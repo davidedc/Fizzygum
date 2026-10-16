@@ -38,9 +38,13 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Caret placement by click** (`macroTextWdgtCaretPlacementByClick`): clicking inside an EDITABLE text places
   `world.caret` at the nearest slot (`StringWdgt.activated`, `:1564`, gated on `@isEditable`). A
   directly-built StringWdgt/TextWdgt has **`isEditable = false`** (`:50`) — set `txt.isEditable = true` first
-  (the demo widgets do). `@moveToAndClickAtFractionOf_InputEvents txt, [fx, fy]` places the caret on the clicked
-  line: `[0.02, firstLineFrac]` before the first letter; a click past the last line's end clamps after the last
-  letter. Size the widget so the wrapped text FITS (a cropped one opens the "edit:" prompt instead).
+  (the demo widgets do). Aim at a SLOT, never at a fraction of the box: `@clickOnTextSlot_InputEvents txt, slot`
+  presses where the text's own `slotAt` picks exactly that slot (`textSlotScreenPoint`), so a font or wrap change
+  cannot move the caret it places. Name the slot from the content (`txt.text.indexOf("amet,") + "amet,".length`)
+  and assert it: `@assertValuesEqual "…", slot, world.caret.slot`. A click past the last line's end clamps after
+  the last letter (aim right of `textSlotScreenPoint txt, txt.text.length`, declaring `@pressMustLandOn txt`).
+  Size the widget so the wrapped text FITS (a cropped one opens the "edit:" prompt instead).
+  ⚠ A fraction into text picks whichever glyph the FONT puts there — the redesign changes every font size.
 - **Caret is alignment-INVARIANT and placement is alignment-AWARE** (`macroTextWdgtCaretPlacementUnderAlignments`): TWO
   complementary halves (the alignment-aware sibling of caret-placement-by-click above, which is LEFT-only), both turning on the
   per-line shift `textHorizontalPosition` (`StringWdgt.coffee:607-614`, switched on `@horizontalAlignment` LEFT/CENTER/RIGHT).
@@ -90,8 +94,9 @@ assertion a recapture after a regression silently stores two different hashes an
   Up/Down keep the column, clamping at first/last line). Place the caret (same `isEditable=true` fixture), then
   `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowUp"` / `@repeatSpecialKey_InputEvents "ArrowDown", n`.
 - **Shift-click extends a selection** (`macroShiftClickExtendsSelection`): a plain click drops a FIXED anchor caret;
-  each `@shiftClickAtFractionOf_InputEvents txt, [fx,fy]` grows the selection from the anchor to the click point
-  (StringWdgt/TextWdgt.activated reads shiftKey → `startSelectionUpToSlot`/`extendSelectionUpToSlot`).
+  each `@shiftClickOnTextSlot_InputEvents txt, slot` grows the selection from the anchor to that slot
+  (StringWdgt/TextWdgt.activated reads shiftKey → `startSelectionUpToSlot`/`extendSelectionUpToSlot`); assert
+  `[txt.startMark, txt.endMark]` after each.
   Gotchas: TextWdgt softWrap wraps to the WIDGET width (`@width()`) so size it big with
   `setExtent` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
   clicks past the end produce identical shots — land clicks WITHIN the line text.
@@ -108,11 +113,15 @@ assertion a recapture after a regression silently stores two different hashes an
   Shift+Left, Shift+Right, ArrowRight) shoots identical to its predecessor, and three routes to one slot
   (type-at-caret / collapse-left / re-select-then-ArrowUp) all share one hash; state the equality in the metadata
   `assertions` and assert it in-run with `@assertScreenshotsIdentical` (see the preamble). Geometry note: count-based Shift+Arrow runs are relative to ONE
-  clicked slot — keep the recorded fixture geometry (handle-fraction resize + recorded click fraction + font size) and
-  the whole keyboard tail is geometry-free. No new verb.
-- **Double/triple-click selects word/line** (`macroDoubleAndTripleClickThroughCaretWdgt`): `@doubleClickAtFractionOf_InputEvents`
-  / `@tripleClickAtFractionOf_InputEvents widget, [fx,fy]` enqueue a move + 2/3 consecutive left click-pairs that
-  the HAND turns into a double/triple-click; targeting `world.caret` selects word/line at its slot. Recognition is
+  clicked slot — so pin what the counts are written against: grow the box to the EXTENT the wrap was authored for
+  (`resizeWidgetBy_InputEvents`/`resizeWindowTo_InputEvents`, asserted) and place the anchor caret at a NAMED slot
+  (`clickOnTextSlot_InputEvents`, asserted); the whole keyboard tail is then geometry-free (precedent:
+  `macroTextWdgtCaretKeepsCorrectAlignment`).
+- **Double/triple-click selects word/line** (`macroDoubleClickSelectsWord`, `macroTripleClickSelection`,
+  `macroDoubleAndTripleClickThroughCaretWdgt`): `@doubleClickOnTextSlot_InputEvents` / `@tripleClickOnTextSlot_InputEvents
+  text, slot` (or the `…AtFractionOf` forms for a non-text target) enqueue a move + 2/3 consecutive left click-pairs that
+  the HAND turns into a double/triple-click; assert the selection (`txt.selection()`). Targeting `world.caret` selects
+  word/line at its slot — a click THROUGH the caret, so declare what it lands on (`@pressMustLandOn textBox`). Recognition is
   proximity + the hand's 300ms EVENT-TIME window (deterministic, not a wall-clock timer — so it can't mis-fold under
   heavy-cycle load; no speed gate; the verb spaces its clicks inside it), so it works at every global speed level —
   the test carries NO speed metadata.
@@ -1989,6 +1998,19 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Assertions & eval
 
+- **Verified aims — a press must meet what it means** (every test; rule 4 of `CLAUDE.md`): the verbs that know their
+  widget check it when the press drains (`AimCheckInputEvent` → `verifyPressLanding`) and fail with "AIM MISSED" otherwise.
+  For a press aimed at a raw Point, declare its receiver on the line before: `@pressMustLandOn rect` (a spreadsheet cell:
+  `@pressMustLandOn sheet.topWdgtSuchThat (w) -> (w instanceof CellWdgt) and (w.address is "B2")`). A deliberate
+  click-THROUGH declares what lies behind (`macroRoundedBoxCornerClickThrough`: aimed at the box's transparent corner,
+  `@pressMustLandOn backdrop`). Bare desktop is `@clickOnDesktopAt_InputEvents point, "right button"`; the drop of a carried
+  widget is `@dropCarriedWidgetAt_InputEvents point` — unchecked, so a drop INTO a container is followed by
+  `@assertValuesEqual "…landed inside…", true, container.isAncestorOf payload`. Why it exists: before it, a click aimed at a
+  stale label centre or at a "desktop" spot a grown menu had swallowed landed elsewhere, the test still passed, and a
+  recapture baked the misdelivery into the references (`macroMenuPinnedInScrollPanel`'s "dismiss" click opened the
+  Wallpapers submenu; `macroDragEmbedRepositionNestedWindowStaysWithoutDwell` dragged the PANEL, never the window).
+  ⚠ The check proves the press met the widget, not WHICH part of it: a click into text still needs its slot named and
+  asserted (`clickOnTextSlot_InputEvents`).
 - **Non-screenshot assertions** (`macroCheckNumberOfItemsInWorldMenu`, `macroLonelySliderTargetsWorldOnly`): with a menu open,
   `@assertTopMenuItemCount n` and `@assertTopMenuItemStrings ["label", …]` (reads each item's `labelString` via the menu's
   `testItems()`, compares the ordered array) → `world.automator.player.recordMacroAssertion(passed, desc, expected, found)` (the
@@ -2092,6 +2114,16 @@ assertion a recapture after a regression silently stores two different hashes an
   Wdgt-stripped), then click the policy row on the construct's own menu. No new verb.
 
 ## Touch and the finger run mode
+
+- **A split press-then-carry says "carry"** (`macroCompositeDragsAsUnitIntoScrollPanel`): a test that presses, screenshots
+  while held, carries in "left button" legs and releases (`moveToAndMouseDown` → `syntheticEventsMouseMove …, "left button"` →
+  `syntheticEventsMouseUp`) is, under a finger, a PLAIN touch drag — and over content in a scrolling pane a plain finger drag
+  SCROLLS the pane instead of lifting (ruling I2: only a held press means "take this with you"). Press with
+  `@pressToCarry_InputEvents target` instead: a mouse emits exactly `moveToAndMouseDown`'s events, a finger HOLDS (the hold
+  opens the widget's menu for a moment; the first carrying move removes it). Keep `moveToAndMouseDown_InputEvents` where the
+  press itself is the subject or the pressed surface is chrome that owns its drags (a handle, a divider, a title strip).
+  Assert the lift (`world.hand.isThisPointerFloatDraggingSomething()`, the payload's parent after the drop) — the finger
+  references had baked a scrolled pane in where the composite never left it.
 
 New L1 touch primitives (doc-commented in full in `MacroToolkit.coffee`) compose the four
 gestures a finger stroke can be: `syntheticEventsTouchTap_InputEvents` (a position-carrying

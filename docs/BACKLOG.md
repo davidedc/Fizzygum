@@ -236,9 +236,10 @@ AUTHORED 2026-07-07, NOT STARTED; owner-initiated execution only.
 - [ ] T4: preprocessor structural refactor, behavior-preserving — not started
 - [ ] T5: language/runtime extensions, owner picks which — not started
 
-### `plans/redesign/redesign-plan.md` — the visual redesign (AUTHORED + APPROVED 2026-10-16; P0 done)
+### `plans/redesign/redesign-plan.md` — the visual redesign (AUTHORED + APPROVED 2026-10-16; P0, R0, T done)
 One design system (a `Theme` token layer, seam rules, drawn chrome icons, size-aware icons) reaching the draft in `plans/redesign/` surface by surface, with the suite made aim-by-meaning first. Owner decisions locked in the plan's §0.5.
-- [ ] T: tests aim by meaning; every widget aim verifies its hit (zero recapture)
+- [ ] T follow-up — stale step COMMENTS in macros phase T did not otherwise touch: the spreadsheet macros `macroSpreadsheetResizeViewport` / `…ScrollKeyboardFollow` / `…ScrollRichCellRetain` / `…ScrollWheel` still quote the 6x14 grid (their metadata is corrected), `macroSpreadsheetSliderCell` names the gone `CellSocketWdgt`, and "960x440 harness" survives in `macroSpreadsheetResizeViewport`, `macroSpreadsheetTiltedClickSelectsCell`, `macroStretchChildHandleResizeSurvivesReflow`, `macroStringWdgtAndTextWdgtResizingInLayout`, `macroMenuPinnedByHeaderClick` (comment + provenance). Comments only; no behaviour.
+- [ ] T follow-up — a hidden or collapsed title piece keeps a STALE box: a pinned menu's `label` is a hidden StringWdgt at (0,0), and a collapsed window title keeps the centre it had (three never-delivered tests aimed there, plan §4 T Findings). Harmless to the product (nothing paints or hits it); decide at W1/W2, which rebuild the strip, whether a not-shown piece should answer geometry at all.
 - [ ] F: `Theme` tokens at today's values, primitives F2a–F2f, spikes S1 (rounded corners, §3a) / S2 (symbol inventory, §3b) / S3 (icon ladder)
 - [ ] W1–W6 visual waves on `redesign` branches (frames · menus · controls + Inspector · desktop + icons · Docs Maker · wording)
 - [ ] G: generalisation sweeps, family by family; Z: squash-merge the tests branch, archive

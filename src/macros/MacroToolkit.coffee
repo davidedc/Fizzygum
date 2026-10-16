@@ -13,6 +13,13 @@
 #   L4 driver + state      — the per-cycle pump (progressOnMacroSteps, installed by
 #                           Macro._addHeaderCode at start) + the macro-step gates/fields.
 #
+# Across L1 and L2 runs the AIM CHECK: every verb that knows the widget it aims at verifies that its
+# press lands on that widget. The verb sets @pendingAimExpectation (_aimingAt); every press the
+# toolkit queues goes through one door (_queuePress), which queues an AimCheckInputEvent right before
+# the first press that finds an expectation pending; the check runs when the queue DRAINS, against the
+# world the press meets, and fails the test on a miss (verifyPressLanding). A macro states the
+# expectation itself with pressMustLandOn wherever no verb can.
+#
 # Authoring rule: a running macro has `@` = this MacroToolkit instance, so in these
 # methods (and in macro source strings) `@x` is a MacroToolkit helper/field while
 # `world.x` is the live world (world.add, world.inputEventsQueue, world.hand,
@@ -47,6 +54,14 @@ class MacroToolkit
   # tells the menu that hold opened from one that was already standing (see
   # getMostRecentlyOpenedMenu). undefined until a hold is scheduled.
   popUpIdWhenHoldScheduled: undefined
+
+  # THE AIM THE NEXT PRESS MUST MEET: { receiver, setBy } — the widget the next press the toolkit
+  # queues must land on (on it, or on any widget inside it; the world means the bare desktop), and
+  # the verb or declaration that set it, for the failure message. Set by an aiming verb
+  # (_aimingAt) or by a macro's own declaration (pressMustLandOn); consumed — cleared — by the first
+  # press queued while it is pending (_queuePress). undefined whenever no press is expected to meet
+  # anything in particular.
+  pendingAimExpectation: undefined
 
   # ─── Global playback SPEED ──────────────────────────────────────────────────
   # ONE global, three-level speed control the macro EVENT GENERATORS honour.
@@ -178,6 +193,21 @@ class MacroToolkit
       base = WorldWdgt.dateOfCurrentCycleStart.getTime()
       event.time = base + (event.time - base) * sf
     world.inputEventsQueue.push event
+
+  # THE ONE DOOR EVERY PRESS THE TOOLKIT QUEUES GOES THROUGH: a mouse down, a finger's down, and a
+  # wheel notch, which is the press of a scroll. The first press queued while an aim expectation is
+  # pending CONSUMES it, and an AimCheckInputEvent is queued immediately before that press, at the
+  # press's own time and with the same `nonScaled` choice — so queueInputEvent stamps both with the
+  # identical time and the check drains right before the press. Every later press of the same
+  # gesture (the second and third click of a double or triple click) finds nothing pending and goes
+  # through unchecked. The check is built before the press is queued, because the chokepoint
+  # rewrites a scaled event's time as it enqueues it.
+  _queuePress: (pressEvent, nonScaled = false) ->
+    expectation = @pendingAimExpectation
+    if expectation?
+      @pendingAimExpectation = undefined
+      @queueInputEvent (new AimCheckInputEvent @, expectation.receiver, expectation.setBy, pressEvent), nonScaled
+    @queueInputEvent pressEvent, nonScaled
 
   # Absolute virtual time that a startTime OFFSET maps to under the active spanFactor —
   # i.e. the timestamp queueInputEvent would stamp it as. The click verbs use this to
@@ -465,10 +495,16 @@ class MacroToolkit
   # for a scrolled or tilted one. A Point is taken as given. Every verb that accepts either kind of
   # target asks this, so a mouse gesture and a finger's aim at exactly the same pixel.
   _screenPointOfTarget: (positionOrWidget) ->
-    if positionOrWidget instanceof Widget
+    if @_isWidgetTarget positionOrWidget
       positionOrWidget.localPointToScreen positionOrWidget.center()
     else
       positionOrWidget
+
+  # IS THIS AIM A WIDGET, rather than a Point? Asked by every verb that accepts either kind of target
+  # — to resolve where it aims (_screenPointOfTarget) and whether it knows what its press must meet
+  # (_aimingAt, pressMustLandOn) — so the two questions can never disagree about the same target.
+  _isWidgetTarget: (target) ->
+    target instanceof Widget
 
   # WHICH WIDGET a verb was aimed at: a widget reference as given, or the one a recorded
   # text-description identifier names (the [description, occurrence, total] triple, or a bare
@@ -479,6 +515,105 @@ class MacroToolkit
       @findWidgetByTextDescription widgetOrIdentifier
     else
       widgetOrIdentifier
+
+  # ── THE AIM CHECK ───────────────────────────────────────────────────────────────────────────
+  # A verb aiming at a widget's centre checks nothing by aiming: when a geometry change puts
+  # something else there, the press lands on that instead, and the only symptom is changed pixels —
+  # which a reference recapture would then bake in. So every verb that KNOWS the widget it aims at
+  # states it, and the press it queues is checked against it when the queue drains, immediately
+  # before the press is processed (AimCheckInputEvent).
+
+  # RUN AN AIMING GESTURE whose press must land on `target` (on it, or on any widget inside it).
+  # The expectation is set only when `target` is a widget and none is pending already, so an
+  # explicit pressMustLandOn, or the expectation of an OUTER verb this one serves, wins over this
+  # verb's own. One set here that no press consumed is cleared afterwards — the gesture pressed
+  # nothing (a zero-length scroll) or threw — so it can never land on a later, unrelated press.
+  # Answers whatever the gesture answers, so a verb whose body runs inside this queues and returns
+  # exactly what it would without it. `setBy` names the verb in the failure message.
+  _aimingAt: (target, setBy, gesture) ->
+    return gesture() if @pendingAimExpectation? or not @_isWidgetTarget target
+    expectation = @_expectNextPressOn target, setBy
+    try
+      gesture()
+    finally
+      @pendingAimExpectation = undefined  if @pendingAimExpectation is expectation
+
+  # Set the expectation the next press consumes, replacing any pending one; answers it, so a caller
+  # can tell later whether it is still the pending one.
+  _expectNextPressOn: (receiver, setBy) ->
+    @pendingAimExpectation = { receiver: receiver, setBy: setBy }
+
+  # DECLARE WHAT THE NEXT PRESS MUST LAND ON — the macro's own statement of an aim, for a press no
+  # verb can verify by itself. It OVERRIDES whatever target an aiming verb would set for that press,
+  # and stays pending until a press consumes it, so it goes right before the verb whose press it
+  # describes. Three uses:
+  #   - a click-THROUGH: the verb aims at a widget whose point is transparent to the pointer (a
+  #     caret never takes it), and the declaration names what lies behind, which the press meets;
+  #   - a LITERAL Point aim — `@pressMustLandOn panel` then `@moveToAndClick_InputEvents new Point
+  #     300, 200` — which is then checked without being moved;
+  #   - a press on widget B through a point computed from widget A (a spot beside A that is B's).
+  # The world names the bare desktop (clickOnDesktopAt_InputEvents declares exactly that).
+  pressMustLandOn: (receiver) ->
+    unless @_isWidgetTarget receiver
+      throw new Error "the macro's declaration of what the next press must land on names #{receiver}, which is not a widget (the world names the bare desktop)"
+    @_expectNextPressOn receiver, "the macro's own declaration"
+    return
+
+  # DOES THE PRESS MEET WHAT ITS VERB AIMED AT? Asked by an AimCheckInputEvent as it drains, right
+  # before the press it precedes, so the world read here is the world the press meets. The press
+  # lands where it states (a finger's down) or, stating nothing, where the hand stands now (a mouse
+  # down, a wheel notch: where the approach left it). It passes when what the press meets
+  # (_widgetAPressMeets) is the receiver or lies inside it — except that a receiver that is the
+  # WORLD passes only on the bare desktop (nothing hit, or the world itself), since every widget
+  # lies inside the world. Only a MISS is recorded: a PASS line per press would flood the console.
+  verifyPressLanding: (check) ->
+    place = check.place ? world.hand.position()
+    hit = @_widgetAPressMeets place, check.isTouch
+    receiver = check.receiver
+    landed =
+      if receiver is world
+        (not hit?) or (hit is world)
+      else
+        hit? and receiver.isAncestorOf hit
+    return if landed
+    describe = (wdgt) -> if (not wdgt?) or (wdgt is world) then "the desktop" else wdgt.toString()
+    expected = if receiver is world then "the bare desktop" else "#{receiver.toString()} or a widget inside it"
+    kind = if check.isTouch then "touch" else "mouse"
+    description = "AIM MISSED: the #{kind} press set up by #{check.setBy} must land on #{expected}, but at (#{place.x}, #{place.y}) it meets #{describe hit}"
+    world.automator.player.recordMacroAssertion false, description, expected, (describe hit)
+    return
+
+  # WHAT A PRESS AT THIS SCREEN POINT MEETS: the product's own hit test (_topWdgtAtScreenPoint),
+  # corrected for the one thing a FINGER'S arrival changes before its press is dispatched.
+  #   A mouse has arrived by the time its press drains — its approach move ran the hover pass — so
+  # the hit test reads the world the press meets. A finger arrives WITH its press:
+  # ActivePointerWdgt.processPointerDown's position head runs the move pipeline for the down's own
+  # place before pressing, and that move's hover pass reaches every viewport above the widget under
+  # the point (ViewportWdgt.hoverMoved → _updatePointerInScrollBand). A point within a fat bar's
+  # width of a viewport's right or bottom edge FATTENS both its indicators. A thin indicator is
+  # intangible (SliderWdgt.indicatorIsIntangible: its catchesPointerAt answers false, its thumb's
+  # too), so a hit test asked before that arrival answers for whatever lies under the bar, while the
+  # press meets the FAT bar.
+  #   So for a touch press every viewport above the hit (anything answering barScreenFrameOnArrival)
+  # is asked, for each bar it presents (the bar is its own child, which is what
+  # ViewportWdgt._barIsMineToPresent asks), shows, and holds intangible, whether the point lies in the
+  # frame that bar takes on arrival (barScreenFrameOnArrival). If it does, the press meets the bar's
+  # button when the point lies in the button's box on arrival (buttonScreenBoxOnArrival), the bar
+  # itself — its track — otherwise. When several viewports qualify the OUTERMOST wins: a viewport
+  # paints its bars after its contents, so its bar lies above everything inside it.
+  _widgetAPressMeets: (place, isTouch) ->
+    hit = @_topWdgtAtScreenPoint place
+    return hit unless isTouch
+    met = hit
+    ancestor = hit
+    while ancestor?
+      if ancestor.barScreenFrameOnArrival?
+        for bar in [ancestor.vBar, ancestor.hBar]
+          continue unless bar? and (bar.parent is ancestor) and bar.visibleBasedOnIsVisibleProperty() and bar.indicatorIsIntangible?()
+          continue unless (ancestor.barScreenFrameOnArrival bar).containsPoint place
+          met = if (ancestor.buttonScreenBoxOnArrival bar).containsPoint place then bar.button else bar
+      ancestor = ancestor.parent
+    met
 
   # THE SAMPLED PATH of a pointer move, written once: expoOut-eased, rounded to whole pixels and
   # DEDUPED, one call to `queueOneSample (time, x, y)` per surviving sample. What differs between a
@@ -528,7 +663,8 @@ class MacroToolkit
   # ctrlKey, shiftKey, altKey, metaKey, time, and the optional worldX/worldY a down/up omits: a synthesised
   # press states no place, so the pointer keeps the position it holds). A click carrying shiftKey makes an editable
   # StringWdgt/TextWdgt EXTEND its selection to the click point (activated reads shiftKey) instead
-  # of just repositioning the caret. Left button only (down buttons=1, up buttons=0).
+  # of just repositioning the caret. Left button only (down buttons=1, up buttons=0). The down goes
+  # through _queuePress, so it is verified when the verb that positioned it said what it must meet.
   syntheticEventsMouseShiftClick_InputEvents: (milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     # absolute (scaled) times + guard + non-scaled push, like syntheticEventsMouseClick —
     # a shift-click is still a left-button click and would otherwise fold into a false
@@ -541,15 +677,17 @@ class MacroToolkit
       # a keyboard attached has both — so the finger's tap carries the same flag the mouse's click
       # does. Built here rather than through the tap verb because that verb bakes no modifiers.
       place = @currentPointerTarget
-      @queueInputEvent (PointerdownInputEvent.syntheticTouch 0, 1, false, true, false, false, downAbs, place.x, place.y), true
+      @_queuePress (PointerdownInputEvent.syntheticTouch 0, 1, false, true, false, false, downAbs, place.x, place.y), true
       @queueInputEvent (PointerupInputEvent.syntheticTouch 0, 0, false, true, false, false, upAbs, place.x, place.y), true
       return
-    @queueInputEvent (PointerdownInputEvent.synthetic 0, 1, false, true, false, false, downAbs), true
+    @_queuePress (PointerdownInputEvent.synthetic 0, 1, false, true, false, false, downAbs), true
     @queueInputEvent (PointerupInputEvent.synthetic 0, 0, false, true, false, false, upAbs), true
 
   # nonScaled (default false): when true the startTime is already an absolute, scaled
   # time (the click verbs pre-compute it so the false-double-click guard can shift it),
   # so queueInputEvent must NOT scale it again.
+  # The press goes through _queuePress (a finger's through _queueTouchDown), so it is verified when
+  # the verb that aimed it said what it must land on, and checks nothing otherwise.
   syntheticEventsMouseDown_InputEvents: (whichButton = "left button", startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), nonScaled = false) ->
     if whichButton == "left button"
       button = 0
@@ -574,7 +712,7 @@ class MacroToolkit
       @_queueTouchMove @currentPointerTarget, @pendingTouchHoldCrossedTime
       return
 
-    @queueInputEvent (PointerdownInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
+    @_queuePress (PointerdownInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
 
   syntheticEventsMouseUp_InputEvents: (whichButton = "left button", startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), nonScaled = false) ->
     if whichButton == "left button"
@@ -639,8 +777,10 @@ class MacroToolkit
   # unrounded one lands the hand on fractional bounds and NON_INTEGER_GEOMETRY fires. A mouse never
   # meets this: its down/up state no place at all, and its move samples are rounded as they are
   # eased. Rounding at these three pushes is the same rule in the same place for both devices.
+  #   The down is a PRESS, so it is queued through _queuePress, which puts an aim check in front of
+  # it whenever the verb that aimed it said what it must land on.
   _queueTouchDown: (place, timeAbs) ->
-    @queueInputEvent (PointerdownInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
+    @_queuePress (PointerdownInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
 
   _queueTouchMove: (place, timeAbs) ->
     @queueInputEvent (PointermoveInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
@@ -657,15 +797,18 @@ class MacroToolkit
   # click" row. Guarded and hold-floored exactly like a mouse click, so two taps in the same spot
   # never fold into a false double-click and the pressed frame is still sampled.
   # Returns the absolute time of the release (a caller sequencing a later gesture reads it).
+  # Given a WIDGET, it verifies that the tap lands on that widget (or inside it); given a Point, it
+  # checks nothing of its own (see _aimingAt).
   syntheticEventsTouchTap_InputEvents: (positionOrWidget, milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    place = @_screenPointOfTarget positionOrWidget
-    @currentPointerTarget = place
-    downAbs = @guardedClickStart (@scaledAbs startTime), place
-    upAbs = downAbs + @clickHoldWithFloor milliseconds
-    @_rememberClickGesture upAbs, place
-    @_queueTouchDown place, downAbs
-    @_queueTouchUp place, upAbs
-    upAbs
+    @_aimingAt positionOrWidget, "syntheticEventsTouchTap", =>
+      place = @_screenPointOfTarget positionOrWidget
+      @currentPointerTarget = place
+      downAbs = @guardedClickStart (@scaledAbs startTime), place
+      upAbs = downAbs + @clickHoldWithFloor milliseconds
+      @_rememberClickGesture upAbs, place
+      @_queueTouchDown place, downAbs
+      @_queueTouchUp place, upAbs
+      upAbs
 
   # A PRESS-AND-HOLD: the down, then a SAME-POSITION move scheduled past `pressAndHoldMs` of real
   # time. That move is the drained event whose own time crosses the window, and crossing it is what
@@ -673,19 +816,22 @@ class MacroToolkit
   # (ActivePointerWdgt), so a stationary finger needs an event to decide ON.
   # `alsoRelease` (default true) ends the stroke with the up; pass false to keep the finger down —
   # the hold-then-drag verb below does. Returns the absolute time of the last event scheduled.
+  # Given a WIDGET, it verifies that the press lands on that widget (or inside it); given a Point,
+  # it checks nothing of its own (see _aimingAt).
   syntheticEventsTouchHold_InputEvents: (positionOrWidget, alsoRelease = true, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    place = @_screenPointOfTarget positionOrWidget
-    @currentPointerTarget = place
-    # the watermark this hold's menu will be told apart by (see getMostRecentlyOpenedMenu)
-    @popUpIdWhenHoldScheduled = @_highestOpenPopUpId()
-    downAbs = @scaledAbs startTime
-    holdCrossedAbs = downAbs + WorldWdgt.preferencesAndSettings.pressAndHoldMs + MacroToolkit.holdWindowMarginMs
-    @_queueTouchDown place, downAbs
-    @_queueTouchMove place, holdCrossedAbs
-    return holdCrossedAbs unless alsoRelease
-    upAbs = holdCrossedAbs + MacroToolkit.holdWindowMarginMs
-    @_queueTouchUp place, upAbs
-    upAbs
+    @_aimingAt positionOrWidget, "syntheticEventsTouchHold", =>
+      place = @_screenPointOfTarget positionOrWidget
+      @currentPointerTarget = place
+      # the watermark this hold's menu will be told apart by (see getMostRecentlyOpenedMenu)
+      @popUpIdWhenHoldScheduled = @_highestOpenPopUpId()
+      downAbs = @scaledAbs startTime
+      holdCrossedAbs = downAbs + WorldWdgt.preferencesAndSettings.pressAndHoldMs + MacroToolkit.holdWindowMarginMs
+      @_queueTouchDown place, downAbs
+      @_queueTouchMove place, holdCrossedAbs
+      return holdCrossedAbs unless alsoRelease
+      upAbs = holdCrossedAbs + MacroToolkit.holdWindowMarginMs
+      @_queueTouchUp place, upAbs
+      upAbs
 
   # A DRAG: the down, the sampled path to the destination, the up there. The span is floored to
   # @dragFloorMs — DIRECTLY, not through dragSpanWithFloor, which inflates a span so it survives
@@ -736,9 +882,14 @@ class MacroToolkit
     @currentPointerTarget = destPlace
     moveStartAbs + dragSpan
 
+  # Move to a point/widget, then click there. Given a WIDGET (aimed at its on-screen centre), it
+  # verifies that the press lands on that widget or on something inside it; given a Point, it
+  # checks nothing of its own — the caller states what the press must meet (pressMustLandOn), or
+  # the verb that computed the point already has.
   moveToAndClick_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime
-    @syntheticEventsMouseClick_InputEvents whichButton, 100, startTime + milliseconds + 100
+    @_aimingAt positionOrWidget, "moveToAndClick", =>
+      @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime
+      @syntheticEventsMouseClick_InputEvents whichButton, 100, startTime + milliseconds + 100
 
   # Move to a point/widget then MOUSE DOWN and HOLD — the press half of a click, scheduled AFTER the move
   # completes (like moveToAndClick_InputEvents, but with no release). Use it when the press ITSELF produces
@@ -747,9 +898,56 @@ class MacroToolkit
   # float-dragged widget (processPointerDown -> drop). Pattern: `@moveToAndMouseDown_InputEvents target` ->
   # `yield "waitNoInputsOngoing"` -> `takeScreenshot_InputEvents_Macro "…"` (captures with the button still
   # held) -> `@syntheticEventsMouseUp_InputEvents()` -> `yield "waitNoInputsOngoing"`.
+  # Given a WIDGET it verifies that the press lands on it (or inside it), like moveToAndClick_InputEvents;
+  # given a Point it checks nothing of its own.
   moveToAndMouseDown_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime
-    @syntheticEventsMouseDown_InputEvents whichButton, startTime + milliseconds + 100
+    @_aimingAt positionOrWidget, "moveToAndMouseDown", =>
+      @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime
+      @syntheticEventsMouseDown_InputEvents whichButton, startTime + milliseconds + 100
+
+  # THE PRESS THAT PICKS SOMETHING UP TO CARRY IT AWAY — the first half of a lift built in legs: this
+  # press, then `yield "waitNoInputsOngoing"`, then "left button" moves (syntheticEventsMouseMove_InputEvents,
+  # each a leg of the same stroke, screenshots allowed in between) and syntheticEventsMouseUp_InputEvents,
+  # which drops what the stroke carries.
+  #   A mouse needs nothing more than its press, so for a mouse this queues exactly what
+  # moveToAndMouseDown_InputEvents queues. A FINGER needs more wherever the pressed content sits inside a
+  # surface that takes a plain finger drag for a SCROLL (ViewportWdgt.claimsPlainDragsForScrolling): there a
+  # plain press-and-drag scrolls the surface and the content stays put. The touch grammar's "take this with
+  # you" is a press-and-HOLD (ruling I2, ActivePointerWdgt._touchPressArmsAtOnce), so a finger presses at
+  # once (it has no approach to walk) and holds past pressAndHoldMs and STAYS DOWN
+  # (syntheticEventsTouchHold_InputEvents with alsoRelease false); the hold opens the pressed widget's menu,
+  # and the first carrying move takes the menu away and lifts.
+  # Where nothing competes for the drag (the open desktop) the hold arms a stroke that was armed anyway, so
+  # one verb says "pick this up" wherever the widget sits.
+  #   Use it whenever a test means LIFT what it presses. moveToAndMouseDown_InputEvents stays the verb when
+  # the press ITSELF is the subject (it dismisses a menu, it drops a carried payload) and when the pressed
+  # surface is chrome that owns its drags (a handle, a slider, a title strip) — a hold there opens that
+  # surface's own menu for nothing.
+  # Given a WIDGET it verifies that the press lands on it (or inside it); given a Point it checks nothing of
+  # its own (say what the press must meet with pressMustLandOn).
+  pressToCarry_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_aimingAt positionOrWidget, "pressToCarry", =>
+      unless @fingerMode()
+        return @moveToAndMouseDown_InputEvents positionOrWidget, whichButton, milliseconds, startTime
+      @syntheticEventsTouchHold_InputEvents positionOrWidget, false, startTime
+
+  # CLICK THE BARE DESKTOP at an authored spot — typically a right-click that opens the world's own
+  # menu, or a click away from everything. The spot is a literal, so no widget can say what is there;
+  # this verb says it instead: the press must meet NOTHING but the desktop, and is verified to (the
+  # world is its declared receiver, see pressMustLandOn). A window that grows over the spot then
+  # fails the test where it happens, instead of silently opening that window's menu.
+  clickOnDesktopAt_InputEvents: (point, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_expectNextPressOn world, "clickOnDesktopAt"
+    @moveToAndClick_InputEvents point, whichButton, milliseconds, startTime
+
+  # THE PRESS THAT DROPS what the hand is carrying, at a placement point: a down while the hand
+  # float-drags a payload lands the payload instead of pressing anything (ActivePointerWdgt.
+  # processPointerDown → drop). Deliberately UNCHECKED — wherever the payload comes to rest is a
+  # legitimate placement, so there is no receiver to verify — and it sets no expectation of its own.
+  # It queues exactly what `moveToAndClick_InputEvents point` queues, under either pointer kind: the
+  # walk there (a finger's buttonless carry), then the left click (a finger's tap) that drops.
+  dropCarriedWidgetAt_InputEvents: (point, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @moveToAndClick_InputEvents point, "left button", milliseconds, startTime
 
   # Resolve a [widget | text-description identifier | Point] + an [fx, fy] fraction to an absolute
   # world Point inside that widget: (left + round(width*fx), top + round(height*fy)) of the LIVE widget,
@@ -762,8 +960,12 @@ class MacroToolkit
     # through screenPointAtFractionOf / the Screen verbs, which map this up to the pixel.
     new Point (Math.round(widget.width() * fraction[0]) + widget.left()), (Math.round(widget.height() * fraction[1]) + widget.top())
 
+  # Move to the point at fraction [fx, fy] of a widget (by reference or recorded identifier) and
+  # click there; verifies that the press lands on that widget or on something inside it.
   moveToAndClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @moveToAndClick_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
+    widget = @_widgetOfTarget widgetOrIdentifier
+    @_aimingAt widget, "moveToAndClickAtFractionOf", =>
+      @moveToAndClick_InputEvents (@screenPointAtFractionOf widget, fraction), whichButton, milliseconds, startTime
 
   # Affine transforms (docs/plans/affine-transforms-plan.md §4.6): the SCREEN-plane point at
   # fractional position [fx,fy] inside a widget. pointAtFractionOf gives the point in the
@@ -784,9 +986,12 @@ class MacroToolkit
   # own plane and would miss inside a scaled/rotated island. The pointer pipeline plane-maps the
   # dispatched position per-receiver (4A-1 click dispatch, R1 move channels, R4 drag consumers), so
   # island-inner sub-widget geometry that reads it (a caret slot, a slider fraction) is correct;
-  # this verb's job is just to AIM the pointer at the right on-screen pixel.
+  # this verb's job is just to AIM the pointer at the right on-screen pixel — and to verify that the
+  # press lands on that widget or on something inside it.
   moveToAndClickAtScreenFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @moveToAndClick_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
+    widget = @_widgetOfTarget widgetOrIdentifier
+    @_aimingAt widget, "moveToAndClickAtScreenFractionOf", =>
+      @moveToAndClick_InputEvents (@screenPointAtFractionOf widget, fraction), whichButton, milliseconds, startTime
 
   # Push N consecutive left click-pairs (down+up) at the CURRENT pointer position, spaced so the hand
   # recognises them as a double-/triple-click. The hand only counts a fresh click as a double/triple while
@@ -821,25 +1026,84 @@ class MacroToolkit
   tripleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @_nLeftClicksAtFractionOf_InputEvents 3, widgetOrIdentifier, fraction, milliseconds, startTime
 
-  # Shared body of double/tripleClickAtFractionOf_InputEvents: position the pointer at the fractional point
-  # (so the fake pointer shows), then fire `numberOfClicks` consecutive left clicks that the hand folds into a
-  # double/triple click. The +100ms lead-in after the positioning move is non-scaled at every speed level (see
-  # the comment above on the deterministic event-time recognition window).
+  # Shared body of double/tripleClickAtFractionOf_InputEvents: the multi-click gesture (_nLeftClicksAt_InputEvents)
+  # aimed at the fractional point of the located widget.
   _nLeftClicksAtFractionOf_InputEvents: (numberOfClicks, widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    # public-call-sanctioned: syntheticEventsMouseMove_InputEvents is an L1 event-synthesis primitive (it
-    # pushes a queued mouse-move, not any settling/orchestration) — this is the SAME call the public
-    # double/tripleClick verbs made inline before their shared body was factored here; behaviour is unchanged.
-    @syntheticEventsMouseMove_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
-    @_syntheticEventsConsecutiveLeftClicks_InputEvents numberOfClicks, startTime + milliseconds + 100
+    widget = @_widgetOfTarget widgetOrIdentifier
+    setBy = { 2: "doubleClickAtFractionOf", 3: "tripleClickAtFractionOf" }[numberOfClicks] ? "a #{numberOfClicks}-click at a fraction"
+    @_nLeftClicksAt_InputEvents numberOfClicks, widget, (@screenPointAtFractionOf widget, fraction), setBy, milliseconds, startTime
 
-  # SHIFT+left-click at a fractional point inside a located widget — move the pointer there (no button),
-  # then click with Shift held. In editable text a plain click sets the caret while a shift-click EXTENDS the
-  # selection from the caret to the click point; so the pattern is a plain moveToAndClickAtFractionOf to drop
-  # the anchor caret, then one or more shiftClickAtFractionOf to grow the selection. The selection-extend
-  # sibling of the double-/triple-click verbs. Queues input events — follow with `yield "waitNoInputsOngoing"`.
-  shiftClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
-    @syntheticEventsMouseShiftClick_InputEvents 100, startTime + milliseconds + 100
+  # THE MULTI-CLICK GESTURE every double/triple-click verb queues: position the pointer at `screenPoint` (so the
+  # fake pointer shows), then fire `numberOfClicks` consecutive left clicks that the hand folds into a double/triple
+  # click. The +100ms lead-in after the positioning move is non-scaled at every speed level (see the comment above
+  # on the deterministic event-time recognition window). Verifies that the FIRST press lands on `widget` or on
+  # something inside it; the repeats press the same spot and are not checked again. `setBy` names the verb in the
+  # failure message.
+  _nLeftClicksAt_InputEvents: (numberOfClicks, widget, screenPoint, setBy, milliseconds, startTime) ->
+    # public-call-sanctioned: syntheticEventsMouseMove_InputEvents is an L1 event-synthesis primitive (it
+    # pushes a queued mouse-move, not any settling/orchestration) — the positioning move every multi-click
+    # verb makes before its clicks.
+    @_aimingAt widget, setBy, =>
+      @syntheticEventsMouseMove_InputEvents screenPoint, "no button", milliseconds, startTime
+      @_syntheticEventsConsecutiveLeftClicks_InputEvents numberOfClicks, startTime + milliseconds + 100
+
+  # ── CLICKS INTO TEXT, BY SLOT ───────────────────────────────────────────────────────────────
+  # A fraction of a text widget's box picks whichever glyph the font happens to put there, so a font or a
+  # wrap change silently moves the caret a click places. These verbs aim at a SLOT instead — the caret
+  # position between two characters — and press where the product picks exactly that slot. They are the
+  # by-meaning forms of the fraction verbs above, with the same timing, for a StringWdgt or a TextWdgt.
+  #   THE RULE FOR TEST AUTHORS: name the slot by MEANING, from the text's own content —
+  # `txt.text.indexOf("elit. I") + "elit. I".length` is the slot right after "elit. I" — and follow the
+  # click with a value assertion of what it produced: the caret's slot (`world.caret.slot`) or the
+  # selection (`txt.selection()`, or its startMark/endMark).
+
+  # WHERE A PRESS PICKS EXACTLY `slot` OF A TEXT WIDGET, on the screen: at the slot's boundary on its line
+  # (slotCoordinates — where the caret sits) and halfway down that line, as the whole pixel a press lands on.
+  # The point is VERIFIED with the product's own answer — `text.slotAt` of that pixel carried back into the
+  # text's plane, the position a press there dispatches — and must lie inside the text's own box, so the
+  # press meets the text. When a rounding edge tips the boundary onto a neighbouring slot (or just outside
+  # the box), the nearest points either side of it are tried in turn. A slot that no point near its
+  # boundary picks is a fault to raise, naming the text and the slot, never a press to place on a neighbour.
+  # A side-effect-free locator — it reads the live tree and queues nothing — so a macro can aim a gesture of
+  # its own from a slot: a press past a line's end, a drag that selects.
+  textSlotScreenPoint: (text, slot) ->
+    unless Number.isInteger(slot) and 0 <= slot <= text.text.length
+      throw new Error "#{slot} is not a slot of #{text} — its slots run 0..#{text.text.length}"
+    boundary = text.slotCoordinates slot
+    lineMiddle = boundary.y + Math.floor (Math.ceil text.fontHeight text.fittingFontSize) / 2
+    for nudge in [0, -1, 1, -2, 2]
+      screenPoint = @_screenPixelOf text, new Point boundary.x + nudge, lineMiddle
+      planePoint = text.screenPointToMyPlane screenPoint
+      return screenPoint  if (text.boundsContainPoint planePoint) and (text.slotAt planePoint) is slot
+    throw new Error "no point at the boundary of slot #{slot} of #{text} picks that slot inside the text's box — slotAt answers a neighbouring slot at every one, or the point falls outside the box"
+
+  # Move to where a press picks `slot` of a text widget (textSlotScreenPoint) and click there — the slot form
+  # of moveToAndClickAtFractionOf_InputEvents. Verifies that the press lands on the text or on something
+  # inside it. Name the slot by meaning and assert the caret it places (see the rule above).
+  clickOnTextSlot_InputEvents: (text, slot, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_aimingAt text, "clickOnTextSlot", =>
+      @moveToAndClick_InputEvents (@textSlotScreenPoint text, slot), whichButton, milliseconds, startTime
+
+  # Double- / triple-click a text widget where a press picks `slot` — the slot forms of
+  # double/tripleClickAtFractionOf_InputEvents, with their timing (_nLeftClicksAt_InputEvents). A double click
+  # selects the word around the slot the first click placed, a triple click the line it sits on. Verifies that
+  # the first press lands on the text or on something inside it. Name the slot by meaning and assert the
+  # selection it produces (see the rule above). Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  doubleClickOnTextSlot_InputEvents: (text, slot, milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_nLeftClicksAt_InputEvents 2, text, (@textSlotScreenPoint text, slot), "doubleClickOnTextSlot", milliseconds, startTime
+
+  tripleClickOnTextSlot_InputEvents: (text, slot, milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_nLeftClicksAt_InputEvents 3, text, (@textSlotScreenPoint text, slot), "tripleClickOnTextSlot", milliseconds, startTime
+
+  # SHIFT+left-click a text widget where a press picks `slot` — a move there, then a left click with Shift held
+  # (syntheticEventsMouseShiftClick_InputEvents): in editable text a plain click sets the caret, while a
+  # shift-click EXTENDS the selection from the caret to that slot. Verifies that the
+  # press lands on the text or on something inside it. Name the slot by meaning and assert the selection it
+  # produces (see the rule above). Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  shiftClickOnTextSlot_InputEvents: (text, slot, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_aimingAt text, "shiftClickOnTextSlot", =>
+      @syntheticEventsMouseMove_InputEvents (@textSlotScreenPoint text, slot), "no button", milliseconds, startTime
+      @syntheticEventsMouseShiftClick_InputEvents 100, startTime + milliseconds + 100
 
   # Push ONE synthetic WheelInputEvent onto the input queue — the queued primitive behind
   # wheelOn_InputEvents. This is exactly how the browser delivers a real wheel: WorldWdgt's onwheel
@@ -850,11 +1114,14 @@ class MacroToolkit
   #   A FINGER HAS NO WHEEL, and needs none: the plain finger drag IS the scroll (ruling I2), so the
   # verb's intent — move this pane's content by this much — becomes a touch drag over the pane the
   # pointer is aimed at, carrying the content exactly as far as the wheel would have scrolled it.
+  #   The notch is the PRESS of a scroll, so it goes through _queuePress (a finger's swipe downs
+  # through _queueTouchDown): verified when the verb that aimed it (wheelOn_InputEvents) said what
+  # it must land on, unchecked when called on its own.
   syntheticEventsWheel_InputEvents: (deltaX = 0, deltaY = 0, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     if @fingerMode()
       aim = @_screenPointOfTarget @currentPointerTarget
       return @_touchScrollBy aim, deltaX, deltaY, startTime, (@_scrollPaneAt aim)
-    @queueInputEvent new WheelInputEvent deltaX, deltaY, 0, 0, 0, false, false, false, false, true, startTime
+    @_queuePress new WheelInputEvent deltaX, deltaY, 0, 0, 0, false, false, false, false, true, startTime
 
   # THE FINGER'S SCROLL, expressed as the wheel deltas a translated verb hands it. A drag moves the
   # content WITH the finger — ViewportWdgt's scroll-drag step feeds its own per-frame delta straight
@@ -987,13 +1254,16 @@ class MacroToolkit
   # viewport BELOW it, a text widget that OVERFLOWS the document scrolling it — and a swipe bounded
   # by the named widget's own box starts outside the pane, where it presses chrome or nothing and
   # delivers no scroll at all.
+  #   Either way it verifies that the gesture's press — the wheel notch, or the finger's first swipe
+  # down — lands on the named widget or on something inside it.
   wheelOn_InputEvents: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    aimPoint = @screenPointAtFractionOf widgetOrIdentifier, fraction
-    if @fingerMode()
-      return @_touchScrollBy aimPoint, deltaX, deltaY, startTime,
-        (@_scrollPaneAt aimPoint, (@_widgetOfTarget widgetOrIdentifier))
-    @syntheticEventsMouseMove_InputEvents aimPoint, "no button", milliseconds, startTime
-    @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
+    widget = @_widgetOfTarget widgetOrIdentifier
+    @_aimingAt widget, "wheelOn", =>
+      aimPoint = @screenPointAtFractionOf widget, fraction
+      if @fingerMode()
+        return @_touchScrollBy aimPoint, deltaX, deltaY, startTime, (@_scrollPaneAt aimPoint, widget)
+      @syntheticEventsMouseMove_InputEvents aimPoint, "no button", milliseconds, startTime
+      @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
   # length, to JUMP the slider button there. For a viewport's scrollbar — a ViewportWdgt's @vBar
@@ -1004,8 +1274,9 @@ class MacroToolkit
   # track); for a horizontal one [0.8, 0.5]. Queues input events — follow with `yield
   # "waitNoInputsOngoing"`. A slider NOT parented to a viewport ignores the track click (it escalates
   # the event) — that is the negative companion behaviour (sliderNotOnViewportBackground…). Composes
-  # moveToAndClickAtFractionOf_InputEvents; sliderOrIdentifier may be a widget reference (e.g. doc.vBar)
-  # or a recorded text-description identifier.
+  # moveToAndClickAtFractionOf_InputEvents, so it verifies that the press lands on the slider or on
+  # something inside it; sliderOrIdentifier may be a widget reference (e.g. doc.vBar) or a recorded
+  # text-description identifier.
   clickOnSliderTrackAtFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClickAtFractionOf_InputEvents sliderOrIdentifier, fraction, "left button", milliseconds, startTime
 
@@ -1021,12 +1292,14 @@ class MacroToolkit
   # bounds = the destination of the drag along the track (for a vertical slider, vary fy; default sliders
   # have smallestValueIsAtBottomEnd false, so a larger fy = a larger value). Queues input events — follow
   # with `yield "waitNoInputsOngoing"`. sliderOrIdentifier may be a widget reference or a recorded
-  # text-description identifier.
+  # text-description identifier. Verifies that the press lands on the slider's BUTTON (a press on the
+  # track beside it would page the bar instead of grabbing the thumb).
   dragSliderButtonToFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     slider = @_widgetOfTarget sliderOrIdentifier
-    buttonCentre = @sliderButtonPressPoint slider
-    trackPoint = @screenPointAtFractionOf slider, fraction
-    @_dragChromeFromTo_InputEvents buttonCentre, trackPoint, milliseconds, startTime
+    @_aimingAt slider.button, "dragSliderButtonToFraction", =>
+      buttonCentre = @sliderButtonPressPoint slider
+      trackPoint = @screenPointAtFractionOf slider, fraction
+      @_dragChromeFromTo_InputEvents buttonCentre, trackPoint, milliseconds, startTime
 
   # WHERE A PRESS TAKES A SLIDER'S BUTTON (a scrollbar's thumb), on the screen. `preferred` is the
   # point a verb would aim at, the button's centre as it measures it; it is KEPT whenever a press
@@ -1052,10 +1325,11 @@ class MacroToolkit
 
   # Drag a slider's button by the displacement a verb measured between two screen points of it:
   # pressed where a press takes the button (sliderButtonPressPoint, preferring `seenFrom`), and
-  # released that same displacement further on.
+  # released that same displacement further on. Verifies that the press lands on the button.
   _dragSliderButtonFromTo_InputEvents: (slider, seenFrom, seenTo) ->
-    from = @sliderButtonPressPoint slider, seenFrom
-    @_dragChromeFromTo_InputEvents from, (if from is seenFrom then seenTo else from.add seenTo.subtract seenFrom)
+    @_aimingAt slider.button, "a slider-button drag", =>
+      from = @sliderButtonPressPoint slider, seenFrom
+      @_dragChromeFromTo_InputEvents from, (if from is seenFrom then seenTo else from.add seenTo.subtract seenFrom)
 
   # Clipboard CUT / COPY / PASTE for the active editing caret, driven through the INPUT-EVENT QUEUE like
   # the browser's real clipboard events (oncut/oncopy/onpaste → ClipboardInputEvent.fromBrowserEvent →
@@ -1100,17 +1374,58 @@ class MacroToolkit
   # while nothing between the aim and the press is off by a single pixel, so aim a quarter-box deeper
   # into the corner: that clears the diagonal by handleSize/4 on each axis.
   #
-  # The destination shifts by the SAME on-screen vector, so the drag vector — hence the extent the
-  # gesture produces — is the centre-to-destination one the caller asks for, and the handle's CENTRE
-  # still lands on the destination. localPointToScreen forward-maps through any enclosing
-  # non-identity island (affine transforms §6 4A-2), so a handle inside a scaled/rotated island is
-  # pressed where it actually renders and the shift is mapped with it; both operands then carry the
-  # same vector through nonFloatDragging's inverse map, which cancels it exactly.
+  # Those are the PREFERRED points: the press goes where _handlePressPoint finds a press takes the
+  # handle, which is the preferred point whenever a press there already meets it.
+  #
+  # The destination shifts by the SAME on-screen vector the press point sits off the centre, so the
+  # drag vector — hence the extent the gesture produces — is the centre-to-destination one the caller
+  # asks for, and the handle's CENTRE still lands on the destination. A press AT the centre shifts
+  # nothing, and the destination is handed on exactly as given. localPointToScreen forward-maps
+  # through any enclosing non-identity island (affine transforms §6 4A-2), so a handle inside a
+  # scaled/rotated island is pressed where it actually renders and the shift is mapped with it; both
+  # operands then carry the same vector through nonFloatDragging's inverse map, which cancels it exactly.
   _handlePressAndDropPoints: (handle, destination) ->
     screenCentre = handle.localPointToScreen handle.center()
-    return [screenCentre, destination]  unless handle.type is "resizeBothDimensionsHandle"
-    pressPoint = handle.localPointToScreen handle.center().add handle.extent().floorDivideBy 4
-    [pressPoint, (destination.add pressPoint.subtract screenCentre)]
+    preferred =
+      if handle.type is "resizeBothDimensionsHandle"
+        handle.localPointToScreen handle.center().add handle.extent().floorDivideBy 4
+      else
+        screenCentre
+    pressPoint = @_handlePressPoint handle, preferred
+    shift = pressPoint.subtract screenCentre
+    return [pressPoint, destination]  if shift.isZero()
+    [pressPoint, (destination.add shift)]
+
+  # WHERE A PRESS TAKES A HANDLE, on the screen. `preferred` — the point the handle verbs aim at (see
+  # _handlePressAndDropPoints) — is KEPT whenever a press there meets the handle, so no aim that
+  # already works moves. Otherwise the handle's box is scanned from its ANCHORED corner (or edge
+  # middle, HandleWdgt's cornerSpec) inward — an 8×8 grid, nearest first — for the first point a press
+  # meets: a handle's shape hugs the corner it is anchored to (the corner resizer's striped triangle),
+  # so its deepest pixels are there.
+  #   A ROTATE handle's point is never moved: its gesture reads the raw pointer's angle about the
+  # target's anchor (HandleWdgt._pointerAngleToTargetAnchorDegrees), so a different press point is a
+  # different rotation. A rotate handle a press cannot meet where the verb aims is a fault to raise,
+  # and so is a handle no sampled point of which a press meets.
+  #   "Meets" is the aim check's own question for the run's pointer kind (_pressMeetsWidget), so the
+  # answer holds for the press the run makes.
+  _handlePressPoint: (handle, preferred) ->
+    return preferred  if @_pressMeetsWidget preferred, handle
+    if handle.type is "rotateHandle"
+      throw new Error "a press at (#{preferred.x}, #{preferred.y}) does not meet #{handle}, and a rotate handle's press point is never moved — its gesture reads the pointer's angle about the target's anchor"
+    anchor = switch handle.cornerSpec?.anchor
+      when "topLeft" then handle.topLeft()
+      when "rightMiddle" then handle.rightCenter()
+      when "bottomMiddle" then handle.bottomCenter()
+      else handle.bottomRight()
+    candidates = []
+    for row in [0...8]
+      for column in [0...8]
+        candidates.push new Point (handle.left() + Math.round((column + 0.5) * handle.width() / 8)), (handle.top() + Math.round((row + 0.5) * handle.height() / 8))
+    candidates.sort (a, b) -> (a.distanceTo anchor) - (b.distanceTo anchor)
+    for candidate in candidates
+      screenPoint = @_screenPixelOf handle, candidate
+      return screenPoint  if @_pressMeetsWidget screenPoint, handle
+    throw new Error "no sampled point of #{handle} meets a press — something else covers every one"
 
   # A PRESS-DRAG-RELEASE THE CALLER KNOWS LANDS ON CHROME — a handle, a slider's button, a
   # scrollbar's thumb — where a drag is that surface's OWN gesture and nothing competes for it. That
@@ -1133,20 +1448,25 @@ class MacroToolkit
   # via NON-float dragging (HandleWdgt.nonFloatDragging → setExtent / moveTo), so this is a real
   # press-drag-release. handleType picks the handle: "resizeBothDimensionsHandle" (bottom-right
   # corner — resizes both dimensions), "moveHandle", "resizeHorizontalHandle", "resizeVerticalHandle".
+  # Verifies that the press lands on that handle.
   dragResizeMoveHandleTo_InputEvents: (handleType, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     handle = world.topWdgtSuchThat (item) -> (item instanceof HandleWdgt) and (item.type == handleType)
-    [pressPoint, dropPoint] = @_handlePressAndDropPoints handle, destination
-    @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
+    @_aimingAt handle, "dragResizeMoveHandleTo", =>
+      [pressPoint, dropPoint] = @_handlePressAndDropPoints handle, destination
+      @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
 
   # Float-DRAG a widget (by reference, or by a recorded text-description identifier) and drop it at a
   # destination — a Point, or another widget / identifier (dropped on that target's centre). Presses at
   # the widget's centre and drags past the grab threshold so the widget is picked up onto the hand, then
   # releases over the destination. Use it to drop a widget INTO a container that accepts drops — e.g. a
   # DocumentViewport with editing enabled re-parents the dropped widget as a flowing paragraph.
+  # Verifies that the press — the one that picks the widget up — lands on it or on something inside
+  # it; where the drop lands is the destination's business, and is not checked.
   dragWidgetTo_InputEvents: (widgetOrIdentifier, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     source = @_widgetOfTarget widgetOrIdentifier
-    dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
-    @syntheticEventsMouseMovePressDragRelease_InputEvents (source.localPointToScreen source.center()), dropPoint, milliseconds, startTime
+    @_aimingAt source, "dragWidgetTo", =>
+      dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
+      @syntheticEventsMouseMovePressDragRelease_InputEvents (source.localPointToScreen source.center()), dropPoint, milliseconds, startTime
 
   openMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents widget, "right button", milliseconds, startTime
@@ -1156,9 +1476,12 @@ class MacroToolkit
   # when that is exposed (exactly what openMenuOf aims at), else the first exposed point of an 8×8
   # grid over it, row by row. A test then says "the panel's menu" instead of aiming at the panel's
   # background by a fraction that the next layout change moves onto a child. A widget with no
-  # exposed point is a fault to raise, not a click to place on whatever covers it.
+  # exposed point is a fault to raise, not a click to place on whatever covers it. Verifies, when the
+  # press drains, that it still lands on the widget itself or on something inside it (the WORLD's own
+  # menu: on the bare desktop).
   openOwnMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @moveToAndClick_InputEvents (@_exposedScreenPointOf widget), "right button", milliseconds, startTime
+    @_aimingAt widget, "openOwnMenuOf", =>
+      @moveToAndClick_InputEvents (@_exposedScreenPointOf widget), "right button", milliseconds, startTime
 
   _exposedScreenPointOf: (widget) ->
     centre = widget.localPointToScreen widget.center()
@@ -1168,6 +1491,18 @@ class MacroToolkit
         candidate = widget.localPointToScreen new Point (widget.left() + Math.round((column + 0.5) * widget.width() / 8)), (widget.top() + Math.round((row + 0.5) * widget.height() / 8))
         return candidate if (@_topWdgtAtScreenPoint candidate) is widget
     throw new Error "no sampled point of #{widget} is exposed to a press — something else covers every one"
+
+  # THE SCREEN PIXEL a press aimed at this point of a widget's plane lands on: the point carried up
+  # through every mapping ancestor (localPointToScreen), rounded as both pointer kinds round a press.
+  _screenPixelOf: (widget, pointInItsPlane) ->
+    (widget.localPointToScreen pointInItsPlane).round()
+
+  # Does a press at this screen point meet `widget` — the widget itself or one inside it? The aim
+  # check's own question (_widgetAPressMeets) for the run's pointer kind, asked of the whole pixel the
+  # press lands on, so a locator that asks it answers for the press the run makes.
+  _pressMeetsWidget: (screenPoint, widget) ->
+    hit = @_widgetAPressMeets screenPoint.round(), @fingerMode()
+    hit? and widget.isAncestorOf hit
 
   # Close a FrameWdgt by clicking the close button (the X) in its window bar. Every FrameWdgt builds
   # a `.closeButton` (a CloseIconButtonWdgt at its top-left); clicking it runs the button's actOnClick
@@ -1192,11 +1527,182 @@ class MacroToolkit
   # window (HandleWdgt.nonFloatDragging → setExtent on the window). The window-chrome sibling of close/
   # collapse: reach the window's OWN resize control by reference (vs hunting a HandleWdgt by coordinates —
   # several windows each have one). destination may be a Point or another widget (dragged to its centre).
-  # Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  # Verifies that the press lands on that resizer. Queues input events — follow with
+  # `yield "waitNoInputsOngoing"`.
   dragWindowResizerTo_InputEvents: (windowWidget, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
-    [pressPoint, dropPoint] = @_handlePressAndDropPoints windowWidget.resizer, dropPoint
-    @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
+    @_aimingAt windowWidget.resizer, "dragWindowResizerTo", =>
+      dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
+      [pressPoint, dropPoint] = @_handlePressAndDropPoints windowWidget.resizer, dropPoint
+      @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
+
+  # RESIZE A FRAME BY ITS OWN GRIP so its EXTENT changes by exactly `extentDelta` (positive grows).
+  # The grip's centre travels by the delta: a resize handle keeps the offset it was grabbed at
+  # (HandleWdgt.nonFloatDragging places its top-left at the pointer less that offset) and sizes its
+  # target out to its own far corner, so the target's extent changes by exactly the pointer's
+  # displacement. Stated as the extent it produces, the gesture does not depend on the grip's size,
+  # its inset from the corner, or where on it the press lands — all of which a destination for the
+  # grip's centre bakes in. The delta is in the frame's own plane, carried to the screen through any
+  # island or scrolled pane like every aim. The frame's layout keeps the last word on a dimension it
+  # does not size freely: a content that dictates its own height (wrapping text) takes the width and
+  # sets the height itself, and a minimum extent stands. Verifies that the press lands on the grip.
+  resizeWindowBy_InputEvents: (frame, extentDelta, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    resizer = frame.resizer
+    @_aimingAt resizer, "resizeWindowBy", =>
+      [pressPoint, dropPoint] = @_handlePressAndDropPoints resizer, (resizer.localPointToScreen resizer.center().add extentDelta)
+      @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
+
+  # RESIZE A FRAME BY ITS OWN GRIP to exactly `extent`: resizeWindowBy_InputEvents by the difference
+  # from the extent it has now, so a resize round trip lands back on the extent it started from.
+  resizeWindowTo_InputEvents: (frame, extent, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @resizeWindowBy_InputEvents frame, (extent.subtract frame.extent()), milliseconds, startTime
+
+  # RESIZE A WIDGET BY ITS OWN HALO GRIP so its EXTENT changes by exactly `extentDelta` (positive
+  # grows): the halo twin of resizeWindowBy_InputEvents. The grip is the corner resizer the
+  # "resize/move..." menu item gives the widget (or one a handle's "attach..." put on it) — found
+  # among the widget's OWN children by its type (the front-most, the one a press reaches), so the
+  # test names the widget it resizes rather than whichever handle of that type is topmost in the
+  # world. A widget showing no such grip is a fault to raise: the menu item puts the halo on the
+  # nearest free-floating ancestor of an embedded widget, not on the widget itself. The grip's
+  # centre travels by the delta: the handle keeps the offset it was grabbed at
+  # (HandleWdgt.nonFloatDragging) and sizes its target out to its own far corner, so the extent
+  # changes by exactly the pointer's displacement — whatever the grip's size, its inset from the
+  # corner, or where on it the press lands. The delta is in the widget's own plane, carried to the
+  # screen through any island or scrolled pane like every aim. The widget's layout keeps the last
+  # word on a dimension it does not size freely (wrapping text sets its own height, a minimum
+  # extent stands). Verifies that the press lands on the grip.
+  resizeWidgetBy_InputEvents: (widget, extentDelta, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    grips = widget.children.filter (child) -> child.type is "resizeBothDimensionsHandle"
+    if grips.length is 0
+      throw new Error "#{widget} shows no corner resize handle — open its \"resize/move...\" first"
+    grip = grips[grips.length - 1]
+    @_aimingAt grip, "resizeWidgetBy", =>
+      [pressPoint, dropPoint] = @_handlePressAndDropPoints grip, (grip.localPointToScreen grip.center().add extentDelta)
+      @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
+
+  # WHERE A PRESS TAKES HOLD OF A FRAME BY ITS TITLE STRIP, on the screen — the point every title-drag
+  # verb presses — answered with the strip PIECE a press there meets, as { point, piece }: the piece is
+  # the receiver the verb's aim check holds that press to.
+  #   The strip a user takes hold of is the title text and the strip background, exactly the two the
+  # bar's own gesture counts as the strip rather than as a piece (FrameBarWdgt._clickIsAPiecePress):
+  # the bar itself is never what a press meets (FrameBarWdgt.catchesPointerAt), and a button piece is
+  # a control whose own gesture is a tap. A point counts only when the grab a press there starts lifts
+  # THIS frame (findRootForGrab), so a frame inside another, or docked in a host's band, is taken by
+  # its own strip and never by its holder's.
+  #   `preferred`, when given, is KEPT whenever it counts, so an aim that already works never moves.
+  # Otherwise, in order: the title's centre, while the title SHOWS (_titleShowsOn) and a press there
+  # meets it; the strip background's centre; the first of 32 points along the background's centre
+  # row a press meets — a strip whose middle a centred button covers (a docked band's grip) is still
+  # taken by its uncovered margin. A frame offering none of these has no strip to take hold of, which
+  # is a fault to raise, naming the frame, never a press to place on whatever covers it.
+  #   Each candidate is the whole pixel a press lands on (rounded, as both pointer kinds round a press)
+  # and "meets" is the aim check's own question for the run's pointer kind (_widgetAPressMeets), so the
+  # answer holds for the press the run actually makes. A side-effect-free locator — it reads the live
+  # tree and queues nothing — so a macro can aim a press of its own at a strip: `@pressMustLandOn
+  # grab.piece`, then press at `grab.point`.
+  titleGrabPoint: (frame, preferred) ->
+    if preferred?
+      piece = @_stripPieceAPressGrabsBy frame, preferred
+      return { point: preferred, piece: piece }  if piece?
+    if @_titleShowsOn frame
+      title = frame.bar.label
+      titleCentre = @_screenPixelOf title, title.center()
+      return { point: titleCentre, piece: title }  if (@_stripPieceAPressGrabsBy frame, titleCentre) is title
+    background = frame.bar?.titlebarBackground
+    if background?
+      backgroundCentre = @_screenPixelOf background, background.center()
+      return { point: backgroundCentre, piece: background }  if (@_stripPieceAPressGrabsBy frame, backgroundCentre) is background
+      for column in [0...32]
+        candidate = @_screenPixelOf background, new Point (background.left() + Math.round((column + 0.5) * background.width() / 32)), background.center().y
+        return { point: candidate, piece: background }  if (@_stripPieceAPressGrabsBy frame, candidate) is background
+    throw new Error "no point of #{frame}'s title strip takes hold of it — its title does not show, and its strip background is absent or covered at every sampled point"
+
+  # WHICH STRIP PIECE a press at this screen point takes hold of `frame` by: the title or the strip
+  # background — the one the press meets, or the one holding what it meets — provided the grab that
+  # press starts lifts `frame` itself. undefined for anything else: a button piece, a miss, a press
+  # whose grab would lift a holder.
+  _stripPieceAPressGrabsBy: (frame, screenPoint) ->
+    hit = @_widgetAPressMeets screenPoint.round(), @fingerMode()
+    return undefined  unless hit?
+    for piece in [frame.bar?.label, frame.bar?.titlebarBackground]
+      continue  unless piece?.isAncestorOf hit
+      return (if hit.findRootForGrab() is frame then piece else undefined)
+    undefined
+
+  # Does `frame`'s title SHOW on its strip? The title piece is the bar's own, carries text, and is not
+  # collapsed away: the strip collapses a title it has no room to show (a strip running down a band's
+  # side, a span too short to read — FrameBarWdgt._layOutTitleInStrip), and a collapsed title keeps
+  # the box it last held, so a press aimed at that box meets whatever lies there now.
+  _titleShowsOn: (frame) ->
+    title = frame.bar?.label
+    title? and (title.parent is frame.bar) and (not title.isInCollapsedSubtree()) and (title.text?.length > 0)
+
+  # A WIDGET'S TOP-LEFT CORNER ON THE SCREEN: its plane top-left carried up through every mapping
+  # ancestor, so a tilted widget's is its rotated corner, not its bounding box's. A frame float-dragged
+  # by its strip moves by exactly the pointer's displacement, so this corner moves by exactly that
+  # too — which is what lets a title drag say where the frame lands rather than where the pointer lets
+  # go (dragWindowByTitleTo_InputEvents, dwellDragWindowByTitleToEmbed_InputEvents_Macro).
+  screenTopLeftOf: (widget) ->
+    widget.localPointToScreen widget.topLeft()
+
+  # DRAG A FRAME BY ITS TITLE STRIP so it moves by exactly `screenDelta`: pressed where a press takes
+  # hold of the strip (titleGrabPoint), released that same displacement further on. A float-dragged
+  # frame moves by exactly the pointer's displacement, so where it lands does not depend on WHERE on
+  # the strip the press goes — the strip's geometry can change and the frame still lands where the
+  # test means. A title strip is chrome that owns the drags starting on it
+  # (FrameBarWdgt.ownsDragsStartingOnMe), so a finger takes it with a plain drag and no hold
+  # (_dragChromeFromTo_InputEvents). Verifies that the press lands on the strip piece it aimed at.
+  # A plain drag never ARMS an embed, so it nests the frame in nothing new; that is
+  # dwellDragWindowByTitleToEmbed_InputEvents_Macro's gesture.
+  dragWindowByTitleBy_InputEvents: (frame, screenDelta, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    grab = @titleGrabPoint frame
+    @_aimingAt grab.piece, "dragWindowByTitleBy", =>
+      @_dragChromeFromTo_InputEvents grab.point, (grab.point.add screenDelta), milliseconds, startTime
+
+  # DRAG A FRAME BY ITS TITLE STRIP so its top-left comes to rest on `screenTopLeft` (the corner
+  # screenTopLeftOf answers): dragWindowByTitleBy_InputEvents by the vector from where that corner is
+  # now. Stated by the frame's corner, never by a release point, so the result does not depend on
+  # where on the strip the press lands.
+  dragWindowByTitleTo_InputEvents: (frame, screenTopLeft, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @dragWindowByTitleBy_InputEvents frame, (screenTopLeft.subtract @screenTopLeftOf frame), milliseconds, startTime
+
+  # WHERE A PRESS MEETS A FRAME'S CONTENT, on the screen — where a verb carries a payload when it means
+  # "into this frame": the content's centre when a press there meets the content (or a widget inside
+  # it), else the content's first exposed point (_exposedScreenPointOf). Every frame has content — an
+  # empty one holds its placeholder (FrameWdgt.defaultContents). Stated by the content rather than by
+  # a fraction of the frame, so it stays on the content whatever the strip's thickness or the body's
+  # margin.
+  contentPointOf: (frame) ->
+    contents = frame.contents
+    centre = @_screenPixelOf contents, contents.center()
+    return centre  if @_pressMeetsWidget centre, contents
+    @_exposedScreenPointOf contents
+
+  # A POINT IN A VIEWPORT'S EDGE AUTO-SCROLL BAND, on the screen: `depth` px inside its `side` ("top",
+  # "bottom", "left" or "right"), at the middle of that side — where a float-dragged widget the viewport
+  # wants is HELD to make the viewport creep toward that side. Depth counts from the side's edge line, the
+  # way the bounds are drawn: top() + depth, bottom() − depth, left() + depth, right() − depth (bounds are
+  # half-open, so the deepest point inside a top or left edge is depth 0, inside a bottom or right edge
+  # depth 1).
+  #   The band is the viewport's own: inside its bounds but outside its box inset by three scroll-bar
+  # thicknesses — the box ViewportWdgt.maybeStartAutoScrollForDraggedWidget arms the creep outside of,
+  # and autoScroll scrolls by how far into it the pointer is. A depth that leaves the point outside that
+  # band is a fault to raise, naming the viewport and the side, never a hover that silently scrolls
+  # nothing. The band test runs in the viewport's own plane, as the product's does, and the point is
+  # then carried to the screen. A destination for a hover or a carried payload, not a press, so it sets
+  # no aim check.
+  autoScrollBandPointOf: (viewport, side, depth) ->
+    middle = viewport.center()
+    switch side
+      when "top" then point = new Point middle.x, viewport.top() + depth
+      when "bottom" then point = new Point middle.x, viewport.bottom() - depth
+      when "left" then point = new Point viewport.left() + depth, middle.y
+      when "right" then point = new Point viewport.right() - depth, middle.y
+      else throw new Error "'#{side}' is not a side of #{viewport} — say 'top', 'bottom', 'left' or 'right'"
+    bandDepth = WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
+    inBand = (viewport.boundsContainPoint point) and not (viewport.boundingBox().insetBy(bandDepth).containsPoint point)
+    unless inBand
+      throw new Error "#{depth} px inside the #{side} edge of #{viewport} is not in its auto-scroll band (#{bandDepth} px deep)"
+    @_screenPixelOf viewport, point
 
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set
@@ -1445,6 +1951,25 @@ class MacroToolkit
     identifier = [identifier, 0, 1] if typeof identifier == "string"
     world.getWidgetViaTextLabel identifier
 
+  # THE CELL OF A SPREADSHEET AT AN ADDRESS: the cell widget `sheet` has built for the cell named
+  # `address` ("A1") — the topmost one in the sheet's tree, as topWdgtSuchThat answers it — so a
+  # macro names the cell a press means (`@pressMustLandOn @spreadsheetCellAt sheet, "A1"`) instead of
+  # spelling the tree search at every site. A side-effect-free locator: it reads the tree and queues
+  # nothing. Only a BUILT cell answers — one per address of the sheet's realised window, plus the
+  # hidden one an off-window widget-valued cell keeps — so an address scrolled out of that window is
+  # a fault to raise, naming the sheet and the address, never undefined handed on for a later check
+  # to trip over.
+  # A cell is recognised by what a cell answers, not by its class: its `address`, and `cellInput`,
+  # the wire target a value-widget it hosts fires into — CellWdgt is the one class defining it, so
+  # this finds exactly the widgets a CellWdgt type test would. Naming the class would be that type
+  # test, and also an unguarded reference from this EAGER 'macros' part into the LAZY 'spreadsheet'
+  # one, which a profile may not ship and a page may not yet have fetched.
+  spreadsheetCellAt: (sheet, address) ->
+    cell = sheet.topWdgtSuchThat (w) -> (w.address is address) and w.cellInput?
+    unless cell?
+      throw new Error "#{sheet} has no built cell at #{address} — is it scrolled out of the sheet's window?"
+    cell
+
   # WHERE A PRESS MEETS A SLIDER, on the screen: the frame its button travels along and the button's
   # own box, as a press finds them. A plain slider is pressed as it is drawn. A THIN scroll indicator
   # is not: the pointer's arrival fattens it first (see sliderButtonPressPoint), and the fat thumb can
@@ -1470,7 +1995,7 @@ class MacroToolkit
 
   # Robustly scroll an inspector member/property `list` so `itemString`'s row lands a couple of rows
   # BELOW the pane's top edge -- clear of both clip edges and reliably clickable -- regardless of how
-  # long the list is. It uses the REAL row height + visible pane height (not the plain index/(total-1)
+  # long the list is. It uses the REAL row pitch + visible pane height (not the plain index/(total-1)
   # fraction, which lands the target at the pane's BOTTOM edge for large indices; adding a single
   # inherited member then tips it out of view and a click on the clipped row selects the wrong
   # property). Number of scroll positions = total - visibleRows (rows you can put at the top), so
@@ -1479,17 +2004,37 @@ class MacroToolkit
   scrollInspectorListItemIntoView_InputEvents: (list, itemString) ->
     index = list.elements.indexOf itemString
 
-    # a currently-rendered row gives the true row PITCH (the list shows its top rows before any
-    # scroll). Ask for the ROW — a widget carrying a labelString — and not for the label inside it:
-    # a row is at least menuRowHeight tall while its label is only as tall as its glyphs, so
-    # measuring the label under-counts the pitch and over-counts how many rows the pane shows,
-    # which lands the target well below the fold on any list long enough to need scrolling.
-    sampleRow = list.topWdgtSuchThat (m) -> m.labelString?
-    rowHeight = if sampleRow? and sampleRow.height() > 0 then sampleRow.height() else 1
-    visibleRows = Math.max 1, Math.floor(list.height() / rowHeight)
+    # The row PITCH is the distance from one row's top to the next one's, so it counts whatever gap
+    # the rows panel leaves between rows — a row's own height does not. It is measured on ROWS (the
+    # widgets carrying a labelString), never on the labels inside them: a label is only as tall as its
+    # glyphs, which under-counts the pitch and over-counts how many rows the pane shows. A one-row list
+    # has no second row to measure against, so its row's height stands in. Rows live on the list's
+    # plane, so their tops do not move when it scrolls.
+    rows = @_listRows list
+    pitch =
+      if rows.length > 1 then rows[1].top() - rows[0].top()
+      else if rows.length is 1 then rows[0].height()
+      else 0
+    pitch = 1  unless pitch > 0
+    # How many rows the pane shows: its height, less the rows panel's padding above the first row and
+    # below the last, in pitches.
+    padding = list.listContents.padding ? 0
+    visibleRows = Math.max 1, Math.floor((list.height() - 2 * padding) / pitch)
     scrollPositions = Math.max 1, list.elements.length - visibleRows
     topIndex = Math.max 0, Math.min(scrollPositions, index - 2)
     @_dragVerticalSliderButtonToTravelFraction_InputEvents list.vBar, topIndex / scrollPositions
+
+  # THE ROWS OF `list`, top to bottom: the children of its rows panel that stand for an element — the
+  # widgets carrying a labelString.
+  _listRows: (list) ->
+    list.listContents.children.filter (child) -> child.labelString?
+
+  # THE ROW OF `list` THAT STANDS FOR `listItemString`, by IDENTITY: the row whose labelString is the
+  # item's label — what ListWdgt.select hands the list's action — and never by the text the row renders,
+  # which a narrow column may ellipsize. The topmost such row, as topWdgtSuchThat answers it; undefined
+  # when the list has none.
+  _listRowOf: (list, listItemString) ->
+    list.topWdgtSuchThat (item) -> item.labelString is listItemString
 
   # The member list of the topmost inspector — the list the `…FromTopInspector…` verbs act on, named
   # by a public locator so macro source can hand it to the list verbs below.
@@ -1497,20 +2042,23 @@ class MacroToolkit
     @_findTopInspector()?.list
 
   # WHERE THE NAMED ROW SITS RELATIVE TO THE PANE'S VISIBLE WINDOW — the one place that geometry is
-  # computed, shared by the aimability check, the corrective nudge and the click itself. The pane's
-  # window is expressed in the ROW'S plane (screenPointToMyPlane — identity when the list is
-  # unscrolled) so row and window are comparable numbers.
+  # computed, shared by the aimability check, the corrective nudge and the click itself. The row is
+  # found by identity (_listRowOf) and measured by its LABEL, the part of the row a click aims into.
+  # The pane's window is expressed in the label's plane (screenPointToMyPlane — identity when the list
+  # is unscrolled) so label and window are comparable numbers. undefined when the list has no such row.
   _listRowVisibility: (list, listItemString) ->
-    entry = list.topWdgtSuchThat (item) -> item.text? and item.text == listItemString
-    return undefined  unless entry?
-    paneTop = (entry.screenPointToMyPlane new Point list.left(), list.top()).y
-    paneBottom = (entry.screenPointToMyPlane new Point list.left(), list.bottom()).y
+    row = @_listRowOf list, listItemString
+    return undefined  unless row?
+    label = row.label ? row
+    paneTop = (label.screenPointToMyPlane new Point list.left(), list.top()).y
+    paneBottom = (label.screenPointToMyPlane new Point list.left(), list.bottom()).y
     list: list
-    entry: entry
+    row: row
+    label: label
     paneTop: paneTop
     paneBottom: paneBottom
-    visibleTop: Math.max entry.top(), paneTop
-    visibleBottom: Math.min entry.bottom(), paneBottom
+    visibleTop: Math.max label.top(), paneTop
+    visibleBottom: Math.min label.bottom(), paneBottom
 
   # Is the named row of `list` actually SHOWING, i.e. does it have a slice a click can land in?
   listItemIsAimable_InputEvents: (list, listItemString) ->
@@ -1526,22 +2074,22 @@ class MacroToolkit
     v = @_listRowVisibility list, listItemString
     return  unless v?
     direction =
-      if v.entry.bottom() <= v.paneTop then -1
-      else if v.entry.top() >= v.paneBottom then 1
+      if v.label.bottom() <= v.paneTop then -1
+      else if v.label.top() >= v.paneBottom then 1
       else 0
     return  if direction is 0
     thumb = v.list.vBar.children[0]
     from = thumb.center()
     @_dragSliderButtonFromTo_InputEvents v.list.vBar, (thumb.localPointToScreen from), (thumb.localPointToScreen new Point from.x, from.y + direction)
 
+  # CLICK THE ROW OF `list` THAT STANDS FOR `listItemString` — found by identity (_listRowOf), so a
+  # row whose rendered name is ellipsized is still the row it names.
   clickOnListItem_InputEvents: (list, listItemString, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    entry = list.topWdgtSuchThat (item) ->
-      if item.text?
-        item.text == listItemString
-      else
-        false
+    v = @_listRowVisibility list, listItemString
+    unless v?
+      throw new Error "#{list} has no row for '#{listItemString}'"
 
-    # AIM INTO THE ROW'S VISIBLE SLICE — the intersection of the row's box with the pane's
+    # AIM INTO THE ROW'S VISIBLE SLICE — the intersection of its label's box with the pane's
     # visible window. The scroll verb's handle-drag is quantized to scrollbar pixels, so a
     # member-list length change can leave the found row EDGE-CLIPPED at the pane's top or
     # bottom, and the aim must stay inside what is actually showing: a point above the window
@@ -1551,25 +2099,24 @@ class MacroToolkit
     # A slice too thin for the 2px insets is aimed at its middle; a row with NO visible slice
     # is not clicked blind — the scroll left it unreachable, which is a fault to raise, naming
     # the row, rather than a click to place somewhere arbitrary.
-    # The arithmetic is done in the ROW'S plane (screenPointToMyPlane — identity when the list
-    # is unscrolled), and the resulting point is AIMED at its on-screen pixel.
-    windowTopInEntryPlane = (entry.screenPointToMyPlane new Point list.left(), list.top()).y
-    windowBottomInEntryPlane = (entry.screenPointToMyPlane new Point list.left(), list.bottom()).y
-    visibleTop = Math.max entry.top(), windowTopInEntryPlane
-    visibleBottom = Math.min entry.bottom(), windowBottomInEntryPlane
-    if visibleBottom <= visibleTop
-      throw new Error "clickOnListItem_InputEvents: row '#{listItemString}' has no visible slice in the pane (row #{entry.top()}..#{entry.bottom()}, pane #{windowTopInEntryPlane}..#{windowBottomInEntryPlane}) — scroll it into view before clicking"
-    lowestAim = visibleTop + 2
-    highestAim = visibleBottom - 2
+    # The arithmetic is done in the label's plane (_listRowVisibility), and the resulting point
+    # is AIMED at its on-screen pixel; the click verifies that its press lands on the row.
+    if v.visibleBottom <= v.visibleTop
+      throw new Error "row '#{listItemString}' of #{v.list} has no visible slice in the pane (row #{v.label.top()}..#{v.label.bottom()}, pane #{v.paneTop}..#{v.paneBottom}) — scroll it into view before clicking"
+    lowestAim = v.visibleTop + 2
+    highestAim = v.visibleBottom - 2
     clickY =
       if highestAim < lowestAim
-        (visibleTop + visibleBottom) / 2
+        (v.visibleTop + v.visibleBottom) / 2
       else
-        Math.min (Math.max (entry.top() + 2), lowestAim), highestAim
+        Math.min (Math.max (v.label.top() + 2), lowestAim), highestAim
     clickY = Math.round clickY
-    @moveToAndClick_InputEvents (entry.localPointToScreen new Point (entry.left() + 10), clickY), "left button", milliseconds, startTime
+    @_aimingAt v.row, "clickOnListItem", =>
+      @moveToAndClick_InputEvents (v.label.localPointToScreen new Point (v.label.left() + 10), clickY), "left button", milliseconds, startTime
 
 
+  # Click into the top inspector's code text just before or after the Nth occurrence of `codeString`;
+  # verifies that the press lands on that text.
   clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @_findTopInspector()
 
@@ -1579,7 +2126,8 @@ class MacroToolkit
     # (identity when the detail pane is unscrolled)
     clickPosition = inspectorNaked.textWidget.localPointToScreen inspectorNaked.textWidget.slotCoordinates(slotCoords).translateBy new Point 3,3
 
-    @moveToAndClick_InputEvents clickPosition, "left button", milliseconds, startTime
+    @_aimingAt inspectorNaked.textWidget, "clickOnCodeBoxFromTopInspectorAtCodeString", =>
+      @moveToAndClick_InputEvents clickPosition, "left button", milliseconds, startTime
 
   clickOnSaveButtonFromTopInspector_InputEvents: (milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @_findTopInspector()
@@ -1746,7 +2294,7 @@ class MacroToolkit
     # can screenshot the separate state first (a macro subroutine can return a value — `x = aMacro()` is rewritten to
     # `x = yield from aMacro.call this`, and yield-from propagates the generator's return value).
     # dropInternalWindowIntoExternalWindow_InputEvents_Macro then carries the internal window on the hand (pickUp +
-    # a no-button move to the external window's content area + a click to drop) so it becomes the external window's
+    # a no-button move onto the external window's content, contentPointOf + a click to drop) so it becomes the external window's
     # fitted CONTENT, and RETURNS the (now composite) external window for the caller to screenshot/resize.
     # NB: these shared verbs deliberately take NO screenshots — only a test's own mainMacroSource/extraSubroutineSources
     # are scanned for reference-image names, so the per-test assertions stay in each test's main macro.
@@ -1765,7 +2313,7 @@ class MacroToolkit
     macroSubroutines.add Macro.fromString """
       dropInternalWindowIntoExternalWindow_InputEvents_Macro = (extWin, intWin) ->
         intWin.pickUp()
-        @syntheticEventsMouseMove_InputEvents (@screenPointAtFractionOf extWin, [0.5, 0.55]), "no button", 700
+        @syntheticEventsMouseMove_InputEvents (@contentPointOf extWin), "no button", 700
         yield "waitNoInputsOngoing"
         # Phase 3 (drag-embed dwell-to-arm, spec section 6): a WINDOW payload embeds only after the dwell.
         # The window is now held STILL over the external window's content, so a NON-SCALED linger past
@@ -1800,31 +2348,70 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
+    # DWELL-EMBED A FRAME TAKEN BY ITS TITLE STRIP: dwellDragWindowByGrabToEmbed_InputEvents_Macro's
+    # press, carry, non-scaled linger and release, pressed where a press takes hold of the strip
+    # (titleGrabPoint) and verified to land on the strip piece it aimed at. Where the frame comes to rest
+    # is said one of two ways, by what its new host does with what it receives:
+    #   - a host that LAYS OUT what it holds (a stack, a document, a dock band) picks the slot by the
+    #     RELEASE point, so pass `dropPoint` alone: the frame is released there, wherever the strip is
+    #     pressed;
+    #   - a FREE host (a plain panel) keeps the bounds the frame is carried at, so also pass `topLeft`,
+    #     the screen point the frame's top-left (screenTopLeftOf) must land on. The press is then chosen
+    #     to keep the release on `dropPoint` — the strip point that far behind it, whenever a press there
+    #     takes hold of the strip — and where it does not, the release moves with the press, so the
+    #     top-left lands on `topLeft` either way.
+    # Takes NO screenshots.
+    macroSubroutines.add Macro.fromString """
+      dwellDragWindowByTitleToEmbed_InputEvents_Macro = (frame, dropPoint, topLeft) ->
+        if topLeft?
+          carry = topLeft.subtract @screenTopLeftOf frame
+          seenGrab = dropPoint.subtract carry
+          grab = @titleGrabPoint frame, seenGrab
+          release = if grab.point is seenGrab then dropPoint else grab.point.add carry
+        else
+          grab = @titleGrabPoint frame
+          release = dropPoint
+        @pressMustLandOn grab.piece
+        dwellDragWindowByGrabToEmbed_InputEvents_Macro grab.point, release
+    """
+
     # Overflowing-viewport fixture, SHARED by the viewport drag-behaviour tests (default → the panel MOVES;
     # locked-to-desktop → the contents SCROLL; in a window → the WINDOW moves) so the setup lives in ONE place. Builds a
     # ViewportWdgt with a tall wrapping TextWdgt so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
-    # topLeftPoint, and RETURNS the panel. Takes NO screenshots (only a test's own sources are scanned for reference names).
+    # topLeftPoint, asserts the overflow, and RETURNS the panel. Takes NO screenshots (only a test's own sources are
+    # scanned for reference names).
     macroSubroutines.add Macro.fromString """
       buildOverflowingViewportWithText_Macro = (topLeftPoint) ->
+        # The fixture's INPUTS: the panel's extent, the width the text wraps at, and how far in from the panel's
+        # top-left corner the text sits. They are AUTHORED, not derived — no product dimension decides them, and
+        # every test that builds this fixture has its references captured at exactly this geometry. What they must
+        # PRODUCE is checked once the fixture is built: text that overflows the panel vertically.
+        panelExtent = new Point 270, 200
+        textWrapWidth = 185
+        textInset = 12
         # Build entirely through the PUBLIC widget API (macros must not use the private / low-level _-prefixed API):
         # attach first, so the public setExtent/setWidth/moveTo SELF-SETTLE and apply in place.
         panel = new ViewportWdgt
         world.add panel
-        panel.setBounds topLeftPoint, new Point 270, 200
+        panel.setBounds topLeftPoint, panelExtent
         text = new TextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
         # a bare TextWdgt SELF-SIZES as contained text: put it in
         # FIT_BOX_TO_TEXT and it wraps to its own width and grows its HEIGHT to the
         # wrapped content (FLOAT/SCALEDOWN = render at the set font size, never
-        # crop). Wrap it to 185px so the tall result OVERFLOWS the 200px panel → a
+        # crop). Wrap it at textWrapWidth so the tall result OVERFLOWS the panel → a
         # vertical scrollbar shows. setWidth on the attached FIT_BOX_TO_TEXT text wraps it AND fits the height.
         text.fittingSpec = FittingSpecText.FIT_BOX_TO_TEXT
         text.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
         text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
         text.softWrap = true
         panel.add text
-        text.setWidth 185
-        text.moveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
+        text.setWidth textWrapWidth
+        text.moveTo new Point (topLeftPoint.x + textInset), (topLeftPoint.y + textInset)
         yield "waitNoInputsOngoing"
+        # THE FIXTURE'S GUARANTEE: the text, set textInset below the panel's top, reaches past the panel's bottom,
+        # so the panel has content to scroll. A font, wrap or padding change that ends the overflow fails here,
+        # by name, instead of leaving every test built on this fixture driving a pane with nothing to scroll.
+        @assertValuesEqual "buildOverflowingViewportWithText: the text overflows its panel vertically", true, (textInset + text.height() > panel.height())
         return panel
     """
 

@@ -1,6 +1,6 @@
 # Fizzygum visual redesign — the plan
 
-**AUTHORED + OWNER-APPROVED 2026-10-16; P0 and R0 done, T next.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
+**AUTHORED + OWNER-APPROVED 2026-10-16; P0, R0 and T done, F next.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
 - This file is the living plan. Keep its STATUS box current at every phase close. The design input it executes sits beside it in this directory.
 - Line numbers below drift. The quoted method or field name is authoritative: grep it fresh before trusting a `file:line`.
 
@@ -16,7 +16,7 @@
 |---|---|---|
 | P0 | Copy the plan into the repo; add BACKLOG pointers (branches are created at W1) | DONE 2026-10-16 |
 | R0 | Recapture tooling: batch finger recapture + throughput | DONE 2026-10-16 (~1 h per full wave, was ~7 h) |
-| T | Tests aim by meaning; aims verify their hit (zero recapture) | not started |
+| T | Tests aim by meaning; aims verify their hit (zero recapture) | DONE 2026-10-16 — every widget-aimed press verified ("AIM MISSED"); 9 never-delivered tests found and fixed, their recapture owner-gated |
 | F | Tokens (`Theme`), primitives, spikes S1–S3 (zero recapture) | not started |
 | W1 | Global surface + all persistent frames (windows, cards, bands) | not started |
 | W2 | Menus, lists, scrollbars, prompts, tooltips | not started |
@@ -92,7 +92,7 @@ So the redesign is mostly SURFACE: tokens, glyphs, rules, radii and shadows. The
 - 162 tests contain no literal or relative aims. About 54 aim by offsets relative to a widget (`top()+12`, `.add new Point`). About 23 use chrome-assuming fractions (`win.bar [0.8,0.5]`, `win [0.5,0.02]`). 25 use off-centre fractions into TEXT, which are font-dependent.
 - 4 numeric assertions encode chrome or font geometry: `CheckNumberOfItemsInWorldMenu` count 16, `ToolbarChevronPopsOverflow`, `SpreadsheetResizeViewport` `"20@10"`, and `TextWdgtCaretKeepsCorrectAlignment` 721×436.
 - No test hits a chrome element by absolute coordinate. 37 right-click bare desktop at authored spots, which are placements, and fine.
-- **`MacroToolkit.moveToAndClick` aims at a widget's centre with NO hit check** (`src/macros/MacroToolkit.coffee`, `_screenPointOfTarget` / `moveToAndClick_InputEvents`). Only `openOwnMenuOf`, `sliderButtonPressPoint` and `clickOnListItem` verify their aim.
+- **Every widget-aimed press is now VERIFIED** (phase T, §4 T): it must land on the widget it means, or the test fails with "AIM MISSED"; a raw-Point press declares its receiver (`@pressMustLandOn`). Before T only `openOwnMenuOf`, `sliderButtonPressPoint` and `clickOnListItem` checked their aim — and 9 tests turned out to have never delivered their intent, a recapture having baked the misdelivery in.
 - **Labels.** 104 tests find menu rows by EXACT label text (355 strings). The toolkit itself hard-codes `"dev ➜"`, `"inspect"`, `"connect ➜"`, `"connect to ➜"`, `"bind ⇄"` and `"disconnect"`. A missing label THROWS, so it fails loudly.
 
 **Recapture cost** (the basis of phase R0):
@@ -297,34 +297,37 @@ The arc recaptures 7–10 times, so this came first. As executed (both runs belo
   - **Measured** (20 of the heaviest tests, 212 references): captures 66 s, recompress 65 s, gate 77 s + 87 s. A full wave projects to ~30 min per pointer kind, ~1 h for both, against ~7 h serial before.
   - **Found and fixed on the way: fresh captures were committed UN-optimized.** Since the 2026-08-25 switch to the native PNG encoder, a capture is ~40–100 KB. The recompress DIRECTORY scan skips anything under its 100 KB "already small" threshold, so 1462 of 3808 committed references are ~10× larger than zopflipng makes them (e.g. 38.8 KB → 3.5 KB). Every capture path now NAMES the files it wrote, which a size threshold never skips.
   - **zopflipng rejects some valid Chrome PNGs** ("invalid ADLER32" on a stream Node's zlib verifies); such a file is now retried with optipng (137 KB → 12 KB), pixels re-verified.
-  - The existing oversized references are left as they are: the visual waves recapture nearly all of them, and a one-off `--min-size 0` pass over the tree is the owner's call.
+  - **Owner decision (2026-10-16): the 1462 oversized references are NOT shrunk now.** The visual waves' recaptures rewrite nearly all of them through the fixed capture paths. A one-off `--min-size 0` pass over whatever survives to Z is the owner's call then.
 - **R0.3 Review sample.** `docs/plans/redesign/review-sample.txt`: 23 tests covering every surface. Every wave's owner review runs `fg diffpage $(grep -v '^#' Fizzygum/docs/plans/redesign/review-sample.txt)` before any recapture.
 - Gates: `npm run selftest` and `fg lint` green; the recompress `--check-only` gate still verifies all 3808 references.
 
-### T — Tests aim by meaning, and every aim verifies its hit (zero recapture, both repos)
-The goal is that a geometry change can break PIXELS, never DELIVERY. The precedent is the caret test (Fizzygum-tests `3940b0f36`): measure what the old aim did, re-aim by meaning, assert a value, and get zero recapture.
-
-- **T1 Verifying aims (the runtime gate).** In `MacroToolkit`, every verb that aims at a WIDGET checks with the product hit test (`_topWdgtAtScreenPoint`) that the press lands on that widget or one of its descendants. This covers `moveToAndClick`, `moveToAndMouseDown`, the press-drag origins, menu-row clicks and the fraction verbs. On a miss it calls `recordMacroAssertion` with `AIM MISSED <target> → hit <other>`. Deliberately aimed literal Points keep working. Introduce explicit verbs for the two legitimate literal kinds:
-  - `clickOnDesktopAt_InputEvents point` (asserts the world itself is hit);
-  - drop and park destinations (unchecked placements).
-  - **Measure first:** run the check in REPORT mode as an audit prelude over the suite, at both pointers and dpr1 (`AUDIT_PRELUDE` + `AUDIT_ECHO=1`, the twin-prelude method in the memory note `residue-followups-arc-2026-10-16`). Triage every miss: a mis-aimed test is a latent bug. Fix its aim, or declare it.
-  - Acceptance: the suite is green with the check ON, mouse and finger.
-- **T2 Meaning verbs that replace chrome assumptions.** Each answers from the live widget:
-  - `dragWindowByTitleTo` (aims at the bar via `_exposedScreenPointOf`);
-  - `contentPointOf frame` (replaces `[0.5,0.55]` in `dropInternalWindowIntoExternalWindow`);
-  - `edgeBandPointOf viewport, side` (scroll-indicator and auto-scroll bands; replaces `right()-6`, `right()-15`);
-  - `resizerPressPoint handle` (sampled from the handle's own `catchesPointerAt`; replaces `floorDivideBy 4` in `_handlePressAndDropPoints`);
-  - `clickOnListItem_InputEvents` matching the row's IDENTITY (the member name), not its rendered text, so ellipsis is safe;
-  - `scrollInspectorListItemIntoView_InputEvents` deriving the row pitch from two rows, so row gaps are counted;
-  - `buildOverflowingViewportWithText` sizing from measured text, not 270/185 literals.
-- **T3 Convert the census list** (counts in §0; the explorer's top-30 table is reproducible with the census in T4):
-  - The ~23 chrome-fraction tests and the ~54 relative-offset tests move onto T2 verbs.
-  - The 25 text-fraction tests move onto `slotCoordinates` aims plus a value assertion of the resulting caret or selection.
-  - The 4 numeric chrome assertions are re-expressed as relations to live values.
-  - Every conversion must be PIXEL-IDENTICAL: all references still match at mouse + finger × dpr 1 + 2. Where a meaning aim cannot reproduce the old point, keep the old aim plus T1's verification, and note it.
-  - Regenerate `visualisation.html` for every edited test (`node scripts/make-visualisation.js <Test>`). An edit to metadata or step comments stales the page, and only the gauntlet's `refs` leg catches it.
-- **T4 Census tool** `Fizzygum-tests/scripts/aim-census.js`: literal, relative and fraction aims per test, with the categories of §0. It is a MEASUREMENT, not a gate (a ratchet is a declaration, not a count). The runtime check from T1 is the gate.
-- Gates: `fg presuite` per unit. At close: `fg gauntlet`, plus `node scripts/run-all-headless.js --pointer=finger` (dpr1), plus `fg finger`. **Zero references changed** (`git -C Fizzygum-tests status` shows no `automation-assets` changes). Commit both repos on master (approval).
+### T — Tests aim by meaning, and every aim verifies its hit — ✅ DONE 2026-10-16 (its 9 never-delivered tests are fixed in source; their recapture is owner-gated — see "Findings")
+The goal: a geometry change can break PIXELS, never DELIVERY. As executed (probes, data and briefs under `Fizzygum-tests/.scratch/{t1,t2-research,t3}/`):
+- **T1 Verifying aims — the runtime gate.** Every verb that knows the WIDGET it aims at runs its gesture inside `MacroToolkit._aimingAt`; every press the toolkit queues goes through ONE door, `_queuePress`, which puts an `AimCheckInputEvent` (new, `src/macros/`) in front of the first press that finds an expectation pending. The check DRAINS immediately before the press, so it reads the world the press meets (`verifyPressLanding`); a miss is recorded as "AIM MISSED" (an assertion failure — the macro runs on). A macro declares the receiver of a raw-Point press with `@pressMustLandOn widget` (also the click-THROUGH form); the legitimate literal kinds are `clickOnDesktopAt_InputEvents` (verified: bare desktop) and `dropCarriedWidgetAt_InputEvents` (deliberately unchecked; a drop INTO a container is followed by a landing assertion).
+  - **Measured first** with an in-page REPORT-mode twin (`.scratch/t1/aim-audit-prelude.js`) over the whole suite at both pointers: checking at queue time and checking at drain time differ in exactly ONE mechanism — the pointer's ARRIVAL fattens a thin scroll indicator (a mouse's approach before its press; a finger's down WITH it). So the check runs at drain time, and for a touch press `_widgetAPressMeets` asks the product's own arrival derivation (`ViewportWdgt.barScreenFrameOnArrival` / `buttonScreenBoxOnArrival`). Result: 983 + 914 widget-aimed presses OK; the misses were 2 deliberate click-throughs and 1 mis-named strip piece (now declared), and 1 test that never delivered its intent.
+  - ⚠ An aim-check label must never equal the verb's own method name: `check-dead-methods` counts any string as a reference, so a verb naming itself could never be reported dead (found when `shiftClickAtFractionOf` lost its last caller; it is deleted).
+- **T2 Meaning verbs** (`MacroToolkit`; each a side-effect-free locator that KEEPS a caller's working point and otherwise asks the product's own hit test):
+  - windows: `titleGrabPoint frame[, preferred]` → `{point, piece}` (the title or the strip background, never a button; `FrameBarWdgt.catchesPointerAt` is false, so a press never meets the bar itself), `dragWindowByTitleBy/To_InputEvents` ("To" = the frame's TOP-LEFT, so the press point does not matter; a no-hold chrome drag under finger), `dwellDragWindowByTitleToEmbed_InputEvents_Macro frame, dropPoint[, topLeft]`, `contentPointOf frame`, `screenTopLeftOf`;
+  - handles: `_handlePressPoint` (keeps today's quarter-box-deeper corner point while a press there meets the handle, else scans from the anchored corner; a rotate handle's point is never moved), `resizeWindowBy/To_InputEvents`, `resizeWidgetBy_InputEvents` (the EXTENT change, independent of the grip's size and inset);
+  - lists: rows found by IDENTITY (`labelString`), aimed through `row.label` as before; the scroll pitch from two rows (top-to-top) and the rows panel's padding;
+  - text: `textSlotScreenPoint text, slot` (verified with the text's own `slotAt`) and `clickOnTextSlot` / `doubleClickOnTextSlot` / `tripleClickOnTextSlot` / `shiftClickOnTextSlot`;
+  - carrying: `pressToCarry_InputEvents` — the press of a split press-then-carry (a mouse's `moveToAndMouseDown`; a finger's HOLD, since a plain finger drag over a scrolling pane scrolls it);
+  - `spreadsheetCellAt sheet, address` (the cell widget, by its address and the capability a cell answers — no type test, no edge into the lazy spreadsheet part);
+  - `autoScrollBandPointOf viewport, side, depth`; `buildOverflowingViewportWithText` keeps its AUTHORED 270×200 / 185 / +12 inputs (from the recorded test it migrated — no measured formula yields them) and ASSERTS the overflow it exists for.
+- **T3 Conversions** (each pixel-identical by construction or by measurement; gated at mouse + finger × dpr 1 + 2): ~20 title-strip drags, every bare-desktop press (`clickOnDesktopAt`, 95) and named drop (24), every other raw-Point press onto a widget declared or rewritten (181 presses in 101 tests), 28 text clicks onto slots with caret/selection assertions, 53 resize drags by EXTENT (`resizeWindowBy` / `resizeWidgetBy`, the measured exact deltas). The metadata of every converted test was then made true again (42 files: resize amounts quoted from where the old verbs dropped the grip's centre were ~25 px off, and stale spreadsheet grid numbers). Left by design: right-clicks into text (the menu opens AT the pointer), clicks that open the cropped-string prompt, `macroTextWdgtCaretPlacementUnderAlignments` (its subject IS the fraction under two alignments), transform-island tests (their subject is the screen→plane mapping), and the 4 numeric assertions — those already fail LOUDLY on a geometry change (a count of hidden toolbar cells, an asserted extent), which is the property T wants; re-expressing them would only save a later edit.
+- **T4** `Fizzygum-tests/scripts/aim-census.js` — a measurement: categories per site, `verified` per site, and the work list (flagged and not verified, plus every text fraction: verification proves the widget, not the slot).
+- **Findings — tests that never delivered their intent** (each passed, because a recapture had baked the misdelivery into its references; each is now fixed in source, with value assertions of the intent, and its references are recaptured only on owner approval):
+  - `macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground`: its raises aimed at `menu.label`, a hidden StringWdgt left at (0,0) on a pinned menu → clicked the desktop (committed image_4 == image_3); its rectangle was dropped wholly inside the menu, so the overlap it tests never existed.
+  - `macroDragEmbedRepositionNestedWindowStaysWithoutDwell`: every drag aimed at a collapsed title's stale centre and dragged the PANEL; legs B and C (detach, land on world) never ran.
+  - `macroPromptShadowFollowsOnDrag`: after the first grab the title was collapsed off-screen; two drags met nothing.
+  - `macroMenusAndSubMenusRemainOpenWhileDraggingMenusOnly` (finger): the hold-then-drag translation of a title-strip drag opened the strip's context menu and tore the cascade down.
+  - `macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`: a drag pressed the uncollapse glyph (mouse image_4); and found at the owner's review of the new pictures, its "parked fully inside the viewport — no scrollbars" bar overhung the viewport by 7×5 px (both thin scrollbars showing at images 4 and 6, in the old references too): the park spot was a literal written for an older bar size. It now parks the bar its own extent in from the pane's corner and asserts the scrollability at images 4–6. ⚠ A placement, not a press — no aim check sees it; only a value assertion does.
+  - `macroMenuPinnedInScrollPanel`: its "dismiss the world menu" click landed on the "wallpapers ➜" row and opened that submenu.
+  - `macroSubMenuDroppedIntoPanelPinsItself`: its "bare desktop" click landed inside the world menu (menus had grown 44 px rows since the test was written); the menu was never dismissed.
+  - `macroTextWdgtCaretResizing`: its "resize" drag pressed the ROTATE handle — since the 1920×880 recapture (Fizzygum-tests 530b49d4e) baked a small rotated box in; the caret-grows-with-font claims were never exercised. Re-authored against the 905×386 extent its carves were written for (from the pre-1920 references); its metadata claimed fonts "~20→30→60→90 px", the measured truth is 24→56→96→96 (SWCanvas caps a fit at 96).
+  - `macroCompositeDragsAsUnitIntoScrollPanel` (finger): split press + carry primitives are a plain finger drag, which SCROLLS a pane instead of lifting; `pressToCarry_InputEvents` says "carry" (a hold under a finger) — and the fixed finger images are byte-identical to the mouse references. A scan of 25 sibling split-carry tests found no other.
+  - ⭐⭐⭐ The lesson: a green screenshot test whose aim is not verified certifies only that the pixels are what they were — a recapture after any geometry change converts a misdelivery into the reference. T1 is the gate that makes that impossible from now on.
+- Gates: `fg presuite` per unit; at close `fg gauntlet`, `fg finger`, the finger dpr1 suite.
 
 ### F — Foundations: tokens, primitives, spikes (zero recapture)
 - **F1 `Theme` (new class `src/Theme.coffee`, reached as `WorldWdgt.theme`, a sibling of `WorldWdgt.preferencesAndSettings`).**
@@ -575,3 +578,7 @@ Legacy icons shown on any redesigned surface are converted with the skill. Every
       paths' directory-scan recompress skipped native-encoder captures (<100 KB) as already optimized,
       leaving 1462 of 3808 committed references ~10× oversized; the capture paths now name the files
       they wrote.
+- [x] T: tests aim by meaning; every widget aim verifies its hit (zero recapture)
+      **DONE 2026-10-16** (§4 T): the runtime aim check (`AimCheckInputEvent`, "AIM MISSED"), the meaning verbs,
+      the census conversions, `scripts/aim-census.js`; 9 tests found that never delivered their intent, fixed in
+      source with value assertions (their recapture is owner-gated).

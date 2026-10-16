@@ -523,6 +523,11 @@ ledger): only 10% of references to a colliding name carry any class information,
 so class-awareness would flag 543 pairs to find a handful; and excluding prose reveals nothing,
 because the real survivors are LOCAL VARIABLES sharing a method's name (`for toggle in …`) and
 human-readable strings sitting exactly where a string dispatch sits.
+⚠ The authoring corollary, for code you write: **never put a method's own exact name in a string inside
+its own body** (a label, a log tag, an error message's prefix) — it is a reference the gate counts, so that
+method can never be reported dead. The macro toolkit's aim-check labels (`_aimingAt target, "moveToAndClick"`)
+drop the `_InputEvents` suffix for exactly this reason: with the full names, a fraction verb that lost its last
+caller stayed invisible until it was found by hand.
 ⭐⭐ **What makes that the right answer rather than a shrug: the methods a static reference scan
 cannot see are precisely the ones the two RUNTIME sweeps above already cover.** Every one of the 21
 methods reachable only by a bare word is string-dispatched — a `PinSpec` setter or an

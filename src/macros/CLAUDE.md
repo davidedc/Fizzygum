@@ -109,6 +109,34 @@ holds the harder rule that `@evaluateString` is ALWAYS wrong (it is `MacroToolki
 `Macro._replaceMacroInvocationWithYieldingInvocations`, whose regex rewrites every `…Macro` not immediately followed
 by `(` into a `yield from`. (So the assertion sink is reachable only from inside a toolkit `@assert…` method, never the source.)
 
+**4. Every press a test means for a widget is VERIFIED — aim by meaning, and say what a press must meet.** A
+geometry change (a taller strip, a bigger font, a wider padding) must break PIXELS, never DELIVERY: a click that
+silently lands on something else changes the pixels, and a recapture would then bake the misdelivery in. So:
+- Every verb that knows the WIDGET it aims at (`moveToAndClick` given a widget, every `…AtFractionOf` verb,
+  the slot, title, list, handle and resize verbs, and everything built on them — menu rows, `openMenuOf`,
+  `closeWindow`, …) runs its gesture inside `_aimingAt`; the first press it queues goes through `_queuePress`,
+  which puts an `AimCheckInputEvent` right in front of it. That check drains immediately BEFORE the press, so it
+  reads the world the press meets (`verifyPressLanding`): the press must land on the widget or on something
+  inside it, or the test fails with **"AIM MISSED"** (recorded like a failed assertion, so the macro runs on).
+  A finger press is judged as the finger meets it: its own arrival fattens a thin scroll indicator before it
+  presses, which `_widgetAPressMeets` accounts for through `ViewportWdgt.barScreenFrameOnArrival`.
+- A press aimed at a raw Point is checked only when the macro DECLARES what it must meet, on the line before:
+  `@pressMustLandOn widget`. Use it for a literal or computed aim, and for a deliberate click-THROUGH (aim at a
+  pointer-transparent widget — a caret, a rounded corner — and name what lies behind). It overrides a verb's own
+  target for that one press.
+- The literal kinds that are legitimate say so: `@clickOnDesktopAt_InputEvents point, button` (the press must
+  meet bare desktop — the world is its declared receiver) and `@dropCarriedWidgetAt_InputEvents point` (the drop
+  of what the hand carries: any receiver is a placement, so it is deliberately unchecked; follow a drop INTO a
+  container with a value assertion that it landed there).
+- Aim BY MEANING wherever a verb exists: a window by its title strip (`dragWindowByTitleTo/By_InputEvents`,
+  `dwellDragWindowByTitleToEmbed_InputEvents_Macro`, `titleGrabPoint`), its content (`contentPointOf`), its
+  extent (`resizeWindowBy/To_InputEvents`, `resizeWidgetBy_InputEvents`), text by SLOT
+  (`clickOnTextSlot_InputEvents` and the double/triple/shift twins — name the slot from the text's content and
+  assert the caret or selection it produces), list rows by identity (`clickOnListItem_InputEvents`), an
+  auto-scroll band (`autoScrollBandPointOf`). A fraction into text, a fraction of a title strip, an offset from a
+  widget's edge into its chrome are exactly the aims a redesign moves.
+`Fizzygum-tests/scripts/aim-census.js` measures what is left (a census, not a gate — the runtime check is the gate).
+
 ## Playback speed (one global level — tests say NOTHING about it)
 
 A single global level — **`MacroToolkit.currentSpeed()` ∈ `{normal, fast, fastest}`**, resolved lazily against
@@ -207,10 +235,21 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   thin scroll indicator's thumb is not where a press meets it (the pointer's arrival fattens the bar
   first), so its box is asked of `ViewportWdgt.buttonScreenBoxOnArrival`; a plain slider's centre is
   checked with the product's hit test. The caller's own point is kept whenever a press there already
-  takes the button, so no working aim moves.
+  takes the button, so no working aim moves. The same keep-the-working-point idiom answers the other
+  meaning locators: `titleGrabPoint frame[, preferred]` (where a press takes hold of a window by its title
+  strip — the title or the strip background, never a button — answering `{point, piece}`), `contentPointOf
+  frame`, `textSlotScreenPoint text, slot` (where a press picks exactly that caret slot, checked with the
+  text's own `slotAt`), `autoScrollBandPointOf viewport, side, depth`, `screenTopLeftOf widget`.
 - **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
-  `tripleClickAtFractionOf`, `shiftClickAtFractionOf`); drag/resize (`dragWidgetTo`, `dragResizeMoveHandleTo`,
-  `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`); menus (`openMenuOf`, `openOwnMenuOf` — the
+  `tripleClickAtFractionOf`, `clickOnDesktopAt` — bare desktop, verified; `dropCarriedWidgetAt` — the drop of what
+  the hand carries); text by slot (`clickOnTextSlot`, `doubleClickOnTextSlot`, `tripleClickOnTextSlot`,
+  `shiftClickOnTextSlot`); the aim declaration `pressMustLandOn widget` (rule 4); `pressToCarry` — the press that
+  starts carrying something away, continued by "left button" moves and a mouse-up (a mouse's `moveToAndMouseDown`; a
+  finger's press-and-HOLD, since a plain finger drag over a scrolling pane SCROLLS it — use it whenever a split
+  press-then-carry means "lift this"); drag/resize (`dragWidgetTo`,
+  `dragResizeMoveHandleTo`, `resizeWidgetBy`, `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`);
+  windows by meaning (`dragWindowByTitleTo` — its top-left to a point, `dragWindowByTitleBy`, `resizeWindowBy`,
+  `resizeWindowTo`); menus (`openMenuOf`, `openOwnMenuOf` — the
   widget's OWN menu even where children cover its centre: it right-clicks a point where the widget itself is what a press
   hits, so "the panel's menu" is said by meaning rather than by a background fraction the next layout moves onto a child,
   `moveToItemOf{Menu,TopMenu}AndClick`, `moveToItem{StartingWith,Containing}OfMenuAndClick`, `clickMenuHeaderToPin`);
@@ -232,11 +271,13 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `setControllerTargetToWidgetProperty`, `bindControllerTo` (its TWO-WAY sibling — `bind ⇄`, which takes no
   property argument because a bind's pins are forced to be the two widgets' principal ones),
   `disconnectControllerWire` (the inverse of both — pick a controller's per-wire
-  menu row by prefix, then "disconnect"), the window-in-window fixture pair, `dwellDragWindowByGrabToEmbed`
-  (float-drag a WINDOW by a grab point and DWELL-ARM-embed it at a destination — press, drag, non-scaled
-  linger past `dwellToArmMs`, release; use wherever a window must NEST after the drag-embed rule flip),
+  menu row by prefix, then "disconnect"), the window-in-window fixture pair, `dwellDragWindowByTitleToEmbed`
+  (float-drag a WINDOW by its title strip and DWELL-ARM-embed it — press, drag, non-scaled linger past
+  `dwellToArmMs`, release; use wherever a window must NEST after the drag-embed rule flip; give `topLeft` when the
+  host keeps the carried bounds, else the release point picks the host's slot) over `dwellDragWindowByGrabToEmbed`
+  (the same gesture from a raw grab point),
   `buildOverflowingViewportWithText` (the shared overflowing-`ViewportWdgt` fixture, returned for the
-  caller to drive — the DRY form for the drag-vs-scroll family).
+  caller to drive — the DRY form for the drag-vs-scroll family; it asserts that its text overflows).
 
 ## Adding to the toolkit
 
