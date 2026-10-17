@@ -20,11 +20,11 @@ class ToolTipWdgt extends Widget
 
   constructor: (@contents = "text here", opts = {}) ->
     @widgetInvokingThis = opts.widgetInvokingThis
-    @color = opts.color ? WorldWdgt.preferencesAndSettings.menuBackgroundColor
+    @color = opts.color ? WorldWdgt.theme.tooltipFill
     @padding = opts.padding ? 0
     super()
-    @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
-    @cornerRadius = opts.cornerRadius or 6
+    @strokeColor = WorldWdgt.theme.tooltipStroke
+    @cornerRadius = opts.cornerRadius or WorldWdgt.theme.tooltipCornerRadius
     @appearance = new BubblyAppearance @
   
   @createBubbleHelpIfHandStillOnWidget: (contents, widgetInvokingThis) ->
@@ -80,15 +80,12 @@ class ToolTipWdgt extends Widget
     if @contents instanceof Widget
       @contentsWidget = @contents
     else if Utils.isString @contents
-      # "sans-serif" passed explicitly: the old text widget defaulted an undefined font
-      # to "sans-serif", whereas TextWdgt's default is 'Arial, sans-serif'.
-      # Color.BLACK passed explicitly: old text widget forced black, TextWdgt
-      # defaults to (37,37,37).
+      # the font and the ink come from the tooltip's own roles, so both are passed explicitly
+      # rather than left to TextWdgt's defaults.
       @contentsWidget = new TextWdgt @contents,
-        fontSize: WorldWdgt.preferencesAndSettings.bubbleHelpFontSize
-        fontName: "sans-serif"
+        fontRole: WorldWdgt.theme.fonts.tooltip
         italic: true
-        color: Color.BLACK
+        color: WorldWdgt.theme.tooltipText
       @contentsWidget.alignCenter()
     # canvas-like (a DOM canvas OR an SWCanvasElement under the software backend);
     # Widget / string contents are already handled by the branches above.
@@ -100,10 +97,9 @@ class ToolTipWdgt extends Widget
       @contentsWidget.backBufferContext = @contentsWidget.backBuffer.getContext "2d"
     else
       @contentsWidget = new TextWdgt @contents.toString(),
-        fontSize: WorldWdgt.preferencesAndSettings.bubbleHelpFontSize
-        fontName: "sans-serif"
+        fontRole: WorldWdgt.theme.fonts.tooltip
         italic: true
-        color: Color.BLACK
+        color: WorldWdgt.theme.tooltipText
       @contentsWidget.alignCenter()
     @_addNoSettle @contentsWidget
 

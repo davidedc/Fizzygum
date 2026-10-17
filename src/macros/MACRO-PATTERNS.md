@@ -1956,7 +1956,7 @@ assertion a recapture after a regression silently stores two different hashes an
   correct first frame WHILE the morph is held — synchronously, no settle. `ActivePointerWdgt.grab` does `@add aWdgt` (which FORCES the
   morph's first paint — its comment: "the shadow needs the image of the widget"), then `addShadow new Point(6,6),0.1` (the floaty drag
   shadow — larger+fainter than the at-rest (4,4)α0.2 desktop shadow), then `_fullChanged()`. A `PanelWdgt` (cream fill + dark 1px stroke via
-  `RectangularAppearance`, painted synchronously; `defaultPanels*`, `PreferencesAndSettings.coffee:122-123`) overrides nothing in the grab
+  `RectangularAppearance`, painted synchronously; the `panelFill` / `panelStroke` roles of `Theme.coffee`) overrides nothing in the grab
   path, so its held frame is deterministic — no timer/animation/frame-race, and axis-aligned chrome (no trig → immune to the cross-engine
   `Math.sin/cos` issue). Build `new PanelWdgt` + `setExtent` + `world.add` + `moveTo` (equivalent to the demo "panel" item, since
   `WorldWdgt.create` IS `pickUp()` and PanelWdgt overrides nothing in the grab path), then the held mid-drag idiom:

@@ -53,7 +53,7 @@ class RectangularAppearance extends Appearance
       if @widget.backgroundColor?
         color = @widget.backgroundColor
         if appliedShadow?
-          color = Color.BLACK
+          color = WorldWdgt.theme.shadowColor
         ctx.fillStyle = color.toString()
         @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
 
@@ -63,13 +63,17 @@ class RectangularAppearance extends Appearance
 
       color = @widget.color
       if appliedShadow?
-        color = Color.BLACK
+        color = WorldWdgt.theme.shadowColor
 
       if color?
         ctx.fillStyle = color.toString()
         @_fillLocalRectSnappedToDevicePixels ctx, toBePainted
 
       @drawAdditionalPartsOnBaseShape? appliedShadow, ctx, localDamageBox
+
+      # the rules between my widget's panes: over my own paint, under its children and my stroke
+      if !appliedShadow?
+        @_paintSeamRules ctx, localDamageBox
 
     # the stroke re-derives its own key values (it is also a standalone entry — see paintStroke),
     # so it runs after the scope, not inside it

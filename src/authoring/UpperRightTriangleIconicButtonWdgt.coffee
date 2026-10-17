@@ -19,6 +19,6 @@ class UpperRightTriangleIconicButtonWdgt extends UpperRightTriangleWdgt
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    pencilIconWdgt = new PencilIconWdgt Color.BLACK
+    pencilIconWdgt = new PencilIconWdgt WorldWdgt.theme.editMarkInk
 
     @_addNoSettle pencilIconWdgt, layoutSpec: new CornerInternalLayoutSpec 'topRight', 1/2, 0

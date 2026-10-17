@@ -25,7 +25,7 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
       @simpleShadow context, color, appliedShadow
       return
 
-    context.fillStyle = WorldWdgt.preferencesAndSettings.editableItemBackgroundColor.toString()
+    context.fillStyle = WorldWdgt.theme.plotBackgroundFill.toString()
     context.fillRect 0, 0, width, height
 
     availableHeight = height - 2 * circleRadius

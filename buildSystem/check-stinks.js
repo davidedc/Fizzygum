@@ -25,6 +25,18 @@
 // NB the naive `#` split means a `#` inside a string counts as a comment start here; accepted for
 // the same measures-regression-not-absolutes reason as above.
 //
+// A stink may declare `exclude`: a list of src-relative path PREFIXES whose files it does not scan
+// — a directory (`'demos/'`, which covers its subdirectories too) or a file (`'Theme.coffee'`). Use
+// it when a smell is a smell only OUTSIDE some places (a colour literal is a look decision in a
+// chrome file and plain data in a demo). Every file the list does not name is scanned, so a NEW
+// file is counted by default; an exclusion is a decision someone wrote down, never an accident.
+//
+// A code-scope stink may declare `stringAware: true` to cut the comment at the first `#` that sits
+// OUTSIDE a quoted string ('…', "…" incl. its `#{…}` interpolation, `…`), so a literal written
+// inside a string — a CSS `'#rrggbb'` — stays visible to `re`; the default naive cut takes that
+// `#` for a comment start and hides the rest of the line. A per-line scan cannot follow a string
+// across lines (`'''`/`"""` blocks) or into a regex literal; the naive cut has the same blind spots.
+//
 // (Historical: the original settle-batch-with-core stink was retired when its target,
 // _settleLayoutsAfterBatch, was deleted, leaving the table empty until the 2026-07-15 seeding.)
 
@@ -74,6 +86,19 @@ const STINKS = [
   { id: 'helper-compiling-operator', baseline: 0,   // HARD from the day it was added (2026-08-17): src was already at zero, and every site this can match is a guaranteed runtime ReferenceError
     why: "CoffeeScript compiles `%%` into a `modulo` HELPER FUNCTION declared in the emitted `var` block — and the meta-system STRIPS that block out of every member it compiles (src/meta/Class.coffee _removeHelperFunctions, `/^var(.|\\n)*?\\(function/`), so the operator becomes a call to something that does not exist. Nothing else catches it: it parses, so the syntax gate passes it, and the strip's own guard enumerates only three helper names (indexOf/hasProp/slice) — it does not know about this one. The failure surfaces as a widget BANNED FROM REPAINTING with `ReferenceError: modulo is not defined` in the error log, i.e. as a screenshot diff. Spell the wrap out (`x += 6 if x < 0`)",
     re: /%%/ },
+  { id: 'raw-chrome-color', baseline: 98,   // seeded 2026-10-17 at THIS engine's own count (98), once the shadow silhouettes read their Theme role (redesign plan §4 F1). The 98: 29 class-level/mixin state colours, 12 wallpaper-pattern strings, 4 transparent clears, 5 clock leftovers, the spreadsheet's 7 look colours (SimpleSpreadsheetWdgt: header, gridlines, selection, value/error text — the G spreadsheet family), and 41 literals in counted files that are not a chrome look decision (palette data and marker rings, PaintToolbarWdgt's paint-tool source strings, the droplet placeholder, the text-widget defaults, the debug damage overlay, the virtual-keyboard DOM input) — `--list raw-chrome-color` enumerates them
+    why: "the LOOK of chrome is decided in ONE place, src/Theme.coffee (docs/architecture/visual-design-system.md): its palette, and the role each surface paints with. A colour literal in a chrome file is a look decided OUTSIDE that design system — a restyle edits Theme and cannot reach it, so that surface keeps the old look while everything around it moves, and nothing reports the miss. Read the surface's role instead (`WorldWdgt.theme.<role>`), adding a role when the surface has none. `exclude` names the places where a literal is NOT a chrome look decision: Theme itself, the Color class and value plumbing, CONTENT (demos, sample widgets, plots, maps, examples, fizzytiles, the video player) and ICON art. The tolerated tail is the class-level state colours (a class-level declaration may not reference another class, so they move with their family's wave), the desktop wallpaper patterns (a wallpaper design's own colours), transparent clears, a few clock leftovers and the spreadsheet's own look colours, plus the non-chrome literals that live in counted files; it ratchets toward 0",
+    exclude: [
+      'Theme.coffee',                                          // where the values live
+      'basic-data-structures/', 'boot/', 'serialization/',     // the Color class itself and value plumbing
+      'demos/', 'dev-tools/', 'graphs-plots-charts/', 'maps/', // CONTENT: a literal is the content's own colour
+      'examples/', 'fizzytiles/', 'video-player/',
+      // (spreadsheet/ is COUNTED: its grid header, gridlines and selection are the sheet's chrome)
+      'patch-programming-experimental/',                       // ICON art (its Fanout*Appearance classes are IconAppearances)
+      'icons/', 'icons-dev/', 'authoring-icons/', 'demos-icons/', 'examples-icons/',
+    ],
+    stringAware: true,   // a CSS colour lives in a string ('#325FA2'); the naive cut would hide it
+    re: /\bColor\.create|\bnew Color\b|\bColor\.[A-Z][A-Z0-9_]*\b|(['"])#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})\1|['"]rgba?\(/ },
   // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).
   { id: 'comment-meta-edit', baseline: 0, scope: 'comments',
     why: 'a comment arguing with itself ("the below is actually correct", "to be clear") is process residue — state the surviving constraint once, plainly',
@@ -100,6 +125,21 @@ function walk(dir, acc) {
 }
 function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
 function commentPart(line) { const i = line.indexOf('#'); return i < 0 ? null : line.slice(i); }
+// the `stringAware` cut: the code before the first `#` outside a quoted string (header comment)
+function stripCommentOutsideStrings(line) {
+  let quote = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) {
+      if (c === '\\') i++;
+      else if (c === quote) quote = null;
+    } else if (c === '"' || c === "'" || c === '`') quote = c;
+    else if (c === '#') return line.slice(0, i);
+  }
+  return line;
+}
+// src-relative, '/'-separated: the form `exclude` prefixes are written in
+const srcRelative = p => path.relative(SRC, p).split(path.sep).join('/');
 
 // --list <stink-id>: print every site of ONE stink and exit — a sweep enumerator, not a gate
 // (the comments-side twin of check-doc-narration's --full). Reached as `fg stinks --list <id>`.
@@ -117,9 +157,11 @@ for (const stink of STINKS) {
   if (listId && stink.id !== listId) continue;
   const baseline = stink.baseline || 0;
   const hits = [];
+  const codeCut = stink.stringAware ? stripCommentOutsideStrings : stripComment;
   for (const p of files) {
+    if (stink.exclude && stink.exclude.some(prefix => srcRelative(p).startsWith(prefix))) continue;
     fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
-      const subject = stink.scope === 'comments' ? commentPart(line) : stripComment(line);
+      const subject = stink.scope === 'comments' ? commentPart(line) : codeCut(line);
       if (subject !== null && stink.re.test(subject)) hits.push(`${path.relative(SRC, p)}:${i + 1}: ${line.trim()}`);
     });
   }

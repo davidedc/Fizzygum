@@ -15,9 +15,10 @@ class IconAppearance extends Appearance
   _iconColorString: ->
     (@ownColorInsteadOfWidgetColor ? @widget.color).toString()
 
-  # The system-wide icon outline color (from preferences).
+  # The system-wide icon outline colour, as a string (the theme's iconOutline role; Color.toString
+  # computes the string once per Color and keeps it, so every paint after the first reads a field).
   _outlineColorString: ->
-    WorldWdgt.preferencesAndSettings.outlineColorString
+    WorldWdgt.theme.iconOutline.toString()
 
   # default icon is a ring — one direct mid-radius stroke (see _paintButtonRing):
   # outer r 91.5, inner r 78.1 in specification space

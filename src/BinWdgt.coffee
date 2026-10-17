@@ -52,8 +52,8 @@ class BinWdgt extends Widget
     # panels (orphan-construction field writes; PanelWdgt.setColor keeps the
     # pair in sync from then on). Drops stay ENABLED: dropping things into the
     # open bin is how you throw them away.
-    @viewport.color = Color.WHITE
-    @viewport.contents.color = Color.WHITE
+    @viewport.color = WorldWdgt.theme.binViewportFill
+    @viewport.contents.color = WorldWdgt.theme.binViewportFill
     @_addNoSettle @viewport
 
     @emptyBinButton = new SimpleButtonWdgt @, "emptyBinRequested", face: "Empty bin"
@@ -136,7 +136,7 @@ class BinWdgt extends Widget
 
     # the main pane fills the body above the button row (the
     # ErrorsLogViewerWdgt scheme: the row's height is the handleSize band)
-    mainPaneHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
+    mainPaneHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.theme.handleSize
     mainPaneBottom = @top() + @externalPadding + mainPaneHeight
 
     if @viewport.parent == @
@@ -148,7 +148,7 @@ class BinWdgt extends Widget
     # width + padding + the sizing handle (both always spared). Integer by
     # construction: a constant clamped by integer geometry.
     if @emptyBinButton.parent == @
-      rowWidth = @width() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
+      rowWidth = @width() - 2 * @externalPadding - @internalPadding - WorldWdgt.theme.handleSize
       buttonWidth = Math.max 0, Math.min @emptyBinButtonWidth, rowWidth
       buttonBounds = new Rectangle new Point @left() + @externalPadding, mainPaneBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonWidth, 15

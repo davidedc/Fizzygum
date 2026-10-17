@@ -2,7 +2,7 @@ class IconWdgt extends Widget
 
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
 
-  constructor: (@color = WorldWdgt.preferencesAndSettings.iconDarkLineColor) ->
+  constructor: (@color = WorldWdgt.theme.iconInk) ->
     super()
     @appearance = @createAppearance()
 

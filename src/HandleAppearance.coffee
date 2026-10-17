@@ -28,11 +28,11 @@ class HandleAppearance extends Appearance
       # art colours go BLACK under appliedShadow — the scope's alpha already carries the
       # shadow's faintness.
       if appliedShadow?
-        @handleWidgetRenderingHelper ctx, Color.BLACK, Color.BLACK
+        @handleWidgetRenderingHelper ctx, WorldWdgt.theme.shadowColor, WorldWdgt.theme.shadowColor
       else if @widget.state == @widget.STATE_NORMAL
-        @handleWidgetRenderingHelper ctx, @widget.color, Color.create 150, 150, 150
+        @handleWidgetRenderingHelper ctx, @widget.color, WorldWdgt.theme.handleArtShadow
       else if @widget.state == @widget.STATE_HIGHLIGHTED
-        @handleWidgetRenderingHelper ctx, Color.WHITE, Color.create 200, 200, 255
+        @handleWidgetRenderingHelper ctx, WorldWdgt.theme.handleArtHighlightedInk, WorldWdgt.theme.handleArtHighlightedShadow
 
   drawArrow: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
     context.beginPath()

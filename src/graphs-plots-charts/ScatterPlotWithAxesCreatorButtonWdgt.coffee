@@ -2,7 +2,7 @@ class ScatterPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "scatter plot"
 
-  createAppearance: -> new ScatterPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new ScatterPlotIconAppearance @, WorldWdgt.theme.iconInk
 
   createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new PlotWithAxesWdgt(new ExampleScatterPlotWdgt)

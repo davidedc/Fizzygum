@@ -10,8 +10,8 @@ class GlassBoxBottomWdgt extends BoxWdgt
 
   constructor: ->
     super
-    @setColor Color.create 230,230,230
-    @strokeColor = Color.create 196,195,196
+    @setColor WorldWdgt.theme.toolCellPlateFill
+    @strokeColor = WorldWdgt.theme.toolCellPlateStroke
     @setAlphaScaled 50
 
   # Role query (replaces the `aWdgt instanceof GlassBoxBottomWdgt` wrap-idempotency guard in

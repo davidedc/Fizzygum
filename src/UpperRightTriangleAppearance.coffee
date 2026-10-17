@@ -16,7 +16,7 @@ class UpperRightTriangleAppearance extends Appearance
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
       # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the art
       # colour goes BLACK under appliedShadow — the scope already applied the shadow's alpha.
-      @_renderingHelper ctx, (if appliedShadow? then Color.BLACK else @widget.color)
+      @_renderingHelper ctx, (if appliedShadow? then WorldWdgt.theme.shadowColor else @widget.color)
 
   _renderingHelper: (context, color) ->
     context.save()

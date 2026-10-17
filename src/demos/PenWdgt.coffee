@@ -19,7 +19,7 @@ class PenWdgt extends Widget
     @appearance = new PenAppearance @
     # the arrow (the widget's on-screen representation) is sized at handle
     # scale; @penSize is only the stroke width forward() draws with
-    arrowExtent = WorldWdgt.preferencesAndSettings.handleSize * 4
+    arrowExtent = WorldWdgt.theme.handleSize * 4
     @_applyExtent new Point arrowExtent, arrowExtent
     @penSize = 1
 

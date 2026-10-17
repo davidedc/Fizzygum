@@ -21,6 +21,6 @@ class SimpleButtonWdgt extends ButtonWdgt
     super
 
     @appearance = new BoxyAppearance @
-    @strokeColor = Color.create 196,195,196
-    @color = Color.create 245, 244, 245
+    @strokeColor = WorldWdgt.theme.buttonStroke
+    @color = WorldWdgt.theme.buttonFill
 

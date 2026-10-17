@@ -53,7 +53,7 @@ class CircleBoxyAppearance extends Appearance
 
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
       if appliedShadow?
-        ctx.fillStyle = Color.BLACK.toString()
+        ctx.fillStyle = WorldWdgt.theme.shadowColor.toString()
       else
         ctx.fillStyle = @widget.color.toString()
 

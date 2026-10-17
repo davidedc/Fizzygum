@@ -31,7 +31,7 @@ class TextAreaWdgt extends ViewportWdgt
     @disableDrops()
     @contents.disableDrops()
     @isTextLineWrapping = wraps
-    @color = Color.WHITE
+    @color = WorldWdgt.theme.textAreaFill
     @textWdgt = new SimpleTextWdgt textAsString,
       backgroundColor: Color.create(230, 230, 130)
       backgroundTransparency: 1
@@ -55,7 +55,7 @@ class TextAreaWdgt extends ViewportWdgt
   configureAsMonoTextPanel: (isEditable) ->
     @disableDrops()
     @contents.disableDrops()
-    @color = Color.WHITE
+    @color = WorldWdgt.theme.textAreaFill
     @textWdgt.backgroundColor = Color.TRANSPARENT
     @textWdgt._setFontNameNoSettle @textWdgt.monoFontStack
     @textWdgt.isEditable = isEditable

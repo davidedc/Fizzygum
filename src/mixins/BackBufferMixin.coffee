@@ -54,7 +54,7 @@ BackBufferMixin =
 
       _shadowSilhouetteOfBackBuffer: ->
         if !@_backBufferShadowSilhouette? or @_backBufferShadowSilhouetteSource != @backBuffer
-          @_backBufferShadowSilhouette = HTMLCanvasElement.blackSilhouetteOf @backBuffer
+          @_backBufferShadowSilhouette = HTMLCanvasElement.blackSilhouetteOf @backBuffer, WorldWdgt.theme.shadowColor
           @_backBufferShadowSilhouetteSource = @backBuffer
         @_backBufferShadowSilhouette
 

@@ -54,7 +54,9 @@ vocabulary below is the convention for all new code:
     never a subclass: **menu** (transient, always a world child), **window** (persistent on
     the world), **card** (persistent, nested). Skin, bar roster, shadow, and colloquial name
     are all **derived** from the pair, re-derived at every (re)parenting and every lifetime
-    change, never read back from a field.
+    change, never read back from a field. The look half of that derivation is one query, `FrameWdgt._frameLook()`
+    ([`visual-design-system.md`](visual-design-system.md) §5, which also records its one asymmetry: a
+    pinned menu keeps the body colours it was born with).
   - The bar roster follows the same derivation: transient wears its title alone (tap pins);
     a free-floating persistent frame wears close + collapse + title + a pencil (iff its
     payload affords editing); one whose host owns its membership drops close, since you leave

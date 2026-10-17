@@ -6,7 +6,7 @@ class BlinkerWdgt extends Widget
     world.steppingWdgts.add @
     super()
     @appearance = new RectangularAppearance @
-    @color = Color.BLACK
+    @color = WorldWdgt.theme.caretFill
   
   step: ->
     # While the Automator is pacing animations mid-test (recording or playing),

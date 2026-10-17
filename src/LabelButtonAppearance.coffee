@@ -14,7 +14,7 @@ class LabelButtonAppearance extends Appearance
 
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
       if appliedShadow?
-        color = Color.BLACK
+        color = WorldWdgt.theme.shadowColor
       else
         color = switch @widget.state
           when @widget.STATE_NORMAL
@@ -43,7 +43,7 @@ class LabelButtonAppearance extends Appearance
   # below for the law and the bug that proved it.
   _paintSeparatorAbove: (ctx) ->
     return unless @widget.showsSeparatorAbove?()
-    ctx.fillStyle = WorldWdgt.preferencesAndSettings.menuRowSeparatorColor.toString()
+    ctx.fillStyle = WorldWdgt.theme.menuRowSeparator.toString()
     @_fillLocalRectSnappedToDevicePixels ctx, new Rectangle 1, 0, (@widget.width() - 1), 1
 
   # A short bar down my left edge, drawn only when my container has declared me a payload it
@@ -66,5 +66,5 @@ class LabelButtonAppearance extends Appearance
     # 2px wide, inset 1px, and stopping 3px short top and bottom so consecutive rows read as
     # separate grips rather than one continuous rule down the menu's edge
     return if @widget.height() <= 6
-    ctx.fillStyle = Color.DARKGRAY.toString()
+    ctx.fillStyle = WorldWdgt.theme.menuRowGrip.toString()
     @_fillLocalRectSnappedToDevicePixels ctx, new Rectangle 1, 3, 3, (@widget.height() - 3)

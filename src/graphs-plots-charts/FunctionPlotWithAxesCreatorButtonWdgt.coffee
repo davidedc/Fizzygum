@@ -2,7 +2,7 @@ class FunctionPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "function plot"
 
-  createAppearance: -> new FunctionPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new FunctionPlotIconAppearance @, WorldWdgt.theme.iconInk
 
   createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt)

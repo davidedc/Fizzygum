@@ -7,4 +7,4 @@ class AlignCenterButtonWdgt extends AlignButtonWdgt
   alignDirectMethod: "alignCenter"
   layoutAlignSetterMethod: "setAlignmentToCenter"
 
-  createAppearance: -> new AlignCenterIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new AlignCenterIconAppearance @, WorldWdgt.theme.iconInk

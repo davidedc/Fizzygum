@@ -65,7 +65,7 @@ solved for the worst offenders (busy 100–300-line icons → ~60-line files).
 **A second reframe that shapes the whole design**: today's icons are **tinted masks, not
 pictures**. They fill from `@widget.color` / `ownColorInsteadOfWidgetColor` and a theme-level
 outline color at paint time (verified: 32 button `createAppearance` sites pass
-`WorldWdgt.preferencesAndSettings.iconDarkLineColor` as the appearance's second ctor arg; the
+`WorldWdgt.theme.iconInk` as the appearance's second ctor arg; the
 hover-"stain" mechanism described in `Appearance.coffee`'s `ownColorInsteadOfWidgetColor`
 comment depends on this). Any format that bakes colors in breaks recoloring. Hence index-mask.
 
@@ -118,8 +118,8 @@ A fresh session executes this plan as follows:
     `useLogicalPixelsUntilRestore()`, translates/scales design space → widget box, calls
     `@paintFunction aContext`.
   - `_iconColorString()` → `(@ownColorInsteadOfWidgetColor ? @widget.color).toString()`;
-    `_outlineColorString()` → `WorldWdgt.preferencesAndSettings.outlineColorString`
-    (`PreferencesAndSettings.coffee:41,136`).
+    `_outlineColorString()` → `WorldWdgt.theme.iconOutline.toString()`
+    (the `iconOutline` role of `Theme.coffee`).
   - Path helpers `oval`/`circle`/`arc` + shared frame primitives (`_paintSlideOutline`,
     `_paintSlideCard`, `_paintWindowTitleDots`, `_paintWindowFrame`,
     `_paintRoundedSquareBadge`, `_paintPlotAxes`, `_paintPaletteSwatch`, `_paintButtonRing`)
@@ -131,7 +131,7 @@ A fresh session executes this plan as follows:
 
 ### The widget side
 
-- `IconWdgt` (`src/IconWdgt.coffee`) — `constructor: (@color = WorldWdgt.preferencesAndSettings.iconDarkLineColor)`;
+- `IconWdgt` (`src/IconWdgt.coffee`) — `constructor: (@color = WorldWdgt.theme.iconInk)`;
   `createAppearance: -> new IconAppearance @` — **a method, not a class field, so the build's
   regex dependency-finder sees the `new <X>IconAppearance` edge and orders the appearance
   class before the icon class** (the comment in the file says exactly this — preserve the
@@ -140,7 +140,7 @@ A fresh session executes this plan as follows:
   contract, not just painting.**
 - Every concrete icon has a paired `<X>IconWdgt` whose `createAppearance` news up the
   appearance. Buttons do the same directly: **32 sites** under `src/buttons/` pass
-  `WorldWdgt.preferencesAndSettings.iconDarkLineColor` as the second ctor arg
+  `WorldWdgt.theme.iconInk` as the second ctor arg
   (= `ownColorInsteadOfWidgetColor`); others pass nothing (tint from `@widget.color`).
 - `EditIconButtonWdgt` **swaps appearance instances at runtime** (pencil ↔ eye), so
   appearances must stay cheaply constructible.
@@ -270,7 +270,7 @@ class HeartIconAppearance extends PixelIconAppearance
   # optional — this is the base-class default; add chars for literals as needed
   palette:
     '#': 'body'                # (@ownColorInsteadOfWidgetColor ? @widget.color).toString()
-    'o': 'outline'             # WorldWdgt.preferencesAndSettings.outlineColorString
+    'o': 'outline'             # WorldWdgt.theme.iconOutline
     'r': 'rgb(255, 59, 48)'    # any other value = literal fillStyle string
 
   pixels32: '''

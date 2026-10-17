@@ -151,3 +151,9 @@ back-ref checks) stay in the caller, before the scope call.
   never reads. Thin strokes render CONTINUOUSLY under rotated composites: SWCanvas samples the
   rotation composite bilinear (`docs/architecture/transforms.md` §8, sampling contract), so a
   1-2px feature cannot disintegrate into dashes at the warp.
+- `BoxyAppearance.paintStroke` is the rounded-box twin of that after-children entry, with one
+  difference: it paints only when the appearance's `strokesOverChildren` knob is on (a clipping
+  widget whose outline must be painted OVER its content — the redesign's frame look). With the knob
+  off the stroke is painted once, with the fill, under the children; with it on, once, after them.
+  It shares `strokeOutline` with the base paint, so `BubblyAppearance`'s outline strokes from either
+  entry, and it takes per-corner radii (an HTML5 `roundRect()` 4-array in `cornerRadius`).

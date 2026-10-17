@@ -8,7 +8,7 @@ class WindowWithPanelCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "panel"
 
-  createAppearance: -> new WindowWithScrollingPanelIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new WindowWithScrollingPanelIconAppearance @, WorldWdgt.theme.iconInk
 
   createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new ViewportWdgt

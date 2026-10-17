@@ -6,7 +6,7 @@ class VideoDurationLabelWdgt extends HhmmssLabelWdgt
     "video duration"
 
   constructor: (@videoPlayerCanvas) ->
-    super "n/a", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    super "n/a", fontRole: WorldWdgt.theme.fonts.buttonLabel
     @alignLeft()
 
     # the label of the duration is updated via the stepping

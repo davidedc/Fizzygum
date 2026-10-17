@@ -45,9 +45,9 @@ class HandleWdgt extends Widget
     @inset = new Point 2, 2
     super()
     @appearance = new HandleAppearance @
-    @color = Color.WHITE
+    @color = WorldWdgt.theme.handleArtInk
 
-    @cornerSpec = new CornerInternalLayoutSpec @_anchorForType(), 0, WorldWdgt.preferencesAndSettings.handleSize, @inset
+    @cornerSpec = new CornerInternalLayoutSpec @_anchorForType(), 0, WorldWdgt.theme.handleSize, @inset
 
   # I corner-attach (the corner fixed by my @type) to whatever widget I am added to -- that widget becomes my
   # resize/move @target. Added to the WORLD or the HAND (a naked desktop handle, or while detached / picked

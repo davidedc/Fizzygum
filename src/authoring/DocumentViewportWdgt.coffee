@@ -23,7 +23,7 @@ class DocumentViewportWdgt extends VerticalStackViewportWdgt
 
   getNormalParagraph: (text) ->
     paragraph = new SimpleTextWdgt text,
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     paragraph.isEditable = true
     paragraph.enableSelecting()

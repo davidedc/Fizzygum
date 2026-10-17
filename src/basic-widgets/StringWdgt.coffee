@@ -227,11 +227,18 @@ class StringWdgt extends Widget
   #
   # `?` and not a parameter default, so an explicit "" survives as a real value while an
   # omitted argument still gets "StringWdgt".
+  #
+  # The FONT comes as a ROLE: `fontRole` is one of WorldWdgt.theme.fonts' {family, size, bold}
+  # objects, and gives all three at once. An explicit fontName / fontSize / bold still wins over
+  # the role's member, so a caller can take a role and override one member of it. A text built
+  # without a role takes the defaultText role. The role is read here and not kept: I hold the
+  # three values I render with.
   constructor: (text, opts = {}) ->
     @text = text ? "StringWdgt"
-    @originallySetFontSize = opts.fontSize ? WorldWdgt.preferencesAndSettings.normalTextFontSize
-    @fontName = opts.fontName ? @justArialFontStack
-    @isBold = opts.bold ? false
+    fontRole = opts.fontRole ? WorldWdgt.theme.fonts.defaultText
+    @originallySetFontSize = opts.fontSize ? fontRole.size
+    @fontName = opts.fontName ? fontRole.family
+    @isBold = opts.bold ? fontRole.bold
     @isItalic = opts.italic ? false
     @isHeaderLine = opts.headerLine ? false
     @isNumeric = opts.numeric ? false
@@ -746,7 +753,7 @@ class StringWdgt extends Widget
   # (JS round-half-up: +1.5 → +2 but -1.5 → -1), which speckled the halo.
   _drawTextLine: (backBufferContext, line, x, y) ->
     if @hasDarkOutline
-      backBufferContext.fillStyle = Color.BLACK.toString()
+      backBufferContext.fillStyle = WorldWdgt.theme.desktopCaptionHalo.toString()
       backBufferContext.fillText line, x+0, y+0
       for r in [1, 1.5]
         backBufferContext.fillText line, x+r, y+0

@@ -17,5 +17,5 @@ class SimpleRectangularButtonWdgt extends ButtonWdgt
     super opts.target, opts.action, opts
 
     @appearance = new RectangularAppearance @
-    @strokeColor = Color.create 196,195,196
+    @strokeColor = WorldWdgt.theme.buttonStroke
 

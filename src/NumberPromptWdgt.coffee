@@ -25,9 +25,9 @@ class NumberPromptWdgt extends PromptWdgt
       parseFloat(@defaultValue),
       Math.floor((@ceilingNum - @floorNum) / 4))
     slider.alpha = 1
-    slider.color = Color.create 225, 225, 225
-    slider.button.setColorScheme Color.create 60, 60, 60
-    slider.__commitHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
+    slider.color = WorldWdgt.theme.promptSliderTrack
+    slider.button.setColorScheme WorldWdgt.theme.promptSliderThumb
+    slider.__commitHeight WorldWdgt.theme.prompterSliderSize
     # A named wire verb — a controller owns a LIST of wire records (§P4), so there is no target/action
     # field pair to assign. The QUIET one, because the field and the slider are already consistent
     # here — I built the slider from @defaultValue — and firing would round that default away and

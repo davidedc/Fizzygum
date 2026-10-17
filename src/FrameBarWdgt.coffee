@@ -180,19 +180,17 @@ class FrameBarWdgt extends Widget
 
   # The title piece, in the shape its style asks for: a WINDOW's is a plain fitted string the
   # arrange grants the span between the buttons; a POP-UP HEADER's hugs its own text (the strip
-  # sizes itself to it) and is centred in the header box, white and bold on the header colour.
+  # sizes itself to it) and is centred in the header box, on a background of its own. Both take
+  # their font from the bar spec's font role and their colours from the frame's look.
   _buildTitleNoSettle: (spec) ->
-    preferences = WorldWdgt.preferencesAndSettings
+    look = @frame._frameLook()
     if spec.titleStyle is "menuHeader"
       # BORN with its text: a multi-line text hugs its box only when told to (its box-hug core
       # is a one-shot, not a mode the way a plain string's is), so it must have something to
       # hug at build time. The frame re-asserts the same title right after.
-      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""),
-        fontSize: spec.fontSize
-        fontName: preferences.menuFontName
-        bold: preferences.menuHeaderBold
-      title.color = Color.WHITE
-      title.backgroundColor = preferences.menuHeaderColor
+      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""), fontRole: spec.fontRole
+      title.color = look.titleText
+      title.backgroundColor = look.titleBackground
       title.alignCenter()
       @_addNoSettle title
       # the modern family does not self-size; make the title hug its text (and KEEP hugging it
@@ -201,14 +199,12 @@ class FrameBarWdgt extends Widget
       title._sizeToTextAndDisableFittingNoSettle()
       return title
 
-    title = new StringWdgt "", fontSize: spec.fontSize
+    # the family, size and weight the spec's font role names, on EVERY engine: a bar title is chrome
+    # like any other, and chrome keyed on the user agent renders one world two ways -- which is
+    # precisely what the cross-engine suite leg reads, and reports, as a defect.
+    title = new StringWdgt "", fontRole: spec.fontRole
 
-    # the weight the preference block names, on EVERY engine: a bar title is chrome like any
-    # other, and chrome keyed on the user agent renders one world two ways -- which is precisely
-    # what the cross-engine suite leg reads, and reports, as a defect.
-    title.isBold = preferences.titleBarBoldText
-
-    title.color = Color.WHITE
+    title.color = look.titleText
     # a window title reads CENTRED in its strip (ruling C13): the arrange grants me a box centred
     # on the strip and clear of the pieces at both ends, and the text centres itself within it.
     title.alignCenter()
@@ -327,39 +323,28 @@ class FrameBarWdgt extends Widget
     # as the window changes from internal to external and vice versa
     # HOWEVER a bunch of tests would fail if I do the proper
     # thing so we are doing this for the time being.
-    if @frame._barSpec().titleStyle is "menuHeader"
-      @titlebarBackground = new BoxWdgt WorldWdgt.preferencesAndSettings.menuHeaderCornerRadius
-    else if @frame.isInternal()
+    # The frame's look decides the shape: a card's flat strip is a rectangle, any other a box at
+    # the look's rounding.
+    look = @frame._frameLook()
+    if look.manifestation is "card"
       @titlebarBackground = new RectangleWdgt
     else
-      @titlebarBackground = new BoxWdgt
+      @titlebarBackground = new BoxWdgt look.barCornerRadius
 
     @_setAppearanceAndColorOfTitleBackground()
     @_addNoSettle @titlebarBackground
 
-  # The title-bar half of my skin (the body half is
-  # FrameWdgt._deriveAndSetBodyAppearance): the pop-up manifestation's header box carries the
-  # menu-header colour and no stroke; a window's is re-derived from the frame's parentage on
-  # every (re)parenting.
+  # The title-bar half of my skin (the body half is FrameWdgt._deriveAndSetBodyAppearance), as the
+  # frame's look names it (FrameWdgt._frameLook): re-applied on every (re)parenting, so a window's
+  # strip follows its parentage. A look naming no stroke (a pop-up's header box) leaves the
+  # background the one it was built with, which is none.
   _setAppearanceAndColorOfTitleBackground: ->
     # an untitled pop-up has no strip at all, so there is no background to skin
     return unless @titlebarBackground?
-    if @frame._barSpec().titleStyle is "menuHeader"
-      @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
-      @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.menuHeaderColor
-      return
-
-    if @frame.isInternal()
-      @titlebarBackground.appearance = new RectangularAppearance @titlebarBackground
-    else
-      @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
-
-    if @frame.isInternal()
-      @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.internalWindowBarBackgroundColor
-      @titlebarBackground.strokeColor = WorldWdgt.preferencesAndSettings.internalWindowBarStrokeColor
-    else
-      @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.externalWindowBarBackgroundColor
-      @titlebarBackground.strokeColor = WorldWdgt.preferencesAndSettings.externalWindowBarStrokeColor
+    look = @frame._frameLook()
+    @titlebarBackground.appearance = new look.barAppearance @titlebarBackground
+    @titlebarBackground.setColor look.barFill
+    @titlebarBackground.strokeColor = look.barStroke if look.barStroke?
 
   # The edit button's lifecycle is driven by the FRAME (it depends on the
   # content's providesAmenitiesForEditing and dies/respawns on collapse /
@@ -387,7 +372,7 @@ class FrameBarWdgt extends Widget
   # "title" lead from my left edge in order, the ones named AFTER it trail from
   # my right edge, and the title takes the span left between them -- so dropping
   # a piece closes its gap instead of leaving a hole. Every number comes from the
-  # spec (which reads preferences), never from a literal here.
+  # spec (which reads the theme's metrics), never from a literal here.
 
   _reLayoutChildren: ->
     @_positionAndResizeChildren()

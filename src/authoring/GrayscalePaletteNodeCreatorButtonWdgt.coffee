@@ -2,7 +2,7 @@ class GrayscalePaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "grayscale palette"
 
-  createAppearance: -> new GrayscalePalettePatchProgrammingIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new GrayscalePalettePatchProgrammingIconAppearance @, WorldWdgt.theme.iconInk
 
   createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new GrayPaletteWdgt

@@ -43,4 +43,4 @@ class LayoutChromeWdgt extends Widget
   # LayoutElementAdderOrDropletWdgt each supply. StackElementsSizeAdjustingWdgt
   # overrides this with its own inline glyph.
   drawLayoutChrome: (aContext) ->
-    @spacerWidgetRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
+    @spacerWidgetRenderingHelper aContext, WorldWdgt.theme.layoutChromeGlyphInk, WorldWdgt.theme.layoutChromeGlyphShadow

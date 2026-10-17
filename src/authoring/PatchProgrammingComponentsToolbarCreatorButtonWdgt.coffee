@@ -2,7 +2,7 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends ToolbarCreatorB
 
   toolTipMessage: "components that can be connected"
 
-  createAppearance: -> new PatchProgrammingComponentsIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new PatchProgrammingComponentsIconAppearance @, WorldWdgt.theme.iconInk
 
   createWidgetToBeHandled: ->
     # the ONE patch-programming list (§5.C): this floating palette shares

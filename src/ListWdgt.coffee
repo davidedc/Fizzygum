@@ -59,7 +59,7 @@ class ListWdgt extends ViewportWdgt
     #
     super()
     @contents.disableDrops()
-    @color = Color.WHITE
+    @color = WorldWdgt.theme.listFill
     @_buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
     # instead of undefined because the scrollbars (inherited from Viewport)

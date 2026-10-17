@@ -24,7 +24,7 @@ class DocumentWdgt extends FrameWdgt
   _makeStartingPayload: ->
     viewport = new DocumentViewportWdgt
     startingContent = new SimpleTextWdgt @startingText,
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     viewport.setContents startingContent, 5
     startingContent.isEditable = true

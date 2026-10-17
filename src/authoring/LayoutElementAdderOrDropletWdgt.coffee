@@ -3,7 +3,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
 
   constructor: ->
     super()
-    @setColor Color.BLACK
+    @setColor WorldWdgt.theme.layoutChromeFill
     @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), DivisionStackLayoutSpec.SPREADABILITY_HANDLES
 
   # Role query (replaces the `x instanceof LayoutElementAdderOrDropletWdgt` filters in
@@ -107,9 +107,9 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
     @_fullDestroyNoSettle()
 
   hoverEntered: ->
-    @setColor Color.create 100, 100, 100
+    @setColor WorldWdgt.theme.layoutChromeFillHover
 
   hoverExited: ->
-    @setColor Color.BLACK
+    @setColor WorldWdgt.theme.layoutChromeFill
 
 

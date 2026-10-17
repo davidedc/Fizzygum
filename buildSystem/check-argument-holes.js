@@ -31,11 +31,14 @@
 const path = require('path');
 const census = require('./census-call-arity.js');
 
-// Seeded at 20, tightened to 9 (P8), and to 2 at P9 — which is this check's FLOOR, not a way-point.
+// Seeded at 20, tightened to 9 (P8), to 2 at P9, and raised to 3 by redesign F2a
+// (BoxyAppearance.paintStroke, the same "no shadow" value as RectangularAppearance.paintStroke) —
+// which is this check's FLOOR, not a way-point.
 //
-// ⚠⚠ THE REMAINING 2 ARE NOT HOLES, AND NO FUTURE SWEEP SHOULD "FIX" THEM. They are `undefined`
+// ⚠⚠ THE REMAINING 3 ARE NOT HOLES, AND NO FUTURE SWEEP SHOULD "FIX" THEM. They are `undefined`
 // used as a VALUE, which this regex cannot distinguish from a skipped parameter:
 //   - RectangularAppearance.paintStroke      an absent appliedShadow MEANS "no shadow"
+//   - BoxyAppearance.paintStroke             an absent appliedShadow MEANS "no shadow"
 //   - Widget._setScaleFactorNoSettle         an absent rotation MEANS "leave it unchanged"
 // Each is annotated at its call site. The test that separates the two cases, worked out by reading
 // all nine of P8's survivors: a `undefined` is a HOLE when some OTHER caller of the same method
@@ -44,7 +47,7 @@ const census = require('./census-call-arity.js');
 // required block, as with _paintInLocalScope's bodyFn) or when no reordering can help (a symmetric
 // two-slot partial-update record), the `undefined` is an operand with an absent value and the list
 // is right. So: a rise here is a regression; reaching 0 is not a goal.
-const BASELINE = 2;
+const BASELINE = 3;
 
 const SRC = [path.join(census.ROOT, 'Fizzygum', 'src')];
 

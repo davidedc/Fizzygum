@@ -30,8 +30,8 @@ class DragChargingRingWdgt extends Widget
     super()
     @appearance = new DragChargingRingAppearance @
     @ringSteps = WorldWdgt.preferencesAndSettings.dwellRingSteps
-    @filledColor = Color.create 248, 188, 58, 1     # pencil-yellow accent (matches the candidate outline)
-    @emptyColor  = Color.create 180, 180, 180, 0.55
+    @filledColor = WorldWdgt.theme.dragArmRingFilled
+    @emptyColor  = WorldWdgt.theme.dragArmRingEmpty
 
   # Reposition at the cursor and recompute the fill from ELAPSED time. Called every cycle the ring is
   # declared. @_changed() only on a quantised step change (paint stays read-only); bounds re-applied

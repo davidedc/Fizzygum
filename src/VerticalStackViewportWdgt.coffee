@@ -18,7 +18,7 @@ class VerticalStackViewportWdgt extends ViewportWdgt
     @disableDrops()
 
     ostmA = new SimpleTextWdgt "A small string\n\n\nhere another.",
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     ostmA.isEditable = true
     ostmA.enableSelecting()

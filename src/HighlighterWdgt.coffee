@@ -51,8 +51,8 @@ class HighlighterWdgt extends RectangleWdgt
   # Drag-embed candidate/reluctant outlines (spec §11). A receptive candidate gets the accent
   # (pencil-yellow family); a view-mode reluctant target gets a neutral gray. Outline (not a wash):
   # S1 found the whole-target fill far too loud for a drag affordance.
-  @candidateOutlineStyle: -> {form: "outline", color: Color.create(248, 188, 58, 1), alpha: 1}
-  @reluctantOutlineStyle: -> {form: "outline", color: Color.create(140, 140, 140, 1), alpha: 1}
+  @candidateOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.dropCandidateOutline, alpha: 1}
+  @reluctantOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.dropReluctantOutline, alpha: 1}
 
   # NOTE: the editor-focus indicator (§5.D D-3/D21) NO LONGER uses a HighlighterWdgt. It is now a per-widget
   # PAINT-TIME selection overlay drawn on top of the selected widget's own content (Widget._drawSelectionOverlay,

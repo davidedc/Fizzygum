@@ -23,7 +23,7 @@ class PenAppearance extends Appearance
       # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the
       # dart's shadow is its black-filled shape; the white/black legibility outline is
       # skipped like every stroke under appliedShadow (the Boxy precedent).
-      fillColor = if appliedShadow? then Color.BLACK else @widget.color
+      fillColor = if appliedShadow? then WorldWdgt.theme.shadowColor else @widget.color
       ctx.fillStyle = fillColor.toString()
       ctx.beginPath()
 

@@ -3,7 +3,7 @@ class FrameContentsPlaceholderText extends TextWdgt
   constructor: ->
 
     super "Drop a widget in here",
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
 
     @alignCenter()

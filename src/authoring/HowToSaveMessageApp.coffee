@@ -27,7 +27,7 @@ class HowToSaveMessageApp extends WindowedApp
     startingContent._contentStackSpec.setAlignmentToCenter()
 
     startingContent = new SimpleTextWdgt "How to save?",
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     startingContent.alignCenter()
     startingContent.setFontSize 24
@@ -51,7 +51,7 @@ class HowToSaveMessageApp extends WindowedApp
     sdspw.addSpacer()
 
     startingContent = new SimpleTextWdgt "Footnotes",
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     startingContent.toggleWeight()
     startingContent.isEditable = true

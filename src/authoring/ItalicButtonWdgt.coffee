@@ -5,7 +5,7 @@ class ItalicButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "italic"
 
-  createAppearance: -> new ItalicIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new ItalicIconAppearance @, WorldWdgt.theme.iconInk
 
   activated: ->
     if world.editorFocusWdgt?.toggleItalic?

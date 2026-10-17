@@ -67,7 +67,7 @@ class SliderWdgt extends CircleBoxWdgt
   # parameter ORDER could serve both. Those callers now state the numbers they want and name the
   # knob. Assigned before the super call, preserving the order the all-`@param` form compiled to.
   constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, opts = {}) ->
-    @color = opts.color ? Color.BLACK
+    @color = opts.color ? WorldWdgt.theme.scrollTrack
     @smallestValueIsAtBottomEnd = opts.smallestValueIsAtBottomEnd ? false
     super()
     @alpha = @plainTrackAlpha

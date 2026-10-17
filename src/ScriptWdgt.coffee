@@ -65,7 +65,7 @@ class ScriptWdgt extends CodeAreaWdgt
     @_addNoSettle @runItButton
 
     # local: @saveButton keeps it as its face widget, so a second copy on `this` was redundant state.
-    saveTextWdgt = new StringWdgt "save + close", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    saveTextWdgt = new StringWdgt "save + close", fontRole: WorldWdgt.theme.fonts.buttonLabel
     saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: saveTextWdgt
     @_addNoSettle @saveButton
@@ -113,7 +113,7 @@ class ScriptWdgt extends CodeAreaWdgt
     textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
     textBottom = @top() + @externalPadding + textHeight
     textWidth = @width() - 2 * @externalPadding
-    buttonsWidth = Math.round((textWidth - 2 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize)/2)
+    buttonsWidth = Math.round((textWidth - 2 * @internalPadding - WorldWdgt.theme.handleSize)/2)
 
     if @tempPromptEntryField.parent == @
       @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point textWidth, textHeight

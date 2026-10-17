@@ -14,7 +14,7 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   constructor: (@fontSelectionMenuHolder) ->
     super undefined  # undefined keeps @color = undefined as before; icon line-colour set in createAppearance
 
-  createAppearance: -> new ChangeFontIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new ChangeFontIconAppearance @, WorldWdgt.theme.iconInk
 
   # the menu is a WORLD child, so it opens at my on-SCREEN position — my own @position()
   # is plane-local and lands offset-pixels away when I sit in a scrolled pane (or inside an

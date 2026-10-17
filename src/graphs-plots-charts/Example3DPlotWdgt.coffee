@@ -200,13 +200,13 @@ class Example3DPlotWdgt extends Widget
       context.globalAlpha = appliedShadow.alpha * @alpha
       # shadow-pass paint contract (Widget.coffee "How the shadow painting works"):
       # the plot box's shadow is BLACK, like every other caster's
-      context.fillStyle = Color.BLACK.toString()
+      context.fillStyle = WorldWdgt.theme.shadowColor.toString()
       context.fillRect 0, 0, width, height
       # let's avoid paint 3d stuff twice because
       # of the shadow
       return
 
-    context.fillStyle = WorldWdgt.preferencesAndSettings.editableItemBackgroundColor.toString()
+    context.fillStyle = WorldWdgt.theme.plotBackgroundFill.toString()
     context.fillRect 0, 0, width, height
 
 

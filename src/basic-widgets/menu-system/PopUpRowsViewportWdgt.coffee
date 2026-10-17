@@ -123,7 +123,7 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   # My rows panel keeps the menu border itself and my box IS its box, so a frame holding me adds no
   # body margin of its own -- a second margin would only double the first. The capability query a
   # frame asks its payload for its chrome margin (FrameWdgt._chromePadding); a payload without an
-  # opinion takes the margin preference.
+  # opinion takes the theme's chrome margin.
   keepsItsOwnChromeMargin: ->
     true
 

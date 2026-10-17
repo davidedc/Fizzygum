@@ -5,7 +5,7 @@ class FormatAsCodeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "format as code"
 
-  createAppearance: -> new FormatAsCodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new FormatAsCodeIconAppearance @, WorldWdgt.theme.iconInk
 
   activated: ->
     if world.editorFocusWdgt?.setFontName?

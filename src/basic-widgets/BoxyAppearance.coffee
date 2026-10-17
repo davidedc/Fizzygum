@@ -1,56 +1,100 @@
 class BoxyAppearance extends Appearance
 
+  # MY WIDGET'S ROUNDING, `@widget.cornerRadius`, comes in two shapes, both read the way HTML5's
+  # roundRect() reads its radii:
+  #   a number   every corner rounded alike (absent: my default, 4)
+  #   a 4-array  per-corner radii [topLeft, topRight, bottomRight, bottomLeft], CSS border-radius
+  #              order, so `[7, 7, 0, 0]` rounds only the top corners (a window's title bar)
+  # The user-facing setter (Widget.setCornerRadius, the prompt and the pin) stays scalar: per-corner
+  # radii are a decision of the code that builds a widget, not a dial.
+
+  # A clipping widget whose outline must be painted OVER its content (the redesign's frame look,
+  # docs/plans/redesign/redesign-plan.md §1) sets this on its appearance; see _strokesAfterChildren.
+  strokesOverChildren: false
+
+  # ONE number, for the readers that want one (the "corner radius..." prompt's default,
+  # BubblyAppearance's outline): the uniform radius as stored, or the LARGEST of per-corner radii.
   getCornerRadius: ->
-    if @widget.cornerRadius?
-      return @widget.cornerRadius
+    if Array.isArray @widget.cornerRadius
+      Math.max @_cornerRadii()...
     else
-      return 4
+      @widget.cornerRadius ? 4
+
+  # THE ONE NORMALISER of my rounding: the four corner radii [topLeft, topRight, bottomRight,
+  # bottomLeft], each clamped to >= 0, whichever shape the widget stores. Every reader that needs
+  # the corners one by one comes through here.
+  _cornerRadii: ->
+    radius = @widget.cornerRadius ? 4
+    if Array.isArray radius
+      [topLeft, topRight, bottomRight, bottomLeft] = radius
+      [(Math.max topLeft, 0), (Math.max topRight, 0), (Math.max bottomRight, 0), (Math.max bottomLeft, 0)]
+    else
+      radius = Math.max radius, 0
+      [radius, radius, radius, radius]
+
+  # What my outline hands fillRoundRect / strokeRoundRect. ⚠ A uniform radius goes as the SCALAR
+  # getCornerRadius answers, never as an array: a widget without per-corner radii makes the plain
+  # scalar call (SWCanvas's scalar entry), and only per-corner radii travel as the normalised 4-array.
+  _roundRectRadii: ->
+    if Array.isArray @widget.cornerRadius then @_cornerRadii() else @getCornerRadius()
 
   constructor: (widget) ->
     super widget
 
-  # The rounded box: the bounding box MINUS the four quarter-disc cut-outs the rounding
-  # takes off the corners. A big cornerRadius therefore leaves a genuinely pointer-through
-  # notch at each corner (SystemTest_macroRoundedBoxCornerClickThrough is exactly that).
+  # The rounded box, corner by corner: a logical pixel is mine iff its pixel CENTRE lies inside the
+  # outline fillOutline draws — the box minus, at each corner, whatever lies outside that corner's
+  # quarter-circle (a 0 corner is square). Testing the CENTRE makes the hit shape the FILLED pixels
+  # (SWCanvas's fill samples pixel centres too, so at dpr 1 the two agree pixel for pixel) and makes
+  # all four corners alike. A big radius therefore leaves a genuinely pointer-through notch at each
+  # rounded corner (SystemTest_macroRoundedBoxCornerClickThrough is exactly that).
+  #   The radii are fitted to the box as roundRect() fits them: when two corners on one side add up
+  # to more than that side, all four shrink by the one factor that makes the tightest side fit.
   shapeContainsPoint: (aPoint) ->
-    # first quickly check if the point is even
-    # within the bounding box
+    # TOTAL (see Appearance): nothing outside my bounds is mine
     if !@widget.boundsContainPoint aPoint
       return false
 
+    w = @widget.width()
+    h = @widget.height()
+    [topLeft, topRight, bottomRight, bottomLeft] = @_cornerRadii()
+    sideFit = (side, sumOfTwoCorners) ->
+      if sumOfTwoCorners > 0 then side / sumOfTwoCorners else 1
+    fit = Math.min 1,
+      (sideFit w, topLeft + topRight), (sideFit h, topRight + bottomRight),
+      (sideFit w, bottomRight + bottomLeft), (sideFit h, bottomLeft + topLeft)
+    if fit < 1
+      topLeft *= fit
+      topRight *= fit
+      bottomRight *= fit
+      bottomLeft *= fit
+
+    # the centre of the logical pixel the point falls in, in my local coordinates
     thisWidgetPosition = @widget.position()
-    radius = Math.max @getCornerRadius(), 0
+    x = Math.floor(aPoint.x - thisWidgetPosition.x) + 0.5
+    y = Math.floor(aPoint.y - thisWidgetPosition.y) + 0.5
 
-    relativePoint = new Point aPoint.x - thisWidgetPosition.x, aPoint.y - thisWidgetPosition.y
+    # a corner cuts that centre off iff it lies past the corner's arc centre on BOTH axes (in the
+    # corner's radius-sized square) and farther than the radius from it; outX / outY measure how far
+    # past, toward the corner
+    cutOff = (radius, outX, outY) ->
+      outX > 0 and outY > 0 and outX * outX + outY * outY > radius * radius
 
-    # top left corner
-    if relativePoint.x < radius and relativePoint.y < radius
-      if relativePoint.distanceTo(new Point radius,radius) > radius
-        return false
-
-    # top right corner
-    else if relativePoint.x > @widget.width() - radius and relativePoint.y < radius
-      if relativePoint.distanceTo(new Point @widget.width() - radius,radius) > radius
-        return false
-
-    # bottom left corner
-    else if relativePoint.x < radius and relativePoint.y > @widget.height() - radius
-      if relativePoint.distanceTo(new Point radius, @widget.height() - radius) > radius
-        return false
-
-    # bottom right corner
-    else if relativePoint.x > @widget.width() - radius and relativePoint.y > @widget.height() - radius
-      if relativePoint.distanceTo(new Point @widget.width() - radius, @widget.height() - radius) > radius
-        return false
-
+    if cutOff topLeft, topLeft - x, topLeft - y
+      return false
+    if cutOff topRight, x - (w - topRight), topRight - y
+      return false
+    if cutOff bottomRight, x - (w - bottomRight), y - (h - bottomRight)
+      return false
+    if cutOff bottomLeft, bottomLeft - x, y - (h - bottomLeft)
+      return false
 
     return true
 
   # The inscribed box: the straight edges between the corners fill crisply to the bounds, and
   # the corner areas are cut away by the rounding (anti-aliased on native, hard-edged on
-  # SWCanvas) -> inset every side by cornerRadius + 1, conservatively.
+  # SWCanvas) -> inset every side by the LARGEST corner radius + 1, conservatively.
   opaqueCoveredRect: ->
-    @widget.boundingBox().insetBy Math.max(@getCornerRadius(), 0) + 1
+    @widget.boundingBox().insetBy Math.max(@_cornerRadii()...) + 1
 
   # This method only paints this very widget's "image",
   # it doesn't descend the children
@@ -60,21 +104,57 @@ class BoxyAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
       if !@widget.color? then debugger
       ctx.fillStyle = @widget.color.toString()
 
       if appliedShadow?
-        ctx.fillStyle = Color.BLACK.toString()
+        ctx.fillStyle = WorldWdgt.theme.shadowColor.toString()
 
       @fillOutline ctx
 
-      if @widget.strokeColor? and !appliedShadow?
-        ctx.lineWidth = 1
-        ctx.strokeStyle = @widget.strokeColor.toString()
-        @strokeOutline ctx
+      # the rules between my widget's panes: over my fill, under its children and my stroke
+      if !appliedShadow?
+        @_paintSeamRules ctx, localDamageBox
 
-  
+      # THE STROKE, EXACTLY ONCE PER PAINT and never in the shadow pass: here, over my fill —
+      # unless it is painted after my widget's children instead (_strokesAfterChildren).
+      if !appliedShadow? and !@_strokesAfterChildren()
+        @_strokeOutlineInStrokeColor ctx
+
+  # Is my stroke painted AFTER my widget's children rather than with my fill? Only when I am asked
+  # to stroke over them (strokesOverChildren) AND my widget clips its children
+  # (ClippingAtRectangularBoundsMixin: an external window, a menu) — the mixin's after-children call
+  # is what reaches paintStroke below. Then the children paint over my fill and the 1 px outline
+  # over them. Otherwise a clipping widget's children paint over my outline.
+  _strokesAfterChildren: ->
+    @strokesOverChildren and @widget.clipsAtRectangularBounds
+
+  # My after-children stroke: ClippingAtRectangularBoundsMixin calls it (through Widget.paintStroke)
+  # once my widget's children have all painted, and only in the normal pass. It paints only when
+  # _strokesAfterChildren, so the base paint has not stroked already. A standalone entry, so it
+  # opens its own scope — local logical coordinates, clipped to the damage box.
+  #   ⚠ That `undefined` is the appliedShadow VALUE — "no shadow", the normal pass — not a skip to
+  # reach the block: every caller of _paintInLocalScope passes all four arguments, because the
+  # trailing bodyFn is required. It is NOT a hole under R3
+  # (docs/architecture/constructor-and-parameter-conventions.md) — the same value
+  # RectangularAppearance.paintStroke hands its scope; buildSystem/check-argument-holes.js counts it
+  # because a regex cannot tell an absent value from a skipped parameter.
+  paintStroke: (aContext, clippingRectangle) ->
+    return unless @_strokesAfterChildren()
+    @_paintInLocalScope aContext, clippingRectangle, undefined, (ctx) =>
+      @_strokeOutlineInStrokeColor ctx
+
+  # The one stroke body both entries share, inside an open scope: the 1-LOGICAL-px outline in my
+  # widget's strokeColor (no strokeColor, no stroke). It goes through strokeOutline, so a subclass
+  # with its own outline (BubblyAppearance) strokes that one from either entry.
+  _strokeOutlineInStrokeColor: (ctx) ->
+    return unless @widget.strokeColor?
+    ctx.lineWidth = 1
+    ctx.strokeStyle = @widget.strokeColor.toString()
+    @strokeOutline ctx
+
+
   # Fill / stroke the rounded-box outline through the direct rounded-rect calls
   # (CanvasRenderingContext2D-extensions.coffee): SWCanvas's dedicated fast
   # rasterizers on the software backend, a roundRect() path on native. One
@@ -83,13 +163,47 @@ class BoxyAppearance extends Appearance
   # so the stroke covers precisely the boundary pixel ring (the standard HTML5
   # crisp-stroke idiom; strokes need the displacement, fills would just look
   # fuzzy from it). On native the curved corners anti-alias; on SWCanvas they
-  # are hard-edged. BubblyAppearance overrides BOTH of these with its
-  # generic-path speech-bubble outline.
+  # are hard-edged. Per-corner radii ride the same two calls (both take
+  # HTML5 roundRect() radii). BubblyAppearance overrides BOTH of these with
+  # its generic-path speech-bubble outline.
   fillOutline: (context) ->
-    context.fillRoundRect 0, 0, @widget.width(), @widget.height(), @getCornerRadius()
+    context.fillRoundRect 0, 0, @widget.width(), @widget.height(), @_roundRectRadii()
 
   strokeOutline: (context) ->
-    context.strokeRoundRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1, @getCornerRadius()
+    context.strokeRoundRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1, @_roundRectRadii()
+
+  # ===== my outline as a CLIP, for a widget that clips its children to it =====
+  # FrameWdgt's rounded child clip (redesign plan §3a option (a)) reads these two. ⚠ BubblyAppearance
+  # inherits them although its outline is not a roundRect: no bubble clips its children, and one
+  # that did would have to re-answer both, as it re-answers fillOutline / strokeOutline.
+
+  # The per-corner radii of my outline, [topLeft, topRight, bottomRight, bottomLeft], as declared
+  # (before roundRect() shrinks them to fit a box too small for them). A corner of radius r leaves
+  # my box only inside its r×r corner square, which is what the reader needs them for.
+  outlineCornerRadii: ->
+    @_cornerRadii()
+
+  # Intersect aContext's clip with exactly the pixels fillOutline fills, so whatever is painted next
+  # shows only inside my outline. The path is traced under the matrix fillOutline paints under
+  # (logical pixels, translated to my widget) and the clip is set AFTER that matrix is restored: a
+  # path's points are fixed in device space as they are added, and the current path is not part of
+  # the saved drawing state. So the clip lands where my fill lands while aContext keeps exactly the
+  # matrix it came in with — the one a clipping widget's children then paint under, whatever that
+  # matrix carries (a back buffer's or an island buffer's offset, the shadow pass's translate).
+  #   Measured on SWCanvas (spike S1b, redesign plan §3a): the clip covers exactly my fill's
+  # pixels for every integer-placed box at dpr 1 and 2, at every integer offset the context
+  # carries. A box at a FRACTIONAL plane position (a payload dropped into a rotated container)
+  # can differ from the fill on a few pixels of the curve: the fill flattens its arcs in my local
+  # space, this path flattens them as it is traced.
+  clipToOutline: (aContext) ->
+    aContext.save()
+    aContext.useLogicalPixelsUntilRestore()
+    widgetPosition = @widget.position()
+    aContext.translate widgetPosition.x, widgetPosition.y
+    aContext.beginPath()
+    aContext.roundRect 0, 0, @widget.width(), @widget.height(), @_roundRectRadii()
+    aContext.restore()
+    aContext.clip()
 
   cornerRadiusPopout: (menuItem)->
     # ⚠ through the GETTER, which owns the absent case: this appearance is worn by widgets that
@@ -110,6 +224,6 @@ class BoxyAppearance extends Appearance
   # The pins my SHAPE contributes to the widget wearing me (Widget.pins concatenates them). Write-only:
   # I do have a getCornerRadius, but it is a method on ME and a pin's reader is dispatched on the
   # WIDGET (`node[pin.getterName]()`), where no such method exists — the setter's twin, `setCornerRadius`,
-  # is on BoxWdgt. Declaring `get: "getCornerRadius"` here would name a method the reader cannot reach.
+  # is on Widget. Declaring `get: "getCornerRadius"` here would name a method the reader cannot reach.
   pins: ->
     [ new PinSpec "corner radius", "numerical", set: "setCornerRadius" ]

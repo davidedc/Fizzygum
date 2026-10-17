@@ -2,7 +2,7 @@ class LayoutSpacerWdgt extends LayoutChromeWdgt
 
   constructor: (spacerWeight = 1) ->
     super()
-    @setColor Color.BLACK
+    @setColor WorldWdgt.theme.layoutChromeFill
     @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * DivisionStackLayoutSpec.SPREADABILITY_SPACERS
     @minimumExtent = new Point 0,0
 

@@ -121,8 +121,9 @@ ClippingAtRectangularBoundsMixin =
       
       # ⚠ LOCKSTEP: ViewportWdgt overrides BOTH this method and _fullPaintIntoAreaOrBlitFromBackBufferJustShadow
       # below with hand-copied bodies that add the scroll translation around the contents child
-      # (the zero-offset path delegates back to these injected copies). An edit to either body
-      # here must be mirrored there.
+      # (the zero-offset path delegates back to these injected copies). FrameWdgt does the same for
+      # its rounded child clip (the clip-off path delegates back here). An edit to either body
+      # here must be mirrored in both.
       _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
 
         # a PanelWdgt has the special property that all of its children

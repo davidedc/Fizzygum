@@ -5,7 +5,7 @@ class Plot3DCreatorButtonWdgt extends CreatorButtonWdgt
   # stated rather than derived: the camelCase split reads "3" and "D" as separate humps
   colloquialName: -> "3D plot creator button"
 
-  createAppearance: -> new Plot3DIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new Plot3DIconAppearance @, WorldWdgt.theme.iconInk
 
   createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new Example3DPlotWdgt

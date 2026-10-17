@@ -18,7 +18,7 @@ class SampleDocApp extends WindowedApp
     sdspw = doc.contents
 
     startingContent = new SimpleTextWdgt "Sample Doc",
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     startingContent.alignCenter()
     startingContent.setFontSize 22

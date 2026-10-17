@@ -60,6 +60,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # in pure theory you could have multiple worlds in the same
   # page with different settings
   @preferencesAndSettings: undefined
+  # the world's LOOK (colours, font roles, chrome metrics); preferencesAndSettings keeps behaviour
+  @theme: undefined
 
   @dateOfPreviousCycleStart: undefined
   @dateOfCurrentCycleStart: undefined
@@ -514,6 +516,7 @@ class WorldWdgt extends IconGridPanelWdgt
       @isIndexPage = true
 
     WorldWdgt.preferencesAndSettings = new PreferencesAndSettings
+    WorldWdgt.theme = new Theme
 
     super()
     # the desktop's wallpaper (available patterns + current choice + picker menu),
@@ -521,7 +524,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @wallpaper = new Wallpaper
     @appearance = new DesktopAppearance @
 
-    @color = Color.create 205, 205, 205 # (130, 130, 130)
+    @color = WorldWdgt.theme.worldFill
     @strokeColor = undefined
 
     @alpha = 1
@@ -690,10 +693,10 @@ class WorldWdgt extends IconGridPanelWdgt
     splashScreenFakeDesktop?.parentNode?.removeChild splashScreenFakeDesktop
 
   createDesktop: ->
-    # the desktop's own furnishing -- its backdrop colour and its wallpaper pattern. Every
-    # chrome DIMENSION and COLOUR lives in the preference block instead, so what a page renders
-    # does not depend on whether this method ran.
-    @setColor Color.create 244,243,244
+    # the desktop's own furnishing -- its backdrop colour (the theme's desktopFill) and its wallpaper
+    # pattern. Every other chrome DIMENSION and COLOUR is read from the theme where it is used, so
+    # what a page renders does not depend on whether this method ran.
+    @setColor WorldWdgt.theme.desktopFill
     @wallpaper.setPattern "dots"
 
     acm = new AnalogClockWdgt
@@ -1602,7 +1605,7 @@ class WorldWdgt extends IconGridPanelWdgt
         @dragEmbedLabelWdgt = new StringWdgt @dragEmbedLabelDeclared.text
         @dragEmbedLabelWdgt._ephemeralOverlay = true
         @add @dragEmbedLabelWdgt
-        @dragEmbedLabelWdgt.setColor Color.create(40, 40, 40, 1)
+        @dragEmbedLabelWdgt.setColor WorldWdgt.theme.dragLabelText
         @dragEmbedLabelWdgt.setWidth 320   # roomy enough for the full text (else a StringWdgt crops it)
       @dragEmbedLabelWdgt._applyMoveTo @dragEmbedLabelDeclared.point
     else if @dragEmbedLabelWdgt?
@@ -1615,7 +1618,7 @@ class WorldWdgt extends IconGridPanelWdgt
         @dragEmbedLockBadgeWdgt = new StringWdgt "view-only"
         @dragEmbedLockBadgeWdgt._ephemeralOverlay = true
         @add @dragEmbedLockBadgeWdgt
-        @dragEmbedLockBadgeWdgt.setColor Color.create(120, 120, 120, 1)
+        @dragEmbedLockBadgeWdgt.setColor WorldWdgt.theme.dragBadgeText
       # the badge is a world child, so anchor it to the target's SCREEN footprint — the target can sit
       # inside a rotated/scaled island, where the plane-local box is the wrong plane (§7.11 mapping;
       # off any island mapRectToScreen returns the box unchanged)

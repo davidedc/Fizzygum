@@ -824,13 +824,16 @@ inheritance. Any red test after such a swap is a faithfulness bug, not a renderi
 
 ---
 
-## 15. Colours and preferences
+## 15. Colours, fonts and chrome sizes — the theme
 
-**[convention]** Take a colour from `WorldWdgt.preferencesAndSettings` when it is a *system* colour
-(menu background, icon line colour, outline, button label) — that object is the per-world theming
-surface. Use an interned `Color.*` constant for a true primitive. Reserve `Color.create r, g, b` for a
-colour that genuinely belongs to this one widget, and never write a `'#RRGGBB'` string where a `Color`
-belongs.
+**[gated: `raw-chrome-color` stink]** A widget's LOOK comes from `WorldWdgt.theme`
+([`visual-design-system.md`](visual-design-system.md)): a chrome colour is the ROLE named for its
+surface (`WorldWdgt.theme.menuRowText`) — add a role to `src/Theme.coffee` when your surface has none,
+never a colour literal in a chrome file; a chrome text takes `fontRole: WorldWdgt.theme.fonts.<role>`;
+a chrome dimension is a theme metric. `WorldWdgt.preferencesAndSettings` holds BEHAVIOUR only (input,
+timing, thresholds). Content keeps its own colours: reserve `Color.create r, g, b` for a colour that
+genuinely belongs to the content this widget shows, use an interned `Color.*` constant for a true
+primitive, and never write a `'#RRGGBB'` string where a `Color` belongs.
 
 Value classes are **immutable**: never write a field of a `Point` / `Rectangle` / `Color` /
 `ShadowInfo` / `TransformSpec` after construction — operations return new instances, `this`, or a
@@ -1036,6 +1039,7 @@ the debt.
 - [`widget-citizenship.md`](widget-citizenship.md) — the contract; [`design-principles.md`](design-principles.md) — why the contract is shaped this way; [`app-fit-criteria.md`](app-fit-criteria.md) — whether an idea belongs here at all.
 - [`regularity-principles.md`](regularity-principles.md) — separate the fused axes; the name encodes the role.
 - [`layering-naming-convention.md`](layering-naming-convention.md) · [`layout.md`](layout.md) · [`transforms.md`](transforms.md) · [`appearance-paint-convention.md`](appearance-paint-convention.md) · [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md) — the mechanics.
+- [`visual-design-system.md`](visual-design-system.md) — where a widget's look is decided (`Theme`: palette, roles, font roles, metrics, shadows) and the rules it follows.
 - [`serialization-duplication-reference.md`](serialization-duplication-reference.md) · [`immutable-value-classes.md`](immutable-value-classes.md) · [`mixins.md`](mixins.md) · [`build-and-packaging.md`](build-and-packaging.md).
 - [`lint-and-static-checks.md`](lint-and-static-checks.md) — every gate cited above.
 - [`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md) — how the existing widget population scores against these rules (dated snapshot; re-run `buildSystem/census-widget-conformance.js` for the mechanical facets).

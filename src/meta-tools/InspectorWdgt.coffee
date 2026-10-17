@@ -135,7 +135,7 @@ class InspectorWdgt extends Widget
     # opaque background; inside a FrameWdgt the window supplies it. The
     # appearance is toggled off when the inspector becomes window content
     # (_setLayoutSpec, below) so the windowed render stays byte-identical.
-    @color = Color.create 248, 248, 248
+    @color = WorldWdgt.theme.inspectorFill
     @inspectorBackgroundAppearance = new RectangularAppearance @
     @appearance = @inspectorBackgroundAppearance
 
@@ -222,13 +222,13 @@ class InspectorWdgt extends Widget
         goingUpTargetProtChain = goingUpTargetProtChain.__proto__
 
     @hierarchyBackgroundPanel = new RectangleWdgt
-    @hierarchyBackgroundPanel.setColor Color.create 255,255,255,.2
+    @hierarchyBackgroundPanel.setColor WorldWdgt.theme.inspectorHierarchyFill
     @_addNoSettle @hierarchyBackgroundPanel
 
     counter = 0
     for eachNamedClass in @classesNames
       classButton = new SimpleButtonWdgt @, "openClassInspector",
-        face: (new StringWdgt eachNamedClass, fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize)
+        face: (new StringWdgt eachNamedClass, fontRole: WorldWdgt.theme.fonts.buttonLabel)
         arg1: eachNamedClass
         padding: @classNamesTextPadding
       @classesButtons.push classButton
@@ -236,7 +236,7 @@ class InspectorWdgt extends Widget
 
       # the top class doesn't get an arrow pointing upwards
       if counter > 0
-        angledArrow = new AngledArrowUpLeftIconWdgt Color.BLACK
+        angledArrow = new AngledArrowUpLeftIconWdgt WorldWdgt.theme.inspectorHierarchyArrow
         @angledArrows.push angledArrow
         @_addNoSettle angledArrow
 
@@ -246,7 +246,7 @@ class InspectorWdgt extends Widget
     # needs no self-sizing — a StringWdgt fits "this object" left-aligned.
     @lastLabelInHierarchy = new StringWdgt "this object"
     @_addNoSettle @lastLabelInHierarchy
-    @lastArrowInHierarchy = new AngledArrowUpLeftIconWdgt Color.BLACK
+    @lastArrowInHierarchy = new AngledArrowUpLeftIconWdgt WorldWdgt.theme.inspectorHierarchyArrow
     @_addNoSettle @lastArrowInHierarchy
     @mixinDonorLabel = new StringWdgt ""
     @_addNoSettle @mixinDonorLabel
@@ -301,7 +301,7 @@ class InspectorWdgt extends Widget
     @detail = new TextAreaWdgt "", false, 5
     @detail.disableDrops()
     @detail.contents.disableDrops()
-    @detail.color = Color.WHITE
+    @detail.color = WorldWdgt.theme.codePaneFill
     @detail.addModifiedContentIndicator()
     
     # when there is no selected item in the list
@@ -326,13 +326,13 @@ class InspectorWdgt extends Widget
 
 
 
-    @hierarchyHeaderString = new StringWdgt "Hierarchy", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    @hierarchyHeaderString = new StringWdgt "Hierarchy", fontRole: WorldWdgt.theme.fonts.buttonLabel
     @hierarchyHeaderString.toggleHeaderLine()
     @hierarchyHeaderString.alignCenter()
     @_addNoSettle @hierarchyHeaderString
 
 
-    @propertyHeaderString = new StringWdgt "Properties", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    @propertyHeaderString = new StringWdgt "Properties", fontRole: WorldWdgt.theme.fonts.buttonLabel
     @propertyHeaderString.toggleHeaderLine()
     @propertyHeaderString.alignCenter()
     @_addNoSettle @propertyHeaderString
@@ -358,7 +358,7 @@ class InspectorWdgt extends Widget
   # TODO this stands in for enabling/disabling the button: the colour changes but the button still
   # works. Needs real enabling/disabling.
   _showSaveButtonAsEnabled: (enabled) ->
-    @saveTextWdgt?.setColor if enabled then Color.BLACK else Color.create 200, 200, 200
+    @saveTextWdgt?.setColor if enabled then WorldWdgt.theme.saveLabelEnabledText else WorldWdgt.theme.saveLabelDisabledText
 
   textContentModified: ->
     @_showSaveButtonAsEnabled true
@@ -390,7 +390,7 @@ class InspectorWdgt extends Widget
     @removePropertyButton = new SimpleButtonWdgt @, "removeProperty", face: "remove"
     @_addNoSettle @removePropertyButton
 
-    @saveTextWdgt = (new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+    @saveTextWdgt = (new StringWdgt "save", fontRole: WorldWdgt.theme.fonts.buttonLabel).alignCenter()
     @saveButton = new SimpleButtonWdgt @, "save", face: @saveTextWdgt
     @_addNoSettle @saveButton
 
@@ -408,7 +408,7 @@ class InspectorWdgt extends Widget
     if @markOwnershipOfProperties
       return [
         # give color criteria from the most general to the most specific
-        [Color.create(0, 0, 180),
+        [WorldWdgt.theme.inspectorInheritedMemberText,
           (element) =>
             # if the element is either an enumerable property of the object
             # or it belongs to the own methods, then it is highlighted.
@@ -418,7 +418,7 @@ class InspectorWdgt extends Widget
             # are still not picked up, maybe because of the coffeescript construction system, I am not sure
             true
         ],
-        [Color.create(0, 180, 0),
+        [WorldWdgt.theme.inspectorOwnMemberText,
           (element) =>
             # if the element is either an enumerable property of the object
             # or it belongs to the own methods, then it is highlighted.
@@ -630,7 +630,7 @@ class InspectorWdgt extends Widget
         buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
         @removePropertyButton._reLayout buttonBounds
 
-        buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
+        buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldWdgt.theme.handleSize), @bottom() - 15 - @externalPadding
         buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
         @saveButton._reLayout buttonBounds
 

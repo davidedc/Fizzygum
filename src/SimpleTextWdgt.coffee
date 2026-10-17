@@ -33,7 +33,7 @@ class SimpleTextWdgt extends TextWdgt
   # signature. A bare `super` compiles to `.apply(this, arguments)` — the arguments the CALLER
   # passed, not this constructor's defaulted parameters — while `@param` assignment happens
   # BEFORE that call, so the base re-defaulted every omitted slot straight over the top. What
-  # a SimpleTextWdgt has always actually got is StringWdgt's normalTextFontSize and
+  # a SimpleTextWdgt has always actually got is the theme's default-text size and
   # Color(37,37,37). Restoring the stated intent is a visible change to every unsized
   # SimpleTextWdgt in the system, so it is a decision, not a cleanup.
   constructor: (text, opts = {}) ->
@@ -160,9 +160,9 @@ class SimpleTextWdgt extends TextWdgt
   # @parent.parent.isTextLineWrapping).
 
   blendInWithPanelColor: ->
-    if @backgroundColor.equals WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+    if @backgroundColor.equals WorldWdgt.theme.editableItemFill
       @setBackgroundColor Color.create 249, 249, 249
 
   contrastOutFromPanelColor: ->
     if @backgroundColor.equals Color.create 249, 249, 249
-      @setBackgroundColor WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      @setBackgroundColor WorldWdgt.theme.editableItemFill

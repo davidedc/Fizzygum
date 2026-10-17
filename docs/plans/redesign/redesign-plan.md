@@ -1,6 +1,6 @@
 # Fizzygum visual redesign — the plan
 
-**AUTHORED + OWNER-APPROVED 2026-10-16; P0, R0 and T done, F next.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
+**AUTHORED + OWNER-APPROVED 2026-10-16; P0, R0, T and F done; next: S1c, the corner path the owner confirmed (§3 #4), then W1.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
 - This file is the living plan. Keep its STATUS box current at every phase close. The design input it executes sits beside it in this directory.
 - Line numbers below drift. The quoted method or field name is authoritative: grep it fresh before trusting a `file:line`.
 
@@ -16,8 +16,8 @@
 |---|---|---|
 | P0 | Copy the plan into the repo; add BACKLOG pointers (branches are created at W1) | DONE 2026-10-16 |
 | R0 | Recapture tooling: batch finger recapture + throughput | DONE 2026-10-16 (~1 h per full wave, was ~7 h) |
-| T | Tests aim by meaning; aims verify their hit (zero recapture) | DONE 2026-10-16 — every widget-aimed press verified ("AIM MISSED"); 9 never-delivered tests found and fixed, their recapture owner-gated |
-| F | Tokens (`Theme`), primitives, spikes S1–S3 (zero recapture) | not started |
+| T | Tests aim by meaning; aims verify their hit (zero recapture) | DONE 2026-10-16 — every widget-aimed press verified ("AIM MISSED"); 9 never-delivered tests found, fixed and recaptured (owner-approved; Fizzygum b408f0c7, Fizzygum-tests 80ee6ca92) |
+| F | Tokens (`Theme`), primitives, spikes S1–S3 (zero recapture) | DONE 2026-10-17 — `Theme` + the primitives, each default-neutral; spikes measured. The one benign inspector recapture owner-approved. Corners (§3 #4): owner CONFIRMED S1c 2026-10-17 (optimise SWCanvas's clip tiers, re-measure; adopt the clip iff ≤ 3 %) — NEXT, before W1 |
 | W1 | Global surface + all persistent frames (windows, cards, bands) | not started |
 | W2 | Menus, lists, scrollbars, prompts, tooltips | not started |
 | W3 | Controls + Object Inspector re-layout | not started |
@@ -52,7 +52,7 @@ Everything in this plan must look right on SWCanvas first.
 
 **⭐ The critical reframe: today's structure already matches the draft.** It was measured on 2026-10-16:
 - The window title strip is already a 44 px icon slot. Close and collapse already sit on the LEFT, the pencil on the right, and the title is centred (`FrameWdgt._barSpec`).
-- Menu rows are already 44 px (`PreferencesAndSettings.menuRowHeight`).
+- Menu rows are already 44 px (`menuRowHeight`, a `Theme` metric since F1).
 - Scrollbars are already 4 px overlay thumbs (`ViewportWdgt`, `scrollIndicatorThickness`).
 - Frames already cast ONE solid silhouette shadow with no blur (`ShadowInfo` has no blur parameter).
 - The Docs Maker's toolbar is already a docked `FrameWdgt` with a vertical strip carrying only collapse (`FrameWdgt` + `EdgeDockLayoutSpec`).
@@ -66,11 +66,11 @@ So the redesign is mostly SURFACE: tokens, glyphs, rules, radii and shadows. The
 5. Menu chevrons, which are typed into label strings today.
 
 **Measured gaps** (from 3 research sweeps, 2026-10-16):
-- **No token layer.** Chrome colours live in about 14 `PreferencesAndSettings` fields (`src/PreferencesAndSettings.coffee:140-233`) plus about 30 hard-coded sites (frame 125/248, menu 238/186, buttons 245/196, handle 150, slider black α0.4, inspector colours, the clock's `#325FA2`, …). There are 111 `Color.create` sites in `src`.
+- **No token layer** (F1 built it: `Theme`, §4 F). Chrome colours lived in about 14 `PreferencesAndSettings` fields (`src/PreferencesAndSettings.coffee:140-233`) plus about 30 hard-coded sites (frame 125/248, menu 238/186, buttons 245/196, handle 150, slider black α0.4, inspector colours, the clock's `#325FA2`, …). There are 111 `Color.create` sites in `src`.
 - **No focus state.** Only z-order exists (`Widget.bringToForeground`, `isInForeground`).
 - **External frames stroke BEFORE their children.** `BoxyAppearance` has no `paintStroke`. `ClippingAtRectangularBoundsMixin` re-strokes after children only for appearances that do (`RectangularAppearance`).
 - **Clipping is rectangular only.** SWCanvas does support `clip(path)`: `vendor/swcanvas/swcanvas.js` `clip(path, rule)`, a 1-bit stencil.
-- **The bar strip and the body margin are fused.** `thickness = barIconSize + 2*barPadding` = 50, and `barPadding` = 3 is ALSO the body margin around the content (`FrameWdgt._barSpec`, `PreferencesAndSettings.coffee:193-197`).
+- **The bar strip and the body margin are fused.** `thickness = barIconSize + 2*barPadding` = 50, and `barPadding` = 3 is ALSO the body margin around the content (`FrameWdgt._barSpec`; the metrics live in `Theme` since F1).
 - **Desktop icon holder.** `WidgetHolderWithCaptionWdgt` is 95×92: a 60 px icon band plus a 32 px band holding a white caption with a black outline. There is no tile, no plate and no selection state. The grid is `IconGridPanelWdgt`, column-major, 5 per column, pitch literals 105/102.
   - ⚠ Test worlds have NO desktop icons (`createDesktop` runs only `if theWorld.isIndexPage`, `src/boot/globalFunctions.coffee:485`).
 - **Icons.** 9 of the ~89 icon appearances are size-aware (`src/icons/*` extending `SizeAwareIconAppearance`); 80 are legacy. Chrome glyphs (`Close`/`Collapse`/`Uncollapse`/`Pencil`/`Eye`/`OverflowChevron`) are all legacy rings and beziers in a 200-unit space, painted at `barGlyphSize` 24.
@@ -134,7 +134,7 @@ The draft paints in flat, page order (`desktop-canvas.html` §6: "titleBar drawn
 
 | Draft element | Owner in the Fizzygum tree | Note |
 |---|---|---|
-| Window shadow, fill, 1 px frame "stroked last" | `FrameWdgt` body appearance (`BoxyAppearance`) | Needs a `paintStroke` so the clipping mixin re-strokes after children (F2a). The shadow is `ShadowInfo`. |
+| Window shadow, fill, 1 px frame "stroked last" | `FrameWdgt` body appearance (`BoxyAppearance`) | F2a: `BoxyAppearance.strokesOverChildren` makes the clipping mixin stroke the outline after the children (off until a wave switches it on). The shadow is `ShadowInfo`. |
 | Title bar fill `[7,7,0,0]` + bottom rule | `FrameBarWdgt`'s `titlebarBackground` child | The rule is the BAND'S OWN edge (§2 rule D): the bar paints its bottom rule. Corners: 7 = 8 − 1 (frame radius minus the border), so the bar sits inside the 1 px frame. |
 | × / − glyphs in 44×44 targets, left edge | `CloseIconButtonWdgt`, `CollapseIconButtonWdgt` (in a `SwitchButtonWdgt`), children of `FrameBarWdgt` | Already left. New size-aware glyph art, drawn at `glyphSize` 14. |
 | Title text centred between 88 px insets | `FrameBarWdgt` label `StringWdgt` | 88 = 2×44 falls out by itself once the bar's inner padding is 0 (today it is 97 = 3 + 2×47). |
@@ -187,7 +187,7 @@ The draft paints in flat, page order (`desktop-canvas.html` §6: "titleBar drawn
 | 1 | Menu header 32 px | Tapping the header PINS the menu; the 44 floor is deliberate (`FrameWdgt._transientBarSpec`) | **Keep 44**. The draft's own §4 says every target is ≥44. Restyle it flat: paper fill, 11 px `muted2`, 1 px `chrome` rule. |
 | 2 | `›` chevron, right-aligned | `" ➜"` is typed into 31+ label strings, and SWCanvas lacks the glyph at small sizes | By §3b it is an ICON (a row indicator, not label text). **W2:** a row flag (`opensSubmenu`), set where the submenu row is built, plus a DRAWN size-aware chevron. The `" ➜"` leaves the label. The 26 tests' strings and the toolkit's labels are swept in the same phase; a stale label fails loudly. |
 | 3 | `×`, `−`, `›`, `»`, `…`, `—`, `✓` | Mixed today: some typed into text, some drawn | **Classified by meaning, §3b.** Control faces and indicators are icons. Characters that belong to a label's text are glyphs, sourced from an atlas. |
-| 4 | Content flush to rounded window corners | Rectangular clip only; opaque flush content leaves "ears" outside the radius-8 corners | **§3a.** Top corners: per-corner bar radii (solved). Bottom corners: the host imposes its corner radii on flush content, painted with per-corner fills (no clip). Spike S1's census decides whether a corner-square clip is also needed as a backstop. |
+| 4 | Content flush to rounded window corners | Rectangular clip only; opaque flush content leaves "ears" outside the radius-8 corners | **§3a.** Top corners: per-corner bar radii (solved). Bottom corners: the host imposes its corner radii on flush content, painted with per-corner fills (no clip). Spike S1's census decides whether a corner-square clip is also needed as a backstop. **Measured in F (§4 F, S1/S1b): (d) alone covers only 19 of 71 content groups; the corner-square clip (a) works and is deterministic but costs +7 % (dpr 1) / +12 % (dpr 2) suite time because of SWCanvas's canvas-sized clip masks — **OWNER DECISION (2026-10-17, confirmed): S1c — optimise SWCanvas's clip tiers, re-measure with the S1b harness, adopt the frame's rounded child clip iff ≤ 3 % at dpr 1 and 2.** Per-corner radii alone were weighed and set aside: they cover only content whose corner pixels are its OWN background (option (d), 19 of 71 groups); scrolled viewport content, children on the corner, the spreadsheet and palettes need a clip or an inset. The rejected alternatives: a hybrid (per-corner radii + a 3 px bottom-corner inset for edge-painting content: loses the flush look on viewports, the commonest content, and every new content widget must cooperate) and (e) square bottom corners. They return only if S1c misses the 3 % bar. |
 | 5 | Grip hit area = its 36×36 square | Today's hit area is a triangle (`HandleWdgt` `x/w+y/h ≥ 1`) | **Square per the draft.** T makes the toolkit's resizer aim ask the handle's own hit test, so the shape change is safe. |
 | 6 | Icon grid rows as tall as their tallest icon | `IconGridPanelWdgt` places each icon incrementally (`n%5` arithmetic) | **W4 decides.** Default: a uniform row pitch sized for two-line labels (simple). Per-row heights need a whole-grid re-layout on add; do it only if the owner asks at review. |
 | 7 | Tool buttons spread space-between | `ToolPanelWdgt` cell grid | **W5:** check the capability first; fall back to fixed 8 px gaps. |
@@ -301,7 +301,7 @@ The arc recaptures 7–10 times, so this came first. As executed (both runs belo
 - **R0.3 Review sample.** `docs/plans/redesign/review-sample.txt`: 23 tests covering every surface. Every wave's owner review runs `fg diffpage $(grep -v '^#' Fizzygum/docs/plans/redesign/review-sample.txt)` before any recapture.
 - Gates: `npm run selftest` and `fg lint` green; the recompress `--check-only` gate still verifies all 3808 references.
 
-### T — Tests aim by meaning, and every aim verifies its hit — ✅ DONE 2026-10-16 (its 9 never-delivered tests are fixed in source; their recapture is owner-gated — see "Findings")
+### T — Tests aim by meaning, and every aim verifies its hit — ✅ DONE 2026-10-16 (its 9 never-delivered tests are fixed in source and recaptured with owner approval — see "Findings")
 The goal: a geometry change can break PIXELS, never DELIVERY. As executed (probes, data and briefs under `Fizzygum-tests/.scratch/{t1,t2-research,t3}/`):
 - **T1 Verifying aims — the runtime gate.** Every verb that knows the WIDGET it aims at runs its gesture inside `MacroToolkit._aimingAt`; every press the toolkit queues goes through ONE door, `_queuePress`, which puts an `AimCheckInputEvent` (new, `src/macros/`) in front of the first press that finds an expectation pending. The check DRAINS immediately before the press, so it reads the world the press meets (`verifyPressLanding`); a miss is recorded as "AIM MISSED" (an assertion failure — the macro runs on). A macro declares the receiver of a raw-Point press with `@pressMustLandOn widget` (also the click-THROUGH form); the legitimate literal kinds are `clickOnDesktopAt_InputEvents` (verified: bare desktop) and `dropCarriedWidgetAt_InputEvents` (deliberately unchecked; a drop INTO a container is followed by a landing assertion).
   - **Measured first** with an in-page REPORT-mode twin (`.scratch/t1/aim-audit-prelude.js`) over the whole suite at both pointers: checking at queue time and checking at drain time differ in exactly ONE mechanism — the pointer's ARRIVAL fattens a thin scroll indicator (a mouse's approach before its press; a finger's down WITH it). So the check runs at drain time, and for a touch press `_widgetAPressMeets` asks the product's own arrival derivation (`ViewportWdgt.barScreenFrameOnArrival` / `buttonScreenBoxOnArrival`). Result: 983 + 914 widget-aimed presses OK; the misses were 2 deliberate click-throughs and 1 mis-named strip piece (now declared), and 1 test that never delivered its intent.
@@ -316,7 +316,7 @@ The goal: a geometry change can break PIXELS, never DELIVERY. As executed (probe
   - `autoScrollBandPointOf viewport, side, depth`; `buildOverflowingViewportWithText` keeps its AUTHORED 270×200 / 185 / +12 inputs (from the recorded test it migrated — no measured formula yields them) and ASSERTS the overflow it exists for.
 - **T3 Conversions** (each pixel-identical by construction or by measurement; gated at mouse + finger × dpr 1 + 2): ~20 title-strip drags, every bare-desktop press (`clickOnDesktopAt`, 95) and named drop (24), every other raw-Point press onto a widget declared or rewritten (181 presses in 101 tests), 28 text clicks onto slots with caret/selection assertions, 53 resize drags by EXTENT (`resizeWindowBy` / `resizeWidgetBy`, the measured exact deltas). The metadata of every converted test was then made true again (42 files: resize amounts quoted from where the old verbs dropped the grip's centre were ~25 px off, and stale spreadsheet grid numbers). Left by design: right-clicks into text (the menu opens AT the pointer), clicks that open the cropped-string prompt, `macroTextWdgtCaretPlacementUnderAlignments` (its subject IS the fraction under two alignments), transform-island tests (their subject is the screen→plane mapping), and the 4 numeric assertions — those already fail LOUDLY on a geometry change (a count of hidden toolbar cells, an asserted extent), which is the property T wants; re-expressing them would only save a later edit.
 - **T4** `Fizzygum-tests/scripts/aim-census.js` — a measurement: categories per site, `verified` per site, and the work list (flagged and not verified, plus every text fraction: verification proves the widget, not the slot).
-- **Findings — tests that never delivered their intent** (each passed, because a recapture had baked the misdelivery into its references; each is now fixed in source, with value assertions of the intent, and its references are recaptured only on owner approval):
+- **Findings — tests that never delivered their intent** (each passed, because a recapture had baked the misdelivery into its references; each is now fixed in source, with value assertions of the intent, and its references were recaptured with owner approval):
   - `macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground`: its raises aimed at `menu.label`, a hidden StringWdgt left at (0,0) on a pinned menu → clicked the desktop (committed image_4 == image_3); its rectangle was dropped wholly inside the menu, so the overlap it tests never existed.
   - `macroDragEmbedRepositionNestedWindowStaysWithoutDwell`: every drag aimed at a collapsed title's stale centre and dragged the PANEL; legs B and C (detach, land on world) never ran.
   - `macroPromptShadowFollowsOnDrag`: after the first grab the title was collapsed off-screen; two drags met nothing.
@@ -329,38 +329,30 @@ The goal: a geometry change can break PIXELS, never DELIVERY. As executed (probe
   - ⭐⭐⭐ The lesson: a green screenshot test whose aim is not verified certifies only that the pixels are what they were — a recapture after any geometry change converts a misdelivery into the reference. T1 is the gate that makes that impossible from now on.
 - Gates: `fg presuite` per unit; at close `fg gauntlet`, `fg finger`, the finger dpr1 suite.
 
-### F — Foundations: tokens, primitives, spikes (zero recapture)
-- **F1 `Theme` (new class `src/Theme.coffee`, reached as `WorldWdgt.theme`, a sibling of `WorldWdgt.preferencesAndSettings`).**
-  - It holds the draft's named tokens:
-    - colours (`ink chromeDark chrome line frame chip desk plate item panel paper muted muted2 muted3 text2 code grip disabledText accent accentTint danger scrollbar`);
-    - radii (2/5/6/7/8/10/16);
-    - font ROLES (family stack + size + bold): menuRow, title, label, header, kindTag, member, code, document;
-    - metrics (barThickness, target 44, control heights 32/36, rule 1, glyph sizes 14/20, grip 36);
-    - shadows (offset, alpha).
-  - **It lands holding TODAY's values, under role names.** Each later wave flips only its own roles to draft values. ⇒ F1 is a pure refactor with zero pixel change.
-  - Migrate the ~14 visual `PreferencesAndSettings` fields and the ~30 hard-coded chrome literals (list in §0) onto roles. Behavioural prefs stay in `PreferencesAndSettings`.
-  - Add a `check-stinks.js` ratchet, `raw-chrome-color`: `Color.create`/`Color.<NAME>` literals inside the chrome file set, with content widgets and icons excluded. Baseline it after F1; it ratchets to 0 by G.
-  - Gates: `fg presuite` green with zero recaptures. `fg homepage` (`Theme` is core).
-- **F2 Primitives (each pixel-neutral when it lands).**
-  - **F2a** `BoxyAppearance`: per-corner radii (an array, HTML5 semantics, already supported by `fillRoundRect`), with `shapeContainsPoint` following them, plus a `paintStroke`. External frames then stroke LAST through `ClippingAtRectangularBoundsMixin`. Verify zero change: today's content is inset 3 and never overlaps the stroke.
-  - **F2b** `SizeAwareIconAppearance` honours `@widget.glyphSize`, centring as `IconAppearance.calculateRectangleOfIcon` does. Run a golden-master re-check of all 9 size-aware icons (probe pre/post, shasum; skill §1).
-  - **F2c** Chrome ICONS (§3b) as new size-aware classes: chevron `›`, `×`, `−`, `+`, `»`, tick `✓`, the 3-stroke grip. They are not yet used.
-  - **F2d** Seam rules: `Widget._seamRects()` (empty by default) plus appearance support, filling the seams with the `chrome` token (§2).
-  - **F2e** Font roles: `StringWdgt`/`TextWdgt` read family, size and bold from a role. 600 → bold, 500 → regular.
-  - **F2f** Frame look derivation: one `FrameWdgt` method yields bar/body/stroke/shadow tokens from (lifetime, parentage, collapsed, docked). It is the future focus hook (§0.5.2).
-- **Spikes. Report numbers and decide before W1.**
-  - **S1 Rounded bottom corners.** Run the §3a decision procedure: the census of which flush content types paint non-background pixels into the corner squares, then, only if needed, the corner-square clip with its measured cost, determinism, back-buffer/island paths and notch hit-testing. This decides §3 #4.
-  - **S2 Symbol inventory and atlas coverage** (§3b). Find every non-ASCII character in src label strings, test strings and the draft. Classify each as glyph or icon. Check each glyph against the font atlases and the `BitmapTextInvariant` set at the sizes it is used. Output: the icon list (into F2c/W2) and the atlas additions (font-specific or invariant).
-  - **S3 Icon size ladder.** Extend the skill's probe ladder (`.claude/skills/convert-icon-size-aware/probe-template.js`, `CONFIGS`) with 14, 20, 28, 36, 40, 44, 72, 80. The ladder lacks the draft's sizes today.
-  - **Doc fixes the spikes surfaced:** the skill's "desktop icon paints at 76" is stale (it is 60, since commit 8768f7da), and so is its "window-chrome = 16 logical" (the glyph is 24 in a 44 slot, since 5a45a135). Fix those lines.
-- Write `Fizzygum/docs/architecture/visual-design-system.md` (present tense):
-  - the tokens and their roles;
-  - the rules: §2 seams B/D; the 44 rule binds chrome; a bordered rounded rectangle means "press me"; solid offset shadows for desktop objects; chrome symbols are drawn, never typed; icons are size-aware integer geometry;
-  - the tree mapping of §1;
-  - how a new widget picks its look.
-
-  Link it from `widget-authoring-guidelines.md`. It is completed in G.
-- Commit F on master (approval). Gates: `fg gauntlet`, `fg homepage`.
+### F — Foundations: tokens, primitives, spikes — ✅ DONE 2026-10-17 (zero recapture except ONE benign inspector member-list shift, recaptured with owner approval — see "Findings")
+The system's look now has ONE home, and every primitive the waves need exists, each landed pixel-neutral. As executed (research data, probes and briefs under `Fizzygum-tests/.scratch/{f1,f2b,f2c,f2a,f2d,f2e,f2f,s1,s1b,s2,s3}/`; the living description is [`../../architecture/visual-design-system.md`](../../architecture/visual-design-system.md)):
+- **F1 `Theme`** (`src/Theme.coffee`, `WorldWdgt.theme`, built with each world, never saved in a snapshot). Five sections: PALETTE (the draft's 22 colours at draft values; read by nothing yet except `seamRule`), ROLES (~90, one per SURFACE at today's exact value — two surfaces sharing a value hold two roles), FONT ROLES (`@fonts`, plain `{family, size, bold}`: menuRow, menuHeader, windowTitle, buttonLabel, defaultText, tooltip, speechBubble, prompt, desktopCaption), METRICS (the chrome metric fields, same names), SHADOWS (desktop / pop-up / drag-lift offset+alpha, `shadowColor`).
+  - **Census first** (read-only): 313 colour literals in src — CHROME 133 (the plan's "~30" was 120 outside the prefs), CONTENT 84, ICON 45, OTHER 28, BORDERLINE 23.
+  - **F1a** moved every VISUAL `PreferencesAndSettings` field (14 colours, 13 fonts, 13 metrics) onto Theme and swapped ~150 readers in both repos (the serialization rig's prefs assertion now reads the theme); prefs keep behaviour only. A field read by several surfaces SPLIT into one role per surface (tooltip / speech-bubble fill and stroke, plot background).
+  - **F1b** moved every instance-level chrome literal (75 lines, 38 files) onto 66 new roles, plus the three shadows, the menu/tooltip/speech-bubble radii and the chrome font families. **F1c**: every shadow silhouette reads `shadowColor` (the boot primitive takes it as an ARGUMENT — boot code knows no world); the `raw-chrome-color` stink (`check-stinks.js`: per-stink `exclude` path prefixes + `stringAware`) baselined at **98**.
+  - **Left on purpose, counted by the ratchet** (each moves with its family's wave): the 29 CLASS-LEVEL / mixin state colours (a class-level declaration may not reference another class, the state machines copy them, and `HighlightableMixin.color_hover` is the subject of a mixin-editing test), the 12 wallpaper-pattern strings (a wallpaper design's own colours, not a role — §3 #12), 4 transparent clears, the clock's `'#D40000'` (its `drawSecondsHand` source is SHOWN in `macroAnalogClockInspectEdit`'s inspector: any text change moves pixels) and two dead clock colour arguments, the spreadsheet's 7 look colours (G family), and 41 non-chrome literals in counted files (palette data, the paint tools' source strings, debug/DOM sites).
+- **F2a** `BoxyAppearance`: per-corner radii (`cornerRadius` = a number or an HTML5 `[tl, tr, br, bl]` array; ONE normaliser; a uniform radius still reaches `fillRoundRect` as the same scalar), `shapeContainsPoint` per corner AND corrected to the FILLED pixels (pixel centre inside the outline — it was asymmetric: an r4 corner caught 6/10 notch points at bottom-left and 9/10 at bottom-right), and a `paintStroke` after-children entry behind the knob `strokesOverChildren` (default OFF ⇒ today's order exactly). ⚠ The plan's premise "today's content is inset 3 and never overlaps the stroke" is FALSE for pop-ups (padding 0, rows at inset 2): with the knob ON, a titled pop-up changes 2 px at dpr 2, a pinned menu 24 px, an overflowing pop-up hundreds at both dprs (scrolled rows and the thin bar under the ring) — the overlap table W1/W2 should expect when they switch it on (`.scratch/f2a/overlap-analysis.js`). Windows are neutral only because `windowBarFill` = `windowFrameStroke` = 125 today.
+- **F2b** `SizeAwareIconAppearance` honours `glyphSize`: `_paintBoxInDevicePx` gives a glyphSize'd widget the centred g×g square (integer, clipped to it); the unset path is untouched — ⚠ it must keep today's FLOOR centring, since a desktop icon's box is a NON-square 95×60 and `calculateRectangleOfIcon`'s rounding would move every desktop icon 1 px. Golden master (all 9 size-aware icons × 27 ladder sizes × 2 backends, square AND non-square boxes, 810 renders): byte-identical before/after.
+- **F2c** seven chrome icons as new size-aware classes, named for their SHAPE (the button carries the meaning): `Cross`, `Minus`, `Plus`, `ChevronRight`, `DoubleChevronRight`, `Tick`, `Grip` `IconAppearance`s — the draft's SVG paths hand-translated (no Path2D on SWCanvas); line unit = the 45° stroke's row RUN, ends n/4 inside pixel corners (a round-cap tie fix measured on SWCanvas); the tick is our own design (the draft has none). Node renders 217/217, browser 434/434 (SWCanvas byte-identical to node). Preview for the owner's review at W1/W2: `.scratch/f2c/preview.html`. ⇒ **W1 does NOT rewrite the legacy Close/Collapse/Uncollapse appearances in place**: the buttons wear the new shape-named classes and the legacy appearances are deleted.
+- **F2d** seams: `Widget._seamRects()` (none by default) + `Appearance._paintSeamRules`, called by `RectangularAppearance` and `BoxyAppearance` after the fill and before the children, in `seamRule` (= palette `chrome`).
+- **F2e** font roles: `StringWdgt` takes `opts.fontRole` (explicit fontName/fontSize/bold still win; no role = `fonts.defaultText`); `LabelButtonWdgt`, `MenuItemWdgt`, `StringFieldWdgt` forward it; 20 chrome construction sites converted. No `fonts.code` yet: the mono sites set only the family after construction (`_setFontNameNoSettle`) at TextAreaWdgt's default size — W3 (the Inspector's code pane) gives them the role.
+- **F2f** `FrameWdgt._frameLook()`: ONE pure query answering the whole frame look (manifestation, body appearance/fill/stroke/rounding, strip background appearance/colours/rounding, title ink and background, shadow) from lifetime × parentage; every skin consumer reads it; collapsed and docked are not inputs; a focus state would enter there (§0.5.2).
+- **Spikes.**
+  - **S1** (`.scratch/s1/corner-census.md`): option (d) alone does NOT suffice — 52 of 71 measured (content × frame) groups paint non-background pixels outside the radius-7 inner curve at margin 0: the viewport family's own border and plane (A), a bordered panel in the corner (B), a button on the corner (C), palettes (D), the spreadsheet (E), menus at r9 (F), cards/bands (G); the resize handle at inset 2 (H; keep it ≥ 3). An occupant inset ≥ 3 can never reach an outside pixel for r ≤ 9. ⇒ §3a step 3: spike S1b.
+  - **S1b** (option (a), the frame's rounded CHILD clip; `.scratch/s1b/`): built behind two `FrameWdgt` switches, both OFF (`clipsChildrenToRoundedOutline`, and `roundedChildClipIsOnePathClip` for the one-clip variant) — with them off a frame runs exactly the clipping mixin's code. On: the damage is split into bands (painted as today) and the parts inside the rounded corner squares, which paint their children under `BoxyAppearance.clipToOutline` (the outline traced under the fill's own matrix, so back buffers, island buffers and the shadow pass need nothing special); `Widget.isPointerTargetAt` lets a press in a clipping ancestor's notch fall through. Proven: node proof (outline exact, 41,674 interior + 176 notch hit points), browser notch probe (screen, presses, offscreen render and a tilted island all clean at dpr 1 and 2; the clip-off control shows the ears), and a suite-wide measurement under a flush-geometry prelude (margin 0, radius 8), 3 interleaved rounds per configuration: deterministic, split ≡ single shot for shot. **Cost: dpr 1 +6.9 %, dpr 2 +12.1 % suite wall time** (the runner reports in 5 s steps, identical every round: dpr 2 is at least one full step slower, ≥ ~6 %) — over the 3 % bar. The cost is SWCanvas's, not the clip's design: once a non-rectangular clip is active, every later `clip()` — even a child's plain rectangle — builds a canvas-sized bitmask, and `save()` clones it (`vendor/swcanvas/swcanvas.js` `clip`), so the split saves nothing. ⇒ §3a step 4: **owner decision (2026-10-17, confirmed after weighing per-corner radii alone): S1c — optimise SWCanvas (a rect clip under a mask kept as a tracked rect, the mask shared copy-on-write across `save()`) and re-measure with the same harness** (`.scratch/s1b/measure.sh`; adopt iff ≤ 3 %): one mechanism, correct for every content type. Only if that still fails: (b) a 3 px body inset (S1: an occupant inset ≥ 3 never reaches an outside pixel for r ≤ 9) or (e) square bottom corners. The switches stay off and the code stays as the re-measurement instrument.
+  - **S2** (`.scratch/s2/symbol-inventory.md`): coverage is per CHARACTER (every family/size/density alike). `➜` (U+279C) and `✓` (U+2713) are in NO atlas: every submenu row and every ticked row paints a placeholder box on SWCanvas TODAY — W2's chevron and tick icons fix a live defect. Also boxes today: the text menu's alignment pictograms (← → ↑ ↓ ∸ ⍿ ☓ ⋯), ⇄, ↵, ☐ ☒, ° ¹ ² “ ” ―, the video face symbols, most of the Templates "useful characters" palette, and a cropped multi-line text's newline. Safe: … — – • ’ − € £ § and Latin-1. Icon list adds pause/play/‹ (video, G), a wire-direction indicator (`ControllerMixin` " ➜"/" ⇄" rows — not a chevron), and drops `HandleWdgt`'s attach-row " ➜" (not a submenu). Atlas additions: ° ¹ ² “ ” ‘ ― (font sets) and ↔ → ↵ (+ ⇄ if W6 keeps it) (BitmapTextInvariant) — in `~/code/BitmapText.js/src/runtime/CharacterSets.js`; SWCanvas embeds its own copy of the sets and throws on a mismatch, so engine and fonts are re-vendored together.
+  - **S3**: the probe ladder gained 14, 28, 36, 40, 44, 72, 80 at dpr 1 and 14, 20, 40, 44 at dpr 2; the skill's stale size lines fixed (desktop icon S = 60 in a 95×60 band, chrome glyph 24 in a 44 slot). At the new sizes: Toolbars and GenericPanel draw SOLID tool boxes at 72 (their line unit steps to 2 at S ≥ 68) — relevant to W4's tile size; GenericPanel and Typewriter degenerate at 14; Bin draws lopsided ridges at S = 18/22/26/28/32 (pre-existing).
+- **Findings.**
+  - ⚠ **One benign inspector shift (recaptured, owner-approved):** `Widget._seamRects` joins the inherited-member list `macroDuplicatedInspectorDrivesCopiedTargetOnly` shows (both inspectors' scrolled lists sit one entry later; nothing else changes) — images 2 and 3, mouse + finger, dpr 1 + 2.
+  - Tooling consequence of moving the prefs: the icon skill's probe template (and every scratch copy) waited for `preferencesAndSettings.outlineColorString`; they now wait for `WorldWdgt.theme.iconOutline`.
+  - A SWCanvas defect (not ours to fix here): a thick rounded-rect stroke whose outer left edge sits at a negative device x loses EVERY row with a negative left extent (`swcanvas.js` `if (outer.leftX < 0) continue` colliding with `_getXExtent`'s `{leftX: -1}` sentinel) — a Boxy-stroked widget dragged past the world's left edge at dpr 2 (BACKLOG).
+  - On native, the plain Dashboards icon is not translation-invariant (1–3 AA px between whole-pixel offsets) — native rasterisation, not a geometry defect.
+- Gates: `fg presuite` after every 1–2 units (5 gates); `fg homepage` (Theme is core); the serialization rig; every unit's acceptance probe on the fresh build. At close, after the owner-approved recapture of the one inspector test: `fg gauntlet` green on all 18 legs (no load-flake), the finger dpr1 suite 321/321, `fg homepage` OK; `check-visualisations --strict` OK.
 
 ### Visual waves: a common procedure (every phase W1–G)
 1. Implement the units.
@@ -378,23 +370,23 @@ The goal: a geometry change can break PIXELS, never DELIVERY. As executed (probe
 Create the `redesign` branches here (owner approval).
 - **The desk.** World and test-world background → `desk` (#ECECE8). The homepage default wallpaper → plain.
 - **Shadows.** Every desktop object → (2,2) α0.12 (one token). The drag "lift" shadow is a separate token, kept; owner review.
-- **Window frame.** Radius 8, a 1 px `frame` stroke painted last (F2a), `paper` body fill.
+- **Window frame.** Radius 8, a 1 px `frame` stroke painted last (switch on F2a's `strokesOverChildren` — through `_frameLook()`), `paper` body fill. The frame look (F2f) decides it; also decide there whether a pinned menu takes the window body look (today it keeps the colours it was born with) and whether a strip's background radius follows re-parenting (today it is set only when the strip is built).
 - **Bar.**
   - Strip thickness = 44, plus the band's own 1 px `line` bottom rule. Bar inner padding 0, so pieces sit at x 0–44 and 44–88, and the title is centred between 88 px insets.
   - The body margin is decoupled from bar padding: split `barPadding` into two theme metrics. The body margin is 0 if S1 passes, else 3.
   - Corners `[7,7,0,0]`; `chrome` fill; title 13 px regular `muted`.
-- **Glyphs** (F2c/F2b): ×, − and + at 14 px, and the pencil/eye at 20 px, in `muted`. The legacy rings go. The legacy chrome glyph classes keep their names and are rewritten in place as size-aware, so there is zero call-site churn.
+- **Glyphs** (F2c/F2b): ×, − and + at 14 px, and the pencil/eye at 20 px, in `muted`. The legacy rings go. The bar buttons (`CloseIconButtonWdgt`, `CollapseIconButtonWdgt`, `UncollapseIconButtonWdgt`) wear F2c's shape-named size-aware classes (`CrossIconAppearance`, `MinusIconAppearance`, `PlusIconAppearance`) at `glyphSize` 14, and the legacy `Close`/`Collapse`/`UncollapseIconAppearance` are deleted (the button carries the meaning, the appearance the shape).
 - **Grip.** 36 px, 3 diagonal strokes 1.5 units wide in `grip`, inset 3, square hit area (§3 #5).
 - **Collapsed frames.** The bar alone; owner review of the corner treatment.
 - **Cards** (internal windows) and **docked bands.** The draft's embedded-toolbar skin: 1 px `line` border, radius 6, `paper`; the strip is 44 wide, `chrome`, `[5,0,0,5]`, with a 1 px `line` divider.
 - Menus and prompts are NOT restyled here, beyond inheriting the shadow token.
 
 ### W2 — Menus, lists, scrollbars, prompts, tooltips
-- **Menu body.** `paper`, a 1 px `frame` stroke, radius 10, 4 px side padding (`menuRowsBorder` → theme).
+- **Menu body.** `paper`, a 1 px `frame` stroke, radius 10, 4 px side padding (`menuRowsBorder`, a theme metric). Switching on `strokesOverChildren` for menus changes the pixels F2a's overlap table lists (titled pop-up, pinned menu, overflowing pop-up — `.scratch/f2a/overlap-analysis.js`).
 - **Header.** 44 tall (§3 #1), flat `paper`, 11 px `muted2`, a 1 px `chrome` rule (band-owned, rule D).
-- **Rows.** 15 px `ink`, 10 px side inset; hover is a `desk` rounded-6 plate; DROP the per-row hairline (`LabelButtonAppearance` / `CommandPanelWdgt._deriveRowSeparators`).
+- **Rows.** 15 px `ink`, 10 px side inset; hover is a `desk` rounded-6 plate; DROP the per-row hairline (`LabelButtonAppearance` / `CommandPanelWdgt._deriveRowSeparators`). Two facts F found: `MenuItemWdgt._createLabel` never passes bold to its label (a bold `menuRow` role would not render), and the alpha-0 `CommandPanelWdgt` still CATCHES presses in a menu's corner notches although `PopUpRowsViewportWdgt` is pointer-through (S1).
 - **Groups.** `DividerWdgt` becomes a 9 px band (4 + a 1 px `chrome` rule + 4). The 16-count assertion is already relational after T3.
-- **Chevron** (§3 #2):
+- **Chevron** (§3 #2) — this also fixes a live defect: `➜` and `✓` are in no SWCanvas atlas, so today every submenu row and every ticked row paints a placeholder box (S2):
   - Add a row flag plus the drawn `›` in 16 px-equivalent `muted3`, 10 px from the right edge.
   - Strip `" ➜"` from every src label.
   - Sweep the 26 tests, the toolkit's hard-coded labels, `scripts/` (menu-click-sweep KNOWN/SKIP lists) and docs.
@@ -415,7 +407,7 @@ Create the `redesign` branches here (owner approval).
 - **Toggle.** A single bordered toggle with a FIXED label ("Methods") whose fill shows the state: `accentTint` + `accent` border and text when on, `line`/`text2` when off. It replaces `ToggleButtonWdgt`'s two-label switch, or `ToggleButtonWdgt` is rewritten in place. Tests find it by reference (`inspector.showInheritedToggle`).
 - **Chip.** 32 tall, radius 16, `chip` border, `text2`; current = `accentTint`.
 - **Tool button.** 44, radius 6, `desk` when active.
-- **Inspector re-layout** (`src/meta-tools/InspectorWdgt.coffee`, and `ClassInspectorWdgt` alike):
+- **Inspector re-layout** (`src/meta-tools/InspectorWdgt.coffee`, and `ClassInspectorWdgt` alike; its code pane, the code areas and the mono text panels take a `fonts.code` role here — F2e left them setting only the family, via `_setFontNameNoSettle`, after construction):
   - A breadcrumb band, 44 incl. its seam: "Class" in `muted2`, then the hierarchy chips with drawn `›` separators, wrapping to more rows when long. The current class is the accent chip. The mixin-donor and "this object" labels get a place; owner review.
   - A toggles band, 48.
   - The body: list \| code, 1 px apart, with the seams painted (§2).
@@ -429,7 +421,7 @@ Create the `redesign` branches here (owner approval).
   - A `paper` tile, radius 16 at 64 (it scales with the tile), with a 1 px `line` border and the shared shadow.
   - The glyph is centred at tile × 40/64.
   - A `plate` label plate: radius 8, 1/7 padding, 12 px text with line-height 16, word-wrapping to the cell width minus 14 (two-line plates span the cell), and its own shadow. It replaces the white-with-outline caption.
-- **⭐ ONE size knob (owner note 4).** `Theme.desktopIconTile` (default chosen at W4 from the S3 ladder: 64, 72 or 80). Everything derives from it:
+- **⭐ ONE size knob (owner note 4).** `Theme.desktopIconTile` (default chosen at W4 from the S3 ladder: 64, 72 or 80 — ⚠ S3 measured that at 72 the Toolbars and GenericPanel icons draw SOLID tool boxes, their line unit stepping to 2 at S ≥ 68). Everything derives from it:
   - the glyph size, the cell width (tile + 32), the grid pitch and the folder-window size;
   - `standardDesktopIconExtent`'s 95×92 and its six readers;
   - `IconGridPanelWdgt` 105/102/5;
@@ -441,7 +433,7 @@ Create the `redesign` branches here (owner approval).
 - **Icons, via `/convert-icon-size-aware`.** One at a time, each with owner review rounds (1–4 each). Use the redesign family's line unit (§3 #14). Retune `_pxSlideCard`'s 5 constants to the shared motif (34×24 r4 at (5,10)/44 → L .114, T .227, R .886, B .773, r .091); patch, panel and slides share it.
   - **Redesign in place** (already size-aware): Typewriter (Docs), PatchProgramming, GenericPanel, Toolbars (Super toolbar: column + 3 stars, the hybrid bezier dropped), SimpleSlide, Dashboards (4 tiles, no card), Folder (Examples), Bin.
   - **New size-aware bodies:** FloppyDisk (How to save?), FridgeMagnets (Fizzytiles), and Draw's spray can. The spray can is a new drawing, so it gets a new class; `PaintBucketIconWdgt`'s catalog entry in `AppCatalog.coffee` moves to it.
-- **Clock** (`AnalogClockAppearance`):
+- **Clock** (`AnalogClockAppearance`; its second hand and centre dot `'#D40000'` and two dead colour arguments are still literals — F1b left them because `macroAnalogClockInspectEdit` shows `drawSecondsHand`'s source — they move onto roles here):
   - An opaque `paper` disc, no border, 4 `#9A9A95` dots;
   - hands: hour 6 / minute 4 in `ink`, second 2 in `accent`, all with round caps; the centre dot in `accent`.
   - Integer-ise the widths per size, holding a minimum width at dpr 1 (second hand ≥ 1 px; never a 1↔2 px wobble).
@@ -581,4 +573,9 @@ Legacy icons shown on any redesigned surface are converted with the skill. Every
 - [x] T: tests aim by meaning; every widget aim verifies its hit (zero recapture)
       **DONE 2026-10-16** (§4 T): the runtime aim check (`AimCheckInputEvent`, "AIM MISSED"), the meaning verbs,
       the census conversions, `scripts/aim-census.js`; 9 tests found that never delivered their intent, fixed in
-      source with value assertions (their recapture is owner-gated).
+      source with value assertions, then recaptured (owner-approved).
+- [x] F: `Theme` tokens at today's values, primitives F2a–F2f, spikes S1 (rounded corners, §3a) / S2 (symbol inventory, §3b) / S3 (icon ladder)
+      **DONE 2026-10-17** (§4 F): `Theme` (palette, per-surface roles, font roles, metrics, shadows) with the `raw-chrome-color`
+      ratchet; per-corner radii + filled-pixel hit shape + stroke-over-children knob; size-aware icons honour `glyphSize`; seven
+      shape-named chrome icons; container-owned seams; `fontRole`; `FrameWdgt._frameLook()`; the rounded child clip (off). Spikes
+      measured; the corner decision went to S1c.

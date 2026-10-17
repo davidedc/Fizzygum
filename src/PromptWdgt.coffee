@@ -124,8 +124,7 @@ class PromptWdgt extends FrameWdgt
   _buildAndAddEntryFieldInto: (panel, isNumericField) ->
     @tempPromptEntryField = new StringFieldWdgt (@defaultValue or ""),
       minTextWidth: @intendedWidth or 100
-      fontSize: WorldWdgt.preferencesAndSettings.prompterFontSize
-      fontStyle: WorldWdgt.preferencesAndSettings.prompterFontName
+      fontRole: WorldWdgt.theme.fonts.prompt
       isNumeric: isNumericField
     panel._addNoSettle @tempPromptEntryField
     # _addNoSettle skips the child's calculateAndUpdateExtent (which measures the

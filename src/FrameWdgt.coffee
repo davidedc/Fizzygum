@@ -113,6 +113,19 @@ class FrameWdgt extends Widget
   # the window is going away -- see the note there.
   _beingFullDestroyed: undefined
 
+  # ===== the ROUNDED CHILD CLIP's two switches (redesign plan §3a option (a), spike S1b) =====
+  # ON, I clip my children to my rounded OUTLINE rather than to my rectangle, so content laid flush
+  # into a rounded window cannot paint (or catch presses) in the notches outside its corners. Both
+  # are plain class-level values, off; _roundedChildClipRadii reads the first and
+  # _paintChildrenInsideMyRoundedOutline the second, and nothing else reads either. Off, every paint
+  # and hit test of mine runs exactly the code a rectangular clip runs.
+  clipsChildrenToRoundedOutline: false
+  # how a damaged part of me that reaches a corner square is clipped: false = the damaged part is cut
+  # into its corner squares, each painted under the rounded clip, and the rest, painted as an
+  # unclipped rectangle; true = the whole damaged part is painted under ONE rounded clip. The two
+  # paint the same pixels; they differ in what the clip costs.
+  roundedChildClipIsOnePathClip: false
+
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
   # mutating anything, so a parent (a stack/scroll holding this window) can MEASURE this window
@@ -150,27 +163,27 @@ class FrameWdgt extends Widget
   #   showsText     whether the title piece carries its text (a bar too thin for text does not).
   #   naturalWidth  what the bar contributes to its frame's width hug: "none" asks for nothing,
   #                 "titleText" hugs the title text.
-  #   thickness / slotSize / glyphSize / padding / textHeight / fontSize
-  #                 the metrics, every one of them a preference (G2): the strip's own thickness,
+  #   thickness / slotSize / glyphSize / padding / textHeight
+  #                 the metrics, every one of them a theme metric (G2): the strip's own thickness,
   #                 the target box a piece advances the strip by, the glyph drawn inside that box
   #                 (G3: a target and its mark are separate dials), the gap around and between
-  #                 pieces, and the title's height and font size.
+  #                 pieces, and the title's height.
+  #   fontRole      the title's font: a theme font role (family, size and weight together).
   #
-  #   titleStyle    how the title strip is built, coloured and laid out: "windowBar" (the strip
-  #                 spans my whole top edge, its background inset a pixel, the title text left-
-  #                 aligned in the span the pieces leave) or "menuHeader" (a rounded header box
-  #                 inset by the padding, the title text hugging itself and centred in it).
+  #   titleStyle    how the title strip is built and laid out: "windowBar" (the strip spans my
+  #                 whole top edge, its background inset a pixel, the title text left-aligned in
+  #                 the span the pieces leave) or "menuHeader" (a rounded header box inset by the
+  #                 padding, the title text hugging itself and centred in it).
   #
   # WHICH row applies is my LIFETIME (program ruling C4): a TRANSIENT frame is a menu and wears
   # the pop-up row -- `pieces: ["title"]` (a tap on it pins the frame), `naturalWidth: "titleText"`,
-  # the menu-header metrics and skin. A PERSISTENT one is furniture and wears the window row,
-  # whatever it was born as: a pinned menu IS a window, down to its strip. Both are laid out by the
-  # same bar through the same arrange. For the window rows the strip's COLOURS are a separate axis,
-  # derived from parentage by _setAppearanceAndColorOfTitleBackground beside my own
-  # _deriveAndSetBodyAppearance.
+  # the menu-header metrics. A PERSISTENT one is furniture and wears the window row, whatever it
+  # was born as: a pinned menu IS a window, down to its strip. Both are laid out by the same bar
+  # through the same arrange. What the strip LOOKS like -- its background's appearance and colours,
+  # its title's ink -- is not the spec's: it is my look (_frameLook), which the bar reads.
   _barSpec: ->
     return @_transientBarSpec() if @isTransientPopUp()
-    preferences = WorldWdgt.preferencesAndSettings
+    theme = WorldWdgt.theme
     pieces = []
     pieces.push "close" if @isFreeFloating()
     pieces.push "collapse"
@@ -190,15 +203,15 @@ class FrameWdgt extends Widget
     showsText: axis is "horizontal"
     naturalWidth: "none"
     # the strip: icon square + a padding above and below. The strip's own padding is the bar
-    # preference (G2), NOT my body margin: the two coincide on a frame whose payload takes the
+    # metric (G2), NOT my body margin: the two coincide on a frame whose payload takes the
     # chrome margin, and a payload that keeps its own border (a rows panel) leaves my body margin
     # at zero while its window strip stays a window strip.
-    thickness: Math.round preferences.barIconSize + 2 * preferences.barPadding
-    slotSize: preferences.barIconSize
-    glyphSize: preferences.barGlyphSize
-    padding: preferences.barPadding
-    textHeight: preferences.titleBarTextHeight
-    fontSize: preferences.titleBarTextFontSize
+    thickness: Math.round theme.barIconSize + 2 * theme.barPadding
+    slotSize: theme.barIconSize
+    glyphSize: theme.barGlyphSize
+    padding: theme.barPadding
+    textHeight: theme.titleBarTextHeight
+    fontRole: theme.fonts.windowTitle
     titleStyle: "windowBar"
 
   # WHICH DIRECTION MY STRIP RUNS (program rulings C13/C15). A free frame's bar is on TOP, always
@@ -237,20 +250,20 @@ class FrameWdgt extends Widget
   #   A titled strip is floored at menuRowHeight: the tap that pins me lands on it, so it is a
   # target of the same size as a row (G3/G5), and it is one of my rows in every other respect.
   _transientBarSpec: ->
-    preferences = WorldWdgt.preferencesAndSettings
+    theme = WorldWdgt.theme
     titled = !!@_titleForContents @contents
-    textHeight = @bar?.label?.height() ? preferences.titleBarTextHeight
+    textHeight = @bar?.label?.height() ? theme.titleBarTextHeight
     pieces: (if titled then ["title"] else [])
     resizer: "none"
     axis: "horizontal"
     showsText: true
     naturalWidth: "titleText"
-    thickness: (if titled then Math.max(textHeight + 2, preferences.menuRowHeight) else 0)
-    slotSize: preferences.barIconSize
-    glyphSize: preferences.barGlyphSize
-    padding: preferences.menuRowsBorder
+    thickness: (if titled then Math.max(textHeight + 2, theme.menuRowHeight) else 0)
+    slotSize: theme.barIconSize
+    glyphSize: theme.barGlyphSize
+    padding: theme.menuRowsBorder
     textHeight: textHeight
-    fontSize: preferences.menuHeaderFontSize
+    fontRole: theme.fonts.menuHeader
     titleStyle: "menuHeader"
 
   # What my title contributes to my payload's OWN row width: a pop-up's rows all equalize to the
@@ -286,7 +299,7 @@ class FrameWdgt extends Widget
     if spec.resizerCanOverlapContents
       @_titlebarHeight() + 2 * @padding + @_topDockThickness() + @_bottomDockThickness()
     else
-      @_titlebarHeight() + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize + @_topDockThickness() + @_bottomDockThickness()
+      @_titlebarHeight() + 3 * @padding + WorldWdgt.theme.handleSize + @_topDockThickness() + @_bottomDockThickness()
 
   # ===== the four edge slots' layout terms =====
   # The frame docked at one of my edges, WHEN IT COUNTS: the slot's occupant, still my child, its
@@ -452,8 +465,6 @@ class FrameWdgt extends Widget
     super()
     @closeButton = opts.closeButton
 
-    @strokeColor = Color.create 125,125,125
-
     @defaultContents = new FrameContentsPlaceholderText
     if !@contents?
       @contents = @defaultContents
@@ -473,8 +484,12 @@ class FrameWdgt extends Widget
     @padding = @_chromePadding()
     # TODO this looks better:
     #@padding = 10
-    @color = Color.create 248, 248, 248
-    # after my own colours: the pop-up manifestation's body skin brings its own (see there)
+    # I am born in my look's body colours. A pop-up citizen declares its lifetime before this
+    # constructor runs, so a menu is born in the menu box's; the derive then applies my body
+    # appearance (and, transient, those colours again with the rounding -- see there).
+    look = @_frameLook()
+    @strokeColor = look.bodyStroke
+    @color = look.bodyFill
     @_deriveAndSetBodyAppearance()
     @_buildAndConnectChildren()
 
@@ -521,13 +536,13 @@ class FrameWdgt extends Widget
   # The margin my body keeps around my payload. It is the PAYLOAD's question, not my
   # manifestation's: a payload that draws its own border (a rows panel keeps the menu border, and
   # its box IS my box) gets none, because a second margin would only double the first. Everything
-  # else gets the chrome margin preference. Read once, at construction, like the payload it
+  # else gets the theme's chrome margin. Read once, at construction, like the payload it
   # follows.
   _chromePadding: ->
     if @contents?.keepsItsOwnChromeMargin?()
       0
     else
-      WorldWdgt.preferencesAndSettings.barPadding
+      WorldWdgt.theme.barPadding
 
 
   # in general, windows just create a reference of themselves and
@@ -1441,16 +1456,12 @@ class FrameWdgt extends Widget
     else
       @removeShadow()
 
-  # A TRANSIENT frame's own shadow: mid-gesture UI floats over the desktop at (5,5). Furniture
-  # takes the shadow the caller asks for — the desktop shadow Widget's add gives every world child,
-  # and the floaty one the hand adds while dragging — which is why an EXPLICIT offset always wins in
-  # both rows.
+  # The shadow I cast at rest is my look's (_frameLook): mid-gesture UI floats over the desktop at
+  # the theme's pop-up shadow, furniture at the desktop shadow every world child wears. An EXPLICIT
+  # offset or alpha always wins: the hand adds its lifted one while it carries me.
   addShadow: (offset, alpha) ->
-    if @isTransientPopUp()
-      super (offset ? new Point 5, 5), (alpha ? 0.2)
-      return
-
-    super offset, alpha
+    look = @_frameLook()
+    super (offset ? look.shadowOffset), (alpha ? look.shadowAlpha)
 
   # ALWAYS-ON invariant, in the family of Widget._assertBoundsWellFormed: a pop-up bigger
   # than the world is a pop-up with rows nothing can click. It needs a guard of its own
@@ -1475,7 +1486,7 @@ class FrameWdgt extends Widget
   # strip itself: a tap there PINS me, which is the opposite of dismissing me.
   popUpCenteredAtHand: (world) ->
     offset = new Point (Math.floor @width() / 2),
-      (@_barSpec().thickness + WorldWdgt.preferencesAndSettings.menuRowsBorder + 1)
+      (@_barSpec().thickness + WorldWdgt.theme.menuRowsBorder + 1)
     @popUp (world.hand.position().subtract offset), world
 
   popUpAtHand: ->
@@ -1586,33 +1597,225 @@ class FrameWdgt extends Widget
     # as the _resetToDefaultContents lifecycle path above.
     @_buildAndConnectChildrenNoSettle()
 
-  # The BODY appearance half of my skin (the title-bar half is
-  # FrameBarWdgt._setAppearanceAndColorOfTitleBackground). THREE manifestations, derived from my
-  # LIFETIME and my PARENTAGE and from nothing else (program ruling C4): transient — the MENU box;
-  # persistent on the desktop — the boxy BoxyAppearance of a window; persistent nested in a real
-  # container — the flat RectangularAppearance of a card. There is deliberately no fourth,
-  # "pinned menu" skin: that would key on what I once was, the one input a derived skin may never
-  # take. Set at construction, re-derived on every re-parenting (_reactToBeingAdded) and on every
-  # lifetime change (_setLifetimeNoSettle).
-  #   The menu branch carries its own colours: a menu box is grey with the menu stroke, and it
-  # is rounded only when it has a title strip to round (an untitled pop-up takes the boxy
-  # default). Nothing else paints them -- my rows panel is a transparent stack inside me.
-  _deriveAndSetBodyAppearance: ->
+  # MY LOOK: every value my skin wears, as ONE plain record -- the one place a frame's look is
+  # decided. My body (_deriveAndSetBodyAppearance, and my constructor's birth colours), my strip
+  # (FrameBarWdgt: its background's build and skin, its title's ink) and my own shadow (addShadow)
+  # READ it; none of them decides a look of its own. A pure query: it reads my state and the theme,
+  # writes nothing, and answers at any time (a pop-up citizen asks before its own super has run).
+  #   The inputs are my MANIFESTATION (program ruling C4) -- my lifetime crossed with my parentage:
+  # transient is a MENU (its pop-up header style goes with it), persistent on the desktop a WINDOW,
+  # persistent nested in a real container a CARD -- plus, for a menu's rounding, whether it carries
+  # a title strip to round and the world's flat-look preference. Collapsed and docked are not
+  # inputs: a collapsed frame wears the look it wears expanded, and a docked band is the card its
+  # parentage makes it. A FOCUS state would enter here, and only here (redesign plan §0.5.2).
+  #   The fields:
+  #     manifestation       "menu" | "window" | "card"
+  #     bodyAppearance      the appearance class my body wears
+  #     bodyFill, bodyStroke, bodyCornerRadius
+  #                         my body's colours and rounding (an undefined rounding is the
+  #                         appearance's own default). A menu box is grey with the menu stroke --
+  #                         nothing else paints it: my rows panel is a transparent stack inside me.
+  #     barAppearance       the appearance class my strip's background wears
+  #     barFill, barStroke  its colours (no stroke: the background keeps the one it was built with)
+  #     barCornerRadius     its rounding, given when the strip builds it (undefined: the box's own)
+  #     titleText           my title's ink
+  #     titleBackground     the fill behind my title's text (only a pop-up header has one)
+  #     shadowOffset, shadowAlpha
+  #                         the shadow I cast at rest on the desktop
+  _frameLook: ->
+    theme = WorldWdgt.theme
     if @isTransientPopUp()
-      @appearance = new MenuAppearance @
-      @color = Color.create 238, 238, 238
-      @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
-      @cornerRadius =
+      # rounded only when there is a title strip to round (an untitled pop-up takes the boxy
+      # default), and not at all in a flat look
+      menuCornerRadius =
         if @_barSpec().pieces.length is 0
           undefined
         else if WorldWdgt.preferencesAndSettings.isFlat
           0
         else
-          5
-    else if @isInternal()
-      @appearance = new RectangularAppearance @
+          theme.menuCornerRadius
+      return {
+        manifestation: "menu"
+        bodyAppearance: MenuAppearance
+        bodyFill: theme.menuBodyFill
+        bodyStroke: theme.menuStroke
+        bodyCornerRadius: menuCornerRadius
+        barAppearance: BoxyAppearance
+        barFill: theme.menuHeaderFill
+        barStroke: undefined
+        barCornerRadius: theme.menuHeaderCornerRadius
+        titleText: theme.menuHeaderText
+        titleBackground: theme.menuHeaderFill
+        shadowOffset: theme.popUpShadowOffset
+        shadowAlpha: theme.popUpShadowAlpha
+      }
+
+    internal = @isInternal()
+    manifestation: if internal then "card" else "window"
+    bodyAppearance: if internal then RectangularAppearance else BoxyAppearance
+    bodyFill: theme.windowBodyFill
+    bodyStroke: theme.windowFrameStroke
+    bodyCornerRadius: undefined
+    barAppearance: if internal then RectangularAppearance else BoxyAppearance
+    barFill: if internal then theme.cardBarFill else theme.windowBarFill
+    barStroke: if internal then theme.cardBarStroke else theme.windowBarStroke
+    barCornerRadius: undefined
+    titleText: theme.windowTitleText
+    titleBackground: undefined
+    shadowOffset: theme.desktopShadowOffset
+    shadowAlpha: theme.desktopShadowAlpha
+
+  # The BODY half of my skin (the strip's half is FrameBarWdgt._setAppearanceAndColorOfTitleBackground),
+  # applied from my look (_frameLook): the menu box, a window's boxy body, a card's flat one. There is
+  # deliberately no fourth, "pinned menu" look: that would key on what I once was, the one input a
+  # derived look may never take. Set at construction, re-derived on every re-parenting
+  # (_reactToBeingAdded) and on every lifetime change (_setLifetimeNoSettle).
+  _deriveAndSetBodyAppearance: ->
+    look = @_frameLook()
+    @appearance = new look.bodyAppearance @
+    # a pinned menu keeps the body colours it was born with: only a transient derivation applies them
+    return unless look.manifestation is "menu"
+    @color = look.bodyFill
+    @strokeColor = look.bodyStroke
+    @cornerRadius = look.bodyCornerRadius
+
+  # ===== the ROUNDED CHILD CLIP (its two switches are declared at the top of the class) =====
+
+  # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] of the ROUNDED outline I clip my
+  # children to, or undefined when I clip them to my rectangle: my body's own radii, read through my
+  # appearance, when the clip is on and my body is rounded. A card's flat body (RectangularAppearance)
+  # has no rounded corners, so a card keeps the rectangle. My paint asks it, and so does every
+  # descendant's pointer test (Widget.isPointerTargetAt probes its ancestors for it). The ONE reader
+  # of clipsChildrenToRoundedOutline; when the clip is adopted, that switch becomes a field of my look
+  # (_frameLook), read here.
+  _roundedChildClipRadii: ->
+    return undefined unless @clipsChildrenToRoundedOutline
+    radii = @appearance?.outlineCornerRadii?()
+    return undefined unless radii? and Math.max(radii...) > 0
+    radii
+
+  # My children's paint, intercepted at the content-recursion point the clipping mixin owns (the
+  # ViewportWdgt idiom). With no rounded child clip it IS the mixin's body, reached through
+  # PanelWdgt's injected copy (`super` here would bind to base Widget's un-clipping version); with
+  # one it is that body (kept in lockstep with it) with my children painted inside my outline.
+  _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
+    radii = @_roundedChildClipRadii()
+    if !radii?
+      return PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow.call @, aContext, clippingRectangle, appliedShadow
+    damagedPartOfFrame = @boundingBox().intersect clippingRectangle
+    if !damagedPartOfFrame.isEmpty()
+      if aContext == world.worldCanvasContext
+        @_recordDrawnAreaForNextDamageRects()
+      @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
+      @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfFrame, appliedShadow, radii
+
+  # The shadow-pass twin. An OPAQUE frame's silhouette is its own box and paints no child (the
+  # mixin's short-circuit), so only a translucent frame has children to clip here — under the
+  # shadow offset this pass translates by, which the clip follows because it is traced under the
+  # context's own matrix.
+  _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
+    radii = @_roundedChildClipRadii()
+    if !radii? or @alpha == 1
+      return PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferJustShadow.call @, aContext, clippingRectangle, appliedShadow
+    clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
+    if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
+      damagedPartOfFrame = @boundingBox().intersect clippingRectangle
+      if !damagedPartOfFrame.isEmpty()
+        aContext.save()
+        aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
+        @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
+        @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfFrame, appliedShadow, radii
+        aContext.restore()
+
+  # Paint my children over the damaged part of me so that nothing of theirs shows outside my
+  # rounded outline, paying for the rounded clip only where it can matter: away from my corner
+  # squares my outline IS my box, so damage that touches no square is painted exactly as the
+  # rectangular clip paints it. Damage that reaches a square is either CUT (_roundedChildClipPieces)
+  # — the parts inside the squares painted under the rounded clip, the rest as plain rectangles — or,
+  # with roundedChildClipIsOnePathClip (this is that switch's one reader), painted whole under ONE
+  # rounded clip. Both paint the same pixels: each piece goes down as the clipping rectangle exactly
+  # as the whole damaged part would, and the pieces tile it.
+  _paintChildrenInsideMyRoundedOutline: (aContext, damagedPartOfMe, appliedShadow, radii) ->
+    area = damagedPartOfMe.round()
+    pieces = @_roundedChildClipPieces area, radii
+    if pieces? and pieces.corners.length == 0
+      @_paintChildrenOver aContext, damagedPartOfMe, appliedShadow
+    else if !pieces? or @roundedChildClipIsOnePathClip
+      @_paintChildrenUnderMyOutlineClip aContext, area, appliedShadow
     else
-      @appearance = new BoxyAppearance @
+      for band in pieces.bands
+        @_paintChildrenOver aContext, band, appliedShadow
+      for corner in pieces.corners
+        @_paintChildrenUnderMyOutlineClip aContext, corner, appliedShadow
+
+  # `area` (an integer rectangle inside my box) cut for the rounded clip: `corners`, its parts inside
+  # my corner SQUARES (r×r at a corner of radius r, the only places my outline leaves my box), and
+  # `bands`, the rest, as horizontal bands. The pieces are disjoint and tile `area` exactly; adjacent
+  # bands spanning the same columns are merged, so a uniformly rounded box yields at most three
+  # bands and four corner parts. A part of `area` in no square leaves `corners` empty. Undefined when
+  # two squares would overlap (a box too small for its own rounding): the caller then clips the
+  # whole area.
+  _roundedChildClipPieces: (area, radii) ->
+    [topLeft, topRight, bottomRight, bottomLeft] = (Math.ceil radius for radius in radii)
+    box = @boundingBox().round()
+    left = box.left()
+    top = box.top()
+    right = box.right()
+    bottom = box.bottom()
+    squaresOverlap = (topLeft + topRight > box.width()) or (bottomLeft + bottomRight > box.width()) or
+      (topLeft + bottomLeft > box.height()) or (topRight + bottomRight > box.height())
+    return undefined if squaresOverlap
+    squares = [
+      new Rectangle left, top, left + topLeft, top + topLeft
+      new Rectangle right - topRight, top, right, top + topRight
+      new Rectangle right - bottomRight, bottom - bottomRight, right, bottom
+      new Rectangle left, bottom - bottomLeft, left + bottomLeft, bottom
+    ]
+    corners = (area.intersect square for square in squares).filter (piece) -> piece.isNotEmpty()
+    return { corners: corners, bands: [area] } if corners.length == 0
+    # cut horizontally wherever a square starts or ends inside the area; within one cut the
+    # squares on each side, hence the band's columns, are fixed
+    cuts = [area.top(), area.bottom()]
+    for y in [top + topLeft, top + topRight, bottom - bottomLeft, bottom - bottomRight]
+      cuts.push y if area.top() < y < area.bottom()
+    cuts.sort (a, b) -> a - b
+    bands = []
+    for i in [0...cuts.length - 1]
+      bandTop = cuts[i]
+      bandBottom = cuts[i + 1]
+      continue unless bandTop < bandBottom
+      leftEdge =
+        if bandTop < top + topLeft then left + topLeft
+        else if bandTop >= bottom - bottomLeft then left + bottomLeft
+        else left
+      rightEdge =
+        if bandTop < top + topRight then right - topRight
+        else if bandTop >= bottom - bottomRight then right - bottomRight
+        else right
+      bandLeft = Math.max area.left(), leftEdge
+      bandRight = Math.min area.right(), rightEdge
+      continue unless bandLeft < bandRight
+      previous = bands[bands.length - 1]
+      if previous? and previous.bottom() == bandTop and previous.left() == bandLeft and previous.right() == bandRight
+        bands[bands.length - 1] = new Rectangle bandLeft, previous.top(), bandRight, bandBottom
+      else
+        bands.push new Rectangle bandLeft, bandTop, bandRight, bandBottom
+    { corners: corners, bands: bands }
+
+  # Paint my children over `rectangle`, which goes down as the clipping rectangle each child honours.
+  _paintChildrenOver: (aContext, rectangle, appliedShadow) ->
+    @children.forEach (child) ->
+      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, rectangle, appliedShadow
+
+  # Paint my children over `rectangle` with the context clipped to it AND to my outline: the
+  # rectangle in the context's device pixels (the space every appearance scope clips in), my outline
+  # traced by my body's appearance under the same matrix its own fill is traced under.
+  _paintChildrenUnderMyOutlineClip: (aContext, rectangle, appliedShadow) ->
+    aContext.save()
+    aContext.clipToRectangle rectangle.left() * ceilPixelRatio, rectangle.top() * ceilPixelRatio, rectangle.width() * ceilPixelRatio, rectangle.height() * ceilPixelRatio
+    @appearance.clipToOutline aContext
+    @_paintChildrenOver aContext, rectangle, appliedShadow
+    aContext.restore()
 
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
   # core is non-settling: it adds the bar (whose pieces build through the bar's own non-settling
@@ -1806,7 +2009,7 @@ class FrameWdgt extends Widget
     # a piece gained here is placed in this same pass.
     @_reDeriveBarRosterNoSettle()
 
-    closeIconSize = WorldWdgt.preferencesAndSettings.barIconSize
+    closeIconSize = WorldWdgt.theme.barIconSize
 
     stackHeight = 0
 

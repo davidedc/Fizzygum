@@ -5,7 +5,7 @@ class IncreaseFontSizeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "increase font size"
 
-  createAppearance: -> new IncreaseFontSizeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new IncreaseFontSizeIconAppearance @, WorldWdgt.theme.iconInk
 
   activated: ->
     if world.editorFocusWdgt?.originallySetFontSize?

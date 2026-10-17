@@ -36,19 +36,24 @@ class LabelButtonWdgt extends ButtonWdgt
   # ⚠ ONE field, ONE name: ButtonWdgt's `subjectOfAction` rides the `subject` option here too.
   # A second alias for it is exactly what an options vocabulary cannot afford (R4), because a
   # forwarded bag would then carry a key the receiver never reads.
+  #
+  # My label's font is a ROLE, as StringWdgt's is: `fontRole` (the menu row's when absent) gives
+  # its family, size and weight, and an explicit fontStyle / fontSize / bold overrides that member.
+  # The role is resolved into my three label fields here and not kept.
   constructor: (target, action, opts = {}) ->
     super target, action, opts
 
     @labelString = opts.labelString
-    @fontSize = opts.fontSize ? WorldWdgt.preferencesAndSettings.menuFontSize
-    @fontStyle = opts.fontStyle ? "sans-serif"
+    fontRole = opts.fontRole ? WorldWdgt.theme.fonts.menuRow
+    @fontSize = opts.fontSize ? fontRole.size
+    @fontStyle = opts.fontStyle ? fontRole.family
     @centered = opts.centered ? false
-    @labelColor = opts.color ? WorldWdgt.preferencesAndSettings.menuButtonsLabelColor
-    @labelBold = opts.bold ? false
+    @labelColor = opts.color ? WorldWdgt.theme.menuRowText
+    @labelBold = opts.bold ? fontRole.bold
     @labelItalic = opts.italic ? false
 
     # the flat fill (ButtonWdgt defaults to white)
-    @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor
+    @color = WorldWdgt.theme.menuRowFill
     @appearance = new LabelButtonAppearance @
 
     if @labelString?

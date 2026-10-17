@@ -12,7 +12,7 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
     # follows from the appearance answering shapeContainsPoint -- nothing to declare here
     @appearance = new UpperRightTriangleAppearance @, @positionWithinParent
 
-    size = WorldWdgt.preferencesAndSettings.handleSize
+    size = WorldWdgt.theme.handleSize
     @__commitExtent new Point size, size
     parent?.add @, layoutSpec: @cornerSpec
 

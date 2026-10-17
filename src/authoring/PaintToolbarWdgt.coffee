@@ -517,7 +517,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
   _deriveToolHighlights: ->
     armedTool = @_armedTool()
     for tool in @_tools()
-      tool.faceWidget.setColor (if tool is armedTool then @highlightedToolIconColor else WorldWdgt.preferencesAndSettings.iconDarkLineColor)
+      tool.faceWidget.setColor (if tool is armedTool then @highlightedToolIconColor else WorldWdgt.theme.iconInk)
     return
 
   _reLayoutChildren: ->

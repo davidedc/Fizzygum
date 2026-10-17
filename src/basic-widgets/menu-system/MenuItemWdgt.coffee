@@ -45,7 +45,7 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # The SPEC is the identity — it is what this row IS: spec.label is the STRING I say and
   # spec.icon the optional widget I show. The rest is the menu-level CONTEXT the owning
-  # MenuWdgt supplies (font size / style, centring, and the subject), which is the
+  # MenuWdgt supplies (font role / size / style, centring, and the subject), which is the
   # same for every row, so it rides `opts`.
   #
   # The spec's per-item fields are unpacked onto LabelButtonWdgt's options here; an absent
@@ -60,6 +60,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       # a REFLECTING row is born showing the current value — no build-then-fix-up dance, and no
       # placeholder-prefix pass to reserve the label width
       labelString: (@rowReflection?.currentLabel() ? commandSpec.label or "close")
+      fontRole: opts.fontRole
       fontSize: opts.fontSize
       fontStyle: opts.fontStyle
       centered: opts.centered
@@ -162,7 +163,7 @@ class MenuItemWdgt extends LabelButtonWdgt
     # buttons are menu rows too). The label then sits centred in whatever height wins, rounded
     # because every widget is placed in integer pixels.
     labelExtent = @label.extent()
-    rowHeight = Math.max labelExtent.y, WorldWdgt.preferencesAndSettings.menuRowHeight
+    rowHeight = Math.max labelExtent.y, WorldWdgt.theme.menuRowHeight
     w = @width()
     @__commitExtent new Point (labelExtent.x + 2 * @CONTENT_INSET + @_iconColumnWidth()), rowHeight
     @__commitWidth w
@@ -177,7 +178,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   # GLYPH inset in it.
   _iconColumnWidth: ->
     return 0 unless @icon?
-    WorldWdgt.preferencesAndSettings.barGlyphSize + @CONTENT_INSET
+    WorldWdgt.theme.barGlyphSize + @CONTENT_INSET
 
   # Place the picture in its glyph box: the box sits at my left inset, my icon centres in it on
   # both axes, and every number rounds -- a fractional placement fails the suite even where the
@@ -187,7 +188,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   # that -- it belongs to the spec I was built from, not to the label of the moment.
   _placeMyIcon: (rowHeight) ->
     return unless @icon?
-    glyphBox = WorldWdgt.preferencesAndSettings.barGlyphSize
+    glyphBox = WorldWdgt.theme.barGlyphSize
     @_addNoSettle @icon  unless @icon.parent is @
     iconExtent = @icon.extent()
     iconLeftInset = @CONTENT_INSET + Math.round (glyphBox - iconExtent.x) / 2

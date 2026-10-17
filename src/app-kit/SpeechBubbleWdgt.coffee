@@ -19,10 +19,10 @@ class SpeechBubbleWdgt extends Widget
 
   constructor: (@contents="hello") ->
     super()
-    @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor
+    @color = WorldWdgt.theme.speechBubbleFill
     @padding = 0
-    @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
-    @cornerRadius = 6
+    @strokeColor = WorldWdgt.theme.speechBubbleStroke
+    @cornerRadius = WorldWdgt.theme.speechBubbleCornerRadius
     @appearance = new BubblyAppearance @
     @toolTipMessage = "speech bubble"
     @_buildAndConnectChildren()
@@ -39,7 +39,7 @@ class SpeechBubbleWdgt extends Widget
     # No colour opinion: the text takes StringWdgt's default. The centring this widget wants is
     # @contentsWidget.alignCenter() below — the layout verb, not a constructor argument.
     @contentsWidget = new TextWdgt @contents,
-      fontSize: WorldWdgt.preferencesAndSettings.bubbleHelpFontSize
+      fontRole: WorldWdgt.theme.fonts.speechBubble
       italic: true
 
     @contentsWidget.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP

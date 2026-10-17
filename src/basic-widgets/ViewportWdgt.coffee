@@ -136,7 +136,7 @@ class ViewportWdgt extends Widget
 
   constructor: (
     @contents,
-    @scrollBarsThickness = (WorldWdgt.preferencesAndSettings.scrollBarsThickness),
+    @scrollBarsThickness = (WorldWdgt.theme.scrollBarsThickness),
     @sliderColor
     ) ->
     # seed alpha 0 here; _buildViewportChromeNoSettle immediately overwrites it with the
@@ -149,8 +149,8 @@ class ViewportWdgt extends Widget
     # contents' alpha, typically 1) -- just always fully occluded under the plane and bars;
     # the colors seed the mimic until _buildViewportChromeNoSettle adopts the contents' own
     @appearance = new RectangularAppearance @
-    @color = WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor
-    @strokeColor = WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor
+    @color = WorldWdgt.theme.panelFill
+    @strokeColor = WorldWdgt.theme.panelStroke
     @_buildViewportChrome()
 
   # Build the viewport (contents + h/v scrollbars) via the NoSettle core, settling ONCE at the end
@@ -438,7 +438,7 @@ class ViewportWdgt extends Widget
     if @_pointerInScrollBand
       @scrollBarsThickness
     else
-      WorldWdgt.preferencesAndSettings.scrollIndicatorThickness
+      WorldWdgt.theme.scrollIndicatorThickness
 
   # Hand the bars the presentation my state implies. _-tier: my own arrange is the only caller and
   # the only one there can be — the look is settled in the same pass that decided which bars show
@@ -531,7 +531,7 @@ class ViewportWdgt extends Widget
   # from, the resizer by climbing the corner chain (_aResizerSitsOverMyCorner).
   _cornerReserveFor: (bar) ->
     reserve =
-      if @_aResizerSitsOverMyCorner() then Math.max @scrollBarsThickness, WorldWdgt.preferencesAndSettings.handleSize
+      if @_aResizerSitsOverMyCorner() then Math.max @scrollBarsThickness, WorldWdgt.theme.handleSize
       else if @_otherBarCrossesMyCorner bar then @scrollBarsThickness
       else 0
     if reserve > 0 then reserve + 2 * @padding else 0
@@ -1241,7 +1241,7 @@ class ViewportWdgt extends Widget
       # the caller hands the hand's SCREEN position; my box is plane-local (I can myself be a
       # resident of a scrolled pane / island), so map the pointer into MY plane for the band
       # test — the identity (same object) for an un-nested viewport
-      if !@boundingBox().insetBy(WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3).containsPoint @screenPointToMyPlane pointerPosition
+      if !@boundingBox().insetBy(WorldWdgt.theme.scrollBarsThickness * 3).containsPoint @screenPointToMyPlane pointerPosition
         @startAutoScrolling()
 
   startAutoScrolling: ->
@@ -1254,7 +1254,7 @@ class ViewportWdgt extends Widget
     # enough that the scroll CLAMPS, so the screenshotted endpoint is
     # frame-cadence-independent even though the path there isn't (see the
     # edge-auto-scroll entry in src/macros/MACRO-PATTERNS.md).
-    inset = WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
+    inset = WorldWdgt.theme.scrollBarsThickness * 3
     if @isOrphan() then return undefined
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
@@ -1275,7 +1275,7 @@ class ViewportWdgt extends Widget
   
   autoScroll: (pos) ->
     return undefined  if Date.now() - @autoScrollTrigger < 500
-    inset = WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
+    inset = WorldWdgt.theme.scrollBarsThickness * 3
     area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false
     if area.containsPoint(pos)

@@ -23,15 +23,20 @@ class StringFieldWdgt extends PanelWdgt
   # that method); declared so Duplicator duplication carries it.
   menuEntryNaturalWidth: undefined
 
+  # The entry text's font is a ROLE, as StringWdgt's is: `fontRole` gives its family, size and
+  # weight, and an explicit fontStyle / fontSize / isBold overrides that member. Without a role the
+  # text is 12 px, plain, in the prompt role's family. The role is resolved into my three font
+  # fields here and not kept; the text I build reads those.
   constructor: (@defaultContents = "", opts = {}) ->
     @minTextWidth = opts.minTextWidth ? 100
-    @fontSize = opts.fontSize ? 12
-    @fontStyle = opts.fontStyle ? "sans-serif"
-    @isBold = opts.isBold ? false
+    fontRole = opts.fontRole
+    @fontSize = opts.fontSize ? fontRole?.size ? 12
+    @fontStyle = opts.fontStyle ? fontRole?.family ? WorldWdgt.theme.fonts.prompt.family
+    @isBold = opts.isBold ? fontRole?.bold ? false
     @isItalic = opts.isItalic ? false
     @isNumeric = opts.isNumeric ? false
     super()
-    @color = Color.WHITE
+    @color = WorldWdgt.theme.textFieldFill
 
   # As a menu entry, answer my natural width as DERIVED in
   # calculateAndUpdateExtent (max(minTextWidth, text width) — every prompt

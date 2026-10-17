@@ -5,7 +5,7 @@ class DecreaseFontSizeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "decrease font size"
 
-  createAppearance: -> new DecreaseFontSizeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new DecreaseFontSizeIconAppearance @, WorldWdgt.theme.iconInk
 
   activated: ->
     if world.editorFocusWdgt?.originallySetFontSize?

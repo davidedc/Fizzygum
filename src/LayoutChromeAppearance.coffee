@@ -16,7 +16,7 @@ class LayoutChromeAppearance extends Appearance
       # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the box
       # is opaque, so its BLACK version is the complete silhouette — the chrome art drawn
       # inside it adds no coverage and is skipped, like the hover highlight (not ink).
-      boxColor = if appliedShadow? then Color.BLACK else @widget.color
+      boxColor = if appliedShadow? then WorldWdgt.theme.shadowColor else @widget.color
       if boxColor?
         ctx.fillStyle = boxColor.toString()
         @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox

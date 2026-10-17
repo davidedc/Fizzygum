@@ -34,7 +34,7 @@ class CodeAreaWdgt extends Widget
     @tempPromptEntryField = new TextAreaWdgt initialText, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = Color.WHITE
+    @tempPromptEntryField.color = WorldWdgt.theme.codePaneFill
     @tempPromptEntryField.addModifiedContentIndicator()
 
     # register this wdgt as one to be notified when the text

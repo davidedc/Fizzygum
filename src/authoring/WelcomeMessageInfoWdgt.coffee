@@ -13,7 +13,7 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
 
 
     startingContent = new SimpleTextWdgt "Welcome to Fizzygum",
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     startingContent.alignCenter()
     startingContent.setFontSize 24
@@ -22,7 +22,7 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
     sdspw.add startingContent
 
     startingContent = new SimpleTextWdgt "version 1.1.12",
-      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     startingContent.alignCenter()
     startingContent.setFontSize 9

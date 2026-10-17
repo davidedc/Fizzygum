@@ -15,7 +15,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
 
   # The ONE home for the standard desktop-icon extent — every launcher/shortcut
   # creation site sizes through this: a 60px icon band + the two-line caption
-  # band below it (2 × fontHeight(shortcutsFontSize 12) + 2 = 32).
+  # band below it (2 × fontHeight(the theme's desktopCaption size, 12) + 2 = 32).
   @standardDesktopIconExtent: -> new Point 95, 92
 
   constructor: (@labelContent, @icon) ->
@@ -36,9 +36,9 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # both lines); the CROP default ellipsises what overflows line 2, and
     # editing an ellipsised caption hands off to the pop-out editor
     # (handOffToPopoutEditorIfOverflowing), same as the old one-line label.
-    @label = new TextWdgt @labelContent, fontSize: WorldWdgt.preferencesAndSettings.shortcutsFontSize
+    @label = new TextWdgt @labelContent, fontRole: WorldWdgt.theme.fonts.desktopCaption
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
-    @label.color = Color.WHITE
+    @label.color = WorldWdgt.theme.desktopCaptionText
     @label.hasDarkOutline = true
     @_addNoSettle @label, beingDropped: true
     @label.alignCenter()

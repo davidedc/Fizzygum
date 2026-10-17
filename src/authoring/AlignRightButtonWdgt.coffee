@@ -7,4 +7,4 @@ class AlignRightButtonWdgt extends AlignButtonWdgt
   alignDirectMethod: "alignRight"
   layoutAlignSetterMethod: "setAlignmentToRight"
 
-  createAppearance: -> new AlignRightIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new AlignRightIconAppearance @, WorldWdgt.theme.iconInk

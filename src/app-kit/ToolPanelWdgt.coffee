@@ -1,7 +1,7 @@
 class ToolPanelWdgt extends PanelWdgt
 
-  # the grid's cell gap / outer margin / cell side -- read from the toolInternalPadding /
-  # toolExternalPadding / toolThumbnailSize preferences in the constructor rather than declared
+  # the grid's cell gap / outer margin / cell side -- read from the theme's toolInternalPadding /
+  # toolExternalPadding / toolThumbnailSize metrics in the constructor rather than declared
   # as literals here, because a caller (e.g. TextToolbarWdgt) writes these fields directly on an
   # instance to retune its own strip -- an instance field a subclass overrides after construction,
   # not a class-level constant.
@@ -16,9 +16,9 @@ class ToolPanelWdgt extends PanelWdgt
 
   constructor: ->
     super()
-    @internalPadding = WorldWdgt.preferencesAndSettings.toolInternalPadding
-    @externalPadding = WorldWdgt.preferencesAndSettings.toolExternalPadding
-    @thumbnailSize = WorldWdgt.preferencesAndSettings.toolThumbnailSize
+    @internalPadding = WorldWdgt.theme.toolInternalPadding
+    @externalPadding = WorldWdgt.theme.toolExternalPadding
+    @thumbnailSize = WorldWdgt.theme.toolThumbnailSize
 
   # my enclosing viewport borrows my colloquial name (type-test-elimination ε; see
   # ViewportWdgt.colloquialName)
@@ -141,7 +141,7 @@ class ToolPanelWdgt extends PanelWdgt
   # floating window's box are ONE arithmetic. PURE -- cell dials only, no laid-out extent --
   # which is exactly what a dock spec's thickness must be (§6.1 rule 1).
   naturalGridCrossExtent: ->
-    @_naturalRunFor (Math.max 1, WorldWdgt.preferencesAndSettings.toolRows), @_cellPitch()
+    @_naturalRunFor (Math.max 1, WorldWdgt.theme.toolRows), @_cellPitch()
 
   # THE BOX THAT HUGS MY CELLS, within the `room` a free-floating home can offer (owner ruling:
   # a floating toolbar hugs its payload; C10's never-bigger-than-the-world is what `room` carries).
@@ -151,7 +151,7 @@ class ToolPanelWdgt extends PanelWdgt
   # and the overflow chevron carries what is left out either way.
   naturalGridExtentWithin: (room) ->
     pitch = @_cellPitch()
-    columns = Math.min (Math.max 1, WorldWdgt.preferencesAndSettings.toolRows), (@_cellsFittingIn room.x, pitch)
+    columns = Math.min (Math.max 1, WorldWdgt.theme.toolRows), (@_cellsFittingIn room.x, pitch)
     rows = Math.min (Math.max 1, Math.ceil @_toolCells().length / columns), (@_cellsFittingIn room.y, pitch)
     new Point (@_naturalRunFor columns, pitch), (@_naturalRunFor rows, pitch)
 
@@ -181,11 +181,11 @@ class ToolPanelWdgt extends PanelWdgt
     # So a wide strip is toolRows deep and as many columns as fit, a tall one is toolRows wide
     # and as many rows as fit -- one arrange, two directions.
     if runH > runW
-      columns = Math.max 1, WorldWdgt.preferencesAndSettings.toolRows
+      columns = Math.max 1, WorldWdgt.theme.toolRows
       rows = @_cellsFittingIn runH, pitch
     else
       columns = @_cellsFittingIn runW, pitch
-      rows = Math.max 1, WorldWdgt.preferencesAndSettings.toolRows
+      rows = Math.max 1, WorldWdgt.theme.toolRows
 
     # The trailing slot becomes the chevron's the moment one cell would be left out, so the
     # count that SHOWS is one short of the fit whenever anything overflows. When everything

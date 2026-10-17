@@ -564,7 +564,7 @@ class TransformFrameWdgt extends PanelWdgt
     return if !buffer?
     # The shadow pass must composite a BLACK SILHOUETTE of the content — the same thing the
     # recursive shadow paint produces widget-by-widget (every appearance swaps its fill to
-    # Color.BLACK). Compositing the buffer's own colours at shadow alpha would cast a faint
+    # Theme.shadowColor). Compositing the buffer's own colours at shadow alpha would cast a faint
     # COPY instead, which over a light background LIGHTENS where a shadow must darken (the
     # tilted-window faint-shadow bug).
     buffer = @_shadowSilhouetteOfIslandBuffer buffer if appliedShadow?
@@ -581,7 +581,7 @@ class TransformFrameWdgt extends PanelWdgt
   # the shadow's faintness, exactly as on the normal pass.
   _shadowSilhouetteOfIslandBuffer: (buffer) ->
     if !@_islandShadowSilhouette?
-      @_islandShadowSilhouette = HTMLCanvasElement.blackSilhouetteOf buffer
+      @_islandShadowSilhouette = HTMLCanvasElement.blackSilhouetteOf buffer, WorldWdgt.theme.shadowColor
     @_islandShadowSilhouette
 
   # §4.2 scale-only fast path: a uniform scale needs no setTransform — the whole buffer

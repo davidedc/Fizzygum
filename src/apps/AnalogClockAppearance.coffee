@@ -106,7 +106,7 @@ class AnalogClockAppearance extends Appearance
     context.translate width/2, height/2
     context.scale 0.9, 0.9
     context.rotate -Math.PI / 2
-    context.strokeStyle = Color.BLACK.toString()
+    context.strokeStyle = WorldWdgt.theme.clockInk.toString()
 
   _renderingHelper: (context, color) ->
     height = @widget.height()
@@ -132,7 +132,7 @@ class AnalogClockAppearance extends Appearance
     # that used to be here. What follows (hands + centre dot + outer arc) is the dynamic
     # / front content and is still drawn live, preserving the original z-order.
 
-    context.fillStyle = Color.BLACK.toString()
+    context.fillStyle = WorldWdgt.theme.clockInk.toString()
 
     @_calculateHandsAngles()
 
@@ -143,7 +143,7 @@ class AnalogClockAppearance extends Appearance
 
     context.beginPath()
     context.lineWidth = 10 * Math.min(width,height) * @widget.strokeSizeToClockDimensionRatio
-    context.strokeStyle = '#325FA2'
+    context.strokeStyle = WorldWdgt.theme.clockRing.toString()
     context.arc 0, 0, squareDim, 0, Math.PI * 2
     context.stroke()
 

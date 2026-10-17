@@ -151,9 +151,23 @@ class Appearance
     h = Math.round localRect.height() * ceilPixelRatio
     ctx.fillRect l / ceilPixelRatio - widgetPosition.x, t / ceilPixelRatio - widgetPosition.y, w / ceilPixelRatio, h / ceilPixelRatio
 
+  # The rules between my widget's panes (Widget._seamRects), each filled in the seamRule colour over
+  # the part of it being repainted. A container appearance calls this inside its open scope, after
+  # its own fill and before my widget's children paint, in the normal pass only (a seam is part of
+  # the container's look, not of its silhouette). A seam is a GAP between children, so no child ever
+  # paints over it and the order is never contested.
+  _paintSeamRules: (ctx, localDamageBox) ->
+    seams = @widget._seamRects()
+    return if seams.length == 0
+    ctx.fillStyle = WorldWdgt.theme.seamRule.toString()
+    for seam in seams
+      toBePainted = seam.intersect localDamageBox
+      if toBePainted.isNotEmpty()
+        @_fillLocalRectSnappedToDevicePixels ctx, toBePainted
+
 
   # Shadow-pass wrapper for appearances whose art sets its own colours internally (icons,
-  # the analog clock) — where the boxy pattern of swapping ONE fill to Color.BLACK cannot
+  # the analog clock) — where the boxy pattern of swapping ONE fill to the shadow colour cannot
   # reach the art's colours. Renders `paintColoredArt` (the appearance's NORMAL, full-colour
   # painting; receives the scratch context, pre-translated so the art's usual absolute device
   # coordinates land in the scratch) into a scratch canvas of just the DAMAGED area (w×h
@@ -169,7 +183,7 @@ class Appearance
     sctx = scratch.getContext "2d"
     sctx.translate -al, -at
     paintColoredArt sctx
-    HTMLCanvasElement.blackenIntoSilhouetteInPlace scratch
+    HTMLCanvasElement.blackenIntoSilhouetteInPlace scratch, WorldWdgt.theme.shadowColor
     aContext.save()
     aContext.globalAlpha = appliedShadow.alpha
     aContext.drawImage scratch, 0, 0, w, h, al, at, w, h

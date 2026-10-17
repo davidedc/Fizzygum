@@ -15,7 +15,7 @@ class DividerWdgt extends RectangleWdgt
   constructor: (height = 1) ->
     super()
     @_setMinimumExtent new Point 5,1
-    @color = Color.create 230,230,230
+    @color = WorldWdgt.theme.menuDivider
     @_applyHeight height + 2
 
 

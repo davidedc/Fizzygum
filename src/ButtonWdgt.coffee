@@ -90,7 +90,7 @@ class ButtonWdgt extends Widget
   _buildAndConnectChildrenNoSettle: ->
     if @faceWidget?
       if (typeof @faceWidget) == "string"
-        @faceWidget = (new StringWdgt @faceWidget, fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+        @faceWidget = (new StringWdgt @faceWidget, fontRole: WorldWdgt.theme.fonts.buttonLabel).alignCenter()
       @_addNoSettle @faceWidget
       @_invalidateLayout()
   

@@ -86,7 +86,7 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     # menuRowsBorder = the menu's tight border; rows stack FLUSH inside it (see
     # interElementGap below). No extent/color through the base ctor — the look
     # is set right here.
-    super padding: WorldWdgt.preferencesAndSettings.menuRowsBorder
+    super padding: WorldWdgt.theme.menuRowsBorder
     @target = opts.target
     @fontSize = opts.fontSize
     @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
@@ -94,8 +94,8 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     # stroked with the menu stroke. A pop-up frame paints its OWN box around me and turns
     # mine off (alpha 0) rather than doubling the stroke; a list's panel IS the box.
     @appearance = new MenuAppearance @
-    @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
-    @color = Color.create 238, 238, 238
+    @strokeColor = WorldWdgt.theme.menuStroke
+    @color = WorldWdgt.theme.rowsPanelFill
 
   colloquialName: ->
     "menu rows"
@@ -158,13 +158,13 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     item = @createLine height
     @__add item, atIndex: 0
 
-  # Builds a MenuItemWdgt from a CommandSpec and this panel's context: the font (this panel's
-  # @fontSize, or the global default) and the subject — every row of mine acts ABOUT my @target,
-  # however the row's own receiver is wired.
+  # Builds a MenuItemWdgt from a CommandSpec and this panel's context: the font (the menu-row
+  # role, at this panel's own @fontSize when it has one) and the subject — every row of mine acts
+  # ABOUT my @target, however the row's own receiver is wired.
   _createMenuItem: (commandSpec) ->
     new MenuItemWdgt commandSpec,
-      fontSize: (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize)
-      fontStyle: WorldWdgt.preferencesAndSettings.menuFontName
+      fontRole: WorldWdgt.theme.fonts.menuRow
+      fontSize: @fontSize
       subject: @target
 
   # ── REFLECTED ROWS are not mine ─────────────────────────────────────────────────────────────

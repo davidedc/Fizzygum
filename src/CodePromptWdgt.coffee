@@ -39,7 +39,7 @@ class CodePromptWdgt extends CodeAreaWdgt
     @_addNoSettle @cancelButton
 
     
-    @saveTextWdgt = new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    @saveTextWdgt = new StringWdgt "save", fontRole: WorldWdgt.theme.fonts.buttonLabel
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonWdgt @, "deliverValue", face: @saveTextWdgt
     @_addNoSettle @saveButton
@@ -56,10 +56,10 @@ class CodePromptWdgt extends CodeAreaWdgt
     @_invalidateLayout()
 
   textContentModified: ->
-    @saveTextWdgt.setColor Color.BLACK
+    @saveTextWdgt.setColor WorldWdgt.theme.saveLabelEnabledText
 
   textContentUnmodified: ->
-    @saveTextWdgt.setColor Color.create 200, 200, 200
+    @saveTextWdgt.setColor WorldWdgt.theme.saveLabelDisabledText
 
 
   # my value is the composed source text. Same verb pair as PromptWdgt (a prompt by ROLE —
@@ -102,7 +102,7 @@ class CodePromptWdgt extends CodeAreaWdgt
     # fractional /3 makes the second and third buttons' origins fractional --
     # round it here so all three land on integer pixels (the ConsoleWdgt /2
     # precedent; integer placement is enforced by the always-on bounds guard)
-    eachButtonWidth = Math.round (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
+    eachButtonWidth = Math.round (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldWdgt.theme.handleSize) / 3
 
     if @cancelButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), textBottom + @internalPadding

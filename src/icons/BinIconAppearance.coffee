@@ -35,10 +35,12 @@ class BinIconAppearance extends SizeAwareIconAppearance
     y = y0 + Math.floor (hDev - S) / 2
 
     t = Math.max 1, Math.round S / 32   # halo/envelope unit
-    # the outlines: the 2px weight of the desktop rendering (the 95 shortcut
-    # holder paints this icon at 76px, where round(S/45) = 2) is the icon's
-    # look -- keep it down to 20px; under that, 2px walls don't fit the
-    # bin's proportions. The ridges stay one step lighter throughout.
+    # the outlines: the 2px weight of the desktop rendering is the icon's look
+    # (the desktop holder's 95x60 icon band -- WidgetHolderWithCaptionWdgt.
+    # standardDesktopIconExtent -- paints this icon at S = 60 at dpr 1, where
+    # round(S/45) is 1, so the max-2 floor is what holds the walls at 2) --
+    # keep it down to 20px; under that, 2px walls don't fit the bin's
+    # proportions. The ridges stay one step lighter throughout.
     tc = if S >= 20 then Math.max 2, Math.round S / 45 else 1
     td = Math.max 1, Math.round S / 64  # the ridges
     o = t

@@ -7,4 +7,4 @@ class AlignLeftButtonWdgt extends AlignButtonWdgt
   alignDirectMethod: "alignLeft"
   layoutAlignSetterMethod: "setAlignmentToLeft"
 
-  createAppearance: -> new AlignLeftIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new AlignLeftIconAppearance @, WorldWdgt.theme.iconInk

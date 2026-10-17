@@ -1203,7 +1203,7 @@ class MacroToolkit
     bottomRight = pane.localPointToScreen new Point pane.right(), pane.bottom()
     inset = pane.scrollBarsThickness ? 0
     if pane.children.some((child) -> world.temporaryHandlesAndLayoutAdjusters.has child)
-      inset = Math.max inset, WorldWdgt.preferencesAndSettings.handleSize
+      inset = Math.max inset, WorldWdgt.theme.handleSize
     inset = Math.min inset, (Math.floor((bottomRight.x - topLeft.x) / 3)), (Math.floor((bottomRight.y - topLeft.y) / 3))
     inset = Math.max inset, 0
     [(new Point topLeft.x + inset, topLeft.y + inset), (new Point bottomRight.x - inset, bottomRight.y - inset)]
@@ -1698,7 +1698,7 @@ class MacroToolkit
       when "left" then point = new Point viewport.left() + depth, middle.y
       when "right" then point = new Point viewport.right() - depth, middle.y
       else throw new Error "'#{side}' is not a side of #{viewport} — say 'top', 'bottom', 'left' or 'right'"
-    bandDepth = WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
+    bandDepth = WorldWdgt.theme.scrollBarsThickness * 3
     inBand = (viewport.boundsContainPoint point) and not (viewport.boundingBox().insetBy(bandDepth).containsPoint point)
     unless inBand
       throw new Error "#{depth} px inside the #{side} edge of #{viewport} is not in its auto-scroll band (#{bandDepth} px deep)"

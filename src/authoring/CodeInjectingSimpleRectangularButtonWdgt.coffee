@@ -35,8 +35,8 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   # disagree. `face` is the icon I show; `drawingToolKey` names the command I am.
   constructor: (palette, face, @drawingToolKey) ->
     super target: palette, action: "selectTool", face: face
-    @strokeColor = Color.BLACK
-    @setColor Color.create 150, 150, 150
+    @strokeColor = WorldWdgt.theme.paintToolButtonStroke
+    @setColor WorldWdgt.theme.paintToolButtonFill
     @toolTipMessage = face.toolTipMessage
 
   # A tool press is about the palette that owns me and about nothing above it, so the click ENDS

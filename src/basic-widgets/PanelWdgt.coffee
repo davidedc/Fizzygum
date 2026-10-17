@@ -16,8 +16,8 @@ class PanelWdgt extends Widget
     @dragsDropsAndEditingEnabled = true
     @appearance = new RectangularAppearance @
 
-    @color = WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor
-    @strokeColor = WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor
+    @color = WorldWdgt.theme.panelFill
+    @strokeColor = WorldWdgt.theme.panelStroke
 
   # Where among `children` (a childrenNotHandlesNorCarets list) does a payload dropped at `posInPlane`
   # — the release point expressed in MY plane (the drop dispatcher maps it, ActivePointerWdgt.drop) —

@@ -62,21 +62,52 @@ class SizeAwareIconAppearance extends IconAppearance
 
     aContext.globalAlpha = @widget.alpha
 
+    [x0, y0, wDev, hDev] = @_paintBoxInDevicePx()
+
+    # a glyph square is a clip too: inside it the art must be pixel for pixel
+    # this icon at size g, which is what a g x g widget box paints -- clipped by
+    # its own bounds. (Unclipped, the bin at g = 20 overhangs its square by a
+    # halo row.)
+    aContext.clipToRectangle x0, y0, wDev, hDev if @widget.glyphSize?
+
     # deliberately NO useLogicalPixelsUntilRestore(): subclasses draw in
-    # integer DEVICE pixels, anchored to the widget's own origin — never to the
-    # damage rect's corner (al/at), which shifts under partial repaints. The
-    # widget's bounds are integer logical px (integer-placement policy), so
-    # these products are exact integers.
-    @_paintSizeAware aContext,
-      @widget.left() * ceilPixelRatio,
-      @widget.top() * ceilPixelRatio,
-      @widget.width() * ceilPixelRatio,
-      @widget.height() * ceilPixelRatio
+    # integer DEVICE pixels, anchored to the paint box's origin — never to the
+    # damage rect's corner (al/at), which shifts under partial repaints.
+    @_paintSizeAware aContext, x0, y0, wDev, hDev
 
     aContext.restore()
 
+  # THE BOX my art is painted into, as integer DEVICE px [x0, y0, wDev, hDev].
+  # _paintColoredIcon is its one reader, and both the normal pass and the
+  # shadow-pass silhouette run that, so a glyph's shadow is cast by exactly the
+  # art it shadows.
+  #   No glyphSize (a desktop icon, a toolbar thumbnail): my widget's WHOLE box,
+  # and each subclass centres its own square in it with Math.floor in device px
+  # -- which a non-square box such as the desktop's 95x60 icon band relies on.
+  #   A glyphSize (a chrome button sized to its whole slot, ruling G3 -- see
+  # IconButtonWdgt.glyphSize): the g x g square, g = min(glyphSize, width,
+  # height) logical px, centred in my box the way calculateRectangleOfIcon
+  # centres a legacy glyph (Math.round of the logical offset). It is computed
+  # here in integers rather than read from calculateRectangleOfIcon, which
+  # aspect-fits through preferredSize: g/100*100 is not exact in floating point
+  # for every g, so a .5 offset can tip the other way and the box comes back a
+  # pixel too wide (g = 14 in a 15 px box comes back 15 wide).
+  #   The widget's bounds are integer logical px (integer-placement policy) and
+  # g is rounded, so every product is an exact integer.
+  _paintBoxInDevicePx: ->
+    left = @widget.left()
+    top = @widget.top()
+    width = @widget.width()
+    height = @widget.height()
+    if @widget.glyphSize?
+      side = Math.round Math.min @widget.glyphSize, width, height
+      left = Math.round left + (width - side) / 2
+      top = Math.round top + (height - side) / 2
+      width = height = side
+    [left * ceilPixelRatio, top * ceilPixelRatio, width * ceilPixelRatio, height * ceilPixelRatio]
+
   # subclass responsibility: all-integer device-pixel drawing into the
-  # (x0, y0, wDev, hDev) box
+  # (x0, y0, wDev, hDev) box _paintBoxInDevicePx hands over
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
 
   # ---- colour roles --------------------------------------------------------

@@ -5,7 +5,7 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "useful snippets"
 
-  createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.theme.iconInk
 
   bringTemplatesWindowIntoView: ->
     world.simpleEditorTemplates.bringToForeground()

@@ -483,16 +483,34 @@ class Widget extends TreeNode
   # neither of which a conjunction spelled out at the call site allows.
   # aPoint is in MY plane (the caller maps it through screenPointToMyPlane).
   #   The conjuncts are AM-I-THERE (clipped bounds), AM-I-SHOWN (visible, not collapsed),
-  # DOES-MY-SURFACE-STOP-IT (catchesPointerAt) and AM-I-EVEN-MATERIAL (ephemerals — highlights,
+  # DOES-MY-SURFACE-STOP-IT (catchesPointerAt), AM-I-EVEN-MATERIAL (ephemerals — highlights,
   # pinout markers, drag affordances — are reconciler-owned overlays, non-interactable by
-  # definition; the isEphemeral() capability replaced the two former per-marker predicates).
+  # definition; the isEphemeral() capability replaced the two former per-marker predicates) and
+  # AM-I-UNCUT (asked last, because it walks my ancestors: see below).
   # CaretWdgt overrides the whole thing to false, with its own reason.
   isPointerTargetAt: (aPoint) ->
-    @clippedThroughBounds().containsPoint(aPoint) and
+    return false unless @clippedThroughBounds().containsPoint(aPoint) and
       @visibleBasedOnIsVisibleProperty() and
       not @isInCollapsedSubtree() and
       @catchesPointerAt(aPoint) and
       not @isEphemeral()
+    # AM-I-UNCUT: clipped bounds answer only for the RECTANGLE a clipping ancestor clips to. An
+    # ancestor that clips its children to a ROUNDED outline (FrameWdgt's rounded child clip, which
+    # answers _roundedChildClipRadii — probed like scrollTranslationOfChild in the plane walks) also
+    # cuts its corner notches away, and a point there falls through to whatever lies behind that
+    # ancestor, exactly as a press in the ancestor's OWN notch does: the pointer agrees with the
+    # paint. Each such ancestor tests the point in its own plane with its own shape test (the one its
+    # notch answers with), the point carried there through the screen by the same two-arm mappings
+    # that brought it from the screen to me. With no such ancestor (every frame while the clip is
+    # off), one walk up, no mapping.
+    screenPoint = undefined
+    ancestor = @parent
+    while ancestor?
+      if ancestor._roundedChildClipRadii?()?
+        screenPoint ?= @localPointToScreen aPoint
+        return false unless ancestor.appearance.shapeContainsPoint ancestor.screenPointToMyPlane screenPoint
+      ancestor = ancestor.parent
+    true
 
   # DOES MY SURFACE STOP THE POINTER HERE? The inner half: purely about the surface I present,
   # with no say about visibility, materiality or z-order. TOTAL — false outside my bounds — so
@@ -539,7 +557,7 @@ class Widget extends TreeNode
     aContext.clip()
     aContext.globalAlpha = 1
     aContext.lineWidth = ceilPixelRatio
-    aContext.strokeStyle = Color.create(38, 166, 154, 1).toString()
+    aContext.strokeStyle = WorldWdgt.theme.selectionOverlayStroke.toString()
     aContext.strokeRect (Math.round(@left() * ceilPixelRatio) + 0.5 * ceilPixelRatio),
       (Math.round(@top() * ceilPixelRatio) + 0.5 * ceilPixelRatio),
       (Math.round(@width() * ceilPixelRatio) - ceilPixelRatio),
@@ -570,6 +588,16 @@ class Widget extends TreeNode
     if @appearance?
       if @appearance.paintStroke?
         @appearance.paintStroke aContext, clippingRectangle
+
+  # The rules I paint between my children: the 1 px gaps between the panes I place 1 px apart, as
+  # integer rectangles in my LOCAL logical coordinates (relative to my own top-left). My appearance
+  # fills each with WorldWdgt.theme.seamRule after its own fill and before my children paint
+  # (Appearance._paintSeamRules), so every seam is ONE line with ONE owner at any size, and a pane
+  # reused elsewhere carries no border of its own (docs/plans/redesign/redesign-plan.md §2). None by
+  # default; a container that places its panes 1 px apart answers the gaps from the same geometry its
+  # layout places them with.
+  _seamRects: ->
+    []
 
   addShapeSpecificMenuItems: (menu) ->
     if @appearance?.addShapeSpecificMenuItems?
@@ -2875,7 +2903,7 @@ class Widget extends TreeNode
       @highlighted = true
       # declare into the highlight style channel (target -> style descriptor) with the legacy
       # translucent-blue fill — the only style today; the drag arc (Phase 2+) adds outline styles.
-      world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle(Color.BLUE, 50)
+      world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle(WorldWdgt.theme.hoverHighlightWash, 50)
       @_changed()
 
   turnOffHighlight: ->
@@ -2993,14 +3021,15 @@ class Widget extends TreeNode
   # asymmetric is fine: the pass is two vector operations (cull rect translated by
   # −offset, ctx translated by +offset), with no directional assumption anywhere.
   # THE SHADOW-PASS PAINT CONTRACT: a shadow is the caster's per-pixel COVERAGE,
-  # chroma always black — a shadow occludes light, so it may only darken, never
-  # carry the caster's own colours (a caster lighter than the background would
-  # otherwise cast a GLOW — the tilted-window faint-shadow bug, fixed 2026-08-02).
+  # chroma always the one shadow colour (Theme.shadowColor, black) — a shadow
+  # occludes light, so it may only darken, never carry the caster's own colours
+  # (a caster lighter than the background would otherwise cast a GLOW — the
+  # tilted-window faint-shadow bug, fixed 2026-08-02).
   # Coverage means per-pixel OPACITY, not a hard mask: a translucent widget casts a
   # proportionally fainter shadow (appliedShadow.alpha × its alpha), glyph AA edges
   # shade proportionally, a hole casts nothing. Every paint leaf honours the
   # contract by the cheapest correct means: appearances that control their fills
-  # swap them to Color.BLACK under appliedShadow; buffer blits (BackBufferMixin,
+  # swap them to Theme.shadowColor under appliedShadow; buffer blits (BackBufferMixin,
   # the island composite) blit a cached black-silhouette twin
   # (HTMLCanvasElement.blackSilhouetteOf); arbitrary-coloured art (icons, the
   # clock) renders to a scratch and blits its silhouette
@@ -3365,7 +3394,7 @@ class Widget extends TreeNode
       # and the widget will get undefined shadow back
       # again at the end of this method
       originalShadow = undefined
-      @shadowInfo = new ShadowInfo new Point(4, 4), 0.2
+      @shadowInfo = new ShadowInfo WorldWdgt.theme.desktopShadowOffset, WorldWdgt.theme.desktopShadowAlpha
       shadowHadBeenReplacedOrAdded = true
 
 
@@ -3404,7 +3433,7 @@ class Widget extends TreeNode
 
   # shadow is added to a widget by
   # the ActivePointerWdgt while floatDragging
-  addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
+  addShadow: (offset = WorldWdgt.theme.desktopShadowOffset, alpha = WorldWdgt.theme.desktopShadowAlpha) ->
     @__addShadow offset, alpha
     @_fullChanged()
 

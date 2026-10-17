@@ -15,14 +15,14 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
 
   constructor: ->
     super()
-    # A strip is a light surface, so the mark takes the dark icon line colour rather than the
+    # A strip is a light surface, so the mark takes the theme's dark icon ink rather than the
     # button family's near-white default.
     #   It is `color_normal` -- the RESTING colour of the highlight state machine -- and not a
     # bare `@color`: HighlightableMixin repaints me at color_normal on every hoverExited and
     # pressEnded, so a colour set beside it survives only until the first pointer visit and I
     # then go near-white on a near-white strip. @color follows it so my very first paint, before
     # any pointer has reached me, is already the resting one.
-    @color_normal = WorldWdgt.preferencesAndSettings.iconDarkLineColor
+    @color_normal = WorldWdgt.theme.iconInk
     @color = @color_normal
 
   createAppearance: -> new OverflowChevronIconAppearance @
@@ -64,7 +64,7 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
     # from actOnClick, an event-stream handler, so a settle here is legal and never mid-pass.
     picture = tool.fullCopy?()
     return undefined unless picture?
-    glyphBox = WorldWdgt.preferencesAndSettings.barGlyphSize
+    glyphBox = WorldWdgt.theme.barGlyphSize
     icon = new InertIconHolderWdgt picture, fitInto: new Point glyphBox, glyphBox
     picture._fullDestroyNoSettle()
     icon

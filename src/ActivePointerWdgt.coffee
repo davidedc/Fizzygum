@@ -442,7 +442,7 @@ class ActivePointerWdgt extends Widget
       # produce for the first time. This grab shadow uses its own "floaty" look (offset/blur/color),
       # distinct from a widget's own per-class shadow (e.g. Menus use a different one).
 
-      aWdgt.addShadow new Point(6, 6), 0.1
+      aWdgt.addShadow WorldWdgt.theme.dragLiftShadowOffset, WorldWdgt.theme.dragLiftShadowAlpha
       
       @_fullChanged()
       # Notify the old parent so it can re-fit itself (e.g. a ViewportWdgt re-snugs its contents +
