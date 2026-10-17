@@ -148,10 +148,14 @@ hand-translated into drawing calls.
   own pixels outside the curve unless something stops it. Two mechanisms exist: a flush child can take
   the host's corner radii on its own background (per-corner fill — enough only for content whose corner
   pixels are its background), and `FrameWdgt` can clip its children to its rounded outline
-  (`clipsChildrenToRoundedOutline`, off; the clip touches only the corner squares a repaint reaches,
-  through `BoxyAppearance.clipToOutline`, and a press in the notch falls through to whatever is
-  behind). Which one the design uses is decided in the redesign plan's §3a with the measurements; on
-  SWCanvas a non-rectangular clip currently makes every nested clip build a canvas-sized mask.
+  (`clipsChildrenToRoundedOutline`). It is off until W1 switches it on through the frame look.
+  - A repaint whose damage reaches one of the frame's corner squares paints the children under ONE
+    rounded clip, through `BoxyAppearance.clipToOutline`. Any other repaint paints them under the
+    rectangle, as before.
+  - A press in the notch falls through to whatever is behind.
+  - The design adopts the clip (redesign plan §3a, and §4 F S1c for the measurements). It costs under
+    2 % of suite time on SWCanvas, whose clip is an optional mask AND a rect: a child's rectangle clip
+    under the rounded one never builds a mask.
 
 ### 4.8 Colour use
 The accent says "focused", "selected" or "on" — nothing else. Selected and "on" controls use the

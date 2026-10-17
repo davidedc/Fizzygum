@@ -113,18 +113,12 @@ class FrameWdgt extends Widget
   # the window is going away -- see the note there.
   _beingFullDestroyed: undefined
 
-  # ===== the ROUNDED CHILD CLIP's two switches (redesign plan §3a option (a), spike S1b) =====
+  # ===== the ROUNDED CHILD CLIP's switch (redesign plan §3a option (a), spikes S1b/S1c) =====
   # ON, I clip my children to my rounded OUTLINE rather than to my rectangle, so content laid flush
-  # into a rounded window cannot paint (or catch presses) in the notches outside its corners. Both
-  # are plain class-level values, off; _roundedChildClipRadii reads the first and
-  # _paintChildrenInsideMyRoundedOutline the second, and nothing else reads either. Off, every paint
-  # and hit test of mine runs exactly the code a rectangular clip runs.
+  # into a rounded window cannot paint (or catch presses) in the notches outside its corners. A plain
+  # class-level value, off; _roundedChildClipRadii is its one reader. Off, every paint and hit test
+  # of mine runs exactly the code a rectangular clip runs.
   clipsChildrenToRoundedOutline: false
-  # how a damaged part of me that reaches a corner square is clipped: false = the damaged part is cut
-  # into its corner squares, each painted under the rounded clip, and the rest, painted as an
-  # unclipped rectangle; true = the whole damaged part is painted under ONE rounded clip. The two
-  # paint the same pixels; they differ in what the clip costs.
-  roundedChildClipIsOnePathClip: false
 
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
@@ -1679,7 +1673,7 @@ class FrameWdgt extends Widget
     @strokeColor = look.bodyStroke
     @cornerRadius = look.bodyCornerRadius
 
-  # ===== the ROUNDED CHILD CLIP (its two switches are declared at the top of the class) =====
+  # ===== the ROUNDED CHILD CLIP (its switch is declared at the top of the class) =====
 
   # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] of the ROUNDED outline I clip my
   # children to, or undefined when I clip them to my rectangle: my body's own radii, read through my
@@ -1729,33 +1723,19 @@ class FrameWdgt extends Widget
 
   # Paint my children over the damaged part of me so that nothing of theirs shows outside my
   # rounded outline, paying for the rounded clip only where it can matter: away from my corner
-  # squares my outline IS my box, so damage that touches no square is painted exactly as the
-  # rectangular clip paints it. Damage that reaches a square is either CUT (_roundedChildClipPieces)
-  # — the parts inside the squares painted under the rounded clip, the rest as plain rectangles — or,
-  # with roundedChildClipIsOnePathClip (this is that switch's one reader), painted whole under ONE
-  # rounded clip. Both paint the same pixels: each piece goes down as the clipping rectangle exactly
-  # as the whole damaged part would, and the pieces tile it.
+  # squares my outline IS my box, so damage that reaches no square is painted exactly as the
+  # rectangular clip paints it, and damage that reaches one is painted whole under ONE rounded clip.
   _paintChildrenInsideMyRoundedOutline: (aContext, damagedPartOfMe, appliedShadow, radii) ->
     area = damagedPartOfMe.round()
-    pieces = @_roundedChildClipPieces area, radii
-    if pieces? and pieces.corners.length == 0
-      @_paintChildrenOver aContext, damagedPartOfMe, appliedShadow
-    else if !pieces? or @roundedChildClipIsOnePathClip
+    if @_areaReachesACornerSquare area, radii
       @_paintChildrenUnderMyOutlineClip aContext, area, appliedShadow
     else
-      for band in pieces.bands
-        @_paintChildrenOver aContext, band, appliedShadow
-      for corner in pieces.corners
-        @_paintChildrenUnderMyOutlineClip aContext, corner, appliedShadow
+      @_paintChildrenOver aContext, damagedPartOfMe, appliedShadow
 
-  # `area` (an integer rectangle inside my box) cut for the rounded clip: `corners`, its parts inside
-  # my corner SQUARES (r×r at a corner of radius r, the only places my outline leaves my box), and
-  # `bands`, the rest, as horizontal bands. The pieces are disjoint and tile `area` exactly; adjacent
-  # bands spanning the same columns are merged, so a uniformly rounded box yields at most three
-  # bands and four corner parts. A part of `area` in no square leaves `corners` empty. Undefined when
-  # two squares would overlap (a box too small for its own rounding): the caller then clips the
-  # whole area.
-  _roundedChildClipPieces: (area, radii) ->
+  # Does `area` (an integer rectangle inside my box) reach one of my corner SQUARES (r×r at a corner
+  # of radius r, the only places my outline leaves my box)? Also true when two squares would overlap
+  # (a box too small for its own rounding), so such a box always clips.
+  _areaReachesACornerSquare: (area, radii) ->
     [topLeft, topRight, bottomRight, bottomLeft] = (Math.ceil radius for radius in radii)
     box = @boundingBox().round()
     left = box.left()
@@ -1764,43 +1744,14 @@ class FrameWdgt extends Widget
     bottom = box.bottom()
     squaresOverlap = (topLeft + topRight > box.width()) or (bottomLeft + bottomRight > box.width()) or
       (topLeft + bottomLeft > box.height()) or (topRight + bottomRight > box.height())
-    return undefined if squaresOverlap
+    return true if squaresOverlap
     squares = [
       new Rectangle left, top, left + topLeft, top + topLeft
       new Rectangle right - topRight, top, right, top + topRight
       new Rectangle right - bottomRight, bottom - bottomRight, right, bottom
       new Rectangle left, bottom - bottomLeft, left + bottomLeft, bottom
     ]
-    corners = (area.intersect square for square in squares).filter (piece) -> piece.isNotEmpty()
-    return { corners: corners, bands: [area] } if corners.length == 0
-    # cut horizontally wherever a square starts or ends inside the area; within one cut the
-    # squares on each side, hence the band's columns, are fixed
-    cuts = [area.top(), area.bottom()]
-    for y in [top + topLeft, top + topRight, bottom - bottomLeft, bottom - bottomRight]
-      cuts.push y if area.top() < y < area.bottom()
-    cuts.sort (a, b) -> a - b
-    bands = []
-    for i in [0...cuts.length - 1]
-      bandTop = cuts[i]
-      bandBottom = cuts[i + 1]
-      continue unless bandTop < bandBottom
-      leftEdge =
-        if bandTop < top + topLeft then left + topLeft
-        else if bandTop >= bottom - bottomLeft then left + bottomLeft
-        else left
-      rightEdge =
-        if bandTop < top + topRight then right - topRight
-        else if bandTop >= bottom - bottomRight then right - bottomRight
-        else right
-      bandLeft = Math.max area.left(), leftEdge
-      bandRight = Math.min area.right(), rightEdge
-      continue unless bandLeft < bandRight
-      previous = bands[bands.length - 1]
-      if previous? and previous.bottom() == bandTop and previous.left() == bandLeft and previous.right() == bandRight
-        bands[bands.length - 1] = new Rectangle bandLeft, previous.top(), bandRight, bandBottom
-      else
-        bands.push new Rectangle bandLeft, bandTop, bandRight, bandBottom
-    { corners: corners, bands: bands }
+    squares.some (square) -> area.intersect(square).isNotEmpty()
 
   # Paint my children over `rectangle`, which goes down as the clipping rectangle each child honours.
   _paintChildrenOver: (aContext, rectangle, appliedShadow) ->
