@@ -72,7 +72,7 @@ class InertIconHolderWdgt extends Widget
   # square. The same fit GlassBoxBottomWdgt._reLayoutSelf applies in a toolbar cell, at glyph
   # scale instead of thumbnail scale -- and rounded, because a widget is sized in whole pixels.
   _extentFitting: (aWdgt, fitInto) ->
-    glyphBox = WorldWdgt.theme.barGlyphSize
+    glyphBox = WorldWdgt.theme.menuRowGlyphSize
     box = fitInto ? new Point glyphBox, glyphBox
     ratio = aWdgt.idealRatioWidthToHeight
     return box.round()  unless ratio?

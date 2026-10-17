@@ -6,7 +6,7 @@ class CloseIconButtonWdgt extends IconButtonWdgt
   iconHoverColor: Color.RED
   toolTipMessage: "close window"
 
-  createAppearance: -> new CloseIconAppearance @
+  createAppearance: -> new CrossIconAppearance @
 
   actOnClick: ->
     # Ask the container what its bar's close button does -- a window handles it

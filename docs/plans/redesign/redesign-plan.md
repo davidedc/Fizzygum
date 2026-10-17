@@ -1,6 +1,6 @@
 # Fizzygum visual redesign — the plan
 
-**AUTHORED + OWNER-APPROVED 2026-10-16; P0, R0, T and F done; S1c done (the rounded child clip passes the 3 % bar, §3 #4); next: W1.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
+**AUTHORED + OWNER-APPROVED 2026-10-16; P0, R0, T and F done; S1c done (the rounded child clip passes the 3 % bar, §3 #4); W1 done (units a–f, recaptured, every close gate green; committing on `redesign` awaits owner approval); W2 next.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
 - This file is the living plan. Keep its STATUS box current at every phase close. The design input it executes sits beside it in this directory.
 - Line numbers below drift. The quoted method or field name is authoritative: grep it fresh before trusting a `file:line`.
 
@@ -18,7 +18,7 @@
 | R0 | Recapture tooling: batch finger recapture + throughput | DONE 2026-10-16 (~1 h per full wave, was ~7 h) |
 | T | Tests aim by meaning; aims verify their hit (zero recapture) | DONE 2026-10-16 — every widget-aimed press verified ("AIM MISSED"); 9 never-delivered tests found, fixed and recaptured (owner-approved; Fizzygum b408f0c7, Fizzygum-tests 80ee6ca92) |
 | F | Tokens (`Theme`), primitives, spikes S1–S3 (zero recapture) | DONE 2026-10-17 — `Theme` + the primitives, each default-neutral; spikes measured. The one benign inspector recapture owner-approved (Fizzygum fd0165b3, Fizzygum-tests 417d0a6e4). Corners (§3 #4): S1c DONE 2026-10-17. SWCanvas's clip model is rebuilt (§4 F, S1c), and the rounded child clip now costs +0.2 % (dpr 1) / +1.9 % (dpr 2) of suite time, so it is ADOPTED for W1, as the single path clip (owner). Committed: SWCanvas 1b482fe (pushed); the Fizzygum pin bump is the commit carrying this line. |
-| W1 | Global surface + all persistent frames (windows, cards, bands) | not started |
+| W1 | Global surface + all persistent frames (windows, cards, bands) | DONE 2026-10-17 on the `redesign` branches (both repos, from Fizzygum e3032d72 and Fizzygum-tests 417d0a6e4), commit pending owner approval. Units: W1a desk + plain wallpaper + one shadow; W1b body look; W1c the draft's geometry; W1d strip skin + island re-derivation; W1e strip glyphs; W1f the resize grip (`FrameGripWdgt`); plus the retitle fix the census found (`FrameWdgt._retitleNoSettle`). Each unit gated pixel-only before the recapture. Owner reviewed the sample; recaptured mouse (1942 refs / 297 tests) and finger (1862 / 287) at dpr 1,2. Close gates: `fg gauntlet` 19/19 (census serial-only: a boot-storm compile flake in parallel), `fg homepage` OK, `check-visualisations --strict` OK. Open review points: §4 W1. NEXT: W2. |
 | W2 | Menus, lists, scrollbars, prompts, tooltips | not started |
 | W3 | Controls + Object Inspector re-layout | not started |
 | W4 | Desktop: tiles, plates, grid, size knob, clock, bin, icons | not started |
@@ -399,6 +399,29 @@ Create the `redesign` branches here (owner approval).
 - **Collapsed frames.** The bar alone; owner review of the corner treatment.
 - **Cards** (internal windows) and **docked bands.** The draft's embedded-toolbar skin: 1 px `line` border, radius 6, `paper`; the strip is 44 wide, `chrome`, `[5,0,0,5]`, with a 1 px `line` divider.
 - Menus and prompts are NOT restyled here, beyond inheriting the shadow token.
+- **Decisions settled at W1's start (2026-10-17), from research R1/R2 (`Fizzygum-tests/.scratch/w1/`):**
+  - **Geometry is the draft's exactly** (orchestrator, from UI-guidelines §6.1 "the 1px frame sits outside [the content area]"). Every draft number is measured from the content box INSIDE the 1 px frame:
+    - the strip is 44 plus its 1 px `line` rule, inside the border, so a window's top chrome is 46;
+    - the pieces sit at 1–45 and 45–89 from the frame's outer edge, the pencil at W−45..W−1, and the title centres between 89 px insets;
+    - content sits flush to the border's INNER edge, so the body margin equals the border width (1), not 0 from the outer bounds. Flush to the outer bounds (S1b's measured geometry) would hide content's outer ring under the stroke-last frame, and a press on the border would hit content.
+  - **Metrics split** (`barPadding` was four dials at once): the frame border width, the strip's edge inset / inter-piece gap / cross inset, the body margin, and the dock-band inset. `barGlyphSize` 24 keeps its value for its menu readers (menu rows, `InertIconHolderWdgt`, the overflow chevron: W2's) under the name `menuRowGlyphSize`, and the bar gets its own glyph sizes, `barControlGlyphSize` 14 for × − + and `barActionGlyphSize` 20 for the pencil/eye. The grip gets its own size 36 and inset; `handleSize` stays for its non-handle readers.
+  - **Bar hover** (owner): a bar glyph recolours from `muted` to `ink` on hover and press, through the existing state machine, with no plate. Close is no exception, and the pencil's next-mode preview goes `ink` too (no yellow).
+  - **Pinned menus** (owner): a pinned menu takes the window look. The look is re-applied on EVERY derivation (construction, lifetime change, re-parenting), for persistent and transient frames alike. A user-set corner radius therefore resets when a window changes parent.
+  - **Test values** (owner): the assertions that encode today's look are re-expressed by meaning, never recaptured over: `macroTiltedFigureShadowAsDarkAsStraight` (darkness relative to the backdrop × alpha), `macroColoredCastersShadowNeutralBlack` (shadowed ≈ bare × (1−α) per channel; the desk is not neutral grey), `macroSpreadsheetResizeViewport` and `macroSpreadsheetSelection` keep their assertions as written. The fault is in the product: `SpreadsheetApp` opens at a literal OUTER extent chosen to grant its content "exactly the default grid". The app now derives its window extent from that content extent plus the frame's live chrome, so the grid is the same under any chrome.
+  - **One shadow** (2,2) α0.12 for every desktop object, pop-ups included (the draft's "shared shadow"). The pop-up tokens go; the drag lift keeps its own.
+  - **Strip skin.** The strip is always a rounded box with no stroke. It rounds exactly the corners it shares with the body's outline (radius = body radius − border): a top strip [r,r,0,0], a left strip [r,0,0,r], and a collapsed strip, which IS the frame, all four. Its rule (rule D) is a 1 px `line` rule along its content-facing edge. The corners are re-applied at layout, since the axis and the collapsed state change without a re-derivation.
+  - **Glyph ink** comes from the look: `muted` on a window strip, `text2` on a card's or band's strip (the draft's docked strip).
+  - **The rounded child clip** is on for every ROUNDED persistent frame (windows, cards, bands), and off for transient pop-ups (W2 decides theirs).
+  - **Band inset** = the host's body margin. The embedded toolbar's 8 px inset is W5's.
+  - **Grip**: 36, 3 px in from the content area (4 from the outer bounds), a square hit area, on the FRAME's resizer only. The halo, naked-inspector and demo handles keep their look, about 35 tests.
+- **Open review points from the W1 owner review (2026-10-17).** The owner approved the recapture without ruling on these, so each is still open. Each is a later unit's call, or the owner's:
+  - A collapsed strip rounds all four corners, and its bottom arcs sit 1 px below the border's inner curve. The collapsed-corner treatment awaits the owner's review.
+  - Inside a window's bottom corners, a thin crescent of the body's `paper` shows between the clipped content and the border: the clip radius vs the stroke's inner edge.
+  - A card nested flush under its host's strip shows the host's `paper` in its rounded top corners.
+  - A pinned menu's rows sit flush under its border (W2's).
+  - The grip's square covers whatever content lies under it; the default spreadsheet's bottom-right cell is pressable only on its left part (`MacroToolkit.pressPointOf` aims there).
+  - Every non-float drag (handles, sliders) records its grab offset at the move that crosses the drag threshold, not at the press, so a resize lags the pointer by that first step (`ActivePointerWdgt`, "if we ever will need to compensate for the grab/drag threshold"). Should the grip compensate?
+  - Naming: ruling C12 calls a docked band's strip "a grip", which collides with `FrameGripWdgt`.
 
 ### W2 — Menus, lists, scrollbars, prompts, tooltips
 - **Menu body.** `paper`, a 1 px `frame` stroke, radius 10, 4 px side padding (`menuRowsBorder`, a theme metric). Switching on `strokesOverChildren` for menus changes the pixels F2a's overlap table lists (titled pop-up, pinned menu, overflowing pop-up — `.scratch/f2a/overlap-analysis.js`).

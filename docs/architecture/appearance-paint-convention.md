@@ -33,8 +33,10 @@ restores. `localDamageBox` = the damage box translated to widget-local logical c
 
 On a partial repaint it is a SUB-RECT of the widget — whatever region is being redrawn this pass.
 That distinction is invisible when a body only fills: painting one colour over exactly the damaged
-part gives the same picture however large that part is, which is why the six background fills in
-the tree pass it straight to `_fillLocalRectSnappedToDevicePixels` and are right to.
+part gives the same picture however large that part is, which is why the background fills in the
+tree pass it straight to `_fillLocalRectSnappedToDevicePixels` and are right to, and why a fill of a
+fixed part of the widget (a seam between panes, a band's edge rule) intersects its own rect with it
+and fills only that.
 
 **Art is different.** Geometry placed relative to `localDamageBox` lands wherever the damage
 happened to start, so the same widget draws differently depending on what else moved. Take art

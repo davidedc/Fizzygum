@@ -77,7 +77,7 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
     @_invalidateLayout()
 
   # My output box is laid out across my full width at my bottom (_layOutOwnContents), so it is the
-  # child at my bottom-right corner, where my window's resizer sits (ViewportWdgt._aResizerSitsOverMyCorner).
+  # child at my bottom-right corner, where my window's resizer sits (ViewportWdgt._resizerOverMyCorner).
   bottomRightCornerReachedBy: (child) ->
     child is @outputTextArea
 

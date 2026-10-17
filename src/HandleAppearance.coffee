@@ -6,11 +6,12 @@
 class HandleAppearance extends Appearance
 
   # WHERE THE HANDLE REACTS, stated in the shape rather than on the widget (the
-  # UpperRightTriangleAppearance idiom): the corner resizer reacts on the striped triangle it
-  # draws and nothing else -- at a 44 px box (ruling T3) the square grab area reaches over
-  # whatever sits beside the corner (a strip's last cell, a small frame's bar), and "what you
-  # can hit is what you see" is the single-geometry rule. Every other handle type draws its
-  # arrows / knob ring ACROSS its whole box, so there the box IS the shape.
+  # UpperRightTriangleAppearance idiom): the corner resizer (a halo's, a naked inspector's; a
+  # frame's grip wears its own glyph appearance and reacts on its whole square) reacts on the
+  # striped triangle it draws and nothing else -- at a 44 px box (ruling T3) the square grab
+  # area reaches over whatever sits beside the corner (a strip's last cell, a small frame's
+  # bar), and "what you can hit is what you see" is the single-geometry rule. Every other
+  # handle type draws its arrows / knob ring ACROSS its whole box, so there the box IS the shape.
   #   TOTAL, like every shapeContainsPoint: false outside the bounds.
   shapeContainsPoint: (aPoint) ->
     return false unless @widget.boundsContainPoint aPoint

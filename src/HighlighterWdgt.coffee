@@ -49,7 +49,7 @@ class HighlighterWdgt extends RectangleWdgt
   @fillStyle: (color, alphaScaled) -> {form: "fill", color: color, alphaScaled: alphaScaled}
 
   # Drag-embed candidate/reluctant outlines (spec §11). A receptive candidate gets the accent
-  # (pencil-yellow family); a view-mode reluctant target gets a neutral gray. Outline (not a wash):
+  # (the yellow accent); a view-mode reluctant target gets a neutral gray. Outline (not a wash):
   # S1 found the whole-target fill far too loud for a drag affordance.
   @candidateOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.dropCandidateOutline, alpha: 1}
   @reluctantOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.dropReluctantOutline, alpha: 1}

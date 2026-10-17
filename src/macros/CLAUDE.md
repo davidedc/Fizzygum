@@ -238,7 +238,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   takes the button, so no working aim moves. The same keep-the-working-point idiom answers the other
   meaning locators: `titleGrabPoint frame[, preferred]` (where a press takes hold of a window by its title
   strip — the title or the strip background, never a button — answering `{point, piece}`), `contentPointOf
-  frame`, `textSlotScreenPoint text, slot` (where a press picks exactly that caret slot, checked with the
+  frame`, `pressPointOf widget` (where a press meets the widget: its centre, or its first exposed point
+  when something covers that — a sheet's corner cell under its window's grip), `textSlotScreenPoint text, slot` (where a press picks exactly that caret slot, checked with the
   text's own `slotAt`), `autoScrollBandPointOf viewport, side, depth`, `screenTopLeftOf widget`.
 - **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
   `tripleClickAtFractionOf`, `clickOnDesktopAt` — bare desktop, verified; `dropCarriedWidgetAt` — the drop of what

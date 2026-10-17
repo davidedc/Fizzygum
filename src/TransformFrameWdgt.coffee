@@ -99,6 +99,31 @@ class TransformFrameWdgt extends PanelWdgt
   _reactToChildAdded: (aWdgt) ->
     @parent?.noteContentsNameMayHaveChanged?() unless aWdgt.isLayoutInert?()
 
+  # RE-HOMED WITH A FRAME INSIDE: a frame that is my sole content -- directly, or through islands
+  # nested in me, each the sole content of the one around it -- takes its look from the container
+  # it really lives in, seen THROUGH its sole-content islands (FrameWdgt.isInternal reads
+  # Widget._parentThroughIslands, which climbs sugar and explicit islands alike). Re-homing me
+  # changes that container, but only the ROOT of an add hears _reactToBeingAdded -- here, me -- so
+  # the frame inside would keep the skin of the home I left (a tilted window dwell-embedded into a
+  # panel would go on wearing the window look, though it is now a card). So I re-derive its skin
+  # myself, for the one frame that classifies through me: its look-through figure is me or an
+  # island around me.
+  # Not while the hand carries me, exactly like the frame's own re-derivation: the skin settles on
+  # release. The materialize homes me EMPTY before my content moves in, and the content then hears
+  # its own add, so nothing reaches a frame twice there.
+  #   An explicit type test, never a probe for the method: a duck-typed `?.()` would start calling
+  # into whatever unrelated class next gained a method of that name.
+  _reactToBeingAdded: (whereTo, beingDropped) ->
+    super
+    return if whereTo is world?.hand
+    figure = @
+    loop
+      onlyChildren = figure.childrenNotHandlesNorCarets()
+      break unless onlyChildren.length is 1
+      figure = onlyChildren[0]
+    if figure instanceof FrameWdgt and figure._enclosingIslandFigure().isAncestorOf @
+      figure._deriveAndSetSkin()
+
   # Phase 4B-universal (§6): an EXPLICIT island drives the halo rotation protocol against its OWN spec
   # (not the Widget base, which would wrap the island in ANOTHER sugar island). screenAnchor honours an
   # explicit anchor; rotationHalo_apply drives the self-settling setRotation (see its note below).

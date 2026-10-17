@@ -418,8 +418,9 @@ widget fills the data background (the backdrop shows through, as it always did).
 - **FILL-class window content by DELETION**: the pre-F6 fixed-size overrides died; the
   default `FrameContentLayoutSpec` (grow 1, `canSetHeightFreely` true) + the BASE Widget
   sizing protocol are exactly right. The default open size is PINNED by `SpreadsheetApp`
-  (window 452×336 − 36 chrome = 442×300 content — the pre-F6 on-screen window was ALWAYS
-  452×336: the fixed content overrode the old passed 334, so the pin changes no pixel).
+  as a CONTENT extent (446×280): the app opens the window at whatever outer extent the frame's
+  live chrome needs to grant exactly that (`FrameWdgt.extentWrappingPayloadAt`), so the default
+  grid is the same under any chrome.
 - **The resize seam is a `_reLayout` override** (the `StretchableWidgetContainerWdgt`
   precedent: bounds-first `_applyGrantedBounds`, then `_buildChromeNoSettle` +
   `_reconcileViewportNoSettle` re-derive everything from the just-applied frame, then

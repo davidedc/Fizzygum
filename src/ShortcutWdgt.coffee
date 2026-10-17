@@ -175,5 +175,7 @@ class ShortcutWdgt extends DesktopLinkWdgt
       # fractional bookkeeping from an earlier desktop/storage life, which the fill-only
       # seed respects -- re-derive at the spawned position explicitly.
       whatToBringUp._rememberFractionalSituationInHoldingPanel()
+      # nosettle-sanctioned: the second half of the public bringUpReferencedWidget, never inside a
+      # settle (see the exemption above) -- the re-title settles on its own, as spawnNextTo does.
       whatToBringUp.setTitle? @label.text
 

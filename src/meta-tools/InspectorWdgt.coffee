@@ -155,8 +155,8 @@ class InspectorWdgt extends Widget
         undefined
 
   # My detail pane runs out to my bottom-right corner, where my own resizer sits while I am naked (and
-  # my window's while I am its payload), so its bars keep that corner free (ViewportWdgt.
-  # _aResizerSitsOverMyCorner). The resizer overlaps only the pane's lowest rows, and the pane keeps
+  # my window's grip while I am its payload), so its bars keep that corner free (ViewportWdgt.
+  # _resizerOverMyCorner). The resizer overlaps only the pane's lowest rows, and the pane keeps
   # the whole reserve: the safe way to be wrong.
   bottomRightCornerReachedBy: (child) ->
     child is @detail

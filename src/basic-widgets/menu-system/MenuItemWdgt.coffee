@@ -30,9 +30,9 @@ class MenuItemWdgt extends LabelButtonWdgt
   # whose value moved.
   rowReflection: undefined
 
-  # The widget I show at my left, inside a barGlyphSize box; undefined when I am label-only, which
-  # is every row that carries no picture (ruling G3: the glyph is INSET in the target, and the
-  # target is the whole of me).
+  # The widget I show at my left, inside a menuRowGlyphSize box; undefined when I am label-only,
+  # which is every row that carries no picture (ruling G3: the glyph is INSET in the target, and
+  # the target is the whole of me).
   #   It is a PICTURE and nothing else. A tap anywhere on me is MY click, so an icon derived from a
   # live thing — a copy of a tool, which is still a button — arrives already inert, wrapped in an
   # InertIconHolderWdgt by whoever built the spec.
@@ -172,13 +172,13 @@ class MenuItemWdgt extends LabelButtonWdgt
     @label.__commitMoveTo np
     @_placeMyIcon rowHeight
 
-  # WHAT MY ICON TAKES from my label: a barGlyphSize glyph box and the gap after it, and nothing
+  # WHAT MY ICON TAKES from my label: a menuRowGlyphSize glyph box and the gap after it, and nothing
   # whatever when I show no icon -- which is what keeps a label-only row exactly a label-only row.
   # Two dials, never one (ruling G3): my height is the TARGET (menuRowHeight), the box is the
   # GLYPH inset in it.
   _iconColumnWidth: ->
     return 0 unless @icon?
-    WorldWdgt.theme.barGlyphSize + @CONTENT_INSET
+    WorldWdgt.theme.menuRowGlyphSize + @CONTENT_INSET
 
   # Place the picture in its glyph box: the box sits at my left inset, my icon centres in it on
   # both axes, and every number rounds -- a fractional placement fails the suite even where the
@@ -188,7 +188,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   # that -- it belongs to the spec I was built from, not to the label of the moment.
   _placeMyIcon: (rowHeight) ->
     return unless @icon?
-    glyphBox = WorldWdgt.theme.barGlyphSize
+    glyphBox = WorldWdgt.theme.menuRowGlyphSize
     @_addNoSettle @icon  unless @icon.parent is @
     iconExtent = @icon.extent()
     iconLeftInset = @CONTENT_INSET + Math.round (glyphBox - iconExtent.x) / 2

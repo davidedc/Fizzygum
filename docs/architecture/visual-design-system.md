@@ -34,8 +34,8 @@ another class, and most values are `Color`s):
 | **PALETTE** | The design's named colours (§2), at the design's values. A palette colour paints nothing by itself. |
 | **ROLES** | What each SURFACE paints with — `windowBarFill`, `menuRowText`, `tooltipStroke`, `seamRule`, … One role per surface: two surfaces that paint the same colour still hold two roles, so one can be restyled without moving the other. A role's value is either a palette colour (the surface wears the design: `@seamRule = @chrome`) or the exact value the surface painted with before it adopted the design. |
 | **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects — `menuRow`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`. |
-| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyph inside it (`barGlyphSize`), the bar's padding, the menu row height, the resize handle, the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii. |
-| **SHADOWS** | The shadow every desktop object casts, the transient pop-up's and the drag lift's (offset + alpha each), and `shadowColor`, the one colour every shadow silhouette is filled with. |
+| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii. |
+| **SHADOWS** | The ONE shadow every desktop object casts at rest (windows, menus, prompts, tooltips, icons, the clock) and the drag lift a carried widget takes (offset + alpha each), and `shadowColor`, the one colour every shadow silhouette is filled with. |
 
 **The ratchet.** A colour literal in a chrome file is a look decided outside this system — a restyle
 edits `Theme` and cannot reach it. The `raw-chrome-color` stink (`buildSystem/check-stinks.js`; table in
@@ -92,7 +92,9 @@ rectangles; `Widget` answers none); its appearance (`Appearance._paintSeamRules`
 its children. A seam is a gap, so no child ever paints over it, every pixel has exactly one owner, and
 a pane reused elsewhere carries no stray line.
 - A BAND paints its OWN edge rule (a title bar's bottom rule, a menu header's rule): the line is part
-  of the band's look whatever sits next to it.
+  of the band's look whatever sits next to it. Mechanism: three fields on the band's `BoxyAppearance`
+  (`ruledEdge`, `ruleColor`, `ruleWidth`), painted after the fill and under the stroke; a frame's strip
+  draws the `barRule` role along its content-facing edge.
 - Overlapping two panes' borders so they coincide is rejected: double ownership, double paint under
   anti-aliasing, and it must be re-established at every resize.
 - Resizing a split stays a halo affordance: a target of at least 44 cannot hide inside a 1 px line.
@@ -110,8 +112,8 @@ fill, a `chrome` outline, `disabledText` text — never a dashed outline or a gr
 
 ### 4.4 Shadows are solid
 A shadow is a copy of the object's shape filled with `shadowColor` (solid black) at the shadow's alpha,
-offset — no blur, no gradient. Every object on the desktop casts the shared desktop shadow; a
-transient pop-up and a dragged object have their own. The shadow pass paints a widget's SILHOUETTE
+offset — no blur, no gradient. Every object on the desktop casts the ONE shared desktop shadow,
+transient pop-ups included; only a dragged object has its own (the lift). The shadow pass paints a widget's SILHOUETTE
 (its per-pixel coverage), so an icon or a rounded box casts its own shape.
 
 ### 4.5 Symbols: an ICON or a GLYPH, decided by MEANING
@@ -138,6 +140,13 @@ hand-translated into drawing calls.
 - A rounded box's radius is one number, or per corner — a 4-array `[topLeft, topRight, bottomRight,
   bottomLeft]` in `cornerRadius` (HTML5 `roundRect()` semantics), e.g. `[7, 7, 0, 0]` for a title bar
   inside a radius-8 window. `BoxyAppearance` fills, strokes and hit-tests by it.
+- A frame's strip rounds exactly the corners it shares with the body's outline, at the body radius less
+  the border: `[r, r, 0, 0]` for a strip across the top, `[r, 0, 0, r]` for a strip down the side, all
+  four when the frame is collapsed (the strip IS the frame). It is set at every arrange of the strip
+  (`FrameBarWdgt._shapeTitlebarBackground`), because collapsing and re-siding a dock change it without a
+  re-derivation of the look. `FrameWdgt._deriveAndSetSkin` re-derives the body and the strip as one act,
+  and a transform island re-homed with a frame as its sole content re-derives that frame
+  (`TransformFrameWdgt._reactToBeingAdded`), so a tilted window dropped into a panel wears the card look.
 - The hit shape of a rounded box is its FILLED pixels: a logical pixel belongs to it iff its pixel
   centre is inside the outline, the same in all four corners. A rounded corner's notch is pointer-through.
 - A 1 px outline is stroked inset half a pixel with the same radius as the fill (the house crisp
@@ -148,7 +157,8 @@ hand-translated into drawing calls.
   own pixels outside the curve unless something stops it. Two mechanisms exist: a flush child can take
   the host's corner radii on its own background (per-corner fill — enough only for content whose corner
   pixels are its background), and `FrameWdgt` can clip its children to its rounded outline
-  (`clipsChildrenToRoundedOutline`). It is off until W1 switches it on through the frame look.
+  (its body appearance's `clipsChildrenToOutline` knob, which `_frameLook` turns on for every persistent
+  frame — a window, a card, a docked band — and off for a transient pop-up).
   - A repaint whose damage reaches one of the frame's corner squares paints the children under ONE
     rounded clip, through `BoxyAppearance.clipToOutline`. Any other repaint paints them under the
     rectangle, as before.
@@ -173,7 +183,7 @@ exactly one owning widget:
 | × / − in 44×44 targets | `CloseIconButtonWdgt`, `CollapseIconButtonWdgt` (in a `SwitchButtonWdgt`), children of `FrameBarWdgt` |
 | Window title | `FrameBarWdgt`'s label `StringWdgt` (`fonts.windowTitle`) |
 | Pencil / eye | `EditIconButtonWdgt` |
-| Resize grip | `HandleWdgt` (child of the frame, bottom-right corner) and `HandleAppearance` |
+| Resize grip | `FrameGripWdgt` (a `HandleWdgt`, child of the frame, bottom-right, `frameGripInset` in from the content area) and `GripIconAppearance`; its hit area is its whole `frameGripSize` square. A halo's and a naked inspector's resizers stay plain `HandleWdgt`s, on `HandleAppearance`'s triangle |
 | Embedded toolbar with its title strip | a docked `FrameWdgt` (a card under an `EdgeDockLayoutSpec`) holding a toolbar; its bar runs vertically |
 | Document paragraph items | `SimpleTextWdgt` paragraphs in `DocumentViewportWdgt` |
 | Menu container, header, rows, group rules | `MenuWdgt` (a transient `FrameWdgt`) → bar (header) → `PopUpRowsViewportWdgt` → `CommandPanelWdgt` → `MenuItemWdgt` rows + `DividerWdgt` |
@@ -187,12 +197,19 @@ model"). **`FrameWdgt._frameLook()` is the one place a frame's look is decided**
 one record — the manifestation (menu, window, card), the body's appearance, fill, stroke and rounding,
 the strip background's appearance, colours and rounding, the title's ink and background, and the shadow
 it casts at rest — from the frame's lifetime and parentage (and, for a menu, whether it has a title to
-round). The body (`_deriveAndSetBodyAppearance` and the constructor), the strip (`FrameBarWdgt`) and the
-shadow (`addShadow`) all READ it; none decides a look of its own. A focus state, when one exists, enters
+round). The body (`_deriveAndSetBodyAppearance`), the strip (`FrameBarWdgt`) and the shadow (`addShadow`)
+all READ it; none decides a look of its own. A focus state, when one exists, enters
 there and nowhere else. Collapsed and docked are not inputs: a collapsed frame wears its expanded look,
-and a docked band is the card its parentage makes it. ⚠ The body's colours and rounding are applied on a
-transient derivation and at construction, never on a persistent re-derivation — so a menu that is
-pinned keeps the menu box's colours it was born with.
+and a docked band is the card its parentage makes it; only the strip's corners follow the collapse and
+the strip's axis, set at every arrange (§4.7). The whole skin is applied on EVERY derivation, as one act
+(`FrameWdgt._deriveAndSetSkin`): the body (appearance, colours, rounding, and the stroke-last and
+rounded-clip knobs) and the strip (its background's appearance, fill and rule, its title's ink, and
+its glyphs' ink: `muted` in a window's strip, `text2` in a card's, `ink` while a glyph is hovered or
+pressed — the glyph recolours in place, with no plate behind it). A
+derivation is construction, re-parenting, lifetime change, and the re-homing of a transform island the
+frame rides in as its sole content. So a pinned menu wears the window's skin, a window nested into a
+panel wears the card's, and a corner radius set by hand lasts until the frame next changes parent or
+lifetime.
 
 ## 6. How a new widget picks its look
 

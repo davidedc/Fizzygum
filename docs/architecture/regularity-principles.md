@@ -70,7 +70,7 @@ vocabulary below is the convention for all new code:
     `EdgeDockLayoutSpec` (`side` / `thickness` / `engaged`) — the same widget that sits in the
     slot floats free the moment it is dragged out, because leaving the slot is exactly
     dropping the spec. The payload receives the spec's `thickness` exactly (its own declared
-    `dockThickness` if it has one); the band contributes only its own margin on top. A
+    `dockThickness` if it has one); the band contributes only its own chrome across it (its border and body margin). A
     collapsed frame **is** its bar, and the whole bar — not just the collapse control — taps
     to expand it.
   - `MenuWdgt` / `PromptWdgt` are framed citizens (`extends FrameWdgt`, born transient): a

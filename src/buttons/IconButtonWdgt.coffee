@@ -1,22 +1,26 @@
-# Base for the small icon-shaped buttons that live in window / panel chrome
-# (close, collapse, un-collapse, edit, make-internal, make-external, …).
+# Base for the small icon buttons of chrome: a window strip's close, collapse, un-collapse and
+# edit pieces, and a toolbar strip's overflow chevron.
 #
-# Each sends a message to a target object when pressed and takes its SHAPE
-# from an IconAppearance rather than from a label/face widget. Driving the
-# shape through the appearance (plus a hover/press colour) is currently the
-# simplest way to give a NON-rectangular button its colour — recolouring a
-# button's face widget isn't supported yet.
+# Each sends a message to a target object when pressed and draws its MARK -- the glyph -- through
+# an IconAppearance rather than through a label or a face widget. The glyph is painted in my
+# colour, so the hover/press state machine (HighlightableMixin) recolours it. What a pointer hits
+# is my whole box, never the glyph's outline: an icon appearance keeps the base box test
+# (Appearance.shapeContainsPoint), because the box is the target and the glyph only the mark drawn
+# inside it (ruling G3).
 #
 # A subclass supplies only what differs from this base:
-#   createAppearance   -> new <Foo>IconAppearance @   (the icon shape)
+#   createAppearance   -> new <Foo>IconAppearance @   (the glyph's shape)
 #   toolTipMessage     :  "…"                          (hover tooltip)
 #   actOnClick         -> …                            (what the press does)
 #   iconHoverColor     :  <Color>                      (only if not the default orange)
+# A frame's strip inks the pieces it carries itself (setGlyphInk, below), so on a frame strip a
+# piece wears the strip's ink whatever those defaults say.
 
 class IconButtonWdgt extends ButtonWdgt
 
-  # hover / press colour for the family (orange); a subclass overrides this
-  # field if it wants a different one (e.g. CloseIconButtonWdgt → red).
+  # the hover / press colour (orange) of a button no frame strip inks -- the toolbar's overflow
+  # chevron, a close button standing on its own; a subclass overrides this field if it wants a
+  # different one (e.g. CloseIconButtonWdgt → red).
   iconHoverColor: Color.create 255, 153, 0
 
   # THE SIDE MY MARK IS DRAWN AT inside my box, read by IconAppearance.calculateRectangleOfIcon.
@@ -52,3 +56,18 @@ class IconButtonWdgt extends ButtonWdgt
     # pairing OverflowChevronButtonWdgt writes out for its own dark mark.)
     @color_normal = @color
     @appearance = @createAppearance()
+
+  # MY GLYPH'S INK, as the strip that carries me names it (FrameBarWdgt._inkGlyphButtons, from its
+  # frame's look): `restInk` at rest, `activeInk` while I am hovered and while I am pressed. All the
+  # state machine's colours move together, for the reason the constructor gives -- a bare @color
+  # would last only until the first pointer visit -- and @color follows at once, in whatever state
+  # I am in now. The same inks again are a no-op: a strip re-inks every piece it carries at each
+  # derivation of its skin.
+  setGlyphInk: (restInk, activeInk) ->
+    unchanged = @color_normal?.equals(restInk) and @color_hover?.equals(activeInk) and
+      @color_pressed?.equals(activeInk)
+    return if unchanged
+    @color_normal = restInk
+    @color_hover = activeInk
+    @color_pressed = activeInk
+    @_updateColor()

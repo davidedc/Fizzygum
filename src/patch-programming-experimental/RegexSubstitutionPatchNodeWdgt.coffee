@@ -75,7 +75,7 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
 
   # My output box is the last of my three, laid out across my full width at my bottom (_layOutOwnContents),
   # so it is the child at my bottom-right corner, where my window's resizer sits
-  # (ViewportWdgt._aResizerSitsOverMyCorner).
+  # (ViewportWdgt._resizerOverMyCorner).
   bottomRightCornerReachedBy: (child) ->
     child is @outputTextArea
 

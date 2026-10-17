@@ -9,6 +9,9 @@ SystemTest_macroCollapsedWindowBarDragMovesAndUncollapseRestoresExtent
 SystemTest_macroCollapsingTiltedWindowKeepsTitleBarStill
 SystemTest_macroInternalWindowDroppedIntoWindowFits
 SystemTest_macroResizeWindowContainingInternalWindow
+# the strip's glyphs at rest and hovered (pencil / eye feedforward), a tilted window embedded as a card
+SystemTest_macroEditModeTogglePencilEyeGlyph
+SystemTest_macroTiltedWindowDropRequiresDwell
 # docked bands and the Docs Maker toolbar
 SystemTest_macroDocsToolbarDockSidesAndFloat
 SystemTest_macroCollapsedDockIsAnEdgeSliver

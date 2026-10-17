@@ -693,11 +693,11 @@ class WorldWdgt extends IconGridPanelWdgt
     splashScreenFakeDesktop?.parentNode?.removeChild splashScreenFakeDesktop
 
   createDesktop: ->
-    # the desktop's own furnishing -- its backdrop colour (the theme's desktopFill) and its wallpaper
-    # pattern. Every other chrome DIMENSION and COLOUR is read from the theme where it is used, so
-    # what a page renders does not depend on whether this method ran.
+    # the desktop's own furnishing -- its backdrop colour (the theme's desktopFill). Its wallpaper
+    # is the Wallpaper's own default, plain: the bare desk. Every other chrome DIMENSION and COLOUR
+    # is read from the theme where it is used, so what a page renders does not depend on whether
+    # this method ran.
     @setColor WorldWdgt.theme.desktopFill
-    @wallpaper.setPattern "dots"
 
     acm = new AnalogClockWdgt
     acm._applyExtent new Point 80, 80

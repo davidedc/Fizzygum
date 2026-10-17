@@ -64,7 +64,7 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
     # from actOnClick, an event-stream handler, so a settle here is legal and never mid-pass.
     picture = tool.fullCopy?()
     return undefined unless picture?
-    glyphBox = WorldWdgt.theme.barGlyphSize
+    glyphBox = WorldWdgt.theme.menuRowGlyphSize
     icon = new InertIconHolderWdgt picture, fitInto: new Point glyphBox, glyphBox
     picture._fullDestroyNoSettle()
     icon

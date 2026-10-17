@@ -556,13 +556,13 @@ assertion a recapture after a regression silently stores two different hashes an
   desktop. GOTCHA: the header-drag's RELEASE point must be clear of every menu of the still-open world-menu cascade — a release
   over the cascade silently re-absorbs the dragged sub-menu (unpinned) and the later dismissal click destroys it. No new verb.
 - **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptWdgt` (a framed citizen of `FrameWdgt`)
-  casts a drop shadow like every transient frame (`FrameWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
+  casts a drop shadow like every transient frame (`FrameWdgt.popUp → addShadow`: the theme's one desktop shadow, `Theme.desktopShadowOffset`/`desktopShadowAlpha`). Drag it by its TITLE
   BAR: `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` (a press-drag GRABS the whole
   pop-up; a CLICK on the header would PIN it; dragging the CENTRE hits the inner field/slider). ⚠ That first grab is also what makes it
   PERSISTENT (C8), so from then on it rests as a WINDOW; on each drop `FrameWdgt._reactToBeingDropped` re-runs `_updatePopUpShadow`, so
   the shadow renders correctly at every position. Capture `prompt` fresh right after it opens.
 - **Menu shadow is correct WHILE dragging and AFTER drop** (`macroMenuShadowCorrectWhileAndAfterDrag`): the mid-drag companion of the
-  prompt-shadow entry above. A popped-up TRANSIENT menu casts the at-rest pop-up shadow (`FrameWdgt.addShadow` → offset (5,5) α0.2); while
+  prompt-shadow entry above. A popped-up TRANSIENT menu casts the at-rest desktop shadow (`FrameWdgt.addShadow` → the theme's `desktopShadowOffset`/`desktopShadowAlpha`, the one every desktop object wears); while
   it is FLOAT-DRAGGED the grab swaps in the lifted drag shadow (`ActivePointerWdgt.grab` → addShadow offset (6,6) α0.1 — larger and
   fainter); on drop `FrameWdgt._reactToBeingDropped` derives the shadow the new home calls for — and since the grab already made it
   furniture, that is the desktop shadow of a WINDOW, not the pop-up one it opened with. The difference is an OFFSET/ALPHA change on pickup, NOT clipping
@@ -821,13 +821,10 @@ assertion a recapture after a regression silently stores two different hashes an
   include the LAST-CLICKED switch's hover + tooltip (the pointer rests on the icon that toggles into view under it — approved
   convention since macroWindowsEmptyCollapsingUncollapsing), so anchor byte-equality pairs on states produced by the SAME last
   click (no pointer-parking needed) — this test lands two such pairs (its step-by-step double restore == the earlier full state;
-  an extra outer round trip == the case-3 restore); (2) a switch icon's PRISTINE construction-time paint is the class-default
-  `Color.WHITE`, while any later repaint through `HighlightableMixin`'s state machine uses `color_normal` (245,244,245,
-  `HighlightableMixin.coffee:14`) — the shift comes with the bar's first REPAINT (collapse/resize cycles trigger it regardless
-  of the pointer), NOT with a pointer touch (verified: a restore shot byte-matched its partner even though one of them predated
-  the switch's first-ever click), and it is exactly the 92 switch-glyph pixels separating the original recording's
-  never-repainted fixture shot from its post-cycle restore — so geometry-restores byte-match each other but never the pristine
-  fixture shot. Fixture: the shared window-in-window verbs + ONE lorem paragraph (same text/colors as
+  an extra outer round trip == the case-3 restore); (2) a strip glyph wears its strip's ink from the moment it is built
+  (`FrameBarWdgt._inkGlyphButtons` sets every state colour at once, `IconButtonWdgt.setGlyphInk`), so a never-repainted
+  fixture shot and a post-cycle restore draw the same glyph pixels: a geometry restore byte-matches the pristine fixture shot
+  as well as its partner. Fixture: the shared window-in-window verbs + ONE lorem paragraph (same text/colors as
   `createNewWrappingSimpleTextWdgtWithBackground`) dropped into the inner window; drag the composite by its TITLE
   (`extWin.label.center()` + press-drag-release) so taller re-wrapped states stay on-canvas. No new verb.
 - **Drop-to-dock: a frame docks into a host's edge BAND** (`macroDockAnyFrame` — spec
@@ -1044,8 +1041,8 @@ assertion a recapture after a regression silently stores two different hashes an
   everything without something covering someone else's centre. Squeeze/widen via `dragWindowResizerTo_InputEvents` with DELTAS
   off `win.resizer.center()` (the verb releases the handle centre AT the destination — absolute corner targets shift the window
   by the handle-centre offset): the cells re-cap against the LIVE stack width both ways, and the round trip is byte-identical.
-  The collapse round trip byte-anchor needs a SECOND round trip (post-repaint states match each other; the FIRST restore differs
-  from the pristine shot by exactly the `HighlightableMixin` pristine-vs-repaint glyph rule of the nested-collapse entry). Park
+  The collapse round trip byte-matches the pre-collapse shot (strip glyphs are inked at build, gotcha (2) of the
+  nested-collapse entry), and a SECOND round trip anchors it again. Park
   the pointer on one clear spot before every shot. No new verb.
 - **Edge auto-scroll while dragging** (`macroListWdgtAutoScrollsNearDraggedEdge`): a ViewportWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOfChild` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
@@ -1947,15 +1944,15 @@ assertion a recapture after a regression silently stores two different hashes an
   shadow + alpha-non-cascade; unlocks the panel-rendering family). GOTCHA: the children must STRADDLE the panel's edge (be moved so
   part crosses it) for the crop to be visible — fully-inside children show no clipping.
 - **Composite drop-shadow** (`macroCompositeWidgetsHaveCorrectShadow`): a shadow comes from `Widget.add`, NOT `attach` — `world.add
-  widget` gives the desktop shadow (`addShadow`, offset (4,4) α0.2, `Widget.coffee:3196`), re-parenting to a non-world parent calls
-  `removeShadow` (`:3206`). The shadow is the whole subtree RE-PAINTED faintly at the offset (every descendant's actual pixels —
+  widget` gives the desktop shadow (`Widget.addShadow`, the theme's `desktopShadowOffset`/`desktopShadowAlpha`), re-parenting to a non-world parent calls
+  `removeShadow` (`Widget._addNoSettle`). The shadow is the whole subtree RE-PAINTED faintly at the offset (every descendant's actual pixels —
   fill and content — not just an edge/silhouette), so `world.add parent` then `parent.add child` makes the parent's shadow show
   the WHOLE composite faintly. A widget never bakes its own shadow into its back-buffer — this unified recursive re-paint is the
   only shadow. To force a shadow on a morph that never routed through `world.add`, call `widget.addShadow()` explicitly.
 - **A widget is painted correctly the INSTANT it is picked up** (`macroPanelPaintedOkAsSoonAsPickedUp`): the grab path produces a complete,
   correct first frame WHILE the morph is held — synchronously, no settle. `ActivePointerWdgt.grab` does `@add aWdgt` (which FORCES the
   morph's first paint — its comment: "the shadow needs the image of the widget"), then `addShadow new Point(6,6),0.1` (the floaty drag
-  shadow — larger+fainter than the at-rest (4,4)α0.2 desktop shadow), then `_fullChanged()`. A `PanelWdgt` (cream fill + dark 1px stroke via
+  shadow — larger+fainter than the at-rest desktop shadow), then `_fullChanged()`. A `PanelWdgt` (cream fill + dark 1px stroke via
   `RectangularAppearance`, painted synchronously; the `panelFill` / `panelStroke` roles of `Theme.coffee`) overrides nothing in the grab
   path, so its held frame is deterministic — no timer/animation/frame-race, and axis-aligned chrome (no trig → immune to the cross-engine
   `Math.sin/cos` issue). Build `new PanelWdgt` + `setExtent` + `world.add` + `moveTo` (equivalent to the demo "panel" item, since
@@ -1966,7 +1963,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `macroCompositeWidgetsHaveCorrectShadow`. No new verb.
 - **Bare text widget casts the unified drop-shadow, lifted while dragged** (`macroBareTextWidgetDropShadowRestAndDrag`): a
   `StringWdgt` + a `TextWdgt` added straight to the world (transparent, so the shadow is the GLYPHS, not a box) each get the
-  at-rest desktop shadow via `Widget.add` -> `addShadow` (offset (4,4) α0.2, `Widget.coffee:3196`); float-dragging the TextWdgt
+  at-rest desktop shadow via `Widget.add` -> `addShadow` (the theme's `desktopShadowOffset`/`desktopShadowAlpha`); float-dragging the TextWdgt
   by its body swaps in the lifted shadow (`ActivePointerWdgt.grab` -> (6,6) α0.1), and dropping restores the at-rest one. Proves
   a text widget's shadow IS the ONE unified widget drop-shadow — there is NO per-glyph shadow baked into its back-buffer
   (roadmap #3 closed-SUBSUMED; the deleted `StringMorph`/`TextMorph` `shadowOffset`/`shadowColor` is not reintroduced). The
@@ -2279,7 +2276,7 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   DARKNESS (not just its shape), isolate it with a shadow-on/off A/B — screenshot the shadowed scene (leaves a settled,
   fully-painted canvas), `getImageData` read A, then `widget.removeShadow()` on each shadow owner (the SUGAR ISLAND owns a
   tilted figure's shadow — `tilted.parent`, not the widget), `world._fullChanged()` (sanctioned test oracle), yield, read B,
-  and assert per-region `max(lumaB − lumaA)` — the flat interior of a black shadow at alpha 0.2 over the grey desktop.
+  and assert per-region `max(lumaB − lumaA)` — the flat interior of a black shadow, which darkens the bare desk by its luma times the shadow's alpha (both read live; the floor is 3/4 of that).
   Geometry-free (no hand-derived rotated sample points ⇒ dpr-invariant), and the numeric assert is what makes the guard
   survive a batch recapture: a screenshot-only shadow test would be silently re-baselined by the next `fg recapture --auto`.
   Born with the 2026-08-02 tilted-window faint-shadow fix (the faint-copy bug scores the tilted half ≤ 0 — it only LIGHTENS).
@@ -2301,10 +2298,13 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   content, and since the bar CAPTURES the name while the materialize still holds the island EMPTY, the island nudges the
   frame's `noteContentsNameMayHaveChanged()` when its content arrives (assert it with
   `win.contents.colloquialName() == "analog clock"`).
-- **Chroma-neutrality assert (the shadow-COLOUR guard)** (`macroColoredCastersShadowNeutralBlack`): the same A/B isolation,
-  plus, over pixels the shadow darkened by > 8 luma, assert the SHADOWED image's max RGB channel spread ≤ 2 — over the
-  neutral grey desktop a contract-true black shadow stays channel-balanced, while a shadow that re-tints the caster's own
-  colours scores its hue's spread (the un-aligned rainbow palette scored ~200). Fixture = one caster per PAINT PATH, since
+- **Neutrality assert (the shadow-COLOUR guard)** (`macroColoredCastersShadowNeutralBlack`): the same A/B isolation, read
+  against the BARE backdrop (the desk is not a neutral grey, so the shadowed pixel's own channel balance would test the
+  desk): over shadowed pixels whose unshadowed twin is the bare desk, estimate the pixel's one shadow factor f from its three
+  channels (capped to the caster's alpha) and assert every channel equals the backdrop's times (1 − f) within 2 — a
+  contract-true black shadow scales all channels alike, while a shadow that re-tints the caster's own colours pulls each
+  channel toward its hue (a red tint strays ~14). Assert at least one such pixel per caster, so the check cannot pass
+  vacuously. Fixture = one caster per PAINT PATH, since
   each path enforces the contract separately (Widget.coffee "How the shadow painting works"): coloured text (BackBufferMixin
   blit), a coloured icon (Appearance scratch-silhouette), the ColorPaletteWdgt (immutable palette buffer). Also assert no
   pixel LIGHTENED (> 2 luma) — the ghost-copy failure mode. Born with the 2026-08-03 shadow-colour alignment arc.

@@ -1368,11 +1368,13 @@ class MacroToolkit
   # centre IS the press point — including the rotate handle, whose gesture reads the RAW pointer's
   # angle about the target's anchor, so moving its press point would move the angle it measures.
   #
-  # The corner resizer's shape is the striped triangle whose diagonal runs exactly through the box
-  # CENTRE — so there the centre is the shape's BOUNDARY, and a press a single pixel up or left of it
-  # falls through to the frame, which float-drags instead of resizing. An aim ON a boundary holds only
-  # while nothing between the aim and the press is off by a single pixel, so aim a quarter-box deeper
-  # into the corner: that clears the diagonal by handleSize/4 on each axis.
+  # A plain corner resizer's shape (a halo's, a naked inspector's) is the striped triangle whose
+  # diagonal runs exactly through the box CENTRE — so there the centre is the shape's BOUNDARY, and a
+  # press a single pixel up or left of it falls through to the widget, which float-drags instead of
+  # resizing. An aim ON a boundary holds only while nothing between the aim and the press is off by a
+  # single pixel, so aim a quarter-box deeper into the corner: that clears the diagonal by a quarter
+  # of the handle's side on each axis. A frame's grip (FrameGripWdgt) is a corner resizer too and
+  # reacts on its whole square, which holds that same point well inside it, so one aim serves both.
   #
   # Those are the PREFERRED points: the press goes where _handlePressPoint finds a press takes the
   # handle, which is the preferred point whenever a press there already meets it.
@@ -1523,10 +1525,11 @@ class MacroToolkit
     @moveToAndClick_InputEvents windowWidget.collapseUncollapseSwitchButton
 
   # Resize a FrameWdgt by dragging its resize handle to a destination. Every FrameWdgt builds a `.resizer`
-  # (a HandleWdgt laid out at its bottom-right corner); a NON-float press-drag-release on it resizes the
-  # window (HandleWdgt.nonFloatDragging → setExtent on the window). The window-chrome sibling of close/
-  # collapse: reach the window's OWN resize control by reference (vs hunting a HandleWdgt by coordinates —
-  # several windows each have one). destination may be a Point or another widget (dragged to its centre).
+  # (its grip, a FrameGripWdgt: a HandleWdgt laid out at its bottom-right corner); a NON-float
+  # press-drag-release on it resizes the window (HandleWdgt.nonFloatDragging → setExtent on the window).
+  # The window-chrome sibling of close/collapse: reach the window's OWN resize control by reference (vs
+  # hunting a HandleWdgt by coordinates — several windows each have one). destination may be a Point or
+  # another widget (dragged to its centre).
   # Verifies that the press lands on that resizer. Queues input events — follow with
   # `yield "waitNoInputsOngoing"`.
   dragWindowResizerTo_InputEvents: (windowWidget, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -1672,10 +1675,16 @@ class MacroToolkit
   # a fraction of the frame, so it stays on the content whatever the strip's thickness or the body's
   # margin.
   contentPointOf: (frame) ->
-    contents = frame.contents
-    centre = @_screenPixelOf contents, contents.center()
-    return centre  if @_pressMeetsWidget centre, contents
-    @_exposedScreenPointOf contents
+    @pressPointOf frame.contents
+
+  # WHERE A PRESS MEETS A WIDGET, on the screen: its centre when a press there meets it (or a widget
+  # inside it), else its first exposed point (_exposedScreenPointOf). The aim for a widget something
+  # else may partly cover -- a sheet's bottom-right cell, under its window's resize grip -- stated by
+  # the widget rather than by a point inside it that the next layout change covers.
+  pressPointOf: (widget) ->
+    centre = @_screenPixelOf widget, widget.center()
+    return centre  if @_pressMeetsWidget centre, widget
+    @_exposedScreenPointOf widget
 
   # A POINT IN A VIEWPORT'S EDGE AUTO-SCROLL BAND, on the screen: `depth` px inside its `side` ("top",
   # "bottom", "left" or "right"), at the middle of that side — where a float-dragged widget the viewport

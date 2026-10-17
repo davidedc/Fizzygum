@@ -105,7 +105,10 @@ still scrolls, since scrollability is asked of overflow.
 
 The CORNER RESERVE is what occupies the bottom-right corner, and nothing more
 (`ViewportWdgt._cornerReserveFor`, read by `_barFrameAt`):
-- a resizer over the corner takes `max(scrollBarsThickness, handleSize)`;
+- a resizer over the corner takes the room it names (`HandleWdgt.cornerFootprint`), never less
+  than a bar: a frame's grip its inset plus its side (`FrameGripWdgt.footprint`), a naked
+  inspector's handle its side (`handleSize`). The climb that finds it (`_resizerOverMyCorner`)
+  answers the resizer itself;
 - failing that, the other bar, where it crosses, takes `scrollBarsThickness`;
 - with neither, the bar runs its side's full length.
 

@@ -1,5 +1,12 @@
 # not to be confused with the ActivePointerWdgt
 # I am a resize / move handle that can be attached to any Widget
+#
+# A subclass that keeps every gesture of a handle but looks, sizes or sits differently supplies only
+# what differs (the frame's own resize grip, FrameGripWdgt, is one):
+#   createAppearance   -> new <Foo>Appearance @    (my look, and so the shape I react on)
+#   _cornerSide        -> <px>                     (the side of my square)
+#   _cornerInsetFrom   (target) -> <Point>         (how far in from my target's edges I sit)
+#   cornerFootprint    -> <px>                     (how much of my target's corner I take)
 
 class HandleWdgt extends Widget
 
@@ -23,8 +30,8 @@ class HandleWdgt extends Widget
 
   # (No catchesPointerAt of my own: WHERE I react is my SHAPE, and the shape is my appearance's
   # business -- HandleAppearance.shapeContainsPoint answers the striped triangle for the corner
-  # resizer and the box for every other type, the same way the round bar buttons react on their
-  # circles.)
+  # resizer and the box for every other type, the same way an icon button's appearance answers its
+  # whole box, and the way the frame grip's glyph appearance answers its whole square.)
 
   # Resize / move / rotate handles are CHROME, never editor content (§5.D D-3/D21). Clicking or dragging a
   # handle to reshape a widget must NOT make the handle world.editorFocusWdgt -- otherwise the editor-focus
@@ -41,13 +48,31 @@ class HandleWdgt extends Widget
   # @inset are set in _reactToBeingAdded once the destination -- which IS the target -- is known (history:
   # see docs/archive/end-of-cycle-flush-final-records-plan.md).
   constructor: (@type = "resizeBothDimensionsHandle") ->
-    # default inset; recomputed against the real target's padding in _reactToBeingAdded when I corner-attach
+    # default inset; recomputed against the real target (_cornerInsetFrom) in _reactToBeingAdded when I
+    # corner-attach
     @inset = new Point 2, 2
     super()
-    @appearance = new HandleAppearance @
+    @appearance = @createAppearance()
     @color = WorldWdgt.theme.handleArtInk
 
-    @cornerSpec = new CornerInternalLayoutSpec @_anchorForType(), 0, WorldWdgt.theme.handleSize, @inset
+    @cornerSpec = new CornerInternalLayoutSpec @_anchorForType(), 0, @_cornerSide(), @inset
+
+  # my look: the striped triangle, the arrows or the rotate ring, by @type. A method, not a class
+  # field, so the boot dependency finder sees the `new` edge (widget-authoring guidelines §5).
+  createAppearance: -> new HandleAppearance @
+
+  # the side of my square, which the corner pass sizes me to
+  _cornerSide: -> WorldWdgt.theme.handleSize
+
+  # HOW FAR IN FROM MY TARGET'S EDGES I SIT once attached to it: its padding, never less than 2.
+  _cornerInsetFrom: (target) ->
+    pad = Math.max (target.padding ? 2), 2
+    new Point pad, pad
+
+  # HOW MUCH OF MY TARGET'S BOTTOM-RIGHT CORNER I TAKE, along each axis: the length a viewport
+  # running out to that corner stops its bars short of it by (ViewportWdgt._cornerReserveFor). A
+  # plain handle answers its side.
+  cornerFootprint: -> @_cornerSide()
 
   # I corner-attach (the corner fixed by my @type) to whatever widget I am added to -- that widget becomes my
   # resize/move @target. Added to the WORLD or the HAND (a naked desktop handle, or while detached / picked
@@ -104,12 +129,11 @@ class HandleWdgt extends Widget
     # Adopt whoever I was just added to as my resize/move @target -- UNLESS I landed free-floating (on the
     # world or the hand: a naked desktop handle, or mid-detach), in which case I have no target. The spec was
     # already resolved by defaultLayoutSpecWhenAddedTo during the add, so @isFreeFloating() tells the two
-    # apart. Recompute the corner inset from the real target's padding now that I know it (the constructor only
-    # had a default 2; for every non-menu attach the construction target used to supply this -- same value).
+    # apart. Recompute the corner inset against the real target now that I know it (the constructor only had
+    # a default 2).
     unless @isFreeFloating()
       @target = whereTo
-      pad = Math.max (@target.padding ? 2), 2
-      @inset = new Point pad, pad
+      @inset = @_cornerInsetFrom @target
       @cornerSpec.inset = @inset
     @_moveInFrontOfSiblings()
 
@@ -131,7 +155,7 @@ class HandleWdgt extends Widget
 
   # The two questions above, as a query: what my showing derives from, asked without asking whether I
   # show. A viewport that runs out to my parent's bottom-right corner keeps that corner free for me
-  # by this answer (ViewportWdgt._aResizerSitsOverMyCorner) -- a visibility is never a layout input.
+  # by this answer (ViewportWdgt._resizerOverMyCorner) -- a visibility is never a layout input.
   wouldShow: ->
     @parent? and @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)
 

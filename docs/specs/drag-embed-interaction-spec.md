@@ -144,8 +144,8 @@ above changed; no app's default editing state changed as part of this arc.
 ### §4.1 — Dock bands: a receptivity tier ahead of the four (`frame-lifetime-and-docking-plan.md` §2.4/§2.5)
 
 A host `FrameWdgt`'s four edge **bands** — strips `dockBandDepth` deep in from its body's edges (the
-preference is 30px, deliberately ≥ the bar thickness of 26px = `barIconSize + 2·barPadding`, so a band is
-never thinner than the grip a drop produces) — are drop candidates `ActivePointerWdgt._dockBandUnderPointerFor`
+preference is deliberately ≥ the strip's thickness, `frameBorderWidth + barIconSize + barRuleWidth`, so a
+band is never thinner than the grip a drop produces) — are drop candidates `ActivePointerWdgt._dockBandUnderPointerFor`
 checks **before** the tier climb of §4/§5 even starts, and the climb never runs at all once a band answers: a
 host offering a band under the pointer wins outright over its own ordinary content receptivity, whatever tier
 that content is in. Two gates keep the offer narrow:
@@ -343,7 +343,8 @@ The internal/external switch button is DELETED outright (not repurposed). A wind
 DERIVED from parentage (`FrameWdgt.isInternal` = "am I nested" = my parent is neither the world nor the hand),
 and the whole-window skin (body appearance + title-bar appearance/colors) FOLLOWS it automatically on every
 re-parenting (`_reactToBeingAdded` re-applies it, skipping the transient pick-up by the hand): drag a window into
-a container → flat internal skin; out to the desktop → boxy external skin. So the manual toggle has no job left.
+a container → the card look (the card radius, a `line` stroke); out to the desktop → the window look (the window radius,
+a `frame` stroke). So the manual toggle has no job left.
 (A window built `internal=true` and then nested via `container.add` — a dashboard/document plot — ends up
 byte-identical to the old stored-flag path, because the full skin re-derives to internal on that add.)
 

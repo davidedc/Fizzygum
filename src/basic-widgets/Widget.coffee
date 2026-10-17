@@ -501,8 +501,8 @@ class Widget extends TreeNode
     # ancestor, exactly as a press in the ancestor's OWN notch does: the pointer agrees with the
     # paint. Each such ancestor tests the point in its own plane with its own shape test (the one its
     # notch answers with), the point carried there through the screen by the same two-arm mappings
-    # that brought it from the screen to me. With no such ancestor (every frame while the clip is
-    # off), one walk up, no mapping.
+    # that brought it from the screen to me. With no such ancestor (no frame above me whose look
+    # turns the clip on), one walk up, no mapping.
     screenPoint = undefined
     ancestor = @parent
     while ancestor?
@@ -2105,11 +2105,13 @@ class Widget extends TreeNode
   # class; off any sugar figure (a plain widget, or an EXPLICIT authored island -- a real container, not
   # sugar) it returns ME. The payload-side sibling of _parentThroughIslands (the container-side
   # look-through). Consult it ONLY where the payload's CLASS/policy is inspected -- NEVER at geometry/add sites,
-  # which must keep the figure (it is what actually gets placed + parented).
+  # which must keep the figure (it is what actually gets placed + parented). Only islands define
+  # _materializedBySugar, so the one test also stops the walk at any figure that is not an island
+  # (the same guard _enclosingSugarIsland makes).
   _dropPolicyProxy: ->
     figure = @
     loop
-      break if !(figure instanceof TransformFrameWdgt) or !figure._materializedBySugar
+      break if !figure._materializedBySugar
       content = figure.childrenNotHandlesNorCarets()?[0]
       break if !content?
       figure = content
@@ -2980,7 +2982,8 @@ class Widget extends TreeNode
   # CONSERVATIVE BY DESIGN: any uncertainty MUST yield undefined -- a wrong (too-big) rect silently drops
   # pixels of whatever is painted beneath the coverer, caught only by the pixel-exact SystemTests.
   # Every gate is evaluated at RUNTIME (never baked per class): appearances are swapped live
-  # (e.g. FrameWdgt._deriveAndSetBodyAppearance flips Rectangular<->Boxy on re-parenting).
+  # (e.g. FrameWdgt._deriveAndSetBodyAppearance flips a pop-up's menu box to a window's rounded box
+  # when it is pinned, and re-rounds a frame on every re-parenting).
   # ⓘ The scan runs over world.children, so only DESKTOP-level widgets are ever asked — the world
   # itself never is, which is why DesktopAppearance may simply inherit the rectangular claim.
   # These three gates are WIDGET facts — how the widget's own paint is modulated — so they live

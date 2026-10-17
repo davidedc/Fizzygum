@@ -7,9 +7,10 @@ class FolderWindowWdgt extends FrameWdgt
   constructor: (@closeButton, @contents, @internal = false) ->
     @contents = new ViewportWdgt new FolderPanelWdgt
     super @contents, closeButton: @closeButton
-    # wide enough for a 3-column icon grid at the desktop-icon pitch
-    # (3 × 105 + the grid's edge padding + window chrome); overrides the
-    # generic 300×300 FrameWdgt default, which clips the third column
+    # wide enough for a 3-column icon grid at the desktop-icon pitch: three
+    # 95 px icons at a 105 px pitch inside the grid's 5 px edge padding run
+    # 315 px, which this width grants with room to spare inside the window's
+    # chrome; the generic 300×300 FrameWdgt default clips the third column
     @setExtent new Point 340, 300
 
 

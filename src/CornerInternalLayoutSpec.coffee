@@ -9,12 +9,14 @@
 # Sizing is OPTIONAL. A spec that declares a size has the corner pass size the child square,
 # to  round( min(parentW, parentH) * proportionOfParent + fixedSize )
 # — PROPORTIONAL (handle badges scaling with the parent: proportion > 0, fixedSize 0) or
-# FIXED (the resize/move handles: proportion 0, fixedSize = handleSize). A spec that
+# FIXED (the resize/move handles: proportion 0, fixedSize = the handle's side — handleSize,
+# or frameGripSize for a frame's grip). A spec that
 # declares NO size (both terms zero) never sizes its carrier: the anchor formulas place the
 # child by its OWN per-axis extent (the furniture knobs — the carrier's extent is its own
 # business, and need not be square).
-# `inset` backs the anchor off the parent's edge (a handle respecting its target's padding —
-# HandleWdgt re-derives it in _reactToBeingAdded once the real target is known).
+# `inset` backs the anchor off the parent's edge (a handle respecting its target's padding, a
+# frame's grip keeping its own inset past the frame's border — HandleWdgt re-derives it in
+# _reactToBeingAdded once the real target is known).
 #
 # `inset` is constructed at runtime, never as a class-level default: a class-level
 # `new Point` here would need a boot-order edge the dependency scanner cannot promise

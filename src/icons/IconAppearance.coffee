@@ -20,8 +20,9 @@ class IconAppearance extends Appearance
   _outlineColorString: ->
     WorldWdgt.theme.iconOutline.toString()
 
-  # default icon is a ring — one direct mid-radius stroke (see _paintButtonRing):
-  # outer r 91.5, inner r 78.1 in specification space
+  # default icon is a ring — one direct mid-radius stroke: outer r 91.5, inner r 78.1 in
+  # specification space. It stays a circle under the icon transform because
+  # calculateRectangleOfIcon aspect-fits to a square, so the paint scale is always UNIFORM.
   paintFunction: (context) ->
     context.strokeStyle = @color.toString()
     context.lineWidth = 13.4
@@ -274,18 +275,3 @@ class IconAppearance extends Appearance
     @oval context, 88.5, 48, 6, 6
     context.fillStyle = iconColorString
     context.fill()
-
-  # The concentric-circle button "ring" (an annulus), shared by the Close / Collapse /
-  # Uncollapse title-bar button icons; each fills it from its own @widget.color.
-  _paintButtonRing: (context, fillColor) ->
-    # ONE direct mid-radius stroke: the thick-stroke path rasterizes the exact
-    # analytic annulus [90.7−6.3, 90.7+6.3] = outer r 97, inner r 84.4 in the
-    # 200×200 specification space. Safe under the icon transform because
-    # calculateRectangleOfIcon aspect-fits to a square, so the paint scale is
-    # always UNIFORM (a non-uniform scale would silently draw a wrong-radius
-    # circle where an ellipse belongs).
-    context.strokeStyle = fillColor.toString()
-    context.lineWidth = 12.6
-    context.strokeCircle 100.5, 99.5, 90.7
-
-

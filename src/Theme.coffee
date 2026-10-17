@@ -59,7 +59,7 @@ class Theme
     @menuHeaderText = Color.create 255, 255, 255
     # the menu box's stroke, and the stroke of the rows panel a menu or list stacks its rows in.
     @menuStroke = Color.create 186, 186, 186
-    # the menu box's body: the fill a TRANSIENT frame wears (a menu pinned from it keeps it).
+    # the menu box's body: the fill a TRANSIENT frame wears (pinned, a menu wears a window's body).
     @menuBodyFill = Color.create 238, 238, 238
     # the rows panel a menu or list stacks its rows in (CommandPanelWdgt).
     @rowsPanelFill = Color.create 238, 238, 238
@@ -84,18 +84,31 @@ class Theme
     @speechBubbleFill = Color.create 250, 250, 250
     @speechBubbleStroke = Color.create 186, 186, 186
 
-    # a window's title strip on the desktop (an external frame) ...
-    @windowBarFill = Color.create 125, 125, 125
-    @windowBarStroke = Color.create 100, 100, 100
-    # ... and nested in a real container (an internal frame: a card).
-    @cardBarFill = Color.create 172, 172, 172
-    @cardBarStroke = Color.create 150, 150, 150
+    # the fill of a window's title strip on the desktop (an external frame) and of a card's (nested
+    # in a real container, a docked band included). A strip carries no stroke: the line it draws is
+    # its rule, barRule.
+    @windowBarFill = @chrome
+    @cardBarFill = @chrome
+    # the 1 px rule a window's or a card's strip draws along the edge that faces its frame's content
+    # (redesign plan §2, rule D: the band's own edge -- unlike seamRule, the gap between two panes).
+    @barRule = @line
     # the title text in a window's or a card's strip.
-    @windowTitleText = Color.create 255, 255, 255
-    # a window's (and a card's) body stroke and fill: what a frame born furniture is built with
-    # (FrameWdgt._frameLook).
-    @windowFrameStroke = Color.create 125, 125, 125
-    @windowBodyFill = Color.create 248, 248, 248
+    @windowTitleText = @muted
+    # the ink of the glyphs a strip's pieces draw (close, collapse / uncollapse, the pencil / eye)
+    # at rest: in a window's strip, and in a card's (a docked band's included) ...
+    @windowBarGlyph = @muted
+    @cardBarGlyph = @text2
+    # ... and the ink a strip glyph takes while it is hovered or pressed, in either strip (the
+    # glyph recolours in place: no plate is drawn behind it).
+    @barGlyphActive = @ink
+    # a window's body (a persistent frame on the desktop, a pinned pop-up included): its 1 px
+    # frame stroke and its fill (FrameWdgt._frameLook).
+    @windowFrameStroke = @frame
+    @windowBodyFill = @paper
+    # a card's body (a persistent frame nested in a real container, a docked band included): its
+    # 1 px border stroke and its fill (FrameWdgt._frameLook).
+    @cardFrameStroke = @line
+    @cardBodyFill = @paper
 
     # the fill and stroke every PanelWdgt and ViewportWdgt starts with.
     @panelFill = Color.create 249, 249, 249
@@ -136,23 +149,27 @@ class Theme
     # ... and a simple button's fill.
     @buttonFill = Color.create 245, 244, 245
 
-    # the resize/move handle's arrow art at rest: its ink and the shadow drawn under it ...
+    # a plain resize/move handle's art (a halo's handles, a naked inspector's resizer) at rest: its
+    # ink and the shadow drawn under it ...
     @handleArtInk = Color.create 255, 255, 255
     @handleArtShadow = Color.create 150, 150, 150
     # ... and while the handle is highlighted.
     @handleArtHighlightedInk = Color.create 255, 255, 255
     @handleArtHighlightedShadow = Color.create 200, 200, 255
+    # the ink of a frame's resize GRIP (FrameGripWdgt): its three strokes, at rest and under the
+    # pointer alike -- the grip has no hover look.
+    @frameGripInk = @grip
 
-    # a world's own fill, under everything: what a world shows when createDesktop has not
-    # furnished it.
-    @worldFill = Color.create 205, 205, 205
-    # the index page's desktop colour under the wallpaper pattern (createDesktop sets it).
-    @desktopFill = Color.create 244, 243, 244
+    # a world's own fill, under everything: the desk a world shows when createDesktop has not
+    # furnished it (the test world).
+    @worldFill = @desk
+    # the index page's desktop colour, under its wallpaper (createDesktop sets it): the desk too.
+    @desktopFill = @desk
     # a desktop icon's caption: its text, and the dark outline stamped around its glyphs.
     @desktopCaptionText = Color.create 255, 255, 255
     @desktopCaptionHalo = Color.create 0, 0, 0
 
-    # the dwell-to-arm charging ring: a filled segment (the pencil-yellow accent, as the drop
+    # the dwell-to-arm charging ring: a filled segment (the yellow accent, as the drop
     # candidate's outline) and an empty one.
     @dragArmRingFilled = Color.create 248, 188, 58
     @dragArmRingEmpty = Color.create 180, 180, 180, 0.55
@@ -228,7 +245,7 @@ class Theme
       # a pop-up's header title
       menuHeader: {family: "sans-serif", size: 13, bold: false}
       # a window's title, in its strip
-      windowTitle: {family: "Arial, sans-serif", size: 15, bold: false}
+      windowTitle: {family: "Arial, sans-serif", size: 13, bold: false}
       # the small chrome labels: a text button's face, the save / save + close labels, the
       # inspector's headers and class buttons, a patch node's field labels, the video time labels
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
@@ -246,36 +263,68 @@ class Theme
       desktopCaption: {family: "Arial, sans-serif", size: 12, bold: false}
 
     # ---- METRICS ---------------------------------------------------------------------------
-    # Chrome geometry (program ruling G2): the bar button's hit box, the bar's own padding, the
-    # glyph inset within a bar button's box, the minimum height a menu/list row takes, the corner
-    # rounding of a menu's header and body and of the two bubbles, a menu/list rows-panel's border,
-    # and a toolbar grid's cell side / inter-cell gap / outer margin / row count. Each chrome layout
-    # site reads the matching name here; no chrome dimension lives as a literal in a layout method.
+    # Chrome geometry (program ruling G2): a handle's side, a frame grip's side and inset, the bar
+    # button's hit box, a frame's border, its strip's
+    # rule and its body margin, the glyphs inset within a bar button's box, a menu row's glyph
+    # box, the minimum height a menu/list row takes, the corner
+    # rounding of a window's and a card's body, of a menu's header and body and of the two
+    # bubbles, a menu/list rows-panel's border, and a toolbar grid's cell side / inter-cell gap /
+    # outer margin / row count. Each chrome layout site reads the matching name here; no chrome
+    # dimension lives as a literal in a layout method.
     #   ONE geometry serves mouse and finger alike (program ruling G1), so every value is set
     # here, once, at construction: there is no per-device redraw to switch between, and no
     # boot-time styling pass rewriting a dozen of them on one kind of page.
 
-    # the height of a window title's text box in its strip. A pop-up's strip reads its title
-    # piece's own height instead, and this number stands in for it until that piece exists (a
-    # frame derives its strip in its constructor).
-    @titleBarTextHeight = 19
+    # the height a frame's title text STANDS IN at until its title piece exists (a frame derives
+    # its strip in its constructor, before the piece is built): the line height of a 13 px title,
+    # the size of both the window title and the pop-up header fonts. Once the piece exists, every
+    # strip reads the piece's own height instead -- a window's centres its title by it.
+    @titleBarTextHeight = 16
 
-    # the resize handle is a TARGET (G3), and ruling T3 gives it the "glyph = box" shape: what
-    # you can hit is exactly the grip you see, so there is one dial and no invisible band.
+    # the side of a plain HANDLE (HandleWdgt: a halo's resize / move / rotate handles, a naked
+    # inspector's resizer, a demo handle). A handle is a TARGET (G3), and ruling T3 gives its corner
+    # resizer the "glyph = box" shape: what you can hit is exactly the striped triangle it draws, so
+    # there is one dial and no invisible band. The same side is the corner band a window payload
+    # keeps free beside its footer row (a bin's, an errors log's, a code prompt's, a console's, a
+    # script's, an inspector's), the side of a text's corner triangle badges, and the pen demo's
+    # arrow unit. A frame's own resizer is its grip, sized by frameGripSize below, never by this.
     @handleSize = 44
+    # a frame's resize GRIP (FrameGripWdgt, the draft's three-stroke grip): the side of its square,
+    # which is also its whole hit area, and how far in from the corner of the frame's CONTENT area
+    # (inside its border) the square sits. Inset plus side is how far into that corner the grip
+    # reaches, which a payload kept clear of it and a viewport's bars running out to it both leave
+    # free (FrameGripWdgt.footprint).
+    @frameGripSize = 36
+    @frameGripInset = 3
     # the FAT (hovered) width of a scroll indicator -- see scrollIndicatorThickness below for the
     # thin resting width.
     @scrollBarsThickness = 12
 
     # a frame bar's button (close / collapse / edit) is a barIconSize square; its glyph paints
-    # at barGlyphSize centred within that square. Two dials, never one (G3): a touch target and
+    # centred within that square at the side its kind names: barControlGlyphSize for the window
+    # controls (the close cross, the collapse minus, the uncollapse plus), barActionGlyphSize for
+    # the strip's trailing action (the pencil / eye). Two dials, never one (G3): a touch target and
     # the mark inside it scale differently, so the bar strip is sized for the finger while the
     # ink stays the size the eye wants.
     @barIconSize = 44
-    @barGlyphSize = 24
-    # barPadding is the frame's own chrome padding: it sets the titlebar strip's height
-    # (barIconSize + 2 * barPadding) and the frame body's margin around its content.
-    @barPadding = 3
+    @barControlGlyphSize = 14
+    @barActionGlyphSize = 20
+    # the glyph box a menu row shows its icon in (MenuItemWdgt), and so the box a picture taken
+    # for a row is fitted into (InertIconHolderWdgt, the overflow chevron's tool miniatures).
+    @menuRowGlyphSize = 24
+    # the width of a frame's BORDER: the ring its 1 px outline occupies along its edges (the crisp
+    # hairline BoxyAppearance strokes over the frame's content). The frame's strip, its payload and
+    # its docked bands all lie INSIDE it, so it is also how far a strip's pieces and background sit
+    # in from the frame's outer edge, and how far in a payload starts where no strip runs
+    # (FrameWdgt._barSpec, FrameWdgt._chromePadding).
+    @frameBorderWidth = 1
+    # the width of the RULE a frame's strip draws along its content-facing edge, inside its own
+    # thickness: a strip is the border it spans, its barIconSize targets, then this rule.
+    @barRuleWidth = 1
+    # the margin a frame's payload keeps INSIDE its body's edges -- the border's inner edge, the
+    # strip's rule, a docked band -- which is also the gap between a docked band and the payload. At
+    # zero the payload lies flush against every one of them.
+    @frameBodyMargin = 0
 
     # the MINIMUM height a menu or list row takes, and the floor under a pop-up's title strip
     # (a title is a tap-to-pin target, ruling C3). A row whose label is taller keeps its label's
@@ -288,6 +337,10 @@ class Theme
     # the body rounding of a menu with a title strip (an untitled pop-up takes the boxy default,
     # and a flat look, PreferencesAndSettings.isFlat, takes none).
     @menuCornerRadius = 5
+    # the body rounding of a window, and of a card (a nested frame or a docked band): the radius
+    # of the outline the frame strokes over its content and clips its children to.
+    @windowCornerRadius = 8
+    @cardCornerRadius = 6
     # the tooltip bubble's rounding (when its opener names none), and the speech bubble's.
     @tooltipCornerRadius = 6
     @speechBubbleCornerRadius = 6
@@ -322,13 +375,13 @@ class Theme
     # the colour every shadow is cast in: the shadow pass fills a caster's silhouette with it.
     @shadowColor = Color.BLACK
 
-    # the desktop shadow: every world child wears it (Widget.addShadow's default), and so does an
-    # image taken with a forced shadow (Widget.fullImage).
-    @desktopShadowOffset = new Point 4, 4
-    @desktopShadowAlpha = 0.2
-    # a transient pop-up's (a menu's, a prompt's) shadow.
-    @popUpShadowOffset = new Point 5, 5
-    @popUpShadowAlpha = 0.2
-    # the lift a widget takes while the pointer carries it.
+    # the desktop shadow: the ONE shadow every object standing on the desktop casts at rest --
+    # a window, a menu, a prompt, a tooltip, an icon, the clock. Every world child wears it
+    # (Widget.addShadow's default, and FrameWdgt._frameLook's for a frame of either lifetime), and
+    # so does an image taken with a forced shadow (Widget.fullImage).
+    @desktopShadowOffset = new Point 2, 2
+    @desktopShadowAlpha = 0.12
+    # the lift a widget takes while the pointer carries it: its own token, larger and fainter
+    # than the desktop shadow, so a carried widget reads as picked up off the desk.
     @dragLiftShadowOffset = new Point 6, 6
     @dragLiftShadowAlpha = 0.1

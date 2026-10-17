@@ -122,7 +122,7 @@ A fresh session executes this plan as follows:
     (the `iconOutline` role of `Theme.coffee`).
   - Path helpers `oval`/`circle`/`arc` + shared frame primitives (`_paintSlideOutline`,
     `_paintSlideCard`, `_paintWindowTitleDots`, `_paintWindowFrame`,
-    `_paintRoundedSquareBadge`, `_paintPlotAxes`, `_paintPaletteSwatch`, `_paintButtonRing`)
+    `_paintRoundedSquareBadge`, `_paintPlotAxes`, `_paintPaletteSwatch`)
     — code-motion consolidation from a 2026-07 duplication arc. ⚠ **`_paintRoundedSquareBadge`
     is used by the FanoutPin appearance too — a NON-icon appearance** (per the comment on the
     method). Helper cleanup must check all users, not just `icons/`.

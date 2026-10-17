@@ -524,14 +524,16 @@ class ViewportWdgt extends Widget
       new Rectangle (new Point @left(), @bottom() - thickness), (new Point @right() - spaceToLeaveOnOneSide, @bottom())
 
   # How far a bar of mine stops short of my bottom-right corner: as far as what sits there needs. A
-  # resizer over the corner takes a touch target's room (handleSize, never less than a bar); failing
-  # that, my other bar takes its thickness where it crosses; with neither, the corner is free and the
-  # bar runs right to it. Both are asked of STRUCTURE, never of geometry or visibility, which the
-  # passes that read this are still laying out: the other bar by the overflow its showing derives
-  # from, the resizer by climbing the corner chain (_aResizerSitsOverMyCorner).
+  # resizer over the corner takes the room IT names (its cornerFootprint: a frame's grip its inset
+  # plus its side, a naked inspector's handle its side; never less than a bar); failing that, my
+  # other bar takes its thickness where it crosses; with neither, the corner is free and the bar
+  # runs right to it. Both are asked of STRUCTURE, never of geometry or visibility, which the passes
+  # that read this are still laying out: the other bar by the overflow its showing derives from, the
+  # resizer by climbing the corner chain (_resizerOverMyCorner).
   _cornerReserveFor: (bar) ->
+    resizer = @_resizerOverMyCorner()
     reserve =
-      if @_aResizerSitsOverMyCorner() then Math.max @scrollBarsThickness, WorldWdgt.theme.handleSize
+      if resizer? then Math.max @scrollBarsThickness, resizer.cornerFootprint()
       else if @_otherBarCrossesMyCorner bar then @scrollBarsThickness
       else 0
     if reserve > 0 then reserve + 2 * @padding else 0
@@ -547,19 +549,20 @@ class ViewportWdgt extends Widget
     else
       @contents.height() >= @height() + 1
 
-  # Does a RESIZER sit over my bottom-right corner? Every container that runs a child out to its own
-  # bottom-right corner says which (bottomRightCornerReachedBy), so I climb for as long as I am, or
-  # am inside, such a child, and the first container on the way whose resizer would show answers yes
-  # (HandleWdgt.wouldShow: what its showing derives from, not whether it shows yet). A container that
-  # names nobody ends the climb. I name nobody myself: my contents scroll under my corner.
-  _aResizerSitsOverMyCorner: ->
+  # The RESIZER that sits over my bottom-right corner, or undefined when none does. Every container
+  # that runs a child out to its own bottom-right corner says which (bottomRightCornerReachedBy), so
+  # I climb for as long as I am, or am inside, such a child, and the first container on the way whose
+  # resizer would show answers with that resizer (HandleWdgt.wouldShow: what its showing derives
+  # from, not whether it shows yet). A container that names nobody ends the climb. I name nobody
+  # myself: my contents scroll under my corner.
+  _resizerOverMyCorner: ->
     child = @
     container = @parent
     while container?.bottomRightCornerReachedBy?(child)
-      return true  if container.resizer?.wouldShow?()
+      return container.resizer  if container.resizer?.wouldShow?()
       child = container
       container = container.parent
-    false
+    undefined
 
   # A resizer over a corner I reach came or went (HandleWdgt.updateVisibility tells the viewports down
   # its corner chain), so my bars must re-lay to the reserve the corner now asks of them: my arrange

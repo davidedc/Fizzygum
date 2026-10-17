@@ -439,8 +439,8 @@ class ActivePointerWdgt extends Widget
       # undeclared end-of-cycle push.
       @_settleLayoutsAfter => aWdgt._reactToBeingGrabbed? oldParent
       # The shadow must be added after @add -- it needs the widget's painted image, which @add may
-      # produce for the first time. This grab shadow uses its own "floaty" look (offset/blur/color),
-      # distinct from a widget's own per-class shadow (e.g. Menus use a different one).
+      # produce for the first time. This grab shadow uses its own "floaty" look (the theme's drag
+      # lift offset/alpha), distinct from the one desktop shadow every widget casts at rest.
 
       aWdgt.addShadow WorldWdgt.theme.dragLiftShadowOffset, WorldWdgt.theme.dragLiftShadowAlpha
       

@@ -26,13 +26,14 @@ class SpreadsheetApp extends WindowedApp
 
   # v1 placeholder icon (an existing shortcut glyph); a dedicated SpreadsheetIconWdgt is
   # deferred (recorded in the implementation plan's Phase-2a notes).
+  #   THE OPENING SIZE is the SHEET's, never the window's: a fresh sheet opens at its opening grid,
+  # 446×280 -- six whole columns and a 4 px sliver of a seventh, by thirteen whole rows (a 7×13
+  # viewport: 91 cells under 21 headers). The window is sized AROUND that extent by the frame's own
+  # chrome query (FrameWdgt.extentWrappingPayloadAt), so the sheet opens at the same grid whatever
+  # the window's chrome measures. The sheet is fill-class window content (F6): the window extent
+  # passed here is authoritative and the sheet takes what it grants, so a resize from here shows
+  # more (or less) of the 26×100 logical sheet -- partial edge cells, backdrop past its edge.
   buildWindow: ->
-    # THE default-size pin (F6 V4): with fill-class sheet content the passed window extent is
-    # AUTHORITATIVE, and 452×336 grants the content exactly 442×300 — the default 6×14 grid —
-    # through the window's 36px chrome (titlebar 26 + 2×5 padding; width 452 − 2×5 padding =
-    # 442). Pre-F6 the FIXED content DICTATED the window height: the old passed 334 was
-    # overwritten to 336 by the content-driven arrange every pass, so the on-screen window was
-    # always 452×336 — this pin preserves that exact render, byte-for-byte (the F6 hard gate:
-    # the whole pre-F6 suite, zero recaptures). A resize from here shows MORE of the 26×100
-    # logical sheet (partial edge cells; backdrop past the sheet edge).
-    world.openFrameWith (new SpreadsheetWdgt), (new Point 452, 336), (new Point 120, 90)
+    sheetWindow = new SpreadsheetWdgt
+    openingSheetExtent = new Point 446, 280
+    world.openFrameWith sheetWindow, (sheetWindow.extentWrappingPayloadAt openingSheetExtent), (new Point 120, 90)

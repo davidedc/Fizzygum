@@ -5,7 +5,7 @@ class UncollapseIconButtonWdgt extends IconButtonWdgt
 
   toolTipMessage: "un-collapse window"
 
-  createAppearance: -> new UncollapseIconAppearance @
+  createAppearance: -> new PlusIconAppearance @
 
   actOnClick: ->
     # my parent is the collapse/uncollapse SwitchButtonWdgt; ITS parent is the
