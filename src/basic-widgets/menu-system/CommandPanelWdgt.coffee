@@ -6,18 +6,23 @@
 # paints the box around me; a ListWdgt owns the surrounding viewport and leaves my own
 # box painting me. Either way the ROWS are laid out HERE.
 #
-# Two knobs shape a panel to its client:
+# Three knobs shape a panel to its client:
 #  - `selectsItemsOnClick`: true makes each MenuItemWdgt SELECT on click (a list),
-#    false makes it TRIGGER (a menu / prompt's Ok-Close). MenuItemWdgt.isListItem
+#    false makes it TRIGGER (a menu). MenuItemWdgt.isListItem
 #    dispatches on it via ?(); default false so a plain menu reads falsy. It is also
 #    which LOOK my rows are built with (_createMenuItem): a list's rows, or menu rows.
+#  - `memberRows`: true makes me a MEMBER list's rows panel (ListWdgt's memberFactsQuery): my rows
+#    are MemberRowWdgts, I take my list's width rather than hugging my rows, and I paint no box of
+#    my own.
 #  - `padding`: the border my rows stack inside. A pop-up hands me its content padding
-#    (its content box inside its border); a list's panel keeps its own, rowsPanelPadding.
+#    (its content box inside its border); a list's panel keeps its own, rowsPanelPadding, or a
+#    member list's memberRowsPanelPadding.
 #
 # Rows answer menuEntryPreferredWidth() (MenuItemWdgt / StringFieldWdgt /
-# ColorPickerWdgt / SliderWdgt) so every row is widened to the panel's widest;
-# dividers are DividerWdgt. Rows are added by the owner after construction
-# (addMenuItem / addLine), matching MenuWdgt's compose-after-build protocol.
+# ColorPickerWdgt / SliderWdgt / PromptButtonsRowWdgt) so every row is widened to the
+# panel's widest; dividers are DividerWdgt. Rows are added by the owner after construction
+# (addMenuItem / addLine, or a prompt's own editors and buttons row), matching MenuWdgt's
+# compose-after-build protocol.
 #
 # LAYOUT (§5.2e): the panel IS a VerticalStackPanelWdgt — the ONE vertical-
 # stack engine lays the rows out. Menu-ness enters only through the base's own policy seams:
@@ -26,7 +31,8 @@
 #  - width: a menu SELF-sizes to its widest row (a general stack takes its width
 #    from its container) — the _positionAndResizeChildren specialization hugs
 #    the width, then super() distributes it; the _childWidthInStack policy hands
-#    every row the full row width, so hover highlights span the menu. Each row
+#    every row the full row width, so hover highlights span the menu. (A member
+#    list's panel keeps the width its list gives it instead: _myArrangedWidth.) Each row
 #    kind arranges its own innards through the engine's standard chokepoints
 #    (menu-row-conformance Phase 2), so no equalization post-pass exists.
 # Unlike a general stack the panel accepts no drops and imposes no width ratio
@@ -43,6 +49,8 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # framework's other cornerRadius lives.
   cornerRadius: undefined
   _selectsItemsOnClick: false
+  # am I a MEMBER list's rows panel (the `memberRows` knob)? An own field only when true.
+  _holdsMemberRows: false
   # A menu / list-contents row-stack is the internal body of a pop-up or viewport
   # — it accepts no drops and imposes no width ratio on its rows, unlike a
   # general VerticalStackPanelWdgt (which does both). Suppress the inherited
@@ -55,6 +63,11 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # pencil-engaged click on a menu/list row as a selected item inside an editor.
   # `undefined` = no opinion: the walk passes through me (and the rows viewport, which
   # declares the same) to the world, and frames nothing.
+  #   A MEMBER list's rows panel says `false` instead (an own field, set by my constructor): its
+  # rows show their selection themselves, with their plate, so the walk STOPS at me and frames none
+  # of them -- the opt-out a container managing its own selection look makes (SheetCellsPanelWdgt
+  # makes the same one). Without it, the walk from a clicked member row would reach my list's plane
+  # above me (a panel: true) and frame the row in the editor's outline.
   providesAmenitiesForEditing: undefined
 
   imposesRatioConstraintOnDroppedChildren: ->
@@ -78,7 +91,8 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # already exists and already means "this menu stays", and extraction costs no new gesture.
   #   A COMMAND row only — a divider is punctuation. Carrying an `action` is what separates
   # them, and it is the fact that MATTERS rather than a proxy for the row's class: what
-  # survives extraction is a button that still does something.
+  # survives extraction is a button that still does something. (A prompt's row of buttons
+  # carries none itself and asks me on behalf of its buttons: PromptButtonsRowWdgt.wantsDetachOfChild.)
   #   A ListWdgt's rows panel needs no exception: it sits in no pop-up, so it has no holder to
   # ask (see _holdingPopUp) and answers false.
   wantsDetachOfChild: (aWdgt) ->
@@ -86,19 +100,28 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     @_holdingPopUp()?.isPersistent?() ? false
 
   constructor: (opts = {}) ->
+    theme = WorldWdgt.theme
     # the border my rows stack FLUSH inside (see interElementGap below): my client's to give,
-    # a list's rows-panel padding when it gives none. No extent/color through the base ctor —
-    # the look is set right here.
-    super padding: opts.padding ? WorldWdgt.theme.rowsPanelPadding
+    # a list's rows-panel padding when it gives none (a member list's own). No extent/color
+    # through the base ctor — the look is set right here.
+    super padding: opts.padding ? (if opts.memberRows then theme.memberRowsPanelPadding else theme.rowsPanelPadding)
     @target = opts.target
     @fontSize = opts.fontSize
     @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
+    @_holdsMemberRows = true  if opts.memberRows
     # replace the stack's RectangularAppearance: the panel draws the rows box, stroked with the
     # rows-panel stroke -- a list's look. A pop-up frame paints its OWN box around me and turns
-    # mine off (alpha 0) rather than doubling the stroke; a list's panel IS the box.
+    # mine off (alpha 0) rather than doubling the stroke; a plain list's panel IS the box. A member
+    # list's panel paints neither fill nor stroke, and frames none of its rows in the editor's
+    # outline (providesAmenitiesForEditing, above).
     @appearance = new MenuAppearance @
-    @strokeColor = WorldWdgt.theme.rowsPanelStroke
-    @color = WorldWdgt.theme.rowsPanelFill
+    if @_holdsMemberRows
+      @strokeColor = undefined
+      @color = theme.memberRowsPanelFill
+      @providesAmenitiesForEditing = false
+    else
+      @strokeColor = theme.rowsPanelStroke
+      @color = theme.rowsPanelFill
 
   colloquialName: ->
     "menu rows"
@@ -163,11 +186,16 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     item = @createLine()
     @__add item, atIndex: 0
 
-  # Builds a MenuItemWdgt from a CommandSpec and this panel's context: the LOOK my rows wear (a
-  # list's rows when I select on click, menu rows otherwise -- the row picks its font and colours
-  # from it), my own @fontSize when I have one, and the subject — every row of mine acts ABOUT my
-  # @target, however the row's own receiver is wired.
+  # Builds a row from a CommandSpec and this panel's context: the LOOK my rows wear -- a member
+  # list's rows are MemberRowWdgts, whose look is their own; otherwise a MenuItemWdgt in a plain
+  # list's look when I select on click and a menu row's when I do not (the row picks its font and
+  # colours from it) -- my own @fontSize when I have one, and the subject: every row of mine acts
+  # ABOUT my @target, however the row's own receiver is wired.
   _createMenuItem: (commandSpec) ->
+    if @_holdsMemberRows
+      return new MemberRowWdgt commandSpec,
+        fontSize: @fontSize
+        subject: @target
     new MenuItemWdgt commandSpec,
       listRow: @_selectsItemsOnClick
       fontSize: @fontSize
@@ -221,16 +249,24 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # container) — hug the width FIRST so super() distributes exactly that.
   # Row equalization needs no pass of its own: _childWidthInStack (above) hands
   # every row the full row width, and each row kind arranges its own innards
-  # through the engine's standard chokepoints (header/slider/field track via
-  # _reLayoutChildren, the picker via its deferred _reLayout; items and
+  # through the engine's standard chokepoints (header/slider/field/a prompt's buttons row
+  # track via _reLayoutChildren, the picker via its deferred _reLayout; items and
   # dividers are true leaves), so BOTH engine branches emerge equalized. The
   # retired interim post-pass this replaced is in
   # docs/archive/menu-row-conformance-plan.md (Phase 2e).
   _positionAndResizeChildren: ->
     @_deriveTickColumn()
-    @_applyExtentBase new Point (@maxWidthOfMenuEntries() + 2 * @padding), @height()
+    @_applyExtentBase new Point @_myArrangedWidth(), @height()
     super()
     @_deriveRowSeparators()
+
+  # MY WIDTH, the one my arrange commits and both my pure measures report: a menu's or a plain
+  # list's rows panel hugs its widest row plus my padding at each side; a MEMBER list's keeps the
+  # width its list gives it (ListWdgt._positionAndResizeChildren, its own width), so its rows are as
+  # wide as the list less my padding and it never scrolls sideways.
+  _myArrangedWidth: ->
+    return @width()  if @_holdsMemberRows
+    @maxWidthOfMenuEntries() + 2 * @padding
 
   # Does a leading TICK COLUMN run down my rows? Exactly while one of them ticks -- a row reflecting
   # somebody's value, or one its builder made ticked or unticked (MenuItemWdgt.ticks) -- so that
@@ -258,10 +294,11 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # divider already IS that boundary and a hairline beside it would double it.
   #   Adjacency is mine to know and no row's: a row that moves, or a row inserted between two
   # others, changes its neighbours' answers as much as its own, and only I see all three.
-  #   Only a LIST's rows wear hairlines, so its rows panel is this derive's one client: a pop-up's
-  # rows are told apart by their hover plate and grouped by dividers, and are never told.
+  #   Only a plain LIST's rows wear hairlines, so its rows panel is this derive's one client: a
+  # pop-up's rows are told apart by their hover plate and grouped by dividers, a member list's by
+  # their selection plate alone, and neither is ever told.
   _deriveRowSeparators: ->
-    return unless @_selectsItemsOnClick
+    return unless @_selectsItemsOnClick and not @_holdsMemberRows
     previousChildWasARow = false
     for child in @children
       childIsARow = child.showSeparatorAbove?
@@ -273,14 +310,15 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # CONTENT-driven — the hug the arrange above applies — not container-given,
   # so the measures answer that same truth instead of the base's
   # availW-distributing arithmetic: a measuring parent sees exactly the width
-  # the arrange will commit. Height rides the base measure AT the hug width
+  # the arrange will commit (a member list's panel: the width its list gave it,
+  # _myArrangedWidth). Height rides the base measure AT the hug width
   # (which _childWidthInStack then hands to every row, mirroring the arrange).
   # The panel is a hug-class stack on BOTH axes — the base already hugs height
   # (tight: true); these make the width story symmetric. THE consumer is the
   # pop-up rows viewport's frame committer, through scrolledContentMeasure
   # below (the menu-sandwich dissolution).
   preferredExtentForWidth: (availW) ->
-    hugW = @maxWidthOfMenuEntries() + 2 * @padding
+    hugW = @_myArrangedWidth()
     # WITH NO ROWS AT ALL my hug is just my border: the base stack has nothing to sum and
     # answers its APPLIED height instead, which is a leftover, not a measure. A titled pop-up
     # carrying no rows is exactly that case ("no widgets to attach to").
@@ -289,7 +327,7 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     new Point hugW, (super hugW).y
 
   subWidgetsMergedPreferredBounds: (availW) ->
-    super (@maxWidthOfMenuEntries() + 2 * @padding)
+    super @_myArrangedWidth()
 
   # ── as the pop-up rows viewport's DIRECT contents (menu-sandwich dissolution) ─
   # My width is content-driven (the hug) — the committer must not width-normalize
@@ -317,7 +355,7 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
 
   # My preferred row width: the widest child's PURE content measure. Every row
   # kind that contributes a width answers menuEntryPreferredWidth() — MenuItemWdgt
-  # / StringFieldWdgt / ColorPickerWdgt / SliderWdgt — so the walk is uniform; divider
+  # / StringFieldWdgt / ColorPickerWdgt / SliderWdgt / PromptButtonsRowWdgt — so the walk is uniform; divider
   # lines don't answer and are skipped. All the measures are stretch-immune (frozen or
   # content-derived), so re-arranges can legitimately SHRINK the hug.
   #   The walk starts at what my HOLDER contributes: a pop-up frame's title is an entry of

@@ -47,3 +47,14 @@ SystemTest_macroAnalogClockInspectEdit
 SystemTest_macroSpreadsheetOpenGrid
 SystemTest_macroTwoEditsOnOneRingInOneCycle
 SystemTest_macroSampleDashboardPlots
+# W3: buttons in footer bands (error log, console), prompt buttons (number + colour prompts), the Inspector
+# re-layout (breadcrumb + donor label, toggles, member rows, footer, taken apart), a two-button toggle fixture,
+# and a mono patch node (fonts.code)
+SystemTest_macroErrorConsolePopsClean
+SystemTest_macroInspectorWorkAreaEvaluatesCoffeeScript
+SystemTest_macroBoxTransparencyAndColorChanging
+SystemTest_macroMixinEditDonorAndOverride
+SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly
+SystemTest_macroInspectorResizingOKEvenWhenTakenApart
+SystemTest_macroSliderDrivesAToggleButton
+SystemTest_macroDegreesConverterFourWayDrive

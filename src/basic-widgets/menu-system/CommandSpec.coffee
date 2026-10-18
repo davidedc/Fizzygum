@@ -70,6 +70,12 @@ class CommandSpec
   # construction (`ticked:`), undefined for one that never ticks. A row whose tick follows a live
   # value takes a `reflection` instead.
   ticked: undefined
+  # what a MEMBER row (MemberRowWdgt) shows of its member beside the label, which names it: its
+  # KIND TAG, a short word its builder chooses ("fn", "var"), and whether the name is DIMMED (shown
+  # in a muted ink). Facts about the member, so they travel with the record; any other row ignores
+  # them.
+  kindTag: undefined
+  dimmed: false
 
   constructor: (@label, @target, @action, opts = {}) ->
     @icon = opts.icon
@@ -85,3 +91,5 @@ class CommandSpec
     @reflection = opts.reflection
     @opensSubmenu = opts.opensSubmenu ? false
     @ticked = opts.ticked
+    @kindTag = opts.kindTag
+    @dimmed = opts.dimmed ? false

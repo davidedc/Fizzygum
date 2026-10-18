@@ -1,15 +1,16 @@
 # A prompt is the FRAMED CITIZEN of the prompt kind: it asks for one value and reports it
 # back via a callback. Like a menu (it is NOT a MenuWdgt) it wraps a rows payload — a
 # CommandPanelWdgt inside a PopUpRowsViewportWdgt, holding the value editor, a divider and
-# the "Ok"/"Close" rows — and, like a menu, it is born TRANSIENT: it closes on a click
-# outside it, and pinning it makes it furniture. The frame draws the box, the title strip
-# (from @msg) and the shadow.
+# one row of real BUTTONS, [Close] [Ok] (a PromptButtonsRowWdgt of SimpleButtonWdgts, Ok the
+# primary action) — and, like a menu, it is born TRANSIENT: it closes on a click outside it,
+# and pinning it makes it furniture. The frame draws the box, the title strip (from @msg) and
+# the shadow.
 #
 # Per-value-type subclasses fill in only the editor row:
 #   TextPromptWdgt   — a StringFieldWdgt.
 #   NumberPromptWdgt — a numeric StringFieldWdgt + a SliderWdgt.
 #   ColorPromptWdgt  — a ColorPickerWdgt (the folded Widget.pickColor).
-# SaveShortcutPromptWdgt re-bases here too, swapping the button row.
+# SaveShortcutPromptWdgt re-bases here too, swapping the buttons.
 
 class PromptWdgt extends FrameWdgt
 
@@ -28,6 +29,18 @@ class PromptWdgt extends FrameWdgt
   # kept under this conventional name because Widget.prompt and the macro tests
   # reach it as `<prompt>.tempPromptEntryField`.
   tempPromptEntryField: undefined
+  # the row my buttons stand in (the last row of my rows panel), and the buttons by what they do:
+  # Ok delivers my value, Close dismisses me. SaveShortcutPromptWdgt has its own three, Ok among
+  # them, and no Close. A button aimed at me is aimed at the copy in a duplicate of me, since the
+  # duplicate remaps every reference into the tree it copies.
+  #   ⚠ My [Close] is `dismissButton`, NEVER `closeButton`: that name is FrameWdgt's alias of my
+  # STRIP's close piece (the × a pinned prompt's window strip carries), re-pointed at the bar's
+  # piece whenever my roster is re-derived, and handed to my bar as its "supplied" close piece
+  # whenever my frame rebuilds its chrome. A field of mine under that name would be overwritten
+  # by the strip's × on pinning, and adopted -- or destroyed -- by the strip on a rebuild.
+  buttonsRow: undefined
+  okButton: undefined
+  dismissButton: undefined
 
   # A prompt is a menu-family pop-up: it answers isMenu? like a MenuWdgt does. The one isMenu?()
   # consumer is the hand's click-outside dismissal (ActivePointerWdgt.processPointerDown), so a
@@ -133,17 +146,25 @@ class PromptWdgt extends FrameWdgt
     # menuEntryPreferredWidth); run it explicitly.
     @tempPromptEntryField.calculateAndUpdateExtent()
 
-  # The everyday button row: a divider then "Ok" (delivers the composed value to
-  # the caller's callback, via deliverValue below) and "Close" (dismisses this
-  # prompt). SaveShortcutPromptWdgt overrides with its own three buttons and no
-  # leading divider.
+  # The everyday buttons: a divider, then one row holding [Close] (dismisses this prompt) and
+  # [Ok], the primary action (delivers the composed value to the caller's callback, via
+  # deliverValue below). Both are ordinary buttons, dispatched through ButtonWdgt's four slots
+  # like any menu row, and like a menu row they close an unpinned pop-up when activated -- so Ok
+  # on a transient prompt delivers and closes it, and on a pinned one delivers and leaves it
+  # standing. SaveShortcutPromptWdgt overrides with its own three buttons and no leading divider.
   _addButtonsInto: (panel) ->
     panel.addLine()
-    panel.addMenuItem "Ok", @, "deliverValue"
-    # we name the button "Close" instead of "Cancel" because we are not undoing
-    # any change we made -- that would be difficult with multiple prompts pinned
-    # down and changing the property concurrently.
-    panel.addMenuItem "Close", @, "close"
+    # "Close" rather than "Cancel" because nothing this prompt changed is undone -- that would be
+    # difficult with several prompts pinned down and changing the property concurrently.
+    @dismissButton = new SimpleButtonWdgt @, "close", face: "Close"
+    @okButton = new SimpleButtonWdgt @, "deliverValue", face: "Ok", primary: true
+    @_addButtonsRowInto panel, [@dismissButton, @okButton]
+
+  # My buttons, in order, left to right, as the last row of my rows panel (PromptButtonsRowWdgt
+  # lays them out right-aligned and widens me to fit them).
+  _addButtonsRowInto: (panel, buttons) ->
+    @buttonsRow = new PromptButtonsRowWdgt buttons
+    panel._addNoSettle @buttonsRow
 
   # The Ok adapter: a prompt delivers ONE argument — the value composed in its
   # editor — to the caller's callback verb on the target, the same one-value

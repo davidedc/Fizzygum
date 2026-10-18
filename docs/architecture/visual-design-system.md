@@ -33,8 +33,8 @@ another class, and most values are `Color`s):
 |---|---|
 | **PALETTE** | The design's named colours (§2), at the design's values. A palette colour paints nothing by itself. |
 | **ROLES** | What each SURFACE paints with — `windowBarFill`, `menuRowText`, `speechBubbleStroke`, `seamRule`, … One role per surface: two surfaces that paint the same colour still hold two roles, so one can be restyled without moving the other. A role's value is either a palette colour (the surface wears the design: `@seamRule = @chrome`) or the exact value the surface painted with before it adopted the design. |
-| **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects — `menuRow`, `listRow`, `labelButton`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`. |
-| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), its side inset, icon gap and hover-plate radius (`menuRowSideInset`, `menuRowIconGap`, `menuRowPlateRadius`; a list row's `listRowSideInset`, `listRowIconGap`), its two drawn indicators' glyph squares and gaps (the submenu chevron's `menuRowChevronSize` and `menuRowChevronGap` before it; the leading tick column's `menuRowTickSize` and `menuRowTickGap` after it), a pop-up's content padding and its header's rule and title inset (`menuContentPadding`, `menuHeaderRuleWidth`, `menuHeaderTitleInset`; a list's rows panel `rowsPanelPadding`), a group divider's band (`menuDividerGap`, `menuDividerRuleWidth`), the scroll indicator's edge inset (`scrollIndicatorEdgeInset`), a tooltip plate's rounding, paddings and line height (`tooltipCornerRadius`, `tooltipHorizontalPadding`, `tooltipVerticalPadding`, `tooltipLineHeight`), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii. |
+| **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects — `menuRow`, `listRow`, `labelButton`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`, `memberName`, `memberKindTag`, `code`. |
+| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), its side inset, icon gap and hover-plate radius (`menuRowSideInset`, `menuRowIconGap`, `menuRowPlateRadius`; a list row's `listRowSideInset`, `listRowIconGap`), its two drawn indicators' glyph squares and gaps (the submenu chevron's `menuRowChevronSize` and `menuRowChevronGap` before it; the leading tick column's `menuRowTickSize` and `menuRowTickGap` after it), a pop-up's content padding and its header's rule and title inset (`menuContentPadding`, `menuHeaderRuleWidth`, `menuHeaderTitleInset`; a list's rows panel `rowsPanelPadding`), a group divider's band (`menuDividerGap`, `menuDividerRuleWidth`), the scroll indicator's edge inset (`scrollIndicatorEdgeInset`), a tooltip plate's rounding, paddings and line height (`tooltipCornerRadius`, `tooltipHorizontalPadding`, `tooltipVerticalPadding`, `tooltipLineHeight`), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii, a button's height, horizontal paddings and rounding (`buttonHeight`, `buttonPaddingX`, `primaryButtonPaddingX`, `buttonCornerRadius`), the least side of a chrome target (`minimumTargetSize`), a footer band's height, rule, inset, button gap and grip clearance (`footerBandHeight`, `footerRuleWidth`, `footerInset`, `footerGap`, `footerGripClearance`), a toggle's and a chip's height, padding and rounding (`toggleHeight`, `togglePaddingX`, `toggleCornerRadius`; `chipHeight`, `chipPaddingX`, `chipCornerRadius`), the Object Inspector's bands (`breadcrumbBandHeight`, `breadcrumbInset`, `breadcrumbCaptionGap`, `breadcrumbGap`, `breadcrumbDonorGap`, `breadcrumbSeparatorSize`; `toggleBandHeight`, `toggleBandInset`, `toggleBandGap`; `inspectorRuleWidth`, `inspectorListColumnWidth`), a member row's geometry (`memberRowHeight`, `memberRowPlateHeight`, `memberRowPlateRadius`, `memberRowSideInset`, `memberRowTagGap`, `memberRowTagColumnWidth`, `memberRowsPanelPadding`), and a code pane's padding (`codePanePadding`). |
 | **SHADOWS** | The ONE shadow every desktop object casts at rest (windows, menus, prompts, tooltips, icons, the clock) and the drag lift a carried widget takes (offset + alpha each), and `shadowColor`, the one colour every shadow silhouette is filled with. |
 
 **The ratchet.** A colour literal in a chrome file is a look decided outside this system — a restyle
@@ -75,7 +75,7 @@ A text widget takes its font as a ROLE: `new StringWdgt text, fontRole: WorldWdg
 gives family, size and bold at once. An explicit `fontName` / `fontSize` / `bold` wins over the role's
 member, so a caller can take a role and override one member. A text built without a role takes
 `fonts.defaultText`. `StringWdgt` and everything built on it read the role; `LabelButtonWdgt` (default
-`labelButton`), `MenuItemWdgt` (`menuRow` or `listRow`, by the panel that builds it) and `StringFieldWdgt`
+`labelButton`), `MenuItemWdgt` (`menuRow` or `listRow`, by the panel that builds it; a `MemberRowWdgt` takes `memberName`, its kind tag `memberKindTag`) and `StringFieldWdgt`
 forward it.
 
 The families are the three the SWCanvas glyph atlases cover — **Arial** (sans), **Courier New** (mono,
@@ -89,7 +89,7 @@ Both backends use the same families.
 A 1 px line between two sibling panes belongs to their container, never to either pane. The container
 places its panes exactly 1 px apart and answers those gaps from `_seamRects()` (widget-local
 rectangles; `Widget` answers none); its appearance (`Appearance._paintSeamRules`, called by
-`RectangularAppearance` and `BoxyAppearance`) fills them with `seamRule` after its own fill and before
+`RectangularAppearance`, `BoxyAppearance` and `SeamRulesAppearance` — the painter of a container with no look of its own, which paints its seams and nothing else) fills them with `seamRule` after its own fill and before
 its children. A seam is a gap, so no child ever paints over it, every pixel has exactly one owner, and
 a pane reused elsewhere carries no stray line.
 - A BAND paints its OWN edge rule (a title bar's bottom rule, a menu header's rule): the line is part
@@ -110,7 +110,36 @@ a target that must be big is drawn big.
 ### 4.3 A bordered rounded rectangle means "press me"
 Anything pressable has a border and rounded corners; anything that is not drops the border and changes
 shape (the clock: a round face, no border). A disabled control keeps its shape and loses contrast: no
-fill, a `chrome` outline, `disabledText` text — never a dashed outline or a grey fill.
+fill, a `chrome` outline, `disabledText` text — never a dashed outline or a grey fill. A disabled
+button (`SimpleButtonWdgt.setEnabled false`) still catches a press, and does nothing with it.
+
+**The toggle** (`LabelledToggleWdgt`, a `SimpleButtonWdgt`) has a FIXED label and a look that says whether it
+is on: off, no fill inside a `line` border with `text2` text (hovered `desk`, pressed `chrome` inside a `frame`
+border, as the button); on, an `accentTint` fill inside an `accent` border with `accent` text, in every state. Its
+state is its HOST's: a click dispatches its one action, and the host decides the new state and shows it on the
+toggle (`setOn`); the toggle never flips itself. `toggleHeight` tall, its label plus `togglePaddingX` at each side
+plus its border wide, never narrower than `minimumTargetSize`.
+
+**The chip** (`ChipWdgt`, a `SimpleButtonWdgt`): a label control `chipHeight` (32) tall at radius
+`chipCornerRadius` (16), its label plus `chipPaddingX` at each side plus its border wide, never narrower
+than `minimumTargetSize`; no fill inside a `chip` border with `text2` text (hovered `desk`, pressed `chrome`
+inside a `frame` border); the CURRENT chip an `accentTint` fill inside an `accent` border with `accent` text, in
+every state. The Object Inspector's breadcrumb is a band of them: "Class" in `muted2`, then the class chain base
+first, each chip followed by a drawn `›` (`BreadcrumbSeparatorWdgt`, `muted3`, never a pointer target), the
+current class last; a mixin-donated member's donor label (`muted2`, no border) follows the chips. The band wraps
+to another row, 36 lower, when the next piece would pass its right inset.
+
+**The button** (`SimpleButtonWdgt`) sizes itself: `preferredExtent` is `buttonHeight` tall and its
+label plus `buttonPaddingX` at each side plus its border wide (`primaryButtonPaddingX` for a primary
+action), never narrower than `minimumTargetSize`. A one-line text face sits in a box one line tall,
+`floor((h − lineHeight) / 2)` down. Its look is re-derived from its state at every transition: `paper`
+with a `line` border at rest, `desk` hovered, `chrome` with a `frame` border pressed, text `ink`. A
+window content that ends in buttons lays them in a **footer band** (`FooterBandLayout`): 52 tall
+including its 1 px `chrome` top rule, which is the host's seam (§4.1); buttons at their own size,
+`footerInset` from the edge and `footerGap` apart, a left group and a right group, the right group
+ending `footerGripClearance` short of the corner the frame's grip sits in. When both groups do not fit,
+the right group follows the left one, and what runs past it is clipped (by the window, or by a container that clips
+its own children: the Object Inspector does, naked or windowed).
 
 ### 4.4 Shadows are solid
 A shadow is a copy of the object's shape filled with `shadowColor` (solid black) at the shadow's alpha,
@@ -120,7 +149,7 @@ transient pop-ups included; only a dragged object has its own (the lift). The sh
 
 ### 4.5 Symbols: an ICON or a GLYPH, decided by MEANING
 A symbol that stands on its own — a control's face, or an indicator of state or behaviour (× − +, a
-submenu chevron ›, an overflow », a tick ✓, the resize grip) — is an ICON: a drawn, size-aware icon,
+submenu chevron ›, a breadcrumb separator ›, an overflow », a tick ✓, the resize grip) — is an ICON: a drawn, size-aware icon,
 never a character typed into a string. A character that is part of a label's own wording ("…" in
 "Save world snapshot…", "—" in a title) is a GLYPH: it renders from a font atlas, and where an atlas
 lacks it, it is ADDED to an atlas — the font's own for a typographic character, `BitmapTextInvariant`
@@ -191,6 +220,8 @@ exactly one owning widget:
 | Document paragraph items | `SimpleTextWdgt` paragraphs in `DocumentViewportWdgt` |
 | Menu container, header, rows, group rules | `MenuWdgt` (a transient `FrameWdgt`) → bar (header) → `PopUpRowsViewportWdgt` → `CommandPanelWdgt` → `MenuItemWdgt` rows + `DividerWdgt` |
 | Inspector bands and the list \| code line | `InspectorWdgt`'s children; the lines are container-owned seams (§4.1) |
+| Inspector breadcrumb | `InspectorWdgt`'s children: a "Class" caption and the donor label (`StringWdgt`s), the class `ChipWdgt`s and their `BreadcrumbSeparatorWdgt`s, placed by `_breadcrumbIn` |
+| A window content's row of buttons | its footer band (`FooterBandLayout`, the geometry); the rule is the host's seam, painted by its appearance (`SeamRulesAppearance` for a host with no look of its own) |
 | Desktop icon tile, glyph and label plate | `WidgetHolderWithCaptionWdgt` (icon band + caption band) |
 | Clock | `AnalogClockWdgt` + `AnalogClockAppearance` |
 
@@ -224,14 +255,35 @@ lifetime.
 - **Rows** (`MenuItemWdgt`): label 15 px `ink`, 10 px in from each side. A `desk` plate of radius 6
   over the whole row while hovered, `chrome` while pressed (`LabelButtonAppearance`), and no hairline.
 - **Groups:** a `DividerWdgt` band between groups, 9 px with its own centred `chrome` rule.
+- **Buttons** (a prompt): one last row (`PromptButtonsRowWdgt`), `minimumTargetSize` tall (the 44 rule's row for
+  36-tall controls, §4.2), holding `SimpleButtonWdgt`s at their own size, right-aligned flush to the content box,
+  `footerGap` apart, centred down the row: [Close] [Ok] with Ok primary; a save-shortcut prompt [Don't save] [Cancel]
+  [Ok]. The row answers `menuEntryPreferredWidth`, so the pop-up widens to fit it. `Widget.inform` is a menu: its Ok
+  stays a row.
 - **Indicators** (`MenuRowIndicatorWdgt`), pointer-transparent children of the row:
   - a row that opens a submenu (`opensSubmenu`) draws a `muted3` chevron whose ink ends 10 px from its
     right edge;
   - a menu with any ticking row reserves a leading tick column in every row, and a ticked row draws
     an `ink` tick there.
 
-The row's label stays its plain wording. A LIST's rows (`ListWdgt`) and fizzytiles magnets keep their
-own look until their families are restyled.
+The row's label stays its plain wording. A plain LIST's rows (`ListWdgt` without `memberFactsQuery`) and fizzytiles
+magnets keep their own look until their families are restyled.
+
+**Code panes** (the Object Inspector's code pane, the script window, the code prompt, the console, the error log)
+are built in the code role: `fonts.code` (12 px mono), `codeText`, `codePanePadding` (12) — a `TextAreaWdgt`
+forwards `fontRole` and `textColor` to its text. A code area that is its window's content is borderless: the
+window's border, its strip's rule and its footer's rule are its lines (every other `TextAreaWdgt` keeps its
+border). A patch node's text boxes take `fonts.code` at their own padding and ink. The line pitch is Fizzygum's
+`ceil(1.2 × size)`, 15 at 12 px: there is no line-height knob, so the draft's 18 is not reached.
+
+**The Object Inspector's member list** wears the member-row look: the inspector builds its `ListWdgt` with
+`memberFactsQuery`, and the list's rows panel builds `MemberRowWdgt`s (`CommandPanelWdgt._createMenuItem`). Each
+row is `memberRowHeight` (42) tall and flush, as wide as the list less the panel's 4 px padding (no hug to the
+widest name, no horizontal bar); the kind tag (`fn` for a function, else `var`, 10 px bold `muted2`, `accent`
+while the row is selected) sits in an 18 px column at x 8, and the name (13 px mono, `ink` for an own member,
+`muted` for an inherited one) at x 34 in a box that crops with "…". The selected row paints a 40 px `accentTint`
+plate of radius 6 at its top; no row paints a hairline, and the panel opts out of the editor-selection frame
+(`providesAmenitiesForEditing = false`), so a selected member shows only its plate.
 
 ## 6. How a new widget picks its look
 

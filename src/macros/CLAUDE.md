@@ -254,6 +254,10 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   widget's OWN menu even where children cover its centre: it right-clicks a point where the widget itself is what a press
   hits, so "the panel's menu" is said by meaning rather than by a background fraction the next layout moves onto a child,
   `moveToItemOf{Menu,TopMenu}AndClick`, `moveToItem{StartingWith,Containing}OfMenuAndClick`, `clickMenuHeaderToPin`);
+  a prompt's buttons (`clickPromptButton(prompt, label)`, `clickTopPromptButton(label)`: a prompt ends in a row of real
+  buttons — [Close] [Ok], or [Don't save] [Cancel] [Ok] — that carry no `labelString`, so the row verbs cannot see them;
+  the label is the button's face text, a missing label throws naming the labels the prompt has, and the press is verified
+  like every widget-aimed press; an `inform` is a MENU, and its Ok stays a row);
   clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
   `dragWindowResizerTo`); assertions (`assertValuesEqual` — the general expected-vs-found verb every non-pixel
   claim goes through, `assertTopMenuItemCount`, `assertTopMenuItemStrings`,
@@ -311,7 +315,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   sizing/positioning before OR after `world.add` both work; for measure-then-size, attach first and let `setWidth`
   settle so the wrapped height is readable.
 - **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`. Capture a popup
-  reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents`.
+  reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents` (a prompt's
+  buttons via `@clickPromptButton_InputEvents prompt, "Ok"`).
 - **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X" per ancestor, each a submenu row) — navigate by class-name
   prefix to reach the desired ancestor's own menu (and note "pick up" lives in a morph's own hierarchy submenu, not top-level).
 - **Menu/target labels STRIP "Wdgt" from the class name** — the strip is applied where the menu is BUILT
@@ -327,20 +332,21 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   a clean base **`LabelButtonWdgt`** (a flat label-bearing button) on the modern family: `Widget → ButtonWdgt` (was
   `EmptyButtonMorph`) `→ LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
   `target`/`action`/`trigger` machinery + `HighlightableMixin` state constants from `ButtonWdgt` but paints its own
-  state fill from fields its builder sets (`LabelButtonAppearance`): magnets and list rows SILVER hover / GRAY press over
-  the whole box, menu rows a `desk` hover / `chrome` press plate of radius 6 on a paper box.
+  state fill from fields its builder sets (`LabelButtonAppearance`): magnets and plain list rows SILVER hover / GRAY press over
+  the whole box, menu rows a `desk` hover / `chrome` press plate of radius 6 on a paper box, and a member row (the
+  Object Inspector's list, `MemberRowWdgt`) a 40 px `accentTint` plate while selected, its `label` a cropping
+  `StringWdgt`.
   `MenuItemMorph`→`MenuItemWdgt` (BATCH 4 — the button-family rename), so use `instanceof MenuItemWdgt` and the
   Wdgt-stripped hierarchy nav string `"a MenuItem"` (NOT `"a MenuItemWdgt"`). For a STANDALONE button fixture use
-  `SimpleButtonWdgt` (rounded modern button; its `StringWdgt` face crops on
-  `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
+  `SimpleButtonWdgt` (the design's button: radius 6, its look derived from the theme by state, its one-line
+  `StringWdgt` face centred in its box and cropped on `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
 - **One inspector — windowed by default, but ALSO a first-class NAKED widget:** there is a single `InspectorWdgt` (the
   old `InspectorMorph` was deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector`
   (the duplicate `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev → inspect" item now
   routes through `inspect`/`spawnInspector` too). The menu/inspect paths wrap it WINDOWED — `spawnInspector` puts it in a
   `FrameWdgt` (560×410) — but it now ALSO renders + functions + self-resizes **NAKED**: `world.add new InspectorWdgt
-  target` paints its own opaque background (a `RectangularAppearance`, dropped when it becomes window content via
-  `setLayoutSpec`, so the windowed render stays byte-identical) and shows its own `@resizer` HandleWdgt (visible only when
+  target` paints its own `panel` body (`inspectorBodyFill`, a `RectangularAppearance`, naked and windowed alike) and shows its own `@resizer` HandleWdgt (visible only when
   free-floating). To drive a naked resize, press THAT handle: `@syntheticEventsMouseMovePressDragRelease_InputEvents
   insp.resizer.center(), dest` — NOT `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", …`, which grabs the
   TOPMOST handle by type (a save raises the desktop's own resizer above the inspector's). Two naked gotchas (learned in

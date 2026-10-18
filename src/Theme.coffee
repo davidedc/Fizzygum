@@ -61,12 +61,15 @@ class Theme
     # its 1 px border stroke and its fill (FrameWdgt._frameLook).
     @menuStroke = @frame
     @menuBodyFill = @paper
-    # a LIST's rows panel (the CommandPanelWdgt a ListWdgt stacks its rows in): its fill and its
+    # a plain LIST's rows panel (the CommandPanelWdgt a ListWdgt stacks its rows in): its fill and its
     # stroke. A pop-up's rows panel paints nothing: the pop-up's body is its box.
     @rowsPanelFill = Color.create 238, 238, 238
     @rowsPanelStroke = Color.create 186, 186, 186
-    # a MENU row (a MenuItemWdgt in a menu or a prompt, a prompt's Ok / Close included, and one
-    # lifted out of a pinned menu or duplicated onto the desktop): its fill at rest -- the pop-up
+    # a MEMBER list's rows panel: no fill and no stroke at all, so whatever the list stands on shows
+    # around and between its rows.
+    @memberRowsPanelFill = Color.TRANSPARENT
+    # a MENU row (a MenuItemWdgt in a menu, and one lifted out of a pinned menu or duplicated
+    # onto the desktop): its fill at rest -- the pop-up
     # body's own paper, so a row in a pop-up shows no box of its own and a standalone row keeps a
     # paper box -- and the ink of its label ...
     @menuRowFill = @paper
@@ -85,9 +88,9 @@ class Theme
     # the rule a pop-up's group divider paints across its band (DividerWdgt; redesign plan §2,
     # rule D: a band painting its own rule).
     @menuDivider = @chrome
-    # a LIST row (a MenuItemWdgt in a ListWdgt's rows panel), which keeps its flat look until lists
-    # take their own (redesign plan §4 W3): its fill at rest, while highlighted and while pressed (a
-    # selected row stays pressed), each over its whole box, and the ink of its label ...
+    # a plain LIST row (a MenuItemWdgt in a ListWdgt's rows panel), in the flat look: its fill at
+    # rest, while highlighted and while pressed (a selected row stays pressed), each over its whole
+    # box, and the ink of its label ...
     @listRowFill = Color.create 250, 250, 250
     @listRowHighlightFill = Color.SILVER
     @listRowPressFill = Color.GRAY
@@ -97,6 +100,18 @@ class Theme
     # targets. Fainter than rowsPanelStroke, because the panel's own border is a boundary and this
     # is only a rhythm mark inside it.
     @listRowSeparator = Color.create 225, 225, 225
+    # a MEMBER row (MemberRowWdgt: a row of a member list, the Object Inspector's -- a kind tag, then
+    # the member's name): its fill at rest, none, so whatever its list stands on shows; and the PLATE
+    # it wears while it is its list's selection, and while pressed, the accent's translucent tint ...
+    @memberRowFill = Color.TRANSPARENT
+    @memberRowSelectedFill = @accentTint
+    # ... the ink of its member's name, and of a DIMMED one's (a member its subject's own class does
+    # not declare) ...
+    @memberRowNameText = @ink
+    @memberRowDimmedNameText = @muted
+    # ... and the ink of its kind tag ("fn", "var"), at rest and while the row is selected.
+    @memberRowTagText = @muted2
+    @memberRowSelectedTagText = @accent
     # a LabelButtonWdgt built with no look of its own (a fizzytiles magnet): its fill at rest,
     # hovered and pressed, each over its whole box, and the ink of its label.
     @labelButtonFill = Color.create 250, 250, 250
@@ -150,9 +165,11 @@ class Theme
 
     # the body of a text area (TextAreaWdgt), and of the mono text panel it configures into.
     @textAreaFill = Color.create 255, 255, 255
-    # the editable code pane: a script, console or code prompt's editor body, and the inspector's
-    # detail pane.
+    # the editable code pane: a script's or a code prompt's editor body.
     @codePaneFill = Color.create 255, 255, 255
+    # the ink of SOURCE CODE in a code pane -- the Object Inspector's, a script's, a code prompt's, a
+    # console's and an error log's -- which also takes fonts.code and codePanePadding.
+    @codeText = @code
     # the background of a one-line text-entry field (StringFieldWdgt).
     @textFieldFill = Color.create 255, 255, 255
     # the text caret's fill.
@@ -160,10 +177,6 @@ class Theme
     # a TextWdgt's text selection: the selected glyphs' ink and the highlight behind them.
     @textSelectionText = Color.create 255, 255, 255
     @textSelectionFill = Color.create 60, 60, 120
-    # the "save" label of a code prompt and of the inspector while there is an edit to save ...
-    @saveLabelEnabledText = Color.create 0, 0, 0
-    # ... and while there is none.
-    @saveLabelDisabledText = Color.create 200, 200, 200
 
     # a number prompt's slider: its track, and the base its thumb derives its hover and press
     # colours from.
@@ -188,10 +201,55 @@ class Theme
     @scrollIndicatorThumbHighlight = Color.create 0x1E, 0x1E, 0x1C, 0.5
     @scrollIndicatorThumbPress = Color.create 0x1E, 0x1E, 0x1C, 0.6
 
-    # a button's border (SimpleButtonWdgt, SimpleRectangularButtonWdgt) ...
-    @buttonStroke = Color.create 196, 195, 196
-    # ... and a simple button's fill.
-    @buttonFill = Color.create 245, 244, 245
+    # a BUTTON (SimpleButtonWdgt; visual-design-system §4.3): its fill and 1 px border at rest ...
+    @buttonFill = @paper
+    @buttonStroke = @line
+    # ... its fill while hovered (its border stays buttonStroke) ...
+    @buttonHoverFill = @desk
+    # ... its fill and its darker border while pressed ...
+    @buttonPressFill = @chrome
+    @buttonPressStroke = @frame
+    # ... the ink of a text face, enabled ...
+    @buttonText = @ink
+    # ... and, DISABLED, in every state: no fill at all (whatever lies behind the button shows),
+    # its border, and the ink of a text face.
+    @buttonDisabledFill = Color.TRANSPARENT
+    @buttonDisabledStroke = @chrome
+    @buttonDisabledText = @disabledText
+    # a TOGGLE (LabelledToggleWdgt; visual-design-system §4.3, §4.8), OFF: no fill at all (whatever
+    # lies behind the toggle shows), its 1 px border and the ink of its label ...
+    @toggleOffFill = Color.TRANSPARENT
+    @toggleOffStroke = @line
+    @toggleOffText = @text2
+    # ... OFF and hovered, its fill (its border stays toggleOffStroke), and OFF and pressed, its fill
+    # and its darker border ...
+    @toggleOffHoverFill = @desk
+    @toggleOffPressFill = @chrome
+    @toggleOffPressStroke = @frame
+    # ... and ON, in every state: the accent's translucent tint, which composites over whatever the
+    # toggle stands on, inside an accent border, and the accent as its label's ink.
+    @toggleOnFill = @accentTint
+    @toggleOnStroke = @accent
+    @toggleOnText = @accent
+    # a CHIP (ChipWdgt; visual-design-system §4.3, §4.8), one of a row of alternatives -- a class of
+    # the Object Inspector's breadcrumb. Any chip but the CURRENT one: no fill at all (whatever lies
+    # behind the chip shows), its 1 px border and the ink of its label ...
+    @chipFill = Color.TRANSPARENT
+    @chipStroke = @chip
+    @chipText = @text2
+    # ... hovered, its fill (its border stays chipStroke), and pressed, its fill and its darker
+    # border ...
+    @chipHoverFill = @desk
+    @chipPressFill = @chrome
+    @chipPressStroke = @frame
+    # ... and the CURRENT chip, in every state: the accent's translucent tint, which composites over
+    # whatever the chip stands on, inside an accent border, and the accent as its label's ink.
+    @chipCurrentFill = @accentTint
+    @chipCurrentStroke = @accent
+    @chipCurrentText = @accent
+    # a RECTANGULAR button's border (SimpleRectangularButtonWdgt: the demo switch's buttons, and the
+    # base of the paint tools, which paint their own).
+    @rectangularButtonStroke = Color.create 196, 195, 196
 
     # a plain resize/move handle's art (a halo's handles, a naked inspector's resizer) at rest: its
     # ink and the shadow drawn under it ...
@@ -249,15 +307,19 @@ class Theme
     # the pencil on the corner "edit code" mark.
     @editMarkInk = Color.create 0, 0, 0
 
-    # the inspector's own body while it floats free (inside a window, the window paints it).
-    @inspectorFill = Color.create 248, 248, 248
-    # the inspector's hierarchy: the translucent panel behind it and the arrows linking its classes.
-    @inspectorHierarchyFill = Color.create 255, 255, 255, 0.2
-    @inspectorHierarchyArrow = Color.create 0, 0, 0
-    # the inspector's member list when it marks ownership: an inherited member's text, and an
-    # own member's.
-    @inspectorInheritedMemberText = Color.create 0, 0, 180
-    @inspectorOwnMemberText = Color.create 0, 180, 0
+    # the Object Inspector's BODY, which it paints itself, naked and windowed alike: under its bands
+    # and panes, the draft's panel ...
+    @inspectorBodyFill = @panel
+    # ... and its two panes' fill (the member list and the code pane, viewports and planes alike, and
+    # the background of the code pane's text): none, so the body and the inspector's seams show
+    # through them.
+    @inspectorPaneFill = Color.TRANSPARENT
+    # the inspector's BREADCRUMB band (its class chips wear the chip roles, above): the ink of its
+    # "Class" caption, of the drawn › separating two chips, and of its mixin-donor label ("from
+    # <Name>Mixin", while a mixin-donated member is selected).
+    @inspectorBreadcrumbCaption = @muted2
+    @inspectorBreadcrumbSeparator = @muted3
+    @inspectorDonorText = @muted2
 
     # the analog clock: the ink its ticks and hands draw with, and its outer ring.
     @clockInk = Color.create 0, 0, 0
@@ -280,22 +342,27 @@ class Theme
     # ---- FONT ROLES ------------------------------------------------------------------------
     # Each role is {family, size, bold}, holding what its surface renders with. A surface hands its
     # whole role to the text it builds (StringWdgt's `fontRole` option, also taken by
-    # LabelButtonWdgt and StringFieldWdgt), which renders with all three members; an explicit
+    # LabelButtonWdgt, StringFieldWdgt and TextAreaWdgt), which renders with all three members; an explicit
     # fontName / fontSize / bold beside the role overrides that one member. Weights map onto the
     # bold flag: the draft's 600 is bold, 500 is regular.
     @fonts =
       # a menu row's label (a MenuItemWdgt in a menu or a prompt, or one standing on its own)
       menuRow: {family: "Arial, sans-serif", size: 15, bold: false}
-      # a list row's label (a MenuItemWdgt in a ListWdgt)
+      # a plain list row's label (a MenuItemWdgt in a ListWdgt)
       listRow: {family: "sans-serif", size: 17, bold: false}
+      # a member row's name (MemberRowWdgt: a member list, the Object Inspector's), in mono ...
+      memberName: {family: StringWdgt::monoFontStack, size: 13, bold: false}
+      # ... and its kind tag ("fn", "var"), the draft's weight 600
+      memberKindTag: {family: "Arial, sans-serif", size: 10, bold: true}
       # the label of a LabelButtonWdgt built without a role (a fizzytiles magnet)
       labelButton: {family: "sans-serif", size: 17, bold: false}
       # a pop-up's header title
       menuHeader: {family: "Arial, sans-serif", size: 11, bold: false}
       # a window's title, in its strip
       windowTitle: {family: "Arial, sans-serif", size: 13, bold: false}
-      # the small chrome labels: a text button's face, the save / save + close labels, the
-      # inspector's headers and class buttons, a patch node's field labels, the video time labels
+      # the small chrome labels: a text button's face (a toggle's and a chip's included), the save /
+      # save + close labels, the Object Inspector's breadcrumb caption and mixin-donor label, a patch
+      # node's field labels, the video time labels
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
       # every StringWdgt / TextWdgt built without a role
       defaultText: {family: "Arial, sans-serif", size: 13, bold: false}
@@ -309,6 +376,10 @@ class Theme
       prompt: {family: "sans-serif", size: 14, bold: false}
       # a desktop icon's caption
       desktopCaption: {family: "Arial, sans-serif", size: 12, bold: false}
+      # the text of a CODE PANE, in mono -- source code: the Object Inspector's code pane, a script's
+      # and a code prompt's editor -- and of the mono text panels: a console's, an error log's and a
+      # patch node's text boxes. Its lines stack at the pitch every text keeps, ceil(1.2 x size).
+      code: {family: StringWdgt::monoFontStack, size: 12, bold: false}
 
     # ---- METRICS ---------------------------------------------------------------------------
     # Chrome geometry (program ruling G2): a handle's side, a frame grip's side and inset, the bar
@@ -316,12 +387,20 @@ class Theme
     # rule and its body margin, the glyphs inset within a bar button's box, a menu row's glyph
     # box, the minimum height a menu/list row takes, a menu row's and a list row's side inset and
     # icon gap, a menu row's plate rounding and its chevron's and tick's glyph squares and gaps, a
-    # pop-up group divider's band, the corner
+    # member row's height, selection plate and horizontal rhythm, a pop-up group divider's band, the
+    # corner
     # rounding of a window's, a card's and a pop-up's body and of the speech bubble, a tooltip
     # plate's rounding, padding and line height, a pop-up's
-    # content padding and its header's rule and title inset, a list rows-panel's padding, a scroll
-    # indicator's fat and thin widths and the thin one's edge inset, and a toolbar grid's cell
-    # side / inter-cell gap / outer margin / row count. Each chrome layout site reads the matching
+    # content padding and its header's rule and title inset, a plain or member list rows-panel's
+    # padding, a scroll
+    # indicator's fat and thin widths and the thin one's edge inset, a toolbar grid's cell
+    # side / inter-cell gap / outer margin / row count, a button's height, paddings and rounding,
+    # a toggle's height, padding and rounding, a chip's height, padding and rounding,
+    # the least side of a chrome target, a footer band's height, rule, inset, button gap and
+    # grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
+    # and separator square, its toggles band's height, inset and gap, its list column's width and
+    # its seams' width, and a code pane's padding. Each chrome
+    # layout site reads the matching
     # name here; no chrome dimension lives as a literal in a layout method.
     #   ONE geometry serves mouse and finger alike (program ruling G1), so every value is set
     # here, once, at construction: there is no per-device redraw to switch between, and no
@@ -337,10 +416,10 @@ class Theme
     # the side of a plain HANDLE (HandleWdgt: a halo's resize / move / rotate handles, a naked
     # inspector's resizer, a demo handle). A handle is a TARGET (G3), and ruling T3 gives its corner
     # resizer the "glyph = box" shape: what you can hit is exactly the striped triangle it draws, so
-    # there is one dial and no invisible band. The same side is the corner band a window payload
-    # keeps free beside its footer row (a bin's, an errors log's, a code prompt's, a console's, a
-    # script's, an inspector's), the side of a text's corner triangle badges, and the pen demo's
-    # arrow unit. A frame's own resizer is its grip, sized by frameGripSize below, never by this.
+    # there is one dial and no invisible band. The same side is the side of a text's corner
+    # triangle badges and the pen demo's arrow unit. A frame's own resizer is its grip, sized by
+    # frameGripSize below, never by this; and a footer band keeps footerGripClearance free at its
+    # right end, never this.
     @handleSize = 44
     # a frame's resize GRIP (FrameGripWdgt, the draft's three-stroke grip): the side of its square,
     # which is also its whole hit area, and how far in from the corner of the frame's CONTENT area
@@ -379,10 +458,10 @@ class Theme
     # zero the payload lies flush against every one of them.
     @frameBodyMargin = 0
 
-    # the MINIMUM height a menu or list row takes, and the floor under a pop-up's title strip
+    # the MINIMUM height a menu or plain list row takes, and the floor under a pop-up's title strip
     # (a title is a tap-to-pin target, ruling C3). A row whose label is taller keeps its label's
-    # height, and the label sits centred in whichever height wins. A row is a tap target, and so
-    # are the prompt's Ok / Close buttons, which ARE menu rows (G5).
+    # height, and the label sits centred in whichever height wins. A row is a tap target (G5). A
+    # member row's height is its own, memberRowHeight.
     @menuRowHeight = 44
     # a MENU row's horizontal rhythm: the inset it keeps at each side (whatever it shows first --
     # its tick column, its icon's glyph box, or its label -- starts this far in, and whatever it
@@ -405,9 +484,22 @@ class Theme
     @menuRowChevronGap = 8
     @menuRowTickSize = 14
     @menuRowTickGap = 6
-    # a LIST row's two, which it keeps until lists take their own look.
+    # a plain LIST row's two.
     @listRowSideInset = 4
     @listRowIconGap = 4
+    # a MEMBER row (MemberRowWdgt): its height -- its list's row pitch too, since member rows stack
+    # flush, no layout gap opening a dead zone between two targets (ruling G5) -- and the selection
+    # PLATE drawn from its top: its height and its rounding (the draft's 40 px list row at radius 6;
+    # the 2 px under it are the draft's gap between two rows) ...
+    @memberRowHeight = 42
+    @memberRowPlateHeight = 40
+    @memberRowPlateRadius = 6
+    # ... its horizontal rhythm: the inset at each of its sides (its kind tag starts this far in, its
+    # name ends this far short of its right edge), the column its kind tag stands in, and the gap
+    # between that column and its name ...
+    @memberRowSideInset = 8
+    @memberRowTagColumnWidth = 18
+    @memberRowTagGap = 8
     # a pop-up's group DIVIDER (DividerWdgt): its band is this gap, its rule, then this gap again
     # -- the draft's group padding above and below a 1 px rule.
     @menuDividerGap = 4
@@ -440,9 +532,11 @@ class Theme
     @menuHeaderRuleWidth = 1
     # ... and how far into the band the header's title text starts.
     @menuHeaderTitleInset = 10
-    # the padding a LIST's rows panel keeps around its flush-stacked rows (a pop-up's rows panel
-    # keeps menuContentPadding instead).
+    # the padding a plain LIST's rows panel keeps around its flush-stacked rows (a pop-up's rows
+    # panel keeps menuContentPadding instead) ...
     @rowsPanelPadding = 2
+    # ... and a MEMBER list's (the draft's 4 px list padding).
+    @memberRowsPanelPadding = 4
 
     # a toolbar grid's thumbnail cell: side length, the gap between cells, and the margin
     # around the whole grid; toolRows is how many rows of cells a strip lays out before the
@@ -470,6 +564,82 @@ class Theme
     # a prompt's input slider's CROSS axis, i.e. the thumb you drag: a TARGET (G3), like the
     # prompt text it sits under.
     @prompterSliderSize = 44
+
+    # a BUTTON (SimpleButtonWdgt) whose face is a line of text: the height it takes, its horizontal
+    # padding at each side of the label (a primary action's is wider), and the rounding of its box.
+    # Its width is the label, that padding at each side and its 1 px border at each side
+    # (SimpleButtonWdgt.preferredExtent).
+    @buttonHeight = 36
+    @buttonPaddingX = 14
+    @primaryButtonPaddingX = 18
+    @buttonCornerRadius = 6
+    # a TOGGLE (LabelledToggleWdgt): the height it takes, its horizontal padding at each side of its
+    # label, and the rounding of its box. Its width is the label, that padding at each side and its
+    # 1 px border at each side (LabelledToggleWdgt.preferredExtent).
+    @toggleHeight = 36
+    @togglePaddingX = 12
+    @toggleCornerRadius = 6
+    # a CHIP (ChipWdgt): the height it takes, its horizontal padding at each side of its label, and
+    # the rounding of its box -- half its height, a full pill. Its width is the label, that padding at
+    # each side and its 1 px border at each side (ChipWdgt.preferredExtent).
+    @chipHeight = 32
+    @chipPaddingX = 10
+    @chipCornerRadius = 16
+    # the least side of a chrome TARGET (the 44 rule, visual-design-system §4.2): a button, a toggle
+    # or a chip is never narrower than this, and a row holding smaller controls is never shorter (a
+    # prompt's row of buttons, PromptButtonsRowWdgt).
+    @minimumTargetSize = 44
+
+    # a FOOTER BAND, the row of buttons a window's content ends in (FooterBandLayout: a code
+    # prompt's, a script's, a console's, an error log's, a bin's, an Object Inspector's): its
+    # height, its top rule included, and that rule's thickness (a seam its host owns,
+    # visual-design-system §4.1) ...
+    @footerBandHeight = 52
+    @footerRuleWidth = 1
+    # ... how far in from the band's left edge its left group starts and from its right edge its
+    # right group ends, and the gap between two buttons of a group (and between two buttons of a
+    # prompt's row, PromptButtonsRowWdgt) ...
+    @footerInset = 12
+    @footerGap = 8
+    # ... and how much more its right group keeps clear at the band's right end, for the frame's
+    # resize grip in that corner.
+    @footerGripClearance = 44
+
+    # the OBJECT INSPECTOR's bands (InspectorWdgt._bandsIn; its footer band is a footer band, above):
+    # the breadcrumb and the toggles band each end in a rule along their bottom, included in their
+    # height, a seam the inspector owns (visual-design-system §4.1). The width of those two rules
+    # and of the line between its list and its code pane ...
+    @inspectorRuleWidth = 1
+    # ... the BREADCRUMB band (InspectorWdgt._breadcrumbIn): its height while its chips take one row,
+    # its rule included, the row's chips centred down the rest -- each further row of chips adds a
+    # chip's height and breadcrumbGap to it; how far in from the band's left edge its "Class"
+    # caption starts, which is also how far short of its right edge its chips and its donor label
+    # end; the gap after the caption; the gap between a chip and the INK of the separator on either
+    # side of it (the draft's "all 4 apart", the ink standing where the draft's › glyph advances),
+    # which is also the gap between two rows of chips; the gap before the donor label; and the side
+    # of a separator's glyph square, whose chevron is the size of the draft's 12 px › (its ink 4 px
+    # wide, the glyph's advance) ...
+    @breadcrumbBandHeight = 44
+    @breadcrumbInset = 12
+    @breadcrumbCaptionGap = 8
+    @breadcrumbGap = 4
+    @breadcrumbDonorGap = 8
+    @breadcrumbSeparatorSize = 8
+    # ... the TOGGLES band's height, how far in from its left edge its first toggle starts, and the
+    # gap between two toggles ...
+    @toggleBandHeight = 48
+    @toggleBandInset = 12
+    @toggleBandGap = 8
+    # ... and the width of the body's member-list column (the draft's: a 230 row and 4 at each side),
+    # which never takes more than half the inspector's width; the code pane takes the rest.
+    @inspectorListColumnWidth = 238
+
+    # a CODE PANE (a TextAreaWdgt in the code role, with fonts.code and codeText: the Object
+    # Inspector's, a script's, a code prompt's, a console's, an error log's): how far in from the
+    # pane's edges its text stands, on every side -- so the inspector's code starts this far right of
+    # its list | code seam and this far below its body's top. A patch node's text boxes keep their
+    # own.
+    @codePanePadding = 12
 
     # ---- SHADOWS ---------------------------------------------------------------------------
     # Each shadow is an offset (an integer-px Point, any direction: ShadowInfo) and an alpha.

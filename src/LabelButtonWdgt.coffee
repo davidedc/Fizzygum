@@ -2,9 +2,10 @@
 # which shows its STATE -- hovered, pressed -- in a state fill of its own: over the whole box,
 # square, or, when it carries a plateRadius, as a rounded PLATE on its rest fill
 # (LabelButtonAppearance). Every one of those is its builder's to give; a builder that gives none
-# gets the plain labelButton roles (a fizzytiles magnet), and MenuItemWdgt gives the menu-row or
-# the list-row look its context asks for. It extends the modern button family (ButtonWdgt),
-# inheriting the target/action/trigger machinery and the HighlightableMixin state constants, but
+# gets the plain labelButton roles (a fizzytiles magnet), MenuItemWdgt gives the menu-row or the
+# list-row look its context asks for, and MemberRowWdgt its own. It extends the modern button
+# family (ButtonWdgt), inheriting the target/action/trigger machinery and the HighlightableMixin
+# state constants, but
 # supplies its OWN flat paint -- the button family draws no flat fill (ButtonWdgt is transparent,
 # SimpleButtonWdgt is a rounded box).
 #
@@ -28,8 +29,11 @@ class LabelButtonWdgt extends ButtonWdgt
   highlightColor: undefined
   pressColor: undefined
   # how my state fill is shaped: undefined fills my whole box, square; a radius paints it as a
-  # PLATE of that rounding over my box, on my rest fill (a menu row's hover and press).
+  # PLATE of that rounding over my box, on my rest fill (a menu row's hover and press) -- as tall as
+  # my box, or plateHeight tall from my top when I carry one (a member row's selection plate, my rest
+  # fill showing under it).
   plateRadius: undefined
+  plateHeight: undefined
   centered: false
 
   # Same head as ButtonWdgt — target/action — and the same opts object, extended with the
@@ -49,7 +53,8 @@ class LabelButtonWdgt extends ButtonWdgt
   # member. The role is resolved into my three label fields here and not kept.
   #   My LOOK rides the same opts: `color` is my label's ink, `fill` my rest fill, `highlightFill`
   # and `pressFill` my two state fills, `plateRadius` the rounding of the plate they are painted as
-  # (absent: they cover my whole box, square). Each absent one is the plain labelButton role's.
+  # (absent: they cover my whole box, square) and `plateHeight` how tall that plate is from my top
+  # (absent: my whole height). Each absent one is the plain labelButton role's.
   # Every value lands in a field of mine, so I keep the look I was built with wherever I go.
   constructor: (target, action, opts = {}) ->
     super target, action, opts
@@ -69,6 +74,7 @@ class LabelButtonWdgt extends ButtonWdgt
     @highlightColor = opts.highlightFill ? theme.labelButtonHighlightFill
     @pressColor = opts.pressFill ? theme.labelButtonPressFill
     @plateRadius = opts.plateRadius if opts.plateRadius?
+    @plateHeight = opts.plateHeight if opts.plateHeight?
     @appearance = new LabelButtonAppearance @
 
     if @labelString?

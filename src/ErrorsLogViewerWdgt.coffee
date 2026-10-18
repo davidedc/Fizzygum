@@ -95,46 +95,23 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   clearTextPane: ->
     @textWidget.setText ""
 
-  _reLayout: (newBoundsForThisLayout) ->
-    @_reLayoutWithOwnContents newBoundsForThisLayout
+  # My footer band: clear and the pause toggle at its LEFT, ok at its right.
+  _footerLeftButtons: ->
+    [@clearButton, @pauseToggle]
 
-  # position my contents against my CURRENT frame (already committed by
-  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
-  _layOutOwnContents: ->
+  _footerRightButtons: ->
+    [@okButton]
 
-    # clamped at 0: a transient degenerate height mid window-negotiation must not
-    # invert the text panel's rect (a negative height here was half the console's
-    # NON_INTEGER_GEOMETRY construction cascade)
-    mainCanvasHeight = Math.max 0, @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.theme.handleSize
-    mainCanvasBottom = @top() + @externalPadding + mainCanvasHeight
-
-    if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainCanvasHeight
-
-
-    # buttons -------------------------------
-
-
-    # fractional /3 makes the second and third buttons' origins (each = the
-    # previous one's right edge plus the padding) fractional -- round it here so
-    # all three land on integer pixels (the ConsoleWdgt /2 precedent; integer
-    # placement is enforced by the always-on bounds guard)
-    eachButtonWidth = Math.round (@width() - 2* @externalPadding - 3 * @internalPadding - WorldWdgt.theme.handleSize) / 3
-
-    if @clearButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @clearButton._reLayout buttonBounds
-
-    if @pauseToggle.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @pauseToggle._reLayout buttonBounds
-
-    if @okButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @okButton._reLayout buttonBounds
-
-    # ----------------------------------------------
+  # My pause toggle shows one of its two buttons at a time, in its own box, and has no size of
+  # its own: in my footer band it takes the larger of its two buttons' preferred extents, so it
+  # keeps its size when it flips between "pause" and "un-pause".
+  _footerExtentOf: (button) ->
+    return super button unless button is @pauseToggle
+    width = 0
+    height = 0
+    for toggleButton in @pauseToggle.buttons
+      extent = toggleButton.preferredExtent()
+      width = Math.max width, extent.x
+      height = Math.max height, extent.y
+    new Point width, height
 

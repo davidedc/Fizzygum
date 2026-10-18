@@ -151,8 +151,8 @@ The paint-time fractional device transforms you will see (e.g. via a transform-o
 come from *content rendering*, not placement:
 
 - **Vector / icon art** — `IconAppearance` subclasses draw a fixed floating-point **design**
-  (e.g. `AngledArrowUpLeftIconAppearance`: `translate 90,37; moveTo -25,-9.04; lineTo
-  16.6,32.5; … lineTo 79,-102.5`), **scaled to fit** the integer box. The fit-scale and the
+  (e.g. `BrushIconAppearance`: `translate 102.19, 100.77; rotate -17.2°; moveTo 96.31,
+  -58.22; …`), **scaled to fit** the integer box. The fit-scale and the
   design's own fractional coordinates make the drawn content land at fractional device
   positions. Rounding these would deform the icons.
 - **Charts / plots** — data-driven `scale`+`translate` to fractional positions

@@ -2,7 +2,9 @@
 # pressed, its state fill (highlightColor / pressColor). A widget carrying no plateRadius paints
 # its state fill over its whole box, square, in place of the rest fill (a magnet, a list row); one
 # carrying a plateRadius keeps its rest fill over its whole box and paints the state fill on it as
-# a rounded PLATE of that radius, so outside the plate's corners the rest fill shows (a menu row).
+# a rounded PLATE of that radius, so outside the plate's corners the rest fill shows (a menu row) --
+# and below the plate too, when the widget's plateHeight stops it short of its bottom (a member
+# row).
 # Solid BLACK over the whole box on the shadow pass, plate or no plate: the box is the silhouette.
 # The @label text is a child StringWdgt and paints itself; this appearance draws the fills and
 # the two row marks below.
@@ -40,9 +42,10 @@ class LabelButtonAppearance extends Appearance
       @_paintLiftableGrip ctx
 
   # The PLATE look: my rest fill over the part of my box being repainted, then -- only while I am
-  # out of my rest state -- the state fill as a plate over my WHOLE box, rounded at my widget's
-  # plateRadius (a uniform radius goes to fillRoundRect as the scalar, its fast path). A pure
-  # function of my widget's state and box: no timer, no fade.
+  # out of my rest state -- the state fill as a plate across my WHOLE width, from my top down my
+  # widget's plateHeight (absent: my whole height), rounded at its plateRadius (a uniform radius goes
+  # to fillRoundRect as the scalar, its fast path). A pure function of my widget's state and box: no
+  # timer, no fade.
   #   ⚠ The plate's geometry comes from MY WIDGET, never from the scope's `localDamageBox` — the law
   # is on Appearance._paintInLocalScope; the scope has already clipped to the damage box
   # (`clipsToDamageBox` is true here), so painting the whole plate is safe.
@@ -52,11 +55,11 @@ class LabelButtonAppearance extends Appearance
       @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
     return if !stateColor? or @widget.state is @widget.STATE_NORMAL
     ctx.fillStyle = stateColor.toString()
-    ctx.fillRoundRect 0, 0, @widget.width(), @widget.height(), @widget.plateRadius
+    ctx.fillRoundRect 0, 0, @widget.width(), (@widget.plateHeight ? @widget.height()), @widget.plateRadius
 
   # The hairline along my TOP edge, drawn only while my container has told me the row above me is
   # another row (MenuItemWdgt.showSeparatorAbove — a rows panel DERIVES adjacency at arrange, so no
-  # row has to know where it sits; only a LIST's rows panel tells its rows so). PAINT, never
+  # row has to know where it sits; only a plain LIST's rows panel tells its rows so). PAINT, never
   # layout: the line takes no height, so two rows stay flush and no dead zone opens between two
   # touch targets.
   #   Inset a pixel at each end, so it reads as a rhythm mark inside the list's box rather than as

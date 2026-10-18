@@ -64,10 +64,7 @@ class ScriptWdgt extends CodeAreaWdgt
     @runItButton = new SimpleButtonWdgt @, "tryIt", face: "try it"
     @_addNoSettle @runItButton
 
-    # local: @saveButton keeps it as its face widget, so a second copy on `this` was redundant state.
-    saveTextWdgt = new StringWdgt "save + close", fontRole: WorldWdgt.theme.fonts.buttonLabel
-    saveTextWdgt.alignCenter()
-    @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: saveTextWdgt
+    @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: "save + close", primary: true
     @_addNoSettle @saveButton
     # ---------------------------------------
 
@@ -103,35 +100,10 @@ class ScriptWdgt extends CodeAreaWdgt
 
   textContentUnmodified: ->
 
-  _reLayout: (newBoundsForThisLayout) ->
-    @_reLayoutWithOwnContents newBoundsForThisLayout
+  # My footer band: "try it" at its LEFT; "save + close", the primary action, at its right.
+  _footerLeftButtons: ->
+    [@runItButton]
 
-  # position my contents against my CURRENT frame (already committed by
-  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
-  _layOutOwnContents: ->
-
-    textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
-    textBottom = @top() + @externalPadding + textHeight
-    textWidth = @width() - 2 * @externalPadding
-    buttonsWidth = Math.round((textWidth - 2 * @internalPadding - WorldWdgt.theme.handleSize)/2)
-
-    if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point textWidth, textHeight
-
-
-    # buttons -------------------------------
-
-
-    if @runItButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding, textBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runItButton._reLayout buttonBounds
-
-    if @saveButton.parent == @
-      buttonBounds = new Rectangle new Point buttonBounds.right() + @internalPadding, textBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @saveButton._reLayout buttonBounds
-
-
-    # ----------------------------------------------
+  _footerRightButtons: ->
+    [@saveButton]
 

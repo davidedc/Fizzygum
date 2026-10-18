@@ -125,7 +125,8 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     attribution key and the donor-edit shadow guard), after which donor edits skip the
     class;
   - a **"from `<Name>Mixin`" donor label** (`InspectorWdgt.mixinDonorLabel`) appears in
-    the hierarchy row of BOTH inspector types while a mixin-donated member is selected;
+    the breadcrumb band, right after the class chips, of BOTH inspector types while a mixin-donated
+    member is selected;
   - **add/remove**: the class inspector's `add…` popout gains a destination step
     (class or any of its mixins — a mixin add is `applyMemberEdit` with a new name)
     when the class declares augmentations, and `remove` on a mixin-donated member
@@ -156,7 +157,7 @@ three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
-| `ClippingAtRectangularBoundsMixin` | 195 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `VerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
+| `ClippingAtRectangularBoundsMixin` | 195 | 6 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `VerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt`, `InspectorWdgt` (clips its bands' overflowing controls, naked or windowed) | base class + unrelated branches | yes |
 | `ControllerMixin` | 516 | 7 — `SliderWdgt`, `StringWdgt` (whence `TextWdgt`/`SimpleTextWdgt` inherit it — SimpleTextWdgt's own augment was the double-injection the boot guard now forbids), `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | yes — `graphEdgesOut` (super-composed, graph-edges §4.2) |
 | `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |

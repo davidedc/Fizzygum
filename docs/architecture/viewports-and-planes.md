@@ -119,7 +119,8 @@ and visibility:
   room-for-thumb check, so neither bar's length waits on whether the other one shows.
 - **The resizer** is found by climbing the corner chain. A container that runs a child out to its
   own bottom-right corner names it (`bottomRightCornerReachedBy`): a frame names its payload
-  and its bottom/right bands, an inspector its detail pane, a patch node its bottom text box. The
+  and its bottom/right bands, a read-only inspector its code pane (an inspector that ends in its
+  footer band names none), a patch node its bottom text box. The
   first container on the climb whose resizer would show answers (`HandleWdgt.wouldShow`, what
   showing derives from, never `isVisible`).
 - **A container that names nobody ends the climb**, and a viewport names nobody: its contents
@@ -264,7 +265,8 @@ turns the normalization off), and its `tight: false` height AGREES with grow-to-
 construction. ⚠ `ListWdgt` keeps the interposed-pane shape deliberately: its design sizes
 the rows panel PAST the hug (anti-vacant-space, `ListWdgt._applyExtent`), so the panel's
 unconditional hug self-write and the list's committed frame structurally disagree — there
-the pane IS the second surface that keeps the writers apart.
+the pane IS the second surface that keeps the writers apart. (A MEMBER list's panel — the Object Inspector's —
+does not hug: it takes the list's width, `ListWdgt._positionAndResizeChildren` / `CommandPanelWdgt._myArrangedWidth`.)
 
 ## Naming
 

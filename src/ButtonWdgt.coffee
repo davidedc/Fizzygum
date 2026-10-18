@@ -106,8 +106,12 @@ class ButtonWdgt extends Widget
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
+    # My face gets the room my padding leaves in my box -- all of it, unless my class places the
+    # face inside that room itself (a soft hook: SimpleButtonWdgt sets a line of text in a box one
+    # line tall, centred in the room).
     if @faceWidget?.parent == @
-      @faceWidget._applyGrantedBounds newBoundsForThisLayout.insetBy @padding
+      faceRoom = newBoundsForThisLayout.insetBy @padding
+      @faceWidget._applyGrantedBounds (@_faceBoundsIn?(faceRoom) ? faceRoom)
 
     super
     @_markLayoutAsFixed()
@@ -126,11 +130,12 @@ class ButtonWdgt extends Widget
       @target[@action].call @target, @, @subjectOfAction, @argumentToAction1, @argumentToAction2
     return
 
+  # trigger()'s twin for a double-click: the same four slots, dispatched by the NAME in my
+  # doubleClickAction instead of my action (a list row's names its list's openRow). Specifying a
+  # doubleClickAction is optional.
   triggerDoubleClick: ->
-    # same as trigger() but use doubleClickAction instead of action property
-    # note that specifying a doubleClickAction is optional
     return  unless @doubleClickAction
-    @target[@doubleClickAction]()
+    @target[@doubleClickAction].call @target, @, @subjectOfAction, @argumentToAction1, @argumentToAction2
 
   # My COMMAND edge (Widget.graphEdgesOut -- the three-edge model,
   # docs/archive/graph-edges-and-lifecycle-plan.md §4.2): the widget my @action is dispatched at.

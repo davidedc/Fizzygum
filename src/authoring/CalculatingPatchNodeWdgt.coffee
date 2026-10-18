@@ -54,12 +54,14 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new TextAreaWdgt @defaultFormulaBoxContents, false, 5
+    # my formula and output boxes are mono text panels: each born in the code role's font
+    # (fonts.code), at my own padding and ink
+    @tempPromptEntryField = new TextAreaWdgt @defaultFormulaBoxContents, false, 5, fontRole: WorldWdgt.theme.fonts.code
     @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField
 
-    @outputTextArea = new TextAreaWdgt "", false, 5
+    @outputTextArea = new TextAreaWdgt "", false, 5, fontRole: WorldWdgt.theme.fonts.code
     @outputTextArea.configureAsMonoTextPanel false
     @outputTextAreaText = @outputTextArea.textWdgt
     @_addNoSettle @outputTextArea

@@ -1046,9 +1046,9 @@ class StringWdgt extends Widget
   setFontName: (theNewFontName) ->
     @_settleLayoutsAfter => @_setFontNameNoSettle theNewFontName
 
-  # The NON-settling core of setFontName -- used by low-level builders that configure a contained text
-  # widget while assembling it (e.g. InspectorWdgt's detail pane, inside its own rebuild settle). The public
-  # setFontName self-settles over this; low-level code reaches the core directly (cores call cores).
+  # The NON-settling core of setFontName. The public setFontName self-settles over this; low-level code
+  # that changes a text's font inside a settle it already holds reaches the core directly (cores call
+  # cores). A text that is BUILT in a font takes it as a role at construction instead (`fontRole`).
   _setFontNameNoSettle: (theNewFontName) ->
     if @fontName != theNewFontName
       @fontName = theNewFontName

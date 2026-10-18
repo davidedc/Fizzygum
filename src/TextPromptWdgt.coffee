@@ -1,5 +1,5 @@
 # A prompt whose value is free text: a single StringFieldWdgt editor above the
-# "Ok"/"Close" rows. Widget.prompt routes here when no numeric ceiling is given.
+# [Close] [Ok] buttons. Widget.prompt routes here when no numeric ceiling is given.
 
 class TextPromptWdgt extends PromptWdgt
 

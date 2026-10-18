@@ -46,7 +46,8 @@ class ChevronRightIconAppearance extends SizeAwareIconAppearance
   # half stroke its round caps and join reach past them (at S = 16: [5, 12), which is the ink
   # SWCanvas lays down). Asked of the CLASS, because a layout aligning my INK rather than my
   # square needs the number before any widget wears me: MenuItemWdgt's submenu chevron, whose ink
-  # ends a side inset short of its row's right edge.
+  # ends a side inset short of its row's right edge, and the Object Inspector's breadcrumb
+  # separators (InspectorWdgt._breadcrumbIn), whose ink keeps the gaps between two class chips.
   @inkSpanX: (S) ->
     m = @::_glyphMetrics S
     left = Infinity

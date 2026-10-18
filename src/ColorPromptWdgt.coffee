@@ -1,5 +1,5 @@
-# A prompt whose value is a colour: a ColorPickerWdgt above the "Ok"/"Close"
-# rows. This is the folded Widget.pickColor: the ad-hoc inline MenuWdgt that
+# A prompt whose value is a colour: a ColorPickerWdgt above the [Close] [Ok]
+# buttons. This is the folded Widget.pickColor: the ad-hoc inline MenuWdgt that
 # colour picking hand-rolls becomes a first-class member of the prompt family.
 # Widget.pickColor routes here.
 

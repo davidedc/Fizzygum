@@ -1819,12 +1819,13 @@ class MacroToolkit
         false
     @_menuRowScrolledIntoView theItem
 
-  # Move to and click a menu/prompt item by its label, in a SPECIFIC menu you already hold a reference
+  # Move to and click a menu item by its label, in a SPECIFIC menu you already hold a reference
   # to. Prefer this over moveToItemOfTopMenuAndClick_InputEvents whenever you interact with a popup more
-  # than once (e.g. click a slider/palette INSIDE a prompt, THEN click its "Ok"): getMostRecentlyOpenedMenu
+  # than once (e.g. click a submenu row, THEN a row of the menu you came from): getMostRecentlyOpenedMenu
   # reads world.freshlyCreatedPopUps, which EVERY pointer-up clears (ActivePointerWdgt.processPointerUp), so it
   # is only valid for the FIRST interaction after a popup opens. Capture the popup reference while it is
-  # still fresh (right after it opens) and drive its later items through this method.
+  # still fresh (right after it opens) and drive its later items through this method. ⚠ A PROMPT's Ok,
+  # Close, Cancel and Don't save are BUTTONS, not rows: press them with clickPromptButton_InputEvents.
   moveToItemOfMenuAndClick_InputEvents: (theMenu, theLabel) ->
     theItem = @getTextMenuItemFromMenu theMenu, theLabel
     @moveToAndClick_InputEvents theItem
@@ -1848,6 +1849,43 @@ class MacroToolkit
   moveToItemContainingOfMenuAndClick_InputEvents: (theMenu, theSubstring) ->
     theItem = @getTextMenuItemFromMenuByContains theMenu, theSubstring
     @moveToAndClick_InputEvents theItem
+
+  # ── A PROMPT's BUTTONS ──────────────────────────────────────────────────────────────────────────
+  # A prompt (a PromptWdgt: the Text / Number / Color prompts and the save-shortcut one) ends in a
+  # row of real BUTTONS, not menu rows — [Close] [Ok], or [Don't save] [Cancel] [Ok] — so the row
+  # verbs above cannot name them (a button carries no labelString) and stay ROW verbs. These name a
+  # prompt's button by its LABEL, the text on its face, which is a button's identity the way a row's
+  # labelString is a row's.
+
+  # The button of `prompt` labelled `theLabel` ("Ok", "Close", "Cancel", "Don't save"), looked for
+  # among the prompt's own buttons (PromptWdgt.buttonsRow) and nowhere else in it, and brought into
+  # view if the prompt's rows scroll (_menuRowScrolledIntoView, which serves any widget of a pop-up's
+  # rows). THROWS when the prompt has no such button — naming the labels it does have — exactly as a
+  # row verb fails on a label its menu lacks: a missing button is a broken step, never one to skip.
+  # Queues nothing. A macro holds a prompt's button by its field instead (prompt.okButton,
+  # prompt.dismissButton — never closeButton, which is the window strip's × on a pinned prompt; a
+  # save-shortcut prompt's dontSaveButton, cancelButton, okButton).
+  _promptButtonLabelled: (prompt, theLabel) ->
+    buttons = prompt?.buttonsRow?.children ? []
+    button = buttons.find (each) -> each.faceWidget?.text == theLabel
+    unless button?
+      labels = ("\"#{each.faceWidget?.text}\"" for each in buttons)
+      throw new Error "#{prompt} has no button labelled \"#{theLabel}\" (its buttons: #{if labels.length then labels.join ', ' else 'none'})"
+    @_menuRowScrolledIntoView button
+
+  # Move to and click the button of `prompt` labelled `theLabel` — Ok delivers the prompt's value and
+  # closes the prompt unless it is pinned; Close / Cancel dismiss it. The press is verified
+  # like every widget-aimed press (moveToAndClick_InputEvents: it must land on the button — AIM
+  # MISSED otherwise). Hold the prompt the way the row verbs hold a menu: capture it right after it
+  # opens (getMostRecentlyOpenedMenu is cleared by every pointer-up), then press its buttons through
+  # this verb.
+  clickPromptButton_InputEvents: (prompt, theLabel) ->
+    @moveToAndClick_InputEvents @_promptButtonLabelled prompt, theLabel
+
+  # The same, on the most recently opened pop-up — valid only for the first interaction after the
+  # prompt opened (see moveToItemOfMenuAndClick_InputEvents on getMostRecentlyOpenedMenu).
+  clickTopPromptButton_InputEvents: (theLabel) ->
+    @clickPromptButton_InputEvents @getMostRecentlyOpenedMenu(), theLabel
 
   # Click a menu's title bar (its frame bar's title piece, reachable as menu.label) to PIN the menu open.
   # The piece escalates its click to the strip, and FrameBarWdgt.activated -> frame.pinPopUp on a

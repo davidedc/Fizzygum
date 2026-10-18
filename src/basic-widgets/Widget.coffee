@@ -879,7 +879,7 @@ class Widget extends TreeNode
     # Bulk teardown through the non-settling core, NOT the public self-settling fullDestroy(): looping
     # the public method would self-settle once PER child (O(children) flushes), and -- with fullDestroy
     # on the single-mutation tier -- each immediate settle re-fits a half-emptied container. Callers
-    # (resetWorld / Inspector rebuild / video panes / bin) are reset/rebuild contexts that settle
+    # (resetWorld / video panes / bin / shelf) are reset/rebuild contexts that settle
     # once afterwards (or redraw an empty container), so no per-child flush is wanted.
     until @children.length == 0
       @children[0]._fullDestroyNoSettle()

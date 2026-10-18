@@ -5,7 +5,8 @@
 # self-sizing multi-line TextWdgt label, its two drawn INDICATORS (the submenu
 # chevron at its right, the tick in its leading column), list-row selection, the
 # "represents a widget" hover-highlight, and the LOOK its context asks for (see the
-# constructor): a menu row's, or a list row's.
+# constructor): a menu row's, or a plain list row's. A member list's row is my subclass
+# MemberRowWdgt.
 
 class MenuItemWdgt extends LabelButtonWdgt
 
@@ -16,9 +17,9 @@ class MenuItemWdgt extends LabelButtonWdgt
   # Does a hairline run along my TOP edge? My rows panel DERIVES it at arrange (the row above me
   # has to be another row) and tells me; I hold the answer and my appearance paints it. Paint
   # only, never layout: a separator takes no height, so two rows stay flush and no dead zone opens
-  # between two touch targets (ruling G5). Only a LIST's rows panel tells its rows (a list row
-  # keeps the flat look until lists take their own); a pop-up's rows are told apart by their
-  # hover plate and grouped by dividers, so a menu row's answer stays false.
+  # between two touch targets (ruling G5). Only a plain LIST's rows panel tells its rows (the flat
+  # look's rhythm mark); a pop-up's rows are told apart by their hover plate and grouped by
+  # dividers, and a member list's rows by their selection plate alone, so their answer stays false.
   _separatorAbove: false
 
   # my MenuRowReflectionSpec when I am a VIEW of somebody else's value: whether I am TICKED is then
@@ -83,14 +84,14 @@ class MenuItemWdgt extends LabelButtonWdgt
   # The spec's per-item fields are unpacked onto LabelButtonWdgt's options here; an absent
   # spec.label falls back to "close".
   #
-  # MY LOOK is my context's, chosen once, here: a LIST's rows panel builds me as a list row
-  # (`listRow`), which keeps the flat look -- 17 px, state fills over my whole box -- until lists
-  # take their own (redesign plan §4 W3); every other context, a menu's or a prompt's panel or a
-  # row built on its own, builds a MENU row -- the draft's 15 px ink label, a paper box, and a
-  # rounded plate while hovered or pressed. Every value lands in a field of mine, so I keep the
-  # look I was built with wherever I go: lifted out of a pinned menu, duplicated onto the desktop,
-  # saved in a snapshot and restored. A spec's own `color` still wins for my label's ink (a list
-  # formats its entries by it), and an explicit `fontRole` for my font.
+  # MY LOOK is my context's, chosen once, here (_lookFor): a plain LIST's rows panel builds me as a
+  # list row (`listRow`), in the flat look -- 17 px, state fills over my whole box; every other
+  # context, a menu's or a prompt's panel or a row built on its own, builds a MENU row -- the
+  # draft's 15 px ink label, a paper box, and a rounded plate while hovered or pressed. (A MEMBER
+  # list's rows panel builds a MemberRowWdgt, whose look is its own.) Every value lands in a field
+  # of mine, so I keep the look I was built with wherever I go: lifted out of a pinned menu,
+  # duplicated onto the desktop, saved in a snapshot and restored. A spec's own `color` still wins
+  # for my label's ink (a list formats its entries by it), and an explicit `fontRole` for my font.
   #   WHAT I SAY is the spec's label -- or, when I reflect somebody's value, my reflection's, the
   # same plain wording -- and never carries a mark: whether I open a submenu, and whether I am
   # ticked, are facts of their own (opensSubmenu / ticked) that my indicators draw.
@@ -98,26 +99,9 @@ class MenuItemWdgt extends LabelButtonWdgt
   # super: LabelButtonWdgt's constructor labels itself (_reLayoutSelf -> _createLabel, then
   # _placeMyParts) as its last act, so all of them are already needed by the time it runs.
   constructor: (commandSpec, opts = {}) ->
-    theme = WorldWdgt.theme
-    if opts.listRow
-      font = theme.fonts.listRow
-      ink = theme.listRowText
-      restFill = theme.listRowFill
-      highlightFill = theme.listRowHighlightFill
-      pressFill = theme.listRowPressFill
-      # no plate: a list row's state fills cover its whole box
-      plateRadius = undefined
-      @sideInset = theme.listRowSideInset
-      @iconGap = theme.listRowIconGap
-    else
-      font = theme.fonts.menuRow
-      ink = theme.menuRowText
-      restFill = theme.menuRowFill
-      highlightFill = theme.menuRowHoverFill
-      pressFill = theme.menuRowPressFill
-      plateRadius = theme.menuRowPlateRadius
-      @sideInset = theme.menuRowSideInset
-      @iconGap = theme.menuRowIconGap
+    look = @_lookFor opts
+    @sideInset = look.sideInset
+    @iconGap = look.iconGap
     @rowReflection = commandSpec.reflection
     @icon = commandSpec.icon
     @opensSubmenu = true  if commandSpec.opensSubmenu
@@ -129,17 +113,18 @@ class MenuItemWdgt extends LabelButtonWdgt
     super commandSpec.target, commandSpec.action,
       closesUnpinnedPopUps: commandSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       labelString: (@rowReflection?.label ? commandSpec.label or "close")
-      fontRole: opts.fontRole ? font
+      fontRole: opts.fontRole ? look.font
       fontSize: opts.fontSize
       fontStyle: opts.fontStyle
       centered: opts.centered
       subject: opts.subject
       toolTip: commandSpec.toolTipMessage
-      color: commandSpec.color ? ink
-      fill: restFill
-      highlightFill: highlightFill
-      pressFill: pressFill
-      plateRadius: plateRadius
+      color: commandSpec.color ? look.ink
+      fill: look.restFill
+      highlightFill: look.highlightFill
+      pressFill: look.pressFill
+      plateRadius: look.plateRadius
+      plateHeight: look.plateHeight
       bold: commandSpec.bold
       italic: commandSpec.italic
       doubleClickAction: commandSpec.doubleClickAction
@@ -148,6 +133,33 @@ class MenuItemWdgt extends LabelButtonWdgt
       representsAWidget: commandSpec.representsAWidget
     @actionableAsThumbnail = true
     @_subscribeToMyReflectedSource()
+
+  # MY LOOK, as one record my constructor reads before super: my label's font role and ink, my rest
+  # fill, my two state fills and the plate they are painted as (its rounding -- absent: they cover
+  # my whole box, square -- and its height -- absent: my whole height), and my horizontal rhythm
+  # (sideInset, iconGap). A plain list row's when my context asks for one (`listRow`), a menu row's
+  # otherwise; a row kind with a look of its own answers its own (MemberRowWdgt).
+  _lookFor: (opts) ->
+    theme = WorldWdgt.theme
+    if opts.listRow
+      font: theme.fonts.listRow
+      ink: theme.listRowText
+      restFill: theme.listRowFill
+      highlightFill: theme.listRowHighlightFill
+      pressFill: theme.listRowPressFill
+      # no plate: a list row's state fills cover its whole box
+      plateRadius: undefined
+      sideInset: theme.listRowSideInset
+      iconGap: theme.listRowIconGap
+    else
+      font: theme.fonts.menuRow
+      ink: theme.menuRowText
+      restFill: theme.menuRowFill
+      highlightFill: theme.menuRowHoverFill
+      pressFill: theme.menuRowPressFill
+      plateRadius: theme.menuRowPlateRadius
+      sideInset: theme.menuRowSideInset
+      iconGap: theme.menuRowIconGap
 
   # One edge source -> me, waking me whenever the value I show changes by ANY route (a gesture, a
   # script, the loader, another menu). firesOnAnyChange because what I show is almost never the
@@ -172,6 +184,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   # (owner: a tight-text highlight is visual noise). WorldWdgt._widgetBeingEdited resolves a selected
   # descendant (my label) up to me through this. Capability, not an `instanceof MenuItemWdgt` type-test
   # (type-test-elimination convention — the same reason my glass-box sizing uses a capability, above).
+  # (A member list's rows panel frames none of its rows at all: they show their own selection.)
   absorbsDescendantEditorSelection: -> true
 
   # In a glass box I am sized to my (variable-width) text, not laid out as a square
@@ -184,8 +197,8 @@ class MenuItemWdgt extends LabelButtonWdgt
   # THE SEPARATOR PAIR. My panel tells me whether a row sits directly above me; my appearance asks
   # me back when it paints. Both are capability-dispatched (`?()`), so the OTHER row kinds a panel
   # may hold -- a divider, a slider, a colour picker -- neither hear the statement nor draw a line,
-  # and a menu row outside a panel simply never carries one. Its one teller is a LIST's rows panel
-  # (CommandPanelWdgt._deriveRowSeparators).
+  # and a menu row outside a panel simply never carries one. Its one teller is a plain LIST's rows
+  # panel (CommandPanelWdgt._deriveRowSeparators).
   showSeparatorAbove: (aBoolean) ->
     return if @_separatorAbove is aBoolean
     @_separatorAbove = aBoolean
@@ -218,11 +231,14 @@ class MenuItemWdgt extends LabelButtonWdgt
   # MenuItemWdgt hugs its box to its (multi-line, modern TextWdgt) label -- the
   # opposite of LabelButtonWdgt's default single-line StringWdgt label, which
   # leaves the box alone. Building the label sizes me; _placeMyParts, which my _reLayoutSelf runs
-  # right after, places it.
+  # right after, places it. The label renders my whole font: its family, size and weight, and the
+  # italic a list's format can ask for.
   _createLabel: ->
     @label = new TextWdgt @labelString,
       fontSize: @fontSize
       fontName: @fontStyle
+      bold: @labelBold
+      italic: @labelItalic
     @label.setColor @labelColor
 
     # _addNoSettle (NOT add): _createLabel is driven by _reLayoutSelf (a layout pass), so a
@@ -235,9 +251,8 @@ class MenuItemWdgt extends LabelButtonWdgt
 
     # menuRowHeight is a MINIMUM, not a height: a row is as tall as its label or as tall as the
     # dial, whichever is more, so a big label never gets clipped by a small dial and a small label
-    # still offers the full target (G3/G5 -- a row is a tap target, and the prompt's Ok/Close
-    # buttons are menu rows too). The label then sits centred in whatever height wins
-    # (_placeMyLabel).
+    # still offers the full target (G3/G5 -- a row is a tap target). The label then sits centred
+    # in whatever height wins (_placeMyLabel).
     labelExtent = @label.extent()
     rowHeight = Math.max labelExtent.y, WorldWdgt.theme.menuRowHeight
     w = @width()

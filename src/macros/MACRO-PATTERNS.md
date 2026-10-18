@@ -460,7 +460,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **`getMostRecentlyOpenedMenu()` is fresh-only.** It reads `world.freshlyCreatedPopUps`, which **every pointer-up clears**
   (`ActivePointerWdgt.processPointerUp`). Capture a popup reference RIGHT AFTER it opens and drive its later items through
   `@moveToItemOfMenuAndClick_InputEvents menu, "label"` whenever you touch the popup more than once (e.g. click a
-  slider/palette INSIDE a prompt, THEN its "Ok").
+  slider/palette INSIDE a prompt, THEN its "Ok" — a prompt's Ok is a BUTTON, pressed with
+  `@clickPromptButton_InputEvents prompt, "Ok"`; the row verbs cannot see it).
 - **Item-label matching variants**: exact (`moveToItemOfMenuAndClick_InputEvents`), **PREFIX**
   (`moveToItemStartingWithOfMenuAndClick_InputEvents` — for labels with a variable suffix; match the stable class-name
   head. ⚠ The two candidate choosers spell their labels DIFFERENTLY: the controller's "choose target:"
@@ -486,7 +487,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the baseline visible: pair it with a plain `PanelWdgt` + `RectangleWdgt` child whose right-click DOES build the 2-item hierarchy
   menu (`@assertTopMenuItemStrings ["a Rectangle", "a Panel"]`, plus `@assertValuesEqual …, true, (@rowOpensSubmenu menu,
   "a Rectangle")` per row — the labels are plain, so that each row LEADS ON is its own assertion) — same gesture, opposite menu. Build the panel directly:
-  `new TextAreaWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
+  `new TextAreaWdgt "text", false, 5` (ctor `(textAsString, wraps, padding, opts = {})` auto-builds the inner blurb; `opts.fontRole` / `opts.textColor` reach it).
   image_1 (the panel's own merged menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
   clicked point on click (the menu item's `trigger`, inherited from the `ButtonWdgt` family). Clicking ANY item KEEPS the menus in its ASCENDING hierarchy
@@ -598,7 +599,7 @@ assertion a recapture after a regression silently stores two different hashes an
   fixture noise. No new verb.
 - **Pick a colour / set transparency via a popup**: colour: `"color..."` opens a colour-picker menu — capture
   `picker = @getMostRecentlyOpenedMenu()`, click `picker.topWdgtSuchThat((m)-> m instanceof ColorPickerWdgt).colorPalette`
-  at `[fx,0.5]` (saturated; the palette is `hsl(360·fx,100%,50%)`), then `@moveToItemOfMenuAndClick_InputEvents picker, "Ok"`.
+  at `[fx,0.5]` (saturated; the palette is `hsl(360·fx,100%,50%)`), then `@clickPromptButton_InputEvents picker, "Ok"` (a prompt's Ok is a BUTTON: the row verbs cannot see it).
   COLOUR-PICKER TRAP: a `ColorPickerWdgt` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette`, and both
   are `PaletteWdgt`s (SIBLINGS — a gray palette is-not-a colour palette), so reach the colour one via the `.colorPalette`
   accessor rather than by searching the subtree for a palette. Each palette also draws a ring where its own current
@@ -1919,7 +1920,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `clickMenuItemOfWidget_InputEvents_Macro` / `@moveToItemOfTopMenuAndClick_InputEvents "floor..."` opens a
   `NumberPromptWdgt` (`SliderWdgt.floorPopout` → `Widget.prompt msg, target, "setStart", opts`); `Widget.prompt`
   already puts the caret in the entry field, so `Meta+a` then `@syntheticEventsStringKeys_InputEvents "25"` replaces
-  the default contents; then `@moveToItemOfMenuAndClick_InputEvents prompt, "Ok"` and
+  the default contents; then `@clickPromptButton_InputEvents prompt, "Ok"` and
   `@assertValuesEqual "…", 25, slider.start`. ⚠ CAPTURE the prompt with `@getMostRecentlyOpenedMenu()` the moment it
   opens — every mouseUp clears `world.freshlyCreatedPopUps`, and its "Ok" is clicked several steps later.
   ⭐ **THE MECHANIC WORTH KNOWING: the prompt delivers the VALUE.** The prompt's "Ok" targets the PROMPT itself:
@@ -2350,10 +2351,11 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   `openClassInspector` shape) — and TARGET THE CLASS THAT DECLARES THE `@augmentWith` (here `ButtonWdgt`): the inspector hides
   inherited members, so a SUBCLASS prototype's list carries no mixin-donated row at all — and the row-select helper's thumb-press
   then degenerates into a window float-drag (the naked-inspector degenerate-vBar gotcha, windowed edition). A consumer instance
-  (a `SimpleButtonWdgt`, which INHERITS the injected member) on the desktop proves each edit took via its HOVER colour
-  (Highlightable's `hoverEntered` reads `color_hover`; park the pointer on the button with a no-button
-  `@syntheticEventsMouseMove_InputEvents` and screenshot the held hover — a plain `SimpleButtonWdgt` has no tooltip, so no timed
-  bubble). Selecting a mixin-donated row (the `selectInspectorRow` helper from the AddEditSave pilot works unchanged on a class
+  (a PLAIN `ButtonWdgt`, which INHERITS the injected member, given a `RectangularAppearance` so it paints its `@color`) on the
+  desktop proves each edit took via its HOVER colour (Highlightable's `hoverEntered` reads `color_hover`; park the pointer on the
+  button with a no-button `@syntheticEventsMouseMove_InputEvents` and screenshot the held hover — a plain `ButtonWdgt` has no
+  tooltip, so no timed bubble). ⚠ Not a `SimpleButtonWdgt`: it derives its whole look from the theme at every state change and
+  reads none of the mixin's colours, so a mixin edit would never reach its pixels. Selecting a mixin-donated row (the `selectInspectorRow` helper from the AddEditSave pilot works unchanged on a class
   inspector) shows the donor label ("from `<Name>Mixin`", `InspectorWdgt.mixinDonorLabel`) and the "override in this class" button
   (`ClassInspectorWdgt.overrideInThisClassButton`, left of save). A plain `saveButton` click routes to the DONOR
   (`Mixin.applyMemberEdit` → every non-shadowing consumer class updates) and pops an `@inform` naming the mixin + consumer count;

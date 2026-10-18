@@ -55,38 +55,7 @@ class ConsoleWdgt extends CodeAreaWdgt
       menu.addMenuItem "run selection", @, "doSelection"
     menu.addMenuItem "run contents", @, "doAll"
 
-  _reLayout: (newBoundsForThisLayout) ->
-    @_reLayoutWithOwnContents newBoundsForThisLayout
-
-  # position my contents against my CURRENT frame (already committed by
-  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
-  _layOutOwnContents: ->
-
-    textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
-    textBottom = @top() + @externalPadding + textHeight
-    textWidth = @width() - 2 * @externalPadding
-    # Integer placement (Layer A): the two run-buttons share this width and are laid side by side, so a
-    # fractional /2 makes the second button's origin (= first's right edge) fractional -- round it here so both
-    # commit integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
-    buttonsWidth = Math.round (textWidth - 2 * @internalPadding - WorldWdgt.theme.handleSize)/2
-
-    if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point textWidth, textHeight
-
-
-    # buttons -------------------------------
-
-
-    if @runSelectionButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding, textBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runSelectionButton._reLayout buttonBounds
-
-    if @runAllButton.parent == @
-      buttonBounds = new Rectangle new Point buttonBounds.right() + @internalPadding, textBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runAllButton._reLayout buttonBounds
-
-
-    # ----------------------------------------------
+  # My footer band holds both run buttons at its LEFT.
+  _footerLeftButtons: ->
+    [@runSelectionButton, @runAllButton]
 

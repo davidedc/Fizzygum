@@ -55,17 +55,19 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @regexEntryField = new TextAreaWdgt @defaultContents, false, 5
+    # my three text boxes are mono text panels: each born in the code role's font (fonts.code), at my
+    # own padding and ink
+    @regexEntryField = new TextAreaWdgt @defaultContents, false, 5, fontRole: WorldWdgt.theme.fonts.code
     @regexEntryField.configureAsMonoTextPanel true
     @textWidget = @regexEntryField.textWdgt
     @_addNoSettle @regexEntryField
 
-    @substitutionTextArea = new TextAreaWdgt @defaultContents, false, 5
+    @substitutionTextArea = new TextAreaWdgt @defaultContents, false, 5, fontRole: WorldWdgt.theme.fonts.code
     @substitutionTextArea.configureAsMonoTextPanel true
     @substitutionTextAreaText = @substitutionTextArea.textWdgt
     @_addNoSettle @substitutionTextArea
 
-    @outputTextArea = new TextAreaWdgt @defaultContents, false, 5
+    @outputTextArea = new TextAreaWdgt @defaultContents, false, 5, fontRole: WorldWdgt.theme.fonts.code
     @outputTextArea.configureAsMonoTextPanel false
     @outputTextAreaText = @outputTextArea.textWdgt
     @_addNoSettle @outputTextArea
