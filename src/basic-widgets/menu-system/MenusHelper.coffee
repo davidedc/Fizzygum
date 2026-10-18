@@ -1,6 +1,6 @@
 # What is left of the menu-action helper after arc 3 split the demo catalogue out into
 # DemoMenus: the three actions that SHIP. `binIconAndText` builds the Bin desktop icon
-# (WorldWdgt.createDesktop calls it), `popUpDevToolsMenu` is the "dev ➜" menu reachable
+# (WorldWdgt.createDesktop calls it), `popUpDevToolsMenu` is the "dev" submenu reachable
 # from any widget's context menu on the index page, and `newScriptWindow` opens a script
 # frame. Everything demo-shaped lives in DemoMenus (reached as `demoMenus`), which a
 # production build does not ship at all.

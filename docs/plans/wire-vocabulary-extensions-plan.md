@@ -63,7 +63,7 @@ work is *landing reserved designs*, not inventing machinery.
 
 - **Payloads = pin KINDS.** ⚠ **Restated 2026-08-16 — connector P1 replaced the three setter
   tables.** `Widget.pins` returns one `PinSpec {label, kinds, setterName, getterName}` per pin, and
-  `Widget.pinsOfKind kind` filters it for the connect-to-➜ target-chooser menus. Subclasses chain
+  `Widget.pinsOfKind kind` filters it for the "connect to" target-chooser menus. Subclasses chain
   with `super().concat [...]` (see `PatchNodeWdgt._inputPins`). **The kind is now a property of the
   PIN, not a partition of the tables** — a `PinSpec` takes one kind, an array of them, or `"any"` —
   which is what makes W2/W3's "add a buffer payload" a smaller change than the note below assumed.
@@ -220,7 +220,7 @@ assignment bug; retire the written-never-read `setInput*IsConnected` flags (writ
 no-ops without the field, delete the prototype fields) and rationalize the now-
 redundant plain/`Hot` setter pairs once `cold` is a wire attribute (the per-NODE
 hot/cold vocabulary dissolves into the per-WIRE attribute; check menu-label screenshot
-impact — connect-to-➜ menus appear in patch tests).
+impact — "connect to" menus appear in patch tests).
 
 ### W3 — buffer payloads as current values
 

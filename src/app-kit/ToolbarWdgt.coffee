@@ -15,7 +15,7 @@ class ToolbarWdgt extends ViewportWdgt
 
   # MY DEFAULT SIDE: which of a host frame's four edge slots my band takes when the host docks
   # me. A per-instance property with a per-TYPE class default, user-adjustable per frame via the
-  # frame's "dock the toolbar ➜" context-menu popout, which edits the band's own edge spec.
+  # band's "dock" context-menu submenu, which edits the band's own edge spec.
   # FLOATING is not a state this field records: I am a PAYLOAD either way (program ruling C11) --
   # what docks and floats is the frame around me, and dragging its grip onto the desktop is
   # exactly what turns a band into a window.

@@ -358,8 +358,8 @@ inserts the payload at exactly that seam (the droplet is mode-aware off its own 
 reconciler runs MID-PASS, its structural edits keep the child free-floating at the boundary — insert
 spec-less then activate via `_setLayoutSpec`; detach the spec before `_fullDestroyNoSettle` — so no
 add/teardown invalidate fires mid-pass. `showAdders`/`removeAdders` are canonical self-settling
-wrappers. A DIVISION CELL's knobs are menu-reachable: its spec's "layout in row ➜"/"layout in
-column ➜" submenu (desired/max size prompts, cross-alignment entries — the settle-on-element setter
+wrappers. A DIVISION CELL's knobs are menu-reachable: its spec's "layout in row"/"layout in
+column" submenu (desired/max size prompts, cross-alignment entries — the settle-on-element setter
 family on `DivisionStackLayoutSpec`, `element` bound at `_ensureDivisionBox`; the VSLS idiom), the
 chrome excluded by the `isLayoutChrome` capability. A border layout is COMPOSITION, not an engine: a
 'y' division stack whose middle cell is an 'x' row, dividers at the seams

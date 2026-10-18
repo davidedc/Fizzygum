@@ -4616,7 +4616,7 @@ class Widget extends TreeNode
     widgetsHierarchy.forEach (each) ->
       textLabelForWidget = each.toString().slice 0, 50
       textLabelForWidget = textLabelForWidget.replace "Wdgt", ""
-      menu.addMenuItem textLabelForWidget + " ➜", each, "popupDeveloperMenu", closesUnpinnedPopUps: false, representsAWidget: true
+      menu.addMenuItem textLabelForWidget, each, "popupDeveloperMenu", closesUnpinnedPopUps: false, opensSubmenu: true, representsAWidget: true
 
     menu
 
@@ -4665,7 +4665,7 @@ class Widget extends TreeNode
     menu.addMenuItem "save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
     menu.addMenuItem "create shortcut", @, "createReferenceFromMenu", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
     menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
-    menu.addMenuItem "attach...", @, "attach", toolTip: "stick this widget\nto another one"
+    menu.addMenuItem "attach...", @, "attach", opensSubmenu: true, toolTip: "stick this widget\nto another one"
     menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
     menu.addLine()
 
@@ -4698,18 +4698,18 @@ class Widget extends TreeNode
       menu.addMenuItem "move to trash", @, "moveToTrash", toolTip: "sever every shortcut and wire\npointing at this widget,\nthen file it in the bin"
 
     # The dev/test tail. Each entry is gated on what makes it MEANINGFUL rather than on which page
-    # we are: "dev ➜" and "destroy" on dev mode, "test menu ➜" on the demo family actually shipping
+    # we are: "dev" and "destroy" on dev mode, "test menu" on the demo family actually shipping
     # (a production build has no `demoMenus` at all).
     if world.isDevMode
       menu.addLine()
-      menu.addMenuItem "dev ➜", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, toolTip: "dev tools"
+      menu.addMenuItem "dev", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "dev tools"
       # ⚠ target is `world`, NOT `@`. The door has to live on ONE class, and putting it on Widget
       # adds a public member to every widget's prototype -- which the inspector faithfully lists, so
       # it churns the inspector-list reference screenshots for a method that has nothing to do with
       # the widget being inspected. The menu machinery passes the widget through the ARGUMENTS
       # (`@target[@action].call @target, @, @subjectOfAction`) rather than
       # through the target, so the door receives the same widget whatever the target is.
-      menu.addMenuItem "test menu ➜", world, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
+      menu.addMenuItem "test menu", world, "popUpDemoTestMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
       menu.addMenuItem "destroy", @, "fullDestroy"
 
     menu
@@ -4724,7 +4724,7 @@ class Widget extends TreeNode
       # being
       if @parent?.constrainContentWidth
         @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
-    # a DIVISION cell gets its spec's own submenu ("layout in row/column ➜" — desired/max
+    # a DIVISION cell gets its spec's own submenu ("layout in row/column" — desired/max
     # size + cross-alignment). The layout CHROME (divider / adder / spacer) is a division
     # cell too, but its box is machinery working state, not a user knob — excluded by
     # capability, never a type test.

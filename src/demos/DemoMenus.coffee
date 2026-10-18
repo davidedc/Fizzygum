@@ -1,4 +1,4 @@
-# The DEMO / parts-bin menus: the "demo ➜" catalogue, the icon galleries, the widget and
+# The DEMO / parts-bin menus: the "demo" catalogue, the icon galleries, the widget and
 # layout sample factories, and the test menu they hang off.
 #
 # This is the bulk of what used to be MenusHelper, split out of it in arc 3 and made the
@@ -535,11 +535,11 @@ class DemoMenus
     menu.addMenuItem "Scooter icon", demoMenus, "createScooterIconWdgt"
     menu.addMenuItem "Heart icon", demoMenus, "createHeartIconWdgt"
 
-    menu.addMenuItem "more 1 ➜", demoMenus, "popUpMore1IconsMenu", closesUnpinnedPopUps: false, toolTip: "others"
-    menu.addMenuItem "more 2 ➜", demoMenus, "popUpMore2IconsMenu", closesUnpinnedPopUps: false, toolTip: "others"
-    menu.addMenuItem "arrows ➜", demoMenus, "popUpArrowsIconsMenu", closesUnpinnedPopUps: false, toolTip: "others"
-    menu.addMenuItem "maps ➜", demoMenus, "popUpMapsMenu", closesUnpinnedPopUps: false, toolTip: "maps"
-    menu.addMenuItem "more 3 ➜", demoMenus, "popUpMore3IconsMenu", closesUnpinnedPopUps: false, toolTip: "maps"
+    menu.addMenuItem "more 1", demoMenus, "popUpMore1IconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
+    menu.addMenuItem "more 2", demoMenus, "popUpMore2IconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
+    menu.addMenuItem "arrows", demoMenus, "popUpArrowsIconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
+    menu.addMenuItem "maps", demoMenus, "popUpMapsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "maps"
+    menu.addMenuItem "more 3", demoMenus, "popUpMore3IconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "maps"
 
     menu.popUpAtHand()
 
@@ -702,7 +702,7 @@ class DemoMenus
     menu.addMenuItem "serialise widget to memory", targetWidget, "serialiseToMemory"
     menu.addMenuItem "deserialize from memory and attach to world", targetWidget, "deserialiseFromMemoryAndAttachToWorld"
     menu.addMenuItem "deserialize from memory and attach to hand", targetWidget, "deserialiseFromMemoryAndAttachToHand"
-    menu.addMenuItem "attach with horizontal layout", targetWidget, "attachWithHorizLayout"
+    menu.addMenuItem "attach with horizontal layout", targetWidget, "attachWithHorizLayout", opensSubmenu: true
     menu.addMenuItem "make spacers transparent", targetWidget, "makeSpacersTransparent"
     menu.addMenuItem "make spacers opaque", targetWidget, "makeSpacersOpaque"
     menu.addMenuItem "border layout scaffold", world.widgetFactory, "createBorderLayoutScaffold"
@@ -722,8 +722,8 @@ class DemoMenus
       else
         menu.addMenuItem "collapse", targetWidget, "collapse"
 
-    menu.addMenuItem "others ➜", demoMenus, "popUpFirstMenu", closesUnpinnedPopUps: false, toolTip: "others"
-    menu.addMenuItem "others 2 ➜", demoMenus, "popUpSecondMenu", closesUnpinnedPopUps: false, toolTip: "others"
+    menu.addMenuItem "others", demoMenus, "popUpFirstMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
+    menu.addMenuItem "others 2", demoMenus, "popUpSecondMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
 
 
     menu.popUpAtHand()
@@ -746,30 +746,30 @@ class DemoMenus
     menu.addMenuItem "stretchable panel", demoMenus, "createStretchablePanel"
     menu.addMenuItem "tools panel", demoMenus, "createToolsPanel"
     menu.addMenuItem "slide", demoMenus, "createSlideWdgt"
-    menu.addMenuItem "patch programming ➜", demoMenus, "popUpPatchProgrammingMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "graphs ➜", demoMenus, "popUpGraphsMenu", closesUnpinnedPopUps: false, toolTip: "graphs"
-    menu.addMenuItem "support docs ➜", demoMenus, "popUpSupportDocsMenu", closesUnpinnedPopUps: false, toolTip: "support docs"
+    menu.addMenuItem "patch programming", demoMenus, "popUpPatchProgrammingMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "graphs", demoMenus, "popUpGraphsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "graphs"
+    menu.addMenuItem "support docs", demoMenus, "popUpSupportDocsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "support docs"
 
     menu.popUpAtHand()
 
   # ⚠ THIS menu's panel target is the widget the menu is about, where the sibling above uses `@`.
-  # The "dev tools ➜" row reaches `menusHelper.popUpDevToolsMenu`, which takes its subject from the
+  # The "dev tools" row reaches `menusHelper.popUpDevToolsMenu`, which takes its subject from the
   # SECOND dispatch slot — and that slot holds the ENCLOSING PANEL's target, not the row's own
   # (CommandPanelWdgt fills every row's subject from its own @target). Building this panel about `@`
   # would hand `demoMenus` to a verb that wants a widget. Every other row here takes
   # `(widgetOpeningThePopUp)` only and so cannot tell the difference; the sibling above can keep
   # `target: @` because its one widget-hungry row ("make pointer") routes through the ROW's target
-  # instead. This matches the other `popUpDevToolsMenu` wiring site, Widget's own "dev ➜".
+  # instead. This matches the other `popUpDevToolsMenu` wiring site, Widget's own "dev".
   popUpSecondMenu: (widgetOpeningThePopUp, widgetThisMenuIsAbout) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: widgetThisMenuIsAbout, title: "others"
-    menu.addMenuItem "icons ➜", demoMenus, "popUpIconsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "simple plain text ➜", demoMenus, "popUpSimpleTextWdgtMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "vertical stack ➜", demoMenus, "popUpVerticalStackMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "document ➜", demoMenus, "popUpDocumentMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "windows ➜", demoMenus, "popUpWindowsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "shortcuts & scripts ➜", demoMenus, "popUpShortcutsAndScriptsMenu", closesUnpinnedPopUps: false, toolTip: "Shortcuts & Scripts"
+    menu.addMenuItem "icons", demoMenus, "popUpIconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "simple plain text", demoMenus, "popUpSimpleTextWdgtMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "vertical stack", demoMenus, "popUpVerticalStackMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "document", demoMenus, "popUpDocumentMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "windows", demoMenus, "popUpWindowsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "shortcuts & scripts", demoMenus, "popUpShortcutsAndScriptsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "Shortcuts & Scripts"
     menu.addMenuItem "analog clock", demoMenus, "analogClock"
-    menu.addMenuItem "dev tools ➜", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
+    menu.addMenuItem "dev tools", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
     menu.addMenuItem "fizzytiles", demoMenus, "createFridgeMagnets"
     menu.addMenuItem "fizzypaint", demoMenus, "createImageWdgt"
     menu.addMenuItem "simple button", demoMenus, "createSimpleButton"

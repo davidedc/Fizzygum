@@ -177,11 +177,15 @@ class ViewportWdgt extends Widget
     @color = @contents.color
     @alpha = @contents.alpha
 
-    @hBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
+    # my bars' track colour: my builder's, else the scroll indicator's -- which a bar shows faintly
+    # while I present it fat, not at all while thin, and as a plain slider's once picked up off me
+    trackColor = @sliderColor ? WorldWdgt.theme.scrollIndicatorTrack
+
+    @hBar = new SliderWdgt 1, 100, 50, 10, color: trackColor
     @hBar._applyHeight @scrollBarsThickness
     @_addNoSettle @hBar
 
-    @vBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
+    @vBar = new SliderWdgt 1, 100, 50, 10, color: trackColor
     @vBar._applyWidth @scrollBarsThickness
     @_addNoSettle @vBar
 
@@ -440,6 +444,18 @@ class ViewportWdgt extends Widget
     else
       WorldWdgt.theme.scrollIndicatorThickness
 
+  # How far in from my edge the indicators lie. A thin one floats clear of the edge, so no border
+  # covers it: neither my own, which I paint over my children, nor that of a pop-up or a window
+  # around me. A fat one lies flush, because its bar is my scroll band itself: the strip the hover
+  # pass watches (_updatePointerInScrollBand) and the frame every press is aimed into
+  # (buttonScreenBoxOnArrival). The inset moves the thin bar across its axis only, and a thin bar
+  # is no target, so the corner reserve, the hover band and every hit area are unmoved by it.
+  _indicatorEdgeInset: ->
+    if @_pointerInScrollBand
+      0
+    else
+      WorldWdgt.theme.scrollIndicatorEdgeInset
+
   # Hand the bars the presentation my state implies. _-tier: my own arrange is the only caller and
   # the only one there can be — the look is settled in the same pass that decided which bars show
   # at all, so there is nothing left for anyone else to advance and nothing steps.
@@ -511,17 +527,20 @@ class ViewportWdgt extends Widget
   isContentSizing: ->
     @isTextLineWrapping
 
-  # Where I place a bar of mine at a given cross-axis THICKNESS: the vertical one against my right
-  # edge and the horizontal one against my bottom edge, each stopping short of my bottom-right corner
-  # by as much as what OCCUPIES that corner needs (_cornerReserveFor), and running its side's full
-  # length when nothing does. My arrange places my bars from this, and buttonScreenBoxOnArrival /
-  # barScreenFrameOnArrival ask it for the thickness a pointer's arrival gives them.
-  _barFrameAt: (bar, thickness) ->
+  # Where I place a bar of mine at a given cross-axis THICKNESS, `edgeInset` in from my edge: the
+  # vertical one along my right edge and the horizontal one along my bottom edge, each stopping
+  # short of my bottom-right corner by as much as what OCCUPIES that corner needs
+  # (_cornerReserveFor), and running its side's full length when nothing does. The inset moves a
+  # bar across its axis only, never along it. My arrange places my bars from this, at the
+  # thickness and the inset of the look they wear (_indicatorThickness, _indicatorEdgeInset), and
+  # buttonScreenBoxOnArrival / barScreenFrameOnArrival ask it for the look a pointer's arrival
+  # gives them: my full thickness, flush.
+  _barFrameAt: (bar, thickness, edgeInset = 0) ->
     spaceToLeaveOnOneSide = @_cornerReserveFor bar
     if bar is @vBar
-      new Rectangle (new Point @right() - thickness, @top()), (new Point @right(), @bottom() - spaceToLeaveOnOneSide)
+      new Rectangle (new Point @right() - edgeInset - thickness, @top()), (new Point @right() - edgeInset, @bottom() - spaceToLeaveOnOneSide)
     else
-      new Rectangle (new Point @left(), @bottom() - thickness), (new Point @right() - spaceToLeaveOnOneSide, @bottom())
+      new Rectangle (new Point @left(), @bottom() - edgeInset - thickness), (new Point @right() - spaceToLeaveOnOneSide, @bottom() - edgeInset)
 
   # How far a bar of mine stops short of my bottom-right corner: as far as what sits there needs. A
   # resizer over the corner takes the room IT names (its cornerFootprint: a frame's grip its inset
@@ -607,9 +626,10 @@ class ViewportWdgt extends Widget
     # need is gone along with the notify-by-mutation seam it guarded against.
     # See docs/archive/proper-layouts-4.2-structural-arrange-plan.md.
 
-    # the indicator's CROSS-axis size: thin at rest, my full bar thickness while a hovering
-    # pointer has fattened it back into a control (ruling G4)
+    # the indicator's CROSS-axis size and its distance from my edge: thin and inset at rest, my full
+    # bar thickness and flush while a hovering pointer has fattened it back into a control (ruling G4)
     barThickness = @_indicatorThickness()
+    barEdgeInset = @_indicatorEdgeInset()
 
     @_changed()
 
@@ -626,9 +646,10 @@ class ViewportWdgt extends Widget
     # asking a METHOD is not, and a bar that cannot answer is exactly a bar I must not touch.
     if @hBar.isWiredTo? @
       # the cross axis is INDICATOR presentation, so it is imposed only on a bar I still hold;
-      # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent).
+      # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent), and
+      # its place is not mine to decide (it is moved only while it is mine, below).
       hThickness = if @_barIsMineToPresent @hBar then barThickness else @hBar.height()
-      hFrame = @_barFrameAt @hBar, hThickness
+      hFrame = @_barFrameAt @hBar, hThickness, barEdgeInset
       # a 'never' viewport shows no bars whatever the overflow — same hide arm the
       # fitting case takes — and neither does a frame with no room for the bar's thumb
       if @scrollPolicy isnt 'never' and @contents.width() >= @width() + 1 and @_barFrameHasRoomForThumb @hBar, hFrame
@@ -657,7 +678,7 @@ class ViewportWdgt extends Widget
     if @vBar.isWiredTo? @
       # the cross axis is presentation — imposed only on a bar I still hold (see the hBar above)
       vThickness = if @_barIsMineToPresent @vBar then barThickness else @vBar.width()
-      vFrame = @_barFrameAt @vBar, vThickness
+      vFrame = @_barFrameAt @vBar, vThickness, barEdgeInset
       # 'never' shows no bars, nor does a frame with no room for the thumb — see the hBar above
       if @scrollPolicy isnt 'never' and @contents.height() >= @height() + 1 and @_barFrameHasRoomForThumb @vBar, vFrame
         @vBar.show()

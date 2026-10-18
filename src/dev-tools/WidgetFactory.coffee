@@ -120,7 +120,7 @@ class WidgetFactory
   # ⚠⚠ BouncerWdgt and PenWdgt are the LAZY 'demos' part, and this class is the EAGER 'dev-tools'
   # one -- a lazy requirement on an eager owner, which check-part-edges.js discounts entirely when
   # scanning these files (parts.json //requires): the await below is what satisfies the gate.
-  # Both are reached from world menu -> 'demo ➜', which offers the items but loads
+  # Both are reached from world menu -> 'demo', which offers the items but loads
   # nothing, so without this await the click threw '<Class> is not defined' on index.html.
   # Awaiting here rather than at the menu door is deliberate: only these two factory methods want
   # the demo family, and the rest of that menu is core widgets that must stay instant.

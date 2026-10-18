@@ -67,7 +67,8 @@ class MenuWdgt extends FrameWdgt
   # viewport is unconditional). DELIBERATELY no rows here — a menu's ITEMS are composed by its
   # opener after construction (addMenuItem/addLine) and land in the panel.
   _buildRowsPayload: ->
-    panel = new CommandPanelWdgt target: @target, fontSize: @fontSize
+    # my rows lie in my content box: the panel keeps my content padding inside my border
+    panel = new CommandPanelWdgt target: @target, fontSize: @fontSize, padding: WorldWdgt.theme.menuContentPadding
     # dragging a menu by its title must move the MENU, and a child of a panel detaches instead
     # unless it locks to panels. ListWdgt does exactly this to its own rows panel, for exactly
     # this reason.
@@ -122,11 +123,11 @@ class MenuWdgt extends FrameWdgt
   # The opener composes a menu by calling these on the MENU (dozens of MenusHelper
   # / addWidgetSpecificMenuEntries sites); the rows themselves live in the panel.
 
-  addLine: (height) ->
-    @rowsPanel.addLine height
+  addLine: ->
+    @rowsPanel.addLine()
 
-  prependLine: (height) ->
-    @rowsPanel.prependLine height
+  prependLine: ->
+    @rowsPanel.prependLine()
 
   addMenuItem: (label, target, action, opts = {}) ->
     @rowsPanel.addMenuItem label, target, action, opts

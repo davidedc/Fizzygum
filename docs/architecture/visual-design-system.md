@@ -32,9 +32,9 @@ another class, and most values are `Color`s):
 | Section | What it holds |
 |---|---|
 | **PALETTE** | The design's named colours (§2), at the design's values. A palette colour paints nothing by itself. |
-| **ROLES** | What each SURFACE paints with — `windowBarFill`, `menuRowText`, `tooltipStroke`, `seamRule`, … One role per surface: two surfaces that paint the same colour still hold two roles, so one can be restyled without moving the other. A role's value is either a palette colour (the surface wears the design: `@seamRule = @chrome`) or the exact value the surface painted with before it adopted the design. |
-| **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects — `menuRow`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`. |
-| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii. |
+| **ROLES** | What each SURFACE paints with — `windowBarFill`, `menuRowText`, `speechBubbleStroke`, `seamRule`, … One role per surface: two surfaces that paint the same colour still hold two roles, so one can be restyled without moving the other. A role's value is either a palette colour (the surface wears the design: `@seamRule = @chrome`) or the exact value the surface painted with before it adopted the design. |
+| **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects — `menuRow`, `listRow`, `labelButton`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`. |
+| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), its side inset, icon gap and hover-plate radius (`menuRowSideInset`, `menuRowIconGap`, `menuRowPlateRadius`; a list row's `listRowSideInset`, `listRowIconGap`), its two drawn indicators' glyph squares and gaps (the submenu chevron's `menuRowChevronSize` and `menuRowChevronGap` before it; the leading tick column's `menuRowTickSize` and `menuRowTickGap` after it), a pop-up's content padding and its header's rule and title inset (`menuContentPadding`, `menuHeaderRuleWidth`, `menuHeaderTitleInset`; a list's rows panel `rowsPanelPadding`), a group divider's band (`menuDividerGap`, `menuDividerRuleWidth`), the scroll indicator's edge inset (`scrollIndicatorEdgeInset`), a tooltip plate's rounding, paddings and line height (`tooltipCornerRadius`, `tooltipHorizontalPadding`, `tooltipVerticalPadding`, `tooltipLineHeight`), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii. |
 | **SHADOWS** | The ONE shadow every desktop object casts at rest (windows, menus, prompts, tooltips, icons, the clock) and the drag lift a carried widget takes (offset + alpha each), and `shadowColor`, the one colour every shadow silhouette is filled with. |
 
 **The ratchet.** A colour literal in a chrome file is a look decided outside this system — a restyle
@@ -53,7 +53,7 @@ colour plumbing, and only ever goes down. Its tolerated tail is listed there.
 | `frame` | `#B9B9B4` | Frames of windows and menus |
 | `chip` | `#D2D2CD` | Border of a chip that is not selected |
 | `desk` | `#ECECE8` | Wallpaper, active tool button, highlighted menu row, pale fill inside icons |
-| `plate` | `#F4F4F1` | Desktop icon label plates |
+| `plate` | `#F4F4F1` | Desktop icon label plates, the tooltip |
 | `item` | `#F0F0EC` | A document paragraph item |
 | `panel` | `#FAFAF8` | The Object Inspector's body |
 | `paper` | `#FFFFFF` | Window content, tiles, menus, the clock face, buttons |
@@ -74,8 +74,9 @@ colour plumbing, and only ever goes down. Its tolerated tail is listed there.
 A text widget takes its font as a ROLE: `new StringWdgt text, fontRole: WorldWdgt.theme.fonts.windowTitle`
 gives family, size and bold at once. An explicit `fontName` / `fontSize` / `bold` wins over the role's
 member, so a caller can take a role and override one member. A text built without a role takes
-`fonts.defaultText`. `StringWdgt` and everything built on it read the role; `LabelButtonWdgt` (menu and
-list rows — default `menuRow`), `MenuItemWdgt` and `StringFieldWdgt` forward it.
+`fonts.defaultText`. `StringWdgt` and everything built on it read the role; `LabelButtonWdgt` (default
+`labelButton`), `MenuItemWdgt` (`menuRow` or `listRow`, by the panel that builds it) and `StringFieldWdgt`
+forward it.
 
 The families are the three the SWCanvas glyph atlases cover — **Arial** (sans), **Courier New** (mono,
 through `StringWdgt.monoFontStack`), **Times** (serif) — at normal or bold, normal or italic, sizes
@@ -94,7 +95,8 @@ a pane reused elsewhere carries no stray line.
 - A BAND paints its OWN edge rule (a title bar's bottom rule, a menu header's rule): the line is part
   of the band's look whatever sits next to it. Mechanism: three fields on the band's `BoxyAppearance`
   (`ruledEdge`, `ruleColor`, `ruleWidth`), painted after the fill and under the stroke; a frame's strip
-  draws the `barRule` role along its content-facing edge.
+  draws the `barRule` role along its content-facing edge. A menu's group divider is such a band too: 9 px
+  with no fill of its own, painting its own centred 1 px rule (`DividerWdgt`, `DividerAppearance`).
 - Overlapping two panes' borders so they coincide is rejected: double ownership, double paint under
   anti-aliasing, and it must be re-established at every resize.
 - Resizing a split stays a halo affordance: a target of at least 44 cannot hide inside a 1 px line.
@@ -157,8 +159,9 @@ hand-translated into drawing calls.
   own pixels outside the curve unless something stops it. Two mechanisms exist: a flush child can take
   the host's corner radii on its own background (per-corner fill — enough only for content whose corner
   pixels are its background), and `FrameWdgt` can clip its children to its rounded outline
-  (its body appearance's `clipsChildrenToOutline` knob, which `_frameLook` turns on for every persistent
-  frame — a window, a card, a docked band — and off for a transient pop-up).
+  (its body appearance's `clipsChildrenToOutline` knob, which `_frameLook` turns on for every rounded
+  frame — a window, a card, a docked band, a menu, a prompt; a pop-up in the flat look is square and has
+  no notch).
   - A repaint whose damage reaches one of the frame's corner squares paints the children under ONE
     rounded clip, through `BoxyAppearance.clipToOutline`. Any other repaint paints them under the
     rectangle, as before.
@@ -195,9 +198,8 @@ Menus, windows, cards and docked bands are ONE class, `FrameWdgt`; which skin a 
 from its lifetime and its parentage ([`regularity-principles.md`](regularity-principles.md), "The frame
 model"). **`FrameWdgt._frameLook()` is the one place a frame's look is decided**: a pure query answering
 one record — the manifestation (menu, window, card), the body's appearance, fill, stroke and rounding,
-the strip background's appearance, colours and rounding, the title's ink and background, and the shadow
-it casts at rest — from the frame's lifetime and parentage (and, for a menu, whether it has a title to
-round). The body (`_deriveAndSetBodyAppearance`), the strip (`FrameBarWdgt`) and the shadow (`addShadow`)
+the strip background's appearance, colours, rounding and rule, the title's ink, and the shadow
+it casts at rest — from the frame's lifetime and parentage. The body (`_deriveAndSetBodyAppearance`), the strip (`FrameBarWdgt`) and the shadow (`addShadow`)
 all READ it; none decides a look of its own. A focus state, when one exists, enters
 there and nowhere else. Collapsed and docked are not inputs: a collapsed frame wears its expanded look,
 and a docked band is the card its parentage makes it; only the strip's corners follow the collapse and
@@ -210,6 +212,26 @@ derivation is construction, re-parenting, lifetime change, and the re-homing of 
 frame rides in as its sole content. So a pinned menu wears the window's skin, a window nested into a
 panel wears the card's, and a corner radius set by hand lasts until the frame next changes parent or
 lifetime.
+
+**A pop-up** (a transient frame: a menu or a prompt) has the following parts.
+- **Body:** a `paper` body inside a 1 px `frame` border at radius 10, stroked after its children, with
+  its children clipped to the rounded outline. An overflowing menu's scrolled rows and its scroll
+  indicator therefore stop at the outline, and nothing catches a press in its notches.
+- **Content box:** inside the border, `menuContentPadding` in on every side. The rows panel
+  (`CommandPanelWdgt`, alpha 0) lays its rows, dividers and editors out across it.
+- **Header** (titled only): a band across the content box, 44 tall plus its own 1 px `chrome` rule
+  along its bottom edge. Its title sits `menuHeaderTitleInset` in, 11 px `muted2`, left-aligned.
+- **Rows** (`MenuItemWdgt`): label 15 px `ink`, 10 px in from each side. A `desk` plate of radius 6
+  over the whole row while hovered, `chrome` while pressed (`LabelButtonAppearance`), and no hairline.
+- **Groups:** a `DividerWdgt` band between groups, 9 px with its own centred `chrome` rule.
+- **Indicators** (`MenuRowIndicatorWdgt`), pointer-transparent children of the row:
+  - a row that opens a submenu (`opensSubmenu`) draws a `muted3` chevron whose ink ends 10 px from its
+    right edge;
+  - a menu with any ticking row reserves a leading tick column in every row, and a ticked row draws
+    an `ink` tick there.
+
+The row's label stays its plain wording. A LIST's rows (`ListWdgt`) and fizzytiles magnets keep their
+own look until their families are restyled.
 
 ## 6. How a new widget picks its look
 

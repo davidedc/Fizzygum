@@ -1109,7 +1109,7 @@ class StringWdgt extends Widget
     menu.addMenuItem "edit...", @, "editPopout", toolTip: "set this String's\ncontent"
     menu.addMenuItem "font size...", @, "fontSizePopout", toolTip: "set this String's\nfont point size"
 
-    menu.addMenuItem "font ➜", @, "fontsMenu", closesUnpinnedPopUps: false, toolTip: "pick a font"
+    menu.addMenuItem "font", @, "fontsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "pick a font"
 
     if @isBold
       menu.addMenuItem "normal weight", @, "toggleWeight"
@@ -1167,9 +1167,9 @@ class StringWdgt extends Widget
     if world.isIndexPage
       menu.addLine()
       # ONE row for the gestures, as the shared block does it: the submenu behind it offers "connect
-      # to ➜" and — when something can actually be bound to — "bind ⇄". Grouping is what keeps a
+      # to" and — when something can actually be bound to — "bind ⇄". Grouping is what keeps a
       # second gesture from costing every controller's menu a second row.
-      menu.addMenuItem "connect ➜", @, "openConnectionGestureMenu", toolTip: "connect to\nanother widget"
+      menu.addMenuItem "connect", @, "openConnectionGestureMenu", opensSubmenu: true, toolTip: "connect to\nanother widget"
     @_addWireMenuEntries menu
 
 

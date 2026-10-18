@@ -561,10 +561,19 @@ mark after `add` + `setExtent` adds nothing.
 - **Define `representativeIcon`** when the widget can be referenced from the desktop — a shortcut needs
   a picture.
 - **Set `toolTipMessage`** for anything whose purpose is not obvious from its face.
+- **A row says WHAT IT IS in plain words; what it shows beside them is stated, never typed.**
+  [convention] A row's label is its plain wording — no trailing arrow, no tick prefix. A row that opens
+  a submenu passes `opensSubmenu: true` (what an action does cannot be read off its name, so its
+  builder states it); the row then draws its chevron, and `fg menusweep` checks the statement against
+  the act (`SUBMENU_FLAG_MISMATCH`). A row ticked or not by construction passes `ticked: true` /
+  `ticked: false` (`SimpleTextWdgt`'s one "soft wrap" row). Both travel `addMenuItem` opts →
+  `CommandSpec` → own fields of `MenuItemWdgt`, so a duplicated, lifted-out or saved row keeps them; a
+  menu holding any ticking row reserves the leading tick column in every row, so its labels align.
 - **A row that SHOWS somebody's state must DECLARE it, not paint it once.** [convention] If a row
-  ticks itself, or swaps its wording to report a setting, pass a `reflection:` —
-  `MenuRowReflectionSpec.tickWhen source, "readerName", theValue, theLabel` for the tick case, or the
-  full `{whenValue, labelWhenTrue, labelWhenFalse}` record for a wording swap:
+  ticks itself to report a setting, pass a `reflection:` —
+  `MenuRowReflectionSpec.tickWhen source, "readerName", theValue, theLabel`, the one door: the row is
+  ticked exactly while `source[readerName]()` is `theValue`, and says `theLabel` either way (its tick
+  STATE, `MenuItemWdgt.ticked`, is what it draws; there is no wording swap):
 
   ```coffee
   for patternName in @patternNames()
@@ -573,7 +582,7 @@ mark after `add` + `setExtent` adds nothing.
       reflection: MenuRowReflectionSpec.tickWhen @, "currentPatternName", patternName, patternName
   ```
 
-  The row is then **born** showing the current value and re-derives it whenever the source announces
+  The row is then **born** with the current tick and re-derives it whenever the source announces
   a change, in *every* open copy of the menu. Writing it by hand instead means a routine that walks
   `rowsPanel.children` **by index** and can only fix up the one menu that was clicked — so a second
   open copy disagrees, and so does one open across a change made by a script or the loader. It also
@@ -683,7 +692,9 @@ binding verb by **which way the value moves when the wire is made**:
   declares no principal pin and correctly neither offers nor accepts a bind.
   [§CL9 — why the gesture costs a controller's menu no extra row]
 - **Two-wayness is DERIVED, never recorded** — answered by asking whether the target wires back, and
-  it is what draws a connection row `⇄` rather than `➜`. So a pair wired by hand in two ordinary
+  it is what makes a connection row's typed direction arrow read `⇄` rather than `➜` (that arrow is
+  the row's wording; that the row opens the wire's own menu is a separate fact, its drawn submenu
+  chevron). So a pair wired by hand in two ordinary
   gestures is bound in the same sense, and a duplicate of one half tells the truth with no
   bookkeeping to have gone stale.
 - **A follower relationship is a PROMOTION of a wire that already exists** — the wire's own menu row,

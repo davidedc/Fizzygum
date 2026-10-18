@@ -34,10 +34,11 @@ class SliderWdgt extends CircleBoxWdgt
   # 'fat' (the full control, under a hovering pointer). undefined on every OTHER slider — a value
   # control is not an indicator, and none of this touches it.
   indicatorMode: undefined
-  # the alphas the two states wear: the track's (fat only — a thin indicator paints no track) and
-  # the thumb's
-  indicatorTrackAlpha: 0.1
-  indicatorThumbAlpha: 0.4
+  # my thumb's alpha in both indicator states: full, because the indicator's thumb colours carry
+  # their own (Theme.scrollIndicatorThumb is the scrollbar token, α .35) and a second alpha would
+  # dim them twice. My track's alpha in the fat state is the theme's (scrollIndicatorTrackAlpha);
+  # a thin indicator paints no track.
+  indicatorThumbAlpha: 1
   # and the pair a PLAIN slider wears — a translucent track and a solid thumb. Named because two
   # places need them: my constructor, and the return from an indicator presentation.
   plainTrackAlpha: 0.1
@@ -67,7 +68,7 @@ class SliderWdgt extends CircleBoxWdgt
   # parameter ORDER could serve both. Those callers now state the numbers they want and name the
   # knob. Assigned before the super call, preserving the order the all-`@param` form compiled to.
   constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, opts = {}) ->
-    @color = opts.color ? WorldWdgt.theme.scrollTrack
+    @color = opts.color ? WorldWdgt.theme.sliderTrack
     @smallestValueIsAtBottomEnd = opts.smallestValueIsAtBottomEnd ? false
     super()
     @alpha = @plainTrackAlpha
@@ -97,8 +98,12 @@ class SliderWdgt extends CircleBoxWdgt
   # Wear an indicator presentation (my viewport derives it; see ViewportWdgt._refreshScrollIndicators).
   # PRESENTATION ONLY: my value, my range and my wiring are untouched, which is exactly why the
   # bars stay SliderWdgts instead of becoming a second overlay family. The thin state paints the
-  # thumb alone — the track's alpha goes to zero. `undefined` is the third state and means "not an
-  # indicator at all": the plain slider look, and a pointer that stops on me again.
+  # thumb alone — the track's alpha goes to zero; the fat one shows my track faintly. In both, my
+  # thumb wears the indicator's colours instead of its own scheme (SliderButtonWdgt._colorForMyState
+  # reads my mode), while my track keeps its colour: a viewport builds its bars in the indicator's
+  # (Theme.scrollIndicatorTrack). `undefined` is the third state and means "not an indicator at
+  # all": the plain slider look, my thumb back on its own scheme, and a pointer that stops on me
+  # again.
   #   The mode is also an input to my thumb's GEOMETRY (thumbInsetInTrack), so a flip that changes
   # the inset re-lays the thumb here, at the one door the mode changes through: a caller that has
   # just laid me out for the old look (my viewport's _reLayoutScrollbars, my own _reactToBeingAdded)
@@ -109,7 +114,7 @@ class SliderWdgt extends CircleBoxWdgt
     insetBefore = @thumbInsetInTrack()
     @indicatorMode = mode
     @alpha = switch mode
-      when 'fat'  then @indicatorTrackAlpha
+      when 'fat'  then WorldWdgt.theme.scrollIndicatorTrackAlpha
       when 'thin' then 0
       else             @plainTrackAlpha
     @button?.showAsScrollIndicatorThumb? (if mode? then @indicatorThumbAlpha else @plainThumbAlpha)

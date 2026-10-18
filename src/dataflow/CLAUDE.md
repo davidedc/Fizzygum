@@ -70,9 +70,10 @@ Landed so far:
   event, spec §4). It lives on the wire record — `WireSpec.firesPerEvent`, surfaced as `edgeOpts()`
   and `isFiringPerEvent()` — as a PROTOTYPE default, so an untoggled wire carries no own property
   and serializes as target + action alone (the own-only-when-set idiom, one level down from where
-  the loose `@target`/`@action` fields used to keep it). It is flipped by the "✓ fires per event"
-  row the shared connection menu grows for EACH live wire
-  (`ControllerMixin._addTargetConnectionMenuEntries` → `toggleFiresPerEventOfWire`, which flips the
+  the loose `@target`/`@action` fields used to keep it). It is flipped by the "fires per event"
+  row (ticked while the policy is on — a drawn tick, the label stays plain) in the menu the shared
+  connection menu's row for EACH live wire opens
+  (`ControllerMixin._addTargetConnectionMenuEntries` → `openWireMenu` → `toggleFiresPerEventOfWire`, which flips the
   flag on the WIRE and announces it with `markNonValueChange`), offered by every controller —
   SliderWdgt, StringWdgt, the patch nodes, … — once a target is wired. 6a is DARK: **nothing reads
   the flag yet** — legacy `_fireConnection` delivery still runs, pixels unchanged. Phase 6b's
@@ -102,7 +103,7 @@ Landed so far:
   entry never re-applied, capstone 0 with the switch ON.
 
 - **6c — default ON + reconciliation.** `world.dataflowWiresEnabled` now DEFAULTS ON, so the whole suite
-  runs engine delivery. Flipping it exposed that 6b declared the edge ONLY in the connect-to-➜ menu path,
+  runs engine delivery. Flipping it exposed that 6b declared the edge ONLY in the "connect to" menu path,
   so wires set up by DIRECT construction in code (a `ViewportWdgt` scrollbar —
   `@hBar.trackTarget @, "setScrollX"` — and the prompt slider — `slider.declareWireTo @,
   "takeSliderValue"`) had no edge and delivered nothing. Fix: **`DataflowEngine.ensureWireEdges`** — the

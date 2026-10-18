@@ -87,7 +87,8 @@ class PromptWdgt extends FrameWdgt
   # My payload: the empty rows panel inside the rows viewport, which is what bounds a prompt
   # to the world and scrolls whatever does not fit. The ROWS go in through _buildPromptRows.
   _buildRowsPayload: ->
-    panel = new CommandPanelWdgt target: @target
+    # my rows lie in my content box: the panel keeps my content padding inside my border
+    panel = new CommandPanelWdgt target: @target, padding: WorldWdgt.theme.menuContentPadding
     # dragging a prompt by its title must move the PROMPT, and a child of a panel detaches
     # instead unless it locks to panels.
     panel.isLockingToPanels = true
@@ -137,7 +138,7 @@ class PromptWdgt extends FrameWdgt
   # prompt). SaveShortcutPromptWdgt overrides with its own three buttons and no
   # leading divider.
   _addButtonsInto: (panel) ->
-    panel.addLine 2
+    panel.addLine()
     panel.addMenuItem "Ok", @, "deliverValue"
     # we name the button "Close" instead of "Cancel" because we are not undoing
     # any change we made -- that would be difficult with multiple prompts pinned

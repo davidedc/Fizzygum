@@ -261,10 +261,13 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   (stacked duplicate handles paint near-identically), `assertScreenshotsIdentical` — MANDATORY for every
   within-test byte-equality claim: call it right after the
   later shot with both full image names, earlier first). Menu READERS: `tickedRowLabelOfMenu` — the
-  BARE label of a menu's one ticked row (tick prefix stripped), so a test asserts what a ticked menu
-  SHOWS rather than a decorated string; for the ticked-menu family (wallpapers, fonts, any row
-  carrying a `MenuRowReflectionSpec`), where exactly one row is ticked and "which one" is the whole
-  state. All `…_InputEvents`.
+  plain label of a menu's one ticked row, read from the rows' tick STATE (the tick is drawn, never
+  typed into a label), so a test asserts what a ticked menu SHOWS by meaning; for the ticked-menu
+  family (wallpapers, fonts, any row carrying a `MenuRowReflectionSpec`), where exactly one row is
+  ticked and "which one" is the whole state. `rowOpensSubmenu(menu, label)` — whether the row with
+  that exact label carries the `opensSubmenu` flag its drawn chevron shows (true / false, undefined
+  for no such row; it scrolls nothing), the by-meaning way to assert "this row leads on". All
+  `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
   `bringInViewAndClickOnListItem` (the same verified scroll-correct-click on a list you NAME — a test holding two
@@ -309,28 +312,31 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   settle so the wrapped height is readable.
 - **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`. Capture a popup
   reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents`.
-- **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X ➜" per ancestor) — navigate by class-name
+- **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X" per ancestor, each a submenu row) — navigate by class-name
   prefix to reach the desired ancestor's own menu (and note "pick up" lives in a morph's own hierarchy submenu, not top-level).
 - **Menu/target labels STRIP "Wdgt" from the class name** — the strip is applied where the menu is BUILT
   (`Widget.buildHierarchyMenu`, `ControllerMixin`'s choosers, `WireSpec.describeConnection`) and by
   `getTextDescription()`; `toString()` itself does NOT strip it, so a chooser built from a bare `toString()`
   (`Widget._attachToChosenParent`'s "choose new parent:") shows the full class name. Where it IS stripped a
-  `FrameWdgt` reads `a Window ➜`, a `StringWdgt` reads `a String ➜`, a `TextWdgt` reads `a Text ➜` — navigate hierarchy /
-  "connect to ➜" menus by the **Wdgt-stripped** name (`"a Text"`, not `"a TextWdgt"`). `findTopWidgetByClassNameOrClass` and
+  `FrameWdgt` reads `a Window`, a `StringWdgt` reads `a String`, a `TextWdgt` reads `a Text` — navigate hierarchy /
+  "connect to" menus by the **Wdgt-stripped** name (`"a Text"`, not `"a TextWdgt"`). A label carries no mark of where its
+  row leads: a row that opens a submenu states it (`opensSubmenu: true`) and DRAWS a chevron, so a test asserts it with
+  `rowOpensSubmenu`, never by a typed arrow. `findTopWidgetByClassNameOrClass` and
   `instanceof`, by contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
 - **Menu items / magnets are now in the modern button family** — the deprecated `TriggerMorph` was deleted and replaced by
   a clean base **`LabelButtonWdgt`** (a flat label-bearing button) on the modern family: `Widget → ButtonWdgt` (was
   `EmptyButtonMorph`) `→ LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
-  `target`/`action`/`trigger` machinery + `HighlightableMixin` state constants from `ButtonWdgt` but KEEPS the flat
-  fill (SILVER hover / GRAY press) via its own retained paint + state handlers, so menus render exactly as before.
+  `target`/`action`/`trigger` machinery + `HighlightableMixin` state constants from `ButtonWdgt` but paints its own
+  state fill from fields its builder sets (`LabelButtonAppearance`): magnets and list rows SILVER hover / GRAY press over
+  the whole box, menu rows a `desk` hover / `chrome` press plate of radius 6 on a paper box.
   `MenuItemMorph`→`MenuItemWdgt` (BATCH 4 — the button-family rename), so use `instanceof MenuItemWdgt` and the
-  Wdgt-stripped hierarchy nav string `"a MenuItem ➜"` (NOT `"a MenuItemWdgt ➜"`). For a STANDALONE button fixture use
+  Wdgt-stripped hierarchy nav string `"a MenuItem"` (NOT `"a MenuItemWdgt"`). For a STANDALONE button fixture use
   `SimpleButtonWdgt` (rounded modern button; its `StringWdgt` face crops on
   `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
 - **One inspector — windowed by default, but ALSO a first-class NAKED widget:** there is a single `InspectorWdgt` (the
   old `InspectorMorph` was deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector`
-  (the duplicate `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev ➜ → inspect" item now
+  (the duplicate `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev → inspect" item now
   routes through `inspect`/`spawnInspector` too). The menu/inspect paths wrap it WINDOWED — `spawnInspector` puts it in a
   `FrameWdgt` (560×410) — but it now ALSO renders + functions + self-resizes **NAKED**: `world.add new InspectorWdgt
   target` paints its own opaque background (a `RectangularAppearance`, dropped when it becomes window content via

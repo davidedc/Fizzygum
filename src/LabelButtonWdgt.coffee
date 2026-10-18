@@ -1,11 +1,14 @@
-# A flat, label-bearing button: a filled rectangle drawn in the menu background
-# colour normally, SILVER on hover, GRAY on press, with a single text label
-# drawn on top. It extends the modern button family (ButtonWdgt), inheriting the
-# target/action/trigger machinery and the HighlightableMixin state constants,
-# but supplies its OWN flat paint -- the button family draws no flat fill
-# (ButtonWdgt is transparent, SimpleButtonWdgt is a rounded box).
+# A flat, label-bearing button: a box in its rest fill with a single text label drawn on top,
+# which shows its STATE -- hovered, pressed -- in a state fill of its own: over the whole box,
+# square, or, when it carries a plateRadius, as a rounded PLATE on its rest fill
+# (LabelButtonAppearance). Every one of those is its builder's to give; a builder that gives none
+# gets the plain labelButton roles (a fizzytiles magnet), and MenuItemWdgt gives the menu-row or
+# the list-row look its context asks for. It extends the modern button family (ButtonWdgt),
+# inheriting the target/action/trigger machinery and the HighlightableMixin state constants, but
+# supplies its OWN flat paint -- the button family draws no flat fill (ButtonWdgt is transparent,
+# SimpleButtonWdgt is a rounded box).
 #
-# This is the shared base of MenuItemWdgt (menu rows) and MagnetWdgt
+# This is the shared base of MenuItemWdgt (menu and list rows) and MagnetWdgt
 # (fizzytiles word tiles).
 
 class LabelButtonWdgt extends ButtonWdgt
@@ -20,9 +23,13 @@ class LabelButtonWdgt extends ButtonWdgt
   fontSize: undefined
   fontStyle: undefined
 
-  # the flat state-fill look
-  highlightColor: Color.SILVER
-  pressColor: Color.GRAY
+  # the state fills: while I am hovered, and while I am pressed (a selected list row stays
+  # pressed). My rest fill is my @color.
+  highlightColor: undefined
+  pressColor: undefined
+  # how my state fill is shaped: undefined fills my whole box, square; a radius paints it as a
+  # PLATE of that rounding over my box, on my rest fill (a menu row's hover and press).
+  plateRadius: undefined
   centered: false
 
   # Same head as ButtonWdgt — target/action — and the same opts object, extended with the
@@ -37,23 +44,31 @@ class LabelButtonWdgt extends ButtonWdgt
   # A second alias for it is exactly what an options vocabulary cannot afford (R4), because a
   # forwarded bag would then carry a key the receiver never reads.
   #
-  # My label's font is a ROLE, as StringWdgt's is: `fontRole` (the menu row's when absent) gives
-  # its family, size and weight, and an explicit fontStyle / fontSize / bold overrides that member.
-  # The role is resolved into my three label fields here and not kept.
+  # My label's font is a ROLE, as StringWdgt's is: `fontRole` (fonts.labelButton when absent)
+  # gives its family, size and weight, and an explicit fontStyle / fontSize / bold overrides that
+  # member. The role is resolved into my three label fields here and not kept.
+  #   My LOOK rides the same opts: `color` is my label's ink, `fill` my rest fill, `highlightFill`
+  # and `pressFill` my two state fills, `plateRadius` the rounding of the plate they are painted as
+  # (absent: they cover my whole box, square). Each absent one is the plain labelButton role's.
+  # Every value lands in a field of mine, so I keep the look I was built with wherever I go.
   constructor: (target, action, opts = {}) ->
     super target, action, opts
 
+    theme = WorldWdgt.theme
     @labelString = opts.labelString
-    fontRole = opts.fontRole ? WorldWdgt.theme.fonts.menuRow
+    fontRole = opts.fontRole ? theme.fonts.labelButton
     @fontSize = opts.fontSize ? fontRole.size
     @fontStyle = opts.fontStyle ? fontRole.family
     @centered = opts.centered ? false
-    @labelColor = opts.color ? WorldWdgt.theme.menuRowText
+    @labelColor = opts.color ? theme.labelButtonText
     @labelBold = opts.bold ? fontRole.bold
     @labelItalic = opts.italic ? false
 
-    # the flat fill (ButtonWdgt defaults to white)
-    @color = WorldWdgt.theme.menuRowFill
+    # the flat rest fill (ButtonWdgt defaults to white) and the state fills
+    @color = opts.fill ? theme.labelButtonFill
+    @highlightColor = opts.highlightFill ? theme.labelButtonHighlightFill
+    @pressColor = opts.pressFill ? theme.labelButtonPressFill
+    @plateRadius = opts.plateRadius if opts.plateRadius?
     @appearance = new LabelButtonAppearance @
 
     if @labelString?

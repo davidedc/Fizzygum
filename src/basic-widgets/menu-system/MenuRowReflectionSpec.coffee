@@ -1,13 +1,16 @@
 # What a menu row SHOWS about somebody else's state — the declaration that makes a row a VIEW of a
-# value rather than a label painted once at menu-build time.
+# value rather than a mark painted once at menu-build time: the row is TICKED exactly while that
+# value is the row's choice.
 #
-# A row that ticks itself ("✓ circles") or otherwise swaps its wording between two spellings is
-# showing state it does not own. Written by hand that is a redraw: each menu fixes up
-# its OWN rows, at the moment it was clicked, by walking `rowsPanel.children` by INDEX — so a second
-# open copy of the same menu disagrees, and so does one open across a change made by a script, the
-# loader, or another menu. This record says instead: *my label is a function of that object's value*,
-# and each reflecting row re-reads it (MenuItemWdgt._applyRowReflectionConnector) whenever the value
-# announces itself through the dataflow drain.
+# A row that ticks itself (the current wallpaper, the current font) is showing state it does not
+# own. Written by hand that is a redraw: each menu fixes up its OWN rows, at the moment it was
+# clicked, by walking `rowsPanel.children` by INDEX — so a second open copy of the same menu
+# disagrees, and so does one open across a change made by a script, the loader, or another menu.
+# This record says instead: *my tick is a function of that object's value*, and each reflecting row
+# re-reads it (MenuItemWdgt._applyRowReflectionConnector) whenever the value announces itself
+# through the dataflow drain.
+#   The tick is DRAWN (MenuItemWdgt's tick indicator), never typed into the label: the label is the
+# row's plain wording, the same whether or not it is ticked.
 #
 # SHALLOWLY IMMUTABLE (docs/architecture/immutable-value-classes.md): the fields are never written
 # after construction, though `source` references a live object.
@@ -20,7 +23,7 @@
 #
 # CONSTRUCTOR SHAPE (docs/architecture/constructor-and-parameter-conventions.md): `source` and
 # `readerName` are the identity — WHOSE state and HOW to read it — so they stay positional; the
-# value/label triple rides `opts`. Most callers want the `tickWhen` door below instead.
+# value and the label ride `opts`. Callers use the `tickWhen` door below.
 
 class MenuRowReflectionSpec
 
@@ -28,24 +31,21 @@ class MenuRowReflectionSpec
   source: undefined
   # name of the method on `source` that answers the current value
   readerName: undefined
-  # the value that selects labelWhenTrue
+  # the value that ticks the row
   whenValue: undefined
-  labelWhenTrue: undefined
-  labelWhenFalse: undefined
+  # what the row SAYS, ticked or not: its plain wording
+  label: undefined
 
   constructor: (@source, @readerName, opts = {}) ->
     @whenValue = opts.whenValue
-    @labelWhenTrue = opts.labelWhenTrue
-    @labelWhenFalse = opts.labelWhenFalse
+    @label = opts.label
 
-  # THE COMMON CASE: one row per choice, ticked when that choice is the current one. Takes the bare
-  # label and builds both spellings, so no caller repeats the tick/untick concatenation by hand.
+  # THE ONE DOOR: one row per choice, ticked while that choice is the current one, saying theLabel.
   @tickWhen: (source, readerName, theValue, theLabel) ->
     new MenuRowReflectionSpec source, readerName,
       whenValue: theValue
-      labelWhenTrue: tick + theLabel
-      labelWhenFalse: untick + theLabel
+      label: theLabel
 
-  # what this row's label should say RIGHT NOW
-  currentLabel: ->
-    if @source[@readerName]() is @whenValue then @labelWhenTrue else @labelWhenFalse
+  # is the row ticked RIGHT NOW
+  isTicked: ->
+    @source[@readerName]() is @whenValue

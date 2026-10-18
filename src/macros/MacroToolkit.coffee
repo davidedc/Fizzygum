@@ -1795,11 +1795,14 @@ class MacroToolkit
     @_menuRowScrolledIntoView theItem
 
   # Like getTextMenuItemFromMenu but matches by label PREFIX. Use it when a menu item's full label
-  # carries a suffix you should not depend on — e.g. the "attach..." target menu labels each candidate
-  # `<widget>.toString().replace("Wdgt","") + " ➜"`, so a RectangleWdgt reads "a Rectangle#1 ➜" (an
-  # instance number + a trailing arrow). Match the stable head ("a Rectangle") instead of the exact
-  # string, and only the intended target is hit even when the menu also lists the World and the widget's
-  # own handle.
+  # carries a suffix you should not depend on — e.g. a "choose target:" menu (a handle's "attach...",
+  # a controller's "connect to") labels each candidate `<widget>.toString().replace("Wdgt","")`, so a
+  # RectangleWdgt reads "a Rectangle#1" (an instance number), while the "choose new parent:" menu of
+  # an ordinary widget's "attach..." keeps the suffix (`toString()` alone: "a RectangleWdgt#1"). Match
+  # the stable head ("a Rectangle") instead of the exact string, and only the intended target is hit
+  # even when the menu also lists the World and the widget's own handle. ⚠ A head that is also the
+  # head of a LONGER class name ("a Slider" of "a SliderButton") matches both rows, and the last one
+  # in the menu wins (topWdgtSuchThat): name such a row by its exact label instead.
   getTextMenuItemFromMenuByPrefix: (theMenu, thePrefix) ->
     theItem = theMenu.topWdgtSuchThat (item) ->
       if item.labelString?
@@ -1831,16 +1834,17 @@ class MacroToolkit
 
   # Move to and click the menu item whose label STARTS WITH a prefix, in a menu you hold a reference to.
   # The prefix sibling of moveToItemOfMenuAndClick_InputEvents — for menus whose item labels carry a
-  # variable suffix (the "attach..."/"choose target:" menu labels each target
-  # `toString().replace("Wdgt","") + " ➜"`), match the stable Wdgt-stripped class-name head so you pick
-  # the intended target rather than the first/Nth item.
+  # variable suffix (a "choose target:" menu labels each target `toString().replace("Wdgt","")`, its
+  # instance number included), match the stable Wdgt-stripped class-name head so you pick the intended
+  # target rather than the first/Nth item.
   moveToItemStartingWithOfMenuAndClick_InputEvents: (theMenu, thePrefix) ->
     theItem = @getTextMenuItemFromMenuByPrefix theMenu, thePrefix
     @moveToAndClick_InputEvents theItem
 
   # Move to and click the menu item whose label CONTAINS a substring, in a menu you hold a reference to.
-  # The substring sibling of the prefix verb — for items whose label carries a leading decoration the prefix
-  # can't match, e.g. a checkmark toggle ("soft wrap".tick() renders "✓ soft wrap"): match "soft wrap".
+  # The substring sibling of the prefix verb — for a row named by a word INSIDE its label rather than by
+  # its head ("shrink to fit" for "→← shrink to fit"). A row's tick and its submenu chevron are drawn
+  # beside its label, never written into it, so neither ever needs this verb.
   moveToItemContainingOfMenuAndClick_InputEvents: (theMenu, theSubstring) ->
     theItem = @getTextMenuItemFromMenuByContains theMenu, theSubstring
     @moveToAndClick_InputEvents theItem
@@ -1924,15 +1928,26 @@ class MacroToolkit
   assertValuesEqual: (description, expected, found) ->
     world.automator.player.recordMacroAssertion (found == expected), description, expected, found
 
-  # The BARE label of the one ticked row of a menu -- the tick prefix stripped, so a test can say
-  # what the menu currently SHOWS rather than assert a decorated string. For the ticked-menu family
-  # (wallpapers, fonts, and any row carrying a MenuRowReflectionSpec built by tickWhen): those menus
-  # tick exactly one row, so "which one" is the whole state. undefined when none is ticked.
+  # The label of the one ticked row of a menu -- read from the rows' tick STATE (MenuItemWdgt.isTicked,
+  # what each row's drawn tick shows), and returned as the row's plain label, so a test says what the
+  # menu currently SHOWS by meaning. For the ticked-menu family (wallpapers, fonts, and any row carrying
+  # a MenuRowReflectionSpec built by tickWhen): those menus tick exactly one row, so "which one" is the
+  # whole state. undefined when none is ticked.
   tickedRowLabelOfMenu: (menu) ->
     for row in menu.rowsPanel.children
       if row.isTicked?()
-        return row.label.text.replace tick, ""
+        return row.label.text
     return undefined
+
+  # Does the row labelled theLabel (exactly, as getTextMenuItemFromMenu matches) OPEN A SUBMENU -- does
+  # it carry the opensSubmenu flag its drawn chevron shows (MenuItemWdgt.opensSubmenu)? true or false,
+  # or undefined when the menu has no such row. A QUERY: it moves nothing and scrolls nothing (unlike the
+  # getTextMenuItemFromMenu family, which scrolls the row into view), so a test asserts "this row leads
+  # on" by meaning, with assertValuesEqual, never by a typed arrow in its label.
+  rowOpensSubmenu: (theMenu, theLabel) ->
+    row = theMenu.topWdgtSuchThat (item) -> item.labelString? and item.labelString == theLabel
+    return undefined unless row?
+    row.opensSubmenu is true
 
   # Topmost widget matching either a class-name string (compared via
   # widgetClassString) or a class object (compared via instanceof).
@@ -2182,7 +2197,7 @@ class MacroToolkit
 
     macroSubroutines.add Macro.fromString """
       bringUpInspector_InputEvents_Macro = (whichWidget) ->
-        clickMenuItemOfWidget_InputEvents_Macro whichWidget, "dev ➜"
+        clickMenuItemOfWidget_InputEvents_Macro whichWidget, "dev"
         @moveToItemOfTopMenuAndClick_InputEvents "inspect"
         yield "waitNoInputsOngoing"
     """
@@ -2225,11 +2240,11 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
-    # Patch-programming "connect to ➜": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,
+    # Patch-programming "connect to": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,
     # SliderWdgt, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
-    # another widget. Right-click the controller -> "connect to ➜" (openTargetSelector) opens a
-    # "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must
-    # OVERLAP the intended target), each labelled `target.toString().replace("Wdgt","") + " ➜"`
+    # another widget. Right-click the controller -> "connect" -> "connect to" (openTargetSelector) opens
+    # a "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must
+    # OVERLAP the intended target), each labelled `target.toString().replace("Wdgt","")`
     # (Wdgt-stripped); pick it by class-name PREFIX. That opens a "choose target property:" menu of the
     # target's setters (e.g. "color"); pick the property. Afterwards, acting on the controller (clicking
     # a palette, dragging a slider) calls target[setter](value). Each menu is captured fresh from
@@ -2239,15 +2254,15 @@ class MacroToolkit
         @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
         yield "waitNoInputsOngoing"
         # When the controller is INSIDE a container (its parent is not the world), right-clicking it opens the
-        # ancestor HIERARCHY menu ("a Slider ➜", "a Panel ➜", …) rather than the controller's own menu —
+        # ancestor HIERARCHY menu ("a Slider", "a Panel", …) rather than the controller's own menu —
         # so first navigate into the controller's own submenu by its class-name prefix. (A world-child
         # controller opens its menu directly, so this is skipped.)
         if controllerHierarchyPrefix?
           @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
           yield "waitNoInputsOngoing"
-        @moveToItemOfTopMenuAndClick_InputEvents "connect ➜"
+        @moveToItemOfTopMenuAndClick_InputEvents "connect"
         yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "connect to ➜"
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "connect to"
         yield "waitNoInputsOngoing"
         @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), targetClassNamePrefix
         yield "waitNoInputsOngoing"
@@ -2267,7 +2282,7 @@ class MacroToolkit
         if controllerHierarchyPrefix?
           @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
           yield "waitNoInputsOngoing"
-        @moveToItemOfTopMenuAndClick_InputEvents "connect ➜"
+        @moveToItemOfTopMenuAndClick_InputEvents "connect"
         yield "waitNoInputsOngoing"
         @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "bind ⇄"
         yield "waitNoInputsOngoing"
@@ -2277,12 +2292,13 @@ class MacroToolkit
 
     # The INVERSE gesture (connector plan §P4): cut one of a controller's connections and leave the rest
     # standing. A controller's own menu carries one row PER LIVE WIRE, labelled by what it drives —
-    # `WireSpec.describeConnection()` plus an arrow, i.e. the Wdgt-stripped target then the PIN's label,
-    # "a Panel . color ➜" — so name the wire by that prefix. The row opens that wire's own little menu
-    # ("fires per event", "disconnect"); this clicks "disconnect".
-    # ⚠ Pass the prefix WITHOUT the trailing arrow (prefix matching), which is also what makes this verb
-    # blind to the arrow's DIRECTION: a two-way wire's row ends " ⇄" rather than " ➜" (§P2), and cutting
-    # one ends the relationship in both directions.
+    # `WireSpec.describeConnection()` plus its direction arrow, i.e. the Wdgt-stripped target then the
+    # PIN's label, "a Panel . color ➜" — so name the wire by that prefix. The row opens that wire's own
+    # little menu ("fires per event", "disconnect"; the row wears a submenu chevron as well, drawn beside
+    # the label); this clicks "disconnect".
+    # ⚠ Pass the prefix WITHOUT the direction arrow (prefix matching), which is also what makes this verb
+    # blind to the DIRECTION: a two-way wire's row ends " ⇄" rather than " ➜" (§P2), and cutting one ends
+    # the relationship in both directions.
     # ⚠ The pin LABEL is what appears, not the setter name: "a Panel . color", never "a Panel . setColor".
     macroSubroutines.add Macro.fromString """
       disconnectControllerWire_InputEvents_Macro = (controllerWidget, wireRowPrefix, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix) ->

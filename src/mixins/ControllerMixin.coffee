@@ -21,7 +21,7 @@ ControllerMixin =
           #choices.push @world()
           choices.forEach (each) =>
             if !(each.isConnectionPin?())
-              menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", @, "openTargetPropertySelector", closesUnpinnedPopUps: false, arg1: each, representsAWidget: true
+              menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50), @, "openTargetPropertySelector", closesUnpinnedPopUps: false, opensSubmenu: true, arg1: each, representsAWidget: true
         else
           menu = new MenuWdgt @, target: @, title: "no targets available"
         menu.popUpAtHand()
@@ -48,7 +48,7 @@ ControllerMixin =
       # below reduces to once the dispatcher's slots have been unpacked.
       #   ⭐ It ADDS a wire; it does not replace my wires. That IS the §P4 capability — a controller
       # drives as many things as it is connected to, so fan-out stops needing FanoutWdgt — and it is
-      # why the menu item is now "connect to ➜" everywhere and is partnered by "disconnect ➜".
+      # why the menu item is now "connect to" everywhere and is partnered by "disconnect".
       # Wiring the same target+action twice is a no-op rather than a second edge (WireSpec.describes).
       wireTo: (theTarget, action) ->
         @_addWire theTarget, action
@@ -113,7 +113,7 @@ ControllerMixin =
       # THE UN-WIRE VERB, which single-slot wiring could not have: drop one relationship and leave the
       # others alone. Its first caller was already in the tree waiting for it — CellWdgt cleared the
       # fields by hand under a comment reading "no un-wire idiom exists in ControllerMixin"; the
-      # "disconnect ➜" menu item is the second.
+      # "disconnect" menu item is the second.
       #   Both halves of a tracking wire go: the forward edge stops being derivable the moment the
       # record leaves the list (ensureWireEdges reconciles), but the reverse one is an edge OUT of the
       # target that only I can revoke, so it is dropped explicitly. Then the record itself dies as a
@@ -164,7 +164,7 @@ ControllerMixin =
       # bind record, no bind edge and no bind flag: "these two are bound" is a QUESTION asked of the
       # two wire lists and answered fresh every time (_isTwoWayWire below). One consequence is worth
       # stating, because it is the proof the model is honest rather than a shortcut: a pair someone
-      # wires by hand in two separate "connect to ➜" gestures IS bound, and reads as bound. The
+      # wires by hand in two separate "connect to" gestures IS bound, and reads as bound. The
       # gesture saves clicks and picks the pins correctly; it does not create a different kind of
       # thing.
       #   ⭐ IT BINDS VALUE TO VALUE, and can bind nothing else. A wire delivers its producer's
@@ -343,7 +343,7 @@ ControllerMixin =
 
       # ---- THE FOLLOW GESTURE (connector plan §P2 residue) --------------------------------
       # PIN granularity's answer to `bind ⇄`, and it is not a second chooser: the wire the gesture
-      # needs ALREADY EXISTS. "connect to ➔" offers every drivable pin, so a slider can already be
+      # needs ALREADY EXISTS. "connect to" offers every drivable pin, so a slider can already be
       # wired onto a viewport's `scroll y` today — what it cannot do is FOLLOW it. So the gesture
       # is a promotion of a wire you are already looking at, and it lands in that wire's own menu
       # beside "fires per event", costing the enclosing menu no row at all.
@@ -395,7 +395,7 @@ ControllerMixin =
       # ---- the connection menu -------------------------------------------------------------
       # The shared "connect a target" block, appended identically by every controller (SliderWdgt,
       # SimpleTextWdgt, PaletteWdgt, FanoutPinWdgt and the patch nodes) right after its `super`: a
-      # divider, the "connect ➜" gesture submenu, then ONE ROW PER LIVE WIRE.
+      # divider, the "connect" gesture submenu, then ONE ROW PER LIVE WIRE.
       #   ⭐ Those rows are the point of §P4. A single-slot controller had nothing to show — its one
       # connection was invisible, and re-targeting silently dropped it. A controller that owns a list
       # can SHOW what it drives, and each row opens that wire's own little menu (policy + disconnect),
@@ -405,7 +405,7 @@ ControllerMixin =
       # drive. (StringWdgt keeps its own hand-rolled variant — it guards the whole block behind
       # isIndexPage, so it is deliberately NOT routed through here.)
       #   ⭐ The GESTURES are grouped behind one submenu row, and the live wires are not. That split is
-      # the meaning of the two halves: "connect ➜" opens the things I can DO, while a wire row is a
+      # the meaning of the two halves: "connect" opens the things I can DO, while a wire row is a
       # thing that IS — a status line you read, and cut from where you read it.
       #   Grouping also costs the enclosing menu ZERO rows for the second gesture, and that thrift is
       # still worth keeping even though an over-tall pop-up now SCROLLS its rows rather than putting
@@ -415,7 +415,7 @@ ControllerMixin =
       # all — it lives in the wire's own menu, one level further down.)
       _addTargetConnectionMenuEntries: (menu) ->
         menu.addLine()
-        menu.addMenuItem "connect ➜", @, "openConnectionGestureMenu", toolTip: "connect this widget\nto another one"
+        menu.addMenuItem "connect", @, "openConnectionGestureMenu", opensSubmenu: true, toolTip: "connect this widget\nto another one"
         @_addWireMenuEntries menu
 
       # The two ways to relate myself to another widget, one level down. They belong together: both
@@ -428,7 +428,7 @@ ControllerMixin =
       # would compare them. A widget that drives any kind names none: the sentence reads
       # "whose property".
       #   ⭐ `bind ⇄` appears only when there is something to bind to: the same rule `canBind` applies
-      # to the SUBJECT, applied to the WORLD. The asymmetry with the always-offered "connect to ➜" is
+      # to the SUBJECT, applied to the WORLD. The asymmetry with the always-offered "connect to" is
       # earned rather than sloppy — almost anything has a drivable pin, so connecting is nearly always
       # possible, whereas binding needs the OTHER side to own a value of a matching kind, which is
       # rare and rarer still among the widgets I overlap. An item that is nearly always a dead end is
@@ -437,16 +437,16 @@ ControllerMixin =
       openConnectionGestureMenu: ->
         menu = new MenuWdgt @, target: @, title: "connect:"
         kindWord = if @producesPinKind? and @producesPinKind isnt "any" then @producesPinKind + " " else ""
-        menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: ("choose another widget\nwhose " + kindWord + "property\n will be" + " controlled by this one")
+        menu.addMenuItem "connect to", @, "openTargetSelector", opensSubmenu: true, toolTip: ("choose another widget\nwhose " + kindWord + "property\n will be" + " controlled by this one")
         if @canBind() and @_bindableTargets().length > 0
-          menu.addMenuItem "bind ⇄", @, "openBindSelector", toolTip: "keep this widget's value\nand another's in step,\nboth ways"
+          menu.addMenuItem "bind ⇄", @, "openBindSelector", opensSubmenu: true, toolTip: "keep this widget's value\nand another's in step,\nboth ways"
         menu.popUpAtHand()
 
-      # The bind target chooser. "connect to ➜" lists every plausible widget and filters PROPERTIES in
+      # The bind target chooser. "connect to" lists every plausible widget and filters PROPERTIES in
       # the menu after it; a bind has no property step — both pins are forced — so the filtering has
       # to happen HERE instead. A widget that cannot be bound therefore never appears, rather than
       # appearing and then having nothing to offer.
-      # The widgets I could bind to right now: the same overlap-based candidate walk "connect to ➜"
+      # The widgets I could bind to right now: the same overlap-based candidate walk "connect to"
       # uses, narrowed by the four conditions above. Asked TWICE per gesture — once to decide whether
       # to offer the item at all, once when the chooser opens — deliberately, rather than caching the
       # first answer on me: the world can change between building a menu and clicking its row, and a
@@ -480,11 +480,14 @@ ControllerMixin =
       #   The ARROW is the whole reading of the relationship's direction: ➜ for a wire that only
       # drives, ⇄ for one that also carries values back — a tracking wire or half of a bound pair.
       # Derived per row at open time, so a menu never shows a direction that has stopped being true.
+      # The arrow is the row's WORDING and says which way values flow; that the row leads on to the
+      # wire's menu is a separate fact, drawn as its submenu chevron (opensSubmenu).
       _addWireMenuEntries: (menu) ->
         return unless @wires?
         for wire in @wires
           arrow = if @_isTwoWayWire wire then " ⇄" else " ➜"
           menu.addMenuItem wire.describeConnection() + arrow, @, "openWireMenu",
+            opensSubmenu: true
             toolTip: "what this connection does,\nand how to remove it"
             arg1: wire
         return

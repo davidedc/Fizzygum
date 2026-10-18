@@ -17,7 +17,7 @@
 # _contentStackSpec.canSetHeightFreely = false (height is content-driven), the
 # viewport soft-wrap toggle (softWrapOn/Off), the dataflow plumbing
 # (updateTarget + bang), and the panel-colour blend helpers. The CONTROLLER
-# chrome (wire verbs, the "connect to ➜" menu) is INHERITED — base StringWdgt
+# chrome (wire verbs, the "connect to" menu) is INHERITED — base StringWdgt
 # carries ControllerMixin. ⛔ Do not re-augment it here: a mixin's compiled
 # members are ONE shared function object, so injecting the same mixin at two
 # levels of one chain makes every super-calling member (graphEdgesOut) recurse
@@ -86,10 +86,12 @@ class SimpleTextWdgt extends TextWdgt
         m != world.caret
       if childrenNotCarets.length == 1
         menu.addLine()
+        # ONE "soft wrap" row, ticked while my viewport wraps, and clicking it flips that. Its tick
+        # is fixed when the menu is built (`ticked:`), as the action it carries is.
         if @parent.parent.isTextLineWrapping
-          menu.addMenuItem "☒ soft wrap", @, "softWrapOff"
+          menu.addMenuItem "soft wrap", @, "softWrapOff", ticked: true
         else
-          menu.addMenuItem "☐ soft wrap", @, "softWrapOn"
+          menu.addMenuItem "soft wrap", @, "softWrapOn", ticked: false
 
     menu.removeConsecutiveLines()
 

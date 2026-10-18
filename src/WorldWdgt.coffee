@@ -3207,7 +3207,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # offered there even with dev mode on: the part gate is about what SHIPPED, the dev gate about
     # what is being SHOWN, and an item can need both.
     if @isDevMode
-      menu.addMenuItem "demo ➜", @, "popUpDemoMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"  if world.parts.isAvailable "demos"
+      menu.addMenuItem "demo", @, "popUpDemoMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "sample widgets"  if world.parts.isAvailable "demos"
       menu.addLine()
       menu.addMenuItem "delete all", @, "closeChildren"
       menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
@@ -3215,15 +3215,15 @@ class WorldWdgt extends IconGridPanelWdgt
     # EVERY DESKTOP — look at it, size it, colour it, paper it, and say how you are driving it.
     # None of these is a developer's tool: they are what owning a desktop means.
     menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
-    menu.addMenuItem "test menu ➜", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if @isDevMode and world.parts.isAvailable "demos"
+    menu.addMenuItem "test menu", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "debugging and testing operations"  if @isDevMode and world.parts.isAvailable "demos"
     menu.addLine()
     menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
     menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
-    menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
+    menu.addMenuItem "wallpapers", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "choose a wallpaper for the Desktop"
     menu.addLine()
 
     if Automator?
-      menu.addMenuItem "system tests ➜", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, toolTip: ""
+      menu.addMenuItem "system tests", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
 
     # the door, and it swings both ways from every page — a desktop that cannot be switched INTO
     # dev mode is a desktop whose developer affordances do not exist
@@ -3276,7 +3276,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # builds a MenuItemWdgt wired to (world, "popUpDemoMenu") to exercise button float-drag
   # semantics. Their CONTENT is what is dev-only, and it is reached through @widgetFactory /
   # demoMenus, both absent from a production build -- where nothing links here either, since
-  # the world menu offers "demo ➜" only when DemoMenus ships.
+  # the world menu offers "demo" only when DemoMenus ships.
   # ONE catalogue (arc 3 phase 7). This forked on isIndexPage too — a short "parts bin" on the
   # product page and a long "make a widget" on the harness page — so the two disagreed both on
   # WHICH widgets you could make and on whether a palette arrived bare or wrapped in a window.
@@ -3284,7 +3284,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # explicit label rather than silently replacing the bare ones.
   # The one item of the demo menu that reaches the LAZY `demos` part, routed through core so the
   # menu itself can still be BUILT synchronously -- the menu's other items are all widgetFactory's,
-  # and offering "demo ➜" only says the part is available, never that it has arrived. Deferring the
+  # and offering "demo" only says the part is available, never that it has arrived. Deferring the
   # whole popUpDemoMenu instead would move every item a world cycle later for the sake of one.
   # ⚠ The delegate is `demoMenus.analogClock`, which is a one-liner over the CORE AnalogClockWdgt --
   # so this awaits the part for the sake of where the method lives, not what it builds. If the demo
@@ -3350,7 +3350,7 @@ class WorldWdgt extends IconGridPanelWdgt
     menu.addMenuItem "pen", @widgetFactory, "createNewPenWdgt"
 
     menu.addLine()
-    menu.addMenuItem "layout tests ➜", @, "layoutTestsMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"
+    menu.addMenuItem "layout tests", @, "layoutTestsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "sample widgets"
     menu.addLine()
     menu.addMenuItem "under the carpet", @widgetFactory, "underTheCarpet"
 

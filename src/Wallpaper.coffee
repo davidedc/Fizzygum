@@ -50,7 +50,7 @@ class Wallpaper
   wallpapersMenu: (ignored,targetWidget)->
     menu = new MenuWdgt world, target: targetWidget, title: "Wallpapers"
 
-    # Each row DECLARES that it shows my current pattern; the row is born with the right label and
+    # Each row DECLARES that it shows my current pattern; the row is born with the right tick and
     # re-derives it whenever I announce a change, in this menu and in every other open copy
     # (MenuItemWdgt._subscribeToMyReflectedSource). Nothing here indexes rows[1..7] any more —
     # that hand-numbering broke the day anyone added a divider.

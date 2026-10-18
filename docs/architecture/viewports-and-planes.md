@@ -89,7 +89,8 @@ scrollability question every drag-scroll consumer asks — `grabsToParentWhenDra
 foreground- and background-drag-scroll branches (`Widget.coffee`/`PanelWdgt.coffee`) among
 them; `anyScrollBarShowing()`, the visibility-as-scrollability proxy, is retired. The derivation is a pure function of layout
 state, nothing time-driven on any path: while content overflows the bar shows THIN
-(`scrollIndicatorThickness`, thumb-only painting, no track) and passes the pointer through to
+(`scrollIndicatorThickness`, thumb-only painting, no track, `scrollIndicatorEdgeInset` in from the
+viewport's edge so no border covers it) and passes the pointer through to
 the content under it — `SliderWdgt.catchesPointerAt` answers false whenever
 `indicatorIsIntangible()` (thin or hidden; an indicator is not a target); resting the pointer
 within `scrollBarsThickness` of the viewport's scroll edge (the hover pass —
@@ -161,7 +162,8 @@ own down runs its position head (the hover move) ahead of the press (`input-and-
 §"Touch hover dissolution") — so what a press can take is the FAT thumb, which is wider and placed
 differently. `ViewportWdgt.buttonScreenBoxOnArrival` answers where that is without fattening
 anything, from the same two derivations the arrange commits: `_barFrameAt` (where the viewport
-places a bar of a given thickness — both looks come from it) and
+places a bar of a given thickness and edge inset — both looks come from it: the thin one 2 px in, the
+fat one flush, so every aim derived from the fat frame is unchanged by the inset) and
 `SliderButtonWdgt.boxInSliderFrame` (the thumb's box inside a frame of a given extent and track
 inset, `SliderWdgt.trackThumbInset` for every pressable look). Its client is the macro toolkit's
 `sliderButtonPressPoint`: a press aimed at the thin thumb's centre can fall on the track beside the
@@ -171,6 +173,18 @@ than the thin one, since a thumb is never shorter than it is wide (10px fat wher
 drag that carries the thumb a fraction of its travel measures that travel from these two, not from
 the bar as drawn. Measured from the thin look, it overshoots by a share that grows with the
 distance dragged.
+
+The indicator's COLOURS are the theme's and follow its presentation, never a slider's own scheme. A
+viewport builds its bars' track in `scrollIndicatorTrack`, which the fat look shows faintly
+(`scrollIndicatorTrackAlpha`) and the thin look not at all. The thumb's colour is a function of the
+presentation and its state, `SliderButtonWdgt._colorForMyState`, re-derived at every state change and
+every presentation change:
+- thin: `scrollIndicatorThumb` (the `scrollbar` token) in every state;
+- fat: that colour at rest, `scrollIndicatorThumbHighlight` under a pointer, `scrollIndicatorThumbPress`
+  while pressed;
+- no presentation: the thumb's own scheme, or the plain `sliderThumb*` roles.
+
+So a content slider keeps its scheme, and an unplugged bar returns to it.
 
 ## Drag-to-scroll — the plane's other scroll gesture
 

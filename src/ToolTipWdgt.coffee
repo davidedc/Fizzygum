@@ -5,27 +5,38 @@
 # and basically _not_ behave like a tool tip)
 # Note that I'm not a PopUp, for example I can't be pinned.
 # I'm always attached to the world, without any layout constraints.
+#
+# I am a PLATE (the label plate of docs/plans/redesign/UI-guidelines.md §5.3): a rounded box in my
+# fill, with no border -- a bordered rounded rectangle means "press me", and I am not pressable --
+# and no tail, casting the desktop shadow. My margin around my contents is my own padding, never my
+# corner radius. A text shows each of its lines centred, one line per line-height slot.
 
 class ToolTipWdgt extends Widget
 
   @ongoingTimeouts: new Set
 
   contents: undefined
-  padding: undefined # extra pixels around the contents, both axes; when 0 the cornerRadius supplies the horizontal margin
+  # the plate's margin around my contents: at each side of them, and above and below them
+  horizontalPadding: undefined
+  verticalPadding: undefined
   widgetInvokingThis: undefined
   # per class, not pulled up: this extends Widget, not BoxWdgt
   cornerRadius: undefined
-  # the widget child holding @contents, built when the tip is opened and torn down with it
-  contentsWidget: undefined
+  # the children showing @contents, built when the tip is opened and torn down with it: one
+  # TextWdgt per line of a text, or the one widget showing any other contents
+  contentsWidgets: undefined
 
+  # An opener may name my fill, my rounding, and a padding (both axes alike); what it leaves out
+  # comes from the theme's tooltip roles and metrics.
   constructor: (@contents = "text here", opts = {}) ->
     @widgetInvokingThis = opts.widgetInvokingThis
     @color = opts.color ? WorldWdgt.theme.tooltipFill
-    @padding = opts.padding ? 0
+    @horizontalPadding = opts.padding ? WorldWdgt.theme.tooltipHorizontalPadding
+    @verticalPadding = opts.padding ? WorldWdgt.theme.tooltipVerticalPadding
     super()
-    @strokeColor = WorldWdgt.theme.tooltipStroke
-    @cornerRadius = opts.cornerRadius or WorldWdgt.theme.tooltipCornerRadius
-    @appearance = new BubblyAppearance @
+    @cornerRadius = opts.cornerRadius ? WorldWdgt.theme.tooltipCornerRadius
+    # the rounded box, and no strokeColor: a plate paints its fill and no border
+    @appearance = new BoxyAppearance @
   
   @createBubbleHelpIfHandStillOnWidget: (contents, widgetInvokingThis) ->
     # Only proceed if the invoking widget is still rooted in the world and the
@@ -33,12 +44,12 @@ class ToolTipWdgt extends Widget
     # the widget's plane so the containment holds for tilted widgets too (off any island the
     # mapping returns the same point; the raw-pointer lint's same-line shape).
     if widgetInvokingThis.root() == world and widgetInvokingThis.boundsContainPoint (widgetInvokingThis.screenPointToMyPlane world.hand.position())
-      theBubble = new @ contents, widgetInvokingThis: widgetInvokingThis
-      # the bubble is a WORLD child pointing at a widget whose plane may be MAPPED (scrolled
+      theTip = new @ contents, widgetInvokingThis: widgetInvokingThis
+      # the tip is a WORLD child placed against a widget whose plane may be MAPPED (scrolled
       # pane, tilted island) — aim at the widget's on-screen corner, not its plane corner
       # (identity for the common unmapped widget). Screen-family points can be FRACTIONAL
       # under a tilt: round before the integer placement funnel.
-      theBubble.openAt (widgetInvokingThis.localPointToScreen widgetInvokingThis.topRight()).round()
+      theTip.openAt (widgetInvokingThis.localPointToScreen widgetInvokingThis.topRight()).round()
 
   @cancelAllScheduledToolTips: ->
     @ongoingTimeouts.forEach (eachTimeout) =>
@@ -75,44 +86,49 @@ class ToolTipWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
     # re-build my contents
-    if @contentsWidget
-      @contentsWidget = @contentsWidget._destroyNoSettle()
+    if @contentsWidgets?
+      eachContentsWidget._destroyNoSettle() for eachContentsWidget in @contentsWidgets
     if @contents instanceof Widget
-      @contentsWidget = @contents
-    else if Utils.isString @contents
-      # the font and the ink come from the tooltip's own roles, so both are passed explicitly
-      # rather than left to TextWdgt's defaults.
-      @contentsWidget = new TextWdgt @contents,
-        fontRole: WorldWdgt.theme.fonts.tooltip
-        italic: true
-        color: WorldWdgt.theme.tooltipText
-      @contentsWidget.alignCenter()
-    # canvas-like (a DOM canvas OR an SWCanvasElement under the software backend);
-    # Widget / string contents are already handled by the branches above.
+      @contentsWidgets = [@contents]
+      @_addNoSettle @contents
+      slotHeight = @contents.height()
+    # canvas-like (a DOM canvas OR an SWCanvasElement under the software backend)
     else if @contents? and typeof @contents.getContext is "function"
-      @contentsWidget = new Widget
-      @contentsWidget.__commitWidth @contents.width
-      @contentsWidget.__commitHeight @contents.height
-      @contentsWidget.backBuffer = @contents
-      @contentsWidget.backBufferContext = @contentsWidget.backBuffer.getContext "2d"
+      canvasWidget = new Widget
+      canvasWidget.__commitWidth @contents.width
+      canvasWidget.__commitHeight @contents.height
+      canvasWidget.backBuffer = @contents
+      canvasWidget.backBufferContext = canvasWidget.backBuffer.getContext "2d"
+      @contentsWidgets = [canvasWidget]
+      @_addNoSettle canvasWidget
+      slotHeight = canvasWidget.height()
     else
-      @contentsWidget = new TextWdgt @contents.toString(),
-        fontRole: WorldWdgt.theme.fonts.tooltip
-        italic: true
-        color: WorldWdgt.theme.tooltipText
-      @contentsWidget.alignCenter()
-    @_addNoSettle @contentsWidget
+      # a text, or anything else shown as its string: one TextWdgt per line, in the tooltip's own
+      # font and ink (both passed explicitly rather than left to TextWdgt's defaults), each hugging
+      # its line -- the modern family does not self-size -- before I read its extent
+      @contentsWidgets = for eachLine in @contents.toString().split "\n"
+        lineWidget = new TextWdgt eachLine,
+          fontRole: WorldWdgt.theme.fonts.tooltip
+          color: WorldWdgt.theme.tooltipText
+        lineWidget.alignCenter()
+        @_addNoSettle lineWidget
+        lineWidget._sizeToTextAndDisableFittingNoSettle()
+        lineWidget
+      # every line spans the widest one, so each centres its own text across the same width
+      linesWidth = 0
+      linesWidth = Math.max linesWidth, eachLineWidget.width() for eachLineWidget in @contentsWidgets
+      eachLineWidget.__commitWidth linesWidth for eachLineWidget in @contentsWidgets
+      # each line stands in a slot tooltipLineHeight tall (taller only if the line's own box is)
+      slotHeight = Math.max WorldWdgt.theme.tooltipLineHeight, @contentsWidgets[0].height()
 
-    # the modern family does not self-size; make the tooltip text hug its
-    # content before we read its width/height to size the bubble around it.
-    @contentsWidget._sizeToTextAndDisableFittingNoSettle() if @contentsWidget instanceof TextWdgt
+    # adjust my layout: my padding around the stacked slots
+    @__commitWidth @contentsWidgets[0].width() + 2 * @horizontalPadding
+    @__commitHeight @contentsWidgets.length * slotHeight + 2 * @verticalPadding
 
-    # adjust my layout
-    @__commitWidth @contentsWidget.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
-    @__commitHeight @contentsWidget.height() + @cornerRadius + @padding * 2 + 2
-
-    # position my contents
-    @contentsWidget._applyMoveTo @position().add(
-      new Point(@padding or @cornerRadius, @padding + 1))
-
+    # position my contents: each widget at the top of its slot plus half the spare height, rounded
+    # down (the draft's line-height rule, UI-guidelines.md §1.1)
+    for eachContentsWidget, slotIndex in @contentsWidgets
+      slotTop = @verticalPadding + slotIndex * slotHeight
+      halfSpareHeight = Math.floor((slotHeight - eachContentsWidget.height()) / 2)
+      eachContentsWidget._applyMoveTo @position().add new Point @horizontalPadding, slotTop + halfSpareHeight
 

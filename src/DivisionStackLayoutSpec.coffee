@@ -68,11 +68,11 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   # The division cell's DIRECT-MANIPULATION surface, dispatched from the widget's menu gate
   # (Widget.addWidgetSpecificMenuEntries — an active division element that is not layout
-  # chrome). Mirrors VerticalStackLayoutSpec's "layout in stack ➜" submenu.
+  # chrome). Mirrors VerticalStackLayoutSpec's "layout in stack" submenu.
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
-    menuLabel = if @axis == 'y' then "layout in column ➜" else "layout in row ➜"
-    menu.addMenuItem menuLabel, @, "divisionCellMenu", closesUnpinnedPopUps: false, toolTip: ""
+    menuLabel = if @axis == 'y' then "layout in column" else "layout in row"
+    menu.addMenuItem menuLabel, @, "divisionCellMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
 
   divisionCellMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget

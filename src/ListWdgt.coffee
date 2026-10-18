@@ -80,7 +80,8 @@ class ListWdgt extends ViewportWdgt
     # rows, not a (crippled) menu. No pop-up lifetime (not a pop-up: nothing
     # dismisses these rows on a click outside them), no title (a plain square
     # body), and selectsItemsOnClick so a click SELECTS a row rather than
-    # triggering it.
+    # triggering it -- and so the panel builds its rows as LIST rows, in the list
+    # look (MenuItemWdgt's constructor), not as menu rows.
     @listContents = new CommandPanelWdgt target: @, selectsItemsOnClick: true
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length

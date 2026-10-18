@@ -55,7 +55,7 @@ assertion a recapture after a regression silently stores two different hashes an
   **AWARENESS:** the SAME fractional click lands on a DIFFERENT character once the line is shifted, because `slotAtSingleLineString`
   SUBTRACTS the shift before resolving the slot (`:791`) — re-click the same `[0.40,0.5]` under right vs the original left placement
   (image_4). Set alignment through the REAL context menu — for a `world.add`-ed widget in dev mode the morph menu is TOP-LEVEL (no
-  "a Text ➜" wrapper, `Widget.buildContextMenu:2913-2922`); items carry a leading glyph (`"∸ align center"` / `"→ align
+  "a Text" wrapper, `Widget.buildContextMenu:2913-2922`); items carry a leading glyph (`"∸ align center"` / `"→ align
   right"`) so match by SUBSTRING: `@openMenuOf_InputEvents txt` → `@moveToItemContainingOfMenuAndClick_InputEvents
   (@getMostRecentlyOpenedMenu()), "align center"`. Build an editable multi-line TextWdgt (`\n` via `String.fromCharCode 10`)
   with DISTINCT per-line widths so the shift is obvious. GOTCHAS: `isEditable = true`; extent WIDE enough that the longest line
@@ -259,7 +259,7 @@ assertion a recapture after a regression silently stores two different hashes an
   and `verticalAlignment` (default TOP). Drive `str.alignLeft()/alignCenter()/alignRight()` and
   `str.alignTop()/alignMiddle()/alignBottom()` DIRECTLY (the "align …" item methods); a synthetic right-click won't open
   its menu (TextWdgt-family drift). Give it a `backgroundColor` so the float position is visible.
-- **Soft-wrap toggle** (`macroSoftWrapTogglesTextReflow`): `textBox.toggleSoftWrap()` DIRECTLY (the "✓ soft wrap" method) —
+- **Soft-wrap toggle** (`macroSoftWrapTogglesTextReflow`): `textBox.toggleSoftWrap()` DIRECTLY (the method the "soft wrap" row calls; the row is ticked while wrapping) —
   a synthetic right-click on a TextWdgt does NOT open a usable context menu in a macro (it does on plain widgets; and
   INSIDE a ViewportWdgt the panel's MERGED menu does open fine, with `SimpleTextWdgt`'s own `softWrapOff/On`
   items — see the Scroll section's in-panel soft-wrap entry).
@@ -318,7 +318,7 @@ assertion a recapture after a regression silently stores two different hashes an
   width (fewer, longer lines when widened; many short lines when narrowed). ⚠ This INVERTS the law of the deleted old
   text-widget family, whose box kept only the drag's WIDTH (as a `maxTextWidth` knob that no longer exists) and
   re-derived its HEIGHT from the wrapped line count — a recording written against that behaviour asserts the opposite
-  of what the modern box does. Fixture: build the `TextWdgt` directly (the "demo ➜" → "text" item now makes an UNSIZED
+  of what the modern box does. Fixture: build the `TextWdgt` directly (the "demo" → "text" item now makes an UNSIZED
   TextWdgt, not the old self-sizing 300-wide column), pin `fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT`
   so only the wrapping changes, `isEditable = true`, then size it through the PUBLIC API on the ATTACHED widget —
   `world.add`, `setWidth 300` (self-settles, so the wrap is in place), measure that wrapped height with
@@ -424,17 +424,17 @@ assertion a recapture after a regression silently stores two different hashes an
   so you MUST re-click into the field before Meta+a, or select-all routes nowhere and the selected shot silently equals the unselected one.
 - **Empty editable text omits "select all"** (`macroEmptyStringDoesntGiveSelectAllOption`): the negative/exclusion sibling of the
   evaluation-menu entry above. `evaluationMenu` builds `@buildHierarchyMenu()` FIRST and only prepends "do all"/"select all" inside
-  `if @text.length>0` (`TextWdgt.coffee:618`), so on an EMPTY field the right-click menu is JUST the hierarchy item `a Text ➜`
+  `if @text.length>0` (`TextWdgt.coffee:618`), so on an EMPTY field the right-click menu is JUST the hierarchy item `a Text`
   — neither item present. Same fixture as the selection sibling (`new TextWdgt("", …)` + `isEditable=true` + `setReceiver world`,
   sized to fit) but START EMPTY: right-click → screenshot (no select-all), then click in + `@syntheticEventsStringKeys_InputEvents
-  "asdf"` (NON-empty, no selection) → right-click → screenshot ("do all"/"select all" now prepended above `a Text ➜`). The two
+  "asdf"` (NON-empty, no selection) → right-click → screenshot ("do all"/"select all" now prepended above `a Text`). The two
   shots (absent vs present) ARE the assertion. GOTCHAS: do NOT select the text (Meta+a) — that trips the SEPARATE `:625` selection gate
   and adds the "…selection" items, muddying the empty-vs-filled contrast; re-click the field before typing (dismissing the first menu
   ends editing); screenshot-only (an exact menu-strings assertion is brittle — `evaluationMenu` prepends separator RectangleWdgts with no `labelString`).
 - **Add an indented paragraph to a document via its layout menu** (`macroSimpleDocumentCanAddIndentedParagraph`): a
   `DocumentViewportWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
   (`(doc.contents.childrenNotHandlesNorCarets())[0]`) — reformat THAT (add a Lorem paragraph below for reflow context). Drive its
-  `"a SimpleText ➜"` → `"layout in stack ➜"` submenu (`VerticalStackLayoutSpec.coffee:42-53`): `"base width..."` opens a PromptWdgt
+  `"a SimpleText"` → `"layout in stack"` submenu (`VerticalStackLayoutSpec.coffee:42-53`): `"base width..."` opens a PromptWdgt
   (narrows the box), `"align right"` (setAlignmentToRight) moves the box to the document's right edge; then click in, `Meta+a`, and type
   the indented body PER LINE with an `"Enter"` between (`@syntheticEventsStringKeys_InputEvents` has NO newline handling), the two leading
   spaces of `"  some code"` typed as literal space keys so the indent round-trips (Enter → `CaretWdgt` inserts `"\n"`). TWO gotchas make
@@ -464,20 +464,28 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Item-label matching variants**: exact (`moveToItemOfMenuAndClick_InputEvents`), **PREFIX**
   (`moveToItemStartingWithOfMenuAndClick_InputEvents` — for labels with a variable suffix; match the stable class-name
   head. ⚠ The two candidate choosers spell their labels DIFFERENTLY: the controller's "choose target:"
-  (`ControllerMixin.openTargetSelector`) is Wdgt-STRIPPED plus `" ➜"` — `"a Rectangle#1 ➜"` — while `attach…`'s
-  "choose new parent:" (`Widget._attachToChosenParent`) is the bare `toString().slice(0,50)`, so it KEEPS the suffix and
-  carries no arrow — `"a RectangleWdgt#1"`. A class-name prefix like `"a Rectangle"` matches both), **SUBSTRING**
-  (`moveToItemContainingOfMenuAndClick_InputEvents` — for a leading decoration, e.g. `"soft wrap".tick()` renders "✓ soft wrap").
+  (`ControllerMixin.openTargetSelector`) is Wdgt-STRIPPED — `"a Rectangle#1"` — while `attach…`'s
+  "choose new parent:" (`Widget._attachToChosenParent`) is the bare `toString().slice(0,50)`, so it KEEPS the suffix —
+  `"a RectangleWdgt#1"`. A class-name prefix like `"a Rectangle"` matches both. ⚠ A head that is also the head of a LONGER
+  class name (`"a Slider"` of `"a SliderButton"`) matches both rows and the last one in the menu wins: name such a row by its
+  EXACT label), **SUBSTRING** (`moveToItemContainingOfMenuAndClick_InputEvents` — for a row named by a word INSIDE its
+  label, e.g. `"shrink to fit"` for `"→← shrink to fit"`). A row's tick and its submenu chevron are DRAWN beside its label,
+  never typed into it, so neither needs a looser match: assert them by MEANING instead — `@tickedRowLabelOfMenu menu` (the
+  plain label of the ticked row, read from the rows' tick state), a row's own `isTicked()` / `ticks()`, and
+  `@rowOpensSubmenu menu, "label"` (the `opensSubmenu` flag its chevron shows), each through `@assertValuesEqual`.
 - **Hierarchy menu (a non-world child)**: right-clicking a widget whose parent ≠ world opens the framework's ANCESTOR
-  HIERARCHY menu (`Widget.buildContextMenu`/`buildHierarchyMenu`) — one "a X ➜" item per ancestor that has a menu (labels are
-  `toString().replace("Wdgt","")` so a FrameWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name PREFIX
-  to open ITS own menu (used to resize a content-covered panel, duplicate a nested widget, "pick up" an inspector part, …).
+  HIERARCHY menu (`Widget.buildContextMenu`/`buildHierarchyMenu`) — one "a X" item per ancestor that has a menu, each a
+  submenu row (`opensSubmenu: true`, drawn with its chevron; labels are `toString().replace("Wdgt","")` so a FrameWdgt reads
+  "a Window"). Navigate to the desired ancestor by class-name PREFIX (or its exact label, when a longer class name shares
+  the head) to open ITS own menu (used to resize a content-covered panel, duplicate a nested widget, "pick up" an inspector
+  part, …).
 - **A merging scroll panel SUPPRESSES its child's hierarchy menu** (`macroScrollPanelMergesChildMenu`): the inverse of the
   rule above. A `TextAreaWdgt` sets `takesOverAndMergesChildrensMenus = true` (`TextAreaWdgt.coffee:25`),
   so `Widget.buildContextMenu` (`:2905-2908`) finds that ancestor and returns the PANEL'S OWN menu — right-clicking the inner text
-  blurb produces no "a X ➜" disambiguation at all (the blurb is never offered as a separate target). A NEGATIVE assertion needs
+  blurb produces no "a X" disambiguation at all (the blurb is never offered as a separate target). A NEGATIVE assertion needs
   the baseline visible: pair it with a plain `PanelWdgt` + `RectangleWdgt` child whose right-click DOES build the 2-item hierarchy
-  menu (`@assertTopMenuItemStrings ["a Rectangle ➜", "a Panel ➜"]`) — same gesture, opposite menu. Build the panel directly:
+  menu (`@assertTopMenuItemStrings ["a Rectangle", "a Panel"]`, plus `@assertValuesEqual …, true, (@rowOpensSubmenu menu,
+  "a Rectangle")` per row — the labels are plain, so that each row LEADS ON is its own assertion) — same gesture, opposite menu. Build the panel directly:
   `new TextAreaWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
   image_1 (the panel's own merged menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
@@ -517,7 +525,7 @@ assertion a recapture after a regression silently stores two different hashes an
   swaps its rounded header for a window title bar with close + collapse, the body swaps the menu box for the boxy one, and
   the shadow becomes the desktop shadow — expect all of that in the after shot.
 - **A menu carried into a panel becomes a CARD in it** (`macroSubMenuDroppedIntoPanelPinsItself`): the container sibling of the
-  header-click pin above. Float-drag a transient pop-up (here the world menu's "demo ➜" sub-menu, titled "make a morph") OUT of its
+  header-click pin above. Float-drag a transient pop-up (here the world menu's "demo" sub-menu, titled "make a morph") OUT of its
   parent by its HEADER: the GRAB is what takes its lifetime to `'persistent'` (`FrameWdgt._reactToBeingGrabbed`, program ruling C8), so
   it survives the later dismissal wherever it lands. Release it INSIDE a `PanelWdgt` and `ActivePointerWdgt.drop` re-parents it under the
   panel (`_acceptsDrops:true`) — but ⚠ **a frame is a deliberate-embed payload, menus included**, so the release must be DWELL-ARMED
@@ -580,7 +588,7 @@ assertion a recapture after a regression silently stores two different hashes an
   click on an ALREADY-pinned menu raises it and leaves its lifetime — and its shadow — exactly as they are.
   Two observables: with NOTHING overlapping, the raise is a pixel-perfect NO-OP (before/after shots share a
   dataHash — aim every header click at the header's CENTRE so the pointer ends identically placed, no parking moves needed);
-  then a rectangle made the user's way (a second world menu → "demo ➜" → "rectangle") is carry-dropped OVERLAPPING the menu,
+  then a rectangle made the user's way (a second world menu → "demo" → "rectangle") is carry-dropped OVERLAPPING the menu,
   and one more header click lifts the menu above it with the tight shadow painted over the rectangle. The on-menu drop is
   safe twice over: a menu does not accept drops (`Widget._acceptsDrops:104` false; `dropTargetFor` walks up to the world, so
   the rectangle lands as a world child ABOVE the menu), and the drop CONSUMES the mouse-down
@@ -628,12 +636,12 @@ assertion a recapture after a regression silently stores two different hashes an
   world)`, attached to the WORLD), and clipping (`ClippingAtRectangularBoundsMixin`) only crops a frame's own DESCENDANTS,
   so a world-level sibling menu drawn over the frame is never clipped by it. Build a narrow `PanelWdgt` (a clipping frame)
   with a child straddling an edge (cropped → proves the clip is active) and an inner item; `@moveToAndClickAtFractionOf_InputEvents
-  innerItem, [0.5,0.5], "right button"` opens the item's hierarchy menu ("a X ➜" — a non-world child →
+  innerItem, [0.5,0.5], "right button"` opens the item's hierarchy menu ("a X" — a non-world child →
   `buildHierarchyMenu`), which overflows the frame's edge in full while the frame still crops its own child. The
   frame-clip counterpart of macroMenuRepositionsToStayOnScreen (which is about the SCREEN edge). The recorded original
   (poppingUpSubMenuNotClipped) used an inspector's clipped list column; a plain frame demonstrates the same point.
 - **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
-  ancestor hierarchy menu ("a MenuItem ➜" / "a Menu ➜"); drilling "a Menu ➜" → "duplicate" runs the MENU's own
+  ancestor hierarchy menu ("a MenuItem" / "a Menu"); drilling "a Menu" → "duplicate" runs the MENU's own
   duplicate — `Widget.duplicateMenuAction`, which adds the copy to the world at the original's position + (10,10) and leaves it
   there. `FrameWdgt.fullCopy` sets the copy's lifetime to `'persistent'`, so `isPersistent()` is true the
   instant the copy exists — pinned from birth, with no drop involved. Show the differential with an explicit unpinned FOIL: leave the
@@ -754,7 +762,7 @@ assertion a recapture after a regression silently stores two different hashes an
   chain is cell → stack wraps its cells → `_positionAndResizeChildren` wraps the window: dropping a wrapping lorem in resizes the
   window AROUND the re-wrapped cell, dropping an icon ON a cell inserts it AFTER the cell whose span contains the drop point
   (the document-stack insertion rule) and GROWS the window, Enter×3 at a caret inside a cell grows it again, and deleting the
-  cell through its hierarchy menu (right-click the nested cell → "a SimpleText ➜" → "delete") COLLAPSES the window
+  cell through its hierarchy menu (right-click the nested cell → "a SimpleText" → "delete") COLLAPSES the window
   around what remains. The CONTRAST: a `VerticalStackViewportWdgt` content (its ctor SEEDS a default "A small
   string / here another." paragraph, calls `disableDrops()` on the panel so drops route to the inner stack, and sets the
   inner stack `isLockingToPanels = true` so dragging it carries the WHOLE panel) absorbs overflow by CLIPPING — drop a big
@@ -852,13 +860,13 @@ assertion a recapture after a regression silently stores two different hashes an
   `f(lifetime, parentage)`, same rule as the pin-by-header entries above). Re-docking it is the drop-to-dock
   gesture again, grabbing the SAME frame's bar. Re-siding WITHOUT detaching is a menu action, not a drag — next.
 - **The band's own context menu: re-side and float, on the BAND, never the host** (`macroDocsToolbarDockSidesAndFloat`):
-  a docked frame owns its own placement question, so "dock ➜ <the other three sides>" (`dockSideMenu` →
+  a docked frame owns its own placement question, so "dock" → <the other three sides> (`dockSideMenu` →
   `dockAtSide`) and "float" (`floatOutOfDock` — the one PROGRAMMATIC undock, for keyboard-free use) live in the
   DOCKED FRAME's own context menu. Right-clicking its bar lands on a chrome child first, so descend the
-  ancestor HIERARCHY submenu exactly as everywhere else (Wdgt-stripped, "a Frame ➜"):
+  ancestor HIERARCHY submenu exactly as everywhere else (Wdgt-stripped, "a Frame"):
   `@openMenuOf_InputEvents band.bar` → `@moveToItemStartingWithOfMenuAndClick_InputEvents
   (@getMostRecentlyOpenedMenu()), "a Frame"` → `…, "dock"` → `@moveToItemOfMenuAndClick_InputEvents
-  (@getMostRecentlyOpenedMenu()), "right"`. The HOST's complementary row — "toolbar ➜ <side>"
+  (@getMostRecentlyOpenedMenu()), "right"`. The HOST's complementary row — "toolbar" → <side>
   (`toolbarSideMenu` → `addToolbarAtSide`), offered only while its content declares `buildToolbar` and no slot
   already holds that variant — lives on the HOST's own menu instead (right-click the host directly; no
   hierarchy descent needed for its own top-level menu). Both rows are `check-menu-actions`/`fg menusweep`-gated.
@@ -999,12 +1007,14 @@ assertion a recapture after a regression silently stores two different hashes an
   No new verb.
 - **Soft-wrap toggle INSIDE a scroll panel — `softWrapOff`/`softWrapOn`, NOT `toggleSoftWrap`**
   (`macroSimpleTextScrollPanelUpdatesWellWhenWrappingUnwrappingFromTheBottomOfContent`): on a `SimpleTextWdgt`
-  inside its scroll panel the '☒/☐ soft wrap' items are the TEXT's OWN (`SimpleTextWdgt.coffee:90-98`, shown only
-  when it is the panel's LONE child) and call `softWrapOff` (panel `isTextLineWrapping` false +
+  inside its scroll panel the "soft wrap" row is the TEXT's OWN (`SimpleTextWdgt.addWidgetSpecificMenuEntries`, shown
+  only when it is the panel's LONE child): ONE row, ticked while the panel wraps (`ticked:` fixed at build), whose action
+  is `softWrapOff` while ticked and `softWrapOn` while not — `softWrapOff` (panel `isTextLineWrapping` false +
   `softWrap = false` — `softWrap` replaced the retired `maxTextWidth`) / `softWrapOn` (both back, plus re-homing the panel's contents to the panel origin) —
   TextWdgt's `toggleSoftWrap` is NOT involved. The bare-TextWdgt no-menu drift does NOT apply here either: the
-  merged in-panel menu OPENS for synthetic right-clicks, so drive the REAL items (match the decorated label by
-  SUBSTRING, `moveToItemContainingOfMenuAndClick`). Toggling OFF while scrolled at the END collapses the content to its
+  merged in-panel menu OPENS for synthetic right-clicks, so drive the REAL row by its exact label
+  (`moveToItemOfMenuAndClick … "soft wrap"`) and assert its tick from the row itself (`row.isTicked()` before
+  unwrapping; `row.ticks() and not row.isTicked()` after). Toggling OFF while scrolled at the END collapses the content to its
   unbounded logical rows (width = LONGEST line, `TextWdgt::_reLayoutSelf`) → it fits vertically → the view re-anchors at the
   TOP with the V-bar swapped for an H-bar (thumb at the LEFT: the x offset was never touched); toggling ON re-wraps tall
   with the view at the top. Produce "at the bottom" via the CLIPBOARD: Meta+a + `copySelection_InputEvents` + ArrowRight
@@ -1057,7 +1067,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Unplug an inspector scrollbar + the duplicate ASYMMETRY** (`macroInspectorScrollbarUnplugged`): inspect a string
   (`clickMenuItemOfWidget_InputEvents_Macro str, "inspect"`) → an `InspectorWdgt` window; park the window left so the strip
   to its right is clear for the detached scrollbars. Capture `scrollbar1 = inspector.list.vBar` BEFORE detaching (the list doesn't rebuild it). Right-click its knob → hierarchy
-  "a Slider ➜" → "pick up" → carry + drop CLEAR. It STILL drives the list: `@dragSliderButtonToFraction_InputEvents
+  "a Slider" (by its EXACT label: the knob's own row, "a SliderButton", shares the head) → "pick up" → carry + drop CLEAR. It STILL drives the list: `@dragSliderButtonToFraction_InputEvents
   scrollbar1, [0.5, fy]` (`detachesWhenDragged` is false when the button's parent is a SliderWdgt). DUPLICATE it ("duplicate"
   instead of "pick up"); `fullCopy` copies the `target` reference so the copy ALSO drives the list. ASYMMETRY: dragging the copy
   scrolls the list and `scrollbar1` FOLLOWS (the list updates its own @vBar via `_reLayoutScrollbars`); dragging `scrollbar1`
@@ -1154,8 +1164,9 @@ assertion a recapture after a regression silently stores two different hashes an
   `Widget.attach` lists only morphs whose bounds INTERSECT it, `world.plausibleTargetAndDestinationWidgets`, excluding self +
   current parent), then `clickMenuItemOfWidget_InputEvents_Macro morph, "attach..."` → capture the **"choose new parent:"**
   menu → `@moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a Rectangle"` (class-name PREFIX; the menu also lists the World).
-  ⚠ These labels are the BARE `toString().slice(0,50)` — they KEEP the `Wdgt` suffix and carry NO `" ➜"` (`"a RectangleWdgt#1"`),
-  unlike the CONTROLLER's Wdgt-stripped, arrow-suffixed "choose target:" chooser; a class-name prefix matches either.
+  ⚠ These labels are the BARE `toString().slice(0,50)` — they KEEP the `Wdgt` suffix (`"a RectangleWdgt#1"`), unlike the
+  CONTROLLER's Wdgt-stripped "choose target:" chooser (whose rows open a property menu, so they also draw a submenu
+  chevron); a class-name prefix matches either.
   A HandleWdgt so attached becomes the target's resize handle → drag it with `@dragResizeMoveHandleTo_InputEvents`.
 - **"Attach…" with no targets → a message** (`macroAttachShowsNoTargetsMessage`): a morph alone (nothing overlapping) → `attach`
   pops a `MenuWdgt` titled **"no widgets to attach to"** (`Widget._attachToChosenParent`) instead of a target list; that titled,
@@ -1163,14 +1174,14 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Attach EXCLUDES the parent — a lonely widget attaches to NOTHING, not even the world**
   (`macroLonelySliderCantBeAttachedToAnything`): `Widget.attach` (`Widget.coffee:4525` → `_attachToChosenParent`) filters its
   `plausibleTargetAndDestinationWidgets` candidates by `each != @parent` — for a bare desktop widget the parent IS the world, so
-  the list is EMPTY and the "no widgets to attach to" menu pops with ZERO items, while `"connect ➜"` → `"connect to ➜"`
+  the list is EMPTY and the "no widgets to attach to" menu pops with ZERO items, while `"connect"` → `"connect to"`
   (`ControllerMixin.openTargetSelector`) on the SAME fixture keeps the world (re-attaching to your parent is a no-op; controlling
   it is meaningful). Assert the zero-item shape with `@assertTopMenuItemCount 0` + `@assertTopMenuItemStrings []` — the menu's
   title is NOT an item (`MenuWdgt.testItems` excludes `@label`), so a titled-but-empty menu counts 0. Reuses
   macroLonelySliderTargetsWorldOnly's lone-slider fixture verbatim (right-click the LOWER track), so the attach-vs-set-target
   contrast is asserted on an identical scene. No new verb.
 - **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedWidget`): both "attach..."
-  (`Widget.attach`) and a controller's `"connect ➜"` → `"connect to ➜"` (`ControllerMixin.openTargetSelector`) build their candidate menus
+  (`Widget.attach`) and a controller's `"connect"` → `"connect to"` (`ControllerMixin.openTargetSelector`) build their candidate menus
   from `world.plausibleTargetAndDestinationWidgets` (`Widget.coffee:1092`), but a `PanelWdgt` (which `@augmentWith
   ClippingAtRectangularBoundsMixin`) OVERRIDES it (`ClippingAtRectangularBoundsMixin.coffee:17`) to recurse into its
   children ONLY where the PANEL's own bounds intersect the probe. So a child whose raw bounds stick out past the panel
@@ -1178,7 +1189,8 @@ assertion a recapture after a regression silently stores two different hashes an
   logical-AND of two raw-bounds intersections (`panel∩probe` AND `child∩probe`), NOT a per-pixel hit-test. Build `new
   PanelWdgt`, `panel.add rect`, `rect.moveTo` to STRADDLE the right edge; drop a probe ENTIRELY right of the panel
   (over the rect's clipped-away raw bounds): `clickMenuItemOfWidget… "attach..."` → `@assertTopMenuItemCount 0` ("no
-  widgets to attach to"); a slider's `"connect to ➜"` → `@assertTopMenuItemStrings ["a World ➜"]`. KEY: the probe must
+  widgets to attach to"); a slider's `"connect to"` → `@assertTopMenuItemStrings ["a World"]` + `@assertValuesEqual …, true,
+  (@rowOpensSubmenu @getMostRecentlyOpenedMenu(), "a World")` (the row leads on to the world's properties). KEY: the probe must
   overlap ONLY the clipped-away part — if it also overlaps the panel, the recursion runs and the rect reappears (leave a
   clear gap to the panel edge). Distinct from macroAttachShowsNoTargetsMessage (genuinely nothing overlapping) — here a
   morph IS there, but clipped out of the candidate list.
@@ -1187,7 +1199,7 @@ assertion a recapture after a regression silently stores two different hashes an
   grabs the morph itself = float drag) and true when the parent is another morph (dragging grabs the PARENT, so they move
   together). "attach…" re-parents under the chosen target (`Widget.attach` → `newParentChoice` → `target.add`); "detaching" = pick up +
   drop on the desktop, which resets the parent to the world. So after attach + detach the morph float-drags independently again.
-  GOTCHA: "attach…" is a TOP-LEVEL item, but "pick up" lives in the morph's "a <Class> ➜" HIERARCHY submenu — `clickMenuItemOfWidget
+  GOTCHA: "attach…" is a TOP-LEVEL item, but "pick up" lives in the morph's "a <Class>" HIERARCHY submenu — `clickMenuItemOfWidget
   …, "pick up"` finds nothing and crashes; use `pickUp()` directly or navigate the submenu.
 - **Duplicate a widget — the copy appears IN PLACE, then you carry it** (`macroDuplicateSimpleWidgetPaintsCleanly` /
   `…ComplexWidget…`): a normal widget's context menu carries a TOP-LEVEL "duplicate" (`Widget.duplicateMenuAction`), so
@@ -1221,21 +1233,23 @@ assertion a recapture after a regression silently stores two different hashes an
   holds wherever the hand is; a sampled move ends exactly on its destination, so the position assert is exact. Find it with `world.hand.children`, not `world.children`; and assert the
   transformed case by VALUE (which island rode, carrying which TransformSpec) rather than with another screenshot.
 - **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneWidget`): a `MenuItemWdgt` is an ordinary
-  duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
-  determinism toggles the item's own entry is the clean `"a MenuItem ➜"` (no instance number/bounds — `Widget.toString:543`
-  with `HidingOfWidgetsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItem ➜"` → `"duplicate"`: the copy is added
+  duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo") → its ANCESTOR hierarchy menu; under the
+  determinism toggles the item's own entry is the clean `"a MenuItem"` (no instance number/bounds — `Widget.toString:543`
+  with `HidingOfWidgetsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItem"` → `"duplicate"`: the copy is added
   straight to the WORLD at the item's position + (10,10) — and since the same click closes the menu chain it came out of, the copy
-  is simply left standing alone on the bare desktop, so the detachment needs no carry and no drop at all. Capture the "demo ➜" target item from `getMostRecentlyOpenedMenu()` WHILE the world menu is
-  still fresh (the next click clears `freshlyCreatedPopUps`). image_1 = a standalone "demo ➜" menu-item morph alone on the desktop.
-  **The detached copy stays FUNCTIONAL:** because "demo ➜" is a submenu-opener, left-clicking the standalone item opens the demo
-  menu (locate it via `world.topWdgtSuchThat (w) -> (w instanceof MenuItemWdgt) and (w.labelString == "demo ➜")` — the only menu
+  is simply left standing alone on the bare desktop, so the detachment needs no carry and no drop at all. Capture the "demo" target item from `getMostRecentlyOpenedMenu()` WHILE the world menu is
+  still fresh (the next click clears `freshlyCreatedPopUps`). image_1 = a standalone "demo" menu-item morph alone on the desktop,
+  its drawn chevron included — the `opensSubmenu` flag is an own field of the row, so the copy keeps it (assert
+  `standaloneItem.opensSubmenu is true`). **The detached copy stays FUNCTIONAL:** because "demo" is a submenu-opener,
+  left-clicking the standalone item opens the demo
+  menu (locate it via `world.topWdgtSuchThat (w) -> (w instanceof MenuItemWdgt) and (w.labelString == "demo")` — the only menu
   item left once the menus close), then `@moveToItemOfTopMenuAndClick_InputEvents "rectangle"` makes a rectangle that rides the
   hand → drop on the world. image_2 = the detached item + the rectangle it produced (reproducing the recording's full arc).
 - **Duplicate an INSPECTOR WINDOW → an independent second inspector (independent close)** (`macroDuplicatedInspectorsCloseIndependently`): the
   duplication trio's third case (after a plain widget and a menu item). The inspector is always windowed — inspect a string
   (`clickMenuItemOfWidget_InputEvents_Macro string, "inspect"`; a demo `StringWdgt` is a plain widget, so NO TextWdgt right-click drift) → an
   `InspectorWdgt` in a `FrameWdgt`; find the window with `@findTopWidgetByClassNameOrClass FrameWdgt`. A window does not block
-  duplication: right-click its TITLE bar → ancestor hierarchy menu → `"a Frame ➜"` → `"duplicate"` (`Widget.duplicateMenuAction`, a DEEP
+  duplication: right-click its TITLE bar → ancestor hierarchy menu → `"a Frame"` → `"duplicate"` (`Widget.duplicateMenuAction`, a DEEP
   copy added to the world at the window's position + (10,10), NOT onto the hand — a move-and-click afterwards drops nothing; a
   test-local `duplicateWindowedWidget_InputEvents_Macro` DRYs the menu walk). Place the copy with `moveTo` before any shot or press
   meant for the original: left at +10,+10 it covers the original's top-left. The copy is a fully INDEPENDENT live inspector window. Close each via its WINDOW'S own button — `@closeWindow_InputEvents win` (the
@@ -1252,7 +1266,7 @@ assertion a recapture after a regression silently stores two different hashes an
   stack while editing is ENABLED. Its "disable editing" item → `disableDragsDropsAndEditing` (`VerticalStackViewportWdgt.coffee:34`
   → `ViewportWdgt.coffee:630` → `disableDrops`) clears the inner content panel's `_acceptsDrops`; now
   `ActivePointerWdgt.dropTargetFor` walks PAST the locked doc up to the WORLD, so the next drop lands as a world child ON TOP of the
-  doc, NOT in its flow. Reach "disable editing" by the hierarchy drill (right-click a doc blurb → `"a DocumentViewport ➜"`
+  doc, NOT in its flow. Reach "disable editing" by the hierarchy drill (right-click a doc blurb → `"a DocumentViewport"`
   → `"disable editing"`). Make the negative meaningful with the accepted-vs-rejected contrast: a blue box dropped while enabled
   flows into the stack (image_1), a red box dropped while locked floats over the doc (image_2). The accepted box uses
   `@dragWidgetTo_InputEvents box1, doc` (drops at the centre, flows in); **drop the REJECTED box STRADDLING the doc's right edge**
@@ -1435,7 +1449,9 @@ assertion a recapture after a regression silently stores two different hashes an
   button reads GREY in the dropped shot (the pointer hovers it post-drop → STATE_HIGHLIGHTED) and white once the pointer leaves —
   deterministic. Complement of `macroButtonTriggersOnlyOnSameWidgetMouseUp` (a CONTAINER button with `rejectDrags=true` that AVOIDS
   float-drag) and `macroResizingButtonDoesntCauseItToClick` (a resize handle, not a body drag): this covers the world-parented,
-  rejectDrags-false body-float-drag branch. Drop the "demo ➜" arrow glyph (absent from the SWCanvas bitmap font → a box) — plain "demo". No new verb.
+  rejectDrags-false body-float-drag branch. The fixture row is the torn-off item's twin: plain label "demo" AND
+  `opensSubmenu: true` on its `CommandSpec` (a hand-built row that opens a menu is a submenu row and draws its chevron, as
+  the world menu's own "demo" row does). No new verb.
 - **A composite drags as one unit into/out of a scroll panel, clipped inside** (`macroCompositeDragsAsUnitIntoScrollPanel`): a
   composite (boxes parented under one top box) crosses a clipping container's boundary as a single assembly. A child parented under a
   non-world morph has `grabsToParentWhenDragged` true (`Widget.coffee:2513-2533`), so dragging any part climbs via `findFirstLooseWidget`
@@ -1465,7 +1481,7 @@ assertion a recapture after a regression silently stores two different hashes an
   original->clone identity map), so clicking the COPY's embedded button duplicates the copy, not the original — the duplicator survives `fullCopy` and replicates
   across generations (1 → 2 → 3 → 4). SETUP reuses the `macroMenuItemDuplicatesToStandaloneWidget` idiom: `@openMenuOf_InputEvents panel` →
   `@getTextMenuItemFromMenu @getMostRecentlyOpenedMenu(), "duplicate"` → `@openMenuOf_InputEvents dupItem` (right-click the item → its ancestor
-  hierarchy menu) → `"a MenuItem ➜"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to
+  hierarchy menu) → `"a MenuItem"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to
   drop. Clicking the embedded button stands the copy IN PLACE at +10,+10, never on the hand: the copy reaches the hand only through its own
   "pick up", after which a plain move-then-click carries-and-drops it (NOT a held-drag — that is only for a free morph not already on the
   hand). Locate each generation's button by a LIVE-WORLD query — the new `PanelWdgt` not yet seen, then its
@@ -1517,7 +1533,7 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Set target** (`macroPaletteSetTargetRecolorsPanel`): `setControllerTargetToWidgetProperty_InputEvents_Macro controller,
   "a Panel", "color"` — right-click the controller (a ColorPaletteWdgt / GrayPaletteWdgt / SliderWdgt / … with
-  `ControllerMixin`) → "connect to ➜" (`openTargetSelector` lists only bounds-INTERSECTING widgets, so it MUST OVERLAP the target)
+  `ControllerMixin`) → "connect" → "connect to" (`openTargetSelector` lists only bounds-INTERSECTING widgets, so it MUST OVERLAP the target)
   → pick the target by class-name PREFIX → pick the property; thereafter acting on the controller calls `target[setter](value)`.
   4th arg `controllerMenuFraction` (default `[0.5,0.5]`): pass `[0.5,0.85]` for a SLIDER (its button covers the centre at value
   50, so target the LOWER TRACK). 5th arg `controllerHierarchyPrefix`: pass the controller's class-name prefix when it is INSIDE
@@ -1528,18 +1544,19 @@ assertion a recapture after a regression silently stores two different hashes an
   Put ONE palette over TWO targets of DIFFERENT classes (PanelWdgt + RectangleWdgt) so each is picked unambiguously by
   class-name PREFIX.
 - **Disconnect ONE wire** (`macroPaletteFansOutAndDisconnects`): `disconnectControllerWire_InputEvents_Macro controller,
-  "a Panel . color"` — a controller's own menu carries one row PER LIVE WIRE, labelled `WireSpec.describeConnection() + " ➜"`;
-  the verb picks that row by PREFIX and clicks "disconnect" in the little menu it opens. ⚠ The label is the Wdgt-stripped target
-  plus the **PIN's label**, not the setter name: `"a Panel . color"`, never `"a Panel . setColor"`; pass the prefix WITHOUT the
-  trailing `" ➜"`. Takes the same 3rd/4th `controllerMenuFraction` / `controllerHierarchyPrefix` args as set-target. The same row
-  is also where a wire's **"fires per event"** toggle lives (`macroConnectionFiresPerEventToggle` navigates it by hand: row
-  prefix, then `@moveToItemContainingOfMenuAndClick_InputEvents … "fires per event"` — CONTAINING, because a ticked row carries
-  a leading ✓).
+  "a Panel . color"` — a controller's own menu carries one row PER LIVE WIRE, labelled `WireSpec.describeConnection()` plus
+  its typed DIRECTION arrow (`" ➜"` one-way, `" ⇄"` two-way — wording, kept until W6 decides it); the row also draws a submenu
+  chevron, since it opens the wire's own menu. The verb picks that row by PREFIX and clicks "disconnect" in the little menu
+  it opens. ⚠ The label is the Wdgt-stripped target plus the **PIN's label**, not the setter name: `"a Panel . color"`, never
+  `"a Panel . setColor"`; pass the prefix WITHOUT the direction arrow. Takes the same 3rd/4th `controllerMenuFraction` /
+  `controllerHierarchyPrefix` args as set-target. The same row is also where a wire's **"fires per event"** toggle lives
+  (`macroConnectionFiresPerEventToggle` navigates it by hand: row prefix, then the "fires per event" row — its tick is DRAWN
+  beside the plain label, so the label reads the same ticked or not).
 - **Reach a SHAPE's own menu item ("corner radius...")** (`macroCornerRadiusPromptOnANonBoxWidget`): an appearance
   contributes items to its widget's menu (`Widget.addShapeSpecificMenuItems` delegates), so they sit LAST. Two traps make
   the fixture, not the navigation, the hard part:
   ⚠⚠ **A right-click lands on the TOPMOST widget under it, and a widget with children answers with the ancestor
-  HIERARCHY menu of the child** ("a String ➜" / "a SimpleButton ➜"), not its own flat one. A `SimpleButtonWdgt` carrying a
+  HIERARCHY menu of the child** ("a String" / "a SimpleButton"), not its own flat one. A `SimpleButtonWdgt` carrying a
   face is therefore two hops from its own items, and so is any widget inside a container — the flat menu is what a
   childless DIRECT world child gives you. Pick the fixture that gives you the menu you mean, or navigate the hierarchy
   row first with `@moveToItemStartingWithOfMenuAndClick_InputEvents`.
@@ -1552,29 +1569,33 @@ assertion a recapture after a regression silently stores two different hashes an
 - **PROMOTE a wire to two-way — "follows it too"** (`macroSliderPromotedToFollowAScrollPanel`, connector §A2): the SAME row,
   one item further down. A wire only DRIVES; this makes the controller follow the pin it drives as well, so a slider wired onto
   a `ViewportWdgt`'s `scroll y` becomes a scrollbar for it. Navigate exactly as for "fires per event" — row prefix, then
-  CONTAINING `"follows it too"` — and click it again to demote.
+  the `"follows it too"` row — and click it again to demote.
   ⚠ **The row is ABSENT unless the promotion would really work** (`ControllerMixin._canTrackWire`): the pin must be readable
   AND declare `announces` on its `PinSpec`, the controller must be able to render that pin (`SliderWdgt._canReflectPin` wants a
   `SliderRange`, which today only a scroll frame answers), and it must not already be following another wire. So a macro that
   expects the row must pick a target that qualifies — a scroll frame — and `@assertTopMenuItemStrings` is how to prove it is
-  there (or absent): `["    fires per event", "    follows it too", "disconnect"]`, four-space `String::untick` prefixes and
-  all, becoming `"✓ follows it too"` once promoted.
-  ⚠⚠ **Assert the arrow BY STRING, never by pixel.** A wire row reads `… ➜` one-way and `… ⇄` two-way, and NEITHER glyph is in
-  the SWCanvas bitmap font — both render as the same box, so a reference image cannot tell them apart (connector §P2's lesson).
+  there (or absent): `["fires per event", "follows it too", "disconnect"]`, the plain labels. Which toggle is ON is the
+  rows' TICK STATE, never their text (the tick is drawn): assert it by meaning, per row — the test folds each row into
+  `"<label>: ticked" / ": unticked" / ": no tick"` from `row.ticks()` and `row.isTicked()` and asserts the joined string,
+  so a promoted wire reads `"fires per event: unticked | follows it too: ticked | disconnect: no tick"`.
+  ⚠⚠ **Assert the wire's direction arrow BY STRING, never by pixel.** A wire row reads `… ➜` one-way and `… ⇄` two-way
+  (typed wording), and NEITHER glyph is in the SWCanvas bitmap font — both render as the same box, so a reference image
+  cannot tell them apart (connector §P2's lesson). A tick is drawn and shows in a picture, but the picture does not say
+  which relationship it stands for, which is why the tick states are asserted too.
   ⚠ **Promoting PULLS: it takes the target's value and scale and moves the target not at all.** A macro asserting the effect
   should compare the target before/after (unchanged) and the controller before/after (adopted) — that pair is the whole proof.
   ⚠ **Drain after wiring before measuring anything**: making a wire fires the controller's connect-push, which is delivered on
   the NEXT drain, so a `yield "waitNoInputsOngoing"` must sit between the wiring and any reading of the target — otherwise the
   controller's constructed default lands on the target after your gesture and the numbers read as a coincidence.
-- ⚠ **BOTH connection gestures live one level down, behind a single `"connect ➜"` row** (connector §P2). A hand-rolled
-  chain must click that row FIRST and then `"connect to ➜"` / `"bind ⇄"` in the submenu it opens
+- ⚠ **BOTH connection gestures live one level down, behind a single `"connect"` row** (connector §P2; a submenu row, so it
+  draws its chevron). A hand-rolled chain must click that row FIRST and then `"connect to"` / `"bind ⇄"` in the submenu it opens
   (`@moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), …`); the shared verbs below already do.
   Grouping keeps the second gesture free of menu height, which is now a readability question rather than a correctness
   one: a pop-up too big for the world is bounded to it and SCROLLS its rows (`PopUpRowsViewportWdgt.preferredExtentForWidth`),
   so a row past the fold is reached with the wheel instead of being lost. ⚠ **A macro must therefore scroll before
   clicking a row near the bottom of a long menu** — `@wheelOn_InputEvents menu, <delta>` — because the item is located by
   a tree walk (which finds it wherever it is) but CLICKED at its coordinates (which must be on-world). See
-  `macroOverTallMenuScrollsToReachItsLastRow`. ⚠ The `"connect ➜"` row deliberately does NOT pass
+  `macroOverTallMenuScrollsToReachItsLastRow`. ⚠ The `"connect"` row deliberately does NOT pass
   `closesUnpinnedPopUps: false`, i.e. it REPLACES its parent menu rather than stacking on it: `openTargetSelector`
   enumerates world widgets, so a menu left standing would list its own `MenuItem`/`Text` children as plausible targets
   (caught only because three tests assert the chooser's contents BY STRING).
@@ -1588,7 +1609,7 @@ assertion a recapture after a regression silently stores two different hashes an
   That is the trap the older patch-cycle tests dodge by picking their target by meaning. ⚠ PRECEDENCE is observable: the
   controller whose menu you open PUSHES its value, so start the two at different values if you want to photograph it.
 - **A two-way wire's row reads `⇄`, and cutting it cuts BOTH halves** (`macroBindTwoSlidersAndUnbind`): the arrow is DERIVED
-  (a tracking wire, or a target that wires back onto my principal pin), so a pair wired by hand in two `connect to ➜` gestures
+  (a tracking wire, or a target that wires back onto my principal pin), so a pair wired by hand in two `connect to` gestures
   reads `⇄` too, and a 3-node ring correctly reads `➜` at every row. `disconnect` on such a row removes the wire held by the
   OTHER widget as well. ⚠⚠ **Do not try to assert the arrow from a SCREENSHOT: under SWCanvas neither `➜` nor `⇄` is in the
   bitmap font, so both render as the same box glyph.** Assert it on the LABEL STRING instead — match the row with a prefix
@@ -1607,7 +1628,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Hover-to-highlight a candidate** (`macroTargetingHighlightsCandidateWidget`): hovering a "choose target:"/"choose new parent:"
   item highlights the morph it represents (`MenuItemWdgt.hoverEntered → widgetToBeHighlighted.turnOnHighlight()`,
   `MenuItemWdgt.coffee:78` → `world.widgetsToBeHighlighted` → a `HighlighterWdgt` each cycle). Overlap a ColorPaletteWdgt with a
-  rect, `clickMenuItemOfWidget… "connect ➜"` then `"connect to ➜"`, grab the menu, find the candidate by prefix, then
+  rect, `clickMenuItemOfWidget… "connect"` then `"connect to"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
 - **The highlight covers the EXACT SUBTREE, tracks the hover, clears on leave** (`macroHierarchyMenuHoverHighlightsExactSubtree`):
   the ancestor-HIERARCHY menu's ▪-marked items are `representsAMorph` too — same hoverEntered/hoverExited path — and on a nested
@@ -1623,9 +1644,10 @@ assertion a recapture after a regression silently stores two different hashes an
   `target.pinsOfKind "color"` — the world offers "background color" + "color"), and picking "color" yields a binding a palette
   click then proves (the whole desktop recolours). To screenshot BETWEEN the menus, hand-roll the
   `setControllerTargetToWidgetProperty…` chain — remembering that BOTH connection gestures sit one level down behind the
-  `"connect ➜"` row — and capture each popup fresh (`targetMenu = @getMostRecentlyOpenedMenu()` right
-  after `"connect to ➜"`; `propertyMenu = …` right after the target click), driving later clicks via the captured refs. GOTCHA:
-  clicking "a World ➜" parks the pointer on a candidate item whose hover highlight-tints the morph it represents — the
+  `"connect"` row — and capture each popup fresh (`targetMenu = @getMostRecentlyOpenedMenu()` right
+  after `"connect to"`; `propertyMenu = …` right after the target click), driving later clicks via the captured refs; assert
+  the one candidate with `@assertTopMenuItemStrings ["a World"]` and that it leads on with `@rowOpensSubmenu targetMenu,
+  "a World"`. GOTCHA: clicking "a World" parks the pointer on a candidate item whose hover highlight-tints the morph it represents — the
   WHOLE WORLD — and the property menu pops OVER the item so no hoverExited fires; hover the property menu's "color" item
   (`@getTextMenuItemFromMenuByPrefix propertyMenu, "color"` + a no-button move) before the shot to clear the tint (and match
   the recording's hover-highlighted row). Prefix "color" is unambiguous: "background color" does not START with it. No new verb.
@@ -1642,16 +1664,16 @@ assertion a recapture after a regression silently stores two different hashes an
   (see `macroSliderTextSliderPatchCycle` below). Drive: `@dragSliderButtonToFraction_InputEvents slider, [0.5,fy]` (slider→text), then edit the text via
   `world.edit text` (escape hatch — left-clicking a short number in a wide box overshoots the empty-text `slotAt`, see
   `macroInspectorWorkAreaEvaluatesCoffeeScript`) + `Meta+a` + typed digits (text→slider). FIXTURE gotchas: KEEP the ctor's
-  wrap-to-own-width (`softWrap` on, the default — `softWrap = false` shrinks the box to its natural content width, so it stops overlapping the slider and `"connect to ➜"` can't find it);
-  `SliderWdgt`'s track AND `SliderButtonWdgt.normalColor` are both `Color.BLACK`, so tint the track light (`slider.color = …`) to
+  wrap-to-own-width (`softWrap` on, the default — `softWrap = false` shrinks the box to its natural content width, so it stops overlapping the slider and `"connect to"` can't find it);
+  a plain slider's track (`Theme.sliderTrack`) and its thumb's rest colour (`Theme.sliderThumb`) are both black, so tint the track light (`slider.color = …`) to
   make the button (= the value) visible. No new verb.
 - **The full 3-node slider→text→slider cycle — each component drives the other two, wired with NOTHING moved**
   (`macroSliderTextSliderPatchCycle`): the 3-node sibling of the above. `slider1 → text "text"`, `text → slider2 "value"`,
   `slider2 → slider1 "value"` close a ring, so dragging slider1, dragging slider2, OR typing the text each drives the other two (the
   guard stops each lap). Wiring it IN PLACE needs two tricks: (1) place the two sliders ADJACENT with a ~1px bounding-box OVERLAP —
-  enough that `slider2`'s `"connect to ➜"` lists `slider1` (so `slider2→slider1` wires unambiguously) while their BUTTONS stay distinct
+  enough that `slider2`'s `"connect to"` lists `slider1` (so `slider2→slider1` wires unambiguously) while their BUTTONS stay distinct
   (give them different track colours too, so the two sliders are easy to tell apart); and (2) wire the one ambiguous leg —
-  `text→slider2`, since the text overlaps BOTH sliders — BY MEANING instead of the prefix verb: right-click the text → `"connect ➜"` → `"connect to ➜"`,
+  `text→slider2`, since the text overlaps BOTH sliders — BY MEANING instead of the prefix verb: right-click the text → `"connect"` → `"connect to"`,
   then in the "choose target:" menu pick the item whose target IS slider2. **The reusable bit — selecting a target menu item by its
   morph reference:** `ControllerMixin.openTargetSelector` passes each candidate target widget as the menu item's `argumentToAction1`
   (via `MenuWdgt.addMenuItem` → `MenuItemWdgt`), so `slider2Item = menu.topWdgtSuchThat (item) -> (item instanceof MenuItemWdgt) and
@@ -1800,7 +1822,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@dragWidgetTo_InputEvents text, panel`), then REMOVE the last. KEY GESTURE: a child of a TIGHT stack is NOT independently
   float-draggable (a float-drag grabs the whole STACK — eyeball-caught: dragging the paragraph moved the entire stack), so detach
   it through its hierarchy menu's "pick up", reusing `pickUpPartToDesktop_InputEvents_Macro part, "a SimpleText", dropPoint`
-  (right-click → "a SimpleText ➜" → "pick up" = `Widget.pickUp → world.hand.grab`, then carry + mouse-DOWN to drop; the
+  (right-click → "a SimpleText" → "pick up" = `Widget.pickUp → world.hand.grab`, then carry + mouse-DOWN to drop; the
   subroutine from `macroPickingUpPartsFromInspector`). GOTCHAS: keep paragraphs MODERATE so the whole stack stays on-screen (a
   clean right-click on the last paragraph — tall paragraphs put its centre at the canvas edge); drop the removed paragraph well
   inside the desktop, clear of the stack, so the world extent (hence the SWCanvas frame) stays put. No new verb.
@@ -1828,11 +1850,11 @@ assertion a recapture after a regression silently stores two different hashes an
   childrenNotHandlesNorCarets.length == 0: newHeight = Math.max newHeight, @height()` (`:130-131`) keeps the dragged height ONLY
   when loose or EMPTY. Resize via the real HANDLE: `@openMenuOf_InputEvents panel` → "resize/move..." →
   `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`. KEY: once filled the text COVERS the panel, so bring up
-  its handles via the text's "a VerticalStackPanel ➜" hierarchy submenu. Screenshot WITH the handles showing, then click
+  its handles via the text's "a VerticalStackPanel" hierarchy submenu. Screenshot WITH the handles showing, then click
   empty desktop to exit. `world.add text` to detach the content and empty the stack.
 - **A lone centered widget stays centered** (`macroCenteredWidgetStaysCenteredWhenAlone`): a stack child's
   `VerticalStackLayoutSpec.alignment` (`"left"|"center"|"right"`, default left) drives its horizontal placement; `setAlignmentToCenter`
-  is what the "a X ➜ → layout in stack → align center" menu item calls — `heart.layoutSpec.setAlignmentToCenter()` is the direct
+  is what the "a X → layout in stack → align center" menu item calls — `heart.layoutSpec.setAlignmentToCenter()` is the direct
   equivalent (sets the field AND relayouts). The centering SURVIVES the child becoming the only element: `ViewportWdgt._positionAndResizeChildren`
   has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
   HeartIconWdgt (Color…)` into a `DocumentViewportWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
@@ -1841,7 +1863,7 @@ assertion a recapture after a regression silently stores two different hashes an
   two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region
   `boundingBoxTight()` (`Widget.coffee:679-680`, edges inset by paddingTop/Bottom/Left/Right `:658-668`). The padding band between them is part
   of the morph, but while UNPAINTED it is click-through. Reproduce basicMorphPadding via PATCH-PROGRAMMING: build the rect + FIVE SliderWdgts
-  + a ColorPaletteWdgt all OVERLAPPING it (REQUIRED — `"connect to ➜"` lists only widgets whose bounds intersect the controller), then
+  + a ColorPaletteWdgt all OVERLAPPING it (REQUIRED — `"connect to"` lists only widgets whose bounds intersect the controller), then
   `setControllerTargetToWidgetProperty_InputEvents_Macro slider, "a Rectangle", "padding"|"padding top"|"…bottom"|"…left"|"…right", [0.5,0.85]`
   (the centred slider button covers a centre right-click → right-click the LOWER TRACK; a world-child controller needs no hierarchy prefix) and
   the palette → `"background color"`. `@dragSliderButtonToFraction_InputEvents slider,[0.5,frac]` insets the dark interior; a palette click
@@ -1859,7 +1881,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `normalColor`/`highlightColor`/`pressColor` per state (`hoverEntered → setHiglightedColor`, `pressBegan → setPressedColor`,
   `hoverExited → setNormalColor`; each early-returns while the hand is dragging). `demoMenus.makeSlidersButtonsStatesBright()`
   (`DemoMenus.coffee:87` — the "make sliders' buttons states bright" test-menu row; NOT the `menusHelper` global, which does
-  not carry it) recolours every EXISTING slider button BLACK/BLUE/LIME — call it AFTER `world.add`. HOLD each state:
+  not carry it) recolours every EXISTING slider button BLACK/BLUE/LIME — call it AFTER `world.add`. (A slider that is a viewport's scroll indicator ignores that scheme while it is one: its thumb wears the indicator's colours, `SliderButtonWdgt._colorForMyState`.) HOLD each state:
   hover via a no-button move onto the button (highlighted, persists), then `@moveToAndMouseDown_InputEvents slider.button`
   (pressed, held). GOTCHA: a SliderWdgt defaults to `alpha 0.1`, which mutes the colours into greys — set
   `slider.button.alpha = 1` (NOT `slider.alpha = 1`: the track's own colour is BLACK, so an opaque track swallows the black
@@ -1913,10 +1935,11 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A menu row that SHOWS somebody's state follows a change it did not make**
   (`macroWallpaperMenuFollowsAnApiChange`): open a ticked menu, change the underlying value with NO menu
   interaction at all — `world.wallpaper.setPattern world.wallpaper.pattern5` — and the open
-  menu's tick MOVES. The rows carry a `MenuRowReflectionSpec` (they declare that their label reflects a
-  value); the source is a dataflow node that `markStale`s itself on change, and `CommandPanelWdgt`
-  subscribes one edge PER PANEL, so the drain re-derives every subscribed row wherever it is. Assert with
-  `@assertValuesEqual "…", "dots", (@tickedRowLabelOfMenu menu)` — the bare label of the ticked row.
+  menu's tick MOVES. The rows carry a `MenuRowReflectionSpec` (they declare that their TICK reflects a
+  value: ticked exactly while it is the row's choice; the tick is drawn, the label stays plain); the source is a
+  dataflow node that `markStale`s itself on change, and each reflecting row subscribes ITSELF to it (one edge per
+  row, `MenuItemWdgt`'s constructor), so the drain re-derives every subscribed row's tick wherever it is. Assert with
+  `@assertValuesEqual "…", "dots", (@tickedRowLabelOfMenu menu)` — the plain label of the row whose tick state is set.
   ⚠ Grab the menu with `@getMostRecentlyOpenedMenu()` right after it opens, and do NOT pin it unless the
   test clicks elsewhere (pinning tightens its shadow, changing the pixels). ⭐ The API path is the sharp
   case and the cheap one: it needs no second-menu choreography, and it is what the hand-rolled tick
@@ -2014,7 +2037,7 @@ assertion a recapture after a regression silently stores two different hashes an
   generic sink: flips `allTestsPassedSoFar`, records the failing test, logs expected-vs-found, but does NOT stop the macro). These
   MUST be `@assert…` toolkit methods — `recordMacroAssertion` has "Macro" mid-token, which the invocation rewriter would mangle in
   macro SOURCE. `macroLonelySliderTargetsWorldOnly`: a lone controller can only target the WORLD — `openTargetSelector` lists
-  bounds-intersecting widgets + always the world (`Widget.plausibleTargetAndDestinationWidgets`, `Widget.coffee:1092`); with nothing overlapping, "a World ➜" is the only item.
+  bounds-intersecting widgets + always the world (`Widget.plausibleTargetAndDestinationWidgets`, `Widget.coffee:1092`); with nothing overlapping, "a World" is the only item (assert its label AND that it leads on: `@rowOpensSubmenu`).
 - **Button-trigger discipline** (`macroButtonTriggersOnlyOnSameWidgetMouseUp`): a button fires only when mouse-down AND mouse-up
   land on the SAME morph (`ActivePointerWdgt.processPointerUp` fires only `when w == @mouseDownWdgt`). To show "press then release
   elsewhere does NOT trigger", press on the button and release off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents
@@ -2076,7 +2099,7 @@ assertion a recapture after a regression silently stores two different hashes an
   has no work/execution pane, but each widget's **"dev → console"** menu opens a `ConsoleWdgt` — an editable code area (`@textWidget`) plus
   "run selection" / "run all" buttons. **"run all" → `ConsoleWdgt.doAll`** compiles the code area's text and runs it with `@` = the console's
   target (`ConsoleWdgt.coffee:66-70`) — the direct equivalent of the old inspector work-pane's "do all". So open the console on a string
-  (`clickMenuItemOfWidget_InputEvents_Macro s, "dev ➜"` → `@moveToItemOfTopMenuAndClick_InputEvents "console"`), find it
+  (`clickMenuItemOfWidget_InputEvents_Macro s, "dev"` → `@moveToItemOfTopMenuAndClick_InputEvents "console"`), find it
   (`@findTopWidgetByClassNameOrClass ConsoleWdgt`), set the code with `consoleWdgt.textWidget.setText "@inform 'coffeescript!'"` (a fixture
   convenience — the EVAL is driven by the real UI button), then click `consoleWdgt.runAllButton` → the snippet runs against the string and
   pops an `@inform` bubble. The console run-all sibling of `macroEvaluateString` (which calls `world.evaluateString` directly). Single quotes
@@ -2351,8 +2374,8 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   — one fills it via `doc.add`, the other by DRAGGING two desktop text widgets in (`@dragWidgetTo_InputEvents`) — then wheel-scroll.
   GOTCHA: `SimpleTextWdgt` width floors ~330px, so narrow the doc and place draggables SIDE BY SIDE (stacking overlaps them).
 - **`macroDemoMenuCatalogueParade`** (from the recorded buildAllWidgets, 70 steps → 1 shot): the whole-catalogue construction smoke —
-  every STATIC "demo ➜" item built via the real menu (a per-test `makeDemoWidget itemLabel, dropPoint` helper: right-click a
-  RESERVED bare menu-home spot → "demo ➜" → item → the fresh widget rides the hand → a click at the authored grid spot drops it
+  every STATIC "demo" item built via the real menu (a per-test `makeDemoWidget itemLabel, dropPoint` helper: right-click a
+  RESERVED bare menu-home spot → "demo" → item → the fresh widget rides the hand → a click at the authored grid spot drops it
   centered), one reference asserting every catalogue widget's constructor, defaults and first paint at once. When a new demo item
   lands, ADD it to the parade and re-capture. "animation demo" is deliberately excluded: its BouncerMorphs keep moving after the
   drop, so the single reference would depend on cycle count.

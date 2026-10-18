@@ -49,37 +49,65 @@ class Theme
     # ---- ROLES -----------------------------------------------------------------------------
     # What each piece of chrome paints with. A role names ONE surface, so a surface can be
     # restyled without moving another: two surfaces that paint the same colour today still hold
-    # two roles (the tooltip and the speech bubble share the menu row's fill and the menu's stroke
-    # by value, never by name).
+    # two roles (the speech bubble shares the list row's fill and the list rows panel's stroke by
+    # value, never by name).
 
-    # the pop-up (menu) header: the header box's fill, and the background of the title text
-    # centred in it.
-    @menuHeaderFill = Color.create 125, 125, 125
-    # the pop-up header's title text.
-    @menuHeaderText = Color.create 255, 255, 255
-    # the menu box's stroke, and the stroke of the rows panel a menu or list stacks its rows in.
-    @menuStroke = Color.create 186, 186, 186
-    # the menu box's body: the fill a TRANSIENT frame wears (pinned, a menu wears a window's body).
-    @menuBodyFill = Color.create 238, 238, 238
-    # the rows panel a menu or list stacks its rows in (CommandPanelWdgt).
+    # the pop-up (menu and prompt) header band: its fill, its title text, and the 1 px rule the
+    # band paints as its own bottom edge (redesign plan §2, rule D: the band's own edge).
+    @menuHeaderFill = @paper
+    @menuHeaderText = @muted2
+    @menuHeaderRule = @chrome
+    # a pop-up's body -- a TRANSIENT frame, a menu or a prompt (pinned, it wears a window's body):
+    # its 1 px border stroke and its fill (FrameWdgt._frameLook).
+    @menuStroke = @frame
+    @menuBodyFill = @paper
+    # a LIST's rows panel (the CommandPanelWdgt a ListWdgt stacks its rows in): its fill and its
+    # stroke. A pop-up's rows panel paints nothing: the pop-up's body is its box.
     @rowsPanelFill = Color.create 238, 238, 238
-    # a menu row's flat fill at rest, and the ink of its label.
-    @menuRowFill = Color.create 250, 250, 250
-    @menuRowText = Color.create 50, 50, 50
-    # the grip bar a pinned menu's liftable row paints along its left edge.
-    @menuRowGrip = Color.create 169, 169, 169
-    # The hairline a row paints along its TOP edge when the row above it is another row (ruling
-    # G5): paint, never layout, so rows stay flush and no dead zone opens between two targets.
-    # Fainter than menuStroke, because a menu's own border is a boundary and this is only a rhythm
-    # mark inside it.
-    @menuRowSeparator = Color.create 225, 225, 225
-    # the rule a menu draws between two groups of rows (DividerWdgt).
-    @menuDivider = Color.create 230, 230, 230
+    @rowsPanelStroke = Color.create 186, 186, 186
+    # a MENU row (a MenuItemWdgt in a menu or a prompt, a prompt's Ok / Close included, and one
+    # lifted out of a pinned menu or duplicated onto the desktop): its fill at rest -- the pop-up
+    # body's own paper, so a row in a pop-up shows no box of its own and a standalone row keeps a
+    # paper box -- and the ink of its label ...
+    @menuRowFill = @paper
+    @menuRowText = @ink
+    # ... the PLATE it wears over its whole box while hovered, and while pressed (rounded at
+    # menuRowPlateRadius; outside the plate's corners its rest fill shows) ...
+    @menuRowHoverFill = @desk
+    @menuRowPressFill = @chrome
+    # ... the grip bar it paints along its left edge while a PINNED menu hands it out ...
+    @menuRowGrip = @grip
+    # ... and the ink of its two INDICATORS (MenuRowIndicatorWdgt), the same at rest, hovered and
+    # pressed: the chevron at its right edge saying the row opens a submenu, and the tick in its
+    # leading column saying the row's choice is the current one.
+    @menuRowSubmenuChevron = @muted3
+    @menuRowTick = @ink
+    # the rule a pop-up's group divider paints across its band (DividerWdgt; redesign plan §2,
+    # rule D: a band painting its own rule).
+    @menuDivider = @chrome
+    # a LIST row (a MenuItemWdgt in a ListWdgt's rows panel), which keeps its flat look until lists
+    # take their own (redesign plan §4 W3): its fill at rest, while highlighted and while pressed (a
+    # selected row stays pressed), each over its whole box, and the ink of its label ...
+    @listRowFill = Color.create 250, 250, 250
+    @listRowHighlightFill = Color.SILVER
+    @listRowPressFill = Color.GRAY
+    @listRowText = Color.create 50, 50, 50
+    # ... and the hairline it paints along its TOP edge when the row above it is another row
+    # (ruling G5): paint, never layout, so rows stay flush and no dead zone opens between two
+    # targets. Fainter than rowsPanelStroke, because the panel's own border is a boundary and this
+    # is only a rhythm mark inside it.
+    @listRowSeparator = Color.create 225, 225, 225
+    # a LabelButtonWdgt built with no look of its own (a fizzytiles magnet): its fill at rest,
+    # hovered and pressed, each over its whole box, and the ink of its label.
+    @labelButtonFill = Color.create 250, 250, 250
+    @labelButtonHighlightFill = Color.SILVER
+    @labelButtonPressFill = Color.GRAY
+    @labelButtonText = Color.create 50, 50, 50
 
-    # the tooltip bubble's fill and stroke, and the ink of its text.
-    @tooltipFill = Color.create 250, 250, 250
-    @tooltipStroke = Color.create 186, 186, 186
-    @tooltipText = Color.create 0, 0, 0
+    # a tooltip's PLATE: its fill (a plate carries no border, so it has no stroke) and the ink of
+    # its text.
+    @tooltipFill = @plate
+    @tooltipText = @ink
     # the speech bubble's (the placeable callout's) fill and stroke.
     @speechBubbleFill = Color.create 250, 250, 250
     @speechBubbleStroke = Color.create 186, 186, 186
@@ -141,8 +169,24 @@ class Theme
     # colours from.
     @promptSliderTrack = Color.create 225, 225, 225
     @promptSliderThumb = Color.create 60, 60, 60
-    # a slider's (and a scroll indicator's) track when its builder names no colour.
-    @scrollTrack = Color.create 0, 0, 0
+    # a slider's track when its builder names no colour ...
+    @sliderTrack = Color.create 0, 0, 0
+    # ... and its thumb at rest, under a pointer and pressed, when its builder gives the thumb no
+    # scheme of its own (SliderButtonWdgt.setColorScheme).
+    @sliderThumb = Color.BLACK
+    @sliderThumbHighlight = Color.create 110, 110, 110
+    @sliderThumbPress = Color.create 100, 100, 100
+    # a viewport's SCROLL INDICATOR -- the two bars a viewport builds and presents
+    # (SliderWdgt.showAsScrollIndicator). Its track: the colour the viewport builds its bars in,
+    # and the alpha a FAT indicator shows that track at (a thin one shows none) ...
+    @scrollIndicatorTrack = @ink
+    @scrollIndicatorTrackAlpha = 0.06
+    # ... and its thumb: the scrollbar token at rest, thin or fat, and a darker ink while a fat one
+    # is hovered and while it is pressed. Each carries its own alpha, which the thumb shows as it
+    # is, never dimmed by a second one.
+    @scrollIndicatorThumb = @scrollbar
+    @scrollIndicatorThumbHighlight = Color.create 0x1E, 0x1E, 0x1C, 0.5
+    @scrollIndicatorThumbPress = Color.create 0x1E, 0x1E, 0x1C, 0.6
 
     # a button's border (SimpleButtonWdgt, SimpleRectangularButtonWdgt) ...
     @buttonStroke = Color.create 196, 195, 196
@@ -240,10 +284,14 @@ class Theme
     # fontName / fontSize / bold beside the role overrides that one member. Weights map onto the
     # bold flag: the draft's 600 is bold, 500 is regular.
     @fonts =
-      # a menu row's label (and any LabelButtonWdgt's built without a role)
-      menuRow: {family: "sans-serif", size: 17, bold: false}
+      # a menu row's label (a MenuItemWdgt in a menu or a prompt, or one standing on its own)
+      menuRow: {family: "Arial, sans-serif", size: 15, bold: false}
+      # a list row's label (a MenuItemWdgt in a ListWdgt)
+      listRow: {family: "sans-serif", size: 17, bold: false}
+      # the label of a LabelButtonWdgt built without a role (a fizzytiles magnet)
+      labelButton: {family: "sans-serif", size: 17, bold: false}
       # a pop-up's header title
-      menuHeader: {family: "sans-serif", size: 13, bold: false}
+      menuHeader: {family: "Arial, sans-serif", size: 11, bold: false}
       # a window's title, in its strip
       windowTitle: {family: "Arial, sans-serif", size: 13, bold: false}
       # the small chrome labels: a text button's face, the save / save + close labels, the
@@ -251,8 +299,8 @@ class Theme
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
       # every StringWdgt / TextWdgt built without a role
       defaultText: {family: "Arial, sans-serif", size: 13, bold: false}
-      # a tooltip's text (set in italic by the tooltip itself)
-      tooltip: {family: "sans-serif", size: 12, bold: false}
+      # a tooltip's text
+      tooltip: {family: "Arial, sans-serif", size: 12, bold: false}
       # a speech bubble's text (set in italic by the bubble itself)
       speechBubble: {family: "Arial, sans-serif", size: 12, bold: false}
       # the entry field of a prompt (its family is also the family of any StringFieldWdgt built
@@ -266,19 +314,24 @@ class Theme
     # Chrome geometry (program ruling G2): a handle's side, a frame grip's side and inset, the bar
     # button's hit box, a frame's border, its strip's
     # rule and its body margin, the glyphs inset within a bar button's box, a menu row's glyph
-    # box, the minimum height a menu/list row takes, the corner
-    # rounding of a window's and a card's body, of a menu's header and body and of the two
-    # bubbles, a menu/list rows-panel's border, and a toolbar grid's cell side / inter-cell gap /
-    # outer margin / row count. Each chrome layout site reads the matching name here; no chrome
-    # dimension lives as a literal in a layout method.
+    # box, the minimum height a menu/list row takes, a menu row's and a list row's side inset and
+    # icon gap, a menu row's plate rounding and its chevron's and tick's glyph squares and gaps, a
+    # pop-up group divider's band, the corner
+    # rounding of a window's, a card's and a pop-up's body and of the speech bubble, a tooltip
+    # plate's rounding, padding and line height, a pop-up's
+    # content padding and its header's rule and title inset, a list rows-panel's padding, a scroll
+    # indicator's fat and thin widths and the thin one's edge inset, and a toolbar grid's cell
+    # side / inter-cell gap / outer margin / row count. Each chrome layout site reads the matching
+    # name here; no chrome dimension lives as a literal in a layout method.
     #   ONE geometry serves mouse and finger alike (program ruling G1), so every value is set
     # here, once, at construction: there is no per-device redraw to switch between, and no
     # boot-time styling pass rewriting a dozen of them on one kind of page.
 
     # the height a frame's title text STANDS IN at until its title piece exists (a frame derives
-    # its strip in its constructor, before the piece is built): the line height of a 13 px title,
-    # the size of both the window title and the pop-up header fonts. Once the piece exists, every
-    # strip reads the piece's own height instead -- a window's centres its title by it.
+    # its strip in its constructor, before the piece is built): the line height of the window
+    # title's 13 px. A pop-up header stands in at it too: its band is floored at menuRowHeight, far
+    # above either title's line. Once the piece exists, every strip reads the piece's own height
+    # instead -- a window's centres its title by it.
     @titleBarTextHeight = 16
 
     # the side of a plain HANDLE (HandleWdgt: a halo's resize / move / rotate handles, a naked
@@ -331,21 +384,65 @@ class Theme
     # height, and the label sits centred in whichever height wins. A row is a tap target, and so
     # are the prompt's Ok / Close buttons, which ARE menu rows (G5).
     @menuRowHeight = 44
+    # a MENU row's horizontal rhythm: the inset it keeps at each side (whatever it shows first --
+    # its tick column, its icon's glyph box, or its label -- starts this far in, and whatever it
+    # shows last -- its label, or its submenu chevron's ink -- ends this far short of its right
+    # edge), and, in a row carrying an icon, the gap between the glyph box and the label ...
+    @menuRowSideInset = 10
+    @menuRowIconGap = 4
+    # ... the rounding of the plate it wears while hovered or pressed (the draft's control
+    # radius) ...
+    @menuRowPlateRadius = 6
+    # ... and its two INDICATORS (MenuItemWdgt). The submenu CHEVRON: the side of its glyph square
+    # (the draft's 16 px ›), and the least gap between the end of the label and the start of the
+    # chevron's ink. The INK, not the square, is what ends menuRowSideInset short of the row's right
+    # edge, so the square overhangs into that inset. The TICK: the side of its glyph square, which
+    # starts at the side inset in a leading column that every row of a ticking menu reserves, and
+    # the gap between that square and the label. The tick's ink ends a pixel inside its square
+    # (TickIconAppearance at 14 px: ink columns 1..12), so the gap the eye reads is one more than
+    # this -- between the icon gap and the chevron gap.
+    @menuRowChevronSize = 16
+    @menuRowChevronGap = 8
+    @menuRowTickSize = 14
+    @menuRowTickGap = 6
+    # a LIST row's two, which it keeps until lists take their own look.
+    @listRowSideInset = 4
+    @listRowIconGap = 4
+    # a pop-up's group DIVIDER (DividerWdgt): its band is this gap, its rule, then this gap again
+    # -- the draft's group padding above and below a 1 px rule.
+    @menuDividerGap = 4
+    @menuDividerRuleWidth = 1
 
-    # the header box's own corner rounding.
-    @menuHeaderCornerRadius = 4
-    # the body rounding of a menu with a title strip (an untitled pop-up takes the boxy default,
-    # and a flat look, PreferencesAndSettings.isFlat, takes none).
-    @menuCornerRadius = 5
+    # the body rounding of a pop-up, a menu or a prompt, titled or not (a flat look,
+    # PreferencesAndSettings.isFlat, takes none): the radius of the outline it strokes over its
+    # content and clips its children to.
+    @menuCornerRadius = 10
     # the body rounding of a window, and of a card (a nested frame or a docked band): the radius
     # of the outline the frame strokes over its content and clips its children to.
     @windowCornerRadius = 8
     @cardCornerRadius = 6
-    # the tooltip bubble's rounding (when its opener names none), and the speech bubble's.
-    @tooltipCornerRadius = 6
+    # a tooltip's PLATE (the draft's label plate): its rounding, and its padding at each side of
+    # its contents and above and below them, each when its opener names none; and the height of
+    # the slot each line of its text stands in (the draft's line-height) ...
+    @tooltipCornerRadius = 8
+    @tooltipHorizontalPadding = 7
+    @tooltipVerticalPadding = 1
+    @tooltipLineHeight = 16
+    # ... and the speech bubble's rounding.
     @speechBubbleCornerRadius = 6
-    # the border width a menu/list rows panel keeps around its flush-stacked rows.
-    @menuRowsBorder = 2
+    # a pop-up's CONTENT BOX (a menu's or a prompt's): how far in from its border, and below its
+    # header's rule, its rows panel lays its rows and editors out, on every side. The header band
+    # spans that same content width, so it stops this far in from the border at both ends. The
+    # sides and the top and bottom are ONE number because a rows panel's padding is one uniform
+    # knob (VerticalStackPanelWdgt.padding).
+    @menuContentPadding = 4
+    # a pop-up header's own rule, the band's bottom edge: its thickness ...
+    @menuHeaderRuleWidth = 1
+    # ... and how far into the band the header's title text starts.
+    @menuHeaderTitleInset = 10
+    # the padding a LIST's rows panel keeps around its flush-stacked rows (a pop-up's rows panel
+    # keeps menuContentPadding instead).
+    @rowsPanelPadding = 2
 
     # a toolbar grid's thumbnail cell: side length, the gap between cells, and the margin
     # around the whole grid; toolRows is how many rows of cells a strip lays out before the
@@ -364,6 +461,11 @@ class Theme
     # indicator rests THIN and untouchable for as long as its pane overflows, and is absent when
     # it does not: visibility is a derivation from overflow, on no clock at all.
     @scrollIndicatorThickness = 4
+    # how far in from its viewport's edge a THIN indicator lies: clear of the viewport's own
+    # border, and of the border of a pop-up or a window around it. A fat indicator lies flush,
+    # since its bar is the band the hover pass watches and every press aims into
+    # (ViewportWdgt._indicatorEdgeInset).
+    @scrollIndicatorEdgeInset = 2
 
     # a prompt's input slider's CROSS axis, i.e. the thumb you drag: a TARGET (G3), like the
     # prompt text it sits under.

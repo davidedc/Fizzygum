@@ -287,7 +287,7 @@ class HandleWdgt extends Widget
     menu = new MenuWdgt @, target: @, title: "choose target:"
     if choices.length > 0
       choices.forEach (each) =>
-        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", @, 'makeHandleSolidWithParentWidget', arg1: each, representsAWidget: true
+        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50), @, 'makeHandleSolidWithParentWidget', arg1: each, representsAWidget: true
     else
       # Not pre-computed: finding eligible widgets is costly, so the list is calculated lazily
       # here, on menu-open; if none are found, show a message instead of hiding the entry.

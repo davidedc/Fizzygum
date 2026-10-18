@@ -6,10 +6,13 @@
 # paints the box around me; a ListWdgt owns the surrounding viewport and leaves my own
 # box painting me. Either way the ROWS are laid out HERE.
 #
-# One knob shapes a panel to its client:
+# Two knobs shape a panel to its client:
 #  - `selectsItemsOnClick`: true makes each MenuItemWdgt SELECT on click (a list),
 #    false makes it TRIGGER (a menu / prompt's Ok-Close). MenuItemWdgt.isListItem
-#    dispatches on it via ?(); default false so a plain menu reads falsy.
+#    dispatches on it via ?(); default false so a plain menu reads falsy. It is also
+#    which LOOK my rows are built with (_createMenuItem): a list's rows, or menu rows.
+#  - `padding`: the border my rows stack inside. A pop-up hands me its content padding
+#    (its content box inside its border); a list's panel keeps its own, rowsPanelPadding.
 #
 # Rows answer menuEntryPreferredWidth() (MenuItemWdgt / StringFieldWdgt /
 # ColorPickerWdgt / SliderWdgt) so every row is widened to the panel's widest;
@@ -18,8 +21,8 @@
 #
 # LAYOUT (§5.2e): the panel IS a VerticalStackPanelWdgt — the ONE vertical-
 # stack engine lays the rows out. Menu-ness enters only through the base's own policy seams:
-#  - border 2 / gap 0: the stack's padding knob set tight, with the new
-#    interElementGap() policy at 0 so rows sit FLUSH inside the 2px border;
+#  - padding / gap 0: the stack's padding knob is my client's (above), with the
+#    interElementGap() policy at 0 so rows sit FLUSH inside that border;
 #  - width: a menu SELF-sizes to its widest row (a general stack takes its width
 #    from its container) — the _positionAndResizeChildren specialization hugs
 #    the width, then super() distributes it; the _childWidthInStack policy hands
@@ -83,18 +86,18 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     @_holdingPopUp()?.isPersistent?() ? false
 
   constructor: (opts = {}) ->
-    # menuRowsBorder = the menu's tight border; rows stack FLUSH inside it (see
-    # interElementGap below). No extent/color through the base ctor — the look
-    # is set right here.
-    super padding: WorldWdgt.theme.menuRowsBorder
+    # the border my rows stack FLUSH inside (see interElementGap below): my client's to give,
+    # a list's rows-panel padding when it gives none. No extent/color through the base ctor —
+    # the look is set right here.
+    super padding: opts.padding ? WorldWdgt.theme.rowsPanelPadding
     @target = opts.target
     @fontSize = opts.fontSize
     @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
-    # replace the stack's RectangularAppearance: the panel draws the square menu box,
-    # stroked with the menu stroke. A pop-up frame paints its OWN box around me and turns
+    # replace the stack's RectangularAppearance: the panel draws the rows box, stroked with the
+    # rows-panel stroke -- a list's look. A pop-up frame paints its OWN box around me and turns
     # mine off (alpha 0) rather than doubling the stroke; a list's panel IS the box.
     @appearance = new MenuAppearance @
-    @strokeColor = WorldWdgt.theme.menuStroke
+    @strokeColor = WorldWdgt.theme.rowsPanelStroke
     @color = WorldWdgt.theme.rowsPanelFill
 
   colloquialName: ->
@@ -114,7 +117,7 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     @_holdingPopUp()?.titleText?()
 
   # menu rows sit FLUSH (contiguous hover highlights); only the outer border
-  # keeps the 2px padding. See the base's interElementGap policy comment.
+  # keeps my padding. See the base's interElementGap policy comment.
   interElementGap: ->
     0
 
@@ -147,23 +150,26 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   sliderTrackPressJumpsButton: ->
     true
 
-  createLine: (height = 1) ->
-    new DividerWdgt height
+  # A group boundary: a DividerWdgt, whose band is the theme's whoever mints it -- every group
+  # boundary reads the same, so a caller has no size to give.
+  createLine: ->
+    new DividerWdgt
 
-  addLine: (height) ->
-    item = @createLine height
+  addLine: ->
+    item = @createLine()
     @__add item
 
-  prependLine: (height) ->
-    item = @createLine height
+  prependLine: ->
+    item = @createLine()
     @__add item, atIndex: 0
 
-  # Builds a MenuItemWdgt from a CommandSpec and this panel's context: the font (the menu-row
-  # role, at this panel's own @fontSize when it has one) and the subject — every row of mine acts
-  # ABOUT my @target, however the row's own receiver is wired.
+  # Builds a MenuItemWdgt from a CommandSpec and this panel's context: the LOOK my rows wear (a
+  # list's rows when I select on click, menu rows otherwise -- the row picks its font and colours
+  # from it), my own @fontSize when I have one, and the subject — every row of mine acts ABOUT my
+  # @target, however the row's own receiver is wired.
   _createMenuItem: (commandSpec) ->
     new MenuItemWdgt commandSpec,
-      fontRole: WorldWdgt.theme.fonts.menuRow
+      listRow: @_selectsItemsOnClick
       fontSize: @fontSize
       subject: @target
 
@@ -173,13 +179,12 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # _applyRowReflectionConnector lane the drain calls. I hold no edge and take no part — what
   # reflects is the ROW, so a row keeps showing its value wherever it goes, including out of me.
 
-  # Drop the row with this label. Matched WITHOUT the tick decoration on either side: a reflecting
-  # row's prefix follows the value it shows, so the spelling on screen is not something a caller
-  # removing a row by name can know. Pass the bare name ("soft wrap"); a decorated one still works.
+  # Drop the row with this label. A row's label is its plain wording whatever it shows -- its tick
+  # and its submenu chevron are drawn beside it, never written into it -- so the name a caller
+  # removes a row by ("soft wrap") is the text on screen.
   removeMenuItem: (label) ->
-    wanted = label.withoutTickDecoration()
     item = @firstChildSuchThat (m) ->
-      m.label? and m.label.text.withoutTickDecoration() == wanted
+      m.label? and m.label.text == label
     if item?
       item.fullDestroy()
 
@@ -222,18 +227,41 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # retired interim post-pass this replaced is in
   # docs/archive/menu-row-conformance-plan.md (Phase 2e).
   _positionAndResizeChildren: ->
+    @_deriveTickColumn()
     @_applyExtentBase new Point (@maxWidthOfMenuEntries() + 2 * @padding), @height()
     super()
     @_deriveRowSeparators()
 
+  # Does a leading TICK COLUMN run down my rows? Exactly while one of them ticks -- a row reflecting
+  # somebody's value, or one its builder made ticked or unticked (MenuItemWdgt.ticks) -- so that
+  # every label of a menu with a tick in it starts at the same x, ticked or not. Never in a list: a
+  # list's rows wear no indicators. A pure query, asked by my rows' own measures
+  # (MenuItemWdgt._reservesTickColumn), so what a measure of mine reports is what my arrange commits.
+  reservesTickColumn: ->
+    return false if @_selectsItemsOnClick
+    @children.some (child) -> child.ticks?()
+
+  # WHETHER MY ROWS RESERVE THE TICK COLUMN, told to each (the C5 derive-at-arrange idiom, like the
+  # separators below) -- told FIRST, before the hug reads their widths, so a row whose label the
+  # column moves has re-placed it by the time it is measured and sized. A row keeps the answer when it
+  # leaves me, with the rest of its look. Membership is what moves the answer, and a membership
+  # change is what re-arranges me.
+  _deriveTickColumn: ->
+    reserved = @reservesTickColumn()
+    for child in @children
+      child.reserveTickColumn? reserved
+    return
+
   # WHICH of my rows carry a hairline above them (ruling G5, the C5 derive-at-arrange idiom): a row
   # does exactly when the child before it is another row. So my FIRST row never does -- the line
-  # above it is my own border, or the pop-up title strip sitting on top of me -- and a row just
-  # below a DIVIDER never does either, because the divider already IS that boundary and a hairline
-  # beside it would double it.
+  # above it is my own border -- and a row just below a DIVIDER never does either, because the
+  # divider already IS that boundary and a hairline beside it would double it.
   #   Adjacency is mine to know and no row's: a row that moves, or a row inserted between two
   # others, changes its neighbours' answers as much as its own, and only I see all three.
+  #   Only a LIST's rows wear hairlines, so its rows panel is this derive's one client: a pop-up's
+  # rows are told apart by their hover plate and grouped by dividers, and are never told.
   _deriveRowSeparators: ->
+    return unless @_selectsItemsOnClick
     previousChildWasARow = false
     for child in @children
       childIsARow = child.showSeparatorAbove?
@@ -274,7 +302,7 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # The committer's measure answers my FULL self-box — hug width, and the
   # preferredExtentForWidth height (top AND bottom border included), i.e.
   # byte-what my own arrange self-writes — not the base's children union, which
-  # misses the bottom border and would disagree by 2px in the world-capped state.
+  # misses the bottom border and would disagree by my padding in the world-capped state.
   scrolledContentMeasure: (ignored_widthHint) ->
     e = @preferredExtentForWidth undefined
     new Rectangle @left(), @top(), @left() + e.x, @top() + e.y

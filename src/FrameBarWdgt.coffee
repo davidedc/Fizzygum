@@ -48,7 +48,7 @@ class FrameBarWdgt extends Widget
   collapseUncollapseSwitchButton: undefined
   editButton: undefined
   # WHICH style the title pieces I am holding right now were built for. The two styles are two
-  # different pieces -- a rounded header box around a self-hugging TextWdgt, or an inset strip
+  # different pieces -- a ruled header band behind a self-hugging TextWdgt, or an inset strip
   # behind a fitted StringWdgt -- so a frame that changes manifestation needs them REBUILT, not
   # recoloured, and this is what tells the roster derive that they disagree with the spec.
   titleStyle: undefined
@@ -190,8 +190,9 @@ class FrameBarWdgt extends Widget
 
   # The title piece, in the shape its style asks for: a WINDOW's is a plain fitted string the
   # arrange grants the span between the buttons; a POP-UP HEADER's hugs its own text (the strip
-  # sizes itself to it) and is centred in the header box, on a background of its own. Both take
-  # their font from the bar spec's font role and their colours from the frame's look.
+  # sizes itself to it), its lines LEFT-aligned, and the arrange places it the title inset into the
+  # header band. Both paint straight onto the strip's background, take their font from the bar
+  # spec's font role and their ink from the frame's look.
   _buildTitleNoSettle: (spec) ->
     look = @frame._frameLook()
     if spec.titleStyle is "menuHeader"
@@ -200,8 +201,7 @@ class FrameBarWdgt extends Widget
       # hug at build time. The frame re-asserts the same title right after.
       title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""), fontRole: spec.fontRole
       title.color = look.titleText
-      title.backgroundColor = look.titleBackground
-      title.alignCenter()
+      title.alignLeft()
       @_addNoSettle title
       # the modern family does not self-size; make the title hug its text (and KEEP hugging it
       # through every later setText) so the strip's own thickness and the payload's row-width
@@ -415,27 +415,32 @@ class FrameBarWdgt extends Widget
   # therefore always square.
   #   The axis and the collapsed state change with NO re-derivation of the look (collapsing,
   # re-siding a dock, a dock engaging or disengaging), so the shape follows the LAYOUT: my arrange
-  # applies it every time, and so does my skin, whose fresh appearance runs no rule. Only the
-  # window strip style is shaped here: a pop-up header box keeps the rounding of its build.
+  # applies it every time, and so does my skin, whose fresh appearance runs no rule. A pop-up
+  # header band is shaped here too, more simply: it keeps the square corners of its build, and its
+  # rule runs along its bottom edge, the one facing the frame's rows.
   _shapeTitlebarBackground: (spec) ->
-    return unless @titlebarBackground? and @titleStyle is "windowBar"
-    bodyRadius = @frame.cornerRadius ? 0
-    bodyRadius = Math.max bodyRadius... if Array.isArray bodyRadius
-    r = Math.max 0, Math.round(bodyRadius) - WorldWdgt.theme.frameBorderWidth
-    if @frame.contents?.collapsed
-      radii = [r, r, r, r]
-      ruledEdge = undefined
-    else if spec.axis is "vertical"
-      radii = [r, 0, 0, r]
-      ruledEdge = "right"
-    else
-      radii = [r, r, 0, 0]
-      ruledEdge = "bottom"
+    return unless @titlebarBackground? and @titleStyle is spec.titleStyle
     background = @titlebarBackground
     appearance = background.appearance
+    if spec.titleStyle is "menuHeader"
+      radii = background.cornerRadius
+      ruledEdge = "bottom"
+    else
+      bodyRadius = @frame.cornerRadius ? 0
+      bodyRadius = Math.max bodyRadius... if Array.isArray bodyRadius
+      r = Math.max 0, Math.round(bodyRadius) - WorldWdgt.theme.frameBorderWidth
+      if @frame.contents?.collapsed
+        radii = [r, r, r, r]
+        ruledEdge = undefined
+      else if spec.axis is "vertical"
+        radii = [r, 0, 0, r]
+        ruledEdge = "right"
+      else
+        radii = [r, r, 0, 0]
+        ruledEdge = "bottom"
     current = background.cornerRadius
-    sameRadii = Array.isArray(current) and current.length is 4 and
-      current.every((radius, i) -> radius is radii[i])
+    sameRadii = current is radii or (Array.isArray(current) and Array.isArray(radii) and
+      current.length is 4 and current.every((radius, i) -> radius is radii[i]))
     return if sameRadii and appearance.ruledEdge is ruledEdge and appearance.ruleWidth is spec.ruleWidth
     background.cornerRadius = radii
     appearance.ruledEdge = ruledEdge
@@ -656,16 +661,23 @@ class FrameBarWdgt extends Widget
     keptLength >= preferences.barTitleEllipsisMinChars and
       keptLength >= preferences.barTitleEllipsisMinFraction * wholeLength
 
-  # The POP-UP strip: ONE header box, inset from my edges by the padding and as tall as the
-  # strip, with the title text hugging itself and centred in it. An untitled pop-up carries no
-  # pieces at all, so there is nothing to place.
+  # The POP-UP strip: ONE header band, inside the frame's border on my outer side (the spec's
+  # padding) and across the frame's content box (the band inset past the border at both ends), down
+  # through my last row, which is the band's own rule -- so nothing of the band reaches the frame's
+  # rows below me. The title text hugs itself, starts the title inset into the band, and is centred
+  # down the band above its rule. An untitled pop-up carries no pieces at all, so there is nothing
+  # to place.
   _layOutTitleBox: (spec) ->
     return unless @titlebarBackground? and @label?
-    @titlebarBackground._applyBounds (@position().add new Point spec.padding, spec.padding),
-      (new Point (@width() - 2 * spec.padding), spec.thickness)
-    # Integer placement (Layer A): the box centre is fractional when its extent is odd, so round
-    # the centred title's position to commit an integer @bounds.
-    @label._applyMoveTo (@titlebarBackground.center().subtract @label.extent().floorDivideBy 2).round()
+    sideInset = spec.padding + spec.bandInset
+    bandHeight = spec.thickness - spec.padding
+    @titlebarBackground._applyBounds (@position().add new Point sideInset, spec.padding),
+      (new Point (@width() - 2 * sideInset), bandHeight)
+    @_shapeTitlebarBackground spec
+    # Integer placement (Layer A): the band's rows above its rule can leave an odd remainder around
+    # the title, so round the centring offset to commit an integer @bounds.
+    titleTopInBand = Math.round (bandHeight - spec.ruleWidth - @label.height()) / 2
+    @label._applyMoveTo @titlebarBackground.position().add new Point spec.titleInset, titleTopInBand
 
   # MY STRIP'S OWN GESTURES. The pieces escalate their clicks to me (they are shaped where they
   # are drawn; I am not a hit target), so this one handler covers the whole strip — and so it must

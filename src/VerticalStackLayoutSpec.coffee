@@ -86,7 +86,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
-    menu.addMenuItem "layout in stack ➜", @, "vertStackMenu", closesUnpinnedPopUps: false, toolTip: ""
+    menu.addMenuItem "layout in stack", @, "vertStackMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
 
   vertStackMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
@@ -98,7 +98,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
     menu.popUpAtHand()
 
   # The spec's layout setters below (align / elasticity / base-width) are DISCRETE public mutations -- driven
-  # from the "layout in stack ➜" menu, the align/elasticity buttons, the base-width prompt, or an app building
+  # from the "layout in stack" menu, the align/elasticity buttons, the base-width prompt, or an app building
   # its starting content. Each must therefore SELF-SETTLE (one layout flush per outermost public mutation),
   # instead of leaving its re-fit to ride the per-frame end-of-cycle flush. The spec is not a Widget, so the
   # settle is taken on @element (the stack element). Canonical public-wrapper / _NoSettle-core split: each

@@ -202,7 +202,7 @@ class VerticalStackPanelWdgt extends Widget
   # @padding knob served as BOTH the border inset and the inter-element gap;
   # they are distinct layout roles (CSS padding vs gap), so the gap is now its
   # own policy method for a subclass to set apart — CommandPanelWdgt stacks its
-  # rows FLUSH (gap 0) inside a 2px border. Default: the border padding,
+  # rows FLUSH (gap 0) inside its padding. Default: the border padding,
   # preserving every existing stack byte-identically. Mirrored in the three
   # walkers (_positionAndResizeChildren / preferredExtentForWidth /
   # subWidgetsMergedPreferredBounds) exactly like the _childWidthInStack trio.

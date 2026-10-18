@@ -157,17 +157,23 @@ class FrameWdgt extends Widget
   #                 separate dials; the window controls and the pencil are two glyph sizes, and a
   #                 strip that carries no button piece names none), the inset the strip keeps
   #                 from my edges, the width of the rule the strip draws along its content-facing
-  #                 edge, and the title's height. A window strip's padding is my BORDER: its
-  #                 background and its pieces sit inside it at both ends and along my outer side,
-  #                 and its pieces abut, so its thickness is that border, one row of targets and
-  #                 its own rule (redesign plan §4 W1). A window title's height is its piece's own
-  #                 line height, read off the piece once it exists (the theme's stand-in before).
+  #                 edge, and the title's height. Every strip's padding is my BORDER: its
+  #                 background sits inside it along my outer side (and, for a window strip, at
+  #                 both ends, with its pieces), so its thickness is that border, its band and
+  #                 its own rule (redesign plan §4 W1, W2). A window strip's band is one row of
+  #                 abutting targets. A window title's height is its piece's own line height,
+  #                 read off the piece once it exists (the theme's stand-in before).
+  #   bandInset / titleInset
+  #                 a pop-up header's own two, named by its spec alone: how far past my border, at
+  #                 both ends, its band stops (my content padding, so the band spans exactly the
+  #                 content box my rows span), and how far into the band its title text starts.
   #   fontRole      the title's font: a theme font role (family, size and weight together).
   #
   #   titleStyle    how the title strip is built and laid out: "windowBar" (the strip spans my
   #                 whole top edge inside my border, the title text centred in the span the
-  #                 pieces leave) or "menuHeader" (a rounded header box inset by the padding, the
-  #                 title text hugging itself and centred in it).
+  #                 pieces leave) or "menuHeader" (a flat header band across my content box,
+  #                 inside my border, ruled along its bottom; the title text hugs itself, starts
+  #                 the title inset into the band and is centred down it).
   #
   # WHICH row applies is my LIFETIME (program ruling C4): a TRANSIENT frame is a menu and wears
   # the pop-up row -- `pieces: ["title"]` (a tap on it pins the frame), `naturalWidth: "titleText"`,
@@ -198,9 +204,7 @@ class FrameWdgt extends Widget
     showsText: axis is "horizontal"
     naturalWidth: "none"
     # the strip, measured from my OUTER edge: my border, one row of targets, then the strip's own
-    # rule, which my payload lies past. The strip sits inside my border whatever my payload is: a
-    # payload that keeps its own border (a rows panel) is granted my whole box below the strip
-    # (_chromePadding), while its window strip stays a window strip.
+    # rule, which my payload lies past.
     thickness: theme.frameBorderWidth + theme.barIconSize + theme.barRuleWidth
     slotSize: theme.barIconSize
     glyphSizes:
@@ -248,43 +252,51 @@ class FrameWdgt extends Widget
     return @layoutSpec if @layoutSpec?.isEdgeDock?()
     undefined
 
-  # The POP-UP row of the same vocabulary: my strip is exactly my title box -- the title text
-  # plus a pixel of air above and below it, inset by the menu border, and a tap on it pins me.
-  # An UNTITLED pop-up carries no strip at all: an empty roster, and a thickness of 0 so my rows
-  # start at my very top edge.
-  #   The strip's thickness is read off the title piece, which hugs its own text and never
+  # The POP-UP row of the same vocabulary: my strip is my header BAND -- inside my border, across
+  # my content box (bandInset past the border at both ends, so it spans exactly what my rows
+  # span), the title text plus a pixel of air above and below it, and below that the band's own
+  # rule, its bottom edge (redesign plan §2 rule D). A tap on it pins me. Measured from my OUTER
+  # edge like a window strip -- my border, the band, the rule -- so at its floor it is exactly as
+  # thick as a window strip, and pinning me moves nothing below it. An UNTITLED pop-up carries no
+  # strip at all: an empty roster, and a thickness of 0 so my rows start just inside my border.
+  #   The band's height is read off the title piece, which hugs its own text and never
   # stretches (the bar sizes it to text and disables fitting), so this is stable applied
   # geometry, not a mutate-then-read-back. Before the piece exists -- the appearance derivation
-  # runs in my constructor -- the window title's own height stands in at the same number.
-  #   A titled strip is floored at menuRowHeight: the tap that pins me lands on it, so it is a
+  # runs in my constructor -- the window title's own height stands in.
+  #   A titled band is floored at menuRowHeight: the tap that pins me lands on it, so it is a
   # target of the same size as a row (G3/G5), and it is one of my rows in every other respect.
   _transientBarSpec: ->
     theme = WorldWdgt.theme
     titled = !!@_titleForContents @contents
     textHeight = @bar?.label?.height() ? theme.titleBarTextHeight
+    bandHeight = Math.max textHeight + 2, theme.menuRowHeight
     pieces: (if titled then ["title"] else [])
     resizer: "none"
     axis: "horizontal"
     showsText: true
     naturalWidth: "titleText"
-    thickness: (if titled then Math.max(textHeight + 2, theme.menuRowHeight) else 0)
+    thickness: (if titled then theme.frameBorderWidth + bandHeight + theme.menuHeaderRuleWidth else 0)
     slotSize: theme.barIconSize
     # a pop-up strip carries no button piece, so no glyph to size
     glyphSizes: {}
-    padding: theme.menuRowsBorder
-    # a pop-up header box draws no rule of its own
-    ruleWidth: 0
+    padding: theme.frameBorderWidth
+    bandInset: theme.menuContentPadding
+    titleInset: theme.menuHeaderTitleInset
+    ruleWidth: theme.menuHeaderRuleWidth
     textHeight: textHeight
     fontRole: theme.fonts.menuHeader
     titleStyle: "menuHeader"
 
   # What my title contributes to my payload's OWN row width: a pop-up's rows all equalize to the
   # widest entry, and its title is one of those entries even though it lives in my chrome (the
-  # spec's "titleText" natural width). The rows panel PULLS this through the pop-up climb, so a
-  # rows panel outside a frame (a list's) simply gets nothing.
+  # spec's "titleText" natural width): the title text, and its band's title inset on both sides of
+  # it (the band spans the rows' width, so this is what keeps a long title clear of the band's
+  # ends). The rows panel PULLS this through the pop-up climb, so a rows panel outside a frame (a
+  # list's) simply gets nothing, and so does an untitled pop-up's, which has no title piece.
   _titleEntryWidth: ->
-    return 0 unless @_barSpec().naturalWidth is "titleText"
-    (@bar?.label?.width() ? 0) + 2
+    spec = @_barSpec()
+    return 0 unless spec.naturalWidth is "titleText" and @bar?.label?
+    @bar.label.width() + 2 * spec.titleInset
 
   # What the titlebar strip takes out of my HEIGHT -- the bar spec's own thickness when the strip
   # runs across my top, nothing when it runs down my side. The measure, the arrange and the bar
@@ -302,15 +314,15 @@ class FrameWdgt extends Widget
   # ===== my body's edges =====
   # My BODY is what my border encloses, less my strip: my payload and my docked bands lie in it.
   # Its inner edge sits in from my outer edge by my STRIP's thickness on the side my strip runs
-  # along (the strip spans my border, its targets and its rule: _barSpec) and by my BORDER INSET
+  # along (the strip spans my border, its band and its rule: _barSpec) and by my BORDER INSET
   # on every other side. Past those edges my payload and my bands keep my BODY MARGIN, and the
   # same margin parts a band from my payload. My padding (_chromePadding) is the two together,
   # measured where no strip runs: border inset plus body margin.
 
-  # The part of my padding that is my border: all of the theme's border width, or none when my
-  # payload is granted my whole box (its box IS my box, border included).
+  # The part of my padding that is my border: the theme's border width, which my padding always
+  # holds (_chromePadding), whatever my payload is.
   _borderInset: ->
-    Math.min @padding, WorldWdgt.theme.frameBorderWidth
+    WorldWdgt.theme.frameBorderWidth
 
   # The part of my padding past my border: the margin my payload keeps from every inner edge of
   # my body, a strip's rule and a docked band's side included.
@@ -576,16 +588,13 @@ class FrameWdgt extends Widget
 
   # MY PADDING: how far my payload sits in from my OUTER edge where no strip runs -- my border
   # (the payload lies inside the outline I stroke over it) plus the theme's body margin past it
-  # (see "my body's edges" for how the strip side and a docked band read it). It is the PAYLOAD's
-  # question, not my manifestation's: a payload that draws its own border (a rows panel keeps the
-  # menu border, and its box IS my box) is granted my whole box, border included, because a second
-  # margin would only double the first. Read once, at construction, like the payload it follows.
+  # (see "my body's edges" for how the strip side and a docked band read it). The same for every
+  # payload and every manifestation: a pop-up's rows lie inside my border like any payload, and the
+  # padding they keep inside it is their rows panel's own (the pop-up's content padding, handed to
+  # its CommandPanelWdgt). Read once, at construction.
   _chromePadding: ->
     theme = WorldWdgt.theme
-    if @contents?.keepsItsOwnChromeMargin?()
-      0
-    else
-      theme.frameBorderWidth + theme.frameBodyMargin
+    theme.frameBorderWidth + theme.frameBodyMargin
 
 
   # in general, windows just create a reference of themselves and
@@ -1188,7 +1197,7 @@ class FrameWdgt extends Widget
   # Build my content's toolbar variant and dock it, framed, at the side the variant asks for. A
   # framed CITIZEN declares its kind's variant itself (§5.B); a plain frame asks the content it
   # wraps; a content that declares none leaves every slot empty.
-  # `side` overrides the variant's own default (the "toolbar ➜" row names one).
+  # `side` overrides the variant's own default (the "toolbar" submenu's rows name one).
   _buildDockedToolbarNoSettle: (side) ->
     toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
     return unless toolbar?
@@ -1220,7 +1229,7 @@ class FrameWdgt extends Widget
     # a slot to sit in (program ruling C12).
     if @_myEdgeDockSpec()?
       menu.addLine()
-      menu.addMenuItem "dock ➜", @, "dockSideMenu", closesUnpinnedPopUps: false, toolTip: ""
+      menu.addMenuItem "dock", @, "dockSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
       menu.addMenuItem "float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
     # A HOST's row: fill an empty slot with the toolbar my content declares. Offered only while
     # there IS one to make and no slot already holds it -- you cannot dock a second copy of the
@@ -1228,7 +1237,7 @@ class FrameWdgt extends Widget
     # bar space on it).
     if @_offersAFreshToolbar()
       menu.addLine()
-      menu.addMenuItem "toolbar ➜", @, "toolbarSideMenu", closesUnpinnedPopUps: false, toolTip: ""
+      menu.addMenuItem "toolbar", @, "toolbarSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
     # the pin is offered only while there is something to pin: furniture is already staying
     if @isTransientPopUp()
       menu.addLine()
@@ -1240,7 +1249,7 @@ class FrameWdgt extends Widget
     return false if @_dockedToolbarFrame()?
     (@buildToolbar? or @contents?.buildToolbar?) == true
 
-  # The BAND's side chooser ("dock ➜"): the three sides I am not on (the VSLS-alignment /
+  # The BAND's side chooser (the "dock" submenu): the three sides I am not on (the VSLS-alignment /
   # division-cell menu pattern -- the current one is nothing to choose).
   dockSideMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
@@ -1249,7 +1258,7 @@ class FrameWdgt extends Widget
       menu.addMenuItem side, @, "dockAtSide", arg1: side  if side isnt currentSide
     menu.popUpAtHand()
 
-  # The HOST's side chooser ("toolbar ➜"): all four, since the slot the row fills is empty.
+  # The HOST's side chooser (the "toolbar" submenu): all four, since the slot the row fills is empty.
   toolbarSideMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     for side in FrameWdgt.DOCK_SIDES
@@ -1539,14 +1548,26 @@ class FrameWdgt extends Widget
 
   # Placed with my FIRST ROW under the pointer, and centred on the hand across: the row a user
   # is about to want is already where the pointer is, so the click that opened me can dismiss me
-  # without moving. The drop is my own chrome — the title strip plus my rows' border, plus the
-  # one pixel that lands the pointer INSIDE the row rather than on its edge — so it holds for an
-  # untitled pop-up (no strip, thickness 0) exactly as for a titled one. Deliberately never the
-  # strip itself: a tap there PINS me, which is the opposite of dismissing me.
+  # without moving. Deliberately never the strip itself: a tap there PINS me, which is the
+  # opposite of dismissing me.
+  #   Both coordinates are the LAYOUT's own, read before the add that lays me out runs it (my
+  # composer adds my rows after I am built, and that add is where I take their size): down, where
+  # my arrange seats my payload (_payloadOffset) plus how far below its top my payload seats its
+  # first row, plus the one pixel that lands the pointer INSIDE the row rather than on its edge;
+  # across, the middle of the width my first placement will give me (_widthAtFirstPlacement). So
+  # it holds for an untitled pop-up (no strip) exactly as for a titled one, and cannot drift from
+  # where the row really lands.
   popUpCenteredAtHand: (world) ->
-    offset = new Point (Math.floor @width() / 2),
-      (@_barSpec().thickness + WorldWdgt.theme.menuRowsBorder + 1)
+    firstRowTop = @_payloadOffset().y + (@contents?.firstRowTopInset?() ? 0)
+    offset = new Point (Math.floor @_widthAtFirstPlacement() / 2), (firstRowTop + 1)
     @popUp (world.hand.position().subtract offset), world
+
+  # The width my next FIRST PLACEMENT lays me out at: the arrange's own hug (my payload's
+  # negotiated width plus my chrome, the free-floating branch of _positionAndResizeChildren), asked
+  # before it runs. A pop-up's add re-arms that placement (PopUpRowsViewportWdgt
+  # ._reLayOutAfterContainedPanelChange), so until the add my applied width can predate my rows.
+  _widthAtFirstPlacement: ->
+    @_negotiatedContentWidth(@width()) + @_chromeWidth()
 
   popUpAtHand: ->
     @popUp world.hand.position(), world
@@ -1656,8 +1677,8 @@ class FrameWdgt extends Widget
   # and answers at any time (a pop-up citizen asks before its own super has run).
   #   The inputs are my MANIFESTATION (program ruling C4) -- my lifetime crossed with my parentage:
   # transient is a MENU (its pop-up header style goes with it), persistent on the desktop a WINDOW,
-  # persistent nested in a real container a CARD -- plus, for a menu's rounding, whether it carries
-  # a title strip to round and the world's flat-look preference. Collapsed and docked are not
+  # persistent nested in a real container a CARD -- plus, for a menu's rounding, the world's
+  # flat-look preference. Collapsed and docked are not
   # inputs: a collapsed frame wears the look it wears expanded, and a docked band is the card its
   # parentage makes it. (WHICH corners my strip rounds and WHETHER it draws its rule do follow
   # those two -- they change with no re-derivation of the look -- so my strip decides them from its
@@ -1669,7 +1690,7 @@ class FrameWdgt extends Widget
   #                         rounded box for a window and a card alike
   #     bodyFill, bodyStroke, bodyCornerRadius
   #                         my body's colours and rounding (an undefined rounding is the
-  #                         appearance's own default). A menu box is grey with the menu stroke --
+  #                         appearance's own default). A menu box is paper with the menu stroke --
   #                         nothing else paints it: my rows panel is a transparent stack inside me.
   #     bodyStrokesOverChildren
   #                         whether my 1 px outline is stroked ONCE, after my children, rather than
@@ -1683,50 +1704,42 @@ class FrameWdgt extends Widget
   #                         every strip
   #     barFill, barStroke  its colours. No look strokes a strip, and the stroke is applied as
   #                         given, so an undefined one clears a stroke an earlier look left
-  #     barCornerRadius     a pop-up header box's rounding, given when the strip builds it. A
-  #                         persistent frame's look names none: its strip rounds the corners it
-  #                         shares with my outline to the body I wear, less my border, at its
-  #                         arrange (FrameBarWdgt._shapeTitlebarBackground)
-  #     barRule             the ink of the rule my strip draws along its content-facing edge, or
-  #                         undefined for none (a pop-up header draws none)
+  #     barCornerRadius     a pop-up header band's rounding, given when the strip builds it: none,
+  #                         since the band's rule is its bottom edge and a ruled band wants square
+  #                         rule ends (BoxyAppearance.ruledEdge). A persistent frame's look names
+  #                         none: its strip rounds the corners it shares with my outline to the body
+  #                         I wear, less my border, at its arrange (FrameBarWdgt._shapeTitlebarBackground)
+  #     barRule             the ink of the rule my strip draws along its content-facing edge
   #     barGlyph, barGlyphActive
   #                         the ink of the glyphs my strip's button pieces draw (close, collapse /
   #                         uncollapse, the pencil / eye): at rest, and while one is hovered or
   #                         pressed. Undefined for a strip that carries no button piece (a pop-up
   #                         header)
-  #     titleText           my title's ink
-  #     titleBackground     the fill behind my title's text (only a pop-up header has one)
+  #     titleText           my title's ink (painted straight onto my strip's background)
   #     shadowOffset, shadowAlpha
   #                         the shadow I cast at rest on the desktop
   _frameLook: ->
     theme = WorldWdgt.theme
     if @isTransientPopUp()
-      # rounded only when there is a title strip to round (an untitled pop-up takes the boxy
-      # default), and not at all in a flat look
-      menuCornerRadius =
-        if @_barSpec().pieces.length is 0
-          undefined
-        else if WorldWdgt.preferencesAndSettings.isFlat
-          0
-        else
-          theme.menuCornerRadius
       return {
         manifestation: "menu"
         bodyAppearance: MenuAppearance
         bodyFill: theme.menuBodyFill
         bodyStroke: theme.menuStroke
-        bodyCornerRadius: menuCornerRadius
-        bodyStrokesOverChildren: false
-        bodyClipsChildrenToOutline: false
+        # rounded titled or not, and not at all in a flat look
+        bodyCornerRadius: if WorldWdgt.preferencesAndSettings.isFlat then 0 else theme.menuCornerRadius
+        # a pop-up clips and strokes last like a window: an overflowing pop-up's scrolled rows and
+        # its scroll indicator stop at its outline, and its rows panel catches nothing in its notches
+        bodyStrokesOverChildren: true
+        bodyClipsChildrenToOutline: true
         barAppearance: BoxyAppearance
         barFill: theme.menuHeaderFill
         barStroke: undefined
-        barCornerRadius: theme.menuHeaderCornerRadius
-        barRule: undefined
+        barCornerRadius: 0
+        barRule: theme.menuHeaderRule
         barGlyph: undefined
         barGlyphActive: undefined
         titleText: theme.menuHeaderText
-        titleBackground: theme.menuHeaderFill
         shadowOffset: theme.desktopShadowOffset
         shadowAlpha: theme.desktopShadowAlpha
       }
@@ -1747,7 +1760,6 @@ class FrameWdgt extends Widget
     barGlyph: if internal then theme.cardBarGlyph else theme.windowBarGlyph
     barGlyphActive: theme.barGlyphActive
     titleText: theme.windowTitleText
-    titleBackground: undefined
     shadowOffset: theme.desktopShadowOffset
     shadowAlpha: theme.desktopShadowAlpha
 
@@ -1787,11 +1799,11 @@ class FrameWdgt extends Widget
 
   # ===== the ROUNDED CHILD CLIP (redesign plan §3a option (a), spikes S1b/S1c) =====
   # My LOOK decides it (_frameLook's bodyClipsChildrenToOutline, set on my body's appearance as its
-  # clipsChildrenToOutline knob): a rounded persistent frame -- a window, a card, a docked band --
-  # clips its children to its rounded OUTLINE rather than to its rectangle, so content laid flush
-  # into it cannot paint (or catch presses) in the notches outside its corners; a transient pop-up
-  # keeps the rectangle. With the knob off, every paint and hit test of mine runs exactly the code a
-  # rectangular clip runs.
+  # clipsChildrenToOutline knob): every rounded frame -- a window, a card, a docked band, a menu or a
+  # prompt -- clips its children to its rounded OUTLINE rather than to its rectangle, so content laid
+  # flush into it cannot paint (or catch presses) in the notches outside its corners; a square one
+  # (a pop-up in the flat look) has no notch and keeps the rectangle. With the knob off, every paint
+  # and hit test of mine runs exactly the code a rectangular clip runs.
 
   # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] of the ROUNDED outline I clip my
   # children to, or undefined when I clip them to my rectangle: my body's own radii, read through my

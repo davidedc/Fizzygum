@@ -1,6 +1,6 @@
 # Fizzygum visual redesign — the plan
 
-**AUTHORED + OWNER-APPROVED 2026-10-16; P0, R0, T and F done; S1c done (the rounded child clip passes the 3 % bar, §3 #4); W1 done (units a–f, recaptured, every close gate green; committing on `redesign` awaits owner approval); W2 next.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
+**AUTHORED + OWNER-APPROVED 2026-10-16; P0, R0, T and F done; S1c done (the rounded child clip passes the 3 % bar, §3 #4); W1 done and committed on `redesign` (Fizzygum 495e67ed, Fizzygum-tests 15320404e; both branches pushed to origin); W2 done (commit pending); W3 next.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
 - This file is the living plan. Keep its STATUS box current at every phase close. The design input it executes sits beside it in this directory.
 - Line numbers below drift. The quoted method or field name is authoritative: grep it fresh before trusting a `file:line`.
 
@@ -18,8 +18,8 @@
 | R0 | Recapture tooling: batch finger recapture + throughput | DONE 2026-10-16 (~1 h per full wave, was ~7 h) |
 | T | Tests aim by meaning; aims verify their hit (zero recapture) | DONE 2026-10-16 — every widget-aimed press verified ("AIM MISSED"); 9 never-delivered tests found, fixed and recaptured (owner-approved; Fizzygum b408f0c7, Fizzygum-tests 80ee6ca92) |
 | F | Tokens (`Theme`), primitives, spikes S1–S3 (zero recapture) | DONE 2026-10-17 — `Theme` + the primitives, each default-neutral; spikes measured. The one benign inspector recapture owner-approved (Fizzygum fd0165b3, Fizzygum-tests 417d0a6e4). Corners (§3 #4): S1c DONE 2026-10-17. SWCanvas's clip model is rebuilt (§4 F, S1c), and the rounded child clip now costs +0.2 % (dpr 1) / +1.9 % (dpr 2) of suite time, so it is ADOPTED for W1, as the single path clip (owner). Committed: SWCanvas 1b482fe (pushed); the Fizzygum pin bump is the commit carrying this line. |
-| W1 | Global surface + all persistent frames (windows, cards, bands) | DONE 2026-10-17 on the `redesign` branches (both repos, from Fizzygum e3032d72 and Fizzygum-tests 417d0a6e4), commit pending owner approval. Units: W1a desk + plain wallpaper + one shadow; W1b body look; W1c the draft's geometry; W1d strip skin + island re-derivation; W1e strip glyphs; W1f the resize grip (`FrameGripWdgt`); plus the retitle fix the census found (`FrameWdgt._retitleNoSettle`). Each unit gated pixel-only before the recapture. Owner reviewed the sample; recaptured mouse (1942 refs / 297 tests) and finger (1862 / 287) at dpr 1,2. Close gates: `fg gauntlet` 19/19 (census serial-only: a boot-storm compile flake in parallel), `fg homepage` OK, `check-visualisations --strict` OK. Open review points: §4 W1. NEXT: W2. |
-| W2 | Menus, lists, scrollbars, prompts, tooltips | not started |
+| W1 | Global surface + all persistent frames (windows, cards, bands) | DONE 2026-10-17 on the `redesign` branches (both repos, from Fizzygum e3032d72 and Fizzygum-tests 417d0a6e4), committed as Fizzygum 495e67ed and Fizzygum-tests 15320404e, both branches pushed to origin (the tests branch is deleted from origin after the Z squash). Units: W1a desk + plain wallpaper + one shadow; W1b body look; W1c the draft's geometry; W1d strip skin + island re-derivation; W1e strip glyphs; W1f the resize grip (`FrameGripWdgt`); plus the retitle fix the census found (`FrameWdgt._retitleNoSettle`). Each unit gated pixel-only before the recapture. Owner reviewed the sample; recaptured mouse (1942 refs / 297 tests) and finger (1862 / 287) at dpr 1,2. Close gates: `fg gauntlet` 19/19 (census serial-only: a boot-storm compile flake in parallel), `fg homepage` OK, `check-visualisations --strict` OK. Open review points: §4 W1. NEXT: W2. |
+| W2 | Menus, lists, scrollbars, prompts, tooltips | DONE 2026-10-18 on the `redesign` branches (commit pending owner approval). Units: W2a the pop-up frame (paper body r10, the rounded clip and stroke-last for pop-ups, the 44+1 header band, the content padding); W2b menu rows (15 px ink, the desk/chrome r6 plate, no hairline) and the 9 px group band; W2c+W2d the drawn chevron (`opensSubmenu`) and tick, with the label sweep across src, toolkit, tests, scripts and docs (`fg menusweep` proves every flag); W2e the scroll indicator (the `scrollbar` token, thin inset 2); W2f the tooltip plate. Lists and magnets keep their look (W3/G). Each unit gated pixel-only. Owner reviewed the sample; recaptured mouse (604 refs / 107 tests) and finger (536 / 98) at dpr 1,2. Close gates: `fg gauntlet` 19/19, `fg homepage` OK, `check-visualisations --strict` OK. Open review points: §4 W2. NEXT: W3. |
 | W3 | Controls + Object Inspector re-layout | not started |
 | W4 | Desktop: tiles, plates, grid, size knob, clock, bin, icons | not started |
 | W5 | Docs Maker: tool buttons, paragraph items, caret | not started |
@@ -424,7 +424,7 @@ Create the `redesign` branches here (owner approval).
   - Naming: ruling C12 calls a docked band's strip "a grip", which collides with `FrameGripWdgt`.
 
 ### W2 — Menus, lists, scrollbars, prompts, tooltips
-- **Menu body.** `paper`, a 1 px `frame` stroke, radius 10, 4 px side padding (`menuRowsBorder`, a theme metric). Switching on `strokesOverChildren` for menus changes the pixels F2a's overlap table lists (titled pop-up, pinned menu, overflowing pop-up — `.scratch/f2a/overlap-analysis.js`).
+- **Menu body.** `paper`, a 1 px `frame` stroke, radius 10, 4 px side padding (`menuContentPadding`, a theme metric). Switching on `strokesOverChildren` for menus changes the pixels F2a's overlap table lists (titled pop-up, pinned menu, overflowing pop-up — `.scratch/f2a/overlap-analysis.js`).
 - **Header.** 44 tall (§3 #1), flat `paper`, 11 px `muted2`, a 1 px `chrome` rule (band-owned, rule D).
 - **Rows.** 15 px `ink`, 10 px side inset; hover is a `desk` rounded-6 plate; DROP the per-row hairline (`LabelButtonAppearance` / `CommandPanelWdgt._deriveRowSeparators`). Two facts F found: `MenuItemWdgt._createLabel` never passes bold to its label (a bold `menuRow` role would not render), and the alpha-0 `CommandPanelWdgt` still CATCHES presses in a menu's corner notches although `PopUpRowsViewportWdgt` is pointer-through (S1).
 - **Groups.** `DividerWdgt` becomes a 9 px band (4 + a 1 px `chrome` rule + 4). The 16-count assertion is already relational after T3.
@@ -437,7 +437,52 @@ Create the `redesign` branches here (owner approval).
 - **Lists** (`ListWdgt` rows are `MenuItemWdgt`s): the same row look, except the Inspector's member list, which is done in W3.
 - **Scrollbar thumb.** `scrollbar` token rgba(30,30,28,.35), inset 2 from the edge (`ViewportWdgt._barFrameAt`).
 - **Prompts** (`PromptWdgt`, a transient frame): the menu skin. Their buttons wait for W3.
-- **Tooltips** (`BubblyAppearance`): `plate` fill, radius 8, 12 px; owner review.
+- **Tooltips** (`ToolTipWdgt`, on `BubblyAppearance` until W2): `plate` fill, radius 8, 12 px; owner review.
+- **Decisions settled at W2's start (2026-10-18), from research R1–R3 (`Fizzygum-tests/.scratch/w2/R{1,2,3}-report.md`):**
+  - **Geometry is the draft's exactly, measured inside the 1 px border** (as in W1):
+    - rows sit 4 px inside the border on both sides (x 5 from the outer edge);
+    - the header band (44 tall, §3 #1) sits inside the border and spans the content box; its own 1 px `chrome` rule (rule D) is its bottom edge, so the rule spans the content width, not the frame;
+    - the first row sits 4 below the header rule (an untitled menu: 4 below the border), and the last row ends 4 above the border.
+  - **`menuRowsBorder` was four dials at once** (the panel padding on every side, the header-box inset, a term of `popUpCenteredAtHand`, list padding): split into metrics with one meaning each.
+  - **Pop-ups (menus and prompts) clip and stroke last.** The rounded child clip and the stroke-last border are ON for transient frames too. The clip is the only fix covering every case: the alpha-0 rows panel catches presses in the corner notches, and an overflowing menu has no notch at all and paints its scrolled rows and thin thumb over its border. A pinned menu keeps the window look (W1). Its rows panel brings its own 4 px padding, so its rows no longer sit flush under the border (W1 open point).
+  - **Rows** (`MenuItemWdgt` in a menu or a prompt):
+    - 15 px `ink`, side inset 10 (`menuRowSideInset`, split from the icon-to-label gap `menuRowIconGap`);
+    - a `paper` rest fill over the row box (invisible on the paper body; a standalone row keeps a paper box);
+    - hover = a `desk` plate with radius 6 over the full row box (the draft's container gives the inset);
+    - pressed = a `chrome` plate;
+    - the per-row hairline is deleted;
+    - a pinned menu's liftable grip stays, in the `grip` token.
+  - **Lists and magnets keep today's look.** The only `ListWdgt` in src is the Inspector's member list, and the draft's list rows are another look (40 tall, an `accentTint` selection, kind tags), so lists move with the Inspector in W3. Fizzytiles magnets (`MagnetWdgt` = `LabelButtonWdgt` defaults) are G's. The new row look is therefore keyed on the row living in a pop-up or a menu, never on the class.
+  - **Prompts** (owner): their Ok/Close are menu rows and take the row look now; W3 decides whether prompts get real buttons. Their field, slider and colour picker are G's.
+  - **Groups:** `DividerWdgt` is a 9 px band painting its own centred 1 px `chrome` rule, spanning the content width.
+  - **Header text** (owner): uppercase waits for W6 and its human names. W2 renders 11 px `muted2` (`Arial, sans-serif`) in today's wording, LEFT-aligned 10 px into the content box like the row labels (the draft's `textInBand('DESKTOP', x + 10, …)`; today it is centred).
+  - **Chevron:**
+    - an explicit `opensSubmenu` row option (`CommandSpec` → `MenuItemWdgt`, an own field so a duplicated or saved row keeps it), set on EVERY row that opens a menu, including the five that carry no `➜` today (`attach...`, `attach with horizontal layout` ×2, `bind ⇄`, the wire rows);
+    - structural derivation was measured unsound: an action-name regex has 25 false positives;
+    - `fg menusweep` gains the runtime proof: per dispatched row, "opened a fresh transient menu that is not a message" equals the flag (`SUBMENU_FLAG_MISMATCH`; `SUBMENU_FLAG_CHECK_VACUOUS` if no flagged row was judged). Its allowlist `CONDITIONAL_OPENERS` (keyed `<receiverClass>.<action>`, one direction per entry) holds `HandleWdgt.attach` (no target, no menu), `WorldWdgt.popUpDemoTestMenu` (asynchronous on a lazy page) and `OverflowChevronButtonWdgt.triggerToolFromMenu` (a tool row, unflagged, that opens a menu when its tool does);
+    - the indicator is a pointer-transparent child of the row, mirroring the left `icon` slot, wearing `ChevronRightIconAppearance` in `muted3`, and the menu's width hug counts its column;
+    - `HandleWdgt`'s attach row is terminal: it just loses its `" ➜"`.
+  - **Tick** (owner: `ink`):
+    - `MenuRowReflectionSpec` yields a boolean `ticked`; the label stays plain (the 4-space `untick` placeholder goes too);
+    - the tick is drawn in a leading column reserved in every row of a menu that has any ticking row, so labels stay aligned;
+    - the soft-wrap rows `☐`/`☒` become one ticked row;
+    - `MacroToolkit.tickedRowLabelOfMenu` reads the flag.
+  - **Typed direction symbols wait for W6:** the wire rows' `" ➜"`/`" ⇄"`, `bind ⇄`, and the text menu's alignment pictograms. They are wording (§3b), so the atlas additions (S2) wait until W6 decides which survive; until then they keep painting placeholder boxes.
+  - **Scroll thumb:**
+    - the `scrollbar` token, 4 wide, radius 2 (already the stadium), inset 2 from the edge on the THIN look only: hit areas, the hover band, the auto-scroll band, the corner reserve and every toolkit aim (derived from the fat frame) are unchanged;
+    - the fat look takes its colours from theme roles too;
+    - the indicator presentation imposes the colours (`showAsScrollIndicatorThumb`), so content sliders keep theirs until G;
+    - no minimum-length change.
+  - **Tooltip** (owner): a plate. `plate` fill, radius 8, no border, no tail, 12 px regular `ink`, padding 7/1, the margin decoupled from the radius, placement as today. The speech bubble is content and keeps `BubblyAppearance` until G. Creation stays synchronous under the Automator's pacing.
+
+- **Open review points from the W2 owner review (2026-10-18).** The owner approved the recapture without ruling on these; each is a later unit's call, or the owner's:
+  - The wire rows keep their typed direction suffix (`" ➜"`/`" ⇄"`, a placeholder box on SWCanvas) AND show the chevron, until W6 decides the wording.
+  - The fat scroll indicator's look (a faint `ink` track, the thumb `ink` α .5 / .6 on hover / press) is the orchestrator's choice: the draft defines no fat look.
+  - The tooltip keeps today's placement (its bottom-left 8 px left of the invoker's top-right), so it can overlap the menu it explains.
+  - A ticking menu reserves a 20 px tick column, so its labels start at x 30.
+  - Narrow pinned menus (now commoner with 15 px rows) still hide their title and centre close/collapse (W1).
+  - A prompt slider's thumb returns to black after one hover: `SliderButtonWdgt.setColorScheme` never sets `normalColor` (G's slider family).
+  - `MenuItemWdgt._createLabel` forwards no bold/italic, so a list's `format` bold/italic never renders (W3's list rows).
 
 ### W3 — Controls + Object Inspector
 - **Buttons.**
