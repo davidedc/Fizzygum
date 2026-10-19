@@ -8,7 +8,9 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
   _buildAndConnectChildrenNoSettle: ->
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
-    @_applyExtent new Point 95, 95
+    # born at the desktop icon's glyph square; the holder that takes me lays me out in that square
+    glyphSize = WorldWdgt.theme.desktopIconGlyphSize
+    @_applyExtent new Point glyphSize, glyphSize
     @_addNoSettle @icon
 
     @referenceArrowIcon = new ShortcutArrowIconWdgt

@@ -1,331 +1,466 @@
 class TypewriterIconAppearance extends SizeAwareIconAppearance
 
-  # SIZE-AWARE icon (2026-07-21, the first of its kind). The old version was a
-  # fixed 100-unit vector drawing (2-unit document lines filled at half-integer
-  # offsets, eleven lineWidth-2.5 key strokes) that the icon pipeline scaled
-  # arbitrarily, so no stroke ever landed on the pixel grid — the case study of
-  # docs/measurements/vector-icon-crispness-audit-2026-07-19.md: ragged and
-  # uneven under SWCanvas's non-AA rendering, its thin details washing out at
-  # small sizes.
-  #
-  # This version never draws in design space at all: it reads its ACTUAL size
-  # in device pixels and computes integer-pixel geometry from that budget.
-  # THE POINT: the non-AA backend renders it cleanly at every size — no ragged
-  # or uneven strokes, no dropouts — because the icon is smart about how it
-  # uses its space and aligns integer-width strokes to the grid per size. The
-  # same discipline makes the HTML5-canvas render neater too (AA itself was
-  # never a defect). Conversion lessons + process: docs/plans/pixel-icons-plan.md
-  # §5b; the geometry-vs-rendering doctrine (pixel-aligned geometry, standard
-  # drawing commands, each backend rasterizes its own way) is in
-  # SizeAwareIconAppearance's header.
-  #
-  # The drawing idiom (a vocabulary for future size-aware icons):
-  #   - two line units: t = round(S/32) for paper/document-lines/chassis/knobs,
-  #     and the slightly lighter tc = round(S/45) for the keys (owner call:
-  #     full-t keys read too heavy); every band is an integer multiple of its
-  #     unit; the light halo "envelope" around the glyph is o = t thick
-  #   - regions paint a solid-ink silhouette, then repaint their interior in
-  #     the light color inset by t — so borders can never thin below t
-  #   - curves and oblique edges are drawing commands: the slot mouth is an
-  #     elliptical arc (light punch + t-thick stroked lip), the flared lower
-  #     body a filled hexagon path, keys are strokeCircle rings / fillCircle
-  #     dots, the spacebar a fillStadium; only the sub-5px key squares/dots
-  #     are hand-placed rects
-  #   - detail adapts to the budget: document lines fill the paper only while
-  #     they keep clearance, keys go disc-ring → dot, and the mouth / knob
-  #     hollow / flare tiers drop out when they cannot render honestly
-  # Colors keep the house two-tone: light "halo/base" in the outline color,
-  # dark line-work in the icon color.
+  # SIZE-AWARE typewriter in the design's style, the icon of the Docs Maker (its
+  # launcher, its info doc), of the Examples folder's "Document" and
+  # "Spreadsheet" openers and of a document's shortcut: the draft's "docs"
+  # glyph (docs/plans/redesign/desktop-canvas.html), drawn by the idiom of
+  # docs/plans/pixel-icons-plan.md §5b. Line art in ink, every line on the
+  # glyph line unit t (SizeAwareIconAppearance._glyphLineUnit), with paper
+  # interiors and no halo envelope (the tile the icon stands on is its ground):
+  #   - the SHEET is a box with no bottom of its own, standing behind the
+  #     carriage: the carriage's top line closes it (adjacent outlined shapes
+  #     share ONE line -- a drawn bottom would double it into a thicker band);
+  #     on it, two TEXT LINES, t tall, the second shorter;
+  #   - the CARRIAGE is a bar with round ends across the machine's top;
+  #   - a KNOB at each end of it, as tall as the bar or a little less and
+  #     tangent to its end: the knob's inner wall IS the bar's end wall where
+  #     they meet;
+  #   - the LEVER, a t-thick bent line: an arm rising from the left knob's top
+  #     up and out to the left, then a short stub back to the right;
+  #   - the BODY, flaring downward from its top line, which is the carriage's
+  #     bottom line (one line, never a doubled band), its bottom corners
+  #     rounded;
+  #   - the KEYS, solid ink, two rows of five on the body's paper.
+  #   The border idiom: each shape's ink, then its paper inset by t. The
+  # carriage is two stadiums (fillStadium), so its round ends stay concentric
+  # and every wall is t thick, horizontal and vertical alike. The body is two
+  # polygons (_typewriterBodyOutline, twice): its paper's flanks are the ink's
+  # moved t across, two parallel edges at an integer offset, which the non-AA
+  # backend quantises identically (lesson 29) -- every row of a slanted wall is
+  # exactly t wide and touches the next, one connected wall from the top line
+  # to the bottom one, as thick as every straight one; each bottom corner is
+  # an arc tangent to its flank and to the bottom line, the ink's and the
+  # paper's about ONE centre, so the wall stays t round the corner. Its
+  # flanks' run and rise never share their largest power of two (the Bin's
+  # tie rule: such a flank crosses a pixel centre exactly on some row, where
+  # the backend may break the tie either way and the two flanks stop
+  # mirroring each other); where they would, the flanks leave the top line a
+  # row lower. A knob is a ring -- a mid-radius strokeCircle over a paper
+  # disc, the exact annulus [k/2 - t, k/2], so its wall is t -- or a solid
+  # dot. The lever is fills: the stub a fillRect, the slanted arm a band whose
+  # two edges are parallel at a t offset across, so every row of it is exactly
+  # t (lesson 29) and shifts at most a px from the next: one connected line (a
+  # fill, never a round-capped stroke: the non-AA backend leaves the overlap
+  # of two round caps in one stroke unpainted).
+  #   ONE axis: every width shares the key size k's parity, so the middle key
+  # sits on the axis and the machine (but for its lever and its text lines) is
+  # its own mirror image. The draft's carriage and knobs sit a unit right of
+  # its axis, which balances the lever on the left; here they stand on the
+  # axis, and the machine and its lever are centred in S as ONE composition
+  # instead: the axis stands half the lever's overhang right of the square's
+  # centre, or half a px left of that where widths of k's parity would not
+  # land on whole px (floor centring). Vertically the machine is centred
+  # exactly.
+  #   Clearance is a spec: the sheet stands on the straight of the carriage's
+  # top line, a px clear of its round ends. The body's top corners tuck in
+  # under the carriage's round ends, no further out than where those cross
+  # the top of the carriage's bottom line, so the bar's lower arcs, the knobs
+  # and the body's corners never close a pocket of clear between them. The
+  # carriage is never so wide that a knob leaves the square. The lever's arm
+  # stands on the middle of the left knob's top (a knob's top row is inked
+  # across its middle, whatever way the backend rounds the rest of its rim);
+  # the arm and the stub touch nothing else, and the stub reaches a px past
+  # the arm below it, so its end is free.
+  #   Detail by rule: a corner radius under MIN_CORNER px rounds nothing on the
+  # non-AA backend, so below it the body's corners are square. The text lines
+  # keep a px of paper from the sheet's walls, from each other and from the
+  # carriage; their gaps close up to fit (to a px of paper each), then the
+  # second line drops, then the first. The first line is centred across the
+  # paper; the second, from the same left end, is at least a px shorter. A
+  # knob is a ring only when it is at least MIN_RING px across and its hole
+  # keeps MIN_RING_HOLE px (the ring gate of PatchProgrammingIconAppearance's
+  # node, read on its exact span too, so the ring never turns back into a dot
+  # as S grows), else a solid dot: a fillCircle from MIN_ROUND_KNOB px, a
+  # hand-placed square below it. The lever's arm shifts at most a px a row
+  # (its outer corner moves right to hold that); with no row for the arm
+  # under the stub, there is no lever. The keys are all one size and one
+  # shape: a fillCircle from MIN_ROUND_KEY px, a hand-placed square below it
+  # (the non-AA backend draws a 2 px circle as one row of 2 and a 3 px one as
+  # a plus). They keep a px of paper from each other and from the body's
+  # walls, and are centred in its paper both ways (half a px up where the
+  # leftover is odd); where the flanks leave them too little paper there,
+  # their gaps close up to a px, then they move down a row at a time, then the
+  # keyboard thins by KEY_TIERS -- to one row of five, then to the middle
+  # three -- never by shrinking its keys; with room for none, the body is
+  # drawn empty. At these proportions: no keys up to S = 15, three from 16,
+  # five from 23, two rows of five from 24.
 
-  # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this);
-  # specificationSize is irrelevant here — nothing below runs in design space.
+  # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
 
-  # ---- proportions, named so the painters below read as intent -------------
-  # (fractions of the inner-square side unless noted otherwise)
-  CARRIAGE_TOP:    0.38   # where the machine starts, below the paper
-  CARRIAGE_HEIGHT: 0.20
-  CHASSIS_MARGIN:  0.05   # the machine is narrower than the glyph square
-                          # (each side; the paper keeps the full square)
-  PAPER_MARGIN:    0.20   # the sheet's left/right inset
-  INSET:           0.05   # carriage side inset = knob protrusion = flare travel
-  FLARE_HEIGHT:    0.45   # of the lower body, before the straight base
-  KNOB_HEIGHT:     0.78   # of the carriage height
-  MOUTH_RADIUS:    0.26   # of the paper width
-  MOUTH_DEPTH:     0.62   # of the mouth radius
-  LINE_LENGTHS:    [1, 0.7, 0.85, 0.55, 0.8]   # document-line length rhythm
-
-  # ---- the typewriter ------------------------------------------------------
-  # (the paint entry point and the _px* drawing vocabulary live in
-  # SizeAwareIconAppearance)
+  # ---- proportions: the INK edges of a one-unit line on the draft glyph's
+  # path (its centre line moved out by half a unit; a text line's round caps
+  # reach half a unit past its ends), in GLYPH_GRID units: u units are round(S
+  # * u / GLYPH_GRID) px at a glyph square of S px. The machine is centred in
+  # S, so a symmetric part counts only by its span, and every height by its
+  # distance from the sheet's top.
+  TOP: 2.5                # the sheet's top ink edge (path y 3): the machine's top
+  BOTTOM: 38.5            # the body's bottom ink edge (path y 38): the machine's bottom
+  SHEET_WIDTH: 21         # the sheet's outer ink span (path M12 18V3h20v15)
+  LINES: 2                # the text lines (path M15 7h14 M15 11h8.4)
+  LINE_LENGTH: 15         # the first line's ink length, centred across the sheet's paper
+  SHORT_LINE_LENGTH: 9.4  # the second line's, from the same left end
+  LINE_TOP: 6.5           # the first line's top ink edge (path y 7)
+  LINE_PITCH: 4           # from a line's top to the next one's
+  CARRIAGE_WIDTH: 31      # the carriage's outer ink span (path rect (8, 16) 30 x 5 r 2.5, a stadium; here centred on the axis, path x 7..37)
+  CARRIAGE_TOP: 15.5      # its top ink edge (path y 16)
+  CARRIAGE_HEIGHT: 6      # its ink height
+  KNOB_SIZE: 5            # a knob's ink diameter (path circles r 2 two units past the carriage's ends, tangent to them)
+  LEVER_TOP: 10.5         # the lever stub's top ink edge (path M8 17L3 11h4, here a unit left with the knob)
+  LEVER_OVERHANG: 1       # how far the lever's outer corner stands left of the knob's ink (path x 2, the knob's ink from 2.5)
+  LEVER_STUB: 4           # from the knob's ink left edge to the stub's ink end (path x 6)
+  BODY_TOP_WIDTH: 30.8    # the body's outer ink span along its top line (path M7 21h30: its flanks' outer edges cross that line at x 6.6 and 37.4)
+  BODY_BOTTOM_WIDTH: 38   # its flanks' outer span continued to the bottom ink edge (path l3 15: 3 units out over 15 down)
+  BODY_CORNER: 2.5        # its bottom corners' outer radius (path radius 2; the inner one is t less)
+  KEY_SIZE: 3.5           # a key's size across and down (the draft's dots are 2.6 across; the owner asked for bigger, heavier keys)
+  KEY_PITCH: 5.5          # from a key's left edge to the next one's
+  KEY_ROW_PITCH: 5        # from a key row's top to the next one's
+  # ---- detail tiers -----------------------------------------------------------
+  MIN_CORNER: 2           # px: a smaller corner radius is square
+  MIN_CLEARANCE: 1        # px of paper a text line or a key keeps from every other ink
+  MIN_LINE: 2             # px: the shortest first text line; with less the sheet is blank
+  MIN_KNOB: 2             # px: the smallest knob, across
+  MIN_ROUND_KNOB: 4       # px: the smallest knob drawn round; a smaller one is a square
+  MIN_RING: 6             # px: the smallest knob drawn as a ring, across ...
+  MIN_RING_HOLE: 2        # px: ... and the smallest hole a ring keeps; a smaller knob is a solid dot
+  MIN_KEY: 2              # px: the smallest key, across
+  MIN_ROUND_KEY: 4        # px: the smallest key drawn round; a smaller one is a square
+  KEY_TIERS: [[2, 5], [1, 5], [1, 3]]   # the keyboards the keys thin through, as [rows, keys a row], the draft's first (path dots x 11, 16.5, 22, 27.5 and 33, y 27 and 32); each row's keys the middle ones of a full row
 
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
+    return if Math.min(wDev, hDev) < 10
     m = @_typewriterMetrics x0, y0, wDev, hDev
-    return unless m?
-    @_paintPaper ctx, m
-    @_paintCarriage ctx, m
-    @_paintSlotMouth ctx, m if m.mouth?
-    @_paintKnobs ctx, m
-    @_paintLowerBody ctx, m
-    @_paintKeyboard ctx, m
+    @_typewriterSheet ctx, m
+    @_typewriterCarriage ctx, m
+    @_typewriterBody ctx, m
+    @_typewriterKnobs ctx, m
+    @_typewriterLever ctx, m
+    @_typewriterKeys ctx, m
 
-  # every shared measurement, in integer device pixels; horizontal symmetry is
-  # by construction (all widths derive from symmetric insets)
+  # every measurement the typewriter is built from, in whole device px but for
+  # the axis (half a px off the grid where S and k differ in parity), the
+  # bottom corners' centre and the lever's step
   _typewriterMetrics: (x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev
-    return undefined if S < 6
-
-    t = Math.max 1, Math.round S / 32          # the line unit (paper, chassis, knobs)
-    tc = Math.max 1, Math.round S / 45         # the KEYS line unit — a touch
-                                               # lighter than t (owner call:
-                                               # full-t keys read too heavy)
-    o = t                                      # halo/envelope thickness
-    # the glyph proper lives in an inner square, centered in the widget box,
-    # so the halo never overflows the bounds
+    t = @_glyphLineUnit S
+    px = (units) => Math.round S * units / @GLYPH_GRID
+    k = Math.max @MIN_KEY, px @KEY_SIZE
+    # a width of k's parity: centred on the axis, its edges land on whole px
+    width = (units, least = 1) ->
+      n = Math.max least, px units
+      n++ if (n - k) % 2 isnt 0
+      n
     x = x0 + Math.floor (wDev - S) / 2
     y = y0 + Math.floor (hDev - S) / 2
-    ix = x + o
-    iy = y + o
-    iS = S - 2 * o
-
-    carriageTop = iy + Math.round iS * @CARRIAGE_TOP
-    carriageH = Math.max 3 * t, Math.round(iS * @CARRIAGE_HEIGHT)
-    inset = Math.max 1, Math.round iS * @INSET
-    paperMargin = Math.round iS * @PAPER_MARGIN
-    chassisM = Math.round iS * @CHASSIS_MARGIN
-
+    # the axis: the machine and its lever are centred in S as ONE composition
+    # -- the lever's corner stands LEVER_OVERHANG further out on the left than
+    # the right knob does on the right, so the axis is half that right of the
+    # square's centre -- where widths of k's parity have whole-px edges: half a
+    # px left of there where it is not such a place
+    reach = S + px @LEVER_OVERHANG
+    axis = x + (reach - (reach - k) % 2) / 2
+    # a height of S's parity, so the machine is centred in S vertically
+    h = px @BOTTOM - @TOP
+    h++ if (S - h) % 2 isnt 0
+    top = y + (S - h) / 2
+    bottom = top + h
+    carriageHeight = Math.max 2 * t + 1, px @CARRIAGE_HEIGHT
+    # the body keeps a px of paper under the carriage
+    carriageTop = Math.min top + px(@CARRIAGE_TOP - @TOP), bottom - t - 1 - carriageHeight
     m =
       S: S
       t: t
-      tc: tc
-      o: o
-      ix: ix
-      iy: iy
-      iS: iS
-      bottom: iy + iS
+      k: k
+      square: {left: x, top: y, right: x + S, bottom: y + S}
+      axis: axis
+      top: top
+      bottom: bottom
       carriageTop: carriageTop
-      carriageH: carriageH
-      deckTop: carriageTop + carriageH
-      inset: inset
-      bodyX: ix + chassisM                     # the machine's x-range (base width)
-      bodyW: iS - 2 * chassisM
-      cL: ix + chassisM + inset                # the carriage's x-range
-      cR: ix + chassisM + (iS - 2 * chassisM) - inset
-      paperX: ix + paperMargin
-      paperW: iS - 2 * paperMargin
-
-    # the slot mouth only exists when the budget gives it a recognizable curve
-    mouthR = Math.round m.paperW * @MOUTH_RADIUS
-    mouthD = Math.min Math.round(mouthR * @MOUTH_DEPTH), carriageH - 2 * t
-    m.mouth = { R: mouthR, D: mouthD } if mouthR >= 3 * t and mouthD >= 2 * t
+      carriageBottom: carriageTop + carriageHeight
+      bodyTop: carriageTop + carriageHeight - t   # the carriage's bottom line
+    @_typewriterKnobSize m
+    # the carriage leaves room in the square for its knobs (twice the axis's
+    # distance from either side of the square has k's parity, and so does the
+    # cap)
+    carriageWidth = Math.min width(@CARRIAGE_WIDTH), 2 * Math.min(axis - x, x + S - axis) - 2 * (m.knob - t)
+    # the sheet stands on the straight of the carriage's top line, a px clear
+    # of its round ends
+    sheetWidth = Math.min width(@SHEET_WIDTH, 2 * t + 1), carriageWidth - 2 * Math.ceil(carriageHeight / 2) - 2
+    # the body's top corners stand no further out than where the carriage's
+    # round ends cross the top of its bottom line: so the carriage's lower
+    # arcs, the knobs and the body's corners never close a pocket between them
+    half = carriageHeight / 2
+    tuck = Math.ceil half - Math.sqrt(half * half - (half - t) * (half - t))
+    topWidth = Math.min width(@BODY_TOP_WIDTH), carriageWidth - 2 * tuck
+    bottomWidth = width @BODY_BOTTOM_WIDTH, topWidth + 2   # the body always flares
+    radius = px @BODY_CORNER
+    m.carriageLeft = axis - carriageWidth / 2
+    m.carriageRight = axis + carriageWidth / 2
+    m.sheetLeft = axis - sheetWidth / 2
+    m.sheetRight = axis + sheetWidth / 2
+    m.bodyLeft = axis - topWidth / 2                # the body's top-left outer corner
+    m.run = (bottomWidth - topWidth) / 2            # how far each flank travels out, top to bottom
+    m.r = if radius < @MIN_CORNER then 0 else radius
+    # the flanks start on the top line, unless their run and rise share their
+    # largest power of two (x & -x): one row lower is tie-free, and still on
+    # the top line or directly under it
+    m.flankTop = m.bodyTop
+    m.flankTop++ if (m.run & -m.run) is ((bottom - m.flankTop) & -(bottom - m.flankTop))
+    # the bottom-left corner's centre (the right one mirrors it): r inside the
+    # ink flank and r above the bottom ink edge; and the flank's length from
+    # flankTop to the bottom ink edge, so (-rise, -run) / length is the unit
+    # normal pointing out of the left flank
+    m.flankLength = Math.sqrt m.run * m.run + (bottom - m.flankTop) * (bottom - m.flankTop)
+    m.cornerY = bottom - m.r
+    m.cornerX = @_typewriterFlankAt(m, m.cornerY, 0) + m.r * m.flankLength / (bottom - m.flankTop)
+    @_typewriterLineMetrics m, px
+    @_typewriterKnobMetrics m
+    @_typewriterLeverMetrics m, px
+    @_typewriterKeyMetrics m, px
     m
 
-  # the sheet: halo rim, dark edges landing ON the carriage lip (so the page
-  # connects to the machine), and as many document lines as genuinely fit — a
-  # line is drawn only while it keeps one inter-line gap of clearance to the
-  # machine below, and the count reaches 0 when nothing fits
-  _paintPaper: (ctx, m) ->
-    {t, o, iy, carriageTop, paperX, paperW} = m
-    @_useLight ctx
-    ctx.fillRect paperX - o, iy - o, paperW + 2 * o, carriageTop - iy + 2 * o
+  # the text lines, onto m: the first line's length -- the whole px nearest
+  # the draft's with the sheet paper's parity, so it sits on its exact centre
+  # across, a px of paper each side at least -- the second's, their left end
+  # and their tops. Their gaps close up to fit above the carriage (to a px of
+  # paper each); where they still do not, the second line drops, then the
+  # first
+  _typewriterLineMetrics: (m, px) ->
+    {S, t} = m
+    paper = m.sheetRight - m.sheetLeft - 2 * t
+    length = 2 * Math.round((S * @LINE_LENGTH / @GLYPH_GRID - paper) / 2) + paper
+    m.lineLength = Math.min length, paper - 2 * @MIN_CLEARANCE
+    m.shortLength = Math.min px(@SHORT_LINE_LENGTH), m.lineLength - 1
+    m.lineLeft = m.sheetLeft + t + (paper - m.lineLength) / 2
+    m.lineTops = []
+    return if m.lineLength < @MIN_LINE
+    paperTop = m.top + t
+    spacings = [[Math.max(@MIN_CLEARANCE, px(@LINE_TOP - @TOP) - t), Math.max(t + @MIN_CLEARANCE, px @LINE_PITCH)], [@MIN_CLEARANCE, t + @MIN_CLEARANCE]]
+    for n in [@LINES..1] by -1
+      for [gap, pitch] in spacings
+        first = paperTop + gap
+        if first + (n - 1) * pitch + t + @MIN_CLEARANCE <= m.carriageTop
+          m.lineTops = (first + i * pitch for i in [0...n])
+          break
+      break if m.lineTops.length
+    return
+
+  # the knobs' size and shape, onto m: the whole px nearest the draft's size
+  # with the carriage height's parity, so each is centred on the carriage's
+  # height, and no taller than it
+  _typewriterKnobSize: (m) ->
+    {S, t} = m
+    height = m.carriageBottom - m.carriageTop
+    exact = S * @KNOB_SIZE / @GLYPH_GRID
+    k = 2 * Math.round((exact - height) / 2) + height
+    k += 2 while k < @MIN_KNOB
+    k = Math.min k, height
+    m.knob = k
+    # read on the smaller of k and the knob's exact size, which k follows a px
+    # either way as the carriage height's parity alternates: the knob never
+    # turns back from a ring into a dot, or a dot into a square, as S grows
+    least = Math.min k, exact
+    m.knobIsRing = least >= @MIN_RING and k - 2 * t >= @MIN_RING_HOLE
+    m.knobIsRound = least >= @MIN_ROUND_KNOB
+
+  # the knobs' place, onto m: the left one's top-left corner (the right one
+  # mirrors it), its inner wall on the carriage's end wall at the carriage's
+  # middle row
+  _typewriterKnobMetrics: (m) ->
+    m.knobTop = m.carriageTop + (m.carriageBottom - m.carriageTop - m.knob) / 2
+    m.knobLeft = m.carriageLeft + m.t - m.knob
+
+  # the lever, onto m: its top row, the outer corner (the stub's left end and
+  # the arm's left edge on that row), the arm's left edge on its last row --
+  # the row on the left knob's top, centred on the knob (half a px left where
+  # the parities differ) -- the arm's step a row, and the stub's right end.
+  # The arm's left edge moves from the corner to that last place by the same
+  # amount every row, at most a px (the corner moves right to hold that); the
+  # stub reaches at least a px past the arm on the row under it, so its end
+  # is free. With no row for the arm below the stub, there is no lever
+  _typewriterLeverMetrics: (m, px) ->
+    {t, knob, knobLeft, knobTop} = m
+    top = m.top + px(@LEVER_TOP - @TOP)
+    last = knobTop - 1
+    m.hasLever = last - top >= t
+    return unless m.hasLever
+    base = knobLeft + Math.floor (knob - t) / 2
+    left = Math.max m.square.left, knobLeft - px(@LEVER_OVERHANG), base - (last - top)
+    step = (base - left) / (last - top)
+    m.leverTop = top
+    m.leverLeft = left
+    m.leverBase = base
+    m.leverStep = step
+    m.leverEnd = Math.max left + t + 1, knobLeft + px(@LEVER_STUB), Math.ceil(left + step * t) + t + 1
+
+  # the keys, onto m: each key's top-left corner, all k px square. The first
+  # keyboard of KEY_TIERS that fits with a px of paper from the body's walls
+  # and between its keys -- at the draft's pitches, else with its gaps closed
+  # up to a px -- centred in the body's paper both ways (half a px up where
+  # the leftover is odd), or as little below the centre as the flanks need
+  _typewriterKeyMetrics: (m, px) ->
+    {t, k, axis} = m
+    gap = Math.max @MIN_CLEARANCE, px(@KEY_PITCH) - k
+    rowGap = Math.max @MIN_CLEARANCE, px(@KEY_ROW_PITCH) - k
+    paperTop = m.carriageBottom
+    paperHeight = m.bottom - t - paperTop
+    m.keys = []
+    for [rows, n] in @KEY_TIERS
+      for [across, down] in [[gap, rowGap], [@MIN_CLEARANCE, @MIN_CLEARANCE]]
+        blockHeight = rows * k + (rows - 1) * down
+        continue if blockHeight > paperHeight - 2 * @MIN_CLEARANCE
+        left = axis - (n * k + (n - 1) * across) / 2
+        lowest = paperTop + paperHeight - @MIN_CLEARANCE - blockHeight
+        top = paperTop + Math.floor (paperHeight - blockHeight) / 2
+        # the flanks flare out downward, so the narrowest paper by a key is on
+        # the row above the first one (a wall px there touches the key's
+        # corner); where it is too narrow, the keys move down a row at a time
+        top++ while top <= lowest and left < @_typewriterPaperLeft(m, top - 1) + @MIN_CLEARANCE
+        continue if top > lowest
+        for row in [0...rows]
+          for i in [0...n]
+            m.keys.push [left + i * (k + across), top + row * (k + down)]
+        return
+    return
+
+  # the body's first paper column at row y, left of the axis: the first pixel
+  # whose centre lies right of the left flank moved t across
+  _typewriterPaperLeft: (m, y) ->
+    Math.ceil @_typewriterFlankAt(m, y + 0.5, m.t) - 0.5
+
+  # the left flank at row boundary y (or a pixel centre's y), moved d inward:
+  # straight down to flankTop, then out by run to the bottom ink edge
+  _typewriterFlankAt: (m, y, d) ->
+    out = if y > m.flankTop then m.run * (y - m.flankTop) / (m.bottom - m.flankTop) else 0
+    m.bodyLeft + d - out
+
+  # the sheet: its ink down into the carriage's top line, its paper inset by t
+  # on the three sides it shows (the carriage paints over its bottom), the
+  # text lines on that paper
+  _typewriterSheet: (ctx, m) ->
+    {t, top, sheetLeft, carriageTop} = m
+    w = m.sheetRight - sheetLeft
     @_useInk ctx
-    ctx.fillRect paperX, iy, paperW, t
-    ctx.fillRect paperX, iy, t, carriageTop - iy
-    ctx.fillRect paperX + paperW - t, iy, t, carriageTop - iy
-
-    pad = 2 * t
-    lineW = paperW - 2 * pad
-    return if lineW < 2 * t
-    pitch = if t is 1 then 3 else 2 * t        # keeps gaps >= 2px at t = 1
-    lineGap = pitch - t
-    firstY = iy + pad
-    nLines = Math.max 0, Math.floor((carriageTop - firstY - t - lineGap) / pitch) + 1
-    for i in [0...nLines]
-      len = Math.max 2 * t, Math.round lineW * @LINE_LENGTHS[i % @LINE_LENGTHS.length]
-      ctx.fillRect paperX + pad, firstY + i * pitch, len, t
-
-  # the carriage bar: halo rims split around the page (a full-width rim would
-  # overpaint the page's dark side edges and re-float the sheet), solid ink
-  # bar, then the light interior. The bar's surviving top t rows ARE the slot
-  # lip, running visibly beneath the paper as in the original.
-  _paintCarriage: (ctx, m) ->
-    {t, o, cL, cR, carriageTop, deckTop, paperX, paperW} = m
-    @_useLight ctx
-    ctx.fillRect cL - o, carriageTop - o, paperX - (cL - o), o
-    ctx.fillRect paperX + paperW, carriageTop - o, (cR + o) - (paperX + paperW), o
-    ctx.fillRect cL - o, carriageTop, o, deckTop - carriageTop
-    ctx.fillRect cR, carriageTop, o, deckTop - carriageTop
+    ctx.fillRect sheetLeft, top, w, carriageTop + t - top
+    @_usePaper ctx
+    ctx.fillRect sheetLeft + t, top + t, w - 2 * t, carriageTop - top
     @_useInk ctx
-    ctx.fillRect cL, carriageTop, cR - cL, deckTop - carriageTop
-    @_useLight ctx
-    ctx.fillRect cL + t, carriageTop + t, (cR - t) - (cL + t), deckTop - (carriageTop + t)
+    for lineTop, i in m.lineTops
+      ctx.fillRect m.lineLeft, lineTop, (if i is 0 then m.lineLength else m.shortLength), t
+    return
 
-  # the slot mouth: a half-ellipse punched through the lip in the light color,
-  # its curve traced by a t-thick elliptical stroke just below the punch (the
-  # trace's semi-axes sit t/2 outside the punch's, so the ink band hangs off
-  # the opening's rim). The ellipse is a drawing command — each backend
-  # rasterizes the curve its own way. The arc's butt caps end exactly on the
-  # lip's top row (the endpoints are the arc's topmost points).
-  _paintSlotMouth: (ctx, m) ->
-    {t, ix, iS, carriageTop} = m
-    {R, D} = m.mouth
-    cx = ix + iS / 2
-    @_useLight ctx
+  # the carriage: its ink stadium, then the stadium inset by t in paper, so its
+  # round ends stay concentric and every wall is t
+  _typewriterCarriage: (ctx, m) ->
+    {t, carriageLeft, carriageTop} = m
+    w = m.carriageRight - carriageLeft
+    h = m.carriageBottom - carriageTop
+    @_useInk ctx
+    ctx.fillStadium carriageLeft, carriageTop, w, h
+    @_usePaper ctx
+    ctx.fillStadium carriageLeft + t, carriageTop + t, w - 2 * t, h - 2 * t
+
+  # the body: its ink, then its paper, the outline inset by t
+  _typewriterBody: (ctx, m) ->
+    @_useInk ctx
+    @_typewriterBodyOutline ctx, m, 0
+    @_usePaper ctx
+    @_typewriterBodyOutline ctx, m, m.t
+
+  # the body's outline inset by d, filled: d = 0 is the ink silhouette, d = t
+  # its paper. Every edge moves d inward: the top line and the bottom one d
+  # down and up, each flank d across, so each row of a slanted wall is d wide.
+  # A bottom corner is an arcTo corner (built the way fillRoundRect builds its
+  # own) at radius r - d about ONE centre for both outlines, so its wall is t
+  # all round: the arc is tangent to the bottom line and to the flank moved d
+  # along its normal, and it leaves the flank moved d across a fraction of a
+  # px from it (the across move is a little the longer). A 0 radius is a
+  # square corner
+  _typewriterBodyOutline: (ctx, m, d) ->
+    {axis} = m
+    top = m.bodyTop + d
+    bottom = m.bottom - d
+    bend = Math.max top, m.flankTop
+    left = (y) => @_typewriterFlankAt m, y, d
+    right = (y) -> 2 * axis - left y
     ctx.beginPath()
-    ctx.ellipse cx, carriageTop, R, D, 0, 0, Math.PI
-    ctx.fill()
-    @_useInk ctx
-    ctx.lineWidth = t
-    ctx.beginPath()
-    ctx.ellipse cx, carriageTop, R + t / 2, D + t / 2, 0, 0, Math.PI
-    ctx.stroke()
-
-  # platen knobs: thin, LIGHT "D"-tabs hanging off the carriage sides — a
-  # bt-thin outline (thinner than the chassis line) OPEN toward the chassis,
-  # so its top and bottom edges merge into the carriage's side line and the
-  # light interior sits right beside it; degenerates to a solid thin nub when
-  # the protrusion can't host a hollow. The height shares the carriage's
-  # parity so the vertical centering is exact.
-  _paintKnobs: (ctx, m) ->
-    {t, o, cL, cR, carriageTop, carriageH, inset} = m
-    bt = Math.max 1, Math.ceil t / 2
-    knobW = Math.max 1, inset - 1
-    knobH = Math.round carriageH * @KNOB_HEIGHT
-    knobH += 1 if (carriageH - knobH) % 2 is 1
-    knobH = Math.min knobH, carriageH
-    knobY = carriageTop + Math.floor (carriageH - knobH) / 2
-    @_useLight ctx
-    ctx.fillRect cL - knobW - o, knobY - o, knobW + o, knobH + 2 * o
-    ctx.fillRect cR, knobY - o, knobW + o, knobH + 2 * o
-    @_useInk ctx
-    ctx.fillRect cL - knobW, knobY, knobW, knobH
-    ctx.fillRect cR, knobY, knobW, knobH
-    if knobW - bt >= 1 and knobH - 2 * bt >= 2
-      @_useLight ctx
-      ctx.fillRect cL - knobW + bt, knobY + bt, knobW - bt, knobH - 2 * bt
-      ctx.fillRect cR, knobY + bt, knobW - bt, knobH - 2 * bt
-
-  # the lower body: flares from the carriage width out to the full base width
-  # on an oblique flank, then runs straight to the bottom — one hexagonal
-  # silhouette, filled three times: light halo (expanded o sideways and o
-  # below; the top edge stays put, or it would punch light into the
-  # carriage's side borders), ink, then the light interior (flank shifted t
-  # inward, top edge t lower so the divider line under the carriage
-  # survives, bottom edge t higher). The oblique flank is a path edge — each
-  # backend rasterizes it its own way; the interior flank parallels the ink
-  # flank at a t horizontal offset, so the slanted border reads t thick at
-  # every row.
-  _paintLowerBody: (ctx, m) ->
-    {t, o, bodyX, bodyW, deckTop, bottom, inset} = m
-    deckH = bottom - deckTop
-    return if deckH < 1
-    # the straight base keeps at least 2*t (a t bottom edge + the interior
-    # above it); when even a 1px flare can't fit, the body is a plain box
-    flareH = Math.min Math.round(deckH * @FLARE_HEIGHT), deckH - 2 * t
-    flareH = 0 if flareH < 1 or inset < 1
-    yFlare = deckTop + flareH
-    body = (dx, yT, yB) ->
-      # the silhouette shifted dx inward per side (negative = outward),
-      # spanning yT..yB; the flank runs from inset at deckTop to 0 at yFlare.
-      # A path with inverted or empty extent still fills (a negative-size
-      # fillRect is a no-op, a path is not) — bail explicitly.
-      return if yB <= yT
-      hasFlank = flareH > 0 and yT < yFlare
-      xTop = if hasFlank then dx + inset * (1 - (yT - deckTop) / flareH) else dx
-      ctx.beginPath()
-      ctx.moveTo bodyX + xTop, yT
-      ctx.lineTo bodyX + bodyW - xTop, yT
-      if hasFlank
-        ctx.lineTo bodyX + bodyW - dx, yFlare
-        ctx.lineTo bodyX + bodyW - dx, yB
-        ctx.lineTo bodyX + dx, yB
-        ctx.lineTo bodyX + dx, yFlare
-      else
-        ctx.lineTo bodyX + bodyW - dx, yB
-        ctx.lineTo bodyX + dx, yB
-      ctx.closePath()
-      ctx.fill()
-    @_useLight ctx
-    body -o, deckTop, bottom + o
-    @_useInk ctx
-    body 0, deckTop, bottom
-    @_useLight ctx
-    body t, deckTop + t, bottom - t
-
-  # the keyboard: rows computed from the deck's inner budget. Keys are
-  # strokeCircle rings (fillCircle dots once the hole can't survive) from
-  # diameter 5 up, hand-placed square rings / dots below (the extra-small
-  # tier); the spacebar is a fillStadium spanning 3 OR 4 middle slots —
-  # whichever lets the remaining keys split evenly — and a plain bar when
-  # the row can't host bar + side keys.
-  _paintKeyboard: (ctx, m) ->
-    {S, t, tc, bodyX, bodyW, inset, deckTop, bottom} = m
-    deckX = bodyX + inset + t
-    deckW = bodyW - 2 * (inset + t)
-    dyTop = deckTop + 2 * t
-    deckInnerH = (bottom - 2 * t) - dyTop
-    return if deckInnerH < 1 or deckW < 3
-
-    k = Math.max t, Math.round S / 11          # key side/diameter
-    isRound = k >= 5
-    isRing = (k - 2 * tc) >= 2
-    g = Math.max 1, Math.round k / 3           # key gap (tight, fits an extra key)
-    rowGap = Math.max t, 2
-    nRows = if deckInnerH >= 2 * k + rowGap then 2 else 1
-    k = Math.min k, deckInnerH                 # tiny budgets: shrink before dropping
-    nk = Math.min 8, Math.max 3, Math.floor((deckW + g) / (k + g))
-    nk = Math.max 3, nk - 1 if S < 48          # the full count reads crowded when small
-    rowW = nk * k + (nk - 1) * g
-    kx0 = deckX + Math.floor (deckW - rowW) / 2
-    rowsH = nRows * k + (nRows - 1) * rowGap
-    ky0 = dyTop + Math.max 0, Math.floor((deckInnerH - rowsH) / 2)
-
-    drawKey = (kx, ky) =>
-      if isRound
-        if isRing
-          # a mid-radius strokeCircle renders the exact analytic annulus
-          # [rMid - tc/2, rMid + tc/2] — the same spelling as the title-bar
-          # rings (a fillCircle pair reads 4-petaled at these small radii
-          # under the non-AA backend)
-          @_useInk ctx
-          ctx.lineWidth = tc
-          ctx.strokeCircle kx + k / 2, ky + k / 2, (k - tc) / 2
-        else
-          @_useInk ctx
-          ctx.fillCircle kx + k / 2, ky + k / 2, k / 2
-      else if isRing
-        @_useInk ctx
-        @_pxBorder ctx, kx, ky, k, k, tc
-      else
-        @_useInk ctx
-        ctx.fillRect kx, ky, k, k
-
-    for i in [0...nk]
-      drawKey kx0 + i * (k + g), ky0
-
-    return unless nRows is 2
-    y2 = ky0 + k + rowGap
-    if nk >= 5
-      sbCount = 3 + (nk - 3) % 2
-      sbSlot = (nk - sbCount) / 2
-      sbX = kx0 + sbSlot * (k + g)
-      sbW = sbCount * k + (sbCount - 1) * g
-      if isRound
-        @_useInk ctx
-        ctx.fillStadium sbX, y2, sbW, k
-        if isRing
-          @_useLight ctx
-          ctx.fillStadium sbX + tc, y2 + tc, sbW - 2 * tc, k - 2 * tc
-      else if isRing
-        @_useInk ctx
-        @_pxBorder ctx, sbX, y2, sbW, k, tc
-      else
-        @_useInk ctx
-        ctx.fillRect sbX, y2, sbW, k
-      for i in [0...nk] when i < sbSlot or i >= sbSlot + sbCount
-        drawKey kx0 + i * (k + g), y2
+    ctx.moveTo left(top), top
+    ctx.lineTo right(top), top
+    ctx.lineTo right(bend), bend
+    if m.r is 0
+      ctx.lineTo right(bottom), bottom
+      ctx.lineTo left(bottom), bottom
     else
-      @_useInk ctx
-      sbW = Math.max 2 * k, Math.round deckW * 0.5
-      sbX = deckX + Math.floor (deckW - sbW) / 2
-      ctx.fillRect sbX, y2, sbW, k
+      r = m.r - d
+      rise = m.bottom - m.flankTop
+      # where the arc leaves the flank: r from the centre along the flank's
+      # normal; and the corner the arc rounds, where the flank through that
+      # point meets the bottom line
+      x = m.cornerX - r * rise / m.flankLength
+      y = m.cornerY - r * m.run / m.flankLength
+      corner = x - (bottom - y) * m.run / rise
+      ctx.lineTo right(y), y
+      ctx.lineTo 2 * axis - x, y
+      ctx.arcTo 2 * axis - corner, bottom, corner, bottom, r
+      ctx.arcTo corner, bottom, x, y, r
+      ctx.lineTo left(y), y
+    ctx.lineTo left(bend), bend
+    ctx.closePath()
+    ctx.fill()
+
+  # each knob fills its k x k box: a ring -- the box's disc in paper, then
+  # over it a mid-radius strokeCircle, the exact annulus [k/2 - t, k/2], so
+  # its wall is t and its hole paper (the disc and the ring both cover
+  # exactly their whole-px boxes, so nothing between them is left unpainted;
+  # where the disc reaches the carriage's end wall, the ring inks it again) --
+  # a fillCircle dot, or, under MIN_ROUND_KNOB px (an extra-small feature no
+  # circle command expresses), the solid k x k square, hand-placed
+  _typewriterKnobs: (ctx, m) ->
+    {t, knob, knobTop} = m
+    for left in [m.knobLeft, m.carriageRight - t]
+      cx = left + knob / 2
+      cy = knobTop + knob / 2
+      if m.knobIsRing
+        @_usePaper ctx
+        ctx.fillCircle cx, cy, knob / 2
+        @_useInk ctx
+        ctx.lineWidth = t
+        ctx.strokeCircle cx, cy, (knob - t) / 2
+      else if m.knobIsRound
+        @_useInk ctx
+        ctx.fillCircle cx, cy, knob / 2
+      else
+        @_useInk ctx
+        ctx.fillRect left, knobTop, knob, knob
+    return
+
+  # the lever: the arm, a band t across from the stub's row down to the row
+  # above the knob, its two edges parallel -- each passes the pixel centres
+  # of its top row at the corner and of its last row at the base, so those
+  # rows ink exactly [leverLeft, + t) and [leverBase, + t) -- then the stub, t
+  # tall, from the corner back to the right
+  _typewriterLever: (ctx, m) ->
+    return unless m.hasLever
+    {t, leverLeft, leverTop, leverBase, leverStep, knobTop} = m
+    @_useInk ctx
+    ctx.beginPath()
+    ctx.moveTo leverLeft - leverStep / 2, leverTop
+    ctx.lineTo leverLeft - leverStep / 2 + t, leverTop
+    ctx.lineTo leverBase + leverStep / 2 + t, knobTop
+    ctx.lineTo leverBase + leverStep / 2, knobTop
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillRect leverLeft, leverTop, m.leverEnd - leverLeft, t
+
+  # each key fills its k x k box: a fillCircle, or -- under MIN_ROUND_KEY px,
+  # an extra-small feature no circle command expresses -- the solid k x k
+  # square, hand-placed
+  _typewriterKeys: (ctx, m) ->
+    k = m.k
+    @_useInk ctx
+    for [x, y] in m.keys
+      if k >= @MIN_ROUND_KEY
+        ctx.fillCircle x + k / 2, y + k / 2, k / 2
+      else
+        ctx.fillRect x, y, k, k
+    return

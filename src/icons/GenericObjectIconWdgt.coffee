@@ -12,7 +12,10 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
 
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
-    @_applyExtent new Point 95, 95
+    # born at the desktop icon's glyph square; what holds me (a desktop icon's holder, or the arrow
+    # composite around me) lays me out in its own box
+    glyphSize = WorldWdgt.theme.desktopIconGlyphSize
+    @_applyExtent new Point glyphSize, glyphSize
     @_addNoSettle @icon
 
     # update layout
@@ -37,4 +40,6 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     @icon._applyBounds ((centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()), (new Point squareDim*50/100, squareDim*50/100).round()
 
 
-    @objectIcon._applyBounds inscribedSquareTopLeft, (new Point squareDim, squareDim).round()
+    # rounded: a square centred in a box whose width and height differ by an odd amount starts on a
+    # half pixel, and a widget is placed in integer pixels
+    @objectIcon._applyBounds inscribedSquareTopLeft.round(), (new Point squareDim, squareDim).round()

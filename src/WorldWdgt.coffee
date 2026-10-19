@@ -352,7 +352,6 @@ class WorldWdgt extends IconGridPanelWdgt
 
   widgetsReferencingOtherWidgets: undefined
   incrementalGcSessionId: 0
-  desktopSidesPadding: 10
 
   # the desktop lays down icons vertically
   laysIconsHorizontallyInGrid: false
@@ -700,7 +699,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @setColor WorldWdgt.theme.desktopFill
 
     acm = new AnalogClockWdgt
-    acm._applyExtent new Point 80, 80
+    acm._applyExtent new Point WorldWdgt.theme.desktopClockSize, WorldWdgt.theme.desktopClockSize
     # the creator ARMS the clock's corner knob (top-right); the corner pass places it, so
     # no hand-computed position here. Corner-anchored until the user grabs it -- the grab
     # disarms the slot and the membership rule takes over (proportional tracking).
@@ -2741,7 +2740,6 @@ class WorldWdgt extends IconGridPanelWdgt
     # 5. apply the world-state scalars to the LIVE world.
     @isDevMode = section.isDevMode if section.isDevMode?
     @alpha = section.alpha if section.alpha?
-    @numberOfIconsOnDesktop = section.numberOfIconsOnDesktop if section.numberOfIconsOnDesktop?
     @[name] = val for own name, val of (section.infoDocFlags or {})
     if section.untitledNamingCounters? and @untitledNamingService?
       @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0

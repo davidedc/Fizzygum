@@ -50,10 +50,6 @@ class StringWdgt extends Widget
   fontName: undefined
   isBold: undefined
   isItalic: undefined
-  # TODO there is no API to toggle this properly yet,
-  # TODO?? ...and there is no menu entry for this
-  # TODO???? ...should we let users pick any color?
-  hasDarkOutline: false
   isHeaderLine: undefined
   isEditable: false
   # may the user drag-select my text? (see enableSelecting). A serializable MODE
@@ -633,31 +629,13 @@ class StringWdgt extends Widget
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  # hasDarkOutline halo: the offset black glyph copies extend up to 1.5px
-  # (plus AA spill) beyond the glyph ink on every side. This margin is reserved
-  # in fitting (doesTextFitInExtent), in the text position (textHorizontal/
-  # VerticalPosition — shared by paint AND caret/selection math, so both shift
-  # together), in the tight text-sized buffer and in the box-hugs-text measure,
-  # so the halo never clips at the buffer edge or at the widget bounds (the
-  # back buffer blits clipped to the widget box).
-  _outlineHaloMargin: ->
-    if @hasDarkOutline then 2 else 0
-
   doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     if !@measureText?
       debugger
     if text == ""
       return true
     extentOccupiedByText = new Point Math.ceil(@measureText text, overrideFontSize), @fontHeight(overrideFontSize)
-
-    # reserve the halo margin HORIZONTALLY only: measured width is the glyphs'
-    # actual advance (ink reaches it), but fontHeight is the full em box, whose
-    # internal leading already keeps glyph ink at least a halo's width away from
-    # the top/bottom edges. Reserving it vertically too would make a short box
-    # (the 15px icon-label band) reject its set font outright — and CROP can
-    # only shorten text, never height, so the label would crop away to nothing.
-    haloMargin = @_outlineHaloMargin()
-    return extentOccupiedByText.le @extent().subtract new Point 2*haloMargin, 0
+    return extentOccupiedByText.le @extent()
 
   fitToExtent: ->
     # this if is just to check if the text fits in the
@@ -700,7 +678,6 @@ class StringWdgt extends Widget
     @isShowingBlanks  + "-" +
     @originallySetFontSize + "-" +
     @buildCanvasFontProperty() + "-" +
-    @hasDarkOutline + "-" +
     @isHeaderLine + "-" +
     @color.toString()  + "-" +
     (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
@@ -718,52 +695,31 @@ class StringWdgt extends Widget
     @fittingSpecBoxTightOrLoose  + "-" +
     @fittingSpecBoxWhichDimensionAdjusts
 
-  # TOP/LEFT inset by the halo margin; CENTER needs no explicit inset because
-  # fitting reserves 2×margin horizontally, so the centring slack is ≥ margin;
-  # MIDDLE relies on the em box's internal leading (see doesTextFitInExtent).
+  # Where my text starts inside my box, along each axis: flush with the side it is aligned to, or
+  # centred. The paint and the caret / selection math (slotCoordinates, slotAt) both read these, so
+  # the caret always sits on the text it edits.
   textVerticalPosition: (heightOfText) ->
     switch @verticalAlignment
       when AlignmentSpecVertical.TOP
-        @_outlineHaloMargin()
+        0
       when AlignmentSpecVertical.MIDDLE
         (@height() - heightOfText)/2
       when AlignmentSpecVertical.BOTTOM
-        @height() - heightOfText - @_outlineHaloMargin()
+        @height() - heightOfText
 
   textHorizontalPosition: (widthOfText) ->
     switch @horizontalAlignment
       when AlignmentSpecHorizontal.LEFT
-        @_outlineHaloMargin()
+        0
       when AlignmentSpecHorizontal.CENTER
         @width()/2 - widthOfText/2
       when AlignmentSpecHorizontal.RIGHT
-        @width() - widthOfText - @_outlineHaloMargin()
+        @width() - widthOfText
 
 
-  # Draw ONE complete line of text at (x, y): when hasDarkOutline, first stamp
-  # the black halo copies, then the line itself in @color. This is the ONE home
-  # of the outline — StringWdgt's single-line paint and TextWdgt's
-  # wrapped-lines loop both draw every line through here.
-  #
-  # The halo is TWO 8-neighbourhood rings of black copies (plus the centre
-  # one): the ±1.5 ring gives the halo its reach under native AA; the ±1 ring
-  # is made of exact integer translates, which SWCanvas's round-to-integer
-  # glyph placement preserves symmetrically, guaranteeing every white pixel
-  # a contour there too — ±1.5 alone rounds lopsided under SWCanvas
-  # (JS round-half-up: +1.5 → +2 but -1.5 → -1), which speckled the halo.
+  # Draw ONE complete line of text at (x, y) in @color. The ONE home of a line's ink: StringWdgt's
+  # single-line paint and TextWdgt's wrapped-lines loop both draw every line through here.
   _drawTextLine: (backBufferContext, line, x, y) ->
-    if @hasDarkOutline
-      backBufferContext.fillStyle = WorldWdgt.theme.desktopCaptionHalo.toString()
-      backBufferContext.fillText line, x+0, y+0
-      for r in [1, 1.5]
-        backBufferContext.fillText line, x+r, y+0
-        backBufferContext.fillText line, x-r, y+0
-        backBufferContext.fillText line, x+0, y+r
-        backBufferContext.fillText line, x+r, y+r
-        backBufferContext.fillText line, x-r, y+r
-        backBufferContext.fillText line, x+0, y-r
-        backBufferContext.fillText line, x+r, y-r
-        backBufferContext.fillText line, x-r, y-r
     backBufferContext.fillStyle = @color.toString()
     backBufferContext.fillText line, x, y
 
@@ -859,8 +815,8 @@ class StringWdgt extends Widget
       width = @width()
       height = @height()
     else
-      width = widthOfText + 2 * @_outlineHaloMargin()
-      height = heightOfText + 2 * @_outlineHaloMargin()
+      width = widthOfText
+      height = heightOfText
 
     backBuffer = HTMLCanvasElement.createOfPhysicalDimensions (new Point width, height).scaleBy ceilPixelRatio
 
@@ -872,9 +828,7 @@ class StringWdgt extends Widget
     textVerticalPosition = @textVerticalPosition(@fontHeight @fittingFontSize) + @fontHeight(@fittingFontSize)
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
-    # NB: no SHADOW is baked into this buffer. hasDarkOutline (honoured inside
-    # _drawTextLine) is an OUTLINE (offset black glyph copies, for legibility
-    # against busy backgrounds), NOT a shadow. A text widget's shadow is the
+    # NB: no SHADOW is baked into this buffer. A text widget's shadow is the
     # unified widget drop-shadow (see Widget.coffee "How the shadow painting
     # works" + addShadow); a per-glyph shadowOffset/shadowColor route is
     # deliberately not used here.
@@ -1277,8 +1231,7 @@ class StringWdgt extends Widget
     measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
     widthOfText = Math.max (Math.ceil measuredWidth), 1
     heightOfText = @fontHeight @originallySetFontSize
-    haloMargin = @_outlineHaloMargin()
-    @__commitExtent new Point widthOfText + 2*haloMargin, heightOfText + 2*haloMargin
+    @__commitExtent new Point widthOfText, heightOfText
     # public-call-sanctioned: reflowText is public text API — macros call it directly
     # (macroBoxTransparencyAndColorChanging), so it stays public; consciously reused by this core.
     @reflowText()
@@ -1331,6 +1284,10 @@ class StringWdgt extends Widget
         # self-settling wrapper would re-enter the flush guard and throw).
         @_sizeToTextAndDisableFittingNoSettle()
       @_changed()
+      # a parent that lays itself out from my text is told it changed (a desktop icon sizes its
+      # caption's plate from the caption's lines: WidgetHolderWithCaptionWdgt); every other parent
+      # has no such reaction
+      @parent?._reactToChildTextChanged? @
     @updateTarget()
     @_reflowContainedTextThenInvalidateLayout()
 

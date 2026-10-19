@@ -267,9 +267,21 @@ class Theme
     @worldFill = @desk
     # the index page's desktop colour, under its wallpaper (createDesktop sets it): the desk too.
     @desktopFill = @desk
-    # a desktop icon's caption: its text, and the dark outline stamped around its glyphs.
-    @desktopCaptionText = Color.create 255, 255, 255
-    @desktopCaptionHalo = Color.create 0, 0, 0
+    # a DESKTOP ICON (WidgetHolderWithCaptionWdgt; DesktopIconAppearance paints its tile and plate):
+    # its TILE's fill and 1 px border at rest ...
+    @desktopIconTileFill = @paper
+    @desktopIconTileStroke = @line
+    # ... its fill hovered (its border stays desktopIconTileStroke), and its fill and darker border
+    # pressed -- the button's rule (visual-design-system §4.3), on a desktop link (DesktopLinkWdgt) ...
+    @desktopIconTileHoverFill = @desk
+    @desktopIconTilePressedFill = @chrome
+    @desktopIconTilePressedStroke = @frame
+    # ... the ink its glyph is built with, the same in every state ...
+    @desktopIconGlyph = @ink
+    # ... the fill of its label PLATE (a plate carries no border) ...
+    @desktopIconPlateFill = @plate
+    # ... and the ink of its caption, on the plate.
+    @desktopCaptionText = @ink
 
     # the dwell-to-arm charging ring: a filled segment (the yellow accent, as the drop
     # candidate's outline) and an empty one.
@@ -321,9 +333,19 @@ class Theme
     @inspectorBreadcrumbSeparator = @muted3
     @inspectorDonorText = @muted2
 
-    # the analog clock: the ink its ticks and hands draw with, and its outer ring.
-    @clockInk = Color.create 0, 0, 0
-    @clockRing = Color.create 0x32, 0x5F, 0xA2
+    # the analog CLOCK (AnalogClockAppearance paints its face and marks, AnalogClockWdgt's hand
+    # methods its hands and centre dot): its FACE, an opaque disc with no border ...
+    @clockFace = @paper
+    # ... the four MARK dots at 12, 3, 6 and 9: the draft's own grey, held here at the draft's value
+    # because no palette token carries it ...
+    @clockMark = Color.create 0x9A, 0x9A, 0x95
+    # ... its hour and minute hands ...
+    @clockHourHand = @ink
+    @clockMinuteHand = @ink
+    # ... and its second hand and the centre dot over the hands, in the accent: the clock's live
+    # hand is the accent's one use that is not a state (visual-design-system §2).
+    @clockSecondHand = @accent
+    @clockCentreDot = @accent
 
     # the background of an editable text item: a document's title and paragraphs, the stack and
     # document samples, the templates, the welcome and how-to-save texts, and the placeholder an
@@ -338,6 +360,11 @@ class Theme
     # the outline colour icon paint code strokes and fills with (IconAppearance._outlineColorString).
     # Readers take its string through Color.toString, which computes it once per Color and keeps it.
     @iconOutline = Color.create 244, 243, 244
+    # the PAPER of an icon drawn in the design's style (SizeAwareIconAppearance._usePaper): the light
+    # fill of its interiors, inside its ink, with no halo envelope around the icon -- the surface the
+    # icon stands on (a desktop icon's paper tile) is its ground. An icon in the older style keeps
+    # iconOutline for its halo and interiors.
+    @iconPaper = @paper
 
     # ---- FONT ROLES ------------------------------------------------------------------------
     # Each role is {family, size, bold}, holding what its surface renders with. A surface hands its
@@ -399,7 +426,9 @@ class Theme
     # the least side of a chrome target, a footer band's height, rule, inset, button gap and
     # grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
     # and separator square, its toggles band's height, inset and gap, its list column's width and
-    # its seams' width, and a code pane's padding. Each chrome
+    # its seams' width, a code pane's padding, and a desktop icon's tile, glyph, plate and cell (all
+    # from one knob, desktopIconTile), the icon grid's gaps and origin, the bin's corner insets, the
+    # rows a folder window opens showing, and the desktop clock's side and corner insets. Each chrome
     # layout site reads the matching
     # name here; no chrome dimension lives as a literal in a layout method.
     #   ONE geometry serves mouse and finger alike (program ruling G1), so every value is set
@@ -640,6 +669,63 @@ class Theme
     # its list | code seam and this far below its body's top. A patch node's text boxes keep their
     # own.
     @codePanePadding = 12
+
+    # a DESKTOP ICON (WidgetHolderWithCaptionWdgt and its family, on the desktop and in a folder):
+    # the draft's tile with its glyph, and its label plate below the tile, in a cell. THE KNOB is
+    # the tile's side: the ONE size every desktop icon dimension derives from (the draft's 64) ...
+    @desktopIconTile = 64
+    # ... and what derives from it: the glyph square centred in the tile (40 at 64, 12 in from
+    # each side of the tile), the tile's rounding (16 at 64), and the cell's width, the tile and 16
+    # at each side of it ...
+    @desktopIconGlyphSize = Math.round @desktopIconTile * 40 / 64
+    @desktopIconTileRadius = Math.round @desktopIconTile / 4
+    @desktopIconCellWidth = @desktopIconTile + 32
+    # ... while these keep the draft's values whatever the knob: the padding above the tile and
+    # below the plate, the gap between the tile and the plate, the plate's padding at each side of
+    # its text and above and below it, its rounding, the height of the slot each caption line
+    # stands in, and the most lines a caption takes (a longer one ends in "…") ...
+    @desktopIconPadding = 6
+    @desktopIconTilePlateGap = 6
+    @desktopIconPlateHorizontalPadding = 7
+    @desktopIconPlateVerticalPadding = 1
+    @desktopIconPlateRadius = 8
+    @desktopIconPlateLineHeight = 16
+    @desktopIconCaptionMaxLines = 2
+    # ... so an icon is as tall as a plate of the most lines needs, whatever its own caption -- one
+    # row pitch for every icon -- and its EXTENT is the cell by that height
+    # (WidgetHolderWithCaptionWdgt.standardDesktopIconExtent).
+    @desktopIconHeight = @desktopIconPadding + @desktopIconTile + @desktopIconTilePlateGap +
+      (@desktopIconCaptionMaxLines * @desktopIconPlateLineHeight + 2 * @desktopIconPlateVerticalPadding) +
+      @desktopIconPadding
+    @desktopIconExtent = new Point @desktopIconCellWidth, @desktopIconHeight
+    # the ICON GRID a desktop and a folder panel lay their icons in (IconGridPanelWdgt.add): the gap
+    # between two columns and between two rows, and where the first slot's top-left sits in the
+    # panel. One set of numbers for both, and a folder window opens with this same margin past its
+    # grid's last column and last row (IconGridPanelWdgt.extentShowingIconGrid).
+    @desktopIconColumnGap = 8
+    @desktopIconRowGap = 10
+    @desktopIconGridOrigin = new Point 16, 14
+    # the rows of its panel's icon grid a FOLDER WINDOW opens tall enough to show whole, with no
+    # scroll bar (it opens as wide as the columns that grid lays in a row: FolderWindowWdgt).
+    @folderWindowIconRows = 2
+    # the BIN's icon (BinOpenerWdgt) in the desktop's bottom-right corner: its cell's right edge this
+    # far in from the desktop's right edge -- on it, which keeps the whole cell inside the desktop
+    # (the draft's spot, its tile 12 in from the edge, would put this cell's right edge past it) ...
+    @desktopBinRightInset = 0
+    # ... and its cell's bottom edge where the bottom of its ONE-line plate lies the draft's 29 above
+    # the desktop's bottom: the cell keeps, below that plate, the room the other caption lines and
+    # the bottom padding take in every icon.
+    @desktopBinPlateBottomInset = 29
+    oneLinePlateBottom = @desktopIconPadding + @desktopIconTile + @desktopIconTilePlateGap +
+      @desktopIconPlateLineHeight + 2 * @desktopIconPlateVerticalPadding
+    @desktopBinBottomInset = @desktopBinPlateBottomInset - (@desktopIconHeight - oneLinePlateBottom)
+
+    # the desktop's CLOCK (an AnalogClockWdgt, built by WorldWdgt.createDesktop) at the draft's spot:
+    # the side of its square, and its corner knob's insets (AnalogClockWdgt.cornerSpec) -- its right
+    # edge this far in from the desktop's right edge, and its top this far below the desktop's top.
+    @desktopClockSize = 88
+    @desktopClockRightInset = 15
+    @desktopClockTopInset = 14
 
     # ---- SHADOWS ---------------------------------------------------------------------------
     # Each shadow is an offset (an integer-px Point, any direction: ShadowInfo) and an alpha.

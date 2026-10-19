@@ -1,90 +1,158 @@
-# Paints the AnalogClockWdgt: background rect, then the cached STATIC face (the tick
-# marks, blitted from a per-size immutable back buffer — C1), then the dynamic content
-# (hands + centre dot + outer arc) live. The hand-drawing methods themselves
-# (drawHoursHand / drawMinutesHand / drawSecondsHand / drawDotInMiddleOfFace and their
-# shared _drawHand core) stay PUBLIC on the widget — they are the classic live-edit
-# demo target (SystemTest_macroAnalogClockInspectEdit edits drawSecondsHand in the
-# inspector) — and all clock STATE (the hand angles, dateLastTicked) stays widget-side
-# too: this appearance computes into @widget fields and dispatches to @widget methods,
-# so an inspector edit of a hand method still takes effect on the next repaint.
+# Paints the AnalogClockWdgt in the draft's look (docs/plans/redesign/UI-guidelines.md §5.5, drawn
+# on its 120-unit face): an opaque FACE disc with no border, four MARK dots at 12, 3, 6 and 9, then
+# the hour, minute and second hands and the centre dot over them. The hand-drawing methods
+# themselves (drawHoursHand / drawMinutesHand / drawSecondsHand / drawDotInMiddleOfFace and their
+# shared _drawHand core) stay PUBLIC on the widget -- they are the classic live-edit demo target
+# (SystemTest_macroAnalogClockInspectEdit edits drawSecondsHand in the inspector) -- and all clock
+# STATE (the hand angles, dateLastTicked) stays widget-side too: this appearance computes into
+# @widget fields and dispatches to @widget methods, so an inspector edit of a hand method takes
+# effect on the next repaint.
+#
+# I paint in DEVICE pixels, by declaration (the appearance paint convention's exception for
+# dpr-conditional pixel work, docs/architecture/appearance-paint-convention.md): every piece of the
+# face is a whole number of device pixels, sized from the side of the clock's square in device
+# pixels by ONE rule (pixelsForUnits), so the non-anti-aliased backend draws the same clean,
+# symmetric shapes at every size and density. Each paint computes it all afresh from my widget's
+# box -- six discs and three strokes -- so nothing is cached, and nothing is placed relative to the
+# damage rect.
+#
+# My SHAPE and my SILHOUETTE are both the face's disc: a press in my box's corners, outside the face,
+# reaches whatever lies behind the clock (shapeContainsPoint), and every piece of the clock lies on
+# the opaque face, so the one shadow it casts is that disc.
 
 class AnalogClockAppearance extends Appearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
+    return undefined unless keyValues?
+    [damageBox,sl,st,al,at,w,h] = keyValues
 
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
+    # the face, the marks and the hands set their own colours, so the shadow pass renders the
+    # whole clock to a scratch and blits its black silhouette (the shadow-pass paint contract). The
+    # opaque face counts as coverage there like every other piece -- nothing of mine erases
+    # coverage, as a size-aware icon's light role does -- so the silhouette is the face's disc.
+    if appliedShadow?
+      @_paintDamagedAreaAsBlackSilhouette aContext, al, at, w, h, appliedShadow, (sctx) =>
+        @_paintColoredClock sctx, al, at, w, h
+      return undefined
 
-    [damageBox,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    if damageBox.isNotEmpty()
-      if w < 1 or h < 1
-        return undefined
+    @_paintColoredClock aContext, al, at, w, h
+    return undefined
 
-      # the clock face + hands set their own colours (white face, black hands, blue arc),
-      # so the shadow pass renders the whole clock to a scratch and blits the black
-      # silhouette (the shadow-pass paint contract).
-      if appliedShadow?
-        @_paintDamagedAreaAsBlackSilhouette aContext, al, at, w, h, appliedShadow, (sctx) =>
-          @_paintColoredClock sctx, sl, st, al, at, w, h
-        return
+  # Keeps its OWN paint preamble instead of Appearance._paintInLocalScope: its body draws in device
+  # pixels (the header), so it opens no logical-pixels scope, and the background fill shares the
+  # preamble's device-space damage clip.
+  _paintColoredClock: (aContext, al, at, w, h) ->
+    aContext.save()
 
-      @_paintColoredClock aContext, sl, st, al, at, w, h
+    # clip out the damage rectangle as we are
+    # going to paint the whole of the box
+    aContext.clipToRectangle al,at,w,h
 
-  # Keeps its OWN paint preamble instead of Appearance._paintInLocalScope (the appearance
-  # paint convention's blit exception): the cached-face drawImage below is DEVICE-space
-  # preamble business — like BackBufferMixin's blit — and the background fill must sit
-  # UNDER it, so both stay in device pixels here; only the live content (hands + dot +
-  # arc, via _renderingHelper) rides the logical-pixels scope.
-  _paintColoredClock: (aContext, sl, st, al, at, w, h) ->
-      aContext.save()
-
-      # clip out the damage rectangle as we are
-      # going to paint the whole of the box
-      aContext.clipToRectangle al,at,w,h
-
-      # `? 1`: an absent backgroundTransparency means fully opaque (Widget's class-level
-      # default) — never hand the canvas an undefined (see StringWdgt::_prepareTextBufferContext).
+    # the background, filling the damage box (al/at/w/h: device pixels). backgroundColor is
+    # undefined unless the user sets one (the base Widget default), so this fill is usually
+    # skipped: around the face my box shows whatever lies behind it. `? 1`: an absent
+    # backgroundTransparency means fully opaque (Widget's class-level default) -- never hand the
+    # canvas an undefined (see StringWdgt::_prepareTextBufferContext).
+    if @widget.backgroundColor?
       aContext.globalAlpha = @widget.backgroundTransparency ? 1
+      aContext.fillStyle = @widget.backgroundColor.toString()
+      aContext.fillRect al, at, w, h
 
-      # the background, filling the damage box (al/at/w/h: device pixels).
-      # (backgroundColor is undefined unless the user sets one — the base Widget default — so
-      # this fill is usually skipped: the clock sits transparent around its face circle)
-      if @widget.backgroundColor?
-        aContext.fillStyle = @widget.backgroundColor.toString()
-        aContext.fillRect al, at, w, h
+    aContext.globalAlpha = @widget.alpha
 
-      # C1: blit the cached STATIC face (the 12 hour + 48 minute tick marks) instead of
-      # re-stroking all 60 marks every repaint. It's rendered once per size into an
-      # immutable back buffer (see _getFaceBuffer) and blitted here in DEVICE space,
-      # integer-aligned to the SAME al/at/sl/st as the background rect. NOT guaranteed
-      # byte-identical to the old direct strokes, though: the floating-point CTM differs
-      # between a direct draw and a buffer-plus-blit, which can shift a near-boundary
-      # tick endpoint by 1px at some sizes/dprs (see
-      # docs/architecture/integer-pixel-placement-and-sizing.md §5). The ticks
-      # are the BOTTOM layer (drawn first, under the hands); the dynamic hands and the
-      # centre dot + outer arc that sit IN FRONT of the hands are still drawn live by
-      # _renderingHelper, so the z-order is unchanged.
-      faceBuffer = @_getFaceBuffer()
-      aContext.globalAlpha = @widget.alpha
-      aContext.drawImage faceBuffer,
-        Math.round(sl), Math.round(st), Math.round(w), Math.round(h),
-        Math.round(al), Math.round(at), Math.round(w), Math.round(h)
+    # deliberately NO useLogicalPixelsUntilRestore(): device pixels, with the origin moved to the
+    # face's centre, which is anchored to my widget's box -- never to the damage rect's corner
+    # (al/at), which shifts under partial repaints. Every piece is drawn around (0, 0), the
+    # widget's hands included.
+    face = @_faceGeometry()
+    aContext.translate @widget.left() * ceilPixelRatio + face.centreX, @widget.top() * ceilPixelRatio + face.centreY
 
-      aContext.useLogicalPixelsUntilRestore()
+    aContext.fillStyle = WorldWdgt.theme.clockFace.toString()
+    aContext.fillCircle 0, 0, face.diameter / 2
+    @_paintMarks aContext, face.side
 
-      widgetPosition = @widget.position()
-      aContext.translate widgetPosition.x, widgetPosition.y
+    @_calculateHandsAngles()
+    @widget.drawHoursHand aContext, face.side
+    @widget.drawMinutesHand aContext, face.side
+    @widget.drawSecondsHand aContext, face.side
+    @widget.drawDotInMiddleOfFace aContext, face.side
 
-      @_renderingHelper aContext, Color.WHITE
+    aContext.restore()
 
-      aContext.restore()
+  # MY FACE, in device pixels from my widget's top-left corner: the side of its square (the shorter
+  # side of my box; a box that is not square shows the square centred in it, at a whole device
+  # pixel), the square's centre, and the face's diameter, 116 units (the draft's radius 58).
+  #   The centre lies on a pixel boundary when the side is even and on a pixel centre when it is
+  # odd, and the diameter has the side's parity (pixelsForUnits), so the face is the circle
+  # inscribed in a whole-pixel box -- the crisp fillCircle spelling
+  # (CanvasRenderingContext2D-extensions) -- inset by the whole number (side - diameter) / 2 from
+  # each side of the square.
+  _faceGeometry: ->
+    boxWidth = @widget.width() * ceilPixelRatio
+    boxHeight = @widget.height() * ceilPixelRatio
+    side = Math.min boxWidth, boxHeight
+    {
+      side: side
+      centreX: Math.floor((boxWidth - side) / 2) + side / 2
+      centreY: Math.floor((boxHeight - side) / 2) + side / 2
+      diameter: @pixelsForUnits side, 116, 1
+    }
 
+  # THE PIXEL RULE every piece of the face is sized by: `units` of the draft's 120-unit face, at a
+  # square of `side` device pixels, as the nearest whole number of device pixels with the PARITY of
+  # `side` (an exact half-way value takes the larger), and never less than `least` (taken up to that
+  # parity). It sizes the face's and the dots' diameters here and the hands' widths
+  # (AnalogClockWdgt._drawHand).
+  #   Why the parity: the face's centre lies on a pixel boundary when the side is even and on a
+  # pixel centre when it is odd, and only a span of the same parity sits symmetrically about it.
+  # SWCanvas draws a circle whose diameter has the other parity half a pixel off-centre, and a
+  # stroke whose width has the other parity a pixel thinner where it points left -- a 1 px hand on a
+  # whole-pixel centre vanishes at :45.
+  #   The answer never decreases as `units` grows, so a piece of more units is never the narrower of
+  # two; at `least` 1 the smallest answer is 2 on an even side and 1 on an odd one.
+  pixelsForUnits: (side, units, least) ->
+    parity = side % 2
+    nearest = 2 * Math.round((units * side / 120 - parity) / 2) + parity
+    Math.max nearest, least + (least + parity) % 2
+
+  # the four MARK dots, at 12, 3, 6 and 9 o'clock: each centred 44 units out, a whole number of
+  # device pixels from the face's centre (so it has the centre's phase), and a disc 6 units across:
+  # at least 4 device pixels on an even side (SWCanvas draws a 2-pixel circle as a 2x1 dash) and 3
+  # on an odd one (a plus), so no size needs a hand-placed dot.
+  _paintMarks: (context, side) ->
+    distance = Math.round 44 * side / 120
+    radius = (@pixelsForUnits side, 6, 3) / 2
+    context.fillStyle = WorldWdgt.theme.clockMark.toString()
+    context.fillCircle 0, (-distance), radius
+    context.fillCircle distance, 0, radius
+    context.fillCircle 0, distance, radius
+    context.fillCircle (-distance), 0, radius
+
+  # My SHAPE: the face's disc. The logical pixel a point falls in is mine iff its CENTRE lies inside
+  # the face's circle (BoxyAppearance's rounded-box test samples pixel centres the same way, as
+  # SWCanvas's fill does), so a press in my box's corners, outside the face, reaches whatever lies
+  # behind the clock. TOTAL (see Appearance): nothing outside my bounds is mine.
+  shapeContainsPoint: (aPoint) ->
+    return false unless @widget.boundsContainPoint aPoint
+    face = @_faceGeometry()
+    # that pixel centre, in device pixels from the face's centre
+    x = (Math.floor(aPoint.x) + 0.5 - @widget.left()) * ceilPixelRatio - face.centreX
+    y = (Math.floor(aPoint.y) + 0.5 - @widget.top()) * ceilPixelRatio - face.centreY
+    radius = face.diameter / 2
+    x * x + y * y <= radius * radius
+
+  # The hand angles, 0 at 12 o'clock and growing clockwise, into my widget's fields, from its
+  # dateLastTicked -- which a playing SystemTest pins (under
+  # AutomatorEventCommandTurnOnAnimationsPacingControl) to 10:08:37 on a fixed day: a time with no
+  # hand on an axis and no two hands together, so every hand shows, and an edit that mirrors the
+  # second hand (macroAnalogClockInspectEdit) moves it.
   _calculateHandsAngles: ->
 
     if Automator? and
      Automator.animationsPacingControl and
      Automator.state == Automator.PLAYING
-      @widget.dateLastTicked = new Date 2011,10,30
+      @widget.dateLastTicked = new Date 2011,10,30,10,8,37
 
     sec = @widget.dateLastTicked.getSeconds() + @widget.dateLastTicked.getMilliseconds()/1000
     min = @widget.dateLastTicked.getMinutes()
@@ -93,124 +161,3 @@ class AnalogClockAppearance extends Appearance
     @widget.hoursHandAngle = hr * Math.PI / 6 + Math.PI / 360 * min + Math.PI / 21600 * sec
     @widget.minutesHandAngle = Math.PI / 30 * min + Math.PI / 1800 * sec
     @widget.secondsHandAngle = sec * Math.PI / 30
-
-  # The shared clock-face transform: recentre to the clock's middle, scale to 0.9,
-  # rotate so 12 o'clock points up, and set the black stroke. Used by both the live
-  # _renderingHelper and the cached _renderStaticFace so both draw with the same
-  # origin and orientation — which does NOT make the buffered ticks byte-identical
-  # to a direct stroke (the C1 floating-point caveat:
-  # docs/architecture/integer-pixel-placement-and-sizing.md §5).
-  _applyFaceTransform: (context) ->
-    width = @widget.width()
-    height = @widget.height()
-    context.translate width/2, height/2
-    context.scale 0.9, 0.9
-    context.rotate -Math.PI / 2
-    context.strokeStyle = WorldWdgt.theme.clockInk.toString()
-
-  _renderingHelper: (context, color) ->
-    height = @widget.height()
-    width = @widget.width()
-
-    context.lineWidth = 1 * Math.min(width,height) * @widget.strokeSizeToClockDimensionRatio
-    context.lineCap = "round"
-
-    context.save()
-    context.globalAlpha = @widget.alpha
-
-    squareDim = Math.min width/2, height/2
-
-    @_applyFaceTransform context
-    context.fillStyle = Color.WHITE.toString()
-    context.lineWidth = 6 * Math.min(width,height) * @widget.strokeSizeToClockDimensionRatio
-    context.lineCap = 'round'
-
-    # C1: the 12 hour + 48 minute tick marks (the STATIC face) are no longer stroked
-    # here — they are pre-rendered once per size into a cached back buffer and blitted
-    # in paintIntoAreaOrBlitFromBackBuffer BEFORE this method runs, so they remain the
-    # bottom layer (under the hands). _renderStaticFace reproduces exactly the strokes
-    # that used to be here. What follows (hands + centre dot + outer arc) is the dynamic
-    # / front content and is still drawn live, preserving the original z-order.
-
-    context.fillStyle = WorldWdgt.theme.clockInk.toString()
-
-    @_calculateHandsAngles()
-
-    @widget.drawHoursHand context, squareDim
-    @widget.drawMinutesHand context, squareDim
-    @widget.drawSecondsHand context, squareDim
-    @widget.drawDotInMiddleOfFace context, squareDim
-
-    context.beginPath()
-    context.lineWidth = 10 * Math.min(width,height) * @widget.strokeSizeToClockDimensionRatio
-    context.strokeStyle = WorldWdgt.theme.clockRing.toString()
-    context.arc 0, 0, squareDim, 0, Math.PI * 2
-    context.stroke()
-
-
-    context.restore()
-
-    context.strokeStyle = color.toString()
-
-
-  # C1: render the STATIC clock face (tick marks only) into an offscreen buffer, cached
-  # by device size in world.cacheForImmutableBackBuffers. The face depends ONLY on the
-  # clock's size (colours + strokeSizeToClockDimensionRatio are constants), so every
-  # same-size clock shares one immutable buffer — cheap for the many-clocks scenes.
-  # Blitted by paintIntoAreaOrBlitFromBackBuffer (see the byte-identity note there).
-  _getFaceBuffer: ->
-    cacheKey = "AnalogClockWdgtFace-" + @widget.extent().toString()
-    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit? then return cacheHit
-
-    faceBuffer = HTMLCanvasElement.createOfPhysicalDimensions @widget.extent().scaleBy ceilPixelRatio
-    faceBufferContext = faceBuffer.getContext "2d"
-    faceBufferContext.useLogicalPixelsUntilRestore()
-    @_renderStaticFace faceBufferContext
-
-    world.cacheForImmutableBackBuffers.set cacheKey, faceBuffer
-    return faceBuffer
-
-  # Draws ONLY the hour + minute tick marks, in the clock's local logical space (buffer
-  # origin = clock origin). This is exactly the tick portion that used to live at the
-  # top of _renderingHelper — identical transform, stroke widths, caps and iteration
-  # order — but blitting is still NOT guaranteed byte-identical to stroking live: the
-  # floating-point CTM differs between a direct draw and a buffer-plus-blit and can
-  # shift a near-boundary tick endpoint by 1px at some sizes/dprs (the C1 caveat,
-  # docs/architecture/integer-pixel-placement-and-sizing.md §5). Drawn
-  # pristine: globalAlpha 1, no shadow (opaque black on transparent); the clock's alpha
-  # and any shadow are applied at blit time in paintIntoAreaOrBlitFromBackBuffer.
-  _renderStaticFace: (context) ->
-    height = @widget.height()
-    width = @widget.width()
-    squareDim = Math.min width/2, height/2
-
-    @_applyFaceTransform context
-    context.lineCap = 'round'
-
-    # hour face ticks
-    context.save()
-    context.lineWidth = 6 * Math.min(width,height) * @widget.strokeSizeToClockDimensionRatio
-    i = 0
-    while i < 12
-      context.beginPath()
-      context.rotate Math.PI / 6
-      context.moveTo squareDim*2.4/3, 0
-      context.lineTo squareDim, 0
-      context.stroke()
-      i++
-    context.restore()
-
-    # minute face ticks
-    context.save()
-    context.lineWidth = 5 * Math.min(width,height) * @widget.strokeSizeToClockDimensionRatio
-    i = 0
-    while i < 60
-      if i % 5 != 0
-        context.beginPath()
-        context.moveTo squareDim*2.7/3, 0
-        context.lineTo squareDim, 0
-        context.stroke()
-      context.rotate Math.PI / 30
-      i++
-    context.restore()

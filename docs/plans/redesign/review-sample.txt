@@ -58,3 +58,10 @@ SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly
 SystemTest_macroInspectorResizingOKEvenWhenTakenApart
 SystemTest_macroSliderDrivesAToggleButton
 SystemTest_macroDegreesConverterFourWayDrive
+# W4: a filed document's shortcut icon (the arrow composite on the new tile, at the grid's first slot), a clock
+# inside a window resized (dots and hands only), clocks of three sizes in a document, and the inspector's
+# member list shifted by StringWdgt's removed outline members
+SystemTest_macroSavedDocumentShortcutIcon
+SystemTest_macroClockInWindowKeepsSquareOnResize
+SystemTest_macroDocumentScrollsMixedTextAndClocks
+SystemTest_macroWrappingTextFieldResizesOK

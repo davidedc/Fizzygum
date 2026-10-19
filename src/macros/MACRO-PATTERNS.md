@@ -794,7 +794,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`@dragWidgetTo_InputEvents` would grab the slider's CENTRE = its BUTTON at value 50, moving the button not the slider).
 - **Window CONTENT resize — aspect-CONSTRAINED (stays square)** (`macroClockInWindowKeepsSquareOnResize`): the third window-content
   case after free/fixed-width. An `AnalogClockWdgt` as window content keeps a SQUARE aspect at every window size — its
-  `initialiseDefaultFrameContentLayoutSpec` sets `canSetHeightFreely=false` (`AnalogClockWdgt.coffee:32`) and it overrides
+  `initialiseDefaultFrameContentLayoutSpec` sets `canSetHeightFreely=false` (`AnalogClockWdgt.initialiseDefaultFrameContentLayoutSpec`) and it overrides
   `_setWidthSizeHeightAccordingly` to `@_applyExtent new Point newWidth, newWidth` (`:36`) so width drives an EQUAL height; so
   `FrameWdgt._positionAndResizeChildren` sizes the content from the recommended WIDTH and SKIPS the free-height branch (`:466-468`, gated
   on `contentsRecursivelyCanSetHeightFreely`). Build `new FrameWdgt()` + `new AnalogClockWdgt` (self-sizes — no extent
@@ -1098,7 +1098,7 @@ assertion a recapture after a regression silently stores two different hashes an
   SCROLL/FLOW/CLIP of mixed content, not the drop GESTURE (covered by macroIconDroppedIntoDocumentFlows — and dragging several
   oversized clocks by hand is needless flakiness: a mis-grabbed big clock leaks onto the desktop). `@wheelOn_InputEvents doc, delta`
   scrolls (positive = down; `ViewportWdgt.scrollY` clamps at the travel limits, so the top/bottom shots are deterministic). The
-  clocks freeze (`new Date 2011,10,30`) during playback, so a LIVE dynamic widget is a safe screenshot fixture (precedent:
+  clocks freeze (`new Date 2011,10,30,10,8,37`: every hand off the axes) during playback, so a LIVE dynamic widget is a safe screenshot fixture (precedent:
   macroAnalogClockInspectEdit). Interleave a tall text paragraph BEFORE and AFTER the clocks so the narrow-document scroll positions
   (top / oversized-clock-clipped / bottom-with-trailing-text) are distinct. Then `doc.setExtent` to near-fullscreen (a fixture-state
   change; the public setter's settle re-runs `_positionAndResizeChildren`/`_reLayoutScrollbars` for you): the text reflows wider and the clamped clock grows back, and a wheel-scroll back UP

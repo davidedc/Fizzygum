@@ -158,9 +158,8 @@ class IconAppearance extends Appearance
   # scrolling/cropping window panels), the halves are split into two helpers so call
   # order is preserved.
 
-  # (The bezier slide-card helpers that lived here served the SimpleSlide /
-  # PatchProgramming / GenericPanel / Dashboards icons; that family now
-  # draws through SizeAwareIconAppearance._pxSlideCard.)
+  # (The SimpleSlide / PatchProgramming / GenericPanel / Dashboards icons draw
+  # their card through SizeAwareIconAppearance._contentCard.)
 
   # The two window title-bar dots, shared by every window-chrome icon.
   _paintWindowTitleDots: (context, colorString) ->

@@ -32,9 +32,9 @@ another class, and most values are `Color`s):
 | Section | What it holds |
 |---|---|
 | **PALETTE** | The design's named colours (§2), at the design's values. A palette colour paints nothing by itself. |
-| **ROLES** | What each SURFACE paints with — `windowBarFill`, `menuRowText`, `speechBubbleStroke`, `seamRule`, … One role per surface: two surfaces that paint the same colour still hold two roles, so one can be restyled without moving the other. A role's value is either a palette colour (the surface wears the design: `@seamRule = @chrome`) or the exact value the surface painted with before it adopted the design. |
+| **ROLES** | What each SURFACE paints with — `windowBarFill`, `menuRowText`, `speechBubbleStroke`, `seamRule`, … One role per surface: two surfaces that paint the same colour still hold two roles, so one can be restyled without moving the other. A role's value is either a palette colour (the surface wears the design: `@seamRule = @chrome`), a value the design gives that surface alone, outside the palette (`clockMark`, the clock's marks), or the exact value the surface painted with before it adopted the design. |
 | **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects — `menuRow`, `listRow`, `labelButton`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`, `memberName`, `memberKindTag`, `code`. |
-| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), its side inset, icon gap and hover-plate radius (`menuRowSideInset`, `menuRowIconGap`, `menuRowPlateRadius`; a list row's `listRowSideInset`, `listRowIconGap`), its two drawn indicators' glyph squares and gaps (the submenu chevron's `menuRowChevronSize` and `menuRowChevronGap` before it; the leading tick column's `menuRowTickSize` and `menuRowTickGap` after it), a pop-up's content padding and its header's rule and title inset (`menuContentPadding`, `menuHeaderRuleWidth`, `menuHeaderTitleInset`; a list's rows panel `rowsPanelPadding`), a group divider's band (`menuDividerGap`, `menuDividerRuleWidth`), the scroll indicator's edge inset (`scrollIndicatorEdgeInset`), a tooltip plate's rounding, paddings and line height (`tooltipCornerRadius`, `tooltipHorizontalPadding`, `tooltipVerticalPadding`, `tooltipLineHeight`), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii, a button's height, horizontal paddings and rounding (`buttonHeight`, `buttonPaddingX`, `primaryButtonPaddingX`, `buttonCornerRadius`), the least side of a chrome target (`minimumTargetSize`), a footer band's height, rule, inset, button gap and grip clearance (`footerBandHeight`, `footerRuleWidth`, `footerInset`, `footerGap`, `footerGripClearance`), a toggle's and a chip's height, padding and rounding (`toggleHeight`, `togglePaddingX`, `toggleCornerRadius`; `chipHeight`, `chipPaddingX`, `chipCornerRadius`), the Object Inspector's bands (`breadcrumbBandHeight`, `breadcrumbInset`, `breadcrumbCaptionGap`, `breadcrumbGap`, `breadcrumbDonorGap`, `breadcrumbSeparatorSize`; `toggleBandHeight`, `toggleBandInset`, `toggleBandGap`; `inspectorRuleWidth`, `inspectorListColumnWidth`), a member row's geometry (`memberRowHeight`, `memberRowPlateHeight`, `memberRowPlateRadius`, `memberRowSideInset`, `memberRowTagGap`, `memberRowTagColumnWidth`, `memberRowsPanelPadding`), and a code pane's padding (`codePanePadding`). |
+| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), its side inset, icon gap and hover-plate radius (`menuRowSideInset`, `menuRowIconGap`, `menuRowPlateRadius`; a list row's `listRowSideInset`, `listRowIconGap`), its two drawn indicators' glyph squares and gaps (the submenu chevron's `menuRowChevronSize` and `menuRowChevronGap` before it; the leading tick column's `menuRowTickSize` and `menuRowTickGap` after it), a pop-up's content padding and its header's rule and title inset (`menuContentPadding`, `menuHeaderRuleWidth`, `menuHeaderTitleInset`; a list's rows panel `rowsPanelPadding`), a group divider's band (`menuDividerGap`, `menuDividerRuleWidth`), the scroll indicator's edge inset (`scrollIndicatorEdgeInset`), a tooltip plate's rounding, paddings and line height (`tooltipCornerRadius`, `tooltipHorizontalPadding`, `tooltipVerticalPadding`, `tooltipLineHeight`), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii, a button's height, horizontal paddings and rounding (`buttonHeight`, `buttonPaddingX`, `primaryButtonPaddingX`, `buttonCornerRadius`), the least side of a chrome target (`minimumTargetSize`), a footer band's height, rule, inset, button gap and grip clearance (`footerBandHeight`, `footerRuleWidth`, `footerInset`, `footerGap`, `footerGripClearance`), a toggle's and a chip's height, padding and rounding (`toggleHeight`, `togglePaddingX`, `toggleCornerRadius`; `chipHeight`, `chipPaddingX`, `chipCornerRadius`), the Object Inspector's bands (`breadcrumbBandHeight`, `breadcrumbInset`, `breadcrumbCaptionGap`, `breadcrumbGap`, `breadcrumbDonorGap`, `breadcrumbSeparatorSize`; `toggleBandHeight`, `toggleBandInset`, `toggleBandGap`; `inspectorRuleWidth`, `inspectorListColumnWidth`), a member row's geometry (`memberRowHeight`, `memberRowPlateHeight`, `memberRowPlateRadius`, `memberRowSideInset`, `memberRowTagGap`, `memberRowTagColumnWidth`, `memberRowsPanelPadding`), a code pane's padding (`codePanePadding`), and a desktop icon's geometry, all from ONE knob, the tile's side (`desktopIconTile`, 64): the glyph square, the tile's rounding and the cell's width derive from it (`desktopIconGlyphSize`, `desktopIconTileRadius`, `desktopIconCellWidth`), the draft's fixed values sit beside it (`desktopIconPadding`, `desktopIconTilePlateGap`, `desktopIconPlateHorizontalPadding`, `desktopIconPlateVerticalPadding`, `desktopIconPlateRadius`, `desktopIconPlateLineHeight`, `desktopIconCaptionMaxLines`), and so do the icon's height and extent (`desktopIconHeight`, `desktopIconExtent`: one two-line pitch for every icon), the icon grid's gaps and origin (`desktopIconColumnGap`, `desktopIconRowGap`, `desktopIconGridOrigin`), the rows a folder window opens showing (`folderWindowIconRows`) and the bin's corner insets (`desktopBinRightInset`, `desktopBinBottomInset`); the desktop clock's side and corner insets (`desktopClockSize`, `desktopClockRightInset`, `desktopClockTopInset`). |
 | **SHADOWS** | The ONE shadow every desktop object casts at rest (windows, menus, prompts, tooltips, icons, the clock) and the drag lift a carried widget takes (offset + alpha each), and `shadowColor`, the one colour every shadow silhouette is filled with. |
 
 **The ratchet.** A colour literal in a chrome file is a look decided outside this system — a restyle
@@ -141,11 +141,35 @@ ending `footerGripClearance` short of the corner the frame's grip sits in. When 
 the right group follows the left one, and what runs past it is clipped (by the window, or by a container that clips
 its own children: the Object Inspector does, naked or windowed).
 
+**The desktop icon** (`WidgetHolderWithCaptionWdgt`, painted by `DesktopIconAppearance`) is a pressable tile
+and a label plate in a cell of the standard desktop-icon extent (the cell by a two-line height, all from the one
+knob `desktopIconTile`). The TILE is `desktopIconTile` square, `desktopIconPadding` below the cell's top and
+centred across it, rounded at `desktopIconTileRadius`, with the button's state look: `paper` inside a 1 px `line`
+border at rest, `desk` hovered, `chrome` inside a `frame` border pressed (a desktop link, `DesktopLinkWdgt`; a
+bare holder shows the rest look only). The glyph (the holder's `icon`) is the `desktopIconGlyphSize` square
+centred in the tile, in `ink`, and in a desktop link it is a PICTURE, never a pointer target
+(`_showsChildAsAPicture`, asked by `Widget.isPointerTargetAt` on its ancestor walk), so a press on it is a press on
+the tile, and the tile takes the press, the release and the click together. The PLATE is `plate`, rounded at
+`desktopIconPlateRadius`, no border: the caption's box outset by the plate's padding, `desktopIconTilePlateGap`
+below the tile. The caption (the holder's `label`, `ink`, 12 px) hugs one line of text, or wraps across the cell
+less the plate's padding (its plate spanning the cell), at most `desktopIconCaptionMaxLines` lines, cut with "…";
+its lines stand at Fizzygum's 15 px pitch inside the draft's 16 px slots. A press on the plate edits the caption
+(a rename; the tile keeps its look); the holder re-lays its plate as the caption's text changes. The holder's
+shape is the tile and the plate, so a press or a drop in a cell's empty corners or in the gap reaches whatever
+lies behind it. Icons stand on an ICON GRID (`IconGridPanelWdgt`: the desktop column by column, five to a column; a
+folder's panel row by row, three to a row; from `desktopIconGridOrigin`, one cell plus a gap apart): an icon made
+or moved in later — a new folder, a "create shortcut", a filing, an icon dropped onto a folder's icon — takes the
+grid's NEXT FREE SLOT (the first one no other icon overlaps, so a slot an icon has left is reused), at the standard
+extent; an icon the user drops somewhere (on the desktop, or into an open folder window) stays where it was
+dropped.
+
 ### 4.4 Shadows are solid
 A shadow is a copy of the object's shape filled with `shadowColor` (solid black) at the shadow's alpha,
 offset — no blur, no gradient. Every object on the desktop casts the ONE shared desktop shadow,
 transient pop-ups included; only a dragged object has its own (the lift). The shadow pass paints a widget's SILHOUETTE
-(its per-pixel coverage), so an icon or a rounded box casts its own shape.
+(its per-pixel coverage), so an icon or a rounded box casts its own shape. A desktop icon casts its OWN
+silhouette only, its tile and its plate (its shadow pass skips its children), so its shadow at rest and its
+drag lift are those two shapes, with no glyph or caption marks.
 
 ### 4.5 Symbols: an ICON or a GLYPH, decided by MEANING
 A symbol that stands on its own — a control's face, or an indicator of state or behaviour (× − +, a
@@ -166,6 +190,26 @@ for its SHAPE (`CrossIconAppearance`, `ChevronRightIconAppearance`, `GripIconApp
 button that wears it carries the MEANING (`CloseIconButtonWdgt`). The method — probe ladder, preview,
 owner review — is the `convert-icon-size-aware` skill. SWCanvas has no `Path2D`: a design's SVG path is
 hand-translated into drawing calls.
+
+**The desktop icons are one family in the design's style** (Examples, Bin, How to save?, Fizzytiles, Draw's spray
+can, Patch programming, Slides Maker, Generic panel, Dashboards, Super toolbar, Docs Maker), and share its rules:
+- **One line unit**, `SizeAwareIconAppearance._glyphLineUnit S` = one unit of the design's 44-unit grid, at least
+  1 px: 1 px at the 40 px tile glyph, 2 px at dpr 2 (half the design's 2-unit stroke; the owner judged that heavy).
+  Every wall of a shape is that one thickness, horizontal and vertical alike; a filled feature (a chart's bar) may be
+  a whole multiple of it.
+- **Paper interiors, no halo**: a shape is its ink fill, then the same shape inset by the line in `iconPaper`
+  (`_usePaper`, which, like `_useLight`, erases coverage on the shadow pass, so an icon's shadow is its ink). The
+  tile is the ground, so no light envelope surrounds the art.
+- **Slanted walls** are two parallel edges an integer step apart, the inner one moved along the axis nearest the
+  edge's normal, so a slanted wall is one line per row and stays connected.
+- **Small round features** (dots, magnets, keys) follow one size rule: hand-placed squares under 4 px, round dots
+  from 4, rings only where the ring's hole survives.
+- **Shared shapes**: Patch programming, Slides Maker, Generic panel and Dashboards stand on ONE content card
+  (`_contentCardMetrics` / `_contentCard`: the design's 34 × 24 motif at the family's line).
+- Constants are in design units over `GLYPH_GRID`, so each proportion is a named knob; detail drops by rule (a
+  chart loses bars before its rise, a row of lines drops as a unit), never regressing as the size grows.
+- Fills only where shapes overlap: SWCanvas leaves the overlap of two round-capped subpaths in one `stroke()`
+  unpainted.
 
 ### 4.7 Corners and outlines
 - A rounded box's radius is one number, or per corner — a 4-array `[topLeft, topRight, bottomRight,
@@ -222,8 +266,8 @@ exactly one owning widget:
 | Inspector bands and the list \| code line | `InspectorWdgt`'s children; the lines are container-owned seams (§4.1) |
 | Inspector breadcrumb | `InspectorWdgt`'s children: a "Class" caption and the donor label (`StringWdgt`s), the class `ChipWdgt`s and their `BreadcrumbSeparatorWdgt`s, placed by `_breadcrumbIn` |
 | A window content's row of buttons | its footer band (`FooterBandLayout`, the geometry); the rule is the host's seam, painted by its appearance (`SeamRulesAppearance` for a host with no look of its own) |
-| Desktop icon tile, glyph and label plate | `WidgetHolderWithCaptionWdgt` (icon band + caption band) |
-| Clock | `AnalogClockWdgt` + `AnalogClockAppearance` |
+| Desktop icon tile, glyph and label plate | `WidgetHolderWithCaptionWdgt` and its appearance `DesktopIconAppearance` (the tile and the plate are paint; its hit shape and its silhouette are the two shapes); the glyph is its `icon` child in the glyph square, the caption its `label` `TextWdgt` on the plate (§4.3) |
+| Clock | `AnalogClockWdgt` + `AnalogClockAppearance`: an opaque `clockFace` disc (no border) that is also its hit shape and its silhouette, four `clockMark` dots, hour and minute hands in `ink`, the second hand and the centre dot in `accent`; every width a whole number of device pixels of the face's parity (`pixelsForUnits`), so a hand is one width pointing any way; round caps from 4 px |
 
 Menus, windows, cards and docked bands are ONE class, `FrameWdgt`; which skin a frame wears is derived
 from its lifetime and its parentage ([`regularity-principles.md`](regularity-principles.md), "The frame

@@ -3,7 +3,9 @@ class FolderShortcutWdgt extends ShortcutWdgt
   _acceptsDrops: true
 
   _reactToChildDropped: (droppedWidget) ->
-    # a desktop icon (link) moves itself into the folder; anything else makes a reference.
+    # a desktop icon (link) moves itself into the folder; anything else makes a reference there
+    # (a filing). Either way the icon takes the folder's next free slot: a drop onto me brings no
+    # place inside the folder.
     # The dropped widget decides via _reactToBeingDroppedIntoFolder instead of
     # `droppedWidget instanceof DesktopLinkWdgt`. (type-test-elimination campaign)
     if droppedWidget._reactToBeingDroppedIntoFolder?
@@ -17,7 +19,9 @@ class FolderShortcutWdgt extends ShortcutWdgt
   _defaultInnerIcon: ->
     new FolderIconWdgt
 
-  activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
+  # what a press on my tile does: open my folder (WidgetHolderWithCaptionWdgt.activated decides tile
+  # or plate, and hands a tile press here)
+  _activateMyTile: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation
       return
 

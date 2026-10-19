@@ -16,8 +16,8 @@ before writing or modifying any `*Appearance` paint body, and together with
 > damage box as a LOCAL rect (`localDamageBox`) — **fills may be sized to it, art may not be
 > placed relative to it**: art takes its geometry from the widget and lets the clip bound it.
 > Exception, by declaration only: a body may draw in integer DEVICE pixels anchored at the
-> widget origin when its art is dpr-conditional pixel work (the SizeAware family) — such a body
-> documents it and never reads `al/at`.
+> widget origin when its art is dpr-conditional pixel work (the SizeAware family, the analog
+> clock) — such a body documents it and never reads `al/at`.
 > Ctx state set by a body is contained by the preamble's save/restore; leaving state as a
 > contract for a callee within one body is allowed, across bodies it is not.
 
@@ -107,12 +107,13 @@ back-ref checks) stay in the caller, before the scope call.
 
 ## The declared device-space exceptions
 
-- **The SizeAware icon family** (`src/icons/SizeAwareIconAppearance.coffee`, base + 9):
+- **The SizeAware icon family** (`src/icons/SizeAwareIconAppearance.coffee`, base + its icons):
   dpr-conditional integer-device pixel art, by documented design. The law's exception clause.
+- **The analog clock** (`AnalogClockAppearance`): the same kind of work — its face, marks and hands
+  are whole device pixels whose parity matches the face's centre (`pixelsForUnits`), so a hand is the
+  same width pointing every way — in its own device-space preamble, anchored at the widget origin.
 - **Blits are preamble business**: `BackBufferMixin`'s buffer blit (named `blitBackBufferInto`, so
-  an appearance can compose it), and `AnalogClockAppearance`'s cached-face blit (its background fill
-  sits UNDER that blit, so both stay device-space in its own preamble; only the hands/live content
-  ride the scope). `PaletteAppearance` is the same two-layer shape over the mixin's blit: a cached
+  an appearance can compose it). `PaletteAppearance` is a two-layer shape over the mixin's blit: a cached
   buffer is keyed on class + extent and therefore SHARED, so anything per-instance — a palette's
   choice marker — has to be drawn live on top, and that half rides the scope. Such an appearance
   keeps its own entry (it calls the blit before opening the scope) and its widget defines

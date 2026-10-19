@@ -310,10 +310,6 @@ un-shadow the mixin's own member — a class-body member out-ranks a mixin's. �
 draws INSIDE the buffer's opaque footprint adds no coverage, so skip it on the shadow pass rather
 than paying for a silhouette that cannot differ.
 
-⚠ **A cache does not have to be the MIXIN's.** `AnalogClockAppearance` keys its static tick-mark face
-into the same `world.cacheForImmutableBackBuffers` by class + extent and draws the hands live over
-it, without `BackBufferMixin` at all. The rule is about the raster, not the mechanism.
-
 **Hit-testing is THREE members, and which one you touch depends on what you are saying.** Say it in
 the layer that owns the fact:
 
@@ -325,7 +321,8 @@ the layer that owns the fact:
 
 - **`Appearance.shapeContainsPoint(aPoint)`** — geometry: is this point inside the outline I draw.
   Four shapes answer it (rectangular, rounded-box, stadium, triangle); the base claims the widget's
-  whole box, which is what an icon glyph, a clock face or a label button want. **TOTAL** — `false`
+  whole box, which is what an icon glyph or a label button want (the analog clock answers its
+  face disc). **TOTAL** — `false`
   outside the widget's bounds, always, so it is safe to ask on its own.
 - **`Widget.catchesPointerAt(aPoint)`** — does my surface stop the pointer here. Defaults to my
   appearance's shape (my whole box if I have no appearance). Override it when your **role**, not
@@ -335,8 +332,16 @@ the layer that owns the fact:
   (`StringWdgt`, `HandleWdgt`, `SliderButtonWdgt`, `StackElementsSizeAdjustingWdgt`,
   `CanvasGlassTopWdgt` …).
 - **`Widget.isPointerTargetAt(aPoint)`** — the whole question `ActivePointerWdgt.topWdgtUnderPointer`
-  asks: clipped bounds ∧ shown ∧ not collapsed ∧ `catchesPointerAt` ∧ not ephemeral. Override only to
-  remove yourself from targeting entirely; `CaretWdgt` is the one class that does.
+  asks: clipped bounds ∧ shown ∧ not collapsed ∧ `catchesPointerAt` ∧ not ephemeral, then, on one walk
+  up my ancestors, no ancestor shows the child I came up through as a PICTURE and no ancestor's rounded
+  child clip cuts the point away. Override only to remove yourself from targeting entirely; `CaretWdgt`
+  is the one class that does.
+- **"this child of mine is a picture, not a target"** — `_showsChildAsAPicture: (child) -> …` on the
+  PARENT, answered for the child the walk comes up through: nothing in that child's subtree is then a
+  target, and a press there is a press on the parent, which takes the press, the release and the click
+  together. A parent cannot say it with its own `catchesPointerAt`, because the hit test asks children
+  first (`InertIconHolderWdgt`'s header). A desktop link's glyph is the one picture today
+  (`DesktopLinkWdgt`).
 
 ⚠ **"Does the pointer stop here" is NOT "am I see-through here", and the trap runs in both
 directions.** A widget can paint almost nothing and still stop the pointer everywhere: a `StringWdgt`

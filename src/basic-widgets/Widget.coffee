@@ -485,8 +485,8 @@ class Widget extends TreeNode
   #   The conjuncts are AM-I-THERE (clipped bounds), AM-I-SHOWN (visible, not collapsed),
   # DOES-MY-SURFACE-STOP-IT (catchesPointerAt), AM-I-EVEN-MATERIAL (ephemerals — highlights,
   # pinout markers, drag affordances — are reconciler-owned overlays, non-interactable by
-  # definition; the isEphemeral() capability replaced the two former per-marker predicates) and
-  # AM-I-UNCUT (asked last, because it walks my ancestors: see below).
+  # definition; the isEphemeral() capability replaced the two former per-marker predicates),
+  # AM-I-A-PICTURE and AM-I-UNCUT (asked last, because they walk my ancestors: see below).
   # CaretWdgt overrides the whole thing to false, with its own reason.
   isPointerTargetAt: (aPoint) ->
     return false unless @clippedThroughBounds().containsPoint(aPoint) and
@@ -494,6 +494,12 @@ class Widget extends TreeNode
       not @isInCollapsedSubtree() and
       @catchesPointerAt(aPoint) and
       not @isEphemeral()
+    # AM-I-A-PICTURE: an ancestor may show one of its children as a PICTURE (a desktop link's glyph:
+    # DesktopLinkWdgt._showsChildAsAPicture). Nothing in that child's subtree is then a pointer
+    # target, so a press there falls to the ancestor, which takes the press, the release and the
+    # click as one widget. It has to be asked on this walk, of the child the walk came up through:
+    # TreeNode.topWdgtSuchThat asks CHILDREN FIRST, so an answer of the ancestor's own never reaches
+    # them (InertIconHolderWdgt's header). An ancestor that declares no picture answers nothing here.
     # AM-I-UNCUT: clipped bounds answer only for the RECTANGLE a clipping ancestor clips to. An
     # ancestor that clips its children to a ROUNDED outline (FrameWdgt's rounded child clip, which
     # answers _roundedChildClipRadii — probed like scrollTranslationOfChild in the plane walks) also
@@ -504,11 +510,14 @@ class Widget extends TreeNode
     # that brought it from the screen to me. With no such ancestor (no frame above me whose look
     # turns the clip on), one walk up, no mapping.
     screenPoint = undefined
+    childOnMyPath = @
     ancestor = @parent
     while ancestor?
+      return false if ancestor._showsChildAsAPicture? childOnMyPath
       if ancestor._roundedChildClipRadii?()?
         screenPoint ?= @localPointToScreen aPoint
         return false unless ancestor.appearance.shapeContainsPoint ancestor.screenPointToMyPlane screenPoint
+      childOnMyPath = ancestor
       ancestor = ancestor.parent
     true
 
@@ -3333,8 +3342,13 @@ class Widget extends TreeNode
 
   # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> _applyExtent
   # (the shortcut is freshly added freefloating, so the immediate raw size is byte-identical to the
-  # deferred desired-extent path; same add-then-size order as the public version, so the icon grid
-  # positions identically once the enclosing settle re-fits).
+  # deferred desired-extent path). Into an ICON GRID -- the desktop, a folder's panel -- the
+  # shortcut then takes the grid's next free slot (IconGridPanelWdgt._placeIconInNextFreeSlotNoSettle),
+  # at the standard desktop-icon extent: the slot the public add gives the icons of the other
+  # creation paths (FolderWindowWdgt / FrameWdgt.createReference, PanelWdgt.makeFolder). That holds
+  # for every caller of this core: "create shortcut", a filing (_createReferenceAndCloseNoSettle --
+  # a window closed to the desktop or into a folder, the save prompt's Ok) and a widget dropped onto
+  # a folder's icon or into its open window. Anywhere else the shortcut stays where the add put it.
   _createReferenceNoSettle: (placeToDropItIn = world, referenceName, opts = {}) ->
     # don't create new reference if it exists already
     for w in placeToDropItIn.children
@@ -3342,10 +3356,10 @@ class Widget extends TreeNode
         return
 
     widgetToAdd = @_buildShortcutWidget referenceName, opts
-    # this "add" is going to try to position the
-    # new icon into a grid
     placeToDropItIn._addNoSettle widgetToAdd
-    widgetToAdd._applyExtent new Point 75, 75
+    widgetToAdd._applyExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
+    # an icon grid's own capability: only the desktop and a folder's panel answer it
+    placeToDropItIn._placeIconInNextFreeSlotNoSettle? widgetToAdd
     # public-call-sanctioned: bringToForeground is the heavily-public z-order verb (macros/user
     # code drive it) — settle-free, consciously reused by this core.
     @bringToForeground()

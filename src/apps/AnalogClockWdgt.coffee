@@ -3,7 +3,6 @@ class AnalogClockWdgt extends Widget
   hoursHandAngle: 0
   minutesHandAngle: 0
   secondsHandAngle: 0
-  strokeSizeToClockDimensionRatio: 1/250
   dateLastTicked: undefined
   # tick with the world's cycle clock rather than my own: every clock on screen
   # advances its second hand on the same frame
@@ -23,14 +22,15 @@ class AnalogClockWdgt extends Widget
 
     super()
     @appearance = new AnalogClockAppearance @
-    @setColor Color.create 255, 125, 125
     @_applyExtent new Point 200, 200
-    # my corner KNOB (carrier-owned, like HandleWdgt.cornerSpec): top-right of the
-    # desktop, desktopSidesPadding inside, ZERO size declared -- the corner pass places
-    # me by my own extent, it never sizes me. Only createDesktop ARMS it (explicitly, at
-    # add) -- deliberately NOT via defaultLayoutSpecWhenAddedTo, which would re-anchor on
-    # every user re-drop; inert everywhere else a clock lives (windows, demos).
-    @cornerSpec = new CornerInternalLayoutSpec 'topRight', 0, 0, new Point world.desktopSidesPadding, world.desktopSidesPadding
+    # my corner KNOB (carrier-owned, like HandleWdgt.cornerSpec): top-right of the desktop, in at
+    # the theme's clock insets (Theme's desktopClockRightInset / desktopClockTopInset, the draft's
+    # spot), ZERO size declared -- the corner pass places me by my own extent, it never sizes me.
+    # Only createDesktop ARMS it (explicitly, at add) -- deliberately NOT via
+    # defaultLayoutSpecWhenAddedTo, which would re-anchor on every user re-drop; inert everywhere
+    # else a clock lives (windows, demos).
+    theme = WorldWdgt.theme
+    @cornerSpec = new CornerInternalLayoutSpec 'topRight', 0, 0, new Point theme.desktopClockRightInset, theme.desktopClockTopInset
     return
 
 
@@ -66,41 +66,48 @@ class AnalogClockWdgt extends Widget
     @dateLastTicked = WorldWdgt.dateOfCurrentCycleStart
     @_changed()
 
-  # Shared hand drawing. The three hands differ only in angle, stroke-width multiplier, the two
-  # length divisors (inner tail / outer tip), and colour: hours & minutes inherit the black stroke/
-  # fill set by _renderingHelper (color=undefined → left untouched), the seconds hand alone sets its own
-  # red. Every op is in the same order as the old per-hand bodies, and colour is scoped by save/
-  # restore exactly as before, so the pixels are identical. (@width()/@height() are pure getters.)
-  _drawHand: (context, squareDim, angle, widthMultiplier, innerDivisor, outerDivisor, color) ->
+  # HAND DRAWING, public on purpose: these are the live-edit demo target (an inspector edit of one
+  # of them takes effect on my next repaint). AnalogClockAppearance calls each with the context in
+  # DEVICE pixels, its origin on my face's centre, and squareDim the side of my face's square in
+  # device pixels. Every size here is in units of the draft's 120-unit face, which
+  # AnalogClockAppearance.pixelsForUnits turns into device pixels at that side.
+  #   A hand is one stroke from its tail, behind the centre, to its tip, at its angle (0 at
+  # 12 o'clock, growing clockwise), in its colour. Its width is a whole number of device pixels of
+  # squareDim's parity, so it sits symmetrically about the centre whichever way it points, and each
+  # of its ends lies a whole number of device pixels from the centre along each axis, so a hand on an
+  # axis is exactly axis-aligned. A hand 4 device pixels wide or more has round caps; a thinner one
+  # has butt caps: SWCanvas draws a round cap that thin as a square extension, while it draws a butt
+  # line (its direct line rasterizer) exactly the stroke's width in every axis direction, a 1 px
+  # one included.
+  _drawHand: (context, squareDim, angle, widthUnits, lengthUnits, tailUnits, color) ->
+    width = @appearance.pixelsForUnits squareDim, widthUnits, 1
+    tip = lengthUnits * squareDim / 120
+    tail = tailUnits * squareDim / 120
+    sine = Math.sin angle
+    cosine = Math.cos angle
     context.save()
-    context.rotate angle
-    if color?
-      context.strokeStyle = color
-      context.fillStyle = color
-    context.lineWidth = widthMultiplier * Math.min(@width(), @height()) * @strokeSizeToClockDimensionRatio
-    context.beginPath()
-    context.moveTo -squareDim/innerDivisor, 0
-    context.lineTo squareDim/outerDivisor, 0
-    context.stroke()
+    context.strokeStyle = color.toString()
+    context.lineWidth = width
+    context.lineCap = if width >= 4 then "round" else "butt"
+    context.strokeLine (Math.round -tail * sine), (Math.round tail * cosine), (Math.round tip * sine), (Math.round -tip * cosine)
     context.restore()
 
   drawHoursHand: (context, squareDim) ->
-    @_drawHand context, squareDim, @hoursHandAngle, 8, 7, 2
+    @_drawHand context, squareDim, @hoursHandAngle, 6, 22, 0, WorldWdgt.theme.clockHourHand
 
   drawMinutesHand: (context, squareDim) ->
-    @_drawHand context, squareDim, @minutesHandAngle, 5, 5, 1.3
+    @_drawHand context, squareDim, @minutesHandAngle, 4, 32, 0, WorldWdgt.theme.clockMinuteHand
 
   drawSecondsHand: (context, squareDim) ->
-    @_drawHand context, squareDim, @secondsHandAngle, 6, 5, 1.3, '#D40000'
+    @_drawHand context, squareDim, @secondsHandAngle, 2, 36, 8, WorldWdgt.theme.clockSecondHand
 
+  # the centre dot over the hands' junction: a disc 8 units across, at least 4 device pixels on an
+  # even side and 3 on an odd one (as the face's marks). The pixel rule never decreases as the units
+  # grow, so the dot is never narrower than the hour hand's 6 units: it covers every hand's end at
+  # the centre, the hour hand's round cap included.
   drawDotInMiddleOfFace: (context, squareDim) ->
-    height = @height()
-    width = @width()
     context.save()
-    context.fillStyle = '#D40000'
-    context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
-    context.beginPath()
-    context.arc 0, 0, Math.min(width,height)/30, 0, Math.PI * 2
-    context.fill()
+    context.fillStyle = WorldWdgt.theme.clockCentreDot.toString()
+    context.fillCircle 0, 0, (@appearance.pixelsForUnits squareDim, 8, 3) / 2
     context.restore()
 

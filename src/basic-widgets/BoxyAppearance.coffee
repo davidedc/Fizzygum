@@ -65,21 +65,33 @@ class BoxyAppearance extends Appearance
     super widget
 
   # The rounded box, corner by corner: a logical pixel is mine iff its pixel CENTRE lies inside the
-  # outline fillOutline draws — the box minus, at each corner, whatever lies outside that corner's
-  # quarter-circle (a 0 corner is square). Testing the CENTRE makes the hit shape the FILLED pixels
-  # (SWCanvas's fill samples pixel centres too, so at dpr 1 the two agree pixel for pixel) and makes
-  # all four corners alike. A big radius therefore leaves a genuinely pointer-through notch at each
-  # rounded corner (SystemTest_macroRoundedBoxCornerClickThrough is exactly that).
-  #   The radii are fitted to the box as roundRect() fits them: when two corners on one side add up
-  # to more than that side, all four shrink by the one factor that makes the tightest side fit.
+  # outline fillOutline draws (the one test, roundedBoxContainsPixelCentreOf below). A big radius
+  # therefore leaves a genuinely pointer-through notch at each rounded corner
+  # (SystemTest_macroRoundedBoxCornerClickThrough is exactly that).
   shapeContainsPoint: (aPoint) ->
     # TOTAL (see Appearance): nothing outside my bounds is mine
     if !@widget.boundsContainPoint aPoint
       return false
+    BoxyAppearance.roundedBoxContainsPixelCentreOf (aPoint.subtract @widget.position()), @widget.width(), @widget.height(), @_cornerRadii()
 
-    w = @widget.width()
-    h = @widget.height()
-    [topLeft, topRight, bottomRight, bottomLeft] = @_cornerRadii()
+  # THE ROUNDED-BOX HIT TEST, the one every rounded shape asks (my shape above, and a desktop
+  # icon's tile and plate, DesktopIconAppearance): does the logical pixel that `localPoint` falls in
+  # belong to the w×h box at the origin, rounded at `radii` ([topLeft, topRight, bottomRight,
+  # bottomLeft], each >= 0, as fillRoundRect takes them)? It does iff its pixel CENTRE lies inside
+  # the box and inside the rounded outline -- the box minus, at each corner, whatever lies outside
+  # that corner's quarter-circle (a 0 corner is square). Testing the CENTRE makes the hit shape the
+  # FILLED pixels (SWCanvas's fill samples pixel centres too, so at dpr 1 the two agree pixel for
+  # pixel) and makes all four corners alike. Asked of the CLASS: it needs only the box, not a widget
+  # wearing me.
+  #   The radii are fitted to the box as roundRect() fits them: when two corners on one side add up
+  # to more than that side, all four shrink by the one factor that makes the tightest side fit.
+  @roundedBoxContainsPixelCentreOf: (localPoint, w, h, radii) ->
+    # the centre of the logical pixel the point falls in
+    x = Math.floor(localPoint.x) + 0.5
+    y = Math.floor(localPoint.y) + 0.5
+    return false unless 0 < x < w and 0 < y < h
+
+    [topLeft, topRight, bottomRight, bottomLeft] = radii
     sideFit = (side, sumOfTwoCorners) ->
       if sumOfTwoCorners > 0 then side / sumOfTwoCorners else 1
     fit = Math.min 1,
@@ -90,11 +102,6 @@ class BoxyAppearance extends Appearance
       topRight *= fit
       bottomRight *= fit
       bottomLeft *= fit
-
-    # the centre of the logical pixel the point falls in, in my local coordinates
-    thisWidgetPosition = @widget.position()
-    x = Math.floor(aPoint.x - thisWidgetPosition.x) + 0.5
-    y = Math.floor(aPoint.y - thisWidgetPosition.y) + 0.5
 
     # a corner cuts that centre off iff it lies past the corner's arc centre on BOTH axes (in the
     # corner's radius-sized square) and farther than the radius from it; outX / outY measure how far

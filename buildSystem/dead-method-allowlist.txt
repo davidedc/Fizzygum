@@ -33,3 +33,7 @@ _setFontSizeConnector    # reactive connector for setFontSize; reached only via 
 _takeSliderValueConnector # reactive connector for takeSliderValue (PromptWdgt prompt slider); reached only via @target["_takeSliderValueConnector"] computed dispatch
 _applyRowReflectionConnector  # reactive connector lane: reached by the computed name `_#{action}Connector` from a reflected-row edge (MenuItemWdgt._subscribeToMyReflectedSource), invisible to a static scan
 _setToggleStateConnector  # reactive connector for setToggleState (SwitchButtonWdgt's `shown button` pin); reached only via @target["_setToggleStateConnector"] computed dispatch
+
+# --- Read only by the INDEX-PAGE rigs (Fizzygum-tests/scripts/, inside page.evaluate bodies the scanner does not
+#     read): index.html carries no harness, so such a member cannot live in a *TestSupport class. ---
+isDesktopShortcut       # ShortcutWdgt capability; graph-liveness-headless.js and serialization-roundtrip-headless.js find a shortcut among the desktop's / a folder's children by it

@@ -443,7 +443,7 @@ unserializable value still raises the rich `SerializationError`.
 
 **The `world` envelope section** (outside `objects`, plain and greppable): `children`
 (`[{$r}…]`), `desktopColor` (`{$r}`), `alpha`, `isDevMode`, `wallpaperPatternName`,
-`numberOfIconsOnDesktop`, `infoDocFlags` (the `world.infoDoc_*_created` own booleans),
+`infoDocFlags` (the `world.infoDoc_*_created` own booleans),
 `untitledNamingCounters`, `users` (`world.users` — each `User`'s `armedDrawingTool` KEY,
 captured by name like the naming service since a `User` is a plain delegated collaborator,
 not a tree object), `appSlots` (`{slot:{$r}}`), `simpleEditorTemplates` (`{$r}`),

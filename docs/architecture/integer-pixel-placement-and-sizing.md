@@ -117,7 +117,8 @@ points in §2.
 
 ## 5. Integer placement is necessary but NOT sufficient for back-buffer byte-identity
 
-This is the sharp lesson from **C1** (back-buffering `AnalogClockWdgt`'s static tick face).
+This is the sharp lesson from **C1**, a measured back buffer of an analog clock's static tick face (the clock
+paints whole device pixels live, with no buffer: `AnalogClockAppearance`).
 Placing a widget at an integer position does **not** guarantee that rendering its content
 into an origin buffer and blitting it is byte-identical to drawing it directly — because
 relocating the draw changes the floating-point CTM:
@@ -157,7 +158,6 @@ come from *content rendering*, not placement:
   positions. Rounding these would deform the icons.
 - **Charts / plots** — data-driven `scale`+`translate` to fractional positions
   (`renderingHelper` in the sample-dashboard plots).
-- **The clock face** — internal `translate(w/2,h/2)` + `scale(0.9)` + `rotate` (the C1 case).
 
 All of this is Layer C: correct, inherent, and out of scope for the integer-placement policy.
 

@@ -9,7 +9,9 @@ class ScriptShortcutWdgt extends ShortcutWdgt
   _defaultInnerIcon: ->
     new ScriptIconWdgt
 
-  activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
+  # what a press on my tile does: run my script (WidgetHolderWithCaptionWdgt.activated decides tile
+  # or plate, and hands a tile press here)
+  _activateMyTile: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation
       return
 

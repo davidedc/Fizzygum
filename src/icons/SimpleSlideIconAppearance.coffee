@@ -1,101 +1,157 @@
 class SimpleSlideIconAppearance extends SizeAwareIconAppearance
 
-  # SIZE-AWARE simple-slide icon (2026-07-21, converted with
-  # /convert-icon-size-aware; idiom docs: docs/plans/pixel-icons-plan.md §5b):
-  # the family's shared slide-card panel (the base's _pxSlideCard) holding
-  # slide content -- a left column of text rows and a right column with a
-  # rising 3-bar chart over two more text rows. All content is integer rects
-  # on the lighter tc unit: the old 1.5-design-unit strokes land around one
-  # device pixel at the real display sizes and dropped out, or dashed,
-  # under the non-AA backend. The card's rounded corners are
-  # fillRoundRect's, rasterized by each backend its own way.
+  # SIZE-AWARE slide icon in the design's style, the launcher icon of the
+  # Slides Maker: the draft's "slides" glyph
+  # (docs/plans/redesign/desktop-canvas.html), drawn by the idiom of
+  # docs/plans/pixel-icons-plan.md §5b. Line art in ink, every line on the
+  # glyph line unit t (SizeAwareIconAppearance._glyphLineUnit), with paper
+  # interiors and no halo envelope (the tile the icon stands on is its ground):
+  #   - the CARD is the design's content card (SizeAwareIconAppearance.
+  #     _contentCard): one rounded outline, its four walls t thick;
+  #   - inside it, the slide's content on one band across the card's middle:
+  #     three TEXT LINES on the left, t tall, at one left edge, the third
+  #     shorter than the first two; and a rising CHART on the right, three
+  #     BARS on one baseline, each taller than the one to its left by one step.
+  #   One line unit for every part: the card's walls and the text lines are t,
+  # and a bar is a solid block BAR_WIDTH_IN_LINES line units wide (2t), so no
+  # horizontal line is heavier than a vertical one. The text and the chart
+  # share the band: the tallest bar's top is the first line's top and the
+  # baseline is the third line's bottom. Every line is a fillRect over the
+  # card's paper.
+  #   Placement: the content (the lines, the paper gap, the chart) is centred
+  # in the card across -- the full lines' length is the whole px nearest their
+  # span that gives the content S's parity -- and the band down, half a px
+  # above the card's middle row where its height and S differ in parity. The
+  # content keeps MIN_CLEARANCE px of paper from the card's walls, between its
+  # lines, between its bars and between the text and the chart.
+  #   Detail by rule: the line pitch shrinks to fit the card's paper, down to
+  # its least (MIN_CLEARANCE px of paper between two lines); below that the
+  # third line drops, then the second -- the rows drop as a unit, so the text
+  # and the chart stay one band. The chart keeps its rise: its step shrinks to
+  # fit the band (the shortest bar keeps t), and where even a one-px step does
+  # not fit, or the text would be left less than MIN_LINE px across, the chart
+  # loses a bar, its survivors still rising in equal steps to the band's top.
+  # With room for fewer than MIN_BARS bars there is no rise to draw, and the
+  # chart drops: the text lines take the card.
 
   # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
 
-  # ---- proportions, fractions of the glyph square (numbers from the
-  # original 100-space drawing) ----------------------------------------------
-  LINE_YS: [0.336, 0.4534, 0.5608, 0.6736]  # the slide's 4 text rows
-  COL1_X: 0.17        # left text column
-  COL2_X: 0.54        # right column (the chart + its 2 text rows)
-  LINE_LEN: 0.28
-  COL2_FROM_ROW: 2    # the right column joins at the 3rd text row
-  BAR_BASE: 0.46      # the chart's common baseline
-  BAR_W: 0.085
-  BAR_GAP: 0.025
-  BAR_HS: [0.11, 0.14, 0.19]                # rising bar heights
+  # ---- proportions, in GLYPH_GRID units: u units are round(S * u /
+  # GLYPH_GRID) px at a glyph square of S px; the card's are the base's
+  # CONTENT_CARD_*. The INK extents of a one-unit line on the draft glyph's
+  # path: a line's round caps reach half a unit past its ends, a bar's half
+  # width either side of its path x. The content is centred in the card, so
+  # it counts only by its lengths and gaps.
+  LINES: 3               # the text lines (path y 17, 22 and 27)
+  LINE_LENGTH: 15        # the first two lines' ink length (path M10 17h14 and M10 22h14)
+  SHORT_LINE_LENGTH: 11  # the third line's (path M10 27h10)
+  LINE_PITCH: 5          # from a line's top to the next one's
+  TEXT_TO_CHART: 3       # the paper between the lines' right ends and the first bar (path x 24 to 28)
+  BARS: 3                # the chart's bars (path M28 26v3 M31 23v6 M34 20v9)
+  BAR_PITCH: 3           # from a bar's left edge to the next one's (path x 28, 31 and 34)
+  BAR_STEP: 3            # how much taller each bar is than the one to its left (path tops y 26, 23 and 20)
+  # ---- in line units t --------------------------------------------------------
+  BAR_WIDTH_IN_LINES: 2  # a bar's width in line units: a solid block two lines wide (the owner's choice over 1, a bar as thin as a line)
+  # ---- detail tiers -----------------------------------------------------------
+  MIN_CLEARANCE: 1       # px of paper the content keeps from the card's walls, and each line and bar from the next
+  MIN_LINE: 3            # px: the shortest full text line; the chart loses a bar before the text gets shorter
+  MIN_BARS: 2            # the fewest bars that still rise; with room for fewer the chart drops
 
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
+    return if Math.min(wDev, hDev) < 10
+    m = @_slideMetrics x0, y0, wDev, hDev
+    @_contentCard ctx, m.card
+    @_slideText ctx, m
+    @_slideChart ctx, m
+
+  # every measurement the icon is built from, in whole device px
+  _slideMetrics: (x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev
-    return if S < 10
-    # center the square glyph box in the widget box
-    x = x0 + Math.floor (wDev - S) / 2
-    y = y0 + Math.floor (hDev - S) / 2
+    t = @_glyphLineUnit S
+    card = @_contentCardMetrics x0 + Math.floor((wDev - S) / 2), y0 + Math.floor((hDev - S) / 2), S, t
+    m =
+      t: t
+      card: card
+    px = (units) => Math.round S * units / @GLYPH_GRID
+    # the room inside the card's walls, less the content's clearance on each side
+    across = card.right - card.left - 2 * t - 2 * @MIN_CLEARANCE
+    down = card.bottom - card.top - 2 * t - 2 * @MIN_CLEARANCE
+    @_slideRowMetrics m, px, down
+    @_slideChartMetrics m, px, across
+    @_slideTextMetrics m, S, across
+    m.textLeft = card.left + t + @MIN_CLEARANCE + (across - m.length - m.gap - m.chartWidth) / 2
+    m.chartLeft = m.textLeft + m.length + m.gap
+    m.bandTop = card.top + t + @MIN_CLEARANCE + Math.floor (down - m.band) / 2
+    m
 
-    t = Math.max 1, Math.round S / 32   # structural unit: the card border
-    tc = Math.max 1, Math.round S / 45  # lighter unit: all slide content
-    o = t                               # halo/envelope thickness
+  # the text rows, onto m: how many, their pitch, and the band they fill. The
+  # pitch shrinks to fit the room down, never under t + MIN_CLEARANCE; where
+  # it would, the third line drops, then the second
+  _slideRowMetrics: (m, px, down) ->
+    {t} = m
+    m.rows = 0
+    m.pitch = 0
+    for rows in [@LINES..1] by -1
+      if rows is 1
+        fits = down >= t
+        pitch = 0
+      else
+        pitch = Math.min px(@LINE_PITCH), Math.floor (down - t) / (rows - 1)
+        fits = pitch >= t + @MIN_CLEARANCE
+      if fits
+        m.rows = rows
+        m.pitch = pitch
+        break
+    m.band = if m.rows > 0 then (m.rows - 1) * m.pitch + t else 0
 
-    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, t, o
+  # the chart, onto m: its bars' width, the paper between them, their
+  # heights, and the paper gap left of the chart. Its step shrinks to fit
+  # the band (the shortest bar keeps t); a chart with no room for a one-px
+  # step, or one that would leave the text less than MIN_LINE px across,
+  # loses a bar -- its survivors still rise in equal steps to the band's top
+  # -- and with room for fewer than MIN_BARS it drops
+  _slideChartMetrics: (m, px, across) ->
+    {t, band} = m
+    m.barWidth = @BAR_WIDTH_IN_LINES * t
+    m.barGap = Math.max @MIN_CLEARANCE, px(@BAR_PITCH) - m.barWidth
+    m.gap = Math.max @MIN_CLEARANCE, px @TEXT_TO_CHART
+    widthOf = (bars) => bars * m.barWidth + (bars - 1) * m.barGap
+    stepFor = (bars) => Math.min px(@BAR_STEP), Math.floor (band - t) / (bars - 1)
+    bars = @BARS
+    bars-- while bars >= @MIN_BARS and (stepFor(bars) < 1 or across - m.gap - widthOf(bars) < @MIN_LINE)
+    if bars < @MIN_BARS
+      m.barHeights = []
+      m.gap = 0
+      m.chartWidth = 0
+      return
+    step = stepFor bars
+    m.barHeights = (band - (bars - 1 - i) * step for i in [0...bars])
+    m.chartWidth = widthOf bars
 
-    # the content clearance box: >=1px of light inside the card ring
-    # (rounding otherwise parks content ON the border at small sizes)
-    cxMin = px + t + 1
-    cxMax = px + pw - t - 2             # last usable column
-    lx1 = Math.max x + Math.round(S * @COL1_X), cxMin
-    lx2 = Math.max x + Math.round(S * @COL2_X), cxMin
+  # the text lines' lengths, onto m: the full lines' is the whole px nearest
+  # their span whose parity puts the content on the card's centre, capped by
+  # the room the chart leaves; the third line is shorter by at least a px
+  _slideTextMetrics: (m, S, across) ->
+    room = across - m.gap - m.chartWidth
+    parity = room % 2
+    length = 2 * Math.round((S * @LINE_LENGTH / @GLYPH_GRID - parity) / 2) + parity
+    m.length = Math.min length, room
+    m.shortLength = Math.min Math.round(S * @SHORT_LINE_LENGTH / @GLYPH_GRID), m.length - 1
 
-    [yB, chartRight] = @_paintBarChart ctx, y, S, tc, lx2, cxMax, py, t
-    @_paintTextRows ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, chartRight
-
-  # the rising bar chart: uniform-width bars (walls tc, hollow when the
-  # hole keeps 1px, solid below) sharing one baseline, left-anchored on the
-  # right text column. Heights derive right-to-left, each strictly shorter
-  # than its taller neighbour and capped under the card's top clearance; a
-  # bar that can't stay both >=1 tall and strictly shorter DROPS and the
-  # survivors compact left -- the rise is the chart's identity, so at tiny
-  # sizes fewer still-rising bars beat a flattened row. A bar that would
-  # cross the clearance box is dropped too. Returns the baseline and the
-  # chart's right edge (undefined when no bar fit) -- the right column's text
-  # rows align their ends to it.
-  _paintBarChart: (ctx, y, S, tc, lx2, cxMax, py, t) ->
-    yB = y + Math.round S * @BAR_BASE
-    bw = Math.max 1, Math.round S * @BAR_W
-    gap = Math.max 1, Math.round S * @BAR_GAP
-    hMax = yB - (py + t + 1)
-    hs = []
-    hNext = hMax + 1
-    for i in [@BAR_HS.length - 1 .. 0] by -1
-      h = Math.min Math.round(S * @BAR_HS[i]), hMax, hNext - 1
-      break if h < 1
-      hs.unshift h
-      hNext = h
-    chartRight = undefined
-    for h, i in hs
-      bx = lx2 + i * (bw + gap)
-      break if bx + bw - 1 > cxMax
-      chartRight = bx + bw - 1
-      @_useInk ctx
-      ctx.fillRect bx, yB - h, bw, h
-      if bw - 2 * tc >= 2 and h - 2 * tc >= 2
-        @_useLight ctx
-        ctx.fillRect bx + tc, yB - h + tc, bw - 2 * tc, h - 2 * tc
-    [yB, chartRight]
-
-  # the text rows, computed ONCE and shared by both columns so surviving
-  # rows stay aligned across them: a row that can't keep 1px of light from
-  # the previous one is dropped (min-pitch rule); the right column draws
-  # its subset only below the chart's baseline, and its rows end exactly
-  # at the chart's right edge (the two right edges read as one margin)
-  _paintTextRows: (ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, chartRight) ->
-    len = Math.round S * @LINE_LEN
-    len2 = if chartRight? then chartRight - lx2 + 1 else Math.min(len, cxMax - lx2 + 1)
+  # the text lines, t tall, from one left edge; the third (the last) is the
+  # short one
+  _slideText: (ctx, m) ->
     @_useInk ctx
-    prevY = -99
-    for f, i in @LINE_YS
-      yy = Math.max y + Math.round(S * f) - Math.round(tc / 2), py + t + 1
-      continue if yy < prevY + tc + 1
-      prevY = yy
-      ctx.fillRect lx1, yy, Math.min(len, cxMax - lx1 + 1), tc
-      if i >= @COL2_FROM_ROW and yy > yB
-        ctx.fillRect lx2, yy, len2, tc
+    for i in [0...m.rows]
+      length = if i is @LINES - 1 then m.shortLength else m.length
+      ctx.fillRect m.textLeft, m.bandTop + i * m.pitch, length, m.t
+    return
+
+  # the bars, standing on the band's bottom row and rising left to right
+  _slideChart: (ctx, m) ->
+    @_useInk ctx
+    baseline = m.bandTop + m.band
+    for h, i in m.barHeights
+      ctx.fillRect m.chartLeft + i * (m.barWidth + m.barGap), baseline - h, m.barWidth, h
+    return

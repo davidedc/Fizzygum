@@ -7,11 +7,17 @@ class FolderWindowWdgt extends FrameWdgt
   constructor: (@closeButton, @contents, @internal = false) ->
     @contents = new ViewportWdgt new FolderPanelWdgt
     super @contents, closeButton: @closeButton
-    # wide enough for a 3-column icon grid at the desktop-icon pitch: three
-    # 95 px icons at a 105 px pitch inside the grid's 5 px edge padding run
-    # 315 px, which this width grants with room to spare inside the window's
-    # chrome; the generic 300×300 FrameWdgt default clips the third column
-    @setExtent new Point 340, 300
+    # I open showing a whole grid of icons with no scroll bar: as many columns as my panel's grid
+    # lays in a row, and the theme's folderWindowIconRows rows (the grid's own extent for them,
+    # IconGridPanelWdgt.extentShowingIconGrid), inside my chrome -- my border, my strip and its
+    # rule, measured by the same _chromeWidth / _chromeHeight my arrange takes out of my extent, so
+    # my viewport is exactly that grid. (The generic 300×300 FrameWdgt default clips the third
+    # column.) Imposed after the construction above rather than answered as my _initialExtent: my
+    # content's first placement sizes me from the content's own extent (the hug in
+    # FrameWdgt._positionAndResizeChildren), while this is an extent my content is to take.
+    panel = @contents.contents
+    grid = panel.extentShowingIconGrid panel.iconsLayingInGridWrapCount, WorldWdgt.theme.folderWindowIconRows
+    @setExtent new Point (grid.x + @_chromeWidth()), (grid.y + @_chromeHeight(@contents.contentStackSpec()))
 
 
   # my ART, not a badge decision: the arrow contract (reference-widgets plan §4.4) reserves the

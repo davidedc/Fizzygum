@@ -6,10 +6,11 @@
 # Note that I'm not a PopUp, for example I can't be pinned.
 # I'm always attached to the world, without any layout constraints.
 #
-# I am a PLATE (the label plate of docs/plans/redesign/UI-guidelines.md §5.3): a rounded box in my
-# fill, with no border -- a bordered rounded rectangle means "press me", and I am not pressable --
-# and no tail, casting the desktop shadow. My margin around my contents is my own padding, never my
-# corner radius. A text shows each of its lines centred, one line per line-height slot.
+# I am a PLATE, the label plate of docs/plans/redesign/UI-guidelines.md §5.3 (a desktop icon's
+# caption stands on its sibling, painted by DesktopIconAppearance): a rounded box in my fill, with
+# no border -- a bordered rounded rectangle means "press me", and I am not pressable -- and no tail,
+# casting the desktop shadow. My margin around my contents is my own padding, never my corner
+# radius. A text shows each of its lines centred, one line per line-height slot.
 
 class ToolTipWdgt extends Widget
 

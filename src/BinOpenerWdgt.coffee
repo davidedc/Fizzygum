@@ -15,12 +15,15 @@ class BinOpenerWdgt extends DesktopLinkWdgt
     super "Bin", new BinIconWdgt
     @target = world.binWdgt
     # my corner KNOB (carrier-owned, like HandleWdgt.cornerSpec): bottom-right of the
-    # desktop, desktopSidesPadding inside, ZERO size declared -- the corner pass places
-    # me by my own extent, it never sizes me. The CREATOR arms it at add
+    # desktop, in at the theme's bin insets (my cell's right edge on the desktop's, and my
+    # one-line plate's bottom the draft's distance above the desktop's bottom: Theme's
+    # desktopBinRightInset / desktopBinBottomInset), ZERO size declared -- the corner pass
+    # places me by my own extent, it never sizes me. The CREATOR arms it at add
     # (menusHelper.binIconAndText) -- deliberately NOT via defaultLayoutSpecWhenAddedTo,
     # which would re-anchor me on every user re-drop; a grab disarms the slot and I stay
     # free-floating, which IS the "until the user intervenes" lifecycle.
-    @cornerSpec = new CornerInternalLayoutSpec 'bottomRight', 0, 0, new Point world.desktopSidesPadding, world.desktopSidesPadding
+    theme = WorldWdgt.theme
+    @cornerSpec = new CornerInternalLayoutSpec 'bottomRight', 0, 0, new Point theme.desktopBinRightInset, theme.desktopBinBottomInset
 
   # I am a desktop icon but the desktop positions me itself (bottom-right corner), so I do
   # NOT take part in the auto icon grid -- override of WidgetHolderWithCaptionWdgt (was the
@@ -35,11 +38,15 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   _refusesDuplication: ->
     true
 
-  activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
+  # what a press on my tile does: open the bin (WidgetHolderWithCaptionWdgt.activated decides tile
+  # or plate, and hands a tile press here)
+  _activateMyTile: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation
       return
 
     if @target.isOrphan()
+      # nosettle-sanctioned: this hook runs a click at event time, off any settle (the dispatcher's
+      # activated hands it here), so the bin's public, self-settling unCollapse settles once, here
       @target.unCollapse()
       windowedBinWdgt = new FrameWdgt @target
       world.add windowedBinWdgt

@@ -1,124 +1,166 @@
 class BinIconAppearance extends SizeAwareIconAppearance
 
-  # SIZE-AWARE bin icon (2026-07-22, owner-redesigned from a reference
-  # drawing): the bin is where discarded widgets go, and its icon is
-  # now a simple BIN -- a small handle over a wider lid over a gently
-  # tapered body with three inner ridges. Light line art: outlines on the
-  # tc unit, ridges on the hairline td (the reference is thin uniform
-  # strokes), halo envelope on o. The tapered body is a trapezoid path
-  # whose interior twin shares the SAME side lines shifted tc inward, so
-  # the slanted walls read tc thick at every row; each backend rasterizes
-  # the slant its own way (the geometry-vs-rendering doctrine in
-  # SizeAwareIconAppearance's header).
+  # SIZE-AWARE bin in the design's style: the draft's "bin" glyph
+  # (docs/plans/redesign/desktop-canvas.html), drawn by the idiom of
+  # docs/plans/pixel-icons-plan.md §5b. Line art in ink, every line on the
+  # glyph line unit t (SizeAwareIconAppearance._glyphLineUnit), with paper
+  # interiors and no halo envelope (the tile the icon stands on is its ground):
+  #   - the LID is one t-thick line across the bin;
+  #   - the HANDLE is a box standing on the lid line with no bottom of its own:
+  #     the lid line closes it (adjacent outlined shapes share ONE line -- a
+  #     drawn bottom would double it into a thicker band);
+  #   - the BODY hangs from the lid line, which is its top, and tapers down to
+  #     its bottom wall;
+  #   - three RIDGES, t-wide vertical lines inside the body.
+  #   The border idiom: the ink silhouette, then each interior in paper inset by
+  # t. The body's paper is its trapezoid with each side moved t inward, between
+  # the lid line and the bottom wall (_binBody, twice): two parallel edges at an
+  # integer offset quantise identically under the non-AA backend (lesson 29), so
+  # every row of a slanted wall is exactly t wide and touches the next -- one
+  # connected wall, as thick as every straight one.
+  #   ONE axis: every width shares t's parity, so the centre ridge (t wide) sits
+  # on the axis and the bin is its own mirror image. Where S and t differ in
+  # parity the axis cannot be the square's centre, and the bin sits half a px
+  # left of it (floor centring); vertically it is centred exactly.
+  #   Detail by rule: a ridge keeps MIN_CLEARANCE px of paper from the lid line,
+  # the bottom wall, the other ridges and the slanted walls (measured at its
+  # lowest row, where the taper brings the walls nearest). The outer pair drops
+  # together, never one side, and then the centre one by the same rule. The
+  # handle keeps at least a px of paper inside it, across and down.
 
   # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
 
-  # ---- proportions, fractions of the glyph square (from the owner's
-  # reference drawing) --------------------------------------------------------
-  HANDLE_W: 0.20
-  HANDLE_H: 0.07
-  LID_W: 0.62
-  LID_H: 0.09
-  BODY_TOP_W: 0.52
-  BODY_BOT_W: 0.43
-  BODY_H: 0.55
-  RIDGE_XS: [-0.11, 0, 0.11]  # ridge centers, offsets from the bin's center
-  RIDGE_TOP: 0.06             # ridge clearance below the body's top
-  RIDGE_BOT: 0.05             # ridge clearance above the body's bottom border
+  # ---- proportions: the INK edges of a one-unit line on the draft glyph's
+  # path (its centre line moved out by half a unit; the lid's and the ridges'
+  # round caps reach half a unit past their ends), in GLYPH_GRID units: u units
+  # are round(S * u / GLYPH_GRID) px at a glyph square of S px. The bin is
+  # symmetric about the path's x 22 and centred in S, so two opposite edges
+  # count only by their span.
+  HANDLE_TOP: 6.5          # the handle's top ink edge (path y 7)
+  LID_TOP: 10.5            # the lid line's top ink edge (path y 11)
+  BOTTOM: 37.5             # the bottom wall's lower ink edge (path y 37)
+  LID_LEFT: 7.5            # the lid line's ends (path x 8 and 36)
+  LID_RIGHT: 36.5
+  HANDLE_LEFT: 16.5        # the handle's outer ink edges (path x 17 and 27)
+  HANDLE_RIGHT: 27.5
+  BODY_TOP_LEFT: 10.5      # the body's outer ink edges at the lid line (path x 11 and 33)
+  BODY_TOP_RIGHT: 33.5
+  BODY_TAPER: 2            # how far each side moves in, lid line to bottom (path x 11 to 13)
+  RIDGE_PITCH: 4           # ridge centre to ridge centre (path x 18, 22, 26)
+  RIDGE_TOP: 16.5          # the ridges' ink ends (path y 17 and 31)
+  RIDGE_BOTTOM: 31.5
+  # ---- detail tiers -----------------------------------------------------------
+  MIN_CLEARANCE: 1         # px of paper a ridge keeps from every other ink
 
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
+    return if Math.min(wDev, hDev) < 10
+    m = @_binMetrics x0, y0, wDev, hDev
+    @_binSilhouette ctx, m
+    @_binInteriors ctx, m
+    @_binRidges ctx, m
+
+  # every measurement the bin is built from, in whole device px (each slanted
+  # side is the exact line between two of them)
+  _binMetrics: (x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev
-    return if S < 10
-    # center the square glyph box in the widget box
-    x = x0 + Math.floor (wDev - S) / 2
-    y = y0 + Math.floor (hDev - S) / 2
+    t = @_glyphLineUnit S
+    px = (units) => Math.round S * units / @GLYPH_GRID
+    # a width of t's parity: centred on the axis, its edges land on whole px
+    width = (n) ->
+      n++ if (n - t) % 2 isnt 0
+      n
+    # the axis: the square's centre when S and t share parity, else half a px
+    # left of it
+    axis = x0 + Math.floor((wDev - S) / 2) + (S - (S - t) % 2) / 2
+    # a height of S's parity, so the bin is centred in S vertically
+    h = px @BOTTOM - @HANDLE_TOP
+    h++ if (S - h) % 2 isnt 0
+    top = y0 + Math.floor((hDev - S) / 2) + (S - h) / 2
+    bottom = top + h
+    lidTop = top + Math.max t + 1, px @LID_TOP - @HANDLE_TOP
+    handleWidth = width Math.max 2 * t + 1, px @HANDLE_RIGHT - @HANDLE_LEFT
+    topWidth = width px @BODY_TOP_RIGHT - @BODY_TOP_LEFT
+    run = Math.max 1, px @BODY_TAPER   # the body always tapers
+    lidWidth = width Math.max topWidth + 2, px @LID_RIGHT - @LID_LEFT
+    # the slanted sides start on the lid line's top row, unless their run and
+    # rise then share their largest power of two (x & -x): such a side crosses
+    # a pixel centre exactly on some row, where the backend may break the tie
+    # either way -- the two walls would stop mirroring each other there, and a
+    # wall's two edges could round apart. One row lower is tie-free, and still
+    # on the lid line or directly under it, so the walls still meet it.
+    edgeTop = lidTop
+    edgeTop++ if (run & -run) is ((bottom - edgeTop) & -(bottom - edgeTop))
+    m =
+      t: t
+      axis: axis
+      top: top
+      lidTop: lidTop
+      bottom: bottom
+      handleLeft: axis - handleWidth / 2
+      handleWidth: handleWidth
+      lidLeft: axis - lidWidth / 2
+      lidWidth: lidWidth
+      topWidth: topWidth
+      run: run
+      edgeTop: edgeTop
+    @_binRidgeMetrics m, px
+    m
 
-    t = Math.max 1, Math.round S / 32   # halo/envelope unit
-    # the outlines: the 2px weight of the desktop rendering is the icon's look
-    # (the desktop holder's 95x60 icon band -- WidgetHolderWithCaptionWdgt.
-    # standardDesktopIconExtent -- paints this icon at S = 60 at dpr 1, where
-    # round(S/45) is 1, so the max-2 floor is what holds the walls at 2) --
-    # keep it down to 20px; under that, 2px walls don't fit the bin's
-    # proportions. The ridges stay one step lighter throughout.
-    tc = if S >= 20 then Math.max 2, Math.round S / 45 else 1
-    td = Math.max 1, Math.round S / 64  # the ridges
-    o = t
+  # the ridges, onto m: a length of the interior's parity centred in it (clear
+  # of the lid line and of the bottom wall), and the ridges that keep their
+  # clearance from the walls at their lowest row, where the paper is narrowest
+  _binRidgeMetrics: (m, px) ->
+    t = m.t
+    interior = m.bottom - m.lidTop - 2 * t
+    length = px @RIDGE_BOTTOM - @RIDGE_TOP
+    length++ if (interior - length) % 2 isnt 0
+    length = Math.min length, interior - 2 * @MIN_CLEARANCE
+    m.ridgeTop = m.lidTop + t + (interior - length) / 2
+    m.ridgeBottom = m.ridgeTop + length
+    room = @_binHalfWidthAt(m, m.ridgeBottom) - t   # the paper's half-width there
+    pitch = Math.max t + @MIN_CLEARANCE, px @RIDGE_PITCH
+    offsets = []
+    if length >= 2 and room - t / 2 >= @MIN_CLEARANCE
+      offsets = if room - pitch - t / 2 >= @MIN_CLEARANCE then [-pitch, 0, pitch] else [0]
+    m.ridgeLefts = (m.axis + offset - t / 2 for offset in offsets)
 
-    # widths parity-normalized to S so every shape shares ONE exact center
-    cw = (f) =>
-      w = Math.max 1, Math.round S * f
-      w++ if (S - w) % 2 isnt 0
-      w
-    handleW = cw @HANDLE_W
-    lidW = cw @LID_W
-    bodyTopW = cw @BODY_TOP_W
-    bodyBotW = cw @BODY_BOT_W
-    bodyBotW -= 2 if bodyBotW >= bodyTopW  # cw's parity nudge must not untaper
-    handleH = Math.max 2 * tc, Math.round S * @HANDLE_H
-    lidH = Math.max 2 * tc, Math.round S * @LID_H
-    bodyH = Math.max 2 * tc + 2, Math.round S * @BODY_H
-    topY = y + Math.round (S - handleH - lidH - bodyH) / 2
-    handleX = x + (S - handleW) // 2
-    lidX = x + (S - lidW) // 2
-    bodyX = x + (S - bodyTopW) // 2
-    lidY = topY + handleH
-    bodyY = lidY + lidH
+  # the body's outer half-width at row boundary y: its sides run from the top
+  # corners (axis -/+ topWidth / 2, edgeTop) inward by run at the bottom
+  _binHalfWidthAt: (m, y) ->
+    m.topWidth / 2 - m.run * (y - m.edgeTop) / (m.bottom - m.edgeTop)
 
-    cxc = x + S / 2                     # every body shape shares this center
-    taper = (bodyTopW - bodyBotW) / 2   # per-side horizontal travel
-
-    # ---- halos first: with every halo down before any ink, none can
-    # punch a border ----------------------------------------------------------
-    @_useLight ctx
-    ctx.fillRect handleX - o, topY - o, handleW + 2 * o, handleH + 2 * o
-    ctx.fillRect lidX - o, lidY - o, lidW + 2 * o, lidH + 2 * o
-    @_binTrapezoid ctx, cxc, bodyTopW + 2 * o, bodyBotW + 2 * o, bodyY - o, bodyH + 2 * o
-
-    # ---- ink silhouettes, then light interiors (border idiom) ---------------
+  # the ink silhouette: the handle as a solid box down to the lid line, the lid
+  # line, the body's trapezoid
+  _binSilhouette: (ctx, m) ->
     @_useInk ctx
-    ctx.fillRect handleX, topY, handleW, handleH
-    ctx.fillRect lidX, lidY, lidW, lidH
-    @_binTrapezoid ctx, cxc, bodyTopW, bodyBotW, bodyY, bodyH
-    @_useLight ctx
-    # the handle is BOTTOMLESS -- its interior runs down to the lid, whose
-    # own top line closes the shape (a drawn handle bottom would sit on the
-    # lid's top border and read as one doubled, thicker line)
-    if handleW - 2 * tc >= 1 and handleH - tc >= 1
-      ctx.fillRect handleX + tc, topY + tc, handleW - 2 * tc, handleH - tc
-    if lidW - 2 * tc >= 1 and lidH - 2 * tc >= 1
-      ctx.fillRect lidX + tc, lidY + tc, lidW - 2 * tc, lidH - 2 * tc
-    # the body has no top border of its own -- the lid's bottom edge is the
-    # bin's top line -- so the interior starts at the body's first row and
-    # stops above the tc bottom border; its sides are the outer sides
-    # shifted tc inward (same slope), so the slanted walls are tc thick
-    innerH = bodyH - tc
-    if bodyTopW - 2 * tc >= 1 and innerH >= 1
-      @_binTrapezoid ctx, cxc, bodyTopW - 2 * tc,
-        bodyTopW - 2 * tc - 2 * taper * innerH / bodyH, bodyY, innerH
+    ctx.fillRect m.handleLeft, m.top, m.handleWidth, m.lidTop - m.top
+    ctx.fillRect m.lidLeft, m.lidTop, m.lidWidth, m.t
+    @_binBody ctx, m, 0, m.edgeTop, m.bottom
 
-    # ---- the three ridges: td verticals, clear of the walls and of the
-    # lid/bottom (a ridge that can't keep 1px of light off the slanted
-    # wall at its lowest row is dropped) --------------------------------------
-    rTop = bodyY + Math.max 1, Math.round S * @RIDGE_TOP
-    rBot = bodyY + bodyH - tc - Math.max 1, Math.round S * @RIDGE_BOT
-    return if rBot - rTop < 2
-    innerHalfAtBot = (bodyBotW - 2 * tc) // 2
+  # the paper interiors, each its ink shape inset by t: the handle's runs down
+  # to the lid line that closes it, the body's from under the lid line (its
+  # top) to above the bottom wall
+  _binInteriors: (ctx, m) ->
+    @_usePaper ctx
+    ctx.fillRect m.handleLeft + m.t, m.top + m.t, m.handleWidth - 2 * m.t, m.lidTop - m.top - m.t
+    @_binBody ctx, m, m.t, m.lidTop + m.t, m.bottom - m.t
+
+  _binRidges: (ctx, m) ->
     @_useInk ctx
-    for offF in @RIDGE_XS
-      rx = x + Math.round((S - td) / 2) + Math.round offF * S
-      halfSpan = Math.abs(rx + (if offF > 0 then td else 0) - (x + S / 2))
-      continue if halfSpan + 1 > innerHalfAtBot
-      ctx.fillRect rx, rTop, td, rBot - rTop
+    for left in m.ridgeLefts
+      ctx.fillRect left, m.ridgeTop, m.t, m.ridgeBottom - m.ridgeTop
+    return
 
-  # one filled trapezoid of the body family (top wider than the bottom),
-  # centered on cxc — the widths are parity-normalized to S, so cxc ± w/2
-  # land on integer columns
-  _binTrapezoid: (ctx, cxc, topW, botW, yT, h) ->
+  # the body's trapezoid between rows yTop and yBottom, each side its outer side
+  # moved d inward: d = 0 is the ink silhouette, d = t the paper interior
+  _binBody: (ctx, m, d, yTop, yBottom) ->
+    halfTop = @_binHalfWidthAt(m, yTop) - d
+    halfBottom = @_binHalfWidthAt(m, yBottom) - d
     ctx.beginPath()
-    ctx.moveTo cxc - topW / 2, yT
-    ctx.lineTo cxc + topW / 2, yT
-    ctx.lineTo cxc + botW / 2, yT + h
-    ctx.lineTo cxc - botW / 2, yT + h
+    ctx.moveTo m.axis - halfTop, yTop
+    ctx.lineTo m.axis + halfTop, yTop
+    ctx.lineTo m.axis + halfBottom, yBottom
+    ctx.lineTo m.axis - halfBottom, yBottom
     ctx.closePath()
     ctx.fill()

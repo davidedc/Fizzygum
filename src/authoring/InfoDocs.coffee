@@ -160,7 +160,7 @@ class InfoDocs
     dashboards:       -> new DashboardsIconWdgt
     genericPanel:     -> new GenericPanelIconWdgt
     patchProgramming: -> new PatchProgrammingIconWdgt
-    drawingsMaker:    -> new PaintBucketIconWdgt
+    drawingsMaker:    -> new SprayCanIconWdgt
     docsMaker:        -> new TypewriterIconWdgt
     slidesMaker:      -> new SimpleSlideIconWdgt
     superToolbar:     -> new ToolbarsIconWdgt

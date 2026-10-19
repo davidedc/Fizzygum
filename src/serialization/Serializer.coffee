@@ -182,7 +182,6 @@ class Serializer
     section.alpha = theWorld.alpha if theWorld.alpha?
     section.isDevMode = theWorld.isDevMode
     section.wallpaperPatternName = theWorld.wallpaper?.patternName
-    section.numberOfIconsOnDesktop = theWorld.numberOfIconsOnDesktop if theWorld.numberOfIconsOnDesktop?
     # info-doc "already created" flags: plain own booleans set on the world instance.
     infoDocFlags = {}
     for own name of theWorld when name.indexOf("infoDoc") is 0

@@ -68,8 +68,9 @@ class ShortcutWdgt extends DesktopLinkWdgt
   # (the storage drain only re-files existing residents, it cannot home an orphan). The
   # attached-in-truth check keeps this a no-op in a world-snapshot restore (there the shelf is a
   # serialized root and the figure is restored as its genuine child) and idempotent across two
-  # icons sharing one referent.
+  # icons sharing one referent. (First, the restore every desktop icon makes: its re-layout.)
   _afterDeserialization: ->
+    super
     return unless @representsContents and @referencedWidget? and !@referencedWidget.destroyed
     figure = @referencedWidget._enclosingIslandFigure()
     p = figure.parent

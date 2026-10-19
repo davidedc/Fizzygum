@@ -57,7 +57,7 @@ class AppCatalog
   @entries: ->
     "HowToSaveMessageApp": {title: "How to save?",      icon: (-> new FloppyDiskIconWdgt)}
     "SimpleDocumentApp":   {title: "Docs Maker",        icon: (-> new TypewriterIconWdgt)}
-    "FizzyPaintApp":       {title: "Draw",              icon: (-> new PaintBucketIconWdgt)}
+    "FizzyPaintApp":       {title: "Draw",              icon: (-> new SprayCanIconWdgt)}
     "SimpleSlideApp":      {title: "Slides Maker",      icon: (-> new SimpleSlideIconWdgt)}
     "DashboardsApp":       {title: "Dashboards",        icon: (-> new DashboardsIconWdgt)}
     "PatchProgrammingApp": {title: "Patch programming", icon: (-> new PatchProgrammingIconWdgt)}
