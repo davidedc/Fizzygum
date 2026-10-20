@@ -288,11 +288,11 @@ client's:
 
 ## 8. Client: patch programming (migration)
 
-- Edges derive from the owner's `@wires` list; the "connect to" menus and wire storage are
+- Edges derive from the owner's `@wires` list; the "Connect to" menus and wire storage are
   unchanged in kind. `firesPerEvent` is a per-wire property (a `WireSpec` field) with a menu toggle
   on that wire's own row.
 - **A reciprocal BIND is two ordinary wires and nothing else** (connector plan §P2) — no bind record,
-  no bind attribute on an edge, no engine involvement. The `bind ⇄` gesture makes both at once; a pair
+  no bind attribute on an edge, no engine involvement. The `Bind ⇄` gesture makes both at once; a pair
   wired by hand in two gestures is the same thing. Termination is the cycle machinery already
   specified in §7 (visit-once, the equal-value cutoff, and the echo drop of §1.13 for the node being
   applied into), measured at one lap — the same guarantee the six-node °C↔°F ring relies on.

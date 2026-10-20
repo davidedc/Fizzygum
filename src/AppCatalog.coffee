@@ -53,7 +53,7 @@ class AppCatalog
   # Every icon here is BARE — no GenericShortcutIconWdgt arrow wrap: a launcher is not a
   # reference (it spawns independent instances), and under the arrow contract
   # (reference-widgets plan §4.4) the arrow badge is reserved for genuine widget references
-  # made by "create shortcut".
+  # made by "Create shortcut".
   @entries: ->
     "HowToSaveMessageApp": {title: "How to save?",      icon: (-> new FloppyDiskIconWdgt)}
     "SimpleDocumentApp":   {title: "Docs Maker",        icon: (-> new TypewriterIconWdgt)}
@@ -62,7 +62,7 @@ class AppCatalog
     "DashboardsApp":       {title: "Dashboards",        icon: (-> new DashboardsIconWdgt)}
     "PatchProgrammingApp": {title: "Patch programming", icon: (-> new PatchProgrammingIconWdgt)}
     "GenericPanelApp":     {title: "Generic panel",     icon: (-> new GenericPanelIconWdgt)}
-    "ToolbarsApp":         {title: "Super Toolbar",     icon: (-> new ToolbarsIconWdgt), toolTip: "a toolbar to rule them all"}
+    "ToolbarsApp":         {title: "Super toolbar",     icon: (-> new ToolbarsIconWdgt), toolTip: "a toolbar to rule them all"}
     "FridgeMagnetsApp":    {title: "Fizzytiles",        icon: (-> new FridgeMagnetsIconWdgt), toolTip: "fridge magnets"}
     "DegreesConverterApp": {title: "C-F converter"}
     "SampleSlideApp":      {title: "Slide",             icon: (-> new SimpleSlideIconWdgt)}

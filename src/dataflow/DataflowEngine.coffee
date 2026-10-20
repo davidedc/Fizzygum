@@ -71,7 +71,7 @@
 # the recalculateLayouts that immediately follows the drain. A generous pass-count cap turns a
 # genuinely divergent side-effect loop into a loud DATAFLOW_NONCONVERGENCE rather than a
 # frozen frame. Measured peaks (recorded in Phase 7): 1 pass typical, 2 for sink-onto-source.
-#   ⚠ A RING TAKES ONE EDIT PER PASS. Two EDITS on one ring (both ends of a `bind ⇄`, two stops of
+#   ⚠ A RING TAKES ONE EDIT PER PASS. Two EDITS on one ring (both ends of a "Bind ⇄", two stops of
 # the °C↔°F circuit, a viewport's two bars) drained by one walk would each lap only as far as the
 # other, so the result would depend on whether load batched them into one cycle — the earlier
 # edit winning a bind, a longer ring left contradicting itself. So a pass keeps only the EARLIEST

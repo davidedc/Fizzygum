@@ -10,6 +10,9 @@
 
 class StringFieldWdgt extends PanelWdgt
 
+  colloquialName: ->
+    "text field"
+
   defaultContents: undefined
   minTextWidth: undefined
   fontSize: undefined

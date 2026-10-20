@@ -635,18 +635,18 @@ class TextWdgt extends StringWdgt
     menu.addLine()
     # the row SHOWS my soft-wrap state rather than being built from a snapshot of it, so a menu left
     # open while the state changes (another copy of this menu, a script) re-ticks instead of lying
-    menu.addMenuItem "soft wrap", @, "toggleSoftWrap",
-      reflection: MenuRowReflectionSpec.tickWhen @, "isSoftWrapping", true, "soft wrap"
+    menu.addMenuItem "Soft wrap", @, "toggleSoftWrap",
+      reflection: MenuRowReflectionSpec.tickWhen @, "isSoftWrapping", true, "Soft wrap"
     menu.addLine()
 
-    # a console contributes its own run-menu entries (run selection / run all); a text not in a
+    # a console contributes its own run-menu entries (Run selection / Run contents); a text not in a
     # console runs its own contents. Was a 3-level `instanceof ConsoleWdgt` reach-through.
     # (type-test-elimination campaign)
     console = @parent?.parent?.parent
     if console?.addRunMenuEntriesForText?
       console.addRunMenuEntriesForText menu, @
     else
-      menu.addMenuItem "run contents", @, "doContents"
+      menu.addMenuItem "Run contents", @, "doContents"
   
   setAlignmentToLeft: ->
     @alignment = "left"
@@ -668,16 +668,16 @@ class TextWdgt extends StringWdgt
 
     if @text.length > 0
       menu.prependLine()
-      menu.prependMenuItem "select all", @, "selectAllAndEdit"
-      menu.prependMenuItem "do all", @, "doAll"
+      menu.prependMenuItem "Select all", @, "selectAllAndEdit"
+      menu.prependMenuItem "Do all", @, "doAll"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
     if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
       menu.prependLine()
-      menu.prependMenuItem "inspect selection", @, "inspectSelection", toolTip: "evaluate the\nselected expression\nand inspect the result"
-      menu.prependMenuItem "show selection", @, "showSelection", toolTip: "evaluate the\nselected expression\nand show the result"
-      menu.prependMenuItem "do selection", @, "doSelection", toolTip: "evaluate the\nselected expression"
+      menu.prependMenuItem "Inspect selection", @, "inspectSelection", toolTip: "evaluate the\nselected expression\nand inspect the result"
+      menu.prependMenuItem "Show selection", @, "showSelection", toolTip: "evaluate the\nselected expression\nand show the result"
+      menu.prependMenuItem "Do selection", @, "doSelection", toolTip: "evaluate the\nselected expression"
     menu
 
   # Multi-line text inserts a newline on Enter rather than accepting -- override of

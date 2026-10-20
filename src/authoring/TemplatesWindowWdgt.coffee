@@ -36,7 +36,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.addDivider()
 
     # the Title building block IS the TitleWdgt role (§5.B, D7) -- the style
-    # lives in the class, and a dragged-out copy carries the "a Title" identity
+    # lives in the class, and a dragged-out copy carries the TitleWdgt identity
     sdspw.add new TitleWdgt
 
     startingContent = new SimpleTextWdgt "Section X",

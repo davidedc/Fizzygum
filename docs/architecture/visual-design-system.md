@@ -298,6 +298,42 @@ The accent says "focused", "selected" or "on" — nothing else. Selected and "on
 `accentTint` fill with an `accent` border and text, never a solid dark fill. `danger` marks destructive
 actions only.
 
+### 4.9 Wording and case
+- **Case is shown, never stored.** A text shows its words in a DISPLAY CASE (`StringWdgt.displayCase`: none, "upper"
+  or "sentence"), applied in `transformTextOneToOne`, the one hook that measuring, fitting, wrapping, the back-buffer
+  key and painting read, so a box that hugs its text hugs what shows. `text` keeps the stored words for every reader of
+  them: a pinned menu carries its header's stored words into its window title, a prompt's title is built from its
+  menu's (`CommandPanelWdgt.promptTitleAsking`), and `colloquialName` names saved files. The transform is one
+  character for one (a character whose capital is longer, "ß", is kept), and a password shows no case.
+- **A bar title's case is the frame's to decide** (`FrameWdgt._titleDisplayCase`), and the bar builds every title
+  piece in it: a pop-up header that NAMES something (a widget's menu, the desktop's, a section, a chooser) shows in
+  capitals; every other title reads as a sentence, its first character a capital: a window's, a pinned or collapsed
+  one's, a card's, a prompt's question, and a pop-up whose title is a MESSAGE (an inform, an empty chooser's "no
+  targets available", the bin's confirmation: `MenuWdgt`'s `titleIsAMessage` option).
+- **Human names, never class names.** A widget's menu is headed by its `colloquialName()` ("RECTANGLE", "DESKTOP"); a
+  chooser's header names what its rows offer ("NEW PARENT", "TARGET", "TARGET PROPERTY", "CONNECT", "BIND WITH").
+  `colloquialName` answers lowercase words by contract (they go mid-sentence too); a proper name keeps its capitals; a
+  name derived from a class that reads like a programmer's word is overridden where it shows ("text", "slider knob",
+  "list"). Titles that carry a name put it after a dash, as stored: "Object Inspector — analog clock", "Console — Docs
+  Maker"; a class inspector names its class as the data it is, "Class Inspector — RectangleWdgt".
+- **A row, a button and a toggle are in sentence case** ("Duplicate", "Pick up", "Own props only", "OK"). A row whose
+  label is a VALUE is capitalised where the row is built and the value stays as it is (`CommandPanelWdgt.rowLabelOfValue`:
+  the dock sides, the wallpapers, the property chooser's pin names, an overflow row built from a tool's tooltip) — never
+  inside `MenuItemWdgt`, whose label is a property name in the Inspector's member list and code in Fizzytiles. Data is
+  never re-cased: font names, member names, class names.
+- **"…" (U+2026) ends a label exactly when its action needs more from you before it completes**: a prompt, a colour
+  prompt, a code prompt, the file chooser, a download, a confirmation, or the resize handles ("Color…", "Save to file…",
+  "Empty bin…", "Resize/move…", "Add…"). A row that opens a submenu has none (its chevron says it: "Attach"), nor a row
+  that opens a window ("Inspect", "Edit script"), nor "Delete all". ASCII "..." ends no label. `fg menusweep` proves the
+  rule and sentence case at runtime (`ELLIPSIS_MISMATCH`, `SENTENCE_CASE`).
+- **A row that names a widget reads its human name** (`Widget.rowName`), told apart from its menu's other rows only
+  where two would read alike (`CommandPanelWdgt.rowLabelsNaming`): first by a detail in straight quotes (a text by its
+  start, a window by its title: 'Text "Hello"', 'Window "Docs Maker"'), then by a number ("Rectangle 2"). Never an
+  instance number, never a class name. A wire row reads its target and pin, then its direction ("Slider · value ⇄").
+- **Typed symbols that are wording** (a wire's ➜ / ⇄, the text menu's ← → ↑ ↓ ∸ ⍿ ☓ ⋯ pictograms, "°C ↔ °F") come
+  from the font-independent symbols atlas (`BitmapTextInvariant`), appended to its set; they render at the text's size
+  and density, never bold.
+
 ## 5. The design on the widget tree
 The design paints flat; Fizzygum paints a tree (parent, then children), so every pixel of the design has
 exactly one owning widget:
@@ -307,7 +343,7 @@ exactly one owning widget:
 | Window shadow, fill, 1 px frame | `FrameWdgt`'s body appearance (`BoxyAppearance`); the shadow is its `ShadowInfo` |
 | Title bar fill and its bottom rule | `FrameBarWdgt`'s `titlebarBackground` (the rule is the band's own edge, §4.1) |
 | × / − in 44×44 targets | `CloseIconButtonWdgt`, `CollapseIconButtonWdgt` (in a `SwitchButtonWdgt`), children of `FrameBarWdgt` |
-| Window title | `FrameBarWdgt`'s label `StringWdgt` (`fonts.windowTitle`) |
+| Window title | `FrameBarWdgt`'s label `StringWdgt` (`fonts.windowTitle`), its stored name shown as a sentence (§4.9) |
 | Pencil / eye | `EditIconButtonWdgt` |
 | Resize grip | `FrameGripWdgt` (a `HandleWdgt`, child of the frame, bottom-right, `frameGripInset` in from the content area) and `GripIconAppearance`; its hit area is its whole `frameGripSize` square. A halo's and a naked inspector's resizers stay plain `HandleWdgt`s, on `HandleAppearance`'s triangle |
 | Embedded toolbar with its title strip | a docked `FrameWdgt` (a card under an `EdgeDockLayoutSpec`) holding a toolbar; its bar runs vertically. The band stands `dockedBandInset` in from the host's body on its three outer sides and flush with the payload on the fourth; its thickness is the toolbar's `dockThickness`, derived from the theme's grid dials at every measure (`EdgeDockLayoutSpec.thicknessGrantedTo`). The toolbar and its grid paint nothing (`SeamRulesAppearance`): the band's card is the one line around them. Its cells (44, least 6 apart) spread space-between along the strip, `toolAlongPadding` from each end, `toolCrossPadding` across it, so a one-row strip is 56 deep; the far end keeps clear of a resizer over the strip's bottom-right corner (a floating toolbar's grip, or the host's over a right or bottom band: `ViewportWdgt.cornerResizerFootprint`, the reserve the scroll bars keep); a strip too short for every cell shows the prefix that fits and a trailing `»` |
@@ -345,14 +381,15 @@ lifetime.
 - **Content box:** inside the border, `menuContentPadding` in on every side. The rows panel
   (`CommandPanelWdgt`, alpha 0) lays its rows, dividers and editors out across it.
 - **Header** (titled only): a band across the content box, 44 tall plus its own 1 px `chrome` rule
-  along its bottom edge. Its title sits `menuHeaderTitleInset` in, 11 px `muted2`, left-aligned.
+  along its bottom edge. Its title sits `menuHeaderTitleInset` in, 11 px `muted2`, left-aligned, in capitals when it
+  names something and as a sentence when it is a message or a prompt's question (§4.9).
 - **Rows** (`MenuItemWdgt`): label 15 px `ink`, 10 px in from each side. A `desk` plate of radius 6
   over the whole row while hovered, `chrome` while pressed (`LabelButtonAppearance`), and no hairline.
 - **Groups:** a `DividerWdgt` band between groups, 9 px with its own centred `chrome` rule.
 - **Buttons** (a prompt): one last row (`PromptButtonsRowWdgt`), `minimumTargetSize` tall (the 44 rule's row for
   36-tall controls, §4.2), holding `SimpleButtonWdgt`s at their own size, right-aligned flush to the content box,
-  `footerGap` apart, centred down the row: [Close] [Ok] with Ok primary; a save-shortcut prompt [Don't save] [Cancel]
-  [Ok]. The row answers `menuEntryPreferredWidth`, so the pop-up widens to fit it. `Widget.inform` is a menu: its Ok
+  `footerGap` apart, centred down the row: [Close] [OK] with OK primary; a save-shortcut prompt [Don't save] [Cancel]
+  [OK]. The row answers `menuEntryPreferredWidth`, so the pop-up widens to fit it. `Widget.inform` is a menu: its OK
   stays a row.
 - **Indicators** (`MenuRowIndicatorWdgt`), pointer-transparent children of the row:
   - a row that opens a submenu (`opensSubmenu`) draws a `muted3` chevron whose ink ends 10 px from its

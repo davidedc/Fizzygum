@@ -308,7 +308,7 @@ class SliderWdgt extends CircleBoxWdgt
   # Could I FOLLOW this pin of this target — is there a thumb geometry to derive?
   # (ControllerMixin._canTrackWire, which asks this of the follower because only the follower knows
   # what it can render.) A scale is what I need and what most targets have no answer for, so this is
-  # the condition that keeps the "follows it too" row off almost every wire.
+  # the condition that keeps the "Follows it too" row off almost every wire.
   #   ⚠ Asked again at fire time by reflectTarget, deliberately rather than cached: a menu is built
   # at one moment and clicked at another, and a target can be re-sized or emptied in between — the
   # same reasoning _bindableTargets states for the bind chooser.
@@ -325,33 +325,34 @@ class SliderWdgt extends CircleBoxWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "show value", @, "showValue", toolTip: "display a dialog box\nshowing the selected number"
-    menu.addMenuItem "floor...", @, "floorPopout", toolTip: "set the minimum value\nwhich can be selected"
-    menu.addMenuItem "ceiling...", @, "ceilingPopout", toolTip: "set the maximum value\nwhich can be selected"
-    menu.addMenuItem "button size...", @, "buttonSizePopout", toolTip: "set the range\ncovered by\nthe slider button"
+    menu.addMenuItem "Show value", @, "showValue", toolTip: "display a dialog box\nshowing the selected number"
+    menu.addMenuItem "Floor…", @, "floorPopout", toolTip: "set the minimum value\nwhich can be selected"
+    menu.addMenuItem "Ceiling…", @, "ceilingPopout", toolTip: "set the maximum value\nwhich can be selected"
+    menu.addMenuItem "Button size…", @, "buttonSizePopout", toolTip: "set the range\ncovered by\nthe slider button"
     @_addTargetConnectionMenuEntries menu
 
   # The three range prompts. ⚠ An action MUST be a STRING method name: ButtonWdgt dispatches
   # `@target[@action]`, so a function literal indexes the target with a stringified function,
   # finds nothing, and throws (its own dev tripwire says so). These read the menu's title from
   # the dispatcher's first slot — the MENU ITEM — which is the same idiom
-  # Widget.transparencyPopout uses: the row climbs to its own pop-up and asks it for its title.
+  # Widget.transparencyPopout uses: the row's rows panel joins its pop-up's title and the question
+  # (CommandPanelWdgt.promptTitleAsking).
   floorPopout: (menuItem) ->
-    @prompt menuItem.parent.popUpTitle() + "\nfloor:", @, "setStart",
+    @prompt menuItem.parent.promptTitleAsking("floor:"), @, "setStart",
       defaultContents: @start.toString()
       floorNum: 0
       ceilingNum: @stop - @size
       isRounded: true
 
   ceilingPopout: (menuItem) ->
-    @prompt menuItem.parent.popUpTitle() + "\nceiling:", @, "setStop",
+    @prompt menuItem.parent.promptTitleAsking("ceiling:"), @, "setStop",
       defaultContents: @stop.toString()
       floorNum: @start + @size
       ceilingNum: @size * 100
       isRounded: true
 
   buttonSizePopout: (menuItem) ->
-    @prompt menuItem.parent.popUpTitle() + "\nbutton size:", @, "setSize",
+    @prompt menuItem.parent.promptTitleAsking("button size:"), @, "setSize",
       defaultContents: @size.toString()
       floorNum: 1
       ceilingNum: @stop - @start

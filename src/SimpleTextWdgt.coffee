@@ -17,7 +17,7 @@
 # _contentStackSpec.canSetHeightFreely = false (height is content-driven), the
 # viewport soft-wrap toggle (softWrapOn/Off), the dataflow plumbing
 # (updateTarget + bang), and the panel-colour blend helpers. The CONTROLLER
-# chrome (wire verbs, the "connect to" menu) is INHERITED — base StringWdgt
+# chrome (wire verbs, the "Connect to" menu) is INHERITED — base StringWdgt
 # carries ControllerMixin. ⛔ Do not re-augment it here: a mixin's compiled
 # members are ONE shared function object, so injecting the same mixin at two
 # levels of one chain makes every super-calling member (graphEdgesOut) recurse
@@ -63,19 +63,21 @@ class SimpleTextWdgt extends TextWdgt
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    menu.removeMenuItem "soft wrap"
+    # each key is the EXACT label of a row my chain built (TextWdgt / StringWdgt
+    # addWidgetSpecificMenuEntries): a key that matches no row removes nothing, silently
+    menu.removeMenuItem "Soft wrap"
 
-    menu.removeMenuItem "←☓→ don't expand to fill"
-    menu.removeMenuItem "←→ expand to fill"
-    menu.removeMenuItem "→← shrink to fit"
-    menu.removeMenuItem "→⋯← crop to fit"
+    menu.removeMenuItem "←☓→ Don't expand to fill"
+    menu.removeMenuItem "←→ Expand to fill"
+    menu.removeMenuItem "→← Shrink to fit"
+    menu.removeMenuItem "→⋯← Crop to fit"
 
-    menu.removeMenuItem "header line"
-    menu.removeMenuItem "no header line"
+    menu.removeMenuItem "Header line"
+    menu.removeMenuItem "No header line"
 
-    menu.removeMenuItem "↑ align top"
-    menu.removeMenuItem "⍿ align middle"
-    menu.removeMenuItem "↓ align bottom"
+    menu.removeMenuItem "↑ Align top"
+    menu.removeMenuItem "⍿ Align middle"
+    menu.removeMenuItem "↓ Align bottom"
 
     @_addTargetConnectionMenuEntries menu
 
@@ -86,12 +88,12 @@ class SimpleTextWdgt extends TextWdgt
         m != world.caret
       if childrenNotCarets.length == 1
         menu.addLine()
-        # ONE "soft wrap" row, ticked while my viewport wraps, and clicking it flips that. Its tick
+        # ONE "Soft wrap" row, ticked while my viewport wraps, and clicking it flips that. Its tick
         # is fixed when the menu is built (`ticked:`), as the action it carries is.
         if @parent.parent.isTextLineWrapping
-          menu.addMenuItem "soft wrap", @, "softWrapOff", ticked: true
+          menu.addMenuItem "Soft wrap", @, "softWrapOff", ticked: true
         else
-          menu.addMenuItem "soft wrap", @, "softWrapOn", ticked: false
+          menu.addMenuItem "Soft wrap", @, "softWrapOn", ticked: false
 
     menu.removeConsecutiveLines()
 

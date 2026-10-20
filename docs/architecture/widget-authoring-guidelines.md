@@ -546,8 +546,8 @@ mark after `add` + `setExtent` adds nothing.
 - **`@prompt msg, target, "methodName", opts`** — three operands then the options bag
   (`defaultContents:`, `intendedWidth:`, `floorNum:`, `ceilingNum:`, `isRounded:`); pass the target and
   the method *name*, not a bound method value. [gated — `buildSystem/check-menu-actions.js`]
-  `PromptWdgt`'s Ok row targets the prompt itself (`panel.addMenuItem "Ok", @, "deliverValue"`) and
-  `deliverValue` dispatches your callback by name one hop later
+  `PromptWdgt`'s OK button targets the prompt itself (`new SimpleButtonWdgt @, "deliverValue", face: "OK"`)
+  and `deliverValue` dispatches your callback by name one hop later
   (`@target[@callback].call @target, @_promptValue()`) — the same slot, so the same proof applies; the
   gate holds both doors to one standard, and those callbacks also count as menu-dispatched verbs for
   its unread-parameter ratchet.
@@ -557,8 +557,9 @@ mark after `add` + `setExtent` adds nothing.
   (`FolderPanelWdgt` → *"folder panel"*), so a new widget is named correctly for free. Override when
   the derivation reads wrong (an acronym or digit the camelCase split mangles — `Plot3DCreatorButtonWdgt`)
   or when the thing has a **name** rather than a description (*"Desktop"*, *"Bin"*, *"Fizzytiles"*,
-  *"Docs Maker"*). Lowercase unless it is a proper noun: consumers drop it into a sentence, or
-  parenthesise it as *"Object Inspector (folder panel)"*.
+  *"Docs Maker"*). Lowercase unless it is a proper noun: consumers drop it into a sentence or after a
+  dash (*"Object Inspector — folder panel"*); a title or a menu header that starts with it shows it in its
+  display case, capitalised at display, never stored (visual-design-system.md §4.9).
   ⚠ **An override SHADOWS the derivation for every descendant**, which is how `CanvasWdgt` and
   `StringFieldWdgt` both used to answer *"panel"*. Before adding one to a class that has subclasses, <!-- narration-ok: the warning IS that two classes once collided on one name; the collision is the thing to avoid -->
   check you are not renaming them all; before deleting one, check the chain does not fall through to
@@ -571,9 +572,15 @@ mark after `add` + `setExtent` adds nothing.
   a submenu passes `opensSubmenu: true` (what an action does cannot be read off its name, so its
   builder states it); the row then draws its chevron, and `fg menusweep` checks the statement against
   the act (`SUBMENU_FLAG_MISMATCH`). A row ticked or not by construction passes `ticked: true` /
-  `ticked: false` (`SimpleTextWdgt`'s one "soft wrap" row). Both travel `addMenuItem` opts →
+  `ticked: false` (`SimpleTextWdgt`'s one "Soft wrap" row). Both travel `addMenuItem` opts →
   `CommandSpec` → own fields of `MenuItemWdgt`, so a duplicated, lifted-out or saved row keeps them; a
   menu holding any ticking row reserves the leading tick column in every row, so its labels align.
+  The words follow `visual-design-system.md` §4.9: sentence case ("Pick up"); "…" exactly when the action
+  needs more from you before it completes ("Color…", "Resize/move…"), never on a submenu row ("Attach");
+  a VALUE row through `CommandPanelWdgt.rowLabelOfValue`; a row that NAMES a widget through
+  `CommandPanelWdgt.rowLabelsNaming` (asked once per menu, with every widget its rows name) plus
+  `representsAWidget: true`, which is what hovering highlights and what a test finds the row by
+  (`MacroToolkit.rowOfMenuStandingFor`). `fg menusweep` proves the first two (`ELLIPSIS_MISMATCH`, `SENTENCE_CASE`).
 - **A row that SHOWS somebody's state must DECLARE it, not paint it once.** [convention] If a row
   ticks itself to report a setting, pass a `reflection:` —
   `MenuRowReflectionSpec.tickWhen source, "readerName", theValue, theLabel`, the one door: the row is
@@ -634,7 +641,7 @@ pins: -> super().concat [
   so a readable *field* with no reader *method* is honestly write-only. `width`/`height` are
   write-only on purpose: a readable pin is a licence to bind, and the bar for a readable geometry pin
   is a real CONSUMER — add the reader when something needs to track it. [§CL1]
-- **No `set` declares a READ-ONLY pin**, which never appears in a "choose target property" menu
+- **No `set` declares a READ-ONLY pin**, which never appears in the "target property" chooser
   because nothing can drive it (`StringFieldWdgt`'s `value`). A `PinSpec` with neither half is
   refused at construction.
 - **`announces` is a promise about EVERY write path** — a gesture, a script, the loader, another
@@ -703,14 +710,14 @@ binding verb by **which way the value moves when the wire is made**:
   gestures is bound in the same sense, and a duplicate of one half tells the truth with no
   bookkeeping to have gone stale.
 - **A follower relationship is a PROMOTION of a wire that already exists** — the wire's own menu row,
-  "follows it too" — offered only where the pin is readable and `announces`, the follower can render
+  "Follows it too" — offered only where the pin is readable and `announces`, the follower can render
   *that* pin, and the follower is not already following something else. [§CL5]
 
 ### The pin-setter contract
 
 **Every delivery path passes a pin setter ONE argument: the value.** A wire calls
 `consumer[action] value`, a controller's `updateTarget` calls `target[setter](value)`, and a prompt's
-Ok extracts the value from its own editor before delivering it. No delivery hands a setter a widget
+OK extracts the value from its own editor before delivering it. No delivery hands a setter a widget
 to interrogate, so a setter never probes its argument for `getValue`/`getColor` — it coerces, clamps,
 and stores. (A pin setter reached as a MENU action instead takes its subject from dispatch **slot 2**
 — the enclosing panel's target, not the row's: the slot law is

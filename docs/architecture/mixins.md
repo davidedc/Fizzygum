@@ -117,7 +117,7 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   receiver as a WIDGET and stamps widget-lifecycle fields onto the prototype as own
   properties, polluting every later member listing of the class. The full editing
   vocabulary on top of that core:
-  - **"override in this class"** (`ClassInspectorWdgt.overrideInThisClass`): a second
+  - **"Override in this class"** (`ClassInspectorWdgt.overrideInThisClass`): a second
     save destination shown while a mixin-donated instance member (method or field) is
     selected — keeps the edited source as a live override on THAT class's prototype
     only (via `Class.applyMemberEdit`, the class twin, which super-rewrites exactly as
@@ -127,9 +127,9 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   - a **"from `<Name>Mixin`" donor label** (`InspectorWdgt.mixinDonorLabel`) appears in
     the breadcrumb band, right after the class chips, of BOTH inspector types while a mixin-donated
     member is selected;
-  - **add/remove**: the class inspector's `add…` popout gains a destination step
+  - **add/remove**: the class inspector's "Add…" popout gains a destination step
     (class or any of its mixins — a mixin add is `applyMemberEdit` with a new name)
-    when the class declares augmentations, and `remove` on a mixin-donated member
+    when the class declares augmentations, and "Remove" on a mixin-donated member
     routes to `Mixin.removeMember` (deletes member + fake-super companion from every
     non-shadowing consumer; logged as a `deleted: true` registry record);
   - **class-side statics**: the Mixin constructor parses the literal's 2-space keys

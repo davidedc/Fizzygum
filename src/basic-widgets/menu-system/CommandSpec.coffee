@@ -58,6 +58,8 @@ class CommandSpec
   doubleClickAction: undefined
   argumentToAction1: undefined
   argumentToAction2: undefined
+  # does the row NAME a widget — its argumentToAction1 when it carries one, else its target? Such a
+  # row highlights that widget on hover and is found by it (MenuItemWdgt.representedWidget).
   representsAWidget: false
   # a MenuRowReflectionSpec when this row is a VIEW of somebody else's value -- ticked while that
   # value is the row's choice; undefined for an ordinary row

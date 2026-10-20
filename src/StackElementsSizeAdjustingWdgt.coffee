@@ -3,6 +3,9 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
 
   category: 'Widgetic-Layouts'
 
+  # what a person calls the bar dragged to re-apportion a split
+  colloquialName: -> "splitter"
+
 
   # I am a 5×5 grab strip between stacked elements, and LayoutChromeAppearance paints only a
   # hint inside it: every pixel of that strip has to drag, or the divider is unusable.

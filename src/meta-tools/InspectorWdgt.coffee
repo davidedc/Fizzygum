@@ -16,14 +16,14 @@
 #     toggleBandInset in and toggleBandGap apart, centred down the band;
 #   - the BODY: the member list, inspectorListColumnWidth wide but never more than half my width,
 #     then a 1 px seam, then the code pane out to my right edge;
-#   - the FOOTER band (FooterBandLayout): add... rename... remove at its left, save -- the primary
+#   - the FOOTER band (FooterBandLayout): Add… Rename… Remove at its left, Save -- the primary
 #     action -- at its right. A read-only inspector (a subject that cannot service an edit) has no
 #     footer band, and its body runs to my bottom.
 # A band keeps its controls at their own size: where my width is less than a band's controls need,
 # they run past my right edge -- the breadcrumb wraps instead, and only a piece wider than a whole
 # row runs past it -- and I clip them there, naked or windowed alike.
 #
-# My TOGGLES (LabelledToggleWdgt) show my member FILTER -- methods, fields, inherited, obj own props
+# My TOGGLES (LabelledToggleWdgt) show my member FILTER -- Methods, Fields, Inherited, Own props
 # only -- whose one truth is my showing* fields. A click on a toggle runs its action
 # (toggleShowing*), which flips that field and RE-FILTERS me (_refilterMembers): my member list is
 # rebuilt from the filter as it now stands, every other child of mine stays the same widget, and
@@ -101,10 +101,12 @@ class InspectorWdgt extends Widget
 
   # ⚠ Through the SERVICE, never `@inspectedObject.colloquialName()`: an inspector is handed
   # whatever the user asked to inspect, and that is not always a widget — the evaluation menu's
-  # "inspect selection" hands it the VALUE of a snippet, so it can be a number, a string, a Point.
+  # "Inspect selection" hands it the VALUE of a snippet, so it can be a number, a string, a Point.
   # Asking a number for a method is a category error; the service names it from its class instead.
+  # The subject's name follows the dash AS IT IS ("Object Inspector — analog clock", "Object
+  # Inspector — Docs Maker"): my window title's display case touches only its first character.
   colloquialName: ->
-    "Object Inspector (" + (Utils.colloquialNameOf @inspectedObject) + ")"
+    "Object Inspector — " + Utils.colloquialNameOf @inspectedObject
 
   # My toggles' ACTIONS, one per toggle (a toggle hands itself in slot 1; none of them needs it).
   # Each flips the filter field its toggle stands for and re-filters me, in ONE settle: the field is
@@ -170,11 +172,11 @@ class InspectorWdgt extends Widget
 
     # my filter's toggles, each with its fixed label and the one action that flips its field; the
     # state each shows is set from my filter once they all exist (_reflectFiltersOnToggles, below)
-    @showMethodsToggle = new LabelledToggleWdgt @, "toggleShowingMethods", face: "methods"
+    @showMethodsToggle = new LabelledToggleWdgt @, "toggleShowingMethods", face: "Methods"
     @_addNoSettle @showMethodsToggle
-    @showFieldsToggle = new LabelledToggleWdgt @, "toggleShowingFields", face: "fields"
+    @showFieldsToggle = new LabelledToggleWdgt @, "toggleShowingFields", face: "Fields"
     @_addNoSettle @showFieldsToggle
-    @showInheritedToggle = new LabelledToggleWdgt @, "toggleShowingInherited", face: "inherited"
+    @showInheritedToggle = new LabelledToggleWdgt @, "toggleShowingInherited", face: "Inherited"
     @_addNoSettle @showInheritedToggle
     @_buildAndConnectOwnPropsOnlyToggle()
     @_reflectFiltersOnToggles()
@@ -199,7 +201,7 @@ class InspectorWdgt extends Widget
 
     # register this wdgt as one to be notified when the text
     # changes/unchanges from "reference" content
-    # so we can enable/disable the "save" button
+    # so we can enable/disable the "Save" button
     @detail.widgetToBeNotifiedOfTextModificationChange = @
 
     @textWidget = @detail.textWdgt
@@ -438,19 +440,19 @@ class InspectorWdgt extends Widget
   # twin is the guarded footer band in `_reLayout`. Save is the primary action; the build sets the
   # enabled states (see the field declarations).
   _buildAndConnectEditRow: ->
-    @addPropertyButton = new SimpleButtonWdgt @, "addPropertyPopout", face: "add..."
+    @addPropertyButton = new SimpleButtonWdgt @, "addPropertyPopout", face: "Add…"
     @_addNoSettle @addPropertyButton
-    @renamePropertyButton = new SimpleButtonWdgt @, "renamePropertyPopout", face: "rename..."
+    @renamePropertyButton = new SimpleButtonWdgt @, "renamePropertyPopout", face: "Rename…"
     @_addNoSettle @renamePropertyButton
-    @removePropertyButton = new SimpleButtonWdgt @, "removeProperty", face: "remove"
+    @removePropertyButton = new SimpleButtonWdgt @, "removeProperty", face: "Remove"
     @_addNoSettle @removePropertyButton
 
-    @saveButton = new SimpleButtonWdgt @, "save", face: "save", primary: true
+    @saveButton = new SimpleButtonWdgt @, "save", face: "Save", primary: true
     @_addNoSettle @saveButton
 
   # my last toggle, which a class inspector does not build (ClassInspectorWdgt)
   _buildAndConnectOwnPropsOnlyToggle: ->
-    @showOwnPropsOnlyToggle = new LabelledToggleWdgt @, "toggleShowingOwnPropsOnly", face: "obj own props only"
+    @showOwnPropsOnlyToggle = new LabelledToggleWdgt @, "toggleShowingOwnPropsOnly", face: "Own props only"
     @_addNoSettle @showOwnPropsOnlyToggle
 
   openClassInspector: (ignored,ignored2,className) ->
@@ -827,7 +829,7 @@ class InspectorWdgt extends Widget
   _addNamedProperty: (prop) ->
     @inspectedObject[prop] = undefined
     # nosettle-sanctioned: gesture tail shared by two PUBLIC add actions (the popout
-    # Ok and the class inspector's destination menu), event-time only -- the re-filter
+    # OK and the class inspector's destination menu), event-time only -- the re-filter
     # is that gesture's single settle
     @_refilterMembers()
     @notifyInstancesOfSourceChange([prop])

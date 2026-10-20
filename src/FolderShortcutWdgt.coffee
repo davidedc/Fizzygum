@@ -15,7 +15,7 @@ class FolderShortcutWdgt extends ShortcutWdgt
       droppedWidget._createReferenceAndCloseNoSettle @referencedWidget.contents.contents
 
   # my inner art (bare on the primary folder icon a makeFolder leaves behind, arrow'd on a
-  # deliberate "create shortcut" alias -- the assembly lives in ShortcutWdgt's constructor)
+  # deliberate "Create shortcut" alias -- the assembly lives in ShortcutWdgt's constructor)
   _defaultInnerIcon: ->
     new FolderIconWdgt
 

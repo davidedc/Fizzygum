@@ -54,7 +54,7 @@ class FolderWindowWdgt extends FrameWdgt
   # the shortcut on the desktop here exactly as it does everywhere else.
   # opts.representsContents threads the arrow contract exactly as in the base (plan §4.4):
   # PanelWdgt.makeFolder passes true — the icon it leaves behind is the folder's PRIMARY
-  # representation (bare art, deep copy) — while the menu's "create shortcut" defaults to a
+  # representation (bare art, deep copy) — while the menu's "Create shortcut" defaults to a
   # deliberate arrow'd alias.
   createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
     widgetToAdd = @_buildShortcutWidget referenceName, opts

@@ -673,11 +673,28 @@ class FrameWdgt extends Widget
       titleToBeSet = "window with an " + titleToBeSet
     titleToBeSet
 
-  # The name my title strip carries. A ROW of a pop-up asks its pop-up for this to prefix the
-  # question its prompt opens with ("Rectangle\nalpha value:"), which is why it is public: the
+  # The name my title strip carries, as stored (the display case is my title piece's, not the
+  # name's). A ROW of a pop-up asks its pop-up for this to prefix the question its prompt opens with
+  # ("rectangle\nalpha\nvalue:", CommandPanelWdgt.promptTitleAsking), which is why it is public: the
   # asker is the row, several classes away. The citizens answer their own kind of title.
   titleText: ->
     @_titleForContents @contents
+
+  # HOW MY TITLE SHOWS: the display case my strip's title piece wears (StringWdgt.displayCase) over
+  # the words my title stores, which stay as they are for every reader of them -- a pinned menu's
+  # window title, a prompt's title built from a menu's, a saved file's name. The ONE place the case
+  # is decided: my bar builds every title piece in it, in either style, and I re-assert it whenever
+  # I re-title. A pop-up's header that NAMES something shows in capitals ("RECTANGLE", "DESKTOP",
+  # "FONTS"); every other title reads as a sentence, its first character a capital: a window's, a
+  # pinned or collapsed one's, a card's, a prompt's question and a pop-up's message.
+  _titleDisplayCase: ->
+    if @isTransientPopUp() and @_headerIsAName() then "upper" else "sentence"
+
+  # Does my pop-up header NAME something (a widget, a section, a chooser), rather than say
+  # something? A plain frame is never a pop-up, and a prompt's header is the question it asks, so
+  # neither does; a menu says per title (MenuWdgt).
+  _headerIsAName: ->
+    false
 
   # Re-derive the bar title from my CURRENT contents' colloquialName. Intent-named public
   # note (the noteWallpaperChanged idiom) for a contents whose ANSWER to colloquialName
@@ -701,12 +718,16 @@ class FrameWdgt extends Widget
   # grades how much of it survives the box it is granted, and a strip whose title gives itself up
   # centres its pieces -- so new text re-lays my strip. My label is fitted to that box, so its own
   # text change invalidates nothing above it. An untitled pop-up carries no title piece, so there is
-  # nothing to re-title.
+  # nothing to re-title. The text is shown in my title's display case (_titleDisplayCase), asserted
+  # before the text is set so the label measures the shown form; a change of case alone re-lays my
+  # strip too, since it changes what shows.
   _retitleNoSettle: (newTitle) ->
     return unless @label?
     titleBefore = @label.text
+    caseBefore = @label.displayCase
+    @label._setDisplayCaseNoSettle @_titleDisplayCase()
     @label._setTextNoSettle newTitle
-    @bar?._invalidateLayout() unless @label.text is titleBefore
+    @bar?._invalidateLayout() unless @label.text is titleBefore and @label.displayCase is caseBefore
 
   representativeIcon: ->
     if @contents == @defaultContents
@@ -863,6 +884,16 @@ class FrameWdgt extends Widget
       return "internal window"
     else
       return "window"
+
+  # What tells me from another window on a row that names me (Widget.distinguishedRowName): my
+  # title as my strip SHOWS it ('Window "Docs Maker"'). Nothing when I show no title, or when my
+  # name already says it — a menu's and a prompt's name quote their title, a Maker's name is its
+  # title — where it would tell nothing more.
+  _rowNameDistinction: ->
+    return undefined unless @label?
+    title = @label.transformTextOneToOne @label.text
+    return undefined if @colloquialName().toLowerCase().includes title.toLowerCase()
+    title
 
   # The re-fit chokepoint (the `_reLayoutChildren?` size-tracking marker keys off this
   # definition): re-fit chrome + content via the frame's own arrange below.
@@ -1212,7 +1243,7 @@ class FrameWdgt extends Widget
   # Build my content's toolbar variant and dock it, framed, at the side the variant asks for. A
   # framed CITIZEN declares its kind's variant itself (§5.B); a plain frame asks the content it
   # wraps; a content that declares none leaves every slot empty.
-  # `side` overrides the variant's own default (the "toolbar" submenu's rows name one).
+  # `side` overrides the variant's own default (the "Toolbar" submenu's rows name one).
   _buildDockedToolbarNoSettle: (side) ->
     toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
     return unless toolbar?
@@ -1244,19 +1275,19 @@ class FrameWdgt extends Widget
     # a slot to sit in (program ruling C12).
     if @_myEdgeDockSpec()?
       menu.addLine()
-      menu.addMenuItem "dock", @, "dockSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
-      menu.addMenuItem "float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
+      menu.addMenuItem "Dock", @, "dockSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
+      menu.addMenuItem "Float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
     # A HOST's row: fill an empty slot with the toolbar my content declares. Offered only while
     # there IS one to make and no slot already holds it -- you cannot dock a second copy of the
     # same variant, and DELIBERATELY a menu entry, never a bar button (owner ruling D9: don't spend
     # bar space on it).
     if @_offersAFreshToolbar()
       menu.addLine()
-      menu.addMenuItem "toolbar", @, "toolbarSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
+      menu.addMenuItem "Toolbar", @, "toolbarSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
     # the pin is offered only while there is something to pin: furniture is already staying
     if @isTransientPopUp()
       menu.addLine()
-      menu.addMenuItem "pin", @, "pinPopUp", closesUnpinnedPopUps: false
+      menu.addMenuItem "Pin", @, "pinPopUp", closesUnpinnedPopUps: false
 
   # Is there a toolbar to dock that is not docked already? The content must declare a variant (a
   # framed citizen declares its own -- §5.B) and no slot may hold one.
@@ -1264,20 +1295,22 @@ class FrameWdgt extends Widget
     return false if @_dockedToolbarFrame()?
     (@buildToolbar? or @contents?.buildToolbar?) == true
 
-  # The BAND's side chooser (the "dock" submenu): the three sides I am not on (the VSLS-alignment /
-  # division-cell menu pattern -- the current one is nothing to choose).
+  # The BAND's side chooser (the "Dock" submenu): the three sides I am not on (the VSLS-alignment /
+  # division-cell menu pattern -- the current one is nothing to choose). A row SHOWS its side
+  # capitalised ("Top") and carries the side itself ("top"), the name my slots are keyed by.
   dockSideMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     currentSide = @_myEdgeDockSpec()?.side
     for side in FrameWdgt.DOCK_SIDES
-      menu.addMenuItem side, @, "dockAtSide", arg1: side  if side isnt currentSide
+      menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue side), @, "dockAtSide", arg1: side  if side isnt currentSide
     menu.popUpAtHand()
 
-  # The HOST's side chooser (the "toolbar" submenu): all four, since the slot the row fills is empty.
+  # The HOST's side chooser (the "Toolbar" submenu): all four, since the slot the row fills is
+  # empty; its rows are labelled like the "Dock" submenu's.
   toolbarSideMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     for side in FrameWdgt.DOCK_SIDES
-      menu.addMenuItem side, @, "addToolbarAtSide", arg1: side
+      menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue side), @, "addToolbarAtSide", arg1: side
     menu.popUpAtHand()
 
   # Move me to another of my host's slots. A dock IS a placement, so re-siding is an edit to the
@@ -1441,7 +1474,7 @@ class FrameWdgt extends Widget
 
   # Role query for the world snapshot (Serializer.serializeWorld): a TRANSIENT frame is
   # mid-gesture UI — it auto-closes on the next outside click / item trigger (indeed the very
-  # menu-item click that starts a "save world snapshot…" has already marked its menu for
+  # menu-item click that starts a "Save world snapshot…" has already marked its menu for
   # closure) — so a snapshot drops it, exactly like the ephemeral overlays. A PERSISTENT one
   # is desktop furniture and is saved. Dispatched via ?() (nothing on Widget), like isMenu.
   #   It is also my own branches' reader (see isPersistent above): the strip spec, the birth
@@ -1483,7 +1516,7 @@ class FrameWdgt extends Widget
   # derives at its top on the flush the gesture supplies. Same two tiers, same discriminator, as
   # _setLayoutSpec's roster derive.
   #   Nothing settles here, so every caller must bring a declared flush for that mark to ride: the
-  # user-facing pins (the strip tap, the "pin" row) come through the setLifetime wrapper above, and
+  # user-facing pins (the strip tap, the "Pin" row) come through the setLifetime wrapper above, and
   # the grab reaches me from a notification callback, whose settle the grab dispatcher owns.
   _setLifetimeNoSettle: (aLifetime) ->
     # public-call-sanctioned: onClickOutsideMeOrAnyOfMyChildren is pure REGISTRY bookkeeping (one
@@ -1505,7 +1538,7 @@ class FrameWdgt extends Widget
       @_invalidateLayout() if @bar?._rosterDisagreesWithSpec()
     return
 
-  # The user-facing verb for "this pop-up stays" — the header tap and the "pin" row land here. The
+  # The user-facing verb for "this pop-up stays" — the header tap and the "Pin" row land here. The
   # pin itself is the lifetime entry above; what belongs to THIS verb is the sibling sweep: the
   # pop-ups I was opened from are mid-gesture UI that the pin ends, so the chain above me is marked
   # for closure and drained. It is invoked on the pop-up to be pinned; the triggering menu item — the
@@ -1805,7 +1838,7 @@ class FrameWdgt extends Widget
   # knobs. There is deliberately no fourth, "pinned menu" look: that would key on what I once was,
   # the one input a derived look may never take, so a pinned menu wears the window's body.
   #   The rule this makes: my look WINS at every derivation, so a body colour or a corner radius set
-  # by hand ("corner radius...", its pin) lasts until I next change parent or lifetime.
+  # by hand ("Corner radius…", its pin) lasts until I next change parent or lifetime.
   #   The knobs go on the NEW appearance: they live on the appearance instance, and a fresh one
   # starts with both off. As the appearance's own fields they are saved with it, so a frame a
   # snapshot restores WITHOUT re-deriving (a nested one: only the top-level frames hear

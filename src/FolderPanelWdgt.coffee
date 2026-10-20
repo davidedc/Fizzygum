@@ -66,5 +66,5 @@ class FolderPanelWdgt extends IconGridPanelWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "new folder", @, "makeFolderFromMenu", toolTip: "make a new folder"
+    menu.addMenuItem "New folder", @, "makeFolderFromMenu", toolTip: "make a new folder"
 

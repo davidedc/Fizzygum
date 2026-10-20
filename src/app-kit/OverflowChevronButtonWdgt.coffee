@@ -61,8 +61,10 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
       tool = cell.glassBoxItem?() ? cell
       # a hidden tool that is the ACTIVE one (isActiveTool: the armed paint tool, a text tool
       # mirroring the edited text) says so with its row's tick, as its cell would with its plate --
-      # read now, at pop time, like everything else in this menu
-      menu.addMenuItem (tool.toolTipMessage ? tool.colloquialName()), @, "triggerToolFromMenu",
+      # read now, at pop time, like everything else in this menu. The row names its tool by the
+      # tool's tooltip (or, lacking one, its colloquial name), capitalised as a row is ("Change
+      # font"); the tooltip itself reads as it does.
+      menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue (tool.toolTipMessage ? tool.colloquialName())), @, "triggerToolFromMenu",
         arg1: cell
         icon: @_miniatureOf tool
         ticked: (if tool.isActiveTool?() then true else undefined)

@@ -25,7 +25,8 @@ class ScriptShortcutWdgt extends ShortcutWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "edit script...", @, "editScript"
+    # it brings up the script's own WINDOW, so the row carries no "…": nothing more is asked first
+    menu.addMenuItem "Edit script", @, "editScript"
     menu
 
   editScript: ->

@@ -11,7 +11,7 @@ class ColorPickerWdgt extends Widget
   @augmentWith ControllerMixin
 
 
-  # I drive colours: what the "choose target property" menu filters the target's pins by, and the
+  # I drive colours: what the "target property" chooser filters the target's pins by, and the
   # adjective in the "set target" tooltip.
   producesPinKind: "color"
 

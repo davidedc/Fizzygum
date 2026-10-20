@@ -347,7 +347,7 @@ change that moves a class between core and any lazy part moves BOTH numbers iden
 with `sources: "none"` may not ship a lazy part at all (`buildProfile.py` fails the build: a lazy
 part's source *is* its code, since the image is harvested by booting `index.html`, where lazy parts
 do not load). So the appliance has no spreadsheet and no Makers — no Docs, Slides, Dashboards, Draw,
-Patch programming, Generic panel or Super Toolbar — and, correctly, no icons for them either: an
+Patch programming, Generic panel or Super toolbar — and, correctly, no icons for them either: an
 eager launcher on a tree without its engine is a desktop icon whose click can only reject. An
 appliance that wants the Makers back wants `sources: "lazy"`, which is a different artifact.
 

@@ -34,7 +34,7 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   # The arrow contract (reference-widgets plan §4.4): the bin refuses duplication. There is ONE
   # bin singleton; a copy of me could only be a second alias to it, while my arrow-less icon
   # promises the thing itself. Consulted by Widget's context-menu assembly (?-dispatched,
-  # nothing on Widget), which drops the "duplicate" row.
+  # nothing on Widget), which drops the "Duplicate" row.
   _refusesDuplication: ->
     true
 
@@ -66,7 +66,7 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   # Runs inside the drop's single settle, so add through the non-settling core.
   # DROPPING ONTO THE BIN ICON IS THE CLASSIC TRASH GESTURE (reference-widgets plan R5,
   # ratified 2026-08-19): sever every liveness edge into the dropped figure -- the same sever
-  # the "move to trash" row runs -- BEFORE filing it, so the bin keeps it: otherwise a
+  # the "Move to trash" row runs -- BEFORE filing it, so the bin keeps it: otherwise a
   # still-referenced widget escapes to the shelf on the next drain and the gesture silently
   # meant nothing. (Dropping a shortcut trashes the ALIAS only, never its referent -- see
   # BinWdgt._reactToChildDroppedInViewport, this gesture's open-window twin.)

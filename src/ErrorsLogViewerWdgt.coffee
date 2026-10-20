@@ -1,6 +1,6 @@
 # to make this error log viewer come up, edit any code
 # in the inspector so to get a compilation error
-# (e.g. unmatched parens) and click "save"
+# (e.g. unmatched parens) and click "Save"
 
 class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
@@ -17,7 +17,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   # and gets its real size from the window that wraps it, createErrorConsole.)
   # ALL options, no operand: the error console is opened by the world with nothing to
   # configure. It carries no target/callback pair -- an error log reports, it does not commit a
-  # value back to anyone, so my ok button just hides my window (hideLog) and the
+  # value back to anyone, so my OK button just hides my window (hideLog) and the
   # deliverValue path belongs to CodePromptWdgt alone.
   # defaultContents is read GUARDED so absence leaves the class-level "" standing: a bare
   # @param would overwrite it with undefined (R5).
@@ -72,16 +72,16 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @_buildMonoCodeAreaNoSettle @defaultContents
 
     # buttons -------------------------------
-    @clearButton = new SimpleButtonWdgt @, "clearTextPane", face: "clear"
+    @clearButton = new SimpleButtonWdgt @, "clearTextPane", face: "Clear"
     @_addNoSettle @clearButton
 
 
-    pauseButton = new SimpleButtonWdgt @, "pauseErrors", face: "pause"
-    unpauseButton = new SimpleButtonWdgt @, "unpauseErrors", face: "un-pause"
+    pauseButton = new SimpleButtonWdgt @, "pauseErrors", face: "Pause"
+    unpauseButton = new SimpleButtonWdgt @, "unpauseErrors", face: "Un-pause"
     @pauseToggle = new ToggleButtonWdgt pauseButton, unpauseButton, if @paused then 1 else 0
     @_addNoSettle @pauseToggle
 
-    @okButton = new SimpleButtonWdgt @, "hideLog", face: "ok"
+    @okButton = new SimpleButtonWdgt @, "hideLog", face: "OK"
     @_addNoSettle @okButton
 
     @_invalidateLayout()
@@ -104,7 +104,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
   # My pause toggle shows one of its two buttons at a time, in its own box, and has no size of
   # its own: in my footer band it takes the larger of its two buttons' preferred extents, so it
-  # keeps its size when it flips between "pause" and "un-pause".
+  # keeps its size when it flips between "Pause" and "Un-pause".
   _footerExtentOf: (button) ->
     return super button unless button is @pauseToggle
     width = 0

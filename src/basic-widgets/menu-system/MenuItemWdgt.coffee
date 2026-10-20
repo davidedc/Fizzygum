@@ -82,7 +82,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   # which is the same for every row, so it rides `opts`.
   #
   # The spec's per-item fields are unpacked onto LabelButtonWdgt's options here; an absent
-  # spec.label falls back to "close".
+  # spec.label falls back to "Close".
   #
   # MY LOOK is my context's, chosen once, here (_lookFor): a plain LIST's rows panel builds me as a
   # list row (`listRow`), in the flat look -- 17 px, state fills over my whole box; every other
@@ -112,7 +112,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       @_tickColumnReserved = true
     super commandSpec.target, commandSpec.action,
       closesUnpinnedPopUps: commandSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
-      labelString: (@rowReflection?.label ? commandSpec.label or "close")
+      labelString: (@rowReflection?.label ? commandSpec.label or "Close")
       fontRole: opts.fontRole ? look.font
       fontSize: opts.fontSize
       fontStyle: opts.fontStyle
@@ -420,18 +420,24 @@ class MenuItemWdgt extends LabelButtonWdgt
   menuEntryPreferredWidth: ->
     @_leadingWidth() + @label.width() + @_trailingWidth()
 
+  # THE WIDGET I STAND FOR, when my builder says I name one (representsAWidget): the widget my
+  # action is handed when I carry one (a chooser's pick, the widget a wire drives), else my target
+  # (a hierarchy menu's row, a "new parent" row). undefined for every other row. The one answer to
+  # "which widget is this row about": hovering me highlights it, and a test finds me by it
+  # (MacroToolkit.rowOfMenuStandingFor), since my label is a human name that reads alike for two
+  # widgets of one kind until the menu tells them apart.
+  representedWidget: ->
+    return undefined unless @representsAWidget
+    @argumentToAction1 ? @target
+
+  # What tells me from another row on a row that names ME (Widget.distinguishedRowName) — a chooser
+  # listing a list's rows, a hierarchy menu over a lifted-out row: my wording, 'Menu item "Demo"'.
+  _rowNameDistinction: ->
+    @labelString
+
   # MenuItemWdgt events:
   hoverEntered: ->
-
-    if @representsAWidget
-      if @argumentToAction1?
-        # this first case handles when you pick a widget
-        # as a target
-        widgetToBeHighlighted = @argumentToAction1
-      else
-        # this second case handles when you attach to a widget
-        widgetToBeHighlighted = @target
-      widgetToBeHighlighted.turnOnHighlight()
+    @representedWidget()?.turnOnHighlight()
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED
       @_changed()
@@ -439,15 +445,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       @startCountdownForBubbleHelp @toolTipMessage
 
   hoverExited: ->
-    if @representsAWidget
-      if @argumentToAction1?
-        # this first case handles when you pick a widget
-        # as a target
-        widgetToBeHighlighted = @argumentToAction1
-      else
-        # this second case handles when you attach to a widget
-        widgetToBeHighlighted = @target
-      widgetToBeHighlighted.turnOffHighlight()
+    @representedWidget()?.turnOffHighlight()
     unless @isListItem()
       @state = @STATE_NORMAL
       @_changed()

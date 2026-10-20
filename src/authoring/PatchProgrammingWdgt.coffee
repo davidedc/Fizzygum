@@ -5,8 +5,9 @@
 
 class PatchProgrammingWdgt extends GenericPanelWdgt
 
+  # the app's one name, as its desktop caption writes it (AppCatalog)
   colloquialName: ->
-    "Patch Programming"
+    "Patch programming"
 
   representativeIcon: ->
     new PatchProgrammingIconWdgt

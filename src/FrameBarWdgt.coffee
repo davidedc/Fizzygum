@@ -120,7 +120,7 @@ class FrameBarWdgt extends Widget
   # The internal structure of a window's chrome, not a user-meaningful target:
   # excluded from the right-click hierarchy/disambiguation menu exactly like
   # CommandPanelWdgt (see Widget.getHierarchyMenuWidgets) -- every action a
-  # user takes on the title strip belongs to the WINDOW ("a Frame" stays the
+  # user takes on the title strip belongs to the WINDOW ("Window" stays the
   # entry they navigate).
   hiddenFromHierarchyMenu: ->
     true
@@ -192,14 +192,19 @@ class FrameBarWdgt extends Widget
   # arrange grants the span between the buttons; a POP-UP HEADER's hugs its own text (the strip
   # sizes itself to it), its lines LEFT-aligned, and the arrange places it the title inset into the
   # header band. Both paint straight onto the strip's background, take their font from the bar
-  # spec's font role and their ink from the frame's look.
+  # spec's font role and their ink from the frame's look, and are BORN in the display case the
+  # frame decides for its title (FrameWdgt._titleDisplayCase), so the first measure of either --
+  # the header's hug above all -- is of the text as it shows. A piece rebuilt in the other style
+  # (a pinned menu's header becoming its window title) is born in the case its frame's kind at the
+  # rebuild calls for.
   _buildTitleNoSettle: (spec) ->
     look = @frame._frameLook()
+    displayCase = @frame._titleDisplayCase()
     if spec.titleStyle is "menuHeader"
       # BORN with its text: a multi-line text hugs its box only when told to (its box-hug core
       # is a one-shot, not a mode the way a plain string's is), so it must have something to
       # hug at build time. The frame re-asserts the same title right after.
-      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""), fontRole: spec.fontRole
+      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""), fontRole: spec.fontRole, displayCase: displayCase
       title.color = look.titleText
       title.alignLeft()
       @_addNoSettle title
@@ -212,7 +217,7 @@ class FrameBarWdgt extends Widget
     # the family, size and weight the spec's font role names, on EVERY engine: a bar title is chrome
     # like any other, and chrome keyed on the user agent renders one world two ways -- which is
     # precisely what the cross-engine suite leg reads, and reports, as a defect.
-    title = new StringWdgt "", fontRole: spec.fontRole
+    title = new StringWdgt "", fontRole: spec.fontRole, displayCase: displayCase
 
     title.color = look.titleText
     # a window title reads CENTRED in its strip (ruling C13): the arrange grants me a box centred
@@ -236,7 +241,10 @@ class FrameBarWdgt extends Widget
     pieces = spec.pieces
     rosterChanged = false
     # whatever the frame last titled itself survives every piece swap below (an empty window keeps
-    # saying "empty window", a grip that widens back into a bar gets its title back)
+    # saying "empty window", a grip that widens back into a bar gets its title back). The STORED
+    # words carry over, never the shown form: a rebuilt piece shows them in the display case it is
+    # born in (_buildTitleNoSettle), so a pinned menu's "rectangle" header, shown "RECTANGLE",
+    # becomes the window title "Rectangle".
     titleTextCarriedOver = @label?.text
 
     # the title pair (strip background + text piece) first: a roster that drops the title retires

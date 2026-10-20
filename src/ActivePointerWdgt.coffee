@@ -1415,7 +1415,7 @@ class ActivePointerWdgt extends Widget
           # FIGURE that comes onto the hand — reuse the sole-content island, extract a genuine sub-part into
           # a fresh island, or (off any island) return the widget UNCHANGED ⇒ byte-identical dormant — then
           # dissolve an identity compensating sugar wrapper so the BARE content grabs. The whole two-step is
-          # _resolvePickUpFigure, SHARED with the menu "pick up" entry point (pickUpMenuAction) so the two
+          # _resolvePickUpFigure, SHARED with the menu "Pick up" entry point (pickUpMenuAction) so the two
           # cannot drift; its doc comment carries the full pick-out / Bug-F reasoning. Resolved HERE (once,
           # at drag-start) so BOTH the grab below and the "pointer left its bounds, re-centre" re-grab
           # further down in this method operate on the SAME figure. It does NOT set switcherooHappened

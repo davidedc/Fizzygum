@@ -1,5 +1,8 @@
 class USAMapCreatorButtonWdgt extends CreatorButtonWdgt
 
+  # stated rather than derived: an acronym keeps its capitals
+  colloquialName: -> "USA map creator button"
+
   toolTipMessage: "USA map"
 
   createAppearance: -> new LittleUSAIconAppearance @, WorldWdgt.theme.toolbarGlyph

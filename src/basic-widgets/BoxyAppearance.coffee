@@ -35,7 +35,7 @@ class BoxyAppearance extends Appearance
   ruleColor: undefined
   ruleWidth: 1
 
-  # ONE number, for the readers that want one (the "corner radius..." prompt's default,
+  # ONE number, for the readers that want one (the "Corner radius…" prompt's default,
   # BubblyAppearance's outline): the uniform radius as stored, or the LARGEST of per-corner radii.
   getCornerRadius: ->
     if Array.isArray @widget.cornerRadius
@@ -264,7 +264,7 @@ class BoxyAppearance extends Appearance
     # ⚠ through the GETTER, which owns the absent case: this appearance is worn by widgets that
     # never declare a cornerRadius of their own (a frame, a folder window), and reading the field
     # raw threw on every click of this item for those.
-    @widget.prompt menuItem.parent.popUpTitle() + "\ncorner\nradius:", @widget, "setCornerRadius",
+    @widget.prompt menuItem.parent.promptTitleAsking("corner\nradius:"), @widget, "setCornerRadius",
       defaultContents: @getCornerRadius().toString()
       floorNum: 0
       ceilingNum: 100
@@ -273,7 +273,7 @@ class BoxyAppearance extends Appearance
   # Boxy menus:
   addShapeSpecificMenuItems: (menu) ->
     menu.addLine()
-    menu.addMenuItem "corner radius...", @, "cornerRadiusPopout", toolTip: "set the corner's\nradius"
+    menu.addMenuItem "Corner radius…", @, "cornerRadiusPopout", toolTip: "set the corner's\nradius"
     menu
   
   # The pins my SHAPE contributes to the widget wearing me (Widget.pins concatenates them). Write-only:

@@ -32,7 +32,7 @@
 #     canonical one (it has no value to read), and it is also what most of Widget's own pins are
 #     today -- their fields are readable, but no reader METHOD exists and inventing one here would
 #     be fabricating a contract nothing implements.
-#   • no `set` => a READ-ONLY pin. It never appears in a "choose target property" menu, because
+#   • no `set` => a READ-ONLY pin. It never appears in a "target property" chooser, because
 #     nothing can drive it. StringFieldWdgt's `value` is the canonical one: it holds its string in
 #     a child StringWdgt, so `getValue` reaches through the child and there is simply no one-call
 #     setter twin to pair it with. The arrays could not express this at all.
@@ -49,13 +49,13 @@
 # promises nothing, so a follower is never offered a relationship whose reverse half is dead. That
 # default is the whole reason the flag exists (connector plan §P2: "a pin-to-pin gesture could offer
 # binds whose reverse half silently never fires").
-#   ⚠ It is NOT what `bind ⇄` consults. A bind at NODE granularity is two ordinary wires and its
+#   ⚠ It is NOT what "Bind ⇄" consults. A bind at NODE granularity is two ordinary wires and its
 # reverse half fires from `updateTarget`; `announces` is the PIN-granularity precondition, read by
 # ControllerMixin.canTrackWire. The two granularities keep their own machinery (§P2's table).
 
 class PinSpec
 
-  # what the "choose target property" menu row says
+  # what the "target property" chooser's row says
   label: undefined
   # the kinds of value this pin accepts, always an array; see acceptsKind
   kinds: undefined

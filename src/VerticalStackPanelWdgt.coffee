@@ -120,7 +120,7 @@ class VerticalStackPanelWdgt extends Widget
     @__commitExtent(extent) if extent?
     @color = color if color?
 
-  # Capability query (duck-typed at the call sites): may "edit layout" show content
+  # Capability query (duck-typed at the call sites): may "Edit layout" show content
   # drop-slots between my elements? Follows my drop gate — slots are DROP targets, so a
   # stack that refuses drops (CommandPanelWdgt: menus are not user-editable layouts)
   # refuses slots for the same reason.

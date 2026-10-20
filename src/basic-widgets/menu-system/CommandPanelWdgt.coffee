@@ -134,10 +134,14 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   _holdingPopUp: ->
     @parent?.holdingPopUp?()
 
-  # The name of the pop-up I am the body of — what a ROW of mine prefixes its prompt's question
-  # with ("Rectangle\nalpha value:"), so the prompt says WHAT it is about.
-  popUpTitle: ->
-    @_holdingPopUp()?.titleText?()
+  # THE TITLE OF A PROMPT ONE OF MY ROWS OPENS: the name of the pop-up I am the body of, as stored,
+  # then the prompt's question on the lines below it ("rectangle\nalpha\nvalue:"), so the prompt
+  # says WHAT it is about. A pop-up with no title (an untitled submenu), or no pop-up at all (a
+  # list's rows), has no name to give, and the question stands alone. Every prompt a row opens
+  # takes its title here: the row's dispatcher hands the action the row itself, whose parent I am.
+  promptTitleAsking: (question) ->
+    nameOfMyPopUp = @_holdingPopUp()?.titleText?()
+    if nameOfMyPopUp then nameOfMyPopUp + "\n" + question else question
 
   # menu rows sit FLUSH (contiguous hover highlights); only the outer border
   # keeps my padding. See the base's interElementGap policy comment.
@@ -207,9 +211,52 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # _applyRowReflectionConnector lane the drain calls. I hold no edge and take no part — what
   # reflects is the ROW, so a row keeps showing its value wherever it goes, including out of me.
 
+  # A VALUE's words as the label of the row that offers it: capitalised like every other row's
+  # label ("top" → "Top", "vert. stripes" → "Vert. stripes"), one character for one. Only the
+  # LABEL is written so: the row's argument, its reflection's value and anything else keyed on
+  # the value keep the value itself. A name that is data (a font, a member, a class) is never
+  # passed here: it shows as it is.
+  @rowLabelOfValue: (aValue) ->
+    StringWdgt.inDisplayCase aValue, "sentence"
+
+  # THE LABELS OF ONE MENU'S ROWS THAT NAME WIDGETS, one per entry of `widgets` (row order), told
+  # apart from each other. A builder asks it ONCE per menu, with every widget its rows will name,
+  # before adding them — a row's wording depends on its neighbours, so no row can be named alone.
+  # Each widget reads its row name (Widget.rowName: "Rectangle"); widgets whose rows would read ALIKE
+  # take their distinguishing detail (Widget.distinguishedRowName: 'Text "Hello"', 'Window "Docs
+  # Maker"'); widgets whose rows STILL read alike are numbered in order of first appearance, the
+  # first one left as it is ("Rectangle", "Rectangle 2"). A widget whose rows read like no other
+  # widget's keeps its bare name. The NAME is the widget's, not the row's: a widget named by several
+  # rows (a controller wired twice into one widget) reads the same in each of them.
+  #   `labelFromName` (name, index) -> label is what a row says AROUND its widget's name, for rows
+  # that say more than the name (a wire's row: 'Slider · value'): rows are told apart by the whole
+  # of what they say. Absent, a row says the name alone.
+  @rowLabelsNaming: (widgets, labelFromName = ((name) -> name)) ->
+    nameOf = new Map
+    nameOf.set each, each.rowName() for each in widgets
+    labelAt = (i) -> labelFromName (nameOf.get widgets[i]), i
+    firstAppearances = widgets.filter (each, i) -> widgets.indexOf(each) is i
+    # the widgets with a row that reads like a row of ANOTHER widget, in order of first appearance
+    readingAlike = ->
+      alike = new Set
+      for i in [0...widgets.length]
+        for j in [i + 1...widgets.length]
+          if widgets[j] isnt widgets[i] and labelAt(j) is labelAt(i)
+            alike.add widgets[i]
+            alike.add widgets[j]
+      (each for each in firstAppearances when alike.has each)
+    for each in readingAlike()
+      nameOf.set each, each.distinguishedRowName()
+    timesSeen = new Map
+    for each in readingAlike()
+      name = nameOf.get each
+      timesSeen.set name, (timesSeen.get(name) ? 0) + 1
+      nameOf.set each, name + " " + timesSeen.get(name) if timesSeen.get(name) > 1
+    (labelAt i for i in [0...widgets.length])
+
   # Drop the row with this label. A row's label is its plain wording whatever it shows -- its tick
   # and its submenu chevron are drawn beside it, never written into it -- so the name a caller
-  # removes a row by ("soft wrap") is the text on screen.
+  # removes a row by ("Soft wrap") is the text on screen.
   removeMenuItem: (label) ->
     item = @firstChildSuchThat (m) ->
       m.label? and m.label.text == label

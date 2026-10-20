@@ -36,6 +36,11 @@ class StringWdgt extends Widget
     return @boundsContainPoint aPoint unless cornerRadius?
     (@boundsContainPoint aPoint) and BoxyAppearance.roundedBoxContainsPixelCentreOf (aPoint.subtract @position()), @width(), @height(), [cornerRadius, cornerRadius, cornerRadius, cornerRadius]
 
+  # a line of text is "text" to a person ("string" is a programmer's word); my subclasses inherit
+  # it, so one that is something more than a text names itself
+  colloquialName: ->
+    "text"
+
   # I drive text, and the text I export is my `text` pin (see `pins`, below).
   # ⚠ "string", not "numerical": the target-property menu I open offers my target's STRING pins,
   # because a text widget drives text. SimpleTextWdgt's set-target tooltip said "numerical" — the
@@ -76,6 +81,12 @@ class StringWdgt extends Widget
   # other than numbers and "-" and "."
   isNumeric: undefined
   isPassword: false
+  # HOW MY TEXT SHOWS, as a case over the words I store: undefined shows them as they are, "upper"
+  # every character in capitals, "sentence" the first character in capitals and the rest as they
+  # are. A DISPLAY case, never written into `text`: every reader of `text` reads the stored words,
+  # while every measure, fit, wrap, paint and back-buffer key of mine reads the shown form through
+  # transformTextOneToOne, so a box that hugs me hugs what shows. A password shows no case.
+  displayCase: undefined
   isShowingBlanks: false
 
   blanksColor: Color.create 180, 140, 140
@@ -260,6 +271,9 @@ class StringWdgt extends Widget
     @isHeaderLine = opts.headerLine ? false
     @isNumeric = opts.numeric ? false
     @color = opts.color ? (Color.create 37, 37, 37)
+    # only when passed, so a text without a case keeps the class's: my shown text is computed from
+    # it on the next line, so it is set before anything measures me
+    @displayCase = opts.displayCase if opts.displayCase?
 
     # additional properties:
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
@@ -545,6 +559,14 @@ class StringWdgt extends Widget
     @setVerticalAlignment AlignmentSpecVertical.BOTTOM
     @
   
+  # What tells me from another text on a row that names me (Widget.distinguishedRowName): the text
+  # I SHOW — in my display case, a password as its asterisks — whose start the row quotes.
+  _rowNameDistinction: ->
+    @transformTextOneToOne @text
+
+  # My DEBUG representation (Widget.toString) with an extract of my text: 'a StringWdgt#3
+  # ("Hello↵World...")'. A row that NAMES me reads my rowName instead. While the test harness plays,
+  # the extract is hidden (hidingOfWidgetsContentExtractInLabels), like the instance number.
   toString: ->
     # e.g. 'a StringWdgt("Hello World")'
     firstPart = super()
@@ -799,11 +821,40 @@ class StringWdgt extends Widget
     world.cacheForTextMeasurements.set cacheKey, cacheEntry
     return cacheEntry
 
-  # this should be a 1-1 transformation.
-  # for example substitute any letter with "*" for passwords
-  # or turn everything to uppercase
+  # My text as it SHOWS. This must be a 1-1 transformation: the shown text is exactly as long as
+  # the stored one, so a slot in one is the same slot in the other. A password shows one "*" per
+  # character and no case (an asterisk has none); any other text shows in my display case.
   transformTextOneToOne: (theText) ->
-    return (if @isPassword then @obfuscateAsPassword("*", theText.length) else theText)
+    return @obfuscateAsPassword("*", theText.length) if @isPassword
+    StringWdgt.inDisplayCase theText, @displayCase
+
+  # A text in a DISPLAY CASE, one character for one: "upper" capitalises every character,
+  # "sentence" the first one only, and no case leaves the text as it is. A character whose capital
+  # is longer than itself ("ß" capitalises to "SS") is kept as it is, so the result is always
+  # exactly as long as the text (transformTextOneToOne's contract).
+  @inDisplayCase: (theText, displayCase) ->
+    capitalOf = (character) ->
+      capital = character.toUpperCase()
+      if capital.length is 1 then capital else character
+    switch displayCase
+      when "upper"
+        (capitalOf character for character in theText).join ""
+      when "sentence"
+        if theText.length is 0 then theText else (capitalOf theText[0]) + theText.slice 1
+      else
+        theText
+
+  # The NON-settling core of a display-case change: what shows follows at once (and a box that hugs
+  # my text re-hugs it), while the stored text is untouched. Called inside an enclosing settle, like
+  # _setTextNoSettle: a frame re-asserts its title's case as it re-titles it
+  # (FrameWdgt._retitleNoSettle).
+  _setDisplayCaseNoSettle: (aDisplayCase) ->
+    return if @displayCase is aDisplayCase
+    @displayCase = aDisplayCase
+    @_synchroniseTextAndActualText()
+    @_sizeToTextAndDisableFittingNoSettle() if @autoSizeBoxToText
+    @_changed()
+    @_reflowContainedTextThenInvalidateLayout()
 
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
@@ -857,6 +908,7 @@ class StringWdgt extends Widget
   createBufferCacheKey: ->
     @extent().toString() + "-" +
     @isPassword  + "-" +
+    @displayCase  + "-" +
     @isShowingBlanks  + "-" +
     @originallySetFontSize + "-" +
     @buildCanvasFontProperty() + "-" +
@@ -1187,7 +1239,7 @@ class StringWdgt extends Widget
     @textPossiblyCroppedToFit.length
 
   fontSizePopout: (menuItem)->
-    @prompt menuItem.parent.popUpTitle() + "\nfont\nsize:", @, "setFontSize",
+    @prompt menuItem.parent.promptTitleAsking("font\nsize:"), @, "setFontSize",
       defaultContents: @originallySetFontSize.toString()
       floorNum: 6
       ceilingNum: 500
@@ -1195,7 +1247,7 @@ class StringWdgt extends Widget
 
   editPopout: (menuItem)->
     if menuItem?
-      title = menuItem.parent.popUpTitle() + "\nedit:"
+      title = menuItem.parent.promptTitleAsking "edit:"
     else
       title = "edit:"
 
@@ -1269,59 +1321,59 @@ class StringWdgt extends Widget
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "edit...", @, "editPopout", toolTip: "set this String's\ncontent"
-    menu.addMenuItem "font size...", @, "fontSizePopout", toolTip: "set this String's\nfont point size"
+    menu.addMenuItem "Edit…", @, "editPopout", toolTip: "set this String's\ncontent"
+    menu.addMenuItem "Font size…", @, "fontSizePopout", toolTip: "set this String's\nfont point size"
 
-    menu.addMenuItem "font", @, "fontsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "pick a font"
+    menu.addMenuItem "Font", @, "fontsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "pick a font"
 
     if @isBold
-      menu.addMenuItem "normal weight", @, "toggleWeight"
+      menu.addMenuItem "Normal weight", @, "toggleWeight"
     else
-      menu.addMenuItem "bold", @, "toggleWeight"
+      menu.addMenuItem "Bold", @, "toggleWeight"
 
     if @isItalic
-      menu.addMenuItem "non-italic", @, "toggleItalic"
+      menu.addMenuItem "Non-italic", @, "toggleItalic"
     else
-      menu.addMenuItem "italic", @, "toggleItalic"
+      menu.addMenuItem "Italic", @, "toggleItalic"
 
     if @isHeaderLine
-      menu.addMenuItem "no header line", @, "toggleHeaderLine"
+      menu.addMenuItem "No header line", @, "toggleHeaderLine"
     else
-      menu.addMenuItem "header line", @, "toggleHeaderLine"
+      menu.addMenuItem "Header line", @, "toggleHeaderLine"
 
 
     if @isPassword
-      menu.addMenuItem "show characters", @, "toggleIsPassword"
+      menu.addMenuItem "Show characters", @, "toggleIsPassword"
     else
-      menu.addMenuItem "hide characters", @, "toggleIsPassword"
+      menu.addMenuItem "Hide characters", @, "toggleIsPassword"
 
     menu.addLine()
     if @horizontalAlignment != AlignmentSpecHorizontal.LEFT
-      menu.addMenuItem "← align left", @, "alignLeft"
+      menu.addMenuItem "← Align left", @, "alignLeft"
     if @horizontalAlignment != AlignmentSpecHorizontal.CENTER
-      menu.addMenuItem "∸ align center", @, "alignCenter"
+      menu.addMenuItem "∸ Align center", @, "alignCenter"
     if @horizontalAlignment != AlignmentSpecHorizontal.RIGHT
-      menu.addMenuItem "→ align right", @, "alignRight"
+      menu.addMenuItem "→ Align right", @, "alignRight"
 
     menu.addLine()
     if @verticalAlignment != AlignmentSpecVertical.TOP
-      menu.addMenuItem "↑ align top", @, "alignTop"
+      menu.addMenuItem "↑ Align top", @, "alignTop"
     if @verticalAlignment != AlignmentSpecVertical.MIDDLE
-      menu.addMenuItem "⍿ align middle", @, "alignMiddle"
+      menu.addMenuItem "⍿ Align middle", @, "alignMiddle"
     if @verticalAlignment != AlignmentSpecVertical.BOTTOM
-      menu.addMenuItem "↓ align bottom", @, "alignBottom"
+      menu.addMenuItem "↓ Align bottom", @, "alignBottom"
 
     menu.addLine()
 
     if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
-      menu.addMenuItem "←☓→ don't expand to fill", @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "←☓→ Don't expand to fill", @, "togglefittingSpecWhenBoundsTooLarge"
     else
-      menu.addMenuItem "←→ expand to fill", @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "←→ Expand to fill", @, "togglefittingSpecWhenBoundsTooLarge"
 
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-      menu.addMenuItem "→← shrink to fit", @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "→← Shrink to fit", @, "togglefittingSpecWhenBoundsTooSmall"
     else
-      menu.addMenuItem "→⋯← crop to fit", @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "→⋯← Crop to fit", @, "togglefittingSpecWhenBoundsTooSmall"
 
     # Deliberately NOT routed through ControllerMixin._addTargetConnectionMenuEntries: I offer the
     # connect item on the index page ONLY, which is the whole reason I build this block by hand.
@@ -1329,10 +1381,10 @@ class StringWdgt extends Widget
     # wherever I am, even where I offer no way to make a new one.
     if world.isIndexPage
       menu.addLine()
-      # ONE row for the gestures, as the shared block does it: the submenu behind it offers "connect
-      # to" and — when something can actually be bound to — "bind ⇄". Grouping is what keeps a
+      # ONE row for the gestures, as the shared block does it: the submenu behind it offers "Connect
+      # to" and — when something can actually be bound to — "Bind ⇄". Grouping is what keeps a
       # second gesture from costing every controller's menu a second row.
-      menu.addMenuItem "connect", @, "openConnectionGestureMenu", opensSubmenu: true, toolTip: "connect to\nanother widget"
+      menu.addMenuItem "Connect", @, "openConnectionGestureMenu", opensSubmenu: true, toolTip: "connect to\nanother widget"
     @_addWireMenuEntries menu
 
 

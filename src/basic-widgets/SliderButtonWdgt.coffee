@@ -4,6 +4,10 @@
 
 class SliderButtonWdgt extends CircleBoxWdgt
 
+  # what a person calls me; without it the chain answers my base's "circle-box"
+  colloquialName: ->
+    "slider knob"
+
   # The slider knob is CHROME -- the interactive handle of a slider/scrollbar, never editor content.
   # Dragging or clicking it must NOT make it world.editorFocusWdgt: framing the little knob is pure visual
   # noise (there is nothing a user acts on about the knob itself). Same exemption as the other affordances

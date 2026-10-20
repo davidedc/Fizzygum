@@ -10,7 +10,7 @@
 # (Widget._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle) -- which is reachable
 # from the base widget context menu in every build, so it and this base ship in core.
 # The spacer and the adder/droplet appear only while layouts are being edited: they
-# live in the LAZY 'authoring' part, product-reachable via "edit layout" on a division
+# live in the LAZY 'authoring' part, product-reachable via "Edit layout" on a division
 # container's context menu (Widget.editLayout awaits the part).
 #
 # That shared paint scaffold lives in LayoutChromeAppearance; each subclass

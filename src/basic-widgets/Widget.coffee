@@ -99,7 +99,7 @@ class Widget extends TreeNode
   # BoxWdgt because it is part of the widget↔appearance contract and always was: every rounded
   # appearance reads `@widget.cornerRadius` unconditionally and supplies its own default when the
   # widget declares none (BoxyAppearance.getCornerRadius). Undeclared, that read was the only
-  # statement of the contract — and its setter twin lived on ONE subclass, so the "corner radius..."
+  # statement of the contract — and its setter twin lived on ONE subclass, so the "Corner radius…"
   # prompt and the `corner radius` pin that every rounded widget offers reached nothing on the
   # sixteen classes that are not BoxWdgts.
   #   `undefined` means "I have no opinion, use the shape's default" — which is why the field is not
@@ -169,7 +169,7 @@ class Widget extends TreeNode
   # if a widget is a "template" it means that
   # when you floatDrag it, it creates a copy of itself.
   # it's a nice shortcut instead of doing
-  # right click and then "duplicate..."
+  # right click and then "Duplicate"
   isTemplate: false
   _acceptsDrops: false
   fps: 0
@@ -245,7 +245,7 @@ class Widget extends TreeNode
 
   # ── the two per-class halves of the PIN protocol (see `pins`, below) ──────────────────────────
   # What kind of value I produce when I act as a dataflow SOURCE, which is what decides which of a
-  # target's pins my "choose target property" menu may offer ("numerical" | "string" | "color", or
+  # target's pins my "target property" chooser may offer ("numerical" | "string" | "color", or
   # "any" for a widget that forwards whatever it received). Only controllers declare it.
   #   ONE declaration feeds both halves of the set-target UI: `openTargetPropertySelector` filters the
   # target's pins by it, and `ControllerMixin._addTargetConnectionMenuEntries` words its tooltip from
@@ -615,7 +615,12 @@ class Widget extends TreeNode
 
 
 
-  # Widget string representation: e.g. 'a Widget' or 'a Widget#2'
+  # Widget string representation: e.g. 'a Widget' or 'a Widget#2' — my DEBUG name, the one I show
+  # as a VALUE (the inspector's fields, error messages) and the seed of my scatter spot in a panel
+  # (PanelWdgt._addInPseudoRandomPositionNoSettle hashes it). A row that NAMES me reads my rowName
+  # instead. While the test harness plays, the instance number is hidden
+  # (hidingOfWidgetsNumberIDInLabels), so none of these depends on how many widgets of my class were
+  # built before me, the framework's own constructions included.
   toString: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfWidgetsNumberIDInLabels
       name = @widgetClassString()
@@ -670,7 +675,7 @@ class Widget extends TreeNode
   closeFromContainerFrame: (containerWindow) ->
     containerWindow.close()
 
-  # "move to trash" (reference-widgets plan §4.3, ratified sever-and-close): close, but FIRST cut
+  # "Move to trash" (reference-widgets plan §4.3, ratified sever-and-close): close, but FIRST cut
   # every liveness edge aimed at my figure — shortcuts pointing at me die, wires into me are
   # revoked — so the close's bin filing STICKS: nothing reachable is left to make the end-of-cycle
   # drain re-file me to the shelf. Where no such edge exists this is exactly close-to-bin, which is
@@ -690,7 +695,7 @@ class Widget extends TreeNode
     world._severLivenessEdgesIntoWdgtNoSettle @_enclosingIslandFigure()
     @_closeNoSettle()
 
-  # Does "move to trash" differ from plain close/delete for me right now? — i.e. is there an
+  # Does "Move to trash" differ from plain close/delete for me right now? — i.e. is there an
   # inbound liveness edge the sever would cut. Asked by the context-menu builder so the trash row
   # only appears when it MEANS something (a row on every menu is rent nothing measures); the walk
   # is O(everything widget-bearing) but menu-opening is a user gesture, like the close sites' ask.
@@ -716,7 +721,7 @@ class Widget extends TreeNode
     else
       @enableDragsDropsAndEditing @
 
-  # The shared "enable/disable editing" lock menu entry appended by the content-locking
+  # The shared "Enable editing" / "Disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,
   # VerticalStackViewportWdgt). The children list varies by
   # container (the viewport sources it from @contents), so it is passed in.
@@ -724,9 +729,9 @@ class Widget extends TreeNode
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()
       if !@dragsDropsAndEditingEnabled
-        menu.addMenuItem "enable editing", @, "enableDragsDropsAndEditingFromMenu", toolTip: "lets you drag content in and out"
+        menu.addMenuItem "Enable editing", @, "enableDragsDropsAndEditingFromMenu", toolTip: "lets you drag content in and out"
       else
-        menu.addMenuItem "disable editing", @, "disableDragsDropsAndEditingFromMenu", toolTip: "prevents dragging content in and out"
+        menu.addMenuItem "Disable editing", @, "disableDragsDropsAndEditingFromMenu", toolTip: "prevents dragging content in and out"
     menu.removeConsecutiveLines()
 
   # Widgets destroying ======
@@ -826,7 +831,7 @@ class Widget extends TreeNode
     #   ⚠ IT GOES LAST, and that placement is what makes it TERMINATE. Severing is not an edge
     # rewrite: a shortcut's whole meaning IS the edge, so it answers by destroying its own
     # SUBTREE — and a holder is free to CONTAIN its referent (drop a widget onto its own
-    # shortcut icon, or reparent it in there with "attach..."), which points that cascade back
+    # shortcut icon, or reparent it in there with "Attach"), which points that cascade back
     # down at me. The recursion therefore walks inbound-REFERENCE edges and CONTAINMENT edges
     # together, and their union holds a two-cycle exactly there; reference edges alone are a
     # DAG (a referent is ctor-fixed, so every edge points at an OLDER widget) and the
@@ -2224,7 +2229,7 @@ class Widget extends TreeNode
     content
 
   # Affine transforms (§6 Phase 4D-2a): the shared figure resolution for BOTH pick-up entry points — the
-  # drag pipeline (ActivePointerWdgt.determineGrabs) and the menu "pick up" item (pickUpMenuAction) — so
+  # drag pipeline (ActivePointerWdgt.determineGrabs) and the menu "Pick up" item (pickUpMenuAction) — so
   # the two cannot drift. Two steps:
   #   1. Resolve the FIGURE that comes onto the hand (_resolvePickOutFigureNoSettle): when I am grabbed from
   #      inside a non-identity island, either REUSE the existing island (I am its sole content — Phase-1's
@@ -2808,10 +2813,10 @@ class Widget extends TreeNode
   
   # The write half of the `corner radius` pin an appearance contributes (BoxyAppearance /
   # BubblyAppearance / MenuAppearance all declare it), and the target of that shape's
-  # "corner radius..." prompt. Both dispatch on the WIDGET — a pin's setter is called as
+  # "Corner radius…" prompt. Both dispatch on the WIDGET — a pin's setter is called as
   # `consumer[pin.setterName]` and the prompt as `@widget[action]` — which is why this must live
   # where every wearer can answer it, not on the one subclass that happened to introduce it.
-  #   The pin-setter contract (widget-authoring-guidelines §11): every delivery — wire, prompt Ok,
+  #   The pin-setter contract (widget-authoring-guidelines §11): every delivery — wire, prompt OK,
   # controller — passes ONE argument, the value.
   setCornerRadius: (radius) ->
     if typeof radius is "number"
@@ -3344,17 +3349,19 @@ class Widget extends TreeNode
     @parent.removeChild @
 
   # My name in the product's own words: window titles, inspector and console titles, the drag-embed
-  # hint, the shortcut auto-namer, the name a saved file gets.
+  # hint, the shortcut auto-namer, the name a saved file gets, the rows that name me (rowName).
   #   DERIVED from my class name, because a name every class has to REMEMBER to write is a name most
   # of them do not write — 200 of 267 widget classes carry no override, and the flat `"generic
   # widget"` this replaces was what all 200 of them called themselves, in title bars and file names
   # alike. Deriving makes the default TRUE instead of merely present, and an override an editorial
   # improvement rather than the only way to avoid a lie.
   #   Lowercase words, because that is what every consumer wants: they drop it into a sentence ("drop
-  # it into the …?"), parenthesise it ("Object Inspector (analog clock)"), or prefix it ("Console
-  # for: …", which lowercases defensively today). Override when the derivation reads wrong, or when
-  # the thing has a NAME of its own rather than a description — "Desktop", "Bin", "Fizzytiles",
-  # "Docs Maker".
+  # it into the …?"), or follow a dash with it ("Object Inspector — analog clock", "Console —
+  # rectangle"); a title that STARTS with it capitalises it at display, never here. Override when the
+  # derivation reads wrong — a programmer's word ("string", "viewport"), an inherited name that is
+  # not mine ("circle-box" on a slider's knob), an acronym or a proper name lowercased ("usa",
+  # "fizzygum") — or when the thing has a NAME of its own rather than a description — "Desktop",
+  # "Bin", "Fizzytiles", "Docs Maker" — which keeps its capitals.
   # The BASE answer, derived from the class name; ~50 classes override this to state their own
   # (and some to ask a collaborator — a transform frame answers its sole content's name). The
   # derivation itself lives in Utils because it is not a widget question: the object inspector is
@@ -3362,6 +3369,42 @@ class Widget extends TreeNode
   # answer through THIS method, arbitrary values through `Utils.colloquialNameOf`.
   colloquialName: ->
     Utils.derivedColloquialName @
+
+  # ── MY NAME ON A ROW THAT NAMES ME ───────────────────────────────────────────────────────────
+  # The rows that stand for a widget — a hierarchy menu's, the "new parent", "target" and "bind
+  # with" choosers', a controller's wire rows — read its HUMAN name: my colloquialName, its first
+  # character capitalised for the row ("Rectangle", "Window", "Desktop"), on one line. Never my
+  # class name, never my instance number. The stored colloquialName keeps the lowercase words a
+  # sentence uses.
+  #   Two rows of one menu that would read alike are told apart by the menu that builds them, all
+  # its rows at once (CommandPanelWdgt.rowLabelsNaming): first by distinguishedRowName, then, where
+  # they still read alike, by a number in row order ("Rectangle", "Rectangle 2"). So the common row
+  # is the bare name, and a detail shows only where it tells two rows apart.
+  rowName: ->
+    StringWdgt.inDisplayCase (@_oneLineStartOf @colloquialName(), 50), "sentence"
+
+  # My row name with the DETAIL that tells me from another widget of my kind, when my kind has
+  # one (_rowNameDistinction) — a text by its start, a window by its title, quoted in STRAIGHT
+  # quotes (the font atlases carry no curly ones): 'Text "Hello world"', 'Window "Docs Maker"'.
+  # The detail is cut to its first 20 characters. My plain rowName when my kind has no detail.
+  distinguishedRowName: ->
+    detail = @_rowNameDistinction()
+    return @rowName() unless detail?
+    @rowName() + " \"" + (@_oneLineStartOf detail, 20) + "\""
+
+  # What tells me from another widget of my kind on a row, as plain text, or undefined when my kind
+  # has nothing to tell (the common case). A text answers what it shows, a window its title
+  # (StringWdgt, FrameWdgt).
+  _rowNameDistinction: ->
+    undefined
+
+  # A text as one line of at most maxLength characters: every run of newlines, tabs and spaces
+  # becomes ONE space (a row never draws a "↵", which no font atlas carries), the ends are trimmed,
+  # and a longer text is cut and ends in "…".
+  _oneLineStartOf: (text, maxLength) ->
+    oneLine = text.replace(/\s+/g, " ").trim()
+    return oneLine if oneLine.length <= maxLength
+    oneLine.slice(0, maxLength).trimEnd() + "…"
 
   representativeIcon: ->
     new WidgetIconWdgt
@@ -3387,7 +3430,7 @@ class Widget extends TreeNode
     # caller. Introduce it with the SECOND one.
     @removeFromTree() if @parent?
 
-  # THE MENU ADAPTER for the "create shortcut" item — the shape shared with
+  # THE MENU ADAPTER for the "Create shortcut" item — the shape shared with
   # PanelWdgt.makeFolderFromMenu and StringWdgt.setFontNameFromMenu. ButtonWdgt dispatches a FIXED
   # 4-slot convention (`@target[@action].call @target, theButton, subject, arg1, arg2`), so a menu item
   # carrying no arguments of its own still arrives with WIDGETS in the leading slots. Keeping the
@@ -3410,7 +3453,7 @@ class Widget extends TreeNode
   # threaded to the shortcut's constructor: the FILING paths (createReferenceAndClose,
   # PanelWdgt.makeFolder) pass true (the icon left behind IS the widget's primary
   # representation — bare art, deep copy), while this default — the deliberate
-  # "create shortcut" alias — stays a reference (arrow badge, shallow copy).
+  # "Create shortcut" alias — stays a reference (arrow badge, shallow copy).
   createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
     @_settleLayoutsAfter => @_createReferenceNoSettle placeToDropItIn, referenceName, opts
 
@@ -3420,8 +3463,8 @@ class Widget extends TreeNode
   # shortcut then takes the grid's next free slot (IconGridPanelWdgt._placeIconInNextFreeSlotNoSettle),
   # at the standard desktop-icon extent: the slot the public add gives the icons of the other
   # creation paths (FolderWindowWdgt / FrameWdgt.createReference, PanelWdgt.makeFolder). That holds
-  # for every caller of this core: "create shortcut", a filing (_createReferenceAndCloseNoSettle --
-  # a window closed to the desktop or into a folder, the save prompt's Ok) and a widget dropped onto
+  # for every caller of this core: "Create shortcut", a filing (_createReferenceAndCloseNoSettle --
+  # a window closed to the desktop or into a folder, the save prompt's OK) and a widget dropped onto
   # a folder's icon or into its open window. Anywhere else the shortcut stays where the add put it.
   _createReferenceNoSettle: (placeToDropItIn = world, referenceName, opts = {}) ->
     # don't create new reference if it exists already
@@ -3439,7 +3482,7 @@ class Widget extends TreeNode
     @bringToForeground()
 
   # THE ONE seam deciding WHICH shortcut class represents me, consulted by the core above — so
-  # the answer holds on EVERY creation path: the menu's "create shortcut", a folder-drop filing,
+  # the answer holds on EVERY creation path: the menu's "Create shortcut", a folder-drop filing,
   # and the save-close prompt all reach it. Overridden by FrameWdgt (its CONTENT may specialize
   # — a script window yields a run-on-double-click ScriptShortcutWdgt) and FolderWindowWdgt
   # (a folder shortcut). Pure builder: the core places and sizes what this returns.
@@ -3448,7 +3491,7 @@ class Widget extends TreeNode
 
   # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
   # (FolderShortcutWdgt / FolderPanelWdgt._reactToChildDropped, inside the drop's settle).
-  # This is a FILING ritual (the SaveShortcutPromptWdgt "Ok" path routes here too), so the icon
+  # This is a FILING ritual (the SaveShortcutPromptWdgt "OK" path routes here too), so the icon
   # left behind declares content — no arrow, deep copy — per the arrow contract (plan §4.4).
   createReferenceAndClose: (placeToDropItIn = world, referenceName) ->
     @_settleLayoutsAfter => @_createReferenceAndCloseNoSettle placeToDropItIn, referenceName
@@ -3896,7 +3939,7 @@ class Widget extends TreeNode
   # _normalizePinnedAnchorNoSettle (the `?.` no-ops off any island); the copy is a detached root, so no
   # settle is needed here — pickUp's own settle covers it.
   # PUBLIC API WITH NO MENU ITEM, deliberately: arc 3 phase 7 unified the two entry pages onto ONE
-  # "duplicate" item meaning copy-in-place (the less surprising end-user behaviour), so this variant is
+  # "Duplicate" item meaning copy-in-place (the less surprising end-user behaviour), so this variant is
   # reachable only programmatically. Do not re-add it to a context menu without an owner decision.
   duplicateAndPickItUp: ->
     figure = @_enclosingIslandFigure()
@@ -3992,7 +4035,7 @@ class Widget extends TreeNode
   # Serialization — delegates to the src/serialization/ Serializer. Unlike the old dev-only
   # prototype this replaced, serialize/deserialize SHIP in all builds (including production):
   # they are a product feature, so they carry NO homepage-strip markers. Only the dev
-  # "test menu" entries that drive them (serialiseToMemory etc., MenusHelper.testMenu) stay
+  # "Test menu" entries that drive them (serialiseToMemory etc., MenusHelper.testMenu) stay
   # homepage-stripped. See docs/architecture/serialization-duplication-reference.md.
   serialize: (opts) ->
     Serializer.serializeWidget @, opts
@@ -4412,7 +4455,7 @@ class Widget extends TreeNode
     # cleanly outside any pass.
     @_settleLayoutsAfter => oldParent?._reactToChildPickedUp? @
 
-  # The menu "pick up" item (buildBaseWidgetClassContextMenu). Bare `pickUp` grabs the CONTENT widget the
+  # The menu "Pick up" item (buildBaseWidgetClassContextMenu). Bare `pickUp` grabs the CONTENT widget the
   # menu opened on — which, for a rotated/scaled widget, rips the content off the hand un-transformed AND
   # strands the now-empty sugar island in the tree (nothing dissolves a contentless island). Resolve the
   # pick-up FIGURE first (the SAME resolution the drag path uses — reuse the sole-content island, so the
@@ -4510,7 +4553,7 @@ class Widget extends TreeNode
 
   
   # Pop a one-line bubble showing a VALUE. ⚠ The empty case is ABSENCE, not falsiness: `0`, `""`
-  # and `false` are values somebody asked to see — the evaluation menu's "show selection" hands
+  # and `false` are values somebody asked to see — the evaluation menu's "Show selection" hands
   # this whatever the selected snippet evaluated to — so this tests `msg?`, never `msg`. Absence
   # is spelled the way the language spells it, as everywhere else in the codebase.
   # The `toString?` arm is not defensiveness about ordinary values: an object built with a null
@@ -4520,9 +4563,10 @@ class Widget extends TreeNode
       if not msg?           then "undefined"
       else if msg.toString? then msg.toString()
       else Object.prototype.toString.call msg
-    m = new MenuWdgt @, target: @, title: text
-    m.addMenuItem "Ok"
-    # the pointer comes to rest on the "Ok" row (see popUpCenteredAtHand), so the click that
+    # the bubble's title IS the message, so it reads as a sentence, never in a name header's capitals
+    m = new MenuWdgt @, target: @, title: text, titleIsAMessage: true
+    m.addMenuItem "OK"
+    # the pointer comes to rest on the "OK" row (see popUpCenteredAtHand), so the click that
     # dismisses this bubble needs no aiming.
     m.popUpCenteredAtHand world
 
@@ -4561,8 +4605,8 @@ class Widget extends TreeNode
     @spawnInspector @
 
   # the single inspector entry point. Every inspect path routes here:
-  # the world menu and widget context-menu "inspect" items, the "dev -> inspect"
-  # item (MenusHelper), and a text editor's "inspect selection". This is the
+  # the world menu and widget context-menu "Inspect" items, the "Dev -> Inspect"
+  # item (MenusHelper), and a text editor's "Inspect selection". This is the
   # convenience wrapper that opens the inspector WINDOWED — its content fills a
   # 560x410 FrameWdgt that supplies the chrome + background + resizer. The
   # InspectorWdgt also renders and resizes correctly on its OWN now
@@ -4701,14 +4745,15 @@ class Widget extends TreeNode
   # mean to operate on the speech bubble or did she mean to operate on
   # the text widget contained in it?
   # This menu lets her disambiguate.
+  # One row per widget, innermost first, each reading the widget's row name, told apart from the
+  # other rows' (CommandPanelWdgt.rowLabelsNaming).
   buildHierarchyMenu: (widgetsHierarchy) ->
     if !widgetsHierarchy?
       widgetsHierarchy = @getHierarchyMenuWidgets()
     menu = new MenuWdgt @, target: @
-    widgetsHierarchy.forEach (each) ->
-      textLabelForWidget = each.toString().slice 0, 50
-      textLabelForWidget = textLabelForWidget.replace "Wdgt", ""
-      menu.addMenuItem textLabelForWidget, each, "popupDeveloperMenu", closesUnpinnedPopUps: false, opensSubmenu: true, representsAWidget: true
+    labels = CommandPanelWdgt.rowLabelsNaming widgetsHierarchy
+    widgetsHierarchy.forEach (each, i) ->
+      menu.addMenuItem labels[i], each, "popupDeveloperMenu", closesUnpinnedPopUps: false, opensSubmenu: true, representsAWidget: true
 
     menu
 
@@ -4720,7 +4765,7 @@ class Widget extends TreeNode
 
 
   transparencyPopout: (menuItem)->
-    @prompt menuItem.parent.popUpTitle() + "\nalpha\nvalue:", @, "setAlphaScaled",
+    @prompt menuItem.parent.promptTitleAsking("alpha\nvalue:"), @, "setAlphaScaled",
       defaultContents: (@alpha * 100).toString()
       floorNum: 1
       ceilingNum: 100
@@ -4741,24 +4786,26 @@ class Widget extends TreeNode
 
   buildBaseWidgetClassContextMenu: (widgetOpeningThePopUp) ->
 
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: ((@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
+    # titled with my HUMAN name, the one a sentence would use ("rectangle"), which my header shows in
+    # capitals; never my class name
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: @colloquialName()
 
-    # ONE widget context menu — no isIndexPage fork; "duplicate" is copy-IN-PLACE everywhere (D2).
+    # ONE widget context menu — no isIndexPage fork; "Duplicate" is copy-IN-PLACE everywhere (D2).
     # See docs/archive/build-arc-3-phase-7-menu-topology.md.
-    menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
-    menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
-    menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
+    menu.addMenuItem "Color…", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
+    menu.addMenuItem "Transparency…", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
+    menu.addMenuItem "Resize/move…", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
     menu.addLine()
     # opt-out capability (?-dispatched, nothing on Widget): the bin opener refuses duplication —
     # the bin is one singleton, so a second opener could only alias it while its arrow-less icon
     # promises the thing itself (the arrow contract, reference-widgets plan §4.4).
     if !@_refusesDuplication?()
-      menu.addMenuItem "duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
-    menu.addMenuItem "save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
-    menu.addMenuItem "create shortcut", @, "createReferenceFromMenu", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
-    menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
-    menu.addMenuItem "attach...", @, "attach", opensSubmenu: true, toolTip: "stick this widget\nto another one"
-    menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
+      menu.addMenuItem "Duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
+    menu.addMenuItem "Save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
+    menu.addMenuItem "Create shortcut", @, "createReferenceFromMenu", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
+    menu.addMenuItem "Pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
+    menu.addMenuItem "Attach", @, "attach", opensSubmenu: true, toolTip: "stick this widget\nto another one"
+    menu.addMenuItem "Inspect", @, "inspect", toolTip: "open a window\non all properties"
     menu.addLine()
 
     # capability, instead of `(parent instanceof PanelWdgt) and !(parent instanceof ViewportWdgt)`
@@ -4769,40 +4816,40 @@ class Widget extends TreeNode
       else
         whereToOrFrom = "panel"
       if @isLockingToPanels
-        menu.addMenuItem "unlock from " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nunmovable"
+        menu.addMenuItem "Unlock from " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nunmovable"
       else
-        menu.addMenuItem "lock to " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nmovable"
+        menu.addMenuItem "Lock to " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nmovable"
 
-    # "hide" leaves a widget with no product way back (only the dev tools can bring it round), so
-    # it is dev-gated rather than page-gated. Same for the unrecoverable "destroy".
+    # "Hide" leaves a widget with no product way back (only the dev tools can bring it round), so
+    # it is dev-gated rather than page-gated. Same for the unrecoverable "Destroy".
     if world.isDevMode
-      menu.addMenuItem "hide", @, "hide"
+      menu.addMenuItem "Hide", @, "hide"
 
     if @isFrame?()
-      menu.addMenuItem "close", @, "close"
+      menu.addMenuItem "Close", @, "close"
     else
-      menu.addMenuItem "delete", @, "close"
+      menu.addMenuItem "Delete", @, "close"
 
     # only when it DIFFERS from the row above: with no inbound liveness edge, close/delete
     # already files binward and the drain keeps it there — the row would be a synonym paying
     # menu rent (reference-widgets plan §4.3; the P2 bind-row lesson).
     if @_wouldTrashSeverAnything()
-      menu.addMenuItem "move to trash", @, "moveToTrash", toolTip: "sever every shortcut and wire\npointing at this widget,\nthen file it in the bin"
+      menu.addMenuItem "Move to trash", @, "moveToTrash", toolTip: "sever every shortcut and wire\npointing at this widget,\nthen file it in the bin"
 
     # The dev/test tail. Each entry is gated on what makes it MEANINGFUL rather than on which page
-    # we are: "dev" and "destroy" on dev mode, "test menu" on the demo family actually shipping
+    # we are: "Dev" and "Destroy" on dev mode, "Test menu" on the demo family actually shipping
     # (a production build has no `demoMenus` at all).
     if world.isDevMode
       menu.addLine()
-      menu.addMenuItem "dev", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "dev tools"
+      menu.addMenuItem "Dev", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "dev tools"
       # ⚠ target is `world`, NOT `@`. The door has to live on ONE class, and putting it on Widget
       # adds a public member to every widget's prototype -- which the inspector faithfully lists, so
       # it churns the inspector-list reference screenshots for a method that has nothing to do with
       # the widget being inspected. The menu machinery passes the widget through the ARGUMENTS
       # (`@target[@action].call @target, @, @subjectOfAction`) rather than
       # through the target, so the door receives the same widget whatever the target is.
-      menu.addMenuItem "test menu", world, "popUpDemoTestMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
-      menu.addMenuItem "destroy", @, "fullDestroy"
+      menu.addMenuItem "Test menu", world, "popUpDemoTestMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
+      menu.addMenuItem "Destroy", @, "fullDestroy"
 
     menu
 
@@ -4816,15 +4863,15 @@ class Widget extends TreeNode
       # being
       if @parent?.constrainContentWidth
         @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
-    # a DIVISION cell gets its spec's own submenu ("layout in row/column" — desired/max
+    # a DIVISION cell gets its spec's own submenu ("Layout in row" / "Layout in column" — desired/max
     # size + cross-alignment). The layout CHROME (divider / adder / spacer) is a division
     # cell too, but its box is machinery working state, not a user knob — excluded by
     # capability, never a type test.
     else if @layoutSpec?.isDivisionElement?() and !@isLayoutChrome?()
       @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
     # a DIVISION container — or a drop-slot-hosting CONTENT stack (a document's inner
-    # stack) — gets the layout-scaffold toggle: "edit layout" shows the drop-slot adders
-    # between the cells (fetching the lazy authoring part that carries them), "done
+    # stack) — gets the layout-scaffold toggle: "Edit layout" shows the drop-slot adders
+    # between the cells (fetching the lazy authoring part that carries them), "Done
     # editing layout" removes them
     if @_divisionChildrenAxis()? or @hostsContentStackDropSlots?()
       @addLayoutEditingMenuEntries menu
@@ -4836,9 +4883,9 @@ class Widget extends TreeNode
   addLayoutEditingMenuEntries: (menu) ->
     menu.addLine()
     if @_showsAdders
-      menu.addMenuItem "done editing layout", @, "removeAdders", toolTip: ""
+      menu.addMenuItem "Done editing layout", @, "removeAdders", toolTip: ""
     else
-      menu.addMenuItem "edit layout", @, "editLayout", toolTip: "show drop-slots between the cells, to add or drop in new ones"
+      menu.addMenuItem "Edit layout", @, "editLayout", toolTip: "show drop-slots between the cells, to add or drop in new ones"
 
   buildWidgetContextMenu: (widgetOpeningThePopUp) ->
     menu = @buildBaseWidgetClassContextMenu widgetOpeningThePopUp
@@ -4952,9 +4999,11 @@ class Widget extends TreeNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuWdgt @, target: @, title: "choose new parent:"
-      choicesExcludingParent.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50), each, newParentActionName, representsAWidget: true
+      # a chooser's header NAMES what its rows offer; each row names its widget
+      menu = new MenuWdgt @, target: @, title: "new parent"
+      labels = CommandPanelWdgt.rowLabelsNaming choicesExcludingParent
+      choicesExcludingParent.forEach (each, i) =>
+        menu.addMenuItem labels[i], each, newParentActionName, representsAWidget: true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -4964,7 +5013,7 @@ class Widget extends TreeNode
       # this list if the user invokes the
       # command, and if there are no good
       # widgets then show some kind of message.
-      menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleIsAMessage: true
     menu.popUpAtHand()
 
   attach: ->
@@ -4985,7 +5034,7 @@ class Widget extends TreeNode
   # ---------------------------------------------------------------------
   # locking of contents
 
-  # THE MENU ADAPTERS for the "enable editing" / "disable editing" lock entries — the shape of
+  # THE MENU ADAPTERS for the "Enable editing" / "Disable editing" lock entries — the shape of
   # createReferenceFromMenu above. ButtonWdgt dispatches a FIXED 4-slot convention
   # (`@target[@action].call @target, theButton, subject, arg1, arg2`), so an item carrying no arguments
   # of its own still arrives with WIDGETS in the leading slots. Here that matters because the four
@@ -5039,7 +5088,7 @@ class Widget extends TreeNode
 
 
   # SELF-SETTLE (single-mutation tier): lock the contents settle-free, then flush ONCE. Any entry point (the edit
-  # button, the "disable editing" menu, or a construction-time call) self-settles -- so calling this before or after
+  # button, the "Disable editing" menu, or a construction-time call) self-settles -- so calling this before or after
   # world.add is equally legal (an orphan defers in-flush, orphan-settledness). Idempotency guard + per-child work
   # live in the core; world.stopEditing routes to the NON-settling _stopEditingNoSettle (a caret teardown re-fits its
   # text, so the public stopEditing self-settles -- reaching it inside this flush would throw).
@@ -5127,7 +5176,7 @@ class Widget extends TreeNode
   # The pins a source of `kind` can actually DRIVE: read-only pins are dropped (nothing can drive
   # them), duplicates are resolved by SETTER NAME keeping the first (so an inherited declaration
   # wins over a subclass re-declaration of the same pin), and the result is sorted by label because
-  # that is the order the "choose target property" menu presents.
+  # that is the order the "target property" chooser presents.
   #   Passing no kind (or "any") asks for every drivable pin.
   # ⚠ Dedup is by setter name ON THE RECORD. The array version deduped its two arrays INDEPENDENTLY
   # with two separate Sets, so a label repeated against a different setter (or the reverse) shifted
@@ -5186,20 +5235,22 @@ class Widget extends TreeNode
   # flow + reference and let command confer nothing.
   graphEdgesOut: -> []
 
-  # The shared body of every controller widget's openTargetPropertySelector: pop up the "choose
-  # target property" menu, one item per drivable pin of the kind I produce. Each item wires
+  # The shared body of every controller widget's openTargetPropertySelector: pop up the "target
+  # property" chooser, one item per drivable pin of the kind I produce. Each item wires
   # @action = that pin's setter onto theTarget via setTargetAndActionWithOnesPickedFromMenu (a
   # ControllerMixin method -- every caller @augmentWith's it).
   # Deliberately on Widget, NOT ControllerMixin: as an INHERITED member it is hidden from the
   # inspector's default own-props view, so the controllers' inspected member lists are unshifted --
   # a ControllerMixin method would be copied in as an OWN member of each and shift every one. (It
   # DOES surface in the rarer inherited-props inspector view.)
+  # A row shows its pin's label capitalised ("Alpha 0-100"); the pin keeps its label as it is, its
+  # identity (pinLabelled, principalPinLabel, a wire's describeConnection).
   _popUpTargetPropertyMenu: (theTarget, pins) ->
-    menu = new MenuWdgt @, target: @, title: "choose target property:"
+    menu = new MenuWdgt @, target: @, title: "target property"
     for pin in pins
-      menu.addMenuItem pin.label, @, "setTargetAndActionWithOnesPickedFromMenu", arg1: theTarget, arg2: pin.setterName
+      menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue pin.label), @, "setTargetAndActionWithOnesPickedFromMenu", arg1: theTarget, arg2: pin.setterName
     if pins.length == 0
-      menu = new MenuWdgt @, target: @, title: "no target properties available"
+      menu = new MenuWdgt @, target: @, title: "no target properties available", titleIsAMessage: true
     menu.popUpAtHand()
 
   # Menu-dispatched, and now shared by every controller: the per-class stubs differed ONLY by which
@@ -5270,7 +5321,7 @@ class Widget extends TreeNode
   # ⚠ The result is returned EXPLICITLY, and must stay that way. The relayout/repaint tail has to
   # run AFTER the eval, so without this line CoffeeScript returns `_changed()`'s value — `true` or
   # `undefined` — and the eval's own value is computed and dropped on the floor. Three callers read
-  # what comes back: the evaluation menu's "show selection" and "inspect selection"
+  # what comes back: the evaluation menu's "Show selection" and "Inspect selection"
   # (`TextWdgt`) and `Deserializer.compileFunction`, which needs the live function it compiled.
   # None of them throws when handed the wrong thing, so `fg menusweep` cannot see a regression here
   # — this comment is the guard, together with `SystemTest_macroEvaluateStringReturnsItsValue`.
@@ -5794,7 +5845,7 @@ class Widget extends TreeNode
     @_showsAdders = false
     @_invalidateLayout()
 
-  # PRODUCT entry for the layout scaffold ("edit layout" in a division container's context
+  # PRODUCT entry for the layout scaffold ("Edit layout" in a division container's context
   # menu): fetch the LAZY authoring part that carries the adder/droplet chrome, THEN show
   # the drop-slots. An existence guard here would silently swallow the click — inclusion
   # guards are for the arranges, ensureLoaded is for user entry points.

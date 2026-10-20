@@ -1446,7 +1446,7 @@ class MacroToolkit
       return @syntheticEventsTouchDrag_InputEvents pressPoint, dropPoint, (@_touchDragSpanFor milliseconds), startTime, numberOfEventsPerMillisecond
     @syntheticEventsMouseMovePressDragRelease_InputEvents pressPoint, dropPoint, milliseconds, startTime, numberOfEventsPerMillisecond
 
-  # Drag a resize/move HANDLE (one of the handles shown after a widget's "resize/move..." menu
+  # Drag a resize/move HANDLE (one of the handles shown after a widget's "Resize/move…" menu
   # item) to a destination Point (the handle's centre lands there). Handles resize/move the target
   # via NON-float dragging (HandleWdgt.nonFloatDragging → setExtent / moveTo), so this is a real
   # press-drag-release. handleType picks the handle: "resizeBothDimensionsHandle" (bottom-right
@@ -1562,7 +1562,7 @@ class MacroToolkit
 
   # RESIZE A WIDGET BY ITS OWN HALO GRIP so its EXTENT changes by exactly `extentDelta` (positive
   # grows): the halo twin of resizeWindowBy_InputEvents. The grip is the corner resizer the
-  # "resize/move..." menu item gives the widget (or one a handle's "attach..." put on it) — found
+  # "Resize/move…" menu item gives the widget (or one a handle's "Attach" put on it) — found
   # among the widget's OWN children by its type (the front-most, the one a press reaches), so the
   # test names the widget it resizes rather than whichever handle of that type is topmost in the
   # world. A widget showing no such grip is a fault to raise: the menu item puts the halo on the
@@ -1577,7 +1577,7 @@ class MacroToolkit
   resizeWidgetBy_InputEvents: (widget, extentDelta, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     grips = widget.children.filter (child) -> child.type is "resizeBothDimensionsHandle"
     if grips.length is 0
-      throw new Error "#{widget} shows no corner resize handle — open its \"resize/move...\" first"
+      throw new Error "#{widget} shows no corner resize handle — open its \"Resize/move…\" first"
     grip = grips[grips.length - 1]
     @_aimingAt grip, "resizeWidgetBy", =>
       [pressPoint, dropPoint] = @_handlePressAndDropPoints grip, (grip.localPointToScreen grip.center().add extentDelta)
@@ -1795,37 +1795,12 @@ class MacroToolkit
         false
     @_menuRowScrolledIntoView theItem
 
-  # Like getTextMenuItemFromMenu but matches by label PREFIX. Use it when a menu item's full label
-  # carries a suffix you should not depend on — e.g. a "choose target:" menu (a handle's "attach...",
-  # a controller's "connect to") labels each candidate `<widget>.toString().replace("Wdgt","")`, so a
-  # RectangleWdgt reads "a Rectangle#1" (an instance number), while the "choose new parent:" menu of
-  # an ordinary widget's "attach..." keeps the suffix (`toString()` alone: "a RectangleWdgt#1"). Match
-  # the stable head ("a Rectangle") instead of the exact string, and only the intended target is hit
-  # even when the menu also lists the World and the widget's own handle. ⚠ A head that is also the
-  # head of a LONGER class name ("a Slider" of "a SliderButton") matches both rows, and the last one
-  # in the menu wins (topWdgtSuchThat): name such a row by its exact label instead.
-  getTextMenuItemFromMenuByPrefix: (theMenu, thePrefix) ->
-    theItem = theMenu.topWdgtSuchThat (item) ->
-      if item.labelString?
-        item.labelString.startsWith thePrefix
-      else
-        false
-    @_menuRowScrolledIntoView theItem
-
-  getTextMenuItemFromMenuByContains: (theMenu, theSubstring) ->
-    theItem = theMenu.topWdgtSuchThat (item) ->
-      if item.labelString?
-        item.labelString.includes theSubstring
-      else
-        false
-    @_menuRowScrolledIntoView theItem
-
   # Move to and click a menu item by its label, in a SPECIFIC menu you already hold a reference
   # to. Prefer this over moveToItemOfTopMenuAndClick_InputEvents whenever you interact with a popup more
   # than once (e.g. click a submenu row, THEN a row of the menu you came from): getMostRecentlyOpenedMenu
   # reads world.freshlyCreatedPopUps, which EVERY pointer-up clears (ActivePointerWdgt.processPointerUp), so it
   # is only valid for the FIRST interaction after a popup opens. Capture the popup reference while it is
-  # still fresh (right after it opens) and drive its later items through this method. ⚠ A PROMPT's Ok,
+  # still fresh (right after it opens) and drive its later items through this method. ⚠ A PROMPT's OK,
   # Close, Cancel and Don't save are BUTTONS, not rows: press them with clickPromptButton_InputEvents.
   moveToItemOfMenuAndClick_InputEvents: (theMenu, theLabel) ->
     theItem = @getTextMenuItemFromMenu theMenu, theLabel
@@ -1834,31 +1809,58 @@ class MacroToolkit
   moveToItemOfTopMenuAndClick_InputEvents: (theLabel) ->
     @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), theLabel
 
-  # Move to and click the menu item whose label STARTS WITH a prefix, in a menu you hold a reference to.
-  # The prefix sibling of moveToItemOfMenuAndClick_InputEvents — for menus whose item labels carry a
-  # variable suffix (a "choose target:" menu labels each target `toString().replace("Wdgt","")`, its
-  # instance number included), match the stable Wdgt-stripped class-name head so you pick the intended
-  # target rather than the first/Nth item.
-  moveToItemStartingWithOfMenuAndClick_InputEvents: (theMenu, thePrefix) ->
-    theItem = @getTextMenuItemFromMenuByPrefix theMenu, thePrefix
-    @moveToAndClick_InputEvents theItem
+  # ── ROWS THAT NAME A WIDGET, found by the widget ──────────────────────────────────────────────
+  # A hierarchy menu's rows, the "new parent", "target" and "bind with" choosers' rows, a handle's
+  # "Attach" rows and a controller's wire rows each STAND FOR a widget (MenuItemWdgt.representedWidget:
+  # the widget hovering the row highlights, the wire's target for a wire row). Their wording is that
+  # widget's human name told apart from its neighbours' ("Rectangle", "Rectangle 2",
+  # 'Text "Hello"', "Slider · value ➜" — CommandPanelWdgt.rowLabelsNaming), so it moves whenever
+  # the menu lists something else: a test names the WIDGET it means instead, the one it built or
+  # holds. Assert the wording itself only where the wording is the point (assertTopMenuItemStrings).
 
-  # Move to and click the menu item whose label CONTAINS a substring, in a menu you hold a reference to.
-  # The substring sibling of the prefix verb — for a row named by a word INSIDE its label rather than by
-  # its head ("shrink to fit" for "→← shrink to fit"). A row's tick and its submenu chevron are drawn
-  # beside its label, never written into it, so neither ever needs this verb.
-  moveToItemContainingOfMenuAndClick_InputEvents: (theMenu, theSubstring) ->
-    theItem = @getTextMenuItemFromMenuByContains theMenu, theSubstring
-    @moveToAndClick_InputEvents theItem
+  # Every row of theMenu standing for theWidget, in row order — a QUERY: it scrolls nothing and
+  # never throws, so a step can ask whether a menu offers a widget at all (a hierarchy menu has a
+  # row for each ancestor; a plain context menu has none), or assert that a chooser leaves one out.
+  rowsOfMenuStandingFor: (theMenu, theWidget) ->
+    return [] unless theMenu? and theWidget?
+    theMenu.collectAllChildrenBottomToTopSuchThat (item) -> item.representedWidget?() is theWidget
+
+  # THE row of theMenu standing for theWidget, brought into view if the menu's rows scroll (as the
+  # label verbs bring theirs). THROWS a named error when no row stands for it — naming the widgets
+  # the menu's rows do name — or when several do (a controller wired twice into one widget, on two
+  # pins: name such a wire row by its exact label instead). A missing row is a broken step, never
+  # one to skip.
+  rowOfMenuStandingFor: (theMenu, theWidget) ->
+    unless theMenu?
+      throw new Error "no menu to find the row standing for #{theWidget} in"
+    rows = @rowsOfMenuStandingFor theMenu, theWidget
+    if rows.length isnt 1
+      named = theMenu.collectAllChildrenBottomToTopSuchThat (item) -> item.representedWidget?()?
+      labels = ("\"#{each.labelString}\"" for each in named)
+      problem = if rows.length is 0 then "has no row standing for" else "has #{rows.length} rows standing for"
+      throw new Error "#{theMenu} #{problem} #{theWidget} (its rows naming a widget: #{if labels.length then labels.join ', ' else 'none'})"
+    @_menuRowScrolledIntoView rows[0]
+
+  # Move to and click the row of theMenu standing for theWidget (rowOfMenuStandingFor: it throws on
+  # no row or several). The press is verified like every widget-aimed press, and a finger run taps
+  # it, exactly as the label verbs' clicks. Hold the menu the way the label verbs do: capture it
+  # right after it opens (getMostRecentlyOpenedMenu is cleared by every pointer-up).
+  moveToRowOfMenuStandingForAndClick_InputEvents: (theMenu, theWidget) ->
+    @moveToAndClick_InputEvents @rowOfMenuStandingFor theMenu, theWidget
+
+  # The same, on the most recently opened pop-up — valid only for the first interaction after it
+  # opened (see moveToItemOfMenuAndClick_InputEvents on getMostRecentlyOpenedMenu).
+  moveToRowOfTopMenuStandingForAndClick_InputEvents: (theWidget) ->
+    @moveToRowOfMenuStandingForAndClick_InputEvents @getMostRecentlyOpenedMenu(), theWidget
 
   # ── A PROMPT's BUTTONS ──────────────────────────────────────────────────────────────────────────
   # A prompt (a PromptWdgt: the Text / Number / Color prompts and the save-shortcut one) ends in a
-  # row of real BUTTONS, not menu rows — [Close] [Ok], or [Don't save] [Cancel] [Ok] — so the row
+  # row of real BUTTONS, not menu rows — [Close] [OK], or [Don't save] [Cancel] [OK] — so the row
   # verbs above cannot name them (a button carries no labelString) and stay ROW verbs. These name a
   # prompt's button by its LABEL, the text on its face, which is a button's identity the way a row's
   # labelString is a row's.
 
-  # The button of `prompt` labelled `theLabel` ("Ok", "Close", "Cancel", "Don't save"), looked for
+  # The button of `prompt` labelled `theLabel` ("OK", "Close", "Cancel", "Don't save"), looked for
   # among the prompt's own buttons (PromptWdgt.buttonsRow) and nowhere else in it, and brought into
   # view if the prompt's rows scroll (_menuRowScrolledIntoView, which serves any widget of a pop-up's
   # rows). THROWS when the prompt has no such button — naming the labels it does have — exactly as a
@@ -1874,7 +1876,7 @@ class MacroToolkit
       throw new Error "#{prompt} has no button labelled \"#{theLabel}\" (its buttons: #{if labels.length then labels.join ', ' else 'none'})"
     @_menuRowScrolledIntoView button
 
-  # Move to and click the button of `prompt` labelled `theLabel` — Ok delivers the prompt's value and
+  # Move to and click the button of `prompt` labelled `theLabel` — OK delivers the prompt's value and
   # closes the prompt unless it is pinned; Close / Cancel dismiss it. The press is verified
   # like every widget-aimed press (moveToAndClick_InputEvents: it must land on the button — AIM
   # MISSED otherwise). Hold the prompt the way the row verbs hold a menu: capture it right after it
@@ -1923,7 +1925,7 @@ class MacroToolkit
     world.automator.player.recordMacroAssertion passed, "top menu item strings", expectedLabels.join(" | "), (if found? then found.join(" | ") else "no menu")
 
   # Assert how many resize/move HandleWdgts are currently attached to a widget
-  # (the "resize/move..." chrome). Pushes no input events and does not yield.
+  # (the "Resize/move…" chrome). Pushes no input events and does not yield.
   # A toolkit method for the same reason as the menu assertions above: the
   # assertion sink's mid-name "Macro" must not appear in macro source.
   assertHandleCountOn: (aWdgt, expectedCount) ->
@@ -1977,16 +1979,6 @@ class MacroToolkit
       if row.isTicked?()
         return row.label.text
     return undefined
-
-  # Does the row labelled theLabel (exactly, as getTextMenuItemFromMenu matches) OPEN A SUBMENU -- does
-  # it carry the opensSubmenu flag its drawn chevron shows (MenuItemWdgt.opensSubmenu)? true or false,
-  # or undefined when the menu has no such row. A QUERY: it moves nothing and scrolls nothing (unlike the
-  # getTextMenuItemFromMenu family, which scrolls the row into view), so a test asserts "this row leads
-  # on" by meaning, with assertValuesEqual, never by a typed arrow in its label.
-  rowOpensSubmenu: (theMenu, theLabel) ->
-    row = theMenu.topWdgtSuchThat (item) -> item.labelString? and item.labelString == theLabel
-    return undefined unless row?
-    row.opensSubmenu is true
 
   # Topmost widget matching either a class-name string (compared via
   # widgetClassString) or a class object (compared via instanceof).
@@ -2236,8 +2228,8 @@ class MacroToolkit
 
     macroSubroutines.add Macro.fromString """
       bringUpInspector_InputEvents_Macro = (whichWidget) ->
-        clickMenuItemOfWidget_InputEvents_Macro whichWidget, "dev"
-        @moveToItemOfTopMenuAndClick_InputEvents "inspect"
+        clickMenuItemOfWidget_InputEvents_Macro whichWidget, "Dev"
+        @moveToItemOfTopMenuAndClick_InputEvents "Inspect"
         yield "waitNoInputsOngoing"
     """
 
@@ -2279,76 +2271,82 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
-    # Patch-programming "connect to": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,
-    # SliderWdgt, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
-    # another widget. Right-click the controller -> "connect" -> "connect to" (openTargetSelector) opens
-    # a "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must
-    # OVERLAP the intended target), each labelled `target.toString().replace("Wdgt","")`
-    # (Wdgt-stripped); pick it by class-name PREFIX. That opens a "choose target property:" menu of the
-    # target's setters (e.g. "color"); pick the property. Afterwards, acting on the controller (clicking
-    # a palette, dragging a slider) calls target[setter](value). Each menu is captured fresh from
-    # getMostRecentlyOpenedMenu() right after it opens (every mouseUp clears world.freshlyCreatedPopUps).
+    # Right-click a widget at a fraction of it and land in its OWN context menu. Where the press meets
+    # a widget nested in a container, or a part of the widget (a slider's knob), the right-click opens
+    # the HIERARCHY menu instead — one row per widget under the pointer — and this steps into the
+    # widget's own row of it, found by the widget (rowsOfMenuStandingFor: a widget's own menu has no
+    # row standing for the widget itself, a hierarchy menu has one for each widget it lists). The
+    # widget's own menu is then the most recently opened one.
     macroSubroutines.add Macro.fromString """
-      setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, propertyLabel, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix) ->
-        @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
+      openOwnMenuAtFractionOf_InputEvents_Macro = (theWidget, fraction = [0.5, 0.5]) ->
+        @moveToAndClickAtFractionOf_InputEvents theWidget, fraction, "right button"
         yield "waitNoInputsOngoing"
-        # When the controller is INSIDE a container (its parent is not the world), right-clicking it opens the
-        # ancestor HIERARCHY menu ("a Slider", "a Panel", …) rather than the controller's own menu —
-        # so first navigate into the controller's own submenu by its class-name prefix. (A world-child
-        # controller opens its menu directly, so this is skipped.)
-        if controllerHierarchyPrefix?
-          @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
+        menu = @getMostRecentlyOpenedMenu()
+        if (@rowsOfMenuStandingFor menu, theWidget).length > 0
+          @moveToRowOfMenuStandingForAndClick_InputEvents menu, theWidget
           yield "waitNoInputsOngoing"
-        @moveToItemOfTopMenuAndClick_InputEvents "connect"
+    """
+
+    # Patch-programming "Connect to": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,
+    # SliderWdgt, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
+    # another widget. Open the controller's own menu (openOwnMenuAtFractionOf: right-clicked at
+    # controllerMenuFraction, stepping through the hierarchy menu where one opens) -> "Connect" ->
+    # "Connect to" (openTargetSelector): a "target" chooser of the widgets whose bounds INTERSECT the
+    # controller (so the controller must OVERLAP the intended target), one row per widget; pick the
+    # row standing for targetWidget, BY THE WIDGET (rowOfMenuStandingFor — the rows read human names
+    # told apart from each other, "Rectangle", "Rectangle 2", "Desktop" for the world). That opens a
+    # "target property" chooser of the target's pins; pick the property by its PIN LABEL as the pin
+    # states it ("color", "alpha 0-100"): its row shows that label capitalised ("Color"), and this verb
+    # finds the row the same way the chooser builds it (CommandPanelWdgt.rowLabelOfValue), so either
+    # spelling names the same row. Afterwards, acting on the controller (clicking a palette, dragging a
+    # slider) calls target[setter](value). Each menu is captured fresh from getMostRecentlyOpenedMenu()
+    # right after it opens (every mouseUp clears world.freshlyCreatedPopUps).
+    macroSubroutines.add Macro.fromString """
+      setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetWidget, propertyLabel, controllerMenuFraction = [0.5, 0.5]) ->
+        openOwnMenuAtFractionOf_InputEvents_Macro controllerWidget, controllerMenuFraction
+        @moveToItemOfTopMenuAndClick_InputEvents "Connect"
         yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "connect to"
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "Connect to"
         yield "waitNoInputsOngoing"
-        @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), targetClassNamePrefix
+        @moveToRowOfTopMenuStandingForAndClick_InputEvents targetWidget
         yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), propertyLabel
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), (CommandPanelWdgt.rowLabelOfValue propertyLabel)
         yield "waitNoInputsOngoing"
     """
 
     # The TWO-WAY gesture (connector plan §P2): bind this controller's value to another widget's, so
     # each drives the other. Shorter than the connect gesture above because a bind has NO property
-    # step — both pins are forced to be the two widgets' principal ones — and the target menu lists
-    # only widgets that can actually be bound. The controller whose menu is opened is the one whose
-    # value wins at bind time.
+    # step — both pins are forced to be the two widgets' principal ones — and the "bind with" chooser
+    # lists only widgets that can actually be bound; its row is picked by targetWidget, as above. The
+    # controller whose menu is opened is the one whose value wins at bind time.
     macroSubroutines.add Macro.fromString """
-      bindControllerTo_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix) ->
-        @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
+      bindControllerTo_InputEvents_Macro = (controllerWidget, targetWidget, controllerMenuFraction = [0.5, 0.5]) ->
+        openOwnMenuAtFractionOf_InputEvents_Macro controllerWidget, controllerMenuFraction
+        @moveToItemOfTopMenuAndClick_InputEvents "Connect"
         yield "waitNoInputsOngoing"
-        if controllerHierarchyPrefix?
-          @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
-          yield "waitNoInputsOngoing"
-        @moveToItemOfTopMenuAndClick_InputEvents "connect"
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "Bind ⇄"
         yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "bind ⇄"
-        yield "waitNoInputsOngoing"
-        @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), targetClassNamePrefix
+        @moveToRowOfTopMenuStandingForAndClick_InputEvents targetWidget
         yield "waitNoInputsOngoing"
     """
 
     # The INVERSE gesture (connector plan §P4): cut one of a controller's connections and leave the rest
-    # standing. A controller's own menu carries one row PER LIVE WIRE, labelled by what it drives —
-    # `WireSpec.describeConnection()` plus its direction arrow, i.e. the Wdgt-stripped target then the
-    # PIN's label, "a Panel . color ➜" — so name the wire by that prefix. The row opens that wire's own
-    # little menu ("fires per event", "disconnect"; the row wears a submenu chevron as well, drawn beside
-    # the label); this clicks "disconnect".
-    # ⚠ Pass the prefix WITHOUT the direction arrow (prefix matching), which is also what makes this verb
-    # blind to the DIRECTION: a two-way wire's row ends " ⇄" rather than " ➜" (§P2), and cutting one ends
-    # the relationship in both directions.
-    # ⚠ The pin LABEL is what appears, not the setter name: "a Panel . color", never "a Panel . setColor".
+    # standing. A controller's own menu carries one row PER LIVE WIRE, reading what it drives —
+    # WireSpec.descriptionsOf: the target's row name, " · ", the PIN's label (never the setter name),
+    # then its direction arrow, "Panel · color ➜" — and STANDING FOR the wire's target, so this picks
+    # the row by targetWidget. The row opens that wire's own little menu ("Fires per event",
+    # "Disconnect"; the row wears a submenu chevron as well, drawn beside the label); this clicks
+    # "Disconnect".
+    # ⚠ Blind to the DIRECTION: a two-way wire's row ends " ⇄" rather than " ➜" (§P2), and cutting one
+    # ends the relationship in both directions.
+    # ⚠ A controller wired into targetWidget TWICE (two pins) has two rows standing for it, and the row
+    # finder throws: drive such a menu with the rows' exact labels instead.
     macroSubroutines.add Macro.fromString """
-      disconnectControllerWire_InputEvents_Macro = (controllerWidget, wireRowPrefix, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix) ->
-        @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
+      disconnectControllerWire_InputEvents_Macro = (controllerWidget, targetWidget, controllerMenuFraction = [0.5, 0.5]) ->
+        openOwnMenuAtFractionOf_InputEvents_Macro controllerWidget, controllerMenuFraction
+        @moveToRowOfTopMenuStandingForAndClick_InputEvents targetWidget
         yield "waitNoInputsOngoing"
-        if controllerHierarchyPrefix?
-          @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
-          yield "waitNoInputsOngoing"
-        @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), wireRowPrefix
-        yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "disconnect"
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "Disconnect"
         yield "waitNoInputsOngoing"
     """
 

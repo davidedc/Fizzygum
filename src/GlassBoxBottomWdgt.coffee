@@ -24,6 +24,8 @@
 
 class GlassBoxBottomWdgt extends BoxWdgt
 
+  colloquialName: -> "tool cell"
+
   constructor: ->
     super()
     @_deriveMyLook()

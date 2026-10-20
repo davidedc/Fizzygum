@@ -3,7 +3,7 @@
 # (FolderPanelWdgt). Hosts the two behaviours the pair shares: the ICON GRID
 # every icon made or moved in later is placed on -- its next free slot
 # (_placeIconInNextFreeSlotNoSettle, which add calls, and so does every other
-# path that brings an icon in: a "create shortcut", a filing, a desktop link
+# path that brings an icon in: a "Create shortcut", a filing, a desktop link
 # moved into a folder) -- and keeping desktop links layered behind the other
 # content (_reactToChildAdded / _reactToChildMovedToFront). Never instantiated
 # directly.

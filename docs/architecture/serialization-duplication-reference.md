@@ -410,8 +410,8 @@ does NOT work — `fetch`/XHR of local files.
 
 `WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot` (both PRODUCT — `core`-part code, so
 every profile ships them).
-Save downloads `world.fzw.json` ("save world snapshot…" world menu); load routes through the
-`kind` field (the drop handler / "open from file…").
+Save downloads `world.fzw.json` ("Save world snapshot…" world menu); load routes through the
+`kind` field (the drop handler / "Open from file…").
 
 **The world is DELIBERATELY NOT a table record.** Serializing the world *widget's* own props
 would drag in ~50 transient fields (the render/measure canvases + contexts, seven LRUCaches,

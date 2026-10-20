@@ -35,9 +35,9 @@ class WorldWdgt extends IconGridPanelWdgt
   errorConsole: undefined
 
   # Scratch buffer holding the last serialised widget's string. It is a CARRIER between two
-  # separate user actions -- the "serialise widget to memory" test-menu row (or a macro's
-  # evaluateString step) writes it, and the "deserialize from memory..." row that follows reads
-  # it back -- which is what lets serialization be driven as two menu picks instead of one
+  # separate user actions -- the "Serialise widget to memory" test-menu row (or a macro's
+  # evaluateString step) writes it, and the "Deserialize from memory and attach to …" rows
+  # that follow read it back -- which is what lets serialization be driven as two menu picks instead of one
   # atomic call. Nothing else reads it, and its value means nothing outside the pair.
   lastSerializationString: ""
 
@@ -159,7 +159,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # recorded value is the latched true. It is load-bearing at reconstruction: resetWorld hands it to
   # the replacement's constructor, so the successor is built with the policy BOOT chose rather than
   # with whatever the finished session left in @automaticallyAdjustToFillEntireBrowserAlsoOnResize
-  # ("fit whole page", the dev context-menu item, latches that ON for good).
+  # ("Fit whole page", the dev context-menu item, latches that ON for good).
   #   There is deliberately no companion record of the boot EXTENT. A world's size is world-level
   # mutable state, and coming back from a mid-session resize is CONSTRUCTION's job: the replacement
   # runs the same sizing branch boot's world ran — size the canvas, then set the bounds from it —
@@ -767,7 +767,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
     return mostRecentPopUp
 
-  # used to close temporary menus. Every caller is a top-level gesture -- the "pin" menu row, the
+  # used to close temporary menus. Every caller is a top-level gesture -- the "Pin" menu row, the
   # title-strip tap, the hand's own click-outside sweep -- so each marked popup closes via the
   # self-settling close(), one settle per popup. Only TRANSIENT pop-ups ever enter the marked set
   # (propagateKillPopUps gates on the lifetime), so each drained close lands on
@@ -2630,7 +2630,7 @@ class WorldWdgt extends IconGridPanelWdgt
       @toolTipsList.delete tooltip
   
 
-  # "open from file…" world-menu action: pop the file picker; FileLoading routes the chosen
+  # "Open from file…" world-menu action: pop the file picker; FileLoading routes the chosen
   # *.fzw.json by its envelope `kind` (a widget is attached to the desktop, a world snapshot
   # replaces the world). A product feature — ships in all builds.
   openFromFile: ->
@@ -2649,11 +2649,11 @@ class WorldWdgt extends IconGridPanelWdgt
   # `world.serialize()` is a GUIDED error: a world is not a widget subtree, so the inherited
   # Widget.serialize would crash the graph walker (D8). Point callers at the snapshot entry.
   serialize: (opts) ->
-    throw new SerializationError "a whole world cannot be saved as a widget — call world.serializeWorldSnapshot() instead (menu: \"save world snapshot…\")",
+    throw new SerializationError "a whole world cannot be saved as a widget — call world.serializeWorldSnapshot() instead (menu: \"Save world snapshot…\")",
       rootDescription: "the world"
       remediation: "Use world.serializeWorldSnapshot() to save the whole desktop, or serialize an individual widget subtree."
 
-  # "save world snapshot…" world-menu action: serialize + download over file://.
+  # "Save world snapshot…" world-menu action: serialize + download over file://.
   saveWorldSnapshotToFile: ->
     try
       envelope = @serializeWorldSnapshot prettyPrint: true
@@ -2912,8 +2912,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # seam and asserts, one teardown later, that the VM was allowed to let the object go.
     @unregisterThisInstance()
     # (d) EVERY REPLACEMENT IS WorldWdgt#1, exactly as this one was — world identity carries no run
-    # history, and no drawn label shifts because a page has reset a few hundred times (Widget.toString
-    # -> uniqueIDString is DRAWN in re-parent menu rows, wire labels, pinouts and the inspector).
+    # history, and no drawn value shifts because a page has reset a few hundred times (Widget.toString
+    # -> uniqueIDString is DRAWN wherever a widget shows as a value: the inspector's fields).
     # ⚠ It is zeroed HERE and not in fullDestroyChildren's per-class sweep (which skips WorldWdgt)
     # because this is the one place a world is actually REPLACED. loadWorldSnapshot shares that
     # sweep and keeps its LIVE world, whose id must stay the one it was issued — and a snapshot
@@ -3216,49 +3216,42 @@ class WorldWdgt extends IconGridPanelWdgt
   # and a single append point cannot reproduce that order.
   buildContextMenu: ->
 
-    # ⚠ the title is computed into a local FIRST. An `if` expression written directly as an
-    # implicit-object value on its own line does not become that value — the menu comes out
-    # title-less, which costs it its whole title bar, and with it the thing you click to
-    # drag the menu and the thing you click to pin it.
-    title = if @isDevMode
-      @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
-    else
-      "Desktop"
-    menu = new MenuWdgt @, target: @, title: title
+    # titled with my human name in every mode ("Desktop"), which my header shows in capitals
+    menu = new MenuWdgt @, target: @, title: @colloquialName()
 
     # DEV ONLY — the demo tree, and the bulk operations that reach every widget in the world.
     # `world.parts.isAvailable "demos"` is false in a production build, so those two are not
     # offered there even with dev mode on: the part gate is about what SHIPPED, the dev gate about
     # what is being SHOWN, and an item can need both.
     if @isDevMode
-      menu.addMenuItem "demo", @, "popUpDemoMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "sample widgets"  if world.parts.isAvailable "demos"
+      menu.addMenuItem "Demo", @, "popUpDemoMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "sample widgets"  if world.parts.isAvailable "demos"
       menu.addLine()
-      menu.addMenuItem "delete all", @, "closeChildren"
-      menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
+      menu.addMenuItem "Delete all", @, "closeChildren"
+      menu.addMenuItem "Move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
 
     # EVERY DESKTOP — look at it, size it, colour it, paper it, and say how you are driving it.
     # None of these is a developer's tool: they are what owning a desktop means.
-    menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
-    menu.addMenuItem "test menu", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "debugging and testing operations"  if @isDevMode and world.parts.isAvailable "demos"
+    menu.addMenuItem "Inspect", @, "inspect", toolTip: "open a window on\nall properties"
+    menu.addMenuItem "Test menu", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "debugging and testing operations"  if @isDevMode and world.parts.isAvailable "demos"
     menu.addLine()
-    menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
-    menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
-    menu.addMenuItem "wallpapers", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "choose a wallpaper for the Desktop"
+    menu.addMenuItem "Fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
+    menu.addMenuItem "Color…", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
+    menu.addMenuItem "Wallpapers", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "choose a wallpaper for the Desktop"
     menu.addLine()
 
     if Automator?
-      menu.addMenuItem "system tests", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
+      menu.addMenuItem "System tests", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
 
     # the door, and it swings both ways from every page — a desktop that cannot be switched INTO
     # dev mode is a desktop whose developer affordances do not exist
     if @isDevMode
-      menu.addMenuItem "switch to user mode", @, "toggleDevMode", toolTip: "disable developers'\ncontext menus"
+      menu.addMenuItem "Switch to user mode", @, "toggleDevMode", toolTip: "disable developers'\ncontext menus"
     else
-      menu.addMenuItem "switch to dev mode", @, "toggleDevMode"
+      menu.addMenuItem "Switch to dev mode", @, "toggleDevMode"
 
-    menu.addMenuItem "new folder", @, "makeFolderFromMenu"
-    menu.addMenuItem "save world snapshot…", @, "saveWorldSnapshotToFile", toolTip: "save the whole desktop\nto a *.fzw.json file"
-    menu.addMenuItem "open from file…", @, "openFromFile", toolTip: "load a widget or world\nfrom a *.fzw.json file"
+    menu.addMenuItem "New folder", @, "makeFolderFromMenu"
+    menu.addMenuItem "Save world snapshot…", @, "saveWorldSnapshotToFile", toolTip: "save the whole desktop\nto a *.fzw.json file"
+    menu.addMenuItem "Open from file…", @, "openFromFile", toolTip: "load a widget or world\nfrom a *.fzw.json file"
     menu
 
 
@@ -3300,7 +3293,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # builds a MenuItemWdgt wired to (world, "popUpDemoMenu") to exercise button float-drag
   # semantics. Their CONTENT is what is dev-only, and it is reached through @widgetFactory /
   # demoMenus, both absent from a production build -- where nothing links here either, since
-  # the world menu offers "demo" only when DemoMenus ships.
+  # the world menu offers "Demo" only when DemoMenus ships.
   # ONE catalogue (arc 3 phase 7). This forked on isIndexPage too — a short "parts bin" on the
   # product page and a long "make a widget" on the harness page — so the two disagreed both on
   # WHICH widgets you could make and on whether a palette arrived bare or wrapped in a window.
@@ -3308,7 +3301,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # explicit label rather than silently replacing the bare ones.
   # The one item of the demo menu that reaches the LAZY `demos` part, routed through core so the
   # menu itself can still be BUILT synchronously -- the menu's other items are all widgetFactory's,
-  # and offering "demo" only says the part is available, never that it has arrived. Deferring the
+  # and offering "Demo" only says the part is available, never that it has arrived. Deferring the
   # whole popUpDemoMenu instead would move every item a world cycle later for the sake of one.
   # ⚠ The delegate is `demoMenus.analogClock`, which is a one-liner over the CORE AnalogClockWdgt --
   # so this awaits the part for the sake of where the method lives, not what it builds. If the demo
@@ -3319,7 +3312,7 @@ class WorldWdgt extends IconGridPanelWdgt
       window.demoMenus ?= new (window["DemoMenus"])
       window.demoMenus.analogClock()
 
-  # THE DOOR into the demo family's "test menu", from the world menu AND from any widget's context
+  # THE DOOR into the demo family's "Test menu", from the world menu AND from any widget's context
   # menu. `demos` is a LAZY part, so three things have to be true here and none is the obvious one:
   #
   # ⚠ 1. The menu ITEM's visibility asks `world.parts.isAvailable "demos"`, never `if DemoMenus?`.
@@ -3348,43 +3341,43 @@ class WorldWdgt extends IconGridPanelWdgt
 
   popUpDemoMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "make a widget"
-    menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
-    menu.addMenuItem "box", @widgetFactory, "createNewBoxWdgt"
-    menu.addMenuItem "circle box", @widgetFactory, "createNewCircleBoxWdgt"
+    menu.addMenuItem "Rectangle", @widgetFactory, "createNewRectangleWdgt"
+    menu.addMenuItem "Box", @widgetFactory, "createNewBoxWdgt"
+    menu.addMenuItem "Circle box", @widgetFactory, "createNewCircleBoxWdgt"
     menu.addLine()
-    menu.addMenuItem "slider", @widgetFactory, "createNewSliderWdgt"
-    menu.addMenuItem "panel", @widgetFactory, "createNewPanelWdgt"
-    menu.addMenuItem "viewport", @widgetFactory, "createNewViewportWdgt"
-    menu.addMenuItem "canvas", @widgetFactory, "createNewCanvas"
-    menu.addMenuItem "handle", @widgetFactory, "createNewHandle"
+    menu.addMenuItem "Slider", @widgetFactory, "createNewSliderWdgt"
+    menu.addMenuItem "Panel", @widgetFactory, "createNewPanelWdgt"
+    menu.addMenuItem "Viewport", @widgetFactory, "createNewViewportWdgt"
+    menu.addMenuItem "Canvas", @widgetFactory, "createNewCanvas"
+    menu.addMenuItem "Handle", @widgetFactory, "createNewHandle"
     menu.addLine()
-    menu.addMenuItem "string", @widgetFactory, "createNewString"
-    menu.addMenuItem "text", @widgetFactory, "createNewText"
-    menu.addMenuItem "tool tip", @widgetFactory, "createNewToolTipWdgt"
-    menu.addMenuItem "speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
+    menu.addMenuItem "String", @widgetFactory, "createNewString"
+    menu.addMenuItem "Text", @widgetFactory, "createNewText"
+    menu.addMenuItem "Tool tip", @widgetFactory, "createNewToolTipWdgt"
+    menu.addMenuItem "Speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
     menu.addLine()
-    menu.addMenuItem "gray scale palette", @widgetFactory, "createNewGrayPaletteWdgt"
-    menu.addMenuItem "color palette", @widgetFactory, "createNewColorPaletteWdgt"
-    menu.addMenuItem "color picker", @widgetFactory, "createNewColorPickerWdgt"
-    menu.addMenuItem "gray scale palette in window", @widgetFactory, "createNewGrayPaletteWdgtInWindow"
-    menu.addMenuItem "color palette in window", @widgetFactory, "createNewColorPaletteWdgtInWindow"
+    menu.addMenuItem "Gray scale palette", @widgetFactory, "createNewGrayPaletteWdgt"
+    menu.addMenuItem "Color palette", @widgetFactory, "createNewColorPaletteWdgt"
+    menu.addMenuItem "Color picker", @widgetFactory, "createNewColorPickerWdgt"
+    menu.addMenuItem "Gray scale palette in window", @widgetFactory, "createNewGrayPaletteWdgtInWindow"
+    menu.addMenuItem "Color palette in window", @widgetFactory, "createNewColorPaletteWdgtInWindow"
     menu.addLine()
-    menu.addMenuItem "analog clock", @, "createDemoAnalogClock"
-    menu.addMenuItem "animation demo", @widgetFactory, "createNewAnimationDemo"
-    menu.addMenuItem "pen", @widgetFactory, "createNewPenWdgt"
+    menu.addMenuItem "Analog clock", @, "createDemoAnalogClock"
+    menu.addMenuItem "Animation demo", @widgetFactory, "createNewAnimationDemo"
+    menu.addMenuItem "Pen", @widgetFactory, "createNewPenWdgt"
 
     menu.addLine()
-    menu.addMenuItem "layout tests", @, "layoutTestsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "sample widgets"
+    menu.addMenuItem "Layout tests", @, "layoutTestsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "sample widgets"
     menu.addLine()
-    menu.addMenuItem "under the carpet", @widgetFactory, "underTheCarpet"
+    menu.addMenuItem "Under the carpet", @widgetFactory, "underTheCarpet"
 
     menu.popUpAtHand()
 
   layoutTestsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Layout tests"
-    menu.addMenuItem "adjuster widget", @widgetFactory, "createNewStackElementsSizeAdjustingWdgt"
-    menu.addMenuItem "adder/droplet", @widgetFactory, "createNewLayoutElementAdderOrDropletWdgt"
-    menu.addMenuItem "test screen 1", @widgetFactory, "setupTestScreen1"
+    menu.addMenuItem "Adjuster widget", @widgetFactory, "createNewStackElementsSizeAdjustingWdgt"
+    menu.addMenuItem "Adder/droplet", @widgetFactory, "createNewLayoutElementAdderOrDropletWdgt"
+    menu.addMenuItem "Test screen 1", @widgetFactory, "setupTestScreen1"
     menu.popUpAtHand()
     
   
@@ -3532,7 +3525,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # The shared enumeration under the query above AND the trash sever below — ONE walk, so the
   # two can never disagree about which edges exist: whatever the query counts is exactly what
-  # the sever cuts, which is what makes "move to trash" land in the bin by graph truth rather
+  # the sever cuts, which is what makes "Move to trash" land in the bin by graph truth rather
   # than by an intent tag (reference-widgets plan §4.3). Returns [{holder, edge}].
   _livenessEdgesIntoWdgt: (whichWdgt) ->
     found = []

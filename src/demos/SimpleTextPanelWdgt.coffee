@@ -10,6 +10,8 @@
 
 class SimpleTextPanelWdgt extends PanelWdgt
 
+  colloquialName: -> "text panel"
+
   # the panel's text, taken by the constructor and handed to the SimpleTextWdgt it builds
   textAsString: undefined
   # whether that text soft-wraps; the constructor takes it as `wraps`

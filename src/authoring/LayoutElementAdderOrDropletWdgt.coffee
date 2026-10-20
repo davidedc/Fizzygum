@@ -1,6 +1,9 @@
 class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
   _acceptsDrops: true
 
+  # what a person calls me: a slot a widget is dropped into (a click on me adds another after me)
+  colloquialName: -> "drop slot"
+
   constructor: ->
     super()
     @setColor WorldWdgt.theme.layoutChromeFill

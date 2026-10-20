@@ -1435,9 +1435,9 @@ class ViewportWdgt extends Widget
       super
       if @offersScrollPolicyToggle
         if @scrollPolicy is 'never'
-          menu.addMenuItem "allow scrolling", @, "toggleScrollPolicyFromMenu", toolTip: "let the contents scroll\nwhen they overflow"
+          menu.addMenuItem "Allow scrolling", @, "toggleScrollPolicyFromMenu", toolTip: "let the contents scroll\nwhen they overflow"
         else
-          menu.addMenuItem "don't scroll (crop)", @, "toggleScrollPolicyFromMenu", toolTip: "crop the contents at my\nedges instead of scrolling"
+          menu.addMenuItem "Don't scroll (crop)", @, "toggleScrollPolicyFromMenu", toolTip: "crop the contents at my\nedges instead of scrolling"
   
   # Set this viewport's text-line-wrapping state; turning wrapping ON fills
   # the content to the viewport's bounds. (Called by SimpleTextWdgt's soft-wrap

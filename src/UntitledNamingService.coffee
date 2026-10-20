@@ -1,4 +1,4 @@
-# UntitledNamingService — hands out the default "Untitled" / "new folder" names
+# UntitledNamingService — hands out the default "Untitled" / "New folder" names
 # for freshly-created desktop shortcuts and folders, tracking how many of each
 # have been made so the Nth gets an " N" suffix.
 #
@@ -23,8 +23,9 @@ class UntitledNamingService
 
     return name
 
+  # a caption, so capitalised like "Untitled": "New folder", then "New folder 2", …
   getNextUntitledFolderShortcutName: ->
-    name = "new folder"
+    name = "New folder"
     if @howManyUntitledFoldersShortcuts > 0
       name += " " + (@howManyUntitledFoldersShortcuts + 1)
 

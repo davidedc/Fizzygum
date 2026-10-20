@@ -34,7 +34,7 @@ class BinWdgt extends Widget
   
   # NOT homepage-excluded (it long was): the shared world teardown
   # (WorldWdgt._teardownWorldStructureNoSettle) ships in production and calls
-  # this -- with it stripped, "open from file…" on a homepage build crashed
+  # this -- with it stripped, "Open from file…" on a homepage build crashed
   # at teardown.
   empty: ->
     @viewport?.contents?.fullDestroyChildren()
@@ -53,7 +53,8 @@ class BinWdgt extends Widget
     @viewport.contents.color = WorldWdgt.theme.binViewportFill
     @_addNoSettle @viewport
 
-    @emptyBinButton = new SimpleButtonWdgt @, "emptyBinRequested", face: "Empty bin"
+    # "…": the press asks first (emptyBinRequested's confirmation) and empties only on a yes
+    @emptyBinButton = new SimpleButtonWdgt @, "emptyBinRequested", face: "Empty bin…"
     @_addNoSettle @emptyBinButton
 
     @_invalidateLayout()
@@ -63,7 +64,7 @@ class BinWdgt extends Widget
   # the framework's only bulk-destructive user action, so it confirms through an
   # in-world menu first; the menu is transient, so dismissal destroys it.
   emptyBinRequested: ->
-    menu = new MenuWdgt @, target: @, title: "Empty the bin?\nEverything shown in it will be\ndestroyed for good."
+    menu = new MenuWdgt @, target: @, title: "Empty the bin?\nEverything shown in it will be\ndestroyed for good.", titleIsAMessage: true
     menu.addMenuItem "Yes, empty it", @, "emptyBin"
     menu.addMenuItem "Cancel"
     # the pointer rests on the first row -- "Yes, empty it" -- where this confirmation wants it
@@ -104,7 +105,7 @@ class BinWdgt extends Widget
     world.noteStorageMembershipMayHaveChanged()
 
   # AN EXPLICIT DROP INTO MY OPEN WINDOW CARRIES TRASH INTENT (reference-widgets plan R5,
-  # ratified 2026-08-19): run the same sever the "move to trash" menu row runs, so the drop
+  # ratified 2026-08-19): run the same sever the "Move to trash" menu row runs, so the drop
   # STICKS -- without it, a still-referenced widget put in the bin is re-filed to the shelf by
   # the very next drain and visibly escapes the bin, silently overriding the user's gesture.
   # This hook fires ONLY for user drops (the drop-specific relay in

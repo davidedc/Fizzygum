@@ -7,7 +7,7 @@
 # world snapshot (§11). Non-Fizzygum files are rejected with a friendly inform.
 class FileLoading
 
-  # A hidden <input type=file>, created on demand and clicked from a "open from file…" menu
+  # A hidden <input type=file>, created on demand and clicked from an "Open from file…" menu
   # item (a user gesture, so it is allowed over file://).
   @openFromFileDialog: ->
     input = document.createElement "input"

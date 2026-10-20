@@ -1,5 +1,5 @@
-# A PROMPT's row of buttons -- the actions that end it: [Close] [Ok], or a save-shortcut prompt's
-# [Don't save] [Cancel] [Ok] -- as ONE row of the prompt's rows panel, the last one
+# A PROMPT's row of buttons -- the actions that end it: [Close] [OK], or a save-shortcut prompt's
+# [Don't save] [Cancel] [OK] -- as ONE row of the prompt's rows panel, the last one
 # (PromptWdgt._addButtonsInto builds the buttons and hands them to me).
 #
 # My geometry is the pop-up skin's (visual-design-system §4.3, §5), a pure function of my box and

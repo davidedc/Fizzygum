@@ -1,5 +1,8 @@
 class FrameContentsPlaceholderText extends TextWdgt
 
+  # stated rather than inherited (a text's "text"): I stand in for the window's missing contents
+  colloquialName: -> "placeholder text"
+
   constructor: ->
 
     super "Drop a widget in here",

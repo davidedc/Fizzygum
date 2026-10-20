@@ -80,3 +80,16 @@ SystemTest_macroDrawingsMakerReEnableEditing
 SystemTest_macroIconDroppedIntoDocumentFlows
 SystemTest_macroWindowsEmptyResizing
 SystemTest_macroMultilineTextInputScrollsWell
+# W6 (wording): name headers in capitals (TARGET / TARGET PROPERTY choosers, a widget's own menu), a message
+# header in sentence case, value rows capitalised at the row (wallpapers), the text menu's pictograms and a wire
+# row with its direction glyph from the symbols atlas, a name row ("Desktop" in the target chooser, hierarchy
+# rows "Rectangle" / "Panel"), the fixed palette test (a bare palette, as it says), and the class inspector's
+# title plus informs in sentence case
+SystemTest_macroBindTwoSlidersAndUnbind
+SystemTest_macroUniqueTargetAndPropertyAreStillPresented
+SystemTest_macroAttachShowsNoTargetsMessage
+SystemTest_macroWallpaperMenuTickTracksSelection
+SystemTest_macroFontsMenuFollowsAnApiChange
+SystemTest_macroScrollPanelMergesChildMenu
+SystemTest_macroMenuPinnedInScrollPanel
+SystemTest_macroMixinFieldEditDonorAndOverride

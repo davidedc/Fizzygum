@@ -84,10 +84,15 @@ class TransformFrameWdgt extends PanelWdgt
 
   # LENS (§5.4 family): my name is my content's — a window bar / inspector title / console
   # title naming me should name the DISPLAYED thing, not the invisible plumbing. An empty
-  # authored island falls back to its own name (dev-facing hierarchy/menus stay CLASS-named
-  # regardless — they never ask colloquialName).
+  # authored island falls back to its own name.
   colloquialName: ->
     @_soleContent()?.colloquialName() ? "transform frame"
+
+  # A ROW that names me (a hierarchy menu's, a chooser's) names the transform itself: beside my
+  # content's own row, my content's name a second time would read as a second such widget
+  # ("Rectangle", "Rectangle 2"), so a rotated rectangle's hierarchy reads "Rectangle", "Transform".
+  rowName: ->
+    "Transform"
 
   # LENS timing twin of the materialize's spec pre-seed: the ONE consumer that CAPTURES my
   # name — a FrameWdgt titles its bar at mount — asks while the materialize still holds me

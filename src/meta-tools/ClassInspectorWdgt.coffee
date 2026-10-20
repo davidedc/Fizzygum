@@ -19,7 +19,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     # the Widget branch, reachable now that an inspector opens on any value) gets a read-only
     # inspector with no footer band at all, and this button is one of its members.
     if @_subjectIsEditable()
-      @overrideInThisClassButton = new SimpleButtonWdgt @, "overrideInThisClass", face: "override in this class"
+      @overrideInThisClassButton = new SimpleButtonWdgt @, "overrideInThisClass", face: "Override in this class"
       @_addNoSettle @overrideInThisClassButton
       @overrideInThisClassButton.hide()
 
@@ -66,7 +66,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   _footerLeftButtons: ->
     super().concat [@overrideInThisClassButton]
 
-  # Destination step past the add... prompt: a class that declares augmentations
+  # Destination step past the Add… prompt: a class that declares augmentations
   # can receive the new member either on itself or on one of its mixins (a member
   # added to a mixin appears on every non-shadowing consumer class and is logged
   # for snapshot replay). An unaugmented class keeps the base single-step flow.
@@ -76,7 +76,8 @@ class ClassInspectorWdgt extends InspectorWdgt
       super
       return
     return unless prop
-    menu = new MenuWdgt @, target: @, title: "add \"" + prop + "\" to:"
+    # the title carries the member's name as typed, so it reads as a message: capitals would re-case it
+    menu = new MenuWdgt @, target: @, title: "add \"" + prop + "\" to:", titleIsAMessage: true
     menu.addMenuItem @inspectedObject.constructor.name, @, "addPropertyToClass", arg1: prop
     for eachMixinGlobalName in augmentations
       menu.addMenuItem eachMixinGlobalName, @, "addPropertyToMixin", arg1: prop, arg2: eachMixinGlobalName
@@ -141,8 +142,10 @@ class ClassInspectorWdgt extends InspectorWdgt
     @save()
     @inform "overridden in " + @inspectedObject.constructor.name + "\n(" + theMixinName + "Mixin edits no longer affect it)"
 
+  # the class name follows the dash as DATA, exactly as the breadcrumb's chip shows it ("Class
+  # Inspector — RectangleWdgt"): a class inspector's subject IS the class
   colloquialName: ->
-    "Class Inspector (" + @inspectedObject.constructor.name.replace("Wdgt", "") + ")"
+    "Class Inspector — " + @inspectedObject.constructor.name
 
   # a class inspector builds no own-props toggle, so my toggles band holds three
   # (InspectorWdgt._toggles)

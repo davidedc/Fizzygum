@@ -1,6 +1,6 @@
 class CodePromptWdgt extends CodeAreaWdgt
 
-  # the DISPATCH pair: on save/Ok I call @target[@callback].call @target, @_promptValue()
+  # the DISPATCH pair: on Save/OK I call @target[@callback].call @target, @_promptValue()
   # — ONE argument, the composed source text, the same value delivery every prompt makes
   # (the pin-setter contract, widget-authoring-guidelines.md §11).
   target: undefined
@@ -34,13 +34,13 @@ class CodePromptWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @defaultContents
 
     # buttons -------------------------------
-    @cancelButton = new SimpleButtonWdgt @, "close", face: "cancel"
+    @cancelButton = new SimpleButtonWdgt @, "close", face: "Cancel"
     @_addNoSettle @cancelButton
 
-    @saveButton = new SimpleButtonWdgt @, "deliverValue", face: "save"
+    @saveButton = new SimpleButtonWdgt @, "deliverValue", face: "Save"
     @_addNoSettle @saveButton
 
-    @okButton = new SimpleButtonWdgt @, "deliverValueAndClose", face: "ok", primary: true
+    @okButton = new SimpleButtonWdgt @, "deliverValueAndClose", face: "OK", primary: true
     @_addNoSettle @okButton
     # ---------------------------------------
 

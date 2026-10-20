@@ -96,7 +96,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     true
 
 
-  # The generic "color..." row (and the color pin) recolours my GLYPH: its ink is the one my icon
+  # The generic "Color…" row (and the color pin) recolours my GLYPH: its ink is the one my icon
   # was built with, and no hover or press of mine touches it, so a colour picked here stays. My tile
   # and my plate wear the theme's.
   setColor: (aColor) ->

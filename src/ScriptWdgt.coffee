@@ -45,7 +45,7 @@ class ScriptWdgt extends CodeAreaWdgt
   # script-ness) instead of testing `@contents instanceof ScriptWdgt`; other contents don't
   # define it and fall to the default reference. (type-test-elimination campaign)
   # opts.representsContents = the arrow-contract declaration (plan §4.4), threaded exactly as in
-  # the base shortcut builder: a filing declares content, "create shortcut" stays an alias.
+  # the base shortcut builder: a filing declares content, "Create shortcut" stays an alias.
   specialFrameReferenceShortcut: (window, referenceName, opts = {}) ->
     new ScriptShortcutWdgt window, referenceName, representsContents: opts.representsContents
 
@@ -61,14 +61,14 @@ class ScriptWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @savedScript
 
     # buttons -------------------------------
-    @runItButton = new SimpleButtonWdgt @, "tryIt", face: "try it"
+    @runItButton = new SimpleButtonWdgt @, "tryIt", face: "Try it"
     @_addNoSettle @runItButton
 
-    @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: "save + close", primary: true
+    @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: "Save + close", primary: true
     @_addNoSettle @saveButton
     # ---------------------------------------
 
-    # now that we added the buttons there is a "save" button
+    # now that we added the buttons there is a "Save + close" button
     # to disable (because the reference text has not been
     # changed yet), so trigger the content check now
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
@@ -100,7 +100,7 @@ class ScriptWdgt extends CodeAreaWdgt
 
   textContentUnmodified: ->
 
-  # My footer band: "try it" at its LEFT; "save + close", the primary action, at its right.
+  # My footer band: "Try it" at its LEFT; "Save + close", the primary action, at its right.
   _footerLeftButtons: ->
     [@runItButton]
 

@@ -1,8 +1,14 @@
 class ListWdgt extends ViewportWdgt
 
-  # The label rule when a caller supplies none. A STATIC, so every list shares the
-  # one function object rather than each instance carrying its own closure.
-  @defaultLabelGetter: (element) ->
+  # what a person calls me; without it the chain answers my base's "viewport" (my contents panel
+  # has no name of its own to lend, ViewportWdgt.colloquialName)
+  colloquialName: ->
+    "list"
+
+  # The label a row shows for an element. A STATIC, asked at every row build, never stored on an
+  # instance: a function-valued field has no source to serialize, so a list holding one would make
+  # every world it stands in unsaveable.
+  @labelOf: (element) ->
     return element  if Utils.isString element
     return element.toSource()  if element.toSource
     element.toString()
@@ -20,7 +26,6 @@ class ListWdgt extends ViewportWdgt
     false
 
   elements: undefined
-  labelGetter: undefined
   format: undefined
   listContents: undefined # a CommandPanelWdgt with the contents of the list
   selected: undefined # the selected ROW: the MenuItemWdgt `select` was dispatched with (slot 1); its labelString is the element's label
@@ -43,7 +48,6 @@ class ListWdgt extends ViewportWdgt
   constructor: (@elements = [], opts = {}) ->
     @target = opts.target
     @action = opts.action
-    @labelGetter = opts.labelGetter ? ListWdgt.defaultLabelGetter
     @format = opts.format ? []
     @doubleClickAction = opts.doubleClickAction
     @memberFactsQuery = opts.memberFactsQuery  if opts.memberFactsQuery?
@@ -119,7 +123,7 @@ class ListWdgt extends ViewportWdgt
         memberFacts = if @memberFactsQuery? and !placeholder then @target[@memberFactsQuery] element else {}
 
         # a row's double-click reaches me (openRow, slot 1 the row), and I forward it to my target
-        @listContents.addMenuItem @labelGetter(element), @, "select",
+        @listContents.addMenuItem (ListWdgt.labelOf element), @, "select",
           color: color
           bold: bold
           italic: italic

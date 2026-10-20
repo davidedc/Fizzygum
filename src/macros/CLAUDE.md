@@ -223,7 +223,10 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   testing what a half-finished gesture leaves behind (`ActivePointerWdgt.processPointerCancel`).
 - **L2 locators**: `findWidgetByTextDescription([desc,occ,total])` (the recorded-identity bridge — wraps
   `world.getWidgetViaTextLabel`), `findTopWidgetByClassNameOrClass`, `pointAtFractionOf`, `getMostRecentlyOpenedMenu`,
-  `getTextMenuItemFromMenu{,ByPrefix,ByContains}`; plus the SCREEN-family pair for widgets on any MAPPED
+  `getTextMenuItemFromMenu` (a row by its EXACT label), `rowOfMenuStandingFor menu, widget` (a row that NAMES a widget —
+  a hierarchy menu's, a chooser's, a wire's — found by that widget, `MenuItemWdgt.representedWidget`; it throws a named
+  error on no row or several) and its query twin `rowsOfMenuStandingFor` (every such row, in order; never throws, so a
+  step can ask whether a menu offers a widget at all); plus the SCREEN-family pair for widgets on any MAPPED
   plane — inside an affine island OR a resident of a SCROLLED pane (paint-time scroll: a plane's widgets
   never move when it scrolls, so their plane-local geometry sits offset-pixels away from the pixels) —
   `screenPointAtFractionOf` and its action twin `moveToAndClickAtScreenFractionOf_InputEvents` (the plane-local
@@ -253,11 +256,12 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `resizeWindowTo`); menus (`openMenuOf`, `openOwnMenuOf` — the
   widget's OWN menu even where children cover its centre: it right-clicks a point where the widget itself is what a press
   hits, so "the panel's menu" is said by meaning rather than by a background fraction the next layout moves onto a child,
-  `moveToItemOf{Menu,TopMenu}AndClick`, `moveToItem{StartingWith,Containing}OfMenuAndClick`, `clickMenuHeaderToPin`);
+  `moveToItemOf{Menu,TopMenu}AndClick` — a row by its exact label, `moveToRowOf{Menu,TopMenu}StandingForAndClick` — a
+  row by the widget it stands for, `clickMenuHeaderToPin`);
   a prompt's buttons (`clickPromptButton(prompt, label)`, `clickTopPromptButton(label)`: a prompt ends in a row of real
-  buttons — [Close] [Ok], or [Don't save] [Cancel] [Ok] — that carry no `labelString`, so the row verbs cannot see them;
+  buttons — [Close] [OK], or [Don't save] [Cancel] [OK] — that carry no `labelString`, so the row verbs cannot see them;
   the label is the button's face text, a missing label throws naming the labels the prompt has, and the press is verified
-  like every widget-aimed press; an `inform` is a MENU, and its Ok stays a row);
+  like every widget-aimed press; an `inform` is a MENU, and its "OK" stays a row);
   clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
   `dragWindowResizerTo`); assertions (`assertValuesEqual` — the general expected-vs-found verb every non-pixel
   claim goes through, `assertTopMenuItemCount`, `assertTopMenuItemStrings`,
@@ -268,18 +272,23 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   plain label of a menu's one ticked row, read from the rows' tick STATE (the tick is drawn, never
   typed into a label), so a test asserts what a ticked menu SHOWS by meaning; for the ticked-menu
   family (wallpapers, fonts, any row carrying a `MenuRowReflectionSpec`), where exactly one row is
-  ticked and "which one" is the whole state. `rowOpensSubmenu(menu, label)` — whether the row with
-  that exact label carries the `opensSubmenu` flag its drawn chevron shows (true / false, undefined
-  for no such row; it scrolls nothing), the by-meaning way to assert "this row leads on". All
-  `…_InputEvents`.
+  ticked and "which one" is the whole state. "This row leads on" is read off the ROW: its
+  `opensSubmenu` flag, the one its drawn chevron shows — `(@rowOfMenuStandingFor menu, widget).opensSubmenu`
+  for a row naming a widget, `(@getTextMenuItemFromMenu menu, "Attach").opensSubmenu` for a wording row —
+  asserted through `assertValuesEqual`. All `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
   `bringInViewAndClickOnListItem` (the same verified scroll-correct-click on a list you NAME — a test holding two
   inspectors passes the one it means; the top-inspector verb is this one applied to `topInspectorList()`),
-  `setControllerTargetToWidgetProperty`, `bindControllerTo` (its TWO-WAY sibling — `bind ⇄`, which takes no
+  `openOwnMenuAtFractionOf` (right-click a widget at a fraction and land in its OWN menu, stepping through the
+  hierarchy menu by the widget's own row where one opens instead),
+  `setControllerTargetToWidgetProperty` (controller, target WIDGET, pin label — "Connect" → "Connect to" → the
+  target's row in the "target" chooser, found by the widget → the property row),
+  `bindControllerTo` (its TWO-WAY sibling — "Bind ⇄", which takes no
   property argument because a bind's pins are forced to be the two widgets' principal ones),
-  `disconnectControllerWire` (the inverse of both — pick a controller's per-wire
-  menu row by prefix, then "disconnect"), the window-in-window fixture pair, `dwellDragWindowByTitleToEmbed`
+  `disconnectControllerWire` (the inverse of both — the controller's wire row standing for the target widget, then
+  "Disconnect"); all three take the target widget, never a label, and reach a controller nested in a container through
+  `openOwnMenuAtFractionOf`; the window-in-window fixture pair, `dwellDragWindowByTitleToEmbed`
   (float-drag a WINDOW by its title strip and DWELL-ARM-embed it — press, drag, non-scaled linger past
   `dwellToArmMs`, release; use wherever a window must NEST after the drag-embed rule flip; give `topLeft` when the
   host keeps the carried bounds, else the release point picks the host's slot) over `dwellDragWindowByGrabToEmbed`
@@ -316,18 +325,23 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   settle so the wrapped height is readable.
 - **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`. Capture a popup
   reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents` (a prompt's
-  buttons via `@clickPromptButton_InputEvents prompt, "Ok"`).
-- **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X" per ancestor, each a submenu row) — navigate by class-name
-  prefix to reach the desired ancestor's own menu (and note "pick up" lives in a morph's own hierarchy submenu, not top-level).
-- **Menu/target labels STRIP "Wdgt" from the class name** — the strip is applied where the menu is BUILT
-  (`Widget.buildHierarchyMenu`, `ControllerMixin`'s choosers, `WireSpec.describeConnection`) and by
-  `getTextDescription()`; `toString()` itself does NOT strip it, so a chooser built from a bare `toString()`
-  (`Widget._attachToChosenParent`'s "choose new parent:") shows the full class name. Where it IS stripped a
-  `FrameWdgt` reads `a Window`, a `StringWdgt` reads `a String`, a `TextWdgt` reads `a Text` — navigate hierarchy /
-  "connect to" menus by the **Wdgt-stripped** name (`"a Text"`, not `"a TextWdgt"`). A label carries no mark of where its
-  row leads: a row that opens a submenu states it (`opensSubmenu: true`) and DRAWS a chevron, so a test asserts it with
-  `rowOpensSubmenu`, never by a typed arrow. `findTopWidgetByClassNameOrClass` and
-  `instanceof`, by contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
+  buttons via `@clickPromptButton_InputEvents prompt, "OK"`).
+- **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** (one row per ancestor that has a menu, each a
+  submenu row) — step into the ancestor you mean by the WIDGET, `@moveToRowOfTopMenuStandingForAndClick_InputEvents
+  ancestor` (or `openOwnMenuAtFractionOf_InputEvents_Macro widget, fraction`, which right-clicks and steps in when a
+  hierarchy menu is what opened); note "Pick up" lives in a widget's own submenu, not top-level.
+- **A row that NAMES a widget reads its HUMAN name, never its class name** — the hierarchy menu's rows, the "new
+  parent", "target" and "bind with" choosers' rows, a handle's "Attach" rows and a controller's wire rows all read
+  `Widget.rowName` (the capitalised `colloquialName`: a `RectangleWdgt` reads "Rectangle", a `FrameWdgt` "Window" or
+  "Internal window", a `StringWdgt`/`TextWdgt` "Text", the world "Desktop"), told apart within ONE menu by
+  `CommandPanelWdgt.rowLabelsNaming` — a text by its start and a window by its title in straight quotes
+  (`'Text "Hello"'`), else a number in row order ("Rectangle", "Rectangle 2"); a wire row adds " · ", the pin's label and
+  its arrow ("Slider · value ⇄"). That wording moves whenever the menu lists something else, so a test finds such a row
+  by the widget it STANDS FOR (`rowOfMenuStandingFor` and the `moveToRowOf…StandingForAndClick` pair) and asserts the
+  wording itself (`assertTopMenuItemStrings ["Desktop"]`) only where the wording is the point. A label carries no mark
+  of where its row leads either: a row that opens a submenu states it (`opensSubmenu: true`) and DRAWS a chevron, so a
+  test reads the row's `opensSubmenu`, never a typed arrow. `findTopWidgetByClassNameOrClass` and `instanceof`, by
+  contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
 - **Menu items / magnets are now in the modern button family** — the deprecated `TriggerMorph` was deleted and replaced by
   a clean base **`LabelButtonWdgt`** (a flat label-bearing button) on the modern family: `Widget → ButtonWdgt` (was
   `EmptyButtonMorph`) `→ LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
@@ -336,15 +350,15 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   the whole box, menu rows a `desk` hover / `chrome` press plate of radius 6 on a paper box, and a member row (the
   Object Inspector's list, `MemberRowWdgt`) a 40 px `accentTint` plate while selected, its `label` a cropping
   `StringWdgt`.
-  `MenuItemMorph`→`MenuItemWdgt` (BATCH 4 — the button-family rename), so use `instanceof MenuItemWdgt` and the
-  Wdgt-stripped hierarchy nav string `"a MenuItem"` (NOT `"a MenuItemWdgt"`). For a STANDALONE button fixture use
+  `MenuItemMorph`→`MenuItemWdgt` (BATCH 4 — the button-family rename), so use `instanceof MenuItemWdgt`, and reach a
+  menu item's own menu through its hierarchy menu by the ITEM (`@moveToRowOfTopMenuStandingForAndClick_InputEvents
+  item`; its row reads "Menu item", or 'Menu item "Demo"' beside another). For a STANDALONE button fixture use
   `SimpleButtonWdgt` (the design's button: radius 6, its look derived from the theme by state, its one-line
   `StringWdgt` face centred in its box and cropped on `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
 - **One inspector — windowed by default, but ALSO a first-class NAKED widget:** there is a single `InspectorWdgt` (the
   old `InspectorMorph` was deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector`
-  (the duplicate `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev → inspect" item now
-  routes through `inspect`/`spawnInspector` too). The menu/inspect paths wrap it WINDOWED — `spawnInspector` puts it in a
+  (the "Dev → Inspect" item routes through `inspect`/`spawnInspector` too). The menu/inspect paths wrap it WINDOWED — `spawnInspector` puts it in a
   `FrameWdgt` (560×410) — but it now ALSO renders + functions + self-resizes **NAKED**: `world.add new InspectorWdgt
   target` paints its own `panel` body (`inspectorBodyFill`, a `RectangularAppearance`, naked and windowed alike) and shows its own `@resizer` HandleWdgt (visible only when
   free-floating). To drive a naked resize, press THAT handle: `@syntheticEventsMouseMovePressDragRelease_InputEvents
@@ -356,12 +370,13 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   overflows makes its alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2, so shrink the WIDTH (keep
   the detail fitting) for a deterministic resize shot. Find the inspector with `@findTopWidgetByClassNameOrClass
   InspectorWdgt`; the `*FromTopInspector*` helpers target it (windowed or naked). Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
-  **"dev → console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "run all" button → `doAll`, runs the text with
+  **"Dev → Console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "Run all" button → `doAll`, runs the text with
   `@`=the console's target); its detail pane is a `SimpleTextWdgt` (a `TextWdgt`) — a synthetic right-click
-  can't open its "do all"/context menu, it defaults to NON-wrapping (call `detailText.softWrapOn()` to wrap), and
+  can't open its "Do all"/context menu, it defaults to NON-wrapping (call `detailText.softWrapOn()` to wrap), and
   it is only editable after a list-row is selected; it HIDES inherited properties by default (toggle
   `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);
-  property editing is via the `add.../rename.../remove/save` footer buttons (`save` → `@target.injectProperty`); and
+  property editing is via the "Add…"/"Rename…"/"Remove"/"Save" footer buttons ("Save" → `save` → `injectProperty` on
+  the inspected object); and
   to nest it into a document/panel, drag it by its title and linger past `dwellToArmMs` (the dwell-to-arm embed — there is no
   internal/external gate any more; a window's skin is derived from its parentage, `FrameWdgt.isInternal`).
 

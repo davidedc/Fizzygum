@@ -264,11 +264,11 @@ class HandleWdgt extends Widget
     @state = @STATE_NORMAL
     @_changed()
 
-  # Menu action ("attach..." -> choose target): corner-attach this handle to the chosen widget. A discrete
+  # Menu action ("Attach" -> the "target" chooser): corner-attach this handle to the chosen widget. A discrete
   # user action, so it goes through the public self-settling add() -- the corner placement comes from default
   # LayoutSpecWhenAddedTo and @target is adopted in _reactToBeingAdded (the destination IS the new target). add()
   # also unlinks me from any previous parent (e.g. the world, if I had been detached). Kept on this name + arg
-  # position because the "attach..." menu dispatches it by string with the chosen target as the 3rd argument.
+  # position because the "Attach" chooser dispatches it by string with the chosen target as the 3rd argument.
   makeHandleSolidWithParentWidget: (ignored, ignored2, widgetAttachedTo) ->
     widgetAttachedTo?.add @
 
@@ -276,12 +276,14 @@ class HandleWdgt extends Widget
   # HandleWdgt menu:
   attach: ->
     choices = world.plausibleTargetAndDestinationWidgets @
-    menu = new MenuWdgt @, target: @, title: "choose target:"
+    menu = new MenuWdgt @, target: @, title: "target"
     if choices.length > 0
-      choices.forEach (each) =>
-        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50), @, 'makeHandleSolidWithParentWidget', arg1: each, representsAWidget: true
+      # each row names its widget (CommandPanelWdgt.rowLabelsNaming)
+      labels = CommandPanelWdgt.rowLabelsNaming choices
+      choices.forEach (each, i) =>
+        menu.addMenuItem labels[i], @, 'makeHandleSolidWithParentWidget', arg1: each, representsAWidget: true
     else
       # Not pre-computed: finding eligible widgets is costly, so the list is calculated lazily
       # here, on menu-open; if none are found, show a message instead of hiding the entry.
-      menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleIsAMessage: true
     menu.popUpAtHand() if choices.length

@@ -1,5 +1,5 @@
 # The design's TOGGLE (visual-design-system §4.3 and §4.8; the draft's UI-guidelines §7): ONE
-# bordered rounded control with a FIXED label -- "methods", never "methods: on" -- whose look says
+# bordered rounded control with a FIXED label -- "Methods", never "Methods: on" -- whose look says
 # whether it is ON. A press-me button in every other respect (I am a SimpleButtonWdgt): a click
 # dispatches my one action at my target, handing me in slot 1, and a disabled toggle catches the
 # press and does nothing.

@@ -55,7 +55,7 @@ class CodeAreaWdgt extends Widget
 
     # register this wdgt as one to be notified when the text
     # changes/unchanges from "reference" content
-    # so we can enable/disable the "save" button
+    # so we can enable/disable the save button (@saveButton)
     @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
 
     @textWidget = @tempPromptEntryField.textWdgt
