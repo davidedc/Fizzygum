@@ -15,7 +15,8 @@
 #                my caption's box outset by the plate's padding
 #   the CAPTION  my label child, a TextWdgt in desktopCaptionText on the plate: one line hugs its
 #                text, a longer caption wraps across my width less the plate's padding (so its plate
-#                spans my width), desktopIconCaptionMaxLines lines at most, the rest ending in "…"
+#                spans my width), desktopIconCaptionMaxLines lines at most, the rest ending in "…";
+#                each line stands on the caption's own line box (its desktopCaption font role's)
 # I lay all of it out again at EVERY arrange (_layOutOwnContents), from the theme of the page I am
 # in, so the bounds a saved or copied icon carries for its children never pin a look. I am made at
 # the standard extent; in a box of any other size nothing shrinks: every piece keeps its size and
@@ -69,10 +70,11 @@ class WidgetHolderWithCaptionWdgt extends Widget
       @icon = new SimpleDropletWdgt "icon"
     @_applyExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
     @_addNoSettle @icon
-    # the caption: a TextWdgt at the desktopCaption font, which it keeps -- FLOAT never scales a
-    # short caption up to fill its box, and the CROP default ellipsises what the most lines I give
-    # it cannot hold (editing an ellipsised caption hands off to the pop-out editor,
-    # handOffToPopoutEditorIfOverflowing). Its box and its wrapping are my layout's.
+    # the caption: a TextWdgt in the desktopCaption font role (its font and its line box), which it
+    # keeps -- FLOAT never scales a short caption up to fill its box, and the CROP default
+    # ellipsises what the most lines I give it cannot hold (editing an ellipsised caption hands off
+    # to the pop-out editor, handOffToPopoutEditorIfOverflowing). Its box and its wrapping are my
+    # layout's.
     @label = new TextWdgt @labelContent, fontRole: theme.fonts.desktopCaption
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @label.color = theme.desktopCaptionText
@@ -220,10 +222,12 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # wrapping at its own width -- the wrapper counts a trailing space after the last word, which a
     # box that hugs the line does not hold, so a wrapping caption would break its one line there.
     # MORE: wrapping at the text width they were measured at, in a box that wide, so the caption
-    # shows exactly the lines measured here (CROP ends the last one it can hold in "…").
+    # shows exactly the lines measured here (CROP ends the last one it can hold in "…"). Either way
+    # the box is as tall as those lines on the caption's own line box, at the size it paints at, so
+    # the plate's lines and the caption's agree.
     @label.softWrap = wraps
     boxWidth = if wraps then textWidth else Math.max @label.getMinimumExtent().x, Math.min widestLine, textWidth
-    boxHeight = lineCount * theme.desktopIconPlateLineHeight
+    boxHeight = lineCount * @label.linePitch @label.originallySetFontSize
     # the plate centred across my width (rounded down), the box inside it at the plate's padding
     plateLeft = @left() + Math.floor (@width() - (boxWidth + 2 * horizontalPadding)) / 2
     boxTop = tile.bottom() + theme.desktopIconTilePlateGap + theme.desktopIconPlateVerticalPadding

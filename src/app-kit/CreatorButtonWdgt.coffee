@@ -1,12 +1,9 @@
 class CreatorButtonWdgt extends Widget
 
+  # my hover / press state shows on the tool cell I stand in, never on me (ParentStainerMixin)
   @augmentWith HighlightableMixin, @name
   @augmentWith ParentStainerMixin, @name
   @augmentWith WidgetCreatorAndSmartPlacerOnClickMixin, @name
-
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
 
   actionableAsThumbnail: true
 
@@ -18,8 +15,8 @@ class CreatorButtonWdgt extends Widget
   excludedFromEditorFocusTracking: ->
     true
 
-  # subclasses supply createAppearance (the icon) + toolTipMessage (hover text,
-  # declared on Widget); the appearance is set here after super, as the original
+  # subclasses supply createAppearance (the icon, in the toolbarGlyph ink) + toolTipMessage
+  # (hover text, declared on Widget); the appearance is set here after super, as the original
   # ctors did.
   constructor: ->
     super

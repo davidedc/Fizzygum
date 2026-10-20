@@ -2,7 +2,7 @@ class ExternalLinkCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "external link"
 
-  createAppearance: -> new ExternalLinkIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new ExternalLinkIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   createWidgetToBeHandled: ->
     switcheroo = new SimpleLinkWdgt

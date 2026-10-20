@@ -161,10 +161,19 @@ class SimpleTextWdgt extends TextWdgt
   # softWrapOn/Off (above) are viewport-specific (they flip
   # @parent.parent.isTextLineWrapping).
 
+  # THE ITEM LOOK FOLLOWS THE EDIT MODE of the container I sit in (a document's stack, a stretchable
+  # panel): its view-mode core asks me to blend in, its edit-mode core to contrast out
+  # (Widget._disable / _enableDragsDropsAndEditingNoSettle). In view mode an item -- my background
+  # the editable-item fill -- melts into the page I sit on, my parent's fill; in edit mode a
+  # background that is my page's fill shows the item fill again. Both sides are read live, the
+  # theme's role and my parent's colour, so the round trip holds whatever either is styled to. A
+  # background of any other colour (one the user set) is left as it is in both modes.
   blendInWithPanelColor: ->
-    if @backgroundColor.equals WorldWdgt.theme.editableItemFill
-      @setBackgroundColor Color.create 249, 249, 249
+    page = @parent?.color
+    if page? and @backgroundColor?.equals WorldWdgt.theme.editableItemFill
+      @setBackgroundColor page
 
   contrastOutFromPanelColor: ->
-    if @backgroundColor.equals Color.create 249, 249, 249
+    page = @parent?.color
+    if page? and @backgroundColor?.equals page
       @setBackgroundColor WorldWdgt.theme.editableItemFill

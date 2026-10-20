@@ -1155,8 +1155,11 @@ assertion a recapture after a regression silently stores two different hashes an
   at a Point or onto a widget's centre. A SimpleDocument's INNER content panel (`VerticalStackPanelWdgt`,
   `_acceptsDrops:true`) flows arbitrary widgets, so a drop over its content area re-parents the widget as a flowing paragraph —
   no "enable editing" needed (the OUTER scroll panel's `@disableDrops` only gates its chrome). INSERTION INDEX ↔ drop Y:
-  `VerticalStackPanelWdgt.add` (`:34-42`) inserts AFTER the sibling whose vertical span contains the drop Y, APPENDS if the
-  Y is in a gap/below all — **index 0 is unreachable**; aim at a sibling's `.center()` for "after it", `lastEl.bottom()+N` to append.
+  `VerticalStackPanelWdgt._indexForDropAt` inserts BEFORE the first sibling whose vertical middle (`.center().y`, a whole
+  pixel) is below the drop Y (rounded), and APPENDS when none is — so a drop on a sibling's upper half, in the gap above it or in
+  the top padding lands before it. Aim at a sibling's upper quarter (`el.top() + floor(el.height() / 4)`) for "before it", at its
+  `.center()` or lower half for "after it", below every middle (e.g. the view's foot) to append. ⚠ The drop point must be INSIDE
+  the visible document: a tall paragraph's `.bottom()` can lie past the viewport, where the drop lands on the desktop instead.
 - **`@dragWidgetTo_InputEvents` grabs the CENTRE — which may be a sub-widget.** For a SliderWdgt (button at the centre at value 50)
   it grabs/moves the BUTTON, not the slider (the drop silently does nothing). Drop such a widget programmatically: `widget.pickUp()`
   + a no-button `@syntheticEventsMouseMove_InputEvents` + `@syntheticEventsMouseClick_InputEvents()`. A plain shape

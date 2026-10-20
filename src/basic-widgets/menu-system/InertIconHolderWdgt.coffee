@@ -1,6 +1,16 @@
-# A PICTURE of a widget, taken once and kept as pixels. I show what a command's tool looks like --
-# a menu row places me as its glyph (MenuItemWdgt._placeMyIcon) -- and I am a picture in the
-# literal sense: I hold a raster, not the widget it was taken from, and I have no children at all.
+# A PICTURE of a widget, taken once and kept as pixels (a typed face excepted, below). I show what a
+# command's tool looks like -- a menu row places me as its glyph (MenuItemWdgt._placeMyIcon) -- and
+# I am a picture in the literal sense: I hold a raster, not the widget it was taken from, and I have
+# no children at all.
+#
+# ONE KIND OF FACE CANNOT BE KEPT AS PIXELS: a face TYPED from the glyph atlases (a text tool's B,
+# I or </>, TypedFaceIconAppearance) types placeholder boxes while its atlas is still loading, and a
+# raster shot then would keep the boxes for good -- the widget shot is a throwaway copy, so the
+# atlas-warm repaint (which repaints the widgets that drew cold glyphs) never reaches the shot. Such
+# a face hands me a live copy of itself instead (its appearance's livePictureOn), which I wear in
+# place of a raster: it paints at my extent, a cold draw of it is MINE, and the atlas-warm repaint
+# repaints me. It is still a picture -- an appearance, never the widget -- so the reasoning below
+# holds unchanged.
 #
 # WHY A RASTER AND NOT THE WIDGET: an icon derived from a live thing IS that thing. A copy of a
 # tool is a button, and a button under a pointer behaves like a button -- it highlights, it
@@ -21,10 +31,11 @@
 
 class InertIconHolderWdgt extends Widget
 
-  # my picture: an HTMLCanvasElement at device resolution, taken at construction and never redrawn.
-  # It rides serialization as a $Canvas (a PNG data URL) and duplication through
-  # Duplicator._copyCanvas, so it needs no transient declaration and no rebuild hook -- a snapshot
-  # of a pinned menu comes back with its icons still on it.
+  # my picture: an HTMLCanvasElement at device resolution, taken at construction and never redrawn
+  # (undefined while I wear a live face instead, see the header). It rides serialization as a
+  # $Canvas (a PNG data URL) and duplication through Duplicator._copyCanvas, so it needs no
+  # transient declaration and no rebuild hook -- a snapshot of a pinned menu comes back with its
+  # icons still on it.
   raster: undefined
 
   # POSITIONAL for the identity -- the widget I am a picture OF -- and `fitInto` (a Point, the box
@@ -57,6 +68,14 @@ class InertIconHolderWdgt extends Widget
   # the two rendering backends are not obliged to agree about pixel for pixel.
   _takePictureOf: (aWdgt, fitInto) ->
     extent = @_extentFitting aWdgt, fitInto
+    # A FACE THAT STAYS LIVE (the header): when the widget's whole picture is its own appearance (it
+    # has no children) and that appearance offers a live copy, I wear the copy at my extent, and
+    # there is nothing to shoot.
+    livePicture = if aWdgt.children.length is 0 then aWdgt.appearance?.livePictureOn? @
+    if livePicture?
+      @appearance = livePicture
+      @__commitExtent extent
+      return
     # the APPLY tier, not the public setter: the widget I am shooting is a throwaway orphan, and
     # what I need before the shot is exactly what this does -- re-lay its own contents at the new
     # size. There is no world state to settle around it.

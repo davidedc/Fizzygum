@@ -164,7 +164,7 @@ three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
 | `KeepsRatioWhenInVerticalStackMixin` | 69 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `VerticalStackViewportWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ViewportWdgt`) | unrelated branches (Viewport / Panel / Widget) | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
-| `ParentStainerMixin` | 11 | 2 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt` | unrelated leaves | yes |
+| `ParentStainerMixin` |       28 | 4 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt`, `GlassBoxTopWdgt` (a thumbnail's lid), `CodeInjectingSimpleRectangularButtonWdgt` (a paint tool): a toolbar tool tells the tool cell it stands in that its pointer state changed (`GlassBoxBottomWdgt.noteItemStateChanged`), and the cell derives its own look | unrelated leaves | no |
 
 (The count excludes three that no longer exist as mixins: dead `ContainerMixin`, deleted;
 the five misfiled ones, folded into standard-OO homes — §4; and `DeepCopierMixin`, inverted
@@ -185,8 +185,8 @@ The test: consumers on unrelated branches AND behaviour that overrides framework
   panel clipping), `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
   bubbling to a coordinating parent, across Viewport/Panel/Widget branches),
   `KeepsRatioWhenInVerticalStackMixin`,
-  `WidgetCreatorAndSmartPlacerOnClickMixin`, `ParentStainerMixin` (barely — 2 unrelated
-  leaves each).
+  `WidgetCreatorAndSmartPlacerOnClickMixin` (barely — 2 unrelated leaves), `ParentStainerMixin`
+  (4 unrelated leaves: the toolbar tools).
 - **Misfiled (single consumer / single subtree / config bag) — all five now live in
   standard-OO homes**, motivated by inspectability (a mixed-in member's
   source is view-only in the inspector, and it is unclear whether to edit the donor or

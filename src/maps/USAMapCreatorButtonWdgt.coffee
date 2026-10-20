@@ -2,7 +2,7 @@ class USAMapCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "USA map"
 
-  createAppearance: -> new LittleUSAIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new LittleUSAIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   createWidgetToBeHandled: ->
     switcheroo = new SimpleUSAMapIconWdgt

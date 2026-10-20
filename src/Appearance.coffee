@@ -25,11 +25,9 @@ class Appearance
   # FRACTIONAL (a fractional slot origin), where the clip's own boundary quantization differs from
   # the fills' and can cut an edge column (found at dpr 2, macroDropIntoRotatedStretchablePanel…).
   clipsToDamageBox: true
-  # the ownColorInsteadOfWidgetColor is used for buttons
-  # with icons on a glass bottom: the glass bottom has
-  # to change the color on hover, so the icon_button on it
-  # stain it, but they have to retain their color otherwise
-  # they are not visible anymore.
+  # A colour of my own, painted instead of my widget's @color: an icon whose ink is fixed whatever
+  # its widget's colour says -- a toolbar tool's glyph, in the toolbarGlyph ink, on a tool cell whose
+  # look shows the tool's state (GlassBoxBottomWdgt) -- takes it here, at construction.
   ownColorInsteadOfWidgetColor: undefined
 
   constructor: (@widget, @ownColorInsteadOfWidgetColor) ->

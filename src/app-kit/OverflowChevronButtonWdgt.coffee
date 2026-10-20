@@ -4,7 +4,14 @@
 # retired by ToolPanelWdgt's own arrange, so it exists exactly while some tool is hidden and a
 # strip that shows everything carries no chevron at all.
 #
-# The remainder menu is DERIVED at pop time from the tools currently hidden, and it is a
+# I LOOK LIKE A TOOL in its cell (OverflowChevronAppearance): a plate in the tool cell's fill for my
+# state -- none at rest, hovered, pressed -- under the drawn » at the glyph size my strip names
+# (ToolPanelWdgt writes my glyphSize as it places me), in the toolbarGlyph ink in every state. The
+# button family's hover / press colours (IconButtonWdgt's iconHoverColor) never reach my glyph:
+# my look reads my state as it paints, so a transition writes no colour (_updateColor).
+#
+# The remainder menu is DERIVED at pop time from the tools currently hidden -- each row's name,
+# picture and tick (ticked while its tool is the active one) -- and it is a
 # transient pop-up: there is no wiring keeping it in step with the strip, because a strip that
 # re-arranges under an open menu dismisses that menu as it dismisses any other transient. One
 # widget, one staleness signal.
@@ -13,19 +20,28 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
 
   toolTipMessage: "more tools"
 
-  constructor: ->
-    super()
-    # A strip is a light surface, so the mark takes the theme's dark icon ink rather than the
-    # button family's near-white default.
-    #   It is `color_normal` -- the RESTING colour of the highlight state machine -- and not a
-    # bare `@color`: HighlightableMixin repaints me at color_normal on every hoverExited and
-    # pressEnded, so a colour set beside it survives only until the first pointer visit and I
-    # then go near-white on a near-white strip. @color follows it so my very first paint, before
-    # any pointer has reached me, is already the resting one.
-    @color_normal = WorldWdgt.theme.iconInk
-    @color = @color_normal
+  createAppearance: -> new OverflowChevronAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createAppearance: -> new OverflowChevronIconAppearance @
+  # MY FACE IS A PICTURE (Widget.isPointerTargetAt, AM-I-A-PICTURE): the empty face every icon
+  # button carries covers my whole box, so a press on it would reach me only as an escalated
+  # pressBegan, never as the pressEnded that ends it, and it would catch a press in my plate's corner
+  # notches. Nothing in it is a pointer target: the press, the release and the click are mine, and
+  # where I catch the pointer is my plate's shape.
+  _showsChildAsAPicture: (child) ->
+    child is @faceWidget
+
+  # HighlightableMixin's colour hook, which every one of its state transitions calls after setting
+  # @state. My look for a state is read from it as my appearance paints, so a transition only
+  # repaints me: no colour of mine is written here, and none a transition could leave behind.
+  _updateColor: ->
+    @_changed()
+
+  # HighlightableMixin's release transition, re-answered: a release reaches me only when it ends the
+  # press that began on me with the pointer still over me, so I am hovered, not at rest -- the
+  # pointer leaving me (hoverExited) is what brings the rest look back.
+  pressEnded: ->
+    @state = @STATE_HIGHLIGHTED
+    @_updateColor()
 
   actOnClick: ->
     # the strip owns the answer to "what is behind me" -- capability via ?(), so a chevron that
@@ -43,9 +59,13 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
     menu.actsAsEditorChrome = true
     for cell in hiddenCells
       tool = cell.glassBoxItem?() ? cell
+      # a hidden tool that is the ACTIVE one (isActiveTool: the armed paint tool, a text tool
+      # mirroring the edited text) says so with its row's tick, as its cell would with its plate --
+      # read now, at pop time, like everything else in this menu
       menu.addMenuItem (tool.toolTipMessage ? tool.colloquialName()), @, "triggerToolFromMenu",
         arg1: cell
         icon: @_miniatureOf tool
+        ticked: (if tool.isActiveTool?() then true else undefined)
     menu.popUpAtHand()
 
   # A ROW SHOWS WHAT ITS TOOL LOOKS LIKE: a picture of the tool at glyph size, beside the name.
@@ -54,8 +74,9 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # behind; the menu is transient and goes with the strip.
   #   A COPY is photographed rather than the tool itself, because fitting it to the glyph box
   # means resizing it, and the tool on the strip must not move. The copy exists for one shot and
-  # is destroyed straight after: what the row keeps is pixels (InertIconHolderWdgt), which is also
-  # what keeps the row's tap the ROW's -- a live tool held on a row would take the tap itself.
+  # is destroyed straight after: what the row keeps is a picture (InertIconHolderWdgt: pixels, or
+  # for a typed face a live copy of the face's appearance, never the tool), which is also what keeps
+  # the row's tap the ROW's -- a live tool held on a row would take the tap itself.
   #   An undefined icon is simply a label-only row (MenuItemWdgt), so a tool that cannot be copied
   # costs its row nothing.
   _miniatureOf: (tool) ->

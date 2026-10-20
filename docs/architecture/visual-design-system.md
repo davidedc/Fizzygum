@@ -33,8 +33,8 @@ another class, and most values are `Color`s):
 |---|---|
 | **PALETTE** | The design's named colours (§2), at the design's values. A palette colour paints nothing by itself. |
 | **ROLES** | What each SURFACE paints with — `windowBarFill`, `menuRowText`, `speechBubbleStroke`, `seamRule`, … One role per surface: two surfaces that paint the same colour still hold two roles, so one can be restyled without moving the other. A role's value is either a palette colour (the surface wears the design: `@seamRule = @chrome`), a value the design gives that surface alone, outside the palette (`clockMark`, the clock's marks), or the exact value the surface painted with before it adopted the design. |
-| **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects — `menuRow`, `listRow`, `labelButton`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`, `memberName`, `memberKindTag`, `code`. |
-| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), its side inset, icon gap and hover-plate radius (`menuRowSideInset`, `menuRowIconGap`, `menuRowPlateRadius`; a list row's `listRowSideInset`, `listRowIconGap`), its two drawn indicators' glyph squares and gaps (the submenu chevron's `menuRowChevronSize` and `menuRowChevronGap` before it; the leading tick column's `menuRowTickSize` and `menuRowTickGap` after it), a pop-up's content padding and its header's rule and title inset (`menuContentPadding`, `menuHeaderRuleWidth`, `menuHeaderTitleInset`; a list's rows panel `rowsPanelPadding`), a group divider's band (`menuDividerGap`, `menuDividerRuleWidth`), the scroll indicator's edge inset (`scrollIndicatorEdgeInset`), a tooltip plate's rounding, paddings and line height (`tooltipCornerRadius`, `tooltipHorizontalPadding`, `tooltipVerticalPadding`, `tooltipLineHeight`), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cells, the scroll indicator's resting and hovered widths, chrome corner radii, a button's height, horizontal paddings and rounding (`buttonHeight`, `buttonPaddingX`, `primaryButtonPaddingX`, `buttonCornerRadius`), the least side of a chrome target (`minimumTargetSize`), a footer band's height, rule, inset, button gap and grip clearance (`footerBandHeight`, `footerRuleWidth`, `footerInset`, `footerGap`, `footerGripClearance`), a toggle's and a chip's height, padding and rounding (`toggleHeight`, `togglePaddingX`, `toggleCornerRadius`; `chipHeight`, `chipPaddingX`, `chipCornerRadius`), the Object Inspector's bands (`breadcrumbBandHeight`, `breadcrumbInset`, `breadcrumbCaptionGap`, `breadcrumbGap`, `breadcrumbDonorGap`, `breadcrumbSeparatorSize`; `toggleBandHeight`, `toggleBandInset`, `toggleBandGap`; `inspectorRuleWidth`, `inspectorListColumnWidth`), a member row's geometry (`memberRowHeight`, `memberRowPlateHeight`, `memberRowPlateRadius`, `memberRowSideInset`, `memberRowTagGap`, `memberRowTagColumnWidth`, `memberRowsPanelPadding`), a code pane's padding (`codePanePadding`), and a desktop icon's geometry, all from ONE knob, the tile's side (`desktopIconTile`, 64): the glyph square, the tile's rounding and the cell's width derive from it (`desktopIconGlyphSize`, `desktopIconTileRadius`, `desktopIconCellWidth`), the draft's fixed values sit beside it (`desktopIconPadding`, `desktopIconTilePlateGap`, `desktopIconPlateHorizontalPadding`, `desktopIconPlateVerticalPadding`, `desktopIconPlateRadius`, `desktopIconPlateLineHeight`, `desktopIconCaptionMaxLines`), and so do the icon's height and extent (`desktopIconHeight`, `desktopIconExtent`: one two-line pitch for every icon), the icon grid's gaps and origin (`desktopIconColumnGap`, `desktopIconRowGap`, `desktopIconGridOrigin`), the rows a folder window opens showing (`folderWindowIconRows`) and the bin's corner insets (`desktopBinRightInset`, `desktopBinBottomInset`); the desktop clock's side and corner insets (`desktopClockSize`, `desktopClockRightInset`, `desktopClockTopInset`). |
+| **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects, optionally with a `lineHeight` (§3, the line box) — `menuRow`, `listRow`, `labelButton`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`, `memberName`, `memberKindTag`, `code`, `document`, and the text tools' typed faces `boldToolFace`, `italicToolFace`, `codeToolFace` (a role may also carry `italic`). |
+| **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), its side inset, icon gap and hover-plate radius (`menuRowSideInset`, `menuRowIconGap`, `menuRowPlateRadius`; a list row's `listRowSideInset`, `listRowIconGap`), its two drawn indicators' glyph squares and gaps (the submenu chevron's `menuRowChevronSize` and `menuRowChevronGap` before it; the leading tick column's `menuRowTickSize` and `menuRowTickGap` after it), a pop-up's content padding and its header's rule and title inset (`menuContentPadding`, `menuHeaderRuleWidth`, `menuHeaderTitleInset`; a list's rows panel `rowsPanelPadding`), a group divider's band (`menuDividerGap`, `menuDividerRuleWidth`), the scroll indicator's edge inset (`scrollIndicatorEdgeInset`), a tooltip plate's rounding and paddings (`tooltipCornerRadius`, `tooltipHorizontalPadding`, `tooltipVerticalPadding`; its line box is `fonts.tooltip`'s), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cell, least gap and padding along and across the strip (`toolThumbnailSize`, `toolInternalPadding`, `toolAlongPadding`, `toolCrossPadding`, `toolRows`) and a docked band's inset from its host (`dockedBandInset`), the scroll indicator's resting and hovered widths, chrome corner radii, a button's height, horizontal paddings and rounding (`buttonHeight`, `buttonPaddingX`, `primaryButtonPaddingX`, `buttonCornerRadius`), the least side of a chrome target (`minimumTargetSize`), a footer band's height, rule, inset, button gap and grip clearance (`footerBandHeight`, `footerRuleWidth`, `footerInset`, `footerGap`, `footerGripClearance`), a toggle's and a chip's height, padding and rounding (`toggleHeight`, `togglePaddingX`, `toggleCornerRadius`; `chipHeight`, `chipPaddingX`, `chipCornerRadius`), the Object Inspector's bands (`breadcrumbBandHeight`, `breadcrumbInset`, `breadcrumbCaptionGap`, `breadcrumbGap`, `breadcrumbDonorGap`, `breadcrumbSeparatorSize`; `toggleBandHeight`, `toggleBandInset`, `toggleBandGap`; `inspectorRuleWidth`, `inspectorListColumnWidth`), a member row's geometry (`memberRowHeight`, `memberRowPlateHeight`, `memberRowPlateRadius`, `memberRowSideInset`, `memberRowTagGap`, `memberRowTagColumnWidth`, `memberRowsPanelPadding`), a code pane's padding (`codePanePadding`), the text caret's width and gap (`caretWidth`, `caretGap`), a document's item spacing and its items' rounding and text padding (`documentItemSpacing`, `documentItemCornerRadius`, `documentItemHorizontalPadding`, `documentItemVerticalPadding`), and a desktop icon's geometry, all from ONE knob, the tile's side (`desktopIconTile`, 64): the glyph square, the tile's rounding and the cell's width derive from it (`desktopIconGlyphSize`, `desktopIconTileRadius`, `desktopIconCellWidth`), the draft's fixed values sit beside it (`desktopIconPadding`, `desktopIconTilePlateGap`, `desktopIconPlateHorizontalPadding`, `desktopIconPlateVerticalPadding`, `desktopIconPlateRadius`, `desktopIconCaptionMaxLines`; the caption's line box is `fonts.desktopCaption`'s), and so do the icon's height and extent (`desktopIconHeight`, `desktopIconExtent`: one two-line pitch for every icon), the icon grid's gaps and origin (`desktopIconColumnGap`, `desktopIconRowGap`, `desktopIconGridOrigin`), the rows a folder window opens showing (`folderWindowIconRows`) and the bin's corner insets (`desktopBinRightInset`, `desktopBinBottomInset`); the desktop clock's side and corner insets (`desktopClockSize`, `desktopClockRightInset`, `desktopClockTopInset`). |
 | **SHADOWS** | The ONE shadow every desktop object casts at rest (windows, menus, prompts, tooltips, icons, the clock) and the drag lift a carried widget takes (offset + alpha each), and `shadowColor`, the one colour every shadow silhouette is filled with. |
 
 **The ratchet.** A colour literal in a chrome file is a look decided outside this system — a restyle
@@ -64,7 +64,7 @@ colour plumbing, and only ever goes down. Its tolerated tail is listed there.
 | `code` | `#3A3A36` | Source code text |
 | `grip` | `#BDBDB8` | The resize grip's strokes |
 | `disabledText` | `#B9B9B4` | Text of a disabled button |
-| `accent` | `#2F5BEA` | Focused, selected and "on" ONLY (the clock's second hand is the one exception: it is live) |
+| `accent` | `#2F5BEA` | Focused, selected and "on" ONLY — the text caret (the editing focus) included (the clock's second hand is the one exception: it is live) |
 | `accentTint` | `#2F5BEA` at 12% | The fill of an "on" or selected control |
 | `danger` | `#C4321C` | Destructive actions only |
 | `scrollbar` | `rgba(30,30,28,0.35)` | The overlay scrollbar thumb |
@@ -77,6 +77,40 @@ member, so a caller can take a role and override one member. A text built withou
 `fonts.defaultText`. `StringWdgt` and everything built on it read the role; `LabelButtonWdgt` (default
 `labelButton`), `MenuItemWdgt` (`menuRow` or `listRow`, by the panel that builds it; a `MemberRowWdgt` takes `memberName`, its kind tag `memberKindTag`) and `StringFieldWdgt`
 forward it.
+
+**The line box.** Every line of a text stands in a line box, answered from ONE home on `StringWdgt` (the
+"THE LINE BOX" block: `linePitch`, `caretBoxInLine`, `caretTopLeftAt` and their private helpers), which wrapping,
+measuring, box sizing, paint, selection, `slotCoordinates` / `slotAt`, the caret and the macro toolkit's text aims
+all read. A role may carry `lineHeight`, its line box's height AT THE ROLE'S SIZE (an explicit `lineHeight` option
+is stated at the size the text is set in); at any other size the pitch scales with the font's em box,
+`round(lineHeight × fontHeight(size) / fontHeight(statedSize))`, so a line box is never shorter than its em box.
+- **Unset** (no line height): the box is the em box, `fontHeight` = `ceil(1.2 × size)` tall, and a line is drawn
+  `textBaseline "bottom"` at the box's bottom, its baseline the font's descent above it.
+- **Set**: the baseline follows the design's explicit-line-height rule, `floor((pitch − (A + D)) / 2) + A`, with A
+  and D the font box's ascent and descent rounded to whole pixels (measured on the widgets' own measuring context
+  about the alphabetic baseline), and a line is drawn `"alphabetic"` at it. The design's formula is never applied to
+  an unset text: at the em-box pitch it would put every baseline 1 px higher.
+- The caret stands in the font's EM BOX within the line, `[baseline + D − P, baseline + D)` (P = `fontHeight`): the
+  whole box when unset. Every caret wears one look: `caretWidth` (2) wide, or a twentieth of its height where that is
+  wider, painted `caretFill` (the accent), `caretGap` (1) right of its slot's boundary (`CaretWdgt._myTopLeftAtSlot`;
+  `slotCoordinates` and `caretTopLeftAt` keep the boundary). Following a caret through a scrolling field keeps its
+  whole box inside the field less `viewPadding` at each side, so it stays visible at either edge; inside a viewport's
+  plane the viewport's own follow keeps it in view instead (the two would disagree), and every follow pass reads its
+  text re-fitted, so the pass run during a keystroke and the settle's confirming pass agree. A selection spans the whole line box, so a multi-line selection has no gaps.
+- Every number is a whole logical pixel, so dpr 2 doubles each exactly. The line height is part of the wrap and
+  back-buffer cache keys.
+- Four roles state a line height, at the draft's values: `document` 22, `code` 18, `desktopCaption` 16, `tooltip` 16.
+- A text dressed as a document item (§5) stands its line boxes in its text area, inset from its box.
+
+**Typed icon faces.** The text tools' B, I and `</>` are TYPED from the atlases (`TypedFaceIconAppearance`; the
+draft's serif and mono faces), in their font roles, which are stated at a tool cell's side: Times New Roman bold 20 and
+italic 20, Courier New 15. They paint in the widget's logical coordinates inside the standard paint scope (crisp on
+SWCanvas only there: in a device-pixel body a typed glyph comes out half size at dpr 2). In a box of side s the size is
+the role's × s / `toolThumbnailSize`, snapped to 0.5 and kept within the atlases' 9–96; they are centred across by
+their advance and down by the draft's "line centred in a taller box" rule, `round((h − (A + D)) / 2) + A`. A face's
+family names the literal family first and the generic last (`"Times New Roman", serif`): SWCanvas picks an atlas by the
+generic word, so a bare literal would type Arial. Shown as a menu row's picture, a typed face is worn live by the
+holder (`livePictureOn`), never photographed, so it is retyped when its atlas arrives.
 
 The families are the three the SWCanvas glyph atlases cover — **Arial** (sans), **Courier New** (mono,
 through `StringWdgt.monoFontStack`), **Times** (serif) — at normal or bold, normal or italic, sizes
@@ -141,6 +175,20 @@ ending `footerGripClearance` short of the corner the frame's grip sits in. When 
 the right group follows the left one, and what runs past it is clipped (by the window, or by a container that clips
 its own children: the Object Inspector does, naked or windowed).
 
+**The tool cell** (`GlassBoxBottomWdgt`, a toolbar's cell, holding one tool) is a pressable square with no border: at
+rest no fill at all (the band's `paper` shows), hovered `toolCellHoverFill` (`desk`), pressed `toolCellPressedFill`
+(`chrome`), ACTIVE `toolCellActiveFill` (`desk`, the draft's active tool), rounded at `toolCellCornerRadius` (6). The cell
+derives that look itself, from the state of the widget a tap on it reaches (its lid, or its tool) and from its tool's
+`isActiveTool`, every time a tool tells it something changed (`noteItemStateChanged`, through `ParentStainerMixin` for
+the pointer state, and from whatever decides the active state: Draw's armed tool, the text tools' mirror of the edited
+text), so no tool leaves a stale colour on it. The text tools MIRROR the edited text (the editor focus,
+`world.editorFocusWdgt`): B is active while it is bold, I while it is italic, `</>` while it is monospaced, an align tool
+while it has that alignment. The focus has ONE write (`WorldWdgt._setEditorFocusNoSettle`), and a text's style setters
+announce a change while it is the focus (`noteStyleChanged`); each text toolbar hears both through one dataflow edge
+world → toolbar, so it follows in the same cycle with no timer. A hidden active tool ticks its row in the `»` menu. It clips its tool to its rounded outline, so a press in a corner notch
+falls through. Every glyph in a toolbar is `toolbarGlyph` (`ink`); the overflow `»` is the drawn double chevron at
+`toolOverflowGlyphSize` (16) on the same state plate.
+
 **The desktop icon** (`WidgetHolderWithCaptionWdgt`, painted by `DesktopIconAppearance`) is a pressable tile
 and a label plate in a cell of the standard desktop-icon extent (the cell by a two-line height, all from the one
 knob `desktopIconTile`). The TILE is `desktopIconTile` square, `desktopIconPadding` below the cell's top and
@@ -153,7 +201,7 @@ the tile, and the tile takes the press, the release and the click together. The 
 `desktopIconPlateRadius`, no border: the caption's box outset by the plate's padding, `desktopIconTilePlateGap`
 below the tile. The caption (the holder's `label`, `ink`, 12 px) hugs one line of text, or wraps across the cell
 less the plate's padding (its plate spanning the cell), at most `desktopIconCaptionMaxLines` lines, cut with "…";
-its lines stand at Fizzygum's 15 px pitch inside the draft's 16 px slots. A press on the plate edits the caption
+its lines stand on the role's 16 px line boxes (baselines 12 and 28 below the caption's top). A press on the plate edits the caption
 (a rename; the tile keeps its look); the holder re-lays its plate as the caption's text changes. The holder's
 shape is the tile and the plate, so a press or a drop in a cell's empty corners or in the gap reaches whatever
 lies behind it. Icons stand on an ICON GRID (`IconGridPanelWdgt`: the desktop column by column, five to a column; a
@@ -226,6 +274,8 @@ can, Patch programming, Slides Maker, Generic panel, Dashboards, Super toolbar, 
   centre is inside the outline, the same in all four corners. A rounded corner's notch is pointer-through.
 - A 1 px outline is stroked inset half a pixel with the same radius as the fill (the house crisp
   spelling, `strokeRoundRect 0.5, 0.5, w − 1, h − 1, r`).
+- A tool cell clips its tool to its rounded outline the same way a rounded frame clips its children (the shared
+  `Widget._paintChildrenInsideMyRoundedOutline` family).
 - A clipping widget whose outline must be painted OVER its content sets `strokesOverChildren` on its
   `BoxyAppearance`: the outline is then stroked once, after the children, instead of with the fill.
 - A frame clips its children to its RECTANGLE, so content laid flush against a rounded corner shows its
@@ -260,8 +310,8 @@ exactly one owning widget:
 | Window title | `FrameBarWdgt`'s label `StringWdgt` (`fonts.windowTitle`) |
 | Pencil / eye | `EditIconButtonWdgt` |
 | Resize grip | `FrameGripWdgt` (a `HandleWdgt`, child of the frame, bottom-right, `frameGripInset` in from the content area) and `GripIconAppearance`; its hit area is its whole `frameGripSize` square. A halo's and a naked inspector's resizers stay plain `HandleWdgt`s, on `HandleAppearance`'s triangle |
-| Embedded toolbar with its title strip | a docked `FrameWdgt` (a card under an `EdgeDockLayoutSpec`) holding a toolbar; its bar runs vertically |
-| Document paragraph items | `SimpleTextWdgt` paragraphs in `DocumentViewportWdgt` |
+| Embedded toolbar with its title strip | a docked `FrameWdgt` (a card under an `EdgeDockLayoutSpec`) holding a toolbar; its bar runs vertically. The band stands `dockedBandInset` in from the host's body on its three outer sides and flush with the payload on the fourth; its thickness is the toolbar's `dockThickness`, derived from the theme's grid dials at every measure (`EdgeDockLayoutSpec.thicknessGrantedTo`). The toolbar and its grid paint nothing (`SeamRulesAppearance`): the band's card is the one line around them. Its cells (44, least 6 apart) spread space-between along the strip, `toolAlongPadding` from each end, `toolCrossPadding` across it, so a one-row strip is 56 deep; the far end keeps clear of a resizer over the strip's bottom-right corner (a floating toolbar's grip, or the host's over a right or bottom band: `ViewportWdgt.cornerResizerFootprint`, the reserve the scroll bars keep); a strip too short for every cell shows the prefix that fits and a trailing `»` |
+| Document paragraph items | `SimpleTextWdgt` paragraphs in `DocumentViewportWdgt`, a borderless `documentPageFill` page whose stack keeps `documentItemSpacing` from the page's edges and between items (read at every arrange). Every paragraph a document builds comes from `getNormalParagraph`: `fonts.document` (15 px on 22 px lines; a title at its own size keeps that line height scaled with its em box) in `documentText`, on `editableItemFill` (= `item`); in view mode an item melts into the page it sits on (`blendInWithPanelColor`, both colours read live), and a background the user set stays. Every text standing on the page (a template excepted) wears the ITEM SHAPE, asked at every measure, paint and point mapping and never stored (`StringWdgt._itemShape` → its stack → `DocumentViewportWdgt.itemShapeOfTextOnPlane`): its fill rounded at `documentItemCornerRadius`, its text inset `documentItemHorizontalPadding` from the sides and `documentItemVerticalPadding` from top and bottom, so a one-line paragraph is 34 tall and wraps at its width less 20; a press in the padding picks the nearest slot of the nearest line, and the hit shape is the rounded fill. Off the page (dragged to the desk, in the hand) the same text is plain. A widget dropped into the stack goes before the first item whose middle is below the drop point |
 | Menu container, header, rows, group rules | `MenuWdgt` (a transient `FrameWdgt`) → bar (header) → `PopUpRowsViewportWdgt` → `CommandPanelWdgt` → `MenuItemWdgt` rows + `DividerWdgt` |
 | Inspector bands and the list \| code line | `InspectorWdgt`'s children; the lines are container-owned seams (§4.1) |
 | Inspector breadcrumb | `InspectorWdgt`'s children: a "Class" caption and the donor label (`StringWdgt`s), the class `ChipWdgt`s and their `BreadcrumbSeparatorWdgt`s, placed by `_breadcrumbIn` |
@@ -317,8 +367,8 @@ magnets keep their own look until their families are restyled.
 are built in the code role: `fonts.code` (12 px mono), `codeText`, `codePanePadding` (12) — a `TextAreaWdgt`
 forwards `fontRole` and `textColor` to its text. A code area that is its window's content is borderless: the
 window's border, its strip's rule and its footer's rule are its lines (every other `TextAreaWdgt` keeps its
-border). A patch node's text boxes take `fonts.code` at their own padding and ink. The line pitch is Fizzygum's
-`ceil(1.2 × size)`, 15 at 12 px: there is no line-height knob, so the draft's 18 is not reached.
+border). A patch node's text boxes take `fonts.code` at their own padding and ink. Its lines stand on the role's 18 px
+line boxes (the draft's; on SWCanvas: baseline 12, caret rows 1–15 of each line).
 
 **The Object Inspector's member list** wears the member-row look: the inspector builds its `ListWdgt` with
 `memberFactsQuery`, and the list's rows panel builds `MemberRowWdgt`s (`CommandPanelWdgt._createMenuItem`). Each

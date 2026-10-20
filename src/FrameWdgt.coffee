@@ -219,13 +219,13 @@ class FrameWdgt extends Widget
 
   # The height my window title takes in my strip: the title piece's own line height (a fitted
   # string paints its text at the TOP of the box it is granted, so the box is exactly its text and
-  # the strip centres that), measured off the piece at its set font size. My strip derives in my
+  # the strip centres that), its line box's pitch at its set font size. My strip derives in my
   # constructor before the piece exists, and the theme's stand-in answers until then -- every
   # arrange of the strip runs after the piece is built, so the title is placed by the real height.
   _windowTitleTextHeight: ->
     title = @bar?.label
     return WorldWdgt.theme.titleBarTextHeight unless title?
-    title.fontHeight title.originallySetFontSize
+    title.linePitch title.originallySetFontSize
 
   # WHICH DIRECTION MY STRIP RUNS (program rulings C13/C15). A free frame's bar is on TOP, always
   # -- no per-frame orientation knob, because a window whose bar could be anywhere costs more
@@ -316,8 +316,9 @@ class FrameWdgt extends Widget
   # Its inner edge sits in from my outer edge by my STRIP's thickness on the side my strip runs
   # along (the strip spans my border, its band and its rule: _barSpec) and by my BORDER INSET
   # on every other side. Past those edges my payload and my bands keep my BODY MARGIN, and the
-  # same margin parts a band from my payload. My padding (_chromePadding) is the two together,
-  # measured where no strip runs: border inset plus body margin.
+  # same margin parts a band from my payload; a band also stands its own inset in from those edges
+  # (_dockedBandInset), on every side but the one it shares with my payload. My padding
+  # (_chromePadding) is border inset plus body margin, measured where no strip runs.
 
   # The part of my padding that is my border: the theme's border width, which my padding always
   # holds (_chromePadding), whatever my payload is.
@@ -340,19 +341,20 @@ class FrameWdgt extends Widget
     Math.max @_titlebarWidth(), @_borderInset()
 
   # Where my payload's top-left sits from mine when it fills its region: past my body's leading
-  # edges, a band docked at my left or my top, and my body margin. The arrange seats it there, and
-  # a frame re-wrapping a payload in place reads the same offset (floatOutOfDock).
+  # edges, a band docked at my left or my top (with its inset), and my body margin. The arrange
+  # seats it there, and a frame re-wrapping a payload in place reads the same offset
+  # (floatOutOfDock).
   _payloadOffset: ->
     new Point (@_bodyEdgeLeft() + @_leftDockThickness() + @_bodyMargin()),
       (@_bodyEdgeTop() + @_topDockThickness() + @_bodyMargin())
 
   # Window chrome height -- everything that is NOT content: my body's top and bottom edges, my
-  # body margin past each, the bands docked at my top and bottom, and -- when my payload must keep
-  # clear of my resizer -- the grip's row: how far the grip reaches up from my content area's
-  # bottom edge (FrameGripWdgt.footprint, its inset plus its side), so my payload stops my body
-  # margin above the grip. ONE home for the measure (preferredExtentForWidth) and the arrange
-  # (_positionAndResizeChildren): they MUST agree, or the window's measure diverges from what its
-  # arrange then applies (assessment §6.1 rule 1).
+  # body margin past each, the bands docked at my top and bottom with their insets, and -- when
+  # my payload must keep clear of my resizer -- the grip's row: how far the grip reaches up from
+  # my content area's bottom edge (FrameGripWdgt.footprint, its inset plus its side), so my
+  # payload stops my body margin above the grip. ONE home for the measure
+  # (preferredExtentForWidth) and the arrange (_positionAndResizeChildren): they MUST agree, or
+  # the window's measure diverges from what its arrange then applies (assessment §6.1 rule 1).
   _chromeHeight: (spec) ->
     chrome = @_bodyEdgeTop() + @_borderInset() + 2 * @_bodyMargin() + @_topDockThickness() + @_bottomDockThickness()
     chrome += FrameGripWdgt.footprint() unless spec.resizerCanOverlapContents
@@ -371,15 +373,25 @@ class FrameWdgt extends Widget
     return undefined unless dockedFrame._myEdgeDockSpec()?.engaged
     dockedFrame
 
-  # What a docked frame takes out of my body at `side`: the band it occupies plus the gap between
-  # the band and my content (my body margin). 0 for an empty, disengaged or collapsed-away slot.
+  # What a docked frame takes out of my body at `side`: the band's inset from my body's edge
+  # (_dockedBandInset), the band it occupies, and the gap between the band and my content (my body
+  # margin). 0 for an empty, disengaged or collapsed-away slot.
   _dockThicknessAt: (side) ->
     dockedFrame = @_dockedFrameAt side
     return 0 unless dockedFrame?
-    dockedFrame._dockedBandThickness() + @_bodyMargin()
+    @_dockedBandInset() + dockedFrame._dockedBandThickness() + @_bodyMargin()
 
-  # MY OWN cross extent as a band in somebody's slot (program ruling C13): expanded, the spec's
-  # thickness -- what the band grants my payload -- plus my own chrome across it (my border and
+  # How far a band docked in one of my slots stands in from my body on its three outer sides,
+  # past my body margin (the theme's dockedBandInset; its fourth side, toward my payload, keeps my
+  # body margin alone). Read at every measure and arrange, never copied into me, so a saved or
+  # duplicated host places its bands in the current theme. A pure dial, as the slot terms above
+  # must be.
+  _dockedBandInset: ->
+    WorldWdgt.theme.dockedBandInset
+
+  # MY OWN cross extent as a band in somebody's slot (program ruling C13): expanded, what the
+  # band grants my payload (EdgeDockLayoutSpec.thicknessGrantedTo: a toolbar's own dockThickness,
+  # asked now, or the extent my payload arrived with) plus my own chrome across it (my border and
   # body margin on both sides), so the payload gets exactly the extent it asked for and my grip,
   # running ACROSS the band, adds nothing; collapsed, I AM my bar, so the band is the strip's
   # thickness (never 0 -- there has to be something left to tap). 0 when I am not docked at all.
@@ -387,10 +399,11 @@ class FrameWdgt extends Widget
     dockSpec = @_myEdgeDockSpec()
     return 0 unless dockSpec?
     return @_barSpec().thickness if @contents?.collapsed
+    payloadThickness = dockSpec.thicknessGrantedTo @contents
     if dockSpec.side is "top" or dockSpec.side is "bottom"
-      dockSpec.thickness + @_chromeHeight @contents.contentStackSpec()
+      payloadThickness + @_chromeHeight @contents.contentStackSpec()
     else
-      dockSpec.thickness + @_chromeWidth()
+      payloadThickness + @_chromeWidth()
 
   # The four named terms my chrome accounting reads (one home each side, so _chromeHeight and
   # _chromeWidth stay readable).
@@ -408,9 +421,9 @@ class FrameWdgt extends Widget
 
   # Frame chrome WIDTH -- everything that is not content width: my body's left and right edges (a
   # strip running down my side is the left one), my body margin past each, and the bands docked
-  # on either flank. The width sibling of _chromeHeight, and the ONE home the measures and the
-  # arrange both read (§6.1 rule 1): availableWidthForContents, the width negotiation and the
-  # first-placement hug all route through it.
+  # on either flank with their insets. The width sibling of _chromeHeight, and the ONE home the
+  # measures and the arrange both read (§6.1 rule 1): availableWidthForContents, the width
+  # negotiation and the first-placement hug all route through it.
   _chromeWidth: ->
     @_bodyEdgeLeft() + @_borderInset() + 2 * @_bodyMargin() + @_leftDockThickness() + @_rightDockThickness()
 
@@ -1135,16 +1148,18 @@ class FrameWdgt extends Widget
   dockFrame: (aFrame, side) ->
     @_settleLayoutsAfter => @_dockFrameNoSettle aFrame, side
 
-  # Dock a frame in my slot at `side`. The spec is the whole act: it says WHERE and, through the
-  # thickness it records, HOW MUCH of my body the band gets -- and everything else about the
-  # docked manifestation (card skin, a grip across the band, no close, no resizer) derives from
-  # the frame's no-longer-free-floating attachment. The thickness is what the band grants the
-  # PAYLOAD: the extent the payload declares for itself if it declares one, else the extent it
-  # arrives with. An occupied slot's previous holder is set free first -- one frame per side.
+  # Dock a frame in my slot at `side`. The spec is the whole act: it says WHERE and HOW MUCH of my
+  # body the band gets -- and everything else about the docked manifestation (card skin, a grip
+  # across the band, no close, no resizer) derives from the frame's no-longer-free-floating
+  # attachment. What the band grants the PAYLOAD is the thickness the payload declares for itself
+  # if it declares one (dockThickness, which the spec asks at every measure, so nothing about it
+  # is recorded), else the extent it arrives with, which the spec records. An occupied slot's
+  # previous holder is set free first -- one frame per side.
   _dockFrameNoSettle: (aFrame, side) ->
     payload = aFrame.contents
-    across = if side is "top" or side is "bottom" then payload.height() else payload.width()
-    dockSpec = new EdgeDockLayoutSpec side, (payload.dockThickness ? across)
+    unless payload.dockThickness?
+      arrivalThickness = if side is "top" or side is "bottom" then payload.height() else payload.width()
+    dockSpec = new EdgeDockLayoutSpec side, arrivalThickness
     # armed BEFORE the add, so the band's own roster derive already sees the mode it lands in. A
     # dock is engaged on arrival; only a host whose payload HAS an edit mode and is currently
     # viewing lands it disengaged, because that host's view mode is what disengages every dock.
@@ -1283,6 +1298,13 @@ class FrameWdgt extends Widget
     dockSpec.side = side
     host.dockedFrames[side] = @
     host._invalidateLayout()
+    # the new side may move me into or out of the corner my host's grip covers (it names its right
+    # and bottom bands, bottomRightCornerReachedBy), while my extent can stay the same (a bottom
+    # band and a top band are equally long), so nothing else re-lays what my viewports keep clear
+    # of that corner: tell my corner chain. Docking and undocking reach the same chain without this
+    # call: they change my spec, which shows or hides my own grip (Widget._setLayoutSpec ->
+    # HandleWdgt.updateVisibility), and its coming or going tells the chain.
+    @noteCornerChainChanged()
 
   # Fill one of my empty slots with my content's toolbar variant, framed. (Menu-dispatched -- see
   # dockAtSide for the two named-as-unread slots.)
@@ -1306,8 +1328,8 @@ class FrameWdgt extends Widget
     # at the extent it had
     @setExtent @extentWrappingPayloadAt payloadExtent
     # the arrange seats my payload inside my chrome: past my body's edges (my border, my bar), a
-    # band of my OWN docked at my left or top (a Docs frame's text toolbar) and my body margin, so I
-    # land that far up-left of it
+    # band of my OWN docked at my left or top (a Docs frame's text toolbar, with its inset) and my
+    # body margin, so I land that far up-left of it
     @_applyMoveTo payloadPosition.subtract @_payloadOffset()
     @_moveWithin world
 
@@ -1850,52 +1872,9 @@ class FrameWdgt extends Widget
         @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfFrame, appliedShadow, radii
         aContext.restore()
 
-  # Paint my children over the damaged part of me so that nothing of theirs shows outside my
-  # rounded outline, paying for the rounded clip only where it can matter: away from my corner
-  # squares my outline IS my box, so damage that reaches no square is painted exactly as the
-  # rectangular clip paints it, and damage that reaches one is painted whole under ONE rounded clip.
-  _paintChildrenInsideMyRoundedOutline: (aContext, damagedPartOfMe, appliedShadow, radii) ->
-    area = damagedPartOfMe.round()
-    if @_areaReachesACornerSquare area, radii
-      @_paintChildrenUnderMyOutlineClip aContext, area, appliedShadow
-    else
-      @_paintChildrenOver aContext, damagedPartOfMe, appliedShadow
-
-  # Does `area` (an integer rectangle inside my box) reach one of my corner SQUARES (r×r at a corner
-  # of radius r, the only places my outline leaves my box)? Also true when two squares would overlap
-  # (a box too small for its own rounding), so such a box always clips.
-  _areaReachesACornerSquare: (area, radii) ->
-    [topLeft, topRight, bottomRight, bottomLeft] = (Math.ceil radius for radius in radii)
-    box = @boundingBox().round()
-    left = box.left()
-    top = box.top()
-    right = box.right()
-    bottom = box.bottom()
-    squaresOverlap = (topLeft + topRight > box.width()) or (bottomLeft + bottomRight > box.width()) or
-      (topLeft + bottomLeft > box.height()) or (topRight + bottomRight > box.height())
-    return true if squaresOverlap
-    squares = [
-      new Rectangle left, top, left + topLeft, top + topLeft
-      new Rectangle right - topRight, top, right, top + topRight
-      new Rectangle right - bottomRight, bottom - bottomRight, right, bottom
-      new Rectangle left, bottom - bottomLeft, left + bottomLeft, bottom
-    ]
-    squares.some (square) -> area.intersect(square).isNotEmpty()
-
-  # Paint my children over `rectangle`, which goes down as the clipping rectangle each child honours.
-  _paintChildrenOver: (aContext, rectangle, appliedShadow) ->
-    @children.forEach (child) ->
-      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, rectangle, appliedShadow
-
-  # Paint my children over `rectangle` with the context clipped to it AND to my outline: the
-  # rectangle in the context's device pixels (the space every appearance scope clips in), my outline
-  # traced by my body's appearance under the same matrix its own fill is traced under.
-  _paintChildrenUnderMyOutlineClip: (aContext, rectangle, appliedShadow) ->
-    aContext.save()
-    aContext.clipToRectangle rectangle.left() * ceilPixelRatio, rectangle.top() * ceilPixelRatio, rectangle.width() * ceilPixelRatio, rectangle.height() * ceilPixelRatio
-    @appearance.clipToOutline aContext
-    @_paintChildrenOver aContext, rectangle, appliedShadow
-    aContext.restore()
+  # (Painting my children inside my rounded outline -- _paintChildrenInsideMyRoundedOutline and the
+  # helpers it calls -- is Widget's, shared with the other widget that cuts its children to its
+  # outline, a tool cell.)
 
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
   # core is non-settling: it adds the bar (whose pieces build through the bar's own non-settling
@@ -2218,13 +2197,16 @@ class FrameWdgt extends Widget
         barBounds = barBounds.setBoundsWidthAndHeight @width(), @_titlebarHeight()
       @bar._reLayout barBounds
 
-    # the four slots: place each docked band in my body, on its inner edges
-    # (past my border or my bar) and my body margin -- TOP/BOTTOM: a
-    # full-available-width band the content starts below (top) or ends a body
-    # margin above (bottom); LEFT/RIGHT: a column on that
-    # flank sharing the content's vertical span (stackHeight is the content
-    # height this pass just derived, so every placement is pass-local -- no
-    # applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
+    # the four slots: place each docked band in my body, past its inner edges
+    # (my border or my bar) and my body margin, standing my band inset in from
+    # them on its three OUTER sides and flush with the content's region on its
+    # fourth -- TOP/BOTTOM: a band across my whole body less the inset at each
+    # end, the content starting below it (top) or ending a body margin above
+    # it (bottom); LEFT/RIGHT: a column on that flank spanning the content's
+    # vertical span less the inset at each end, so a column and a top or
+    # bottom band stand one inset apart where they meet (stackHeight is the
+    # content height this pass just derived, so every placement is pass-local
+    # -- no applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
     # the same drive as @bar above -- a band's _reLayout applies its own
     # bounds THEN re-fits its chrome and payload, and the payload viewport in
     # turn re-fits its contents+scrollbars, so a width change that
@@ -2236,35 +2218,43 @@ class FrameWdgt extends Widget
     # ⚖ The bottom-right RESIZER may OVERLAP a right/bottom band's far corner
     # -- accepted DELIBERATELY (layout follow-ups plan F4), the same trade the
     # content already makes under resizerCanOverlapContents: the resizer is
-    # corner-internal, always re-fronted, and the tool grid fills from the
-    # top-left so the covered corner is normally empty strip; an inset band
-    # would buy that corner at the price of coupling the band's extent to the
-    # resizer and breaking the left/right, top/bottom mirror symmetry.
+    # corner-internal and always re-fronted, and what runs out to that corner
+    # keeps its own pieces clear of it by occupancy (I name a right or bottom
+    # band in bottomRightCornerReachedBy, so a toolbar strip in it ends its
+    # last slot short of my grip, ToolPanelWdgt._farAlongPadding); the band
+    # inset is the same on all four sides and does not grow to clear the
+    # resizer, because that would couple the band's extent to the resizer and
+    # break the left/right, top/bottom mirror symmetry.
     bodyMargin = @_bodyMargin()
+    bandInset = @_dockedBandInset()
     bodyLeft = @left() + @_bodyEdgeLeft() + bodyMargin
     bodyTop = @top() + @_bodyEdgeTop() + bodyMargin
     bodyWidth = @width() - @_bodyEdgeLeft() - @_borderInset() - 2 * bodyMargin
+    bandRun = Math.max 0, bodyWidth - 2 * bandInset
+    columnTop = bodyTop + @_topDockThickness() + bandInset
+    columnRun = Math.max 0, stackHeight - 2 * bandInset
     for side in FrameWdgt.DOCK_SIDES
       dockedFrame = @_dockedFrameAt side
       continue unless dockedFrame?
       bandThickness = dockedFrame._dockedBandThickness()
       switch side
         when 'top'
-          bandBounds = new Rectangle new Point bodyLeft, bodyTop
-          bandBounds = bandBounds.setBoundsWidthAndHeight bodyWidth, bandThickness
+          bandBounds = new Rectangle new Point bodyLeft + bandInset, bodyTop + bandInset
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandRun, bandThickness
         when 'bottom'
-          # just below the content: the band's bottom lands where the content
-          # region's bottom sits for the content's spec branch (my bottom edge
-          # and body margin, or the reserved grip row above them --
-          # _chromeHeight carries the matching reservation either way)
-          bandBounds = new Rectangle new Point bodyLeft, bodyTop + @_topDockThickness() + stackHeight + bodyMargin
-          bandBounds = bandBounds.setBoundsWidthAndHeight bodyWidth, bandThickness
+          # just below the content: the band's top lands a body margin below
+          # the content, and its bottom stands the band inset above where the
+          # content region's bottom sits for the content's spec branch (my
+          # bottom edge and body margin, or the reserved grip row above them
+          # -- _chromeHeight carries the matching reservation either way)
+          bandBounds = new Rectangle new Point bodyLeft + bandInset, bodyTop + @_topDockThickness() + stackHeight + bodyMargin
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandRun, bandThickness
         when 'right'
-          bandBounds = new Rectangle new Point @right() - @_borderInset() - bodyMargin - bandThickness, bodyTop + @_topDockThickness()
-          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, stackHeight
+          bandBounds = new Rectangle new Point @right() - @_borderInset() - bodyMargin - bandInset - bandThickness, columnTop
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, columnRun
         else # 'left'
-          bandBounds = new Rectangle new Point bodyLeft, bodyTop + @_topDockThickness()
-          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, stackHeight
+          bandBounds = new Rectangle new Point bodyLeft + bandInset, columnTop
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, columnRun
       dockedFrame._reLayout bandBounds
 
     # (the resizer needs no placement here: it is corner-attached — its CornerInternalLayoutSpec,

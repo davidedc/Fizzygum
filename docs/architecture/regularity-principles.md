@@ -69,8 +69,11 @@ vocabulary below is the convention for all new code:
   - **Docking is a placement, not a rebuild**: a docked frame is a card under a host-owned
     `EdgeDockLayoutSpec` (`side` / `thickness` / `engaged`) — the same widget that sits in the
     slot floats free the moment it is dragged out, because leaving the slot is exactly
-    dropping the spec. The payload receives the spec's `thickness` exactly (its own declared
-    `dockThickness` if it has one); the band contributes only its own chrome across it (its border and body margin). A
+    dropping the spec. The payload receives what the spec grants it, exactly
+    (`EdgeDockLayoutSpec.thicknessGrantedTo`: its own `dockThickness`, asked at every measure, if it
+    declares one, else the cross extent it arrived with, which the spec records); the band contributes
+    only its own chrome across it (its border and body margin), and the host keeps the band
+    `dockedBandInset` in from its body on the band's three outer sides. A
     collapsed frame **is** its bar, and the whole bar — not just the collapse control — taps
     to expand it.
   - `MenuWdgt` / `PromptWdgt` are framed citizens (`extends FrameWdgt`, born transient): a

@@ -27,8 +27,14 @@ class StringWdgt extends Widget
   # This is not a nicety: 97% of a string's box is ink-free (measured on a 50×40 StringWdgt —
   # 1946 of 2000 px), so per-pixel hit-testing would make text clickable only between the
   # letters' own strokes, and dropping this would silently do exactly that.
+  #   Dressed as an ITEM (THE ITEM SHAPE, below) my box is a rounded block, pressed as a whole, and
+  # it takes the pointer where its fill is: a logical pixel is mine iff its centre lies inside the
+  # rounded outline (BoxyAppearance.roundedBoxContainsPixelCentreOf, the one rounded hit test), so a
+  # corner's notch lets a press through to the page under it, as every rounded box's does.
   catchesPointerAt: (aPoint) ->
-    @boundsContainPoint aPoint
+    cornerRadius = @_itemShape()?.cornerRadius
+    return @boundsContainPoint aPoint unless cornerRadius?
+    (@boundsContainPoint aPoint) and BoxyAppearance.roundedBoxContainsPixelCentreOf (aPoint.subtract @position()), @width(), @height(), [cornerRadius, cornerRadius, cornerRadius, cornerRadius]
 
   # I drive text, and the text I export is my `text` pin (see `pins`, below).
   # ⚠ "string", not "numerical": the target-property menu I open offers my target's STRING pins,
@@ -46,6 +52,13 @@ class StringWdgt extends Widget
 
   fittingFontSize: undefined
   originallySetFontSize: undefined
+
+  # MY LINE BOX's height (see linePitch) and the font size it is stated at. Undefined = unset: my
+  # lines stack at the font's em box. A font role may carry it as its `lineHeight` member, stated
+  # at the role's size; an explicit `lineHeight` option is stated at the size I am set in, and so
+  # is a line height given no stated size.
+  lineHeight: undefined
+  lineHeightStatedAtFontSize: undefined
 
   fontName: undefined
   isBold: undefined
@@ -131,9 +144,11 @@ class StringWdgt extends Widget
   #     "code view" / horizontal-scroll case).
   # This is what makes a SimpleTextWdgt — and now ANY TextWdgt used as window
   # / panel / scroll content — re-wrap and auto-grow/shrink its height. Two
-  # sub-axes refine it (both stored + part of createBufferCacheKey):
-  #   - fittingSpecBoxTightOrLoose: TIGHT (no padding — the only configuration any
-  #     caller uses) | LOOSE (a padding margin — reserved, not yet built out).
+  # sub-axes refine it (both part of createBufferCacheKey):
+  #   - TIGHT or LOOSE: the box is exactly the text's extent (tight), or that extent
+  #     plus a padding margin (loose: where the text lives dresses it as an ITEM, as a
+  #     document dresses its text items). Not stored: asked of the text's container at
+  #     every measure, paint and point mapping (THE ITEM SHAPE, below).
   #   - fittingSpecBoxWhichDimensionAdjusts: HEIGHT_ADJUSTS_TO_WIDTH (the contained
   #     default) | WIDTH_ADJUSTS_TO_HEIGHT (reserved). The single-line "box hugs
   #     text in BOTH dims" case is the chrome-label path,
@@ -164,13 +179,10 @@ class StringWdgt extends Widget
   # in TextWdgt::_reLayoutSelf and are part of createBufferCacheKey so a mode/sub-axis
   # change re-renders the cached back-buffer.
   fittingSpec: FittingSpecText.FIT_TEXT_TO_BOX
-  # FIT_BOX_TO_TEXT sub-axes (honoured by TextWdgt::_reLayoutSelf, keyed into the
-  # buffer-cache key). Each had two values but only one ever shipped, so they are
-  # inlined here as raw booleans rather than carrying a single-valued spec class.
-  # Re-introduce a named axis only if a second value ships.
-  #   TIGHT box: false = the box is exactly the text extent, no padding.
-  #     (was FittingSpecTextBoxFittingTextTightOrLoose.TIGHT; LOOSE=true never shipped.)
-  fittingSpecBoxTightOrLoose: false
+  # The FIT_BOX_TO_TEXT sub-axis that is stored (honoured by TextWdgt::_reLayoutSelf, keyed into
+  # the buffer-cache key). It had two values but only one ever shipped, so it is inlined here as a
+  # raw boolean rather than carrying a single-valued spec class. Re-introduce a named axis only if
+  # a second value ships. (The tight-or-loose sub-axis is derived, never stored: THE ITEM SHAPE.)
   #   HEIGHT_ADJUSTS_TO_WIDTH: true = width is given, height follows the wrapped lines.
   #     (was FittingSpecTextBoxFittingTextWhichDimensionAdjusts.HEIGHT_ADJUSTS_TO_WIDTH;
   #      WIDTH_ADJUSTS_TO_HEIGHT=false never shipped.)
@@ -228,14 +240,23 @@ class StringWdgt extends Widget
   # objects, and gives all three at once. An explicit fontName / fontSize / bold still wins over
   # the role's member, so a caller can take a role and override one member of it. A text built
   # without a role takes the defaultText role. The role is read here and not kept: I hold the
-  # three values I render with.
+  # three values I render with. A role may also state a line height (`lineHeight`, at the role's
+  # size), and so may an explicit `lineHeight` option (at the size I am set in): I hold it with
+  # the size it is stated at, and only when one is given, so a text without one keeps the class's
+  # unset default. A role may also carry `italic`, which an explicit `italic` overrides.
   constructor: (text, opts = {}) ->
     @text = text ? "StringWdgt"
     fontRole = opts.fontRole ? WorldWdgt.theme.fonts.defaultText
     @originallySetFontSize = opts.fontSize ? fontRole.size
     @fontName = opts.fontName ? fontRole.family
     @isBold = opts.bold ? fontRole.bold
-    @isItalic = opts.italic ? false
+    if opts.lineHeight?
+      @lineHeight = opts.lineHeight
+      @lineHeightStatedAtFontSize = @originallySetFontSize
+    else if fontRole.lineHeight?
+      @lineHeight = fontRole.lineHeight
+      @lineHeightStatedAtFontSize = fontRole.size
+    @isItalic = opts.italic ? fontRole.italic ? false
     @isHeaderLine = opts.headerLine ? false
     @isNumeric = opts.numeric ? false
     @color = opts.color ? (Color.create 37, 37, 37)
@@ -258,6 +279,162 @@ class StringWdgt extends Widget
   fontHeight: (fontSize) ->
     minHeight = Math.max fontSize, WorldWdgt.preferencesAndSettings.minimumFontHeight
     Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
+
+  # ── THE LINE BOX ───────────────────────────────────────────────────────────────────────────
+  # Each line of my text stands in a LINE BOX, and the queries below are its ONE home: how tall
+  # the box is (linePitch: my lines stack at it), where the baseline sits in it (_baselineInLine),
+  # where a caret stands in it (caretBoxInLine, caretTopLeftAt) and how paint spells that baseline
+  # (_lineInkTextBaseline, _lineInkOffset). Wrapping heights and fit checks, measuring, box sizing,
+  # paint, selection, slotCoordinates / slotAt, the caret and the macro toolkit's text aim all read
+  # them, so a click, the caret, the selection and the ink agree on where every line is.
+  #   My `lineHeight` picks the branch:
+  #   - UNSET (undefined): the box is the font's em box, fontHeight tall (ceil(1.2 x size)), and a
+  #     line is drawn with textBaseline "bottom" at the box's bottom, which puts its baseline the
+  #     font's descent above that bottom.
+  #   - SET: the box is my lineHeight, scaled with the font's em box (fontHeight) from the size it
+  #     is stated at to the size in use, and the baseline sits where an explicit line height puts
+  #     it: the half-leading above the font box rounds down, floor((pitch - (A + D)) / 2) + A, with
+  #     A and D the font box's ascent and descent rounded to whole pixels. A line is drawn
+  #     "alphabetic" at that baseline.
+  #   Every number is a whole LOGICAL pixel, so dpr 2 doubles each one exactly.
+
+  # How tall each of my lines is at `fontSize`: the pitch my lines stack at. Unset, the em box
+  # (fontHeight). Set, my lineHeight scaled with the font's em box (fontHeight) from the size it is
+  # stated at to `fontSize`, and rounded: an enlarged text keeps its proportions, at the stated size
+  # the pitch IS the line height, and a line height at least its em box stays at least the em box
+  # at every size, below the smallest renderable font too, where fontHeight holds steady. A line
+  # height given no stated size is stated at the size I am set in. A fitted text (SCALEUP /
+  # SCALEDOWN) passes its fitted size, as every row computation does.
+  linePitch: (fontSize) ->
+    if @lineHeight?
+      statedAtFontSize = @lineHeightStatedAtFontSize ? @originallySetFontSize
+      Math.round @lineHeight * (@fontHeight fontSize) / (@fontHeight statedAtFontSize)
+    else
+      Math.ceil @fontHeight fontSize
+
+  # Where the baseline sits in a line box at `fontSize`, below the box's top. Unset, the font
+  # box's descent above the box's bottom (where "bottom" at that bottom draws it); set, the
+  # explicit-line-height rule above.
+  _baselineInLine: (fontSize) ->
+    [ascent, descent] = @_fontBoxAscentAndDescent fontSize
+    if @lineHeight?
+      Math.floor((@linePitch(fontSize) - (ascent + descent)) / 2) + ascent
+    else
+      @fontHeight(fontSize) - descent
+
+  # The font box's ascent and descent at `fontSize`, each rounded to a whole pixel: [A, D], in the
+  # font I paint with.
+  _fontBoxAscentAndDescent: (fontSize) ->
+    StringWdgt.fontBoxAscentAndDescentOf @buildCanvasFontProperty fontSize
+
+  # THE FONT BOX of a canvas font string ("bold 20px Arial"): its ascent and descent, each rounded to
+  # a whole pixel, [A, D]. Measured on the widgets' shared measuring context about the ALPHABETIC
+  # baseline -- a canvas reports these relative to its textBaseline, and that context keeps its own
+  # for every other measure -- and cached per font, like measureText. My line box reads it at the font
+  # I paint with, and so does a line of text centred in a box by its font box elsewhere (a typed
+  # icon face, TypedFaceIconAppearance), so one measure and one cache serve both.
+  @fontBoxAscentAndDescentOf: (font) ->
+    cacheKey = "fontBox-" + font
+    cacheHit = world.cacheForTextMeasurements.get cacheKey
+    if cacheHit? then return cacheHit
+    context = world.canvasContextForTextMeasurements
+    context.font = font
+    textBaselineToRestore = context.textBaseline
+    context.textBaseline = "alphabetic"
+    metrics = context.measureText "Hg"
+    context.textBaseline = textBaselineToRestore
+    cacheEntry = [(Math.round metrics.fontBoundingBoxAscent), (Math.round metrics.fontBoundingBoxDescent)]
+    world.cacheForTextMeasurements.set cacheKey, cacheEntry
+    cacheEntry
+
+  # Where a caret stands in a line box at `fontSize`: the font's em box, fontHeight tall, ending at
+  # the font box's bottom (the baseline plus the descent). Unset, that is the whole line box. The
+  # box spans no width: how wide a caret is, its caret decides.
+  caretBoxInLine: (fontSize) ->
+    emBoxHeight = @fontHeight fontSize
+    if @lineHeight?
+      top = @_baselineInLine(fontSize) + @_fontBoxAscentAndDescent(fontSize)[1] - emBoxHeight
+    else
+      top = 0
+    new Rectangle 0, top, 0, top + emBoxHeight
+
+  # WHERE A CARET STANDS at `slot`, in my plane, as far as my line box decides it: the slot's boundary
+  # on its line (slotCoordinates, which answers the top of the slot's LINE box) moved down to the caret
+  # box's top in that line, read at the size my slot geometry uses. How far right of that boundary a
+  # caret draws itself is its own look (CaretWdgt._myTopLeftAtSlot, the theme's caretGap), so this and
+  # slotCoordinates both keep the boundary itself.
+  caretTopLeftAt: (slot) ->
+    lineTopLeft = @slotCoordinates slot
+    lineTopLeft.add new Point 0, (@caretBoxInLine @fittingFontSize).top()
+
+  # How paint spells a line's baseline: the textBaseline my back buffer draws with, and the y below
+  # a line box's top that each line is handed to fillText at. Unset, "bottom" at the box's bottom;
+  # set, "alphabetic" at the baseline itself, so a font whose box descent is not a whole pixel
+  # cannot move it.
+  _lineInkTextBaseline: ->
+    if @lineHeight? then "alphabetic" else "bottom"
+
+  _lineInkOffset: (fontSize) ->
+    if @lineHeight? then @_baselineInLine fontSize else @linePitch fontSize
+
+  # What my line box adds to the key of a cache that keeps a pitch-derived value (a wrap's height
+  # and fit verdict, a back buffer): nothing while my lineHeight is unset, so an unset text keys
+  # its entries exactly as a text with no line box does; the line height and the size it is stated
+  # at once it is set, so two texts that differ only in their line box never share an entry.
+  _lineBoxCacheKeySuffix: ->
+    if @lineHeight? then "-lineHeight" + @lineHeight + "@" + (@lineHeightStatedAtFontSize ? @originallySetFontSize) else ""
+
+  # ── THE ITEM SHAPE ─────────────────────────────────────────────────────────────────────────
+  # Where I live can dress me as an ITEM: a block filled rounded at its corners, my text standing in
+  # from its edges -- as a document dresses the texts on its page (DocumentViewportWdgt
+  # .itemShapeOfTextOnPlane, asked through its stack). It is my box's LOOSE fit (the FITTING MODEL,
+  # above): a box that hugs my text (FIT_BOX_TO_TEXT) is my text's own extent, tight, or that extent
+  # plus the item's inset at each side, loose; a box of any other fit is never loose. A TEMPLATE (a
+  # widget a drag copies instead of moving, as the templates window shows its building blocks) is a
+  # picture of an item, not an item, and wears none; the copy a drag takes is an item wherever it
+  # lands. I ASK for the shape at every measure, paint and point mapping and keep nothing of it, so a
+  # text dragged out of a document is a plain text again, one dropped back in an item again (each
+  # re-parenting re-lays me: Widget._reactToBeingAdded), and a text saved, loaded or duplicated
+  # wears what its new place gives it.
+  #   The inset moves every query that places my text, consistently: where my text starts
+  # (textVerticalPosition / textHorizontalPosition, which paint, slotCoordinates, slotAt, the caret
+  # and the selection all read), the width it wraps at (TextWdgt.breakTextIntoLines), my box's size
+  # (TextWdgt._reLayoutSelf and preferredExtentForWidth, the box hugs), whether my text fits
+  # (doesTextFitInExtent), where a point picks a slot (_pointTakenOutOfPadding) and where a header
+  # line runs (_drawHeaderUnderline); the rounding shapes my fill (_prepareTextBufferContext) and my
+  # hit shape (catchesPointerAt). Wearing no shape, my inset is Point.ZERO and my fill square, and
+  # each of those answers exactly what it answers for a text that was never dressed.
+
+  # My item shape -- {cornerRadius, inset}: my fill's rounding, and how far my text stands in from my
+  # box (inset.x from each side, inset.y from the top and the bottom) -- or undefined, wearing none.
+  _itemShape: ->
+    return undefined unless @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT and !@isTemplate
+    @parent?.itemShapeOfContainedText?()
+
+  _textInset: ->
+    @_itemShape()?.inset ? Point.ZERO
+
+  # the part of my box my text stands in, in my plane: my box less my inset (my box itself when I
+  # wear no shape)
+  _textArea: ->
+    @boundingBox().insetBy @_textInset()
+
+  # WHERE A POINT PICKS A SLOT: a point in my padding (inside my box, around my text area) is taken to
+  # the nearest point of my text area, so a press there picks the nearest slot of the nearest line --
+  # in the top padding, the first line's slot under it; beside a line, that line's nearer end. Any
+  # other point is its own: one outside my box keeps its above / below / beside answers, and with no
+  # inset my text area is my box, so every point is.
+  _pointTakenOutOfPadding: (aPoint) ->
+    return aPoint if @_textInset().isZero() or !@boundsContainPoint aPoint
+    area = @_textArea()
+    new Point (Math.min (Math.max aPoint.x, area.left()), area.right()),
+      (Math.min (Math.max aPoint.y, area.top()), area.bottom())
+
+  # What my item shape adds to my back buffer's cache key: nothing while I wear none; its rounding and
+  # inset once I do, so a dressed text and an otherwise identical plain one never share a buffer.
+  _itemShapeCacheKeySuffix: ->
+    shape = @_itemShape()
+    if shape? then "-item" + shape.cornerRadius + "-" + shape.inset.x + "x" + shape.inset.y else ""
 
   # the actual font size used might be
   # different than the one specified originally
@@ -335,10 +512,14 @@ class StringWdgt extends Widget
       if onlyUndo.isJustFirstClickToPositionCursor
         @undoHistory = []
 
+  # My weight, slant, font and alignment are MY STYLE, which a text toolbar's tools mirror while I am
+  # the text being edited (TextToolbarWdgt): each of my setters for them tells the world it moved
+  # (WorldWdgt.noteStyleChanged), and the world announces it if I am its editor focus.
   setHorizontalAlignment: (newAlignment) ->
     if @horizontalAlignment != newAlignment
       @horizontalAlignment = newAlignment
       @_changed()
+      world.noteStyleChanged @
 
   setVerticalAlignment: (newAlignment) ->
     if @verticalAlignment != newAlignment
@@ -629,13 +810,14 @@ class StringWdgt extends Widget
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
+  # The text fits when it fits my text area (my box less my item inset).
   doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     if !@measureText?
       debugger
     if text == ""
       return true
-    extentOccupiedByText = new Point Math.ceil(@measureText text, overrideFontSize), @fontHeight(overrideFontSize)
-    return extentOccupiedByText.le @extent()
+    extentOccupiedByText = new Point Math.ceil(@measureText text, overrideFontSize), @linePitch(overrideFontSize)
+    return extentOccupiedByText.le @_textArea().extent()
 
   fitToExtent: ->
     # this if is just to check if the text fits in the
@@ -692,29 +874,33 @@ class StringWdgt extends Widget
     @fittingSpecWhenBoundsTooLarge  + "-" +
     @fittingSpecWhenBoundsTooSmall  + "-" +
     @fittingSpec  + "-" +
-    @fittingSpecBoxTightOrLoose  + "-" +
-    @fittingSpecBoxWhichDimensionAdjusts
+    @fittingSpecBoxWhichDimensionAdjusts +
+    @_lineBoxCacheKeySuffix() +
+    @_itemShapeCacheKeySuffix()
 
-  # Where my text starts inside my box, along each axis: flush with the side it is aligned to, or
-  # centred. The paint and the caret / selection math (slotCoordinates, slotAt) both read these, so
-  # the caret always sits on the text it edits.
+  # Where my text starts inside my box, along each axis: flush with the side of my text area it is
+  # aligned to (my box less my item inset, THE ITEM SHAPE), or centred. The paint and the caret /
+  # selection math (slotCoordinates, slotAt) both read these, so the caret always sits on the text
+  # it edits.
   textVerticalPosition: (heightOfText) ->
+    inset = @_textInset().y
     switch @verticalAlignment
       when AlignmentSpecVertical.TOP
-        0
+        inset
       when AlignmentSpecVertical.MIDDLE
         (@height() - heightOfText)/2
       when AlignmentSpecVertical.BOTTOM
-        @height() - heightOfText
+        @height() - inset - heightOfText
 
   textHorizontalPosition: (widthOfText) ->
+    inset = @_textInset().x
     switch @horizontalAlignment
       when AlignmentSpecHorizontal.LEFT
-        0
+        inset
       when AlignmentSpecHorizontal.CENTER
         @width()/2 - widthOfText/2
       when AlignmentSpecHorizontal.RIGHT
-        @width() - widthOfText
+        @width() - inset - widthOfText
 
 
   # Draw ONE complete line of text at (x, y) in @color. The ONE home of a line's ink: StringWdgt's
@@ -731,7 +917,7 @@ class StringWdgt extends Widget
     backBufferContext.useLogicalPixelsUntilRestore()
     backBufferContext.font = @buildCanvasFontProperty()
     backBufferContext.textAlign = "left"
-    backBufferContext.textBaseline = "bottom"
+    backBufferContext.textBaseline = @_lineInkTextBaseline()
 
     # paint the background so we have a better sense of
     # where the text is fitting into.
@@ -746,29 +932,42 @@ class StringWdgt extends Widget
     # silently paints NOTHING, with no error anywhere. Belt-and-braces since the two
     # constructors that used to leave the field undefined were fixed (TextWdgt/SimpleTextWdgt),
     # because the failure mode is invisible rather than loud.
+    # Dressed as an item (THE ITEM SHAPE) the fill is the item's rounded block, its corners left
+    # clear in the buffer, so the page under it shows there; otherwise it is the whole square box.
     if @backgroundColor
       backBufferContext.save()
       backBufferContext.fillStyle = @backgroundColor.toString()
       backBufferContext.globalAlpha = @backgroundTransparency ? 1
-      backBufferContext.fillRect  0,
-          0,
-          Math.round(@width()),
-          Math.round(@height())
+      cornerRadius = @_itemShape()?.cornerRadius
+      if cornerRadius?
+        backBufferContext.fillRoundRect 0, 0, Math.round(@width()), Math.round(@height()), cornerRadius
+      else
+        backBufferContext.fillRect  0,
+            0,
+            Math.round(@width()),
+            Math.round(@height())
       backBufferContext.restore()
 
 
   # Shared by StringWdgt and TextWdgt: draw the "header line" — two horizontal
-  # rule segments flanking the text. The four geometry values are passed in
-  # because the same-named locals mean slightly different things at each call
-  # site (single fitting line here vs one wrapped line in TextWdgt), so only the
+  # rule segments flanking the text, through the middle of the line box (its bottom less half its
+  # pitch). The geometry values are passed in because each call site computes them its own way
+  # (single fitting line here vs one wrapped line in TextWdgt), so only the
   # drawing itself is factored out (honouring the TODO in TextWdgt._createRefreshOrGetBackBuffer).
-  _drawHeaderUnderline: (backBufferContext, textVerticalPosition, heightOfText, textHorizontalPosition, widthOfText) ->
+  # The rule runs across my text area (my box less my item inset: the whole box when I wear no
+  # shape), broken 5 px either side of the text, and a segment with no length left in that span
+  # (text at or near an end of it) is not drawn: there it could only cover pixels outside the span.
+  _drawHeaderUnderline: (backBufferContext, lineBottom, pitch, textHorizontalPosition, widthOfText) ->
+    spanLeft = @_textInset().x
+    spanRight = @width() - spanLeft
     backBufferContext.strokeStyle = (Color.create 198, 198, 198).toString()
     backBufferContext.beginPath()
-    backBufferContext.moveTo 0, textVerticalPosition - heightOfText / 2
-    backBufferContext.lineTo textHorizontalPosition - 5, textVerticalPosition - heightOfText / 2
-    backBufferContext.moveTo textHorizontalPosition + widthOfText + 5, textVerticalPosition - heightOfText / 2
-    backBufferContext.lineTo @width(), textVerticalPosition - heightOfText / 2
+    if textHorizontalPosition - 5 > spanLeft
+      backBufferContext.moveTo spanLeft, lineBottom - pitch / 2
+      backBufferContext.lineTo textHorizontalPosition - 5, lineBottom - pitch / 2
+    if textHorizontalPosition + widthOfText + 5 < spanRight
+      backBufferContext.moveTo textHorizontalPosition + widthOfText + 5, lineBottom - pitch / 2
+      backBufferContext.lineTo spanRight, lineBottom - pitch / 2
     backBufferContext.stroke()
 
 
@@ -806,12 +1005,15 @@ class StringWdgt extends Widget
     # so potentially we could be wasting some space as the string might
     # be really small so to fit, say, the width, while a lot of height of
     # the widget could be "wasted" in memory.
+    # Text standing inset (an item, THE ITEM SHAPE) is not at the surface's
+    # top-left either, so it takes the whole widget too.
     widthOfText = @calculateTextWidth text
-    heightOfText = @fontHeight @fittingFontSize
+    heightOfText = @linePitch @fittingFontSize
     if @backgroundColor? or
      @verticalAlignment != AlignmentSpecVertical.TOP or
      @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
-     @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT
+     @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT or
+     !@_textInset().isZero()
       width = @width()
       height = @height()
     else
@@ -825,7 +1027,9 @@ class StringWdgt extends Widget
     @_prepareTextBufferContext backBufferContext
 
 
-    textVerticalPosition = @textVerticalPosition(@fontHeight @fittingFontSize) + @fontHeight(@fittingFontSize)
+    # my one line's box, placed by my vertical alignment, and the y its text is drawn at in it
+    lineTop = @textVerticalPosition heightOfText
+    textVerticalPosition = lineTop + @_lineInkOffset @fittingFontSize
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
     # NB: no SHADOW is baked into this buffer. A text widget's shadow is the
@@ -836,7 +1040,7 @@ class StringWdgt extends Widget
 
     # header line
     if @isHeaderLine
-      @_drawHeaderUnderline backBufferContext, textVerticalPosition, heightOfText, textHorizontalPosition, widthOfText
+      @_drawHeaderUnderline backBufferContext, lineTop + heightOfText, heightOfText, textHorizontalPosition, widthOfText
 
 
 
@@ -858,6 +1062,8 @@ class StringWdgt extends Widget
   # this way. I profiled this, just see how highlighting gets slower
   # and slower as selection gets longer.
   #
+  # Each selected character's plate spans its whole line box (slotCoordinates answers the box's
+  # top), so a selection over several lines has no gaps between them.
   drawSelection: (backBufferContext) ->
     startSlot = @firstSelectedSlot()
     endSlot = @lastSelectedSlot()
@@ -865,9 +1071,9 @@ class StringWdgt extends Widget
       p = @slotCoordinates(i).subtract @position()
       c = @textPossiblyCroppedToFit.charAt(i)
       backBufferContext.fillStyle = @markedBackgroundColor.toString()
-      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText c) + 1, Math.ceil @fontHeight @fittingFontSize
+      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText c) + 1, @linePitch @fittingFontSize
       backBufferContext.fillStyle = @markedTextColor.toString()
-      backBufferContext.fillText c, p.x, p.y + Math.ceil @fontHeight @fittingFontSize
+      backBufferContext.fillText c, p.x, p.y + @_lineInkOffset @fittingFontSize
     
   
   # StringWdgt measuring:
@@ -875,8 +1081,8 @@ class StringWdgt extends Widget
     # PURE geometry: the position point of the given index ("slot") -- no side effects.
     # (used to fire one here; moved to handOffToPopoutEditorIfOverflowing -- see docs/archive/layout-system-architecture-assessment.md.)
 
-    # answer the position point of the given index ("slot")
-    # where the caret should be placed
+    # answer the position point of the given index ("slot"): its boundary, at the top of my line
+    # box (caretTopLeftAt moves it down to the caret box's top; a caret stands just right of it)
     text = @text
 
     # let's be defensive and check that the
@@ -892,7 +1098,7 @@ class StringWdgt extends Widget
 
     widthOfText = @calculateTextWidth text
 
-    textVerticalPosition = @textVerticalPosition @fontHeight @fittingFontSize
+    textVerticalPosition = @textVerticalPosition @linePitch @fittingFontSize
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
     x += textHorizontalPosition
@@ -938,7 +1144,7 @@ class StringWdgt extends Widget
     idx
 
   pointIsAboveFirstLine: (aPoint) ->
-    textVerticalPosition = @textVerticalPosition @fontHeight @fittingFontSize
+    textVerticalPosition = @textVerticalPosition @linePitch @fittingFontSize
 
     if aPoint.y - @top() < textVerticalPosition
       return 0
@@ -946,16 +1152,18 @@ class StringWdgt extends Widget
     return false
 
   pointIsUnderLastLine: (aPoint) ->
-    textVerticalPosition = @textVerticalPosition(@fontHeight @fittingFontSize) + @fontHeight(@fittingFontSize)
+    textVerticalPosition = @textVerticalPosition(@linePitch @fittingFontSize) + @linePitch(@fittingFontSize)
 
     # if pointer is below the line, the slot is at
     # the last character.
-    if (aPoint.y - textVerticalPosition) - @top() > Math.ceil @fontHeight @fittingFontSize
+    if (aPoint.y - textVerticalPosition) - @top() > @linePitch @fittingFontSize
       return @textPossiblyCroppedToFit.length
 
     return false
-  
+
+  # a point in my padding picks from the nearest point of my text area (_pointTakenOutOfPadding)
   slotAt: (aPoint) ->
+    aPoint = @_pointTakenOutOfPadding aPoint
     if (isPointBeforeFirstLine = @pointIsAboveFirstLine aPoint) != false
       return isPointBeforeFirstLine
 
@@ -1011,6 +1219,7 @@ class StringWdgt extends Widget
       # while a script changed the font. markNonValueChange rather than markStale: my font is not my
       # VALUE (my value is my text), and saying otherwise would re-deliver my text along my wire.
       world.dataflow.markNonValueChange @
+      world.noteStyleChanged @   # ... and my font is my style (see setHorizontalAlignment)
     @_reflowContainedTextThenInvalidateLayout()
 
   # THE MENU ADAPTER. A menu/button action is dispatched as
@@ -1144,16 +1353,19 @@ class StringWdgt extends Widget
       @_changed()
       @_reflowContainedTextThenInvalidateLayout()
 
+  # weight and slant are my style: see setHorizontalAlignment for who mirrors it
   toggleWeight: ->
     @_settleLayoutsAfter =>
       @isBold = not @isBold
       @_changed()
+      world.noteStyleChanged @
       @_reflowContainedTextThenInvalidateLayout()
 
   toggleItalic: ->
     @_settleLayoutsAfter =>
       @isItalic = not @isItalic
       @_changed()
+      world.noteStyleChanged @
       @_reflowContainedTextThenInvalidateLayout()
 
   toggleHeaderLine: ->
@@ -1170,7 +1382,7 @@ class StringWdgt extends Widget
   _changed: ->
     super
     world.caret?.noteTextChanged()
-  
+
   # adjust the data models behind the text. E.g.
   # is it going to be shown as cropped? What size
   # is it going to be? How is the text broken down
@@ -1224,14 +1436,16 @@ class StringWdgt extends Widget
   # centres it in _reLayoutSelf); the generic _reFitContainer seam can't reach a non-scroll/stack container
   # and a freefloating child doesn't climb, so invalidate the managing parent explicitly (gated out-of-pass
   # -- _invalidateLayout THROWS during a pass) and let the enclosing settle flush it.
+  # The box is the text's extent plus my item inset at each side (none when I wear no item shape).
   _sizeToTextAndDisableFittingNoSettle: ->
     @autoSizeBoxToText = true
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
     widthOfText = Math.max (Math.ceil measuredWidth), 1
-    heightOfText = @fontHeight @originallySetFontSize
-    @__commitExtent new Point widthOfText, heightOfText
+    heightOfText = @linePitch @originallySetFontSize
+    inset = @_textInset()
+    @__commitExtent new Point widthOfText + 2 * inset.x, heightOfText + 2 * inset.y
     # public-call-sanctioned: reflowText is public text API — macros call it directly
     # (macroBoxTransparencyAndColorChanging), so it stays public; consciously reused by this core.
     @reflowText()

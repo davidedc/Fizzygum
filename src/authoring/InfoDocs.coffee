@@ -193,7 +193,7 @@ class InfoDocs
     sdspw = doc.contents
 
     iconWidget._applyExtent new Point 85, 85
-    sdspw.setContents iconWidget, 5
+    sdspw.setContents iconWidget
     iconWidget._contentStackSpec.setGrow 0
     iconWidget._contentStackSpec.setAlignmentToCenter()
 

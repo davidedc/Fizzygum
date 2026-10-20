@@ -29,8 +29,6 @@ class PaintToolbarWdgt extends ToolbarWdgt
   toothpasteTool: undefined
   eraserTool: undefined
 
-  highlightedToolIconColor: Color.create 245, 126, 0
-
   # rolling buffer of recent pointer positions, built lazily on first use and drained
   # as the stroke is laid down. Declared undefined, never [] — the lazy build keys off
   # `if !@queue?`, and a prototype array would be shared by every instance.
@@ -510,14 +508,21 @@ class PaintToolbarWdgt extends ToolbarWdgt
   _tools: ->
     (each for each in [@pencilTool, @brushTool, @toothpasteTool, @eraserTool] when each?)
 
+  # Is `tool` the one in the person's hand -- the ACTIVE tool, whose cell shows it
+  # (CodeInjectingSimpleRectangularButtonWdgt.isActiveTool asks)? Read from the hand at every
+  # asking, never stored.
+  holdsInHand: (tool) ->
+    tool? and tool is @_armedTool()
+
   # The highlight is a VIEW of the person's hand, re-derived at every arrange (the
-  # _deriveRowSeparators idiom, ruling C5): the armed tool's icon wears the highlight colour and
-  # every other wears the icon default. No cell stores "am I the armed one", so no cell can
-  # disagree with the hand.
+  # _deriveRowSeparators idiom, ruling C5): every tool's face wears the toolbar glyph ink, the same
+  # armed or not, and every tool's CELL re-derives its look, which asks the tool whether it is the
+  # active one (holdsInHand) -- so the armed tool's cell shows active and no other does. No cell
+  # stores "am I the armed one", so no cell can disagree with the hand.
   _deriveToolHighlights: ->
-    armedTool = @_armedTool()
     for tool in @_tools()
-      tool.faceWidget.setColor (if tool is armedTool then @highlightedToolIconColor else WorldWdgt.theme.iconInk)
+      tool.faceWidget.setColor WorldWdgt.theme.toolbarGlyph
+      tool.parent?.noteItemStateChanged?()
     return
 
   _reLayoutChildren: ->

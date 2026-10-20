@@ -501,14 +501,14 @@ class Widget extends TreeNode
     # TreeNode.topWdgtSuchThat asks CHILDREN FIRST, so an answer of the ancestor's own never reaches
     # them (InertIconHolderWdgt's header). An ancestor that declares no picture answers nothing here.
     # AM-I-UNCUT: clipped bounds answer only for the RECTANGLE a clipping ancestor clips to. An
-    # ancestor that clips its children to a ROUNDED outline (FrameWdgt's rounded child clip, which
-    # answers _roundedChildClipRadii — probed like scrollTranslationOfChild in the plane walks) also
-    # cuts its corner notches away, and a point there falls through to whatever lies behind that
-    # ancestor, exactly as a press in the ancestor's OWN notch does: the pointer agrees with the
-    # paint. Each such ancestor tests the point in its own plane with its own shape test (the one its
-    # notch answers with), the point carried there through the screen by the same two-arm mappings
-    # that brought it from the screen to me. With no such ancestor (no frame above me whose look
-    # turns the clip on), one walk up, no mapping.
+    # ancestor that clips its children to a ROUNDED outline (FrameWdgt's rounded child clip, and a
+    # tool cell's, GlassBoxBottomWdgt: each answers _roundedChildClipRadii — probed like
+    # scrollTranslationOfChild in the plane walks) also cuts its corner notches away, and a point
+    # there falls through to whatever lies behind that ancestor, exactly as a press in the
+    # ancestor's OWN notch does: the pointer agrees with the paint. Each such ancestor tests the
+    # point in its own plane with its own shape test (the one its notch answers with), the point
+    # carried there through the screen by the same two-arm mappings that brought it from the screen
+    # to me. With no such ancestor (no rounded frame or tool cell above me), one walk up, no mapping.
     screenPoint = undefined
     childOnMyPath = @
     ancestor = @parent
@@ -794,7 +794,7 @@ class Widget extends TreeNode
     # children rather than destroying them) still covers a focused descendant.
     focusWdgt = world.editorFocusWdgt
     if focusWdgt? and (focusWdgt == @ or @isAncestorOf focusWdgt)
-      world.editorFocusWdgt = undefined
+      world._setEditorFocusNoSettle undefined
 
     # remove callback when user clicks outside
     # me or any of my children
@@ -934,6 +934,22 @@ class Widget extends TreeNode
     isThereAnHandle = @firstChildSuchThat (m) ->
       m.updateVisibility?
     isThereAnHandle?.updateVisibility()
+
+  # MY CORNER CHAIN CHANGED: the resizer over my bottom-right corner came or went
+  # (HandleWdgt.updateVisibility), or the chain from my corner up to a resizer did (a docked band
+  # re-sided into or out of the slots its host names, FrameWdgt._reSideMyDockNoSettle). Every
+  # viewport down my corner chain -- the children that run out to my corner
+  # (bottomRightCornerReachedBy), and theirs -- re-lays what it keeps clear of that corner, its bars
+  # and, through its arrange, contents laid out to its far edges (ViewportWdgt.noteCornerResizerChanged,
+  # which only MARKS layout, through the phase valve, so the flush that is coming lays each one once).
+  # A container that names no such child ends the walk.
+  noteCornerChainChanged: ->
+    visit = (container) ->
+      for child in container.children when container.bottomRightCornerReachedBy?(child)
+        child.noteCornerResizerChanged?()
+        visit child
+      return
+    visit @
 
 
   # leaving this function as step means that the widget wants to do nothing
@@ -3121,6 +3137,9 @@ class Widget extends TreeNode
   # The only variant is that the Panel
   # draws its background, then its contents AND THEN its stroke
   # (because otherwise its content would paint over its stroke)
+  #   ⚠ LOCKSTEP: GlassBoxBottomWdgt overrides this body with a hand-copied one that paints its
+  # children inside its rounded outline (the unrounded path is this body exactly). An edit here must
+  # be mirrored there.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     @children.forEach (child) ->
@@ -3140,6 +3159,61 @@ class Widget extends TreeNode
     [damageBox, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
     return unless damageBox? and damageBox.isNotEmpty() and w >= 1 and h >= 1
     @_drawSelectionOverlay aContext, al, at, w, h
+
+  # ===== painting my children inside my ROUNDED outline =====
+  # The shared paint of a widget that cuts its children to its rounded outline -- it answers
+  # _roundedChildClipRadii: a rounded frame (FrameWdgt, its look's clip knob on), a tool cell
+  # (GlassBoxBottomWdgt) -- so content laid flush into it cannot paint in the notches outside its
+  # corners, where the pointer falls through to whatever lies behind it (Widget.isPointerTargetAt,
+  # AM-I-UNCUT). Its outline is its appearance's (a BoxyAppearance: clipToOutline). Every caller has
+  # checked that the damage meets its box.
+
+  # Paint my children over the damaged part of me so that nothing of theirs shows outside my
+  # rounded outline, paying for the rounded clip only where it can matter: away from my corner
+  # squares my outline IS my box, so damage that reaches no square is painted exactly as the
+  # rectangular clip paints it, and damage that reaches one is painted whole under ONE rounded clip.
+  _paintChildrenInsideMyRoundedOutline: (aContext, damagedPartOfMe, appliedShadow, radii) ->
+    area = damagedPartOfMe.round()
+    if @_areaReachesACornerSquare area, radii
+      @_paintChildrenUnderMyOutlineClip aContext, area, appliedShadow
+    else
+      @_paintChildrenOver aContext, damagedPartOfMe, appliedShadow
+
+  # Does `area` (an integer rectangle inside my box) reach one of my corner SQUARES (r×r at a corner
+  # of radius r, the only places my outline leaves my box)? Also true when two squares would overlap
+  # (a box too small for its own rounding), so such a box always clips.
+  _areaReachesACornerSquare: (area, radii) ->
+    [topLeft, topRight, bottomRight, bottomLeft] = (Math.ceil radius for radius in radii)
+    box = @boundingBox().round()
+    left = box.left()
+    top = box.top()
+    right = box.right()
+    bottom = box.bottom()
+    squaresOverlap = (topLeft + topRight > box.width()) or (bottomLeft + bottomRight > box.width()) or
+      (topLeft + bottomLeft > box.height()) or (topRight + bottomRight > box.height())
+    return true if squaresOverlap
+    squares = [
+      new Rectangle left, top, left + topLeft, top + topLeft
+      new Rectangle right - topRight, top, right, top + topRight
+      new Rectangle right - bottomRight, bottom - bottomRight, right, bottom
+      new Rectangle left, bottom - bottomLeft, left + bottomLeft, bottom
+    ]
+    squares.some (square) -> area.intersect(square).isNotEmpty()
+
+  # Paint my children over `rectangle`, which goes down as the clipping rectangle each child honours.
+  _paintChildrenOver: (aContext, rectangle, appliedShadow) ->
+    @children.forEach (child) ->
+      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, rectangle, appliedShadow
+
+  # Paint my children over `rectangle` with the context clipped to it AND to my outline: the
+  # rectangle in the context's device pixels (the space every appearance scope clips in), my outline
+  # traced by my appearance under the same matrix its own fill is traced under.
+  _paintChildrenUnderMyOutlineClip: (aContext, rectangle, appliedShadow) ->
+    aContext.save()
+    aContext.clipToRectangle rectangle.left() * ceilPixelRatio, rectangle.top() * ceilPixelRatio, rectangle.width() * ceilPixelRatio, rectangle.height() * ceilPixelRatio
+    @appearance.clipToOutline aContext
+    @_paintChildrenOver aContext, rectangle, appliedShadow
+    aContext.restore()
 
   # ... when you want to hide something
   # but you don't want to generate any
@@ -3722,9 +3796,13 @@ class Widget extends TreeNode
     # and the __add seed's drain alone IS the last-write-wins record.)
     return aWdgt
 
+  # An edit made under me rather than through my setters -- an inspector's saved property
+  # (injectProperty), a class-level source edit reaching its instances -- may have moved my style,
+  # which the editor's tools mirror while I am the widget being edited (WorldWdgt.noteStyleChanged).
   sourceChanged: ->
     @_reLayoutSelf?()
     @_changed?()
+    world.noteStyleChanged @
 
   # this is done before the updating of the
   # backing store in some widgets that

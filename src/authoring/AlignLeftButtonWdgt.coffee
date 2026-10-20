@@ -6,5 +6,6 @@ class AlignLeftButtonWdgt extends AlignButtonWdgt
   toolTipMessage: "align left"
   alignDirectMethod: "alignLeft"
   layoutAlignSetterMethod: "setAlignmentToLeft"
+  horizontalAlignmentName: "LEFT"
 
-  createAppearance: -> new AlignLeftIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new AlignLeftIconAppearance @, WorldWdgt.theme.toolbarGlyph

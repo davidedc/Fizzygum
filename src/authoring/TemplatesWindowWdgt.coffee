@@ -25,7 +25,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     startingContent.isEditable = true
     startingContent.enableSelecting()
 
-    sdspw.setContents startingContent, 5
+    sdspw.setContents startingContent
 
 
     startingContent = new ArrowSIconWdgt

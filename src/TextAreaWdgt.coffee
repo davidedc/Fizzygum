@@ -76,7 +76,7 @@ class TextAreaWdgt extends ViewportWdgt
   # padding). It measures the font, not the text, so a container that floors a text box at it gets
   # the same floor whatever the box holds.
   heightShowingOneLine: ->
-    (Math.ceil @textWdgt.fontHeight @textWdgt.originallySetFontSize) + 2 * Math.floor(@extraPadding + @padding)
+    (@textWdgt.linePitch @textWdgt.originallySetFontSize) + 2 * Math.floor(@extraPadding + @padding)
 
   colloquialName: ->
     return "text"

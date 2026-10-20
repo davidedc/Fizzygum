@@ -3,23 +3,27 @@
 # font-size, format-as-code, templates) that act on the LAST widget the user
 # clicked or dropped (world.editorFocusWdgt).
 #
-# They share: the highlightable hover/press colouring + parent-stainer mixins,
-# the grey hover/press/normal colour scheme, the thumbnail-actionability flag
-# and the editor-chrome exclusion below. A subclass supplies only its icon
-# (createAppearance), its tooltip (toolTipMessage), and its activated.
+# They share: the hover/press state machine (HighlightableMixin), shown on the
+# tool cell each stands in rather than on the button (ParentStainerMixin: the
+# cell derives its look from the state, GlassBoxBottomWdgt), the
+# thumbnail-actionability flag and the editor-chrome exclusion below. A subclass
+# supplies only its icon (createAppearance, in the toolbarGlyph ink), its tooltip
+# (toolTipMessage), and its activated -- and, when it toggles a state of the text
+# it acts on (bold, italic, the mono font, an alignment), whether it is the ACTIVE
+# tool: isActiveTool, true while that text has the state, so its cell MIRRORS the
+# edited text (re-derived whenever the world announces the focus or its style
+# moved, TextToolbarWdgt). A tool with no state (the font, font-size and
+# templates buttons) answers nothing and is never active.
 #
-# All of them are icon-shaped, hence the IconWdgt base. (Bold/Italic and the
-# Align trio used to extend Widget directly — an inconsistency, since they draw
-# through icon appearances exactly like the font/size/code/templates buttons.)
+# All of them are icon-shaped, hence the IconWdgt base: they paint through icon
+# appearances, like every other glyph-faced tool. Bold, italic and format-as-code
+# TYPE their face (a "B", an "I", a "</>") from the glyph atlases in a theme font
+# role (TypedFaceIconAppearance); the others draw theirs.
 
 class EditorContentPropertyChangerButtonWdgt extends IconWdgt
 
   @augmentWith HighlightableMixin, @name
   @augmentWith ParentStainerMixin, @name
-
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
 
   actionableAsThumbnail: true
 

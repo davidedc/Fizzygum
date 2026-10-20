@@ -10,7 +10,8 @@
 # caption stands on its sibling, painted by DesktopIconAppearance): a rounded box in my fill, with
 # no border -- a bordered rounded rectangle means "press me", and I am not pressable -- and no tail,
 # casting the desktop shadow. My margin around my contents is my own padding, never my corner
-# radius. A text shows each of its lines centred, one line per line-height slot.
+# radius. A text shows each of its lines centred, each on its own line box (the tooltip font role's
+# line height), one under the other.
 
 class ToolTipWdgt extends Widget
 
@@ -119,17 +120,16 @@ class ToolTipWdgt extends Widget
       linesWidth = 0
       linesWidth = Math.max linesWidth, eachLineWidget.width() for eachLineWidget in @contentsWidgets
       eachLineWidget.__commitWidth linesWidth for eachLineWidget in @contentsWidgets
-      # each line stands in a slot tooltipLineHeight tall (taller only if the line's own box is)
-      slotHeight = Math.max WorldWdgt.theme.tooltipLineHeight, @contentsWidgets[0].height()
+      # each line's slot is its own line box (the tooltip font role's line height), which the line
+      # hugs, so the lines stack one line box apart
+      slotHeight = @contentsWidgets[0].linePitch @contentsWidgets[0].originallySetFontSize
 
     # adjust my layout: my padding around the stacked slots
     @__commitWidth @contentsWidgets[0].width() + 2 * @horizontalPadding
     @__commitHeight @contentsWidgets.length * slotHeight + 2 * @verticalPadding
 
-    # position my contents: each widget at the top of its slot plus half the spare height, rounded
-    # down (the draft's line-height rule, UI-guidelines.md §1.1)
+    # position my contents: each widget at the top of its slot, the slots stacked down from my top
+    # padding (a slot is as tall as what stands in it)
     for eachContentsWidget, slotIndex in @contentsWidgets
-      slotTop = @verticalPadding + slotIndex * slotHeight
-      halfSpareHeight = Math.floor((slotHeight - eachContentsWidget.height()) / 2)
-      eachContentsWidget._applyMoveTo @position().add new Point @horizontalPadding, slotTop + halfSpareHeight
+      eachContentsWidget._applyMoveTo @position().add new Point @horizontalPadding, @verticalPadding + slotIndex * slotHeight
 

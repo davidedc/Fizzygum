@@ -83,11 +83,11 @@ class MemberRowWdgt extends MenuItemWdgt
   _placeMyParts: ->
     theme = WorldWdgt.theme
     plateHeight = theme.memberRowPlateHeight
-    tagLine = @kindTag.fontHeight @kindTag.originallySetFontSize
+    tagLine = @kindTag.linePitch @kindTag.originallySetFontSize
     @kindTag.__commitMoveTo @position().add new Point @sideInset, Math.floor (plateHeight - tagLine) / 2
     @kindTag.__commitExtent new Point theme.memberRowTagColumnWidth, tagLine
     @_addNoSettle @kindTag  unless @kindTag.parent is @
-    nameLine = @label.fontHeight @label.originallySetFontSize
+    nameLine = @label.linePitch @label.originallySetFontSize
     @label.__commitMoveTo @position().add new Point @_leadingWidth(), Math.floor (plateHeight - nameLine) / 2
     @label.__commitExtent new Point (Math.max 0, @width() - @_leadingWidth() - @_trailingWidth()), nameLine
 

@@ -172,8 +172,11 @@ class Theme
     @codeText = @code
     # the background of a one-line text-entry field (StringFieldWdgt).
     @textFieldFill = Color.create 255, 255, 255
-    # the text caret's fill.
-    @caretFill = Color.create 0, 0, 0
+    # the text caret's fill (CaretWdgt; BlinkerWdgt takes it as its colour): the accent, the one look every
+    # caret wears -- in a document, a prompt field, a code pane, a cell editor, a caption rename.
+    # The caret is the editing FOCUS, which is what the accent marks. Its width and the gap it
+    # stands after its slot are the caretWidth / caretGap metrics.
+    @caretFill = @accent
     # a TextWdgt's text selection: the selected glyphs' ink and the highlight behind them.
     @textSelectionText = Color.create 255, 255, 255
     @textSelectionFill = Color.create 60, 60, 120
@@ -310,12 +313,18 @@ class Theme
     # ... and the round hint of a stack's size adjuster.
     @layoutAdjusterHint = Color.create 128, 128, 128
 
-    # the glass plate behind a toolbar thumbnail (GlassBoxBottomWdgt): its fill and stroke.
-    @toolCellPlateFill = Color.create 230, 230, 230
-    @toolCellPlateStroke = Color.create 196, 195, 196
-    # a paint tool's button: its border and the faint plate under its glyph.
-    @paintToolButtonStroke = Color.create 0, 0, 0
-    @paintToolButtonFill = Color.create 150, 150, 150
+    # a TOOL CELL (GlassBoxBottomWdgt: the 44 x 44 cell a toolbar's tool stands in, whose look is its
+    # tool's state; a toolbar's overflow chevron, standing in no cell, wears the same look): its fill
+    # at rest -- none, so whatever the strip stands on shows around the tool's glyph -- while its tool
+    # is hovered, while its tool is pressed, and while its tool is the ACTIVE one (the armed paint
+    # tool), hovered or not; pressed wins over active. A cell has no border in any state.
+    @toolCellFill = Color.TRANSPARENT
+    @toolCellHoverFill = @desk
+    @toolCellPressedFill = @chrome
+    @toolCellActiveFill = @desk
+    # the ink of a TOOLBAR's glyphs -- a text tool's face, a creator button's, a paint tool's, the
+    # overflow chevron -- the same in every state (the cell under a glyph shows the state).
+    @toolbarGlyph = @ink
     # the pencil on the corner "edit code" mark.
     @editMarkInk = Color.create 0, 0, 0
 
@@ -349,13 +358,22 @@ class Theme
 
     # the background of an editable text item: a document's title and paragraphs, the stack and
     # document samples, the templates, the welcome and how-to-save texts, and the placeholder an
-    # empty window shows.
-    @editableItemFill = Color.create 240, 240, 240
+    # empty window shows. In view mode a document's item melts into its page instead
+    # (SimpleTextWdgt.blendInWithPanelColor).
+    @editableItemFill = @item
+    # a DOCUMENT's page (DocumentViewportWdgt): its fill, with no border, so the window's frame,
+    # strip rule and docked band are the page's only lines ...
+    @documentPageFill = @paper
+    # ... and the ink of a document's text (DocumentViewportWdgt.getNormalParagraph), which also
+    # takes fonts.document.
+    @documentText = @ink
+    # the stack sample's page (a bare VerticalStackViewportWdgt): its fill. Its border is every
+    # viewport's, panelStroke.
+    @stackViewportFill = Color.create 249, 249, 249
     # the background the example plots clear their canvas to.
     @plotBackgroundFill = Color.create 240, 240, 240
 
-    # the ink of a toolbar's icons (creator, format and paint-tool buttons, the overflow chevron at
-    # rest) and the default colour of an IconWdgt.
+    # the colour an IconWdgt built without one takes (a toolbar's glyphs take toolbarGlyph instead).
     @iconInk = Color.create 37, 37, 37
     # the outline colour icon paint code strokes and fills with (IconAppearance._outlineColorString).
     # Readers take its string through Color.toString, which computes it once per Color and keeps it.
@@ -371,7 +389,11 @@ class Theme
     # whole role to the text it builds (StringWdgt's `fontRole` option, also taken by
     # LabelButtonWdgt, StringFieldWdgt and TextAreaWdgt), which renders with all three members; an explicit
     # fontName / fontSize / bold beside the role overrides that one member. Weights map onto the
-    # bold flag: the draft's 600 is bold, 500 is regular.
+    # bold flag: the draft's 600 is bold, 500 is regular. A role may also carry `lineHeight`, the
+    # height of its text's line box AT THE ROLE'S SIZE (StringWdgt.linePitch scales it with the
+    # font's em box, fontHeight, from that size to any other); a role without it stacks its lines at
+    # the font's em box, ceil(1.2 x size). A role may also carry `italic`, which an explicit `italic`
+    # option overrides the same way.
     @fonts =
       # a menu row's label (a MenuItemWdgt in a menu or a prompt, or one standing on its own)
       menuRow: {family: "Arial, sans-serif", size: 15, bold: false}
@@ -393,20 +415,35 @@ class Theme
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
       # every StringWdgt / TextWdgt built without a role
       defaultText: {family: "Arial, sans-serif", size: 13, bold: false}
-      # a tooltip's text
-      tooltip: {family: "Arial, sans-serif", size: 12, bold: false}
+      # a tooltip's text, each line on the draft's 16 px line box
+      tooltip: {family: "Arial, sans-serif", size: 12, bold: false, lineHeight: 16}
       # a speech bubble's text (set in italic by the bubble itself)
       speechBubble: {family: "Arial, sans-serif", size: 12, bold: false}
       # the entry field of a prompt (its family is also the family of any StringFieldWdgt built
       # without a role). The prompt family is a TARGET family (G3): its text scales with the menu
       # text.
       prompt: {family: "sans-serif", size: 14, bold: false}
-      # a desktop icon's caption
-      desktopCaption: {family: "Arial, sans-serif", size: 12, bold: false}
+      # a desktop icon's caption, each line on the draft's 16 px line box: the plate's line height,
+      # which the icon's height takes for a plate of the most lines (desktopIconHeight)
+      desktopCaption: {family: "Arial, sans-serif", size: 12, bold: false, lineHeight: 16}
       # the text of a CODE PANE, in mono -- source code: the Object Inspector's code pane, a script's
       # and a code prompt's editor -- and of the mono text panels: a console's, an error log's and a
-      # patch node's text boxes. Its lines stack at the pitch every text keeps, ceil(1.2 x size).
-      code: {family: StringWdgt::monoFontStack, size: 12, bold: false}
+      # patch node's text boxes. Its lines stand on the draft's 18 px line boxes, source code's line
+      # height.
+      code: {family: StringWdgt::monoFontStack, size: 12, bold: false, lineHeight: 18}
+      # a DOCUMENT's text: every paragraph a document builds (DocumentViewportWdgt.getNormalParagraph),
+      # in the documentText ink. A title or heading set at its own size keeps this line height
+      # scaled with its em box (22 px text stands on 33 px lines).
+      document: {family: "Arial, sans-serif", size: 15, bold: false, lineHeight: 22}
+      # the TYPED FACES of the text tools (TypedFaceIconAppearance): the bold tool's "B", the italic
+      # tool's "I" and the format-as-code tool's "</>", each at its size in a tool cell
+      # (toolThumbnailSize); a face in any other box scales with the box. Each family names the
+      # literal family first and ends in the generic one, so the native canvas resolves the literal
+      # family and SWCanvas maps the stack onto the same atlas family (it maps by the generic word:
+      # a bare "Times New Roman" would map to Arial).
+      boldToolFace: {family: '"Times New Roman", serif', size: 20, bold: true}
+      italicToolFace: {family: '"Times New Roman", serif', size: 20, bold: false, italic: true}
+      codeToolFace: {family: '"Courier New", monospace', size: 15, bold: false}
 
     # ---- METRICS ---------------------------------------------------------------------------
     # Chrome geometry (program ruling G2): a handle's side, a frame grip's side and inset, the bar
@@ -417,16 +454,19 @@ class Theme
     # member row's height, selection plate and horizontal rhythm, a pop-up group divider's band, the
     # corner
     # rounding of a window's, a card's and a pop-up's body and of the speech bubble, a tooltip
-    # plate's rounding, padding and line height, a pop-up's
+    # plate's rounding and padding, a pop-up's
     # content padding and its header's rule and title inset, a plain or member list rows-panel's
     # padding, a scroll
     # indicator's fat and thin widths and the thin one's edge inset, a toolbar grid's cell
-    # side / inter-cell gap / outer margin / row count, a button's height, paddings and rounding,
+    # side / inter-cell gap / outer margin / row count, a tool cell's rounding and the overflow
+    # chevron's glyph square, a button's height, paddings and rounding,
     # a toggle's height, padding and rounding, a chip's height, padding and rounding,
     # the least side of a chrome target, a footer band's height, rule, inset, button gap and
     # grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
     # and separator square, its toggles band's height, inset and gap, its list column's width and
-    # its seams' width, a code pane's padding, and a desktop icon's tile, glyph, plate and cell (all
+    # its seams' width, a code pane's padding, the text caret's width and the gap it stands after
+    # its slot, a document's item spacing and its text items' rounding and padding, and a desktop
+    # icon's tile, glyph, plate and cell (all
     # from one knob, desktopIconTile), the icon grid's gaps and origin, the bin's corner insets, the
     # rows a folder window opens showing, and the desktop clock's side and corner insets. Each chrome
     # layout site reads the matching
@@ -486,6 +526,13 @@ class Theme
     # strip's rule, a docked band -- which is also the gap between a docked band and the payload. At
     # zero the payload lies flush against every one of them.
     @frameBodyMargin = 0
+    # how far a DOCKED BAND (a frame in one of a host's four edge slots) stands in from the host's
+    # body on its three OUTER sides -- past the border's inner edge or the strip's rule, and past
+    # the body margin -- while its fourth side, the one toward the payload, keeps the body margin
+    # alone. A left or right band spans the payload's height less this at each end, so where it
+    # meets a top or bottom band the two stand this far apart. Every docked band keeps it, a frame
+    # a user docks included; nothing else reads it (a payload's own margin is frameBodyMargin's).
+    @dockedBandInset = 8
 
     # the MINIMUM height a menu or plain list row takes, and the floor under a pop-up's title strip
     # (a title is a tap-to-pin target, ruling C3). A row whose label is taller keeps its label's
@@ -543,12 +590,11 @@ class Theme
     @windowCornerRadius = 8
     @cardCornerRadius = 6
     # a tooltip's PLATE (the draft's label plate): its rounding, and its padding at each side of
-    # its contents and above and below them, each when its opener names none; and the height of
-    # the slot each line of its text stands in (the draft's line-height) ...
+    # its contents and above and below them, each when its opener names none (each line of its text
+    # stands on its own line box, the tooltip font role's) ...
     @tooltipCornerRadius = 8
     @tooltipHorizontalPadding = 7
     @tooltipVerticalPadding = 1
-    @tooltipLineHeight = 16
     # ... and the speech bubble's rounding.
     @speechBubbleCornerRadius = 6
     # a pop-up's CONTENT BOX (a menu's or a prompt's): how far in from its border, and below its
@@ -567,17 +613,31 @@ class Theme
     # ... and a MEMBER list's (the draft's 4 px list padding).
     @memberRowsPanelPadding = 4
 
-    # a toolbar grid's thumbnail cell: side length, the gap between cells, and the margin
-    # around the whole grid; toolRows is how many rows of cells a strip lays out before the
-    # remainder goes behind the overflow chevron. A thumbnail is a target (G3), and a strip is
-    # ONE row, as a tablet toolbar is.
+    # a toolbar grid's thumbnail CELL: its side, and the least gap between two cells, which is
+    # what decides how many cells a strip shows; toolRows is how many rows of cells a strip lays
+    # out before the remainder goes behind the overflow chevron. A thumbnail is a target (G3), and
+    # a strip is ONE row, as a tablet toolbar is.
     @toolThumbnailSize = 44
     @toolInternalPadding = 6
-    @toolExternalPadding = 10
+    # the grid's padding, one per axis. ALONG the strip: the side padding before its first slot
+    # and after its last (after the last, more where a resize grip sits over the strip's far end:
+    # ToolPanelWdgt._farAlongPadding), with whatever run is left between them shared evenly between
+    # the cells (space-between). ACROSS it: around its toolRows of cells, so a one-row strip is
+    # 44 + 2 x 6 = 56 deep.
+    @toolAlongPadding = 8
+    @toolCrossPadding = 6
     @toolRows = 1
-    # (a docked strip's own cross-axis extent is no constant: it DERIVES from the three dials
-    # above -- ToolPanelWdgt.naturalGridCrossExtent, the same arithmetic that hugs a floating
-    # toolbar around its cells.)
+    # (a docked strip's own cross-axis extent is no constant: it DERIVES from the dials above --
+    # ToolPanelWdgt.naturalGridCrossExtent, the same arithmetic that hugs a floating toolbar
+    # around its cells -- and is read at every measure, so a band is laid out in the theme of the
+    # world that lays it out.)
+    # the rounding of a TOOL CELL (GlassBoxBottomWdgt), of the plate its state paints and of the
+    # outline its tool is cut to (the draft's control radius), which the overflow chevron's plate
+    # takes too ...
+    @toolCellCornerRadius = 6
+    # ... and the side of the overflow chevron's glyph square, centred in its cell-sized box (the
+    # draft's 16 px »).
+    @toolOverflowGlyphSize = 16
 
     # The overlay scroll INDICATOR's thin resting width (program ruling G4); a hovered indicator
     # fattens to scrollBarsThickness instead, which is why that dial is the FAT width. An
@@ -670,6 +730,28 @@ class Theme
     # own.
     @codePanePadding = 12
 
+    # the text CARET (CaretWdgt), one look for every caret: its width -- the draft's 2 px cursor,
+    # which a caret keeps while a twentieth of its height is narrower, so it thickens only in text
+    # whose em box passes 59 px -- and the gap it stands to the RIGHT of its slot's boundary, at
+    # every slot, so it never covers the ink of the glyph before it. Its height is no metric: it is
+    # the font's em box in its line (StringWdgt.caretBoxInLine).
+    @caretWidth = 2
+    @caretGap = 1
+
+    # a DOCUMENT's items (its paragraphs and whatever is dropped in among them): how far in from
+    # the page's edges they stand, and how far apart -- the padding of the document's stack, which
+    # is both its inset and its gap (DocumentViewportWdgt, read at every arrange). The stack
+    # sample keeps the stack's own.
+    @documentItemSpacing = 8
+    # ... and the ITEM SHAPE a document dresses the texts on its page in
+    # (DocumentViewportWdgt.itemShapeOfTextOnPlane, read at every ask): the rounding of the block
+    # each one is filled as, and how far in its text stands from the block's sides and from its
+    # top and bottom -- a one-line paragraph's block is its 22 px line plus 2 x 6 tall, and its text
+    # wraps at the block's width less 2 x 10.
+    @documentItemCornerRadius = 6
+    @documentItemHorizontalPadding = 10
+    @documentItemVerticalPadding = 6
+
     # a DESKTOP ICON (WidgetHolderWithCaptionWdgt and its family, on the desktop and in a folder):
     # the draft's tile with its glyph, and its label plate below the tile, in a cell. THE KNOB is
     # the tile's side: the ONE size every desktop icon dimension derives from (the draft's 64) ...
@@ -682,20 +764,21 @@ class Theme
     @desktopIconCellWidth = @desktopIconTile + 32
     # ... while these keep the draft's values whatever the knob: the padding above the tile and
     # below the plate, the gap between the tile and the plate, the plate's padding at each side of
-    # its text and above and below it, its rounding, the height of the slot each caption line
-    # stands in, and the most lines a caption takes (a longer one ends in "…") ...
+    # its text and above and below it, its rounding, and the most lines a caption takes (a longer
+    # one ends in "…") ...
     @desktopIconPadding = 6
     @desktopIconTilePlateGap = 6
     @desktopIconPlateHorizontalPadding = 7
     @desktopIconPlateVerticalPadding = 1
     @desktopIconPlateRadius = 8
-    @desktopIconPlateLineHeight = 16
     @desktopIconCaptionMaxLines = 2
     # ... so an icon is as tall as a plate of the most lines needs, whatever its own caption -- one
     # row pitch for every icon -- and its EXTENT is the cell by that height
-    # (WidgetHolderWithCaptionWdgt.standardDesktopIconExtent).
+    # (WidgetHolderWithCaptionWdgt.standardDesktopIconExtent). A caption line is as tall as its
+    # font role's line box (fonts.desktopCaption.lineHeight: the caption is set at the role's size).
+    captionLineHeight = @fonts.desktopCaption.lineHeight
     @desktopIconHeight = @desktopIconPadding + @desktopIconTile + @desktopIconTilePlateGap +
-      (@desktopIconCaptionMaxLines * @desktopIconPlateLineHeight + 2 * @desktopIconPlateVerticalPadding) +
+      (@desktopIconCaptionMaxLines * captionLineHeight + 2 * @desktopIconPlateVerticalPadding) +
       @desktopIconPadding
     @desktopIconExtent = new Point @desktopIconCellWidth, @desktopIconHeight
     # the ICON GRID a desktop and a folder panel lay their icons in (IconGridPanelWdgt.add): the gap
@@ -717,7 +800,7 @@ class Theme
     # the bottom padding take in every icon.
     @desktopBinPlateBottomInset = 29
     oneLinePlateBottom = @desktopIconPadding + @desktopIconTile + @desktopIconTilePlateGap +
-      @desktopIconPlateLineHeight + 2 * @desktopIconPlateVerticalPadding
+      captionLineHeight + 2 * @desktopIconPlateVerticalPadding
     @desktopBinBottomInset = @desktopBinPlateBottomInset - (@desktopIconHeight - oneLinePlateBottom)
 
     # the desktop's CLOCK (an AnalogClockWdgt, built by WorldWdgt.createDesktop) at the draft's spot:

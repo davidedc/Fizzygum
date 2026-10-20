@@ -1,10 +1,21 @@
-# I mark where the caret is in a String/Text while editing
+# I am the text CARET: I mark the slot where typing goes in the String/Text being edited, my target.
+# ONE look for every caret -- in a document, a prompt field, a code pane, a cell editor, a caption
+# rename, a plain text: I paint in the theme's caretFill (the accent, BlinkerWdgt); I am as tall as
+# the font's em box in my slot's line (my target's caretBoxInLine) and the theme's caretWidth wide (a
+# twentieth of my height where that is wider); and I stand the theme's caretGap to the RIGHT of my
+# slot's boundary (_myTopLeftAtSlot). My colour is taken from the theme as I am built (the world
+# builds a caret for each edit); my extent and my place are read from the theme and my target at
+# every re-sync. My slot's boundary itself stays my target's answer (slotCoordinates), which clicks,
+# selections and the macro toolkit's text aims read.
 
 class CaretWdgt extends BlinkerWdgt
 
   target: undefined
   slot: undefined
+  # how far in from each side of my parent my WHOLE box stays while my target scrolls to keep me in
+  # view (_oneScrollCaretIntoViewPassNoSettle): one pixel, clear of a field's 1 px border.
   viewPadding: 1
+  # the height my extent was last taken at (_updateDimension re-takes it only when that changes)
   currentCaretFontSize: undefined
 
   constructor: (@target) ->
@@ -46,8 +57,8 @@ class CaretWdgt extends BlinkerWdgt
   # singleton: the reason belongs on the class it is about (type-test-elimination convention).
   isPointerTargetAt: (aPoint) -> false
 
-  # The INERT re-sync of the caret to its target: re-size it to the target's font height and re-place it
-  # on the target's CURRENT slot coordinate. The caret is isLayoutInert, so this schedules / mutates NO
+  # The INERT re-sync of the caret to its target: re-size it to the target's caret box and re-place it
+  # where a caret stands at the target's CURRENT slot. The caret is isLayoutInert, so this schedules / mutates NO
   # layout -- it is READ-ONLY w.r.t. the layout tree and therefore safe to run at PAINT time
   # (justBeforeBeingPainted). It deliberately does NOT scroll-follow: bringing the caret into view mutates
   # layout (moves @target / @contents) and must happen out of paint -- that is the caret's _reLayout, drained
@@ -71,11 +82,21 @@ class CaretWdgt extends BlinkerWdgt
   noteTextChanged: ->
     @_changed()
 
+  # MY EXTENT where my target's text is set at `fontSize`: as tall as the caret box its line box
+  # answers there (the font's em box in its line), and the theme's caretWidth wide -- or a twentieth of
+  # that height where that is wider, so a caret in very large text thickens with it: 2 px up to a 59 px
+  # em box (12 px text: 2 x 15; 15 px: 2 x 18; 48 px: 2 x 58), then 3, 4, ... (96 px text: 5 x 116).
+  # Whole logical pixels, so dpr 2 doubles it. A pure read: _updateDimension applies it, and the
+  # scroll-follow's clamp sizes my box with it before a paint has applied it.
+  _extentAtTargetFontSize: (fontSize) ->
+    height = (@target.caretBoxInLine fontSize).height()
+    new Point (Math.max WorldWdgt.theme.caretWidth, (Math.floor height / 20)), height
+
   _updateDimension: ->
-    ls = @target.fontHeight @target.actualFontSizeUsedInRendering()
-    if ls != @currentCaretFontSize
-      @currentCaretFontSize = ls
-      @_applyExtent new Point Math.max(Math.floor(ls / 20), 1), ls
+    extent = @_extentAtTargetFontSize @target.actualFontSizeUsedInRendering()
+    if extent.y != @currentCaretFontSize
+      @currentCaretFontSize = extent.y
+      @_applyExtent extent
   
   # CaretWdgt event processing:
 
@@ -143,10 +164,10 @@ class CaretWdgt extends BlinkerWdgt
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
     @_updateDimension()
-    # The target geometry is now final (reactToKeystroke re-fit done): converge any deferred caret scroll-follow
-    # IN-PLACE, during this keystroke event, rather than leaving it to ride the end-of-cycle flush. (No-op for a
-    # nav/no-move keystroke -- see _settleScrollFollow. Typing/delete enqueue off-settle here, so this is
-    # where their follow settles, AFTER the reactToKeystroke re-fit the inline advance pass had to precede.)
+    # The target geometry is now final (its parent told, the caret re-sized for the new text): converge any
+    # deferred caret scroll-follow IN-PLACE, during this keystroke event, rather than leaving it to ride the
+    # end-of-cycle flush. (No-op for a nav/no-move keystroke -- see _settleScrollFollow. Typing/delete enqueue
+    # off-settle here, so this is where their follow settles.)
     @_settleScrollFollow()
 
   processCut: (selectedText) ->
@@ -165,15 +186,16 @@ class CaretWdgt extends BlinkerWdgt
   # (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT defer its settle
   # (contrast _setMaxDimDeferredSettle, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
   # per discrete move. The follow NEVER rides the end-of-cycle flush.
-  #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret on the target's current
-  #   slot coordinate (inert), do one best-effort scroll-follow pass inline (load-bearing for in-place typing --
+  #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret where it stands at the
+  #   target's current slot (inert), do one best-effort scroll-follow pass inline (load-bearing for in-place typing --
   #   see below), and ENQUEUE the caret for the follow (_requestScrollFollow). The scroll-follow -- the only
   #   layout-MUTATING part -- then runs as the caret's OWN _reLayout, settled in-line with every other widget: the
   #   draining flush picks the caret up AFTER its target / scroll-panel are settled and iterates the follow to a
   #   fixed point via the until-loop -- no post-flush special-case, no hand-rolled convergence loop. The core is
   #   the non-settling member reached where the immediate flush is wrong: (1) typing/delete/paste, whose advance
-  #   must stay off-settle so its inline pass precedes the keystroke's reactToKeystroke re-fit -- their editing
-  #   handler's tail (_settleScrollFollow) drains the follow in-place at the keystroke's end instead; and
+  #   stays off-settle so the follow converges on the caret as the keystroke re-sizes it (_updateDimension; the
+  #   viewport's follow reads the caret's box) -- their editing handler's tail (_settleScrollFollow) drains the
+  #   follow in-place at the keystroke's end instead; and
   #   (2) construction (the caret is an orphan, so it defers and settles when first added).
   gotoSlot: (slot, becauseOfMouseClick) ->
     @_settleLayoutsAfter => @_gotoSlotNoSettle slot, becauseOfMouseClick
@@ -183,11 +205,11 @@ class CaretWdgt extends BlinkerWdgt
     length = @target.text.length
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
 
-    # Scroll-follow the move ONE pass right here, DURING the event (not at paint). This is load-bearing for
-    # in-place TYPING (insert -> _goRightNoSettle): the advance scroll must happen BEFORE the keystroke's
-    # escalateEvent re-fit, which reads the (now-scrolled) target geometry -- deferring it past that re-fit
-    # shifts the result (macroStringWdgtInlineTypingRefitsUnderFittingModes). One pass suffices where the
-    # follow converges immediately (e.g. a single-line horizontal scroll) ...
+    # Scroll-follow the move ONE pass right here, DURING the event (not at paint). The pass reads its target
+    # re-fitted (see _oneScrollCaretIntoViewPassNoSettle), so in in-place TYPING too (insert -> _goRightNoSettle,
+    # before the keystroke's _updateDimension) it lands where the flush's pass would: that pass then moves
+    # nothing and confirms in one visit. One pass suffices where the follow converges immediately (e.g. a
+    # single-line horizontal scroll) ...
     @_oneScrollCaretIntoViewPassNoSettle()
     # ... and ENQUEUE the caret for the follow for the cases that need MORE than one pass (a viewport's
     # vertical follow advances only partway per pass): the caret's _reLayout runs the follow on settled geometry
@@ -199,12 +221,20 @@ class CaretWdgt extends BlinkerWdgt
     if becauseOfMouseClick and @target.undoHistory?.length == 0
       @target.pushUndoState? @slot, true
 
-  # The INERT re-place (no layout): put the caret at the target's current slot coordinate. Called only by the
-  # paint/ctor re-sync (_adjustAccordingToTargetText); a caret MOVE places itself UN-clamped inside
-  # _oneScrollCaretIntoViewPassNoSettle instead (Point.floor() here clamps to >=0 -- exactly the clamp the
-  # 2026-07-01 single-pass follow fix removed for moves; see the note there).
+  # WHERE I STAND at my slot, in my target's plane: my target's caretTopLeftAt answers the slot's
+  # boundary on its line, at the top of the caret box in that line, and I stand the theme's caretGap to
+  # the right of that boundary -- at every slot, a line's first and last included -- so I never cover
+  # the ink of the glyph before me. Both of my placements read it, so a move and a paint-time re-sync
+  # put me in the same place.
+  _myTopLeftAtSlot: ->
+    @target.caretTopLeftAt(@slot)?.add new Point WorldWdgt.theme.caretGap, 0
+
+  # The INERT re-place (no layout): put the caret where it stands at its target's current slot
+  # (_myTopLeftAtSlot). Called only by the paint/ctor re-sync (_adjustAccordingToTargetText); a caret MOVE
+  # places itself UN-clamped inside _oneScrollCaretIntoViewPassNoSettle instead (Point.floor() here clamps
+  # to >=0 -- exactly the clamp the 2026-07-01 single-pass follow fix removed for moves; see the note there).
   _repositionToSlotNoSettle: ->
-    pos = @target.slotCoordinates @slot
+    pos = @_myTopLeftAtSlot()
     if pos?
       # public-call-sanctioned: show is the heavily-public visibility verb (settle-free one-liner);
       # consciously reused by this core.
@@ -251,7 +281,8 @@ class CaretWdgt extends BlinkerWdgt
     # the viewport's contents) nor the target text had to move to keep me in view. The caret's OWN reposition
     # to its slot is an exact, idempotent one-shot, so a pass that ONLY repositioned the caret is already at the
     # fixed point and needs no confirming re-visit.
-    #   INVARIANT this leans on: placing the caret at slotCoordinates is idempotent (a direct absolute move), and my
+    #   INVARIANT this leans on: placing the caret where it stands at its slot (_myTopLeftAtSlot) is idempotent (a
+    # direct absolute move), the horizontal clamp moves nothing on a pass after the one that clamped, and my
     # target/panel settle BEFORE me (the flush drains parent-first; the caret is freefloating + inert, drained
     # last). Marking fixed here can only REDUCE settle iterations vs the old "did anything move" check -- it can
     # never ADD a cycle. If a future text-relayout change ever broke that invariant (so my slot moved AFTER I
@@ -269,9 +300,9 @@ class CaretWdgt extends BlinkerWdgt
   # Converge the caret's pending scroll-follow IN-PLACE, during the event -- called at the tail of each caret
   # EDITING-event handler (processKeyDown / processCut / processPaste), once the target geometry is final. The
   # discrete moves (click/arrow/Home/End) already settle in-place: their public gotoSlot/goLeft/goRight wrap the
-  # advance in _settleLayoutsAfter. The typing/delete/paste advance can't do that -- its inline scroll pass must
-  # precede the keystroke's reactToKeystroke re-fit (§ byte-exact typing, see goLeft/goRight), so it enqueues the
-  # caret OFF-settle (_requestScrollFollow) and the convergence is deferred to here, the keystroke's end. This
+  # advance in _settleLayoutsAfter. The typing/delete/paste advance does not -- it runs inside the editing
+  # handler, before the caret is re-sized for the new text (see goLeft/goRight), so it enqueues the caret
+  # OFF-settle (_requestScrollFollow) and the convergence is deferred to here, the keystroke's end. This
   # drains it now -- in-place, "step by step" per the doOneCycle invariant -- instead of letting it ride the
   # end-of-cycle flush (the caret is discrete, not a deferred-settle stream, so it belongs in the per-event
   # settle). Reuses the standard in-place settle (_settleLayoutsAfter) with an EMPTY core: the work (the enqueue +
@@ -286,38 +317,63 @@ class CaretWdgt extends BlinkerWdgt
     @_settleLayoutsAfter => undefined
 
   # A SINGLE scroll-follow pass (see _reLayout, which iterates this to a fixed point via the flush). Re-derives
-  # pos from the current (settled) geometry, applies the horizontal clamp (which scrolls @target and adjusts where
-  # the caret lands), re-places the caret, then asks the viewport to scroll it vertically into view.
+  # where the caret stands from the current (settled) geometry, applies the horizontal clamp (which scrolls
+  # @target and adjusts where the caret lands), re-places the caret, then asks the viewport to scroll it
+  # into view.
+  #   Every pass reads its target RE-FITTED first (actualFontSizeUsedInRendering): a keystroke's setText leaves
+  # a box-fitted text's size to be redone, and a pass measuring the old size would put the caret where the
+  # next pass, measuring the new one, has to move it again -- a corrective second visit of the flush. Read
+  # re-fitted, the pass the event runs inline and the flush's confirming pass measure the same text.
   # thin-wrap-exempt: one convergence pass driven by the caret's _reLayout (no public twin -- settling is provided
   # by the flush, not a self-settling wrapper).
   _oneScrollCaretIntoViewPassNoSettle: ->
-    pos = @target.slotCoordinates @slot
+    fontSize = @target.actualFontSizeUsedInRendering()
+    pos = @_myTopLeftAtSlot()
     if pos?
-      if @parent and @target.isScrollable
-        right = @parent.right() - @viewPadding
-        left = @parent.left() + @viewPadding
-        if pos.x > right
-          @target._moveLeftSideTo @target.left() + right - pos.x
-          pos = new Point right, pos.y
-        if pos.x < left
-          left = Math.min @parent.left(), left
-          @target._moveLeftSideTo @target.left() + left - pos.x
-          pos = new Point left, pos.y
-        if @target.right() < right and right - @target.width() < left
-          pos = new Point pos.x + (right - @target.right()), pos.y
-          @target._moveRightSideTo right
-      # public-call-sanctioned: show is the heavily-public visibility verb (settle-free one-liner);
-      # consciously reused by this core.
-      @show()
-      # Place the caret at its TRUE slot position, integer-floored but WITHOUT Point.floor()'s clamp-to->=0
+      # The caret's TRUE place at its slot, integer-floored but WITHOUT Point.floor()'s clamp-to->=0
       # (Math.max(_, 0)): when the content is scrolled up, a slot above the world origin has a NEGATIVE absolute y.
       # Clamping the caret to 0 there capped scrollCaretIntoView -- which scrolls by (ft - caretWidget.top()) -- at
       # ONE viewport-step (ft) per pass, so a far caret converged over MANY settle re-visits (contents crawled to
       # its mark in +ft steps). Placing the caret at its real (possibly negative, off-viewport, harmlessly clipped)
       # position lets scrollCaretIntoView compute the FULL scroll delta in ONE pass -- byte-identical fixed point,
-      # but the follow now settles in a single move + verify instead of distance/ft passes. The final resting
-      # position is always in view (positive), so the rendered caret is unchanged.
-      @_applyMoveTo new Point (Math.floor pos.x), (Math.floor pos.y)
+      # but the follow settles in a single move + verify instead of distance/ft passes. The final resting
+      # position is always in view (positive), so the rendered caret is unchanged. Floored BEFORE the clamp,
+      # so the clamp below keeps the very box the caret is drawn in, and moves the target by whole pixels.
+      pos = new Point (Math.floor pos.x), (Math.floor pos.y)
+      if @parent and @target.isScrollable and !@_amIDirectlyInsideViewport()
+        # THE HORIZONTAL CLAMP keeps the caret's WHOLE box -- its gap past its slot's boundary and its width,
+        # not the boundary alone -- inside its parent less viewPadding at each side: left <= the caret's left,
+        # and the caret's right <= right. Where it would not be, the TARGET moves (it scrolls in its field) and
+        # the caret moves with it, so a caret at either edge of a clipping field (a prompt's entry, a cell's
+        # editor) shows in full, clear of the field's 1 px border; anywhere else nothing moves and the caret
+        # stands where its slot puts it. The width is read at the size the slot geometry above is read at (the
+        # re-fitted one). Every StringWdgt is isScrollable, so a text that does not scroll moves too, when a
+        # caret at a line's end would leave its parent.
+        #   A VIEWPORT'S PLANE is no band to clamp to: the viewport scrolls the caret into view itself (below)
+        # and grows its plane to the window it shows, so the plane's edge follows the caret: a band inset from
+        # that edge is undone by the same pass's follow, and the flush's next pass would move the target again.
+        width = (@_extentAtTargetFontSize fontSize).x
+        right = @parent.right() - @viewPadding
+        left = @parent.left() + @viewPadding
+        if pos.x + width > right
+          @target._moveLeftSideTo @target.left() + right - (pos.x + width)
+          pos = new Point right - width, pos.y
+        if pos.x < left
+          @target._moveLeftSideTo @target.left() + left - pos.x
+          pos = new Point left, pos.y
+        # a target wider than that band whose right edge has come short of the band's (scrolled too far
+        # left) slides back right: up to that edge, and no further than keeps the caret's box inside the
+        # band -- sliding the target's edge all the way would carry a caret at the text's end straight back
+        # past the band, undoing the first clamp in the same pass
+        if @target.right() < right and right - @target.width() < left
+          slide = Math.min right - @target.right(), right - (pos.x + width)
+          if slide > 0
+            @target._moveRightSideTo @target.right() + slide
+            pos = new Point pos.x + slide, pos.y
+      # public-call-sanctioned: show is the heavily-public visibility verb (settle-free one-liner);
+      # consciously reused by this core.
+      @show()
+      @_applyMoveTo pos
 
       if @_amIDirectlyInsideViewport() and @target.isScrollable
         @parent.parent.scrollCaretIntoView @
@@ -326,10 +382,10 @@ class CaretWdgt extends BlinkerWdgt
   # Navigation keystrokes SELF-SETTLE (one flush per arrow press, during the event) -- caret navigation is not a
   # high-traffic stream, so it does not defer its settle (see the comment on gotoSlot). goLeft / goRight are ALSO called
   # INTERNALLY (insert -> goRight to advance past the typed char; deleteLeft -> goLeft), where the caret advance
-  # must NOT self-settle early -- doing so reorders the fit (it broke macroStringWdgtInlineTypingRefitsUnderFitting-
-  # Modes: the advance scroll flushed before _updateDimension/escalateEvent). The advance instead enqueues the
-  # follow off-settle and lets the editing handler's tail settle it in-place once the reactToKeystroke re-fit is
-  # done (processKeyDown -> _settleScrollFollow). So goLeft/goRight split into a self-settling public
+  # must NOT self-settle early -- its flush would converge the follow before the keystroke re-sizes the caret for
+  # the new text (_updateDimension), and the viewport's follow reads the caret's box. The advance instead
+  # enqueues the follow off-settle and lets the editing handler's tail settle it in-place once the caret is
+  # re-sized (processKeyDown -> _settleScrollFollow). So goLeft/goRight split into a self-settling public
   # wrapper (the keystroke path) + a non-settling _go*NoSettle core (the internal path). goUp/goDown/goHome/
   # goEnd have NO internal callers, so they self-settle inline via gotoSlot. updateSelection / clearSelectionIf...
   # only touch selection marks (no layout). (end-of-cycle-flush-drawdown CONVERT.)
@@ -481,7 +537,7 @@ class CaretWdgt extends BlinkerWdgt
       # slotCoordinates -- insert (typing + paste) is the only path that can grow inline-edited text past the
       # fit. If it hands off, the inline caret is gone, so stop here (no advance / dimension / undo to do).
       return if @target.handOffToPopoutEditorIfOverflowing()
-      @_goRightNoSettle false, key.length   # internal advance: rides setText's flush, must NOT self-settle early
+      @_goRightNoSettle false, key.length   # internal: settles at the handler's tail, NOT early (see goLeft/goRight)
       @_updateDimension()
       @target.pushUndoState? @slot
   
@@ -517,7 +573,7 @@ class CaretWdgt extends BlinkerWdgt
     else
       text = @target.text
       @target.setText text.substring(0, @slot - 1) + text.substr(@slot)
-      @_goLeftNoSettle()   # internal: rides setText's flush, must NOT self-settle early (see goLeft/goRight)
+      @_goLeftNoSettle()   # internal: settles at the handler's tail, NOT early (see goLeft/goRight)
 
     @updateSelection false
     @_gotoSlotNoSettle @slot

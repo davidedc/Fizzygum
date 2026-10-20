@@ -633,7 +633,7 @@ class ActivePointerWdgt extends Widget
       # (By ANCESTRY, §5.D: a drop into an excluded subtree must not steal
       # focus either -- same rule as the click site.)
       if !(@_excludedFromEditorFocusTrackingByAncestry wdgtToDrop)
-        world.editorFocusWdgt = wdgtToDrop
+        world._setEditorFocusNoSettle wdgtToDrop
 
       @children = []
       @_applyExtent new Point
@@ -1143,7 +1143,7 @@ class ActivePointerWdgt extends Widget
           # is honored over the whole opted-out subtree (D2a folded the former
           # editorContentPropertyChangerButton field into this same walk).
           if !(@_excludedFromEditorFocusTrackingByAncestry w)
-            world.editorFocusWdgt = w
+            world._setEditorFocusNoSettle w
           w[expectedClick] @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey, doubleClickInvocation, tripleClickInvocation
 
           # now send the double/triple clicks

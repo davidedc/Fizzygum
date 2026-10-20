@@ -1058,7 +1058,8 @@ class MacroToolkit
   # selection (`txt.selection()`, or its startMark/endMark).
 
   # WHERE A PRESS PICKS EXACTLY `slot` OF A TEXT WIDGET, on the screen: at the slot's boundary on its line
-  # (slotCoordinates — where the caret sits) and halfway down that line, as the whole pixel a press lands on.
+  # (slotCoordinates — the boundary a caret stands just right of) and halfway down that line, as the whole
+  # pixel a press lands on.
   # The point is VERIFIED with the product's own answer — `text.slotAt` of that pixel carried back into the
   # text's plane, the position a press there dispatches — and must lie inside the text's own box, so the
   # press meets the text. When a rounding edge tips the boundary onto a neighbouring slot (or just outside
@@ -1070,7 +1071,7 @@ class MacroToolkit
     unless Number.isInteger(slot) and 0 <= slot <= text.text.length
       throw new Error "#{slot} is not a slot of #{text} — its slots run 0..#{text.text.length}"
     boundary = text.slotCoordinates slot
-    lineMiddle = boundary.y + Math.floor (Math.ceil text.fontHeight text.fittingFontSize) / 2
+    lineMiddle = boundary.y + Math.floor (text.linePitch text.fittingFontSize) / 2
     for nudge in [0, -1, 1, -2, 2]
       screenPoint = @_screenPixelOf text, new Point boundary.x + nudge, lineMiddle
       planePoint = text.screenPointToMyPlane screenPoint

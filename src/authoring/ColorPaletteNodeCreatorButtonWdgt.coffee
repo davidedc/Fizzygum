@@ -2,7 +2,7 @@ class ColorPaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "color palette"
 
-  createAppearance: -> new ColorPalettePatchProgrammingIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new ColorPalettePatchProgrammingIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new ColorPaletteWdgt

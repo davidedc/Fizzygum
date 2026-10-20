@@ -369,6 +369,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # this one is so we can left/center/right align in
   # a document editor the last widget that the user "touched"
+  # Read as a field by anyone; WRITTEN only through _setEditorFocusNoSettle, the one write, which
+  # announces every change to whatever mirrors the edited text (a text toolbar's tools).
   # TODO this could be extended so we keep a "list" of
   # "selected" widgets (e.g. if the user ctrl-clicks on a widget
   # then it highlights in some manner and ends up in this list)
@@ -1645,6 +1647,30 @@ class WorldWdgt extends IconGridPanelWdgt
       @dragEmbedDockBandWdgt.fullDestroy()
       @dragEmbedDockBandWdgt = undefined
 
+  # THE ONE WRITE OF THE EDITOR FOCUS (editorFocusWdgt). The pointer's click and drop sites
+  # (ActivePointerWdgt), a dying widget taking itself out of the focus (Widget._destroyNoSettle) and
+  # the error-recovery reset (_softResetWorld) all come through here, so a change is ANNOUNCED
+  # whichever of them made it: a markNonValueChange of mine (the focus is not my VALUE), heard by
+  # every text toolbar (TextToolbarWdgt subscribes to me, firesOnAnyChange) and drained by the
+  # cycle's dataflow station, ahead of layout and paint -- so what the text tools show is a function
+  # of the event stream, with no timer. DARK when nothing mirrors the edited text. Settles nothing,
+  # so it is safe inside a pass (the destroy core runs under layout flushes).
+  _setEditorFocusNoSettle: (aWdgt) ->
+    return if aWdgt is @editorFocusWdgt
+    @editorFocusWdgt = aWdgt
+    @dataflow?.markNonValueChange @
+    return
+
+  # A WIDGET'S STYLE MOVED -- a text's weight, slant, font or alignment (StringWdgt's setters), or
+  # whatever an edit made under a widget may have touched (Widget.sourceChanged: an inspector's
+  # saved property). When that widget is the one being edited I announce it exactly as I announce a
+  # new focus, so what mirrors the edited text re-reads it; any other widget's style is nothing the
+  # editor's tools show.
+  noteStyleChanged: (aWdgt) ->
+    return unless aWdgt is @editorFocusWdgt
+    @dataflow?.markNonValueChange @
+    return
+
   # The widget the editor-focus indicator frames (§5.D D-3, decisions D18/D21), or undefined. editorFocusWdgt
   # is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a SELECTED
   # op-target within an active editing context, so the indicator frames "this is what an op will act on":
@@ -2545,7 +2571,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @hand.mouseOverList.clear()
     @hand.nonFloatDraggedWdgt = undefined
     @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
-    @editorFocusWdgt = undefined
+    @_setEditorFocusNoSettle undefined
 
   # There is something special about the
   # "world" version of fullDestroyChildren:

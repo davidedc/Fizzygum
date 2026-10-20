@@ -125,8 +125,13 @@ and visibility:
   showing derives from, never `isVisible`).
 - **A container that names nobody ends the climb**, and a viewport names nobody: its contents
   scroll under its corner.
-- **When a resizer comes or goes**, `HandleWdgt.updateVisibility` tells the viewports down its
-  owner's corner chain (`noteCornerResizerChanged`), and each re-lays only its bars.
+- **When the corner chain changes** — a resizer comes or goes (`HandleWdgt.updateVisibility`), or a
+  docked band is re-sided into or out of the slots its host names (`FrameWdgt._reSideMyDockNoSettle`)
+  — `Widget.noteCornerChainChanged` tells the viewports down that corner chain
+  (`noteCornerResizerChanged`), and each re-lays what it keeps clear of the corner: its bars, and
+  through its arrange the contents that lay pieces out to its far edges (a toolbar's strip keeps
+  its last slot clear of the resizer, `ViewportWdgt.cornerResizerFootprint`). Docking and undocking
+  change the band's spec, which shows or hides its own grip, so they reach the same walk.
 
 A container that runs a viewport into its corner WITHOUT naming it leaves that viewport's bar
 running under the resizer, so a new container of that shape names its corner child.

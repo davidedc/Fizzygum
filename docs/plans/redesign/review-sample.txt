@@ -65,3 +65,18 @@ SystemTest_macroSavedDocumentShortcutIcon
 SystemTest_macroClockInWindowKeepsSquareOnResize
 SystemTest_macroDocumentScrollsMixedTextAndClocks
 SystemTest_macroWrappingTextFieldResizesOK
+# W5: the Docs Maker at its real size with its toolbar (cells spread, the band inset 8, the typed B / I / </>, the
+# drawn », the script A) and its paragraph items; a caret in a document item; a re-flowing document (15 px on 22 px
+# lines, items, the reorder by the new drop rule); a toolbar in a narrow window (») and the overflow menu; the slides
+# and paint toolbars (side bands, the armed tool's active cell); the drop rule's "at the top"; an empty window's
+# placeholder in the item colour; a code pane at 18 px lines
+SystemTest_macroDocsToolbarSlotEditViewToggle
+SystemTest_macroSelectionOverlaySurvivesBringToFront
+SystemTest_macroDocumentCaretBroughtIntoViewWhenMoved
+SystemTest_macroSimpleDocumentAllReflowsCorrectlyAsIChangeFontSize
+SystemTest_macroTabletDockedToolbarChevron
+SystemTest_macroSampleSlideEditViewToggle
+SystemTest_macroDrawingsMakerReEnableEditing
+SystemTest_macroIconDroppedIntoDocumentFlows
+SystemTest_macroWindowsEmptyResizing
+SystemTest_macroMultilineTextInputScrollsWell

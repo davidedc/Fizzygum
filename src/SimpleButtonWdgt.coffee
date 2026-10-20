@@ -118,7 +118,8 @@ class SimpleButtonWdgt extends ButtonWdgt
     @faceWidget?.parent is @ and @faceWidget.measureText? and !@faceWidget.breakTextIntoLines?
 
   # The box ButtonWdgt._reLayout grants my face inside `room` (my box inset by my padding). A line
-  # of text gets a box one line tall -- its own line box, ceil(1.2 x its font size): 15 at 12 px --
+  # of text gets a box one line tall -- its own line box (linePitch), ceil(1.2 x its font size)
+  # while its font role states no line height: 15 at 12 px --
   # across the whole room, floor((room height - line height) / 2) below the room's top: in a 36
   # tall button the cap ink of 12 px Arial lands on rows 13..21, on the draft's baseline 22. The
   # floor keeps the box at integer bounds, and in a room only one line tall it IS the room, so a
@@ -126,7 +127,7 @@ class SimpleButtonWdgt extends ButtonWdgt
   # one line, and any other face, keep the whole room.
   _faceBoundsIn: (room) ->
     return room unless @_faceIsALineOfText()
-    lineHeight = @faceWidget.fontHeight @faceWidget.originallySetFontSize
+    lineHeight = @faceWidget.linePitch @faceWidget.originallySetFontSize
     return room if room.height() <= lineHeight
     top = room.top() + Math.floor (room.height() - lineHeight) / 2
     new Rectangle room.left(), top, room.right(), top + lineHeight

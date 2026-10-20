@@ -6,7 +6,8 @@
 # colour, so the hover/press state machine (HighlightableMixin) recolours it. What a pointer hits
 # is my whole box, never the glyph's outline: an icon appearance keeps the base box test
 # (Appearance.shapeContainsPoint), because the box is the target and the glyph only the mark drawn
-# inside it (ruling G3).
+# inside it (ruling G3). (The toolbar's overflow chevron re-answers both: it wears a tool cell's
+# look, its state on a rounded plate that is also its shape, OverflowChevronButtonWdgt.)
 #
 # A subclass supplies only what differs from this base:
 #   createAppearance   -> new <Foo>IconAppearance @   (the glyph's shape)
@@ -18,9 +19,9 @@
 
 class IconButtonWdgt extends ButtonWdgt
 
-  # the hover / press colour (orange) of a button no frame strip inks -- the toolbar's overflow
-  # chevron, a close button standing on its own; a subclass overrides this field if it wants a
-  # different one (e.g. CloseIconButtonWdgt → red).
+  # the hover / press colour (orange) of a button no frame strip inks -- a close button standing on
+  # its own; a subclass overrides this field if it wants a different one (e.g. CloseIconButtonWdgt
+  # → red).
   iconHoverColor: Color.create 255, 153, 0
 
   # THE SIDE MY MARK IS DRAWN AT inside my box, read by IconAppearance.calculateRectangleOfIcon.

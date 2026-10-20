@@ -181,7 +181,7 @@ host's screen bounds so it renders correctly inside a rotated/scaled island too 
 **Release outcome (§7): docks, not embeds.** An ARMED release resolved to a band skips the ordinary
 `_beforeChildDropped` content hand-off (a dock takes a slot BESIDE the host's content, never instead of it)
 and instead calls `target.add wdgtToDrop, dockSide: <the band's side>`, which arms a fresh
-`EdgeDockLayoutSpec side, thickness` at that side (`FrameWdgt._dockFrameNoSettle`) — the side is always the
+`EdgeDockLayoutSpec` at that side (`FrameWdgt._dockFrameNoSettle`; it records the payload's arrival thickness unless the payload declares its own `dockThickness`) — the side is always the
 DROP's, never any default the payload might otherwise declare for itself.
 
 ## §5 — Candidate resolution (owner decisions 1 + 3)

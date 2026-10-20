@@ -583,9 +583,22 @@ class ViewportWdgt extends Widget
       container = container.parent
     undefined
 
-  # A resizer over a corner I reach came or went (HandleWdgt.updateVisibility tells the viewports down
-  # its corner chain), so my bars must re-lay to the reserve the corner now asks of them: my arrange
-  # is where they are laid, so I schedule it.
+  # HOW FAR A RESIZER OVER MY BOTTOM-RIGHT CORNER REACHES IN from that corner, along each axis (its
+  # cornerFootprint), or 0 when none sits there: what contents that lay their own pieces out to my far
+  # edges keep clear (ToolPanelWdgt keeps its strip's last slot out of it). The same STRUCTURAL answer
+  # my bars' reserve takes (_resizerOverMyCorner, a reserve by occupancy), because the passes that ask
+  # are still laying out; whenever the answer can change -- a resizer coming or going, or the chain
+  # above me re-sided -- my corner chain is told (Widget.noteCornerChainChanged), which re-lays me
+  # (noteCornerResizerChanged), and my arrange re-lays my contents.
+  cornerResizerFootprint: ->
+    @_resizerOverMyCorner()?.cornerFootprint() ? 0
+
+  # What occupies a corner I reach may have changed -- its resizer came or went
+  # (HandleWdgt.updateVisibility), or the chain from me up to a resizer did (a band re-sided,
+  # FrameWdgt._reSideMyDockNoSettle); either tells the viewports down that corner chain
+  # (Widget.noteCornerChainChanged) -- so my bars must re-lay to the reserve the corner now asks of
+  # them, and so must contents that keep clear of it (cornerResizerFootprint): my arrange is where
+  # both are laid, so I schedule it.
   noteCornerResizerChanged: ->
     @_scheduleRelayoutRespectingPhase()
 
@@ -924,10 +937,6 @@ class ViewportWdgt extends Widget
       # are state, and nothing above mutated them -- see subWidgetsMergedFullBounds's comment.
       subBounds = @contents.subWidgetsMergedFullBounds()?.ceil()
     if subBounds
-
-      # add-in the content's own external padding
-      if @contents.externalPadding?
-        subBounds = subBounds.expandBy @contents.externalPadding
 
       # For a content-sizing stack/text panel: never stretch the view past the end of @contents (e.g.
       # after deleting text while scrolled to the bottom -- we don't want to reveal vacant space, we

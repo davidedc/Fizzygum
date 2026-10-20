@@ -22,17 +22,13 @@ class HowToSaveMessageApp extends WindowedApp
     startingContent = new FloppyDiskIconWdgt
     startingContent._applyExtent new Point 85, 85
 
-    sdspw.setContents startingContent, 5
+    sdspw.setContents startingContent
     startingContent._contentStackSpec.setGrow 0
     startingContent._contentStackSpec.setAlignmentToCenter()
 
-    startingContent = new SimpleTextWdgt "How to save?",
-      backgroundColor: WorldWdgt.theme.editableItemFill
-      backgroundTransparency: 1
+    startingContent = sdspw.getNormalParagraph "How to save?"
     startingContent.alignCenter()
     startingContent.setFontSize 24
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
     sdspw.add startingContent
 
 
@@ -50,12 +46,8 @@ class HowToSaveMessageApp extends WindowedApp
 
     sdspw.addSpacer()
 
-    startingContent = new SimpleTextWdgt "Footnotes",
-      backgroundColor: WorldWdgt.theme.editableItemFill
-      backgroundTransparency: 1
+    startingContent = sdspw.getNormalParagraph "Footnotes"
     startingContent.toggleWeight()
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
     startingContent.toggleHeaderLine()
     sdspw.add startingContent
 

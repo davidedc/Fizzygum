@@ -47,10 +47,11 @@ class DegreesConverterApp extends WindowedApp
     container._addNoSettle fText
 
     # Each calc frame is tall enough for what its node lays out inside a window's chrome: the node
-    # splits its height 2:1 between the formula box (two lines) and the output box (one line), and a
-    # text box needs its lines at 15px (fonts.code) plus 5px of padding top and bottom -- 25px for
-    # the output. At 186 (scaled by the stretch panel to ~181) the output box gets 27; shorter, it
-    # overflows by a few pixels and scrolls. calc2 at 186 still ends inside the 552px container.
+    # splits its height 2:1 between the formula box (two lines) and the output box (one line), and
+    # holds neither box below one line of its text -- fonts.code's 18px line box plus 5px of padding
+    # top and bottom, 28px (PatchNodeWdgt._heightsSplitByWeights). At 186 (scaled by the stretch
+    # panel to ~181) the output box's third of the height is 27, so it takes its 28 and the formula
+    # box the rest, its two lines included. calc2 at 186 still ends inside the 552px container.
     calcFrameExtent = new Point 241, 186
     calc1 = new FrameWdgt new CalculatingPatchNodeWdgt("# °C → °F formula\n(in1)->Math.round in1*9/5+32")
     calc1._applyBounds (container.position().add new Point 148+xCorrection/2, 19), calcFrameExtent
