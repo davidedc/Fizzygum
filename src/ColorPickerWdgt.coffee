@@ -29,12 +29,19 @@ class ColorPickerWdgt extends Widget
   # that method); declared so Duplicator duplication carries it.
   menuEntryNaturalWidth: undefined
 
+  # My background wears the colour picker's look, read as I am painted: the colorPickerFill role
+  # (_surfaceFill, which my RectangularAppearance asks while I hold no colour of my own), so a picker
+  # saved, loaded or duplicated wears the look of the world it is shown in, and a colour set on me
+  # later is mine.
   constructor: ( @choice = Color.WHITE ) ->
     super()
     @appearance = new RectangularAppearance @
-    @color = Color.WHITE
+    @color = undefined
     @_applyExtent new Point 80, 80
     @_buildAndConnectChildren()
+
+  _surfaceFill: ->
+    WorldWdgt.theme.colorPickerFill
 
 
   # As a menu entry, prefer the width I was BUILT at (the ctor's design extent,
@@ -79,12 +86,12 @@ class ColorPickerWdgt extends Widget
     return aColor
 
   # My picked colour is a genuine read/WRITE pin — the pair reads and writes @feedback.color, the
-  # same property. (Widget's own `color` pin is a different one: it writes @color, my chrome, which
-  # the constructor sets to white and which has nothing to do with the picked colour. Pairing THOSE
-  # two into one pin would be the lie, because a wire writing it would not change what a reader
-  # reads.) The names are asymmetric because each is fixed from its own side: `getColor` is the
-  # duck-typed spelling Widget.setColor and the spreadsheet's cell reader both look for, and
-  # `setColor` was already taken by the chrome.
+  # same property. (Widget's own `color` pin is a different one: it writes @color, my background,
+  # which wears colorPickerFill until a colour is set on it and has nothing to do with the picked
+  # colour. Pairing THOSE two into one pin would be the lie, because a wire writing it would not
+  # change what a reader reads.) The names are asymmetric because each is fixed from its own side:
+  # `getColor` is the duck-typed spelling Widget.setColor and the spreadsheet's cell reader both look
+  # for, and `setColor` was already taken by the chrome.
   # `picked color` ANNOUNCES: `setPickedColor` is the ONLY write path (audited — `@feedback` is mine
   # alone, no other class touches it, and the constructor runs before anyone can be following me), and
   # it raises `updateTarget`, which announces whether or not I drive anything.

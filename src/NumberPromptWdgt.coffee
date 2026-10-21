@@ -24,9 +24,8 @@ class NumberPromptWdgt extends PromptWdgt
       @ceilingNum,
       parseFloat(@defaultValue),
       Math.floor((@ceilingNum - @floorNum) / 4))
-    slider.alpha = 1
-    slider.color = WorldWdgt.theme.promptSliderTrack
-    slider.button.setColorScheme WorldWdgt.theme.promptSliderThumb
+    # it wears a content slider's look, read as it paints (the groove, its thumb in the button's
+    # look); only its cross axis is the prompt's own: a target's height
     slider.__commitHeight WorldWdgt.theme.prompterSliderSize
     # A named wire verb — a controller owns a LIST of wire records (§P4), so there is no target/action
     # field pair to assign. The QUIET one, because the field and the slider are already consistent

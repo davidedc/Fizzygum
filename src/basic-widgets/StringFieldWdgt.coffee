@@ -7,6 +7,12 @@
 # A stringWidget that can "scroll" as the cursor moves along the text
 # but note that there are no scrollbars, since the container
 # is just a Panel not a Viewport.
+#
+# I wear a text field's look, read as I am painted (StringFieldAppearance): a borderless well
+# rounded at textFieldCornerRadius, in the textFieldFill role (_surfaceFill) until a colour is set
+# on me. PanelWdgt's constructor gives every panel the generic panel look as its OWN fill and
+# stroke; I keep neither, so a field saved, loaded or duplicated wears the look of the world it is
+# shown in. My whole box is my press target, the well's rounded corners included.
 
 class StringFieldWdgt extends PanelWdgt
 
@@ -39,7 +45,13 @@ class StringFieldWdgt extends PanelWdgt
     @isItalic = opts.isItalic ? false
     @isNumeric = opts.isNumeric ? false
     super()
-    @color = WorldWdgt.theme.textFieldFill
+    @appearance = new StringFieldAppearance @
+    @color = undefined
+    @strokeColor = undefined
+
+  # the fill my StringFieldAppearance paints my well in while I hold no colour of my own
+  _surfaceFill: ->
+    WorldWdgt.theme.textFieldFill
 
   # As a menu entry, answer my natural width as DERIVED in
   # calculateAndUpdateExtent (max(minTextWidth, text width) — every prompt

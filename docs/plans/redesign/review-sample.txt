@@ -114,3 +114,13 @@ SystemTest_macroDocumentEditLayoutDropSlots
 SystemTest_macroDragEmbedWindowLingerArms
 SystemTest_macroDragEmbedCandidateChangeResets
 SystemTest_macroDragEmbedArmedPersistsWhileAiming
+# G-C: sliders in their states (bright overrides, a prompt's slider, a spreadsheet slider cell, a bar picked up off its
+# viewport); the palettes' choice marker; a prompt's text field and the "Save as…" title; a bare text area
+SystemTest_macroSliderButtonStateColors
+SystemTest_macroSliderFloorPromptTakesTypedValue
+SystemTest_macroSpreadsheetSliderCell
+SystemTest_macroInspectorScrollbarUnplugged
+SystemTest_macroPaletteMarksItsChoice
+SystemTest_macroSaveAsPromptAboveTiltedWindow
+SystemTest_macroStringWdgtEditDefersToPromptWhenCropped
+SystemTest_macroScrollPanelMergesChildMenu

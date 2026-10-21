@@ -14,11 +14,12 @@ class SliderButtonWdgt extends CircleBoxWdgt
   # (handles, scrollbars, layout chrome); honored by ancestry at ActivePointerWdgt's focus-set sites.
   excludedFromEditorFocusTracking: -> true
 
-  # my colour scheme as a PLAIN slider's thumb: at rest, under a pointer, and pressed. One left
-  # undefined is the theme's slider thumb role for that state (Theme.sliderThumb...), read each
-  # time I show it; a builder that wants another scheme writes its own (setColorScheme). While my
-  # slider wears an indicator presentation the indicator's colours stand in for all three
-  # (_colorForMyState), and this scheme waits, untouched, for the presentation to end.
+  # my FILL overrides as a PLAIN slider's thumb: at rest, under a pointer, and pressed. One left
+  # undefined is the theme's slider thumb fill for that state (Theme.sliderThumbFill,
+  # sliderThumbHoverFill, sliderThumbPressFill), read each time I am painted; my border is always
+  # the theme's (sliderThumbStroke, sliderThumbPressStroke while pressed). While my slider wears an
+  # indicator presentation the indicator's colours stand in for all three and I draw no border
+  # (_fillForMyState, _strokeForMyState), and these wait, untouched, for the presentation to end.
   normalColor: undefined
   highlightColor: undefined
   pressColor: undefined
@@ -37,26 +38,24 @@ class SliderButtonWdgt extends CircleBoxWdgt
     @boundsContainPoint aPoint
 
   # My slider has just put on, changed or taken off its indicator presentation (see
-  # SliderWdgt.showAsScrollIndicator) and hands me the alpha that presentation shows me at. My
-  # colour follows from the presentation and my state together, so I re-derive it here exactly as
-  # every state change does (_colorForMyState). My state is untouched.
+  # SliderWdgt.showAsScrollIndicator) and hands me the alpha that presentation shows me at. My look
+  # follows from the presentation and my state together, read as I am painted (_fillForMyState,
+  # _strokeForMyState), so a new presentation is a new look: I keep the alpha and repaint. My state
+  # is untouched.
   showAsScrollIndicatorThumb: (alpha) ->
-    color = @_colorForMyState()
-    return if @alpha == alpha and color.equals @color
     @alpha = alpha
-    @color = color
     @_changed()
 
-  # The colour I show: a function of my slider's indicator presentation and my state, and, while
-  # it wears none, of my own scheme. A THIN indicator's thumb is not a control (ruling G3) and
-  # shows the scrollbar colour in every state; a FAT one shows it at rest and darkens under a
-  # pointer and while pressed; a thumb whose slider is no indicator shows my scheme for my state.
-  # The indicator's colours are the theme's, so a viewport's thumbs wear the design while every
-  # content slider keeps its own.
-  #   It is asked at EVERY state change and at every presentation change, the two things that
-  # move it, which is how a colour the presentation puts on me survives my state machine: no
-  # transition writes a colour of its own.
-  _colorForMyState: ->
+  # My look, read by my appearance as it paints me (CircleBoxyAppearance._fillColor / _borderColor):
+  # a function of my slider's indicator presentation and my state, and, while it wears none, of my
+  # fill overrides. A THIN indicator's thumb is not a control (ruling G3) and shows the scrollbar
+  # colour in every state; a FAT one shows it at rest and darkens under a pointer and while
+  # pressed; neither draws a border. A thumb whose slider is no indicator wears the button's look
+  # (visual-design-system §4.3): its fill for my state (an override of mine, else the theme's
+  # role) inside a 1 px border, the darker one while pressed. Every colour is the theme's or an
+  # override's, never one copied into me, so a thumb saved, loaded or duplicated wears the look of
+  # the world it is shown in. My own `color` is not my look: a colour set on me paints nothing.
+  _fillForMyState: ->
     theme = WorldWdgt.theme
     switch @parent?.indicatorMode
       when 'thin'
@@ -68,9 +67,14 @@ class SliderButtonWdgt extends CircleBoxWdgt
           else theme.scrollIndicatorThumb
       else
         switch @state
-          when @STATE_PRESSED then @pressColor ? theme.sliderThumbPress
-          when @STATE_HIGHLIGHTED then @highlightColor ? theme.sliderThumbHighlight
-          else @normalColor ? theme.sliderThumb
+          when @STATE_PRESSED then @pressColor ? theme.sliderThumbPressFill
+          when @STATE_HIGHLIGHTED then @highlightColor ? theme.sliderThumbHoverFill
+          else @normalColor ? theme.sliderThumbFill
+
+  _strokeForMyState: ->
+    return undefined if @parent?.indicatorMode?
+    theme = WorldWdgt.theme
+    if @state is @STATE_PRESSED then theme.sliderThumbPressStroke else theme.sliderThumbStroke
 
   # the thumb's grab-corrected target POSITION (pointer mapped into my plane, minus the
   # within-thumb grab point), held for the duration of a knob drag — plane-local, so it
@@ -80,19 +84,13 @@ class SliderButtonWdgt extends CircleBoxWdgt
   constructor: ->
     super
     @isLockingToPanels = false
-    @color = @_colorForMyState()
-    @alpha = 0.4
+    # I hold no colour of my own: my look is my state's, read as I am painted (_fillForMyState), and
+    # I am opaque (Widget's alpha) until a presentation hands me another (showAsScrollIndicatorThumb).
+    @color = undefined
     # my extent is my slider's to derive (boxInSliderFrame), and the generic 5px floor every
     # widget carries must not overrule it: a thin scroll indicator's bar is narrower than that,
     # and a thumb held at the floor would poke past its bar and the viewport's edge.
     @_setMinimumExtent new Point 1, 1
-
-  # Derive the button's colour states from one base colour: resting = base,
-  # highlight/press progressively bluer. (Used by the prompter slider.)
-  setColorScheme: (base) ->
-    @color = base
-    @highlightColor = base.bluerBy 100
-    @pressColor = base.bluerBy 150
 
   detachesWhenDragged: ->
     if @parent instanceof SliderWdgt
@@ -190,30 +188,27 @@ class SliderButtonWdgt extends CircleBoxWdgt
         # precondition for deferring this move later — see SliderWdgt.updateValue).
         @parent.updateValue newPosition
   
-  # The state transitions. Each one sets my state and then asks _colorForMyState what that state
-  # shows, so the presentation my slider wears decides the colour together with the state.
+  # The state transitions. Each one sets my state and repaints me; what that state shows is read
+  # as I am painted (_fillForMyState, _strokeForMyState), so the presentation my slider wears
+  # decides the look together with the state, and no transition writes a colour.
   endOfNonFloatDrag: ->
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
-      @color = @_colorForMyState()
       @_changed()
 
   _setHighlightedColor: ->
     if @state != @STATE_HIGHLIGHTED
       @state = @STATE_HIGHLIGHTED
-      @color = @_colorForMyState()
       @_changed()
 
   _setNormalColor: ->
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
-      @color = @_colorForMyState()
       @_changed()
 
   setPressedColor: ->
     if @state != @STATE_PRESSED
       @state = @STATE_PRESSED
-      @color = @_colorForMyState()
       @_changed()
 
   # A pointer merely resting on me highlights me, so I take the HOVER move channel and no

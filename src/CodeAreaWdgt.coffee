@@ -59,7 +59,7 @@ class CodeAreaWdgt extends Widget
     @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
 
     @textWidget = @tempPromptEntryField.textWdgt
-    @textWidget.backgroundColor = Color.TRANSPARENT
+    @textWidget.backgroundColor = WorldWdgt.theme.textAreaTextFill
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
 

@@ -20,9 +20,10 @@
 
 class PaletteAppearance extends Appearance
 
-  # The choice ring's nominal radius in logical pixels: a black hairline just outside a white one,
-  # a pairing that stays legible over any hue the field can show. Shrinks on a palette too small
-  # to hold it (a colour picker's gray strip is ~5px tall) — see _paintRingAt.
+  # The choice ring's nominal radius in logical pixels: a hairline in the marker's outer tone just
+  # outside one in its inner tone (Theme.paletteMarkerOuter / paletteMarkerInner, dark and light, read
+  # as I paint), a pairing that stays legible over any hue the field can show. Shrinks on a palette
+  # too small to hold it (a colour picker's gray strip is ~5px tall) — see _paintRingAt.
   @RING_RADIUS: 4
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
@@ -48,10 +49,11 @@ class PaletteAppearance extends Appearance
     # shrink rather than overflow: the gray strip inside a ColorPickerWdgt is only a few px tall,
     # and a ring bigger than the palette would read as a stray arc rather than as a marker.
     radius = Math.max 2, Math.min PaletteAppearance.RING_RADIUS, Math.floor(Math.min(extent.x, extent.y) / 2) - 1
+    theme = WorldWdgt.theme
     ctx.lineWidth = 1
-    ctx.strokeStyle = Color.BLACK.toString()
+    ctx.strokeStyle = theme.paletteMarkerOuter.toString()
     @_strokeCircle ctx, positionOnMe, radius + 0.5
-    ctx.strokeStyle = Color.WHITE.toString()
+    ctx.strokeStyle = theme.paletteMarkerInner.toString()
     @_strokeCircle ctx, positionOnMe, radius - 0.5
 
   _strokeCircle: (ctx, centrePixel, radius) ->
@@ -66,11 +68,13 @@ class PaletteAppearance extends Appearance
   # by framing the whole field in it.
   _paintOffMapFrame: (ctx, choice) ->
     extent = @widget.extent()
-    # The band is laid down BETWEEN two black hairlines and never under one — the field behind it
-    # runs from white to black, so a band bounded on only one side disappears against one corner or
-    # the other (and a hairline painted OVER the band's outer half leaves too little colour to read).
+    # The band is laid down BETWEEN two hairlines in the marker's outer tone (the dark one) and never
+    # under one — the field behind it runs from white to black, so a band bounded on only one side
+    # disappears against one corner or the other (and a hairline painted OVER the band's outer half
+    # leaves too little colour to read).
+    outerTone = WorldWdgt.theme.paletteMarkerOuter.toString()
     ctx.lineWidth = 1
-    ctx.strokeStyle = Color.BLACK.toString()
+    ctx.strokeStyle = outerTone
     ctx.strokeRect 0.5, 0.5, extent.x - 1, extent.y - 1
     ctx.lineWidth = 2
     ctx.strokeStyle = choice.toString()
@@ -80,5 +84,5 @@ class PaletteAppearance extends Appearance
     # says the same thing.
     return unless extent.x > 8 and extent.y > 8
     ctx.lineWidth = 1
-    ctx.strokeStyle = Color.BLACK.toString()
+    ctx.strokeStyle = outerTone
     ctx.strokeRect 3.5, 3.5, extent.x - 7, extent.y - 7

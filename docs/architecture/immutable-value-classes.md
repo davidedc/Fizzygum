@@ -92,7 +92,7 @@ definition).
 (`Color._permanent`, seeded by `createConstant` — never evicted) and then the LRU
 (`Color._cache`, 300 slots, 24h TTL). So a named constant stays THE canonical instance for the
 whole session, while ad-hoc colors dedupe best-effort. Derivations (`mixed`, `lighter`,
-`darker`, `bluerBy`) all route through `create` — never bare `new`, which would bypass the
+`darker`) all route through `create` — never bare `new`, which would bypass the
 dedupe.
 
 ## 4. The engine contracts (serialization / duplication)

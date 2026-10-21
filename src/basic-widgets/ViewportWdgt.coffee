@@ -183,15 +183,15 @@ class ViewportWdgt extends Widget
     @color = @contents.color
     @alpha = @contents.alpha
 
-    # my bars' track colour: my builder's, else the scroll indicator's -- which a bar shows faintly
-    # while I present it fat, not at all while thin, and as a plain slider's once picked up off me
-    trackColor = @sliderColor ? WorldWdgt.theme.scrollIndicatorTrack
-
-    @hBar = new SliderWdgt 1, 100, 50, 10, color: trackColor
+    # my bars hold a track colour of their own only when my builder names one (@sliderColor);
+    # otherwise each bar's track wears its presentation's role, read as it paints
+    # (SliderWdgt._surfaceFill): the scroll indicator's while I present it -- faint while fat, absent
+    # while thin -- and a plain slider's groove once it is picked up off me
+    @hBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
     @hBar._applyHeight @scrollBarsThickness
     @_addNoSettle @hBar
 
-    @vBar = new SliderWdgt 1, 100, 50, 10, color: trackColor
+    @vBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
     @vBar._applyWidth @scrollBarsThickness
     @_addNoSettle @vBar
 

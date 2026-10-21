@@ -1,12 +1,15 @@
-# The "save as..." prompt: a text field for the shortcut name over a row of three buttons,
+# The "Save as…" prompt: a text field for the shortcut name over a row of three buttons,
 # [Don't save] [Cancel] [OK]. A member of the prompt family (it shares PromptWdgt's framed
 # pop-up behaviour + composed rows panel, and its buttons row); it only swaps in its own three
 # buttons (no leading divider) and edits the field at once.
 
 class SaveShortcutPromptWdgt extends PromptWdgt
 
-  # the trailing spaces pad the title so the prompt opens at a decent width.
-  msg: " save as...         "
+  # my title, the question I ask, stored as words: my strip shows it as a sentence, "Save as…"
+  # (FrameWdgt._titleDisplayCase). It sets none of my width: my rows hug their widest entry (my row
+  # of three buttons, or my field when its name is longer), and the title's entry
+  # (FrameWdgt._titleEntryWidth) is narrower than that row.
+  msg: "save as…"
 
   wdgtWhereReferenceWillGo: undefined
   # my two buttons besides the OK I share with the family (PromptWdgt.okButton): Don't save

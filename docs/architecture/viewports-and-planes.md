@@ -180,17 +180,20 @@ drag that carries the thumb a fraction of its travel measures that travel from t
 the bar as drawn. Measured from the thin look, it overshoots by a share that grows with the
 distance dragged.
 
-The indicator's COLOURS are the theme's and follow its presentation, never a slider's own scheme. A
-viewport builds its bars' track in `scrollIndicatorTrack`, which the fat look shows faintly
-(`scrollIndicatorTrackAlpha`) and the thin look not at all. The thumb's colour is a function of the
-presentation and its state, `SliderButtonWdgt._colorForMyState`, re-derived at every state change and
-every presentation change:
-- thin: `scrollIndicatorThumb` (the `scrollbar` token) in every state;
+The indicator's COLOURS are the theme's and follow its presentation, read as the bar paints. A bar
+holds no track colour of its own (unless its viewport's builder names one, `sliderColor`): while
+presented, its track wears `scrollIndicatorTrack` (`SliderWdgt._surfaceFill`), which the fat look shows
+faintly (`scrollIndicatorTrackAlpha`) and the thin look not at all. The thumb's look is a function of
+the presentation and its state, `SliderButtonWdgt._fillForMyState` and `_strokeForMyState`:
+- thin: `scrollIndicatorThumb` (the `scrollbar` token) in every state, no border;
 - fat: that colour at rest, `scrollIndicatorThumbHighlight` under a pointer, `scrollIndicatorThumbPress`
-  while pressed;
-- no presentation: the thumb's own scheme, or the plain `sliderThumb*` roles.
+  while pressed, no border;
+- no presentation: a content slider's look, the button's (`sliderThumbFill` inside a 1 px
+  `sliderThumbStroke`, `sliderThumbHoverFill` hovered, `sliderThumbPressFill` inside
+  `sliderThumbPressStroke` pressed; a fill override the thumb holds for a state wins), over the
+  `sliderTrack` groove.
 
-So a content slider keeps its scheme, and an unplugged bar returns to it.
+So a bar picked up off its viewport is a plain slider: the opaque groove and the button-look thumb.
 
 ## Drag-to-scroll — the plane's other scroll gesture
 

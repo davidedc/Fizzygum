@@ -74,7 +74,7 @@ class PromptWdgt extends FrameWdgt
   # message my strip titles itself from is mine to know first.
   constructor: (@widgetOpeningThePopUp, target, opts = {}) ->
     # msg is read GUARDED: absence must leave a subclass's class-level default
-    # standing (SaveShortcutPromptWdgt's " save as... "), which a bare assignment
+    # standing (SaveShortcutPromptWdgt's "save as…"), which a bare assignment
     # would overwrite with undefined. The rest have no prototype default to keep.
     @msg = opts.msg if opts.msg?
     @target = target

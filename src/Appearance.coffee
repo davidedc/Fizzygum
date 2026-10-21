@@ -170,8 +170,9 @@ class Appearance
   # (widget-local logical pixels), its geometry my widget's box, never the damage box: the scope has
   # clipped to that. A handle's plate (HandleAppearance) and the layout chrome's
   # (LayoutChromeAppearance) are painted with it; a plate with no stroke is a borderless well (an empty
-  # icon holder's drop placeholder, SimpleDropletAppearance), and a plate filled in shadowColor with
-  # no stroke is any of them as a shadow silhouette.
+  # icon holder's drop placeholder, SimpleDropletAppearance; a prompt's text field,
+  # StringFieldAppearance), and a plate filled in shadowColor with no stroke is any of them as a shadow
+  # silhouette.
   _paintPlate: (ctx, radius, fill, stroke) ->
     w = @widget.width()
     h = @widget.height()

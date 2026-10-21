@@ -157,16 +157,22 @@ class Theme
     # the open bin's content pane: its viewport and the contents panel inside it.
     @binViewportFill = Color.create 255, 255, 255
 
-    # the body of a text area (TextAreaWdgt), and of the mono text panel it configures into.
+    # the body of a text area (TextAreaWdgt), and of the mono text panel it configures into ...
     @textAreaFill = Color.create 255, 255, 255
+    # ... and the background of the TEXT it holds (a bare text area's, a mono text panel's, an editable
+    # code pane's: TextAreaWdgt's constructor, configureAsMonoTextPanel, CodeAreaWdgt): none, so the
+    # area's own pane shows behind its text.
+    @textAreaTextFill = Color.TRANSPARENT
     # the editable code pane: a script's or a code prompt's editor body.
     @codePaneFill = Color.create 255, 255, 255
     # the ink of SOURCE CODE: in a code pane -- the Object Inspector's, a script's, a code prompt's, a
     # console's and an error log's -- which also takes fonts.code and codePanePadding, and in a patch
     # node's text boxes, which take fonts.code at their own padding.
     @codeText = @code
-    # the background of a one-line text-entry field (StringFieldWdgt).
-    @textFieldFill = Color.create 255, 255, 255
+    # the fill of a one-line text-entry FIELD (StringFieldWdgt: a prompt's entry field), a borderless
+    # well rounded at textFieldCornerRadius, read as the field is painted (StringFieldWdgt._surfaceFill,
+    # StringFieldAppearance): the draft's item fill.
+    @textFieldFill = @item
     # the text caret's fill (CaretWdgt; BlinkerWdgt takes it as its colour): the accent, the one look every
     # caret wears -- in a document, a prompt field, a code pane, a cell editor, a caption rename.
     # The caret is the editing FOCUS, which is what the accent marks. Its width and the gap it
@@ -176,25 +182,38 @@ class Theme
     @textSelectionText = Color.create 255, 255, 255
     @textSelectionFill = Color.create 60, 60, 120
 
-    # a number prompt's slider: its track, and the base its thumb derives its hover and press
-    # colours from.
-    @promptSliderTrack = Color.create 225, 225, 225
-    @promptSliderThumb = Color.create 60, 60, 60
-    # a slider's track when its builder names no colour ...
-    @sliderTrack = Color.create 0, 0, 0
-    # ... and its thumb at rest, under a pointer and pressed, when its builder gives the thumb no
-    # scheme of its own (SliderButtonWdgt.setColorScheme).
-    @sliderThumb = Color.BLACK
-    @sliderThumbHighlight = Color.create 110, 110, 110
-    @sliderThumbPress = Color.create 100, 100, 100
+    # a SLIDER (SliderWdgt: a content slider, and a number prompt's): its TRACK, an opaque borderless
+    # groove, while the slider holds no colour of its own and wears no scroll-indicator presentation
+    # (SliderWdgt._surfaceFill) ...
+    @sliderTrack = @chrome
+    # ... and its THUMB (SliderButtonWdgt) in the button's look (visual-design-system §4.3), over the
+    # stadium it is drawn as: its fill and 1 px border at rest, its fill hovered (its border stays
+    # sliderThumbStroke), and its fill and darker border pressed (SliderButtonWdgt._fillForMyState /
+    # _strokeForMyState). A fill override the thumb holds for a state (normalColor, highlightColor,
+    # pressColor) is that state's fill instead.
+    @sliderThumbFill = @paper
+    @sliderThumbStroke = @line
+    @sliderThumbHoverFill = @desk
+    @sliderThumbPressFill = @chrome
+    @sliderThumbPressStroke = @frame
+    # the COLOUR PICKER (ColorPickerWdgt): its background, around and under its two palettes and its
+    # swatch, read as it paints (ColorPickerWdgt._surfaceFill) ...
+    @colorPickerFill = @paper
+    # ... and a palette's CHOICE MARKER (PaletteAppearance, any PaletteWdgt), drawn over its colour
+    # field in two tones so it reads over every hue the field shows: the OUTER tone for the ring's
+    # outer circle and for the two hairlines framing the band of an off-map choice, the INNER tone for
+    # the ring's inner circle. The palettes' gradients are content, not chrome.
+    @paletteMarkerOuter = @ink
+    @paletteMarkerInner = @paper
     # a viewport's SCROLL INDICATOR -- the two bars a viewport builds and presents
-    # (SliderWdgt.showAsScrollIndicator). Its track: the colour the viewport builds its bars in,
-    # and the alpha a FAT indicator shows that track at (a thin one shows none) ...
+    # (SliderWdgt.showAsScrollIndicator). Its track: the fill a presented bar's track wears while
+    # the bar holds no colour of its own (SliderWdgt._surfaceFill), and the alpha a FAT indicator
+    # shows that track at (a thin one shows none) ...
     @scrollIndicatorTrack = @ink
     @scrollIndicatorTrackAlpha = 0.06
     # ... and its thumb: the scrollbar token at rest, thin or fat, and a darker ink while a fat one
     # is hovered and while it is pressed. Each carries its own alpha, which the thumb shows as it
-    # is, never dimmed by a second one.
+    # is, never dimmed by a second one. An indicator's thumb draws no border.
     @scrollIndicatorThumb = @scrollbar
     @scrollIndicatorThumbHighlight = Color.create 0x1E, 0x1E, 0x1C, 0.5
     @scrollIndicatorThumbPress = Color.create 0x1E, 0x1E, 0x1C, 0.6
@@ -558,7 +577,7 @@ class Theme
     # padding, a scroll
     # indicator's fat and thin widths and the thin one's edge inset, a toolbar grid's cell
     # side / inter-cell gap / outer margin / row count, a tool cell's rounding and the overflow
-    # chevron's glyph square, a button's height, paddings and rounding,
+    # chevron's glyph square, a text field's rounding, a button's height, paddings and rounding,
     # a toggle's height, padding and rounding, a chip's height, padding and rounding, a Fizzytiles
     # magnet's rounding, the least side of a chrome target, a footer band's height, rule, inset,
     # button gap and grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
@@ -771,6 +790,10 @@ class Theme
     # a prompt's input slider's CROSS axis, i.e. the thumb you drag: a TARGET (G3), like the
     # prompt text it sits under.
     @prompterSliderSize = 44
+
+    # a one-line text-entry FIELD (StringFieldWdgt, StringFieldAppearance): the rounding of its well.
+    # Its size is the field's own (as wide as its text or its builder's least width, 18 tall).
+    @textFieldCornerRadius = 6
 
     # a BUTTON (SimpleButtonWdgt) whose face is a line of text: the height it takes, its horizontal
     # padding at each side of the label (a primary action's is wider), and the rounding of its box.

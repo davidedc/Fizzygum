@@ -39,9 +39,10 @@ class SliderWdgt extends CircleBoxWdgt
   # dim them twice. My track's alpha in the fat state is the theme's (scrollIndicatorTrackAlpha);
   # a thin indicator paints no track.
   indicatorThumbAlpha: 1
-  # and the pair a PLAIN slider wears — a translucent track and a solid thumb. Named because two
-  # places need them: my constructor, and the return from an indicator presentation.
-  plainTrackAlpha: 0.1
+  # and the pair a PLAIN slider wears: an opaque track (the groove) and an opaque thumb (the
+  # button's look). Named because two places need them: my constructor (my thumb is built at the
+  # class default alpha, opaque too), and the return from an indicator presentation.
+  plainTrackAlpha: 1
   plainThumbAlpha: 1
   # The presentation does not ride a file: my viewport RE-DERIVES it from its own overflow at the
   # first arrange after a restore, exactly as it does on a freshly built world, so a snapshot
@@ -67,8 +68,11 @@ class SliderWdgt extends CircleBoxWdgt
   # wanted them wanted DISJOINT tails — 6 sites wanted only the flag, 2 only the colour — so no
   # parameter ORDER could serve both. Those callers now state the numbers they want and name the
   # knob. Assigned before the super call, preserving the order the all-`@param` form compiled to.
+  #   My track holds a colour of its own only when my builder names one (`color`); otherwise I wear
+  # my presentation's role, read as I am painted (_surfaceFill), so a slider saved, loaded or
+  # duplicated wears the look of the world it is shown in, and a colour set on me later is mine.
   constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, opts = {}) ->
-    @color = opts.color ? WorldWdgt.theme.sliderTrack
+    @color = opts.color
     @smallestValueIsAtBottomEnd = opts.smallestValueIsAtBottomEnd ? false
     super()
     @alpha = @plainTrackAlpha
@@ -99,11 +103,11 @@ class SliderWdgt extends CircleBoxWdgt
   # PRESENTATION ONLY: my value, my range and my wiring are untouched, which is exactly why the
   # bars stay SliderWdgts instead of becoming a second overlay family. The thin state paints the
   # thumb alone — the track's alpha goes to zero; the fat one shows my track faintly. In both, my
-  # thumb wears the indicator's colours instead of its own scheme (SliderButtonWdgt._colorForMyState
-  # reads my mode), while my track keeps its colour: a viewport builds its bars in the indicator's
-  # (Theme.scrollIndicatorTrack). `undefined` is the third state and means "not an indicator at
-  # all": the plain slider look, my thumb back on its own scheme, and a pointer that stops on me
-  # again.
+  # thumb wears the indicator's colours and no border instead of the button's look
+  # (SliderButtonWdgt._fillForMyState / _strokeForMyState read my mode), and my track the
+  # indicator's role instead of the groove (_surfaceFill) unless I hold a colour of my own.
+  # `undefined` is the third state and means "not an indicator at all": the plain slider look — the
+  # opaque groove, my thumb back in the button's look — and a pointer that stops on me again.
   #   The mode is also an input to my thumb's GEOMETRY (thumbInsetInTrack), so a flip that changes
   # the inset re-lays the thumb here, at the one door the mode changes through: a caller that has
   # just laid me out for the old look (my viewport's _reLayoutScrollbars, my own _reactToBeingAdded)
@@ -120,6 +124,14 @@ class SliderWdgt extends CircleBoxWdgt
     @button?.showAsScrollIndicatorThumb? (if mode? then @indicatorThumbAlpha else @plainThumbAlpha)
     @_reLayoutSelfAndButton() if @thumbInsetInTrack() isnt insetBefore
     @_fullChanged()
+
+  # The fill my track wears while I hold no colour of my own (CircleBoxyAppearance._fillColor), read
+  # as I am painted: the scroll indicator's track role while I wear an indicator presentation (shown
+  # faintly fat, not at all thin: my alpha), else a plain slider's opaque groove. A bar picked up off
+  # its viewport is a plain slider, so it shows the groove, never the indicator's ink at full alpha.
+  _surfaceFill: ->
+    theme = WorldWdgt.theme
+    if @indicatorMode? then theme.scrollIndicatorTrack else theme.sliderTrack
 
   # Am I an indicator the pointer must pass THROUGH? True in every state but 'fat': an indicator
   # is not a target (ruling G3), so a click over a thin bar reaches the content under it.

@@ -1695,8 +1695,8 @@ assertion a recapture after a regression silently stores two different hashes an
   `world.edit text` (escape hatch — left-clicking a short number in a wide box overshoots the empty-text `slotAt`, see
   `macroInspectorWorkAreaEvaluatesCoffeeScript`) + `Meta+a` + typed digits (text→slider). FIXTURE gotchas: KEEP the ctor's
   wrap-to-own-width (`softWrap` on, the default — `softWrap = false` shrinks the box to its natural content width, so it stops overlapping the slider and `"Connect to"` can't find it);
-  a plain slider's track (`Theme.sliderTrack`) and its thumb's rest colour (`Theme.sliderThumb`) are both black, so tint the track light (`slider.color = …`) to
-  make the button (= the value) visible. No new verb.
+  a plain slider's track is the opaque `chrome` groove (`Theme.sliderTrack`) and its thumb a `paper` knob inside a `line` wall, so the button (= the value)
+  shows as built; a fixture that tints the track (`slider.color = …`) keeps its tint. No new verb.
 - **The full 3-node slider→text→slider cycle — each component drives the other two, wired with NOTHING moved**
   (`macroSliderTextSliderPatchCycle`): the 3-node sibling of the above. `slider1 → text "text"`, `text → slider2 "value"`,
   `slider2 → slider1 "value"` close a ring, so dragging slider1, dragging slider2, OR typing the text each drives the other two (the
@@ -1911,15 +1911,15 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Sliders & popovers
 
-- **Slider-button state colours + cross-slider grab** (`macroSliderButtonStateColors`): a `SliderButtonWdgt` paints `@color` =
-  `normalColor`/`highlightColor`/`pressColor` per state (`hoverEntered → setHiglightedColor`, `pressBegan → setPressedColor`,
+- **Slider-button state colours + cross-slider grab** (`macroSliderButtonStateColors`): a `SliderButtonWdgt` paints, read at paint,
+  `normalColor`/`highlightColor`/`pressColor` per state (else the theme's `sliderThumb*Fill` roles), inside a 1 px `sliderThumbStroke` wall
+  (`sliderThumbPressStroke` while pressed) (`hoverEntered → setHiglightedColor`, `pressBegan → setPressedColor`,
   `hoverExited → setNormalColor`; each early-returns while the hand is dragging). `demoMenus.makeSlidersButtonsStatesBright()`
   (`DemoMenus.coffee:87` — the "Make sliders' buttons states bright" test-menu row; NOT the `menusHelper` global, which does
-  not carry it) recolours every EXISTING slider button BLACK/BLUE/LIME — call it AFTER `world.add`. (A slider that is a viewport's scroll indicator ignores that scheme while it is one: its thumb wears the indicator's colours, `SliderButtonWdgt._colorForMyState`.) HOLD each state:
+  not carry it) recolours every EXISTING slider button BLACK/BLUE/LIME — call it AFTER `world.add`; it writes the overrides without a repaint, so
+  a test then calls `slider.button.setColor slider.button.normalColor`, which repaints. (A slider that is a viewport's scroll indicator ignores that scheme while it is one: its thumb wears the indicator's colours and no wall, `SliderButtonWdgt._fillForMyState` / `_strokeForMyState`.) HOLD each state:
   hover via a no-button move onto the button (highlighted, persists), then `@moveToAndMouseDown_InputEvents slider.button`
-  (pressed, held). GOTCHA: a SliderWdgt defaults to `alpha 0.1`, which mutes the colours into greys — set
-  `slider.button.alpha = 1` (NOT `slider.alpha = 1`: the track's own colour is BLACK, so an opaque track swallows the black
-  button). CROSS-SLIDER GRAB (two sliders): while one is GRABBED, a move with the button HELD (`…, "left button"`) over the OTHER
+  (pressed, held). A plain slider and its thumb are opaque as built: no alpha fixture is needed. CROSS-SLIDER GRAB (two sliders): while one is GRABBED, a move with the button HELD (`…, "left button"`) over the OTHER
   handle does NOT highlight it (its hoverEntered early-returns while dragging), and the grabbed button FOLLOWS the hand vertically
   clamped to its own track.
 - **Popover stays open while its slider is dragged out** (`macroPopoverStaysOpenWhenSliderDraggedOut`): a pop-up normally closes

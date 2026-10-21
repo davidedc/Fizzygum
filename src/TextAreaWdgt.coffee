@@ -23,7 +23,8 @@ class TextAreaWdgt extends ViewportWdgt
   # The head is the text I show, whether it wraps to my width, and how far in from my edges it
   # stands (setContents' padding). `opts` carries my TEXT's look, which it is BORN with: `fontRole`,
   # a WorldWdgt.theme.fonts role (family, size and bold at once), and `textColor`, its ink -- each
-  # absent leaves StringWdgt's own default. A code pane takes fonts.code and codeText this way.
+  # absent leaves StringWdgt's own default. A code pane takes fonts.code and codeText this way. My
+  # text paints no background of its own (Theme.textAreaTextFill: none), so my pane shows behind it.
   constructor: (
     textAsString,
     wraps,
@@ -40,7 +41,7 @@ class TextAreaWdgt extends ViewportWdgt
     @textWdgt = new SimpleTextWdgt textAsString,
       fontRole: opts.fontRole
       color: opts.textColor
-      backgroundColor: Color.create(230, 230, 130)
+      backgroundColor: WorldWdgt.theme.textAreaTextFill
       backgroundTransparency: 1
     @textWdgt.isEditable = true
     if !wraps
@@ -52,7 +53,7 @@ class TextAreaWdgt extends ViewportWdgt
     @textWdgt.lockToPanels()
 
   # Configure this panel as the "mono text-entry box" the code-editing widgets share: a white, drops-disabled
-  # panel whose text widget has a transparent background, editable-and-selectable when isEditable,
+  # panel whose text widget has no background (textAreaTextFill), editable-and-selectable when isEditable,
   # read-only otherwise. Its text's MONOSPACED font is not set here: a mono text panel is BUILT in the
   # code role (`fontRole: WorldWdgt.theme.fonts.code`, the constructor's option), so its text is born
   # mono. The Console / errors-log family reaches this through CodeAreaWdgt's shared
@@ -67,7 +68,7 @@ class TextAreaWdgt extends ViewportWdgt
     @disableDrops()
     @contents.disableDrops()
     @color = WorldWdgt.theme.textAreaFill
-    @textWdgt.backgroundColor = Color.TRANSPARENT
+    @textWdgt.backgroundColor = WorldWdgt.theme.textAreaTextFill
     @textWdgt.isEditable = isEditable
     if isEditable then @textWdgt.enableSelecting()
     return @
