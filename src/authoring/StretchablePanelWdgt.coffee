@@ -1,9 +1,56 @@
 # this is made to go inside a StretchableWidgetContainerWdgt,
 # it probably makes no sense on its own
+#
+# I am the PAGE of the Slides Maker, the Dashboards Maker, the Generic panel and Patch programming,
+# and I wear the page's own look, read as I am painted (StretchablePanelAppearance): my fill is the
+# stretchablePageFill role (_surfaceFill) until a colour is set on me, and my border is an edge only
+# along the sides where my container letterboxes me (_insetEdgeRects).
 
 class StretchablePanelWdgt extends PanelWdgt
 
   @augmentWith BubblesEditModeToCoordinatorMixin, @name
+
+  # PanelWdgt's constructor gives every panel the generic panel look as its OWN fill and stroke. I
+  # keep neither: my appearance reads my look from the theme as it paints, so a page saved, loaded or
+  # duplicated wears the look of the world it is shown in, and a colour set on me later is mine.
+  constructor: ->
+    super()
+    @color = undefined
+    @strokeColor = undefined
+    @appearance = new StretchablePanelAppearance @
+
+  # the fill I am painted with while I hold no colour of my own (RectangularAppearance._fillColor),
+  # and the one a text sitting on me melts into in view mode (SimpleTextWdgt.blendInWithPanelColor)
+  _surfaceFill: ->
+    WorldWdgt.theme.stretchablePageFill
+
+  # MY EDGES, as integer rectangles in my LOCAL logical coordinates, which my appearance fills in the
+  # stretchablePageEdge role: one along each side where I stand INSET from my container, none along a
+  # side flush with it. My container letterboxes me once my ratio has crystallized
+  # (StretchableWidgetContainerWdgt._layOutOwnContents), and there my edge is my own boundary against
+  # the window body around me; along a flush side the window's frame, its strip's rule or a docked
+  # band is the line. Outside a container (where I make no sense) I draw none. Asked at every
+  # paint, from where I stand in my container (my situation: my top-left in its frame -- we share a
+  # plane, I am its child) and the two extents, so it follows every re-lay; the two vertical edges
+  # stop short of a horizontal one, so no pixel is filled twice.
+  _insetEdgeRects: ->
+    container = @parent
+    return [] unless container?.setRatio?
+    w = @width()
+    h = @height()
+    offset = @situation().position
+    insetTop = offset.y > 0
+    insetBottom = offset.y + h < container.height()
+    insetLeft = offset.x > 0
+    insetRight = offset.x + w < container.width()
+    sideTop = if insetTop then 1 else 0
+    sideBottom = if insetBottom then h - 1 else h
+    edges = []
+    edges.push new Rectangle 0, 0, w, 1 if insetTop
+    edges.push new Rectangle 0, h - 1, w, h if insetBottom
+    edges.push new Rectangle 0, sideTop, 1, sideBottom if insetLeft
+    edges.push new Rectangle w - 1, sideTop, w, sideBottom if insetRight
+    edges
 
   # I re-lay my children from their proportional records (StretchLayoutSpecs, see
   # _reLayout below) -- my COMPLETE child rule, asked by the __add seed and the world's

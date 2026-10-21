@@ -8,8 +8,12 @@ class FanoutPinWdgt extends Widget
   # menu offers all of them, and my set-target tooltip names no kind. Both read this one field.
   producesPinKind: "any"
 
-  constructor: (@color) ->
-    super
+  # no colour of my own until one is set on me (setColor, a wire into my color pin): until then my
+  # badge is in the theme's icon ink, read as it paints (FanoutPinAppearance)
+  color: undefined
+
+  constructor: ->
+    super()
     @appearance = new FanoutPinAppearance @
 
   # Role query (replaces `x instanceof FanoutPinWdgt` filters): "am I a patch-graph connection pin?" --

@@ -34,5 +34,7 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
 
     @icon._applyBounds squareTopLeft.round(), (new Point squareDim, squareDim).round()
 
-
-    @referenceArrowIcon._applyBounds ((squareTopLeft.add new Point 0, squareDim*7/10).round()), (new Point squareDim*3/10, squareDim*3/10).round()
+    # the badge's side is its own HOST_SHARE of my square: the one share it is laid out at and
+    # reads its host's line unit back from (ShortcutArrowIconAppearance)
+    badgeSide = squareDim * @referenceArrowIcon.appearance.HOST_SHARE
+    @referenceArrowIcon._applyBounds ((squareTopLeft.add new Point 0, squareDim - badgeSide).round()), (new Point badgeSide, badgeSide).round()

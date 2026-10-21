@@ -129,6 +129,12 @@ class ViewportWdgt extends Widget
     unless @alpha == alpha
       @alpha = alpha
 
+  # ...and a plane that holds no colour of its own, because it wears a theme role (a folder's panel,
+  # FolderPanelWdgt), leaves my copied colour empty too: the mimic is then the role it answers,
+  # which my RectangularAppearance paints me in (_fillColor).
+  _surfaceFill: ->
+    @contents?._surfaceFill?()
+
   # Two independent scroll-by-drag flags (only live while scrollbars show): drag the
   # contents, or drag the background — independently, e.g. useful for a geographic map.
   canScrollByDraggingBackground: false

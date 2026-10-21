@@ -13,7 +13,7 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
 
   # step() (advance @graphNumber, frozen under SystemTest replay) is inherited from GraphsPlotsChartsWdgt.
 
-  drawPlot: (context, color, appliedShadow) ->
+  drawPlot: (context, appliedShadow) ->
 
     @seed = @graphNumber
     circleRadius = 5
@@ -21,7 +21,7 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
     width = @width()
 
     if appliedShadow?
-      @simpleShadow context, color, appliedShadow
+      @simpleShadow context, appliedShadow
       return
 
     context.fillStyle = WorldWdgt.theme.plotBackgroundFill.toString()
@@ -39,4 +39,4 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
       heightPerc = 0.5 + Math.sin(10*angle+i/(300*(angle+0.01)))/3 - i/(5000+50000*angle)
       context.fillRect xPos, availableHeight * heightPerc, 2,2
 
-    @drawBoundingBox context, color, appliedShadow
+    @drawBoundingBox context

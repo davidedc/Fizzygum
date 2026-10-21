@@ -68,7 +68,7 @@ class AppCatalog
     "SampleSlideApp":      {title: "Slide",             icon: (-> new SimpleSlideIconWdgt)}
     "SampleDashboardApp":  {title: "Dashboard",         icon: (-> new DashboardsIconWdgt)}
     "SampleDocApp":        {title: "Document",          icon: (-> new TypewriterIconWdgt)}
-    "SpreadsheetApp":      {title: "Spreadsheet",       icon: (-> new TypewriterIconWdgt)}
+    "SpreadsheetApp":      {title: "Spreadsheet",       icon: (-> new SpreadsheetIconWdgt)}
 
   @get: (appClassName) ->
     @entries()[appClassName]

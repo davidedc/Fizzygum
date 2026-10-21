@@ -81,6 +81,15 @@ class AxisWdgt extends Widget
     else
       @majorDimLine._applyBounds ((new Point @left() + tickHeight, @top() + 5).round()), new Point heightOfTheDrawnBar, thickness
 
+    # my line and my ticks in the axis ink, my labels in the axis label ink: applied here, at every
+    # arrange, rather than kept from my construction, so whatever colour a saved or duplicated axis
+    # carries gives way to the look of the world that lays it out
+    theme = WorldWdgt.theme
+    @majorDimLine.setColor theme.plotAxisInk
+    for i in [0 ... numberOfTicks]
+      @ticksRectangles[i].setColor theme.plotAxisInk
+      @labelsTextBoxes[i].setColor theme.plotAxisLabelText
+
     # _reLayout runs INSIDE the layout pass (recalculateLayouts), so the tick labels are positioned
     # AND texted through the non-settling APIs (_applyExtent / _applyMoveTo / _setTextNoSettle) -- a
     # public settling setText here would re-enter the settle tier and throw the flow-violation.

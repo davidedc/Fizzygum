@@ -33,7 +33,7 @@ another class, and most values are `Color`s):
 |---|---|
 | **PALETTE** | The design's named colours (§2), at the design's values. A palette colour paints nothing by itself. |
 | **ROLES** | What each SURFACE paints with — `windowBarFill`, `menuRowText`, `speechBubbleStroke`, `seamRule`, … One role per surface: two surfaces that paint the same colour still hold two roles, so one can be restyled without moving the other. A role's value is either a palette colour (the surface wears the design: `@seamRule = @chrome`), a value the design gives that surface alone, outside the palette (`clockMark`, the clock's marks), or the exact value the surface painted with before it adopted the design. |
-| **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects, optionally with a `lineHeight` (§3, the line box) — `menuRow`, `listRow`, `labelButton`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`, `memberName`, `memberKindTag`, `code`, `document`, and the text tools' typed faces `boldToolFace`, `italicToolFace`, `codeToolFace` (a role may also carry `italic`). |
+| **FONT ROLES** | `@fonts`: plain `{family, size, bold}` objects, optionally with a `lineHeight` (§3, the line box) — `menuRow`, `listRow`, `menuHeader`, `windowTitle`, `buttonLabel`, `defaultText`, `tooltip`, `speechBubble`, `prompt`, `desktopCaption`, `memberName`, `memberKindTag`, `code`, `document`, `spreadsheetCell`, `fizzytilesCaption`, and the text tools' typed faces `boldToolFace`, `italicToolFace`, `codeToolFace` (a role may also carry `italic`). |
 | **METRICS** | Chrome geometry: the bar button's box (`barIconSize`) and the glyphs inside it (`barControlGlyphSize` for × − +, `barActionGlyphSize` for the pencil / eye), a menu row's glyph box (`menuRowGlyphSize`), its side inset, icon gap and hover-plate radius (`menuRowSideInset`, `menuRowIconGap`, `menuRowPlateRadius`; a list row's `listRowSideInset`, `listRowIconGap`), its two drawn indicators' glyph squares and gaps (the submenu chevron's `menuRowChevronSize` and `menuRowChevronGap` before it; the leading tick column's `menuRowTickSize` and `menuRowTickGap` after it), a pop-up's content padding and its header's rule and title inset (`menuContentPadding`, `menuHeaderRuleWidth`, `menuHeaderTitleInset`; a list's rows panel `rowsPanelPadding`), a group divider's band (`menuDividerGap`, `menuDividerRuleWidth`), the scroll indicator's edge inset (`scrollIndicatorEdgeInset`), a tooltip plate's rounding and paddings (`tooltipCornerRadius`, `tooltipHorizontalPadding`, `tooltipVerticalPadding`; its line box is `fonts.tooltip`'s), the frame's border width, the strip's rule and the body margin (`frameBorderWidth`, `barRuleWidth`, `frameBodyMargin`), the window and card corner radii, the menu row height, a plain handle's side (`handleSize`) and the frame grip's side and inset (`frameGripSize`, `frameGripInset`), the toolbar grid's cell, least gap and padding along and across the strip (`toolThumbnailSize`, `toolInternalPadding`, `toolAlongPadding`, `toolCrossPadding`, `toolRows`) and a docked band's inset from its host (`dockedBandInset`), the scroll indicator's resting and hovered widths, chrome corner radii, a button's height, horizontal paddings and rounding (`buttonHeight`, `buttonPaddingX`, `primaryButtonPaddingX`, `buttonCornerRadius`), the least side of a chrome target (`minimumTargetSize`), a footer band's height, rule, inset, button gap and grip clearance (`footerBandHeight`, `footerRuleWidth`, `footerInset`, `footerGap`, `footerGripClearance`), a toggle's and a chip's height, padding and rounding (`toggleHeight`, `togglePaddingX`, `toggleCornerRadius`; `chipHeight`, `chipPaddingX`, `chipCornerRadius`), the Object Inspector's bands (`breadcrumbBandHeight`, `breadcrumbInset`, `breadcrumbCaptionGap`, `breadcrumbGap`, `breadcrumbDonorGap`, `breadcrumbSeparatorSize`; `toggleBandHeight`, `toggleBandInset`, `toggleBandGap`; `inspectorRuleWidth`, `inspectorListColumnWidth`), a member row's geometry (`memberRowHeight`, `memberRowPlateHeight`, `memberRowPlateRadius`, `memberRowSideInset`, `memberRowTagGap`, `memberRowTagColumnWidth`, `memberRowsPanelPadding`), a code pane's padding (`codePanePadding`), the text caret's width and gap (`caretWidth`, `caretGap`), a document's item spacing and its items' rounding and text padding (`documentItemSpacing`, `documentItemCornerRadius`, `documentItemHorizontalPadding`, `documentItemVerticalPadding`), and a desktop icon's geometry, all from ONE knob, the tile's side (`desktopIconTile`, 64): the glyph square, the tile's rounding and the cell's width derive from it (`desktopIconGlyphSize`, `desktopIconTileRadius`, `desktopIconCellWidth`), the draft's fixed values sit beside it (`desktopIconPadding`, `desktopIconTilePlateGap`, `desktopIconPlateHorizontalPadding`, `desktopIconPlateVerticalPadding`, `desktopIconPlateRadius`, `desktopIconCaptionMaxLines`; the caption's line box is `fonts.desktopCaption`'s), and so do the icon's height and extent (`desktopIconHeight`, `desktopIconExtent`: one two-line pitch for every icon), the icon grid's gaps and origin (`desktopIconColumnGap`, `desktopIconRowGap`, `desktopIconGridOrigin`), the rows a folder window opens showing (`folderWindowIconRows`) and the bin's corner insets (`desktopBinRightInset`, `desktopBinBottomInset`); the desktop clock's side and corner insets (`desktopClockSize`, `desktopClockRightInset`, `desktopClockTopInset`). |
 | **SHADOWS** | The ONE shadow every desktop object casts at rest (windows, menus, prompts, tooltips, icons, the clock) and the drag lift a carried widget takes (offset + alpha each), and `shadowColor`, the one colour every shadow silhouette is filled with. |
 
@@ -66,7 +66,7 @@ colour plumbing, and only ever goes down. Its tolerated tail is listed there.
 | `disabledText` | `#B9B9B4` | Text of a disabled button |
 | `accent` | `#2F5BEA` | Focused, selected and "on" ONLY — the text caret (the editing focus) included (the clock's second hand is the one exception: it is live) |
 | `accentTint` | `#2F5BEA` at 12% | The fill of an "on" or selected control |
-| `danger` | `#C4321C` | Destructive actions only |
+| `danger` | `#C4321C` | Destructive actions and error states only (a spreadsheet's error value) |
 | `scrollbar` | `rgba(30,30,28,0.35)` | The overlay scrollbar thumb |
 
 ## 3. Fonts
@@ -74,8 +74,8 @@ colour plumbing, and only ever goes down. Its tolerated tail is listed there.
 A text widget takes its font as a ROLE: `new StringWdgt text, fontRole: WorldWdgt.theme.fonts.windowTitle`
 gives family, size and bold at once. An explicit `fontName` / `fontSize` / `bold` wins over the role's
 member, so a caller can take a role and override one member. A text built without a role takes
-`fonts.defaultText`. `StringWdgt` and everything built on it read the role; `LabelButtonWdgt` (default
-`labelButton`), `MenuItemWdgt` (`menuRow` or `listRow`, by the panel that builds it; a `MemberRowWdgt` takes `memberName`, its kind tag `memberKindTag`) and `StringFieldWdgt`
+`fonts.defaultText`. `StringWdgt` and everything built on it read the role; `LabelButtonWdgt` (its builder's role; a
+`MagnetWdgt` builds its label in `code`), `MenuItemWdgt` (`menuRow` or `listRow`, by the panel that builds it; a `MemberRowWdgt` takes `memberName`, its kind tag `memberKindTag`) and `StringFieldWdgt`
 forward it.
 
 **The line box.** Every line of a text stands in a line box, answered from ONE home on `StringWdgt` (the
@@ -152,7 +152,8 @@ is on: off, no fill inside a `line` border with `text2` text (hovered `desk`, pr
 border, as the button); on, an `accentTint` fill inside an `accent` border with `accent` text, in every state. Its
 state is its HOST's: a click dispatches its one action, and the host decides the new state and shows it on the
 toggle (`setOn`); the toggle never flips itself. `toggleHeight` tall, its label plus `togglePaddingX` at each side
-plus its border wide, never narrower than `minimumTargetSize`.
+plus its border wide, never narrower than `minimumTargetSize`. Its hosts: the Object Inspector's filter (Methods,
+Fields, Inherited, Own props only) and the error log's "Pause", on while the log is paused (`ErrorsLogViewerWdgt.paused`).
 
 **The chip** (`ChipWdgt`, a `SimpleButtonWdgt`): a label control `chipHeight` (32) tall at radius
 `chipCornerRadius` (16), its label plus `chipPaddingX` at each side plus its border wide, never narrower
@@ -240,20 +241,25 @@ owner review — is the `convert-icon-size-aware` skill. SWCanvas has no `Path2D
 hand-translated into drawing calls.
 
 **The desktop icons are one family in the design's style** (Examples, Bin, How to save?, Fizzytiles, Draw's spray
-can, Patch programming, Slides Maker, Generic panel, Dashboards, Super toolbar, Docs Maker), and share its rules:
+can, Patch programming, Slides Maker, Generic panel, Dashboards, Super toolbar, Docs Maker, the Spreadsheet, the C-F
+converter) and the composites that frame a filed or aliased widget (the object frame, the script frame, the generic
+widget picture, the shortcut badge), and share its rules:
 - **One line unit**, `SizeAwareIconAppearance._glyphLineUnit S` = one unit of the design's 44-unit grid, at least
   1 px: 1 px at the 40 px tile glyph, 2 px at dpr 2 (half the design's 2-unit stroke; the owner judged that heavy).
   Every wall of a shape is that one thickness, horizontal and vertical alike; a filled feature (a chart's bar) may be
   a whole multiple of it.
 - **Paper interiors, no halo**: a shape is its ink fill, then the same shape inset by the line in `iconPaper`
-  (`_usePaper`, which, like `_useLight`, erases coverage on the shadow pass, so an icon's shadow is its ink). The
+  (`_usePaper`, which erases coverage on the shadow pass, so an icon's shadow is its ink). The
   tile is the ground, so no light envelope surrounds the art.
 - **Slanted walls** are two parallel edges an integer step apart, the inner one moved along the axis nearest the
   edge's normal, so a slanted wall is one line per row and stays connected.
 - **Small round features** (dots, magnets, keys) follow one size rule: hand-placed squares under 4 px, round dots
   from 4, rings only where the ring's hole survives.
-- **Shared shapes**: Patch programming, Slides Maker, Generic panel and Dashboards stand on ONE content card
-  (`_contentCardMetrics` / `_contentCard`: the design's 34 × 24 motif at the family's line).
+- **Shared shapes**: Patch programming, Slides Maker, Generic panel, Dashboards and the Spreadsheet stand on ONE
+  content card (`_contentCardMetrics` / `_contentCard`: the design's 34 × 24 motif at the family's line); the object
+  and script frames on ONE page with a folded corner (`_pageMetrics` / `_page`). The shortcut badge (a paper box, an
+  ink frame, a one-line paper knockout ring and a straight 45° arrow) takes its host glyph's line and sits at its
+  `HOST_SHARE` (0.3) of the host's square, bottom left.
 - Constants are in design units over `GLYPH_GRID`, so each proportion is a named knob; detail drops by rule (a
   chart loses bars before its rise, a row of lines drops as a unit), never regressing as the size grows.
 - Fills only where shapes overlap: SWCanvas leaves the overlap of two round-capped subpaths in one `stroke()`
@@ -296,7 +302,7 @@ can, Patch programming, Slides Maker, Generic panel, Dashboards, Super toolbar, 
 ### 4.8 Colour use
 The accent says "focused", "selected" or "on" — nothing else. Selected and "on" controls use the
 `accentTint` fill with an `accent` border and text, never a solid dark fill. `danger` marks destructive
-actions only.
+actions and error states only.
 
 ### 4.9 Wording and case
 - **Case is shown, never stored.** A text shows its words in a DISPLAY CASE (`StringWdgt.displayCase`: none, "upper"
@@ -353,6 +359,12 @@ exactly one owning widget:
 | Inspector breadcrumb | `InspectorWdgt`'s children: a "Class" caption and the donor label (`StringWdgt`s), the class `ChipWdgt`s and their `BreadcrumbSeparatorWdgt`s, placed by `_breadcrumbIn` |
 | A window content's row of buttons | its footer band (`FooterBandLayout`, the geometry); the rule is the host's seam, painted by its appearance (`SeamRulesAppearance` for a host with no look of its own) |
 | Desktop icon tile, glyph and label plate | `WidgetHolderWithCaptionWdgt` and its appearance `DesktopIconAppearance` (the tile and the plate are paint; its hit shape and its silhouette are the two shapes); the glyph is its `icon` child in the glyph square, the caption its `label` `TextWdgt` on the plate (§4.3) |
+| Spreadsheet grid | `SimpleSpreadsheetWdgt`'s header cells (`SheetHeaderCellWdgt` + `SheetHeaderCellAppearance`) and data cells (`CellWdgt` + `CellAppearance`); the sheet paints nothing. A header: `spreadsheetHeaderFill` (`desk`), its letter or number `fonts.buttonLabel` in `spreadsheetHeaderText` (`muted2`); the line under the letter row and right of the number column `spreadsheetHeaderRule` (`line`), every other edge `spreadsheetGridline` (`chrome`), each a 1 px edge a cell or header strokes along its own top or left (`SimpleSpreadsheetWdgt.paintGridEdges`); none along the sheet's outer top and left boundary, where the window's lines are; the selected cell a 2 px `spreadsheetSelectionRing` (`accent`) inside its edges; a value `fonts.spreadsheetCell` in `spreadsheetValueText` (`ink`), an error value in `spreadsheetErrorText` (`danger`). Every colour is read at paint or build time, so a saved or duplicated sheet wears the current look |
+| Plot | `GraphsPlotsChartsWdgt` and its examples: the area `plotBackgroundFill` (`paper`), the box `plotFrameStroke` (`line`, the crisp spelling), a `PlotWithAxesWdgt`'s surround `plotSurroundFill` (`paper`, read at paint), its axes' line, ticks and labels `plotAxisInk` / `plotAxisLabelText` (`muted2`, applied at every arrange); the series are content |
+| A Maker's page | `StretchablePanelWdgt` (the Slides Maker's, the Dashboards Maker's, Generic panel's and Patch programming's page) through `StretchablePanelAppearance`: `stretchablePageFill` (`paper`), read at paint; a 1 px `stretchablePageEdge` (`line`) only along a side where its container letterboxes it (the crystallized ratio), none along a side flush with it |
+| Folder window | `FolderWindowWdgt`: its panel `folderPanelFill` (`paper`), read at paint; the panel and its viewport borderless (the window's frame and strip rule are the lines); its title "Folder — Examples" (§4.9) |
+| Fizzytiles | `FridgeMagnetsWdgt`'s fridge, tiles bin and output pane on `paper` inside `line` borders (`fizzytiles*` roles, read at paint), the four captions `fonts.fizzytilesCaption` in `fizzytilesCaptionText` (`muted2`); the code pane `fonts.code` in `codeText` on `fizzytilesCodePaneFill`, no border; a MAGNET (`MagnetWdgt`, `MagnetAppearance`) the button's look derived at paint from its state (`magnetFill` `paper` inside a `magnetStroke` `line` border, `magnetHoverFill` `desk` hovered, `magnetPressFill` `chrome` inside `magnetPressStroke` `frame` pressed, rounded at `magnetCornerRadius` 6; hit shape and silhouette the rounded box), its label a code token in `fonts.code` and `magnetText` (`ink`) |
+| The error log's footer | Clear, the fixed-label "Pause" toggle (`LabelledToggleWdgt`, on while paused) and OK in its footer band (§4.3) |
 | Clock | `AnalogClockWdgt` + `AnalogClockAppearance`: an opaque `clockFace` disc (no border) that is also its hit shape and its silhouette, four `clockMark` dots, hour and minute hands in `ink`, the second hand and the centre dot in `accent`; every width a whole number of device pixels of the face's parity (`pixelsForUnits`), so a hand is one width pointing any way; round caps from 4 px |
 
 Menus, windows, cards and docked bands are ONE class, `FrameWdgt`; which skin a frame wears is derived
@@ -397,14 +409,16 @@ lifetime.
   - a menu with any ticking row reserves a leading tick column in every row, and a ticked row draws
     an `ink` tick there.
 
-The row's label stays its plain wording. A plain LIST's rows (`ListWdgt` without `memberFactsQuery`) and fizzytiles
-magnets keep their own look until their families are restyled.
+The row's label stays its plain wording. A plain LIST's rows (`ListWdgt` without `memberFactsQuery`) keep their own look
+until their family is restyled.
 
 **Code panes** (the Object Inspector's code pane, the script window, the code prompt, the console, the error log)
 are built in the code role: `fonts.code` (12 px mono), `codeText`, `codePanePadding` (12) — a `TextAreaWdgt`
 forwards `fontRole` and `textColor` to its text. A code area that is its window's content is borderless: the
 window's border, its strip's rule and its footer's rule are its lines (every other `TextAreaWdgt` keeps its
-border). A patch node's text boxes take `fonts.code` at their own padding and ink. Its lines stand on the role's 18 px
+border). A patch node's text boxes (`PatchNodeWdgt._newTextBox`) take `fonts.code` and `codeText` at their own padding (5),
+inside a 1 px `patchNodeTextBoxStroke` (`line`) border; a calculating node's field labels ("Formula", "Output") are
+`fonts.buttonLabel` in `patchNodeFieldLabelText` (`muted2`). Its lines stand on the role's 18 px
 line boxes (the draft's; on SWCanvas: baseline 12, caret rows 1–15 of each line).
 
 **The Object Inspector's member list** wears the member-row look: the inspector builds its `ListWdgt` with

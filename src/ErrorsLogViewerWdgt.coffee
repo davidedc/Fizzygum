@@ -7,9 +7,15 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   defaultContents: ""
 
   clearButton: undefined
+  # my PAUSE toggle (LabelledToggleWdgt): the fixed label "Pause", ON exactly while I am paused.
+  # Its state is mine: a click runs my togglePaused, which decides and shows it.
   pauseToggle: undefined
   okButton: undefined
 
+  # Am I paused? While I am, showUpWithError logs nothing new (it still shows my window). It is
+  # the one truth of my pause state, and my pause toggle shows it. togglePaused writes it, so a
+  # paused log carries it as an own field, which a copy and a saved world keep beside the
+  # toggle's own isOn.
   paused: false
 
   # (Widget's constructor takes no arguments -- a birth extent passed to super
@@ -76,9 +82,9 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @_addNoSettle @clearButton
 
 
-    pauseButton = new SimpleButtonWdgt @, "pauseErrors", face: "Pause"
-    unpauseButton = new SimpleButtonWdgt @, "unpauseErrors", face: "Un-pause"
-    @pauseToggle = new ToggleButtonWdgt pauseButton, unpauseButton, if @paused then 1 else 0
+    # my pause toggle: its fixed label, the one action that flips my paused field, and born
+    # showing that field
+    @pauseToggle = new LabelledToggleWdgt @, "togglePaused", face: "Pause", on: @paused
     @_addNoSettle @pauseToggle
 
     @okButton = new SimpleButtonWdgt @, "hideLog", face: "OK"
@@ -86,11 +92,12 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
     @_invalidateLayout()
 
-  pauseErrors: ->
-    @paused = true
-
-  unpauseErrors: ->
-    @paused = false
+  # My pause toggle's action: pause me, or resume me, and show the new state on the toggle. The
+  # toggle never flips itself, so after my build this is the one place either of the two changes,
+  # and they cannot disagree. Only the toggle's look changes, never its size, so nothing re-lays.
+  togglePaused: ->
+    @paused = !@paused
+    @pauseToggle.setOn @paused
 
   clearTextPane: ->
     @textWidget.setText ""
@@ -101,17 +108,4 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
   _footerRightButtons: ->
     [@okButton]
-
-  # My pause toggle shows one of its two buttons at a time, in its own box, and has no size of
-  # its own: in my footer band it takes the larger of its two buttons' preferred extents, so it
-  # keeps its size when it flips between "Pause" and "Un-pause".
-  _footerExtentOf: (button) ->
-    return super button unless button is @pauseToggle
-    width = 0
-    height = 0
-    for toggleButton in @pauseToggle.buttons
-      extent = toggleButton.preferredExtent()
-      width = Math.max width, extent.x
-      height = Math.max height, extent.y
-    new Point width, height
 

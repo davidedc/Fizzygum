@@ -241,7 +241,7 @@ which bite silently:
 - **Never a mutable `[]` or `{}` at class level.** A prototype array is ONE array shared by every
   instance of the class, so an `@queue.push` on one widget is visible from all of them. `: undefined`
   plus a constructor (or lazy `if !@queue?`) build is the only safe shape for a container.
-- **A class-level default must not call another class.** `headerFillColor: Color.create 236,236,236`
+- **A class-level default must not call another class.** `swatchColor: Color.create 236,236,236`
   runs at class-*definition* time, before `Color` has necessarily loaded, and the boot dependency
   scanner only sees declaration-level `new X` edges — see
   [`immutable-value-classes.md`](immutable-value-classes.md) §3. Build such values in the constructor.

@@ -27,4 +27,4 @@ class Example3DPlotAppearance extends Appearance
         ctx.fillStyle = @widget.backgroundColor.toString()
         @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
 
-      @widget.drawPlot ctx, Color.WHITE, appliedShadow
+      @widget.drawPlot ctx, appliedShadow

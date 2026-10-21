@@ -27,6 +27,14 @@ class RectangularAppearance extends Appearance
     else
       @widget.boundingBoxTight()
 
+  # The colour I fill my widget's TIGHT box with: its own colour -- or, for a widget that holds none
+  # of its own because it wears a theme role until a colour is set on it, the role it answers (its
+  # _surfaceFill, a soft hook no plain widget defines: a plot's surround, a Maker's page, a folder's
+  # panel), read here as I paint, so a saved or duplicated widget wears the look of the world it is
+  # painted in.
+  _fillColor: ->
+    @widget.color ? @widget._surfaceFill?()
+
   # This method only paints this very widget
   # i.e. it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
@@ -47,7 +55,8 @@ class RectangularAppearance extends Appearance
     return undefined unless (@_calculateKeyValuesOrNil aContext, clippingRectangle)?
 
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
-      if !@widget.color? then debugger
+      fill = @_fillColor()
+      if !fill? then debugger
 
       # paint the background: the whole damage box (the padding halo beyond the tight box)
       if @widget.backgroundColor?
@@ -61,7 +70,7 @@ class RectangularAppearance extends Appearance
       # (potentially inset because of the padding): the damage box ∩ the tight box
       toBePainted = localDamageBox.intersect @widget.boundingBoxTight().translateBy @widget.position().neg()
 
-      color = @widget.color
+      color = fill
       if appliedShadow?
         color = WorldWdgt.theme.shadowColor
 
@@ -116,25 +125,40 @@ class RectangularAppearance extends Appearance
     # (docs/architecture/constructor-and-parameter-conventions.md; buildSystem/check-argument-holes.js
     # counts it because a regex cannot tell an absent value from a skipped parameter).
     @_paintInLocalScope aContext, clippingRectangle, undefined, (ctx, localDamageBox) =>
-      return unless @widget.strokeColor?
+      @_paintBorder ctx, localDamageBox
 
-      # clip to the damage ∩ tight box (the stroke must not paint into the padding halo)
-      toBePainted = localDamageBox.intersect @widget.boundingBoxTight().translateBy @widget.position().neg()
+  # The colour I stroke my widget's border with: its own strokeColor -- or, for a widget that holds
+  # none of its own because it wears a theme role until one is set on it, the role it answers (its
+  # _surfaceStroke, a soft hook no plain widget defines: Fizzytiles' panes), read here as I paint,
+  # like _fillColor.
+  _borderColor: ->
+    @widget.strokeColor ? @widget._surfaceStroke?()
 
-      ctx.beginPath()
-      ctx.rect Math.round(toBePainted.left()),
-        Math.round(toBePainted.top()),
-        Math.round(toBePainted.width()),
-        Math.round(toBePainted.height())
-      ctx.clip()
+  # My widget's BORDER, painted inside paintStroke's scope (widget-local logical coordinates,
+  # `localDamageBox` the part being repainted): its _borderColor outline all round, when it has one.
+  # A subclass whose border is not that outline answers its own (StretchablePanelAppearance: a page's
+  # edge only along the sides where its container letterboxes it).
+  _paintBorder: (ctx, localDamageBox) ->
+    borderColor = @_borderColor()
+    return unless borderColor?
 
-      ctx.strokeStyle = @widget.strokeColor.toString()
-      ctx.lineWidth = 1
-      # raw local coords, the Boxy spelling — deliberately NOT snapped to the device grid: a
-      # widget's own plane position is integer by the placement law, so snapping is provably
-      # the identity here, and the one genuinely fractional offset (a compensating wrapper's
-      # figure origin, plus its rotation pair) lives in the CTM, which a body never reads.
-      # Under rotated composites the stroke renders continuously — SWCanvas samples the
-      # island warp bilinear (docs/architecture/transforms.md §8, sampling contract).
-      ctx.strokeRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1
+    # clip to the damage ∩ tight box (the stroke must not paint into the padding halo)
+    toBePainted = localDamageBox.intersect @widget.boundingBoxTight().translateBy @widget.position().neg()
+
+    ctx.beginPath()
+    ctx.rect Math.round(toBePainted.left()),
+      Math.round(toBePainted.top()),
+      Math.round(toBePainted.width()),
+      Math.round(toBePainted.height())
+    ctx.clip()
+
+    ctx.strokeStyle = borderColor.toString()
+    ctx.lineWidth = 1
+    # raw local coords, the Boxy spelling — deliberately NOT snapped to the device grid: a
+    # widget's own plane position is integer by the placement law, so snapping is provably
+    # the identity here, and the one genuinely fractional offset (a compensating wrapper's
+    # figure origin, plus its rotation pair) lives in the CTM, which a body never reads.
+    # Under rotated composites the stroke renders continuously — SWCanvas samples the
+    # island warp bilinear (docs/architecture/transforms.md §8, sampling contract).
+    ctx.strokeRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1
 

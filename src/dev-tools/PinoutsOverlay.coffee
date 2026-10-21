@@ -1,4 +1,5 @@
-# The PINOUT debug overlay: floating blue labels that name the widget they point at.
+# The PINOUT debug overlay: floating labels, in the theme's pinoutLabelText ink, that name the widget
+# they point at.
 #
 # A dev/debug affordance reached from a widget's context menu ("Show output pins" /
 # "Remove output pins"), never product UI -- so it lives in its own collaborator class
@@ -73,7 +74,7 @@ class PinoutsOverlay
         # SCREEN-anchor, same mapping as the reposition branch above (§7.11)
         peekThroughBox = eachWidgetNeedingPinout.mapRectToScreen eachWidgetNeedingPinout.clippedThroughBounds()
         hM._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
-        hM.setColor Color.BLUE
+        hM.setColor WorldWdgt.theme.pinoutLabelText
         hM.setWidth 400
         @currentPinoutingWidgets.add hM
         @widgetsBeingPinouted.add eachWidgetNeedingPinout

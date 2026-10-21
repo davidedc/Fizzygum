@@ -168,14 +168,19 @@ class SimpleTextWdgt extends TextWdgt
   # (Widget._disable / _enableDragsDropsAndEditingNoSettle). In view mode an item -- my background
   # the editable-item fill -- melts into the page I sit on, my parent's fill; in edit mode a
   # background that is my page's fill shows the item fill again. Both sides are read live, the
-  # theme's role and my parent's colour, so the round trip holds whatever either is styled to. A
-  # background of any other colour (one the user set) is left as it is in both modes.
+  # theme's role and my parent's fill (_fillOfMyPage), so the round trip holds whatever either is
+  # styled to. A background of any other colour (one the user set) is left as it is in both modes.
   blendInWithPanelColor: ->
-    page = @parent?.color
+    page = @_fillOfMyPage()
     if page? and @backgroundColor?.equals WorldWdgt.theme.editableItemFill
       @setBackgroundColor page
 
   contrastOutFromPanelColor: ->
-    page = @parent?.color
+    page = @_fillOfMyPage()
     if page? and @backgroundColor?.equals page
       @setBackgroundColor WorldWdgt.theme.editableItemFill
+
+  # The fill the page I sit on shows: its own colour, or, for a page that holds none and wears a
+  # theme role instead, the role it answers (its _surfaceFill: a Maker's page, StretchablePanelWdgt).
+  _fillOfMyPage: ->
+    @parent?.color ? @parent?._surfaceFill?()

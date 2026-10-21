@@ -707,8 +707,12 @@ class FrameWdgt extends Widget
     return unless @contents? and @contents != @defaultContents
     @_retitleNoSettle @_titleForContents @contents
 
+  # A title that carries a NAME (a shortcut bringing me up names me by its caption,
+  # ShortcutWdgt._bringUpReferencedWidgetNow): my content's kind, then the name after a dash, as
+  # stored -- "folder — Examples", shown "Folder — Examples" in my title's display case
+  # (visual-design-system §4.9; the inspector titles are stored the same way).
   setTitle: (newTitle) ->
-    @_settleLayoutsAfter => @_retitleNoSettle @contents.colloquialName() + ": " + newTitle
+    @_settleLayoutsAfter => @_retitleNoSettle @contents.colloquialName() + " — " + newTitle
 
   setTitleWithoutPrependedContentName: (newTitle) ->
     @_settleLayoutsAfter => @_retitleNoSettle newTitle

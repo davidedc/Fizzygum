@@ -67,14 +67,12 @@ class FooterBandLayout
 
   # Lay `host`'s footer buttons out across its current bounds: leftButtons and rightButtons, each
   # in order, left to right. Only a button that is the HOST'S CHILD takes part: one taken out of
-  # it is not the host's to place, and the others close up. Each is measured by
-  # opts.extentOf (default: the button's own preferredExtent). An in-pass placement: a host calls
-  # it from its own arrange, after applying its own bounds.
-  @arrange: (host, leftButtons, rightButtons, opts = {}) ->
-    extentOf = opts.extentOf ? ((button) -> button.preferredExtent())
+  # it is not the host's to place, and the others close up. Each takes its own preferredExtent.
+  # An in-pass placement: a host calls it from its own arrange, after applying its own bounds.
+  @arrange: (host, leftButtons, rightButtons) ->
     left = (button for button in leftButtons when button?.parent is host)
     right = (button for button in rightButtons when button?.parent is host)
-    bounds = @buttonBoundsIn host.bounds, (extentOf button for button in left), (extentOf button for button in right)
+    bounds = @buttonBoundsIn host.bounds, (button.preferredExtent() for button in left), (button.preferredExtent() for button in right)
     for button, i in left
       button._reLayout bounds.left[i]
     for button, i in right

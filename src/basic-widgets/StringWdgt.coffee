@@ -914,7 +914,7 @@ class StringWdgt extends Widget
     @buildCanvasFontProperty() + "-" +
     @isHeaderLine + "-" +
     @color.toString()  + "-" +
-    (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
+    (@_backgroundFill()?.toString() ? "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
     @text.hashCode()  + "-" +
     @textPossiblyCroppedToFit.hashCode()  + "-" +
@@ -961,6 +961,13 @@ class StringWdgt extends Widget
     backBufferContext.fillStyle = @color.toString()
     backBufferContext.fillText line, x, y
 
+  # The fill behind my text: my backgroundColor -- or, for a text that holds none of its own because
+  # it wears a theme role until one is set on it, the role it answers (its _surfaceBackgroundFill, a
+  # soft hook no plain text defines: Fizzytiles' code pane), read here as my buffer is keyed, sized
+  # and filled, so a saved or duplicated text wears the look of the world it is painted in.
+  _backgroundFill: ->
+    @backgroundColor ? @_surfaceBackgroundFill?()
+
   # Shared by StringWdgt and TextWdgt (which extends StringWdgt): set the text
   # font/alignment on the freshly-created back-buffer context and, if a background
   # colour is set, fill it. Operates entirely within the caller's
@@ -986,9 +993,10 @@ class StringWdgt extends Widget
     # because the failure mode is invisible rather than loud.
     # Dressed as an item (THE ITEM SHAPE) the fill is the item's rounded block, its corners left
     # clear in the buffer, so the page under it shows there; otherwise it is the whole square box.
-    if @backgroundColor
+    background = @_backgroundFill()
+    if background
       backBufferContext.save()
-      backBufferContext.fillStyle = @backgroundColor.toString()
+      backBufferContext.fillStyle = background.toString()
       backBufferContext.globalAlpha = @backgroundTransparency ? 1
       cornerRadius = @_itemShape()?.cornerRadius
       if cornerRadius?
@@ -1061,7 +1069,7 @@ class StringWdgt extends Widget
     # top-left either, so it takes the whole widget too.
     widthOfText = @calculateTextWidth text
     heightOfText = @linePitch @fittingFontSize
-    if @backgroundColor? or
+    if @_backgroundFill()? or
      @verticalAlignment != AlignmentSpecVertical.TOP or
      @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
      @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT or

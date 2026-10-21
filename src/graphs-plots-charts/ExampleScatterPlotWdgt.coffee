@@ -13,7 +13,7 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
 
   # step() (advance @graphNumber, frozen under SystemTest replay) is inherited from GraphsPlotsChartsWdgt.
 
-  drawPlot: (context, color, appliedShadow) ->
+  drawPlot: (context, appliedShadow) ->
 
     @seed = @graphNumber
     circleRadius = 5
@@ -22,7 +22,7 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
 
 
     if appliedShadow?
-      @simpleShadow context, color, appliedShadow
+      @simpleShadow context, appliedShadow
       return
 
     context.fillStyle = WorldWdgt.theme.plotBackgroundFill.toString()
@@ -56,6 +56,6 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
     context.strokeStyle = '#FF0000'
     context.stroke()
 
-    @drawBoundingBox context, color, appliedShadow
+    @drawBoundingBox context
 
 

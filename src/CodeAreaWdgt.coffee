@@ -81,11 +81,6 @@ class CodeAreaWdgt extends Widget
   _footerRightButtons: ->
     []
 
-  # How big one of my footer buttons is in the band: its own preferredExtent, unless a subclass
-  # holds a control that has no size of its own.
-  _footerExtentOf: (button) ->
-    button.preferredExtent()
-
   # My one seam: my footer band's rule, between the code area and the buttons.
   _seamRects: ->
     [FooterBandLayout.ruleIn new Rectangle 0, 0, @width(), @height()]
@@ -105,4 +100,4 @@ class CodeAreaWdgt extends Widget
     if @tempPromptEntryField.parent == @
       @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, codeAreaTop), new Point @width() - 2 * @externalPadding, codeAreaHeight
 
-    FooterBandLayout.arrange @, @_footerLeftButtons(), @_footerRightButtons(), extentOf: (button) => @_footerExtentOf button
+    FooterBandLayout.arrange @, @_footerLeftButtons(), @_footerRightButtons()

@@ -38,9 +38,9 @@ class SizeAwareIconAppearance extends IconAppearance
 
     # the icon art (_paintSizeAware) sets its own colours, so the shadow pass renders it to
     # a scratch and blits the black silhouette (the shadow-pass paint contract). In that
-    # scratch the LIGHT role ERASES coverage (see _useLight): the halo and the light
-    # interiors are visually background, so the icon's shadow is its dark line-work —
-    # never the fat halo-envelope blob.
+    # scratch the PAPER role ERASES coverage (see _usePaper): the paper interiors are
+    # visually background, so the icon's shadow is its ink line-work — never a solid blob
+    # of the whole shape.
     if appliedShadow?
       @_paintDamagedAreaAsBlackSilhouette aContext, al, at, w, h, appliedShadow, (sctx) =>
         @_paintingSilhouette = true
@@ -123,29 +123,24 @@ class SizeAwareIconAppearance extends IconAppearance
 
   # ---- colour roles --------------------------------------------------------
   # Every painter picks its colour through these — the ONE choke point that
-  # keeps the shadow pass honest about the halo. Painting normally, they just
-  # set fill/stroke style to the role's colour. Painting the shadow-pass
-  # silhouette scratch (_paintingSilhouette), the LIGHT and PAPER roles switch
-  # the context to destination-out so their paint ERASES coverage: the halo
-  # and the light interiors are visually background, not ink, so they must not
-  # cast shadow — the border idiom's "ink silhouette, then light interior"
-  # then leaves exactly the dark line-work in the silhouette. Order matters
-  # and the painters already honour it (halos before ink erase nothing;
-  # interiors after ink punch through).
-  #   LIGHT (Theme.iconOutline) is the light of an icon in the older style:
-  # its halo envelope and its interiors. PAPER (Theme.iconPaper) is the light
-  # of an icon drawn in the design's style: its interiors only, with no halo
-  # around the icon (the surface it stands on is its ground).
+  # keeps the shadow pass honest about the interiors. Painting normally, they
+  # just set fill/stroke style to the role's colour. Painting the shadow-pass
+  # silhouette scratch (_paintingSilhouette), the PAPER role switches the
+  # context to destination-out so its paint ERASES coverage: the paper
+  # interiors are visually background, not ink, so they must not cast shadow
+  # — the border idiom's "ink silhouette, then paper interior" then leaves
+  # exactly the ink line-work in the silhouette. Order matters and the
+  # painters honour it (paper before ink erases nothing; paper after ink
+  # punches through).
+  #   INK is the icon's own colour (_iconColorString: my widget's, which a
+  # desktop icon's holder sets to the desktop glyph role). PAPER
+  # (Theme.iconPaper) is the light of an icon drawn in the design's style: its
+  # interiors only, with no halo around the icon (the surface it stands on is
+  # its ground).
 
   _useInk: (ctx) ->
     ctx.globalCompositeOperation = 'source-over' if @_paintingSilhouette
     s = @_iconColorString()
-    ctx.fillStyle = s
-    ctx.strokeStyle = s
-
-  _useLight: (ctx) ->
-    ctx.globalCompositeOperation = 'destination-out' if @_paintingSilhouette
-    s = @_outlineColorString()
     ctx.fillStyle = s
     ctx.strokeStyle = s
 
@@ -154,20 +149,6 @@ class SizeAwareIconAppearance extends IconAppearance
     s = WorldWdgt.theme.iconPaper.toString()
     ctx.fillStyle = s
     ctx.strokeStyle = s
-
-  # ---- pixel-drawing vocabulary --------------------------------------------
-
-  # a rounded-rect PANEL: light halo envelope (expanded o), ink round-rect,
-  # light interior inset by the border thickness tb. The corner radius tracks
-  # each inset, so all four corners stay concentric and the ring reads tb
-  # thick all the way around. The shortcut-arrow badge draws through it.
-  _pxPanel: (ctx, x, y, w, h, r, tb, o) ->
-    @_useLight ctx
-    ctx.fillRoundRect x - o, y - o, w + 2 * o, h + 2 * o, r + o
-    @_useInk ctx
-    ctx.fillRoundRect x, y, w, h, r
-    @_useLight ctx
-    ctx.fillRoundRect x + tb, y + tb, w - 2 * tb, h - 2 * tb, Math.max 0, r - tb
 
   # ---- the content card of an icon drawn in the design's style -------------
   # The design's shared CONTENT card (docs/plans/redesign/desktop-canvas.html):
@@ -215,3 +196,117 @@ class SizeAwareIconAppearance extends IconAppearance
     ctx.fillRoundRect left, top, w, h, r
     @_usePaper ctx
     ctx.fillRoundRect left + t, top + t, w - 2 * t, h - 2 * t, Math.max 0, r - t
+
+  # ---- the document page of an icon drawn in the design's style ------------
+  # The family's DOCUMENT PAGE, the twin of the content card: a portrait sheet
+  # whose top-right corner is FOLDED. The object frame (ObjectIconAppearance,
+  # which holds a widget's own picture in its middle) and the script frame
+  # (ScriptIconAppearance) stand on it, so a filed widget and a script read as
+  # one kind of thing. One outline in ink on the glyph line unit t, a paper
+  # interior inset t (the border idiom):
+  #   - the SHEET: a portrait box, its bottom corners and its top-left corner
+  #     rounded at PAGE_CORNER (the inner radius t less), its top-right corner
+  #     cut by a 45-degree CHAMFER, the Floppy's idiom: the chamfer's two edges
+  #     run half a pixel off the pixel diagonals, so no row ties and every row
+  #     AND column of the slanted wall is exactly t;
+  #   - the FLAP (the folded-over corner): an L of two t lines -- one hanging
+  #     from the top wall where the chamfer leaves it, one running from its
+  #     foot to the right wall where the chamfer meets it. Each shares its far
+  #     end with the sheet's own line (adjacent outlined shapes share ONE
+  #     line), and the triangle they close with the chamfer is paper.
+  #   Detail by rule: the fold (the cut) is the half pixel nearest
+  # S * PAGE_FOLD / GLYPH_GRID, never less than 1.5 px, and never so deep that
+  # the flap's foot line reaches the glyph square's middle half (where the
+  # object frame's picture lies); the flap is drawn only where its paper
+  # triangle keeps MIN_FLAP_PAPER px along each leg (else the corner is a plain
+  # cut, which still reads as a page). A corner radius under PAGE_MIN_CORNER
+  # px is square. The sheet is centred in S both ways (spans of S's parity),
+  # like the card.
+  #   Proportions: the INK edges of a one-unit line on a 44-unit path (its
+  # centre line moved out half a unit), in GLYPH_GRID units.
+  PAGE_LEFT: 7.5        # path x 8 and 36: a 28-unit sheet, the 22-unit picture square (the
+  PAGE_RIGHT: 36.5      #   composite's middle 50%) inside it with 2.5 units of paper either side
+  PAGE_TOP: 3.5         # path y 4 and 40
+  PAGE_BOTTOM: 40.5
+  PAGE_FOLD: 7.5        # what the chamfer's outer edge cuts off the top wall and the right wall
+  PAGE_CORNER: 2.5      # the rounded corners' outer radius (the Folder's; the inner one t less)
+  MIN_FLAP_PAPER: 2     # px of paper the flap's triangle keeps along each leg, or no flap
+  PAGE_MIN_CORNER: 2    # px: a smaller corner radius is square
+
+  # the page in the glyph square of S px whose top-left corner is (x, y), on
+  # line unit t: its outer ink edges, the chamfer's two ends (half a px along
+  # the walls they cut), the flap's corner and whether it is drawn, and the
+  # corner radius, in device px. Callers lay their content out against it,
+  # then paint it with _page.
+  _pageMetrics: (x, y, S, t) ->
+    px = (units) => Math.round S * units / @GLYPH_GRID
+    span = (units) ->
+      n = px units
+      n++ if (S - n) % 2 isnt 0
+      n
+    w = span @PAGE_RIGHT - @PAGE_LEFT
+    h = span @PAGE_BOTTOM - @PAGE_TOP
+    left = x + (S - w) / 2
+    top = y + (S - h) / 2
+    right = left + w
+    bottom = top + h
+    r = px @PAGE_CORNER
+    r = 0 if r < @PAGE_MIN_CORNER
+    r = Math.min r, Math.floor(w / 2) - t
+    # the fold stays above the glyph square's MIDDLE HALF (the square GenericObjectIconWdgt lays
+    # a widget's picture in: from round(S / 4), half of S): the flap's foot line ends above it
+    cut = Math.max 1, Math.min(Math.floor(S * @PAGE_FOLD / @GLYPH_GRID), y + Math.round(S / 4) - top - t)
+    # the flap's L: its vertical line's columns [flapX, flapX + t), hanging from the top wall at
+    # the chamfer's start; its horizontal line's rows [flapY, flapY + t), meeting the right wall
+    # at the chamfer's end. The paper triangle between the L and the chamfer has legs of
+    # cut - 2t px (the chamfer's band eats a t, the L another)
+    flapX = right - cut - t
+    flapY = top + cut
+    m =
+      left: left
+      top: top
+      right: right
+      bottom: bottom
+      w: w
+      h: h
+      r: r
+      t: t
+      cut: cut
+      chamferX: right - cut - 0.5   # where the chamfer's outer edge leaves the top line
+      chamferY: top + cut + 0.5     # where it meets the right wall
+      flapX: flapX
+      flapY: flapY
+      hasFlap: cut - 2 * t >= @MIN_FLAP_PAPER
+    m
+
+  # the sheet's outline inset by d, filled: d = 0 the ink, d = t the paper.
+  # The chamfer's inset copy is the edge moved d to the LEFT (for 45 degrees,
+  # also d down), so its ends stay on the inset walls; each corner is an arcTo
+  # corner about ONE centre (radius r - d)
+  _pageOutline: (ctx, p, d) ->
+    left = p.left + d
+    top = p.top + d
+    right = p.right - d
+    bottom = p.bottom - d
+    r = Math.max 0, p.r - d
+    ctx.beginPath()
+    ctx.moveTo left + r, top
+    ctx.lineTo p.chamferX, top
+    ctx.lineTo right, p.chamferY
+    ctx.arcTo right, bottom, left, bottom, r
+    ctx.arcTo left, bottom, left, top, r
+    ctx.arcTo left, top, p.chamferX, top, r
+    ctx.closePath()
+    ctx.fill()
+
+  # the page: its ink, its paper inset t, then the flap's two lines (each
+  # meeting the sheet's line)
+  _page: (ctx, p) ->
+    @_useInk ctx
+    @_pageOutline ctx, p, 0
+    @_usePaper ctx
+    @_pageOutline ctx, p, p.t
+    return unless p.hasFlap
+    @_useInk ctx
+    ctx.fillRect p.flapX, p.top, p.t, p.flapY + p.t - p.top
+    ctx.fillRect p.flapX, p.flapY, p.right - p.flapX, p.t

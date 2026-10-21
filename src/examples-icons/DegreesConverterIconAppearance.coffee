@@ -1,235 +1,264 @@
-class DegreesConverterIconAppearance extends IconAppearance
+class DegreesConverterIconAppearance extends SizeAwareIconAppearance
 
+  # SIZE-AWARE C-F converter in the design's style: the converter's opener in
+  # the Examples folder (40 px glyph, 80 at dpr 2). Line art on t, paper
+  # interiors, no halo:
+  #   - the THERMOMETER on the square's middle column: a TUBE (a stadium,
+  #     fillStadium) whose foot joins a round BULB. The border idiom with the
+  #     exact annulus for the bulb: the tube's ink; the bulb's paper disc
+  #     (covering the tube's walls inside it); the bulb's ring (a mid-radius
+  #     strokeCircle, wall t); the tube's paper inset t (its foot opens the
+  #     ring's top arc between the tube's walls: a T on each side, one t line
+  #     each); then the MERCURY in ink: a disc in the bulb and a column up the
+  #     tube, each keeping MERCURY_GAP of paper from the glass;
+  #   - TICKS: short t lines right of the tube, one pitch apart;
+  #   - the LETTERS, a degree sign and a C left of the tube, a degree sign and
+  #     an F right of it, all on t: the C is a round-rect outline opened on its
+  #     right, the F three bars, the degree sign a ring where the family's ring
+  #     rule allows it.
+  #   Detail by rule: the letters drop as a pair when their box is under
+  # MIN_LETTER px tall or would leave the square (the thermometer stays); a
+  # degree sign is a ring (k >= MIN_RING, hole >= MIN_RING_HOLE), else a dot
+  # from MIN_DOT px (the family's small-feature rule, read on the smaller of
+  # the rounded and the exact size), else it drops (a 3 px square reads as a
+  # blot, not a degree); the bulb is solid ink when its mercury disc would be
+  # under MIN_MERCURY px; the mercury column drops when the tube's paper is
+  # under MIN_COLUMN_ROOM px; the ticks drop as a unit when a tick would be
+  # shorter than MIN_TICK px. Under S 10 nothing is drawn.
+
+  # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
-  specificationSize: new Point 100, 100
 
-  # Fill for the little "degrees" ring (the "degrees of F outline" oval below).
-  # Overridable so CFDegreesConverterIconAppearance can tint just that one ring grey
-  # while sharing the rest of this paintFunction verbatim (was a 230-line copy).
-  _degreesSymbolFillStyle: ->
-    @_outlineColorString()
+  # ---- proportions, GLYPH_GRID units (INK edges) ------------------------------
+  TUBE_WIDTH: 7         # the tube's outer width, on the square's middle column
+  TUBE_TOP: 3.5         # its top ink edge (a round cap)
+  BULB_SIZE: 13         # the bulb's outer diameter
+  BULB_BOTTOM: 40.5     # its bottom ink edge
+  MERCURY_GAP: 1        # paper between the mercury and the glass
+  MERCURY_TOP: 17       # the column's top
+  TICK_LENGTH: 3        # a tick's length
+  TICK_GAP: 1.5         # paper between the tube and a tick
+  TICK_TOP: 9           # the first tick's top (the scale runs from it down)
+  TICK_PITCH: 4         # from one tick's top to the next one's
+  TICKS: 4
+  LETTER_TOP: 5         # the letters' top ink edge
+  LETTER_HEIGHT: 9      # their ink height
+  C_WIDTH: 7            # the C's outer width
+  F_WIDTH: 6            # the F's
+  F_BAR: 0.55           # the F's middle bar: its top over the letter's height, and ...
+  F_MID_SHARE: 0.75     # ... its length over the F's width
+  DEGREE_SIZE: 4.5      # the degree sign's outer size
+  LETTER_GAP: 1         # paper between a degree sign and its letter
+  LETTER_TO_TUBE: 2.5   # paper between the letters and the tube
+  C_OPENING: 0.36       # the C's opening on its right: its height over the letter's
+  C_CORNER: 3           # the C's outer corner radius
+  # ---- detail tiers -----------------------------------------------------------
+  MIN_LETTER: 6         # px: shorter letters drop (both sides)
+  MIN_COLUMN_ROOM: 3    # px of tube paper the column needs (column + a px of paper each side)
+  MIN_TICK: 2           # px: shorter ticks drop
+  MIN_MERCURY: 4        # px: a smaller mercury disc makes the bulb solid
+  MIN_RING: 6           # px: the smallest degree sign drawn as a ring ...
+  MIN_RING_HOLE: 2      # px: ... whose hole keeps this much
+  MIN_DOT: 4            # px: the smallest degree sign drawn as a dot (else it drops)
 
-  paintFunction: (context) ->
-    #// Color Declarations
-    iconColorString = @_iconColorString()
-    outlineColorString = @_outlineColorString()
+  _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
+    return if Math.min(wDev, hDev) < 10
+    m = @_thermoMetrics x0, y0, wDev, hDev
+    @_thermometer ctx, m
+    @_ticks ctx, m
+    @_letters ctx, m if m.letters?
 
-    #// degrees writings
-    #// degrees F
-    #// degrees of F outline Drawing
-    @oval context, 67, 6.5, 13, 13
-    context.fillStyle = @_degreesSymbolFillStyle()
-    context.fill()
-    #// F letter outline Drawing
-    context.beginPath()
-    context.moveTo 82, 16
-    context.lineTo 82, 37
-    context.moveTo 82, 16
-    context.lineTo 93.5, 16
-    context.moveTo 82, 26
-    context.lineTo 87, 26
-    context.strokeStyle = outlineColorString
-    context.lineWidth = 7
-    context.lineCap = 'round'
-    context.stroke()
-    #// degrees of F Drawing
-    @oval context, 70, 9.5, 7, 7
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2.5
-    context.stroke()
-    #// F letter Drawing
-    context.beginPath()
-    context.moveTo 95, 16.49
-    context.bezierCurveTo 95, 17.35, 94.26, 18.06, 93.36, 18.06
-    context.lineTo 83.53, 18.06
-    context.bezierCurveTo 83.53, 18.06, 83.53, 20.47, 83.53, 23.56
-    context.bezierCurveTo 83.68, 23.52, 83.84, 23.5, 84, 23.5
-    context.lineTo 86, 23.5
-    context.bezierCurveTo 87.1, 23.5, 88, 24.4, 88, 25.5
-    context.bezierCurveTo 88, 26.6, 87.1, 27.5, 86, 27.5
-    context.lineTo 84, 27.5
-    context.bezierCurveTo 83.84, 27.5, 83.68, 27.48, 83.53, 27.44
-    context.bezierCurveTo 83.53, 32.18, 83.53, 36.94, 83.53, 36.94
-    context.bezierCurveTo 83.53, 37.81, 82.79, 38.52, 81.89, 38.52
-    context.bezierCurveTo 80.99, 38.52, 80.25, 37.81, 80.25, 36.94
-    context.bezierCurveTo 80.25, 36.94, 80.25, 36.14, 80.25, 34.86
-    context.bezierCurveTo 80.25, 29.66, 80.25, 16.49, 80.25, 16.49
-    context.bezierCurveTo 80.25, 15.62, 80.99, 14.92, 81.89, 14.92
-    context.lineTo 93.36, 14.92
-    context.bezierCurveTo 94.26, 14.92, 95, 15.62, 95, 16.49
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// degrees C
-    #// degrees of C outline Drawing
-    @oval context, 2.5, 6.5, 13, 13
-    context.fillStyle = outlineColorString
-    context.fill()
-    #// C letter outline Drawing
-    context.beginPath()
-    context.moveTo 23.94, 40.02
-    context.bezierCurveTo 16.42, 40.02, 10.28, 33.76, 10.28, 26.07
-    context.bezierCurveTo 10.28, 18.39, 16.42, 12.13, 23.94, 12.13
-    context.bezierCurveTo 27.56, 12.13, 32.1, 14.34, 33.55, 16.17
-    context.bezierCurveTo 35, 18, 34.15, 19.76, 33.56, 20.36
-    context.bezierCurveTo 32.99, 20.97, 31.82, 21.91, 29.42, 21.37
-    context.bezierCurveTo 27.01, 20.84, 28.89, 18.46, 23.94, 18.23
-    context.bezierCurveTo 19, 18, 16, 23, 16.32, 26.07
-    context.bezierCurveTo 16.64, 29.15, 18.09, 33.92, 23.94, 33.92
-    context.bezierCurveTo 26.76, 33.92, 27.01, 31.56, 29.42, 30.78
-    context.bezierCurveTo 31.82, 30, 32.99, 31.19, 33.56, 31.79
-    context.bezierCurveTo 34.15, 32.39, 34.14, 35.38, 33.55, 35.98
-    context.bezierCurveTo 30.97, 38.58, 27.56, 40.02, 23.94, 40.02
-    context.closePath()
-    context.fillStyle = outlineColorString
-    context.fill()
-    #// C letter Drawing
-    context.beginPath()
-    context.moveTo 23.64, 38.02
-    context.bezierCurveTo 17.38, 38.02, 12.28, 32.66, 12.28, 26.07
-    context.bezierCurveTo 12.28, 19.49, 17.38, 14.13, 23.64, 14.13
-    context.bezierCurveTo 26.65, 14.13, 29.48, 15.36, 31.63, 17.59
-    context.bezierCurveTo 32.12, 18.11, 32.13, 18.96, 31.64, 19.47
-    context.bezierCurveTo 31.16, 19.99, 30.35, 20, 29.85, 19.48
-    context.bezierCurveTo 28.19, 17.75, 25.99, 16.79, 23.64, 16.79
-    context.bezierCurveTo 18.77, 16.79, 14.81, 20.95, 14.81, 26.07
-    context.bezierCurveTo 14.81, 31.2, 18.77, 35.36, 23.64, 35.36
-    context.bezierCurveTo 25.98, 35.36, 28.19, 34.41, 29.85, 32.67
-    context.bezierCurveTo 30.35, 32.16, 31.16, 32.17, 31.64, 32.68
-    context.bezierCurveTo 32.13, 33.2, 32.12, 34.05, 31.63, 34.56
-    context.bezierCurveTo 29.48, 36.79, 26.65, 38.02, 23.64, 38.02
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// degrees of C Drawing
-    @oval context, 5.5, 9.5, 7, 7
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2.5
-    context.stroke()
-    #// thermometer with lines
-    #// thermometer outline Drawing
-    context.beginPath()
-    context.moveTo 51.3, 2
-    context.bezierCurveTo 44.58, 1.97, 38.95, 6.05, 38.92, 12.2
-    context.lineTo 38.92, 64.3
-    context.bezierCurveTo 34.19, 67.67, 32, 72.85, 32, 78.71
-    context.bezierCurveTo 32, 88.82, 40.17, 98, 51.34, 98
-    context.bezierCurveTo 62.5, 98, 70.67, 88.82, 70.67, 78.71
-    context.bezierCurveTo 70.67, 72.84, 68.47, 67.64, 63.72, 64.27
-    context.bezierCurveTo 63.52, 45.14, 64, 30.33, 63.69, 12.2
-    context.bezierCurveTo 63.72, 6.05, 58.09, 1.97, 51.3, 2
-    context.closePath()
-    context.fillStyle = outlineColorString
-    context.fill()
-    #// thermometer Drawing
-    context.beginPath()
-    context.moveTo 51.31, 4.82
-    context.bezierCurveTo 45.82, 4.79, 41.22, 8.56, 41.19, 14.24
-    context.lineTo 41.19, 64.94
-    context.bezierCurveTo 37.33, 68.05, 34.78, 72.83, 34.78, 78.24
-    context.bezierCurveTo 34.78, 87.57, 42.22, 95.18, 51.34, 95.18
-    context.bezierCurveTo 60.46, 95.18, 67.89, 87.57, 67.89, 78.24
-    context.bezierCurveTo 67.89, 72.82, 65.33, 68.02, 61.45, 64.91
-    context.bezierCurveTo 61.29, 47.26, 61.68, 30.98, 61.42, 14.24
-    context.bezierCurveTo 61.45, 8.56, 56.85, 4.79, 51.31, 4.82
-    context.closePath()
-    context.moveTo 51.28, 8.59
-    context.bezierCurveTo 54.1, 8.56, 57.77, 10.44, 57.74, 14.24
-    context.bezierCurveTo 57.8, 31.68, 57.77, 48.05, 57.77, 65.76
-    context.bezierCurveTo 57.77, 66.38, 58.08, 66.98, 58.58, 67.32
-    context.bezierCurveTo 61.98, 69.69, 64.21, 73.69, 64.21, 78.24
-    context.bezierCurveTo 64.21, 85.53, 58.47, 91.41, 51.34, 91.41
-    context.bezierCurveTo 44.2, 91.41, 38.46, 85.53, 38.46, 78.24
-    context.bezierCurveTo 38.46, 73.71, 40.68, 69.7, 44.07, 67.32
-    context.bezierCurveTo 44.55, 66.99, 44.86, 66.4, 44.87, 65.79
-    context.lineTo 44.87, 14.24
-    context.bezierCurveTo 44.9, 10.44, 47.66, 8.56, 51.28, 8.59
-    context.closePath()
-    context.moveTo 47.4, 49.18
-    context.bezierCurveTo 46.76, 49.82, 46.74, 50.5, 46.74, 50.97
-    context.lineTo 46.74, 70.18
-    context.bezierCurveTo 44.02, 71.81, 42.14, 74.76, 42.14, 78.21
-    context.bezierCurveTo 42.14, 83.38, 46.28, 87.62, 51.34, 87.62
-    context.bezierCurveTo 56.39, 87.62, 60.53, 83.38, 60.53, 78.21
-    context.bezierCurveTo 60.53, 74.77, 58.65, 71.84, 55.93, 70.21
-    context.lineTo 55.93, 50.97
-    context.bezierCurveTo 55.94, 50.29, 55.55, 49.61, 54.96, 49.29
-    context.bezierCurveTo 54.37, 48.98, 53.61, 49.03, 53.06, 49.41
-    context.bezierCurveTo 51.61, 49.96, 50.53, 48.82, 49.38, 48.59
-    context.bezierCurveTo 48.61, 48.43, 47.98, 48.79, 47.4, 49.18
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// thermometer lines
-    #// thermometer line 9 Drawing
-    context.beginPath()
-    context.moveTo 47, 16
-    context.lineTo 56, 16
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
-    #// thermometer line 7 Drawing
-    context.beginPath()
-    context.moveTo 47, 23.5
-    context.lineTo 56, 23.5
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
-    #// thermometer line 5 Drawing
-    context.beginPath()
-    context.moveTo 47, 31
-    context.lineTo 56, 31
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
-    #// thermometer line 3 Drawing
-    context.beginPath()
-    context.moveTo 47, 38.5
-    context.lineTo 56, 38.5
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
-    #// thermometer line 1 Drawing
-    context.beginPath()
-    context.moveTo 47, 46
-    context.lineTo 56, 46
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
-    #// thermometer line 8 Drawing
-    context.beginPath()
-    context.moveTo 51.5, 19.75
-    context.lineTo 56, 19.75
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
-    #// thermometer line 6 Drawing
-    context.beginPath()
-    context.moveTo 51.5, 27.25
-    context.lineTo 56, 27.25
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
-    #// thermometer line 4 Drawing
-    context.beginPath()
-    context.moveTo 51.5, 34.75
-    context.lineTo 56, 34.75
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
-    #// thermometer line 2 Drawing
-    context.beginPath()
-    context.moveTo 51.5, 42.25
-    context.lineTo 56, 42.25
-    context.strokeStyle = iconColorString
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.stroke()
+  # every measurement the icon is built from, in device px: the tube and the
+  # bulb (on the square's middle column), the mercury, the letters' box
+  # (undefined where they drop) and the ticks' tops
+  _thermoMetrics: (x0, y0, wDev, hDev) ->
+    S = Math.min wDev, hDev
+    t = @_glyphLineUnit S
+    x = x0 + Math.floor((wDev - S) / 2)
+    y = y0 + Math.floor((hDev - S) / 2)
+    px = (units) => Math.round S * units / @GLYPH_GRID
+    # widths of S's parity, so the tube and the bulb share the square's exact middle column
+    ofS = (units, least) ->
+      n = Math.max least, px(units)
+      n++ if (S - n) % 2 isnt 0
+      n
+    tw = ofS @TUBE_WIDTH, 2 * t + 1
+    bd = Math.max tw + 2, ofS(@BULB_SIZE, 2 * t + 3)
+    axis = x + S / 2
+    bulbBottom = y + px(@BULB_BOTTOM)
+    bulbTop = bulbBottom - bd
+    tubeTop = y + px(@TUBE_TOP)
+    g = Math.max 1, px(@MERCURY_GAP)
+    m =
+      t: t
+      tw: tw
+      bd: bd
+      tubeLeft: axis - tw / 2
+      tubeTop: tubeTop
+      bulbCx: axis
+      bulbCy: bulbTop + bd / 2
+      g: g
+    # the mercury: a disc of the bulb's paper less the gap, a column of the tube's paper less it.
+    # The disc keeps g px of paper from the ring across, and (a quantised circle's shoulder being
+    # nearer) a px DIAGONALLY too: an odd bulb's disc is two px smaller again
+    m.mercuryD = bd - 2 * t - 2 * g - (if bd % 2 isnt 0 then 2 else 0)
+    # a mercury disc under MIN_MERCURY px reads as a speck: the bulb is then solid ink. Gated on
+    # the EXACT size (the drawn bulb alternates a px with S's parity, and the gate must not), half
+    # a px up so the drawn disc is never under MIN_MERCURY where the gate lets it be hollow
+    exactD = S * @BULB_SIZE / @GLYPH_GRID - 2 * t - 2 * g - 2
+    m.solidBulb = exactD < @MIN_MERCURY + 0.5 or m.mercuryD < @MIN_MERCURY
+    m.columnW = tw - 2 * t - 2 * g
+    # gated on the smaller of the drawn and the exact tube (the drawn one alternates a px with S's
+    # parity): the column never comes and goes as S grows
+    m.hasColumn = Math.min(tw, S * @TUBE_WIDTH / @GLYPH_GRID) - 2 * t >= @MIN_COLUMN_ROOM and m.columnW >= 1
+    m.columnTop = Math.min y + px(@MERCURY_TOP), bulbTop
+    # ---- the letters
+    lh = px @LETTER_HEIGHT
+    lt = y + px(@LETTER_TOP)
+    toTube = Math.max 1, px(@LETTER_TO_TUBE)
+    lgap = Math.max 1, px(@LETTER_GAP)
+    dk = Math.max 1, px(@DEGREE_SIZE)
+    cw = Math.max 2 * t + 2, px(@C_WIDTH)
+    fw = Math.max t + 2, px(@F_WIDTH)
+    exactDeg = S * @DEGREE_SIZE / @GLYPH_GRID
+    # the C sits right of its degree sign, ending toTube left of the tube; mirror for the F
+    cRight = m.tubeLeft - toTube
+    cLeft = cRight - cw
+    dcLeft = cLeft - lgap - dk
+    fLeft = m.tubeLeft + tw + toTube + dk + lgap
+    dfLeft = fLeft - lgap - dk
+    if lh >= @MIN_LETTER and dcLeft >= x and fLeft + fw <= x + S
+      cr = Math.min px(@C_CORNER), Math.floor(cw / 2)
+      cr = 0 if cr < 2
+      degreeSize = Math.min dk, exactDeg
+      degreeTier = 'none'
+      degreeTier = 'dot' if degreeSize >= @MIN_DOT
+      degreeTier = 'ring' if degreeSize >= @MIN_RING and dk - 2 * t >= @MIN_RING_HOLE
+      # the opening has the letter's height parity, so it sits on the C's middle, and stays on
+      # the right wall's straight (clear of the corner arcs)
+      opening = Math.max 1, Math.round(lh * @C_OPENING)
+      opening++ if (lh - opening) % 2 isnt 0
+      opening -= 2 while opening > Math.max(1, lh - 2 * cr) and opening > 2
+      m.letters =
+        top: lt
+        h: lh
+        cLeft: cLeft
+        cw: cw
+        cr: cr
+        fLeft: fLeft
+        fw: fw
+        dk: dk
+        dcLeft: dcLeft
+        dfLeft: dfLeft
+        degreeTier: degreeTier
+        opening: opening
+    # ---- the ticks, right of the tube. The scale starts under the letters' band, whether or not
+    # the letters are drawn, so the ticks do not jump when they arrive. HOW MANY is read on the
+    # exact geometry (monotonic in S); WHERE on the rounded one, the pitch closing up a px where
+    # the rounded room is short, a tick dropping only where even the least pitch (t + 1) cannot
+    # hold them
+    tl = px @TICK_LENGTH
+    tg = Math.max 1, px(@TICK_GAP)
+    # in GLYPH_GRID units, unrounded (a tick and its gaps one unit each): the same count at every
+    # S, so the scale never loses a tick as the icon grows
+    firstUnits = Math.max @TICK_TOP, @LETTER_TOP + @LETTER_HEIGHT + @TICK_GAP + 1
+    lastUnits = @BULB_BOTTOM - @BULB_SIZE - @TICK_GAP - 1
+    n = Math.max 0, Math.min(@TICKS, Math.floor((lastUnits - firstUnits) / @TICK_PITCH) + 1)
+    firstTick = y + Math.max(px(@TICK_TOP), px(@LETTER_TOP) + px(@LETTER_HEIGHT) + tg + t)
+    # the gap under the letters' band is SOFT: it closes to a px (the hard clearance) before a
+    # tick drops; the pitch closes to t + 1 first
+    firstLeast = y + px(@LETTER_TOP) + px(@LETTER_HEIGHT) + 1
+    pitch = Math.max t + 1, px(@TICK_PITCH)
+    m.ticks = []
+    if tl >= @MIN_TICK
+      last = -> firstTick + (n - 1) * pitch + t
+      while n > 1 and last() > bulbTop - tg
+        pitch = Math.max t + 1, Math.min(pitch, Math.floor((bulbTop - tg - t - firstTick) / (n - 1)))
+        break if last() <= bulbTop - tg
+        if firstTick > firstLeast
+          firstTick--
+          pitch = Math.max t + 1, px(@TICK_PITCH)
+          continue
+        n--
+        pitch = Math.max t + 1, px(@TICK_PITCH)
+      n = 0 if n is 1 and firstTick + t > bulbTop - tg
+      for i in [0...n]
+        m.ticks.push firstTick + i * pitch
+    m.tickLength = tl
+    m.tickGap = tg
+    m
+
+  _thermometer: (ctx, m) ->
+    {t, tubeLeft, tubeTop, tw, bd, bulbCx, bulbCy, g} = m
+    tubeH = bulbCy - tubeTop
+    @_useInk ctx
+    ctx.fillStadium tubeLeft, tubeTop, tw, tubeH
+    @_usePaper ctx
+    ctx.fillCircle bulbCx, bulbCy, bd / 2
+    @_useInk ctx
+    ctx.lineWidth = t
+    ctx.strokeCircle bulbCx, bulbCy, (bd - t) / 2
+    @_usePaper ctx
+    ctx.fillStadium tubeLeft + t, tubeTop + t, tw - 2 * t, tubeH
+    # the mercury
+    @_useInk ctx
+    # the solid tier: the WHOLE bulb in ink (an inner disc meeting the ring's inner edge would tie
+    # on the shared radius and leave paper specks)
+    if m.solidBulb
+      ctx.fillCircle bulbCx, bulbCy, bd / 2
+    else
+      ctx.fillCircle bulbCx, bulbCy, m.mercuryD / 2
+    ctx.fillRect tubeLeft + t + g, m.columnTop, m.columnW, bulbCy - m.columnTop if m.hasColumn
+
+  _ticks: (ctx, m) ->
+    @_useInk ctx
+    left = m.tubeLeft + m.tw + m.tickGap
+    for top in m.ticks
+      ctx.fillRect left, top, m.tickLength, m.t
+
+  # a degree sign in the k x k box at (left, top): a ring, a dot, or nothing,
+  # by its tier
+  _degree: (ctx, m, left, top, k, tier) ->
+    t = m.t
+    if tier is 'ring'
+      ctx.lineWidth = t
+      ctx.strokeCircle left + k / 2, top + k / 2, (k - t) / 2
+    else if tier is 'dot'
+      ctx.fillCircle left + k / 2, top + k / 2, k / 2
+
+  # the C: ONE filled band, a round-rect outline opened on its right across
+  # its middle -- the outer boundary, then the inner one traced back (corners
+  # about one centre each, the inner radius t less)
+  _cBand: (ctx, l, tp, r, b, cr, t, opening) ->
+    ri = Math.max 0, cr - t
+    yo1 = tp + (b - tp - opening) / 2
+    yo2 = yo1 + opening
+    ctx.beginPath()
+    ctx.moveTo r, yo1
+    ctx.arcTo r, tp, l, tp, cr
+    ctx.arcTo l, tp, l, b, cr
+    ctx.arcTo l, b, r, b, cr
+    ctx.arcTo r, b, r, yo2, cr
+    ctx.lineTo r, yo2
+    ctx.lineTo r - t, yo2
+    ctx.arcTo r - t, b - t, l + t, b - t, ri
+    ctx.arcTo l + t, b - t, l + t, tp + t, ri
+    ctx.arcTo l + t, tp + t, r - t, tp + t, ri
+    ctx.arcTo r - t, tp + t, r - t, yo1, ri
+    ctx.lineTo r - t, yo1
+    ctx.closePath()
+    ctx.fill()
+
+  # the letters, ink only: no paper inside a glyph to leak out of its opening
+  # onto a hovered or pressed tile. The C, the F (stem, top bar, middle bar),
+  # then the degree signs, their tops on the letters' top
+  _letters: (ctx, m) ->
+    letters = m.letters
+    t = m.t
+    @_useInk ctx
+    @_cBand ctx, letters.cLeft, letters.top, letters.cLeft + letters.cw, letters.top + letters.h, letters.cr, t, letters.opening
+    ctx.fillRect letters.fLeft, letters.top, t, letters.h
+    ctx.fillRect letters.fLeft, letters.top, letters.fw, t
+    ctx.fillRect letters.fLeft, letters.top + Math.round(letters.h * @F_BAR) - t, Math.max(t + 1, Math.round(letters.fw * @F_MID_SHARE)), t
+    @_degree ctx, m, letters.dcLeft, letters.top, letters.dk, letters.degreeTier
+    @_degree ctx, m, letters.dfLeft, letters.top, letters.dk, letters.degreeTier

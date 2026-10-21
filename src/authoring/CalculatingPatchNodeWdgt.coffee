@@ -54,24 +54,26 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    # my formula and output boxes are mono text panels: each born in the code role's font
-    # (fonts.code), at my own padding and ink
-    @tempPromptEntryField = new TextAreaWdgt @defaultFormulaBoxContents, false, 5, fontRole: WorldWdgt.theme.fonts.code
-    @tempPromptEntryField.configureAsMonoTextPanel true
+    theme = WorldWdgt.theme
+
+    # my formula and output boxes are two of my text boxes (PatchNodeWdgt._newTextBox); the output one
+    # is read-only
+    @tempPromptEntryField = @_newTextBox @defaultFormulaBoxContents, true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField
 
-    @outputTextArea = new TextAreaWdgt "", false, 5, fontRole: WorldWdgt.theme.fonts.code
-    @outputTextArea.configureAsMonoTextPanel false
+    @outputTextArea = @_newTextBox "", false
     @outputTextAreaText = @outputTextArea.textWdgt
     @_addNoSettle @outputTextArea
 
 
-    @formulaTextBoxLabel = new StringWdgt "Formula", fontRole: WorldWdgt.theme.fonts.buttonLabel
+    # my field labels, each over its header line: the small chrome labels' font, in the ink of a
+    # patch node's field labels
+    @formulaTextBoxLabel = new StringWdgt "Formula", fontRole: theme.fonts.buttonLabel, color: theme.patchNodeFieldLabelText
     @formulaTextBoxLabel.toggleHeaderLine()
     @_addNoSettle @formulaTextBoxLabel
 
-    @outputTextBoxLabel = new StringWdgt "Output", fontRole: WorldWdgt.theme.fonts.buttonLabel
+    @outputTextBoxLabel = new StringWdgt "Output", fontRole: theme.fonts.buttonLabel, color: theme.patchNodeFieldLabelText
     @outputTextBoxLabel.toggleHeaderLine()
     @_addNoSettle @outputTextBoxLabel
 

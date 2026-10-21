@@ -472,8 +472,8 @@ launcher registration. Decisions/deviations recorded per rules 7/8:
 - **Text = 12px Arial**, left-aligned (SWCanvas ships Arial/Times/Courier atlases only —
   `SWCanvasElement-extensions.coffee`; 12px Arial is the deterministic band). Centering needs
   `measureText` — a later polish.
-- **Placeholder icon** (`GenericShortcutIconWdgt`+`TypewriterIconWdgt`); custom `SpreadsheetIconWdgt`
-  deferred. **Launcher in the examples folder** (not the desktop) so it doesn't shift the
+- **Placeholder icon** (`GenericShortcutIconWdgt`+`TypewriterIconWdgt`); the dedicated `SpreadsheetIconWdgt`
+  came with the visual redesign's phase G. **Launcher in the examples folder** (not the desktop) so it doesn't shift the
   desktop icon grid (mass recapture); tests open via `launch()`. Menu entry (now a `DemoMenus`
   one) deferred.
 - **Keyboard focus-on-click**: `mouseClickLeft` reads `world.hand.position()` for cell

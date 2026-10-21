@@ -112,12 +112,6 @@ class Theme
     # ... and the ink of its kind tag ("fn", "var"), at rest and while the row is selected.
     @memberRowTagText = @muted2
     @memberRowSelectedTagText = @accent
-    # a LabelButtonWdgt built with no look of its own (a fizzytiles magnet): its fill at rest,
-    # hovered and pressed, each over its whole box, and the ink of its label.
-    @labelButtonFill = Color.create 250, 250, 250
-    @labelButtonHighlightFill = Color.SILVER
-    @labelButtonPressFill = Color.GRAY
-    @labelButtonText = Color.create 50, 50, 50
 
     # a tooltip's PLATE: its fill (a plate carries no border, so it has no stroke) and the ink of
     # its text.
@@ -167,8 +161,9 @@ class Theme
     @textAreaFill = Color.create 255, 255, 255
     # the editable code pane: a script's or a code prompt's editor body.
     @codePaneFill = Color.create 255, 255, 255
-    # the ink of SOURCE CODE in a code pane -- the Object Inspector's, a script's, a code prompt's, a
-    # console's and an error log's -- which also takes fonts.code and codePanePadding.
+    # the ink of SOURCE CODE: in a code pane -- the Object Inspector's, a script's, a code prompt's, a
+    # console's and an error log's -- which also takes fonts.code and codePanePadding, and in a patch
+    # node's text boxes, which take fonts.code at their own padding.
     @codeText = @code
     # the background of a one-line text-entry field (StringFieldWdgt).
     @textFieldFill = Color.create 255, 255, 255
@@ -356,6 +351,35 @@ class Theme
     @clockSecondHand = @accent
     @clockCentreDot = @accent
 
+    # the SPREADSHEET's grid (SimpleSpreadsheetWdgt; its header cells and data cells paint it): a
+    # HEADER cell's fill -- the column letters across the top, the row numbers down the left and the
+    # corner between them -- and the ink of its letter or number ...
+    @spreadsheetHeaderFill = @desk
+    @spreadsheetHeaderText = @muted2
+    # ... the RULE under the letter row and right of the number column, and the GRIDLINE between any
+    # other two cells: 1 px edges, each stroked by the cell or header along its own top or left
+    # (SimpleSpreadsheetWdgt.paintGridEdges). The sheet's outer top and left boundary carries no
+    # edge: the window's strip rule and frame border are the lines there ...
+    @spreadsheetHeaderRule = @line
+    @spreadsheetGridline = @chrome
+    # ... the 2 px ring the SELECTED cell draws inside its own edges ...
+    @spreadsheetSelectionRing = @accent
+    # ... and the ink of a cell's text: a value's -- at rest, and typed into the cell's editor --
+    # and an error value's ("#SYNTAX", "#ERR", "#LOOP").
+    @spreadsheetValueText = @ink
+    @spreadsheetErrorText = @danger
+
+    # a PATCH NODE (CalculatingPatchNodeWdgt, and the experimental DiffingPatchNodeWdgt and
+    # RegexSubstitutionPatchNodeWdgt): the ink of its FIELD LABELS (a calculating node's "Formula"
+    # and "Output", in fonts.buttonLabel over their header line), the draft's secondary labels ...
+    @patchNodeFieldLabelText = @muted2
+    # ... and the 1 px border of its TEXT BOXES (PatchNodeWdgt._newTextBox: the mono text panels its
+    # formula, regex, substitution and output stand in, their text in fonts.code and codeText).
+    @patchNodeTextBoxStroke = @line
+    # the PINOUT overlay's labels (PinoutsOverlay, a dev affordance: each names the widget it points
+    # at): their ink. Not the accent: a pinout marks no state.
+    @pinoutLabelText = @ink
+
     # the background of an editable text item: a document's title and paragraphs, the stack and
     # document samples, the templates, the welcome and how-to-save texts, and the placeholder an
     # empty window shows. In view mode a document's item melts into its page instead
@@ -370,10 +394,64 @@ class Theme
     # the stack sample's page (a bare VerticalStackViewportWdgt): its fill. Its border is every
     # viewport's, panelStroke.
     @stackViewportFill = Color.create 249, 249, 249
-    # the background the example plots clear their canvas to.
-    @plotBackgroundFill = Color.create 240, 240, 240
+    # the PAGE of the Slides Maker, the Dashboards Maker, the Generic panel and Patch programming
+    # (StretchablePanelWdgt, both read as it paints): its fill, and the 1 px EDGE it draws along a
+    # side where its container letterboxes it (StretchablePanelAppearance) -- its own boundary against
+    # the window body around it. A side flush with its container draws none: there the window's
+    # frame, its strip's rule or a docked band is the line.
+    @stretchablePageFill = @paper
+    @stretchablePageEdge = @line
+    # a FOLDER WINDOW's panel (FolderPanelWdgt, read as it paints): its fill. It has no border, and
+    # neither has the viewport it scrolls in (FolderWindowWdgt): the window's frame and its strip's
+    # rule are its lines.
+    @folderPanelFill = @paper
 
-    # the colour an IconWdgt built without one takes (a toolbar's glyphs take toolbarGlyph instead).
+    # a PLOT (the example plots, GraphsPlotsChartsWdgt's family and Example3DPlotWdgt): its AREA, the
+    # box each drawPlot clears before drawing its content ...
+    @plotBackgroundFill = @paper
+    # ... the 1 px BOX it draws round that area (GraphsPlotsChartsWdgt.drawBoundingBox): along its
+    # top and its right inside a plot with axes, whose axes stand along the other two, all round
+    # otherwise ...
+    @plotFrameStroke = @line
+    # ... the SURROUND a plot with axes stands its plot and its axes on (PlotWithAxesWdgt, read as it
+    # paints) ...
+    @plotSurroundFill = @paper
+    # ... and the AXES (AxisWdgt, applied at every arrange of the axis): the ink of an axis's line and
+    # ticks, and of its tick labels. A plot's series, marks and meshes keep their own colours: they
+    # are its content.
+    @plotAxisInk = @muted2
+    @plotAxisLabelText = @muted2
+
+    # FIZZYTILES (FridgeMagnetsWdgt), each surface read as it is painted. Its PANES, four bordered
+    # boxes 5 px apart, each its own surface: the fridge -- "Drag tiles here", where the program is
+    # laid out (FridgeWdgt) -- and the tiles bin the magnets are taken from (MagnetsBoxWdgt), each a
+    # fill and a 1 px border; the 3D output pane's border (FridgeMagnets3DCanvasWdgt: its raster is
+    # content); and the code pane's background and 1 px border (FizzytilesCodeWdgt: its text is in
+    # the code role, fonts.code and codeText, codePanePadding in from its edges) ...
+    @fizzytilesFridgeFill = @paper
+    @fizzytilesFridgeStroke = @line
+    @fizzytilesTilesBinFill = @paper
+    @fizzytilesTilesBinStroke = @line
+    @fizzytiles3DPaneStroke = @line
+    @fizzytilesCodePaneFill = @paper
+    @fizzytilesCodePaneStroke = @line
+    # ... the ink of the CAPTION over each pane, in fonts.fizzytilesCaption between its header-line
+    # rules ...
+    @fizzytilesCaptionText = @muted2
+    # ... and a MAGNET (MagnetWdgt, painted by MagnetAppearance), a tile in the button's look
+    # (visual-design-system §4.3) over its whole box, rounded at magnetCornerRadius: its fill and
+    # 1 px border at rest, its fill hovered (its border stays magnetStroke), its fill and darker
+    # border pressed, and the ink of its label, a code token in fonts.code.
+    @magnetFill = @paper
+    @magnetStroke = @line
+    @magnetHoverFill = @desk
+    @magnetPressFill = @chrome
+    @magnetPressStroke = @frame
+    @magnetText = @ink
+
+    # the colour an IconWdgt built without one takes (a toolbar's glyphs take toolbarGlyph instead),
+    # and the ink a fanout and its pins paint their art in while no colour is set on them, read as
+    # they paint (FanoutAppearance, FanoutPinAppearance).
     @iconInk = Color.create 37, 37, 37
     # the outline colour icon paint code strokes and fills with (IconAppearance._outlineColorString).
     # Readers take its string through Color.toString, which computes it once per Color and keeps it.
@@ -403,15 +481,13 @@ class Theme
       memberName: {family: StringWdgt::monoFontStack, size: 13, bold: false}
       # ... and its kind tag ("fn", "var"), the draft's weight 600
       memberKindTag: {family: "Arial, sans-serif", size: 10, bold: true}
-      # the label of a LabelButtonWdgt built without a role (a fizzytiles magnet)
-      labelButton: {family: "sans-serif", size: 17, bold: false}
       # a pop-up's header title
       menuHeader: {family: "Arial, sans-serif", size: 11, bold: false}
       # a window's title, in its strip
       windowTitle: {family: "Arial, sans-serif", size: 13, bold: false}
       # the small chrome labels: a text button's face (a toggle's and a chip's included), the save /
       # save + close labels, the Object Inspector's breadcrumb caption and mixin-donor label, a patch
-      # node's field labels, the video time labels
+      # node's field labels, the video time labels, a spreadsheet header's letter or number
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
       # every StringWdgt / TextWdgt built without a role
       defaultText: {family: "Arial, sans-serif", size: 13, bold: false}
@@ -435,6 +511,13 @@ class Theme
       # in the documentText ink. A title or heading set at its own size keeps this line height
       # scaled with its em box (22 px text stands on 33 px lines).
       document: {family: "Arial, sans-serif", size: 15, bold: false, lineHeight: 22}
+      # a spreadsheet cell's text (CellWdgt): its value at rest and the text typed into its editor,
+      # one role so the two align
+      spreadsheetCell: {family: "Arial, sans-serif", size: 12, bold: false}
+      # the CAPTION over each Fizzytiles pane ("Drag tiles here", "Tiles bin", ...), in the 15 px band
+      # FridgeMagnetsWdgt lays it in: its em box, ceil(1.2 x size), must fit that band, or the
+      # caption crops to nothing -- 12 px is the largest size that does
+      fizzytilesCaption: {family: "Arial, sans-serif", size: 12, bold: false}
       # the TYPED FACES of the text tools (TypedFaceIconAppearance): the bold tool's "B", the italic
       # tool's "I" and the format-as-code tool's "</>", each at its size in a tool cell
       # (toolThumbnailSize); a face in any other box scales with the box. Each family names the
@@ -460,9 +543,9 @@ class Theme
     # indicator's fat and thin widths and the thin one's edge inset, a toolbar grid's cell
     # side / inter-cell gap / outer margin / row count, a tool cell's rounding and the overflow
     # chevron's glyph square, a button's height, paddings and rounding,
-    # a toggle's height, padding and rounding, a chip's height, padding and rounding,
-    # the least side of a chrome target, a footer band's height, rule, inset, button gap and
-    # grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
+    # a toggle's height, padding and rounding, a chip's height, padding and rounding, a Fizzytiles
+    # magnet's rounding, the least side of a chrome target, a footer band's height, rule, inset,
+    # button gap and grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
     # and separator square, its toggles band's height, inset and gap, its list column's width and
     # its seams' width, a code pane's padding, the text caret's width and the gap it stands after
     # its slot, a document's item spacing and its text items' rounding and padding, and a desktop
@@ -674,6 +757,9 @@ class Theme
     @chipHeight = 32
     @chipPaddingX = 10
     @chipCornerRadius = 16
+    # a Fizzytiles MAGNET (MagnetAppearance): the rounding of its box, the draft's control radius.
+    # Its box is content's size, not a chrome target's (a word tile, Widget's default 50 x 40).
+    @magnetCornerRadius = 6
     # the least side of a chrome TARGET (the 44 rule, visual-design-system §4.2): a button, a toggle
     # or a chip is never narrower than this, and a row holding smaller controls is never shorter (a
     # prompt's row of buttons, PromptButtonsRowWdgt).
@@ -724,10 +810,11 @@ class Theme
     @inspectorListColumnWidth = 238
 
     # a CODE PANE (a TextAreaWdgt in the code role, with fonts.code and codeText: the Object
-    # Inspector's, a script's, a code prompt's, a console's, an error log's): how far in from the
-    # pane's edges its text stands, on every side -- so the inspector's code starts this far right of
-    # its list | code seam and this far below its body's top. A patch node's text boxes keep their
-    # own.
+    # Inspector's, a script's, a code prompt's, a console's, an error log's; and Fizzytiles' code
+    # pane, a bordered text): how far in from the pane's edges its text stands, on every side -- so
+    # the inspector's code starts this far right of its list | code seam and this far below its
+    # body's top, and Fizzytiles' stands this far in from its outer edge, clear of its 1 px border. A
+    # patch node's text boxes keep their own.
     @codePanePadding = 12
 
     # the text CARET (CaretWdgt), one look for every caret: its width -- the draft's 2 px cursor,

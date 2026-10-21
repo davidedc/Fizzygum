@@ -46,10 +46,8 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    # my text box is a mono text panel: born in the code role's font (fonts.code), at my own padding
-    # and ink
-    @tempPromptEntryField = new TextAreaWdgt @defaultContents, false, 5, fontRole: WorldWdgt.theme.fonts.code
-    @tempPromptEntryField.configureAsMonoTextPanel true
+    # my one text box (PatchNodeWdgt._newTextBox)
+    @tempPromptEntryField = @_newTextBox @defaultContents, true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField
 

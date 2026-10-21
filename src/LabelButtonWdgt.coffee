@@ -1,13 +1,14 @@
 # A flat, label-bearing button: a box in its rest fill with a single text label drawn on top,
 # which shows its STATE -- hovered, pressed -- in a state fill of its own: over the whole box,
 # square, or, when it carries a plateRadius, as a rounded PLATE on its rest fill
-# (LabelButtonAppearance). Every one of those is its builder's to give; a builder that gives none
-# gets the plain labelButton roles (a fizzytiles magnet), MenuItemWdgt gives the menu-row or the
-# list-row look its context asks for, and MemberRowWdgt its own. It extends the modern button
-# family (ButtonWdgt), inheriting the target/action/trigger machinery and the HighlightableMixin
-# state constants, but
-# supplies its OWN flat paint -- the button family draws no flat fill (ButtonWdgt is transparent,
-# SimpleButtonWdgt is a rounded box).
+# (LabelButtonAppearance). Every one of those is its builder's to give: MenuItemWdgt gives the
+# menu-row or the list-row look its context asks for, and MemberRowWdgt its own. A label button
+# whose look is its own instead gives none, and answers its appearance (createAppearance) and its
+# label's font and ink (_labelTextOptions) itself: MagnetWdgt, a Fizzytiles word tile in the
+# button's look. It extends the modern button family (ButtonWdgt), inheriting the
+# target/action/trigger machinery and the HighlightableMixin state constants, but supplies its OWN
+# flat paint -- the button family draws no flat fill (ButtonWdgt is transparent, SimpleButtonWdgt
+# is a rounded box).
 #
 # This is the shared base of MenuItemWdgt (menu and list rows) and MagnetWdgt
 # (fizzytiles word tiles).
@@ -48,48 +49,49 @@ class LabelButtonWdgt extends ButtonWdgt
   # A second alias for it is exactly what an options vocabulary cannot afford (R4), because a
   # forwarded bag would then carry a key the receiver never reads.
   #
-  # My label's font is a ROLE, as StringWdgt's is: `fontRole` (fonts.labelButton when absent)
-  # gives its family, size and weight, and an explicit fontStyle / fontSize / bold overrides that
-  # member. The role is resolved into my three label fields here and not kept.
+  # My label's font is a ROLE, as StringWdgt's is: `fontRole` gives its family, size and weight,
+  # and an explicit fontStyle / fontSize / bold overrides that member. The role is resolved into my
+  # three label fields here and not kept.
   #   My LOOK rides the same opts: `color` is my label's ink, `fill` my rest fill, `highlightFill`
   # and `pressFill` my two state fills, `plateRadius` the rounding of the plate they are painted as
   # (absent: they cover my whole box, square) and `plateHeight` how tall that plate is from my top
-  # (absent: my whole height). Each absent one is the plain labelButton role's.
-  # Every value lands in a field of mine, so I keep the look I was built with wherever I go.
+  # (absent: my whole height).
+  # Every value given lands in a field of mine, so I keep the look I was built with wherever I go.
+  # One not given stays unset, so I hold no colour or font of my own for it: a label button whose
+  # look is its own reads it from the theme as it paints and as it builds its label (MagnetWdgt),
+  # and a bare one has no fill and its label the default text role (StringWdgt's).
   constructor: (target, action, opts = {}) ->
     super target, action, opts
 
-    theme = WorldWdgt.theme
     @labelString = opts.labelString
-    fontRole = opts.fontRole ? theme.fonts.labelButton
-    @fontSize = opts.fontSize ? fontRole.size
-    @fontStyle = opts.fontStyle ? fontRole.family
+    fontRole = opts.fontRole
+    @fontSize = opts.fontSize ? fontRole?.size
+    @fontStyle = opts.fontStyle ? fontRole?.family
     @centered = opts.centered ? false
-    @labelColor = opts.color ? theme.labelButtonText
-    @labelBold = opts.bold ? fontRole.bold
+    @labelColor = opts.color
+    @labelBold = opts.bold ? fontRole?.bold
     @labelItalic = opts.italic ? false
 
-    # the flat rest fill (ButtonWdgt defaults to white) and the state fills
-    @color = opts.fill ? theme.labelButtonFill
-    @highlightColor = opts.highlightFill ? theme.labelButtonHighlightFill
-    @pressColor = opts.pressFill ? theme.labelButtonPressFill
+    # the flat rest fill (in place of ButtonWdgt's white) and the state fills
+    @color = opts.fill
+    @highlightColor = opts.highlightFill
+    @pressColor = opts.pressFill
     @plateRadius = opts.plateRadius if opts.plateRadius?
     @plateHeight = opts.plateHeight if opts.plateHeight?
-    @appearance = new LabelButtonAppearance @
+    @appearance = @createAppearance()
 
     if @labelString?
       @_reLayoutSelf()
+
+  # a method, not a class field, so the dependency finder sees the `new` edge; a label button with
+  # a look of its own paints through its own (MagnetWdgt)
+  createAppearance: -> new LabelButtonAppearance @
 
   # the default label: a self-sized single-line StringWdgt that does NOT resize
   # the button's box. Subclasses that need the box to hug the label (e.g.
   # MenuItemWdgt) override this.
   _createLabel: ->
-    @label = new StringWdgt (@labelString or ""),
-      fontSize: @fontSize
-      fontName: @fontStyle
-      bold: @labelBold
-      italic: @labelItalic
-      color: @labelColor
+    @label = new StringWdgt (@labelString or ""), @_labelTextOptions()
     # _addNoSettle (NOT add): _createLabel is driven by _reLayoutSelf (a layout pass), so a
     # self-settle here would re-enter the flush guard and throw.
     @_addNoSettle @label
@@ -97,6 +99,16 @@ class LabelButtonWdgt extends ButtonWdgt
     # _reLayoutSelf's centring math (which reads @label.extent()) works. _createLabel is driven by
     # _reLayoutSelf (a layout pass), so use the NoSettle core -- the wrapper would throw mid-pass.
     @label._sizeToTextAndDisableFittingNoSettle()
+
+  # The StringWdgt options my default label is built with: my font and my ink, as my fields hold
+  # them. A label button whose look is its own answers its own, read from the theme each time its
+  # label is built (MagnetWdgt).
+  _labelTextOptions: ->
+    fontSize: @fontSize
+    fontName: @fontStyle
+    bold: @labelBold
+    italic: @labelItalic
+    color: @labelColor
 
   _reLayoutSelf: ->
     if not @label?

@@ -24,8 +24,8 @@ class SpreadsheetApp extends WindowedApp
 
   slot:  undefined   # multiple sheets — a fresh window every launch (no world slot)
 
-  # v1 placeholder icon (an existing shortcut glyph); a dedicated SpreadsheetIconWdgt is
-  # deferred (recorded in the implementation plan's Phase-2a notes).
+  # My launcher wears the spreadsheet's own icon, SpreadsheetIconWdgt (core art, named by
+  # AppCatalog's entry; the sheet's representativeIcon answers the same one).
   #   THE OPENING SIZE is the SHEET's, never the window's: a fresh sheet opens at its opening grid,
   # 446×280 -- six whole columns and a 4 px sliver of a seventh, by thirteen whole rows (a 7×13
   # viewport: 91 cells under 21 headers). The window is sized AROUND that extent by the frame's own

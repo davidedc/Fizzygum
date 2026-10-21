@@ -93,3 +93,12 @@ SystemTest_macroFontsMenuFollowsAnApiChange
 SystemTest_macroScrollPanelMergesChildMenu
 SystemTest_macroMenuPinnedInScrollPanel
 SystemTest_macroMixinFieldEditDonorAndOverride
+# G-A: the spreadsheet with values, an error and a selection; the Fizzytiles window (magnets, panes, captions, the code
+# pane); a sample slide's page; the stretchable page flush and letterboxed under rotation; plots on the sample dashboard
+# (already listed); the folder window (DesktopShortcutIcons, listed); the error log's Pause toggle (listed)
+SystemTest_macroSpreadsheetSelection
+SystemTest_macroSpreadsheetErrorPropagation
+SystemTest_macroFizzytilesBoxTileRendersStaticCube
+SystemTest_macroPlotUncollapseKeepsRendering
+SystemTest_macroStretchPanelChildrenReflowOnResize
+SystemTest_macroDropIntoRotatedStretchablePanelStretchesOnResize

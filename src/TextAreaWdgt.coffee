@@ -58,8 +58,9 @@ class TextAreaWdgt extends ViewportWdgt
   # mono. The Console / errors-log family reaches this through CodeAreaWdgt's shared
   # _buildMonoCodeAreaNoSettle (whose code area is built in the code role -- fonts.code, the codeText
   # ink, codePanePadding); the patch nodes (CalculatingPatchNodeWdgt, RegexSubstitutionPatchNodeWdgt,
-  # DiffingPatchNodeWdgt) still hand-copy the ~identical setup, each constructing its own panel in
-  # fonts.code at its own padding and ink, and keeping its own textWdgt-derived field.
+  # DiffingPatchNodeWdgt) build theirs through PatchNodeWdgt._newTextBox -- fonts.code and the codeText
+  # ink at the node's own padding, inside the node's own border -- each node keeping its own
+  # textWdgt-derived field.
   # The drops/colour lines re-assert the constructor's defaults verbatim — kept so
   # this is pure code-motion (the exact op sequence the call sites ran), not an idempotency argument.
   configureAsMonoTextPanel: (isEditable) ->

@@ -6,9 +6,9 @@
 #
 # MY STATE IS MY HOST'S. My isOn is what my host last told me to show (setOn); a click never flips
 # it. The host's action decides the new state, keeps it where the truth lives (the Object
-# Inspector: its showing* fields) and shows it on me through setOn, so the two cannot disagree
-# however the click is reached. A copy or a restored world carries my isOn as an own field beside
-# the host's, both copied from the one consistent state.
+# Inspector: its showing* fields; the error log: its paused field) and shows it on me through
+# setOn, so the two cannot disagree however the click is reached. A copy or a restored world
+# carries my isOn as an own field beside the host's, both copied from the one consistent state.
 #
 # MY LOOK is a pure function of three things, every value a Theme role or metric: my isOn, my
 # HighlightableMixin state (at rest, hovered, pressed) and my enabled flag. It is re-derived at every

@@ -26,7 +26,6 @@ class Example3DPlotWdgt extends Widget
     @fps = 0
     world.steppingWdgts.add @
 
-    @setColor Color.create 255, 125, 125
     @_applyExtent new Point 200, 200
 
 
@@ -190,7 +189,7 @@ class Example3DPlotWdgt extends Widget
 
   # the drawing tail: the PUBLIC per-plot body Example3DPlotAppearance dispatches to
   # (the drawLayoutChrome / drawPlot family precedent)
-  drawPlot: (context, color, appliedShadow) ->
+  drawPlot: (context, appliedShadow) ->
 
     height = @height()
     width = @width()
