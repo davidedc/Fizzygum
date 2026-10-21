@@ -45,15 +45,29 @@ class SizeAwareIconAppearance extends IconAppearance
       @_paintDamagedAreaAsBlackSilhouette aContext, al, at, w, h, appliedShadow, (sctx) =>
         @_paintingSilhouette = true
         try
-          @_paintColoredIcon sctx, al, at, w, h
+          @_paintColoredIcon sctx, al, at, w, h, @widget.glyphSize
         finally
           @_paintingSilhouette = false
       return
 
-    @_paintColoredIcon aContext, al, at, w, h
+    @_paintColoredIcon aContext, al, at, w, h, @widget.glyphSize
     return undefined
 
-  _paintColoredIcon: (aContext, al, at, w, h) ->
+  # MY ART AS THE MARK ON ANOTHER APPEARANCE'S LOOK: an appearance that paints a look of its own
+  # under a glyph (HandleAppearance's plate) wears me for the glyph instead of letting me be its
+  # widget's appearance, and names the side my glyph square takes in my widget's box -- the square
+  # a glyphSize of `side` names (_paintBoxInDevicePx), centred, my art clipped to it. The normal
+  # pass only: the wearer casts the silhouette it wants (a plate's, under the whole glyph).
+  paintAsMarkInSquare: (aContext, clippingRectangle, side) ->
+    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
+    return undefined unless keyValues?
+    [damageBox,sl,st,al,at,w,h] = keyValues
+    @_paintColoredIcon aContext, al, at, w, h, side
+    return undefined
+
+  # glyphSide: the side of the glyph square my art takes in my widget's box, or undefined for the
+  # whole box (_paintBoxInDevicePx)
+  _paintColoredIcon: (aContext, al, at, w, h, glyphSide) ->
     aContext.save()
 
     # clip out the damage rectangle as we are
@@ -62,13 +76,13 @@ class SizeAwareIconAppearance extends IconAppearance
 
     aContext.globalAlpha = @widget.alpha
 
-    [x0, y0, wDev, hDev] = @_paintBoxInDevicePx()
+    [x0, y0, wDev, hDev] = @_paintBoxInDevicePx glyphSide
 
     # a glyph square is a clip too: inside it the art must be pixel for pixel
     # this icon at size g, which is what a g x g widget box paints -- clipped by
     # its own bounds. (Unclipped, the bin at g = 20 overhangs its square by a
     # halo row.)
-    aContext.clipToRectangle x0, y0, wDev, hDev if @widget.glyphSize?
+    aContext.clipToRectangle x0, y0, wDev, hDev if glyphSide?
 
     # deliberately NO useLogicalPixelsUntilRestore(): subclasses draw in
     # integer DEVICE pixels, anchored to the paint box's origin — never to the
@@ -80,12 +94,14 @@ class SizeAwareIconAppearance extends IconAppearance
   # THE BOX my art is painted into, as integer DEVICE px [x0, y0, wDev, hDev].
   # _paintColoredIcon is its one reader, and both the normal pass and the
   # shadow-pass silhouette run that, so a glyph's shadow is cast by exactly the
-  # art it shadows.
-  #   No glyphSize (a desktop icon's glyph square, a toolbar thumbnail): my
+  # art it shadows. glyphSide is my widget's glyphSize when I am its
+  # appearance, and the wearer's side when I am the mark on its look
+  # (paintAsMarkInSquare).
+  #   No glyphSide (a desktop icon's glyph square, a toolbar thumbnail): my
   # widget's WHOLE box, and each subclass centres its own square in it with
   # Math.floor in device px -- which any box that is not square relies on.
-  #   A glyphSize (a chrome button sized to its whole slot, ruling G3 -- see
-  # IconButtonWdgt.glyphSize): the g x g square, g = min(glyphSize, width,
+  #   A glyphSide (a chrome button sized to its whole slot, ruling G3 -- see
+  # IconButtonWdgt.glyphSize): the g x g square, g = min(glyphSide, width,
   # height) logical px, centred in my box the way calculateRectangleOfIcon
   # centres a legacy glyph (Math.round of the logical offset). It is computed
   # here in integers rather than read from calculateRectangleOfIcon, which
@@ -94,13 +110,13 @@ class SizeAwareIconAppearance extends IconAppearance
   # pixel too wide (g = 14 in a 15 px box comes back 15 wide).
   #   The widget's bounds are integer logical px (integer-placement policy) and
   # g is rounded, so every product is an exact integer.
-  _paintBoxInDevicePx: ->
+  _paintBoxInDevicePx: (glyphSide) ->
     left = @widget.left()
     top = @widget.top()
     width = @widget.width()
     height = @widget.height()
-    if @widget.glyphSize?
-      side = Math.round Math.min @widget.glyphSize, width, height
+    if glyphSide?
+      side = Math.round Math.min glyphSide, width, height
       left = Math.round left + (width - side) / 2
       top = Math.round top + (height - side) / 2
       width = height = side
@@ -120,6 +136,38 @@ class SizeAwareIconAppearance extends IconAppearance
   GLYPH_GRID: 44
   _glyphLineUnit: (S) ->
     Math.max 1, Math.round S / @GLYPH_GRID
+
+  # ---- a CONTROL glyph drawn as fills --------------------------------------
+  # A control glyph that stands on a plate (a halo handle's four-way arrow,
+  # double arrows and curled-arrows square) is drawn as FILLS -- shafts and
+  # squares as rects, heads as polygons whose slanted edges run half a pixel
+  # off the pixel lattice, arcs as a ring clipped to a wedge -- on ONE line t:
+  # 2 logical px at the side the glyph is drawn at for real (2 px at dpr 1, 4
+  # at dpr 2), the weight of the bar's control glyphs. No round cap or join
+  # anywhere: with fills no pixel centre ties an edge, so a glyph mirrors
+  # exactly at every size, and SWCanvas's unpainted overlap of round-capped
+  # subpaths cannot reach it.
+  #   lineShare is t as a share of the side, 2 over the real side; t never
+  # turns back as S grows.
+  _controlGlyphLine: (S, lineShare) ->
+    Math.max 1, Math.round S * lineShare
+
+  # THE PARITY FIT: a line t thick sits exactly on the axis of a square whose
+  # side has t's parity, so a control glyph paints in the square of side
+  # S - ((S - t) % 2) at its square's top-left (one spare px right and below
+  # when S and t disagree), where it mirrors exactly about both axes.
+  _parityFitSide: (S, t) ->
+    S - ((S - t) % 2)
+
+  # a polygon's points, offset by (x, y), as one more subpath of the path
+  # being built: the caller closes it and fills the path
+  _addPolygonSubpath: (ctx, x, y, points) ->
+    for [px, py], i in points
+      if i is 0
+        ctx.moveTo x + px, y + py
+      else
+        ctx.lineTo x + px, y + py
+    return
 
   # ---- colour roles --------------------------------------------------------
   # Every painter picks its colour through these — the ONE choke point that

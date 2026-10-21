@@ -85,7 +85,7 @@ class Appearance
   # use it, because painting one colour over exactly the damaged part gives the same picture either
   # way. ART MAY NOT: geometry placed relative to it lands wherever the damage happened to start.
   # Take art geometry from the widget (`@widget.width()`/`height()`, origin 0,0) and let the clip
-  # bound it — SimpleDropletAppearance's plus-sign is the model, and a grip that ignored this came
+  # bound it — _paintPlate below is the model, and a grip that ignored this came
   # back three pixels short whenever a neighbouring row was removed.
   #   Device-space business (the damage clip here, back-buffer blits, the shadow-silhouette
   # fallback) stays OUT of bodies — a body never sees al/at.
@@ -162,6 +162,27 @@ class Appearance
       toBePainted = seam.intersect localDamageBox
       if toBePainted.isNotEmpty()
         @_fillLocalRectSnappedToDevicePixels ctx, toBePainted
+
+  # THE PLATE over my widget's whole box: `fill` rounded at `radius`, and, when a `stroke` is given,
+  # the 1 px border just inside it at the same radius, in the house crisp spelling (the button's look,
+  # visual-design-system §4.3: a bordered rounded rectangle means "press me"). A box narrower than
+  # twice the radius rounds at half its short side. Painted inside my _paintInLocalScope body
+  # (widget-local logical pixels), its geometry my widget's box, never the damage box: the scope has
+  # clipped to that. A handle's plate (HandleAppearance) and the layout chrome's
+  # (LayoutChromeAppearance) are painted with it; a plate with no stroke is a borderless well (an empty
+  # icon holder's drop placeholder, SimpleDropletAppearance), and a plate filled in shadowColor with
+  # no stroke is any of them as a shadow silhouette.
+  _paintPlate: (ctx, radius, fill, stroke) ->
+    w = @widget.width()
+    h = @widget.height()
+    r = Math.min radius, Math.floor(w / 2), Math.floor(h / 2)
+    ctx.fillStyle = fill.toString()
+    ctx.fillRoundRect 0, 0, w, h, r
+    return unless stroke?
+    ctx.lineWidth = 1
+    ctx.strokeStyle = stroke.toString()
+    ctx.strokeRoundRect 0.5, 0.5, w - 1, h - 1, r
+    return
 
 
   # Shadow-pass wrapper for appearances whose art sets its own colours internally (icons,

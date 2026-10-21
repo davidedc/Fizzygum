@@ -3220,6 +3220,52 @@ class Widget extends TreeNode
     @_paintChildrenOver aContext, rectangle, appliedShadow
     aContext.restore()
 
+  # ===== the corners a box laid over me follows =====
+  # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] a box `aBox` laid over me (in my
+  # plane, inside my bounds) takes to follow the rounded corners I SHOW: my own outline's (my
+  # appearance's outlineCornerRadii -- a window's, a card's, a menu's, a rounded box's) and those of
+  # each ancestor that cuts its children to a rounded outline (_roundedChildClipRadii -- a window's
+  # contents show the window's corners). A rounded corner of radius r reaches the box's matching
+  # corner when that corner lies dx, dy in from it with both under r, and the box's corner then takes
+  # the concentric radius r - max(dx, dy), the way a frame's strip rounds at the body radius less the
+  # border (visual-design-system §4.7); a corner nothing rounded reaches is square (0). An ancestor
+  # is read in my plane, carried across the scroll translations between us; the walk stops at my
+  # innermost non-identity island, past which a rounded corner is turned or scaled, so it is none
+  # of my box's. The drag's drop outline asks it (HighlighterWdgt.coverTarget, and the dock band
+  # of WorldWdgt.addDragAffordanceWidgets), so the outline follows the target's own corners.
+  cornerRadiiFollowingMyOutline: (aBox) ->
+    radii = [0, 0, 0, 0]
+    island = @_enclosingNonIdentityIsland()
+    # the offset that carries a point of the plane `shape`'s box lies in into my plane
+    shapePlaneToMine = Point.ZERO
+    previous = undefined
+    shape = @
+    while shape? and shape isnt island
+      if previous? and (translation = shape.scrollTranslationOfChild?(previous))?
+        shapePlaneToMine = shapePlaneToMine.subtract translation
+      shapeRadii = if shape is @ then @appearance?.outlineCornerRadii?() else shape._roundedChildClipRadii?()
+      if shapeRadii?
+        # the box in the shape's own frame (its origin at the shape's top-left), carried out of my
+        # plane into the shape's ...
+        boxInShape = aBox.translateBy shape.position().add(shapePlaneToMine).neg()
+        # ... where how far in from each of the shape's corners the box's matching corner lies,
+        # along x and y, reads straight off it
+        rightInset = shape.width() - boxInShape.right()
+        bottomInset = shape.height() - boxInShape.bottom()
+        insets = [
+          [boxInShape.left(), boxInShape.top()]
+          [rightInset, boxInShape.top()]
+          [rightInset, bottomInset]
+          [boxInShape.left(), bottomInset]
+        ]
+        for [dx, dy], corner in insets
+          inset = Math.max dx, dy
+          if Math.min(dx, dy) >= 0 and inset < shapeRadii[corner]
+            radii[corner] = Math.max radii[corner], shapeRadii[corner] - inset
+      previous = shape
+      shape = shape.parent
+    radii
+
   # ... when you want to hide something
   # but you don't want to generate any
   # damage rectangles
@@ -4513,7 +4559,7 @@ class Widget extends TreeNode
       # public method is callable without the menu-open teardown running in
       # between), and a repeat invocation must not stack a second identical
       # handle set on top of the first — the duplicates are invisible (same
-      # positions) but double-paint the hairline glyphs and their shadows
+      # positions) but double-paint the plates' shadows
       return if @children.some (c) -> world.temporaryHandlesAndLayoutAdjusters.has c
       @_addAndTrackHandle "resizeHorizontalHandle"
       @_addAndTrackHandle "resizeVerticalHandle"
@@ -4525,13 +4571,12 @@ class Widget extends TreeNode
       # correct once a rotation is in play.
       @_addAndTrackHandle "rotateHandle"
       # THE CORNER RESIZER GOES ON LAST, and the order is load-bearing: each handle
-      # _moveInFrontOfSiblings as it is added, so the last one added is the one a pointer reaches
-      # first. A halo smaller than twice the handle size has its five corners OVERLAPPING, and there
-      # z-order decides everything — so the handle that goes in front must be the one that takes the
-      # least from the others. That is this one: it alone reacts on a SHAPE that is a proper subset
-      # of its box (the striped triangle, HandleAppearance.shapeContainsPoint), while every other
-      # type claims its whole box. Last also means painted on top, so on such a halo the stripes you
-      # press are the stripes you see.
+      # _moveInFrontOfSiblings as it is added, so the last one added is painted on top and is the
+      # one a pointer reaches first. A halo smaller than twice the handle size has its five plates
+      # OVERLAPPING (every handle reacts on its whole box), and there z-order decides everything:
+      # the corner resizer is on top, whole, so on such a halo the plate you press is the plate you
+      # see (redesign plan §4 G, the halo: the overlap is accepted, its crowding the owner's G2
+      # feel-check).
       @_addAndTrackHandle "resizeBothDimensionsHandle"
     else
       stackSiblingBefore = @lastSiblingBeforeMeSuchThat (m) -> m.layoutSpec?.isDivisionElement?()

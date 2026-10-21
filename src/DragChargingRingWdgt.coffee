@@ -19,19 +19,17 @@ class DragChargingRingWdgt extends Widget
   _ephemeralOverlay: true          # reconciler-owned drag-affordance overlay (Phase-1 capability)
   ringSteps: 5
   chargeStep: 0                    # how many segments are filled (0..ringSteps) — read by the appearance
-  filledColor: undefined
-  emptyColor: undefined
   lingerOriginEventTime: undefined
   lingerOriginWallTime: undefined
   # last ring centre, kept to skip the move when the centre has not actually changed
   _lastRingCenter: undefined
 
+  # my look (the filled and the empty segments' colours) is the theme's, read by my appearance as it
+  # paints (DragChargingRingAppearance), so I hold none of it
   constructor: ->
     super()
     @appearance = new DragChargingRingAppearance @
     @ringSteps = WorldWdgt.preferencesAndSettings.dwellRingSteps
-    @filledColor = WorldWdgt.theme.dragArmRingFilled
-    @emptyColor  = WorldWdgt.theme.dragArmRingEmpty
 
   # Reposition at the cursor and recompute the fill from ELAPSED time. Called every cycle the ring is
   # declared. @_changed() only on a quantised step change (paint stays read-only); bounds re-applied

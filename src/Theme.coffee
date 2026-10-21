@@ -249,13 +249,17 @@ class Theme
     # base of the paint tools, which paint their own).
     @rectangularButtonStroke = Color.create 196, 195, 196
 
-    # a plain resize/move handle's art (a halo's handles, a naked inspector's resizer) at rest: its
-    # ink and the shadow drawn under it ...
-    @handleArtInk = Color.create 255, 255, 255
-    @handleArtShadow = Color.create 150, 150, 150
-    # ... and while the handle is highlighted.
-    @handleArtHighlightedInk = Color.create 255, 255, 255
-    @handleArtHighlightedShadow = Color.create 200, 200, 255
+    # a plain resize / move / rotate HANDLE (HandleWdgt, painted by HandleAppearance: a halo's handles,
+    # a naked inspector's resizer, a demo handle), the button's look (visual-design-system §4.3) over
+    # its whole box, rounded at handlePlateRadius: its PLATE's fill and 1 px border at rest, its fill
+    # hovered (its border stays handlePlateStroke), its fill and darker border pressed, and the ink of
+    # the glyph on it, the same in every state.
+    @handlePlateFill = @paper
+    @handlePlateStroke = @line
+    @handlePlateHoverFill = @desk
+    @handlePlatePressFill = @chrome
+    @handlePlatePressStroke = @frame
+    @handleGlyph = @ink
     # the ink of a frame's resize GRIP (FrameGripWdgt): its three strokes, at rest and under the
     # pointer alike -- the grip has no hover look.
     @frameGripInk = @grip
@@ -281,32 +285,44 @@ class Theme
     # ... and the ink of its caption, on the plate.
     @desktopCaptionText = @ink
 
-    # the dwell-to-arm charging ring: a filled segment (the yellow accent, as the drop
-    # candidate's outline) and an empty one.
-    @dragArmRingFilled = Color.create 248, 188, 58
-    @dragArmRingEmpty = Color.create 180, 180, 180, 0.55
-    # the outline around a receptive drop candidate (and a dock band) ...
-    @dropCandidateOutline = Color.create 248, 188, 58
+    # the dwell-to-arm charging ring: a filled segment, in the accent like the candidate's outline,
+    # over the empty segments' opaque track.
+    @dragArmRingFilled = @accent
+    @dragArmRingEmpty = @line
+    # the outline around a receptive drop candidate (and a dock band): the target the release
+    # reaches ...
+    @dropCandidateOutline = @accent
     # ... and around a view-mode target that declines the drop.
-    @dropReluctantOutline = Color.create 140, 140, 140
-    # the status label that follows the pointer through an armed drag, and the "view-only" badge.
-    @dragLabelText = Color.create 40, 40, 40
-    @dragBadgeText = Color.create 120, 120, 120
+    @dropReluctantOutline = @line
+    # the status label that follows the pointer through an armed drag, and the "view-only" badge (a
+    # secondary label).
+    @dragLabelText = @ink
+    @dragBadgeText = @muted2
     # the wash laid over a highlighted widget (a hierarchy menu row lights up its widget this way);
     # the caller gives its alpha.
     @hoverHighlightWash = Color.create 0, 0, 255
     # the outline drawn over the widget an editor is focused on.
     @selectionOverlayStroke = Color.create 38, 166, 154
 
-    # the layout-editing affordances (spacers, adders and droplets): their fill at rest and
-    # hovered ...
-    @layoutChromeFill = Color.create 0, 0, 0
-    @layoutChromeFillHover = Color.create 100, 100, 100
-    # ... the glyph they draw and the shadow under it ...
-    @layoutChromeGlyphInk = Color.create 255, 255, 255
-    @layoutChromeGlyphShadow = Color.create 200, 200, 255
-    # ... and the round hint of a stack's size adjuster.
-    @layoutAdjusterHint = Color.create 128, 128, 128
+    # the LAYOUT CHROME (LayoutChromeWdgt's family, painted by LayoutChromeAppearance: a division's
+    # adders and a content stack's drop slots, LayoutElementAdderOrDropletWdgt; a spacer,
+    # LayoutSpacerWdgt; a split adjuster, StackElementsSizeAdjustingWdgt) in the handles' look over
+    # its whole box, rounded at layoutChromePlateRadius: its PLATE's fill and 1 px border at rest,
+    # its fill hovered (its border stays layoutChromePlateStroke), its fill and darker border pressed
+    # (an adder under a press, an adjuster under a press or its drag; a spacer has no pressed look),
+    # and the ink of the mark on it -- an adder's plus, a spacer's double arrow, an adjuster's grab
+    # mark -- the same in every state.
+    @layoutChromePlateFill = @paper
+    @layoutChromePlateStroke = @line
+    @layoutChromePlateHoverFill = @desk
+    @layoutChromePlatePressFill = @chrome
+    @layoutChromePlatePressStroke = @frame
+    @layoutChromeGlyph = @ink
+    # an EMPTY ICON HOLDER's drop placeholder (SimpleDropletWdgt, painted by SimpleDropletAppearance):
+    # the fill of its borderless well and the ink of the plus on it, the same in every pointer state
+    # (a placeholder, not a button).
+    @dropletWellFill = @desk
+    @dropletGlyph = @muted3
 
     # a TOOL CELL (GlassBoxBottomWdgt: the 44 x 44 cell a toolbar's tool stands in, whose look is its
     # tool's state; a toolbar's overflow chevron, standing in no cell, wears the same look): its fill
@@ -529,8 +545,8 @@ class Theme
       codeToolFace: {family: '"Courier New", monospace', size: 15, bold: false}
 
     # ---- METRICS ---------------------------------------------------------------------------
-    # Chrome geometry (program ruling G2): a handle's side, a frame grip's side and inset, the bar
-    # button's hit box, a frame's border, its strip's
+    # Chrome geometry (program ruling G2): a handle's side, its plate's rounding and its glyph
+    # squares, a frame grip's side and inset, the bar button's hit box, a frame's border, its strip's
     # rule and its body margin, the glyphs inset within a bar button's box, a menu row's glyph
     # box, the minimum height a menu/list row takes, a menu row's and a list row's side inset and
     # icon gap, a menu row's plate rounding and its chevron's and tick's glyph squares and gaps, a
@@ -548,8 +564,8 @@ class Theme
     # button gap and grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
     # and separator square, its toggles band's height, inset and gap, its list column's width and
     # its seams' width, a code pane's padding, the text caret's width and the gap it stands after
-    # its slot, a document's item spacing and its text items' rounding and padding, and a desktop
-    # icon's tile, glyph, plate and cell (all
+    # its slot, the drop outline's width, a document's item spacing and its text items' rounding
+    # and padding, and a desktop icon's tile, glyph, plate and cell (all
     # from one knob, desktopIconTile), the icon grid's gaps and origin, the bin's corner insets, the
     # rows a folder window opens showing, and the desktop clock's side and corner insets. Each chrome
     # layout site reads the matching
@@ -566,13 +582,32 @@ class Theme
     @titleBarTextHeight = 16
 
     # the side of a plain HANDLE (HandleWdgt: a halo's resize / move / rotate handles, a naked
-    # inspector's resizer, a demo handle). A handle is a TARGET (G3), and ruling T3 gives its corner
-    # resizer the "glyph = box" shape: what you can hit is exactly the striped triangle it draws, so
-    # there is one dial and no invisible band. The same side is the side of a text's corner
-    # triangle badges and the pen demo's arrow unit. A frame's own resizer is its grip, sized by
-    # frameGripSize below, never by this; and a footer band keeps footerGripClearance free at its
+    # inspector's resizer, a demo handle). A handle is a TARGET (G3) drawn as big as it is: its plate
+    # covers its whole square, and its whole square is what a pointer hits, the corner resizer's
+    # included, so there is one dial and no invisible band. The same side is the side of a text's
+    # corner triangle badges and the pen demo's arrow unit. A frame's own resizer is its grip, sized
+    # by frameGripSize below, never by this; and a footer band keeps footerGripClearance free at its
     # right end, never this.
     @handleSize = 44
+    # ... the rounding of a handle's plate (HandleAppearance), and the side of the glyph square
+    # centred on it: the arrows' (the four-way arrow of the move handle, the double arrows of the
+    # horizontal and vertical resizers), the rotate handle's curled-arrows square, and the corner
+    # resizer's grip strokes.
+    @handlePlateRadius = 6
+    @handleArrowGlyphSize = 24
+    @handleRotateGlyphSize = 28
+    @handleCornerGlyphSize = 28
+    # the LAYOUT CHROME at the sizes its boxes keep (LayoutChromeAppearance): its plate's rounding (a
+    # box narrower than twice it rounds at half its short side, Appearance._paintPlate), the side of
+    # the glyph square centred on it -- an adder's plus in a division's strip and in a content
+    # stack's drop slot (PlusIconAppearance), a spacer's double arrow -- and an adjuster's grab mark,
+    # its length along the adjuster's long side and its width across it.
+    @layoutChromePlateRadius = 6
+    @layoutAdderGlyphSize = 9
+    @layoutDropSlotGlyphSize = 14
+    @layoutSpacerGlyphSize = 24
+    @layoutAdjusterGrabMarkLength = 12
+    @layoutAdjusterGrabMarkWidth = 2
     # a frame's resize GRIP (FrameGripWdgt, the draft's three-stroke grip): the side of its square,
     # which is also its whole hit area, and how far in from the corner of the frame's CONTENT area
     # (inside its border) the square sits. Inset plus side is how far into that corner the grip
@@ -825,6 +860,11 @@ class Theme
     @caretWidth = 2
     @caretGap = 1
 
+    # the DROP OUTLINE's width (HighlightOutlineAppearance): the ring a drag draws wholly inside the
+    # box of the target its release reaches (a dock band's included), and of a target declining the
+    # drop -- one width for both, so a target that changes state does not jump.
+    @dropOutlineWidth = 2
+
     # a DOCUMENT's items (its paragraphs and whatever is dropped in among them): how far in from
     # the page's edges they stand, and how far apart -- the padding of the document's stack, which
     # is both its inset and its gap (DocumentViewportWdgt, read at every arrange). The stack
@@ -889,6 +929,11 @@ class Theme
     oneLinePlateBottom = @desktopIconPadding + @desktopIconTile + @desktopIconTilePlateGap +
       captionLineHeight + 2 * @desktopIconPlateVerticalPadding
     @desktopBinBottomInset = @desktopBinPlateBottomInset - (@desktopIconHeight - oneLinePlateBottom)
+    # an EMPTY icon's drop WELL (SimpleDropletAppearance, the placeholder an icon holder with no glyph
+    # shows in its glyph square): its rounding, and the side of the plus centred on it, half that
+    # glyph square (20 at the knob's 64).
+    @dropletWellRadius = 6
+    @dropletGlyphSize = Math.round @desktopIconGlyphSize / 2
 
     # the desktop's CLOCK (an AnalogClockWdgt, built by WorldWdgt.createDesktop) at the draft's spot:
     # the side of its square, and its corner knob's insets (AnalogClockWdgt.cornerSpec) -- its right

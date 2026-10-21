@@ -1,6 +1,8 @@
 # Paints the drag-embed CHARGING RING (docs/specs/drag-embed-interaction-spec.md §6/§11): a small
 # cursor-anchored ring of dwellRingSteps arc segments. The first @widget.chargeStep segments are drawn
-# in the accent (filled) colour, the rest faint — a radial progress readout of the dwell-to-arm charge.
+# in dragArmRingFilled (the accent), the rest in dragArmRingEmpty (the opaque track) — a radial
+# progress readout of the dwell-to-arm charge. Both colours are opaque and read from the theme here,
+# as the ring paints, so nothing under the ring mixes into it.
 # PRESENTATION ONLY: the arm DECISION is the hand's event-time elapsed check; this never feeds it.
 # The fill amount is STATE computed in DragChargingRingWdgt.updateChargeDeclaration (paint stays read-only).
 
@@ -12,6 +14,7 @@ class DragChargingRingAppearance extends Appearance
 
     # (the scope's default alpha reduces to plain @widget.alpha here — no shadow pass reaches this)
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
+      theme = WorldWdgt.theme
       cx = @widget.width() / 2
       cy = @widget.height() / 2
       radius = Math.min(cx, cy) - 2
@@ -27,6 +30,6 @@ class DragChargingRingAppearance extends Appearance
         endAngle   = -Math.PI / 2 + (i + 1) * seg - gap / 2
         ctx.beginPath()
         ctx.arc cx, cy, radius, startAngle, endAngle
-        ctx.strokeStyle = (if i < filled then @widget.filledColor else @widget.emptyColor).toString()
+        ctx.strokeStyle = (if i < filled then theme.dragArmRingFilled else theme.dragArmRingEmpty).toString()
         ctx.stroke()
       return

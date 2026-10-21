@@ -42,8 +42,8 @@ and fills only that.
 happened to start, so the same widget draws differently depending on what else moved. Take art
 geometry from the widget — origin `(0,0)`, extent `@widget.width()`/`@widget.height()` — and paint
 the whole of it; the scope has already clipped to the damage box, so the partial case costs
-nothing and needs no arithmetic. `SimpleDropletAppearance.drawAdditionalPartsOnBaseShape` is the
-model: its plus-sign is sized from `@widget`, and it touches the damage box only to clip.
+nothing and needs no arithmetic. `Appearance._paintPlate` is the model: the plate is sized from
+`@widget` alone (its whole box, its radius clamped to the box), and never reads the damage box.
 
 ⚠ **A screenshot test cannot see this class of bug** — it settles the world before capturing, and a
 full repaint hides it. The instrument is the **paint-truthfulness gate** (`fg presuite` /
@@ -72,8 +72,7 @@ is also where the `_paintInLocalScope` call lives, so the field cannot reach a s
 the declaration was not already deciding. Check that before adding a third knob.
 
 `@clipsToDamageBox: false` skips the scope's damage clip — for a body whose every draw provably
-bounds itself to damage∩tight (`RectangularAppearance`: its fills and stroke are exact rects,
-and its droplet hook self-clips). This is not an optimization but a PIXEL contract: in an
+bounds itself to damage∩tight (`RectangularAppearance`: its fills and stroke are exact rects). This is not an optimization but a PIXEL contract: in an
 island buffer the ambient translate can be FRACTIONAL (a rotated-container payload's figure
 has a fractional slot origin), where an added rect-clip's boundary quantization differs from
 the fills' and cuts an edge column — the legacy device paint never clipped, so neither may

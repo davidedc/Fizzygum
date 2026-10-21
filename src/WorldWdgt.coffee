@@ -1561,7 +1561,7 @@ class WorldWdgt extends IconGridPanelWdgt
           # (paint-time-scroll-translation plan Phase 2c) — else it re-adds every cycle.
           desiredParent = target._enclosingMappedPlaneRoot() ? @
           desiredParent.add eachHighlightingWidget  if eachHighlightingWidget.parent != desiredParent
-          eachHighlightingWidget._applyBounds target.clippedThroughBounds()
+          eachHighlightingWidget.coverTarget target
       else
         @currentHighlightingWidgets.delete eachHighlightingWidget
         @widgetsBeingHighlighted.delete target
@@ -1577,7 +1577,7 @@ class WorldWdgt extends IconGridPanelWdgt
         # ⇒ byte-identical to the prior @add hM).
         (eachWidgetNeedingHighlight._enclosingMappedPlaneRoot() ? @).add hM
         hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
-        hM._applyBounds eachWidgetNeedingHighlight.clippedThroughBounds()
+        hM.coverTarget eachWidgetNeedingHighlight
         hM.applyHighlightStyle styleDescriptor
         @currentHighlightingWidgets.add hM
         @widgetsBeingHighlighted.add eachWidgetNeedingHighlight
@@ -1640,9 +1640,14 @@ class WorldWdgt extends IconGridPanelWdgt
         @dragEmbedDockBandWdgt.applyHighlightStyle HighlighterWdgt.candidateOutlineStyle()
       # the overlay is a world child, so anchor it to the band's SCREEN footprint — the host can
       # sit inside a rotated/scaled island, where its own plane-local box is the wrong plane
-      # (off any island mapRectToScreen returns the box unchanged)
+      # (off any island mapRectToScreen returns the box unchanged). The band's corners follow the
+      # host's where they meet them (the host's rounded corners at the body's far edge), read in the
+      # host's plane; a host inside such an island is outlined square, its band on the screen being
+      # the bounding box of a turned rectangle, with no corner of the host's to follow.
       bandHost = @dragEmbedDockBandDeclared.host
-      @dragEmbedDockBandWdgt._applyBounds bandHost.mapRectToScreen @dragEmbedDockBandDeclared.box
+      bandBox = @dragEmbedDockBandDeclared.box
+      bandRadii = if bandHost._isInsideNonIdentityIsland() then undefined else bandHost.cornerRadiiFollowingMyOutline bandBox
+      @dragEmbedDockBandWdgt.coverBox (bandHost.mapRectToScreen bandBox), bandRadii
     else if @dragEmbedDockBandWdgt?
       @dragEmbedDockBandWdgt.fullDestroy()
       @dragEmbedDockBandWdgt = undefined

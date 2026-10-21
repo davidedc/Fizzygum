@@ -1,14 +1,10 @@
-# looks like a plus sign and it replaces itself with whatever you
-# drop on it. It can also assign the dropped widget to a parent field
-# of choice.
+# An empty icon holder's DROP PLACEHOLDER (the glyph a WidgetHolderWithCaptionWdgt, or a composite
+# icon, shows while it holds none): it replaces itself with whatever you drop on it, and can also
+# assign the dropped widget to a parent field of choice. A placeholder, not a button: my look
+# (SimpleDropletAppearance, a borderless well with a plus) is the same in every pointer state and
+# is read from the theme as I am painted, never from a colour of mine.
 
 class SimpleDropletWdgt extends Widget
-
-  @augmentWith HighlightableMixin, @name
-
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.BLACK
 
   _acceptsDrops: true
   parentFieldToAttachingTheWidgetToAsString: undefined
@@ -16,7 +12,6 @@ class SimpleDropletWdgt extends Widget
   constructor: (@parentFieldToAttachingTheWidgetToAsString) ->
     super()
     @appearance = new SimpleDropletAppearance @
-    @setColor Color.BLACK
 
   _reactToChildDropped: (widgetBeingDropped) ->
     @parent?[@parentFieldToAttachingTheWidgetToAsString] = widgetBeingDropped

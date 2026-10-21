@@ -1,140 +1,69 @@
-# Paints the resize / move / rotate HandleWdgt: the striped-triangle resizer, the
-# horizontal/vertical/move arrows or the rotate knob ring, drawn twice translated in a
-# darker colour for a shadow so the handle reads on light backgrounds too, with the
-# widget's hover state picking the highlighted colour pair.
+# The look of a resize / move / rotate HandleWdgt (a halo's five handles, a naked inspector's resizer,
+# a demo handle): the design's button over my widget's WHOLE box (visual-design-system §4.3, "a
+# bordered rounded rectangle means press me"), with the handle's glyph on it --
+#   the PLATE  handlePlateFill inside a 1 px handlePlateStroke border at rest, handlePlateHoverFill
+#              hovered, handlePlatePressFill inside handlePlatePressStroke pressed (HandleWdgt's
+#              _plateFillForMyState / _plateStrokeForMyState), rounded at handlePlateRadius, painted
+#              by the shared Appearance._paintPlate (the fill, then the 1 px outline inset half a px)
+#   the GLYPH  by my widget's type, in handleGlyph, the same in every state, in its glyph square
+#              centred on the plate (_glyphForMyType): the four-way arrow on the move handle and the
+#              double arrows on the horizontal and vertical resizers at handleArrowGlyphSize, the
+#              curled-arrows square on the rotate handle at handleRotateGlyphSize, and the frame
+#              grip's strokes on the corner resizer at handleCornerGlyphSize
+# Every value is my widget's state, its box or a Theme role or metric, read as I paint: I hold
+# nothing of my own, and the glyph's appearance is built for the paint that wears it (it would be
+# saved and copied with me, its ink with it, if I held one), so a saved or copied handle wears the
+# look of the world it is shown in.
+#
+# My SHAPE is my widget's whole box, for every type (the base answer, Appearance.shapeContainsPoint):
+# a handle is a target drawn as big as it is, so the plate's rounded corners are the handle's too.
+# My SILHOUETTE is the plate: on my widget's OWN shadow pass I fill the rounded box in shadowColor and
+# nothing else, so a handle casts its plate's shape (the shadow is its own, HandleWdgt._castMyShadow).
+# An ancestor casting its subtree's shadow does not cast me: a handle is chrome over its target, not
+# part of the target's shape, and it already casts its own -- under a target with see-through parts (a
+# text) its plate would otherwise be shadowed twice.
 
 class HandleAppearance extends Appearance
 
-  # WHERE THE HANDLE REACTS, stated in the shape rather than on the widget (the
-  # UpperRightTriangleAppearance idiom): the corner resizer (a halo's, a naked inspector's; a
-  # frame's grip wears its own glyph appearance and reacts on its whole square) reacts on the
-  # striped triangle it draws and nothing else -- at a 44 px box (ruling T3) the square grab
-  # area reaches over whatever sits beside the corner (a strip's last cell, a small frame's
-  # bar), and "what you can hit is what you see" is the single-geometry rule. Every other
-  # handle type draws its arrows / knob ring ACROSS its whole box, so there the box IS the shape.
-  #   TOTAL, like every shapeContainsPoint: false outside the bounds.
-  shapeContainsPoint: (aPoint) ->
-    return false unless @widget.boundsContainPoint aPoint
-    return true unless @widget.type is "resizeBothDimensionsHandle"
-    # drawHandle's stripe loop starts ON the bottom-left→top-right diagonal and sweeps down to
-    # the bottom-right corner, so the ink is the half-plane on the corner's side of it:
-    # x/w + y/h >= 1, cross-multiplied so a zero extent never reaches a divisor.
-    relative = aPoint.subtract @widget.position()
-    (relative.x * @widget.height()) + (relative.y * @widget.width()) >= @widget.width() * @widget.height()
-
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
+    # an ancestor's shadow pass hands down ITS shadow; my widget's own pass hands down my widget's
+    # (Widget.fullPaintIntoAreaOrBlitFromBackBuffer)
+    return undefined if appliedShadow? and appliedShadow isnt @widget.shadowInfo
+
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
-      # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): both
-      # art colours go BLACK under appliedShadow — the scope's alpha already carries the
-      # shadow's faintness.
+      theme = WorldWdgt.theme
+      # the plate (Appearance._paintPlate) takes its geometry from my widget, never from the scope's
+      # damage box (the law on Appearance._paintInLocalScope); the scope has clipped to the damage
+      radius = theme.handlePlateRadius
+
       if appliedShadow?
-        @handleWidgetRenderingHelper ctx, WorldWdgt.theme.shadowColor, WorldWdgt.theme.shadowColor
-      else if @widget.state == @widget.STATE_NORMAL
-        @handleWidgetRenderingHelper ctx, @widget.color, WorldWdgt.theme.handleArtShadow
-      else if @widget.state == @widget.STATE_HIGHLIGHTED
-        @handleWidgetRenderingHelper ctx, WorldWdgt.theme.handleArtHighlightedInk, WorldWdgt.theme.handleArtHighlightedShadow
+        @_paintPlate ctx, radius, theme.shadowColor
+        return
 
-  drawArrow: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
-    context.beginPath()
-    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y
-    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftDown.x, 0.5 + leftArrowPoint.y + arrowPieceLeftDown.y
+      @_paintPlate ctx, radius, @widget._plateFillForMyState(), @widget._plateStrokeForMyState()
 
-    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-    context.lineTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
+    # the glyph over the plate, on the normal pass only: the plate is the whole silhouette
+    return undefined if appliedShadow?
+    [glyph, side] = @_glyphForMyType()
+    glyph?.paintAsMarkInSquare aContext, clippingRectangle, side
+    return undefined
 
-    context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightUp.x, 0.5 + rightArrowPoint.y + arrowPieceRightUp.y
-    context.moveTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
-    context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightDown.x, 0.5 + rightArrowPoint.y + arrowPieceRightDown.y
-
-    context.closePath()
-    context.stroke()
-
-  # the per-type arrow art -- called once per paint state (three of them) by
-  # handleWidgetRenderingHelper, i.e. on every handle render
-  drawHandle: (context) ->
-
-    # horizontal arrow
-    if @widget.type is "resizeHorizontalHandle" or @widget.type is "moveHandle"
-      # mid-height on my left edge (widget-local)
-      leftEdgeMiddle = new Point 0, @widget.height() - Math.ceil(@widget.height()/2)
-
-      leftArrowPoint = leftEdgeMiddle.add new Point Math.ceil(@widget.width()/15), 0
-
-      rightArrowPoint = leftEdgeMiddle.add new Point @widget.width() - Math.ceil(@widget.width()/14), 0
-      arrowPieceLeftUp = new Point Math.ceil(@widget.width()/5),-Math.ceil(@widget.height()/5)
-      arrowPieceLeftDown = new Point Math.ceil(@widget.width()/5),Math.ceil(@widget.height()/5)
-      arrowPieceRightUp = new Point -Math.ceil(@widget.width()/5),-Math.ceil(@widget.height()/5)
-      arrowPieceRightDown = new Point -Math.ceil(@widget.width()/5),Math.ceil(@widget.height()/5)
-      @drawArrow context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown
-
-    # vertical arrow
-    if @widget.type is "resizeVerticalHandle" or @widget.type is "moveHandle"
-      bottomMiddle = @widget.bottomCenter().subtract @widget.position()
-
-      leftArrowPoint = bottomMiddle.add new Point 0, -Math.ceil(@widget.height()/14)
-
-      rightArrowPoint = bottomMiddle.add new Point 0, -@widget.height() + Math.ceil(@widget.height()/15)
-      arrowPieceLeftUp = new Point -Math.ceil(@widget.width()/5), -Math.ceil(@widget.height()/5)
-      arrowPieceLeftDown = new Point Math.ceil(@widget.width()/5), -Math.ceil(@widget.height()/5)
-      arrowPieceRightUp = new Point -Math.ceil(@widget.width()/5), Math.ceil(@widget.height()/5)
-      arrowPieceRightDown = new Point Math.ceil(@widget.width()/5), Math.ceil(@widget.height()/5)
-      @drawArrow context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown
-
-
-    # Affine transforms (§6 Phase 4B): the rotate handle draws a small "knob" ring — visually
-    # distinct from the resize arrows / striped triangle. The ring strokes at the hairline
-    # lineWidth 0.5 set by handleWidgetRenderingHelper: every SWCanvas direct stroke dispatcher
-    # renders a sub-1px width as 1px geometry at opacity proportional to the true DEVICE width
-    # (the generic pipeline's sub-pixel rule, restated at the dispatch layer), so this is a
-    # faint 1px Bresenham ring whose faintness scales with the island and whose closure holds
-    # at ANY uniform scale — the transform-robustness that qualifies a hairline for the direct
-    # path at all (case law: docs/archive/direct-shape-fastpaths-followups-plan.md). The ring
-    # involves no trig, so its cross-engine byte-identity (the suite asserts exact pixels under
-    # WebKit) is independent of the fdlibm shim. The native page rasterises strokeCircle through
-    # the arc polyfill on the platform canvas, and matches no reference. (The rotate glyph is
-    # due the four-swirlies redesign — BACKLOG — at which point this paint goes away wholesale.)
-    if @widget.type is "rotateHandle"
-      cx = @widget.width() / 2
-      cy = @widget.height() / 2
-      r  = Math.min(@widget.width(), @widget.height()) / 2 - 1
-      context.strokeCircle cx, cy, r
-
-    # draw the traditional "striped triangle" resizer
-    if @widget.type is "resizeBothDimensionsHandle"
-      bottomLeft = @widget.bottomLeft().subtract(@widget.position())
-      topRight = @widget.topRight().subtract(@widget.position())
-
-      # draw the lines sweeping from long lines
-      # down to the short ones at the corner: the start point
-      # sweeps right along the bottom edge, the end point
-      # sweeps down the right edge
-      for i in [0..@widget.height()] by 6
-        context.beginPath()
-        context.moveTo bottomLeft.x + i, bottomLeft.y
-        context.lineTo topRight.x, topRight.y + i
-        context.closePath()
-        context.stroke()
-
-
-  handleWidgetRenderingHelper: (context, color, shadowColor) ->
-    context.lineWidth = 0.5
-    context.lineCap = "round"
-
-    # give it a good shadow so that
-    # it's visible also when on light
-    # background. Do that by painting it
-    # twice, slightly translated, in
-    # darker color.
-    context.save()
-    context.strokeStyle = shadowColor.toString()
-    context.translate 1,1
-    @drawHandle context
-    context.translate 1,0
-    @drawHandle context
-    context.restore()
-
-    context.strokeStyle = color.toString()
-    @drawHandle context
+  # MY WIDGET'S GLYPH, by its type: [the size-aware icon appearance that draws it, in handleGlyph,
+  # and the side of its square], or [] for a type I draw no glyph for. Built for each paint.
+  _glyphForMyType: ->
+    theme = WorldWdgt.theme
+    ink = theme.handleGlyph
+    switch @widget.type
+      when "moveHandle"
+        [(new FourWayArrowIconAppearance @widget, ink), theme.handleArrowGlyphSize]
+      when "resizeHorizontalHandle"
+        [(new DoubleArrowIconAppearance @widget, ink), theme.handleArrowGlyphSize]
+      when "resizeVerticalHandle"
+        [(new VerticalDoubleArrowIconAppearance @widget, ink), theme.handleArrowGlyphSize]
+      when "rotateHandle"
+        [(new CurledArrowsSquareIconAppearance @widget, ink), theme.handleRotateGlyphSize]
+      when "resizeBothDimensionsHandle"
+        [(new GripIconAppearance @widget, ink), theme.handleCornerGlyphSize]
+      else
+        []

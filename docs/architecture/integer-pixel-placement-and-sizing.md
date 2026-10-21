@@ -210,8 +210,7 @@ may be hand-placed as fillRect runs. The doctrine lives in
 `docs/plans/pixel-icons-plan.md` §5b.
 
 **Hairline (sub-1-device-px) strokes — one rule, both pipelines.** Stroke at the
-TRUE sub-pixel width (e.g. the rotate-handle knob ring's `lineWidth 0.5` in
-`HandleAppearance`); never pre-compensate. SWCanvas renders any such stroke as
+TRUE sub-pixel width (e.g. a hairline in a tilted island); never pre-compensate. SWCanvas renders any such stroke as
 **1px geometry at opacity proportional to the width** — the generic pipeline
 applies the rule to the logical width, and every direct stroke dispatcher applies
 it to the DEVICE width (`scaledLineWidth`), so on the direct paths the faintness

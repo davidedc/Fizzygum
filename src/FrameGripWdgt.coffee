@@ -1,17 +1,20 @@
 # A FRAME's resize GRIP: the corner resizer a window carries (FrameWdgt builds one; a frame whose
 # manifestation offers no resizer, a pop-up, carries none). It is a corner HandleWdgt in every
 # gesture -- it attaches, shows and hides, and resizes its frame exactly as the halo's corner resizer
-# resizes its widget -- and differs only in how it looks, how big it is, where it sits and where it
-# reacts:
+# resizes its widget -- and differs only in how it looks, how big it is, where it sits, where it
+# reacts and the shadow it casts:
 #   - it wears the draft's grip glyph (GripIconAppearance: three diagonal strokes) in its own ink
-#     role, frameGripInk, and has no hover look: the glyph ignores the highlight state HandleWdgt
-#     keeps;
+#     role, frameGripInk, and has no hover or press look: the glyph ignores the pointer state
+#     HandleWdgt keeps;
 #   - it is frameGripSize square, and sits frameGripInset in from the corner of its frame's CONTENT
 #     area, i.e. past the frame's border, whatever margin the frame's payload asks for;
 #   - a press anywhere in its square takes it, because the glyph appearance answers its whole box
 #     (Appearance.shapeContainsPoint). The grip is drawn large precisely because its hit area cannot
-#     reach past the frame's border, so the square it is drawn in is the target.
-# A halo's handles, a naked inspector's resizer and the demo handles stay plain HandleWdgts.
+#     reach past the frame's border, so the square it is drawn in is the target;
+#   - it casts no shadow of its own: its strokes stand on its frame's body, inside the frame's own
+#     shadow, so the add's shadow management (Widget._addNoSettle) is all it gets.
+# A halo's handles, a naked inspector's resizer and the demo handles stay plain HandleWdgts, on a plate
+# that casts the desktop shadow (HandleAppearance, HandleWdgt._castMyShadow).
 
 class FrameGripWdgt extends HandleWdgt
 
@@ -29,6 +32,9 @@ class FrameGripWdgt extends HandleWdgt
     @color = WorldWdgt.theme.frameGripInk
 
   createAppearance: -> new GripIconAppearance @
+
+  # no shadow of my own (see above): a plain handle's plate casts one, my strokes do not
+  _castMyShadow: ->
 
   _cornerSide: -> WorldWdgt.theme.frameGripSize
 

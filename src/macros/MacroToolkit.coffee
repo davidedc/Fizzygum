@@ -1364,18 +1364,14 @@ class MacroToolkit
   # WHERE A SYNTHESISED PRESS GRABS A HANDLE, and where its drag must then end. Answers the
   # [pressPoint, dropPoint] pair both handle-drag verbs push, in SCREEN coordinates.
   #
-  # A handle reacts on the shape its appearance paints (HandleAppearance.shapeContainsPoint). Every
-  # type but the corner resizer paints its whole box, so its centre is deep inside its shape and the
-  # centre IS the press point — including the rotate handle, whose gesture reads the RAW pointer's
+  # A handle reacts on the shape its appearance answers, and every handle answers its whole box (a
+  # halo's, a naked inspector's and a frame's grip alike), so the centre is deep inside the shape and
+  # the centre IS the press point — including the rotate handle, whose gesture reads the RAW pointer's
   # angle about the target's anchor, so moving its press point would move the angle it measures.
   #
-  # A plain corner resizer's shape (a halo's, a naked inspector's) is the striped triangle whose
-  # diagonal runs exactly through the box CENTRE — so there the centre is the shape's BOUNDARY, and a
-  # press a single pixel up or left of it falls through to the widget, which float-drags instead of
-  # resizing. An aim ON a boundary holds only while nothing between the aim and the press is off by a
-  # single pixel, so aim a quarter-box deeper into the corner: that clears the diagonal by a quarter
-  # of the handle's side on each axis. A frame's grip (FrameGripWdgt) is a corner resizer too and
-  # reacts on its whole square, which holds that same point well inside it, so one aim serves both.
+  # A corner resizer is pressed a quarter-box deeper into its corner than its centre: a point well
+  # inside a plain handle's box and a frame grip's square alike, so one aim serves both, and one the
+  # drag vector does not depend on (the destination shifts with it, below).
   #
   # Those are the PREFERRED points: the press goes where _handlePressPoint finds a press takes the
   # handle, which is the preferred point whenever a press there already meets it.
@@ -1403,8 +1399,8 @@ class MacroToolkit
   # _handlePressAndDropPoints) — is KEPT whenever a press there meets the handle, so no aim that
   # already works moves. Otherwise the handle's box is scanned from its ANCHORED corner (or edge
   # middle, HandleWdgt's cornerSpec) inward — an 8×8 grid, nearest first — for the first point a press
-  # meets: a handle's shape hugs the corner it is anchored to (the corner resizer's striped triangle),
-  # so its deepest pixels are there.
+  # meets: where a handle overlaps others (a halo on a widget too small for five plates) the part of
+  # it nothing covers lies toward the corner it is anchored to.
   #   A ROTATE handle's point is never moved: its gesture reads the raw pointer's angle about the
   # target's anchor (HandleWdgt._pointerAngleToTargetAnchorDegrees), so a different press point is a
   # different rotation. A rotate handle a press cannot meet where the verb aims is a fault to raise,

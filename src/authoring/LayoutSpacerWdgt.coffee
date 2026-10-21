@@ -2,7 +2,6 @@ class LayoutSpacerWdgt extends LayoutChromeWdgt
 
   constructor: (spacerWeight = 1) ->
     super()
-    @setColor WorldWdgt.theme.layoutChromeFill
     @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * DivisionStackLayoutSpec.SPREADABILITY_SPACERS
     @minimumExtent = new Point 0,0
 
@@ -18,71 +17,20 @@ class LayoutSpacerWdgt extends LayoutChromeWdgt
       @_changed()
     super
 
-  # paintIntoAreaOrBlitFromBackBuffer is inherited from LayoutChromeWdgt; this
-  # class supplies only its drawLayoutChrome tail (the base default, via
-  # spacerWidgetRenderingHelper below) and toggles thisSpacerIsTransparent in
-  # makeSpacersTransparent / makeSpacersOpaque above.
+  # MY GLYPH (LayoutChromeWdgt._glyphOnMyPlate): the double arrow along my division's axis -- across
+  # (DoubleArrowIconAppearance) in a row, down (VerticalDoubleArrowIconAppearance) in a column, and
+  # across on my own -- in layoutChromeGlyph at layoutSpacerGlyphSize, centred on my plate, which
+  # shows the room I take is spare space that stretches. My plate and its hover are my base's
+  # (LayoutChromeWdgt, LayoutChromeAppearance); a transparent spacer (makeSpacersTransparent above)
+  # paints neither.
+  _glyphOnMyPlate: ->
+    theme = WorldWdgt.theme
+    ink = theme.layoutChromeGlyph
+    glyph = if (@layoutSpec?.axis ? 'x') is 'y'
+      new VerticalDoubleArrowIconAppearance @, ink
+    else
+      new DoubleArrowIconAppearance @, ink
+    [glyph, theme.layoutSpacerGlyphSize]
 
-  doPath: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
-    context.beginPath()
-    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y
-    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftDown.x, 0.5 + leftArrowPoint.y + arrowPieceLeftDown.y
-
-    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y
-
-    spaceInBetweenArrowAndMiddle =  Math.abs @width()/2 - (0.5 + leftArrowPoint.x + arrowPieceLeftUp.x)
-
-    ## the squiggly part
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x + 1*spaceInBetweenArrowAndMiddle/3, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y/2
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x + 2*spaceInBetweenArrowAndMiddle/3, 0.5 + leftArrowPoint.y + arrowPieceLeftDown.y/2
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x + 3*spaceInBetweenArrowAndMiddle/3, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y/2
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x + 4*spaceInBetweenArrowAndMiddle/3, 0.5 + leftArrowPoint.y + arrowPieceLeftDown.y/2
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x + 5*spaceInBetweenArrowAndMiddle/3, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y/2
-    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x + 6*spaceInBetweenArrowAndMiddle/3, 0.5 + leftArrowPoint.y
-
-    context.lineTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
-
-    context.moveTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
-
-    context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightUp.x, 0.5 + rightArrowPoint.y + arrowPieceRightUp.y
-    context.moveTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
-    context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightDown.x, 0.5 + rightArrowPoint.y + arrowPieceRightDown.y
-
-    context.closePath()
-    context.stroke()
-
-  drawReplacerWidget: (context) ->
-    # mid-height on my left edge (widget-local)
-    leftEdgeMiddle = new Point 0, @height() - Math.ceil @height()/2
-
-    leftArrowPoint = leftEdgeMiddle.add new Point Math.ceil(@width()/15), 0
-
-    rightArrowPoint = leftEdgeMiddle.add new Point @width() - Math.ceil(@width()/14), 0
-    arrowPieceLeftUp = new Point Math.ceil(@width()/5), -Math.ceil(@height()/5)
-    arrowPieceLeftDown = new Point Math.ceil(@width()/5), Math.ceil(@height()/5)
-    arrowPieceRightUp = new Point -Math.ceil(@width()/5), -Math.ceil(@height()/5)
-    arrowPieceRightDown = new Point -Math.ceil(@width()/5), Math.ceil(@height()/5)
-    @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
-
-
-  spacerWidgetRenderingHelper: (context, color, shadowColor) ->
-    context.lineWidth = 1
-    context.lineCap = "round"
-
-    # give it a good shadow so that
-    # it's visible also when on light
-    # background: stroke the same path
-    # twice, shadow color first, then
-    # the main color on top (only the
-    # antialiased fringe of the shadow
-    # stroke stays visible).
-    context.save()
-    context.strokeStyle = shadowColor.toString()
-    @drawReplacerWidget context
-    context.restore()
-
-    context.strokeStyle = color.toString()
-    @drawReplacerWidget context
+  # a press on me acts on nothing, so my plate shows none (the hover stays)
+  _showsPressOnMyPlate: -> false

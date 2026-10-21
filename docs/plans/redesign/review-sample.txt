@@ -102,3 +102,15 @@ SystemTest_macroFizzytilesBoxTileRendersStaticCube
 SystemTest_macroPlotUncollapseKeepsRendering
 SystemTest_macroStretchPanelChildrenReflowOnResize
 SystemTest_macroDropIntoRotatedStretchablePanelStretchesOnResize
+# G-B: the halo on a widget (five plates, hovered and pressed), a rotate drag, a lone handle; the layout chrome (adders,
+# spacers, a split adjuster, drop slots); the drag feedback (a candidate outline on a window's rounded corners, a dock
+# band, the dwell ring, the armed label)
+SystemTest_macroResizeMoveHandlesIdempotent
+SystemTest_macroWidgetRotateViaHaloHandle
+SystemTest_macroHandleAttachedToNothing
+SystemTest_macroLayoutsAndCollapsing
+SystemTest_macroStackDividerReproportionsCells
+SystemTest_macroDocumentEditLayoutDropSlots
+SystemTest_macroDragEmbedWindowLingerArms
+SystemTest_macroDragEmbedCandidateChangeResets
+SystemTest_macroDragEmbedArmedPersistsWhileAiming

@@ -78,7 +78,7 @@ landed with the plan.
       snapshot mid-test.
 
 ### `archive/direct-shape-fastpaths-followups-plan.md` — ✅ EXECUTED IN FULL + CLOSED 2026-08-08 (P1–P6)
-- [ ] FOLLOW-UP (owner, 2026-08-08): redesign the rotate-handle glyph as the four-swirlies square (the classic rotate glyph: square outline with four curled arrows at the corners — owner supplied reference screenshots). The current knob-ring paint in `HandleAppearance` is a single `strokeCircle` at the hairline `lineWidth` 0.5 (H1 made that sound — see `archive/hairline-direct-strokes-plan.md` § "BACKLOG ledger": a sub-1px direct stroke rasterizes as 1px geometry at opacity proportional to the true DEVICE width, so the ring's faintness scales with the island); the redesign replaces that paint wholesale. Candidate flow: the size-aware icon workflow.
+- [x] **DONE 2026-10-21 in redesign G-B** (`CurledArrowsSquareIconAppearance` on the halo's plate, owner-approved): FOLLOW-UP (owner, 2026-08-08): redesign the rotate-handle glyph as the four-swirlies square (the classic rotate glyph: square outline with four curled arrows at the corners — owner supplied reference screenshots). The current knob-ring paint in `HandleAppearance` is a single `strokeCircle` at the hairline `lineWidth` 0.5 (H1 made that sound — see `archive/hairline-direct-strokes-plan.md` § "BACKLOG ledger": a sub-1px direct stroke rasterizes as 1px geometry at opacity proportional to the true DEVICE width, so the ring's faintness scales with the island); the redesign replaces that paint wholesale. Candidate flow: the size-aware icon workflow.
 
 ### `archive/shared-base-layer-part-plan.md`
 CLOSED 2026-08-02 — executed in full; the residue is in `architecture/build-and-packaging.md` §2/§5.
@@ -283,6 +283,8 @@ One design system (a `Theme` token layer, seam rules, drawn chrome icons, size-a
 - [ ] G-A finding (SWCanvas, fix in the SWCanvas repo then re-vendor) — `fillRoundRect` with radii 17, 28, 32, 34, 38 or 39 paints 2–4 corner pixels differently at far canvas positions (integer box and radius, no icon involved), and a rect starting exactly at the canvas's (0, 0) paints differently from any other position. No real size in the tree hits it today.
 - [ ] G-A follow-up — the C-F converter's DEMO variant (`CFDegreesConverterIconAppearance`, demos-icons) paints its parent's art: its grey F degree sign went with the redraw, because the size-aware base has no secondary-ink helper (a raw fill style breaks the shadow pass). Add a `_useDetail`-style role helper if a second ink is ever wanted.
 - [ ] G-A follow-up — a Fizzytiles magnet's label is a `StringWdgt` that keeps its own font and ink, so a magnet loaded from a snapshot keeps the label look it was saved with (the magnet's box and border are read at paint).
+- [ ] G-B finding (pre-existing) — `LayoutSpacerWdgt.makeSpacersTransparent` / `makeSpacersOpaque` end in a bare `super` that only the TEST HARNESS defines (`Fizzygum-tests/Automator-and-test-harness-src/WidgetTestSupport.coffee`), so on any build without the harness calling either on a spacer throws; DemoMenus' "Make spacers transparent / opaque" rows reach it. Found by G-B2's implementer.
+- [ ] G-B follow-up (owner G2, still open) — on a widget smaller than ~92 px on a side the halo's five 44 px plates overlap (the corner plate on top); accepted at G-B, decided with the halo feel-check.
 - [ ] W1–W6 visual waves on `redesign` branches (frames · menus · controls + Inspector · desktop + icons · Docs Maker · wording)
 - [ ] G: generalisation sweeps, family by family; Z: squash-merge the tests branch, archive
 - [ ] DEFERRED (owner, 2026-10-16) — the FOCUS arc: a focused-window look (dark `chromeDark` bar and frame, 16% shadow, white glyphs) and the desktop icon "selected" accent, which needs a selection model. This arc ships every window in the draft's background look and keeps one frame-look derivation point for it (plan §0.5.2).
@@ -351,7 +353,7 @@ menu-dispatch-residue lesson, every candidate's CONSUMER was read before calling
 Everything the audit CLOSED — the seven renames, the dispatch-slot protocol, the damage-vocabulary
 unification, the `p0` collapse, the F3 re-sweep and the declined list — is in
 `archive/backlog-closed-items-ledger.md`. One filing is still open:
-- [ ] **Glyph-drawing duplication the `p0` collapse made visible** (filed 2026-08-18; the `p0`
+- [x] **DONE 2026-10-21 in redesign G-B** (the droplet and the adders draw `PlusIconAppearance`; the halo's resize handle and the spacer draw `DoubleArrowIconAppearance`; the hand-drawn painters are gone): **Glyph-drawing duplication the `p0` collapse made visible** (filed 2026-08-18; the `p0`
       collapse itself is in `archive/backlog-closed-items-ledger.md`; NEW filing, not
       a reopening of the closed duplication campaign): `SimpleDropletAppearance` and
       `LayoutElementAdderOrDropletWdgt` draw a near-identical plus sign (same `squareDim/15` flap
