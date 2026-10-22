@@ -186,7 +186,8 @@ reference drawing `desktop-canvas.html` (functions `windowFrame`, `titleBar`, `w
   pinned menu is a persistent `MenuWdgt` that wears the window look.
 - `isInternal`: parent (through islands) is neither the world nor the hand. That makes cards and docked bands
   (`EdgeDockLayoutSpec`).
-- `enclosingFrame`, `_parentThroughIslands`, `Widget.isVisible`, `collapsed`.
+- `enclosingFrame`, `_parentThroughIslands`, `Widget.isVisible` (a boolean FIELD, not a method; the query is
+  `visibleBasedOnIsVisibleProperty()`), `collapsed`.
 - **A tilted window:** its world child is a `TransformFrameWdgt` island holding the frame.
 - **A frame in the hand:** `parent = world.hand`; its skin is frozen until it lands.
 - **The error console** is a HIDDEN world-child `FrameWdgt`.

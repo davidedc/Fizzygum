@@ -281,6 +281,10 @@ One design system (a `Theme` token layer, seam rules, drawn chrome icons, size-a
 - [ ] G-B finding (pre-existing) — `LayoutSpacerWdgt.makeSpacersTransparent` / `makeSpacersOpaque` end in a bare `super` that only the TEST HARNESS defines (`Fizzygum-tests/Automator-and-test-harness-src/WidgetTestSupport.coffee`), so on any build without the harness calling either on a spacer throws; DemoMenus' "Make spacers transparent / opaque" rows reach it. Found by G-B2's implementer.
 - [ ] G-B follow-up (owner G2, still open) — on a widget smaller than ~92 px on a side the halo's five 44 px plates overlap (the corner plate on top); accepted at G-B, decided with the halo feel-check.
 
+### `plans/window-page-gutter-plan.md` — one gutter around a window's page, its bands and its selection ring (AUTHORED 2026-10-22, NOT STARTED; owner decisions D1–D5 locked)
+A window's PAGE (document, canvas, slide, dashboard, patch board, Fizzytiles) keeps the docked band's 8 px gutter on every side and between it and its bands; PANES (Inspector, sheet, folder, bin, code areas) stay flush; the document's own outer inset goes (its paragraphs do not move); a page's selection ring sits in the gutter at offset 2, painted by the window.
+- [ ] P0 confirm D6–D8 · U1 page declaration + host gutter · U2 document inset/gap split · U3 the page ring in the gutter · U4 a drop in the gutter goes to the page · V flip + ONE recapture wave (~20 tests) · Z close
+
 ### `plans/focus-and-selection-plan.md` — the focused window and the selected desktop icon (AUTHORED 2026-10-22, NOT STARTED)
 The FOCUS arc the redesign deferred (its plan §0.5.2): focus derived once per cycle from z-order, the draft's focused-window look through `FrameWdgt._frameLook()`, and the selected icon as the existing editor focus drawn the icon's own way. Owner decisions D1–D10 open (plan §2).
 - [ ] DEFERRED (owner, 2026-10-16) — the FOCUS arc: a focused-window look (dark `chromeDark` bar and frame, 16% shadow, white glyphs) and the desktop icon "selected" accent. Planned: P0 decisions, F0 spike, F1–F2 focus, S1–S2 selection, V one recapture wave (~90 tests), Z close.
