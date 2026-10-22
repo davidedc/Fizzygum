@@ -38,8 +38,11 @@ class ButtonWdgt extends Widget
   padding: 0
 
 
-  # overrides to superclass
-  color: Color.WHITE
+  # overrides to superclass: no colour of my own until my state derives one (_updateColor, at the end
+  # of my constructor and at every state change), so a button never wears a new shape's content
+  # default. A subclass with a look of its own answers _updateColor itself, or sets its colour after
+  # my constructor (LabelButtonWdgt).
+  color: undefined
 
   # target and action are the identity: WHO to tell and WHAT to say. They are the
   # established pair, they are the only two a typical caller passes, and no reader has to
@@ -76,6 +79,8 @@ class ButtonWdgt extends Widget
     @defaultRejectDrags = true
 
     @_buildAndConnectChildren()
+    # my colour for the state I am born in (at rest), derived as every state change derives it
+    @_updateColor()
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   # This REPLACES the old "defer the face's layout until attach" hack. The old fear -- "a settle in a

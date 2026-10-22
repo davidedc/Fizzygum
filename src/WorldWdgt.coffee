@@ -526,7 +526,6 @@ class WorldWdgt extends IconGridPanelWdgt
     @appearance = new DesktopAppearance @
 
     @color = WorldWdgt.theme.worldFill
-    @strokeColor = undefined
 
     @alpha = 1
 
@@ -692,6 +691,12 @@ class WorldWdgt extends IconGridPanelWdgt
     spinner?.parentNode?.removeChild spinner
     splashScreenFakeDesktop = document.getElementById 'splashScreenFakeDesktop'
     splashScreenFakeDesktop?.parentNode?.removeChild splashScreenFakeDesktop
+
+  # The desktop draws no border of its own (not the generic panel's): my DesktopAppearance asks this
+  # while I hold no stroke colour, as every panel's does. My fill is my own colour, the desktop's,
+  # which the user can set.
+  _surfaceStroke: ->
+    undefined
 
   createDesktop: ->
     # the desktop's own furnishing -- its backdrop colour (the theme's desktopFill). Its wallpaper

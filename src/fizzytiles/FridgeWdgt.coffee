@@ -4,19 +4,14 @@
 #
 # I wear the fridge's look, read as I am painted: my fill is the fizzytilesFridgeFill role and my
 # border the fizzytilesFridgeStroke role (_surfaceFill / _surfaceStroke, which my
-# RectangularAppearance asks while I hold no colour of my own). PanelWdgt's constructor gives every
-# panel the generic panel look as its OWN fill and stroke; I keep neither, so a fridge saved, loaded
-# or duplicated wears the look of the world it is shown in, and a colour set on me later is mine.
+# RectangularAppearance asks while I hold no colour of my own). Like every panel I hold no colour of
+# my own, so a fridge saved, loaded or duplicated wears the look of the world it is shown in, and a
+# colour set on me later is mine.
 
 class FridgeWdgt extends PanelWdgt
 
   sourceCodeHolder: undefined
   fridgeMagnetsCanvas: undefined
-
-  constructor: ->
-    super()
-    @color = undefined
-    @strokeColor = undefined
 
   _surfaceFill: ->
     WorldWdgt.theme.fizzytilesFridgeFill

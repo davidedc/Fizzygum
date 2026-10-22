@@ -7,6 +7,10 @@ class VerticalStackPanelWdgt extends Widget
   _acceptsDrops: true
   tight: true
   constrainContentWidth: true
+  # no fill colour of my own (declared here over Widget's content default) until one is given to me
+  # (opts.color) or set on me: until then my RectangularAppearance paints me in my look, read as I
+  # am painted (_surfaceFill, _surfaceStroke)
+  color: undefined
   # serves as BOTH the border inset and the inter-element gap (see the note at its
   # read sites); the constructor takes it as opts.padding and defaults it to 5. A document's
   # page sets its stack's from the theme at every arrange (DocumentViewportWdgt._takeItemSpacing).
@@ -14,6 +18,17 @@ class VerticalStackPanelWdgt extends Widget
 
   colloquialName: ->
     "stack"
+
+  # MY LOOK while I hold no colour of my own. As the plane of a viewport (a stack sample's page, a
+  # document's) I wear its pane's fill and draw no border (the viewport's border is the box's line);
+  # standing on my own, the stack's fill and border -- none as a window's whole content (my frame's
+  # contents), along which the frame's border and its strip's rule run.
+  _surfaceFill: ->
+    if @parent?.isMyContentsPanel?(@) then @parent._paneFill() else WorldWdgt.theme.stackPanelFill
+
+  _surfaceStroke: ->
+    return undefined if @parent?.isMyContentsPanel?(@) or @parent?.isMyContents?(@)
+    WorldWdgt.theme.stackPanelStroke
 
   # A vertical stack constrains a dropped child to its width/height ratio, and frees that
   # constraint when the child is grabbed back out. These container capabilities replace the

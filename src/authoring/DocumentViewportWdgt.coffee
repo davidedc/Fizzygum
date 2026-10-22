@@ -46,11 +46,14 @@ class DocumentViewportWdgt extends VerticalStackViewportWdgt
   _scaffoldParagraph: (text) ->
     @getNormalParagraph text
 
-  # My look as a page: the document's paper, with no border of my own -- in a window, the
-  # window's frame, its strip's rule and a docked band are the page's lines.
-  _wearPageLook: ->
-    @setColor WorldWdgt.theme.documentPageFill
-    @strokeColor = undefined
+  # My look as a page, read as I and my stack are painted: the document's paper, with no border of
+  # my own -- in a window, the window's frame, its strip's rule and a docked band are the page's
+  # lines.
+  _defaultPaneFill: ->
+    WorldWdgt.theme.documentPageFill
+
+  _surfaceStroke: ->
+    undefined
 
   # MY ITEM SPACING (documentItemSpacing): my items stand that far in from my edges and that far
   # apart -- my stack's padding, which is both its inset and its gap -- and my content frame keeps

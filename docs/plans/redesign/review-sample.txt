@@ -132,3 +132,10 @@ SystemTest_macroDoubleClickSelectsWord
 SystemTest_macroHierarchyMenuHoverHighlightsExactSubtree
 SystemTest_macroListWdgtAutoScrollsNearDraggedEdge
 SystemTest_macroDocsToolbarDockSidesAndFloat
+# G-E: state colours (a paint tool's edit mark), the generic panel look (a panel in a panel, a plain list's paper pane),
+# the default text ink, the header-line rule (Fizzytiles' captions)
+SystemTest_macroPencilPaintsStrokeOnLeftDrag
+SystemTest_macroPanelInPanelTransparencyAndStroke
+SystemTest_macroListWdgtWheelScroll
+SystemTest_macroTextWdgtCaretKeepsCorrectAlignment
+SystemTest_macroFizzytilesBlockScoping

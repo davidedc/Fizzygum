@@ -276,7 +276,8 @@ class Example3DPlotWdgt extends Widget
 
     context.closePath()
 
-    context.strokeStyle = Color.GRAY.toString()
+    # the ground grid is chrome (the plot's frame of reference), at the mesh's alpha
+    context.strokeStyle = WorldWdgt.theme.plotGroundGridInk.toString()
     context.stroke()
 
 

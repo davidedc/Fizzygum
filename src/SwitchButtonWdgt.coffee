@@ -1,10 +1,7 @@
 class SwitchButtonWdgt extends Widget
 
   buttons: undefined
- 
-  highlightColor: Color.SILVER
-  pressColor: Color.GRAY
- 
+
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   
   buttonShown: 0
@@ -19,9 +16,6 @@ class SwitchButtonWdgt extends Widget
   # their buttons two different, correct things.
   ownsDragsOfMyChildren: ->
     @parent?.ownsDragsOfMyChildren?() ? false
-
-  # overrides to superclass
-  color: Color.WHITE
 
   # WHICH of my buttons is showing IS my value, and it is an INDEX into @buttons. That is why there is
   # no boolean payload kind here: a switch is n-way, and a boolean is only what the n=2 case looks

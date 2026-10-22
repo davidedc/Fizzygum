@@ -515,8 +515,12 @@ mark after `add` + `setExtent` adds nothing.
   tilted — a bug class that is invisible until someone rotates something.
 - **Escalate what is not yours.** `@escalateEvent "pressBegan", pos` passes the event to the parent
   rather than swallowing it. A handler that conditionally acts should escalate on the other branch.
-- **Get hover/press feedback from `HighlightableMixin`** (`color_normal` / `color_hover` /
-  `color_pressed`) instead of colouring by hand in `hoverEntered`/`hoverExited`.
+- **Get hover/press feedback from `HighlightableMixin`** instead of colouring by hand in
+  `hoverEntered`/`hoverExited`: its `_updateColor` re-derives the colour at every state change — a set
+  `color_normal` / `color_hover` / `color_pressed` wins, else the plain button's theme roles. A widget with
+  a look of its own answers `_updateColor` with its own roles, read there (`SimpleButtonWdgt`,
+  `IconButtonWdgt`, the edit mark). Never declare a state colour at class level: a class-level
+  declaration cannot read `Theme`, so the colour would sit outside the design system.
 - **Chrome opts out of editor focus.** A widget that is manipulation chrome rather than content —
   handles, frame-bar buttons, toolbars, creator buttons — answers
   `excludedFromEditorFocusTracking: -> true`, so clicking it neither steals the editor-focus pointer

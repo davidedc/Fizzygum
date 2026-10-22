@@ -43,8 +43,12 @@ A scrolling container decomposes into three responsibilities, each with an hones
      container re-fit climbs)? `ListWdgt` answers false: its pane holds rows machinery.
    - `hidesContainedWidgetFromHierarchyMenu(aWdgt)` — internal structure stays out of the
      hierarchy (disambiguation) menu; `FolderWindowWdgt` declares the same for its viewport.
-   `ScrolledPaneWdgt` carries what is true of the default plane by construction: it never
-   notices transparent clicks, relays membership changes to the viewport's HOLDER
+   `ScrolledPaneWdgt` carries what is true of the default plane by construction: it wears its
+   viewport's LOOK (holding no colour of its own, it paints in the viewport's pane fill and
+   border — `ViewportWdgt._paneFill` / `_surfaceStroke` — so the box the composite presents
+   wears ONE look: a class's own pane fill, `_defaultPaneFill`, or the roles a builder dressed
+   the viewport in by NAME, `wearPaneRoles`, which travel with the viewport wherever it is
+   taken), never notices transparent clicks, relays membership changes to the viewport's HOLDER
    (`_reactToChild*InViewport` — the bin is the one implementor), forwards an empty-area
    click to a lone editable text child, and owns the FIT_BOX_TO_TEXT re-wrap
    (`_reWrapTextChildrenTo`). The color/alpha up-relays that keep the viewport's mimic true

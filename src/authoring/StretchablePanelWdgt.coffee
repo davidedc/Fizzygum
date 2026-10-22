@@ -10,13 +10,12 @@ class StretchablePanelWdgt extends PanelWdgt
 
   @augmentWith BubblesEditModeToCoordinatorMixin, @name
 
-  # PanelWdgt's constructor gives every panel the generic panel look as its OWN fill and stroke. I
-  # keep neither: my appearance reads my look from the theme as it paints, so a page saved, loaded or
-  # duplicated wears the look of the world it is shown in, and a colour set on me later is mine.
+  # Like every panel I hold no colour of my own: my appearance reads my look from the theme as it
+  # paints (my fill, _surfaceFill, and my letterboxed edges -- it never asks the panel's
+  # _surfaceStroke), so a page saved, loaded or duplicated wears the look of the world it is shown
+  # in, and a colour set on me later is mine.
   constructor: ->
     super()
-    @color = undefined
-    @strokeColor = undefined
     @appearance = new StretchablePanelAppearance @
 
   # the fill I am painted with while I hold no colour of my own (RectangularAppearance._fillColor),

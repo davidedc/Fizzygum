@@ -7,8 +7,8 @@
 # I LOOK LIKE A TOOL in its cell (OverflowChevronAppearance): a plate in the tool cell's fill for my
 # state -- none at rest, hovered, pressed -- under the drawn » at the glyph size my strip names
 # (ToolPanelWdgt writes my glyphSize as it places me), in the toolbarGlyph ink in every state. The
-# button family's hover / press colours (IconButtonWdgt's iconHoverColor) never reach my glyph:
-# my look reads my state as it paints, so a transition writes no colour (_updateColor).
+# icon button's state inks (IconButtonWdgt._updateColor) never reach my glyph: my look reads my
+# state as it paints, so a transition writes no colour (_updateColor), and I hold none.
 #
 # The remainder menu is DERIVED at pop time from the tools currently hidden -- each row's name,
 # picture and tick (ticked while its tool is the active one) -- and it is a

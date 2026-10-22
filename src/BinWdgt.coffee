@@ -46,11 +46,12 @@ class BinWdgt extends Widget
   _buildAndConnectChildrenNoSettle: ->
 
     @viewport = new ViewportWdgt
-    # a white content pane, like the text panels (orphan-construction field writes;
-    # PanelWdgt.setColor keeps the pair in sync from then on). Drops stay ENABLED: dropping things into the
-    # open bin is how you throw them away.
-    @viewport.color = WorldWdgt.theme.binViewportFill
-    @viewport.contents.color = WorldWdgt.theme.binViewportFill
+    # my main pane, dressed in the bin pane's roles (ViewportWdgt.wearPaneRoles, read as it paints,
+    # and its plane wears them too): the binViewportFill, and the window content's border -- like a
+    # code area, it is my window's content down to my footer band, so the window's border and its
+    # strip's rule run along it. Drops stay ENABLED: dropping things into the open bin is how you
+    # throw them away.
+    @viewport.wearPaneRoles fill: "binViewportFill", stroke: "windowContentPanelStroke"
     @_addNoSettle @viewport
 
     # "…": the press asks first (emptyBinRequested's confirmation) and empties only on a yes

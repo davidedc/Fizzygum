@@ -129,11 +129,58 @@ class ViewportWdgt extends Widget
     unless @alpha == alpha
       @alpha = alpha
 
-  # ...and a plane that holds no colour of its own, because it wears a theme role (a folder's panel,
-  # FolderPanelWdgt), leaves my copied colour empty too: the mimic is then the role it answers,
-  # which my RectangularAppearance paints me in (_fillColor).
+  # ── MY LOOK, read as I am painted ─────────────────────────────────────────────────────────
+  # No fill or stroke colour of my own until one is set on me (or, as the mimic, on my plane):
+  # until then my RectangularAppearance paints me in the roles below, so a viewport saved, loaded or
+  # duplicated wears the look of the world it is shown in. The box I present -- me and my plane --
+  # wears ONE look, the PANE's: its fill is my class's (_defaultPaneFill: the generic panel's, a
+  # list's, a text area's, a stack's, a document's), its border the generic panel's, or the window
+  # content's while I am a window's whole content -- unless a BUILDER dresses me in roles of its own
+  # (wearPaneRoles: the Object Inspector's panes, a code area, a patch node's text box, the bin's
+  # pane, a folder window's viewport). Those I keep by NAME, so I wear them, read at paint, wherever
+  # I am taken; a plane that holds no colour of its own wears my pane's look (ScrolledPaneWdgt).
+  color: undefined
+  strokeColor: undefined
+  # the names of the WorldWdgt.theme roles a builder dresses me in (wearPaneRoles): my pane's fill
+  # and my border; undefined, my own
+  paneFillRole: undefined
+  paneStrokeRole: undefined
+
+  # Dress me in a builder's roles, each the NAME of a WorldWdgt.theme role: `fill`, my pane's fill
+  # (and so my plane's), and `stroke`, my border (and my plane's; a role holding no colour draws
+  # none). A role left out leaves me my class's look for it. The name must be a role the theme has.
+  # A builder dresses me as it builds me, before I am shown; dressed while shown, I repaint with my
+  # plane.
+  wearPaneRoles: (roles = {}) ->
+    theme = WorldWdgt.theme
+    for role in [roles.fill, roles.stroke] when role? and role not of theme
+      throw new Error "wearPaneRoles: the theme has no role named " + role
+    @paneFillRole = roles.fill
+    @paneStrokeRole = roles.stroke
+    @_fullChanged() unless @isOrphan()
+
+  # What I paint myself, always under my plane: my plane's fill (the MIMIC -- a plane wearing a role
+  # of its own, a folder's panel, answers it; a default plane answers my pane's), else my pane's.
   _surfaceFill: ->
-    @contents?._surfaceFill?()
+    @contents?._surfaceFill?() ? @_paneFill()
+
+  # THE FILL OF THE BOX I PRESENT, which a default plane wears (ScrolledPaneWdgt._surfaceFill): the
+  # role a builder dressed me in, else my class's.
+  _paneFill: ->
+    (if @paneFillRole? then WorldWdgt.theme[@paneFillRole]) ? @_defaultPaneFill()
+
+  # my class's pane fill: the generic panel's (a list, a text area, a stack and a document answer
+  # their own)
+  _defaultPaneFill: ->
+    WorldWdgt.theme.panelFill
+
+  # MY BORDER, which a default plane wears too (ScrolledPaneWdgt._surfaceStroke): the role a builder
+  # dressed me in (holding no colour: none), else the generic panel's -- or, while I am a window's
+  # whole content (my frame's contents, asked of where I stand as I paint), the window content's.
+  _surfaceStroke: ->
+    theme = WorldWdgt.theme
+    return theme[@paneStrokeRole] if @paneStrokeRole?
+    if @parent?.isMyContents?(@) then theme.windowContentPanelStroke else theme.panelStroke
 
   # Two independent scroll-by-drag flags (only live while scrollbars show): drag the
   # contents, or drag the background — independently, e.g. useful for a geographic map.
@@ -151,12 +198,10 @@ class ViewportWdgt extends Widget
     @alpha = 0
     super()
     # the appearance also decides hit-testing: an appearance-bearing widget answers opaque
-    # inside its tight bounds. It DOES paint every repaint (once the mimic below adopts the
-    # contents' alpha, typically 1) -- just always fully occluded under the plane and bars;
-    # the colors seed the mimic until _buildViewportChromeNoSettle adopts the contents' own
+    # inside its tight bounds. It DOES paint every repaint (once the mimic adopts the
+    # contents' alpha, typically 1) -- just always fully occluded under the plane and bars,
+    # in the look my hooks answer (MY LOOK, above)
     @appearance = new RectangularAppearance @
-    @color = WorldWdgt.theme.panelFill
-    @strokeColor = WorldWdgt.theme.panelStroke
     @_buildViewportChrome()
 
   # Build the viewport (contents + h/v scrollbars) via the NoSettle core, settling ONCE at the end
@@ -179,7 +224,8 @@ class ViewportWdgt extends Widget
 
     # the Viewport paints every repaint just like any RectangularAppearance widget, but always
     # fully occluded under its own contents+bars -- so what matters is that its values MIMIC
-    # the contained Panel's
+    # the contained Panel's: its own colour, when it holds one (else none, and my look's hooks
+    # answer for both of us)
     @color = @contents.color
     @alpha = @contents.alpha
 

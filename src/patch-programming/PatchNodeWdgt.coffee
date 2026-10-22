@@ -103,16 +103,16 @@ class PatchNodeWdgt extends Widget
   # One of my TEXT BOXES, which a subclass builds and stacks in its _buildAndConnectChildrenNoSettle: a
   # mono text panel (TextAreaWdgt.configureAsMonoTextPanel) holding a formula, a regex, a substitution or
   # an output as CODE, unwrapped -- its text born in the code role, fonts.code and the codeText ink, at
-  # my own padding of 5 (a code pane's is codePanePadding) -- inside a 1 px border, the
-  # patchNodeTextBoxStroke role. The border goes on the box and on its plane alike: each strokes its own
-  # outline over its children, so either can be the line that shows. Editable and selectable, or
-  # read-only (an output box), as asked.
+  # my own padding of 5 (a code pane's is codePanePadding) -- on a text area's fill, inside a 1 px
+  # border in the patchNodeTextBoxStroke role, which the box is dressed in (ViewportWdgt.wearPaneRoles,
+  # read as it paints, kept by name wherever it is taken). The border is the box's and its plane's
+  # alike (the plane wears its box's look): each strokes its own outline over its children, so either
+  # can be the line that shows. Editable and selectable, or read-only (an output box), as asked.
   _newTextBox: (text, isEditable) ->
     theme = WorldWdgt.theme
     textBox = new TextAreaWdgt text, false, 5, fontRole: theme.fonts.code, textColor: theme.codeText
     textBox.configureAsMonoTextPanel isEditable
-    for surface in [textBox, textBox.contents]
-      surface.strokeColor = theme.patchNodeTextBoxStroke
+    textBox.wearPaneRoles stroke: "patchNodeTextBoxStroke"
     textBox
 
   # the whole layout shape is Widget's own-contents template; each node subclass supplies only

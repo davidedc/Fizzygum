@@ -3,7 +3,6 @@
 
 class CloseIconButtonWdgt extends IconButtonWdgt
 
-  iconHoverColor: Color.RED
   toolTipMessage: "close window"
 
   createAppearance: -> new CrossIconAppearance @

@@ -233,7 +233,7 @@ defaulted parameters. `Class.coffee`'s `_equivalentforSuper` rewrites it to
 call (§R6), so the base then re-defaults every slot the caller omitted **straight over the
 subclass's own defaults**. A subclass that states defaults and forwards bare therefore states
 them to no effect: `SimpleTextWdgt` declared 12pt and `Color.BLACK` and shipped
-the default text size (now `Theme`'s `fonts.defaultText`) and `Color(37,37,37)` for years. Make the call explicit when the signature
+the default text size (now `Theme`'s `fonts.defaultText`) and a 37,37,37 ink (now `Theme`'s `defaultTextInk`, read as the text paints) for years. Make the call explicit when the signature
 changes shape — and check, when you do, whether the defaults it was hiding were ever real.
 
 ### R8 — Don't invent a second options shape where a spec class already exists.

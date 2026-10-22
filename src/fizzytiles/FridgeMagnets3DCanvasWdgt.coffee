@@ -64,11 +64,10 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
 
   # My raster is content; my BORDER is chrome, the fizzytiles3DPaneStroke role, read as it is
   # painted (_surfaceStroke, which my RectangularAppearance asks while I hold no stroke colour of my
-  # own): PanelWdgt's constructor gives me the generic panel stroke as my own field, and I keep
-  # none, so a pane saved, loaded or duplicated wears the look of the world it is shown in.
+  # own -- like every panel I hold none), so a pane saved, loaded or duplicated wears the look of the
+  # world it is shown in.
   constructor: ->
     super
-    @strokeColor = undefined
     @_ensureRuntime()
     world.steppingWdgts.add @
 

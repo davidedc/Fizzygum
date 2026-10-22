@@ -126,6 +126,19 @@ class BoxyAppearance extends Appearance
   opaqueCoveredRect: ->
     @widget.boundingBox().insetBy Math.max(@_cornerRadii()...) + 1
 
+  # The colour I fill my widget's outline with: its own colour -- or, for a widget that holds none
+  # of its own because it wears a theme role until a colour is set on it, the role it answers (its
+  # _surfaceFill, a soft hook which, of the widgets wearing me, the speech bubble and a rows panel --
+  # CommandPanelWdgt, under a MenuAppearance -- define), read here as I paint, so a saved or
+  # duplicated widget wears the look of the world it is painted in.
+  _fillColor: ->
+    @widget.color ? @widget._surfaceFill?()
+
+  # The colour I stroke my widget's 1 px outline with, the same way: its own strokeColor, else the
+  # role it answers (its _surfaceStroke, the same widgets' other soft hook); neither, no stroke.
+  _borderColor: ->
+    @widget.strokeColor ? @widget._surfaceStroke?()
+
   # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
@@ -135,8 +148,9 @@ class BoxyAppearance extends Appearance
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
-      if !@widget.color? then debugger
-      ctx.fillStyle = @widget.color.toString()
+      fill = @_fillColor()
+      if !fill? then debugger
+      ctx.fillStyle = fill.toString()
 
       if appliedShadow?
         ctx.fillStyle = WorldWdgt.theme.shadowColor.toString()
@@ -200,12 +214,13 @@ class BoxyAppearance extends Appearance
       @_strokeOutlineInStrokeColor ctx
 
   # The one stroke body both entries share, inside an open scope: the 1-LOGICAL-px outline in my
-  # widget's strokeColor (no strokeColor, no stroke). It goes through strokeOutline, so a subclass
-  # with its own outline (BubblyAppearance) strokes that one from either entry.
+  # _borderColor (none, no stroke). It goes through strokeOutline, so a subclass with its own
+  # outline (BubblyAppearance) strokes that one from either entry.
   _strokeOutlineInStrokeColor: (ctx) ->
-    return unless @widget.strokeColor?
+    stroke = @_borderColor()
+    return unless stroke?
     ctx.lineWidth = 1
-    ctx.strokeStyle = @widget.strokeColor.toString()
+    ctx.strokeStyle = stroke.toString()
     @strokeOutline ctx
 
 
@@ -238,12 +253,12 @@ class BoxyAppearance extends Appearance
   outlineCornerRadii: ->
     @_cornerRadii()
 
-  # Does my widget's body draw a 1 px border along that outline? Exactly when it has a strokeColor
+  # Does my widget's body draw a 1 px border along that outline? Exactly when it has a _borderColor
   # (_strokeOutlineInStrokeColor strokes nothing without one). A ring laid over a selected widget
   # strokes the outline too when it does (Widget._drawSelectionOverlay,
   # HighlightOutlineAppearance.paintRing), so the border's corner pixels stay inside the ring.
   outlineIsStroked: ->
-    @widget.strokeColor?
+    @_borderColor()?
 
   # Intersect aContext's clip with exactly the pixels fillOutline fills, so whatever is painted next
   # shows only inside my outline. The path is traced under the matrix fillOutline paints under

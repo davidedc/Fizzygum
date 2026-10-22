@@ -58,7 +58,7 @@ class TemplatesWindowWdgt extends FrameWdgt
 
     sdspw.addNormalParagraph "Normal text."
 
-    startingContent = new SimpleTextWdgt "“Be careful--with quotations, you can damn anything.”\n― André Malraux",
+    startingContent = new SimpleTextWdgt '"Be careful--with quotations, you can damn anything."\n— André Malraux',
       backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
     startingContent.toggleItalic()
@@ -96,10 +96,13 @@ class TemplatesWindowWdgt extends FrameWdgt
     startingContent._contentStackSpec.setAlignmentToRight()
 
     sdspw.addSectionHeading "Useful characters:"
-    # in March 2018, greek chars take a long time to paint on OSX/Chrome so
-    # not adding those to the paragraph, however here they are:
-    # αβγδεζηθικλμνξοπρστυφχψω ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ
-    specialCharsParagraph = sdspw.addNormalParagraph "… †‡§ ↵⏎⇧␣ ☐☑☒✓X✗ •‣⁃◦ °±⁻¹²³µ×÷ℓΩ√∛∜∝∞∟∠∡∩∪∿≈⊂⋅⌀▫◽◻□⩽⩾ ¼½¾⅛⅜⅝⅞ ←↑→↓↔↕↵⇎⇏⇑⇒⇓⇔⇕ ©®™ $£€¥"
+    # every character offered here (and in the quote above) is one the glyph
+    # atlases carry: a font's own set (CharacterSets.FONT_SPECIFIC_CHARS) or
+    # the BitmapTextInvariant symbols atlas (FONT_INVARIANT_CHARS). Any other
+    # character paints a placeholder box on the SWCanvas backend (Greek, the
+    # curly quotes, the math and box symbols), at every font, size and density
+    # alike (docs/architecture/visual-design-system.md §4.5).
+    specialCharsParagraph = sdspw.addNormalParagraph "… § • ° ← ↑ → ↓ ↔ ↗ ➜ ⇄ ✔ ✘ ☓ ≠ ⋯ ▶ ▼ ▲ ◀ ♡ ☺ $ £ €"
     specialCharsParagraph.setFontSize 16
 
 

@@ -65,6 +65,13 @@ class StringWdgt extends Widget
   lineHeight: undefined
   lineHeightStatedAtFontSize: undefined
 
+  # MY INK: no colour of my own until one is given to me (the `color` option, setColor) --
+  # declared here over Widget's content default. While I hold none I paint in the theme's
+  # defaultTextInk, read as I paint each line (_drawTextLine) and in my buffer's key, so a text
+  # saved, loaded or duplicated without a colour of its own wears the ink of the world it is
+  # shown in.
+  color: undefined
+
   fontName: undefined
   isBold: undefined
   isItalic: undefined
@@ -264,7 +271,9 @@ class StringWdgt extends Widget
     @isItalic = opts.italic ? fontRole.italic ? false
     @isHeaderLine = opts.headerLine ? false
     @isNumeric = opts.numeric ? false
-    @color = opts.color ? (Color.create 37, 37, 37)
+    # only when passed, so a text given no ink keeps the class's: none, and paints in the theme's
+    # default text ink
+    @color = opts.color if opts.color?
     # only when passed, so a text without a case keeps the class's: my shown text is computed from
     # it on the next line, so it is set before anything measures me
     @displayCase = opts.displayCase if opts.displayCase?
@@ -911,8 +920,10 @@ class StringWdgt extends Widget
       @_changed()
 
   # The key of my back buffer: everything its pixels are a function of. My selection is its two
-  # marks and the theme's two selection roles (drawSelection reads them as it paints, as
-  # _backgroundFill reads a role I wear), so a changed selection, or a changed role, re-renders me.
+  # marks and the theme's two selection roles, my header line's ink is the headerLineRule role, and
+  # my text's ink is my own colour or, while I hold none, the defaultTextInk role (drawSelection,
+  # _drawHeaderUnderline and _drawTextLine read them as they paint, as _backgroundFill reads a role
+  # I wear), so a changed selection, or a changed role, re-renders me.
   createBufferCacheKey: ->
     theme = WorldWdgt.theme
     @extent().toString() + "-" +
@@ -921,7 +932,8 @@ class StringWdgt extends Widget
     @originallySetFontSize + "-" +
     @buildCanvasFontProperty() + "-" +
     @isHeaderLine + "-" +
-    @color.toString()  + "-" +
+    theme.headerLineRule.toString()  + "-" +
+    (@color ? theme.defaultTextInk).toString()  + "-" +
     (@_backgroundFill()?.toString() ? "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
     @text.hashCode()  + "-" +
@@ -964,10 +976,11 @@ class StringWdgt extends Widget
         @width() - inset - widthOfText
 
 
-  # Draw ONE complete line of text at (x, y) in @color. The ONE home of a line's ink: StringWdgt's
+  # Draw ONE complete line of text at (x, y) in my ink: my own colour, or, while I hold none, the
+  # theme's defaultTextInk (a key of my buffer too). The ONE home of a line's ink: StringWdgt's
   # single-line paint and TextWdgt's wrapped-lines loop both draw every line through here.
   _drawTextLine: (backBufferContext, line, x, y) ->
-    backBufferContext.fillStyle = @color.toString()
+    backBufferContext.fillStyle = (@color ? WorldWdgt.theme.defaultTextInk).toString()
     backBufferContext.fillText line, x, y
 
   # The fill behind my text: my backgroundColor -- or, for a text that holds none of its own because
@@ -1026,10 +1039,11 @@ class StringWdgt extends Widget
   # The rule runs across my text area (my box less my item inset: the whole box when I wear no
   # shape), broken 5 px either side of the text, and a segment with no length left in that span
   # (text at or near an end of it) is not drawn: there it could only cover pixels outside the span.
+  # Its ink is the headerLineRule role, read here (and in my buffer's key).
   _drawHeaderUnderline: (backBufferContext, lineBottom, pitch, textHorizontalPosition, widthOfText) ->
     spanLeft = @_textInset().x
     spanRight = @width() - spanLeft
-    backBufferContext.strokeStyle = (Color.create 198, 198, 198).toString()
+    backBufferContext.strokeStyle = WorldWdgt.theme.headerLineRule.toString()
     backBufferContext.beginPath()
     if textHorizontalPosition - 5 > spanLeft
       backBufferContext.moveTo spanLeft, lineBottom - pitch / 2

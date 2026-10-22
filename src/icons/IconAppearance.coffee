@@ -24,7 +24,7 @@ class IconAppearance extends Appearance
   # specification space. It stays a circle under the icon transform because
   # calculateRectangleOfIcon aspect-fits to a square, so the paint scale is always UNIFORM.
   paintFunction: (context) ->
-    context.strokeStyle = @color.toString()
+    context.strokeStyle = @_iconColorString()
     context.lineWidth = 13.4
     context.strokeCircle 100.5, 98.5, 84.8
 

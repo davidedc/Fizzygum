@@ -24,9 +24,13 @@ class CanvasGlassTopWdgt extends CanvasWdgt
   paintingOverlay: ->
     @
 
+  # I lay no paper: my raster starts clear, so the canvas under me shows through me (CanvasWdgt
+  # lays its role's paper when it holds no colour of its own; as glass, I answer none).
+  _surfaceFill: ->
+    undefined
+
   constructor: ->
     super
-    @color = undefined
     # the overlay canvas is usually attached to a Canvas
     # which unfortunately is a Frame (it shouldn't, it should
     # just clip at its bounds via a mixin TODO ). So, usually

@@ -50,8 +50,9 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # little shortcut: if nothing has been painted yet then
     # we can omit painting the big canvas on the small one,
     # just clean up the small canvas
-    if !@anythingPaintedYet and @color?
-      @backBufferContext.fillStyle = @color.toString()
+    paper = @color ? @_surfaceFill()
+    if !@anythingPaintedYet and paper?
+      @backBufferContext.fillStyle = paper.toString()
       @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
     # if something *has* been painted then
@@ -80,8 +81,9 @@ class StretchableCanvasWdgt extends CanvasWdgt
     @behindTheScenesBackBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @behindTheScenesBackBufferContext = @behindTheScenesBackBuffer.getContext "2d"
 
-    if @color?
-      @behindTheScenesBackBufferContext.fillStyle = @color.toString()
+    paper = @color ? @_surfaceFill()
+    if paper?
+      @behindTheScenesBackBufferContext.fillStyle = paper.toString()
       @behindTheScenesBackBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
     # we leave the context with the correct scaling.

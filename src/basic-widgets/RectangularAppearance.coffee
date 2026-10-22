@@ -29,9 +29,10 @@ class RectangularAppearance extends Appearance
 
   # The colour I fill my widget's TIGHT box with: its own colour -- or, for a widget that holds none
   # of its own because it wears a theme role until a colour is set on it, the role it answers (its
-  # _surfaceFill, a soft hook no plain widget defines: a plot's surround, a Maker's page, a folder's
-  # panel), read here as I paint, so a saved or duplicated widget wears the look of the world it is
-  # painted in.
+  # _surfaceFill, a soft hook: every panel, viewport and stack answers its role -- the generic
+  # panel's, a list's, a Maker's page's, a folder's panel's --, and so do a plot's surround and the
+  # colour picker), read here as I paint, so a saved or duplicated widget wears the look of the world
+  # it is painted in. Widget.opaqueCoveredRect asks it too: what I fill with is what covers.
   _fillColor: ->
     @widget.color ? @widget._surfaceFill?()
 
@@ -129,8 +130,8 @@ class RectangularAppearance extends Appearance
 
   # The colour I stroke my widget's border with: its own strokeColor -- or, for a widget that holds
   # none of its own because it wears a theme role until one is set on it, the role it answers (its
-  # _surfaceStroke, a soft hook no plain widget defines: Fizzytiles' panes), read here as I paint,
-  # like _fillColor.
+  # _surfaceStroke, a soft hook: every panel and viewport answers its border -- the generic panel's,
+  # a window content's, Fizzytiles' panes' --, or none), read here as I paint, like _fillColor.
   _borderColor: ->
     @widget.strokeColor ? @widget._surfaceStroke?()
 

@@ -139,14 +139,15 @@ class SizeAwareIconAppearance extends IconAppearance
 
   # ---- a CONTROL glyph drawn as fills --------------------------------------
   # A control glyph that stands on a plate (a halo handle's four-way arrow,
-  # double arrows and curled-arrows square) is drawn as FILLS -- shafts and
-  # squares as rects, heads as polygons whose slanted edges run half a pixel
-  # off the pixel lattice, arcs as a ring clipped to a wedge -- on ONE line t:
-  # 2 logical px at the side the glyph is drawn at for real (2 px at dpr 1, 4
-  # at dpr 2), the weight of the bar's control glyphs. No round cap or join
-  # anywhere: with fills no pixel centre ties an edge, so a glyph mirrors
-  # exactly at every size, and SWCanvas's unpainted overlap of round-capped
-  # subpaths cannot reach it.
+  # double arrows and curled-arrows square; a text tool's face in its cell:
+  # the ragged lines, the A with its sign, the snippets page) is drawn as
+  # FILLS -- shafts and squares as rects, heads as polygons whose slanted
+  # edges run half a pixel off the pixel lattice, arcs as a ring clipped to a
+  # wedge -- on ONE line t: 2 logical px at the side the glyph is drawn at for
+  # real (2 px at dpr 1, 4 at dpr 2), the weight of the bar's control glyphs.
+  # No round cap or join anywhere: with fills no pixel centre ties an edge, so
+  # a glyph mirrors exactly at every size, and SWCanvas's unpainted overlap of
+  # round-capped subpaths cannot reach it.
   #   lineShare is t as a share of the side, 2 over the real side; t never
   # turns back as S grows.
   _controlGlyphLine: (S, lineShare) ->
@@ -168,6 +169,40 @@ class SizeAwareIconAppearance extends IconAppearance
       else
         ctx.lineTo x + px, y + py
     return
+
+  # the same polygon as one more CLOSED subpath, wound clockwise on screen
+  # whichever way its points run, so the overlapping parts of one nonzero
+  # fill (a letter's legs and its crossbar) add up and never cancel
+  _addClockwisePolygonSubpath: (ctx, x, y, points) ->
+    area = 0
+    for [x1, y1], i in points
+      [x2, y2] = points[(i + 1) % points.length]
+      area += x1 * y2 - x2 * y1
+    @_addPolygonSubpath ctx, x, y, (if area < 0 then points.slice().reverse() else points)
+    ctx.closePath()
+
+  # a BAR w x h at (x, y) as one more subpath of the path being built: a
+  # stadium (its ends round, at half its thickness) where `round` asks and it
+  # is at least 2 px thick, else a plain rect; an empty box adds nothing. The
+  # caller fills the path.
+  _addBarSubpath: (ctx, x, y, w, h, round) ->
+    return if w <= 0 or h <= 0
+    k = Math.min w, h
+    if round and k >= 2
+      ctx.roundRect x, y, w, h, k / 2
+    else
+      ctx.rect x, y, w, h
+
+  # a span in a glyph square of S px with the given PARITY (0 even, 1 odd):
+  # the whole px of that parity nearest S * units / GLYPH_GRID, never under
+  # `least`. A part that must centre on an axis of that parity -- a bar t
+  # thick across a plus, a row of bars on the square's centre column -- sits
+  # on it exactly.
+  _spanOfParity: (S, units, parity, least = 1) ->
+    exact = S * units / @GLYPH_GRID
+    n = 2 * Math.round((exact - parity) / 2) + parity
+    n += 2 while n < least
+    n
 
   # ---- colour roles --------------------------------------------------------
   # Every painter picks its colour through these — the ONE choke point that

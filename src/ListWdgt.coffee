@@ -5,6 +5,11 @@ class ListWdgt extends ViewportWdgt
   colloquialName: ->
     "list"
 
+  # my pane's fill, mine and my plane's (which my rows panel stands on), read as we paint while no
+  # builder dresses me otherwise (ViewportWdgt._paneFill)
+  _defaultPaneFill: ->
+    WorldWdgt.theme.listFill
+
   # The label a row shows for an element. A STATIC, asked at every row build, never stored on an
   # instance: a function-valued field has no source to serialize, so a list holding one would make
   # every world it stands in unsaveable.
@@ -74,7 +79,6 @@ class ListWdgt extends ViewportWdgt
     #
     super()
     @contents.disableDrops()
-    @color = WorldWdgt.theme.listFill
     @_buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
     # instead of undefined because the scrollbars (inherited from Viewport)

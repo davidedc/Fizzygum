@@ -119,9 +119,14 @@ class Theme
     # its text.
     @tooltipFill = @plate
     @tooltipText = @ink
-    # the speech bubble's (the placeable callout's) fill and stroke.
-    @speechBubbleFill = Color.create 250, 250, 250
-    @speechBubbleStroke = Color.create 186, 186, 186
+    # the SPEECH BUBBLE (SpeechBubbleWdgt, the placeable callout, its tail included): a plate's fill
+    # inside a 1 px border, read as it paints while it holds no colour of its own (its _surfaceFill
+    # / _surfaceStroke, which BoxyAppearance asks) ...
+    @speechBubbleFill = @plate
+    @speechBubbleStroke = @line
+    # ... and the ink of its text, given to the text as the bubble builds it (in fonts.speechBubble,
+    # italic, scaled to fit the bubble).
+    @speechBubbleText = @ink
 
     # the fill of a window's title strip on the desktop (an external frame) and of a card's (nested
     # in a real container, a docked band included). A strip carries no stroke: the line it draws is
@@ -140,6 +145,12 @@ class Theme
     # ... and the ink a strip glyph takes while it is hovered or pressed, in either strip (the
     # glyph recolours in place: no plate is drawn behind it).
     @barGlyphActive = @ink
+    # the ink of an ICON BUTTON's glyph that no strip inks (an IconButtonWdgt standing on its own: the
+    # demo's close icon, a pointer's close button), read at each of its state changes
+    # (IconButtonWdgt._updateColor): at rest, and while it is hovered or pressed. A strip inks the
+    # glyphs it carries itself, with the bar glyph roles above (IconButtonWdgt.setGlyphInk).
+    @iconButtonGlyph = @muted
+    @iconButtonGlyphActive = @ink
     # a window's body (a persistent frame on the desktop, a pinned pop-up included): its 1 px
     # frame stroke and its fill (FrameWdgt._frameLook).
     @windowFrameStroke = @frame
@@ -149,28 +160,53 @@ class Theme
     @cardFrameStroke = @line
     @cardBodyFill = @paper
 
-    # the fill and stroke every PanelWdgt and ViewportWdgt starts with.
-    @panelFill = Color.create 249, 249, 249
-    @panelStroke = Color.create 198, 198, 198
+    # the GENERIC PANEL look -- a bare PanelWdgt, a bare ViewportWdgt (and the plane it scrolls, which
+    # wears its viewport's look), and any panel or viewport whose class or builder gives it no look of
+    # its own -- read as the surface paints while it holds no colour of its own (PanelWdgt /
+    # ViewportWdgt._surfaceFill, _surfaceStroke): its fill and its 1 px border ...
+    @panelFill = @panel
+    @panelStroke = @line
+    # ... and the border of such a panel or viewport when it is a WINDOW'S WHOLE CONTENT (its frame's
+    # contents, asked from where it stands as it paints: FrameWdgt.isMyContents), and of the bin's
+    # pane (its window's content down to its footer band, BinWdgt): the frame's border and its
+    # strip's rule run along it.
+    @windowContentPanelStroke = undefined
+    # the PAPER a canvas's raster is laid on (CanvasWdgt: Draw's canvas, a factory canvas; its
+    # _surfaceFill), read as the raster is made, enlarged or cleared while the canvas holds no colour
+    # of its own.
+    @canvasFill = @paper
     # the rule between two panes a container places 1 px apart (Widget._seamRects); draft §6.4.
     @seamRule = @chrome
-    # a list's background (ListWdgt).
-    @listFill = Color.create 255, 255, 255
-    # the open bin's content pane: its viewport and the contents panel inside it.
-    @binViewportFill = Color.create 255, 255, 255
+    # a plain LIST's pane (ListWdgt: its viewport and the plane its rows panel stands on, read as they
+    # paint; ListWdgt._defaultPaneFill).
+    @listFill = @paper
+    # the open bin's pane (BinWdgt dresses its viewport in it, and the plane inside wears it too); its
+    # border is windowContentPanelStroke.
+    @binViewportFill = @paper
 
-    # the body of a text area (TextAreaWdgt), and of the mono text panel it configures into ...
-    @textAreaFill = Color.create 255, 255, 255
+    # the body of a text area (TextAreaWdgt: its viewport and the plane its text stands on, read as
+    # they paint; TextAreaWdgt._defaultPaneFill), a mono text panel's and a patch node's text boxes'
+    # included ...
+    @textAreaFill = @paper
     # ... and the background of the TEXT it holds (a bare text area's, a mono text panel's, an editable
     # code pane's: TextAreaWdgt's constructor, configureAsMonoTextPanel, CodeAreaWdgt): none, so the
     # area's own pane shows behind its text.
     @textAreaTextFill = Color.TRANSPARENT
-    # the editable code pane: a script's or a code prompt's editor body.
-    @codePaneFill = Color.create 255, 255, 255
+    # a CODE AREA's pane (CodeAreaWdgt._newCodeArea dresses it: the editor body of a script, a code
+    # prompt, a console and an error log): its fill, and its border, none -- it is its window's
+    # content down to its footer band, so the window's border, its strip's rule and its footer's rule
+    # are its lines.
+    @codePaneFill = @paper
+    @codePaneStroke = undefined
     # the ink of SOURCE CODE: in a code pane -- the Object Inspector's, a script's, a code prompt's, a
     # console's and an error log's -- which also takes fonts.code and codePanePadding, and in a patch
     # node's text boxes, which take fonts.code at their own padding.
     @codeText = @code
+    # the MODIFIED MARK of a code pane (ModifiedTextTriangleAnnotationWdgt: the triangle in the
+    # top-left corner of a script's, a code prompt's or the Object Inspector's code pane, shown while
+    # its text differs from the text it started with), read as the mark paints while it holds no
+    # colour of its own (its _surfaceFill, which UpperRightTriangleAppearance asks).
+    @codePaneModifiedMark = @muted3
     # the fill of a one-line text-entry FIELD (StringFieldWdgt: a prompt's entry field), a borderless
     # well rounded at textFieldCornerRadius, read as the field is painted (StringFieldWdgt._surfaceFill,
     # StringFieldAppearance): the draft's item fill.
@@ -180,12 +216,24 @@ class Theme
     # The caret is the editing FOCUS, which is what the accent marks. Its width and the gap it
     # stands after its slot are the caretWidth / caretGap metrics.
     @caretFill = @accent
+    # the INK of a text that holds no colour of its own (every StringWdgt -- so every TextWdgt,
+    # SimpleTextWdgt and paragraph too -- built without a `color` and never given one): a fixture's
+    # text, a prompt's entry text, a sample's text. Read as the text paints its lines
+    # (StringWdgt._drawTextLine), and part of the key of the text's buffer, so a changed role
+    # re-renders it. A text whose builder gives it an ink (a title, a menu row, a document's
+    # paragraph, code, a caption, the empty window's placeholder) paints in its own.
+    @defaultTextInk = @ink
     # a text's SELECTION (every StringWdgt, so every TextWdgt and paragraph too), read as the text
     # paints (StringWdgt.drawSelection): the ink of the selected characters and the plate behind
     # each of them -- the draft's selected label plate, a solid accent with paper text. The plate
     # must be opaque: neighbouring characters' plates overlap by a pixel.
     @textSelectionText = @paper
     @textSelectionFill = @accent
+    # the RULE of a text with a HEADER LINE (StringWdgt._drawHeaderUnderline: a document's divider,
+    # a calculating patch node's "Formula" and "Output" labels, Fizzytiles' pane captions): 1 px
+    # through the middle of its line, either side of its text, read as the text paints (it is part
+    # of the key of the text's buffer, so a changed role re-renders it).
+    @headerLineRule = @chrome
 
     # a SLIDER (SliderWdgt: a content slider, and a number prompt's): its TRACK, an opaque borderless
     # groove, while the slider holds no colour of its own and wears no scroll-indicator presentation
@@ -269,9 +317,17 @@ class Theme
     @chipCurrentFill = @accentTint
     @chipCurrentStroke = @accent
     @chipCurrentText = @accent
-    # a RECTANGULAR button's border (SimpleRectangularButtonWdgt: the demo switch's buttons, and the
-    # base of the paint tools, which paint their own).
-    @rectangularButtonStroke = Color.create 196, 195, 196
+    # a PLAIN button -- one with no look of its own that wears HighlightableMixin's state colours: a
+    # bare ButtonWdgt given an appearance, a SimpleRectangularButtonWdgt (the demo's simple button and
+    # the demo switch's buttons) -- the button's look (visual-design-system §4.3): its fill at rest,
+    # hovered and pressed, re-derived at each state change (HighlightableMixin._updateColor). A colour
+    # set on the mixin's own state fields (color_normal / color_hover / color_pressed) wins over these.
+    @plainButtonFill = @paper
+    @plainButtonHoverFill = @desk
+    @plainButtonPressFill = @chrome
+    # a RECTANGULAR button's border (SimpleRectangularButtonWdgt, read as it is painted: its
+    # _surfaceStroke; the paint tools built on it paint none).
+    @rectangularButtonStroke = @line
 
     # a plain resize / move / rotate HANDLE (HandleWdgt, painted by HandleAppearance: a halo's handles,
     # a naked inspector's resizer, a demo handle), the button's look (visual-design-system §4.3) over
@@ -366,16 +422,24 @@ class Theme
     # the ink of a TOOLBAR's glyphs -- a text tool's face, a creator button's, a paint tool's, the
     # overflow chevron -- the same in every state (the cell under a glyph shows the state).
     @toolbarGlyph = @ink
-    # the pencil on the corner "edit code" mark.
-    @editMarkInk = Color.create 0, 0, 0
+    # the corner "edit code" MARK (UpperRightTriangleIconicButtonWdgt: a paint tool's edit mark,
+    # EditableMarkWdgt): its triangle's fill at rest, hovered and pressed, re-derived at each state
+    # change (UpperRightTriangleIconicButtonWdgt._updateColor) ...
+    @editMarkFill = @paper
+    @editMarkHoverFill = @desk
+    @editMarkPressFill = @chrome
+    # ... and the ink of the pencil on it.
+    @editMarkInk = @ink
 
     # the Object Inspector's BODY, which it paints itself, naked and windowed alike: under its bands
     # and panes, the draft's panel ...
     @inspectorBodyFill = @panel
     # ... and its two panes' fill (the member list and the code pane, viewports and planes alike, and
-    # the background of the code pane's text): none, so the body and the inspector's seams show
-    # through them.
+    # the background of the code pane's text) and their border (InspectorWdgt._clearPaneLook dresses
+    # each pane in them, and a pane taken out of the inspector keeps them): none, so the body and the
+    # inspector's seams show through them.
     @inspectorPaneFill = Color.TRANSPARENT
+    @inspectorPaneStroke = undefined
     # the inspector's BREADCRUMB band (its class chips wear the chip roles, above): the ink of its
     # "Class" caption, of the drawn › separating two chips, and of its mixin-donor label ("from
     # <Name>Mixin", while a mixin-donated member is selected).
@@ -431,15 +495,26 @@ class Theme
     # empty window shows. In view mode a document's item melts into its page instead
     # (SimpleTextWdgt.blendInWithPanelColor).
     @editableItemFill = @item
+    # the ink of the PLACEHOLDER an empty window shows ("Drop a widget in here",
+    # FrameContentsPlaceholderText): a hint standing in for the missing contents, not content, so
+    # its builder gives it this ink as it builds it, over a text's default ink.
+    @framePlaceholderText = @muted2
     # a DOCUMENT's page (DocumentViewportWdgt): its fill, with no border, so the window's frame,
     # strip rule and docked band are the page's only lines ...
     @documentPageFill = @paper
     # ... and the ink of a document's text (DocumentViewportWdgt.getNormalParagraph), which also
     # takes fonts.document.
     @documentText = @ink
-    # the stack sample's page (a bare VerticalStackViewportWdgt): its fill. Its border is every
-    # viewport's, panelStroke.
-    @stackViewportFill = Color.create 249, 249, 249
+    # the stack sample's page (a bare VerticalStackViewportWdgt, and the stack it scrolls, which wears
+    # it: VerticalStackViewportWdgt._defaultPaneFill): its fill. Its border is every viewport's,
+    # panelStroke (windowContentPanelStroke as a window's whole content).
+    @stackViewportFill = @panel
+    # a bare VERTICAL STACK (a VerticalStackPanelWdgt that is not the plane of a viewport, whose look
+    # it wears), read as it paints while it holds no colour of its own (its _surfaceFill and
+    # _surfaceStroke): its fill and its 1 px border (undefined: none). As a window's whole content it
+    # draws no border: the frame's border and its strip's rule run along it.
+    @stackPanelFill = @panel
+    @stackPanelStroke = @line
     # the PAGE of the Slides Maker, the Dashboards Maker, the Generic panel and Patch programming
     # (StretchablePanelWdgt, both read as it paints): its fill, and the 1 px EDGE it draws along a
     # side where its container letterboxes it (StretchablePanelAppearance) -- its own boundary against
@@ -448,9 +523,10 @@ class Theme
     @stretchablePageFill = @paper
     @stretchablePageEdge = @line
     # a FOLDER WINDOW's panel (FolderPanelWdgt, read as it paints): its fill. It has no border, and
-    # neither has the viewport it scrolls in (FolderWindowWdgt): the window's frame and its strip's
-    # rule are its lines.
+    # neither has the viewport it scrolls in (FolderWindowWdgt dresses it in folderViewportStroke,
+    # none): the window's frame and its strip's rule are its lines.
     @folderPanelFill = @paper
+    @folderViewportStroke = undefined
 
     # a PLOT (the example plots, GraphsPlotsChartsWdgt's family and Example3DPlotWdgt): its AREA, the
     # box each drawPlot clears before drawing its content ...
@@ -467,6 +543,9 @@ class Theme
     # are its content.
     @plotAxisInk = @muted2
     @plotAxisLabelText = @muted2
+    # ... and the GROUND GRID a 3D plot draws under its mesh (Example3DPlotWdgt.drawPlot, read as it
+    # paints, at the mesh's alpha): the plot's frame of reference, as a 2D plot's axes are.
+    @plotGroundGridInk = @muted2
 
     # FIZZYTILES (FridgeMagnetsWdgt), each surface read as it is painted. Its PANES, four bordered
     # boxes 5 px apart, each its own surface: the fridge -- "Drag tiles here", where the program is

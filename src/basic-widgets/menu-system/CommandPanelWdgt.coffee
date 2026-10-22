@@ -110,20 +110,28 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
     @_holdsMemberRows = true  if opts.memberRows
     # replace the stack's RectangularAppearance with a box I never let show: no stroke, and a clear
-    # fill in my client's role. A pop-up frame paints its OWN box around me (and turns mine off,
-    # alpha 0, besides); a list's rows -- plain or member -- stand straight on the list's plane. A
-    # list's panel also frames none of its rows in the editor's outline
-    # (providesAmenitiesForEditing, above).
+    # fill in my client's role (_surfaceFill, read as I paint). A pop-up frame paints its OWN box
+    # around me (and turns mine off, alpha 0, besides); a list's rows -- plain or member -- stand
+    # straight on the list's plane. A list's panel also frames none of its rows in the editor's
+    # outline (providesAmenitiesForEditing, above).
     @appearance = new MenuAppearance @
-    @strokeColor = undefined
+    if @_holdsMemberRows or @_selectsItemsOnClick
+      @providesAmenitiesForEditing = false
+
+  # MY LOOK while I hold no colour of my own, read as I paint (my MenuAppearance asks): the rows
+  # panel's fill in my client's role -- a member list's, a plain list's or a pop-up's (each clear) --
+  # and no border (not the stack's).
+  _surfaceFill: ->
+    theme = WorldWdgt.theme
     if @_holdsMemberRows
-      @color = theme.memberRowsPanelFill
-      @providesAmenitiesForEditing = false
+      theme.memberRowsPanelFill
     else if @_selectsItemsOnClick
-      @color = theme.listRowsPanelFill
-      @providesAmenitiesForEditing = false
+      theme.listRowsPanelFill
     else
-      @color = theme.menuRowsPanelFill
+      theme.menuRowsPanelFill
+
+  _surfaceStroke: ->
+    undefined
 
   colloquialName: ->
     "menu rows"

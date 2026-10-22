@@ -883,6 +883,15 @@ class FrameWdgt extends Widget
   # dispatches via `?()` and a non-window answers undefined (falsy). (type-test-elimination campaign)
   isFrame: -> true
 
+  # Role query, the frame-side twin of ViewportWdgt.isMyContentsPanel: is aWdgt my WHOLE CONTENT
+  # (@contents, the payload my chrome wraps -- never my strip, my grip or a docked band)? A panel or
+  # viewport asks it of its parent as it paints (PanelWdgt / ViewportWdgt / VerticalStackPanelWdgt
+  # ._surfaceStroke): along my content my border and my strip's rule are the line, so the content
+  # wears the window content's border role -- derived from where it stands at every paint, so it
+  # follows every re-parenting and is never stored. Only a frame answers (?.()-dispatched).
+  isMyContents: (aWdgt) ->
+    aWdgt is @contents
+
   colloquialName: ->
     if @isInternal()
       return "internal window"

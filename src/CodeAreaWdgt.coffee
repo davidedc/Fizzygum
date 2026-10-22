@@ -2,8 +2,9 @@
 # ConsoleWdgt ("dev -> console"), ScriptWdgt (a standalone script on the desktop),
 # CodePromptWdgt (the code-entry popup) and ErrorsLogViewerWdgt (the error log).
 # It carries what is common to the family: the code-area fields + the padding, the build
-# settle-wrapper, the two code-area builder variants (the EDITABLE white panel with
-# modified-content tracking -- Script/CodePrompt -- and the plain mono panel -- Console/ErrorsLog),
+# settle-wrapper, the two code-area builder variants (the EDITABLE panel with
+# modified-content tracking -- Script/CodePrompt -- and the plain mono panel -- Console/ErrorsLog,
+# both in the code pane's roles),
 # my look, and my ARRANGEMENT: the code area on top, then my footer band (FooterBandLayout), whose
 # rule is my one seam. Everything that differs per class stays on the subclass: the constructor
 # signature, the buttons, which of them sit in the footer's left group and which in its right
@@ -28,29 +29,29 @@ class CodeAreaWdgt extends Widget
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   # My CODE AREA, as both variants below build it: a TextAreaWdgt in the CODE role -- its text born in
-  # fonts.code and the codeText ink, codePanePadding in from its edges -- and with NO BORDER of its
-  # own: it is my window's content down to my footer band, so the window's border runs along its
-  # sides, the window's title strip ends in a rule above it and my footer band's rule ends it below,
-  # and a border of its own would double each of those lines (visual-design-system §4.1). Its fills
-  # stay. Set here, on my code area only: a TextAreaWdgt anywhere else keeps its border.
+  # fonts.code and the codeText ink, codePanePadding in from its edges -- dressed in the code pane's
+  # roles (ViewportWdgt.wearPaneRoles, read as it paints, and kept by name wherever it is taken): the
+  # codePaneFill, and the codePaneStroke, NO BORDER of its own: it is my window's content down to my
+  # footer band, so the window's border runs along its sides, the window's title strip ends in a rule
+  # above it and my footer band's rule ends it below, and a border of its own would double each of
+  # those lines (visual-design-system §4.1). Dressed here, my code area only: a TextAreaWdgt anywhere
+  # else keeps its own look and its border.
   _newCodeArea: (initialText) ->
     theme = WorldWdgt.theme
     codeArea = new TextAreaWdgt initialText, false, theme.codePanePadding, fontRole: theme.fonts.code, textColor: theme.codeText
-    for surface in [codeArea, codeArea.contents]
-      surface.strokeColor = undefined
+    codeArea.wearPaneRoles fill: "codePaneFill", stroke: "codePaneStroke"
     codeArea
 
-  # the EDITABLE code-area variant (ScriptWdgt / CodePromptWdgt): my code area (_newCodeArea) on a
-  # white viewport, drops disabled, modified-content indicator, its text transparent, editable, with
-  # selection enabled. The text it opens with is the text it compares against, so it starts
-  # UNMODIFIED: the indicator stays hidden, and a save button the notified widget keeps in step
-  # starts disabled, until the text diverges.
+  # the EDITABLE code-area variant (ScriptWdgt / CodePromptWdgt): my code area (_newCodeArea), drops
+  # disabled, modified-content indicator, its text transparent, editable, with selection enabled. The
+  # text it opens with is the text it compares against, so it starts UNMODIFIED: the indicator stays
+  # hidden, and a save button the notified widget keeps in step starts disabled, until the text
+  # diverges.
   _buildEditableCodeAreaNoSettle: (initialText) ->
     @tempPromptEntryField = @_newCodeArea initialText
     @tempPromptEntryField.textWdgt.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = WorldWdgt.theme.codePaneFill
     @tempPromptEntryField.addModifiedContentIndicator()
 
     # register this wdgt as one to be notified when the text

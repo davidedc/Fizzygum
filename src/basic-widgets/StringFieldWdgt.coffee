@@ -10,9 +10,9 @@
 #
 # I wear a text field's look, read as I am painted (StringFieldAppearance): a borderless well
 # rounded at textFieldCornerRadius, in the textFieldFill role (_surfaceFill) until a colour is set
-# on me. PanelWdgt's constructor gives every panel the generic panel look as its OWN fill and
-# stroke; I keep neither, so a field saved, loaded or duplicated wears the look of the world it is
-# shown in. My whole box is my press target, the well's rounded corners included.
+# on me. Like every panel I hold no colour of my own, so a field saved, loaded or duplicated wears
+# the look of the world it is shown in. My whole box is my press target, the well's rounded corners
+# included.
 
 class StringFieldWdgt extends PanelWdgt
 
@@ -46,10 +46,9 @@ class StringFieldWdgt extends PanelWdgt
     @isNumeric = opts.isNumeric ? false
     super()
     @appearance = new StringFieldAppearance @
-    @color = undefined
-    @strokeColor = undefined
 
-  # the fill my StringFieldAppearance paints my well in while I hold no colour of my own
+  # the fill my StringFieldAppearance paints my well in while I hold no colour of my own (it paints
+  # no border, so it never asks the panel's _surfaceStroke)
   _surfaceFill: ->
     WorldWdgt.theme.textFieldFill
 

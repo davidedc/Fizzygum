@@ -26,20 +26,19 @@
 
 class FolderPanelWdgt extends IconGridPanelWdgt
 
-  # I wear a folder window's panel look, read as I am painted: my fill is the folderPanelFill role
-  # (_surfaceFill) until a colour is set on me, and I have no border -- the window's frame and its
-  # strip's rule are my lines (FolderWindowWdgt). PanelWdgt's constructor gives every panel the
-  # generic panel look as its OWN fill and stroke; I keep neither, so a folder saved, loaded or
-  # duplicated wears the look of the world it is shown in.
-  constructor: ->
-    super()
-    @color = undefined
-    @strokeColor = undefined
+  # I wear a folder window's panel look, read as I am painted (_surfaceFill, _surfaceStroke): my fill
+  # is the folderPanelFill role until a colour is set on me, and I have no border -- the window's
+  # frame and its strip's rule are my lines (FolderWindowWdgt). Like every panel I hold no colour of
+  # my own, so a folder saved, loaded or duplicated wears the look of the world it is shown in.
 
   # the fill my RectangularAppearance paints me in while I hold no colour of my own (my viewport,
   # whose paint mimics mine, answers it too: ViewportWdgt._surfaceFill)
   _surfaceFill: ->
     WorldWdgt.theme.folderPanelFill
+
+  # ... and my border: none (not the generic panel's)
+  _surfaceStroke: ->
+    undefined
 
   # I manage my contents through the folder machinery (shortcut-creation on drop, grid
   # positioning), so my enclosing viewport must refuse RAW drops — it asks via ?()

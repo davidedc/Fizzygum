@@ -42,21 +42,17 @@ class EditIconButtonWdgt extends IconButtonWdgt
     @toolTipMessage = "edit contents"
     @_updateColor()
 
-  # Override the HighlightableMixin colour hook to ALSO swap the glyph. At rest: the
-  # CURRENT mode's glyph, in the resting ink. Highlighted / pressed: the glyph of the mode
-  # a click switches TO, in that state's ink (the feedforward). The inks are the state
-  # machine's own fields, so they are exactly what the mixin's hook would paint.
+  # Override the icon button's colour hook to ALSO swap the glyph. At rest: the CURRENT
+  # mode's glyph. Highlighted / pressed: the glyph of the mode a click switches TO (the
+  # feedforward). The ink is then the icon button's for the state I am in
+  # (IconButtonWdgt._updateColor), which also repaints me, so a swapped glyph shows even when
+  # the ink is unchanged.
   _updateColor: ->
     if @state is @STATE_NORMAL
       @appearance = if @_editModeNow then new PencilIconAppearance @ else new EyeIconAppearance @
-      stateInk = @color_normal
     else                       # hovered or pressed -> preview the OTHER mode
       @appearance = if @_editModeNow then new EyeIconAppearance @ else new PencilIconAppearance @
-      stateInk = if @state is @STATE_PRESSED then @color_pressed else @color_hover
-    # public-call-sanctioned: mirrors HighlightableMixin._updateColor (which this overrides) — setColor is the
-    # pure paint-colour setter (sets @color + changed, no layout settle), here driving the per-state glyph colour.
-    @setColor stateInk
-    @_changed()   # explicit: setColor early-returns when the colour is unchanged, but the GLYPH may still have swapped
+    super()
 
   # Immediate action tooltip: the base delay is 500ms; on THIS button the
   # bubble explains what a click does, so we want it to land with the hover preview — show

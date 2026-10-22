@@ -780,12 +780,12 @@ class InspectorWdgt extends Widget
     [@saveButton]
 
   # A pane of mine paints nothing of its own -- neither the viewport nor the plane it scrolls has a
-  # fill or a border -- so my body and my seams show through it (visual-design-system §4.1). Set on
-  # MY two panes as they are built: a ListWdgt or a TextAreaWdgt anywhere else keeps its own look.
+  # fill or a border -- so my body and my seams show through it (visual-design-system §4.1): each is
+  # dressed in the inspector pane's roles (ViewportWdgt.wearPaneRoles; its plane wears them too),
+  # read as it paints and kept by name, so a pane taken out of me keeps them. Dressed on MY two panes
+  # as they are built: a ListWdgt or a TextAreaWdgt anywhere else keeps its own look.
   _clearPaneLook: (pane) ->
-    for surface in [pane, pane.contents]
-      surface.color = WorldWdgt.theme.inspectorPaneFill
-      surface.strokeColor = undefined
+    pane.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
     return
 
   notifyInstancesOfSourceChange: (propertiesArray)->

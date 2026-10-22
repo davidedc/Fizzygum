@@ -67,12 +67,11 @@ class TransformFrameWdgt extends PanelWdgt
   ]
 
   constructor: (contentWidget, transformSpec) ->
-    super()   # PanelWdgt ctor (sets appearance/color/stroke) — we blank them below
+    super()   # PanelWdgt ctor (sets the appearance) — we blank it below
     @transformSpec = transformSpec ? new TransformSpec()
-    # invisible frame: no background, no stroke, no chrome of its own.
+    # invisible frame: no background, no stroke, no chrome of its own (no appearance, and no look
+    # either: _surfaceFill / _surfaceStroke).
     @appearance = undefined
-    @color = undefined
-    @strokeColor = undefined
     # The invisible frame itself never accepts drops — permanent design, not just the Phase-1
     # §4.6 scope cut it began as: 4D confirmed no flip is needed (a drop-accepting CONTENT
     # container inside the island resolves as the dropTargetFor climb target; when the climb
@@ -87,6 +86,14 @@ class TransformFrameWdgt extends PanelWdgt
   # authored island falls back to its own name.
   colloquialName: ->
     @_soleContent()?.colloquialName() ? "transform frame"
+
+  # I am no surface: I answer no panel look (not the generic panel's), so a text standing in me
+  # finds no page fill to melt into (SimpleTextWdgt._fillOfMyPage), and nothing paints me.
+  _surfaceFill: ->
+    undefined
+
+  _surfaceStroke: ->
+    undefined
 
   # A ROW that names me (a hierarchy menu's, a chooser's) names the transform itself: beside my
   # content's own row, my content's name a second time would read as a second such widget

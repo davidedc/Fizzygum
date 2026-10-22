@@ -40,7 +40,10 @@ another class, and most values are `Color`s):
 **The ratchet.** A colour literal in a chrome file is a look decided outside this system — a restyle
 edits `Theme` and cannot reach it. The `raw-chrome-color` stink (`buildSystem/check-stinks.js`; table in
 [`lint-and-static-checks.md`](lint-and-static-checks.md)) counts them outside content, icon art and the
-colour plumbing, and only ever goes down. Its tolerated tail is listed there.
+colour plumbing, and it is at 0: any such literal fails the build. A literal in a counted file that is data rather
+than a look decision (a wallpaper pattern, palette data, a paint tool's source text, a new shape's content default)
+is DECLARED in the stink's `sanctioned` list by file and member, with its reason, and an entry that no longer matches
+its member's literals fails too.
 
 ## 2. The palette
 
@@ -48,18 +51,18 @@ colour plumbing, and only ever goes down. Its tolerated tail is listed there.
 |---|---|---|
 | `ink` | `#1E1E1C` | Text and icon strokes; never large fills |
 | `chromeDark` | `#4A4A46` | Reserved for a focused window (no focus state exists yet) |
-| `chrome` | `#E2E2DE` | Title bars, the embedded toolbar strip, 1 px rules inside windows (`seamRule`), the disabled button outline |
-| `line` | `#C9C9C4` | Control and tile borders, the title bar's bottom rule, the strip divider |
+| `chrome` | `#E2E2DE` | Title bars, the embedded toolbar strip, 1 px rules inside windows (`seamRule`), a text's header-line rule, the disabled button outline |
+| `line` | `#C9C9C4` | Control and tile borders, the title bar's bottom rule, the strip divider, a free-standing panel's border |
 | `frame` | `#B9B9B4` | Frames of windows and menus |
 | `chip` | `#D2D2CD` | Border of a chip that is not selected |
 | `desk` | `#ECECE8` | Wallpaper, active tool button, highlighted menu row, pale fill inside icons |
-| `plate` | `#F4F4F1` | Desktop icon label plates, the tooltip |
+| `plate` | `#F4F4F1` | Desktop icon label plates, the tooltip, the speech bubble |
 | `item` | `#F0F0EC` | A document paragraph item |
-| `panel` | `#FAFAF8` | The Object Inspector's body |
-| `paper` | `#FFFFFF` | Window content, tiles, menus, the clock face, buttons |
+| `panel` | `#FAFAF8` | The Object Inspector's body; a bare panel's or viewport's fill |
+| `paper` | `#FFFFFF` | Window content, tiles, menus, the clock face, buttons, code panes, lists and text areas, a canvas |
 | `muted` | `#6A6A66` | Window title text and bar controls |
-| `muted2` | `#8A8A85` | Secondary labels: "Class", `fn`, a menu header |
-| `muted3` | `#A5A5A0` | Chevrons and breadcrumb separators |
+| `muted2` | `#8A8A85` | Secondary labels: "Class", `fn`, a menu header, an empty window's placeholder |
+| `muted3` | `#A5A5A0` | Chevrons and breadcrumb separators, a code pane's "modified" mark |
 | `text2` | `#55554F` | Text on toggles and chips that are off; a toolbar strip's glyph |
 | `code` | `#3A3A36` | Source code text |
 | `grip` | `#BDBDB8` | The resize grip's strokes |
@@ -77,6 +80,11 @@ member, so a caller can take a role and override one member. A text built withou
 `fonts.defaultText`. `StringWdgt` and everything built on it read the role; `LabelButtonWdgt` (its builder's role; a
 `MagnetWdgt` builds its label in `code`), `MenuItemWdgt` (`menuRow` or `listRow`, by the panel that builds it; a `MemberRowWdgt` takes `memberName`, its kind tag `memberKindTag`) and `StringFieldWdgt`
 forward it.
+
+A text's INK is a role too: a text built without a colour holds none and paints in `defaultTextInk` (`ink`), read as
+it paints each line and keyed into its back buffer, so a saved or duplicated text wears the world's ink. A builder
+that gives its text an ink gives it the role of its surface as it builds it (a window title's `titleText`, a speech
+bubble's `speechBubbleText`, the empty window's placeholder `framePlaceholderText`, `muted2`: a hint, not body text).
 
 **The line box.** Every line of a text stands in a line box, answered from ONE home on `StringWdgt` (the
 "THE LINE BOX" block: `linePitch`, `caretBoxInLine`, `caretTopLeftAt` and their private helpers), which wrapping,
@@ -188,7 +196,12 @@ while it has that alignment. The focus has ONE write (`WorldWdgt._setEditorFocus
 announce a change while it is the focus (`noteStyleChanged`); each text toolbar hears both through one dataflow edge
 world → toolbar, so it follows in the same cycle with no timer. A hidden active tool ticks its row in the `»` menu. It clips its tool to its rounded outline, so a press in a corner notch
 falls through. Every glyph in a toolbar is `toolbarGlyph` (`ink`); the overflow `»` is the drawn double chevron at
-`toolOverflowGlyphSize` (16) on the same state plate.
+`toolOverflowGlyphSize` (16) on the same state plate. The text toolbar's faces are B, I and `</>` typed in their
+faces' fonts, and the rest drawn as size-aware control glyphs on the » × − + weight (2 px in the 44 cell), ink only and
+every part a fill, so the cell's state plate shows through them: the script A (font family), the align trio as four
+ragged bars, long and short, with round ends (`RaggedLinesIconAppearance`, anchored left, centre or right), the font-size
+pair as a drawn A with a small plus or minus (`LetterAWithSignIconAppearance`), and the snippets (Templates) face as a
+folded page with a filled heart.
 
 **The desktop icon** (`WidgetHolderWithCaptionWdgt`, painted by `DesktopIconAppearance`) is a pressable tile
 and a label plate in a cell of the standard desktop-icon extent (the cell by a two-line height, all from the one
@@ -369,10 +382,18 @@ exactly one owning widget:
 | A window content's row of buttons | its footer band (`FooterBandLayout`, the geometry); the rule is the host's seam, painted by its appearance (`SeamRulesAppearance` for a host with no look of its own) |
 | Desktop icon tile, glyph and label plate | `WidgetHolderWithCaptionWdgt` and its appearance `DesktopIconAppearance` (the tile and the plate are paint; its hit shape and its silhouette are the two shapes); the glyph is its `icon` child in the glyph square, the caption its `label` `TextWdgt` on the plate (§4.3) |
 | Spreadsheet grid | `SimpleSpreadsheetWdgt`'s header cells (`SheetHeaderCellWdgt` + `SheetHeaderCellAppearance`) and data cells (`CellWdgt` + `CellAppearance`); the sheet paints nothing. A header: `spreadsheetHeaderFill` (`desk`), its letter or number `fonts.buttonLabel` in `spreadsheetHeaderText` (`muted2`); the line under the letter row and right of the number column `spreadsheetHeaderRule` (`line`), every other edge `spreadsheetGridline` (`chrome`), each a 1 px edge a cell or header strokes along its own top or left (`SimpleSpreadsheetWdgt.paintGridEdges`); none along the sheet's outer top and left boundary, where the window's lines are; the selected cell a 2 px `spreadsheetSelectionRing` (`accent`) inside its edges; a value `fonts.spreadsheetCell` in `spreadsheetValueText` (`ink`), an error value in `spreadsheetErrorText` (`danger`). Every colour is read at paint or build time, so a saved or duplicated sheet wears the current look |
-| Plot | `GraphsPlotsChartsWdgt` and its examples: the area `plotBackgroundFill` (`paper`), the box `plotFrameStroke` (`line`, the crisp spelling), a `PlotWithAxesWdgt`'s surround `plotSurroundFill` (`paper`, read at paint), its axes' line, ticks and labels `plotAxisInk` / `plotAxisLabelText` (`muted2`, applied at every arrange); the series are content |
+| Plot | `GraphsPlotsChartsWdgt` and its examples: the area `plotBackgroundFill` (`paper`), the box `plotFrameStroke` (`line`, the crisp spelling), a `PlotWithAxesWdgt`'s surround `plotSurroundFill` (`paper`, read at paint), its axes' line, ticks and labels `plotAxisInk` / `plotAxisLabelText` (`muted2`, applied at every arrange), a 3D plot's ground grid `plotGroundGridInk` (`muted2`, read at paint, at the mesh's alpha); the series are content |
 | A Maker's page | `StretchablePanelWdgt` (the Slides Maker's, the Dashboards Maker's, Generic panel's and Patch programming's page) through `StretchablePanelAppearance`: `stretchablePageFill` (`paper`), read at paint; a 1 px `stretchablePageEdge` (`line`) only along a side where its container letterboxes it (the crystallized ratio), none along a side flush with it |
 | Folder window | `FolderWindowWdgt`: its panel `folderPanelFill` (`paper`), read at paint; the panel and its viewport borderless (the window's frame and strip rule are the lines); its title "Folder — Examples" (§4.9) |
 | Fizzytiles | `FridgeMagnetsWdgt`'s fridge, tiles bin and output pane on `paper` inside `line` borders (`fizzytiles*` roles, read at paint), the four captions `fonts.fizzytilesCaption` in `fizzytilesCaptionText` (`muted2`); the code pane `fonts.code` in `codeText` on `fizzytilesCodePaneFill`, no border; a MAGNET (`MagnetWdgt`, `MagnetAppearance`) the button's look derived at paint from its state (`magnetFill` `paper` inside a `magnetStroke` `line` border, `magnetHoverFill` `desk` hovered, `magnetPressFill` `chrome` inside `magnetPressStroke` `frame` pressed, rounded at `magnetCornerRadius` 6; hit shape and silhouette the rounded box), its label a code token in `fonts.code` and `magnetText` (`ink`) |
+| Generic panel and viewport | `PanelWdgt` and `ViewportWdgt` hold no colour of their own and are painted in roles read at paint (`_surfaceFill`, `_surfaceStroke`): `panelFill` (`panel`) inside a 1 px `panelStroke` (`line`), and no border of their own as a window's whole content (`FrameWdgt.isMyContents`, asked at paint: `windowContentPanelStroke`, none — the frame's border and its strip's rule are that line). A viewport's default plane wears its viewport's pane look (`ViewportWdgt._paneFill`): its class's pane fill (`_defaultPaneFill`: a plain list's and a text area's `paper`, the stack sample's `panel`, a document's page), or the roles a builder dresses it in BY NAME (`wearPaneRoles`: the Object Inspector's panes, a code area, a patch node's text box, the bin's pane, a folder window's viewport), which travel with the pane wherever it is taken. A bare `VerticalStackPanelWdgt` wears the panel look (`stackPanelFill`, `stackPanelStroke`). A colour set on one (`setColor`) wins over its role. |
+| Plain buttons | a `HighlightableMixin` consumer with no look of its own (a bare `ButtonWdgt` given an appearance, the demo's `SimpleRectangularButtonWdgt`): `plainButtonFill` (`paper`) at rest, `plainButtonHoverFill` (`desk`) hovered, `plainButtonPressFill` (`chrome`) pressed, re-derived at each state change (the mixin's `_updateColor`; a set `color_normal` / `color_hover` / `color_pressed` wins); the rectangular button's square border `rectangularButtonStroke` (`line`) |
+| Icon buttons off a strip | an `IconButtonWdgt` no frame strip inks (the demo's close icon, a pointer's close button): its glyph `iconButtonGlyph` (`muted`) at rest, `iconButtonGlyphActive` (`ink`) hovered and pressed; a strip inks the glyphs it carries itself (§5's frame look) |
+| A paint tool's edit mark | `UpperRightTriangleIconicButtonWdgt` (`EditableMarkWdgt`): the triangle `editMarkFill` / `editMarkHoverFill` / `editMarkPressFill` (`paper` / `desk` / `chrome`) by state, its pencil `editMarkInk` (`ink`) |
+| Canvas | a `CanvasWdgt`'s raster (Draw's canvas, a factory canvas) is laid on `canvasFill` (`paper`) as it is made, enlarged or cleared, unless a colour is set on the canvas |
+| Header-line rule | `StringWdgt._drawHeaderUnderline` (a document's divider, a patch node's field labels, Fizzytiles' captions): a 1 px `headerLineRule` (`chrome`) through the middle of the line, broken 5 px either side of the text, read at paint and part of the text's back-buffer key |
+| A code pane's modified mark | `ModifiedTextTriangleAnnotationWdgt` + `UpperRightTriangleAppearance`: the 10×10 top-left triangle in `codePaneModifiedMark` (`muted3`), read at paint, shown while the text differs from its reference |
+| Speech bubble | `SpeechBubbleWdgt` + `BubblyAppearance`: `speechBubbleFill` (`plate`) inside a 1 px `speechBubbleStroke` (`line`), read at paint (`BoxyAppearance._fillColor` / `_borderColor` ask a widget holding no colour for its `_surfaceFill` / `_surfaceStroke`), radius 6, its tail at the bottom-left; its text `fonts.speechBubble` (12, italic, scaled to fit the bubble) in `speechBubbleText` (`ink`) |
 | The error log's footer | Clear, the fixed-label "Pause" toggle (`LabelledToggleWdgt`, on while paused) and OK in its footer band (§4.3) |
 | Clock | `AnalogClockWdgt` + `AnalogClockAppearance`: an opaque `clockFace` disc (no border) that is also its hit shape and its silhouette, four `clockMark` dots, hour and minute hands in `ink`, the second hand and the centre dot in `accent`; every width a whole number of device pixels of the face's parity (`pixelsForUnits`), so a hand is one width pointing any way; round caps from 4 px |
 
@@ -433,9 +454,10 @@ The rows panel opts out of the editor outline (`providesAmenitiesForEditing: fal
 
 **Code panes** (the Object Inspector's code pane, the script window, the code prompt, the console, the error log)
 are built in the code role: `fonts.code` (12 px mono), `codeText`, `codePanePadding` (12) — a `TextAreaWdgt`
-forwards `fontRole` and `textColor` to its text. A text area's text paints no background of its own (`textAreaTextFill`, transparent): the pane shows behind it. A code area that is its window's content is borderless: the
-window's border, its strip's rule and its footer's rule are its lines (every other `TextAreaWdgt` keeps its
-border). A patch node's text boxes (`PatchNodeWdgt._newTextBox`) take `fonts.code` and `codeText` at their own padding (5),
+forwards `fontRole` and `textColor` to its text. A text area's text paints no background of its own (`textAreaTextFill`, transparent): the pane shows behind it. A code area is dressed in the code pane's roles
+(`wearPaneRoles`): a `codePaneFill` (`paper`) pane and no border (`codePaneStroke`): it is its window's content, so the
+window's border, its strip's rule and its footer's rule are its lines (a bare `TextAreaWdgt` keeps the panel's `line`
+border on its `textAreaFill`, `paper`). A patch node's text boxes (`PatchNodeWdgt._newTextBox`) take `fonts.code` and `codeText` at their own padding (5),
 inside a 1 px `patchNodeTextBoxStroke` (`line`) border; a calculating node's field labels ("Formula", "Output") are
 `fonts.buttonLabel` in `patchNodeFieldLabelText` (`muted2`). Its lines stand on the role's 18 px
 line boxes (the draft's; on SWCanvas: baseline 12, caret rows 1–15 of each line).
@@ -456,7 +478,14 @@ plate of radius 6 at its top; no row paints a hairline, and the panel opts out o
    from `Theme`.
 2. **Colours:** read the role named for your surface (`WorldWdgt.theme.<role>`); if your surface has
    none, add one to `Theme`'s ROLES section, named for the surface, at the value it paints with.
-   Never a colour literal in a chrome file (§1, the ratchet).
+   Never a colour literal in a chrome file (§1, the ratchet). Read it where the look is USED — at paint,
+   at arrange, at a state change — never copied into the widget as it is built: a copied colour is
+   serialized and pins the old look in every saved or duplicated widget. A surface that wears a role
+   holds no colour of its own and answers `_surfaceFill` / `_surfaceStroke`, which its appearance asks
+   (`RectangularAppearance`, `BoxyAppearance`, `CircleBoxyAppearance`); a colour set on it still wins.
+   A state colour is derived at each state change (`_updateColor`), never declared at class level (a
+   class-level declaration cannot read `Theme`). A pane a builder dresses wears roles by NAME
+   (`ViewportWdgt.wearPaneRoles`), so it keeps them wherever it is taken.
 3. **Text:** `fontRole: WorldWdgt.theme.fonts.<role>`.
 4. **Sizes:** chrome dimensions are `Theme` metrics; a chrome target is at least 44 (§4.2).
 5. **Shape:** pressable ⇒ bordered and rounded (§4.3); per-corner radii where it sits inside a rounded

@@ -37,7 +37,6 @@ class TextAreaWdgt extends ViewportWdgt
     @disableDrops()
     @contents.disableDrops()
     @isTextLineWrapping = wraps
-    @color = WorldWdgt.theme.textAreaFill
     @textWdgt = new SimpleTextWdgt textAsString,
       fontRole: opts.fontRole
       color: opts.textColor
@@ -52,7 +51,7 @@ class TextAreaWdgt extends ViewportWdgt
     @setContents @textWdgt, padding
     @textWdgt.lockToPanels()
 
-  # Configure this panel as the "mono text-entry box" the code-editing widgets share: a white, drops-disabled
+  # Configure this panel as the "mono text-entry box" the code-editing widgets share: a drops-disabled
   # panel whose text widget has no background (textAreaTextFill), editable-and-selectable when isEditable,
   # read-only otherwise. Its text's MONOSPACED font is not set here: a mono text panel is BUILT in the
   # code role (`fontRole: WorldWdgt.theme.fonts.code`, the constructor's option), so its text is born
@@ -61,13 +60,13 @@ class TextAreaWdgt extends ViewportWdgt
   # ink, codePanePadding); the patch nodes (CalculatingPatchNodeWdgt, RegexSubstitutionPatchNodeWdgt,
   # DiffingPatchNodeWdgt) build theirs through PatchNodeWdgt._newTextBox -- fonts.code and the codeText
   # ink at the node's own padding, inside the node's own border -- each node keeping its own
-  # textWdgt-derived field.
-  # The drops/colour lines re-assert the constructor's defaults verbatim — kept so
+  # textWdgt-derived field. My look is not set here: it is my pane's (_defaultPaneFill), or the roles
+  # my builder dresses me in (ViewportWdgt.wearPaneRoles), read as I paint.
+  # The drops/background lines re-assert the constructor's defaults verbatim — kept so
   # this is pure code-motion (the exact op sequence the call sites ran), not an idempotency argument.
   configureAsMonoTextPanel: (isEditable) ->
     @disableDrops()
     @contents.disableDrops()
-    @color = WorldWdgt.theme.textAreaFill
     @textWdgt.backgroundColor = WorldWdgt.theme.textAreaTextFill
     @textWdgt.isEditable = isEditable
     if isEditable then @textWdgt.enableSelecting()
@@ -82,6 +81,11 @@ class TextAreaWdgt extends ViewportWdgt
 
   colloquialName: ->
     return "text"
+
+  # my pane's fill, mine and my plane's, read as we paint while no builder dresses me otherwise
+  # (ViewportWdgt._paneFill)
+  _defaultPaneFill: ->
+    WorldWdgt.theme.textAreaFill
 
   # always content-sizing, wrap on or off (type-test-elimination ε; see
   # ViewportWdgt.isContentSizing)

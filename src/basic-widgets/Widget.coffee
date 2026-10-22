@@ -3031,10 +3031,13 @@ class Widget extends TreeNode
   opaqueCoveredRect: ->
     # ephemeral overlays (highlights, drag affordances) are translucent screen-toppers, never coverers
     return undefined if @isEphemeral()
-    # the fill runs at globalAlpha = @alpha, and @color must be a solid opaque colour
-    # (else fillStyle emits rgba(...) -- Color.toString gates on _a == 1)
+    # the fill runs at globalAlpha = @alpha, and the colour it fills with must be a solid opaque one
+    # (else fillStyle emits rgba(...) -- Color.toString gates on _a == 1). That colour is the one my
+    # appearance FILLS with (its _fillColor: my own colour, or, while I hold none, the role I answer
+    # -- a panel's) -- an appearance that does not say fills with my own @color.
     return undefined if @alpha != 1
-    return undefined if !@color? or @color._a != 1
+    fill = @appearance?._fillColor?() ? @color
+    return undefined if !fill? or fill._a != 1
     @appearance?.opaqueCoveredRect()
 
   # in general, the children of a Widget could be outside the

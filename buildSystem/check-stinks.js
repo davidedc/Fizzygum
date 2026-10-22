@@ -31,6 +31,18 @@
 // chrome file and plain data in a demo). Every file the list does not name is scanned, so a NEW
 // file is counted by default; an exclusion is a decision someone wrote down, never an accident.
 //
+// A stink may declare `sanctioned`: a list of { file, member, count, why } naming the sites INSIDE
+// scanned files where a hit is not the smell — a literal that is data, not a look decision. `file`
+// is src-relative; `member` is the hit's ENCLOSING MEMBER (the nearest class-body key above it at
+// the 2-space indent — a method, a field, a static `@NAME` —, or in a mixin file the nearest key at
+// the 6-space indent of its instance-property hash; a deeper key is an option object's and never
+// names a member). A group of hits matching an entry is not counted against the baseline when its
+// size equals `count` EXACTLY; otherwise the entry FAILS the build — 0 hits is a STALE entry (delete
+// it), any other number is a COUNT mismatch (a literal was added to or removed from a sanctioned
+// member: decide again). So the list is a DECLARATION, never a hiding place: it cannot outlive what
+// it names, and it cannot silently absorb a new literal. `--list` prints the sanctioned hits apart,
+// each with its `why`.
+//
 // A code-scope stink may declare `stringAware: true` to cut the comment at the first `#` that sits
 // OUTSIDE a quoted string ('…', "…" incl. its `#{…}` interpolation, `…`), so a literal written
 // inside a string — a CSS `'#rrggbb'` — stays visible to `re`; the default naive cut takes that
@@ -86,7 +98,7 @@ const STINKS = [
   { id: 'helper-compiling-operator', baseline: 0,   // HARD from the day it was added (2026-08-17): src was already at zero, and every site this can match is a guaranteed runtime ReferenceError
     why: "CoffeeScript compiles `%%` into a `modulo` HELPER FUNCTION declared in the emitted `var` block — and the meta-system STRIPS that block out of every member it compiles (src/meta/Class.coffee _removeHelperFunctions, `/^var(.|\\n)*?\\(function/`), so the operator becomes a call to something that does not exist. Nothing else catches it: it parses, so the syntax gate passes it, and the strip's own guard enumerates only three helper names (indexOf/hasProp/slice) — it does not know about this one. The failure surfaces as a widget BANNED FROM REPAINTING with `ReferenceError: modulo is not defined` in the error log, i.e. as a screenshot diff. Spell the wrap out (`x += 6 if x < 0`)",
     re: /%%/ },
-  { id: 'raw-chrome-color', baseline: 48,   // seeded 2026-10-17 at THIS engine's own count (98), once the shadow silhouettes read their Theme role (redesign plan §4 F1); 98->96 on 2026-10-17 (redesign W1: the pencil/eye button takes its strip's inks and drops its two class-level colours); 96->91 on 2026-10-18 (redesign W2: menu rows and magnets read their state fills from roles, LabelButtonWdgt's two class-level colours go; the scroll thumb's colour is a function of its presentation and state, SliderButtonWdgt's three go); 91->90 on 2026-10-18 (redesign W3: the Object Inspector's code-pane text background reads its role); 90->82 on 2026-10-19 (redesign W4: DesktopLinkWdgt's three class-level state colours go, its tile reading the desktopIconTile* roles, and so do the clock's five leftovers, its face, marks and hands reading the clock* roles); 82->72 on 2026-10-20 (redesign W5: the toolbar tools' class-level state colours go, the tool cell deriving its look from roles — CreatorButtonWdgt 3, EditorContentPropertyChangerButtonWdgt 3, PaintToolbarWdgt's orange armed-tool ink 1 — and the document page's 249 literals read roles — SimpleTextWdgt's blend 2, VerticalStackViewportWdgt 1); 72->65 on 2026-10-21 (redesign G-A: the spreadsheet's 7 look colours go, its cells and headers reading the spreadsheet* roles at paint and build time); 65->59 on 2026-10-21 (redesign G-B: the drag outline paints a ring and no fill, so HighlighterWdgt's transparent clear goes; the droplet becomes a well read from roles at paint, its three class-level state colours and two literals go); 59->51 on 2026-10-21 (redesign G-C: the colour picker's background and the palette's choice-marker rings read their roles at paint — ColorPickerWdgt 1, PaletteAppearance 4 — and a text area's text background is one role, so TextAreaWdgt's yellow default and its and CodeAreaWdgt's transparent clears go); 51->48 on 2026-10-21 (redesign G-D: a text's selection reads its roles at paint, so StringWdgt's class-level markedTextColor / markedBackgroundColor go, and blanksColor, which nothing read). The 48: 11 class-level/mixin state colours, 12 wallpaper-pattern strings, and 25 literals in counted files that are not a chrome look decision (palette data, PaintToolbarWdgt's paint-tool source strings, the text-widget defaults, the debug damage overlay, the virtual-keyboard DOM input, a back-buffer pixel read) — `--list raw-chrome-color` enumerates them
+  { id: 'raw-chrome-color', baseline: 0,   // seeded 2026-10-17 at THIS engine's own count (98), once the shadow silhouettes read their Theme role (redesign plan §4 F1); 98->96 on 2026-10-17 (redesign W1: the pencil/eye button takes its strip's inks and drops its two class-level colours); 96->91 on 2026-10-18 (redesign W2: menu rows and magnets read their state fills from roles, LabelButtonWdgt's two class-level colours go; the scroll thumb's colour is a function of its presentation and state, SliderButtonWdgt's three go); 91->90 on 2026-10-18 (redesign W3: the Object Inspector's code-pane text background reads its role); 90->82 on 2026-10-19 (redesign W4: DesktopLinkWdgt's three class-level state colours go, its tile reading the desktopIconTile* roles, and so do the clock's five leftovers, its face, marks and hands reading the clock* roles); 82->72 on 2026-10-20 (redesign W5: the toolbar tools' class-level state colours go, the tool cell deriving its look from roles — CreatorButtonWdgt 3, EditorContentPropertyChangerButtonWdgt 3, PaintToolbarWdgt's orange armed-tool ink 1 — and the document page's 249 literals read roles — SimpleTextWdgt's blend 2, VerticalStackViewportWdgt 1); 72->65 on 2026-10-21 (redesign G-A: the spreadsheet's 7 look colours go, its cells and headers reading the spreadsheet* roles at paint and build time); 65->59 on 2026-10-21 (redesign G-B: the drag outline paints a ring and no fill, so HighlighterWdgt's transparent clear goes; the droplet becomes a well read from roles at paint, its three class-level state colours and two literals go); 59->51 on 2026-10-21 (redesign G-C: the colour picker's background and the palette's choice-marker rings read their roles at paint — ColorPickerWdgt 1, PaletteAppearance 4 — and a text area's text background is one role, so TextAreaWdgt's yellow default and its and CodeAreaWdgt's transparent clears go); 51->48 on 2026-10-21 (redesign G-D: a text's selection reads its roles at paint, so StringWdgt's class-level markedTextColor / markedBackgroundColor go, and blanksColor, which nothing read).; 48->13 on 2026-10-22 (redesign G-E: the 35 literals in counted files that are data, not a look decision, are DECLARED in `sanctioned` below, each with its reason, so the count is chrome only); 13->2 on 2026-10-22 (redesign G-E1: state colours read roles at each state change — HighlightableMixin's 3, ButtonWdgt's, the edit mark's, the icon buttons' two hovers — SwitchButtonWdgt's 3 unread colours go, and a canvas's paper reads canvasFill as its raster is made); 2->1 on 2026-10-22 (redesign G-E3: the header-line rule reads headerLineRule as it paints); 1->0 on 2026-10-22 (redesign G-E2: a text with no colour of its own holds none and paints in the defaultTextInk role, read as it paints) — now a HARD rule: a chrome look decided outside Theme fails the build; a literal that is data is declared in `sanctioned` — `--list raw-chrome-color` enumerates them, and the sanctioned sites apart
     why: "the LOOK of chrome is decided in ONE place, src/Theme.coffee (docs/architecture/visual-design-system.md): its palette, and the role each surface paints with. A colour literal in a chrome file is a look decided OUTSIDE that design system — a restyle edits Theme and cannot reach it, so that surface keeps the old look while everything around it moves, and nothing reports the miss. Read the surface's role instead (`WorldWdgt.theme.<role>`), adding a role when the surface has none. `exclude` names the places where a literal is NOT a chrome look decision: Theme itself, the Color class and value plumbing, CONTENT (demos, sample widgets, plots, maps, examples, fizzytiles, the video player) and ICON art. The tolerated tail is the class-level state colours (a class-level declaration may not reference another class, so they move with their family's wave), the desktop wallpaper patterns (a wallpaper design's own colours), transparent clears, plus the non-chrome literals that live in counted files; it ratchets toward 0",
     exclude: [
       'Theme.coffee',                                          // where the values live
@@ -96,6 +108,23 @@ const STINKS = [
       // (spreadsheet/ is COUNTED: its grid header, gridlines and selection are the sheet's chrome)
       'patch-programming-experimental/',                       // ICON art (its Fanout*Appearance classes are IconAppearances)
       'icons/', 'icons-dev/', 'authoring-icons/', 'demos-icons/', 'examples-icons/',
+    ],
+    // the literals inside counted files that are DATA, not a chrome look decision (header comment: an entry
+    // fails once its member holds a different number of hits, so it cannot outlive or widen what it names)
+    sanctioned: [
+      { file: 'DesktopAppearance.coffee', member: '_setUpBackgroundPattern', count: 12, why: "a wallpaper pattern's own colours: a design the user picks, not chrome" },
+      { file: 'GrayPaletteWdgt.coffee', member: 'fillPaletteBuffer', count: 2, why: 'palette data: the black-to-white gradient IS the content' },
+      { file: 'ColorPickerWdgt.coffee', member: 'constructor', count: 1, why: 'a value: the choice a picker opens with when given none' },
+      { file: 'basic-widgets/Widget.coffee', member: 'color', count: 1, why: "a new shape's declared content default (plan §4 G \"Decisions settled\", Defaults)" },
+      { file: 'basic-widgets/Widget.coffee', member: 'popUpColorSetter', count: 1, why: 'a value: the colour the colour prompt opens at' },
+      { file: 'authoring/PaintToolbarWdgt.coffee', member: '@PENCIL_TOOL_SOURCE', count: 2, why: "a paint tool's source text, which the user reads and edits: content" },
+      { file: 'authoring/PaintToolbarWdgt.coffee', member: '@BRUSH_TOOL_SOURCE', count: 3, why: "a paint tool's source text, which the user reads and edits: content" },
+      { file: 'authoring/PaintToolbarWdgt.coffee', member: '@TOOTHPASTE_TOOL_SOURCE', count: 5, why: "a paint tool's source text, which the user reads and edits: content" },
+      { file: 'authoring/PaintToolbarWdgt.coffee', member: '@ERASER_TOOL_SOURCE', count: 3, why: "a paint tool's source text, which the user reads and edits: content" },
+      { file: 'PreferencesAndSettings.coffee', member: 'getMinimumFontHeight', count: 1, why: 'a throwaway calibration rasterisation, never shown' },
+      { file: 'WorldWdgt.coffee', member: '_showDamageRects', count: 1, why: 'the debug damage overlay: random colours by design' },
+      { file: 'WorldWdgt.coffee', member: '_initVirtualKeyboard', count: 2, why: 'styling of an invisible DOM <input>, not canvas paint' },
+      { file: 'mixins/BackBufferMixin.coffee', member: 'getPixelColor', count: 1, why: 'value plumbing: a Color built from read pixel bytes' },
     ],
     stringAware: true,   // a CSS colour lives in a string ('#325FA2'); the naive cut would hide it
     re: /\bColor\.create|\bnew Color\b|\bColor\.[A-Z][A-Z0-9_]*\b|(['"])#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})\1|['"]rgba?\(/ },
@@ -138,8 +167,20 @@ function stripCommentOutsideStrings(line) {
   }
   return line;
 }
-// src-relative, '/'-separated: the form `exclude` prefixes are written in
+// src-relative, '/'-separated: the form `exclude` prefixes and `sanctioned` files are written in
 const srcRelative = p => path.relative(SRC, p).split(path.sep).join('/');
+
+// the ENCLOSING MEMBER of line i, as `sanctioned` names it (header comment): the nearest class-body
+// key above at the 2-space indent, or — in a mixin file — at the 6-space indent of its hash
+const CLASS_BODY_KEY = /^  (@?[A-Za-z_$][\w$]*)\s*:/;
+const MIXIN_HASH_KEY = /^ {6}(@?[A-Za-z_$][\w$]*)\s*:/;
+function enclosingMember(lines, i, isMixinFile) {
+  for (let j = i; j >= 0; j--) {
+    const m = lines[j].match(CLASS_BODY_KEY) || (isMixinFile && lines[j].match(MIXIN_HASH_KEY));
+    if (m) return m[1];
+  }
+  return '(top)';
+}
 
 // --list <stink-id>: print every site of ONE stink and exit — a sweep enumerator, not a gate
 // (the comments-side twin of check-doc-narration's --full). Reached as `fg stinks --list <id>`.
@@ -153,26 +194,62 @@ if (listIdx >= 0 && !STINKS.some(s => s.id === listId)) {
 const files = walk(SRC, []);
 let over = 0;        // total occurrences ABOVE baseline (a build failure)
 let ratchetable = 0; // stinks now BELOW baseline (a chance to tighten)
+let badSanctions = 0; // STALE or COUNT-mismatched `sanctioned` entries (a build failure)
 for (const stink of STINKS) {
   if (listId && stink.id !== listId) continue;
   const baseline = stink.baseline || 0;
-  const hits = [];
+  let hits = [];
+  const groups = new Map();   // `${file}::${member}` -> its hits, when the stink declares `sanctioned`
   const codeCut = stink.stringAware ? stripCommentOutsideStrings : stripComment;
   for (const p of files) {
-    if (stink.exclude && stink.exclude.some(prefix => srcRelative(p).startsWith(prefix))) continue;
-    fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
+    const rel = srcRelative(p);
+    if (stink.exclude && stink.exclude.some(prefix => rel.startsWith(prefix))) continue;
+    const text = fs.readFileSync(p, 'utf8');
+    const lines = text.split('\n');
+    const isMixinFile = /@addInstanceProperties\b/.test(text);
+    lines.forEach((line, i) => {
       const subject = stink.scope === 'comments' ? commentPart(line) : codeCut(line);
-      if (subject !== null && stink.re.test(subject)) hits.push(`${path.relative(SRC, p)}:${i + 1}: ${line.trim()}`);
+      if (subject === null || !stink.re.test(subject)) return;
+      const hit = `${path.relative(SRC, p)}:${i + 1}: ${line.trim()}`;
+      hits.push(hit);
+      if (stink.sanctioned) {
+        const key = `${rel}::${enclosingMember(lines, i, isMixinFile)}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(hit);
+      }
     });
+  }
+  const sanctionedHits = [];   // [hit, why]
+  const sanctionFailures = [];
+  for (const s of stink.sanctioned || []) {
+    const found = groups.get(`${s.file}::${s.member}`) || [];
+    if (found.length === s.count) {
+      for (const h of found) sanctionedHits.push([h, s.why]);
+      hits = hits.filter(h => !found.includes(h));
+    } else if (found.length === 0) {
+      sanctionFailures.push(`STALE SANCTION ${s.file}::${s.member} — no hit left there: delete the entry`);
+    } else {
+      sanctionFailures.push(`SANCTION COUNT ${s.file}::${s.member} — expects ${s.count}, found ${found.length}: decide each literal again, then set the count`);
+    }
   }
   const n = hits.length;
   if (listId) {
     console.log(`[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline})`);
     for (const h of hits) console.log(`    ${h}`);
+    if (sanctionedHits.length) {
+      console.log(`[stinks] ${stink.id}: ${sanctionedHits.length} sanctioned site(s), not counted:`);
+      for (const [h, why] of sanctionedHits) console.log(`    ${h}    -- ${why}`);
+    }
+    for (const f of sanctionFailures) console.log(`    ${f}`);
     process.exit(0);
   }
+  if (sanctionFailures.length) {
+    badSanctions += sanctionFailures.length;
+    console.error(`[stinks] ${stink.id}: ${sanctionFailures.length === 1 ? '1 sanctioned entry no longer matches its site' : `${sanctionFailures.length} sanctioned entries no longer match their sites`}:`);
+    for (const f of sanctionFailures) console.error(`    ${f}`);
+  }
   const tag = n > baseline ? 'FAIL' : n < baseline ? 'UNDER' : 'OK';
-  console.log(`[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline}) -- ${tag}`);
+  console.log(`[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline})${stink.sanctioned ? `, ${sanctionedHits.length} sanctioned` : ''} -- ${tag}`);
   if (n > baseline) {
     over += n - baseline;
     console.error(`    ${stink.why}`);
@@ -188,8 +265,11 @@ if (ratchetable) {
 
 if (over) {
   console.error(`\n[stinks] FAIL -- ${over} occurrence(s) over baseline. Either fix the smell (preferred) or, if genuinely intentional, raise that stink's baseline in buildSystem/check-stinks.js with a one-line reason.`);
-  process.exit(1);
 }
+if (badSanctions) {
+  console.error(`\n[stinks] FAIL -- ${badSanctions} sanctioned entr${badSanctions === 1 ? 'y no longer matches' : 'ies no longer match'} the code it names (see above).`);
+}
+if (over || badSanctions) process.exit(1);
 
 console.log(`[stinks] OK -- all stinks within baseline.`);
 process.exit(0);

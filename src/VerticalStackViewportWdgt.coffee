@@ -21,7 +21,6 @@ class VerticalStackViewportWdgt extends ViewportWdgt
     ostmA.isEditable = true
     ostmA.enableSelecting()
     @setContents ostmA, 5
-    @_wearPageLook()
 
   # The paragraph I open with, which a caller's setContents replaces: a plain text on the
   # editable-item fill. A document opens with one of its own paragraphs (DocumentViewportWdgt).
@@ -30,10 +29,11 @@ class VerticalStackViewportWdgt extends ViewportWdgt
       backgroundColor: WorldWdgt.theme.editableItemFill
       backgroundTransparency: 1
 
-  # My look as a page: the stack sample's fill, inside the border every viewport has
-  # (panelStroke). A document's page wears its own (DocumentViewportWdgt).
-  _wearPageLook: ->
-    @setColor WorldWdgt.theme.stackViewportFill
+  # My look as a page, read as I and my stack (which wears my pane's look) are painted: the stack
+  # sample's fill, inside the border every viewport has (ViewportWdgt._surfaceStroke). A document's
+  # page wears its own (DocumentViewportWdgt).
+  _defaultPaneFill: ->
+    WorldWdgt.theme.stackViewportFill
 
   colloquialName: ->
     "stack"

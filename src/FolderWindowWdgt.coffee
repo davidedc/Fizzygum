@@ -9,10 +9,11 @@ class FolderWindowWdgt extends FrameWdgt
     super @contents, closeButton: @closeButton
     # my viewport has no border of its own: my frame and my strip's rule are its lines, and a border
     # just inside them would double each (visual-design-system §4.1; my panel has none either,
-    # FolderPanelWdgt). Cleared on MY viewport as it is built -- a viewport anywhere else keeps its
-    # border -- the way a code area's and a document page's are (CodeAreaWdgt._newCodeArea,
-    # DocumentViewportWdgt._wearPageLook).
-    @contents.strokeColor = undefined
+    # FolderPanelWdgt). MY viewport is dressed in the folder viewport's border (ViewportWdgt
+    # .wearPaneRoles: folderViewportStroke, none) as it is built -- a viewport anywhere else keeps
+    # its border -- the way a code area is (CodeAreaWdgt._newCodeArea); its fill is my panel's,
+    # which it mimics.
+    @contents.wearPaneRoles stroke: "folderViewportStroke"
     # I open showing a whole grid of icons with no scroll bar: as many columns as my panel's grid
     # lays in a row, and the theme's folderWindowIconRows rows (the grid's own extent for them,
     # IconGridPanelWdgt.extentShowingIconGrid), inside my chrome -- my border, my strip and its
