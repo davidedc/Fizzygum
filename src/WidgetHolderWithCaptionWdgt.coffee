@@ -3,7 +3,7 @@
 # This widget has a caption instead. Also, since it can hold any widget, the
 # final name is WidgetHolderWithCaptionWdgt.
 #
-# MY LOOK (docs/plans/redesign/UI-guidelines.md §5.1-5.3), every size a Theme desktop icon metric
+# MY LOOK (docs/archive/redesign/UI-guidelines.md §5.1-5.3), every size a Theme desktop icon metric
 # (each derived from its one knob, desktopIconTile, or fixed at the draft's value):
 #   the TILE     a desktopIconTile square desktopIconPadding below my top, centred across my width,
 #                painted by my appearance (DesktopIconAppearance) in my state's look: paper inside a

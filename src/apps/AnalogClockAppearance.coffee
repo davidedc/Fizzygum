@@ -1,4 +1,4 @@
-# Paints the AnalogClockWdgt in the draft's look (docs/plans/redesign/UI-guidelines.md §5.5, drawn
+# Paints the AnalogClockWdgt in the draft's look (docs/archive/redesign/UI-guidelines.md §5.5, drawn
 # on its 120-unit face): an opaque FACE disc with no border, four MARK dots at 12, 3, 6 and 9, then
 # the hour, minute and second hands and the centre dot over them. The hand-drawing methods
 # themselves (drawHoursHand / drawMinutesHand / drawSecondsHand / drawDotInMiddleOfFace and their

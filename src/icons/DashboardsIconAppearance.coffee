@@ -3,7 +3,7 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
   # SIZE-AWARE dashboards icon in the design's style, the launcher icon of the
   # Dashboards maker, the Examples folder's "Dashboard" opener and a
   # dashboard's shortcut icon: the draft's "dashboards" charts
-  # (docs/plans/redesign/desktop-canvas.html) on the family's card, drawn by
+  # (docs/archive/redesign/desktop-canvas.html) on the family's card, drawn by
   # the idiom of docs/plans/pixel-icons-plan.md §5b. Line art in ink, every
   # line on the glyph line unit t (SizeAwareIconAppearance._glyphLineUnit),
   # with paper interiors and no halo envelope (the tile the icon stands on is

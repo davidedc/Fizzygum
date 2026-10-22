@@ -2,7 +2,7 @@ class GripIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE resize grip: three parallel 45° strokes in the bottom-right
   # half of its square — the redesign draft's `grip` glyph
-  # (docs/plans/redesign/desktop-canvas.html GLYPH: 36-unit viewBox,
+  # (docs/archive/redesign/desktop-canvas.html GLYPH: 36-unit viewBox,
   # M33 5 L5 33 + M33 15 L15 33 + M33 25 l-8 8, 1.5 units wide, round caps) as
   # integer device-pixel geometry. Every stroke starts on the same column and
   # ends on the same row, so the grip mirrors about the box's main diagonal.

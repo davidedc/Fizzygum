@@ -1,7 +1,8 @@
-# The redesign's owner-review sample (plan §4 R0.3): one or more tests per surface a visual wave
-# changes. Every wave runs, BEFORE any recapture:
-#   fg diffpage $(grep -v '^#' Fizzygum/docs/plans/redesign/review-sample.txt)
-# One SystemTest name per line; '#' lines are comments. Add a test when a wave touches a surface
+# The owner-review sample for a change to the look (docs/architecture/visual-design-system.md §6):
+# one or more tests per surface the design system dresses. A change that moves chrome pixels runs,
+# BEFORE any recapture, from Fizzygum-all/:
+#   fg diffpage $(grep -v '^#' Fizzygum/docs/tooling/visual-review-sample.txt)
+# One SystemTest name per line; '#' lines are comments. Add a test when a change touches a surface
 # this list does not show.
 # windows: plain, collapsed, tilted, window-in-window (cards), resized
 SystemTest_macroResizingPristineInspector

@@ -2,7 +2,7 @@ class ToolbarsIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE super-toolbar icon in the design's style, the launcher icon of
   # the Super toolbar and its info doc's icon: the draft's "superToolbar" glyph
-  # (docs/plans/redesign/desktop-canvas.html), drawn by the idiom of
+  # (docs/archive/redesign/desktop-canvas.html), drawn by the idiom of
   # docs/plans/pixel-icons-plan.md §5b. Line art in ink, every line on the
   # glyph line unit t (SizeAwareIconAppearance._glyphLineUnit), with paper
   # interiors and no halo envelope (the tile the icon stands on is its ground):

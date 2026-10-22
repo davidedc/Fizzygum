@@ -1,7 +1,7 @@
 class FolderIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE folder in the design's style: the draft's "examples" glyph
-  # (docs/plans/redesign/desktop-canvas.html), drawn by the idiom of
+  # (docs/archive/redesign/desktop-canvas.html), drawn by the idiom of
   # docs/plans/pixel-icons-plan.md §5b. ONE outline, in ink on the glyph line
   # unit t (SizeAwareIconAppearance._glyphLineUnit): a body with four rounded
   # corners whose top-left rises into a TAB, the tab's top running right from

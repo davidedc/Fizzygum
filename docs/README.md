@@ -12,7 +12,7 @@ bucket, chosen by what the file IS, not by topic:
 | `archive/` | Completed, falsified, or parked plans and analyses — verbatim, status-stamped. The case-law record: rejected alternatives and gotchas live here. See `archive/INDEX.md`. | past |
 | `archive/prompts/` | Saved session starting-prompts for arcs (historical). | past |
 | `measurements/` | Point-in-time numbers: profiling results, inventories, catalogs, audits. Dated snapshots; never updated, superseded by new snapshots. | past |
-| `tooling/` | How-tos for dev tooling (duplication detection, audit tooling). | present |
+| `tooling/` | How-tos for dev tooling (duplication detection, audit tooling), and the inputs those tools read (the owner-review sample for a change to the look). | present |
 | `profiling/` | Profiling harness scripts + result sets. | — |
 | `explainers/` | Self-contained HTML visual walkthroughs for human readers with light context (diagrams, generic→specific). May describe a program's target state — each states which plan owns it; updated or retired when plans land. See `explainers/README.md`. | present + planned |
 
@@ -24,8 +24,8 @@ all arcs, each linking to the plan section that owns the detail).
 1. **New arc → new file in `plans/`.** Plans are self-contained: embed the
    history and concrete facts needed to execute cold. A plan that executes an
    external design input lives in its own directory beside that input
-   (`plans/redesign/`: the plan plus the draft it implements), and the whole
-   directory moves to `archive/` when the arc closes.
+   (as `archive/redesign/` was: the plan plus the draft it implemented), and
+   the whole directory moves to `archive/` when the arc closes.
 2. **Arc closes → `git mv` the plan to `archive/`**, stamp a status header
    (COMPLETE/FALSIFIED/PARKED + date + one line), add its line to
    `archive/INDEX.md`, and remove its items from `BACKLOG.md` — closed entries

@@ -3,7 +3,7 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   # SIZE-AWARE typewriter in the design's style, the icon of the Docs Maker (its
   # launcher, its info doc), of the Examples folder's "Document" and
   # "Spreadsheet" openers and of a document's shortcut: the draft's "docs"
-  # glyph (docs/plans/redesign/desktop-canvas.html), drawn by the idiom of
+  # glyph (docs/archive/redesign/desktop-canvas.html), drawn by the idiom of
   # docs/plans/pixel-icons-plan.md §5b. Line art in ink, every line on the
   # glyph line unit t (SizeAwareIconAppearance._glyphLineUnit), with paper
   # interiors and no halo envelope (the tile the icon stands on is its ground):

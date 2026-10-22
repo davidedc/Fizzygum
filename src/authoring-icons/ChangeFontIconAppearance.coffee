@@ -1,6 +1,6 @@
 # The FONT tool's face: ONE script capital "A", drawn as a SIZE-AWARE icon in
 # the design's style (docs/architecture/visual-design-system.md §4.6) after the
-# draft's Snell Roundhand "A" (docs/plans/redesign/desktop-canvas.html
+# draft's Snell Roundhand "A" (docs/archive/redesign/desktop-canvas.html
 # drawDocsMaker: italic, 30 units of the 44-unit cell at 34 px) -- drawn, not
 # typed: no atlas carries the face, and the letter is the tool's mark. Worn by
 # the text toolbar's font tool (ChangeFontButtonWdgt, the whole 44 x 44 tool

@@ -2,7 +2,7 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE generic-panel icon in the design's style, the launcher icon of
   # the Generic panel maker and a generic panel's shortcut icon: the draft's
-  # "panel" glyph (docs/plans/redesign/desktop-canvas.html), drawn by the idiom
+  # "panel" glyph (docs/archive/redesign/desktop-canvas.html), drawn by the idiom
   # of docs/plans/pixel-icons-plan.md §5b. Line art in ink, every line on the
   # glyph line unit t (SizeAwareIconAppearance._glyphLineUnit), with paper
   # interiors and no halo envelope (the tile the icon stands on is its ground):

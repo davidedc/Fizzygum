@@ -727,7 +727,7 @@ untouched. Extra-small hand-placed tiers stay: the sub-5px key squares/dots and 
     the shadow. Normal-pass renders are untouched (288-render golden check).
 
 **THE DESIGN FAMILY (redesign W4, 2026-10-19) — the 11 desktop icons redrawn as one
-family** (`docs/plans/redesign/redesign-plan.md` §4 W4; the family's rules live in
+family** (`docs/archive/redesign/redesign-plan.md` §4 W4; the family's rules live in
 `docs/architecture/visual-design-system.md` §4.6). Redrawn in place: Folder (the
 flagship), Bin, Typewriter, PatchProgramming, SimpleSlide, GenericPanel, Dashboards,
 Toolbars; new size-aware bodies: FloppyDisk, FridgeMagnets, and the spray can

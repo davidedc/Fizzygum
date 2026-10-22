@@ -2,7 +2,7 @@ class MinusIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE minus (−), a chrome control face — drawn, never typed (a
   # symbol that stands on its own is an icon). The redesign draft's
-  # `minimise` glyph (docs/plans/redesign/desktop-canvas.html GLYPH: 14-unit
+  # `minimise` glyph (docs/archive/redesign/desktop-canvas.html GLYPH: 14-unit
   # viewBox, M2 7 h10, 2 units wide, round caps) as integer device-pixel
   # geometry. Ink only, no halo: chrome glyphs sit on a bar or a row, never
   # on art.

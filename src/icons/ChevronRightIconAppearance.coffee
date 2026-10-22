@@ -2,7 +2,7 @@ class ChevronRightIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE right chevron (›), a chrome indicator or separator — drawn,
   # never typed (a symbol that stands on its own is an icon). One half of the
-  # redesign draft's `more` glyph (docs/plans/redesign/desktop-canvas.html
+  # redesign draft's `more` glyph (docs/archive/redesign/desktop-canvas.html
   # GLYPH: 16-unit viewBox, M3 3 l5 5 -5 5, 2 units wide, round caps and
   # join), re-centred in its own square, as integer device-pixel geometry. Ink
   # only, no halo: chrome glyphs sit on a bar or a row, never on art.

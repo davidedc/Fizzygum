@@ -609,7 +609,7 @@ class Widget extends TreeNode
   # integer rectangles in my LOCAL logical coordinates (relative to my own top-left). My appearance
   # fills each with WorldWdgt.theme.seamRule after its own fill and before my children paint
   # (Appearance._paintSeamRules), so every seam is ONE line with ONE owner at any size, and a pane
-  # reused elsewhere carries no border of its own (docs/plans/redesign/redesign-plan.md §2). None by
+  # reused elsewhere carries no border of its own (docs/architecture/visual-design-system.md §4.1). None by
   # default; a container that places its panes 1 px apart answers the gaps from the same geometry its
   # layout places them with.
   _seamRects: ->

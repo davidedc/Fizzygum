@@ -1,5 +1,5 @@
 # The look of a DESKTOP ICON (WidgetHolderWithCaptionWdgt and its family, on the desktop and in a
-# folder; docs/plans/redesign/UI-guidelines.md §5.1-5.3): two rounded boxes in my widget's cell.
+# folder; docs/archive/redesign/UI-guidelines.md §5.1-5.3): two rounded boxes in my widget's cell.
 # Both are paint, never a child widget, and every value in them is my widget's state, its caption's
 # box or a Theme role or metric: I hold nothing of my own.
 #   the TILE   my widget's tile square (WidgetHolderWithCaptionWdgt._tileRect), rounded at

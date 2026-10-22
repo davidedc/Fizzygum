@@ -2,7 +2,7 @@ class CrossIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE cross (×), a chrome control face — drawn, never typed (a
   # symbol that stands on its own is an icon). The redesign draft's `close`
-  # glyph (docs/plans/redesign/desktop-canvas.html GLYPH: 14-unit viewBox,
+  # glyph (docs/archive/redesign/desktop-canvas.html GLYPH: 14-unit viewBox,
   # M2 2 L12 12 + M12 2 L2 12, 2 units wide, round caps) as integer
   # device-pixel geometry. Ink only, no halo: chrome glyphs sit on a bar or a
   # row, never on art.

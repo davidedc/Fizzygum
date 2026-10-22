@@ -234,7 +234,7 @@ class SizeAwareIconAppearance extends IconAppearance
     ctx.strokeStyle = s
 
   # ---- the content card of an icon drawn in the design's style -------------
-  # The design's shared CONTENT card (docs/plans/redesign/desktop-canvas.html):
+  # The design's shared CONTENT card (docs/archive/redesign/desktop-canvas.html):
   # the landscape card the patch, slides and panel glyphs hold their content
   # in, path rect (5, 10) 34 x 24 radius 4, as one outline on the glyph line
   # unit t. Its proportions are the INK edges of a one-unit line on that path

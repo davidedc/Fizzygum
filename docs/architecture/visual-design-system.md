@@ -5,11 +5,13 @@ every chrome dimension and every shadow is decided in one class, `src/Theme.coff
 says what it is FOR. This doc says what those names are, the rules a widget's look follows, how the
 design maps onto the widget tree, and how a new widget picks its look.
 
-The design itself — its tokens, its drawing rules and a reference drawing — lives with the redesign
-plan that brings the system to it: [`../plans/redesign/UI-guidelines.md`](../plans/redesign/UI-guidelines.md)
-(the rules and tokens), `desktop-canvas.html` (a flat Canvas-2D drawing of the target) and
-[`../plans/redesign/redesign-plan.md`](../plans/redesign/redesign-plan.md) (which surfaces wear the
-design so far, and the decisions behind each rule below).
+The design this system implements — its tokens, its drawing rules and a reference drawing — is
+archived with the redesign plan that brought the system to it:
+[`../archive/redesign/UI-guidelines.md`](../archive/redesign/UI-guidelines.md) (the rules and tokens),
+`desktop-canvas.html` (a flat Canvas-2D drawing of the target) and
+[`../archive/redesign/redesign-plan.md`](../archive/redesign/redesign-plan.md) (the decisions behind
+each rule below, and where the system departs from the draft). Where this doc and the draft disagree,
+this doc is the look Fizzygum wears.
 
 ---
 
@@ -493,6 +495,14 @@ plate of radius 6 at its top; no row paints a hairline, and the panel opts out o
 6. **Symbols:** drawn size-aware icons, named for their shape (§4.5, §4.6).
 7. **Lines between your panes:** seams you own (`_seamRects`, §4.1), not pane borders.
 8. **Shadow:** nothing to do — an object on the desktop casts the shared shadow.
+
+**Reviewing a change to the look.** A change that moves chrome pixels is reviewed BEFORE any recapture
+on the owner-review sample, one or more tests per surface the system dresses
+([`../tooling/visual-review-sample.txt`](../tooling/visual-review-sample.txt), run as
+`fg diffpage $(grep -v '^#' Fizzygum/docs/tooling/visual-review-sample.txt)` from `Fizzygum-all/`),
+and in the live worlds (`index-sw.html` on SWCanvas, `index.html` on the native canvas). Every changed
+pixel is classified before the references move; add a test to the sample when a change touches a
+surface it does not show.
 
 See also [`widget-authoring-guidelines.md`](widget-authoring-guidelines.md) §15 and
 [`appearance-paint-convention.md`](appearance-paint-convention.md) (how an appearance paints).

@@ -3,7 +3,7 @@
 # The FOOTER BAND -- the row of buttons a window's content ends in -- as ONE geometry, class-side
 # only, never instantiated. Its hosts (CodeAreaWdgt's family: the code prompt, the script window,
 # the console and the error log; and BinWdgt) each place their pane above the band and ask me for
-# the rest. The numbers are the draft's (docs/plans/redesign/desktop-canvas.html, the inspector's
+# the rest. The numbers are the draft's (docs/archive/redesign/desktop-canvas.html, the inspector's
 # footer), all of them Theme metrics.
 #
 # In a host's box, the band is its bottom footerBandHeight:

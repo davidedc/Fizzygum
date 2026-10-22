@@ -2,7 +2,7 @@ class PlusIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE plus (+), a chrome control face — drawn, never typed (a symbol
   # that stands on its own is an icon). The redesign draft's `minimise` bar
-  # (docs/plans/redesign/desktop-canvas.html GLYPH) plus its vertical twin:
+  # (docs/archive/redesign/desktop-canvas.html GLYPH) plus its vertical twin:
   # 14-unit viewBox, M7 2 v10 + M2 7 h10, 2 units wide, round caps, as integer
   # device-pixel geometry. Ink only, no halo: chrome glyphs sit on a bar or a
   # row, never on art.
