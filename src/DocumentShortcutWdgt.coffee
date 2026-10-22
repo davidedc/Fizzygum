@@ -9,7 +9,9 @@ class DocumentShortcutWdgt extends ShortcutWdgt
 
   _reactToChildDropped: (droppedWidget) ->
 
-  activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
+  # what a press on my tile does: bring my document up (WidgetHolderWithCaptionWdgt.activated
+  # decides tile or plate, and hands a tile press here)
+  _activateMyTile: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation
       return
 

@@ -10,7 +10,6 @@ class GraphsPlotsChartsWdgt extends Widget
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
     @appearance = new GraphsPlotsChartsAppearance @
-    @setColor Color.create 255, 125, 125
     @_applyExtent new Point 200, 200
     world.steppingWdgts.add @
 
@@ -49,7 +48,7 @@ class GraphsPlotsChartsWdgt extends Widget
       v = @seededRandom()
     return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
 
-  simpleShadow: (context, color, appliedShadow) ->
+  simpleShadow: (context, appliedShadow) ->
 
     height = @height()
     width = @width()
@@ -63,17 +62,24 @@ class GraphsPlotsChartsWdgt extends Widget
       # let's avoid paint 3d stuff twice because
       # of the shadow
   
-  drawBoundingBox: (context, color, appliedShadow) ->
+  # My BOX, the 1 px line round my area, in the theme's plotFrameStroke: along my top and my right
+  # when I stand in a plot with axes, whose axes run along the other two (drawOnlyPartOfBoundingRect),
+  # all round otherwise. Stroked inset half a pixel, the house crisp spelling, so each side is exactly
+  # my outermost row or column of pixels at every dpr; the top stops where the right side starts, so
+  # no pixel is stroked twice. The normal pass only: the shadow pass fills my silhouette instead.
+  drawBoundingBox: (context) ->
 
     height = @height()
     width = @width()
 
-    context.strokeStyle = (Color.create 30,30,30).toString()
+    context.strokeStyle = WorldWdgt.theme.plotFrameStroke.toString()
+    context.lineWidth = 1
     if @drawOnlyPartOfBoundingRect
       context.beginPath()
-      context.moveTo 0, 0
-      context.lineTo width, 0
-      context.lineTo width, height
+      context.moveTo 0, 0.5
+      context.lineTo width - 1, 0.5
+      context.moveTo width - 0.5, 0
+      context.lineTo width - 0.5, height
       context.stroke()
     else
-      context.strokeRect 0, 0, width, height
+      context.strokeRect 0.5, 0.5, width - 1, height - 1

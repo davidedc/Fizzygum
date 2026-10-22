@@ -50,14 +50,18 @@ class Wallpaper
   wallpapersMenu: (ignored,targetWidget)->
     menu = new MenuWdgt world, target: targetWidget, title: "Wallpapers"
 
-    # Each row DECLARES that it shows my current pattern; the row is born with the right label and
+    # Each row DECLARES that it shows my current pattern; the row is born with the right tick and
     # re-derives it whenever I announce a change, in this menu and in every other open copy
     # (MenuItemWdgt._subscribeToMyReflectedSource). Nothing here indexes rows[1..7] any more —
-    # that hand-numbering broke the day anyone added a divider.
+    # that hand-numbering broke the day anyone added a divider. A row SHOWS its pattern's name
+    # capitalised ("Vert. stripes") -- the label it is born with and the label its reflection keeps
+    # it at -- while its argument and its tick's value are the pattern name itself, the value
+    # DesktopAppearance paints by and a snapshot saves.
     for patternName in @patternNames()
-      menu.addMenuItem patternName, @, "setPatternFromMenu",
+      rowLabel = CommandPanelWdgt.rowLabelOfValue patternName
+      menu.addMenuItem rowLabel, @, "setPatternFromMenu",
         arg1: patternName
-        reflection: MenuRowReflectionSpec.tickWhen @, "currentPatternName", patternName, patternName
+        reflection: MenuRowReflectionSpec.tickWhen @, "currentPatternName", patternName, rowLabel
 
     menu.popUpAtHand()
 

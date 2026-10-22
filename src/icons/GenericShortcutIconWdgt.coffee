@@ -8,7 +8,9 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
   _buildAndConnectChildrenNoSettle: ->
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
-    @_applyExtent new Point 95, 95
+    # born at the desktop icon's glyph square; the holder that takes me lays me out in that square
+    glyphSize = WorldWdgt.theme.desktopIconGlyphSize
+    @_applyExtent new Point glyphSize, glyphSize
     @_addNoSettle @icon
 
     @referenceArrowIcon = new ShortcutArrowIconWdgt
@@ -32,5 +34,7 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
 
     @icon._applyBounds squareTopLeft.round(), (new Point squareDim, squareDim).round()
 
-
-    @referenceArrowIcon._applyBounds ((squareTopLeft.add new Point 0, squareDim*7/10).round()), (new Point squareDim*3/10, squareDim*3/10).round()
+    # the badge's side is its own HOST_SHARE of my square: the one share it is laid out at and
+    # reads its host's line unit back from (ShortcutArrowIconAppearance)
+    badgeSide = squareDim * @referenceArrowIcon.appearance.HOST_SHARE
+    @referenceArrowIcon._applyBounds ((squareTopLeft.add new Point 0, squareDim - badgeSide).round()), (new Point badgeSide, badgeSide).round()

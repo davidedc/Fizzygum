@@ -4,19 +4,20 @@
 class EditIconButtonWdgt extends IconButtonWdgt
 
   # pencil<->eye edit-mode toggle with HOVER FEEDFORWARD (docs/archive/pencil-eye-edit-mode-toggle-plan.md §8):
-  #   1. MONOCHROME AT REST — the resting glyph is uncoloured (near-white on the gray bar)
-  #      for BOTH modes; the SHAPE alone names the current mode (pencil = editing now,
-  #      eye = viewing now). Drops the editing-yellow at rest.
+  #   1. ONE INK AT REST — the resting glyph wears its strip's resting ink (color_normal) for
+  #      BOTH modes; the SHAPE alone names the current mode (pencil = editing now, eye =
+  #      viewing now).
   #   2. FEEDFORWARD ON HOVER — while hovered (or pressed) the button morphs to the glyph
-  #      of the mode a click switches TO, in a single "this button does something" YELLOW.
-  #      The shape carries the meaning; the colour just says "active / clickable".
+  #      of the mode a click switches TO, in the strip's active ink (color_hover /
+  #      color_pressed) -- the one every strip glyph takes when a pointer is on it. The
+  #      shape carries the meaning; the ink just says "active / clickable".
   #   3. IMMEDIATE tooltip — the action bubble pops on hover with (almost) no delay, so the
   #      text explanation lands together with the visual preview (the shipped delay is 500ms).
-  # Rest = pure status (shape); hover = pure control (next-state glyph + affordance colour + text).
-  restColor: Color.create 245, 244, 245        # near-white; both glyphs at rest, reads on the gray bar
-  hoverColor: Color.create 248, 188, 58         # yellow = "this button does something" (both hover previews)
+  # Rest = pure status (shape); hover = pure control (next-state glyph + active ink + text).
+  # Both inks are my strip's (IconButtonWdgt.setGlyphInk): every edit button is a frame strip's
+  # piece, so I carry no colours of my own.
 
-  # default the mode so an early paint (before the window sets the real mode) is a mono pencil
+  # default the mode so an early paint (before the window sets the real mode) is the resting pencil
   _editModeNow: true
 
   toolTipMessage: "edit contents"
@@ -41,20 +42,17 @@ class EditIconButtonWdgt extends IconButtonWdgt
     @toolTipMessage = "edit contents"
     @_updateColor()
 
-  # Override the HighlightableMixin colour hook to ALSO swap the glyph. At rest: the
-  # CURRENT mode's glyph, monochrome. Highlighted / pressed: the glyph of the mode a
-  # click switches TO, in the affordance yellow (the feedforward).
+  # Override the icon button's colour hook to ALSO swap the glyph. At rest: the CURRENT
+  # mode's glyph. Highlighted / pressed: the glyph of the mode a click switches TO (the
+  # feedforward). The ink is then the icon button's for the state I am in
+  # (IconButtonWdgt._updateColor), which also repaints me, so a swapped glyph shows even when
+  # the ink is unchanged.
   _updateColor: ->
     if @state is @STATE_NORMAL
       @appearance = if @_editModeNow then new PencilIconAppearance @ else new EyeIconAppearance @
-      previewColor = @restColor
-    else                       # hovered or pressed -> preview the OTHER mode, in yellow
+    else                       # hovered or pressed -> preview the OTHER mode
       @appearance = if @_editModeNow then new EyeIconAppearance @ else new PencilIconAppearance @
-      previewColor = @hoverColor
-    # public-call-sanctioned: mirrors HighlightableMixin._updateColor (which this overrides) — setColor is the
-    # pure paint-colour setter (sets @color + changed, no layout settle), here driving the per-state glyph colour.
-    @setColor previewColor
-    @_changed()   # explicit: setColor early-returns when the colour is unchanged, but the GLYPH may still have swapped
+    super()
 
   # Immediate action tooltip: the base delay is 500ms; on THIS button the
   # bubble explains what a click does, so we want it to land with the hover preview — show

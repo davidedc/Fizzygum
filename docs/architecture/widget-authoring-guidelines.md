@@ -241,7 +241,7 @@ which bite silently:
 - **Never a mutable `[]` or `{}` at class level.** A prototype array is ONE array shared by every
   instance of the class, so an `@queue.push` on one widget is visible from all of them. `: undefined`
   plus a constructor (or lazy `if !@queue?`) build is the only safe shape for a container.
-- **A class-level default must not call another class.** `headerFillColor: Color.create 236,236,236`
+- **A class-level default must not call another class.** `swatchColor: Color.create 236,236,236`
   runs at class-*definition* time, before `Color` has necessarily loaded, and the boot dependency
   scanner only sees declaration-level `new X` edges — see
   [`immutable-value-classes.md`](immutable-value-classes.md) §3. Build such values in the constructor.
@@ -310,10 +310,6 @@ un-shadow the mixin's own member — a class-body member out-ranks a mixin's. �
 draws INSIDE the buffer's opaque footprint adds no coverage, so skip it on the shadow pass rather
 than paying for a silhouette that cannot differ.
 
-⚠ **A cache does not have to be the MIXIN's.** `AnalogClockAppearance` keys its static tick-mark face
-into the same `world.cacheForImmutableBackBuffers` by class + extent and draws the hands live over
-it, without `BackBufferMixin` at all. The rule is about the raster, not the mechanism.
-
 **Hit-testing is THREE members, and which one you touch depends on what you are saying.** Say it in
 the layer that owns the fact:
 
@@ -325,7 +321,8 @@ the layer that owns the fact:
 
 - **`Appearance.shapeContainsPoint(aPoint)`** — geometry: is this point inside the outline I draw.
   Four shapes answer it (rectangular, rounded-box, stadium, triangle); the base claims the widget's
-  whole box, which is what an icon glyph, a clock face or a label button want. **TOTAL** — `false`
+  whole box, which is what an icon glyph or a label button want (the analog clock answers its
+  face disc). **TOTAL** — `false`
   outside the widget's bounds, always, so it is safe to ask on its own.
 - **`Widget.catchesPointerAt(aPoint)`** — does my surface stop the pointer here. Defaults to my
   appearance's shape (my whole box if I have no appearance). Override it when your **role**, not
@@ -335,8 +332,16 @@ the layer that owns the fact:
   (`StringWdgt`, `HandleWdgt`, `SliderButtonWdgt`, `StackElementsSizeAdjustingWdgt`,
   `CanvasGlassTopWdgt` …).
 - **`Widget.isPointerTargetAt(aPoint)`** — the whole question `ActivePointerWdgt.topWdgtUnderPointer`
-  asks: clipped bounds ∧ shown ∧ not collapsed ∧ `catchesPointerAt` ∧ not ephemeral. Override only to
-  remove yourself from targeting entirely; `CaretWdgt` is the one class that does.
+  asks: clipped bounds ∧ shown ∧ not collapsed ∧ `catchesPointerAt` ∧ not ephemeral, then, on one walk
+  up my ancestors, no ancestor shows the child I came up through as a PICTURE and no ancestor's rounded
+  child clip cuts the point away. Override only to remove yourself from targeting entirely; `CaretWdgt`
+  is the one class that does.
+- **"this child of mine is a picture, not a target"** — `_showsChildAsAPicture: (child) -> …` on the
+  PARENT, answered for the child the walk comes up through: nothing in that child's subtree is then a
+  target, and a press there is a press on the parent, which takes the press, the release and the click
+  together. A parent cannot say it with its own `catchesPointerAt`, because the hit test asks children
+  first (`InertIconHolderWdgt`'s header). A desktop link's glyph is the one picture today
+  (`DesktopLinkWdgt`).
 
 ⚠ **"Does the pointer stop here" is NOT "am I see-through here", and the trap runs in both
 directions.** A widget can paint almost nothing and still stop the pointer everywhere: a `StringWdgt`
@@ -510,8 +515,12 @@ mark after `add` + `setExtent` adds nothing.
   tilted — a bug class that is invisible until someone rotates something.
 - **Escalate what is not yours.** `@escalateEvent "pressBegan", pos` passes the event to the parent
   rather than swallowing it. A handler that conditionally acts should escalate on the other branch.
-- **Get hover/press feedback from `HighlightableMixin`** (`color_normal` / `color_hover` /
-  `color_pressed`) instead of colouring by hand in `hoverEntered`/`hoverExited`.
+- **Get hover/press feedback from `HighlightableMixin`** instead of colouring by hand in
+  `hoverEntered`/`hoverExited`: its `_updateColor` re-derives the colour at every state change — a set
+  `color_normal` / `color_hover` / `color_pressed` wins, else the plain button's theme roles. A widget with
+  a look of its own answers `_updateColor` with its own roles, read there (`SimpleButtonWdgt`,
+  `IconButtonWdgt`, the edit mark). Never declare a state colour at class level: a class-level
+  declaration cannot read `Theme`, so the colour would sit outside the design system.
 - **Chrome opts out of editor focus.** A widget that is manipulation chrome rather than content —
   handles, frame-bar buttons, toolbars, creator buttons — answers
   `excludedFromEditorFocusTracking: -> true`, so clicking it neither steals the editor-focus pointer
@@ -541,8 +550,8 @@ mark after `add` + `setExtent` adds nothing.
 - **`@prompt msg, target, "methodName", opts`** — three operands then the options bag
   (`defaultContents:`, `intendedWidth:`, `floorNum:`, `ceilingNum:`, `isRounded:`); pass the target and
   the method *name*, not a bound method value. [gated — `buildSystem/check-menu-actions.js`]
-  `PromptWdgt`'s Ok row targets the prompt itself (`panel.addMenuItem "Ok", @, "deliverValue"`) and
-  `deliverValue` dispatches your callback by name one hop later
+  `PromptWdgt`'s OK button targets the prompt itself (`new SimpleButtonWdgt @, "deliverValue", face: "OK"`)
+  and `deliverValue` dispatches your callback by name one hop later
   (`@target[@callback].call @target, @_promptValue()`) — the same slot, so the same proof applies; the
   gate holds both doors to one standard, and those callbacks also count as menu-dispatched verbs for
   its unread-parameter ratchet.
@@ -552,8 +561,9 @@ mark after `add` + `setExtent` adds nothing.
   (`FolderPanelWdgt` → *"folder panel"*), so a new widget is named correctly for free. Override when
   the derivation reads wrong (an acronym or digit the camelCase split mangles — `Plot3DCreatorButtonWdgt`)
   or when the thing has a **name** rather than a description (*"Desktop"*, *"Bin"*, *"Fizzytiles"*,
-  *"Docs Maker"*). Lowercase unless it is a proper noun: consumers drop it into a sentence, or
-  parenthesise it as *"Object Inspector (folder panel)"*.
+  *"Docs Maker"*). Lowercase unless it is a proper noun: consumers drop it into a sentence or after a
+  dash (*"Object Inspector — folder panel"*); a title or a menu header that starts with it shows it in its
+  display case, capitalised at display, never stored (visual-design-system.md §4.9).
   ⚠ **An override SHADOWS the derivation for every descendant**, which is how `CanvasWdgt` and
   `StringFieldWdgt` both used to answer *"panel"*. Before adding one to a class that has subclasses, <!-- narration-ok: the warning IS that two classes once collided on one name; the collision is the thing to avoid -->
   check you are not renaming them all; before deleting one, check the chain does not fall through to
@@ -561,10 +571,25 @@ mark after `add` + `setExtent` adds nothing.
 - **Define `representativeIcon`** when the widget can be referenced from the desktop — a shortcut needs
   a picture.
 - **Set `toolTipMessage`** for anything whose purpose is not obvious from its face.
+- **A row says WHAT IT IS in plain words; what it shows beside them is stated, never typed.**
+  [convention] A row's label is its plain wording — no trailing arrow, no tick prefix. A row that opens
+  a submenu passes `opensSubmenu: true` (what an action does cannot be read off its name, so its
+  builder states it); the row then draws its chevron, and `fg menusweep` checks the statement against
+  the act (`SUBMENU_FLAG_MISMATCH`). A row ticked or not by construction passes `ticked: true` /
+  `ticked: false` (`SimpleTextWdgt`'s one "Soft wrap" row). Both travel `addMenuItem` opts →
+  `CommandSpec` → own fields of `MenuItemWdgt`, so a duplicated, lifted-out or saved row keeps them; a
+  menu holding any ticking row reserves the leading tick column in every row, so its labels align.
+  The words follow `visual-design-system.md` §4.9: sentence case ("Pick up"); "…" exactly when the action
+  needs more from you before it completes ("Color…", "Resize/move…"), never on a submenu row ("Attach");
+  a VALUE row through `CommandPanelWdgt.rowLabelOfValue`; a row that NAMES a widget through
+  `CommandPanelWdgt.rowLabelsNaming` (asked once per menu, with every widget its rows name) plus
+  `representsAWidget: true`, which is what hovering highlights and what a test finds the row by
+  (`MacroToolkit.rowOfMenuStandingFor`). `fg menusweep` proves the first two (`ELLIPSIS_MISMATCH`, `SENTENCE_CASE`).
 - **A row that SHOWS somebody's state must DECLARE it, not paint it once.** [convention] If a row
-  ticks itself, or swaps its wording to report a setting, pass a `reflection:` —
-  `MenuRowReflectionSpec.tickWhen source, "readerName", theValue, theLabel` for the tick case, or the
-  full `{whenValue, labelWhenTrue, labelWhenFalse}` record for a wording swap:
+  ticks itself to report a setting, pass a `reflection:` —
+  `MenuRowReflectionSpec.tickWhen source, "readerName", theValue, theLabel`, the one door: the row is
+  ticked exactly while `source[readerName]()` is `theValue`, and says `theLabel` either way (its tick
+  STATE, `MenuItemWdgt.ticked`, is what it draws; there is no wording swap):
 
   ```coffee
   for patternName in @patternNames()
@@ -573,7 +598,7 @@ mark after `add` + `setExtent` adds nothing.
       reflection: MenuRowReflectionSpec.tickWhen @, "currentPatternName", patternName, patternName
   ```
 
-  The row is then **born** showing the current value and re-derives it whenever the source announces
+  The row is then **born** with the current tick and re-derives it whenever the source announces
   a change, in *every* open copy of the menu. Writing it by hand instead means a routine that walks
   `rowsPanel.children` **by index** and can only fix up the one menu that was clicked — so a second
   open copy disagrees, and so does one open across a change made by a script or the loader. It also
@@ -620,7 +645,7 @@ pins: -> super().concat [
   so a readable *field* with no reader *method* is honestly write-only. `width`/`height` are
   write-only on purpose: a readable pin is a licence to bind, and the bar for a readable geometry pin
   is a real CONSUMER — add the reader when something needs to track it. [§CL1]
-- **No `set` declares a READ-ONLY pin**, which never appears in a "choose target property" menu
+- **No `set` declares a READ-ONLY pin**, which never appears in the "target property" chooser
   because nothing can drive it (`StringFieldWdgt`'s `value`). A `PinSpec` with neither half is
   refused at construction.
 - **`announces` is a promise about EVERY write path** — a gesture, a script, the loader, another
@@ -683,18 +708,20 @@ binding verb by **which way the value moves when the wire is made**:
   declares no principal pin and correctly neither offers nor accepts a bind.
   [§CL9 — why the gesture costs a controller's menu no extra row]
 - **Two-wayness is DERIVED, never recorded** — answered by asking whether the target wires back, and
-  it is what draws a connection row `⇄` rather than `➜`. So a pair wired by hand in two ordinary
+  it is what makes a connection row's typed direction arrow read `⇄` rather than `➜` (that arrow is
+  the row's wording; that the row opens the wire's own menu is a separate fact, its drawn submenu
+  chevron). So a pair wired by hand in two ordinary
   gestures is bound in the same sense, and a duplicate of one half tells the truth with no
   bookkeeping to have gone stale.
 - **A follower relationship is a PROMOTION of a wire that already exists** — the wire's own menu row,
-  "follows it too" — offered only where the pin is readable and `announces`, the follower can render
+  "Follows it too" — offered only where the pin is readable and `announces`, the follower can render
   *that* pin, and the follower is not already following something else. [§CL5]
 
 ### The pin-setter contract
 
 **Every delivery path passes a pin setter ONE argument: the value.** A wire calls
 `consumer[action] value`, a controller's `updateTarget` calls `target[setter](value)`, and a prompt's
-Ok extracts the value from its own editor before delivering it. No delivery hands a setter a widget
+OK extracts the value from its own editor before delivering it. No delivery hands a setter a widget
 to interrogate, so a setter never probes its argument for `getValue`/`getColor` — it coerces, clamps,
 and stores. (A pin setter reached as a MENU action instead takes its subject from dispatch **slot 2**
 — the enclosing panel's target, not the row's: the slot law is

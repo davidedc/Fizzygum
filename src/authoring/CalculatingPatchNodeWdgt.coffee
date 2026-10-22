@@ -54,22 +54,26 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new TextAreaWdgt @defaultFormulaBoxContents, false, 5
-    @tempPromptEntryField.configureAsMonoTextPanel true
+    theme = WorldWdgt.theme
+
+    # my formula and output boxes are two of my text boxes (PatchNodeWdgt._newTextBox); the output one
+    # is read-only
+    @tempPromptEntryField = @_newTextBox @defaultFormulaBoxContents, true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField
 
-    @outputTextArea = new TextAreaWdgt "", false, 5
-    @outputTextArea.configureAsMonoTextPanel false
+    @outputTextArea = @_newTextBox "", false
     @outputTextAreaText = @outputTextArea.textWdgt
     @_addNoSettle @outputTextArea
 
 
-    @formulaTextBoxLabel = new StringWdgt "Formula", fontRole: WorldWdgt.theme.fonts.buttonLabel
+    # my field labels, each over its header line: the small chrome labels' font, in the ink of a
+    # patch node's field labels
+    @formulaTextBoxLabel = new StringWdgt "Formula", fontRole: theme.fonts.buttonLabel, color: theme.patchNodeFieldLabelText
     @formulaTextBoxLabel.toggleHeaderLine()
     @_addNoSettle @formulaTextBoxLabel
 
-    @outputTextBoxLabel = new StringWdgt "Output", fontRole: WorldWdgt.theme.fonts.buttonLabel
+    @outputTextBoxLabel = new StringWdgt "Output", fontRole: theme.fonts.buttonLabel, color: theme.patchNodeFieldLabelText
     @outputTextBoxLabel.toggleHeaderLine()
     @_addNoSettle @outputTextBoxLabel
 
@@ -77,7 +81,7 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
     @_invalidateLayout()
 
   # My output box is laid out across my full width at my bottom (_layOutOwnContents), so it is the
-  # child at my bottom-right corner, where my window's resizer sits (ViewportWdgt._aResizerSitsOverMyCorner).
+  # child at my bottom-right corner, where my window's resizer sits (ViewportWdgt._resizerOverMyCorner).
   bottomRightCornerReachedBy: (child) ->
     child is @outputTextArea
 

@@ -4,13 +4,21 @@
 # to the HTML5 commands.
 #
 # "container"/"contained" scenario going on.
+#
+# MY PAPER -- what my raster is laid on as it is made, enlarged or cleared -- is my own colour when
+# one is set on me (setColor), else the canvas role, read as the raster is painted (_surfaceFill).
+# The paper is part of the raster: a role that moves later shows on the next raster I make, not on
+# the one I hold.
 
 class CanvasWdgt extends PanelWdgt
   @augmentWith BackBufferMixin
 
-  constructor: ->
-    super
-    @color = Color.WHITE
+  # The paper I lay my raster on while I hold no colour of my own -- like every panel I hold none until
+  # one is set on me (the soft hook a surface that wears a role answers: RectangularAppearance
+  # ._fillColor, SimpleTextWdgt.blendInWithPanelColor). My border is the panel's (PanelWdgt
+  # ._surfaceStroke).
+  _surfaceFill: ->
+    WorldWdgt.theme.canvasFill
 
   # Capability query (with ActivePointerWdgt): "can a pen draw onto me?" -- replaces the
   # `whereTo instanceof CanvasWdgt` arm in PenWdgt._reactToBeingAdded. Inherited by all CanvasWdgt
@@ -54,8 +62,9 @@ class CanvasWdgt extends PanelWdgt
         # paint the background over it all so there are
         # no holes in the new area (if the canvas is being
         # enlarged).
-        if @color?
-          @backBufferContext.fillStyle = @color.toString()
+        paper = @color ? @_surfaceFill()
+        if paper?
+          @backBufferContext.fillStyle = paper.toString()
           @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
         # copy back the original canvas in the new one.
@@ -69,8 +78,9 @@ class CanvasWdgt extends PanelWdgt
     @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
 
-    if @color?
-      @backBufferContext.fillStyle = @color.toString()
+    paper = @color ? @_surfaceFill()
+    if paper?
+      @backBufferContext.fillStyle = paper.toString()
       @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
     # we leave the context with the correct scaling.
@@ -79,7 +89,7 @@ class CanvasWdgt extends PanelWdgt
     return [@backBuffer, @backBufferContext]
 
 
-  clear: (color = @color) ->
+  clear: (color = @color ? @_surfaceFill()) ->
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
     # @backBuffer.width and @backBuffer.height are already in
     # physical coordinates so no need to adjust for pixelratio

@@ -15,21 +15,11 @@ class ToolbarWdgt extends ViewportWdgt
 
   # MY DEFAULT SIDE: which of a host frame's four edge slots my band takes when the host docks
   # me. A per-instance property with a per-TYPE class default, user-adjustable per frame via the
-  # frame's "dock the toolbar ➜" context-menu popout, which edits the band's own edge spec.
+  # band's "Dock" context-menu submenu, which edits the band's own edge spec.
   # FLOATING is not a state this field records: I am a PAYLOAD either way (program ruling C11) --
   # what docks and floats is the frame around me, and dragging its grip onto the desktop is
   # exactly what turns a band into a window.
   dockSide: 'left'
-
-  # MY CROSS-AXIS SIZE when docked: width for left/right, height for top/bottom -- what I ask the
-  # band to grant me, which the band then wraps in its own chrome. DERIVED, in the constructor,
-  # from my grid's own cell metrics (ToolPanelWdgt.naturalGridCrossExtent: one strip-depth of
-  # cells plus the grid's margins) -- the same capability the FLOATING manifestation hugs its
-  # payload with, so a band is exactly as deep as its cells need and no constant anywhere says
-  # otherwise (owner ruling: one criterion for every toolbar, docked or free). Still a CONSTANT
-  # per instance, never a laid-out size -- the host's PURE measures read it through the band's
-  # spec (§6.1 rule 1), so it must not depend on laid-out extents, and cell dials are not.
-  dockThickness: undefined
 
   # a toolbar strip's scrolling is part of its design — a docked strip that
   # cannot scroll strands its off-edge buttons (see
@@ -38,8 +28,28 @@ class ToolbarWdgt extends ViewportWdgt
 
   constructor: ->
     super new ToolPanelWdgt
-    @dockThickness = @contents.naturalGridCrossExtent()
+    @appearance = @createAppearance()
     @_buildAndConnectChildren()
+
+  # I paint nothing of my own, neither a fill nor a border (one line per edge, visual-design-system
+  # §4.1): every home I have is a FrameWdgt's payload -- a docked band's card, a floating
+  # toolbar's window -- whose body is my background and whose outline is my edge, so a fill or a
+  # border of mine would paint those lines a second time. A press anywhere in my box still lands
+  # on me: the base appearance's shape is my whole box.
+  createAppearance: -> new SeamRulesAppearance @
+
+  # MY CROSS-AXIS SIZE when docked: width for left/right, height for top/bottom -- what I ask the
+  # band to grant me, which the band then wraps in its own chrome. DERIVED from my grid's own cell
+  # metrics (ToolPanelWdgt.naturalGridCrossExtent: one strip-depth of cells plus the grid's cross
+  # padding) -- the same capability the FLOATING manifestation hugs its payload with, so a band is
+  # exactly as deep as its cells need and no constant anywhere says otherwise (owner ruling: one
+  # criterion for every toolbar, docked or free). Answered at every measure and never recorded
+  # (the band's edge spec asks me, EdgeDockLayoutSpec.thicknessGrantedTo), so a host saved and
+  # loaded, or duplicated, lays its band out in the current theme. Never a laid-out size -- the
+  # host's PURE measures read it through the band's spec (§6.1 rule 1), so it must not depend on
+  # laid-out extents, and theme dials are not.
+  dockThickness: ->
+    @contents.naturalGridCrossExtent()
 
   # Clicking BETWEEN the buttons (the strip/grid background) must not steal the
   # editor focus pointer (world.editorFocusWdgt) from the widget being edited.
@@ -56,7 +66,7 @@ class ToolbarWdgt extends ViewportWdgt
   # there are no per-toolbar size constants anywhere). Answered as a capability rather than
   # claimed by a type test, so the frame asks every payload the same question and only a payload
   # with an answer sizes its window. My DOCKED manifestation asks the same grid the same way --
-  # it takes the cross axis alone (@dockThickness, granted through the edge-dock spec) because
+  # it takes the cross axis alone (dockThickness, granted through the edge-dock spec) because
   # its long axis is the host's to force.
   naturalPayloadExtentWithin: (room) ->
     @contents.naturalGridExtentWithin room

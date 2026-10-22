@@ -26,7 +26,6 @@ class Example3DPlotWdgt extends Widget
     @fps = 0
     world.steppingWdgts.add @
 
-    @setColor Color.create 255, 125, 125
     @_applyExtent new Point 200, 200
 
 
@@ -190,7 +189,7 @@ class Example3DPlotWdgt extends Widget
 
   # the drawing tail: the PUBLIC per-plot body Example3DPlotAppearance dispatches to
   # (the drawLayoutChrome / drawPlot family precedent)
-  drawPlot: (context, color, appliedShadow) ->
+  drawPlot: (context, appliedShadow) ->
 
     height = @height()
     width = @width()
@@ -277,7 +276,8 @@ class Example3DPlotWdgt extends Widget
 
     context.closePath()
 
-    context.strokeStyle = Color.GRAY.toString()
+    # the ground grid is chrome (the plot's frame of reference), at the mesh's alpha
+    context.strokeStyle = WorldWdgt.theme.plotGroundGridInk.toString()
     context.stroke()
 
 

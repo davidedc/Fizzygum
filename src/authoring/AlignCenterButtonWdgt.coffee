@@ -6,5 +6,6 @@ class AlignCenterButtonWdgt extends AlignButtonWdgt
   toolTipMessage: "align center"
   alignDirectMethod: "alignCenter"
   layoutAlignSetterMethod: "setAlignmentToCenter"
+  horizontalAlignmentName: "CENTER"
 
-  createAppearance: -> new AlignCenterIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new AlignCenterIconAppearance @, WorldWdgt.theme.toolbarGlyph

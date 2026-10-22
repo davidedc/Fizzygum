@@ -5,9 +5,9 @@
 #   my LIFETIME    'persistent' (furniture: a window, a card, a docked band) or 'transient'
 #                  (mid-gesture UI: a menu, a prompt). It changes mid-life — pinning IS that
 #                  change — which is why it is a state here and not a class hierarchy.
-#   my ATTACHMENT  free-floating on the desktop (a window: boxy skin, close, resizer), nested in
-#                  a container (a card: flat skin, no close), or held by a host's edge spec (a
-#                  docked band: a grip across it, no close, no resizer).
+#   my ATTACHMENT  free-floating on the desktop (a window: the window look, close, resizer),
+#                  nested in a container (a card: the card look, no close), or held by a host's
+#                  edge spec (a docked band: the card look, a grip across it, no close, no resizer).
 #
 # So a window, a card, a menu, a prompt and a docked toolbar are the SAME class in five states;
 # a frame is stackable and dockable anywhere, and every transition (pin, nest, dock, undock,
@@ -113,13 +113,6 @@ class FrameWdgt extends Widget
   # the window is going away -- see the note there.
   _beingFullDestroyed: undefined
 
-  # ===== the ROUNDED CHILD CLIP's switch (redesign plan §3a option (a), spikes S1b/S1c) =====
-  # ON, I clip my children to my rounded OUTLINE rather than to my rectangle, so content laid flush
-  # into a rounded window cannot paint (or catch presses) in the notches outside its corners. A plain
-  # class-level value, off; _roundedChildClipRadii is its one reader. Off, every paint and hit test
-  # of mine runs exactly the code a rectangular clip runs.
-  clipsChildrenToRoundedOutline: false
-
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
   # mutating anything, so a parent (a stack/scroll holding this window) can MEASURE this window
@@ -127,15 +120,15 @@ class FrameWdgt extends Widget
   #
   #   window height = content height-at-its-allotted-width + title/resizer chrome
   #
-  # - chrome (== the arrange's partOfHeightUsedUp): the titlebar (closeIcon + 2*padding) plus the
-  #   bottom margin, which differs by whether the resizer may overlap the contents -- chrome
-  #   comes from the shared _chromeHeight (one home for the measure and the arrange).
+  # - chrome (== the arrange's partOfHeightUsedUp): the strip plus the body's edges and margins,
+  #   and a row for the resizer when it may not overlap the contents -- chrome comes from the
+  #   shared _chromeHeight (one home for the measure and the arrange).
   # - content height: when the content sets its height FREELY (a scroller / slider / document fills
   #   whatever height the window is dragged to), the height is the window's OWN height minus chrome
   #   (mirrors the contentsRecursivelyCanSetHeightFreely branch); otherwise the content DICTATES the
   #   height (wrapping text, a stack, an aspect widget), so we RECURSE into its measure at the width
-  #   it gets in the window -- getWidthInStack(availW - 2*padding), which reproduces the arrange's
-  #   no-arg getWidthInStack() since availableWidthForContents() == width() - 2*padding.
+  #   it gets in the window -- getWidthInStack(availW - _chromeWidth()), which reproduces the
+  #   arrange's no-arg getWidthInStack() since availableWidthForContents() == width() - _chromeWidth().
   # contentsRecursivelyCanSetHeightFreely is width-independent, so testing it here (before the
   # recursion) matches the arrange's post-width-set test. A collapsed window is just its titlebar.
 
@@ -149,32 +142,46 @@ class FrameWdgt extends Widget
   #                 the span between. A free-floating frame offers "close"; a HOST-OWNED one
   #                 does not -- a host that owns my placement owns my membership, and you leave
   #                 such a host by dragging out, with right-click ➜ close as the fallback (C6).
-  #   resizer       which resize affordance the frame offers: "payloadSized" (a handle, iff the
-  #                 payload sizes freely) or "none". The handle answers the same free-floating
+  #   resizer       which resize affordance the frame offers: "payloadSized" (the grip, iff the
+  #                 payload sizes freely) or "none". The grip answers the same free-floating
   #                 predicate itself in HandleWdgt.updateVisibility -- ONE home, so this field
   #                 states the policy the payload half adds to it.
   #   axis          the direction the strip runs. A free frame's bar is on top, always (C15).
   #   showsText     whether the title piece carries its text (a bar too thin for text does not).
   #   naturalWidth  what the bar contributes to its frame's width hug: "none" asks for nothing,
   #                 "titleText" hugs the title text.
-  #   thickness / slotSize / glyphSize / padding / textHeight
-  #                 the metrics, every one of them a theme metric (G2): the strip's own thickness,
-  #                 the target box a piece advances the strip by, the glyph drawn inside that box
-  #                 (G3: a target and its mark are separate dials), the gap around and between
-  #                 pieces, and the title's height.
+  #   thickness / slotSize / glyphSizes / padding / ruleWidth / textHeight
+  #                 the metrics, each read off the theme (G2): the strip's own thickness, the
+  #                 target box a piece advances the strip by, the side of the glyph each button
+  #                 piece draws inside that box, by piece name (G3: a target and its mark are
+  #                 separate dials; the window controls and the pencil are two glyph sizes, and a
+  #                 strip that carries no button piece names none), the inset the strip keeps
+  #                 from my edges, the width of the rule the strip draws along its content-facing
+  #                 edge, and the title's height. Every strip's padding is my BORDER: its
+  #                 background sits inside it along my outer side (and, for a window strip, at
+  #                 both ends, with its pieces), so its thickness is that border, its band and
+  #                 its own rule (redesign plan §4 W1, W2). A window strip's band is one row of
+  #                 abutting targets. A window title's height is its piece's own line height,
+  #                 read off the piece once it exists (the theme's stand-in before).
+  #   bandInset / titleInset
+  #                 a pop-up header's own two, named by its spec alone: how far past my border, at
+  #                 both ends, its band stops (my content padding, so the band spans exactly the
+  #                 content box my rows span), and how far into the band its title text starts.
   #   fontRole      the title's font: a theme font role (family, size and weight together).
   #
   #   titleStyle    how the title strip is built and laid out: "windowBar" (the strip spans my
-  #                 whole top edge, its background inset a pixel, the title text left-aligned in
-  #                 the span the pieces leave) or "menuHeader" (a rounded header box inset by the
-  #                 padding, the title text hugging itself and centred in it).
+  #                 whole top edge inside my border, the title text centred in the span the
+  #                 pieces leave) or "menuHeader" (a flat header band across my content box,
+  #                 inside my border, ruled along its bottom; the title text hugs itself, starts
+  #                 the title inset into the band and is centred down it).
   #
   # WHICH row applies is my LIFETIME (program ruling C4): a TRANSIENT frame is a menu and wears
   # the pop-up row -- `pieces: ["title"]` (a tap on it pins the frame), `naturalWidth: "titleText"`,
   # the menu-header metrics. A PERSISTENT one is furniture and wears the window row, whatever it
   # was born as: a pinned menu IS a window, down to its strip. Both are laid out by the same bar
   # through the same arrange. What the strip LOOKS like -- its background's appearance and colours,
-  # its title's ink -- is not the spec's: it is my look (_frameLook), which the bar reads.
+  # its title's ink, its glyphs' ink -- is not the spec's: it is my look (_frameLook), which the bar
+  # reads.
   _barSpec: ->
     return @_transientBarSpec() if @isTransientPopUp()
     theme = WorldWdgt.theme
@@ -196,17 +203,29 @@ class FrameWdgt extends Widget
     # a strip running along my side is too narrow for a title, so it carries pieces only
     showsText: axis is "horizontal"
     naturalWidth: "none"
-    # the strip: icon square + a padding above and below. The strip's own padding is the bar
-    # metric (G2), NOT my body margin: the two coincide on a frame whose payload takes the
-    # chrome margin, and a payload that keeps its own border (a rows panel) leaves my body margin
-    # at zero while its window strip stays a window strip.
-    thickness: Math.round theme.barIconSize + 2 * theme.barPadding
+    # the strip, measured from my OUTER edge: my border, one row of targets, then the strip's own
+    # rule, which my payload lies past.
+    thickness: theme.frameBorderWidth + theme.barIconSize + theme.barRuleWidth
     slotSize: theme.barIconSize
-    glyphSize: theme.barGlyphSize
-    padding: theme.barPadding
-    textHeight: theme.titleBarTextHeight
+    glyphSizes:
+      close: theme.barControlGlyphSize
+      collapse: theme.barControlGlyphSize
+      edit: theme.barActionGlyphSize
+    padding: theme.frameBorderWidth
+    ruleWidth: theme.barRuleWidth
+    textHeight: @_windowTitleTextHeight()
     fontRole: theme.fonts.windowTitle
     titleStyle: "windowBar"
+
+  # The height my window title takes in my strip: the title piece's own line height (a fitted
+  # string paints its text at the TOP of the box it is granted, so the box is exactly its text and
+  # the strip centres that), its line box's pitch at its set font size. My strip derives in my
+  # constructor before the piece exists, and the theme's stand-in answers until then -- every
+  # arrange of the strip runs after the piece is built, so the title is placed by the real height.
+  _windowTitleTextHeight: ->
+    title = @bar?.label
+    return WorldWdgt.theme.titleBarTextHeight unless title?
+    title.linePitch title.originallySetFontSize
 
   # WHICH DIRECTION MY STRIP RUNS (program rulings C13/C15). A free frame's bar is on TOP, always
   # -- no per-frame orientation knob, because a window whose bar could be anywhere costs more
@@ -233,40 +252,51 @@ class FrameWdgt extends Widget
     return @layoutSpec if @layoutSpec?.isEdgeDock?()
     undefined
 
-  # The POP-UP row of the same vocabulary: my strip is exactly my title box -- the title text
-  # plus a pixel of air above and below it, inset by the menu border, and a tap on it pins me.
-  # An UNTITLED pop-up carries no strip at all: an empty roster, and a thickness of 0 so my rows
-  # start at my very top edge.
-  #   The strip's thickness is read off the title piece, which hugs its own text and never
+  # The POP-UP row of the same vocabulary: my strip is my header BAND -- inside my border, across
+  # my content box (bandInset past the border at both ends, so it spans exactly what my rows
+  # span), the title text plus a pixel of air above and below it, and below that the band's own
+  # rule, its bottom edge (redesign plan §2 rule D). A tap on it pins me. Measured from my OUTER
+  # edge like a window strip -- my border, the band, the rule -- so at its floor it is exactly as
+  # thick as a window strip, and pinning me moves nothing below it. An UNTITLED pop-up carries no
+  # strip at all: an empty roster, and a thickness of 0 so my rows start just inside my border.
+  #   The band's height is read off the title piece, which hugs its own text and never
   # stretches (the bar sizes it to text and disables fitting), so this is stable applied
   # geometry, not a mutate-then-read-back. Before the piece exists -- the appearance derivation
-  # runs in my constructor -- the window title's own height stands in at the same number.
-  #   A titled strip is floored at menuRowHeight: the tap that pins me lands on it, so it is a
+  # runs in my constructor -- the window title's own height stands in.
+  #   A titled band is floored at menuRowHeight: the tap that pins me lands on it, so it is a
   # target of the same size as a row (G3/G5), and it is one of my rows in every other respect.
   _transientBarSpec: ->
     theme = WorldWdgt.theme
     titled = !!@_titleForContents @contents
     textHeight = @bar?.label?.height() ? theme.titleBarTextHeight
+    bandHeight = Math.max textHeight + 2, theme.menuRowHeight
     pieces: (if titled then ["title"] else [])
     resizer: "none"
     axis: "horizontal"
     showsText: true
     naturalWidth: "titleText"
-    thickness: (if titled then Math.max(textHeight + 2, theme.menuRowHeight) else 0)
+    thickness: (if titled then theme.frameBorderWidth + bandHeight + theme.menuHeaderRuleWidth else 0)
     slotSize: theme.barIconSize
-    glyphSize: theme.barGlyphSize
-    padding: theme.menuRowsBorder
+    # a pop-up strip carries no button piece, so no glyph to size
+    glyphSizes: {}
+    padding: theme.frameBorderWidth
+    bandInset: theme.menuContentPadding
+    titleInset: theme.menuHeaderTitleInset
+    ruleWidth: theme.menuHeaderRuleWidth
     textHeight: textHeight
     fontRole: theme.fonts.menuHeader
     titleStyle: "menuHeader"
 
   # What my title contributes to my payload's OWN row width: a pop-up's rows all equalize to the
   # widest entry, and its title is one of those entries even though it lives in my chrome (the
-  # spec's "titleText" natural width). The rows panel PULLS this through the pop-up climb, so a
-  # rows panel outside a frame (a list's) simply gets nothing.
+  # spec's "titleText" natural width): the title text, and its band's title inset on both sides of
+  # it (the band spans the rows' width, so this is what keeps a long title clear of the band's
+  # ends). The rows panel PULLS this through the pop-up climb, so a rows panel outside a frame (a
+  # list's) simply gets nothing, and so does an untitled pop-up's, which has no title piece.
   _titleEntryWidth: ->
-    return 0 unless @_barSpec().naturalWidth is "titleText"
-    (@bar?.label?.width() ? 0) + 2
+    spec = @_barSpec()
+    return 0 unless spec.naturalWidth is "titleText" and @bar?.label?
+    @bar.label.width() + 2 * spec.titleInset
 
   # What the titlebar strip takes out of my HEIGHT -- the bar spec's own thickness when the strip
   # runs across my top, nothing when it runs down my side. The measure, the arrange and the bar
@@ -281,19 +311,54 @@ class FrameWdgt extends Widget
     return 0 unless @_barSpec().axis is "vertical"
     @_barSpec().thickness
 
-  # Window chrome height -- everything that is NOT content: the titlebar strip plus the
-  # bottom margin, which depends on whether the resizer may overlap the contents. ONE home
-  # for the calc the measure (preferredExtentForWidth) and the arrange
-  # (_positionAndResizeChildren) both used to write out inline: they MUST agree, or the
-  # window's measure diverges from what its arrange then applies (assessment §6.1 rule 1).
-  # The two inline copies had in fact drifted at the PARSE level -- one rounded only the
-  # titlebar, the other (via CoffeeScript's implicit call in `Math.round (a) + b`) the
-  # whole sum -- identical only while @padding is an integer.
+  # ===== my body's edges =====
+  # My BODY is what my border encloses, less my strip: my payload and my docked bands lie in it.
+  # Its inner edge sits in from my outer edge by my STRIP's thickness on the side my strip runs
+  # along (the strip spans my border, its band and its rule: _barSpec) and by my BORDER INSET
+  # on every other side. Past those edges my payload and my bands keep my BODY MARGIN, and the
+  # same margin parts a band from my payload; a band also stands its own inset in from those edges
+  # (_dockedBandInset), on every side but the one it shares with my payload. My padding
+  # (_chromePadding) is border inset plus body margin, measured where no strip runs.
+
+  # The part of my padding that is my border: the theme's border width, which my padding always
+  # holds (_chromePadding), whatever my payload is.
+  _borderInset: ->
+    WorldWdgt.theme.frameBorderWidth
+
+  # The part of my padding past my border: the margin my payload keeps from every inner edge of
+  # my body, a strip's rule and a docked band's side included.
+  _bodyMargin: ->
+    @padding - @_borderInset()
+
+  # How far in from my outer TOP my body's inner edge sits: my strip, when it runs across my top
+  # (it always spans my border), else my border inset.
+  _bodyEdgeTop: ->
+    Math.max @_titlebarHeight(), @_borderInset()
+
+  # The LEFT twin: my strip when it runs down my side, else my border inset. My right and bottom
+  # edges are always my border inset: a strip runs along my top or my left, never elsewhere.
+  _bodyEdgeLeft: ->
+    Math.max @_titlebarWidth(), @_borderInset()
+
+  # Where my payload's top-left sits from mine when it fills its region: past my body's leading
+  # edges, a band docked at my left or my top (with its inset), and my body margin. The arrange
+  # seats it there, and a frame re-wrapping a payload in place reads the same offset
+  # (floatOutOfDock).
+  _payloadOffset: ->
+    new Point (@_bodyEdgeLeft() + @_leftDockThickness() + @_bodyMargin()),
+      (@_bodyEdgeTop() + @_topDockThickness() + @_bodyMargin())
+
+  # Window chrome height -- everything that is NOT content: my body's top and bottom edges, my
+  # body margin past each, the bands docked at my top and bottom with their insets, and -- when
+  # my payload must keep clear of my resizer -- the grip's row: how far the grip reaches up from
+  # my content area's bottom edge (FrameGripWdgt.footprint, its inset plus its side), so my
+  # payload stops my body margin above the grip. ONE home for the measure
+  # (preferredExtentForWidth) and the arrange (_positionAndResizeChildren): they MUST agree, or
+  # the window's measure diverges from what its arrange then applies (assessment §6.1 rule 1).
   _chromeHeight: (spec) ->
-    if spec.resizerCanOverlapContents
-      @_titlebarHeight() + 2 * @padding + @_topDockThickness() + @_bottomDockThickness()
-    else
-      @_titlebarHeight() + 3 * @padding + WorldWdgt.theme.handleSize + @_topDockThickness() + @_bottomDockThickness()
+    chrome = @_bodyEdgeTop() + @_borderInset() + 2 * @_bodyMargin() + @_topDockThickness() + @_bottomDockThickness()
+    chrome += FrameGripWdgt.footprint() unless spec.resizerCanOverlapContents
+    chrome
 
   # ===== the four edge slots' layout terms =====
   # The frame docked at one of my edges, WHEN IT COUNTS: the slot's occupant, still my child, its
@@ -308,26 +373,37 @@ class FrameWdgt extends Widget
     return undefined unless dockedFrame._myEdgeDockSpec()?.engaged
     dockedFrame
 
-  # What a docked frame takes out of my body at `side`: the band it occupies plus the gap between
-  # the band and my content. 0 for an empty, disengaged or collapsed-away slot.
+  # What a docked frame takes out of my body at `side`: the band's inset from my body's edge
+  # (_dockedBandInset), the band it occupies, and the gap between the band and my content (my body
+  # margin). 0 for an empty, disengaged or collapsed-away slot.
   _dockThicknessAt: (side) ->
     dockedFrame = @_dockedFrameAt side
     return 0 unless dockedFrame?
-    dockedFrame._dockedBandThickness() + @padding
+    @_dockedBandInset() + dockedFrame._dockedBandThickness() + @_bodyMargin()
 
-  # MY OWN cross extent as a band in somebody's slot (program ruling C13): expanded, the spec's
-  # thickness -- what the band grants my payload -- plus my own body margin around it, so the
-  # payload gets exactly the extent it asked for and my grip, running ACROSS the band, adds
-  # nothing; collapsed, I AM my bar, so the band is the strip's thickness (never 0 -- there has to
-  # be something left to tap). 0 when I am not docked at all.
+  # How far a band docked in one of my slots stands in from my body on its three outer sides,
+  # past my body margin (the theme's dockedBandInset; its fourth side, toward my payload, keeps my
+  # body margin alone). Read at every measure and arrange, never copied into me, so a saved or
+  # duplicated host places its bands in the current theme. A pure dial, as the slot terms above
+  # must be.
+  _dockedBandInset: ->
+    WorldWdgt.theme.dockedBandInset
+
+  # MY OWN cross extent as a band in somebody's slot (program ruling C13): expanded, what the
+  # band grants my payload (EdgeDockLayoutSpec.thicknessGrantedTo: a toolbar's own dockThickness,
+  # asked now, or the extent my payload arrived with) plus my own chrome across it (my border and
+  # body margin on both sides), so the payload gets exactly the extent it asked for and my grip,
+  # running ACROSS the band, adds nothing; collapsed, I AM my bar, so the band is the strip's
+  # thickness (never 0 -- there has to be something left to tap). 0 when I am not docked at all.
   _dockedBandThickness: ->
     dockSpec = @_myEdgeDockSpec()
     return 0 unless dockSpec?
     return @_barSpec().thickness if @contents?.collapsed
+    payloadThickness = dockSpec.thicknessGrantedTo @contents
     if dockSpec.side is "top" or dockSpec.side is "bottom"
-      dockSpec.thickness + @_chromeHeight @contents.contentStackSpec()
+      payloadThickness + @_chromeHeight @contents.contentStackSpec()
     else
-      dockSpec.thickness + @_chromeWidth()
+      payloadThickness + @_chromeWidth()
 
   # The four named terms my chrome accounting reads (one home each side, so _chromeHeight and
   # _chromeWidth stay readable).
@@ -343,14 +419,13 @@ class FrameWdgt extends Widget
   _rightDockThickness: ->
     @_dockThicknessAt "right"
 
-  # Frame chrome WIDTH -- everything that is not content width: the side
-  # paddings, a strip running down my side, and the bands docked on either
-  # flank. The width sibling of
-  # _chromeHeight, and the ONE home the measures and the arrange both read
-  # (§6.1 rule 1): availableWidthForContents, the width negotiation and the
-  # first-placement hug all route through it.
+  # Frame chrome WIDTH -- everything that is not content width: my body's left and right edges (a
+  # strip running down my side is the left one), my body margin past each, and the bands docked
+  # on either flank with their insets. The width sibling of _chromeHeight, and the ONE home the
+  # measures and the arrange both read (§6.1 rule 1): availableWidthForContents, the width
+  # negotiation and the first-placement hug all route through it.
   _chromeWidth: ->
-    2 * @padding + @_titlebarWidth() + @_leftDockThickness() + @_rightDockThickness()
+    @_bodyEdgeLeft() + @_borderInset() + 2 * @_bodyMargin() + @_leftDockThickness() + @_rightDockThickness()
 
   # (U2) The first-placement WIDTH negotiation, as a PURE function of the spec's
   # preferredStartingWidth sentinels -- ONE home for the measure's pre-capture branch (below)
@@ -478,12 +553,9 @@ class FrameWdgt extends Widget
     @padding = @_chromePadding()
     # TODO this looks better:
     #@padding = 10
-    # I am born in my look's body colours. A pop-up citizen declares its lifetime before this
-    # constructor runs, so a menu is born in the menu box's; the derive then applies my body
-    # appearance (and, transient, those colours again with the rounding -- see there).
-    look = @_frameLook()
-    @strokeColor = look.bodyStroke
-    @color = look.bodyFill
+    # I am born in my look's body (the one derivation that decides it); my strip, built next, is
+    # skinned by its own build. A pop-up citizen declares its lifetime before this constructor
+    # runs, so a menu is born in the menu box.
     @_deriveAndSetBodyAppearance()
     @_buildAndConnectChildren()
 
@@ -492,7 +564,7 @@ class FrameWdgt extends Widget
     else
       @disableDrops()
       # an UNTITLED pop-up carries no title piece at all, so there is nothing to title
-      @label?.setText @_titleForContents @contents
+      @_retitleNoSettle @_titleForContents @contents
 
     # settled-after-new: SETTLE the starting extent as the constructor's LAST act (was
     # @_applyExtent, which left a pending re-fit -- and, for default contents, the
@@ -527,16 +599,15 @@ class FrameWdgt extends Widget
     payloadExtent = @contents.naturalPayloadExtentWithin room
     @setExtent new Point (payloadExtent.x + chromeWidth), (payloadExtent.y + chromeHeight)
 
-  # The margin my body keeps around my payload. It is the PAYLOAD's question, not my
-  # manifestation's: a payload that draws its own border (a rows panel keeps the menu border, and
-  # its box IS my box) gets none, because a second margin would only double the first. Everything
-  # else gets the theme's chrome margin. Read once, at construction, like the payload it
-  # follows.
+  # MY PADDING: how far my payload sits in from my OUTER edge where no strip runs -- my border
+  # (the payload lies inside the outline I stroke over it) plus the theme's body margin past it
+  # (see "my body's edges" for how the strip side and a docked band read it). The same for every
+  # payload and every manifestation: a pop-up's rows lie inside my border like any payload, and the
+  # padding they keep inside it is their rows panel's own (the pop-up's content padding, handed to
+  # its CommandPanelWdgt). Read once, at construction.
   _chromePadding: ->
-    if @contents?.keepsItsOwnChromeMargin?()
-      0
-    else
-      WorldWdgt.theme.barPadding
+    theme = WorldWdgt.theme
+    theme.frameBorderWidth + theme.frameBodyMargin
 
 
   # in general, windows just create a reference of themselves and
@@ -602,11 +673,28 @@ class FrameWdgt extends Widget
       titleToBeSet = "window with an " + titleToBeSet
     titleToBeSet
 
-  # The name my title strip carries. A ROW of a pop-up asks its pop-up for this to prefix the
-  # question its prompt opens with ("Rectangle\nalpha value:"), which is why it is public: the
+  # The name my title strip carries, as stored (the display case is my title piece's, not the
+  # name's). A ROW of a pop-up asks its pop-up for this to prefix the question its prompt opens with
+  # ("rectangle\nalpha\nvalue:", CommandPanelWdgt.promptTitleAsking), which is why it is public: the
   # asker is the row, several classes away. The citizens answer their own kind of title.
   titleText: ->
     @_titleForContents @contents
+
+  # HOW MY TITLE SHOWS: the display case my strip's title piece wears (StringWdgt.displayCase) over
+  # the words my title stores, which stay as they are for every reader of them -- a pinned menu's
+  # window title, a prompt's title built from a menu's, a saved file's name. The ONE place the case
+  # is decided: my bar builds every title piece in it, in either style, and I re-assert it whenever
+  # I re-title. A pop-up's header that NAMES something shows in capitals ("RECTANGLE", "DESKTOP",
+  # "FONTS"); every other title reads as a sentence, its first character a capital: a window's, a
+  # pinned or collapsed one's, a card's, a prompt's question and a pop-up's message.
+  _titleDisplayCase: ->
+    if @isTransientPopUp() and @_headerIsAName() then "upper" else "sentence"
+
+  # Does my pop-up header NAME something (a widget, a section, a chooser), rather than say
+  # something? A plain frame is never a pop-up, and a prompt's header is the question it asks, so
+  # neither does; a menu says per title (MenuWdgt).
+  _headerIsAName: ->
+    false
 
   # Re-derive the bar title from my CURRENT contents' colloquialName. Intent-named public
   # note (the noteWallpaperChanged idiom) for a contents whose ANSWER to colloquialName
@@ -616,14 +704,34 @@ class FrameWdgt extends Widget
   # label core: the nudge arrives inside the add's own settle (same reason as the
   # _addNoSettle title site).
   noteContentsNameMayHaveChanged: ->
-    return unless @label? and @contents? and @contents != @defaultContents
-    @label._setTextNoSettle @_titleForContents @contents
+    return unless @contents? and @contents != @defaultContents
+    @_retitleNoSettle @_titleForContents @contents
 
+  # A title that carries a NAME (a shortcut bringing me up names me by its caption,
+  # ShortcutWdgt._bringUpReferencedWidgetNow): my content's kind, then the name after a dash, as
+  # stored -- "folder — Examples", shown "Folder — Examples" in my title's display case
+  # (visual-design-system §4.9; the inspector titles are stored the same way).
   setTitle: (newTitle) ->
-    @label.setText @contents.colloquialName() + ": " + newTitle
+    @_settleLayoutsAfter => @_retitleNoSettle @contents.colloquialName() + " — " + newTitle
 
   setTitleWithoutPrependedContentName: (newTitle) ->
-    @label.setText newTitle
+    @_settleLayoutsAfter => @_retitleNoSettle newTitle
+
+  # THE ONE WAY MY TITLE'S TEXT CHANGES, through the non-settling label core: every title write of
+  # mine comes here. The text is an INPUT to my strip's arrange -- FrameBarWdgt._layOutTitleInStrip
+  # grades how much of it survives the box it is granted, and a strip whose title gives itself up
+  # centres its pieces -- so new text re-lays my strip. My label is fitted to that box, so its own
+  # text change invalidates nothing above it. An untitled pop-up carries no title piece, so there is
+  # nothing to re-title. The text is shown in my title's display case (_titleDisplayCase), asserted
+  # before the text is set so the label measures the shown form; a change of case alone re-lays my
+  # strip too, since it changes what shows.
+  _retitleNoSettle: (newTitle) ->
+    return unless @label?
+    titleBefore = @label.text
+    caseBefore = @label.displayCase
+    @label._setDisplayCaseNoSettle @_titleDisplayCase()
+    @label._setTextNoSettle newTitle
+    @bar?._invalidateLayout() unless @label.text is titleBefore and @label.displayCase is caseBefore
 
   representativeIcon: ->
     if @contents == @defaultContents
@@ -760,14 +868,14 @@ class FrameWdgt extends Widget
   # Re-title the (content-less) window through the NON-settling label core (hence the NoSettle
   # name): reached either during construction (orphan -> deferred) or from _resetToDefaultContents
   # inside a close/destroy settle, so the enclosing settle flushes it -- a self-settling setText
-  # would open a nested settle mid-pass. (The label is FIT_TEXT_TO_BOX, so the text swap changes
-  # no geometry anyway; @_changed() in the core repaints it.)
+  # would open a nested settle mid-pass. (The label is fitted to its box, so the swap moves no
+  # geometry of its own; _retitleNoSettle re-lays the strip, whose arrange grades the title.)
   _setEmptyWindowLabelNoSettle: ->
     # a strip too narrow for text carries no title piece, so there is nothing to title
     if @isInternal()
-      @label?._setTextNoSettle "empty internal window"
+      @_retitleNoSettle "empty internal window"
     else
-      @label?._setTextNoSettle "empty window"
+      @_retitleNoSettle "empty window"
 
   # Polymorphic replacement for `instanceof FrameWdgt`: lets Widget / the smart-placer
   # ask "are you a window?" without naming this subclass. Defined ONLY here -- there is NO
@@ -775,11 +883,30 @@ class FrameWdgt extends Widget
   # dispatches via `?()` and a non-window answers undefined (falsy). (type-test-elimination campaign)
   isFrame: -> true
 
+  # Role query, the frame-side twin of ViewportWdgt.isMyContentsPanel: is aWdgt my WHOLE CONTENT
+  # (@contents, the payload my chrome wraps -- never my strip, my grip or a docked band)? A panel or
+  # viewport asks it of its parent as it paints (PanelWdgt / ViewportWdgt / VerticalStackPanelWdgt
+  # ._surfaceStroke): along my content my border and my strip's rule are the line, so the content
+  # wears the window content's border role -- derived from where it stands at every paint, so it
+  # follows every re-parenting and is never stored. Only a frame answers (?.()-dispatched).
+  isMyContents: (aWdgt) ->
+    aWdgt is @contents
+
   colloquialName: ->
     if @isInternal()
       return "internal window"
     else
       return "window"
+
+  # What tells me from another window on a row that names me (Widget.distinguishedRowName): my
+  # title as my strip SHOWS it ('Window "Docs Maker"'). Nothing when I show no title, or when my
+  # name already says it — a menu's and a prompt's name quote their title, a Maker's name is its
+  # title — where it would tell nothing more.
+  _rowNameDistinction: ->
+    return undefined unless @label?
+    title = @label.transformTextOneToOne @label.text
+    return undefined if @colloquialName().toLowerCase().includes title.toLowerCase()
+    title
 
   # The re-fit chokepoint (the `_reLayoutChildren?` size-tracking marker keys off this
   # definition): re-fit chrome + content via the frame's own arrange below.
@@ -856,7 +983,7 @@ class FrameWdgt extends Widget
       # re-title through the NON-settling label core: _addNoSettle already runs inside the
       # add's settle, so the title change rides that flush instead of opening a nested one.
       # An untitled pop-up carries no title piece, so there is nothing to re-title.
-      @label?._setTextNoSettle @_titleForContents aWdgt
+      @_retitleNoSettle @_titleForContents aWdgt
       # (§9.7-Q, owner-decided 2026-07-17) a chrome rebuild (_buildAndConnectChildrenNoSettle,
       # reached from _reactToChildDropped / _resetToDefaultContents) re-adds the widget that
       # is ALREADY my content. That is bookkeeping, not a re-mount: the placement it would
@@ -957,7 +1084,7 @@ class FrameWdgt extends Widget
   # frame docked in my bottom or right slot, whose far corner the resizer overlaps on purpose. A
   # payload with an engaged band below or beside it does not reach the corner; it is still named,
   # which only keeps a reserve the band has made unnecessary -- the safe way to be wrong. A viewport
-  # in that chain reserves the corner from its bars (ViewportWdgt._aResizerSitsOverMyCorner).
+  # in that chain reserves the corner from its bars (ViewportWdgt._resizerOverMyCorner).
   bottomRightCornerReachedBy: (child) ->
     if child is @contents
       return !@contents.collapsed and @contents.contentStackSpec?()?.resizerCanOverlapContents isnt false
@@ -1065,16 +1192,18 @@ class FrameWdgt extends Widget
   dockFrame: (aFrame, side) ->
     @_settleLayoutsAfter => @_dockFrameNoSettle aFrame, side
 
-  # Dock a frame in my slot at `side`. The spec is the whole act: it says WHERE and, through the
-  # thickness it records, HOW MUCH of my body the band gets -- and everything else about the
-  # docked manifestation (card skin, a grip across the band, no close, no resizer) derives from
-  # the frame's no-longer-free-floating attachment. The thickness is what the band grants the
-  # PAYLOAD: the extent the payload declares for itself if it declares one, else the extent it
-  # arrives with. An occupied slot's previous holder is set free first -- one frame per side.
+  # Dock a frame in my slot at `side`. The spec is the whole act: it says WHERE and HOW MUCH of my
+  # body the band gets -- and everything else about the docked manifestation (card skin, a grip
+  # across the band, no close, no resizer) derives from the frame's no-longer-free-floating
+  # attachment. What the band grants the PAYLOAD is the thickness the payload declares for itself
+  # if it declares one (dockThickness, which the spec asks at every measure, so nothing about it
+  # is recorded), else the extent it arrives with, which the spec records. An occupied slot's
+  # previous holder is set free first -- one frame per side.
   _dockFrameNoSettle: (aFrame, side) ->
     payload = aFrame.contents
-    across = if side is "top" or side is "bottom" then payload.height() else payload.width()
-    dockSpec = new EdgeDockLayoutSpec side, (payload.dockThickness ? across)
+    unless payload.dockThickness?
+      arrivalThickness = if side is "top" or side is "bottom" then payload.height() else payload.width()
+    dockSpec = new EdgeDockLayoutSpec side, arrivalThickness
     # armed BEFORE the add, so the band's own roster derive already sees the mode it lands in. A
     # dock is engaged on arrival; only a host whose payload HAS an edit mode and is currently
     # viewing lands it disengaged, because that host's view mode is what disengages every dock.
@@ -1127,7 +1256,7 @@ class FrameWdgt extends Widget
   # Build my content's toolbar variant and dock it, framed, at the side the variant asks for. A
   # framed CITIZEN declares its kind's variant itself (§5.B); a plain frame asks the content it
   # wraps; a content that declares none leaves every slot empty.
-  # `side` overrides the variant's own default (the "toolbar ➜" row names one).
+  # `side` overrides the variant's own default (the "Toolbar" submenu's rows name one).
   _buildDockedToolbarNoSettle: (side) ->
     toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
     return unless toolbar?
@@ -1159,19 +1288,19 @@ class FrameWdgt extends Widget
     # a slot to sit in (program ruling C12).
     if @_myEdgeDockSpec()?
       menu.addLine()
-      menu.addMenuItem "dock ➜", @, "dockSideMenu", closesUnpinnedPopUps: false, toolTip: ""
-      menu.addMenuItem "float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
+      menu.addMenuItem "Dock", @, "dockSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
+      menu.addMenuItem "Float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
     # A HOST's row: fill an empty slot with the toolbar my content declares. Offered only while
     # there IS one to make and no slot already holds it -- you cannot dock a second copy of the
     # same variant, and DELIBERATELY a menu entry, never a bar button (owner ruling D9: don't spend
     # bar space on it).
     if @_offersAFreshToolbar()
       menu.addLine()
-      menu.addMenuItem "toolbar ➜", @, "toolbarSideMenu", closesUnpinnedPopUps: false, toolTip: ""
+      menu.addMenuItem "Toolbar", @, "toolbarSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
     # the pin is offered only while there is something to pin: furniture is already staying
     if @isTransientPopUp()
       menu.addLine()
-      menu.addMenuItem "pin", @, "pinPopUp", closesUnpinnedPopUps: false
+      menu.addMenuItem "Pin", @, "pinPopUp", closesUnpinnedPopUps: false
 
   # Is there a toolbar to dock that is not docked already? The content must declare a variant (a
   # framed citizen declares its own -- §5.B) and no slot may hold one.
@@ -1179,20 +1308,22 @@ class FrameWdgt extends Widget
     return false if @_dockedToolbarFrame()?
     (@buildToolbar? or @contents?.buildToolbar?) == true
 
-  # The BAND's side chooser ("dock ➜"): the three sides I am not on (the VSLS-alignment /
-  # division-cell menu pattern -- the current one is nothing to choose).
+  # The BAND's side chooser (the "Dock" submenu): the three sides I am not on (the VSLS-alignment /
+  # division-cell menu pattern -- the current one is nothing to choose). A row SHOWS its side
+  # capitalised ("Top") and carries the side itself ("top"), the name my slots are keyed by.
   dockSideMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     currentSide = @_myEdgeDockSpec()?.side
     for side in FrameWdgt.DOCK_SIDES
-      menu.addMenuItem side, @, "dockAtSide", arg1: side  if side isnt currentSide
+      menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue side), @, "dockAtSide", arg1: side  if side isnt currentSide
     menu.popUpAtHand()
 
-  # The HOST's side chooser ("toolbar ➜"): all four, since the slot the row fills is empty.
+  # The HOST's side chooser (the "Toolbar" submenu): all four, since the slot the row fills is
+  # empty; its rows are labelled like the "Dock" submenu's.
   toolbarSideMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     for side in FrameWdgt.DOCK_SIDES
-      menu.addMenuItem side, @, "addToolbarAtSide", arg1: side
+      menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue side), @, "addToolbarAtSide", arg1: side
     menu.popUpAtHand()
 
   # Move me to another of my host's slots. A dock IS a placement, so re-siding is an edit to the
@@ -1213,6 +1344,13 @@ class FrameWdgt extends Widget
     dockSpec.side = side
     host.dockedFrames[side] = @
     host._invalidateLayout()
+    # the new side may move me into or out of the corner my host's grip covers (it names its right
+    # and bottom bands, bottomRightCornerReachedBy), while my extent can stay the same (a bottom
+    # band and a top band are equally long), so nothing else re-lays what my viewports keep clear
+    # of that corner: tell my corner chain. Docking and undocking reach the same chain without this
+    # call: they change my spec, which shows or hides my own grip (Widget._setLayoutSpec ->
+    # HandleWdgt.updateVisibility), and its coming or going tells the chain.
+    @noteCornerChainChanged()
 
   # Fill one of my empty slots with my content's toolbar variant, framed. (Menu-dispatched -- see
   # dockAtSide for the two named-as-unread slots.)
@@ -1234,10 +1372,11 @@ class FrameWdgt extends Widget
     world.add @
     # the desktop gives me a window's chrome where the band gave me a grip, so re-wrap my payload
     # at the extent it had
-    @setExtent @_extentWrappingPayloadAt payloadExtent
-    # the arrange seats my payload inside my chrome: past my padding, my bar, and a band of my OWN
-    # docked at my left or top (a Docs frame's text toolbar), so I land that far up-left of it
-    @_applyMoveTo payloadPosition.subtract new Point @_titlebarWidth() + @_leftDockThickness() + @padding, @_titlebarHeight() + @_topDockThickness() + @padding
+    @setExtent @extentWrappingPayloadAt payloadExtent
+    # the arrange seats my payload inside my chrome: past my body's edges (my border, my bar), a
+    # band of my OWN docked at my left or top (a Docs frame's text toolbar, with its inset) and my
+    # body margin, so I land that far up-left of it
+    @_applyMoveTo payloadPosition.subtract @_payloadOffset()
     @_moveWithin world
 
   # LIFTED OUT OF A DOCK SLOT by my grip: the band's look goes (Widget._beforeBeingGrabbed drops my
@@ -1255,7 +1394,10 @@ class FrameWdgt extends Widget
   # My extent around a payload of `payloadExtent`, in the chrome I wear NOW: read off the mounted
   # content's own spec, the one home the measure and the arrange share, no literals. Both ways out of
   # a dock slot re-wrap with it (floatOutOfDock and a grab of my grip), so the two cannot disagree.
-  _extentWrappingPayloadAt: (payloadExtent) ->
+  # PUBLIC because an opener sizes a window by what it must GRANT its payload: it states the
+  # payload's extent and asks me for mine (SpreadsheetApp opens its sheet at its opening grid
+  # whatever my chrome measures).
+  extentWrappingPayloadAt: (payloadExtent) ->
     payloadExtent.add new Point @_chromeWidth(), @_chromeHeight @contents.contentStackSpec()
 
   # Consulted at the child-death hook (_beforeChildDestroyed: a mid-teardown rebuild
@@ -1309,7 +1451,7 @@ class FrameWdgt extends Widget
     # lifted out of a dock slot: re-wrap my payload at the extent it had in the band (see
     # _beforeBeingGrabbed, which read it while the band still granted it)
     if @_payloadExtentInTheBand?
-      @_setExtentNoSettle @_extentWrappingPayloadAt @_payloadExtentInTheBand
+      @_setExtentNoSettle @extentWrappingPayloadAt @_payloadExtentInTheBand
       @_payloadExtentInTheBand = undefined
 
   # ===== the transient policy: registries, dismissal, pinning =====
@@ -1345,7 +1487,7 @@ class FrameWdgt extends Widget
 
   # Role query for the world snapshot (Serializer.serializeWorld): a TRANSIENT frame is
   # mid-gesture UI — it auto-closes on the next outside click / item trigger (indeed the very
-  # menu-item click that starts a "save world snapshot…" has already marked its menu for
+  # menu-item click that starts a "Save world snapshot…" has already marked its menu for
   # closure) — so a snapshot drops it, exactly like the ephemeral overlays. A PERSISTENT one
   # is desktop furniture and is saved. Dispatched via ?() (nothing on Widget), like isMenu.
   #   It is also my own branches' reader (see isPersistent above): the strip spec, the birth
@@ -1380,14 +1522,14 @@ class FrameWdgt extends Widget
   # _invalidateRowsAfterPinChange).
   #   Entering 'transient' makes me mid-gesture UI: I join the open set the world sweeps and arms the
   # click-outside dismissal that ends me.
-  #   Either way my MANIFESTATION follows (program ruling C4): the body skin and the shadow are
-  # derived here and now, and my strip is re-derived — but a strip that gains or loses a piece
+  #   Either way my MANIFESTATION follows (program ruling C4): my skin (_deriveAndSetSkin) and the
+  # shadow are derived here and now, and my strip is re-derived — but a strip that gains or loses a piece
   # CONSTRUCTS one, so the derive itself runs only inside a flush. In-pass (a lifetime change reached
   # from an arrange) that flush is the one already running; out of pass I only MARK, and the arrange
   # derives at its top on the flush the gesture supplies. Same two tiers, same discriminator, as
   # _setLayoutSpec's roster derive.
   #   Nothing settles here, so every caller must bring a declared flush for that mark to ride: the
-  # user-facing pins (the strip tap, the "pin" row) come through the setLifetime wrapper above, and
+  # user-facing pins (the strip tap, the "Pin" row) come through the setLifetime wrapper above, and
   # the grab reaches me from a notification callback, whose settle the grab dispatcher owns.
   _setLifetimeNoSettle: (aLifetime) ->
     # public-call-sanctioned: onClickOutsideMeOrAnyOfMyChildren is pure REGISTRY bookkeeping (one
@@ -1401,7 +1543,7 @@ class FrameWdgt extends Widget
     else
       world.openPopUps.add @
       @onClickOutsideMeOrAnyOfMyChildren "close"
-    @_deriveAndSetBodyAppearance()
+    @_deriveAndSetSkin()
     @_updatePopUpShadow()
     if world?._recalculatingLayouts
       @_reDeriveBarRosterNoSettle()
@@ -1409,7 +1551,7 @@ class FrameWdgt extends Widget
       @_invalidateLayout() if @bar?._rosterDisagreesWithSpec()
     return
 
-  # The user-facing verb for "this pop-up stays" — the header tap and the "pin" row land here. The
+  # The user-facing verb for "this pop-up stays" — the header tap and the "Pin" row land here. The
   # pin itself is the lifetime entry above; what belongs to THIS verb is the sibling sweep: the
   # pop-ups I was opened from are mid-gesture UI that the pin ends, so the chain above me is marked
   # for closure and drained. It is invoked on the pop-up to be pinned; the triggering menu item — the
@@ -1439,7 +1581,7 @@ class FrameWdgt extends Widget
   # WHETHER I cast a shadow is my PARENTAGE (program ruling C4): standing on the desktop I float
   # over it, held in a container I am part of what holds me and cast nothing, and riding the hand I
   # cast the hand's lifted one, which the hand adds itself right after this. WHAT the desktop
-  # shadow looks like is my lifetime, and that is the addShadow policy below. Orphan: nothing to
+  # shadow looks like is my look's, and that is the addShadow policy below. Orphan: nothing to
   # cast onto and no home to read — the placement that gives me one asks again.
   _updatePopUpShadow: ->
     return unless @parent?
@@ -1450,9 +1592,9 @@ class FrameWdgt extends Widget
     else
       @removeShadow()
 
-  # The shadow I cast at rest is my look's (_frameLook): mid-gesture UI floats over the desktop at
-  # the theme's pop-up shadow, furniture at the desktop shadow every world child wears. An EXPLICIT
-  # offset or alpha always wins: the hand adds its lifted one while it carries me.
+  # The shadow I cast at rest is my look's (_frameLook): the one desktop shadow every world child
+  # wears, transient or persistent alike. An EXPLICIT offset or alpha always wins: the hand adds its
+  # lifted one while it carries me.
   addShadow: (offset, alpha) ->
     look = @_frameLook()
     super (offset ? look.shadowOffset), (alpha ? look.shadowAlpha)
@@ -1474,14 +1616,26 @@ class FrameWdgt extends Widget
 
   # Placed with my FIRST ROW under the pointer, and centred on the hand across: the row a user
   # is about to want is already where the pointer is, so the click that opened me can dismiss me
-  # without moving. The drop is my own chrome — the title strip plus my rows' border, plus the
-  # one pixel that lands the pointer INSIDE the row rather than on its edge — so it holds for an
-  # untitled pop-up (no strip, thickness 0) exactly as for a titled one. Deliberately never the
-  # strip itself: a tap there PINS me, which is the opposite of dismissing me.
+  # without moving. Deliberately never the strip itself: a tap there PINS me, which is the
+  # opposite of dismissing me.
+  #   Both coordinates are the LAYOUT's own, read before the add that lays me out runs it (my
+  # composer adds my rows after I am built, and that add is where I take their size): down, where
+  # my arrange seats my payload (_payloadOffset) plus how far below its top my payload seats its
+  # first row, plus the one pixel that lands the pointer INSIDE the row rather than on its edge;
+  # across, the middle of the width my first placement will give me (_widthAtFirstPlacement). So
+  # it holds for an untitled pop-up (no strip) exactly as for a titled one, and cannot drift from
+  # where the row really lands.
   popUpCenteredAtHand: (world) ->
-    offset = new Point (Math.floor @width() / 2),
-      (@_barSpec().thickness + WorldWdgt.theme.menuRowsBorder + 1)
+    firstRowTop = @_payloadOffset().y + (@contents?.firstRowTopInset?() ? 0)
+    offset = new Point (Math.floor @_widthAtFirstPlacement() / 2), (firstRowTop + 1)
     @popUp (world.hand.position().subtract offset), world
+
+  # The width my next FIRST PLACEMENT lays me out at: the arrange's own hug (my payload's
+  # negotiated width plus my chrome, the free-floating branch of _positionAndResizeChildren), asked
+  # before it runs. A pop-up's add re-arms that placement (PopUpRowsViewportWdgt
+  # ._reLayOutAfterContainedPanelChange), so until the add my applied width can predate my rows.
+  _widthAtFirstPlacement: ->
+    @_negotiatedContentWidth(@width()) + @_chromeWidth()
 
   popUpAtHand: ->
     @popUp world.hand.position(), world
@@ -1539,8 +1693,9 @@ class FrameWdgt extends Widget
   # The state is written directly rather than through the lifetime entry: the copy is a fresh ORPHAN,
   # so the entry's registry and strip work has nothing to reach and its shadow derive has no home to
   # read — the copy carries my shadow verbatim until the copy gesture lands it somewhere. What the
-  # copy DOES need at once is the body skin its new lifetime calls for, so that it never spends the
-  # carry wearing a menu box under a window strip; the strip itself re-derives on the first arrange.
+  # copy DOES need at once is the skin its new lifetime calls for (_deriveAndSetSkin), so that it
+  # never spends the carry wearing a menu box: its body now, while its strip, still built in the
+  # pop-up style, is rebuilt in the window style on the first arrange, and that build skins it.
   # That skin derive is the CHANGE's consequence, so it runs only where there is one — copying
   # furniture copies its skin along with everything else.
   fullCopy: ->
@@ -1548,29 +1703,21 @@ class FrameWdgt extends Widget
     lifetimeChanges = copiedWidget.isTransientPopUp()
     copiedWidget.onClickOutsideMeOrAnyOfMyChildren undefined
     copiedWidget.lifetime = 'persistent'
-    copiedWidget._deriveAndSetBodyAppearance() if lifetimeChanges
+    copiedWidget._deriveAndSetSkin() if lifetimeChanges
     return copiedWidget
 
-  # The whole-window skin follows the window's nesting (isInternal, derived from parentage), so
-  # re-apply it whenever the window lands in a new home: a container makes it internal (flat,
-  # embedded skin), the desktop makes it external (boxy). This is the ONE place the skin used to
-  # be flipped manually by makeInternal/makeExternal via the internal/external switch button --
-  # now it is automatic on every (re)parenting (drag-drop AND programmatic add both route through
-  # here after the reparent, so a dashboard/document that builds a nested window via `container.add`
-  # gets the internal skin too). We re-derive BOTH the window body appearance and the title-bar
-  # appearance/colors so the whole window flips consistently (a window built internal=true and then
-  # nested via container.add ends up byte-identical to the old stored-flag path). We SKIP the
-  # transient pick-up by the hand (whereTo is world.hand) so the skin stays put during a drag and
-  # settles on release, exactly as the old stored flag did.
+  # My whole skin follows my nesting (isInternal, derived from parentage), so it is re-derived
+  # (_deriveAndSetSkin) whenever I land in a new home: a container makes me a card, the desktop a
+  # window. Drag-drop and a programmatic add both route through here after the reparent, so a
+  # dashboard/document that builds a nested window via `container.add` gets the card skin too. The
+  # transient pick-up by the hand (whereTo is world.hand) is SKIPPED: the skin stays put during a
+  # drag and settles on release.
   _reactToBeingAdded: (whereTo, beingDropped) ->
     super
     # the roster is derived from my ATTACHMENT, not from my parentage, so it holds on the hand
     # too (a frame in the hand owns its own placement, hence carries its close piece)
     @_reDeriveBarRosterNoSettle()
-    if whereTo isnt world?.hand
-      @_deriveAndSetBodyAppearance()
-      @bar._setAppearanceAndColorOfTitleBackground()
-      @_changed()
+    @_deriveAndSetSkin() if whereTo isnt world?.hand
 
   _reactToChildDropped: (theWidget) ->
     # a band that just landed in one of my slots is a payload I HOLD: it does not become my content,
@@ -1592,99 +1739,149 @@ class FrameWdgt extends Widget
     @_buildAndConnectChildrenNoSettle()
 
   # MY LOOK: every value my skin wears, as ONE plain record -- the one place a frame's look is
-  # decided. My body (_deriveAndSetBodyAppearance, and my constructor's birth colours), my strip
-  # (FrameBarWdgt: its background's build and skin, its title's ink) and my own shadow (addShadow)
-  # READ it; none of them decides a look of its own. A pure query: it reads my state and the theme,
-  # writes nothing, and answers at any time (a pop-up citizen asks before its own super has run).
+  # decided. My body (_deriveAndSetBodyAppearance), my strip (FrameBarWdgt: its background's build,
+  # skin and shape, its title's and its glyphs' ink) and my own shadow (addShadow) READ it; none of
+  # them decides a look of its own. A pure query: it reads my state and the theme, writes nothing,
+  # and answers at any time (a pop-up citizen asks before its own super has run).
   #   The inputs are my MANIFESTATION (program ruling C4) -- my lifetime crossed with my parentage:
   # transient is a MENU (its pop-up header style goes with it), persistent on the desktop a WINDOW,
-  # persistent nested in a real container a CARD -- plus, for a menu's rounding, whether it carries
-  # a title strip to round and the world's flat-look preference. Collapsed and docked are not
+  # persistent nested in a real container a CARD -- plus, for a menu's rounding, the world's
+  # flat-look preference. Collapsed and docked are not
   # inputs: a collapsed frame wears the look it wears expanded, and a docked band is the card its
-  # parentage makes it. A FOCUS state would enter here, and only here (redesign plan §0.5.2).
+  # parentage makes it. (WHICH corners my strip rounds and WHETHER it draws its rule do follow
+  # those two -- they change with no re-derivation of the look -- so my strip decides them from its
+  # own axis and my collapsed state, at its arrange: FrameBarWdgt._shapeTitlebarBackground.) A FOCUS
+  # state would enter here, and only here (redesign plan §0.5.2).
   #   The fields:
   #     manifestation       "menu" | "window" | "card"
-  #     bodyAppearance      the appearance class my body wears
+  #     bodyAppearance      the appearance class my body wears: the menu box for a menu, the
+  #                         rounded box for a window and a card alike
   #     bodyFill, bodyStroke, bodyCornerRadius
   #                         my body's colours and rounding (an undefined rounding is the
-  #                         appearance's own default). A menu box is grey with the menu stroke --
+  #                         appearance's own default). A menu box is paper with the menu stroke --
   #                         nothing else paints it: my rows panel is a transparent stack inside me.
-  #     barAppearance       the appearance class my strip's background wears
-  #     barFill, barStroke  its colours (no stroke: the background keeps the one it was built with)
-  #     barCornerRadius     its rounding, given when the strip builds it (undefined: the box's own)
-  #     titleText           my title's ink
-  #     titleBackground     the fill behind my title's text (only a pop-up header has one)
+  #     bodyStrokesOverChildren
+  #                         whether my 1 px outline is stroked ONCE, after my children, rather than
+  #                         with my fill under them (BoxyAppearance.strokesOverChildren), so content
+  #                         laid against my border never covers it
+  #     bodyClipsChildrenToOutline
+  #                         whether my children are clipped to my ROUNDED outline rather than to my
+  #                         rectangle (BoxyAppearance.clipsChildrenToOutline -- the rounded child
+  #                         clip, below), so they neither paint nor catch presses in my corner notches
+  #     barAppearance       the appearance class my strip's background wears: the rounded box, for
+  #                         every strip
+  #     barFill, barStroke  its colours. No look strokes a strip, and the stroke is applied as
+  #                         given, so an undefined one clears a stroke an earlier look left
+  #     barCornerRadius     a pop-up header band's rounding, given when the strip builds it: none,
+  #                         since the band's rule is its bottom edge and a ruled band wants square
+  #                         rule ends (BoxyAppearance.ruledEdge). A persistent frame's look names
+  #                         none: its strip rounds the corners it shares with my outline to the body
+  #                         I wear, less my border, at its arrange (FrameBarWdgt._shapeTitlebarBackground)
+  #     barRule             the ink of the rule my strip draws along its content-facing edge
+  #     barGlyph, barGlyphActive
+  #                         the ink of the glyphs my strip's button pieces draw (close, collapse /
+  #                         uncollapse, the pencil / eye): at rest, and while one is hovered or
+  #                         pressed. Undefined for a strip that carries no button piece (a pop-up
+  #                         header)
+  #     titleText           my title's ink (painted straight onto my strip's background)
   #     shadowOffset, shadowAlpha
   #                         the shadow I cast at rest on the desktop
   _frameLook: ->
     theme = WorldWdgt.theme
     if @isTransientPopUp()
-      # rounded only when there is a title strip to round (an untitled pop-up takes the boxy
-      # default), and not at all in a flat look
-      menuCornerRadius =
-        if @_barSpec().pieces.length is 0
-          undefined
-        else if WorldWdgt.preferencesAndSettings.isFlat
-          0
-        else
-          theme.menuCornerRadius
       return {
         manifestation: "menu"
         bodyAppearance: MenuAppearance
         bodyFill: theme.menuBodyFill
         bodyStroke: theme.menuStroke
-        bodyCornerRadius: menuCornerRadius
+        # rounded titled or not, and not at all in a flat look
+        bodyCornerRadius: if WorldWdgt.preferencesAndSettings.isFlat then 0 else theme.menuCornerRadius
+        # a pop-up clips and strokes last like a window: an overflowing pop-up's scrolled rows and
+        # its scroll indicator stop at its outline, and its rows panel catches nothing in its notches
+        bodyStrokesOverChildren: true
+        bodyClipsChildrenToOutline: true
         barAppearance: BoxyAppearance
         barFill: theme.menuHeaderFill
         barStroke: undefined
-        barCornerRadius: theme.menuHeaderCornerRadius
+        barCornerRadius: 0
+        barRule: theme.menuHeaderRule
+        barGlyph: undefined
+        barGlyphActive: undefined
         titleText: theme.menuHeaderText
-        titleBackground: theme.menuHeaderFill
-        shadowOffset: theme.popUpShadowOffset
-        shadowAlpha: theme.popUpShadowAlpha
+        shadowOffset: theme.desktopShadowOffset
+        shadowAlpha: theme.desktopShadowAlpha
       }
 
     internal = @isInternal()
     manifestation: if internal then "card" else "window"
-    bodyAppearance: if internal then RectangularAppearance else BoxyAppearance
-    bodyFill: theme.windowBodyFill
-    bodyStroke: theme.windowFrameStroke
-    bodyCornerRadius: undefined
-    barAppearance: if internal then RectangularAppearance else BoxyAppearance
+    bodyAppearance: BoxyAppearance
+    bodyFill: if internal then theme.cardBodyFill else theme.windowBodyFill
+    bodyStroke: if internal then theme.cardFrameStroke else theme.windowFrameStroke
+    bodyCornerRadius: if internal then theme.cardCornerRadius else theme.windowCornerRadius
+    bodyStrokesOverChildren: true
+    bodyClipsChildrenToOutline: true
+    barAppearance: BoxyAppearance
     barFill: if internal then theme.cardBarFill else theme.windowBarFill
-    barStroke: if internal then theme.cardBarStroke else theme.windowBarStroke
+    barStroke: undefined
     barCornerRadius: undefined
+    barRule: theme.barRule
+    barGlyph: if internal then theme.cardBarGlyph else theme.windowBarGlyph
+    barGlyphActive: theme.barGlyphActive
     titleText: theme.windowTitleText
-    titleBackground: undefined
     shadowOffset: theme.desktopShadowOffset
     shadowAlpha: theme.desktopShadowAlpha
 
-  # The BODY half of my skin (the strip's half is FrameBarWdgt._setAppearanceAndColorOfTitleBackground),
-  # applied from my look (_frameLook): the menu box, a window's boxy body, a card's flat one. There is
-  # deliberately no fourth, "pinned menu" look: that would key on what I once was, the one input a
-  # derived look may never take. Set at construction, re-derived on every re-parenting
-  # (_reactToBeingAdded) and on every lifetime change (_setLifetimeNoSettle).
+  # MY WHOLE SKIN, re-derived from my look as ONE act: my body (below) and my strip
+  # (FrameBarWdgt._deriveAndSetStripSkin: its background's skin and shape, its title's and its
+  # glyphs' ink), then a repaint of me. Every derivation after my birth runs it -- each re-parenting
+  # (_reactToBeingAdded), each lifetime change (_setLifetimeNoSettle, the pin among them), a copy
+  # that changes lifetime (fullCopy) -- and so does a transform island I ride in as its sole content
+  # whenever IT is re-homed (TransformFrameWdgt._reactToBeingAdded): only the root of an add hears
+  # it, and my look follows the container I really live in, seen through that island
+  # (isInternal), which the island's move changes. My constructor derives only my body: my strip
+  # does not exist yet, and its build skins it.
+  _deriveAndSetSkin: ->
+    @_deriveAndSetBodyAppearance()
+    @bar?._deriveAndSetStripSkin()
+    @_changed()
+
+  # The BODY half of my skin (_deriveAndSetSkin runs it with the strip's half): my WHOLE body look,
+  # applied from _frameLook on EVERY derivation, whatever my lifetime -- the appearance (the menu
+  # box, or the rounded box of a window and a card), its fill, stroke and rounding, and its two
+  # knobs. There is deliberately no fourth, "pinned menu" look: that would key on what I once was,
+  # the one input a derived look may never take, so a pinned menu wears the window's body.
+  #   The rule this makes: my look WINS at every derivation, so a body colour or a corner radius set
+  # by hand ("Corner radius…", its pin) lasts until I next change parent or lifetime.
+  #   The knobs go on the NEW appearance: they live on the appearance instance, and a fresh one
+  # starts with both off. As the appearance's own fields they are saved with it, so a frame a
+  # snapshot restores WITHOUT re-deriving (a nested one: only the top-level frames hear
+  # _reactToBeingAdded on a load) keeps the look it was saved in.
   _deriveAndSetBodyAppearance: ->
     look = @_frameLook()
     @appearance = new look.bodyAppearance @
-    # a pinned menu keeps the body colours it was born with: only a transient derivation applies them
-    return unless look.manifestation is "menu"
+    @appearance.strokesOverChildren = look.bodyStrokesOverChildren
+    @appearance.clipsChildrenToOutline = look.bodyClipsChildrenToOutline
     @color = look.bodyFill
     @strokeColor = look.bodyStroke
     @cornerRadius = look.bodyCornerRadius
 
-  # ===== the ROUNDED CHILD CLIP (its switch is declared at the top of the class) =====
+  # ===== the ROUNDED CHILD CLIP (redesign plan §3a option (a), spikes S1b/S1c) =====
+  # My LOOK decides it (_frameLook's bodyClipsChildrenToOutline, set on my body's appearance as its
+  # clipsChildrenToOutline knob): every rounded frame -- a window, a card, a docked band, a menu or a
+  # prompt -- clips its children to its rounded OUTLINE rather than to its rectangle, so content laid
+  # flush into it cannot paint (or catch presses) in the notches outside its corners; a square one
+  # (a pop-up in the flat look) has no notch and keeps the rectangle. With the knob off, every paint
+  # and hit test of mine runs exactly the code a rectangular clip runs.
 
   # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] of the ROUNDED outline I clip my
   # children to, or undefined when I clip them to my rectangle: my body's own radii, read through my
-  # appearance, when the clip is on and my body is rounded. A card's flat body (RectangularAppearance)
-  # has no rounded corners, so a card keeps the rectangle. My paint asks it, and so does every
-  # descendant's pointer test (Widget.isPointerTargetAt probes its ancestors for it). The ONE reader
-  # of clipsChildrenToRoundedOutline; when the clip is adopted, that switch becomes a field of my look
-  # (_frameLook), read here.
+  # appearance, when its clip knob is on and my body is rounded. My paint asks it, and so does every
+  # descendant's pointer test (Widget.isPointerTargetAt probes EVERY ancestor for it on EVERY hit
+  # test) -- which is why the decision is a FIELD read off my appearance, set once per derivation,
+  # and never a fresh derivation of my look.
   _roundedChildClipRadii: ->
-    return undefined unless @clipsChildrenToRoundedOutline
-    radii = @appearance?.outlineCornerRadii?()
+    return undefined unless @appearance?.clipsChildrenToOutline
+    radii = @appearance.outlineCornerRadii?()
     return undefined unless radii? and Math.max(radii...) > 0
     radii
 
@@ -1721,52 +1918,9 @@ class FrameWdgt extends Widget
         @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfFrame, appliedShadow, radii
         aContext.restore()
 
-  # Paint my children over the damaged part of me so that nothing of theirs shows outside my
-  # rounded outline, paying for the rounded clip only where it can matter: away from my corner
-  # squares my outline IS my box, so damage that reaches no square is painted exactly as the
-  # rectangular clip paints it, and damage that reaches one is painted whole under ONE rounded clip.
-  _paintChildrenInsideMyRoundedOutline: (aContext, damagedPartOfMe, appliedShadow, radii) ->
-    area = damagedPartOfMe.round()
-    if @_areaReachesACornerSquare area, radii
-      @_paintChildrenUnderMyOutlineClip aContext, area, appliedShadow
-    else
-      @_paintChildrenOver aContext, damagedPartOfMe, appliedShadow
-
-  # Does `area` (an integer rectangle inside my box) reach one of my corner SQUARES (r×r at a corner
-  # of radius r, the only places my outline leaves my box)? Also true when two squares would overlap
-  # (a box too small for its own rounding), so such a box always clips.
-  _areaReachesACornerSquare: (area, radii) ->
-    [topLeft, topRight, bottomRight, bottomLeft] = (Math.ceil radius for radius in radii)
-    box = @boundingBox().round()
-    left = box.left()
-    top = box.top()
-    right = box.right()
-    bottom = box.bottom()
-    squaresOverlap = (topLeft + topRight > box.width()) or (bottomLeft + bottomRight > box.width()) or
-      (topLeft + bottomLeft > box.height()) or (topRight + bottomRight > box.height())
-    return true if squaresOverlap
-    squares = [
-      new Rectangle left, top, left + topLeft, top + topLeft
-      new Rectangle right - topRight, top, right, top + topRight
-      new Rectangle right - bottomRight, bottom - bottomRight, right, bottom
-      new Rectangle left, bottom - bottomLeft, left + bottomLeft, bottom
-    ]
-    squares.some (square) -> area.intersect(square).isNotEmpty()
-
-  # Paint my children over `rectangle`, which goes down as the clipping rectangle each child honours.
-  _paintChildrenOver: (aContext, rectangle, appliedShadow) ->
-    @children.forEach (child) ->
-      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, rectangle, appliedShadow
-
-  # Paint my children over `rectangle` with the context clipped to it AND to my outline: the
-  # rectangle in the context's device pixels (the space every appearance scope clips in), my outline
-  # traced by my body's appearance under the same matrix its own fill is traced under.
-  _paintChildrenUnderMyOutlineClip: (aContext, rectangle, appliedShadow) ->
-    aContext.save()
-    aContext.clipToRectangle rectangle.left() * ceilPixelRatio, rectangle.top() * ceilPixelRatio, rectangle.width() * ceilPixelRatio, rectangle.height() * ceilPixelRatio
-    @appearance.clipToOutline aContext
-    @_paintChildrenOver aContext, rectangle, appliedShadow
-    aContext.restore()
+  # (Painting my children inside my rounded outline -- _paintChildrenInsideMyRoundedOutline and the
+  # helpers it calls -- is Widget's, shared with the other widget that cuts its children to its
+  # outline, a tool cell.)
 
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
   # core is non-settling: it adds the bar (whose pieces build through the bar's own non-settling
@@ -1809,15 +1963,15 @@ class FrameWdgt extends Widget
 
     # the resize affordance the spec names: a frame that sizes to what it holds (a pop-up hugs
     # its rows) offers none. A frame is an ORPHAN while it builds -- hence free-floating, hence
-    # offering the handle -- so a window always gets one and hides it while a host owns its
+    # offering the grip -- so a window always gets one and hides it while a host owns its
     # placement (HandleWdgt.updateVisibility); only a manifestation that says "none" from birth
-    # goes without.
+    # goes without. The grip is the frame's own resizer (FrameGripWdgt: its look, size, inset and
+    # square hit area), never the plain handle a halo puts on a widget.
     if !@resizer? and @_barSpec().resizer isnt "none"
       # Attach the resizer, then record it. @resizer stays undefined DURING its own add so the
       # `@resizer?._moveInFrontOfSiblings()` in _addNoSettle (above) is a no-op for the resizer
-      # itself -- it only re-fronts the resizer when LATER content is added. (Byte-identical to the
-      # old `@resizer = new HandleWdgt @`, whose in-constructor add also ran while @resizer was undefined.)
-      resizer = new HandleWdgt
+      # itself -- it only re-fronts the resizer when LATER content is added.
+      resizer = new FrameGripWdgt
       @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
       @resizer = resizer
 
@@ -1870,8 +2024,9 @@ class FrameWdgt extends Widget
 
   # Reflect the content's edit/view mode in the title-bar edit button. The glyph
   # NAMES the current mode (pencil = editing now, eye = viewing now); the button
-  # owns its own rest/hover appearance + colour (monochrome at rest, colour on
-  # hover as feedforward — see EditIconButtonWdgt), so this just sets the mode.
+  # owns its own rest/hover appearance (the current mode's glyph at rest, the next
+  # mode's on hover as feedforward — see EditIconButtonWdgt; its inks are its
+  # strip's), so this just sets the mode.
   # Driven from the enable/disable state-reflection callers, not from clicks.
   showEditModeInBar: ->
       @editButton?.showPencilGlyph()
@@ -1959,8 +2114,6 @@ class FrameWdgt extends Widget
     # spec on a grab — would open a flush of its own. The strip is laid out a few lines below, so
     # a piece gained here is placed in this same pass.
     @_reDeriveBarRosterNoSettle()
-
-    closeIconSize = WorldWdgt.theme.barIconSize
 
     stackHeight = 0
 
@@ -2056,13 +2209,13 @@ class FrameWdgt extends Widget
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
         @contents.softWrap = true
 
-      # centre the content in its REGION -- the frame width minus a strip running down my side
-      # and minus a band docked on either flank (identical to the whole width when there is
-      # neither)
-      contentRegionLeft = @left() + @_titlebarWidth() + @_leftDockThickness()
-      leftPosition = contentRegionLeft + Math.floor (@width() - @_titlebarWidth() - @_leftDockThickness() - @_rightDockThickness() - recommendedElementWidth) / 2
+      # centre the content in its REGION -- the width my chrome leaves it (my body's edges, my
+      # body margin past them, a band docked on either flank), starting where a payload that
+      # fills it starts (_payloadOffset), so content as wide as its region sits exactly there
+      payloadOffset = @_payloadOffset()
+      leftPosition = @left() + payloadOffset.x + Math.floor (@width() - @_chromeWidth() - recommendedElementWidth) / 2
 
-      @contents._applyMoveTo new Point leftPosition, @top() + @_titlebarHeight() + @_topDockThickness() + @padding
+      @contents._applyMoveTo new Point leftPosition, @top() + payloadOffset.y
       stackHeight += desiredHeight
 
     if @contents? and @contents.collapsed
@@ -2090,12 +2243,16 @@ class FrameWdgt extends Widget
         barBounds = barBounds.setBoundsWidthAndHeight @width(), @_titlebarHeight()
       @bar._reLayout barBounds
 
-    # the four slots: place each docked band in the padded body, past the
-    # bar -- TOP/BOTTOM: a full-available-width band the content starts below
-    # (top) or ends a padding above (bottom); LEFT/RIGHT: a column on that
-    # flank sharing the content's vertical span (stackHeight is the content
-    # height this pass just derived, so every placement is pass-local -- no
-    # applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
+    # the four slots: place each docked band in my body, past its inner edges
+    # (my border or my bar) and my body margin, standing my band inset in from
+    # them on its three OUTER sides and flush with the content's region on its
+    # fourth -- TOP/BOTTOM: a band across my whole body less the inset at each
+    # end, the content starting below it (top) or ending a body margin above
+    # it (bottom); LEFT/RIGHT: a column on that flank spanning the content's
+    # vertical span less the inset at each end, so a column and a top or
+    # bottom band stand one inset apart where they meet (stackHeight is the
+    # content height this pass just derived, so every placement is pass-local
+    # -- no applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
     # the same drive as @bar above -- a band's _reLayout applies its own
     # bounds THEN re-fits its chrome and payload, and the payload viewport in
     # turn re-fits its contents+scrollbars, so a width change that
@@ -2107,36 +2264,45 @@ class FrameWdgt extends Widget
     # ⚖ The bottom-right RESIZER may OVERLAP a right/bottom band's far corner
     # -- accepted DELIBERATELY (layout follow-ups plan F4), the same trade the
     # content already makes under resizerCanOverlapContents: the resizer is
-    # corner-internal, always re-fronted, and the tool grid fills from the
-    # top-left so the covered corner is normally empty strip; an inset band
-    # would buy that corner at the price of coupling the band's extent to the
-    # resizer and breaking the left/right, top/bottom mirror symmetry.
-    bodyLeft = @left() + @_titlebarWidth() + @padding
-    bodyTop = @top() + @_titlebarHeight() + @padding
-    bodyWidth = @width() - @_titlebarWidth() - 2 * @padding
+    # corner-internal and always re-fronted, and what runs out to that corner
+    # keeps its own pieces clear of it by occupancy (I name a right or bottom
+    # band in bottomRightCornerReachedBy, so a toolbar strip in it ends its
+    # last slot short of my grip, ToolPanelWdgt._farAlongPadding); the band
+    # inset is the same on all four sides and does not grow to clear the
+    # resizer, because that would couple the band's extent to the resizer and
+    # break the left/right, top/bottom mirror symmetry.
+    bodyMargin = @_bodyMargin()
+    bandInset = @_dockedBandInset()
+    bodyLeft = @left() + @_bodyEdgeLeft() + bodyMargin
+    bodyTop = @top() + @_bodyEdgeTop() + bodyMargin
+    bodyWidth = @width() - @_bodyEdgeLeft() - @_borderInset() - 2 * bodyMargin
+    bandRun = Math.max 0, bodyWidth - 2 * bandInset
+    columnTop = bodyTop + @_topDockThickness() + bandInset
+    columnRun = Math.max 0, stackHeight - 2 * bandInset
     for side in FrameWdgt.DOCK_SIDES
       dockedFrame = @_dockedFrameAt side
       continue unless dockedFrame?
       bandThickness = dockedFrame._dockedBandThickness()
       switch side
         when 'top'
-          bandBounds = new Rectangle new Point bodyLeft, bodyTop
-          bandBounds = bandBounds.setBoundsWidthAndHeight bodyWidth, bandThickness
+          bandBounds = new Rectangle new Point bodyLeft + bandInset, bodyTop + bandInset
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandRun, bandThickness
         when 'bottom'
-          # just below the content: the band's bottom lands where the content
-          # region's bottom sits for the content's spec branch (a padding above
-          # the frame bottom, or above the reserved handle row -- _chromeHeight
-          # carries the matching reservation either way)
-          bandBounds = new Rectangle new Point bodyLeft, bodyTop + @_topDockThickness() + stackHeight + @padding
-          bandBounds = bandBounds.setBoundsWidthAndHeight bodyWidth, bandThickness
+          # just below the content: the band's top lands a body margin below
+          # the content, and its bottom stands the band inset above where the
+          # content region's bottom sits for the content's spec branch (my
+          # bottom edge and body margin, or the reserved grip row above them
+          # -- _chromeHeight carries the matching reservation either way)
+          bandBounds = new Rectangle new Point bodyLeft + bandInset, bodyTop + @_topDockThickness() + stackHeight + bodyMargin
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandRun, bandThickness
         when 'right'
-          bandBounds = new Rectangle new Point @right() - @padding - bandThickness, bodyTop + @_topDockThickness()
-          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, stackHeight
+          bandBounds = new Rectangle new Point @right() - @_borderInset() - bodyMargin - bandInset - bandThickness, columnTop
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, columnRun
         else # 'left'
-          bandBounds = new Rectangle new Point bodyLeft, bodyTop + @_topDockThickness()
-          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, stackHeight
+          bandBounds = new Rectangle new Point bodyLeft + bandInset, columnTop
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, columnRun
       dockedFrame._reLayout bandBounds
 
     # (the resizer needs no placement here: it is corner-attached — its CornerInternalLayoutSpec,
-    # bottom-right with the padding-derived inset, is applied by base _reLayout's corner tail
-    # against my final frame)
+    # bottom-right at the grip's own inset past my border (FrameGripWdgt._cornerInsetFrom), is
+    # applied by base _reLayout's corner tail against my final frame)

@@ -61,7 +61,8 @@ yet" and swallows the click. The dataflow engine this app is built on is NOT laz
 - `SheetHeaderCellWdgt.coffee` (F5) — one widget per HEADER cell (kind column/row/corner + its
   index; 21 in all, direct sheet children, OUTSIDE the panel so a future scroll clip never
   touches the frozen headers). Paints (via its `SheetHeaderCellAppearance` — the header's
-  fill/edge painter and the dark-edge predicates) its 236 strip fill and its own top+left edges; its
+  fill/edge painter and the edge-kind predicates) its fill (`Theme.spreadsheetHeaderFill`) and its own
+  top+left edges (none along the sheet's outer top and left boundary); its
   letter/number label is a passive `StringWdgt` CHILD ("scalar text is a StringWdgt child,
   period" — owner direction 2026-07-24), kept in sync + relabelled in place on scroll by
   `_syncLabelNoSettle` from the sheet's chrome ensure, box-inset (+4, +2) so the glyphs sit
@@ -334,9 +335,11 @@ widgets alive in the tree. And the cell is the two-way
 boundary adapter: it hosts the value/presenter widget and is the connection target
 interactive widget-sources (slider, picker, clock) fire into — each firing a `markStale` on
 the cell. Pixel law (F5 receipts, plan §3-F): every widget strokes its own TOP+LEFT edges;
-the grid-coloured edge strokes BEFORE the dark edge (dark wins crossings — the crossing
-rule); nobody strokes right/bottom (the old outermost strokes were clipped invisible); no
-widget fills the data background (the backdrop shows through, as it always did).
+a gridline strokes BEFORE the header rule (the rule wins crossings — the crossing rule); the
+sheet's outer top and left boundary carries no edge (the window's strip rule and frame border
+are the lines there); nobody strokes right/bottom; no widget fills the data background (the
+backdrop shows through). Every colour is a `Theme` role (`spreadsheet*`), read at paint or
+build time, so a saved or duplicated sheet wears the current look.
 
 ## Phase 8 decisions / deviations (recorded also in the plan)
 
@@ -418,8 +421,9 @@ widget fills the data background (the backdrop shows through, as it always did).
 - **FILL-class window content by DELETION**: the pre-F6 fixed-size overrides died; the
   default `FrameContentLayoutSpec` (grow 1, `canSetHeightFreely` true) + the BASE Widget
   sizing protocol are exactly right. The default open size is PINNED by `SpreadsheetApp`
-  (window 452×336 − 36 chrome = 442×300 content — the pre-F6 on-screen window was ALWAYS
-  452×336: the fixed content overrode the old passed 334, so the pin changes no pixel).
+  as a CONTENT extent (446×280): the app opens the window at whatever outer extent the frame's
+  live chrome needs to grant exactly that (`FrameWdgt.extentWrappingPayloadAt`), so the default
+  grid is the same under any chrome.
 - **The resize seam is a `_reLayout` override** (the `StretchableWidgetContainerWdgt`
   precedent: bounds-first `_applyGrantedBounds`, then `_buildChromeNoSettle` +
   `_reconcileViewportNoSettle` re-derive everything from the just-applied frame, then
@@ -443,11 +447,11 @@ widget fills the data background (the backdrop shows through, as it always did).
   v1 paints a fixed viewport that fits the window and defers scroll until the model exceeds it.
   The paint + hit-test math transplant into a scroll-child unchanged; sockets (2b/4) are
   unaffected. (F1 later made "no `ViewportWdgt`" permanent — see the F1 section above.)
-- **Text = 12px Arial.** SWCanvas ships bitmap atlases for Arial/Times/Courier only
+- **Text = 12px Arial** (`Theme.fonts.spreadsheetCell`; a header's label `fonts.buttonLabel`). SWCanvas ships bitmap atlases for Arial/Times/Courier only
   (`src/boot/extensions/SWCanvasElement-extensions.coffee`), so 12px Arial is the deterministic
   choice; left-aligned with a small pad in v1 (centering needs `measureText` — a later polish).
-- **Placeholder icon** (`GenericShortcutIconWdgt`+`TypewriterIconWdgt`); a dedicated
-  `SpreadsheetIconWdgt` is deferred.
+- **Its own icon**, `SpreadsheetIconWdgt` (core `src/icons`: the family's content card ruled as a grid with a
+  header row and column), named by `AppCatalog` and answered by `SimpleSpreadsheetWdgt.representativeIcon`.
 - **Launcher in the examples folder** (not the desktop) to avoid shifting the desktop icon grid
   (which would recapture many desktop screenshots). Tests open a sheet via `SpreadsheetApp.launch()`.
 

@@ -39,8 +39,10 @@
 
 class CommandSpec
 
-  # what the row SAYS: a STRING. What it SHOWS beside that is the `icon` slot below -- two named
-  # slots, because a picture and a sentence are two facts and neither can be read out of the other.
+  # what the row SAYS: a STRING, its plain wording. What it SHOWS beside that is the `icon` slot
+  # below, and the marks its indicators draw (`opensSubmenu`, `ticked` / `reflection`) -- named
+  # slots, because a picture, a mark and a sentence are separate facts and none can be read out of
+  # another.
   label: undefined
   # the widget the row shows at its left, inside a glyph box: a paint-only icon widget, or a live
   # tool's stand-in held inert (InertIconHolderWdgt). undefined for a label-only row, which is what
@@ -56,10 +58,26 @@ class CommandSpec
   doubleClickAction: undefined
   argumentToAction1: undefined
   argumentToAction2: undefined
+  # does the row NAME a widget — its argumentToAction1 when it carries one, else its target? Such a
+  # row highlights that widget on hover and is found by it (MenuItemWdgt.representedWidget).
   representsAWidget: false
-  # a MenuRowReflectionSpec when this row is a VIEW of somebody else's value (a tick, a wording
-  # swap); undefined for an ordinary row whose label is fixed at build time
+  # a MenuRowReflectionSpec when this row is a VIEW of somebody else's value -- ticked while that
+  # value is the row's choice; undefined for an ordinary row
   reflection: undefined
+  # does the row OPEN A SUBMENU? Its builder's to state (`opensSubmenu: true`), because what an
+  # action does cannot be read off its name; the row then draws its chevron. A fact about what the
+  # row DOES, so it travels with the record, and the label stays its plain wording.
+  opensSubmenu: false
+  # the row's tick when the BUILDER knows it: true or false for a row ticked or not by
+  # construction (`ticked:`), undefined for one that never ticks. A row whose tick follows a live
+  # value takes a `reflection` instead.
+  ticked: undefined
+  # what a MEMBER row (MemberRowWdgt) shows of its member beside the label, which names it: its
+  # KIND TAG, a short word its builder chooses ("fn", "var"), and whether the name is DIMMED (shown
+  # in a muted ink). Facts about the member, so they travel with the record; any other row ignores
+  # them.
+  kindTag: undefined
+  dimmed: false
 
   constructor: (@label, @target, @action, opts = {}) ->
     @icon = opts.icon
@@ -73,3 +91,7 @@ class CommandSpec
     @argumentToAction2 = opts.arg2
     @representsAWidget = opts.representsAWidget ? false
     @reflection = opts.reflection
+    @opensSubmenu = opts.opensSubmenu ? false
+    @ticked = opts.ticked
+    @kindTag = opts.kindTag
+    @dimmed = opts.dimmed ? false

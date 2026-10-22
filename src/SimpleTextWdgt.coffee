@@ -17,7 +17,7 @@
 # _contentStackSpec.canSetHeightFreely = false (height is content-driven), the
 # viewport soft-wrap toggle (softWrapOn/Off), the dataflow plumbing
 # (updateTarget + bang), and the panel-colour blend helpers. The CONTROLLER
-# chrome (wire verbs, the "connect to ➜" menu) is INHERITED — base StringWdgt
+# chrome (wire verbs, the "Connect to" menu) is INHERITED — base StringWdgt
 # carries ControllerMixin. ⛔ Do not re-augment it here: a mixin's compiled
 # members are ONE shared function object, so injecting the same mixin at two
 # levels of one chain makes every super-calling member (graphEdgesOut) recurse
@@ -33,8 +33,8 @@ class SimpleTextWdgt extends TextWdgt
   # signature. A bare `super` compiles to `.apply(this, arguments)` — the arguments the CALLER
   # passed, not this constructor's defaulted parameters — while `@param` assignment happens
   # BEFORE that call, so the base re-defaulted every omitted slot straight over the top. What
-  # a SimpleTextWdgt has always actually got is the theme's default-text size and
-  # Color(37,37,37). Restoring the stated intent is a visible change to every unsized
+  # a SimpleTextWdgt has always actually got is the theme's default-text size and its
+  # default text ink. Restoring the stated intent is a visible change to every unsized
   # SimpleTextWdgt in the system, so it is a decision, not a cleanup.
   constructor: (text, opts = {}) ->
     super text, opts
@@ -63,19 +63,21 @@ class SimpleTextWdgt extends TextWdgt
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    menu.removeMenuItem "soft wrap"
+    # each key is the EXACT label of a row my chain built (TextWdgt / StringWdgt
+    # addWidgetSpecificMenuEntries): a key that matches no row removes nothing, silently
+    menu.removeMenuItem "Soft wrap"
 
-    menu.removeMenuItem "←☓→ don't expand to fill"
-    menu.removeMenuItem "←→ expand to fill"
-    menu.removeMenuItem "→← shrink to fit"
-    menu.removeMenuItem "→⋯← crop to fit"
+    menu.removeMenuItem "←☓→ Don't expand to fill"
+    menu.removeMenuItem "←→ Expand to fill"
+    menu.removeMenuItem "→← Shrink to fit"
+    menu.removeMenuItem "→⋯← Crop to fit"
 
-    menu.removeMenuItem "header line"
-    menu.removeMenuItem "no header line"
+    menu.removeMenuItem "Header line"
+    menu.removeMenuItem "No header line"
 
-    menu.removeMenuItem "↑ align top"
-    menu.removeMenuItem "⍿ align middle"
-    menu.removeMenuItem "↓ align bottom"
+    menu.removeMenuItem "↑ Align top"
+    menu.removeMenuItem "⍿ Align middle"
+    menu.removeMenuItem "↓ Align bottom"
 
     @_addTargetConnectionMenuEntries menu
 
@@ -86,10 +88,12 @@ class SimpleTextWdgt extends TextWdgt
         m != world.caret
       if childrenNotCarets.length == 1
         menu.addLine()
+        # ONE "Soft wrap" row, ticked while my viewport wraps, and clicking it flips that. Its tick
+        # is fixed when the menu is built (`ticked:`), as the action it carries is.
         if @parent.parent.isTextLineWrapping
-          menu.addMenuItem "☒ soft wrap", @, "softWrapOff"
+          menu.addMenuItem "Soft wrap", @, "softWrapOff", ticked: true
         else
-          menu.addMenuItem "☐ soft wrap", @, "softWrapOn"
+          menu.addMenuItem "Soft wrap", @, "softWrapOn", ticked: false
 
     menu.removeConsecutiveLines()
 
@@ -153,16 +157,30 @@ class SimpleTextWdgt extends TextWdgt
   # openTargetPropertySelector is now one shared method on Widget. All this class adds is the `bang`
   # pin above, because `bang` is the one controller verb that IS specific to it.
 
-  # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
+  # setText (above) + the inherited setFontSize / setFontName /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
   # container via StringWdgt::_reflowContainedTextThenInvalidateLayout (gated by FIT_BOX_TO_TEXT).
   # softWrapOn/Off (above) are viewport-specific (they flip
   # @parent.parent.isTextLineWrapping).
 
+  # THE ITEM LOOK FOLLOWS THE EDIT MODE of the container I sit in (a document's stack, a stretchable
+  # panel): its view-mode core asks me to blend in, its edit-mode core to contrast out
+  # (Widget._disable / _enableDragsDropsAndEditingNoSettle). In view mode an item -- my background
+  # the editable-item fill -- melts into the page I sit on, my parent's fill; in edit mode a
+  # background that is my page's fill shows the item fill again. Both sides are read live, the
+  # theme's role and my parent's fill (_fillOfMyPage), so the round trip holds whatever either is
+  # styled to. A background of any other colour (one the user set) is left as it is in both modes.
   blendInWithPanelColor: ->
-    if @backgroundColor.equals WorldWdgt.theme.editableItemFill
-      @setBackgroundColor Color.create 249, 249, 249
+    page = @_fillOfMyPage()
+    if page? and @backgroundColor?.equals WorldWdgt.theme.editableItemFill
+      @setBackgroundColor page
 
   contrastOutFromPanelColor: ->
-    if @backgroundColor.equals Color.create 249, 249, 249
+    page = @_fillOfMyPage()
+    if page? and @backgroundColor?.equals page
       @setBackgroundColor WorldWdgt.theme.editableItemFill
+
+  # The fill the page I sit on shows: its own colour, or, for a page that holds none and wears a
+  # theme role instead, the role it answers (its _surfaceFill: a Maker's page, StretchablePanelWdgt).
+  _fillOfMyPage: ->
+    @parent?.color ? @parent?._surfaceFill?()

@@ -2,7 +2,7 @@ class ChevronRightIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE right chevron (›), a chrome indicator or separator — drawn,
   # never typed (a symbol that stands on its own is an icon). One half of the
-  # redesign draft's `more` glyph (docs/plans/redesign/desktop-canvas.html
+  # redesign draft's `more` glyph (docs/archive/redesign/desktop-canvas.html
   # GLYPH: 16-unit viewBox, M3 3 l5 5 -5 5, 2 units wide, round caps and
   # join), re-centred in its own square, as integer device-pixel geometry. Ink
   # only, no halo: chrome glyphs sit on a bar or a row, never on art.
@@ -40,6 +40,24 @@ class ChevronRightIconAppearance extends SizeAwareIconAppearance
       return [px, py] if n % 2 is 0
       [Math.round(px - dx * n / 4) + dx * n / 4, Math.round(py - dy * n / 4) + dy * n / 4]
     { n, lineWidth: (Math.max 1, n / Math.SQRT2), strokes: [[end(vx - h, cy - h, 1, 1), [vx, cy], end(vx - h, cy + h, 1, -1)]] }
+
+  # THE INK'S HORIZONTAL SPAN in an S x S square: [left, right) in px from the square's left
+  # edge, each end rounded to the pixel lattice -- the stroke's outermost points, widened by the
+  # half stroke its round caps and join reach past them (at S = 16: [5, 12), which is the ink
+  # SWCanvas lays down). Asked of the CLASS, because a layout aligning my INK rather than my
+  # square needs the number before any widget wears me: MenuItemWdgt's submenu chevron, whose ink
+  # ends a side inset short of its row's right edge, and the Object Inspector's breadcrumb
+  # separators (InspectorWdgt._breadcrumbIn), whose ink keeps the gaps between two class chips.
+  @inkSpanX: (S) ->
+    m = @::_glyphMetrics S
+    left = Infinity
+    right = -Infinity
+    for points in m.strokes
+      for point in points
+        left = Math.min left, point[0]
+        right = Math.max right, point[0]
+    reach = m.lineWidth / 2
+    [(Math.round left - reach), (Math.round right + reach)]
 
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev

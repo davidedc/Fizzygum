@@ -7,27 +7,19 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
     startingContent = new FizzygumLogoIconWdgt
     startingContent._applyExtent new Point 85, 85
 
-    sdspw.setContents startingContent, 5
+    sdspw.setContents startingContent
     startingContent._contentStackSpec.setGrow 0
     startingContent._contentStackSpec.setAlignmentToCenter()
 
 
-    startingContent = new SimpleTextWdgt "Welcome to Fizzygum",
-      backgroundColor: WorldWdgt.theme.editableItemFill
-      backgroundTransparency: 1
+    startingContent = sdspw.getNormalParagraph "Welcome to Fizzygum"
     startingContent.alignCenter()
     startingContent.setFontSize 24
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
     sdspw.add startingContent
 
-    startingContent = new SimpleTextWdgt "version 1.1.12",
-      backgroundColor: WorldWdgt.theme.editableItemFill
-      backgroundTransparency: 1
+    startingContent = sdspw.getNormalParagraph "version 1.1.12"
     startingContent.alignCenter()
     startingContent.setFontSize 9
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
     sdspw.add startingContent
 
     sdspw.addDivider()

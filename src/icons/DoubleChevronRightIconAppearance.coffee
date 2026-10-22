@@ -2,7 +2,7 @@ class DoubleChevronRightIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE double right chevron (»), a chrome control face — drawn, never
   # typed (a symbol that stands on its own is an icon). The redesign draft's
-  # `more` glyph (docs/plans/redesign/desktop-canvas.html GLYPH: 16-unit
+  # `more` glyph (docs/archive/redesign/desktop-canvas.html GLYPH: 16-unit
   # viewBox, M3 3 l5 5 -5 5 + M9 3 l5 5 -5 5, 2 units wide, round caps and
   # joins), re-centred in its square, as integer device-pixel geometry. Ink
   # only, no halo: chrome glyphs sit on a bar or a row, never on art.

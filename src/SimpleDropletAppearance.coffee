@@ -1,52 +1,27 @@
-class SimpleDropletAppearance extends RectangularAppearance
+# The look of an empty icon holder's drop placeholder (SimpleDropletWdgt):
+#   the WELL  dropletWellFill over my widget's whole box, rounded at dropletWellRadius (at half the
+#             short side of a box narrower than twice that), with no border: a placeholder, not a
+#             button (visual-design-system §4.3: what nothing presses drops the border), painted by
+#             the shared Appearance._paintPlate
+#   the PLUS  in dropletGlyph, centred on the well at dropletGlyphSize (PlusIconAppearance, built
+#             for each paint)
+# the same in every pointer state. Every value is a Theme role or metric read as I paint, so a saved
+# or copied placeholder wears the look of the world it is shown in.
+#
+# My SHAPE is my widget's whole box (the base answer): a drop anywhere on it reaches the
+# placeholder, the well's rounded corners included. My SILHOUETTE is the well: on a shadow pass I
+# fill it in shadowColor, and the plus inside it adds no coverage.
 
-  # The plus-sign glyph, drawn INSIDE the base paint's logical-pixels scope (already switched
-  # to logical pixels and translated to the widget position), so the geometry below is
-  # widget-local logical coordinates. The base rectangular scope runs UNCLIPPED (opts.clip
-  # false — its fills self-bound), so this hook clips its strokes to the damage box itself,
-  # as its legacy device-space self-clip did.
+class SimpleDropletAppearance extends Appearance
 
-  drawAdditionalPartsOnBaseShape: (appliedShadow, context, localDamageBox) ->
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+    theme = WorldWdgt.theme
 
-    # we refuse to paint the shadow of the plus sign
-    # in the middle of a black rectangle. Just, no.
-    if appliedShadow?
-      return
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
+      fill = if appliedShadow? then theme.shadowColor else theme.dropletWellFill
+      @_paintPlate ctx, theme.dropletWellRadius, fill
 
-    height = @widget.height()
-    width = @widget.width()
-
-    squareDim = Math.min width/2, height/2
-
-    # the plus sign's anchor: mid-height on the left edge of the squareDim-wide
-    # square centered in the widget (widget-local coords)
-    inscribedSquareLeftMiddle = new Point (width - squareDim)/2, height - Math.ceil height/2
-
-    plusSignLeft = inscribedSquareLeftMiddle.add new Point Math.ceil(squareDim/15), 0
-    plusSignRight = inscribedSquareLeftMiddle.add new Point squareDim - Math.ceil(squareDim/15), 0
-    plusSignTop = inscribedSquareLeftMiddle.add new Point Math.ceil(squareDim/2), -Math.ceil(squareDim/3)
-    plusSignBottom = inscribedSquareLeftMiddle.add new Point Math.ceil(squareDim/2), Math.ceil(squareDim/3)
-
-    color = Color.WHITE
-
-    context.save()
-
-    # bound the affordance to the damage box (the legacy self-clip, now in local coords)
-    context.clipToRectangle localDamageBox.left(), localDamageBox.top(), localDamageBox.width(), localDamageBox.height()
-
-    context.lineWidth = 1
-    context.lineCap = "round"
-    context.strokeStyle = color.toString()
-
-    context.beginPath()
-    context.moveTo 0.5 + plusSignLeft.x, 0.5 + plusSignLeft.y
-    context.lineTo 0.5 + plusSignRight.x, 0.5 + plusSignRight.y
-    context.moveTo 0.5 + plusSignTop.x, 0.5 + plusSignTop.y
-    context.lineTo 0.5 + plusSignBottom.x, 0.5 + plusSignBottom.y
-
-
-    context.closePath()
-    context.stroke()
-
-    context.restore()
+    return undefined if appliedShadow?
+    (new PlusIconAppearance @widget, theme.dropletGlyph).paintAsMarkInSquare aContext, clippingRectangle, theme.dropletGlyphSize
+    return undefined
 

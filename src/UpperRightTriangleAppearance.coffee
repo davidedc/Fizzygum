@@ -16,7 +16,15 @@ class UpperRightTriangleAppearance extends Appearance
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
       # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the art
       # colour goes BLACK under appliedShadow — the scope already applied the shadow's alpha.
-      @_renderingHelper ctx, (if appliedShadow? then WorldWdgt.theme.shadowColor else @widget.color)
+      @_renderingHelper ctx, (if appliedShadow? then WorldWdgt.theme.shadowColor else @_fillColor())
+
+  # The colour I fill my widget's triangle with: its own colour (the edit mark's, which it derives at
+  # every state change) -- or, for a widget that holds none of its own because it wears a theme role
+  # until a colour is set on it, the role it answers (its _surfaceFill, a soft hook: the code pane's
+  # modified mark), read here as I paint, so a saved or duplicated widget wears the look of the world
+  # it is painted in.
+  _fillColor: ->
+    @widget.color ? @widget._surfaceFill?()
 
   _renderingHelper: (context, color) ->
     context.save()

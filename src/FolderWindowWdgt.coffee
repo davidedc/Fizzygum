@@ -7,10 +7,24 @@ class FolderWindowWdgt extends FrameWdgt
   constructor: (@closeButton, @contents, @internal = false) ->
     @contents = new ViewportWdgt new FolderPanelWdgt
     super @contents, closeButton: @closeButton
-    # wide enough for a 3-column icon grid at the desktop-icon pitch
-    # (3 × 105 + the grid's edge padding + window chrome); overrides the
-    # generic 300×300 FrameWdgt default, which clips the third column
-    @setExtent new Point 340, 300
+    # my viewport has no border of its own: my frame and my strip's rule are its lines, and a border
+    # just inside them would double each (visual-design-system §4.1; my panel has none either,
+    # FolderPanelWdgt). MY viewport is dressed in the folder viewport's border (ViewportWdgt
+    # .wearPaneRoles: folderViewportStroke, none) as it is built -- a viewport anywhere else keeps
+    # its border -- the way a code area is (CodeAreaWdgt._newCodeArea); its fill is my panel's,
+    # which it mimics.
+    @contents.wearPaneRoles stroke: "folderViewportStroke"
+    # I open showing a whole grid of icons with no scroll bar: as many columns as my panel's grid
+    # lays in a row, and the theme's folderWindowIconRows rows (the grid's own extent for them,
+    # IconGridPanelWdgt.extentShowingIconGrid), inside my chrome -- my border, my strip and its
+    # rule, measured by the same _chromeWidth / _chromeHeight my arrange takes out of my extent, so
+    # my viewport is exactly that grid. (The generic 300×300 FrameWdgt default clips the third
+    # column.) Imposed after the construction above rather than answered as my _initialExtent: my
+    # content's first placement sizes me from the content's own extent (the hug in
+    # FrameWdgt._positionAndResizeChildren), while this is an extent my content is to take.
+    panel = @contents.contents
+    grid = panel.extentShowingIconGrid panel.iconsLayingInGridWrapCount, WorldWdgt.theme.folderWindowIconRows
+    @setExtent new Point (grid.x + @_chromeWidth()), (grid.y + @_chromeHeight(@contents.contentStackSpec()))
 
 
   # my ART, not a badge decision: the arrow contract (reference-widgets plan §4.4) reserves the
@@ -47,7 +61,7 @@ class FolderWindowWdgt extends FrameWdgt
   # the shortcut on the desktop here exactly as it does everywhere else.
   # opts.representsContents threads the arrow contract exactly as in the base (plan §4.4):
   # PanelWdgt.makeFolder passes true — the icon it leaves behind is the folder's PRIMARY
-  # representation (bare art, deep copy) — while the menu's "create shortcut" defaults to a
+  # representation (bare art, deep copy) — while the menu's "Create shortcut" defaults to a
   # deliberate arrow'd alias.
   createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
     widgetToAdd = @_buildShortcutWidget referenceName, opts

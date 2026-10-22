@@ -211,11 +211,6 @@ class Color
     @_permanent[theColor._r + "," + theColor._g + "," + theColor._b + "," + theColor._a] = theColor
     theColor
 
-  # immutable + cached: routes through the shared @constructor.create factory (never
-  # bare `new`, which would bypass the cache and the immutable-color dedupe)
-  bluerBy: (howMuchMoreBlue) ->
-    @constructor.create @_r, @_g, (@_b+howMuchMoreBlue), @_a
-  
   # Color string representation: e.g. 'rgba(255,165,0,1)'
   toString: ->
     if !@_derived_String

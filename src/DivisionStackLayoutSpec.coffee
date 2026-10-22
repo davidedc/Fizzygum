@@ -68,20 +68,20 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   # The division cell's DIRECT-MANIPULATION surface, dispatched from the widget's menu gate
   # (Widget.addWidgetSpecificMenuEntries — an active division element that is not layout
-  # chrome). Mirrors VerticalStackLayoutSpec's "layout in stack ➜" submenu.
+  # chrome). Mirrors VerticalStackLayoutSpec's "Layout in stack" submenu.
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
-    menuLabel = if @axis == 'y' then "layout in column ➜" else "layout in row ➜"
-    menu.addMenuItem menuLabel, @, "divisionCellMenu", closesUnpinnedPopUps: false, toolTip: ""
+    menuLabel = if @axis == 'y' then "Layout in column" else "Layout in row"
+    menu.addMenuItem menuLabel, @, "divisionCellMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
 
   divisionCellMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    menu.addMenuItem "desired size...", @, "desiredMainDimPopout", toolTip: ""
-    menu.addMenuItem "max size...", @, "maxMainDimPopout", toolTip: ""
-    menu.addMenuItem "cross: stretch", @, "setCrossAlignToStretch"  if @crossAlign isnt "stretch"
-    menu.addMenuItem "cross: start", @, "setCrossAlignToStart"  if @crossAlign isnt "start"
-    menu.addMenuItem "cross: center", @, "setCrossAlignToCenter"  if @crossAlign isnt "center"
-    menu.addMenuItem "cross: end", @, "setCrossAlignToEnd"  if @crossAlign isnt "end"
+    menu.addMenuItem "Desired size…", @, "desiredMainDimPopout", toolTip: ""
+    menu.addMenuItem "Max size…", @, "maxMainDimPopout", toolTip: ""
+    menu.addMenuItem "Cross: stretch", @, "setCrossAlignToStretch"  if @crossAlign isnt "stretch"
+    menu.addMenuItem "Cross: start", @, "setCrossAlignToStart"  if @crossAlign isnt "start"
+    menu.addMenuItem "Cross: center", @, "setCrossAlignToCenter"  if @crossAlign isnt "center"
+    menu.addMenuItem "Cross: end", @, "setCrossAlignToEnd"  if @crossAlign isnt "end"
     menu.popUpAtHand()
 
   # The setters below are DISCRETE public mutations (menu entries / prompts / an app
@@ -119,7 +119,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   desiredMainDimPopout: (menuItem)->
     currentDesired = if @axis == 'y' then @desiredHeight else @desiredWidth
-    @element.prompt menuItem.parent.popUpTitle() + "\ndesired size:", @, "setDesiredMainDim",
+    @element.prompt menuItem.parent.promptTitleAsking("desired size:"), @, "setDesiredMainDim",
       defaultContents: currentDesired.toString()
       floorNum: 10
       ceilingNum: 1000
@@ -142,7 +142,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   maxMainDimPopout: (menuItem)->
     currentMax = if @axis == 'y' then @maxHeight else @maxWidth
-    @element.prompt menuItem.parent.popUpTitle() + "\nmax size:", @, "setMaxMainDim",
+    @element.prompt menuItem.parent.promptTitleAsking("max size:"), @, "setMaxMainDim",
       defaultContents: currentMax.toString()
       floorNum: 10
       ceilingNum: 1000

@@ -159,7 +159,7 @@ itself), slot 2 is always the subject the *enclosing panel* was built about, wit
 left for a "which panel" fork. So a verb taking its SUBJECT from slot 2 —
 `MenusHelper.popUpDevToolsMenu`, and every pin setter (see `widget-authoring-guidelines.md`, "The
 pin-setter contract") — is right exactly when the menu it sits in was built `target: <that subject>`
-(Widget's own "dev ➜" is the pattern), and reads something else whenever it wasn't. A row therefore
+(Widget's own "Dev" row is the pattern), and reads something else whenever it wasn't. A row therefore
 cannot be copied into another menu without first checking what THAT panel's target is. ⚠ A row wired
 to a **different** receiver than the panel does not opt out of this — the receiver comes from the
 row, the two leading dispatch arguments still come from the panel.
@@ -233,7 +233,7 @@ defaulted parameters. `Class.coffee`'s `_equivalentforSuper` rewrites it to
 call (§R6), so the base then re-defaults every slot the caller omitted **straight over the
 subclass's own defaults**. A subclass that states defaults and forwards bare therefore states
 them to no effect: `SimpleTextWdgt` declared 12pt and `Color.BLACK` and shipped
-the default text size (now `Theme`'s `fonts.defaultText`) and `Color(37,37,37)` for years. Make the call explicit when the signature
+the default text size (now `Theme`'s `fonts.defaultText`) and a 37,37,37 ink (now `Theme`'s `defaultTextInk`, read as the text paints) for years. Make the call explicit when the signature
 changes shape — and check, when you do, whether the defaults it was hiding were ever real.
 
 ### R8 — Don't invent a second options shape where a spec class already exists.

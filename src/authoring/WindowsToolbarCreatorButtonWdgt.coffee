@@ -2,7 +2,7 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   toolTipMessage: "many types of\npre-made windows"
 
-  createAppearance: -> new WindowsToolbarIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new WindowsToolbarIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   createWidgetToBeHandled: ->
 

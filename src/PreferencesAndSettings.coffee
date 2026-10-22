@@ -94,8 +94,8 @@ class PreferencesAndSettings
 
     # how deep a frame's edge DROP BANDS reach in from its body's edges: the strip in which
     # releasing a dragged frame docks it there instead of dropping it into the content. At least a
-    # bar thickness (the theme's barIconSize + 2 * barPadding = 50), so a band is never thinner
-    # than the grip the drop produces.
+    # strip's thickness (the frame border it spans, its barIconSize targets and its rule: 46 --
+    # FrameWdgt._barSpec), so a band is never thinner than the grip the drop produces.
     @dockBandDepth = 50
 
     # A title too cropped to read is worse than no title (ruling C13): keep the ellipsised form

@@ -43,8 +43,12 @@ A scrolling container decomposes into three responsibilities, each with an hones
      container re-fit climbs)? `ListWdgt` answers false: its pane holds rows machinery.
    - `hidesContainedWidgetFromHierarchyMenu(aWdgt)` — internal structure stays out of the
      hierarchy (disambiguation) menu; `FolderWindowWdgt` declares the same for its viewport.
-   `ScrolledPaneWdgt` carries what is true of the default plane by construction: it never
-   notices transparent clicks, relays membership changes to the viewport's HOLDER
+   `ScrolledPaneWdgt` carries what is true of the default plane by construction: it wears its
+   viewport's LOOK (holding no colour of its own, it paints in the viewport's pane fill and
+   border — `ViewportWdgt._paneFill` / `_surfaceStroke` — so the box the composite presents
+   wears ONE look: a class's own pane fill, `_defaultPaneFill`, or the roles a builder dressed
+   the viewport in by NAME, `wearPaneRoles`, which travel with the viewport wherever it is
+   taken), never notices transparent clicks, relays membership changes to the viewport's HOLDER
    (`_reactToChild*InViewport` — the bin is the one implementor), forwards an empty-area
    click to a lone editable text child, and owns the FIT_BOX_TO_TEXT re-wrap
    (`_reWrapTextChildrenTo`). The color/alpha up-relays that keep the viewport's mimic true
@@ -89,7 +93,8 @@ scrollability question every drag-scroll consumer asks — `grabsToParentWhenDra
 foreground- and background-drag-scroll branches (`Widget.coffee`/`PanelWdgt.coffee`) among
 them; `anyScrollBarShowing()`, the visibility-as-scrollability proxy, is retired. The derivation is a pure function of layout
 state, nothing time-driven on any path: while content overflows the bar shows THIN
-(`scrollIndicatorThickness`, thumb-only painting, no track) and passes the pointer through to
+(`scrollIndicatorThickness`, thumb-only painting, no track, `scrollIndicatorEdgeInset` in from the
+viewport's edge so no border covers it) and passes the pointer through to
 the content under it — `SliderWdgt.catchesPointerAt` answers false whenever
 `indicatorIsIntangible()` (thin or hidden; an indicator is not a target); resting the pointer
 within `scrollBarsThickness` of the viewport's scroll edge (the hover pass —
@@ -105,7 +110,10 @@ still scrolls, since scrollability is asked of overflow.
 
 The CORNER RESERVE is what occupies the bottom-right corner, and nothing more
 (`ViewportWdgt._cornerReserveFor`, read by `_barFrameAt`):
-- a resizer over the corner takes `max(scrollBarsThickness, handleSize)`;
+- a resizer over the corner takes the room it names (`HandleWdgt.cornerFootprint`), never less
+  than a bar: a frame's grip its inset plus its side (`FrameGripWdgt.footprint`), a naked
+  inspector's handle its side (`handleSize`). The climb that finds it (`_resizerOverMyCorner`)
+  answers the resizer itself;
 - failing that, the other bar, where it crosses, takes `scrollBarsThickness`;
 - with neither, the bar runs its side's full length.
 
@@ -115,13 +123,19 @@ and visibility:
   room-for-thumb check, so neither bar's length waits on whether the other one shows.
 - **The resizer** is found by climbing the corner chain. A container that runs a child out to its
   own bottom-right corner names it (`bottomRightCornerReachedBy`): a frame names its payload
-  and its bottom/right bands, an inspector its detail pane, a patch node its bottom text box. The
+  and its bottom/right bands, a read-only inspector its code pane (an inspector that ends in its
+  footer band names none), a patch node its bottom text box. The
   first container on the climb whose resizer would show answers (`HandleWdgt.wouldShow`, what
   showing derives from, never `isVisible`).
 - **A container that names nobody ends the climb**, and a viewport names nobody: its contents
   scroll under its corner.
-- **When a resizer comes or goes**, `HandleWdgt.updateVisibility` tells the viewports down its
-  owner's corner chain (`noteCornerResizerChanged`), and each re-lays only its bars.
+- **When the corner chain changes** — a resizer comes or goes (`HandleWdgt.updateVisibility`), or a
+  docked band is re-sided into or out of the slots its host names (`FrameWdgt._reSideMyDockNoSettle`)
+  — `Widget.noteCornerChainChanged` tells the viewports down that corner chain
+  (`noteCornerResizerChanged`), and each re-lays what it keeps clear of the corner: its bars, and
+  through its arrange the contents that lay pieces out to its far edges (a toolbar's strip keeps
+  its last slot clear of the resizer, `ViewportWdgt.cornerResizerFootprint`). Docking and undocking
+  change the band's spec, which shows or hides its own grip, so they reach the same walk.
 
 A container that runs a viewport into its corner WITHOUT naming it leaves that viewport's bar
 running under the resizer, so a new container of that shape names its corner child.
@@ -158,7 +172,8 @@ own down runs its position head (the hover move) ahead of the press (`input-and-
 §"Touch hover dissolution") — so what a press can take is the FAT thumb, which is wider and placed
 differently. `ViewportWdgt.buttonScreenBoxOnArrival` answers where that is without fattening
 anything, from the same two derivations the arrange commits: `_barFrameAt` (where the viewport
-places a bar of a given thickness — both looks come from it) and
+places a bar of a given thickness and edge inset — both looks come from it: the thin one 2 px in, the
+fat one flush, so every aim derived from the fat frame is unchanged by the inset) and
 `SliderButtonWdgt.boxInSliderFrame` (the thumb's box inside a frame of a given extent and track
 inset, `SliderWdgt.trackThumbInset` for every pressable look). Its client is the macro toolkit's
 `sliderButtonPressPoint`: a press aimed at the thin thumb's centre can fall on the track beside the
@@ -168,6 +183,21 @@ than the thin one, since a thumb is never shorter than it is wide (10px fat wher
 drag that carries the thumb a fraction of its travel measures that travel from these two, not from
 the bar as drawn. Measured from the thin look, it overshoots by a share that grows with the
 distance dragged.
+
+The indicator's COLOURS are the theme's and follow its presentation, read as the bar paints. A bar
+holds no track colour of its own (unless its viewport's builder names one, `sliderColor`): while
+presented, its track wears `scrollIndicatorTrack` (`SliderWdgt._surfaceFill`), which the fat look shows
+faintly (`scrollIndicatorTrackAlpha`) and the thin look not at all. The thumb's look is a function of
+the presentation and its state, `SliderButtonWdgt._fillForMyState` and `_strokeForMyState`:
+- thin: `scrollIndicatorThumb` (the `scrollbar` token) in every state, no border;
+- fat: that colour at rest, `scrollIndicatorThumbHighlight` under a pointer, `scrollIndicatorThumbPress`
+  while pressed, no border;
+- no presentation: a content slider's look, the button's (`sliderThumbFill` inside a 1 px
+  `sliderThumbStroke`, `sliderThumbHoverFill` hovered, `sliderThumbPressFill` inside
+  `sliderThumbPressStroke` pressed; a fill override the thumb holds for a state wins), over the
+  `sliderTrack` groove.
+
+So a bar picked up off its viewport is a plain slider: the opaque groove and the button-look thumb.
 
 ## Drag-to-scroll — the plane's other scroll gesture
 
@@ -247,7 +277,8 @@ turns the normalization off), and its `tight: false` height AGREES with grow-to-
 construction. ⚠ `ListWdgt` keeps the interposed-pane shape deliberately: its design sizes
 the rows panel PAST the hug (anti-vacant-space, `ListWdgt._applyExtent`), so the panel's
 unconditional hug self-write and the list's committed frame structurally disagree — there
-the pane IS the second surface that keeps the writers apart.
+the pane IS the second surface that keeps the writers apart. (A MEMBER list's panel — the Object Inspector's —
+does not hug: it takes the list's width, `ListWdgt._positionAndResizeChildren` / `CommandPanelWdgt._myArrangedWidth`.)
 
 ## Naming
 

@@ -17,11 +17,15 @@ class SpeechBubbleWdgt extends Widget
   # the size a bubble takes when dragged out of the glass box
   extentToGetWhenDraggedFromGlassBox: undefined
 
+  # no fill or stroke colour of my own until one is set on me (my color is declared undefined here,
+  # over Widget's content default; my strokeColor is Widget's, undefined): until then my
+  # BubblyAppearance paints me in the speech bubble's roles, read as I am painted (_surfaceFill,
+  # _surfaceStroke), so a bubble saved, loaded or duplicated wears the world's look
+  color: undefined
+
   constructor: (@contents="hello") ->
     super()
-    @color = WorldWdgt.theme.speechBubbleFill
     @padding = 0
-    @strokeColor = WorldWdgt.theme.speechBubbleStroke
     @cornerRadius = WorldWdgt.theme.speechBubbleCornerRadius
     @appearance = new BubblyAppearance @
     @toolTipMessage = "speech bubble"
@@ -29,18 +33,27 @@ class SpeechBubbleWdgt extends Widget
     @minimumExtent = new Point 10,10
     @extentToGetWhenDraggedFromGlassBox = new Point 105,80
 
+  # the fill and the 1 px border my BubblyAppearance paints me in while I hold no colour of my own
+  _surfaceFill: ->
+    WorldWdgt.theme.speechBubbleFill
 
-  
+  _surfaceStroke: ->
+    WorldWdgt.theme.speechBubbleStroke
+
+
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    # No colour opinion: the text takes StringWdgt's default. The centring this widget wants is
-    # @contentsWidget.alignCenter() below — the layout verb, not a constructor argument.
+    # The text's ink is the speech bubble's text role, given here as the text is built. The
+    # centring this widget wants is @contentsWidget.alignCenter() below — the layout verb, not a
+    # constructor argument.
+    theme = WorldWdgt.theme
     @contentsWidget = new TextWdgt @contents,
-      fontRole: WorldWdgt.theme.fonts.speechBubble
+      fontRole: theme.fonts.speechBubble
       italic: true
+      color: theme.speechBubbleText
 
     @contentsWidget.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @contentsWidget.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

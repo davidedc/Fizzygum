@@ -5,8 +5,8 @@
 # bang) marks itself STALE; the drain then PULLS all stored inputs via dataflowRecompute — a subclass hook
 # that runs the node's own computation (recalculateOutput) and refreshes its on-node display — and delivers
 # @output along the out-edge. This base holds everything the three nodes share verbatim: the dataflow node
-# protocol, the connect-to-target menu wiring, the input PINS, the _reLayout scaffold, and the floored
-# height split their stacked text boxes take (_heightsSplitByWeights). Each subclass
+# protocol, the connect-to-target menu wiring, the input PINS, the _reLayout scaffold, their text boxes
+# (_newTextBox) and the floored height split those stacked boxes take (_heightsSplitByWeights). Each subclass
 # supplies only what actually differs — its constructor / colloquialName / setInput* / recalculateOutput /
 # _buildAndConnectChildrenNoSettle (children) / _layOutOwnContents (child geometry), and, if its inputs differ
 # from the default in1..in4, _inputPins.
@@ -99,6 +99,21 @@ class PatchNodeWdgt extends Widget
   # _buildAndConnectChildrenNoSettle is the subclass hook that actually creates the node's children.
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  # One of my TEXT BOXES, which a subclass builds and stacks in its _buildAndConnectChildrenNoSettle: a
+  # mono text panel (TextAreaWdgt.configureAsMonoTextPanel) holding a formula, a regex, a substitution or
+  # an output as CODE, unwrapped -- its text born in the code role, fonts.code and the codeText ink, at
+  # my own padding of 5 (a code pane's is codePanePadding) -- on a text area's fill, inside a 1 px
+  # border in the patchNodeTextBoxStroke role, which the box is dressed in (ViewportWdgt.wearPaneRoles,
+  # read as it paints, kept by name wherever it is taken). The border is the box's and its plane's
+  # alike (the plane wears its box's look): each strokes its own outline over its children, so either
+  # can be the line that shows. Editable and selectable, or read-only (an output box), as asked.
+  _newTextBox: (text, isEditable) ->
+    theme = WorldWdgt.theme
+    textBox = new TextAreaWdgt text, false, 5, fontRole: theme.fonts.code, textColor: theme.codeText
+    textBox.configureAsMonoTextPanel isEditable
+    textBox.wearPaneRoles stroke: "patchNodeTextBoxStroke"
+    textBox
 
   # the whole layout shape is Widget's own-contents template; each node subclass supplies only
   # its own _layOutOwnContents

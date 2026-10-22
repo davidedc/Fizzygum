@@ -1,6 +1,6 @@
-# The one-shot "*Info" documents (Dashboards Maker / Generic Panel /
-# Patch Programming / Drawings Maker / Docs Maker / Slides Maker / Super
-# Toolbar / Windows) collapsed into ONE registry of build closures (Option A
+# The one-shot "*Info" documents (Dashboards Maker / Generic panel /
+# Patch programming / Drawings Maker / Docs Maker / Slides Maker / Super
+# toolbar / Windows) collapsed into ONE registry of build closures (Option A
 # "closure table"), keyed by app. Each app's launcher calls
 # `InfoDocs.createNextTo "<key>", windowJustOpened` instead of a dedicated
 # one-method factory class. `WelcomeMessageInfoWdgt` stays a standalone class
@@ -31,8 +31,8 @@ class InfoDocs
 
     genericPanel:
       flag:        "infoDoc_genericPanel_created"
-      title:       "Generic Panel"
-      windowTitle: "Generic Panels info"
+      title:       "Generic panel"
+      windowTitle: "Generic panels info"
       build: (sdspw) ->
         sdspw.addNormalParagraph "You can use this panel to temporarily hold widgets, or to put together any mix of widgets. It's just a more generic version of slides and dashboards."
         sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
@@ -45,8 +45,8 @@ class InfoDocs
 
     patchProgramming:
       flag:        "infoDoc_patchProgramming_created"
-      title:       "Patch Programming"
-      windowTitle: "Patch Programming info"
+      title:       "Patch programming"
+      windowTitle: "Patch programming info"
       build: (sdspw) ->
         sdspw.addNormalParagraph "'Patch programming' is a type of visual programming where you simply connect together existing widgets. It's useful to make simple applications/utilities quickly."
         sdspw.addNormalParagraph "You can imagine the widgets being 'patched together' by imaginary wires."
@@ -127,8 +127,8 @@ class InfoDocs
 
     superToolbar:
       flag:        "infoDoc_superToolbar_created"
-      title:       "Super Toolbar"
-      windowTitle: "Super Toolbar info"
+      title:       "Super toolbar"
+      windowTitle: "Super toolbar info"
       build: (sdspw) ->
         sdspw.addNormalParagraph "The Super Toolbar can create all other toolbars for you, and from those toolbars you can create any widget.\n\nThis is handy because any widget can go in any document... so here is a way to access them all.\n\nFor an example on how this is useful, see the video on `mixing widgets`:"
 
@@ -160,7 +160,7 @@ class InfoDocs
     dashboards:       -> new DashboardsIconWdgt
     genericPanel:     -> new GenericPanelIconWdgt
     patchProgramming: -> new PatchProgrammingIconWdgt
-    drawingsMaker:    -> new PaintBucketIconWdgt
+    drawingsMaker:    -> new SprayCanIconWdgt
     docsMaker:        -> new TypewriterIconWdgt
     slidesMaker:      -> new SimpleSlideIconWdgt
     superToolbar:     -> new ToolbarsIconWdgt
@@ -193,7 +193,7 @@ class InfoDocs
     sdspw = doc.contents
 
     iconWidget._applyExtent new Point 85, 85
-    sdspw.setContents iconWidget, 5
+    sdspw.setContents iconWidget
     iconWidget._contentStackSpec.setGrow 0
     iconWidget._contentStackSpec.setAlignmentToCenter()
 

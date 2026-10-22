@@ -1,7 +1,8 @@
-# The PINOUT debug overlay: floating blue labels that name the widget they point at.
+# The PINOUT debug overlay: floating labels, in the theme's pinoutLabelText ink, that name the widget
+# they point at.
 #
-# A dev/debug affordance reached from a widget's context menu ("show output pins" /
-# "remove output pins"), never product UI -- so it lives in its own collaborator class
+# A dev/debug affordance reached from a widget's context menu ("Show output pins" /
+# "Remove output pins"), never product UI -- so it lives in its own collaborator class
 # rather than inside WorldWdgt. Before arc 3 the three tracking Sets, the per-cycle
 # reconciler and the two menu actions sat in WorldWdgt/Widget wrapped in `»>>` markers
 # (the retired region-exclusion mechanism); re-homing them here is what let it be retired.
@@ -62,7 +63,9 @@ class PinoutsOverlay
 
     @widgetsToBePinouted.forEach (eachWidgetNeedingPinout) =>
       unless @widgetsBeingPinouted.has eachWidgetNeedingPinout
-        hM = new StringWdgt eachWidgetNeedingPinout.toString()
+        # named the way a row names it, with the detail that tells it from its kind, since a label
+        # stands alone (Widget.distinguishedRowName)
+        hM = new StringWdgt eachWidgetNeedingPinout.distinguishedRowName()
         # this bare StringWdgt is used as an ephemeral overlay — mark the INSTANCE before @add so it
         # is hit-test-excluded and shadow-free (isEphemeral capability), like the HighlighterWdgt.
         hM._ephemeralOverlay = true
@@ -71,7 +74,7 @@ class PinoutsOverlay
         # SCREEN-anchor, same mapping as the reposition branch above (§7.11)
         peekThroughBox = eachWidgetNeedingPinout.mapRectToScreen eachWidgetNeedingPinout.clippedThroughBounds()
         hM._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
-        hM.setColor Color.BLUE
+        hM.setColor WorldWdgt.theme.pinoutLabelText
         hM.setWidth 400
         @currentPinoutingWidgets.add hM
         @widgetsBeingPinouted.add eachWidgetNeedingPinout

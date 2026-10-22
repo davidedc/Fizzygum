@@ -8,7 +8,7 @@
  *   A) A LOW-LEVEL method (name starting raw / _ / __ , ending NoSettle, or one of
  *      _reLayout / _positionAndResizeChildren / _reLayoutScrollbars) must NOT call a public
  *      geometry setter, a SINGLE-settling text setter (setText / setFontSize / setFontName /
- *      toggleShowBlanks / toggleWeight / toggleItalic / toggleIsPassword), or recalculateLayouts.
+ *      toggleWeight / toggleItalic / toggleIsPassword), or recalculateLayouts.
  *      Low-level code mutates immediately (raw pixels / the _ and __ private tiers) and must never reach UP into the
  *      public, self-flushing layer. (The text setters self-settle via the single _settleLayoutsAfter,
  *      so reaching one from a layout pass throws the flow-violation — AxisWdgt._reLayout once called
@@ -75,7 +75,7 @@ const CANVAS_EXT_FILE = /boot[\/\\]extensions[\/\\].*[Cc]anvas/;
 // (low-level code uses the core _sizeToTextAndDisableFittingNoSettle). The `[@.]\s*` anchor + `\b` make
 // `@setText`/`.setText` match while `@_setTextNoSettle`/`._setTextNoSettle` (the cores, leading `_`) and
 // `setTextLineWrapping` do NOT.
-const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleShowBlanks', 'toggleWeight', 'toggleItalic', 'toggleIsPassword'];
+const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleWeight', 'toggleItalic', 'toggleIsPassword'];
 const TEXT_SETTER_CALL = new RegExp('[@.]\\s*(' + TEXT_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
 const INVALIDATE_CALL = /[@.]\s*_invalidateLayout\b/;         // @_invalidateLayout / x._invalidateLayout

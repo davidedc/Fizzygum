@@ -2,7 +2,7 @@
 # declared by THE ARROW CONTRACT (reference-widgets plan §4.4), per instance:
 #
 #   ARROW (representsContents false, the default -- a deliberate alias made by
-#   "create shortcut"): duplicating it duplicates the REFERENCE only -- both
+#   "Create shortcut"): duplicating it duplicates the REFERENCE only -- both
 #   copies point at, and open, the SAME referenced widget, and since only one
 #   instance of a widget can be shown at once, opening either one is likely to
 #   relocate it from wherever it currently sits.
@@ -28,7 +28,7 @@ class ShortcutWdgt extends DesktopLinkWdgt
   # THE ARROW CONTRACT declaration (plan §4.4): true = I present as the referent's CONTENTS
   # (no arrow badge; copy and save deepen through the reference edge), false = I am a deliberate
   # alias (arrow badge; copy shares the referent). Set ONCE at creation from the creation path
-  # (filing declares content, "create shortcut" declares reference) and never mutated -- an own
+  # (filing declares content, "Create shortcut" declares reference) and never mutated -- an own
   # field, so it rides serialization and duplication untouched. ⛔ It must NEVER feed liveness:
   # to the storage classifier, the close-path query and the trash sever I am an ordinary
   # reference edge either way (graphEdgesOut below does not read it).
@@ -68,8 +68,9 @@ class ShortcutWdgt extends DesktopLinkWdgt
   # (the storage drain only re-files existing residents, it cannot home an orphan). The
   # attached-in-truth check keeps this a no-op in a world-snapshot restore (there the shelf is a
   # serialized root and the figure is restored as its genuine child) and idempotent across two
-  # icons sharing one referent.
+  # icons sharing one referent. (First, the restore every desktop icon makes: its re-layout.)
   _afterDeserialization: ->
+    super
     return unless @representsContents and @referencedWidget? and !@referencedWidget.destroyed
     figure = @referencedWidget._enclosingIslandFigure()
     p = figure.parent
@@ -119,7 +120,7 @@ class ShortcutWdgt extends DesktopLinkWdgt
   # the caption and the click all exist to re-summon the referent — so severing it means dying,
   # not blanking (a blanked shortcut would be a lying icon whose click can only apologise).
   # Dispatched by the two sever chokepoints — world._severLivenessEdgesIntoWdgtNoSettle (the
-  # trash gestures: the "move to trash" row and both bin drop surfaces, plan R5) and
+  # trash gestures: the "Move to trash" row and both bin drop surfaces, plan R5) and
   # Widget._destroyNoSettle (referent death) — WITHOUT `?.`: a
   # future class that emits reference edges must decide its own sever behaviour, and a loud
   # throw at the sever site beats silently destroying a widget richer than a shortcut.
@@ -175,5 +176,7 @@ class ShortcutWdgt extends DesktopLinkWdgt
       # fractional bookkeeping from an earlier desktop/storage life, which the fill-only
       # seed respects -- re-derive at the spawned position explicitly.
       whatToBringUp._rememberFractionalSituationInHoldingPanel()
+      # nosettle-sanctioned: the second half of the public bringUpReferencedWidget, never inside a
+      # settle (see the exemption above) -- the re-title settles on its own, as spawnNextTo does.
       whatToBringUp.setTitle? @label.text
 

@@ -1,7 +1,23 @@
+# The FRIDGE, Fizzytiles' "Drag tiles here" pane: the magnets dropped on me, read in their places,
+# are the program (putIntoWords), which I hand to the code pane and the 3D pane on every drop and
+# grab (compileTiles).
+#
+# I wear the fridge's look, read as I am painted: my fill is the fizzytilesFridgeFill role and my
+# border the fizzytilesFridgeStroke role (_surfaceFill / _surfaceStroke, which my
+# RectangularAppearance asks while I hold no colour of my own). Like every panel I hold no colour of
+# my own, so a fridge saved, loaded or duplicated wears the look of the world it is shown in, and a
+# colour set on me later is mine.
+
 class FridgeWdgt extends PanelWdgt
 
   sourceCodeHolder: undefined
   fridgeMagnetsCanvas: undefined
+
+  _surfaceFill: ->
+    WorldWdgt.theme.fizzytilesFridgeFill
+
+  _surfaceStroke: ->
+    WorldWdgt.theme.fizzytilesFridgeStroke
 
   topMostMagnet: (setOfWidgets = @children) ->
     filtered = setOfWidgets.filter (m) ->

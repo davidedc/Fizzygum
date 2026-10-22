@@ -439,8 +439,8 @@ class ActivePointerWdgt extends Widget
       # undeclared end-of-cycle push.
       @_settleLayoutsAfter => aWdgt._reactToBeingGrabbed? oldParent
       # The shadow must be added after @add -- it needs the widget's painted image, which @add may
-      # produce for the first time. This grab shadow uses its own "floaty" look (offset/blur/color),
-      # distinct from a widget's own per-class shadow (e.g. Menus use a different one).
+      # produce for the first time. This grab shadow uses its own "floaty" look (the theme's drag
+      # lift offset/alpha), distinct from the one desktop shadow every widget casts at rest.
 
       aWdgt.addShadow WorldWdgt.theme.dragLiftShadowOffset, WorldWdgt.theme.dragLiftShadowAlpha
       
@@ -633,7 +633,7 @@ class ActivePointerWdgt extends Widget
       # (By ANCESTRY, §5.D: a drop into an excluded subtree must not steal
       # focus either -- same rule as the click site.)
       if !(@_excludedFromEditorFocusTrackingByAncestry wdgtToDrop)
-        world.editorFocusWdgt = wdgtToDrop
+        world._setEditorFocusNoSettle wdgtToDrop
 
       @children = []
       @_applyExtent new Point
@@ -1143,7 +1143,7 @@ class ActivePointerWdgt extends Widget
           # is honored over the whole opted-out subtree (D2a folded the former
           # editorContentPropertyChangerButton field into this same walk).
           if !(@_excludedFromEditorFocusTrackingByAncestry w)
-            world.editorFocusWdgt = w
+            world._setEditorFocusNoSettle w
           w[expectedClick] @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey, doubleClickInvocation, tripleClickInvocation
 
           # now send the double/triple clicks
@@ -1415,7 +1415,7 @@ class ActivePointerWdgt extends Widget
           # FIGURE that comes onto the hand — reuse the sole-content island, extract a genuine sub-part into
           # a fresh island, or (off any island) return the widget UNCHANGED ⇒ byte-identical dormant — then
           # dissolve an identity compensating sugar wrapper so the BARE content grabs. The whole two-step is
-          # _resolvePickUpFigure, SHARED with the menu "pick up" entry point (pickUpMenuAction) so the two
+          # _resolvePickUpFigure, SHARED with the menu "Pick up" entry point (pickUpMenuAction) so the two
           # cannot drift; its doc comment carries the full pick-out / Bug-F reasoning. Resolved HERE (once,
           # at drag-start) so BOTH the grab below and the "pointer left its bounds, re-centre" re-grab
           # further down in this method operate on the SAME figure. It does NOT set switcherooHappened

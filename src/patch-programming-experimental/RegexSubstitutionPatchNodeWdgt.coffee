@@ -55,18 +55,16 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @regexEntryField = new TextAreaWdgt @defaultContents, false, 5
-    @regexEntryField.configureAsMonoTextPanel true
+    # my three text boxes (PatchNodeWdgt._newTextBox); the output one is read-only
+    @regexEntryField = @_newTextBox @defaultContents, true
     @textWidget = @regexEntryField.textWdgt
     @_addNoSettle @regexEntryField
 
-    @substitutionTextArea = new TextAreaWdgt @defaultContents, false, 5
-    @substitutionTextArea.configureAsMonoTextPanel true
+    @substitutionTextArea = @_newTextBox @defaultContents, true
     @substitutionTextAreaText = @substitutionTextArea.textWdgt
     @_addNoSettle @substitutionTextArea
 
-    @outputTextArea = new TextAreaWdgt @defaultContents, false, 5
-    @outputTextArea.configureAsMonoTextPanel false
+    @outputTextArea = @_newTextBox @defaultContents, false
     @outputTextAreaText = @outputTextArea.textWdgt
     @_addNoSettle @outputTextArea
 
@@ -75,7 +73,7 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
 
   # My output box is the last of my three, laid out across my full width at my bottom (_layOutOwnContents),
   # so it is the child at my bottom-right corner, where my window's resizer sits
-  # (ViewportWdgt._aResizerSitsOverMyCorner).
+  # (ViewportWdgt._resizerOverMyCorner).
   bottomRightCornerReachedBy: (child) ->
     child is @outputTextArea
 

@@ -20,15 +20,11 @@ class DocumentWdgt extends FrameWdgt
 
   # The naked document payload. The viewport class stays generic/UNSEEDED
   # (bare-panel fixtures depend on that), so the CITIZEN seeds the starting
-  # paragraph -- exactly what the fused class's build core did.
+  # paragraph -- one of the viewport's own paragraphs (getNormalParagraph), set in
+  # at the page's item spacing.
   _makeStartingPayload: ->
     viewport = new DocumentViewportWdgt
-    startingContent = new SimpleTextWdgt @startingText,
-      backgroundColor: WorldWdgt.theme.editableItemFill
-      backgroundTransparency: 1
-    viewport.setContents startingContent, 5
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
+    viewport.setContents viewport.getNormalParagraph @startingText
     viewport
 
   colloquialName: ->

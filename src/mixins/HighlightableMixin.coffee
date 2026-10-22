@@ -1,5 +1,11 @@
-# changes the color of a widget based on whether pointer is
-# hovering over or pressing on it
+# Changes a widget's colour with its pointer STATE -- at rest, hovered, pressed -- re-deriving it at
+# every transition (_updateColor). A state's colour is the widget's state field for it when one is
+# set (color_normal / color_hover / color_pressed: set by a consumer, or by a live edit of this
+# mixin's own field, which reaches every consumer that does not shadow it); otherwise it is the plain
+# button's role for that state (Theme: plainButtonFill, plainButtonHoverFill, plainButtonPressFill),
+# read as the state changes, so the mixin declares no colour of its own. A consumer with a look of
+# its own answers _updateColor itself (SimpleButtonWdgt, IconButtonWdgt, the edit mark, a desktop
+# link, a toolbar tool through ParentStainerMixin).
 
 HighlightableMixin =
   # class properties here:
@@ -9,9 +15,9 @@ HighlightableMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      color_hover: Color.SILVER
-      color_pressed: Color.GRAY
-      color_normal: Color.create 245, 244, 245
+      color_hover: undefined
+      color_pressed: undefined
+      color_normal: undefined
 
       state: 0
       STATE_NORMAL: 0
@@ -20,13 +26,14 @@ HighlightableMixin =
 
 
       _updateColor: ->
+        theme = WorldWdgt.theme
         @setColor switch @state
           when @STATE_NORMAL
-            @color_normal
+            @color_normal ? theme.plainButtonFill
           when @STATE_HIGHLIGHTED
-            @color_hover
+            @color_hover ? theme.plainButtonHoverFill
           when @STATE_PRESSED
-            @color_pressed
+            @color_pressed ? theme.plainButtonPressFill
 
         @_changed()
       

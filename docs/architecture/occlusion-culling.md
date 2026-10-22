@@ -71,10 +71,10 @@ shape makes no coverage claim unless it states one. Two state one:
 ⚠⚠ **A claim is inherited, and a subclass that changes the OUTLINE must therefore refuse it.**
 `BubblyAppearance` does: its rounded body occupies only the top `h - h/5` of the box (the rest is
 the tail strip), so `BoxyAppearance`'s inscribed box reaches below the fill for any bubble taller
-than about `5×(cornerRadius+1)` — and a `ToolTipWdgt` is a direct child of the world, so it *is*
-asked. It overrides back to `undefined`. `DesktopAppearance` and `SimpleDropletAppearance` inherit
-the rectangular claim correctly (a wallpaper tile and a plus-sign glyph both sit *on* the full
-fill), as `MenuAppearance` does the boxy one.
+than about `5×(cornerRadius+1)` — and a `SpeechBubbleWdgt` standing on the desktop is a direct child
+of the world, so it *is* asked. It overrides back to `undefined`. `DesktopAppearance` inherits the rectangular claim correctly
+(a wallpaper tile sits *on* the full fill), as `MenuAppearance` does the boxy one;
+`SimpleDropletAppearance` (a rounded well) claims nothing.
 
 ⓘ The `BackBufferMixin` consumers (`StringWdgt`, `CanvasWdgt`, `PaletteWdgt` and their subclasses)
 blit an offscreen buffer of unknown per-pixel opacity: the mixin answers `undefined` for itself, so

@@ -269,7 +269,7 @@ island's `_reactToChildAdded` nudges `FrameWdgt.noteContentsNameMayHaveChanged()
 intent-named public note, the `noteWallpaperChanged` idiom) once the content arrives.
 
 Pinned by `SystemTest_macroIslandLensWindowHeightLock` (identity + name oracles, the
-wrapped-resize height-lock, the bar reading "analog clock" while wrapped) and — since the
+wrapped-resize height-lock, the bar naming the clock — "analog clock", shown "Analog clock" — while wrapped) and — since the
 ONE-OBJECT identity is a duplication/serialization property no pixel can show — by the
 `island.keptSpec.*` checks in `Fizzygum-tests/scripts/serialization-roundtrip-headless.js` (the
 gauntlet's serialization leg), which hold that identity across materialize, dissolve, `fullCopy`
@@ -507,7 +507,7 @@ outermost island (or the widget itself off any island, byte-identical dormant). 
   pinned anchor along.
 - **Duplicate + pick up** (`duplicateAndPickItUp`) — same figure resolution, then
   `_normalizePinnedAnchorNoSettle` first (the hand-carry pipeline assumes a slot-centre pivot). Public
-  API with no menu item since arc 3 phase 7 — the one "duplicate" item means copy-in-place.
+  API with no menu item since arc 3 phase 7 — the one "Duplicate" item means copy-in-place.
 - **Pick up** (`pickUpMenuAction`) — `_resolvePickUpFigure` (the same resolution the drag pipeline's
   `determineGrabs` uses, so a menu pick-up and a drag grab take the same thing), then `pickUp`.
 - **Save to file** (`saveToFile`) — serialize the figure, not the bare content: the Serializer

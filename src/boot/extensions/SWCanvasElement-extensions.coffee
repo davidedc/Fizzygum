@@ -26,10 +26,13 @@
 # NO bigger than MAX, so auto-fitting text (StringWdgt's font-size search)
 # must not pick a size larger than MAX — otherwise the chosen size, and the
 # caret/line height derived from it, run away above what is actually painted
-# (the "giant caret, normal-size text" bug). Exposed on window so that search
-# can read the cap from its single source of truth here.
+# (the "giant caret, normal-size text" bug). Both are exposed on window, on
+# either backend: that search reads the cap, and a typed icon face
+# (TypedFaceIconAppearance) keeps its size inside the band, so the native canvas
+# types the size SWCanvas does -- both from this one source of truth.
 SWCANVAS_MIN_FONT_SIZE = 9
 SWCANVAS_MAX_FONT_SIZE = 96
+window.SWCANVAS_MIN_FONT_SIZE = SWCANVAS_MIN_FONT_SIZE
 window.SWCANVAS_MAX_FONT_SIZE = SWCANVAS_MAX_FONT_SIZE
 
 mapFontStackToSWCanvasFamily = (stack) ->

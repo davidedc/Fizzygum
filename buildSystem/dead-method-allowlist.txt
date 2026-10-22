@@ -13,7 +13,6 @@
 #     unused; deleting it would leave a lopsided surface). ---
 asArray                 # Point [x,y] / Rectangle [l,t,r,b] conversion API (the _xywh variant was deleted)
 getBody                 # Macro immutable value-class accessor
-toggleShowBlanks        # StringWdgt menu-toggle action, same shape as toggleWeight / toggleItalic / ...
 bringUpTestMenu_InputEvents                        # MacroToolkit L1 synthetic-input primitive (test-authoring family)
 
 # --- LCL / fizzytiles experimental subsystem: LCLProgramRunner is not yet instantiated anywhere (in-progress
@@ -33,3 +32,7 @@ _setFontSizeConnector    # reactive connector for setFontSize; reached only via 
 _takeSliderValueConnector # reactive connector for takeSliderValue (PromptWdgt prompt slider); reached only via @target["_takeSliderValueConnector"] computed dispatch
 _applyRowReflectionConnector  # reactive connector lane: reached by the computed name `_#{action}Connector` from a reflected-row edge (MenuItemWdgt._subscribeToMyReflectedSource), invisible to a static scan
 _setToggleStateConnector  # reactive connector for setToggleState (SwitchButtonWdgt's `shown button` pin); reached only via @target["_setToggleStateConnector"] computed dispatch
+
+# --- Read only by the INDEX-PAGE rigs (Fizzygum-tests/scripts/, inside page.evaluate bodies the scanner does not
+#     read): index.html carries no harness, so such a member cannot live in a *TestSupport class. ---
+isDesktopShortcut       # ShortcutWdgt capability; graph-liveness-headless.js and serialization-roundtrip-headless.js find a shortcut among the desktop's / a folder's children by it

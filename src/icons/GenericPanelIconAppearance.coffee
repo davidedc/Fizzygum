@@ -1,165 +1,208 @@
 class GenericPanelIconAppearance extends SizeAwareIconAppearance
 
-  # SIZE-AWARE generic-panel icon (2026-07-21, converted with
-  # /convert-icon-size-aware; idiom docs: docs/plans/pixel-icons-plan.md §5b):
-  # a rounded panel -- the slide-card shape shared with the SimpleSlide /
-  # Dashboards / PatchProgramming icons, drawn through the base's reusable
-  # _pxPanel so every corner carries the same quantized ring -- with two
-  # small floating toolbars overlapping its edges. The toolbars follow the
-  # super-toolbar column's recipe at the finer tc weight but stay LOCAL:
-  # they are thinner and smaller than the super-toolbar's column, not worth
-  # a shared abstraction. The toolbars are integer rects; the card's
-  # rounded corners are fillRoundRect's, rasterized by each backend its
-  # own way.
+  # SIZE-AWARE generic-panel icon in the design's style, the launcher icon of
+  # the Generic panel maker and a generic panel's shortcut icon: the draft's
+  # "panel" glyph (docs/archive/redesign/desktop-canvas.html), drawn by the idiom
+  # of docs/plans/pixel-icons-plan.md §5b. Line art in ink, every line on the
+  # glyph line unit t (SizeAwareIconAppearance._glyphLineUnit), with paper
+  # interiors and no halo envelope (the tile the icon stands on is its ground):
+  #   - the CARD is the design's content card (SizeAwareIconAppearance.
+  #     _contentCard): one rounded outline, its four walls t thick;
+  #   - two TOOLBARS lie on it, each a rounded box across one of its corners:
+  #     the LEFT one across its bottom-left corner, out past its left edge and
+  #     down past its bottom edge; the RIGHT one across its top-right corner,
+  #     up past its top edge and out past its right edge;
+  #   - in each toolbar, BUTTON LINES one under another, t tall: three in the
+  #     left toolbar, two in the right one.
+  #   A toolbar is the border idiom: its ink, then the same box inset by t in
+  #   paper, its corner radius t less, so its walls are t and its corners
+  #   concentric. Its paper covers the card inside it, so each of the card's
+  #   walls it crosses passes UNDER it: the wall runs into one of the toolbar's
+  #   walls and out of the next, a T where they meet, and the toolbar's wall
+  #   there stays one t line.
+  #   The two toolbars are one width, and their button lines one layout, so
+  #   they read as one family: the lines centred across the toolbar's paper,
+  #   the first a step below its top, the rest one pitch apart. The layout
+  #   also PLACES the toolbars down the card: where the card's wall passes
+  #   under a toolbar it keeps a gap of paper from the button line nearest it,
+  #   so it never reads as a line running on through the toolbar -- the left
+  #   toolbar's lines all stand above the card's bottom wall, and the card's
+  #   top wall passes under the right toolbar between its two lines.
+  #   Clearance is a spec: a card wall passing under a toolbar keeps a px of
+  #   paper from the toolbar's walls that run beside it, crosses the
+  #   toolbar's walls clear of their rounded corners, and on its own straight
+  #   (never on the card's corner arc); where the draft's measures fall short
+  #   of that, the toolbar reaches further out past the card, or is wider. A
+  #   button line keeps a px of paper from its toolbar's walls and from the
+  #   next line.
+  #   Detail by rule: the step shrinks where the right toolbar's top would
+  #   leave the glyph square. The left toolbar's top sits no higher than where
+  #   the card's left wall runs straight; where its lines would put it higher,
+  #   the step shrinks, then the left toolbar's lines close up (its pitch
+  #   alone shrinks), then its bottom-most line drops. The right toolbar keeps
+  #   its second line only where the pitch leaves room for the card's wall
+  #   between its lines and the line keeps a px of paper above its bottom
+  #   wall. A toolbar whose paper is too narrow for MIN_BUTTON px of line with
+  #   a px of paper each side holds no lines. A toolbar that would leave the
+  #   glyph square drops, the right one first: it is drawn only with the left
+  #   one.
 
   # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
 
-  # ---- proportions, fractions of the glyph square (numbers from the
-  # original 100-space drawing; the panel itself is the base's shared
-  # slide card) ---------------------------------------------------------------
-  # the two mini toolbars: [frame left, frame top, design box count, hangs
-  # below the panel]. The 4-vs-3 length asymmetry is part of the design --
-  # box count only drops when even a shrunk column can't fit
-  TOOLBARS: [[0.17, 0.32, 4, true], [0.71, 0.05, 3, false]]
-  TB_IW: 0.13         # toolbar interior width (the 13-unit box column)
-  TB_HEADER_H: 0.07   # gray header interior height (~7 units)
-  BOX_K: 0.45         # inner square side, fraction of the box interior (5/13
-                      #   in the original, nudged up because the size-aware
-                      #   ring walls are thicker than the original 1px stroke)
-  HEADER_LINE_W: 0.7  # white title-line width, fraction of interior
-  HEADER_BG: 'rgb(170, 170, 170)'
+  # ---- proportions, in GLYPH_GRID units: u units are round(S * u /
+  # GLYPH_GRID) px at a glyph square of S px; the card's are the base's
+  # CONTENT_CARD_*. The INK extents of a one-unit line on the draft glyph's
+  # path (its centre line moved out by half a unit; a button line's round caps
+  # reach half a unit past its ends), each toolbar measured from the card edges
+  # it crosses, as the card is centred in S; a toolbar's top follows from the
+  # button layout, and its fourth side from the width.
+  TOOLBAR_WIDTH: 9          # both toolbars' outer ink width (path rects 8 wide)
+  TOOLBAR_CORNER: 2.5       # their outer corner radius (path radius 2; the inner one is t less)
+  LEFT_TOOLBAR_OUT: 3       # how far the left toolbar reaches out past the card's left edge (path x 2 against 5)
+  LEFT_TOOLBAR_BELOW: 5     # how far it hangs below the card's bottom edge (path y 39 against 34)
+  RIGHT_TOOLBAR_OUT: 1      # how far the right toolbar reaches out past the card's right edge (path x 40 against 39)
+  RIGHT_TOOLBAR_BOTTOM: 13  # its bottom edge, below the card's top edge (path y 22 against 10)
+  BUTTON_LENGTH: 4          # a button line's ink length (path h3, its round caps half a unit past each end)
+  BUTTON_TOP: 5             # the step from a toolbar's top edge to its first button line's top (path y 15 to 20, and 4 to 9)
+  BUTTON_PITCH: 6           # from a button line's top to the next one's (path y 20, 26, 32 and 9, 15)
+  BUTTON_TO_CARD: 1         # the paper between the card's wall passing under a toolbar and the button line nearest it (the left toolbar's, path y 32 against 34; the draft's right toolbar has its first line flush on the card's top line, so here it rises a unit higher)
+  LEFT_BUTTONS: 3           # the left toolbar's button lines (path M4.5 20h3 M4.5 26h3 M4.5 32h3)
+  RIGHT_BUTTONS: 2          # the right toolbar's (path M34.5 9h3 M34.5 15h3)
+  # ---- detail tiers -----------------------------------------------------------
+  MIN_CORNER: 2             # px: a smaller corner radius is square
+  MIN_CLEARANCE: 1          # px of paper a card wall keeps from a toolbar's walls beside it, and a button line from its toolbar's walls and the next line
+  MIN_BUTTON: 1             # px: the shortest button line
 
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
+    return if Math.min(wDev, hDev) < 10
+    m = @_panelMetrics x0, y0, wDev, hDev
+    @_contentCard ctx, m.card
+    @_panelToolbar ctx, m, toolbar for toolbar in m.toolbars
+    return
+
+  # every measurement the icon is built from, in whole device px
+  _panelMetrics: (x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev
-    return if S < 10
-    # center the square glyph box in the widget box
+    t = @_glyphLineUnit S
     x = x0 + Math.floor (wDev - S) / 2
     y = y0 + Math.floor (hDev - S) / 2
+    card = @_contentCardMetrics x, y, S, t
+    px = (units) => Math.round S * units / @GLYPH_GRID
+    r = px @TOOLBAR_CORNER
+    r = 0 if r < @MIN_CORNER
+    m =
+      t: t
+      card: card
+      r: r
+      # how far a card wall passing under a toolbar stands from the toolbar's
+      # outer edges beside it: past its wall and a px of paper, and past its
+      # corner's arc
+      clear: Math.max t + @MIN_CLEARANCE, r
+      toolbars: []
+    m.leftOut = Math.max m.clear, px @LEFT_TOOLBAR_OUT
+    m.rightOut = Math.max m.clear, px @RIGHT_TOOLBAR_OUT
+    # one width for both: the draft's, or wider where the card's wall passing
+    # under would not keep its clearance from the far side, or would leave the
+    # toolbar on the card's corner arc
+    m.width = Math.max px(@TOOLBAR_WIDTH), Math.max(m.leftOut, m.rightOut) + t + Math.max(m.clear, card.r)
+    @_panelButtonMetrics m, S, px, y
+    left = @_panelLeftToolbar m, px
+    right = @_panelRightToolbar m, px
+    if left.left >= x and left.bottom <= y + S and left.top >= m.leftTopLeast
+      m.toolbars.push left
+      m.toolbars.push right if right.top >= y and right.right <= x + S
+    m
 
-    u =
-      S: S
-      t: Math.max 1, Math.round S / 32  # structural unit: panel border
-      tc: Math.max 1, Math.round S / 45 # lighter unit: all toolbar line work
-      td: Math.max 1, Math.round S / 64 # detail unit: the tool-box rings
-    u.o = u.t                           # halo/envelope thickness
+  # the button lines, onto m: their length, and their layout down a toolbar --
+  # the first line's step below the toolbar's top and the paper gap from the
+  # card's wall, one for both toolbars, and the pitch. The step shrinks where
+  # the right toolbar's top would leave the square. The left toolbar's lines
+  # stand above the card's bottom wall, its top the step above them and no
+  # higher than where the card's left wall runs straight (leftTopLeast):
+  # where it would be, the step shrinks, then the left toolbar's lines close
+  # up (leftPitch), then its bottom-most line drops
+  _panelButtonMetrics: (m, S, px, y) ->
+    {t, card} = m
+    inside = m.width - 2 * t
+    across = inside - 2 * @MIN_CLEARANCE
+    # the nearest whole px to the line's length with the paper's parity, so
+    # the line sits on its exact centre
+    length = 2 * Math.round((S * @BUTTON_LENGTH / @GLYPH_GRID - inside) / 2) + inside
+    length += 2 while length < @MIN_BUTTON
+    m.buttonLength = if across >= @MIN_BUTTON then Math.min length, across else 0
+    m.buttonInset = t + (inside - m.buttonLength) / 2
+    least = t + @MIN_CLEARANCE
+    m.buttonGap = Math.max @MIN_CLEARANCE, px @BUTTON_TO_CARD
+    m.buttonPitch = Math.max least, px @BUTTON_PITCH
+    step = Math.max least, Math.min px(@BUTTON_TOP), card.top - m.buttonGap - t - y
+    m.leftTopLeast = card.top + Math.max card.r, least
+    # from that highest top to the left toolbar's last line's top
+    room = card.bottom - t - m.buttonGap - t - m.leftTopLeast
+    pitch = m.buttonPitch
+    n = @LEFT_BUTTONS
+    until n is 1 or step + (n - 1) * pitch <= room
+      if step > least
+        step = Math.max least, room - (n - 1) * pitch
+      else if pitch > least
+        pitch = Math.max least, Math.floor (room - step) / (n - 1)
+      else
+        n--
+    m.buttonStep = step
+    m.leftPitch = pitch
+    m.leftButtons = n
 
-    # the landscape rounded card
-    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, u.t, u.o
+  # the left toolbar's box and its lines' tops: out past the card's left edge
+  # and down past its bottom one, its lines standing a gap of paper above the
+  # card's bottom wall and its top the first line's step above them
+  _panelLeftToolbar: (m, px) ->
+    {t, card} = m
+    lastTop = card.bottom - t - m.buttonGap - t
+    firstTop = lastTop - (m.leftButtons - 1) * m.leftPitch
+    toolbar =
+      left: card.left - m.leftOut
+      top: firstTop - m.buttonStep
+      bottom: card.bottom + Math.max m.clear, px @LEFT_TOOLBAR_BELOW
+      lineTops: (firstTop + i * m.leftPitch for i in [0...m.leftButtons])
+    toolbar.right = toolbar.left + m.width
+    toolbar.lineTops = [] unless m.buttonLength > 0
+    toolbar
 
-    # a toolbar's light backing may punch the panel's TOP border (right
-    # toolbar) and BOTTOM border (left toolbar) -- that's the design -- but
-    # must never eat a border it isn't meant to cross: the backing is capped
-    # short of each such border's ink (crossing the ink is a defect, and
-    # rounding at small sizes does cross without the clamps). On the RIGHT
-    # the cap keeps an extra o of interior beyond the backing, so the
-    # toolbar's frame shows 2o of light before the panel border instead of
-    # sitting right next to it. The left toolbar may run to the glyph
-    # bottom; the right one stops above the panel's bottom border.
-    # Both toolbars paint at ONE shared column width -- the narrower of
-    # their two shrink-fits -- so they read as the same family. Each also
-    # clamps clear of the PREVIOUS one's frame (at tiny sizes the border
-    # clamps squeeze them into each other), and a toolbar that still can't
-    # keep every hard clearance is dropped rather than painted overlapping.
-    yMaxFor = (hangsBelow) => if hangsBelow then y + S else py + ph - u.t
-    iw = undefined
-    for [fx, fy, nBoxes, hangsBelow] in @TOOLBARS
-      fit = @_toolbarFitIW u, fy, nBoxes, y, yMaxFor hangsBelow
-      iw = fit if not iw? or fit < iw
-    # the min clamp starts past the panel's corner-arc region (px + r, not
-    # just past the border ink): the left toolbar punches the BOTTOM border,
-    # and crossing it inside the rounded corner mangles the arc
-    prevFrameRight = 0
-    for [fx, fy, nBoxes, hangsBelow] in @TOOLBARS
-      frameRight = @_paintMiniToolbar ctx, x, y, u, iw, fx, fy, nBoxes,
-        Math.max(px + r, prevFrameRight), px + pw - u.t - u.o, yMaxFor hangsBelow
-      prevFrameRight = frameRight if frameRight?
+  # the right toolbar's box and its lines' tops: up past the card's top edge
+  # and out past its right one, the card's top wall passing under it a gap of
+  # paper below its first line. Its second line stands below that wall, where
+  # the pitch leaves it a gap of paper too, and above the toolbar's bottom
+  # wall, keeping a px of paper from it
+  _panelRightToolbar: (m, px) ->
+    {t, card} = m
+    firstTop = card.top - m.buttonGap - t
+    toolbar =
+      right: card.right + m.rightOut
+      top: firstTop - m.buttonStep
+      # the card's right wall leaves it from its straight, clear of the
+      # toolbar's corner
+      bottom: card.top + Math.max px(@RIGHT_TOOLBAR_BOTTOM), t + Math.max(m.clear, card.r)
+      lineTops: [firstTop]
+    toolbar.left = toolbar.right - m.width
+    for i in [1...@RIGHT_BUTTONS]
+      top = firstTop + i * m.buttonPitch
+      break unless top >= card.top + t + m.buttonGap and top + t + @MIN_CLEARANCE <= toolbar.bottom - t
+      toolbar.lineTops.push top
+    toolbar.lineTops = [] unless m.buttonLength > 0
+    toolbar
 
-  # the shrink-to-fit column width for one toolbar: boxes are square
-  # (side = iw), so the column narrows first (down to a floor) to keep the
-  # design's box count -- the 4-box left toolbar would otherwise lose its
-  # length asymmetry at every real display size -- and only then would
-  # boxes drop
-  _toolbarFitIW: (u, fy, nDesign, y, yMaxBacking) ->
-    {S, tc} = u
-    iw = Math.max Math.round(S * @TB_IW), 2
-    hH = Math.round S * @TB_HEADER_H
-    hH = 0 if hH < 2
-    headerSpan = if hH > 0 then hH + tc else 0
-    avail = yMaxBacking - (y + Math.round S * fy) - u.o
-    n = nDesign
-    while (2 * tc + headerSpan + n * iw + (n - 1) * tc) > avail and (iw > 4 or n > 1)
-      if iw > 4 then iw-- else n--
-    iw
-
-  # one floating mini toolbar at glyph fraction (fx, fy): light backing
-  # (the halo), tc frame and dividers, gray header band with white title
-  # line, then square tool boxes. Each box glyph is a hollow ring on the td
-  # unit when its hole survives, a solid dot when smaller, nothing once
-  # even a dot can't keep 1px of clearance.
-  _paintMiniToolbar: (ctx, x, y, u, iw, fx, fy, nDesign, xMinBacking, xMaxBacking, yMaxBacking) ->
-    {S, tc, td, o} = u
-    hH = Math.round S * @TB_HEADER_H
-    hH = 0 if hH < 2                    # too thin to read as the title bar
-    headerSpan = if hH > 0 then hH + tc else 0
-    yT = y + Math.round S * fy
-    avail = yMaxBacking - yT - o
-
-    # the column width iw arrives shared across both toolbars; only the
-    # box count still adapts here
-    n = nDesign
-    frameH = -> 2 * tc + headerSpan + n * iw + (n - 1) * tc
-    n-- while frameH() > avail and n > 1
-    return if iw < 2 or n < 1
-    boxH = iw
-
-    W = iw + 2 * tc
-    xL = x + Math.round S * fx
-    xL = Math.min xL, xMaxBacking - W - o
-    xL = Math.max xL, xMinBacking + o
-    # the min-clamp (border/previous-toolbar clearance) may push past the
-    # soft max-clamp; the o of extra border clearance folded into
-    # xMaxBacking is allowed to give, but the backing crossing the border
-    # ink itself never is -- drop the toolbar instead
-    return undefined if xL + W > xMaxBacking
-
-    # backing/halo, then the frame: ink silhouette, light interior
-    fh = frameH()
-    @_useLight ctx
-    ctx.fillRect xL - o, yT - o, W + 2 * o, fh + 2 * o
+  # a toolbar: its ink, then its paper inset by t (the corner radius t less, so
+  # the corners stay concentric), which covers the card under it; then its
+  # button lines, each a t-tall bar of ink on that paper
+  _panelToolbar: (ctx, m, toolbar) ->
+    {t, r} = m
+    w = toolbar.right - toolbar.left
+    h = toolbar.bottom - toolbar.top
     @_useInk ctx
-    ctx.fillRect xL, yT, W, fh
-    @_useLight ctx
-    ctx.fillRect xL + tc, yT + tc, iw, fh - 2 * tc
-
-    cy = yT + tc
-    if hH > 0
-      @_useDetail ctx, @HEADER_BG
-      ctx.fillRect xL + tc, cy, iw, hH
-      # the white line keeps >=1px of gray on every side (clearance is a
-      # spec: rounding can otherwise land its end on the frame's ink)
-      lw = Math.min Math.round(iw * @HEADER_LINE_W), iw - 2
-      if hH >= 3 * tc and lw >= 1
-        @_useDetail ctx, Color.WHITE.toString()
-        ctx.fillRect xL + tc + Math.round((iw - lw) / 2),
-          cy + Math.round((hH - tc) / 2), lw, tc
-      @_useInk ctx
-      ctx.fillRect xL + tc, cy + hH, iw, tc
-      cy += hH + tc
-
-    for i in [0...n]
-      if i > 0
-        @_useInk ctx
-        ctx.fillRect xL + tc, cy - tc, iw, tc
-      k = Math.min Math.round(iw * @BOX_K), iw - 2, boxH - 2
-      if k >= 2
-        kx = xL + tc + Math.round (iw - k) / 2
-        ky = cy + Math.round (boxH - k) / 2
-        @_useInk ctx
-        ctx.fillRect kx, ky, k, k
-        if k - 2 * td >= 2
-          @_useLight ctx
-          ctx.fillRect kx + td, ky + td, k - 2 * td, k - 2 * td
-      cy += boxH + tc
-    xL + W                              # my frame's right edge, for the
-                                        # next toolbar's clearance clamp
+    ctx.fillRoundRect toolbar.left, toolbar.top, w, h, r
+    @_usePaper ctx
+    ctx.fillRoundRect toolbar.left + t, toolbar.top + t, w - 2 * t, h - 2 * t, Math.max 0, r - t
+    @_useInk ctx
+    for top in toolbar.lineTops
+      ctx.fillRect toolbar.left + m.buttonInset, top, m.buttonLength, t
+    return

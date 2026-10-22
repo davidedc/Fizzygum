@@ -129,6 +129,59 @@ class ViewportWdgt extends Widget
     unless @alpha == alpha
       @alpha = alpha
 
+  # ── MY LOOK, read as I am painted ─────────────────────────────────────────────────────────
+  # No fill or stroke colour of my own until one is set on me (or, as the mimic, on my plane):
+  # until then my RectangularAppearance paints me in the roles below, so a viewport saved, loaded or
+  # duplicated wears the look of the world it is shown in. The box I present -- me and my plane --
+  # wears ONE look, the PANE's: its fill is my class's (_defaultPaneFill: the generic panel's, a
+  # list's, a text area's, a stack's, a document's), its border the generic panel's, or the window
+  # content's while I am a window's whole content -- unless a BUILDER dresses me in roles of its own
+  # (wearPaneRoles: the Object Inspector's panes, a code area, a patch node's text box, the bin's
+  # pane, a folder window's viewport). Those I keep by NAME, so I wear them, read at paint, wherever
+  # I am taken; a plane that holds no colour of its own wears my pane's look (ScrolledPaneWdgt).
+  color: undefined
+  strokeColor: undefined
+  # the names of the WorldWdgt.theme roles a builder dresses me in (wearPaneRoles): my pane's fill
+  # and my border; undefined, my own
+  paneFillRole: undefined
+  paneStrokeRole: undefined
+
+  # Dress me in a builder's roles, each the NAME of a WorldWdgt.theme role: `fill`, my pane's fill
+  # (and so my plane's), and `stroke`, my border (and my plane's; a role holding no colour draws
+  # none). A role left out leaves me my class's look for it. The name must be a role the theme has.
+  # A builder dresses me as it builds me, before I am shown; dressed while shown, I repaint with my
+  # plane.
+  wearPaneRoles: (roles = {}) ->
+    theme = WorldWdgt.theme
+    for role in [roles.fill, roles.stroke] when role? and role not of theme
+      throw new Error "wearPaneRoles: the theme has no role named " + role
+    @paneFillRole = roles.fill
+    @paneStrokeRole = roles.stroke
+    @_fullChanged() unless @isOrphan()
+
+  # What I paint myself, always under my plane: my plane's fill (the MIMIC -- a plane wearing a role
+  # of its own, a folder's panel, answers it; a default plane answers my pane's), else my pane's.
+  _surfaceFill: ->
+    @contents?._surfaceFill?() ? @_paneFill()
+
+  # THE FILL OF THE BOX I PRESENT, which a default plane wears (ScrolledPaneWdgt._surfaceFill): the
+  # role a builder dressed me in, else my class's.
+  _paneFill: ->
+    (if @paneFillRole? then WorldWdgt.theme[@paneFillRole]) ? @_defaultPaneFill()
+
+  # my class's pane fill: the generic panel's (a list, a text area, a stack and a document answer
+  # their own)
+  _defaultPaneFill: ->
+    WorldWdgt.theme.panelFill
+
+  # MY BORDER, which a default plane wears too (ScrolledPaneWdgt._surfaceStroke): the role a builder
+  # dressed me in (holding no colour: none), else the generic panel's -- or, while I am a window's
+  # whole content (my frame's contents, asked of where I stand as I paint), the window content's.
+  _surfaceStroke: ->
+    theme = WorldWdgt.theme
+    return theme[@paneStrokeRole] if @paneStrokeRole?
+    if @parent?.isMyContents?(@) then theme.windowContentPanelStroke else theme.panelStroke
+
   # Two independent scroll-by-drag flags (only live while scrollbars show): drag the
   # contents, or drag the background — independently, e.g. useful for a geographic map.
   canScrollByDraggingBackground: false
@@ -145,12 +198,10 @@ class ViewportWdgt extends Widget
     @alpha = 0
     super()
     # the appearance also decides hit-testing: an appearance-bearing widget answers opaque
-    # inside its tight bounds. It DOES paint every repaint (once the mimic below adopts the
-    # contents' alpha, typically 1) -- just always fully occluded under the plane and bars;
-    # the colors seed the mimic until _buildViewportChromeNoSettle adopts the contents' own
+    # inside its tight bounds. It DOES paint every repaint (once the mimic adopts the
+    # contents' alpha, typically 1) -- just always fully occluded under the plane and bars,
+    # in the look my hooks answer (MY LOOK, above)
     @appearance = new RectangularAppearance @
-    @color = WorldWdgt.theme.panelFill
-    @strokeColor = WorldWdgt.theme.panelStroke
     @_buildViewportChrome()
 
   # Build the viewport (contents + h/v scrollbars) via the NoSettle core, settling ONCE at the end
@@ -173,10 +224,15 @@ class ViewportWdgt extends Widget
 
     # the Viewport paints every repaint just like any RectangularAppearance widget, but always
     # fully occluded under its own contents+bars -- so what matters is that its values MIMIC
-    # the contained Panel's
+    # the contained Panel's: its own colour, when it holds one (else none, and my look's hooks
+    # answer for both of us)
     @color = @contents.color
     @alpha = @contents.alpha
 
+    # my bars hold a track colour of their own only when my builder names one (@sliderColor);
+    # otherwise each bar's track wears its presentation's role, read as it paints
+    # (SliderWdgt._surfaceFill): the scroll indicator's while I present it -- faint while fat, absent
+    # while thin -- and a plain slider's groove once it is picked up off me
     @hBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
     @hBar._applyHeight @scrollBarsThickness
     @_addNoSettle @hBar
@@ -440,6 +496,18 @@ class ViewportWdgt extends Widget
     else
       WorldWdgt.theme.scrollIndicatorThickness
 
+  # How far in from my edge the indicators lie. A thin one floats clear of the edge, so no border
+  # covers it: neither my own, which I paint over my children, nor that of a pop-up or a window
+  # around me. A fat one lies flush, because its bar is my scroll band itself: the strip the hover
+  # pass watches (_updatePointerInScrollBand) and the frame every press is aimed into
+  # (buttonScreenBoxOnArrival). The inset moves the thin bar across its axis only, and a thin bar
+  # is no target, so the corner reserve, the hover band and every hit area are unmoved by it.
+  _indicatorEdgeInset: ->
+    if @_pointerInScrollBand
+      0
+    else
+      WorldWdgt.theme.scrollIndicatorEdgeInset
+
   # Hand the bars the presentation my state implies. _-tier: my own arrange is the only caller and
   # the only one there can be — the look is settled in the same pass that decided which bars show
   # at all, so there is nothing left for anyone else to advance and nothing steps.
@@ -511,27 +579,32 @@ class ViewportWdgt extends Widget
   isContentSizing: ->
     @isTextLineWrapping
 
-  # Where I place a bar of mine at a given cross-axis THICKNESS: the vertical one against my right
-  # edge and the horizontal one against my bottom edge, each stopping short of my bottom-right corner
-  # by as much as what OCCUPIES that corner needs (_cornerReserveFor), and running its side's full
-  # length when nothing does. My arrange places my bars from this, and buttonScreenBoxOnArrival /
-  # barScreenFrameOnArrival ask it for the thickness a pointer's arrival gives them.
-  _barFrameAt: (bar, thickness) ->
+  # Where I place a bar of mine at a given cross-axis THICKNESS, `edgeInset` in from my edge: the
+  # vertical one along my right edge and the horizontal one along my bottom edge, each stopping
+  # short of my bottom-right corner by as much as what OCCUPIES that corner needs
+  # (_cornerReserveFor), and running its side's full length when nothing does. The inset moves a
+  # bar across its axis only, never along it. My arrange places my bars from this, at the
+  # thickness and the inset of the look they wear (_indicatorThickness, _indicatorEdgeInset), and
+  # buttonScreenBoxOnArrival / barScreenFrameOnArrival ask it for the look a pointer's arrival
+  # gives them: my full thickness, flush.
+  _barFrameAt: (bar, thickness, edgeInset = 0) ->
     spaceToLeaveOnOneSide = @_cornerReserveFor bar
     if bar is @vBar
-      new Rectangle (new Point @right() - thickness, @top()), (new Point @right(), @bottom() - spaceToLeaveOnOneSide)
+      new Rectangle (new Point @right() - edgeInset - thickness, @top()), (new Point @right() - edgeInset, @bottom() - spaceToLeaveOnOneSide)
     else
-      new Rectangle (new Point @left(), @bottom() - thickness), (new Point @right() - spaceToLeaveOnOneSide, @bottom())
+      new Rectangle (new Point @left(), @bottom() - edgeInset - thickness), (new Point @right() - spaceToLeaveOnOneSide, @bottom() - edgeInset)
 
   # How far a bar of mine stops short of my bottom-right corner: as far as what sits there needs. A
-  # resizer over the corner takes a touch target's room (handleSize, never less than a bar); failing
-  # that, my other bar takes its thickness where it crosses; with neither, the corner is free and the
-  # bar runs right to it. Both are asked of STRUCTURE, never of geometry or visibility, which the
-  # passes that read this are still laying out: the other bar by the overflow its showing derives
-  # from, the resizer by climbing the corner chain (_aResizerSitsOverMyCorner).
+  # resizer over the corner takes the room IT names (its cornerFootprint: a frame's grip its inset
+  # plus its side, a naked inspector's handle its side; never less than a bar); failing that, my
+  # other bar takes its thickness where it crosses; with neither, the corner is free and the bar
+  # runs right to it. Both are asked of STRUCTURE, never of geometry or visibility, which the passes
+  # that read this are still laying out: the other bar by the overflow its showing derives from, the
+  # resizer by climbing the corner chain (_resizerOverMyCorner).
   _cornerReserveFor: (bar) ->
+    resizer = @_resizerOverMyCorner()
     reserve =
-      if @_aResizerSitsOverMyCorner() then Math.max @scrollBarsThickness, WorldWdgt.theme.handleSize
+      if resizer? then Math.max @scrollBarsThickness, resizer.cornerFootprint()
       else if @_otherBarCrossesMyCorner bar then @scrollBarsThickness
       else 0
     if reserve > 0 then reserve + 2 * @padding else 0
@@ -547,23 +620,37 @@ class ViewportWdgt extends Widget
     else
       @contents.height() >= @height() + 1
 
-  # Does a RESIZER sit over my bottom-right corner? Every container that runs a child out to its own
-  # bottom-right corner says which (bottomRightCornerReachedBy), so I climb for as long as I am, or
-  # am inside, such a child, and the first container on the way whose resizer would show answers yes
-  # (HandleWdgt.wouldShow: what its showing derives from, not whether it shows yet). A container that
-  # names nobody ends the climb. I name nobody myself: my contents scroll under my corner.
-  _aResizerSitsOverMyCorner: ->
+  # The RESIZER that sits over my bottom-right corner, or undefined when none does. Every container
+  # that runs a child out to its own bottom-right corner says which (bottomRightCornerReachedBy), so
+  # I climb for as long as I am, or am inside, such a child, and the first container on the way whose
+  # resizer would show answers with that resizer (HandleWdgt.wouldShow: what its showing derives
+  # from, not whether it shows yet). A container that names nobody ends the climb. I name nobody
+  # myself: my contents scroll under my corner.
+  _resizerOverMyCorner: ->
     child = @
     container = @parent
     while container?.bottomRightCornerReachedBy?(child)
-      return true  if container.resizer?.wouldShow?()
+      return container.resizer  if container.resizer?.wouldShow?()
       child = container
       container = container.parent
-    false
+    undefined
 
-  # A resizer over a corner I reach came or went (HandleWdgt.updateVisibility tells the viewports down
-  # its corner chain), so my bars must re-lay to the reserve the corner now asks of them: my arrange
-  # is where they are laid, so I schedule it.
+  # HOW FAR A RESIZER OVER MY BOTTOM-RIGHT CORNER REACHES IN from that corner, along each axis (its
+  # cornerFootprint), or 0 when none sits there: what contents that lay their own pieces out to my far
+  # edges keep clear (ToolPanelWdgt keeps its strip's last slot out of it). The same STRUCTURAL answer
+  # my bars' reserve takes (_resizerOverMyCorner, a reserve by occupancy), because the passes that ask
+  # are still laying out; whenever the answer can change -- a resizer coming or going, or the chain
+  # above me re-sided -- my corner chain is told (Widget.noteCornerChainChanged), which re-lays me
+  # (noteCornerResizerChanged), and my arrange re-lays my contents.
+  cornerResizerFootprint: ->
+    @_resizerOverMyCorner()?.cornerFootprint() ? 0
+
+  # What occupies a corner I reach may have changed -- its resizer came or went
+  # (HandleWdgt.updateVisibility), or the chain from me up to a resizer did (a band re-sided,
+  # FrameWdgt._reSideMyDockNoSettle); either tells the viewports down that corner chain
+  # (Widget.noteCornerChainChanged) -- so my bars must re-lay to the reserve the corner now asks of
+  # them, and so must contents that keep clear of it (cornerResizerFootprint): my arrange is where
+  # both are laid, so I schedule it.
   noteCornerResizerChanged: ->
     @_scheduleRelayoutRespectingPhase()
 
@@ -604,9 +691,10 @@ class ViewportWdgt extends Widget
     # need is gone along with the notify-by-mutation seam it guarded against.
     # See docs/archive/proper-layouts-4.2-structural-arrange-plan.md.
 
-    # the indicator's CROSS-axis size: thin at rest, my full bar thickness while a hovering
-    # pointer has fattened it back into a control (ruling G4)
+    # the indicator's CROSS-axis size and its distance from my edge: thin and inset at rest, my full
+    # bar thickness and flush while a hovering pointer has fattened it back into a control (ruling G4)
     barThickness = @_indicatorThickness()
+    barEdgeInset = @_indicatorEdgeInset()
 
     @_changed()
 
@@ -623,9 +711,10 @@ class ViewportWdgt extends Widget
     # asking a METHOD is not, and a bar that cannot answer is exactly a bar I must not touch.
     if @hBar.isWiredTo? @
       # the cross axis is INDICATOR presentation, so it is imposed only on a bar I still hold;
-      # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent).
+      # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent), and
+      # its place is not mine to decide (it is moved only while it is mine, below).
       hThickness = if @_barIsMineToPresent @hBar then barThickness else @hBar.height()
-      hFrame = @_barFrameAt @hBar, hThickness
+      hFrame = @_barFrameAt @hBar, hThickness, barEdgeInset
       # a 'never' viewport shows no bars whatever the overflow — same hide arm the
       # fitting case takes — and neither does a frame with no room for the bar's thumb
       if @scrollPolicy isnt 'never' and @contents.width() >= @width() + 1 and @_barFrameHasRoomForThumb @hBar, hFrame
@@ -654,7 +743,7 @@ class ViewportWdgt extends Widget
     if @vBar.isWiredTo? @
       # the cross axis is presentation — imposed only on a bar I still hold (see the hBar above)
       vThickness = if @_barIsMineToPresent @vBar then barThickness else @vBar.width()
-      vFrame = @_barFrameAt @vBar, vThickness
+      vFrame = @_barFrameAt @vBar, vThickness, barEdgeInset
       # 'never' shows no bars, nor does a frame with no room for the thumb — see the hBar above
       if @scrollPolicy isnt 'never' and @contents.height() >= @height() + 1 and @_barFrameHasRoomForThumb @vBar, vFrame
         @vBar.show()
@@ -900,10 +989,6 @@ class ViewportWdgt extends Widget
       # are state, and nothing above mutated them -- see subWidgetsMergedFullBounds's comment.
       subBounds = @contents.subWidgetsMergedFullBounds()?.ceil()
     if subBounds
-
-      # add-in the content's own external padding
-      if @contents.externalPadding?
-        subBounds = subBounds.expandBy @contents.externalPadding
 
       # For a content-sizing stack/text panel: never stretch the view past the end of @contents (e.g.
       # after deleting text while scrolled to the bottom -- we don't want to reveal vacant space, we
@@ -1402,9 +1487,9 @@ class ViewportWdgt extends Widget
       super
       if @offersScrollPolicyToggle
         if @scrollPolicy is 'never'
-          menu.addMenuItem "allow scrolling", @, "toggleScrollPolicyFromMenu", toolTip: "let the contents scroll\nwhen they overflow"
+          menu.addMenuItem "Allow scrolling", @, "toggleScrollPolicyFromMenu", toolTip: "let the contents scroll\nwhen they overflow"
         else
-          menu.addMenuItem "don't scroll (crop)", @, "toggleScrollPolicyFromMenu", toolTip: "crop the contents at my\nedges instead of scrolling"
+          menu.addMenuItem "Don't scroll (crop)", @, "toggleScrollPolicyFromMenu", toolTip: "crop the contents at my\nedges instead of scrolling"
   
   # Set this viewport's text-line-wrapping state; turning wrapping ON fills
   # the content to the viewport's bounds. (Called by SimpleTextWdgt's soft-wrap

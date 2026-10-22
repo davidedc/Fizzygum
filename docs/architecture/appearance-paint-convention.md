@@ -16,8 +16,8 @@ before writing or modifying any `*Appearance` paint body, and together with
 > damage box as a LOCAL rect (`localDamageBox`) — **fills may be sized to it, art may not be
 > placed relative to it**: art takes its geometry from the widget and lets the clip bound it.
 > Exception, by declaration only: a body may draw in integer DEVICE pixels anchored at the
-> widget origin when its art is dpr-conditional pixel work (the SizeAware family) — such a body
-> documents it and never reads `al/at`.
+> widget origin when its art is dpr-conditional pixel work (the SizeAware family, the analog
+> clock) — such a body documents it and never reads `al/at`.
 > Ctx state set by a body is contained by the preamble's save/restore; leaving state as a
 > contract for a callee within one body is allowed, across bodies it is not.
 
@@ -33,15 +33,17 @@ restores. `localDamageBox` = the damage box translated to widget-local logical c
 
 On a partial repaint it is a SUB-RECT of the widget — whatever region is being redrawn this pass.
 That distinction is invisible when a body only fills: painting one colour over exactly the damaged
-part gives the same picture however large that part is, which is why the six background fills in
-the tree pass it straight to `_fillLocalRectSnappedToDevicePixels` and are right to.
+part gives the same picture however large that part is, which is why the background fills in the
+tree pass it straight to `_fillLocalRectSnappedToDevicePixels` and are right to, and why a fill of a
+fixed part of the widget (a seam between panes, a band's edge rule) intersects its own rect with it
+and fills only that.
 
 **Art is different.** Geometry placed relative to `localDamageBox` lands wherever the damage
 happened to start, so the same widget draws differently depending on what else moved. Take art
 geometry from the widget — origin `(0,0)`, extent `@widget.width()`/`@widget.height()` — and paint
 the whole of it; the scope has already clipped to the damage box, so the partial case costs
-nothing and needs no arithmetic. `SimpleDropletAppearance.drawAdditionalPartsOnBaseShape` is the
-model: its plus-sign is sized from `@widget`, and it touches the damage box only to clip.
+nothing and needs no arithmetic. `Appearance._paintPlate` is the model: the plate is sized from
+`@widget` alone (its whole box, its radius clamped to the box), and never reads the damage box.
 
 ⚠ **A screenshot test cannot see this class of bug** — it settles the world before capturing, and a
 full repaint hides it. The instrument is the **paint-truthfulness gate** (`fg presuite` /
@@ -70,8 +72,7 @@ is also where the `_paintInLocalScope` call lives, so the field cannot reach a s
 the declaration was not already deciding. Check that before adding a third knob.
 
 `@clipsToDamageBox: false` skips the scope's damage clip — for a body whose every draw provably
-bounds itself to damage∩tight (`RectangularAppearance`: its fills and stroke are exact rects,
-and its droplet hook self-clips). This is not an optimization but a PIXEL contract: in an
+bounds itself to damage∩tight (`RectangularAppearance`: its fills and stroke are exact rects). This is not an optimization but a PIXEL contract: in an
 island buffer the ambient translate can be FRACTIONAL (a rotated-container payload's figure
 has a fractional slot origin), where an added rect-clip's boundary quantization differs from
 the fills' and cuts an edge column — the legacy device paint never clipped, so neither may
@@ -105,12 +106,13 @@ back-ref checks) stay in the caller, before the scope call.
 
 ## The declared device-space exceptions
 
-- **The SizeAware icon family** (`src/icons/SizeAwareIconAppearance.coffee`, base + 9):
+- **The SizeAware icon family** (`src/icons/SizeAwareIconAppearance.coffee`, base + its icons):
   dpr-conditional integer-device pixel art, by documented design. The law's exception clause.
+- **The analog clock** (`AnalogClockAppearance`): the same kind of work — its face, marks and hands
+  are whole device pixels whose parity matches the face's centre (`pixelsForUnits`), so a hand is the
+  same width pointing every way — in its own device-space preamble, anchored at the widget origin.
 - **Blits are preamble business**: `BackBufferMixin`'s buffer blit (named `blitBackBufferInto`, so
-  an appearance can compose it), and `AnalogClockAppearance`'s cached-face blit (its background fill
-  sits UNDER that blit, so both stay device-space in its own preamble; only the hands/live content
-  ride the scope). `PaletteAppearance` is the same two-layer shape over the mixin's blit: a cached
+  an appearance can compose it). `PaletteAppearance` is a two-layer shape over the mixin's blit: a cached
   buffer is keyed on class + extent and therefore SHARED, so anything per-instance — a palette's
   choice marker — has to be drawn live on top, and that half rides the scope. Such an appearance
   keeps its own entry (it calls the blit before opening the scope) and its widget defines
@@ -119,9 +121,10 @@ back-ref checks) stay in the caller, before the scope call.
   the tile would scale with the dpr and its phase would follow the translate.
   `DesktopAppearance._paintBackgroundPatternFill` therefore runs AFTER the scope closes, in
   device pixels (verified by the wallpaper A/B probe — the desktop has no suite coverage).
-- **The world-level selection/highlight overlays** (`Widget._drawSelectionOverlay`) are not
-  appearance bodies; they keep their device spelling (only the stroke THICKNESS is logical —
-  `lineWidth ceilPixelRatio`, matching the rectangular-family border).
+- **The editor-focus selection outline** (`Widget._drawSelectionOverlay`) is not an appearance body
+  but is laid out like one: it clips to the damage box in device pixels, then works in logical pixels
+  translated to the widget, and the drop outline's painter (`HighlightOutlineAppearance.paintRing`)
+  draws it in the context the widget paints into — the world canvas, or its island's buffer.
 
 ## The vocabulary law: pixels say "damage", layout says "dirty"
 

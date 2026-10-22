@@ -3,6 +3,9 @@ class CanvasGlassTopWdgt extends CanvasWdgt
   underlyingCanvasWdgt: undefined
   defaultRejectDrags: true
 
+  # what a person calls me: the surface a drawing is painted on
+  colloquialName: -> "paint surface"
+
   # I clear myself to FULLY TRANSPARENT, so BackBufferMixin's per-pixel answer (which I would
   # otherwise inherit from CanvasWdgt) is "the pointer is never on me" — and hover would stop
   # registering the moment the paint surface is clean. My whole box takes the pointer instead:
@@ -21,9 +24,13 @@ class CanvasGlassTopWdgt extends CanvasWdgt
   paintingOverlay: ->
     @
 
+  # I lay no paper: my raster starts clear, so the canvas under me shows through me (CanvasWdgt
+  # lays its role's paper when it holds no colour of its own; as glass, I answer none).
+  _surfaceFill: ->
+    undefined
+
   constructor: ->
     super
-    @color = undefined
     # the overlay canvas is usually attached to a Canvas
     # which unfortunately is a Frame (it shouldn't, it should
     # just clip at its bounds via a mixin TODO ). So, usually

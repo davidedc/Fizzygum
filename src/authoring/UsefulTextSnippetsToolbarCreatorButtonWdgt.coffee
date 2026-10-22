@@ -2,7 +2,7 @@ class UsefulTextSnippetsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdg
 
   toolTipMessage: "Useful text snippets"
 
-  createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   createWidgetToBeHandled: ->
     return TemplatesWindowWdgt.create()

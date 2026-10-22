@@ -4,7 +4,7 @@ class ElasticWindowCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "elastic panel"
 
-  createAppearance: -> new ElasticWindowIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new ElasticWindowIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   createWidgetToBeHandled: ->
     genericPanel = new GenericPanelWdgt

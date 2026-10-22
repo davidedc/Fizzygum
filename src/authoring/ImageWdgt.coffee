@@ -18,7 +18,7 @@ class ImageWdgt extends GenericPanelWdgt
     "Drawings Maker"
 
   representativeIcon: ->
-    new PaintBucketIconWdgt
+    new SprayCanIconWdgt
 
   # the frame docks this variant in its toolbar-slot (§5.C)
   buildToolbar: ->

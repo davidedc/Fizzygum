@@ -117,7 +117,7 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   receiver as a WIDGET and stamps widget-lifecycle fields onto the prototype as own
   properties, polluting every later member listing of the class. The full editing
   vocabulary on top of that core:
-  - **"override in this class"** (`ClassInspectorWdgt.overrideInThisClass`): a second
+  - **"Override in this class"** (`ClassInspectorWdgt.overrideInThisClass`): a second
     save destination shown while a mixin-donated instance member (method or field) is
     selected — keeps the edited source as a live override on THAT class's prototype
     only (via `Class.applyMemberEdit`, the class twin, which super-rewrites exactly as
@@ -125,10 +125,11 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     attribution key and the donor-edit shadow guard), after which donor edits skip the
     class;
   - a **"from `<Name>Mixin`" donor label** (`InspectorWdgt.mixinDonorLabel`) appears in
-    the hierarchy row of BOTH inspector types while a mixin-donated member is selected;
-  - **add/remove**: the class inspector's `add…` popout gains a destination step
+    the breadcrumb band, right after the class chips, of BOTH inspector types while a mixin-donated
+    member is selected;
+  - **add/remove**: the class inspector's "Add…" popout gains a destination step
     (class or any of its mixins — a mixin add is `applyMemberEdit` with a new name)
-    when the class declares augmentations, and `remove` on a mixin-donated member
+    when the class declares augmentations, and "Remove" on a mixin-donated member
     routes to `Mixin.removeMember` (deletes member + fake-super companion from every
     non-shadowing consumer; logged as a `deleted: true` registry record);
   - **class-side statics**: the Mixin constructor parses the literal's 2-space keys
@@ -156,14 +157,14 @@ three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
-| `ClippingAtRectangularBoundsMixin` | 195 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `VerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
+| `ClippingAtRectangularBoundsMixin` | 195 | 6 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `VerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt`, `InspectorWdgt` (clips its bands' overflowing controls, naked or windowed) | base class + unrelated branches | yes |
 | `ControllerMixin` | 516 | 7 — `SliderWdgt`, `StringWdgt` (whence `TextWdgt`/`SimpleTextWdgt` inherit it — SimpleTextWdgt's own augment was the double-injection the boot guard now forbids), `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | yes — `graphEdgesOut` (super-composed, graph-edges §4.2) |
-| `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
+| `HighlightableMixin` | 54 | 6 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
 | `KeepsRatioWhenInVerticalStackMixin` | 69 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `VerticalStackViewportWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ViewportWdgt`) | unrelated branches (Viewport / Panel / Widget) | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
-| `ParentStainerMixin` | 11 | 2 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt` | unrelated leaves | yes |
+| `ParentStainerMixin` |       28 | 4 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt`, `GlassBoxTopWdgt` (a thumbnail's lid), `CodeInjectingSimpleRectangularButtonWdgt` (a paint tool): a toolbar tool tells the tool cell it stands in that its pointer state changed (`GlassBoxBottomWdgt.noteItemStateChanged`), and the cell derives its own look | unrelated leaves | no |
 
 (The count excludes three that no longer exist as mixins: dead `ContainerMixin`, deleted;
 the five misfiled ones, folded into standard-OO homes — §4; and `DeepCopierMixin`, inverted
@@ -184,8 +185,8 @@ The test: consumers on unrelated branches AND behaviour that overrides framework
   panel clipping), `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
   bubbling to a coordinating parent, across Viewport/Panel/Widget branches),
   `KeepsRatioWhenInVerticalStackMixin`,
-  `WidgetCreatorAndSmartPlacerOnClickMixin`, `ParentStainerMixin` (barely — 2 unrelated
-  leaves each).
+  `WidgetCreatorAndSmartPlacerOnClickMixin` (barely — 2 unrelated leaves), `ParentStainerMixin`
+  (4 unrelated leaves: the toolbar tools).
 - **Misfiled (single consumer / single subtree / config bag) — all five now live in
   standard-OO homes**, motivated by inspectability (a mixed-in member's
   source is view-only in the inspector, and it is unclear whether to edit the donor or

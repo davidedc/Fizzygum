@@ -3,9 +3,13 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
 
   category: 'Widgetic-Layouts'
 
+  # what a person calls the bar dragged to re-apportion a split
+  colloquialName: -> "splitter"
 
-  # I am a 5×5 grab strip between stacked elements, and LayoutChromeAppearance paints only a
-  # hint inside it: every pixel of that strip has to drag, or the divider is unusable.
+
+  # I am a 5×5 grab strip between stacked elements, and LayoutChromeAppearance rounds my plate's
+  # corners and paints only a small mark inside it: every pixel of that strip has to drag, or the
+  # divider is unusable.
   catchesPointerAt: (aPoint) ->
     @boundsContainPoint aPoint
 
@@ -161,7 +165,9 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       rightWidget._setMaxDimDeferredSettle new Point rmdd.x, rmdd.y - delta
 
 
+  # my plate's hover and press are my base's (LayoutChromeWdgt); here, the resize cursor
   hoverEntered: ->
+    super
     cursor = if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
     document.getElementById("world").style.cursor = cursor
 
@@ -169,6 +175,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # cursor while THIS adjuster is the one being non-float dragged -- the
   # endOfNonFloatDrag hook below restores it at the true end of the drag
   hoverExited: ->
+    super
     return if world.hand.nonFloatDraggedWdgt == @
     document.getElementById("world").style.cursor = "auto"
 
@@ -176,20 +183,26 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # suppressed above), so restore the cursor here unless the pointer is back
   # over me -- then the eventual hoverExited handles it
   endOfNonFloatDrag: ->
+    super
     if world.hand.topWdgtUnderPointer() != @
       document.getElementById("world").style.cursor = "auto"
 
 
-  # The size-adjuster's glyph: a grey filled circle. (The shared background
-  # fill + clip + translate live in
-  # LayoutChromeWdgt.paintIntoAreaOrBlitFromBackBuffer.)
+  # MY GRAB MARK, over my plate (LayoutChromeAppearance; the plate and its states are my base's): a
+  # bar layoutAdjusterGrabMarkWidth thick and layoutAdjusterGrabMarkLength long in layoutChromeGlyph,
+  # centred, along my long side -- down a strip standing between a row's cells, across one lying
+  # between a column's -- and cut to my box where my box is smaller. Widget-local logical pixels,
+  # whole ones, so it is crisp at every density (on an odd spare span it sits half a pixel before
+  # the centre).
   drawLayoutChrome: (aContext) ->
-    aContext.fillStyle = @color.toString()
-    
-    centerX = @bounds.width() / 2
-    centerY = @bounds.height() / 2
-    radius = Math.min centerX, centerY
-    radius = radius - radius / 20
-    aContext.fillStyle = WorldWdgt.theme.layoutAdjusterHint.toString()
-    aContext.fillCircle centerX, centerY, radius
+    theme = WorldWdgt.theme
+    width = @width()
+    height = @height()
+    across = theme.layoutAdjusterGrabMarkWidth
+    along = theme.layoutAdjusterGrabMarkLength
+    [markWidth, markHeight] = if height >= width then [across, along] else [along, across]
+    markWidth = Math.min markWidth, width
+    markHeight = Math.min markHeight, height
+    aContext.fillStyle = theme.layoutChromeGlyph.toString()
+    aContext.fillRect Math.floor((width - markWidth) / 2), Math.floor((height - markHeight) / 2), markWidth, markHeight
 

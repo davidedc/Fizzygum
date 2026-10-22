@@ -21,6 +21,12 @@ class MenuWdgt extends FrameWdgt
 
   target: undefined
   title: undefined
+  # Does my title SAY something -- a message (an inform, the empty state of a chooser, a question
+  # such as the bin's confirmation) -- rather than NAME what I am about (a widget, a section, a
+  # chooser)? A header that names shows in capitals while I am a pop-up; a message reads as a
+  # sentence (FrameWdgt._titleDisplayCase). Its opener says which, through the `titleIsAMessage`
+  # option: a title is a name unless its opener says otherwise.
+  titleIsAMessage: false
   fontSize: undefined
   # the CommandPanelWdgt that is my rows' whole visible body, and the viewport it lives
   # in — my @contents. Declared here so a duplicate has the handles to remap.
@@ -45,12 +51,14 @@ class MenuWdgt extends FrameWdgt
     @actsAsEditorChrome
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
-  # (P5 arg-object conversion): target / title / fontSize, each undefined when absent.
+  # (P5 arg-object conversion): target / title / fontSize, each undefined when absent, and
+  # titleIsAMessage, false when absent.
   # The rows payload is built BEFORE super: it IS the frame's content operand, and the title
-  # my frame reads for its strip is mine to know first.
+  # my frame reads for its strip -- and the case it shows in -- is mine to know first.
   constructor: (@widgetOpeningThePopUp, opts = {}) ->
     @target = opts.target
     @title = opts.title
+    @titleIsAMessage = opts.titleIsAMessage ? false
     @fontSize = opts.fontSize
     # a menu is born mid-gesture UI: the lifetime entry enrols me in the open set and arms the
     # click-outside dismissal that ends me.
@@ -67,7 +75,8 @@ class MenuWdgt extends FrameWdgt
   # viewport is unconditional). DELIBERATELY no rows here — a menu's ITEMS are composed by its
   # opener after construction (addMenuItem/addLine) and land in the panel.
   _buildRowsPayload: ->
-    panel = new CommandPanelWdgt target: @target, fontSize: @fontSize
+    # my rows lie in my content box: the panel keeps my content padding inside my border
+    panel = new CommandPanelWdgt target: @target, fontSize: @fontSize, padding: WorldWdgt.theme.menuContentPadding
     # dragging a menu by its title must move the MENU, and a child of a panel detaches instead
     # unless it locks to panels. ListWdgt does exactly this to its own rows panel, for exactly
     # this reason.
@@ -99,6 +108,10 @@ class MenuWdgt extends FrameWdgt
   _titleForContents: (unused_aWdgt) ->
     @title
 
+  # my header names what I am about unless my opener said it is a message (titleIsAMessage)
+  _headerIsAName: ->
+    !@titleIsAMessage
+
   # As another frame's CONTENT (a pinned menu dropped into a window), I keep the size I have
   # and do not grow in the holder's stack: a menu is its rows, and stretching it would only
   # add empty box.
@@ -122,11 +135,11 @@ class MenuWdgt extends FrameWdgt
   # The opener composes a menu by calling these on the MENU (dozens of MenusHelper
   # / addWidgetSpecificMenuEntries sites); the rows themselves live in the panel.
 
-  addLine: (height) ->
-    @rowsPanel.addLine height
+  addLine: ->
+    @rowsPanel.addLine()
 
-  prependLine: (height) ->
-    @rowsPanel.prependLine height
+  prependLine: ->
+    @rowsPanel.prependLine()
 
   addMenuItem: (label, target, action, opts = {}) ->
     @rowsPanel.addMenuItem label, target, action, opts

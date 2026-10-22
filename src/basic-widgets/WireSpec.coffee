@@ -25,7 +25,7 @@
 # (DataflowEngine._applyWireValue).
 #
 # IT IS ALSO A DATAFLOW NODE, in the duck-typed sense the engine means (src/dataflow/CLAUDE.md): its
-# "fires per event" menu row is a MenuRowReflectionSpec whose source is the wire itself, so flipping
+# "Fires per event" menu row is a MenuRowReflectionSpec whose source is the wire itself, so flipping
 # the policy anywhere re-ticks every open menu showing it. That needs nothing but a reader method and
 # a markNonValueChange — the same zero-engine-change trick §P5 played for Wallpaper.
 #
@@ -65,19 +65,28 @@ class WireSpec
     action: @action
     firesPerEvent: @firesPerEvent
 
-  # what my "fires per event" menu row reads to decide whether it is ticked
+  # what my "Fires per event" menu row reads to decide whether it is ticked
   # (MenuRowReflectionSpec.readerName — the row's source is this wire)
   isFiringPerEvent: -> @firesPerEvent
 
-  # the same, for my "follows it too" row: whether I also carry values BACK
+  # the same, for my "Follows it too" row: whether I also carry values BACK
   # (ControllerMixin.toggleTrackingOfWire)
   isTracking: -> @tracks
 
-  # How a menu names me: the target as the connect menus name it, then the PIN's label rather than
-  # the raw setter — "a Panel . color", not "a Panel . setColor". The user picked the pin by that
-  # word, so it is the word that identifies the wire back to them; the setter name is the fallback
-  # for a target that declares no matching pin (a hard-wired app circuit naming a plain method).
-  describeConnection: ->
-    targetName = (@target.toString().replace "Wdgt", "").slice 0, 50
+  # How a menu names me: my target by its row name — as given, when the menu listing me has told it
+  # apart from my siblings' targets (descriptionsOf) — then " · " and the PIN's label rather than
+  # the raw setter: "Panel · color", not "Panel · setColor". The user picked the pin by that word,
+  # so it is the word that identifies the wire back to them, and it stays as the pin states it (a
+  # pin's label is its identity, never re-cased); the setter name is the fallback for a target that
+  # declares no matching pin (a hard-wired app circuit naming a plain method).
+  describeConnection: (targetName = @target.rowName()) ->
     pinLabel = (@target.pinDrivenBy? @action)?.label ? @action
-    targetName + " . " + pinLabel
+    targetName + " · " + pinLabel
+
+  # How each of `wires` is named in ONE menu, in their order: by describeConnection, with their
+  # targets' row names told apart by the whole of what each says (CommandPanelWdgt.rowLabelsNaming)
+  # — two wires into two rectangles' color read "Rectangle · color" and "Rectangle 2 · color", while
+  # one rectangle's color and alpha read "Rectangle · color" and "Rectangle · alpha 0-100". A controller's
+  # wire rows, the header of the menu each opens and its "Disconnect" tooltip all name a wire so.
+  @descriptionsOf: (wires) ->
+    CommandPanelWdgt.rowLabelsNaming (wire.target for wire in wires), (name, i) -> wires[i].describeConnection name

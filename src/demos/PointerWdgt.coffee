@@ -27,7 +27,9 @@ class PointerWdgt extends BoxWdgt
 
   _buildAndConnectChildrenNoSettle: ->
     lmContent1 = new CollapsedStateIconWdgt
-    lmContent2 = new StringWdgt @target.toString(), color: Color.WHITE
+    # my label names my target the way a row names it, with the detail that tells it from its
+    # kind (Widget.distinguishedRowName)
+    lmContent2 = new StringWdgt @target.distinguishedRowName(), color: Color.WHITE
     # override inherited properties:
     lmContent2.isEditable = false
 
@@ -72,6 +74,6 @@ class PointerWdgt extends BoxWdgt
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    menu.addLine 1
-    menu.addMenuItem "close this button", @, "closeThis"
-    menu.addMenuItem "close target widget", @, "closeThisAndTarget"
+    menu.addLine()
+    menu.addMenuItem "Close this button", @, "closeThis"
+    menu.addMenuItem "Close target widget", @, "closeThisAndTarget"

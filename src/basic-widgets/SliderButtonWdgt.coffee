@@ -4,15 +4,25 @@
 
 class SliderButtonWdgt extends CircleBoxWdgt
 
+  # what a person calls me; without it the chain answers my base's "circle-box"
+  colloquialName: ->
+    "slider knob"
+
   # The slider knob is CHROME -- the interactive handle of a slider/scrollbar, never editor content.
   # Dragging or clicking it must NOT make it world.editorFocusWdgt: framing the little knob is pure visual
   # noise (there is nothing a user acts on about the knob itself). Same exemption as the other affordances
   # (handles, scrollbars, layout chrome); honored by ancestry at ActivePointerWdgt's focus-set sites.
   excludedFromEditorFocusTracking: -> true
 
-  highlightColor: Color.create 110, 110, 110
-  pressColor: Color.create 100, 100, 100
-  normalColor: Color.BLACK
+  # my FILL overrides as a PLAIN slider's thumb: at rest, under a pointer, and pressed. One left
+  # undefined is the theme's slider thumb fill for that state (Theme.sliderThumbFill,
+  # sliderThumbHoverFill, sliderThumbPressFill), read each time I am painted; my border is always
+  # the theme's (sliderThumbStroke, sliderThumbPressStroke while pressed). While my slider wears an
+  # indicator presentation the indicator's colours stand in for all three and I draw no border
+  # (_fillForMyState, _strokeForMyState), and these wait, untouched, for the presentation to end.
+  normalColor: undefined
+  highlightColor: undefined
+  pressColor: undefined
 
   state: 0
   STATE_NORMAL: 0
@@ -27,12 +37,44 @@ class SliderButtonWdgt extends CircleBoxWdgt
     return false if @parent?.indicatorIsIntangible?()
     @boundsContainPoint aPoint
 
-  # My slider hands me the alpha its indicator presentation puts me at (see
-  # SliderWdgt.showAsScrollIndicator). Colour and state are untouched — only how strongly I show.
+  # My slider has just put on, changed or taken off its indicator presentation (see
+  # SliderWdgt.showAsScrollIndicator) and hands me the alpha that presentation shows me at. My look
+  # follows from the presentation and my state together, read as I am painted (_fillForMyState,
+  # _strokeForMyState), so a new presentation is a new look: I keep the alpha and repaint. My state
+  # is untouched.
   showAsScrollIndicatorThumb: (alpha) ->
-    return if @alpha == alpha
     @alpha = alpha
     @_changed()
+
+  # My look, read by my appearance as it paints me (CircleBoxyAppearance._fillColor / _borderColor):
+  # a function of my slider's indicator presentation and my state, and, while it wears none, of my
+  # fill overrides. A THIN indicator's thumb is not a control (ruling G3) and shows the scrollbar
+  # colour in every state; a FAT one shows it at rest and darkens under a pointer and while
+  # pressed; neither draws a border. A thumb whose slider is no indicator wears the button's look
+  # (visual-design-system §4.3): its fill for my state (an override of mine, else the theme's
+  # role) inside a 1 px border, the darker one while pressed. Every colour is the theme's or an
+  # override's, never one copied into me, so a thumb saved, loaded or duplicated wears the look of
+  # the world it is shown in. My own `color` is not my look: a colour set on me paints nothing.
+  _fillForMyState: ->
+    theme = WorldWdgt.theme
+    switch @parent?.indicatorMode
+      when 'thin'
+        theme.scrollIndicatorThumb
+      when 'fat'
+        switch @state
+          when @STATE_PRESSED then theme.scrollIndicatorThumbPress
+          when @STATE_HIGHLIGHTED then theme.scrollIndicatorThumbHighlight
+          else theme.scrollIndicatorThumb
+      else
+        switch @state
+          when @STATE_PRESSED then @pressColor ? theme.sliderThumbPressFill
+          when @STATE_HIGHLIGHTED then @highlightColor ? theme.sliderThumbHoverFill
+          else @normalColor ? theme.sliderThumbFill
+
+  _strokeForMyState: ->
+    return undefined if @parent?.indicatorMode?
+    theme = WorldWdgt.theme
+    if @state is @STATE_PRESSED then theme.sliderThumbPressStroke else theme.sliderThumbStroke
 
   # the thumb's grab-corrected target POSITION (pointer mapped into my plane, minus the
   # within-thumb grab point), held for the duration of a knob drag — plane-local, so it
@@ -42,19 +84,13 @@ class SliderButtonWdgt extends CircleBoxWdgt
   constructor: ->
     super
     @isLockingToPanels = false
-    @color = @normalColor
-    @alpha = 0.4
+    # I hold no colour of my own: my look is my state's, read as I am painted (_fillForMyState), and
+    # I am opaque (Widget's alpha) until a presentation hands me another (showAsScrollIndicatorThumb).
+    @color = undefined
     # my extent is my slider's to derive (boxInSliderFrame), and the generic 5px floor every
     # widget carries must not overrule it: a thin scroll indicator's bar is narrower than that,
     # and a thumb held at the floor would poke past its bar and the viewport's edge.
     @_setMinimumExtent new Point 1, 1
-
-  # Derive the button's colour states from one base colour: resting = base,
-  # highlight/press progressively bluer. (Used by the prompter slider.)
-  setColorScheme: (base) ->
-    @color = base
-    @highlightColor = base.bluerBy 100
-    @pressColor = base.bluerBy 150
 
   detachesWhenDragged: ->
     if @parent instanceof SliderWdgt
@@ -152,28 +188,27 @@ class SliderButtonWdgt extends CircleBoxWdgt
         # precondition for deferring this move later — see SliderWdgt.updateValue).
         @parent.updateValue newPosition
   
+  # The state transitions. Each one sets my state and repaints me; what that state shows is read
+  # as I am painted (_fillForMyState, _strokeForMyState), so the presentation my slider wears
+  # decides the look together with the state, and no transition writes a colour.
   endOfNonFloatDrag: ->
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
-      @color = @normalColor
       @_changed()
 
   _setHighlightedColor: ->
     if @state != @STATE_HIGHLIGHTED
       @state = @STATE_HIGHLIGHTED
-      @color = @highlightColor
       @_changed()
 
   _setNormalColor: ->
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
-      @color = @normalColor
       @_changed()
 
   setPressedColor: ->
     if @state != @STATE_PRESSED
       @state = @STATE_PRESSED
-      @color = @pressColor
       @_changed()
 
   # A pointer merely resting on me highlights me, so I take the HOVER move channel and no

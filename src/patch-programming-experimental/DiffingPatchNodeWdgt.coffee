@@ -46,8 +46,8 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new TextAreaWdgt @defaultContents, false, 5
-    @tempPromptEntryField.configureAsMonoTextPanel true
+    # my one text box (PatchNodeWdgt._newTextBox)
+    @tempPromptEntryField = @_newTextBox @defaultContents, true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField
 
@@ -55,7 +55,7 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
     @_invalidateLayout()
 
   # My one text box fills me (_layOutOwnContents), so it is the child at my bottom-right corner, where my
-  # window's resizer sits (ViewportWdgt._aResizerSitsOverMyCorner).
+  # window's resizer sits (ViewportWdgt._resizerOverMyCorner).
   bottomRightCornerReachedBy: (child) ->
     child is @tempPromptEntryField
 

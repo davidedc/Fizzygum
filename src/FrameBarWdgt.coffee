@@ -48,10 +48,20 @@ class FrameBarWdgt extends Widget
   collapseUncollapseSwitchButton: undefined
   editButton: undefined
   # WHICH style the title pieces I am holding right now were built for. The two styles are two
-  # different pieces -- a rounded header box around a self-hugging TextWdgt, or an inset strip
+  # different pieces -- a ruled header band behind a self-hugging TextWdgt, or an inset strip
   # behind a fitted StringWdgt -- so a frame that changes manifestation needs them REBUILT, not
   # recoloured, and this is what tells the roster derive that they disagree with the spec.
   titleStyle: undefined
+  # THE INK MY GLYPH PIECES WEAR -- at rest, and while one is hovered or pressed -- as my frame's
+  # look named it at my last skin derivation (_deriveAndSetStripSkin). Kept, rather than asked of
+  # the look whenever a piece is built, because a piece can be built BETWEEN two derivations: a
+  # frame lifted out of a host that owned its placement gains its close piece (and its pencil) on
+  # the hand, where its skin stays the one it was lifted with until it lands
+  # (FrameWdgt._reactToBeingAdded), so the new piece must wear the ink its strip already wears.
+  # Undefined until something records it, and after a look that names none (a pop-up's): the next
+  # piece to be inked then reads my frame's look.
+  glyphInk: undefined
+  activeGlyphInk: undefined
 
   # THE EVENT ONE OF MY PIECES ACTED ON — the stamp my own strip gesture reads to know whose click
   # it is looking at (see activated). Purely about a gesture in flight, so it never belongs in
@@ -77,8 +87,8 @@ class FrameBarWdgt extends Widget
   # pencil); a press on one that travels past the grab threshold is the user taking hold of the
   # STRIP, and it must do what a drag on my bare strip does: move a window, pull a docked band out
   # of its slot. Without this a piece cancels the drag outright (the button family rejects drags
-  # by default) and a strip whose pieces cover it -- a 50 px band grip with a centred 44 px switch
-  # -- becomes undraggable at exactly the place a user grabs it.
+  # by default) and a strip whose pieces cover it -- a band grip whose 44 px switch spans the
+  # strip's whole row of targets -- becomes undraggable at exactly the place a user grabs it.
   #   Declared HERE, on the strip, in the parent-side shape wantsDetachOfChild already uses
   # (ButtonWdgt.rejectDrags consults both): a piece never has to know which strip it sits on, and
   # nothing in the hand learns a special case. The CLICK path is untouched -- a tap still fires
@@ -110,7 +120,7 @@ class FrameBarWdgt extends Widget
   # The internal structure of a window's chrome, not a user-meaningful target:
   # excluded from the right-click hierarchy/disambiguation menu exactly like
   # CommandPanelWdgt (see Widget.getHierarchyMenuWidgets) -- every action a
-  # user takes on the title strip belongs to the WINDOW ("a Frame" stays the
+  # user takes on the title strip belongs to the WINDOW ("Window" stays the
   # entry they navigate).
   hiddenFromHierarchyMenu: ->
     true
@@ -180,18 +190,23 @@ class FrameBarWdgt extends Widget
 
   # The title piece, in the shape its style asks for: a WINDOW's is a plain fitted string the
   # arrange grants the span between the buttons; a POP-UP HEADER's hugs its own text (the strip
-  # sizes itself to it) and is centred in the header box, on a background of its own. Both take
-  # their font from the bar spec's font role and their colours from the frame's look.
+  # sizes itself to it), its lines LEFT-aligned, and the arrange places it the title inset into the
+  # header band. Both paint straight onto the strip's background, take their font from the bar
+  # spec's font role and their ink from the frame's look, and are BORN in the display case the
+  # frame decides for its title (FrameWdgt._titleDisplayCase), so the first measure of either --
+  # the header's hug above all -- is of the text as it shows. A piece rebuilt in the other style
+  # (a pinned menu's header becoming its window title) is born in the case its frame's kind at the
+  # rebuild calls for.
   _buildTitleNoSettle: (spec) ->
     look = @frame._frameLook()
+    displayCase = @frame._titleDisplayCase()
     if spec.titleStyle is "menuHeader"
       # BORN with its text: a multi-line text hugs its box only when told to (its box-hug core
       # is a one-shot, not a mode the way a plain string's is), so it must have something to
       # hug at build time. The frame re-asserts the same title right after.
-      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""), fontRole: spec.fontRole
+      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""), fontRole: spec.fontRole, displayCase: displayCase
       title.color = look.titleText
-      title.backgroundColor = look.titleBackground
-      title.alignCenter()
+      title.alignLeft()
       @_addNoSettle title
       # the modern family does not self-size; make the title hug its text (and KEEP hugging it
       # through every later setText) so the strip's own thickness and the payload's row-width
@@ -202,7 +217,7 @@ class FrameBarWdgt extends Widget
     # the family, size and weight the spec's font role names, on EVERY engine: a bar title is chrome
     # like any other, and chrome keyed on the user agent renders one world two ways -- which is
     # precisely what the cross-engine suite leg reads, and reports, as a defect.
-    title = new StringWdgt "", fontRole: spec.fontRole
+    title = new StringWdgt "", fontRole: spec.fontRole, displayCase: displayCase
 
     title.color = look.titleText
     # a window title reads CENTRED in its strip (ruling C13): the arrange grants me a box centred
@@ -226,7 +241,10 @@ class FrameBarWdgt extends Widget
     pieces = spec.pieces
     rosterChanged = false
     # whatever the frame last titled itself survives every piece swap below (an empty window keeps
-    # saying "empty window", a grip that widens back into a bar gets its title back)
+    # saying "empty window", a grip that widens back into a bar gets its title back). The STORED
+    # words carry over, never the shown form: a rebuilt piece shows them in the display case it is
+    # born in (_buildTitleNoSettle), so a pinned menu's "rectangle" header, shown "RECTANGLE",
+    # becomes the window title "Rectangle".
     titleTextCarriedOver = @label?.text
 
     # the title pair (strip background + text piece) first: a roster that drops the title retires
@@ -283,6 +301,8 @@ class FrameBarWdgt extends Widget
       @collapseUncollapseSwitchButton = undefined
       rosterChanged = true
 
+    # a piece built just now wears my strip's ink from its first paint
+    @_inkGlyphButtons() if rosterChanged
     rosterChanged
 
   # Does my built strip disagree with the roster my frame's spec names? The pure question, asked
@@ -323,28 +343,118 @@ class FrameBarWdgt extends Widget
     # as the window changes from internal to external and vice versa
     # HOWEVER a bunch of tests would fail if I do the proper
     # thing so we are doing this for the time being.
-    # The frame's look decides the shape: a card's flat strip is a rectangle, any other a box at
-    # the look's rounding.
+    # ONE kind of background for every strip -- a window's, a card's, a docked band's, a pop-up
+    # header's: a box, which the look skins and my arrange shapes (a pop-up header's is built at
+    # the look's rounding). Re-homing a frame changes how its background is skinned and which
+    # corners it rounds, never what the background is.
     look = @frame._frameLook()
-    if look.manifestation is "card"
-      @titlebarBackground = new RectangleWdgt
-    else
-      @titlebarBackground = new BoxWdgt look.barCornerRadius
-
-    @_setAppearanceAndColorOfTitleBackground()
+    @titlebarBackground = new BoxWdgt look.barCornerRadius
+    @_skinTitlebarBackgroundTo look
     @_addNoSettle @titlebarBackground
 
-  # The title-bar half of my skin (the body half is FrameWdgt._deriveAndSetBodyAppearance), as the
-  # frame's look names it (FrameWdgt._frameLook): re-applied on every (re)parenting, so a window's
-  # strip follows its parentage. A look naming no stroke (a pop-up's header box) leaves the
-  # background the one it was built with, which is none.
-  _setAppearanceAndColorOfTitleBackground: ->
-    # an untitled pop-up has no strip at all, so there is no background to skin
-    return unless @titlebarBackground?
+  # MY HALF OF MY FRAME'S SKIN (the body's half is FrameWdgt._deriveAndSetBodyAppearance; the
+  # frame runs the two as one, body first, FrameWdgt._deriveAndSetSkin): my background skinned as
+  # my frame's look names it (FrameWdgt._frameLook) and shaped to the body it now wears, my title
+  # in the look's ink, and my glyph pieces in the look's glyph ink. Re-applied on every derivation
+  # of that skin -- each re-parenting, each lifetime change -- so a strip follows what its frame now
+  # is: a window nested as a card takes the card's glyph ink. A strip still built in another style
+  # than the one my frame's spec names (a pop-up just pinned, a copy of one) is about to be rebuilt
+  # in that style by my roster derive, and the rebuild skins it; an untitled pop-up has no strip to
+  # skin at all. The glyph ink is recorded and applied before that check, whatever style my title
+  # pieces were built in, so the pieces such a rebuild constructs already wear what this
+  # derivation decided.
+  _deriveAndSetStripSkin: ->
     look = @frame._frameLook()
-    @titlebarBackground.appearance = new look.barAppearance @titlebarBackground
-    @titlebarBackground.setColor look.barFill
-    @titlebarBackground.strokeColor = look.barStroke if look.barStroke?
+    @glyphInk = look.barGlyph
+    @activeGlyphInk = look.barGlyphActive
+    @_inkGlyphButtons()
+    spec = @frame._barSpec()
+    return unless @titlebarBackground? and @titleStyle is spec.titleStyle
+    @_skinTitlebarBackgroundTo look
+    @_shapeTitlebarBackground spec
+    @label?.setColor look.titleText
+
+  # Every glyph piece I carry wears my strip's ink (glyphInk): the ones already there take it again
+  # (a no-op unless the ink moved), and one built a moment ago joins them. With no ink recorded yet
+  # -- the first build, or a pop-up just pinned -- my frame's look names it now; a look naming none
+  # (a pop-up's, whose strip carries no glyph piece) leaves the pieces as they are. A piece that
+  # is no icon button (a close piece supplied by a frame subclass) has no glyph ink to take.
+  _inkGlyphButtons: ->
+    if !@glyphInk?
+      look = @frame._frameLook()
+      @glyphInk = look.barGlyph
+      @activeGlyphInk = look.barGlyphActive
+    return unless @glyphInk?
+    for button in @_glyphButtons()
+      button.setGlyphInk? @glyphInk, @activeGlyphInk
+    return
+
+  # The buttons whose glyphs my strip draws: the close piece, BOTH glyphs of the collapse switch
+  # (the one it hides shows the moment the switch flips, so it is inked with the other), and the
+  # pencil.
+  _glyphButtons: ->
+    buttons = []
+    buttons.push @closeButton if @closeButton?
+    buttons.push @collapseUncollapseSwitchButton.buttons... if @collapseUncollapseSwitchButton?
+    buttons.push @editButton if @editButton?
+    buttons
+
+  # My background's SKIN from `look`: the appearance it wears, the ink of its rule, its fill, and
+  # its stroke -- applied as given, so a look naming none (every look: a strip's one line is its
+  # rule) clears a stroke an earlier one left. Where the rule runs is my shape's, below: a fresh
+  # appearance runs none until the shape puts it back.
+  _skinTitlebarBackgroundTo: (look) ->
+    background = @titlebarBackground
+    background.appearance = new look.barAppearance background
+    background.appearance.ruleColor = look.barRule if look.barRule?
+    background.setColor look.barFill
+    background.strokeColor = look.barStroke
+
+  # My background's SHAPE: which of its corners round, and where the rule along its content-facing
+  # edge runs (redesign plan §2 rule D -- the band's own edge, painted by its own appearance:
+  # BoxyAppearance.ruledEdge). A strip rounds exactly the corners it shares with its frame's
+  # outline: one across the frame's top its top two [r, r, 0, 0], one down the frame's side its
+  # left two [r, 0, 0, r], and a COLLAPSED one -- which is the whole frame -- all four. r is the
+  # radius of the body the frame WEARS, less its border, so the strip's curve runs inside the
+  # border's (read off the frame, never its look: a frame riding the hand keeps the body it was
+  # lifted with until it lands, and its strip keeps fitting it). The rule, the spec's rule width
+  # thick, runs along the edge that faces the frame's content: the bottom of a top strip, the right
+  # of a side strip; a collapsed strip faces no content and runs none. The rule's two corners are
+  # therefore always square.
+  #   The axis and the collapsed state change with NO re-derivation of the look (collapsing,
+  # re-siding a dock, a dock engaging or disengaging), so the shape follows the LAYOUT: my arrange
+  # applies it every time, and so does my skin, whose fresh appearance runs no rule. A pop-up
+  # header band is shaped here too, more simply: it keeps the square corners of its build, and its
+  # rule runs along its bottom edge, the one facing the frame's rows.
+  _shapeTitlebarBackground: (spec) ->
+    return unless @titlebarBackground? and @titleStyle is spec.titleStyle
+    background = @titlebarBackground
+    appearance = background.appearance
+    if spec.titleStyle is "menuHeader"
+      radii = background.cornerRadius
+      ruledEdge = "bottom"
+    else
+      bodyRadius = @frame.cornerRadius ? 0
+      bodyRadius = Math.max bodyRadius... if Array.isArray bodyRadius
+      r = Math.max 0, Math.round(bodyRadius) - WorldWdgt.theme.frameBorderWidth
+      if @frame.contents?.collapsed
+        radii = [r, r, r, r]
+        ruledEdge = undefined
+      else if spec.axis is "vertical"
+        radii = [r, 0, 0, r]
+        ruledEdge = "right"
+      else
+        radii = [r, r, 0, 0]
+        ruledEdge = "bottom"
+    current = background.cornerRadius
+    sameRadii = current is radii or (Array.isArray(current) and Array.isArray(radii) and
+      current.length is 4 and current.every((radius, i) -> radius is radii[i]))
+    return if sameRadii and appearance.ruledEdge is ruledEdge and appearance.ruleWidth is spec.ruleWidth
+    background.cornerRadius = radii
+    appearance.ruledEdge = ruledEdge
+    appearance.ruleWidth = spec.ruleWidth
+    # cross-invalidation-sanctioned: own sub-part — my background's outline and rule follow my layout
+    background._changed()
 
   # The edit button's lifecycle is driven by the FRAME (it depends on the
   # content's providesAmenitiesForEditing and dies/respawns on collapse /
@@ -353,6 +463,7 @@ class FrameBarWdgt extends Widget
   _createAndAddEditButtonNoSettle: ->
     @editButton = new EditIconButtonWdgt @frame
     @_addNoSettle @editButton
+    @_inkGlyphButtons()
     @editButton
 
   # the SUBTREE, like every other piece I retire: an icon button owns a face widget, and destroying
@@ -373,6 +484,12 @@ class FrameBarWdgt extends Widget
   # my right edge, and the title takes the span left between them -- so dropping
   # a piece closes its gap instead of leaving a hole. Every number comes from the
   # spec (which reads the theme's metrics), never from a literal here.
+  #   A window strip lies INSIDE its frame's border: my bounds span the frame's
+  # edge, and the spec's padding (that border) keeps my background and my pieces
+  # in from my two ends and my outer side. The pieces abut -- each is a whole
+  # target slot, and neighbouring targets need no gap between them -- and my
+  # background runs on through my last row or column, the one the strip's own
+  # rule takes along its content-facing edge.
 
   _reLayoutChildren: ->
     @_positionAndResizeChildren()
@@ -393,7 +510,7 @@ class FrameBarWdgt extends Widget
       @_layOutTitleBox spec
       return
     vertical = spec.axis is "vertical"
-    pitch = spec.slotSize + spec.padding
+    pitch = spec.slotSize
 
     titleAt = spec.pieces.indexOf "title"
     leadingPieces = spec.pieces.slice 0, titleAt
@@ -424,10 +541,17 @@ class FrameBarWdgt extends Widget
     leadingPieces = (pieceName for pieceName in leadingPieces when pieceName in keptPieces)
     trailingPieces = (pieceName for pieceName in trailingPieces when pieceName in keptPieces)
 
+    # my background: inside the frame's border on my two ends and my outer side, and on through
+    # my content-facing edge, whose last row (or column) is the strip's rule
+    inset = spec.padding
     if vertical
-      @titlebarBackground._applyBounds (@position().add new Point 1,1), (new Point spec.thickness, @height()).subtract new Point 2,2
+      @titlebarBackground._applyBounds (@position().add new Point inset, inset), new Point (spec.thickness - inset), (@height() - 2 * inset)
     else
-      @titlebarBackground._applyBounds (@position().add new Point 1,1), (new Point @width(), spec.thickness).subtract new Point 2,2
+      @titlebarBackground._applyBounds (@position().add new Point inset, inset), new Point (@width() - 2 * inset), (spec.thickness - inset)
+    # ... rounded at the corners it shares with the frame's outline, and ruled along the edge that
+    # faces the frame's content -- both follow my axis and the frame's collapsed state, so every
+    # arrange re-applies them
+    @_shapeTitlebarBackground spec
     # TODO this looks better:
     #@titlebarBackground._applyExtent (new Point @width(), spec.thickness).subtract new Point 4,4
     #@titlebarBackground._applyMoveTo @position().add new Point 2,2
@@ -445,33 +569,32 @@ class FrameBarWdgt extends Widget
       for pieceName, slotIndex in leadingPieces
         piece = @_pieceNamed pieceName
         continue unless piece? and piece.parent == @
-        @_layOutPieceInSlot piece, (stripStart + spec.padding + slotIndex * pitch), spec
+        @_layOutPieceInSlot pieceName, (stripStart + spec.padding + slotIndex * pitch), spec
 
       for pieceName, slotIndex in trailingPieces
         piece = @_pieceNamed pieceName
         continue unless piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
-        @_layOutPieceInSlot piece, (stripEnd - (trailingPieces.length - slotIndex) * pitch), spec
+        @_layOutPieceInSlot pieceName, (stripEnd - spec.padding - (trailingPieces.length - slotIndex) * pitch), spec
     else
       # A TEXTLESS strip centres its piece GROUP along its own axis (ruling C13): with no title
       # between them the pieces are the whole of what the strip carries, and a lone collapse glyph
       # pinned to one end of a long empty band reads as an accident rather than as the band's
       # control. Contiguous, in roster order, in the middle -- a side dock's horizontal bar centres
       # it horizontally, a top dock's vertical bar vertically, and it is ONE arithmetic either way.
-      showing = @_showingPieces leadingPieces.concat trailingPieces
+      showing = @_showingPieceNames leadingPieces.concat trailingPieces
       if showing.length > 0
-        groupLength = showing.length * spec.slotSize + (showing.length - 1) * spec.padding
+        groupLength = showing.length * pitch
         groupStart = stripStart + Math.round (stripLength - groupLength) / 2
-        for piece, slotIndex in showing
-          @_layOutPieceInSlot piece, (groupStart + slotIndex * pitch), spec
+        for pieceName, slotIndex in showing
+          @_layOutPieceInSlot pieceName, (groupStart + slotIndex * pitch), spec
 
   # WHICH of `pieceNames` the strip has room for, in roster order. A piece occupies a whole slot
-  # (the target box) and the strip keeps a padding at each end and between neighbours, so the
-  # count that fits is the inverse of the group arithmetic the placement below uses --
-  # n * pitch + padding pixels for n pieces. What falls out goes by PIECE_DROP_ORDER, so the
-  # progression is the ruled one (pencil, collapse, close) rather than "whatever was last".
+  # (the target box), the pieces abut, and the strip keeps its padding (the frame border) at each
+  # end, so the count that fits is the inverse of the arithmetic the placement uses --
+  # n * slotSize + 2 * padding pixels for n pieces. What falls out goes by PIECE_DROP_ORDER, so
+  # the progression is the ruled one (pencil, collapse, close) rather than "whatever was last".
   _pieceNamesThatFit: (pieceNames, stripLength, spec) ->
-    pitch = spec.slotSize + spec.padding
-    slotsAvailable = Math.max 0, Math.floor (stripLength - spec.padding) / pitch
+    slotsAvailable = Math.max 0, Math.floor (stripLength - 2 * spec.padding) / spec.slotSize
     kept = pieceNames.slice()
     for pieceName in FrameBarWdgt.PIECE_DROP_ORDER
       break if kept.length <= slotsAvailable
@@ -481,20 +604,24 @@ class FrameBarWdgt extends Widget
     kept = kept.slice 0, slotsAvailable if kept.length > slotsAvailable
     kept
 
-  # The pieces of `pieceNames` that are actually on the strip right now -- mine, and not collapsed
-  # away by the roster's fit grade above.
-  _showingPieces: (pieceNames) ->
-    pieces = []
+  # The names of the pieces of `pieceNames` that are actually on the strip right now -- mine, and
+  # not collapsed away by the roster's fit grade above. Names, not pieces: a piece is placed by
+  # its name, which is what its glyph size is keyed on (_layOutPieceInSlot).
+  _showingPieceNames: (pieceNames) ->
+    showing = []
     for pieceName in pieceNames
       piece = @_pieceNamed pieceName
-      pieces.push piece if piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
-    pieces
+      showing.push pieceName if piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
+    showing
 
   # PLACE THE TITLE, and answer whether it ends up showing at all.
-  #   Its box is the widest one CENTRED on the strip that stays clear of the pieces at both ends,
-  # so the text reads centred in the strip's FULL width (ruling C13) and can never run under a
-  # button; the box is symmetric because the extra room beside the shorter end is room a centred
-  # title cannot use anyway. Vertically it sits centred in the strip's thickness.
+  #   Its box is the widest one CENTRED on the strip that stays clear of the pieces at both ends:
+  # inset from BOTH ends by the deeper of the two piece runs, so the text reads centred in the
+  # strip's FULL width (ruling C13) whatever trails, and can never run under a button; the extra
+  # room beside the shorter run is room a centred title cannot use anyway. Across the strip the
+  # box is exactly the title's own text height (the spec's textHeight -- a fitted string paints
+  # its text at the TOP of its box), centred in the strip's row of targets: not in its whole
+  # thickness, which also spans the frame border above the targets and the rule below them.
   #   THE GRADE (ruling C13): a title that fits shows whole; a cropped one shows only while the
   # visible prefix keeps barTitleEllipsisMinFraction of the characters AND at least
   # barTitleEllipsisMinChars of them. Below either bar there is no title piece at all -- "World…"
@@ -509,23 +636,23 @@ class FrameBarWdgt extends Widget
     vertical = spec.axis is "vertical"
     stripLength = if vertical then @height() else @width()
     stripStart = if vertical then @top() else @left()
-    trailingShowing = (@_showingPieces trailingPieces).length
+    trailingShowing = (@_showingPieceNames trailingPieces).length
 
-    centre = stripStart + Math.round stripLength / 2
-    leadEnd = stripStart + spec.padding + leadingPieces.length * pitch
-    trailEnd = stripStart + stripLength - spec.padding - trailingShowing * pitch
-    halfSpan = Math.min (centre - leadEnd), (trailEnd - centre)
+    leadInset = spec.padding + leadingPieces.length * pitch
+    trailInset = spec.padding + trailingShowing * pitch
+    titleInset = Math.max leadInset, trailInset
+    titleLength = stripLength - 2 * titleInset
 
-    if halfSpan <= 0
+    if titleLength <= 0
       @label._collapseNoSettle()
       return false
 
     # uncollapsed BEFORE the grant: the grade below reads what the label would draw in the box it
     # is holding, so it must be holding one
     @label._unCollapseNoSettle()
-    labelTop = @top() + Math.round (spec.thickness - spec.textHeight) / 2
-    labelBounds = new Rectangle new Point (centre - halfSpan), labelTop
-    @label._applyGrantedBounds labelBounds.setBoundsWidthAndHeight (2 * halfSpan), spec.textHeight
+    labelTop = @top() + spec.padding + Math.round (spec.slotSize - spec.textHeight) / 2
+    labelBounds = new Rectangle new Point (stripStart + titleInset), labelTop
+    @label._applyGrantedBounds labelBounds.setBoundsWidthAndHeight titleLength, spec.textHeight
 
     return true if @_titleReadsWellEnough()
     @label._collapseNoSettle()
@@ -542,16 +669,23 @@ class FrameBarWdgt extends Widget
     keptLength >= preferences.barTitleEllipsisMinChars and
       keptLength >= preferences.barTitleEllipsisMinFraction * wholeLength
 
-  # The POP-UP strip: ONE header box, inset from my edges by the padding and as tall as the
-  # strip, with the title text hugging itself and centred in it. An untitled pop-up carries no
-  # pieces at all, so there is nothing to place.
+  # The POP-UP strip: ONE header band, inside the frame's border on my outer side (the spec's
+  # padding) and across the frame's content box (the band inset past the border at both ends), down
+  # through my last row, which is the band's own rule -- so nothing of the band reaches the frame's
+  # rows below me. The title text hugs itself, starts the title inset into the band, and is centred
+  # down the band above its rule. An untitled pop-up carries no pieces at all, so there is nothing
+  # to place.
   _layOutTitleBox: (spec) ->
     return unless @titlebarBackground? and @label?
-    @titlebarBackground._applyBounds (@position().add new Point spec.padding, spec.padding),
-      (new Point (@width() - 2 * spec.padding), spec.thickness)
-    # Integer placement (Layer A): the box centre is fractional when its extent is odd, so round
-    # the centred title's position to commit an integer @bounds.
-    @label._applyMoveTo (@titlebarBackground.center().subtract @label.extent().floorDivideBy 2).round()
+    sideInset = spec.padding + spec.bandInset
+    bandHeight = spec.thickness - spec.padding
+    @titlebarBackground._applyBounds (@position().add new Point sideInset, spec.padding),
+      (new Point (@width() - 2 * sideInset), bandHeight)
+    @_shapeTitlebarBackground spec
+    # Integer placement (Layer A): the band's rows above its rule can leave an odd remainder around
+    # the title, so round the centring offset to commit an integer @bounds.
+    titleTopInBand = Math.round (bandHeight - spec.ruleWidth - @label.height()) / 2
+    @label._applyMoveTo @titlebarBackground.position().add new Point spec.titleInset, titleTopInBand
 
   # MY STRIP'S OWN GESTURES. The pieces escalate their clicks to me (they are shaped where they
   # are drawn; I am not a hit target), so this one handler covers the whole strip — and so it must
@@ -559,7 +693,7 @@ class FrameBarWdgt extends Widget
   # already acted by the time it escalates: a press on the collapse button that this handler read
   # as a strip press would undo itself on the spot.
   #   It asks by PROVENANCE (the press protocol's stamp), never by position, because the press has
-  # already RE-LAID my pieces: collapsing a docked band turns a 50-wide vertical strip into a
+  # already RE-LAID my pieces: collapsing a docked band turns a narrow vertical strip into a
   # band-wide horizontal one, so the collapse glyph is no longer under the point that was clicked
   # and a positional test answers "not a piece" — which is exactly the tap-anywhere-to-expand case
   # below, and the collapse undid itself in the same click.
@@ -593,12 +727,15 @@ class FrameBarWdgt extends Widget
   # A piece IS its SLOT -- the whole target box the strip advances by -- and DRAWS the glyph dial
   # centred inside it. Two dials, never one (program ruling G3: the bar arrange must never equate
   # a glyph with a box), and the piece takes the bigger of them: what a finger can hit is the slot,
-  # while the ink stays the size the eye wants. The inset lives on the appearance, which is where
-  # a shape already decides where it paints inside the box it is given.
-  _layOutPieceInSlot: (piece, slotStart, spec) ->
+  # while the ink stays the size the eye wants. The glyph's side is the piece's OWN (the spec keys
+  # it by piece name: the window controls draw one size, the pencil another), and the collapse
+  # switch hands its side on to both of its glyphs. The inset lives on the appearance, which is
+  # where a shape already decides where it paints inside the box it is given.
+  _layOutPieceInSlot: (pieceName, slotStart, spec) ->
+    piece = @_pieceNamed pieceName
     if spec.axis is "vertical"
       pieceBounds = new Rectangle new Point @left() + spec.padding, slotStart
     else
       pieceBounds = new Rectangle new Point slotStart, @top() + spec.padding
-    piece.glyphSize = spec.glyphSize
+    piece.glyphSize = spec.glyphSizes[pieceName]
     piece._reLayout pieceBounds.setBoundsWidthAndHeight spec.slotSize, spec.slotSize

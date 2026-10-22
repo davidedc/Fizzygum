@@ -7,12 +7,20 @@ class PlotWithAxesWdgt extends Widget
   vertAxis: undefined
   horizAxis: undefined
 
+  # no colour of my own until one is set on me (setColor, a wire into my color pin): until then my
+  # surround -- what my plot and my axes stand on -- is the theme's plotSurroundFill, read as I am
+  # painted (_surfaceFill), so a plot saved, loaded or duplicated wears the world's look
+  color: undefined
+
   constructor: (@plot) ->
     super
     @plot.drawOnlyPartOfBoundingRect = true
     @appearance = new RectangularAppearance @
     @_buildAndConnectChildren()
-    @setColor Color.create 242,242,242
+
+  # the fill my RectangularAppearance paints my surround in while I hold no colour of my own
+  _surfaceFill: ->
+    WorldWdgt.theme.plotSurroundFill
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->

@@ -17,14 +17,10 @@ class SampleDocApp extends WindowedApp
     doc = new DocumentWdgt
     sdspw = doc.contents
 
-    startingContent = new SimpleTextWdgt "Sample Doc",
-      backgroundColor: WorldWdgt.theme.editableItemFill
-      backgroundTransparency: 1
+    startingContent = sdspw.getNormalParagraph "Sample Doc"
     startingContent.alignCenter()
     startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.setContents startingContent, 5
+    sdspw.setContents startingContent
 
     sdspw.addDivider()
 

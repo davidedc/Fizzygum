@@ -42,21 +42,24 @@ class AppLauncherWdgt extends DesktopLinkWdgt
   # Build the lazy-mode icon for `appClassName` and put it in `folder`. A class method rather than a
   # bare constructor so the two modes cannot be confused at a call site (`new …(title, icon, undefined,
   # undefined)` would be silently launch-less), and because installing an in-folder icon is a ritual —
-  # size FIRST, then add, since the icon grid places on add.
+  # build it, size it to the standard desktop-icon extent, and add it, where the icon grid places it
+  # in its next free slot.
   # ⚠ `iconOverride` has exactly ONE caller in the system and is not a general escape hatch: the
   # Examples folder's C-F door draws art from the LAZY `examples-icons` part, which a CORE file may
   # not name (AppCatalog's header explains why). Everything else takes its icon from the catalog.
   @addToFolder: (folder, appClassName, iconOverride) ->
     launcher = @forAppNamed appClassName, iconOverride
     return unless launcher?
-    # in-folder: size FIRST, then add — the icon grid places on add
+    # in-folder: size, then add — the folder panel's icon grid places it in its next free slot on add
     launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
     folder.contents.contents.add launcher
 
-  # Same, onto the desktop. ⚠ The two orders are NOT interchangeable and never were (this pair is
-  # lifted verbatim from WindowedApp.createOpener's two arms): the desktop places
-  # by smart grid ON ADD, so it must be added before it is sized, while a folder's grid reads the
-  # extent as it adds.
+  # Same, onto the desktop, whose icon grid places it in its next free slot on add. The two arms
+  # keep opposite orders (add then size here, size then add above — WindowedApp.createOpener's
+  # desktop arm is this one), and either order lands the icon in the same slot at the same extent:
+  # which slot is free is a question of the theme's pitch and origin and of where the OTHER icons
+  # stand (IconGridPanelWdgt._placeIconInNextFreeSlotNoSettle), never of this icon's own extent,
+  # and every holder is born at the standard extent anyway.
   @addToDesktop: (appClassName) ->
     launcher = @forAppNamed appClassName
     return unless launcher?
@@ -98,7 +101,9 @@ class AppLauncherWdgt extends DesktopLinkWdgt
     launcher.toolTipMessage = entry.toolTip  if entry.toolTip?
     launcher
 
-  activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
+  # what a press on my tile does: launch my app (WidgetHolderWithCaptionWdgt.activated decides tile
+  # or plate, and hands a tile press here)
+  _activateMyTile: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation
       return
 

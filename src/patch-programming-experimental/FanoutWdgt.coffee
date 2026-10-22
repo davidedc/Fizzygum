@@ -8,8 +8,12 @@ class FanoutWdgt extends Widget
   pinRight: undefined
   inputValue: undefined
 
-  constructor: (@color) ->
-    super
+  # no colour of my own until one is set on me (setColor, a wire into my color pin): until then my
+  # art is in the theme's icon ink, read as it paints (FanoutAppearance)
+  color: undefined
+
+  constructor: ->
+    super()
     @appearance = new FanoutAppearance @
     @_buildAndConnectChildren()
 

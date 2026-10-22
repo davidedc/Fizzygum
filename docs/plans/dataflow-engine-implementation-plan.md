@@ -52,7 +52,7 @@ sequencing owner-ratified 2026-07-17: **F5(+F2) → F1 → F4 → F3**, perf C2 
       SystemTests dpr1+dpr2, suite 255; 2 new rig rows, both serialization legs green; close
       gauntlet 11/11 in 275s — dpr1/dpr2/webkit 255/255, REVISITS baseline still EMPTY,
       census 0/1528, zero recaptures of existing references)
-- [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby
+- [ ] F3 — the "operate" cell menu (value-class method introspection → formula in a nearby
       cell) — independent, any time
 - [x] F6 — resizable viewport with PARTIAL EDGE CELLS (window resize shows more of the
       logical sheet) — **LANDED 2026-07-17, same day as authoring** (see the F6 section's
@@ -472,8 +472,8 @@ launcher registration. Decisions/deviations recorded per rules 7/8:
 - **Text = 12px Arial**, left-aligned (SWCanvas ships Arial/Times/Courier atlases only —
   `SWCanvasElement-extensions.coffee`; 12px Arial is the deterministic band). Centering needs
   `measureText` — a later polish.
-- **Placeholder icon** (`GenericShortcutIconWdgt`+`TypewriterIconWdgt`); custom `SpreadsheetIconWdgt`
-  deferred. **Launcher in the examples folder** (not the desktop) so it doesn't shift the
+- **Placeholder icon** (`GenericShortcutIconWdgt`+`TypewriterIconWdgt`); the dedicated `SpreadsheetIconWdgt`
+  came with the visual redesign's phase G. **Launcher in the examples folder** (not the desktop) so it doesn't shift the
   desktop icon grid (mass recapture); tests open via `launch()`. Menu entry (now a `DemoMenus`
   one) deferred.
 - **Keyboard focus-on-click**: `mouseClickLeft` reads `world.hand.position()` for cell
@@ -673,7 +673,7 @@ cat line); `src/spreadsheet/CLAUDE.md` grown. Decisions/deviations per rules 7/8
   mounted presenter and update it (e.g. `setColor`); on class change, dispose and rebuild.
 - `FormulaHelpers` v1: `mix: (a, b, p = 0.5) -> a.mixed p, b` — one helper to prove the
   binding path; the algebra otherwise = value-class methods (spec §9.5).
-- The "operate ➜" cell menu (meta-introspection listing of the value class's methods) is
+- The "operate" cell menu (meta-introspection listing of the value class's methods) is
   OPTIONAL scope — implement only if time allows; record either way in the ledger commit.
 - **SystemTests:** `SystemTest_macroSpreadsheetColorCell` (`new Color 255, 0, 0` → swatch;
   B1 = `A1.lighter()` → lighter swatch; edit A1 → both change). Extend the rig's sheet
@@ -714,7 +714,7 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
 - **`FormulaHelpers.mix` (spec §9.5)** — `@mix: (a, b, p = 0.5) -> a.mixed p, b`; static methods are
   bound by the compiler's existing `for own name of FormulaHelpers` scan. (A static is also exempt
   from the dead-method gate's instance-method header regex — no reference needed.)
-- **"operate ➜" cell menu: DEFERRED** (the plan marked it optional). Meta-introspection UI, not part
+- **"operate" cell menu: DEFERRED** (the plan marked it optional). Meta-introspection UI, not part
   of the value protocol; recorded here as not-done. Fleshed out as follow-on **F3 (§3-F)**.
 - **SystemTests (captured SWCanvas dpr1+dpr2, webkit-verified via the gauntlet, eyeballed):**
   `SpreadsheetColorCell` — A1=`new Color 255,0,0` (swatch), B1=`A1.lighter()`, C1=`A1.darker()`,
@@ -921,13 +921,14 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   untoggled wire carries NO own `firesPerEvent` and serializes byte-for-byte as before — the same
   own-only-when-set idiom as `@target`/`@action` (SliderWdgt ~13). Only a user who TOGGLES a wire
   writes an own property that then serializes (correct: a saved per-event wire keeps its policy).
-- **The toggle rides the existing connection menu.** The 8 controllers that render "connect to ➜" /
+- **The toggle rides the existing connection menu.** The 8 controllers that render "connect to" /
   "set target" (`SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, and the four patch
   nodes `CalculatingPatchNodeWdgt` / `DiffingPatchNodeWdgt` / `RegexSubstitutionPatchNodeWdgt` /
   `FanoutPinWdgt`) each call `@addFiresPerEventMenuEntry menu` right after that block — one shared
   helper, no duplicated toggle logic. Shown ONLY once a target is wired (`return unless @target?` —
-  `firesPerEvent` is a property OF a wire); a leading ✓ reflects state via `String::tick` (matched in
-  tests by the "fires per event" substring).
+  `firesPerEvent` is a property OF a wire); the row's tick reflects the state — a drawn tick beside
+  the plain "fires per event" label (a `MenuRowReflectionSpec.tickWhen` on the wire, read as the row's
+  tick STATE), never a character typed into the label, so tests match the label exactly.
 - **DARK, like Phase 1: nothing READS the flag yet.** Legacy `_fireConnection` delivery still runs
   unchanged. Phase 6b's engine delivery (behind `world.dataflowWiresEnabled`) reads it when it
   declares the edge, letting the policy ride the edge record's opts. NOMENCLATURE already had the
@@ -1079,7 +1080,7 @@ battery. Keep the switch for one release as a kill-switch.
 
 **Landed 2026-07-06 (this session) — all green.** The A/B default is flipped ON
 (`WorldWdgt.dataflowWiresEnabled: true`, ~102), so the whole suite runs ENGINE delivery.
-Flipping it exposed that 6b declared the edge ONLY for wires made through the connect-to-➜
+Flipping it exposed that 6b declared the edge ONLY for wires made through the "connect to"
 MENU; two classes of wire that bypass the menu broke, so 6c is **flip + two real engine-path
 fixes + benign recaptures**, not the "flip + recapture" scoped above (deviation, rule 7).
 - **Fix 1 — direct-assignment wires had no edge (`ensureWireEdge`).** A scrollbar
@@ -1572,9 +1573,9 @@ the fixture to snapshot while editing). The recapture list above, each webkit-ve
 **Done when:** the recaptured set is listed + webkit-verified; suite + both legs green; the
 mid-edit rig row green; ledger F2 checked.
 
-### F3 — the "operate ➜" cell menu (spec §9.5, deferred in Phase 3)
+### F3 — the "operate" cell menu (spec §9.5, deferred in Phase 3)
 
-**Goal.** Right-click a cell whose value has an operation algebra → an "operate ➜" submenu
+**Goal.** Right-click a cell whose value has an operation algebra → an "operate" submenu
 lists the value class's zero-required-arg methods; picking one writes `<addr>.<method>()` as
 the formula of a nearby empty cell, commits it, and selects it. The algebra stays METHODS on
 the value classes (spec §9.5); the menu is introspection + text generation only.
@@ -1589,6 +1590,12 @@ the value classes (spec §9.5); the menu is introspection + text generation only
   controller menus + `ControllerMixin.openTargetSelector`'s `MenuWdgt` construction, incl. its
   addMenuItem extra-argument idiom at ControllerMixin ~24 for passing the method name to the
   action).
+- **The entry row is a SUBMENU row, stated, never typed:** label it plain `"operate"` and build it
+  with `opensSubmenu: true` (`menu.addMenuItem "operate", @, "<the submenu opener>", opensSubmenu:
+  true, …`) — the flag rides `CommandSpec` onto `MenuItemWdgt`, which draws the row's chevron. Never
+  type an arrow into the label: no label carries one, and `fg menusweep` fails a row whose
+  dispatch opens a menu without the flag (`SUBMENU_FLAG_MISMATCH`). The method rows inside the
+  submenu are terminal and carry no flag.
 - **Which methods (the meta question, decided): REFLECT, filter, allow a curation override.**
   Enumerate `Object.getOwnPropertyNames(value.constructor.prototype)` filtered to: functions;
   not `_`-prefixed; `fn.length is 0` (CoffeeScript default-args don't count toward `length`,
@@ -1625,7 +1632,8 @@ the value classes (spec §9.5); the menu is introspection + text generation only
 story; the spec's §9.5 gets a "landed (F3)" note at close.
 
 **Tests.** `SystemTest_macroSpreadsheetOperateMenu` — A1 = `new Color 255, 0, 0`; right-click
-A1's cell (the 6a toggle test is the drive-a-real-context-menu precedent), operate ➜ lighter;
+A1's cell (the 6a toggle test is the drive-a-real-context-menu precedent), "operate" → "lighter",
+asserting with `@rowOpensSubmenu menu, "operate"` that the entry row is flagged;
 assert B1's source is `"A1.lighter()"` (`evaluateString`) + the two-swatch screenshot; then
 edit A1 → B1 recolours (reactivity through a menu-written formula). Recaptures: none expected
 — no existing test right-clicks a cell (verified by grep 2026-07-17; re-verify at

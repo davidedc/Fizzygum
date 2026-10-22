@@ -46,7 +46,7 @@ it depended on landed in `docs/archive/coalesced-nomenclature-rename-plan.md`.
   `true` is stored against the day the scoped mini-pass lands.
 - **OPTIONAL FOLLOW-ONS (fleshed out 2026-07-06, UNSCHEDULED — plan §3-F):** F1 scroll + viewport
   materialise/recycle (supersedes §9.1's scroll-panel hosting with a sheet-owned view origin) · F2 selection
-  border + overlay editor into the `CellWdgt` · F3 the "operate ➜" cell menu (§9.5) · F4 drag-and-drop desktop
+  border + overlay editor into the `CellWdgt` · F3 the "operate" cell menu (§9.5) · F4 drag-and-drop desktop
   widgets into cells (the §9.1 "kind-of-entry metadata", as a persistent `widgetEntry`) · F5 headers-as-widgets
   + cell-owned grid chrome (owner direction 2026-07-17 — the §9.1 grid's headers become selectable widgets and
   the sheet's own paint goes EMPTY). **F5 (with F2 folded in) LANDED 2026-07-17** — §9.1's "everything a
@@ -59,7 +59,7 @@ it depended on landed in `docs/archive/coalesced-nomenclature-rename-plan.md`.
   DERIVES from the window-granted extent — a bigger window shows more of the logical sheet with
   PARTIAL edge cells, backdrop past the sheet edge, the default open size byte-identical; scroll
   clamps/follow use full-cell counts so the overlay editor never mounts on a clipped cell).
-  Only F3 (the "operate ➜" menu) remains, cold-executable in the plan.
+  Only F3 (the "operate" menu) remains, cold-executable in the plan.
 
 This spec defines ONE dataflow engine that serves two clients: the existing
 **patch-programming** circuits (widgets wired by connections) and the upcoming
@@ -288,11 +288,11 @@ client's:
 
 ## 8. Client: patch programming (migration)
 
-- Edges derive from the owner's `@wires` list; the connect-to-➜ menus and wire storage are
+- Edges derive from the owner's `@wires` list; the "Connect to" menus and wire storage are
   unchanged in kind. `firesPerEvent` is a per-wire property (a `WireSpec` field) with a menu toggle
   on that wire's own row.
 - **A reciprocal BIND is two ordinary wires and nothing else** (connector plan §P2) — no bind record,
-  no bind attribute on an edge, no engine involvement. The `bind ⇄` gesture makes both at once; a pair
+  no bind attribute on an edge, no engine involvement. The `Bind ⇄` gesture makes both at once; a pair
   wired by hand in two gestures is the same thing. Termination is the cycle machinery already
   specified in §7 (visit-once, the equal-value cutoff, and the echo drop of §1.13 for the node being
   applied into), measured at one lap — the same guarantee the six-node °C↔°F ring relies on.
@@ -411,9 +411,10 @@ cell).
   class inspector is available to the next recompute, since formulas compile from source).
 - An optional **`FormulaHelpers`** veneer provides free-function style (`mix A1, B1`),
   bound by the identifier scan; helpers delegate to methods.
-- An **"operate ➜" menu** on a cell enumerates the value class's methods via the meta
+- An **"operate" menu** on a cell enumerates the value class's methods via the meta
   system (mirror of the pin-declaration introspection menus, `Widget.pins`) and writes
-  formula text into a new cell.
+  formula text into a new cell. Its row in the cell's menu is a submenu row: labelled plain
+  "operate" and built with `opensSubmenu: true`, which draws its chevron (never a typed arrow).
 - **Purity law (normative):** operations used in formulas return new values and never
   mutate the receiver. `Color` is now officially immutable-and-cached (`Color.create` LRU
   shares instances; deep copy returns the same object; serialization emits a compact record

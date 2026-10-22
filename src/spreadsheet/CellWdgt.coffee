@@ -92,9 +92,12 @@ class CellWdgt extends Widget
     return
 
   # ── branch 3: present the scalar value's text as my passive StringWdgt child ──────────────
-  # Same (4,2) box inset + fontSize 12 the overlay editor uses (isEditable false here, true
-  # there) so resting and editing text align; the pixels come from StringWdgt's standard
-  # immutable back buffers, so repeated labels share cached rasters world-wide. NoSettle:
+  # Same (4,2) box inset + font role (fonts.spreadsheetCell) the overlay editor uses (isEditable
+  # false here, true there) so resting and editing text align. Its ink is the theme's
+  # spreadsheetValueText, or spreadsheetErrorText for an error, read as the child is built: the
+  # child is derived and rebuilt on restore and duplicate, so it wears the current look. The
+  # pixels come from StringWdgt's standard immutable back buffers, so repeated labels share cached
+  # rasters world-wide. NoSettle:
   # called from the sheet's reconcile, which runs inside the dataflow drain's layout settle
   # (DataflowEngine._drainOnePass). Drops any hosted widget first (a cell that was rich and
   # became a scalar). `text` undefined / "" clears the cell (an emptied cell shows nothing).
@@ -116,8 +119,10 @@ class CellWdgt extends Widget
     if @_scalarTextWdgt?
       @_scalarTextWdgt._setTextNoSettle scalarText
     else
-      textWdgt = new StringWdgt scalarText, fontSize: 12
-      textWdgt.color = if showsError then @_sheetWidget.errorTextColor else @_sheetWidget.valueTextColor
+      theme = WorldWdgt.theme
+      textWdgt = new StringWdgt scalarText,
+        fontRole: theme.fonts.spreadsheetCell
+        color: (if showsError then theme.spreadsheetErrorText else theme.spreadsheetValueText)
       textWdgt.isEditable = false
       @_addNoSettle textWdgt
       # the (4,2) box inset places the child's TOP/LEFT-aligned glyphs at the exact position
@@ -247,8 +252,9 @@ class CellWdgt extends Widget
     # (damage-free __hide — adding the editor repaints the same rect); teardown reveals it
     # again, which also serves the Escape-cancel path (no reconcile runs there)
     @_scalarTextWdgt?.__hide()
-    editor = new StringWdgt seedText, fontSize: 12
-    editor.color = @_sheetWidget.valueTextColor
+    editor = new StringWdgt seedText,
+      fontRole: WorldWdgt.theme.fonts.spreadsheetCell
+      color: WorldWdgt.theme.spreadsheetValueText
     editor.isEditable = true
     # an edit never leaves the cell for the pop-out "edit:" prompt — a pop-out would bypass
     # the cell's commit semantics; an over-long text stays inline-ellipsised with the caret

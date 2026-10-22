@@ -235,7 +235,7 @@ function classifyOccurrence(code, endIdx) {
 // ---------- effect-classification constants ----------
 const SETTLE_DIRECT = /[@.]\s*(_settleLayoutsAfter(OrJoinEnclosingPass)?|recalculateLayouts)\b/;
 const PUBLIC_SETTERS = ['setExtent', 'moveTo', 'setBounds', 'setWidth', 'setHeight'];
-const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleShowBlanks', 'toggleWeight', 'toggleItalic', 'toggleIsPassword'];
+const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleWeight', 'toggleItalic', 'toggleIsPassword'];
 const memberSettleRe = new RegExp('\\.\\s*(' + [...PUBLIC_SETTERS, ...TEXT_SETTERS].join('|') + ')\\b');
 // the canvas-context moveTo carve-out (same as check-layering rule [A]'s CANVAS_MOVETO)
 const CANVAS_MOVETO = /\b(context|pctx|backBufferContext|aContext|ctx|cacheCtx|targetContext)\s*\.\s*moveTo\b/;

@@ -15,12 +15,15 @@ class BinOpenerWdgt extends DesktopLinkWdgt
     super "Bin", new BinIconWdgt
     @target = world.binWdgt
     # my corner KNOB (carrier-owned, like HandleWdgt.cornerSpec): bottom-right of the
-    # desktop, desktopSidesPadding inside, ZERO size declared -- the corner pass places
-    # me by my own extent, it never sizes me. The CREATOR arms it at add
+    # desktop, in at the theme's bin insets (my cell's right edge on the desktop's, and my
+    # one-line plate's bottom the draft's distance above the desktop's bottom: Theme's
+    # desktopBinRightInset / desktopBinBottomInset), ZERO size declared -- the corner pass
+    # places me by my own extent, it never sizes me. The CREATOR arms it at add
     # (menusHelper.binIconAndText) -- deliberately NOT via defaultLayoutSpecWhenAddedTo,
     # which would re-anchor me on every user re-drop; a grab disarms the slot and I stay
     # free-floating, which IS the "until the user intervenes" lifecycle.
-    @cornerSpec = new CornerInternalLayoutSpec 'bottomRight', 0, 0, new Point world.desktopSidesPadding, world.desktopSidesPadding
+    theme = WorldWdgt.theme
+    @cornerSpec = new CornerInternalLayoutSpec 'bottomRight', 0, 0, new Point theme.desktopBinRightInset, theme.desktopBinBottomInset
 
   # I am a desktop icon but the desktop positions me itself (bottom-right corner), so I do
   # NOT take part in the auto icon grid -- override of WidgetHolderWithCaptionWdgt (was the
@@ -31,15 +34,19 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   # The arrow contract (reference-widgets plan §4.4): the bin refuses duplication. There is ONE
   # bin singleton; a copy of me could only be a second alias to it, while my arrow-less icon
   # promises the thing itself. Consulted by Widget's context-menu assembly (?-dispatched,
-  # nothing on Widget), which drops the "duplicate" row.
+  # nothing on Widget), which drops the "Duplicate" row.
   _refusesDuplication: ->
     true
 
-  activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
+  # what a press on my tile does: open the bin (WidgetHolderWithCaptionWdgt.activated decides tile
+  # or plate, and hands a tile press here)
+  _activateMyTile: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation
       return
 
     if @target.isOrphan()
+      # nosettle-sanctioned: this hook runs a click at event time, off any settle (the dispatcher's
+      # activated hands it here), so the bin's public, self-settling unCollapse settles once, here
       @target.unCollapse()
       windowedBinWdgt = new FrameWdgt @target
       world.add windowedBinWdgt
@@ -59,7 +66,7 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   # Runs inside the drop's single settle, so add through the non-settling core.
   # DROPPING ONTO THE BIN ICON IS THE CLASSIC TRASH GESTURE (reference-widgets plan R5,
   # ratified 2026-08-19): sever every liveness edge into the dropped figure -- the same sever
-  # the "move to trash" row runs -- BEFORE filing it, so the bin keeps it: otherwise a
+  # the "Move to trash" row runs -- BEFORE filing it, so the bin keeps it: otherwise a
   # still-referenced widget escapes to the shelf on the next drain and the gesture silently
   # meant nothing. (Dropping a shortcut trashes the ALIAS only, never its referent -- see
   # BinWdgt._reactToChildDroppedInViewport, this gesture's open-window twin.)

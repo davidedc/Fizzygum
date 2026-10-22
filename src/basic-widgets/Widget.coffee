@@ -99,7 +99,7 @@ class Widget extends TreeNode
   # BoxWdgt because it is part of the widget↔appearance contract and always was: every rounded
   # appearance reads `@widget.cornerRadius` unconditionally and supplies its own default when the
   # widget declares none (BoxyAppearance.getCornerRadius). Undeclared, that read was the only
-  # statement of the contract — and its setter twin lived on ONE subclass, so the "corner radius..."
+  # statement of the contract — and its setter twin lived on ONE subclass, so the "Corner radius…"
   # prompt and the `corner radius` pin that every rounded widget offers reached nothing on the
   # sixteen classes that are not BoxWdgts.
   #   `undefined` means "I have no opinion, use the shape's default" — which is why the field is not
@@ -169,7 +169,7 @@ class Widget extends TreeNode
   # if a widget is a "template" it means that
   # when you floatDrag it, it creates a copy of itself.
   # it's a nice shortcut instead of doing
-  # right click and then "duplicate..."
+  # right click and then "Duplicate"
   isTemplate: false
   _acceptsDrops: false
   fps: 0
@@ -245,7 +245,7 @@ class Widget extends TreeNode
 
   # ── the two per-class halves of the PIN protocol (see `pins`, below) ──────────────────────────
   # What kind of value I produce when I act as a dataflow SOURCE, which is what decides which of a
-  # target's pins my "choose target property" menu may offer ("numerical" | "string" | "color", or
+  # target's pins my "target property" chooser may offer ("numerical" | "string" | "color", or
   # "any" for a widget that forwards whatever it received). Only controllers declare it.
   #   ONE declaration feeds both halves of the set-target UI: `openTargetPropertySelector` filters the
   # target's pins by it, and `ControllerMixin._addTargetConnectionMenuEntries` words its tooltip from
@@ -485,8 +485,8 @@ class Widget extends TreeNode
   #   The conjuncts are AM-I-THERE (clipped bounds), AM-I-SHOWN (visible, not collapsed),
   # DOES-MY-SURFACE-STOP-IT (catchesPointerAt), AM-I-EVEN-MATERIAL (ephemerals — highlights,
   # pinout markers, drag affordances — are reconciler-owned overlays, non-interactable by
-  # definition; the isEphemeral() capability replaced the two former per-marker predicates) and
-  # AM-I-UNCUT (asked last, because it walks my ancestors: see below).
+  # definition; the isEphemeral() capability replaced the two former per-marker predicates),
+  # AM-I-A-PICTURE and AM-I-UNCUT (asked last, because they walk my ancestors: see below).
   # CaretWdgt overrides the whole thing to false, with its own reason.
   isPointerTargetAt: (aPoint) ->
     return false unless @clippedThroughBounds().containsPoint(aPoint) and
@@ -494,21 +494,30 @@ class Widget extends TreeNode
       not @isInCollapsedSubtree() and
       @catchesPointerAt(aPoint) and
       not @isEphemeral()
+    # AM-I-A-PICTURE: an ancestor may show one of its children as a PICTURE (a desktop link's glyph:
+    # DesktopLinkWdgt._showsChildAsAPicture). Nothing in that child's subtree is then a pointer
+    # target, so a press there falls to the ancestor, which takes the press, the release and the
+    # click as one widget. It has to be asked on this walk, of the child the walk came up through:
+    # TreeNode.topWdgtSuchThat asks CHILDREN FIRST, so an answer of the ancestor's own never reaches
+    # them (InertIconHolderWdgt's header). An ancestor that declares no picture answers nothing here.
     # AM-I-UNCUT: clipped bounds answer only for the RECTANGLE a clipping ancestor clips to. An
-    # ancestor that clips its children to a ROUNDED outline (FrameWdgt's rounded child clip, which
-    # answers _roundedChildClipRadii — probed like scrollTranslationOfChild in the plane walks) also
-    # cuts its corner notches away, and a point there falls through to whatever lies behind that
-    # ancestor, exactly as a press in the ancestor's OWN notch does: the pointer agrees with the
-    # paint. Each such ancestor tests the point in its own plane with its own shape test (the one its
-    # notch answers with), the point carried there through the screen by the same two-arm mappings
-    # that brought it from the screen to me. With no such ancestor (every frame while the clip is
-    # off), one walk up, no mapping.
+    # ancestor that clips its children to a ROUNDED outline (FrameWdgt's rounded child clip, and a
+    # tool cell's, GlassBoxBottomWdgt: each answers _roundedChildClipRadii — probed like
+    # scrollTranslationOfChild in the plane walks) also cuts its corner notches away, and a point
+    # there falls through to whatever lies behind that ancestor, exactly as a press in the
+    # ancestor's OWN notch does: the pointer agrees with the paint. Each such ancestor tests the
+    # point in its own plane with its own shape test (the one its notch answers with), the point
+    # carried there through the screen by the same two-arm mappings that brought it from the screen
+    # to me. With no such ancestor (no rounded frame or tool cell above me), one walk up, no mapping.
     screenPoint = undefined
+    childOnMyPath = @
     ancestor = @parent
     while ancestor?
+      return false if ancestor._showsChildAsAPicture? childOnMyPath
       if ancestor._roundedChildClipRadii?()?
         screenPoint ?= @localPointToScreen aPoint
         return false unless ancestor.appearance.shapeContainsPoint ancestor.screenPointToMyPlane screenPoint
+      childOnMyPath = ancestor
       ancestor = ancestor.parent
     true
 
@@ -540,28 +549,35 @@ class Widget extends TreeNode
   # It is drawn AFTER my whole subtree (_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow),
   # so a CONTAINER's frame sits on top of its children too (own-content-level would let the children hide
   # it). Both halves are overridable so every widget decides WHETHER it is selected and HOW that looks;
-  # the default frames the editor-selected widget (WorldWdgt._widgetBeingEdited, cached once per cycle)
-  # with a calm teal outline. (The spreadsheet cell's blue ring is a separate MODEL selection drawn inline
-  # -- CellWdgt.paintIntoAreaOrBlitFromBackBuffer -- since a cell is never the editor-focus widget.)
+  # the default outlines the editor-selected widget (WorldWdgt._widgetBeingEdited, cached once per cycle;
+  # never a widget a caret is in, whose accent caret already says "focus") in the selection outline
+  # below. (The spreadsheet cell's ring is a separate MODEL selection drawn inline -- CellAppearance --
+  # since a cell is never the editor-focus widget.)
   _showsSelectionOverlay: ->
     world?.isEditorSelected @
   _drawSelectionOverlay: (aContext, al, at, w, h) ->
-    # the teal outline the old editor-focus HighlighterWdgt drew (D19, Color 38,166,154): a 1-LOGICAL-px
-    # stroke (ceilPixelRatio device px — the same thickness as every rectangular-family border) on my own
-    # screen footprint, inset half a logical pixel for a crisp line (see RectangularAppearance.paintStroke),
-    # clipped to my visible rect so a partially-scrolled widget is not outlined past its clip. Deliberately
-    # DEVICE-space: this is world-level screen chrome, not an appearance body (only the thickness is logical).
+    # THE SELECTION OUTLINE (visual-design-system §4.8: the accent says "selected"): a ring
+    # selectionOutlineWidth thick in the selectionOutline role, lying wholly inside my box, its corners
+    # the ones I show (cornerRadiiFollowingMyOutline: my own rounded outline and my ancestors' rounded
+    # clips), so it follows a rounded body instead of squaring it off. It is the drop outline's ring,
+    # painted by the same painter (HighlightOutlineAppearance.paintRing), with its stroke half on only
+    # when my body draws a 1 px border along its outline (my appearance's outlineIsStroked: a bordered
+    # box, a magnet) -- over a borderless rounded body the stroke would cover pixels my corners leave
+    # to whatever is behind me. It is clipped to the damaged part of my box (al, at, w, h: device
+    # pixels), so a partially-scrolled widget is not outlined past its clip, and painted at full alpha
+    # whatever mine is; its geometry is my whole box, never the damage box. My box is laid out the way
+    # an appearance body lays out its widget's pixels (Appearance._paintInLocalScope): logical pixels,
+    # the origin moved to my position, in whatever context I am painted into -- the world canvas, or
+    # the buffer of the transform island I sit in, where the ring is drawn in my plane and warped with
+    # me.
     aContext.save()
-    aContext.beginPath()
-    aContext.rect Math.round(al), Math.round(at), Math.round(w), Math.round(h)
-    aContext.clip()
+    aContext.clipToRectangle al, at, w, h
     aContext.globalAlpha = 1
-    aContext.lineWidth = ceilPixelRatio
-    aContext.strokeStyle = WorldWdgt.theme.selectionOverlayStroke.toString()
-    aContext.strokeRect (Math.round(@left() * ceilPixelRatio) + 0.5 * ceilPixelRatio),
-      (Math.round(@top() * ceilPixelRatio) + 0.5 * ceilPixelRatio),
-      (Math.round(@width() * ceilPixelRatio) - ceilPixelRatio),
-      (Math.round(@height() * ceilPixelRatio) - ceilPixelRatio)
+    aContext.useLogicalPixelsUntilRestore()
+    aContext.translate @left(), @top()
+    theme = WorldWdgt.theme
+    HighlightOutlineAppearance.paintRing aContext, @width(), @height(), theme.selectionOutlineWidth,
+      (@cornerRadiiFollowingMyOutline @boundingBox()), theme.selectionOutline, (@appearance?.outlineIsStroked?() is true)
     aContext.restore()
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
@@ -593,7 +609,7 @@ class Widget extends TreeNode
   # integer rectangles in my LOCAL logical coordinates (relative to my own top-left). My appearance
   # fills each with WorldWdgt.theme.seamRule after its own fill and before my children paint
   # (Appearance._paintSeamRules), so every seam is ONE line with ONE owner at any size, and a pane
-  # reused elsewhere carries no border of its own (docs/plans/redesign/redesign-plan.md §2). None by
+  # reused elsewhere carries no border of its own (docs/architecture/visual-design-system.md §4.1). None by
   # default; a container that places its panes 1 px apart answers the gaps from the same geometry its
   # layout places them with.
   _seamRects: ->
@@ -606,7 +622,12 @@ class Widget extends TreeNode
 
 
 
-  # Widget string representation: e.g. 'a Widget' or 'a Widget#2'
+  # Widget string representation: e.g. 'a Widget' or 'a Widget#2' — my DEBUG name, the one I show
+  # as a VALUE (the inspector's fields, error messages) and the seed of my scatter spot in a panel
+  # (PanelWdgt._addInPseudoRandomPositionNoSettle hashes it). A row that NAMES me reads my rowName
+  # instead. While the test harness plays, the instance number is hidden
+  # (hidingOfWidgetsNumberIDInLabels), so none of these depends on how many widgets of my class were
+  # built before me, the framework's own constructions included.
   toString: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfWidgetsNumberIDInLabels
       name = @widgetClassString()
@@ -661,7 +682,7 @@ class Widget extends TreeNode
   closeFromContainerFrame: (containerWindow) ->
     containerWindow.close()
 
-  # "move to trash" (reference-widgets plan §4.3, ratified sever-and-close): close, but FIRST cut
+  # "Move to trash" (reference-widgets plan §4.3, ratified sever-and-close): close, but FIRST cut
   # every liveness edge aimed at my figure — shortcuts pointing at me die, wires into me are
   # revoked — so the close's bin filing STICKS: nothing reachable is left to make the end-of-cycle
   # drain re-file me to the shelf. Where no such edge exists this is exactly close-to-bin, which is
@@ -681,7 +702,7 @@ class Widget extends TreeNode
     world._severLivenessEdgesIntoWdgtNoSettle @_enclosingIslandFigure()
     @_closeNoSettle()
 
-  # Does "move to trash" differ from plain close/delete for me right now? — i.e. is there an
+  # Does "Move to trash" differ from plain close/delete for me right now? — i.e. is there an
   # inbound liveness edge the sever would cut. Asked by the context-menu builder so the trash row
   # only appears when it MEANS something (a row on every menu is rent nothing measures); the walk
   # is O(everything widget-bearing) but menu-opening is a user gesture, like the close sites' ask.
@@ -707,7 +728,7 @@ class Widget extends TreeNode
     else
       @enableDragsDropsAndEditing @
 
-  # The shared "enable/disable editing" lock menu entry appended by the content-locking
+  # The shared "Enable editing" / "Disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,
   # VerticalStackViewportWdgt). The children list varies by
   # container (the viewport sources it from @contents), so it is passed in.
@@ -715,9 +736,9 @@ class Widget extends TreeNode
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()
       if !@dragsDropsAndEditingEnabled
-        menu.addMenuItem "enable editing", @, "enableDragsDropsAndEditingFromMenu", toolTip: "lets you drag content in and out"
+        menu.addMenuItem "Enable editing", @, "enableDragsDropsAndEditingFromMenu", toolTip: "lets you drag content in and out"
       else
-        menu.addMenuItem "disable editing", @, "disableDragsDropsAndEditingFromMenu", toolTip: "prevents dragging content in and out"
+        menu.addMenuItem "Disable editing", @, "disableDragsDropsAndEditingFromMenu", toolTip: "prevents dragging content in and out"
     menu.removeConsecutiveLines()
 
   # Widgets destroying ======
@@ -785,7 +806,7 @@ class Widget extends TreeNode
     # children rather than destroying them) still covers a focused descendant.
     focusWdgt = world.editorFocusWdgt
     if focusWdgt? and (focusWdgt == @ or @isAncestorOf focusWdgt)
-      world.editorFocusWdgt = undefined
+      world._setEditorFocusNoSettle undefined
 
     # remove callback when user clicks outside
     # me or any of my children
@@ -817,7 +838,7 @@ class Widget extends TreeNode
     #   ⚠ IT GOES LAST, and that placement is what makes it TERMINATE. Severing is not an edge
     # rewrite: a shortcut's whole meaning IS the edge, so it answers by destroying its own
     # SUBTREE — and a holder is free to CONTAIN its referent (drop a widget onto its own
-    # shortcut icon, or reparent it in there with "attach..."), which points that cascade back
+    # shortcut icon, or reparent it in there with "Attach"), which points that cascade back
     # down at me. The recursion therefore walks inbound-REFERENCE edges and CONTAINMENT edges
     # together, and their union holds a two-cycle exactly there; reference edges alone are a
     # DAG (a referent is ctor-fixed, so every edge points at an OLDER widget) and the
@@ -879,7 +900,7 @@ class Widget extends TreeNode
     # Bulk teardown through the non-settling core, NOT the public self-settling fullDestroy(): looping
     # the public method would self-settle once PER child (O(children) flushes), and -- with fullDestroy
     # on the single-mutation tier -- each immediate settle re-fits a half-emptied container. Callers
-    # (resetWorld / Inspector rebuild / video panes / bin) are reset/rebuild contexts that settle
+    # (resetWorld / video panes / bin / shelf) are reset/rebuild contexts that settle
     # once afterwards (or redraw an empty container), so no per-child flush is wanted.
     until @children.length == 0
       @children[0]._fullDestroyNoSettle()
@@ -925,6 +946,22 @@ class Widget extends TreeNode
     isThereAnHandle = @firstChildSuchThat (m) ->
       m.updateVisibility?
     isThereAnHandle?.updateVisibility()
+
+  # MY CORNER CHAIN CHANGED: the resizer over my bottom-right corner came or went
+  # (HandleWdgt.updateVisibility), or the chain from my corner up to a resizer did (a docked band
+  # re-sided into or out of the slots its host names, FrameWdgt._reSideMyDockNoSettle). Every
+  # viewport down my corner chain -- the children that run out to my corner
+  # (bottomRightCornerReachedBy), and theirs -- re-lays what it keeps clear of that corner, its bars
+  # and, through its arrange, contents laid out to its far edges (ViewportWdgt.noteCornerResizerChanged,
+  # which only MARKS layout, through the phase valve, so the flush that is coming lays each one once).
+  # A container that names no such child ends the walk.
+  noteCornerChainChanged: ->
+    visit = (container) ->
+      for child in container.children when container.bottomRightCornerReachedBy?(child)
+        child.noteCornerResizerChanged?()
+        visit child
+      return
+    visit @
 
 
   # leaving this function as step means that the widget wants to do nothing
@@ -2105,11 +2142,13 @@ class Widget extends TreeNode
   # class; off any sugar figure (a plain widget, or an EXPLICIT authored island -- a real container, not
   # sugar) it returns ME. The payload-side sibling of _parentThroughIslands (the container-side
   # look-through). Consult it ONLY where the payload's CLASS/policy is inspected -- NEVER at geometry/add sites,
-  # which must keep the figure (it is what actually gets placed + parented).
+  # which must keep the figure (it is what actually gets placed + parented). Only islands define
+  # _materializedBySugar, so the one test also stops the walk at any figure that is not an island
+  # (the same guard _enclosingSugarIsland makes).
   _dropPolicyProxy: ->
     figure = @
     loop
-      break if !(figure instanceof TransformFrameWdgt) or !figure._materializedBySugar
+      break if !figure._materializedBySugar
       content = figure.childrenNotHandlesNorCarets()?[0]
       break if !content?
       figure = content
@@ -2197,7 +2236,7 @@ class Widget extends TreeNode
     content
 
   # Affine transforms (§6 Phase 4D-2a): the shared figure resolution for BOTH pick-up entry points — the
-  # drag pipeline (ActivePointerWdgt.determineGrabs) and the menu "pick up" item (pickUpMenuAction) — so
+  # drag pipeline (ActivePointerWdgt.determineGrabs) and the menu "Pick up" item (pickUpMenuAction) — so
   # the two cannot drift. Two steps:
   #   1. Resolve the FIGURE that comes onto the hand (_resolvePickOutFigureNoSettle): when I am grabbed from
   #      inside a non-identity island, either REUSE the existing island (I am its sole content — Phase-1's
@@ -2781,10 +2820,10 @@ class Widget extends TreeNode
   
   # The write half of the `corner radius` pin an appearance contributes (BoxyAppearance /
   # BubblyAppearance / MenuAppearance all declare it), and the target of that shape's
-  # "corner radius..." prompt. Both dispatch on the WIDGET — a pin's setter is called as
+  # "Corner radius…" prompt. Both dispatch on the WIDGET — a pin's setter is called as
   # `consumer[pin.setterName]` and the prompt as `@widget[action]` — which is why this must live
   # where every wearer can answer it, not on the one subclass that happened to introduce it.
-  #   The pin-setter contract (widget-authoring-guidelines §11): every delivery — wire, prompt Ok,
+  #   The pin-setter contract (widget-authoring-guidelines §11): every delivery — wire, prompt OK,
   # controller — passes ONE argument, the value.
   setCornerRadius: (radius) ->
     if typeof radius is "number"
@@ -2901,9 +2940,9 @@ class Widget extends TreeNode
   turnOnHighlight: ->
     if !@highlighted
       @highlighted = true
-      # declare into the highlight style channel (target -> style descriptor) with the legacy
-      # translucent-blue fill — the only style today; the drag arc (Phase 2+) adds outline styles.
-      world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle(WorldWdgt.theme.hoverHighlightWash, 50)
+      # declare into the highlight style channel (target -> style descriptor): the hover WASH, in its
+      # role's translucent colour (the drag's outlines are the channel's other form).
+      world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle WorldWdgt.theme.hoverHighlightWash
       @_changed()
 
   turnOffHighlight: ->
@@ -2980,7 +3019,8 @@ class Widget extends TreeNode
   # CONSERVATIVE BY DESIGN: any uncertainty MUST yield undefined -- a wrong (too-big) rect silently drops
   # pixels of whatever is painted beneath the coverer, caught only by the pixel-exact SystemTests.
   # Every gate is evaluated at RUNTIME (never baked per class): appearances are swapped live
-  # (e.g. FrameWdgt._deriveAndSetBodyAppearance flips Rectangular<->Boxy on re-parenting).
+  # (e.g. FrameWdgt._deriveAndSetBodyAppearance flips a pop-up's menu box to a window's rounded box
+  # when it is pinned, and re-rounds a frame on every re-parenting).
   # ⓘ The scan runs over world.children, so only DESKTOP-level widgets are ever asked — the world
   # itself never is, which is why DesktopAppearance may simply inherit the rectangular claim.
   # These three gates are WIDGET facts — how the widget's own paint is modulated — so they live
@@ -2991,10 +3031,13 @@ class Widget extends TreeNode
   opaqueCoveredRect: ->
     # ephemeral overlays (highlights, drag affordances) are translucent screen-toppers, never coverers
     return undefined if @isEphemeral()
-    # the fill runs at globalAlpha = @alpha, and @color must be a solid opaque colour
-    # (else fillStyle emits rgba(...) -- Color.toString gates on _a == 1)
+    # the fill runs at globalAlpha = @alpha, and the colour it fills with must be a solid opaque one
+    # (else fillStyle emits rgba(...) -- Color.toString gates on _a == 1). That colour is the one my
+    # appearance FILLS with (its _fillColor: my own colour, or, while I hold none, the role I answer
+    # -- a panel's) -- an appearance that does not say fills with my own @color.
     return undefined if @alpha != 1
-    return undefined if !@color? or @color._a != 1
+    fill = @appearance?._fillColor?() ? @color
+    return undefined if !fill? or fill._a != 1
     @appearance?.opaqueCoveredRect()
 
   # in general, the children of a Widget could be outside the
@@ -3034,10 +3077,10 @@ class Widget extends TreeNode
   # (HTMLCanvasElement.blackSilhouetteOf); arbitrary-coloured art (icons, the
   # clock) renders to a scratch and blits its silhouette
   # (Appearance._paintDamagedAreaAsBlackSilhouette). In that scratch the
-  # size-aware icons' LIGHT role (halo + light interiors) ERASES coverage
-  # (SizeAwareIconAppearance._useLight, destination-out): the halo is visually
-  # background, not ink, so an icon's shadow is its dark line-work — never the
-  # halo-envelope blob. Hover/selection overlays are
+  # size-aware icons' PAPER role (their light interiors) ERASES coverage
+  # (SizeAwareIconAppearance._usePaper, destination-out): an interior is visually
+  # background, not ink, so an icon's shadow is its ink line-work — never a
+  # solid blob of the whole shape. Hover/selection overlays are
   # not part of the caster's ink and are skipped in the shadow pass. (There is no
   # per-glyph / per-widget baked shadow: a per-glyph shadowOffset/shadowColor
   # route is deliberately not reintroduced; a COLOURED shadow, if ever wanted,
@@ -3109,6 +3152,9 @@ class Widget extends TreeNode
   # The only variant is that the Panel
   # draws its background, then its contents AND THEN its stroke
   # (because otherwise its content would paint over its stroke)
+  #   ⚠ LOCKSTEP: GlassBoxBottomWdgt overrides this body with a hand-copied one that paints its
+  # children inside its rounded outline (the unrounded path is this body exactly). An edit here must
+  # be mirrored there.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     @children.forEach (child) ->
@@ -3128,6 +3174,118 @@ class Widget extends TreeNode
     [damageBox, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
     return unless damageBox? and damageBox.isNotEmpty() and w >= 1 and h >= 1
     @_drawSelectionOverlay aContext, al, at, w, h
+
+  # ===== painting my children inside my ROUNDED outline =====
+  # The shared paint of a widget that cuts its children to its rounded outline -- it answers
+  # _roundedChildClipRadii: a rounded frame (FrameWdgt, its look's clip knob on), a tool cell
+  # (GlassBoxBottomWdgt) -- so content laid flush into it cannot paint in the notches outside its
+  # corners, where the pointer falls through to whatever lies behind it (Widget.isPointerTargetAt,
+  # AM-I-UNCUT). Its outline is its appearance's (a BoxyAppearance: clipToOutline). Every caller has
+  # checked that the damage meets its box.
+
+  # Paint my children over the damaged part of me so that nothing of theirs shows outside my
+  # rounded outline, paying for the rounded clip only where it can matter: away from my corner
+  # squares my outline IS my box, so damage that reaches no square is painted exactly as the
+  # rectangular clip paints it, and damage that reaches one is painted whole under ONE rounded clip.
+  _paintChildrenInsideMyRoundedOutline: (aContext, damagedPartOfMe, appliedShadow, radii) ->
+    area = damagedPartOfMe.round()
+    if @_areaReachesACornerSquare area, radii
+      @_paintChildrenUnderMyOutlineClip aContext, area, appliedShadow
+    else
+      @_paintChildrenOver aContext, damagedPartOfMe, appliedShadow
+
+  # Does `area` (an integer rectangle inside my box) reach one of my corner SQUARES (r×r at a corner
+  # of radius r, the only places my outline leaves my box)? Also true when two squares would overlap
+  # (a box too small for its own rounding), so such a box always clips.
+  _areaReachesACornerSquare: (area, radii) ->
+    [topLeft, topRight, bottomRight, bottomLeft] = (Math.ceil radius for radius in radii)
+    box = @boundingBox().round()
+    left = box.left()
+    top = box.top()
+    right = box.right()
+    bottom = box.bottom()
+    squaresOverlap = (topLeft + topRight > box.width()) or (bottomLeft + bottomRight > box.width()) or
+      (topLeft + bottomLeft > box.height()) or (topRight + bottomRight > box.height())
+    return true if squaresOverlap
+    squares = [
+      new Rectangle left, top, left + topLeft, top + topLeft
+      new Rectangle right - topRight, top, right, top + topRight
+      new Rectangle right - bottomRight, bottom - bottomRight, right, bottom
+      new Rectangle left, bottom - bottomLeft, left + bottomLeft, bottom
+    ]
+    squares.some (square) -> area.intersect(square).isNotEmpty()
+
+  # Paint my children over `rectangle`, which goes down as the clipping rectangle each child honours.
+  _paintChildrenOver: (aContext, rectangle, appliedShadow) ->
+    @children.forEach (child) ->
+      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, rectangle, appliedShadow
+
+  # Paint my children over `rectangle` with the context clipped to it AND to my outline: the
+  # rectangle in the context's device pixels (the space every appearance scope clips in), my outline
+  # traced by my appearance under the same matrix its own fill is traced under.
+  _paintChildrenUnderMyOutlineClip: (aContext, rectangle, appliedShadow) ->
+    aContext.save()
+    aContext.clipToRectangle rectangle.left() * ceilPixelRatio, rectangle.top() * ceilPixelRatio, rectangle.width() * ceilPixelRatio, rectangle.height() * ceilPixelRatio
+    @appearance.clipToOutline aContext
+    @_paintChildrenOver aContext, rectangle, appliedShadow
+    aContext.restore()
+
+  # ===== the corners a box laid over me follows =====
+  # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] of the rounded outline my BODY
+  # is painted in, or undefined when it is square: my appearance's outlineCornerRadii (a rounded
+  # box's -- a window's, a card's, a menu's, a button's --, a text field's well, a magnet's, a
+  # stadium's). A widget that paints its own rounded body answers it itself (a text dressed as a
+  # document item, StringWdgt). Only cornerRadiiFollowingMyOutline below reads it, for a ring or a
+  # wash laid over me; it clips nothing (a widget cutting its children to a rounded outline says so
+  # with _roundedChildClipRadii, a separate answer).
+  _outlineCornerRadii: ->
+    @appearance?.outlineCornerRadii?()
+
+  # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] a box `aBox` laid over me (in my
+  # plane, inside my bounds) takes to follow the rounded corners I SHOW: my own outline's
+  # (_outlineCornerRadii, above) and those of each ancestor that cuts its children to a rounded
+  # outline (_roundedChildClipRadii -- a window's contents show the window's corners). A rounded
+  # corner of radius r reaches the box's matching corner when that corner lies dx, dy in from it with
+  # both under r, and the box's corner then takes the concentric radius r - max(dx, dy), the way a
+  # frame's strip rounds at the body radius less the border (visual-design-system §4.7); a corner
+  # nothing rounded reaches is square (0). An ancestor is read in my plane, carried across the scroll
+  # translations between us; the walk stops at my innermost non-identity island, past which a rounded
+  # corner is turned or scaled, so it is none of my box's. Three surfaces ask it, so each follows
+  # the corners its target shows: the drag's drop outline (HighlighterWdgt.coverTarget, and
+  # the dock band of WorldWdgt.addDragAffordanceWidgets), the hover wash (coverTarget too), and the
+  # editor-focus selection outline a selected widget draws over itself (_drawSelectionOverlay).
+  cornerRadiiFollowingMyOutline: (aBox) ->
+    radii = [0, 0, 0, 0]
+    island = @_enclosingNonIdentityIsland()
+    # the offset that carries a point of the plane `shape`'s box lies in into my plane
+    shapePlaneToMine = Point.ZERO
+    previous = undefined
+    shape = @
+    while shape? and shape isnt island
+      if previous? and (translation = shape.scrollTranslationOfChild?(previous))?
+        shapePlaneToMine = shapePlaneToMine.subtract translation
+      shapeRadii = if shape is @ then @_outlineCornerRadii() else shape._roundedChildClipRadii?()
+      if shapeRadii?
+        # the box in the shape's own frame (its origin at the shape's top-left), carried out of my
+        # plane into the shape's ...
+        boxInShape = aBox.translateBy shape.position().add(shapePlaneToMine).neg()
+        # ... where how far in from each of the shape's corners the box's matching corner lies,
+        # along x and y, reads straight off it
+        rightInset = shape.width() - boxInShape.right()
+        bottomInset = shape.height() - boxInShape.bottom()
+        insets = [
+          [boxInShape.left(), boxInShape.top()]
+          [rightInset, boxInShape.top()]
+          [rightInset, bottomInset]
+          [boxInShape.left(), bottomInset]
+        ]
+        for [dx, dy], corner in insets
+          inset = Math.max dx, dy
+          if Math.min(dx, dy) >= 0 and inset < shapeRadii[corner]
+            radii[corner] = Math.max radii[corner], shapeRadii[corner] - inset
+      previous = shape
+      shape = shape.parent
+    radii
 
   # ... when you want to hide something
   # but you don't want to generate any
@@ -3258,17 +3416,19 @@ class Widget extends TreeNode
     @parent.removeChild @
 
   # My name in the product's own words: window titles, inspector and console titles, the drag-embed
-  # hint, the shortcut auto-namer, the name a saved file gets.
+  # hint, the shortcut auto-namer, the name a saved file gets, the rows that name me (rowName).
   #   DERIVED from my class name, because a name every class has to REMEMBER to write is a name most
   # of them do not write — 200 of 267 widget classes carry no override, and the flat `"generic
   # widget"` this replaces was what all 200 of them called themselves, in title bars and file names
   # alike. Deriving makes the default TRUE instead of merely present, and an override an editorial
   # improvement rather than the only way to avoid a lie.
   #   Lowercase words, because that is what every consumer wants: they drop it into a sentence ("drop
-  # it into the …?"), parenthesise it ("Object Inspector (analog clock)"), or prefix it ("Console
-  # for: …", which lowercases defensively today). Override when the derivation reads wrong, or when
-  # the thing has a NAME of its own rather than a description — "Desktop", "Bin", "Fizzytiles",
-  # "Docs Maker".
+  # it into the …?"), or follow a dash with it ("Object Inspector — analog clock", "Console —
+  # rectangle"); a title that STARTS with it capitalises it at display, never here. Override when the
+  # derivation reads wrong — a programmer's word ("string", "viewport"), an inherited name that is
+  # not mine ("circle-box" on a slider's knob), an acronym or a proper name lowercased ("usa",
+  # "fizzygum") — or when the thing has a NAME of its own rather than a description — "Desktop",
+  # "Bin", "Fizzytiles", "Docs Maker" — which keeps its capitals.
   # The BASE answer, derived from the class name; ~50 classes override this to state their own
   # (and some to ask a collaborator — a transform frame answers its sole content's name). The
   # derivation itself lives in Utils because it is not a widget question: the object inspector is
@@ -3276,6 +3436,42 @@ class Widget extends TreeNode
   # answer through THIS method, arbitrary values through `Utils.colloquialNameOf`.
   colloquialName: ->
     Utils.derivedColloquialName @
+
+  # ── MY NAME ON A ROW THAT NAMES ME ───────────────────────────────────────────────────────────
+  # The rows that stand for a widget — a hierarchy menu's, the "new parent", "target" and "bind
+  # with" choosers', a controller's wire rows — read its HUMAN name: my colloquialName, its first
+  # character capitalised for the row ("Rectangle", "Window", "Desktop"), on one line. Never my
+  # class name, never my instance number. The stored colloquialName keeps the lowercase words a
+  # sentence uses.
+  #   Two rows of one menu that would read alike are told apart by the menu that builds them, all
+  # its rows at once (CommandPanelWdgt.rowLabelsNaming): first by distinguishedRowName, then, where
+  # they still read alike, by a number in row order ("Rectangle", "Rectangle 2"). So the common row
+  # is the bare name, and a detail shows only where it tells two rows apart.
+  rowName: ->
+    StringWdgt.inDisplayCase (@_oneLineStartOf @colloquialName(), 50), "sentence"
+
+  # My row name with the DETAIL that tells me from another widget of my kind, when my kind has
+  # one (_rowNameDistinction) — a text by its start, a window by its title, quoted in STRAIGHT
+  # quotes (the font atlases carry no curly ones): 'Text "Hello world"', 'Window "Docs Maker"'.
+  # The detail is cut to its first 20 characters. My plain rowName when my kind has no detail.
+  distinguishedRowName: ->
+    detail = @_rowNameDistinction()
+    return @rowName() unless detail?
+    @rowName() + " \"" + (@_oneLineStartOf detail, 20) + "\""
+
+  # What tells me from another widget of my kind on a row, as plain text, or undefined when my kind
+  # has nothing to tell (the common case). A text answers what it shows, a window its title
+  # (StringWdgt, FrameWdgt).
+  _rowNameDistinction: ->
+    undefined
+
+  # A text as one line of at most maxLength characters: every run of newlines, tabs and spaces
+  # becomes ONE space (a row never draws a "↵", which no font atlas carries), the ends are trimmed,
+  # and a longer text is cut and ends in "…".
+  _oneLineStartOf: (text, maxLength) ->
+    oneLine = text.replace(/\s+/g, " ").trim()
+    return oneLine if oneLine.length <= maxLength
+    oneLine.slice(0, maxLength).trimEnd() + "…"
 
   representativeIcon: ->
     new WidgetIconWdgt
@@ -3301,7 +3497,7 @@ class Widget extends TreeNode
     # caller. Introduce it with the SECOND one.
     @removeFromTree() if @parent?
 
-  # THE MENU ADAPTER for the "create shortcut" item — the shape shared with
+  # THE MENU ADAPTER for the "Create shortcut" item — the shape shared with
   # PanelWdgt.makeFolderFromMenu and StringWdgt.setFontNameFromMenu. ButtonWdgt dispatches a FIXED
   # 4-slot convention (`@target[@action].call @target, theButton, subject, arg1, arg2`), so a menu item
   # carrying no arguments of its own still arrives with WIDGETS in the leading slots. Keeping the
@@ -3324,14 +3520,19 @@ class Widget extends TreeNode
   # threaded to the shortcut's constructor: the FILING paths (createReferenceAndClose,
   # PanelWdgt.makeFolder) pass true (the icon left behind IS the widget's primary
   # representation — bare art, deep copy), while this default — the deliberate
-  # "create shortcut" alias — stays a reference (arrow badge, shallow copy).
+  # "Create shortcut" alias — stays a reference (arrow badge, shallow copy).
   createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
     @_settleLayoutsAfter => @_createReferenceNoSettle placeToDropItIn, referenceName, opts
 
   # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> _applyExtent
   # (the shortcut is freshly added freefloating, so the immediate raw size is byte-identical to the
-  # deferred desired-extent path; same add-then-size order as the public version, so the icon grid
-  # positions identically once the enclosing settle re-fits).
+  # deferred desired-extent path). Into an ICON GRID -- the desktop, a folder's panel -- the
+  # shortcut then takes the grid's next free slot (IconGridPanelWdgt._placeIconInNextFreeSlotNoSettle),
+  # at the standard desktop-icon extent: the slot the public add gives the icons of the other
+  # creation paths (FolderWindowWdgt / FrameWdgt.createReference, PanelWdgt.makeFolder). That holds
+  # for every caller of this core: "Create shortcut", a filing (_createReferenceAndCloseNoSettle --
+  # a window closed to the desktop or into a folder, the save prompt's OK) and a widget dropped onto
+  # a folder's icon or into its open window. Anywhere else the shortcut stays where the add put it.
   _createReferenceNoSettle: (placeToDropItIn = world, referenceName, opts = {}) ->
     # don't create new reference if it exists already
     for w in placeToDropItIn.children
@@ -3339,16 +3540,16 @@ class Widget extends TreeNode
         return
 
     widgetToAdd = @_buildShortcutWidget referenceName, opts
-    # this "add" is going to try to position the
-    # new icon into a grid
     placeToDropItIn._addNoSettle widgetToAdd
-    widgetToAdd._applyExtent new Point 75, 75
+    widgetToAdd._applyExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
+    # an icon grid's own capability: only the desktop and a folder's panel answer it
+    placeToDropItIn._placeIconInNextFreeSlotNoSettle? widgetToAdd
     # public-call-sanctioned: bringToForeground is the heavily-public z-order verb (macros/user
     # code drive it) — settle-free, consciously reused by this core.
     @bringToForeground()
 
   # THE ONE seam deciding WHICH shortcut class represents me, consulted by the core above — so
-  # the answer holds on EVERY creation path: the menu's "create shortcut", a folder-drop filing,
+  # the answer holds on EVERY creation path: the menu's "Create shortcut", a folder-drop filing,
   # and the save-close prompt all reach it. Overridden by FrameWdgt (its CONTENT may specialize
   # — a script window yields a run-on-double-click ScriptShortcutWdgt) and FolderWindowWdgt
   # (a folder shortcut). Pure builder: the core places and sizes what this returns.
@@ -3357,7 +3558,7 @@ class Widget extends TreeNode
 
   # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
   # (FolderShortcutWdgt / FolderPanelWdgt._reactToChildDropped, inside the drop's settle).
-  # This is a FILING ritual (the SaveShortcutPromptWdgt "Ok" path routes here too), so the icon
+  # This is a FILING ritual (the SaveShortcutPromptWdgt "OK" path routes here too), so the icon
   # left behind declares content — no arrow, deep copy — per the arrow contract (plan §4.4).
   createReferenceAndClose: (placeToDropItIn = world, referenceName) ->
     @_settleLayoutsAfter => @_createReferenceAndCloseNoSettle placeToDropItIn, referenceName
@@ -3705,9 +3906,13 @@ class Widget extends TreeNode
     # and the __add seed's drain alone IS the last-write-wins record.)
     return aWdgt
 
+  # An edit made under me rather than through my setters -- an inspector's saved property
+  # (injectProperty), a class-level source edit reaching its instances -- may have moved my style,
+  # which the editor's tools mirror while I am the widget being edited (WorldWdgt.noteStyleChanged).
   sourceChanged: ->
     @_reLayoutSelf?()
     @_changed?()
+    world.noteStyleChanged @
 
   # this is done before the updating of the
   # backing store in some widgets that
@@ -3801,7 +4006,7 @@ class Widget extends TreeNode
   # _normalizePinnedAnchorNoSettle (the `?.` no-ops off any island); the copy is a detached root, so no
   # settle is needed here — pickUp's own settle covers it.
   # PUBLIC API WITH NO MENU ITEM, deliberately: arc 3 phase 7 unified the two entry pages onto ONE
-  # "duplicate" item meaning copy-in-place (the less surprising end-user behaviour), so this variant is
+  # "Duplicate" item meaning copy-in-place (the less surprising end-user behaviour), so this variant is
   # reachable only programmatically. Do not re-add it to a context menu without an owner decision.
   duplicateAndPickItUp: ->
     figure = @_enclosingIslandFigure()
@@ -3897,7 +4102,7 @@ class Widget extends TreeNode
   # Serialization — delegates to the src/serialization/ Serializer. Unlike the old dev-only
   # prototype this replaced, serialize/deserialize SHIP in all builds (including production):
   # they are a product feature, so they carry NO homepage-strip markers. Only the dev
-  # "test menu" entries that drive them (serialiseToMemory etc., MenusHelper.testMenu) stay
+  # "Test menu" entries that drive them (serialiseToMemory etc., MenusHelper.testMenu) stay
   # homepage-stripped. See docs/architecture/serialization-duplication-reference.md.
   serialize: (opts) ->
     Serializer.serializeWidget @, opts
@@ -4317,7 +4522,7 @@ class Widget extends TreeNode
     # cleanly outside any pass.
     @_settleLayoutsAfter => oldParent?._reactToChildPickedUp? @
 
-  # The menu "pick up" item (buildBaseWidgetClassContextMenu). Bare `pickUp` grabs the CONTENT widget the
+  # The menu "Pick up" item (buildBaseWidgetClassContextMenu). Bare `pickUp` grabs the CONTENT widget the
   # menu opened on — which, for a rotated/scaled widget, rips the content off the hand un-transformed AND
   # strands the now-empty sugar island in the tree (nothing dissolves a contentless island). Resolve the
   # pick-up FIGURE first (the SAME resolution the drag path uses — reuse the sole-content island, so the
@@ -4375,7 +4580,7 @@ class Widget extends TreeNode
       # public method is callable without the menu-open teardown running in
       # between), and a repeat invocation must not stack a second identical
       # handle set on top of the first — the duplicates are invisible (same
-      # positions) but double-paint the hairline glyphs and their shadows
+      # positions) but double-paint the plates' shadows
       return if @children.some (c) -> world.temporaryHandlesAndLayoutAdjusters.has c
       @_addAndTrackHandle "resizeHorizontalHandle"
       @_addAndTrackHandle "resizeVerticalHandle"
@@ -4387,13 +4592,12 @@ class Widget extends TreeNode
       # correct once a rotation is in play.
       @_addAndTrackHandle "rotateHandle"
       # THE CORNER RESIZER GOES ON LAST, and the order is load-bearing: each handle
-      # _moveInFrontOfSiblings as it is added, so the last one added is the one a pointer reaches
-      # first. A halo smaller than twice the handle size has its five corners OVERLAPPING, and there
-      # z-order decides everything — so the handle that goes in front must be the one that takes the
-      # least from the others. That is this one: it alone reacts on a SHAPE that is a proper subset
-      # of its box (the striped triangle, HandleAppearance.shapeContainsPoint), while every other
-      # type claims its whole box. Last also means painted on top, so on such a halo the stripes you
-      # press are the stripes you see.
+      # _moveInFrontOfSiblings as it is added, so the last one added is painted on top and is the
+      # one a pointer reaches first. A halo smaller than twice the handle size has its five plates
+      # OVERLAPPING (every handle reacts on its whole box), and there z-order decides everything:
+      # the corner resizer is on top, whole, so on such a halo the plate you press is the plate you
+      # see (redesign plan §4 G, the halo: the overlap is accepted, its crowding the owner's G2
+      # feel-check).
       @_addAndTrackHandle "resizeBothDimensionsHandle"
     else
       stackSiblingBefore = @lastSiblingBeforeMeSuchThat (m) -> m.layoutSpec?.isDivisionElement?()
@@ -4415,7 +4619,7 @@ class Widget extends TreeNode
 
   
   # Pop a one-line bubble showing a VALUE. ⚠ The empty case is ABSENCE, not falsiness: `0`, `""`
-  # and `false` are values somebody asked to see — the evaluation menu's "show selection" hands
+  # and `false` are values somebody asked to see — the evaluation menu's "Show selection" hands
   # this whatever the selected snippet evaluated to — so this tests `msg?`, never `msg`. Absence
   # is spelled the way the language spells it, as everywhere else in the codebase.
   # The `toString?` arm is not defensiveness about ordinary values: an object built with a null
@@ -4425,9 +4629,10 @@ class Widget extends TreeNode
       if not msg?           then "undefined"
       else if msg.toString? then msg.toString()
       else Object.prototype.toString.call msg
-    m = new MenuWdgt @, target: @, title: text
-    m.addMenuItem "Ok"
-    # the pointer comes to rest on the "Ok" row (see popUpCenteredAtHand), so the click that
+    # the bubble's title IS the message, so it reads as a sentence, never in a name header's capitals
+    m = new MenuWdgt @, target: @, title: text, titleIsAMessage: true
+    m.addMenuItem "OK"
+    # the pointer comes to rest on the "OK" row (see popUpCenteredAtHand), so the click that
     # dismisses this bubble needs no aiming.
     m.popUpCenteredAtHand world
 
@@ -4466,8 +4671,8 @@ class Widget extends TreeNode
     @spawnInspector @
 
   # the single inspector entry point. Every inspect path routes here:
-  # the world menu and widget context-menu "inspect" items, the "dev -> inspect"
-  # item (MenusHelper), and a text editor's "inspect selection". This is the
+  # the world menu and widget context-menu "Inspect" items, the "Dev -> Inspect"
+  # item (MenusHelper), and a text editor's "Inspect selection". This is the
   # convenience wrapper that opens the inspector WINDOWED — its content fills a
   # 560x410 FrameWdgt that supplies the chrome + background + resizer. The
   # InspectorWdgt also renders and resizes correctly on its OWN now
@@ -4606,14 +4811,15 @@ class Widget extends TreeNode
   # mean to operate on the speech bubble or did she mean to operate on
   # the text widget contained in it?
   # This menu lets her disambiguate.
+  # One row per widget, innermost first, each reading the widget's row name, told apart from the
+  # other rows' (CommandPanelWdgt.rowLabelsNaming).
   buildHierarchyMenu: (widgetsHierarchy) ->
     if !widgetsHierarchy?
       widgetsHierarchy = @getHierarchyMenuWidgets()
     menu = new MenuWdgt @, target: @
-    widgetsHierarchy.forEach (each) ->
-      textLabelForWidget = each.toString().slice 0, 50
-      textLabelForWidget = textLabelForWidget.replace "Wdgt", ""
-      menu.addMenuItem textLabelForWidget + " ➜", each, "popupDeveloperMenu", closesUnpinnedPopUps: false, representsAWidget: true
+    labels = CommandPanelWdgt.rowLabelsNaming widgetsHierarchy
+    widgetsHierarchy.forEach (each, i) ->
+      menu.addMenuItem labels[i], each, "popupDeveloperMenu", closesUnpinnedPopUps: false, opensSubmenu: true, representsAWidget: true
 
     menu
 
@@ -4625,7 +4831,7 @@ class Widget extends TreeNode
 
 
   transparencyPopout: (menuItem)->
-    @prompt menuItem.parent.popUpTitle() + "\nalpha\nvalue:", @, "setAlphaScaled",
+    @prompt menuItem.parent.promptTitleAsking("alpha\nvalue:"), @, "setAlphaScaled",
       defaultContents: (@alpha * 100).toString()
       floorNum: 1
       ceilingNum: 100
@@ -4646,24 +4852,26 @@ class Widget extends TreeNode
 
   buildBaseWidgetClassContextMenu: (widgetOpeningThePopUp) ->
 
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: ((@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
+    # titled with my HUMAN name, the one a sentence would use ("rectangle"), which my header shows in
+    # capitals; never my class name
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: @colloquialName()
 
-    # ONE widget context menu — no isIndexPage fork; "duplicate" is copy-IN-PLACE everywhere (D2).
+    # ONE widget context menu — no isIndexPage fork; "Duplicate" is copy-IN-PLACE everywhere (D2).
     # See docs/archive/build-arc-3-phase-7-menu-topology.md.
-    menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
-    menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
-    menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
+    menu.addMenuItem "Color…", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
+    menu.addMenuItem "Transparency…", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
+    menu.addMenuItem "Resize/move…", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
     menu.addLine()
     # opt-out capability (?-dispatched, nothing on Widget): the bin opener refuses duplication —
     # the bin is one singleton, so a second opener could only alias it while its arrow-less icon
     # promises the thing itself (the arrow contract, reference-widgets plan §4.4).
     if !@_refusesDuplication?()
-      menu.addMenuItem "duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
-    menu.addMenuItem "save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
-    menu.addMenuItem "create shortcut", @, "createReferenceFromMenu", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
-    menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
-    menu.addMenuItem "attach...", @, "attach", toolTip: "stick this widget\nto another one"
-    menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
+      menu.addMenuItem "Duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
+    menu.addMenuItem "Save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
+    menu.addMenuItem "Create shortcut", @, "createReferenceFromMenu", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
+    menu.addMenuItem "Pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
+    menu.addMenuItem "Attach", @, "attach", opensSubmenu: true, toolTip: "stick this widget\nto another one"
+    menu.addMenuItem "Inspect", @, "inspect", toolTip: "open a window\non all properties"
     menu.addLine()
 
     # capability, instead of `(parent instanceof PanelWdgt) and !(parent instanceof ViewportWdgt)`
@@ -4674,40 +4882,40 @@ class Widget extends TreeNode
       else
         whereToOrFrom = "panel"
       if @isLockingToPanels
-        menu.addMenuItem "unlock from " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nunmovable"
+        menu.addMenuItem "Unlock from " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nunmovable"
       else
-        menu.addMenuItem "lock to " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nmovable"
+        menu.addMenuItem "Lock to " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nmovable"
 
-    # "hide" leaves a widget with no product way back (only the dev tools can bring it round), so
-    # it is dev-gated rather than page-gated. Same for the unrecoverable "destroy".
+    # "Hide" leaves a widget with no product way back (only the dev tools can bring it round), so
+    # it is dev-gated rather than page-gated. Same for the unrecoverable "Destroy".
     if world.isDevMode
-      menu.addMenuItem "hide", @, "hide"
+      menu.addMenuItem "Hide", @, "hide"
 
     if @isFrame?()
-      menu.addMenuItem "close", @, "close"
+      menu.addMenuItem "Close", @, "close"
     else
-      menu.addMenuItem "delete", @, "close"
+      menu.addMenuItem "Delete", @, "close"
 
     # only when it DIFFERS from the row above: with no inbound liveness edge, close/delete
     # already files binward and the drain keeps it there — the row would be a synonym paying
     # menu rent (reference-widgets plan §4.3; the P2 bind-row lesson).
     if @_wouldTrashSeverAnything()
-      menu.addMenuItem "move to trash", @, "moveToTrash", toolTip: "sever every shortcut and wire\npointing at this widget,\nthen file it in the bin"
+      menu.addMenuItem "Move to trash", @, "moveToTrash", toolTip: "sever every shortcut and wire\npointing at this widget,\nthen file it in the bin"
 
     # The dev/test tail. Each entry is gated on what makes it MEANINGFUL rather than on which page
-    # we are: "dev ➜" and "destroy" on dev mode, "test menu ➜" on the demo family actually shipping
+    # we are: "Dev" and "Destroy" on dev mode, "Test menu" on the demo family actually shipping
     # (a production build has no `demoMenus` at all).
     if world.isDevMode
       menu.addLine()
-      menu.addMenuItem "dev ➜", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, toolTip: "dev tools"
+      menu.addMenuItem "Dev", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "dev tools"
       # ⚠ target is `world`, NOT `@`. The door has to live on ONE class, and putting it on Widget
       # adds a public member to every widget's prototype -- which the inspector faithfully lists, so
       # it churns the inspector-list reference screenshots for a method that has nothing to do with
       # the widget being inspected. The menu machinery passes the widget through the ARGUMENTS
       # (`@target[@action].call @target, @, @subjectOfAction`) rather than
       # through the target, so the door receives the same widget whatever the target is.
-      menu.addMenuItem "test menu ➜", world, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
-      menu.addMenuItem "destroy", @, "fullDestroy"
+      menu.addMenuItem "Test menu", world, "popUpDemoTestMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
+      menu.addMenuItem "Destroy", @, "fullDestroy"
 
     menu
 
@@ -4721,15 +4929,15 @@ class Widget extends TreeNode
       # being
       if @parent?.constrainContentWidth
         @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
-    # a DIVISION cell gets its spec's own submenu ("layout in row/column ➜" — desired/max
+    # a DIVISION cell gets its spec's own submenu ("Layout in row" / "Layout in column" — desired/max
     # size + cross-alignment). The layout CHROME (divider / adder / spacer) is a division
     # cell too, but its box is machinery working state, not a user knob — excluded by
     # capability, never a type test.
     else if @layoutSpec?.isDivisionElement?() and !@isLayoutChrome?()
       @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
     # a DIVISION container — or a drop-slot-hosting CONTENT stack (a document's inner
-    # stack) — gets the layout-scaffold toggle: "edit layout" shows the drop-slot adders
-    # between the cells (fetching the lazy authoring part that carries them), "done
+    # stack) — gets the layout-scaffold toggle: "Edit layout" shows the drop-slot adders
+    # between the cells (fetching the lazy authoring part that carries them), "Done
     # editing layout" removes them
     if @_divisionChildrenAxis()? or @hostsContentStackDropSlots?()
       @addLayoutEditingMenuEntries menu
@@ -4741,9 +4949,9 @@ class Widget extends TreeNode
   addLayoutEditingMenuEntries: (menu) ->
     menu.addLine()
     if @_showsAdders
-      menu.addMenuItem "done editing layout", @, "removeAdders", toolTip: ""
+      menu.addMenuItem "Done editing layout", @, "removeAdders", toolTip: ""
     else
-      menu.addMenuItem "edit layout", @, "editLayout", toolTip: "show drop-slots between the cells, to add or drop in new ones"
+      menu.addMenuItem "Edit layout", @, "editLayout", toolTip: "show drop-slots between the cells, to add or drop in new ones"
 
   buildWidgetContextMenu: (widgetOpeningThePopUp) ->
     menu = @buildBaseWidgetClassContextMenu widgetOpeningThePopUp
@@ -4857,9 +5065,11 @@ class Widget extends TreeNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuWdgt @, target: @, title: "choose new parent:"
-      choicesExcludingParent.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50), each, newParentActionName, representsAWidget: true
+      # a chooser's header NAMES what its rows offer; each row names its widget
+      menu = new MenuWdgt @, target: @, title: "new parent"
+      labels = CommandPanelWdgt.rowLabelsNaming choicesExcludingParent
+      choicesExcludingParent.forEach (each, i) =>
+        menu.addMenuItem labels[i], each, newParentActionName, representsAWidget: true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -4869,7 +5079,7 @@ class Widget extends TreeNode
       # this list if the user invokes the
       # command, and if there are no good
       # widgets then show some kind of message.
-      menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleIsAMessage: true
     menu.popUpAtHand()
 
   attach: ->
@@ -4890,7 +5100,7 @@ class Widget extends TreeNode
   # ---------------------------------------------------------------------
   # locking of contents
 
-  # THE MENU ADAPTERS for the "enable editing" / "disable editing" lock entries — the shape of
+  # THE MENU ADAPTERS for the "Enable editing" / "Disable editing" lock entries — the shape of
   # createReferenceFromMenu above. ButtonWdgt dispatches a FIXED 4-slot convention
   # (`@target[@action].call @target, theButton, subject, arg1, arg2`), so an item carrying no arguments
   # of its own still arrives with WIDGETS in the leading slots. Here that matters because the four
@@ -4944,7 +5154,7 @@ class Widget extends TreeNode
 
 
   # SELF-SETTLE (single-mutation tier): lock the contents settle-free, then flush ONCE. Any entry point (the edit
-  # button, the "disable editing" menu, or a construction-time call) self-settles -- so calling this before or after
+  # button, the "Disable editing" menu, or a construction-time call) self-settles -- so calling this before or after
   # world.add is equally legal (an orphan defers in-flush, orphan-settledness). Idempotency guard + per-child work
   # live in the core; world.stopEditing routes to the NON-settling _stopEditingNoSettle (a caret teardown re-fits its
   # text, so the public stopEditing self-settles -- reaching it inside this flush would throw).
@@ -5032,7 +5242,7 @@ class Widget extends TreeNode
   # The pins a source of `kind` can actually DRIVE: read-only pins are dropped (nothing can drive
   # them), duplicates are resolved by SETTER NAME keeping the first (so an inherited declaration
   # wins over a subclass re-declaration of the same pin), and the result is sorted by label because
-  # that is the order the "choose target property" menu presents.
+  # that is the order the "target property" chooser presents.
   #   Passing no kind (or "any") asks for every drivable pin.
   # ⚠ Dedup is by setter name ON THE RECORD. The array version deduped its two arrays INDEPENDENTLY
   # with two separate Sets, so a label repeated against a different setter (or the reverse) shifted
@@ -5091,20 +5301,22 @@ class Widget extends TreeNode
   # flow + reference and let command confer nothing.
   graphEdgesOut: -> []
 
-  # The shared body of every controller widget's openTargetPropertySelector: pop up the "choose
-  # target property" menu, one item per drivable pin of the kind I produce. Each item wires
+  # The shared body of every controller widget's openTargetPropertySelector: pop up the "target
+  # property" chooser, one item per drivable pin of the kind I produce. Each item wires
   # @action = that pin's setter onto theTarget via setTargetAndActionWithOnesPickedFromMenu (a
   # ControllerMixin method -- every caller @augmentWith's it).
   # Deliberately on Widget, NOT ControllerMixin: as an INHERITED member it is hidden from the
   # inspector's default own-props view, so the controllers' inspected member lists are unshifted --
   # a ControllerMixin method would be copied in as an OWN member of each and shift every one. (It
   # DOES surface in the rarer inherited-props inspector view.)
+  # A row shows its pin's label capitalised ("Alpha 0-100"); the pin keeps its label as it is, its
+  # identity (pinLabelled, principalPinLabel, a wire's describeConnection).
   _popUpTargetPropertyMenu: (theTarget, pins) ->
-    menu = new MenuWdgt @, target: @, title: "choose target property:"
+    menu = new MenuWdgt @, target: @, title: "target property"
     for pin in pins
-      menu.addMenuItem pin.label, @, "setTargetAndActionWithOnesPickedFromMenu", arg1: theTarget, arg2: pin.setterName
+      menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue pin.label), @, "setTargetAndActionWithOnesPickedFromMenu", arg1: theTarget, arg2: pin.setterName
     if pins.length == 0
-      menu = new MenuWdgt @, target: @, title: "no target properties available"
+      menu = new MenuWdgt @, target: @, title: "no target properties available", titleIsAMessage: true
     menu.popUpAtHand()
 
   # Menu-dispatched, and now shared by every controller: the per-class stubs differed ONLY by which
@@ -5175,7 +5387,7 @@ class Widget extends TreeNode
   # ⚠ The result is returned EXPLICITLY, and must stay that way. The relayout/repaint tail has to
   # run AFTER the eval, so without this line CoffeeScript returns `_changed()`'s value — `true` or
   # `undefined` — and the eval's own value is computed and dropped on the floor. Three callers read
-  # what comes back: the evaluation menu's "show selection" and "inspect selection"
+  # what comes back: the evaluation menu's "Show selection" and "Inspect selection"
   # (`TextWdgt`) and `Deserializer.compileFunction`, which needs the live function it compiled.
   # None of them throws when handed the wrong thing, so `fg menusweep` cannot see a regression here
   # — this comment is the guard, together with `SystemTest_macroEvaluateStringReturnsItsValue`.
@@ -5699,7 +5911,7 @@ class Widget extends TreeNode
     @_showsAdders = false
     @_invalidateLayout()
 
-  # PRODUCT entry for the layout scaffold ("edit layout" in a division container's context
+  # PRODUCT entry for the layout scaffold ("Edit layout" in a division container's context
   # menu): fetch the LAZY authoring part that carries the adder/droplet chrome, THEN show
   # the drop-slots. An existence guard here would silently swallow the click — inclusion
   # guards are for the arranges, ensureLoaded is for user entry points.

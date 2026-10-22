@@ -1,22 +1,26 @@
 # SheetHeaderCellWdgt — one spreadsheet HEADER cell, as a real widget (plan §3-F F5, owner
 # direction 2026-07-17: anything selectable/clickable should be a Widget). Three kinds share
 # this class: the column-letter cells across the top, the row-number cells down the left, and
-# the blank top-left corner. Headers are now inspectable, clickable widgets — a click
-# escalates to the sheet exactly as a data-cell click does (today's behaviour, unchanged);
-# column/row SELECTION semantics are a deliberate later arc, not part of the widgetisation.
+# the blank top-left corner. Headers are inspectable, clickable widgets — a click escalates
+# to the sheet exactly as a data-cell click does; column/row SELECTION semantics are a
+# deliberate later arc, not part of the widgetisation.
 #
 # DERIVED chrome: carries no document state (@kind/@viewportSlot are construction facts re-derivable
 # from the sheet's geometry constants), so the restore/duplicate re-index DESTROYS and
 # REBUILDS header cells rather than adopting them (SimpleSpreadsheetWdgt._reindexCellsNoSettle).
 #
-# It paints its CHROME (the F5 "the sheet paints nothing" flip):
-#   - its header-strip fill (the sheet's headerFillColor — was the sheet's strip fillRects);
+# It paints its CHROME (the F5 "the sheet paints nothing" rule), through its
+# SheetHeaderCellAppearance:
+#   - its header fill (the theme's spreadsheetHeaderFill, read at paint time);
 #   - its own TOP + LEFT grid edges via the sheet's paintGridEdges (the F5 edge-ownership
-#     convention; the crossing rule lives there).
+#     convention; the crossing rule lives there) — none along the sheet's outer top and left
+#     boundary, which the corner, the column headers' tops and the row headers' lefts stand on.
 # Its LABEL is a passive StringWdgt child ("scalar text is a StringWdgt child, period" —
-# owner direction 2026-07-24, same as CellWdgt's branch-3 text), kept in sync by
-# _syncLabelNoSettle from the sheet's chrome ensure (build/scroll/resize/restore all funnel
-# there); scrolling relabels in place through _setTextNoSettle's no-change guard.
+# owner direction 2026-07-24, same as CellWdgt's branch-3 text) in fonts.buttonLabel and the
+# theme's spreadsheetHeaderText, kept in sync by _syncLabelNoSettle from the sheet's chrome
+# ensure (build/scroll/resize/restore all funnel there; a restore rebuilds the header, so the
+# label wears the current look); scrolling relabels in place through _setTextNoSettle's
+# no-change guard.
 
 class SheetHeaderCellWdgt extends Widget
 
@@ -63,17 +67,19 @@ class SheetHeaderCellWdgt extends Widget
 
   # Keep my label child in sync (create / retext / place) — called from the sheet's chrome
   # ensure, whose build/scroll/resize/restore paths all funnel through buildHeader. The label
-  # is a passive StringWdgt (the CellWdgt scalar-text configuration); a scroll relabels in
-  # place through _setTextNoSettle's no-change guard. The corner has no label and never
-  # creates one. NoSettle: runs inside the chrome ensure's enclosing settle.
+  # is a passive StringWdgt (the CellWdgt scalar-text configuration, in fonts.buttonLabel and
+  # spreadsheetHeaderText, read from the theme as it is built); a scroll relabels in place through
+  # _setTextNoSettle's no-change guard. The corner has no label and never creates one.
+  # NoSettle: runs inside the chrome ensure's enclosing settle.
   _syncLabelNoSettle: ->
     label = @_labelText()
     return unless label?
     if @_labelWdgt?
       @_labelWdgt._setTextNoSettle label
     else
-      labelWdgt = new StringWdgt label, fontSize: 12
-      labelWdgt.color = @_sheetWidget.headerTextColor
+      labelWdgt = new StringWdgt label,
+        fontRole: WorldWdgt.theme.fonts.buttonLabel
+        color: WorldWdgt.theme.spreadsheetHeaderText
       labelWdgt.isEditable = false
       @_addNoSettle labelWdgt
       @_labelWdgt = labelWdgt

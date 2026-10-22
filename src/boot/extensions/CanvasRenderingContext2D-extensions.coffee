@@ -69,8 +69,8 @@ CanvasRenderingContext2D::fillStadium = (x, y, w, h) ->
   @fill()
 
 # Direct circle stroke (annulus at the current lineWidth), mirroring
-# SWCanvas's strokeCircle so ring-shaped chrome (window title-bar buttons)
-# speaks the same vocabulary on both backends. On SWCanvas the thick-stroke
+# SWCanvas's strokeCircle so ring-shaped art (an icon's rings, the rotate
+# handle's knob) speaks the same vocabulary on both backends. On SWCanvas the thick-stroke
 # path rasterizes the exact analytic annulus [r−lw/2, r+lw/2]; the native
 # polyfill strokes the equivalent arc path.
 CanvasRenderingContext2D::strokeCircle = (cx, cy, r) ->

@@ -10,11 +10,11 @@ class VerticalStackLayoutSpec extends LayoutSpec
   #   width in stack = round( min( availW, desiredWidth + grow * (availW - desiredWidth) ) )
   #
   # - desiredWidth: the element's width WISH — captured from its natural width at placement
-  #   (an initialisation default, user-editable via the "base width..." menu entry), NOT
+  #   (an initialisation default, user-editable via the "Base width…" menu entry), NOT
   #   load-bearing history: nothing samples the container's PAST width.
   # - grow: the 0..1 share of the EXTRA space (availW - desiredWidth) the element takes.
   #   0 = keep the desired width (fixed); 1 = fill the row / track the stack width. The
-  #   "elasticity..." menu knob edits it on a 0..100 scale. undefined = NOT DECIDED YET: the
+  #   "Elasticity…" menu knob edits it on a 0..100 scale. undefined = NOT DECIDED YET: the
   #   capture below derives it from the add-time relationship (an element placed at/above
   #   the stack width is fill-class and tracks; a narrower one keeps its size — D2-def). An
   #   EXPLICIT grow (the fixed/aspect classes' 0, a menu edit, a constructor arg) always wins
@@ -86,19 +86,19 @@ class VerticalStackLayoutSpec extends LayoutSpec
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
-    menu.addMenuItem "layout in stack ➜", @, "vertStackMenu", closesUnpinnedPopUps: false, toolTip: ""
+    menu.addMenuItem "Layout in stack", @, "vertStackMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
 
   vertStackMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    menu.addMenuItem "base width...", @, "desiredWidthPopout", toolTip: ""
-    menu.addMenuItem "elasticity...", @, "growPopout", toolTip: ""
-    menu.addMenuItem "align left", @, "setAlignmentToLeft"  if @alignment isnt "left"
-    menu.addMenuItem "align right", @, "setAlignmentToRight"  if @alignment isnt "right"
-    menu.addMenuItem "align center", @, "setAlignmentToCenter"  if @alignment isnt "center"
+    menu.addMenuItem "Base width…", @, "desiredWidthPopout", toolTip: ""
+    menu.addMenuItem "Elasticity…", @, "growPopout", toolTip: ""
+    menu.addMenuItem "Align left", @, "setAlignmentToLeft"  if @alignment isnt "left"
+    menu.addMenuItem "Align right", @, "setAlignmentToRight"  if @alignment isnt "right"
+    menu.addMenuItem "Align center", @, "setAlignmentToCenter"  if @alignment isnt "center"
     menu.popUpAtHand()
 
   # The spec's layout setters below (align / elasticity / base-width) are DISCRETE public mutations -- driven
-  # from the "layout in stack ➜" menu, the align/elasticity buttons, the base-width prompt, or an app building
+  # from the "Layout in stack" menu, the align/elasticity buttons, the base-width prompt, or an app building
   # its starting content. Each must therefore SELF-SETTLE (one layout flush per outermost public mutation),
   # instead of leaving its re-fit to ride the per-frame end-of-cycle flush. The spec is not a Widget, so the
   # settle is taken on @element (the stack element). Canonical public-wrapper / _NoSettle-core split: each
@@ -110,8 +110,8 @@ class VerticalStackLayoutSpec extends LayoutSpec
   # container off-pass). (Off-world content hits _settleLayoutsAfter's orphan early-return, so it still just
   # defers, unchanged.) (end-of-cycle-flush-drawdown -- CONVERT)
   # NB (U4) the setters carry the MODEL's names (setGrow / setDesiredWidth — pre-U4:
-  # setElasticity / setWidthOfElementWhenAdded); the USER-FACING wording ("elasticity...",
-  # "base width...", the prompt titles) deliberately keeps the old menu vocabulary — labels
+  # setElasticity / setWidthOfElementWhenAdded); the USER-FACING wording ("Elasticity…",
+  # "Base width…", the prompt titles) deliberately keeps the old menu vocabulary — labels
   # are product wording and pixel-asserted, methods are code vocabulary.
   # thin-wrap-exempt: the spec is NOT a Widget, so each setter settles on @element (the stack element), not @
   # -- the thin-wrap gate's canonical form anchors _settleLayoutsAfter on @ (a self-settle). This is the same
@@ -135,7 +135,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) viewport
 
   growPopout: (menuItem)->
-    @element.prompt menuItem.parent.popUpTitle() + "\nelasticity:", @, "setGrowFromPercent",
+    @element.prompt menuItem.parent.promptTitleAsking("elasticity:"), @, "setGrowFromPercent",
       defaultContents: ((@grow ? 1) * 100).toString()
       floorNum: 0
       ceilingNum: 100
@@ -160,7 +160,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) viewport
 
   desiredWidthPopout: (menuItem)->
-    @element.prompt menuItem.parent.popUpTitle() + "\nbase width:", @, "setDesiredWidth",
+    @element.prompt menuItem.parent.promptTitleAsking("base width:"), @, "setDesiredWidth",
       defaultContents: @desiredWidth.toString()
       floorNum: 10
       ceilingNum: 1000

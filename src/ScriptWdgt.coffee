@@ -45,7 +45,7 @@ class ScriptWdgt extends CodeAreaWdgt
   # script-ness) instead of testing `@contents instanceof ScriptWdgt`; other contents don't
   # define it and fall to the default reference. (type-test-elimination campaign)
   # opts.representsContents = the arrow-contract declaration (plan §4.4), threaded exactly as in
-  # the base shortcut builder: a filing declares content, "create shortcut" stays an alias.
+  # the base shortcut builder: a filing declares content, "Create shortcut" stays an alias.
   specialFrameReferenceShortcut: (window, referenceName, opts = {}) ->
     new ScriptShortcutWdgt window, referenceName, representsContents: opts.representsContents
 
@@ -61,17 +61,14 @@ class ScriptWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @savedScript
 
     # buttons -------------------------------
-    @runItButton = new SimpleButtonWdgt @, "tryIt", face: "try it"
+    @runItButton = new SimpleButtonWdgt @, "tryIt", face: "Try it"
     @_addNoSettle @runItButton
 
-    # local: @saveButton keeps it as its face widget, so a second copy on `this` was redundant state.
-    saveTextWdgt = new StringWdgt "save + close", fontRole: WorldWdgt.theme.fonts.buttonLabel
-    saveTextWdgt.alignCenter()
-    @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: saveTextWdgt
+    @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: "Save + close", primary: true
     @_addNoSettle @saveButton
     # ---------------------------------------
 
-    # now that we added the buttons there is a "save" button
+    # now that we added the buttons there is a "Save + close" button
     # to disable (because the reference text has not been
     # changed yet), so trigger the content check now
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
@@ -103,35 +100,10 @@ class ScriptWdgt extends CodeAreaWdgt
 
   textContentUnmodified: ->
 
-  _reLayout: (newBoundsForThisLayout) ->
-    @_reLayoutWithOwnContents newBoundsForThisLayout
+  # My footer band: "Try it" at its LEFT; "Save + close", the primary action, at its right.
+  _footerLeftButtons: ->
+    [@runItButton]
 
-  # position my contents against my CURRENT frame (already committed by
-  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
-  _layOutOwnContents: ->
-
-    textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
-    textBottom = @top() + @externalPadding + textHeight
-    textWidth = @width() - 2 * @externalPadding
-    buttonsWidth = Math.round((textWidth - 2 * @internalPadding - WorldWdgt.theme.handleSize)/2)
-
-    if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point textWidth, textHeight
-
-
-    # buttons -------------------------------
-
-
-    if @runItButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding, textBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runItButton._reLayout buttonBounds
-
-    if @saveButton.parent == @
-      buttonBounds = new Rectangle new Point buttonBounds.right() + @internalPadding, textBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @saveButton._reLayout buttonBounds
-
-
-    # ----------------------------------------------
+  _footerRightButtons: ->
+    [@saveButton]
 

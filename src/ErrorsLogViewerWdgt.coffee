@@ -1,15 +1,21 @@
 # to make this error log viewer come up, edit any code
 # in the inspector so to get a compilation error
-# (e.g. unmatched parens) and click "save"
+# (e.g. unmatched parens) and click "Save"
 
 class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
   defaultContents: ""
 
   clearButton: undefined
+  # my PAUSE toggle (LabelledToggleWdgt): the fixed label "Pause", ON exactly while I am paused.
+  # Its state is mine: a click runs my togglePaused, which decides and shows it.
   pauseToggle: undefined
   okButton: undefined
 
+  # Am I paused? While I am, showUpWithError logs nothing new (it still shows my window). It is
+  # the one truth of my pause state, and my pause toggle shows it. togglePaused writes it, so a
+  # paused log carries it as an own field, which a copy and a saved world keep beside the
+  # toggle's own isOn.
   paused: false
 
   # (Widget's constructor takes no arguments -- a birth extent passed to super
@@ -17,7 +23,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   # and gets its real size from the window that wraps it, createErrorConsole.)
   # ALL options, no operand: the error console is opened by the world with nothing to
   # configure. It carries no target/callback pair -- an error log reports, it does not commit a
-  # value back to anyone, so my ok button just hides my window (hideLog) and the
+  # value back to anyone, so my OK button just hides my window (hideLog) and the
   # deliverValue path belongs to CodePromptWdgt alone.
   # defaultContents is read GUARDED so absence leaves the class-level "" standing: a bare
   # @param would overwrite it with undefined (R5).
@@ -72,69 +78,34 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @_buildMonoCodeAreaNoSettle @defaultContents
 
     # buttons -------------------------------
-    @clearButton = new SimpleButtonWdgt @, "clearTextPane", face: "clear"
+    @clearButton = new SimpleButtonWdgt @, "clearTextPane", face: "Clear"
     @_addNoSettle @clearButton
 
 
-    pauseButton = new SimpleButtonWdgt @, "pauseErrors", face: "pause"
-    unpauseButton = new SimpleButtonWdgt @, "unpauseErrors", face: "un-pause"
-    @pauseToggle = new ToggleButtonWdgt pauseButton, unpauseButton, if @paused then 1 else 0
+    # my pause toggle: its fixed label, the one action that flips my paused field, and born
+    # showing that field
+    @pauseToggle = new LabelledToggleWdgt @, "togglePaused", face: "Pause", on: @paused
     @_addNoSettle @pauseToggle
 
-    @okButton = new SimpleButtonWdgt @, "hideLog", face: "ok"
+    @okButton = new SimpleButtonWdgt @, "hideLog", face: "OK"
     @_addNoSettle @okButton
 
     @_invalidateLayout()
 
-  pauseErrors: ->
-    @paused = true
-
-  unpauseErrors: ->
-    @paused = false
+  # My pause toggle's action: pause me, or resume me, and show the new state on the toggle. The
+  # toggle never flips itself, so after my build this is the one place either of the two changes,
+  # and they cannot disagree. Only the toggle's look changes, never its size, so nothing re-lays.
+  togglePaused: ->
+    @paused = !@paused
+    @pauseToggle.setOn @paused
 
   clearTextPane: ->
     @textWidget.setText ""
 
-  _reLayout: (newBoundsForThisLayout) ->
-    @_reLayoutWithOwnContents newBoundsForThisLayout
+  # My footer band: clear and the pause toggle at its LEFT, ok at its right.
+  _footerLeftButtons: ->
+    [@clearButton, @pauseToggle]
 
-  # position my contents against my CURRENT frame (already committed by
-  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
-  _layOutOwnContents: ->
-
-    # clamped at 0: a transient degenerate height mid window-negotiation must not
-    # invert the text panel's rect (a negative height here was half the console's
-    # NON_INTEGER_GEOMETRY construction cascade)
-    mainCanvasHeight = Math.max 0, @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.theme.handleSize
-    mainCanvasBottom = @top() + @externalPadding + mainCanvasHeight
-
-    if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainCanvasHeight
-
-
-    # buttons -------------------------------
-
-
-    # fractional /3 makes the second and third buttons' origins (each = the
-    # previous one's right edge plus the padding) fractional -- round it here so
-    # all three land on integer pixels (the ConsoleWdgt /2 precedent; integer
-    # placement is enforced by the always-on bounds guard)
-    eachButtonWidth = Math.round (@width() - 2* @externalPadding - 3 * @internalPadding - WorldWdgt.theme.handleSize) / 3
-
-    if @clearButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @clearButton._reLayout buttonBounds
-
-    if @pauseToggle.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @pauseToggle._reLayout buttonBounds
-
-    if @okButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @okButton._reLayout buttonBounds
-
-    # ----------------------------------------------
+  _footerRightButtons: ->
+    [@okButton]
 

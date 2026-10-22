@@ -1,51 +1,10 @@
-class FormatAsCodeIconAppearance extends IconAppearance
+# The CODE FACE: "</>" typed in the theme's codeToolFace role (Courier New, 15 in a tool cell). Worn
+# by the text toolbar's format-as-code tool (FormatAsCodeButtonWdgt) and its demo icon
+# (FormatAsCodeIconWdgt). How a typed face sizes, centres and paints: TypedFaceIconAppearance.
 
-  preferredSize: new Point 100, 100
-  specificationSize: new Point 100, 100
+class FormatAsCodeIconAppearance extends TypedFaceIconAppearance
 
-  paintFunction: (context) ->
-    #// Color Declarations
-    outlineColorString = @_outlineColorString()
-    iconColorString = @_iconColorString()
-    #// Group
-    #// cket 2 Drawing
-    context.beginPath()
-    context.moveTo 60.58, 28
-    context.lineTo 83, 50.5
-    context.lineTo 60.58, 73
-    context.strokeStyle = outlineColorString
-    context.lineWidth = 10
-    context.lineCap = 'round'
-    context.lineJoin = 'round'
-    context.stroke()
-    #// bra 2 Drawing
-    context.beginPath()
-    context.moveTo 39.42, 28
-    context.lineTo 17, 50.5
-    context.lineTo 39.42, 73
-    context.strokeStyle = outlineColorString
-    context.lineWidth = 10
-    context.lineCap = 'round'
-    context.lineJoin = 'round'
-    context.stroke()
-    #// cket Drawing
-    context.beginPath()
-    context.moveTo 60.58, 28
-    context.lineTo 83, 50.5
-    context.lineTo 60.58, 73
-    context.strokeStyle = iconColorString
-    context.lineWidth = 5
-    context.lineCap = 'round'
-    context.lineJoin = 'round'
-    context.stroke()
-    #// bra Drawing
-    context.beginPath()
-    context.moveTo 39.42, 28
-    context.lineTo 17, 50.5
-    context.lineTo 39.42, 73
-    context.strokeStyle = iconColorString
-    context.lineWidth = 5
-    context.lineCap = 'round'
-    context.lineJoin = 'round'
-    context.stroke()
+  faceText: "</>"
 
+  _faceFontRole: ->
+    WorldWdgt.theme.fonts.codeToolFace

@@ -11,29 +11,28 @@ class PanelWdgt extends Widget
   _acceptsDrops: true
   providesAmenitiesForEditing: true
 
+  # no fill or stroke colour of my own until one is set on me (declared here over Widget's content
+  # default): until then my RectangularAppearance paints me in my role, read as I am painted
+  # (_surfaceFill, _surfaceStroke), so a panel saved, loaded or duplicated wears the look of the world
+  # it is shown in. A subclass with a surface of its own answers its own role through the same pair.
+  color: undefined
+  strokeColor: undefined
+
   constructor: ->
     super()
     @dragsDropsAndEditingEnabled = true
     @appearance = new RectangularAppearance @
 
-    @color = WorldWdgt.theme.panelFill
-    @strokeColor = WorldWdgt.theme.panelStroke
+  # MY LOOK while I hold no colour of my own: the generic panel's fill ...
+  _surfaceFill: ->
+    WorldWdgt.theme.panelFill
 
-  # Where among `children` (a childrenNotHandlesNorCarets list) does a payload dropped at `posInPlane`
-  # — the release point expressed in MY plane (the drop dispatcher maps it, ActivePointerWdgt.drop) —
-  # land? Returns the sibling insertion index (bumped one past a child whose right half holds
-  # the point), or undefined when the point is over no child — callers then fall back to appending at the end.
-  # Pure computation; used verbatim by ToolPanelWdgt._addNoSettle.
-  _findDropSlot: (posInPlane, children) ->
-    return undefined unless posInPlane? and children.length > 0
-    positionNumberAmongSiblings = 0
-    for w in children
-      if w.bounds.growBy(@internalPadding).containsPoint posInPlane
-        if w.bounds.growBy(@internalPadding).rightHalf().containsPoint posInPlane
-          positionNumberAmongSiblings++
-        return positionNumberAmongSiblings
-      positionNumberAmongSiblings++
-    return undefined
+  # ... and its border -- unless I am a window's whole content (my frame's contents, asked of where I
+  # stand as I paint), along which the frame's border and its strip's rule run: then the window
+  # content's border role.
+  _surfaceStroke: ->
+    theme = WorldWdgt.theme
+    if @parent?.isMyContents?(@) then theme.windowContentPanelStroke else theme.panelStroke
 
   # only the desktop and folder panels have menu entries
   # to invoke this
@@ -174,7 +173,7 @@ class PanelWdgt extends Widget
     super
     if @children.length
       menu.addLine()
-      menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
+      menu.addMenuItem "Move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
   
   keepAllSubwidgetsWithin: ->
     @children.forEach (m) =>

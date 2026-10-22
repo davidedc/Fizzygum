@@ -218,9 +218,9 @@ never sets the flag, so their strokes keep today's persistent pointer-under stat
 byte-identically.
 
 The dissolution is the stroke's LAST act: the up (or the cancel) clears the stroke's press and
-drag state FIRST, so the exit it delivers is final. Two `hoverExited` handlers defer to a live
-drag — a slider thumb keeps its pressed look while the pointer outruns it, and a size adjuster
-keeps its resize cursor — and an exit delivered while the drag still stands is one they ignore.
+drag state FIRST, so the exit it delivers is final. Three `hoverExited` handlers defer to a live
+drag — a slider thumb keeps its pressed look while the pointer outruns it, a halo handle keeps its
+pressed plate, and a size adjuster keeps its resize cursor — and an exit delivered while the drag still stands is one they ignore.
 That matters most for a thumb a finger dragged and let go of ON the thumb: the release is a click
 on it, and `SliderButtonWdgt.activated` lights it up, so the dissolution is the only thing left
 that can put it out.

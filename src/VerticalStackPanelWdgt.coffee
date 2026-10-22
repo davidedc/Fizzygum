@@ -7,12 +7,28 @@ class VerticalStackPanelWdgt extends Widget
   _acceptsDrops: true
   tight: true
   constrainContentWidth: true
+  # no fill colour of my own (declared here over Widget's content default) until one is given to me
+  # (opts.color) or set on me: until then my RectangularAppearance paints me in my look, read as I
+  # am painted (_surfaceFill, _surfaceStroke)
+  color: undefined
   # serves as BOTH the border inset and the inter-element gap (see the note at its
-  # read sites); the constructor takes it as opts.padding and defaults it to 5
+  # read sites); the constructor takes it as opts.padding and defaults it to 5. A document's
+  # page sets its stack's from the theme at every arrange (DocumentViewportWdgt._takeItemSpacing).
   padding: undefined
 
   colloquialName: ->
     "stack"
+
+  # MY LOOK while I hold no colour of my own. As the plane of a viewport (a stack sample's page, a
+  # document's) I wear its pane's fill and draw no border (the viewport's border is the box's line);
+  # standing on my own, the stack's fill and border -- none as a window's whole content (my frame's
+  # contents), along which the frame's border and its strip's rule run.
+  _surfaceFill: ->
+    if @parent?.isMyContentsPanel?(@) then @parent._paneFill() else WorldWdgt.theme.stackPanelFill
+
+  _surfaceStroke: ->
+    return undefined if @parent?.isMyContentsPanel?(@) or @parent?.isMyContents?(@)
+    WorldWdgt.theme.stackPanelStroke
 
   # A vertical stack constrains a dropped child to its width/height ratio, and frees that
   # constraint when the child is grabbed back out. These container capabilities replace the
@@ -39,6 +55,13 @@ class VerticalStackPanelWdgt extends Widget
   arrangesOwnScrolledChildren: ->
     true
 
+  # THE ITEM SHAPE of a text I hold (StringWdgt._itemShape asks me, at every measure, paint and
+  # point mapping): the one the viewport I am the plane of gives the texts on its page -- a
+  # document's (DocumentViewportWdgt.itemShapeOfTextOnPlane) -- or none: a stack nested in another,
+  # or the plane of any other viewport, dresses nothing.
+  itemShapeOfContainedText: ->
+    @parent?.itemShapeOfTextOnPlane? @
+
   # I measure at my OWN width — I subtract my own padding (§4.1 Stage C); the viewport-derived
   # width hint is for planes whose children wrap to the viewport
   scrolledContentMeasure: (ignored_widthHint) ->
@@ -62,42 +85,43 @@ class VerticalStackPanelWdgt extends Widget
     @parent?._reactToChildAlphaChanged? @, alpha
     return alpha
 
-  # opts.positionInPlane -- where the widget was released, expressed in MY plane (the drop
-  # dispatcher maps it through screenPointToMyPlane before handing it over -- ActivePointerWdgt
-  # .drop), so the stack can compare it against its children's plane-local spans to work out
-  # which sibling it landed between. Distinct from opts.atIndex, which names that slot outright.
+  # opts.positionInPlane -- where the widget was released: the POINTER's position at the release
+  # (the hand's), expressed in MY plane (the drop dispatcher maps it through screenPointToMyPlane
+  # before handing it over -- ActivePointerWdgt.drop -- and a viewport holding me takes its scroll
+  # off it on the way in -- ViewportWdgt.add), so the stack can compare it against its children's
+  # plane-local middles to work out which sibling it goes before (_indexForDropAt). opts.atIndex
+  # names that slot outright, and wins over it.
   # A key this receiver does not read (opts.notContent, which only the frame acts on) is simply
   # ignored -- which is why one drop-site call can address any container in the add family.
   add: (aWdgt, opts = {}) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
 
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
-  # work (_resizeToWithoutSpacing + sibling-position computation) only uses immediate mutators / structural
+  # work (_resizeToWithoutSpacing + the drop's sibling slot) only uses immediate mutators / structural
   # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
   _addNoSettle: (aWdgt, opts = {}) ->
-    positionInPlane = opts.positionInPlane
     aWdgt._resizeToWithoutSpacing()
+    unless opts.atIndex?
+      dropIndex = @_indexForDropAt opts.positionInPlane
+      if dropIndex?
+        opts = Object.assign {}, opts, atIndex: dropIndex
+    super aWdgt, opts
 
-    # find out WHERE to add the widget. Find the existing widget in the
-    # stack that is at the same height, and put the new
-    # widget after it
-
-    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
-
-    # The vertical stack lays children in sibling order, so inserting means counting up to the child
-    # at the same height and inserting after it -- opts.atIndex names that slot outright.
-    positionNumberAmongSiblings = undefined
-    if (childrenNotHandlesNorCarets.length > 0) and (positionInPlane instanceof Point)
-      positionNumberAmongSiblings = 0
-      for w in childrenNotHandlesNorCarets
-        positionNumberAmongSiblings++
-        if w.top() < positionInPlane.y and w.bottom() > positionInPlane.y
-          break
-
-    if positionNumberAmongSiblings?
-      super aWdgt, Object.assign {}, opts, atIndex: positionNumberAmongSiblings
-    else
-      super aWdgt, opts
+  # WHERE A WIDGET DROPPED AT `positionInPlane` GOES among my children, which I stack in sibling
+  # order: BEFORE the first of them whose vertical middle is below the drop point, so a drop above
+  # an element's middle -- on its upper half, in the gap above it, or in my top padding -- lands
+  # just before it; past every element's middle it lands after them all (undefined: the add
+  # appends). The answer indexes @children, as atIndex does. An element's middle is its centre
+  # (Rectangle.center, a whole pixel), so a drop aimed at an element's centre lands after it; the
+  # point is taken to the nearest whole pixel first, so a point mapped through a rotated plane
+  # (which can come back a hair either side of a whole pixel) cannot fall either side of a centre
+  # at random. No point (a programmatic add): no index.
+  _indexForDropAt: (positionInPlane) ->
+    return undefined unless positionInPlane?
+    dropY = Math.round positionInPlane.y
+    for w in @childrenNotHandlesNorCarets()
+      return @children.indexOf w if w.center().y > dropY
+    undefined
 
   # ALL options, no operand — a positional-hole-test call (R1/R3); see
   # docs/archive/constructor-parameter-conformance-plan.md.
@@ -111,7 +135,7 @@ class VerticalStackPanelWdgt extends Widget
     @__commitExtent(extent) if extent?
     @color = color if color?
 
-  # Capability query (duck-typed at the call sites): may "edit layout" show content
+  # Capability query (duck-typed at the call sites): may "Edit layout" show content
   # drop-slots between my elements? Follows my drop gate — slots are DROP targets, so a
   # stack that refuses drops (CommandPanelWdgt: menus are not user-editable layouts)
   # refuses slots for the same reason.
@@ -202,7 +226,7 @@ class VerticalStackPanelWdgt extends Widget
   # @padding knob served as BOTH the border inset and the inter-element gap;
   # they are distinct layout roles (CSS padding vs gap), so the gap is now its
   # own policy method for a subclass to set apart — CommandPanelWdgt stacks its
-  # rows FLUSH (gap 0) inside a 2px border. Default: the border padding,
+  # rows FLUSH (gap 0) inside its padding. Default: the border padding,
   # preserving every existing stack byte-identically. Mirrored in the three
   # walkers (_positionAndResizeChildren / preferredExtentForWidth /
   # subWidgetsMergedPreferredBounds) exactly like the _childWidthInStack trio.

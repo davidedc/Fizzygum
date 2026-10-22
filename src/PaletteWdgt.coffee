@@ -25,7 +25,7 @@ class PaletteWdgt extends Widget
   # first palette of a given size would start out differently from every later palette of that size.
   choice: undefined
 
-  # what the "choose target property" menu filters a target's pins by, and the adjective in my
+  # what the "target property" chooser filters a target's pins by, and the adjective in my
   # "set target" tooltip: I drive colours.
   producesPinKind: "color"
 

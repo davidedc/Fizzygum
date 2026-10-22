@@ -144,7 +144,7 @@ class Serializer
   @serializeWorld: (theWorld, opts = {}) ->
     # EPHEMERAL overlays (live highlight / pinout / drag-affordance widgets) are reconciler-owned
     # transient world children — never part of the persisted desktop. TRANSIENT (unpinned)
-    # POP-UPS are mid-gesture UI: the very menu whose item triggers "save world snapshot…" is
+    # POP-UPS are mid-gesture UI: the very menu whose item triggers "Save world snapshot…" is
     # still attached (and already marked for closure) while the save runs, so without this
     # filter it gets baked into the file and restores as a zombie. Pinned pop-ups are desktop
     # furniture and stay. Exclude both up front so they ride NEITHER the snapshot-roots walk NOR
@@ -182,7 +182,6 @@ class Serializer
     section.alpha = theWorld.alpha if theWorld.alpha?
     section.isDevMode = theWorld.isDevMode
     section.wallpaperPatternName = theWorld.wallpaper?.patternName
-    section.numberOfIconsOnDesktop = theWorld.numberOfIconsOnDesktop if theWorld.numberOfIconsOnDesktop?
     # info-doc "already created" flags: plain own booleans set on the world instance.
     infoDocFlags = {}
     for own name of theWorld when name.indexOf("infoDoc") is 0

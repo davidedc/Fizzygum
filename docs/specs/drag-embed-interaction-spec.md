@@ -144,8 +144,8 @@ above changed; no app's default editing state changed as part of this arc.
 ### §4.1 — Dock bands: a receptivity tier ahead of the four (`frame-lifetime-and-docking-plan.md` §2.4/§2.5)
 
 A host `FrameWdgt`'s four edge **bands** — strips `dockBandDepth` deep in from its body's edges (the
-preference is 30px, deliberately ≥ the bar thickness of 26px = `barIconSize + 2·barPadding`, so a band is
-never thinner than the grip a drop produces) — are drop candidates `ActivePointerWdgt._dockBandUnderPointerFor`
+preference is deliberately ≥ the strip's thickness, `frameBorderWidth + barIconSize + barRuleWidth`, so a
+band is never thinner than the grip a drop produces) — are drop candidates `ActivePointerWdgt._dockBandUnderPointerFor`
 checks **before** the tier climb of §4/§5 even starts, and the climb never runs at all once a band answers: a
 host offering a band under the pointer wins outright over its own ordinary content receptivity, whatever tier
 that content is in. Two gates keep the offer narrow:
@@ -175,13 +175,14 @@ furniture, never mid-gesture UI.
 `world.dragEmbedDockBandDeclared {host, box}` and stands the host's per-widget outline down while the band is
 offered, drawing a dedicated `HighlighterWdgt` around the band's own rectangle instead — the SAME
 candidate-accent style §11's highlight row already specifies (`HighlighterWdgt.candidateOutlineStyle`,
-`248,188,58`), just applied to a region of the host's body rather than to a widget, and mapped through the
+the accent `dropCandidateOutline`, 2 px `dropOutlineWidth` inside the box, its corners following the host's where
+they meet them), just applied to a region of the host's body rather than to a widget, and mapped through the
 host's screen bounds so it renders correctly inside a rotated/scaled island too (§11).
 
 **Release outcome (§7): docks, not embeds.** An ARMED release resolved to a band skips the ordinary
 `_beforeChildDropped` content hand-off (a dock takes a slot BESIDE the host's content, never instead of it)
 and instead calls `target.add wdgtToDrop, dockSide: <the band's side>`, which arms a fresh
-`EdgeDockLayoutSpec side, thickness` at that side (`FrameWdgt._dockFrameNoSettle`) — the side is always the
+`EdgeDockLayoutSpec` at that side (`FrameWdgt._dockFrameNoSettle`; it records the payload's arrival thickness unless the payload declares its own `dockThickness`) — the side is always the
 DROP's, never any default the payload might otherwise declare for itself.
 
 ## §5 — Candidate resolution (owner decisions 1 + 3)
@@ -343,7 +344,8 @@ The internal/external switch button is DELETED outright (not repurposed). A wind
 DERIVED from parentage (`FrameWdgt.isInternal` = "am I nested" = my parent is neither the world nor the hand),
 and the whole-window skin (body appearance + title-bar appearance/colors) FOLLOWS it automatically on every
 re-parenting (`_reactToBeingAdded` re-applies it, skipping the transient pick-up by the hand): drag a window into
-a container → flat internal skin; out to the desktop → boxy external skin. So the manual toggle has no job left.
+a container → the card look (the card radius, a `line` stroke); out to the desktop → the window look (the window radius,
+a `frame` stroke). So the manual toggle has no job left.
 (A window built `internal=true` and then nested via `container.add` — a dashboard/document plot — ends up
 byte-identical to the old stored-flag path, because the full skin re-derives to internal on that add.)
 
@@ -373,11 +375,11 @@ highlighted/decorated carries any state about its own decoration. Per element:
 
 | Element | Mechanism | Spec |
 |---|---|---|
-| Candidate highlight | **EPHEMERAL — the existing `HighlighterWdgt` flow, almost verbatim** (`widgetsToBeHighlighted.add candidate` on resolution, remove on candidate change) | 2px (logical) rounded outline just inside the candidate's `clippedThroughBounds`; accent tone (suggest pencil-yellow family `248,188,58`, reduced alpha for willing / full for eager). Needs a STYLE CHANNEL the current mechanism lacks (today: hardcoded blue fill, alpha 50) — either per-target style descriptors (Set → Map target→style) or distinct ephemeral declaration sets per style; owner/implementation choice |
-| Dock band highlight (§4.1) | **EPHEMERAL — its own `HighlighterWdgt`, keyed to a BOX, not a widget** (`world.dragEmbedDockBandDeclared {host, box}`): a band is a region of its host's body, not a widget, so it rides its own declare-and-reconcile slot instead of the `widgetsToBeHighlighted` channel above — the host's own candidate outline stands down for as long as a band is offered | Same candidate-accent outline style as the row above (`HighlighterWdgt.candidateOutlineStyle`, `248,188,58`), drawn around the band's WHOLE rectangle rather than a widget's bounds; mapped through the host's screen bounds so it renders correctly inside a rotated/scaled island too |
+| Candidate highlight | **EPHEMERAL — the existing `HighlighterWdgt` flow, almost verbatim** (`widgetsToBeHighlighted.add candidate` on resolution, remove on candidate change) | 2px (logical) rounded outline just inside the candidate's `clippedThroughBounds`; the accent (`dropCandidateOutline`), 2 px (`dropOutlineWidth`), its corners following the target's own (`Widget.cornerRadiiFollowingMyOutline`). Needs a STYLE CHANNEL the current mechanism lacks (today: hardcoded blue fill, alpha 50) — either per-target style descriptors (Set → Map target→style) or distinct ephemeral declaration sets per style; owner/implementation choice |
+| Dock band highlight (§4.1) | **EPHEMERAL — its own `HighlighterWdgt`, keyed to a BOX, not a widget** (`world.dragEmbedDockBandDeclared {host, box}`): a band is a region of its host's body, not a widget, so it rides its own declare-and-reconcile slot instead of the `widgetsToBeHighlighted` channel above — the host's own candidate outline stands down for as long as a band is offered | Same candidate-accent outline style as the row above (`HighlighterWdgt.candidateOutlineStyle`, the accent), drawn around the band's WHOLE rectangle rather than a widget's bounds; mapped through the host's screen bounds so it renders correctly inside a rotated/scaled island too |
 | Charging ring (the radial timeout) | **EPHEMERAL — new cursor-anchored type, and a STEPPING one** (the analog-clock pattern, `AnalogClockWdgt.coffee:99-108`): fills over wall time from the linger origin in production; under `Automator.animationsPacingControl` follows the harness's virtual pacing like the clocks already do in byte-exact tests. Reconciler positions it at hand + (16,16); repaints only on quantized step change | Radius ~9px; RING_STEPS discrete segments; PRESENTATION ONLY — the armed decision is §6's event-time elapsed check and never reads ring state |
 | Armed label | **EPHEMERAL — text type** (the pinout `StringWdgt` readout is the in-code precedent) | Near cursor: "Drop to insert into '<title>'" (title truncated ~24 chars) |
-| Lock badge + eye pulse (reluctant) | **EPHEMERAL(s) anchored to the destination's title-bar / eye-button bounds** — deliberately NOT a state change of the real eye button: the pulse never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | Neutral gray outline on the destination + small lock badge at title-bar right; amber pulse over the eye button in 2 quantized steps |
+| Lock badge + eye pulse (reluctant) | **EPHEMERAL(s) anchored to the destination's title-bar / eye-button bounds** — deliberately NOT a state change of the real eye button: the pulse never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | A `line`-coloured outline (`dropReluctantOutline`, the candidate's width) on the destination + small lock badge at title-bar right; amber pulse over the eye button in 2 quantized steps |
 | §9 teaching hint | **EPHEMERAL — text type.** Non-interactability is exactly right here: it is click-THROUGH (the next click acts on the world AND dismisses it — the pointer-down handler drops the declaration) | One line near the landing; no buttons, no timeout |
 | §8 land-and-offer pill | **NOT an ephemeral — it has buttons.** Interactability violates the ephemeral definition; it is a real transient widget of the menu family (menus already own dismiss-on-outside-click) | See §8 |
 | ~~Refused-landing nudge~~ | **DROPPED with §8** — it was to be neither an ephemeral nor a widget of its own, but a transient movement of the real landed widget (2-frame quantized) | Moot: a refused release lands where it was released, unnudged (§7) |

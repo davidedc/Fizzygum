@@ -50,8 +50,6 @@ class TextWdgt extends StringWdgt
     @wrappedLineSlots = []
     super (text ? "TextWdgt"), opts
     # override inherited properties:
-    @markedTextColor = WorldWdgt.theme.textSelectionText
-    @markedBackgroundColor = WorldWdgt.theme.textSelectionFill
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
 
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
@@ -63,10 +61,11 @@ class TextWdgt extends StringWdgt
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
+  # The text fits when it fits my text area (my box less my item inset, StringWdgt's THE ITEM SHAPE).
   doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     if text == ""
       return true
-    doesItFit = @breakTextIntoLines text, overrideFontSize, @extent()
+    doesItFit = @breakTextIntoLines text, overrideFontSize, @_textArea().extent()
     return doesItFit
 
   getParagraphs: (text) ->
@@ -168,7 +167,8 @@ class TextWdgt extends StringWdgt
       justCheckIfItFitsInThisExtent = null
       overrideFontSize = @originallySetFontSize
 
-    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + text.hashCode() + "-" + justCheckIfItFitsInThisExtent
+    # the entry keeps a pitch-derived height and fit verdict, so my line box is part of its key
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + text.hashCode() + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix()
     textWrappingData = world.cacheForTextWrappingData.get cacheKey
     if textWrappingData? then return textWrappingData
     wrappedLinesOfWholeText = []
@@ -231,7 +231,7 @@ class TextWdgt extends StringWdgt
       maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
 
       if justCheckIfItFitsInThisExtent?
-        heightOfPossiblyCroppedText = (wrappedLineSlotsOfWholeText.length - 1) * Math.ceil(@fontHeight overrideFontSize)
+        heightOfPossiblyCroppedText = (wrappedLineSlotsOfWholeText.length - 1) * @linePitch(overrideFontSize)
         if heightOfPossiblyCroppedText > justCheckIfItFitsInThisExtent.y or maxWrappedLineWidthOfWholeText > justCheckIfItFitsInThisExtent.x
           world.cacheForTextWrappingData.set cacheKey, false
           return false
@@ -241,7 +241,7 @@ class TextWdgt extends StringWdgt
     if justCheckIfItFitsInThisExtent?
       world.cacheForTextWrappingData.set cacheKey, true
       return true
-    heightOfPossiblyCroppedText = wrappedLinesOfWholeText.length * Math.ceil(@fontHeight overrideFontSize)
+    heightOfPossiblyCroppedText = wrappedLinesOfWholeText.length * @linePitch(overrideFontSize)
     textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText, heightOfPossiblyCroppedText]
     world.cacheForTextWrappingData.set cacheKey, textWrappingDataCacheEntry
     textWrappingData = textWrappingDataCacheEntry
@@ -268,15 +268,15 @@ class TextWdgt extends StringWdgt
       # widthOverride lets the pure measure (preferredExtentForWidth, §4.1 proper-layouts)
       # wrap at an EXPLICIT available width instead of the applied @width(). Without it this
       # is the unchanged commit path: an undefined override falls through to @width().
-      # The halo margin is reserved on each side of every wrapped line — the ONE
-      # seam through which BOTH the fit check (doesTextFitInExtent) and the
-      # render wrap (reflowText) get their width, mirroring the base class's
-      # horizontal-only reservation in doesTextFitInExtent.
-      widgetWidth = (widthOverride ? @width()) - 2 * @_outlineHaloMargin()
+      # This is the ONE seam through which BOTH the fit check (doesTextFitInExtent) and the
+      # render wrap (reflowText) get their width. Either width is a BOX's: my text wraps at it
+      # less my item inset at each side (StringWdgt's THE ITEM SHAPE; none when I wear none).
+      widgetWidth = (widthOverride ? @width()) - 2 * @_textInset().x
     else
       widgetWidth = Number.MAX_VALUE
 
-    cacheKey = text.hashCode() + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + widgetWidth + "-" + justCheckIfItFitsInThisExtent
+    # what this caches is getTextWrappingData's answer, which reads my line box
+    cacheKey = text.hashCode() + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + widgetWidth + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix()
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
     if textWrappingData? then return textWrappingData
 
@@ -294,10 +294,13 @@ class TextWdgt extends StringWdgt
   # §4.1 PURE MEASURE (proper-layouts): the side-effect-free preferred extent of this
   # wrapping text -- round+min-extent clamp MUST mirror __commitExtent (byte-matches the
   # commit). Campaign history: docs/archive/proper-layouts-4.1-pure-measure-campaign-plan.md
+  # The box is my text's extent plus my item inset at each side (_reLayoutSelf's arithmetic): wrapping,
+  # my text wraps at the box's width less the inset (breakTextIntoLines).
   preferredExtentForWidth: (availW) ->
     # a non-growing text keeps its box (FIT_TEXT_TO_BOX scales/crops the text, it does not
     # size to it), so its preferred extent is simply its current extent.
     if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return @extent()
+    inset = @_textInset()
     if @softWrap
       wrapW = Math.round availW
       minExtent = @getMinimumExtent()
@@ -307,8 +310,8 @@ class TextWdgt extends StringWdgt
     else
       veryWideExtent = new Point 10000000, 10000000
       tuple = @breakTextIntoLines @text, @originallySetFontSize, veryWideExtent
-      measuredWidth = tuple[2]   # the natural (un-wrapped) max line width
-    measuredHeight = tuple[0].length * Math.ceil @fontHeight @originallySetFontSize
+      measuredWidth = tuple[2] + 2 * inset.x   # the natural (un-wrapped) max line width, inset
+    measuredHeight = tuple[0].length * @linePitch(@originallySetFontSize) + 2 * inset.y
     return new Point measuredWidth, measuredHeight
 
   # Wrapping text is FILL-CLASS in a stack BY TYPE: its box tracks the column and the text
@@ -342,7 +345,7 @@ class TextWdgt extends StringWdgt
 
   # multi-line variant of the StringWdgt helper: size the box to the NATURAL,
   # un-soft-wrapped text — the widest hard-newline-separated line × the line
-  # count (width = maxLineWidth, height = lines × fontHeight). softWrap is turned
+  # count (width = maxLineWidth, height = lines × linePitch). softWrap is turned
   # OFF so the text never re-wraps to the container; the box just hugs the text.
   # See StringWdgt::sizeToTextAndDisableFitting for the full rationale — only the CORE is overridden
   # here; StringWdgt's public sizeToTextAndDisableFitting is the canonical settle-wrap and dispatches
@@ -366,8 +369,10 @@ class TextWdgt extends StringWdgt
     [lines, lineSlots, naturalWidth, naturalHeight] =
       @breakTextIntoLines (@transformTextOneToOne @text), @originallySetFontSize
     widthOfText = Math.max naturalWidth, 1
-    heightOfText = Math.max naturalHeight, (@fontHeight @originallySetFontSize)
-    @__commitExtent new Point widthOfText, heightOfText
+    heightOfText = Math.max naturalHeight, (@linePitch @originallySetFontSize)
+    # the box is the text plus my item inset at each side (none when I wear no item shape)
+    inset = @_textInset()
+    @__commitExtent new Point widthOfText + 2 * inset.x, heightOfText + 2 * inset.y
     @reflowText()
     @parent?._invalidateLayout() unless world?._recalculatingLayouts
     @  # return self so the public wrapper is chainable (macros do `(new TextWdgt …).sizeToTextAndDisableFitting()`)
@@ -390,6 +395,11 @@ class TextWdgt extends StringWdgt
 
     if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return
 
+    # TIGHT or LOOSE: the box is the text's extent, plus my item inset at each side when where
+    # I live dresses me as an item (StringWdgt's THE ITEM SHAPE), and the text wraps at the box's
+    # width less that inset (breakTextIntoLines). Asked here, at every re-lay, so a re-parented
+    # text takes its new place's fit (Widget._reactToBeingAdded re-lays it).
+    inset = @_textInset()
     if @softWrap
       [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
         @breakTextIntoLines @text, @originallySetFontSize, @extent()
@@ -398,17 +408,15 @@ class TextWdgt extends StringWdgt
       veryWideExtent = new Point 10000000, 10000000
       [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
         @breakTextIntoLines @text, @originallySetFontSize, veryWideExtent
-      width = @widthOfPossiblyCroppedText
+      width = @widthOfPossiblyCroppedText + 2 * inset.x
 
-    height = @wrappedLines.length *  Math.ceil @fontHeight @originallySetFontSize
+    height = @wrappedLines.length * @linePitch(@originallySetFontSize) + 2 * inset.y
 
-    # fittingSpecBoxTightOrLoose is TIGHT here (no padding) and
     # fittingSpecBoxWhichDimensionAdjusts is HEIGHT_ADJUSTS_TO_WIDTH — the only
-    # configuration any current caller uses (and what the defaults encode). A
-    # LOOSE padding margin and the WIDTH_ADJUSTS_TO_HEIGHT variant are reserved:
-    # they are stored + part of createBufferCacheKey so a future opt-in
-    # re-renders, but their sizing is left for the first caller that needs them
-    # (the padding amount is a look-and-decide per the FITTING MODEL design).
+    # configuration any current caller uses (and what the default encodes). The
+    # WIDTH_ADJUSTS_TO_HEIGHT variant is reserved: it is stored + part of
+    # createBufferCacheKey so a future opt-in re-renders, but its sizing is left
+    # for the first caller that needs it.
     @__commitExtent new Point width, height
 
     @_changed()
@@ -443,11 +451,11 @@ class TextWdgt extends StringWdgt
 
     contentHeight = @reflowText()
 
-    # FIT_BOX_TO_TEXT paints exactly lineCount × fontHeight tall at the SET font
-    # size (the box was already grown to this by _reLayoutSelf; here we only recompute
-    # the paint height, we do NOT resize — see the "no extent changes" note above).
+    # FIT_BOX_TO_TEXT paints its text exactly lineCount × linePitch tall at the SET font
+    # size (the box was already grown to this, plus my item inset, by _reLayoutSelf; here we
+    # only recompute the paint height, we do NOT resize — see the "no extent changes" note above).
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-      contentHeight = @wrappedLines.length *  Math.ceil @fontHeight @originallySetFontSize
+      contentHeight = @wrappedLines.length * @linePitch @originallySetFontSize
 
     # if we are calculating a new buffer then
     # for sure the caret has to be notified
@@ -464,28 +472,31 @@ class TextWdgt extends StringWdgt
     textVerticalPosition = @textVerticalPosition contentHeight
 
     # now draw the actual text, line by line through the shared
-    # _drawTextLine (which honours hasDarkOutline). The per-line x comes from
-    # the base textHorizontalPosition — the same function the caret/selection
-    # math (slotCoordinates) uses, and the carrier of the halo-margin inset.
+    # _drawTextLine. The per-line x comes from the base textHorizontalPosition
+    # — the same function the caret/selection math (slotCoordinates) uses. Each line stands in
+    # its line box, one pitch below the one before, and is drawn at the box's ink offset (the
+    # LINE BOX queries in StringWdgt).
+    pitch = @linePitch @fittingFontSize
+    inkOffset = @_lineInkOffset @fittingFontSize
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText line)
       x = @textHorizontalPosition width
-      y = (i + 1) * Math.ceil @fontHeight @fittingFontSize
+      lineTop = i * pitch
       i++
 
       # you'd think that we don't need to eliminate the invisible character
       # to draw the text, as it's supposed to be, well, invisible.
       # Unfortunately some fonts do draw it, so we indeed have to eliminate
       # it.
-      @_drawTextLine backBufferContext, (@eliminateInvisibleCharacter line), x, y + textVerticalPosition
+      @_drawTextLine backBufferContext, (@eliminateInvisibleCharacter line), x, lineTop + inkOffset + textVerticalPosition
 
       # header line
-      # NB the same-named locals mean slightly different things here than in the
-      # StringWdgt call site (one wrapped line vs the whole fitting line), so only
-      # the drawing is shared — the geometry is computed here and passed in.
+      # NB the geometry means one wrapped line here and the whole fitting line at the
+      # StringWdgt call site, so only the drawing is shared — the geometry is computed
+      # here and passed in.
       if @isHeaderLine and @wrappedLines.length <= 1
-        @_drawHeaderUnderline backBufferContext, (y + textVerticalPosition), (@fontHeight @fittingFontSize), x, width
+        @_drawHeaderUnderline backBufferContext, (lineTop + pitch + textVerticalPosition), pitch, x, width
 
     @drawSelection backBufferContext
 
@@ -517,8 +528,9 @@ class TextWdgt extends StringWdgt
         idx += 1
     [@wrappedLines.length - 1, @wrappedLines[@wrappedLines.length - 1].length - 1]
   
-  # Answer the position (in pixels) of the given index ("slot")
-  # where the caret should be placed.
+  # Answer the position (in pixels) of the given index ("slot"): its boundary on its line, at
+  # the top of the line's box (caretTopLeftAt moves it down to the caret box's top; a caret stands
+  # just right of it).
   # This is in absolute world coordinates.
   # Accounts for horizontal alignment via textHorizontalPosition (unlike
   # StringWdgt.slotCoordinates, which is left-justified only).
@@ -531,7 +543,7 @@ class TextWdgt extends StringWdgt
 
     lineWidth = @measureText @wrappedLines[slotRow]
     xOffset = Math.ceil @measureText @wrappedLines[slotRow].substring(0,slotColumn)
-    yOffset = slotRow * Math.ceil @fontHeight @fittingFontSize
+    yOffset = slotRow * @linePitch @fittingFontSize
 
     textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
     textHorizontalPosition = @textHorizontalPosition lineWidth
@@ -561,8 +573,11 @@ class TextWdgt extends StringWdgt
   # Returns the slot (index) closest to the given point
   # so the caret can be moved accordingly
   # Accounts for horizontal alignment (slotAtRow -> slotAtSingleLineString applies
-  # the textHorizontalPosition offset), not left-justified-only.
+  # the textHorizontalPosition offset), not left-justified-only. A point in my padding picks
+  # from the nearest point of my text area (StringWdgt._pointTakenOutOfPadding): the nearest
+  # slot of the nearest line.
   slotAt: (aPoint) ->
+    aPoint = @_pointTakenOutOfPadding aPoint
 
     if (isPointBeforeFirstLine = @pointIsAboveFirstLine aPoint) != false
       return isPointBeforeFirstLine
@@ -571,7 +586,8 @@ class TextWdgt extends StringWdgt
 
     row = 0
 
-    while aPoint.y - @top() > textVerticalPosition + row * Math.ceil @fontHeight @fittingFontSize
+    # rows are whole line boxes, so a point between two lines' ink picks the line whose box it is in
+    while aPoint.y - @top() > textVerticalPosition + row * @linePitch @fittingFontSize
       row += 1
     row = Math.max row, 1
 
@@ -617,18 +633,18 @@ class TextWdgt extends StringWdgt
     menu.addLine()
     # the row SHOWS my soft-wrap state rather than being built from a snapshot of it, so a menu left
     # open while the state changes (another copy of this menu, a script) re-ticks instead of lying
-    menu.addMenuItem "soft wrap", @, "toggleSoftWrap",
-      reflection: MenuRowReflectionSpec.tickWhen @, "isSoftWrapping", true, "soft wrap"
+    menu.addMenuItem "Soft wrap", @, "toggleSoftWrap",
+      reflection: MenuRowReflectionSpec.tickWhen @, "isSoftWrapping", true, "Soft wrap"
     menu.addLine()
 
-    # a console contributes its own run-menu entries (run selection / run all); a text not in a
+    # a console contributes its own run-menu entries (Run selection / Run contents); a text not in a
     # console runs its own contents. Was a 3-level `instanceof ConsoleWdgt` reach-through.
     # (type-test-elimination campaign)
     console = @parent?.parent?.parent
     if console?.addRunMenuEntriesForText?
       console.addRunMenuEntriesForText menu, @
     else
-      menu.addMenuItem "run contents", @, "doContents"
+      menu.addMenuItem "Run contents", @, "doContents"
   
   setAlignmentToLeft: ->
     @alignment = "left"
@@ -650,16 +666,16 @@ class TextWdgt extends StringWdgt
 
     if @text.length > 0
       menu.prependLine()
-      menu.prependMenuItem "select all", @, "selectAllAndEdit"
-      menu.prependMenuItem "do all", @, "doAll"
+      menu.prependMenuItem "Select all", @, "selectAllAndEdit"
+      menu.prependMenuItem "Do all", @, "doAll"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
     if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
       menu.prependLine()
-      menu.prependMenuItem "inspect selection", @, "inspectSelection", toolTip: "evaluate the\nselected expression\nand inspect the result"
-      menu.prependMenuItem "show selection", @, "showSelection", toolTip: "evaluate the\nselected expression\nand show the result"
-      menu.prependMenuItem "do selection", @, "doSelection", toolTip: "evaluate the\nselected expression"
+      menu.prependMenuItem "Inspect selection", @, "inspectSelection", toolTip: "evaluate the\nselected expression\nand inspect the result"
+      menu.prependMenuItem "Show selection", @, "showSelection", toolTip: "evaluate the\nselected expression\nand show the result"
+      menu.prependMenuItem "Do selection", @, "doSelection", toolTip: "evaluate the\nselected expression"
     menu
 
   # Multi-line text inserts a newline on Enter rather than accepting -- override of

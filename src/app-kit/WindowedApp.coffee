@@ -61,11 +61,11 @@ class WindowedApp
   # receive a WIDGET from a click. A verb that takes nothing cannot be mis-fed by the dispatcher.
   # ⚠ The in-folder variant lives on the launcher class as
   # AppLauncherWdgt.addToFolder — go there rather than re-growing a
-  # parameter here; note the two add/size ORDERS are not interchangeable, which that pair documents.
+  # parameter here; that pair also documents why its add/size orders land the same.
   createOpener: ->
     launcher = AppLauncherWdgt.forApp @
     return unless launcher?
-    # desktop launcher: add first (smart grid placement), then size
+    # desktop launcher: add (the desktop's icon grid places it), then size
     world.add launcher
     launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
 

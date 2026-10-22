@@ -1,8 +1,19 @@
 class ListWdgt extends ViewportWdgt
 
-  # The label rule when a caller supplies none. A STATIC, so every list shares the
-  # one function object rather than each instance carrying its own closure.
-  @defaultLabelGetter: (element) ->
+  # what a person calls me; without it the chain answers my base's "viewport" (my contents panel
+  # has no name of its own to lend, ViewportWdgt.colloquialName)
+  colloquialName: ->
+    "list"
+
+  # my pane's fill, mine and my plane's (which my rows panel stands on), read as we paint while no
+  # builder dresses me otherwise (ViewportWdgt._paneFill)
+  _defaultPaneFill: ->
+    WorldWdgt.theme.listFill
+
+  # The label a row shows for an element. A STATIC, asked at every row build, never stored on an
+  # instance: a function-valued field has no source to serialize, so a list holding one would make
+  # every world it stands in unsaveable.
+  @labelOf: (element) ->
     return element  if Utils.isString element
     return element.toSource()  if element.toSource
     element.toString()
@@ -20,13 +31,21 @@ class ListWdgt extends ViewportWdgt
     false
 
   elements: undefined
-  labelGetter: undefined
   format: undefined
   listContents: undefined # a CommandPanelWdgt with the contents of the list
   selected: undefined # the selected ROW: the MenuItemWdgt `select` was dispatched with (slot 1); its labelString is the element's label
+  # my target's methods I dispatch BY NAME, each handed an element's label: `action` when a row is
+  # selected (select), `doubleClickAction` when a row is double-clicked (openRow) -- strings, so a
+  # copy of me dispatches at its own target and I hold no closure
   action: undefined
   target: undefined
   doubleClickAction: undefined
+  # MEMBER ROWS: the name of my target's query that tells me what each element is as a MEMBER, or
+  # undefined for a plain list. Handed an element, it answers {kindTag, dimmed} (a MemberRowWdgt's
+  # kind tag, and whether its name is dimmed), and my rows are then member rows, in a member list's
+  # look: each a kind tag and the element's name cropped to the row, as wide as I am
+  # (_positionAndResizeChildren). Asked once per element, as my rows are built.
+  memberFactsQuery: undefined
 
   # The rows are the operand: every caller supplies them, while only the inspector
   # supplies target/action — which as leading positionals made the other six sites
@@ -34,9 +53,9 @@ class ListWdgt extends ViewportWdgt
   constructor: (@elements = [], opts = {}) ->
     @target = opts.target
     @action = opts.action
-    @labelGetter = opts.labelGetter ? ListWdgt.defaultLabelGetter
     @format = opts.format ? []
     @doubleClickAction = opts.doubleClickAction
+    @memberFactsQuery = opts.memberFactsQuery  if opts.memberFactsQuery?
     #
     #    passing a format is optional. If the format parameter is specified
     #    it has to be of the following pattern:
@@ -50,16 +69,16 @@ class ListWdgt extends ViewportWdgt
     #
     #    multiple conditions can be passed in such a format list, the
     #    last predicate to evaluate true when given the list element sets
-    #    the given format category (color, bold, italic).
-    #    If no condition is met, the default format (color black, non-bold,
-    #    non-italic) will be assigned.
+    #    the given format category (color, bold, italic) of that element's
+    #    row. If no condition is met, the row keeps its look's own (its ink,
+    #    non-bold, non-italic).
     #
-    #    An example of how to use formats can be found in the InspectorWdgt's
-    #    "_filterProperties" mechanism.
+    #    A format's predicates are functions, which a snapshot cannot save;
+    #    a member list says what its rows show through memberFactsQuery, a
+    #    method name, instead.
     #
     super()
     @contents.disableDrops()
-    @color = WorldWdgt.theme.listFill
     @_buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
     # instead of undefined because the scrollbars (inherited from Viewport)
@@ -80,10 +99,15 @@ class ListWdgt extends ViewportWdgt
     # rows, not a (crippled) menu. No pop-up lifetime (not a pop-up: nothing
     # dismisses these rows on a click outside them), no title (a plain square
     # body), and selectsItemsOnClick so a click SELECTS a row rather than
-    # triggering it.
-    @listContents = new CommandPanelWdgt target: @, selectsItemsOnClick: true
+    # triggering it -- and so the panel builds its rows as LIST rows, in the list
+    # look (MenuItemWdgt's constructor), not as menu rows; as MEMBER rows
+    # (MemberRowWdgt), in the member look, when I have a memberFactsQuery.
+    @listContents = new CommandPanelWdgt target: @, selectsItemsOnClick: true, memberRows: @memberFactsQuery?
     @listContents.isLockingToPanels = true
-    @elements = ["(empty)"]  if !@elements.length
+    # with no elements at all I show one placeholder row -- my own words, not an element of my
+    # target's, so my target is never asked about it
+    placeholder = !@elements.length
+    @elements = ["(empty)"]  if placeholder
     @_repaintAsOneUnit =>
       @elements.forEach (element) =>
         color = undefined
@@ -99,11 +123,17 @@ class ListWdgt extends ViewportWdgt
               else # assume it's a color
                 color = pair[0]
 
-        @listContents.addMenuItem @labelGetter(element), @, "select",
+        # what a member row shows of its element beside the name, from my target
+        memberFacts = if @memberFactsQuery? and !placeholder then @target[@memberFactsQuery] element else {}
+
+        # a row's double-click reaches me (openRow, slot 1 the row), and I forward it to my target
+        @listContents.addMenuItem (ListWdgt.labelOf element), @, "select",
           color: color
           bold: bold
           italic: italic
-          doubleClickAction: @doubleClickAction
+          kindTag: memberFacts.kindTag
+          dimmed: memberFacts.dimmed
+          doubleClickAction: (if @doubleClickAction? then "openRow")
 
     @listContents.__commitMoveTo @contents.position()
     @listContents._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
@@ -126,6 +156,24 @@ class ListWdgt extends ViewportWdgt
     if @action? and @action != ""
       @target[@action].call @target, row.labelString
     return
+
+  # A row's DOUBLE-click dispatches here, the row again in slot 1 (ButtonWdgt.triggerDoubleClick), and
+  # follows the click that selected it: my target's doubleClickAction is run on the row's label.
+  openRow: (row) ->
+    @target[@doubleClickAction].call @target, row.labelString
+    return
+
+  # MY MEMBER ROWS ARE AS WIDE AS I AM. At every arrange of mine -- the settle of my build, a resize,
+  # a re-fit -- and before my viewport's arrange measures my plane, my rows panel takes my width and
+  # lays its rows out at it: it keeps that width (CommandPanelWdgt._myArrangedWidth), so each member
+  # row is my width less the panel's padding, a long name is cropped in its row, and I never scroll
+  # sideways. A plain list's panel hugs its widest row instead and may run past me (my horizontal
+  # bar). My rows panel does not exist yet while my viewport base builds its own chrome.
+  _positionAndResizeChildren: ->
+    if @memberFactsQuery? and @listContents? and @listContents.width() isnt @width()
+      @listContents._applyExtentBase new Point @width(), @listContents.height()
+      @listContents._reLayoutChildren()
+    super
 
   
   _applyExtent: (aPoint) ->

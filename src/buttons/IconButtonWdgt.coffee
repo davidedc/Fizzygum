@@ -1,23 +1,22 @@
-# Base for the small icon-shaped buttons that live in window / panel chrome
-# (close, collapse, un-collapse, edit, make-internal, make-external, …).
+# Base for the small icon buttons of chrome: a window strip's close, collapse, un-collapse and
+# edit pieces, and a toolbar strip's overflow chevron.
 #
-# Each sends a message to a target object when pressed and takes its SHAPE
-# from an IconAppearance rather than from a label/face widget. Driving the
-# shape through the appearance (plus a hover/press colour) is currently the
-# simplest way to give a NON-rectangular button its colour — recolouring a
-# button's face widget isn't supported yet.
+# Each sends a message to a target object when pressed and draws its MARK -- the glyph -- through
+# an IconAppearance rather than through a label or a face widget. The glyph is painted in my
+# colour, so the hover/press state machine (HighlightableMixin) recolours it. What a pointer hits
+# is my whole box, never the glyph's outline: an icon appearance keeps the base box test
+# (Appearance.shapeContainsPoint), because the box is the target and the glyph only the mark drawn
+# inside it (ruling G3). (The toolbar's overflow chevron re-answers both: it wears a tool cell's
+# look, its state on a rounded plate that is also its shape, OverflowChevronButtonWdgt.)
 #
 # A subclass supplies only what differs from this base:
-#   createAppearance   -> new <Foo>IconAppearance @   (the icon shape)
+#   createAppearance   -> new <Foo>IconAppearance @   (the glyph's shape)
 #   toolTipMessage     :  "…"                          (hover tooltip)
 #   actOnClick         -> …                            (what the press does)
-#   iconHoverColor     :  <Color>                      (only if not the default orange)
+# My glyph's ink is the same for every subclass: a frame's strip inks the pieces it carries itself
+# (setGlyphInk, below), and a piece no strip inks wears the icon button's roles (_updateColor).
 
 class IconButtonWdgt extends ButtonWdgt
-
-  # hover / press colour for the family (orange); a subclass overrides this
-  # field if it wants a different one (e.g. CloseIconButtonWdgt → red).
-  iconHoverColor: Color.create 255, 153, 0
 
   # THE SIDE MY MARK IS DRAWN AT inside my box, read by IconAppearance.calculateRectangleOfIcon.
   # A chrome button is a TARGET first (ruling G3), so a title strip sizes me to the whole slot it
@@ -42,13 +41,32 @@ class IconButtonWdgt extends ButtonWdgt
     # not have a parent yet, so the button targets ITSELF and routes the
     # press to its own actOnClick (see the super args: target = @).
     super @, 'actOnClick', face: new Widget
-    @color_hover = @iconHoverColor
-    @color_pressed = @color_hover
-    # MY RESTING COLOUR IS THE ONE I AM BUILT AT. HighlightableMixin repaints me at color_normal
-    # on every hoverExited and pressEnded, so leaving that at the mixin's generic default while my
-    # own @color says something else means I change colour the first time a pointer visits me and
-    # never change back -- a glyph whose shade records whether anyone ever hovered it. Stating the
-    # two as one value is what makes a pointer visit round-trip to the same pixels. (The same
-    # pairing OverflowChevronButtonWdgt writes out for its own dark mark.)
-    @color_normal = @color
     @appearance = @createAppearance()
+
+  # HighlightableMixin's colour hook, which every one of its state transitions calls after setting
+  # @state (and ButtonWdgt's constructor, once): my glyph's ink for the state I am in now -- the
+  # state machine's own field for it when the strip that carries me has set one (setGlyphInk), else
+  # the icon button's role, read here: iconButtonGlyph at rest, iconButtonGlyphActive hovered and
+  # pressed. The constructor and every transition derive it the same way, so a pointer visit
+  # round-trips my glyph to the pixels it had.
+  _updateColor: ->
+    theme = WorldWdgt.theme
+    @color = switch @state
+      when @STATE_HIGHLIGHTED then @color_hover ? theme.iconButtonGlyphActive
+      when @STATE_PRESSED then @color_pressed ? theme.iconButtonGlyphActive
+      else @color_normal ? theme.iconButtonGlyph
+    @_changed()
+
+  # MY GLYPH'S INK, as the strip that carries me names it (FrameBarWdgt._inkGlyphButtons, from its
+  # frame's look): `restInk` at rest, `activeInk` while I am hovered and while I am pressed. All the
+  # state machine's colours move together, so every transition paints the strip's ink, and @color
+  # follows at once, in whatever state I am in now. The same inks again are a no-op: a strip
+  # re-inks every piece it carries at each derivation of its skin.
+  setGlyphInk: (restInk, activeInk) ->
+    unchanged = @color_normal?.equals(restInk) and @color_hover?.equals(activeInk) and
+      @color_pressed?.equals(activeInk)
+    return if unchanged
+    @color_normal = restInk
+    @color_hover = activeInk
+    @color_pressed = activeInk
+    @_updateColor()

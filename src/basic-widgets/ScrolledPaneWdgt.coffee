@@ -10,6 +10,9 @@
 # What lives HERE is only what is true of the default plane BY CONSTRUCTION — so PanelWdgt
 # stays purely the SURFACE class, with no plane-conditional second personality (scroll-frame
 # role plan P3):
+#   - it wears its viewport's LOOK: holding no colour of its own, it paints in the fill and the
+#     border of the box its viewport presents (ViewportWdgt._paneFill, _surfaceStroke), so the two
+#     wear one look -- a list's, a text area's, the one a builder dressed the viewport in;
 #   - its membership changes are relayed to the viewport's HOLDER (the bin listens);
 #   - a click on its empty part forwards the caret to a lone editable text child.
 # (The color/alpha up-relays that keep the viewport's mimic paint values true are NOT here —
@@ -20,6 +23,14 @@ class ScrolledPaneWdgt extends PanelWdgt
 
   # (the color/alpha up-relays that keep my viewport's mimic values true live on PanelWdgt now —
   # every panel-family plane relays, not just me)
+
+  # ── my LOOK while I hold no colour of my own: my viewport's pane's, asked as I paint ─────────
+  # (outside a viewport -- never the case for a plane a viewport built -- the panel's own)
+  _surfaceFill: ->
+    if @_amITheContentsPanelOfAViewport() then @parent._paneFill() else super()
+
+  _surfaceStroke: ->
+    if @_amITheContentsPanelOfAViewport() then @parent._surfaceStroke() else super()
 
   # ── the membership relays to the viewport's HOLDER ────────────────────────────────────────
   # (@parent = the viewport, @parent.parent = whoever holds it — e.g. the bin, which

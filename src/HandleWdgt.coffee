@@ -1,5 +1,13 @@
 # not to be confused with the ActivePointerWdgt
 # I am a resize / move handle that can be attached to any Widget
+#
+# A subclass that keeps every gesture of a handle but looks, sizes or sits differently supplies only
+# what differs (the frame's own resize grip, FrameGripWdgt, is one):
+#   createAppearance   -> new <Foo>Appearance @    (my look, and so the shape I react on)
+#   _castMyShadow      -> …                        (the shadow I cast wherever I am added)
+#   _cornerSide        -> <px>                     (the side of my square)
+#   _cornerInsetFrom   (target) -> <Point>         (how far in from my target's edges I sit)
+#   cornerFootprint    -> <px>                     (how much of my target's corner I take)
 
 class HandleWdgt extends Widget
 
@@ -17,14 +25,20 @@ class HandleWdgt extends Widget
   _rotateGrabStartRotationDegrees: undefined
   _rotateGrabStartPointerAngleDegrees: undefined
 
-  state: 0
-  STATE_NORMAL: 0
-  STATE_HIGHLIGHTED: 1
+  # MY POINTER STATE, two facts kept apart because they end apart: whether the pointer is over me
+  # (hoverEntered / hoverExited), and whether a press that began on me still stands (pressBegan,
+  # until its release, the end of its drag, the pointer leaving me while nothing is dragged, or my
+  # moving to another parent). My plate shows the press while it stands and the hover otherwise
+  # (_plateFillForMyState), so its look after a gesture is a function of where the gesture left the
+  # pointer and me, whatever order the events of a busy cycle arrive in: a handle travels with its
+  # drag, so the pointer can leave and re-enter me under a press.
+  _isHovered: false
+  _isPressed: false
 
   # (No catchesPointerAt of my own: WHERE I react is my SHAPE, and the shape is my appearance's
-  # business -- HandleAppearance.shapeContainsPoint answers the striped triangle for the corner
-  # resizer and the box for every other type, the same way the round bar buttons react on their
-  # circles.)
+  # business -- HandleAppearance answers my whole box for every type, the corner resizer's included,
+  # the same way an icon button's appearance answers its whole box, and the way the frame grip's
+  # glyph appearance answers its whole square.)
 
   # Resize / move / rotate handles are CHROME, never editor content (§5.D D-3/D21). Clicking or dragging a
   # handle to reshape a widget must NOT make the handle world.editorFocusWdgt -- otherwise the editor-focus
@@ -41,13 +55,39 @@ class HandleWdgt extends Widget
   # @inset are set in _reactToBeingAdded once the destination -- which IS the target -- is known (history:
   # see docs/archive/end-of-cycle-flush-final-records-plan.md).
   constructor: (@type = "resizeBothDimensionsHandle") ->
-    # default inset; recomputed against the real target's padding in _reactToBeingAdded when I corner-attach
+    # default inset; recomputed against the real target (_cornerInsetFrom) in _reactToBeingAdded when I
+    # corner-attach
     @inset = new Point 2, 2
     super()
-    @appearance = new HandleAppearance @
-    @color = WorldWdgt.theme.handleArtInk
+    @appearance = @createAppearance()
 
-    @cornerSpec = new CornerInternalLayoutSpec @_anchorForType(), 0, WorldWdgt.theme.handleSize, @inset
+    @cornerSpec = new CornerInternalLayoutSpec @_anchorForType(), 0, @_cornerSide(), @inset
+
+  # my look: the button's plate over my whole box with my type's glyph on it. A method, not a class
+  # field, so the boot dependency finder sees the `new` edge (widget-authoring guidelines §5).
+  createAppearance: -> new HandleAppearance @
+
+  # THE SHADOW I CAST: my plate floats over whatever I stand on, so I cast the one desktop shadow
+  # (visual-design-system §4.4) wherever I am added -- over the widget I resize as on the desktop.
+  # Asked after every add (_reactToBeingAdded), because the add's own shadow management
+  # (Widget._addNoSettle) leaves a widget added anywhere but the world without one; a hand that
+  # carries me adds its lift after this. My appearance casts my plate's silhouette.
+  _castMyShadow: ->
+    theme = WorldWdgt.theme
+    @__addShadow theme.desktopShadowOffset, theme.desktopShadowAlpha
+
+  # the side of my square, which the corner pass sizes me to
+  _cornerSide: -> WorldWdgt.theme.handleSize
+
+  # HOW FAR IN FROM MY TARGET'S EDGES I SIT once attached to it: its padding, never less than 2.
+  _cornerInsetFrom: (target) ->
+    pad = Math.max (target.padding ? 2), 2
+    new Point pad, pad
+
+  # HOW MUCH OF MY TARGET'S BOTTOM-RIGHT CORNER I TAKE, along each axis: the length a viewport
+  # running out to that corner stops its bars short of it by (ViewportWdgt._cornerReserveFor). A
+  # plain handle answers its side.
+  cornerFootprint: -> @_cornerSide()
 
   # I corner-attach (the corner fixed by my @type) to whatever widget I am added to -- that widget becomes my
   # resize/move @target. Added to the WORLD or the HAND (a naked desktop handle, or while detached / picked
@@ -104,13 +144,16 @@ class HandleWdgt extends Widget
     # Adopt whoever I was just added to as my resize/move @target -- UNLESS I landed free-floating (on the
     # world or the hand: a naked desktop handle, or mid-detach), in which case I have no target. The spec was
     # already resolved by defaultLayoutSpecWhenAddedTo during the add, so @isFreeFloating() tells the two
-    # apart. Recompute the corner inset from the real target's padding now that I know it (the constructor only
-    # had a default 2; for every non-menu attach the construction target used to supply this -- same value).
+    # apart. Recompute the corner inset against the real target now that I know it (the constructor only had
+    # a default 2).
     unless @isFreeFloating()
       @target = whereTo
-      pad = Math.max (@target.padding ? 2), 2
-      @inset = new Point pad, pad
+      @inset = @_cornerInsetFrom @target
       @cornerSpec.inset = @inset
+    # a press does not survive a change of parent: a hand that picks me up or drops me ends it
+    # with no release reaching me
+    @_setPointerState @_isHovered, false
+    @_castMyShadow()
     @_moveInFrontOfSiblings()
 
   # WHETHER I SHOW. Two questions, both about my parent: does it own its own placement (a
@@ -127,23 +170,15 @@ class HandleWdgt extends Widget
       @show()
     else
       @hide()
-    @_tellCornerViewportsMyShowingChanged()  unless @isVisible is showedBefore
+    # I came or went, so the viewports keeping my parent's bottom-right corner free for me re-lay
+    # what they keep clear of it: down my parent's corner chain (Widget.noteCornerChainChanged)
+    @parent?.noteCornerChainChanged()  unless @isVisible is showedBefore
 
   # The two questions above, as a query: what my showing derives from, asked without asking whether I
   # show. A viewport that runs out to my parent's bottom-right corner keeps that corner free for me
-  # by this answer (ViewportWdgt._aResizerSitsOverMyCorner) -- a visibility is never a layout input.
+  # by this answer (ViewportWdgt._resizerOverMyCorner) -- a visibility is never a layout input.
   wouldShow: ->
     @parent? and @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)
-
-  # I came or went, so the viewports keeping my parent's bottom-right corner free for me re-lay their
-  # bars: down the corner chain (bottomRightCornerReachedBy) from my parent, each one reached.
-  _tellCornerViewportsMyShowingChanged: ->
-    visit = (container) ->
-      for child in container.children when container.bottomRightCornerReachedBy?(child)
-        child.noteCornerResizerChanged?()
-        visit child
-      return
-    visit @parent  if @parent?
 
 
   # implement dummy methods in here
@@ -152,7 +187,10 @@ class HandleWdgt extends Widget
   activated: ->
   # Affine transforms (§6 Phase 4B): end of a rotate gesture — clear the grab-start state so the next
   # grab re-captures its own reference angle. Harmless for the other handle types (fields stay undefined).
+  # The release ends my press; whether my plate then shows the hover is the pointer's business
+  # (hoverEntered / hoverExited).
   pressEnded: ->
+    @_setPointerState @_isHovered, false
     @_rotateGrabStartRotationDegrees = undefined
     @_rotateGrabStartPointerAngleDegrees = undefined
     # RE-RECORD request (the F6 family, auto-bookkeeping arc): this gesture resized/moved my
@@ -166,7 +204,9 @@ class HandleWdgt extends Widget
   # same here, the handle doesn't want to propagate
   # anything, otherwise the handle on a button
   # will trigger the button when resizing.
+  # The press shows on my plate whether or not I have a target.
   pressBegan: (pos) ->
+    @_setPointerState @_isHovered, true
     return undefined  unless @target
     @target.bringToForeground()
     # Affine transforms (§6 Phase 4B): capture the rotate gesture's reference frame AT PRESS — the
@@ -241,18 +281,47 @@ class HandleWdgt extends Widget
   
   # HandleWdgt events:
   hoverEntered: ->
-    @state = @STATE_HIGHLIGHTED
-    @_changed()
+    @_setPointerState true, @_isPressed
 
+  # The pointer leaving me ends my press unless it drags me: a drag carries me along, and the pointer
+  # may outrun me while it does, but a press that left without dragging is abandoned (the button's
+  # rule). A finger's stroke ends with this too, once its press and drag are cleared
+  # (ActivePointerWdgt._dissolveHoverStateOfTouchStroke), which ends a press its hold took over.
   hoverExited: ->
-    @state = @STATE_NORMAL
+    @_setPointerState false, @_isPressed and world.hand.isThisPointerDraggingSomething()
+
+  # the drag that began on me is over, wherever the pointer is: so is my press
+  endOfNonFloatDrag: ->
+    @_setPointerState @_isHovered, false
+
+  # my pointer state, and a repaint of me when it changes
+  _setPointerState: (hovered, pressed) ->
+    return if hovered is @_isHovered and pressed is @_isPressed
+    @_isHovered = hovered
+    @_isPressed = pressed
     @_changed()
 
-  # Menu action ("attach..." -> choose target): corner-attach this handle to the chosen widget. A discrete
+  # my plate's fill and border for the pointer state I am in now, which my appearance reads as it
+  # paints: the press look while a press stands, else the hover look while the pointer is over me,
+  # else the rest look
+  _plateFillForMyState: ->
+    theme = WorldWdgt.theme
+    if @_isPressed
+      theme.handlePlatePressFill
+    else if @_isHovered
+      theme.handlePlateHoverFill
+    else
+      theme.handlePlateFill
+
+  _plateStrokeForMyState: ->
+    theme = WorldWdgt.theme
+    if @_isPressed then theme.handlePlatePressStroke else theme.handlePlateStroke
+
+  # Menu action ("Attach" -> the "target" chooser): corner-attach this handle to the chosen widget. A discrete
   # user action, so it goes through the public self-settling add() -- the corner placement comes from default
   # LayoutSpecWhenAddedTo and @target is adopted in _reactToBeingAdded (the destination IS the new target). add()
   # also unlinks me from any previous parent (e.g. the world, if I had been detached). Kept on this name + arg
-  # position because the "attach..." menu dispatches it by string with the chosen target as the 3rd argument.
+  # position because the "Attach" chooser dispatches it by string with the chosen target as the 3rd argument.
   makeHandleSolidWithParentWidget: (ignored, ignored2, widgetAttachedTo) ->
     widgetAttachedTo?.add @
 
@@ -260,12 +329,14 @@ class HandleWdgt extends Widget
   # HandleWdgt menu:
   attach: ->
     choices = world.plausibleTargetAndDestinationWidgets @
-    menu = new MenuWdgt @, target: @, title: "choose target:"
+    menu = new MenuWdgt @, target: @, title: "target"
     if choices.length > 0
-      choices.forEach (each) =>
-        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", @, 'makeHandleSolidWithParentWidget', arg1: each, representsAWidget: true
+      # each row names its widget (CommandPanelWdgt.rowLabelsNaming)
+      labels = CommandPanelWdgt.rowLabelsNaming choices
+      choices.forEach (each, i) =>
+        menu.addMenuItem labels[i], @, 'makeHandleSolidWithParentWidget', arg1: each, representsAWidget: true
     else
       # Not pre-computed: finding eligible widgets is costly, so the list is calculated lazily
       # here, on menu-open; if none are found, show a message instead of hiding the entry.
-      menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleIsAMessage: true
     menu.popUpAtHand() if choices.length

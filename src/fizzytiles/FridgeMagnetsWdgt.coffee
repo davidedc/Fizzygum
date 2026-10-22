@@ -41,13 +41,18 @@ class FridgeMagnetsWdgt extends Widget
     @visualOutput.disableDrops()
     @_addNoSettle @visualOutput
     
-    # source code output pane
+    theme = WorldWdgt.theme
+
+    # source code output pane: its text in the code role (its background is its own role,
+    # FizzytilesCodeWdgt._surfaceBackgroundFill)
     @codeOutput = new FizzytilesCodeWdgt "",
-      backgroundColor: (Color.create 255, 250, 245)
-      backgroundTransparency: 1
+      fontRole: theme.fonts.code
+      color: theme.codeText
     @codeOutput.fridgeMagnetsCanvas = @visualOutput
     @codeOutput.isEditable = true
     @codeOutput.enableSelecting()
+    # off TextWdgt's default SCALEUP, onto FLOAT: the code stays at the code role's size however
+    # large the pane is
     @codeOutput.togglefittingSpecWhenBoundsTooLarge()
     @_addNoSettle @codeOutput
 
@@ -57,8 +62,8 @@ class FridgeMagnetsWdgt extends Widget
     @fridge.sourceCodeHolder = @codeOutput
     @_addNoSettle @fridge
 
-    # magnets box
-    @magnetsBox = new PanelWdgt
+    # magnets box (the tiles bin)
+    @magnetsBox = new MagnetsBoxWdgt
     @_addNoSettle @magnetsBox
 
 
@@ -88,22 +93,24 @@ class FridgeMagnetsWdgt extends Widget
     # ----------------------------------------------
 
     # headers --------------------------------------
-    @dragTheTilesHereHeader = new StringWdgt "drag tiles here"
+    # each a caption centred over its pane between its header-line rules, in the caption role, whose
+    # em box fits the 15 px band each is laid in (_layOutOwnContents)
+    @dragTheTilesHereHeader = new StringWdgt "Drag tiles here", fontRole: theme.fonts.fizzytilesCaption, color: theme.fizzytilesCaptionText
     @dragTheTilesHereHeader.toggleHeaderLine()
     @dragTheTilesHereHeader.alignCenter()
     @_addNoSettle @dragTheTilesHereHeader
 
-    @tilesBinHeader = new StringWdgt "tiles bin"
+    @tilesBinHeader = new StringWdgt "Tiles bin", fontRole: theme.fonts.fizzytilesCaption, color: theme.fizzytilesCaptionText
     @tilesBinHeader.toggleHeaderLine()
     @tilesBinHeader.alignCenter()
     @_addNoSettle @tilesBinHeader
 
-    @liveCodeLangOutputHeader = new StringWdgt "LiveCodeLang output"
+    @liveCodeLangOutputHeader = new StringWdgt "LiveCodeLang output", fontRole: theme.fonts.fizzytilesCaption, color: theme.fizzytilesCaptionText
     @liveCodeLangOutputHeader.toggleHeaderLine()
     @liveCodeLangOutputHeader.alignCenter()
     @_addNoSettle @liveCodeLangOutputHeader
 
-    @outputAnimationHeader = new StringWdgt "output animation"
+    @outputAnimationHeader = new StringWdgt "Output animation", fontRole: theme.fonts.fizzytilesCaption, color: theme.fizzytilesCaptionText
     @outputAnimationHeader.toggleHeaderLine()
     @outputAnimationHeader.alignCenter()
     @_addNoSettle @outputAnimationHeader

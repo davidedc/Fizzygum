@@ -1,25 +1,23 @@
-# A window-content citizen in the ErrorsLogViewerWdgt/InspectorWdgt mould: a plain
-# Widget with no background of its own (the wrapping FrameWdgt paints it), a main
-# pane filling the body, and a 15-high bottom button row that reserves the
-# sizing-handle corner.
+# A window-content citizen in the ErrorsLogViewerWdgt mould: a plain Widget that paints no
+# background of its own (the wrapping FrameWdgt paints it) -- only its footer band's rule -- with
+# a main pane filling the body down to a footer band (FooterBandLayout) that holds its one
+# button.
 class BinWdgt extends Widget
 
   # panes:
   viewport: undefined
   emptyBinButton: undefined
 
+  # the main pane's inset from my top and sides; it always runs down to my footer band.
   externalPadding: 0
-  internalPadding: 5
-
-  # the Empty-bin button's natural width -- kept until the window gets too
-  # narrow for it (see _reLayout)
-  emptyBinButtonWidth: 100
 
   constructor: ->
     # a naked (chrome-less) bin must establish its OWN usable extent (the
     # InspectorWdgt idiom); the windowed path (BinOpenerWdgt) overrides this
     # via the window's bounds.
     super new Point 340, 270
+    # my only paint: my footer band's rule, my one seam (_seamRects)
+    @appearance = new SeamRulesAppearance @
     # I only ever appear as a window's content (BinOpenerWdgt always wraps me in a
     # FrameWdgt), and I am a VIEW, not a fixed-proportion artifact: fill the window
     # on both axes and track its resizes (like PaletteWdgt / the text viewports).
@@ -36,7 +34,7 @@ class BinWdgt extends Widget
   
   # NOT homepage-excluded (it long was): the shared world teardown
   # (WorldWdgt._teardownWorldStructureNoSettle) ships in production and calls
-  # this -- with it stripped, "open from file…" on a homepage build crashed
+  # this -- with it stripped, "Open from file…" on a homepage build crashed
   # at teardown.
   empty: ->
     @viewport?.contents?.fullDestroyChildren()
@@ -48,15 +46,16 @@ class BinWdgt extends Widget
   _buildAndConnectChildrenNoSettle: ->
 
     @viewport = new ViewportWdgt
-    # a white content pane, like the inspector's list/detail panes and the text
-    # panels (orphan-construction field writes; PanelWdgt.setColor keeps the
-    # pair in sync from then on). Drops stay ENABLED: dropping things into the
-    # open bin is how you throw them away.
-    @viewport.color = WorldWdgt.theme.binViewportFill
-    @viewport.contents.color = WorldWdgt.theme.binViewportFill
+    # my main pane, dressed in the bin pane's roles (ViewportWdgt.wearPaneRoles, read as it paints,
+    # and its plane wears them too): the binViewportFill, and the window content's border -- like a
+    # code area, it is my window's content down to my footer band, so the window's border and its
+    # strip's rule run along it. Drops stay ENABLED: dropping things into the open bin is how you
+    # throw them away.
+    @viewport.wearPaneRoles fill: "binViewportFill", stroke: "windowContentPanelStroke"
     @_addNoSettle @viewport
 
-    @emptyBinButton = new SimpleButtonWdgt @, "emptyBinRequested", face: "Empty bin"
+    # "…": the press asks first (emptyBinRequested's confirmation) and empties only on a yes
+    @emptyBinButton = new SimpleButtonWdgt @, "emptyBinRequested", face: "Empty bin…"
     @_addNoSettle @emptyBinButton
 
     @_invalidateLayout()
@@ -66,7 +65,7 @@ class BinWdgt extends Widget
   # the framework's only bulk-destructive user action, so it confirms through an
   # in-world menu first; the menu is transient, so dismissal destroys it.
   emptyBinRequested: ->
-    menu = new MenuWdgt @, target: @, title: "Empty the bin?\nEverything shown in it will be\ndestroyed for good."
+    menu = new MenuWdgt @, target: @, title: "Empty the bin?\nEverything shown in it will be\ndestroyed for good.", titleIsAMessage: true
     menu.addMenuItem "Yes, empty it", @, "emptyBin"
     menu.addMenuItem "Cancel"
     # the pointer rests on the first row -- "Yes, empty it" -- where this confirmation wants it
@@ -107,7 +106,7 @@ class BinWdgt extends Widget
     world.noteStorageMembershipMayHaveChanged()
 
   # AN EXPLICIT DROP INTO MY OPEN WINDOW CARRIES TRASH INTENT (reference-widgets plan R5,
-  # ratified 2026-08-19): run the same sever the "move to trash" menu row runs, so the drop
+  # ratified 2026-08-19): run the same sever the "Move to trash" menu row runs, so the drop
   # STICKS -- without it, a still-referenced widget put in the bin is re-filed to the shelf by
   # the very next drain and visibly escapes the bin, silently overriding the user's gesture.
   # This hook fires ONLY for user drops (the drop-specific relay in
@@ -127,6 +126,10 @@ class BinWdgt extends Widget
     world.noteStorageMembershipMayHaveChanged()
 
 
+  # My one seam: my footer band's rule, between the main pane and the button.
+  _seamRects: ->
+    [FooterBandLayout.ruleIn new Rectangle 0, 0, @width(), @height()]
+
   _reLayout: (newBoundsForThisLayout) ->
     @_reLayoutWithOwnContents newBoundsForThisLayout
 
@@ -134,22 +137,14 @@ class BinWdgt extends Widget
   # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
   _layOutOwnContents: ->
 
-    # the main pane fills the body above the button row (the
-    # ErrorsLogViewerWdgt scheme: the row's height is the handleSize band)
-    mainPaneHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.theme.handleSize
-    mainPaneBottom = @top() + @externalPadding + mainPaneHeight
+    # the main pane from externalPadding in at my top and sides, flush down to my footer band
+    # (clamped at 0: a transient degenerate height must not invert its rect)
+    mainPaneTop = @top() + @externalPadding
+    mainPaneHeight = Math.max 0, (FooterBandLayout.topIn @bounds) - mainPaneTop
 
     if @viewport.parent == @
-      @viewport._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainPaneHeight
+      @viewport._applyBounds (new Point @left() + @externalPadding, mainPaneTop), new Point @width() - 2 * @externalPadding, mainPaneHeight
 
-    # the Empty-bin button sits at the LEFT of the bottom row (owner-placed:
-    # destructive action away from the sizing-handle corner) at its NATURAL
-    # width -- it shrinks only when the window gets narrower than natural
-    # width + padding + the sizing handle (both always spared). Integer by
-    # construction: a constant clamped by integer geometry.
-    if @emptyBinButton.parent == @
-      rowWidth = @width() - 2 * @externalPadding - @internalPadding - WorldWdgt.theme.handleSize
-      buttonWidth = Math.max 0, Math.min @emptyBinButtonWidth, rowWidth
-      buttonBounds = new Rectangle new Point @left() + @externalPadding, mainPaneBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonWidth, 15
-      @emptyBinButton._reLayout buttonBounds
+    # the Empty-bin button sits at the LEFT of my footer band (owner-placed: the destructive
+    # action away from the grip's corner), at its own size
+    FooterBandLayout.arrange @, [@emptyBinButton], []

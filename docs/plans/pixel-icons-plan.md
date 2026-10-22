@@ -2,12 +2,13 @@
 
 **Status**: two tracks. The BITMAP (ASCII index-mask) track: PLAN ONLY — AUTHORED
 2026-07-18, phases P0–P6 NOT STARTED, gated on the §5 owner re-judge. The SIZE-AWARE
-vector track (§5b): **LIVE and rolling** — 9 icons landed (Typewriter, Folder,
-ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel, PatchProgramming,
-SimpleSlide, Dashboards — the ENTIRE slide-card family, retiring IconAppearance's
-legacy bezier `_paintSlideOutline`/`_paintSlideCard` — and the owner-redesigned
-Bin) + the `SizeAwareIconAppearance` base (incl. the reusable `_pxPanel`
-rounded panel and the family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
+vector track (§5b): **LIVE and rolling** — the 11 desktop icons drawn as ONE family in
+the redesign's style (Folder, Bin, Typewriter, PatchProgramming, SimpleSlide,
+GenericPanel, Dashboards, Toolbars, FloppyDisk, FridgeMagnets, SprayCan: one line unit,
+paper interiors, the shared content card), ShortcutArrow in the older halo style, and the
+window-chrome glyphs (Cross, Minus, Plus, ChevronRight, DoubleChevronRight, Tick, Grip),
+over the `SizeAwareIconAppearance` base (`_glyphLineUnit`, the colour roles,
+`_contentCard`, `_pxPanel`); further conversions proceed one icon at a time via the local skill
 `/convert-icon-size-aware` and append lessons to §5b without touching this plan's
 phases. Written to be executed COLD by an LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
 away. Every `file:line` was verified against source on 2026-07-18; **line numbers drift — the
@@ -122,7 +123,7 @@ A fresh session executes this plan as follows:
     (the `iconOutline` role of `Theme.coffee`).
   - Path helpers `oval`/`circle`/`arc` + shared frame primitives (`_paintSlideOutline`,
     `_paintSlideCard`, `_paintWindowTitleDots`, `_paintWindowFrame`,
-    `_paintRoundedSquareBadge`, `_paintPlotAxes`, `_paintPaletteSwatch`, `_paintButtonRing`)
+    `_paintRoundedSquareBadge`, `_paintPlotAxes`, `_paintPaletteSwatch`)
     — code-motion consolidation from a 2026-07 duplication arc. ⚠ **`_paintRoundedSquareBadge`
     is used by the FanoutPin appearance too — a NON-icon appearance** (per the comment on the
     method). Helper cleanup must check all users, not just `icons/`.
@@ -724,6 +725,49 @@ untouched. Extra-small hand-placed tiers stay: the sub-5px key squares/dots and 
     (halos before ink erase nothing; interiors after ink punch through). A raw
     `ctx.fillStyle` in a size-aware painter is now a defect — it silently fattens
     the shadow. Normal-pass renders are untouched (288-render golden check).
+
+**THE DESIGN FAMILY (redesign W4, 2026-10-19) — the 11 desktop icons redrawn as one
+family** (`docs/archive/redesign/redesign-plan.md` §4 W4; the family's rules live in
+`docs/architecture/visual-design-system.md` §4.6). Redrawn in place: Folder (the
+flagship), Bin, Typewriter, PatchProgramming, SimpleSlide, GenericPanel, Dashboards,
+Toolbars; new size-aware bodies: FloppyDisk, FridgeMagnets, and the spray can
+(`SprayCanIconAppearance`, which replaces the paint bucket wherever Draw shows). The
+base gained the family's line unit `_glyphLineUnit` (`max(1, round(S/44))`), the paper
+role `_usePaper` and the shared content card `_contentCardMetrics`/`_contentCard`; the
+redraws left `_pxSlideCard`, `_useDetail` and `_pxBorder` without callers, and they are
+deleted (the dead-method gate fired each time). Every untouched class stayed
+byte-identical through five golden masters. New lessons:
+
+32. **The line weight is set ONCE, by the owner, at the flagship size — then it binds the
+    family.** The plan proposed `round(S/22)` (2 px at 40) to match the draft's 2-unit
+    stroke; the owner chose lighter (one draft unit, `round(S/44)`: 1 px at 40, 2 at 80)
+    and no floor, after seeing both on the flagship. Every later icon took that unit for
+    every line, horizontal and vertical alike; no icon carries a second unit by default.
+33. **Redraw from the landed class, never from the draft's geometry.** Replayed naively
+    on SWCanvas, the draft's SVG paths showed disconnected oblique walls, walls of
+    different h and v thickness, and holes where round caps overlap — every one of them
+    already solved by the landed painters (two parallel edges, ink-then-paper fills,
+    shared lines). The draft gives the proportions; the class gives the pixels.
+34. **SWCanvas leaves the self-overlap of round-capped subpaths in ONE `stroke()`
+    unpainted, and its `fillCircle` under-fills at some diameters** (both measured,
+    both in BACKLOG). Joins are fills, never one multi-subpath stroke; a part that must
+    touch a circle stands on a pixel the circle always inks (the middle of its top
+    row), and a sweep measures circles rather than predicting them.
+35. **A slanted wall's paper edge is its ink edge moved t along the axis NEAREST its
+    normal** (across for a steep flank, down for a shallow star edge), which makes the
+    wall exactly t per row (or column); a rounded corner of the ink and the paper turns
+    about ONE centre. A flank whose run and rise share their largest power of two
+    crosses a pixel centre exactly on some row, where the backend may break the tie
+    either way and the mirror flanks stop agreeing: start it a row lower (the Bin's and
+    the Typewriter's tie rule).
+36. **One small-feature rule for the whole family**: a square under 4 px, a dot from 4,
+    a ring only when its hole keeps 2 px and it is at least 6 px across — each tier
+    read on the SMALLER of the rounded and the exact size, so a feature never turns
+    back into a lower tier as S grows (the knobs' parity alternates with S).
+37. **Probe the APPEARANCE class.** `probe-icon.js --class=TypewriterIconWdgt` renders
+    a correct ladder under the wrong file prefix, and the preview then shows the OLD
+    renders; the golden master's own renders (the same frozen probe) are a valid source
+    for a round's images.
 
 ## §6 Phases
 

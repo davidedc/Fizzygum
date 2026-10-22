@@ -13,7 +13,7 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
 
   # step() (advance @graphNumber, frozen under SystemTest replay) is inherited from GraphsPlotsChartsWdgt.
 
-  drawPlot: (context, color, appliedShadow) ->
+  drawPlot: (context, appliedShadow) ->
 
     @seed = @graphNumber
     circleRadius = 5
@@ -21,7 +21,7 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
     width = @width()
 
     if appliedShadow?
-      @simpleShadow context, color, appliedShadow
+      @simpleShadow context, appliedShadow
       return
 
     context.fillStyle = WorldWdgt.theme.plotBackgroundFill.toString()
@@ -40,4 +40,4 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
         context.fillStyle = '#FF0000'
       context.fillRect Math.round(xPos), Math.round(availableHeight - (availableHeight * heightPerc)), Math.round((1/20)*width - 2), Math.round(availableHeight * heightPerc)
 
-    @drawBoundingBox context, color, appliedShadow
+    @drawBoundingBox context

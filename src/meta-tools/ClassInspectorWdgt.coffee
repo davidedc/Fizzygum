@@ -1,34 +1,39 @@
 class ClassInspectorWdgt extends InspectorWdgt
 
   # the SECOND save destination for a mixin-donated member (see overrideInThisClass);
-  # laid out left of the save button, shown only while such a member is selected
+  # laid out last in my footer band's left group, after remove (_footerLeftButtons), shown only
+  # while such a member is selected
   overrideInThisClassButton: undefined
 
   notifyInstancesOfSourceChange: (propertiesArray)->
     @inspectedObject.constructor.class.notifyInstancesOfSourceChange propertiesArray
 
   # Override the NON-SETTLING core (not the wrapper): the inherited _buildAndConnectChildren wrapper settles
-  # once, and this extension runs inside that single settle -- so the "this class" label is set via the
-  # non-settling _setTextNoSettle, keeping a low-level core free of public self-settling setters.
+  # once, and this extension -- my second save destination -- is built inside that single settle. My
+  # breadcrumb is the base's: my subject is a class's prototype, so its current chip is that class
+  # (InspectorWdgt._classChainNames).
   _buildAndConnectChildrenNoSettle: ->
     super
-    @lastLabelInHierarchy._setTextNoSettle "this class"
-    # part of the base's bottom EDIT ROW, so it exists on the same condition the rest of that row
-    # does: a class whose prototype cannot service an edit (a Point, a Color — anything off the
-    # Widget branch, reachable now that an inspector opens on any value) gets a read-only inspector
-    # with no bottom row at all, and this button is one of its members.
+    # part of the base's EDIT ROW, my footer band, so it exists on the same condition the rest of
+    # that row does: a class whose prototype cannot service an edit (a Point, a Color — anything off
+    # the Widget branch, reachable now that an inspector opens on any value) gets a read-only
+    # inspector with no footer band at all, and this button is one of its members.
     if @_subjectIsEditable()
-      @overrideInThisClassButton = new SimpleButtonWdgt @, "overrideInThisClass", face: "override in this class"
+      @overrideInThisClassButton = new SimpleButtonWdgt @, "overrideInThisClass", face: "Override in this class"
       @_addNoSettle @overrideInThisClassButton
       @overrideInThisClassButton.hide()
 
-  # a mixin-donated INSTANCE member gets the second save destination offered; any
-  # other selection hides it (a static's override would need a constructor-side
-  # assignment -- not offered). (Visibility is not a layout input: whenever the button EXISTS it is
-  # laid out, in _layoutOverrideInThisClassButton, shown or not. Existence is the separate question
-  # the edit row answers -- a read-only subject has no bottom row, hence the `?.` here.)
-  selectionFromList: (selected) ->
-    super
+  # The base's rename and remove follow my selection, and so does my second save destination: a
+  # mixin-donated INSTANCE member gets it offered; any other selection hides it (a static's override
+  # would need a constructor-side assignment -- not offered), and so does NO selection, since a
+  # re-filter clears the attribution with the list. Reached at the end of every selection
+  # (selectionFromList) and of every re-filter. (Visibility is not a layout input: whenever the
+  # button EXISTS it is laid out in my footer band, shown or not, so showing or hiding it moves no
+  # other button. Existence is the separate question the edit row answers -- a read-only subject
+  # has no footer band, and the build reaches here before my extension builds the button, hence the
+  # `?.` here.)
+  _reflectMemberSelection: ->
+    super()
     if @currentPropertySourceMixin? and !@currentPropertySourceIsStatic
       @overrideInThisClassButton?.show()
     else
@@ -56,15 +61,12 @@ class ClassInspectorWdgt extends InspectorWdgt
       goingUpTargetProtChain = goingUpTargetProtChain.__proto__
     undefined
 
-  # layout-apply-sanctioned: apply helper, runs under _reLayout (settle point).
-  # The gap between the remove button and the save button, in the bottom row.
-  _layoutOverrideInThisClassButton: ->
-    buttonLeft = @removePropertyButton.right() + @internalPadding
-    buttonBounds = new Rectangle new Point buttonLeft, @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight (Math.max 10, @saveButton.left() - @internalPadding - buttonLeft), 15
-    @overrideInThisClassButton._reLayout buttonBounds
+  # My footer band's left group: the base's add, rename and remove, then my second save destination
+  # for a mixin-donated member, at its own size like every footer button.
+  _footerLeftButtons: ->
+    super().concat [@overrideInThisClassButton]
 
-  # Destination step past the add... prompt: a class that declares augmentations
+  # Destination step past the Add… prompt: a class that declares augmentations
   # can receive the new member either on itself or on one of its mixins (a member
   # added to a mixin appears on every non-shadowing consumer class and is logged
   # for snapshot replay). An unaugmented class keeps the base single-step flow.
@@ -74,7 +76,8 @@ class ClassInspectorWdgt extends InspectorWdgt
       super
       return
     return unless prop
-    menu = new MenuWdgt @, target: @, title: "add \"" + prop + "\" to:"
+    # the title carries the member's name as typed, so it reads as a message: capitals would re-case it
+    menu = new MenuWdgt @, target: @, title: "add \"" + prop + "\" to:", titleIsAMessage: true
     menu.addMenuItem @inspectedObject.constructor.name, @, "addPropertyToClass", arg1: prop
     for eachMixinGlobalName in augmentations
       menu.addMenuItem eachMixinGlobalName, @, "addPropertyToMixin", arg1: prop, arg2: eachMixinGlobalName
@@ -88,21 +91,20 @@ class ClassInspectorWdgt extends InspectorWdgt
     return unless theMixin?
     theMixin.applyMemberEdit prop, "undefined"
     world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, prop, "undefined"
-    @_buildAndConnectChildren()
+    @_refilterMembers()
 
   # a mixin-donated INSTANCE member (not shadowed by this class) is removed from
   # the DONOR: every non-shadowing consumer class loses it (Mixin.removeMember),
   # and the removal is logged so a world snapshot replays it. A plain member (and
-  # a mixin static) keeps the base prototype-delete flow.
+  # a mixin static) keeps the base prototype-delete flow. Either way my member set is all that
+  # changed, so I re-filter (_refilterMembers), which also drops the removed member's attribution.
   removeProperty: ->
     if @currentPropertySourceMixin? and !@currentPropertySourceIsStatic and @list.selected?
       theMixin = @currentPropertySourceMixin
       propertyName = @list.selected.labelString
       updatedCount = theMixin.removeMember propertyName
       world?.sourceEditsRegistry?.recordMixinMemberRemoval? theMixin.name, propertyName
-      @currentProperty = undefined
-      @currentPropertySourceMixin = undefined
-      @_buildAndConnectChildren()
+      @_refilterMembers()
       @inform "removed from " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"
       return
     super
@@ -134,32 +136,20 @@ class ClassInspectorWdgt extends InspectorWdgt
     theMixinName = @currentPropertySourceMixin.name
     @currentPropertySourceMixin = undefined
     @overrideInThisClassButton?.hide()
-    # the donor label follows the attribution: the member is class-owned now
+    # the donor label follows the attribution: the member is class-owned now, and my breadcrumb band
+    # re-flows without the label
     @mixinDonorLabel?.setText ""
     @save()
     @inform "overridden in " + @inspectedObject.constructor.name + "\n(" + theMixinName + "Mixin edits no longer affect it)"
 
+  # the class name follows the dash as DATA, exactly as the breadcrumb's chip shows it ("Class
+  # Inspector — RectangleWdgt"): a class inspector's subject IS the class
   colloquialName: ->
-    "Class Inspector (" + @inspectedObject.constructor.name.replace("Wdgt", "") + ")"
+    "Class Inspector — " + @inspectedObject.constructor.name
 
-  layoutOwnPropsOnlyToggle: (height) ->
-    # layout-apply-sanctioned: apply helper, runs under _reLayout (settle point)
-
-
-    toggleBounds = new Rectangle new Point @left() + @externalPadding , height
-    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
-    @showMethodsToggle._reLayout toggleBounds
-
-    toggleBounds = new Rectangle new Point @showMethodsToggle.right() + @internalPadding, height
-    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
-    @showFieldsToggle._reLayout toggleBounds
-
-    toggleBounds = new Rectangle new Point @showFieldsToggle.right() + @internalPadding, height
-    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point 2*(@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
-    @showInheritedToggle._reLayout toggleBounds
-
-
-  _buildAndConnectObjOwnPropsButton: ->
+  # a class inspector builds no own-props toggle, so my toggles band holds three
+  # (InspectorWdgt._toggles)
+  _buildAndConnectOwnPropsOnlyToggle: ->
 
   # The shared save scaffolding lives in InspectorWdgt::save; a class inspector
   # differs only in HOW it applies the edit: it evaluates the assignment against

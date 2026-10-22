@@ -7,7 +7,8 @@ class FanoutAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
+    # my widget holds no colour until one is set on it (FanoutWdgt.color): until then the icon ink
+    iconColorString = (@ownColorInsteadOfWidgetColor ? @widget.color ? WorldWdgt.theme.iconInk).toString()
     highlightColorString = 'rgb(184, 184, 184)'
     #// highlight Drawing
     context.beginPath()

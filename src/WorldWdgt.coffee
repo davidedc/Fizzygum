@@ -35,9 +35,9 @@ class WorldWdgt extends IconGridPanelWdgt
   errorConsole: undefined
 
   # Scratch buffer holding the last serialised widget's string. It is a CARRIER between two
-  # separate user actions -- the "serialise widget to memory" test-menu row (or a macro's
-  # evaluateString step) writes it, and the "deserialize from memory..." row that follows reads
-  # it back -- which is what lets serialization be driven as two menu picks instead of one
+  # separate user actions -- the "Serialise widget to memory" test-menu row (or a macro's
+  # evaluateString step) writes it, and the "Deserialize from memory and attach to …" rows
+  # that follow read it back -- which is what lets serialization be driven as two menu picks instead of one
   # atomic call. Nothing else reads it, and its value means nothing outside the pair.
   lastSerializationString: ""
 
@@ -159,7 +159,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # recorded value is the latched true. It is load-bearing at reconstruction: resetWorld hands it to
   # the replacement's constructor, so the successor is built with the policy BOOT chose rather than
   # with whatever the finished session left in @automaticallyAdjustToFillEntireBrowserAlsoOnResize
-  # ("fit whole page", the dev context-menu item, latches that ON for good).
+  # ("Fit whole page", the dev context-menu item, latches that ON for good).
   #   There is deliberately no companion record of the boot EXTENT. A world's size is world-level
   # mutable state, and coming back from a mid-session resize is CONSTRUCTION's job: the replacement
   # runs the same sizing branch boot's world ran — size the canvas, then set the bounds from it —
@@ -308,7 +308,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # --- editor-focus selection (§5.D D-3/D21; selection-overlay-unification arc) --------------------
   # The widget generically SELECTED for editing this cycle, or undefined. PULL model: recomputed each cycle from
-  # editorFocusWdgt + the edit-mode predicate (_updateEditorSelectionOverlay), so it can't drift. The
+  # editorFocusWdgt + the edit-mode predicate + where the caret is (_updateEditorSelectionOverlay), so it can't drift. The
   # selection is drawn as a per-widget PAINT-TIME overlay (Widget._drawSelectionOverlay) on top of the
   # selected widget's own content, NOT a separate world-attached widget -- so it rides that widget's own
   # z-order + back-buffer for free. This is a once-per-cycle cache; the per-widget paint reads it via the
@@ -352,7 +352,6 @@ class WorldWdgt extends IconGridPanelWdgt
 
   widgetsReferencingOtherWidgets: undefined
   incrementalGcSessionId: 0
-  desktopSidesPadding: 10
 
   # the desktop lays down icons vertically
   laysIconsHorizontallyInGrid: false
@@ -370,6 +369,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # this one is so we can left/center/right align in
   # a document editor the last widget that the user "touched"
+  # Read as a field by anyone; WRITTEN only through _setEditorFocusNoSettle, the one write, which
+  # announces every change to whatever mirrors the edited text (a text toolbar's tools).
   # TODO this could be extended so we keep a "list" of
   # "selected" widgets (e.g. if the user ctrl-clicks on a widget
   # then it highlights in some manner and ends up in this list)
@@ -525,7 +526,6 @@ class WorldWdgt extends IconGridPanelWdgt
     @appearance = new DesktopAppearance @
 
     @color = WorldWdgt.theme.worldFill
-    @strokeColor = undefined
 
     @alpha = 1
 
@@ -692,15 +692,21 @@ class WorldWdgt extends IconGridPanelWdgt
     splashScreenFakeDesktop = document.getElementById 'splashScreenFakeDesktop'
     splashScreenFakeDesktop?.parentNode?.removeChild splashScreenFakeDesktop
 
+  # The desktop draws no border of its own (not the generic panel's): my DesktopAppearance asks this
+  # while I hold no stroke colour, as every panel's does. My fill is my own colour, the desktop's,
+  # which the user can set.
+  _surfaceStroke: ->
+    undefined
+
   createDesktop: ->
-    # the desktop's own furnishing -- its backdrop colour (the theme's desktopFill) and its wallpaper
-    # pattern. Every other chrome DIMENSION and COLOUR is read from the theme where it is used, so
-    # what a page renders does not depend on whether this method ran.
+    # the desktop's own furnishing -- its backdrop colour (the theme's desktopFill). Its wallpaper
+    # is the Wallpaper's own default, plain: the bare desk. Every other chrome DIMENSION and COLOUR
+    # is read from the theme where it is used, so what a page renders does not depend on whether
+    # this method ran.
     @setColor WorldWdgt.theme.desktopFill
-    @wallpaper.setPattern "dots"
 
     acm = new AnalogClockWdgt
-    acm._applyExtent new Point 80, 80
+    acm._applyExtent new Point WorldWdgt.theme.desktopClockSize, WorldWdgt.theme.desktopClockSize
     # the creator ARMS the clock's corner knob (top-right); the corner pass places it, so
     # no hand-computed position here. Corner-anchored until the user grabs it -- the grab
     # disarms the slot and the membership rule takes over (proportional tracking).
@@ -766,7 +772,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
     return mostRecentPopUp
 
-  # used to close temporary menus. Every caller is a top-level gesture -- the "pin" menu row, the
+  # used to close temporary menus. Every caller is a top-level gesture -- the "Pin" menu row, the
   # title-strip tap, the hand's own click-outside sweep -- so each marked popup closes via the
   # self-settling close(), one settle per popup. Only TRANSIENT pop-ups ever enter the marked set
   # (propagateKillPopUps gates on the lifetime), so each drained close lands on
@@ -1560,7 +1566,7 @@ class WorldWdgt extends IconGridPanelWdgt
           # (paint-time-scroll-translation plan Phase 2c) — else it re-adds every cycle.
           desiredParent = target._enclosingMappedPlaneRoot() ? @
           desiredParent.add eachHighlightingWidget  if eachHighlightingWidget.parent != desiredParent
-          eachHighlightingWidget._applyBounds target.clippedThroughBounds()
+          eachHighlightingWidget.coverTarget target
       else
         @currentHighlightingWidgets.delete eachHighlightingWidget
         @widgetsBeingHighlighted.delete target
@@ -1576,7 +1582,7 @@ class WorldWdgt extends IconGridPanelWdgt
         # ⇒ byte-identical to the prior @add hM).
         (eachWidgetNeedingHighlight._enclosingMappedPlaneRoot() ? @).add hM
         hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
-        hM._applyBounds eachWidgetNeedingHighlight.clippedThroughBounds()
+        hM.coverTarget eachWidgetNeedingHighlight
         hM.applyHighlightStyle styleDescriptor
         @currentHighlightingWidgets.add hM
         @widgetsBeingHighlighted.add eachWidgetNeedingHighlight
@@ -1639,26 +1645,60 @@ class WorldWdgt extends IconGridPanelWdgt
         @dragEmbedDockBandWdgt.applyHighlightStyle HighlighterWdgt.candidateOutlineStyle()
       # the overlay is a world child, so anchor it to the band's SCREEN footprint — the host can
       # sit inside a rotated/scaled island, where its own plane-local box is the wrong plane
-      # (off any island mapRectToScreen returns the box unchanged)
+      # (off any island mapRectToScreen returns the box unchanged). The band's corners follow the
+      # host's where they meet them (the host's rounded corners at the body's far edge), read in the
+      # host's plane; a host inside such an island is outlined square, its band on the screen being
+      # the bounding box of a turned rectangle, with no corner of the host's to follow.
       bandHost = @dragEmbedDockBandDeclared.host
-      @dragEmbedDockBandWdgt._applyBounds bandHost.mapRectToScreen @dragEmbedDockBandDeclared.box
+      bandBox = @dragEmbedDockBandDeclared.box
+      bandRadii = if bandHost._isInsideNonIdentityIsland() then undefined else bandHost.cornerRadiiFollowingMyOutline bandBox
+      @dragEmbedDockBandWdgt.coverBox (bandHost.mapRectToScreen bandBox), bandRadii
     else if @dragEmbedDockBandWdgt?
       @dragEmbedDockBandWdgt.fullDestroy()
       @dragEmbedDockBandWdgt = undefined
 
-  # The widget the editor-focus indicator frames (§5.D D-3, decisions D18/D21), or undefined. editorFocusWdgt
-  # is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a SELECTED
-  # op-target within an active editing context, so the indicator frames "this is what an op will act on":
-  #   TEXT      — a caret is up editing exactly this focus widget. They coincide: the click that sets
-  #               editorFocusWdgt = w dispatches to w, whose text handler calls world.edit @ (= w).
+  # THE ONE WRITE OF THE EDITOR FOCUS (editorFocusWdgt). The pointer's click and drop sites
+  # (ActivePointerWdgt), a dying widget taking itself out of the focus (Widget._destroyNoSettle) and
+  # the error-recovery reset (_softResetWorld) all come through here, so a change is ANNOUNCED
+  # whichever of them made it: a markNonValueChange of mine (the focus is not my VALUE), heard by
+  # every text toolbar (TextToolbarWdgt subscribes to me, firesOnAnyChange) and drained by the
+  # cycle's dataflow station, ahead of layout and paint -- so what the text tools show is a function
+  # of the event stream, with no timer. DARK when nothing mirrors the edited text. Settles nothing,
+  # so it is safe inside a pass (the destroy core runs under layout flushes).
+  _setEditorFocusNoSettle: (aWdgt) ->
+    return if aWdgt is @editorFocusWdgt
+    @editorFocusWdgt = aWdgt
+    @dataflow?.markNonValueChange @
+    return
+
+  # A WIDGET'S STYLE MOVED -- a text's weight, slant, font or alignment (StringWdgt's setters), or
+  # whatever an edit made under a widget may have touched (Widget.sourceChanged: an inspector's
+  # saved property). When that widget is the one being edited I announce it exactly as I announce a
+  # new focus, so what mirrors the edited text re-reads it; any other widget's style is nothing the
+  # editor's tools show.
+  noteStyleChanged: (aWdgt) ->
+    return unless aWdgt is @editorFocusWdgt
+    @dataflow?.markNonValueChange @
+    return
+
+  # The widget the editor-focus selection outline frames (§5.D D-3, decisions D18/D21), or undefined.
+  # editorFocusWdgt is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a
+  # SELECTED op-target within an active editing context, so the outline frames "this is what an op will
+  # act on":
   #   CITIZEN   — a pencil-capable widget (providesAmenitiesForEditing) with the pencil engaged
-  #               (dragsDropsAndEditingEnabled). Fires when the focus leaf IS the panel — a text leaf
-  #               inside it has no amenities, so it goes through the caret branch instead.
+  #               (dragsDropsAndEditingEnabled), when the focus leaf IS the panel.
   #   SELECTED  — (D21) a widget SELECTED inside an editable container that is in edit mode, e.g. a clock
   #     ITEM      or image dropped into a document: it has no "edit mode" of its own, but ops (alignment,
   #               …) target it, so it shows the same outline. Its nearest editing-amenities ANCESTOR
   #               (excluding the world) must be in edit mode — a bare selection on the desktop is NOT
   #               framed (the world is an editable panel but is not an "editor" holding selected items).
+  # NEVER a widget a CARET is in — the caret's target is the focus or a widget inside it (a text being
+  # typed into, a text field whose text is being edited): the accent caret already says "focus", so an
+  # outline around it as well would say it twice. That is decided here, in the walk, and not when the
+  # outline paints, because this answer is what _updateEditorSelectionOverlay caches and compares each
+  # cycle: a caret coming or going changes it, and that change is what repaints the widget with its
+  # outline or without it. Once the caret goes (Escape, or an accept), the walk frames the focus again
+  # if a branch above selects it.
   # Stale-pointer guarded (belt to D2b's destroy-time clear): the target must still be attached here.
   _widgetBeingEdited: ->
     focus = @editorFocusWdgt
@@ -1684,8 +1724,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # frame hugs the whole entry, not the label's text bounds (owner: a tight-text frame is visual noise).
     if focus.parent?.absorbsDescendantEditorSelection?()
       focus = focus.parent
-    if @caret? and @caret.target is focus
-      return focus
+    # a caret in the focus or in a widget inside it: the caret says "focus" by itself (see above)
+    caretTarget = @caret?.target
+    return undefined if caretTarget? and focus.isAncestorOf caretTarget
     if focus.providesAmenitiesForEditing and focus.dragsDropsAndEditingEnabled
       return focus
     # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container that is in edit mode.
@@ -2546,7 +2587,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @hand.mouseOverList.clear()
     @hand.nonFloatDraggedWdgt = undefined
     @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
-    @editorFocusWdgt = undefined
+    @_setEditorFocusNoSettle undefined
 
   # There is something special about the
   # "world" version of fullDestroyChildren:
@@ -2605,7 +2646,7 @@ class WorldWdgt extends IconGridPanelWdgt
       @toolTipsList.delete tooltip
   
 
-  # "open from file…" world-menu action: pop the file picker; FileLoading routes the chosen
+  # "Open from file…" world-menu action: pop the file picker; FileLoading routes the chosen
   # *.fzw.json by its envelope `kind` (a widget is attached to the desktop, a world snapshot
   # replaces the world). A product feature — ships in all builds.
   openFromFile: ->
@@ -2624,11 +2665,11 @@ class WorldWdgt extends IconGridPanelWdgt
   # `world.serialize()` is a GUIDED error: a world is not a widget subtree, so the inherited
   # Widget.serialize would crash the graph walker (D8). Point callers at the snapshot entry.
   serialize: (opts) ->
-    throw new SerializationError "a whole world cannot be saved as a widget — call world.serializeWorldSnapshot() instead (menu: \"save world snapshot…\")",
+    throw new SerializationError "a whole world cannot be saved as a widget — call world.serializeWorldSnapshot() instead (menu: \"Save world snapshot…\")",
       rootDescription: "the world"
       remediation: "Use world.serializeWorldSnapshot() to save the whole desktop, or serialize an individual widget subtree."
 
-  # "save world snapshot…" world-menu action: serialize + download over file://.
+  # "Save world snapshot…" world-menu action: serialize + download over file://.
   saveWorldSnapshotToFile: ->
     try
       envelope = @serializeWorldSnapshot prettyPrint: true
@@ -2741,7 +2782,6 @@ class WorldWdgt extends IconGridPanelWdgt
     # 5. apply the world-state scalars to the LIVE world.
     @isDevMode = section.isDevMode if section.isDevMode?
     @alpha = section.alpha if section.alpha?
-    @numberOfIconsOnDesktop = section.numberOfIconsOnDesktop if section.numberOfIconsOnDesktop?
     @[name] = val for own name, val of (section.infoDocFlags or {})
     if section.untitledNamingCounters? and @untitledNamingService?
       @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
@@ -2888,8 +2928,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # seam and asserts, one teardown later, that the VM was allowed to let the object go.
     @unregisterThisInstance()
     # (d) EVERY REPLACEMENT IS WorldWdgt#1, exactly as this one was — world identity carries no run
-    # history, and no drawn label shifts because a page has reset a few hundred times (Widget.toString
-    # -> uniqueIDString is DRAWN in re-parent menu rows, wire labels, pinouts and the inspector).
+    # history, and no drawn value shifts because a page has reset a few hundred times (Widget.toString
+    # -> uniqueIDString is DRAWN wherever a widget shows as a value: the inspector's fields).
     # ⚠ It is zeroed HERE and not in fullDestroyChildren's per-class sweep (which skips WorldWdgt)
     # because this is the one place a world is actually REPLACED. loadWorldSnapshot shares that
     # sweep and keeps its LIVE world, whose id must stay the one it was issued — and a snapshot
@@ -3192,49 +3232,42 @@ class WorldWdgt extends IconGridPanelWdgt
   # and a single append point cannot reproduce that order.
   buildContextMenu: ->
 
-    # ⚠ the title is computed into a local FIRST. An `if` expression written directly as an
-    # implicit-object value on its own line does not become that value — the menu comes out
-    # title-less, which costs it its whole title bar, and with it the thing you click to
-    # drag the menu and the thing you click to pin it.
-    title = if @isDevMode
-      @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
-    else
-      "Desktop"
-    menu = new MenuWdgt @, target: @, title: title
+    # titled with my human name in every mode ("Desktop"), which my header shows in capitals
+    menu = new MenuWdgt @, target: @, title: @colloquialName()
 
     # DEV ONLY — the demo tree, and the bulk operations that reach every widget in the world.
     # `world.parts.isAvailable "demos"` is false in a production build, so those two are not
     # offered there even with dev mode on: the part gate is about what SHIPPED, the dev gate about
     # what is being SHOWN, and an item can need both.
     if @isDevMode
-      menu.addMenuItem "demo ➜", @, "popUpDemoMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"  if world.parts.isAvailable "demos"
+      menu.addMenuItem "Demo", @, "popUpDemoMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "sample widgets"  if world.parts.isAvailable "demos"
       menu.addLine()
-      menu.addMenuItem "delete all", @, "closeChildren"
-      menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
+      menu.addMenuItem "Delete all", @, "closeChildren"
+      menu.addMenuItem "Move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
 
     # EVERY DESKTOP — look at it, size it, colour it, paper it, and say how you are driving it.
     # None of these is a developer's tool: they are what owning a desktop means.
-    menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
-    menu.addMenuItem "test menu ➜", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if @isDevMode and world.parts.isAvailable "demos"
+    menu.addMenuItem "Inspect", @, "inspect", toolTip: "open a window on\nall properties"
+    menu.addMenuItem "Test menu", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "debugging and testing operations"  if @isDevMode and world.parts.isAvailable "demos"
     menu.addLine()
-    menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
-    menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
-    menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
+    menu.addMenuItem "Fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
+    menu.addMenuItem "Color…", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
+    menu.addMenuItem "Wallpapers", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "choose a wallpaper for the Desktop"
     menu.addLine()
 
     if Automator?
-      menu.addMenuItem "system tests ➜", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, toolTip: ""
+      menu.addMenuItem "System tests", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
 
     # the door, and it swings both ways from every page — a desktop that cannot be switched INTO
     # dev mode is a desktop whose developer affordances do not exist
     if @isDevMode
-      menu.addMenuItem "switch to user mode", @, "toggleDevMode", toolTip: "disable developers'\ncontext menus"
+      menu.addMenuItem "Switch to user mode", @, "toggleDevMode", toolTip: "disable developers'\ncontext menus"
     else
-      menu.addMenuItem "switch to dev mode", @, "toggleDevMode"
+      menu.addMenuItem "Switch to dev mode", @, "toggleDevMode"
 
-    menu.addMenuItem "new folder", @, "makeFolderFromMenu"
-    menu.addMenuItem "save world snapshot…", @, "saveWorldSnapshotToFile", toolTip: "save the whole desktop\nto a *.fzw.json file"
-    menu.addMenuItem "open from file…", @, "openFromFile", toolTip: "load a widget or world\nfrom a *.fzw.json file"
+    menu.addMenuItem "New folder", @, "makeFolderFromMenu"
+    menu.addMenuItem "Save world snapshot…", @, "saveWorldSnapshotToFile", toolTip: "save the whole desktop\nto a *.fzw.json file"
+    menu.addMenuItem "Open from file…", @, "openFromFile", toolTip: "load a widget or world\nfrom a *.fzw.json file"
     menu
 
 
@@ -3276,7 +3309,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # builds a MenuItemWdgt wired to (world, "popUpDemoMenu") to exercise button float-drag
   # semantics. Their CONTENT is what is dev-only, and it is reached through @widgetFactory /
   # demoMenus, both absent from a production build -- where nothing links here either, since
-  # the world menu offers "demo ➜" only when DemoMenus ships.
+  # the world menu offers "Demo" only when DemoMenus ships.
   # ONE catalogue (arc 3 phase 7). This forked on isIndexPage too — a short "parts bin" on the
   # product page and a long "make a widget" on the harness page — so the two disagreed both on
   # WHICH widgets you could make and on whether a palette arrived bare or wrapped in a window.
@@ -3284,7 +3317,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # explicit label rather than silently replacing the bare ones.
   # The one item of the demo menu that reaches the LAZY `demos` part, routed through core so the
   # menu itself can still be BUILT synchronously -- the menu's other items are all widgetFactory's,
-  # and offering "demo ➜" only says the part is available, never that it has arrived. Deferring the
+  # and offering "Demo" only says the part is available, never that it has arrived. Deferring the
   # whole popUpDemoMenu instead would move every item a world cycle later for the sake of one.
   # ⚠ The delegate is `demoMenus.analogClock`, which is a one-liner over the CORE AnalogClockWdgt --
   # so this awaits the part for the sake of where the method lives, not what it builds. If the demo
@@ -3295,7 +3328,7 @@ class WorldWdgt extends IconGridPanelWdgt
       window.demoMenus ?= new (window["DemoMenus"])
       window.demoMenus.analogClock()
 
-  # THE DOOR into the demo family's "test menu", from the world menu AND from any widget's context
+  # THE DOOR into the demo family's "Test menu", from the world menu AND from any widget's context
   # menu. `demos` is a LAZY part, so three things have to be true here and none is the obvious one:
   #
   # ⚠ 1. The menu ITEM's visibility asks `world.parts.isAvailable "demos"`, never `if DemoMenus?`.
@@ -3324,43 +3357,43 @@ class WorldWdgt extends IconGridPanelWdgt
 
   popUpDemoMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "make a widget"
-    menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
-    menu.addMenuItem "box", @widgetFactory, "createNewBoxWdgt"
-    menu.addMenuItem "circle box", @widgetFactory, "createNewCircleBoxWdgt"
+    menu.addMenuItem "Rectangle", @widgetFactory, "createNewRectangleWdgt"
+    menu.addMenuItem "Box", @widgetFactory, "createNewBoxWdgt"
+    menu.addMenuItem "Circle box", @widgetFactory, "createNewCircleBoxWdgt"
     menu.addLine()
-    menu.addMenuItem "slider", @widgetFactory, "createNewSliderWdgt"
-    menu.addMenuItem "panel", @widgetFactory, "createNewPanelWdgt"
-    menu.addMenuItem "viewport", @widgetFactory, "createNewViewportWdgt"
-    menu.addMenuItem "canvas", @widgetFactory, "createNewCanvas"
-    menu.addMenuItem "handle", @widgetFactory, "createNewHandle"
+    menu.addMenuItem "Slider", @widgetFactory, "createNewSliderWdgt"
+    menu.addMenuItem "Panel", @widgetFactory, "createNewPanelWdgt"
+    menu.addMenuItem "Viewport", @widgetFactory, "createNewViewportWdgt"
+    menu.addMenuItem "Canvas", @widgetFactory, "createNewCanvas"
+    menu.addMenuItem "Handle", @widgetFactory, "createNewHandle"
     menu.addLine()
-    menu.addMenuItem "string", @widgetFactory, "createNewString"
-    menu.addMenuItem "text", @widgetFactory, "createNewText"
-    menu.addMenuItem "tool tip", @widgetFactory, "createNewToolTipWdgt"
-    menu.addMenuItem "speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
+    menu.addMenuItem "String", @widgetFactory, "createNewString"
+    menu.addMenuItem "Text", @widgetFactory, "createNewText"
+    menu.addMenuItem "Tool tip", @widgetFactory, "createNewToolTipWdgt"
+    menu.addMenuItem "Speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
     menu.addLine()
-    menu.addMenuItem "gray scale palette", @widgetFactory, "createNewGrayPaletteWdgt"
-    menu.addMenuItem "color palette", @widgetFactory, "createNewColorPaletteWdgt"
-    menu.addMenuItem "color picker", @widgetFactory, "createNewColorPickerWdgt"
-    menu.addMenuItem "gray scale palette in window", @widgetFactory, "createNewGrayPaletteWdgtInWindow"
-    menu.addMenuItem "color palette in window", @widgetFactory, "createNewColorPaletteWdgtInWindow"
+    menu.addMenuItem "Gray scale palette", @widgetFactory, "createNewGrayPaletteWdgt"
+    menu.addMenuItem "Color palette", @widgetFactory, "createNewColorPaletteWdgt"
+    menu.addMenuItem "Color picker", @widgetFactory, "createNewColorPickerWdgt"
+    menu.addMenuItem "Gray scale palette in window", @widgetFactory, "createNewGrayPaletteWdgtInWindow"
+    menu.addMenuItem "Color palette in window", @widgetFactory, "createNewColorPaletteWdgtInWindow"
     menu.addLine()
-    menu.addMenuItem "analog clock", @, "createDemoAnalogClock"
-    menu.addMenuItem "animation demo", @widgetFactory, "createNewAnimationDemo"
-    menu.addMenuItem "pen", @widgetFactory, "createNewPenWdgt"
+    menu.addMenuItem "Analog clock", @, "createDemoAnalogClock"
+    menu.addMenuItem "Animation demo", @widgetFactory, "createNewAnimationDemo"
+    menu.addMenuItem "Pen", @widgetFactory, "createNewPenWdgt"
 
     menu.addLine()
-    menu.addMenuItem "layout tests ➜", @, "layoutTestsMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"
+    menu.addMenuItem "Layout tests", @, "layoutTestsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "sample widgets"
     menu.addLine()
-    menu.addMenuItem "under the carpet", @widgetFactory, "underTheCarpet"
+    menu.addMenuItem "Under the carpet", @widgetFactory, "underTheCarpet"
 
     menu.popUpAtHand()
 
   layoutTestsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Layout tests"
-    menu.addMenuItem "adjuster widget", @widgetFactory, "createNewStackElementsSizeAdjustingWdgt"
-    menu.addMenuItem "adder/droplet", @widgetFactory, "createNewLayoutElementAdderOrDropletWdgt"
-    menu.addMenuItem "test screen 1", @widgetFactory, "setupTestScreen1"
+    menu.addMenuItem "Adjuster widget", @widgetFactory, "createNewStackElementsSizeAdjustingWdgt"
+    menu.addMenuItem "Adder/droplet", @widgetFactory, "createNewLayoutElementAdderOrDropletWdgt"
+    menu.addMenuItem "Test screen 1", @widgetFactory, "setupTestScreen1"
     menu.popUpAtHand()
     
   
@@ -3508,7 +3541,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # The shared enumeration under the query above AND the trash sever below — ONE walk, so the
   # two can never disagree about which edges exist: whatever the query counts is exactly what
-  # the sever cuts, which is what makes "move to trash" land in the bin by graph truth rather
+  # the sever cuts, which is what makes "Move to trash" land in the bin by graph truth rather
   # than by an intent tag (reference-widgets plan §4.3). Returns [{holder, edge}].
   _livenessEdgesIntoWdgt: (whichWdgt) ->
     found = []

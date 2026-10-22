@@ -17,13 +17,23 @@ class VerticalStackViewportWdgt extends ViewportWdgt
     super VS
     @disableDrops()
 
-    ostmA = new SimpleTextWdgt "A small string\n\n\nhere another.",
-      backgroundColor: WorldWdgt.theme.editableItemFill
-      backgroundTransparency: 1
+    ostmA = @_scaffoldParagraph "A small string\n\n\nhere another."
     ostmA.isEditable = true
     ostmA.enableSelecting()
     @setContents ostmA, 5
-    @setColor Color.create 249, 249, 249
+
+  # The paragraph I open with, which a caller's setContents replaces: a plain text on the
+  # editable-item fill. A document opens with one of its own paragraphs (DocumentViewportWdgt).
+  _scaffoldParagraph: (text) ->
+    new SimpleTextWdgt text,
+      backgroundColor: WorldWdgt.theme.editableItemFill
+      backgroundTransparency: 1
+
+  # My look as a page, read as I and my stack (which wears my pane's look) are painted: the stack
+  # sample's fill, inside the border every viewport has (ViewportWdgt._surfaceStroke). A document's
+  # page wears its own (DocumentViewportWdgt).
+  _defaultPaneFill: ->
+    WorldWdgt.theme.stackViewportFill
 
   colloquialName: ->
     "stack"

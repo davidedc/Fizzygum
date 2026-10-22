@@ -3,8 +3,8 @@ class BubblyAppearance extends BoxyAppearance
   # No constructor: the meta-compiler synthesises a forward-everything one for a class
   # without its own — `__super__.constructor.apply this, arguments` plus
   # `registerThisInstance?()` (meta/Class.coffee) — equivalent to the explicit
-  # `(widget) -> super widget` this would otherwise need (both call sites pass one
-  # argument). Dedup case law: docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md.
+  # `(widget) -> super widget` this would otherwise need (its one call site, SpeechBubbleWdgt,
+  # passes one argument). Dedup case law: docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md.
 
   # ===== the two shape answers, because my OUTLINE is not my superclass's =====
   # My rounded body occupies only the top (h - h/5) of the box; the bottom fifth is the tail
@@ -13,15 +13,15 @@ class BubblyAppearance extends BoxyAppearance
   # ⛔ opaqueCoveredRect MUST be undefined, not inherited. BoxyAppearance claims
   # `boundingBox().insetBy cornerRadius + 1`, whose bottom edge sits BELOW my body for any
   # bubble taller than about 5×(cornerRadius+1) — the occlusion culler would then skip
-  # everything behind that strip and drop real pixels there. A ToolTipWdgt is a direct child
-  # of the world, so it is asked.
+  # everything behind that strip and drop real pixels there. A SpeechBubbleWdgt standing on the
+  # desktop is a direct child of the world, so it is asked.
   opaqueCoveredRect: ->
     undefined
 
   # shapeContainsPoint is deliberately NOT overridden: I inherit BoxyAppearance's rounded-box
   # test, which OVER-claims the tail strip (a click in the empty corner beside the spike stops
-  # on the bubble instead of falling through). Harmless today — bubbles and tooltips are not
-  # things you click past — and correcting it means an analytic body+spike test, which is a
+  # on the bubble instead of falling through). Harmless today — a speech bubble is not a thing
+  # you click past — and correcting it means an analytic body+spike test, which is a
   # behaviour change, not a rename. Named here so it is a known approximation, not a silence.
 
   # The bubble outline (rounded box + tail spike) is not a roundRect, so unlike

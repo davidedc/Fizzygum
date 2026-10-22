@@ -5,11 +5,18 @@
 # mouse actions to reach the widget, and it
 # provides a larger target area to grab the
 # widget)
+#
+# I paint nothing. My hover / press state is the one the cell under me shows (ParentStainerMixin;
+# GlassBoxBottomWdgt reads the state of the widget a tap on it reaches, which is me).
 
 class GlassBoxTopWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name
+  @augmentWith ParentStainerMixin, @name
   @augmentWith WidgetCreatorAndSmartPlacerOnClickMixin, @name
+
+  # the lid of a tool cell (GlassBoxBottomWdgt)
+  colloquialName: -> "tool cell lid"
 
   # Role query (the GlassBoxBottomWdgt.isGlassBoxWrapper spelling): "am I the lid a tap on a tool
   # cell lands on?" -- true here only, so the cell can answer what a tap on it reaches without a
@@ -27,6 +34,3 @@ class GlassBoxTopWdgt extends Widget
   # i.e. the first child of the glass box bottom
   findRootForGrab: ->
     return @parent.children[0]
-
-  setColor: (theColor) ->
-    @parent?.setColor theColor

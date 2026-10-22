@@ -410,8 +410,8 @@ does NOT work — `fetch`/XHR of local files.
 
 `WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot` (both PRODUCT — `core`-part code, so
 every profile ships them).
-Save downloads `world.fzw.json` ("save world snapshot…" world menu); load routes through the
-`kind` field (the drop handler / "open from file…").
+Save downloads `world.fzw.json` ("Save world snapshot…" world menu); load routes through the
+`kind` field (the drop handler / "Open from file…").
 
 **The world is DELIBERATELY NOT a table record.** Serializing the world *widget's* own props
 would drag in ~50 transient fields (the render/measure canvases + contexts, seven LRUCaches,
@@ -443,7 +443,7 @@ unserializable value still raises the rich `SerializationError`.
 
 **The `world` envelope section** (outside `objects`, plain and greppable): `children`
 (`[{$r}…]`), `desktopColor` (`{$r}`), `alpha`, `isDevMode`, `wallpaperPatternName`,
-`numberOfIconsOnDesktop`, `infoDocFlags` (the `world.infoDoc_*_created` own booleans),
+`infoDocFlags` (the `world.infoDoc_*_created` own booleans),
 `untitledNamingCounters`, `users` (`world.users` — each `User`'s `armedDrawingTool` KEY,
 captured by name like the naming service since a `User` is a plain delegated collaborator,
 not a tree object), `appSlots` (`{slot:{$r}}`), `simpleEditorTemplates` (`{$r}`),

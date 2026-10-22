@@ -1,4 +1,4 @@
-# The DEMO / parts-bin menus: the "demo ➜" catalogue, the icon galleries, the widget and
+# The DEMO / parts-bin menus: the "Demo" catalogue, the icon galleries, the widget and
 # layout sample factories, and the test menu they hang off.
 #
 # This is the bulk of what used to be MenusHelper, split out of it in arc 3 and made the
@@ -211,7 +211,7 @@ class DemoMenus
     world.openFrameWith toolPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
 
   popUpMore1IconsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "More Icons 1"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "More icons 1"
     menu.addMenuItem "Pencil 1 icon", demoMenus, "createPencil1IconWdgt"
     menu.addMenuItem "Pencil 2 icon", demoMenus, "createPencil2IconWdgt"
     menu.addMenuItem "Brush icon", demoMenus, "createBrushIconWdgt"
@@ -227,7 +227,7 @@ class DemoMenus
     menu.popUpAtHand()
 
   popUpMore2IconsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "More Icons 2"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "More icons 2"
     menu.addMenuItem "Format as code icon", demoMenus, "createFormatAsCodeIconWdgt"
     menu.addMenuItem "Ch. X icon", demoMenus, "createChXIconWdgt"
     menu.addMenuItem "Ch. X.X icon", demoMenus, "createChXXIconWdgt"
@@ -249,7 +249,7 @@ class DemoMenus
     menu.popUpAtHand()
 
   popUpMore3IconsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "More Icons 2"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "More icons 3"
     menu.addMenuItem "Fizzygum logo", demoMenus, "createFizzygumLogoIconWdgt"
     menu.addMenuItem "Fizzygum logo with text", demoMenus, "createFizzygumLogoWithTextIconWdgt"
     menu.addMenuItem "Vaporwave sun", demoMenus, "createVaporwaveSunIconWdgt"
@@ -451,45 +451,45 @@ class DemoMenus
 
   popUpMapsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Maps"
-    menu.addMenuItem "world map", demoMenus, "createWorldMapIconWdgt", toolTip: "others"
+    menu.addMenuItem "World map", demoMenus, "createWorldMapIconWdgt", toolTip: "others"
     menu.addMenuItem "USA map", demoMenus, "createUSAMapIconWdgt", toolTip: "others"
 
     menu.popUpAtHand()
 
   popUpGraphsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "graphs"
-    menu.addMenuItem "axis", demoMenus, "create2DAxis"
-    menu.addMenuItem "scatter plot", demoMenus, "createExampleScatterPlot"
-    menu.addMenuItem "scatter plot with axes", demoMenus, "createExampleScatterPlotWithAxes"
-    menu.addMenuItem "function plot", demoMenus, "createExampleFunctionPlot"
-    menu.addMenuItem "bar plot", demoMenus, "createExampleBarPlot"
+    menu.addMenuItem "Axis", demoMenus, "create2DAxis"
+    menu.addMenuItem "Scatter plot", demoMenus, "createExampleScatterPlot"
+    menu.addMenuItem "Scatter plot with axes", demoMenus, "createExampleScatterPlotWithAxes"
+    menu.addMenuItem "Function plot", demoMenus, "createExampleFunctionPlot"
+    menu.addMenuItem "Bar plot", demoMenus, "createExampleBarPlot"
     menu.addMenuItem "3D plot", demoMenus, "createExample3DPlot"
 
     menu.popUpAtHand()
 
   popUpSupportDocsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Support Docs"
-    menu.addMenuItem "welcome message", @, "createWelcomeMessageWindowAndShortcut", toolTip: "welcome message"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Support docs"
+    menu.addMenuItem "Welcome message", @, "createWelcomeMessageWindowAndShortcut", toolTip: "welcome message"
 
     menu.popUpAtHand()
 
   popUpPatchProgrammingMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Patch Programming"
-    menu.addMenuItem "fanout", demoMenus, "createFanout"
-    menu.addMenuItem "calculating node", demoMenus, "createCalculatingPatchNode"
-    menu.addMenuItem "diffing node", demoMenus, "createDiffingPatchNode"
-    menu.addMenuItem "slider", demoMenus, "createSliderWithSmallestValueAtBottomEnd"
-    menu.addMenuItem "regex subst. node", demoMenus, "createRegexSubstitutionPatchNodeWdgt"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Patch programming"
+    menu.addMenuItem "Fanout", demoMenus, "createFanout"
+    menu.addMenuItem "Calculating node", demoMenus, "createCalculatingPatchNode"
+    menu.addMenuItem "Diffing node", demoMenus, "createDiffingPatchNode"
+    menu.addMenuItem "Slider", demoMenus, "createSliderWithSmallestValueAtBottomEnd"
+    menu.addMenuItem "Regex subst. node", demoMenus, "createRegexSubstitutionPatchNodeWdgt"
     menu.popUpAtHand()
 
   popUpVerticalStackMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Vertical stack"
-    menu.addMenuItem "vertical stack constrained contents width", demoMenus, "createVerticalStackPanelWdgt"
-    menu.addMenuItem "vertical stack scrollpanel constrained contents width", demoMenus, "createVerticalStackViewportWdgt"
-    menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", demoMenus, "createVerticalStackPanelWdgtAndViewport"
-    menu.addMenuItem "vertical stack free contents width", demoMenus, "createVerticalStackPanelWdgtFreeContentsWidth"
-    menu.addMenuItem "vertical stack scrollpanel free contents width", demoMenus, "createVerticalStackViewportWdgtFreeContentsWidth"
-    menu.addMenuItem "vertical stack panel and scrollpanel free contents width", demoMenus, "createVerticalStackPanelWdgtAndViewportFreeContentsWidth"
+    menu.addMenuItem "Vertical stack constrained contents width", demoMenus, "createVerticalStackPanelWdgt"
+    menu.addMenuItem "Vertical stack scrollpanel constrained contents width", demoMenus, "createVerticalStackViewportWdgt"
+    menu.addMenuItem "Vertical stack panel and scrollpanel constrained contents width", demoMenus, "createVerticalStackPanelWdgtAndViewport"
+    menu.addMenuItem "Vertical stack free contents width", demoMenus, "createVerticalStackPanelWdgtFreeContentsWidth"
+    menu.addMenuItem "Vertical stack scrollpanel free contents width", demoMenus, "createVerticalStackViewportWdgtFreeContentsWidth"
+    menu.addMenuItem "Vertical stack panel and scrollpanel free contents width", demoMenus, "createVerticalStackPanelWdgtAndViewportFreeContentsWidth"
 
     menu.popUpAtHand()
 
@@ -535,28 +535,28 @@ class DemoMenus
     menu.addMenuItem "Scooter icon", demoMenus, "createScooterIconWdgt"
     menu.addMenuItem "Heart icon", demoMenus, "createHeartIconWdgt"
 
-    menu.addMenuItem "more 1 ➜", demoMenus, "popUpMore1IconsMenu", closesUnpinnedPopUps: false, toolTip: "others"
-    menu.addMenuItem "more 2 ➜", demoMenus, "popUpMore2IconsMenu", closesUnpinnedPopUps: false, toolTip: "others"
-    menu.addMenuItem "arrows ➜", demoMenus, "popUpArrowsIconsMenu", closesUnpinnedPopUps: false, toolTip: "others"
-    menu.addMenuItem "maps ➜", demoMenus, "popUpMapsMenu", closesUnpinnedPopUps: false, toolTip: "maps"
-    menu.addMenuItem "more 3 ➜", demoMenus, "popUpMore3IconsMenu", closesUnpinnedPopUps: false, toolTip: "maps"
+    menu.addMenuItem "More 1", demoMenus, "popUpMore1IconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
+    menu.addMenuItem "More 2", demoMenus, "popUpMore2IconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
+    menu.addMenuItem "Arrows", demoMenus, "popUpArrowsIconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
+    menu.addMenuItem "Maps", demoMenus, "popUpMapsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "maps"
+    menu.addMenuItem "More 3", demoMenus, "popUpMore3IconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "maps"
 
     menu.popUpAtHand()
 
   popUpWindowsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Windows"
-    menu.addMenuItem "empty window", demoMenus, "createEmptyWindow"
-    menu.addMenuItem "empty internal window", demoMenus, "createEmptyInternalWindow"
+    menu.addMenuItem "Empty window", demoMenus, "createEmptyWindow"
+    menu.addMenuItem "Empty internal window", demoMenus, "createEmptyInternalWindow"
 
     menu.popUpAtHand()
 
   popUpShortcutsAndScriptsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Shortcuts & Scripts"
-    menu.addMenuItem "bin shortcut", menusHelper, "binIconAndText"
-    menu.addMenuItem "new script", menusHelper, "newScriptWindow"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Shortcuts & scripts"
+    menu.addMenuItem "Bin shortcut", menusHelper, "binIconAndText"
+    menu.addMenuItem "New script", menusHelper, "newScriptWindow"
     menu.addMenuItem "Fizzypaint launcher", (new FizzyPaintApp), "createOpener"
-    menu.addMenuItem "document launcher", (new SimpleDocumentApp), "createOpener"
-    menu.addMenuItem "slide launcher", (new SimpleSlideApp), "createOpener"
+    menu.addMenuItem "Document launcher", (new SimpleDocumentApp), "createOpener"
+    menu.addMenuItem "Slide launcher", (new SimpleSlideApp), "createOpener"
     menu.addMenuItem "Link", demoMenus, "createSimpleLinkWdgt"
     menu.addMenuItem "Video link", demoMenus, "createSimpleVideoLinkWdgt"
     menu.popUpAtHand()
@@ -657,21 +657,21 @@ class DemoMenus
 
   popUpDocumentMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Document"
-    menu.addMenuItem "simple document scrollpanel", demoMenus, "createDocumentViewportWdgt"
-    menu.addMenuItem "document", demoMenus, "createDocumentWdgt"
+    menu.addMenuItem "Simple document scrollpanel", demoMenus, "createDocumentViewportWdgt"
+    menu.addMenuItem "Document", demoMenus, "createDocumentWdgt"
     menu.popUpAtHand()
 
   popUpSimpleTextWdgtMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Simple plain text"
-    menu.addMenuItem "simple plain text wrapping", demoMenus, "createNewWrappingSimpleTextWdgtWithBackground"
-    menu.addMenuItem "simple plain text not wrapping", demoMenus, "createNewNonWrappingSimpleTextWdgtWithBackground"
-    menu.addMenuItem "simple plain text (wrapping / not wrapping)", demoMenus, "createNewWrappingAndNonWrappingSimpleTextWdgtWithBackground"
-    menu.addMenuItem "simple plain text panel wrapping", demoMenus, "createWrappingSimpleTextPanelWdgt"
-    menu.addMenuItem "simple plain text panel not wrapping", demoMenus, "createNonWrappingSimpleTextPanelWdgt"
-    menu.addMenuItem "simple plain text panel (wrapping / not wrapping)", demoMenus, "createWrappingAndNonWrappingSimpleTextPanelWdgt"
-    menu.addMenuItem "simple plain text scrollpanel wrapping", demoMenus, "createWrappingTextAreaWdgt"
-    menu.addMenuItem "simple plain text scrollpanel not wrapping", demoMenus, "createNonWrappingTextAreaWdgt"
-    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", demoMenus, "createWrappingAndNonWrappingTextAreaWdgt"
+    menu.addMenuItem "Simple plain text wrapping", demoMenus, "createNewWrappingSimpleTextWdgtWithBackground"
+    menu.addMenuItem "Simple plain text not wrapping", demoMenus, "createNewNonWrappingSimpleTextWdgtWithBackground"
+    menu.addMenuItem "Simple plain text (wrapping / not wrapping)", demoMenus, "createNewWrappingAndNonWrappingSimpleTextWdgtWithBackground"
+    menu.addMenuItem "Simple plain text panel wrapping", demoMenus, "createWrappingSimpleTextPanelWdgt"
+    menu.addMenuItem "Simple plain text panel not wrapping", demoMenus, "createNonWrappingSimpleTextPanelWdgt"
+    menu.addMenuItem "Simple plain text panel (wrapping / not wrapping)", demoMenus, "createWrappingAndNonWrappingSimpleTextPanelWdgt"
+    menu.addMenuItem "Simple plain text scrollpanel wrapping", demoMenus, "createWrappingTextAreaWdgt"
+    menu.addMenuItem "Simple plain text scrollpanel not wrapping", demoMenus, "createNonWrappingTextAreaWdgt"
+    menu.addMenuItem "Simple plain text scrollpanel (wrapping / not wrapping)", demoMenus, "createWrappingAndNonWrappingTextAreaWdgt"
 
     menu.popUpAtHand()
 
@@ -699,82 +699,82 @@ class DemoMenus
 
   testMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    menu.addMenuItem "serialise widget to memory", targetWidget, "serialiseToMemory"
-    menu.addMenuItem "deserialize from memory and attach to world", targetWidget, "deserialiseFromMemoryAndAttachToWorld"
-    menu.addMenuItem "deserialize from memory and attach to hand", targetWidget, "deserialiseFromMemoryAndAttachToHand"
-    menu.addMenuItem "attach with horizontal layout", targetWidget, "attachWithHorizLayout"
-    menu.addMenuItem "make spacers transparent", targetWidget, "makeSpacersTransparent"
-    menu.addMenuItem "make spacers opaque", targetWidget, "makeSpacersOpaque"
-    menu.addMenuItem "border layout scaffold", world.widgetFactory, "createBorderLayoutScaffold"
+    menu.addMenuItem "Serialise widget to memory", targetWidget, "serialiseToMemory"
+    menu.addMenuItem "Deserialize from memory and attach to world", targetWidget, "deserialiseFromMemoryAndAttachToWorld"
+    menu.addMenuItem "Deserialize from memory and attach to hand", targetWidget, "deserialiseFromMemoryAndAttachToHand"
+    menu.addMenuItem "Attach with horizontal layout", targetWidget, "attachWithHorizLayout", opensSubmenu: true
+    menu.addMenuItem "Make spacers transparent", targetWidget, "makeSpacersTransparent"
+    menu.addMenuItem "Make spacers opaque", targetWidget, "makeSpacersOpaque"
+    menu.addMenuItem "Border layout scaffold", world.widgetFactory, "createBorderLayoutScaffold"
     menu.addMenuItem "StringWdgt without background", demoMenus, "createNewStringWdgtWithoutBackground"
     menu.addMenuItem "StringWdgt with background", demoMenus, "createNewStringWdgtWithBackground"
     menu.addMenuItem "TextWdgt with background", demoMenus, "createNewTextWdgtWithBackground"
     if world.pinouts?.isShowing targetWidget
-      menu.addMenuItem "remove output pins", targetWidget, "removeOutputPins"
+      menu.addMenuItem "Remove output pins", targetWidget, "removeOutputPins"
     else
-      menu.addMenuItem "show output pins", targetWidget, "showOutputPins"
+      menu.addMenuItem "Show output pins", targetWidget, "showOutputPins"
 
-    # unclear whether the "un-collapse" entry would ever be
+    # unclear whether the "Un-collapse" entry would ever be
     # visible.
     if targetWidget?
       if targetWidget.collapsed
-        menu.addMenuItem "un-collapse", targetWidget, "unCollapse"
+        menu.addMenuItem "Un-collapse", targetWidget, "unCollapse"
       else
-        menu.addMenuItem "collapse", targetWidget, "collapse"
+        menu.addMenuItem "Collapse", targetWidget, "collapse"
 
-    menu.addMenuItem "others ➜", demoMenus, "popUpFirstMenu", closesUnpinnedPopUps: false, toolTip: "others"
-    menu.addMenuItem "others 2 ➜", demoMenus, "popUpSecondMenu", closesUnpinnedPopUps: false, toolTip: "others"
+    menu.addMenuItem "Others", demoMenus, "popUpFirstMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
+    menu.addMenuItem "Others 2", demoMenus, "popUpSecondMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "others"
 
 
     menu.popUpAtHand()
 
   # ⚠ Built `target: @`, so slot 2 of every row here is `demoMenus`, NOT the widget — the one row
-  # that needs the widget ("make pointer") receives it as the ROW's own target instead. A row added
+  # that needs the widget ("Make pointer") receives it as the ROW's own target instead. A row added
   # here that took its SUBJECT from slot 2 would silently act on `demoMenus`; popUpSecondMenu below
   # is the same question answered the other way. See constructor-and-parameter-conventions.md R3.
   popUpFirstMenu: (widgetOpeningThePopUp, widgetThisMenuIsAbout) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "others"
-    menu.addMenuItem "make sliders' buttons states bright", demoMenus, "makeSlidersButtonsStatesBright"
-    menu.addMenuItem "make pointer", widgetThisMenuIsAbout, "createPointerWdgt"
-    menu.addMenuItem "icon with text", demoMenus, "makeIconWithText"
-    menu.addMenuItem "empty icon with text", demoMenus, "makeEmptyIconWithText"
-    menu.addMenuItem "generic reference icon", demoMenus, "makeGenericReferenceIcon"
-    menu.addMenuItem "generic object icon", demoMenus, "makeGenericObjectIcon"
-    menu.addMenuItem "folder window", demoMenus, "makeFolderWindow"
-    menu.addMenuItem "bouncing particle", demoMenus, "makeBouncingParticle"
-    menu.addMenuItem "throw an error", demoMenus, "throwAnError"
-    menu.addMenuItem "stretchable panel", demoMenus, "createStretchablePanel"
-    menu.addMenuItem "tools panel", demoMenus, "createToolsPanel"
-    menu.addMenuItem "slide", demoMenus, "createSlideWdgt"
-    menu.addMenuItem "patch programming ➜", demoMenus, "popUpPatchProgrammingMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "graphs ➜", demoMenus, "popUpGraphsMenu", closesUnpinnedPopUps: false, toolTip: "graphs"
-    menu.addMenuItem "support docs ➜", demoMenus, "popUpSupportDocsMenu", closesUnpinnedPopUps: false, toolTip: "support docs"
+    menu.addMenuItem "Make sliders' buttons states bright", demoMenus, "makeSlidersButtonsStatesBright"
+    menu.addMenuItem "Make pointer", widgetThisMenuIsAbout, "createPointerWdgt"
+    menu.addMenuItem "Icon with text", demoMenus, "makeIconWithText"
+    menu.addMenuItem "Empty icon with text", demoMenus, "makeEmptyIconWithText"
+    menu.addMenuItem "Generic reference icon", demoMenus, "makeGenericReferenceIcon"
+    menu.addMenuItem "Generic object icon", demoMenus, "makeGenericObjectIcon"
+    menu.addMenuItem "Folder window", demoMenus, "makeFolderWindow"
+    menu.addMenuItem "Bouncing particle", demoMenus, "makeBouncingParticle"
+    menu.addMenuItem "Throw an error", demoMenus, "throwAnError"
+    menu.addMenuItem "Stretchable panel", demoMenus, "createStretchablePanel"
+    menu.addMenuItem "Tools panel", demoMenus, "createToolsPanel"
+    menu.addMenuItem "Slide", demoMenus, "createSlideWdgt"
+    menu.addMenuItem "Patch programming", demoMenus, "popUpPatchProgrammingMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "Graphs", demoMenus, "popUpGraphsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "graphs"
+    menu.addMenuItem "Support docs", demoMenus, "popUpSupportDocsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "support docs"
 
     menu.popUpAtHand()
 
   # ⚠ THIS menu's panel target is the widget the menu is about, where the sibling above uses `@`.
-  # The "dev tools ➜" row reaches `menusHelper.popUpDevToolsMenu`, which takes its subject from the
+  # The "Dev tools" row reaches `menusHelper.popUpDevToolsMenu`, which takes its subject from the
   # SECOND dispatch slot — and that slot holds the ENCLOSING PANEL's target, not the row's own
   # (CommandPanelWdgt fills every row's subject from its own @target). Building this panel about `@`
   # would hand `demoMenus` to a verb that wants a widget. Every other row here takes
   # `(widgetOpeningThePopUp)` only and so cannot tell the difference; the sibling above can keep
-  # `target: @` because its one widget-hungry row ("make pointer") routes through the ROW's target
-  # instead. This matches the other `popUpDevToolsMenu` wiring site, Widget's own "dev ➜".
+  # `target: @` because its one widget-hungry row ("Make pointer") routes through the ROW's target
+  # instead. This matches the other `popUpDevToolsMenu` wiring site, Widget's own "Dev".
   popUpSecondMenu: (widgetOpeningThePopUp, widgetThisMenuIsAbout) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: widgetThisMenuIsAbout, title: "others"
-    menu.addMenuItem "icons ➜", demoMenus, "popUpIconsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "simple plain text ➜", demoMenus, "popUpSimpleTextWdgtMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "vertical stack ➜", demoMenus, "popUpVerticalStackMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "document ➜", demoMenus, "popUpDocumentMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "windows ➜", demoMenus, "popUpWindowsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "shortcuts & scripts ➜", demoMenus, "popUpShortcutsAndScriptsMenu", closesUnpinnedPopUps: false, toolTip: "Shortcuts & Scripts"
-    menu.addMenuItem "analog clock", demoMenus, "analogClock"
-    menu.addMenuItem "dev tools ➜", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "fizzytiles", demoMenus, "createFridgeMagnets"
-    menu.addMenuItem "fizzypaint", demoMenus, "createImageWdgt"
-    menu.addMenuItem "simple button", demoMenus, "createSimpleButton"
-    menu.addMenuItem "switch button", demoMenus, "createSwitchButtonWdgt"
-    menu.addMenuItem "clipping box", demoMenus, "createNewClippingBoxWdgt"
+    menu.addMenuItem "Icons", demoMenus, "popUpIconsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "Simple plain text", demoMenus, "popUpSimpleTextWdgtMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "Vertical stack", demoMenus, "popUpVerticalStackMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "Document", demoMenus, "popUpDocumentMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "Windows", demoMenus, "popUpWindowsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "Shortcuts & scripts", demoMenus, "popUpShortcutsAndScriptsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "Shortcuts & Scripts"
+    menu.addMenuItem "Analog clock", demoMenus, "analogClock"
+    menu.addMenuItem "Dev tools", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "icons"
+    menu.addMenuItem "Fizzytiles", demoMenus, "createFridgeMagnets"
+    menu.addMenuItem "Fizzypaint", demoMenus, "createImageWdgt"
+    menu.addMenuItem "Simple button", demoMenus, "createSimpleButton"
+    menu.addMenuItem "Switch button", demoMenus, "createSwitchButtonWdgt"
+    menu.addMenuItem "Clipping box", demoMenus, "createNewClippingBoxWdgt"
 
     menu.popUpAtHand()
 

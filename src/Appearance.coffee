@@ -25,11 +25,9 @@ class Appearance
   # FRACTIONAL (a fractional slot origin), where the clip's own boundary quantization differs from
   # the fills' and can cut an edge column (found at dpr 2, macroDropIntoRotatedStretchablePanel…).
   clipsToDamageBox: true
-  # the ownColorInsteadOfWidgetColor is used for buttons
-  # with icons on a glass bottom: the glass bottom has
-  # to change the color on hover, so the icon_button on it
-  # stain it, but they have to retain their color otherwise
-  # they are not visible anymore.
+  # A colour of my own, painted instead of my widget's @color: an icon whose ink is fixed whatever
+  # its widget's colour says -- a toolbar tool's glyph, in the toolbarGlyph ink, on a tool cell whose
+  # look shows the tool's state (GlassBoxBottomWdgt) -- takes it here, at construction.
   ownColorInsteadOfWidgetColor: undefined
 
   constructor: (@widget, @ownColorInsteadOfWidgetColor) ->
@@ -87,7 +85,7 @@ class Appearance
   # use it, because painting one colour over exactly the damaged part gives the same picture either
   # way. ART MAY NOT: geometry placed relative to it lands wherever the damage happened to start.
   # Take art geometry from the widget (`@widget.width()`/`height()`, origin 0,0) and let the clip
-  # bound it — SimpleDropletAppearance's plus-sign is the model, and a grip that ignored this came
+  # bound it — _paintPlate below is the model, and a grip that ignored this came
   # back three pixels short whenever a neighbouring row was removed.
   #   Device-space business (the damage clip here, back-buffer blits, the shadow-silhouette
   # fallback) stays OUT of bodies — a body never sees al/at.
@@ -164,6 +162,35 @@ class Appearance
       toBePainted = seam.intersect localDamageBox
       if toBePainted.isNotEmpty()
         @_fillLocalRectSnappedToDevicePixels ctx, toBePainted
+
+  # THE PLATE over my widget's whole box: `fill` rounded at `radius`, and, when a `stroke` is given,
+  # the 1 px border just inside it at the same radius, in the house crisp spelling (the button's look,
+  # visual-design-system §4.3: a bordered rounded rectangle means "press me"). A box narrower than
+  # twice the radius rounds at half its short side. Painted inside my _paintInLocalScope body
+  # (widget-local logical pixels), its geometry my widget's box, never the damage box: the scope has
+  # clipped to that. A handle's plate (HandleAppearance) and the layout chrome's
+  # (LayoutChromeAppearance) are painted with it; a plate with no stroke is a borderless well (an empty
+  # icon holder's drop placeholder, SimpleDropletAppearance; a prompt's text field,
+  # StringFieldAppearance), and a plate filled in shadowColor with no stroke is any of them as a shadow
+  # silhouette.
+  _paintPlate: (ctx, radius, fill, stroke) ->
+    w = @widget.width()
+    h = @widget.height()
+    r = @_plateRadius radius
+    ctx.fillStyle = fill.toString()
+    ctx.fillRoundRect 0, 0, w, h, r
+    return unless stroke?
+    ctx.lineWidth = 1
+    ctx.strokeStyle = stroke.toString()
+    ctx.strokeRoundRect 0.5, 0.5, w - 1, h - 1, r
+    return
+
+  # The radius THE PLATE over my widget's box is rounded at for a requested `radius`: that radius,
+  # but never more than half the box's side, rounded down -- so a box narrower than twice it rounds at
+  # half its short side. _paintPlate rounds by it, and so does an appearance answering the corners of
+  # its plate (StringFieldAppearance.outlineCornerRadii), so the two cannot disagree.
+  _plateRadius: (radius) ->
+    Math.min radius, Math.floor(@widget.width() / 2), Math.floor(@widget.height() / 2)
 
 
   # Shadow-pass wrapper for appearances whose art sets its own colours internally (icons,

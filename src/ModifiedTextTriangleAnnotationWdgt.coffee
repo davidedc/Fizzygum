@@ -5,6 +5,11 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
   # (the pattern LayoutSpec.coffee names, alongside HandleWdgt.cornerSpec)
   cornerSpec: undefined
 
+  # no colour of my own until one is set on me: until then I am painted in the code pane's
+  # modified-mark role, read as I am painted (_surfaceFill), so a saved or duplicated code pane
+  # wears the world's look
+  color: undefined
+
   constructor: (parent, proportionOfParent = 0, fixedSize = 10) ->
     super()
     @cornerSpec = new CornerInternalLayoutSpec 'topLeft', proportionOfParent, fixedSize
@@ -15,6 +20,10 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
     size = WorldWdgt.theme.handleSize
     @__commitExtent new Point size, size
     parent?.add @, layoutSpec: @cornerSpec
+
+  # the fill my UpperRightTriangleAppearance paints my triangle in while I hold no colour of my own
+  _surfaceFill: ->
+    WorldWdgt.theme.codePaneModifiedMark
 
   # I attach directly to a viewport (not its plane / inner contents) when added -- the
   # container add methods key off this instead of instanceof ModifiedTextTriangleAnnotationWdgt.

@@ -34,13 +34,15 @@ class SliderWdgt extends CircleBoxWdgt
   # 'fat' (the full control, under a hovering pointer). undefined on every OTHER slider — a value
   # control is not an indicator, and none of this touches it.
   indicatorMode: undefined
-  # the alphas the two states wear: the track's (fat only — a thin indicator paints no track) and
-  # the thumb's
-  indicatorTrackAlpha: 0.1
-  indicatorThumbAlpha: 0.4
-  # and the pair a PLAIN slider wears — a translucent track and a solid thumb. Named because two
-  # places need them: my constructor, and the return from an indicator presentation.
-  plainTrackAlpha: 0.1
+  # my thumb's alpha in both indicator states: full, because the indicator's thumb colours carry
+  # their own (Theme.scrollIndicatorThumb is the scrollbar token, α .35) and a second alpha would
+  # dim them twice. My track's alpha in the fat state is the theme's (scrollIndicatorTrackAlpha);
+  # a thin indicator paints no track.
+  indicatorThumbAlpha: 1
+  # and the pair a PLAIN slider wears: an opaque track (the groove) and an opaque thumb (the
+  # button's look). Named because two places need them: my constructor (my thumb is built at the
+  # class default alpha, opaque too), and the return from an indicator presentation.
+  plainTrackAlpha: 1
   plainThumbAlpha: 1
   # The presentation does not ride a file: my viewport RE-DERIVES it from its own overflow at the
   # first arrange after a restore, exactly as it does on a freshly built world, so a snapshot
@@ -66,8 +68,11 @@ class SliderWdgt extends CircleBoxWdgt
   # wanted them wanted DISJOINT tails — 6 sites wanted only the flag, 2 only the colour — so no
   # parameter ORDER could serve both. Those callers now state the numbers they want and name the
   # knob. Assigned before the super call, preserving the order the all-`@param` form compiled to.
+  #   My track holds a colour of its own only when my builder names one (`color`); otherwise I wear
+  # my presentation's role, read as I am painted (_surfaceFill), so a slider saved, loaded or
+  # duplicated wears the look of the world it is shown in, and a colour set on me later is mine.
   constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, opts = {}) ->
-    @color = opts.color ? WorldWdgt.theme.scrollTrack
+    @color = opts.color
     @smallestValueIsAtBottomEnd = opts.smallestValueIsAtBottomEnd ? false
     super()
     @alpha = @plainTrackAlpha
@@ -97,8 +102,12 @@ class SliderWdgt extends CircleBoxWdgt
   # Wear an indicator presentation (my viewport derives it; see ViewportWdgt._refreshScrollIndicators).
   # PRESENTATION ONLY: my value, my range and my wiring are untouched, which is exactly why the
   # bars stay SliderWdgts instead of becoming a second overlay family. The thin state paints the
-  # thumb alone — the track's alpha goes to zero. `undefined` is the third state and means "not an
-  # indicator at all": the plain slider look, and a pointer that stops on me again.
+  # thumb alone — the track's alpha goes to zero; the fat one shows my track faintly. In both, my
+  # thumb wears the indicator's colours and no border instead of the button's look
+  # (SliderButtonWdgt._fillForMyState / _strokeForMyState read my mode), and my track the
+  # indicator's role instead of the groove (_surfaceFill) unless I hold a colour of my own.
+  # `undefined` is the third state and means "not an indicator at all": the plain slider look — the
+  # opaque groove, my thumb back in the button's look — and a pointer that stops on me again.
   #   The mode is also an input to my thumb's GEOMETRY (thumbInsetInTrack), so a flip that changes
   # the inset re-lays the thumb here, at the one door the mode changes through: a caller that has
   # just laid me out for the old look (my viewport's _reLayoutScrollbars, my own _reactToBeingAdded)
@@ -109,12 +118,20 @@ class SliderWdgt extends CircleBoxWdgt
     insetBefore = @thumbInsetInTrack()
     @indicatorMode = mode
     @alpha = switch mode
-      when 'fat'  then @indicatorTrackAlpha
+      when 'fat'  then WorldWdgt.theme.scrollIndicatorTrackAlpha
       when 'thin' then 0
       else             @plainTrackAlpha
     @button?.showAsScrollIndicatorThumb? (if mode? then @indicatorThumbAlpha else @plainThumbAlpha)
     @_reLayoutSelfAndButton() if @thumbInsetInTrack() isnt insetBefore
     @_fullChanged()
+
+  # The fill my track wears while I hold no colour of my own (CircleBoxyAppearance._fillColor), read
+  # as I am painted: the scroll indicator's track role while I wear an indicator presentation (shown
+  # faintly fat, not at all thin: my alpha), else a plain slider's opaque groove. A bar picked up off
+  # its viewport is a plain slider, so it shows the groove, never the indicator's ink at full alpha.
+  _surfaceFill: ->
+    theme = WorldWdgt.theme
+    if @indicatorMode? then theme.scrollIndicatorTrack else theme.sliderTrack
 
   # Am I an indicator the pointer must pass THROUGH? True in every state but 'fat': an indicator
   # is not a target (ruling G3), so a click over a thin bar reaches the content under it.
@@ -303,7 +320,7 @@ class SliderWdgt extends CircleBoxWdgt
   # Could I FOLLOW this pin of this target — is there a thumb geometry to derive?
   # (ControllerMixin._canTrackWire, which asks this of the follower because only the follower knows
   # what it can render.) A scale is what I need and what most targets have no answer for, so this is
-  # the condition that keeps the "follows it too" row off almost every wire.
+  # the condition that keeps the "Follows it too" row off almost every wire.
   #   ⚠ Asked again at fire time by reflectTarget, deliberately rather than cached: a menu is built
   # at one moment and clicked at another, and a target can be re-sized or emptied in between — the
   # same reasoning _bindableTargets states for the bind chooser.
@@ -320,33 +337,34 @@ class SliderWdgt extends CircleBoxWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "show value", @, "showValue", toolTip: "display a dialog box\nshowing the selected number"
-    menu.addMenuItem "floor...", @, "floorPopout", toolTip: "set the minimum value\nwhich can be selected"
-    menu.addMenuItem "ceiling...", @, "ceilingPopout", toolTip: "set the maximum value\nwhich can be selected"
-    menu.addMenuItem "button size...", @, "buttonSizePopout", toolTip: "set the range\ncovered by\nthe slider button"
+    menu.addMenuItem "Show value", @, "showValue", toolTip: "display a dialog box\nshowing the selected number"
+    menu.addMenuItem "Floor…", @, "floorPopout", toolTip: "set the minimum value\nwhich can be selected"
+    menu.addMenuItem "Ceiling…", @, "ceilingPopout", toolTip: "set the maximum value\nwhich can be selected"
+    menu.addMenuItem "Button size…", @, "buttonSizePopout", toolTip: "set the range\ncovered by\nthe slider button"
     @_addTargetConnectionMenuEntries menu
 
   # The three range prompts. ⚠ An action MUST be a STRING method name: ButtonWdgt dispatches
   # `@target[@action]`, so a function literal indexes the target with a stringified function,
   # finds nothing, and throws (its own dev tripwire says so). These read the menu's title from
   # the dispatcher's first slot — the MENU ITEM — which is the same idiom
-  # Widget.transparencyPopout uses: the row climbs to its own pop-up and asks it for its title.
+  # Widget.transparencyPopout uses: the row's rows panel joins its pop-up's title and the question
+  # (CommandPanelWdgt.promptTitleAsking).
   floorPopout: (menuItem) ->
-    @prompt menuItem.parent.popUpTitle() + "\nfloor:", @, "setStart",
+    @prompt menuItem.parent.promptTitleAsking("floor:"), @, "setStart",
       defaultContents: @start.toString()
       floorNum: 0
       ceilingNum: @stop - @size
       isRounded: true
 
   ceilingPopout: (menuItem) ->
-    @prompt menuItem.parent.popUpTitle() + "\nceiling:", @, "setStop",
+    @prompt menuItem.parent.promptTitleAsking("ceiling:"), @, "setStop",
       defaultContents: @stop.toString()
       floorNum: @start + @size
       ceilingNum: @size * 100
       isRounded: true
 
   buttonSizePopout: (menuItem) ->
-    @prompt menuItem.parent.popUpTitle() + "\nbutton size:", @, "setSize",
+    @prompt menuItem.parent.promptTitleAsking("button size:"), @, "setSize",
       defaultContents: @size.toString()
       floorNum: 1
       ceilingNum: @stop - @start

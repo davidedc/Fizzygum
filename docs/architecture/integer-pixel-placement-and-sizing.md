@@ -117,7 +117,8 @@ points in §2.
 
 ## 5. Integer placement is necessary but NOT sufficient for back-buffer byte-identity
 
-This is the sharp lesson from **C1** (back-buffering `AnalogClockWdgt`'s static tick face).
+This is the sharp lesson from **C1**, a measured back buffer of an analog clock's static tick face (the clock
+paints whole device pixels live, with no buffer: `AnalogClockAppearance`).
 Placing a widget at an integer position does **not** guarantee that rendering its content
 into an origin buffer and blitting it is byte-identical to drawing it directly — because
 relocating the draw changes the floating-point CTM:
@@ -151,13 +152,12 @@ The paint-time fractional device transforms you will see (e.g. via a transform-o
 come from *content rendering*, not placement:
 
 - **Vector / icon art** — `IconAppearance` subclasses draw a fixed floating-point **design**
-  (e.g. `AngledArrowUpLeftIconAppearance`: `translate 90,37; moveTo -25,-9.04; lineTo
-  16.6,32.5; … lineTo 79,-102.5`), **scaled to fit** the integer box. The fit-scale and the
+  (e.g. `BrushIconAppearance`: `translate 102.19, 100.77; rotate -17.2°; moveTo 96.31,
+  -58.22; …`), **scaled to fit** the integer box. The fit-scale and the
   design's own fractional coordinates make the drawn content land at fractional device
   positions. Rounding these would deform the icons.
 - **Charts / plots** — data-driven `scale`+`translate` to fractional positions
   (`renderingHelper` in the sample-dashboard plots).
-- **The clock face** — internal `translate(w/2,h/2)` + `scale(0.9)` + `rotate` (the C1 case).
 
 All of this is Layer C: correct, inherent, and out of scope for the integer-placement policy.
 
@@ -210,8 +210,7 @@ may be hand-placed as fillRect runs. The doctrine lives in
 `docs/plans/pixel-icons-plan.md` §5b.
 
 **Hairline (sub-1-device-px) strokes — one rule, both pipelines.** Stroke at the
-TRUE sub-pixel width (e.g. the rotate-handle knob ring's `lineWidth 0.5` in
-`HandleAppearance`); never pre-compensate. SWCanvas renders any such stroke as
+TRUE sub-pixel width (e.g. a hairline in a tilted island); never pre-compensate. SWCanvas renders any such stroke as
 **1px geometry at opacity proportional to the width** — the generic pipeline
 applies the rule to the logical width, and every direct stroke dispatcher applies
 it to the DEVICE width (`scaledLineWidth`), so on the direct paths the faintness

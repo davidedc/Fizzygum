@@ -2,7 +2,7 @@ class TextBoxCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "text box"
 
-  createAppearance: -> new TextIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new TextIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   createWidgetToBeHandled: ->
     switcheroo = new TextWdgt "insert text here"

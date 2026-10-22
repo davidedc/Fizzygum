@@ -3,7 +3,7 @@ class TickIconAppearance extends SizeAwareIconAppearance
   # SIZE-AWARE tick (✓), a chrome state indicator — drawn, never typed (a
   # symbol that stands on its own is an icon). One short 45° arm down into one
   # long 45° arm up, in the 14-unit family and weight of the redesign draft's
-  # `close`/`minimise` glyphs (docs/plans/redesign/desktop-canvas.html GLYPH:
+  # `close`/`minimise` glyphs (docs/archive/redesign/desktop-canvas.html GLYPH:
   # 2 units wide, round caps and join), as integer device-pixel geometry. Ink
   # only, no halo: chrome glyphs sit on a bar or a row, never on art.
   #

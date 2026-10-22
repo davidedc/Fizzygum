@@ -1,0 +1,142 @@
+# The owner-review sample for a change to the look (docs/architecture/visual-design-system.md §6):
+# one or more tests per surface the design system dresses. A change that moves chrome pixels runs,
+# BEFORE any recapture, from Fizzygum-all/:
+#   fg diffpage $(grep -v '^#' Fizzygum/docs/tooling/visual-review-sample.txt)
+# One SystemTest name per line; '#' lines are comments. Add a test when a change touches a surface
+# this list does not show.
+# windows: plain, collapsed, tilted, window-in-window (cards), resized
+SystemTest_macroResizingPristineInspector
+SystemTest_macroCollapsedWindowBarDragMovesAndUncollapseRestoresExtent
+SystemTest_macroCollapsingTiltedWindowKeepsTitleBarStill
+SystemTest_macroInternalWindowDroppedIntoWindowFits
+SystemTest_macroResizeWindowContainingInternalWindow
+# the strip's glyphs at rest and hovered (pencil / eye feedforward), a tilted window embedded as a card
+SystemTest_macroEditModeTogglePencilEyeGlyph
+SystemTest_macroTiltedWindowDropRequiresDwell
+# docked bands and the Docs Maker toolbar
+SystemTest_macroDocsToolbarDockSidesAndFloat
+SystemTest_macroCollapsedDockIsAnEdgeSliver
+SystemTest_macroToolbarChevronPopsOverflow
+# menus: world menu, submenus, pinned header, ticked rows
+SystemTest_macroBasicWorldMenuAndBubble
+SystemTest_macroHoppingBetweenSubMenus
+SystemTest_macroMenuPinnedByHeaderClick
+SystemTest_macroFontsMenuTickTracksSelection
+# menus (W2): the hover plate, an overflowing menu, chooser rows with chevrons, a wire menu's ticks,
+# a standalone row
+SystemTest_macroHierarchyMenuHoverHighlightsExactSubtree
+SystemTest_macroOverTallMenuScrollsToReachItsLastRow
+SystemTest_macroAttachTargetExcludesClippedWidget
+SystemTest_macroSliderPromotedToFollowAScrollPanel
+SystemTest_macroBareButtonFloatDragsWithoutTriggering
+# prompts
+SystemTest_macroSliderFloorPromptTakesTypedValue
+SystemTest_macroPromptShadowFollowsOnDrag
+SystemTest_macroSaveAsPromptAboveTiltedWindow
+# lists and scrollbars
+SystemTest_macroListWdgtAutoScrollsNearDraggedEdge
+SystemTest_macroScrollIndicatorFattensAndDrags
+# the Object Inspector
+SystemTest_macroAddEditSaveRenameRemoveProperty
+SystemTest_macroNakedInspectorRendersResizesAndEdits
+# documents
+SystemTest_macroSimpleDocumentManualBuildAndScroll
+# desktop icons, folders, the clock
+SystemTest_macroDesktopShortcutIcons
+SystemTest_macroAnalogClockInspectEdit
+# content apps: spreadsheet, patch programming, plots
+SystemTest_macroSpreadsheetOpenGrid
+SystemTest_macroTwoEditsOnOneRingInOneCycle
+SystemTest_macroSampleDashboardPlots
+# W3: buttons in footer bands (error log, console), prompt buttons (number + colour prompts), the Inspector
+# re-layout (breadcrumb + donor label, toggles, member rows, footer, taken apart), a two-button toggle fixture,
+# and a mono patch node (fonts.code)
+SystemTest_macroErrorConsolePopsClean
+SystemTest_macroInspectorWorkAreaEvaluatesCoffeeScript
+SystemTest_macroBoxTransparencyAndColorChanging
+SystemTest_macroMixinEditDonorAndOverride
+SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly
+SystemTest_macroInspectorResizingOKEvenWhenTakenApart
+SystemTest_macroSliderDrivesAToggleButton
+SystemTest_macroDegreesConverterFourWayDrive
+# W4: a filed document's shortcut icon (the arrow composite on the new tile, at the grid's first slot), a clock
+# inside a window resized (dots and hands only), clocks of three sizes in a document, and the inspector's
+# member list shifted by StringWdgt's removed outline members
+SystemTest_macroSavedDocumentShortcutIcon
+SystemTest_macroClockInWindowKeepsSquareOnResize
+SystemTest_macroDocumentScrollsMixedTextAndClocks
+SystemTest_macroWrappingTextFieldResizesOK
+# W5: the Docs Maker at its real size with its toolbar (cells spread, the band inset 8, the typed B / I / </>, the
+# drawn », the script A) and its paragraph items; a caret in a document item; a re-flowing document (15 px on 22 px
+# lines, items, the reorder by the new drop rule); a toolbar in a narrow window (») and the overflow menu; the slides
+# and paint toolbars (side bands, the armed tool's active cell); the drop rule's "at the top"; an empty window's
+# placeholder in the item colour; a code pane at 18 px lines
+SystemTest_macroDocsToolbarSlotEditViewToggle
+SystemTest_macroSelectionOverlaySurvivesBringToFront
+SystemTest_macroDocumentCaretBroughtIntoViewWhenMoved
+SystemTest_macroSimpleDocumentAllReflowsCorrectlyAsIChangeFontSize
+SystemTest_macroTabletDockedToolbarChevron
+SystemTest_macroSampleSlideEditViewToggle
+SystemTest_macroDrawingsMakerReEnableEditing
+SystemTest_macroIconDroppedIntoDocumentFlows
+SystemTest_macroWindowsEmptyResizing
+SystemTest_macroMultilineTextInputScrollsWell
+# W6 (wording): name headers in capitals (TARGET / TARGET PROPERTY choosers, a widget's own menu), a message
+# header in sentence case, value rows capitalised at the row (wallpapers), the text menu's pictograms and a wire
+# row with its direction glyph from the symbols atlas, a name row ("Desktop" in the target chooser, hierarchy
+# rows "Rectangle" / "Panel"), the fixed palette test (a bare palette, as it says), and the class inspector's
+# title plus informs in sentence case
+SystemTest_macroBindTwoSlidersAndUnbind
+SystemTest_macroUniqueTargetAndPropertyAreStillPresented
+SystemTest_macroAttachShowsNoTargetsMessage
+SystemTest_macroWallpaperMenuTickTracksSelection
+SystemTest_macroFontsMenuFollowsAnApiChange
+SystemTest_macroScrollPanelMergesChildMenu
+SystemTest_macroMenuPinnedInScrollPanel
+SystemTest_macroMixinFieldEditDonorAndOverride
+# G-A: the spreadsheet with values, an error and a selection; the Fizzytiles window (magnets, panes, captions, the code
+# pane); a sample slide's page; the stretchable page flush and letterboxed under rotation; plots on the sample dashboard
+# (already listed); the folder window (DesktopShortcutIcons, listed); the error log's Pause toggle (listed)
+SystemTest_macroSpreadsheetSelection
+SystemTest_macroSpreadsheetErrorPropagation
+SystemTest_macroFizzytilesBoxTileRendersStaticCube
+SystemTest_macroPlotUncollapseKeepsRendering
+SystemTest_macroStretchPanelChildrenReflowOnResize
+SystemTest_macroDropIntoRotatedStretchablePanelStretchesOnResize
+# G-B: the halo on a widget (five plates, hovered and pressed), a rotate drag, a lone handle; the layout chrome (adders,
+# spacers, a split adjuster, drop slots); the drag feedback (a candidate outline on a window's rounded corners, a dock
+# band, the dwell ring, the armed label)
+SystemTest_macroResizeMoveHandlesIdempotent
+SystemTest_macroWidgetRotateViaHaloHandle
+SystemTest_macroHandleAttachedToNothing
+SystemTest_macroLayoutsAndCollapsing
+SystemTest_macroStackDividerReproportionsCells
+SystemTest_macroDocumentEditLayoutDropSlots
+SystemTest_macroDragEmbedWindowLingerArms
+SystemTest_macroDragEmbedCandidateChangeResets
+SystemTest_macroDragEmbedArmedPersistsWhileAiming
+# G-C: sliders in their states (bright overrides, a prompt's slider, a spreadsheet slider cell, a bar picked up off its
+# viewport); the palettes' choice marker; a prompt's text field and the "Save as…" title; a bare text area
+SystemTest_macroSliderButtonStateColors
+SystemTest_macroSliderFloorPromptTakesTypedValue
+SystemTest_macroSpreadsheetSliderCell
+SystemTest_macroInspectorScrollbarUnplugged
+SystemTest_macroPaletteMarksItsChoice
+SystemTest_macroSaveAsPromptAboveTiltedWindow
+SystemTest_macroStringWdgtEditDefersToPromptWhenCropped
+SystemTest_macroScrollPanelMergesChildMenu
+# G-D: the selection outline (a rounded item, a retarget, none while a caret shows, after Escape + Bold), text selection,
+# the hover wash, a plain list
+SystemTest_macroEditorFocusIndicatorTracksEditedWidget
+SystemTest_macroSelectionOverlaySurvivesBringToFront
+SystemTest_macroDoubleClickSelectsWord
+SystemTest_macroHierarchyMenuHoverHighlightsExactSubtree
+SystemTest_macroListWdgtAutoScrollsNearDraggedEdge
+SystemTest_macroDocsToolbarDockSidesAndFloat
+# G-E: state colours (a paint tool's edit mark), the generic panel look (a panel in a panel, a plain list's paper pane),
+# the default text ink, the header-line rule (Fizzytiles' captions)
+SystemTest_macroPencilPaintsStrokeOnLeftDrag
+SystemTest_macroPanelInPanelTransparencyAndStroke
+SystemTest_macroListWdgtWheelScroll
+SystemTest_macroTextWdgtCaretKeepsCorrectAlignment
+SystemTest_macroFizzytilesBlockScoping

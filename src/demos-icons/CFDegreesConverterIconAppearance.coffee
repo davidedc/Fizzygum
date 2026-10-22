@@ -1,7 +1,5 @@
 class CFDegreesConverterIconAppearance extends DegreesConverterIconAppearance
 
-  # Byte-for-byte the DegreesConverter icon except the little "degrees F" ring, which
-  # this "°C <-> °F" variant tints a fixed grey. Sizes and the whole paintFunction
-  # are inherited -- this used to be a ~230-line copy that differed by one fillStyle.
-  _degreesSymbolFillStyle: ->
-    'rgb(170, 170, 170)'
+  # The demo menu's "C <-> F converter icon": the C-F converter's art, inherited
+  # whole. The family draws in its two roles, ink and paper (_useInk /
+  # _usePaper), and has no grey, so this variant carries no colour of its own.

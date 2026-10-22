@@ -123,17 +123,6 @@ class SimpleSpreadsheetWdgt extends Widget
   # the sparse data model — this widget owns it and is its formula scope
   model: undefined
 
-  # the palette the child widgets read. Declared undefined and BUILT IN THE CONSTRUCTOR
-  # on purpose: a class-level Color.create would run at class-definition time, before
-  # Color has loaded (see the constructor's own note).
-  headerFillColor: undefined
-  gridlineColor: undefined
-  headerBorderColor: undefined
-  headerTextColor: undefined
-  selectionColor: undefined
-  valueTextColor: undefined
-  errorTextColor: undefined
-
   # editing state: which cell is being edited. The editor WIDGET lives on the editing cell.
   _editing: undefined
   _editCol: undefined
@@ -153,18 +142,6 @@ class SimpleSpreadsheetWdgt extends Widget
     @selectedRow = 0
     # the sparse data model — this widget owns it and is its formula scope (see FormulaCompiler)
     @model = new SheetModel @
-    # colours (immutable + LRU-cached via Color.create; computed once here, never at class
-    # scope — class-level Color statics would run at class-definition time, before Color loads).
-    # The child widgets read these — the sheet itself paints nothing (F5), and the data region
-    # has NO background of its own (the cells panel is transparent too): the backdrop under
-    # the sheet shows through, exactly as it always did.
-    @headerFillColor = Color.create 236, 236, 236
-    @gridlineColor = Color.create 198, 198, 198
-    @headerBorderColor = Color.create 150, 150, 150
-    @headerTextColor = Color.create 90, 90, 90
-    @selectionColor = Color.create 40, 110, 210
-    @valueTextColor = Color.create 30, 30, 30
-    @errorTextColor = Color.create 200, 40, 40
     # editing state (which cell is being edited; the editor WIDGET lives on the editing
     # cell, and the standard caret types straight into it); undefined / false until an edit begins
     @_editing = false
@@ -198,6 +175,12 @@ class SimpleSpreadsheetWdgt extends Widget
     return
 
   colloquialName: -> "spreadsheet"
+
+  # the picture a filed or aliased sheet wears (the generic object frame around it), and the one
+  # its launcher wears through AppCatalog: the spreadsheet's own icon. The window (SpreadsheetWdgt)
+  # answers through FrameWdgt's representativeIcon, which asks its content -- me.
+  representativeIcon: ->
+    new SpreadsheetIconWdgt
 
   # FILL-class window content (F6 — this DELETED the pre-F6 fixed-size overrides: the
   # initialiseDefaultFrameContentLayoutSpec grow-0/height-frozen flip, the fixed
@@ -463,28 +446,39 @@ class SimpleSpreadsheetWdgt extends Widget
 
   # PUBLIC (F5): stroke a grid widget's OWN top+left edges into its local, already-translated
   # coordinate space — the ONE home for the edge paint CellWdgt and SheetHeaderCellWdgt share
-  # (the sheet stays the colour + geometry authority). THE CROSSING RULE (F5 receipt A): the
-  # grid-coloured edge strokes BEFORE the dark edge, so dark wins every crossing pixel exactly
-  # as the old one-pass paint's "gridlines first, darker borders last" order did —
-  # byte-identical, proven at dpr1+dpr2. Left edge = a vertical at x 0.5 (rasterises into the
-  # widget's FIRST pixel column); top edge = a horizontal at y 0.5. Nobody strokes
-  # right/bottom: the old outermost strokes at gw+0.5/gh+0.5 rasterised one pixel past the
-  # sheet and were clipped invisible (F5 receipt C) — drawing them now WOULD change pixels.
-  paintGridEdges: (aContext, width, height, leftIsDark, topIsDark) ->
+  # (the sheet is the geometry authority; the colours are the theme's spreadsheet roles, read
+  # here at paint time). `leftEdge` and `topEdge` each name what that edge is:
+  #   "rule"     — the header rule (spreadsheetHeaderRule): an edge on the line under the letter
+  #                row or on the line right of the number column;
+  #   "gridline" — a gridline (spreadsheetGridline): any other edge between two cells or headers;
+  #   undefined  — no line: the edge lies on the sheet's OUTER top or left boundary, where the
+  #                window's strip rule and frame border are the line (a second one there would
+  #                double it), so that pixel row or column shows the widget's own fill.
+  # THE CROSSING RULE (F5 receipt A): a gridline strokes BEFORE the rule, so the rule wins every
+  # pixel where the two cross. Left edge = a vertical at x 0.5 (rasterises into the widget's
+  # FIRST pixel column); top edge = a horizontal at y 0.5. Each runs the widget's whole side, so
+  # an inner line meets the outer boundary flush. Nobody strokes right or bottom: a neighbour
+  # strokes that line as its own left or top, and the sheet's outer right and bottom carry none.
+  paintGridEdges: (aContext, width, height, leftEdge, topEdge) ->
+    theme = WorldWdgt.theme
+    edgeColorString = (edge) ->
+      (if edge is "rule" then theme.spreadsheetHeaderRule else theme.spreadsheetGridline).toString()
     aContext.lineWidth = 1
-    strokeLeftEdge = =>
-      aContext.strokeStyle = (if leftIsDark then @headerBorderColor else @gridlineColor).toString()
+    strokeLeftEdge = ->
+      return unless leftEdge?
+      aContext.strokeStyle = edgeColorString leftEdge
       aContext.beginPath()
       aContext.moveTo 0.5, 0
       aContext.lineTo 0.5, height
       aContext.stroke()
-    strokeTopEdge = =>
-      aContext.strokeStyle = (if topIsDark then @headerBorderColor else @gridlineColor).toString()
+    strokeTopEdge = ->
+      return unless topEdge?
+      aContext.strokeStyle = edgeColorString topEdge
       aContext.beginPath()
       aContext.moveTo 0, 0.5
       aContext.lineTo width, 0.5
       aContext.stroke()
-    if leftIsDark and not topIsDark
+    if leftEdge is "rule" and topEdge isnt "rule"
       strokeTopEdge()
       strokeLeftEdge()
     else

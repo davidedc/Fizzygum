@@ -1,6 +1,10 @@
 # sends a message to a target object when pressed.
 # takes a rectangular shape, and can host
 # a widget to be used as "face"
+#
+# MY LOOK is the plain button's: my fill is HighlightableMixin's for my state (the plainButton*
+# roles, re-derived at every state change), inside a square 1 px border in the rectangular button's
+# role, read as my RectangularAppearance paints it (_surfaceStroke).
 
 class SimpleRectangularButtonWdgt extends ButtonWdgt
 
@@ -17,5 +21,9 @@ class SimpleRectangularButtonWdgt extends ButtonWdgt
     super opts.target, opts.action, opts
 
     @appearance = new RectangularAppearance @
-    @strokeColor = WorldWdgt.theme.buttonStroke
+
+  # The colour my border is stroked with while I hold no stroke colour of my own
+  # (RectangularAppearance._borderColor asks it as it paints).
+  _surfaceStroke: ->
+    WorldWdgt.theme.rectangularButtonStroke
 

@@ -2,7 +2,7 @@ class EmptyWindowCreatorButtonWdgt extends CreatorButtonWdgt
 
   toolTipMessage: "empty window"
 
-  createAppearance: -> new EmptyWindowIconAppearance @, WorldWdgt.theme.iconInk
+  createAppearance: -> new EmptyWindowIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt()
