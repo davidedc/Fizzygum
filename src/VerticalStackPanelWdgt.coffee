@@ -11,9 +11,11 @@ class VerticalStackPanelWdgt extends Widget
   # (opts.color) or set on me: until then my RectangularAppearance paints me in my look, read as I
   # am painted (_surfaceFill, _surfaceStroke)
   color: undefined
-  # serves as BOTH the border inset and the inter-element gap (see the note at its
-  # read sites); the constructor takes it as opts.padding and defaults it to 5. A document's
-  # page sets its stack's from the theme at every arrange (DocumentViewportWdgt._takeItemSpacing).
+  # my INSET: how far in from my edges my elements stand (above the first, below the last, beside
+  # each as its alignment puts it) -- and the gap between two of them too, unless the viewport I am
+  # the plane of names one for its page (interElementGap). The constructor takes it as opts.padding
+  # and defaults it to 5. A document's page sets its stack's at every arrange, from the theme and
+  # the gutter around the page (DocumentViewportWdgt._takeItemSpacing).
   padding: undefined
 
   colloquialName: ->
@@ -222,16 +224,16 @@ class VerticalStackPanelWdgt extends Widget
   availableWidthForContents: ->
     @width() - 2 * @padding
 
-  # The gap between two consecutive stacked elements. Historically the ONE
-  # @padding knob served as BOTH the border inset and the inter-element gap;
-  # they are distinct layout roles (CSS padding vs gap), so the gap is now its
-  # own policy method for a subclass to set apart — CommandPanelWdgt stacks its
-  # rows FLUSH (gap 0) inside its padding. Default: the border padding,
-  # preserving every existing stack byte-identically. Mirrored in the three
-  # walkers (_positionAndResizeChildren / preferredExtentForWidth /
-  # subWidgetsMergedPreferredBounds) exactly like the _childWidthInStack trio.
+  # The gap between two consecutive stacked elements -- a layout role apart from my padding, the
+  # inset from my edges (CSS gap vs padding), so each can change without the other. The viewport I
+  # am the plane of names it when its page has its own (interElementGapOfPlane, asked through ?():
+  # a document's item spacing, which holds while the document's inset yields to a window's gutter);
+  # otherwise it is my padding. A subclass may set its own policy -- CommandPanelWdgt stacks its
+  # rows FLUSH (gap 0) inside its padding. Asked at every read, so the three walkers
+  # (_positionAndResizeChildren / preferredExtentForWidth / subWidgetsMergedPreferredBounds) read
+  # one answer, exactly like the _childWidthInStack trio.
   interElementGap: ->
-    @padding
+    (@parent?.interElementGapOfPlane? @) ? @padding
 
   # The per-child stack sizing POLICY, in ONE place for the three siblings that walk my children
   # (the pure measures preferredExtentForWidth / subWidgetsMergedPreferredBounds and the applying

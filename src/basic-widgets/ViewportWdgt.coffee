@@ -18,7 +18,7 @@ class ViewportWdgt extends Widget
 
   # the panel facts I genuinely mean, restated off PanelWdgt:
   # around-the-content padding a caller can add via setContents (reads: the arrange,
-  # scrollCaretIntoView)
+  # _caretScrollMargin)
   extraPadding: 0
   # an EMPTY generic viewport accepts drops (wantsDropOfChild consults the contents' veto)
   _acceptsDrops: true
@@ -1399,14 +1399,13 @@ class ViewportWdgt extends Widget
     fb = @contents.top() + @scrollOffsetY + @height() - @padding
     fl = @contents.left() + @scrollOffsetX + @padding
     fr = @contents.left() + @scrollOffsetX + @width() - @padding
-    marginAroundCaret = @padding
-    if @extraPadding?
-      marginAroundCaret += @extraPadding
+    # how far past that interior's edge the caret comes to stand, on either axis
+    marginAroundCaret = @_caretScrollMargin()
     # DIRECT, deliberately UN-clamped offset writes (the follow's one licence — the movement
     # cores clamp to the content frame, but a caret at the very end of the content needs the
-    # window to overshoot by its margin): the arrange below then GROWS the frame to cover the
-    # overshot window (the window-in-plane merge) and its bookkeeping+clamp normalize the
-    # offset against the grown frame, so the overshoot STICKS exactly as far as the margin —
+    # window to overshoot by its caret scroll margin): the arrange below then GROWS the frame to
+    # cover the overshot window (the window-in-plane merge) and its bookkeeping+clamp normalize
+    # the offset against the grown frame, so the overshoot STICKS exactly as far as the margin —
     # the same fixpoint the moved-plane follow reached by moving the plane un-clamped.
     if caretWidget.top() < ft
       @_writeScrollOffset @scrollOffsetX, (Math.round @scrollOffsetY - (ft - caretWidget.top() + marginAroundCaret))
@@ -1418,6 +1417,15 @@ class ViewportWdgt extends Widget
       @_writeScrollOffset (Math.round @scrollOffsetX + (caretWidget.right() - fr + marginAroundCaret)), @scrollOffsetY
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
+
+  # MY CARET SCROLL MARGIN: how far past my padded interior's edge a caret I bring into view comes
+  # to stand (scrollCaretIntoView, on both axes), so some of what surrounds it shows too. It is a
+  # SCROLLING policy (CSS scroll-padding), apart from my layout inset (CSS padding), though by
+  # default it equals that inset: my padding plus the extra padding a caller set around my content
+  # (setContents). A viewport whose inset can yield to room someone else keeps around it answers its
+  # own (DocumentViewportWdgt). Read at every follow and kept nowhere.
+  _caretScrollMargin: ->
+    @padding + (@extraPadding ? 0)
 
   # ViewportWdgt events.
   scrolledBy: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->

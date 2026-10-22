@@ -27,7 +27,14 @@ class FridgeMagnetsWdgt extends Widget
 
   colloquialName: ->
     "Fizzytiles"
- 
+
+  # I am a PAGE, not a pane (three boards you work on): a window holding me keeps the theme's page
+  # gutter (windowPageGutter) around me on every side and between me and each band it docks, and my
+  # own box carries no outer margin of its own for that purpose (my externalPadding is 0). Asked by
+  # that window at every measure and arrange (FrameWdgt._hostsAPage), through ?(): a payload that
+  # does not answer is a pane.
+  wantsWindowPageGutter: -> true
+
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()

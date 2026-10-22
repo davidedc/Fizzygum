@@ -315,20 +315,62 @@ class FrameWdgt extends Widget
   # My BODY is what my border encloses, less my strip: my payload and my docked bands lie in it.
   # Its inner edge sits in from my outer edge by my STRIP's thickness on the side my strip runs
   # along (the strip spans my border, its band and its rule: _barSpec) and by my BORDER INSET
-  # on every other side. Past those edges my payload and my bands keep my BODY MARGIN, and the
-  # same margin parts a band from my payload; a band also stands its own inset in from those edges
-  # (_dockedBandInset), on every side but the one it shares with my payload. My padding
-  # (_chromePadding) is border inset plus body margin, measured where no strip runs.
+  # on every other side. Past those edges my payload keeps my BODY MARGIN, and the same margin
+  # parts a band from my payload. A band stands in from those edges, on every side but the one it
+  # faces my payload across, by the larger of my body margin and the theme's band inset
+  # (_dockedBandInset is what the band inset adds past my margin). My body margin depends on what
+  # my payload IS: a PAGE (a surface you work on, which declares wantsWindowPageGutter) keeps the
+  # theme's page gutter, a PANE (a view whose edges are my lines) the theme's frame body margin.
+  # My padding (_chromePadding) is border inset plus the frame body margin: a pane's inset where no
+  # strip runs, whatever my payload is.
 
   # The part of my padding that is my border: the theme's border width, which my padding always
   # holds (_chromePadding), whatever my payload is.
   _borderInset: ->
     WorldWdgt.theme.frameBorderWidth
 
-  # The part of my padding past my border: the margin my payload keeps from every inner edge of
-  # my body, a strip's rule and a docked band's side included.
+  # The margin my payload keeps from every inner edge of my body, a strip's rule and a docked band's
+  # side included. A PAGE keeps the theme's page gutter, read here at every measure and arrange and
+  # never copied into me, so a saved or duplicated window keeps the gutter of the world it lands
+  # in; a PANE keeps the part of my padding past my border (the theme's frame body margin,
+  # _chromePadding). Every chrome term below reads this one answer, so the measure and the arrange
+  # agree whichever it is.
   _bodyMargin: ->
+    return WorldWdgt.theme.windowPageGutter if @_hostsAPage()
     @padding - @_borderInset()
+
+  # Is my payload a PAGE -- a surface you work on (a document, a canvas, a board) -- rather than a
+  # PANE whose edges are my own lines? The payload's class declares it (wantsWindowPageGutter, a
+  # capability asked through ?(): a payload that does not answer is a pane). Asked at every read and
+  # never kept, stored or serialized, because my payload can be swapped.
+  _hostsAPage: ->
+    !!@contents?.wantsWindowPageGutter?()
+
+  # THE GUTTER I KEEP AROUND `aPayload` as my page: my body margin (the theme's page gutter) when
+  # aPayload is my content and a PAGE, else 0 -- around a pane, a band, my strip or a widget that is
+  # not mine I keep none. A page asks it of its parent through ?() at every arrange, so content
+  # spacing it keeps for itself can yield to the room I already give it (a document's items stand
+  # the theme's item spacing from my body's edge, my gutter counted toward it:
+  # DocumentViewportWdgt._itemInset); a parent that does not answer keeps no gutter. Read live and
+  # never stored, so it follows the theme and every re-parenting.
+  pageGutterAround: (aPayload) ->
+    return 0 unless aPayload is @contents and @_hostsAPage()
+    @_bodyMargin()
+
+  # WHO RECEIVES A DROP ON MY BODY -- on a point of it that none of my children covers: my page
+  # gutter, my border. While I keep a gutter around a PAGE that room is the page's, so a payload
+  # released there goes to the page: to the child my page names as receiving drops around it
+  # (receiverOfDropsAroundMe, asked through ?(): a document's stack, a stretchable page's content),
+  # else to my page itself, and the page's own drop rules decide from there (a page that refuses a
+  # payload refuses it in my gutter too, and the climb goes on past me as it would from me). Around
+  # a pane, or a collapsed page, nobody: the climb starts at me, and I refuse drops while I hold
+  # content. A point on my strip, my grip or a docked band is that child's, never mine. PUBLIC: the
+  # hand asks it, through ?(), of the top widget under the pointer, where both its drop climbs start
+  # (ActivePointerWdgt._dropClimbStart) and where its drop learns that a release fell in my gutter
+  # (_targetReachedThroughAGutter); its dock offer and a press never ask it.
+  dropReceiverForPointsOnMyBody: ->
+    return undefined unless @_hostsAPage() and !@contents.collapsed
+    @contents.receiverOfDropsAroundMe?() ? @contents
 
   # How far in from my outer TOP my body's inner edge sits: my strip, when it runs across my top
   # (it always spans my border), else my border inset.
@@ -373,21 +415,24 @@ class FrameWdgt extends Widget
     return undefined unless dockedFrame._myEdgeDockSpec()?.engaged
     dockedFrame
 
-  # What a docked frame takes out of my body at `side`: the band's inset from my body's edge
+  # What a docked frame takes out of my body at `side`, past the body margin my payload offset and
+  # my chrome already count at that edge: what the band's inset adds past that margin
   # (_dockedBandInset), the band it occupies, and the gap between the band and my content (my body
-  # margin). 0 for an empty, disengaged or collapsed-away slot.
+  # margin again). 0 for an empty, disengaged or collapsed-away slot.
   _dockThicknessAt: (side) ->
     dockedFrame = @_dockedFrameAt side
     return 0 unless dockedFrame?
     @_dockedBandInset() + dockedFrame._dockedBandThickness() + @_bodyMargin()
 
-  # How far a band docked in one of my slots stands in from my body on its three outer sides,
-  # past my body margin (the theme's dockedBandInset; its fourth side, toward my payload, keeps my
-  # body margin alone). Read at every measure and arrange, never copied into me, so a saved or
-  # duplicated host places its bands in the current theme. A pure dial, as the slot terms above
-  # must be.
+  # How much further a band docked in one of my slots stands in, on its three outer sides, past my
+  # body margin: what the theme's dockedBandInset asks beyond that margin, and nothing once my margin
+  # reaches it. So every band stands the larger of my body margin and the band inset in from my
+  # body's inner edges, whatever my payload is -- a page's gutter no wider than the band inset moves
+  # no band, it only parts the band from the page (its fourth side, toward my payload, keeps my body
+  # margin alone). Read at every measure and arrange, never copied into me, so a saved or duplicated
+  # host places its bands in the current theme. A pure dial, as the slot terms above must be.
   _dockedBandInset: ->
-    WorldWdgt.theme.dockedBandInset
+    Math.max 0, WorldWdgt.theme.dockedBandInset - @_bodyMargin()
 
   # MY OWN cross extent as a band in somebody's slot (program ruling C13): expanded, what the
   # band grants my payload (EdgeDockLayoutSpec.thicknessGrantedTo: a toolbar's own dockThickness,
@@ -599,12 +644,14 @@ class FrameWdgt extends Widget
     payloadExtent = @contents.naturalPayloadExtentWithin room
     @setExtent new Point (payloadExtent.x + chromeWidth), (payloadExtent.y + chromeHeight)
 
-  # MY PADDING: how far my payload sits in from my OUTER edge where no strip runs -- my border
-  # (the payload lies inside the outline I stroke over it) plus the theme's body margin past it
-  # (see "my body's edges" for how the strip side and a docked band read it). The same for every
-  # payload and every manifestation: a pop-up's rows lie inside my border like any payload, and the
-  # padding they keep inside it is their rows panel's own (the pop-up's content padding, handed to
-  # its CommandPanelWdgt). Read once, at construction.
+  # MY PADDING: my border (a payload lies inside the outline I stroke over it) plus the theme's
+  # frame body margin past it -- how far a PANE payload sits in from my OUTER edge where no strip
+  # runs (see "my body's edges" for how the strip side and a docked band read it). The same for
+  # every manifestation: a pop-up's rows lie inside my border like any pane, and the padding they
+  # keep inside it is their rows panel's own (the pop-up's content padding, handed to its
+  # CommandPanelWdgt). Read once, at construction, and kept as my padding whatever my payload is: a
+  # PAGE payload's margin is the theme's page gutter, which _bodyMargin reads at every measure in
+  # place of this.
   _chromePadding: ->
     theme = WorldWdgt.theme
     theme.frameBorderWidth + theme.frameBodyMargin
@@ -1922,6 +1969,117 @@ class FrameWdgt extends Widget
   # helpers it calls -- is Widget's, shared with the other widget that cuts its children to its
   # outline, a tool cell.)
 
+  # ===== my page's SELECTION RING, in my page gutter (window-page-gutter plan D3, D8) =====
+  # While I keep a gutter around a PAGE, the editor-selection ring of my page lies OUTSIDE the page,
+  # in that gutter, and I paint it: the space is mine, so what lies in it is mine to paint. It stands
+  # theme.pageSelectionOutlineOffset out from my page's box, selectionOutlineWidth thick, its corners
+  # my page's grown by that reach (a square corner stays square), painted after my own fill and
+  # before my children -- so my grip, my last child, lies over it. I host it only while my gutter is
+  # at least that reach wide, so nothing else reaches it (a band stands a whole gutter from my page,
+  # my border a whole gutter from its edges). The selected widget then paints no ring of its own
+  # (Widget._paintEditorSelectionOverlayIfSelected). The world decides once per cycle whose ring I
+  # paint and around which box, by asking hostsSelectionRingOf and pageSelectionRingBox below, and
+  # tells me when that ring comes, goes, changes hands or moves (notePageSelectionRingChanged). Every
+  # other selection ring -- a paragraph's, a board's, the page's in a window whose gutter cannot
+  # hold it -- stays inside its own widget.
+
+  # Do I paint the selection ring of `aWdgt`? Only while my gutter HOLDS the ring (my payload is a
+  # PAGE, my body margin is at least the ring's reach, my page is not collapsed and shows) and
+  # `aWdgt` FILLS my page: my page itself, or a widget inside it whose visible box is my page's
+  # visible box. A narrower gutter would put the ring over my border or a band, so there the
+  # selected widget keeps its own ring, inside its box. A click on a page selects the child that
+  # covers it -- a document's stack, a canvas's glass, a stretchable page's panel -- and never the
+  # page, so that child's ring is my page's ring; an item ON my page (a paragraph, a letterboxed
+  # slide, a Fizzytiles board) keeps its ring inside its own box. PUBLIC: the world's selection
+  # reconciler asks it, through ?(), of the nearest frame above the selected widget
+  # (WorldWdgt._editorSelectionRingHostOf); a widget that does not answer hosts no ring.
+  hostsSelectionRingOf: (aWdgt) ->
+    return false unless @_hostsAPage() and @_bodyMargin() >= @_pageSelectionRingReach() and !@contents.collapsed
+    return false unless @contents.isAncestorOf aWdgt
+    pageBox = @contents.clippedThroughBounds()
+    # nothing of my page shows (hidden, or clipped away by a container I stand in): no ring to paint
+    return false if pageBox.isEmpty()
+    pageBox.equals @_visibleBoxOnMyPage aWdgt
+
+  # `aWdgt`'s visible box (its clippedThroughBounds, in its own plane) carried into my page's plane
+  # across the scroll translations between them: a scrolled document's stack lies in its viewport's
+  # translated plane, where its box stands wherever its content has scrolled to. undefined when a
+  # transform island stands between them -- past one a box is turned or scaled, so it is no box of my
+  # page's. `aWdgt` is my page or a widget inside it.
+  _visibleBoxOnMyPage: (aWdgt) ->
+    return undefined unless aWdgt._enclosingNonIdentityIsland() is @contents._enclosingNonIdentityIsland()
+    box = aWdgt.clippedThroughBounds()
+    child = aWdgt
+    until child is @contents
+      translation = child.parent.scrollTranslationOfChild? child
+      box = box.translateBy translation if translation?
+      child = child.parent
+    box
+
+  # How far my page's ring reaches out past my page's box: the theme's air, then the ring's width.
+  # Read by the guard above (my gutter must hold it) and by the ring's box below.
+  _pageSelectionRingReach: ->
+    theme = WorldWdgt.theme
+    theme.pageSelectionOutlineOffset + theme.selectionOutlineWidth
+
+  # THE BOX OF THE RING I paint around my page: my page's visible box grown by the ring's reach (the
+  # ring is the band between this box and my page's box grown by the air alone). The ONE home of the
+  # ring's geometry, read by my paint (_paintPageSelectionRing) and by the world's selection
+  # reconciler, which keeps the last answer beside the host and tells me when it changes
+  # (WorldWdgt._updateEditorSelectionOverlay) -- so the box the world compares is the box I paint.
+  # PUBLIC query, read live at every ask: my page's box moves with my resizes and with every band
+  # floated out of me, docked into me or collapsed.
+  pageSelectionRingBox: ->
+    @contents.clippedThroughBounds().expandBy @_pageSelectionRingReach()
+
+  # PUBLIC notification -- the page selection ring I paint came to me, left me, moved (my page's box
+  # changed while it stayed selected), or now belongs to a different selected widget's page. The
+  # world's selection reconciler calls it on any such change
+  # (WorldWdgt._updateEditorSelectionOverlay). The ring lies in MY gutter, outside the selected
+  # widget's box, so that widget's own repaint cannot cover it: a widget's damage reaches 1 px past
+  # its top and left edges (and the damage margin past its right and bottom), so the ring's top and
+  # left sides would stay on screen. I invalidate MYSELF here, in the method the world invokes on me
+  # (widget-citizenship point 2) -- the world never reaches into my _changed().
+  notePageSelectionRingChanged: ->
+    @_changed()
+
+  # My body's own paint (my appearance: my fill), then -- in the normal pass, while the world names me
+  # the host of the selection ring (WorldWdgt.editorSelectionRingHost) -- my page's ring, over that
+  # fill and under my children. Both of my paint paths reach here before they paint my children: the
+  # rounded child clip's (_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow above) and
+  # the clipping mixin's. The shadow pass never paints the ring: a selection is no part of my
+  # silhouette.
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+    super
+    return if appliedShadow? or world?.editorSelectionRingHost() isnt @
+    @_paintPageSelectionRing aContext, clippingRectangle
+
+  # THE PAGE RING: selectionOutlineWidth thick, pageSelectionOutlineOffset out from my page's visible
+  # box, filling pageSelectionRingBox to its edges, in the selectionOutline role, its corners the
+  # ones my page shows (cornerRadiiFollowingMyOutline) each grown by the ring's reach, a square corner
+  # staying square. Painted by the selection outline's own painter in its own spelling
+  # (Widget._drawSelectionOverlay): clipped to the damaged part of me (device pixels), at full alpha,
+  # laid out in logical pixels with the origin moved to the ring's top-left, in whatever context I am
+  # painted into -- the world canvas, or the buffer of the transform island I sit in, where it warps
+  # with me. Its geometry is pageSelectionRingBox, never the damage box. Its stroke half stays off:
+  # the ring's outer edge lies over my own fill in the gutter, where no border runs under it.
+  _paintPageSelectionRing: (aContext, clippingRectangle) ->
+    [damageBox, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
+    return unless damageBox? and damageBox.isNotEmpty() and w >= 1 and h >= 1
+    theme = WorldWdgt.theme
+    reach = @_pageSelectionRingReach()
+    ringBox = @pageSelectionRingBox()
+    pageBox = ringBox.insetBy reach
+    radii = ((if radius > 0 then radius + reach else 0) for radius in @contents.cornerRadiiFollowingMyOutline pageBox)
+    aContext.save()
+    aContext.clipToRectangle al, at, w, h
+    aContext.globalAlpha = 1
+    aContext.useLogicalPixelsUntilRestore()
+    aContext.translate ringBox.left(), ringBox.top()
+    HighlightOutlineAppearance.paintRing aContext, ringBox.width(), ringBox.height(), theme.selectionOutlineWidth,
+      radii, theme.selectionOutline, false
+    aContext.restore()
+
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
   # core is non-settling: it adds the bar (whose pieces build through the bar's own non-settling
   # core) AND the content through @_addNoSettle, so nothing self-settles per add and nothing
@@ -2244,15 +2402,17 @@ class FrameWdgt extends Widget
       @bar._reLayout barBounds
 
     # the four slots: place each docked band in my body, past its inner edges
-    # (my border or my bar) and my body margin, standing my band inset in from
-    # them on its three OUTER sides and flush with the content's region on its
-    # fourth -- TOP/BOTTOM: a band across my whole body less the inset at each
-    # end, the content starting below it (top) or ending a body margin above
-    # it (bottom); LEFT/RIGHT: a column on that flank spanning the content's
-    # vertical span less the inset at each end, so a column and a top or
-    # bottom band stand one inset apart where they meet (stackHeight is the
-    # content height this pass just derived, so every placement is pass-local
-    # -- no applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
+    # (my border or my bar) and my body margin, standing my band inset
+    # (_dockedBandInset: what the theme's band inset adds past that margin)
+    # further in on its three OUTER sides, its fourth side facing the content
+    # across my body margin -- TOP/BOTTOM: a band across my whole body less the
+    # inset at each end, the content starting a body margin below it (top) or
+    # ending a body margin above it (bottom); LEFT/RIGHT: a column on that flank
+    # spanning the content's vertical span less the inset at each end, so a
+    # column and a top or bottom band stand as far apart where they meet as a
+    # band stands in from my body's edges (stackHeight is the content height
+    # this pass just derived, so every placement is pass-local -- no
+    # applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
     # the same drive as @bar above -- a band's _reLayout applies its own
     # bounds THEN re-fits its chrome and payload, and the payload viewport in
     # turn re-fits its contents+scrollbars, so a width change that

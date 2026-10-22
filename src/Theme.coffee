@@ -385,9 +385,9 @@ class Theme
     @hoverHighlightWash = @accentTint
     # the SELECTION OUTLINE: the ring the editor-focus selection draws inside the box of the widget
     # an op will act on (Widget._drawSelectionOverlay, from WorldWdgt._widgetBeingEdited; never one a
-    # caret is in -- the caret, in the accent too, says "focus" there): the accent, which says
-    # "selected" (visual-design-system §4.8), the drop outline's painter at its own width,
-    # selectionOutlineWidth.
+    # caret is in -- the caret, in the accent too, says "focus" there), or around a window's page in
+    # the window's gutter (FrameWdgt._paintPageSelectionRing): the accent, which says "selected"
+    # (visual-design-system §4.8), the drop outline's painter at its own width, selectionOutlineWidth.
     @selectionOutline = @accent
 
     # the LAYOUT CHROME (LayoutChromeWdgt's family, painted by LayoutChromeAppearance: a division's
@@ -499,8 +499,8 @@ class Theme
     # FrameContentsPlaceholderText): a hint standing in for the missing contents, not content, so
     # its builder gives it this ink as it builds it, over a text's default ink.
     @framePlaceholderText = @muted2
-    # a DOCUMENT's page (DocumentViewportWdgt): its fill, with no border, so the window's frame,
-    # strip rule and docked band are the page's only lines ...
+    # a DOCUMENT's page (DocumentViewportWdgt): its fill, with no border -- a borderless sheet whose
+    # edge is where this fill ends, inside a window's page gutter or bare on the desk ...
     @documentPageFill = @paper
     # ... and the ink of a document's text (DocumentViewportWdgt.getNormalParagraph), which also
     # takes fonts.document.
@@ -516,10 +516,12 @@ class Theme
     @stackPanelFill = @panel
     @stackPanelStroke = @line
     # the PAGE of the Slides Maker, the Dashboards Maker, the Generic panel and Patch programming
-    # (StretchablePanelWdgt, both read as it paints): its fill, and the 1 px EDGE it draws along a
-    # side where its container letterboxes it (StretchablePanelAppearance) -- its own boundary against
-    # the window body around it. A side flush with its container draws none: there the window's
-    # frame, its strip's rule or a docked band is the line.
+    # (StretchablePanelWdgt, both read as it paints): its fill, and the 1 px EDGE that marks the
+    # sheet's extent (StretchablePanelAppearance) -- on all four sides while its container stands in a
+    # window's page gutter, where the window's body, the gutter and the page are all paper; elsewhere
+    # along a side where its container letterboxes it, its own boundary against the room around it,
+    # and none along a side flush with its container, where what lies past the container's edge (a
+    # window's frame, its strip's rule or a docked band, the desk) is the boundary.
     @stretchablePageFill = @paper
     @stretchablePageEdge = @line
     # a FOLDER WINDOW's panel (FolderPanelWdgt, read as it paints): its fill. It has no border, and
@@ -749,16 +751,26 @@ class Theme
     # the width of the RULE a frame's strip draws along its content-facing edge, inside its own
     # thickness: a strip is the border it spans, its barIconSize targets, then this rule.
     @barRuleWidth = 1
-    # the margin a frame's payload keeps INSIDE its body's edges -- the border's inner edge, the
+    # the margin a frame's PANE payload keeps INSIDE its body's edges -- the border's inner edge, the
     # strip's rule, a docked band -- which is also the gap between a docked band and the payload. At
-    # zero the payload lies flush against every one of them.
+    # zero the payload lies flush against every one of them. A PAGE payload keeps windowPageGutter
+    # instead (below).
     @frameBodyMargin = 0
+    # the GUTTER a window keeps around a PAGE payload (a payload declaring wantsWindowPageGutter: a
+    # document, a canvas, a board), in place of frameBodyMargin: the page stands this far in from
+    # every inner edge of the window's body and this far from each docked band. Read at every measure
+    # and arrange of the page's window (FrameWdgt._bodyMargin), never copied into the window. A band
+    # stands the larger of this and dockedBandInset in from the body's edges, so a gutter no wider
+    # than that inset moves no band.
+    @windowPageGutter = 8
     # how far a DOCKED BAND (a frame in one of a host's four edge slots) stands in from the host's
-    # body on its three OUTER sides -- past the border's inner edge or the strip's rule, and past
-    # the body margin -- while its fourth side, the one toward the payload, keeps the body margin
-    # alone. A left or right band spans the payload's height less this at each end, so where it
-    # meets a top or bottom band the two stand this far apart. Every docked band keeps it, a frame
-    # a user docks included; nothing else reads it (a payload's own margin is frameBodyMargin's).
+    # body on its three OUTER sides -- past the border's inner edge or the strip's rule -- unless the
+    # host's body margin is wider, which then sets it (FrameWdgt._dockedBandInset), while its fourth
+    # side, the one toward the payload, keeps the body margin alone. A left or right band spans the
+    # payload's height less what this adds past the margin at each end, so where it meets a top or
+    # bottom band the two stand as far apart as a band stands in from the body. Every docked band
+    # keeps it, a frame a user docks included; nothing else reads it (a payload's own margin is
+    # frameBodyMargin's or windowPageGutter's).
     @dockedBandInset = 8
 
     # the MINIMUM height a menu row takes, and the floor under a pop-up's title strip (a title is a
@@ -990,13 +1002,22 @@ class Theme
     @dropOutlineWidth = 2
     # the SELECTION OUTLINE's width (Widget._drawSelectionOverlay, painted with the drop outline's ring,
     # HighlightOutlineAppearance.paintRing): the ring an editor-focus selection draws wholly inside the
-    # selected widget's box, its corners those the widget shows.
+    # selected widget's box, its corners those the widget shows -- except the ring of a window's PAGE,
+    # which its window paints outside the page (below).
     @selectionOutlineWidth = 2
+    # ... and how far OUTSIDE a page's box its window paints the page's selection ring, in the window's
+    # page gutter (FrameWdgt._paintPageSelectionRing, read as the ring is painted): this much air
+    # between the page and the ring, then the ring, selectionOutlineWidth thick. Only a window whose
+    # gutter around its page holds the ring (windowPageGutter at least this plus that width) paints it
+    # there, and the selected widget filling the page then draws no ring of its own; a narrower gutter
+    # leaves the ring inside that widget.
+    @pageSelectionOutlineOffset = 2
 
-    # a DOCUMENT's items (its paragraphs and whatever is dropped in among them): how far in from
-    # the page's edges they stand, and how far apart -- the padding of the document's stack, which
-    # is both its inset and its gap (DocumentViewportWdgt, read at every arrange). The stack
-    # sample keeps the stack's own.
+    # a DOCUMENT's items (its paragraphs and whatever is dropped in among them): how far apart they
+    # stand (the gap of the document's stack), and how far in from the edge of the space around the
+    # page -- its own edges, or the body of a window keeping windowPageGutter around it, the gutter
+    # counted toward it, so the stack's inset is what is left of this past the gutter
+    # (DocumentViewportWdgt, read at every arrange). The stack sample keeps the stack's own.
     @documentItemSpacing = 8
     # ... and the ITEM SHAPE a document dresses the texts on its page in
     # (DocumentViewportWdgt.itemShapeOfTextOnPlane, read at every ask): the rounding of the block

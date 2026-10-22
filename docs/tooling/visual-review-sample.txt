@@ -140,3 +140,7 @@ SystemTest_macroPanelInPanelTransparencyAndStroke
 SystemTest_macroListWdgtWheelScroll
 SystemTest_macroTextWdgtCaretKeepsCorrectAlignment
 SystemTest_macroFizzytilesBlockScoping
+# window page gutter: a page's selection ring in its window's gutter (Docs Maker, Drawings Maker) and a paragraph's
+# inside ring; a Stretchable page as a four-edged sheet in the gutter (DegreesConverterFourWayDrive) and Fizzytiles'
+# boards in the gutter (both listed above)
+SystemTest_macroPageSelectionRingInWindowGutter

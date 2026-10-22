@@ -3,15 +3,16 @@
 #
 # I am the PAGE of the Slides Maker, the Dashboards Maker, the Generic panel and Patch programming,
 # and I wear the page's own look, read as I am painted (StretchablePanelAppearance): my fill is the
-# stretchablePageFill role (_surfaceFill) until a colour is set on me, and my border is an edge only
-# along the sides where my container letterboxes me (_insetEdgeRects).
+# stretchablePageFill role (_surfaceFill) until a colour is set on me, and my border is an edge on
+# all four sides while my container stands in a window's page gutter, else only along the sides
+# where my container letterboxes me (_insetEdgeRects).
 
 class StretchablePanelWdgt extends PanelWdgt
 
   @augmentWith BubblesEditModeToCoordinatorMixin, @name
 
   # Like every panel I hold no colour of my own: my appearance reads my look from the theme as it
-  # paints (my fill, _surfaceFill, and my letterboxed edges -- it never asks the panel's
+  # paints (my fill, _surfaceFill, and my edges, _insetEdgeRects -- it never asks the panel's
   # _surfaceStroke), so a page saved, loaded or duplicated wears the look of the world it is shown
   # in, and a colour set on me later is mine.
   constructor: ->
@@ -24,31 +25,40 @@ class StretchablePanelWdgt extends PanelWdgt
     WorldWdgt.theme.stretchablePageFill
 
   # MY EDGES, as integer rectangles in my LOCAL logical coordinates, which my appearance fills in the
-  # stretchablePageEdge role: one along each side where I stand INSET from my container, none along a
-  # side flush with it. My container letterboxes me once my ratio has crystallized
-  # (StretchableWidgetContainerWdgt._layOutOwnContents), and there my edge is my own boundary against
-  # the window body around me; along a flush side the window's frame, its strip's rule or a docked
-  # band is the line. Outside a container (where I make no sense) I draw none. Asked at every
-  # paint, from where I stand in my container (my situation: my top-left in its frame -- we share a
-  # plane, I am its child) and the two extents, so it follows every re-lay; the two vertical edges
-  # stop short of a horizontal one, so no pixel is filled twice.
+  # stretchablePageEdge role: the line that marks my sheet's extent (what a slide or a dashboard
+  # presents) wherever nothing else marks it. While my container stands in a window's page gutter
+  # (StretchableWidgetContainerWdgt.standsInWindowPageGutter), one along each of my four sides: the
+  # window's body, its gutter and I are all paper, so a side without its edge would have no boundary
+  # at all. Elsewhere -- bare on the desk, in a stack, in a window keeping no gutter -- one along
+  # each side where I stand INSET from my container, none along a side flush with it: my container
+  # letterboxes me once my ratio has crystallized (StretchableWidgetContainerWdgt._layOutOwnContents),
+  # and there my edge is my own boundary against the room around me, while along a flush side what
+  # lies past my container's edge (a window's frame, its strip's rule or a docked band, the desk) is
+  # the boundary. Outside a container (where I make no sense) I draw none. Asked at every paint, of
+  # my container and from where I stand in it (my situation: my top-left in its frame -- we share a
+  # plane, I am its child) and the two extents, so it follows every re-lay and every re-parenting of
+  # my container; the two vertical edges stop short of a horizontal one, so no pixel is filled
+  # twice.
   _insetEdgeRects: ->
     container = @parent
     return [] unless container?.setRatio?
     w = @width()
     h = @height()
-    offset = @situation().position
-    insetTop = offset.y > 0
-    insetBottom = offset.y + h < container.height()
-    insetLeft = offset.x > 0
-    insetRight = offset.x + w < container.width()
-    sideTop = if insetTop then 1 else 0
-    sideBottom = if insetBottom then h - 1 else h
+    if container.standsInWindowPageGutter?()
+      edgeTop = edgeBottom = edgeLeft = edgeRight = true
+    else
+      offset = @situation().position
+      edgeTop = offset.y > 0
+      edgeBottom = offset.y + h < container.height()
+      edgeLeft = offset.x > 0
+      edgeRight = offset.x + w < container.width()
+    sideTop = if edgeTop then 1 else 0
+    sideBottom = if edgeBottom then h - 1 else h
     edges = []
-    edges.push new Rectangle 0, 0, w, 1 if insetTop
-    edges.push new Rectangle 0, h - 1, w, h if insetBottom
-    edges.push new Rectangle 0, sideTop, 1, sideBottom if insetLeft
-    edges.push new Rectangle w - 1, sideTop, w, sideBottom if insetRight
+    edges.push new Rectangle 0, 0, w, 1 if edgeTop
+    edges.push new Rectangle 0, h - 1, w, h if edgeBottom
+    edges.push new Rectangle 0, sideTop, 1, sideBottom if edgeLeft
+    edges.push new Rectangle w - 1, sideTop, w, sideBottom if edgeRight
     edges
 
   # I re-lay my children from their proportional records (StretchLayoutSpecs, see

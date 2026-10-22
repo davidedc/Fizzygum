@@ -138,7 +138,8 @@ class RectangularAppearance extends Appearance
   # My widget's BORDER, painted inside paintStroke's scope (widget-local logical coordinates,
   # `localDamageBox` the part being repainted): its _borderColor outline all round, when it has one.
   # A subclass whose border is not that outline answers its own (StretchablePanelAppearance: a page's
-  # edge only along the sides where its container letterboxes it).
+  # edge on all four sides in a window's page gutter, elsewhere only along the sides where its
+  # container letterboxes it).
   _paintBorder: (ctx, localDamageBox) ->
     borderColor = @_borderColor()
     return unless borderColor?

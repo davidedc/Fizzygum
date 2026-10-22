@@ -225,10 +225,52 @@ class ActivePointerWdgt extends Widget
     # the returned target is used by the caller for GEOMETRY on the figure itself (off any sugar figure the
     # proxy is the widget unchanged ⇒ byte-identical dormant).
     payloadPolicy = aWdgt._dropPolicyProxy()
-    target = @topWdgtUnderPointer()
+    target = @_dropClimbStart()
     until target.wantsDropOfChild payloadPolicy
       target = target.parent
     target
+
+  # WHERE BOTH DROP CLIMBS START (dropTargetFor's above, resolveDragEmbedCandidates' below, so the
+  # preview and the outcome start at the same widget): the top widget under the pointer -- unless
+  # that widget hands the points of its own body to a widget inside it that receives drops there
+  # (dropReceiverForPointsOnMyBody, asked through ?()): a window keeping a gutter around its PAGE
+  # names the page's receiver for that gutter, and a letterboxed stretchable page names its content
+  # for its own margin, so a payload released in the gutter or the margin goes to the page's
+  # receiver, by that receiver's own drop rules. The top widget is under the pointer exactly where
+  # none of its children is, so the hand-off covers its own body alone. The dock offer
+  # (_dockBandUnderPointerFor) climbs from the top widget itself, so a host's edge bands stay ahead
+  # of the hand-off; and a press never asks this (the grab resolves its own root), so a press-drag
+  # in a window's gutter still moves the window.
+  _dropClimbStart: ->
+    top = @topWdgtUnderPointer()
+    top.dropReceiverForPointsOnMyBody?() ? top
+
+  # Did the climb that resolved `target` start at the receiver the top widget under the pointer
+  # names for its own body (_dropClimbStart) and stop BELOW that widget? Then the release fell on
+  # that widget's own body beside the receiver -- a window's gutter beside its page, a letterboxed
+  # page's margin beside its content -- and `target` is the receiver or a widget between it and the
+  # top widget: a destination the release did not lie over. A target at or above the top widget
+  # (the receiver refused the payload and the climb went on past it -- past the window, the page, a
+  # dock band's host, to the world) is the one a climb from the top widget itself would reach, so
+  # it is not.
+  _targetReachedThroughAGutter: (target) ->
+    top = @topWdgtUnderPointer()
+    return false unless top.dropReceiverForPointsOnMyBody?()?
+    target isnt top and top.isAncestorOf target
+
+  # A payload released BESIDE the widget it goes to -- in a window's gutter, in a letterboxed page's
+  # margin (_targetReachedThroughAGutter) -- lands INSIDE it: moved by the least offset that brings
+  # its box inside `target`'s visible box (clippedThroughBounds), and a box larger than that on an
+  # axis aligned to its top/left edge (the one clamp home, _clampedPositionWithin). Released beside
+  # the receiver, its box can lie partly or wholly outside it, and a receiver that keeps what it is
+  # given where it is given it (a slide's panel places it, a drawing's canvas stamps it) would keep
+  # it, or stamp it, out of sight. The payload's box and `target`'s must be in one plane: drop calls
+  # me once the payload's box is in `target`'s plane (re-expressed there when that plane is mapped).
+  # When nothing of `target` shows, there is no box to keep it inside.
+  _moveGutterDropInsideTarget: (wdgtToDrop, target) ->
+    visibleBox = target.clippedThroughBounds()
+    return if visibleBox.isEmpty()
+    wdgtToDrop._applyMoveTo wdgtToDrop._clampedPositionWithin visibleBox, wdgtToDrop.position(), wdgtToDrop.extent()
 
   # === drag-embed dwell-to-arm state machine (docs/specs/drag-embed-interaction-spec.md §6) =======
   # Runs once per pointer dispatch while float-dragging a payload (from dispatchEventsFollowingMouseMove,
@@ -237,9 +279,6 @@ class ActivePointerWdgt extends Widget
   # declarative state (candidate / linger origin / armed) and declares ephemeral visuals; it does NOT
   # touch drop() — Phase 2 PREVIEWS the interaction, Phase 3 makes the release obey it.
 
-  # Resolve the candidates on the parent-climb from the cursor hit (spec §5): the innermost widget that
-  # wantsDropOfChild wins (world is never a candidate); else the innermost view-mode editing-amenity
-  # widget is the reluctant cue. Same climb dropTargetFor uses, so preview and outcome cannot disagree.
   # THE EDGE BAND under the pointer, if a host offers one there for THIS payload — the dock offer,
   # consulted BEFORE the ordinary drop climb below. Only a FRAME is ever offered a band (a band
   # holds chrome, not loose content), and a host never offers one to something it lives inside.
@@ -256,6 +295,11 @@ class ActivePointerWdgt extends Widget
       wdgt = wdgt.parent
     undefined
 
+  # Resolve the candidates on the parent-climb from the climb start (spec §5; _dropClimbStart: the
+  # cursor hit, or the receiver the hit names for its own body -- a page's, when the cursor is in its
+  # window's gutter or its letterbox margin): the innermost widget that wantsDropOfChild wins (world
+  # is never a candidate); else the innermost view-mode editing-amenity widget is the reluctant cue.
+  # Same climb dropTargetFor uses, from the same start, so preview and outcome cannot disagree.
   resolveDragEmbedCandidates: (payload) ->
     # §6 4D-2b: match candidates by the payload's real class (see dropTargetFor) so the dwell preview and the
     # drop outcome agree for a tilted window too.
@@ -263,10 +307,10 @@ class ActivePointerWdgt extends Widget
     # the DOCK OFFER wins where it applies: a band is a strip of a host's own body that the host
     # has declared means "place me here", so a frame released over one docks instead of landing in
     # the content underneath. Everything else — every plain payload, and a frame anywhere but a
-    # band — resolves exactly as it always has.
+    # band — resolves by the climb below.
     band = @_dockBandUnderPointerFor payload
     return {candidate: band.host, reluctant: undefined, dockBand: band} if band?
-    wdgt = @topWdgtUnderPointer()
+    wdgt = @_dropClimbStart()
     reluctant = undefined
     while wdgt? and wdgt isnt world
       if wdgt.wantsDropOfChild payloadPolicy
@@ -548,6 +592,10 @@ class ActivePointerWdgt extends Widget
           else
             target = @dropTargetFor wdgtToDrop
 
+      # read while the tree under the pointer is still the one the release resolved against: the
+      # steps below re-parent (_beforeChildDropped, the add). A forced target is taken as it is.
+      releasedInAGutter = !forcedTarget? and @_targetReachedThroughAGutter target
+
       @_fullChanged()
 
       # Affine transforms 4D-2b (§6): a dropped SUGAR FIGURE is re-spec'd RELATIVE to the destination plane, so
@@ -596,6 +644,12 @@ class ActivePointerWdgt extends Widget
         payloadVisualCentre = if wdgtToDrop.transformSpec? then wdgtToDrop.transformSpec.mapPoint(wdgtToDrop.center(), wdgtToDrop.bounds) else wdgtToDrop.center()
         virtualCentre = target.screenPointToMyPlane payloadVisualCentre
         wdgtToDrop._applyMoveTo virtualCentre.subtract wdgtToDrop.extent().floorDivideBy 2
+
+      # a payload released in a window's gutter or a letterboxed page's margin goes inside the
+      # widget it lands in, its box and target's both in target's plane here (the re-expression
+      # above); a release over that widget itself keeps its placement. NoSettle mutator -- the
+      # target.add below carries the settle.
+      @_moveGutterDropInsideTarget wdgtToDrop, target if releasedInAGutter
 
       # Affine transforms §7.13: positionInPlane is consumed by the stack/menu panels
       # (VerticalStackPanelWdgt / ToolPanelWdgt) to derive a

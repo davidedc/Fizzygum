@@ -66,6 +66,47 @@ class StretchableWidgetContainerWdgt extends Widget
   colloquialName: ->
     "stretchable panel"
 
+  # I am a PAGE, not a pane (a canvas, a slide, a dashboard, a patch board): a window holding me
+  # keeps the theme's page gutter (windowPageGutter) around me on every side and between me and each
+  # band it docks, and my own box carries no outer margin of its own for that purpose. Asked by that
+  # window at every measure and arrange (FrameWdgt._hostsAPage), through ?(): a payload that does
+  # not answer is a pane.
+  wantsWindowPageGutter: -> true
+
+  # THE RECEIVER OF DROPS AROUND ME: my content (a slide's, dashboard's or patch board's panel, a
+  # drawing's canvas), the child of mine that receives drops -- I refuse them myself. Asked through
+  # ?() by a window keeping its page gutter around me (FrameWdgt.dropReceiverForPointsOnMyBody), and
+  # by me for my own letterbox margin (dropReceiverForPointsOnMyBody below), so a payload released
+  # in that gutter or that margin goes to my content by its own rules (a panel places it, a canvas
+  # stamps it), moved first inside its visible box (ActivePointerWdgt._moveGutterDropInsideTarget).
+  receiverOfDropsAroundMe: ->
+    @contents
+
+  # WHO RECEIVES A DROP ON MY BODY -- on a point of it that none of my children covers: my LETTERBOX
+  # margin, the room my ratio leaves beside my content once it has crystallized (_layOutOwnContents).
+  # That room is my page's, as a window's page gutter is (FrameWdgt.dropReceiverForPointsOnMyBody),
+  # so a payload released there goes to my content (receiverOfDropsAroundMe), by my content's own
+  # drop rules -- a content that refuses a payload refuses it in my margin too, and the climb goes on
+  # past me as it would from me -- moved first inside its visible box. Bare on the desk as in a
+  # window: the margin is my page's own body either way. With my content collapsed, nobody: the
+  # climb starts at me. PUBLIC: the hand asks it, through ?(), of the top widget under the pointer,
+  # where both its drop climbs start (ActivePointerWdgt._dropClimbStart) and where its drop learns
+  # that a release fell beside the receiver (_targetReachedThroughAGutter); its dock offer and a
+  # press never ask it.
+  dropReceiverForPointsOnMyBody: ->
+    return undefined if @contents?.collapsed
+    @receiverOfDropsAroundMe()
+
+  # Do I stand in a window's PAGE GUTTER -- does my parent keep a gutter around me
+  # (FrameWdgt.pageGutterAround, asked through ?(): a parent that does not answer keeps none)? Then
+  # the window's body, its gutter and a panel content of mine are all paper, so that panel
+  # (StretchablePanelWdgt) marks its extent with an edge on all four sides; elsewhere -- bare on the
+  # desk, in a stack, in a window keeping no gutter -- only where I letterbox it
+  # (StretchablePanelWdgt._insetEdgeRects). PUBLIC: the panel asks it, through ?(), at every paint
+  # of its border. Read live and never kept, so it follows the theme and every re-parenting of mine.
+  standsInWindowPageGutter: ->
+    ((@parent?.pageGutterAround? @) ? 0) > 0
+
   # paintingOverlay() capability chain (§5.D): delegate to my content -- for an
   # ImageWdgt's payload that is the paintable canvas, which answers its glass.
   paintingOverlay: ->
