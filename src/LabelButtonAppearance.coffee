@@ -1,13 +1,14 @@
 # Paints a LabelButtonWdgt's box and its STATE: its rest fill (@color) and, while it is hovered or
 # pressed, its state fill (highlightColor / pressColor). A widget carrying no plateRadius paints
-# its state fill over its whole box, square, in place of the rest fill (a magnet, a list row); one
-# carrying a plateRadius keeps its rest fill over its whole box and paints the state fill on it as
-# a rounded PLATE of that radius, so outside the plate's corners the rest fill shows (a menu row) --
-# and below the plate too, when the widget's plateHeight stops it short of its bottom (a member
-# row).
+# its state fill over its whole box, square, in place of the rest fill; one carrying a plateRadius
+# (every menu, list and member row) keeps its rest fill over its whole box and paints the state
+# fill on it as a rounded PLATE of that radius, so outside the plate's corners the rest fill shows
+# (a menu row) -- and below the plate too, when the widget's plateHeight stops it short of its
+# bottom (a list or a member row). At rest, a widget may still ask for a plate of its own
+# (_restPlateFill: a plain list row's hover, its highlighted state being its selection).
 # Solid BLACK over the whole box on the shadow pass, plate or no plate: the box is the silhouette.
 # The @label text is a child StringWdgt and paints itself; this appearance draws the fills and
-# the two row marks below.
+# the row's grip below.
 
 class LabelButtonAppearance extends Appearance
 
@@ -38,14 +39,14 @@ class LabelButtonAppearance extends Appearance
         ctx.fillStyle = stateColor.toString()
         @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
 
-      @_paintSeparatorAbove ctx
       @_paintLiftableGrip ctx
 
-  # The PLATE look: my rest fill over the part of my box being repainted, then -- only while I am
-  # out of my rest state -- the state fill as a plate across my WHOLE width, from my top down my
-  # widget's plateHeight (absent: my whole height), rounded at its plateRadius (a uniform radius goes
-  # to fillRoundRect as the scalar, its fast path). A pure function of my widget's state and box: no
-  # timer, no fade.
+  # The PLATE look: my rest fill over the part of my box being repainted, then a plate across my
+  # WHOLE width, from my top down my widget's plateHeight (absent: my whole height), rounded at its
+  # plateRadius (a uniform radius goes to fillRoundRect as the scalar, its fast path): out of my rest
+  # state, in that state's fill; at rest, in the fill my widget asks for at rest (_restPlateFill: a
+  # plain list row's hover plate while the pointer is over it), if any. A pure function of my
+  # widget's state and box: no timer, no fade.
   #   ⚠ The plate's geometry comes from MY WIDGET, never from the scope's `localDamageBox` — the law
   # is on Appearance._paintInLocalScope; the scope has already clipped to the damage box
   # (`clipsToDamageBox` is true here), so painting the whole plate is safe.
@@ -53,24 +54,10 @@ class LabelButtonAppearance extends Appearance
     if @widget.color?
       ctx.fillStyle = @widget.color.toString()
       @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
-    return if !stateColor? or @widget.state is @widget.STATE_NORMAL
-    ctx.fillStyle = stateColor.toString()
+    plateColor = if @widget.state is @widget.STATE_NORMAL then @widget._restPlateFill?() else stateColor
+    return unless plateColor?
+    ctx.fillStyle = plateColor.toString()
     ctx.fillRoundRect 0, 0, @widget.width(), (@widget.plateHeight ? @widget.height()), @widget.plateRadius
-
-  # The hairline along my TOP edge, drawn only while my container has told me the row above me is
-  # another row (MenuItemWdgt.showSeparatorAbove — a rows panel DERIVES adjacency at arrange, so no
-  # row has to know where it sits; only a plain LIST's rows panel tells its rows so). PAINT, never
-  # layout: the line takes no height, so two rows stay flush and no dead zone opens between two
-  # touch targets.
-  #   Inset a pixel at each end, so it reads as a rhythm mark inside the list's box rather than as
-  # a second border crossing it.
-  #   Nothing on the SHADOW pass: that pass has already filled my rectangle solid black.
-  #   ⚠ The geometry comes from MY WIDGET, never from the scope's `localDamageBox` — see the grip
-  # below for the law and the bug that proved it.
-  _paintSeparatorAbove: (ctx) ->
-    return unless @widget.showsSeparatorAbove?()
-    ctx.fillStyle = WorldWdgt.theme.listRowSeparator.toString()
-    @_fillLocalRectSnappedToDevicePixels ctx, new Rectangle 1, 0, (@widget.width() - 1), 1
 
   # A short bar down my left edge, drawn only when my container has declared me a payload it
   # hands out (ButtonWdgt.isDetachablePayloadOfMyParent — the SAME declaration the grab reads,

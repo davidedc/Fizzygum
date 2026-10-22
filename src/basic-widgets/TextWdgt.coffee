@@ -50,8 +50,6 @@ class TextWdgt extends StringWdgt
     @wrappedLineSlots = []
     super (text ? "TextWdgt"), opts
     # override inherited properties:
-    @markedTextColor = WorldWdgt.theme.textSelectionText
-    @markedBackgroundColor = WorldWdgt.theme.textSelectionFill
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
 
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP

@@ -121,9 +121,10 @@ back-ref checks) stay in the caller, before the scope call.
   the tile would scale with the dpr and its phase would follow the translate.
   `DesktopAppearance._paintBackgroundPatternFill` therefore runs AFTER the scope closes, in
   device pixels (verified by the wallpaper A/B probe — the desktop has no suite coverage).
-- **The world-level selection/highlight overlays** (`Widget._drawSelectionOverlay`) are not
-  appearance bodies; they keep their device spelling (only the stroke THICKNESS is logical —
-  `lineWidth ceilPixelRatio`, matching the rectangular-family border).
+- **The editor-focus selection outline** (`Widget._drawSelectionOverlay`) is not an appearance body
+  but is laid out like one: it clips to the damage box in device pixels, then works in logical pixels
+  translated to the widget, and the drop outline's painter (`HighlightOutlineAppearance.paintRing`)
+  draws it in the context the widget paints into — the world canvas, or its island's buffer.
 
 ## The vocabulary law: pixels say "damage", layout says "dirty"
 

@@ -23,3 +23,13 @@ class StringFieldAppearance extends Appearance
       fill = if appliedShadow? then theme.shadowColor else @widget.color ? @widget._surfaceFill?()
       @_paintPlate ctx, theme.textFieldCornerRadius, fill
     return undefined
+
+  # The corners of my well, [topLeft, topRight, bottomRight, bottomLeft]: textFieldCornerRadius as
+  # _paintPlate rounds it for my widget's box (_plateRadius). A ring or a wash laid over the field
+  # reads them (Widget.cornerRadiiFollowingMyOutline: the selection outline, the drop outline, the
+  # hover wash), so it follows the well's corners. Nothing else does: the field still clips its text
+  # to its rectangle (only a widget answering _roundedChildClipRadii -- a rounded frame, a tool cell --
+  # cuts its children to a rounded outline), and its shape stays its whole box.
+  outlineCornerRadii: ->
+    radius = @_plateRadius WorldWdgt.theme.textFieldCornerRadius
+    [radius, radius, radius, radius]

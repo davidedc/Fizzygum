@@ -308,7 +308,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # --- editor-focus selection (§5.D D-3/D21; selection-overlay-unification arc) --------------------
   # The widget generically SELECTED for editing this cycle, or undefined. PULL model: recomputed each cycle from
-  # editorFocusWdgt + the edit-mode predicate (_updateEditorSelectionOverlay), so it can't drift. The
+  # editorFocusWdgt + the edit-mode predicate + where the caret is (_updateEditorSelectionOverlay), so it can't drift. The
   # selection is drawn as a per-widget PAINT-TIME overlay (Widget._drawSelectionOverlay) on top of the
   # selected widget's own content, NOT a separate world-attached widget -- so it rides that widget's own
   # z-order + back-buffer for free. This is a once-per-cycle cache; the per-widget paint reads it via the
@@ -1676,19 +1676,24 @@ class WorldWdgt extends IconGridPanelWdgt
     @dataflow?.markNonValueChange @
     return
 
-  # The widget the editor-focus indicator frames (§5.D D-3, decisions D18/D21), or undefined. editorFocusWdgt
-  # is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a SELECTED
-  # op-target within an active editing context, so the indicator frames "this is what an op will act on":
-  #   TEXT      — a caret is up editing exactly this focus widget. They coincide: the click that sets
-  #               editorFocusWdgt = w dispatches to w, whose text handler calls world.edit @ (= w).
+  # The widget the editor-focus selection outline frames (§5.D D-3, decisions D18/D21), or undefined.
+  # editorFocusWdgt is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a
+  # SELECTED op-target within an active editing context, so the outline frames "this is what an op will
+  # act on":
   #   CITIZEN   — a pencil-capable widget (providesAmenitiesForEditing) with the pencil engaged
-  #               (dragsDropsAndEditingEnabled). Fires when the focus leaf IS the panel — a text leaf
-  #               inside it has no amenities, so it goes through the caret branch instead.
+  #               (dragsDropsAndEditingEnabled), when the focus leaf IS the panel.
   #   SELECTED  — (D21) a widget SELECTED inside an editable container that is in edit mode, e.g. a clock
   #     ITEM      or image dropped into a document: it has no "edit mode" of its own, but ops (alignment,
   #               …) target it, so it shows the same outline. Its nearest editing-amenities ANCESTOR
   #               (excluding the world) must be in edit mode — a bare selection on the desktop is NOT
   #               framed (the world is an editable panel but is not an "editor" holding selected items).
+  # NEVER a widget a CARET is in — the caret's target is the focus or a widget inside it (a text being
+  # typed into, a text field whose text is being edited): the accent caret already says "focus", so an
+  # outline around it as well would say it twice. That is decided here, in the walk, and not when the
+  # outline paints, because this answer is what _updateEditorSelectionOverlay caches and compares each
+  # cycle: a caret coming or going changes it, and that change is what repaints the widget with its
+  # outline or without it. Once the caret goes (Escape, or an accept), the walk frames the focus again
+  # if a branch above selects it.
   # Stale-pointer guarded (belt to D2b's destroy-time clear): the target must still be attached here.
   _widgetBeingEdited: ->
     focus = @editorFocusWdgt
@@ -1714,8 +1719,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # frame hugs the whole entry, not the label's text bounds (owner: a tight-text frame is visual noise).
     if focus.parent?.absorbsDescendantEditorSelection?()
       focus = focus.parent
-    if @caret? and @caret.target is focus
-      return focus
+    # a caret in the focus or in a widget inside it: the caret says "focus" by itself (see above)
+    caretTarget = @caret?.target
+    return undefined if caretTarget? and focus.isAncestorOf caretTarget
     if focus.providesAmenitiesForEditing and focus.dragsDropsAndEditingEnabled
       return focus
     # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container that is in edit mode.

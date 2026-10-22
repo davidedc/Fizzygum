@@ -43,6 +43,16 @@ class CircleBoxyAppearance extends Appearance
       center2.distanceTo(aPoint) < radius or
       rect.containsPoint aPoint
 
+  # The corners of my stadium, [topLeft, topRight, bottomRight, bottomLeft]: each half my widget's
+  # shorter side, the radius fillStadium rounds the box at. A ring or a wash laid over the widget
+  # reads them (Widget.cornerRadiiFollowingMyOutline: the selection outline around a selected slider,
+  # the drop outline, the hover wash), so it follows the round ends. Nothing clips to them: only a
+  # widget answering _roundedChildClipRadii (a rounded frame, a tool cell) cuts its children to a
+  # rounded outline, so a slider's thumb is painted as it is.
+  outlineCornerRadii: ->
+    radius = Math.min(@widget.width(), @widget.height()) / 2
+    [radius, radius, radius, radius]
+
   # The colour I fill my widget's stadium with, read as I paint: the fill its STATE shows, for a
   # widget whose look is a function of its state (a slider's thumb, SliderButtonWdgt._fillForMyState);
   # else its own colour; else, for a widget holding none because it wears a theme role until a

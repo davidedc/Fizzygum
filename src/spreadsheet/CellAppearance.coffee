@@ -32,7 +32,7 @@ class CellAppearance extends Appearance
       # scope, fully INSIDE it (band [1,3), under its hosted child). This is a distinct concern from the
       # editor-focus SELECTION overlay (Widget._drawSelectionOverlay): a cell is never world.editorFocusWdgt
       # (clicks escalate to the sheet; SheetCellsPanelWdgt opts its cells out of the editor-selection walk),
-      # so the generic teal overlay never fires here -- the cell owns its selection look, the sheet the state.
+      # so the generic selection outline never fires here -- the cell owns its selection look, the sheet the state.
       if sheetWidget.isSelectedAddress @widget.address
         ctx.strokeStyle = WorldWdgt.theme.spreadsheetSelectionRing.toString()
         ctx.lineWidth = 2

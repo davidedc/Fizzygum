@@ -49,8 +49,8 @@ class Theme
     # ---- ROLES -----------------------------------------------------------------------------
     # What each piece of chrome paints with. A role names ONE surface, so a surface can be
     # restyled without moving another: two surfaces that paint the same colour today still hold
-    # two roles (the speech bubble shares the list row's fill and the list rows panel's stroke by
-    # value, never by name).
+    # two roles (a plain list's selected row and a member list's both wear the accent's tint, each
+    # through its own role).
 
     # the pop-up (menu and prompt) header band: its fill, its title text, and the 1 px rule the
     # band paints as its own bottom edge (redesign plan §2, rule D: the band's own edge).
@@ -61,10 +61,14 @@ class Theme
     # its 1 px border stroke and its fill (FrameWdgt._frameLook).
     @menuStroke = @frame
     @menuBodyFill = @paper
-    # a plain LIST's rows panel (the CommandPanelWdgt a ListWdgt stacks its rows in): its fill and its
-    # stroke. A pop-up's rows panel paints nothing: the pop-up's body is its box.
-    @rowsPanelFill = Color.create 238, 238, 238
-    @rowsPanelStroke = Color.create 186, 186, 186
+    # a POP-UP's rows panel (the CommandPanelWdgt a menu or a prompt stacks its rows in): no fill and
+    # no stroke -- the pop-up's body is the box around its rows, and the pop-up turns the panel off
+    # besides (alpha 0), so a second box never doubles the body's border.
+    @menuRowsPanelFill = Color.TRANSPARENT
+    # a plain LIST's rows panel (the CommandPanelWdgt a ListWdgt without a memberFactsQuery stacks its
+    # rows in): no fill and no stroke at all, so the list's own plane shows around and between its
+    # rows (the draft's list, as a member list's).
+    @listRowsPanelFill = Color.TRANSPARENT
     # a MEMBER list's rows panel: no fill and no stroke at all, so whatever the list stands on shows
     # around and between its rows.
     @memberRowsPanelFill = Color.TRANSPARENT
@@ -88,18 +92,16 @@ class Theme
     # the rule a pop-up's group divider paints across its band (DividerWdgt; redesign plan §2,
     # rule D: a band painting its own rule).
     @menuDivider = @chrome
-    # a plain LIST row (a MenuItemWdgt in a ListWdgt's rows panel), in the flat look: its fill at
-    # rest, while highlighted and while pressed (a selected row stays pressed), each over its whole
-    # box, and the ink of its label ...
-    @listRowFill = Color.create 250, 250, 250
-    @listRowHighlightFill = Color.SILVER
-    @listRowPressFill = Color.GRAY
-    @listRowText = Color.create 50, 50, 50
-    # ... and the hairline it paints along its TOP edge when the row above it is another row
-    # (ruling G5): paint, never layout, so rows stay flush and no dead zone opens between two
-    # targets. Fainter than rowsPanelStroke, because the panel's own border is a boundary and this
-    # is only a rhythm mark inside it.
-    @listRowSeparator = Color.create 225, 225, 225
+    # a plain LIST row (a MenuItemWdgt in a plain list's rows panel; the draft's §7.1 list row, as a
+    # member row): its fill at rest, none, so the list's plane shows; the PLATE it wears while the
+    # pointer is over it at rest, the menu row's hover; the PLATE it wears while it is its list's
+    # selection, and while pressed, the accent's translucent tint (each plate listRowPlateHeight tall
+    # from its top, rounded at listRowPlateRadius); and the ink of its label (a list's format may give
+    # an entry an ink of its own). No hairline between two rows: the plates tell them apart.
+    @listRowFill = Color.TRANSPARENT
+    @listRowHoverFill = @desk
+    @listRowSelectedFill = @accentTint
+    @listRowText = @ink
     # a MEMBER row (MemberRowWdgt: a row of a member list, the Object Inspector's -- a kind tag, then
     # the member's name): its fill at rest, none, so whatever its list stands on shows; and the PLATE
     # it wears while it is its list's selection, and while pressed, the accent's translucent tint ...
@@ -178,9 +180,12 @@ class Theme
     # The caret is the editing FOCUS, which is what the accent marks. Its width and the gap it
     # stands after its slot are the caretWidth / caretGap metrics.
     @caretFill = @accent
-    # a TextWdgt's text selection: the selected glyphs' ink and the highlight behind them.
-    @textSelectionText = Color.create 255, 255, 255
-    @textSelectionFill = Color.create 60, 60, 120
+    # a text's SELECTION (every StringWdgt, so every TextWdgt and paragraph too), read as the text
+    # paints (StringWdgt.drawSelection): the ink of the selected characters and the plate behind
+    # each of them -- the draft's selected label plate, a solid accent with paper text. The plate
+    # must be opaque: neighbouring characters' plates overlap by a pixel.
+    @textSelectionText = @paper
+    @textSelectionFill = @accent
 
     # a SLIDER (SliderWdgt: a content slider, and a number prompt's): its TRACK, an opaque borderless
     # groove, while the slider holds no colour of its own and wears no scroll-indicator presentation
@@ -317,11 +322,17 @@ class Theme
     # secondary label).
     @dragLabelText = @ink
     @dragBadgeText = @muted2
-    # the wash laid over a highlighted widget (a hierarchy menu row lights up its widget this way);
-    # the caller gives its alpha.
-    @hoverHighlightWash = Color.create 0, 0, 255
-    # the outline drawn over the widget an editor is focused on.
-    @selectionOverlayStroke = Color.create 38, 166, 154
+    # the WASH laid over a highlighted widget (a menu row that stands for a widget -- a hierarchy
+    # menu's, a chooser's -- lights that widget up this way while hovered; HighlightWashAppearance):
+    # the accent's tint, translucent by its own alpha and painted at full widget alpha, so the
+    # widget under it shows through one layer of tint and no more.
+    @hoverHighlightWash = @accentTint
+    # the SELECTION OUTLINE: the ring the editor-focus selection draws inside the box of the widget
+    # an op will act on (Widget._drawSelectionOverlay, from WorldWdgt._widgetBeingEdited; never one a
+    # caret is in -- the caret, in the accent too, says "focus" there): the accent, which says
+    # "selected" (visual-design-system §4.8), the drop outline's painter at its own width,
+    # selectionOutlineWidth.
+    @selectionOutline = @accent
 
     # the LAYOUT CHROME (LayoutChromeWdgt's family, painted by LayoutChromeAppearance: a division's
     # adders and a content stack's drop slots, LayoutElementAdderOrDropletWdgt; a spacer,
@@ -510,8 +521,8 @@ class Theme
     @fonts =
       # a menu row's label (a MenuItemWdgt in a menu or a prompt, or one standing on its own)
       menuRow: {family: "Arial, sans-serif", size: 15, bold: false}
-      # a plain list row's label (a MenuItemWdgt in a ListWdgt)
-      listRow: {family: "sans-serif", size: 17, bold: false}
+      # a plain list row's label (a MenuItemWdgt in a plain ListWdgt), a menu row's size
+      listRow: {family: "Arial, sans-serif", size: 15, bold: false}
       # a member row's name (MemberRowWdgt: a member list, the Object Inspector's), in mono ...
       memberName: {family: StringWdgt::monoFontStack, size: 13, bold: false}
       # ... and its kind tag ("fn", "var"), the draft's weight 600
@@ -567,10 +578,10 @@ class Theme
     # Chrome geometry (program ruling G2): a handle's side, its plate's rounding and its glyph
     # squares, a frame grip's side and inset, the bar button's hit box, a frame's border, its strip's
     # rule and its body margin, the glyphs inset within a bar button's box, a menu row's glyph
-    # box, the minimum height a menu/list row takes, a menu row's and a list row's side inset and
+    # box, the minimum height a menu row takes, a menu row's and a list row's side inset and
     # icon gap, a menu row's plate rounding and its chevron's and tick's glyph squares and gaps, a
-    # member row's height, selection plate and horizontal rhythm, a pop-up group divider's band, the
-    # corner
+    # plain list row's height and plate, a member row's height, selection plate and horizontal
+    # rhythm, a pop-up group divider's band, the corner
     # rounding of a window's, a card's and a pop-up's body and of the speech bubble, a tooltip
     # plate's rounding and padding, a pop-up's
     # content padding and its header's rule and title inset, a plain or member list rows-panel's
@@ -583,8 +594,8 @@ class Theme
     # button gap and grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
     # and separator square, its toggles band's height, inset and gap, its list column's width and
     # its seams' width, a code pane's padding, the text caret's width and the gap it stands after
-    # its slot, the drop outline's width, a document's item spacing and its text items' rounding
-    # and padding, and a desktop icon's tile, glyph, plate and cell (all
+    # its slot, the drop outline's and the selection outline's widths, a document's item spacing and
+    # its text items' rounding and padding, and a desktop icon's tile, glyph, plate and cell (all
     # from one knob, desktopIconTile), the icon grid's gaps and origin, the bin's corner insets, the
     # rows a folder window opens showing, and the desktop clock's side and corner insets. Each chrome
     # layout site reads the matching
@@ -671,10 +682,10 @@ class Theme
     # a user docks included; nothing else reads it (a payload's own margin is frameBodyMargin's).
     @dockedBandInset = 8
 
-    # the MINIMUM height a menu or plain list row takes, and the floor under a pop-up's title strip
-    # (a title is a tap-to-pin target, ruling C3). A row whose label is taller keeps its label's
-    # height, and the label sits centred in whichever height wins. A row is a tap target (G5). A
-    # member row's height is its own, memberRowHeight.
+    # the MINIMUM height a menu row takes, and the floor under a pop-up's title strip (a title is a
+    # tap-to-pin target, ruling C3). A row whose label is taller keeps its label's height, and the
+    # label sits centred in whichever height wins. A row is a tap target (G5). A plain list row's
+    # least height is listRowHeight, a member row's height memberRowHeight.
     @menuRowHeight = 44
     # a MENU row's horizontal rhythm: the inset it keeps at each side (whatever it shows first --
     # its tick column, its icon's glyph box, or its label -- starts this far in, and whatever it
@@ -697,8 +708,19 @@ class Theme
     @menuRowChevronGap = 8
     @menuRowTickSize = 14
     @menuRowTickGap = 6
-    # a plain LIST row's two.
-    @listRowSideInset = 4
+    # a plain LIST row (a MenuItemWdgt in a plain list; the draft's §7.1 list, as a member row): its
+    # LEAST height -- its list's row pitch too, since its rows stack flush, no layout gap opening a
+    # dead zone between two targets (ruling G5); a row whose label is taller keeps its label's
+    # height -- and the PLATE it wears hovered and selected, drawn from its top: its height and its
+    # rounding (the draft's 40 px list row at radius 6; the 2 px under it are the draft's gap between
+    # two rows). Its label, and whatever else it shows, is centred down that plate, while the label
+    # fits on it ...
+    @listRowHeight = 42
+    @listRowPlateHeight = 40
+    @listRowPlateRadius = 6
+    # ... and its horizontal rhythm: the inset at each of its sides (a member row's) and, in a row
+    # carrying an icon, the gap between the glyph box and the label.
+    @listRowSideInset = 8
     @listRowIconGap = 4
     # a MEMBER row (MemberRowWdgt): its height -- its list's row pitch too, since member rows stack
     # flush, no layout gap opening a dead zone between two targets (ruling G5) -- and the selection
@@ -744,10 +766,10 @@ class Theme
     @menuHeaderRuleWidth = 1
     # ... and how far into the band the header's title text starts.
     @menuHeaderTitleInset = 10
-    # the padding a plain LIST's rows panel keeps around its flush-stacked rows (a pop-up's rows
-    # panel keeps menuContentPadding instead) ...
-    @rowsPanelPadding = 2
-    # ... and a MEMBER list's (the draft's 4 px list padding).
+    # the padding a plain LIST's rows panel keeps around its flush-stacked rows, the draft's 4 px list
+    # padding (a pop-up's rows panel keeps menuContentPadding instead) ...
+    @listRowsPanelPadding = 4
+    # ... and a MEMBER list's (the draft's 4 px list padding too).
     @memberRowsPanelPadding = 4
 
     # a toolbar grid's thumbnail CELL: its side, and the least gap between two cells, which is
@@ -887,6 +909,10 @@ class Theme
     # box of the target its release reaches (a dock band's included), and of a target declining the
     # drop -- one width for both, so a target that changes state does not jump.
     @dropOutlineWidth = 2
+    # the SELECTION OUTLINE's width (Widget._drawSelectionOverlay, painted with the drop outline's ring,
+    # HighlightOutlineAppearance.paintRing): the ring an editor-focus selection draws wholly inside the
+    # selected widget's box, its corners those the widget shows.
+    @selectionOutlineWidth = 2
 
     # a DOCUMENT's items (its paragraphs and whatever is dropped in among them): how far in from
     # the page's edges they stand, and how far apart -- the padding of the document's stack, which

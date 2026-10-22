@@ -131,7 +131,7 @@ assertion a recapture after a regression silently stores two different hashes an
   distinct sibling of the through-the-caret entry above. `StringWdgt.doubleActivated` (`:1535`) reads the slot the prior click
   placed (`world.caret.slot`) and expands left/right while `String.isLetter()` (`String-extensions.coffee:43-45`, `[a-z]` only —
   spaces/punctuation/digits are boundaries) then `selectBetween()`s the contiguous letter run, so EXACTLY the word under the cursor
-  selects (white-on-blue, `drawSelection :738-747`). TextWdgt inherits it verbatim (extends StringWdgt with no own
+  selects (paper on an accent plate, `StringWdgt.drawSelection`, read at paint). TextWdgt inherits it verbatim (extends StringWdgt with no own
   `doubleActivated`), resolving the slot per WRAPPED visual line. `@doubleClickAtFractionOf_InputEvents widget, [fx,fy]` is
   self-sufficient — its FIRST click focuses + places `world.caret`, the SECOND is recognised as the double-click — so no separate prior
   click is needed; double-clicking the TextWdgt also CLEARS the StringWdgt's selection (focus moves). Fixture: a WIDE single-line
@@ -2373,7 +2373,7 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
 - **`macroAddEditSaveRenameRemoveProperty`** (from 1057 cmds, 5 shots): inspect a string → an `InspectorWdgt` window, then add /
   set-value+save / rename / remove a property via the inspector's DIRECT footer BUTTONS — `addPropertyButton` ("Add…" → a "new
   property name:" prompt), `saveButton` ("Save" → `@target.injectProperty selectedName, detailText`), `renamePropertyButton`,
-  `removePropertyButton`. INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`blanksColor`
+  `removePropertyButton`. INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`autoSizeBoxToText`
   sorts below the first rows, so SCROLL the list to the row by name before clicking it
   (`bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro`); a value/detail pane's text is a `TextWdgt` in a scroll-panel — set it with
   `detailText.setText`, not a click. The original asserted a byte-identical add→remove round-trip (image_1≡image_5); the new inspector's

@@ -3,8 +3,8 @@
 # menu, carrying no menu-ness of its own: no pop-up membership, no
 # click-outside-to-close, no shadow, no title. A pop-up FRAME (a MenuWdgt or a
 # PromptWdgt) owns the transient/pin behaviour, the title strip and the shadow, and
-# paints the box around me; a ListWdgt owns the surrounding viewport and leaves my own
-# box painting me. Either way the ROWS are laid out HERE.
+# paints the box around me; a ListWdgt owns the surrounding viewport, whose plane my rows
+# stand on. I paint no box of my own for any of them. Either way the ROWS are laid out HERE.
 #
 # Three knobs shape a panel to its client:
 #  - `selectsItemsOnClick`: true makes each MenuItemWdgt SELECT on click (a list),
@@ -12,10 +12,9 @@
 #    dispatches on it via ?(); default false so a plain menu reads falsy. It is also
 #    which LOOK my rows are built with (_createMenuItem): a list's rows, or menu rows.
 #  - `memberRows`: true makes me a MEMBER list's rows panel (ListWdgt's memberFactsQuery): my rows
-#    are MemberRowWdgts, I take my list's width rather than hugging my rows, and I paint no box of
-#    my own.
+#    are MemberRowWdgts, and I take my list's width rather than hugging my rows.
 #  - `padding`: the border my rows stack inside. A pop-up hands me its content padding
-#    (its content box inside its border); a list's panel keeps its own, rowsPanelPadding, or a
+#    (its content box inside its border); a list's panel keeps its own, listRowsPanelPadding, or a
 #    member list's memberRowsPanelPadding.
 #
 # Rows answer menuEntryPreferredWidth() (MenuItemWdgt / StringFieldWdgt /
@@ -63,11 +62,12 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # pencil-engaged click on a menu/list row as a selected item inside an editor.
   # `undefined` = no opinion: the walk passes through me (and the rows viewport, which
   # declares the same) to the world, and frames nothing.
-  #   A MEMBER list's rows panel says `false` instead (an own field, set by my constructor): its
-  # rows show their selection themselves, with their plate, so the walk STOPS at me and frames none
-  # of them -- the opt-out a container managing its own selection look makes (SheetCellsPanelWdgt
-  # makes the same one). Without it, the walk from a clicked member row would reach my list's plane
-  # above me (a panel: true) and frame the row in the editor's outline.
+  #   A LIST's rows panel -- plain or member -- says `false` instead (an own field, set by my
+  # constructor): its rows show their selection themselves, with their plate, so the walk STOPS at
+  # me and frames none of them -- the opt-out a container managing its own selection look makes
+  # (SheetCellsPanelWdgt makes the same one). Without it, the walk from a clicked list row would
+  # reach my list's plane above me (a panel: true) and frame the row in the editor's outline over
+  # its own selection plate.
   providesAmenitiesForEditing: undefined
 
   imposesRatioConstraintOnDroppedChildren: ->
@@ -104,24 +104,26 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     # the border my rows stack FLUSH inside (see interElementGap below): my client's to give,
     # a list's rows-panel padding when it gives none (a member list's own). No extent/color
     # through the base ctor — the look is set right here.
-    super padding: opts.padding ? (if opts.memberRows then theme.memberRowsPanelPadding else theme.rowsPanelPadding)
+    super padding: opts.padding ? (if opts.memberRows then theme.memberRowsPanelPadding else theme.listRowsPanelPadding)
     @target = opts.target
     @fontSize = opts.fontSize
     @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
     @_holdsMemberRows = true  if opts.memberRows
-    # replace the stack's RectangularAppearance: the panel draws the rows box, stroked with the
-    # rows-panel stroke -- a list's look. A pop-up frame paints its OWN box around me and turns
-    # mine off (alpha 0) rather than doubling the stroke; a plain list's panel IS the box. A member
-    # list's panel paints neither fill nor stroke, and frames none of its rows in the editor's
-    # outline (providesAmenitiesForEditing, above).
+    # replace the stack's RectangularAppearance with a box I never let show: no stroke, and a clear
+    # fill in my client's role. A pop-up frame paints its OWN box around me (and turns mine off,
+    # alpha 0, besides); a list's rows -- plain or member -- stand straight on the list's plane. A
+    # list's panel also frames none of its rows in the editor's outline
+    # (providesAmenitiesForEditing, above).
     @appearance = new MenuAppearance @
+    @strokeColor = undefined
     if @_holdsMemberRows
-      @strokeColor = undefined
       @color = theme.memberRowsPanelFill
       @providesAmenitiesForEditing = false
+    else if @_selectsItemsOnClick
+      @color = theme.listRowsPanelFill
+      @providesAmenitiesForEditing = false
     else
-      @strokeColor = theme.rowsPanelStroke
-      @color = theme.rowsPanelFill
+      @color = theme.menuRowsPanelFill
 
   colloquialName: ->
     "menu rows"
@@ -305,7 +307,6 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     @_deriveTickColumn()
     @_applyExtentBase new Point @_myArrangedWidth(), @height()
     super()
-    @_deriveRowSeparators()
 
   # MY WIDTH, the one my arrange commits and both my pure measures report: a menu's or a plain
   # list's rows panel hugs its widest row plus my padding at each side; a MEMBER list's keeps the
@@ -324,33 +325,14 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     return false if @_selectsItemsOnClick
     @children.some (child) -> child.ticks?()
 
-  # WHETHER MY ROWS RESERVE THE TICK COLUMN, told to each (the C5 derive-at-arrange idiom, like the
-  # separators below) -- told FIRST, before the hug reads their widths, so a row whose label the
-  # column moves has re-placed it by the time it is measured and sized. A row keeps the answer when it
-  # leaves me, with the rest of its look. Membership is what moves the answer, and a membership
-  # change is what re-arranges me.
+  # WHETHER MY ROWS RESERVE THE TICK COLUMN, told to each (the C5 derive-at-arrange idiom) -- told
+  # FIRST, before the hug reads their widths, so a row whose label the column moves has re-placed it
+  # by the time it is measured and sized. A row keeps the answer when it leaves me, with the rest of
+  # its look. Membership is what moves the answer, and a membership change is what re-arranges me.
   _deriveTickColumn: ->
     reserved = @reservesTickColumn()
     for child in @children
       child.reserveTickColumn? reserved
-    return
-
-  # WHICH of my rows carry a hairline above them (ruling G5, the C5 derive-at-arrange idiom): a row
-  # does exactly when the child before it is another row. So my FIRST row never does -- the line
-  # above it is my own border -- and a row just below a DIVIDER never does either, because the
-  # divider already IS that boundary and a hairline beside it would double it.
-  #   Adjacency is mine to know and no row's: a row that moves, or a row inserted between two
-  # others, changes its neighbours' answers as much as its own, and only I see all three.
-  #   Only a plain LIST's rows wear hairlines, so its rows panel is this derive's one client: a
-  # pop-up's rows are told apart by their hover plate and grouped by dividers, a member list's by
-  # their selection plate alone, and neither is ever told.
-  _deriveRowSeparators: ->
-    return unless @_selectsItemsOnClick and not @_holdsMemberRows
-    previousChildWasARow = false
-    for child in @children
-      childIsARow = child.showSeparatorAbove?
-      child.showSeparatorAbove previousChildWasARow  if childIsARow
-      previousChildWasARow = childIsARow
     return
 
   # HONEST pure measures (menu-row-conformance Phase 3): my width is

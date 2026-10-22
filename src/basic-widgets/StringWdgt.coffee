@@ -87,9 +87,6 @@ class StringWdgt extends Widget
   # while every measure, fit, wrap, paint and back-buffer key of mine reads the shown form through
   # transformTextOneToOne, so a box that hugs me hugs what shows. A password shows no case.
   displayCase: undefined
-  isShowingBlanks: false
-
-  blanksColor: Color.create 180, 140, 140
 
   # Used for when the cursor movement causes the
   # text to scroll, so that the caret is in-view when
@@ -120,9 +117,6 @@ class StringWdgt extends Widget
   # right and "going left"
   startMark: undefined
   endMark: undefined
-
-  markedTextColor: Color.WHITE
-  markedBackgroundColor: Color.create 60, 60, 120
 
   horizontalAlignment: AlignmentSpecHorizontal.LEFT
   verticalAlignment: AlignmentSpecVertical.TOP
@@ -415,8 +409,9 @@ class StringWdgt extends Widget
   # and the selection all read), the width it wraps at (TextWdgt.breakTextIntoLines), my box's size
   # (TextWdgt._reLayoutSelf and preferredExtentForWidth, the box hugs), whether my text fits
   # (doesTextFitInExtent), where a point picks a slot (_pointTakenOutOfPadding) and where a header
-  # line runs (_drawHeaderUnderline); the rounding shapes my fill (_prepareTextBufferContext) and my
-  # hit shape (catchesPointerAt). Wearing no shape, my inset is Point.ZERO and my fill square, and
+  # line runs (_drawHeaderUnderline); the rounding shapes my fill (_prepareTextBufferContext), my
+  # hit shape (catchesPointerAt) and the corners a ring or a wash laid over me follows
+  # (_outlineCornerRadii). Wearing no shape, my inset is Point.ZERO and my fill square, and
   # each of those answers exactly what it answers for a text that was never dressed.
 
   # My item shape -- {cornerRadius, inset}: my fill's rounding, and how far my text stands in from my
@@ -449,6 +444,16 @@ class StringWdgt extends Widget
   _itemShapeCacheKeySuffix: ->
     shape = @_itemShape()
     if shape? then "-item" + shape.cornerRadius + "-" + shape.inset.x + "x" + shape.inset.y else ""
+
+  # The corners of the rounded body I paint myself (Widget._outlineCornerRadii): dressed as an item,
+  # my fill's rounding at each corner; else whatever my appearance answers. A ring or a wash laid over
+  # me reads them (Widget.cornerRadiiFollowingMyOutline: the selection outline around a selected
+  # paragraph, the drop outline, the hover wash), so it follows the item's corners. Nothing clips to
+  # them.
+  _outlineCornerRadii: ->
+    cornerRadius = @_itemShape()?.cornerRadius
+    return super() unless cornerRadius?
+    [cornerRadius, cornerRadius, cornerRadius, cornerRadius]
 
   # the actual font size used might be
   # different than the one specified originally
@@ -905,11 +910,14 @@ class StringWdgt extends Widget
       @fittingFontSize = theValue
       @_changed()
 
+  # The key of my back buffer: everything its pixels are a function of. My selection is its two
+  # marks and the theme's two selection roles (drawSelection reads them as it paints, as
+  # _backgroundFill reads a role I wear), so a changed selection, or a changed role, re-renders me.
   createBufferCacheKey: ->
+    theme = WorldWdgt.theme
     @extent().toString() + "-" +
     @isPassword  + "-" +
     @displayCase  + "-" +
-    @isShowingBlanks  + "-" +
     @originallySetFontSize + "-" +
     @buildCanvasFontProperty() + "-" +
     @isHeaderLine + "-" +
@@ -920,7 +928,8 @@ class StringWdgt extends Widget
     @textPossiblyCroppedToFit.hashCode()  + "-" +
     @startMark  + "-" +
     @endMark  + "-" +
-    @markedBackgroundColor.toString()  + "-" +
+    theme.textSelectionFill.toString()  + "-" +
+    theme.textSelectionText.toString()  + "-" +
     @horizontalAlignment  + "-" +
     @verticalAlignment  + "-" +
     @fittingSpecWhenBoundsTooLarge  + "-" +
@@ -1124,15 +1133,22 @@ class StringWdgt extends Widget
   #
   # Each selected character's plate spans its whole line box (slotCoordinates answers the box's
   # top), so a selection over several lines has no gaps between them.
+  #   The look is the theme's, read here as I paint (so a saved or duplicated text wears the look of
+  # the world it is painted in): the plate textSelectionFill, the character on it textSelectionText
+  # -- a solid accent plate with paper text. The plate must stay OPAQUE: each one is a pixel wider
+  # than its character's advance, so neighbouring plates overlap, and a translucent plate would show
+  # every overlap as a darker seam.
   drawSelection: (backBufferContext) ->
     startSlot = @firstSelectedSlot()
     endSlot = @lastSelectedSlot()
+    plateFill = WorldWdgt.theme.textSelectionFill.toString()
+    characterInk = WorldWdgt.theme.textSelectionText.toString()
     for i in [startSlot...endSlot]
       p = @slotCoordinates(i).subtract @position()
       c = @textPossiblyCroppedToFit.charAt(i)
-      backBufferContext.fillStyle = @markedBackgroundColor.toString()
+      backBufferContext.fillStyle = plateFill
       backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText c) + 1, @linePitch @fittingFontSize
-      backBufferContext.fillStyle = @markedTextColor.toString()
+      backBufferContext.fillStyle = characterInk
       backBufferContext.fillText c, p.x, p.y + @_lineInkOffset @fittingFontSize
     
   
@@ -1406,12 +1422,6 @@ class StringWdgt extends Widget
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
     @_changed()
 
-  
-  toggleShowBlanks: ->
-    @_settleLayoutsAfter =>
-      @isShowingBlanks = not @isShowingBlanks
-      @_changed()
-      @_reflowContainedTextThenInvalidateLayout()
 
   # weight and slant are my style: see setHorizontalAlignment for who mirrors it
   toggleWeight: ->
@@ -1513,8 +1523,8 @@ class StringWdgt extends Widget
     @  # return self so the public wrapper is chainable (macros do `(new StringWdgt …).sizeToTextAndDisableFitting()`)
 
   # ── Contained-text (FIT_BOX_TO_TEXT) edit: the re-fit core ───────────────────
-  # The NON-settling re-fit behind the seven text-property setters (setText / setFontSize
-  # / setFontName / toggleShowBlanks / toggleWeight / toggleItalic / toggleIsPassword).
+  # The NON-settling re-fit behind the six text-property setters (setText / setFontSize
+  # / setFontName / toggleWeight / toggleItalic / toggleIsPassword).
   # A FIT_BOX_TO_TEXT widget re-flows its box to the new text measure (_reLayoutSelf)
   # and, ONLY if the box actually changed size, invalidates its tracking container so it
   # re-fits (@parent._invalidateLayout, the uniform dirty-tree climb). An edit that leaves the

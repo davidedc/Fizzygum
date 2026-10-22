@@ -15,8 +15,8 @@
 # panel's padding, CommandPanelWdgt._myArrangedWidth): member rows stack flush, so my height is my
 # list's pitch. My look (_lookFor): no fill at rest; while I am my list's selection, and while I am
 # pressed, a memberRowPlateHeight plate of the accent tint across my whole width at my top, and my
-# tag in the accent. No hover look (a list row ignores hovering), no hairline (my panel tells member
-# rows none), no indicators.
+# tag in the accent. No hover look (my look gives no hover plate, so the pointer changes nothing on
+# me), no hairline, no indicators.
 #   Otherwise I am a list row like any other (MenuItemWdgt): a click selects me and a double-click
 # opens my member (ListWdgt.select / ListWdgt.openRow), and the toolkit finds me by my labelString
 # and aims into my label.

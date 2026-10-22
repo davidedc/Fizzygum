@@ -515,10 +515,10 @@ class PaintToolbarWdgt extends ToolbarWdgt
     tool? and tool is @_armedTool()
 
   # The highlight is a VIEW of the person's hand, re-derived at every arrange (the
-  # _deriveRowSeparators idiom, ruling C5): every tool's face wears the toolbar glyph ink, the same
-  # armed or not, and every tool's CELL re-derives its look, which asks the tool whether it is the
-  # active one (holdsInHand) -- so the armed tool's cell shows active and no other does. No cell
-  # stores "am I the armed one", so no cell can disagree with the hand.
+  # CommandPanelWdgt._deriveTickColumn idiom, ruling C5): every tool's face wears the toolbar glyph
+  # ink, the same armed or not, and every tool's CELL re-derives its look, which asks the tool
+  # whether it is the active one (holdsInHand) -- so the armed tool's cell shows active and no other
+  # does. No cell stores "am I the armed one", so no cell can disagree with the hand.
   _deriveToolHighlights: ->
     for tool in @_tools()
       tool.faceWidget.setColor WorldWdgt.theme.toolbarGlyph

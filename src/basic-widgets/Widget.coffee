@@ -549,28 +549,35 @@ class Widget extends TreeNode
   # It is drawn AFTER my whole subtree (_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow),
   # so a CONTAINER's frame sits on top of its children too (own-content-level would let the children hide
   # it). Both halves are overridable so every widget decides WHETHER it is selected and HOW that looks;
-  # the default frames the editor-selected widget (WorldWdgt._widgetBeingEdited, cached once per cycle)
-  # with a calm teal outline. (The spreadsheet cell's blue ring is a separate MODEL selection drawn inline
-  # -- CellWdgt.paintIntoAreaOrBlitFromBackBuffer -- since a cell is never the editor-focus widget.)
+  # the default outlines the editor-selected widget (WorldWdgt._widgetBeingEdited, cached once per cycle;
+  # never a widget a caret is in, whose accent caret already says "focus") in the selection outline
+  # below. (The spreadsheet cell's ring is a separate MODEL selection drawn inline -- CellAppearance --
+  # since a cell is never the editor-focus widget.)
   _showsSelectionOverlay: ->
     world?.isEditorSelected @
   _drawSelectionOverlay: (aContext, al, at, w, h) ->
-    # the teal outline the old editor-focus HighlighterWdgt drew (D19, Color 38,166,154): a 1-LOGICAL-px
-    # stroke (ceilPixelRatio device px — the same thickness as every rectangular-family border) on my own
-    # screen footprint, inset half a logical pixel for a crisp line (see RectangularAppearance.paintStroke),
-    # clipped to my visible rect so a partially-scrolled widget is not outlined past its clip. Deliberately
-    # DEVICE-space: this is world-level screen chrome, not an appearance body (only the thickness is logical).
+    # THE SELECTION OUTLINE (visual-design-system §4.8: the accent says "selected"): a ring
+    # selectionOutlineWidth thick in the selectionOutline role, lying wholly inside my box, its corners
+    # the ones I show (cornerRadiiFollowingMyOutline: my own rounded outline and my ancestors' rounded
+    # clips), so it follows a rounded body instead of squaring it off. It is the drop outline's ring,
+    # painted by the same painter (HighlightOutlineAppearance.paintRing), with its stroke half on only
+    # when my body draws a 1 px border along its outline (my appearance's outlineIsStroked: a bordered
+    # box, a magnet) -- over a borderless rounded body the stroke would cover pixels my corners leave
+    # to whatever is behind me. It is clipped to the damaged part of my box (al, at, w, h: device
+    # pixels), so a partially-scrolled widget is not outlined past its clip, and painted at full alpha
+    # whatever mine is; its geometry is my whole box, never the damage box. My box is laid out the way
+    # an appearance body lays out its widget's pixels (Appearance._paintInLocalScope): logical pixels,
+    # the origin moved to my position, in whatever context I am painted into -- the world canvas, or
+    # the buffer of the transform island I sit in, where the ring is drawn in my plane and warped with
+    # me.
     aContext.save()
-    aContext.beginPath()
-    aContext.rect Math.round(al), Math.round(at), Math.round(w), Math.round(h)
-    aContext.clip()
+    aContext.clipToRectangle al, at, w, h
     aContext.globalAlpha = 1
-    aContext.lineWidth = ceilPixelRatio
-    aContext.strokeStyle = WorldWdgt.theme.selectionOverlayStroke.toString()
-    aContext.strokeRect (Math.round(@left() * ceilPixelRatio) + 0.5 * ceilPixelRatio),
-      (Math.round(@top() * ceilPixelRatio) + 0.5 * ceilPixelRatio),
-      (Math.round(@width() * ceilPixelRatio) - ceilPixelRatio),
-      (Math.round(@height() * ceilPixelRatio) - ceilPixelRatio)
+    aContext.useLogicalPixelsUntilRestore()
+    aContext.translate @left(), @top()
+    theme = WorldWdgt.theme
+    HighlightOutlineAppearance.paintRing aContext, @width(), @height(), theme.selectionOutlineWidth,
+      (@cornerRadiiFollowingMyOutline @boundingBox()), theme.selectionOutline, (@appearance?.outlineIsStroked?() is true)
     aContext.restore()
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
@@ -2933,9 +2940,9 @@ class Widget extends TreeNode
   turnOnHighlight: ->
     if !@highlighted
       @highlighted = true
-      # declare into the highlight style channel (target -> style descriptor) with the legacy
-      # translucent-blue fill — the only style today; the drag arc (Phase 2+) adds outline styles.
-      world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle(WorldWdgt.theme.hoverHighlightWash, 50)
+      # declare into the highlight style channel (target -> style descriptor): the hover WASH, in its
+      # role's translucent colour (the drag's outlines are the channel's other form).
+      world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle WorldWdgt.theme.hoverHighlightWash
       @_changed()
 
   turnOffHighlight: ->
@@ -3221,18 +3228,29 @@ class Widget extends TreeNode
     aContext.restore()
 
   # ===== the corners a box laid over me follows =====
+  # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] of the rounded outline my BODY
+  # is painted in, or undefined when it is square: my appearance's outlineCornerRadii (a rounded
+  # box's -- a window's, a card's, a menu's, a button's --, a text field's well, a magnet's, a
+  # stadium's). A widget that paints its own rounded body answers it itself (a text dressed as a
+  # document item, StringWdgt). Only cornerRadiiFollowingMyOutline below reads it, for a ring or a
+  # wash laid over me; it clips nothing (a widget cutting its children to a rounded outline says so
+  # with _roundedChildClipRadii, a separate answer).
+  _outlineCornerRadii: ->
+    @appearance?.outlineCornerRadii?()
+
   # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] a box `aBox` laid over me (in my
-  # plane, inside my bounds) takes to follow the rounded corners I SHOW: my own outline's (my
-  # appearance's outlineCornerRadii -- a window's, a card's, a menu's, a rounded box's) and those of
-  # each ancestor that cuts its children to a rounded outline (_roundedChildClipRadii -- a window's
-  # contents show the window's corners). A rounded corner of radius r reaches the box's matching
-  # corner when that corner lies dx, dy in from it with both under r, and the box's corner then takes
-  # the concentric radius r - max(dx, dy), the way a frame's strip rounds at the body radius less the
-  # border (visual-design-system §4.7); a corner nothing rounded reaches is square (0). An ancestor
-  # is read in my plane, carried across the scroll translations between us; the walk stops at my
-  # innermost non-identity island, past which a rounded corner is turned or scaled, so it is none
-  # of my box's. The drag's drop outline asks it (HighlighterWdgt.coverTarget, and the dock band
-  # of WorldWdgt.addDragAffordanceWidgets), so the outline follows the target's own corners.
+  # plane, inside my bounds) takes to follow the rounded corners I SHOW: my own outline's
+  # (_outlineCornerRadii, above) and those of each ancestor that cuts its children to a rounded
+  # outline (_roundedChildClipRadii -- a window's contents show the window's corners). A rounded
+  # corner of radius r reaches the box's matching corner when that corner lies dx, dy in from it with
+  # both under r, and the box's corner then takes the concentric radius r - max(dx, dy), the way a
+  # frame's strip rounds at the body radius less the border (visual-design-system §4.7); a corner
+  # nothing rounded reaches is square (0). An ancestor is read in my plane, carried across the scroll
+  # translations between us; the walk stops at my innermost non-identity island, past which a rounded
+  # corner is turned or scaled, so it is none of my box's. Three surfaces ask it, so each follows
+  # the corners its target shows: the drag's drop outline (HighlighterWdgt.coverTarget, and
+  # the dock band of WorldWdgt.addDragAffordanceWidgets), the hover wash (coverTarget too), and the
+  # editor-focus selection outline a selected widget draws over itself (_drawSelectionOverlay).
   cornerRadiiFollowingMyOutline: (aBox) ->
     radii = [0, 0, 0, 0]
     island = @_enclosingNonIdentityIsland()
@@ -3243,7 +3261,7 @@ class Widget extends TreeNode
     while shape? and shape isnt island
       if previous? and (translation = shape.scrollTranslationOfChild?(previous))?
         shapePlaneToMine = shapePlaneToMine.subtract translation
-      shapeRadii = if shape is @ then @appearance?.outlineCornerRadii?() else shape._roundedChildClipRadii?()
+      shapeRadii = if shape is @ then @_outlineCornerRadii() else shape._roundedChildClipRadii?()
       if shapeRadii?
         # the box in the shape's own frame (its origin at the shape's top-left), carried out of my
         # plane into the shape's ...

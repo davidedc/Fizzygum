@@ -124,3 +124,11 @@ SystemTest_macroPaletteMarksItsChoice
 SystemTest_macroSaveAsPromptAboveTiltedWindow
 SystemTest_macroStringWdgtEditDefersToPromptWhenCropped
 SystemTest_macroScrollPanelMergesChildMenu
+# G-D: the selection outline (a rounded item, a retarget, none while a caret shows, after Escape + Bold), text selection,
+# the hover wash, a plain list
+SystemTest_macroEditorFocusIndicatorTracksEditedWidget
+SystemTest_macroSelectionOverlaySurvivesBringToFront
+SystemTest_macroDoubleClickSelectsWord
+SystemTest_macroHierarchyMenuHoverHighlightsExactSubtree
+SystemTest_macroListWdgtAutoScrollsNearDraggedEdge
+SystemTest_macroDocsToolbarDockSidesAndFloat

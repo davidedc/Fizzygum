@@ -14,13 +14,19 @@ class MenuItemWdgt extends LabelButtonWdgt
   # turns this on for every row
   actionableAsThumbnail: undefined
 
-  # Does a hairline run along my TOP edge? My rows panel DERIVES it at arrange (the row above me
-  # has to be another row) and tells me; I hold the answer and my appearance paints it. Paint
-  # only, never layout: a separator takes no height, so two rows stay flush and no dead zone opens
-  # between two touch targets (ruling G5). Only a plain LIST's rows panel tells its rows (the flat
-  # look's rhythm mark); a pop-up's rows are told apart by their hover plate and grouped by
-  # dividers, and a member list's rows by their selection plate alone, so their answer stays false.
-  _separatorAbove: false
+  # The HOVER PLATE of a row whose highlighted state is not its hover: a plain LIST row's (its
+  # highlighted state is its list's selection), from its look (_lookFor) -- the plate it wears while
+  # the pointer is over it at rest. undefined for every other row: a menu row's hover IS its
+  # highlighted state, and a member row has no hover look.
+  hoverColor: undefined
+  # Is the pointer over me? Kept only while I carry a hoverColor (written by _showHoverOnMyPlate, so
+  # a menu row and a member row never gain the field); my appearance asks for the plate it means
+  # (_restPlateFill).
+  _isHovered: false
+
+  # The LEAST height I take, from my look when it gives one (a plain list row's listRowHeight);
+  # undefined for a menu row, which reads menuRowHeight as it lays its label out.
+  minimumRowHeight: undefined
 
   # my MenuRowReflectionSpec when I am a VIEW of somebody else's value: whether I am TICKED is then
   # derived from that value, not fixed when I was built. undefined for an ordinary row.
@@ -85,23 +91,28 @@ class MenuItemWdgt extends LabelButtonWdgt
   # spec.label falls back to "Close".
   #
   # MY LOOK is my context's, chosen once, here (_lookFor): a plain LIST's rows panel builds me as a
-  # list row (`listRow`), in the flat look -- 17 px, state fills over my whole box; every other
-  # context, a menu's or a prompt's panel or a row built on its own, builds a MENU row -- the
-  # draft's 15 px ink label, a paper box, and a rounded plate while hovered or pressed. (A MEMBER
-  # list's rows panel builds a MemberRowWdgt, whose look is its own.) Every value lands in a field
-  # of mine, so I keep the look I was built with wherever I go: lifted out of a pinned menu,
-  # duplicated onto the desktop, saved in a snapshot and restored. A spec's own `color` still wins
-  # for my label's ink (a list formats its entries by it), and an explicit `fontRole` for my font.
+  # list row (`listRow`), in the draft's list look -- a 15 px ink label on no fill, at least
+  # listRowHeight tall, a rounded listRowPlateHeight plate from my top while hovered, and an
+  # accent-tint one while I am my list's selection or pressed; every other context, a menu's or a
+  # prompt's panel or a row built on its own, builds a MENU row -- the draft's 15 px ink label, a
+  # paper box, and a rounded plate while hovered or pressed. (A MEMBER list's rows panel builds a
+  # MemberRowWdgt, whose look is its own.) Every value lands in a field of mine, so I keep the look
+  # I was built with wherever I go: lifted out of a pinned menu, duplicated onto the desktop, saved
+  # in a snapshot and restored. A spec's own `color` still wins for my label's ink (a list formats
+  # its entries by it), and an explicit `fontRole` for my font.
   #   WHAT I SAY is the spec's label -- or, when I reflect somebody's value, my reflection's, the
   # same plain wording -- and never carries a mark: whether I open a submenu, and whether I am
   # ticked, are facts of their own (opensSubmenu / ticked) that my indicators draw.
-  #   ⚠ @rowReflection, @icon, my tick, my submenu flag and my two rhythm dials are set BEFORE
-  # super: LabelButtonWdgt's constructor labels itself (_reLayoutSelf -> _createLabel, then
-  # _placeMyParts) as its last act, so all of them are already needed by the time it runs.
+  #   ⚠ @rowReflection, @icon, my tick, my submenu flag, my two rhythm dials and my least height are
+  # set BEFORE super: LabelButtonWdgt's constructor labels itself (_reLayoutSelf -> _createLabel,
+  # then _placeMyParts) as its last act, so all of them are already needed by the time it runs. My
+  # hover plate and my least height land in fields only when my look gives them.
   constructor: (commandSpec, opts = {}) ->
     look = @_lookFor opts
     @sideInset = look.sideInset
     @iconGap = look.iconGap
+    @minimumRowHeight = look.minimumHeight  if look.minimumHeight?
+    @hoverColor = look.hoverFill  if look.hoverFill?
     @rowReflection = commandSpec.reflection
     @icon = commandSpec.icon
     @opensSubmenu = true  if commandSpec.opensSubmenu
@@ -136,19 +147,24 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # MY LOOK, as one record my constructor reads before super: my label's font role and ink, my rest
   # fill, my two state fills and the plate they are painted as (its rounding -- absent: they cover
-  # my whole box, square -- and its height -- absent: my whole height), and my horizontal rhythm
-  # (sideInset, iconGap). A plain list row's when my context asks for one (`listRow`), a menu row's
-  # otherwise; a row kind with a look of its own answers its own (MemberRowWdgt).
+  # my whole box, square -- and its height -- absent: my whole height), my horizontal rhythm
+  # (sideInset, iconGap), and, when my highlighted state is not my hover, the plate I wear hovered
+  # at rest (hoverFill) and my least height (minimumHeight; absent: menuRowHeight). A plain list
+  # row's when my context asks for one (`listRow`) -- highlighted is selected there, so my selection
+  # and my press share one plate and my hover has its own --, a menu row's otherwise; a row kind
+  # with a look of its own answers its own (MemberRowWdgt).
   _lookFor: (opts) ->
     theme = WorldWdgt.theme
     if opts.listRow
       font: theme.fonts.listRow
       ink: theme.listRowText
       restFill: theme.listRowFill
-      highlightFill: theme.listRowHighlightFill
-      pressFill: theme.listRowPressFill
-      # no plate: a list row's state fills cover its whole box
-      plateRadius: undefined
+      hoverFill: theme.listRowHoverFill
+      highlightFill: theme.listRowSelectedFill
+      pressFill: theme.listRowSelectedFill
+      plateRadius: theme.listRowPlateRadius
+      plateHeight: theme.listRowPlateHeight
+      minimumHeight: theme.listRowHeight
       sideInset: theme.listRowSideInset
       iconGap: theme.listRowIconGap
     else
@@ -194,18 +210,19 @@ class MenuItemWdgt extends LabelButtonWdgt
   isTextSizedGlassBoxItem: ->
     true
 
-  # THE SEPARATOR PAIR. My panel tells me whether a row sits directly above me; my appearance asks
-  # me back when it paints. Both are capability-dispatched (`?()`), so the OTHER row kinds a panel
-  # may hold -- a divider, a slider, a colour picker -- neither hear the statement nor draw a line,
-  # and a menu row outside a panel simply never carries one. Its one teller is a plain LIST's rows
-  # panel (CommandPanelWdgt._deriveRowSeparators).
-  showSeparatorAbove: (aBoolean) ->
-    return if @_separatorAbove is aBoolean
-    @_separatorAbove = aBoolean
+  # THE HOVER-PLATE PAIR. The pointer coming and going tells me (hoverEntered / hoverExited, as a
+  # list row); my appearance asks me back, while my state is at rest, for the plate to paint over my
+  # rest fill: my hover plate while the pointer is over me, nothing otherwise. Out of my rest state
+  # (my list's selection, or pressed) my state's own plate wins, hovered or not. A row with no
+  # hoverColor neither keeps the fact nor repaints for it.
+  _showHoverOnMyPlate: (hovered) ->
+    return unless @hoverColor?
+    return if hovered is @_isHovered
+    @_isHovered = hovered
     @_changed()
 
-  showsSeparatorAbove: ->
-    @_separatorAbove
+  _restPlateFill: ->
+    if @_isHovered then @hoverColor else undefined
 
   # reset my selection highlight (called for every menu child by CommandPanelWdgt.unselectAllItems,
   # replacing its `if item instanceof MenuItemWdgt`). (type-test-elimination campaign)
@@ -249,12 +266,13 @@ class MenuItemWdgt extends LabelButtonWdgt
     # _reLayoutSelf (a layout pass), so use the NoSettle core -- the wrapper would throw mid-pass.
     @label._sizeToTextAndDisableFittingNoSettle()
 
-    # menuRowHeight is a MINIMUM, not a height: a row is as tall as its label or as tall as the
-    # dial, whichever is more, so a big label never gets clipped by a small dial and a small label
-    # still offers the full target (G3/G5 -- a row is a tap target). The label then sits centred
-    # in whatever height wins (_placeMyLabel).
+    # menuRowHeight (a plain list row's listRowHeight, from its look) is a MINIMUM, not a height: a
+    # row is as tall as its label or as tall as the dial, whichever is more, so a big label never
+    # gets clipped by a small dial and a small label still offers the full target (G3/G5 -- a row is
+    # a tap target). The label then sits centred in whatever height wins, or down the plate a list
+    # row's look stops short of its bottom (_placeMyParts).
     labelExtent = @label.extent()
-    rowHeight = Math.max labelExtent.y, WorldWdgt.theme.menuRowHeight
+    rowHeight = Math.max labelExtent.y, (@minimumRowHeight ? WorldWdgt.theme.menuRowHeight)
     w = @width()
     @__commitExtent new Point (@_leadingWidth() + labelExtent.x + @_trailingWidth()), rowHeight
     @__commitWidth w
@@ -262,10 +280,14 @@ class MenuItemWdgt extends LabelButtonWdgt
   # EVERYTHING I SHOW, placed against my box as it now is -- the one placement, run by my
   # _reLayoutSelf and again whenever my tick or my tick column moves. Left to right: my side inset,
   # my tick column (while reserved), my icon's glyph box (while I carry an icon), my label; and my
-  # submenu chevron right-aligned on its ink. Every number rounds: a fractional placement fails the
-  # suite even where the pixels match (Widget._assertBoundsWellFormed / NON_INTEGER_GEOMETRY).
+  # submenu chevron right-aligned on its ink. Each is centred down my height, or down my plate's
+  # when my look stops the plate short of my bottom and my label fits on it (a plain list row: what
+  # it shows sits on its plate, not on the gap below it). Every number rounds: a fractional
+  # placement fails the suite even where the pixels match (Widget._assertBoundsWellFormed /
+  # NON_INTEGER_GEOMETRY).
   _placeMyParts: ->
     rowHeight = @height()
+    rowHeight = @plateHeight  if @plateHeight? and @plateHeight >= @label.height()
     @_placeMyLabel rowHeight
     @_placeMyIcon rowHeight
     @_placeMyTick rowHeight
@@ -284,8 +306,8 @@ class MenuItemWdgt extends LabelButtonWdgt
     [inkLeft, inkRight] = @_submenuChevronInkSpan()
     WorldWdgt.theme.menuRowChevronGap + (inkRight - inkLeft) + @sideInset
 
-  # My label at its x, centred down my height. A CENTRED row's label is LabelButtonWdgt's to
-  # place: its _reLayoutSelf centres it in my whole box.
+  # My label at its x, centred down the height _placeMyParts stands my parts in. A CENTRED row's
+  # label is LabelButtonWdgt's to place: its _reLayoutSelf centres it in my whole box.
   _placeMyLabel: (rowHeight) ->
     return if @centered
     labelTopInset = Math.round (rowHeight - @label.height()) / 2
@@ -369,9 +391,9 @@ class MenuItemWdgt extends LabelButtonWdgt
     @submenuIndicator.__commitMoveTo @position().add new Point (@width() - @sideInset - inkRight), Math.round (rowHeight - side) / 2
     @_addNoSettle @submenuIndicator  unless @submenuIndicator.parent is @
 
-  # THE TICK-COLUMN PAIR (the separator pair's shape): my rows panel tells me, at each arrange,
-  # whether its rows reserve the tick column; I keep the answer, and re-place my parts when it
-  # moves -- my label shifts by the column, and my tick appears or goes with it.
+  # THE TICK-COLUMN PAIR: my rows panel tells me, at each arrange, whether its rows reserve the tick
+  # column; I keep the answer, and re-place my parts when it moves -- my label shifts by the column,
+  # and my tick appears or goes with it.
   reserveTickColumn: (aBoolean) ->
     return if @_tickColumnReserved is aBoolean
     @_tickColumnReserved = aBoolean
@@ -435,10 +457,15 @@ class MenuItemWdgt extends LabelButtonWdgt
   _rowNameDistinction: ->
     @labelString
 
-  # MenuItemWdgt events:
+  # MenuItemWdgt events. A LIST row's highlighted state is its list's selection, so the pointer
+  # leaves its state alone and is shown, when its look has a hover plate, on that plate instead.
+  # Leaving always drops the hover plate, wherever I stand: a copy of me drops it too
+  # (LabelButtonWdgt._reactToBeingCopied), parented or not.
   hoverEntered: ->
     @representedWidget()?.turnOnHighlight()
-    unless @isListItem()
+    if @isListItem()
+      @_showHoverOnMyPlate true
+    else
       @state = @STATE_HIGHLIGHTED
       @_changed()
     if @toolTipMessage
@@ -446,6 +473,7 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   hoverExited: ->
     @representedWidget()?.turnOffHighlight()
+    @_showHoverOnMyPlate false
     unless @isListItem()
       @state = @STATE_NORMAL
       @_changed()

@@ -157,7 +157,7 @@ class SimpleTextWdgt extends TextWdgt
   # openTargetPropertySelector is now one shared method on Widget. All this class adds is the `bang`
   # pin above, because `bang` is the one controller verb that IS specific to it.
 
-  # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
+  # setText (above) + the inherited setFontSize / setFontName /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
   # container via StringWdgt::_reflowContainedTextThenInvalidateLayout (gated by FIT_BOX_TO_TEXT).
   # softWrapOn/Off (above) are viewport-specific (they flip

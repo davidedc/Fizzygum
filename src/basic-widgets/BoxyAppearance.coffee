@@ -238,6 +238,13 @@ class BoxyAppearance extends Appearance
   outlineCornerRadii: ->
     @_cornerRadii()
 
+  # Does my widget's body draw a 1 px border along that outline? Exactly when it has a strokeColor
+  # (_strokeOutlineInStrokeColor strokes nothing without one). A ring laid over a selected widget
+  # strokes the outline too when it does (Widget._drawSelectionOverlay,
+  # HighlightOutlineAppearance.paintRing), so the border's corner pixels stay inside the ring.
+  outlineIsStroked: ->
+    @widget.strokeColor?
+
   # Intersect aContext's clip with exactly the pixels fillOutline fills, so whatever is painted next
   # shows only inside my outline. The path is traced under the matrix fillOutline paints under
   # (logical pixels, translated to my widget) and the clip is set AFTER that matrix is restored: a

@@ -40,19 +40,21 @@ class HighlighterWdgt extends RectangleWdgt
   # content-bounds enumerations run only on scroll / size-tracking containers, never the world).
   isLayoutInert: -> true
 
-  # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] my OUTLINE form rounds my box's
-  # corners at (HighlightOutlineAppearance): the corners of what I outline where my box meets them,
-  # else 0. coverBox sets them with my box, so they always describe the box I have; square until then.
-  # The fill form never reads them.
+  # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] I round my box's corners at, in
+  # either form: the corners of what I cover where my box meets them, else 0 -- my OUTLINE form's
+  # ring follows them (HighlightOutlineAppearance), and so does my FILL form's wash
+  # (HighlightWashAppearance). coverBox sets them with my box, so they always describe the box I
+  # have; square until then.
   outlineRadii: undefined
 
   # --- highlight style channel (drag-embed arc) ------------------------------------------------
   # A style descriptor is a plain record. Producers declare a target -> descriptor into
   # world.widgetsToBeHighlighted (a Map); the reconciler builds one HighlighterWdgt per target and
   # calls applyHighlightStyle. Two forms:
-  #   {form:"fill",    color, alphaScaled}  — a translucent wash (menu hover-highlight)
+  #   {form:"fill",    color}               — a wash over the box (menu hover-highlight), in a colour
+  #                                           translucent by its own alpha, painted at full alpha
   #   {form:"outline", color, alpha}        — a ring inside the box (drag candidate/reluctant affordance)
-  @fillStyle: (color, alphaScaled) -> {form: "fill", color: color, alphaScaled: alphaScaled}
+  @fillStyle: (color) -> {form: "fill", color: color}
 
   # Drag-embed candidate/reluctant outlines (spec §11), drawn at one width so a target that changes
   # state does not jump: a receptive candidate (and a dock band) in the accent -- the target the
@@ -65,7 +67,8 @@ class HighlighterWdgt extends RectangleWdgt
   # overlay drawn on top of the selected widget's own content (Widget._drawSelectionOverlay).
 
   # A highlighter takes one style for its life (the reconcilers apply it once, as they build it), and
-  # each form is its own appearance: the outline paints nothing but its ring, so it holds no fill.
+  # each form is its own appearance: the outline paints nothing but its ring, so it holds no fill;
+  # the wash paints nothing but its fill, so it holds no stroke.
   applyHighlightStyle: (style) ->
     if style.form is "outline"
       # the ring, in the style's colour, inside my box (HighlightOutlineAppearance); @alpha its opacity
@@ -74,11 +77,13 @@ class HighlighterWdgt extends RectangleWdgt
       @alpha = style.alpha ? 1
       @_changed()
     else
-      # the translucent fill wash
-      @appearance = new RectangularAppearance @
+      # the wash, in the style's colour, over my box (HighlightWashAppearance), at my full alpha: the
+      # colour carries the wash's translucency, so no second alpha dims it further
+      @appearance = new HighlightWashAppearance @
       @strokeColor = undefined
-      @setColor style.color
-      @setAlphaScaled style.alphaScaled
+      @color = style.color
+      @alpha = 1
+      @_changed()
 
   # Lay me over `aBox` (in my parent's plane), my outline rounding its corners at `radii`
   # (outlineRadii; undefined: square). My box and my corners are set here, together, and only here.

@@ -39,6 +39,20 @@ class MagnetAppearance extends Appearance
       ctx.strokeStyle = @widget._strokeForMyState().toString()
       ctx.strokeRoundRect 0.5, 0.5, w - 1, h - 1, radius
 
+  # The corners of my rounded box, [topLeft, topRight, bottomRight, bottomLeft]: magnetCornerRadius at
+  # each. A ring or a wash laid over the magnet reads them (Widget.cornerRadiiFollowingMyOutline: the
+  # selection outline, the drop outline, the hover wash), so it follows my corners. Nothing clips to
+  # them: only a widget answering _roundedChildClipRadii (a rounded frame, a tool cell) cuts its
+  # children to a rounded outline, and a magnet is neither.
+  outlineCornerRadii: ->
+    radius = WorldWdgt.theme.magnetCornerRadius
+    [radius, radius, radius, radius]
+
+  # My box always draws its 1 px border along that outline (the button's look, in every state), so a
+  # ring laid over a selected magnet strokes the outline too (Widget._drawSelectionOverlay).
+  outlineIsStroked: ->
+    true
+
   # The rounded box, by pixel centre. TOTAL (see Appearance): nothing outside my widget's bounds is
   # mine.
   shapeContainsPoint: (aPoint) ->

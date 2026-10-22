@@ -176,7 +176,7 @@ class Appearance
   _paintPlate: (ctx, radius, fill, stroke) ->
     w = @widget.width()
     h = @widget.height()
-    r = Math.min radius, Math.floor(w / 2), Math.floor(h / 2)
+    r = @_plateRadius radius
     ctx.fillStyle = fill.toString()
     ctx.fillRoundRect 0, 0, w, h, r
     return unless stroke?
@@ -184,6 +184,13 @@ class Appearance
     ctx.strokeStyle = stroke.toString()
     ctx.strokeRoundRect 0.5, 0.5, w - 1, h - 1, r
     return
+
+  # The radius THE PLATE over my widget's box is rounded at for a requested `radius`: that radius,
+  # but never more than half the box's side, rounded down -- so a box narrower than twice it rounds at
+  # half its short side. _paintPlate rounds by it, and so does an appearance answering the corners of
+  # its plate (StringFieldAppearance.outlineCornerRadii), so the two cannot disagree.
+  _plateRadius: (radius) ->
+    Math.min radius, Math.floor(@widget.width() / 2), Math.floor(@widget.height() / 2)
 
 
   # Shadow-pass wrapper for appearances whose art sets its own colours internally (icons,
