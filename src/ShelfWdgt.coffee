@@ -29,9 +29,3 @@ class ShelfWdgt extends PanelWdgt
   holds: (w) ->
     p = w._parentThroughIslands()
     p? and p == @
-
-  # NOT homepage-excluded: the shared world teardown
-  # (WorldWdgt._teardownWorldStructureNoSettle) ships in production and
-  # empties the storage containers through this.
-  empty: ->
-    @fullDestroyChildren()

@@ -2900,11 +2900,24 @@ class WorldWdgt extends IconGridPanelWdgt
   loadWorldSnapshot: (envelopeOrString, opts = {}) ->
     # early-return-sanctioned: every guard below MUST precede the settle, and none of them can live
     # in a core that only runs after the teardown they exist to prevent — a format check that informs
-    # and stops, a user confirm that may decline, and the lazy-part branch, which RE-ENTERS this same
-    # public method once the parts arrive rather than continuing.
+    # and stops, a refusal of a file this build can never restore (it informs and stops too), a user
+    # confirm that may decline, and the lazy-part and reflective-layer branches, which RE-ENTER this
+    # same public method once what they wait for arrives rather than continuing.
     envelope = if typeof envelopeOrString is "string" then JSON.parse(envelopeOrString) else envelopeOrString
     unless envelope? and envelope.format is Serializer.FORMAT and envelope.kind is "world"
       world.inform "This is not a Fizzygum world snapshot file."
+      return
+    # A FILE THIS BUILD CAN NEVER RESTORE IS REFUSED HERE, before anything changes: a newer format
+    # version, a malformed object table, or a record naming a class that is neither here nor owned
+    # by a part this build ships. Each would make the restore throw AFTER step 1 has destroyed the
+    # whole desktop, leaving the user an empty one. Like the format check it is a fact about the
+    # file, so it precedes the confirm — nobody is asked to replace their desktop with a file that
+    # cannot load — and it precedes step 0, so a file refused anyway costs no part fetch. A class a
+    # LAZY part provides is not refused: that file takes step 0's load-then-re-enter path, and the
+    # re-entry passes this pure check again.
+    whyNot = Deserializer.whyItCanNeverBeRestored envelope, (className) => @parts.canEverProvideClass className
+    if whyNot?
+      @inform "This world snapshot cannot be loaded here: " + whyNot + ".\nYour desktop has been left as it was."
       return
     unless opts.skipConfirm
       msg = "Load this world snapshot?\n\nIt REPLACES everything on your desktop, and can run code the snapshot carries."
@@ -2933,71 +2946,84 @@ class WorldWdgt extends IconGridPanelWdgt
     #     any mutation, after the confirm, so the user is prompted exactly once -- and re-enter.
     #     It cannot loop: the predicate requires the layer to be absent, and the re-entry runs with
     #     it present. A build that can NEVER load it (`sources: "none"`) does not come through here
-    #     at all; it takes the refusal below instead.
+    #     at all; it takes step 2b's notice below instead.
     if @_snapshotNeedsTheReflectiveLayer envelope
       return ensureReflectiveLayerLoaded().then =>
         @loadWorldSnapshot envelope, Object.assign {}, opts, skipConfirm: true
     section = envelope.world or {}
     # 1. tear the current world down — one settle over the shared NoSettle core, which also zeroes
     #    every per-class lastBuiltInstanceNumericID, giving the clean id space the restored iids need.
+    #    Every way this method stops WITHOUT changing the world is above this line (the
+    #    early-return-sanctioned list at its head); from here on the desktop is replaced.
     @_settleLayoutsAfter => @_teardownWorldStructureNoSettle()
-    # 2. restore the per-class id counters into the freshly-zeroed space BEFORE deserializing,
-    #    so registerThisInstance sees the right high-water marks (§4.4/§4.9).
-    if section.idCounters?
-      for own className, n of section.idCounters
-        window[className].lastBuiltInstanceNumericID = n if window[className]?
-    # 2b. replay CLASS-scope source edits against the live prototypes BEFORE deserializing, so
-    #     restored shells (Object.create(prototype)) already see the edited methods (§12). The
-    #     confirm above warned that a load can run code the snapshot carries. Instance-scope
-    #     edits ride the normal {"$src"} path on their own widget. The rebuilt registry is
-    #     installed AFTER deserialize (below), so the $src re-injections don't double-log into it.
-    restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
-    # An artifact that ships no class source text has no meta-system and can never replay these
-    # (arc 5's lean profile). Say so ONCE, to the user, before restoring the rest: the alternative
-    # is that their class edits vanish from the loaded world with only a console line to show for it.
-    # The widgets and their per-widget {"$src"} function edits still load normally.
-    if (unreplayableCount = restoredRegistry.unreplayableSourceEditsCount()) > 0
-      @inform "This build cannot re-apply the " + unreplayableCount + " class-level source edit" +
-        (if unreplayableCount is 1 then "" else "s") + " this file carries.\n" +
-        "Everything else in it loads normally."
-    restoredRegistry.replayMixinEdits()
-    restoredRegistry.replayClassEdits()
-    # 3. deserialize the object table (kind:"world" preserves each widget's iid).
-    result = Deserializer.deserialize envelope
-    shells = result.shells or []
-    resolve = (refOrVal) ->
-      return undefined unless refOrVal?
-      return shells[refOrVal.$r] if refOrVal.$r?
-      return WellKnownObjects.resolve refOrVal.$wk if refOrVal.$wk?
-      refOrVal
-    # 4. restore the static preferences bag (values only) from its forced data record.
-    if section.preferences?
-      restoredPrefs = resolve section.preferences
-      if restoredPrefs?
-        WorldWdgt.preferencesAndSettings[k] = v for own k, v of restoredPrefs
-    # 5. apply the world-state scalars to the LIVE world.
-    @isDevMode = section.isDevMode if section.isDevMode?
-    @alpha = section.alpha if section.alpha?
-    @[name] = val for own name, val of (section.infoDocFlags or {})
-    if section.untitledNamingCounters? and @untitledNamingService?
-      @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
-      @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
-    # the people at this world: the file's state onto the LIVE users, positionally. Through the
-    # write VERB, so the announcement reaches every palette the load has just restored -- and the
-    # verb is idempotent (User.armDrawingTool states a fact), so re-stating a hand the live user
-    # already holds is simply quiet.
-    for eachRecord, i in (section.users or [])
-      @users?[i]?.armDrawingTool eachRecord.armedDrawingTool
-    # 6. swap in the restored (self-contained, off-tree) storage containers so every $r
-    #    pointer at them (the bin opener's target, ...) stays consistent, and re-bind the
-    #    app-slot / templates windows (orphaned-but-revivable — NOT re-attached to the
-    #    desktop here).
-    restoredBin = resolve section.bin
-    @binWdgt = restoredBin if restoredBin?
-    restoredShelf = resolve section.shelf
-    @shelfWdgt = restoredShelf if restoredShelf?
-    @[slot] = resolve(refVal) for own slot, refVal of (section.appSlots or {})
-    @simpleEditorTemplates = resolve(section.simpleEditorTemplates) if section.simpleEditorTemplates?
+    # From the teardown to step 6 the world has NO STORAGE: the core destroyed the bin and the shelf
+    # (snapshot roots, which no caller keeps), and step 6 installs the file's pair. The `finally`
+    # guarantees a bin and a shelf whatever happens in between — a file carrying none, or a load
+    # that throws part-way (a record whose body is malformed, say: the refusal above vets the
+    # envelope's shape and its class names, not every record's contents) — because without them the
+    # next storage drain (StorageSorter.drainPendingSort, once per world cycle) throws, and the
+    # world's animation loop stops. The pair is built exactly as finishWorldSetup builds a fresh world's.
+    try
+      # 2. restore the per-class id counters into the freshly-zeroed space BEFORE deserializing,
+      #    so registerThisInstance sees the right high-water marks (§4.4/§4.9).
+      if section.idCounters?
+        for own className, n of section.idCounters
+          window[className].lastBuiltInstanceNumericID = n if window[className]?
+      # 2b. replay CLASS-scope source edits against the live prototypes BEFORE deserializing, so
+      #     restored shells (Object.create(prototype)) already see the edited methods (§12). The
+      #     confirm above warned that a load can run code the snapshot carries. Instance-scope
+      #     edits ride the normal {"$src"} path on their own widget. The rebuilt registry is
+      #     installed AFTER deserialize (below), so the $src re-injections don't double-log into it.
+      restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
+      # An artifact that ships no class source text has no meta-system and can never replay these
+      # (arc 5's lean profile). Say so ONCE, to the user, before restoring the rest: the alternative
+      # is that their class edits vanish from the loaded world with only a console line to show for it.
+      # The widgets and their per-widget {"$src"} function edits still load normally.
+      if (unreplayableCount = restoredRegistry.unreplayableSourceEditsCount()) > 0
+        @inform "This build cannot re-apply the " + unreplayableCount + " class-level source edit" +
+          (if unreplayableCount is 1 then "" else "s") + " this file carries.\n" +
+          "Everything else in it loads normally."
+      restoredRegistry.replayMixinEdits()
+      restoredRegistry.replayClassEdits()
+      # 3. deserialize the object table (kind:"world" preserves each widget's iid).
+      result = Deserializer.deserialize envelope
+      shells = result.shells or []
+      resolve = (refOrVal) ->
+        return undefined unless refOrVal?
+        return shells[refOrVal.$r] if refOrVal.$r?
+        return WellKnownObjects.resolve refOrVal.$wk if refOrVal.$wk?
+        refOrVal
+      # 4. restore the static preferences bag (values only) from its forced data record.
+      if section.preferences?
+        restoredPrefs = resolve section.preferences
+        if restoredPrefs?
+          WorldWdgt.preferencesAndSettings[k] = v for own k, v of restoredPrefs
+      # 5. apply the world-state scalars to the LIVE world.
+      @isDevMode = section.isDevMode if section.isDevMode?
+      @alpha = section.alpha if section.alpha?
+      @[name] = val for own name, val of (section.infoDocFlags or {})
+      if section.untitledNamingCounters? and @untitledNamingService?
+        @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
+        @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
+      # the people at this world: the file's state onto the LIVE users, positionally. Through the
+      # write VERB, so the announcement reaches every palette the load has just restored -- and the
+      # verb is idempotent (User.armDrawingTool states a fact), so re-stating a hand the live user
+      # already holds is simply quiet.
+      for eachRecord, i in (section.users or [])
+        @users?[i]?.armDrawingTool eachRecord.armedDrawingTool
+      # 6. install the restored (self-contained, off-tree) storage containers (the teardown
+      #    destroyed the previous pair) so every $r pointer at them (the bin opener's target, ...)
+      #    stays consistent, and re-bind the app-slot / templates windows (orphaned-but-revivable —
+      #    NOT re-attached to the desktop here).
+      restoredBin = resolve section.bin
+      @binWdgt = restoredBin if restoredBin?
+      restoredShelf = resolve section.shelf
+      @shelfWdgt = restoredShelf if restoredShelf?
+      @[slot] = resolve(refVal) for own slot, refVal of (section.appSlots or {})
+      @simpleEditorTemplates = resolve(section.simpleEditorTemplates) if section.simpleEditorTemplates?
+    finally
+      @binWdgt ?= new BinWdgt
+      @shelfWdgt ?= new ShelfWdgt
     # 7. attach the desktop children in ONE settle batch, via the base _addNoSettle so the
     #    grid mixin does NOT re-place them (their restored positions are preserved) — the
     #    sanctioned public-equivalent path (never a raw layout core; see DETERMINISM.md).
@@ -3105,20 +3131,17 @@ class WorldWdgt extends IconGridPanelWdgt
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = undefined
-    # (b) THE WIDGETS A WORLD OWNS THAT ARE NOT TREE CHILDREN, and which fullDestroyChildren
-    # therefore cannot reach: the hand (built by the constructor) and the two storage containers
-    # (built by finishWorldSetup). Each of them sits in its class's `instances` registry, so leaving
-    # one undestroyed pins it — and the whole object graph it references — for the life of the page.
-    # The teardown core has already EMPTIED the containers of their residents (@binWdgt?.empty() /
-    # @shelfWdgt?.empty()); this destroys the containers themselves.
+    # (b) THE HAND (built by the constructor): the one widget a world owns that is not a tree child
+    # and that the shared core leaves standing. fullDestroyChildren cannot reach it, and the core
+    # cannot destroy it either, because the core's other caller, loadWorldSnapshot, keeps its world
+    # and goes on using the hand. It sits in its class's `instances` registry, so leaving it
+    # undestroyed pins it — and the whole object graph it references — for the life of the page.
+    # The world's other off-tree widgets, the two storage containers, are snapshot roots that
+    # neither caller keeps, so the core has already destroyed them and let go of them.
     @hand._fullDestroyNoSettle()
-    @binWdgt?._fullDestroyNoSettle()
-    @shelfWdgt?._fullDestroyNoSettle()
     # ...and then hold no reference to what was just destroyed — the same seam contract the shared
-    # teardown core keeps for the tree.
+    # teardown core keeps for the tree and the containers.
     @hand = undefined
-    @binWdgt = undefined
-    @shelfWdgt = undefined
     # (c) THE WORLD LEAVES ITS OWN CLASS CHAIN'S `instances` SETS. This is also the line that arms
     # the collectibility oracle for free: `fg vmtruth`'s prelude records a WeakRef at exactly this
     # seam and asserts, one teardown later, that the VM was allowed to let the object go.
@@ -3140,23 +3163,26 @@ class WorldWdgt extends IconGridPanelWdgt
     @destroyed = true
     # (f) THE PAGE-LIFETIME COLD-GLYPH STORE, AGAIN. The shared teardown core already ran this filter,
     # but it runs it as ITS last act — and dissolution is a FOURTH destroy phase behind it, so at that
-    # point the hand, the two containers and this world were all still `destroyed == false` and every
-    # one of them survived the pass. The filter keys on `destroyed`, which is only true for them HERE.
-    # Both calls are needed and neither is redundant: the core's covers the tree (and is the only one
-    # loadWorldSnapshot gets, since that path keeps its world and never dissolves), this one covers
-    # the four the core cannot yet see. Idempotent — it rebuilds the array from a predicate.
+    # point the hand and this world were both still `destroyed == false` and both survived the pass.
+    # The filter keys on `destroyed`, which is only true for them HERE.
+    # Both calls are needed and neither is redundant: the core's covers the tree and the two storage
+    # containers (and is the only one loadWorldSnapshot gets, since that path keeps its world and
+    # never dissolves), this one covers the two the core cannot yet see. Idempotent — it rebuilds the
+    # array from a predicate.
     window.swCanvasDropDestroyedColdGlyphEntriesForTeardown?()
     # (g) MY OWN DAMAGE QUEUES, for the same reason and at the same seam. The shared core filters
     # destroyed entries out of them as ITS last act, and destruction RE-MARKS a dying widget (it
-    # posts damage so its pixels get erased) — so the hand, the containers and their subtrees, all
-    # destroyed above, marked their way back in after that filter had already run. EMPTIED rather
-    # than filtered: a dissolved world never repaints, so nothing in here is owed to anyone, and the
-    # queues are exactly the "no reference to anything just destroyed" the lines above promise.
-    # ⭐ It is also what keeps a future finding HONEST. These collections are the only edges from a
-    # world to the off-tree containers that survive @binWdgt = undefined, so while they stand,
-    # anything retaining a dissolved world transitively retains its whole bin subtree — measured
-    # with a planted closure over one world: 8 worlds and 72 widgets reported, every widget reached
-    # ONLY through one of these queues. One defect, ten lines of findings.
+    # posts damage so its pixels get erased) — so the hand and its subtree, destroyed above, marked
+    # their way back in after that filter had already run. (The two storage containers cannot: the
+    # core destroys them BEFORE its own filter, which is why their destroys sit where they do.)
+    # EMPTIED rather than filtered: a dissolved world never repaints, so nothing in here is owed to
+    # anyone, and the queues are exactly the "no reference to anything just destroyed" the lines
+    # above promise.
+    # ⭐ It is also what keeps a future finding HONEST. Once @hand is dropped above, these
+    # collections are this world's only edges to whatever they still list — the hand and its subtree
+    # at the least — so while they stand, anything retaining a dissolved world transitively retains
+    # those corpses too, and the object-lifetime gate reports one retention defect as a page of
+    # destroyed-widget findings instead of the one world it is.
     # ⚠ ALL of them, not the ones that happened to show up in a retainer path: the paint queues and
     # the layout queue were each found this way in turn, and enumerating "the ones that bite" is how
     # the next one gets missed. Every widget collection the world owns is reset to its empty shape.
@@ -3242,6 +3268,13 @@ class WorldWdgt extends IconGridPanelWdgt
     # clean id space a snapshot's restored iids need. Everything after it exists because it CANNOT
     # reach world-level state held outside the tree.
     @fullDestroyChildren()
+    # THE HAND'S CARGO (a widget picked up, or mid float-drag) is world-owned state held OUTSIDE the
+    # tree, so the destroy above cannot reach it — obligation (A). A load replaces everything and the
+    # file does not contain the cargo, so it dies with the world it came from rather than landing on
+    # the restored desktop at the next release. On the resetWorld path _softResetWorld has already
+    # dropped it, so this finds nothing there. It sits BESIDE the tree destroy so that its destroy,
+    # which re-marks damage like any other, precedes the cold-glyph and damage-queue filters below.
+    @hand._discardCarriedWidgetNoSettle()
     # EPHEMERAL-OVERLAY bookkeeping is world-level state NOT held in the widget tree, so
     # fullDestroyChildren above (which destroys the reconciled highlighter WIDGETS as world children
     # / island descendants) does NOT empty these declare/current/being structures — they keep DEAD
@@ -3386,34 +3419,47 @@ class WorldWdgt extends IconGridPanelWdgt
     # the loaded world. Teardown empties, loader fills.
     infoDocFlagNames = (name for own name of @ when name.indexOf("infoDoc") is 0)
     delete @[name] for name in infoDocFlagNames
-    # the storage containers (bin, shelf) are not attached
-    # to the world tree so they're not in the children,
-    # so we need to clean them up separately
-    @binWdgt?.empty()
-    @shelfWdgt?.empty()
+    # the storage containers (bin, shelf) are world-owned widgets that are never tree children, so
+    # fullDestroyChildren above cannot reach them -- and they are SNAPSHOT ROOTS that neither caller
+    # keeps: resetWorld's replacement world builds its own pair (finishWorldSetup), and
+    # loadWorldSnapshot installs the file's (its step 6). So they die WHOLE here, chrome and
+    # residents alike, and the world lets go of them -- obligation (A). Emptying them instead would
+    # keep the two shells, and every load would then leak the pair (the bin's viewport, scroll bars
+    # and button with it), pinned by the class `instances` registries and the dataflow index for the
+    # life of the page. The gate is world.teardownHygiene.loadLeavesNoOrphanedWidgets in
+    # ../Fizzygum-tests/scripts/serialization-roundtrip-headless.js.
+    # ⚠ The destroys must sit HERE, BEFORE the cold-glyph filter and the damage-queue filters below:
+    # a dying widget re-marks damage (so its pixels get erased), and a destroy placed after those
+    # filters leaves its corpses queued -- measured: destroying the old pair from the loader instead
+    # left 9 zombies in widgetsWithMaybeChangedFullPaintBounds.
+    @binWdgt?._fullDestroyNoSettle()
+    @shelfWdgt?._fullDestroyNoSettle()
+    @binWdgt = undefined
+    @shelfWdgt = undefined
     # the SWCanvas cold-glyph store holds LIVE WIDGET REFS between a cold placeholder draw and the
     # atlas-warm refresh that drains it. ⭐ OBLIGATION (B): a module-level array outside the world
     # entirely, so nothing above can have emptied it, discarding the world does not empty it either,
     # and on a page whose atlases are all warm the drain may never come.
     # It sits BESIDE the damage-queue filter below rather than after it: both must
-    # follow every destroy (the bin/shelf empties directly above included), but unlike the damage
+    # follow every destroy (the bin/shelf destroys directly above included), but unlike the damage
     # queues this store feeds no repaint the reset caller is depending on, so their ordering
     # constraint neither reaches it nor is disturbed by it. Soaked because it is a boot-bundle
     # facility, reached the same way anyTextDirty reaches swCanvasAnyTextDirty.
-    # ⚠ This pass covers the TREE, which is everything this core destroys — but it is not the last
-    # word on the reset path: _dissolveWorldNoSettle destroys the hand, the two containers and the
-    # world itself AFTER this returns, so those four are still `destroyed == false` right here and
-    # survive the filter. Dissolution runs it a second time, once they are corpses. The load path
-    # keeps its world and never dissolves, so for loadWorldSnapshot this call IS the whole story.
+    # ⚠ This pass covers the TREE and the two storage containers, which is everything this core
+    # destroys — but it is not the last word on the reset path: _dissolveWorldNoSettle destroys the
+    # hand and the world itself AFTER this returns, so those two are still `destroyed == false` right
+    # here and survive the filter. Dissolution runs it a second time, once they are corpses. The load
+    # path keeps its world and never dissolves, so for loadWorldSnapshot this call IS the whole story.
     window.swCanvasDropDestroyedColdGlyphEntriesForTeardown?()
     # the per-cycle damage queues (drained by the next _repaintDamagedRects) still hold
     # widgets destroyed above -- and destruction itself RE-MARKS them (a dying widget posts
     # damage so its pixels get erased), so this filter must be the teardown's LAST act,
-    # after the bin/shelf empties directly above have destroyed their residents too. The
-    # seam contract ("no reference to anything just destroyed") wants the dead entries gone
-    # NOW, not next frame. A filter, not a clear, because a SURVIVING widget's pending damage is
-    # still owed a repaint: on the load path the restored desktop is painted from marks made after
-    # this, but anything the teardown did not destroy keeps whatever it had queued. (The reset path
+    # after the bin/shelf destroys directly above have destroyed the containers and their
+    # residents too. The seam contract ("no reference to anything just destroyed") wants the
+    # dead entries gone NOW, not next frame. A filter, not a clear, because a SURVIVING widget's
+    # pending damage is still owed a repaint: on the load path the restored desktop is painted
+    # from marks made after this, but anything the teardown did not destroy keeps whatever it
+    # had queued. (The reset path
     # does not depend on that -- this world is about to be dissolved, and the world that replaces it
     # marks its own whole screen in its constructor.)
     @widgetsWithMaybeChangedPaintBounds = (w for w in @widgetsWithMaybeChangedPaintBounds when !w.destroyed)

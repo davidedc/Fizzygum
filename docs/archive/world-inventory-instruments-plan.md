@@ -505,3 +505,18 @@ messages and wait (Phase-0 of this program already has a pending commit; coordin
   `_fingerprintWorldStateNoSettle`, `_worldStateAuditExemptions`, `registerThisInstance`,
   `unregisterThisInstance`, `_livenessEdgesIntoWdgt`, `graphEdgesOut`, `_buildObjectTable`,
   `_cloneContentInto`, `swCanvasColdGlyphWidgets`, `gate-tokens` (D3, to be created).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **A snapshot LOAD leaked the pre-load world's bin and shelf** (found 2026-10-23 by the focus arc's F1 probe).
+      **DONE 2026-10-23** (the focus-residue arc, obligation (A)): the teardown core destroys the bin and the shelf WHOLE
+      and lets go of them — they are snapshot roots neither caller keeps, so emptying them left the shells (ten widgets per
+      load, pinned by the `instances` registries and the dataflow edge index) — before its paint-queue filter;
+      `_dissolveWorldNoSettle` destroys only the hand; `loadWorldSnapshot` guarantees a pair in a `finally`. Pinned by the
+      serialization rig's `world.teardownHygiene.loadLeavesNoOrphanedWidgets` (the in-band inventory after the load vs the
+      pristine world's, by identity), proven to fail with the old container lifetime planted live. Done with it, owner's
+      call: a file this build can never restore (an unbuildable record class, a newer format version, a malformed object
+      table) is refused BEFORE the teardown (`Deserializer.whyItCanNeverBeRestored`, `world.loadGuard.*`); the widget the
+      hand carries dies with the outgoing world (`ActivePointerWdgt._discardCarriedWidgetNoSettle`,
+      `handCargoDestroyed` / `handDragEmbedStateCleared`); the file door's world branch reports a load error as one inform
+      (`fileDropInformsOnLoadError`).

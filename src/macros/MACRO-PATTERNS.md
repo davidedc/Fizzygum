@@ -568,9 +568,9 @@ assertion a recapture after a regression silently stores two different hashes an
   double-wrapping composition of the carry-into-a-container and in-panel-liveness entries. Drop the demo sub-menu by its HEADER into an
   empty internal window: the grab has already made it persistent, the placeholder accepts it, `_reactToChildDropped` adopts + retitles — and the window
   WRAPS down around the menu's natural narrow-tall shape (the wrap law applies to menus too; the preset extent is discarded).
-  Drag that window by its TITLE BAR into a constrained scroll-stack: the cell's BAR takes the full stack width while the menu
-  keeps its natural width inside; the tall cell overflows the viewport (scrollbar appears), a wheel slides the whole cell —
-  bar and menu — under the viewport top, and a click on a still-visible item (`getTextMenuItemFromMenu`, by its exact label, on the subMenu
+  Drag that window by its TITLE BAR into a constrained scroll-stack: the stack CAPS a cell at its content width and does not
+  stretch a narrower one, so the cell keeps the window's wrapped width; the tall cell overflows the viewport (scrollbar
+  appears), a wheel slides the whole cell — bar and menu — under the viewport top, and a click on a still-visible item (`getTextMenuItemFromMenu`, by its exact label, on the subMenu
   reference captured BEFORE the drop — it survives both re-parentings) still FIRES, the made morph riding the hand to the
   desktop. GOTCHA: the header-drag's RELEASE point must be clear of every menu of the still-open world-menu cascade — a release
   over the cascade silently re-absorbs the dragged sub-menu (unpinned) and the later dismissal click destroys it. No new verb.

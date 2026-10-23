@@ -1189,6 +1189,12 @@ class ViewportWdgt extends Widget
     # the gesture is MOVING a (detachable) widget, not scrolling, so it must never get
     # a parting scroll — even if its frames collapse (see the flush's collapse branch).
     everFloatDragged = false
+    # A press I take where I have something to scroll (claimsPlainDragsForScrolling) starts a
+    # SCROLL, and the hand is told so at the press: my content carries whatever the press landed on
+    # along with the pointer, so the release lands back on it, and this fact is what keeps that
+    # release from reading as a click on it (ActivePointerWdgt._strokeOwesNoClick). A pane with no
+    # overflow takes a step that moves nothing, and its release is an ordinary click.
+    world.hand.notePressTakenForScrolling()  if @claimsPlainDragsForScrolling()
     world.steppingWdgts.add @
     @step = =>
       scrollbarJustChanged = false

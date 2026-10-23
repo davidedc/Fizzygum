@@ -43,14 +43,8 @@ class FileLoading
       return
     switch envelope.kind
       when "widget"
-        try
-          result = Deserializer.deserialize envelope
-        catch error
-          if error instanceof SerializationError
-            world.inform error.toString()
-            return
-          else
-            throw error
+        result = @_reportingSerializationErrors -> Deserializer.deserialize envelope
+        return unless result?
         widget = result.widget
         world.add widget
         widget._applyMoveTo dropPoint if dropPoint?
@@ -68,9 +62,26 @@ class FileLoading
           widget._fullChanged?()
       when "world"
         if world.loadWorldSnapshot?
-          world.loadWorldSnapshot envelope
+          # A file this build can never restore is refused by the loader itself, desktop untouched,
+          # so a SerializationError reported here is one that failed part-way through the restore.
+          # ⚠ Only the SYNCHRONOUS load is covered: a file that needs a lazy part or the reflective
+          # layer makes the loader return a promise and re-enter once that arrives, and a failure
+          # there rejects a promise nothing here observes.
+          @_reportingSerializationErrors -> world.loadWorldSnapshot envelope
         else
           world.inform "This build cannot load whole-world snapshots yet."
       else
         world.inform "Unknown Fizzygum file kind: " + envelope.kind
     return
+
+  # Run one restore and answer what it answers — or, when it throws a SerializationError, show that
+  # to the user as one message and answer undefined, so a bad file never surfaces as an uncaught
+  # error in the file reader's callback. Any other error is a bug, and propagates. Both kinds of
+  # file come through here, so the two cannot report a failed load differently.
+  @_reportingSerializationErrors: (restore) ->
+    try
+      restore()
+    catch error
+      throw error unless error instanceof SerializationError
+      world.inform error.toString()
+      undefined

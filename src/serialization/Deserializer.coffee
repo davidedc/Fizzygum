@@ -20,9 +20,10 @@ class Deserializer
     unless envelope? and envelope.format is Serializer.FORMAT
       throw new SerializationError "not a Fizzygum serialization envelope",
         offender: "format=" + envelope?.format
-    if envelope.formatVersion > Serializer.FORMAT_VERSION
-      throw new SerializationError ("this file is format version " + envelope.formatVersion +
-        ", newer than this build understands (" + Serializer.FORMAT_VERSION + "). Update Fizzygum and retry.")
+    # the same envelope-level verdict the world loader asks for BEFORE its teardown (through
+    # whyItCanNeverBeRestored), so a file it lets through cannot fail one of these after it
+    shapeProblem = @_envelopeShapeProblem envelope
+    throw new SerializationError "this file cannot be loaded: " + shapeProblem if shapeProblem?
 
     records = envelope.objects
     kind = envelope.kind or "widget"
@@ -132,6 +133,42 @@ class Deserializer
     whenReady = if asyncPromises.length then Promise.all(asyncPromises) else Promise.resolve()
     { widget: shells[envelope.root], whenReady: whenReady, shells: shells }
 
+  # WHY THIS BUILD CAN NEVER RESTORE THIS ENVELOPE, as a clause to follow "cannot be loaded here: "
+  # (no closing full stop), or undefined when it can. PURE — it only reads the envelope — which is
+  # what lets WorldWdgt.loadWorldSnapshot ask it before its teardown destroys the desktop. It
+  # predicts exactly the throws a restore would hit and no others: the envelope-level ones
+  # @deserialize raises up front (one helper answers both, so the two cannot drift), and
+  # @instantiate's per-record one — a record class with no tag builder that can never arrive.
+  # WHAT can still arrive is the caller's to say: the world passes PartsRegistry.canEverProvideClass,
+  # so a class a LAZY part provides is not a reason (that file loads the part first). An
+  # app-singleton {"$wk"} key is not checked, because an unresolved one is left undefined rather
+  # than thrown (@resolveWellKnown). The format check stays with each caller (the loader's also
+  # wants kind:"world"), so the envelope is taken to be a Fizzygum one.
+  @whyItCanNeverBeRestored: (envelope, canStillArrive) ->
+    shapeProblem = @_envelopeShapeProblem envelope
+    return shapeProblem if shapeProblem?
+    unbuildable = []
+    for record in envelope.objects
+      continue if Deserializer.TAG_BUILDERS[record.class]?
+      continue if canStillArrive record.class
+      unbuildable.push record.class unless record.class in unbuildable
+    return undefined unless unbuildable.length
+    "it uses " + unbuildable.join(", ") + ", which this build does not have"
+
+  # What makes an envelope unrestorable WHOEVER restores it and whatever this build contains — a
+  # clause in whyItCanNeverBeRestored's form, or undefined. Every record the Serializer writes
+  # carries a string `class` (a class name or a $-tag), and @instantiate resolves nothing else, so
+  # a record without one is a malformed table, not an unknown class.
+  @_envelopeShapeProblem: (envelope) ->
+    if envelope.formatVersion > Serializer.FORMAT_VERSION
+      return "it is format version " + envelope.formatVersion + ", newer than this build understands (" +
+        Serializer.FORMAT_VERSION + "). Update Fizzygum and retry"
+    return "its object table is missing" unless Array.isArray envelope.objects
+    for record, i in envelope.objects
+      unless record? and typeof record.class is "string"
+        return "its object table is malformed (entry " + i + " names no class)"
+    undefined
+
   # --- native-type tag registry ---
   # One entry per serialization tag, consulted by BOTH passes: the pass-1 factory
   # (@instantiate, via .build) and the pass-2 linker (@deserialize, via .populate). Having
@@ -197,6 +234,8 @@ class Deserializer
     return builder.build record, asyncPromises if builder?
     # a user class: bare shell, constructor NOT run — the established, SliderWdgt-guarded convention
     klass = window[record.class]
+    # the world loader refuses such a file before its teardown (whyItCanNeverBeRestored mirrors
+    # this test); this throw is the net for every other caller
     unless klass?
       throw new SerializationError ("this file references the class '" + record.class +
         "', which does not exist in this build")

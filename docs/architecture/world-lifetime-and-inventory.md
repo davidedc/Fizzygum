@@ -129,6 +129,14 @@ green suite):
   clear — the world's own whole-screen damage mark must survive), while the SWCanvas
   cold-glyph window stores are counted but not walked and are declared per-refresh
   transients (their drain's consumer skips destroyed entries).
+- The SNAPSHOT-LOAD path is the other place the inventory is read. A load keeps its world, so
+  no reset seam ever audits what it left behind (no SystemTest loads a snapshot); instead the
+  serialization rig's `world.teardownHygiene.loadLeavesNoOrphanedWidgets` takes the inventory
+  on the product pages (`WorldInventory` is core) and requires the escaped and zombie widgets
+  after the load — at the load's own turn and after the settle — to be exactly the pristine
+  world's, by identity. It is compared with pristine rather than required empty because a live
+  world lists one escape per frame holding real contents: the frame's off-tree
+  `@defaultContents` placeholder, which the containment walk does not reach.
 - Both engines run the same gate: the instrument is plain in-page JS, so the WebKit suite
   leg exercises it identically. The VM-truth tier below is Chrome-only by nature and ADDS
   closure-visibility rather than replacing any of this.

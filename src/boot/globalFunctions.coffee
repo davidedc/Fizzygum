@@ -475,8 +475,9 @@ window.finishWorldSetup = (theWorld) ->
   theWorld.isDevMode = true
   # The world's two OFF-TREE storage containers (the standing invariant: everything on the shelf is
   # reachable, everything in the bin is lost). They are world-owned widgets that are never tree
-  # children, so no generic sweep reaches them: the shared teardown empties them BY NAME and
-  # WorldWdgt._dissolveWorldNoSettle destroys them by name.
+  # children, so no generic sweep reaches them: the shared teardown core destroys them BY NAME, and
+  # neither of its callers keeps them -- resetWorld's replacement world is given this pair, built
+  # here, and loadWorldSnapshot installs the pair its file carries.
   theWorld.binWdgt = new BinWdgt
   theWorld.shelfWdgt = new ShelfWdgt
   # The desktop furniture (wallpaper, clock, the bin icon, ...) belongs to the PRODUCT page only.

@@ -262,9 +262,13 @@ class MenuItemWdgt extends LabelButtonWdgt
     # self-settle here would re-enter the flush guard and throw.
     @_addNoSettle @label
     # the modern family does not self-size; make the label hug its text before
-    # we read @label.extent() below to size this menu item around it. _createLabel is driven by
-    # _reLayoutSelf (a layout pass), so use the NoSettle core -- the wrapper would throw mid-pass.
-    @label._sizeToTextAndDisableFittingNoSettle()
+    # we read @label.extent() below to size this menu item around it. _createLabel is driven by my
+    # _reLayoutSelf -- my own arrange, whose _placeMyParts places the label right after -- so the hug
+    # ALONE (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle). Telling ME was never what
+    # told my container about the size I take from the label: an in-pass mark does not climb, and the row
+    # built at construction is an orphan. My container hears it the way it hears any arrange of mine --
+    # the settle-time up-edge, and on a relabel _setLabelNoSettle's own climbing invalidate.
+    @label._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle()
 
     # menuRowHeight (a plain list row's listRowHeight, from its look) is a MINIMUM, not a height: a
     # row is as tall as its label or as tall as the dial, whichever is more, so a big label never

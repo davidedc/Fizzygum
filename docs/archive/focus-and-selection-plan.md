@@ -728,3 +728,18 @@ mouse and finger, dpr 1 and 2 (about an hour since R0).
   does the same.
 - [x] G-D follow-up, its HOLD half (a finger does not select what a mouse selects). DONE 2026-10-23 as unit S2; the DRAG
   half stays in BACKLOG under the redesign's section.
+
+Residue closed by the focus-residue arc (2026-10-23, the session after this plan's close; no plan doc of its own):
+- [x] Three more "skip the mark in-pass" sites (`StringWdgt`/`TextWdgt._sizeToTextAndDisableFittingNoSettle`,
+  `PopUpRowsViewportWdgt._reLayOutAfterContainedPanelChange`). DONE: a census over the whole suite (mouse + finger) found
+  none reached in-pass; all three now schedule through the phase-valve (pixel- and revisit-neutral). One in-pass path IS
+  the parent's own arrange — a label button rebuilding its label (`LabelButtonWdgt.setLabel` → `_reLayout` →
+  `_reLayoutSelf` → `_createLabel`), where the valve would re-lay the button a second time — so, owner's call, the split is
+  STRUCTURAL and decided by caller: `_createLabel` (LabelButtonWdgt, MenuItemWdgt) sizes its label with the hug-only
+  `_sizeToTextAndDisableFittingInMyParentsArrangeNoSettle`; every other caller keeps the core (hug + valve). Planted
+  relabels: 2 → 1 depth-0 visits, same pixels; 17 inspector shots shifted by the new member row (recaptured).
+- [x] `macroMenuInWindowInScrollStackStaysLive`'s mouse references did not deliver its intent. DONE: the test means the
+  STACK's scroll (intent, scenario, assertions, MACRO-PATTERNS, the 2026-06-12 birth reference); the 2026-08-25 1920×880
+  recapture had baked in a wheel that scrolled the menu's own rows. The wheel is aimed beside the cell by meaning and both
+  offsets are asserted (stack 0 → 60, menu rows 0 → 0); the recaptured mouse image_3/image_4 are byte-identical to the
+  finger references.

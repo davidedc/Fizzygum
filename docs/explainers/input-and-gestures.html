@@ -306,7 +306,9 @@
       for its whole life</strong>, and a scroll owes nothing at its end: the release dispatches
       <em>no click</em> (<code>_strokeOwesNoClick</code>). This matters because a drag-scroll carries
       the pressed row along <em>with</em> the finger, so press-widget equals release-widget by
-      construction — without the rule, every scroll would click what it pressed.</li>
+      construction — without the rule, every scroll would click what it pressed. The rule is the
+      same for a mouse or a pen: a stroke that travelled past the threshold after a scroll surface
+      took its press is a scroll, and its release clicks nothing.</li>
     <li>At a touch stroke's end the hover world <strong>dissolves</strong>: every widget under the
       stroke is told the pointer left, the over-list empties, and a pointer-absence flag starves the
       per-cycle hover re-sync — nothing is "under" a pointer that is not there. Mouse strokes keep

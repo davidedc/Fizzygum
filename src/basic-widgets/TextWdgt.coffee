@@ -347,17 +347,13 @@ class TextWdgt extends StringWdgt
   # un-soft-wrapped text — the widest hard-newline-separated line × the line
   # count (width = maxLineWidth, height = lines × linePitch). softWrap is turned
   # OFF so the text never re-wraps to the container; the box just hugs the text.
-  # See StringWdgt::sizeToTextAndDisableFitting for the full rationale — only the CORE is overridden
-  # here; StringWdgt's public sizeToTextAndDisableFitting is the canonical settle-wrap and dispatches
-  # straight to it.
-  #
-  # The multi-line box-hug, minus the settle. A chrome label (menu item / button caption -- a freefloating
-  # TextWdgt at .label) is laid out by its container, which centres it in _reLayoutSelf (LabelButton /
-  # MenuItem). On re-hug the container must re-layout, but it is NOT a scroll-panel/stack so the generic
-  # _reFitContainer seam (gated on _reLayoutChildren) doesn't reach it and a freefloating child doesn't
-  # climb. So invalidate the managing parent explicitly (gated out-of-pass -- inside a pass the container is
-  # already re-laying out and _invalidateLayout would throw) and let the enclosing settle flush it.
-  _sizeToTextAndDisableFittingNoSettle: ->
+  # See StringWdgt::sizeToTextAndDisableFitting for the full rationale — only the HUG is overridden here:
+  # StringWdgt's core (_sizeToTextAndDisableFittingNoSettle: this hug, then the managing parent told
+  # through the phase-valve) and its public settle-wrap dispatch straight to it, so a menu item's or a
+  # tooltip's TextWdgt label is told to its container exactly as a StringWdgt one is. The same constraint
+  # holds (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle): called directly only from
+  # inside my parent's own arrange, with my parent placing me after (MenuItemWdgt._createLabel).
+  _sizeToTextAndDisableFittingInMyParentsArrangeNoSettle: ->
     # remember the box-hug, as StringWdgt's core does: a later setFontSize / setText re-hugs the text
     # instead of fitting the new size into the box sized for the old one
     @autoSizeBoxToText = true
@@ -374,8 +370,6 @@ class TextWdgt extends StringWdgt
     inset = @_textInset()
     @__commitExtent new Point widthOfText + 2 * inset.x, heightOfText + 2 * inset.y
     @reflowText()
-    @parent?._invalidateLayout() unless world?._recalculatingLayouts
-    @  # return self so the public wrapper is chainable (macros do `(new TextWdgt …).sizeToTextAndDisableFitting()`)
 
   # FIT_BOX_TO_TEXT layout pass: resize our OWN extent to hug the text. This is
   # the contained-text engine — gated by the mode, so ANY TextWdgt used as window

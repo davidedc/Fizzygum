@@ -97,7 +97,8 @@ decision is elapsed EVENT time from the press origin while the pointer stays wit
 of it, decided on `WorldWdgt.timeOfEventBeingProcessed`, never a wall-clock timer.
 `_beginPressAndHoldRecognition` starts it at every `processPointerDown`, recording
 `pressOriginPoint`/`pressOriginEventTime`; a `'mouse'`/`'pen'` stroke arms immediately and consults
-no clock at all, so every path from here on is the path those strokes have always taken.
+no clock at all: all the recognizer keeps for it is whether the stroke travelled past
+`grabDragThreshold` (`_pressTravelledPastDragThreshold`), which the release's click decision reads.
 
 A `'touch'` press arms immediately too, in exactly one case: `_touchPressArmsAtOnce` walks the
 pressed widget's ancestry and answers `true` the moment it finds a chrome surface
@@ -118,7 +119,9 @@ the harness still gets its menu on time. Once elapsed time crosses `pressAndHold
 gesture's alternate trigger: it SELECTS the pressed widget as a right-click release does (the leaf the press
 hit, under the same ancestry opt-out — `world._setEditorFocusNoSettle`, focus first), then dispatches
 `contextMenuRequested` on it, so a finger sees which widget the menu acts on. A plain finger drag leaves
-the hold radius first and selects nothing: it scrolls.
+the hold radius first, so the hold never selects for it: over a scrolling surface it scrolls and selects
+nothing (a scroll is not a click, on any pointer — below), and on a surface that arms at once (a paint
+canvas) its release selects what it acted on, exactly as a mouse stroke's does.
 
 **That suppression is an IDIOM with three applications, and the third one is the pressed-move
 channel.** Anything a per-cycle re-entry produces is counted in CYCLES — wall clock — while
@@ -198,11 +201,19 @@ secondary-press channel on the widget surface, only the hand's own right-press b
 
 A hold-consumed stroke's release dispatches no click — the same shape a right press has always
 had (a right press never fires `activated` either) — via `_strokeOwesNoClick()`, which is
-also true for an un-armed touch stroke that left the hold radius (a plain drag, i.e. a scroll).
-That second case is load-bearing, not cosmetic: a scroll-drag carries the pressed row WITH the
-finger, so the release lands on the very widget the press landed on, and a plain `w ==
-@mouseDownWdgt` test cannot tell a scroll from an ordinary click — without the carried-row fact,
-every scroll swipe would end in a spurious click on whatever it scrolled past. A hold menu still
+also true for a SCROLL, on any pointer: **a stroke selects what it acts on, and a scroll acts on
+the pane alone.** A finger's scroll is decided by the grammar (an un-armed touch stroke that left
+the hold radius is a plain drag, i.e. a scroll, for its whole life); a mouse's or a pen's is a
+stroke that travelled past `grabDragThreshold` after a scroll surface took its press — told at the
+press by the viewport that installed its drag-scroll step on a pane with something to scroll
+(`ViewportWdgt.pressBegan` → `notePressTakenForScrolling`, not derived from the pressed widget's
+ancestry, because a widget in between — a selectable text, a 3D plot — can take the press for
+itself) — with nothing poised to lift and no value control dragging. That rule is load-bearing,
+not cosmetic: a scroll-drag carries the pressed row WITH the pointer, so the release lands on the
+very widget the press landed on, and a plain `w == @mouseDownWdgt` test cannot tell a scroll from
+an ordinary click — without it, every scroll would end in a click on whatever it scrolled past,
+selecting it and firing it (a menu row's action, closing the menu). Pinned by
+`SystemTest_macroMouseDragScrollOfMenuRowsFiresNoRow` (mouse) and the finger reference axis. A hold menu still
 standing at release (the finger let go without moving) stays open as an ordinary transient menu;
 the next outside tap dismisses it like any other.
 

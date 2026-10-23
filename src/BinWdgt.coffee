@@ -31,14 +31,7 @@ class BinWdgt extends Widget
     @removeFromTree()
     # containerWindow is now empty (we just detached above), so destroying it loses nothing
     containerWindow.fullDestroy()
-  
-  # NOT homepage-excluded (it long was): the shared world teardown
-  # (WorldWdgt._teardownWorldStructureNoSettle) ships in production and calls
-  # this -- with it stripped, "Open from file…" on a homepage build crashed
-  # at teardown.
-  empty: ->
-    @viewport?.contents?.fullDestroyChildren()
-  
+
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()

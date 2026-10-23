@@ -398,7 +398,11 @@ re-register `memberships`, per-class `_afterDeserialization` hook); (5) deliver 
 Safari `data:` fallback) and `FileLoading.coffee` (drag-drop via `WorldWdgt`'s drop
 handler + a hidden `<input type=file>`; envelope-sniff router on the `kind` field). Single
 extension `*.fzw.json` for both widget and world files (owner decision, plan §8.3);
-routing is on `kind`, never the filename. **Ships in every profile** — `src/serialization` is
+routing is on `kind`, never the filename. Both branches restore through
+`FileLoading._reportingSerializationErrors`, so a `SerializationError` from a widget file OR a
+world load is one `inform`, never an uncaught error in the reader's callback (anything else is a
+bug and propagates); it covers the SYNCHRONOUS load only — a world file that waits for a lazy part
+or the reflective layer re-enters through a promise nothing observes. **Ships in every profile** — `src/serialization` is
 `core`-part code and file save/load is a product feature (`buildSystem/parts.json`).
 `file://` capability map: works — Blob
 download, `input type=file`, drag-drop + FileReader, `data:` URLs, script-tag injection;
@@ -454,12 +458,25 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
 
 **Restore** — `loadWorldSnapshot(envelope, {skipConfirm})` — a PUBLIC orchestrator (like
 `resetWorld`), so its `setColor`/`_settleLayoutsAfter` calls are the sanctioned public path:
-1. Confirm (a file/menu load warns it replaces the desktop AND can run code — §4.12; the rig /
-   a macro pass `skipConfirm`), then **pre-load what the file needs, before touching anything** —
-   two bail-out-then-re-enter guards, in that order. Their POSITION is the whole correctness
-   argument: step 2 destroys the desktop, so anything that fails to load must leave the user's
-   world intact, and they sit after the confirm so the user is asked exactly once (the re-entry
-   passes `skipConfirm` for that reason and no other).
+1. **Everything that can stop the load happens before anything changes**, because step 2 destroys
+   the desktop and a load that fails after it leaves the user an empty one. In order:
+   - **The format check** (`format` + `kind:"world"`) — not a snapshot: one `inform`, stop.
+   - **The refusal of a file this build can NEVER restore** — `Deserializer.whyItCanNeverBeRestored`
+     (a pure read of the envelope) names the reason: a `formatVersion` newer than
+     `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array, or a record naming
+     no class), or a record class with no tag builder that this artifact can never provide
+     (`world.parts.canEverProvideClass` — resident, or owned by a part this build ships, so a class
+     a LAZY part provides is not a reason). One `inform` ("…Your desktop has been left as it
+     was."), stop. It mirrors exactly the throws a restore would hit — `Deserializer.deserialize`
+     raises its envelope-level ones through the same helper (`_envelopeShapeProblem`), and
+     `@instantiate` keeps its per-record throw as the net for every other caller — and it precedes
+     the confirm (a fact about the FILE: nobody is asked to replace their desktop with a file that
+     cannot load) and the parts fetch (a file refused anyway costs no fetch).
+   - **The confirm** (a file/menu load warns it replaces the desktop AND can run code — §4.12; the
+     rig / a macro pass `skipConfirm`).
+   - **Pre-load what the file needs** — two bail-out-then-re-enter guards, in that order. They sit
+     after the confirm so the user is asked exactly once (the re-entry passes `skipConfirm` for that
+     reason and no other).
    - **Lazy parts.** `Serializer.classNamesIn` reads the envelope (a pure read) for record classes
      and `app:` well-known keys; any class living in a LAZY part this page has never loaded is
      fetched via `world.parts.ensureAllLoaded`, and the loader then RE-ENTERS itself.
@@ -469,11 +486,16 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      instead, telling the user once, before the world is rebuilt, how many class-level edits it
      cannot re-apply (`SourceEditsRegistry.unreplayableSourceEditsCount` — §12).
 2. **Structural teardown** — `_teardownWorldStructureNoSettle`, the SHARED shipping core this and
-   the TEST-REPO teardown (`_resetWorldNoSettle`, in
-   `Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee`, which travels with
-   the `harness` part) both call. Its contract: after
+   `resetWorld` both call (the reset then dissolves its world and constructs a new one; a load keeps
+   its world). Its contract: after
    `fullDestroyChildren`, the world holds no reference to anything just destroyed, and no
-   bookkeeping that assumed it still exists — the tree, `binWdgt`/`shelfWdgt`, the app slots +
+   bookkeeping that assumed it still exists — the tree; the widget the hand is CARRYING (picked up
+   or mid float-drag: it belongs to the outgoing world and the file does not contain it, so it is
+   destroyed, never dropped onto the restored desktop — `ActivePointerWdgt._discardCarriedWidgetNoSettle`,
+   with the hand's drag-embed record cleared by the verb a release uses); the two storage
+   containers `binWdgt`/`shelfWdgt`, DESTROYED WHOLE and let go of (they are snapshot roots that
+   neither caller keeps, so emptying them would leak the shells on every load — and they die
+   before the core's paint-queue filter, since a dying widget re-marks damage); the app slots +
    `simpleEditorTemplates`, the highlight tracking structures, `errorConsole` /
    `lastEditedText` / `_editorSelectedWidget`, the tooltip / pop-up / clicked-hierarchy / handle /
    scroll-momentum / paint-error collections, the `_damageSuppressionDepth` counter, and the
@@ -482,14 +504,21 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    `lastBuiltInstanceNumericID`, giving the clean id space the restored iids need.
    ⚠ The `infoDoc*` clear is load-bearing for step 4: that restore is **additive only**, so a flag
    the live world has and the file lacks can only be removed here. The rig gate is
-   `world.teardownHygiene.*` in `Fizzygum-tests/scripts/serialization-roundtrip-headless.js`.
+   `world.teardownHygiene.*` in `Fizzygum-tests/scripts/serialization-roundtrip-headless.js` —
+   including `loadLeavesNoOrphanedWidgets`, which compares the in-band inventory
+   (`WorldInventory.takeInventory`'s escaped and zombie widgets, by identity) after the load with
+   the pristine world the file was written from, so any widget a load forgets to destroy shows; and
+   `handCargoDestroyed` / `handDragEmbedStateCleared`. The refusals are `world.loadGuard.*`.
+   ⚠ From the teardown to step 4 the world has NO storage; the loader's `try/finally` guarantees
+   a bin and a shelf whatever happens in between (a file carrying none, or a restore that throws),
+   because the end-of-cycle storage drain needs both.
 3. Restore `idCounters` **before** deserializing (so `registerThisInstance` sees the right
    high-water marks), then `Deserializer.deserialize` (`kind:"world"` preserves each `iid`;
    returns `shells` so the loader resolves the `world` section's `{$r}` refs).
 4. Restore the static `preferences` bag; apply the scalars (isDevMode/alpha/infoDoc/naming/
-   icon-count) to the LIVE world; **swap** in the restored (self-contained, off-tree)
-   `binWdgt` and `shelfWdgt` so every `{$r}` pointer at them (the bin opener's target, …)
-   stays consistent; re-bind the app-slot / templates windows (orphaned-but-revivable — not
+   icon-count) to the LIVE world; **install** the restored (self-contained, off-tree)
+   `binWdgt` and `shelfWdgt` (the teardown destroyed the previous pair) so every `{$r}` pointer
+   at them (the bin opener's target, …) stays consistent; re-bind the app-slot / templates windows (orphaned-but-revivable — not
    re-attached to the desktop). Restore completion marks the storage sort pending
    (`noteStorageMembershipMayHaveChanged`), so a mid-pending snapshot re-sorts on the first
    cycle.

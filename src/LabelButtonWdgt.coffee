@@ -96,9 +96,11 @@ class LabelButtonWdgt extends ButtonWdgt
     # self-settle here would re-enter the flush guard and throw.
     @_addNoSettle @label
     # the modern family does not self-size; make the label hug its text so
-    # _reLayoutSelf's centring math (which reads @label.extent()) works. _createLabel is driven by
-    # _reLayoutSelf (a layout pass), so use the NoSettle core -- the wrapper would throw mid-pass.
-    @label._sizeToTextAndDisableFittingNoSettle()
+    # _reLayoutSelf's centring math (which reads @label.extent()) works. _createLabel is driven by my
+    # _reLayoutSelf -- my own arrange, which places the label right after -- so the hug ALONE
+    # (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle): the core would schedule the very
+    # arrange that is running, and from inside my _reLayout re-queue me for a second visit in this flush.
+    @label._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle()
 
   # The StringWdgt options my default label is built with: my font and my ink, as my fields hold
   # them. A label button whose look is its own answers its own, read from the theme each time its
@@ -132,7 +134,9 @@ class LabelButtonWdgt extends ButtonWdgt
   # SELF-SETTLE (public tier, like setExtent/add) so the button's FULL re-layout -- _createLabel + centre, via
   # _reLayout -- runs synchronously and the world is consistent on return. This is the public label-setter
   # API; its one historical caller (FridgeMagnetsWdgt construction) now labels via the core directly, so the
-  # wrapper has no in-tree caller and is intentionally dead-method-allowlisted (a runtime label change settles).
+  # wrapper has no in-tree caller and is kept by check-dead-methods.js's settle-twin pairing rule -- a dead
+  # public wrapper whose _setLabelNoSettle core is independently live is exempt, with no allowlist entry
+  # (a runtime label change settles).
   setLabel: (labelString) ->
     @_settleLayoutsAfter => @_setLabelNoSettle labelString
 

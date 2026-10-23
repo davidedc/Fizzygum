@@ -219,6 +219,13 @@ not, because a plain finger drag over a viewport's content always means scroll u
 press-and-hold recognizer arms the stroke ([`input-and-gestures.md`](input-and-gestures.md)); once armed, the gate reads
 exactly as the mouse's. The mouse reading is untouched.
 
+A drag-scroll is NOT A CLICK, on any pointer: when the step is installed on a pane with something
+to scroll (`claimsPlainDragsForScrolling`), `pressBegan` tells the hand
+(`notePressTakenForScrolling`), and a stroke that then travels past `grabDragThreshold` releases
+without dispatching `activated` — the content carried the pressed widget along with the pointer, so
+the release lands back on it and would otherwise click (select, and fire) whatever was scrolled
+(`ActivePointerWdgt._strokeOwesNoClick`, [`input-and-gestures.md`](input-and-gestures.md)).
+
 AT-EDGE ESCALATION: a drag step that reaches its pane's clamp hands the leftover delta outward
 through `scrollByDragDelta` — the drag twin of the escalation `ViewportWdgt.scrolledBy` already runs
 at its own edge, reached by the same parent climb (`escalateEvent`) — so a stack of nested panes

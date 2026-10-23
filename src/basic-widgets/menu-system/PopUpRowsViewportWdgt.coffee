@@ -84,7 +84,10 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   # menu leaves the frame drawn at its old height, with a blank strip where the row was: the
   # frame's own re-fit path keeps the width its first placement latched (measured, spike S1).
   #   The frame is reached through the pop-up climb, which STOPS AT IT (FrameWdgt
-  # .enclosingFrame); outside a frame there is nothing to absorb into.
+  # .enclosingFrame); outside a frame there is nothing to absorb into. The frame's re-arrange goes
+  # through the phase-valve (_scheduleRelayoutRespectingPhase): off-pass it invalidates the frame and
+  # the climb reaches whoever places it; in-pass it enqueues just the frame, which the walk's next
+  # round re-lays in this same flush.
   _reLayOutAfterContainedPanelChange: ->
     frame = @enclosingFrame()
     return false unless frame?.isFrame?() and @_contentStackSpec?
@@ -95,7 +98,7 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
     frame._applyExtentBase new Point (measure.x + frame._chromeWidth()),
                                      (measure.y + (frame._chromeHeight @_contentStackSpec))
     @_contentStackSpec.desiredWidth = undefined
-    frame._invalidateLayout() unless world?._recalculatingLayouts
+    frame._scheduleRelayoutRespectingPhase()
     true
 
   # ⚠ `alpha = 0` is about PAINTING, not hit-testing: my RectangularAppearance is SHAPED over my

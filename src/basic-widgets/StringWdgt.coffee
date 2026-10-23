@@ -1101,7 +1101,7 @@ class StringWdgt extends Widget
         world.caret?.noteTextChanged()
       return cacheHit
 
-    # public-call-sanctioned: reflowText is macro-called public text API (see _sizeToTextAndDisableFittingNoSettle).
+    # public-call-sanctioned: reflowText is macro-called public text API (see _sizeToTextAndDisableFittingInMyParentsArrangeNoSettle).
     @reflowText()
 
     # if we are calculating a new buffer then
@@ -1552,25 +1552,46 @@ class StringWdgt extends Widget
   # With box == text the "bounds too small" branch is unreachable, so neither
   # cropping, the edit-prompt, nor any font scaling ever fires — i.e. it draws
   # the text at its exact set size.
-  # (TextWdgt overrides this with a multi-line, soft-wrap-off variant.)
+  # (TextWdgt overrides the hug with a multi-line, soft-wrap-off variant.)
   # PUBLIC self-settling entry for STANDALONE callers (a tick toggle on an open menu, a header/tooltip
-  # build on an orphan). The IN-PASS / IN-SETTLE callers -- _createLabel (driven by _reLayoutSelf),
-  # _setTextNoSettle, _setFontSizeNoSettle -- call _sizeToTextAndDisableFittingNoSettle DIRECTLY, because a single
-  # self-settle reached mid-pass/mid-settle re-enters the flush guard and THROWS. That throw is the wanted
-  # discipline (it surfaces a mis-routed caller); an absorbing batch settler would silently swallow it.
+  # build on an orphan). The IN-SETTLE callers -- _setTextNoSettle, _setFontSizeNoSettle, the chrome
+  # builders -- call _sizeToTextAndDisableFittingNoSettle DIRECTLY, and a label button's _createLabel the
+  # hug-only variant below, because a single self-settle reached mid-pass/mid-settle re-enters the flush
+  # guard and THROWS. That throw is the wanted discipline (it surfaces a mis-routed caller); an absorbing
+  # batch settler would silently swallow it.
   # Returns @ (the core ends with @) so callers can chain -- several macros do
   # `s = (new StringWdgt ...).sizeToTextAndDisableFitting()` then `world.add s`.
   sizeToTextAndDisableFitting: ->
     @_settleLayoutsAfter => @_sizeToTextAndDisableFittingNoSettle()
 
-  # The box-hug, minus the settle. Remembers the box-hugs-text mode (autoSizeBoxToText) so a later setText
-  # (editing a button label in place) keeps the box tracking the text instead of cramming the new text into
-  # the stale box. A chrome label is a freefloating child laid out by its managing container (button/menu
-  # centres it in _reLayoutSelf); the generic _reFitContainer seam can't reach a non-scroll/stack container
-  # and a freefloating child doesn't climb, so invalidate the managing parent explicitly (gated out-of-pass
-  # -- _invalidateLayout THROWS during a pass) and let the enclosing settle flush it.
-  # The box is the text's extent plus my item inset at each side (none when I wear no item shape).
+  # The box-hug, minus the settle: hug my box to my text, then tell my managing parent. A chrome label is a
+  # freefloating child laid out by its managing container (button/menu centres it in _reLayoutSelf); the
+  # generic _reFitContainer seam can't reach a non-scroll/stack container and a freefloating child doesn't
+  # climb, so schedule the managing parent's re-lay explicitly, through the phase-valve
+  # (_scheduleRelayoutRespectingPhase): off-pass it invalidates the parent and the enclosing settle flushes
+  # it; in-pass, where a climbing _invalidateLayout throws, it enqueues just the parent, which the walk
+  # re-lays in this same flush -- nothing else promises that an arrange of the parent follows. This is the
+  # hug for every caller but one (the variant below names it); TextWdgt overrides only the hug, so this one
+  # tail serves both classes.
   _sizeToTextAndDisableFittingNoSettle: ->
+    @_sizeToTextAndDisableFittingInMyParentsArrangeNoSettle()
+    @parent?._scheduleRelayoutRespectingPhase()
+    @  # return self so the public wrapper is chainable (macros do `(new StringWdgt …).sizeToTextAndDisableFitting()`)
+
+  # The box-hug ALONE, telling my parent nothing -- for the one caller that IS my parent's arrange and
+  # places me next: my parent building me in its own _reLayoutSelf (LabelButtonWdgt._createLabel,
+  # MenuItemWdgt._createLabel), which reads my extent right after to centre or place me and, as a menu row,
+  # to size itself. Remembers the box-hugs-text mode (autoSizeBoxToText) so a later setText (editing a
+  # button label in place) keeps the box tracking the text instead of cramming the new text into the stale
+  # box. The box is the text's extent plus my item inset at each side (none when I wear no item shape).
+  #   ⚠ THE CONSTRAINT: call this only from inside my parent's own arrange, with my parent placing me
+  # after -- that arrange is what makes the missing schedule safe; every other caller takes the core above.
+  # The core is wrong there, not merely redundant: once my parent's _reLayout has marked it fixed
+  # (LabelButtonWdgt._reLayout runs the base arrange, which does, and only then _reLayoutSelf ->
+  # _createLabel), the in-pass enqueue leaves my parent invalid and the walk re-lays it a SECOND time in
+  # that flush -- a depth-0 re-visit, which the standing revisit gate (Fizzygum-tests/scripts/
+  # revisit-gate.js, baseline EMPTY) fails on.
+  _sizeToTextAndDisableFittingInMyParentsArrangeNoSettle: ->
     @autoSizeBoxToText = true
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
@@ -1580,10 +1601,8 @@ class StringWdgt extends Widget
     inset = @_textInset()
     @__commitExtent new Point widthOfText + 2 * inset.x, heightOfText + 2 * inset.y
     # public-call-sanctioned: reflowText is public text API — macros call it directly
-    # (macroBoxTransparencyAndColorChanging), so it stays public; consciously reused by this core.
+    # (macroBoxTransparencyAndColorChanging), so it stays public; consciously reused by this hug.
     @reflowText()
-    @parent?._invalidateLayout() unless world?._recalculatingLayouts
-    @  # return self so the public wrapper is chainable (macros do `(new StringWdgt …).sizeToTextAndDisableFitting()`)
 
   # ── Contained-text (FIT_BOX_TO_TEXT) edit: the re-fit core ───────────────────
   # The NON-settling re-fit behind the six text-property setters (setText / setFontSize

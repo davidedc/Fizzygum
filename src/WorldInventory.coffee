@@ -9,9 +9,8 @@
 # first-teardown baseline: everything alive after a teardown must be (a) part of that
 # baseline, (b) a declared page-lifetime store below, or (c) a bug.
 #
-# A plain collaborator (no widget), instantiated only by the harness audit seam; nothing
-# in the product constructs it, and a build without the dev-tools part simply has no
-# inventory.
+# A plain collaborator (no widget), and CORE, so every build ships it; nothing in the
+# product constructs it -- the harness audit seam and the headless rigs do.
 #
 # THE WALK IS READ-ONLY AND SIDE-EFFECT-FREE: it never calls methods on visited objects
 # (the named accessor portholes and SourceVault.names() are the deliberate exceptions --
