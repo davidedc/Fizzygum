@@ -125,6 +125,9 @@ back-ref checks) stay in the caller, before the scope call.
   but is laid out like one: it clips to the damage box in device pixels, then works in logical pixels
   translated to the widget, and the drop outline's painter (`HighlightOutlineAppearance.paintRing`)
   draws it in the context the widget paints into — the world canvas, or its island's buffer.
+  A page's ring, which its window paints in its gutter (`FrameWdgt._paintPageSelectionRing`, called from
+  the window's own `paintIntoAreaOrBlitFromBackBuffer` after its fill and before its children), is spelled
+  the same way, translated to the ring's box instead of the widget's.
 
 ## The vocabulary law: pixels say "damage", layout says "dirty"
 

@@ -83,7 +83,7 @@ how much the destination has to lose.
 |---|---|
 | Self drop-gate: `wantsToBeDropped()` → `@internal`; base default true | `FrameWdgt.coffee:256` · `Widget.coffee:2910` |
 | Drop routing: if `!wantsToBeDropped()` → target forced to `world`, else climb | `ActivePointerWdgt.drop`, `ActivePointerWdgt.coffee:247-287` |
-| Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild` | `ActivePointerWdgt.dropTargetFor` `:154-158`, `topWdgtUnderPointer` `:87-110` |
+| Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild`; the climb STARTS at what the hit widget names for points on its own body (`dropReceiverForPointsOnMyBody`: a page window's gutter and a letterboxed Stretchable page's margin name the page's receiver), and a payload released there is moved inside that receiver | `ActivePointerWdgt.dropTargetFor`, `_dropClimbStart`, `_moveGutterDropInsideTarget`, `topWdgtUnderPointer` |
 | Accept predicate: `wantsDropOfChild` → `@_acceptsDrops` (default false; `enableDrops`/`disableDrops`) | `Widget.coffee:2904-2917` |
 | Edit/view toggle: pencil → window relay → content `dragsDropsAndEditingEnabled` | `EditIconButtonWdgt` → `FrameBarWdgt` → `FrameWdgt.editButtonInBarPressed` → the content's base `Widget.editButtonPressedFromFrameBar` (the fused editor middle layer dissolved — Frame-model §5.B/§5.D) |
 | Edit-off cascades a drops-lock into the citizen's container + hides the docked toolbar | `StretchableWidgetContainerWdgt._disableDragsDropsAndEditingNoSettle` → `FrameWdgt.showViewModeInBar` (toolbar-slot collapse) |
@@ -196,7 +196,9 @@ offering a band under the pointer wins outright and the climb below never runs f
   bounds/center are irrelevant. A huge window dragged by its corner embeds only if the *cursor* is over the
   destination — predictable, matches every OS; the highlight communicates it.
 - **Candidate = the innermost receptive widget on the parent-climb from the hit** (decision 3, uniform at all
-  depths): climb until `wantsDropOfChild(payload)` is true, exactly as `dropTargetFor` — with TWO additions:
+  depths; the climb starts where `dropTargetFor`'s does, `ActivePointerWdgt._dropClimbStart` — over a page
+  window's gutter, at the page's receiver — while the dock offer is consulted first, from the hit itself):
+  climb until `wantsDropOfChild(payload)` is true, exactly as `dropTargetFor` — with TWO additions:
   1. **The world is never a "candidate"** for embed UX. If the climb reaches `world`, there is no candidate: no
      highlight, no dwell, release lands on the desktop (today's behavior, untouched).
   2. The climb also records the innermost **reluctant** widget it passed (for the lock cue + §8 pill). If an

@@ -73,11 +73,19 @@ vocabulary below is the convention for all new code:
     (`EdgeDockLayoutSpec.thicknessGrantedTo`: its own `dockThickness`, asked at every measure, if it
     declares one, else the cross extent it arrived with, which the spec records); the band contributes
     only its own chrome across it (its border and body margin), and the host keeps the band
-    `dockedBandInset` in from its body on the band's three outer sides. A
+    `dockedBandInset` in from its body on the band's three outer sides (its own body margin, when
+    that is wider) and its body margin from the payload on the fourth. A
     collapsed frame **is** its bar, and the whole bar — not just the collapse control — taps
     to expand it.
   - `MenuWdgt` / `PromptWdgt` are framed citizens (`extends FrameWdgt`, born transient): a
     menu or a prompt is a frame around a rows payload, not a parallel hierarchy alongside it.
+  - **What a frame wraps is a PAGE or a PANE, declared by the payload's class, never by the
+    frame** (`wantsWindowPageGutter`): a page (a document, a canvas, a board) gets the theme's
+    page gutter as the frame's body margin, read at every measure and arrange, so the same page
+    keeps its gutter in any window and a saved or duplicated window lays out in the current theme;
+    a pane runs flush. The gutter is the frame's space, so the frame paints what lies in it (the
+    page's selection ring) and hands its points' drops to the page
+    ([`visual-design-system.md`](visual-design-system.md) §4.10).
 
 ## How to apply it
 

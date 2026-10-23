@@ -15,8 +15,10 @@ class CodeAreaWdgt extends Widget
   tempPromptEntryField: undefined
   textWidget: undefined
 
-  # space between my top and side edges and the code area -- often left 0 because windows
-  # already add their own inner padding. The code area always runs down to my footer band.
+  # space between my top and side edges and the code area -- 0, because as a window's content I am
+  # a PANE: I run flush with its body, whose border and strip's rule are my lines (a window keeps a
+  # gutter only around a PAGE, visual-design-system §4.10). The code area always runs down to my
+  # footer band.
   externalPadding: 0
 
   # I paint no background (my window's body shows) -- only my footer band's rule.

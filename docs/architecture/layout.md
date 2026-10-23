@@ -242,8 +242,12 @@ the spec through its knobs — move a stack child by hand and the next arrange s
 `StretchLayoutSpec` alone answers false (it is derived placement MEMORY that trails the child's own
 geometry — the child stays user-movable, handles show, its mutations don't climb). WHICH strategy places
 a child is answered by duck-typed capability queries on its spec (`isDivisionElement?()`,
-`isCornerInternal?()`, `isStackElementActive?()`, `isFrameContentActive?()`, `isStretchElement?()`),
-never a type test.
+`isCornerInternal?()`, `isStackElementActive?()`, `isFrameContentActive?()`, `isStretchElement?()`,
+`isEdgeDock?()`), never a type test. The sixth member, `EdgeDockLayoutSpec`, is the spec a DOCKED frame
+carries: the host's statement that the child is a band along one of its four edges (`side`), what the band
+grants its payload across that edge (`thicknessGrantedTo`), and the host's mode switch (`engaged`: view mode
+disengages every dock, taking the band's layout contribution to zero). It owns its carrier's placement, so a
+docked frame is not free-floating, and leaving the slot is exactly dropping the spec.
 
 **A pending geometry WISH is a free-floating-only value.** `@desiredExtent`/`@desiredPosition` are recorded only
 by the deferred setters (`_setExtentNoSettle`, `_setBoundsNoSettle`, `_moveToNoSettle`, `_setWidthNoSettle`,
@@ -262,7 +266,8 @@ widget owns for its whole life, holding underivable per-class/user preferences, 
 the attachment value and is armed into the slot at attachment: `Widget._divisionBox`,
 `HandleWdgt.cornerSpec` and the desktop furniture's corner knobs, and the content-stack spec
 `Widget._contentStackSpec`) or a
-**per-attachment RECORD** (derived at entry, discarded at detachment: `StretchLayoutSpec`).
+**per-attachment RECORD** (derived at entry, discarded at detachment: `StretchLayoutSpec`, and
+`EdgeDockLayoutSpec`, made when a frame docks and dropped when it leaves the slot).
 Container-side reads of a child's content-stack spec go **SLOT-FIRST through the one accessor
 `Widget.contentStackSpec()`** (the active spec when content-stack-capable, else the knob field):
 while armed the two are the same object, and on a sugar ISLAND the spec rides the slot via the
