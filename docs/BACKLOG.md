@@ -291,8 +291,8 @@ A window's PAGE keeps one 8 px gutter on every side and between it and its bands
 - [ ] Naming follow-up — `StretchablePanelWdgt._insetEdgeRects` now also answers all four edges in a gutter, and `ActivePointerWdgt._targetReachedThroughAGutter` / `_moveGutterDropInsideTarget` / `releasedInAGutter` also cover a letterboxed page's margin: names narrower than what they do. `Widget._clampedPositionWithin`'s comment says `aWdgt` where `_moveGutterDropInsideTarget` passes a `Rectangle` (same four accessors).
 - [ ] Precision follow-up — a document's scroll bars keep the grip's full corner footprint as their reserve (`ViewportWdgt._cornerReserveFor`) although a page's corner stands a gutter in from the window's: safe, 8 px short of exact.
 
-### `plans/focus-and-selection-plan.md` — the focused window and the selected desktop icon (AUTHORED 2026-10-22, NOT STARTED)
-The FOCUS arc the redesign deferred (its plan §0.5.2): focus derived once per cycle from z-order, the draft's focused-window look through `FrameWdgt._frameLook()`, and the selected icon as the existing editor focus drawn the icon's own way. Owner decisions D1–D10 open (plan §2).
+### `plans/focus-and-selection-plan.md` — the focused window and the selected desktop icon (AUTHORED 2026-10-22, NOT STARTED; decisions LOCKED 2026-10-23)
+The FOCUS arc the redesign deferred (its plan §0.5.2): focus derived once per cycle from z-order, the draft's focused-window look through `FrameWdgt._frameLook()`, and the selected icon as the existing editor focus drawn the icon's own way. Owner decisions D1–D11 LOCKED 2026-10-23, every recommendation (plan §2); D11, added from the owner seeing a dropped Docs Maker window ringed: a top-level window is focused, never selected (unit S0).
 - [ ] DEFERRED (owner, 2026-10-16) — the FOCUS arc: a focused-window look (dark `chromeDark` bar and frame, 16% shadow, white glyphs) and the desktop icon "selected" accent. Planned: P0 decisions, F0 spike, F1–F2 focus, S1–S2 selection, V one recapture wave (~90 tests), Z close.
 
 ### `plans/occlusion-culling-plan.md`
