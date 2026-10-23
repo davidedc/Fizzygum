@@ -727,10 +727,17 @@ class Widget extends TreeNode
   # on contents, and by the framed citizens (DocumentWdgt, GenericPanelWdgt, §5.B)
   # on the frame itself -- so this shared press body lives here on the base.
   editButtonPressedFromFrameBar: ->
-    if @dragsDropsAndEditingEnabled
+    if @isInEditMode()
       @disableDragsDropsAndEditing @
     else
       @enableDragsDropsAndEditing @
+
+  # Is my editing switched on -- the pencil engaged, so things can be dragged in and out of me and
+  # edited in place? My own dragsDropsAndEditingEnabled. A window answers for its content, which
+  # holds the mode (FrameWdgt.isInEditMode), so a reader that may be handed a window asks this and
+  # never reads the field.
+  isInEditMode: ->
+    @dragsDropsAndEditingEnabled
 
   # The shared "Enable editing" / "Disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,

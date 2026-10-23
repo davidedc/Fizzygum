@@ -66,6 +66,11 @@ vocabulary below is the convention for all new code:
     everywhere, and closes the nested frame **alone** — a frame's own content redirects a
     close to its frame, but a frame reached that way does not redirect again, so the host
     reverts to empty rather than leaving with its content.
+  - A frame's **edit mode is its payload's**: the pencil switches the payload's
+    `dragsDropsAndEditingEnabled` directly, and the frame keeps no copy — it answers
+    `isInEditMode()` from its payload. So a reader that may be handed a window (the editor-selection
+    rule, the drop climb's reluctant tier, the pencil of a window nested as another's content) asks
+    `isInEditMode()`, never the field.
   - **Docking is a placement, not a rebuild**: a docked frame is a card under a host-owned
     `EdgeDockLayoutSpec` (`side` / `thickness` / `engaged`) — the same widget that sits in the
     slot floats free the moment it is dragged out, because leaving the slot is exactly

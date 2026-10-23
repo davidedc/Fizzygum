@@ -2204,13 +2204,13 @@ class FrameWdgt extends Widget
       @_dockedToolbar()?.reactToViewModeInFrame?()
 
   # Frame-level edit-mode switch (§5.B): route through the PAYLOAD's own core --
-  # the payload owns the canonical dragsDropsAndEditingEnabled flag and its core
-  # does the recursive child locking/unlocking -- then flip my own bar (I am the
-  # bar owner; the payload's `@parent?.show*ModeInBar?()` notify reaches me too,
-  # idempotently). The Widget base core would act SHALLOWLY on @contents (one
-  # child level, no payload-specific propagation) and notify only @parent. My
-  # own flag mirrors the payload's so a frame nested as another frame's content
-  # keeps Widget.editButtonPressedFromFrameBar's toggle direction honest.
+  # the payload owns the dragsDropsAndEditingEnabled flag and its core does the
+  # recursive child locking/unlocking -- then flip my own bar (I am the bar owner;
+  # the payload's `@parent?.show*ModeInBar?()` notify reaches me too, idempotently).
+  # The Widget base core would act SHALLOWLY on @contents (one child level, no
+  # payload-specific propagation) and notify only @parent. I write no flag of my
+  # own: my mode is my payload's (isInEditMode), which the bar's pencil switches
+  # without passing through me.
   # ⚠ NO `triggeringWidget` parameter here, unlike the Stretchables. That parameter exists ONLY to
   # stop an edit-mode change bubbling back to whoever triggered it, and the only code that reads it
   # is BubblesEditModeToCoordinatorMixin's `@parent != triggeringWidget` — which is the CORE of the
@@ -2221,7 +2221,6 @@ class FrameWdgt extends Widget
     @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()
 
   _enableDragsDropsAndEditingNoSettle: ->
-    @dragsDropsAndEditingEnabled = true
     @contents?._enableDragsDropsAndEditingNoSettle @
     # public-call-sanctioned: showEditModeInBar is the window-bar mode PROTOCOL, driven
     # cross-object by content widgets (`@parent?.showEditModeInBar?()`), so it stays public — and
@@ -2232,12 +2231,19 @@ class FrameWdgt extends Widget
     @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
 
   _disableDragsDropsAndEditingNoSettle: ->
-    @dragsDropsAndEditingEnabled = false
     @contents?._disableDragsDropsAndEditingNoSettle @
     # public-call-sanctioned: showViewModeInBar is the window-bar mode PROTOCOL, driven
     # cross-object by content widgets (`@parent?.showViewModeInBar?()`), so it stays public — and
     # it settles nothing (it marks; my own settling wrapper above flushes the mark)
     @showViewModeInBar()
+
+  # My edit mode is my content's (I always have one -- a placeholder when nothing else): the
+  # content holds the flag and the bar's pencil switches it there directly, so a copy of my own
+  # would fall stale. It is what decides whether I am framed as the widget being edited when I am
+  # the focus (WorldWdgt._widgetBeingEdited), whether a drop finds me reluctant, and which way my
+  # pencil turns me when I am another window's content.
+  isInEditMode: ->
+    @contents.isInEditMode()
 
   _createAndAddEditButton: ->
     # public-call-sanctioned: showEditModeInBar/showViewModeInBar are the window-bar mode PROTOCOL —

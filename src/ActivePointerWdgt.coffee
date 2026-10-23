@@ -315,7 +315,7 @@ class ActivePointerWdgt extends Widget
     while wdgt? and wdgt isnt world
       if wdgt.wantsDropOfChild payloadPolicy
         return {candidate: wdgt, reluctant: undefined}
-      if !reluctant? and wdgt.providesAmenitiesForEditing and not wdgt.dragsDropsAndEditingEnabled
+      if !reluctant? and wdgt.providesAmenitiesForEditing and not wdgt.isInEditMode()
         reluctant = wdgt
       wdgt = wdgt.parent
     {candidate: undefined, reluctant: reluctant}

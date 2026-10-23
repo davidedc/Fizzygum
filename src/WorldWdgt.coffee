@@ -1699,7 +1699,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # SELECTED op-target within an active editing context, so the outline frames "this is what an op will
   # act on":
   #   CITIZEN   — a pencil-capable widget (providesAmenitiesForEditing) with the pencil engaged
-  #               (dragsDropsAndEditingEnabled), when the focus leaf IS the panel.
+  #               (isInEditMode: a window answers its content's mode), when the focus leaf IS the panel.
   #   SELECTED  — (D21) a widget SELECTED inside an editable container that is in edit mode, e.g. a clock
   #     ITEM      or image dropped into a document: it has no "edit mode" of its own, but ops (alignment,
   #               …) target it, so it shows the same outline. Its nearest editing-amenities ANCESTOR
@@ -1740,7 +1740,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # a caret in the focus or in a widget inside it: the caret says "focus" by itself (see above)
     caretTarget = @caret?.target
     return undefined if caretTarget? and focus.isAncestorOf caretTarget
-    if focus.providesAmenitiesForEditing and focus.dragsDropsAndEditingEnabled
+    if focus.providesAmenitiesForEditing and focus.isInEditMode()
       return focus
     # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container that is in edit mode.
     # Walk to the nearest container that has an OPINION on editing amenities, stopping BEFORE the world
@@ -1753,7 +1753,7 @@ class WorldWdgt extends IconGridPanelWdgt
     container = focus.parent
     while container? and container isnt @
       if container.providesAmenitiesForEditing is true
-        return (if container.dragsDropsAndEditingEnabled then focus else undefined)
+        return (if container.isInEditMode() then focus else undefined)
       if container.providesAmenitiesForEditing is false
         return undefined
       container = container.parent

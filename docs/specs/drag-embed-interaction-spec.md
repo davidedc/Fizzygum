@@ -128,12 +128,12 @@ they show a lock cue, and a release near them lands the payload visibly OFFSET w
 |---|---|---|---|---|
 | **Eager** | empty `FrameWdgt` (placeholder showing), `SimpleDropletWdgt`, `LayoutElementAdderOrDropletWdgt` | dwell-to-arm (no exception — empty windows are exactly where accidental window-nesting happens) | instant accept | bright invite highlight, immediate |
 | **Willing** | edit-mode framed-citizen containers (slides, dashboards, patch, the Drawings Maker `ImageWdgt` — their `StretchableWidgetContainerWdgt` payload), edit-mode `DocumentWdgt` scroll panel, edit-mode `PanelWdgt`/stacks/scroll panels (anything whose `wantsDropOfChild` is true) | dwell-to-arm | instant accept | candidate highlight; ring while charging (window payload only) |
-| **Reluctant** | the same widgets in VIEW mode (`providesAmenitiesForEditing` true, `dragsDropsAndEditingEnabled` false) | never accepts mid-drag → lock cue; land-and-offer on release (§8) | same | neutral outline + lock badge + eye pulses amber |
+| **Reluctant** | the same widgets in VIEW mode (`providesAmenitiesForEditing` true, `isInEditMode()` false — a window answers its content's mode) | never accepts mid-drag → lock cue; land-and-offer on release (§8) | same | neutral outline + lock badge + eye pulses amber |
 | **Refusing** | inspector panes, plot glass, full windows' chrome, anything `_acceptsDrops` false without editing amenities | inert (no cue) | inert | none |
 
 Tier membership is *computed*, not a new stored flag: eager/willing = `wantsDropOfChild` true (the existing
 predicate); reluctant = the §5 climb found no acceptor but passed a widget with
-`providesAmenitiesForEditing and !dragsDropsAndEditingEnabled`; refusing = neither.
+`providesAmenitiesForEditing and !isInEditMode()`; refusing = neither.
 
 **Owner decision 4 was REVERSED 2026-07-06** (owner "keep view-locked" — see the deviations note at the top):
 dashboards stay view-locked at construction, exactly like slides and docs. `SampleDashboardApp` keeps the
