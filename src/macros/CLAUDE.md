@@ -164,7 +164,11 @@ Two independent axes the generators honour (`MacroToolkit.spanFactor` + the sing
 its real duration at every speed: a numeric **`yield N`** in a macro waits N ms of REAL wall-clock (the pump accrues
 real cycle deltas), and `readyForMacroScreenshot` waits for atlas/momentum settle. Use `yield N` for a load-bearing
 real-time settle (hold a drag in an auto-scroll edge band until the framework's `Date.now` timer clamps; wait for a
-hover bubble). Use the verb's gesture `milliseconds` (scaled) for cosmetic gesture duration.
+hover bubble). Use the verb's gesture `milliseconds` (scaled) for cosmetic gesture duration. ⚠ A `yield N` bounds a
+hold only from BELOW: whatever the event that ends it is, it is stamped from the cycle the wait ends in, so every slow
+cycle lengthens the hold an event-time recognizer measures (the drag-embed dwell, a press-and-hold). That is safe for a
+hold that must CROSS a window and wrong for one that must stay UNDER it — schedule that one in event time, in the same
+step as the gesture it follows: `clickAfterHoldingStill_InputEvents holdMs`.
 
 **Per-verb floors** keep a few frame-cadence-sensitive handlers correct at `fastest` (the verbs apply them; tests
 need do nothing): a press-drag-release floors its drag SPAN (`@dragFloorMs`, count held constant) so a per-frame
@@ -246,7 +250,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   text's own `slotAt`), `autoScrollBandPointOf viewport, side, depth`, `screenTopLeftOf widget`.
 - **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
   `tripleClickAtFractionOf`, `clickOnDesktopAt` — bare desktop, verified; `dropCarriedWidgetAt` — the drop of what
-  the hand carries); text by slot (`clickOnTextSlot`, `doubleClickOnTextSlot`, `tripleClickOnTextSlot`,
+  the hand carries; `clickAfterHoldingStill holdMs` — a click whose press lands exactly holdMs of EVENT time after
+  the pointer came to rest); text by slot (`clickOnTextSlot`, `doubleClickOnTextSlot`, `tripleClickOnTextSlot`,
   `shiftClickOnTextSlot`); the aim declaration `pressMustLandOn widget` (rule 4); `pressToCarry` — the press that
   starts carrying something away, continued by "left button" moves and a mouse-up (a mouse's `moveToAndMouseDown`; a
   finger's press-and-HOLD, since a plain finger drag over a scrolling pane SCROLLS it — use it whenever a split

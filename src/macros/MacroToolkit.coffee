@@ -658,6 +658,24 @@ class MacroToolkit
     @syntheticEventsMouseDown_InputEvents whichButton, downAbs, true
     @syntheticEventsMouseUp_InputEvents whichButton, upAbs, true
 
+  # A LEFT CLICK AFTER HOLDING STILL FOR EXACTLY `holdMs` OF EVENT TIME: its press is stamped holdMs
+  # after the last event still queued, the moment the pointer comes to rest, and its release the click's
+  # usual hold after that. A hold a recognizer measures (the dwell to arm a drag-embed, judged at the
+  # press that drops a carried window) reads EVENT time, and a numeric `yield` bounds such a hold only
+  # from BELOW: the click after it is stamped from the cycle the yield ends in, so every slow cycle on
+  # the way lengthens the hold. That is enough for a hold that must CROSS a window and never for one that
+  # must stay UNDER it, which this schedules instead, identical at every speed and every load. It is
+  # called in the same step as the gesture it follows, before anything drains — the queue's last event
+  # is where the hold starts, so an empty queue throws. As a finger, the click is a tap.
+  clickAfterHoldingStill_InputEvents: (holdMs) ->
+    queue = world.inputEventsQueue
+    throw new Error "clickAfterHoldingStill_InputEvents: nothing queued to hold still after — call it in the same step as the gesture it follows" if queue.isEmpty()
+    downAbs = queue[queue.length - 1].time + holdMs
+    upAbs = downAbs + @clickHoldWithFloor 100
+    @_rememberClickGesture upAbs, @currentPointerTarget
+    @syntheticEventsMouseDown_InputEvents "left button", downAbs, true
+    @syntheticEventsMouseUp_InputEvents "left button", upAbs, true
+
   # A SHIFT-modified left click: the same down+up as syntheticEventsMouseClick_InputEvents, but with the
   # event's shiftKey flag set (the 4th parameter of Pointer{down,up}InputEvent.synthetic — button, buttons,
   # ctrlKey, shiftKey, altKey, metaKey, time, and the optional worldX/worldY a down/up omits: a synthesised

@@ -709,7 +709,10 @@ assertion a recapture after a regression silently stores two different hashes an
   DETERMINISM CONSTRAINT:** `MacroToolkit.queueInputEvent` SCALES `event.time` by `spanFactor`, so the arming linger MUST be a
   NON-SCALED numeric `yield N` (real wall-clock) — a scaled linger would arm at one speed but not another. To ARM: carry over
   the candidate (`win.pickUp()` + no-button `@syntheticEventsMouseMove_InputEvents`), `yield <past dwellToArmMs>`, then release
-  (`@syntheticEventsMouseClick_InputEvents()`) — the frozen hold arms on release. To assert deterministically: assert the armed
+  (`@syntheticEventsMouseClick_InputEvents()`) — the frozen hold arms on release. A wall-clock `yield` bounds the hold only from
+  BELOW (the click is stamped from the cycle the wait ends in, so a slow cycle lengthens it), which is safe for arming and
+  wrong for NOT arming: a hold that must stay UNDER `dwellToArmMs` is scheduled in event time, in the same step as the carry —
+  `@clickAfterHoldingStill_InputEvents <ms>` (`…ReleaseWhileChargingLandsOnWorld`). To assert deterministically: assert the armed
   LABEL (binary) or an EMPTY ring (elapsed ~0), NEVER a partial ring (it quantises nondeterministically across densities); and
   avoid a post-drop frame captured right after a rapid move→release (the charging ring's invisible alpha=0 teardown residue can
   differ between capture/run at dpr2 — assert a mid-drag state instead). Prove nesting with `panel.moveTo …` (only the nested
