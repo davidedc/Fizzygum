@@ -52,7 +52,7 @@ its member's literals fails too.
 | Token | Value | Use |
 |---|---|---|
 | `ink` | `#1E1E1C` | Text and icon strokes; never large fills |
-| `chromeDark` | `#4A4A46` | Reserved for a focused window (no focus state exists yet) |
+| `chromeDark` | `#4A4A46` | The FOCUSED window's strip and 1 px frame (§5) |
 | `chrome` | `#E2E2DE` | Title bars, the embedded toolbar strip, 1 px rules inside windows (`seamRule`), a text's header-line rule, the disabled button outline |
 | `line` | `#C9C9C4` | Control and tile borders, the title bar's bottom rule, the strip divider, a free-standing panel's border |
 | `frame` | `#B9B9B4` | Frames of windows and menus |
@@ -218,7 +218,14 @@ the tile, and the tile takes the press, the release and the click together. The 
 below the tile. The caption (the holder's `label`, `ink`, 12 px) hugs one line of text, or wraps across the cell
 less the plate's padding (its plate spanning the cell), at most `desktopIconCaptionMaxLines` lines, cut with "…";
 its lines stand on the role's 16 px line boxes (baselines 12 and 28 below the caption's top). A press on the plate edits the caption
-(a rename; the tile keeps its look); the holder re-lays its plate as the caption's text changes. The holder's
+(a rename; the tile keeps its look); the holder re-lays its plate as the caption's text changes. The SELECTED icon
+— the one the editor focus selects (`WorldWdgt.isSelectedIcon`; a click on the tile selects it AND opens it, as do a
+right-click, a finger hold and a drop; never while a caret is in its caption) — wears an `accent` ring
+`desktopIconTileSelectedStrokeWidth` (2) wide inside the tile in place of the 1 px border
+(`desktopIconTileSelectedStroke`, painted by `HighlightOutlineAppearance.paintRing`), an `accent` plate
+(`desktopIconPlateSelectedFill`) and `paper` caption ink (`desktopIconCaptionSelectedText`: the caption holds no colour,
+its holder answers its ink at paint, `inkForChildText`); its tile's fill stays its state's, and no generic selection
+outline frames it (the icon's own look replaces it). The holder's
 shape is the tile and the plate, so a press or a drop in a cell's empty corners or in the gap reaches whatever
 lies behind it. Icons stand on an ICON GRID (`IconGridPanelWdgt`: the desktop column by column, five to a column; a
 folder's panel row by row, three to a row; from `desktopIconGridOrigin`, one cell plus a gap apart): an icon made
@@ -315,8 +322,10 @@ widget picture, the shortcut badge), and share its rules:
     under the rounded one never builds a mask.
 
 ### 4.8 Colour use
-The accent says "focused", "selected" or "on" — nothing else. Selected and "on" controls use the
-`accentTint` fill with an `accent` border and text, never a solid dark fill. `danger` marks destructive
+The accent says "selected", "on" or "the editing focus" (the caret) — nothing else. A selected or "on"
+CONTROL uses the `accentTint` fill with an `accent` border and text, never a solid dark fill. A selected
+LABEL reads like selected text: solid `accent` with `paper` ink (text selection; the selected desktop
+icon's plate). A focused WINDOW is not an accent: it wears `chromeDark` (§5). `danger` marks destructive
 actions and error states only.
 
 ### 4.9 Wording and case
@@ -397,7 +406,8 @@ exactly one owning widget:
 | Window shadow, fill, 1 px frame | `FrameWdgt`'s body appearance (`BoxyAppearance`); the shadow is its `ShadowInfo` |
 | Title bar fill and its bottom rule | `FrameBarWdgt`'s `titlebarBackground` (the rule is the band's own edge, §4.1) |
 | × / − in 44×44 targets | `CloseIconButtonWdgt`, `CollapseIconButtonWdgt` (in a `SwitchButtonWdgt`), children of `FrameBarWdgt` |
-| Window title | `FrameBarWdgt`'s label `StringWdgt` (`fonts.windowTitle`), its stored name shown as a sentence (§4.9) |
+| Window title | `FrameBarWdgt`'s label `StringWdgt` (`fonts.windowTitle`; the focused window's in `fonts.focusedWindowTitle`, bold, every window's fit measured in it), its stored name shown as a sentence (§4.9) |
+| Focused window | The frontmost top-level window (`WorldWdgt.isFocusedFrame`): `FrameWdgt._frameLook` answers the `focusedWindow*` roles — strip `chromeDark` with no rule, glyphs `chrome` lighting to `paper`, title `paper` bold, frame `chromeDark`, shadow 16 % (a tilted window's transform island casts it) |
 | Pencil / eye | `EditIconButtonWdgt` |
 | Resize grip | `FrameGripWdgt` (a `HandleWdgt`, child of the frame, bottom-right, `frameGripInset` in from the content area) and `GripIconAppearance`; its hit area is its whole `frameGripSize` square. A halo's handles and a naked inspector's resizer are plain `HandleWdgt`s on a plate (below) |
 | Halo handles | `HandleWdgt` + `HandleAppearance`: each handle a `handlePlateFill` (`paper`) plate over its whole `handleSize` (44) box at `handlePlateRadius` (6) inside a 1 px `handlePlateStroke` (`line`) border, `handlePlateHoverFill` (`desk`) hovered, `handlePlatePressFill` (`chrome`) inside `handlePlatePressStroke` (`frame`) pressed (pressed and hovered are two flags, so a release over the handle shows it hovered); its glyph `handleGlyph` (`ink`), drawn as fills through `SizeAwareIconAppearance.paintAsMarkInSquare`: move `FourWayArrowIconAppearance` and resize `DoubleArrowIconAppearance` / `VerticalDoubleArrowIconAppearance` at `handleArrowGlyphSize` (24), rotate `CurledArrowsSquareIconAppearance` (the four-swirlies square) at `handleRotateGlyphSize` (28), the corner `GripIconAppearance` at `handleCornerGlyphSize` (28); every type hits its whole box; the plate casts the shared desktop shadow (its silhouette, never the glyph's). A frame's grip opts out of that shadow |
@@ -405,7 +415,7 @@ exactly one owning widget:
 | Layout chrome | `LayoutChromeWdgt` (division adders, content drop slots, spacers, split adjusters) + `LayoutChromeAppearance`: the halo's plate at today's sizes (`Appearance._paintPlate`, radius `layoutChromePlateRadius` clamped to the box: `layoutChromePlate*` roles — `paper` in a `line` border, `desk` hovered, `chrome` in `frame` pressed; a spacer shows no press), its glyph in `layoutChromeGlyph` (`ink`): an adder's `PlusIconAppearance` at `layoutAdderGlyphSize` (9) in a division strip and `layoutDropSlotGlyphSize` (14) in a drop slot, a spacer's double arrow at `layoutSpacerGlyphSize` (24) along its axis, an adjuster's grab mark (`layoutAdjusterGrabMarkWidth` × `layoutAdjusterGrabMarkLength`, 2 × 12) along its long side |
 | Slider | `SliderWdgt` (a content slider, a number prompt's) + `SliderButtonWdgt` (its thumb), both drawn by `CircleBoxyAppearance` as stadiums read at paint: the track an opaque borderless `sliderTrack` (`chrome`) groove unless the slider holds a colour of its own; the thumb in the button's look (§4.3), `sliderThumbFill` (`paper`) inside a 1 px `sliderThumbStroke` (`line`) wall (a filled stadium-border, concentric at the round ends), `sliderThumbHoverFill` (`desk`) hovered, `sliderThumbPressFill` (`chrome`) inside `sliderThumbPressStroke` (`frame`) pressed; a fill override the thumb holds for a state (`normalColor`, `highlightColor`, `pressColor`) is that state's fill. A viewport's scroll bars are the same class in an indicator presentation: their track `scrollIndicatorTrack`, their thumb `scrollIndicator*`, no border; a bar picked up off its viewport is a plain slider |
 | Colour picker and palettes | `ColorPickerWdgt`'s background `colorPickerFill` (`paper`, read at paint while it holds no colour of its own); a palette's (`ColorPaletteWdgt`, `GrayPaletteWdgt`) choice marker (`PaletteAppearance`) a 1 px ring in `paletteMarkerOuter` (`ink`) just outside one in `paletteMarkerInner` (`paper`), legible over any hue; a choice that is not on the palette is said by two `paletteMarkerOuter` hairlines around a 2 px band of the choice framing the field. The gradients are content |
-| Selection outline | `Widget._drawSelectionOverlay` around the item an op would act on (`WorldWdgt._widgetBeingEdited`): a `selectionOutlineWidth` (2) ring in `selectionOutline` (`accent`), wholly inside the selected widget's box (a page's excepted: its window paints it in its gutter, §4.10), its corners `cornerRadiiFollowingMyOutline`, painted by the drop outline's `HighlightOutlineAppearance.paintRing` (its 1 px stroke half only over a body with a border: `outlineIsStroked`); never shown while a caret is in the widget or inside it — the caret says "focus" there |
+| Selection outline | `Widget._drawSelectionOverlay` around the item an op would act on (`WorldWdgt._widgetBeingEdited`): a `selectionOutlineWidth` (2) ring in `selectionOutline` (`accent`), wholly inside the selected widget's box (a page's excepted: its window paints it in its gutter, §4.10), its corners `cornerRadiiFollowingMyOutline`, painted by the drop outline's `HighlightOutlineAppearance.paintRing` (its 1 px stroke half only over a body with a border: `outlineIsStroked`); never shown while a caret is in the widget or inside it — the caret says "focus" there — and never around a top-level window (focused, never selected: the one write of the editor focus refuses one, `WorldWdgt._setEditorFocusNoSettle`) or a desktop icon (it wears its own selected look, §4.3) |
 | Text selection | `StringWdgt.drawSelection` (every text, so every `TextWdgt` and paragraph): per selected character, a `textSelectionFill` (`accent`) plate over its whole line box, the character re-typed on it in `textSelectionText` (`paper`), read at paint; the plate is opaque, because neighbouring characters' plates overlap by a pixel |
 | Hover wash | `HighlighterWdgt`'s fill form (`HighlightWashAppearance`, from `Widget.turnOnHighlight`: a menu row that stands for a widget — a hierarchy menu's, a chooser's — washes it while hovered): the target's `clippedThroughBounds` filled once in `hoverHighlightWash` (`accentTint`, translucent by its own alpha) at full widget alpha, its corners those the target shows (`cornerRadiiFollowingMyOutline`, as for the drop outline); no stroke, no shadow |
 | An icon holder's empty slot | `SimpleDropletWdgt` + `SimpleDropletAppearance`: a placeholder, not a button: a borderless `dropletWellFill` (`desk`) well at `dropletWellRadius` (6) with a `PlusIconAppearance` in `dropletGlyph` (`muted3`) at `dropletGlyphSize` (half the desktop glyph) |
@@ -438,8 +448,20 @@ model"). **`FrameWdgt._frameLook()` is the one place a frame's look is decided**
 one record — the manifestation (menu, window, card), the body's appearance, fill, stroke and rounding,
 the strip background's appearance, colours, rounding and rule, the title's ink, and the shadow
 it casts at rest — from the frame's lifetime and parentage. The body (`_deriveAndSetBodyAppearance`), the strip (`FrameBarWdgt`) and the shadow (`addShadow`)
-all READ it; none decides a look of its own. A focus state, when one exists, enters
-there and nowhere else. Collapsed and docked are not inputs: a collapsed frame wears its expanded look,
+all READ it; none decides a look of its own. FOCUS enters there and nowhere else: the frontmost visible
+top-level window (`FrameWdgt.isTopLevelWindow` — a persistent frame whose home is the desktop, seen
+through a transform island; a pinned or grabbed menu among them) is the focused frame, and a persistent
+frame the hand carries is focused for the whole carry. The world derives it ONCE per cycle from z-order,
+just before the geometry settle (`WorldWdgt._updateFocusedFrameNoSettle`; queried as `isFocusedFrame`),
+because the focused title is BOLD and a bolder title is a layout input; there is no stored focus flag.
+The focused window wears a `chromeDark` strip with no rule, `chrome` glyphs that light to `paper` while
+hovered or pressed, a `paper` bold title, a `chromeDark` frame and a 16 % shadow
+(`focusedWindow*` roles); every other window wears the window roles. A focus change re-skins NARROWLY
+(`FrameWdgt.noteFocusChanged`): the strip, the frame's stroke and the shadow cast at rest — never the
+body's fill or rounding, so a colour set by hand survives a flip — and a carried frame is re-skinned too,
+its shadow left to the hand. A window's title is FIT in the focused weight whether or not it is focused
+(`titleFitBold`), so a flip never changes which characters it shows; a card's and a menu's title is fit
+in its own weight. Collapsed and docked are not inputs: a collapsed frame wears its expanded look,
 and a docked band is the card its parentage makes it; only the strip's corners follow the collapse and
 the strip's axis, set at every arrange (§4.7). The whole skin is applied on EVERY derivation, as one act
 (`FrameWdgt._deriveAndSetSkin`): the body (appearance, colours, rounding, and the stroke-last and
@@ -532,6 +554,11 @@ plate of radius 6 at its top; no row paints a hairline, and the panel opts out o
    and keep no outer margin of your own that the window's gutter already gives you (yield it, as the
    document's inset does). A view whose edges are the window's lines is a PANE and answers nothing
    (§4.10).
+10. **Does your look depend on focus or selection?** Never store a "focused" or "selected" flag. A
+    frame's focus reaches its look only through `_frameLook` (`world.isFocusedFrame`); a widget's
+    selection is read at paint from the world's once-per-cycle caches (`world.isEditorSelected` for the
+    generic ring, `world.isSelectedIcon` for a desktop icon's own look). A top-level window is focused,
+    never selected; everything inside it, and a window nested as content, stays selectable.
 
 **Reviewing a change to the look.** A change that moves chrome pixels is reviewed BEFORE any recapture
 on the owner-review sample, one or more tests per surface the system dresses

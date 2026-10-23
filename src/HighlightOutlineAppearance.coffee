@@ -16,8 +16,9 @@
 # stroke centred on the ring) follows the corners less closely: it leaves the target's own border
 # and fill showing outside it at every rounded corner, at dpr 1 and 2 alike.
 #   The ring is painted by ONE painter, HighlightOutlineAppearance.paintRing, which the editor-focus
-# selection outline paints with too (Widget._drawSelectionOverlay): two surfaces, each with its own
-# role and width, one ring.
+# selection outline paints with too (Widget._drawSelectionOverlay), and so does a selected desktop
+# icon's tile border (DesktopIconAppearance): three surfaces, each with its own role and width, one
+# ring.
 class HighlightOutlineAppearance extends Appearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
@@ -45,8 +46,9 @@ class HighlightOutlineAppearance extends Appearance
   # leaves out (see my header). Over a body with no border that stroke would land, at dpr 1, on a few
   # pixels at each rounded corner the body leaves to whatever is behind it, so it is left out there.
   # Asked of the CLASS, as BoxyAppearance's rounded hit test is: it needs only the box, never a widget
-  # wearing me -- my own outline form calls it, and so does the selection outline a selected widget
-  # draws over itself (Widget._drawSelectionOverlay).
+  # wearing me -- my own outline form calls it, and so do the selection outline a selected widget
+  # draws over itself (Widget._drawSelectionOverlay) and a selected desktop icon's tile border
+  # (DesktopIconAppearance).
   @paintRing: (ctx, w, h, ringWidth, radii, ringColor, outlinesAStroke) ->
     outerRadii = HighlightOutlineAppearance.ringEdgeRadii radii, 0
     ctx.fillStyle = ringColor.toString()

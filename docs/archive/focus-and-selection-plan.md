@@ -1,11 +1,15 @@
 # Focus and selection — the focused window and the selected desktop icon
 
+**✅ CLOSED 2026-10-23 — archived. Every unit landed (P0, F0, F1, F2, S0, S1, S2, R, V, Z) as ONE commit pair
+(Fizzygum + Fizzygum-tests, the commits that archive this file); the closing `fg gauntlet` 19/19 and `fg homepage` OK.
+Living truth: `architecture/visual-design-system.md` §4.3, §4.8, §5, §6 step 10; `regularity-principles.md` "The frame
+model"; `input-and-gestures.md` (the hold). Open residue is in `../BACKLOG.md` under this file's name.**
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-**AUTHORED 2026-10-22 — NOT STARTED; its owner decisions D1–D11 are LOCKED (2026-10-23, every recommendation).** It
-was written against Fizzygum master `1f001744` and Fizzygum-tests master `d7fbdd0d7` (suite 335 SystemTests;
-`fg gauntlet` 19/19 and `fg homepage` OK on that tree), and §1.5/§1.7 were updated on 2026-10-23 against Fizzygum
-`9342748f` / Fizzygum-tests `1b2be92d1` (suite 337). When a session picks it up, re-verify §1 against the tree of
-that day before trusting it.
+**AUTHORED 2026-10-22; its owner decisions D1–D11 are LOCKED (2026-10-23, every recommendation).** It was written against Fizzygum master `1f001744` and Fizzygum-tests master `d7fbdd0d7` (suite 335
+SystemTests), and §0 reframe 3 and §1 were re-verified on 2026-10-23 against Fizzygum `dc2ad0f5` / Fizzygum-tests
+`1b2be92d1` (suite 337) and corrected from F0's measurements. When a session picks it up, re-verify §1 against the
+tree of that day before trusting it.
 - Line numbers drift. A quoted method or field name is authoritative: grep it fresh before trusting a `file:line`.
 - Keep the STATUS box below current at every phase close.
 
@@ -19,15 +23,28 @@ remember to update.
 ## STATUS
 | Phase | What | State |
 |---|---|---|
-| P0 | Owner decisions D1–D11 (§2) locked; reference policy; review-sample additions | decisions LOCKED 2026-10-23 (all recommendations); review-sample additions not started |
-| F0 | Spike: the predicted focus set, per shot, from a twin prelude | not started |
-| F1 | The focus mechanism, pixel-neutral (roles at today's values) | not started |
-| F2 | The title's weight and fit | not started |
-| S0 | A top-level window is focused, never selected (D11) | not started |
-| S1 | The selected-icon mechanism, pixel-neutral | not started |
-| S2 | Finger parity for selection | not started |
-| V | The flip to the draft's values, owner review, ONE recapture wave | not started |
-| Z | Close: docs, BACKLOG, archive | not started |
+| P0 | Owner decisions D1–D11 (§2) locked; reference policy; review-sample additions | DONE 2026-10-23: decisions LOCKED (all recommendations); references on master (D10); review sample extended (F0's focus-contrast tests) |
+| F0 | Spike: the predicted focus set, per shot, from a twin prelude | DONE 2026-10-23: results in §4 F0 "Result"; §0 reframe 3 and §1 corrected from it |
+| F1 | The focus mechanism, pixel-neutral (roles at today's values) | LANDED in the tree 2026-10-23 (uncommitted; commits at V, D10): `WorldWdgt._updateFocusedFrameNoSettle` / `isFocusedFrame`, `FrameWdgt.isTopLevelWindow` / `noteFocusChanged`, the island's shadow from its frame's look, the focused roles at today's values. Gates: probe `.scratch/focus/f1-probe.js` 139/139 (incl. the draft-value pixel pass); presuite and every suite leg fail ONLY the 6 inspector member-list shifts below; every audit leg clean when re-judged from its own audit dir (capstone, tier-naming, settle, revisits, storage, vmtruth); the other gauntlet legs PASS |
+| F2 | The title's weight and fit | LANDED in the tree 2026-10-23 (uncommitted): the look's `titleFitBold` (a window is fit in the focused title role's weight, a card and a menu in their own), `StringWdgt.fitBold` read only by the fit (`doesTextFitInExtent`), a back-buffer key suffix while the two weights differ. Gates: presuite = the known set only (each passes with the new members hidden); revisits OK (direct); probe `.scratch/focus/f2-probe.js` 131/131 |
+| S0 | A top-level window is focused, never selected (D11) | LANDED in the tree 2026-10-23 (uncommitted): the rule at the ONE write, `WorldWdgt._setEditorFocusNoSettle` (a write naming a top-level window changes nothing — and CLEARS the selection when that window IS it, a nested item just carried out onto the desktop), and at the read, `_widgetBeingEdited` (never a top-level window, whatever path made it the focus); `macroWindowRingFollowsItsPencil` re-expressed (21 value assertions, visualisation regenerated). Gates: presuite = the known set + `macroTiltedWindowDropRequiresDwell` image_2 exactly (its 606 accent ring pixels gone, nothing else), revisits OK, probe `.scratch/focus/s0-probe.js` 54/54 |
+| S1 | The selected-icon mechanism, pixel-neutral | LANDED in the tree 2026-10-23 (uncommitted): `WorldWdgt._widgetTheFocusSelects` (the ONE reading of the editor focus, shared by the ring and the icon), `_selectedIcon` / `isSelectedIcon`, holders opt out of the generic ring and absorb their caption's selection, the selected border through `HighlightOutlineAppearance.paintRing`, the caption ink read at paint (`StringWdgt._textInk` → the holder's `inkForChildText`), four roles at today's values. Gates: presuite = the known set only; revisits OK; probe `.scratch/focus/s1-probe.js` 184/185 — the one FAIL is the probe's own over-strict corner check: at dpr 2 the selected state at today's values moves 128 device px (124 in the tile's corner squares, 4 beside them, exactly the agent's offline SWCanvas computation), so `macroDesktopShortcutIcons` image_1 changes at dpr 2 only, inside V's set |
+| S2 | Finger parity for selection | LANDED in the tree 2026-10-23 (uncommitted): the finger HOLD sets the editor focus on the pressed leaf, under the click path's ancestry opt-out, before it opens the menu (`ActivePointerWdgt`, the hold path). Gates: finger dpr1 = the known set + EXACTLY F0's 16 predicted shots in 10 tests; mouse = the known set + `macroFingerHoldThenDragLifts` image_2 (a finger-witness hold on the mouse page, F0's one mouse prediction); revisits OK; probe `.scratch/focus/s2-probe.js` 44/44 |
+| R | A strip's roster change re-arranges the strip (owner, at V's review, 2026-10-23: fix it in this arc) | LANDED in the tree 2026-10-23 (uncommitted): in-pass, `FrameWdgt._reDeriveBarRosterNoSettle` schedules the BAR through the phase-valve (`_scheduleRelayoutRespectingPhase`, no climb), and so does `FrameBarWdgt._setTitleWeightNoSettle` (the sibling hole); both comments rewritten true (a census found 4 of 16 in-pass roster changes come from a host's adoption, with no arrange of the frame after them). Gates: presuite = V's 107 tests; all 977 mouse + 934 finger live hashes IDENTICAL before and after (R moves no V pixel); with V's roles unflipped the set is the known 8 + exactly the two stale-strip tests (fresh layout), as the spike's twin; revisits OK |
+| V | The flip to the draft's values, owner review, ONE recapture wave | OWNER-REVIEWED and RECAPTURED 2026-10-23 (owner: every recommendation, fix R first, then "go"): mouse 107 tests and finger 111 tests recaptured at dpr 1 and 2, both `RECAPTURE COMPLETE` (suite green at every density), each recaptured set EQUAL to the predicted one; closing gauntlet + homepage below. The flip: `Theme` at the draft's values (D5 (i)); `macroTiltingWindowKeepsInternalExternalSkin` reads the stroke its window's focus names. Changed sets equal the predictions EXACTLY: mouse dpr1 107 tests / 302 shots = F0's 297 focus shots + `macroFingerHoldThenDragLifts` image_2 (S2) + 4 shots where the weight flip re-arranges a STALE card strip the references froze (`macroMenuInWindowInScrollStackStaysLive` 2–4, `macroSimpleDocumentHandlesOldInspector` 2 — a pre-existing bug, BACKLOG); dpr2 the same 302; finger dpr1 111 tests = F0's finger focus set + S2's 10 + the known set. Review page: `Fizzygum-tests/.scratch/diff-page/index.html` (214 groups, 0 INVALID) |
+| Z | Close: docs, BACKLOG, archive | DONE 2026-10-23: closing `fg gauntlet` 19/19 (896 s, no load-flake) and `fg homepage` OK on the recaptured tree; docs (visual-design-system, regularity-principles — the pinned-menu contradiction fixed — input-and-gestures, widget-authoring-guidelines); BACKLOG closed into the ledger below; archived |
+
+**The known failing set carried to V** (every unit's gate judges against it; it is recaptured in V's one wave, with the
+owner's approval): the INSPECTOR MEMBER-LIST shifts F1's new members cause, at mouse, finger, dpr 1 and 2 —
+`macroAddEditSaveRenameRemoveProperty`, `macroInspectorResizingOKEvenWhenTakenApart`, `macroInspectorScrollbarUnplugged`,
+`macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`, `macroMultilineTextInputScrollsWell`,
+`macroWrappingTextFieldResizesOK` — and S0's one predicted shot, `macroTiltedWindowDropRequiresDwell` image_2 (the dropped
+tilted window's ring goes). The inspector shifts are proven benign: each passes with F1's new members made non-enumerable in-page
+(`.scratch/focus/hide-f1-members-prelude.js`) and fails without it. While the suite fails, an audit leg refuses to
+judge; judge it from its own audit dir (`node scripts/revisit-gate.js --audit-dir=.scratch/revisit-gate-out`, the same
+for `storage-invariant-gate.js` and `vm-truth-gate.js`; the capstone leg prints its careless count before refusing;
+tier-naming and settle: `.scratch/focus/rejudge-{tiernaming,settle}.sh`, their gates' own analysis over
+`scripts/.scratch/*-gate`).
 
 ---
 
@@ -81,11 +98,11 @@ reference drawing `desktop-canvas.html` (functions `windowFrame`, `titleBar`, `w
    It is not serialized. A click on a desktop tile already makes the icon the editor focus (and opens its app at once).
    So the selected icon is that existing selection, drawn the icon's own way. The draft's own scene (icon selected,
    its window focused) is exactly what Fizzygum's single-click-opens plus the editor focus produce.
-3. **The footprint is a third of the suite, not all of it.** In G's census of 298 screenshot tests and 972 shots
-   (`Fizzygum-tests/.scratch/g/r2/census-raw.json`; analysis script `Fizzygum-tests/.scratch/focus/footprint.js`):
-   88 tests and 255 shots show at least one top-level window, and only those can change. 24 shots show two or more
-   windows, where only the frontmost goes dark. 8 tests carry a frame in the hand. Desktop icons appear in only 3
-   tests, and one shot (`macroDesktopShortcutIcons` image_1) shows a clicked icon.
+3. **The footprint is a third of the suite, not all of it.** F0 measured it exactly (§4 F0 "Result"; mouse, dpr 1,
+   299 screenshot tests and 977 shots): 106 tests and 297 shots show a focused frame, and only those can change at V.
+   30 shots in 15 tests show two or more eligible frames, where only the frontmost goes dark. 10 shots in 8 tests
+   carry the focused frame in the hand. Desktop icons appear in only 3 tests, and one shot
+   (`macroDesktopShortcutIcons` image_1) shows a clicked icon.
 4. **⚠ The trap: frame looks are COPIED, and the title is a LAYOUT input.**
    - Every frame look value is copied into fields when the look is derived, and those fields are serialized. The full
      body derivation (`FrameWdgt._deriveAndSetBodyAppearance`) also wipes a hand-set body colour and corner radius. So
@@ -112,7 +129,7 @@ reference drawing `desktop-canvas.html` (functions `windowFrame`, `titleBar`, `w
 
 ---
 
-## §1 Current state (verified 2026-10-22; re-grep before trusting)
+## §1 Current state (verified 2026-10-22, re-verified 2026-10-23; re-grep before trusting)
 
 ### 1.1 Z-order and raising
 - `world.children` is back-to-front: the last child is topmost (`WorldWdgt`). The hand (`world.hand`) is NOT a world
@@ -120,7 +137,7 @@ reference drawing `desktop-canvas.html` (functions `windowFrame`, `titleBar`, `w
 - `Widget.rootForFocus` climbs to the world child. Despite its name, it is a z-order root, not focus.
   `Widget.bringToForeground` moves that root last (`TreeNode.moveAsLastChild`), re-raises the transient pop-up band
   above it (`_transientPopUpsAboveMe`), then calls `root._fullChanged()`. `isInForeground` asks "nothing above my
-  root but the pop-up band". Its only reader is `VideoPlayerWdgt`.
+  root but the pop-up band". Its readers are `bringToForeground` itself (an early return) and `VideoPlayerWdgt`.
 - **When a window comes to the front:**
   - **A left press anywhere in it.** `ActivePointerWdgt` dispatches `pressBegan`; `Widget.pressBegan` does
     `@bringToForeground()`, then escalates. Bar and button presses raise too.
@@ -184,8 +201,10 @@ reference drawing `desktop-canvas.html` (functions `windowFrame`, `titleBar`, `w
   child is the last child at its own add. Nested frames keep their saved look.
 
 ### 1.3 Focus-eligibility predicates (`FrameWdgt`)
-- `isTransientPopUp` / `isPersistent`: `lifetime is 'transient' | 'persistent'`. Menus and prompts are transient. A
-  pinned menu is a persistent `MenuWdgt` that wears the window look.
+- `isTransientPopUp` / `isPersistent`: `lifetime is 'transient' | 'persistent'`. Menus and prompts are transient
+  until pinned or GRABBED: `_reactToBeingGrabbed` makes a transient frame persistent at the grab ("you moved it, it
+  stays"). A pinned or grabbed menu is a persistent `MenuWdgt` that wears the window look, so under D1+D2 a grabbed
+  menu or a dragged prompt is the focused frame from the grab on.
 - `isInternal`: parent (through islands) is neither the world nor the hand. That makes cards and docked bands
   (`EdgeDockLayoutSpec`).
 - `enclosingFrame`, `_parentThroughIslands`, `Widget.isVisible` (a boolean FIELD, not a method; the query is
@@ -199,13 +218,13 @@ reference drawing `desktop-canvas.html` (functions `windowFrame`, `titleBar`, `w
 - Non-frame world children (icons, the clock, tooltips, loose widgets) are interleaved with frames.
 
 ### 1.4 The world cycle (`WorldWdgt.doOneCycle`), in order
-1. events: `_playQueuedEvents`, then replayed test commands;
+1. events: `_playQueuedEvents`, then replayed test commands, then `progressFramePacedActions`;
 2. `_runChildrensStepFunction`;
 3. `dataflow.recalculateDataflow`;
 4. `storageSorter.drainPendingSort`;
 5. `_drainPendingFractionalBookkeepingSeeds`;
 6. **`recalculateLayouts`**;
-7. the hover re-sync;
+7. the hover re-sync, then `_drainPendingFractionalReRecords`;
 8. `pinouts?.reconcile`, `addHighlightingWidgets`;
 9. **`_updateEditorSelectionOverlay`**: a PULL reconciler, once per cycle, before paint;
 10. `addDragAffordanceWidgets`;
@@ -232,14 +251,21 @@ The selection reconciler is the precedent for a per-cycle derived fact. It cache
   because `FrameWdgt` is not excluded from editor-focus tracking; only its strip (`FrameBarWdgt`), buttons and handles
   are. A framed CITIZEN that declares editing amenities (`DocumentWdgt`, `GenericPanelWdgt`) in edit mode is then framed
   by the ring round the WHOLE window (`_widgetBeingEdited`'s CITIZEN branch). Its mode is its content's:
-  `FrameWdgt.isInEditMode` answers `@contents.isInEditMode()` (Fizzygum `9342748f`; before it, a stale copy on the
-  frame decided). D11 ends the window-as-selection case.
+  `FrameWdgt.isInEditMode` answers `@contents.isInEditMode()`. D11 ends the window-as-selection case.
+  - A TILTED window dropped is ringed whatever its content: the drop makes its transform island the focus,
+    `_widgetBeingEdited` unwraps the island to the frame, and the "selected item" walk then accepts the ISLAND as an
+    editable container in edit mode (`TransformFrameWdgt extends PanelWdgt`, whose `providesAmenitiesForEditing` is
+    true). An untilted plain window dropped the same way is not ringed. (F0: the suite's only D11 pixel change.)
+  - In the suite every window-as-selection write is a DROP (32 at mouse); no test clicks a window's border or gutter.
 - **A page's ring is the window's** (window-page-gutter arc): when the selected widget fills a window's page, the
   window paints that ring in its gutter (`FrameWdgt.hostsSelectionRingOf`, `WorldWdgt.editorSelectionRingHost`). That
   is the selection of the page's CONTENT, untouched by D11.
-- Chrome opts out with `excludedFromEditorFocusTracking`: `FrameBarWdgt`, `IconButtonWdgt`, `MenuWdgt`, `HandleWdgt`,
+- Chrome opts out with `excludedFromEditorFocusTracking`: `FrameBarWdgt`, `IconButtonWdgt`, `HandleWdgt`,
   `LayoutChromeWdgt`, `SimpleButtonWdgt`, `SliderWdgt`, `SliderButtonWdgt`, `ToolbarWdgt`, … No desktop-icon class
-  opts out.
+  opts out. `MenuWdgt` does NOT (`excludedFromEditorFocusTracking: -> @actsAsEditorChrome`, and `actsAsEditorChrome`
+  is false), so a click on a menu row selects the `MenuItemWdgt`, and a drop of a grabbed menu selects the menu. The
+  click-release focus is always the leaf widget hit: base `Widget` defines both `activated` and
+  `contextMenuRequested`, so no climb happens.
 - **The ring.** `_widgetBeingEdited` decides which widget is framed by the 2 px accent ring
   (`HighlightOutlineAppearance.paintRing`, via `Widget._paintEditorSelectionOverlayIfSelected`). It returns nothing
   for a bare desktop selection and nothing while a caret is in the focus. So today:
@@ -273,7 +299,7 @@ The selection reconciler is the precedent for a per-cycle derived fact. It cache
   border and text". The draft's SOLID accent plate departs from that (D8).
 
 ### 1.7 Tests and rigs that read what this arc changes
-- **The 88 window tests** of reframe 3. F0 replaces the census estimate with an exact per-shot list.
+- **The 106 tests with a focused frame** of reframe 3 (F0's exact per-shot list, §4 F0 "Result").
 - **Assertions on frame look values:** `macroTiltingWindowKeepsInternalExternalSkin` asserts
   `w.strokeColor.equals(theme.windowFrameStroke)`, which a focused window fails. Re-express it by meaning: the window
   skin is "the look `_frameLook()` answers", or name the focused role.
@@ -313,6 +339,12 @@ The selection reconciler is the precedent for a per-cycle derived fact. It cache
 | D9 | A finger hold that opens a context menu selects, as a right-click does; a plain finger drag does not. |
 | D10 | References land on master, one owner-approved commit pair per pixel-changing phase. |
 | D11 | (b) A top-level window is FOCUSED, never SELECTED; a window nested as content is selectable, never focused. |
+
+**Settled at V's review (owner, 2026-10-23, every recommendation):** D5 stays (i) — glyphs rest `chrome` and light to
+`paper`; F0's surprising answers stand (a grabbed menu, a dragged prompt, a floated toolbar and the shown error console
+are focused windows: the rule stays uniform); D4 reads as F2 built it (a window's title is fit in the focused weight, a
+card's and a menu's in their own); the stale card strip the flip exposed is FIXED in this arc (unit R), before the one
+recapture wave.
 
 The options weighed, as they were put:
 
@@ -432,6 +464,35 @@ redesign learned that a pixel-clean presuite can hide re-visits), plus its probe
   and what the selection was before the press or drop that made it so — the shots S0 changes, and what they will show.
 - **Acceptance:** an exact predicted set (tests and shots) for F's flip, for D4 and for D11, and a list of
   "surprising" focus answers for the owner.
+- **Result (2026-10-23, against Fizzygum `dc2ad0f5` / Fizzygum-tests `1b2be92d1`).** Prelude
+  `Fizzygum-tests/.scratch/focus/f0-prelude.js`, aggregator `f0-aggregate.js`, per-shot tables
+  `.scratch/focus/f0/{mouse,finger}-shots.tsv`, reports `f0/{mouse,finger}-report.txt`. Both runs green with the
+  prelude installed (337/337 mouse, 323/323 finger), so it observes and changes nothing.
+  - **Focus (V's flip):** mouse 297 shots in 106 tests show a focused frame (finger 286 / 103); 274 / 97 without
+    pinned menus and persistent prompts. 30 shots in 15 tests show two or more eligible frames (the review sample's
+    focus section). 10 shots in 8 tests carry the focused frame in the hand. The focus derived at F1's station
+    point disagreed with the shot-time answer 0 times.
+  - **Focus changes with no press between shots:** 2 — a snapshot load (`macroSerializeRoundTripWindow`) and a
+    carried menu dropped into a panel (`macroSubMenuDroppedIntoPanelPinsItself`, focus → nothing). A close to the
+    bin and a reopen give A → nothing → A over one cycle, with the window in the bin meanwhile.
+  - **D4:** 9 shown titles keep fewer characters measured bold (none disappears): 8 in FOCUSED windows, which change
+    at V anyway, and 1 in a CARD (`macroSimpleDocumentHandlesOldInspector` image_2). No background window title
+    changes. F2 therefore measures a title in the weight it wears when its frame is FOCUSED: for a window, the
+    focused role's weight; for a card, which is never focused, its own. D4's purpose — a title shows the same
+    characters whether or not its window is focused — holds, and no card loses characters it has room for.
+  - **D11:** every suppressed write in the suite is a DROP (32 mouse / 31 finger); the predicted pixel set is ONE
+    shot, `macroTiltedWindowDropRequiresDwell` image_2 (the tilted window's ring goes, §1.5). Of the four tests that
+    assert on the selection, only `macroWindowRingFollowsItsPencil` has suppressed writes.
+  - **S1:** 0 shots where the widget being edited is a desktop-icon holder; the selected-icon set is ONE shot,
+    `macroDesktopShortcutIcons` image_1.
+  - **S2 (finger):** 334 holds, 304 of which would select; the predicted set is 16 shots in 10 tests (list in
+    `f0/finger-report.txt`): rectangles, scrolled panes' planes, a canvas's glass, a palette — each ringed after the
+    hold, as a right-click rings it today.
+  - **Surprising answers for the owner (V review), all consequences of D1+D2 as locked:** a grabbed menu and a
+    dragged prompt are the focused window from the grab on; a floated Docs Maker toolbar takes focus from its
+    document (`macroDocsToolbarDockSidesAndFloat` image_2, `macroToolbarChevronPopsOverflow`); the error console,
+    once shown, is a focused window; Inspector windows are focused like any window. Ruled out: focus on a covered or
+    off-screen window, a hand carrying a non-persistent frame, a hidden persistent frame other than the console.
 
 ### F1 — The focus mechanism, pixel-neutral
 - **`WorldWdgt`:**
@@ -481,11 +542,14 @@ redesign learned that a pixel-clean presuite can hide re-visits), plus its probe
   existing note. Prefer the paint-time read.
 
 ### F2 — The title's weight and fit (after F1; D4)
-- Implement D4. Recommended: `FrameBarWdgt._titleReadsWellEnough` and the title's ellipsis fit use the focused weight
-  ALWAYS, and the label's drawn weight follows the look.
-- **Acceptance:** presuite changes exactly F0's D4-predicted set (an empty set is possible) and nothing else; revisits
-  clean.
-- If the set is non-empty, it joins V's review and recapture.
+- Implement D4: `FrameBarWdgt._titleReadsWellEnough` and the title's ellipsis fit measure the title in the weight it
+  wears when its frame is FOCUSED (a look field: the focused title role's weight for a window, its own weight for a
+  card or a menu, which are never focused — F0 "Result"), and the label's drawn weight follows the look.
+- **Acceptance:** with the focused title role still at today's weight (bold false) the fit is measured exactly as
+  today, so presuite's failing set is unchanged (empty); revisits clean. A probe flips the focused title role to
+  bold in-page and checks that a window's title keeps the same characters through three focus flips, and that a
+  card's title keeps the characters it has room for. The 8 focused-window titles F0 found shorter in bold change
+  at V, inside V's set.
 
 ### S0 — A top-level window is focused, never selected (after F1; D11)
 - **One predicate, shared with F1:** the D1 eligibility test F1 writes for `_deriveFocusedFrame` (persistent, not
@@ -499,10 +563,12 @@ redesign learned that a pixel-clean presuite can hide re-visits), plus its probe
   Maker window dropped into a document) is an item and is framed by the rule that frames items.
 - Re-express `macroWindowRingFollowsItsPencil` (§1.7): keep its `isInEditMode` assertions; assert that the dropped
   windows are NOT selected, and that a paragraph selected before a window's drop is still selected after it.
-- **Acceptance:** presuite changes exactly F0's D11-predicted set; revisits clean; a probe asserts, for a drop, a
-  border click and a gutter click on a Docs Maker window in edit mode, that the window is not selected and the prior
-  selection survives, and that a Docs Maker window dropped INTO a document is selected as an item. A non-empty set
-  joins V's review and recapture.
+- **Acceptance:** presuite changes exactly F0's D11-predicted set — ONE shot, `macroTiltedWindowDropRequiresDwell`
+  image_2, whose tilted window loses its ring — plus `macroWindowRingFollowsItsPencil`'s re-expressed assertions;
+  revisits clean; a probe asserts, for a drop, a border click and a gutter click on a Docs Maker window in edit mode
+  (the suite exercises only drops), that the window is not selected and the prior selection survives, and that a
+  Docs Maker window dropped INTO a document is selected as an item. The changed shot joins V's review and
+  recapture.
 
 ### S1 — The selected-icon mechanism, pixel-neutral (after F1; independent of F2)
 - **`WorldWdgt`:** in `_updateEditorSelectionOverlay` (the pre-paint PULL reconciler; selection changes paint only),
@@ -532,7 +598,8 @@ redesign learned that a pixel-clean presuite can hide re-visits), plus its probe
   `_setEditorFocusNoSettle` under the same ancestry opt-out as the click path.
 - **Acceptance:** presuite at `--pointer=finger` (`node scripts/run-all-headless.js --pointer=finger` from
   `Fizzygum-tests/`, plus `fg finger`). The finger references that change are exactly the shots where a hold now
-  selects; F0's prelude can list them first. Each is a picture to eyeball before the recapture, not a fix.
+  selects: F0 predicts 16 shots in 10 tests (`.scratch/focus/f0/finger-report.txt`). Each is a picture to eyeball
+  before the recapture, not a fix.
 - Update the BACKLOG item "a finger does not select what a mouse selects" (its hold half is done here; its drag half
   stays).
 
@@ -543,7 +610,8 @@ redesign learned that a pixel-clean presuite can hide re-visits), plus its probe
 
    Re-express `macroTiltingWindowKeepsInternalExternalSkin`'s skin predicate by meaning. Re-read the §1.7 tests and
    update their prose and assertions where the focus look is now part of what they state.
-2. `fg presuite`: the changed set must equal F0's prediction plus F2, S0 and S2's sets. Every needs-a-fix or AIM
+2. `fg presuite`: the changed set must equal F0's prediction (the shots with a focused frame, §4 F0 "Result") plus
+   the selected icon (`macroDesktopShortcutIcons` image_1), on top of S0's and S2's sets. Every needs-a-fix or AIM
    MISSED is fixed first; never recapture over one.
 3. **Owner review:**
    - `fg diffpage $(grep -v '^#' Fizzygum/docs/tooling/visual-review-sample.txt)` from `Fizzygum-all/`, plus the
@@ -552,7 +620,8 @@ redesign learned that a pixel-clean presuite can hide re-visits), plus its probe
      and click between them, drag one, pin a menu, tilt a window, collapse one, and click and right-click desktop
      icons. Select a paragraph in one Docs Maker, then drag another window and click its gutter: the paragraph keeps
      its ring and no window wears one (D11).
-   - The owner settles D5 here.
+   - The owner settles D5 here, and sees F0's surprising answers (§4 F0 "Result": a grabbed menu, a dragged prompt,
+     a floated toolbar and the error console are focused windows).
 4. **Recapture**, backgrounded, with ETA and status: `fg recapture --auto --dprs=1,2`, then the finger equivalent.
    ⚠ A Monitor on a recapture log must grep the verdict tokens (`RECAPTURE COMPLETE|INCOMPLETE|INCONCLUSIVE|
    needs-a-fix|UNSTABLE`), never "FAIL": the discovery pass prints "STILL FAILS single-process" per stale test.
@@ -640,7 +709,7 @@ redesign learned that a pixel-clean presuite can hide re-visits), plus its probe
   `residue-followups-arc-2026-10-16` (the twin prelude), `swcanvas-reproduces-what-native-hides`.
 
 ## Sizing (estimate)
-2–3 sessions: P0's remainder + F0 + F1, then F2 + S0 + S1 + S2, then V + Z. ONE recapture wave of about 90 tests at
+2–3 sessions: P0's remainder + F0 + F1, then F2 + S0 + S1 + S2, then V + Z. ONE recapture wave of about 110 tests at
 mouse and finger, dpr 1 and 2 (about an hour since R0).
 
 ## Start prompt for a fresh session
@@ -650,3 +719,12 @@ mouse and finger, dpr 1 and 2 (about an hour since R0).
 > against today's tree (§1.5/§1.7 were last checked against Fizzygum `9342748f` / Fizzygum-tests `1b2be92d1`). Finish
 > P0 (the review-sample additions), then run F0 and the next unstarted units in orchestration mode (§0.5). Never
 > commit, push or recapture without my approval.
+
+## Closed BACKLOG items (ledger)
+- [x] DEFERRED (owner, 2026-10-16) — the FOCUS arc: a focused-window look (dark `chromeDark` bar and frame, 16% shadow,
+  white glyphs) and the desktop icon "selected" accent. DONE 2026-10-23: this plan, every unit.
+- [x] A frame strip's ROSTER change does not re-arrange the strip (found by V's review). DONE 2026-10-23 as unit R: in-pass,
+  `FrameWdgt._reDeriveBarRosterNoSettle` schedules the bar through the phase-valve; `FrameBarWdgt._setTitleWeightNoSettle`
+  does the same.
+- [x] G-D follow-up, its HOLD half (a finger does not select what a mouse selects). DONE 2026-10-23 as unit S2; the DRAG
+  half stays in BACKLOG under the redesign's section.

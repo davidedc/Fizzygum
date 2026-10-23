@@ -192,11 +192,15 @@ class FrameBarWdgt extends Widget
   # arrange grants the span between the buttons; a POP-UP HEADER's hugs its own text (the strip
   # sizes itself to it), its lines LEFT-aligned, and the arrange places it the title inset into the
   # header band. Both paint straight onto the strip's background, take their font from the bar
-  # spec's font role and their ink from the frame's look, and are BORN in the display case the
-  # frame decides for its title (FrameWdgt._titleDisplayCase), so the first measure of either --
-  # the header's hug above all -- is of the text as it shows. A piece rebuilt in the other style
-  # (a pinned menu's header becoming its window title) is born in the case its frame's kind at the
-  # rebuild calls for.
+  # spec's font role and their ink from the frame's look -- a window's title its weight too, which
+  # focus moves; a header's weight is its role's, the one its look names -- and the weight their
+  # FIT is measured in from the look as well (titleFitBold: a window's title is fit in its focused
+  # weight; a header's, the weight it draws in, never moves). Both are BORN in those weights and in
+  # the display case the frame decides for its title (FrameWdgt._titleDisplayCase), so the first
+  # measure of either -- the header's hug above all -- is of the text as it shows, and no later
+  # derivation of an unchanged look touches them. A piece rebuilt in the other style (a pinned
+  # menu's header becoming its window title) is born in what its frame's kind at the rebuild calls
+  # for.
   _buildTitleNoSettle: (spec) ->
     look = @frame._frameLook()
     displayCase = @frame._titleDisplayCase()
@@ -204,7 +208,7 @@ class FrameBarWdgt extends Widget
       # BORN with its text: a multi-line text hugs its box only when told to (its box-hug core
       # is a one-shot, not a mode the way a plain string's is), so it must have something to
       # hug at build time. The frame re-asserts the same title right after.
-      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""), fontRole: spec.fontRole, displayCase: displayCase
+      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""), fontRole: spec.fontRole, displayCase: displayCase, fitBold: look.titleFitBold
       title.color = look.titleText
       title.alignLeft()
       @_addNoSettle title
@@ -214,10 +218,12 @@ class FrameBarWdgt extends Widget
       title._sizeToTextAndDisableFittingNoSettle()
       return title
 
-    # the family, size and weight the spec's font role names, on EVERY engine: a bar title is chrome
-    # like any other, and chrome keyed on the user agent renders one world two ways -- which is
-    # precisely what the cross-engine suite leg reads, and reports, as a defect.
-    title = new StringWdgt "", fontRole: spec.fontRole, displayCase: displayCase
+    # the family and size the spec's font role names, on EVERY engine: a bar title is chrome like any
+    # other, and chrome keyed on the user agent renders one world two ways -- which is precisely what
+    # the cross-engine suite leg reads, and reports, as a defect. Its weight is the look's (a
+    # focused window's title can be bolder than the role's), so it is born in the weight it shows,
+    # and in the weight the look fits it in (the focused one, for a window focused or not).
+    title = new StringWdgt "", fontRole: spec.fontRole, displayCase: displayCase, bold: look.titleBold, fitBold: look.titleFitBold
 
     title.color = look.titleText
     # a window title reads CENTRED in its strip (ruling C13): the arrange grants me a box centred
@@ -233,9 +239,11 @@ class FrameBarWdgt extends Widget
   # close piece (program ruling C6, the same isFreeFloating() predicate the
   # resize handle answers) -- hence the frame re-runs this at every (re)parenting
   # and every layout-spec change. Answers whether the roster actually CHANGED, so
-  # the frame invalidates its layout only when it did (a spec-less chrome child
-  # rides the freefloating skip in Widget._addNoSettle's container invalidate, and
-  # an unconditional invalidate mid-arrange would cost a settle re-visit).
+  # the frame schedules my re-lay only when it did (a spec-less chrome child rides
+  # the freefloating skip in Widget._addNoSettle's container invalidate, so these
+  # adds and teardowns reach no layout on their own -- the frame's
+  # _reDeriveBarRosterNoSettle schedules it, and an unconditional schedule would
+  # re-lay an unchanged strip at every spec handoff).
   _reDeriveRosterNoSettle: ->
     spec = @frame._barSpec()
     pieces = spec.pieces
@@ -355,13 +363,14 @@ class FrameBarWdgt extends Widget
   # MY HALF OF MY FRAME'S SKIN (the body's half is FrameWdgt._deriveAndSetBodyAppearance; the
   # frame runs the two as one, body first, FrameWdgt._deriveAndSetSkin): my background skinned as
   # my frame's look names it (FrameWdgt._frameLook) and shaped to the body it now wears, my title
-  # in the look's ink, and my glyph pieces in the look's glyph ink. Re-applied on every derivation
-  # of that skin -- each re-parenting, each lifetime change -- so a strip follows what its frame now
-  # is: a window nested as a card takes the card's glyph ink. A strip still built in another style
-  # than the one my frame's spec names (a pop-up just pinned, a copy of one) is about to be rebuilt
-  # in that style by my roster derive, and the rebuild skins it; an untitled pop-up has no strip to
-  # skin at all. The glyph ink is recorded and applied before that check, whatever style my title
-  # pieces were built in, so the pieces such a rebuild constructs already wear what this
+  # in the look's ink and weight, and my glyph pieces in the look's glyph ink. Re-applied on every
+  # derivation of that skin -- each re-parenting, each lifetime change -- and, without the body's
+  # half, on each change of my frame's focus (FrameWdgt.noteFocusChanged), so a strip follows what
+  # its frame now is: a window nested as a card takes the card's glyph ink. A strip still built in
+  # another style than the one my frame's spec names (a pop-up just pinned, a copy of one) is about
+  # to be rebuilt in that style by my roster derive, and the rebuild skins it; an untitled pop-up has
+  # no strip to skin at all. The glyph ink is recorded and applied before that check, whatever style
+  # my title pieces were built in, so the pieces such a rebuild constructs already wear what this
   # derivation decided.
   _deriveAndSetStripSkin: ->
     look = @frame._frameLook()
@@ -373,6 +382,23 @@ class FrameBarWdgt extends Widget
     @_skinTitlebarBackgroundTo look
     @_shapeTitlebarBackground spec
     @label?.setColor look.titleText
+    @_setTitleWeightNoSettle look.titleBold, look.titleFitBold
+
+  # My title's WEIGHTS, as my frame's look names them: the one it draws in (titleBold) and the one
+  # its fit is measured in (titleFitBold). My title is born in both (_buildTitleNoSettle), and takes
+  # them again at each derivation of my skin, a focus flip among them. Weights that do not change
+  # are a strict no-op: nothing repaints and nothing re-arranges. A changed one re-renders my title
+  # (its back buffer is keyed on both) and schedules my re-lay, because whether my title shows at
+  # all is decided by my arrange (_titleReadsWellEnough), on the fit's measure. A focus flip, which
+  # the world decides just before its cycle's flush, moves only the drawn weight -- a window's title
+  # is fit in its focused weight, focused or not -- and a re-parenting between a window and a card,
+  # inside the gesture's own settle, can move both, from inside a pass when an arrange reaches it.
+  # A pass refuses a CLIMBING invalidate, not the phase-valve's mark, so I schedule through the
+  # valve: off-pass it invalidates me and the next flush re-lays me; in-pass it enqueues just me,
+  # the one widget the change affects, and the walk's next round re-lays me in this same flush.
+  _setTitleWeightNoSettle: (bold, fitBold) ->
+    return unless @label?._setBoldNoSettle bold, fitBold
+    @_scheduleRelayoutRespectingPhase()
 
   # Every glyph piece I carry wears my strip's ink (glyphInk): the ones already there take it again
   # (a no-op unless the ink moved), and one built a moment ago joins them. With no ink recorded yet
@@ -659,7 +685,9 @@ class FrameBarWdgt extends Widget
     false
 
   # Does the title in the box it now holds still SAY the frame's name? Whole, always; cropped, only
-  # while enough of it survives (the two barTitleEllipsis* dials).
+  # while enough of it survives (the two barTitleEllipsis* dials) -- measured in the weight its fit
+  # is measured in (numberOfCharactersThatFit), so a window's title is graded in its focused weight,
+  # focused or not, and a focus flip never shows or hides it.
   _titleReadsWellEnough: ->
     preferences = WorldWdgt.preferencesAndSettings
     wholeLength = @label.text.length

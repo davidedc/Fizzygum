@@ -11,7 +11,7 @@ class TransformFrameWdgt extends PanelWdgt
   # I am a structural transform WRAPPER around ONE content subtree, never editor content myself: when a
   # MOVE of a tilted widget makes ME world.editorFocusWdgt, the editor-focus selection must frame my
   # CONTENT (which draws its frame WARPED inside my island buffer), not ME (my own @bounds are un-rotated,
-  # so framing me draws an axis-aligned box that ignores the tilt). WorldWdgt._widgetBeingEdited resolves
+  # so framing me draws an axis-aligned box that ignores the tilt). WorldWdgt._widgetTheFocusSelects resolves
   # through this to my content. Capability, not an `instanceof` type-test (type-test-elimination convention).
   resolvesEditorSelectionToContent: -> true
 
@@ -123,18 +123,37 @@ class TransformFrameWdgt extends PanelWdgt
   # Not while the hand carries me, exactly like the frame's own re-derivation: the skin settles on
   # release. The materialize homes me EMPTY before my content moves in, and the content then hears
   # its own add, so nothing reaches a frame twice there.
-  #   An explicit type test, never a probe for the method: a duck-typed `?.()` would start calling
-  # into whatever unrelated class next gained a method of that name.
   _reactToBeingAdded: (whereTo, beingDropped) ->
     super
     return if whereTo is world?.hand
+    @_frameClassifyingThroughMe()?._deriveAndSetSkin()
+
+  # The ONE frame that classifies through me (FrameWdgt.isInternal looks through sole-content
+  # islands): a frame that is my sole content -- directly, or through islands nested in me, each
+  # the sole content of the one around it -- and whose look-through figure is me or an island
+  # around me. undefined when my content is anything else. Its look is what I re-derive on a re-home
+  # (above) and what the shadow I cast for it reads (addShadow).
+  #   An explicit type test, never a probe for the method: a duck-typed `?.()` would start calling
+  # into whatever unrelated class next gained a method of that name.
+  _frameClassifyingThroughMe: ->
     figure = @
     loop
       onlyChildren = figure.childrenNotHandlesNorCarets()
       break unless onlyChildren.length is 1
       figure = onlyChildren[0]
-    if figure instanceof FrameWdgt and figure._enclosingIslandFigure().isAncestorOf @
-      figure._deriveAndSetSkin()
+    return undefined unless figure instanceof FrameWdgt and figure._enclosingIslandFigure().isAncestorOf @
+    figure
+
+  # THE DESKTOP SHADOW I CAST AT REST. Standing on the desktop with a frame classifying through me,
+  # I am that frame's world child -- a tilted or scaled window's -- and cast the shadow its look
+  # names (FrameWdgt._frameLook), the focused window's own alpha among them, while the frame casts
+  # none of its own inside me (FrameWdgt._reCastRestingShadow re-takes mine when its look's shadow
+  # moves). Wrapping anything else I cast the one desktop shadow every world child wears
+  # (Widget.addShadow's default). An EXPLICIT offset or alpha always wins: the hand gives me its
+  # lifted one while it carries me.
+  addShadow: (offset, alpha) ->
+    look = @_frameClassifyingThroughMe()?._frameLook()
+    super (offset ? look?.shadowOffset), (alpha ? look?.shadowAlpha)
 
   # Phase 4B-universal (§6): an EXPLICIT island drives the halo rotation protocol against its OWN spec
   # (not the Widget base, which would wrap the island in ANOTHER sugar island). screenAnchor honours an

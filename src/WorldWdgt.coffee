@@ -327,6 +327,21 @@ class WorldWdgt extends IconGridPanelWdgt
   # its window stay put (a band floated out of the window, docked into it or collapsed, changing the
   # page's box inside an unchanged window) is still a change, and the window is told to repaint it.
   _editorSelectionRingBox: undefined
+  # The SELECTED ICON this cycle -- the desktop icon (a WidgetHolderWithCaptionWdgt of any class: an
+  # app launcher, a shortcut, a folder, the bin) the selection names, on my desktop or in a folder or
+  # a document -- or undefined. An icon wears its OWN selected look (its tile's border, its plate,
+  # its caption's ink: DesktopIconAppearance, WidgetHolderWithCaptionWdgt.inkForChildText), never
+  # the ring, so it is cached apart from the selected widget, by the same once-per-cycle pass
+  # (_updateEditorSelectionOverlay) and read through the O(1) isSelectedIcon as the icon paints.
+  _selectedIcon: undefined
+
+  # --- focus (focus-and-selection plan, D1/D2) -------------------------------------------------------
+  # The FOCUSED FRAME this cycle -- the window the user works IN -- or undefined. Derived, never set by
+  # an event: recomputed each cycle from my children's z-order (and what the hand carries) by
+  # _updateFocusedFrameNoSettle, so no reordering path can leave it stale. A once-per-cycle cache, read
+  # through the O(1) isFocusedFrame (a frame's look asks it: FrameWdgt._frameLook); the walk itself is
+  # _deriveFocusedFrame, run once by the station.
+  _focusedFrame: undefined
 
   steppingWdgts: undefined
 
@@ -383,7 +398,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # this one is so we can left/center/right align in
   # a document editor the last widget that the user "touched"
   # Read as a field by anyone; WRITTEN only through _setEditorFocusNoSettle, the one write, which
-  # announces every change to whatever mirrors the edited text (a text toolbar's tools).
+  # announces every change to whatever mirrors the edited text (a text toolbar's tools) and never
+  # names a top-level window (a window on the desktop is focused, never selected).
   # TODO this could be extended so we keep a "list" of
   # "selected" widgets (e.g. if the user ctrl-clicks on a widget
   # then it highlights in some manner and ends up in this list)
@@ -1678,7 +1694,27 @@ class WorldWdgt extends IconGridPanelWdgt
   # cycle's dataflow station, ahead of layout and paint -- so what the text tools show is a function
   # of the event stream, with no timer. DARK when nothing mirrors the edited text. Settles nothing,
   # so it is safe inside a pass (the destroy core runs under layout flushes).
+  #   A TOP-LEVEL WINDOW IS FOCUSED, NEVER SELECTED (focus-and-selection plan D11). A write naming
+  # one -- a frame standing on my desktop (FrameWdgt.isTopLevelWindow), or the transform island it
+  # rides tilted (_frameSeenThroughIslands) -- changes nothing: the selection stays where it was.
+  # Focus is for the window the user works IN (isFocusedFrame, derived from z-order), the selection
+  # for the thing they work ON: dropping a window after a move, or clicking its own body (its border,
+  # its page gutter), raises and focuses it and leaves selected the paragraph or the item the tools
+  # act on. This is no ancestry opt-out: everything INSIDE the window stays selectable, and a window
+  # NESTED as content (a card -- a Docs Maker dropped into a document) is an item like any other,
+  # selectable and never focused. One case clears the selection instead: the window named IS the
+  # selection (itself, or the island it rides) -- it was selected as a nested item and has just come
+  # to stand on my desktop, carried out of its container, so it is selected no more, and the clear
+  # goes through this same write, announced like any change. undefined (a clear) and I (a click on
+  # the bare desktop, which selects nothing) pass through. The rule sits HERE, at the one write,
+  # rather than at the sites that call it, so every path that writes the focus, present and future,
+  # obeys it by construction; a window that comes to stand on my desktop with no write at all is
+  # covered where the selection is read (_widgetTheFocusSelects).
   _setEditorFocusNoSettle: (aWdgt) ->
+    frame = @_frameSeenThroughIslands aWdgt if aWdgt?
+    if frame?.isTopLevelWindow()
+      return unless @editorFocusWdgt? and @_frameSeenThroughIslands(@editorFocusWdgt) is frame
+      aWdgt = undefined
     return if aWdgt is @editorFocusWdgt
     @editorFocusWdgt = aWdgt
     @dataflow?.markNonValueChange @
@@ -1695,9 +1731,10 @@ class WorldWdgt extends IconGridPanelWdgt
     return
 
   # The widget the editor-focus selection outline frames (§5.D D-3, decisions D18/D21), or undefined.
-  # editorFocusWdgt is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a
-  # SELECTED op-target within an active editing context, so the outline frames "this is what an op will
-  # act on":
+  # editorFocusWdgt is the sticky focus POINTER (the last content clicked/dropped), read first as the
+  # widget it SELECTS (_widgetTheFocusSelects: never the desktop, a top-level window, a detached widget
+  # or a widget a caret is in); this narrows that to a SELECTED op-target within an active editing
+  # context, so the outline frames "this is what an op will act on":
   #   CITIZEN   — a pencil-capable widget (providesAmenitiesForEditing) with the pencil engaged
   #               (isInEditMode: a window answers its content's mode), when the focus leaf IS the panel.
   #   SELECTED  — (D21) a widget SELECTED inside an editable container that is in edit mode, e.g. a clock
@@ -1705,41 +1742,13 @@ class WorldWdgt extends IconGridPanelWdgt
   #               …) target it, so it shows the same outline. Its nearest editing-amenities ANCESTOR
   #               (excluding the world) must be in edit mode — a bare selection on the desktop is NOT
   #               framed (the world is an editable panel but is not an "editor" holding selected items).
-  # NEVER a widget a CARET is in — the caret's target is the focus or a widget inside it (a text being
-  # typed into, a text field whose text is being edited): the accent caret already says "focus", so an
-  # outline around it as well would say it twice. That is decided here, in the walk, and not when the
-  # outline paints, because this answer is what _updateEditorSelectionOverlay caches and compares each
-  # cycle: a caret coming or going changes it, and that change is what repaints the widget with its
-  # outline or without it. Once the caret goes (Escape, or an accept), the walk frames the focus again
-  # if a branch above selects it.
-  # Stale-pointer guarded (belt to D2b's destroy-time clear): the target must still be attached here.
+  # NEVER a desktop icon: an icon shows its selection in its own look, not in the ring (the SELECTED
+  # ICON, isSelectedIcon), so a holder in a folder window or a document -- an item of an editable
+  # container in edit mode, which the walk below would otherwise frame -- wears no ring.
   _widgetBeingEdited: ->
-    focus = @editorFocusWdgt
+    focus = @_widgetTheFocusSelects()
     return undefined unless focus?
-    # Never frame the desktop itself: a click on empty desktop sets editorFocusWdgt = world (the world
-    # is not editor-focus-excluded), and the world is a PanelWdgt with editing enabled, so the citizen
-    # branch below would otherwise outline the WHOLE screen. The world is never a "widget being edited".
-    return undefined if focus is @
-    return undefined unless focus.root() is @
-    # A transform ISLAND (the sugar wrapper setRotationDegrees / setScaleFactor materialises, or an explicit
-    # TransformFrameWdgt) is structural chrome around content -- never editor content ITSELF. A MOVE of a
-    # tilted widget makes the island the focus (a click INTO the content focuses the content directly), and
-    # the island is a PanelWdgt with editing enabled, so the citizen branch below would frame the ISLAND --
-    # drawing an AXIS-ALIGNED box around the island's own (un-rotated) bounds (the rotation lives in its
-    # transformSpec, not its @bounds). Resolve to the wrapped CONTENT instead: it draws its frame WARPED
-    # inside the island buffer, so a tilted editor is framed exactly like the non-tilted one. Loop for
-    # nested islands (rotate-then-scale can wrap twice); an empty wrapper resolves to undefined.
-    while focus.resolvesEditorSelectionToContent?()
-      focus = focus.childrenNotHandlesNorCarets()?[0]
-      return undefined unless focus?
-    # A menu/list ROW (MenuItemWdgt) is the selectable UNIT, and it is FULL-WIDTH in its list; but a click
-    # lands on its tight LABEL child (the deepest widget). Resolve the label up to the row so the selection
-    # frame hugs the whole entry, not the label's text bounds (owner: a tight-text frame is visual noise).
-    if focus.parent?.absorbsDescendantEditorSelection?()
-      focus = focus.parent
-    # a caret in the focus or in a widget inside it: the caret says "focus" by itself (see above)
-    caretTarget = @caret?.target
-    return undefined if caretTarget? and focus.isAncestorOf caretTarget
+    return undefined if focus.isDesktopIcon?()
     if focus.providesAmenitiesForEditing and focus.isInEditMode()
       return focus
     # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container that is in edit mode.
@@ -1758,6 +1767,52 @@ class WorldWdgt extends IconGridPanelWdgt
         return undefined
       container = container.parent
     undefined
+
+  # The widget the editor focus SELECTS -- the UNIT a selection names -- or undefined: the ONE reading
+  # of editorFocusWdgt that both selection looks start from, the ring (_widgetBeingEdited) and a
+  # desktop icon's own (the SELECTED ICON, _updateEditorSelectionOverlay), so the two can never
+  # disagree about what is selected.
+  # Stale-pointer guarded (belt to D2b's destroy-time clear): the focus must still be attached here.
+  # NEVER a widget a CARET is in — the caret's target is the focus or a widget inside it (a text being
+  # typed into, a text field whose text is being edited, a desktop icon's caption being renamed): the
+  # accent caret already says "focus", so a selected look on it as well would say it twice. That is
+  # decided here, in the walk, and not when a look paints, because this answer is what
+  # _updateEditorSelectionOverlay caches and compares each cycle: a caret coming or going changes it,
+  # and that change is what repaints the widget with its selected look or without it. Once the caret
+  # goes (Escape, or an accept), the focus is selected again.
+  _widgetTheFocusSelects: ->
+    focus = @editorFocusWdgt
+    return undefined unless focus?
+    # Never the desktop itself: a click on empty desktop sets editorFocusWdgt = world (the world is not
+    # editor-focus-excluded), and the world is a PanelWdgt with editing enabled, so the ring's citizen
+    # branch would otherwise outline the WHOLE screen. A click on the bare desktop selects nothing.
+    return undefined if focus is @
+    return undefined unless focus.root() is @
+    # D11: a top-level window, or the island it rides, is focused, never selected
+    return undefined if @_frameSeenThroughIslands(focus)?.isTopLevelWindow()
+    # A transform ISLAND (the sugar wrapper setRotationDegrees / setScaleFactor materialises, or an explicit
+    # TransformFrameWdgt) is structural chrome around content -- never editor content ITSELF. A MOVE of a
+    # tilted widget makes the island the focus (a click INTO the content focuses the content directly), and
+    # the island is a PanelWdgt with editing enabled, so the ring's citizen branch would frame the ISLAND --
+    # drawing an AXIS-ALIGNED box around the island's own (un-rotated) bounds (the rotation lives in its
+    # transformSpec, not its @bounds). Resolve to the wrapped CONTENT instead: it draws its frame WARPED
+    # inside the island buffer, so a tilted editor is framed exactly like the non-tilted one, and a tilted
+    # icon dropped after a move is selected like an untilted one. Loop for nested islands
+    # (rotate-then-scale can wrap twice); an empty wrapper resolves to undefined.
+    while focus.resolvesEditorSelectionToContent?()
+      focus = focus.childrenNotHandlesNorCarets()?[0]
+      return undefined unless focus?
+    # A menu/list ROW (MenuItemWdgt) is the selectable UNIT, and it is FULL-WIDTH in its list; but a click
+    # lands on its tight LABEL child (the deepest widget). Resolve the label up to the row so the selection
+    # frame hugs the whole entry, not the label's text bounds (owner: a tight-text frame is visual noise).
+    # A desktop icon is a unit the same way: a click on its caption's text, or on a glyph that takes the
+    # pointer, selects the icon (WidgetHolderWithCaptionWdgt.absorbsDescendantEditorSelection).
+    if focus.parent?.absorbsDescendantEditorSelection?()
+      focus = focus.parent
+    # a caret in the focus or in a widget inside it: the caret says "focus" by itself (see above)
+    caretTarget = @caret?.target
+    return undefined if caretTarget? and focus.isAncestorOf caretTarget
+    focus
 
   # Recompute, once per cycle just before paint, which widget is generically SELECTED for editing
   # (_widgetBeingEdited, §5.D D-3/D21) and cache it for the per-widget paint-time selection overlay
@@ -1778,9 +1833,24 @@ class WorldWdgt extends IconGridPanelWdgt
   # the ring's top and left sides -- so a change of the ring's box alone, with the same widget and
   # window, tells that window and nothing else: its whole-box repaint clears the old ring and paints
   # the new one.
+  #   The same pass caches the SELECTED ICON: the widget the focus selects (_widgetTheFocusSelects)
+  # when it is a desktop icon (isDesktopIcon), else undefined -- so none while a caret is in its
+  # caption (a rename). On a change it invalidates the old icon (when still attached here) and the
+  # new one, whole subtree, since its caption's ink changes with its border and plate and the caption
+  # is its child, which may stand outside its box (WidgetHolderWithCaptionWdgt).
   # PULL, not push (D-3-iii): the target is recomputed here, never wired into the focus-set sites. Same
   # doOneCycle slot the old addEditorFocusIndicatorWidget reconciler ran in.
   _updateEditorSelectionOverlay: ->
+    selection = @_widgetTheFocusSelects()
+    icon = if selection?.isDesktopIcon?() then selection else undefined
+    unless icon is @_selectedIcon
+      previousIcon = @_selectedIcon
+      @_selectedIcon = icon
+      # cross-invalidation-sanctioned: selection-overlay reconciler — PULL model (D-3-iii), no method
+      # ever runs on the old/new icon in which it could self-invalidate
+      previousIcon._fullChanged() if previousIcon? and previousIcon.root() is @
+      # cross-invalidation-sanctioned: selection-overlay reconciler (see above)
+      icon?._fullChanged()
     target = @_widgetBeingEdited()
     host = @_editorSelectionRingHostOf target
     ringBox = host?.pageSelectionRingBox()
@@ -1827,6 +1897,12 @@ class WorldWdgt extends IconGridPanelWdgt
   isEditorSelected: (w) ->
     w is @_editorSelectedWidget
 
+  # Is `aHolder` the SELECTED ICON this cycle? PUBLIC query, read at paint time by the icon's own look
+  # (DesktopIconAppearance: its tile's border and its plate; WidgetHolderWithCaptionWdgt.inkForChildText:
+  # its caption's ink): an O(1) identity check against the once-per-cycle cache, like isEditorSelected.
+  isSelectedIcon: (aHolder) ->
+    aHolder? and aHolder is @_selectedIcon
+
   # The window painting the selected widget's ring in its page gutter this cycle, or undefined (no
   # selection, or a ring the selected widget paints inside itself). PUBLIC query, read at paint
   # time: by that window, which then paints the ring (FrameWdgt.paintIntoAreaOrBlitFromBackBuffer),
@@ -1834,6 +1910,58 @@ class WorldWdgt extends IconGridPanelWdgt
   # A read of the once-per-cycle cache, like isEditorSelected.
   editorSelectionRingHost: ->
     @_editorSelectionRingHost
+
+  # THE FOCUSED FRAME, derived: a PURE query over z-order, read once per cycle by the station below
+  # (focus-and-selection plan D1, D2).
+  #   - A persistent frame the hand carries -- directly, or as the frame of a carried transform island
+  #     -- is focused for the whole carry (D2): the press that took hold of it raised it first, so focus
+  #     stays with it rather than passing to the window behind for the length of the drag.
+  #   - Otherwise the FRONTMOST visible top-level window (FrameWdgt.isTopLevelWindow): my children are
+  #     back-to-front, so the walk starts at the last, looks through a transform island to the frame it
+  #     wraps, and passes over every non-frame (an icon, the clock, a naked inspector) and every frame
+  #     that is no top-level window (a transient menu or prompt).
+  #   - Neither: undefined, and nothing is focused.
+  _deriveFocusedFrame: ->
+    for carried in (@hand?.children ? [])
+      frame = @_frameSeenThroughIslands carried
+      return frame if frame?.isPersistent()
+    for child in @children by -1
+      frame = @_frameSeenThroughIslands child
+      return frame if frame?.isTopLevelWindow() and frame.visibleBasedOnIsVisibleProperty()
+    undefined
+
+  # The frame `aWdgt` is, or the frame a transform island `aWdgt` wraps as its sole content (through
+  # nested islands, each the sole content of the one around it); undefined for anything else. An
+  # island is recognised as it is in _widgetTheFocusSelects, by the capability it answers.
+  _frameSeenThroughIslands: (aWdgt) ->
+    figure = aWdgt
+    while figure.resolvesEditorSelectionToContent?()
+      onlyContents = figure.childrenNotHandlesNorCarets()
+      return undefined unless onlyContents.length is 1
+      figure = onlyContents[0]
+    if figure.isFrame?() then figure else undefined
+
+  # Is `aFrame` the focused frame this cycle? PUBLIC query (a frame's look asks it of the world:
+  # FrameWdgt._frameLook): an O(1) identity check against the station's cache, like isEditorSelected.
+  isFocusedFrame: (aFrame) ->
+    aFrame? and aFrame is @_focusedFrame
+
+  # THE FOCUS STATION, run once per cycle by doOneCycle just before the geometry settle (why there:
+  # see doOneCycle). It derives the focused frame (_deriveFocusedFrame) and, when that CHANGED, records
+  # it, then tells the frame that lost focus and the one that gained it (FrameWdgt.noteFocusChanged):
+  # each re-skins what focus changes about it and invalidates itself. A flip that changes a title's
+  # weight marks that strip's layout here, out of any pass, for this cycle's flush to settle -- a
+  # deferral DECLARED as such (_deferredSettleDeclare), since riding the flush that follows is its
+  # whole design and no settle may open inside the station.
+  _updateFocusedFrameNoSettle: ->
+    focused = @_deriveFocusedFrame()
+    return if focused is @_focusedFrame
+    previous = @_focusedFrame
+    @_focusedFrame = focused
+    @_deferredSettleDeclare =>
+      previous?.noteFocusChanged()
+      focused?.noteFocusChanged()
+    return
 
 
   # The VideoPlayer family is its own part ('video-player'), shipped only with
@@ -2001,6 +2129,14 @@ class WorldWdgt extends IconGridPanelWdgt
     # auto-bookkeeping arc): bookkeeping-only writes, no geometry mutation, so it sits with
     # the other drain stations BEFORE the geometry settle. Dark-cheap when empty.
     @_drainPendingFractionalBookkeepingSeeds()
+    # Decide the FOCUSED FRAME. Focus is a pure function of z-order, so it is read HERE, at the cycle's
+    # fixed point, once every event, step and drain above has reordered my children: a snapshot load
+    # adds its windows one by one, each the last at its own add, and only the final order says which
+    # is frontmost. It precedes the geometry settle because a focus flip can change a title's weight,
+    # and a title's weight is a layout input (a bolder title is a wider one, and whether a title shows
+    # at all is decided at its strip's arrange): this cycle's flush lays the flipped strip out before
+    # anything paints it.
+    @_updateFocusedFrameNoSettle()
     @recalculateLayouts()
     # Hover re-sync AFTER the flush: re-derive the widgets-under-(stationary)-pointer set against the
     # frame's SETTLED geometry -- the same fixed point paint reads -- so hover never lags geometry within
@@ -3130,10 +3266,15 @@ class WorldWdgt extends IconGridPanelWdgt
     # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute undefined next cycle
     # regardless; the selected widget's own repaint clears its overlay. The window that painted its ring in a
     # page gutter is a bare ref of the same kind, to a window fullDestroyChildren also tore down; the box
-    # of its ring goes with it.
+    # of its ring goes with it, and so does the selected icon, a bare ref to an icon torn down with it.
     @_editorSelectedWidget = undefined
     @_editorSelectionRingHost = undefined
     @_editorSelectionRingBox = undefined
+    @_selectedIcon = undefined
+    # the focused frame is a bare ref of the same kind, to a frame fullDestroyChildren just tore down.
+    # The station re-derives it from the restored desktop on the next cycle, and the frames a load
+    # re-adds derive their look while nothing is focused, so the station's flip finds them all unfocused.
+    @_focusedFrame = undefined
     # DANGLING WORLD SLOTS. These are bare world fields holding a widget that fullDestroyChildren
     # above just destroyed, so each would keep a DEAD reference into the next test (or, on the load
     # path, into the rest of the session). StorageSorter's furniture marking reads world[slot] and

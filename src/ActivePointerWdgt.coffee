@@ -902,6 +902,16 @@ class ActivePointerWdgt extends Widget
       # a secondary press's release dispatches, climbing to its implementor the same way. So the
       # titled menu, the dev-mode disambiguation, the world's own menu AND any override a widget
       # declares are inherited whole: the two triggers meet AT the widget, not one level below it.
+      #   ...and the hold SELECTS as the right-click release does, so a finger sees which widget the
+      # menu acts on: the pressed widget becomes the editor focus, then its menu opens — the release's
+      # order. The same LEAF the release focuses (the widget the press hit, not the implementor the
+      # climb below reaches) under the same ancestry opt-out (a leaf of chrome selects nothing),
+      # through the one write, which settles nothing and so is safe at either seat the recognizer
+      # runs from: a drained event, or the per-cycle hover re-sync after the geometry flush (the
+      # selection's look is pulled later in that same cycle). A plain finger drag never gets here: it
+      # leaves the hold radius first, and it scrolls.
+      if !(@_excludedFromEditorFocusTrackingByAncestry @mouseDownWdgt)
+        world._setEditorFocusNoSettle @mouseDownWdgt
       w = @mouseDownWdgt
       until w.contextMenuRequested
         w = w.parent

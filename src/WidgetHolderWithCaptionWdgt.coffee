@@ -13,10 +13,15 @@
 #                desktopIconGlyph when I am built
 #   the PLATE    painted by my appearance desktopIconTilePlateGap below the tile, under my caption:
 #                my caption's box outset by the plate's padding
-#   the CAPTION  my label child, a TextWdgt in desktopCaptionText on the plate: one line hugs its
-#                text, a longer caption wraps across my width less the plate's padding (so its plate
-#                spans my width), desktopIconCaptionMaxLines lines at most, the rest ending in "…";
-#                each line stands on the caption's own line box (its desktopCaption font role's)
+#   the CAPTION  my label child, a TextWdgt on the plate in the ink I answer for it as it paints
+#                (inkForChildText: desktopCaptionText): one line hugs its text, a longer caption
+#                wraps across my width less the plate's padding (so its plate spans my width),
+#                desktopIconCaptionMaxLines lines at most, the rest ending in "…"; each line stands
+#                on the caption's own line box (its desktopCaption font role's)
+#   SELECTED     while I am the selected icon (WorldWdgt.isSelectedIcon), the tile's border is a ring
+#                (desktopIconTileSelectedStroke, desktopIconTileSelectedStrokeWidth), the plate is
+#                desktopIconPlateSelectedFill and the caption desktopIconCaptionSelectedText; the
+#                tile's fill stays my state's
 # I lay all of it out again at EVERY arrange (_layOutOwnContents), from the theme of the page I am
 # in, so the bounds a saved or copied icon carries for its children never pin a look. I am made at
 # the standard extent; in a box of any other size nothing shrinks: every piece keeps its size and
@@ -74,10 +79,9 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # keeps -- FLOAT never scales a short caption up to fill its box, and the CROP default
     # ellipsises what the most lines I give it cannot hold (editing an ellipsised caption hands off
     # to the pop-out editor, handOffToPopoutEditorIfOverflowing). Its box and its wrapping are my
-    # layout's.
+    # layout's; its ink is mine to answer as it paints (inkForChildText), so it holds no colour.
     @label = new TextWdgt @labelContent, fontRole: theme.fonts.desktopCaption
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
-    @label.color = theme.desktopCaptionText
     @_addNoSettle @label, beingDropped: true
     @label.alignCenter()
     @label.isEditable = true
@@ -109,6 +113,31 @@ class WidgetHolderWithCaptionWdgt extends Widget
 
   _strokeForMyState: ->
     WorldWdgt.theme.desktopIconTileStroke
+
+  # WHEN I AM SELECTED -- the icon the editor focus selects (WorldWdgt.isSelectedIcon: a click on my
+  # tile (which also opens me), on my plate or on my caption, a right-click, a drop of me; none while
+  # a caret is in my caption) -- I show it in my OWN look, read as I paint: my appearance's selected
+  # tile border and plate, and my caption's selected ink (inkForChildText). Never the generic
+  # selection ring, which would square off my cell and wrap my plate: I answer no to it here, and the
+  # world never names me the widget being edited (WorldWdgt._widgetBeingEdited).
+  _showsSelectionOverlay: ->
+    false
+
+  # As an icon I am the selectable UNIT, but a click can land on my caption's text or on a glyph that
+  # takes the pointer (a bare holder's): the selection they make is mine
+  # (WorldWdgt._widgetTheFocusSelects resolves a selected child of mine up to me through this, as it
+  # resolves a menu row's label to the row).
+  absorbsDescendantEditorSelection: -> true
+
+  # THE INK OF MY CAPTION, which my caption asks me for as it paints and keys its buffer, holding no
+  # colour of its own (StringWdgt._textInk): desktopCaptionText, or desktopIconCaptionSelectedText
+  # while I am the selected icon -- so a selection change re-renders my caption, and a caption being
+  # renamed (a caret in it: no selection) keeps the ink it is typed in. Any other text of mine is no
+  # caption and gets no answer.
+  inkForChildText: (aText) ->
+    return undefined unless aText is @label
+    theme = WorldWdgt.theme
+    if world?.isSelectedIcon @ then theme.desktopIconCaptionSelectedText else theme.desktopCaptionText
 
   # Did a press at `pos` (my plane) land on my PLATE -- its padding, or my caption on it -- while my
   # caption can be edited? Such a press is a press on my caption, a rename, never one on my tile.

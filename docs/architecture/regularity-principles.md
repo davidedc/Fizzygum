@@ -55,8 +55,20 @@ vocabulary below is the convention for all new code:
     the world), **card** (persistent, nested). Skin, bar roster, shadow, and colloquial name
     are all **derived** from the pair, re-derived at every (re)parenting and every lifetime
     change, never read back from a field. The look half of that derivation is one query, `FrameWdgt._frameLook()`
-    ([`visual-design-system.md`](visual-design-system.md) §5, which also records its one asymmetry: a
-    pinned menu keeps the body colours it was born with).
+    ([`visual-design-system.md`](visual-design-system.md) §5): a pinned or grabbed menu is a window and wears
+    the window's skin, with no fourth, "pinned menu" look (a derived look never keys on what a frame once was).
+  - **Focus is a derived INPUT of the window's look, never a state.** The frontmost visible top-level
+    window (`isTopLevelWindow`: persistent, its home the desktop, seen through a transform island) is the
+    focused frame, and a persistent frame the hand carries is focused for the whole carry; the world derives
+    it once per cycle from z-order (`WorldWdgt._updateFocusedFrameNoSettle`, before the geometry settle) and
+    tells the frame that gained it and the one that lost it (`noteFocusChanged`), which re-skin narrowly.
+    No event handler sets it, so every way a window comes to the front — a press, an open, a drop, a close
+    of the one in front, a load — is covered by construction. A card and a menu are never focused.
+  - **A top-level window is FOCUSED, never SELECTED.** The editor selection (`editorFocusWdgt`) has ONE
+    write, `WorldWdgt._setEditorFocusNoSettle`, and it refuses a top-level window (and clears a selection
+    that IS one, a nested item just carried out onto the desktop); the selection's one reading,
+    `_widgetTheFocusSelects`, never answers one either. Focus is for the window you work IN, selection for
+    the thing you work ON: everything inside a window, and a window nested as content, stays selectable.
   - The bar roster follows the same derivation: transient wears its title alone (tap pins);
     a free-floating persistent frame wears close + collapse + title + a pencil (iff its
     payload affords editing); one whose host owns its membership drops close, since you leave

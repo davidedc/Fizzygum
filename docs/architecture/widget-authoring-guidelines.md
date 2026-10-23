@@ -524,7 +524,10 @@ mark after `add` + `setExtent` adds nothing.
 - **Chrome opts out of editor focus.** A widget that is manipulation chrome rather than content —
   handles, frame-bar buttons, toolbars, creator buttons — answers
   `excludedFromEditorFocusTracking: -> true`, so clicking it neither steals the editor-focus pointer
-  nor draws the selection overlay around the chrome.
+  nor draws the selection overlay around the chrome. A top-level window needs no opt-out: the one write
+  of the editor focus refuses it (focused, never selected), while everything inside it stays selectable.
+  A unit whose parts take the click (a menu row's label, a desktop icon's caption) answers
+  `absorbsDescendantEditorSelection: -> true`, so a click on a part selects the unit.
 - **Two capability queries tell the hand's touch grammar about your widget**, both dispatched
   `?()` (nothing stubbed on `Widget`): `ownsDragsStartingOnMe: -> true` says a press starting on
   you is YOUR own drag gesture (a bar, a handle, a slider's thumb) — a finger needs no hold before

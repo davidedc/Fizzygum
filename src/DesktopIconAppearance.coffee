@@ -4,11 +4,15 @@
 # box or a Theme role or metric: I hold nothing of my own.
 #   the TILE   my widget's tile square (WidgetHolderWithCaptionWdgt._tileRect), rounded at
 #              desktopIconTileRadius, filled and bordered with my widget's state look
-#              (_fillForMyState / _strokeForMyState: paper inside a 1 px line border at rest)
-#   the PLATE  desktopIconPlateFill, rounded at desktopIconPlateRadius, no border (a plate is not
-#              pressable): the box under my widget's caption, which is the caption's own box outset
-#              by the plate's padding (_plateRect), read again at every paint so it follows the
-#              caption's lines as they change
+#              (_fillForMyState / _strokeForMyState: paper inside a 1 px line border at rest); while
+#              my widget is the SELECTED icon (WorldWdgt.isSelectedIcon) its border is the selected
+#              ring instead (desktopIconTileSelectedStroke, desktopIconTileSelectedStrokeWidth), and
+#              its fill is still its state's
+#   the PLATE  desktopIconPlateFill (desktopIconPlateSelectedFill while selected), rounded at
+#              desktopIconPlateRadius, no border (a plate is not pressable): the box under my
+#              widget's caption, which is the caption's own box outset by the plate's padding
+#              (_plateRect), read again at every paint so it follows the caption's lines as they
+#              change
 # My widget's glyph (its icon child) stands inside the tile and its caption on the plate; I paint
 # under both.
 #
@@ -39,15 +43,36 @@ class DesktopIconAppearance extends Appearance
           ctx.fillRoundRect plate.left(), plate.top(), plate.width(), plate.height(), theme.desktopIconPlateRadius
         return
 
+      # the SELECTED icon (WorldWdgt.isSelectedIcon, read as I paint) takes its selected border and
+      # plate; its tile's fill is its state's either way
+      selected = !!world?.isSelectedIcon @widget
       ctx.fillStyle = @widget._fillForMyState().toString()
       ctx.fillRoundRect tile.left(), tile.top(), tile.width(), tile.height(), theme.desktopIconTileRadius
-      # the tile's 1 px border, the house crisp spelling: the ring just inside the fill, at its radius
-      ctx.lineWidth = 1
-      ctx.strokeStyle = @widget._strokeForMyState().toString()
-      ctx.strokeRoundRect tile.left() + 0.5, tile.top() + 0.5, tile.width() - 1, tile.height() - 1, theme.desktopIconTileRadius
+      if selected
+        # the selected tile's border: a ring desktopIconTileSelectedStrokeWidth wide in
+        # desktopIconTileSelectedStroke, wholly inside the tile, its corners the tile's and its inner
+        # edge concentric with them -- the one ring painter (HighlightOutlineAppearance.paintRing),
+        # because a rounded border wider than a pixel that must hug a rounded fill is a FILL on
+        # SWCanvas, never a stroke, which leaves the tile's fill showing outside it at every rounded
+        # corner. Its stroke half is on, as for any bordered body: with the crisp 1 px stroke of the
+        # tile's outline over it the ring covers every pixel the resting 1 px border covers (a ring
+        # one pixel wide leaves a few of them to the fill at each rounded corner), so selecting an
+        # icon recolours and thickens its border inward and never moves its outline.
+        radius = theme.desktopIconTileRadius
+        ctx.save()
+        ctx.translate tile.left(), tile.top()
+        HighlightOutlineAppearance.paintRing ctx, tile.width(), tile.height(), theme.desktopIconTileSelectedStrokeWidth,
+          [radius, radius, radius, radius], theme.desktopIconTileSelectedStroke, true
+        ctx.restore()
+      else
+        # the tile's 1 px border in its state's look, the house crisp spelling: the ring just inside the
+        # fill, at its radius
+        ctx.lineWidth = 1
+        ctx.strokeStyle = @widget._strokeForMyState().toString()
+        ctx.strokeRoundRect tile.left() + 0.5, tile.top() + 0.5, tile.width() - 1, tile.height() - 1, theme.desktopIconTileRadius
 
       if plate?
-        ctx.fillStyle = theme.desktopIconPlateFill.toString()
+        ctx.fillStyle = (if selected then theme.desktopIconPlateSelectedFill else theme.desktopIconPlateFill).toString()
         ctx.fillRoundRect plate.left(), plate.top(), plate.width(), plate.height(), theme.desktopIconPlateRadius
 
   # The tile and the plate, rounded, by pixel centre (BoxyAppearance's one rounded-box test).

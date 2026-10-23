@@ -197,7 +197,7 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # As a menu/list ROW I am the selectable UNIT (and I stretch FULL-WIDTH in a list), but a click lands on
   # my tight LABEL child. So the editor-focus selection frame must hug ME, not the label's text bounds
-  # (owner: a tight-text highlight is visual noise). WorldWdgt._widgetBeingEdited resolves a selected
+  # (owner: a tight-text highlight is visual noise). WorldWdgt._widgetTheFocusSelects resolves a selected
   # descendant (my label) up to me through this. Capability, not an `instanceof MenuItemWdgt` type-test
   # (type-test-elimination convention — the same reason my glass-box sizing uses a capability, above).
   # (A member list's rows panel frames none of its rows at all: they show their own selection.)

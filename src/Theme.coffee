@@ -155,6 +155,22 @@ class Theme
     # frame stroke and its fill (FrameWdgt._frameLook).
     @windowFrameStroke = @frame
     @windowBodyFill = @paper
+    # the FOCUSED window -- the frontmost top-level window, the one the user works in, a pinned
+    # pop-up and a window riding the hand included (WorldWdgt._deriveFocusedFrame) -- wears these
+    # where every other window wears the roles above (FrameWdgt._frameLook): its strip's fill, the
+    # rule its strip draws along the edge facing its content (undefined: no rule), the ink of its
+    # strip's glyphs at rest and while one is hovered or pressed, its title's ink, and its body's
+    # 1 px frame stroke. Its title's weight is fonts.focusedWindowTitle's, and its shadow
+    # focusedWindowShadowAlpha. A card and a docked band are never focused. The look is the draft's
+    # (docs/archive/redesign/UI-guidelines.md §6.2): a dark strip with no rule, light glyphs and a
+    # paper title on it, a dark border. The glyphs rest in chrome and light to paper while hovered or
+    # pressed, so a press still reads on the dark strip (focus-and-selection plan D5).
+    @focusedWindowBarFill = @chromeDark
+    @focusedWindowBarRule = undefined
+    @focusedWindowBarGlyph = @chrome
+    @focusedWindowBarGlyphActive = @paper
+    @focusedWindowTitleText = @paper
+    @focusedWindowFrameStroke = @chromeDark
     # a card's body (a persistent frame nested in a real container, a docked band included): its
     # 1 px border stroke and its fill (FrameWdgt._frameLook).
     @cardFrameStroke = @line
@@ -362,8 +378,19 @@ class Theme
     @desktopIconGlyph = @ink
     # ... the fill of its label PLATE (a plate carries no border) ...
     @desktopIconPlateFill = @plate
-    # ... and the ink of its caption, on the plate.
+    # ... and the ink of its caption, on the plate (WidgetHolderWithCaptionWdgt.inkForChildText, read
+    # as the caption paints).
     @desktopCaptionText = @ink
+    # the SELECTED desktop icon -- the icon the editor focus selects (WorldWdgt.isSelectedIcon; never
+    # while a caret is in its caption) -- wears these, read as it paints, where every other icon wears
+    # the roles above: its tile's BORDER, a ring desktopIconTileSelectedStrokeWidth wide inside the tile
+    # in place of its state's 1 px border (DesktopIconAppearance; its tile's FILL stays its state's),
+    # its plate's fill, and its caption's ink.
+    # The draft's selected icon (UI-guidelines §5.2, §5.3): an accent ring round the tile, and the
+    # label read like selected text, paper on a solid accent plate (visual-design-system §4.8).
+    @desktopIconTileSelectedStroke = @accent
+    @desktopIconPlateSelectedFill = @accent
+    @desktopIconCaptionSelectedText = @paper
 
     # the dwell-to-arm charging ring: a filled segment, in the accent like the candidate's outline,
     # over the empty segments' opaque track.
@@ -612,6 +639,10 @@ class Theme
       menuHeader: {family: "Arial, sans-serif", size: 11, bold: false}
       # a window's title, in its strip
       windowTitle: {family: "Arial, sans-serif", size: 13, bold: false}
+      # the FOCUSED window's title, in its strip: the weight its look names (FrameWdgt._frameLook);
+      # every window's title, focused or not, is FIT in this weight (the look's titleFitBold), so a
+      # focus flip never changes which characters a title shows
+      focusedWindowTitle: {family: "Arial, sans-serif", size: 13, bold: true}
       # the small chrome labels: a text button's face (a toggle's and a chip's included), the save /
       # save + close labels, the Object Inspector's breadcrumb caption and mixin-donor label, a patch
       # node's field labels, the video time labels, a spreadsheet header's letter or number
@@ -1057,6 +1088,10 @@ class Theme
       (@desktopIconCaptionMaxLines * captionLineHeight + 2 * @desktopIconPlateVerticalPadding) +
       @desktopIconPadding
     @desktopIconExtent = new Point @desktopIconCellWidth, @desktopIconHeight
+    # the width of the border a SELECTED icon's tile wears, in desktopIconTileSelectedStroke: a ring
+    # wholly inside the tile, its corners the tile's (HighlightOutlineAppearance.paintRing, from
+    # DesktopIconAppearance). Every other icon's tile keeps its 1 px border.
+    @desktopIconTileSelectedStrokeWidth = 2
     # the ICON GRID a desktop and a folder panel lay their icons in (IconGridPanelWdgt.add): the gap
     # between two columns and between two rows, and where the first slot's top-left sits in the
     # panel. One set of numbers for both, and a folder window opens with this same margin past its
@@ -1103,6 +1138,9 @@ class Theme
     # so does an image taken with a forced shadow (Widget.fullImage).
     @desktopShadowOffset = new Point 2, 2
     @desktopShadowAlpha = 0.12
+    # the FOCUSED window casts the desktop shadow at its offset and this alpha (FrameWdgt._frameLook;
+    # a tilted window's transform island casts it for the window, TransformFrameWdgt.addShadow).
+    @focusedWindowShadowAlpha = 0.16
     # the lift a widget takes while the pointer carries it: its own token, larger and fainter
     # than the desktop shadow, so a carried widget reads as picked up off the desk.
     @dragLiftShadowOffset = new Point 6, 6

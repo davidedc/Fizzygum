@@ -144,3 +144,21 @@ SystemTest_macroFizzytilesBlockScoping
 # inside ring; a Stretchable page as a four-edged sheet in the gutter (DegreesConverterFourWayDrive) and Fizzytiles'
 # boards in the gutter (both listed above)
 SystemTest_macroPageSelectionRingInWindowGutter
+# focus and selection (focus-and-selection plan): the focus CONTRAST, where the frontmost window is focused and the
+# others are not (two empty windows closing, collapsing and resizing; duplicated windows, Inspectors and a spreadsheet;
+# a window inside a window; pinned menus), a carried window and a grabbed menu (focused for the whole carry), a pinned
+# menu brought to the front, and a tilted window dropped (no longer the selection). The selected desktop icon is
+# macroDesktopShortcutIcons, listed above.
+SystemTest_macroWindowsEmptyClosing
+SystemTest_macroWindowsEmptyCollapsingUncollapsing
+SystemTest_macroDuplicateComplexWidgetPaintsCleanly
+SystemTest_macroDuplicatedCollapsedWindowKeepsStateAndContent
+SystemTest_macroDuplicatedInspectorsCloseIndependently
+SystemTest_macroSpreadsheetDuplicate
+SystemTest_macroWindowWithAClockInAWindowConstructionTwo
+SystemTest_macroWindowWithSimpleVerticalPanelResizesAsContentChanges
+SystemTest_macroDockAnyFrame
+SystemTest_macroMenusAndSubMenusRemainOpenWhileDraggingMenusOnly
+SystemTest_macroDragEmbedArmedPersistsWhileAiming
+SystemTest_macroMenuShadowCorrectWhileAndAfterDrag
+SystemTest_macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground

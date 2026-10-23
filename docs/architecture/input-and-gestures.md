@@ -114,7 +114,11 @@ also consult `WorldWdgt.dateOfCurrentCycleStart`, but that consultation is SUPPR
 own idiom (see `viewports-and-planes.md`) — so a replayed macro stroke stays purely
 event-determined and its screenshots reproduce, while a real finger holding perfectly still off
 the harness still gets its menu on time. Once elapsed time crosses `pressAndHoldMs` (500,
-`PreferencesAndSettings.pressAndHoldMs`) the hold FIRES, at most once per stroke.
+`PreferencesAndSettings.pressAndHoldMs`) the hold FIRES, at most once per stroke. It is the context
+gesture's alternate trigger: it SELECTS the pressed widget as a right-click release does (the leaf the press
+hit, under the same ancestry opt-out — `world._setEditorFocusNoSettle`, focus first), then dispatches
+`contextMenuRequested` on it, so a finger sees which widget the menu acts on. A plain finger drag leaves
+the hold radius first and selects nothing: it scrolls.
 
 **That suppression is an IDIOM with three applications, and the third one is the pressed-move
 channel.** Anything a per-cycle re-entry produces is counted in CYCLES — wall clock — while

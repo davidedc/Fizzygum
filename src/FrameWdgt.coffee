@@ -708,6 +708,18 @@ class FrameWdgt extends Widget
     p = @_parentThroughIslands()
     p? and p isnt world and p isnt world?.hand
 
+  # Am I a TOP-LEVEL WINDOW -- furniture standing on the desktop? Persistent (a transient menu or
+  # prompt is mid-gesture UI), and my real home is the world: my parent seen through any transform
+  # island I ride as its sole content (_parentThroughIslands, isInternal's look-through), so a tilted
+  # window is one. A card and a docked band live in a real container, a frame riding the hand or
+  # parked off the tree (in the bin) stands on no desktop, and none of them is one. Visibility is not
+  # part of it: the hidden error console is a top-level window nobody sees. The world's FOCUS asks it
+  # of each frame on its desktop (WorldWdgt._deriveFocusedFrame): the frontmost visible one is the
+  # focused frame. Its SELECTION asks it too, and never names one (WorldWdgt._setEditorFocusNoSettle):
+  # a top-level window is focused, never selected.
+  isTopLevelWindow: ->
+    @isPersistent() and @_parentThroughIslands() is world
+
   # The window title a (re)mounted content yields -- ONE home for the ctor and
   # _addNoSettle title sites. A framed CITIZEN (a FrameWdgt subclass that IS its
   # kind -- Frame-model plan §5.B) overrides this to its own colloquialName: the
@@ -1646,6 +1658,17 @@ class FrameWdgt extends Widget
     look = @_frameLook()
     super (offset ? look.shadowOffset), (alpha ? look.shadowAlpha)
 
+  # The desktop shadow cast for me AT REST, re-taken from my look, by whichever of us stands on the
+  # desktop: me, or the transform island I ride as its sole content -- a tilted window's world child
+  # is its island, which casts my shadow at my look's alpha (TransformFrameWdgt.addShadow), and I
+  # cast none of my own inside it. Standing anywhere else nothing casts one for me at rest: held in
+  # a container I cast nothing, and riding the hand I wear the lifted one the hand gave me, which my
+  # landing replaces. Run wherever my look's shadow can have moved under a shadow already cast: on a
+  # focus flip (noteFocusChanged), and when I move into an island (_reactToBeingAdded).
+  _reCastRestingShadow: ->
+    figure = @_enclosingIslandFigure()
+    figure.addShadow() if figure.parent is world
+
   # ALWAYS-ON invariant, in the family of Widget._assertBoundsWellFormed: a pop-up bigger
   # than the world is a pop-up with rows nothing can click. It needs a guard of its own
   # because NO screenshot test reliably catches one — a reference disagrees only if a macro
@@ -1765,6 +1788,9 @@ class FrameWdgt extends Widget
     # too (a frame in the hand owns its own placement, hence carries its close piece)
     @_reDeriveBarRosterNoSettle()
     @_deriveAndSetSkin() if whereTo isnt world?.hand
+    # moved into a transform island, I cast my shadow through it: a tilt homes the island EMPTY on
+    # the desktop before I move in, so the shadow it took there names no look of mine yet
+    @_reCastRestingShadow() if @_enclosingIslandFigure() isnt @
 
   _reactToChildDropped: (theWidget) ->
     # a band that just landed in one of my slots is a payload I HOLD: it does not become my content,
@@ -1793,12 +1819,14 @@ class FrameWdgt extends Widget
   #   The inputs are my MANIFESTATION (program ruling C4) -- my lifetime crossed with my parentage:
   # transient is a MENU (its pop-up header style goes with it), persistent on the desktop a WINDOW,
   # persistent nested in a real container a CARD -- plus, for a menu's rounding, the world's
-  # flat-look preference. Collapsed and docked are not
+  # flat-look preference, and, for a window, FOCUS: the window the world names its focused frame
+  # (WorldWdgt.isFocusedFrame, decided once per cycle from z-order) wears the focused roles where
+  # every other window wears the window roles. Focus enters here and only here; a menu and a card
+  # are never focused. Collapsed and docked are not
   # inputs: a collapsed frame wears the look it wears expanded, and a docked band is the card its
   # parentage makes it. (WHICH corners my strip rounds and WHETHER it draws its rule do follow
   # those two -- they change with no re-derivation of the look -- so my strip decides them from its
-  # own axis and my collapsed state, at its arrange: FrameBarWdgt._shapeTitlebarBackground.) A FOCUS
-  # state would enter here, and only here (redesign plan §0.5.2).
+  # own axis and my collapsed state, at its arrange: FrameBarWdgt._shapeTitlebarBackground.)
   #   The fields:
   #     manifestation       "menu" | "window" | "card"
   #     bodyAppearance      the appearance class my body wears: the menu box for a menu, the
@@ -1824,13 +1852,23 @@ class FrameWdgt extends Widget
   #                         rule ends (BoxyAppearance.ruledEdge). A persistent frame's look names
   #                         none: its strip rounds the corners it shares with my outline to the body
   #                         I wear, less my border, at its arrange (FrameBarWdgt._shapeTitlebarBackground)
-  #     barRule             the ink of the rule my strip draws along its content-facing edge
+  #     barRule             the ink of the rule my strip draws along its content-facing edge;
+  #                         undefined for none
   #     barGlyph, barGlyphActive
   #                         the ink of the glyphs my strip's button pieces draw (close, collapse /
   #                         uncollapse, the pencil / eye): at rest, and while one is hovered or
   #                         pressed. Undefined for a strip that carries no button piece (a pop-up
   #                         header)
   #     titleText           my title's ink (painted straight onto my strip's background)
+  #     titleBold           my title's weight: its font role's bold flag (FrameBarWdgt takes it at
+  #                         its title's build and at each derivation of its skin)
+  #     titleFitBold        the weight my title's FIT is measured in -- whether it shows whole,
+  #                         cropped or not at all (StringWdgt.fitBold; FrameBarWdgt takes it beside
+  #                         titleBold): a window's, focused or not, is the FOCUSED title's weight, so
+  #                         a focus flip, which changes the weight my title draws in, never changes
+  #                         which characters it shows, nor whether it shows. A card's and a menu's,
+  #                         never focused, is the weight they draw in, so neither loses characters
+  #                         to a weight it never wears
   #     shadowOffset, shadowAlpha
   #                         the shadow I cast at rest on the desktop
   _frameLook: ->
@@ -1855,38 +1893,48 @@ class FrameWdgt extends Widget
         barGlyph: undefined
         barGlyphActive: undefined
         titleText: theme.menuHeaderText
+        titleBold: theme.fonts.menuHeader.bold
+        titleFitBold: theme.fonts.menuHeader.bold
         shadowOffset: theme.desktopShadowOffset
         shadowAlpha: theme.desktopShadowAlpha
       }
 
     internal = @isInternal()
+    # a card is never focused: focus is a top-level window's
+    focused = !internal and !!world?.isFocusedFrame @
+    windowStroke = if focused then theme.focusedWindowFrameStroke else theme.windowFrameStroke
+    windowBarFill = if focused then theme.focusedWindowBarFill else theme.windowBarFill
+    windowBarGlyph = if focused then theme.focusedWindowBarGlyph else theme.windowBarGlyph
     manifestation: if internal then "card" else "window"
     bodyAppearance: BoxyAppearance
     bodyFill: if internal then theme.cardBodyFill else theme.windowBodyFill
-    bodyStroke: if internal then theme.cardFrameStroke else theme.windowFrameStroke
+    bodyStroke: if internal then theme.cardFrameStroke else windowStroke
     bodyCornerRadius: if internal then theme.cardCornerRadius else theme.windowCornerRadius
     bodyStrokesOverChildren: true
     bodyClipsChildrenToOutline: true
     barAppearance: BoxyAppearance
-    barFill: if internal then theme.cardBarFill else theme.windowBarFill
+    barFill: if internal then theme.cardBarFill else windowBarFill
     barStroke: undefined
     barCornerRadius: undefined
-    barRule: theme.barRule
-    barGlyph: if internal then theme.cardBarGlyph else theme.windowBarGlyph
-    barGlyphActive: theme.barGlyphActive
-    titleText: theme.windowTitleText
+    barRule: if focused then theme.focusedWindowBarRule else theme.barRule
+    barGlyph: if internal then theme.cardBarGlyph else windowBarGlyph
+    barGlyphActive: if focused then theme.focusedWindowBarGlyphActive else theme.barGlyphActive
+    titleText: if focused then theme.focusedWindowTitleText else theme.windowTitleText
+    titleBold: if focused then theme.fonts.focusedWindowTitle.bold else theme.fonts.windowTitle.bold
+    titleFitBold: if internal then theme.fonts.windowTitle.bold else theme.fonts.focusedWindowTitle.bold
     shadowOffset: theme.desktopShadowOffset
-    shadowAlpha: theme.desktopShadowAlpha
+    shadowAlpha: if focused then theme.focusedWindowShadowAlpha else theme.desktopShadowAlpha
 
   # MY WHOLE SKIN, re-derived from my look as ONE act: my body (below) and my strip
-  # (FrameBarWdgt._deriveAndSetStripSkin: its background's skin and shape, its title's and its
-  # glyphs' ink), then a repaint of me. Every derivation after my birth runs it -- each re-parenting
-  # (_reactToBeingAdded), each lifetime change (_setLifetimeNoSettle, the pin among them), a copy
-  # that changes lifetime (fullCopy) -- and so does a transform island I ride in as its sole content
-  # whenever IT is re-homed (TransformFrameWdgt._reactToBeingAdded): only the root of an add hears
-  # it, and my look follows the container I really live in, seen through that island
+  # (FrameBarWdgt._deriveAndSetStripSkin: its background's skin and shape, its title's ink and
+  # weight, its glyphs' ink), then a repaint of me. Every derivation after my birth runs it -- each
+  # re-parenting (_reactToBeingAdded), each lifetime change (_setLifetimeNoSettle, the pin among
+  # them), a copy that changes lifetime (fullCopy) -- and so does a transform island I ride in as its
+  # sole content whenever IT is re-homed (TransformFrameWdgt._reactToBeingAdded): only the root of an
+  # add hears it, and my look follows the container I really live in, seen through that island
   # (isInternal), which the island's move changes. My constructor derives only my body: my strip
-  # does not exist yet, and its build skins it.
+  # does not exist yet, and its build skins it. A change of FOCUS is no such derivation: it takes
+  # the narrow re-skin (noteFocusChanged).
   _deriveAndSetSkin: ->
     @_deriveAndSetBodyAppearance()
     @bar?._deriveAndSetStripSkin()
@@ -1898,7 +1946,10 @@ class FrameWdgt extends Widget
   # knobs. There is deliberately no fourth, "pinned menu" look: that would key on what I once was,
   # the one input a derived look may never take, so a pinned menu wears the window's body.
   #   The rule this makes: my look WINS at every derivation, so a body colour or a corner radius set
-  # by hand ("Corner radius…", its pin) lasts until I next change parent or lifetime.
+  # by hand ("Corner radius…", its pin) lasts until I next change parent or lifetime. A focus flip
+  # is no such derivation (noteFocusChanged): it re-writes my body's STROKE from my look and never
+  # its fill or its rounding, so a stroke set by hand on a top-level window lasts until its focus
+  # next changes.
   #   The knobs go on the NEW appearance: they live on the appearance instance, and a fresh one
   # starts with both off. As the appearance's own fields they are saved with it, so a frame a
   # snapshot restores WITHOUT re-deriving (a nested one: only the top-level frames hear
@@ -1911,6 +1962,29 @@ class FrameWdgt extends Widget
     @color = look.bodyFill
     @strokeColor = look.bodyStroke
     @cornerRadius = look.bodyCornerRadius
+
+  # PUBLIC notification -- my FOCUS changed: the world just made me its focused frame, or made
+  # another frame focused in my place (WorldWdgt._updateFocusedFrameNoSettle, its once-per-cycle
+  # station). Focus is an input of my look (_frameLook), so I re-skin -- NARROWLY, only what focus
+  # changes about me: my strip (its fill, its rule, its glyphs' ink, its title's ink and weight:
+  # FrameBarWdgt._deriveAndSetStripSkin), my body's STROKE, and the desktop shadow cast for me at
+  # rest (_reCastRestingShadow). Never my whole body (_deriveAndSetBodyAppearance): that is the
+  # parentage-and-lifetime derivation, and it would wipe a fill or a rounding set by hand on every
+  # flip. Each part invalidates itself, and I invalidate myself.
+  #   Riding the hand I am re-skinned like anywhere else -- a carried frame IS the focused one for
+  # the whole carry (WorldWdgt._deriveFocusedFrame), so it must look it -- while my manifestation
+  # stays the one I was lifted with: nothing here touches my body's appearance, fill or rounding,
+  # and my strip keeps fitting the body it was lifted with (FrameBarWdgt._shapeTitlebarBackground
+  # reads my rounding off me, never off my look). Only my shadow waits there: the hand owns the
+  # lifted one it gave me, and the landing re-derives the one I cast at rest. Parked off the tree
+  # (closed into the bin) I am re-skinned too: my last whole derivation already matches my
+  # parentage there. Destroyed, or an orphan, I have nothing to re-skin.
+  noteFocusChanged: ->
+    return if @destroyed or !@parent?
+    @bar?._deriveAndSetStripSkin()
+    @strokeColor = @_frameLook().bodyStroke
+    @_reCastRestingShadow()
+    @_changed()
 
   # ===== the ROUNDED CHILD CLIP (redesign plan §3a option (a), spikes S1b/S1c) =====
   # My LOOK decides it (_frameLook's bodyClipsChildrenToOutline, set on my body's appearance as its
@@ -2139,9 +2213,9 @@ class FrameWdgt extends Widget
   # can change: at every (re)parenting, at every layout-spec change -- the very seam the resize
   # handle's own visibility rides (HandleWdgt.updateVisibility, driven from Widget::_setLayoutSpec)
   # -- and at every lifetime change. Re-points the aliases at what the bar now holds (a strip that
-  # changes style carries a fresh title piece and background), and invalidates only when the roster
-  # really moved -- a spec-less chrome child rides the freefloating skip in Widget._addNoSettle's
-  # container invalidate, so the frame's own layout is not reached by the add alone.
+  # changes style carries a fresh title piece and background), and schedules my strip's re-lay only
+  # when the roster really moved -- a spec-less chrome child rides the freefloating skip in
+  # Widget._addNoSettle's container invalidate, so no layout is reached by the add alone.
   _reDeriveBarRosterNoSettle: ->
     return unless @bar?
     return unless @bar._reDeriveRosterNoSettle()
@@ -2154,20 +2228,33 @@ class FrameWdgt extends Widget
     # desktop hands it back, showing the mode my payload is in at that moment.
     @editButton = @bar.editButton
     @_createAndAddEditButton()
-    # OFF-PASS the roster change needs a re-lay scheduled. IN-PASS it does not: the only
-    # in-pass reach is an arrange handing my content its frame-content spec, and that same
-    # arrange re-lays my bar a few lines later -- while scheduling mid-pass is the flow-rule
-    # violation (Widget._invalidateLayout reads the same flag for the same reason).
-    @_invalidateLayout() unless world?._recalculatingLayouts
+    # The pieces just gained or retired are not placed yet, and the flush this change belongs to
+    # must place them. OFF-PASS: invalidate me -- the climb reaches whoever owns my placement, and
+    # my arrange re-lays my bar. IN-PASS a climbing invalidate is the flow-rule violation
+    # (Widget._invalidateLayout), so the phase-valve enqueues the one widget the change affects, my
+    # bar, with no climb. The mark serves every in-pass reach: the top of my own arrange re-lays my
+    # bar a few lines later and so consumes it (no extra visit); every other reach -- a HOST handing
+    # me a spec mid-arrange (a stack adopting me as a cell, a frame adopting me as its content --
+    # _setLayoutSpec), a lifetime change reached from an arrange -- is followed by nothing that
+    # must lay my bar out in this flush: my frame may come out of the host's arrange unchanged, and
+    # then no arrange of mine runs at all. The walk's next round lays my bar out at the frame I am
+    # left with.
+    if world?._recalculatingLayouts
+      @bar._scheduleRelayoutRespectingPhase()
+    else
+      @_invalidateLayout()
 
   # A spec that OWNS my placement makes me host-owned, which is exactly what my bar's roster
   # (and the resize handle's visibility, in the base) turns on.
   #   THE PRINCIPLE: deriving the roster CONSTRUCTS a gained piece, and a widget constructor
   # settles — so the derive runs ONLY inside a flush. Two tiers, split by the world's own pass
-  # state (the same discriminator the derive's invalidate reads):
-  #   IN-PASS — a host handing me a spec mid-arrange, after my own arrange has already run in this
+  # state (the same discriminator the derive's own scheduling reads):
+  #   IN-PASS — a host handing me a spec mid-arrange (a stack adopting me as a cell, a frame
+  # adopting me as its content), where nothing promises that an arrange of mine follows in this
   # pass — derive NOW: the fresh piece is an orphan, so its constructor's settle is the auto-defer
-  # (Widget._settleLayoutsAfter) and the derive is settle-neutral by construction.
+  # (Widget._settleLayoutsAfter) and the derive is settle-neutral by construction; and the derive
+  # enqueues my bar, so the strip it changed is laid out in this same flush
+  # (_reDeriveBarRosterNoSettle).
   #   OUT-OF-PASS — a notification callback dropping my spec on a grab
   # (Widget._beforeBeingGrabbed), and every other spec change outside a flush — MARK only: a
   # callback owns no settle (layering rule [J]), and my arrange derives at its top on the flush the

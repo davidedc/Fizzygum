@@ -66,14 +66,22 @@ class StringWdgt extends Widget
   lineHeightStatedAtFontSize: undefined
 
   # MY INK: no colour of my own until one is given to me (the `color` option, setColor) --
-  # declared here over Widget's content default. While I hold none I paint in the theme's
-  # defaultTextInk, read as I paint each line (_drawTextLine) and in my buffer's key, so a text
-  # saved, loaded or duplicated without a colour of its own wears the ink of the world it is
-  # shown in.
+  # declared here over Widget's content default. While I hold none I paint in the ink my parent
+  # gives me, or else the theme's defaultTextInk (_textInk), read as I paint each line
+  # (_drawTextLine) and in my buffer's key, so a text saved, loaded or duplicated without a colour
+  # of its own wears the ink of the world it is shown in.
   color: undefined
 
   fontName: undefined
   isBold: undefined
+  # THE WEIGHT MY FIT IS MEASURED IN, where isBold is the weight I draw in: every fit decision of
+  # mine -- whether I show whole, how much of me a crop keeps (numberOfCharactersThatFit), the size
+  # a scaling fit picks -- measures me in it (doesTextFitInExtent). Undefined measures me in the
+  # weight I draw in, as every text is but a frame's title: a window's title is measured in the
+  # weight it wears when its window is FOCUSED (FrameWdgt._frameLook's titleFitBold), so a focus
+  # flip, which changes the weight it draws in, never changes which characters it shows. My
+  # single-line fit reads it; a TextWdgt fits through its wrap, in the weight it draws in.
+  fitBold: undefined
   isItalic: undefined
   isHeaderLine: undefined
   isEditable: false
@@ -255,13 +263,16 @@ class StringWdgt extends Widget
   # three values I render with. A role may also state a line height (`lineHeight`, at the role's
   # size), and so may an explicit `lineHeight` option (at the size I am set in): I hold it with
   # the size it is stated at, and only when one is given, so a text without one keeps the class's
-  # unset default. A role may also carry `italic`, which an explicit `italic` overrides.
+  # unset default. A role may also carry `italic`, which an explicit `italic` overrides. A
+  # `fitBold` gives the weight my fit is measured in (fitBold, above), and only when passed, so a
+  # text given none is measured in the weight it draws in.
   constructor: (text, opts = {}) ->
     @text = text ? "StringWdgt"
     fontRole = opts.fontRole ? WorldWdgt.theme.fonts.defaultText
     @originallySetFontSize = opts.fontSize ? fontRole.size
     @fontName = opts.fontName ? fontRole.family
     @isBold = opts.bold ? fontRole.bold
+    @fitBold = !!opts.fitBold if opts.fitBold?
     if opts.lineHeight?
       @lineHeight = opts.lineHeight
       @lineHeightStatedAtFontSize = @originallySetFontSize
@@ -609,10 +620,11 @@ class StringWdgt extends Widget
       ans += letter
     ans
 
-  buildCanvasFontProperty: (overrideFontSize = @fittingFontSize) ->
+  # in the weight I draw in, or in `bold` when given (my fit measures in fitBold)
+  buildCanvasFontProperty: (overrideFontSize = @fittingFontSize, bold = @isBold) ->
     # answer a font string, e.g. 'bold italic 12px Arial'
     font = ""
-    font = font + "bold "  if @isBold
+    font = font + "bold "  if bold
     font = font + "italic "  if @isItalic
     font + overrideFontSize + "px " + @fontName
 
@@ -680,10 +692,10 @@ class StringWdgt extends Widget
     return ""
 
   # HOW MUCH OF ME SURVIVES THE CROP into the box I hold right now: the number of characters I
-  # would actually draw, the ellipsis itself not counted. A pure query -- it measures, it changes
-  # nothing -- asked by a caller that has to decide whether a cropped text is still worth drawing
-  # at all: a frame bar grades its title on it (ruling C13), because a title cropped to "W…" names
-  # nothing and is worse than no title.
+  # would actually draw, the ellipsis itself not counted, measured in the weight my fit is measured
+  # in (fitBold). A pure query -- it measures, it changes nothing -- asked by a caller that has to
+  # decide whether a cropped text is still worth drawing at all: a frame bar grades its title on it
+  # (ruling C13), because a title cropped to "W…" names nothing and is worse than no title.
   numberOfCharactersThatFit: ->
     (@searchLongestFittingTextByMultiCroppingIt().replace "…", "").length
 
@@ -821,12 +833,13 @@ class StringWdgt extends Widget
   # the measuring, such as font style, but we only pass
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
-  # see the largest fitting size.
-  measureText: (text, overrideFontSize = @fittingFontSize) ->
-    cacheKey =  @buildCanvasFontProperty(overrideFontSize) + "-" + text.hashCode()
+  # see the largest fitting size. The weight is mine unless `bold` is given: my fit passes the
+  # weight it is measured in (doesTextFitInExtent).
+  measureText: (text, overrideFontSize = @fittingFontSize, bold = @isBold) ->
+    cacheKey =  @buildCanvasFontProperty(overrideFontSize, bold) + "-" + text.hashCode()
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit? then return cacheHit
-    world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize
+    world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize, bold
     # you'd think that we don't need to eliminate the invisible character
     # to measure the text, as it's supposed to be of zero length.
     # Unfortunately some fonts do draw it, so we indeed have to eliminate
@@ -875,13 +888,14 @@ class StringWdgt extends Widget
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  # The text fits when it fits my text area (my box less my item inset).
+  # The text fits when it fits my text area (my box less my item inset), measured in the weight my
+  # fit is measured in (fitBold; the weight I draw in while it is undefined).
   doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     if !@measureText?
       debugger
     if text == ""
       return true
-    extentOccupiedByText = new Point Math.ceil(@measureText text, overrideFontSize), @linePitch(overrideFontSize)
+    extentOccupiedByText = new Point Math.ceil(@measureText text, overrideFontSize, @fitBold ? @isBold), @linePitch(overrideFontSize)
     return extentOccupiedByText.le @_textArea().extent()
 
   fitToExtent: ->
@@ -921,9 +935,15 @@ class StringWdgt extends Widget
 
   # The key of my back buffer: everything its pixels are a function of. My selection is its two
   # marks and the theme's two selection roles, my header line's ink is the headerLineRule role, and
-  # my text's ink is my own colour or, while I hold none, the defaultTextInk role (drawSelection,
-  # _drawHeaderUnderline and _drawTextLine read them as they paint, as _backgroundFill reads a role
-  # I wear), so a changed selection, or a changed role, re-renders me.
+  # my text's ink is my own colour or, while I hold none, my parent's answer or the defaultTextInk
+  # role (_textInk; drawSelection, _drawHeaderUnderline and _drawTextLine read them as they paint,
+  # as _backgroundFill reads a role I wear), so a changed selection, a changed role, or a parent's
+  # changed answer re-renders me.
+  #   My crop (textPossiblyCroppedToFit) is decided by the reflow a MISS runs, after this key is
+  # taken, so the key names the weight my fit is measured in itself, while it differs from the
+  # weight I draw in (the canvas font names that one): a text whose fit weight moves re-renders,
+  # and two texts that differ only in it never share a buffer. While the two agree it adds nothing,
+  # so such a text keys its buffer exactly as a text with no fit weight of its own.
   createBufferCacheKey: ->
     theme = WorldWdgt.theme
     @extent().toString() + "-" +
@@ -933,7 +953,7 @@ class StringWdgt extends Widget
     @buildCanvasFontProperty() + "-" +
     @isHeaderLine + "-" +
     theme.headerLineRule.toString()  + "-" +
-    (@color ? theme.defaultTextInk).toString()  + "-" +
+    @_textInk().toString()  + "-" +
     (@_backgroundFill()?.toString() ? "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
     @text.hashCode()  + "-" +
@@ -948,6 +968,7 @@ class StringWdgt extends Widget
     @fittingSpecWhenBoundsTooSmall  + "-" +
     @fittingSpec  + "-" +
     @fittingSpecBoxWhichDimensionAdjusts +
+    (if @fitBold? and @fitBold isnt !!@isBold then "-fitBold" + @fitBold else "") +
     @_lineBoxCacheKeySuffix() +
     @_itemShapeCacheKeySuffix()
 
@@ -976,12 +997,22 @@ class StringWdgt extends Widget
         @width() - inset - widthOfText
 
 
-  # Draw ONE complete line of text at (x, y) in my ink: my own colour, or, while I hold none, the
-  # theme's defaultTextInk (a key of my buffer too). The ONE home of a line's ink: StringWdgt's
+  # Draw ONE complete line of text at (x, y) in my ink (_textInk, a key of my buffer too). StringWdgt's
   # single-line paint and TextWdgt's wrapped-lines loop both draw every line through here.
   _drawTextLine: (backBufferContext, line, x, y) ->
-    backBufferContext.fillStyle = (@color ? WorldWdgt.theme.defaultTextInk).toString()
+    backBufferContext.fillStyle = @_textInk().toString()
     backBufferContext.fillText line, x, y
+
+  # MY INK, the ONE answer my line paint and my buffer's key both read: my own colour; while I hold
+  # none, the ink my PARENT answers for me (its inkForChildText, a soft hook asked through ?(): a
+  # desktop icon answers it for its caption, by whether it is the selected icon); else the theme's
+  # defaultTextInk. The hook is the parent's, not mine, because the text that needs it is a plain
+  # text with no class of its own to answer one (an icon's caption is a TextWdgt), and the ink is a
+  # fact about its holder -- whether it is selected -- that only the holder knows; read here, at
+  # paint, it lets a selection change re-render the text through its key and leaves no ink copied
+  # into a text a save or a copy would carry.
+  _textInk: ->
+    @color ? @parent?.inkForChildText?(@) ? WorldWdgt.theme.defaultTextInk
 
   # The fill behind my text: my backgroundColor -- or, for a text that holds none of its own because
   # it wears a theme role until one is set on it, the role it answers (its _surfaceBackgroundFill, a
@@ -1437,13 +1468,31 @@ class StringWdgt extends Widget
     @_changed()
 
 
-  # weight and slant are my style: see setHorizontalAlignment for who mirrors it
+  # weight and slant are my style: see setHorizontalAlignment for who mirrors it. The toggle flips
+  # the weight I draw in; the weight my fit is measured in (fitBold) stays what it is.
   toggleWeight: ->
     @_settleLayoutsAfter =>
-      @isBold = not @isBold
-      @_changed()
+      @_setBoldNoSettle (not @isBold), @fitBold
       world.noteStyleChanged @
-      @_reflowContainedTextThenInvalidateLayout()
+
+  # The NON-settling core of a weight change: my two weights set -- `bold` the one I draw in,
+  # `fitBold` the one my fit is measured in (fitBold; undefined measures me in `bold`) -- my repaint
+  # (my canvas font and, while it differs from it, my fit's weight are keys of my back buffer) and
+  # my contained-text re-fit. Code that sets a text's weights inside a settle or a pass it already
+  # holds reaches it directly (cores call cores): a frame's title takes the weights its frame's look
+  # names (FrameBarWdgt._setTitleWeightNoSettle). The two weights I already have are a no-op, and a
+  # fit weight is written only when it moves, so a text that never had one keeps the class's.
+  # Answers whether either weight moved: a caller whose layout reads my measure re-arranges only
+  # then.
+  _setBoldNoSettle: (bold, fitBold) ->
+    bold = !!bold
+    fitBold = !!fitBold if fitBold?
+    return false if !!@isBold is bold and @fitBold is fitBold
+    @isBold = bold
+    @fitBold = fitBold unless @fitBold is fitBold
+    @_changed()
+    @_reflowContainedTextThenInvalidateLayout()
+    true
 
   toggleItalic: ->
     @_settleLayoutsAfter =>
