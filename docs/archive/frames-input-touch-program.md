@@ -305,3 +305,15 @@ coordinator reviews it for falsified premises and missing stop rules before it i
   Cocoa `NSPanel` (a window with behaviour flags), Squeak `MenuMorph stayUp:` (the same menu pins in place),
   tear-off menus (Tk/Motif/GTK2/Qt — conversion, the regretted pattern), Apple HIG (44 pt targets, 50 pt iPad bars,
   indicator scrollbars), W3C Pointer Events (Safari 13+).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **suppress content-press side effects while a touch stroke commits to scroll?** (Plan 4 P4; the MOUSE case added by the
+      focus-residue arc's D′, 2026-10-23). **DONE 2026-10-24** (the findings arc, owner: "Do The Right Thing regardless of
+      churn"): THE PRESS LIFECYCLE (`input-and-gestures.md`). The hand drives the press climb and RECORDS its audience
+      (`pressBegan` answers `true` to pass the press on); every member is told exactly one ending — `pressCancelled()`
+      at a scroll's commit (the members inside the latched pane), a lift (all), or an abort, else `pressEnded` at the
+      release wherever it lands — and picks its look from `world.hand.restsOn`; a list row's cancel restores the list's
+      selection look. The click stays a separate verdict. Pinned by `SystemTest_macroEveryPressIsToldItsEnding` and the
+      extended `SystemTest_macroMouseDragScrollOfMenuRowsFiresNoRow`; the predicted recapture (mouse 5 tests, finger 3,
+      48 files) matched exactly.

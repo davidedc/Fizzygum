@@ -134,11 +134,13 @@ class Duplicator
 
   _copyFizzygumObject: (obj) ->
     ctor = obj.constructor
-    # closed-set guard (the Serializer carries the same one): only registered
-    # Fizzygum classes and plain object literals take the generic walk —
-    # anything else is a type the copier doesn't know, e.g. a collaborator
-    # missing its keptByReferenceOnDeepCopy marker.
-    unless ctor? and (ctor is Object or window[ctor.name] is ctor)
+    # THE CLOSED SET, the same rule as the Serializer's generic branch: a plain object literal, or an
+    # instance of the class classNamed answers for its constructor's name. Anything else is a type the
+    # copier does not know -- a collaborator missing its keptByReferenceOnDeepCopy marker, or an
+    # instance of a browser-native class the dispatch above has no handler for (a DOMRect, say) -- and
+    # is refused here, never cloned into a shell of the native's prototype that carries none of its
+    # internal state.
+    unless ctor? and (ctor is Object or classNamed(ctor.name) is ctor)
       console.error "Duplicator: cannot duplicate a value of unrecognized type (" + (ctor?.name or "no constructor") + ")"
       debugger
       throw new Error "Duplicator: cannot duplicate a value of unrecognized type"

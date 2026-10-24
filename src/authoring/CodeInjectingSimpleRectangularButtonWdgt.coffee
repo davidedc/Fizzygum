@@ -46,9 +46,9 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
 
   # MY FACE IS A PICTURE (Widget.isPointerTargetAt, AM-I-A-PICTURE): nothing in it is a pointer
   # target, so a press on it is a press on me, and the press, the release and the click all reach me
-  # together -- my cell shows pressed while the press lasts and hovered once it ends. (A press on a
-  # face that caught it would reach me only as an escalated pressBegan, never as the pressEnded that
-  # ends it.) My edit mark is no picture: it takes its own presses.
+  # together -- my cell shows pressed while the press lasts, and once it ends, hovered or at rest by
+  # where the pointer is (HighlightableMixin's endings). My edit mark is no picture: it takes its own
+  # presses.
   _showsChildAsAPicture: (child) ->
     child is @faceWidget
 

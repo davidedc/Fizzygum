@@ -520,3 +520,25 @@ messages and wait (Phase-0 of this program already has a pending commit; coordin
       hand carries dies with the outgoing world (`ActivePointerWdgt._discardCarriedWidgetNoSettle`,
       `handCargoDestroyed` / `handDragEmbedStateCleared`); the file door's world branch reports a load error as one inform
       (`fileDropInformsOnLoadError`).
+- [x] **A load failure reads as a save failure** (found 2026-10-23, the focus-residue arc). **DONE 2026-10-24** (the findings
+      arc): `SerializationError` carries a `direction` (`"save"` default, `"load"` from the Deserializer's throws) and
+      `toString()` opens "Cannot load this file: …" for a load, "Cannot serialize: …" for a save (byte-identical);
+      pinned by the rig's `world.loadGuard.fileDropInformsOnLoadError` (`readsAsLoad`).
+- [x] **A record class named like an `Object.prototype` member is not refused before a load's teardown** (found 2026-10-23).
+      **DONE 2026-10-24** (the findings arc): ONE definition of "this name is a Fizzygum class" — boot's `classNamed` (an
+      OWN data property of `window` carrying the `instances` marker) — at every site that turns a name read from data
+      into a class (Deserializer build + `whyItCanNeverBeRestored`, own-property `_tagBuilderFor`, PartsRegistry,
+      the `idCounters` restore, `resolveApp`, `SourceEditsRegistry`, `WorldInventory.transientsOf`, the Serializer's and
+      the Duplicator's closed-set guards, the harness's command classes); `allClassFunctions` is built on it over
+      `getOwnPropertyNames`, which also finds `InputEvent` (a class assigned into a browser built-in's non-enumerable
+      slot). Pinned by `world.loadGuard.notAClassRefused.*`, `widgetFileNotAClassIsALoadError`,
+      `appKeyNotAClassUnresolved`, `idCountersRestoreOnlyClasses`, `boot.classNamedIsTheOneDefinition`.
+- [x] **The inventory's containment walk lists each live frame's `@defaultContents` placeholder as ESCAPED** (found 2026-10-23).
+      **DONE 2026-10-24** (the findings arc): `FrameWdgt.@offTreeOwnedWidgetFields: ["defaultContents"]`, merged up
+      the chain by boot's `classStaticListMergedUpTheChain` (the one class-chain list merge, which
+      `Serializer.transientsForClass` reads too), and the containment walk follows declared fields;
+      `world.teardownHygiene.loadLeavesNoOrphanedWidgets` now requires EMPTY escaped/zombie lists (with a vacuity clause).
+- [x] **Two small staleness items in the storage/serialization tooling** (found 2026-10-23). **DONE 2026-10-24** (the findings
+      arc): the catch-list names `dragAffordancesCleared`; `StorageSorter`'s Tier-A header states its two seats; and the
+      class's root — the rig's `evaluate()` reading only REPORTED results — is fixed: an `EXPECTATIONS` name no backend
+      reports is itself a MISMATCH (`SWCANVAS_ONLY_CHECKS` excuses the SW-only names on a `--native-only` run).

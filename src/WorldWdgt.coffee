@@ -2748,9 +2748,10 @@ class WorldWdgt extends IconGridPanelWdgt
       @inputDOMElementForVirtualKeyboard.removeEventListener 'keyup', @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener
       @inputDOMElementForVirtualKeyboard.removeEventListener 'keypress', @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener
 
+  # the top of every press's climb: nothing raises me, and there is nothing above me to pass it to
   pressBegan: ->
-    noOperation
-  
+    false
+
   activated: ->
     noOperation
 
@@ -2966,9 +2967,12 @@ class WorldWdgt extends IconGridPanelWdgt
     try
       # 2. restore the per-class id counters into the freshly-zeroed space BEFORE deserializing,
       #    so registerThisInstance sees the right high-water marks (§4.4/§4.9).
+      #    A key is a name read out of the file: classNamed, so one naming a native global or an
+      #    inherited/accessor property of window writes onto nothing.
       if section.idCounters?
         for own className, n of section.idCounters
-          window[className].lastBuiltInstanceNumericID = n if window[className]?
+          klass = classNamed className
+          klass.lastBuiltInstanceNumericID = n if klass?
       # 2b. replay CLASS-scope source edits against the live prototypes BEFORE deserializing, so
       #     restored shells (Object.create(prototype)) already see the edited methods (§12). The
       #     confirm above warned that a load can run code the snapshot carries. Instance-scope
@@ -3327,8 +3331,10 @@ class WorldWdgt extends IconGridPanelWdgt
     @lastEditedText = undefined
     # EPHEMERAL WORLD-LEVEL COLLECTIONS, same shape as the highlight/pinout sets above: none is
     # emptied by fullDestroyChildren (they are world state, not tree state) and none is emptied by
-    # Widget._destroyNoSettle (which only unregisters from steppingWdgts / keyboardEventsReceivers /
-    # the click-outside set -- world-level collections are outside its remit). So tearing down
+    # Widget._destroyNoSettle (which unregisters the dying widget from the registries of LIVE widgets --
+    # stepping, the keyboard receivers, the click-outside set, the caret, the editor focus, dataflow,
+    # the hand's press bookings -- and leaves these ephemeral world-level collections outside its
+    # remit). So tearing down
     # with a tooltip up, a menu open, handles shown, or a scroll still gliding leaks dead refs into
     # whatever comes next -- the next test in the same headless process, or the loaded desktop.
     #   toolTipsList              destroyToolTips would then read bounds off a destroyed tooltip

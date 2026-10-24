@@ -108,7 +108,7 @@ class SourceEditsRegistry
   replayClassEdits: ->
     return unless SourceEditsRegistry.canReplaySourceEdits()
     for r in @records when r.scope is "class"
-      theClass = window[r.className]?.class
+      theClass = classNamed(r.className)?.class
       continue unless theClass?
       try
         theClass.applyMemberEdit r.propertyName, r.source

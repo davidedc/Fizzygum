@@ -743,3 +743,26 @@ Residue closed by the focus-residue arc (2026-10-23, the session after this plan
   recapture had baked in a wheel that scrolled the menu's own rows. The wheel is aimed beside the cell by meaning and both
   offsets are asserted (stack 0 → 60, menu rows 0 → 0); the recaptured mouse image_3/image_4 are byte-identical to the
   finger references.
+- [x] A finger drag over NESTED scroll panes scrolls the OUTER pane first (found by the focus-residue arc). **DONE 2026-10-24**
+      (the findings arc, owner decision O2): THE DIRECTION LATCH — one drag-scroll step per stroke, on the innermost pane
+      that can move in the stroke's dominant direction, chosen at the drained event where the press leaves the grab radius
+      (`ViewportWdgt.strokeScrollPaneFor`); `scrollByDragDelta` and its double count are gone; a `'never'` pane passes the
+      press on. Pinned by `SystemTest_macroNestedPanesDragLatchesOnePane`.
+- [x] A `wheelOn` aimed through a NESTED scroller passes its aim check. **DONE 2026-10-24**: a wheel named for a scroller
+      must start a scroll the dispatch hands to it — the check asks the dispatch's own decisions
+      (`ActivePointerWdgt.wheelTakerAbove`, `ViewportWdgt.strokeScrollPaneFor`); 0 tests flagged, non-vacuous on the old aim.
+- [x] `revisit-gate.js` at `--pointer=finger` reads INVALID on a clean tree. **DONE 2026-10-24** — the filed diagnosis was
+      wrong: the harness named a test BEFORE the run started (`currentlyPlayingTestName` indexed a half-loaded list), so
+      every boundary-marking prelude filed boot flushes under some test, sometimes another shard's. The player now names
+      only the test it picked (`AutomatorPlayer.nameOfTestBeingPlayed`); the gate is unchanged and reads OK 323/323.
+- [x] Two drag-scroll tests' mouse and finger references differ at image_2. **CLOSED, won't do (2026-10-24)**: both tests test
+      what a MOVE-meaning drag does (an unlocked panel moves; the lock or the scroll flags make it scroll); a plain finger
+      drag over content scrolls regardless (ruling I2), so a plain-drag verb would test nothing about them. The hold IS the
+      finger's mouse-drag, and the ring is the hold's selection.
+- [x] The label-REBUILD path's latent defects. **DONE 2026-10-24**: a relabel rebuilds the label at once (never label-less
+      while the rows panel measures), places a non-centred one at the button's top-left, a menu row commits only its
+      height, and the rows panel re-fits its pop-up (`CommandPanelWdgt._reactToChildRelabelled`); (a) also broke ListWdgt
+      rows. Pinned by `SystemTest_macroRelabelledLabelButtonsStayPlaced`; `macroEditButtonLabelText`'s stale comments fixed.
+- [x] `ActivePointerWdgt`'s hover cleanup does not test the dock-band record. **DONE 2026-10-24** — measured not reachable (a
+      band always stands with the ring or the label; census 0 in 1278 updates); the condition names every record anyway
+      (owner's call).

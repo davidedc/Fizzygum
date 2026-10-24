@@ -51,6 +51,13 @@ class FrameWdgt extends Widget
   padding: undefined
   contents: undefined
   defaultContents: undefined
+  # The fields holding a widget I OWN while it is off my tree: my empty-state placeholder is
+  # mounted only while I hold nothing else, and stays mine (my _fullDestroyNoSettle destroys it)
+  # while real contents are mounted. A walk that reaches widgets through `children` alone reads
+  # it as live and unreachable -- escaped -- so the world inventory's containment walk follows
+  # these fields too. Merged up the chain (boot's classStaticListMergedUpTheChain): a subclass
+  # ADDS to this list. Class-level, so it is no row in the Object Inspector.
+  @offTreeOwnedWidgetFields: ["defaultContents"]
   # MY FOUR EDGE SLOTS: a `side -> FrameWdgt` map, at most one docked frame per side (program
   # ruling C12). The occupant is an ordinary frame carrying an EdgeDockLayoutSpec of mine — no
   # type test, no docked SKIN: the spec owns its placement, and its card skin, its grip and its

@@ -70,8 +70,10 @@ class WellKnownObjects
   # subclasses have no explicit constructor — verified). We memoize one instance per class
   # so multiple launchers for the same app share it (matching the desktop's singleton
   # semantics), and because the apps are stateless the cache is safe to keep across loads.
+  # The name comes out of a file, so it is resolved by classNamed: an "app:" key naming a native
+  # global or an inherited property of window is unresolved, never `new`-ed.
   @resolveApp: (className) ->
-    appClass = window[className]
+    appClass = classNamed className
     return undefined unless appClass?
     @_appSingletons ?= {}
     @_appSingletons[className] ?= new appClass

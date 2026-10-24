@@ -906,3 +906,11 @@ Legacy icons shown on any redesigned surface are converted with the skill. Every
       **DONE 2026-10-22** (§4 G, §4 Z): G in five waves G-A … G-E (STATUS row G); Z closed the arc, the tests branch merged whole rather than squashed (STATUS row Z).
 - [x] G-D follow-up — a finger does not select what a mouse selects (its HOLD half closed by the focus arc's S2)
       **DONE 2026-10-23** (the focus-residue arc), as an owner decision: the DRAG half's evidence had gone stale (since S2 the four named tests' finger references show the same ring as the mouse ones — a finger run plays a press–drag as hold-then-drag, and the hold selects), and what was left was the DRAG-SCROLL, where the finger was right and the mouse wrong — a mouse drag-scroll's release clicked what it pressed, selecting it and FIRING it (a menu row's action, measured). Rule D′: **a stroke selects what it acts on; a scroll is not a click, on any pointer** (`ActivePointerWdgt._strokeOwesNoClick`, told by `ViewportWdgt.pressBegan` → `notePressTakenForScrolling`). Pinned by `SystemTest_macroMouseDragScrollOfMenuRowsFiresNoRow`; two mouse shots recaptured (`macroLockedScrollPanelScrollsWhenDragged`, `macroScrollPanelDragToScrollFlags` image_2). Rejected: a finger drag-scroll that selects (24 finger shots in 13 tests, ringing menu rows and dividers).
+- [x] W5 finding — a FINGER cannot pan a `ListWdgt` nested in a scrolling document. **DONE 2026-10-24** (the findings arc):
+      the diagnosis was wrong — the list DOES claim plain drags; the outer-first drag race (every enclosing pane installed a
+      step, the outer took the travel) won. The DIRECTION LATCH (`viewports-and-planes.md`) gives a stroke to the innermost
+      pane that can move in its direction; `SystemTest_macroNestedScrollPanelsRouteWheel`'s `mouseOnlyReason` now states
+      the real reason it stays mouse-only.
+- [x] W5e, its stuck-PRESSED half (the edit mark's tool cell; frame-strip icon buttons whose empty face caught the release).
+      **DONE 2026-10-24** by the press lifecycle (every widget the press reached is told its ending); the toolbar-copy and
+      dock-corner halves stay in BACKLOG.

@@ -229,6 +229,13 @@ class MenuItemWdgt extends LabelButtonWdgt
   unselect: ->
     @state = @STATE_NORMAL
 
+  # wear my list's selection again: the highlighted state my click gives me
+  # (LabelButtonWdgt.activated), without the click. Asked by my panel when a press that took the
+  # selection off me is cancelled (CommandPanelWdgt.reShowListSelection).
+  showAsSelected: ->
+    @state = @STATE_HIGHLIGHTED
+    @_changed()
+
   getTextDescription: ->
     if @textDescription?
       return @textDescription + " (adhoc description of menu item)"
@@ -245,11 +252,13 @@ class MenuItemWdgt extends LabelButtonWdgt
     super()
     @_placeMyParts()
 
-  # MenuItemWdgt hugs its box to its (multi-line, modern TextWdgt) label -- the
+  # MenuItemWdgt hugs its HEIGHT to its (multi-line, modern TextWdgt) label -- the
   # opposite of LabelButtonWdgt's default single-line StringWdgt label, which
-  # leaves the box alone. Building the label sizes me; _placeMyParts, which my _reLayoutSelf runs
-  # right after, places it. The label renders my whole font: its family, size and weight, and the
-  # italic a list's format can ask for.
+  # leaves the box alone. My WIDTH is not my label's to set: my rows panel hands every row the width of
+  # its widest (CommandPanelWdgt, from each row's menuEntryPreferredWidth), and a row on its own keeps
+  # the width it is given. Building the label sizes my height; _placeMyParts, which my _reLayoutSelf
+  # runs, places it. The label renders my whole font: its family, size and weight, and the italic a
+  # list's format can ask for.
   _createLabel: ->
     @label = new TextWdgt @labelString,
       fontSize: @fontSize
@@ -258,16 +267,18 @@ class MenuItemWdgt extends LabelButtonWdgt
       italic: @labelItalic
     @label.setColor @labelColor
 
-    # _addNoSettle (NOT add): _createLabel is driven by _reLayoutSelf (a layout pass), so a
-    # self-settle here would re-enter the flush guard and throw.
+    # _addNoSettle (NOT add): _createLabel runs inside my arrange (_reLayoutSelf) or inside a relabel's
+    # settle (LabelButtonWdgt._setLabelNoSettle), where a self-settle would re-enter the flush guard and
+    # throw.
     @_addNoSettle @label
     # the modern family does not self-size; make the label hug its text before
-    # we read @label.extent() below to size this menu item around it. _createLabel is driven by my
-    # _reLayoutSelf -- my own arrange, whose _placeMyParts places the label right after -- so the hug
-    # ALONE (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle). Telling ME was never what
-    # told my container about the size I take from the label: an in-pass mark does not climb, and the row
-    # built at construction is an orphan. My container hears it the way it hears any arrange of mine --
-    # the settle-time up-edge, and on a relabel _setLabelNoSettle's own climbing invalidate.
+    # we read its height below to size this menu item around it. The hug ALONE
+    # (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle): my arrange, whose _placeMyParts
+    # places the label, is already under way (my _reLayoutSelf) or already owed (a relabel invalidates
+    # me). Telling ME is not what tells my container about the size I take from the label: an
+    # in-pass mark does not climb, and the row built at construction is an orphan. My container hears it
+    # the way it hears any arrange of mine -- the settle-time up-edge, and on a relabel
+    # _setLabelNoSettle's own climbing invalidate and its _reactToChildRelabelled.
     @label._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle()
 
     # menuRowHeight (a plain list row's listRowHeight, from its look) is a MINIMUM, not a height: a
@@ -275,11 +286,7 @@ class MenuItemWdgt extends LabelButtonWdgt
     # gets clipped by a small dial and a small label still offers the full target (G3/G5 -- a row is
     # a tap target). The label then sits centred in whatever height wins, or down the plate a list
     # row's look stops short of its bottom (_placeMyParts).
-    labelExtent = @label.extent()
-    rowHeight = Math.max labelExtent.y, (@minimumRowHeight ? WorldWdgt.theme.menuRowHeight)
-    w = @width()
-    @__commitExtent new Point (@_leadingWidth() + labelExtent.x + @_trailingWidth()), rowHeight
-    @__commitWidth w
+    @__commitHeight Math.max @label.height(), (@minimumRowHeight ? WorldWdgt.theme.menuRowHeight)
 
   # EVERYTHING I SHOW, placed against my box as it now is -- the one placement, run by my
   # _reLayoutSelf and again whenever my tick or my tick column moves. Left to right: my side inset,
@@ -483,12 +490,19 @@ class MenuItemWdgt extends LabelButtonWdgt
       @_changed()
     world.destroyToolTips()  if @toolTipMessage
 
+  # A list row's press takes the visible selection off its siblings, then shows pressed and goes on up
+  # (LabelButtonWdgt.pressBegan), so the panes above it — the list that may scroll the stroke among
+  # them — hear it too.
   pressBegan: (pos) ->
-    if @isListItem()
-      @parent.unselectAllItems()
-      @escalateEvent "pressBegan", pos
-    # LabelButtonWdgt.pressBegan sets STATE_PRESSED + bringToForeground + escalate
+    @parent.unselectAllItems()  if @isListItem()
     super
+
+  # A CANCELLED press (ActivePointerWdgt, the press's AUDIENCE) is no choice of a row -- the stroke
+  # scrolled, lifted or was aborted -- so a list row gives the visible selection back to its list's
+  # own (CommandPanelWdgt.reShowListSelection), which its press took it from; any other row is undone
+  # the label button's way.
+  pressCancelled: ->
+    if @isListItem() then @parent.reShowListSelection() else super
 
   isListItem: ->
     # true when my container selects rows on click (a CommandPanelWdgt used as a

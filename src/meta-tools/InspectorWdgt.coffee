@@ -232,7 +232,7 @@ class InspectorWdgt extends Widget
     @_invalidateLayout()
 
   # My BREADCRUMB's pieces, added in my paint and hit order, left to right: the "Class" caption,
-  # then a chip per class of my subject's chain (_classChainNames), base class first, each but the
+  # then a chip per class of my subject's chain (_classChainLinks), base class first, each but the
   # last followed by its separator, then the mixin-donor label, blank until a donated member is
   # selected (selectionFromList). The last chip is the CURRENT one. Every chip, the current one
   # included, opens its class's ClassInspector: its action is openClassInspector, its class name in
@@ -247,8 +247,10 @@ class InspectorWdgt extends Widget
 
     @classChips = []
     @classSeparators = []
-    names = @_classChainNames()
+    names = (link.constructor.name for link in @_classChainLinks())
     for name, i in names
+      # the NAME, never the link: names are data, while a prototype held by a chip would be deep-copied
+      # by the Duplicator and refused by the Serializer
       chip = new ChipWdgt @, "openClassInspector", face: name, arg1: name, current: i is names.length - 1
       @classChips.push chip
       @_addNoSettle chip
@@ -261,20 +263,21 @@ class InspectorWdgt extends Widget
     @mixinDonorLabel._sizeToTextAndDisableFittingNoSettle()
     @_addNoSettle @mixinDonorLabel
 
-  # The names of the classes my subject is made of, base class first: every object on its
+  # The LINKS of the class chain my subject is made of, base class first: every object on its
   # prototype chain, my subject itself included, that is a class's OWN prototype (it owns its
   # constructor), up to Object. So an object inspector's chain ends in its subject's own class, a
   # class inspector's -- whose subject IS a class's prototype -- in that class itself, and a value
-  # (a number, a string) names its built-in class. An own "constructor" member that holds no
-  # function (a property added to my subject under that name) names nothing.
-  _classChainNames: ->
-    names = []
+  # (a number, a string) ends in its built-in class. An own "constructor" member that holds no
+  # function (a property added to my subject under that name) is no link. ONE walk, two readers:
+  # the breadcrumb names a chip per link, and openClassInspector finds a chip's link again by name.
+  _classChainLinks: ->
+    links = []
     link = @inspectedObject
     while link? and link.constructor?.name isnt "Object"
       if (Object::hasOwnProperty.call link, "constructor") and Utils.isFunction link.constructor
-        names.unshift link.constructor.name
+        links.unshift link
       link = link.__proto__
-    names
+    links
 
   # My code pane tells me when its text comes to differ from the text last loaded or saved, and when
   # it agrees with it again: save is enabled exactly while there is an edit to save. A read-only
@@ -455,8 +458,16 @@ class InspectorWdgt extends Widget
     @showOwnPropsOnlyToggle = new LabelledToggleWdgt @, "toggleShowingOwnPropsOnly", face: "Own props only"
     @_addNoSettle @showOwnPropsOnlyToggle
 
+  # A breadcrumb chip's class, in a class inspector. The chip's name came from my subject's chain
+  # (_classChainLinks), so it is resolved against those same links and never looked up as a global:
+  # a chip can name a BUILT-IN class (an inspector on a number names Number), which is no Fizzygum
+  # class, so classNamed rightly does not answer it, while window[name] would answer any global at
+  # all. A name on no link of the chain is a broken chip, and fails loudly.
   openClassInspector: (ignored,ignored2,className) ->
-    classInspector = new ClassInspectorWdgt window[className].prototype
+    classLink = (link for link in @_classChainLinks() when link.constructor.name is className)[0]
+    unless classLink?
+      throw new Error "openClassInspector: no class named '" + className + "' on the inspected object's prototype chain"
+    classInspector = new ClassInspectorWdgt classLink
     world.openFrameWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
   # The parsed Mixin that injects member `selected` into `theClass` (undefined when no

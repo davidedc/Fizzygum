@@ -405,9 +405,29 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
         w = Math.max w, item.menuEntryPreferredWidth()
     w
 
+  # A ROW OF MINE WAS RELABELLED (LabelButtonWdgt._setLabelNoSettle tells me): my hug reads my rows'
+  # labels (maxWidthOfMenuEntries), so a new label can change my width, and the frame I sit in must
+  # follow it -- the same contained-panel change a membership change is (VerticalStackPanelWdgt
+  # ._reactToChildRemoved), absorbed the same way: a pop-up's rows viewport re-lays me, re-fits itself
+  # and re-takes its frame's extent (PopUpRowsViewportWdgt._reLayOutAfterContainedPanelChange). A pop-up
+  # frame keeps the width its first placement latched, so without this a longer label would overflow
+  # the frame behind a horizontal scroll bar. A list's rows panel stands on the list's scrolled pane,
+  # which absorbs nothing, and the relabel's own climbing invalidate re-lays me there.
+  _reactToChildRelabelled: (ignored_row) ->
+    @parent?._reLayOutAfterContainedPanelChange?()
+
   unselectAllItems: ->
     # only menu items carry a selection state; each resets its own.
     @children.forEach (item) ->
       item.unselect?()
 
     @_changed()
+
+  # SHOW MY LIST'S SELECTION AGAIN, as its model holds it: a row's press takes the visible selection
+  # off every row (MenuItemWdgt.pressBegan), so when that press is CANCELLED rather than ending in a
+  # click (MenuItemWdgt.pressCancelled), the look goes back to the row my list says is selected
+  # (ListWdgt.selected) — or to none. Only a list's panel is asked (a row asks when it isListItem).
+  reShowListSelection: ->
+    @unselectAllItems()
+    selectedRow = @target.selected
+    selectedRow.showAsSelected()  if selectedRow?.parent is @

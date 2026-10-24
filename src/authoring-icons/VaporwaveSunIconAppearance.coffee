@@ -1,5 +1,11 @@
 class VaporwaveSunIconAppearance extends IconAppearance
 
+  # Serialization: the gradient is a live canvas object, so it never rides a file (SWCanvas has no
+  # encoder for it at all); paintFunction rebuilds it whenever it is absent. The Duplicator needs no
+  # declaration: it clones every gradient as undefined. See
+  # docs/architecture/serialization-duplication-reference.md §5.
+  @serializationTransients: ["sunGradient"]
+
   sunGradient: undefined
 
   preferredSize: new Point 100, 100

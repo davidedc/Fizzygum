@@ -32,15 +32,48 @@ class ActivePointerWdgt extends Widget
   # Per STROKE, not per device: every field here is re-established at the press and answers for
   # that one press. Plain scalars and booleans — no widget references — so a teardown owes them
   # nothing beyond the shared press clear (_forgetPressBookkeeping) that a cancel also reaches. The
-  # last two are kept for EVERY pointer: they are what the release's click decision reads
-  # (_strokeOwesNoClick).
+  # last one is kept for EVERY pointer: with the stroke's pane below, it is what decides whether the
+  # stroke is a scroll (_strokeScrolls) — which cancels part of the press's audience, and makes the
+  # release owe no click.
   pressOriginPoint: undefined                # pointer position where the press began
   pressOriginEventTime: undefined            # EVENT.time at that press — the hold's ONE clock
   _pressArmedForMouseSemantics: false        # do this stroke's drags mean what a mouse's would?
   _pressHoldFired: false                     # the hold opened its menu, so this stroke owes no click
   _pressHoldMenuStands: false                # that menu is still up, and a move dismisses it
   _pressTravelledPastDragThreshold: false    # the press went past grabDragThreshold of its origin
-  _pressTakenForScrolling: false             # a scroll surface took the press for its drag-scroll
+  # --- the stroke's SCROLL (ViewportWdgt's direction latch) ---------------------------------------
+  # Per stroke too, and cleared with the recognizer above — at the next press, a cancel, a teardown
+  # — but WIDGET references, so a dying widget is also forgotten from them (noteWidgetDestroyed).
+  # The owner is told at the press, by the pane itself; the stroke's pane is fixed once, at the
+  # drained event where the press crossed grabDragThreshold, and is undefined until then — and for
+  # the whole stroke when it lifted what it pressed instead, or no pane took its press.
+  _pressScrollOwner: undefined               # the innermost pane with something to scroll that the press reached: it took the press
+  _strokeScrollPane: undefined               # the pane that took this stroke's scroll — the owner's latch chose it
+  # --- the press's AUDIENCE: THE PRESS LIFECYCLE ---------------------------------------------------
+  # A primary press is told to the widget it hit, then on up the chain for as long as each receiver
+  # passes it on (each one's pressBegan answers that: true hands it to the parent, false keeps it —
+  # Widget.pressBegan). I drive that climb and RECORD who heard it, leaf first; the record is the
+  # press's audience, and it is never re-walked: a lift re-parents what it picks up, so the chain at
+  # the release is not the chain the press climbed.
+  #   Every member is told EXACTLY ONE ending, through ?() — a widget with no press look to undo
+  # declares neither verb:
+  #  - pressCancelled(), the moment the stroke becomes something that is not a press on that content:
+  #     · a SCROLL (_strokeScrolls, decided once, at the drained event where the press leaves the
+  #       grab radius): the members inside the pane that took the stroke are cancelled — the pane
+  #       carries them along with the pointer and scrolls, it does not press them — while that pane
+  #       and the members above it keep the press;
+  #     · a LIFT (grab starting a float-drag): every member, since what the press landed on is
+  #       carried from there on, and the drop that ends the stroke owes no ending of its own;
+  #     · an ABORT (processPointerCancel): whatever is still owed.
+  #  - pressEnded(pos, button, buttons, ctrlKey, shiftKey, altKey, metaKey), at the RELEASE, to every
+  #    member still owed one, leaf first, each with the pointer in its own plane — wherever the
+  #    release lands, on every release (a hold-consumed one and a scroll's included). Whether the
+  #    release is also a CLICK is a separate decision, made after the endings (_strokeOwesNoClick).
+  # Neither ending says where the pointer is: a receiver picks the look it ends in from where the
+  # pointer actually stands, by asking me (restsOn), never by assuming it is still over it. A member
+  # that dies mid-stroke leaves the audience with its subtree (noteWidgetDestroyed), so no ending
+  # ever reaches a corpse.
+  _pressAudience: undefined                  # the members still owed an ending, leaf first
   # THE FINGER LEFT THE GLASS: between touch strokes NO pointer rests anywhere, and while that is
   # true nothing is under one. A mouse or a pen never leaves — it stops — so this is false for
   # their whole life and every path they take is the path they always took.
@@ -63,6 +96,7 @@ class ActivePointerWdgt extends Widget
 
   constructor: ->
     @mouseOverList = new Set
+    @_pressAudience = []
     @doubleClick = new MultiClickRecognizer 2
     @tripleClick = new MultiClickRecognizer 3
     super()
@@ -104,21 +138,51 @@ class ActivePointerWdgt extends Widget
     return
 
   # The widget-referencing bookkeeping of a PRESS: which widget the button went down on, what a
-  # drag would pick up, what is being non-float-dragged, and the armed multi-click candidates.
-  # Shared by the two occasions a press ends without a release — a world teardown (above) and a
-  # cancelled stroke (processPointerCancel) — each of which then clears what only it owns.
+  # drag would pick up, what is being non-float-dragged, the press's audience, the armed
+  # multi-click candidates — and, through the recognizer's own clear, the pane that took the press
+  # and the one its stroke latched. Shared by the two occasions a press ends without a release — a
+  # world teardown (above) and a cancelled stroke (processPointerCancel) — each of which then clears
+  # what only it owns. The audience is forgotten, not told: a cancelled stroke has told it already,
+  # and a teardown's audience died with its world.
   _forgetPressBookkeeping: ->
     @mouseDownWdgt = undefined
     @wdgtToGrab = undefined
     @nonFloatDraggedWdgt = undefined
+    @_pressAudience = []
     @doubleClick.forget()
     @tripleClick.forget()
     @_forgetPressAndHoldRecognition()
     return
 
-  # Forget the press-and-hold recognizer's whole per-stroke state. An ordinary release does NOT
-  # come through here: the up still has to know whether the stroke owes a click, and the next press
-  # re-establishes every field anyway.
+  # PUBLIC notification — a widget is dying. Widget._destroyNoSettle, the one funnel every death
+  # passes through, tells me, as it tells the world's other registries of live widgets. A press books
+  # widgets the rest of its stroke acts on — what a drag picks up, the widget the release's click and
+  # a finger's hold are about, the widget a non-float drag steps, the pane that took the press and the
+  # one its latch chose to scroll, the audience still owed an ending — and a booking left naming a
+  # corpse is acted on at a later event of the stroke: a pressed move lifts the corpse onto me, the
+  # release drops it back into the tree, and an ending tells it its press is over. So every booking
+  # the dying widget is or contains is forgotten, and the stroke goes on without it. Containment
+  # counts because a single-widget destroy orphans the subtree under it rather than destroying it
+  # (the editor-focus register's rule). The payload I carry leaves me by itself (its death detaches it
+  # from its parent), and its death also spends the pick-up the press booked, which can be the
+  # template it was copied from rather than the payload itself.
+  #   Not forgotten here: the over-list, which the next dispatch re-derives from the tree and which
+  # owes the corpse its last hoverExited (a menu row takes down the highlight on the widget it stands
+  # for, a widget with a tooltip takes the tooltip down); and the multi-click candidates, which
+  # recognize only the widget a release lands on, never a corpse.
+  noteWidgetDestroyed: (deadWdgt) ->
+    diesWithIt = (booking) -> booking? and deadWdgt.isAncestorOf booking
+    @wdgtToGrab = undefined  if (deadWdgt.parent is @) or diesWithIt @wdgtToGrab
+    @mouseDownWdgt = undefined  if diesWithIt @mouseDownWdgt
+    @nonFloatDraggedWdgt = undefined  if diesWithIt @nonFloatDraggedWdgt
+    @_pressScrollOwner = undefined  if diesWithIt @_pressScrollOwner
+    @_strokeScrollPane = undefined  if diesWithIt @_strokeScrollPane
+    @_pressAudience = (member for member in @_pressAudience when not diesWithIt member)
+    return
+
+  # Forget the press-and-hold recognizer's whole per-stroke state, and the stroke's scroll facts
+  # with it. An ordinary release does NOT come through here: the up still has to know whether the
+  # stroke owes a click, and the next press re-establishes every field anyway.
   _forgetPressAndHoldRecognition: ->
     @pressOriginPoint = undefined
     @pressOriginEventTime = undefined
@@ -126,7 +190,8 @@ class ActivePointerWdgt extends Widget
     @_pressHoldFired = false
     @_pressHoldMenuStands = false
     @_pressTravelledPastDragThreshold = false
-    @_pressTakenForScrolling = false
+    @_pressScrollOwner = undefined
+    @_strokeScrollPane = undefined
     return
 
   # Capability query (with CanvasWdgt; replaces `whereTo instanceof ActivePointerWdgt or ... CanvasWdgt`
@@ -515,6 +580,11 @@ class ActivePointerWdgt extends Widget
       # the flush guard mid-pass; the single tier flushes ONCE and THROWS if a future override sneaks in a
       # public setter (the wanted cores-call-cores discipline).
       @_settleLayoutsAfter => oldParent?._reactToChildGrabbed? aWdgt
+      # THE STROKE BECOMES A LIFT: what the press landed on is being carried, not pressed, so its
+      # whole audience is cancelled here, and the drop that ends the stroke owes it nothing (the press
+      # lifecycle, above). A float-drag started by a click (a menu's "pick up") finds the audience
+      # already ended by its release.
+      @_cancelPressOf -> true
 
   isThisPointerDraggingSomething: ->
     @isThisPointerFloatDraggingSomething() or @isThisPointerNonFloatDraggingSomething()
@@ -731,8 +801,9 @@ class ActivePointerWdgt extends Widget
   #    processPointerCancel and processWheel — each take ONE immutable input event and turn it
   #    into the widget-facing dispatches below:
   #
-  #   pressBegan
-  #   pressEnded
+  #   pressBegan          (climbs while each receiver passes it on — the press's audience, above)
+  #   pressEnded          (to that audience, at the release)
+  #   pressCancelled      (to that audience, when the stroke scrolls, lifts or is aborted)
   #   activated
   #   contextMenuRequested
   #   doubleActivated
@@ -819,7 +890,7 @@ class ActivePointerWdgt extends Widget
   # finger that holds still, fires the right-click's own consequence: the pressed widget's context
   # menu, at the press point.
   #   A 'mouse' or 'pen' stroke arms at the press and consults no clock at all: all the recognizer
-  # keeps for it is whether it travelled, which the release's click decision reads (_strokeOwesNoClick).
+  # keeps for it is whether it travelled, which the scroll decision reads (_strokeScrolls).
 
   # Start the recognizer for a press on `pressedWdgt` (the widget the press hit).
   _beginPressAndHoldRecognition: (e, pressedWdgt) ->
@@ -877,7 +948,7 @@ class ActivePointerWdgt extends Widget
     # A MOUSE OR A PEN keeps the travel fact and nothing else: there is no hold to time for them, and
     # their drags already mean what a mouse's do.
     if @pointerType isnt 'touch'
-      @_pressTravelledPastDragThreshold = true  if pressTravelled
+      @_notePressTravelledPastDragThreshold()  if pressTravelled
       return
 
     return unless @pressOriginEventTime?
@@ -887,7 +958,7 @@ class ActivePointerWdgt extends Widget
       # that has begun sliding must not arm mid-flick, so the stroke is a plain drag for the rest of
       # its life. And if the hold already opened a menu, this move IS the lift: the menu goes and
       # the drag proceeds with the mouse semantics the hold armed.
-      @_pressTravelledPastDragThreshold = true
+      @_notePressTravelledPastDragThreshold()
       if @_pressHoldMenuStands
         @_pressHoldMenuStands = false
         if @mouseDownWdgt?
@@ -945,6 +1016,26 @@ class ActivePointerWdgt extends Widget
       if w?
         w.contextMenuRequested @_pointerPositionInPlaneOf(w)
 
+  # THE PRESS LEAVES THE GRAB RADIUS — once per stroke, at the drained event that carries it past
+  # grabDragThreshold of its origin (a move, or a release that states its place). That event is also
+  # where the stroke's SCROLL is decided: the press's scroll owner latches the one pane that takes it
+  # (ViewportWdgt.latchStrokeScroll) from the press point and this event's point. Deciding here, and
+  # not in whichever frame's step first sees the hand past the radius, keeps the choice a function of
+  # the event stream (Fizzygum-tests/DETERMINISM.md §1–§2).
+  #   And it is where the stroke COMMITS to that scroll, or never does (_strokeScrolls): a scroll
+  # cancels the press of every audience member inside the pane that took it — the pane carries them
+  # along with the pointer, it does not press them — and the whole audience when no pane took it (a
+  # finger's plain drag that nothing scrolls). The pane and the members above it keep the press, and
+  # are told it ended at the release (the press lifecycle, above).
+  _notePressTravelledPastDragThreshold: ->
+    return if @_pressTravelledPastDragThreshold
+    @_pressTravelledPastDragThreshold = true
+    @_strokeScrollPane = @_pressScrollOwner?.latchStrokeScroll @pressOriginPoint, @position()
+    if @_strokeScrolls()
+      pane = @_strokeScrollPane
+      @_cancelPressOf (member) -> not pane? or (member isnt pane and pane.isAncestorOf member)
+    return
+
   # Do this stroke's drags mean what a MOUSE drag means — lift what detaches, value-drag a control —
   # or is it a plain finger drag the surface under it may take for a scroll? The grammar's two
   # consumers (my own grab arms below, a viewport's scroll-drag step) ask this and nothing else. A
@@ -953,42 +1044,57 @@ class ActivePointerWdgt extends Widget
   strokeMeansMouseDrag: ->
     @pointerType isnt 'touch' or @_pressArmedForMouseSemantics
 
-  # PUBLIC notification — a scroll surface took this press for its drag-scroll: the press reached a
-  # viewport with something to scroll, and that viewport installed its scroll-drag step for it
-  # (ViewportWdgt.pressBegan). It is TOLD, at the press, by the one widget that knows it, rather than
-  # derived here from the pressed widget's ancestry: a widget between the pressed leaf and the
-  # viewport can take the press for itself and never pass it on (a selectable text starting a
-  # selection, a plot starting a rotation), and then no scroll surface took anything, however many
-  # scrollable panes enclose the leaf. Read by _strokeOwesNoClick.
-  notePressTakenForScrolling: ->
-    @_pressTakenForScrolling = true
+  # PUBLIC notification — `scrollOwner` took this press for its drag-scroll: it is the innermost pane
+  # the press reached with something to scroll, so it is the one that latches the stroke's pane once
+  # the stroke leaves the grab radius (_notePressTravelledPastDragThreshold). It is TOLD, at the press,
+  # by the one widget that knows it (ViewportWdgt.pressBegan), rather than derived here from the
+  # pressed widget's ancestry: a widget between the pressed leaf and the viewport can take the press
+  # for itself and never pass it on (a selectable text starting a selection, a plot starting a
+  # rotation), and then no scroll surface took anything, however many scrollable panes enclose the
+  # leaf. With no owner a mouse or pen stroke latches no pane, and so is never a scroll
+  # (_strokeScrolls).
+  notePressTakenForScrolling: (scrollOwner) ->
+    @_pressScrollOwner = scrollOwner
     return
+
+  # Has a pane already taken this press for its drag-scroll? Asked by each pane the press climbs
+  # through, so only the first — the innermost — becomes the stroke's owner.
+  isPressTakenForScrolling: ->
+    @_pressScrollOwner?
 
   # Does this stroke's RELEASE owe a click? A stroke selects what it acts on, and a scroll acts on
   # the pane alone, so on any pointer two strokes do not:
   #  - the HOLD consumed it: its menu already happened, and a right press fires no activated
   #    either;
-  #  - it was a SCROLL: it travelled past grabDragThreshold and what took its drag was a scroll
-  #    surface, so its release means "the scroll is over", not "click whatever travelled under the
-  #    pointer". This one is load-bearing rather than tidy: a pane carries what the press landed on
-  #    ALONG with the pointer, so a drag-scroll's release lands on the very widget its press landed
-  #    on, and the `w == @mouseDownWdgt` test below cannot tell the two apart. Without this, every
-  #    scroll ends in a click on the row, cell or paragraph it scrolled past — firing menu actions
-  #    and taking editor focus mid-scroll.
-  # Who took the drag is read per kind of stroke, from facts fixed by the event stream:
-  #  - a FINGER's drag is decided by the grammar (§2.2's plain-drag row, the two facts the recognizer
-  #    keeps): an un-armed touch press that travels is a scroll for the rest of its life, while an
-  #    armed one belongs to the chrome that armed it at the press or the lift its hold armed;
-  #  - a MOUSE or PEN stroke always means a mouse drag, so it is a scroll when a scroll surface took
-  #    its press (notePressTakenForScrolling) and nothing else took its drag: no widget was poised to
-  #    lift — the scroll step stands down for one — and no value control is dragging its value.
-  # A TAP or a CLICK never answers true: neither travels.
+  #  - it was a SCROLL (_strokeScrolls): its release means "the scroll is over", not "click whatever
+  #    travelled under the pointer". This one is load-bearing rather than tidy: a pane carries what
+  #    the press landed on ALONG with the pointer, so a drag-scroll's release lands on the very
+  #    widget its press landed on, and the `w == @mouseDownWdgt` test below cannot tell the two
+  #    apart. Without this, every scroll ends in a click on the row, cell or paragraph it scrolled
+  #    past — firing menu actions and taking editor focus mid-scroll.
+  # A TAP or a CLICK never answers true: neither travels, and neither holds.
   _strokeOwesNoClick: ->
-    return true if @_pressHoldFired
+    @_pressHoldFired or @_strokeScrolls()
+
+  # IS THIS STROKE A SCROLL? The ONE answer two decisions share, so they cannot drift: the press's
+  # audience is cancelled where the stroke commits to scrolling (_notePressTravelledPastDragThreshold,
+  # which asks the moment the press leaves the grab radius), and the release owes no click
+  # (_strokeOwesNoClick). Every fact read here is fixed by the time the press leaves the radius —
+  # the travel itself, the touch stroke's arming (a hold cannot fire once the press has travelled),
+  # the pane the latch chose there, and the non-float target the stroke's first pressed move booked
+  # — so the commit and the release read the same answer, unless a booked widget dies in between.
+  # Who took the drag is read per kind of stroke:
+  #  - a FINGER's drag is decided by the grammar (§2.2's plain-drag row, the two facts the recognizer
+  #    keeps): an un-armed touch press that travels is a scroll for the rest of its life — whether or
+  #    not a pane took it — while an armed one belongs to the chrome that armed it at the press or the
+  #    lift its hold armed;
+  #  - a MOUSE or PEN stroke always means a mouse drag, so it is a scroll when a pane took it — the
+  #    press's scroll owner latched one (_strokeScrollPane), which it does not for a stroke that is
+  #    lifting what it pressed — and no value control is dragging its value.
+  _strokeScrolls: ->
     return false unless @_pressTravelledPastDragThreshold
     return not @_pressArmedForMouseSemantics  if @pointerType is 'touch'
-    @_pressTakenForScrolling and
-      not (@wdgtToGrab?.detachesWhenDragged() or @nonFloatDraggedWdgt?.nonFloatDragging?)
+    @_strokeScrollPane? and not @nonFloatDraggedWdgt?.nonFloatDragging?
 
   # THE FINGER LEFT THE GLASS. A touch stroke has no between-strokes position — nothing rests under
   # a lifted finger — so at its end every widget the stroke walked over is told the pointer left,
@@ -1011,10 +1117,54 @@ class ActivePointerWdgt extends Widget
     @_pointerIsAbsent = true
     return
 
+  # === the press lifecycle: the climb, and the endings (the contract is the audience's, above) ===
+
+  # PUBLIC query — does the pointer REST on `aWdgt`? Asked by a member of the press's audience as it
+  # picks the look it ends in: hovered when the pointer is over it, at rest when it is not. A mouse
+  # or a pen rests on whatever it stopped over; a FINGER never rests anywhere — its stroke ends with
+  # the finger leaving the glass (_dissolveHoverStateOfTouchStroke) — so the answer for one is always
+  # no, even while the over-list still holds what it walked over.
+  restsOn: (aWdgt) ->
+    @pointerType isnt 'touch' and @mouseOverList.has aWdgt
+
+  # THE PRESS CLIMB, from `pressedWdgt` (the widget the primary press hit): each receiver is told
+  # pressBegan with the pointer in its own plane and joins the audience, and the climb goes on to its
+  # parent for as long as it answers that it passes the press on.
+  _climbPressFrom: (pressedWdgt) ->
+    @_pressAudience = []
+    receiver = pressedWdgt
+    while receiver?
+      @_pressAudience.push receiver
+      passesThePressOn = receiver.pressBegan @_pointerPositionInPlaneOf receiver
+      return unless passesThePressOn is true
+      receiver = receiver.parent
+    return
+
+  # THE ENDINGS. A member is struck off the audience before it is told, so an ending that sets off
+  # another one cannot tell anybody twice; and members are taken one at a time from the live record,
+  # so one that dies under an earlier member's ending has left it before its turn
+  # (noteWidgetDestroyed).
+  #   pressCancelled to each member `isCancelled` answers true for, in audience order.
+  _cancelPressOf: (isCancelled) ->
+    while (member = @_pressAudience.find isCancelled)?
+      @_pressAudience.splice (@_pressAudience.indexOf member), 1
+      member.pressCancelled?()
+    return
+
+  #   pressEnded to every member still owed one, leaf first: the release `e` ends the press.
+  _endPressAt: (e) ->
+    until @_pressAudience.length is 0
+      member = @_pressAudience.shift()
+      member.pressEnded? @_pointerPositionInPlaneOf(member), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
+    return
+
   processPointerDown: (e) ->
     @pointerType = e.pointerType
     # a press begins: whatever the previous stroke recognized is spent (the press below re-establishes
-    # it), and the position head right after must not advance a recognizer belonging to a dead stroke
+    # it), and the position head right after must not advance a recognizer belonging to a dead stroke.
+    # A previous press still owed an ending was never released (a down with no up between), so it is
+    # cancelled — exactly one ending holds for it too.
+    @_cancelPressOf -> true
     @_forgetPressAndHoldRecognition()
     # ...and so is where the previous stroke went DOWN. The hover dispatch measures "has the pointer
     # moved" against it, so a finger landing exactly where the last stroke began would arrive with no
@@ -1085,18 +1235,10 @@ class ActivePointerWdgt extends Widget
       @mouseDownWdgt = w
       @mouseDownWdgt = @mouseDownWdgt.parent  until @mouseDownWdgt[expectedClick]
 
-      # only a PRIMARY press carries a down fact: what a secondary press means is the context
-      # gesture, whose receiver the climb above books and whose release dispatches it
-      if @mouseButton is "left"
-        while !w.pressBegan?
-          if w.parent?
-            w = w.parent
-          else
-            break
+      # only a PRIMARY press carries a down fact, and so an audience: what a secondary press means is
+      # the context gesture, whose receiver the climb above books and whose release dispatches it
+      @_climbPressFrom w  if @mouseButton is "left"
 
-        if w.pressBegan?
-          w.pressBegan @_pointerPositionInPlaneOf(w)
-  
   
   processPointerUp: (e) ->
     # the same position head as the down (a browser pointerup states where it happened; a
@@ -1123,8 +1265,13 @@ class ActivePointerWdgt extends Widget
     world.freshlyCreatedPopUps.clear()
 
 
+    # Each branch below ENDS the press for whatever of its audience is still owed an ending (the press
+    # lifecycle, above), wherever the release lands: once its drag is over, and before any click.
     if @isThisPointerFloatDraggingSomething()
       @drop()
+      # the lift that began this float-drag cancelled the whole audience, so nobody is owed here; the
+      # seat keeps "every release ends what is still owed" true on this branch as on the others
+      @_endPressAt e
     else if @_strokeOwesNoClick()
       # THE STROKE OWES NO CLICK — either the hold consumed it or it was a scroll (see the query).
       # Its release dispatches no click and dismisses nothing — the same shape a right press has,
@@ -1133,9 +1280,12 @@ class ActivePointerWdgt extends Widget
       # takes it away; so does a menu whose rows the stroke scrolled.
       #   The non-float contract still holds: the hold can be followed by a value-drag, and whatever
       # the press booked as its non-float target must be told the drag is over (see the arm below).
+      # And the press still ENDS: for a hold, its whole audience; for a scroll, the pane that took
+      # it and the members above that pane — the ones inside it were cancelled as it committed.
       if @isThisPointerNonFloatDraggingSomething()
         @nonFloatDraggedWdgt.endOfNonFloatDrag?()
       @previousNonFloatDraggingPos = undefined
+      @_endPressAt e
     else
 
       # used right now for the slider button:
@@ -1147,6 +1297,10 @@ class ActivePointerWdgt extends Widget
         @nonFloatDraggedWdgt.endOfNonFloatDrag?()
 
       @previousNonFloatDraggingPos = undefined
+
+      # the press ends for its whole audience BEFORE the click is decided: the click below is a
+      # separate verdict about the widget the release landed on, and it does not gate the endings
+      @_endPressAt e
 
       if @mouseButton is "left"
         expectedClick = "activated"
@@ -1160,11 +1314,6 @@ class ActivePointerWdgt extends Widget
           break
       if w?
         if w == @mouseDownWdgt
-
-          # only a PRIMARY release carries a release fact: what a secondary press means is the
-          # context gesture, which the click dispatch below certifies
-          if expectedClick is "activated"
-            w.pressEnded? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
 
           # also send doubleclick if the
           # two clicks happen on the same widget
@@ -1284,8 +1433,9 @@ class ActivePointerWdgt extends Widget
   # processPointerUp: an up means exactly the thing a cancel does not.
   #
   # What the abort still owes is the payload of a float-drag — it may be the only copy of an object
-  # the user made — so it lands on the world where it visibly is. Every decision here is state and
-  # EVENT time only; a cancel reads no clock.
+  # the user made — so it lands on the world where it visibly is; and the press's audience, whose
+  # members still owed an ending are told the press is CANCELLED, never that it ended (the press
+  # lifecycle, above). Every decision here is state and EVENT time only; a cancel reads no clock.
   processPointerCancel: (e) ->
     if @isThisPointerFloatDraggingSomething()
       # the dwell is a statement of INTENT and a confiscated stroke has none, so tear the
@@ -1298,10 +1448,12 @@ class ActivePointerWdgt extends Widget
       # though the release happened outside its bounds — or, here, never happened at all.
       @nonFloatDraggedWdgt.endOfNonFloatDrag?()
 
-    # the stroke is dead: no phantom pressed state may linger, and a later tap must not fold with
-    # this cancelled press into a double-click. The shared clear takes the press-and-hold recognizer
-    # with it — a confiscated press states no intent, so it can neither arm nor open a menu. One
-    # that ALREADY opened stays open: the cancel is not a click outside it.
+    # the stroke is dead: no phantom pressed state may linger — every member of the audience still
+    # owed an ending is told the press is cancelled — and a later tap must not fold with this
+    # cancelled press into a double-click. The shared clear takes the press-and-hold recognizer with
+    # it — a confiscated press states no intent, so it can neither arm nor open a menu. One that
+    # ALREADY opened stays open: the cancel is not a click outside it.
+    @_cancelPressOf -> true
     @_forgetPressBookkeeping()
     @mouseButton = undefined
     @previousNonFloatDraggingPos = undefined
@@ -1386,11 +1538,18 @@ class ActivePointerWdgt extends Widget
   
   # see https://developer.mozilla.org/en-US/docs/Web/Events/wheel
   processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
-    w = @topWdgtUnderPointer()
-    w = w.parent  while w and not w.scrolledBy
-
+    w = ActivePointerWdgt.wheelTakerAbove @topWdgtUnderPointer()
     if w?
       w.scrolledBy deltaX, deltaY, deltaZ, altKey, button, buttons
+
+  # WHO TAKES A WHEEL NOTCH over `hit`: the nearest widget at or above it that takes scrolls
+  # (answers scrolledBy) — processWheel's one decision, and the one the macro toolkit's aim check
+  # asks, so the check cannot drift from the dispatch. Where the notch ends up from there is the
+  # taker's own business (ViewportWdgt.scrolledBy passes it on when it is at its edge that way).
+  @wheelTakerAbove: (hit) ->
+    w = hit
+    w = w.parent  while w and not w.scrolledBy
+    w
   
   
 
@@ -1732,8 +1891,14 @@ class ActivePointerWdgt extends Widget
     # move AND per cycle (via the hover re-sync), so a moving drag and a stationary hold both update.
     if @isThisPointerFloatDraggingSomething()
       @updateDragEmbedStateMachine()
-    else if @_dragEmbedOutlinedWdgt? or world.dragEmbedChargeRingDeclared? or world.dragEmbedLabelDeclared? or world.dragEmbedLockBadgeDeclared?
-      @_endDragEmbedInteraction()   # a drag ended some other way than drop() — clean up
+    else if @_dragEmbedOutlinedWdgt? or @dragEmbedDockBand? or world.dragEmbedDockBandDeclared? or
+     world.dragEmbedChargeRingDeclared? or world.dragEmbedLabelDeclared? or world.dragEmbedLockBadgeDeclared?
+      # a drag ended some other way than drop() — clean up. The test names every record that can
+      # stand after a drag: the outlined widget, the dock band (my record and the world's
+      # declaration), and the world's charging ring, armed label and lock badge. The candidate, the
+      # reluctant cue and the armed flag never stand without one of them, and the linger clock is
+      # re-anchored by the next drag's first candidate.
+      @_endDragEmbedInteraction()
 
     # press-and-hold recognizer, on the same seat and for the same reason: a finger that travels and
     # one that holds perfectly still must both be advanced, and only this method sees both.

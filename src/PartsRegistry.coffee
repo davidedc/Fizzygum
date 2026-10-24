@@ -252,22 +252,25 @@ class PartsRegistry
   whenOptionalPartsLoaded: (partNames, thenDo) ->
     @whenAllLoaded (eachName for eachName in partNames when @isAvailable eachName), thenDo
 
-  # ensureLoaded + construct. `new (window[className])` deliberately names the class as DATA:
+  # ensureLoaded + construct. `new (classNamed className)` deliberately names the class as DATA:
   # buildSystem/check-part-edges.js cannot see through it, which is the point -- core is not
   # allowed to name a part's class as a symbol it needs already defined, and this is the sanctioned
   # way to construct one anyway.
   launch: (className) ->
     part = @_partOf className
-    return Promise.resolve new (window[className]) unless part?
-    @ensureLoaded(part).then -> new (window[className])
+    return Promise.resolve new (classNamed className) unless part?
+    @ensureLoaded(part).then -> new (classNamed className)
 
   # Can this artifact EVER produce this class -- is it already here, or does a part this build
   # ships own it? Asked by whoever is deciding whether to put a control on screen at all: an icon
   # whose class can never arrive is a button whose only possible outcome is a rejected load, which
   # is worse than no icon (the `lean` dead-icon bug). ⚠ This is the isAvailable question, keyed by
   # CLASS instead of by part -- not "is it here yet", which is whenClassAvailable's business.
+  # "Already here" is classNamed's answer -- the one Deserializer.instantiate builds by, so a name
+  # read out of a file (a launcher's app, a record class) is never answered by a native global or an
+  # inherited property of window.
   canEverProvideClass: (className) ->
-    return true if window[className]?
+    return true if classNamed(className)?
     part = @_partOf className
     part? and @isAvailable part
 
@@ -278,7 +281,7 @@ class PartsRegistry
   # moves the effect a whole world CYCLE later and the SystemTest suite measures cycles
   # (../Fizzygum-tests/DETERMINISM.md), the same rule as whenAllLoaded's fast path.
   whenClassAvailable: (className, callback) ->
-    return callback() if window[className]?
+    return callback() if classNamed(className)?
     part = @_partOf className
     # nothing owns it: a build that simply does not have this class. The caller decided whether to
     # offer the control at all (canEverProvideClass); reaching here means it is genuinely absent.

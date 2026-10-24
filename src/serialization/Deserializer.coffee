@@ -20,10 +20,11 @@ class Deserializer
     unless envelope? and envelope.format is Serializer.FORMAT
       throw new SerializationError "not a Fizzygum serialization envelope",
         offender: "format=" + envelope?.format
+        direction: "load"
     # the same envelope-level verdict the world loader asks for BEFORE its teardown (through
     # whyItCanNeverBeRestored), so a file it lets through cannot fail one of these after it
     shapeProblem = @_envelopeShapeProblem envelope
-    throw new SerializationError "this file cannot be loaded: " + shapeProblem if shapeProblem?
+    throw new SerializationError shapeProblem, direction: "load" if shapeProblem?
 
     records = envelope.objects
     kind = envelope.kind or "widget"
@@ -68,7 +69,7 @@ class Deserializer
     # ---- Pass 2: populate & link ----
     for record, i in records
       shell = shells[i]
-      builder = Deserializer.TAG_BUILDERS[record.class]
+      builder = @_tagBuilderFor record.class
       if builder?.populate?
         # a native-container tag whose populate links its items ($Array/$Set/$Map), or a
         # tag fully built in pass 1 whose populate is an explicit no-op ($Date/$Image/
@@ -138,7 +139,9 @@ class Deserializer
   # what lets WorldWdgt.loadWorldSnapshot ask it before its teardown destroys the desktop. It
   # predicts exactly the throws a restore would hit and no others: the envelope-level ones
   # @deserialize raises up front (one helper answers both, so the two cannot drift), and
-  # @instantiate's per-record one — a record class with no tag builder that can never arrive.
+  # @instantiate's per-record one — a record class with no tag builder that can never arrive. Its
+  # first two tests ARE @instantiate's, made the same way (@_tagBuilderFor, then classNamed), so a
+  # record class either passes them, and @instantiate builds it, or must be one that can still arrive.
   # WHAT can still arrive is the caller's to say: the world passes PartsRegistry.canEverProvideClass,
   # so a class a LAZY part provides is not a reason (that file loads the part first). An
   # app-singleton {"$wk"} key is not checked, because an unresolved one is left undefined rather
@@ -149,7 +152,8 @@ class Deserializer
     return shapeProblem if shapeProblem?
     unbuildable = []
     for record in envelope.objects
-      continue if Deserializer.TAG_BUILDERS[record.class]?
+      continue if @_tagBuilderFor(record.class)?
+      continue if classNamed(record.class)?
       continue if canStillArrive record.class
       unbuildable.push record.class unless record.class in unbuildable
     return undefined unless unbuildable.length
@@ -177,6 +181,7 @@ class Deserializer
   # `populate` ($Object) links via the generic assignProps, exactly like a user class.
   # Kept a simple literal for the fragment-compile gate: build fns take (record,
   # asyncPromises), populate fns take (shell, record, resolveRef); neither uses `this`.
+  # Read ONLY through @_tagBuilderFor below, never indexed directly.
   @TAG_BUILDERS:
     "$Array":
       build:    (record, asyncPromises) -> []
@@ -228,17 +233,25 @@ class Deserializer
       build:    (record, asyncPromises) -> Color.create record.rgba[0], record.rgba[1], record.rgba[2], record.rgba[3]
       populate: -> # fully built in pass 1 — nothing to populate
 
+  # The tag builder a record's class names, or undefined. An OWN-property lookup, because a record
+  # class is DATA read out of a file: indexing the table would also answer the names every object
+  # inherits (`constructor`, `toString`, `__proto__`) with something that is not a builder.
+  @_tagBuilderFor: (tag) ->
+    if Object::hasOwnProperty.call Deserializer.TAG_BUILDERS, tag then Deserializer.TAG_BUILDERS[tag] else undefined
+
   # --- pass-1 factory: shell (or fully-built native value) for one record ---
   @instantiate: (record, asyncPromises) ->
-    builder = Deserializer.TAG_BUILDERS[record.class]
+    builder = @_tagBuilderFor record.class
     return builder.build record, asyncPromises if builder?
-    # a user class: bare shell, constructor NOT run — the established, SliderWdgt-guarded convention
-    klass = window[record.class]
+    # a user class: bare shell, constructor NOT run — the established, SliderWdgt-guarded convention.
+    # classNamed, so a record naming a native global or an inherited/accessor property of window
+    # fails here as a load error instead of building a non-Fizzygum shell or throwing a TypeError
+    klass = classNamed record.class
     # the world loader refuses such a file before its teardown (whyItCanNeverBeRestored mirrors
     # this test); this throw is the net for every other caller
     unless klass?
-      throw new SerializationError ("this file references the class '" + record.class +
-        "', which does not exist in this build")
+      throw new SerializationError ("it references the class '" + record.class +
+        "', which does not exist in this build"), direction: "load"
     Object.create klass.prototype
 
   @resolveWellKnown: (key) ->

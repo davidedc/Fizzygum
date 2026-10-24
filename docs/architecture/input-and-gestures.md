@@ -71,7 +71,8 @@ of two tiers a handler is on — the boundary is legible in the name SHAPE, so a
 see at a glance whether a verb carries a certified meaning or a raw phase:
 
 - **Facts — stroke-phase narration, no interpretation.** `pressBegan(pos)`, `pressMoved(pos,
-  button)`, `pressEnded(pos, button, buttons, ctrl, shift, alt, meta)`, `hoverEntered()`,
+  button)`, `pressEnded(pos, button, buttons, ctrl, shift, alt, meta)`, `pressCancelled()`,
+  `hoverEntered()`,
   `hoverMoved(pos)`, `hoverExited()`, plus the in-place drag pair `nonFloatDragging` /
   `endOfNonFloatDrag`. A fact says what the pointer did and nothing about what it meant; a paint
   canvas, a slider, a text selection and a hover highlight all want the raw phase.
@@ -88,6 +89,41 @@ or `buttonPressed`, because whether the consumer treats an activation as a choic
 consumer's business. Nothing at this boundary carries a device word: `scrolledBy` is the WIDGET
 verb, while `wheel`/`WheelInputEvent`/`processWheel` name the W3C stream on the pipeline side,
 where the device is the literal truth.
+
+### The press lifecycle — one beginning, exactly one ending
+
+A primary press is a BEGINNING told to an AUDIENCE, and every member of that audience is told
+exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
+
+- **The climb.** The hand drives it (`_climbPressFrom`): `pressBegan` goes to the widget the press
+  hit, with the pointer in its own plane, then to its parent, for as long as each receiver answers
+  that it passes the press on — `pressBegan` RETURNS `true` to hand it up and anything else to keep
+  it (`Widget.pressBegan` raises and answers `true`; a halo handle, a 3D plot, a selectable text, a
+  slider's jump, a palette and the world keep it). Who heard the press is RECORDED, leaf first,
+  and never re-walked: a lift re-parents what it picks up, so the chain at the release is not the
+  chain the press climbed.
+- **The endings.** `pressCancelled()` the moment the stroke becomes something that is not a press
+  on that content — a SCROLL (decided once, at the drained event where the press leaves the grab
+  radius, by `_strokeScrolls`, the same predicate the click decision reads): the members INSIDE the
+  pane that took the stroke are cancelled, since the pane carries them and does not press them,
+  while that pane and the members above it keep the press; a LIFT (the hand starts a float-drag):
+  the whole audience, and the drop owes nothing more; an ABORT (`processPointerCancel`): whatever is
+  still owed. Otherwise `pressEnded(pos, …)` at the RELEASE, to every member still owed one, leaf
+  first, each with the pointer in its own plane — wherever the release lands, on every release,
+  a hold-consumed one and a scroll's included. A member is struck off before it is told, so nobody
+  hears twice; a member that dies mid-stroke leaves the audience with its subtree.
+- **The look.** Neither ending says where the pointer is. A receiver picks the look it ends in from
+  where the pointer actually stands, by asking the hand (`restsOn` — a mouse or a pen rests on what
+  it stopped over; a finger never rests anywhere), never by assuming it is still over it:
+  `HighlightableMixin` ends HIGHLIGHTED under a resting mouse and NORMAL otherwise, on both
+  endings. A list row's cancel restores the LIST's selection look from its model
+  (`CommandPanelWdgt.reShowListSelection`), since its press moved the visible selection.
+- **The click** is a separate verdict, made after the endings and gated exactly as before.
+
+It is what iOS (`touchesCancelled` when a scroll view takes the touch), Android (`ACTION_CANCEL`
+when a parent intercepts) and the web (`pointercancel` when the browser pans) do: the container
+taking the gesture cancels the content's press. Pinned by `SystemTest_macroEveryPressIsToldItsEnding`
+(both pointers) and `SystemTest_macroMouseDragScrollOfMenuRowsFiresNoRow` (mouse).
 
 ### The press-and-hold recognizer
 
@@ -201,14 +237,17 @@ secondary-press channel on the widget surface, only the hand's own right-press b
 
 A hold-consumed stroke's release dispatches no click — the same shape a right press has always
 had (a right press never fires `activated` either) — via `_strokeOwesNoClick()`, which is
-also true for a SCROLL, on any pointer: **a stroke selects what it acts on, and a scroll acts on
-the pane alone.** A finger's scroll is decided by the grammar (an un-armed touch stroke that left
-the hold radius is a plain drag, i.e. a scroll, for its whole life); a mouse's or a pen's is a
-stroke that travelled past `grabDragThreshold` after a scroll surface took its press — told at the
-press by the viewport that installed its drag-scroll step on a pane with something to scroll
-(`ViewportWdgt.pressBegan` → `notePressTakenForScrolling`, not derived from the pressed widget's
-ancestry, because a widget in between — a selectable text, a 3D plot — can take the press for
-itself) — with nothing poised to lift and no value control dragging. That rule is load-bearing,
+also true for a SCROLL, on any pointer (`_strokeScrolls`): **a stroke selects what it acts on, and
+a scroll acts on the pane alone.** A finger's scroll is decided by the grammar (an un-armed touch
+stroke that left the hold radius is a plain drag, i.e. a scroll, for its whole life); a mouse's or a
+pen's is a stroke whose scroll owner — the innermost pane the press reaches with something to scroll,
+told at the press (`ViewportWdgt.pressBegan` → `notePressTakenForScrolling`, not derived from the
+pressed widget's ancestry, because a widget in between — a selectable text, a 3D plot — can take the
+press for itself) — latched a pane as the press left the grab radius (it latches none for a stroke
+that is lifting what it pressed), with no value control dragging. Neither a hold nor a scroll
+withholds the press's ENDING: a hold-consumed release still ends the press (`pressEnded`), and a
+scroll's release ends it for the pane and the members above it, the ones inside having been
+cancelled at the commit (the press lifecycle, above). That rule is load-bearing,
 not cosmetic: a scroll-drag carries the pressed row WITH the pointer, so the release lands on the
 very widget the press landed on, and a plain `w == @mouseDownWdgt` test cannot tell a scroll from
 an ordinary click — without it, every scroll would end in a click on whatever it scrolled past,
@@ -232,8 +271,9 @@ back), and so does any hover-capable move (a real mouse/pen move). A `'mouse'`/`
 never sets the flag, so their strokes keep today's persistent pointer-under state
 byte-identically.
 
-The dissolution is the stroke's LAST act: the up (or the cancel) clears the stroke's press and
-drag state FIRST, so the exit it delivers is final. Three `hoverExited` handlers defer to a live
+The dissolution is the stroke's LAST act: the up (or the cancel) tells the press's audience its
+ending and clears the stroke's press and drag state FIRST, so the exit it delivers is final (and
+an ending's look never sees a finger resting: `restsOn` answers no for a touch stroke). Three `hoverExited` handlers defer to a live
 drag — a slider thumb keeps its pressed look while the pointer outruns it, a halo handle keeps its
 pressed plate, and a size adjuster keeps its resize cursor — and an exit delivered while the drag still stands is one they ignore.
 That matters most for a thumb a finger dragged and let go of ON the thumb: the release is a click
@@ -279,9 +319,26 @@ going away), so nothing that means "the user chose this spot" may happen — no 
 dismissal, no embed, no dock. A float-drag's payload still lands on the world where it visibly is
 (it may be the user's only copy of something); a non-float drag is told it ended; the shared
 press clear (`_forgetPressBookkeeping` → `_forgetPressAndHoldRecognition`) takes the recognizer's
-state with it — a confiscated press states no intent, so it can neither arm nor open a menu,
+state with it, the press's audience having been told `pressCancelled` first — a confiscated press states no intent, so it can neither arm nor open a menu,
 though a menu that had ALREADY opened stays (the cancel is not a click outside it). Touch hover
 dissolution runs on cancel exactly as it does on an ordinary up.
+
+### A widget that dies mid-stroke
+
+A press books widgets the rest of its stroke acts on — `wdgtToGrab` (what a drag picks up),
+`mouseDownWdgt` (what the release's click and a finger's hold are about), `nonFloatDraggedWdgt`
+(what a non-float drag steps) — and the hand carries a float drag's payload. A booking left naming a
+corpse would be acted on at a later event of the same stroke: a pressed move lifts the corpse onto
+the hand, and the release drops it back into the tree. So the one funnel every death passes
+through, `Widget._destroyNoSettle`, tells the hand (`ActivePointerWdgt.noteWidgetDestroyed`), as it
+tells the world's other registries of live widgets (the caret, the editor focus, stepping, the
+keyboard receivers, dataflow). The hand forgets every booking the dying widget IS OR CONTAINS —
+containment, because a single-widget `destroy()` orphans the subtree under it — and forgets the
+pick-up when its carried payload dies (that pick-up can be the template the payload was copied
+from), and prunes the press's AUDIENCE the same way, so no ending ever reaches a corpse. The
+stroke goes on without them. Not forgotten: the over-list (the next dispatch re-derives
+it, and it owes the corpse its last `hoverExited`), and the multi-click candidates (they recognize
+only the widget a release lands on). Test: `SystemTest_macroWidgetDestroyedMidStrokeIsNotPickedUpAgain`.
 
 ### The touch-stroke grab-threshold rules
 
@@ -308,7 +365,7 @@ the opt-out for a touch machine that has a real keyboard anyway.
 ## See also
 
 - [`viewports-and-planes.md`](viewports-and-planes.md) — the scroll-drag step's own side of the
-  grammar (the widened detach gate, the at-edge escalation).
+  grammar (the widened detach gate, the direction latch).
 - [`widget-authoring-guidelines.md`](widget-authoring-guidelines.md) §9 — the two capability
   queries a widget author may declare or consult.
 - [`../specs/drag-embed-interaction-spec.md`](../specs/drag-embed-interaction-spec.md) §6 — the

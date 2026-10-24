@@ -10,9 +10,9 @@
 # state, and my plate and caption theirs.
 #   My glyph is a PICTURE, never a pointer target (_showsChildAsAPicture), so a press anywhere on my
 # tile is a press on ME: the press, the release and the click all reach me together, and my tile's
-# look follows each of them -- pressed while the press lasts, hovered once it ends (pressEnded),
-# at rest when the pointer leaves. A press on my plate is a press on my caption (a rename) and leaves
-# my tile's look alone (pressBegan).
+# look follows each of them -- pressed while the press lasts, then, once it ends, hovered or at rest
+# by where the pointer is (HighlightableMixin's endings), at rest when the pointer leaves. A press on
+# my plate is a press on my caption (a rename) and leaves my tile's look alone (pressBegan).
 
 class DesktopLinkWdgt extends WidgetHolderWithCaptionWdgt
 
@@ -32,10 +32,10 @@ class DesktopLinkWdgt extends WidgetHolderWithCaptionWdgt
     child is @icon
 
   # HighlightableMixin's colour hook, which every one of its state transitions calls (hoverEntered,
-  # hoverExited, pressBegan, pressEnded) after setting @state. My look for a state is my TILE's,
-  # which my appearance reads from the two answers below as it paints, so a transition only repaints
-  # me: no colour of mine is written here, and none a transition could leave behind. (Which is also
-  # why I wear none of the mixin's own colours, color_normal / color_hover / color_pressed.)
+  # hoverExited, pressBegan, pressEnded, pressCancelled) after setting @state. My look for a state is
+  # my TILE's, which my appearance reads from the two answers below as it paints, so a transition only
+  # repaints me: no colour of mine is written here, and none a transition could leave behind. (Which
+  # is also why I wear none of the mixin's own colours, color_normal / color_hover / color_pressed.)
   _updateColor: ->
     @_changed()
 
@@ -48,14 +48,6 @@ class DesktopLinkWdgt extends WidgetHolderWithCaptionWdgt
       @state = @STATE_PRESSED
       @_updateColor()
     super
-
-  # HighlightableMixin's release transition, re-answered: a release reaches me only when it ends the
-  # press that began on me with the pointer still over me (ActivePointerWdgt.processPointerUp), so
-  # I am hovered, not at rest -- the pointer leaving me (hoverExited) is what brings the rest look
-  # back.
-  pressEnded: ->
-    @state = @STATE_HIGHLIGHTED
-    @_updateColor()
 
   _fillForMyState: ->
     theme = WorldWdgt.theme

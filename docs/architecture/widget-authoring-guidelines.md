@@ -500,8 +500,8 @@ mark after `add` + `setExtent` adds nothing.
 
 - **Pick your handler by TIER — the name says which you are getting.** The FACT tier narrates a
   stroke's phases and interprets nothing: `pressBegan(pos)`, `pressMoved(pos, button)`,
-  `pressEnded(pos, button, buttons, ctrl, shift, alt, meta)`, `hoverEntered()`, `hoverMoved(pos)`,
-  `hoverExited()`, plus the in-place drag pair `nonFloatDragging` / `endOfNonFloatDrag`. The
+  `pressEnded(pos, button, buttons, ctrl, shift, alt, meta)`, `pressCancelled()`, `hoverEntered()`,
+  `hoverMoved(pos)`, `hoverExited()`, plus the in-place drag pair `nonFloatDragging` / `endOfNonFloatDrag`. The
   GESTURE tier hands you a meaning the hand has already certified: `activated(pos, …)` (the stroke
   was examined and meant an activation — multi-click recognition ran, a drag away or a hold
   suppressed it), `doubleActivated(pos)`, `tripleActivated(pos)`, `contextMenuRequested(pos)`
@@ -513,8 +513,20 @@ mark after `add` + `setExtent` adds nothing.
   `check-raw-pointer-reads.js`] It is already mapped into your plane. Reading
   `world.hand.position()` inside a handler is correct off an island and wrong the moment the widget is
   tilted — a bug class that is invisible until someone rotates something.
-- **Escalate what is not yours.** `@escalateEvent "pressBegan", pos` passes the event to the parent
-  rather than swallowing it. A handler that conditionally acts should escalate on the other branch.
+- **Say whether the press goes on; escalate the gestures that are not yours.** The hand drives the
+  press climb: `pressBegan` RETURNS `true` to pass the press to your parent and anything else to keep
+  it (`Widget.pressBegan` raises and answers `true`, so an override that wants the climb to go on ends
+  in `super`; one that takes the press for itself — a handle, a selectable text, a slider's jump —
+  answers `false`, on every branch it does so). The gestures still climb by escalation:
+  `@escalateEvent "activated", pos` passes an activation you do not act on to the parent rather than
+  swallowing it, and a handler that conditionally acts escalates on the other branch.
+- **A look you arm in `pressBegan`, you undo in BOTH endings.** Every widget the press reached is
+  told exactly one of `pressEnded` (the release, wherever it lands) or `pressCancelled` (the stroke
+  became a scroll, a lift, or was aborted) — the press lifecycle,
+  [`input-and-gestures.md`](input-and-gestures.md). Pick the look you end in from where the pointer
+  is, `world.hand.restsOn @` (hovered under a resting mouse, at rest otherwise — a finger never
+  rests), never by assuming it is still over you. `HighlightableMixin` already does this for both
+  endings; a widget with its own press look declares `pressCancelled` beside its `pressEnded`.
 - **Get hover/press feedback from `HighlightableMixin`** instead of colouring by hand in
   `hoverEntered`/`hoverExited`: its `_updateColor` re-derives the colour at every state change — a set
   `color_normal` / `color_hover` / `color_pressed` wins, else the plain button's theme roles. A widget with
@@ -828,7 +840,14 @@ the public wrapper is skipped exactly when a whole subtree goes away — the cas
 What a widget cleans up itself: anything it put in a world-level registry that the base does not know
 about (a reference tracker, an open-pop-up set, an app slot). What it does not: `steppingWdgts`,
 `keyboardEventsReceivers`, `wdgtsDetectingClickOutsideMeOrAnyOfMeChildren` and its dataflow edges —
-`Widget._destroyNoSettle` already drops all of those.
+`Widget._destroyNoSettle` already drops all of those, and it tells the hand
+(`ActivePointerWdgt.noteWidgetDestroyed`), which forgets every press booking the dying widget is or
+contains ([`input-and-gestures.md`](input-and-gestures.md) "A widget that dies mid-stroke").
+
+A widget that keeps an OWNED widget off its tree on purpose (a frame's empty-state placeholder while
+real contents are mounted) declares the field in `@offTreeOwnedWidgetFields` — the world inventory's
+containment walk follows it, so the widget does not read as escaped — and still destroys it in its own
+teardown ([`world-lifetime-and-inventory.md`](world-lifetime-and-inventory.md) §2).
 
 ---
 
@@ -924,7 +943,8 @@ right for inclusion and wrong for laziness — it silently swallows the user's c
 
 **Behaviour**
 - [ ] Public mutators are thin wraps over `*NoSettle` cores; callbacks stay settle-neutral
-- [ ] Handlers use the `pos` parameter and escalate what is not theirs
+- [ ] Handlers use the `pos` parameter; `pressBegan` answers whether the press goes on; gestures escalate what is not theirs
+- [ ] A look armed in `pressBegan` is undone in both `pressEnded` and `pressCancelled`, picked from `world.hand.restsOn @`
 - [ ] `addWidgetSpecificMenuEntries` calls `super`; menu actions are string method names
 - [ ] Pins declared on the class that implements each verb; `announces` only where every write path funnels
 - [ ] Pin setters take ONE argument — the value — coerce it, guard on equality, return it

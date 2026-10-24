@@ -21,10 +21,10 @@ class LayoutChromeWdgt extends Widget
 
   # MY POINTER STATE, the handles' two facts (HandleWdgt), kept apart because they end apart:
   # whether the pointer is over me (hoverEntered / hoverExited), and whether a press that began on
-  # me still stands (pressBegan, until its release, the end of its drag, the pointer leaving me while
-  # nothing is dragged, or my moving to another parent). My plate shows the press while it stands
-  # and the hover otherwise (_plateFillForMyState), so its look after a gesture is a function of where
-  # the gesture left the pointer and me.
+  # me still stands (pressBegan, until its release or its cancel, the end of its drag, the pointer
+  # leaving me while nothing is dragged, or my moving to another parent). My plate shows the press
+  # while it stands and the hover otherwise (_plateFillForMyState), so its look after a gesture is a
+  # function of where the gesture left the pointer and me.
   _isHovered: false
   _isPressed: false
 
@@ -76,16 +76,20 @@ class LayoutChromeWdgt extends Widget
     @_setPointerState @_isHovered, true  if @_showsPressOnMyPlate()
     super
 
-  # the release ends my press; whether my plate then shows the hover is the pointer's business
+  # the release ends my press, and so does the stroke turning into something else (ActivePointerWdgt,
+  # the press's AUDIENCE); whether my plate then shows the hover is the pointer's business
   pressEnded: ->
+    @_setPointerState @_isHovered, false
+
+  pressCancelled: ->
     @_setPointerState @_isHovered, false
 
   # the drag that began on me is over, wherever the pointer is: so is my press
   endOfNonFloatDrag: ->
     @_setPointerState @_isHovered, false
 
-  # a press does not survive a change of parent: a hand that picks me up or drops me ends it with no
-  # release reaching me
+  # a press does not survive a change of parent, whatever makes it: a lift also cancels my press, but
+  # a drop or a builder moving me tells me nothing else
   _reactToBeingAdded: (whereTo, beingDropped) ->
     super
     @_setPointerState @_isHovered, false

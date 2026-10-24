@@ -414,6 +414,9 @@ class SliderWdgt extends CircleBoxWdgt
     @updateTarget()
     @_reLayoutSelfAndButton()
   
+  # A track press JUMPS my button to the pointer and drags it from there when my owning context asks
+  # for that, and then the press STOPS here; otherwise it goes on up (a slider sitting on a pane lets
+  # a press on its track reach the pane).
   pressBegan: (pos) ->
     # jump-drag policy is the OWNING CONTEXT's (viewport / prompt) — capability via ?(),
     # instead of `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)`
@@ -425,9 +428,9 @@ class SliderWdgt extends CircleBoxWdgt
       # however that's difficult to do, just set the "pressed"
       # color from here
       @button.setPressedColor()
-    else
-      @escalateEvent "pressBegan", pos
-    
+      return false
+    true
+
 
   setSize: (size) ->
     if typeof size is "number"

@@ -1578,14 +1578,15 @@ class StringWdgt extends Widget
     @parent?._scheduleRelayoutRespectingPhase()
     @  # return self so the public wrapper is chainable (macros do `(new StringWdgt …).sizeToTextAndDisableFitting()`)
 
-  # The box-hug ALONE, telling my parent nothing -- for the one caller that IS my parent's arrange and
-  # places me next: my parent building me in its own _reLayoutSelf (LabelButtonWdgt._createLabel,
-  # MenuItemWdgt._createLabel), which reads my extent right after to centre or place me and, as a menu row,
-  # to size itself. Remembers the box-hugs-text mode (autoSizeBoxToText) so a later setText (editing a
-  # button label in place) keeps the box tracking the text instead of cramming the new text into the stale
-  # box. The box is the text's extent plus my item inset at each side (none when I wear no item shape).
-  #   ⚠ THE CONSTRAINT: call this only from inside my parent's own arrange, with my parent placing me
-  # after -- that arrange is what makes the missing schedule safe; every other caller takes the core above.
+  # The box-hug ALONE, telling my parent nothing -- for the one caller that builds me for my parent's
+  # arrange, which places me next: my parent building its label (LabelButtonWdgt._createLabel,
+  # MenuItemWdgt._createLabel) in its own _reLayoutSelf, or in a relabel that schedules that arrange itself
+  # (LabelButtonWdgt._setLabelNoSettle), and reading my extent right after to centre or place me and, as a
+  # menu row, to size itself. Remembers the box-hugs-text mode (autoSizeBoxToText) so a later setText
+  # (editing a button label in place) keeps the box tracking the text instead of cramming the new text into
+  # the stale box. The box is the text's extent plus my item inset at each side (none when I wear no item shape).
+  #   ⚠ THE CONSTRAINT: call this only where my parent's arrange is already under way or already owed, with
+  # that arrange placing me -- that is what makes the missing schedule safe; every other caller takes the core above.
   # The core is wrong there, not merely redundant: once my parent's _reLayout has marked it fixed
   # (LabelButtonWdgt._reLayout runs the base arrange, which does, and only then _reLayoutSelf ->
   # _createLabel), the in-pass enqueue leaves my parent invalid and the walk re-lays it a SECOND time in
@@ -1938,16 +1939,17 @@ class StringWdgt extends Widget
   enableSelecting: ->
     @isSelectable = true
 
+  # A press on selectable text starts a selection (an edit, when I am editable), and STOPS here; on
+  # any other text it goes on as any widget's does.
   pressBegan: (pos) ->
-    if !@isSelectable
-      super pos
-      return
+    return super pos  if !@isSelectable
     @clearSelection()
     if @isEditable and !@grabsToParentWhenDragged()
       @edit()
       world.caret.gotoPos pos
       @startMark = @slotAt pos
       @endMark = @startMark
+    false
 
   # I TAKE BOTH MOVE CHANNELS, for the two halves of one rule, so both reach the one step below.
   # Dragging across my glyphs with the button down EXTENDS the selection — that is the pressed half.

@@ -235,9 +235,12 @@ class SliderButtonWdgt extends CircleBoxWdgt
       return
     @_setNormalColor()
   
+  # a press on me is the start of my drag, and STOPS here: my slider must not take it for a press on
+  # its track, nor a pane around us for a drag-scroll
   pressBegan: (pos) ->
     @bringToForeground()
     @setPressedColor()
+    false
 
   activated: ->
     @bringToForeground()

@@ -126,12 +126,13 @@ class WorldInventory
       parts.join "."
 
     # the serializer's per-class transient declarations, merged up the chain -- those
-    # fields are recomputed on restore, so retention through them is by design
+    # fields are recomputed on restore, so retention through them is by design. Only a
+    # Fizzygum class declares any: classNamed is the one test of that
     transientsOf = (ctor, ctorName) ->
       return undefined unless ctor?
       return transientsCache.get ctor if transientsCache.has ctor
       found = undefined
-      if Serializer? and NativeValueKinds.isSet(ctor.instances) and window[ctorName] is ctor
+      if Serializer? and classNamed(ctorName) is ctor
         try
           found = Serializer.transientsForClass ctor
       transientsCache.set ctor, found
@@ -279,7 +280,11 @@ class WorldInventory
     # ---- identity: the registry vs the containment walk ----------------------------
     # containment roots = the ONE liveness enumeration, plus the bin/shelf containers
     # themselves: their chrome is accounted-for citizenry even though residency in them
-    # confers no liveness (see graphLivenessRoots).
+    # confers no liveness (see graphLivenessRoots). Containment = `children`, plus each
+    # holder's declared off-tree owned widgets (its class chain's @offTreeOwnedWidgetFields):
+    # a widget its holder keeps unmounted on purpose -- a frame's empty-state placeholder
+    # while real contents are mounted -- is owned, not escaped. One that is mounted on its
+    # holder is reached through `children` already.
     if world? and Widget?
       reached = new Set
       containmentStack = world.graphLivenessRoots()
@@ -291,6 +296,9 @@ class WorldInventory
         reached.add cursor
         if cursor.children?
           containmentStack.push eachChild for eachChild in cursor.children
+        for fieldName in classStaticListMergedUpTheChain cursor.constructor, "offTreeOwnedWidgetFields"
+          ownedWidget = cursor[fieldName]
+          containmentStack.push ownedWidget if ownedWidget? and ownedWidget.parent isnt cursor
       Widget.instances.forEach (eachInstance) ->
         if eachInstance.destroyed
           # still registered after destruction: unregisterThisInstance was skipped

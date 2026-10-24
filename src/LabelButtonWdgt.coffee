@@ -25,8 +25,8 @@ class LabelButtonWdgt extends ButtonWdgt
   fontSize: undefined
   fontStyle: undefined
 
-  # the state fills: while I am hovered, and while I am pressed (a selected list row stays
-  # pressed). My rest fill is my @color.
+  # the state fills: while I am hovered, and while I am pressed (a selected list row wears the
+  # hovered one -- its list's selection is its highlighted state). My rest fill is my @color.
   highlightColor: undefined
   pressColor: undefined
   # how my state fill is shaped: undefined fills my whole box, square; a radius paints it as a
@@ -88,18 +88,25 @@ class LabelButtonWdgt extends ButtonWdgt
   createAppearance: -> new LabelButtonAppearance @
 
   # the default label: a self-sized single-line StringWdgt that does NOT resize
-  # the button's box. Subclasses that need the box to hug the label (e.g.
-  # MenuItemWdgt) override this.
+  # the button's box. Subclasses that size the box from the label (MenuItemWdgt, its height)
+  # override this.
+  #   Built at my TOP-LEFT, which is where a label that is not centred sits: a label built with me
+  # at construction is born there (I am at the origin), and one built later -- a relabel, with me
+  # anywhere -- must land on the same spot, since nothing else places it. A centred label is moved to
+  # my centre by _reLayoutSelf. Placed BEFORE it is adopted, so the add damages the spot it will be
+  # painted at.
   _createLabel: ->
     @label = new StringWdgt (@labelString or ""), @_labelTextOptions()
-    # _addNoSettle (NOT add): _createLabel is driven by _reLayoutSelf (a layout pass), so a
-    # self-settle here would re-enter the flush guard and throw.
+    @label.__commitMoveTo @position()
+    # _addNoSettle (NOT add): _createLabel runs inside my arrange (_reLayoutSelf) or inside a relabel's
+    # settle (_setLabelNoSettle), where a self-settle would re-enter the flush guard and throw.
     @_addNoSettle @label
     # the modern family does not self-size; make the label hug its text so
-    # _reLayoutSelf's centring math (which reads @label.extent()) works. _createLabel is driven by my
-    # _reLayoutSelf -- my own arrange, which places the label right after -- so the hug ALONE
-    # (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle): the core would schedule the very
-    # arrange that is running, and from inside my _reLayout re-queue me for a second visit in this flush.
+    # _reLayoutSelf's centring math (which reads @label.extent()) works. The hug ALONE
+    # (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle), because my arrange is already
+    # under way or already owed: run from my _reLayoutSelf, the core would schedule the very arrange that
+    # is running, and from inside my _reLayout re-queue me for a second visit in this flush; run from a
+    # relabel, _setLabelNoSettle schedules my arrange itself.
     @label._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle()
 
   # The StringWdgt options my default label is built with: my font and my ink, as my fields hold
@@ -130,24 +137,30 @@ class LabelButtonWdgt extends ButtonWdgt
     Widget::_reLayout.call @, newBoundsForThisLayout
     @_reLayoutSelf()
 
-  # THIN public wrapper over the non-settling core (canonical self-settling form): recreate the label, then
-  # SELF-SETTLE (public tier, like setExtent/add) so the button's FULL re-layout -- _createLabel + centre, via
-  # _reLayout -- runs synchronously and the world is consistent on return. This is the public label-setter
-  # API; its one historical caller (FridgeMagnetsWdgt construction) now labels via the core directly, so the
-  # wrapper has no in-tree caller and is kept by check-dead-methods.js's settle-twin pairing rule -- a dead
-  # public wrapper whose _setLabelNoSettle core is independently live is exempt, with no allowlist entry
-  # (a runtime label change settles).
+  # THIN public wrapper over the non-settling core (canonical self-settling form): relabel, then
+  # SELF-SETTLE (public tier, like setExtent/add) so my re-layout -- and my container's, when the new
+  # label changes what it takes from me -- runs synchronously and the world is consistent on return. The
+  # public label-setter API: a runtime label change settles. No product code calls it;
+  # SystemTest_macroRelabelledLabelButtonsStayPlaced does, which is what check-dead-methods.js counts, and
+  # without it the gate's settle-twin pairing rule would keep it (the _setLabelNoSettle core is live).
   setLabel: (labelString) ->
     @_settleLayoutsAfter => @_setLabelNoSettle labelString
 
-  # NON-settling core -- the construction-time label path: a freshly-built button labels its ORPHAN member
-  # before attach (FridgeMagnetsWdgt's magnets), reached from a low-level _NoSettle build. Tears down the old
-  # label via the non-settling _fullDestroyNoSettle and SCHEDULES the re-layout (invalidate, not a bare settle);
-  # the public wrapper -- or the enclosing construction settle -- does the one flush.
+  # NON-settling core of a RELABEL: my label is REBUILT AT ONCE -- the old one torn down
+  # (_fullDestroyNoSettle) and the new one built and sized (_createLabel) -- so I am never label-less
+  # while somebody reads me: a menu's rows panel measures every row's label as it lays itself out
+  # (CommandPanelWdgt.maxWidthOfMenuEntries), and the walk lays the panel BEFORE the row. PLACING the label
+  # stays my arrange's, which the climbing invalidate schedules -- it re-centres a centred label and places
+  # a row's parts (MenuItemWdgt._placeMyParts); a label that is not centred is built in place
+  # (_createLabel). Then I tell my container I was relabelled, for the one that sizes itself from its rows'
+  # labels (CommandPanelWdgt._reactToChildRelabelled: a pop-up re-takes its size). The public wrapper -- or
+  # the enclosing construction settle, for a button labelling its ORPHAN member before attach
+  # (FridgeMagnetsWdgt's magnets) -- does the one flush.
   _setLabelNoSettle: (@labelString) ->
-    if @label?
-      @label = @label._fullDestroyNoSettle()
+    @label = @label._fullDestroyNoSettle()  if @label?
+    @_createLabel()
     @_invalidateLayout()
+    @parent?._reactToChildRelabelled? @
 
   alignCenter: ->
     if !@centered
@@ -181,19 +194,26 @@ class LabelButtonWdgt extends ButtonWdgt
     @_changed()
     world.destroyToolTips()  if @toolTipMessage
 
-  pressBegan: (pos) ->
+  # A press shows PRESSED, raises me, and goes on up: Widget.pressBegan's body inline rather than
+  # through super, because ButtonWdgt's HighlightableMixin pressBegan would run _updateColor,
+  # clobbering @color (our normal fill).
+  pressBegan: (ignored_pos) ->
     @state = @STATE_PRESSED
     @_changed()
-    # replicate Widget.pressBegan inline (bringToForeground + escalate) rather
-    # than calling super: ButtonWdgt's HighlightableMixin pressBegan would run
-    # _updateColor, clobbering @color (our normal fill).
     @bringToForeground()
-    @escalateEvent "pressBegan", pos
+    true
 
-  # HighlightableMixin would reset @state to NORMAL on mouse-up; a label button
-  # must NOT (a selected list row keeps its STATE_PRESSED highlight). So
-  # neutralise it.
+  # MY TWO ENDINGS (ActivePointerWdgt, the press's AUDIENCE). The release leaves my state as the press
+  # left it: a release that clicks me goes on to set it (activated -- HIGHLIGHTED, which is also how a
+  # list row shows its list's selection), and HighlightableMixin's ending would write a state, and
+  # repaint me through _updateColor (clobbering my normal fill), right under that click.
   pressEnded: ->
+
+  # A cancelled press is followed by no click, so it is mine to undo: hovered if the pointer rests on
+  # me, at rest otherwise.
+  pressCancelled: ->
+    @state = if world.hand.restsOn @ then @STATE_HIGHLIGHTED else @STATE_NORMAL
+    @_changed()
 
   activated: ->
     @bringToForeground()

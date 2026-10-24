@@ -34,12 +34,26 @@ class AimCheckInputEvent extends InputEvent
   # a touch press ARRIVES with its press, which a mouse press has already done by the time it drains
   isTouch: false
 
+  # whether the press must also start a scroll the receiver takes ITSELF, not one the dispatch hands
+  # to another pane — asked when the verb names a scroller (MacroToolkit.wheelOn_InputEvents)
+  receiverTakesTheScroll: false
+
+  # WHERE THE PRESS'S STROKE WILL TRAVEL, a screen vector, when the verb knows it (a wheel turned into
+  # a finger's drag travels the wheel's own drag vector): a finger's drag goes to the pane its
+  # direction latches (ViewportWdgt.strokeScrollPaneFor), so the scroll check needs it. undefined when
+  # no direction is stated.
+  strokeDirection: undefined
+
   # `press` is the press this check precedes, read here for its time, its place and its kind before
   # the chokepoint queues it (queueInputEvent rewrites a scaled event's time as it enqueues it).
-  constructor: (@toolkit, @receiver, @setBy, press) ->
+  # opts.receiverTakesTheScroll (default false) and opts.strokeDirection (default undefined) — see
+  # the fields.
+  constructor: (@toolkit, @receiver, @setBy, press, opts = {}) ->
     super true, press.time
     @place = new Point press.worldX, press.worldY  if press.worldX?
     @isTouch = press.pointerType is "touch"
+    @receiverTakesTheScroll = opts.receiverTakesTheScroll ? false
+    @strokeDirection = opts.strokeDirection ? undefined
 
   processEvent: ->
     @toolkit.verifyPressLanding @

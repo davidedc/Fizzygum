@@ -363,3 +363,18 @@ decided and executed on its own. Kept verbatim, in their BACKLOG order.
       meaning (`openOwnMenuOf world`) and the bare-desktop click that ends the resize mode is asserted by the
       handle count. The drop spot stays as recorded (it places the box, not its lines). Every reference
       still matches at both pointers and both dprs.
+
+### Findings arc 2026-10-24 — fixes that were never BACKLOG lines (no plan doc)
+The arc that worked the focus-residue arc's findings also fixed what its research measured on the way (owner-approved):
+- [x] A world snapshot could not be saved while Patch Programming was open ("unrecognized type (LinearGradient)"): four
+      gradient icon appearances cached a canvas gradient in a serialized field — now `@serializationTransients`; the rig's
+      `world.everyAppSnapshot.*` opens every desktop app and saves the world.
+- [x] A widget destroyed mid-stroke was grabbed again by the next pressed move and dropped into the tree: the death funnel
+      (`Widget._destroyNoSettle`) tells the hand (`noteWidgetDestroyed`), which forgets every booking the dying widget is or
+      contains. Pinned by `SystemTest_macroWidgetDestroyedMidStrokeIsNotPickedUpAgain`.
+- [x] `allClassFunctions` missed `InputEvent` (see the `classNamed` line in `archive/world-inventory-instruments-plan.md`).
+- [x] A resize grip's fractional re-record rode `pressEnded` and was skipped when the release landed elsewhere —
+      `SystemTest_macroStretchChildHandleResizeSurvivesReflow` image_1's reference showed the snapped-back plot its own
+      assertion calls the planted failure; the re-record moved to `endOfNonFloatDrag` and the reference was recaptured.
+- [x] The browser single-test path (`loadAndRunSingleTestFromName`) loaded the wrong test under a selection, a finger filter
+      or groups: the loader identifies one test's files by NAME.

@@ -47,6 +47,7 @@ HighlightableMixin =
         @_updateColor()
         world.destroyToolTips()  if @toolTipMessage
       
+      # a press shows PRESSED, and goes on up as any widget's does (Widget.pressBegan)
       pressBegan: ->
         @state = @STATE_PRESSED
         @_updateColor()
@@ -56,6 +57,15 @@ HighlightableMixin =
 
         super
 
+      # THE PRESS'S TWO ENDINGS (ActivePointerWdgt, the press's AUDIENCE): whichever comes, I leave
+      # PRESSED for the look of where the pointer actually is -- hovered if it rests on me, at rest
+      # otherwise, a finger never resting -- because a press can end with the pointer anywhere: let go
+      # somewhere else, or carried off me by a scroll. Not through hoverEntered, which would also
+      # start my tooltip's countdown.
       pressEnded: ->
-        @state = @STATE_NORMAL
+        @state = if world.hand.restsOn @ then @STATE_HIGHLIGHTED else @STATE_NORMAL
+        @_updateColor()
+
+      pressCancelled: ->
+        @state = if world.hand.restsOn @ then @STATE_HIGHLIGHTED else @STATE_NORMAL
         @_updateColor()

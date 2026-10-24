@@ -177,11 +177,17 @@ class Example3DPlotWdgt extends Widget
           @currentAngle +=  @previousMousePoint.x - pos.x
         @previousMousePoint = pos
 
+  # A press stops the spinning and STOPS here (a drag across me spins me), and either of its endings
+  # (ActivePointerWdgt, the press's AUDIENCE) starts the spinning again.
   pressBegan: (pos) ->
     @autoRotate = false
     @bringToForeground()
+    false
 
   pressEnded: ->
+    @autoRotate = true
+
+  pressCancelled: ->
     @autoRotate = true
 
   hoverExited: ->

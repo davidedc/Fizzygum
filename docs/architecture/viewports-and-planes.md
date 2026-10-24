@@ -77,11 +77,15 @@ pop-up class in between), and it keeps its rows in a viewport unconditionally fo
 reason, whatever the frame's `lifetime`. Its pure measure (`preferredExtentForWidth`) is the
 rows' hug capped at the world MINUS the frame's own chrome, in BOTH lifetimes — never the bare
 world extent, or the frame (viewport + bar) would overflow it by exactly that chrome and
-`_assertFitsInTheWorld` would fire. A row added or removed mid-life re-fits through the
-viewport's own `_reLayOutAfterContainedPanelChange` override, not the frame's standard
+`_assertFitsInTheWorld` would fire. A row added, removed or RELABELLED mid-life re-fits through
+the viewport's own `_reLayOutAfterContainedPanelChange` override, not the frame's standard
 child-removed path (which would leave the frame latched at its old first-placement width) — and
 that absorb fires only because the pop-up climb (`enclosingFrame`) STOPS at the frame
-instead of walking past it to the world. Test: `SystemTest_macroScrollPolicyNeverFlip`.
+instead of walking past it to the world. A relabel reaches it through the rows panel
+(`LabelButtonWdgt._setLabelNoSettle` rebuilds the label at once, then tells its container,
+`CommandPanelWdgt._reactToChildRelabelled`); in a LIST the rows panel stands on the list's scrolled
+pane, which absorbs nothing, and the relabel's own climbing invalidate re-lays the panel. Tests:
+`SystemTest_macroScrollPolicyNeverFlip`, `SystemTest_macroRelabelledLabelButtonsStayPlaced`.
 
 ## Scroll indicators — one presentation, over the same two bars
 
@@ -201,37 +205,50 @@ So a bar picked up off its viewport is a plain slider: the opaque groove and the
 
 ## Drag-to-scroll — the plane's other scroll gesture
 
-Float-dragging a viewport's contents scrolls it too — the gesture beside the bars above.
-`ViewportWdgt.pressBegan` (opt-in `isScrollingByfloatDragging`; refused whole under
-`scrollPolicy 'never'`) installs a per-frame `@step` for the life of the press: while the hand's
-button is down and nothing is being float-dragged, the step samples the hand's position each
-frame (mapped into the viewport's own plane) and moves the offset by the delta through
-`scrollX`/`scrollY` — the same funnel the bars and the wheel write through. Release seeds a
+Float-dragging a viewport's contents scrolls it too — the gesture beside the bars above
+(opt-in `isScrollingByfloatDragging`). A stroke has ONE drag-scroll step, on the pane that takes
+the stroke (`ViewportWdgt.takeStrokeScrollFrom`): while the hand's button is down and nothing is
+being float-dragged, the step samples the hand's position each frame (mapped into that pane's own
+plane) and moves the offset by the delta through `scrollX`/`scrollY` — the same funnel the bars
+and the wheel write through. A pane that takes no scroll gesture — `scrollPolicy 'never'`, or one
+that does not drag-scroll — is TRANSPARENT to the press, as it is to the wheel: `pressBegan` passes
+the press on, so a drag over a cropping pane nested in a scrolling one reaches the scrolling one. Release seeds a
 POST-RELEASE MOMENTUM glide (friction 0.8, tracked in `world.wdgtsWithOngoingScrollMomentum`),
 suppressed under the Automator's pacing control so screenshots stay event-determined.
 
-The step's DETACH GATE decides whether a press here means "scroll the pane" or "pick the pressed
-thing up". On a `'mouse'`/`'pen'` stroke it is `!wdgtToGrab?.detachesWhenDragged()` — hold steady
-if a float-draggable widget sits under the hand, since it is probably about to be lifted. An
-un-armed `'touch'` stroke widens the gate: `!wdgtToGrab?.detachesWhenDragged() or
-!world.hand.strokeMeansMouseDrag()` — an un-armed finger scrolls over ANY content, detachable or
-not, because a plain finger drag over a viewport's content always means scroll until the hand's
+The step's DETACH GATE (`_strokeWouldLiftWhatItPressed`) decides whether a press here means
+"scroll the pane" or "pick the pressed thing up". On a `'mouse'`/`'pen'` stroke it holds steady
+when `wdgtToGrab?.detachesWhenDragged()` — a float-draggable widget sits under the hand, probably
+about to be lifted. An un-armed `'touch'` stroke widens the gate: it holds only when that widget
+detaches AND `world.hand.strokeMeansMouseDrag()` — an un-armed finger scrolls over ANY content,
+detachable or not, because a plain finger drag over a viewport's content always means scroll until the hand's
 press-and-hold recognizer arms the stroke ([`input-and-gestures.md`](input-and-gestures.md)); once armed, the gate reads
 exactly as the mouse's. The mouse reading is untouched.
 
-A drag-scroll is NOT A CLICK, on any pointer: when the step is installed on a pane with something
-to scroll (`claimsPlainDragsForScrolling`), `pressBegan` tells the hand
-(`notePressTakenForScrolling`), and a stroke that then travels past `grabDragThreshold` releases
+A drag-scroll is NOT A CLICK, on any pointer: the stroke's scroll OWNER — the innermost pane the
+press reaches with something to scroll (`claimsPlainDragsForScrolling`) — tells the hand at the
+press (`notePressTakenForScrolling`, passing itself), and a stroke that then travels past `grabDragThreshold` releases
 without dispatching `activated` — the content carried the pressed widget along with the pointer, so
 the release lands back on it and would otherwise click (select, and fire) whatever was scrolled
 (`ActivePointerWdgt._strokeOwesNoClick`, [`input-and-gestures.md`](input-and-gestures.md)).
 
-AT-EDGE ESCALATION: a drag step that reaches its pane's clamp hands the leftover delta outward
-through `scrollByDragDelta` — the drag twin of the escalation `ViewportWdgt.scrolledBy` already runs
-at its own edge, reached by the same parent climb (`escalateEvent`) — so a stack of nested panes
-passes the leftover outward one level at a time instead of dying at the inner clamp. Both arms of
-the step escalate: the per-frame sample taken while the button is down, and the release-time
-FLUSH that carries whatever travelled in the frame the button came up.
+THE DIRECTION LATCH — nested panes. One pane takes a stroke and takes all of it. A lone pane takes
+the stroke at the press and scrolls from its first pixel. With panes NESTED, nothing scrolls until
+the stroke first leaves the grab radius; at that DRAINED event the hand
+(`_notePressTravelledPastDragThreshold`) asks the owner to latch (`latchStrokeScroll`) from the press
+point and the crossing point — two points the event stream fixed, so which pane takes the stroke
+never depends on which frame first saw the hand past the radius. The choice is
+`ViewportWdgt.strokeScrollPaneFor`: by the stroke's DOMINANT axis, the innermost candidate that
+scrolls along that axis and is not already at its clamp in the stroke's direction; else the
+innermost that scrolls along that axis; else the owner. The latched pane catches up from the press
+point and takes the rest of the stroke; travel past its clamp is DROPPED until the next stroke,
+which latches anew — nothing hands on within a stroke. The hand keeps the pane as the stroke's
+fact (`_strokeScrollPane`). It is the wheel's rule (a notch goes to the innermost `scrolledBy` that
+can move, and passes outward only when that pane is already at its edge) applied per stroke, and
+what WebKit, Chrome's touch scrolling and iOS do with nested scrollers. The macro toolkit's wheel
+aim check asks the same two functions (`ActivePointerWdgt.wheelTakerAbove`,
+`ViewportWdgt.strokeScrollPaneFor`), so a check cannot drift from the dispatch. Test:
+`SystemTest_macroNestedPanesDragLatchesOnePane`.
 
 ## The scrolled-content contract
 
@@ -308,9 +325,12 @@ generic viewport is "viewport"; composites take their contents' name
   residents keep integer plane-local `@bounds` while their screen positions are derived, the
   same two-vocabulary law the islands introduced. ⚠ One rule this imposes on INPUT handlers:
   `escalateEvent` forwards its args verbatim, so a `pos` escalated across a plane boundary
-  is still plane-local to the SENDER — a pos-consuming handler on a plane's ancestor must
-  re-derive (`@screenPointToMyPlane world.hand.position()`, as `ViewportWdgt.pressBegan`
-  does), never trust the parameter. The remaining horizon — lifting the offset + paint
+  is still plane-local to the SENDER — a pos-consuming GESTURE handler (`activated`,
+  `doubleActivated`, the ones that still climb by escalation) on a plane's ancestor must
+  re-derive (`@screenPointToMyPlane world.hand.position()`), never trust the parameter. The
+  press facts are exempt by construction: the hand drives the press climb and its endings and
+  maps the pointer into EACH receiver's plane (the press lifecycle,
+  [`input-and-gestures.md`](input-and-gestures.md)). The remaining horizon — lifting the offset + paint
   interception from `ViewportWdgt` to the clipping-mixin level, making scrollability a
   property of every panel — is designed but deliberately unlifted until a second user
   exists (the plan's owner-gated Phase 4).

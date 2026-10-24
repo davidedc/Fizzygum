@@ -25,16 +25,29 @@
 //    stored in one method and consumed in another plane elsewhere; a position forwarded
 //    through an opts key; a bare variable whose provenance is another widget's geometry.
 //
-// C. THE ESCALATION BOUNDARY (hard zero). `escalateEvent` forwards pointer-handler args
-//    VERBATIM up the parent chain, so a handler on a scroll-translation PROVIDER (or a
-//    subclass) can receive a `pos` still expressed in a descendant plane — offset-pixels
-//    away from its own (the measured stationary-click-slams-to-clamp defect). Rule (the
-//    viewports-and-planes.md input rule, given teeth): a positional pointer handler
-//    defined on a class that provides `scrollTranslationOfChild` (transitively, via
-//    extends) must either not read its pos parameter or re-derive via
-//    `screenPointToMyPlane` in the same body. `scrolledBy` is exempt (deltas, not positions).
-//    Exemption marker for a future deliberate consumer:
-//    `# escalated-pos-sanctioned: <reason>` directly above the handler header.
+// C. A POINTER POSITION NOT IN THE RECEIVER'S PLANE (hard zero). The hand hands most positional
+//    handlers the pointer ALREADY mapped into the receiver's own plane — every receiver of a press's
+//    climb and of its endings (pressBegan, pressEnded), every receiver of a move (hoverMoved,
+//    pressMoved), the implementor a click or a context gesture lands on — so those consume their
+//    `pos` as given and are not checked here. Two ways remain for a `pos` to be in some OTHER plane:
+//    C1. ESCALATION. `escalateEvent` forwards its args VERBATIM up the parent chain, so a positional
+//        handler reached by escalation, defined on a scroll-translation PROVIDER (a class providing
+//        `scrollTranslationOfChild`, or a subclass), can receive a `pos` still expressed in a
+//        descendant's plane — offset-pixels away from its own (the measured
+//        stationary-click-slams-to-clamp defect). Which handlers are reached that way is READ from
+//        src, never listed: every name an `escalateEvent "<name>"` call forwards, among the handlers
+//        whose first parameter is the pointer position — so a handler that starts being escalated
+//        is checked from that moment. Rule (the viewports-and-planes.md input rule, given teeth): such
+//        a handler on a provider must not read its pos parameter at all — it re-derives the point
+//        from the hand (`@screenPointToMyPlane world.hand.position()`); mapping the escalated pos
+//        itself would treat a descendant's plane as the screen. A body that only escalates its pos
+//        on is not reading it.
+//    C2. THE RAW SCREEN POINT. The hand hands `nonFloatDragging` the raw SCREEN pointer (its second
+//        parameter, `pos`), on any class: every line reading it must map it into the receiver's plane
+//        on that same line (`@screenPointToMyPlane pos`) — off any island and outside any scrolled
+//        pane the two are the same point, so the bug is invisible until the widget sits in one.
+//    `scrolledBy` is exempt (deltas, not positions). Exemption marker for a future deliberate
+//    consumer: `# escalated-pos-sanctioned: <reason>` directly above the handler header.
 
 const fs = require('fs');
 const path = require('path');
@@ -52,11 +65,16 @@ const BARE_BOUNDS_RE = /(?<![A-Za-z0-9_$.])@bounds\b(?!\s*=[^=])/;
 const MAPPED_RE = /screenPointToMyPlane|localPointToScreen|mapRectToScreen|screenBounds|scrollTranslationOfChild|_scrollTranslation|scrollOffset/;
 const NON_WIDGET_ROOTS = new Set(['Math', 'Rectangle', 'Point', 'window', 'JSON', 'Object']);
 
+// the pointer handlers whose FIRST parameter is the pointer position (C1 checks the ones of them that
+// some `escalateEvent` call forwards)
 const POS_HANDLER_NAMES = new Set([
   'pressBegan', 'pressEnded',
   'activated', 'contextMenuRequested', 'doubleActivated', 'tripleActivated',
-  'hoverMoved', 'pressMoved', 'nonFloatDragging',
+  'hoverMoved', 'pressMoved',
 ]);
+const ESCALATE_CALL_RE = /escalateEvent\s*\(?\s*["']([A-Za-z_$][A-Za-z0-9_$]*)["']/g;
+// the handler handed the raw SCREEN pointer, and the position of that parameter (C2)
+const RAW_SCREEN_POS_HANDLERS = new Map([['nonFloatDragging', 1]]);
 const ESCALATED_EXEMPT = /#\s*escalated-pos-sanctioned:\s*\S/;
 
 function walk(dir, acc) {
@@ -73,6 +91,7 @@ const files = walk(SRC, []);
 const funnelViolations = [];
 const mixLines = [];
 const providerDefiners = new Set();
+const escalatedNames = new Set();   // every handler name some `escalateEvent "<name>"` call forwards (C1)
 const classParent = new Map();   // class -> extends parent
 const classFile = new Map();     // class -> file path
 
@@ -92,6 +111,9 @@ for (const p of files) {
     }
     const line = stripComment(raw);
     if (!line.trim()) return;
+    ESCALATE_CALL_RE.lastIndex = 0;
+    let esc;
+    while ((esc = ESCALATE_CALL_RE.exec(line)) !== null) escalatedNames.add(esc[1]);
 
     // A — bare offset writes
     if (/(?:@|\.)scrollOffset[XY]\s*=[^=]/.test(line) && inMethod !== '_writeScrollOffset'
@@ -118,32 +140,47 @@ for (const p of files) {
   });
 }
 
-// C — pos-reading handlers on provider classes (transitive subclasses included)
+// C — a pointer position not in the receiver's plane: escalated pos on provider classes (C1, transitive
+// subclasses included), the raw screen pos of nonFloatDragging on any class (C2)
 function providesTranslation(cls) {
   let c = cls, hops = 0;
   while (c && hops++ < 50) { if (providerDefiners.has(c)) return true; c = classParent.get(c); }
   return false;
 }
+const escalatedPosHandlers = new Set([...POS_HANDLER_NAMES].filter((n) => escalatedNames.has(n)));
+const paramNamed = (params, index) => ((params.split(',')[index] || '').trim().replace(/=.*$/, '').trim());
+const readsName = (name) => new RegExp('(?<![A-Za-z0-9_$])' + name.replace('$', '\\$') + '(?![A-Za-z0-9_$])');
 const escalationViolations = [];
+let c1Bodies = 0, c2Bodies = 0;
 for (const [cls, p] of classFile) {
-  if (!providesTranslation(cls)) continue;
+  const provider = providesTranslation(cls);
   const lines = fs.readFileSync(p, 'utf8').split('\n');
   for (let i = 0; i < lines.length; i++) {
     const mSig = lines[i].match(HEADER);
-    if (!mSig || !POS_HANDLER_NAMES.has(mSig[1])) continue;
+    if (!mSig) continue;
+    const c1 = provider && escalatedPosHandlers.has(mSig[1]);
+    const c2 = RAW_SCREEN_POS_HANDLERS.has(mSig[1]);
+    if (!c1 && !c2) continue;
     const params = (lines[i].match(/\(([^)]*)\)/) || [])[1];
-    if (!params) continue;                               // zero-param handler: nothing escalated to misread
-    const first = params.split(',')[0].trim().replace(/=.*$/, '').trim();
-    if (!first || first.startsWith('ignored')) continue;
-    // body span: until the next 2-space method header
-    let body = '', exempt = false;
+    if (!params) continue;                               // zero-param handler: no position to misread
+    const posName = paramNamed(params, c2 ? RAW_SCREEN_POS_HANDLERS.get(mSig[1]) : 0);
+    if (!posName || posName.startsWith('ignored')) continue;
+    let exempt = false;
     for (let k = i - 1; k >= 0 && /^\s*#/.test(lines[k]); k--) if (ESCALATED_EXEMPT.test(lines[k])) exempt = true;
-    for (let j = i + 1; j < lines.length && !HEADER.test(lines[j]); j++) body += stripComment(lines[j]) + '\n';
-    const readsPos = new RegExp('(?<![A-Za-z0-9_$])' + first.replace('$', '\\$') + '(?![A-Za-z0-9_$])').test(body);
-    const reDerives = /screenPointToMyPlane/.test(body);
-    const onlyEscalates = new RegExp('escalateEvent\\s+["\']' + mSig[1]).test(body);
-    if (readsPos && !reDerives && !onlyEscalates && !exempt)
-      escalationViolations.push(`${path.relative(SRC, p)}:${i + 1}: ${cls}.${mSig[1]} reads '${first}' without re-deriving via screenPointToMyPlane`);
+    if (exempt) continue;
+    const reads = readsName(posName);
+    const passesItOn = new RegExp('escalateEvent\\s*\\(?\\s*["\']' + mSig[1] + '["\']');
+    if (c1) c1Bodies++; else c2Bodies++;
+    // body span: until the next 2-space method header
+    for (let j = i + 1; j < lines.length && !HEADER.test(lines[j]); j++) {
+      const code = stripComment(lines[j]);
+      if (!reads.test(code)) continue;
+      if (c1 && passesItOn.test(code)) continue;        // forwarding the pos on is not reading it
+      if (c2 && /screenPointToMyPlane/.test(code)) continue;
+      escalationViolations.push(c1
+        ? `${path.relative(SRC, p)}:${j + 1}: ${cls}.${mSig[1]} reads its escalated '${posName}' (a descendant's plane) — re-derive from the hand: @screenPointToMyPlane world.hand.position()`
+        : `${path.relative(SRC, p)}:${j + 1}: ${cls}.${mSig[1]} reads the raw screen '${posName}' unmapped — map it on the same line: @screenPointToMyPlane ${posName}`);
+    }
   }
 }
 
@@ -167,8 +204,8 @@ if (mixLines.length !== CROSS_PLANE_MIX_BASELINE) {
 
 if (escalationViolations.length) {
   failed = true;
-  console.error(`[plane-discipline C] FAIL — ${escalationViolations.length} pos-reading handler(s) on scroll-translation providers:`);
+  console.error(`[plane-discipline C] FAIL — ${escalationViolations.length} read(s) of a pointer position not in the receiver's plane:`);
   escalationViolations.forEach((l) => console.error('    ' + l));
-} else console.log(`[plane-discipline C] escalation boundary: 0 unguarded pos-reading handlers on ${providerDefiners.size} provider class(es) + subclasses -- OK`);
+} else console.log(`[plane-discipline C] positions not in the receiver's plane: 0 reads -- OK (C1: ${c1Bodies} escalated-pos handler bodies [${[...escalatedPosHandlers].sort().join(', ')}] on ${providerDefiners.size} provider class(es) + subclasses; C2: ${c2Bodies} raw-screen-pos bodies [${[...RAW_SCREEN_POS_HANDLERS.keys()].join(', ')}])`);
 
 process.exit(failed ? 1 : 0);

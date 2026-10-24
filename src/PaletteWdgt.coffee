@@ -113,9 +113,11 @@ class PaletteWdgt extends Widget
     return unless @_rememberColorPickedAt @screenPointToMyPlane (pos.add (deltaDragFromPreviousCall or new Point 0, 0))
     @updateTarget()
 
+  # a press picks the colour under it, and STOPS here: the pick is the whole of what a press on me
+  # means
   pressBegan: (pos) ->
-    return unless @_rememberColorPickedAt pos
-    @updateTarget()
+    @updateTarget()  if @_rememberColorPickedAt pos
+    false
 
   # Half of a pick: read the pixel and become it, answering the colour adopted or undefined if none
   # was. The other half is the outward one, @updateTarget, which each gesture fires for itself —

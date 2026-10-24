@@ -83,8 +83,8 @@ class SimpleButtonWdgt extends ButtonWdgt
     super
 
   # HighlightableMixin's colour hook, which every one of its state transitions calls (hoverEntered,
-  # hoverExited, pressBegan, pressEnded) after setting @state. I answer it with my whole box look
-  # for the state I am in now, so the look is decided here and nowhere else.
+  # hoverExited, pressBegan, pressEnded, pressCancelled) after setting @state. I answer it with my
+  # whole box look for the state I am in now, so the look is decided here and nowhere else.
   _updateColor: ->
     @color = @_fillForMyState()
     @strokeColor = @_strokeForMyState()

@@ -23,10 +23,9 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   createAppearance: -> new OverflowChevronAppearance @, WorldWdgt.theme.toolbarGlyph
 
   # MY FACE IS A PICTURE (Widget.isPointerTargetAt, AM-I-A-PICTURE): the empty face every icon
-  # button carries covers my whole box, so a press on it would reach me only as an escalated
-  # pressBegan, never as the pressEnded that ends it, and it would catch a press in my plate's corner
-  # notches. Nothing in it is a pointer target: the press, the release and the click are mine, and
-  # where I catch the pointer is my plate's shape.
+  # button carries covers my whole box, so it would catch a press in my plate's corner notches.
+  # Nothing in it is a pointer target: the press, the release and the click are mine, and where I
+  # catch the pointer is my plate's shape.
   _showsChildAsAPicture: (child) ->
     child is @faceWidget
 
@@ -35,13 +34,6 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # repaints me: no colour of mine is written here, and none a transition could leave behind.
   _updateColor: ->
     @_changed()
-
-  # HighlightableMixin's release transition, re-answered: a release reaches me only when it ends the
-  # press that began on me with the pointer still over me, so I am hovered, not at rest -- the
-  # pointer leaving me (hoverExited) is what brings the rest look back.
-  pressEnded: ->
-    @state = @STATE_HIGHLIGHTED
-    @_updateColor()
 
   actOnClick: ->
     # the strip owns the answer to "what is behind me" -- capability via ?(), so a chevron that

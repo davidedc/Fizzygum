@@ -48,8 +48,10 @@ one is visible even while it stays "correct".
 ## 2. What the inventory measures
 
 `WorldInventory.takeInventory()` walks the reachable object graph — read-only,
-side-effect-free, ~6 ms — from these roots: the world, every class object (found by the
-`instances`-Set marker every class carries, never a name-suffix scan) with its own statics,
+side-effect-free, ~6 ms — from these roots: the world, every class object (boot's
+`allClassFunctions`: every OWN name of `window` — `getOwnPropertyNames`, so a class assigned into a
+browser built-in's non-enumerable slot, `InputEvent`, is found too — that boot's `classNamed`
+answers, by the `instances`-Set marker every class carries, never a name-suffix scan) with its own statics,
 the module-state portholes (`swCanvasTextStateForAudit`, `stringHashCacheForAudit`),
 `menusHelper`, `demoMenus`. It returns:
 
@@ -60,7 +62,12 @@ the module-state portholes (`swCanvasTextStateForAudit`, `stringHashCacheForAudi
   `world.<field>` store sizes, `sourceVault.entries`, `classes.count`;
 - two **identity lists**: `escapedWidgets` — widgets in `Widget.instances`, not destroyed,
   yet unreachable by containment from `graphLivenessRoots()` + the bin/shelf containers
-  (such a widget left the tree without being destroyed, and the registry pins it forever) —
+  (such a widget left the tree without being destroyed, and the registry pins it forever).
+  Containment is `children` plus each holder class's declared off-tree OWNED widgets
+  (`@offTreeOwnedWidgetFields`, merged up the chain by boot's `classStaticListMergedUpTheChain`;
+  `FrameWdgt` declares `defaultContents`, its empty-state placeholder kept unmounted while real
+  contents are mounted). That is not an exemption: such a widget is reached only through a reached
+  holder, and its owner still destroys it —
   and `retainedZombies` — destroyed widgets still held somewhere, each named with the
   property path of its retainer.
 
@@ -101,8 +108,12 @@ green suite):
   (`run-sequence-headless.js [predecessor, victim]`) before believing the attributed name.
 - `WORLD_INVENTORY_ESCAPED`: some code removed a widget from the tree without destroying it
   (the classic shape: chrome rebuilt during a destroy cascade, or a spare/off-tree
-  collaborator widget nothing tears down). Find the creation site, make the owner destroy
-  it. Never "fix" by exempting — identity offences have no exemption row.
+  collaborator widget nothing tears down; or a TEST that single-widget-`destroy()`s a holder,
+  which orphans the subtree under it). Find the creation site, make the owner destroy
+  it. Never "fix" by exempting — identity offences have no exemption row. A widget its owner
+  keeps off its tree on purpose is DECLARED (`@offTreeOwnedWidgetFields`), not exempted.
+  ⚠ A new test is therefore proven with a follower (`run-sequence-headless.js <new> <any>`):
+  run alone it can never show its own leak, since the audit fires at the next reset.
 - `WORLD_INVENTORY_ZOMBIE ... at <path>`: the path names the retainer — clear that
   reference where the teardown contract says it should die (usually
   `WorldWdgt._teardownWorldStructureNoSettle`, the shipping core).
@@ -123,7 +134,8 @@ green suite):
 - The inventory's containment roots are `graphLivenessRoots()` — the ONE enumeration shared
   with the trash-liveness query/sever pair — PLUS the bin/shelf containers themselves:
   residency must not read as an inbound liveness edge, but the containers' chrome is
-  accounted-for citizenry.
+  accounted-for citizenry. The inventory alone follows the declared off-tree owned widgets;
+  `graphLivenessRoots` does not (it answers liveness, not ownership).
 - Per-cycle and per-refresh transients are handled at the honest layer: the teardown core
   drops just-destroyed widgets from the per-cycle damage queues at the seam (a filter, not a
   clear — the world's own whole-screen damage mark must survive), while the SWCanvas
@@ -132,11 +144,10 @@ green suite):
 - The SNAPSHOT-LOAD path is the other place the inventory is read. A load keeps its world, so
   no reset seam ever audits what it left behind (no SystemTest loads a snapshot); instead the
   serialization rig's `world.teardownHygiene.loadLeavesNoOrphanedWidgets` takes the inventory
-  on the product pages (`WorldInventory` is core) and requires the escaped and zombie widgets
-  after the load — at the load's own turn and after the settle — to be exactly the pristine
-  world's, by identity. It is compared with pristine rather than required empty because a live
-  world lists one escape per frame holding real contents: the frame's off-tree
-  `@defaultContents` placeholder, which the containment walk does not reach.
+  on the product pages (`WorldInventory` is core) and requires the escaped and zombie lists
+  after the load — at the load's own turn and after the settle — to be EMPTY. It refuses to pass
+  unless the restored world holds a frame whose placeholder is off its tree (the Examples folder's
+  window on the shelf), so the declared-containment rule cannot go unexercised.
 - Both engines run the same gate: the instrument is plain in-page JS, so the WebKit suite
   leg exercises it identically. The VM-truth tier below is Chrome-only by nature and ADDS
   closure-visibility rather than replacing any of this.

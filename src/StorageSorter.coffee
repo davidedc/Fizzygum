@@ -148,14 +148,21 @@ class StorageSorter
     residents
 
   # ---- Tier A: the always-on storage-invariant guard ----
-  # Runs at drain exit (with the drain's fresh session id) and at the
-  # test-teardown seam (resetWorld's end, no session id -> structural checks
-  # only). O(residents + tracker). Each violation console.errors ONE greppable
+  # Two seats. At DRAIN EXIT (with the drain's fresh session id) it checks
+  # every bin and shelf resident -- destroyed, parent-desynced, or classified
+  # onto the wrong side -- every tracker member for destruction, and that no
+  # sort is left pending. At the TEST-TEARDOWN seat
+  # (WorldTestSupport._beforeWorldDissolveNoSettle: after the shared
+  # structural teardown, before dissolution; no session id) the core has
+  # already destroyed and let go of both containers, so the bin and shelf
+  # scans find nothing to read and only the tracker scan is live: a destroyed
+  # member still listed is residue the finished test left.
+  # O(residents + tracker). Each violation console.errors ONE greppable
   # STORAGE_INVARIANT token line; both headless runners gate on the token, so
   # every suite leg enforces the invariant for free (the NON_INTEGER_GEOMETRY
   # precedent). Quiet during teardown BY CONSTRUCTION (mirroring the bounds
-  # guard): it is only ever called from the drain station -- which never runs
-  # mid-teardown -- and from resetWorld's end, after the world is consistent.
+  # guard): a drain never runs mid-teardown, and the teardown seat runs only
+  # once the core has finished.
   _auditStorageNoSettle: (justComputedGcSessionId) ->
     binContents = world.binWdgt?.viewport?.contents
     if binContents?

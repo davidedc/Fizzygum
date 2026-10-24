@@ -11,7 +11,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # Override the NON-SETTLING core (not the wrapper): the inherited _buildAndConnectChildren wrapper settles
   # once, and this extension -- my second save destination -- is built inside that single settle. My
   # breadcrumb is the base's: my subject is a class's prototype, so its current chip is that class
-  # (InspectorWdgt._classChainNames).
+  # (InspectorWdgt._classChainLinks).
   _buildAndConnectChildrenNoSettle: ->
     super
     # part of the base's EDIT ROW, my footer band, so it exists on the same condition the rest of

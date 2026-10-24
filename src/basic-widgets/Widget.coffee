@@ -819,6 +819,14 @@ class Widget extends TreeNode
     if focusWdgt? and (focusWdgt == @ or @isAncestorOf focusWdgt)
       world._setEditorFocusNoSettle undefined
 
+    # Pointer hygiene, the same kind of register: the hand books the widgets a stroke in progress
+    # goes on acting on (what a drag picks up, the widget its click or hold is about, the non-float
+    # drag target) and carries a float drag's payload. A booking left naming me, or a widget inside
+    # me, is acted on later in the stroke — the next pressed move lifts my corpse onto the hand and
+    # the release drops it back into the tree. Told here, before I leave my parent, so the hand can
+    # still see that I am the payload it carries.
+    world.hand.noteWidgetDestroyed @
+
     # remove callback when user clicks outside
     # me or any of my children
     # public-call-sanctioned: onClickOutsideMeOrAnyOfMyChildren is pure REGISTRY bookkeeping (one
@@ -4473,9 +4481,18 @@ class Widget extends TreeNode
     if @parent?
       @parent.propagateKillPopUps()
 
-  pressBegan: (pos) ->
+  # A PRIMARY PRESS REACHED ME, `pos` the pointer in my plane. The hand climbs a press from the widget
+  # it hit up the chain, and every receiver STATES whether the press goes on: answer true to pass it
+  # to my parent, false to keep it here (a handle, a selecting text, a plot starting a spin, a slider
+  # jumping its button, the world). An override states it on its last line, or ends in `super`, which
+  # passes it on as any widget does. Every receiver then belongs to the press's audience and is told
+  # exactly one ending — pressEnded at the release, or pressCancelled once the stroke scrolls, lifts
+  # or is aborted — both through ?(), so a widget with no press look to undo declares neither. The
+  # contract lives with the hand's press bookkeeping (ActivePointerWdgt, the press's AUDIENCE).
+  #   Mine: a press raises my focus root, and goes on.
+  pressBegan: (ignored_pos) ->
     @bringToForeground()
-    @escalateEvent "pressBegan", pos
+    true
 
   activated: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     @escalateEvent "activated", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9

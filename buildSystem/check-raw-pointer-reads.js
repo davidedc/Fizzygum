@@ -3,19 +3,27 @@
 // screen-plane pointer. Mirrors check-relayout-bounds-first.js (line scanner; exit 0 clean / 1 violation).
 //
 // THE RULE. Since affine Phase 4A the dispatcher hands every pointer handler the pointer position
-// ALREADY inverse-mapped into the receiver's own plane (ActivePointerWdgt._pointerPositionInPlaneOf,
-// forwarded verbatim by escalateEvent within one island plane). `world.hand.position()` is the raw
+// ALREADY inverse-mapped into the receiver's own plane (ActivePointerWdgt._pointerPositionInPlaneOf —
+// for each receiver of a press's climb and of its endings, since the hand drives both; a handler that
+// escalates instead, `activated` and kin, forwards it verbatim within one island plane).
+// `world.hand.position()` is the raw
 // SCREEN-plane point: mixing it with plane-local geometry (@position()/bounds) works for aligned
 // widgets — off any island the mapped point IS the raw point — and silently breaks for tilted ones
 // (the 2026-07-17 spreadsheet tilted-selection bug; the invisible-until-tilted bug class this gate
 // exists to kill). So inside a handler body, `world.hand.position()` may appear ONLY mapped at the
 // read site — `screenPointToMyPlane` on the SAME line (the per-frame sampling idiom: a drag-scroll
 // step legitimately samples the hand each frame, but must map each sample — ViewportWdgt). A
-// handler that needs the pointer as a position should otherwise consume its `pos` PARAMETER.
+// handler that needs the pointer as a position should otherwise consume its `pos` PARAMETER — and one
+// that is handed none (`pressCancelled`, the press's cancel: a pure fact, no position) must map its
+// own read the same way.
 //
 // SCOPE. Method bodies (2-space-indent headers, span until the next header) whose names are the
-// dispatched pointer-handler names below — closures defined inside them (a drag-scroll @step, a
-// _settleLayoutsAfter thunk) are inside the span and covered. HELPERS a handler calls are NOT
+// dispatched pointer-handler names below — closures defined inside them (a _settleLayoutsAfter thunk)
+// are inside the span and covered — plus the two ViewportWdgt drag-scroll methods that sample or
+// consume the pointer per frame / per event although no dispatcher calls them by a handler name:
+// takeStrokeScrollFrom (it installs the drag-scroll @step, a closure sampling the hand every frame)
+// and latchStrokeScroll (the hand hands it the press and grab-radius-crossing points at the drained
+// event that latches the stroke). HELPERS a handler calls are NOT
 // scanned (a heuristic tripwire, not a proof): the known deliberate raw-screen consumer
 // (HandleWdgt._pointerAngleToTargetAnchorDegrees — the rotate handle measures an angle in SCREEN
 // space by design, see its comment) lives in such a helper. ActivePointerWdgt.coffee is skipped
@@ -35,13 +43,15 @@ const RAW_READ = /world\.hand\.position\(\)/;
 const MAPPED = /screenPointToMyPlane/;
 const HANDLER_NAMES = new Set([
   'pressBegan',
-  'pressEnded',
+  'pressEnded', 'pressCancelled',
   'activated', 'contextMenuRequested',
   'doubleActivated', 'tripleActivated',
   'hoverMoved', 'pressMoved',
   'hoverEntered', 'hoverExited',
   'nonFloatDragging', 'endOfNonFloatDrag',
   'scrolledBy',
+  // not dispatched by name, but the per-frame / per-event pointer consumers of the drag-scroll (see SCOPE)
+  'takeStrokeScrollFrom', 'latchStrokeScroll',
 ]);
 
 function walk(dir, acc) {

@@ -2058,6 +2058,8 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Verified aims — a press must meet what it means** (every test; rule 4 of `CLAUDE.md`): the verbs that know their
   widget check it when the press drains (`AimCheckInputEvent` → `verifyPressLanding`) and fail with "AIM MISSED" otherwise.
+  A `wheelOn` named for a scroller is checked against the scroll's TAKER too (rule 4): aim it on the pane's own
+  surface, clear of nested scrollers (`macroMenuInWindowInScrollStackStaysLive`'s `besideTheCell`).
   For a press aimed at a raw Point, declare its receiver on the line before: `@pressMustLandOn rect` (a spreadsheet cell:
   `@pressMustLandOn sheet.topWdgtSuchThat (w) -> (w instanceof CellWdgt) and (w.address is "B2")`). A deliberate
   click-THROUGH declares what lies behind (`macroRoundedBoxCornerClickThrough`: aimed at the box's transparent corner,

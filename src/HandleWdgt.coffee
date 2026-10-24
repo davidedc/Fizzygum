@@ -21,17 +21,18 @@ class HandleWdgt extends Widget
 
   # Affine transforms (§6 Phase 4B): transient rotate-gesture reference frame — the island's rotation
   # and the pointer's angle about the anchor, both captured at grab-start (pressBegan), cleared at
-  # pressEnded. undefined at rest / for every non-rotate handle, so nothing to serialize.
+  # the press's ending (pressEnded / pressCancelled). undefined at rest / for every non-rotate
+  # handle, so nothing to serialize.
   _rotateGrabStartRotationDegrees: undefined
   _rotateGrabStartPointerAngleDegrees: undefined
 
   # MY POINTER STATE, two facts kept apart because they end apart: whether the pointer is over me
   # (hoverEntered / hoverExited), and whether a press that began on me still stands (pressBegan,
-  # until its release, the end of its drag, the pointer leaving me while nothing is dragged, or my
-  # moving to another parent). My plate shows the press while it stands and the hover otherwise
-  # (_plateFillForMyState), so its look after a gesture is a function of where the gesture left the
-  # pointer and me, whatever order the events of a busy cycle arrive in: a handle travels with its
-  # drag, so the pointer can leave and re-enter me under a press.
+  # until its release or its cancel, the end of its drag, the pointer leaving me while nothing is
+  # dragged, or my moving to another parent). My plate shows the press while it stands and the
+  # hover otherwise (_plateFillForMyState), so its look after a gesture is a function of where the
+  # gesture left the pointer and me, whatever order the events of a busy cycle arrive in: a handle
+  # travels with its drag, so the pointer can leave and re-enter me under a press.
   _isHovered: false
   _isPressed: false
 
@@ -150,8 +151,8 @@ class HandleWdgt extends Widget
       @target = whereTo
       @inset = @_cornerInsetFrom @target
       @cornerSpec.inset = @inset
-    # a press does not survive a change of parent: a hand that picks me up or drops me ends it
-    # with no release reaching me
+    # a press does not survive a change of parent, whatever makes it: a lift also cancels my press,
+    # but a drop or a builder moving me tells me nothing else
     @_setPointerState @_isHovered, false
     @_castMyShadow()
     @_moveInFrontOfSiblings()
@@ -185,29 +186,28 @@ class HandleWdgt extends Widget
   # so the handle catches the clicks and
   # prevents the parent from doing anything.
   activated: ->
-  # Affine transforms (§6 Phase 4B): end of a rotate gesture — clear the grab-start state so the next
-  # grab re-captures its own reference angle. Harmless for the other handle types (fields stay undefined).
-  # The release ends my press; whether my plate then shows the hover is the pointer's business
-  # (hoverEntered / hoverExited).
+  # MY PRESS'S TWO ENDINGS (ActivePointerWdgt, the press's AUDIENCE) — the release, or the stroke
+  # turning into something else: either way the press is over, and whether my plate then shows the
+  # hover is the pointer's business (hoverEntered / hoverExited). Affine transforms (§6 Phase 4B): it
+  # is also the end of a rotate gesture — clear the grab-start state so the next grab re-captures its
+  # own reference angle. Harmless for the other handle types (fields stay undefined).
   pressEnded: ->
     @_setPointerState @_isHovered, false
     @_rotateGrabStartRotationDegrees = undefined
     @_rotateGrabStartPointerAngleDegrees = undefined
-    # RE-RECORD request (the F6 family, auto-bookkeeping arc): this gesture resized/moved my
-    # target by user intent, so its fractional bookkeeping is stale. Deferred to the world's
-    # post-flush drain (my writes are deferred-settle, so the settled geometry is the
-    # gesture's outcome) -- without it, a handle-resized stretch child snapped back to its
-    # pre-gesture proportions on the next holder reflow (a long-standing product bug, the
-    # arc's P0 probe GAP A).
-    world.pendingFractionalReRecords.add @target  if @target?
+
+  pressCancelled: ->
+    @_setPointerState @_isHovered, false
+    @_rotateGrabStartRotationDegrees = undefined
+    @_rotateGrabStartPointerAngleDegrees = undefined
 
   # same here, the handle doesn't want to propagate
   # anything, otherwise the handle on a button
-  # will trigger the button when resizing.
+  # will trigger the button when resizing: the press STOPS here.
   # The press shows on my plate whether or not I have a target.
   pressBegan: (pos) ->
     @_setPointerState @_isHovered, true
-    return undefined  unless @target
+    return false  unless @target
     @target.bringToForeground()
     # Affine transforms (§6 Phase 4B): capture the rotate gesture's reference frame AT PRESS — the
     # island's current rotation plus the pointer's angle about the island's screen anchor. The drag
@@ -216,6 +216,7 @@ class HandleWdgt extends Widget
     if @type is "rotateHandle"
       @_rotateGrabStartRotationDegrees = @target.rotationHalo_currentDegrees()
       @_rotateGrabStartPointerAngleDegrees = @_pointerAngleToTargetAnchorDegrees()
+    false
 
   # Affine transforms (§6 Phase 4B): angle (degrees) of the RAW screen pointer about my island
   # target's SCREEN anchor. DELIBERATELY screen-plane: the rotate handle is in-plane content that
@@ -293,6 +294,14 @@ class HandleWdgt extends Widget
   # the drag that began on me is over, wherever the pointer is: so is my press
   endOfNonFloatDrag: ->
     @_setPointerState @_isHovered, false
+    # RE-RECORD request (the F6 family, auto-bookkeeping arc): the drag resized/moved my target by
+    # user intent, so its fractional bookkeeping is stale. Asked here, at the end of the DRAG — which
+    # every drag of mine reaches, however its release lands or if the stroke is aborted — and not at
+    # my press's ending, which a press that never dragged reaches too. Deferred to the world's
+    # post-flush drain (my writes are deferred-settle, so the settled geometry is the gesture's
+    # outcome) -- without it, a handle-resized stretch child snaps back to its pre-gesture
+    # proportions on the next holder reflow.
+    world.pendingFractionalReRecords.add @target  if @target?
 
   # my pointer state, and a repaint of me when it changes
   _setPointerState: (hovered, pressed) ->

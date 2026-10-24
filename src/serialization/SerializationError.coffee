@@ -21,6 +21,9 @@
 #                     "StringWdgt#9, which is outside the serialized structure and not a
 #                      well-known object"
 #   remediation     — one or more hints on how to make the save succeed
+#   direction       — "save" (the default: the Serializer's throws) or "load" (the Deserializer's: a
+#                     file this build cannot restore). The class serves both directions, and this is
+#                     what lets toString open with words that say which one failed
 class SerializationError
 
   constructor: (@message = "serialization failed", details = {}) ->
@@ -29,6 +32,7 @@ class SerializationError
     @path = details.path ? undefined
     @offender = details.offender ? undefined
     @remediation = details.remediation ? undefined
+    @direction = details.direction ? "save"
     # best-effort stack for debugging, without `extends Error`
     try
       @stack = (new Error @message).stack
@@ -37,9 +41,11 @@ class SerializationError
 
   # A multi-line, human-readable rendering — this is what menu/file actions feed to
   # world.inform, and what a headless rig can snapshot. Structured callers read the
-  # individual fields instead.
+  # individual fields instead. The opening words follow @direction, so a refused or failed load
+  # never reads as a failed save.
   toString: ->
-    parts = ["Cannot serialize: " + @message]
+    opening = if @direction is "load" then "Cannot load this file: " else "Cannot serialize: "
+    parts = [opening + @message]
     parts.push "  root: " + @rootDescription if @rootDescription?
     parts.push "  at:   " + @path if @path?
     parts.push "  offending value: " + @offender if @offender?

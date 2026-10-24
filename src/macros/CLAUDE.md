@@ -120,6 +120,14 @@ silently lands on something else changes the pixels, and a recapture would then 
   inside it, or the test fails with **"AIM MISSED"** (recorded like a failed assertion, so the macro runs on).
   A finger press is judged as the finger meets it: its own arrival fattens a thin scroll indicator before it
   presses, which `_widgetAPressMeets` accounts for through `ViewportWdgt.barScreenFrameOnArrival`.
+  A wheel named for a SCROLLER (`wheelOn_InputEvents` on a widget that takes a scroll itself — under a mouse one
+  answering `scrolledBy`, under a finger one claiming plain drags for scrolling) must also start a scroll the
+  dispatch hands to THAT widget: the check asks the dispatch's own decision (`_scrollTakerAbove` →
+  `ActivePointerWdgt.wheelTakerAbove` for a notch, the innermost `scrolledBy` above what the press meets;
+  `ViewportWdgt.strokeScrollPaneFor` for a finger's drag, the pane the direction latch gives the stroke's
+  direction), so landing on a scroller nested inside the named one — a menu's rows, a document in a stack — or
+  a finger drag the latch hands to a pane around it is AIM MISSED. Neither follows the wheel's at-edge
+  escalation, so aim a wheel where the named pane takes it outright.
 - A press aimed at a raw Point is checked only when the macro DECLARES what it must meet, on the line before:
   `@pressMustLandOn widget`. Use it for a literal or computed aim, and for a deliberate click-THROUGH (aim at a
   pointer-transparent widget — a caret, a rounded corner — and name what lies behind). It overrides a verb's own
@@ -196,8 +204,8 @@ The design rule every translated verb follows: **the verb's NAME states the user
 translation preserves that intent, never the raw events** — a click becomes a tap, a right-click
 becomes a press-and-hold (the touch grammar's own context-menu trigger,
 [`../../docs/architecture/input-and-gestures.md`](../../docs/architecture/input-and-gestures.md)),
-a wheel becomes a drag over the resolved pane (delivered as successive clamped swipes — a wheel's
-reach is unlimited, a finger's is one pane wide), and a press-drag-release becomes a hold-then-drag
+a wheel becomes a drag over the resolved pane (delivered as successive clamped swipes, each latching
+afresh — a wheel's reach is unlimited, a finger's is one pane wide), and a press-drag-release becomes a hold-then-drag
 except where the calling verb already knows it presses CHROME (a handle, a slider, a scrollbar
 thumb), which needs no hold on either device. A no-button move emits nothing under finger mode
 UNLESS the hand already carries a payload, in which case it is the buttonless CARRY stream a

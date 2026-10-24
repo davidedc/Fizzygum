@@ -60,7 +60,7 @@ class MemberRowWdgt extends MenuItemWdgt
   # My NAME: a one-line StringWdgt of my labelString in my font and ink, in StringWdgt's own fitting
   # -- its box fixed and its text cropped to it with "…" (not the hug a menu row's TextWdgt label
   # takes) -- its box sized and placed by _placeMyParts. Building it gives me my height. _addNoSettle
-  # (NOT add): _createLabel is driven by _reLayoutSelf, a layout pass.
+  # (NOT add): _createLabel runs inside my arrange (_reLayoutSelf) or inside a relabel's settle.
   _createLabel: ->
     @label = new StringWdgt @labelString,
       fontSize: @fontSize
@@ -98,17 +98,27 @@ class MemberRowWdgt extends MenuItemWdgt
     @kindTag.setColor (if @state is @STATE_NORMAL then theme.memberRowTagText else theme.memberRowSelectedTagText)
 
   # THE CHANGES OF MY STATE, each made the way any list row makes it (MenuItemWdgt, LabelButtonWdgt)
-  # and followed by my tag: a press (pressed; my panel unselects my siblings first), my click
-  # (selected), and my panel unselecting me.
+  # and followed by my tag: a press (pressed; my panel unselects my siblings first — and the press
+  # goes on up, as any row's does), my click (selected), my panel unselecting me, my panel showing
+  # me as its list's selection again, and a cancelled press.
   pressBegan: (pos) ->
     super
     @_inkMyTag()
+    true
 
   activated: ->
     super
     @_inkMyTag()
 
   unselect: ->
+    super
+    @_inkMyTag()
+
+  showAsSelected: ->
+    super
+    @_inkMyTag()
+
+  pressCancelled: ->
     super
     @_inkMyTag()
 

@@ -213,7 +213,9 @@ against the live world in `keyFor`; the `wellKnownKey` marker on the collaborato
 `"dataflow"`, `PreferencesAndSettings` → `"preferences"`, `WindowedApp` →
 `"app:" + @constructor.name`) is the general fallback
 and documents intent (it is the eventual replacement for `keptByReferenceOnDeepCopy`).
-`WellKnownObjects.resolveApp(className)` completes the `app:` branch: it `new`s the named
+`WellKnownObjects.resolveApp(className)` completes the `app:` branch: it resolves the name through
+boot's `classNamed` (a key is a name read out of a file, so one naming a native global or an inherited
+property of `window` is left unresolved, never `new`-ed), `new`s the named
 `WindowedApp` subclass and MEMOIZES one instance per class
 (`@_appSingletons`), which is safe because such an app is a stateless config holder — its one
 window lives on `world[@slot]`, not on the app (§11).
@@ -233,26 +235,30 @@ class Widget extends TreeNode
   @serializationTransients: ["lastTime", "cachedFullBounds", …]  # skipped at serialize
 ```
 
-- **The reader** is `Serializer.transientsForClass(klass)` — walks the class chain, unioning each
-  class's own `@serializationTransients` into one Set of names to skip. **A subclass declares its
-  OWN fields and nothing else**: the merge is the rule, so re-stating an ancestor's entry is
-  duplication, and a subclass can never drop one.
-  ⚠ **The chain to walk is `__super__`, not `Object.getPrototypeOf`.** This tree does not use ES
-  class inheritance: `extend` (`src/boot/globalFunctions.coffee`) COPIES the parent's statics onto
-  the child and links them only through `child.__super__ = parent.prototype`. That copy-down is why
-  a subclass declaring NOTHING inherits the list correctly, and why a subclass's OWN list would
-  REPLACE everything above it under a prototype-chain walk (the chain shows no parent there, so
-  such a walk returns the one declaration it can see — the trap the `__super__` walk below
-  exists to avoid). Silent by construction: it fires only on
-  the classes that declare, and only on fields those instances happen to own. `FrameWdgt` declaring
-  a list during the frame-lifetime plan's P3 is what surfaced it; the merge landed as its tail item
-  T16, and the frame's `isPopUpMarkedForClosure` moved back onto `FrameWdgt` where it belongs.
-  Verified by grep (`grep -rn "@serializationTransients" src`), ten classes carry their own
-  declaration today besides `Widget` itself: `FrameWdgt`, `ScriptWdgt`, `TransformFrameWdgt`,
-  `DesktopAppearance`, `SheetHeaderCellWdgt`, `SimpleSpreadsheetWdgt`, `SheetCellRecord`,
-  `CellWdgt`, `CalculatingPatchNodeWdgt`, `FridgeMagnets3DCanvasWdgt`. The rig check that holds the
-  merge is in `../Fizzygum-tests/scripts/serialization-roundtrip-headless.js` — it serializes a
-  self-declaring class and asserts an INHERITED transient is absent from the record.
+- **The reader** is `Serializer.transientsForClass(klass)` — a Set over boot's
+  `classStaticListMergedUpTheChain klass, "serializationTransients"` (`src/boot/globalFunctions.coffee`),
+  THE one merge of a class-level list declaration up the class chain, which the world inventory's
+  `@offTreeOwnedWidgetFields` (§11 rig note; `world-lifetime-and-inventory.md` §2) reads too. **A
+  subclass declares its OWN fields and nothing else**: the merge is the rule, so re-stating an
+  ancestor's entry is duplication, and a subclass can never drop one.
+  ⚠ **The chain to walk is `__super__`, not `Object.getPrototypeOf`** (boot's `superclassOf`). This
+  tree does not use ES class inheritance: `extend` (`src/boot/globalFunctions.coffee`) COPIES the
+  parent's statics onto the child and links them only through `child.__super__ = parent.prototype`.
+  That copy-down is why a subclass declaring NOTHING inherits the list correctly, and why a
+  subclass's OWN list would REPLACE everything above it under a prototype-chain walk (the chain shows
+  no parent there, so such a walk returns the one declaration it can see), and why the merge reads
+  each class by `hasOwnProperty` and walks on past it. Silent by construction: it fires only on the
+  classes that declare, and only on fields those instances happen to own. The rig check that holds
+  the merge is `transients.inheritedMergedNotReplaced` in
+  `../Fizzygum-tests/scripts/serialization-roundtrip-headless.js` — it serializes a self-declaring
+  class and asserts an INHERITED transient is absent from the record.
+- **A live canvas object a class caches in a field is a transient.** A gradient, a pattern or a
+  canvas a paint builds lazily (`if !@colorGradient?`) has no file encoder; declare the field and let
+  the paint rebuild it after a restore. The rig's `world.everyAppSnapshot.*` checks open every app
+  the desktop offers, paint it, and save the world, refusing a save that throws or that carries a
+  record of a browser-native class — which is what an undeclared cache produces on the two backends.
+  ⚠ They see only what an app's FIRST paint reaches: a tool below a toolbar's fold builds no render
+  state to trip on.
 - **Derived values** keep the existing `rebuildDerivedValue` protocol (canvas 2D
   contexts): both walkers SKIP them, and only duplication rebuilds. The deserializer does
   NOT — its pass-4(b) branch reads a `record.derived` list the serializer has never emitted,
@@ -301,9 +307,10 @@ class Widget extends TreeNode
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
 | `ScriptWdgt` | `functionFromCompiledCode` | the saved script COMPILED (`@savedScript` is the truth); `doAll` recompiles it on demand after a restore |
+| the gradient icon appearances (`ColorPalettePatchProgrammingIconAppearance`, `GrayscalePalettePatchProgrammingIconAppearance`, `VaporwaveBackgroundIconAppearance`, `VaporwaveSunIconAppearance`) | their cached gradient | a canvas gradient their paint builds lazily and rebuilds when absent; undeclared, a world snapshot saved with Patch Programming open throws "a value of an unrecognized type (LinearGradient)" under SWCanvas, and the closed-set guard refuses the `CanvasGradient` under native |
 
-The declarations are the inventory — `grep -rn "@serializationTransients" src/` lists all
-ten classes that carry one, and the table above keeps only the rows a reader could not
+The declarations are the inventory — `grep -rn "@serializationTransients" src/` lists every
+class that carries one, and the table above keeps only the rows a reader could not
 have guessed. `WorldWdgt` deliberately has none: its transient surface is never visited,
 because the world is not a table record (§11).
 
@@ -337,7 +344,11 @@ Native / special types the walkers special-case (duplication: the `Duplicator`'s
 `_copy*` handlers; serialization: the `$`-tagged record encoders — both recognising
 types through the shared `NativeValueKinds`, which duck-types the canvas kind so the
 SWCanvas variant is caught too; its gradient predicate is duplication-only — see the
-gradient row):
+gradient row). Anything that reaches neither a handler nor a plain object literal must be an
+instance of a class boot's `classNamed` answers for — the CLOSED SET, one rule shared by the two
+walkers (`Serializer`'s guard and `Duplicator._copyFizzygumObject`'s): an instance of a
+browser-native class with no handler (a `DOMRect`, a `CanvasGradient`) is refused, because a save
+could not restore it and a copy would hold an object that throws on use:
 
 | Type | Serialize record | Notes |
 |---|---|---|
@@ -346,7 +357,7 @@ gradient row):
 | `Image` | `$Image` `src` | async decode on restore → the `whenReady` promise |
 | `HTMLCanvasElement` | `$Canvas` `w`/`h`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS` |
 | `HTMLVideoElement` | `$Video` `src`/`autoplay`/`currentTime` | tagged on its own record; mis-tagging it as a canvas crashes the restore |
-| `CanvasGradient` | *(no encoder)* | DUPLICATION clones it as `undefined` (`Duplicator._copyGradient`, via `NativeValueKinds.isGradientLike` — its one caller) and consumers rebuild. The SERIALIZER has no gradient branch: a gradient in an own property is emitted as an ordinary class record under the native backend, and raises the unrecognized-type `SerializationError` under SWCanvas. Keep gradients out of serialized own properties, or declare the property transient. |
+| `CanvasGradient` | *(no encoder)* | DUPLICATION clones it as `undefined` (`Duplicator._copyGradient`, via `NativeValueKinds.isGradientLike` — its one caller) and consumers rebuild. The SERIALIZER has no gradient branch: a gradient in an own property raises the unrecognized-type `SerializationError` under both backends (under native the closed-set guard refuses it: `classNamed` answers no class for a browser-native one). Keep gradients out of serialized own properties, or declare the property transient (§5). |
 | plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |
 | `Color` | `Color` `rgba` | restored through `Color.create` (immutable dedupe) |
 
@@ -374,9 +385,12 @@ session-local (creation-order dependent, reset by `WorldWdgt.fullDestroyChildren
 `src/serialization/SerializationError.coffee` — a plain class (not `extends Error`, to
 avoid a phantom boot dependency) carrying `name`, human `message`, and the structured
 `rootDescription` / `path` / `offender` / `remediation` fields, plus a best-effort
-`.stack` and a multi-line `toString()`. Menu/file actions catch it and `world.inform` the
-message; headless rigs assert on the structured fields. The old `debugger`/`console.log`/
-`alert` leftovers in the ser/deser path are removed with the rewrite.
+`.stack` and a multi-line `toString()`. One class serves both directions, so it also carries a
+`direction` — `"save"` (the default: the Serializer's throws) or `"load"` (the Deserializer's: a file
+this build cannot restore) — and `toString()` opens with words that say which one failed: "Cannot
+load this file: …" for a load, "Cannot serialize: …" for a save. Menu/file actions catch it and
+`world.inform` that rendering; headless rigs assert on the structured fields (the rig's
+`world.loadGuard.fileDropInformsOnLoadError` also asserts the load wording).
 
 ---
 
@@ -389,6 +403,16 @@ nesting depth; (3) identity & registration (`registerThisInstance`); (4) fixups
 re-register `memberships`, per-class `_afterDeserialization` hook); (5) deliver a detached
 `{ widget, whenReady }` for the caller to attach. `Widget.deserialize` /
 `world.deserialize` become thin delegates.
+
+A record's class becomes a builder or a class only through OWN lookups: `Deserializer._tagBuilderFor`
+for the `$`-tags and boot's `classNamed` for a class — never `window[name]`. A record class is a name
+read out of a file, and a plain lookup answers it wrongly three ways: it finds INHERITED properties
+(`constructor`, `toString`, `__proto__`), runs the browser's ACCESSORS (`location`), and finds every
+NATIVE global (`Object`, `Array`) — each of which would pass the world loader's pre-teardown refusal
+and then throw, or build a non-Fizzygum shell, after the desktop is gone. A record class neither lookup
+answers fails as a load `SerializationError` (§8), from a widget file as from a world file. The rig's
+`world.loadGuard.notAClassRefused.*`, `widgetFileNotAClassIsALoadError`, `appKeyNotAClassUnresolved`
+and `idCountersRestoreOnlyClasses` hold it; `boot.classNamedIsTheOneDefinition` holds the predicate.
 
 ---
 
@@ -464,7 +488,8 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    - **The refusal of a file this build can NEVER restore** — `Deserializer.whyItCanNeverBeRestored`
      (a pure read of the envelope) names the reason: a `formatVersion` newer than
      `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array, or a record naming
-     no class), or a record class with no tag builder that this artifact can never provide
+     no class), or a record class that is no tag (an own-property `TAG_BUILDERS` lookup) and no class
+     boot's `classNamed` answers, and that this artifact can never provide
      (`world.parts.canEverProvideClass` — resident, or owned by a part this build ships, so a class
      a LAZY part provides is not a reason). One `inform` ("…Your desktop has been left as it
      was."), stop. It mirrors exactly the throws a restore would hit — `Deserializer.deserialize`
@@ -505,15 +530,18 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    ⚠ The `infoDoc*` clear is load-bearing for step 4: that restore is **additive only**, so a flag
    the live world has and the file lacks can only be removed here. The rig gate is
    `world.teardownHygiene.*` in `Fizzygum-tests/scripts/serialization-roundtrip-headless.js` —
-   including `loadLeavesNoOrphanedWidgets`, which compares the in-band inventory
-   (`WorldInventory.takeInventory`'s escaped and zombie widgets, by identity) after the load with
-   the pristine world the file was written from, so any widget a load forgets to destroy shows; and
+   including `loadLeavesNoOrphanedWidgets`, which requires the in-band inventory's escaped and
+   zombie lists (`WorldInventory.takeInventory`) to be EMPTY after the load and after it settles, so
+   any widget a load forgets to destroy shows, and refuses to pass unless the restored world holds a
+   frame whose empty-state placeholder is off its tree (the containment rule it relies on would
+   otherwise go unexercised); and
    `handCargoDestroyed` / `handDragEmbedStateCleared`. The refusals are `world.loadGuard.*`.
    ⚠ From the teardown to step 4 the world has NO storage; the loader's `try/finally` guarantees
    a bin and a shelf whatever happens in between (a file carrying none, or a restore that throws),
    because the end-of-cycle storage drain needs both.
 3. Restore `idCounters` **before** deserializing (so `registerThisInstance` sees the right
-   high-water marks), then `Deserializer.deserialize` (`kind:"world"` preserves each `iid`;
+   high-water marks; each key is resolved through `classNamed`, so one naming no class writes onto
+   nothing), then `Deserializer.deserialize` (`kind:"world"` preserves each `iid`;
    returns `shells` so the loader resolves the `world` section's `{$r}` refs).
 4. Restore the static `preferences` bag; apply the scalars (isDevMode/alpha/infoDoc/naming/
    icon-count) to the LIVE world; **install** the restored (self-contained, off-tree)
@@ -559,7 +587,8 @@ ones):
   ALSO ride serialization on their own: the widget carries a `<name>_source` string →
   `{"$src"}` → re-injected on restore (§5). The registry adds auditability.
 - **class** — `ClassInspectorWdgt.applyPropertyEdit` records `recordClassEdit(prototype, name,
-  txt)` (its `@inspectedObject` is the class prototype — `new ClassInspectorWdgt window[className].prototype`)
+  txt)` (its `@inspectedObject` is the class prototype — the link of the inspected object's own prototype
+  chain whose constructor bears the chip's name, `InspectorWdgt._classChainLinks`)
   for EVERY member kind, methods and fields alike (both apply via `Class.applyMemberEdit`, which
   keeps the `<name>_source` sibling for both). This is the ESSENTIAL case: a prototype edit
   mutates the live class but leaves no other serializable trace (§2.7).

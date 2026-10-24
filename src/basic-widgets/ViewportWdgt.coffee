@@ -39,7 +39,8 @@ class ViewportWdgt extends Widget
   #           plain panel with nothing to flip.
   # 'never' — behave as a plain cropping panel: every scroll path refuses at
   #           the movement cores (scrollX/scrollY), the bars never show, the
-  #           wheel always escalates, and no scroll gesture engages. Contents
+  #           wheel always escalates, and no scroll gesture engages (a press
+  #           passes on through me to a pane around me, as a notch does). Contents
   #           sizing is DELIBERATELY unchanged — the contents panel still
   #           grows to its merged bounds and the overflow is clipped at my
   #           viewport, which IS plain-panel semantics.
@@ -482,8 +483,9 @@ class ViewportWdgt extends Widget
   # Would a plain drag pressed anywhere in me be MINE — a scroll of my pane? The hand asks this of
   # a press's ancestry to know whether a finger has to HOLD before its drag can mean what a mouse
   # drag means (ruling I2: a hold is demanded only where a plain drag already means scroll). It is
-  # the same three facts my scroll-drag step is installed on — I take drags at all, my policy allows
-  # scrolling, and there is overflow to move — asked before the press instead of during it.
+  # the same three facts that make me a pane a stroke can latch (strokeScrollPaneFor) — I take drags
+  # at all, my policy allows scrolling, and there is overflow to move — asked before the press
+  # instead of during it.
   claimsPlainDragsForScrolling: ->
     @isScrollingByfloatDragging and @isScrollableNow()
 
@@ -1144,43 +1146,133 @@ class ViewportWdgt extends Widget
     # content/scrollbar update.
     @_writeScrollOffset @scrollOffsetX, newY
 
-  # A drag-scroll step handed OUTWARD by a pane inside me that is already at its edge: the drag twin
-  # of the wheel's at-edge escalation, reached by the same parent climb (escalateEvent). I take it as
-  # my own step and hand on whatever I cannot absorb either, so a stack of nested panes passes the
-  # leftover outward one level at a time. Scrolling from here is not inside anyone's step function,
-  # so it settles its own content and bars, exactly as scrollTo does.
-  scrollByDragDelta: (deltaX, deltaY) ->
-    scrolledX = deltaX isnt 0 and @scrollX deltaX
-    scrolledY = deltaY isnt 0 and @scrollY deltaY
-    leftoverX = if scrolledX then 0 else deltaX
-    leftoverY = if scrolledY then 0 else deltaY
-    if leftoverX isnt 0 or leftoverY isnt 0
-      @escalateEvent 'scrollByDragDelta', leftoverX, leftoverY
-    if scrolledX or scrolledY
-      # layout-apply-sanctioned: scroll-input (drag-scroll escalation), determinism-exempt
-      # (residuals-audit fam 1) — the same moved-gated post-scroll arrange every other scroll
-      # path runs
-      @_positionAndResizeChildren()
-      @_reLayoutScrollbars()
-  
-  # Float-dragging a Viewport's contents scrolls it (particularly useful on touch devices); the same
-  # gesture works with the mouse when dragging over content that isn't itself draggable (e.g. text in a
+  # A plain drag over my content scrolls me (particularly useful on touch devices); the same gesture
+  # works with the mouse when dragging over content that isn't itself draggable (e.g. text in a
   # viewport anchored to a non-draggable background, such as a color palette).
+  #   With panes NESTED, one pane takes a stroke and takes all of it — THE DIRECTION LATCH. As the
+  # stroke first leaves the grab radius, the innermost pane above the press that can move in the
+  # stroke's direction takes the whole stroke, catching up from the press point; nothing hands on to
+  # another pane within the stroke, so travel past that pane's clamp is dropped until the next stroke
+  # latches anew. It is the wheel's rule (scrolledBy) applied per stroke, and what WebKit, Chrome's
+  # touch scrolling and iOS do with nested scrollers.
+  #   The stroke's OWNER is the innermost pane the press reaches that has something to scroll: the one
+  # the hand is told took the press (notePressTakenForScrolling), and the one it asks to latch
+  # (latchStrokeScroll). Every pane above the owner still gets the press — its raise and the climb go
+  # on — and installs nothing: ONE drag-scroll step per stroke, on the pane that scrolls it. Every
+  # branch passes the press on (super).
   pressBegan: (pos) ->
+    # A pane that takes no scroll gesture at all — 'never', or one that does not drag-scroll — is
+    # TRANSPARENT to the press, as it is to the wheel (scrolledBy passes a notch on through it): the
+    # climb goes on, so a drag over a cropping pane nested in a scrolling one reaches the scrolling one.
+    if @scrollPolicy is 'never' or !@isScrollingByfloatDragging
+      return super
+    # a press that reaches me starts a new stroke, so what my last stroke left running on me (its
+    # glide) ends here — the same press may latch me again
+    @_stopDragScrollStep()
+    # The hand is told at the press: my content carries whatever the press landed on along with the
+    # pointer, so a scroll's release lands back on it, and this fact is what keeps that release from
+    # reading as a click on it, and what tells the press's audience inside me that the stroke is a
+    # scroll (ActivePointerWdgt._strokeScrolls, through the pane my latch chooses).
+    if @claimsPlainDragsForScrolling() and !world.hand.isPressTakenForScrolling()
+      world.hand.notePressTakenForScrolling @
+      # With no pane above me that could take the stroke there is nothing to choose: I take it at the
+      # press, so a lone pane scrolls from the stroke's first pixel.
+      #   The press point is the hand read through the very mapping the step reads its per-frame
+      # samples with, so the seed and the samples share MY plane by construction. A press point in my
+      # scrolled content's plane would sit offset-pixels away (paint-time scroll), and one cross-plane
+      # seed makes the first frame's delta the whole offset — the drag slams to the clamp on a
+      # stationary click (measured).
+      if (ViewportWdgt._strokeScrollCandidatesFrom @).length is 1
+        @takeStrokeScrollFrom @screenPointToMyPlane world.hand.position()
+    super
 
-    # a 'never' viewport takes no scroll gestures at all — fall through to the
-    # normal grab/detach recognition instead of installing a dead step
-    return undefined  if @scrollPolicy is 'never'
-    return undefined  unless @isScrollingByfloatDragging
+  # THE LATCH, asked by the hand of this stroke's OWNER at the DRAINED EVENT where the press first
+  # leaves the grab radius (ActivePointerWdgt._notePressTravelledPastDragThreshold), with the press
+  # point and that event's point — two screen points the event stream fixed, so which pane takes the
+  # stroke is a function of the events, never of which frame first saw the hand past the radius (and
+  # nothing scrolls a nest before it, so every clamp it reads is the one the press found). Answers the
+  # pane that took the stroke's scroll, which the hand keeps as the stroke's fact — or undefined when
+  # the stroke is lifting what it pressed: then it is no scroll, and no pane takes it.
+  latchStrokeScroll: (pressPoint, crossingPoint) ->
+    return undefined  if world.hand.isThisPointerFloatDraggingSomething() or @_strokeWouldLiftWhatItPressed()
+    # a step of mine already running for this press means I took the stroke at the press, alone
+    return @  if world.steppingWdgts.has @
+    pane = ViewportWdgt.strokeScrollPaneFor pressPoint, (crossingPoint.subtract pressPoint), @
+    return undefined  unless pane?
+    # the latched pane scrolls the stroke from the press point, so it catches up the travel that
+    # carried the stroke out of the grab radius
+    pane.takeStrokeScrollFrom pane.screenPointToMyPlane pressPoint
+    pane
 
-    # ⚠ Do NOT seed oldPos from the `pos` parameter: a press on my scrolled CONTENT dispatches
-    # to the row (base Widget.pressBegan) which ESCALATES here with the pos still in the
-    # ROW'S plane — offset-pixels away from mine (paint-time scroll; pre-offset-model the two
-    # planes coincided, so the escalated value was right by coincidence). The step's per-frame
-    # samples below are in MY plane, and one cross-plane oldPos makes the first frame's delta
-    # equal the whole offset — the drag slams to the clamp on a stationary click (measured).
-    # Re-derive the press point from the hand with the same mapped read the step uses.
-    oldPos = @screenPointToMyPlane world.hand.position()
+  # WHICH PANE TAKES A STROKE — the latch's one decision, from the press point (screen), the stroke's
+  # direction (a screen vector: where the stroke has gone from the press) and `hit`, the widget the
+  # press reaches first. The latch asks it with the stroke's owner; the macro toolkit's aim check asks
+  # it with the widget a press will meet, so the check cannot drift from the dispatch. The DOMINANT
+  # axis of the direction decides: the innermost candidate that scrolls along that axis and is not
+  # already at its clamp in the stroke's direction; else the innermost that scrolls along that axis at
+  # all; else the innermost candidate. The direction is read in each candidate's own plane, so a
+  # scrolled or tilted pane answers for the way the stroke would move it. undefined when nothing above
+  # `hit` takes plain drags for scrolling.
+  @strokeScrollPaneFor: (pressPoint, direction, hit) ->
+    candidates = ViewportWdgt._strokeScrollCandidatesFrom hit
+    horizontal = Math.abs(direction.x) > Math.abs(direction.y)
+    alongTheAxis = candidates.filter (each) ->
+      if horizontal then each._dragScrollsHorizontally() else each._dragScrollsVertically()
+    for each in alongTheAxis
+      travel = (each.screenPointToMyPlane pressPoint.add direction).subtract each.screenPointToMyPlane pressPoint
+      if horizontal
+        [step, offset, clamp] = [travel.x, each.scrollOffsetX, Math.max 0, each.contents.width() - each.width()]
+      else
+        [step, offset, clamp] = [travel.y, each.scrollOffsetY, Math.max 0, each.contents.height() - each.height()]
+      # scrollX/scrollY's own sign: a step toward the content's end (negative) needs room before the
+      # clamp, a step back toward its start (positive) needs offset to give back
+      return each  if (step < 0 and offset < clamp) or (step > 0 and offset > 0)
+    alongTheAxis[0] ? candidates[0]
+
+  # The panes a stroke pressed at `hit` could latch, innermost first: every pane on the press's climb
+  # that takes plain drags and has something to scroll (claimsPlainDragsForScrolling). A pane that takes
+  # no scroll gesture — 'never', or not drag-scrolling — is not one, and does not stop the climb either
+  # (pressBegan passes the press on), so the panes beyond it still are.
+  @_strokeScrollCandidatesFrom: (hit) ->
+    candidates = []
+    each = hit
+    while each?
+      candidates.push each  if each.claimsPlainDragsForScrolling?() is true
+      each = each.parent
+    candidates
+
+  # Does my drag-scroll step move me along this axis — the axis I present a bar for?
+  _dragScrollsHorizontally: ->
+    @hBar.visibleBasedOnIsVisibleProperty() and !@hBar.isInCollapsedSubtree()
+
+  _dragScrollsVertically: ->
+    @vBar.visibleBasedOnIsVisibleProperty() and !@vBar.isInCollapsedSubtree()
+
+  # Is the stroke in flight about to LIFT what it pressed rather than scroll? A float-draggable widget
+  # under the hand is probably about to be detached, so a pane holds steady instead of scrolling --
+  # scrolling now would give the wrong cue right before the float-drag threshold is reached. A FINGER
+  # whose stroke does not mean a mouse drag is the other way round (ruling I2): over my content a plain
+  # finger drag is a scroll whatever it is over, and the thing under it lifts only once a hold has
+  # armed the stroke. A mouse or pen stroke always means a mouse drag, so for them this reads exactly
+  # as the detach test alone.
+  _strokeWouldLiftWhatItPressed: ->
+    world.hand.wdgtToGrab?.detachesWhenDragged() and world.hand.strokeMeansMouseDrag()
+
+  # End my drag-scroll step: its stroke, its flush and its glide are over. Nothing to do when none runs.
+  _stopDragScrollStep: ->
+    return unless world.steppingWdgts.has @
+    @step = noOperation
+    world.steppingWdgts.delete @
+    world.wdgtsWithOngoingScrollMomentum.delete @
+
+  # I TAKE THIS STROKE'S SCROLL, from `pressPoint` — the press point in MY plane. The stroke's one
+  # drag-scroll step goes on me: called by its owner, which is me at the press when I am alone, or the
+  # owner's latch on whichever pane it latched. Each frame the step maps the hand into my plane and
+  # scrolls me, on my own axes, by how far it moved there. The mapping holds still under those samples:
+  # only I scroll during the stroke, my own scroll never moves the plane I sit on, and a pane around me
+  # still gliding from an earlier stroke was stopped by this stroke's press (pressBegan).
+  takeStrokeScrollFrom: (pressPoint) ->
+    oldPos = pressPoint
     deltaX = 0
     deltaY = 0
     friction = 0.8
@@ -1189,52 +1281,33 @@ class ViewportWdgt extends Widget
     # the gesture is MOVING a (detachable) widget, not scrolling, so it must never get
     # a parting scroll — even if its frames collapse (see the flush's collapse branch).
     everFloatDragged = false
-    # A press I take where I have something to scroll (claimsPlainDragsForScrolling) starts a
-    # SCROLL, and the hand is told so at the press: my content carries whatever the press landed on
-    # along with the pointer, so the release lands back on it, and this fact is what keeps that
-    # release from reading as a click on it (ActivePointerWdgt._strokeOwesNoClick). A pane with no
-    # overflow takes a step that moves nothing, and its release is an ordinary click.
-    world.hand.notePressTakenForScrolling()  if @claimsPlainDragsForScrolling()
     world.steppingWdgts.add @
     @step = =>
       scrollbarJustChanged = false
       everFloatDragged ||= world.hand.isThisPointerFloatDraggingSomething()
       if world.hand.mouseButton and
         !world.hand.isThisPointerFloatDraggingSomething() and
-        # a float-draggable widget under the hand is probably about to be detached, so hold steady
-        # instead of scrolling -- scrolling now would give the wrong cue right before the float-drag
-        # threshold is reached. A FINGER whose stroke does not mean a mouse drag is the other way
-        # round (ruling I2): over my content a plain finger drag is a scroll whatever it is over, and
-        # the thing under it lifts only once a hold has armed the stroke. A mouse or pen stroke
-        # always means a mouse drag, so for them this reads exactly as the detach test alone.
-        (!world.hand.wdgtToGrab?.detachesWhenDragged() or !world.hand.strokeMeansMouseDrag()) and
+        !@_strokeWouldLiftWhatItPressed() and
         # per-frame samples of the hand are SCREEN-plane; map each into MY plane at the read
         # site (the raw-pointer lint enforces exactly this shape), so the containment gate
         # compares like planes and the deltas below are in-plane — a tilted viewport drag-scrolls
         # along its own axes. Off any island the mapping returns the same point (dormant
-        # byte-identical). The press point (oldPos) is seeded by the SAME mapped read above.
+        # byte-identical). The press point (oldPos) is seeded by the SAME mapped read.
         @boundsContainPoint(@screenPointToMyPlane world.hand.position())
           wasScrollDragging = true
           newPos = @screenPointToMyPlane world.hand.position()
-          if @hBar.visibleBasedOnIsVisibleProperty() and
-          !@hBar.isInCollapsedSubtree()
+          # Travel past my clamp is DROPPED, not handed on: the stroke is mine alone (the latch), so
+          # a step scrollX/scrollY cannot take simply ends there.
+          if @_dragScrollsHorizontally()
             deltaX = newPos.x - oldPos.x
             if deltaX isnt 0
-              # AT-EDGE ESCALATION, the wheel's rule one gesture over: a step this pane cannot
-              # absorb belongs to whatever scroller encloses it, so a drag inside an exhausted inner
-              # pane keeps moving the outer one instead of dying at the inner clamp. scrollX answers
-              # "did the view actually move", which IS the at-edge test — no second derivation of
-              # the clamp. With no enclosing scroller the climb finds nobody and nothing happens.
               scrolled = @scrollX deltaX
               scrollbarJustChanged ||= scrolled
-              @escalateEvent 'scrollByDragDelta', deltaX, 0  unless scrolled
-          if @vBar.visibleBasedOnIsVisibleProperty() and
-          !@vBar.isInCollapsedSubtree()
+          if @_dragScrollsVertically()
             deltaY = newPos.y - oldPos.y
             if deltaY isnt 0
               scrolled = @scrollY deltaY
               scrollbarJustChanged ||= scrolled
-              @escalateEvent 'scrollByDragDelta', 0, deltaY  unless scrolled
           oldPos = newPos
       else
         # final FLUSH: this step samples the hand once per FRAME, so the tail
@@ -1261,7 +1334,7 @@ class ViewportWdgt extends Widget
         # multi-frame path lands on, now identical at every dpr / speed / engine.
         collapsedScrollDrag = !wasScrollDragging and
           !everFloatDragged and
-          (!world.hand.wdgtToGrab?.detachesWhenDragged() or !world.hand.strokeMeansMouseDrag()) and
+          !@_strokeWouldLiftWhatItPressed() and
           @boundsContainPoint(oldPos)
         if wasScrollDragging or collapsedScrollDrag
           wasScrollDragging = false
@@ -1269,21 +1342,17 @@ class ViewportWdgt extends Widget
           # total must be computed between points of the SAME plane
           releasePos = @screenPointToMyPlane world.hand.position()
           if @boundsContainPoint releasePos
-            if @hBar.visibleBasedOnIsVisibleProperty() and
-            !@hBar.isInCollapsedSubtree()
+            # dropped past my clamp, as in the per-frame arm above
+            if @_dragScrollsHorizontally()
               deltaX = releasePos.x - oldPos.x
               if deltaX isnt 0
-                # at-edge escalation, as in the per-frame arm above
                 scrolled = @scrollX deltaX
                 scrollbarJustChanged ||= scrolled
-                @escalateEvent 'scrollByDragDelta', deltaX, 0  unless scrolled
-            if @vBar.visibleBasedOnIsVisibleProperty() and
-            !@vBar.isInCollapsedSubtree()
+            if @_dragScrollsVertically()
               deltaY = releasePos.y - oldPos.y
               if deltaY isnt 0
                 scrolled = @scrollY deltaY
                 scrollbarJustChanged ||= scrolled
-                @escalateEvent 'scrollByDragDelta', 0, deltaY  unless scrolled
             oldPos = releasePos
         # POST-RELEASE MOMENTUM (the glide): keep scrolling by the last
         # frame's hand delta, decayed by friction each frame, until it fades.
@@ -1300,26 +1369,22 @@ class ViewportWdgt extends Widget
           Automator.state != Automator.IDLE
         if !@hasVelocity or glideSuppressed or
         ((Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5))
-          @step = noOperation
-          world.steppingWdgts.delete @
-          world.wdgtsWithOngoingScrollMomentum.delete @
+          @_stopDragScrollStep()
         else
           world.wdgtsWithOngoingScrollMomentum.add @
-          if @hBar.visibleBasedOnIsVisibleProperty() and
-          !@hBar.isInCollapsedSubtree()
+          if @_dragScrollsHorizontally()
             deltaX = deltaX * friction
             if deltaX isnt 0
               scrollbarJustChanged ||= @scrollX Math.round deltaX
-          if @vBar.visibleBasedOnIsVisibleProperty() and
-          !@vBar.isInCollapsedSubtree()
+          if @_dragScrollsVertically()
             deltaY = deltaY * friction
             if deltaY isnt 0
               scrollbarJustChanged ||= @scrollY Math.round deltaY
       if scrollbarJustChanged
-        # layout-apply-sanctioned: scroll-input (momentum glide), determinism-exempt (residuals-audit fam 1)
+        # layout-apply-sanctioned: scroll-input (drag-scroll frame, release flush, momentum glide),
+        # determinism-exempt (residuals-audit fam 1)
         @_positionAndResizeChildren()
         @_reLayoutScrollbars()
-    super
   
   # During a float-drag, if I want the dragged widget and the pointer is in my edge band, I
   # auto-scroll. ActivePointerWdgt calls this instead of testing `newWdgt instanceof
@@ -1338,7 +1403,7 @@ class ViewportWdgt extends Widget
   startAutoScrolling: ->
     # The edge auto-scroll is wall-clock driven (the Date.now() settle below
     # plus per-frame increments), but unlike the momentum glide in
-    # pressBegan it is NOT suppressed under the test harness's pacing
+    # takeStrokeScrollFrom it is NOT suppressed under the test harness's pacing
     # control: it is a load-bearing interaction with its own SystemTest
     # (macroListWdgtAutoScrollsNearDraggedEdge). Its determinism contract is
     # SATURATION instead — a macro holds the drag in the edge band long

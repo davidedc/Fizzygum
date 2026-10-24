@@ -51,20 +51,82 @@ noOperation = ->
 window.fizzygumPartIsEagerHere = (spec) ->
   spec.eager or window.FIZZYGUM_EAGER_ALL_PARTS is true
 
+# IS THIS NAME A FIZZYGUM CLASS? The ONE answer: the class it names, or undefined. Every site that
+# turns a NAME into a class asks it -- a file's record classes, id counters and app keys, a launcher's
+# app, a part's door -- because such a name is DATA, and a plain `window[name]` answers it wrongly
+# three ways: it finds INHERITED properties (`constructor`, `toString`, `__proto__`), runs the
+# browser's ACCESSORS (`location`), and finds every NATIVE global (`Object`, `Array`) -- each of
+# which a file record can name, and each of which would pass the snapshot loader's pre-teardown
+# refusal and then throw (or build a non-Fizzygum shell) after the desktop is gone. So: an OWN
+# property of window, a DATA property (reading the descriptor runs no getter), and a function
+# carrying the `instances` Set marker (see allClassFunctions below), which no native global, no
+# mixin, and neither Class nor Mixin carries.
+window.classNamed = (name) ->
+  descriptor = Object.getOwnPropertyDescriptor window, name
+  return undefined unless descriptor? and "value" of descriptor
+  candidate = descriptor.value
+  if typeof candidate is "function" and NativeValueKinds.isSet candidate.instances then candidate else undefined
+
 # THE class enumeration: every class the meta-system defines carries an `instances` Set
 # (the marker is IN each class's emitted JS, so it is present on pre-compiled pages too,
 # even before the reflective layer arrives -- which is why this lives in the boot bundle,
 # present on every page, and not on `Class`). Never enumerate classes by a NAME-SUFFIX
 # scan: that misses any class whose name lacks the Wdgt/Widget suffix (measured:
 # FrameContentsPlaceholderText, whose id counter the old scans silently skipped).
+# Built ON classNamed, so the enumeration and the name lookup cannot disagree about what a
+# class is. ⚠ It walks getOwnPropertyNames, never `for own … of window`: a class named like a
+# browser built-in (InputEvent) is assigned INTO that built-in's NON-enumerable slot, and an
+# enumerable walk skips it.
 # Consumers: WorldWdgt.fullDestroyChildren's id-zeroing, Serializer.collectIdCounters,
 # WorldInventory's roots.
 window.allClassFunctions = ->
   result = []
-  for own name of window
-    candidate = window[name]
-    result.push candidate if typeof candidate is "function" and NativeValueKinds.isSet candidate.instances
+  for name in Object.getOwnPropertyNames window
+    klass = classNamed name
+    result.push klass if klass?
   result
+
+# The superclass CONSTRUCTOR of a class, or undefined at the top of the chain. `__super__` is
+# the parent's PROTOTYPE, whose `.constructor` is the parent (`extend` builds the child
+# prototype so that link holds). A root class carries `__super__ = Object.prototype`, whose
+# constructor is `Object`, which declares nothing and whose own walk ends immediately. The
+# `Object.getPrototypeOf` fallback covers a genuinely ES-class-derived type (nothing in src is
+# one, and a foreign one costs only correctness here).
+# ⚠ WALK THE `__super__` LINK, NOT `Object.getPrototypeOf`. This tree does not build its classes
+# with ES class inheritance: `extend` (below) COPIES the parent's statics onto the child and links
+# the two only through `child.__super__ = parent.prototype`, leaving `Object.getPrototypeOf(child)`
+# at `Function.prototype` -- so a prototype-chain walk stops at the first class.
+window.superclassOf = (ctor) ->
+  parentPrototype = ctor.__super__
+  if parentPrototype?
+    parent = parentPrototype.constructor
+    return parent if (typeof parent is "function") and parent isnt ctor
+  parent = Object.getPrototypeOf ctor
+  return parent if (typeof parent is "function") and parent isnt Function.prototype
+  undefined
+
+# THE merge of a class-level LIST declaration up the class chain (`@serializationTransients`,
+# `@offTreeOwnedWidgetFields`, ...): the names every class from `klass` up declares as its OWN
+# `staticName`, subclass first, each list in its declared order, duplicates dropped. A subclass's
+# list ADDS to its ancestors', never shadows them -- which is why each class is read by
+# hasOwnProperty and the walk goes on past it: `extend`'s static copy-down gives every subclass
+# that declares nothing an own COPY of its parent's list (harmless, the duplicates drop), and one
+# that declares its own REPLACES that copy, so stopping at the first class found would lose every
+# ancestor's names, silently. (The serialization rig's transients.inheritedMergedNotReplaced
+# pins that for the transients.) A mixin's static is copied onto each consumer constructor as an
+# own property (Mixin's applyStaticEdit, shadow-guarded), so a mixin-declared list is found at
+# the consumer's own step.
+window.classStaticListMergedUpTheChain = (klass, staticName) ->
+  merged = []
+  ctor = klass
+  seen = new Set
+  while ctor? and not seen.has ctor
+    seen.add ctor
+    if Object::hasOwnProperty.call ctor, staticName
+      for name in (ctor[staticName] ? []) when name not in merged
+        merged.push name
+    ctor = superclassOf ctor
+  merged
 
 # Helper function to use Promise style
 # instead of callback style when loading a JS

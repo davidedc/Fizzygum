@@ -55,9 +55,13 @@ class MacroToolkit
   # getMostRecentlyOpenedMenu). undefined until a hold is scheduled.
   popUpIdWhenHoldScheduled: undefined
 
-  # THE AIM THE NEXT PRESS MUST MEET: { receiver, setBy } — the widget the next press the toolkit
-  # queues must land on (on it, or on any widget inside it; the world means the bare desktop), and
-  # the verb or declaration that set it, for the failure message. Set by an aiming verb
+  # THE AIM THE NEXT PRESS MUST MEET: { receiver, setBy, receiverTakesTheScroll, strokeDirection } —
+  # the widget the next press the toolkit queues must land on (on it, or on any widget inside it; the
+  # world means the bare desktop), the verb or declaration that set it, for the failure message,
+  # whether the press must also start a scroll the receiver takes ITSELF (a verb naming a scroller,
+  # see verifyPressLanding), and the screen direction that press's stroke will travel where the verb
+  # knows it (a wheel turned into a drag), which is what decides the pane a finger's drag latches.
+  # Set by an aiming verb
   # (_aimingAt) or by a macro's own declaration (pressMustLandOn); consumed — cleared — by the first
   # press queued while it is pending (_queuePress). undefined whenever no press is expected to meet
   # anything in particular.
@@ -133,7 +137,7 @@ class MacroToolkit
   # pane it is inside. A translated wheel therefore delivers a long scroll in successive swipes,
   # `scrollSwipeMarginPx` clear of the pane's edges (so every sample is inside the box the pane
   # samples), and `maxScrollSwipes` bounds that loop — a request no number of swipes can satisfy
-  # has hit the content's end, where the at-edge escalation takes over.
+  # has hit the content's end, and each swipe past it latches whatever pane around can still move.
   @maxScrollSwipes: 12
   @scrollSwipeMarginPx: 2
 
@@ -206,7 +210,7 @@ class MacroToolkit
     expectation = @pendingAimExpectation
     if expectation?
       @pendingAimExpectation = undefined
-      @queueInputEvent (new AimCheckInputEvent @, expectation.receiver, expectation.setBy, pressEvent), nonScaled
+      @queueInputEvent (new AimCheckInputEvent @, expectation.receiver, expectation.setBy, pressEvent, receiverTakesTheScroll: expectation.receiverTakesTheScroll, strokeDirection: expectation.strokeDirection), nonScaled
     @queueInputEvent pressEvent, nonScaled
 
   # Absolute virtual time that a startTime OFFSET maps to under the active spanFactor —
@@ -529,19 +533,22 @@ class MacroToolkit
   # verb's own. One set here that no press consumed is cleared afterwards — the gesture pressed
   # nothing (a zero-length scroll) or threw — so it can never land on a later, unrelated press.
   # Answers whatever the gesture answers, so a verb whose body runs inside this queues and returns
-  # exactly what it would without it. `setBy` names the verb in the failure message.
-  _aimingAt: (target, setBy, gesture) ->
+  # exactly what it would without it. `setBy` names the verb in the failure message; `opts` is
+  # handed to the expectation (_expectNextPressOn).
+  _aimingAt: (target, setBy, gesture, opts = {}) ->
     return gesture() if @pendingAimExpectation? or not @_isWidgetTarget target
-    expectation = @_expectNextPressOn target, setBy
+    expectation = @_expectNextPressOn target, setBy, opts
     try
       gesture()
     finally
       @pendingAimExpectation = undefined  if @pendingAimExpectation is expectation
 
   # Set the expectation the next press consumes, replacing any pending one; answers it, so a caller
-  # can tell later whether it is still the pending one.
-  _expectNextPressOn: (receiver, setBy) ->
-    @pendingAimExpectation = { receiver: receiver, setBy: setBy }
+  # can tell later whether it is still the pending one. `opts.receiverTakesTheScroll` (default
+  # false) asks that the press also start a scroll the receiver takes itself (verifyPressLanding);
+  # `opts.strokeDirection` (a screen vector, default none) is where that press's stroke will travel.
+  _expectNextPressOn: (receiver, setBy, opts = {}) ->
+    @pendingAimExpectation = { receiver: receiver, setBy: setBy, receiverTakesTheScroll: opts.receiverTakesTheScroll ? false, strokeDirection: opts.strokeDirection }
 
   # DECLARE WHAT THE NEXT PRESS MUST LAND ON — the macro's own statement of an aim, for a press no
   # verb can verify by itself. It OVERRIDES whatever target an aiming verb would set for that press,
@@ -566,6 +573,14 @@ class MacroToolkit
   # (_widgetAPressMeets) is the receiver or lies inside it — except that a receiver that is the
   # WORLD passes only on the bare desktop (nothing hit, or the world itself), since every widget
   # lies inside the world. Only a MISS is recorded: a PASS line per press would flood the console.
+  #   A press that must start a scroll the receiver takes ITSELF (receiverTakesTheScroll: a wheel
+  # named for a scroller) must also be one the dispatch hands to the receiver. Landing inside it is
+  # not enough there: a wheel over a scroller nested inside it (a menu's rows, a document in a
+  # stack) goes to that one, a finger's drag goes to whichever pane its direction latches — a
+  # scroller nested inside the receiver that can still move that way, or one around it when the
+  # receiver cannot — and the only symptom is the wrong pane scrolling, which a recapture would bake
+  # in. The taker is found by the dispatch's own decision (_scrollTakerAbove), from the very widget
+  # the press meets.
   verifyPressLanding: (check) ->
     place = check.place ? world.hand.position()
     hit = @_widgetAPressMeets place, check.isTouch
@@ -575,13 +590,55 @@ class MacroToolkit
         (not hit?) or (hit is world)
       else
         hit? and receiver.isAncestorOf hit
-    return if landed
+    if landed
+      return unless check.receiverTakesTheScroll
+      taker = @_scrollTakerAbove hit, check.isTouch, place, check.strokeDirection
+      return if taker is receiver
     describe = (wdgt) -> if (not wdgt?) or (wdgt is world) then "the desktop" else wdgt.toString()
-    expected = if receiver is world then "the bare desktop" else "#{receiver.toString()} or a widget inside it"
     kind = if check.isTouch then "touch" else "mouse"
-    description = "AIM MISSED: the #{kind} press set up by #{check.setBy} must land on #{expected}, but at (#{place.x}, #{place.y}) it meets #{describe hit}"
-    world.automator.player.recordMacroAssertion false, description, expected, (describe hit)
+    if landed
+      expected = "a scroll #{receiver.toString()} takes itself"
+      # the taker and the receiver both lie on the hit's ancestry, so one encloses the other
+      found =
+        if not taker?
+          "a scroll nothing takes"
+        else if receiver.isAncestorOf taker
+          "a scroll #{taker.toString()} takes, a scroller nested inside it"
+        else
+          "a scroll #{taker.toString()} takes, a scroller around it"
+      description = "AIM MISSED: the #{kind} press set up by #{check.setBy} must start #{expected}, but at (#{place.x}, #{place.y}) it meets #{describe hit} and starts #{found}"
+    else
+      expected = if receiver is world then "the bare desktop" else "#{receiver.toString()} or a widget inside it"
+      found = describe hit
+      description = "AIM MISSED: the #{kind} press set up by #{check.setBy} must land on #{expected}, but at (#{place.x}, #{place.y}) it meets #{found}"
+    world.automator.player.recordMacroAssertion false, description, expected, found
     return
+
+  # WHICH WIDGET TAKES THE SCROLL a press meeting `hit` starts, asked of the dispatch's own decision
+  # rather than re-derived here, so the check cannot drift from what the product does. undefined when
+  # nothing there scrolls.
+  #   A wheel notch goes to the nearest widget taking scrolls — processWheel's taker
+  # (ActivePointerWdgt.wheelTakerAbove). Where it goes from there (a pane at its edge passes the
+  # notch on) is not followed, so a scroll the receiver gets only second-hand reads as another pane's.
+  #   A finger's drag goes to the pane its stroke LATCHES as it leaves the grab radius — the latch's
+  # own chooser (ViewportWdgt.strokeScrollPaneFor), from the press point and the stroke's direction
+  # (`strokeDirection`, a screen vector; with none stated the chooser names the innermost pane that
+  # scrolls vertically, since a stroke that goes nowhere can move nothing).
+  #   Neither models a widget that takes the press for itself between the hit and a pane (a selectable
+  # text starting a selection): there the dispatch scrolls nothing, and this still names a pane.
+  _scrollTakerAbove: (hit, isTouch, place, strokeDirection) ->
+    return ActivePointerWdgt.wheelTakerAbove hit  unless isTouch
+    ViewportWdgt.strokeScrollPaneFor place, (strokeDirection ? Point.ZERO), hit
+
+  # DOES `wdgt` TAKE A SCROLL ITSELF, as the device delivering it asks: a wheel notch is taken by
+  # whatever answers scrolledBy (the method ActivePointerWdgt.processWheel dispatches to), a
+  # finger's plain drag by a pane claiming plain drags for scrolling
+  # (ViewportWdgt.claimsPlainDragsForScrolling, which the hand asks of a touch press's ancestry).
+  _takesScrollsItself: (wdgt, isTouch) ->
+    return wdgt.claimsPlainDragsForScrolling?() is true  if isTouch
+    # nosettle-sanctioned: scrolledBy is PROBED for presence, never called — the question
+    # processWheel's own walk asks before it dispatches
+    wdgt.scrolledBy?
 
   # WHAT A PRESS AT THIS SCREEN POINT MEETS: the product's own hit test (_topWdgtAtScreenPoint),
   # corrected for the one thing a FINGER'S arrival changes before its press is dispatched.
@@ -1142,27 +1199,23 @@ class MacroToolkit
       return @_touchScrollBy aim, deltaX, deltaY, startTime, (@_scrollPaneAt aim)
     @_queuePress new WheelInputEvent deltaX, deltaY, 0, 0, 0, false, false, false, false, true, startTime
 
-  # THE FINGER'S SCROLL, expressed as the wheel deltas a translated verb hands it. A drag moves the
-  # content WITH the finger — ViewportWdgt's scroll-drag step feeds its own per-frame delta straight
-  # to scrollY/scrollX — while a wheel's delta reaches those same cores through the wheel's minor-axis
-  # squelch, its invert preferences and its scale, so the drag vector is exactly the normalized,
-  # scaled deltas the wheel would have applied. Asking PreferencesAndSettings for the normalization
-  # rather than restating it keeps one statement of what a wheel notch means.
+  # THE FINGER'S SCROLL, expressed as the wheel deltas a translated verb hands it (as a drag vector:
+  # _dragVectorOfWheel).
   #   `pane` (the scrollable the gesture means, resolved by _scrollPaneAt) keeps the whole gesture
-  # inside the box it is scrolling: a drag that wandered out of the box stops being sampled by that
-  # pane's step, and one that RELEASES outside it scrolls nothing at all — ViewportWdgt's per-frame
-  # arm and its collapse flush both gate on boundsContainPoint. The pair is SHIFTED, never
+  # inside the box it is scrolling: a drag that wandered out of the box stops being sampled by the
+  # latched pane's step, and one that RELEASES outside it scrolls nothing at all — ViewportWdgt's
+  # per-frame arm and its collapse flush both gate on boundsContainPoint. The pair is SHIFTED, never
   # shortened, so the distance travelled — and therefore the scroll — is the one asked for; a delta
-  # longer than the box itself is all a single drag can carry and reaches the pane's edge, where the
-  # escalation rule takes over.
+  # longer than the box itself is all a single drag can carry, and it goes on in further swipes.
+  # Each swipe is a stroke of its own, so each LATCHES afresh (ViewportWdgt's direction latch): the
+  # travel one swipe carries past its pane's clamp is dropped, and the next swipe goes to a pane
+  # around it once that one is at its clamp that way — the wheel's at-edge rule, swipe by swipe.
   #   The aim is CLAMPED into that box: a macro names the widget it means, and content that
   # overflows its pane has a centre outside it, which would otherwise start the swipe off-pane.
   # And the pointer is PARKED back on the aim afterwards, because a wheel does not move the pointer
   # — the mouse path leaves it exactly where the verb aimed, and the finger's must agree.
   _touchScrollBy: (aimPoint, deltaX, deltaY, startTime, pane) ->
-    prefs = WorldWdgt.preferencesAndSettings
-    [normalizedX, normalizedY] = prefs.normalizedWheelDeltas deltaX, deltaY
-    remaining = new Point (Math.round normalizedX * prefs.wheelScaleX), (Math.round normalizedY * prefs.wheelScaleY)
+    remaining = @_dragVectorOfWheel deltaX, deltaY
     box = @_swipeBoxOf pane
     aim = @_aimInsideBox (@_screenPointOfTarget aimPoint), box
     timeAbs = @scaledAbs startTime
@@ -1182,10 +1235,23 @@ class MacroToolkit
     @currentPointerTarget = aim
     timeAbs
 
-  # WHICH PANE a swipe aimed here means to scroll. It is the product's own question —
-  # ViewportWdgt.claimsPlainDragsForScrolling, the one the hand asks of a touch press's ancestry
-  # (ActivePointerWdgt._touchPressArmsAtOnce) — asked at the macro boundary so a translated wheel
-  # drags inside the very pane the wheel would have scrolled.
+  # THE DRAG A WHEEL MEANS: the screen vector a finger travels to scroll what the wheel deltas would.
+  # A drag moves the content WITH the finger — ViewportWdgt's scroll-drag step feeds its own
+  # per-frame delta straight to scrollY/scrollX — while a wheel's delta reaches those same cores
+  # through the wheel's minor-axis squelch, its invert preferences and its scale, so the drag vector
+  # is exactly the normalized, scaled deltas the wheel would have applied. Asking
+  # PreferencesAndSettings for the normalization rather than restating it keeps one statement of
+  # what a wheel notch means.
+  _dragVectorOfWheel: (deltaX, deltaY) ->
+    prefs = WorldWdgt.preferencesAndSettings
+    [normalizedX, normalizedY] = prefs.normalizedWheelDeltas deltaX, deltaY
+    new Point (Math.round normalizedX * prefs.wheelScaleX), (Math.round normalizedY * prefs.wheelScaleY)
+
+  # WHICH PANE a swipe aimed here is bounded by: the innermost pane at the aim that takes plain drags
+  # for scrolling. It is the product's own question — ViewportWdgt.claimsPlainDragsForScrolling, the
+  # one the hand asks of a touch press's ancestry (ActivePointerWdgt._touchPressArmsAtOnce) — asked at
+  # the macro boundary. It is the smallest pane a swipe there can latch, so a swipe kept inside it
+  # (where it shows) is kept inside whichever pane its direction latches as well.
   #   Asked of the aim POINT first, because a scrollable is very often a DESCENDANT of the widget a
   # macro names (a menu's rows live in its PopUpRowsViewportWdgt, so walking UP from the menu finds
   # nothing); of the NAMED widget second, because content that overflows its pane can have its
@@ -1249,8 +1315,8 @@ class MacroToolkit
   # Where a drag of `travel` must START on one axis for BOTH its ends to sit inside [spanStart,
   # spanEnd], given the caller aimed at `from`: `from` itself whenever the drag already fits, else
   # the nearest start that does. A travel longer than the span cannot fit at all — one drag then
-  # carries the pane to its edge, which is exactly where the at-edge escalation takes over — so it
-  # starts at the end the drag runs away from.
+  # carries as far as the span allows, and the next swipe latches anew — so it starts at the end the
+  # drag runs away from.
   _dragStartInsideSpan: (from, travel, spanStart, spanEnd) ->
     lowest = spanStart + MacroToolkit.scrollSwipeMarginPx
     highest = spanEnd - MacroToolkit.scrollSwipeMarginPx
@@ -1274,15 +1340,24 @@ class MacroToolkit
   # by the named widget's own box starts outside the pane, where it presses chrome or nothing and
   # delivers no scroll at all.
   #   Either way it verifies that the gesture's press — the wheel notch, or the finger's first swipe
-  # down — lands on the named widget or on something inside it.
+  # down — lands on the named widget or on something inside it; and, when the named widget is itself
+  # a SCROLLER, that the scroll is one the dispatch hands to it rather than to another pane: a
+  # wheel can go to a scroller nested inside it, a finger's drag to whichever pane the swipe's
+  # direction latches (verifyPressLanding, told that direction).
   wheelOn_InputEvents: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     widget = @_widgetOfTarget widgetOrIdentifier
-    @_aimingAt widget, "wheelOn", =>
+    gesture = =>
       aimPoint = @screenPointAtFractionOf widget, fraction
       if @fingerMode()
         return @_touchScrollBy aimPoint, deltaX, deltaY, startTime, (@_scrollPaneAt aimPoint, widget)
       @syntheticEventsMouseMove_InputEvents aimPoint, "no button", milliseconds, startTime
       @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
+    namesAScroller = widget? and @_takesScrollsItself widget, @fingerMode()
+    # the first swipe of a translated wheel travels the wheel's own drag vector (its legs keep the
+    # vector's signs, and the wheel's squelch leaves it on one axis), so that is the direction its latch
+    # reads; a mouse's notch has none to state
+    strokeDirection = if @fingerMode() then @_dragVectorOfWheel deltaX, deltaY else undefined
+    @_aimingAt widget, "wheelOn", gesture, receiverTakesTheScroll: namesAScroller, strokeDirection: strokeDirection
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
   # length, to JUMP the slider button there. For a viewport's scrollbar — a ViewportWdgt's @vBar

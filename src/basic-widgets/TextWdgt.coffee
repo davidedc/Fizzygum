@@ -351,8 +351,8 @@ class TextWdgt extends StringWdgt
   # StringWdgt's core (_sizeToTextAndDisableFittingNoSettle: this hug, then the managing parent told
   # through the phase-valve) and its public settle-wrap dispatch straight to it, so a menu item's or a
   # tooltip's TextWdgt label is told to its container exactly as a StringWdgt one is. The same constraint
-  # holds (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle): called directly only from
-  # inside my parent's own arrange, with my parent placing me after (MenuItemWdgt._createLabel).
+  # holds (StringWdgt._sizeToTextAndDisableFittingInMyParentsArrangeNoSettle): called directly only where
+  # my parent's arrange is under way or owed, with that arrange placing me (MenuItemWdgt._createLabel).
   _sizeToTextAndDisableFittingInMyParentsArrangeNoSettle: ->
     # remember the box-hug, as StringWdgt's core does: a later setFontSize / setText re-hugs the text
     # instead of fitting the new size into the box sized for the old one
