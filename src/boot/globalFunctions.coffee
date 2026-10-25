@@ -105,8 +105,8 @@ window.superclassOf = (ctor) ->
   return parent if (typeof parent is "function") and parent isnt Function.prototype
   undefined
 
-# THE merge of a class-level LIST declaration up the class chain (`@serializationTransients`,
-# `@offTreeOwnedWidgetFields`, ...): the names every class from `klass` up declares as its OWN
+# THE merge of a class-level LIST declaration up the class chain (`@serializationTransients`, and
+# any list declared the same way): the names every class from `klass` up declares as its OWN
 # `staticName`, subclass first, each list in its declared order, duplicates dropped. A subclass's
 # list ADDS to its ancestors', never shadows them -- which is why each class is read by
 # hasOwnProperty and the walk goes on past it: `extend`'s static copy-down gives every subclass

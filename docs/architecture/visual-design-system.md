@@ -481,7 +481,11 @@ lifetime.
   (`CommandPanelWdgt`, alpha 0) lays its rows, dividers and editors out across it.
 - **Header** (titled only): a band across the content box, 44 tall plus its own 1 px `chrome` rule
   along its bottom edge. Its title sits `menuHeaderTitleInset` in, 11 px `muted2`, left-aligned, in capitals when it
-  names something and as a sentence when it is a message or a prompt's question (§4.9).
+  names something and as a sentence when it is a message or a prompt's question (§4.9). A pop-up is at least as
+  wide as its title (`CommandPanelWdgt.maxWidthOfMenuEntries` counts it, `FrameWdgt._titleEntryWidth`). Pinned,
+  it is a window: it takes its rows' width, re-taken at the lifetime change itself (`FrameWdgt._setLifetimeNoSettle`;
+  `fullCopy` for a copy born furniture), and its strip crops or hides a title that does not fit — so a menu's
+  width is a function of its rows, its title and its lifetime, never of the lifetime it had at its last add.
 - **Rows** (`MenuItemWdgt`): label 15 px `ink`, 10 px in from each side. A `desk` plate of radius 6
   over the whole row while hovered, `chrome` while pressed (`LabelButtonAppearance`), and no hairline.
 - **Groups:** a `DividerWdgt` band between groups, 9 px with its own centred `chrome` rule.

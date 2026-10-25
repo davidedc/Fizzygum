@@ -859,10 +859,11 @@ contains; a close tells it too (`Widget._closeNoSettle` → `noteWidgetClosed`),
 mid-stroke is not lifted back out of storage ([`input-and-gestures.md`](input-and-gestures.md) "A
 widget that dies or is put away mid-stroke").
 
-A widget that keeps an OWNED widget off its tree on purpose (a frame's empty-state placeholder while
-real contents are mounted) declares the field in `@offTreeOwnedWidgetFields` — the world inventory's
-containment walk follows it, so the widget does not read as escaped — and still destroys it in its own
-teardown ([`world-lifetime-and-inventory.md`](world-lifetime-and-inventory.md) §2).
+A widget owns another only as a CHILD: one it does not show is destroyed, never kept off its tree for
+later (a frame builds its empty-state placeholder when it empties and destroys it when real contents
+arrive, `FrameWdgt.defaultContents`). So a copy, a save and the world inventory all follow `children`
+and nothing else, and none of them meets a widget its owner hid on the side
+([`world-lifetime-and-inventory.md`](world-lifetime-and-inventory.md) §2).
 
 ---
 

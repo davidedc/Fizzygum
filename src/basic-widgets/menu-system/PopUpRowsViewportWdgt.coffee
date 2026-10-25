@@ -83,6 +83,11 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   # answer "absorbed", which is what the stack is waiting for. Without this a row leaving a LIVE
   # menu leaves the frame drawn at its old height, with a blank strip where the row was: the
   # frame's own re-fit path keeps the width its first placement latched (measured, spike S1).
+  #   Every other change of what my rows measure comes through here too: a menu's add
+  # (MenuWdgt._reactToBeingAdded), a prompt's composition (PromptWdgt._buildPromptRowsNoSettle), a
+  # relabelled row (CommandPanelWdgt._reactToChildRelabelled), and my frame's change of lifetime
+  # (FrameWdgt._setLifetimeNoSettle, and the copy that is born furniture, FrameWdgt.fullCopy) —
+  # a pop-up's title is one of my rows' entries only while it is a pop-up.
   #   The frame is reached through the pop-up climb, which STOPS AT IT (FrameWdgt
   # .enclosingFrame); outside a frame there is nothing to absorb into. The frame's re-arrange goes
   # through the phase-valve (_scheduleRelayoutRespectingPhase): off-pass it invalidates the frame and

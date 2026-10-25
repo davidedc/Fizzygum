@@ -55,9 +55,12 @@ class Duplicator
     return @_copyMap value if NativeValueKinds.isMap value
     return @_copySet value if NativeValueKinds.isSet value
     return @_copyDate value if NativeValueKinds.isDate value
-    return @_copyImage value if NativeValueKinds.isImage value
+    # an element the page loads (an image, a video) is a PAGE FACT derived from its holder's own path,
+    # and the holder re-makes it, with its load handlers, in _reactToBeingCopied: nothing is copied and
+    # the clone's field is left undefined -- the treatment a derived value gets. A copied element
+    # would carry none of the original's handlers, so a copy could claim a load it never made.
+    return undefined if NativeValueKinds.isImage(value) or NativeValueKinds.isVideo(value)
     return @_copyCanvas value if NativeValueKinds.isCanvasLike value
-    return @_copyVideo value if NativeValueKinds.isVideo value
     return @_copyGradient value if NativeValueKinds.isGradientLike value
 
     @_copyFizzygumObject value
@@ -96,20 +99,6 @@ class Duplicator
 
   _copyDate: (original) ->
     @_copyWithIdentity original, => new Date original.getTime()
-
-  _copyImage: (original) ->
-    @_copyWithIdentity original, =>
-      cloneOfMe = new Image()
-      cloneOfMe.src = original.src
-      cloneOfMe
-
-  _copyVideo: (original) ->
-    @_copyWithIdentity original, =>
-      cloneOfMe = document.createElement 'video'
-      cloneOfMe.src = original.src
-      cloneOfMe.autoplay = original.autoplay
-      cloneOfMe.currentTime = original.currentTime
-      cloneOfMe
 
   _copyCanvas: (original) ->
     @_copyWithIdentity original, =>

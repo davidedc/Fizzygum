@@ -479,3 +479,45 @@ The five items the residue arc left in BACKLOG, assessed in parallel by three re
       What that exposed, fixed structurally: `FooterBandLayout.@arrange` → `@_arrange` (rule `[F]`: an in-pass placement wearing
       a public name), `InfoDocs.@_buildInfoDocNextTo` folded into its single caller `@createNextTo` (rule `[G]` ×4), and the dead
       `StackElementsSizeAdjustingWdgt.@includeInNewWidgetMenu` deleted (`lint-and-static-checks.md` §6b, "a FOURTH time").
+
+### Save/restore-fidelity arc 2026-10-25 — five items closed (no plan doc)
+Two items from the redesign section and three from the residue-2 arc's residue, assessed in parallel by three read-only agents, decided once (the owner took every recommendation, and extended the scope to two video-player classes for item 4), executed one unit at a time, each gated; every whole-suite twin prediction matched the rebuilt suite to the screenshot hash. One recapture (54 references, owner-approved, by name).
+- [x] **"Save to file…" on a window that holds content was refused** (redesign W6 follow-up) **and the Examples folder's desktop
+      icon could not be serialized on its own** (redesign W4 R1). **DONE 2026-10-25, no recapture.** One root: a window kept its
+      empty-state placeholder OFF its tree while it held content, so a single-widget save met a widget outside its structure (a
+      world snapshot passed only because its policy CAPTURES what a widget save refuses). Wider than filed: any folder or
+      document icon whose window holds content, and nested windows, were refused too; and a COPY of such a window SHARED the
+      original's placeholder (the Duplicator keeps an outside widget by reference) — destroying the copy destroyed it, and
+      emptying the original then mounted a destroyed widget, unseen by the inventory. The fix makes the options unnecessary: a
+      frame's placeholder exists only while it is shown (built when the frame empties, destroyed when contents arrive), so no
+      widget is kept off-tree and `@offTreeOwnedWidgetFields` and the inventory's walk of it are deleted. Accepted cost (owner):
+      a customized hint reverts to "Drop a widget in here" after a fill/empty cycle. Covered by four rig checks
+      (`window.holdingContentSerializes`, `window.holdingContentRestoredEmptiesToPlaceholder`,
+      `duplicate.windowOwnsItsPlaceholder`, `examples.iconSerializesAlone`), two file-door checks
+      (`file.windowHoldingContentSaves`, `file.examplesIconSaves`) and the rewritten
+      `world.teardownHygiene.loadLeavesNoOrphanedWidgets` ("no frame keeps a placeholder it does not show"), each failing on the
+      old code.
+- [x] **A restored pinned menu did not match a freshly built one at the same ratio.** **DONE 2026-10-25, no recapture.** The
+      filed ~5,097 px was a PROBE artifact — the fresh menu, popped up last, was the focused frame (equal focus: 0 px at both
+      ratios, both pages). But the restore WAS unfaithful another way, which a later unit found: a menu whose title is wider than
+      its rows pinned at its pop-up width and re-laid to its rows at any later add (a drop, a restore, a duplicate), and a pinned
+      prompt never re-took its width at all. The rule stays (a pop-up widens for its title; a window — a pinned menu — takes its
+      rows' width and crops or hides its title), and the width is re-taken at the lifetime change itself
+      (`FrameWdgt._setLifetimeNoSettle`, and `fullCopy` for a copy born furniture) — a function of rows, title and lifetime,
+      never of history. Covered by `pinnedMenu.sameRatioMatchesFresh` (+ `.longTitle`), `pinnedMenu.longTitleWidthIsItsOwn`,
+      `pinnedPrompt.longTitleWidthIsItsOwn` and the assertion-only `SystemTest_macroPinnedMenuKeepsItsWidthWhenMoved`.
+- [x] **A `$Image` record stored the ABSOLUTE `file://` path.** **DONE 2026-10-25, no recapture.** Stale as filed for images (the
+      image widget's element was already a transient); the live carriers were `$Video` (absolute src, no path field) and a
+      duplicate race (a copy claimed a load it never made). Decided: an element the page loads is a PAGE FACT derived from its
+      holder's own path — the Serializer has no element encoder and refuses one in a saved field, the Duplicator leaves it
+      `undefined`, the holder re-makes it after a restore and a copy, and `whenReady` awaits a hook's load; `SimpleImageWdgt` and
+      `VideoPlayerCanvasWdgt` (scope extended by the owner) follow it, and gate #30 `check-page-loaded-elements.js` holds every
+      part to it. Rig checks `image.elementInAFieldRefused` / `video.elementInAFieldRefused` fail on the old code.
+- [x] **A fresh overflowing viewport's first drag-scroll "re-fit its contents"** (40 px → offset 28). **DONE 2026-10-25,
+      recapture 54 references (owner-approved).** The premise was half wrong: on-screen travel was always exact; the plane's
+      frame (content ∪ visible window) retreated past the vacant strip above the content once the window left it, so the offset
+      was renumbered and the strip could never be scrolled back to (40 up + 40 down left the text 12 px short; an overflow
+      smaller than the strip left the pane stuck; the thumb jumped). The frame now also covers the viewport's own box, the
+      window at rest. Pinned by the assertion-only `SystemTest_macroScrollingBackReturnsContentToWhereItRested` (6 assertions
+      fail on the old code, both pointers); the two-strokes test's control reads 40 and 70. The recapture: 9 mouse + 6 finger
+      tests at both ratios, 8 of them a 4 px scroll-thumb column, `MenuPinnedInScrollPanel` ~3 px of content.

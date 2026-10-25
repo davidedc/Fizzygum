@@ -50,14 +50,12 @@ class FrameWdgt extends Widget
   resizer: undefined
   padding: undefined
   contents: undefined
+  # MY EMPTY-STATE PLACEHOLDER, which exists exactly while I hold nothing else: whenever it is
+  # defined it is my mounted @contents. It is built when I start empty or lose my contents, and
+  # destroyed the moment real contents arrive -- never kept off my tree, so a copy, a save and the
+  # world inventory meet it as an ordinary child or not at all. A placeholder that LEAVES me
+  # (picked up, closed, destroyed) stops being mine: the next one is built fresh.
   defaultContents: undefined
-  # The fields holding a widget I OWN while it is off my tree: my empty-state placeholder is
-  # mounted only while I hold nothing else, and stays mine (my _fullDestroyNoSettle destroys it)
-  # while real contents are mounted. A walk that reaches widgets through `children` alone reads
-  # it as live and unreachable -- escaped -- so the world inventory's containment walk follows
-  # these fields too. Merged up the chain (boot's classStaticListMergedUpTheChain): a subclass
-  # ADDS to this list. Class-level, so it is no row in the Object Inspector.
-  @offTreeOwnedWidgetFields: ["defaultContents"]
   # MY FOUR EDGE SLOTS: a `side -> FrameWdgt` map, at most one docked frame per side (program
   # ruling C12). The occupant is an ordinary frame carrying an EdgeDockLayoutSpec of mine — no
   # type test, no docked SKIN: the spec owns its placement, and its card skin, its grip and its
@@ -586,8 +584,8 @@ class FrameWdgt extends Widget
     super()
     @closeButton = opts.closeButton
 
-    @defaultContents = new FrameContentsPlaceholderText
     if !@contents?
+      @defaultContents = new FrameContentsPlaceholderText
       @contents = @defaultContents
     else if @contents._contentStackSpec?.isFrameContentSpec?()
       # (U2 re-arm, constructor edition) ctor-supplied content may be a VETERAN
@@ -1064,6 +1062,11 @@ class FrameWdgt extends Widget
       # nor have its children list cleaned by __add. It matters wherever a ctor
       # is handed a widget that still has a home.
       @removeChild @contents if @contents.parent == @
+      # real contents replace my placeholder, which exists only while it is shown: destroyed here,
+      # never kept (a drop has already taken it off my tree, _beforeChildDropped)
+      if @defaultContents? and !isSameContentRemount
+        @defaultContents._fullDestroyNoSettle()
+        @defaultContents = undefined
       @contents = aWdgt
       # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
       # (super -> _addNoSettle invalidates the window; the inherited _reLayout runs @_reLayoutChildren on
@@ -1476,16 +1479,15 @@ class FrameWdgt extends Widget
   _fullDestroyNoSettle: ->
     @_beingFullDestroyed = true
     super
-    # the spare placeholder is an OFF-TREE collaborator (mounted as a child only while
-    # the window is empty): when it is unmounted at teardown, the destroy-until-empty
-    # iteration cannot reach it, and the instances registry would keep it alive forever.
-    @defaultContents._fullDestroyNoSettle() if @defaultContents? and !@defaultContents.destroyed
 
   _resetToDefaultContents: ->
     # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter (macros and
     # cross-object code drive it) — settle-free, consciously reused here.
     @enableDrops()
     @_retireDockedFramesNoSettle()
+    # reached as my contents LEAVES me -- a placeholder leaving (picked up, closed, destroyed) stops
+    # being mine -- so the placeholder I show next is a fresh one
+    @defaultContents = new FrameContentsPlaceholderText
     @contents = @defaultContents
     # Reached only from a child-lifecycle hook (_beforeChildDestroyed/PickedUp/Closed). Rebuild through
     # the non-settling core so a hook firing INSIDE an enclosing settle (destroy/close) is absorbed by
@@ -1593,6 +1595,10 @@ class FrameWdgt extends Widget
   # from an arrange) that flush is the one already running; out of pass I only MARK, and the arrange
   # derives at its top on the flush the gesture supplies. Same two tiers, same discriminator, as
   # _setLayoutSpec's roster derive.
+  #   And so does my WIDTH: a pop-up's title is one of its rows' entries only while it is a pop-up
+  # (_titleEntryWidth reads my bar spec), so a pop-up's rows viewport re-takes my extent from my rows
+  # here, as it does at an add -- my width is a function of my rows, my title and my lifetime, never
+  # of the lifetime I had at my last add.
   #   Nothing settles here, so every caller must bring a declared flush for that mark to ride: the
   # user-facing pins (the strip tap, the "Pin" row) come through the setLifetime wrapper above, and
   # the grab reaches me from a notification callback, whose settle the grab dispatcher owns.
@@ -1614,6 +1620,7 @@ class FrameWdgt extends Widget
       @_reDeriveBarRosterNoSettle()
     else
       @_invalidateLayout() if @bar?._rosterDisagreesWithSpec()
+    @rowsViewport?._reLayOutAfterContainedPanelChange()
     return
 
   # The user-facing verb for "this pop-up stays" — the header tap and the "Pin" row land here. The
@@ -1769,17 +1776,21 @@ class FrameWdgt extends Widget
   # The state is written directly rather than through the lifetime entry: the copy is a fresh ORPHAN,
   # so the entry's registry and strip work has nothing to reach and its shadow derive has no home to
   # read — the copy carries my shadow verbatim until the copy gesture lands it somewhere. What the
-  # copy DOES need at once is the skin its new lifetime calls for (_deriveAndSetSkin), so that it
-  # never spends the carry wearing a menu box: its body now, while its strip, still built in the
-  # pop-up style, is rebuilt in the window style on the first arrange, and that build skins it.
-  # That skin derive is the CHANGE's consequence, so it runs only where there is one — copying
-  # furniture copies its skin along with everything else.
+  # copy DOES need at once is the skin AND the width its new lifetime calls for: the skin
+  # (_deriveAndSetSkin) so that it never spends the carry wearing a menu box -- its body now, while
+  # its strip, still built in the pop-up style, is rebuilt in the window style on the first arrange,
+  # and that build skins it -- and the width its rows give it (the re-take _setLifetimeNoSettle
+  # makes), since a pop-up's title stops being one of its rows' entries as it becomes furniture.
+  # Both are the CHANGE's consequences, so they run only where there is one — copying furniture
+  # copies its skin and its width along with everything else.
   fullCopy: ->
     copiedWidget = super
     lifetimeChanges = copiedWidget.isTransientPopUp()
     copiedWidget.onClickOutsideMeOrAnyOfMyChildren undefined
     copiedWidget.lifetime = 'persistent'
-    copiedWidget._deriveAndSetSkin() if lifetimeChanges
+    if lifetimeChanges
+      copiedWidget._deriveAndSetSkin()
+      copiedWidget.rowsViewport?._reLayOutAfterContainedPanelChange()
     return copiedWidget
 
   # My whole skin follows my nesting (isInternal, derived from parentage), so it is re-derived

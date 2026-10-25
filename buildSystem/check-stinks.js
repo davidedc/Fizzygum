@@ -78,7 +78,7 @@ const STINKS = [
   { id: 'nil-literal', baseline: 0,   // HARD: `nil` no longer exists; a reference to it is a ReferenceError waiting to happen
     why: "the `nil = undefined` global is RETIRED — `undefined` is the codebase's one absence value, spelled the way the language spells it. `nil` was an alias for a primitive that cost a writable global, a boot-order dependency and a lint rule, and had leaked into the reflective layer as emitted source",
     re: /\bnil\b/ },
-  { id: 'null-literal', baseline: 8,   // tightened 9->8 on 2026-08-13 (the DemoMenus stack-panel `null`s were a live CS2 default-param bug)
+  { id: 'null-literal', baseline: 6,   // tightened 9->8 on 2026-08-13 (the DemoMenus stack-panel `null`s were a live CS2 default-param bug); 8->6 on 2026-10-25 (save/restore-fidelity arc: SimpleImageWdgt no longer tears down a replaced Image load with `onload = null` / `@img = null` -- a replaced load runs to its end and claims nothing)
     why: "the codebase uses `undefined` as its ONE absence value, never `null` — the JS-interop sites (JSON.stringify's arg, DOM `onload = null`) are the tolerated tail",
     re: /\bnull\b/ },
   { id: 'wall-clock', baseline: 19,

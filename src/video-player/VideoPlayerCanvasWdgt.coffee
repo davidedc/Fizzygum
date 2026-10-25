@@ -13,7 +13,14 @@
 
 class VideoPlayerCanvasWdgt extends CanvasWdgt
 
+  # MY VIDEO PATH IS MY TRUTH, and the only part of my video that rides a save or a copy. @video is the
+  # element this page made from it -- a PAGE FACT, so a serialization transient, and the Duplicator
+  # copies none -- and a restore (_afterDeserialization) or a copy (_reactToBeingCopied) makes its own
+  # from the path. A video made again plays from its beginning.
+  videoPath: undefined
   video: undefined
+
+  @serializationTransients: ["video"]
 
   _createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
@@ -33,7 +40,9 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
   loadVideo: (videoPath) ->
     @_createVideoTagAndLoadVideo videoPath
 
-  _createVideoTagAndLoadVideo: (videoPath) ->
+  # The path I load becomes my video path (the @-parameter writes it whatever is passed): a load is a
+  # change of truth, and a restore or a copy makes its video from the truth it already holds.
+  _createVideoTagAndLoadVideo: (@videoPath) ->
     # how to safely dispose of a video
     # https://stackoverflow.com/a/28060352
     if @video?
@@ -45,9 +54,20 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
     # with clean constructors, there is no Video class
     # and the only way to create a video is via the DOM
     @video = document.createElement 'video'
-    @video.src = videoPath
+    @video.src = @videoPath
     @video.autoplay = true
 
+  # A restored me holds my video path and no video: this page makes its own. The restore does not wait
+  # for it -- a video streams, and my step paints whatever frame it has reached.
+  _afterDeserialization: ->
+    @_createVideoTagAndLoadVideo @videoPath
+    return
+
+  # A copy of me holds my video path and no video (the Duplicator copies none): it makes its own, which
+  # plays from its beginning while mine plays on.
+  _reactToBeingCopied: ->
+    @_createVideoTagAndLoadVideo @videoPath
+    return
 
 
   play: ->

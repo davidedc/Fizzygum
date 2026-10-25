@@ -711,6 +711,26 @@ if ! $noSyntaxCheck ; then
   echo "... back-buffer-memos check OK"
 fi
 
+# --- build-time PAGE-LOADED-ELEMENTS gate ----------------------------------------------
+# An element the page loads (an image, a video) is a page fact derived from its holder's own path: every
+# field a class assigns one (new Image / new Audio / document.createElement of an img, video or audio) must
+# be a serialization transient of the class chain, and the chain must define both _afterDeserialization and
+# _reactToBeingCopied, the hooks that re-make it after a restore and after a copy -- neither walker carries
+# an element. An element constructed into no field says why with `# page-element-not-held: <reason>`. Reads
+# ALL of src/ -- every part, shipped or not, so it covers the flag-gated video-player part no default build
+# carries. (buildSystem/check-page-loaded-elements.js -- same --noSyntaxCheck escape hatch + explicit $?
+# abort as the gates above.)
+if ! $noSyntaxCheck ; then
+  echo "checking elements the page loads are re-made by their holders ..."
+  node ./buildSystem/check-page-loaded-elements.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: page-loaded-elements gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... page-loaded-elements check OK"
+fi
+
 # --- build-time RELAYOUT-REPAINTS gate (TOMBSTONE) ------------------------------------
 # Static sibling to the runtime paint-truthfulness capstone (Fizzygum-tests/scripts/run-paint-audit.js),
 # which is unchanged. [INV-1] -- a `_reLayoutSelf` that suppresses change-tracking MUST issue a covering

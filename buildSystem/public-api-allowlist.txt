@@ -16,7 +16,6 @@ setSoftWrap   # user-facing text-wrapping toggle
 recalculateOutput         # patch nodes' reactive recompute protocol verb
 reactToTargetConnection   # connection protocol hook
 paintFunction             # icon appearances' polymorphic paint hook
-catchesPointerAt          # the widget-authoring pointer-surface hook (12 classes declare it; Widget.isPointerTargetAt is the only in-tree ASK, so this reads self-only) — public because it is what an author states and what an inspector/live-code session asks of a widget, the widget-side twin of the public Appearance.shapeContainsPoint
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
 saveScript          # ScriptWdgt user action
@@ -30,8 +29,6 @@ addDragAffordanceWidgets  # WorldWdgt frame-driven affordance rebuilder; drives 
 bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form
 createWidgetToBeHandled   # creator-button build protocol (5-class family); builds via public addMany/setExtent — [A]/[G] forbid the _-form
 bringUpReferencedWidget   # ShortcutWdgt shared "open the referenced widget" ritual; drives public show/spawnNextTo/setTitle on other widgets — [A]/[G] forbid the _-form
-scrollToBottom            # ViewportWdgt in-world scrolling verb (natural end-user/inspector API); §5.B left it with only a self-call (the fused SimpleDocumentWdgt was its lone external caller)
-setScrollPolicy           # ViewportWdgt runtime crop⇄scroll flip (scroll-frame role plan P1) — deliberate end-user/scripting API; the menu adapter is its only in-tree caller today
 subWidgetsMergedPreferredBounds  # Widget §4.1 pure-measure API, sibling of the cross-called subWidgetsMergedFullBounds; the P5 scrolled-content contract implementations (scrolledContentMeasure) call it on THEMSELVES, which is what left it with only self-calls
-closeFromFrameBar         # FrameWdgt's close-from-the-bar ACTION — it runs the closeFromFrameBarPolicy (save-or-ask / close / destroy) that plain close() does not, so it is the verb a user or a script means by "close this window as its button would"; the bar-press handler is its only in-tree caller (same shape as setScrollPolicy above)
-setLifetime               # FrameWdgt's runtime transient⇄persistent flip (frame-lifetime plan §2.1) — deliberate end-user/scripting API and the settling twin of _setLifetimeNoSettle; pinPopUp, the user-facing verb the strip tap and the "pin" row reach, is its only in-tree caller (same shape as setScrollPolicy above)
+closeFromFrameBar         # FrameWdgt's close-from-the-bar ACTION — it runs the closeFromFrameBarPolicy (save-or-ask / close / destroy) that plain close() does not, so it is the verb a user or a script means by "close this window as its button would"; the bar-press handler is its only in-tree caller (a deliberate verb whose one in-tree caller is its own user-facing adapter)
+setLifetime               # FrameWdgt's runtime transient⇄persistent flip (frame-lifetime plan §2.1) — deliberate end-user/scripting API and the settling twin of _setLifetimeNoSettle; pinPopUp, the user-facing verb the strip tap and the "pin" row reach, is its only in-tree caller (a deliberate verb whose one in-tree caller is its own user-facing adapter)

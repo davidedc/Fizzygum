@@ -396,8 +396,11 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # lines don't answer and are skipped. All the measures are stretch-immune (frozen or
   # content-derived), so re-arranges can legitimately SHRINK the hug.
   #   The walk starts at what my HOLDER contributes: a pop-up frame's title is an entry of
-  # mine that happens to live in its chrome, so a menu still widens for a long title. Outside
-  # a pop-up (a list's panel) the climb reaches the world, which contributes nothing.
+  # mine that happens to live in its chrome, so a pop-up still widens for a long title. Pinned,
+  # my frame is a window, its title is a window title that crops or hides where it does not fit
+  # (FrameBarWdgt._titleReadsWellEnough), and my frame takes my rows' width alone
+  # (FrameWdgt._titleEntryWidth answers 0). Outside a pop-up (a list's panel) the climb reaches
+  # the world, which contributes nothing.
   maxWidthOfMenuEntries: ->
     w = @enclosingFrame()._titleEntryWidth?() ? 0
     @children.forEach (item) ->

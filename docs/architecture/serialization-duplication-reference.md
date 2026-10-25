@@ -55,7 +55,7 @@ share — and what this doc is the single source of truth for — is the per-cla
 - `@serializationTransients` (fields to skip) and `wellKnownKey` (symbolic singletons) —
   §5, §4; both consulted by duplication too;
 - the `rebuildDerivedValue(s)` derived-value protocol — §5;
-- the native-type handlers' logic (Array/Date/Image/Canvas/Video) — §6 — and the
+- the native-type handlers' logic (Array/Date/Canvas, and the element kinds neither walker carries) — §6 — and the
   native-type DETECTION itself, factored into the one shared
   `NativeValueKinds` (`src/serialization/NativeValueKinds.coffee`) both engines consult.
 
@@ -94,7 +94,11 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   `docs/architecture/immutable-value-classes.md` §4.
 - A `Widget` NOT in the **in-structure set** is **external**: duplication keeps the live
   reference (so a duplicate can stay wired to an outside widget); serialization cannot
-  keep a live pointer, so this is where the well-known / error policy applies (§4).
+  keep a live pointer, so this is where the well-known / error policy applies (§4). That is
+  why an owner keeps no widget OFF its tree: such a widget is external to both walkers, so a
+  copy would SHARE it with the original (and destroy it with whichever dies first) while a
+  save refuses it. A frame's empty-state placeholder exists only while it is mounted
+  (`FrameWdgt.defaultContents`; `widget-authoring-guidelines.md`).
 - **The in-structure set is the ARROW-CONTRACT closure, one computation for both walkers**
   (`Widget.allWidgetsInStructureForCopy`, reference-widgets plan §4.4): the root's subtree
   PLUS, through every in-structure icon that presents as content
@@ -137,8 +141,6 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
     { "class": "Color",   "rgba": [248, 248, 248, 1] },
     { "class": "$Date",   "ms": 1783122262571 },
     { "class": "$Canvas", "w": 300, "h": 200, "pr": 1, "data": "data:image/png;base64,…" },
-    { "class": "$Image",  "src": "data:…" },
-    { "class": "$Video",  "src": "…", "autoplay": false, "currentTime": 0 },
     { "class": "$Object", "props": { … } },
     { "class": "$Map",    "entries": [ [k, v], … ] },
     { "class": "$Set",    "items": [ … ] }
@@ -154,8 +156,8 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
   but no shipped caller selects that mode). A plain JSON object as a *value* is always a table
   slot (`$Object`), so a `props` value is unambiguously one of the reference forms by
   construction; plain user strings need no escaping.
-- **Native types carry `$`-prefixed class tags** (`$Array`/`$Date`/`$Canvas`/`$Image`/
-  `$Video`/`$Object`/`$Map`/`$Set`). User class names are CoffeeScript identifiers and can
+- **Native types carry `$`-prefixed class tags** (`$Array`/`$Date`/`$Canvas`/`$Object`/
+  `$Map`/`$Set`). User class names are CoffeeScript identifiers and can
   never collide with a `$`-prefixed tag.
 - `Color` keeps a compact `rgba` form, restored through the `Color.create` factory so
   immutable-color dedupe is preserved.
@@ -238,8 +240,7 @@ class Widget extends TreeNode
 
 - **The reader** is `Serializer.transientsForClass(klass)` — a Set over boot's
   `classStaticListMergedUpTheChain klass, "serializationTransients"` (`src/boot/globalFunctions.coffee`),
-  THE one merge of a class-level list declaration up the class chain, which the world inventory's
-  `@offTreeOwnedWidgetFields` (§11 rig note; `world-lifetime-and-inventory.md` §2) reads too. **A
+  THE one merge of a class-level list declaration up the class chain. **A
   subclass declares its OWN fields and nothing else**: the merge is the rule, so re-stating an
   ancestor's entry is duplication, and a subclass can never drop one.
   ⚠ **The chain to walk is `__super__`, not `Object.getPrototypeOf`** (boot's `superclassOf`). This
@@ -279,14 +280,28 @@ class Widget extends TreeNode
   `CanvasWdgt._createRefreshOrGetBackBuffer` hands over a NEW raster exactly when there was none (built,
   restored) or the size changed, so a widget whose raster is a cache paints on a new one (`SimpleImageWdgt`
   compares its back buffer before and after `super`) — or paints unconditionally where that is cheap
-  (`VideoPlayerCanvasWdgt` lays its black letterbox under every frame). The same holds for a flag about
-  something the PAGE loaded: `SimpleImageWdgt`'s `img` and `imageLoaded` are transients re-derived from its
-  saved `imagePath` by `_afterDeserialization`, because a restored "loaded" claims an image this page has
-  not decoded (drawing it throws under SWCanvas, and the world hides the widget). The gate is
+  (`VideoPlayerCanvasWdgt` lays its black letterbox under every frame). The gate is
   `buildSystem/check-back-buffer-memos.js` (`lint-and-static-checks.md` §3): every field a back-buffer
   builder writes is a transient of the class chain or is declared `# saved-content:` (today only
   `CanvasWdgt.drawnRaster`); it reads every part, the flag-gated `video-player` included, and is blind to a
   memo written outside the builder's reach (an onload closure).
+- **An element the page loads is a page fact, derived from its holder's own path.** An image or a video
+  is what THIS page fetched from a path; a record of it could only say where the saving page found it (an
+  absolute `file://` path, a `blob:` URL that dies with its session), which is nowhere the loading page
+  need be. So no file carries one and no copy shares one: the holder keeps the path in a field (the truth:
+  `SimpleImageWdgt.imagePath`, `VideoPlayerCanvasWdgt.videoPath`), declares the element (and any flag about
+  its load, `imageLoaded`) in `@serializationTransients`, and re-makes the element from the path — with its
+  load handlers — after a restore (`_afterDeserialization`) and after a copy (`_reactToBeingCopied`). The
+  Serializer has no element encoder and REFUSES an element in a field that is not a declared transient,
+  with a remediation stating this rule; the Duplicator leaves such a field `undefined` for the holder's
+  hook (§6). A restore that re-makes an element completes when it has arrived: a hook that starts a load
+  answers its promise and `whenReady` awaits it (§9) — a hook reporting no load must not end on an
+  expression that yields a thenable (CoffeeScript returns the last one). A video made again plays from its
+  beginning. The gate is `buildSystem/check-page-loaded-elements.js` (`lint-and-static-checks.md` §3):
+  every field a class assigns an element (`new Image`/`new Audio`/`document.createElement` of an img,
+  video or audio) is a transient of the class chain, and the chain defines both hooks; an element made
+  into no field says why with `# page-element-not-held: <reason>` (today only the Deserializer's
+  `$Canvas` decoder image). It reads every part, the flag-gated `video-player` included.
 - **A live canvas object a class caches in a field is a transient.** A gradient, a pattern or a
   canvas a paint builds lazily (`if !@colorGradient?`) has no file encoder; declare the field and let
   the paint rebuild it after a restore. The rig's `world.everyAppSnapshot.*` checks open every app
@@ -339,7 +354,8 @@ class Widget extends TreeNode
 | `Widget` (caches) | `lastTime`; the render caches `backBuffer`/`backBufferContext` and their shadow-silhouette twins; the `WorldWdgt.geometryVersion`-keyed geometry caches (`cachedFullBounds`, `cachedFullClippedBounds`, `cachedVisibleBasedOnIsVisibleProperty`, `cachedClippedThroughBounds`, `cachedClipThrough`, `cachedIsInCollapsedSubtree` — each with its `check…Cache` twin — plus `childrenBoundsUpdatedAt`); the `root()` cache `cachedRoot`/`checkRootCache`; the island-buffer source lane `_islandBufferSourceIsland`/`_islandBufferSourceVirtualRect`; the flush-scoped `hasDirtyDescendant` | frame timing + derived caches, all re-derived on demand after restore. ⚠ `cachedRoot` is the one whose absence bit: `root()` itself never reads it stale (it checks `structureVersion`) but the SERIALIZER walks the raw field, so a stale pointer dragged destroyed subtrees — and their unserializable handler functions — into capture-mode world snapshots |
 | `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcDamageRectIndex`, `dstDamageRectIndex` | per-frame damage-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
 | `FrameWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs. It sat on `Widget` while the merge was broken (the base was the only place a declaration was safe); with the merge fixed it is declared by the class that owns and reads it |
-| `SimpleImageWdgt` | `img`, `imageLoaded` | the loaded `Image` and whether it has arrived are facts about THIS page: `_afterDeserialization` reloads `imagePath`, the one saved part of the picture (a restored `true` would draw an undecoded image: a throw under SWCanvas, nothing natively) |
+| `SimpleImageWdgt` | `img`, `imageLoaded` | the loaded `Image` and whether it has arrived are facts about THIS page: `_afterDeserialization` and `_reactToBeingCopied` reload `imagePath`, the one saved part of the picture (a carried `true` would draw an undecoded image: a throw under SWCanvas, nothing natively — and a copy whose load the original started never repaints) |
+| `VideoPlayerCanvasWdgt` | `video` | the `<video>` element is a page fact made from `videoPath`; `_afterDeserialization` and `_reactToBeingCopied` make their own, which plays from its beginning |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
 | `ScriptWdgt` | `functionFromCompiledCode` | the saved script COMPILED (`@savedScript` is the truth); `doAll` recompiles it on demand after a restore |
@@ -361,7 +377,10 @@ does not ride the field either: membership is captured as an `"openPopUp"` marke
 writes `lifetime = 'persistent'` directly rather than going through the `setLifetime` entry
 point — a copy is born furniture (nobody is mid-gesture with a duplicate), and the direct
 write means the clone never spends a moment wearing its original's transient skin before the
-copy call re-derives the persistent one.
+copy call re-derives the persistent one — and re-takes the width that lifetime calls for (a pinned
+pop-up takes its rows' width; a pop-up's title counts only while it is a pop-up). The rig pins it:
+`pinnedMenu.longTitleWidthIsItsOwn`, `pinnedPrompt.longTitleWidthIsItsOwn` and
+`pinnedMenu.sameRatioMatchesFresh` (and `.longTitle`) in `serialization-roundtrip-headless.js`.
 
 **Instance-assigned handler functions are BANNED as a state idiom** (2026-07-23): a mode a
 widget can be in must be a serializable FIELD consumed by prototype methods, never a pair
@@ -380,7 +399,8 @@ Native / special types the walkers special-case (duplication: the `Duplicator`'s
 `_copy*` handlers; serialization: the `$`-tagged record encoders — both recognising
 types through the shared `NativeValueKinds`, which duck-types the canvas kind so the
 SWCanvas variant is caught too; its gradient predicate is duplication-only — see the
-gradient row). Anything that reaches neither a handler nor a plain object literal must be an
+gradient row — and its element predicates, `isImage`/`isVideo`, decide a refusal's remediation
+in the one walker and a field left `undefined` in the other). Anything that reaches neither a handler nor a plain object literal must be an
 instance of a class boot's `classNamed` answers for — the CLOSED SET, one rule shared by the two
 walkers (`Serializer`'s guard and `Duplicator._copyFizzygumObject`'s): an instance of a
 browser-native class with no handler (a `DOMRect`, a `CanvasGradient`) is refused, because a save
@@ -390,9 +410,9 @@ could not restore it and a copy would hold an object that throws on use:
 |---|---|---|
 | `Array` | `$Array` `items` | element-wise; own table slot; can be shared between properties |
 | `Date` | `$Date` `ms` | the tagged record is what keeps it restorable — a raw `Date` stringifies to a bare ISO string and cannot be deserialized back |
-| `Image` | `$Image` `src` | async decode on restore → the `whenReady` promise |
+| `Image` | *(no encoder)* | an element the page loads (§5): the SERIALIZER refuses it in any field that is not a declared transient, with the element remediation; DUPLICATION leaves the field `undefined` and the holder's `_reactToBeingCopied` re-makes it from its path |
 | `HTMLCanvasElement` | `$Canvas` `w`/`h`/`pr`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS`. The data is PHYSICAL pixels made at the saving page's `ceilPixelRatio`, which rides as `pr`. Every canvas that rides a save is its widget's logical size × that ratio (a drawn canvas's `drawnRaster`, FizzyPaint's `behindTheScenesBackBuffer`, a pinned menu row's `InertIconHolderWdgt.raster`), so at another ratio the builder makes the canvas at `w·cpr/pr × h·cpr/pr` and draws the decoded image into it: smoothing on when it shrinks (at 2 → 1 a box of four pixels), off when it enlarges (pixel replication — so 1 → 2 → 1 gives back the very pixels it started from, and no edge pixel is left part-transparent, which a smoothed SWCanvas enlargement does); 2 → 1 → 2 is lossy. Equal ratios take the unscaled draw, byte for byte, and a record without `pr` is taken at the loading page's ratio. The resample happens at the DECODE, never in the adopting widget: the canvas exists at its final size before its pixels arrive, and the file door attaches the widget before the decode lands — an adopter that copied a canvas still waiting for its pixels into a resized raster would lose the drawing outright under SWCanvas. The decode draws at the IDENTITY transform under save/restore: it lands after the restore has handed the canvas to its widget, and a canvas has one context, which that widget may already have scaled (its `_afterDeserialization`, its first paint); the save/restore keeps the smoothing setting off that context too. A resample is not what drawing at the new ratio would give, pixel for pixel — a cross-ratio restore has no reference to match. SWCanvas's `toDataURL` is its own deterministic encoder (per-row PNG filters + fixed-Huffman deflate, alpha kept): identical pixels give identical bytes on every engine, at ~1.2× the browser's own size on a drawn canvas |
-| `HTMLVideoElement` | `$Video` `src`/`autoplay`/`currentTime` | tagged on its own record; mis-tagging it as a canvas crashes the restore |
+| `HTMLVideoElement` | *(no encoder)* | the same as `Image`: refused by a save, left `undefined` by a copy, re-made by its holder |
 | `CanvasGradient` | *(no encoder)* | DUPLICATION clones it as `undefined` (`Duplicator._copyGradient`, via `NativeValueKinds.isGradientLike` — its one caller) and consumers rebuild. The SERIALIZER has no gradient branch: a gradient in an own property raises the unrecognized-type `SerializationError` under both backends (under native the closed-set guard refuses it: `classNamed` answers no class for a browser-native one). Keep gradients out of serialized own properties, or declare the property transient (§5). |
 | plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |
 | `Color` | `Color` `rgba` | restored through `Color.create` (immutable dedupe) |
@@ -436,7 +456,8 @@ load this file: …" for a load, "Cannot serialize: …" for a save. Menu/file a
 native-type factories; (2) populate & link, resolving `$r`/`$wk`/`$src`/`$ext` at any
 nesting depth; (3) identity & registration (`registerThisInstance`); (4) fixups
 (compile `$src`, decode async assets into one `whenReady` promise,
-re-register `memberships`, per-class `_afterDeserialization` hook); (5) deliver a detached
+re-register `memberships`, per-class `_afterDeserialization` hook — whose answer, when it is a
+thenable (an element load the hook started), `whenReady` awaits too); (5) deliver a detached
 `{ widget, whenReady }` for the caller to attach. `Widget.deserialize` /
 `world.deserialize` become thin delegates.
 
@@ -500,8 +521,8 @@ and re-sorts on the first cycle after load), each non-undefined app-slot window
 world itself is excluded (a pointer *to* it becomes `{"$wk":"world"}`).
 
 **`onExternalPointer: "capture"`** (world default, vs `"throw"` for widgets): an off-tree
-widget reached only via a property — e.g. a non-empty folder window's `defaultContents`
-placeholder — is pulled into the table as its own record, so "everything reachable is
+widget reached only via a property — e.g. the widget a demo `PointerWdgt` stands in for, its
+`target` — is pulled into the table as its own record, so "everything reachable is
 in-structure" holds and no world state is silently dropped. Self-policing: a genuinely
 unserializable value still raises the rich `SerializationError`.
 
@@ -568,9 +589,9 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    `world.teardownHygiene.*` in `Fizzygum-tests/scripts/serialization-roundtrip-headless.js` —
    including `loadLeavesNoOrphanedWidgets`, which requires the in-band inventory's escaped and
    zombie lists (`WorldInventory.takeInventory`) to be EMPTY after the load and after it settles, so
-   any widget a load forgets to destroy shows, and refuses to pass unless the restored world holds a
-   frame whose empty-state placeholder is off its tree (the containment rule it relies on would
-   otherwise go unexercised); and
+   any widget a load forgets to destroy shows, and requires that no frame of the restored world keeps
+   a placeholder it does not show — refusing to pass unless some frame holds real contents, so that
+   rule cannot go unjudged; and
    `handCargoDestroyed` / `handDragEmbedStateCleared`. The refusals are `world.loadGuard.*`.
    ⚠ From the teardown to step 4 the world has NO storage; the loader's `try/finally` guarantees
    a bin and a shelf whatever happens in between (a file carrying none, or a restore that throws),

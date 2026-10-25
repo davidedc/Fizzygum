@@ -280,11 +280,9 @@ class WorldInventory
     # ---- identity: the registry vs the containment walk ----------------------------
     # containment roots = the ONE liveness enumeration, plus the bin/shelf containers
     # themselves: their chrome is accounted-for citizenry even though residency in them
-    # confers no liveness (see graphLivenessRoots). Containment = `children`, plus each
-    # holder's declared off-tree owned widgets (its class chain's @offTreeOwnedWidgetFields):
-    # a widget its holder keeps unmounted on purpose -- a frame's empty-state placeholder
-    # while real contents are mounted -- is owned, not escaped. One that is mounted on its
-    # holder is reached through `children` already.
+    # confers no liveness (see graphLivenessRoots). Containment = `children` and nothing else:
+    # a widget is owned by being a child, so one its holder keeps off its tree is escaped (a
+    # frame's empty-state placeholder exists only while it is mounted, FrameWdgt.defaultContents).
     if world? and Widget?
       reached = new Set
       containmentStack = world.graphLivenessRoots()
@@ -296,9 +294,6 @@ class WorldInventory
         reached.add cursor
         if cursor.children?
           containmentStack.push eachChild for eachChild in cursor.children
-        for fieldName in classStaticListMergedUpTheChain cursor.constructor, "offTreeOwnedWidgetFields"
-          ownedWidget = cursor[fieldName]
-          containmentStack.push ownedWidget if ownedWidget? and ownedWidget.parent isnt cursor
       Widget.instances.forEach (eachInstance) ->
         if eachInstance.destroyed
           # still registered after destruction: unregisterThisInstance was skipped

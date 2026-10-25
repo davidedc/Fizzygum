@@ -63,11 +63,10 @@ the module-state portholes (`swCanvasTextStateForAudit`, `stringHashCacheForAudi
 - two **identity lists**: `escapedWidgets` — widgets in `Widget.instances`, not destroyed,
   yet unreachable by containment from `graphLivenessRoots()` + the bin/shelf containers
   (such a widget left the tree without being destroyed, and the registry pins it forever).
-  Containment is `children` plus each holder class's declared off-tree OWNED widgets
-  (`@offTreeOwnedWidgetFields`, merged up the chain by boot's `classStaticListMergedUpTheChain`;
-  `FrameWdgt` declares `defaultContents`, its empty-state placeholder kept unmounted while real
-  contents are mounted). That is not an exemption: such a widget is reached only through a reached
-  holder, and its owner still destroys it —
+  Containment is `children` and nothing else: a widget is owned by being a child. No widget is
+  kept off its owner's tree on purpose — a frame's empty-state placeholder
+  (`FrameWdgt.defaultContents`) exists only while it is mounted as the frame's contents, built
+  when the frame empties and destroyed when real contents arrive —
   and `retainedZombies` — destroyed widgets still held somewhere, each named with the
   property path of its retainer.
 
@@ -110,8 +109,8 @@ green suite):
   (the classic shape: chrome rebuilt during a destroy cascade, or a spare/off-tree
   collaborator widget nothing tears down; or a TEST that single-widget-`destroy()`s a holder,
   which orphans the subtree under it). Find the creation site, make the owner destroy
-  it. Never "fix" by exempting — identity offences have no exemption row. A widget its owner
-  keeps off its tree on purpose is DECLARED (`@offTreeOwnedWidgetFields`), not exempted.
+  it. Never "fix" by exempting — identity offences have no exemption row. An owner keeps a widget
+  as a child or destroys it; one it does not show is destroyed, not kept off its tree.
   ⚠ A new test is therefore proven with a follower (`run-sequence-headless.js <new> <any>`):
   run alone it can never show its own leak, since the audit fires at the next reset.
 - `WORLD_INVENTORY_ZOMBIE ... at <path>`: the path names the retainer — clear that
@@ -134,8 +133,8 @@ green suite):
 - The inventory's containment roots are `graphLivenessRoots()` — the ONE enumeration shared
   with the trash-liveness query/sever pair — PLUS the bin/shelf containers themselves:
   residency must not read as an inbound liveness edge, but the containers' chrome is
-  accounted-for citizenry. The inventory alone follows the declared off-tree owned widgets;
-  `graphLivenessRoots` does not (it answers liveness, not ownership).
+  accounted-for citizenry. Both walk `children` only; `graphLivenessRoots` answers liveness, the
+  inventory ownership.
 - Per-cycle and per-refresh transients are handled at the honest layer: the teardown core
   drops just-destroyed widgets from the per-cycle damage queues at the seam (a filter, not a
   clear — the world's own whole-screen damage mark must survive), while the SWCanvas
@@ -145,9 +144,10 @@ green suite):
   no reset seam ever audits what it left behind (no SystemTest loads a snapshot); instead the
   serialization rig's `world.teardownHygiene.loadLeavesNoOrphanedWidgets` takes the inventory
   on the product pages (`WorldInventory` is core) and requires the escaped and zombie lists
-  after the load — at the load's own turn and after the settle — to be EMPTY. It refuses to pass
-  unless the restored world holds a frame whose placeholder is off its tree (the Examples folder's
-  window on the shelf), so the declared-containment rule cannot go unexercised.
+  after the load — at the load's own turn and after the settle — to be EMPTY. It also requires
+  that no frame of the restored world keeps a placeholder it does not show, and refuses to pass
+  unless some frame holds real contents (the Examples folder's window on the shelf), so that rule
+  cannot go unjudged.
 - Both engines run the same gate: the instrument is plain in-page JS, so the WebKit suite
   leg exercises it identically. The VM-truth tier below is Chrome-only by nature and ADDS
   closure-visibility rather than replacing any of this.

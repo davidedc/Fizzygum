@@ -1,8 +1,9 @@
 # Deserializer — rebuilds a widget graph from a Serializer envelope. See
 # docs/architecture/serialization-duplication-reference.md §9. Returns { widget, whenReady }: the widget
 # is DETACHED (the caller attaches it — a menu action, drop handler, or snapshot loader);
-# whenReady is a promise that resolves once async assets (images, and canvases under the
-# SWCanvas backend, which decode via <img> onload) have finished decoding.
+# whenReady is a promise that resolves once the async work the restore started has landed: every
+# canvas's decode (via <img> onload, on both backends), and every load a restored widget's
+# _afterDeserialization started for an element it re-makes from its own path.
 #
 # Five passes over the envelope:
 #   1. instantiate  — a shell per record (constructor NOT run), or the native-type factory
@@ -72,8 +73,7 @@ class Deserializer
       builder = @_tagBuilderFor record.class
       if builder?.populate?
         # a native-container tag whose populate links its items ($Array/$Set/$Map), or a
-        # tag fully built in pass 1 whose populate is an explicit no-op ($Date/$Image/
-        # $Canvas/$Video/Color)
+        # tag fully built in pass 1 whose populate is an explicit no-op ($Date/$Canvas/Color)
         builder.populate shell, record, resolveRef
       else
         # $Object tags and every user class: resolve & assign the recorded props
@@ -124,9 +124,14 @@ class Deserializer
             when "keyboardReceiver" then world.keyboardEventsReceivers?.add shell
             when "referenceTracker" then world.widgetsReferencingOtherWidgets?.add shell
             when "openPopUp"        then world.openPopUps?.add shell
-    # (d) per-class post-restore hook (absorbs ad-hoc deserialization guards)
-    for shell in shells
-      shell._afterDeserialization?() if shell instanceof Widget
+    # (d) per-class post-restore hook (absorbs ad-hoc deserialization guards). A hook that re-makes
+    # an element the page loads from its holder's path (an image) answers that load's promise, and
+    # whenReady waits for it: the restore is ready when what it re-made has arrived, not merely when
+    # its own records have decoded. Any other answer is ignored -- so a hook that is NOT reporting a
+    # load must not end on an expression that yields a thenable (CoffeeScript returns the last one).
+    for shell in shells when shell instanceof Widget
+      reloading = shell._afterDeserialization?()
+      asyncPromises.push reloading if typeof reloading?.then is "function"
 
     # ---- Pass 5: deliver ----
     # `shells` is exposed so the world-snapshot loader can resolve its `world` section's
@@ -197,15 +202,6 @@ class Deserializer
     "$Date":
       build:    (record, asyncPromises) -> new Date record.ms
       populate: -> # fully built in pass 1 — nothing to populate
-    "$Image":
-      build: (record, asyncPromises) ->
-        img = new Image
-        asyncPromises.push new Promise (resolve) ->
-          img.onload = -> resolve()
-          img.onerror = -> resolve()
-        img.src = record.src
-        img
-      populate: -> # fully built in pass 1 — nothing to populate
     "$Canvas":
       build: (record, asyncPromises) ->
         # The record is PHYSICAL pixels made at the saving page's pixel ratio `pr`, and every canvas
@@ -220,6 +216,8 @@ class Deserializer
         h = Math.round record.h * scale
         canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point w, h
         ctx = canvas.getContext "2d"
+        # page-element-not-held: the decoder of the record's own data: URL, dropped once its pixels
+        # are in the canvas -- no widget field ever holds it
         img = new Image
         # decode via onload for BOTH backends (SWCanvas REQUIRES the <img> decoded before
         # drawImage; native is fine to defer too). whenReady gates any pixel read.
@@ -249,14 +247,6 @@ class Deserializer
           img.onerror = -> resolve()
         img.src = record.data
         canvas
-      populate: -> # fully built in pass 1 — nothing to populate
-    "$Video":
-      build: (record, asyncPromises) ->
-        v = document.createElement "video"
-        v.src = record.src
-        v.autoplay = record.autoplay
-        v.currentTime = record.currentTime if record.currentTime?
-        v
       populate: -> # fully built in pass 1 — nothing to populate
     "Color":
       build:    (record, asyncPromises) -> Color.create record.rgba[0], record.rgba[1], record.rgba[2], record.rgba[3]

@@ -129,8 +129,8 @@ class Serializer
       widgetSet.add w for w in aRoot.allChildrenBottomToTop()
 
     # a world snapshot CAPTURES everything reachable: a cross-root pointer resolves as {"$r"};
-    # an off-tree widget reached only via a property (e.g. a folder window's `defaultContents`
-    # placeholder) is pulled into the table as its own record, so "everything is in-structure"
+    # an off-tree widget reached only via a property (e.g. the widget a demo PointerWdgt stands in
+    # for, its `target`) is pulled into the table as its own record, so "everything is in-structure"
     # (§4.9) holds and no world state is silently dropped. (A stray {"$ext"} same-world token
     # is still resolvable by iid on restore, but "capture" leaves none for a settled world.)
     onExternal = opts.onExternalPointer or "capture"
@@ -278,8 +278,8 @@ class Serializer
           when "nullify" then return null
           when "record"  then return {$ext: value.uniqueIDString()}
           # "capture": pull the off-tree widget into the table as a full record. Used by the
-          # world snapshot, where EVERYTHING reachable is genuine world state (e.g. a folder
-          # window's off-tree `defaultContents` placeholder) and "everything is in-structure"
+          # world snapshot, where EVERYTHING reachable is genuine world state (e.g. the widget a
+          # demo PointerWdgt stands in for, off the tree) and "everything is in-structure"
           # is the intent (§4.9). Self-policing: if it reaches a truly unserializable value it
           # throws the same rich error below.
           when "capture" then return {$r: encodeToSlot(value, path)}
@@ -350,10 +350,6 @@ class Serializer
         record.class = "$Date"
         record.ms = obj.getTime()
         return
-      if NativeValueKinds.isImage obj
-        record.class = "$Image"
-        record.src = obj.src
-        return
       if NativeValueKinds.isCanvasLike obj
         # HTMLCanvasElement or SWCanvasElement (see NativeValueKinds). Its pixels are PHYSICAL, made at
         # this page's pixel ratio, which rides along as `pr` so a page at another ratio can resample
@@ -363,12 +359,6 @@ class Serializer
         record.h = obj.height
         record.pr = ceilPixelRatio
         record.data = obj.toDataURL "image/png"
-        return
-      if NativeValueKinds.isVideo obj
-        record.class = "$Video"
-        record.src = obj.src
-        record.autoplay = obj.autoplay
-        record.currentTime = obj.currentTime
         return
       if NativeValueKinds.isMap obj
         record.class = "$Map"
@@ -399,11 +389,18 @@ class Serializer
       # restore. An instance of a browser-native class the encoders above have no branch for (a
       # CanvasGradient, a DOMRect) is refused here, never written as a record that would restore as
       # an inert shell.
+      #   An element the page loads (an image, a video) is refused here too, and deliberately has no
+      # encoder: it is a PAGE FACT, derived from its holder's own path field, so the holder re-makes it
+      # after a restore and after a copy, and no file carries it -- what a file would carry is where
+      # the SAVING page found it, which is nowhere the loading page need be.
       className = obj.constructor.name
       if classNamed(className) isnt obj.constructor
+        remediation = if NativeValueKinds.isImage(obj) or NativeValueKinds.isVideo(obj)
+          "An element the page loads is derived from its holder's path: keep the path in a field, declare the property holding the element in @serializationTransients, and re-make the element from the path in _afterDeserialization and _reactToBeingCopied."
+        else
+          "Declare the property holding it in @serializationTransients, or add a per-type handler for it."
         fail ("a value of an unrecognized type (" + className + ") cannot be serialized"),
-             path, describe(obj),
-             "Declare the property holding it in @serializationTransients, or add a per-type handler for it."
+             path, describe(obj), remediation
       record.class = className
       record.iid = obj.instanceNumericID if obj.instanceNumericID?
       if obj instanceof Widget

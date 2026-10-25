@@ -1016,14 +1016,17 @@ class ViewportWdgt extends Widget
           if newBounds.height() < @height()
             newBounds = newBounds.growBy new Point 0, @height() - newBounds.height()
       else
-        # the frame must cover at least the visible WINDOW, expressed in the frame's plane
-        # (frame origin + offset — identical to my own box when unscrolled with the frame
-        # at my origin, which is the common resting state). A frame extending above/left of
-        # my origin is a designed state (the D2 island-overhang scroll-reachability), which
-        # is why the offset is measured from the FRAME origin rather than mine.
+        # the frame covers the padded content, the visible WINDOW, expressed in the frame's
+        # plane (frame origin + offset), and my own box, which is the window at rest. My own
+        # box keeps the vacant strip between my origin and content placed in from it inside
+        # the frame whatever the scroll, so no scroll drops it: the offset moves by exactly a
+        # scroll's travel, and scrolling back returns the content to where it rested. The
+        # frame still extends above/left of my origin for content overhanging it (the D2
+        # island-overhang scroll-reachability), which is why the offset is measured from the
+        # FRAME origin rather than mine.
         windowInPlane = new Rectangle @contents.left() + @scrollOffsetX, @contents.top() + @scrollOffsetY,
           @contents.left() + @scrollOffsetX + @width(), @contents.top() + @scrollOffsetY + @height()
-        newBounds = subBounds.expandBy(padding).merge windowInPlane.ceil()
+        newBounds = subBounds.expandBy(padding).merge(windowInPlane.ceil()).merge @boundingBox()
     else
       newBounds = @boundingBox()?.ceil()
 

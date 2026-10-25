@@ -52,8 +52,8 @@ vocabulary below is the convention for all new code:
   - Parentage (on the world vs nested in another container) is **context**.
   - Crossing lifetime with parentage gives exactly three manifestations — never a stored flag,
     never a subclass: **menu** (transient, always a world child), **window** (persistent on
-    the world), **card** (persistent, nested). Skin, bar roster, shadow, and colloquial name
-    are all **derived** from the pair, re-derived at every (re)parenting and every lifetime
+    the world), **card** (persistent, nested). Skin, bar roster, shadow, colloquial name and a
+    pop-up's width are all **derived** from the pair, re-derived at every (re)parenting and every lifetime
     change, never read back from a field. The look half of that derivation is one query, `FrameWdgt._frameLook()`
     ([`visual-design-system.md`](visual-design-system.md) §5): a pinned or grabbed menu is a window and wears
     the window's skin, with no fourth, "pinned menu" look (a derived look never keys on what a frame once was).

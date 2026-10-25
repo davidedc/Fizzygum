@@ -121,7 +121,7 @@ The built page is *already* 99% of a single-file app:
     @_teardownWorldStructureNoSettle()`, `:2392` — the same core the test teardown calls),
     id-counter restore, mixin-then-class edit replay, `Deserializer.deserialize`, app-slot/bin/
     shelf re-bind, one-settle child attach, colour/wallpaper, repaint + **`result.whenReady`**
-    second repaint once async `$Image`/`$Canvas` data-URLs have decoded (`:2464`).
+    second repaint once async `$Canvas` data-URLs have decoded (`:2464`).
     **It `window.confirm`s unless `opts.skipConfirm`** (`:2358-2360`) — the boot path must pass
     `skipConfirm: true`. On a single-file page steps 0/0b are structurally no-ops: every embedded
     part is present and eager, and the sources are inline.
@@ -408,7 +408,7 @@ Rules:
 | Parts manifest + presets + spinner data-URI + shell | ~3 KB |
 | Vendor payloads of embedded 3D parts (only if loaded) | +18.9 KB each |
 | **Code total** | **~3.0 MB** (all parts) |
-| Snapshot | tens of KB (default desktop) → grows with content; dominated by base64 `$Canvas`/`$Image` records |
+| Snapshot | tens of KB (default desktop) → grows with content; dominated by base64 `$Canvas` records |
 
 Reference points: empty TiddlyWiki 2.55 MB; community comfort zone <10–20 MB ⇒ ~5× headroom for
 world content before entering "large wiki" territory.

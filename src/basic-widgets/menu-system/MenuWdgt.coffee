@@ -11,7 +11,9 @@
 #
 # The opener composes a menu's ITEMS after construction (addMenuItem / addLine) and
 # then pops it up, so the menu is ALWAYS fully built before it is shown. It therefore
-# lays its panel out + hugs it exactly ONCE, at popUp (see _reactToBeingAdded) — it is
+# lays its panel out + hugs it at popUp (see _reactToBeingAdded), and again only when what
+# its rows measure changes — a re-add, a row gained, lost or relabelled, a change of lifetime
+# (a pop-up's title is one of its rows' entries only while it is a pop-up) — it is
 # deliberately NOT a size-tracking container of its rows. (An earlier size-tracking design
 # that re-drove the panel on every settle shifted the menu ±1px and un-hovered the item
 # under the pointer — §5.2d.) The row API is DELEGATED to the panel so the ~380

@@ -22,7 +22,14 @@ A scrolling container decomposes into three responsibilities, each with an hones
    (the visible window's plane rect is `contents.position() + offset .. + my extent`) —
    applied as a paint-time translation around the contents recursion
    (`_scrollTranslation`; dormant, same-object/stock-path, at zero) and carried identically
-   by the screen↔plane walks for input, hit-testing, damage and clipping. Every offset write
+   by the screen↔plane walks for input, hit-testing, damage and clipping. For loose content
+   the plane's committed frame is the padded content ∪ the visible window ∪ the viewport's
+   own box — the window at rest (`_positionAndResizeChildren`) — so the vacant strip between
+   the viewport's origin and content placed in from it is never dropped: every scroll moves
+   the offset by exactly its travel, scrolling back returns the content to where it rested,
+   and a pane whose overflow is smaller than that strip stays scrollable; the frame still
+   extends above/left of the origin for content overhanging it (the D2 island-overhang
+   reachability, which is why the offset is measured from the FRAME origin). Every offset write
    goes through the one funnel `_writeScrollOffset` (clamped by the movement cores
    `scrollX`/`scrollY`, which refuse under `'never'`; the offset is MAPPING state, so the
    funnel breaks the `geometryVersion`-keyed caches exactly as a bounds write does), the
