@@ -1216,6 +1216,8 @@ class MacroToolkit
   # — the mouse path leaves it exactly where the verb aimed, and the finger's must agree.
   _touchScrollBy: (aimPoint, deltaX, deltaY, startTime, pane) ->
     remaining = @_dragVectorOfWheel deltaX, deltaY
+    # the box is read ONCE, as the pane shows now: every swipe below is queued before any drains, so a
+    # swipe that scrolls an enclosing pane moves this one on screen under the swipes still to come
     box = @_swipeBoxOf pane
     aim = @_aimInsideBox (@_screenPointOfTarget aimPoint), box
     timeAbs = @scaledAbs startTime
@@ -1273,9 +1275,15 @@ class MacroToolkit
   _topWdgtAtScreenPoint: (aPoint) ->
     world.topWdgtSuchThat (m) -> m.isPointerTargetAt (m.screenPointToMyPlane aPoint)
 
-  # The box a swipe must stay inside: the pane's own box on the SCREEN (it may sit on a scrolled or
-  # tilted plane — the same two-corner mapping the menu-row scroller uses), inset clear of the
-  # chrome parked on its edges. A press that lands on chrome delivers NO scroll: chrome declares
+  # The box a swipe must stay inside: the part of the pane that SHOWS, on the SCREEN, inset clear of
+  # the chrome parked on its edges. What shows is the pane's box cut by every enclosing clip
+  # (clippedThroughBounds, in the pane's own plane): a pane nested in a scrolled document can stand
+  # partly outside the document's viewport, and a swipe started in that hidden part presses whatever
+  # the screen shows there instead — the bare desktop, a neighbour — and scrolls nothing. It reaches
+  # the screen by the two-corner mapping the menu-row scroller uses (the pane may sit on a scrolled
+  # or tilted plane). A pane nothing of which shows keeps its whole box, so its swipe presses what
+  # covers it and the press's aim check names the miss.
+  #   A press that lands on chrome delivers NO scroll: chrome declares
   # ownsDragsStartingOnMe and answers BEFORE the pane on the way up, so the gesture becomes that
   # surface's own — a parked resize handle resizes the frame by the swipe's whole length instead of
   # scrolling it. The inset is the pane's bar band always (its bars are its own children, and a
@@ -1284,8 +1292,10 @@ class MacroToolkit
   # can never invert.
   _swipeBoxOf: (pane) ->
     return undefined unless pane?
-    topLeft = pane.localPointToScreen new Point pane.left(), pane.top()
-    bottomRight = pane.localPointToScreen new Point pane.right(), pane.bottom()
+    shown = pane.clippedThroughBounds()
+    shown = pane.boundingBox() if shown.isEmpty()
+    topLeft = pane.localPointToScreen shown.topLeft()
+    bottomRight = pane.localPointToScreen shown.bottomRight()
     inset = pane.scrollBarsThickness ? 0
     if pane.children.some((child) -> world.temporaryHandlesAndLayoutAdjusters.has child)
       inset = Math.max inset, WorldWdgt.theme.handleSize

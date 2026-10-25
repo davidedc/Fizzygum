@@ -42,7 +42,9 @@ class Widget extends TreeNode
     "lastTime"
     # the back-buffer render cache (BackBufferMixin) — rebuilt on demand by
     # _createRefreshOrGetBackBuffer, so it is never serialized; the restored widget
-    # re-renders it on its first paint. The shadow-silhouette twin follows the same rule.
+    # re-renders it on its first paint. The shadow-silhouette twin follows the same rule. (A DRAWN
+    # CanvasWdgt's raster is no cache but content: CanvasWdgt.drawnRaster holds that same canvas
+    # under a name that rides a save.)
     "backBuffer", "backBufferContext"
     "_backBufferShadowSilhouette", "_backBufferShadowSilhouetteSource"
     "cachedFullBounds", "checkFullBoundsCache", "childrenBoundsUpdatedAt"
@@ -673,7 +675,14 @@ class Widget extends TreeNode
       # sole content of an island (sugar OR explicit), the island IS my transform, so sending only me to
       # the bin would strand the empty island and drop my transform. Only the re-homing TARGET
       # changes; my own close bookkeeping above still runs on me. Off any island this is me (byte-identical).
-      restingContainer._addRestingWidgetNoSettle @_enclosingIslandFigure()
+      figure = @_enclosingIslandFigure()
+      # Pointer hygiene, the death funnel's twin (_destroyNoSettle tells the hand the same way): a
+      # stroke in progress may have booked what is being put away — what its drag picks up, the widget
+      # its click or hold is about, the non-float drag target — or be carrying it, and a booking left
+      # naming it lifts it back out of storage at the next pressed move. Told the figure that leaves,
+      # before it leaves its parent, so the hand can still see that it is the payload it carries.
+      world.hand.noteWidgetClosed figure
+      restingContainer._addRestingWidgetNoSettle figure
       world.noteStorageMembershipMayHaveChanged()
     else
       world.inform "There is no\nbin to go in!"

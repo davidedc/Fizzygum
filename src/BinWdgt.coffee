@@ -27,7 +27,12 @@ class BinWdgt extends Widget
   colloquialName: ->
     "Bin"
 
+  # Closing my window puts ME away: I am the world's bin (world.binWdgt) and go back off the tree,
+  # taking my residents off the desktop with me. A stroke can be pressing one of them in my open
+  # window, so the hand is told before I leave (ActivePointerWdgt.noteWidgetClosed) -- I cannot pass
+  # through the close funnel, which would file me into myself.
   closeFromContainerFrame: (containerWindow) ->
+    world.hand.noteWidgetClosed @
     @removeFromTree()
     # containerWindow is now empty (we just detached above), so destroying it loses nothing
     containerWindow.fullDestroy()

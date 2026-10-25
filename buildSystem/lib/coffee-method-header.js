@@ -1,4 +1,5 @@
-// coffee-method-header.js — the ONE spelling of "this line defines a class method", shared by every
+// coffee-method-header.js — the ONE spelling of "this line defines a class method", and the ONE
+// grouping of a file's lines into methods (class methods and mixin members alike), shared by every
 // build gate that groups a `.coffee` file into methods.
 //
 // WHY THIS EXISTS. Six gates each carried their own copy of
@@ -54,6 +55,8 @@ const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): +(?:(?:\(.*?\)\s*)?[-=]>|\(
 // would be invisible again, and — this is the whole lesson — NOTHING would say so, because a gate
 // that cannot see a method reports nothing about it. This returns those lines so a gate can FAIL on
 // them, turning a silent blind spot into a build error that names its own fix.
+// It reads the class-method (2-space) indent only: a mixin member in a spelling MIXIN_METHOD_HEADER
+// misses is not reported.
 // Returns [{ line (1-based), text }]. Two shapes, both anchored at the class-method indent:
 //   (a) the line ends in an arrow but we did not match it — a closed header in a spelling we missed;
 //   (b) the line OPENS an unbalanced paren list — a wrapped signature whose header line we missed.
@@ -81,4 +84,56 @@ function unseenMethodHeaders(lines) {
   return out;
 }
 
-module.exports = { METHOD_HEADER, MIXIN_METHOD_HEADER, unseenMethodHeaders };
+// THE GROUPING ITSELF, mixin-DSL aware — what a line does to "which method am I in". A mixin
+// (src/mixins/*, src/app-kit/*Mixin.coffee) declares its members INSIDE the 2-space
+// `onceAddedClassProperties: (fromClass) -> @addInstanceProperties fromClass, { … }` block, one
+// nesting level deeper — 4-space (KeepsRatioWhenInVerticalStackMixin) or 6-space (the others) — so
+// to a gate that knows only METHOD_HEADER a whole mixin is ONE method named onceAddedClassProperties,
+// and every handler a mixin stitches onto a widget is a body that gate never attributes to anyone.
+// A gate that cannot see a method reports nothing about it (§6b of lint-and-static-checks.md), so the
+// mixin shape lives HERE, once, beside the header spellings it extends.
+//   Returns { method, mixinHashIndent, kind: 'header' | 'end' } when the line STARTS or ENDS a
+// method, null for a body line. Thread mixinHashIndent through the file: null = not in a mixin
+// block; -1 = inside onceAddedClassProperties, awaiting the first member to LOCK the member indent;
+// >0 = the locked indent (members at it are headers; deeper headers are defs nested in a member's
+// body). For a file with no onceAddedClassProperties it stays null throughout, and the grouping is
+// METHOD_HEADER's — except that a 2-space non-method key or a column-0 line ENDS the method
+// (kind 'end') instead of being folded into the one above it. Feed it lines whose strings are
+// closed where the gate can (check-layering and the two censuses pass the string-stripped line): fed
+// RAW lines, a heredoc line at column 0 ends the method it sits in.
+const MIXIN_CONTAINER = 'onceAddedClassProperties';
+function methodBoundary(raw, mixinHashIndent) {
+  const m = raw.match(METHOD_HEADER);
+  if (m) return { method: m[1], mixinHashIndent: m[1] === MIXIN_CONTAINER ? -1 : null, kind: 'header' };
+  if (mixinHashIndent !== null) {
+    const sm = raw.match(MIXIN_METHOD_HEADER);
+    if (sm) {
+      const indent = sm[1].length;
+      const lock = mixinHashIndent === -1 ? indent : mixinHashIndent;
+      if (indent === lock) return { method: sm[2], mixinHashIndent: lock, kind: 'header' };
+      return null;
+    }
+  }
+  if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) return { method: null, mixinHashIndent: null, kind: 'end' };
+  return null;
+}
+
+// Every method of a file as a span: [{ name, line (0-based header index), end (exclusive), mixin }],
+// `mixin` true for a member of a mixin's onceAddedClassProperties block (the container itself is
+// reported too, as a 2-space method whose span ends at its first member). The span a gate scans as
+// "this method's body" is lines line+1 .. end-1.
+function methodSpans(lines) {
+  const spans = [];
+  let state = null, open = null;
+  lines.forEach((raw, i) => {
+    const b = methodBoundary(raw, state);
+    if (!b) return;
+    state = b.mixinHashIndent;
+    if (open) { open.end = i; spans.push(open); open = null; }
+    if (b.kind === 'header') open = { name: b.method, line: i, end: lines.length, mixin: state !== null && b.method !== MIXIN_CONTAINER };
+  });
+  if (open) spans.push(open);
+  return spans;
+}
+
+module.exports = { METHOD_HEADER, MIXIN_METHOD_HEADER, MIXIN_CONTAINER, methodBoundary, methodSpans, unseenMethodHeaders };

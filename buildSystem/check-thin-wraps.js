@@ -28,7 +28,7 @@ const path = require('path');
 
 const SRC = path.resolve(__dirname, '../src');
 
-const { METHOD_HEADER: HEADER } = require('./lib/coffee-method-header');   // 2-space-indent class method header
+const { methodSpans } = require('./lib/coffee-method-header');   // class methods and mixin members, one span each
 const GUARD  = /^return\s+(if|unless)\b/;               // idempotency guard clause
 const EXEMPT = /#\s*thin-wrap-exempt:\s*\S/;            // marker WITH a non-empty reason
 
@@ -49,7 +49,7 @@ for (const p of walk(SRC, [])) {
   const cls = path.basename(p, '.coffee');
   const lines = fs.readFileSync(p, 'utf8').split('\n');
   const heads = [];
-  lines.forEach((l, i) => { const m = HEADER.exec(l); if (m) heads.push({ name: m[1], i }); });
+  for (const sp of methodSpans(lines)) heads.push({ name: sp.name, i: sp.line, end: sp.end });
   const byName = new Map(heads.map((h, k) => [h.name, k]));
   for (let k = 0; k < heads.length; k++) {
     const m = /^_(.+)NoSettle$/.exec(heads[k].name);
@@ -69,7 +69,7 @@ for (const p of walk(SRC, [])) {
     }
     if (marked) { exempt++; continue; }
     // the public method's code lines (comments + blanks removed)
-    const end = twinIdx + 1 < heads.length ? heads[twinIdx + 1].i : lines.length;
+    const end = head.end;
     const body = [];
     for (let j = head.i + 1; j < end; j++) { const c = stripComment(lines[j]).trim(); if (c) body.push(c); }
     // strip leading idempotency guards, then require exactly the canonical wrap

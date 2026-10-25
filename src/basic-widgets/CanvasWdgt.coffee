@@ -9,9 +9,24 @@
 # one is set on me (setColor), else the canvas role, read as the raster is painted (_surfaceFill).
 # The paper is part of the raster: a role that moves later shows on the next raster I make, not on
 # the one I hold.
+#
+# MY RASTER BECOMES CONTENT the moment something draws on it through me (drawLine, clear -- the pen's
+# two ways in): from then on it is the only copy of the drawing, and no paint can re-derive it. See
+# drawnRaster.
 
 class CanvasWdgt extends PanelWdgt
   @augmentWith BackBufferMixin
+
+  # MY DRAWN RASTER: the very canvas object BackBufferMixin holds as my backBuffer, held a second time
+  # under a name that rides a save. On every other widget backBuffer is a RENDER CACHE, re-derived on
+  # demand after a restore, so Widget declares it a serialization transient (and a subclass can only
+  # add to that list, never drop from it); a drawn raster is CONTENT, so it is also held here, where
+  # the Serializer writes it as a $Canvas record -- one record, the object table being identity-keyed.
+  # Undefined while my raster is only paper, which every raster I make lays again: a canvas nothing
+  # has drawn on costs a saved file nothing, and neither does a subclass whose raster is a cache it
+  # repaints (a video frame, a loaded image, a 3D render, the paint glass), since none of them draws
+  # through drawLine or clear.
+  drawnRaster: undefined
 
   # The paper I lay my raster on while I hold no colour of my own -- like every panel I hold none until
   # one is set on me (the soft hook a surface that wears a role answers: RectangularAppearance
@@ -45,6 +60,14 @@ class CanvasWdgt extends PanelWdgt
 
     extent = @extent()
 
+    # a canvas restored from a file or a snapshot comes back holding its drawn raster and no back
+    # buffer (that one is a transient): the drawing IS the back buffer, at my pixel scaling
+    if !@backBuffer? and @drawnRaster?
+      @backBuffer = @drawnRaster
+      @backBufferContext = @backBuffer.getContext "2d"
+      @backBufferContext.setTransform 1, 0, 0, 1, 0, 0
+      @backBufferContext.useLogicalPixelsUntilRestore()
+
     if @backBuffer?
       # @backBuffer.width and @backBuffer.height are already in
       # physical coordinates so no need to adjust for pixelratio
@@ -73,6 +96,8 @@ class CanvasWdgt extends PanelWdgt
         # we leave the context with the correct pixel scaling.
         # ALWAYS leave the context with the correct pixel scaling.
         @backBufferContext.useLogicalPixelsUntilRestore()
+        # the drawing moved to the new raster with the copy above
+        @drawnRaster = @backBuffer if @drawnRaster?
         return [@backBuffer, @backBufferContext]
 
     @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
@@ -108,6 +133,7 @@ class CanvasWdgt extends PanelWdgt
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
     @backBufferContext.useLogicalPixelsUntilRestore()
+    @drawnRaster = @backBuffer
     # the raster mutated in place, so the shadow-silhouette twin is stale (the mixin's
     # identity check cannot see an in-place change)
     @_backBufferShadowSilhouette = undefined
@@ -123,6 +149,11 @@ class CanvasWdgt extends PanelWdgt
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
 
     context = @backBufferContext
+    # the line is in my logical pixels, so the context must scale by the pixel ratio -- and a copy's
+    # does not: the Duplicator rebuilds a derived context straight off the copied canvas (a fresh,
+    # unscaled one), so at a ratio above 1 a copy would take every line at a fraction of its size
+    context.setTransform 1, 0, 0, 1, 0, 0
+    context.useLogicalPixelsUntilRestore()
 
     from = start
     to = dest
@@ -134,6 +165,7 @@ class CanvasWdgt extends PanelWdgt
     context.moveTo from.x, from.y
     context.lineTo to.x, to.y
     context.stroke()
+    @drawnRaster = @backBuffer
     # the raster mutated in place, so the shadow-silhouette twin is stale (the mixin's
     # identity check cannot see an in-place change)
     @_backBufferShadowSilhouette = undefined

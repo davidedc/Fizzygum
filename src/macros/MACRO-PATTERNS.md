@@ -2210,11 +2210,10 @@ synthesize cancels): `macroFingerHoldOpensTitledContextMenu`,
 element presence/absence, no pixels), plus three TABLET-extent tests at a declared 1024×768
 (`…TabletDockedToolbarChevron`, `…TabletFingerDragsWindowByBar`,
 `…TabletFingerHoldOpensWorldMenu`) — the extent is the TEST's own declared metadata fact, honoured
-by the reset seam, never a display setting. Every gesture witness test declares
-`grabDragThreshold: true` in its metadata: the Automator's normal threshold-skip (a carve-out for
-the retired recorded tests) would grab the pressed widget before the hold's own same-position move
-ever got to fire it — a test about a RECOGNITION window wants the hand's real recognition
-machinery.
+by the reset seam, never a display setting. Playback applies the hand's own grab threshold exactly
+as a user meets it — there is no test-side switch, and a metadata file still declaring the retired
+`grabDragThreshold` key is refused at replay — so a hold's own same-position move lifts nothing: a
+touch press that has not moved is not a drag (`ActivePointerWdgt.checkDraggingThreshold`).
 
 Separately, the FULL suite can replay under **`?pointer=finger`** (`--pointer=finger` on the
 headless runners) — a second global axis beside speed, `MacroToolkit.currentPointerKind()` ∈
@@ -2246,9 +2245,13 @@ pointer at the aim afterwards.** `_scrollPaneAt` asks the product's own question
 (`ViewportWdgt.claimsPlainDragsForScrolling`, walked from the aim point first and the named
 widget second) rather than assuming the widget named IS what scrolls — a menu's rows live in a
 viewport BELOW it, and content that overflows its pane can have its centre outside that pane. The
-swipe is boxed to `_swipeBoxOf` that pane: its screen rect, inset clear of its own chrome (the
-bar band, widened while a resize/move handle is parked on it — a swipe means to press CONTENT,
-and one that lands on chrome would resize instead of scroll). **A wheel notch has no reach limit
+swipe is boxed to `_swipeBoxOf` that pane: the part of it that SHOWS on the screen (its
+`clippedThroughBounds` — the box cut by every enclosing clip; a pane nested in a scrolled document
+can stand partly outside the document's viewport, and a swipe started there would press the bare
+desktop), inset clear of its own chrome (the bar band, widened while a resize/move handle is parked
+on it — a swipe means to press CONTENT, and one that lands on chrome would resize instead of
+scroll); a pane nothing of which shows keeps its whole box, so the press's aim check names the
+miss. The box is read once per wheel call, before any of its swipes drains. **A wheel notch has no reach limit
 and a finger does, so a delta longer than one swipe is delivered as successive CLAMPED swipes** —
 `_touchScrollBy` loops (bounded by `@maxScrollSwipes`), each leg SHIFTED to fit inside the box
 rather than shortened, until the whole delta is spent or the box is exhausted (where the at-edge

@@ -25,7 +25,8 @@ class MemberRowWdgt extends MenuItemWdgt
 
   # my KIND TAG, a StringWdgt: built with me from my spec's kindTag, adopted and placed by
   # _placeMyParts, which runs again whenever my label is rebuilt -- the tag belongs to my member, not
-  # to the label of the moment
+  # to the label of the moment. It holds no colour of its own: it paints in the ink I answer for it
+  # (inkForChildText).
   kindTag: undefined
   # is my name DIMMED -- shown in memberRowDimmedNameText rather than memberRowNameText? An own field
   # only when true.
@@ -38,7 +39,7 @@ class MemberRowWdgt extends MenuItemWdgt
   constructor: (commandSpec, opts = {}) ->
     theme = WorldWdgt.theme
     @dimmed = true  if commandSpec.dimmed
-    @kindTag = new StringWdgt (commandSpec.kindTag ? ""), fontRole: theme.fonts.memberKindTag, color: theme.memberRowTagText
+    @kindTag = new StringWdgt (commandSpec.kindTag ? ""), fontRole: theme.fonts.memberKindTag
     super commandSpec, opts
 
   # MY LOOK (MenuItemWdgt reads it before super): my name in fonts.memberName, in ink or, dimmed, in
@@ -91,38 +92,13 @@ class MemberRowWdgt extends MenuItemWdgt
     @label.__commitMoveTo @position().add new Point @_leadingWidth(), Math.floor (plateHeight - nameLine) / 2
     @label.__commitExtent new Point (Math.max 0, @width() - @_leadingWidth() - @_trailingWidth()), nameLine
 
-  # My tag's ink follows my state: the accent while I am out of my rest state -- my list's selection,
-  # or pressed -- and memberRowTagText at rest. Run after every change of my state (below).
-  _inkMyTag: ->
+  # THE INK OF MY KIND TAG, which my tag asks me for as it paints and keys its buffer, holding no
+  # colour of its own (StringWdgt._textInk): the accent while the state I show is out of rest -- my
+  # list's selection, or pressed (MenuItemWdgt._shownState) -- and memberRowTagText at rest. Read
+  # here, at paint, it follows my list's model with nothing to keep in step, and no ink is copied into
+  # a tag a save or a copy would carry. My name is no tag and gets no answer: it keeps the ink it was
+  # built with.
+  inkForChildText: (aText) ->
+    return undefined unless aText is @kindTag
     theme = WorldWdgt.theme
-    @kindTag.setColor (if @state is @STATE_NORMAL then theme.memberRowTagText else theme.memberRowSelectedTagText)
-
-  # THE CHANGES OF MY STATE, each made the way any list row makes it (MenuItemWdgt, LabelButtonWdgt)
-  # and followed by my tag: a press (pressed; my panel unselects my siblings first — and the press
-  # goes on up, as any row's does), my click (selected), my panel unselecting me, my panel showing
-  # me as its list's selection again, and a cancelled press.
-  pressBegan: (pos) ->
-    super
-    @_inkMyTag()
-    true
-
-  activated: ->
-    super
-    @_inkMyTag()
-
-  unselect: ->
-    super
-    @_inkMyTag()
-
-  showAsSelected: ->
-    super
-    @_inkMyTag()
-
-  pressCancelled: ->
-    super
-    @_inkMyTag()
-
-  # A COPY of me keeps my state, and my tag's ink with it: my state is my list's SELECTION, which a
-  # copy of my list keeps (its `selected` is my copy), never a hover -- I have no hover look and no
-  # tooltip, the two things a label button's copy drops (LabelButtonWdgt._reactToBeingCopied).
-  _reactToBeingCopied: ->
+    if @_shownState() is @STATE_NORMAL then theme.memberRowTagText else theme.memberRowSelectedTagText

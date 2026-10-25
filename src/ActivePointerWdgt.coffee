@@ -43,7 +43,8 @@ class ActivePointerWdgt extends Widget
   _pressTravelledPastDragThreshold: false    # the press went past grabDragThreshold of its origin
   # --- the stroke's SCROLL (ViewportWdgt's direction latch) ---------------------------------------
   # Per stroke too, and cleared with the recognizer above — at the next press, a cancel, a teardown
-  # — but WIDGET references, so a dying widget is also forgotten from them (noteWidgetDestroyed).
+  # — but WIDGET references, so a dying widget, or one put away, is also forgotten from them
+  # (noteWidgetDestroyed / noteWidgetClosed).
   # The owner is told at the press, by the pane itself; the stroke's pane is fixed once, at the
   # drained event where the press crossed grabDragThreshold, and is undefined until then — and for
   # the whole stroke when it lifted what it pressed instead, or no pane took its press.
@@ -64,7 +65,8 @@ class ActivePointerWdgt extends Widget
   #       and the members above it keep the press;
   #     · a LIFT (grab starting a float-drag): every member, since what the press landed on is
   #       carried from there on, and the drop that ends the stroke owes no ending of its own;
-  #     · an ABORT (processPointerCancel): whatever is still owed.
+  #     · an ABORT (processPointerCancel): whatever is still owed;
+  #     · a CLOSE (noteWidgetClosed): the members inside a widget put away mid-stroke.
   #  - pressEnded(pos, button, buttons, ctrlKey, shiftKey, altKey, metaKey), at the RELEASE, to every
   #    member still owed one, leaf first, each with the pointer in its own plane — wherever the
   #    release lands, on every release (a hold-consumed one and a scroll's included). Whether the
@@ -155,29 +157,60 @@ class ActivePointerWdgt extends Widget
     return
 
   # PUBLIC notification — a widget is dying. Widget._destroyNoSettle, the one funnel every death
-  # passes through, tells me, as it tells the world's other registries of live widgets. A press books
-  # widgets the rest of its stroke acts on — what a drag picks up, the widget the release's click and
-  # a finger's hold are about, the widget a non-float drag steps, the pane that took the press and the
-  # one its latch chose to scroll, the audience still owed an ending — and a booking left naming a
-  # corpse is acted on at a later event of the stroke: a pressed move lifts the corpse onto me, the
-  # release drops it back into the tree, and an ending tells it its press is over. So every booking
-  # the dying widget is or contains is forgotten, and the stroke goes on without it. Containment
-  # counts because a single-widget destroy orphans the subtree under it rather than destroying it
-  # (the editor-focus register's rule). The payload I carry leaves me by itself (its death detaches it
-  # from its parent), and its death also spends the pick-up the press booked, which can be the
-  # template it was copied from rather than the payload itself.
-  #   Not forgotten here: the over-list, which the next dispatch re-derives from the tree and which
-  # owes the corpse its last hoverExited (a menu row takes down the highlight on the widget it stands
-  # for, a widget with a tooltip takes the tooltip down); and the multi-click candidates, which
-  # recognize only the widget a release lands on, never a corpse.
+  # passes through, tells me, as it tells the world's other registries of live widgets. A corpse is
+  # owed nothing — no ending, no end of a drag — so all it takes is the bookings it leaves with
+  # (_forgetBookingsLeavingWith). Containment counts because a single-widget destroy orphans the
+  # subtree under it rather than destroying it (the editor-focus register's rule).
   noteWidgetDestroyed: (deadWdgt) ->
-    diesWithIt = (booking) -> booking? and deadWdgt.isAncestorOf booking
-    @wdgtToGrab = undefined  if (deadWdgt.parent is @) or diesWithIt @wdgtToGrab
-    @mouseDownWdgt = undefined  if diesWithIt @mouseDownWdgt
-    @nonFloatDraggedWdgt = undefined  if diesWithIt @nonFloatDraggedWdgt
-    @_pressScrollOwner = undefined  if diesWithIt @_pressScrollOwner
-    @_strokeScrollPane = undefined  if diesWithIt @_strokeScrollPane
-    @_pressAudience = (member for member in @_pressAudience when not diesWithIt member)
+    @_forgetBookingsLeavingWith deadWdgt
+    return
+
+  # PUBLIC notification — a widget is being PUT AWAY: it goes into storage alive (the bin, or the
+  # shelf when something still reaches it), or the storage it rests in leaves the world. Every close
+  # passes through Widget._closeNoSettle, which tells me (a close button, a menu's Close or Move to
+  # trash, a filing, a drop on the bin's icon); the storage sorter tells me when it files a resident
+  # of the bin, which an open bin window shows, away to the shelf; and the bin tells me when its
+  # window closes and takes it off the desktop. It is the death funnel's twin, because a widget put
+  # away leaves the world the stroke acts on as surely as a dead one, and a booking left naming it is
+  # acted on the same way: a pressed move lifts it back out of storage onto me and the release drops
+  # it on the desktop. I am told the FIGURE that leaves (the island a tilted widget rides in, when
+  # there is one) before it leaves its parent, so I can still see that it is the payload I carry.
+  #   Unlike a corpse, a widget put away can come back, so it is owed what the stroke owes it before
+  # it goes: the members of the press's audience inside it are told the press is CANCELLED — the
+  # stroke stopped being a press on that content, as when a pane takes it for a scroll — and the
+  # widget a non-float drag steps is told that drag is over, as a release would tell it; either
+  # look left standing would come back out of storage with it. Then it takes the same bookings a
+  # death takes.
+  noteWidgetClosed: (closedFigure) ->
+    leavesWithIt = (booking) -> booking? and closedFigure.isAncestorOf booking
+    @_cancelPressOf leavesWithIt
+    @nonFloatDraggedWdgt.endOfNonFloatDrag?()  if leavesWithIt @nonFloatDraggedWdgt
+    @_forgetBookingsLeavingWith closedFigure
+    return
+
+  # THE BOOKINGS A WIDGET LEAVING MID-STROKE TAKES WITH IT, dead or put away. A press books widgets
+  # the rest of its stroke acts on — what a drag picks up, the widget the release's click and a
+  # finger's hold are about, the widget a non-float drag steps, the pane that took the press and the
+  # one its latch chose to scroll, the audience still owed an ending — and a booking left naming a
+  # widget that has left is acted on at a later event of the stroke: a pressed move lifts it onto me,
+  # the release drops it back on the desktop, and an ending tells it its press is over. So every
+  # booking the leaving widget is or contains is forgotten, and the stroke goes on without it. The
+  # payload I carry leaves me by itself (its death detaches it, its close re-homes it), and its
+  # leaving also spends the pick-up the press booked, which can be the template it was copied from
+  # rather than the payload itself.
+  #   Not forgotten here: the over-list, which the next dispatch re-derives from the tree and which
+  # owes the leaving widget its last hoverExited (a menu row takes down the highlight on the widget it
+  # stands for, a widget with a tooltip takes the tooltip down); the multi-click candidates, which
+  # recognize only the widget a release lands on; and the drag-embed state, which the next dispatch
+  # takes down once nothing rides me (dispatchEventsFollowingMouseMove).
+  _forgetBookingsLeavingWith: (leavingWdgt) ->
+    leavesWithIt = (booking) -> booking? and leavingWdgt.isAncestorOf booking
+    @wdgtToGrab = undefined  if (leavingWdgt.parent is @) or leavesWithIt @wdgtToGrab
+    @mouseDownWdgt = undefined  if leavesWithIt @mouseDownWdgt
+    @nonFloatDraggedWdgt = undefined  if leavesWithIt @nonFloatDraggedWdgt
+    @_pressScrollOwner = undefined  if leavesWithIt @_pressScrollOwner
+    @_strokeScrollPane = undefined  if leavesWithIt @_strokeScrollPane
+    @_pressAudience = (member for member in @_pressAudience when not leavesWithIt member)
     return
 
   # Forget the press-and-hold recognizer's whole per-stroke state, and the stroke's scroll facts
@@ -520,8 +553,22 @@ class ActivePointerWdgt extends Widget
 
       world.stopEditing()
 
-      # this paragraph deals with how to resize/reposition the widget
-      # that we are grabbing in respect to the hand
+      # WHERE THE PICK-UP STARTED, for the drop's sticky re-embed, which compares its target with
+      # @grabOrigin.origin, the PRE-GRAB parent. Read before the release below takes the widget out of
+      # its host's layout. (For a template's copy determineGrabs records the TEMPLATE's situation over
+      # this one: the copy is picked up from where the template stands.)
+      @grabOrigin = aWdgt.situation()
+      # I OWN the settle around this callback: _beforeBeingGrabbed releases the widget from its
+      # host's layout (it unlocks from panels and drops its layout spec), which marks the widget
+      # AND the holder chain it is leaving. A notification callback declares no settle of its own
+      # (layering rule [J]), so without this the marks are an undeclared end-of-cycle push — the
+      # dispatcher is the one that knows the gesture is one discrete mutation.
+      @_settleLayoutsAfter => aWdgt._beforeBeingGrabbed?()
+
+      # WHERE THE WIDGET RIDES THE HAND, decided only once the release above has settled. The release
+      # re-lays the host the widget is leaving, and that pass can place the widget itself again (a
+      # document flows it back to its slot in the flow), so a placement decided before it is undone by
+      # it: the widget would ride the hand as far from the press point as the threshold travel.
       if switcherooHappened
         # in this case the widget being grabbed is created on the fly
         # so just like the next case it's OK to center it under the pointer
@@ -538,18 +585,11 @@ class ActivePointerWdgt extends Widget
         aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
         aWdgt._moveWithin world
       else if displacementDueToGrabDragThreshold?
-        # keep visual consistency: move the widget to where the grab started (we grab only after a
-        # significant move past the threshold). Don't fit within the world -- a widget picked up
-        # partially off-screen should stay there, not jump into view.
+        # keep visual consistency: move the widget by the travel the threshold let pass before the lift
+        # (checkDraggingThreshold), so the hand carries it by the point the press went down on. Don't
+        # fit within the world -- a widget picked up partially off-screen should stay there, not jump
+        # into view.
         aWdgt._applyMoveTo aWdgt.position().add displacementDueToGrabDragThreshold
-
-      @grabOrigin = aWdgt.situation()
-      # I OWN the settle around this callback: _beforeBeingGrabbed releases the widget from its
-      # host's layout (it unlocks from panels and drops its layout spec), which marks the widget
-      # AND the holder chain it is leaving. A notification callback declares no settle of its own
-      # (layering rule [J]), so without this the marks are an undeclared end-of-cycle push — the
-      # dispatcher is the one that knows the gesture is one discrete mutation.
-      @_settleLayoutsAfter => aWdgt._beforeBeingGrabbed?()
 
       # double-settle-sanctioned: the grab gesture hand-rolls FOUR deliberate sequential flushes —
       # the release above, then @add self-settling the re-home into the hand, then the grabbed
@@ -1082,7 +1122,8 @@ class ActivePointerWdgt extends Widget
   # (_strokeOwesNoClick). Every fact read here is fixed by the time the press leaves the radius —
   # the travel itself, the touch stroke's arming (a hold cannot fire once the press has travelled),
   # the pane the latch chose there, and the non-float target the stroke's first pressed move booked
-  # — so the commit and the release read the same answer, unless a booked widget dies in between.
+  # — so the commit and the release read the same answer, unless a booked widget dies or is put away
+  # in between.
   # Who took the drag is read per kind of stroke:
   #  - a FINGER's drag is decided by the grammar (§2.2's plain-drag row, the two facts the recognizer
   #    keeps): an un-armed touch press that travels is a scroll for the rest of its life — whether or
@@ -1142,8 +1183,8 @@ class ActivePointerWdgt extends Widget
 
   # THE ENDINGS. A member is struck off the audience before it is told, so an ending that sets off
   # another one cannot tell anybody twice; and members are taken one at a time from the live record,
-  # so one that dies under an earlier member's ending has left it before its turn
-  # (noteWidgetDestroyed).
+  # so one that dies or is put away under an earlier member's ending has left it before its turn
+  # (noteWidgetDestroyed / noteWidgetClosed).
   #   pressCancelled to each member `isCancelled` answers true for, in audience order.
   _cancelPressOf: (isCancelled) ->
     while (member = @_pressAudience.find isCancelled)?
@@ -1595,56 +1636,36 @@ class ActivePointerWdgt extends Widget
 
     @dispatchEventsFollowingMouseMove mouseOverNew
 
+  # THE GRAB/DRAG THRESHOLD: has the pressed widget's lift begun, and how far must it be corrected.
+  # A pointer is noisy, and a press meant to select or to place a caret must not turn into a drag, so
+  # a press lifts nothing until the pointer has travelled grabDragThreshold from where it went down —
+  # and what lifts then is the widget under the PRESS, wherever the pointer is by now. The lift is
+  # corrected by that travel (the displacement answered here, which grab applies), so the hand
+  # carries the widget by the very point the press went down on, not by a point a threshold later.
+  #   Answers [waiting, displacement]: waiting is true while nothing may lift yet.
   checkDraggingThreshold: ->
-    # UNFORTUNATELY OLD tests didn't take the correction into account,
-    # pointers inevitably have some "noise", so to avoid that
-    # a simple clicking (which could be done for example for
-    # selection purposes or to pick a position for a cursor)
-    # turns into a drag, so we add
-    # a grab/drag distance threshold.
-    # Note that even if the mouse moves a bit, we are still
-    # picking up the correct widget that was under the mouse when
-    # the mouse down happened.
-    # Also we correct for the initial displacement
-    # due to the threshold, so really when user starts dragging
-    # it should pick up the EXACT point where the click happened,
-    # not a "later" point once the threshold is passed.
-
-    # so we have to bypass this mechanism for those.
-    displacementDueToGrabDragThreshold = undefined
-    skipGrabDragThreshold = false
-
-    # A TOUCH PRESS THAT HAS NOT MOVED IS NOT A DRAG, ahead of every carve-out below. A zero-delta
+    # A TOUCH PRESS THAT HAS NOT MOVED IS NOT A DRAG, ahead of the carve-out below. A zero-delta
     # move event advances the clocks a live press runs on — the drag-embed dwell, the press-and-hold
     # recognizer — and must not float anything while doing it: a finger holding perfectly still
     # emits exactly such an event to cross its hold window, and picking the pressed widget up there
     # would end the gesture before it was recognised.
     #   Keyed on the STROKE's kind, like every other branch of the grammar. A mouse's zero-delta
-    # pressed move DOES still grab, because for a mouse that move is the first sample of a gesture
-    # the pointer walked to its origin before pressing — its grab point and the displacement
-    # correction below are measured from there, and moving that decision one sample later moves
-    # every dragged widget by the sample's own offset (measured: 41 references).
+    # pressed move CAN still lift — under the instant-grab carve-out below — because for a mouse that
+    # move is the first sample of a gesture the pointer walked to its origin before pressing: its grab
+    # point and the displacement correction are measured from there, and moving that decision one
+    # sample later moves every dragged widget by the sample's own offset (measured: 41 references).
     return [true, undefined] if @pointerType is 'touch' and @mouseDownPosition? and @mouseDownPosition.equals @position()
 
-    # ...and the Automator's own bypass (a test that declares no threshold gets none) is a MOUSE
-    # carve-out too, for the same reason: a TOUCH stroke always takes the threshold, whatever the
-    # test says, because the grammar's press-and-hold is DEFINED as staying inside it.
-    if Automator? and Automator.state == Automator.PLAYING and @pointerType isnt 'touch'
-      if !window["#{world.automator.player.currentlyPlayingTestName()}"].grabDragThreshold?
-        skipGrabDragThreshold = true
+    # The instant-grab carve-out — no threshold at all for a non-editable widget sitting directly
+    # on the desktop — is a MOUSE-FEEL rule: a mouse is steady, and a desktop widget that lifts on
+    # the first pixel of travel feels immediate. A FINGER is noisy by nature, so a touch stroke
+    # always takes the threshold: 7 px before a lift begins is imperceptible on glass, while
+    # without it a trembling finger could never hold long enough to open anything.
+    if @pointerType is 'touch' or @wdgtToGrab.parent != world or (!@wdgtToGrab.isEditable? or @wdgtToGrab.isEditable )
+      if (@mouseDownPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold
+        return [true,undefined]
 
-    if !skipGrabDragThreshold
-      # The instant-grab carve-out — no threshold at all for a non-editable widget sitting directly
-      # on the desktop — is a MOUSE-FEEL rule: a mouse is steady, and a desktop widget that lifts on
-      # the first pixel of travel feels immediate. A FINGER is noisy by nature, so a touch stroke
-      # always takes the threshold: 7 px before a lift begins is imperceptible on glass, while
-      # without it a trembling finger could never hold long enough to open anything.
-      if @pointerType is 'touch' or @wdgtToGrab.parent != world or (!@wdgtToGrab.isEditable? or @wdgtToGrab.isEditable )
-        if (@mouseDownPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold
-          return [true,undefined]
-      displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition
-
-    return [false, displacementDueToGrabDragThreshold]
+    return [false, @position().subtract @mouseDownPosition]
 
   determineGrabs: (pos, topWdgt, mouseOverNew) ->
     if !@isThisPointerDraggingSomething() and (@mouseButton is "left")
@@ -1671,6 +1692,7 @@ class ActivePointerWdgt extends Widget
           w = @wdgtToGrab.fullCopy()
           w.isTemplate = false
           @grab w, displacementDueToGrabDragThreshold
+          # the copy is picked up from where the TEMPLATE stands, so that is the grab's origin
           @grabOrigin = @wdgtToGrab.situation()
 
         else if @wdgtToGrab.detachesWhenDragged()
@@ -1828,9 +1850,9 @@ class ActivePointerWdgt extends Widget
         old.hoverExited?()
 
     # THE GRAMMAR'S THIRD CONSUMER (ruling I2): while a touch stroke is UN-ARMED its moves mean
-    # scroll and nothing else, so no widget is handed a PRESSED move — this is the site a selection
-    # would otherwise extend through, since the tap's own pressBegan already armed the string, and
-    # the site a paint tool or a plot rotation would otherwise consume. HOVER moves (no button down)
+    # scroll and nothing else, so no widget is handed a PRESSED move — this is the site a paint tool
+    # or a plot rotation would otherwise consume (a selectable text has armed no selection to extend:
+    # its pressBegan asks the same fact and passes such a press on). HOVER moves (no button down)
     # are not this stroke's business and pass through untouched; a mouse or pen stroke always means a
     # mouse drag, so this reads false for them and every dispatch below is exactly what it was.
     pressedMovesAreWithheld = @mouseButton? and not @strokeMeansMouseDrag()

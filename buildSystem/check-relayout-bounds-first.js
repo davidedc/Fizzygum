@@ -50,7 +50,7 @@ const fs = require('fs');
 const path = require('path');
 const SRC = path.resolve(__dirname, '../src');
 
-const { METHOD_HEADER: HEADER } = require('./lib/coffee-method-header');   // 2-space-indent class method header
+const { methodSpans } = require('./lib/coffee-method-header');   // class methods and mixin members, one span each
 const EXEMPT = /#\s*relayout-bounds-first-exempt:\s*\S/;     // marker WITH a non-empty reason
 // own-geometry accessor reads that indicate positioning children against MY (about-to-change) frame:
 const GEOM = /@(?:left|right|top|bottom|width|height|position|topLeft|topRight|bottomLeft|bottomRight|center)\(\)|@bounds\b(?!\s*=)/;
@@ -81,8 +81,8 @@ const byClass = new Map();
 for (const p of walk(SRC, [])) {
   const lines = fs.readFileSync(p, 'utf8').split('\n');
   const heads = [];
-  lines.forEach((l, i) => { const m = HEADER.exec(l); if (m) heads.push({ name: m[1], i }); });
-  const bodyEnd = (k) => (k + 1 < heads.length ? heads[k + 1].i : lines.length);
+  for (const sp of methodSpans(lines)) heads.push({ name: sp.name, i: sp.line, end: sp.end });
+  const bodyEnd = (k) => heads[k].end;
   const decl = /^class\s+(\w+)(?:\s+extends\s+(\w+))?/m.exec(lines.join('\n'));
   const rec = {
     p, lines, heads, bodyEnd,

@@ -48,8 +48,9 @@
  *       NEEDS the sibling Fizzygum-tests repo; R4 is null (and rule [U] SKIPS) when it is absent.
  *
  * HOW (same philosophy as the check-*.js gates — a heuristic line scanner, no type inference):
- *   - Parsing machinery is copied from check-layering.js: stripLine (strips # comments + string
- *     literals with multi-line state) and the 2-space METHOD_HEADER grouping, mixin-DSL aware.
+ *   - Parsing machinery: stripLine is copied from check-layering.js (strips # comments + string
+ *     literals with multi-line state); methods are grouped by the shared lib/coffee-method-header.js
+ *     methodBoundary — 2-space class methods and mixin onceAddedClassProperties members.
  *   - Class = file basename (one-class-per-file); `extends` / `@augmentWith` edges regex-scanned
  *     exactly like src/boot/dependencies-finding.coffee does.
  *   - A `@name` occurrence counts as a CALL when followed by `(`, or by whitespace + a value token
@@ -178,24 +179,7 @@ function maskLine(line, state) {
   return { mask, state };
 }
 
-const { METHOD_HEADER, MIXIN_METHOD_HEADER } = require('./lib/coffee-method-header');
-const MIXIN_CONTAINER = 'onceAddedClassProperties';
-
-function methodBoundary(raw, mixinHashIndent) {
-  const m = raw.match(METHOD_HEADER);
-  if (m) return { method: m[1], mixinHashIndent: m[1] === MIXIN_CONTAINER ? -1 : null, kind: 'header' };
-  if (mixinHashIndent !== null) {
-    const sm = raw.match(MIXIN_METHOD_HEADER);
-    if (sm) {
-      const indent = sm[1].length;
-      const lock = mixinHashIndent === -1 ? indent : mixinHashIndent;
-      if (indent === lock) return { method: sm[2], mixinHashIndent: lock, kind: 'header' };
-      return null;
-    }
-  }
-  if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) return { method: null, mixinHashIndent: null, kind: 'end' };
-  return null;
-}
+const { METHOD_HEADER, MIXIN_METHOD_HEADER, methodBoundary } = require('./lib/coffee-method-header');
 
 function collectFiles(dir, ext, out) {
   if (!fs.existsSync(dir)) return out;

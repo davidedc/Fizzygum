@@ -17,7 +17,10 @@
 // that is handed none (`pressCancelled`, the press's cancel: a pure fact, no position) must map its
 // own read the same way.
 //
-// SCOPE. Method bodies (2-space-indent headers, span until the next header) whose names are the
+// SCOPE. Method bodies — a class's 2-space-indent methods and a mixin's onceAddedClassProperties
+// members alike, grouped by the shared lib/coffee-method-header.js methodBoundary (a mixin's handlers
+// run on every widget it augments: HighlightableMixin's press/hover handlers,
+// WidgetCreatorAndSmartPlacerOnClickMixin.activated) — whose names are the
 // dispatched pointer-handler names below — closures defined inside them (a _settleLayoutsAfter thunk)
 // are inside the span and covered — plus the two ViewportWdgt drag-scroll methods that sample or
 // consume the pointer per frame / per event although no dispatcher calls them by a handler name:
@@ -37,7 +40,7 @@ const fs = require('fs');
 const path = require('path');
 const SRC = path.resolve(__dirname, '../src');
 
-const { METHOD_HEADER: HEADER } = require('./lib/coffee-method-header');   // 2-space-indent class method header
+const { methodBoundary } = require('./lib/coffee-method-header');   // class AND mixin-member method grouping
 const EXEMPT = /#\s*raw-screen-pointer-sanctioned:\s*\S/;    // marker WITH a non-empty reason
 const RAW_READ = /world\.hand\.position\(\)/;
 const MAPPED = /screenPointToMyPlane/;
@@ -73,21 +76,25 @@ for (const p of walk(SRC, [])) {
   const lines = fs.readFileSync(p, 'utf8').split('\n');
   let inHandler = false, handlerName = null, handlerExempt = false;
   let commentBlockHasExempt = false;
+  let mixinHashIndent = null;
   for (let n = 0; n < lines.length; n++) {
     const line = lines[n];
-    const head = line.match(HEADER);
-    if (head) {
-      inHandler = HANDLER_NAMES.has(head[1]);
-      handlerName = head[1];
+    const boundary = methodBoundary(line, mixinHashIndent);
+    if (boundary) mixinHashIndent = boundary.mixinHashIndent;
+    if (boundary && boundary.kind === 'header') {
+      inHandler = HANDLER_NAMES.has(boundary.method);
+      handlerName = boundary.method;
       handlerExempt = commentBlockHasExempt;
       if (inHandler) { checked++; if (handlerExempt) exempt++; }
       commentBlockHasExempt = false;
       continue;
     }
-    // track the comment block directly above the NEXT header
+    if (boundary) inHandler = false;                          // a non-method key or a column-0 line ends the method
+    // track the comment block directly above the NEXT header: any code line breaks it, so a marker
+    // inside the previous method's body exempts nothing
     if (/^\s*#/.test(line)) { if (EXEMPT.test(line)) commentBlockHasExempt = true; }
-    else if (line.trim() !== '' && !HEADER.test(line) && /^\S/.test(line)) { commentBlockHasExempt = false; }
-    else if (line.trim() === '') { /* blank keeps the block */ }
+    else if (line.trim() !== '') { commentBlockHasExempt = false; }
+    else { /* blank keeps the block */ }
     if (!inHandler || handlerExempt) continue;
     const code = stripComment(line);
     if (RAW_READ.test(code) && !MAPPED.test(code)) {

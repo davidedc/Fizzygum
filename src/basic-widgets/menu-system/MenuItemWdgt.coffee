@@ -14,10 +14,10 @@ class MenuItemWdgt extends LabelButtonWdgt
   # turns this on for every row
   actionableAsThumbnail: undefined
 
-  # The HOVER PLATE of a row whose highlighted state is not its hover: a plain LIST row's (its
-  # highlighted state is its list's selection), from its look (_lookFor) -- the plate it wears while
-  # the pointer is over it at rest. undefined for every other row: a menu row's hover IS its
-  # highlighted state, and a member row has no hover look.
+  # The HOVER PLATE of a row whose highlighted look is not its hover: a plain LIST row's (its
+  # highlighted look is its list's selection, _shownState), from its look (_lookFor) -- the plate it
+  # wears while the pointer is over it at rest. undefined for every other row: a menu row's hover IS
+  # its highlighted state, and a member row has no hover look.
   hoverColor: undefined
   # Is the pointer over me? Kept only while I carry a hoverColor (written by _showHoverOnMyPlate, so
   # a menu row and a member row never gain the field); my appearance asks for the plate it means
@@ -211,9 +211,9 @@ class MenuItemWdgt extends LabelButtonWdgt
     true
 
   # THE HOVER-PLATE PAIR. The pointer coming and going tells me (hoverEntered / hoverExited, as a
-  # list row); my appearance asks me back, while my state is at rest, for the plate to paint over my
-  # rest fill: my hover plate while the pointer is over me, nothing otherwise. Out of my rest state
-  # (my list's selection, or pressed) my state's own plate wins, hovered or not. A row with no
+  # list row); my appearance asks me back, while the state I show is at rest, for the plate to paint
+  # over my rest fill: my hover plate while the pointer is over me, nothing otherwise. Out of my rest
+  # state (my list's selection, or pressed) that state's own plate wins, hovered or not. A row with no
   # hoverColor neither keeps the fact nor repaints for it.
   _showHoverOnMyPlate: (hovered) ->
     return unless @hoverColor?
@@ -224,17 +224,17 @@ class MenuItemWdgt extends LabelButtonWdgt
   _restPlateFill: ->
     if @_isHovered then @hoverColor else undefined
 
-  # reset my selection highlight (called for every menu child by CommandPanelWdgt.unselectAllItems,
-  # replacing its `if item instanceof MenuItemWdgt`). (type-test-elimination campaign)
-  unselect: ->
-    @state = @STATE_NORMAL
-
-  # wear my list's selection again: the highlighted state my click gives me
-  # (LabelButtonWdgt.activated), without the click. Asked by my panel when a press that took the
-  # selection off me is cancelled (CommandPanelWdgt.reShowListSelection).
-  showAsSelected: ->
-    @state = @STATE_HIGHLIGHTED
-    @_changed()
+  # THE STATE MY LOOK SHOWS, read as I paint (LabelButtonAppearance, and a member row's kind tag
+  # ink): my own state -- except as a LIST row, whose highlighted look is its list's SELECTION, a fact
+  # of the list's model that is never stored on me: pressed while I am pressed, highlighted while my
+  # panel shows me as its list's selection (CommandPanelWdgt.showsAsItsSelection), at rest
+  # otherwise. As a list row my own state only ever holds my press, so however a press of mine ends
+  # -- a click, a release somewhere else, a scroll, a lift, an abort -- the look cannot disagree with
+  # the list.
+  _shownState: ->
+    return @state  unless @isListItem()
+    return @STATE_PRESSED  if @state is @STATE_PRESSED
+    if @parent.showsAsItsSelection @ then @STATE_HIGHLIGHTED else @STATE_NORMAL
 
   getTextDescription: ->
     if @textDescription?
@@ -468,8 +468,8 @@ class MenuItemWdgt extends LabelButtonWdgt
   _rowNameDistinction: ->
     @labelString
 
-  # MenuItemWdgt events. A LIST row's highlighted state is its list's selection, so the pointer
-  # leaves its state alone and is shown, when its look has a hover plate, on that plate instead.
+  # MenuItemWdgt events. A LIST row's highlighted look is its list's selection (_shownState), so the
+  # pointer leaves its state alone and is shown, when its look has a hover plate, on that plate instead.
   # Leaving always drops the hover plate, wherever I stand: a copy of me drops it too
   # (LabelButtonWdgt._reactToBeingCopied), parented or not.
   hoverEntered: ->
@@ -490,19 +490,45 @@ class MenuItemWdgt extends LabelButtonWdgt
       @_changed()
     world.destroyToolTips()  if @toolTipMessage
 
-  # A list row's press takes the visible selection off its siblings, then shows pressed and goes on up
-  # (LabelButtonWdgt.pressBegan), so the panes above it — the list that may scroll the stroke among
-  # them — hear it too.
+  # A row's press shows pressed and goes on up (LabelButtonWdgt.pressBegan), so the panes above it —
+  # the list that may scroll the stroke among them — hear it too. A LIST row's press also takes the
+  # visible selection off its siblings while it lasts (CommandPanelWdgt.showsAsItsSelection), so its
+  # panel repaints them.
   pressBegan: (pos) ->
-    @parent.unselectAllItems()  if @isListItem()
+    @parent.noteShownSelectionChanged()  if @isListItem()
     super
 
-  # A CANCELLED press (ActivePointerWdgt, the press's AUDIENCE) is no choice of a row -- the stroke
-  # scrolled, lifted or was aborted -- so a list row gives the visible selection back to its list's
-  # own (CommandPanelWdgt.reShowListSelection), which its press took it from; any other row is undone
-  # the label button's way.
+  # MY TWO ENDINGS (ActivePointerWdgt, the press's AUDIENCE), as a LIST row: whichever comes, my press
+  # is over and I am at rest again -- my hover plate shows where the pointer is (_showHoverOnMyPlate)
+  # -- and my panel shows its list's selection as the model holds it. A release that clicks me moves
+  # that model itself, after this ending (activated -> ListWdgt.select); a release anywhere else, a
+  # scroll, a lift or an abort leaves it where it was. Any other row ends the label button's way.
+  pressEnded: ->
+    if @isListItem()
+      @state = @STATE_NORMAL
+      @_changed()
+      @parent.noteShownSelectionChanged()
+    else
+      super
+
   pressCancelled: ->
-    if @isListItem() then @parent.reShowListSelection() else super
+    if @isListItem()
+      @state = @STATE_NORMAL
+      @_changed()
+      @parent.noteShownSelectionChanged()
+    else
+      super
+
+  # MY CLICK is the label button's -- raised, any unpinned pop-up I sit in closed, my action
+  # triggered -- and, as a LIST row, it CHOOSES me: my action is my list's select, which moves the
+  # model my look shows (_shownState). So a list row keeps no highlighted state of its own: the label
+  # button's click leaves its "hovered after the click" state, which on a list row means nothing --
+  # my hover is my plate's, my highlighted look my list's selection -- and I put my state back at
+  # rest, where my ending left it. Asked BEFORE the click, since my action may take me out of my list.
+  activated: ->
+    listRow = @isListItem()
+    super
+    @state = @STATE_NORMAL  if listRow
 
   isListItem: ->
     # true when my container selects rows on click (a CommandPanelWdgt used as a

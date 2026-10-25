@@ -90,6 +90,16 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # ALWAYS leave the context with the correct pixel scaling.
     @behindTheScenesBackBufferContext.useLogicalPixelsUntilRestore()
 
+  # A RESTORED canvas comes back with its painting -- behindTheScenesBackBuffer is CONTENT and rides a
+  # save as a $Canvas record -- but without the painting's context: a canvas context is a derived
+  # value the Serializer drops and the Deserializer does not rebuild, and getContextForPainting,
+  # every paint tool's way in, reads it. (A duplicate needs nothing here: the Duplicator rebuilds the
+  # context off the copied canvas, and getContextForPainting re-lays its transform on every call.)
+  _afterDeserialization: ->
+    if @behindTheScenesBackBuffer?
+      @behindTheScenesBackBufferContext = @behindTheScenesBackBuffer.getContext "2d"
+      @behindTheScenesBackBufferContext.useLogicalPixelsUntilRestore()
+
   _createNewFrontFacingBuffer: (extent) ->
     @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @backBufferContext = @backBuffer.getContext "2d"

@@ -9,7 +9,10 @@ class Example3DPlotWdgt extends Widget
   currentAngle: undefined
   planeGrid: undefined
   graphGrid: undefined
-  previousMousePoint: undefined
+  # where MY press stood at the last step of the spin -- a fact of ONE press: set where it begins,
+  # cleared at either of its endings. So a spin's first step never spans two strokes, a drag that
+  # began on something else never spins me, and "a press of mine is live" is exactly "this is set".
+  _lastPressedPoint: undefined
   autoRotate: true
   ratio: undefined
 
@@ -169,29 +172,35 @@ class Example3DPlotWdgt extends Widget
     @_changed()
 
   # Spinning the plot is a DRAG across it, so only the pressed move channel reaches me; the
-  # button is the fact that says which drag, and only the primary one spins.
+  # button is the fact that says which drag, and only the primary one spins. That channel reaches
+  # whatever the pointer is over, whoever's press it is, so only a press that began on ME spins me.
   pressMoved: (pos, mouseButton) ->
     if world.hand.isThisPointerDraggingSomething() then return
-    if mouseButton == 'left'
-        if @previousMousePoint?
-          @currentAngle +=  @previousMousePoint.x - pos.x
-        @previousMousePoint = pos
+    if mouseButton == 'left' and @_lastPressedPoint?
+      @currentAngle +=  @_lastPressedPoint.x - pos.x
+      @_lastPressedPoint = pos
 
-  # A press stops the spinning and STOPS here (a drag across me spins me), and either of its endings
-  # (ActivePointerWdgt, the press's AUDIENCE) starts the spinning again.
+  # A press stops the spinning and STOPS here (a drag across me spins me), anchoring the spin where
+  # it begins, and either of its endings (ActivePointerWdgt, the press's AUDIENCE) drops the anchor
+  # and starts the spinning again.
   pressBegan: (pos) ->
     @autoRotate = false
+    @_lastPressedPoint = pos
     @bringToForeground()
     false
 
   pressEnded: ->
     @autoRotate = true
+    @_lastPressedPoint = undefined
 
   pressCancelled: ->
     @autoRotate = true
+    @_lastPressedPoint = undefined
 
+  # The pointer leaving me starts the spinning again -- unless a press of mine is still live (a drag
+  # that wandered off me and may come back): that press's ending is what starts it.
   hoverExited: ->
-    @autoRotate = true
+    @autoRotate = true unless @_lastPressedPoint?
 
   # the drawing tail: the PUBLIC per-plot body Example3DPlotAppearance dispatches to
   # (the drawLayoutChrome / drawPlot family precedent)

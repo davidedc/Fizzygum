@@ -70,14 +70,16 @@
 // rule, and only because `@` names its receiver structurally), because the receiver of
 // `menu.addMenuItem "…", someExpression, "verb"` is a runtime value and this tree dispatches through
 // a string. So a method whose NAME matches a menu action is checked even on a class no menu ever
-// wires — `ToggleButtonWdgt.select(whichOne)` is checked because `ListWdgt` wires a `"select"`. That
+// wires — `ToggleButtonWdgt.select(whichOne)` is checked because `ListWdgt` wires a `"select"` — and
+// wherever the method is defined, a class body or a mixin's onceAddedClassProperties member alike
+// (ControllerMixin's wiring verbs; lib/coffee-method-header.js methodSpans groups both). That
 // direction is deliberate: over-matching costs a spurious rule-3 hit (fix by naming the slot, which
 // is never wrong), while under-matching would let a real one through. If it ever false-positives on
 // a genuinely unrelated method, prefer renaming that method over loosening the rule.
 
 const fs = require('fs');
 const path = require('path');
-const { METHOD_HEADER } = require('./lib/coffee-method-header.js');
+const { METHOD_HEADER, methodSpans } = require('./lib/coffee-method-header.js');
 // The whole-system CLASS MODEL (parent, @augmentWith mixins, methods, resolution order) — RULE 1b's
 // engine, reused wholesale rather than re-derived, exactly as census-hierarchy-duplication.js and
 // census-property-placement.js reuse it. Re-implementing inheritance resolution here would be a
@@ -222,10 +224,9 @@ const unread = [];
 for (const p of files) {
   const rel = path.relative(SRC, p);
   const lines = fs.readFileSync(p, 'utf8').split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const h = METHOD_HEADER.exec(lines[i]);
-    if (!h) continue;
-    const name = h[1];
+  for (const span of methodSpans(lines)) {
+    const i = span.line;
+    const name = span.name;
     if (!actionNames.has(name)) continue;
 
     const sig = /\(([^)]*)\)/.exec(lines[i]);
@@ -234,12 +235,10 @@ for (const p of files) {
       .map(s => s.replace(/\s*=.*$/, '').replace(/^@/, ''));
     if (!params.length) continue;
 
-    // body = lines until the next method header at the same indent (or EOF)
+    // body = the method's span: up to the next method (a class's, or a sibling member inside a mixin),
+    // a non-method class-level key, or EOF
     let body = '';
-    for (let j = i + 1; j < lines.length; j++) {
-      if (METHOD_HEADER.test(lines[j])) break;
-      body += stripComment(lines[j]) + '\n';
-    }
+    for (let j = i + 1; j < span.end; j++) body += stripComment(lines[j]) + '\n';
     for (const prm of params) {
       if (DECLARED_UNREAD.test(prm)) continue;
       if (new RegExp(`\\b${prm}\\b`).test(body)) continue;

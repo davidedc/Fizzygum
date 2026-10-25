@@ -389,37 +389,20 @@ function collectCoffee(dir, out) {
   return out;
 }
 
-const { METHOD_HEADER, MIXIN_METHOD_HEADER } = require('./lib/coffee-method-header');   // a class-level (2-space) method def, + the mixin variant below
+const { methodBoundary } = require('./lib/coffee-method-header');   // class methods AND mixin members, see below
 
 // --- mixin-DSL awareness: ATTRIBUTE methods defined inside a mixin instead of lumping them into
 // onceAddedClassProperties. A mixin (src/mixins/*) declares its methods INSIDE a 2-space
 // `onceAddedClassProperties: (fromClass) -> @addInstanceProperties fromClass, { … }` block; the method
 // keys sit one nesting level deeper -- 4-space (e.g. KeepsRatioWhenInVerticalStackMixin) or 6-space
-// (most others). methodBoundary() locks the hash indent from the FIRST sub-method and treats siblings
-// at that indent as headers (deeper lines = their bodies). For a NON-mixin file (no onceAddedClass
-// Properties) mixinHashIndent stays null and methodBoundary is byte-for-byte the old 2-space logic.
-const MIXIN_CONTAINER = 'onceAddedClassProperties';
-
+// (most others). The shared lib/coffee-method-header.js methodBoundary() locks the hash indent from the
+// FIRST sub-method and treats siblings at that indent as headers (deeper lines = their bodies); for a
+// NON-mixin file mixinHashIndent stays null and the grouping is the 2-space METHOD_HEADER one.
 // What a fully-closed line does to the current method grouping:
 //   { method, mixinHashIndent, kind:'header'|'end' }  -- the line STARTS or ENDS a method
 //   null                                              -- the line is inside the current method's body
 // mixinHashIndent: null = not in a mixin block; -1 = in onceAddedClassProperties, awaiting the first
 // sub-method to lock the indent; >0 = the locked sub-method indent.
-function methodBoundary(raw, mixinHashIndent) {
-  const m = raw.match(METHOD_HEADER);                          // a 2-space class / mixin-container method
-  if (m) return { method: m[1], mixinHashIndent: m[1] === MIXIN_CONTAINER ? -1 : null, kind: 'header' };
-  if (mixinHashIndent !== null) {                              // inside a mixin's onceAddedClassProperties
-    const sm = raw.match(MIXIN_METHOD_HEADER);
-    if (sm) {
-      const indent = sm[1].length;
-      const lock = mixinHashIndent === -1 ? indent : mixinHashIndent;   // first sub-method locks the indent
-      if (indent === lock) return { method: sm[2], mixinHashIndent: lock, kind: 'header' };
-      return null;                                             // deeper: a nested def inside a sub-method body
-    }
-  }
-  if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) return { method: null, mixinHashIndent: null, kind: 'end' };
-  return null;                                                 // ordinary body line
-}
 
 // [G] pre-pass: the set of public methods that self-settle via the SINGLE-mutation tier (their body
 // calls @_settleLayoutsAfter) -- the structural wrappers a low-level method must NOT call (it must reach
@@ -798,7 +781,7 @@ function main() {
   // [G] pre-pass: discover the structural self-settling wrappers (single-tier), then a regex that
   // matches a CALL to one — capturing the @/. sigil so checkFile can resolve @-SELF calls by class
   // (plan P4.3). Empty-set guard keeps the regex well-formed (a few dozen names in practice;
-  // now mixin-aware -- see methodBoundary -- so a settling wrapper defined inside a mixin is attributed too).
+  // mixin-aware -- see methodBoundary -- so a settling wrapper defined inside a mixin is attributed too).
   const gCtx = discoverSettlingWrappers(files);
   const wrapperNames = [...gCtx.settlingClassesByName.keys()];
   gCtx.WRAPPER_CALL = wrapperNames.length

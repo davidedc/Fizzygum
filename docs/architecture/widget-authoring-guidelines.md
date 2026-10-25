@@ -299,6 +299,17 @@ Inside the appearance, paint the widget's own pixels in widget-local **logical**
 the ctx matrix, inside `Appearance._paintInLocalScope`. Device-space business belongs to the preamble
 ([`appearance-paint-convention.md`](appearance-paint-convention.md)).
 
+**A look that shows a MODEL is read from the model as you paint, never copied into the widget.**
+[convention] A list row's selected plate (`MenuItemWdgt._shownState` asking
+`CommandPanelWdgt.showsAsItsSelection`, i.e. the list's `selected`), a desktop icon's selected border
+and caption ink (`WorldWdgt.isSelectedIcon`, `inkForChildText`), a surface's role fill (`_surfaceFill`)
+— each is a question asked at paint time of the one record of the fact. A copy kept in step by hand
+drifts on the first path that forgets to update it (a list row once stayed pressed while its list's
+selection sat elsewhere, because one way of ending a press wrote nothing). What the widget itself
+owns — its press, its hover — stays its state; when the model moves, the model's owner tells the
+widget that reads it to repaint (`noteShownSelectionChanged`), since it cannot invalidate that widget
+itself.
+
 **A cached raster cannot carry anything per-instance — draw that half live, on top.** [convention]
 `BackBufferMixin` buffers are keyed on class + extent, so widgets of the same class and size share
 one canvas (`world.cacheForImmutableBackBuffers`); nothing that differs between two such widgets can
@@ -517,7 +528,9 @@ mark after `add` + `setExtent` adds nothing.
   press climb: `pressBegan` RETURNS `true` to pass the press to your parent and anything else to keep
   it (`Widget.pressBegan` raises and answers `true`, so an override that wants the climb to go on ends
   in `super`; one that takes the press for itself — a handle, a selectable text, a slider's jump —
-  answers `false`, on every branch it does so). The gestures still climb by escalation:
+  answers `false`, on every branch it does so; one that keeps a press only on some strokes asks the
+  stroke's own fact — a selectable text passes an un-armed finger's press on
+  (`world.hand.strokeMeansMouseDrag()`), since that press may begin a scroll). The gestures still climb by escalation:
   `@escalateEvent "activated", pos` passes an activation you do not act on to the parent rather than
   swallowing it, and a handler that conditionally acts escalates on the other branch.
 - **A look you arm in `pressBegan`, you undo in BOTH endings.** Every widget the press reached is
@@ -842,7 +855,9 @@ about (a reference tracker, an open-pop-up set, an app slot). What it does not: 
 `keyboardEventsReceivers`, `wdgtsDetectingClickOutsideMeOrAnyOfMeChildren` and its dataflow edges —
 `Widget._destroyNoSettle` already drops all of those, and it tells the hand
 (`ActivePointerWdgt.noteWidgetDestroyed`), which forgets every press booking the dying widget is or
-contains ([`input-and-gestures.md`](input-and-gestures.md) "A widget that dies mid-stroke").
+contains; a close tells it too (`Widget._closeNoSettle` → `noteWidgetClosed`), so a widget put away
+mid-stroke is not lifted back out of storage ([`input-and-gestures.md`](input-and-gestures.md) "A
+widget that dies or is put away mid-stroke").
 
 A widget that keeps an OWNED widget off its tree on purpose (a frame's empty-state placeholder while
 real contents are mounted) declares the field in `@offTreeOwnedWidgetFields` — the world inventory's

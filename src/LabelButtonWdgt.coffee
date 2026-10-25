@@ -25,8 +25,8 @@ class LabelButtonWdgt extends ButtonWdgt
   fontSize: undefined
   fontStyle: undefined
 
-  # the state fills: while I am hovered, and while I am pressed (a selected list row wears the
-  # hovered one -- its list's selection is its highlighted state). My rest fill is my @color.
+  # the state fills: while I am hovered, and while I am pressed (a list row wears the hovered one
+  # while it shows its list's selection -- MenuItemWdgt._shownState). My rest fill is my @color.
   highlightColor: undefined
   pressColor: undefined
   # how my state fill is shaped: undefined fills my whole box, square; a radius paints it as a
@@ -204,9 +204,9 @@ class LabelButtonWdgt extends ButtonWdgt
     true
 
   # MY TWO ENDINGS (ActivePointerWdgt, the press's AUDIENCE). The release leaves my state as the press
-  # left it: a release that clicks me goes on to set it (activated -- HIGHLIGHTED, which is also how a
-  # list row shows its list's selection), and HighlightableMixin's ending would write a state, and
-  # repaint me through _updateColor (clobbering my normal fill), right under that click.
+  # left it: a release that clicks me goes on to set it (activated -- HIGHLIGHTED), and
+  # HighlightableMixin's ending would write a state, and repaint me through _updateColor (clobbering
+  # my normal fill), right under that click. (A list row ends its press itself: MenuItemWdgt.)
   pressEnded: ->
 
   # A cancelled press is followed by no click, so it is mine to undo: hovered if the pointer rests on

@@ -98,8 +98,9 @@ exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
 - **The climb.** The hand drives it (`_climbPressFrom`): `pressBegan` goes to the widget the press
   hit, with the pointer in its own plane, then to its parent, for as long as each receiver answers
   that it passes the press on — `pressBegan` RETURNS `true` to hand it up and anything else to keep
-  it (`Widget.pressBegan` raises and answers `true`; a halo handle, a 3D plot, a selectable text, a
-  slider's jump, a palette and the world keep it). Who heard the press is RECORDED, leaf first,
+  it (`Widget.pressBegan` raises and answers `true`; a halo handle, a 3D plot, a selectable text — on
+  a mouse or pen stroke, or a finger stroke the grammar armed —, a slider's jump, a palette and the
+  world keep it). Who heard the press is RECORDED, leaf first,
   and never re-walked: a lift re-parents what it picks up, so the chain at the release is not the
   chain the press climbed.
 - **The endings.** `pressCancelled()` the moment the stroke becomes something that is not a press
@@ -108,16 +109,21 @@ exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
   pane that took the stroke are cancelled, since the pane carries them and does not press them,
   while that pane and the members above it keep the press; a LIFT (the hand starts a float-drag):
   the whole audience, and the drop owes nothing more; an ABORT (`processPointerCancel`): whatever is
-  still owed. Otherwise `pressEnded(pos, …)` at the RELEASE, to every member still owed one, leaf
+  still owed; a CLOSE (`noteWidgetClosed`): the members inside a widget put away mid-stroke. Otherwise `pressEnded(pos, …)` at the RELEASE, to every member still owed one, leaf
   first, each with the pointer in its own plane — wherever the release lands, on every release,
   a hold-consumed one and a scroll's included. A member is struck off before it is told, so nobody
-  hears twice; a member that dies mid-stroke leaves the audience with its subtree.
+  hears twice; a member that dies mid-stroke leaves the audience with its subtree, and one put away
+  mid-stroke is told `pressCancelled` as it goes.
 - **The look.** Neither ending says where the pointer is. A receiver picks the look it ends in from
   where the pointer actually stands, by asking the hand (`restsOn` — a mouse or a pen rests on what
   it stopped over; a finger never rests anywhere), never by assuming it is still over it:
   `HighlightableMixin` ends HIGHLIGHTED under a resting mouse and NORMAL otherwise, on both
-  endings. A list row's cancel restores the LIST's selection look from its model
-  (`CommandPanelWdgt.reShowListSelection`), since its press moved the visible selection.
+  endings. A list row's look of being its list's SELECTION is no state it keeps, so neither ending
+  has a selection to restore: the row reads it from the list's model as it paints
+  (`MenuItemWdgt._shownState` → `CommandPanelWdgt.showsAsItsSelection`, the list's `selected`), a
+  live press on one of the list's rows taking it off the others while it lasts — so either ending
+  leaves the row at rest and the list showing its model's selection, whether the release clicked,
+  landed elsewhere, or the stroke scrolled.
 - **The click** is a separate verdict, made after the endings and gated exactly as before.
 
 It is what iOS (`touchesCancelled` when a scroll view takes the touch), Android (`ACTION_CANCEL`
@@ -203,7 +209,7 @@ its owner:
   facts (takes drags at all, policy allows scrolling, overflow to move) its own scroll-drag step
   installs on.
 
-### The three consumers of `strokeMeansMouseDrag()`
+### The four consumers of `strokeMeansMouseDrag()`
 
 - **The float arms** (`ActivePointerWdgt.determineGrabs`) — a widget that `detachesWhenDragged()`
   (or a template) is picked up onto the hand only while the stroke means a mouse drag; an
@@ -219,7 +225,20 @@ its owner:
   untouched; `'mouse'`/`'pen'` always mean a mouse drag, so the channel reads exactly as it did
   before the grammar existed. **One pressed move per pressed event, from one site**: the
   `button` on `pressMoved` is a plain FACT (`"left"`/`"right"`), not a discriminator between
-  meanings — a paint tool lays paint under the primary button and previews under any other.
+  meanings — a paint tool lays paint under the primary button and previews under any other. The
+  pressed move reaches every widget under the pointer, whoever's press it is: a receiver that acts
+  only on its OWN press (the 3D plot's spin, `Example3DPlotWdgt`) knows that press by an anchor set
+  at `pressBegan` and dropped at either ending — and while that press is live, its ending, not a
+  `hoverExited`, is what ends the press's effects.
+- **A selectable text's press** (`StringWdgt.pressBegan`). Selectable text takes a press for itself
+  — it starts a selection, and an editable one opens its edit at the press — so the pane above it
+  never hears that press. For an un-armed touch stroke it does not: the press may be the start of a
+  scroll, so the text arms nothing and passes it on, and the pane takes the stroke, as iOS and
+  Android give a scroll view the touch over its text. A tap is still the text's (its release clicks
+  it), and so is a finger press the grammar arms at once (no scroll surface above). The text's own
+  selectable flag cannot decide this: it is disarmed by a HOVER move, a mouse's notion, so a finger
+  landing where a mouse last stood finds it armed. Pinned by
+  `SystemTest_macroFingerSwipeOverSelectableTextScrolls`.
 
 ### The context gesture's two triggers, and what a hold's release owes
 
@@ -242,8 +261,8 @@ a scroll acts on the pane alone.** A finger's scroll is decided by the grammar (
 stroke that left the hold radius is a plain drag, i.e. a scroll, for its whole life); a mouse's or a
 pen's is a stroke whose scroll owner — the innermost pane the press reaches with something to scroll,
 told at the press (`ViewportWdgt.pressBegan` → `notePressTakenForScrolling`, not derived from the
-pressed widget's ancestry, because a widget in between — a selectable text, a 3D plot — can take the
-press for itself) — latched a pane as the press left the grab radius (it latches none for a stroke
+pressed widget's ancestry, because a widget in between — a selectable text on a mouse or pen stroke, a
+3D plot — can take the press for itself) — latched a pane as the press left the grab radius (it latches none for a stroke
 that is lifting what it pressed), with no value control dragging. Neither a hold nor a scroll
 withholds the press's ENDING: a hold-consumed release still ends the press (`pressEnded`), and a
 scroll's release ends it for the pane and the members above it, the ones inside having been
@@ -323,24 +342,56 @@ state with it, the press's audience having been told `pressCancelled` first — 
 though a menu that had ALREADY opened stays (the cancel is not a click outside it). Touch hover
 dissolution runs on cancel exactly as it does on an ordinary up.
 
-### A widget that dies mid-stroke
+### A widget that dies or is put away mid-stroke
 
 A press books widgets the rest of its stroke acts on — `wdgtToGrab` (what a drag picks up),
 `mouseDownWdgt` (what the release's click and a finger's hold are about), `nonFloatDraggedWdgt`
-(what a non-float drag steps) — and the hand carries a float drag's payload. A booking left naming a
-corpse would be acted on at a later event of the same stroke: a pressed move lifts the corpse onto
-the hand, and the release drops it back into the tree. So the one funnel every death passes
-through, `Widget._destroyNoSettle`, tells the hand (`ActivePointerWdgt.noteWidgetDestroyed`), as it
-tells the world's other registries of live widgets (the caret, the editor focus, stepping, the
-keyboard receivers, dataflow). The hand forgets every booking the dying widget IS OR CONTAINS —
-containment, because a single-widget `destroy()` orphans the subtree under it — and forgets the
-pick-up when its carried payload dies (that pick-up can be the template the payload was copied
-from), and prunes the press's AUDIENCE the same way, so no ending ever reaches a corpse. The
-stroke goes on without them. Not forgotten: the over-list (the next dispatch re-derives
-it, and it owes the corpse its last `hoverExited`), and the multi-click candidates (they recognize
-only the widget a release lands on). Test: `SystemTest_macroWidgetDestroyedMidStrokeIsNotPickedUpAgain`.
+(what a non-float drag steps), the pane that took the press and the one its latch chose — and the
+hand carries a float drag's payload. A booking left naming a widget that has left the world the
+stroke acts on would be acted on at a later event of the same stroke: a pressed move lifts it onto
+the hand, and the release drops it back on the desktop. A widget leaves that world two ways, and
+each way has ONE funnel that tells the hand:
 
-### The touch-stroke grab-threshold rules
+- **A death.** `Widget._destroyNoSettle`, the funnel every death passes through, tells the hand
+  (`ActivePointerWdgt.noteWidgetDestroyed`), as it tells the world's other registries of live
+  widgets (the caret, the editor focus, stepping, the keyboard receivers, dataflow). A corpse is
+  owed nothing.
+- **Being put away** — into storage alive (the bin, or the shelf when something still reaches it).
+  `Widget._closeNoSettle`, the funnel every close passes through (a close button, a menu's Close or
+  Move to trash, a filing, a drop on the bin's icon, which IS Move to trash), tells the hand the
+  FIGURE that leaves (`noteWidgetClosed`; the island a tilted widget rides in), before it leaves its
+  parent. Two storage moves state the same fact where they happen, since neither can pass through
+  the close funnel: the storage sorter, when it files a resident of the bin (which an open bin
+  window shows) away to the shelf, and the bin itself, when its window closes and takes it off the
+  desktop. A widget put away can come back, so it is owed what the stroke owes it before it goes:
+  the audience members inside it are told `pressCancelled`, and the widget a non-float drag steps
+  is told `endOfNonFloatDrag`, as a release would tell it — either look left standing would come
+  back out of storage with it.
+
+Either way the hand forgets every booking the leaving widget IS OR CONTAINS — containment, because
+a single-widget `destroy()` orphans the subtree under it — forgets the pick-up when its carried
+payload leaves (that pick-up can be the template the payload was copied from), and prunes the
+press's AUDIENCE the same way, so no ending reaches a widget that has left. The stroke goes on
+without them. Not forgotten: the over-list (the next dispatch re-derives it, and it owes the leaving
+widget its last `hoverExited`), the multi-click candidates (they recognize only the widget a release
+lands on), and the drag-embed state (the next dispatch takes it down once nothing rides the hand).
+No built-in gesture closes a booked widget mid-stroke — every close control fires at a release or a
+drop —; a program does (a formula fed by the stroke's own slider, a timer). Test:
+`SystemTest_macroWidgetDestroyedOrClosedMidStrokeIsNotPickedUpAgain`.
+
+### The grab-threshold rules
+
+A press lifts nothing until the pointer has travelled `grabDragThreshold` from where it went down,
+and what lifts then is the widget under the PRESS; `grab` moves it by that travel, so the hand
+carries it by the very point the press went down on. That correction — and every other placement
+relative to the hand, the switcheroo centring and the glass-box inflate — is applied only AFTER the
+release settle (`_beforeBeingGrabbed`): the release re-lays the host being left, and a host that
+places its children (a document's flow) would otherwise put the widget back, leaving it riding the
+hand off by the threshold travel. Playback runs these exact rules: there is no Automator carve-out,
+so a replayed mouse drag waits out the threshold as a user's does, and a test cannot ask otherwise
+(`AutomatorEventCommandStartMacro` refuses the retired `grabDragThreshold` metadata key).
+Pinned by the value assertions of `SystemTest_macroSimpleDocumentHandlesOldInspector` (a window
+dragged out of a document lands exactly where the drag puts it, on either pointer).
 
 `checkDraggingThreshold` (reached from `determineGrabs`) carries two touch-specific rules ahead
 of the ordinary grab-threshold test: a zero-displacement move on a touch stroke NEVER grabs — a

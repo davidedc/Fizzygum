@@ -416,18 +416,19 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   _reactToChildRelabelled: (ignored_row) ->
     @parent?._reLayOutAfterContainedPanelChange?()
 
-  unselectAllItems: ->
-    # only menu items carry a selection state; each resets its own.
-    @children.forEach (item) ->
-      item.unselect?()
+  # DO I SHOW `row` AS MY LIST'S SELECTION? Asked by each of my rows as it paints
+  # (MenuItemWdgt._shownState), so the look is read from the model and never kept in step with it:
+  # yes for the row my list holds selected (ListWdgt.selected) -- unless a press is on one of my rows,
+  # which takes the visible selection off every other row while it lasts, since that row becomes the
+  # selection if the press ends in a click. Only a list's panel is asked (a row asks when it
+  # isListItem).
+  showsAsItsSelection: (row) ->
+    return false  unless @target?.selected is row
+    not @children.some (each) -> each.STATE_PRESSED? and each.state is each.STATE_PRESSED
 
+  # MY LIST'S SHOWN SELECTION MAY HAVE MOVED -- its model moved (ListWdgt.select), or a press on one of
+  # my rows began or ended (MenuItemWdgt) -- and my rows read it as they paint (showsAsItsSelection),
+  # so I repaint: the whole of me, since the row that gains or loses the look need not be the row
+  # whose press or click moved it.
+  noteShownSelectionChanged: ->
     @_changed()
-
-  # SHOW MY LIST'S SELECTION AGAIN, as its model holds it: a row's press takes the visible selection
-  # off every row (MenuItemWdgt.pressBegan), so when that press is CANCELLED rather than ending in a
-  # click (MenuItemWdgt.pressCancelled), the look goes back to the row my list says is selected
-  # (ListWdgt.selected) — or to none. Only a list's panel is asked (a row asks when it isListItem).
-  reShowListSelection: ->
-    @unselectAllItems()
-    selectedRow = @target.selected
-    selectedRow.showAsSelected()  if selectedRow?.parent is @

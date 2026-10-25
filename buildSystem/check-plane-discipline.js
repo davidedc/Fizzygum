@@ -46,13 +46,15 @@
 //        parameter, `pos`), on any class: every line reading it must map it into the receiver's plane
 //        on that same line (`@screenPointToMyPlane pos`) — off any island and outside any scrolled
 //        pane the two are the same point, so the bug is invisible until the widget sits in one.
+//    A MIXIN's members are checked as the classes it augments (`@augmentWith`) would check them: C1 applies
+//    when any augmenting class is a provider, C2 always (lib/coffee-method-header.js groups mixin members).
 //    `scrolledBy` is exempt (deltas, not positions). Exemption marker for a future deliberate
 //    consumer: `# escalated-pos-sanctioned: <reason>` directly above the handler header.
 
 const fs = require('fs');
 const path = require('path');
 const SRC = path.resolve(__dirname, '../src');
-const { METHOD_HEADER: HEADER } = require('./lib/coffee-method-header');
+const { methodBoundary, methodSpans } = require('./lib/coffee-method-header');
 
 // ---- baseline for section B (the check-stinks idiom: exact count, move it consciously) ----
 const CROSS_PLANE_MIX_BASELINE = 28;
@@ -94,17 +96,23 @@ const providerDefiners = new Set();
 const escalatedNames = new Set();   // every handler name some `escalateEvent "<name>"` call forwards (C1)
 const classParent = new Map();   // class -> extends parent
 const classFile = new Map();     // class -> file path
+const mixinFile = new Map();     // mixin -> file path (a mixin's members are checked as every class it augments would be)
+const augmentedBy = new Map();   // mixin -> Set of classes whose body says `@augmentWith <mixin>`
 
 // pass 1: scan lines; collect class graph + provider definers
 for (const p of files) {
   const rel = path.relative(SRC, p);
   const lines = fs.readFileSync(p, 'utf8').split('\n');
-  let inMethod = '';
+  let inMethod = '', mixinHashIndent = null;
   lines.forEach((raw, i) => {
     const cls = raw.match(/^class\s+([A-Za-z0-9_$]+)(?:\s+extends\s+([A-Za-z0-9_$]+))?/);
     if (cls) { classFile.set(cls[1], p); if (cls[2]) classParent.set(cls[1], cls[2]); }
-    const mSig = raw.match(HEADER);
-    if (mSig) inMethod = mSig[1];
+    const mix = raw.match(/^([A-Za-z0-9_$]+Mixin)\s*=\s*$/);
+    if (mix) mixinFile.set(mix[1], p);
+    const aug = raw.match(/@augmentWith\s+([A-Za-z0-9_$]+Mixin)\b/);
+    if (aug) { for (const [c, f] of classFile) if (f === p) { if (!augmentedBy.has(aug[1])) augmentedBy.set(aug[1], new Set()); augmentedBy.get(aug[1]).add(c); } }
+    const b = methodBoundary(raw, mixinHashIndent);
+    if (b) { mixinHashIndent = b.mixinHashIndent; if (b.kind === 'header') inMethod = b.method; }
     if (/^  scrollTranslationOfChild\s*:/.test(raw)) {
       // attribute to the class this file declares (one class per file)
       for (const [c, f] of classFile) if (f === p) providerDefiners.add(c);
@@ -152,12 +160,16 @@ const paramNamed = (params, index) => ((params.split(',')[index] || '').trim().r
 const readsName = (name) => new RegExp('(?<![A-Za-z0-9_$])' + name.replace('$', '\\$') + '(?![A-Za-z0-9_$])');
 const escalationViolations = [];
 let c1Bodies = 0, c2Bodies = 0;
-for (const [cls, p] of classFile) {
-  const provider = providesTranslation(cls);
+// a mixin member runs on every class that augments the mixin, so it is on a provider exactly when one
+// of those classes is
+const mixinOnAProvider = (mx) => [...(augmentedBy.get(mx) || [])].some(providesTranslation);
+const units = [...classFile].map(([cls, p]) => [cls, p, providesTranslation(cls)])
+  .concat([...mixinFile].map(([mx, p]) => [mx, p, mixinOnAProvider(mx)]));
+for (const [cls, p, provider] of units) {
   const lines = fs.readFileSync(p, 'utf8').split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const mSig = lines[i].match(HEADER);
-    if (!mSig) continue;
+  for (const span of methodSpans(lines)) {
+    const i = span.line;
+    const mSig = [lines[i], span.name];
     const c1 = provider && escalatedPosHandlers.has(mSig[1]);
     const c2 = RAW_SCREEN_POS_HANDLERS.has(mSig[1]);
     if (!c1 && !c2) continue;
@@ -171,8 +183,8 @@ for (const [cls, p] of classFile) {
     const reads = readsName(posName);
     const passesItOn = new RegExp('escalateEvent\\s*\\(?\\s*["\']' + mSig[1] + '["\']');
     if (c1) c1Bodies++; else c2Bodies++;
-    // body span: until the next 2-space method header
-    for (let j = i + 1; j < lines.length && !HEADER.test(lines[j]); j++) {
+    // body span: the method's own (lib/coffee-method-header.js methodSpans)
+    for (let j = i + 1; j < span.end; j++) {
       const code = stripComment(lines[j]);
       if (!reads.test(code)) continue;
       if (c1 && passesItOn.test(code)) continue;        // forwarding the pos on is not reading it
@@ -206,6 +218,6 @@ if (escalationViolations.length) {
   failed = true;
   console.error(`[plane-discipline C] FAIL — ${escalationViolations.length} read(s) of a pointer position not in the receiver's plane:`);
   escalationViolations.forEach((l) => console.error('    ' + l));
-} else console.log(`[plane-discipline C] positions not in the receiver's plane: 0 reads -- OK (C1: ${c1Bodies} escalated-pos handler bodies [${[...escalatedPosHandlers].sort().join(', ')}] on ${providerDefiners.size} provider class(es) + subclasses; C2: ${c2Bodies} raw-screen-pos bodies [${[...RAW_SCREEN_POS_HANDLERS.keys()].join(', ')}])`);
+} else console.log(`[plane-discipline C] positions not in the receiver's plane: 0 reads -- OK (C1: ${c1Bodies} escalated-pos handler bodies [${[...escalatedPosHandlers].sort().join(', ')}] on ${providerDefiners.size} provider class(es) + subclasses + ${[...mixinFile.keys()].filter(mixinOnAProvider).length} mixin(s) augmenting one; C2: ${c2Bodies} raw-screen-pos bodies [${[...RAW_SCREEN_POS_HANDLERS.keys()].join(', ')}]; ${classFile.size} classes + ${mixinFile.size} mixins scanned)`);
 
 process.exit(failed ? 1 : 0);

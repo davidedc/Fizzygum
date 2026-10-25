@@ -25,9 +25,10 @@
  *   join lane) · *DeferredSettle twins ([O]) · plain _ helpers/queries (which have their OWN
  *   correct names — the plan's stated reason this is a census, not a sweep).
  *
- * Parsing machinery is copied from check-layering.js: stripLine (strips # comments + string
- * literals, carries multi-line string state) + methodBoundary (2-space class methods, mixin
- * onceAddedClassProperties sub-methods), plus the shared lib/coffee-method-header.js.
+ * Parsing machinery: stripLine is copied from check-layering.js (strips # comments + string
+ * literals, carries multi-line string state); the method grouping is the shared
+ * lib/coffee-method-header.js methodBoundary (2-space class methods, mixin onceAddedClassProperties
+ * members).
  *
  * Exit 0 always (advisory). Run from anywhere: node buildSystem/census-nosettle-naming.js
  */
@@ -36,7 +37,7 @@ const fs = require('fs');
 const path = require('path');
 
 const SRC = path.join(__dirname, '..', 'src');
-const { METHOD_HEADER, MIXIN_METHOD_HEADER } = require('./lib/coffee-method-header');
+const { methodBoundary } = require('./lib/coffee-method-header');
 
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;                       // the single-mutation tier
 const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;      // the reactive-connection lane
@@ -66,7 +67,7 @@ function familyOf(name) {
   return 'plain';                                                         // ordinary _ helper/query
 }
 
-// ---- stripLine + methodBoundary: copied verbatim from check-layering.js ----
+// ---- stripLine: copied verbatim from check-layering.js ----
 function stripLine(line, state) {
   if (state) {
     const end = line.indexOf(state);
@@ -104,22 +105,6 @@ function stripLine(line, state) {
   return { code: out, state };
 }
 
-const MIXIN_CONTAINER = 'onceAddedClassProperties';
-function methodBoundary(raw, mixinHashIndent) {
-  const m = raw.match(METHOD_HEADER);
-  if (m) return { method: m[1], mixinHashIndent: m[1] === MIXIN_CONTAINER ? -1 : null, kind: 'header' };
-  if (mixinHashIndent !== null) {
-    const sm = raw.match(MIXIN_METHOD_HEADER);
-    if (sm) {
-      const indent = sm[1].length;
-      const lock = mixinHashIndent === -1 ? indent : mixinHashIndent;
-      if (indent === lock) return { method: sm[2], mixinHashIndent: lock, kind: 'header' };
-      return null;
-    }
-  }
-  if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) return { method: null, mixinHashIndent: null, kind: 'end' };
-  return null;
-}
 // ---- end copied machinery ----
 
 function collectCoffee(dir, out) {

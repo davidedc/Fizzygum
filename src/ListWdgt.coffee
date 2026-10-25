@@ -33,7 +33,10 @@ class ListWdgt extends ViewportWdgt
   elements: undefined
   format: undefined
   listContents: undefined # a CommandPanelWdgt with the contents of the list
-  selected: undefined # the selected ROW: the MenuItemWdgt `select` was dispatched with (slot 1); its labelString is the element's label
+  # the selected ROW: the MenuItemWdgt `select` was dispatched with (slot 1); its labelString is the
+  # element's label. The ONE record of my selection: my rows show it by reading it as they paint
+  # (MenuItemWdgt._shownState), never by keeping a copy of it.
+  selected: undefined
   # my target's methods I dispatch BY NAME, each handed an element's label: `action` when a row is
   # selected (select), `doubleClickAction` when a row is double-clicked (openRow) -- strings, so a
   # copy of me dispatches at its own target and I hold no closure
@@ -150,9 +153,11 @@ class ListWdgt extends ViewportWdgt
     undefined
 
   # A row's click dispatches here with the row itself in slot 1 (ButtonWdgt.trigger); slot 2, the
-  # row's subject, is always this list, so it carries nothing and is not taken.
+  # row's subject, is always this list, so it carries nothing and is not taken. My rows read the
+  # selection as they paint (CommandPanelWdgt.showsAsItsSelection), so my rows panel is told it moved.
   select: (row) ->
     @selected = row
+    @listContents.noteShownSelectionChanged()
     if @action? and @action != ""
       @target[@action].call @target, row.labelString
     return

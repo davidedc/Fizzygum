@@ -2,7 +2,8 @@
 // check-dead-methods.js — build lint: flag methods DEFINED in src but referenced NOWHERE.
 //
 // Mirrors buildSystem/check-layering.js (a heuristic line scanner, exit 0 clean / 1 violation /
-// 2 operational). It finds every class-method header in src/**/*.coffee, then harvests every
+// 2 operational). It finds every method header in src/**/*.coffee — a class's 2-space ones and a
+// mixin's onceAddedClassProperties members alike (lib/coffee-method-header.js) — then harvests every
 // identifier used anywhere a method could be CALLED — across src (.coffee), the test harness
 // (Fizzygum-tests/Automator-and-test-harness-src/*.coffee) and the macro SystemTests
 // (Fizzygum-tests/tests/**/*.js, whose mainMacroSource strings carry the verbs they call). A
@@ -27,7 +28,9 @@ const TESTS    = path.resolve(__dirname, '../../Fizzygum-tests/tests');
 const HARNESS  = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
 const ALLOWLIST = path.resolve(__dirname, 'dead-method-allowlist.txt');
 
-const { METHOD_HEADER: HEADER, unseenMethodHeaders } = require('./lib/coffee-method-header');   // a 2-space-indent class method header
+// methodSpans / methodBoundary group src (class methods + mixin members); HEADER is the 2-space class
+// method header, all the harness's classes use
+const { METHOD_HEADER: HEADER, methodBoundary, methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header');
 const WORD   = /[A-Za-z_]\w*/g;
 
 function walk(dir, ext, acc) {
@@ -116,10 +119,10 @@ const defs = new Map();
 const unseen = [];
 for (const p of walk(SRC, '.coffee', [])) {
   const lines = fs.readFileSync(p, 'utf8').split('\n');
-  lines.forEach((line, i) => {
-    const m = HEADER.exec(line);
-    if (m) { if (!defs.has(m[1])) defs.set(m[1], []); defs.get(m[1]).push(path.relative(SRC, p) + ':' + (i + 1)); }
-  });
+  for (const sp of methodSpans(lines)) {
+    if (!defs.has(sp.name)) defs.set(sp.name, []);
+    defs.get(sp.name).push(path.relative(SRC, p) + ':' + (sp.line + 1));
+  }
   for (const u of unseenMethodHeaders(lines)) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
 }
 if (unseen.length) {
@@ -142,14 +145,18 @@ function addRef(token, owner) {
   s.add(owner);
 }
 // src: attribute each reference to its ENCLOSING method, so we can later tell whether a settle-twin is used by
-// something OTHER than the dead method itself. A 2-space header opens a method; its inline body (after `->`)
-// and the 4+-space-indented lines below belong to it; class-level lines (indent < 4, not a header) are '@toplevel'.
-// (`referenced` ends up the SAME set as the old flat harvest — the per-owner map is purely additive.)
+// something OTHER than the dead method itself. A method header (a class's 2-space one, or a mixin member's)
+// opens a method; its inline body (after `->`) and the 4+-space-indented lines below belong to it; class-level
+// lines (indent < 4, not a header) are '@toplevel'. A header line contributes only its inline body, so a method's
+// own name on its def line is never a reference to it. (`referenced` is the set a flat harvest of every
+// non-header token gives — the per-owner map is purely additive.)
 function harvestSrc(files) {
   for (const p of files) {
-    let cur = null;
+    let cur = null, mixinHashIndent = null;
     for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
-      const m = HEADER.exec(raw);
+      const b = methodBoundary(raw, mixinHashIndent);
+      if (b) mixinHashIndent = b.mixinHashIndent;
+      const m = b && b.kind === 'header' ? [raw, b.method] : null;
       let code, owner;
       if (m) {
         cur = m[1];

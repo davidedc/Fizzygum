@@ -204,7 +204,7 @@ The design rule every translated verb follows: **the verb's NAME states the user
 translation preserves that intent, never the raw events** — a click becomes a tap, a right-click
 becomes a press-and-hold (the touch grammar's own context-menu trigger,
 [`../../docs/architecture/input-and-gestures.md`](../../docs/architecture/input-and-gestures.md)),
-a wheel becomes a drag over the resolved pane (delivered as successive clamped swipes, each latching
+a wheel becomes a drag over the part of the resolved pane that shows (delivered as successive clamped swipes, each latching
 afresh — a wheel's reach is unlimited, a finger's is one pane wide), and a press-drag-release becomes a hold-then-drag
 except where the calling verb already knows it presses CHROME (a handle, a slider, a scrollbar
 thumb), which needs no hold on either device. A no-button move emits nothing under finger mode

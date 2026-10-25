@@ -57,10 +57,15 @@ class StorageSorter
       for w in world.binWdgt.viewport.contents.children.slice()
         continue if w.destroyed
         if w.isInStorageButReachable newGcSessionId
+          # a bin resident is on the desktop while the bin's window is open, so a stroke can be
+          # pressing it: filing it away to the never-shown shelf puts it away, and the hand is told
+          # (ActivePointerWdgt.noteWidgetClosed), as the close funnel tells it
+          world.hand.noteWidgetClosed w
           world.shelfWdgt._addRestingWidgetNoSettle w
       for w in world.shelfWdgt.children.slice()
         continue if w.destroyed
         if !w.isInStorageButReachable newGcSessionId
+          # nothing to tell the hand: the shelf is never on the tree, so no stroke has booked a resident of it
           world.binWdgt._addRestingWidgetNoSettle w
       @_auditStorageNoSettle newGcSessionId
     finally

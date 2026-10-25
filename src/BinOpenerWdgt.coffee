@@ -63,16 +63,16 @@ class BinOpenerWdgt extends DesktopLinkWdgt
       @target.parent._rememberFractionalSituationInHoldingPanel()
 
 
-  # Runs inside the drop's single settle, so add through the non-settling core.
+  # Runs inside the drop's single settle, so it moves to trash through the non-settling core.
   # DROPPING ONTO THE BIN ICON IS THE CLASSIC TRASH GESTURE (reference-widgets plan R5,
-  # ratified 2026-08-19): sever every liveness edge into the dropped figure -- the same sever
-  # the "Move to trash" row runs -- BEFORE filing it, so the bin keeps it: otherwise a
-  # still-referenced widget escapes to the shelf on the next drain and the gesture silently
-  # meant nothing. (Dropping a shortcut trashes the ALIAS only, never its referent -- see
+  # ratified 2026-08-19), so it IS "Move to trash": every liveness edge into the dropped figure
+  # is severed BEFORE it is filed, so the bin keeps it (otherwise a still-referenced widget
+  # escapes to the shelf on the next drain and the gesture silently meant nothing), and the
+  # filing is a close, through the one funnel every close passes (Widget._closeNoSettle).
+  # (Dropping a shortcut trashes the ALIAS only, never its referent -- see
   # BinWdgt._reactToChildDroppedInViewport, this gesture's open-window twin.)
   _reactToChildDropped: (droppedWidget) ->
-    world._severLivenessEdgesIntoWdgtNoSettle droppedWidget._enclosingIslandFigure()
-    @target.viewport.contents._addInPseudoRandomPositionNoSettle droppedWidget
+    droppedWidget._moveToTrashNoSettle()
 
   wantsToBeDropped: ->
     false

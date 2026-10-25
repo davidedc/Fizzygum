@@ -5,7 +5,10 @@
 # fill on it as a rounded PLATE of that radius, so outside the plate's corners the rest fill shows
 # (a menu row) -- and below the plate too, when the widget's plateHeight stops it short of its
 # bottom (a list or a member row). At rest, a widget may still ask for a plate of its own
-# (_restPlateFill: a plain list row's hover, its highlighted state being its selection).
+# (_restPlateFill: a plain list row's hover, its highlighted look being its selection).
+#   The state I paint is the one my widget SHOWS: its own @state, unless it answers _shownState
+# (a soft hook) -- a list row does, since its highlighted look is its list's selection, a fact of
+# the list's model read as I paint and never stored on the row (MenuItemWdgt._shownState).
 # Solid BLACK over the whole box on the shadow pass, plate or no plate: the box is the silhouette.
 # The @label text is a child StringWdgt and paints itself; this appearance draws the fills and
 # the row's grip below.
@@ -25,7 +28,8 @@ class LabelButtonAppearance extends Appearance
         @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
         return
 
-      stateColor = switch @widget.state
+      shownState = @widget._shownState?() ? @widget.state
+      stateColor = switch shownState
         when @widget.STATE_NORMAL
           @widget.color
         when @widget.STATE_HIGHLIGHTED
@@ -34,7 +38,7 @@ class LabelButtonAppearance extends Appearance
           @widget.pressColor
 
       if @widget.plateRadius?
-        @_paintRestFillAndStatePlate ctx, localDamageBox, stateColor
+        @_paintRestFillAndStatePlate ctx, localDamageBox, shownState, stateColor
       else if stateColor?
         ctx.fillStyle = stateColor.toString()
         @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
@@ -45,16 +49,16 @@ class LabelButtonAppearance extends Appearance
   # WHOLE width, from my top down my widget's plateHeight (absent: my whole height), rounded at its
   # plateRadius (a uniform radius goes to fillRoundRect as the scalar, its fast path): out of my rest
   # state, in that state's fill; at rest, in the fill my widget asks for at rest (_restPlateFill: a
-  # plain list row's hover plate while the pointer is over it), if any. A pure function of my
-  # widget's state and box: no timer, no fade.
+  # plain list row's hover plate while the pointer is over it), if any. A pure function of the state
+  # my widget shows and its box: no timer, no fade.
   #   ⚠ The plate's geometry comes from MY WIDGET, never from the scope's `localDamageBox` — the law
   # is on Appearance._paintInLocalScope; the scope has already clipped to the damage box
   # (`clipsToDamageBox` is true here), so painting the whole plate is safe.
-  _paintRestFillAndStatePlate: (ctx, localDamageBox, stateColor) ->
+  _paintRestFillAndStatePlate: (ctx, localDamageBox, shownState, stateColor) ->
     if @widget.color?
       ctx.fillStyle = @widget.color.toString()
       @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
-    plateColor = if @widget.state is @widget.STATE_NORMAL then @widget._restPlateFill?() else stateColor
+    plateColor = if shownState is @widget.STATE_NORMAL then @widget._restPlateFill?() else stateColor
     return unless plateColor?
     ctx.fillStyle = plateColor.toString()
     ctx.fillRoundRect 0, 0, @widget.width(), (@widget.plateHeight ? @widget.height()), @widget.plateRadius

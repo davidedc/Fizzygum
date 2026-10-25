@@ -378,3 +378,57 @@ The arc that worked the focus-residue arc's findings also fixed what its researc
       assertion calls the planted failure; the re-record moved to `endOfNonFloatDrag` and the reference was recaptured.
 - [x] The browser single-test path (`loadAndRunSingleTestFromName`) loaded the wrong test under a selection, a finger filter
       or groups: the loader identifies one test's files by NAME.
+
+### Findings arc 2026-10-24 — residue, closed by the residue arc 2026-10-24 (no plan doc)
+The eight items the findings arc left in BACKLOG, assessed in parallel, decided once (the owner, on the three calls: "Do The Right Thing regardless of churn"), executed one unit at a time, each gated; the whole-suite twin prediction matched the rebuilt suite every time.
+- [x] **A list row pressed, dragged OFF and released elsewhere kept PRESSED** (the list lost its visible selection while
+      `list.selected` was unchanged). **DONE 2026-10-24, no recapture.** A list row's look of being its list's selection is no
+      longer a state it keeps: it reads the list's model as it paints (`MenuItemWdgt._shownState` →
+      `CommandPanelWdgt.showsAsItsSelection`), so no way of ending a press can leave the look and the model disagreeing.
+      `reShowListSelection`, `unselectAllItems`, `unselect`, `showAsSelected`, `_inkMyTag` and five member-row overrides are
+      gone; a member row's kind-tag ink is answered at paint (`inkForChildText`). Pinned by
+      `SystemTest_macroEveryPressIsToldItsEnding` scene (e), whose two selection checks now read the model.
+- [x] **A carried window CLOSED (sent to the bin) mid-stroke was lifted back out of the bin** by the next pressed move.
+      **DONE 2026-10-24, no recapture.** A close is the death funnel's twin: `Widget._closeNoSettle` tells the hand the figure
+      being put away (`ActivePointerWdgt.noteWidgetClosed`, sharing `_forgetBookingsLeavingWith` with `noteWidgetDestroyed`),
+      which cancels the audience members inside it and ends a non-float drag it holds. The bin-icon drop now IS Move to trash
+      (through the funnel); the storage sorter and the bin's own window-close state the fact where they happen. Reachable by real
+      input only through a user program (a formula fed by the stroke's own slider). Pinned by the renamed
+      `SystemTest_macroWidgetDestroyedOrClosedMidStrokeIsNotPickedUpAgain` (sections E–K; K reads the divider's DOM cursor).
+- [x] **`MacroToolkit._swipeBoxOf` bounded a translated wheel's swipes by the pane's FULL box** where an enclosing pane clips
+      it. **DONE 2026-10-24, no recapture.** The box is the part that shows (`clippedThroughBounds`); no suite swipe box is
+      clipped today (29 measured). `macroNestedScrollPanelsRouteWheel` stays mouse-only for its own stated reason (the first
+      wheel's later swipes carry the document too).
+- [x] **Test metadata `"grabDragThreshold": true` coerced to 1 px** — the premise was FALSE: every test opens with ResetWorld,
+      which builds a fresh `PreferencesAndSettings`, so the value never reached the hand; only the key's PRESENCE switched off a
+      test-only branch in `ActivePointerWdgt.checkDraggingThreshold` that skipped the threshold for mouse strokes during
+      playback. **DONE 2026-10-24.** The key AND the branch are retired (playback runs the product's threshold; the harness
+      refuses the key, `checkNoRetiredMetadataKeys`), and the one test the retirement moved exposed a REAL product bug: a widget
+      dragged out of a layout host (a document's flow) rode the hand off by the threshold travel, because `grab` applied its
+      correction before the release settle re-placed the widget. Every placement relative to the hand now follows that settle.
+      `SystemTest_macroSimpleDocumentHandlesOldInspector` gains value assertions (the window lands exactly on the drag's target);
+      its FINGER image_3 references (dpr 1+2) had baked the lag in and were recaptured (owner-approved, RECAPTURE COMPLETE).
+- [x] **`Example3DPlotWdgt.previousMousePoint` was never reset between strokes.** **DONE 2026-10-24, no recapture.** The spin is
+      a fact of one press: anchored at `pressBegan` (`_lastPressedPoint`), dropped at either ending; a drag begun on another
+      plot no longer spins this one (measured 199 → 0), and `hoverExited` no longer restarts the auto-rotation while the plot's
+      own press is live (measured 47 + 51 steps → 0). Pinned by `SystemTest_macroPlotSpinIsOnePressFact`.
+- [x] **A plain `CanvasWdgt`'s drawn pixels may not survive a save** — MEASURED first: they did not (a file save and a world
+      snapshot both restored blank paper; a Duplicate kept them), and the measurement found three more: a restored FizzyPaint
+      canvas could not be painted on (`TypeError … setTransform` in `getContextForPainting`), a duplicate drew every later line
+      at half size at dpr 2, and a restored canvas's saved raster decoded through the widget's scaled context (2× at dpr 2).
+      **DONE 2026-10-24, no recapture.** A drawn raster is content: `CanvasWdgt` also holds it as `drawnRaster` (set only by
+      `drawLine`/`clear`, so an undrawn canvas and every cache-raster subclass cost a file nothing) and takes it back as its back
+      buffer after a restore; `drawLine` re-lays the pixel ratio on its context; `StretchableCanvasWdgt._afterDeserialization`
+      rebuilds the painting's context; the `Deserializer` decodes a `$Canvas` at the identity transform. Pinned by five new rig
+      checks (`canvas.drawnRasterRoundtrip`, `world.drawnCanvasSurvives`, `canvas.duplicateDrawsAtPixelRatio` and
+      `stretchable.paintableAfterRestore` on a page pinned to dpr 2, `file.drawnCanvasPixels`), each failing on the old code.
+- [x] **A selectable `StringWdgt`'s press during a drag-scroll** (owner call). **DONE 2026-10-24, no recapture.** An un-armed
+      finger press on selectable text passes the press on (`StringWdgt.pressBegan` asks `strokeMeansMouseDrag()`), so a swipe
+      over text scrolls the pane under it, as iOS and Android do; mouse, pen and an armed finger still keep it. The text's
+      selectable flag is disarmed by a hover move — a mouse's notion — and could not decide a finger stroke. Pinned by
+      `SystemTest_macroFingerSwipeOverSelectableTextScrolls`.
+- [x] **`check-raw-pointer-reads` did not scan MIXIN bodies.** **DONE 2026-10-24.** The shared
+      `buildSystem/lib/coffee-method-header.js` owns the grouping too (`methodBoundary` / `methodSpans`, mixin-DSL aware), and
+      nine gates and censuses use it (three private copies deleted): +6 handler bodies scanned, +32 dead-method names, 8 mixins
+      under plane-discipline C, +9 menu verbs — zero findings; a planted mixin raw read fails the gate and passed the old one.
+      Also fixed: an exemption marker inside the previous method's body no longer exempts the next handler.

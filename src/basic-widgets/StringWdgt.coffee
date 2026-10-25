@@ -1941,8 +1941,18 @@ class StringWdgt extends Widget
 
   # A press on selectable text starts a selection (an edit, when I am editable), and STOPS here; on
   # any other text it goes on as any widget's does.
+  #   Except a FINGER's press the touch grammar has not armed (world.hand.strokeMeansMouseDrag(), its
+  # one fact about the stroke, decided at the down): it landed on me inside a surface that takes a
+  # plain finger drag for a SCROLL, so it may be the start of a scroll and is not mine yet. I arm
+  # nothing and pass it on, and the pane above takes the stroke, as iOS and Android give a scroll view
+  # the touch over its text; a tap is still mine (activated edits me), and so is a finger's press the
+  # grammar arms at once (no scroll surface above me). Whether I am still selectable is no answer for
+  # a finger: what disarms me is a HOVER move (_stepSelectionAt), a mouse's notion, so a finger landing
+  # with none before it (where a mouse last stood) would find me armed and take a swipe meant for the
+  # pane.
   pressBegan: (pos) ->
     return super pos  if !@isSelectable
+    return super pos  unless world.hand.strokeMeansMouseDrag()
     @clearSelection()
     if @isEditable and !@grabsToParentWhenDragged()
       @edit()

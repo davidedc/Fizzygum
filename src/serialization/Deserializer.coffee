@@ -213,9 +213,20 @@ class Deserializer
         img = new Image
         # decode via onload for BOTH backends (SWCanvas REQUIRES the <img> decoded before
         # drawImage; native is fine to defer too). whenReady gates any pixel read.
+        #   The decode lands AFTER the restore has handed the canvas to its widget, and a canvas
+        # has ONE context: a widget that has already laid its pixel-ratio scaling on it (its
+        # _afterDeserialization, its first paint) would have the saved pixels drawn through that
+        # scaling. The record is physical pixels, so they go down at the identity, and the
+        # widget's transform is put back.
         asyncPromises.push new Promise (resolve) ->
           img.onload = ->
-            try ctx.drawImage img, 0, 0
+            ctx.save()
+            try
+              ctx.setTransform 1, 0, 0, 1, 0, 0
+              ctx.drawImage img, 0, 0
+            catch
+            finally
+              ctx.restore()
             resolve()
           img.onerror = -> resolve()
         img.src = record.data

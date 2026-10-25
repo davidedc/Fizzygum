@@ -80,7 +80,8 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   restore it — the field comes back `undefined`, so a derived value a restored widget still
   needs must be rebuilt in that class's `_afterDeserialization`. Canvas 2D contexts define
   `rebuildDerivedValue` on their prototype (they rebuild from their sibling canvas by naming
-  convention); a class may also STAMP a no-op one onto a runtime-only object to keep it out of
+  convention) — and a rebuilt context is fresh and UNSCALED, so a primitive that draws through a
+  context it holds lays the pixel ratio again itself (`CanvasWdgt.drawLine`); a class may also STAMP a no-op one onto a runtime-only object to keep it out of
   both walks (§5).
 - A property whose value is flagged **`keptByReferenceOnDeepCopy`** is kept by reference
   on duplication. Two kinds of class declare it: world-level shared singletons
@@ -252,6 +253,21 @@ class Widget extends TreeNode
   the merge is `transients.inheritedMergedNotReplaced` in
   `../Fizzygum-tests/scripts/serialization-roundtrip-headless.js` — it serializes a self-declaring
   class and asserts an INHERITED transient is absent from the record.
+- **A raster that is CONTENT, not a render cache, rides the save under a name of its own.** The
+  back buffer is a `Widget` transient — on almost every widget it is a cache the next paint
+  re-derives — and a subclass can never drop an inherited transient. A plain `CanvasWdgt`'s raster
+  stops being a cache the moment something draws on it (`drawLine`, `clear`): from then on it is the
+  only copy of the drawing. So `CanvasWdgt` also holds that same canvas object as `drawnRaster` (not
+  transient: one `$Canvas` record, the object table being identity-keyed), set only by those two
+  draws, so a canvas nothing has drawn on — and every subclass whose raster IS a cache — costs a file
+  nothing; a restored canvas takes it back as its back buffer at its first paint. FizzyPaint's
+  `StretchableCanvasWdgt` keeps its painting in a separate content field
+  (`behindTheScenesBackBuffer`) and rebuilds that painting's context in `_afterDeserialization`. The
+  record is the saving page's PHYSICAL pixels, so a raster saved at one pixel ratio and loaded at
+  another is copied 1:1 (see BACKLOG). Rig checks: `canvas.drawnRasterRoundtrip`,
+  `world.drawnCanvasSurvives`, `canvas.duplicateDrawsAtPixelRatio`, `stretchable.paintableAfterRestore`
+  (`serialization-roundtrip-headless.js`) and `file.drawnCanvasPixels`
+  (`serialization-file-roundtrip-headless.js`).
 - **A live canvas object a class caches in a field is a transient.** A gradient, a pattern or a
   canvas a paint builds lazily (`if !@colorGradient?`) has no file encoder; declare the field and let
   the paint rebuild it after a restore. The rig's `world.everyAppSnapshot.*` checks open every app
@@ -355,7 +371,7 @@ could not restore it and a copy would hold an object that throws on use:
 | `Array` | `$Array` `items` | element-wise; own table slot; can be shared between properties |
 | `Date` | `$Date` `ms` | the tagged record is what keeps it restorable — a raw `Date` stringifies to a bare ISO string and cannot be deserialized back |
 | `Image` | `$Image` `src` | async decode on restore → the `whenReady` promise |
-| `HTMLCanvasElement` | `$Canvas` `w`/`h`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS` |
+| `HTMLCanvasElement` | `$Canvas` `w`/`h`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS`. The decode draws at the IDENTITY transform under save/restore: it lands after the restore has handed the canvas to its widget, and a canvas has one context, which that widget may already have scaled (its `_afterDeserialization`, its first paint). The data is PHYSICAL pixels (extent × the saving page's `ceilPixelRatio`); SWCanvas encodes an uncompressed PNG (≈ 4/3 × 4·w·h characters) |
 | `HTMLVideoElement` | `$Video` `src`/`autoplay`/`currentTime` | tagged on its own record; mis-tagging it as a canvas crashes the restore |
 | `CanvasGradient` | *(no encoder)* | DUPLICATION clones it as `undefined` (`Duplicator._copyGradient`, via `NativeValueKinds.isGradientLike` — its one caller) and consumers rebuild. The SERIALIZER has no gradient branch: a gradient in an own property raises the unrecognized-type `SerializationError` under both backends (under native the closed-set guard refuses it: `classNamed` answers no class for a browser-native one). Keep gradients out of serialized own properties, or declare the property transient (§5). |
 | plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |
