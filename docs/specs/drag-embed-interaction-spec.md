@@ -138,7 +138,7 @@ predicate); reluctant = the §5 climb found no acceptor but passed a widget with
 **Owner decision 4 was REVERSED 2026-07-06** (owner "keep view-locked" — see the deviations note at the top):
 dashboards stay view-locked at construction, exactly like slides and docs. `SampleDashboardApp` keeps the
 `slideWdgt.disableDragsDropsAndEditing()` call in its window-assembly tail, as `SampleSlideApp` and
-`InfoDocs._buildInfoDocNextTo` (the shared info-doc builder) keep theirs. Only the payload-class dwell rule
+`InfoDocs.createNextTo` (the info-doc builder) keep theirs. Only the payload-class dwell rule
 above changed; no app's default editing state changed as part of this arc.
 
 ### §4.1 — Dock bands: a receptivity tier ahead of the four (`frame-lifetime-and-docking-plan.md` §2.4/§2.5)

@@ -103,4 +103,4 @@ class CodeAreaWdgt extends Widget
     if @tempPromptEntryField.parent == @
       @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, codeAreaTop), new Point @width() - 2 * @externalPadding, codeAreaHeight
 
-    FooterBandLayout.arrange @, @_footerLeftButtons(), @_footerRightButtons()
+    FooterBandLayout._arrange @, @_footerLeftButtons(), @_footerRightButtons()

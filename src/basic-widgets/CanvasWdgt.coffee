@@ -26,6 +26,7 @@ class CanvasWdgt extends PanelWdgt
   # has drawn on costs a saved file nothing, and neither does a subclass whose raster is a cache it
   # repaints (a video frame, a loaded image, a 3D render, the paint glass), since none of them draws
   # through drawLine or clear.
+  # saved-content: once a pen has drawn on me this raster is the drawing's only copy
   drawnRaster: undefined
 
   # The paper I lay my raster on while I hold no colour of my own -- like every panel I hold none until

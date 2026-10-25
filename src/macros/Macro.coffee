@@ -83,6 +83,9 @@ class Macro
           return
 
         return unless @noCodeLoading()
+        # before any wait: a translated wheel's held swipe is queued once the queue has drained, and
+        # the macro does not step on while one is held (MacroToolkit._deliverHeldSwipe)
+        return if @_deliverHeldSwipe()
         if @returnFromLastMacroStep is "waitNoInputsOngoing"
           return unless @noInputsOngoing()
         else if @returnFromLastMacroStep is "waitForScreenshotReady"
@@ -110,8 +113,13 @@ class Macro
         next = @macroGenerator.next()
         @msSinceLastExecutedMacroStep = 0
         if next.done
-          @progressOnMacroSteps = noOperation
-          @aMacroIsRunning = false
+          # a macro whose last statement is a wheel still holds swipes: they are delivered before it
+          # ends (MacroToolkit._deliverHeldSwipesThenEnd)
+          if @heldSwipes?
+            @progressOnMacroSteps = @_deliverHeldSwipesThenEnd
+          else
+            @progressOnMacroSteps = noOperation
+            @aMacroIsRunning = false
         else
           @returnFromLastMacroStep = next.value
     """ + "\n\n\n" + linkedMacro

@@ -1372,8 +1372,9 @@ assertion a recapture after a regression silently stores two different hashes an
   the macro pump's `noInputsOngoing`/`readyForMacroScreenshot` (never capture while momentum settles). The `Date.now()`-
   driven EDGE AUTO-SCROLL is NOT suppressed — it is load-bearing with its own test (the edge-auto-scroll entry above):
   its contract is the same saturation rule as (3); (2) RELEASE TRUNCATION — the step samples the hand per FRAME, so the pointer-path tail
-  that plays in the mouse-up's frame was never scrolled; a final FLUSH in the step's release branch now makes the held-drag
-  total exactly release − press; (3) MID-RANGE PATH-DEPENDENCE — `scrollX`/`scrollY` clamp against the PREVIOUS frame's
+  that plays in the mouse-up's frame was never scrolled; the release FLUSH, paid when the release is told to the pane
+  (`ViewportWdgt.pressEnded`), makes the held-drag total exactly release − press, even when the release and the next press
+  share one frame; (3) MID-RANGE PATH-DEPENDENCE — `scrollX`/`scrollY` clamp against the PREVIOUS frame's
   contents union while `_positionAndResizeChildren` re-derives it each frame, so a mid-range pan endpoint shifts a few pixels with
   event-into-frame batching. (3) is inherent: write drag-to-scroll macros by the SATURATION RULE — every pan axis either
   SATURATES (drag well past the clamp; the saturated state is the clamp's unique fixed point) or is exactly ZERO. And press
@@ -2251,9 +2252,12 @@ can stand partly outside the document's viewport, and a swipe started there woul
 desktop), inset clear of its own chrome (the bar band, widened while a resize/move handle is parked
 on it — a swipe means to press CONTENT, and one that lands on chrome would resize instead of
 scroll); a pane nothing of which shows keeps its whole box, so the press's aim check names the
-miss. The box is read once per wheel call, before any of its swipes drains. **A wheel notch has no reach limit
+miss. Each swipe is queued only once the one before it has drained (the pump delivers the HELD rest,
+`MacroToolkit._deliverHeldSwipe`) and reads the box as the pane shows then — a swipe that scrolled an enclosing pane moved
+this one on the screen — and every swipe after the first is aim-checked against the pane; so a finger wheel MUST be
+followed by `yield "waitNoInputsOngoing"` before anything else is queued (`queueInputEvent` throws otherwise). **A wheel notch has no reach limit
 and a finger does, so a delta longer than one swipe is delivered as successive CLAMPED swipes** —
-`_touchScrollBy` loops (bounded by `@maxScrollSwipes`), each leg SHIFTED to fit inside the box
+`_touchScrollBy` queues the first and the pump the rest (bounded by `@maxScrollSwipes`), each leg SHIFTED to fit inside the box
 rather than shortened, until the whole delta is spent or the box is exhausted (where the at-edge
 escalation — `docs/architecture/viewports-and-planes.md` — takes over). Witness:
 `macroFingerPlainDragScrollsWhereMouseLifts`; both `wheelOn_InputEvents` and

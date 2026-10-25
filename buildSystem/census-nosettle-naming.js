@@ -133,7 +133,9 @@ for (const file of collectCoffee(SRC, [])) {
       if (b) {
         flush();
         mixinHashIndent = b.mixinHashIndent;
-        if (b.kind === 'header') {
+        // the settle tiers name INSTANCE methods; a class-side `@name` method ends the one above it and is
+        // not a def of this census
+        if (b.kind === 'header' && !b.static) {
           cur = { klass, method: b.method, rel, line: n + 1, body: [], settles: false, joins: false };
           continue;
         }

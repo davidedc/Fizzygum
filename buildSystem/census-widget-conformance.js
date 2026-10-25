@@ -22,6 +22,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { methodSpans } = require('./lib/coffee-method-header');   // facet 5's setters: class methods + mixin members
 const SRC = path.resolve(__dirname, '../src');
 
 // ── the two ratcheted floors ────────────────────────────────────────────────────────────────────
@@ -146,13 +147,25 @@ function constructorSlots() {
 // ⚠ NEVER gate: the tree has legitimate variants (ViewportWdgt's conditional forward,
 // NumberPromptWdgt's pure sink), and the whole area is mid-flight between this plan's W6 and
 // plans/connector-ubiquity-and-reflection-plan.md. Reported so W6 can re-derive its table, not judged.
+// The setters are the instance methods the shared grouping finds (lib/coffee-method-header.js
+// methodSpans) in every widget class AND every mixin — a mixin's setter is reported under the
+// mixin's own name, where it is declared, never once per class it is stitched onto. A setter that
+// takes nothing (`setAlignmentToLeft: ->`) is an action, not a pin setter: there is no value to deliver.
+function setterParams(lines, at) {
+  // the parameter list from the header line on — a wrapped list continues on the lines after it
+  const m = /^\s*[A-Za-z_]\w*\s*: +(?:\(([^)]*)\))?/.exec(lines.slice(at, at + 12).join('\n'));
+  return m && m[1] !== undefined ? m[1].split(',').map((s) => s.trim()).filter(Boolean) : [];
+}
 function pinSetterShapes() {
   const rows = [];
-  for (const name of [...classes.keys()].sort()) {
-    if (!isWidget(name)) continue;
-    for (const m of strip(classes.get(name).text).matchAll(/^ {2}(set[A-Z]\w*)\s*:\s*\(([^)]*)\)/gm)) {
-      const params = m[2].split(',').map((s) => s.trim()).filter(Boolean);
-      rows.push({ cls: name, setter: m[1], arity: params.length, params: params.join(', ') });
+  const units = [...[...classes.keys()].filter(isWidget).map((n) => [n, classes.get(n).text]), ...mixins.entries()]
+    .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  for (const [name, text] of units) {
+    const lines = strip(text).split('\n');
+    for (const span of methodSpans(lines)) {
+      if (span.static || !/^set[A-Z]/.test(span.name)) continue;
+      const params = setterParams(lines, span.line);
+      if (params.length > 0) rows.push({ cls: name, setter: span.name, arity: params.length, params: params.join(', ') });
     }
   }
   return rows;

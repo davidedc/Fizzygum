@@ -617,7 +617,7 @@ class InspectorWdgt extends Widget
       # button that is my child, shown or not: visibility is not a layout input, so a hidden button
       # (a class inspector's override) keeps its slot, and showing it moves nothing.
       if @_subjectIsEditable()
-        FooterBandLayout.arrange @, @_footerLeftButtons(), @_footerRightButtons()
+        FooterBandLayout._arrange @, @_footerLeftButtons(), @_footerRightButtons()
 
     super
     @_markLayoutAsFixed()

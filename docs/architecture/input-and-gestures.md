@@ -114,6 +114,12 @@ exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
   a hold-consumed one and a scroll's included. A member is struck off before it is told, so nobody
   hears twice; a member that dies mid-stroke leaves the audience with its subtree, and one put away
   mid-stroke is told `pressCancelled` as it goes.
+- **A scroll ends where its stroke does.** The pane a stroke's scroll went to keeps the press, so it
+  hears the ending too, and its drag-scroll step pays the stroke's release flush THERE —
+  `pressEnded` from the release point, `pressCancelled` from where the pointer stands — never in
+  whichever frame first sees the hand let go (`ViewportWdgt.pressEnded`). A release and the next
+  press drained in one frame therefore lose nothing: the next press stopping the step ends only a
+  glide (`Fizzygum-tests/DETERMINISM.md` §3l).
 - **The look.** Neither ending says where the pointer is. A receiver picks the look it ends in from
   where the pointer actually stands, by asking the hand (`restsOn` — a mouse or a pen rests on what
   it stopped over; a finger never rests anywhere), never by assuming it is still over it:

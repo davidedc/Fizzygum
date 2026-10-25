@@ -432,3 +432,50 @@ The eight items the findings arc left in BACKLOG, assessed in parallel, decided 
       nine gates and censuses use it (three private copies deleted): +6 handler bodies scanned, +32 dead-method names, 8 mixins
       under plane-discipline C, +9 menu verbs — zero findings; a planted mixin raw read fails the gate and passed the old one.
       Also fixed: an exemption marker inside the previous method's body no longer exempts the next handler.
+
+### Residue arc 2026-10-24 — residue, closed by the residue-2 arc 2026-10-25 (no plan doc)
+The five items the residue arc left in BACKLOG, assessed in parallel by three read-only agents, decided once (the owner took every recommendation), executed one unit at a time, each gated; every whole-suite twin prediction matched the rebuilt suite (no recapture in the whole arc).
+- [x] **A `SimpleImageWdgt` restored from a file or a snapshot painted BLACK.** **DONE 2026-10-25, no recapture.** A widget
+      keeps no memo of its back buffer: the image widget paints on every NEW raster `CanvasWdgt` hands it (it compares its back
+      buffer before and after `super`), lays black paper under every paint (a scaled SWCanvas draw leaves part-transparent edge
+      pixels), and holds its image path as its one saved truth — `img`/`imageLoaded` are transients reloaded by
+      `_afterDeserialization` (a memo-only fix still lost the slow-image race: black forever natively, a thrown first paint and a
+      hidden widget under SWCanvas). The same defect, measured live, in `VideoPlayerCanvasWdgt` (its letterbox restored in its
+      paper colour) — fixed the same way. Both classes ship only with `--includeVideoPlayer`, so no suite, rig or smoke can reach
+      them: the cover is a new build gate, `buildSystem/check-back-buffer-memos.js` (every field a back-buffer builder writes is a
+      transient of the class chain or declared `# saved-content:`), which reads every part; it fails on HEAD's two classes and on a
+      stripped marker.
+- [x] **A drawn raster saved at one pixel ratio and loaded at another was copied 1:1.** **DONE 2026-10-25, no recapture.** Worse
+      than filed: through the SWCanvas file door the drawing was lost outright (the door attaches before the decode, and the
+      first paint's resize copied the still-empty canvas). FizzyPaint's half (filed INFERRED) measured TRUE, and a third carrier
+      was found: a pinned menu's row icons (`InertIconHolderWdgt.raster`). The `$Canvas` record now states the ratio its physical
+      pixels were made at (`pr`), and the Deserializer builds the canvas at this page's size and resamples at the DECODE
+      (smoothing when it shrinks, pixel replication when it enlarges, so 1 → 2 → 1 is exact); equal ratios stay byte-identical.
+      Seven new rig checks over three pages pinned to ratios 2, 1, 2; each fails on the old code.
+- [x] **SWCanvas encoded `toDataURL` as an UNCOMPRESSED PNG.** **DONE 2026-10-25, no recapture.** SWCanvas `031f828` (branch
+      `png-deflate` off `main`, in its own worktree): per-row PNG filters by minimum sum of absolute residuals + LZ77 with FIXED
+      Huffman codes (`compressionLevel` 0–9, default 6; level 0 = the old stored bytes exactly); lossless, synchronous, identical
+      bytes on V8 and JSC; 0.89–1.20× the browser's own size on the two measured drawings and ~2× faster than the stored encoder
+      on real rasters; dynamic codes measured not worth it. A golden-hash core test pins it; 176 committed SWCanvas PNGs
+      regenerated, all pixel-identical (34.95 MB → 0.50 MB). Fizzygum's pin bumped `149a51c` → `031f828`: the whole suite green
+      at both pointers × both ratios, both rigs green; a drawn dpr-2 canvas now saves as a ~5 KB file (was ~230 KB). ⚠ The filed
+      vendoring premise was wrong: the SWCanvas checkout's 6 `sw3d` commits sit on a branch that DIVERGED before the pinned
+      font-symbols commit, so vendoring from it would have dropped that commit; the sw3d work is a separate bump.
+- [x] **`MacroToolkit._touchScrollBy` read the swipe box ONCE per wheel call.** **DONE 2026-10-25, no recapture.** The research
+      found a PRODUCT defect behind it: a drag-scroll stroke's release flush was paid by the first FRAME after the release, so a
+      frame that drained one stroke's release and the next press let that press stop the step before it paid — the first
+      stroke's tail lost, by an amount set by cadence (`Fizzygum-tests/DETERMINISM.md` §3l). The stroke now ends at its own
+      event (`ViewportWdgt.pressEnded`/`pressCancelled` pay the flush; frames only sample while the stroke lasts). The toolkit
+      holds a translated wheel's later swipes and the macro pump queues each once the one before it has drained, re-reading the
+      box and aim-checking it on the pane. Pinned by `SystemTest_macroWheelOverAPaneAtItsEndScrollsTheEnclosingPane` (fails on
+      the old toolkit under a finger) and `SystemTest_macroTwoScrollStrokesInOneFrameKeepBothTravels` (makes the shared frame BY
+      CONSTRUCTION; reads 18 against 58 on the old ViewportWdgt), both assertion-only, both pointers.
+- [x] **Two build scripts kept their own method grouping.** **DONE 2026-10-25.** `check-stinks.js` keys a mixin member at the
+      indent the shared grouping locks (`mixinMemberIndent` — two mixins are 4-space, 55 lines had been attributed to
+      `onceAddedClassProperties`); `census-widget-conformance.js` facet 5 reads methods through `methodSpans` (a mixin setter
+      counts; 78 → 79). Folded in, the shared parser's own blind spot: it had no rule for a 2-space class-side `@name:` key, so 109
+      static methods were nobody's (422 of their lines credited to the instance method above). A class-side method is now a span
+      of its own (`static: true`); `check-layering` reads its tier from the bare name and `check-dead-methods` inventories it.
+      What that exposed, fixed structurally: `FooterBandLayout.@arrange` → `@_arrange` (rule `[F]`: an in-pass placement wearing
+      a public name), `InfoDocs.@_buildInfoDocNextTo` folded into its single caller `@createNextTo` (rule `[G]` ×4), and the dead
+      `StackElementsSizeAdjustingWdgt.@includeInNewWidgetMenu` deleted (`lint-and-static-checks.md` §6b, "a FOURTH time").

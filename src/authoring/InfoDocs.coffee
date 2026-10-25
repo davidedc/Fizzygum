@@ -166,11 +166,13 @@ class InfoDocs
     superToolbar:     -> new ToolbarsIconWdgt
     windowsToolbar:   -> new WindowsToolbarIconWdgt
 
-  # Keeps the once-only guard FIRST (so nothing is built on a repeat call),
-  # then constructs `doc` + the per-key icon itself, then hands off to the
-  # shared layout builder. RETURNS the DocumentWdgt --
-  # WindowsToolbarCreatorButtonWdgt's caller captures it (readmeWindow) to
-  # reposition it; the other callers discard it.
+  # Builds the one-shot info document `key` names, next to nextToThisWidget. The once-only guard
+  # comes FIRST, so nothing is built on a repeat call. Then the common shape: the per-key icon +
+  # centred title + divider header, the per-key body via the entry's `build sdspw` callback, then
+  # the doc window is placed, titled and locked (the once-only `world[entry.flag]` set, the
+  # destroy-on-close policy, positioned next to nextToThisWidget). RETURNS the DocumentWdgt --
+  # WindowsToolbarCreatorButtonWdgt's caller captures it (readmeWindow) to reposition it; the other
+  # callers discard it.
   # ⚠ NO await here, and that is a property of where this class LIVES. Every info doc IS a
   # DocumentWdgt, and InfoDocs sits in the same 'authoring' part as DocumentWdgt -- all eight of its
   # REGISTRY keys name a Maker, so it is authoring-surface material and nothing in core reaches it.
@@ -181,15 +183,7 @@ class InfoDocs
     return if world[entry.flag]
 
     doc = new DocumentWdgt
-    @_buildInfoDocNextTo nextToThisWidget, entry.flag, doc, @_iconFor[key](), entry.title, entry.windowTitle, entry.build
-
-  # Shared builder for the one-shot info documents above. It lays out the
-  # common shape -- the icon + centred title + divider header, then the
-  # per-key body via the `buildBody sdspw` callback, then places/titles/locks
-  # the doc window (set the once-only `world[flagName]`, set the
-  # destroy-on-close policy, position next to nextToThisWidget) -- and RETURNS the
-  # DocumentWdgt.
-  @_buildInfoDocNextTo: (nextToThisWidget, flagName, doc, iconWidget, title, windowTitle, buildBody) ->
+    iconWidget = @_iconFor[key]()
     sdspw = doc.contents
 
     iconWidget._applyExtent new Point 85, 85
@@ -197,19 +191,19 @@ class InfoDocs
     iconWidget._contentStackSpec.setGrow 0
     iconWidget._contentStackSpec.setAlignmentToCenter()
 
-    sdspw.addTitle title
+    sdspw.addTitle entry.title
 
     sdspw.addDivider()
 
-    buildBody sdspw
+    entry.build sdspw
 
     doc._applyExtent new Point 365, 405
     doc._moveFullCenterTo world.center()
     world.add doc
-    doc.setTitleWithoutPrependedContentName windowTitle
+    doc.setTitleWithoutPrependedContentName entry.windowTitle
 
     doc.disableDragsDropsAndEditing()
-    world[flagName] = true
+    world[entry.flag] = true
 
     # one-shot info window: closing destroys it outright (no save prompt) --
     # the tracked close policy (§5.E E2).

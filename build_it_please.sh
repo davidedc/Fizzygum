@@ -692,6 +692,25 @@ if ! $noSyntaxCheck ; then
   echo "... widget-conformance check OK"
 fi
 
+# --- build-time BACK-BUFFER-MEMOS gate -------------------------------------------------
+# A widget keeps no memo of its back buffer: every field a back-buffer builder (_createRefreshOrGetBackBuffer,
+# and the same-class methods it reaches) writes must be a serialization transient of the class chain, or a
+# field declared as saved content with a `# saved-content: <reason>` marker on (or directly above) its
+# declaration. The back buffer itself is a transient, so a memo of it that rides a save outlives the raster
+# it describes and the restored widget skips the paint it needs. Reads ALL of src/ -- every part, shipped or
+# not, so it covers the flag-gated video-player part no default build carries. (buildSystem/
+# check-back-buffer-memos.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.)
+if ! $noSyntaxCheck ; then
+  echo "checking back-buffer builders keep no saved memo ..."
+  node ./buildSystem/check-back-buffer-memos.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: back-buffer-memos gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... back-buffer-memos check OK"
+fi
+
 # --- build-time RELAYOUT-REPAINTS gate (TOMBSTONE) ------------------------------------
 # Static sibling to the runtime paint-truthfulness capstone (Fizzygum-tests/scripts/run-paint-audit.js),
 # which is unchanged. [INV-1] -- a `_reLayoutSelf` that suppresses change-tracking MUST issue a covering

@@ -145,4 +145,4 @@ class BinWdgt extends Widget
 
     # the Empty-bin button sits at the LEFT of my footer band (owner-placed: the destructive
     # action away from the grip's corner), at its own size
-    FooterBandLayout.arrange @, [@emptyBinButton], []
+    FooterBandLayout._arrange @, [@emptyBinButton], []

@@ -2,8 +2,10 @@
 // check-dead-methods.js — build lint: flag methods DEFINED in src but referenced NOWHERE.
 //
 // Mirrors buildSystem/check-layering.js (a heuristic line scanner, exit 0 clean / 1 violation /
-// 2 operational). It finds every method header in src/**/*.coffee — a class's 2-space ones and a
-// mixin's onceAddedClassProperties members alike (lib/coffee-method-header.js) — then harvests every
+// 2 operational). It finds every method header in src/**/*.coffee — a class's 2-space ones, a
+// mixin's onceAddedClassProperties members and the class-side `@name:` methods alike
+// (lib/coffee-method-header.js; a class-side method is inventoried under its BARE name, which is how
+// it is called: `Class.name` from outside, `@name` between the statics of one class) — then harvests every
 // identifier used anywhere a method could be CALLED — across src (.coffee), the test harness
 // (Fizzygum-tests/Automator-and-test-harness-src/*.coffee) and the macro SystemTests
 // (Fizzygum-tests/tests/**/*.js, whose mainMacroSource strings carry the verbs they call). A
@@ -13,6 +15,11 @@
 // BUILD method names at runtime, and even a string-dispatched name ("foo") is caught as a token —
 // so the false-positive rate is low. The rare genuine exception (intentional public API, a method
 // dispatched by a computed name, a known gap to fix later) goes in dead-method-allowlist.txt.
+// ⚠ BLIND SPOT, the same for class-side and instance methods: a name that only ever exists
+// ASSEMBLED at runtime (`klass[prefix + "Foo"]()`) appears whole nowhere, so the method reads dead
+// although it is called. A name written whole inside a string — `klass["fooBar"]()` — IS seen, because
+// the harvest reads string contents as tokens. The converse is the price of matching by name: any
+// same-spelled token anywhere (a field, a local, another class's method) keeps a method alive.
 //
 // The lint FAILS on any dead method NOT in the allowlist. Run with --update-allowlist to (re)seed
 // the allowlist file with the current dead set (the baseline).
@@ -66,6 +73,12 @@ function twinName(n) {
   const core = /^_(.+)NoSettle$/.exec(n);
   return core ? core[1] : '_' + n + 'NoSettle';
 }
+// The INVENTORY of one file's methods: an instance method (a class's or a mixin member) under its own
+// name, a class-side method under its BARE name, tagged classSide so a report can say which. A class-side
+// DATA key (`@NAME: 5`) is no method, and methodSpans gives it no span.
+function inventoryOf(lines) {
+  return methodSpans(lines).map((sp) => ({ name: sp.static ? sp.name.slice(1) : sp.name, line: sp.line, classSide: sp.static }));
+}
 function independentlyReferenced(token, excluded, referrers) {
   const owners = referrers.get(token);
   if (!owners) return false;
@@ -90,6 +103,13 @@ if (process.argv.includes('--self-test')) {
     console[(got === expect) ? 'log' : 'error'](`  ${got === expect ? 'ok  ' : 'FAIL'} ${n}: retained=${got} (expected ${expect})`);
     if (got !== expect) ok = false;
   }
+  // the inventory: a class-side method under its bare name and tagged, a class-side DATA key not at all,
+  // and the instance method written after the class-side ones still its own entry
+  const invLines = ['class K', '  @SOME_CONSTANT: 5', '  @make: (a) ->', '    @_helper a', '  @_helper: (a) -> a', '  @OTHER: "x"', '  doIt: ->', '    K.make 1'];
+  const inv = JSON.stringify(inventoryOf(invLines).map((d) => `${d.name}${d.classSide ? '(class-side)' : ''}@${d.line + 1}`));
+  const invWant = JSON.stringify(['make(class-side)@3', '_helper(class-side)@5', 'doIt@7']);
+  console[(inv === invWant) ? 'log' : 'error'](`  ${inv === invWant ? 'ok  ' : 'FAIL'} inventoryOf(class-side corpus) -> ${inv}`);
+  if (inv !== invWant) ok = false;
   // stripComment must treat '#{…}' as CODE (interpolation), not a comment (plan P4.2 regression).
   const stripCases = [
     ['x = "#{@onlyCalledInInterpolation()}" # real comment', 'x = "#{@onlyCalledInInterpolation()}" '],
@@ -115,13 +135,15 @@ if (!fs.existsSync(TESTS) || !fs.existsSync(HARNESS)) {
 // 1. every method header in src -> name => [first def location, ...]
 // This gate owns the method INVENTORY, so it also carries the guard for headers the shared matcher
 // cannot see: an unseen header is not a missing warning, it is a method NO gate checks at all.
+// A class-side method is inventoried under its BARE name (inventoryOf), and its own body is attributed to
+// it in the harvest below, so one static calling another (`@other` inside `@name`) is that other's reference.
 const defs = new Map();
 const unseen = [];
 for (const p of walk(SRC, '.coffee', [])) {
   const lines = fs.readFileSync(p, 'utf8').split('\n');
-  for (const sp of methodSpans(lines)) {
-    if (!defs.has(sp.name)) defs.set(sp.name, []);
-    defs.get(sp.name).push(path.relative(SRC, p) + ':' + (sp.line + 1));
+  for (const def of inventoryOf(lines)) {
+    if (!defs.has(def.name)) defs.set(def.name, []);
+    defs.get(def.name).push(path.relative(SRC, p) + ':' + (def.line + 1) + (def.classSide ? ' (class-side)' : ''));
   }
   for (const u of unseenMethodHeaders(lines)) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
 }
@@ -156,7 +178,9 @@ function harvestSrc(files) {
     for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
       const b = methodBoundary(raw, mixinHashIndent);
       if (b) mixinHashIndent = b.mixinHashIndent;
-      const m = b && b.kind === 'header' ? [raw, b.method] : null;
+      // the owner is the method's INVENTORY name (a class-side one's bare name, as inventoryOf names it), so
+      // the symmetry check below excludes a dead method's references to its own twin whichever side it is on
+      const m = b && b.kind === 'header' ? [raw, b.static ? b.method.slice(1) : b.method] : null;
       let code, owner;
       if (m) {
         cur = m[1];

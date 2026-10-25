@@ -208,7 +208,17 @@ class Deserializer
       populate: -> # fully built in pass 1 — nothing to populate
     "$Canvas":
       build: (record, asyncPromises) ->
-        canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point record.w, record.h
+        # The record is PHYSICAL pixels made at the saving page's pixel ratio `pr`, and every canvas
+        # that rides a save is a raster of its widget's LOGICAL size x that ratio (a drawn canvas, a
+        # painting, a pinned menu's icon). At another ratio it is resampled to the size it has on this
+        # page -- here, at the decode, never by the widget that adopts it: the canvas exists at its
+        # final size before its pixels arrive, so a widget that takes it before the decode lands (the
+        # file door attaches first) holds the very object the pixels land in. A record without `pr` is
+        # taken to be at this page's ratio, and is drawn as it was saved.
+        scale = if record.pr? then ceilPixelRatio / record.pr else 1
+        w = Math.round record.w * scale
+        h = Math.round record.h * scale
+        canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point w, h
         ctx = canvas.getContext "2d"
         img = new Image
         # decode via onload for BOTH backends (SWCanvas REQUIRES the <img> decoded before
@@ -217,13 +227,21 @@ class Deserializer
         # has ONE context: a widget that has already laid its pixel-ratio scaling on it (its
         # _afterDeserialization, its first paint) would have the saved pixels drawn through that
         # scaling. The record is physical pixels, so they go down at the identity, and the
-        # widget's transform is put back.
+        # widget's transform is put back -- with the smoothing setting below, which the save/restore
+        # keeps off the widget's context too.
         asyncPromises.push new Promise (resolve) ->
           img.onload = ->
             ctx.save()
             try
               ctx.setTransform 1, 0, 0, 1, 0, 0
-              ctx.drawImage img, 0, 0
+              if scale is 1
+                ctx.drawImage img, 0, 0
+              else
+                # shrinking averages (smoothing on: at 2 -> 1 a box of four pixels); enlarging
+                # replicates pixels (smoothing off), so a 1 -> 2 -> 1 round trip gives back the very
+                # pixels it started from, and no edge pixel is left part-transparent
+                ctx.imageSmoothingEnabled = scale < 1
+                ctx.drawImage img, 0, 0, w, h
             catch
             finally
               ctx.restore()

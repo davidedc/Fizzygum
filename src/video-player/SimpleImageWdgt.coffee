@@ -1,42 +1,39 @@
-# I clip my subwidgets at my bounds. Which potentially saves a lot of redrawing
-# and event handling.
-# Also I always use a canvas to retain my graphical representation and respond
-# to the HTML5 commands.
+# I show the image at my image path, scaled to fill my box, on black paper.
 #
-# "container"/"contained" scenario going on.
-
-# Having both the image and the backbuffer around
-# might seem redundant, and in most cases it is, since
-# the image in most cases eventually gets painted on the main
-# canvas "as is", in which case we might as well just do that directly
-# without need for an intermediate buffer.
-# However consider that you might attach a turtle to this widget to
-# draw some lines on it, or might want to apply some kind of filter effect,
-# in which case you might want to keep the
-# source image and the backbuffer separate.
-
-# Note also that you could get rid of the Image once it's loaded
-# and keep the Image content in a separate dedicated canvas.
-# This would have the advantage that you don't keep around
-# (and potentially need to deepcopy, with consequent extra code) an Image, which is
-# a special class for _loading_ images rather than keeping them around.
-# So you wouldn't be able to deepCopy this class while the Image is loading then,
-# which also would be odd.
+# MY IMAGE PATH IS MY TRUTH, and the only part of my picture that rides a save. Everything else I
+# hold about the picture is derived from it in the page I live in:
+#   - @img is the Image this page loaded from the path, and @imageLoaded says whether that load has
+#     arrived. Both are serialization transients: a restore loads the path again
+#     (_afterDeserialization), because a restored "loaded" would claim an image this page has not
+#     decoded -- drawing that one throws under SWCanvas and draws nothing natively.
+#   - my raster is a RENDER CACHE of the image at my size, repainted on every new raster. I keep no
+#     memo of what I painted on it: the back buffer is a Widget serialization transient, so a memo of
+#     it would ride a save that the raster it describes does not, and the restored me would skip the
+#     paint it needs. I ask the raster instead -- see _createRefreshOrGetBackBuffer.
+#
+# The image and the raster are kept apart (rather than blitting the image straight to the screen) so
+# that something can draw over my picture, or filter it, without losing the source image.
 
 class SimpleImageWdgt extends CanvasWdgt
 
   imagePath: undefined
   imageLoaded: false
   img: undefined
-  lastPaintedImageSize: undefined
+
+  @serializationTransients: ["img", "imageLoaded"]
 
   constructor: (@imagePath) ->
     super
     @color = Color.BLACK
-  
+
     @loadImage @imagePath
 
-  loadImage: (@imagePath) ->
+  loadImage: (imagePath) ->
+    @_loadImage imagePath
+
+  # The path I load becomes my image path (the @-parameter writes it whatever is passed): a load is a
+  # change of truth, and a restore reloads the truth it already holds.
+  _loadImage: (@imagePath) ->
     if @img?
       @img.onload = null
       @img.src = ''
@@ -47,40 +44,36 @@ class SimpleImageWdgt extends CanvasWdgt
     @img = new Image()
     @img.onload = =>
       @imageLoaded = true
-      @lastPaintedImageSize = undefined
       # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
       world.steppingWdgts.add @
     @img.src = @imagePath
 
+  # A restored me holds my image path and no image: this page loads its own.
+  _afterDeserialization: ->
+    @_loadImage @imagePath
+
+  # CanvasWdgt hands me a NEW raster exactly when there was none (I was just built, or restored) or my
+  # size changed, and a new raster is an unpainted one -- so the raster's identity is all I need to know
+  # whether the image is on it.
   _createRefreshOrGetBackBuffer: ->
+    rasterBefore = @backBuffer
     [@backBuffer, @backBufferContext] = super
-    # This is so we draw the image on the backbuffer every time the
-    # widget (and, consequently, the backbuffer) is resized.
-    # To do that, we remember the size of the backbuffer we last painted the image on,
-    # and if it's same as current size, and repaint the image if
-    # the size has changed.
-    if !@lastPaintedImageSize? or !@lastPaintedImageSize.equals @extent()
-      @_paintImageOnBackBuffer()
-      @lastPaintedImageSize = @extent()
+    @_paintImageOnBackBuffer() unless @backBuffer is rasterBefore
     return [@backBuffer, @backBufferContext]
 
 
-  # Assuming that the widget is not resized, this method should get called
-  # two times: one when the widget is created and there is no image loaded yet
-  # (i.e. painted black), and one when the image is loaded
-  # and it is painted on the backbuffer.
-  # This should _also_ get called when the widget is resized.
+  # Paints my picture on my raster: on every new raster, and once more when the image arrives (step).
+  # The black paper goes down first EVERY time, so a repaint lays exactly the pixels the first paint did:
+  # a scaled draw's edge pixels need not be opaque (SWCanvas leaves them part-transparent), and an image
+  # drawn over its own earlier copy would composite those edges twice.
   _paintImageOnBackBuffer: ->
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
 
     context = @backBufferContext
 
-
-    if !@imageLoaded
-      # if the image is not loaded then just draw a black rectangle
-      context.fillStyle = Color.BLACK.toString()
-      context.fillRect 0, 0, @extent().x, @extent().y
-    else
+    context.fillStyle = Color.BLACK.toString()
+    context.fillRect 0, 0, @extent().x, @extent().y
+    if @imageLoaded
       context.drawImage @img, 0, 0, @extent().x, @extent().y
       # you can't dispose the Image here, just in case the widget is resized
       # and the Image needs to be redrawn at a different size.

@@ -1186,6 +1186,22 @@ class ViewportWdgt extends Widget
         @takeStrokeScrollFrom @screenPointToMyPlane world.hand.position()
     super
 
+  # MY STROKE ENDS AT ITS OWN RELEASE. The pane a stroke's scroll went to is in that press's audience
+  # and keeps the press when the stroke commits to scrolling it (the press lifecycle,
+  # ActivePointerWdgt._pressAudience), so it is told the ending exactly once — and that ending, not
+  # whichever frame first sees the hand let go, is where the stroke's step pays its release flush:
+  # `pos` is the release point in my plane, an event-time fact. A frame that drains this release
+  # together with the next press therefore finds nothing owed when that press stops my step
+  # (pressBegan). With no step of mine running I took no scroll from this stroke, and owe nothing.
+  pressEnded: (pos) ->
+    @step pos  if world.steppingWdgts.has @
+
+  # A stroke that stops being a press on me — confiscated (an abort), put away with me, or turned into
+  # a lift — ends my part of it where the pointer stands as it ends; the step's own guards keep a lift
+  # from getting a parting scroll.
+  pressCancelled: ->
+    @step @screenPointToMyPlane world.hand.position()  if world.steppingWdgts.has @
+
   # THE LATCH, asked by the hand of this stroke's OWNER at the DRAINED EVENT where the press first
   # leaves the grab radius (ActivePointerWdgt._notePressTravelledPastDragThreshold), with the press
   # point and that event's point — two screen points the event stream fixed, so which pane takes the
@@ -1271,6 +1287,9 @@ class ViewportWdgt extends Widget
   # scrolls me, on my own axes, by how far it moved there. The mapping holds still under those samples:
   # only I scroll during the stroke, my own scroll never moves the plane I sit on, and a pane around me
   # still gliding from an earlier stroke was stopped by this stroke's press (pressBegan).
+  #   The step is called two ways. Each FRAME, with no argument: while the stroke lasts it samples the
+  # hand, and once the stroke has ended for me it only glides or stops. And ONCE, at the stroke's own
+  # ending (pressEnded, pressCancelled), with the point the stroke ends at: that call pays the flush.
   takeStrokeScrollFrom: (pressPoint) ->
     oldPos = pressPoint
     deltaX = 0
@@ -1281,105 +1300,104 @@ class ViewportWdgt extends Widget
     # the gesture is MOVING a (detachable) widget, not scrolling, so it must never get
     # a parting scroll — even if its frames collapse (see the flush's collapse branch).
     everFloatDragged = false
+    # has the stroke ENDED for me: its flush paid, so a frame only glides or stops from then on
+    strokeEnded = false
+    # THE FLUSH, paid once, where the stroke ends (`endPos`, in MY plane): the step samples the hand
+    # once per FRAME, so the tail of the pointer's path that arrived after the last frame's sample was
+    # never scrolled — without this the scroll total truncates at the last sample, a frame-cadence
+    # artifact. Scrolling the leftover makes the total exactly end-point minus press-point —
+    # event-determined, identical across engines — and the leftover doubles as the glide's seed
+    # velocity. Only when this drag actually scroll-dragged (a float-move of the viewport must not get
+    # a parting scroll), and only if it ends inside me (matching the per-frame gate below). Answers
+    # whether I scrolled.
+    #   CADENCE COLLAPSE: under the harness's pacing control (or just a slow / HiDPI frame) the whole
+    # press->drag->release can drain inside ONE cycle, so no frame sampled the stroke and
+    # wasScrollDragging is false. When the gesture never float-dragged anything and the hand isn't
+    # poised to detach a widget (so it IS a scroll-drag, not a float-move) and the press is inside me,
+    # it is still a scroll-drag: oldPos is still the press point, so the flush scrolls exactly
+    # release-minus-press — the SAME event-determined total the multi-frame path lands on.
+    endStroke = (endPos) =>
+      strokeEnded = true
+      scrolledNow = false
+      collapsedScrollDrag = !wasScrollDragging and
+        !everFloatDragged and
+        !@_strokeWouldLiftWhatItPressed() and
+        @boundsContainPoint(oldPos)
+      if (wasScrollDragging or collapsedScrollDrag) and @boundsContainPoint endPos
+        # dropped past my clamp, as in the per-frame arm below
+        if @_dragScrollsHorizontally()
+          deltaX = endPos.x - oldPos.x
+          if deltaX isnt 0
+            scrolledNow = (@scrollX deltaX) or scrolledNow
+        if @_dragScrollsVertically()
+          deltaY = endPos.y - oldPos.y
+          if deltaY isnt 0
+            scrolledNow = (@scrollY deltaY) or scrolledNow
+        oldPos = endPos
+      wasScrollDragging = false
+      scrolledNow
     world.steppingWdgts.add @
-    @step = =>
+    @step = (strokeEndPos) =>
       scrollbarJustChanged = false
       everFloatDragged ||= world.hand.isThisPointerFloatDraggingSomething()
-      if world.hand.mouseButton and
-        !world.hand.isThisPointerFloatDraggingSomething() and
-        !@_strokeWouldLiftWhatItPressed() and
-        # per-frame samples of the hand are SCREEN-plane; map each into MY plane at the read
-        # site (the raw-pointer lint enforces exactly this shape), so the containment gate
-        # compares like planes and the deltas below are in-plane — a tilted viewport drag-scrolls
-        # along its own axes. Off any island the mapping returns the same point (dormant
-        # byte-identical). The press point (oldPos) is seeded by the SAME mapped read.
-        @boundsContainPoint(@screenPointToMyPlane world.hand.position())
-          wasScrollDragging = true
-          newPos = @screenPointToMyPlane world.hand.position()
-          # Travel past my clamp is DROPPED, not handed on: the stroke is mine alone (the latch), so
-          # a step scrollX/scrollY cannot take simply ends there.
-          if @_dragScrollsHorizontally()
-            deltaX = newPos.x - oldPos.x
-            if deltaX isnt 0
-              scrolled = @scrollX deltaX
-              scrollbarJustChanged ||= scrolled
-          if @_dragScrollsVertically()
-            deltaY = newPos.y - oldPos.y
-            if deltaY isnt 0
-              scrolled = @scrollY deltaY
-              scrollbarJustChanged ||= scrolled
-          oldPos = newPos
+      if strokeEndPos?
+        # the stroke's own ending, told exactly once (the press lifecycle)
+        scrollbarJustChanged = endStroke strokeEndPos  unless strokeEnded
       else
-        # final FLUSH: this step samples the hand once per FRAME, so the tail
-        # of the pointer's path that arrived in the same frame as the
-        # mouse-up was never scrolled — without this the scroll total
-        # truncates at the last pre-release frame sample, a frame-cadence
-        # artifact. Scrolling the leftover here makes the total exactly
-        # release-point minus press-point — event-determined, identical
-        # across engines — and the leftover doubles as the glide's seed
-        # velocity. Only when this drag actually scroll-dragged (a float-move
-        # of the viewport must not get a parting scroll), and only if released
-        # inside the viewport (matching the per-frame gate above).
-        #
-        # CADENCE COLLAPSE: under the harness's pacing control (or just a slow / HiDPI
-        # frame) the whole press->drag->release can drain inside ONE cycle, so the FIRST
-        # @step already sees the button up and NO button-down frame ever set
-        # wasScrollDragging. That used to drop the scroll ENTIRELY (total -> 0), making
-        # the outcome depend on frame cadence — it scrolled at dpr 1 but not at dpr 2,
-        # the same gesture giving different pixels. Recover it here: when the gesture
-        # never float-dragged anything and the hand isn't poised to detach a widget
-        # (so it IS a scroll-drag, not a float-move) and the press is inside the viewport,
-        # treat it as a scroll-drag. oldPos is still the press point, so the flush below
-        # scrolls exactly release-minus-press — the SAME event-determined total the
-        # multi-frame path lands on, now identical at every dpr / speed / engine.
-        collapsedScrollDrag = !wasScrollDragging and
-          !everFloatDragged and
-          !@_strokeWouldLiftWhatItPressed() and
-          @boundsContainPoint(oldPos)
-        if wasScrollDragging or collapsedScrollDrag
-          wasScrollDragging = false
-          # plane-mapped like the per-frame samples above — the flush's release-minus-press
-          # total must be computed between points of the SAME plane
-          releasePos = @screenPointToMyPlane world.hand.position()
-          if @boundsContainPoint releasePos
-            # dropped past my clamp, as in the per-frame arm above
+        if !strokeEnded
+          if world.hand.mouseButton and
+            !world.hand.isThisPointerFloatDraggingSomething() and
+            !@_strokeWouldLiftWhatItPressed() and
+            # per-frame samples of the hand are SCREEN-plane; map each into MY plane at the read
+            # site (the raw-pointer lint enforces exactly this shape), so the containment gate
+            # compares like planes and the deltas below are in-plane — a tilted viewport drag-scrolls
+            # along its own axes. Off any island the mapping returns the same point (dormant
+            # byte-identical). The press point (oldPos) is seeded by the SAME mapped read.
+            @boundsContainPoint(@screenPointToMyPlane world.hand.position())
+              wasScrollDragging = true
+              newPos = @screenPointToMyPlane world.hand.position()
+              # Travel past my clamp is DROPPED, not handed on: the stroke is mine alone (the latch),
+              # so a step scrollX/scrollY cannot take simply ends there.
+              if @_dragScrollsHorizontally()
+                deltaX = newPos.x - oldPos.x
+                if deltaX isnt 0
+                  scrolled = @scrollX deltaX
+                  scrollbarJustChanged ||= scrolled
+              if @_dragScrollsVertically()
+                deltaY = newPos.y - oldPos.y
+                if deltaY isnt 0
+                  scrolled = @scrollY deltaY
+                  scrollbarJustChanged ||= scrolled
+              oldPos = newPos
+          else
+            # the pointer left me mid-stroke, or the stroke became a lift: my part of it ends here,
+            # where the pointer stands, and this same frame glides or stops below
+            scrollbarJustChanged = endStroke @screenPointToMyPlane world.hand.position()
+        if strokeEnded
+          # POST-RELEASE MOMENTUM (the glide): keep scrolling by the flush's delta (else the last
+          # frame's), decayed by friction each frame, until it fades. Both that delta and the glide
+          # length are FRAME-CADENCE driven (how many queued events played back in the final frame),
+          # so under the test harness's animations pacing control the glide is SUPPRESSED outright —
+          # the content stops exactly at the event-determined release offset and screenshots are
+          # reproducible across engines. While a glide IS running (normal interactive use) it is
+          # tracked in world.wdgtsWithOngoingScrollMomentum so the macro pump can hold until it
+          # settles (the font-atlas-wait idea).
+          glideSuppressed = Automator? and
+            Automator.animationsPacingControl and
+            Automator.state != Automator.IDLE
+          if !@hasVelocity or glideSuppressed or
+          ((Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5))
+            @_stopDragScrollStep()
+          else
+            world.wdgtsWithOngoingScrollMomentum.add @
             if @_dragScrollsHorizontally()
-              deltaX = releasePos.x - oldPos.x
+              deltaX = deltaX * friction
               if deltaX isnt 0
-                scrolled = @scrollX deltaX
-                scrollbarJustChanged ||= scrolled
+                scrollbarJustChanged ||= @scrollX Math.round deltaX
             if @_dragScrollsVertically()
-              deltaY = releasePos.y - oldPos.y
+              deltaY = deltaY * friction
               if deltaY isnt 0
-                scrolled = @scrollY deltaY
-                scrollbarJustChanged ||= scrolled
-            oldPos = releasePos
-        # POST-RELEASE MOMENTUM (the glide): keep scrolling by the last
-        # frame's hand delta, decayed by friction each frame, until it fades.
-        # Both that last delta and the glide length are FRAME-CADENCE driven
-        # (how many queued events played back in the final frame), so under
-        # the test harness's animations pacing control the glide is
-        # SUPPRESSED outright — the content stops exactly at the event-
-        # determined release offset and screenshots are reproducible across
-        # engines. While a glide IS running (normal interactive use) it is
-        # tracked in world.wdgtsWithOngoingScrollMomentum so the macro pump
-        # can hold until it settles (the font-atlas-wait idea).
-        glideSuppressed = Automator? and
-          Automator.animationsPacingControl and
-          Automator.state != Automator.IDLE
-        if !@hasVelocity or glideSuppressed or
-        ((Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5))
-          @_stopDragScrollStep()
-        else
-          world.wdgtsWithOngoingScrollMomentum.add @
-          if @_dragScrollsHorizontally()
-            deltaX = deltaX * friction
-            if deltaX isnt 0
-              scrollbarJustChanged ||= @scrollX Math.round deltaX
-          if @_dragScrollsVertically()
-            deltaY = deltaY * friction
-            if deltaY isnt 0
-              scrollbarJustChanged ||= @scrollY Math.round deltaY
+                scrollbarJustChanged ||= @scrollY Math.round deltaY
       if scrollbarJustChanged
         # layout-apply-sanctioned: scroll-input (drag-scroll frame, release flush, momentum glide),
         # determinism-exempt (residuals-audit fam 1)

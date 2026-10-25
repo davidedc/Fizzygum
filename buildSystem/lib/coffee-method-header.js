@@ -44,6 +44,10 @@
 // A 2-space-indent class method header. Name in m[1].
 const METHOD_HEADER = /^  ([A-Za-z_]\w*): +(?:(?:\(.*?\)\s*)?[-=]>|\($)/;
 
+// The CLASS-SIDE variant: a 2-space `@name:` key whose value is a function — `@forApp: (app) ->`,
+// `@defaults: ->`, `@named: (` — in the same two forms. Name, without the `@`, in m[1].
+const STATIC_METHOD_HEADER = /^  @([A-Za-z_]\w*): +(?:(?:\(.*?\)\s*)?[-=]>|\($)/;
+
 // The mixin-DSL variant: methods declared inside a mixin's `onceAddedClassProperties` hash sit one
 // nesting level deeper (4- or 6-space). Indent in m[1], name in m[2].
 const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): +(?:(?:\(.*?\)\s*)?[-=]>|\($)/;
@@ -87,41 +91,52 @@ function unseenMethodHeaders(lines) {
 // THE GROUPING ITSELF, mixin-DSL aware — what a line does to "which method am I in". A mixin
 // (src/mixins/*, src/app-kit/*Mixin.coffee) declares its members INSIDE the 2-space
 // `onceAddedClassProperties: (fromClass) -> @addInstanceProperties fromClass, { … }` block, one
-// nesting level deeper — 4-space (KeepsRatioWhenInVerticalStackMixin) or 6-space (the others) — so
-// to a gate that knows only METHOD_HEADER a whole mixin is ONE method named onceAddedClassProperties,
-// and every handler a mixin stitches onto a widget is a body that gate never attributes to anyone.
-// A gate that cannot see a method reports nothing about it (§6b of lint-and-static-checks.md), so the
-// mixin shape lives HERE, once, beside the header spellings it extends.
-//   Returns { method, mixinHashIndent, kind: 'header' | 'end' } when the line STARTS or ENDS a
-// method, null for a body line. Thread mixinHashIndent through the file: null = not in a mixin
-// block; -1 = inside onceAddedClassProperties, awaiting the first member to LOCK the member indent;
-// >0 = the locked indent (members at it are headers; deeper headers are defs nested in a member's
-// body). For a file with no onceAddedClassProperties it stays null throughout, and the grouping is
-// METHOD_HEADER's — except that a 2-space non-method key or a column-0 line ENDS the method
-// (kind 'end') instead of being folded into the one above it. Feed it lines whose strings are
-// closed where the gate can (check-layering and the two censuses pass the string-stripped line): fed
-// RAW lines, a heredoc line at column 0 ends the method it sits in.
+// nesting level deeper — 4-space or 6-space, whichever the file's first member uses (mixinMemberIndent
+// below answers which) — so to a gate that knows only METHOD_HEADER a whole mixin is ONE method named
+// onceAddedClassProperties, and every handler a mixin stitches onto a widget is a body that gate never
+// attributes to anyone. A gate that cannot see a method reports nothing about it (§6b of
+// lint-and-static-checks.md), so the mixin shape lives HERE, once, beside the header spellings it extends.
+//   A CLASS-SIDE key (`  @name:`) bounds a method exactly as an instance key does: a class-side METHOD
+// is a header of its own, and any other class-side key ENDS the method above it. Without that rule a
+// static method's body reads as the tail of the instance method written above it, so a gate attributes
+// what the static does to a method that does not do it. A class-side header is reported under the name
+// `@name`, its source spelling, and flagged `static: true`: a gate keying by name can never mistake it
+// for an instance method of the same name, and a gate that is about instance methods only skips it by
+// the flag.
+//   Returns { method, mixinHashIndent, kind: 'header' | 'end', static } when the line STARTS or ENDS a
+// method (`static` on headers only), null for a body line. Thread mixinHashIndent through the file:
+// null = not in a mixin block; -1 = inside onceAddedClassProperties, awaiting the first member to LOCK
+// the member indent; >0 = the locked indent (members at it are headers; deeper headers are defs nested
+// in a member's body). For a file with no onceAddedClassProperties it stays null throughout, and the
+// grouping is METHOD_HEADER's and STATIC_METHOD_HEADER's — except that a 2-space non-method key
+// (instance or class-side) or a column-0 line ENDS the method (kind 'end') instead of being folded into
+// the one above it. Feed it lines whose strings are closed where the gate can (check-layering and the
+// two censuses pass the string-stripped line): fed RAW lines, a heredoc line at column 0 ends the method
+// it sits in.
 const MIXIN_CONTAINER = 'onceAddedClassProperties';
 function methodBoundary(raw, mixinHashIndent) {
   const m = raw.match(METHOD_HEADER);
-  if (m) return { method: m[1], mixinHashIndent: m[1] === MIXIN_CONTAINER ? -1 : null, kind: 'header' };
+  if (m) return { method: m[1], mixinHashIndent: m[1] === MIXIN_CONTAINER ? -1 : null, kind: 'header', static: false };
+  const cm = raw.match(STATIC_METHOD_HEADER);
+  if (cm) return { method: '@' + cm[1], mixinHashIndent: null, kind: 'header', static: true };
   if (mixinHashIndent !== null) {
     const sm = raw.match(MIXIN_METHOD_HEADER);
     if (sm) {
       const indent = sm[1].length;
       const lock = mixinHashIndent === -1 ? indent : mixinHashIndent;
-      if (indent === lock) return { method: sm[2], mixinHashIndent: lock, kind: 'header' };
+      if (indent === lock) return { method: sm[2], mixinHashIndent: lock, kind: 'header', static: false };
       return null;
     }
   }
-  if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) return { method: null, mixinHashIndent: null, kind: 'end' };
+  if (/^  @?[A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) return { method: null, mixinHashIndent: null, kind: 'end' };
   return null;
 }
 
-// Every method of a file as a span: [{ name, line (0-based header index), end (exclusive), mixin }],
-// `mixin` true for a member of a mixin's onceAddedClassProperties block (the container itself is
-// reported too, as a 2-space method whose span ends at its first member). The span a gate scans as
-// "this method's body" is lines line+1 .. end-1.
+// Every method of a file as a span: [{ name, line (0-based header index), end (exclusive), mixin,
+// static }], `mixin` true for a member of a mixin's onceAddedClassProperties block (the container itself
+// is reported too, as a 2-space method whose span ends at its first member), `static` true for a
+// class-side method (named `@name` — see methodBoundary). The span a gate scans as "this method's body"
+// is lines line+1 .. end-1.
 function methodSpans(lines) {
   const spans = [];
   let state = null, open = null;
@@ -130,10 +145,18 @@ function methodSpans(lines) {
     if (!b) return;
     state = b.mixinHashIndent;
     if (open) { open.end = i; spans.push(open); open = null; }
-    if (b.kind === 'header') open = { name: b.method, line: i, end: lines.length, mixin: state !== null && b.method !== MIXIN_CONTAINER };
+    if (b.kind === 'header') open = { name: b.method, line: i, end: lines.length, mixin: state !== null && b.method !== MIXIN_CONTAINER, static: b.static };
   });
   if (open) spans.push(open);
   return spans;
 }
 
-module.exports = { METHOD_HEADER, MIXIN_METHOD_HEADER, MIXIN_CONTAINER, methodBoundary, methodSpans, unseenMethodHeaders };
+// The indent a mixin file's members sit at — the one methodBoundary LOCKS from the first member it meets
+// inside onceAddedClassProperties (4 or 6 spaces) — or undefined for a file holding no mixin member. A gate
+// that groups by member KEY (a data member's key as well as a method's) reads its keys at this indent.
+function mixinMemberIndent(lines) {
+  const first = methodSpans(lines).find((s) => s.mixin);
+  return first ? lines[first.line].match(/^ */)[0].length : undefined;
+}
+
+module.exports = { METHOD_HEADER, STATIC_METHOD_HEADER, MIXIN_METHOD_HEADER, MIXIN_CONTAINER, methodBoundary, methodSpans, mixinMemberIndent, unseenMethodHeaders };

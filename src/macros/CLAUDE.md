@@ -36,8 +36,9 @@ synthesises the real input events. Resilient to layout change.
 3. **`Macro`** parses the generator and rewrites verb calls `fooMacro args` → `yield from fooMacro.call this,
    args`; `linkTo` concatenates the subroutine sources + prepends the pump header; `start` evals the linked code
    via **`world.macroToolkit.evaluateString`** — so the whole macro runs with **`@` = the MacroToolkit instance**.
-4. Each `WorldWdgt.doOneCycle` calls `@macroToolkit?.progressOnMacroSteps()` — the pump — which advances the
-   generator whenever the previous `yield` is satisfied: `"waitNoInputsOngoing"` (the input queue drained),
+4. Each `WorldWdgt.doOneCycle` calls `@macroToolkit?.progressOnMacroSteps()` — the pump — which first queues a
+   translated wheel's next HELD swipe once the queue has drained (finger mode; `MacroToolkit._deliverHeldSwipe`,
+   holding the macro while swipes remain), then advances the generator whenever the previous `yield` is satisfied: `"waitNoInputsOngoing"` (the input queue drained),
    `"waitForScreenshotReady"` (SWCanvas settled + warm), `"waitForScreenshotHash"` (the ASYNC SWCanvas
    screenshot digest has resolved and its verdict is recorded, so a later `assertScreenshotsIdentical` sees the
    fingerprint — emitted by the `takeScreenshot` verb itself), or `<number>` (ms). Each step pushes timed synthetic
@@ -205,7 +206,8 @@ translation preserves that intent, never the raw events** — a click becomes a 
 becomes a press-and-hold (the touch grammar's own context-menu trigger,
 [`../../docs/architecture/input-and-gestures.md`](../../docs/architecture/input-and-gestures.md)),
 a wheel becomes a drag over the part of the resolved pane that shows (delivered as successive clamped swipes, each latching
-afresh — a wheel's reach is unlimited, a finger's is one pane wide), and a press-drag-release becomes a hold-then-drag
+afresh, each queued once the one before it has drained and aimed at the pane as it shows then — a wheel's reach is
+unlimited, a finger's is one pane wide), and a press-drag-release becomes a hold-then-drag
 except where the calling verb already knows it presses CHROME (a handle, a slider, a scrollbar
 thumb), which needs no hold on either device. A no-button move emits nothing under finger mode
 UNLESS the hand already carries a payload, in which case it is the buttonless CARRY stream a

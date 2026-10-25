@@ -823,8 +823,7 @@ class FrameWdgt extends Widget
 
   # The close-from-bar POLICY (Frame-model plan §5.E E2): a tracked field replaces
   # the per-instance `closeFromFrameBar = -> …` monkey-patches the sample/info
-  # factories used to inject (InfoDocs._buildInfoDocNextTo's own TODO:
-  # "should be done using a flag ... the source is not tracked"). 'saveOrAsk'
+  # factories used to inject. 'saveOrAsk'
   # (default) runs the per-kind hook below; 'close'/'destroy' are the one-shot
   # sample/info behaviours -- a property, not injected code.
   closeFromFrameBarPolicy: 'saveOrAsk'

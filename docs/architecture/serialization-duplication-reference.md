@@ -136,7 +136,7 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
     { "class": "$Array",  "items": [ {"$r": 4}, {"$r": 5} ] },
     { "class": "Color",   "rgba": [248, 248, 248, 1] },
     { "class": "$Date",   "ms": 1783122262571 },
-    { "class": "$Canvas", "w": 300, "h": 200, "data": "data:image/png;base64,…" },
+    { "class": "$Canvas", "w": 300, "h": 200, "pr": 1, "data": "data:image/png;base64,…" },
     { "class": "$Image",  "src": "data:…" },
     { "class": "$Video",  "src": "…", "autoplay": false, "currentTime": 0 },
     { "class": "$Object", "props": { … } },
@@ -263,11 +263,30 @@ class Widget extends TreeNode
   nothing; a restored canvas takes it back as its back buffer at its first paint. FizzyPaint's
   `StretchableCanvasWdgt` keeps its painting in a separate content field
   (`behindTheScenesBackBuffer`) and rebuilds that painting's context in `_afterDeserialization`. The
-  record is the saving page's PHYSICAL pixels, so a raster saved at one pixel ratio and loaded at
-  another is copied 1:1 (see BACKLOG). Rig checks: `canvas.drawnRasterRoundtrip`,
-  `world.drawnCanvasSurvives`, `canvas.duplicateDrawsAtPixelRatio`, `stretchable.paintableAfterRestore`
-  (`serialization-roundtrip-headless.js`) and `file.drawnCanvasPixels`
-  (`serialization-file-roundtrip-headless.js`).
+  record states the pixel ratio its physical pixels were made at, and the restore resamples a record
+  made at another ratio to the loading page's (§6), so a drawing — and a FizzyPaint painting, whose
+  paint tools lay the page's ratio on it — comes back at its own logical size and takes the next
+  stroke where a fresh one would. Rig checks: `canvas.drawnRasterRoundtrip`,
+  `world.drawnCanvasSurvives`, `canvas.duplicateDrawsAtPixelRatio`, `stretchable.paintableAfterRestore`,
+  `canvas.crossRatio.2to1`/`.1to2` (through the file door), `stretchable.crossRatio.2to1`/`.1to2`,
+  `canvas.crossRatio.2to1to2KeepsPlace`, `pinnedMenu.crossRatioIcons.2to1`/`.1to2` (three SWCanvas
+  pages pinned to ratios 2, 1, 2 whatever the run's `--dpr`) (`serialization-roundtrip-headless.js`)
+  and `file.drawnCanvasPixels` (`serialization-file-roundtrip-headless.js`).
+- **A widget keeps no memo of its back buffer.** The back buffer is a `Widget` transient, so a field
+  recording what was painted INTO it — the size an image was last painted at, a background already laid —
+  rides a save that the raster it describes does not, and the restored widget meets a fresh, unpainted raster
+  beside a memo claiming the paint is done, and skips it. Ask the raster instead:
+  `CanvasWdgt._createRefreshOrGetBackBuffer` hands over a NEW raster exactly when there was none (built,
+  restored) or the size changed, so a widget whose raster is a cache paints on a new one (`SimpleImageWdgt`
+  compares its back buffer before and after `super`) — or paints unconditionally where that is cheap
+  (`VideoPlayerCanvasWdgt` lays its black letterbox under every frame). The same holds for a flag about
+  something the PAGE loaded: `SimpleImageWdgt`'s `img` and `imageLoaded` are transients re-derived from its
+  saved `imagePath` by `_afterDeserialization`, because a restored "loaded" claims an image this page has
+  not decoded (drawing it throws under SWCanvas, and the world hides the widget). The gate is
+  `buildSystem/check-back-buffer-memos.js` (`lint-and-static-checks.md` §3): every field a back-buffer
+  builder writes is a transient of the class chain or is declared `# saved-content:` (today only
+  `CanvasWdgt.drawnRaster`); it reads every part, the flag-gated `video-player` included, and is blind to a
+  memo written outside the builder's reach (an onload closure).
 - **A live canvas object a class caches in a field is a transient.** A gradient, a pattern or a
   canvas a paint builds lazily (`if !@colorGradient?`) has no file encoder; declare the field and let
   the paint rebuild it after a restore. The rig's `world.everyAppSnapshot.*` checks open every app
@@ -320,6 +339,7 @@ class Widget extends TreeNode
 | `Widget` (caches) | `lastTime`; the render caches `backBuffer`/`backBufferContext` and their shadow-silhouette twins; the `WorldWdgt.geometryVersion`-keyed geometry caches (`cachedFullBounds`, `cachedFullClippedBounds`, `cachedVisibleBasedOnIsVisibleProperty`, `cachedClippedThroughBounds`, `cachedClipThrough`, `cachedIsInCollapsedSubtree` — each with its `check…Cache` twin — plus `childrenBoundsUpdatedAt`); the `root()` cache `cachedRoot`/`checkRootCache`; the island-buffer source lane `_islandBufferSourceIsland`/`_islandBufferSourceVirtualRect`; the flush-scoped `hasDirtyDescendant` | frame timing + derived caches, all re-derived on demand after restore. ⚠ `cachedRoot` is the one whose absence bit: `root()` itself never reads it stale (it checks `structureVersion`) but the SERIALIZER walks the raw field, so a stale pointer dragged destroyed subtrees — and their unserializable handler functions — into capture-mode world snapshots |
 | `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcDamageRectIndex`, `dstDamageRectIndex` | per-frame damage-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
 | `FrameWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs. It sat on `Widget` while the merge was broken (the base was the only place a declaration was safe); with the merge fixed it is declared by the class that owns and reads it |
+| `SimpleImageWdgt` | `img`, `imageLoaded` | the loaded `Image` and whether it has arrived are facts about THIS page: `_afterDeserialization` reloads `imagePath`, the one saved part of the picture (a restored `true` would draw an undecoded image: a throw under SWCanvas, nothing natively) |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
 | `ScriptWdgt` | `functionFromCompiledCode` | the saved script COMPILED (`@savedScript` is the truth); `doAll` recompiles it on demand after a restore |
@@ -371,7 +391,7 @@ could not restore it and a copy would hold an object that throws on use:
 | `Array` | `$Array` `items` | element-wise; own table slot; can be shared between properties |
 | `Date` | `$Date` `ms` | the tagged record is what keeps it restorable — a raw `Date` stringifies to a bare ISO string and cannot be deserialized back |
 | `Image` | `$Image` `src` | async decode on restore → the `whenReady` promise |
-| `HTMLCanvasElement` | `$Canvas` `w`/`h`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS`. The decode draws at the IDENTITY transform under save/restore: it lands after the restore has handed the canvas to its widget, and a canvas has one context, which that widget may already have scaled (its `_afterDeserialization`, its first paint). The data is PHYSICAL pixels (extent × the saving page's `ceilPixelRatio`); SWCanvas encodes an uncompressed PNG (≈ 4/3 × 4·w·h characters) |
+| `HTMLCanvasElement` | `$Canvas` `w`/`h`/`pr`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS`. The data is PHYSICAL pixels made at the saving page's `ceilPixelRatio`, which rides as `pr`. Every canvas that rides a save is its widget's logical size × that ratio (a drawn canvas's `drawnRaster`, FizzyPaint's `behindTheScenesBackBuffer`, a pinned menu row's `InertIconHolderWdgt.raster`), so at another ratio the builder makes the canvas at `w·cpr/pr × h·cpr/pr` and draws the decoded image into it: smoothing on when it shrinks (at 2 → 1 a box of four pixels), off when it enlarges (pixel replication — so 1 → 2 → 1 gives back the very pixels it started from, and no edge pixel is left part-transparent, which a smoothed SWCanvas enlargement does); 2 → 1 → 2 is lossy. Equal ratios take the unscaled draw, byte for byte, and a record without `pr` is taken at the loading page's ratio. The resample happens at the DECODE, never in the adopting widget: the canvas exists at its final size before its pixels arrive, and the file door attaches the widget before the decode lands — an adopter that copied a canvas still waiting for its pixels into a resized raster would lose the drawing outright under SWCanvas. The decode draws at the IDENTITY transform under save/restore: it lands after the restore has handed the canvas to its widget, and a canvas has one context, which that widget may already have scaled (its `_afterDeserialization`, its first paint); the save/restore keeps the smoothing setting off that context too. A resample is not what drawing at the new ratio would give, pixel for pixel — a cross-ratio restore has no reference to match. SWCanvas's `toDataURL` is its own deterministic encoder (per-row PNG filters + fixed-Huffman deflate, alpha kept): identical pixels give identical bytes on every engine, at ~1.2× the browser's own size on a drawn canvas |
 | `HTMLVideoElement` | `$Video` `src`/`autoplay`/`currentTime` | tagged on its own record; mis-tagging it as a canvas crashes the restore |
 | `CanvasGradient` | *(no encoder)* | DUPLICATION clones it as `undefined` (`Duplicator._copyGradient`, via `NativeValueKinds.isGradientLike` — its one caller) and consumers rebuild. The SERIALIZER has no gradient branch: a gradient in an own property raises the unrecognized-type `SerializationError` under both backends (under native the closed-set guard refuses it: `classNamed` answers no class for a browser-native one). Keep gradients out of serialized own properties, or declare the property transient (§5). |
 | plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |

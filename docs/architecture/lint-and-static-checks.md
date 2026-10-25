@@ -85,9 +85,9 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
 |---|---|---|---|---|
 | syntax | `buildSystem/check-coffee-syntax.js` | ~:343 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does | — |
 | shippable-coverage | `buildSystem/check-shippable-coverage.js` | ~:366 | every `src/` subdirectory holding `.coffee` files is CLAIMED BY A PART in `parts.json` — a dir no part claims ships NOTHING, exits 0, and surfaces only as a runtime `<NewClass> is not defined` | in-file `ALLOWLIST_PREFIXES`, now down to `src/boot/` alone (compiled by name from the shell script, never globbed) |
-| **layering** | **`buildSystem/check-layering.js`** | **~:388** | **flow soundness + the naming convention — rules [A]–[T] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
+| **layering** | **`buildSystem/check-layering.js`** | **~:388** | **flow soundness + the naming convention — rules [A]–[T] (§4); a class-side method's tier is read from its bare name (§6b)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
 | **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:407** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged`) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. Matches the legacy public spellings too, so they cannot slip back in** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (9 sites: the structural add/drop/z-order/shadow dispatchers, the world's selection-overlay reconciler (two), FileLoading's async-asset repaint, and the own-sub-part marks in FrameWdgt (its rows, after a pin) and FrameBarWdgt (its background); the world's atlas-warm orchestration carries the marker too, over a `_fullChangedIncludingShadowOwner()` call the gate's pattern does not match) |
-| dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src (class methods and mixin members alike) but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
+| dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src (class methods, class-side methods — inventoried under their BARE name — and mixin members alike) but referenced nowhere (src + harness + macro `.js`); a name only ever ASSEMBLED at runtime (`klass[prefix + "Foo"]`) reads dead, a name written whole inside a string is seen | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
 | **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:446** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API |
 | stinks | `buildSystem/check-stinks.js` | ~:465 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | argument-holes | `buildSystem/check-argument-holes.js` | ~:486 | calls punching a bare `undefined` through to a later argument (R3) — the decisive **hole test** of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md). Shares `census-call-arity.js`'s parser, so gate and census cannot disagree. `src/` only, deliberately: the tests repo's `SystemTest_*.js` metadata is PROSE in string literals, and a doc edit must never break a build | inline `BASELINE = 3` (the conformance arc's measured floor of 2, plus `BoxyAppearance.paintStroke`'s "no shadow" value — the same `undefined`-as-a-value as `RectangularAppearance.paintStroke`'s). ⚠ It is a REGRESSION alarm, not an inventory — the honest tree-wide count is `census-call-arity.js --holes` (§3c) |
@@ -104,6 +104,7 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
 | **call-separation** | **`buildSystem/check-call-separation.js`** | **~:645** | **rules [S]/[U]: [S] a private method must not `@`-self-call a public COMMAND (settling/effectful callee; queries + `changed`/`fullChanged` stay free); [U] a public method referenced ONLY by `@`-self calls is not external API and must be `_`-tier. Measurement engine: `census-public-private-calls.js`. [U] self-skips without the sibling tests repo** | inline count baselines (`BASELINE_S_*`/`BASELINE_U_*`, the stinks idiom); per-caller `# public-call-sanctioned: <why>` for [S]; `public-api-allowlist.txt` for [U] (deliberate end-user inspector/scripting API) |
 | relayout-bounds-first | `buildSystem/check-relayout-bounds-first.js` | ~:664 | a `_reLayout` override must APPLY its own bounds before its first own-geometry read (else children lay out against the previous pass's frame — the "one-cadence-lag" flake). Also follows the own-contents TEMPLATE: a `_reLayout` delegating to `Widget._reLayoutWithOwnContents` is apply-first by construction (counted separately, never as "positions no children"), and a `_layOutOwnContents` reading own geometry without that delegation is a violation. ⚠ Blind to a file defining the hook and NO `_reLayout` — it inherits one this line-scanner cannot follow | `# relayout-bounds-first-exempt: <reason>` above the method header |
 | widget-conformance `--gate` | `buildSystem/census-widget-conformance.js --gate` | ~:686 | the two OBJECTIVE facets of the widget-practices survey: **instance fields written but never DECLARED at class level** (until declared, a lazily-initialised field is invisible to duplication, serialization and the inspector) and **`_reLayout` prologue copies** (classes not taking `Widget._reLayoutWithOwnContents`). Mixin-aware: a field a mixin donates counts as declared, and re-declaring it in the class body would CLOBBER the donated value. Its default, gate-less run is the advisory census (§3c) | inline `BASELINE_UNDECLARED_CLASSES`/`_FIELDS` = **0/0** and `BASELINE_PROLOGUE_COPIES` = **8**. ⚠ **A BASELINE HERE IS A FLOOR, NOT A ZERO** — undeclared fields reached a true 0/0, so that one IS an inventory; prologue copies stay at 8 (two deliberate non-conversions plus six genuinely different shapes), each named in the script |
+| back-buffer-memos | `buildSystem/check-back-buffer-memos.js` | ~:695 | a widget keeps no memo of its back buffer: every `@field` a back-buffer builder (`_createRefreshOrGetBackBuffer`, plus the same-file methods it reaches through `@name`, transitively) ASSIGNS must be a serialization transient of the class chain (merged up `extends` the way `classStaticListMergedUpTheChain` merges at runtime — each class's OWN list, a mixin's class-side list at each consumer) or a field declared saved content. The back buffer is itself a transient, so a memo of it that rides a save outlives the raster it describes and the restored widget skips the paint it needs. Reads ALL of `src/`, every part shipped or not — the one static check over the flag-gated `video-player` part, where both measured cases lived (`SimpleImageWdgt` restored BLACK, `VideoPlayerCanvasWdgt` restored its letterbox in its paper colour). A KEYED builder (it answers from `world.cacheForImmutableBackBuffers`: StringWdgt, TextWdgt, PaletteWdgt — no per-instance raster to describe) is read for its own body only. ⚠ Blind to a memo written outside the builder's reach (an onload or step handler — `SimpleImageWdgt.imageLoaded`'s shape), to cross-file and dynamic calls, and to writes through an alias; refuses LOUDLY a builder declared in a mixin or in a header spelling the shared matcher cannot see; exit 2 when it found no builder at all | `# saved-content: <what makes it content>` on or directly above the field declaration (ONE site: `CanvasWdgt.drawnRaster`) |
 | relayout-repaints [INV-1 tombstone] | `buildSystem/check-relayout-repaints.js` | ~:710 | the RETIRED paired suppression verbs (`disableTrackChanges`/`maybeEnableTrackChanges` — the arc that removed them is [`../archive/repaint-as-one-unit-plan.md`](../archive/repaint-as-one-unit-plan.md)) must not reappear in src or harness src — [INV-1]'s covering-repaint obligation is now STRUCTURAL in `Widget._repaintAsOneUnit` (the `finally` restores the suppression depth and fires the covering `_fullChanged` — skipped only when provably vacuous: zero suppressed mark attempts inside the unit and fn completed; runtime twin = the paint-truthfulness audit, unchanged) | — (no exemption: a suppression window IS `@_repaintAsOneUnit`) |
 | raw-pointer-reads | `buildSystem/check-raw-pointer-reads.js` | ~:731 | a pointer-event HANDLER body (`press*`/`hover*`/`activated`/`scrolledBy`/`nonFloatDragging`/…, closures included — plus the two drag-scroll methods that sample or consume the pointer per frame / per event though no dispatcher calls them by a handler name, `ViewportWdgt.takeStrokeScrollFrom` (it installs the drag-scroll `@step`) and `latchStrokeScroll`) must not consume the raw SCREEN-plane `world.hand.position()` unmapped — consume the plane-mapped `pos` PARAMETER the dispatcher hands every handler (affine 4A), or map the sample at the read site (`screenPointToMyPlane` on the same line, the drag-scroll idiom). Off-island the mapped point IS the raw point, so the bug class is invisible until a widget is TILTED (the 2026-07-17 spreadsheet tilted-selection bug). Helpers a handler calls are NOT scanned (heuristic tripwire — the deliberate raw-screen rotate-angle helper lives in one); MIXIN members are scanned like class methods (the shared `methodBoundary`: `HighlightableMixin`'s press/hover handlers, `WidgetCreatorAndSmartPlacerOnClickMixin.activated`); a handler handed no `pos` (`pressCancelled`) maps its own read; `ActivePointerWdgt` itself skipped | `# raw-screen-pointer-sanctioned: <reason>` DIRECTLY above the handler header — any code line between breaks the comment block, so a marker inside the previous method's body exempts nothing (currently ZERO sites) |
 | plane-discipline | `buildSystem/check-plane-discipline.js` | ~:740 | the three statically-checkable rules of the paint-time scroll model ([`viewports-and-planes.md`](viewports-and-planes.md)): **A)** `scrollOffsetX/Y` assigned ONLY inside `_writeScrollOffset` (a bare write skips the `geometryVersion` bump — the measured hit-invisible-scrolled-row class); **B)** a count RATCHET over lines mixing two DISTINCT receivers' POSITIONAL geometry (`position`/`left`/`top`/`center`/`bounds`/… — plane-relative, unlike the plane-invariant extents) with no mapping call on the line — the silent dormant-at-offset-0/identity class every hard bug of the scroll arc belonged to; same-plane-by-construction sites are legitimate, so new lines are CLASSIFIED (map, or raise the baseline with a reason) and drops ratchet down; **C1)** on a `scrollTranslationOfChild` provider (transitive via `extends`), a handler reached by `escalateEvent` (the names are derived from every `escalateEvent "<name>"` call in src — `activated`, `doubleActivated` today) must not read its `pos` at all but re-derive the point from the hand — the escalated `pos` is a descendant's plane (the measured stationary-click-slams-to-clamp defect); the press facts are exempt by construction (the hand maps the pointer for each receiver of the climb and its endings); **C2)** `nonFloatDragging`'s raw-SCREEN `pos` (its second parameter), on any class, must be mapped on the same line it is read. A MIXIN's members are checked as the classes that `@augmentWith` it would check them (C1 when any of them is a provider). ⚠ Blind by design to CROSS-LINE flows: a positional value stored in one method and consumed in another plane elsewhere, or forwarded through an opts key — those are the deep-audit's job (the 2026-08-20 review census), not a line scanner's | A/C: hard zero; B: inline `CROSS_PLANE_MIX_BASELINE` (28 — every line a genuine two-widget mix; a widget's own `@bounds` chain folds into `@`); C: `# escalated-pos-sanctioned: <reason>` above the handler header (currently ZERO sites) |
@@ -168,7 +169,9 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
   also declare `exclude` (src-relative path prefixes it does not scan — anything unlisted, a new file included, IS
   scanned), `stringAware: true` (its comment cut skips a `#` inside a quoted string, so a `'#rrggbb'` survives) and
   `sanctioned` (`{file, member, count, why}` entries naming hits INSIDE scanned files that are not the smell; a hit's
-  member is the nearest class-body key above it at the 2-space indent, or a mixin hash's 6-space key; an entry matches
+  member is the nearest class-body key above it at the 2-space indent, or in a mixin the nearest key at the member
+  indent the shared grouping locks (`mixinMemberIndent`, §6b: 4 or 6 spaces) — a data member's key as well as a
+  method's, since a sanctioned literal can sit in a field; an entry matches
   only at its exact count, and fails the build otherwise, so it is a declaration that cannot rot into a hiding place).
   **Current stinks — fourteen: seven seeded 2026-07-15**, **three comment-hygiene
   ratchets added at the 2026-07-17 comments cleanup**, `comment-past-receipt` (2026-08-09), `positional-hole`
@@ -430,7 +433,7 @@ human asks (`fg critique`, or directly). The clone scanners are on-demand only (
 | `census-public-private-calls.js` | public/private SELF-call mixing (R1–R4) | ALSO the measurement ENGINE behind the [S]/[U] gate. Its `runCensus()` exports the whole-system **class model** (`classInfo` / `chainOf` / `resolve` — parent + `@augmentWith` mixins + methods + resolution order) and `maskLine`; the two censuses below REUSE it rather than re-implement it. |
 | `census-hierarchy-duplication.js` | overrides that add nothing: `IDENTICAL-TO-INHERITED`, `SHADOWS-MIXIN`, `JUST-SENDS-SUPER` | Pharo `ReEquivalentSuperclassMethods`/`ReJustSendsSuper`/`ReLocalMethodsSameThanTrait`. The hierarchy-aware complement to jscpd/jsinspect, which know nothing of inheritance and so can never say "REMOVABLE". |
 | `census-property-placement.js` | properties at the wrong level (`PULL-UP`) or wrong scope (`DEMOTE`) | Pharo `ReInstVarInSubclasses`/`ReVariableReferencedOnce`. |
-| `census-widget-conformance.js` | the mechanical facets of `measurements/widget-practices-survey-2026-08-14.md`, so that survey is re-runnable rather than a one-off | Its ADVISORY run (exit 0, `--json`) prints six facets; the two OBJECTIVE ones are what `--gate` ratchets on the build (§3). ⚠ Facets 3–6 are heuristics with real exceptions and must NEVER gate — and facet 3 in particular is **not a gap count**: since the widget arc's W7 made `colloquialName` DERIVE from the class name, a class declaring none still answers a true name, so the number says how much of the tree the derivation carries, not how much work is left. On the gated pair: green means "nothing got worse"; only a baseline of 0 also means "nothing is left" |
+| `census-widget-conformance.js` | the mechanical facets of `measurements/widget-practices-survey-2026-08-14.md`, so that survey is re-runnable rather than a one-off | Its ADVISORY run (exit 0, `--json`) prints six facets; the two OBJECTIVE ones are what `--gate` ratchets on the build (§3). Facet 5 (the pin setters) reads methods through the shared grouping (§6b), so a mixin's setter counts under the mixin's own name, and only a setter that takes a value counts. ⚠ Facets 3–6 are heuristics with real exceptions and must NEVER gate — and facet 3 in particular is **not a gap count**: since the widget arc's W7 made `colloquialName` DERIVE from the class name, a class declaring none still answers a true name, so the number says how much of the tree the derivation carries, not how much work is left. On the gated pair: green means "nothing got worse"; only a baseline of 0 also means "nothing is left" |
 | `census-call-arity.js` | call sites + top-level argument arity; `--holes` lists calls punching a bare `undefined` through to a later argument (R3) | ⚠⚠ **The real hole count — `positional-hole` sees only the two-adjacent-`undefined` subset and reads 0 while 50 stand.** Paren/quote-aware, joins continuation lines, scans BOTH repos. `--call=<method>` / `--super=<class>` / `new <Class>` modes; excludes `.call`/`.apply`/`.bind`, where `undefined` is a foreign API's *this*-arg. |
 
 **Why the hierarchy-duplication and property-placement censuses can never be promoted to gates** — the reasons are
@@ -596,7 +599,7 @@ whose body calls `@_settleLayoutsAfter` (`SETTLE_CALL` anchors on that exact nam
 ## 5. The in-code markers + the two ratchet idioms
 
 **Markers — "the justification lives AT the method, no central allowlist."** Each exempts a single method/line via a
-comment carrying a reason. All fourteen, in one place:
+comment carrying a reason. All fifteen, in one place:
 
 | Marker | Gate / rule | Exempts |
 |---|---|---|
@@ -614,6 +617,7 @@ comment carrying a reason. All fourteen, in one place:
 | `# escalated-pos-sanctioned: <reason>` | `check-plane-discipline` (C) | a pos-reading pointer handler on a scroll-translation provider that deliberately consumes a descendant-plane pos (currently ZERO sites) |
 | `# constructor-build-exempt: <reason>` | `check-constructors-build` | a `constructor:` that legitimately must build its children inline (currently ZERO) |
 | `# stringified-script-sanctioned: <reason>` | `check-stringified-scripts` | one `new ScriptWdgt """…"""` line in core |
+| `# saved-content: <what makes it content>` | `check-back-buffer-memos` | a field a back-buffer builder writes that IS the saved picture rather than a memo of the cache — a declaration of what the field is, not a sanction; read from the field's DECLARATION line or the contiguous comment block directly above it (one site: `CanvasWdgt.drawnRaster`) |
 | `<!-- narration-ok: reason -->` | `check-doc-narration` | one docs LINE that must quote the narration trigger words (this doc's stink table does) |
 
 **Placement is per-gate, and it is not decorative.** The `check-layering` per-method markers ([F]/[G]/[H]/[T]) and
@@ -642,7 +646,7 @@ tighten incrementally):
   `buildSystem/public-api-allowlist.txt` (call-separation [U]: deliberate end-user inspector/scripting API).
   Each of those gates prints a **stale-entry NOTE** when an entry stops being needed — `fg critique` is the one place
   that resurfaces every such note at once.
-- **per-method / per-line marker** (the thirteen in-code markers tabled above): the justification
+- **per-method / per-line marker** (the fourteen in-code markers tabled above): the justification
   lives at the method, no central list; a NEW unmarked violation fails the build. Best when the exception is a property
   of one method or one line, not a count.
 
@@ -673,17 +677,29 @@ geometry-apply **2×2** + the notification **(perspective × phase)** grid) and 
 
 ## 6b. What "this line defines a method" means — ONE shared matcher, and its guard
 
-Nine gates and censuses group a `.coffee` file into methods: `census-public-private-calls`,
+Eleven gates and censuses group a `.coffee` file into methods: `census-public-private-calls`,
 `census-nosettle-naming`, `check-dead-methods`, `check-raw-pointer-reads`, `check-plane-discipline`,
-`check-layering`, `check-relayout-bounds-first`, `check-thin-wraps`, `check-menu-actions`. They all take
-both the header spelling and the grouping from **`buildSystem/lib/coffee-method-header.js`**:
-`METHOD_HEADER` / `MIXIN_METHOD_HEADER` say what a header line is; `methodBoundary` / `methodSpans` say
-which method a line belongs to — a class's 2-space methods and a mixin's `onceAddedClassProperties`
-members alike (the member indent is locked from the first member: 4-space in
-`KeepsRatioWhenInVerticalStackMixin`, 6-space in the others). Re-declare neither locally — the module
+`check-layering`, `check-relayout-bounds-first`, `check-thin-wraps`, `check-menu-actions`, `check-stinks`
+(the member indent its `sanctioned` entries are keyed at) and `census-widget-conformance` (facet 5, the pin
+setters). They all take both the header spelling and the grouping from
+**`buildSystem/lib/coffee-method-header.js`**: `METHOD_HEADER` / `STATIC_METHOD_HEADER` /
+`MIXIN_METHOD_HEADER` say what a header line is; `methodBoundary` / `methodSpans` say which method a line
+belongs to — a class's 2-space methods, its class-side `@name:` methods and a mixin's
+`onceAddedClassProperties` members alike (the member indent is locked from the first member, and
+`mixinMemberIndent` answers it: 4-space in `KeepsRatioWhenInVerticalStackMixin` and
+`BubblesEditModeToCoordinatorMixin`, 6-space in the others). Re-declare neither locally — the module
 exists because six copies of one regex had drifted into a shared blind spot nobody could see, and the
 grouping had been copied three times besides, while every gate that knew only `METHOD_HEADER` read a
 whole mixin as ONE method named `onceAddedClassProperties`.
+
+A **class-side key** bounds a method exactly as an instance key does: a class-side METHOD is a span of its
+own, reported under its source spelling `@name` and flagged `static: true`, and any other class-side key
+ends the method above it. So no gate keying by name can mistake a static for the instance method of the
+same name, a gate about instance methods only (`check-call-separation`'s census, `census-nosettle-naming`)
+skips it by the flag, `check-layering` reads its TIER from the bare name (`@_arrange` is in-pass,
+exactly as `_arrange` would be) and leaves it out of settle-wrapper discovery (a static has no instance to
+settle), and `check-dead-methods` inventories it under its bare name, which is how it is called
+(`Class.name`, or `@name` between the statics of one class).
 
 A header is either **closed on the line** (`foo: ->`, `foo: (a, b) ->`, `foo: (a)->`, `foo: (a) =>`,
 `foo:  ->` with the body aligned past a run of spaces) or **opens a wrapped parameter list** (`foo: (`
@@ -714,6 +730,21 @@ checked by no gate. The guard could not see them either: its own precondition de
 second space is not `\S`. Both now read `: +`. The lesson each time is the same one, and it is about
 where the matcher's authority comes from: write it against the LANGUAGE, never against a house
 formatting habit. Widening it moved the method total 3305 → 3314 and changed no gate's verdict.
+
+⚠ **And a FOURTH time, 2026-10-25: the class side.** `methodBoundary` had no rule for a 2-space `@name:`
+key, so 109 class-side methods were nobody's: 1259 of their body lines sat in no span at all, and 422 more
+were credited to the INSTANCE method written above them (`ActivePointerWdgt.processWheel` "contained"
+`@wheelTakerAbove`; five `InputEvent` constructors "contained" `@fromBrowserEvent`). A gate then
+attributed what a static does to a method that does not do it — or saw none of it. What reading the class
+side surfaced:
+
+| revealed | what it was |
+|---|---|
+| `FooterBandLayout.@arrange` | rule `[F]`: an in-pass placement (every caller is its host's own arrange) wearing a public name — renamed `@_arrange` |
+| `InfoDocs.@_buildInfoDocNextTo` | rule `[G]` ×4: a one-off builder wearing the low-level tier, calling four self-settling wrappers — folded into its single caller, the public `@createNextTo` |
+| `StackElementsSizeAdjustingWdgt.@includeInNewWidgetMenu` | dead — the menu that asked it is long gone; deleted |
+| `KeepsRatioWhenInVerticalStackMixin`, `BubblesEditModeToCoordinatorMixin` | `check-stinks` had keyed a mixin member at a hard-coded 6-space indent, so 55 lines of these two 4-space mixins were attributed to `onceAddedClassProperties` (no stink hit sat there yet) |
+| `ControllerMixin.setTargetAndActionWithOnesPickedFromMenu` | a mixin setter the census's private 2-space regex could not see (facet 5: 78 → 79 setters) |
 
 `unseenMethodHeaders()` in the same module is the **regression guard**: `check-dead-methods` (which owns
 the method inventory) FAILS on any class-level line that ends in an arrow, or opens an unbalanced paren

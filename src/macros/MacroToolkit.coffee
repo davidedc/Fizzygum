@@ -67,6 +67,18 @@ class MacroToolkit
   # anything in particular.
   pendingAimExpectation: undefined
 
+  # FINGER MODE ONLY: THE REST OF A TRANSLATED WHEEL, still to be swiped — { pane, aim, park,
+  # remaining, swipesLeft }: the pane the gesture means, the screen point the verb aimed at, where the
+  # pointer stays parked, the drag vector not yet delivered, and how many more swipes the bound
+  # allows. Each swipe is queued only once everything before it has DRAINED (_deliverHeldSwipe),
+  # because the world a later swipe presses is the one the earlier swipes leave: one that scrolled an
+  # enclosing pane moved this pane on the screen. undefined whenever no wheel is part-way through.
+  heldSwipes: undefined
+
+  # true while _queueNextSwipe queues a swipe's own events — the only pushes allowed while swipes are
+  # held (queueInputEvent)
+  queueingHeldSwipe: false
+
   # ─── Global playback SPEED ──────────────────────────────────────────────────
   # ONE global, three-level speed control the macro EVENT GENERATORS honour.
   # Set once at boot from ?speed=normal|fast|fastest (parsed in
@@ -134,10 +146,11 @@ class MacroToolkit
   @holdWindowMarginMs: 60
 
   # A finger's scroll has a REACH a wheel notch does not: one swipe cannot travel further than the
-  # pane it is inside. A translated wheel therefore delivers a long scroll in successive swipes,
+  # pane it is inside. A translated wheel therefore delivers a long scroll in successive swipes, each
+  # queued once the one before it has drained and aimed at the pane as it shows then,
   # `scrollSwipeMarginPx` clear of the pane's edges (so every sample is inside the box the pane
-  # samples), and `maxScrollSwipes` bounds that loop — a request no number of swipes can satisfy
-  # has hit the content's end, and each swipe past it latches whatever pane around can still move.
+  # samples), and `maxScrollSwipes` bounds them — a request no number of swipes can satisfy has hit
+  # the content's end, and each swipe past it latches whatever pane around can still move.
   @maxScrollSwipes: 12
   @scrollSwipeMarginPx: 2
 
@@ -191,7 +204,12 @@ class MacroToolkit
   # scaled time. Only the timestamps move; the (deduped) pixel SET each gesture emits
   # is untouched — so references are speed-invariant. At "normal" (spanFactor 1) the
   # time is left exactly as-is, so playback stays byte-for-byte identical to before.
+  #   While a translated wheel's swipes are HELD, no other event may join the queue: a later swipe is
+  # queued when the queue drains, so anything queued in between would play before it, out of the
+  # order the macro wrote. The guard names the fix — the wait every wheel call is followed by.
   queueInputEvent: (event, nonScaled = false) ->
+    if @heldSwipes? and !@queueingHeldSwipe
+      throw new Error "a translated wheel is still delivering its swipes: wait for them (yield \"waitNoInputsOngoing\") before queueing the next gesture"
     sf = @spanFactor()
     if (not nonScaled) and sf != 1 and event.time?
       base = WorldWdgt.dateOfCurrentCycleStart.getTime()
@@ -286,14 +304,35 @@ class MacroToolkit
   noCodeLoading: ->
     true
 
-  # "no inputs ongoing" = the queue is drained AND no scroll-momentum glide is
-  # still settling: a ViewportWdgt's post-release glide is frame-cadence
-  # driven and outlives the input queue, so without this gate a screenshot
-  # races it (under the pacing control the glide is suppressed at the source —
-  # ViewportWdgt.pressBegan — and this set stays empty; the gate is
-  # defense-in-depth for any momentum that does run).
+  # "no inputs ongoing" = everything queued has been delivered (_queueDrained) AND no translated
+  # wheel still holds swipes it has yet to queue (heldSwipes).
   noInputsOngoing: ->
+    @_queueDrained() and !@heldSwipes?
+
+  # The queue is drained AND no scroll-momentum glide is still settling: a ViewportWdgt's
+  # post-release glide is frame-cadence driven and outlives the input queue, so without this gate a
+  # screenshot races it (under the pacing control the glide is suppressed at the source —
+  # ViewportWdgt.takeStrokeScrollFrom — and this set stays empty; the gate is defense-in-depth for
+  # any momentum that does run).
+  _queueDrained: ->
     world.inputEventsQueue.isEmpty() and !world.anyScrollMomentumOngoing()
+
+  # THE PUMP'S FIRST DUTY, each cycle before any wait gate (Macro._addHeaderCode): a held swipe is
+  # queued at the start of the first cycle after everything before it has drained, so its box is read
+  # on the world the earlier swipes left. Answers true while swipes are held, so the macro does not
+  # step on ahead of the gesture it is in the middle of.
+  _deliverHeldSwipe: ->
+    return false unless @heldSwipes?
+    @_queueNextSwipe WorldWdgt.dateOfCurrentCycleStart.getTime()  if @_queueDrained()
+    true
+
+  # The pump once the macro's generator is DONE while a translated wheel still holds swipes (a macro
+  # whose last statement is a wheel): the swipes are still delivered, one per drain, and the macro
+  # ends — the player moves on — only once the last of them is queued.
+  _deliverHeldSwipesThenEnd: ->
+    return if @_deliverHeldSwipe()
+    @progressOnMacroSteps = noOperation
+    @aMacroIsRunning = false
 
   # Used by a macro's screenshot step (the "waitForScreenshotReady" yield in
   # Macro's pump) and polled by the page-side rigs: decide, across cycles, when
@@ -1210,32 +1249,54 @@ class MacroToolkit
   # Each swipe is a stroke of its own, so each LATCHES afresh (ViewportWdgt's direction latch): the
   # travel one swipe carries past its pane's clamp is dropped, and the next swipe goes to a pane
   # around it once that one is at its clamp that way — the wheel's at-edge rule, swipe by swipe.
+  #   Only the FIRST swipe is queued here; the rest are HELD (heldSwipes) and queued one at a time by
+  # the pump, each once everything before it has drained (_deliverHeldSwipe). A swipe that scrolls
+  # an enclosing pane moves this pane on the screen, so a later swipe aimed from the box as it showed
+  # before would press whatever moved under it; each swipe reads the box as the pane shows when that
+  # swipe is queued (_queueNextSwipe). So the macro must wait for the wheel — `yield
+  # "waitNoInputsOngoing"` — before queueing anything else (queueInputEvent refuses to).
   #   The aim is CLAMPED into that box: a macro names the widget it means, and content that
   # overflows its pane has a centre outside it, which would otherwise start the swipe off-pane.
-  # And the pointer is PARKED back on the aim afterwards, because a wheel does not move the pointer
-  # — the mouse path leaves it exactly where the verb aimed, and the finger's must agree.
+  # And the pointer is PARKED back on the aim after every swipe, because a wheel does not move the
+  # pointer — the mouse path leaves it exactly where the verb aimed, and the finger's must agree.
+  # Answers the absolute time the first swipe ends.
   _touchScrollBy: (aimPoint, deltaX, deltaY, startTime, pane) ->
-    remaining = @_dragVectorOfWheel deltaX, deltaY
-    # the box is read ONCE, as the pane shows now: every swipe below is queued before any drains, so a
-    # swipe that scrolls an enclosing pane moves this one on screen under the swipes still to come
-    box = @_swipeBoxOf pane
-    aim = @_aimInsideBox (@_screenPointOfTarget aimPoint), box
-    timeAbs = @scaledAbs startTime
-    swipes = 0
-    while swipes < MacroToolkit.maxScrollSwipes
-      leg = @_swipeLegWithin remaining, box
-      break if leg.x is 0 and leg.y is 0
-      from = aim
-      if box?
-        from = new Point (@_dragStartInsideSpan aim.x, leg.x, box[0].x, box[1].x),
-          (@_dragStartInsideSpan aim.y, leg.y, box[0].y, box[1].y)
+    aim = @_screenPointOfTarget aimPoint
+    @heldSwipes = { pane: pane, aim: aim, park: (@_aimInsideBox aim, (@_swipeBoxOf pane)), remaining: (@_dragVectorOfWheel deltaX, deltaY), swipesLeft: MacroToolkit.maxScrollSwipes }
+    @_queueNextSwipe @scaledAbs startTime
+
+  # ONE SWIPE of the held wheel, queued at `timeAbs` (absolute, already scaled) and read against the
+  # pane AS IT SHOWS NOW: the first from _touchScrollBy, every later one from the pump once the swipe
+  # before it has drained. A swipe after the first must press the pane, so its press is checked
+  # against it (verifyPressLanding). Lets go of the held wheel once the delta is spent or the bound
+  # reached, and answers the absolute time the swipe ends.
+  _queueNextSwipe: (timeAbs) ->
+    held = @heldSwipes
+    box = @_swipeBoxOf held.pane
+    aim = @_aimInsideBox held.aim, box
+    leg = @_swipeLegWithin held.remaining, box
+    if (leg.x is 0 and leg.y is 0) or held.swipesLeft is 0
+      @heldSwipes = undefined
+      @currentPointerTarget = held.park
+      return timeAbs
+    from = aim
+    if box?
+      from = new Point (@_dragStartInsideSpan aim.x, leg.x, box[0].x, box[1].x),
+        (@_dragStartInsideSpan aim.y, leg.y, box[0].y, box[1].y)
+    @queueingHeldSwipe = true
+    try
+      @_expectNextPressOn held.pane, "a translated wheel's later swipe"  if held.pane? and held.swipesLeft < MacroToolkit.maxScrollSwipes
       @_queueTouchDown from, timeAbs
-      timeAbs = MacroToolkit.holdWindowMarginMs + @_dragTouchFromHeldPress from, (from.add leg),
+      endAbs = MacroToolkit.holdWindowMarginMs + @_dragTouchFromHeldPress from, (from.add leg),
         (@_touchDragSpanFor 600), (timeAbs + MacroToolkit.holdWindowMarginMs), 1
-      remaining = remaining.subtract leg
-      swipes++
-    @currentPointerTarget = aim
-    timeAbs
+    finally
+      @queueingHeldSwipe = false
+    held.remaining = held.remaining.subtract leg
+    held.swipesLeft--
+    @heldSwipes = undefined  if (held.remaining.x is 0 and held.remaining.y is 0) or held.swipesLeft is 0
+    # a wheel does not move the pointer: it stays PARKED where the verb aimed, swipe after swipe
+    @currentPointerTarget = held.park
+    endAbs
 
   # THE DRAG A WHEEL MEANS: the screen vector a finger travels to scroll what the wheel deltas would.
   # A drag moves the content WITH the finger — ViewportWdgt's scroll-drag step feeds its own
@@ -1342,7 +1403,8 @@ class MacroToolkit
   # nearest scrollable under the pointer (ActivePointerWdgt.processWheel walks up to the nearest `scrolledBy`
   # owner; ViewportWdgt.scrolledBy scrolls itself or escalates to its parent at the travel limit). A
   # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with
-  # `yield "waitNoInputsOngoing"`.
+  # `yield "waitNoInputsOngoing"`, which a finger REQUIRES: its later swipes are held until the earlier
+  # ones drain, and queueing anything else meanwhile throws (_touchScrollBy).
   #   A FINGER scrolls the pane by DRAGGING it, so the whole drag is kept inside the box of the pane
   # that would actually take the scroll (see _touchScrollBy). That pane is RESOLVED, never assumed to
   # be the widget the verb names: a macro names what it means — a menu whose rows scroll in a

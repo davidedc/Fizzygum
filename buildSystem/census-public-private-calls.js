@@ -264,6 +264,9 @@ function runCensus() {
         const b = methodBoundary(raw, mixinHashIndent);
         if (b) {
           mixinHashIndent = b.mixinHashIndent;
+          // a class-side `@name` method is no instance method: its `@` is the class, so its body holds no
+          // self-call this census measures — it ENDS the method above it and is not counted itself
+          if (b.kind === 'header' && b.static) { cur = null; continue; }
           if (b.kind === 'header' && b.method) {
             cur = { name: b.method, cls: clsName, file: rel, line: n + 1, bodyLines: [], markers: new Set() };
             const gt = code.indexOf('>');

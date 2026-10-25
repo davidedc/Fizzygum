@@ -207,10 +207,13 @@ So a bar picked up off its viewport is a plain slider: the opaque groove and the
 
 Float-dragging a viewport's contents scrolls it too — the gesture beside the bars above
 (opt-in `isScrollingByfloatDragging`). A stroke has ONE drag-scroll step, on the pane that takes
-the stroke (`ViewportWdgt.takeStrokeScrollFrom`): while the hand's button is down and nothing is
+the stroke (`ViewportWdgt.takeStrokeScrollFrom`): while its stroke lasts and nothing is
 being float-dragged, the step samples the hand's position each frame (mapped into that pane's own
 plane) and moves the offset by the delta through `scrollX`/`scrollY` — the same funnel the bars
-and the wheel write through. A pane that takes no scroll gesture — `scrollPolicy 'never'`, or one
+and the wheel write through. The stroke ENDS at its own event: the pane keeps the press, so it is
+told the ending (`pressEnded` at the release, `pressCancelled` otherwise), and that is where the
+step pays the tail the frames did not sample — end point minus press point — never in a later
+frame, so a release and the next press drained in one frame lose nothing. A pane that takes no scroll gesture — `scrollPolicy 'never'`, or one
 that does not drag-scroll — is TRANSPARENT to the press, as it is to the wheel: `pressBegan` passes
 the press on, so a drag over a cropping pane nested in a scrolling one reaches the scrolling one. Release seeds a
 POST-RELEASE MOMENTUM glide (friction 0.8, tracked in `world.wdgtsWithOngoingScrollMomentum`),

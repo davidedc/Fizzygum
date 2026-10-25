@@ -355,10 +355,13 @@ class Serializer
         record.src = obj.src
         return
       if NativeValueKinds.isCanvasLike obj
-        # HTMLCanvasElement or SWCanvasElement (see NativeValueKinds)
+        # HTMLCanvasElement or SWCanvasElement (see NativeValueKinds). Its pixels are PHYSICAL, made at
+        # this page's pixel ratio, which rides along as `pr` so a page at another ratio can resample
+        # them to its own (Deserializer's $Canvas builder)
         record.class = "$Canvas"
         record.w = obj.width
         record.h = obj.height
+        record.pr = ceilPixelRatio
         record.data = obj.toDataURL "image/png"
         return
       if NativeValueKinds.isVideo obj

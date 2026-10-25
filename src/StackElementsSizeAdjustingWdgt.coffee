@@ -18,10 +18,6 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), DivisionStackLayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 
-  @includeInNewWidgetMenu: ->
-    # Return true for all classes that can be instantiated from the menu
-    return false
-
   detachesWhenDragged: ->
     return false
 

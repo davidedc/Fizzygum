@@ -14,7 +14,6 @@
 class VideoPlayerCanvasWdgt extends CanvasWdgt
 
   video: undefined
-  _extentWhenPreviousBackgroundWasPainted: undefined
 
   _createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
@@ -48,7 +47,6 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
     @video = document.createElement 'video'
     @video.src = videoPath
     @video.autoplay = true
-    @_extentWhenPreviousBackgroundWasPainted = undefined
 
 
 
@@ -80,16 +78,12 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
     frameWidthKeepingRatioBasedOnHeight = Math.floor(@height() * @video.videoWidth / @video.videoHeight)
     frameHeightKeepingRatioBasedOnWidth = Math.floor(@width() * @video.videoHeight / @video.videoWidth)
 
-    # let's paint the black background only if we need to i.e.
-    # if the current extent is different from the extent when we
-    # painted the previous background
-    if (!@_extentWhenPreviousBackgroundWasPainted?) or (!@_extentWhenPreviousBackgroundWasPainted.equals @extent())
-        if @backBufferContext?
-          # paint the black background
-          @backBufferContext?.fillStyle = "black"
-          @backBufferContext?.fillRect 0, 0, @width(), @height()
-          # remember the extent of the canvas
-          @_extentWhenPreviousBackgroundWasPainted = @extent()
+    # the letterbox is black, laid under EVERY frame rather than once per size: my raster is a render
+    # cache (the back buffer is a Widget serialization transient), so a "background already laid" memo
+    # would ride a save that the raster does not, and a restored player would show its paper in the
+    # letterbox. One fillRect costs less than the frame drawn over it.
+    @backBufferContext?.fillStyle = "black"
+    @backBufferContext?.fillRect 0, 0, @width(), @height()
 
     # paint the frame so that it is fully contained in the canvas
     # and also centered
