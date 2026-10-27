@@ -521,3 +521,42 @@ Two items from the redesign section and three from the residue-2 arc's residue, 
       window at rest. Pinned by the assertion-only `SystemTest_macroScrollingBackReturnsContentToWhereItRested` (6 assertions
       fail on the old code, both pointers); the two-strokes test's control reads 40 and 70. The recapture: 9 mouse + 6 finger
       tests at both ratios, 8 of them a 4 px scroll-thumb column, `MenuPinnedInScrollPanel` ~3 px of content.
+
+### SWCanvas correctness arc 2026-10-27 — the residue-2 arc's three SWCanvas items, and fixes that were never BACKLOG lines (no plan doc)
+The arc fixed SWCanvas's queued defects (six of them filed in the redesign section; those closures are in the redesign
+plan's ledger) and, under the owner's triage rule (fix what reaches Fizzygum's tests or usage, or is egregious; the minors
+go to BACKLOG), the egregious ones it found. One SWCanvas commit (`85a18e8`), one pin bump, one recapture (mouse and
+finger, dpr 1 and 2: 1,282 references in 199 tests, predicted hash-exactly by a whole-suite twin and attributed fix by fix).
+The decision records are SWCanvas `DIRECT-RENDERING-SUMMARY.MD` §9 entries 19–31.
+- [x] **SWCanvas's scaled `drawImage` sampled outside the source as TRANSPARENT.** **DONE 2026-10-27**: `drawImage` follows
+      HTML5's rectangle and filtering rules — the bilinear taps clamp to the edge texel, a source rect reaching outside the
+      image is clipped to it (and the destination in proportion), negative sizes name the same rect from the opposite corner
+      (§9 entry 25; core tests 083, 084). It moved the rims of rotated, tilted and zoomed islands (70 shots in 38 tests,
+      faded → solid). The same unit made patterns sample by the same rule (owner: one image-sampling rule), and a follow-up
+      put both at the pixel CENTRE (`Rasterizer.centreTranslation`): a plain blit under a non-power-of-two scale (dpr 3, a
+      3× zoom) picked wrong texels in 250 of 282 draws at scale 3 (core test 093; 0 Fizzygum references moved at dpr 1/2).
+- [x] **SWCanvas's radial gradient ignored `ctx.scale`.** **DONE 2026-10-27**, wider than filed: gradients AND patterns are
+      evaluated in paint space — each device pixel centre mapped through the inverse CTM — so they transform under any
+      affine, and the radial gradient is HTML5's two-circle cone (§9 entries 25–26; core tests 085, 086, visual 214). It
+      moved the colour palette (12 shots in 4 tests).
+- [x] **SWCanvas committed 5 PNGs nothing regenerated.** **DONE 2026-10-27**: the runner set `global.SWCanvas` after the
+      visual tests ran, so the two isPointIn path2d tests failed silently (it now sets it first, and their PNGs regenerate);
+      `139-shadow-basic-test`/`140-shadow-stroke-test` are deleted; the debug scripts write next to themselves into the
+      git-ignored `debug/`; and `npm test` now fails on a visual test that cannot render or write its PNG, a core test whose
+      `savePNG` cannot write, and any committed PNG no test wrote in the run (an orphan, in `tests/output/` or
+      `tests/dist/output/`).
+- [x] Never a BACKLOG line — found by the arc, egregious, fixed: the filler skipped edges with 0 < |dy| < 1e-10, losing a
+      WHOLE ROW (a 2e-15 nudge did it; §9 entry 21, core 090); a cubic whose ends coincide painted nothing and a point-sized
+      quadratic overflowed the stack (§9 entry 28, core 091–092); a Path2D `ellipse()` opening a subpath left `closePath()`
+      stroking to (0, 0) (same entry); `strokeLine`/rotated `strokeRect` sampled pixel CORNERS, so the clock's butt hands
+      sat half a pixel off and moved with position (§9 entry 20, core 095); round caps and joins were flattened at a fixed
+      π/4 step (icon caps ≥ 48 device px off by 4–8 px; core 096); shadows were alpha ×8 (a 0.5-alpha shadow painted 255,
+      HTML5 128) and their blur lost coverage (§9 entry 29, core 097); `drawImage` under `copy` and the other canvas-wide
+      composites kept stale pixels outside the image (§9 entry 30, core 098); source-over and destination-over onto
+      TRANSLUCENT pixels mixed the colours as if the destination were opaque (§9 entry 31, core 099); the filler visited
+      every edge on every row (now an active-edge table, byte-identical, §9 entry 21); and the browser test page could not
+      run the core tests or load fonts — it now runs the same core and visual registries as Node and is gated headless
+      (`npm run test:browser`, Chromium and WebKit: every render byte-identical to Node's).
+- Decided, not bugs: an image drawn piecewise equals the whole up to 1 level of float rounding at 8-bit ties;
+  `isPointInPath` counts edge points as inside (the spec); unknown fill-rule strings stay lenient (nonzero); a draw that is
+  only a fractional TRANSLATION samples nearest-neighbour (no resampling); opaque `fillStrokeRoundRect` +2–5% (owner-accepted).

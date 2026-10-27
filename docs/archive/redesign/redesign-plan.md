@@ -914,3 +914,29 @@ Legacy icons shown on any redesigned surface are converted with the skill. Every
 - [x] W5e, its stuck-PRESSED half (the edit mark's tool cell; frame-strip icon buttons whose empty face caught the release).
       **DONE 2026-10-24** by the press lifecycle (every widget the press reached is told its ending); the toolbar-copy and
       dock-corner halves stay in BACKLOG.
+- [x] F follow-up — a thick rounded-rect stroke past the canvas's left edge lost every row with a negative left extent.
+      **DONE 2026-10-27** by the SWCanvas correctness arc (SWCanvas `85a18e8`, re-vendored): wider than filed — the `-1`
+      "row outside" marker collided with a real extent at eight sites, and the fused arm lost fill rows too. An empty row is
+      now the empty interval `{leftX: 0, rightX: -1}` and every caller tests `rightX < leftX` (SWCanvas
+      `DIRECT-RENDERING-SUMMARY.MD` §9 entry 19; core test 076).
+- [x] W2 follow-up — at dpr 2 a 1 px rounded-rect border's outer left column sat one pixel inward above each left arc's
+      tangent. **DONE 2026-10-27** by the SWCanvas correctness arc (owner call: FIX): the columns sampled pixel EDGES while
+      the rows sampled centres; both now sample centres, so a thick ring is exact and transpose-symmetric (§9 entry 19;
+      core test 077). It moved dpr-2 rounded corners in 161 tests (427 shots), recaptured with the arc.
+- [x] S1c follow-up — `ctx.clip('evenodd')` threw on the HTML5-shaped facade. **DONE 2026-10-27** by the SWCanvas
+      correctness arc: the Core API dispatches the `(path?, fillRule?)` overload by type for `fill()`, `clip()` and
+      `isPointInPath()` (§9 entry 24; core test 082, visual 213). The filed "no `evenodd` anywhere in `src`" was false:
+      `HighlightOutlineAppearance` and `TemplatesIconAppearance` call `ctx.fill "evenodd"` (the fill form, which worked).
+- [x] W4 follow-up — overlapping round caps and joins in one `stroke()` were left unpainted. **DONE 2026-10-27** by the
+      SWCanvas correctness arc: every stroke part is wound like the bodies, so overlaps add under nonzero; a join's point is a
+      vertex of both bodies' end edges, so no seam pixel is left unpainted; round caps and joins are flattened within 0.25
+      device px (§9 entry 20; core tests 078, 079, 094–096). One-path round-capped icons may overlap their subpaths now.
+- [x] W4 follow-up — the direct `fillCircle` covered fewer pixels than pixel-centre sampling. **DONE 2026-10-27** by the
+      SWCanvas correctness arc: it fills exactly the pixels whose centres lie inside the circle, the fused fill's rule, and
+      the six circle/arc entries draw nothing for a non-finite radius (`strokeCircle(Infinity)` hung) (§9 entry 22; core
+      tests 080, 087). It moved the clocks and the icon dots, recaptured with the arc.
+- [x] G-A finding — `fillRoundRect` at radii 17, 28, 32, 34, 38, 39 painted corner pixels differently at far canvas
+      positions, and differently again at (0, 0). **DONE 2026-10-27** by the SWCanvas correctness arc: one root, wider than
+      filed (22 radii) — at some positions a quarter turn's segment quotient came back from atan2 as 16.000000000000004,
+      which a bare ceil made 17.
+      Every count now goes through `PathFlattener.segmentCount` (§9 entry 23; core test 081).

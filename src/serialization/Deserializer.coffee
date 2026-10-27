@@ -237,7 +237,7 @@ class Deserializer
               else
                 # shrinking averages (smoothing on: at 2 -> 1 a box of four pixels); enlarging
                 # replicates pixels (smoothing off), so a 1 -> 2 -> 1 round trip gives back the very
-                # pixels it started from, and no edge pixel is left part-transparent
+                # pixels it started from
                 ctx.imageSmoothingEnabled = scale < 1
                 ctx.drawImage img, 0, 0, w, h
             catch

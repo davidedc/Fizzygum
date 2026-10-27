@@ -74,8 +74,8 @@ class SimpleImageWdgt extends CanvasWdgt
 
   # Paints my picture on my raster: on every new raster, and once more when the image arrives (step).
   # The black paper goes down first EVERY time, so a repaint lays exactly the pixels the first paint did:
-  # a scaled draw's edge pixels need not be opaque (SWCanvas leaves them part-transparent), and an image
-  # drawn over its own earlier copy would composite those edges twice.
+  # an image's part-transparent pixels (its own alpha, or a backend's anti-aliased edges) drawn over its
+  # own earlier copy would composite twice.
   _paintImageOnBackBuffer: ->
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
 
