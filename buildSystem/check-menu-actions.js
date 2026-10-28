@@ -79,7 +79,10 @@
 
 const fs = require('fs');
 const path = require('path');
-const { METHOD_HEADER, methodSpans } = require('./lib/coffee-method-header.js');
+const { methodSpans } = require('./lib/coffee-method-header.js');
+// The boot INSTALL EDGES (`*TestSupport.installOnto <CoreClass>`) and the members each one copies,
+// by installOnto's own semantics — one harvest, shared with check-part-edges.js.
+const { installEdges, harnessPresent } = require('./lib/install-edges.js');
 // The whole-system CLASS MODEL (parent, @augmentWith mixins, methods, resolution order) — RULE 1b's
 // engine, reused wholesale rather than re-derived, exactly as census-hierarchy-duplication.js and
 // census-property-placement.js reuse it. Re-implementing inheritance resolution here would be a
@@ -87,8 +90,6 @@ const { METHOD_HEADER, methodSpans } = require('./lib/coffee-method-header.js');
 const { runCensus } = require('./census-public-private-calls.js');
 
 const SRC = path.resolve(__dirname, '../src');
-const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
-const BOOT_GLOBALS = path.join(SRC, 'boot/globalFunctions.coffee');
 
 // Seeded 2026-08-16 at the count left after the menu-action arc converted the five padded verbs
 // (showOutputPins / removeOutputPins / makeFolderWindow / popUpDemoMenu / dockToolbarMenu). The
@@ -253,7 +254,7 @@ for (const p of files) {
 // census's chainOf already folds both edges into one order). A verb missing from all of them is
 // dispatched at nothing: `@target[@action]` is undefined and the row throws on click.
 let ruleB = { checked: 0, skipped: '' };
-if (!fs.existsSync(HARNESS)) {
+if (!harnessPresent()) {
   // Methods a `*TestSupport` class installs onto a core class are real methods of that class
   // wherever the harness part ships, so without the sibling repo the universe is incomplete and a
   // miss would not be a proof. Same self-skip as check-dead-methods / check-unresolved-sends.
@@ -262,23 +263,15 @@ if (!fs.existsSync(HARNESS)) {
   const census = runCensus();
   const { classInfo, chainOf } = census;
 
-  // harness methods installed onto a core class, read from the ACTUAL boot edges
-  // (`WorldTestSupport.installOnto WorldWdgt` & co in src/boot/globalFunctions.coffee).
-  const installedOn = new Map();   // core class name -> Set(method names)
-  if (fs.existsSync(BOOT_GLOBALS)) {
-    const bootText = fs.readFileSync(BOOT_GLOBALS, 'utf8');
-    const EDGE = /\b([A-Za-z_]\w*)\.installOnto\s+([A-Za-z_]\w*)/g;
-    let e;
-    while ((e = EDGE.exec(bootText)) !== null) {
-      const supportFile = path.join(HARNESS, e[1] + '.coffee');
-      if (!fs.existsSync(supportFile)) continue;
-      if (!installedOn.has(e[2])) installedOn.set(e[2], new Set());
-      const into = installedOn.get(e[2]);
-      for (const l of fs.readFileSync(supportFile, 'utf8').split('\n')) {
-        const h = METHOD_HEADER.exec(l);
-        if (h) into.add(h[1]);
-      }
-    }
+  // harness members installed onto a core class, read from the ACTUAL boot edges
+  // (`WorldTestSupport.installOnto WorldWdgt` & co in src/boot/globalFunctions.coffee) by the shared
+  // harvest check-part-edges.js reads too. Only PROTOTYPE members: `@target[@action]` looks the
+  // action up on an instance, which an installed static never reaches.
+  const installedOn = new Map();   // core class name -> Set(member names)
+  for (const edge of installEdges()) {
+    if (!installedOn.has(edge.target)) installedOn.set(edge.target, new Set());
+    const into = installedOn.get(edge.target);
+    for (const m of edge.members) if (!m.isStatic) into.add(m.name);
   }
 
   // C -> every class whose chain contains C (i.e. every class an `@` in C could be an instance of)

@@ -276,16 +276,11 @@
       "dirs": ["src/patch-programming-experimental"]
     },
 
-    "macros": {
-      "//": "The macro engine + toolkit (world.macroToolkit): the authoring path for SystemTests. Test machinery that lives in src/ because the macros drive the product through its own API. Was excluded by the FILE_ONLY_FOR_MACROS marker regex; now by part.",
-      "dirs": ["src/macros"]
-    },
-
     "harness": {
       "//": "The Automator + test-harness sources, which live in the SIBLING TESTS REPO. Its five *TestSupport classes install themselves onto core prototypes at boot behind `if XTestSupport?`. ⚠ THIS PART IS WHAT MAKES A BUILD TEST-CAPABLE, so five derived facts key off its presence (buildProfile.py): the js/tests symlink, BUILDFLAG_LOAD_TESTS, the two tests-repo build gates, and -- inverted -- the strip of the dead `if Automator?` branches, since Automator/AutomatorLoader/AutomatorPlayer are all in here. It used to carry `requiresFlag: \"tests\"` on top of a flavour test, which asked the same question twice.",
-      "//requires": "AutomatorEventCommandStartMacro builds its macros with Macro.fromString, so a test-capable build that somehow omitted 'macros' would carry a harness that cannot replay a single test. Both eager, so this is inclusion only.",
-      "requires": ["macros"],
+      "//macros": "It also owns src/macros -- the macro engine (Macro) and toolkit (world.macroToolkit, with its AimCheckInputEvent) that every SystemTest is written in -- because the two are ONE shipping unit. The harness is the only thing that starts a macro (AutomatorEventCommandStartMacro -> Macro.fromString), and the toolkit reaches back into the harness at every assertion and screenshot (world.automator.player, a field no build gate can follow) and calls members only the harness installs (testNumberOfItems, testItems, getWidgetViaTextLabel). As two parts, a build could ship either without the other, and the pair would be kept honest only by a guard at every crossing: the member calls checkable, the field reaches not. The directory stays in src/, beside the product API the macros drive -- a part's dirs may span both repos.",
       "dirs": [
+        "src/macros",
         "../Fizzygum-tests/Automator-and-test-harness-src",
         "../Fizzygum-tests/Automator-and-test-harness-src/AutomatorEventCommands"
       ],

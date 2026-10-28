@@ -11,8 +11,8 @@
 # earlier event still waiting in the queue (a menu opening, a window closing, a pane scrolling) has
 # yet to change the world the press will meet. Drained right before the press, the check reads the
 # world exactly as the press finds it.
-#   This class lives in the `macros` part, which no production profile ships, so it is test
-# machinery by placement.
+#   This class lives in the `harness` part (src/macros is the harness's), which no production
+# profile ships, so it is test machinery by placement.
 class AimCheckInputEvent extends InputEvent
 
   # the MacroToolkit that queued me, which answers the question when I drain

@@ -7,16 +7,24 @@
  * grown a copy-pasted duplicate, which is exactly the shape that produced four bugs of one kind in
  * arc 4: one rule, encoded twice, drifting.
  *
- * `guardedPartsPerLine(lines, ownerOfClass, parts)` returns, for each line, the SET OF PARTS whose
- * classes may be named there. Five sources, all of them scope-opening rather than line-local:
+ * `guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember)` returns, for each line, the SET OF
+ * PARTS whose classes (and installed members) may be named there. All its sources are scope-opening
+ * rather than line-local:
  *   - an `X?` existence test (its own line, plus everything indented under it, plus a multi-line
  *     boolean continuation);
  *   - a `return unless X?` / `return if !X?` bail-out, which covers the rest of the method;
  *   - `whenAllLoaded ["a", "b"], ->`, which opens a scope exactly as a guard does — an AWAIT IS A
  *     GUARD, and it is the idiom a lazy part is supposed to use. ⚠ whenOptionalPartsLoaded is
- *     deliberately NOT one: it runs its callback even when the part never arrived.
+ *     deliberately NOT one: it runs its callback even when the part never arrived;
+ *   - with `ownerOfMember` (member name -> the part that alone provides it, see check-part-edges.js),
+ *     an existence test on such a MEMBER — `@m?()`, `x.m? arg`, `if x.m?`, `return unless x.m?` —
+ *     in exactly the shapes an `X?` takes. A part is all-or-nothing, so a member that only that part
+ *     provides being here proves the whole part is here, just as one of its classes would. Omitting
+ *     the argument leaves every other caller's answer exactly what it was.
  * `codePartOf(line)` strips comments and string literals: prose may name any class, and a class
- * NAME as data is the sanctioned indirection for a lazy part.
+ * NAME as data is the sanctioned indirection for a lazy part. `stringLiteralsOf(line)` is its
+ * complement — the contents of the line's string literals, comments excluded — for a scan that has to
+ * read a name used AS data (a member dispatched by name).
  */
 
 function codePartOf(line) {
@@ -36,19 +44,44 @@ function codePartOf(line) {
   return out;
 }
 
+// The contents of every single-line string literal on the line, read with codePartOf's own lexing (so
+// the two always agree on where a string starts and ends) and stopping at a comment.
+function stringLiteralsOf(line) {
+  const out = [];
+  let quote = null;
+  let cur = '';
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) {
+      if (c === '\\') { cur += c + (line[i + 1] || ''); i++; continue; }
+      if (c === quote) { out.push(cur); quote = null; cur = ''; continue; }
+      cur += c;
+      continue;
+    }
+    if (c === '"' || c === "'") { quote = c; continue; }
+    if (c === '#') break;
+  }
+  return out;
+}
+
+// An existence test on a member: `@m?`, `x.m?` (a soak call, a soak access or a plain test).
+const MEMBER_EXISTENCE_TEST = /[@.]([A-Za-z_$][\w$]*)\?/g;
+
 const indentOf = (line) => line.length - line.replace(/^\s*/, '').length;
 
 // Which PARTS are guarded on each line. Two sources, both per-part (see the header):
-//   * an `X?` existence test, guarding its own line plus every deeper-indented line under it
-//     (the guarded block AND the multi-line boolean continuation);
-//   * a `return unless X?` bail-out, guarding the rest of the enclosing method.
+//   * an `X?` existence test (or an `[@.]m?` one on a member in ownerOfMember), guarding its own
+//     line plus every deeper-indented line under it (the guarded block AND the multi-line boolean
+//     continuation);
+//   * a `return unless X?` bail-out (or `return unless x.m?`), guarding the rest of the enclosing
+//     method.
 // A logical line can span several physical ones: CoffeeScript continues it when the previous line
 // ends with a binary/opening operator, and the continuation may be indented LESS than the opener
 // (StringWdgt.toString does exactly that). So a continuation inherits its opener's guards outright,
 // independently of indentation.
 const CONTINUES = /(?:\b(?:and|or|not|is|isnt|then|else|unless|if|in|of)|&&|\|\||[,+\-*/%=<>?:.([{])\s*$/;
 
-function guardedPartsPerLine(lines, ownerOfClass, parts) {
+function guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember) {
   const perLine = lines.map(() => new Set());
   const openGuards = [];      // {indent, part} — active while we are deeper than indent
   let method = null;          // {indent, parts:Set} — a return-unless bail-out's scope
@@ -93,6 +126,22 @@ function guardedPartsPerLine(lines, ownerOfClass, parts) {
       openGuards.push({ indent: ind, part });
     }
 
+    // ...and so does an existence test on a member only one part provides, read off the CODE (a
+    // member named in prose or as a string tests nothing), bail-out included
+    if (ownerOfMember) {
+      const code = codePartOf(raw);
+      const bails = /^\s*return\s+(?:unless|if\s*!)/.test(code);
+      let t;
+      MEMBER_EXISTENCE_TEST.lastIndex = 0;
+      while ((t = MEMBER_EXISTENCE_TEST.exec(code)) !== null) {
+        const part = ownerOfMember.get(t[1]);
+        if (!part) continue;
+        perLine[i].add(part);
+        openGuards.push({ indent: ind, part });
+        if (bails && method) method.parts.add(part);
+      }
+    }
+
     // AN AWAIT IS A GUARD TOO, and not seeing that was this gate's blind spot: a lazy part's
     // prescribed entry point is `world.parts.whenAllLoaded ["maps", "plots"], ->`, and every line
     // nested under it runs with those parts present -- exactly the scope an `if X?` opens. Before
@@ -113,4 +162,4 @@ function guardedPartsPerLine(lines, ownerOfClass, parts) {
   return perLine;
 }
 
-module.exports = { codePartOf, indentOf, guardedPartsPerLine };
+module.exports = { codePartOf, stringLiteralsOf, indentOf, guardedPartsPerLine };

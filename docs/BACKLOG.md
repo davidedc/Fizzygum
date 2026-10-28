@@ -444,12 +444,14 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] (Fizzygum) **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (~:45-46), which puts both ring edges ON pixel centres, so the 3.5 ring is asymmetric at dpr 1. An integer radius 3 is symmetric at dpr 1 and 2 under every variant (`R-B2/logs/ring-symmetry.log`). Cosmetic; a fix moves the palette's pixels (a recapture).
 
 ### SWCanvas correctness arc follow-ons 2026-10-28 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
-- [ ] (owner to decide) **No gate sees a SHIPPING caller of a member only the test harness installs.**
-      `check-menu-actions.js` and `check-unresolved-sends.js` resolve sends against `src` and the harness source
-      together (harness code is live code, and its `*TestSupport` installs are real members wherever it ships), so
-      `DemoMenus.testMenu`'s five harness-only rows and `LayoutSpacerWdgt`'s `super` into the harness sweep resolved
-      cleanly while throwing on `--profile dev-notests`. Options: a rule that a send from a part that can ship without
-      the harness must resolve without it, or a `dev-notests` boot + menu sweep as a gauntlet leg.
+- [ ] **`what-pins-core.js` reads `requires` without the eager-owner discount, and its `--selftest` fails at HEAD.**
+      Its `directRequires(part)` (~:122) grants every declared `requires`, while `check-part-edges.js`'s
+      `declaredRequires` drops a LAZY requirement of an EAGER owner (that owner runs from the first frame, so the lazy
+      part may not have arrived). So for an eager door with a lazy requirement the analyser can report as free a move
+      the gate fails; only `dev-tools` → `authoring` differs today. Self-test case (f) (~:490-500) still asserts the
+      gate's answer, but names a transitive chain as its reason — stale since `eee46adc` gave `dev-tools` a direct
+      `requires`. Nothing automated runs it (only `fg whatpins`). Fix: take `declaredRequires`'s rule from one shared
+      place (`lib/part-edge-scan.js`), then re-word case (f).
 - [ ] **Two load-only failures, each seen once** in the follow-ons' closing gauntlet (2026-10-28, a loaded machine: the
       gauntlet took 40 min), each passing its leg's serial retry on the same build — so neither is a deterministic
       change, and neither test's path was touched. `SystemTest_macroListWdgtAutoScrollsNearDraggedEdge` image_5 failed

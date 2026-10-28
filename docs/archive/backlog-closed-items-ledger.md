@@ -605,3 +605,28 @@ A whole-suite twin predicted the pin bump's footprint before anything was rebuil
       −x0, −y0) did not (22 sizes at dpr 1, 12 at dpr 2; S 80 at dpr 2 is the desktop glyph). It now computes with its
       box at (0, 0) and translates there. Replica on the new engine: 0 position-dependent pixels in all three paints at
       dpr 1 and 2, and the three agree; desktop paints change 0 px. Whole-suite twin: 0 shots move.
+
+### SWCanvas correctness arc, follow-ons round 2 2026-10-28 (no plan doc)
+The owner picked the static rule over a `dev-notests` gauntlet leg for the gate blind spot, and asked for a visual
+test of the round-join fix.
+- [x] **No gate saw a SHIPPING caller of a member only the test harness installs.** **DONE 2026-10-28**:
+      `check-part-edges.js` reads the boot `installOnto` edges (`lib/install-edges.js`, shared with
+      `check-menu-actions.js`) and treats a member the harness alone provides — no file outside the part defines it, by
+      the implementor harvest `lib/name-definitions.js` that `check-unresolved-sends.js` shares — as the harness's
+      symbol: an unguarded reference (a), a by-name dispatch (b) or a `super` into it (c) fails the build; an existence
+      test on the member guards like `if X?`. Chosen over a `dev-notests` boot + menu-sweep leg: static, every call
+      site rather than the clicked ones, and no second build in the gauntlet. It found 4 live sites: `WorldWdgt`'s
+      constructor sizing call (`else if WorldTestSupport?`) and three `MacroToolkit` calls, closed by folding
+      `src/macros` into the `harness` part (the `macros` part is deleted: only the harness starts a macro, and the
+      toolkit reaches back into it ~10 more times through `world.automator.player`, which no gate can follow).
+      Proven by planting each defect shape — the old demo menu (b), the old spacer `super` (c), the removed guard and a
+      plain call for a soak call (a), the fold undone (a) — and by a `--self-test` that fails with the member guard
+      stubbed out.
+- [x] **`dev-notests` shipped the test-harness page without the harness** (found by the above). **DONE 2026-10-28**: its
+      world threw at construction there. `buildProfile.py` refuses `worldWithSystemTestHarness.html` without the
+      `harness` part, and `dev-notests` lists its entries as all but that page. Its tree boots both remaining pages
+      clean, and its demo Test menu offers 9 rows, all resolving.
+- [x] **Round joins had no visual test.** **DONE 2026-10-28**: SWCanvas visual test 216
+      (`tight-curve-strokes-join-inner-side`) strokes an arc, an ellipse, cubic and quadratic hairpins and an arcTo
+      corner 30 px wide with round, miter and bevel joins side by side. On the engine before the fix its PNG differs in
+      the round column only (349 px, all holes); Chromium and WebKit draw it byte-identical to Node.

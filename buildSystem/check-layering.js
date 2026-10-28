@@ -805,7 +805,7 @@ function main() {
     catch (e) { console.error(`check-layering: [T] operational error in ${f}:`, e.message); process.exit(2); }
   }
   let macroCount = 0;
-  if (fs.existsSync(MACROS_DIR)) {           // absent in a build that ships no macros part — skip [D] then
+  if (fs.existsSync(MACROS_DIR)) {           // absent when the sibling tests repo is not checked out — skip [D] then
     let macros;
     try { macros = collectMacros(MACROS_DIR, []); }
     catch (e) { console.error('check-layering: operational error collecting macros:', e.message); process.exit(2); }

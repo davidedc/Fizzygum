@@ -66,9 +66,18 @@ Plus two properties that are **not** the same question:
 
 **A part's absence must be a NO-OP at every call site**, through the class-existence guard idiom (`if DemoMenus?`,
 `world.pinouts?.reset()`), and guarded where the class is NAMED rather than at the callers.
-`buildSystem/check-part-edges.js` fails the build on an unguarded core reference to a part-owned class.
+`buildSystem/check-part-edges.js` fails the build on an unguarded core reference to a part-owned class —
+and to a MEMBER a part installs onto a class it does not own (the harness's `*TestSupport.installOnto
+<CoreClass>`), where an existence test on the member itself (`@m?()`) is a guard too.
 ⚠ A *lazy* part is different: its entry point must await `world.parts.ensureLoaded`, because a guard answers
 "is it here?" and a lazy part needs "get it here".
+
+A part's `dirs` may span both repos. `harness` owns the tests repo's harness sources AND `src/macros`:
+the macro engine and toolkit are started only by the harness (`AutomatorEventCommandStartMacro`) and
+reach back into it at every assertion and screenshot (`world.automator.player`, harness-installed
+members), so the two are ONE shipping unit — as two parts, a build could ship either without the
+other, kept honest only by a guard at every crossing, and the field reaches no gate can follow. The
+directory stays in `src/`, beside the product API the macros drive.
 
 **PART→PART DEPENDENCIES: `requires`.** A part may name another part's classes, and `parts.json`'s
 `requires: [...]` is where that is stated. One declaration, two readers:
@@ -91,8 +100,7 @@ the other part SHIPS. It promises the classes have ARRIVED only when the owner i
 `PartsRegistry` brings the requirements fully in before ingesting the part. An **eager** owner is
 running from the first frame, so a **lazy** requirement may not be here yet and that site still needs
 a guard or an await where it stands. (eager→**eager** is fine: both are in the artifact from frame
-one, so shipping-together is the whole of what could go wrong — which is why `harness requires
-["macros"]` needs nothing further.) `check-part-edges.js` implements exactly this, and its scope is
+one, so shipping-together is the whole of what could go wrong.) `check-part-edges.js` implements exactly this, and its scope is
 every source present at boot (core **and** every eager part), not core alone.
 ⚠ The subtlety the gate has to get right: `declaredRequires` is tested *before* the inheritance check,
 so if it hands every owner its full list, an eager part declaring `requires` on a lazy one can both
@@ -315,7 +323,7 @@ ARE its world, so it has no policy to state, and a field that can hold only one 
 | Profile | Parts | Form | Sources | Entries | Shape |
 |---|---|---|---|---|---|
 | `dev` (default) | all | compile-at-boot | — | all | the inner loop and the whole SystemTest suite |
-| `dev-notests` | all except `harness` | compile-at-boot | — | all | dev without the test machinery |
+| `dev-notests` | all except `harness` | compile-at-boot | — | all except `worldWithSystemTestHarness.html` | dev without the test machinery (the harness and the macro engine it owns) |
 | `dev-precompiled` | all | precompiled | `lazy` | `index.html` | the dev world booted from an image — 59 ms instead of 3219; opt-in, never the default |
 | `homepage` | `core` + LAZY `app-kit` `meta-tools` `examples-icons` `example-degrees-converter` `example-doc` `example-slide` `example-dashboard` `example-sheet` `authoring` `maps` `plots` `spreadsheet` | precompiled | `lazy` | `index.html` | **production** |
 | `lean` | `core` | precompiled | `none` | `index.html` | the appliance |
@@ -580,8 +588,9 @@ There are **no flavour flags**. An unknown argument is a hard error that lists t
   `homepage.json` only if production should have it. Guard every core reference to its classes.
 - **A new profile** — add a file. Validation refuses: an unknown key, a missing/forbidden `sources`, a part or entry
   page that does not exist (this is the one that matters at a RENAME — it turns "production silently ships less" into
-  a build failure), a profile without `core`, `precompiled` without `index.html`, and `sources: "none"` with either
-  `meta-tools` or a lazy part.
+  a build failure), a profile without `core`, `precompiled` without `index.html`, `worldWithSystemTestHarness.html`
+  without the `harness` part (the page exists to run the harness), and `sources: "none"` with either `meta-tools` or
+  a lazy part.
 - **A new entry page** — add a row to `ENTRY_PAGES` in `buildProfile.py` (filename, renders-through-SWCanvas,
   loads-every-part-at-boot). `"entries": "all"` picks it up.
 - **A new non-source file** — give it to the part that owns it (`assets`), never to the build script. A

@@ -49,17 +49,11 @@ function walk(dir, ext, acc) {
   }
   return acc;
 }
-function stripComment(line) {
-  // '#{' opens CoffeeScript string INTERPOLATION, not a comment: a method referenced ONLY inside
-  // "…#{@foo()}…" used to be cut off here and falsely flagged dead (2026-07-06
-  // `_dragEmbedCandidateTitle` incident; dev-workflow plan P4.2). Cut at the first '#' NOT
-  // immediately followed by '{'. ('#{' inside a 'single-quoted' string is not interpolation, so
-  // this can over-count a reference there — errs fail-open: fewer dead flags, never a false flag.)
-  for (let k = line.indexOf('#'); k >= 0; k = line.indexOf('#', k + 1)) {
-    if (line[k + 1] !== '{') return line.slice(0, k);
-  }
-  return line;
-}
+// The comment strip shared with the implementor harvest: '#{' opens CoffeeScript string
+// INTERPOLATION, not a comment, so a method referenced ONLY inside "…#{@foo()}…" stays a reference.
+// ('#{' inside a 'single-quoted' string is not interpolation, so this can over-count a reference
+// there — it errs fail-open: fewer dead flags, never a false flag.)
+const { stripComment } = require('./lib/name-definitions');
 
 // ── settle-tier symmetry helpers (pure; unit-tested via --self-test) ────────────────────────────────
 // A public `<name>` and its private core `_<name>NoSettle` form ONE self-settling pair. When one side is

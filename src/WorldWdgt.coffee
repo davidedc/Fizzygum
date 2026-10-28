@@ -567,9 +567,13 @@ class WorldWdgt extends IconGridPanelWdgt
     @temporaryHandlesAndLayoutAdjusters = new Set
     @inputDOMElementForVirtualKeyboard = undefined
 
+    # Every page fills the browser except the test harness's, which sizes the canvas to the
+    # SystemTest screen through a member the harness part installs (WorldTestSupport). That page
+    # never ships without the part (buildProfile.py), so the guard names the dependency; it is not
+    # a fallback.
     if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and @isIndexPage
       @stretchWorldToFillEntirePage()
-    else
+    else if WorldTestSupport?
       @_sizeCanvasToTestScreenResolution()
 
     # @worldCanvas.width and height here are in physical pixels

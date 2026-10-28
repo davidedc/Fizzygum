@@ -47,7 +47,7 @@
 //     in one, so masking them would add regex-vs-division guesswork for no gain. The one probe
 //     artifact of this kind (`.times(` inside `/\.times([^\w\d])/` in LCLCodePreprocessor.coffee)
 //     resolves for real — `Number::times` is defined in src/boot/numbertimes.coffee:44 — once the
-//     prototype-extension DEF_FORM below is harvested.
+//     prototype-extension DEF_FORM (lib/name-definitions.js) is harvested.
 //
 // EXEMPTIONS — two lists:
 //   BUILTINS (in-file, below)              — JS/DOM/canvas platform API. A fact about the platform.
@@ -60,21 +60,15 @@
 
 const fs = require('fs');
 const path = require('path');
+// The DEF side — its comment strip, its DEF_FORMS, the harvest — is the shared
+// lib/name-definitions.js, which check-part-edges.js reads too: one implementor harvest, not two.
+const defs = require('./lib/name-definitions.js');
 
 const SRC = path.resolve(__dirname, '../src');
 const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
 const ALLOWLIST = path.resolve(__dirname, 'unresolved-sends-allowlist.txt');
 
 // ─── masking machinery ──────────────────────────────────────────────────────────────────────────
-
-// DEF side: cut at the first '#' that does NOT open a `#{…}` interpolation (verbatim from
-// check-dead-methods.js — strings are deliberately KEPT, see the soundness trade above).
-function stripComment(line) {
-  for (let k = line.indexOf('#'); k >= 0; k = line.indexOf('#', k + 1)) {
-    if (line[k + 1] !== '{') return line.slice(0, k);
-  }
-  return line;
-}
 
 // Pull the CODE out of `#{…}` interpolations in a double-quoted string BODY. Interpolation is a
 // double-quote-only feature in CoffeeScript ('…' and '''…''' bodies are literal), and it is real
@@ -155,29 +149,10 @@ function walk(dir, ext, acc) {
 }
 
 // ─── the implementors ("defs") harvest ──────────────────────────────────────────────────────────
-// Every shape that can put a callable name into the world. The 2-space class-body form is the
-// canonical HEADER every other gate keys off; the rest are the forms the 2026-07-15 probe proved it
-// needs (each false positive it reported was one of these, not a real bug).
-const DEF_FORMS = [
-  /^  ([A-Za-z_$][\w$]*)\s*:\s*(\([^)]*\)\s*)?[-=]>/,                          // 2-space class-body method  (the canonical HEADER)
-  /^\s*([A-Za-z_$][\w$]*)\s*:\s*(\([^)]*\)\s*)?[-=]>/,                         // any-indent object-literal / mixin-DSL member fn
-  /^\s*[A-Za-z_$][\w$]*::([A-Za-z_$][\w$]*)\s*=/,                              // prototype extension        (Number::toRadians = ->)
-  /^\s*[A-Za-z_$][\w$.]*\.([A-Za-z_$][\w$]*)\s*=\s*(\([^)]*\)\s*)?[-=]>/,      // static / expando fn        (Math.getRandomInt = …, swContextProto.foo = …)
-  /^\s*([A-Za-z_$][\w$]*)\s*=\s*(\([^)]*\)\s*)?[-=]>/,                         // bare local fn              (helper = ->)
-  /^\s*@?([A-Za-z_$][\w$]*)\s*[:=]/,                                           // ANY other property key — over-approximate ON PURPOSE (a property may hold a closure)
-];
-
+// The forms (and why each is there) live in lib/name-definitions.js's DEF_FORMS; this reads files.
 function harvestDefs(files) {
   const defined = new Set();
-  for (const p of files) {
-    for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
-      const line = stripComment(raw);
-      for (const re of DEF_FORMS) {
-        const m = re.exec(line);
-        if (m) defined.add(m[1]);
-      }
-    }
-  }
+  for (const p of files) defs.harvestDefs(fs.readFileSync(p, 'utf8').split('\n'), defined);
   return defined;
 }
 

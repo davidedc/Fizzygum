@@ -92,16 +92,258 @@
  * ensureAllLoaded = Promise.all, so they arrive concurrently with nothing ordering them, and
  * `class X extends Y` across that boundary is a race rather than a catchable error. Only
  * findLoadOrder (inside one part) and `requires` (between parts) order anything.
+ *
+ * INSTALLED MEMBERS ARE A PART'S SYMBOLS TOO. A part can put members onto a class it does not own:
+ * the harness's `*TestSupport` classes are copied onto core prototypes at boot
+ * (`WorldTestSupport.installOnto WorldWdgt` in src/boot/globalFunctions.coffee). The edges, and what
+ * each one copies by installOnto's own semantics, come from lib/install-edges.js, which
+ * check-menu-actions.js reads too. On an artifact without that part such a member does not exist, so
+ * a caller of it throws -- or a row dispatching it by name is dead -- exactly as a reference to one of
+ * the part's classes would. The name-resolution gates cannot see this, by construction:
+ * check-unresolved-sends.js and check-menu-actions.js count the harness in their definition universe,
+ * correctly, because their question is "does ANYTHING implement this?". The question here is "is it
+ * there on every build that ships the caller?", so the rule lives here:
+ *   - a member is part P's SYMBOL when P installs it onto a class outside P and NO file outside P
+ *     that can ship (src/boot included) defines it -- by the implementor harvest
+ *     check-unresolved-sends.js reads too (lib/name-definitions.js: a method, a static, a field, a
+ *     key or an assignment target, OVER-approximated in the direction that flags less). Then on a
+ *     build without P nothing implements it, whatever the receiver, and that is what makes the
+ *     receiver-blind clauses (a) and (b) sound rather than guesses;
+ *   - in a file whose part is not P and is not satisfied for P (the class rule's own `requires` /
+ *     `requiredParts` reading), each of these is a violation unless its line is guarded for P:
+ *       (a) a code reference `@m` / `x.m` -- a call or a read -- that is not an existence test `m?`;
+ *       (b) a string literal whose whole content is `m` -- dispatch BY NAME (a menu row's or a
+ *           button's action, `@[name]`), the commonest way an installed member is reached;
+ *       (c) a `super` in a method named m of a class outside P, when P installs m onto that class or
+ *           an ancestor and no class outside P above it defines m: without P that super has nowhere
+ *           to go. This clause reads EVERY installed m, P's alone or not, because what matters is
+ *           what the super finds, and the class model (census-public-private-calls.js's chainOf)
+ *           answers exactly that;
+ *   - an existence test on a member P alone provides -- `@m?()`, `x.m? arg`, `if x.m?`,
+ *     `return unless x.m?` -- GUARDS for P exactly as `if X?` on one of P's classes does, opening the
+ *     same scope (lib/part-edge-scan.js): a part is all-or-nothing, so one of its members being here
+ *     proves all of it is.
+ *   WHAT THIS CANNOT SEE: a call or a by-name dispatch of an installed member that some class
+ *   outside P ALSO defines (the harness's spacer sweep, which LayoutSpacerWdgt overrides): such a
+ *   site is dead without P on some receivers and fine on others, and a receiver-blind scan cannot
+ *   tell which, so only its `super` is judged, by (c); a member reached through a COMPUTED name
+ *   (`x[name]()` with the name built at runtime or arriving as data, or a string that only CONTAINS
+ *   the name); a reference inside a `#{…}` interpolation, which codePartOf masks with the string
+ *   around it; src/boot itself, which is outside the scanned set for both rules; a `super` in a
+ *   CLASS-SIDE method (the class model holds instance members only); and a member put on a class by
+ *   anything other than an `installOnto` edge in src/boot/globalFunctions.coffee --
+ *   lib/install-edges.js fails loudly on an `installOnto` whose body it does not model, but it cannot
+ *   find what is not an edge. With the sibling tests repo absent there are no support classes to
+ *   read, so this half SKIPS, as check-menu-actions.js's RULE 1b does, rather than report a
+ *   harness-less checkout clean.
+ *
+ * `--self-test` drives the installed-member half -- which members count as a part's own, the three
+ * clauses and the member existence guard -- over in-memory fixtures, each clause both ways; it needs
+ * no repo. (The definition forms themselves are pinned by check-unresolved-sends.js --self-test.)
  */
 
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+// strip trailing `# comment` while respecting quotes, and report whether code remains
+const { codePartOf, stringLiteralsOf, guardedPartsPerLine } = require('./lib/part-edge-scan');
+const { installEdges, harnessPresent } = require('./lib/install-edges');
+const { harvestDefs } = require('./lib/name-definitions');
 
 const REPO = path.resolve(__dirname, '..');
 const PARTS_FILE = path.join(REPO, 'buildSystem/parts.json');
 
 function fail(msg) { console.error('check-part-edges: ' + msg); process.exit(2); }
+
+// ---- installed members: the pure half (what --self-test drives) ------------------------------
+
+// Which installed members are their part's SYMBOL. `installedBy` maps a member name to the Set of
+// parts installing it onto a class outside themselves; `files` is [{ part, lines }] for everything
+// that can ship. A member qualifies when exactly one part installs it and no file of any OTHER part
+// defines it, by the implementor harvest check-unresolved-sends.js reads too
+// (lib/name-definitions.js). That harvest over-approximates, so an extra "definition" can only
+// withdraw a member here, never add one. Returns Map(member -> part).
+function soleProviders(installedBy, files) {
+  const definingParts = new Map();    // member name -> Set(parts whose files define it)
+  for (const { part, lines } of files) {
+    for (const name of harvestDefs(lines)) {
+      if (!installedBy.has(name)) continue;
+      if (!definingParts.has(name)) definingParts.set(name, new Set());
+      definingParts.get(name).add(part);
+    }
+  }
+  const out = new Map();
+  for (const [name, installers] of installedBy) {
+    if (installers.size !== 1) continue;
+    const [part] = installers;
+    if ([...(definingParts.get(name) || [])].every(p => p === part)) out.set(name, part);
+  }
+  return out;
+}
+
+// Clauses (a) and (b) over one file. `soleProvider` maps a member name to the part that alone
+// provides it; `owner` is the file's part and `isSatisfied(part)` the class rule's requires/
+// requiredParts answer for it. Returns [{ line, clause, name, part }], one per (line, clause, name).
+function memberReaches(lines, guards, soleProvider, owner, isSatisfied) {
+  const out = [];
+  const seen = new Set();
+  const report = (i, clause, name, part) => {
+    const key = i + ' ' + clause + ' ' + name;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ line: i + 1, clause, name, part });
+  };
+  const reaches = (name, i) => {
+    const part = soleProvider.get(name);
+    if (!part || part === owner || isSatisfied(part) || guards[i].has(part)) return undefined;
+    return part;
+  };
+  const REF = /[@.]([A-Za-z_$][\w$]*)/g;
+  for (let i = 0; i < lines.length; i++) {
+    const code = codePartOf(lines[i]);
+    let m;
+    REF.lastIndex = 0;
+    while ((m = REF.exec(code)) !== null) {
+      if (code[m.index + m[0].length] === '?') continue;     // an existence test: a guard, not a reach
+      const part = reaches(m[1], i);
+      if (part) report(i, 'a', m[1], part);
+    }
+    for (const s of stringLiteralsOf(lines[i])) {
+      const part = reaches(s, i);
+      if (part) report(i, 'b', s, part);
+    }
+  }
+  return out;
+}
+
+// Clause (c). `classModel` is census-public-private-calls.js's { classInfo, chainOf } (instance
+// methods, bodies already stripped of comments and strings); `installedOn` maps a class name to
+// Map(member -> installing part), prototype members only, since a super walks the prototype chain;
+// `partOfClass(name)` answers a class's part; `fileOf(name)` answers { rel, owner, guards,
+// isSatisfied } for a class whose file is scanned, else undefined.
+const SUPER = /\bsuper\b(?!\s*(?:\.|::))/;     // `super.other()` reaches a DIFFERENT member
+function superReaches(classModel, installedOn, partOfClass, fileOf) {
+  const out = [];
+  for (const [cls, info] of classModel.classInfo) {
+    const file = fileOf(cls);
+    if (!file) continue;
+    const chain = classModel.chainOf(cls);
+    for (const [name, rec] of info.methods) {
+      let part;
+      for (const c of chain) {
+        const installed = installedOn.get(c.name);
+        if (installed && installed.has(name)) { part = installed.get(name); break; }
+      }
+      if (!part || part === file.owner || file.isSatisfied(part)) continue;
+      if (chain.slice(1).some(c => c.methods.has(name) && partOfClass(c.name) !== part)) continue;
+      for (const { n, code } of rec.bodyLines) {
+        if (!SUPER.test(code) || file.guards[n - 1].has(part)) continue;
+        out.push({ rel: file.rel, line: n, clause: 'c', name, part, cls });
+      }
+    }
+  }
+  return out;
+}
+
+// ---- --self-test: every clause both ways, on in-memory fixtures ------------------------------
+if (process.argv.includes('--self-test')) {
+  let ok = true;
+  const check = (label, got, want) => {
+    const pass = JSON.stringify(got) === JSON.stringify(want);
+    console[pass ? 'log' : 'error'](`  ${pass ? 'ok  ' : 'FAIL'} ${label} -> ${JSON.stringify(got)}${pass ? '' : ` (expected ${JSON.stringify(want)})`}`);
+    if (!pass) ok = false;
+  };
+  const fixtureParts = { core: { dirs: [] }, harness: { dirs: [] }, authoring: { dirs: [] } };
+  const classOwner = new Map([['WidgetTestSupport', 'harness']]);
+  const sole = new Map([['serialiseToMemory', 'harness'], ['_sizeCanvasToTestScreenResolution', 'harness']]);
+  const never = () => false;
+  const reach = (src, owner = 'core', isSatisfied = never) => {
+    const lines = src.split('\n');
+    const guards = guardedPartsPerLine(lines, classOwner, fixtureParts, sole);
+    return memberReaches(lines, guards, sole, owner, isSatisfied).map(v => `${v.clause}:${v.line}:${v.name}`);
+  };
+
+  // which installed members are the part's own: the support class defining them does not withdraw
+  // them, nor does another file of the same part; a definition in any OTHER part does, and so does a
+  // second installing part; a send is no definition
+  const owned = soleProviders(
+    new Map([['serialiseToMemory', new Set(['harness'])], ['makeSpacersOpaque', new Set(['harness'])],
+             ['installedTwice', new Set(['harness', 'tools'])]]),
+    [{ part: 'harness',   lines: ['class WidgetTestSupport', '  serialiseToMemory: ->', '  makeSpacersOpaque: ->', '  installedTwice: ->'] },
+     { part: 'harness',   lines: ['class MacroToolkit', '  serialiseToMemory: -> 1'] },
+     { part: 'tools',     lines: ['class ToolsSupport', '  installedTwice: ->'] },
+     { part: 'authoring', lines: ['class LayoutSpacerWdgt extends Widget', '  makeSpacersOpaque: ->', '    @x = 1'] },
+     { part: 'core',      lines: ['class Caller', '  run: ->', '    x.serialiseToMemory()'] }]);
+  check('owned: only the part defines it, however often',  owned.get('serialiseToMemory'), 'harness');
+  check('owned: a definition in another part withdraws it', owned.has('makeSpacersOpaque'), false);
+  check('owned: two installing parts withdraw it',          owned.has('installedTwice'), false);
+  check('owned: exactly one member is a part\'s own',       [...owned.keys()], ['serialiseToMemory']);
+
+  // clause (a)
+  check('(a) unguarded call',                reach('    @_sizeCanvasToTestScreenResolution()'), ['a:1:_sizeCanvasToTestScreenResolution']);
+  check('(a) unguarded read',                reach('    f = world.serialiseToMemory'), ['a:1:serialiseToMemory']);
+  check('(a) a soak call is a guard',        reach('    @_sizeCanvasToTestScreenResolution?()'), []);
+  check('(a) a member test opens a scope',   reach('    if @_sizeCanvasToTestScreenResolution?\n      @serialiseToMemory()'), []);
+  check('(a) ...which closes at its indent', reach('    if @_sizeCanvasToTestScreenResolution?\n      x = 1\n    @serialiseToMemory()'), ['a:3:serialiseToMemory']);
+  check('(a) a member bail-out',             reach('  m: ->\n    return unless world.serialiseToMemory?\n    world.serialiseToMemory()'), []);
+  check('(a) a class guard covers it',       reach('    if WidgetTestSupport?\n      x.serialiseToMemory()'), []);
+  check('(a) defined outside the part',      reach('    x.sharedName()'), []);
+  check('(a) in a comment',                  reach('    # @serialiseToMemory()'), []);
+  check('(a) in the installing part',        reach('    @serialiseToMemory()', 'harness'), []);
+  check('(a) a requires-satisfied file',     reach('    @serialiseToMemory()', 'authoring', (p) => p === 'harness'), []);
+
+  // clause (b)
+  check('(b) a row dispatching by name',     reach('    menu.addMenuItem "Serialise", w, "serialiseToMemory"'), ['b:1:serialiseToMemory']);
+  check('(b) the same row, guarded',         reach('    if WidgetTestSupport?\n      menu.addMenuItem "Serialise", w, "serialiseToMemory"'), []);
+  check('(b) a member defined elsewhere',    reach('    menu.addMenuItem "Share", w, "sharedName"'), []);
+  check('(b) a string that only contains it', reach('    menu.addMenuItem "serialiseToMemory now", w, "sharedName"'), []);
+  check('(b) in a comment',                  reach('    # menu.addMenuItem "x", w, "serialiseToMemory"'), []);
+
+  // clause (c): Widget is given makeSpacersOpaque by the harness; the class model is built by hand in
+  // the census's shape. Leaf/Leaf2/… sit under Mid (core); MidDef (core) defines the member itself.
+  const sources = {
+    Widget:  { parent: null,     part: 'core',      src: 'class Widget\n  other: ->\n    1' },
+    Mid:     { parent: 'Widget', part: 'core',      src: 'class Mid extends Widget\n  other: ->\n    super' },
+    MidDef:  { parent: 'Widget', part: 'core',      src: 'class MidDef extends Widget\n  makeSpacersOpaque: ->\n    2' },
+    Leaf:    { parent: 'Mid',    part: 'authoring', src: 'class Leaf extends Mid\n  makeSpacersOpaque: ->\n    @x = 1\n    super' },
+    Leaf2:   { parent: 'Mid',    part: 'authoring', src: 'class Leaf2 extends Mid\n  makeSpacersOpaque: ->\n    @x = 1' },
+    Leaf3:   { parent: 'MidDef', part: 'authoring', src: 'class Leaf3 extends MidDef\n  makeSpacersOpaque: ->\n    super' },
+    Leaf4:   { parent: 'Mid',    part: 'authoring', src: 'class Leaf4 extends Mid\n  makeSpacersOpaque: ->\n    super.other()' },
+    Leaf5:   { parent: 'Mid',    part: 'authoring', src: 'class Leaf5 extends Mid\n  makeSpacersOpaque: ->\n    super if WidgetTestSupport?' },
+    Leaf6:   { parent: 'Mid',    part: 'authoring', src: 'class Leaf6 extends Mid\n  makeSpacersOpaque: ->\n    if @serialiseToMemory?\n      super' },
+    // the member under test is NOT the part's alone (Leaf defines it), so testing it proves nothing
+    Leaf7:   { parent: 'Mid',    part: 'authoring', src: 'class Leaf7 extends Mid\n  makeSpacersOpaque: ->\n    if @makeSpacersOpaque?\n      super' },
+  };
+  const classInfo = new Map();
+  const files = new Map();
+  for (const [name, s] of Object.entries(sources)) {
+    const lines = s.src.split('\n');
+    const methods = new Map();
+    let cur;
+    lines.forEach((l, i) => {
+      const h = /^  ([A-Za-z_]\w*): ->/.exec(l);
+      if (h) { cur = { bodyLines: [] }; methods.set(h[1], cur); return; }
+      if (cur) cur.bodyLines.push({ n: i + 1, code: codePartOf(l) });
+    });
+    classInfo.set(name, { name, parent: s.parent, mixins: [], methods });
+    files.set(name, { rel: name + '.coffee', owner: s.part, isSatisfied: never,
+                      guards: guardedPartsPerLine(lines, classOwner, fixtureParts, sole) });
+  }
+  const chainOf = (cls) => { const out = []; for (let c = classInfo.get(cls); c; c = classInfo.get(c.parent)) out.push(c); return out; };
+  const supers = superReaches({ classInfo, chainOf }, new Map([['Widget', new Map([['makeSpacersOpaque', 'harness']])]]),
+                              (n) => sources[n].part, (n) => files.get(n)).map(v => `${v.cls}:${v.line}`);
+  check('(c) super into a member only the part installs',  supers.includes('Leaf:4'), true);
+  check('(c) no super, no reach',                          supers.some(s => s.startsWith('Leaf2:')), false);
+  check('(c) a definition outside the part answers it',    supers.some(s => s.startsWith('Leaf3:')), false);
+  check('(c) super.other() reaches another member',        supers.some(s => s.startsWith('Leaf4:')), false);
+  check('(c) a class guard covers it',                     supers.some(s => s.startsWith('Leaf5:')), false);
+  check('(c) a test on a member only the part has covers it', supers.some(s => s.startsWith('Leaf6:')), false);
+  check('(c) a test on a member others define does not',  supers.includes('Leaf7:4'), true);
+  check('(c) exactly those two reaches in the fixture',    supers, ['Leaf:4', 'Leaf7:4']);
+
+  console.log(ok ? '[part-edges] self-test PASS' : '[part-edges] self-test FAIL');
+  process.exit(ok ? 0 : 1);
+}
 
 let parts;
 try {
@@ -171,24 +413,74 @@ const patterns = names.map(n => ({
   inherit: new RegExp('(?:\\bextends\\s+' + n + '\\b)|(?:@augmentWith\\s+' + n + '\\b)')
 }));
 
-// strip trailing `# comment` while respecting quotes, and report whether code remains
-const { codePartOf, guardedPartsPerLine } = require('./lib/part-edge-scan');
-
 const refViolations = [];
 const inheritViolations = [];
+const memberViolations = [];
 
 // EVERY file that is present at boot is in scope, not just core's. An EAGER part is in the artifact
 // from the first frame exactly as core is, so `samples` naming a lazy `plots` class unguarded is the
 // same defect as core doing it -- and it was invisible for as long as this gate looked only at core.
 // A LAZY part is in scope too, against the parts it does NOT declare in `requires`.
 const scanned = [...shippable].filter(rel => dirToPart.get(path.posix.normalize(path.posix.dirname(rel))));
+const partOfFile = (rel) => dirToPart.get(path.posix.normalize(path.posix.dirname(rel)));
+
+// ---- installed members (see the header) ------------------------------------------------------
+// classOf -> part for EVERY shipped class, core included: an install edge crosses a part boundary
+// only when its support class and its target live in different parts.
+const ownerOfAnyClass = new Map();
+for (const rel of scanned) ownerOfAnyClass.set(path.basename(rel, '.coffee'), partOfFile(rel));
+const partOfClass = (name) => ownerOfAnyClass.get(name) || 'core';
+
+const membersSkipped = harnessPresent() ? '' :
+  'sibling Fizzygum-tests not present (its *TestSupport classes are what installs the members)';
+const installedBy = new Map();     // member name -> Set(parts installing it onto a class outside themselves)
+const installedOn = new Map();     // target class -> Map(prototype member -> installing part), for clause (c)
+let edgeCount = 0;
+if (!membersSkipped) {
+  let edges;
+  try { edges = installEdges(); } catch (e) { fail(e.message); }
+  for (const edge of edges) {
+    const part = ownerOfAnyClass.get(edge.support);
+    if (!part || part === partOfClass(edge.target)) continue;
+    edgeCount++;
+    if (!installedOn.has(edge.target)) installedOn.set(edge.target, new Map());
+    for (const m of edge.members) {
+      if (!installedBy.has(m.name)) installedBy.set(m.name, new Set());
+      installedBy.get(m.name).add(part);
+      if (!m.isStatic) installedOn.get(edge.target).set(m.name, part);
+    }
+  }
+}
+
+// A member is its part's SYMBOL only if no file outside that part can define it. The definition
+// universe is everything that ships -- every part's files, and src/boot, which is in every bundle.
+const shippedFiles = [];             // [{ part, lines }]
+if (installedBy.size) {
+  const bootFiles = [];
+  const walkBoot = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walkBoot(p);
+      else if (e.name.endsWith('.coffee')) bootFiles.push(path.relative(REPO, p));
+    }
+  };
+  walkBoot(path.join(REPO, 'src/boot'));
+  for (const rel of [...scanned, ...bootFiles]) {
+    let lines;
+    try { lines = fs.readFileSync(path.join(REPO, rel), 'utf8').split('\n'); } catch (e) { continue; }
+    shippedFiles.push({ part: partOfFile(rel) || 'core', lines });
+  }
+}
+const soleProvider = soleProviders(installedBy, shippedFiles);   // member name -> the one part that provides it
+
+const scannedFileOfClass = new Map();   // class name -> { rel, owner, guards, isSatisfied }, for clause (c)
 
 for (const rel of scanned) {
-  const owner = dirToPart.get(path.posix.normalize(path.posix.dirname(rel)));
+  const owner = partOfFile(rel);
   const abs = path.join(REPO, rel);
   let lines;
   try { lines = fs.readFileSync(abs, 'utf8').split('\n'); } catch (e) { continue; }
-  const guards = guardedPartsPerLine(lines, partClassOwner, parts);
+  const guards = guardedPartsPerLine(lines, partClassOwner, parts, soleProvider);
   const satisfied = declaredRequires(owner);
 
   // A CLASS-LEVEL DECLARATION covers the whole file. `requiredParts: ["authoring"]` on an
@@ -217,11 +509,32 @@ for (const rel of scanned) {
                            lazy: isLazy(p.owner) });
     }
   }
+
+  // the installed-member clauses (a) and (b), against the same requires/requiredParts reading
+  const isSatisfied = (part) => satisfied.has(part);
+  for (const v of memberReaches(lines, guards, soleProvider, owner, isSatisfied)) {
+    memberViolations.push({ rel, from: owner, ...v, text: lines[v.line - 1].trim() });
+  }
+  scannedFileOfClass.set(path.basename(rel, '.coffee'), { rel, owner, guards, isSatisfied, lines });
+}
+
+// clause (c) needs the class model -- whose chain a `super` walks -- which is
+// census-public-private-calls.js's, reused rather than re-derived (check-menu-actions.js does the same).
+if (installedOn.size) {
+  const { classInfo, chainOf } = require('./census-public-private-calls.js').runCensus();
+  for (const v of superReaches({ classInfo, chainOf }, installedOn, partOfClass, (n) => scannedFileOfClass.get(n))) {
+    const file = scannedFileOfClass.get(v.cls);
+    memberViolations.push({ ...v, from: file.owner, text: file.lines[v.line - 1].trim() });
+  }
 }
 
 console.log(`[part-edges] scan done — ${scanned.length} source(s) present at boot or in a part vs ` +
-  `${partClassOwner.size} part-owned class(es) in ${new Set(partClassOwner.values()).size} part(s): ` +
-  `${refViolations.length} unguarded reference(s), ${inheritViolations.length} inheritance edge(s).`);
+  `${partClassOwner.size} part-owned class(es) in ${new Set(partClassOwner.values()).size} part(s)` +
+  (membersSkipped ? `; installed members SKIPPED -- ${membersSkipped}` :
+    ` and ${installedBy.size} member(s) that ${edgeCount} install edge(s) put onto classes outside their ` +
+    `part (${soleProvider.size} that part's alone)`) +
+  `: ${refViolations.length} unguarded reference(s), ${inheritViolations.length} inheritance edge(s)` +
+  (membersSkipped ? '.' : `, ${memberViolations.length} unguarded reach(es) of an installed member.`));
 
 if (inheritViolations.length) {
   console.error('\n[part-edges] FAIL -- core INHERITS from a part. This is not guardable: you cannot');
@@ -249,6 +562,25 @@ if (refViolations.length) {
   console.error('Either way, if the reference is genuinely core-critical, the partition is wrong.');
 }
 
-if (inheritViolations.length || refViolations.length) process.exit(1);
-console.log('[part-edges] OK -- every core reference into a part is guarded.');
+if (memberViolations.length) {
+  const CLAUSE = { a: 'a reference', b: 'dispatched by name', c: 'a super into it' };
+  console.error('\n[part-edges] FAIL -- a source present at boot reaches a member only another PART installs.');
+  console.error("That part's support class copies the member onto a class at boot (an `installOnto` edge in");
+  console.error('src/boot/globalFunctions.coffee), so on an artifact that does not carry the part nothing');
+  console.error('implements it -- whatever the receiver, for (a) and (b); above the class, for (c) -- and the');
+  console.error('site throws, or a row dispatching it is dead:');
+  for (const v of memberViolations) {
+    const how = v.clause === 'c' ? `${v.cls}.${v.name} -> super` : v.clause === 'b' ? `"${v.name}"` : `.${v.name}`;
+    console.error(`  ${v.rel}:${v.line}  ${v.from} -> ${how} (installed by part '${v.part}'; (${v.clause}) ${CLAUSE[v.clause]})`);
+    console.error(`      ${v.text}`);
+  }
+  console.error('\nFIX: guard the site for that part, exactly as for one of its classes --');
+  console.error('  @theMember?()        # or `if TheSupportClass?`, or a leading `return unless x.theMember?`');
+  console.error('-- and for a `super`, end the walk in the class itself: without the part there is nothing above');
+  console.error('it to call. If the member is product, it does not belong in the part: promote it.');
+}
+
+if (inheritViolations.length || refViolations.length || memberViolations.length) process.exit(1);
+console.log(membersSkipped ? '[part-edges] OK -- every core reference into a part is guarded.' :
+  '[part-edges] OK -- every core reference into a part, to a class or to a member it installs, is guarded.');
 process.exit(0);

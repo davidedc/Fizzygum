@@ -2,7 +2,7 @@
 # lifted out of WorldWdgt so the macro machinery has a cohesive, documented home.
 # Delegation, not a mixin: the world HAS-A one, reachable as world.macroToolkit
 # (created in the WorldWdgt constructor, guarded by `if MacroToolkit?` so a
-# build that does not ship the `macros` part simply has none).
+# build that does not ship the `harness` part, which owns src/macros, simply has none).
 #
 # It hosts four layers, told apart by naming convention (see src/macros/CLAUDE.md):
 #   L1 input primitives   — syntheticEvents…_InputEvents / expoOut: push timed raw
@@ -2143,7 +2143,7 @@ class MacroToolkit
 
   # Topmost widget matching either a class-name string (compared via
   # widgetClassString) or a class object (compared via instanceof).
-  # ⚠ InspectorWdgt is the LAZY 'meta-tools' part, and this class is the EAGER 'macros' one, so the
+  # ⚠ InspectorWdgt is the LAZY 'meta-tools' part, and this class is the EAGER 'harness' one, so the
   # bare name would be an unguarded reference into something a profile may not ship and a page may
   # not yet have fetched. The bail-out is exact rather than defensive: this asks "is an inspector
   # already OPEN", and without the part no inspector can exist, so undefined is the true answer.
@@ -2178,7 +2178,7 @@ class MacroToolkit
   # A cell is recognised by what a cell answers, not by its class: its `address`, and `cellInput`,
   # the wire target a value-widget it hosts fires into — CellWdgt is the one class defining it, so
   # this finds exactly the widgets a CellWdgt type test would. Naming the class would be that type
-  # test, and also an unguarded reference from this EAGER 'macros' part into the LAZY 'spreadsheet'
+  # test, and also an unguarded reference from this EAGER 'harness' part into the LAZY 'spreadsheet'
   # one, which a profile may not ship and a page may not yet have fetched.
   spreadsheetCellAt: (sheet, address) ->
     cell = sheet.topWdgtSuchThat (w) -> (w.address is address) and w.cellInput?

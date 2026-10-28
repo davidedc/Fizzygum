@@ -1,12 +1,16 @@
 # CLAUDE.md — `src/macros/` (the "macro" SystemTest subsystem)
 
-The **framework side of the high-level "macro" SystemTests**. Two files, and the whole directory is the
-**`macros` part** (`buildSystem/parts.json`), which no production profile ships:
+The **framework side of the high-level "macro" SystemTests**. Three classes, and the whole directory
+belongs to the **`harness` part** (`buildSystem/parts.json`), which no production profile ships — nor
+`dev-notests`: the harness is the only thing that starts a macro, and the toolkit reaches back into it,
+so the two ship as one unit:
 
 - **`Macro.coffee`** — the engine (L0): parses a generator-from-a-string, rewrites verb calls into `yield`s,
   links subroutines, installs the per-cycle pump.
 - **`MacroToolkit.coffee`** — the toolkit (L1–L4): input primitives, tree locators, the reusable macro-verb
   library, and the macro-step driver/state. The world HAS-A one, as **`world.macroToolkit`**.
+- **`AimCheckInputEvent.coffee`** — the one queued event no user produces: the toolkit queues it right before
+  a press whose aim it must verify, and draining it asks the toolkit whether the press meets its widget.
 
 This file is the **router**: architecture + the rules you must get right. Two companion docs hold the detail —
 **`MACRO-PATTERNS.md`** (the per-mechanic reuse-pattern catalogue, one entry per test) and the verb
@@ -427,16 +431,17 @@ contribute that verb via the `extraSubroutineSources` merge-seam.
 
 ## Build-exclusion contract (part membership)
 
-- This directory IS the **`macros` part** (`buildSystem/parts.json`). No production profile names it, so
-  both files are absent. A new file added here is covered automatically
-  (the part owns the directory, not a file list).
+- This directory belongs to the **`harness` part** (`harness.dirs` lists `src/macros` beside the tests
+  repo's harness directories). No production profile ships the harness, so every class here is absent
+  there. A new file added here is covered automatically (the part owns the directory, not a file list).
   ⛔ It used to work the other way round: each file's first line carried
   `# this file is only needed for Macros` and `build.py` matched it with a regex. That whole-file
   marker mechanism is **retired (arc 4)** and gated at zero by
   `buildSystem/check-whole-file-markers.js` — do not re-add a marker here or invent a new one.
 - Every core call site copes with the part's absence through the class-existence guard idiom: the
   `macroToolkit: undefined` field stays `undefined` and `if MacroToolkit?` is simply false. `buildSystem/check-part-edges.js`
-  fails the build on an *unguarded* core reference to `Macro`/`MacroToolkit`, so this cannot rot.
+  fails the build on an *unguarded* core reference to `Macro`/`MacroToolkit`, and on an unguarded call of a
+  member the harness installs onto a core class (`testItems`, `getWidgetViaTextLabel`, …), so this cannot rot.
 
 ## History: the recorded→macro migration (closed)
 

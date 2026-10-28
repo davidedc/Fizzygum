@@ -127,6 +127,9 @@ SOURCES_POLICIES = ("background", "lazy", "none")
 # key off it (see the module docstring) and "which part is the test machinery" is one fact.
 HARNESS_PART = "harness"
 
+# The entry page whose whole point is that part (resolve() refuses one without the other).
+HARNESS_PAGE = "worldWithSystemTestHarness.html"
+
 # The part that CANNOT ship without the reflective layer: the in-world inspectors read the member
 # maps that only the ingest pass builds, so shipping them with sources: "none" is a broken window.
 META_TOOLS_PART = "meta-tools"
@@ -436,6 +439,14 @@ def resolve(name):
     if form == "precompiled" and "index.html" not in selectedEntryNames:
         fail("profile '%s': form \"precompiled\" needs index.html among its entries -- the "
              "pre-compile driver harvests the image by booting it" % name)
+
+    # The test-harness page exists to run the harness: it opens a bare world sized to the SystemTest
+    # screen and waits for a test. Shipped without the part, it would boot a world with no harness to
+    # run -- and that world's constructor sizes its canvas through a member only the part installs.
+    if HARNESS_PAGE in selectedEntryNames and HARNESS_PART not in selectedParts:
+        fail("profile '%s': entry %s needs the '%s' part among its parts -- the page exists to run "
+             "the test harness, and without the part it would boot a world with none"
+             % (name, HARNESS_PAGE, HARNESS_PART))
 
     return Profile(name, selectedParts, form, sources, entries)
 
