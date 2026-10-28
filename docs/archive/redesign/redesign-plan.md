@@ -940,3 +940,10 @@ Legacy icons shown on any redesigned surface are converted with the skill. Every
       filed (22 radii) — at some positions a quarter turn's segment quotient came back from atan2 as 16.000000000000004,
       which a bare ceil made 17.
       Every count now goes through `PathFlattener.segmentCount` (§9 entry 23; core test 081).
+- [x] G-A finding — `FolderIconAppearance`'s stepped slant made the art depend on where it was painted. **DONE 2026-10-28**
+      by the correctness arc's follow-ons, and not an engine tie as filed: the icon computed the slant's inset vertex (a
+      non-dyadic run / rise along a row) at its box's absolute device position, so a back buffer or a drag image rounded
+      it differently from the desktop. It computes with its box at (0, 0) and translates there; 0 suite shots moved.
+- [x] G-B finding — `LayoutSpacerWdgt`'s spacer methods called up into a sweep only the test harness defines. **DONE
+      2026-10-28**, wider than filed: five rows of the demo Test menu named harness-only methods. The menu offers them
+      only where the harness ships, and a spacer (a leaf) ends the sweep instead of calling up into it.

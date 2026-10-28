@@ -5,17 +5,18 @@ class LayoutSpacerWdgt extends LayoutChromeWdgt
     @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * DivisionStackLayoutSpec.SPREADABILITY_SPACERS
     @minimumExtent = new Point 0,0
 
+  # A spacer is a leaf, so these end the test harness's sweep of a subtree (WidgetTestSupport's
+  # Widget versions recurse into children) rather than call up into it: a build without the
+  # harness has no Widget version to call.
   makeSpacersTransparent: ->
     if !@thisSpacerIsTransparent
       @thisSpacerIsTransparent = true
       @_changed()
-    super
 
   makeSpacersOpaque: ->
     if @thisSpacerIsTransparent
       @thisSpacerIsTransparent = false
       @_changed()
-    super
 
   # MY GLYPH (LayoutChromeWdgt._glyphOnMyPlate): the double arrow along my division's axis -- across
   # (DoubleArrowIconAppearance) in a row, down (VerticalDoubleArrowIconAppearance) in a column, and

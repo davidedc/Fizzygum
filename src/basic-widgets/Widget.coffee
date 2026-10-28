@@ -4131,11 +4131,11 @@ class Widget extends TreeNode
     world.noteStorageMembershipMayHaveChanged()
     return
 
-  # Serialization — delegates to the src/serialization/ Serializer. Unlike the old dev-only
-  # prototype this replaced, serialize/deserialize SHIP in all builds (including production):
-  # they are a product feature, so they carry NO homepage-strip markers. Only the dev
-  # "Test menu" entries that drive them (serialiseToMemory etc., MenusHelper.testMenu) stay
-  # homepage-stripped. See docs/architecture/serialization-duplication-reference.md.
+  # Serialization — delegates to the src/serialization/ Serializer. serialize/deserialize SHIP in
+  # every build, production included: they are a product feature. The dev "Test menu" rows that
+  # drive them through memory (serialiseToMemory etc.) are the test harness's (WidgetTestSupport),
+  # and DemoMenus.testMenu offers them only where the harness ships. See
+  # docs/architecture/serialization-duplication-reference.md.
   serialize: (opts) ->
     Serializer.serializeWidget @, opts
 

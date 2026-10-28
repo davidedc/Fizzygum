@@ -40,17 +40,22 @@ class FolderIconAppearance extends SizeAwareIconAppearance
   # ---- detail tiers -----------------------------------------------------------
   MIN_SLANT_RUN: 2    # px: a step whose slant would travel less falls straight down
 
+  # The art is computed with my box at (0, 0) and translated to it: the slant's inset copy
+  # lies a non-dyadic fraction (run / rise) along a row, so computed at the box's absolute
+  # device position its rounding, and with it a pixel centre exactly on the slant, would depend
+  # on where the box is -- a back buffer or a drag image would disagree with the desktop.
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
     return if Math.min(wDev, hDev) < 10
-    m = @_folderMetrics x0, y0, wDev, hDev
+    ctx.translate x0, y0
+    m = @_folderMetrics wDev, hDev
     @_useInk ctx
     @_folderOutline ctx, m, 0
     @_usePaper ctx
     @_folderOutline ctx, m, m.t
 
-  # every measurement the outline is built from, in whole device px (the
-  # step's slant is the exact line between two of them)
-  _folderMetrics: (x0, y0, wDev, hDev) ->
+  # every measurement the outline is built from, in whole device px from my
+  # box's origin (the step's slant is the exact line between two of them)
+  _folderMetrics: (wDev, hDev) ->
     S = Math.min wDev, hDev
     px = (units) => Math.round S * units / @GLYPH_GRID
     # a span of S's parity, so the folder sits on the exact centre of S
@@ -60,8 +65,8 @@ class FolderIconAppearance extends SizeAwareIconAppearance
       n
     w = span @BODY_RIGHT - @BODY_LEFT
     h = span @BODY_BOTTOM - @TAB_TOP
-    left = x0 + Math.floor((wDev - S) / 2) + (S - w) / 2
-    top = y0 + Math.floor((hDev - S) / 2) + (S - h) / 2
+    left = Math.floor((wDev - S) / 2) + (S - w) / 2
+    top = Math.floor((hDev - S) / 2) + (S - h) / 2
     rise = px @BODY_TOP - @TAB_TOP
     run = px @SLANT_RUN
     run = 0 if run < @MIN_SLANT_RUN

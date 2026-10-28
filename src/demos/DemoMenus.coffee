@@ -699,12 +699,16 @@ class DemoMenus
 
   testMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    menu.addMenuItem "Serialise widget to memory", targetWidget, "serialiseToMemory"
-    menu.addMenuItem "Deserialize from memory and attach to world", targetWidget, "deserialiseFromMemoryAndAttachToWorld"
-    menu.addMenuItem "Deserialize from memory and attach to hand", targetWidget, "deserialiseFromMemoryAndAttachToHand"
+    # The serialise-to-memory and spacer-sweep verbs are the test harness's (WidgetTestSupport
+    # installs them onto Widget at boot), so a build without the harness part offers none of them.
+    if WidgetTestSupport?
+      menu.addMenuItem "Serialise widget to memory", targetWidget, "serialiseToMemory"
+      menu.addMenuItem "Deserialize from memory and attach to world", targetWidget, "deserialiseFromMemoryAndAttachToWorld"
+      menu.addMenuItem "Deserialize from memory and attach to hand", targetWidget, "deserialiseFromMemoryAndAttachToHand"
     menu.addMenuItem "Attach with horizontal layout", targetWidget, "attachWithHorizLayout", opensSubmenu: true
-    menu.addMenuItem "Make spacers transparent", targetWidget, "makeSpacersTransparent"
-    menu.addMenuItem "Make spacers opaque", targetWidget, "makeSpacersOpaque"
+    if WidgetTestSupport?
+      menu.addMenuItem "Make spacers transparent", targetWidget, "makeSpacersTransparent"
+      menu.addMenuItem "Make spacers opaque", targetWidget, "makeSpacersOpaque"
     menu.addMenuItem "Border layout scaffold", world.widgetFactory, "createBorderLayoutScaffold"
     menu.addMenuItem "StringWdgt without background", demoMenus, "createNewStringWdgtWithoutBackground"
     menu.addMenuItem "StringWdgt with background", demoMenus, "createNewStringWdgtWithBackground"

@@ -560,3 +560,48 @@ The decision records are SWCanvas `DIRECT-RENDERING-SUMMARY.MD` §9 entries 19�
 - Decided, not bugs: an image drawn piecewise equals the whole up to 1 level of float rounding at 8-bit ties;
   `isPointInPath` counts edge points as inside (the spec); unknown fill-rule strings stay lenient (nonzero); a draw that is
   only a fractional TRANSLATION samples nearest-neighbour (no resampling); opaque `fillStrokeRoundRect` +2–5% (owner-accepted).
+
+### SWCanvas correctness arc, follow-ons 2026-10-28 (no plan doc)
+Four items the owner picked after the arc's commit: two SWCanvas fixes stacked on `85a18e8` (same branch, SWCanvas
+`ccfd6ab`, one more pin bump), two Fizzygum-side defects, and the Fizzygum half of the tie item (the folder icon).
+A whole-suite twin predicted the pin bump's footprint before anything was rebuilt: one shot, at dpr 2 on both pointers.
+- [x] **`scripts/recapture.js` contradicted itself and exited 0** (Fizzygum-tests). **DONE 2026-10-28**: a name that is
+      not a test is refused (exit 2) before anything is cleaned or run, and a capture that failed twice now fails the
+      verdict (`❌ RECAPTURE INCOMPLETE`, exit 1, listed under "FAILED TO CAPTURE") whatever the suite says. The suite
+      alone could not see one for a test it does not run at that density or pointer kind (an `SWCanvasBrokenTests`
+      entry, a pointer filter), which also answers the item's open question: a REAL test could reach the same false
+      green that way. Proven with a stubbed run (captures failing, suite green → INCOMPLETE, exit 1; captures passing →
+      COMPLETE, exit 0).
+- [x] **The demo Test menu dispatched harness-only verbs on a build without the harness** (G-B finding, wider than
+      filed). **DONE 2026-10-28**: not only the two spacer rows — five of `DemoMenus.testMenu`'s rows ("Serialise widget
+      to memory", both "Deserialize from memory…", "Make spacers transparent/opaque") named methods only
+      `WidgetTestSupport` installs, so on `--profile dev-notests` all five resolved to nothing, and
+      `LayoutSpacerWdgt`'s two methods threw on their bare `super`. The menu offers those rows only `if
+      WidgetTestSupport?`, and a spacer (a leaf: it takes no drops and builds no children) no longer calls up into the
+      harness's subtree sweep. Measured with an in-page probe on both trees: dev-notests 14 rows / 5 unresolved / both
+      spacer methods throwing → 9 rows / 0 / both working; the harness page keeps all 14 rows, all resolving. ⚠
+      `check-menu-actions.js` and `check-unresolved-sends.js` resolve against `src` AND the harness source together, so
+      a SHIPPING caller of a member only the harness installs is invisible to them; this was found by reading, and a
+      `dev-notests` boot is the only place it shows (filed in BACKLOG).
+- [x] **A stroke's pixel at an exact tie depended on where it was drawn** (the "anchor" item, its STROKE half). **DONE
+      2026-10-28**: `StrokeGenerator` strokes a path relative to the floor of its first point and `PolygonFiller` fills
+      the parts in their device frame; `strokeLine` and `isPointInStroke` take the same frame (SWCanvas §9 entry 32,
+      core test 100). Position-dependent tie pixels went to 0 for every join and cap kind at scale 1 and 2 (from ~2400
+      per join kind, 1887–1947 butt caps, 570–648 square, 330 round), the clock's butt hands stopped depending on
+      position, and 5 SWCanvas PNGs moved (118 px, every one within 1e-9 px of an edge). FILLS were measured and kept
+      on absolute arithmetic: a frame there made `FolderIconAppearance` depend on position on the desktop, because the
+      icon computed its slant at the device position — the fill half stays open in BACKLOG. Fizzygum: one shot, the
+      Dots wallpaper's tile (a 45° butt stroke whose ends pass exactly through pixel centres) at dpr 2, mouse and finger:
+      2 tile pixels flip; neither tile matches exact geometry (the corners are irrational), and the new one is the same
+      wherever it is drawn.
+- [x] **Round joins never emitted the inner triangle.** **DONE 2026-10-28**: a round join adds it under the miter and
+      bevel rule (`_innerTriangleUncovered`), so a thick stroke on a tight curve is the same on its inner side whatever
+      the join (missing inner px vs the polyline sweep, round: arc 6249 → 2566, ellipse 3716 → 2237, cubic 4051 → 268,
+      arcTo 2328 → 8, each now equal to miter). SWCanvas §9 entry 33, core test 101; 0 SWCanvas PNGs, 0 Fizzygum shots.
+- [x] **`FolderIconAppearance`'s art depended on where it was painted** (G-A finding). **DONE 2026-10-28**, and not an
+      engine tie as filed: the icon computed its slant's inset vertex at its box's absolute device position, a
+      non-dyadic run/rise (5/7) along a row, so the INPUT already differed by position — desktop and translated paints
+      re-round it at that same magnitude and agreed with themselves, but a back buffer or a drag image (translated by
+      −x0, −y0) did not (22 sizes at dpr 1, 12 at dpr 2; S 80 at dpr 2 is the desktop glyph). It now computes with its
+      box at (0, 0) and translates there. Replica on the new engine: 0 position-dependent pixels in all three paints at
+      dpr 1 and 2, and the three agree; desktop paints change 0 px. Whole-suite twin: 0 shots move.
