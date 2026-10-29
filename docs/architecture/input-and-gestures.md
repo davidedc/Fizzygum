@@ -127,9 +127,11 @@ exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
   a finger lights nothing as it arrives: were it lit on arrival and left at rest by its press's
   ending, the look under a finger would depend on whether a burst of its moves got ahead of content
   its drag-scroll had not moved yet and came back over it at the next re-sync
-  (`Fizzygum-tests/DETERMINISM.md` §3n). So
-  `HighlightableMixin` ends HIGHLIGHTED under a resting mouse and NORMAL otherwise, on both
-  endings. A list row's look of being its list's SELECTION is no state it keeps, so neither ending
+  (`Fizzygum-tests/DETERMINISM.md` §3n). That holds while a finger CARRIES something too: what it
+  carries a payload over shows no hover look. What a drag shows is the drop's own feedback — the
+  target's outline, a dock band, a window's charging ring and armed label
+  (`updateDragEmbedStateMachine`) — and every pointer gets that. So `HighlightableMixin` ends
+  HIGHLIGHTED under a resting mouse and NORMAL otherwise, on both endings. A list row's look of being its list's SELECTION is no state it keeps, so neither ending
   has a selection to restore: the row reads it from the list's model as it paints
   (`MenuItemWdgt._shownState` → `CommandPanelWdgt.showsAsItsSelection`, the list's `selected`), a
   live press on one of the list's rows taking it off the others while it lasts — so either ending
