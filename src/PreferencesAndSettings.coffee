@@ -61,7 +61,6 @@ class PreferencesAndSettings
 
   useSliderForInput: undefined
   useVirtualKeyboard: undefined
-  rasterizeSVGs: undefined
   isFlat: undefined
   grabDragThreshold: 7
 
@@ -110,7 +109,6 @@ class PreferencesAndSettings
 
     @useSliderForInput = false
     @useVirtualKeyboard = true
-    @rasterizeSVGs = false
     @isFlat = false
 
   # answer the height of the smallest font renderable in pixels

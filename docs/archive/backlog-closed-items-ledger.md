@@ -630,3 +630,66 @@ test of the round-join fix.
       (`tight-curve-strokes-join-inner-side`) strokes an arc, an ellipse, cubic and quadratic hairpins and an arcTo
       corner 30 px wide with round, miter and bevel joins side by side. On the engine before the fix its PNG differs in
       the round column only (349 px, all holes); Chromium and WebKit draw it byte-identical to Node.
+
+### Tooling arc 2026-10-29 — gates you can trust, failures you can read (no plan doc)
+Owner-picked from a BACKLOG triage after the SWCanvas correctness arc's push: the bounded tooling items that needed no
+decision, each re-verified open on the day; then the two load-only failures of the previous closing gauntlet,
+root-caused (the product half fixed with an owner-approved 12-reference recapture); then four small items the owner
+added.
+- [x] **`what-pins-core.js` read `requires` without the eager-owner discount, and its `--selftest` failed at HEAD.**
+      **DONE 2026-10-29**: `isLazyPart` and `declaredRequires` live in `lib/part-edge-scan.js`, and both
+      `check-part-edges.js` and the analyser read them. The real report changes in exactly the predicted place: the
+      `authoring+dev-tools*+fizzytiles*+video-player*` group now needs EAGER `dev-tools` to guard as well. Self-test case
+      (f) states its real reason (an eager door's direct `requires` on a lazy home) with a lazy-door control, and a
+      planted lazy chain (g) keeps the one-level rule tested; each fails alone under its own plant (the raw array read,
+      the closure).
+- [x] **The boot smoke never booted the harness page.** **DONE 2026-10-29**: `smoke-boot-headless.js` boots
+      `worldWithSystemTestHarness.html` too and asserts the harness is there (the world's automator, a non-empty tests
+      manifest). `buildProfile.py --shell` emits `PROFILE_SHIPS_HARNESS_ENTRY`, from which `build_and_smoke.sh` passes
+      `--no-harness-page` for `dev-notests`; a page the profile promises and the tree lacks exits 2 with that flag named.
+      Proven on a scratch copy of the tree: a throw planted in a harness-only member on the world's constructor path
+      fails only the harness leg (both product pages pass — before, the smoke printed BOOT OK); an empty manifest fails
+      the harness assertion with the boot clean.
+- [x] **The `catchesPointerAt` allowlist note** — already done 2026-10-25 (the save/restore-fidelity arc removed the
+      three entries `check-call-separation.js`'s NOTE named); no build since prints it. The BACKLOG line was stale.
+- [x] **The menu sweep printed nothing until it ended** (the G-C follow-up's action; the hang itself stays open).
+      **DONE 2026-10-29**: stages and every root are stamped on stderr as reached; the root marks are console messages
+      from inside the one synchronous sweep, which reach Node while it runs (measured). A hang planted in one root and
+      killed by an alarm (rc 142, as fg's) ends its log on that root. The sweep's numbers are unchanged (3574 items + 53
+      prompt OKs across 469 menus).
+- [x] **The gauntlet's parallel legs kept no failure pictures.** **DONE 2026-10-29**: with
+      `FIZZYGUM_FAILURE_IMAGES_DIR` set, `run-all-headless.js` writes each failure image a shard catches within a poll
+      of it, named as the harness's zip names it; `fg` sets the directory per leg and moves a failed wave's set to
+      `/tmp/fg-<leg>.parallel-fail.images` before the serial retry. Proven with a prelude poisoning the loaded
+      reference hashes on 3 tests in one shard: 8 written + 1 counted over the page budget, each PNG re-hashing to the
+      dataHash in its name (and to the committed reference's); `fg`'s retry function, driven against stubs, moves and
+      names the set.
+- [x] **The two load-only failures of the follow-ons' closing gauntlet** — both ROOT-CAUSED 2026-10-29, one a product
+      determinism defect, one a test cadence defect (`Fizzygum-tests/DETERMINISM.md` §3n, §3m).
+      `macroEveryPressIsToldItsEnding` (c) "expected NORMAL found HIGHLIGHTED": reproduced exactly with the virtual clock
+      (fails at P = 230, 250, 400 ms a cycle; passes at ≤ 220 and 300). A finger got the HOVER look on arrival while its
+      press endings follow `restsOn` (a finger rests nowhere), so a burst of moves that got ahead of the drag-scroll
+      and came back at the re-sync left the row lit. Fixed in the product: `ActivePointerWdgt.pointerCanRest` gates
+      every hover look (`HighlightableMixin`, `LabelButtonWdgt`, `MenuItemWdgt` incl. a list row's hover plate,
+      `SliderButtonWdgt` on enter and hover moves). Blast radius measured with an in-page twin first, then reproduced
+      hash-exact by the build: 12 references, owner-approved recapture — the auto-scroll test's images 2–5 at both
+      finger densities (the hover plate of the row under the carrying finger) and `macroMixinEditDonorAndOverride`
+      image_1 on all four axes (it displays the edited `hoverEntered` source). `macroListWdgtAutoScrollsNearDraggedEdge`
+      image_5: the edge auto-scroll's contract is SATURATION, but the test held a fixed 2.5 s while the scroll moves a
+      fixed step per FRAME — at ~128 ms a cycle every hold stopped short. Each hold now waits for its clamp (bounded)
+      and asserts it; passes at 155 ms a cycle with every reference unchanged.
+- [x] **`world.hand.grabOrigin` kept the window the last grab came from until the next grab.** **DONE 2026-10-29**:
+      `drop` clears it as soon as the sticky re-embed has read it, before any step that could begin a grab of its own;
+      `macroDragEmbedRepositionNestedWindowStaysWithoutDwell` asserts the hand keeps no grab origin after its drop.
+- [x] **Two misplaced or dead fields.** **DONE 2026-10-29**: `PaintToolbarWdgt.queue` moved to `CanvasGlassTopWdgt`,
+      where the toothpaste tool's injected handlers (`@` bound to the paint surface) keep it; the widget census, which
+      had read the tool's SOURCE STRING as the toolbar's code, reads a class's code without its block strings.
+      `PreferencesAndSettings.rasterizeSVGs` (no reader) deleted.
+- [x] **An Object Inspector in the serialization rig.** **DONE 2026-10-29**: `world.inspector.survivesSnapshot` — a desktop
+      holding an inspector on a rectangle round-trips with the same pixels, one inspector, its subject the RESTORED
+      rectangle on the desktop, its member list present (SWCanvas world leg).
+- [x] **Stale step comments in the macros** (the redesign's T follow-up). **DONE 2026-10-29**: the 6x14 grid → 7x13, the
+      `CellSocketWdgt` → `CellWdgt`, and the 960x440 harness claims (now 1920x880) in the spreadsheet, stretch and
+      menu-pinning tests — comments and scenarios corrected, provenance kept as the history it is; visualisation pages
+      regenerated. `macroSpreadsheetSelection` / `…ScrollKeyboardFollow` keep their 6x14 → 7x13 notes: those record
+      the move as the corroboration their counts rely on.

@@ -37,9 +37,12 @@ HighlightableMixin =
 
         @_changed()
       
+      # hovered as the pointer arrives — unless it is a finger, which rests nowhere and so is shown
+      # no hover look (ActivePointerWdgt.pointerCanRest); the tooltip's countdown starts either way
       hoverEntered: ->
-        @state = @STATE_HIGHLIGHTED
-        @_updateColor()
+        if world.hand.pointerCanRest()
+          @state = @STATE_HIGHLIGHTED
+          @_updateColor()
         @startCountdownForBubbleHelp? @toolTipMessage  if @toolTipMessage
 
       hoverExited: ->

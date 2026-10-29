@@ -184,9 +184,12 @@ class LabelButtonWdgt extends ButtonWdgt
     # ActivePointerWdgt); reused to reset the copy's hover state — renaming it is not an option.
     @hoverExited()
 
+  # hovered as the pointer arrives — not under a finger, which rests nowhere
+  # (ActivePointerWdgt.pointerCanRest); the tooltip's countdown starts either way
   hoverEntered: ->
-    @state = @STATE_HIGHLIGHTED
-    @_changed()
+    if world.hand.pointerCanRest()
+      @state = @STATE_HIGHLIGHTED
+      @_changed()
     @startCountdownForBubbleHelp @toolTipMessage  if @toolTipMessage
 
   hoverExited: ->

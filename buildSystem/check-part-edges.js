@@ -146,7 +146,8 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 // strip trailing `# comment` while respecting quotes, and report whether code remains
-const { codePartOf, stringLiteralsOf, guardedPartsPerLine } = require('./lib/part-edge-scan');
+const { codePartOf, stringLiteralsOf, guardedPartsPerLine, isLazyPart,
+        declaredRequires: declaredRequiresOf } = require('./lib/part-edge-scan');
 const { installEdges, harnessPresent } = require('./lib/install-edges');
 const { harvestDefs } = require('./lib/name-definitions');
 
@@ -367,26 +368,13 @@ for (const [partName, part] of Object.entries(parts)) {
   for (const d of part.dirs || []) dirToPart.set(path.posix.normalize(d), partName);
 }
 
-const isLazy = (partName) => partName !== 'core' && !!parts[partName] && parts[partName].eager === false;
-// What a part may name without guarding: itself, plus the `requires` entries that actually cover
-// the reference. ⚠⚠ `requires` MEANS TWO DIFFERENT THINGS AND ONLY ONE OF THEM IS ENOUGH HERE:
-// it always promises the other part SHIPS (buildProfile.py refuses a profile missing it), but it
-// promises the classes have ARRIVED only when the OWNER is lazy -- there PartsRegistry brings the
-// requirements fully in before ingesting this part. An EAGER owner is running from the first frame,
-// so a LAZY requirement may not be here yet and that site still needs a guard or an await where it
-// stands. An eager->EAGER requirement is fine: both are in the artifact from frame one, and
-// shipping-together is the whole of what could go wrong.
-//
-// ⚠ This asymmetry is the one the header describes, and until 2026-08-02 the code did NOT implement
-// it -- every owner got its full `requires` list, and the check below tests this set BEFORE the
-// inheritance check, so an eager part declaring `requires` on a lazy one could both reference and
-// `extends` its classes with the build staying green. Proven by planting each shape in 'dev-tools'
-// against the lazy 'app-kit': both reported 0 violations. Do not "simplify" this back.
-const declaredRequires = (partName) => {
-  const required = ((parts[partName] || {}).requires) || [];
-  const ownerIsLazy = isLazy(partName);
-  return new Set([partName, ...required.filter(r => ownerIsLazy || !isLazy(r))]);
-};
+const isLazy = (partName) => isLazyPart(parts, partName);
+// What a part may name without guarding: itself plus the `requires` entries that cover the
+// reference -- the eager-owner asymmetry the header's rule 8 describes, defined once in
+// lib/part-edge-scan.js so what-pins-core.js asks the same question. ⚠ The check below tests this
+// set BEFORE the inheritance check, so an over-generous set lets an eager part both reference and
+// `extends` a lazy part's classes with the build green.
+const declaredRequires = (partName) => declaredRequiresOf(parts, partName);
 
 const coreFiles = [];
 const partClassOwner = new Map();   // ClassName -> partName (non-core parts only)

@@ -261,6 +261,12 @@ class Profile:
         return any(useSWCanvas for (_, useSWCanvas, _eager) in self.entries)
 
     @property
+    def shipsHarnessEntry(self):
+        """Does the test-harness entry page ship? Not the same fact as shipsTests: a profile may carry
+        the harness part without the page, never the page without the part (resolve() refuses it)."""
+        return any(entryName == HARNESS_PAGE for (entryName, _sw, _eager) in self.entries)
+
+    @property
     def isPreCompiled(self):
         return self.form == "precompiled"
 
@@ -483,6 +489,7 @@ def emitShellAssignments(argv):
     print("PROFILE_SHIPS_SOURCE_TEXT=%s" % ("true" if profile.shipsSourceText else "false"))
     print("PROFILE_SHIPS_TESTS=%s" % ("true" if profile.shipsTests else "false"))
     print("PROFILE_SHIPS_SWCANVAS_ENTRY=%s" % ("true" if profile.shipsSWCanvasEntry else "false"))
+    print("PROFILE_SHIPS_HARNESS_ENTRY=%s" % ("true" if profile.shipsHarnessEntry else "false"))
     print("PROFILE_BOOT_PRELUDE=(%s)" % " ".join(shlex.quote(piece) for piece in prelude))
 
 

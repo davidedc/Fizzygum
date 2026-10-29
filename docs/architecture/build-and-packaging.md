@@ -378,7 +378,7 @@ facts above, never from the identity of a particular flavour. Nothing in this co
 | running the pre-compile driver, then minifying in place | `form == "precompiled"` |
 | whether `js/coffeescript-sources/` exists at all | `sources != "none"` |
 | when the reflective layer loads, if ever | `sources` → `BUILDFLAG_SOURCES` in the bundle |
-| which smoke a built tree gets | `form` + `sources` (`build_and_smoke.sh` asks the profile) |
+| which smoke a built tree gets | `form` + `sources` + `entries` (`build_and_smoke.sh` asks the profile: the production assertions, the SWCanvas page, the harness page) |
 | whether the suite runner may run at all | does the profile ship tests (`build_and_test.sh`) |
 
 ⚠ **`$BUILD_PATH` is shared across flavours**, and `font-assets/` survives the cleanup section. So the font-asset
@@ -493,7 +493,9 @@ an EAGER namer reads back "must not move" even when the whole chain is on-demand
 in the production image until it was spotted BY EYE. `buildSystem/what-pins-core.js` (`fg whatpins`)
 asks the transitive form: walk out from `src/boot/*` following every reference not behind a door, and
 whatever the walk never arrives at is movable, transitively, in one pass instead of over four
-move-rebuild-rerun rounds. It also ranks the **SOLE ROUTES** — where every boot path to a group of
+move-rebuild-rerun rounds. The cost it quotes for a move is the gate's own: it reads `requires` through
+the same `declaredRequires` (`buildSystem/lib/part-edge-scan.js`), eager-owner discount included, so it
+never calls free a move `check-part-edges.js` would fail. It also ranks the **SOLE ROUTES** — where every boot path to a group of
 classes goes through one class, so a door in front of that class takes the whole group with it. ⚠ That
 second list is QUESTIONS, not findings: its top entries (`WorldWdgt`, `Widget`) are structural, which
 is what its `refs` column is for. And it is honest about its own ceiling — no static tool over the old

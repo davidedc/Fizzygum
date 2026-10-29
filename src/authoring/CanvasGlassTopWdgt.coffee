@@ -3,6 +3,13 @@ class CanvasGlassTopWdgt extends CanvasWdgt
   underlyingCanvasWdgt: undefined
   defaultRejectDrags: true
 
+  # the TOOTHPASTE tool's rolling buffer of recent pointer positions: the tool's handlers
+  # (PaintToolbarWdgt.TOOTHPASTE_TOOL_SOURCE) are injected onto me and run with @ bound to me, so
+  # the buffer is mine. Built lazily on first use and drained as the stroke is laid down. Declared
+  # undefined, never [] — the lazy build keys off `if !@queue?`, and a prototype array would be
+  # shared by every instance.
+  queue: undefined
+
   # what a person calls me: the surface a drawing is painted on
   colloquialName: -> "paint surface"
 

@@ -29,11 +29,6 @@ class PaintToolbarWdgt extends ToolbarWdgt
   toothpasteTool: undefined
   eraserTool: undefined
 
-  # rolling buffer of recent pointer positions, built lazily on first use and drained
-  # as the stroke is laid down. Declared undefined, never [] — the lazy build keys off
-  # `if !@queue?`, and a prototype array would be shared by every instance.
-  queue: undefined
-
   # whether MY frame is in edit mode, i.e. whether the person's tool reaches my painting surface
   # at all. Born true: a drawing is born editable, its payload built with the pencil source
   # already injected -- the same statement the User makes by being born holding a pencil.

@@ -21,6 +21,8 @@
  *     in exactly the shapes an `X?` takes. A part is all-or-nothing, so a member that only that part
  *     provides being here proves the whole part is here, just as one of its classes would. Omitting
  *     the argument leaves every other caller's answer exactly what it was.
+ * `declaredRequires(parts, partName)` is the parts.json half of the same question: which other parts
+ * a part's `requires` lets it name unguarded (one level, and only what has ARRIVED when it runs).
  * `codePartOf(line)` strips comments and string literals: prose may name any class, and a class
  * NAME as data is the sanctioned indirection for a lazy part. `stringLiteralsOf(line)` is its
  * complement — the contents of the line's string literals, comments excluded — for a scan that has to
@@ -162,4 +164,26 @@ function guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember) {
   return perLine;
 }
 
-module.exports = { codePartOf, stringLiteralsOf, indentOf, guardedPartsPerLine };
+const isLazyPart = (parts, partName) => partName !== 'core' && !!parts[partName] && parts[partName].eager === false;
+
+// What a part may name without guarding: itself, plus the `requires` entries that actually cover
+// the reference. ⚠⚠ `requires` MEANS TWO DIFFERENT THINGS AND ONLY ONE OF THEM IS ENOUGH HERE:
+// it always promises the other part SHIPS (buildProfile.py refuses a profile missing it), but it
+// promises the classes have ARRIVED only when the OWNER is lazy -- there PartsRegistry brings the
+// requirements fully in before ingesting this part. An EAGER owner is running from the first frame,
+// so a LAZY requirement may not be here yet and that site still needs a guard or an await where it
+// stands. An eager->EAGER requirement is fine: both are in the artifact from frame one, and
+// shipping-together is the whole of what could go wrong.
+// ⚠ ONE LEVEL, NOT THE CLOSURE: `dev-tools` requires `demos` requires `authoring` would not let a
+// lazy owner reach `authoring` through `demos`, because the gate reads the array, not its fixpoint.
+// ⚠ Do not "simplify" the eager discount away: without it an eager part declaring `requires` on a
+// lazy one could both reference and `extends` its classes with the build green (planted against
+// the lazy 'app-kit' from 'dev-tools': 0 violations), and an analyser asking this question
+// (what-pins-core.js) called a move free that the gate fails.
+function declaredRequires(parts, partName) {
+  const required = ((parts[partName] || {}).requires) || [];
+  const ownerIsLazy = isLazyPart(parts, partName);
+  return new Set([partName, ...required.filter(r => ownerIsLazy || !isLazyPart(parts, r))]);
+}
+
+module.exports = { codePartOf, stringLiteralsOf, indentOf, guardedPartsPerLine, isLazyPart, declaredRequires };

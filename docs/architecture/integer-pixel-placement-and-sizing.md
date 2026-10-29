@@ -77,7 +77,7 @@ Empirically confirmed: with the guard hard-gated, the full suite reports **zero*
 cross-engine run — so every widget's applied `@bounds` is integer. (There is no native suite leg:
 the backend is baked into the entry page, and the suite drives `worldWithSystemTestHarness.html`,
 which IS the SWCanvas page. The native page is covered instead by the boot-smoke gate, which boots
-both shipped interactive entry pages and fails on any console error — this guard's included.)
+every shipped entry page and fails on any console error — this guard's included.)
 The earlier evidence was narrower: instrumenting `AnalogClockWdgt`'s paint logged
 `@position()` always integer with an identity CTM — true, but it only exercised the desired funnel,
 not the arrange-apply path, which is how the ~2018→2025 fractional-placement gap went unnoticed.

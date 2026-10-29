@@ -213,20 +213,21 @@ class SliderButtonWdgt extends CircleBoxWdgt
 
   # A pointer merely resting on me highlights me, so I take the HOVER move channel and no
   # other: a move under a live press is that press's business (a drag of me arrives as
-  # nonFloatDragging), never a reason to light up.
-  #   The two guards are about a stroke whose effects OUTLIVE the moves that started it: a
+  # nonFloatDragging), never a reason to light up. A finger rests nowhere
+  # (ActivePointerWdgt.pointerCanRest), so it never lights me this way.
+  #   The other two guards are about a stroke whose effects OUTLIVE the moves that started it: a
   # press state or a hand carrying something is still standing when the per-cycle hover
   # re-sync comes round, and neither may re-highlight me.
   hoverMoved: ->
-    if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething()
+    if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething() or not world.hand.pointerCanRest()
       return
     @_setHighlightedColor()
-  
-  # The same two guards, because an ENTER can come after the press too: a finger's press on a thin
+
+  # The same guards, because an ENTER can come after the press too: a finger's press on a thin
   # scroll indicator meets a thumb its arrival has only just fattened, so the thumb joins the
   # pointer's over-list at the next hover re-sync, under a press I am already showing.
   hoverEntered: ->
-    if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething()
+    if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething() or not world.hand.pointerCanRest()
       return
     @_setHighlightedColor()
 

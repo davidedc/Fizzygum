@@ -3,7 +3,7 @@
 #
 # Runs the FULL build (which now includes the build-time CoffeeScript syntax gate,
 # see buildSystem/check-coffee-syntax.js) and, if that succeeds, headless-boots the
-# produced world (native + SWCanvas) and fails on any boot/console error
+# produced world (every entry page it ships) and fails on any boot/console error
 # (see ../Fizzygum-tests/scripts/smoke-boot-headless.js). One command, on demand —
 # no cloud CI. build_it_please.sh alone stays the fast inner-loop build; this is the
 # pre-commit-quality check.
@@ -25,6 +25,8 @@ cd "$(dirname "$0")" || exit 2
 #   form precompiled  -> the production assertions (booted from the pre-compiled image, and no
 #                        SWCanvas-only payload left in the tree). Implies the native leg only.
 #   no SWCanvas entry -> native leg only: there is no index-sw.html to boot.
+#   no harness entry  -> no harness-page leg: the profile ships SWCanvas pages without the test
+#                        harness (dev-notests), so there is no worldWithSystemTestHarness.html.
 # ⚠ substitute, check, THEN eval — see the same note in build_it_please.sh.
 PROFILE_VARS=$(python3 -B ./buildSystem/buildProfile.py --shell "$@")
 if [ "$?" != "0" ]; then
@@ -43,6 +45,9 @@ elif [ "$PROFILE_FORM" = "precompiled" ]; then
 elif ! $PROFILE_SHIPS_SWCANVAS_ENTRY ; then
   echo "(profile $PROFILE_NAME ships no SWCanvas entry page -> boot smoke runs native-only)"
   SMOKE_ARGS="--native-only"
+elif ! $PROFILE_SHIPS_HARNESS_ENTRY ; then
+  echo "(profile $PROFILE_NAME ships no test-harness page -> boot smoke skips the harness-page leg)"
+  SMOKE_ARGS="--no-harness-page"
 fi
 
 echo "==> building (with CoffeeScript syntax gate) ..."

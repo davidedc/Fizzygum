@@ -61,7 +61,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { codePartOf, guardedPartsPerLine } = require('./lib/part-edge-scan');
+const { codePartOf, guardedPartsPerLine, isLazyPart, declaredRequires } = require('./lib/part-edge-scan');
 
 const REPO = path.resolve(__dirname, '..');
 const BOOT_DIRS = ['src/boot', 'src/boot/extensions'];
@@ -89,7 +89,7 @@ try {
 
 const partNames = Object.keys(parts).filter(n => !n.startsWith('//'));
 const shipped = profile.parts === 'all' ? new Set(partNames) : new Set(profile.parts);
-const isLazy = (p) => p !== 'core' && !!parts[p] && parts[p].eager === false;
+const isLazy = (p) => isLazyPart(parts, p);
 // The eager image is core plus every EAGER part this profile ships. On `homepage` every non-core
 // part is lazy, so the image is exactly core -- which is why homepage and lean emit a byte-identical
 // js/pre-compiled.js, and why a packaging change can only be measured by fingerprinting ONE profile.
@@ -113,13 +113,15 @@ for (const rel of shippable) {
 }
 if (!ownerOfClass.size) die('no part-owned classes found — is parts.json only core?');
 
-// ⚠⚠ ONE LEVEL, NOT THE CLOSURE. `requires` means three different things depending on who is asking
-// — non-transitive for check-part-edges (its `declaredRequires` is a direct read of the array),
-// transitive for PartsRegistry's load ORDERING, and a fixpoint for buildProfile's INCLUSION check.
-// The binding constraint on a move is the strictest of the three, which is the gate: `dev-tools`
-// requires `demos` requires `authoring`, and that does NOT let dev-tools name an authoring class.
-// Using the closure here quietly reported a 1.8 KB move as free when it is not.
-const directRequires = (p) => new Set([p, ...(((parts[p] || {}).requires) || [])]);
+// ⚠⚠ THE GATE'S OWN RULE, NOT A READING OF THE ARRAY. `requires` means three different things
+// depending on who is asking — non-transitive for check-part-edges, transitive for PartsRegistry's
+// load ORDERING, and a fixpoint for buildProfile's INCLUSION check — and the binding constraint on a
+// move is the strictest of the three, which is the gate. Using the closure here once reported a
+// 1.8 KB move as free when it is not. The gate is stricter still for an EAGER owner: its `requires`
+// on a LAZY part promises only that the part ships, so `dev-tools` (eager) requiring `authoring`
+// (lazy) does not let it name an authoring class unguarded. Reading the array granted exactly that,
+// and the shared definition is what keeps the two answers equal.
+const directRequires = (p) => declaredRequires(parts, p);
 
 const declaredPartsIn = (text) => {
   const m = /^\s*requiredParts\s*:\s*\[([^\]]*)\]/m.exec(text);
@@ -354,10 +356,11 @@ function dominatorSubtrees(g) {
 // would still be legal after the move — which check-part-edges grants three different ways: the
 // site is intra-part, its part `requires` the home, or its class declares the home in
 // `requiredParts`. All three are folded into each site's `satisfies` set at scan time.
-// ⚠⚠ What is NOT folded in: `requires` never excuses an EAGER door. An eager part is in the
-// artifact from the first frame, so the declaration can only promise the home SHIPS, never that it
-// has ARRIVED — an eager->lazy reference still needs a guard where it stands. Adding a `requires`
-// is not free either: it ORDERS a lazy load, so the home is fetched in full before the door.
+// ⚠⚠ `requires` never excuses an EAGER door naming a LAZY home (`directRequires` drops that entry):
+// an eager part is in the artifact from the first frame, so the declaration can only promise the
+// home SHIPS, never that it has ARRIVED — an eager->lazy reference still needs a guard where it
+// stands. Adding a `requires` is not free either: it ORDERS a lazy load, so the home is fetched in
+// full before the door.
 function homeFor(classes, doorSet, doorSites) {
   const d = [...doorSet];
   // A home this profile does not ship DELETES the class from the artifact rather than deferring it.
@@ -487,17 +490,32 @@ if (SELFTEST) {
   ok(bare.part === 'authoring' && bare.needsRequires.join() === 'example-slide',
     '...and the same door WITHOUT that declaration does need one (the control)');
 
-  // (f) `requires` is ONE LEVEL for the gate. dev-tools requires demos requires authoring, and that
-  //     chain must NOT read as permission for dev-tools to name an authoring class.
-  const chained = homeOf(analyse({
+  // (f) An EAGER door's `requires` on a LAZY home does not satisfy the gate: dev-tools (eager)
+  //     requires authoring (lazy) directly, but runs from the first frame, so its site still needs
+  //     a guard. The control is a LAZY door with the same direct `requires` (demos), which needs
+  //     nothing — so the case fails for the eager-owner discount and nothing else.
+  const namedFrom = (part, rel) => homeOf(analyse({
     files: orphan,
     outsideFiles: {
       'src/authoring/PlantAuthoringWdgt.coffee': { part: 'authoring', text: '  new PlantedOrphanWdgt\n' },
-      'src/dev-tools/PlantDevWdgt.coffee': { part: 'dev-tools', text: '  new PlantedOrphanWdgt\n' },
+      [rel]: { part, text: '  new PlantedOrphanWdgt\n' },
     },
   }));
-  ok(chained.needsGuard.join() === 'dev-tools',
-    'a transitive requires chain (dev-tools -> demos -> authoring) does NOT satisfy the gate');
+  const eagerDoor = namedFrom('dev-tools', 'src/dev-tools/PlantDevWdgt.coffee');
+  const lazyDoor = namedFrom('demos', 'src/demos/PlantDemoWdgt.coffee');
+  ok(eagerDoor.part === 'authoring' && eagerDoor.needsGuard.join() === 'dev-tools',
+    "an EAGER door's direct requires on a LAZY home (dev-tools -> authoring) does NOT satisfy the gate");
+  ok(lazyDoor.part === 'authoring' && lazyDoor.needsGuard.length === 0 && lazyDoor.needsRequires.length === 0,
+    "...and a LAZY door's direct requires on it (demos -> authoring) does (the control)");
+
+  // (g) `requires` is ONE LEVEL for the gate. No real lazy chain reaches a part its owner does not
+  //     also require directly, so one is planted: a lazy part requiring only demos, which requires
+  //     authoring, must NOT read as permission to name an authoring class.
+  parts['plant-chain'] = { eager: false, requires: ['demos'], dirs: [] };
+  const chained = namedFrom('plant-chain', 'src/plant-chain/PlantChainWdgt.coffee');
+  delete parts['plant-chain'];
+  ok(chained.part === 'authoring' && chained.needsRequires.join() === 'plant-chain',
+    'a transitive requires chain (lazy plant -> demos -> authoring) does NOT satisfy the gate');
 
   const soleBefore = dominatorSubtrees(base.g).subtree.get('TypewriterIconWdgt');
   const second = analyse({ bootLines: ['    new TypewriterIconAppearance'] });

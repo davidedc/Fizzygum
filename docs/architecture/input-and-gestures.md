@@ -122,7 +122,12 @@ exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
   glide (`Fizzygum-tests/DETERMINISM.md` §3l).
 - **The look.** Neither ending says where the pointer is. A receiver picks the look it ends in from
   where the pointer actually stands, by asking the hand (`restsOn` — a mouse or a pen rests on what
-  it stopped over; a finger never rests anywhere), never by assuming it is still over it:
+  it stopped over; a finger never rests anywhere), never by assuming it is still over it. The hover
+  look on ARRIVAL asks the same fact (`pointerCanRest`, of which `restsOn` is the per-widget form), so
+  a finger lights nothing as it arrives: were it lit on arrival and left at rest by its press's
+  ending, the look under a finger would depend on whether a burst of its moves got ahead of content
+  its drag-scroll had not moved yet and came back over it at the next re-sync
+  (`Fizzygum-tests/DETERMINISM.md` §3n). So
   `HighlightableMixin` ends HIGHLIGHTED under a resting mouse and NORMAL otherwise, on both
   endings. A list row's look of being its list's SELECTION is no state it keeps, so neither ending
   has a selection to restore: the row reads it from the list's model as it paints
@@ -288,8 +293,8 @@ finger left the glass. At a touch stroke's up or cancel, `_dissolveHoverStateOfT
 dispatches `hoverExited` to the whole `mouseOverList` and empties it, then sets
 `@_pointerIsAbsent = true`. That flag is what makes the dissolution STICK: the
 per-cycle hover re-sync would otherwise re-derive the over-list from wherever the hand happens to
-stand a cycle later, re-entering whatever the finger last touched — tooltip and highlight
-included. While `_pointerIsAbsent` is true, `dispatchEventsFollowingMouseMove` treats the
+stand a cycle later, re-entering whatever the finger last touched — its tooltip countdown and a
+represented widget's highlight included. While `_pointerIsAbsent` is true, `dispatchEventsFollowingMouseMove` treats the
 mouse-over set as empty: nothing is under a pointer that is not there. The next
 `processPointerDown` of ANY kind clears the absence (a down states a position — the pointer is
 back), and so does any hover-capable move (a real mouse/pen move). A `'mouse'`/`'pen'` stroke

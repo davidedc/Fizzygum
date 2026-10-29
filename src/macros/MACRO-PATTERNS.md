@@ -1076,6 +1076,10 @@ assertion a recapture after a regression silently stores two different hashes an
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
   yield generously. MUST hold long enough that the `autoScroll` 500ms `Date.now()` settle elapses and the scroll CLAMPS — via a
   NON-scaled numeric `yield N` (real-time settle, speed-independent), so it's deterministic at every speed and needs no speed metadata.
+  ⚠ A fixed hold is not enough on its own: the scroll moves a fixed step per FRAME, so a hold of N ms clamps only while frames
+  come fast enough (at ~128 ms a cycle every 2.5 s hold stops short). After the hold, keep holding — `yield 100` in a bounded
+  loop — until the scroll reads its clamp at that edge (`0`, or `contents − viewport` on that axis), then ASSERT it clamped and
+  shoot: the condition is what makes the endpoint cadence-independent (`DETERMINISM.md` §3m).
   The NEGATIVE — a WINDOW payload does NOT edge-auto-scroll (`macroDragEmbedWindowDoesNotAutoscrollPanel`): the same fixture +
   edge-band hold, but the payload is a window, so `ActivePointerWdgt` gates `maybeStartAutoScrollForDraggedWidget` on `not
   …requiresDeliberateEmbedding()` (`:1130`, drag-embed spec §12 — the wheel is a window's explicit mid-drag scroll channel) and the

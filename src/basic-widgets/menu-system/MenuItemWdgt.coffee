@@ -470,15 +470,18 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # MenuItemWdgt events. A LIST row's highlighted look is its list's selection (_shownState), so the
   # pointer leaves its state alone and is shown, when its look has a hover plate, on that plate instead.
+  # A finger is shown neither: it rests nowhere (ActivePointerWdgt.pointerCanRest). The widget I stand
+  # for is lit under any pointer.
   # Leaving always drops the hover plate, wherever I stand: a copy of me drops it too
   # (LabelButtonWdgt._reactToBeingCopied), parented or not.
   hoverEntered: ->
     @representedWidget()?.turnOnHighlight()
-    if @isListItem()
-      @_showHoverOnMyPlate true
-    else
-      @state = @STATE_HIGHLIGHTED
-      @_changed()
+    if world.hand.pointerCanRest()
+      if @isListItem()
+        @_showHoverOnMyPlate true
+      else
+        @state = @STATE_HIGHLIGHTED
+        @_changed()
     if @toolTipMessage
       @startCountdownForBubbleHelp @toolTipMessage
 

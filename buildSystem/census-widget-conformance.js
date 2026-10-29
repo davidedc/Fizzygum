@@ -53,6 +53,11 @@ function walk(dir, acc = []) {
 }
 // naive comment strip — the same trade every scanner in this directory makes
 const strip = (s) => s.split('\n').map((l) => (l.indexOf('#') < 0 ? l : l.slice(0, l.indexOf('#')))).join('\n');
+// A class's own CODE: its text with block strings and comments taken out. A block string ("""…"""
+// or '''…''') is DATA even when it holds CoffeeScript — PaintToolbarWdgt's tool sources are injected
+// onto the paint surface and run with @ bound to IT, so an `@queue =` in one is the surface's field,
+// never the toolbar's. Block strings go first: a `#` inside one is text, not a comment.
+const codeOf = (text) => strip(text.replace(/"""[\s\S]*?"""/g, '""').replace(/'''[\s\S]*?'''/g, "''"));
 
 // ── parse every source once ─────────────────────────────────────────────────────────────────────
 const classes = new Map();   // name -> { parent, text, file }
@@ -92,7 +97,7 @@ function undeclaredFields() {
     const ch = chain(name);
     const declared = new Set();
     for (const a of [...ch, ...new Set(ch.flatMap(mixinsOf))]) for (const d of declarationsOf(a)) declared.add(d);
-    const body = strip(classes.get(name).text);
+    const body = codeOf(classes.get(name).text);
     const written = new Set([...body.matchAll(/@([a-z_]\w*)\s*=(?!=|>)/g)].map((m) => m[1]));
     const ctor = /^ {2}constructor:\s*\(([^)]*)\)/m.exec(body);
     if (ctor) for (const m of ctor[1].matchAll(/@([A-Za-z_]\w*)/g)) written.add(m[1]);
@@ -110,7 +115,7 @@ function prologueCopies() {
   const rows = [];
   for (const name of [...classes.keys()].sort()) {
     if (name === 'Widget' || !isWidget(name)) continue;
-    const body = strip(classes.get(name).text);
+    const body = codeOf(classes.get(name).text);
     if (/@__calculateNewBoundsWhenDoingLayout/.test(body)) rows.push({ cls: name, file: classes.get(name).file });
   }
   return rows;

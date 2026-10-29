@@ -721,6 +721,12 @@ class ActivePointerWdgt extends Widget
       # steps below re-parent (_beforeChildDropped, the add). A forced target is taken as it is.
       releasedInAGutter = !forcedTarget? and @_targetReachedThroughAGutter target
 
+      # The grab's origin has answered the one question it was kept for (the sticky re-embed above).
+      # Kept past here it would hold the window the grab came from until the next grab — a widget
+      # the user may destroy meanwhile. Cleared before the steps below, any of which may begin a grab
+      # of its own.
+      @grabOrigin = undefined
+
       @_fullChanged()
 
       # Affine transforms 4D-2b (§6): a dropped SUGAR FIGURE is re-spec'd RELATIVE to the destination plane, so
@@ -1139,8 +1145,8 @@ class ActivePointerWdgt extends Widget
 
   # THE FINGER LEFT THE GLASS. A touch stroke has no between-strokes position — nothing rests under
   # a lifted finger — so at its end every widget the stroke walked over is told the pointer left,
-  # and the over-list empties. Without it the last-tapped widget keeps a hover highlight, and a
-  # viewport a fattened indicator, with no pointer anywhere near them. A mouse or a pen DOES rest
+  # and the over-list empties. Without it the last-tapped widget keeps the highlight its click lit,
+  # and a viewport a fattened indicator, with no pointer anywhere near them. A mouse or a pen DOES rest
   # where it stopped, so their strokes keep the over-list they built, untouched.
   #   This is the stroke's LAST act: both callers clear the press and the drag BEFORE it, so the
   # exits it sends are final. A hoverExited that defers to a live drag (a slider thumb keeps its
@@ -1160,13 +1166,22 @@ class ActivePointerWdgt extends Widget
 
   # === the press lifecycle: the climb, and the endings (the contract is the audience's, above) ===
 
+  # PUBLIC query — can the pointer REST at all? A mouse or a pen rests on whatever it stopped over; a
+  # FINGER never rests anywhere — its stroke ends with the finger leaving the glass
+  # (_dissolveHoverStateOfTouchStroke). So a finger is shown no HOVER look: a widget asks this before
+  # showing one as the pointer arrives, as a press's ending asks restsOn, and the two answers agree
+  # whatever route a stroke took. Were a finger lit on arrival and left unlit when its press ends, a
+  # widget under it would show either look depending on whether, within one cycle, the finger got
+  # ahead of content its drag-scroll had not moved yet and came back over it at the next re-sync
+  # (Fizzygum-tests DETERMINISM.md §3n).
+  pointerCanRest: ->
+    @pointerType isnt 'touch'
+
   # PUBLIC query — does the pointer REST on `aWdgt`? Asked by a member of the press's audience as it
-  # picks the look it ends in: hovered when the pointer is over it, at rest when it is not. A mouse
-  # or a pen rests on whatever it stopped over; a FINGER never rests anywhere — its stroke ends with
-  # the finger leaving the glass (_dissolveHoverStateOfTouchStroke) — so the answer for one is always
-  # no, even while the over-list still holds what it walked over.
+  # picks the look it ends in: hovered when the pointer is over it, at rest when it is not — and
+  # never for a finger, even while the over-list still holds what it walked over.
   restsOn: (aWdgt) ->
-    @pointerType isnt 'touch' and @mouseOverList.has aWdgt
+    @pointerCanRest() and @mouseOverList.has aWdgt
 
   # THE PRESS CLIMB, from `pressedWdgt` (the widget the primary press hit): each receiver is told
   # pressBegan with the pointer in its own plane and joins the audience, and the climb goes on to its
