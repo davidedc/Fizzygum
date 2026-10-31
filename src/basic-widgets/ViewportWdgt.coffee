@@ -22,7 +22,7 @@ class ViewportWdgt extends Widget
   extraPadding: 0
   # an EMPTY generic viewport accepts drops (wantsDropOfChild consults the contents' veto)
   _acceptsDrops: true
-  # a viewport is an editing surface: FrameWdgt shows the pencil off its contents'
+  # a viewport is an editing surface: FrameWdgt shows the edit toggle off its contents'
   # answer, and the edit-mode focus walk climbs to the first opinion
   providesAmenitiesForEditing: true
 

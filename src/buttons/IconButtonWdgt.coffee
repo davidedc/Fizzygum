@@ -28,7 +28,7 @@ class IconButtonWdgt extends ButtonWdgt
   # Chrome, never editor content (§5.D D-3/D21 correction 1). Every IconButtonWdgt subclass is chrome:
   # a window bar's close / collapse / uncollapse / edit buttons, and a toolbar strip's overflow
   # chevron (OverflowChevronButtonWdgt). Clicking the
-  # eye/pencil to toggle a frame's edit mode, or collapsing/closing it, must NOT set world.editorFocusWdgt
+  # edit toggle to switch a frame's edit mode, or collapsing/closing it, must NOT set world.editorFocusWdgt
   # to the button (the SELECTED-ITEM overlay would then frame the button, since it sits inside an
   # editing-amenity frame) NOR end the ongoing content edit -- exactly the editor-chrome exemption
   # SimpleButtonWdgt gives its opt-in `actsAsEditorChrome` buttons, but unconditional here because every

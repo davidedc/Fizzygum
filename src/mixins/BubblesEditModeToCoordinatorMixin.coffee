@@ -1,4 +1,4 @@
-# Bubbles the pencil/eye edit-mode toggle UP to an editing-coordinating parent.
+# Bubbles a frame strip's edit-mode toggle UP to an editing-coordinating parent.
 # The injected enable/disable CORE asks its parent
 # `coordinatesDragsDropsAndEditingForChildren?()` (the capability query that replaced
 # the old `instanceof` type-tests -- type-test-elimination campaign; Widget defines a

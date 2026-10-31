@@ -21,7 +21,7 @@ class InfoDocs
       build: (sdspw) ->
         sdspw.addNormalParagraph "Lets you arrange a choice of graphs/charts/plots/maps in any way you please. The visualisations can also be interactive (as in the 3D plot example, which you can drag to rotate) and/or calculated on the fly.\n\nOn the bar on the left you can find four example graphs and two example maps."
 
-        sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+        sdspw.addNormalParagraph "Once you are done editing, flip the switch on the window bar to the eye."
         sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
         startingContent = new SimpleVideoLinkWdgt "Dashboards Maker", "http://fizzygum.org/docs/dashboards/"
@@ -35,7 +35,7 @@ class InfoDocs
       windowTitle: "Generic panels info"
       build: (sdspw) ->
         sdspw.addNormalParagraph "You can use this panel to temporarily hold widgets, or to put together any mix of widgets. It's just a more generic version of slides and dashboards."
-        sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+        sdspw.addNormalParagraph "Once you are done editing, flip the switch on the window bar to the eye."
         sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
         startingContent = new SimpleVideoLinkWdgt "Mixing widgets (using generic panels)", "http://fizzygum.org/docs/mixing-widgets/"
@@ -51,7 +51,7 @@ class InfoDocs
         sdspw.addNormalParagraph "'Patch programming' is a type of visual programming where you simply connect together existing widgets. It's useful to make simple applications/utilities quickly."
         sdspw.addNormalParagraph "You can imagine the widgets being 'patched together' by imaginary wires."
         sdspw.addNormalParagraph "You can see in the `example docs` folder a °C ↔ °F converter example made with this."
-        sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+        sdspw.addNormalParagraph "Once you are done editing, flip the switch on the window bar to the eye."
         sdspw.addNormalParagraph "To see an example of use, check out the videos here:"
 
         startingContent = new SimpleVideoLinkWdgt "Patch programming - basics", "http://fizzygum.org/docs/basic-connections/"
@@ -71,7 +71,7 @@ class InfoDocs
       build: (sdspw) ->
         sdspw.addNormalParagraph "Simple paint app. But you can drop anything inside it (try with the clock) to 'use it as a stamp'."
 
-        sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+        sdspw.addNormalParagraph "Once you are done editing, flip the switch on the window bar to the eye."
         sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
         startingContent = new SimpleVideoLinkWdgt "Draw app", "http://fizzygum.org/docs/draw-app/"
@@ -102,7 +102,7 @@ class InfoDocs
 
         sdspw.addSpacer()
 
-        sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+        sdspw.addNormalParagraph "Once you are done editing, flip the switch on the window bar to the eye."
         sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
         startingContent = new SimpleVideoLinkWdgt "Docs Maker", "http://fizzygum.org/docs/documents-maker/"
@@ -117,7 +117,7 @@ class InfoDocs
       build: (sdspw) ->
         sdspw.addNormalParagraph "Anything you drop inside the slide 'keeps proportion' when resized, which makes it handy to put pins on maps, add callouts, arrange text in custom layouts etc."
 
-        sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+        sdspw.addNormalParagraph "Once you are done editing, flip the switch on the window bar to the eye."
         sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
         startingContent = new SimpleVideoLinkWdgt "Slides Maker", "http://fizzygum.org/docs/slides-maker/"

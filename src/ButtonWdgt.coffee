@@ -184,7 +184,7 @@ class ButtonWdgt extends Widget
     return false if @parent == world
     return false if @isDetachablePayloadOfMyParent()
     # ... and a CHROME STRIP owns the drags that start on its pieces (program ruling: a bar piece
-    # acts on tap, never on drag). A press that turns into a drag on a close/collapse/pencil glyph
+    # acts on tap, never on drag). A press that turns into a drag on a close/collapse/edit piece
     # is the user taking hold of the BAR -- moving the window, pulling a docked band out of its
     # slot -- so I must not cancel it here: I yield, and the climb reaches the strip. Same
     # parent-side shape as wantsDetachOfChild above; the strip declares it, no piece has to know

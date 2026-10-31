@@ -730,7 +730,7 @@ class Widget extends TreeNode
     # mutates nothing and settles nothing), the same ask the close sites make.
     world.anyReferenceOrWireIntoWdgt @_enclosingIslandFigure()
 
-  # The window title-bar "edit" (pencil) button announces its press to the window's
+  # The window title-bar edit toggle announces its press to the window's
   # contents (FrameWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromFrameBar?()).
   # The button is only shown when providesAmenitiesForEditing is set -- by PanelWdgt
   # on contents, and by the framed citizens (DocumentWdgt, GenericPanelWdgt, §5.B)
@@ -741,7 +741,7 @@ class Widget extends TreeNode
     else
       @enableDragsDropsAndEditing @
 
-  # Is my editing switched on -- the pencil engaged, so things can be dragged in and out of me and
+  # Is my editing switched on -- the edit toggle on, so things can be dragged in and out of me and
   # edited in place? My own dragsDropsAndEditingEnabled. A window answers for its content, which
   # holds the mode (FrameWdgt.isInEditMode), so a reader that may be handed a window asks this and
   # never reads the field.

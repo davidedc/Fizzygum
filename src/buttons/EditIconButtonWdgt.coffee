@@ -1,62 +1,88 @@
-# Tells the window's contents that the edit button was pressed.
-# See IconButtonWdgt for the shared icon-button family contract.
+# The frame strip's EDIT-MODE TOGGLE: a sliding switch naming both modes, the eye at its left end and
+# the pencil at its right, with a knob standing under the one my window's content is in now. Right is
+# on: editing. A press anywhere on me flips the mode, and I tell the window's contents I was pressed.
+# Both modes are always on show, so I carry no hover preview and my look never contradicts my state;
+# why I look like this rather than anything else: docs/archive/edit-mode-sliding-toggle.md. I keep the
+# icon-button family's contract (see IconButtonWdgt), and my strip gives me a wider slot than its other
+# pieces (FrameWdgt._barSpec's pieceLengths).
+#
+# MY MODE IS MY WINDOW'S. It tells me through showEditMode / showViewMode, driven by the enable/disable
+# state-reflection callers (FrameWdgt.showEditModeInBar / showViewModeInBar) and not by my click, so I
+# follow the mode however it changes.
+#
+# THE SLIDE IS FEEDBACK TO THE PERSON WHO PRESSED ME. Only a mode change my own press caused slides my
+# knob. Any other arrives at once, or every view-mode window would slide as it is built, uncollapsed or
+# restored. A slide steps on the cycle clock, a wall-clock reading, so it must never reach a captured
+# pixel: world.anyKnobSlideOngoing holds the macro pump until my knob has stopped, exactly as a scroll
+# glide holds it (MacroToolkit._queueDrained / readyForMacroScreenshot). My paint is a function of
+# where the knob stands, so a stopped knob is the same pixels whichever cycles it took to get there.
 
 class EditIconButtonWdgt extends IconButtonWdgt
 
-  # pencil<->eye edit-mode toggle with HOVER FEEDFORWARD (docs/archive/pencil-eye-edit-mode-toggle-plan.md §8):
-  #   1. ONE INK AT REST — the resting glyph wears its strip's resting ink (color_normal) for
-  #      BOTH modes; the SHAPE alone names the current mode (pencil = editing now, eye =
-  #      viewing now).
-  #   2. FEEDFORWARD ON HOVER — while hovered (or pressed) the button morphs to the glyph
-  #      of the mode a click switches TO, in the strip's active ink (color_hover /
-  #      color_pressed) -- the one every strip glyph takes when a pointer is on it. The
-  #      shape carries the meaning; the ink just says "active / clickable".
-  #   3. IMMEDIATE tooltip — the action bubble pops on hover with (almost) no delay, so the
-  #      text explanation lands together with the visual preview (the shipped delay is 500ms).
-  # Rest = pure status (shape); hover = pure control (next-state glyph + active ink + text).
-  # Both inks are my strip's (IconButtonWdgt.setGlyphInk): every edit button is a frame strip's
-  # piece, so I carry no colours of my own.
-
-  # default the mode so an early paint (before the window sets the real mode) is the resting pencil
+  # default the mode so an early paint (before the window sets the real one) shows editing
   _editModeNow: true
+
+  # where my knob stands along its travel: 0 under the eye, 1 under the pencil
+  _knobPosition: 1
+
+  # the slide under way, while I am in world.steppingWdgts: where the knob left from, and when
+  _slideFrom: undefined
+  _slideStartedAt: undefined
+
+  # true only for the length of my own press (actOnClick)
+  _slidesOnModeChange: false
 
   toolTipMessage: "edit contents"
 
-  createAppearance: -> new PencilIconAppearance @
+  createAppearance: -> new EditModeToggleAppearance @
 
   actOnClick: ->
+    @_slidesOnModeChange = true
     # Notify the containing window its edit button was pressed (the window forwards
     # to its contents); only a window answers editButtonInBarPressed. (type-test-elimination)
     @parent?.editButtonInBarPressed?()
+    @_slidesOnModeChange = false
 
-  # The window's showEditModeInBar / showViewModeInBar call these to set the CURRENT
-  # mode; the glyph + colour for every state are then derived by @_updateColor, so
-  # rest and hover can never disagree.
-  showPencilGlyph: ->          # edit mode NOW
-    @_editModeNow = true
+  # The window's showEditModeInBar / showViewModeInBar call these to set the CURRENT mode. The tooltip
+  # always states what a press does.
+  showEditMode: ->
     @toolTipMessage = "switch to view mode"
-    @_updateColor()
+    @_moveKnobToMode true
 
-  showEyeGlyph: ->             # view mode NOW
-    @_editModeNow = false
+  showViewMode: ->
     @toolTipMessage = "edit contents"
-    @_updateColor()
+    @_moveKnobToMode false
 
-  # Override the icon button's colour hook to ALSO swap the glyph. At rest: the CURRENT
-  # mode's glyph. Highlighted / pressed: the glyph of the mode a click switches TO (the
-  # feedforward). The ink is then the icon button's for the state I am in
-  # (IconButtonWdgt._updateColor), which also repaints me, so a swapped glyph shows even when
-  # the ink is unchanged.
-  _updateColor: ->
-    if @state is @STATE_NORMAL
-      @appearance = if @_editModeNow then new PencilIconAppearance @ else new EyeIconAppearance @
-    else                       # hovered or pressed -> preview the OTHER mode
-      @appearance = if @_editModeNow then new EyeIconAppearance @ else new PencilIconAppearance @
-    super()
+  # where my knob stands (my appearance paints it there), and whether it is still on its way
+  knobPosition: ->
+    @_knobPosition
 
-  # Immediate action tooltip: the base delay is 500ms; on THIS button the
-  # bubble explains what a click does, so we want it to land with the hover preview — show
-  # it ~next-frame instead of after the pause. (SystemTests already bypass the delay, so this
-  # only changes the live/interactive timing.)
-  startCountdownForBubbleHelp: (contents) ->
-    ToolTipWdgt.createInAWhileIfHandStillContainedInWidget @, contents, 1
+  isKnobSliding: ->
+    world.steppingWdgts.has @
+
+  # A no-op when the mode is the one I already show: the window's reflector is re-driven idempotently,
+  # and a slide under way must not restart.
+  _moveKnobToMode: (editing) ->
+    return if editing is @_editModeNow
+    @_editModeNow = editing
+    if @_slidesOnModeChange
+      @_slideFrom = @_knobPosition
+      @_slideStartedAt = WorldWdgt.dateOfCurrentCycleStart.getTime()
+      world.steppingWdgts.add @
+    else
+      world.steppingWdgts.delete @
+      @_knobPosition = if editing then 1 else 0
+      @_changed()
+
+  # One frame of a slide, eased out: quick off the mark, settling onto the far end. A restored or
+  # copied slide finds its start long gone and simply lands.
+  step: ->
+    target = if @_editModeNow then 1 else 0
+    elapsed = WorldWdgt.dateOfCurrentCycleStart.getTime() - @_slideStartedAt
+    progress = Math.max 0, Math.min 1, elapsed / WorldWdgt.theme.barToggleSlideMs
+    if progress is 1
+      @_knobPosition = target
+      world.steppingWdgts.delete @
+    else
+      @_knobPosition = @_slideFrom + (target - @_slideFrom) * (1 - Math.pow 1 - progress, 3)
+    @_changed()

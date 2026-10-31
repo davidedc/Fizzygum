@@ -905,7 +905,7 @@ assertion a recapture after a regression silently stores two different hashes an
   own choice) are different questions that survive each other: collapse a band, flip to view then back to edit,
   and it comes back at its COLLAPSED thickness, not its expanded one — assert the round trip with
   `@assertScreenshotsIdentical` between the pre-view and post-edit shots (byte-identical, GHOST-conform:
-  visibility never feeds back into state). No new verb (drives the same `editButton` click the pencil/eye
+  visibility never feeds back into state). No new verb (drives the same `editButton` click the edit-toggle
   entries elsewhere in this file use).
 
 ## Scroll & scrollbars

@@ -70,7 +70,7 @@ vocabulary below is the convention for all new code:
     `_widgetTheFocusSelects`, never answers one either. Focus is for the window you work IN, selection for
     the thing you work ON: everything inside a window, and a window nested as content, stays selectable.
   - The bar roster follows the same derivation: transient wears its title alone (tap pins);
-    a free-floating persistent frame wears close + collapse + title + a pencil (iff its
+    a free-floating persistent frame wears close + collapse + title + an edit toggle (iff its
     payload affords editing); one whose host owns its membership drops close, since you leave
     by dragging out, not by a button; a docked band goes further and keeps only collapse +
     title, because editing what a band holds is not a band's gesture. Close button and resize
@@ -78,10 +78,10 @@ vocabulary below is the convention for all new code:
     everywhere, and closes the nested frame **alone** — a frame's own content redirects a
     close to its frame, but a frame reached that way does not redirect again, so the host
     reverts to empty rather than leaving with its content.
-  - A frame's **edit mode is its payload's**: the pencil switches the payload's
+  - A frame's **edit mode is its payload's**: the edit toggle switches the payload's
     `dragsDropsAndEditingEnabled` directly, and the frame keeps no copy — it answers
     `isInEditMode()` from its payload. So a reader that may be handed a window (the editor-selection
-    rule, the drop climb's reluctant tier, the pencil of a window nested as another's content) asks
+    rule, the drop climb's reluctant tier, the edit toggle of a window nested as another's content) asks
     `isInEditMode()`, never the field.
   - **Docking is a placement, not a rebuild**: a docked frame is a card under a host-owned
     `EdgeDockLayoutSpec` (`side` / `thickness` / `engaged`) — the same widget that sits in the

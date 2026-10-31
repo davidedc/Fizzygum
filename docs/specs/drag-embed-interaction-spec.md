@@ -13,7 +13,8 @@ carry the detail):
   slimmed). A window's internal-ness is DERIVED from its parentage (`FrameWdgt.isInternal`) and the whole-window
   skin (body + title bar) is re-derived on every re-parenting; the manual switch is deleted. Drag-OUT already
   ejects a nested window (Phase 3's rule flip), so there is no eject button. The pencil↔eye edit-mode glyph was
-  cut from this arc and extracted to its own owner-requested follow-up plan (separate, not part of this spec).
+  cut from this arc and extracted to its own owner-requested follow-up plan (separate, not part of this spec); the
+  control is a sliding toggle today (`docs/archive/edit-mode-sliding-toggle.md`).
   §10 is the as-built title-bar record.
 - **Decision 4 (dashboards default edit-ON) — REVERSED** (owner "keep view-locked" 2026-07-06): `SampleDashboardApp`
   stays view-locked at construction. Only the payload-class dwell rule changed, not app editing defaults.
@@ -128,7 +129,7 @@ they show a lock cue, and a release near them lands the payload visibly OFFSET w
 |---|---|---|---|---|
 | **Eager** | empty `FrameWdgt` (placeholder showing), `SimpleDropletWdgt`, `LayoutElementAdderOrDropletWdgt` | dwell-to-arm (no exception — empty windows are exactly where accidental window-nesting happens) | instant accept | bright invite highlight, immediate |
 | **Willing** | edit-mode framed-citizen containers (slides, dashboards, patch, the Drawings Maker `ImageWdgt` — their `StretchableWidgetContainerWdgt` payload), edit-mode `DocumentWdgt` scroll panel, edit-mode `PanelWdgt`/stacks/scroll panels (anything whose `wantsDropOfChild` is true) | dwell-to-arm | instant accept | candidate highlight; ring while charging (window payload only) |
-| **Reluctant** | the same widgets in VIEW mode (`providesAmenitiesForEditing` true, `isInEditMode()` false — a window answers its content's mode) | never accepts mid-drag → lock cue; land-and-offer on release (§8) | same | neutral outline + lock badge + eye pulses amber |
+| **Reluctant** | the same widgets in VIEW mode (`providesAmenitiesForEditing` true, `isInEditMode()` false — a window answers its content's mode) | never accepts mid-drag → lock cue; land-and-offer on release (§8) | same | neutral outline + "view-only" badge |
 | **Refusing** | inspector panes, plot glass, full windows' chrome, anything `_acceptsDrops` false without editing amenities | inert (no cue) | inert | none |
 
 Tier membership is *computed*, not a new stored flag: eager/willing = `wantsDropOfChild` true (the existing
@@ -315,7 +316,7 @@ A small transient widget placed adjacent to the landed payload (world child, abo
 - **Insert**: embeds programmatically (same reaction sequence as an accepted drop); destination STAYS in view
   mode. (Programmatic `add` does not consult `wantsDropOfChild` — only the hand's climb does — so this is
   mechanically clean; VERIFY against the slide container's add path at implementation.)
-- **Edit & insert**: calls the content's `enableDragsDropsAndEditing` (pencil→eye flips, tools palette appears),
+- **Edit & insert**: calls the content's `enableDragsDropsAndEditing` (the edit toggle's knob moves to the pencil, tools palette appears),
   then embeds. Leaves the destination open for follow-up arranging.
 - **Dismissal is event-driven, never timed** (determinism): next pointer-down outside the pill, Esc, or
   grabbing the landed widget again. No auto-fade timeout.
@@ -381,7 +382,7 @@ highlighted/decorated carries any state about its own decoration. Per element:
 | Dock band highlight (§4.1) | **EPHEMERAL — its own `HighlighterWdgt`, keyed to a BOX, not a widget** (`world.dragEmbedDockBandDeclared {host, box}`): a band is a region of its host's body, not a widget, so it rides its own declare-and-reconcile slot instead of the `widgetsToBeHighlighted` channel above — the host's own candidate outline stands down for as long as a band is offered | Same candidate-accent outline style as the row above (`HighlighterWdgt.candidateOutlineStyle`, the accent), drawn around the band's WHOLE rectangle rather than a widget's bounds; mapped through the host's screen bounds so it renders correctly inside a rotated/scaled island too |
 | Charging ring (the radial timeout) | **EPHEMERAL — new cursor-anchored type, and a STEPPING one** (the analog-clock pattern, `AnalogClockWdgt.coffee:99-108`): fills over wall time from the linger origin in production; under `Automator.animationsPacingControl` follows the harness's virtual pacing like the clocks already do in byte-exact tests. Reconciler positions it at hand + (16,16); repaints only on quantized step change | Radius ~9px; RING_STEPS discrete segments; PRESENTATION ONLY — the armed decision is §6's event-time elapsed check and never reads ring state |
 | Armed label | **EPHEMERAL — text type** (the pinout `StringWdgt` readout is the in-code precedent) | Near cursor: "Drop to insert into '<title>'" (title truncated ~24 chars) |
-| Lock badge + eye pulse (reluctant) | **EPHEMERAL(s) anchored to the destination's title-bar / eye-button bounds** — deliberately NOT a state change of the real eye button: the pulse never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | A `line`-coloured outline (`dropReluctantOutline`, the candidate's width) on the destination + small lock badge at title-bar right; amber pulse over the eye button in 2 quantized steps |
+| Lock badge (reluctant) | **EPHEMERAL anchored to the destination's title bar** — deliberately NOT a state change of the real edit toggle: it never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | A `line`-coloured outline (`dropReluctantOutline`, the candidate's width) on the destination + small "view-only" badge at title-bar right |
 | §9 teaching hint | **EPHEMERAL — text type.** Non-interactability is exactly right here: it is click-THROUGH (the next click acts on the world AND dismisses it — the pointer-down handler drops the declaration) | One line near the landing; no buttons, no timeout |
 | §8 land-and-offer pill | **NOT an ephemeral — it has buttons.** Interactability violates the ephemeral definition; it is a real transient widget of the menu family (menus already own dismiss-on-outside-click) | See §8 |
 | ~~Refused-landing nudge~~ | **DROPPED with §8** — it was to be neither an ephemeral nor a widget of its own, but a transient movement of the real landed widget (2-frame quantized) | Moot: a refused release lands where it was released, unnudged (§7) |

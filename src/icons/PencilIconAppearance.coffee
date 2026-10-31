@@ -1,8 +1,6 @@
 class PencilIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
-    fillColor = @widget.color
-
     context.save()
     context.translate 90.18, 101.32
     context.rotate 13.16 * Math.PI / 180
@@ -22,6 +20,6 @@ class PencilIconAppearance extends IconAppearance
     context.lineTo -66.83, 61.61
     context.lineTo 16.57, -74.36
     context.closePath()
-    context.fillStyle = fillColor.toString()
+    context.fillStyle = @_iconColorString()
     context.fill()
     context.restore()

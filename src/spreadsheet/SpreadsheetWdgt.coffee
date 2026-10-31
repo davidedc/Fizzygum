@@ -2,7 +2,7 @@
 # a spreadsheet IS its window. A truly THIN FrameWdgt subclass over the naked
 # grid (SimpleSpreadsheetWdgt -- the model owner / formula scope / keyboard
 # receiver): the grid manages its own editing (no providesAmenitiesForEditing,
-# so the frame shows no pencil -- parity with the plain-wrapped era), the
+# so the frame shows no edit toggle -- parity with the plain-wrapped era), the
 # window title comes from the kind name, close is the plain base flow, and
 # the frame's representativeIcon dispatch reaches the grid unchanged.
 

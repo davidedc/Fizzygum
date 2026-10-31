@@ -1,13 +1,10 @@
-# The "view mode" eye shown in a window's title bar when its content has
-# editing disabled (see EditIconButtonWdgt / FrameWdgt.showViewModeInBar).
-# Same single-fill idiom as PencilIconAppearance: the glyph takes the
-# widget's color, so the button's rest / hover recolouring reaches it.
+# The eye at the view end of a window's edit-mode toggle (EditModeToggleAppearance).
+# Same single-fill idiom as PencilIconAppearance: the glyph takes the ink it is
+# given, else the widget's color.
 
 class EyeIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
-    fillColor = @widget.color
-
     context.save()
 
     # almond outline band: outer contour top-first, inner contour
@@ -24,7 +21,7 @@ class EyeIconAppearance extends IconAppearance
     context.closePath()
     # pupil (its own subpath; any winding, it doesn't overlap the band)
     @circle context, 100, 100, 27
-    context.fillStyle = fillColor.toString()
+    context.fillStyle = @_iconColorString()
     context.fill()
 
     context.restore()

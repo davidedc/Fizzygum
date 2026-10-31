@@ -1,5 +1,6 @@
 > **ARCHIVED — COMPLETE (2026-07-17 restructure).** IMPLEMENTED+PUSHED; §1-7 state glyph shipped 2026-07-06, §8 hover-feedforward refinement landed 2026-07-15
 > Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+> **SUPERSEDED 2026-10-31** by `docs/archive/edit-mode-sliding-toggle.md`: the swapping pencil/eye icon is now a sliding toggle.
 
 # Plan — pencil ↔ eye: the window-bar edit-mode toggle shows the CURRENT MODE as a glyph
 

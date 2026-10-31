@@ -367,6 +367,15 @@ class WorldWdgt extends IconGridPanelWdgt
   anyScrollMomentumOngoing: ->
     @wdgtsWithOngoingScrollMomentum.size > 0
 
+  # Is an edit-mode toggle's knob still on its way (EditIconButtonWdgt)? A slide is cycle-clock driven,
+  # so the macro pump holds until it has landed, as it does for a scroll glide. Asked of the stepping
+  # set rather than kept in a set of its own, so there is no second registry for a teardown to forget.
+  anyKnobSlideOngoing: ->
+    sliding = false
+    @steppingWdgts.forEach (eachSteppingWidget) ->
+      sliding = true if eachSteppingWidget.isKnobSliding?()
+    sliding
+
   binWdgt: undefined
   shelfWdgt: undefined
 
@@ -1739,7 +1748,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # widget it SELECTS (_widgetTheFocusSelects: never the desktop, a top-level window, a detached widget
   # or a widget a caret is in); this narrows that to a SELECTED op-target within an active editing
   # context, so the outline frames "this is what an op will act on":
-  #   CITIZEN   — a pencil-capable widget (providesAmenitiesForEditing) with the pencil engaged
+  #   CITIZEN   — an edit-capable widget (providesAmenitiesForEditing) with its edit toggle on
   #               (isInEditMode: a window answers its content's mode), when the focus leaf IS the panel.
   #   SELECTED  — (D21) a widget SELECTED inside an editable container that is in edit mode, e.g. a clock
   #     ITEM      or image dropped into a document: it has no "edit mode" of its own, but ops (alignment,
@@ -1758,7 +1767,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container that is in edit mode.
     # Walk to the nearest container that has an OPINION on editing amenities, stopping BEFORE the world
     # (a desktop selection is not "in an editor"):
-    #   amenities === true  → frame focus, but only if the pencil is engaged (view mode ⇒ no indicator).
+    #   amenities === true  → frame focus, but only if its edit toggle is on (view mode ⇒ no indicator).
     #   amenities === false → STOP, no frame: a container that EXPLICITLY opts out manages its own
     #                         selection UI (a spreadsheet's cell grid draws its own cell highlight), so a
     #                         second outline would just be clutter.

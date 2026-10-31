@@ -163,8 +163,8 @@ The world never stops; the sweet spot is ideas where **editing is the same activ
 using** (toggling sequencer cells during playback, changing a formula in a live
 spreadsheet). Ideas requiring a hard edit/run split (level editors,
 compile-and-flash workflows) import the edit-compile-run cycle the environment exists
-to abolish. Shallow modality is resolvable — the pencil/eye toggle is the precedent
-([`../archive/pencil-eye-edit-mode-toggle-plan.md`](../archive/pencil-eye-edit-mode-toggle-plan.md)),
+to abolish. Shallow modality is resolvable — the edit/view toggle is the precedent
+([`../archive/edit-mode-sliding-toggle.md`](../archive/edit-mode-sliding-toggle.md)),
 and it is deliberately a *paint/input* mode only. If an idea needs a different data
 model when editing, it mismatches.
 
@@ -230,7 +230,7 @@ The world has a house grammar: drag = move, drop = embed, right-click = menu,
 dwell-to-arm for windows
 ([`../specs/drag-embed-interaction-spec.md`](../specs/drag-embed-interaction-spec.md)).
 Does the idea's primary gesture collide (drag-to-paint, drag-to-aim-camera)?
-Collisions are resolvable (the pencil/eye precedent; or claim only clicks, as buttons
+Collisions are resolvable (the edit/view precedent; or claim only clicks, as buttons
 do) but each resolution spends UX budget. An idea whose native gestures *coincide* with
 the grammar — kanban (moving cards IS dragging widgets), chess (moving pieces IS
 dragging widgets) — gets composition for free and feels at home immediately.

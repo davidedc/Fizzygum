@@ -288,8 +288,7 @@ it stores the `<name>_source` sibling that serializes.
 Three payoffs. The dependency edge stays visible to the boot loader. A subclass reskins by overriding
 one line — 63 icon classes are nothing but `createAppearance` (their name is derived, §10), and the
 base constructor needs no knowledge of them. And a widget that legitimately swaps skins at runtime — a
-frame flipping rectangular/boxy by parentage, an edit button flipping pencil/eye by mode — does so
-without changing class.
+frame flipping rectangular/boxy by parentage — does so without changing class.
 
 Naming a `*Appearance` class directly in the constructor (`@appearance = new FooAppearance @`) is the
 older shape and still correct for a leaf that nothing subclasses; it simply forecloses the override

@@ -313,9 +313,11 @@ class MacroToolkit
   # post-release glide is frame-cadence driven and outlives the input queue, so without this gate a
   # screenshot races it (under the pacing control the glide is suppressed at the source —
   # ViewportWdgt.takeStrokeScrollFrom — and this set stays empty; the gate is defense-in-depth for
-  # any momentum that does run).
+  # any momentum that does run). An edit-mode toggle's knob, sliding after a press, holds it the same
+  # way, but is not suppressed: its slide is the product's own path, and a landed knob is the same
+  # pixels however many frames it took.
   _queueDrained: ->
-    world.inputEventsQueue.isEmpty() and !world.anyScrollMomentumOngoing()
+    world.inputEventsQueue.isEmpty() and !world.anyScrollMomentumOngoing() and !world.anyKnobSlideOngoing()
 
   # THE PUMP'S FIRST DUTY, each cycle before any wait gate (Macro._addHeaderCode): a held swipe is
   # queued at the start of the first cycle after everything before it has drained, so its box is read
@@ -348,9 +350,10 @@ class MacroToolkit
   # defects a forced full repaint would erase. This is the single SWCanvas
   # screenshot settle gate.
   readyForMacroScreenshot: ->
-    # never capture while a scroll-momentum glide is settling (matters for
-    # native captures too, hence before the SWCanvas-only early return)
+    # never capture while a scroll-momentum glide or a toggle's knob is settling (matters
+    # for native captures too, hence before the SWCanvas-only early return)
     return false if world.anyScrollMomentumOngoing()
+    return false if world.anyKnobSlideOngoing()
     return true unless window.FIZZYGUM_USE_SWCANVAS
     if world.anyTextDirty()
       return false

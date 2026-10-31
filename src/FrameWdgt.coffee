@@ -155,12 +155,14 @@ class FrameWdgt extends Widget
   #   showsText     whether the title piece carries its text (a bar too thin for text does not).
   #   naturalWidth  what the bar contributes to its frame's width hug: "none" asks for nothing,
   #                 "titleText" hugs the title text.
-  #   thickness / slotSize / glyphSizes / padding / ruleWidth / textHeight
+  #   thickness / slotSize / pieceLengths / glyphSizes / padding / ruleWidth / textHeight
   #                 the metrics, each read off the theme (G2): the strip's own thickness, the
-  #                 target box a piece advances the strip by, the side of the glyph each button
-  #                 piece draws inside that box, by piece name (G3: a target and its mark are
-  #                 separate dials; the window controls and the pencil are two glyph sizes, and a
-  #                 strip that carries no button piece names none), the inset the strip keeps
+  #                 target box a piece advances the strip by, the length along the strip of a piece
+  #                 that is longer than that box, by piece name (every other piece is one slot),
+  #                 the side of the glyph each button piece draws inside its box, by piece name
+  #                 (G3: a target and its mark are separate dials; the window controls and the edit
+  #                 toggle's icons are two glyph sizes, and a strip that carries no button piece
+  #                 names none), the inset the strip keeps
   #                 from my edges, the width of the rule the strip draws along its content-facing
   #                 edge, and the title's height. Every strip's padding is my BORDER: its
   #                 background sits inside it along my outer side (and, for a window strip, at
@@ -197,7 +199,7 @@ class FrameWdgt extends Widget
     # A DOCKED band's strip is a GRIP: take hold of it, or collapse it, and nothing else (program
     # ruling C12) -- editing what a band holds is not a band gesture, and a host that owns my
     # placement owns what my strip offers, exactly as it owns my close piece. Set free on the
-    # desktop I am an ordinary window again and carry the pencil my payload's amenities call for
+    # desktop I am an ordinary window again and carry the edit toggle my payload's amenities call for
     # (ruling C5).
     pieces.push "edit" if !@_myEdgeDockSpec()? and (@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing)
 
@@ -212,10 +214,12 @@ class FrameWdgt extends Widget
     # rule, which my payload lies past.
     thickness: theme.frameBorderWidth + theme.barIconSize + theme.barRuleWidth
     slotSize: theme.barIconSize
+    pieceLengths:
+      edit: theme.barToggleBoxWidth
     glyphSizes:
       close: theme.barControlGlyphSize
       collapse: theme.barControlGlyphSize
-      edit: theme.barActionGlyphSize
+      edit: theme.barToggleGlyphSize
     padding: theme.frameBorderWidth
     ruleWidth: theme.barRuleWidth
     textHeight: @_windowTitleTextHeight()
@@ -1873,9 +1877,12 @@ class FrameWdgt extends Widget
   #                         undefined for none
   #     barGlyph, barGlyphActive
   #                         the ink of the glyphs my strip's button pieces draw (close, collapse /
-  #                         uncollapse, the pencil / eye): at rest, and while one is hovered or
-  #                         pressed. Undefined for a strip that carries no button piece (a pop-up
-  #                         header)
+  #                         uncollapse): at rest, and while one is hovered or pressed. Undefined
+  #                         for a strip that carries no button piece (a pop-up header)
+  #     barToggleTrack, barToggleKnob, barToggleKnobGlyph, barToggleGlyph
+  #                         the edit-mode toggle's inks: its track, its knob, the icon on the knob
+  #                         and the icon off it at rest (hovered or pressed that one takes
+  #                         barGlyphActive). Undefined for a strip that carries no toggle
   #     titleText           my title's ink (painted straight onto my strip's background)
   #     titleBold           my title's weight: its font role's bold flag (FrameBarWdgt takes it at
   #                         its title's build and at each derivation of its skin)
@@ -1909,6 +1916,10 @@ class FrameWdgt extends Widget
         barRule: theme.menuHeaderRule
         barGlyph: undefined
         barGlyphActive: undefined
+        barToggleTrack: undefined
+        barToggleKnob: undefined
+        barToggleKnobGlyph: undefined
+        barToggleGlyph: undefined
         titleText: theme.menuHeaderText
         titleBold: theme.fonts.menuHeader.bold
         titleFitBold: theme.fonts.menuHeader.bold
@@ -1936,6 +1947,10 @@ class FrameWdgt extends Widget
     barRule: if focused then theme.focusedWindowBarRule else theme.barRule
     barGlyph: if internal then theme.cardBarGlyph else windowBarGlyph
     barGlyphActive: if focused then theme.focusedWindowBarGlyphActive else theme.barGlyphActive
+    barToggleTrack: if focused then theme.focusedWindowBarToggleTrack else theme.barToggleTrack
+    barToggleKnob: if focused then theme.focusedWindowBarToggleKnob else theme.barToggleKnob
+    barToggleKnobGlyph: theme.barToggleKnobGlyph
+    barToggleGlyph: if focused then theme.focusedWindowBarToggleGlyph else (if internal then theme.cardBarGlyph else windowBarGlyph)
     titleText: if focused then theme.focusedWindowTitleText else theme.windowTitleText
     titleBold: if focused then theme.fonts.focusedWindowTitle.bold else theme.fonts.windowTitle.bold
     titleFitBold: if internal then theme.fonts.windowTitle.bold else theme.fonts.focusedWindowTitle.bold
@@ -2240,7 +2255,7 @@ class FrameWdgt extends Widget
     @label = @bar.label
     @closeButton = @bar.closeButton
     @collapseUncollapseSwitchButton = @bar.collapseUncollapseSwitchButton
-    # the pencil is the one piece whose BUILD carries a mode to reflect, so the bar retires it
+    # the edit toggle is the one piece whose BUILD carries a mode to reflect, so the bar retires it
     # with the rest of the roster and I put it back: docking me drops it, setting me free on the
     # desktop hands it back, showing the mode my payload is in at that moment.
     @editButton = @bar.editButton
@@ -2284,14 +2299,13 @@ class FrameWdgt extends Widget
       return
     @_invalidateLayout() if @bar?._rosterDisagreesWithSpec()
 
-  # Reflect the content's edit/view mode in the title-bar edit button. The glyph
-  # NAMES the current mode (pencil = editing now, eye = viewing now); the button
-  # owns its own rest/hover appearance (the current mode's glyph at rest, the next
-  # mode's on hover as feedforward — see EditIconButtonWdgt; its inks are its
-  # strip's), so this just sets the mode.
+  # Reflect the content's edit/view mode in the title-bar edit-mode toggle, whose knob
+  # stands under the icon of the current mode (pencil = editing now, eye = viewing now);
+  # the toggle owns its own look (see EditIconButtonWdgt; its inks are my look's), so
+  # this just sets the mode.
   # Driven from the enable/disable state-reflection callers, not from clicks.
   showEditModeInBar: ->
-      @editButton?.showPencilGlyph()
+      @editButton?.showEditMode()
       # my slots follow the mode: editing ENGAGES every dock (the band takes its space back and
       # is drawn again). NoSettle core -- this protocol is driven from inside the content's
       # enable/disable settle; the engagement invalidates, and that flush covers it.
@@ -2303,7 +2317,7 @@ class FrameWdgt extends Widget
       @_dockedToolbar()?.reactToEditModeInFrame?()
 
   showViewModeInBar: ->
-      @editButton?.showEyeGlyph()
+      @editButton?.showViewMode()
       @_engageDocksNoSettle false
       @_dockedToolbar()?.reactToViewModeInFrame?()
 
@@ -2313,7 +2327,7 @@ class FrameWdgt extends Widget
   # the payload's `@parent?.show*ModeInBar?()` notify reaches me too, idempotently).
   # The Widget base core would act SHALLOWLY on @contents (one child level, no
   # payload-specific propagation) and notify only @parent. I write no flag of my
-  # own: my mode is my payload's (isInEditMode), which the bar's pencil switches
+  # own: my mode is my payload's (isInEditMode), which the bar's edit toggle switches
   # without passing through me.
   # ⚠ NO `triggeringWidget` parameter here, unlike the Stretchables. That parameter exists ONLY to
   # stop an edit-mode change bubbling back to whoever triggered it, and the only code that reads it
@@ -2342,17 +2356,17 @@ class FrameWdgt extends Widget
     @showViewModeInBar()
 
   # My edit mode is my content's (I always have one -- a placeholder when nothing else): the
-  # content holds the flag and the bar's pencil switches it there directly, so a copy of my own
+  # content holds the flag and the bar's edit toggle switches it there directly, so a copy of my own
   # would fall stale. It is what decides whether I am framed as the widget being edited when I am
   # the focus (WorldWdgt._widgetBeingEdited), whether a drop finds me reluctant, and which way my
-  # pencil turns me when I am another window's content.
+  # toggle turns me when I am another window's content.
   isInEditMode: ->
     @contents.isInEditMode()
 
   _createAndAddEditButton: ->
     # public-call-sanctioned: showEditModeInBar/showViewModeInBar are the window-bar mode PROTOCOL —
     # content widgets drive them cross-object (`@parent?.showEditModeInBar?()`), so they stay public.
-    # The roster carries the pencil exactly when the amenities are there to drive — a framed
+    # The roster carries the edit toggle exactly when the amenities are there to drive — a framed
     # CITIZEN provides them itself (its payload may be a plain Widget container, §5.B), a plain
     # frame gets them from the content it wraps — so the spec is the one home for that question.
     if ("edit" in @_barSpec().pieces) and !@editButton?

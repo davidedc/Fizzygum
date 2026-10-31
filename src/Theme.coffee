@@ -138,13 +138,19 @@ class Theme
     @barRule = @line
     # the title text in a window's or a card's strip.
     @windowTitleText = @muted
-    # the ink of the glyphs a strip's pieces draw (close, collapse / uncollapse, the pencil / eye)
+    # the ink of the glyphs a strip's pieces draw (close, collapse / uncollapse, the edit toggle's)
     # at rest: in a window's strip, and in a card's (a docked band's included) ...
     @windowBarGlyph = @muted
     @cardBarGlyph = @text2
     # ... and the ink a strip glyph takes while it is hovered or pressed, in either strip (the
     # glyph recolours in place: no plate is drawn behind it).
     @barGlyphActive = @ink
+    # the edit-mode toggle a strip carries (EditIconButtonWdgt): its track, the knob sliding along it
+    # and the icon standing on the knob. The icon off the knob rests in the strip's glyph ink and
+    # takes barGlyphActive while the toggle is hovered or pressed, like every strip glyph.
+    @barToggleTrack = @line
+    @barToggleKnob = @paper
+    @barToggleKnobGlyph = @ink
     # the ink of an ICON BUTTON's glyph that no strip inks (an IconButtonWdgt standing on its own: the
     # demo's close icon, a pointer's close button), read at each of its state changes
     # (IconButtonWdgt._updateColor): at rest, and while it is hovered or pressed. A strip inks the
@@ -169,6 +175,12 @@ class Theme
     @focusedWindowBarRule = undefined
     @focusedWindowBarGlyph = @chrome
     @focusedWindowBarGlyphActive = @paper
+    # the edit-mode toggle on the dark strip: a recessed track, a knob in the desk's colour, and the
+    # icon off the knob a step dimmer than the strip's other glyphs, so the one on the knob reads as
+    # the current mode.
+    @focusedWindowBarToggleTrack = @code
+    @focusedWindowBarToggleKnob = @desk
+    @focusedWindowBarToggleGlyph = @frame
     @focusedWindowTitleText = @paper
     @focusedWindowFrameStroke = @chromeDark
     # a card's body (a persistent frame nested in a real container, a docked band included): its
@@ -761,15 +773,23 @@ class Theme
     # thin resting width.
     @scrollBarsThickness = 12
 
-    # a frame bar's button (close / collapse / edit) is a barIconSize square; its glyph paints
-    # centred within that square at the side its kind names: barControlGlyphSize for the window
-    # controls (the close cross, the collapse minus, the uncollapse plus), barActionGlyphSize for
-    # the strip's trailing action (the pencil / eye). Two dials, never one (G3): a touch target and
-    # the mark inside it scale differently, so the bar strip is sized for the finger while the
-    # ink stays the size the eye wants.
+    # a frame bar's button (close / collapse) is a barIconSize square; its glyph paints centred
+    # within that square at barControlGlyphSize (the close cross, the collapse minus, the uncollapse
+    # plus). Two dials, never one (G3): a touch target and the mark inside it scale differently, so
+    # the bar strip is sized for the finger while the ink stays the size the eye wants.
     @barIconSize = 44
     @barControlGlyphSize = 14
-    @barActionGlyphSize = 20
+    # the strip's trailing edit-mode toggle: one target barToggleBoxWidth wide and barIconSize tall,
+    # holding a pill-shaped track with a knob inset inside it (the knob's height follows from the
+    # track's), an icon at barToggleGlyphSize at each end of the knob's travel, and the time a press's
+    # slide takes.
+    @barToggleBoxWidth = 80
+    @barToggleTrackWidth = 64
+    @barToggleTrackHeight = 28
+    @barToggleKnobWidth = 30
+    @barToggleKnobInset = 2
+    @barToggleGlyphSize = 16
+    @barToggleSlideMs = 160
     # the glyph box a menu row shows its icon in (MenuItemWdgt), and so the box a picture taken
     # for a row is fitted into (InertIconHolderWdgt, the overflow chevron's tool miniatures).
     @menuRowGlyphSize = 24

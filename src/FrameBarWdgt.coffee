@@ -1,6 +1,6 @@
 # The title bar of a FrameWdgt -- ONE child that owns the title-strip pieces
 # (titlebarBackground, label, close button, collapse/uncollapse switch,
-# pencil-eye edit button), their strip arrange, and the title half of the
+# edit-mode toggle), their strip arrange, and the title half of the
 # window/card skin (the body half stays on the frame). WHICH pieces the strip
 # carries, at what metrics, and along which axis is NOT mine to decide: the
 # frame derives all of it in one place (FrameWdgt._barSpec) and I build and lay
@@ -34,7 +34,7 @@ class FrameBarWdgt extends Widget
   @COLLAPSE_GLYPH: 0
 
   # THE ORDER THE STRIP GIVES ITS PIECES UP as it narrows (owner ruling, the graded roster): the
-  # title goes first (the grade in _layOutTitleInStrip), then the pencil, then the collapse
+  # title goes first (the grade in _layOutTitleInStrip), then the edit toggle, then the collapse
   # switch, then the close button, and then the strip carries nothing at all. Least consequential
   # first -- editing is an amenity, collapsing is a convenience, and closing is the last thing a
   # window gives up. A roster name absent from this list is dropped after all of them (from the
@@ -55,7 +55,7 @@ class FrameBarWdgt extends Widget
   # THE INK MY GLYPH PIECES WEAR -- at rest, and while one is hovered or pressed -- as my frame's
   # look named it at my last skin derivation (_deriveAndSetStripSkin). Kept, rather than asked of
   # the look whenever a piece is built, because a piece can be built BETWEEN two derivations: a
-  # frame lifted out of a host that owned its placement gains its close piece (and its pencil) on
+  # frame lifted out of a host that owned its placement gains its close piece (and its edit toggle) on
   # the hand, where its skin stays the one it was lifted with until it lands
   # (FrameWdgt._reactToBeingAdded), so the new piece must wear the ink its strip already wears.
   # Undefined until something records it, and after a look that names none (a pop-up's): the next
@@ -84,7 +84,7 @@ class FrameBarWdgt extends Widget
   excludedFromEditorFocusTracking: -> true
 
   # MY PIECES DO NOT OWN DRAGS -- I DO. A chrome piece acts on a TAP (close, collapse, toggle the
-  # pencil); a press on one that travels past the grab threshold is the user taking hold of the
+  # edit toggle); a press on one that travels past the grab threshold is the user taking hold of the
   # STRIP, and it must do what a drag on my bare strip does: move a window, pull a docked band out
   # of its slot. Without this a piece cancels the drag outright (the button family rejects drags
   # by default) and a strip whose pieces cover it -- a band grip whose 44 px switch spans the
@@ -289,7 +289,7 @@ class FrameBarWdgt extends Widget
       @closeButton = undefined
       rosterChanged = true
 
-    # the pencil, RETIRE side only: its build belongs to the frame, which pairs it with the mode
+    # the edit toggle, RETIRE side only: its build belongs to the frame, which pairs it with the mode
     # glyph to show (FrameWdgt._createAndAddEditButton, re-driven right after this).
     if ("edit" not in pieces) and @editButton?
       @_destroyEditButtonNoSettle()
@@ -417,7 +417,7 @@ class FrameBarWdgt extends Widget
 
   # The buttons whose glyphs my strip draws: the close piece, BOTH glyphs of the collapse switch
   # (the one it hides shows the moment the switch flips, so it is inked with the other), and the
-  # pencil.
+  # edit toggle.
   _glyphButtons: ->
     buttons = []
     buttons.push @closeButton if @closeButton?
@@ -536,7 +536,6 @@ class FrameBarWdgt extends Widget
       @_layOutTitleBox spec
       return
     vertical = spec.axis is "vertical"
-    pitch = spec.slotSize
 
     titleAt = spec.pieces.indexOf "title"
     leadingPieces = spec.pieces.slice 0, titleAt
@@ -587,20 +586,22 @@ class FrameBarWdgt extends Widget
     # above drops a button, and for the same reason -- the piece stays, so its text survives to be
     # shown again the moment the strip runs across a frame's top instead of down a band's side. A
     # title cropped past legibility gives itself up too (see _layOutTitleInStrip).
-    titleShows = @_layOutTitleInStrip spec, leadingPieces, trailingPieces, pitch
+    titleShows = @_layOutTitleInStrip spec, leadingPieces, trailingPieces
 
     if titleShows
       # the roster reads left to right: the leading pieces from the strip's start, the trailing
       # ones from its end, and the title in the span between
-      for pieceName, slotIndex in leadingPieces
+      slotStart = stripStart + spec.padding
+      for pieceName in leadingPieces
         piece = @_pieceNamed pieceName
-        continue unless piece? and piece.parent == @
-        @_layOutPieceInSlot pieceName, (stripStart + spec.padding + slotIndex * pitch), spec
+        @_layOutPieceInSlot pieceName, slotStart, spec if piece? and piece.parent == @
+        slotStart += @_pieceLength pieceName, spec
 
-      for pieceName, slotIndex in trailingPieces
+      slotStart = stripEnd - spec.padding - @_lengthOfPieces trailingPieces, spec
+      for pieceName in trailingPieces
         piece = @_pieceNamed pieceName
-        continue unless piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
-        @_layOutPieceInSlot pieceName, (stripEnd - spec.padding - (trailingPieces.length - slotIndex) * pitch), spec
+        @_layOutPieceInSlot pieceName, slotStart, spec if piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
+        slotStart += @_pieceLength pieceName, spec
     else
       # A TEXTLESS strip centres its piece GROUP along its own axis (ruling C13): with no title
       # between them the pieces are the whole of what the strip carries, and a lone collapse glyph
@@ -609,25 +610,36 @@ class FrameBarWdgt extends Widget
       # it horizontally, a top dock's vertical bar vertically, and it is ONE arithmetic either way.
       showing = @_showingPieceNames leadingPieces.concat trailingPieces
       if showing.length > 0
-        groupLength = showing.length * pitch
-        groupStart = stripStart + Math.round (stripLength - groupLength) / 2
-        for pieceName, slotIndex in showing
-          @_layOutPieceInSlot pieceName, (groupStart + slotIndex * pitch), spec
+        slotStart = stripStart + Math.round (stripLength - @_lengthOfPieces showing, spec) / 2
+        for pieceName in showing
+          @_layOutPieceInSlot pieceName, slotStart, spec
+          slotStart += @_pieceLength pieceName, spec
 
-  # WHICH of `pieceNames` the strip has room for, in roster order. A piece occupies a whole slot
-  # (the target box), the pieces abut, and the strip keeps its padding (the frame border) at each
-  # end, so the count that fits is the inverse of the arithmetic the placement uses --
-  # n * slotSize + 2 * padding pixels for n pieces. What falls out goes by PIECE_DROP_ORDER, so
-  # the progression is the ruled one (pencil, collapse, close) rather than "whatever was last".
+  # How far a piece advances the strip: its own length if the spec names one (the edit toggle), else
+  # one slot, the target box.
+  _pieceLength: (pieceName, spec) ->
+    spec.pieceLengths?[pieceName] ? spec.slotSize
+
+  _lengthOfPieces: (pieceNames, spec) ->
+    total = 0
+    for pieceName in pieceNames
+      total += @_pieceLength pieceName, spec
+    total
+
+  # WHICH of `pieceNames` the strip has room for, in roster order. The pieces abut and the strip keeps
+  # its padding (the frame border) at each end, so the room is the inverse of the arithmetic the
+  # placement uses -- the pieces' lengths + 2 * padding pixels. What falls out goes by
+  # PIECE_DROP_ORDER, so the progression is the ruled one (edit toggle, collapse, close) rather than
+  # "whatever was last".
   _pieceNamesThatFit: (pieceNames, stripLength, spec) ->
-    slotsAvailable = Math.max 0, Math.floor (stripLength - 2 * spec.padding) / spec.slotSize
+    room = Math.max 0, stripLength - 2 * spec.padding
     kept = pieceNames.slice()
     for pieceName in FrameBarWdgt.PIECE_DROP_ORDER
-      break if kept.length <= slotsAvailable
+      break if @_lengthOfPieces(kept, spec) <= room
       droppedAt = kept.indexOf pieceName
       kept.splice droppedAt, 1 if droppedAt >= 0
     # a roster name the drop order does not know still has to fit: the tail goes
-    kept = kept.slice 0, slotsAvailable if kept.length > slotsAvailable
+    kept.pop() while @_lengthOfPieces(kept, spec) > room
     kept
 
   # The names of the pieces of `pieceNames` that are actually on the strip right now -- mine, and
@@ -652,7 +664,7 @@ class FrameBarWdgt extends Widget
   # visible prefix keeps barTitleEllipsisMinFraction of the characters AND at least
   # barTitleEllipsisMinChars of them. Below either bar there is no title piece at all -- "World…"
   # and "t…" name nothing, and an empty strip says more than a garbled one.
-  _layOutTitleInStrip: (spec, leadingPieces, trailingPieces, pitch) ->
+  _layOutTitleInStrip: (spec, leadingPieces, trailingPieces) ->
     return false unless @label? and @label.parent == @
     # a strip running down a band's side is too narrow to read: the piece stays (its text survives
     # for the moment the strip runs across a top again) but it is collapsed out of the picture
@@ -662,10 +674,9 @@ class FrameBarWdgt extends Widget
     vertical = spec.axis is "vertical"
     stripLength = if vertical then @height() else @width()
     stripStart = if vertical then @top() else @left()
-    trailingShowing = (@_showingPieceNames trailingPieces).length
 
-    leadInset = spec.padding + leadingPieces.length * pitch
-    trailInset = spec.padding + trailingShowing * pitch
+    leadInset = spec.padding + @_lengthOfPieces leadingPieces, spec
+    trailInset = spec.padding + @_lengthOfPieces (@_showingPieceNames trailingPieces), spec
     titleInset = Math.max leadInset, trailInset
     titleLength = stripLength - 2 * titleInset
 
@@ -756,7 +767,7 @@ class FrameBarWdgt extends Widget
   # centred inside it. Two dials, never one (program ruling G3: the bar arrange must never equate
   # a glyph with a box), and the piece takes the bigger of them: what a finger can hit is the slot,
   # while the ink stays the size the eye wants. The glyph's side is the piece's OWN (the spec keys
-  # it by piece name: the window controls draw one size, the pencil another), and the collapse
+  # it by piece name: the window controls draw one size, the edit toggle another), and the collapse
   # switch hands its side on to both of its glyphs. The inset lives on the appearance, which is
   # where a shape already decides where it paints inside the box it is given.
   _layOutPieceInSlot: (pieceName, slotStart, spec) ->
@@ -766,4 +777,8 @@ class FrameBarWdgt extends Widget
     else
       pieceBounds = new Rectangle new Point slotStart, @top() + spec.padding
     piece.glyphSize = spec.glyphSizes[pieceName]
-    piece._reLayout pieceBounds.setBoundsWidthAndHeight spec.slotSize, spec.slotSize
+    pieceLength = @_pieceLength pieceName, spec
+    if spec.axis is "vertical"
+      piece._reLayout pieceBounds.setBoundsWidthAndHeight spec.slotSize, pieceLength
+    else
+      piece._reLayout pieceBounds.setBoundsWidthAndHeight pieceLength, spec.slotSize

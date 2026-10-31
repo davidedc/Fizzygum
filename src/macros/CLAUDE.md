@@ -175,7 +175,7 @@ Two independent axes the generators honour (`MacroToolkit.spanFactor` + the sing
 
 **Non-scaled timings (the real-time SETTLE channel) live OUTSIDE the span axis** — never scaled, so a settle keeps
 its real duration at every speed: a numeric **`yield N`** in a macro waits N ms of REAL wall-clock (the pump accrues
-real cycle deltas), and `readyForMacroScreenshot` waits for atlas/momentum settle. Use `yield N` for a load-bearing
+real cycle deltas), and `readyForMacroScreenshot` waits for atlas/momentum/toggle-knob settle. Use `yield N` for a load-bearing
 real-time settle (hold a drag in an auto-scroll edge band until the framework's `Date.now` timer clamps; wait for a
 hover bubble). Use the verb's gesture `milliseconds` (scaled) for cosmetic gesture duration. ⚠ A `yield N` bounds a
 hold only from BELOW: whatever the event that ends it is, it is stamped from the cycle the wait ends in, so every slow
