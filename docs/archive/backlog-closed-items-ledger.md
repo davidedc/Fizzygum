@@ -631,6 +631,37 @@ test of the round-join fix.
       corner 30 px wide with round, miter and bevel joins side by side. On the engine before the fix its PNG differs in
       the round column only (349 px, all holes); Chromium and WebKit draw it byte-identical to Node.
 
+### SWCanvas correctness arc, speed 2026-10-31 (no plan doc)
+The arc's owed benchmarks, run on full power once the battery was healthy, and the one SWCanvas change they called
+for (SWCanvas `427dbe3`, pin bump; SWCanvas §9 entry 34). Evidence: `Fizzygum-tests/.scratch/arc-sw/bench/QUEUE.md`
+("RESULTS TABLE" and "FOLLOW-UP RESULTS").
+- [x] **The arc's speed was not confirmed.** **DONE 2026-10-31**: measured interleaved (old, new, new, old) on mains
+      power after an A/A of the baseline with itself (within 2.2%; this machine's noise is ~5% whole-process steps
+      lasting minutes, which the interleaving cancels). Every family that moved was attributed to one unit by a
+      per-unit chain whose product reproduces the cumulative ratio, and its WORK was counted, so a slowdown that paints
+      more is told from slower code. Most families got faster (curves 0.37×, rotated corners 0.34×, rounded-rect fills
+      0.43×, polylines 0.47×, gradients 0.59×). Three were slower for the same work, and the owner had them taken back
+      in one SWCanvas change, pixel-identical (871 benchmark configurations, 37,680 frames, byte-identical surfaces;
+      SWCanvas's 160 visual PNGs unchanged; the gauntlet on the bump OK, 19/19 legs in-wave, zero serial retries,
+      12m48s, no reference moved):
+      - bilinear `drawImage` +16–26% (U10): the shared filter was a function V8 never inlines (its bytecode is over the
+        limit), called per pixel. It is now an inline TEMPLATE, `FILTER_BILINEAR`, expanded at build time into
+        `drawImage` and pattern paint — one source, no call; the SWCanvas build now fails on an unexpanded marker.
+        Bilinear draws now run 0.89–0.98× their pre-arc time. Fizzygum meets this in every rotated island and
+        non-integer zoom (`TransformFrameWdgt`'s composite).
+      - thick diagonal `strokeLine` +5–10% and rotated-rect strokes +3–4.5% (U14's exact crossings): `QuadScanOps`
+        computes every row's span first, then fills, and keeps no per-row array — whose reset re-allocated it every
+        row since before the arc. Thick lines now run 0.41–0.49× their pre-arc time, thin translucent ones 0.56–0.65×.
+      - polyline strokes, U17's step +4.5% → +2.3%: the stroke anchor copied every flattened point; it shifts them in
+        place. Every polyline configuration runs 0.36–0.75× its pre-arc time.
+      The owner accepted the arc's NEW-WORK costs — work the old engine skipped: small semi-transparent circles +7–26%
+      (it painted 58–91% of their true area), smoothed patterns 1.24–3.24× their old nearest-neighbour time (the old
+      engine never smoothed a pattern; the template cut them to 0.79–0.83× the pushed engine's time), the fused
+      rounded-rect arm's left-edge configurations 2.7–3.9× (it painted no pixel there).
+      Left open on purpose: thick polylines' round joins on short segments cost +8–13% over the engine before U17 —
+      the round-join inner triangles (a counterfactual build without them: +1.4%) — filed in BACKLOG for a cheaper
+      construction rather than accepted.
+
 ### Tooling arc 2026-10-29 — gates you can trust, failures you can read (no plan doc)
 Owner-picked from a BACKLOG triage after the SWCanvas correctness arc's push: the bounded tooling items that needed no
 decision, each re-verified open on the day; then the two load-only failures of the previous closing gauntlet,
