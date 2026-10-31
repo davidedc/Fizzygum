@@ -660,7 +660,24 @@ for (SWCanvas `427dbe3`, pin bump; SWCanvas §9 entry 34). Evidence: `Fizzygum-t
       rounded-rect arm's left-edge configurations 2.7–3.9× (it painted no pixel there).
       Left open on purpose: thick polylines' round joins on short segments cost +8–13% over the engine before U17 —
       the round-join inner triangles (a counterfactual build without them: +1.4%) — filed in BACKLOG for a cheaper
-      construction rather than accepted.
+      construction rather than accepted (closed below).
+- [x] **Round joins' inner triangles cost +8–13% on thick polylines with short segments.** **DONE 2026-10-31**
+      (SWCanvas `bb44ed2`, pin bump; SWCanvas §9 entry 35). Counted per configuration, the triangle is real work: at
+      lineWidth L on S polylines it fires at 44% of round joins and adds +10–14% of the filler's crossings and visits,
+      which is the time (U17's +2.7–3.4% averaged in widths that never emit one). Its sides run the same way as the
+      bodies', so nothing in it cancels and no smaller triangle paints the same pixels; merging it into its pie (same
+      edges, one polygon fewer) saved nothing (1.074/1.122). The owner chose the broader construction that does pay:
+      each subpath's stroke is ONE outline, and the seams every join and cap shares with a body — run once each way
+      between the same two points, which no pixel depends on — are left out (a seam that is not exactly opposite
+      keeps its edges). Pixel-identical by construction: equal edge multisets on 200,000 random strokes, byte-identical
+      surfaces on all 4,376 SWCanvas benchmark configurations, SWCanvas's PNGs unchanged, and the gauntlet on the bump
+      OK (19/19 legs in-wave, zero serial retries, 13m40s) with no reference moved. Time against the engine before:
+      the filed configurations 0.62–0.70× (0.71/0.79× the engine before the triangles, which they had cost
+      1.08/1.13×), all 30 polyline configurations 0.61–0.87×, curve strokes 0.62–0.82×, rotated rounded-rect strokes
+      0.67–0.85×; nothing else moved. The one behaviour change found is in `isPointInStroke`, which Fizzygum never
+      calls: a point 1e-9 outside a square cap's corner that a cancelled seam's epsilon used to count as on an edge
+      now answers outside. Evidence: `Fizzygum-tests/.scratch/arc-sw/bench/QUEUE.md` ("ROUND-JOIN RESULTS"), probes in
+      `.scratch/arc-sw/RJ/`.
 
 ### Tooling arc 2026-10-29 — gates you can trust, failures you can read (no plan doc)
 Owner-picked from a BACKLOG triage after the SWCanvas correctness arc's push: the bounded tooling items that needed no
