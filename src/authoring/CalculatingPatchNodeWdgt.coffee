@@ -80,11 +80,6 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
 
     @_invalidateLayout()
 
-  # My output box is laid out across my full width at my bottom (_layOutOwnContents), so it is the
-  # child at my bottom-right corner, where my window's resizer sits (ViewportWdgt._resizerOverMyCorner).
-  bottomRightCornerReachedBy: (child) ->
-    child is @outputTextArea
-
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
   # The formula box gets two thirds of the height the two labels leave and the output box the third
   # below it, but neither box shorter than one line of its text while both lines fit.

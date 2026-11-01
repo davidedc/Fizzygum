@@ -7,9 +7,11 @@
 #   _castMyShadow      -> …                        (the shadow I cast wherever I am added)
 #   _cornerSide        -> <px>                     (the side of my square)
 #   _cornerInsetFrom   (target) -> <Point>         (how far in from my target's edges I sit)
-#   cornerFootprint    -> <px>                     (how much of my target's corner I take)
 
 class HandleWdgt extends Widget
+
+  # where the pointer stands now is no fact about a saved or copied handle: it starts at rest
+  @serializationTransients: ["_isHovered", "_isPressed"]
 
   target: undefined
   inset: undefined
@@ -86,8 +88,7 @@ class HandleWdgt extends Widget
     new Point pad, pad
 
   # HOW MUCH OF MY TARGET'S BOTTOM-RIGHT CORNER I TAKE, along each axis: the length a viewport
-  # running out to that corner stops its bars short of it by (ViewportWdgt._cornerReserveFor). A
-  # plain handle answers its side.
+  # running out to that corner stops its bars short of it by (ViewportWdgt._cornerReserveFor): my side.
   cornerFootprint: -> @_cornerSide()
 
   # I corner-attach (the corner fixed by my @type) to whatever widget I am added to -- that widget becomes my
@@ -177,7 +178,8 @@ class HandleWdgt extends Widget
 
   # The two questions above, as a query: what my showing derives from, asked without asking whether I
   # show. A viewport that runs out to my parent's bottom-right corner keeps that corner free for me
-  # by this answer (ViewportWdgt._resizerOverMyCorner) -- a visibility is never a layout input.
+  # by this answer (ViewportWdgt._resizerOverMyCorner), and a frame keeps a grip strip for its grip by
+  # it (FrameWdgt._gripStripThickness) -- a visibility is never a layout input.
   wouldShow: ->
     @parent? and @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)
 

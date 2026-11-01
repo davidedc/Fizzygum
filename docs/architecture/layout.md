@@ -299,7 +299,7 @@ not style. The family (`src/LayoutSpec.coffee` is the abstract base):
   survive a grab-out-and-drop-back (and a desktop sojourn, where a stretch record occupies the
   slot while the knob rides in its field).
 - **`FrameContentLayoutSpec`** (a `VerticalStackLayoutSpec` subclass) — adds the starting-size
-  sentinels, `canSetHeightFreely`, `resizerCanOverlapContents`, and `attachedAsFrameContent` (the
+  sentinels, `canSetHeightFreely`, and `attachedAsFrameContent` (the
   role bit that lets the SAME kept object be adopted by a stack). Consumed by `FrameWdgt`'s content
   negotiation; re-initialised per MOUNT and re-armed unless the mount is a same-content
   chrome-rebuild re-add.

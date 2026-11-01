@@ -748,8 +748,8 @@ assertion a recapture after a regression silently stores two different hashes an
   `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `FrameWdgt.add`
   (`:179`) re-parents it as FRAME CONTENT, `_positionAndResizeChildren` (`:384`) COUPLES their bounds (the free-floating
   OUTER window sizes itself to WRAP the content + chrome), relabelled "window with an internal window". Then
-  `@dragWindowResizerTo_InputEvents` resizes the outer and the inner content stretches to fill (the resizer sits at the inner
-  window's corner, `resizerCanOverlapContents`). Shared fixture verbs: `buildExternalAndFreeInternalWindow_Macro()` (`return
+  `@dragWindowResizerTo_InputEvents` resizes the outer and the inner content stretches to fill (the resizer lies in the
+  outer window's grip strip, below the inner window). Shared fixture verbs: `buildExternalAndFreeInternalWindow_Macro()` (`return
   [extWin, intWin]`) + `dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin` (`return extWin`) — see
   "Composing macros" in CLAUDE.md (one test owns the composite screenshot, the other reuses the fixture without re-shooting).
 - **Close an inner (nested) window → the outer survives and stays reusable** (`macroClosingInnerWindowKeepsOuter`): the lifecycle

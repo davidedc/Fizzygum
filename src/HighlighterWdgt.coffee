@@ -18,7 +18,9 @@
 # addDragAffordanceWidgets copies this declare-and-reconcile shape.
 #
 # These widgets are always at the top, so you can always see a widget being
-# highlighted even if it's (partially) occluded by other widgets.
+# highlighted even if it's (partially) occluded by other widgets. A raise leaves
+# them there (Widget._bandAboveMe): the window a frame's grip outlines is raised
+# by the press on that grip, under an outline that already stands.
 
 class HighlighterWdgt extends RectangleWdgt
 
@@ -62,6 +64,8 @@ class HighlighterWdgt extends RectangleWdgt
   # outline, not a wash: the whole-target fill is far too loud for a drag affordance.
   @candidateOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.dropCandidateOutline, alpha: 1}
   @reluctantOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.dropReluctantOutline, alpha: 1}
+  # the window a frame's grip would resize (FrameGripWdgt), at that same width
+  @resizeTargetOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.resizeTargetOutline, alpha: 1}
 
   # The editor-focus indicator is not a HighlighterWdgt: it is a per-widget PAINT-TIME selection
   # overlay drawn on top of the selected widget's own content (Widget._drawSelectionOverlay).

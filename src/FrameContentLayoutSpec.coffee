@@ -36,8 +36,6 @@ class FrameContentLayoutSpec extends VerticalStackLayoutSpec
   # leave the empty vertical space.
   canSetHeightFreely: true
 
-  resizerCanOverlapContents: true
-
   # born as frame content (see VerticalStackLayoutSpec — a content stack that adopts a kept
   # instance of me flips this false)
   attachedAsFrameContent: true

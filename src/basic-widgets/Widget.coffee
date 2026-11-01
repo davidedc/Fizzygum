@@ -977,8 +977,7 @@ class Widget extends TreeNode
     isThereAnHandle?.updateVisibility()
 
   # MY CORNER CHAIN CHANGED: the resizer over my bottom-right corner came or went
-  # (HandleWdgt.updateVisibility), or the chain from my corner up to a resizer did (a docked band
-  # re-sided into or out of the slots its host names, FrameWdgt._reSideMyDockNoSettle). Every
+  # (HandleWdgt.updateVisibility). Every
   # viewport down my corner chain -- the children that run out to my corner
   # (bottomRightCornerReachedBy), and theirs -- re-lays what it keeps clear of that corner, its bars
   # and, through its arrange, contents laid out to its far edges (ViewportWdgt.noteCornerResizerChanged,
@@ -4441,25 +4440,27 @@ class Widget extends TreeNode
     @moveAsLastChild()
     @_fullChanged()
 
-  # THE POP-UP BAND: my siblings above me that are TRANSIENT pop-ups. Mid-gesture UI floats over
-  # the furniture (frame-lifetime ruling C9 — a menu is a world child so that it shows on top of
-  # the window it was opened from), so the band is neither something a raise has to climb past nor
+  # THE BAND: my siblings above me that float over the furniture, TRANSIENT pop-ups and EPHEMERAL
+  # overlays alike. Mid-gesture UI floats over the furniture (frame-lifetime ruling C9 — a menu is a
+  # world child so that it shows on top of the window it was opened from), and an overlay shows
+  # something about what is under it, so the band is neither something a raise has to climb past nor
   # something a raise may bury: a click on a window's own control opens a menu and then escalates
   # into that window's raise, and a raise to the very top would put the window over the menu the
-  # click just opened.
-  _transientPopUpsAboveMe: ->
+  # click just opened; a press on a window's grip raises the window the grip's outline already
+  # stands over (the hover built it a cycle earlier), and would put the window over its own outline.
+  _bandAboveMe: ->
     return [] unless @parent?
     siblings = @parent.children
-    (each for each in siblings.slice((siblings.indexOf @) + 1) when each.isTransientPopUp?())
+    (each for each in siblings.slice((siblings.indexOf @) + 1) when each.isTransientPopUp?() or each.isEphemeral())
 
-  # Am I at the top of the FURNITURE? Nothing above my focus root, or nothing but the pop-up band.
+  # Am I at the top of the FURNITURE? Nothing above my focus root, or nothing but the band.
   isInForeground: ->
     root = @rootForFocus()
     return false unless root?
     return true if root.isLastChild()
     return false unless root.parent?
     siblings = root.parent.children
-    (root._transientPopUpsAboveMe().length) is (siblings.length - (siblings.indexOf root) - 1)
+    (root._bandAboveMe().length) is (siblings.length - (siblings.indexOf root) - 1)
 
   bringToForeground: ->
     # No-op guards: a focus root already atop the furniture cannot be raised further, and a
@@ -4470,12 +4471,12 @@ class Widget extends TreeNode
     # it is pixel-identical: repaint is byte-idempotent.
     root = @rootForFocus()
     return if @isInForeground() or !root?.parent?
-    popUpsAbove = root._transientPopUpsAboveMe()
+    bandAbove = root._bandAboveMe()
     root.moveAsLastChild()
     # and the band goes back over me, in the order it had: I am raised above the FURNITURE, never
-    # above the mid-gesture UI (C9). Their pixels are unchanged — they were over me before and are
+    # above what floats over it. Their pixels are unchanged — they were over me before and are
     # over me after — so the one invalidation below, of the widget that actually moved, covers it.
-    each.moveAsLastChild() for each in popUpsAbove
+    each.moveAsLastChild() for each in bandAbove
     # cross-invalidation-sanctioned: z-order structural verb — invalidates the focus-root
     # it just raised (the moved widget), same dispatcher shape as _addNoSettle's
     root._fullChanged()

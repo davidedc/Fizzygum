@@ -27,6 +27,12 @@ class GripIconAppearance extends SizeAwareIconAppearance
   STARTS: [5 / 36, 15 / 36, 25 / 36]   # each stroke's starting row (and ending column)
   ROW_RUN: 1.5 * Math.SQRT2 / 36       # the draft weight's row cross-section, per px of S
 
+  # My ink: the colour I was built with (a plate's handle hands me its glyph ink), else the ink my
+  # widget's pointer state calls for, read as I paint so that it is never saved or copied stale (a
+  # frame's grip, FrameGripWdgt._gripInk), else my widget's colour.
+  _iconColorString: ->
+    (@ownColorInsteadOfWidgetColor ? @widget._gripInk?() ? @widget.color).toString()
+
   # the geometry for an S x S device-px square, relative to its top-left
   # corner: the run n, the stroke width, and the three strokes as point lists
   _glyphMetrics: (S) ->

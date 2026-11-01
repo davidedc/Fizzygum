@@ -71,12 +71,6 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
 
     @_invalidateLayout()
 
-  # My output box is the last of my three, laid out across my full width at my bottom (_layOutOwnContents),
-  # so it is the child at my bottom-right corner, where my window's resizer sits
-  # (ViewportWdgt._resizerOverMyCorner).
-  bottomRightCornerReachedBy: (child) ->
-    child is @outputTextArea
-
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
   # The regex and the substitution get a quarter of my height each and the output the half below them,
   # but no box shorter than one line of its text while the three lines fit.

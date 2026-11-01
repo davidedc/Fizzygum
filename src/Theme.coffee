@@ -368,9 +368,16 @@ class Theme
     @handlePlatePressFill = @chrome
     @handlePlatePressStroke = @frame
     @handleGlyph = @ink
-    # the ink of a frame's resize GRIP (FrameGripWdgt): its three strokes, at rest and under the
-    # pointer alike -- the grip has no hover look.
+    # the ink of a frame's resize GRIP (FrameGripWdgt): its three strokes at rest, and while the pointer
+    # is over it or a press on it stands.
     @frameGripInk = @grip
+    @frameGripActiveInk = @ink
+    # the GRIP STRIP a window's grip lies in, along its bottom edge (FrameBodyAppearance): its fill,
+    # and the rule along its top edge, the edge that faces the frame's content. It wears the light
+    # strip's two whatever the window's focus: focus dresses the title strip, which is what names the
+    # window, and this strip names nothing. Its rule is barRuleWidth thick.
+    @frameGripStripFill = @windowBarFill
+    @frameGripStripRule = @barRule
 
     # a world's own fill, under everything: the desk a world shows when createDesktop has not
     # furnished it (the test world).
@@ -413,6 +420,9 @@ class Theme
     @dropCandidateOutline = @accent
     # ... and around a view-mode target that declines the drop.
     @dropReluctantOutline = @line
+    # the outline around the window a frame's grip would resize, while the pointer is over the grip
+    # or a press on it stands (FrameGripWdgt).
+    @resizeTargetOutline = @accent
     # the status label that follows the pointer through an armed drag, and the "view-only" badge (a
     # secondary label).
     @dragLabelText = @ink
@@ -740,8 +750,8 @@ class Theme
     # covers its whole square, and its whole square is what a pointer hits, the corner resizer's
     # included, so there is one dial and no invisible band. The same side is the side of a text's
     # corner triangle badges and the pen demo's arrow unit. A frame's own resizer is its grip, sized
-    # by frameGripSize below, never by this; and a footer band keeps footerGripClearance free at its
-    # right end, never this.
+    # by frameGripSize below, never by this; and a naked inspector's footer band keeps
+    # footerGripClearance free at its right end, never this.
     @handleSize = 44
     # ... the rounding of a handle's plate (HandleAppearance), and the side of the glyph square
     # centred on it: the arrows' (the four-way arrow of the move handle, the double arrows of the
@@ -764,11 +774,12 @@ class Theme
     @layoutAdjusterGrabMarkWidth = 2
     # a frame's resize GRIP (FrameGripWdgt, the draft's three-stroke grip): the side of its square,
     # which is also its whole hit area, and how far in from the corner of the frame's CONTENT area
-    # (inside its border) the square sits. Inset plus side is how far into that corner the grip
-    # reaches, which a payload kept clear of it and a viewport's bars running out to it both leave
-    # free (FrameGripWdgt.footprint).
+    # (inside its border) the square sits. The GRIP STRIP holds it, its inset above and below it, and
+    # takes that height out of the window's body (FrameWdgt._gripStripThickness), so a grip never lies
+    # over the window's content or over the grip of a window nested in it.
     @frameGripSize = 36
     @frameGripInset = 3
+    @frameGripStripHeight = 2 * @frameGripInset + @frameGripSize
     # the FAT (hovered) width of a scroll indicator -- see scrollIndicatorThickness below for the
     # thin resting width.
     @scrollBarsThickness = 12
@@ -921,8 +932,7 @@ class Theme
     @toolThumbnailSize = 44
     @toolInternalPadding = 6
     # the grid's padding, one per axis. ALONG the strip: the side padding before its first slot
-    # and after its last (after the last, more where a resize grip sits over the strip's far end:
-    # ToolPanelWdgt._farAlongPadding), with whatever run is left between them shared evenly between
+    # and after its last, with whatever run is left between them shared evenly between
     # the cells (space-between). ACROSS it: around its toolRows of cells, so a one-row strip is
     # 44 + 2 x 6 = 56 deep.
     @toolAlongPadding = 8
@@ -998,8 +1008,9 @@ class Theme
     # prompt's row, PromptButtonsRowWdgt) ...
     @footerInset = 12
     @footerGap = 8
-    # ... and how much more its right group keeps clear at the band's right end, for the frame's
-    # resize grip in that corner.
+    # ... and how much more its right group keeps clear at the band's right end when its host's own
+    # resizer stands over that corner (a naked inspector's, InspectorWdgt.footerRightClearance). A
+    # window's grip is no such case: it lies in the grip strip, below the band.
     @footerGripClearance = 44
 
     # the OBJECT INSPECTOR's bands (InspectorWdgt._bandsIn; its footer band is a footer band, above):

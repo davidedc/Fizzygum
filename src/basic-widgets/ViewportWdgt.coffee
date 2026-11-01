@@ -597,8 +597,8 @@ class ViewportWdgt extends Widget
       new Rectangle (new Point @left(), @bottom() - edgeInset - thickness), (new Point @right() - spaceToLeaveOnOneSide, @bottom() - edgeInset)
 
   # How far a bar of mine stops short of my bottom-right corner: as far as what sits there needs. A
-  # resizer over the corner takes the room IT names (its cornerFootprint: a frame's grip its inset
-  # plus its side, a naked inspector's handle its side; never less than a bar); failing that, my
+  # resizer over the corner takes the room IT names (its cornerFootprint: a naked inspector's handle
+  # its side; never less than a bar); failing that, my
   # other bar takes its thickness where it crosses; with neither, the corner is free and the bar
   # runs right to it. Both are asked of STRUCTURE, never of geometry or visibility, which the passes
   # that read this are still laying out: the other bar by the overflow its showing derives from, the
@@ -637,22 +637,10 @@ class ViewportWdgt extends Widget
       container = container.parent
     undefined
 
-  # HOW FAR A RESIZER OVER MY BOTTOM-RIGHT CORNER REACHES IN from that corner, along each axis (its
-  # cornerFootprint), or 0 when none sits there: what contents that lay their own pieces out to my far
-  # edges keep clear (ToolPanelWdgt keeps its strip's last slot out of it). The same STRUCTURAL answer
-  # my bars' reserve takes (_resizerOverMyCorner, a reserve by occupancy), because the passes that ask
-  # are still laying out; whenever the answer can change -- a resizer coming or going, or the chain
-  # above me re-sided -- my corner chain is told (Widget.noteCornerChainChanged), which re-lays me
-  # (noteCornerResizerChanged), and my arrange re-lays my contents.
-  cornerResizerFootprint: ->
-    @_resizerOverMyCorner()?.cornerFootprint() ? 0
-
   # What occupies a corner I reach may have changed -- its resizer came or went
-  # (HandleWdgt.updateVisibility), or the chain from me up to a resizer did (a band re-sided,
-  # FrameWdgt._reSideMyDockNoSettle); either tells the viewports down that corner chain
+  # (HandleWdgt.updateVisibility), which tells the viewports down that corner chain
   # (Widget.noteCornerChainChanged) -- so my bars must re-lay to the reserve the corner now asks of
-  # them, and so must contents that keep clear of it (cornerResizerFootprint): my arrange is where
-  # both are laid, so I schedule it.
+  # them: my arrange is where they are laid, so I schedule it.
   noteCornerResizerChanged: ->
     @_scheduleRelayoutRespectingPhase()
 
@@ -1623,12 +1611,14 @@ class ViewportWdgt extends Widget
   _enableDragsDropsAndEditingNoSettle: ->
     if @dragsDropsAndEditingEnabled
       return
-    @parent?.showEditModeInBar?()
-
     # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter
     # (macro/cross-object surface) — settle-free, consciously reused by this core.
     @enableDrops()
     @dragsDropsAndEditingEnabled = true
+
+    # told once my mode has changed, as every core in this family tells it: my window re-asks the
+    # windows standing in me whether they offer a grip, and they read my mode to answer
+    @parent?.showEditModeInBar?()
 
     @contents._enableDragsDropsAndEditingNoSettle @
 
@@ -1638,11 +1628,12 @@ class ViewportWdgt extends Widget
   _disableDragsDropsAndEditingNoSettle: ->
     if !@dragsDropsAndEditingEnabled
       return
-    @parent?.showViewModeInBar?()
-
     # public-call-sanctioned: disableDrops — see the enableDrops note in the enable core above.
     @disableDrops()
     @dragsDropsAndEditingEnabled = false
+
+    # (after the flag: see the enable core above)
+    @parent?.showViewModeInBar?()
 
     @contents._disableDragsDropsAndEditingNoSettle @
     # ELIMINATE (end-of-cycle-flush-drawdown): a disable-probe proved the deferred re-fit that used to

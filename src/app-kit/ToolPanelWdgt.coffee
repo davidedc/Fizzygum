@@ -31,20 +31,9 @@ class ToolPanelWdgt extends PanelWdgt
   _minimumGap: ->
     WorldWdgt.theme.toolInternalPadding
 
-  # my padding ALONG the strip, before its first slot and, unless a resizer needs more room there
-  # (_farAlongPadding), after its last ...
+  # my padding ALONG the strip, before its first slot and after its last ...
   _alongPadding: ->
     WorldWdgt.theme.toolAlongPadding
-
-  # ... my padding at the strip's FAR end -- its right end for a row, its bottom for a column, so
-  # always the end at my viewport's bottom-right corner, which is where a frame's resize grip sits:
-  # my along padding, or how far a resizer over that corner reaches in, whichever is more, so my
-  # last slot (the chevron's, when anything overflows) stays clear of the grip. My viewport answers
-  # the reach (ViewportWdgt.cornerResizerFootprint: STRUCTURAL, a reserve by occupancy, the one its
-  # scroll bars keep), so a floating toolbar's window keeps it and a band docked at its host's right
-  # or bottom keeps the host's; a parent with no answer has no corner to keep.
-  _farAlongPadding: ->
-    Math.max @_alongPadding(), (@parent?.cornerResizerFootprint?() ? 0)
 
   # ... and ACROSS it, on either side of my rows of cells
   _crossPadding: ->
@@ -177,19 +166,19 @@ class ToolPanelWdgt extends PanelWdgt
     @_cellSide() + @_minimumGap()
 
   # how many whole cells a run of `run` pixels holds at the least gap between them, with
-  # `nearPadding` before the first and `farPadding` after the last (along a strip, my along padding
-  # and my far-end padding; across it, my cross padding at both ends) -- and always at least one,
-  # so a strip too short for a cell still has a slot for the chevron
-  _cellsFittingIn: (run, nearPadding, farPadding) ->
-    Math.max 1, Math.floor (run - nearPadding - farPadding + @_minimumGap()) / @_cellPitch()
+  # `padding` before the first and after the last (along a strip, my along padding; across it, my
+  # cross padding) -- and always at least one, so a strip too short for a cell still has a slot for
+  # the chevron
+  _cellsFittingIn: (run, padding) ->
+    Math.max 1, Math.floor (run - 2 * padding + @_minimumGap()) / @_cellPitch()
 
   # THE INVERSE of _cellsFittingIn: the run that holds exactly `count` cells at the least gap --
   # their pitches minus the gap the last one does not need, plus the padding at each end. The two
   # must stay inverses, which is why they are written as one pair here and read from both the
   # arrange (which fits) and the hug (which sizes): a strip at the run this answers has no
   # leftover, so its cells sit exactly the least gap apart.
-  _naturalRunFor: (count, nearPadding, farPadding) ->
-    count * @_cellPitch() - @_minimumGap() + nearPadding + farPadding
+  _naturalRunFor: (count, padding) ->
+    count * @_cellPitch() - @_minimumGap() + 2 * padding
 
   # MY DEPTH AS A STRIP: the cross-axis run one strip-depth of cells needs -- toolRows of them
   # with my cross padding on either side, so a band has nothing left over across its cells. The
@@ -198,31 +187,29 @@ class ToolPanelWdgt extends PanelWdgt
   # exactly what a dock thickness must be (§6.1 rule 1), and read at every measure
   # (ToolbarWdgt.dockThickness), so a band follows the theme it is laid out in.
   naturalGridCrossExtent: ->
-    @_naturalRunFor @_stripDepthInCells(), @_crossPadding(), @_crossPadding()
+    @_naturalRunFor @_stripDepthInCells(), @_crossPadding()
 
   # THE BOX THAT HUGS MY CELLS, within the `room` a free-floating home can offer (owner ruling:
   # a floating toolbar hugs its payload; C10's never-bigger-than-the-world is what `room` carries).
   # Across: toolRows columns -- a cell column with my cross padding beside it, so nothing
-  # overflows sideways. Along: EVERY cell's run at the least gap, my along padding before it and my
-  # far-end padding after it (the reach of the window's own grip over that end), capped by the room
-  # and, when capped, QUANTIZED DOWN to whole cells -- a sliver of a cell shows nothing anyone can
+  # overflows sideways. Along: EVERY cell's run at the least gap, my along padding at either end of
+  # it, capped by the room and, when capped, QUANTIZED DOWN to whole cells -- a sliver of a cell shows nothing anyone can
   # use, and the overflow chevron carries what is left out either way. Either way the run has no
   # leftover, so nothing spreads until someone makes the strip longer.
   naturalGridExtentWithin: (room) ->
-    farPadding = @_farAlongPadding()
-    columns = Math.min @_stripDepthInCells(), (@_cellsFittingIn room.x, @_crossPadding(), @_crossPadding())
-    rows = Math.min (Math.max 1, Math.ceil @_toolCells().length / columns), (@_cellsFittingIn room.y, @_alongPadding(), farPadding)
-    new Point (@_naturalRunFor columns, @_crossPadding(), @_crossPadding()), (@_naturalRunFor rows, @_alongPadding(), farPadding)
+    columns = Math.min @_stripDepthInCells(), (@_cellsFittingIn room.x, @_crossPadding())
+    rows = Math.min (Math.max 1, Math.ceil @_toolCells().length / columns), (@_cellsFittingIn room.y, @_alongPadding())
+    new Point (@_naturalRunFor columns, @_crossPadding()), (@_naturalRunFor rows, @_alongPadding())
 
   # WHERE EACH SLOT STARTS ALONG A STRIP `run` long, for `count` slots in use: the first
-  # `nearPadding` in, the last ending `farPadding` short of the far end, and the leftover between
-  # them shared evenly -- SPACE-BETWEEN. One slot sits `nearPadding` in. Each slot is rounded on its
+  # `padding` in, the last ending `padding` short of the far end, and the leftover between
+  # them shared evenly -- SPACE-BETWEEN. One slot sits `padding` in. Each slot is rounded on its
   # own, so a fractional share (a 61.25 step) never commits a fractional bound and the last slot
-  # still ends exactly at the far padding.
-  _slotOffsetsAlong: (count, run, nearPadding, farPadding) ->
-    return [nearPadding] if count is 1
-    spread = run - nearPadding - farPadding - @_cellSide()
-    (nearPadding + Math.round(i * spread / (count - 1)) for i in [0...count])
+  # still ends exactly at the padding.
+  _slotOffsetsAlong: (count, run, padding) ->
+    return [padding] if count is 1
+    spread = run - 2 * padding - @_cellSide()
+    (padding + Math.round(i * spread / (count - 1)) for i in [0...count])
 
   # place one cell in slot `slot` of my grid, centred in its cell box. Slots fill a `columns`-wide
   # grid row by row; along the strip a slot stands where _slotOffsetsAlong put it, across the strip
@@ -254,16 +241,14 @@ class ToolPanelWdgt extends PanelWdgt
     # A STRIP runs along its longer axis, and toolRows is how many cells its CROSS axis takes.
     # So a wide strip is toolRows deep and as many columns as fit, a tall one is toolRows wide
     # and as many rows as fit -- one arrange, two directions. The fit counts cells at the least
-    # gap between my along padding and my far-end padding (which keeps the last slot clear of a
-    # resizer over my viewport's bottom-right corner).
-    nearPadding = @_alongPadding()
-    farPadding = @_farAlongPadding()
+    # gap between my along padding at either end.
+    alongPadding = @_alongPadding()
     vertical = runH > runW
     if vertical
       columns = @_stripDepthInCells()
-      rows = @_cellsFittingIn runH, nearPadding, farPadding
+      rows = @_cellsFittingIn runH, alongPadding
     else
-      columns = @_cellsFittingIn runW, nearPadding, farPadding
+      columns = @_cellsFittingIn runW, alongPadding
       rows = @_stripDepthInCells()
 
     # The trailing slot becomes the chevron's the moment one cell would be left out, so the
@@ -280,7 +265,7 @@ class ToolPanelWdgt extends PanelWdgt
     grid =
       columns: columns
       vertical: vertical
-      alongOffsets: @_slotOffsetsAlong slotsAlong, (if vertical then runH else runW), nearPadding, farPadding
+      alongOffsets: @_slotOffsetsAlong slotsAlong, (if vertical then runH else runW), alongPadding
 
     for cell, i in cells
       if i < shownCount

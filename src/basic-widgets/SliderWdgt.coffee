@@ -213,7 +213,6 @@ class SliderWdgt extends CircleBoxWdgt
     
   initialiseDefaultFrameContentLayoutSpec: ->
     @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
-    @_contentStackSpec.resizerCanOverlapContents = false
 
   
   rangeSize: ->

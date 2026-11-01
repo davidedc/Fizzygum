@@ -150,15 +150,21 @@ class InspectorWdgt extends Widget
 
     @_buildAndConnectChildren()
 
-  # Which of my children run out to my bottom-right corner, where my own resizer sits while I am naked
-  # and my window's grip while I am its payload. While I end in my footer band, none: the band keeps
-  # that corner clear for the grip (footerGripClearance) and holds no viewport there, so the corner
-  # chain stops at me (ViewportWdgt._resizerOverMyCorner). A read-only inspector has no footer band,
-  # and its code pane runs out to the corner, so the pane's bars keep the corner free; the resizer
-  # overlaps only the pane's lowest rows, and the pane keeps the whole reserve: the safe way to be
-  # wrong. The same query the footer band's build and layout ask (_subjectIsEditable).
+  # Which of my children run out to my bottom-right corner, where my own resizer sits while I am naked.
+  # While I end in my footer band, none: the band keeps that corner clear for my resizer
+  # (footerRightClearance) and holds no viewport there, so the corner chain stops at me
+  # (ViewportWdgt._resizerOverMyCorner). A read-only inspector has no footer band, and its code pane
+  # runs out to the corner, so the pane's bars keep the corner free; the resizer overlaps only the
+  # pane's lowest rows, and the pane keeps the whole reserve: the safe way to be wrong. The same query
+  # the footer band's build and layout ask (_subjectIsEditable). In a window my resizer is hidden, and
+  # the window's grip lies in its grip strip below me, so no corner of mine is covered.
   bottomRightCornerReachedBy: (child) ->
     child is @detail and !@_subjectIsEditable()
+
+  # How much more my footer band keeps clear at its right end (FooterBandLayout): my own resizer's
+  # corner, while I am naked and it shows. In a window nothing of a resizer lies over my band.
+  footerRightClearance: ->
+    if @resizer?.wouldShow() then WorldWdgt.theme.footerGripClearance else 0
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
   # settled). Built once, at construction: a filter change or a member add / rename / remove rebuilds

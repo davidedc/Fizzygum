@@ -157,9 +157,10 @@ class BoxyAppearance extends Appearance
 
       @fillOutline ctx
 
-      # the rules between my widget's panes, then the rule along my own edge: over my fill, under
-      # its children and my stroke
+      # a subclass's band across my fill, the rules between my widget's panes, then the rule along
+      # my own edge: over my fill, under its children and my stroke
       if !appliedShadow?
+        @_paintBandOverMyFill ctx, localDamageBox
         @_paintSeamRules ctx, localDamageBox
         @_paintEdgeRule ctx, localDamageBox
 
@@ -167,6 +168,11 @@ class BoxyAppearance extends Appearance
       # unless it is painted after my widget's children instead (_strokesAfterChildren).
       if !appliedShadow? and !@_strokesAfterChildren()
         @_strokeOutlineInStrokeColor ctx
+
+  # A part of my widget's own body that a subclass paints differently from my fill, inside an open
+  # scope, in the normal pass only: it is look, not silhouette. None here (FrameBodyAppearance paints a
+  # window's grip strip).
+  _paintBandOverMyFill: (ctx, localDamageBox) ->
 
   # My edge rule (ruledEdge), filled over the part of it being repainted, inside an open scope. A
   # fill, so it may be sized to the damage box; where it lies is my widget's own edge.

@@ -1844,7 +1844,7 @@ class MacroToolkit
 
   # WHERE A PRESS MEETS A WIDGET, on the screen: its centre when a press there meets it (or a widget
   # inside it), else its first exposed point (_exposedScreenPointOf). The aim for a widget something
-  # else may partly cover -- a sheet's bottom-right cell, under its window's resize grip -- stated by
+  # else may partly cover -- a sheet's cell, under a window standing over the sheet -- stated by
   # the widget rather than by a point inside it that the next layout change covers.
   pressPointOf: (widget) ->
     centre = @_screenPixelOf widget, widget.center()

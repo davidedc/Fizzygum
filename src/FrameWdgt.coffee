@@ -5,7 +5,8 @@
 #   my LIFETIME    'persistent' (furniture: a window, a card, a docked band) or 'transient'
 #                  (mid-gesture UI: a menu, a prompt). It changes mid-life — pinning IS that
 #                  change — which is why it is a state here and not a class hierarchy.
-#   my ATTACHMENT  free-floating on the desktop (a window: the window look, close, resizer),
+#   my ATTACHMENT  free-floating on the desktop (a window: the window look, close, resizer in its
+#                  grip strip),
 #                  nested in a container (a card: the card look, no close), or held by a host's
 #                  edge spec (a docked band: the card look, a grip across it, no close, no resizer).
 #
@@ -123,11 +124,11 @@ class FrameWdgt extends Widget
   # mutating anything, so a parent (a stack/scroll holding this window) can MEASURE this window
   # instead of mutating-it-and-reading-the-applied-height-back. Replaces the Stage-B stub.
   #
-  #   window height = content height-at-its-allotted-width + title/resizer chrome
+  #   window height = content height-at-its-allotted-width + chrome
   #
-  # - chrome (== the arrange's partOfHeightUsedUp): the strip plus the body's edges and margins,
-  #   and a row for the resizer when it may not overlap the contents -- chrome comes from the
-  #   shared _chromeHeight (one home for the measure and the arrange).
+  # - chrome (== the arrange's partOfHeightUsedUp): the title strip plus the body's edges and margins,
+  #   and the grip strip when I offer a grip -- chrome comes from the shared _chromeHeight (one home
+  #   for the measure and the arrange).
   # - content height: when the content sets its height FREELY (a scroller / slider / document fills
   #   whatever height the window is dragged to), the height is the window's OWN height minus chrome
   #   (mirrors the contentsRecursivelyCanSetHeightFreely branch); otherwise the content DICTATES the
@@ -149,8 +150,8 @@ class FrameWdgt extends Widget
   #                 such a host by dragging out, with right-click ➜ close as the fallback (C6).
   #   resizer       which resize affordance the frame offers: "payloadSized" (the grip, iff the
   #                 payload sizes freely) or "none". The grip answers the same free-floating
-  #                 predicate itself in HandleWdgt.updateVisibility -- ONE home, so this field
-  #                 states the policy the payload half adds to it.
+  #                 predicate itself in HandleWdgt.wouldShow -- ONE home, so this field states the
+  #                 policy the payload half adds to it. The grip strip follows the grip.
   #   axis          the direction the strip runs. A free frame's bar is on top, always (C15).
   #   showsText     whether the title piece carries its text (a bar too thin for text does not).
   #   naturalWidth  what the bar contributes to its frame's width hug: "none" asks for nothing,
@@ -321,10 +322,11 @@ class FrameWdgt extends Widget
     @_barSpec().thickness
 
   # ===== my body's edges =====
-  # My BODY is what my border encloses, less my strip: my payload and my docked bands lie in it.
+  # My BODY is what my border encloses, less my strips: my payload and my docked bands lie in it.
   # Its inner edge sits in from my outer edge by my STRIP's thickness on the side my strip runs
-  # along (the strip spans my border, its band and its rule: _barSpec) and by my BORDER INSET
-  # on every other side. Past those edges my payload keeps my BODY MARGIN, and the same margin
+  # along (the strip spans my border, its band and its rule: _barSpec), by my border inset and my
+  # GRIP STRIP on my bottom (_bodyEdgeBottom), and by my BORDER INSET on every other side. Past
+  # those edges my payload keeps my BODY MARGIN, and the same margin
   # parts a band from my payload. A band stands in from those edges, on every side but the one it
   # faces my payload across, by the larger of my body margin and the theme's band inset
   # (_dockedBandInset is what the band inset adds past my margin). My body margin depends on what
@@ -373,7 +375,9 @@ class FrameWdgt extends Widget
   # else to my page itself, and the page's own drop rules decide from there (a page that refuses a
   # payload refuses it in my gutter too, and the climb goes on past me as it would from me). Around
   # a pane, or a collapsed page, nobody: the climb starts at me, and I refuse drops while I hold
-  # content. A point on my strip, my grip or a docked band is that child's, never mine. PUBLIC: the
+  # content. A point on my strip, my grip or a docked band is that child's, never mine; my grip
+  # strip beside my grip is my body, so it counts here, and a payload released on it lands inside the
+  # page like one released in the gutter. PUBLIC: the
   # hand asks it, through ?(), of the top widget under the pointer, where both its drop climbs start
   # (ActivePointerWdgt._dropClimbStart) and where its drop learns that a release fell in my gutter
   # (_targetReachedThroughAGutter); its dock offer and a press never ask it.
@@ -386,10 +390,32 @@ class FrameWdgt extends Widget
   _bodyEdgeTop: ->
     Math.max @_titlebarHeight(), @_borderInset()
 
-  # The LEFT twin: my strip when it runs down my side, else my border inset. My right and bottom
-  # edges are always my border inset: a strip runs along my top or my left, never elsewhere.
+  # The LEFT twin: my strip when it runs down my side, else my border inset. My right edge is always
+  # my border inset: a title strip runs along my top or my left, never elsewhere.
   _bodyEdgeLeft: ->
     Math.max @_titlebarWidth(), @_borderInset()
+
+  # The BOTTOM twin: my border inset, and the grip strip inside it while I have one. So my payload's
+  # margin to my grip strip is the very margin it keeps from my title strip's rule.
+  _bodyEdgeBottom: ->
+    @_borderInset() + @_gripStripThickness()
+
+  # What my GRIP STRIP takes out of my height: the theme's height exactly while my grip would show,
+  # and nothing otherwise, so a frame with nothing to resize keeps that room for its payload. It asks
+  # my grip the question my grip's own showing answers (HandleWdgt.wouldShow: free-floating, sizing,
+  # and not standing in a window in view mode), never whether it shows yet: the measure and the arrange
+  # read this, and a visibility is never a layout input. A frame born without a grip (a pop-up, which
+  # keeps none when pinned) has no strip, and neither has a frame still building, whose grip comes last.
+  _gripStripThickness: ->
+    if @resizer?.wouldShow() then WorldWdgt.theme.frameGripStripHeight else 0
+
+  # Where my grip strip lies, in my LOCAL coordinates: inside my border along my two sides and my
+  # bottom. Undefined while I have none. My body's appearance paints it (FrameBodyAppearance).
+  _gripStripRect: ->
+    thickness = @_gripStripThickness()
+    return undefined unless thickness > 0
+    border = @_borderInset()
+    new Rectangle border, @height() - border - thickness, @width() - border, @height() - border
 
   # Where my payload's top-left sits from mine when it fills its region: past my body's leading
   # edges, a band docked at my left or my top (with its inset), and my body margin. The arrange
@@ -399,17 +425,13 @@ class FrameWdgt extends Widget
     new Point (@_bodyEdgeLeft() + @_leftDockThickness() + @_bodyMargin()),
       (@_bodyEdgeTop() + @_topDockThickness() + @_bodyMargin())
 
-  # Window chrome height -- everything that is NOT content: my body's top and bottom edges, my
-  # body margin past each, the bands docked at my top and bottom with their insets, and -- when
-  # my payload must keep clear of my resizer -- the grip's row: how far the grip reaches up from
-  # my content area's bottom edge (FrameGripWdgt.footprint, its inset plus its side), so my
-  # payload stops my body margin above the grip. ONE home for the measure
-  # (preferredExtentForWidth) and the arrange (_positionAndResizeChildren): they MUST agree, or
-  # the window's measure diverges from what its arrange then applies (assessment §6.1 rule 1).
-  _chromeHeight: (spec) ->
-    chrome = @_bodyEdgeTop() + @_borderInset() + 2 * @_bodyMargin() + @_topDockThickness() + @_bottomDockThickness()
-    chrome += FrameGripWdgt.footprint() unless spec.resizerCanOverlapContents
-    chrome
+  # Window chrome height -- everything that is NOT content: my body's top and bottom edges (my grip
+  # strip is in the bottom one), my body margin past each, and the bands docked at my top and bottom
+  # with their insets. ONE home for the measure (preferredExtentForWidth) and the arrange
+  # (_positionAndResizeChildren): they MUST agree, or the window's measure diverges from what its
+  # arrange then applies (assessment §6.1 rule 1).
+  _chromeHeight: ->
+    @_bodyEdgeTop() + @_bodyEdgeBottom() + 2 * @_bodyMargin() + @_topDockThickness() + @_bottomDockThickness()
 
   # ===== the four edge slots' layout terms =====
   # The frame docked at one of my edges, WHEN IT COUNTS: the slot's occupant, still my child, its
@@ -455,7 +477,7 @@ class FrameWdgt extends Widget
     return @_barSpec().thickness if @contents?.collapsed
     payloadThickness = dockSpec.thicknessGrantedTo @contents
     if dockSpec.side is "top" or dockSpec.side is "bottom"
-      payloadThickness + @_chromeHeight @contents.contentStackSpec()
+      payloadThickness + @_chromeHeight()
     else
       payloadThickness + @_chromeWidth()
 
@@ -547,7 +569,7 @@ class FrameWdgt extends Widget
       # A content transiently WITHOUT its layoutSpec (mid drop/delete) has no derivable measure --
       # keep the measure total and report the current extent.
       if !spec? then return new Point (availW ? @width()), @height()
-      chrome = @_chromeHeight spec
+      chrome = @_chromeHeight()
       if !spec.desiredWidth?
         # FIRST placement hasn't run yet -- the spec capture is the one-shot latch (U2; this
         # branch replaced the deleted contentNeverSetInPlaceYet guard). Mirror the arrange's
@@ -645,10 +667,9 @@ class FrameWdgt extends Widget
   # is a door a payload opts into, never a type test here.
   sizeToPayloadNaturalExtent: ->
     return unless @contents?.naturalPayloadExtentWithin?
-    spec = @contents.contentStackSpec()
-    return unless spec?
+    return unless @contents.contentStackSpec()?
     chromeWidth = @_chromeWidth()
-    chromeHeight = @_chromeHeight spec
+    chromeHeight = @_chromeHeight()
     room = new Point (world.width() - chromeWidth), (world.height() - chromeHeight)
     payloadExtent = @contents.naturalPayloadExtentWithin room
     @setExtent new Point (payloadExtent.x + chromeWidth), (payloadExtent.y + chromeHeight)
@@ -1089,6 +1110,8 @@ class FrameWdgt extends Widget
       # capture is exactly the placement this mount already has.
       aWdgt._contentStackSpec.desiredWidth = undefined unless isSameContentRemount
       super aWdgt, Object.assign {}, opts, layoutSpec: aWdgt._contentStackSpec
+      # the windows standing in my new payload now stand in me, and my mode is my payload's
+      @_noteMyModeToWindowsInMe() unless isSameContentRemount
     else
       super aWdgt, opts
     @resizer?._moveInFrontOfSiblings()
@@ -1147,20 +1170,46 @@ class FrameWdgt extends Widget
   # Do I offer a resize grip right now? Only while my payload is actually SIZING (ruling C5: the
   # resizer belongs to a frame whose payload sizes freely). Collapsed I AM my bar -- there is
   # nothing to size, and a grip the size of a touch target would blanket the whole sliver and
-  # defeat the tap that expands it (ruling C17). My resizer's own visibility asks this.
+  # defeat the tap that expands it (ruling C17). And not while I stand in a window in view mode: its
+  # arrangement is not there to be changed, whatever mode I am in myself. My resizer's own visibility
+  # asks this, and so does my grip strip (_gripStripThickness).
   offersAResizeHandle: ->
-    !@contents?.collapsed
+    !@contents?.collapsed and !@_standsInAWindowInViewMode()
 
-  # Which of my children run out to my bottom-right corner, where my resizer sits: my payload, unless
-  # it is collapsed away or keeps clear of the resizer (its spec's resizerCanOverlapContents), and a
-  # frame docked in my bottom or right slot, whose far corner the resizer overlaps on purpose. A
-  # payload with an engaged band below or beside it does not reach the corner; it is still named,
-  # which only keeps a reserve the band has made unnecessary -- the safe way to be wrong. A viewport
-  # in that chain reserves the corner from its bars (ViewportWdgt._resizerOverMyCorner).
-  bottomRightCornerReachedBy: (child) ->
-    if child is @contents
-      return !@contents.collapsed and @contents.contentStackSpec?()?.resizerCanOverlapContents isnt false
-    child is @_dockedFrameAt('bottom') or child is @_dockedFrameAt('right')
+  # Is the nearest window around me in view mode? The climb ends at the first frame it meets
+  # (enclosingFrame), and a window nested in a nested window answers to the one holding it, not to
+  # the outermost. A root that is no frame (the desktop, a parked subtree) has no mode to ask.
+  _standsInAWindowInViewMode: ->
+    host = @parent?.enclosingFrame()
+    return false unless host?.isFrame?()
+    !host.isInEditMode()
+
+  # PUBLIC notification from my grip: it came or went (FrameGripWdgt.updateVisibility), so my grip strip
+  # did, and my body takes up or gives back that room. A payload that sizes freely takes the room and
+  # I keep my height. A payload that dictates its height keeps it, so MY height changes by the strip,
+  # and it changes HERE rather than at my arrange: a host adopting me mid-arrange reads my applied
+  # height straight after handing me its spec (Widget._setWidthSizeHeightAccordingly), and my first
+  # placement in a window reads it too. Left to my arrange, my host would size itself by the strip
+  # I just lost and be re-visited by the up-edge when I shed it. Collapsed there is no strip to account
+  # for: my extent is my bar's. The phase valve, because this arrives both from outside a flush (a
+  # parent's mode flip) and from inside one (that adoption).
+  noteMyGripCameOrWent: ->
+    @_changed()
+    if @contents?.contentStackSpec()? and !@contents.collapsed and !@contentsRecursivelyCanSetHeightFreely()
+      strip = WorldWdgt.theme.frameGripStripHeight
+      @_applyExtentBase new Point @width(), @height() + (if @resizer.isVisible then strip else -strip)
+    @_scheduleRelayoutRespectingPhase()
+
+  # My mode just changed, or was re-asserted, so each window standing directly in me re-asks whether
+  # it offers a grip (_standsInAWindowInViewMode). The walk stops at those windows: the ones nested in
+  # them answer to them. Idempotent, like the protocol that drives it: a grip that neither comes nor
+  # goes does nothing.
+  _noteMyModeToWindowsInMe: ->
+    visit = (widget) ->
+      for child in widget.children
+        if child.isFrame?() then child.resizer?.updateVisibility() else visit child
+      return
+    visit @contents if @contents?
 
   _reactToChildCollapsed: (child) ->
     if child == @contents
@@ -1227,11 +1276,12 @@ class FrameWdgt extends Widget
       nearestSide = side if !nearestSide? or distances[side] < distances[nearestSide]
     nearestSide
 
-  # The region my bands divide up: everything inside me that is not my own strip. Pure geometry the
-  # hand's hit resolution and the band highlight both read, so the offer and the picture of it
-  # cannot disagree.
+  # The region my bands divide up: everything inside me that is not one of my own strips (my title
+  # strip, my grip strip). Pure geometry the hand's hit resolution and the band highlight both read,
+  # so the offer and the picture of it cannot disagree.
   _dockBandsBox: ->
-    new Rectangle (new Point @left() + @_titlebarWidth(), @top() + @_titlebarHeight()), @bottomRight()
+    new Rectangle (new Point @left() + @_titlebarWidth(), @top() + @_titlebarHeight()),
+      new Point @right(), @bottom() - @_gripStripThickness()
 
   # The band rectangle at `side`, in my own plane — what the hand outlines while a frame hovers
   # over the offer. Same box, same depth, as the answer above.
@@ -1416,13 +1466,6 @@ class FrameWdgt extends Widget
     dockSpec.side = side
     host.dockedFrames[side] = @
     host._invalidateLayout()
-    # the new side may move me into or out of the corner my host's grip covers (it names its right
-    # and bottom bands, bottomRightCornerReachedBy), while my extent can stay the same (a bottom
-    # band and a top band are equally long), so nothing else re-lays what my viewports keep clear
-    # of that corner: tell my corner chain. Docking and undocking reach the same chain without this
-    # call: they change my spec, which shows or hides my own grip (Widget._setLayoutSpec ->
-    # HandleWdgt.updateVisibility), and its coming or going tells the chain.
-    @noteCornerChainChanged()
 
   # Fill one of my empty slots with my content's toolbar variant, framed. (Menu-dispatched -- see
   # dockAtSide for the two named-as-unread slots.)
@@ -1470,7 +1513,7 @@ class FrameWdgt extends Widget
   # payload's extent and asks me for mine (SpreadsheetApp opens its sheet at its opening grid
   # whatever my chrome measures).
   extentWrappingPayloadAt: (payloadExtent) ->
-    payloadExtent.add new Point @_chromeWidth(), @_chromeHeight @contents.contentStackSpec()
+    payloadExtent.add new Point @_chromeWidth(), @_chromeHeight()
 
   # Consulted at the child-death hook (_beforeChildDestroyed: a mid-teardown rebuild
   # strands fresh chrome on already-destroyed parts of me) and by a framed CITIZEN's
@@ -1808,6 +1851,8 @@ class FrameWdgt extends Widget
     # the roster is derived from my ATTACHMENT, not from my parentage, so it holds on the hand
     # too (a frame in the hand owns its own placement, hence carries its close piece)
     @_reDeriveBarRosterNoSettle()
+    # the window I now stand in decides whether I offer a grip (offersAResizeHandle)
+    @resizer?.updateVisibility()
     @_deriveAndSetSkin() if whereTo isnt world?.hand
     # moved into a transform island, I cast my shadow through it: a tilt homes the island EMPTY on
     # the desktop before I move in, so the shadow it took there names no look of mine yet
@@ -1851,7 +1896,7 @@ class FrameWdgt extends Widget
   #   The fields:
   #     manifestation       "menu" | "window" | "card"
   #     bodyAppearance      the appearance class my body wears: the menu box for a menu, the
-  #                         rounded box for a window and a card alike
+  #                         rounded box and its grip strip for a window and a card alike
   #     bodyFill, bodyStroke, bodyCornerRadius
   #                         my body's colours and rounding (an undefined rounding is the
   #                         appearance's own default). A menu box is paper with the menu stroke --
@@ -1934,7 +1979,7 @@ class FrameWdgt extends Widget
     windowBarFill = if focused then theme.focusedWindowBarFill else theme.windowBarFill
     windowBarGlyph = if focused then theme.focusedWindowBarGlyph else theme.windowBarGlyph
     manifestation: if internal then "card" else "window"
-    bodyAppearance: BoxyAppearance
+    bodyAppearance: FrameBodyAppearance
     bodyFill: if internal then theme.cardBodyFill else theme.windowBodyFill
     bodyStroke: if internal then theme.cardFrameStroke else windowStroke
     bodyCornerRadius: if internal then theme.cardCornerRadius else theme.windowCornerRadius
@@ -2310,6 +2355,7 @@ class FrameWdgt extends Widget
       # is drawn again). NoSettle core -- this protocol is driven from inside the content's
       # enable/disable settle; the engagement invalidates, and that flush covers it.
       @_engageDocksNoSettle true
+      @_noteMyModeToWindowsInMe()
       # a mode-reactive toolbar (PaintToolbarWdgt re-arms/disarms its tools,
       # §5.D) rides the SAME protocol; the hooks transition-guard themselves
       # because this reflector is idempotently re-driven (e.g. the edit-button
@@ -2319,6 +2365,7 @@ class FrameWdgt extends Widget
   showViewModeInBar: ->
       @editButton?.showViewMode()
       @_engageDocksNoSettle false
+      @_noteMyModeToWindowsInMe()
       @_dockedToolbar()?.reactToViewModeInFrame?()
 
   # Frame-level edit-mode switch (§5.B): route through the PAYLOAD's own core --
@@ -2439,7 +2486,7 @@ class FrameWdgt extends Widget
       else
         recommendedElementWidth = @contents.contentStackSpec().getWidthInStack()
 
-      partOfHeightUsedUp = @_chromeHeight @contents.contentStackSpec()
+      partOfHeightUsedUp = @_chromeHeight()
 
       # this re-layouts each widget to fit the width.
       if firstPlacement
@@ -2545,16 +2592,6 @@ class FrameWdgt extends Widget
     # nothing, leaving the inner panel at a stale wrap height -- fg census
     # caught exactly that: ToolPanel 75 tall inside the 40 strip after a
     # narrow->wide window resize.)
-    # ⚖ The bottom-right RESIZER may OVERLAP a right/bottom band's far corner
-    # -- accepted DELIBERATELY (layout follow-ups plan F4), the same trade the
-    # content already makes under resizerCanOverlapContents: the resizer is
-    # corner-internal and always re-fronted, and what runs out to that corner
-    # keeps its own pieces clear of it by occupancy (I name a right or bottom
-    # band in bottomRightCornerReachedBy, so a toolbar strip in it ends its
-    # last slot short of my grip, ToolPanelWdgt._farAlongPadding); the band
-    # inset is the same on all four sides and does not grow to clear the
-    # resizer, because that would couple the band's extent to the resizer and
-    # break the left/right, top/bottom mirror symmetry.
     bodyMargin = @_bodyMargin()
     bandInset = @_dockedBandInset()
     bodyLeft = @left() + @_bodyEdgeLeft() + bodyMargin
@@ -2574,9 +2611,9 @@ class FrameWdgt extends Widget
         when 'bottom'
           # just below the content: the band's top lands a body margin below
           # the content, and its bottom stands the band inset above where the
-          # content region's bottom sits for the content's spec branch (my
-          # bottom edge and body margin, or the reserved grip row above them
-          # -- _chromeHeight carries the matching reservation either way)
+          # content region's bottom sits (my bottom edge and body margin, and
+          # the grip strip above them when I keep one -- _chromeHeight carries
+          # the matching reservation)
           bandBounds = new Rectangle new Point bodyLeft + bandInset, bodyTop + @_topDockThickness() + stackHeight + bodyMargin
           bandBounds = bandBounds.setBoundsWidthAndHeight bandRun, bandThickness
         when 'right'
@@ -2588,5 +2625,5 @@ class FrameWdgt extends Widget
       dockedFrame._reLayout bandBounds
 
     # (the resizer needs no placement here: it is corner-attached — its CornerInternalLayoutSpec,
-    # bottom-right at the grip's own inset past my border (FrameGripWdgt._cornerInsetFrom), is
-    # applied by base _reLayout's corner tail against my final frame)
+    # bottom-right at the grip's own inset past my border (FrameGripWdgt._cornerInsetFrom), which puts
+    # it inside my grip strip, is applied by base _reLayout's corner tail against my final frame)

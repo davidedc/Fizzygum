@@ -115,16 +115,16 @@ painting at `scrollBarsThickness`, full interactivity (thumb-drag, track-jump); 
 or the content no longer overflowing, reverts to thin or hidden. A bar also stays hidden, however
 much the content overflows, when its frame has no room for its thumb
 (`ViewportWdgt._barFrameHasRoomForThumb`: the frame must be at least as long as the thumb a press
-meets is wide). Under a resizer, a viewport shorter than the corner reserve has a frame whose
-length is not even positive, and the bar would be a 1px sliver no pointer can work. The pane
-still scrolls, since scrollability is asked of overflow.
+meets is wide). Under a resizer (a naked inspector's), a viewport shorter than the corner reserve has
+a frame whose length is not even positive, and the bar would be a 1px sliver no pointer can work. The
+pane still scrolls, since scrollability is asked of overflow.
 
 The CORNER RESERVE is what occupies the bottom-right corner, and nothing more
 (`ViewportWdgt._cornerReserveFor`, read by `_barFrameAt`):
 - a resizer over the corner takes the room it names (`HandleWdgt.cornerFootprint`), never less
-  than a bar: a frame's grip its inset plus its side (`FrameGripWdgt.footprint`), a naked
-  inspector's handle its side (`handleSize`). The climb that finds it (`_resizerOverMyCorner`)
-  answers the resizer itself;
+  than a bar: a naked inspector's handle its side (`handleSize`). A window's grip is no such case:
+  it lies in the window's grip strip, below everything the window holds. The climb that finds a
+  resizer (`_resizerOverMyCorner`) answers the resizer itself;
 - failing that, the other bar, where it crosses, takes `scrollBarsThickness`;
 - with neither, the bar runs its side's full length.
 
@@ -133,20 +133,15 @@ and visibility:
 - **The other bar** is read from the overflow its showing derives from, without its own
   room-for-thumb check, so neither bar's length waits on whether the other one shows.
 - **The resizer** is found by climbing the corner chain. A container that runs a child out to its
-  own bottom-right corner names it (`bottomRightCornerReachedBy`): a frame names its payload
-  and its bottom/right bands, a read-only inspector its code pane (an inspector that ends in its
-  footer band names none), a patch node its bottom text box. The
+  own bottom-right corner under a resizer of its own names it (`bottomRightCornerReachedBy`): a
+  read-only inspector its code pane (an inspector that ends in its footer band names none). The
   first container on the climb whose resizer would show answers (`HandleWdgt.wouldShow`, what
   showing derives from, never `isVisible`).
 - **A container that names nobody ends the climb**, and a viewport names nobody: its contents
   scroll under its corner.
-- **When the corner chain changes** — a resizer comes or goes (`HandleWdgt.updateVisibility`), or a
-  docked band is re-sided into or out of the slots its host names (`FrameWdgt._reSideMyDockNoSettle`)
-  — `Widget.noteCornerChainChanged` tells the viewports down that corner chain
-  (`noteCornerResizerChanged`), and each re-lays what it keeps clear of the corner: its bars, and
-  through its arrange the contents that lay pieces out to its far edges (a toolbar's strip keeps
-  its last slot clear of the resizer, `ViewportWdgt.cornerResizerFootprint`). Docking and undocking
-  change the band's spec, which shows or hides its own grip, so they reach the same walk.
+- **When the corner chain changes** — a resizer comes or goes (`HandleWdgt.updateVisibility`) —
+  `Widget.noteCornerChainChanged` tells the viewports down that corner chain
+  (`noteCornerResizerChanged`), and each re-lays its bars.
 
 A container that runs a viewport into its corner WITHOUT naming it leaves that viewport's bar
 running under the resizer, so a new container of that shape names its corner child.
