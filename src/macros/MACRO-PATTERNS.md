@@ -676,7 +676,7 @@ assertion a recapture after a regression silently stores two different hashes an
   room beside its pieces (`FrameWdgt.offersAResizeHandle`, `shortestBarKeepingMyGrip`: 168 px for close + collapse), so the
   ordinary `@resizeWindowBy_InputEvents win, delta` drives it. The drag sizes the BAR'S OWN width (`barsOwnWidth`): the bar keeps
   its height whatever the delta's y, the window comes back at the extent it had, and the bar goes back to that width at each
-  collapse until the window itself is resized. Past the floor the bar stops at `shortestBarKeepingMyGrip()`, so state a
+  collapse, also after the window has been resized. Past the floor the bar stops at `shortestBarKeepingMyGrip()`, so state a
   far-too-big delta and assert the floor. A press that travels less than `grabDragThreshold` is the bar's TAP, which expands the
   frame (ruling C17), so `@moveToAndClick_InputEvents win.resizer` expands. Under a finger, a tremble needs
   `@syntheticEventsTouchDrag_InputEvents`: the raw press-drag-release verb HOLDS first, and a hold on chrome opens its context

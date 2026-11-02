@@ -110,8 +110,8 @@ class FrameWdgt extends Widget
 
   # the width my bar has been given while collapsed, by my grip, a halo's handle or a setter
   # (_noteAWidthAskedOfMyBar), which it goes back to at each collapse. undefined for a bar nobody has
-  # resized, which simply has my width. A width given to my bar is about the bar, so it leaves the width
-  # I come back at alone. It lasts until I am resized myself (_beforeChildCollapsed).
+  # resized, which simply has my width. A width given to my bar is about the bar, so from then on the two
+  # leave each other alone: it does not change the width I come back at, and resizing me does not change it.
   barsOwnWidth: undefined
 
   # the extent my payload had in a dock band, carried across the grab that lifts me out of it:
@@ -1158,10 +1158,6 @@ class FrameWdgt extends Widget
 
   _beforeChildCollapsed: (child) ->
     if child == @contents
-      # my bar's own width lasts only while I keep the width I last collapsed from: a window resized since
-      # gives its bar its new width. Compared here rather than at each resize, so whatever changed
-      # my width is covered, and a bar nobody has resized can never come back at a stale width.
-      @barsOwnWidth = undefined if @width() isnt @extentWhenCollapsed?.x
       @contentsExtentWhenCollapsed = @contents.extent()
       @extentWhenCollapsed = @extent()
 

@@ -97,8 +97,8 @@ vocabulary below is the convention for all new code:
     collapsed frame **is** its bar, and the whole bar — not just the collapse control, and the
     grip it keeps when it has room included — taps to expand it. A bar nobody has resized is as
     wide as its frame. A width given to the bar is the bar's own (`FrameWdgt.barsOwnWidth`): the
-    frame comes back exactly as it was, and resizing the frame ends the bar's width. The frame
-    expands from wherever its bar is, so moving a bar moves the frame.
+    frame comes back exactly as it was, and resizing the frame leaves the bar's width alone. The
+    frame expands from wherever its bar is, so moving a bar moves the frame.
   - `MenuWdgt` / `PromptWdgt` are framed citizens (`extends FrameWdgt`, born transient): a
     menu or a prompt is a frame around a rows payload, not a parallel hierarchy alongside it.
   - **What a frame wraps is a PAGE or a PANE, declared by the payload's class, never by the

@@ -12,8 +12,8 @@ corner, on the bar, in the bar's glyph inks. Dragging it sizes the bar's width, 
 stops at the narrowest bar that keeps it. A tap on it expands the window, as a tap anywhere on the bar does.
 
 A bar nobody has resized is as wide as its window. A width given to a collapsed bar is the bar's own: the window comes back
-exactly as it was, and the bar goes back to that width at each collapse. Resizing the window ends it, and the bar takes the
-window's new width at the next collapse.
+exactly as it was, the bar goes back to that width at each collapse, and resizing the window leaves it alone. Nothing makes
+such a bar follow its window again.
 
 The window expands from wherever its bar is. Moving a bar moves the window.
 
@@ -44,12 +44,20 @@ resized between two collapses came back at the stale width. `widthWhenUnCollapse
     rewrapped, its old width gone with no way back but dragging by eye.
   - *A bar width that lasts until you expand* needs no memory at all, but every quick look at a parked window would send its
     bar back to full width, so a tidy row of narrow bars would not stay tidy.
-  - *The chosen rule* has one exception to state (resizing the window ends the bar's width) and costs the ability to change a
-    window's width while it is collapsed, which is one click away.
+  - *The chosen rule* costs the ability to change a window's width while it is collapsed, which is one click away.
   - A bar's width is recorded only when one is asked of it (`_noteAWidthAskedOfMyBar`), never at an uncollapse, so a bar
-    nobody resized has none and cannot go stale. That is the difference from the bug. The check is made at collapse, against
-    the width the window last collapsed from, so a window resized and then dragged back to exactly that width keeps its bar's
-    width, which seems right.
+    nobody resized has none and cannot go stale. That is the difference from the bug.
+- **Resizing the window leaves the bar's width alone (owner, 2026-11-02).** The first version ended the bar's width when the
+  window was resized, and the bar took the window's new width at the next collapse. The owner saw that and asked whether it
+  was right. It was not. A window's resize says nothing about what the bar's width was for, fitting the desktop or reading the
+  title. Expanding one bar of a tidy row, enlarging its window and collapsing it again left that bar wider than the row, which
+  is the failure used above to reject a width that lasts until you expand. The cost is that a bar once given a width never
+  follows its window again, and one narrowed by accident stays narrow until dragged.
+- **A bar's width has no reset (owner, 2026-11-02).** A snap at the window's width during the drag, after which the bar would
+  follow its window again, was proposed and dropped: a snap distance, a hidden rule and more to test on both pointers, for
+  something rarely wanted. A double-click on the grip cannot work, because the first tap has already expanded the window. A menu
+  row would add a row few would find. Dragging a bar back by eye leaves it a few pixels off its window, which does no harm: the
+  mismatch cannot be seen while the window is collapsed, and the window comes back at its own width regardless.
 - **Position is not restored (owner, 2026-11-01).** "Restore" fits a window's size but not its place. A bar's position is no
   blind choice, since it is where the window's title will be. Today the close and collapse buttons stay under the pointer as a
   window unrolls, so a second tap collapses it again; a window jumping back would vanish from under the pointer, and each
@@ -99,6 +107,11 @@ tap-through keeps C17 whole. The archived plans stay as they are.
   people. The owner asking "what is best from a UX perspective?" reversed it in one step: nobody can judge a window's width
   with its content hidden. Claude had also told the owner a remembered width "would recreate the mismatch you reported", which
   overstated it: the report was about a stale width nobody chose, and a width given on purpose is not that.
+- ⭐⭐⭐ **An exception with no reason given is a finding.** This record stated "one exception" to the bar's own width and never
+  argued for it, and it failed the same record's own argument against the width that lasts until you expand. The owner noticed
+  it by using the feature, a day after it was pushed. Before calling a rule settled, ask of each exception what it is for.
+- ⭐⭐ **Do not add machinery to repair a harm nobody has shown.** Claude proposed the snap because a width cannot be matched by
+  eye with the content hidden, without asking whether matching matters. It does not, for the same reason.
 - ⭐⭐⭐ **A comment that states a contract is a hypothesis too.** A test's own intent said there was "no second,
   separately-tracked collapsed size", beside a field that was one and was the bug. Grep for what a contract says does not exist.
 - ⭐⭐ **The hand sends `activated` after a drag too**, whenever the release lands on the widget that was pressed
