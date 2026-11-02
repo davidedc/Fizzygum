@@ -103,13 +103,16 @@ class FrameWdgt extends Widget
   # undefined on a window: nothing opened it.
   widgetOpeningThePopUp: undefined
 
-  # the geometry remembered ACROSS a collapse, so uncollapsing restores what was there:
-  # recorded in _beforeChildCollapsed (the un-collapsed width, and both extents) and in
-  # _beforeChildUnCollapsed (the collapsed width). undefined until the first collapse.
-  widthWhenUnCollapsed: undefined
-  widthWhenCollapsed: undefined
+  # the geometry remembered ACROSS a collapse, so uncollapsing restores what was there: recorded in
+  # _beforeChildCollapsed. undefined until the first collapse.
   contentsExtentWhenCollapsed: undefined
   extentWhenCollapsed: undefined
+
+  # the width my bar has been given while collapsed, by my grip, a halo's handle or a setter
+  # (_noteAWidthAskedOfMyBar), which it goes back to at each collapse. undefined for a bar nobody has
+  # resized, which simply has my width. A width given to my bar is about the bar, so it leaves the width
+  # I come back at alone. It lasts until I am resized myself (_beforeChildCollapsed).
+  barsOwnWidth: undefined
 
   # the extent my payload had in a dock band, carried across the grab that lifts me out of it:
   # read in _beforeBeingGrabbed, applied (and cleared) in _reactToBeingGrabbed
@@ -402,11 +405,14 @@ class FrameWdgt extends Widget
 
   # What my GRIP STRIP takes out of my height: the theme's height exactly while my grip would show,
   # and nothing otherwise, so a frame with nothing to resize keeps that room for its payload. It asks
-  # my grip the question my grip's own showing answers (HandleWdgt.wouldShow: free-floating, sizing,
-  # and not standing in a window in view mode), never whether it shows yet: the measure and the arrange
+  # my grip the question my grip's own showing answers (HandleWdgt.wouldShow: free-floating, and
+  # not standing in a window in view mode), never whether it shows yet: the measure and the arrange
   # read this, and a visibility is never a layout input. A frame born without a grip (a pop-up, which
   # keeps none when pinned) has no strip, and neither has a frame still building, whose grip comes last.
+  # Collapsed there is none whatever the grip answers: I have no body to keep a strip in, and a grip
+  # with room stands on my bar. So my collapsed height never depends on my width.
   _gripStripThickness: ->
+    return 0 if @contents?.collapsed
     if @resizer?.wouldShow() then WorldWdgt.theme.frameGripStripHeight else 0
 
   # Where my grip strip lies, in my LOCAL coordinates: inside my border along my two sides and my
@@ -1006,6 +1012,7 @@ class FrameWdgt extends Widget
   # corner-internal overlays at the FINAL frame -- the arrange may have re-committed my
   # own height after super's corner tail already placed them (idempotent when not).
   _reLayout: (newBoundsForThisLayout) ->
+    @_noteAWidthAskedOfMyBar()
     super
     @_reLayoutChildren()
     @_reLayoutCornerInternalChildren()
@@ -1151,7 +1158,10 @@ class FrameWdgt extends Widget
 
   _beforeChildCollapsed: (child) ->
     if child == @contents
-      @widthWhenUnCollapsed = @width()
+      # my bar's own width lasts only while I keep the width I last collapsed from: a window resized since
+      # gives its bar its new width. Compared here rather than at each resize, so whatever changed
+      # my width is covered, and a bar nobody has resized can never come back at a stale width.
+      @barsOwnWidth = undefined if @width() isnt @extentWhenCollapsed?.x
       @contentsExtentWhenCollapsed = @contents.extent()
       @extentWhenCollapsed = @extent()
 
@@ -1163,18 +1173,38 @@ class FrameWdgt extends Widget
 
   _beforeChildUnCollapsed: (child) ->
     if child == @contents
-      @widthWhenCollapsed = @width()
+      # the last step of a drag on my bar's grip may still be pending, in this same cycle. Its width
+      # is my bar's to keep, and the wish itself, for the bar I am about to stop being, goes.
+      @_noteAWidthAskedOfMyBar()
+      @desiredExtent = undefined
 
     @_createAndAddEditButton()
 
-  # Do I offer a resize grip right now? Only while my payload is actually SIZING (ruling C5: the
-  # resizer belongs to a frame whose payload sizes freely). Collapsed I AM my bar -- there is
-  # nothing to size, and a grip the size of a touch target would blanket the whole sliver and
-  # defeat the tap that expands it (ruling C17). And not while I stand in a window in view mode: its
-  # arrangement is not there to be changed, whatever mode I am in myself. My resizer's own visibility
-  # asks this, and so does my grip strip (_gripStripThickness).
+  # Whoever sizes me while I am collapsed (my grip, a halo's handle, a setter: they all come down to
+  # @desiredExtent, so this one funnel covers them) is sizing my bar. A width is my bar's to keep
+  # (barsOwnWidth), and what I come back at is untouched. Height is not theirs to ask: my bar is as tall
+  # as its strip. Only a wish counts, so a width a host grants a docked sliver is no width of my bar's.
+  _noteAWidthAskedOfMyBar: ->
+    return unless @desiredExtent? and @contents?.collapsed
+    @barsOwnWidth = @desiredExtent.x
+    @desiredExtent = new Point @desiredExtent.x, @height()
+
+  # Do I offer a resize grip right now? Not while I stand in a window in view mode: its arrangement is
+  # not there to be changed, whatever mode I am in myself. Expanded, otherwise, always. Collapsed I AM
+  # my bar, so my grip offers the bar's width, and only while the bar has room for it beside its pieces:
+  # they outrank it (owner ruling, docs/archive/collapsed-bar-grip.md), so a narrower bar shows them and
+  # no grip, which also leaves nothing covered that a tap on the strip must reach (ruling C17). My
+  # resizer's own visibility asks this, and so does my grip strip (_gripStripThickness). A pure read:
+  # my arrange re-asks it as a collapsed width lands.
   offersAResizeHandle: ->
-    !@contents?.collapsed and !@_standsInAWindowInViewMode()
+    return false if @_standsInAWindowInViewMode()
+    return true unless @contents?.collapsed
+    @width() >= @shortestBarKeepingMyGrip()
+
+  # The narrowest my bar can be and still have room for my grip. My grip's drag stops here, so it
+  # never takes itself away from under the pointer holding it.
+  shortestBarKeepingMyGrip: ->
+    @bar.shortestStripLeaving @resizer.reachFromMyFramesCorner()
 
   # Is the nearest window around me in view mode? The climb ends at the first frame it meets
   # (enclosingFrame), and a window nested in a nested window answers to the one holding it, not to
@@ -1191,11 +1221,14 @@ class FrameWdgt extends Widget
   # height straight after handing me its spec (Widget._setWidthSizeHeightAccordingly), and my first
   # placement in a window reads it too. Left to my arrange, my host would size itself by the strip
   # I just lost and be re-visited by the up-edge when I shed it. Collapsed there is no strip to account
-  # for: my extent is my bar's. The phase valve, because this arrives both from outside a flush (a
-  # parent's mode flip) and from inside one (that adoption).
+  # for and nothing to re-lay: my extent is my bar's, the grip takes none of its room, and it is placed
+  # at every arrange whether it shows or not. My own arrange is what asks it then (_positionAndResizeChildren),
+  # so scheduling another would be a re-visit. The phase valve, because this arrives both from outside
+  # a flush (a parent's mode flip) and from inside one (that adoption).
   noteMyGripCameOrWent: ->
     @_changed()
-    if @contents?.contentStackSpec()? and !@contents.collapsed and !@contentsRecursivelyCanSetHeightFreely()
+    return if @contents?.collapsed
+    if @contents?.contentStackSpec()? and !@contentsRecursivelyCanSetHeightFreely()
       strip = WorldWdgt.theme.frameGripStripHeight
       @_applyExtentBase new Point @width(), @height() + (if @resizer.isVisible then strip else -strip)
     @_scheduleRelayoutRespectingPhase()
@@ -1216,10 +1249,10 @@ class FrameWdgt extends Widget
       # a collapsed window is JUST its titlebar, so its bands are gone with its body
       # (_dockedFrameAt already reads them out of the layout; the pixels follow here)
       @_reflectDockVisibilityNoSettle()
-      # ... and so is the resize grip: nothing is sizing, and it would sit over the tap zone
-      @resizer?.updateVisibility()
-      if @widthWhenCollapsed?
-        @_applyWidth @widthWhenCollapsed
+      # (my grip re-asks in the arrange below: _positionAndResizeChildren). A host that owns my placement
+      # owns my bar's width too.
+      if @barsOwnWidth? and @isFreeFloating()
+        @_applyWidth @barsOwnWidth
       # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
       @_reLayoutChildren()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
@@ -1232,8 +1265,6 @@ class FrameWdgt extends Widget
       @resizer?.updateVisibility()
       @_applyExtent @extentWhenCollapsed
       @contents._applyExtent @contentsExtentWhenCollapsed
-      if @widthWhenUnCollapsed?
-        @_applyWidth @widthWhenUnCollapsed
       # layout-apply-sanctioned: uncollapse re-fit (must stay synchronous, residuals-audit fam 4).
       # duringReInflation=true -- the content keeps its just-restored extent; see
       # contentsRecursivelyCanSetHeightFreely. (Direct arrange call: _reLayoutChildren is exactly
@@ -2560,6 +2591,11 @@ class FrameWdgt extends Widget
       newHeight = stackHeight + partOfHeightUsedUp
 
     @_applyExtentBase new Point @width(), newHeight
+
+    # Collapsed, whether my grip has room on my bar depends on my width, which is final here, so here is
+    # where it re-asks: every width a collapsed frame takes comes through this arrange. Nothing in my
+    # layout reads the answer (_gripStripThickness), so asking cannot change what this pass has placed.
+    @resizer?.updateVisibility() if @contents?.collapsed
 
     # the title strip: hand the bar its bounds (my top strip at the FINAL width, or my leading
     # side strip at my final height -- the first-placement hug above may have just re-committed

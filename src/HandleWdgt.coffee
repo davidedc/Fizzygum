@@ -160,8 +160,8 @@ class HandleWdgt extends Widget
 
   # WHETHER I SHOW. Two questions, both about my parent: does it own its own placement (a
   # host-owned widget is sized by its host, so a resizer on it would fight the host), and does it
-  # have anything to size right now? The second is a capability asked via ?(), so only a parent
-  # with an answer -- a frame, which has none while it is collapsed into its bar -- narrows it.
+  # offer a handle right now? The second is a capability asked via ?(), so only a parent with an
+  # answer -- a frame, whose collapsed bar may have no room for me -- narrows it.
   # TODO rather than updating the visibility, we could
   # just make it "inactive" and by drawing it gray, which
   # would also look better (rather than a hole with
@@ -261,7 +261,7 @@ class HandleWdgt extends Widget
       # ...i.e. *after* the parent has re-layouted (in the deferred layout phase).
       when "resizeBothDimensionsHandle"
         newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
-        @target._setExtentDeferredSettle newExt
+        @target._setExtentDeferredSettle @_extentMyDragAsksOfMyTarget newExt
       when "moveHandle"
         @target._moveToDeferredSettle newPos.subtract @inset
       when "resizeHorizontalHandle"
@@ -281,7 +281,11 @@ class HandleWdgt extends Widget
         rawDegrees = @_rotateGrabStartRotationDegrees + (@_pointerAngleToTargetAnchorDegrees() - @_rotateGrabStartPointerAngleDegrees)
         @target.rotationHalo_apply @_quantizeRotationDegrees rawDegrees
 
-  
+  # The extent a corner drag asks of my target, given the extent the pointer alone would make: that
+  # very extent. A handle whose target takes only part of what a drag asks says so (FrameGripWdgt).
+  _extentMyDragAsksOfMyTarget: (anExtent) ->
+    anExtent
+
   # HandleWdgt events:
   hoverEntered: ->
     @_setPointerState true, @_isPressed

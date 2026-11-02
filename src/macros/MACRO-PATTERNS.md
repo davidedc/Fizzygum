@@ -671,27 +671,26 @@ assertion a recapture after a regression silently stores two different hashes an
   `@collapseOrUncollapseWindow_InputEvents win` (`.collapseUncollapseSwitchButton` — the SAME verb collapses or uncollapses
   per current state), `@dragWindowResizerTo_InputEvents win, (new Point win.right()+dx, win.bottom()+dy)` (`.resizer`, a
   bottom-right HandleWdgt, non-float drag → setExtent; use deltas off the live bounds).
-- **Resizing a window WHILE collapsed reverts on uncollapse** (`macroCollapsedWindowBarResizeRevertsOnUncollapse`): the
-  collapsed-bar follow-on to the chrome-button entry above. Collapsing a `FrameWdgt` SAVES its pre-collapse size —
-  `_beforeChildCollapsed`/`_reactToChildCollapsed` store `@widthWhenUnCollapsed`/`@extentWhenCollapsed` (`FrameWdgt.coffee:208-232`) and shrink
-  it to just its title bar at the SAME width; the `.resizer` stays present and draggable while collapsed (`_positionAndResizeChildren`
-  repositions it unconditionally, `:536-537`), so `@dragWindowResizerTo_InputEvents` NARROWS the bar's width (height pinned to the bar,
-  `:480-486`). But `_reactToChildUnCollapsed` (`:234-244`) does `_applyExtent @extentWhenCollapsed` then `_applyWidth @widthWhenUnCollapsed` (the
-  width captured BEFORE collapsing), so uncollapse RESTORES the full pre-collapse extent and DISCARDS the resize-while-collapsed — a
-  round-trip REVERT for the EXPANDED size. But the COLLAPSED-bar size and the expanded size are tracked SEPARATELY, and the collapsed-bar
-  size is STICKY: a later re-collapse returns the bar to its last resized (narrowed) width. So resizing while collapsed changes ONLY the
-  collapsed-bar size (sticky across collapse cycles), never the expanded size. Reuse the empty-window fixture of
-  macroWindowsEmptyCollapsingUncollapsing (two bare `new FrameWdgt()` — the ctor is `(@contents, opts = {})`, and there is no
-  internal-vs-external argument to pass: both are external desktop windows because internal-ness is DERIVED from nesting) and run collapse → resize-narrow →
-  uncollapse → RE-collapse → uncollapse IN THAT ORDER. Park the pointer on a clear spot (`@syntheticEventsMouseMove_InputEvents pt, "no
-  button"`) before each shot so no collapse-button hover tooltip lands on a window. image_1 two full 300×300 windows → image_2 collapsed
-  FULL-WIDTH bars → image_3 NARROWED bars → image_4 back to full 300×300 (== image_1, expanded size preserved) → image_5 RE-collapsed =
-  NARROWED again (pixel-identical to image_3 — the collapsed size is sticky, the identical dataHash IS the proof) → image_6 uncollapsed =
-  full again (== image_4). Distinct from macroWindowsEmptyResizing (resizes while EXPANDED, which persists). No new verb.
+- **A collapsed bar's grip, and the bar's own width** (`macroCollapsedBarGrip`, `macroCollapsedBarHasTheWindowsWidth`):
+  the collapsed-bar follow-on to the chrome-button entry above. A collapsed `FrameWdgt` keeps its `.resizer` while the bar has
+  room beside its pieces (`FrameWdgt.offersAResizeHandle`, `shortestBarKeepingMyGrip`: 168 px for close + collapse), so the
+  ordinary `@resizeWindowBy_InputEvents win, delta` drives it. The drag sizes the BAR'S OWN width (`barsOwnWidth`): the bar keeps
+  its height whatever the delta's y, the window comes back at the extent it had, and the bar goes back to that width at each
+  collapse until the window itself is resized. Past the floor the bar stops at `shortestBarKeepingMyGrip()`, so state a
+  far-too-big delta and assert the floor. A press that travels less than `grabDragThreshold` is the bar's TAP, which expands the
+  frame (ruling C17), so `@moveToAndClick_InputEvents win.resizer` expands. Under a finger, a tremble needs
+  `@syntheticEventsTouchDrag_InputEvents`: the raw press-drag-release verb HOLDS first, and a hold on chrome opens its context
+  menu, which consumes the click. The hand fires `activated` after a drag too when the release lands on the pressed widget, so to
+  prove a drag is no tap, release it at its origin: `@moveToAndMouseDown_InputEvents win.resizer`,
+  `@syntheticEventsMouseMoveWhileDragging_InputEvents` out and back, `@syntheticEventsMouseUp_InputEvents()`. A bar with no room
+  gets its grip from a width set in code (`win.setWidth`), since there is no grip to drag; it comes and goes at exactly the
+  floor. Assert `"ew-resize"`, not `"nwse-resize"`, on a hovered bar grip, behind `unless @fingerMode()`. To press a bar and be
+  sure of a MOVE, aim clear of the corner: `titleGrabPoint` already does. A band collapsed in its dock and lifted out carries its
+  edit toggle at that corner, so it shows no grip at any width. No new verb.
 - **Duplicating a COLLAPSED window keeps state, extent and content** (`macroDuplicatedCollapsedWindowKeepsStateAndContent`):
   the chrome-state axis of the duplicate family (menu duplicates: the born-pinned entry; composite duplicates keep wiring: the
-  slider/inspector entries). A collapsed `FrameWdgt` stores its pre-collapse geometry (`@widthWhenUnCollapsed` /
-  `@extentWhenCollapsed`, `FrameWdgt.coffee:208-232`) and keeps its adopted `@contents` attached — `fullCopy` deep-copies all
+  slider/inspector entries). A collapsed `FrameWdgt` stores its pre-collapse geometry (`@extentWhenCollapsed` /
+  `@contentsExtentWhenCollapsed`, `FrameWdgt._beforeChildCollapsed`) and keeps its adopted `@contents` attached — `fullCopy` deep-copies all
   of it, so the duplicate is BORN COLLAPSED (same content-derived title) and uncollapsing the COPY restores the COPIED stored
   extent (the CONTENT-WRAPPED one — the window shrank around its rectangle on adoption) and reveals the copied content, leaving
   the original bar untouched. Reach "Duplicate" through the ancestor HIERARCHY menu: a right-click on the bar lands on a chrome

@@ -15,7 +15,13 @@
 #     (Appearance.shapeContainsPoint). The grip is drawn large precisely because its hit area cannot
 #     reach past the frame's border, so the square it is drawn in is the target;
 #   - it casts no shadow of its own: its strokes stand on its frame's body, inside the frame's own
-#     shadow, so the add's shadow management (Widget._addNoSettle) is all it gets.
+#     shadow, so the add's shadow management (Widget._addNoSettle) is all it gets;
+#   - on a COLLAPSED frame there is no strip, and it stands on the frame's title bar instead, at the same
+#     place relative to the corner, while the bar has room for it beside its pieces
+#     (FrameWdgt.offersAResizeHandle). There it wears the bar's glyph inks and sizes the bar's own width
+#     (FrameWdgt.barsOwnWidth), leaving the width the window comes back at alone, and stops at the
+#     narrowest bar that keeps it (FrameWdgt.shortestBarKeepingMyGrip). A press that does not travel is
+#     a tap on the bar, which expands the frame (ruling C17), so the grip takes nothing from the bar's tap.
 # A halo's handles, a naked inspector's resizer and the demo handles stay plain HandleWdgts, on a plate
 # that casts the desktop shadow (HandleAppearance, HandleWdgt._castMyShadow).
 
@@ -23,8 +29,12 @@ class FrameGripWdgt extends HandleWdgt
 
   # is my active look up? (see _showActiveLook.) Derived from my pointer state, which does not survive
   # a save or a copy either, so a restored grip starts at rest.
-  @serializationTransients: ["_activeLookShowing"]
+  @serializationTransients: ["_activeLookShowing", "_tapPressOrigin"]
   _activeLookShowing: false
+
+  # where a press on me began while my frame was collapsed, for as long as that press can still be a
+  # tap on the bar: pressBegan sets it, and travelling the grab threshold clears it (nonFloatDragging).
+  _tapPressOrigin: undefined
 
   constructor: ->
     super "resizeBothDimensionsHandle"
@@ -42,9 +52,54 @@ class FrameGripWdgt extends HandleWdgt
     inset = WorldWdgt.theme.frameBorderWidth + WorldWdgt.theme.frameGripInset
     new Point inset, inset
 
-  # my strokes' ink, which my appearance reads as it paints
+  # how far along my frame's bottom edge I reach from its corner: my inset, then my side
+  reachFromMyFramesCorner: ->
+    @_cornerInsetFrom().x + @_cornerSide()
+
+  _standsOnACollapsedBar: ->
+    !!@target?.contents?.collapsed
+
+  # my strokes' ink, which my appearance reads as it paints. On a collapsed bar it is the ink of the
+  # bar's own glyphs, because the bar's fill follows focus and the grip strip's does not. A focus flip
+  # repaints the bar's background, and so whatever stands on it, me included.
   _gripInk: ->
+    if @_standsOnACollapsedBar()
+      bar = @target.bar
+      return if @_activeLookShowing then bar.activeGlyphInk else bar.glyphInk
     if @_activeLookShowing then WorldWdgt.theme.frameGripActiveInk else WorldWdgt.theme.frameGripInk
+
+  # A press on a collapsed bar's grip might still be the bar's tap (see activated), so note where it began
+  pressBegan: (pos) ->
+    @_tapPressOrigin = if @_standsOnACollapsedBar() then pos else undefined
+    super
+
+  # On a collapsed bar the press takes hold of me only once it travels as far as a press on the bar must
+  # to take hold of the bar, the same threshold, so a trembling tap neither resizes the bar nor stops
+  # being a tap. After that I track the pointer: the grab offset the drag measures from was taken
+  # before I started following it, so I catch up with it at once. An expanded frame's grip tracks from
+  # the first pixel, as every handle does.
+  nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
+    if @_tapPressOrigin?
+      travelled = (@screenPointToMyPlane pos).distanceTo @_tapPressOrigin
+      return if travelled < WorldWdgt.preferencesAndSettings.grabDragThreshold
+      @_tapPressOrigin = undefined
+    super
+
+  # On a collapsed bar a drag stops at the narrowest width that keeps me on it. The pointer can overshoot
+  # that and come back: the drag re-derives from the pointer each time, so I rejoin it where it rejoins
+  # me. (The height is the frame's to refuse: FrameWdgt._noteAWidthAskedOfMyBar.) An expanded frame takes
+  # what the pointer asks.
+  _extentMyDragAsksOfMyTarget: (anExtent) ->
+    return anExtent unless @_standsOnACollapsedBar()
+    new Point (Math.max anExtent.x, @target.shortestBarKeepingMyGrip()), anExtent.y
+
+  # A collapsed bar expands on a tap anywhere on it (ruling C17), and I am on it. Reached only by a press
+  # that began on me and released on me, and the hand sends that here after a drag as well, which is
+  # why it asks whether the press is still a tap.
+  activated: ->
+    return unless @_tapPressOrigin?
+    @_tapPressOrigin = undefined
+    @target.bar.expandFromATapOnMyStrip()
 
   # Beyond what any handle does as it comes or goes: my frame's body gives up or takes back the strip I
   # lie in (it answers the same question I do, HandleWdgt.wouldShow), and a grip that is gone shows
@@ -61,12 +116,13 @@ class FrameGripWdgt extends HandleWdgt
     @_showActiveLook @_isPressed or (@_isHovered and world.hand.pointerCanRest())
 
   # Everything I show while the pointer is on me or a press on me stands, as one change: my ink, the
-  # resize cursor, and the outline around the frame that would resize (the highlight channel: the
-  # world's reconciler keeps it on the frame as the frame's box changes under the drag).
+  # resize cursor (a collapsed bar sizes across only, and the cursor says so), and the outline around
+  # the frame that would resize (the highlight channel: the world's reconciler keeps it on the frame as
+  # the frame's box changes under the drag).
   _showActiveLook: (active) ->
     return if active is @_activeLookShowing
     @_activeLookShowing = active
-    world.worldCanvas.style.cursor = if active then 'nwse-resize' else ''
+    world.worldCanvas.style.cursor = if !active then '' else if @_standsOnACollapsedBar() then 'ew-resize' else 'nwse-resize'
     if active and @target?
       world.widgetsToBeHighlighted.set @target, HighlighterWdgt.resizeTargetOutlineStyle()
     else if @target?

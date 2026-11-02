@@ -747,14 +747,31 @@ class FrameBarWdgt extends Widget
     return unless @frame?
     return if @_clickIsAPiecePress()
     if @frame.contents?.collapsed
-      # a tap on the strip IS a press of the collapse switch, so it must do BOTH halves of one:
-      # the switch flips its own glyph on its own click (the frame never drives it), and the
-      # frame's verb does the expanding. Without the first half the strip would expand a frame and
-      # leave the switch offering to expand it again.
-      @collapseUncollapseSwitchButton?.setToggleState FrameBarWdgt.COLLAPSE_GLYPH
-      @frame.uncollapseButtonInBarPressed()
+      @expandFromATapOnMyStrip()
       return
     @frame.pinPopUp @ if @frame.isTransientPopUp()
+
+  # A tap on my collapsed strip, here or on the grip standing on it (FrameGripWdgt.activated). It IS a
+  # press of the collapse switch, so it must do BOTH halves of one: the switch flips its own glyph on its
+  # own click (the frame never drives it), and the frame's verb does the expanding. Without the first
+  # half the strip would expand a frame and leave the switch offering to expand it again.
+  expandFromATapOnMyStrip: ->
+    @collapseUncollapseSwitchButton?.setToggleState FrameBarWdgt.COLLAPSE_GLYPH
+    @frame.uncollapseButtonInBarPressed()
+
+  # THE SHORTEST THIS STRIP CAN BE AND KEEP `aLength` OF ITS TRAILING END FREE, for something standing
+  # there that is none of my pieces (a collapsed frame's grip). My arrange centres my pieces on a strip
+  # with no room for a title, so the tight case is a run of pieces with that length free on both sides
+  # of it; a longer strip leads them from its start and keeps its title as far from either end as they
+  # reach, so the end stays free. A piece that trails stands at that very end, and no length frees it.
+  # A pure read of the roster and of the pieces that exist, never of what my arrange last decided, so
+  # the answer does not depend on when it is asked.
+  shortestStripLeaving: (aLength) ->
+    spec = @frame._barSpec()
+    titleAt = spec.pieces.indexOf "title"
+    existing = (pieceName for pieceName in spec.pieces when pieceName isnt "title" and @_pieceNamed(pieceName)?)
+    return Infinity if existing.some (pieceName) -> spec.pieces.indexOf(pieceName) > titleAt
+    @_lengthOfPieces(existing, spec) + 2 * aLength
 
   # Was this escalated click a BUTTON piece's, rather than the strip's own? (the title text and
   # the strip background ARE the strip, and answer no.) A piece press stamps the event it acted on

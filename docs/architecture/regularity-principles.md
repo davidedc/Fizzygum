@@ -74,7 +74,9 @@ vocabulary below is the convention for all new code:
     payload affords editing); one whose host owns its membership drops close, since you leave
     by dragging out, not by a button; a docked band goes further and keeps only collapse +
     title, because editing what a band holds is not a band's gesture. Close button and resize
-    handle show **iff `isFreeFloating()`**; right-click → close stays the universal fallback
+    handle need **`isFreeFloating()`**, and the handle also asks `FrameWdgt.offersAResizeHandle`
+    (a window in view mode around it, or a collapsed bar with no room beside its pieces, takes it
+    away); right-click → close stays the universal fallback
     everywhere, and closes the nested frame **alone** — a frame's own content redirects a
     close to its frame, but a frame reached that way does not redirect again, so the host
     reverts to empty rather than leaving with its content.
@@ -92,8 +94,11 @@ vocabulary below is the convention for all new code:
     only its own chrome across it (its border and body margin), and the host keeps the band
     `dockedBandInset` in from its body on the band's three outer sides (its own body margin, when
     that is wider) and its body margin from the payload on the fourth. A
-    collapsed frame **is** its bar, and the whole bar — not just the collapse control — taps
-    to expand it.
+    collapsed frame **is** its bar, and the whole bar — not just the collapse control, and the
+    grip it keeps when it has room included — taps to expand it. A bar nobody has resized is as
+    wide as its frame. A width given to the bar is the bar's own (`FrameWdgt.barsOwnWidth`): the
+    frame comes back exactly as it was, and resizing the frame ends the bar's width. The frame
+    expands from wherever its bar is, so moving a bar moves the frame.
   - `MenuWdgt` / `PromptWdgt` are framed citizens (`extends FrameWdgt`, born transient): a
     menu or a prompt is a frame around a rows payload, not a parallel hierarchy alongside it.
   - **What a frame wraps is a PAGE or a PANE, declared by the payload's class, never by the
