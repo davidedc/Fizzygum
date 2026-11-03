@@ -1,4 +1,4 @@
-# The patch-programming palette -- ONE list for both homes (PatchProgrammingWdgt's
+# The patch-programming toolbar -- ONE list for both homes (PatchProgrammingWdgt's
 # docked column and PatchProgrammingComponentsToolbarCreatorButtonWdgt's floating
 # window), per the one-variant-per-content-type rule (Frame-model plan §5.C).
 

@@ -238,12 +238,12 @@ class PartsRegistry
   # is silent. `whenAllLoaded` REJECTS on a part this build never shipped, which is right when the
   # part is load-bearing: a Sample* document that BUILDS plots is broken without them, not reduced,
   # so it must fail loudly rather than open half-assembled. But a door whose window merely offers a
-  # part's tools in a palette is fine without them — the toolbars already filter their own contents
+  # part's tools in a toolbar is fine without them — the toolbars already filter their own contents
   # by class existence — and there `whenAllLoaded` would turn a shipped desktop icon into one whose
   # click can only reject: no window, ever, and an unhandled rejection. That is the trap this method
   # exists to close, and it is only reachable when the DOOR always ships while its parts may not
   # (DashboardsApp and SimpleSlideApp ship inside the lazy `authoring` part — so wherever their
-  # opener is drawn they are there — while the `maps`/`plots` tools their palettes offer are parts
+  # opener is drawn they are there — while the `maps`/`plots` tools their toolbars offer are parts
   # a profile may leave out; hence `optionalParts` on both, `["maps", "plots"]` and `["maps"]`).
   # A door behind a guarded opener cannot hit it, because the opener is absent with the part.
   #

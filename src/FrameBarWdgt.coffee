@@ -588,9 +588,19 @@ class FrameBarWdgt extends Widget
     # title cropped past legibility gives itself up too (see _layOutTitleInStrip).
     titleShows = @_layOutTitleInStrip spec, leadingPieces, trailingPieces
 
-    if titleShows
-      # the roster reads left to right: the leading pieces from the strip's start, the trailing
-      # ones from its end, and the title in the span between
+    # A LONE PIECE, ALONE ON THE STRIP, CENTRES (ruling C13 as amended 2026-11-03,
+    # docs/archive/toolbar-grid-and-bar-run.md): with nothing else on the strip it has no end to
+    # belong to, and a lone collapse glyph pinned to one end of a long empty band reads as an
+    # accident rather than as the band's control -- a side dock's horizontal bar centres it
+    # horizontally, a top dock's vertical bar vertically, ONE arithmetic either way. Anything more
+    # keeps its ENDS, whether a title shows between them or not, and whatever the reason one does
+    # not: the roster reads from the strip's start, the leading pieces from there and the trailing
+    # ones from its far end, so a window's close piece stays in its corner and its edit toggle at
+    # the other end.
+    showing = @_showingPieceNames leadingPieces.concat trailingPieces
+    if showing.length is 1 and !titleShows
+      @_layOutPieceInSlot showing[0], stripStart + Math.round((stripLength - @_lengthOfPieces showing, spec) / 2), spec
+    else
       slotStart = stripStart + spec.padding
       for pieceName in leadingPieces
         piece = @_pieceNamed pieceName
@@ -602,18 +612,6 @@ class FrameBarWdgt extends Widget
         piece = @_pieceNamed pieceName
         @_layOutPieceInSlot pieceName, slotStart, spec if piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
         slotStart += @_pieceLength pieceName, spec
-    else
-      # A TEXTLESS strip centres its piece GROUP along its own axis (ruling C13): with no title
-      # between them the pieces are the whole of what the strip carries, and a lone collapse glyph
-      # pinned to one end of a long empty band reads as an accident rather than as the band's
-      # control. Contiguous, in roster order, in the middle -- a side dock's horizontal bar centres
-      # it horizontally, a top dock's vertical bar vertically, and it is ONE arithmetic either way.
-      showing = @_showingPieceNames leadingPieces.concat trailingPieces
-      if showing.length > 0
-        slotStart = stripStart + Math.round (stripLength - @_lengthOfPieces showing, spec) / 2
-        for pieceName in showing
-          @_layOutPieceInSlot pieceName, slotStart, spec
-          slotStart += @_pieceLength pieceName, spec
 
   # How far a piece advances the strip: its own length if the spec names one (the edit toggle), else
   # one slot, the target box.
@@ -760,18 +758,21 @@ class FrameBarWdgt extends Widget
     @frame.uncollapseButtonInBarPressed()
 
   # THE SHORTEST THIS STRIP CAN BE AND KEEP `aLength` OF ITS TRAILING END FREE, for something standing
-  # there that is none of my pieces (a collapsed frame's grip). My arrange centres my pieces on a strip
-  # with no room for a title, so the tight case is a run of pieces with that length free on both sides
-  # of it; a longer strip leads them from its start and keeps its title as far from either end as they
-  # reach, so the end stays free. A piece that trails stands at that very end, and no length frees it.
-  # A pure read of the roster and of the pieces that exist, never of what my arrange last decided, so
-  # the answer does not depend on when it is asked.
+  # there that is none of my pieces (a collapsed frame's grip). My arrange leads my pieces from the
+  # strip's start (past my padding), so the tight case is that run of pieces with the length free
+  # after it; a longer strip keeps its title as far from either end as the pieces reach, so the end
+  # stays free. A LONE piece centres on a strip with no title, so it needs the length free on both of
+  # its sides. A piece that trails stands at that very end, and no length frees it. A pure read of the
+  # roster and of the pieces that exist, never of what my arrange last decided, so the answer does not
+  # depend on when it is asked.
   shortestStripLeaving: (aLength) ->
     spec = @frame._barSpec()
     titleAt = spec.pieces.indexOf "title"
     existing = (pieceName for pieceName in spec.pieces when pieceName isnt "title" and @_pieceNamed(pieceName)?)
     return Infinity if existing.some (pieceName) -> spec.pieces.indexOf(pieceName) > titleAt
-    @_lengthOfPieces(existing, spec) + 2 * aLength
+    piecesLength = @_lengthOfPieces existing, spec
+    return piecesLength + 2 * aLength if existing.length is 1
+    spec.padding + piecesLength + aLength
 
   # Was this escalated click a BUTTON piece's, rather than the strip's own? (the title text and
   # the strip background ARE the strip, and answer no.) A piece press stamps the event it acted on

@@ -774,12 +774,13 @@ class Theme
     @layoutAdjusterGrabMarkWidth = 2
     # a frame's resize GRIP (FrameGripWdgt, the draft's three-stroke grip): the side of its square,
     # which is also its whole hit area, and how far in from the corner of the frame's CONTENT area
-    # (inside its border) the square sits. The GRIP STRIP holds it, its inset above and below it, and
-    # takes that height out of the window's body (FrameWdgt._gripStripThickness), so a grip never lies
-    # over the window's content or over the grip of a window nested in it.
+    # (inside its border) the square sits. The GRIP STRIP holds it, its inset on either side of it, and
+    # takes that thickness out of the window's body along the edge opposite its bar -- the bottom under
+    # a bar across the top, the right beside a bar down the left (FrameWdgt._gripStripSide) -- so a grip
+    # never lies over the window's content or over the grip of a window nested in it.
     @frameGripSize = 36
     @frameGripInset = 3
-    @frameGripStripHeight = 2 * @frameGripInset + @frameGripSize
+    @frameGripStripThickness = 2 * @frameGripInset + @frameGripSize
     # the FAT (hovered) width of a scroll indicator -- see scrollIndicatorThickness below for the
     # thin resting width.
     @scrollBarsThickness = 12
@@ -790,14 +791,15 @@ class Theme
     # the bar strip is sized for the finger while the ink stays the size the eye wants.
     @barIconSize = 44
     @barControlGlyphSize = 14
-    # the strip's trailing edit-mode toggle: one target barToggleBoxWidth wide and barIconSize tall,
-    # holding a pill-shaped track with a knob inset inside it (the knob's height follows from the
-    # track's), an icon at barToggleGlyphSize at each end of the knob's travel, and the time a press's
-    # slide takes.
-    @barToggleBoxWidth = 80
-    @barToggleTrackWidth = 64
-    @barToggleTrackHeight = 28
-    @barToggleKnobWidth = 30
+    # the strip's trailing edit-mode toggle: one target barToggleBoxLength along the strip and
+    # barIconSize across it, holding a pill-shaped track with a knob inset inside it (the knob's
+    # thickness follows from the track's), an icon at barToggleGlyphSize at each end of the knob's
+    # travel, and the time a press's slide takes. Lengths run along the strip and thicknesses across
+    # it, whichever way the strip runs (EditModeToggleAppearance lays itself along its box).
+    @barToggleBoxLength = 80
+    @barToggleTrackLength = 64
+    @barToggleTrackThickness = 28
+    @barToggleKnobLength = 30
     @barToggleKnobInset = 2
     @barToggleGlyphSize = 16
     @barToggleSlideMs = 160

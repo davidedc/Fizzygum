@@ -16,8 +16,8 @@ class ToolbarCreatorButtonWdgt extends CreatorButtonWdgt
   # ready-built, drops/edit-disabled tools panel (each subclass fills and locks
   # its own), wrap it in a FrameWdgt that HUGS it, and place it down the left of
   # the world, centred on whatever height the hug produced. Returns the window.
-  # The palette's size is the ONE payload derivation
-  # (FrameWdgt.sizeToPayloadNaturalExtent) rather than a constant per palette, so
+  # The toolbar's size is the ONE payload derivation
+  # (FrameWdgt.sizeToPayloadNaturalExtent) rather than a constant per toolbar, so
   # every toolbar this scaffold opens is sized by the same criterion -- which is
   # also why PlotsToolbarCreatorButtonWdgt comes through here now: its own
   # size-then-place order had nothing left to differ about.

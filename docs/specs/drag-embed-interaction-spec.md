@@ -316,7 +316,7 @@ A small transient widget placed adjacent to the landed payload (world child, abo
 - **Insert**: embeds programmatically (same reaction sequence as an accepted drop); destination STAYS in view
   mode. (Programmatic `add` does not consult `wantsDropOfChild` — only the hand's climb does — so this is
   mechanically clean; VERIFY against the slide container's add path at implementation.)
-- **Edit & insert**: calls the content's `enableDragsDropsAndEditing` (the edit toggle's knob moves to the pencil, tools palette appears),
+- **Edit & insert**: calls the content's `enableDragsDropsAndEditing` (the edit toggle's knob moves to the pencil, toolbar appears),
   then embeds. Leaves the destination open for follow-up arranging.
 - **Dismissal is event-driven, never timed** (determinism): next pointer-down outside the pill, Esc, or
   grabbing the landed widget again. No auto-fade timeout.
@@ -449,7 +449,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
   `macroResizeWindowContainingInternalWindow`, `macroClosingInnerWindowKeepsOuter` — wherever the macro drops a
   window, insert a linger (synthesized stationary time ≥ DWELL_ARM_MS) before release. VERIFY which of these
   construct programmatically vs. by drop.
-- Sample apps: dashboard opens edit-ON (pixel change: tools palette visible → recapture + intent update).
+- Sample apps: dashboard opens edit-ON (pixel change: toolbar visible → recapture + intent update).
 
 **Semantics UNCHANGED (plain payloads — the payload-class rule is what protects these):**
 `macroIconDroppedIntoDocumentFlows`, `macroDocumentPreservesDroppedWidgetSizes`,
@@ -469,7 +469,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
   case B (Phase 3.5); the internal/external rework is `InternalVsExternalWindowDrop` (armed-nests vs
   unarmed-lands, Phase 3).
 - ❌ **MOOT** (feature cut/rejected — nothing to author): view-mode-cue + pill-Insert · pill-Edit&insert
-  (pencil→eye + tools palette) · eject-button-pops-out-nested-window · dashboard-edit-on · the "+hint" on
+  (pencil→eye + toolbar) · eject-button-pops-out-nested-window · dashboard-edit-on · the "+hint" on
   release-while-charging. (§8/§9 dropped; pencil↔eye / eject / switch cut in Phase 5; dashboards kept view-locked.)
 - ⏸ **NOT AUTHORED — deliberate, documented** (not silent): **eager-empty-window-still-requires-dwell-for-window-
   payload** — skipped as a duplicate: its code path is identical to release-while-charging-lands-on-world (an

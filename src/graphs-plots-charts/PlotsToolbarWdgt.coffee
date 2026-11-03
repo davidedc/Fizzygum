@@ -1,4 +1,4 @@
-# The plots/graphs palette (floating home: PlotsToolbarCreatorButtonWdgt).
+# The plots/graphs toolbar (floating home: PlotsToolbarCreatorButtonWdgt).
 
 class PlotsToolbarWdgt extends ToolbarWdgt
 

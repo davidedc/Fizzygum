@@ -80,6 +80,15 @@ vocabulary below is the convention for all new code:
     everywhere, and closes the nested frame **alone** — a frame's own content redirects a
     close to its frame, but a frame reached that way does not redirect again, so the host
     reverts to empty rather than leaving with its content.
+  - **Which side a frame's bar takes is derived from its RUN** (`FrameWdgt._runAxis`), never a knob:
+    a host's slot gives the length of its edge; a payload that identifies itself while it shows
+    (`identifiesItself`: a toolbar, whose tools are its identity) gives the frame's longer side;
+    anything else gives none. No run, the bar runs across the top, where a title reads; expanded, it
+    runs across the run at its leading end, the grip strip at the opposite end; collapsed, along the
+    run. So a docked band and a floating toolbar wear the same bar, a collapsed free frame is held by
+    nothing and wears its bar on top with its title, and a window whose title matters never changes
+    chrome whatever shape it is dragged to. On any bar a lone piece alone on its strip centres, and
+    anything more keeps its ends.
   - A frame's **edit mode is its payload's**: the edit toggle switches the payload's
     `dragsDropsAndEditingEnabled` directly, and the frame keeps no copy — it answers
     `isInEditMode()` from its payload. So a reader that may be handed a window (the editor-selection

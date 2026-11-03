@@ -3562,7 +3562,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # The sibling door for a payload that names its OWN box: the opener says WHERE and the payload
   # says HOW BIG (FrameWdgt.sizeToPayloadNaturalExtent). Every free-floating toolbar comes through
   # here, which is what makes ONE derivation serve them all instead of a size constant per
-  # palette. The framed payload then rides the door above, which passes a frame through un-wrapped
+  # toolbar. The framed payload then rides the door above, which passes a frame through un-wrapped
   # and places it exactly as it places any fresh window.
   openFrameHuggingPayload: (contentWidget, position) ->
     wm = @_frameAround contentWidget

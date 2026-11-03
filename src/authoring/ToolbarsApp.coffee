@@ -1,21 +1,21 @@
 # ToolbarsApp -- the "Super toolbar" launcher app: opens the SuperToolbarWdgt
-# palette (the toolbar-creator buttons) + its info widget on each launch.
+# (the toolbar of toolbar-creator buttons) + its info widget on each launch.
 # WindowedApp (Phase 6 6c.4). The window wrap is the shared
 # world.openFrameWith.
 class ToolbarsApp extends WindowedApp
 
   requiredParts: ["authoring"]
 
-  # ⚠⚠ THE SAME PALETTE MUST NOT DEPEND ON HOW IT WAS OPENED. Every toolbar this window can pop
+  # ⚠⚠ THE SAME TOOLBAR MUST NOT DEPEND ON HOW IT WAS OPENED. Every toolbar this window can pop
   # is built by a CREATOR BUTTON, which has no async seam
   # (WidgetCreatorAndSmartPlacerOnClickMixin.activated and grabbedWidgetSwitcheroo both consume
   # createWidgetToBeHandled()'s return value synchronously), so the await has to happen at the one
-  # door that CAN await -- this one -- and for the parts the palettes' CONTENTS come from, not just
+  # door that CAN await -- this one -- and for the parts the toolbars' CONTENTS come from, not just
   # the parts this window's own classes come from. ⚠ The suite cannot see a violation here: the
-  # harness page presets FIZZYGUM_EAGER_ALL_PARTS, so a reduced palette only ever appears on
+  # harness page presets FIZZYGUM_EAGER_ALL_PARTS, so a reduced toolbar only ever appears on
   # index.html, the page no test drives (incident case law: docs/archive/boot-cost-reduction-plan.md).
   # ⚠ OPTIONAL, not required: on a profile with neither part (the appliance) a Super toolbar with
-  # fewer palettes is reduced, not broken, and the toolbars' own `if X?` filters already produce it.
+  # fewer toolbars is reduced, not broken, and the toolbars' own `if X?` filters already produce it.
   optionalParts: ["maps", "plots"]
 
 

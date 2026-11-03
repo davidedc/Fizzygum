@@ -1,12 +1,12 @@
-# The dashboard-authoring palette -- DashboardsWdgt's tool column (docked-only
+# The dashboard-authoring toolbar -- DashboardsWdgt's tool column (docked-only
 # today; the class is home-agnostic like every ToolbarWdgt).
 
 class DashboardsToolbarWdgt extends ToolbarWdgt
 
   # The plot tools and the map tools belong to the LAZY 'plots' and 'maps' parts, so they are absent
   # on a profile without them and not yet here on a profile that has them but has not loaded them
-  # (the hosting app awaits both when it launches, so a docked palette has the lot). Filtering the
-  # LIST is what keeps the palette's ORDER intact when some are missing -- appending them behind a
+  # (the hosting app awaits both when it launches, so a docked toolbar has the lot). Filtering the
+  # LIST is what keeps the toolbar's ORDER intact when some are missing -- appending them behind a
   # guard would silently reshuffle the whole strip.
   _toolbarItems: ->
     items = [

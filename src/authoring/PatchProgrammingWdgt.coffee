@@ -13,6 +13,6 @@ class PatchProgrammingWdgt extends GenericPanelWdgt
     new PatchProgrammingIconWdgt
 
   # the frame docks this variant in its toolbar-slot (§5.C) -- the SAME list
-  # the floating components palette summons (one-variant rule)
+  # the floating components toolbar summons (one-variant rule)
   buildToolbar: ->
     new PatchProgrammingToolbarWdgt

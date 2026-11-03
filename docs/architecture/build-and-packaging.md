@@ -176,7 +176,7 @@ named:
 | Idiom | On a part this artifact never shipped | Use when |
 |---|---|---|
 | `whenAllLoaded [names], -> …` | REJECTS; the callback never runs | the part CONSTITUTES the result — a `Sample*App` document that *builds* plots is broken without them, not reduced, so it must fail loudly rather than open half-assembled |
-| `whenOptionalPartsLoaded [names], -> …` | loads what IS here, runs the callback anyway | the part ENRICHES the result — `DashboardsApp`/`SimpleSlideApp` merely offer its tools in a docked palette, and the toolbars already filter their own contents by class existence |
+| `whenOptionalPartsLoaded [names], -> …` | loads what IS here, runs the callback anyway | the part ENRICHES the result — `DashboardsApp`/`SimpleSlideApp` merely offer its tools in a docked toolbar, and the toolbars already filter their own contents by class existence |
 
 The failure mode is worth stating because it shipped: `DashboardsApp` and `SimpleSlideApp` have
 desktop openers, and they used `whenAllLoaded ["maps", …]`. On `lean`, which ships neither `maps` nor

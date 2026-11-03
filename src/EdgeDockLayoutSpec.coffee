@@ -45,6 +45,12 @@ class EdgeDockLayoutSpec extends LayoutSpec
   thicknessGrantedTo: (payload) ->
     payload?.dockThickness?() ? @thickness
 
+  # The axis the band I give runs along: the length of my edge. A top or bottom band runs across its
+  # host, a left or right one down it. My carrier's RUN (FrameWdgt._runAxis), whether it is expanded
+  # or collapsed: the slot keeps its shape either way.
+  runAxis: ->
+    if @side is "top" or @side is "bottom" then "horizontal" else "vertical"
+
   # Capability query (duck-typed at the call sites): am I an edge dock?
   isEdgeDock: ->
     true

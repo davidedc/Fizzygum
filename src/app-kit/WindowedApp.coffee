@@ -40,7 +40,7 @@ class WindowedApp
   # launch override defeats the gate the same way (case history: docs/architecture/build-and-packaging.md).
   # ⚠ REQUIRED vs OPTIONAL is the distinction PartsRegistry documents: `requiredParts` CONSTITUTE
   # the window (a Sample doc that assembles plots is broken without them, so it must reject loudly),
-  # `optionalParts` merely ENRICH it (a docked palette offers fewer tools, which is reduced rather
+  # `optionalParts` merely ENRICH it (a docked toolbar offers fewer tools, which is reduced rather
   # than broken). ⚠ Only `requiredParts` satisfies the gate -- an optional part may genuinely be
   # absent, so a reference to one still has to be guarded where it stands.
   # ⚠ CLASS-LEVEL CONSTANT LISTS, never mutated: a subclass states its own by SHADOWING these

@@ -211,15 +211,16 @@ class FrameWdgt extends Widget
     pieces: pieces
     resizer: if @isFreeFloating() then "payloadSized" else "none"
     axis: axis
-    # a strip running along my side is too narrow for a title, so it carries pieces only
-    showsText: axis is "horizontal"
+    # a strip running along my side is too narrow for a title, so it carries pieces only; and a
+    # payload that says what it is while it shows (_payloadIdentifiesItself) needs no title either
+    showsText: axis is "horizontal" and !@_payloadIdentifiesItself()
     naturalWidth: "none"
     # the strip, measured from my OUTER edge: my border, one row of targets, then the strip's own
     # rule, which my payload lies past.
     thickness: theme.frameBorderWidth + theme.barIconSize + theme.barRuleWidth
     slotSize: theme.barIconSize
     pieceLengths:
-      edit: theme.barToggleBoxWidth
+      edit: theme.barToggleBoxLength
     glyphSizes:
       close: theme.barControlGlyphSize
       collapse: theme.barControlGlyphSize
@@ -240,23 +241,46 @@ class FrameWdgt extends Widget
     return WorldWdgt.theme.titleBarTextHeight unless title?
     title.linePitch title.originallySetFontSize
 
-  # WHICH DIRECTION MY STRIP RUNS (program rulings C13/C15). A free frame's bar is on TOP, always
-  # -- no per-frame orientation knob, because a window whose bar could be anywhere costs more
-  # predictability than it buys. A DOCKED frame's follows the shape the band gives it, and the
-  # frame's shape is what changes, never the bar's meaning:
-  #   EXPANDED, the strip runs ACROSS the band at its leading end -- vertical at the left end of
-  # a top/bottom band, horizontal at the top of a left/right one -- so the band's thickness stays
-  # the payload's alone and the grip costs only along the edge.
-  #   COLLAPSED, I AM my bar, so it spans the axis the band keeps: a full-width strip for a
-  # top/bottom dock, a full-height sliver for a side one.
+  # WHICH DIRECTION MY STRIP RUNS (program rulings C13/C15, as amended 2026-11-03:
+  # docs/archive/toolbar-grid-and-bar-run.md), from my RUN alone (_runAxis) -- no per-frame knob,
+  # and nothing about what I am or where I stand beyond what the run already says:
+  #   NO RUN, my strip runs across my TOP, where a title reads. That is every frame whose bar has a
+  # title to carry, and every collapsed frame nothing holds.
+  #   EXPANDED, it runs ACROSS my run at its leading end -- down my left when I run left to right,
+  # across my top when I run top to bottom -- so it costs my long side, which has room to spare. A
+  # docked band's thickness so stays its payload's alone, and a wide toolbar window keeps its height.
+  #   COLLAPSED, I AM my bar, so it runs ALONG my run: a full-width strip for a top/bottom dock, a
+  # full-height sliver for a side one.
   _barAxis: ->
+    run = @_runAxis()
+    return "horizontal" unless run?
+    return run if @contents?.collapsed
+    if run is "horizontal" then "vertical" else "horizontal"
+
+  # MY RUN: the axis I am long along, as given by whoever shapes me -- or undefined when nothing does.
+  #   A host's SLOT gives the length of its edge (EdgeDockLayoutSpec.runAxis), expanded or collapsed:
+  # the host keeps the slot's shape either way.
+  #   Otherwise my PAYLOAD gives my longer side, while it shows and says what it is
+  # (_payloadIdentifiesItself): such a payload needs no title, so nothing ties my bar to my top. A
+  # square takes no run. My own extent decides, never my payload's, which my bar's side would feed
+  # back into: the extent is what a person set, and a frame wrapping a payload (extentWrappingPayloadAt)
+  # already has the payload's proportions -- a band lifted out of its slot has its band's, and a new
+  # toolbar window sized to its natural column (sizeToPayloadNaturalExtent) starts square.
+  #   Otherwise I have none: a payload with a title to show, or a collapsed one, shapes nothing.
+  _runAxis: ->
     dockSpec = @_myEdgeDockSpec()
-    return "horizontal" unless dockSpec?
-    bandRunsHorizontally = dockSpec.side is "top" or dockSpec.side is "bottom"
-    if @contents?.collapsed
-      if bandRunsHorizontally then "horizontal" else "vertical"
-    else
-      if bandRunsHorizontally then "vertical" else "horizontal"
+    return dockSpec.runAxis() if dockSpec?
+    return undefined unless @_payloadIdentifiesItself()
+    return "horizontal" if @width() > @height()
+    return "vertical" if @height() > @width()
+    undefined
+
+  # Does my payload, as it shows NOW, say what it is -- a toolbar, whose tools are its identity
+  # (ToolbarWdgt.identifiesItself)? Then my title would only repeat it. A collapsed payload shows
+  # nothing, so it says nothing, and my title is back exactly when its face is hidden.
+  _payloadIdentifiesItself: ->
+    return false unless @contents? and !@contents.collapsed
+    !!@contents.identifiesItself?()
 
   # The edge spec a HOST handed me, if I am docked in one of its slots; undefined otherwise (a
   # desktop window, a card in a stack, a pop-up). The one place the "am I a band?" question is
@@ -328,7 +352,8 @@ class FrameWdgt extends Widget
   # My BODY is what my border encloses, less my strips: my payload and my docked bands lie in it.
   # Its inner edge sits in from my outer edge by my STRIP's thickness on the side my strip runs
   # along (the strip spans my border, its band and its rule: _barSpec), by my border inset and my
-  # GRIP STRIP on my bottom (_bodyEdgeBottom), and by my BORDER INSET on every other side. Past
+  # GRIP STRIP on the edge opposite it (_bodyEdgeBottom, _bodyEdgeRight), and by my BORDER INSET on
+  # every other side. Past
   # those edges my payload keeps my BODY MARGIN, and the same margin
   # parts a band from my payload. A band stands in from those edges, on every side but the one it
   # faces my payload across, by the larger of my body margin and the theme's band inset
@@ -393,35 +418,50 @@ class FrameWdgt extends Widget
   _bodyEdgeTop: ->
     Math.max @_titlebarHeight(), @_borderInset()
 
-  # The LEFT twin: my strip when it runs down my side, else my border inset. My right edge is always
-  # my border inset: a title strip runs along my top or my left, never elsewhere.
+  # The LEFT twin: my strip when it runs down my side, else my border inset. A title strip runs
+  # along my top or my left, never elsewhere.
   _bodyEdgeLeft: ->
     Math.max @_titlebarWidth(), @_borderInset()
 
-  # The BOTTOM twin: my border inset, and the grip strip inside it while I have one. So my payload's
-  # margin to my grip strip is the very margin it keeps from my title strip's rule.
+  # The BOTTOM twin: my border inset, and the grip strip inside it while it lies along my bottom. So
+  # my payload's margin to my grip strip is the very margin it keeps from my title strip's rule.
   _bodyEdgeBottom: ->
-    @_borderInset() + @_gripStripThickness()
+    @_borderInset() + @_gripStripThicknessAt "bottom"
 
-  # What my GRIP STRIP takes out of my height: the theme's height exactly while my grip would show,
-  # and nothing otherwise, so a frame with nothing to resize keeps that room for its payload. It asks
-  # my grip the question my grip's own showing answers (HandleWdgt.wouldShow: free-floating, and
+  # The RIGHT twin: my border inset, and the grip strip inside it while it lies down my right.
+  _bodyEdgeRight: ->
+    @_borderInset() + @_gripStripThicknessAt "right"
+
+  # WHICH OF MY EDGES MY GRIP STRIP LIES ALONG: the one opposite my bar -- my bottom under a bar across
+  # my top, my right beside a bar down my left -- so my strips stand at the two ends of whatever my bar
+  # crosses, and the grip keeps the corner it always has. Undefined while I have no strip: exactly
+  # while my grip would not show, so a frame with nothing to resize keeps that room for its payload. It
+  # asks my grip the question my grip's own showing answers (HandleWdgt.wouldShow: free-floating, and
   # not standing in a window in view mode), never whether it shows yet: the measure and the arrange
   # read this, and a visibility is never a layout input. A frame born without a grip (a pop-up, which
   # keeps none when pinned) has no strip, and neither has a frame still building, whose grip comes last.
   # Collapsed there is none whatever the grip answers: I have no body to keep a strip in, and a grip
-  # with room stands on my bar. So my collapsed height never depends on my width.
-  _gripStripThickness: ->
-    return 0 if @contents?.collapsed
-    if @resizer?.wouldShow() then WorldWdgt.theme.frameGripStripHeight else 0
+  # with room stands on my bar. So my collapsed extent never depends on my grip.
+  _gripStripSide: ->
+    return undefined if @contents?.collapsed
+    return undefined unless @resizer?.wouldShow()
+    if @_barSpec().axis is "vertical" then "right" else "bottom"
 
-  # Where my grip strip lies, in my LOCAL coordinates: inside my border along my two sides and my
-  # bottom. Undefined while I have none. My body's appearance paints it (FrameBodyAppearance).
+  # What my grip strip takes out of my body at `side`: the theme's thickness when it lies there, else 0.
+  _gripStripThicknessAt: (side) ->
+    if @_gripStripSide() is side then WorldWdgt.theme.frameGripStripThickness else 0
+
+  # Where my grip strip lies, in my LOCAL coordinates: inside my border, along the edge it lies on and
+  # both ends of it. Undefined while I have none. My body's appearance paints it (FrameBodyAppearance).
   _gripStripRect: ->
-    thickness = @_gripStripThickness()
-    return undefined unless thickness > 0
+    side = @_gripStripSide()
+    return undefined unless side?
+    thickness = WorldWdgt.theme.frameGripStripThickness
     border = @_borderInset()
-    new Rectangle border, @height() - border - thickness, @width() - border, @height() - border
+    if side is "right"
+      new Rectangle @width() - border - thickness, border, @width() - border, @height() - border
+    else
+      new Rectangle border, @height() - border - thickness, @width() - border, @height() - border
 
   # Where my payload's top-left sits from mine when it fills its region: past my body's leading
   # edges, a band docked at my left or my top (with its inset), and my body margin. The arrange
@@ -507,7 +547,7 @@ class FrameWdgt extends Widget
   # measures and the arrange both read (§6.1 rule 1): availableWidthForContents, the width
   # negotiation and the first-placement hug all route through it.
   _chromeWidth: ->
-    @_bodyEdgeLeft() + @_borderInset() + 2 * @_bodyMargin() + @_leftDockThickness() + @_rightDockThickness()
+    @_bodyEdgeLeft() + @_bodyEdgeRight() + 2 * @_bodyMargin() + @_leftDockThickness() + @_rightDockThickness()
 
   # (U2) The first-placement WIDTH negotiation, as a PURE function of the spec's
   # preferredStartingWidth sentinels -- ONE home for the measure's pre-capture branch (below)
@@ -815,7 +855,7 @@ class FrameWdgt extends Widget
   # THE ONE WAY MY TITLE'S TEXT CHANGES, through the non-settling label core: every title write of
   # mine comes here. The text is an INPUT to my strip's arrange -- FrameBarWdgt._layOutTitleInStrip
   # grades how much of it survives the box it is granted, and a strip whose title gives itself up
-  # centres its pieces -- so new text re-lays my strip. My label is fitted to that box, so its own
+  # centres a lone piece -- so new text re-lays my strip. My label is fitted to that box, so its own
   # text change invalidates nothing above it. An untitled pop-up carries no title piece, so there is
   # nothing to re-title. The text is shown in my title's display case (_titleDisplayCase), asserted
   # before the text is set so the label measures the shown form; a change of case alone re-lays my
@@ -1190,7 +1230,7 @@ class FrameWdgt extends Widget
   # my bar, so my grip offers the bar's width, and only while the bar has room for it beside its pieces:
   # they outrank it (owner ruling, docs/archive/collapsed-bar-grip.md), so a narrower bar shows them and
   # no grip, which also leaves nothing covered that a tap on the strip must reach (ruling C17). My
-  # resizer's own visibility asks this, and so does my grip strip (_gripStripThickness). A pure read:
+  # resizer's own visibility asks this, and so does my grip strip (_gripStripSide). A pure read:
   # my arrange re-asks it as a collapsed width lands.
   offersAResizeHandle: ->
     return false if @_standsInAWindowInViewMode()
@@ -1212,8 +1252,9 @@ class FrameWdgt extends Widget
 
   # PUBLIC notification from my grip: it came or went (FrameGripWdgt.updateVisibility), so my grip strip
   # did, and my body takes up or gives back that room. A payload that sizes freely takes the room and
-  # I keep my height. A payload that dictates its height keeps it, so MY height changes by the strip,
-  # and it changes HERE rather than at my arrange: a host adopting me mid-arrange reads my applied
+  # I keep my height. A payload that dictates its height keeps it, so MY height changes by a strip
+  # along my bottom -- one down my right (beside a bar down my left, _gripStripSide) takes my width,
+  # which a payload's height says nothing about -- and it changes HERE rather than at my arrange: a host adopting me mid-arrange reads my applied
   # height straight after handing me its spec (Widget._setWidthSizeHeightAccordingly), and my first
   # placement in a window reads it too. Left to my arrange, my host would size itself by the strip
   # I just lost and be re-visited by the up-edge when I shed it. Collapsed there is no strip to account
@@ -1224,8 +1265,8 @@ class FrameWdgt extends Widget
   noteMyGripCameOrWent: ->
     @_changed()
     return if @contents?.collapsed
-    if @contents?.contentStackSpec()? and !@contentsRecursivelyCanSetHeightFreely()
-      strip = WorldWdgt.theme.frameGripStripHeight
+    if @_barSpec().axis is "horizontal" and @contents?.contentStackSpec()? and !@contentsRecursivelyCanSetHeightFreely()
+      strip = WorldWdgt.theme.frameGripStripThickness
       @_applyExtentBase new Point @width(), @height() + (if @resizer.isVisible then strip else -strip)
     @_scheduleRelayoutRespectingPhase()
 
@@ -1308,7 +1349,7 @@ class FrameWdgt extends Widget
   # so the offer and the picture of it cannot disagree.
   _dockBandsBox: ->
     new Rectangle (new Point @left() + @_titlebarWidth(), @top() + @_titlebarHeight()),
-      new Point @right(), @bottom() - @_gripStripThickness()
+      new Point @right() - (@_gripStripThicknessAt "right"), @bottom() - (@_gripStripThicknessAt "bottom")
 
   # The band rectangle at `side`, in my own plane — what the hand outlines while a frame hovers
   # over the offer. Same box, same depth, as the answer above.
@@ -2578,9 +2619,10 @@ class FrameWdgt extends Widget
       partOfHeightUsedUp = @_titlebarHeight()
 
 
-    # A strip running down my SIDE spans my whole height, so my height is my HOST's grant, not my
-    # content's sum: a band is exactly as thick as the host reserved for it, whether my payload
-    # fills it or my collapsed body leaves nothing in it at all.
+    # A strip running down my SIDE spans my whole height, so my height is given, not my content's
+    # sum: a band is exactly as thick as the host reserved for it, whether my payload fills it or my
+    # collapsed body leaves nothing in it at all, and a window wearing its strip down its side (a
+    # toolbar running left to right, _runAxis) is as tall as it was made.
     if @_barSpec().axis is "vertical"
       newHeight = @height()
     else
@@ -2590,7 +2632,7 @@ class FrameWdgt extends Widget
 
     # Collapsed, whether my grip has room on my bar depends on my width, which is final here, so here is
     # where it re-asks: every width a collapsed frame takes comes through this arrange. Nothing in my
-    # layout reads the answer (_gripStripThickness), so asking cannot change what this pass has placed.
+    # layout reads the answer (_gripStripSide), so asking cannot change what this pass has placed.
     @resizer?.updateVisibility() if @contents?.collapsed
 
     # the title strip: hand the bar its bounds (my top strip at the FINAL width, or my leading
@@ -2628,7 +2670,7 @@ class FrameWdgt extends Widget
     bandInset = @_dockedBandInset()
     bodyLeft = @left() + @_bodyEdgeLeft() + bodyMargin
     bodyTop = @top() + @_bodyEdgeTop() + bodyMargin
-    bodyWidth = @width() - @_bodyEdgeLeft() - @_borderInset() - 2 * bodyMargin
+    bodyWidth = @width() - @_bodyEdgeLeft() - @_bodyEdgeRight() - 2 * bodyMargin
     bandRun = Math.max 0, bodyWidth - 2 * bandInset
     columnTop = bodyTop + @_topDockThickness() + bandInset
     columnRun = Math.max 0, stackHeight - 2 * bandInset
@@ -2649,7 +2691,7 @@ class FrameWdgt extends Widget
           bandBounds = new Rectangle new Point bodyLeft + bandInset, bodyTop + @_topDockThickness() + stackHeight + bodyMargin
           bandBounds = bandBounds.setBoundsWidthAndHeight bandRun, bandThickness
         when 'right'
-          bandBounds = new Rectangle new Point @right() - @_borderInset() - bodyMargin - bandInset - bandThickness, columnTop
+          bandBounds = new Rectangle new Point @right() - @_bodyEdgeRight() - bodyMargin - bandInset - bandThickness, columnTop
           bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, columnRun
         else # 'left'
           bandBounds = new Rectangle new Point bodyLeft + bandInset, columnTop

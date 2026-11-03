@@ -1759,7 +1759,8 @@ class MacroToolkit
   #   `preferred`, when given, is KEPT whenever it counts, so an aim that already works never moves.
   # Otherwise, in order: the title's centre, while the title SHOWS (_titleShowsOn) and a press there
   # meets it; the strip background's centre; the first of 32 points along the background's centre
-  # row a press meets — a strip whose middle a centred button covers (a docked band's grip) is still
+  # line, down its LENGTH whichever way the strip runs, a press meets — a strip whose middle a
+  # centred button covers (a docked band's grip, a toolbar window's bar down its side) is still
   # taken by its uncovered margin. A frame offering none of these has no strip to take hold of, which
   # is a fault to raise, naming the frame, never a press to place on whatever covers it.
   #   Each candidate is the whole pixel a press lands on (rounded, as both pointer kinds round a press)
@@ -1779,8 +1780,12 @@ class MacroToolkit
     if background?
       backgroundCentre = @_screenPixelOf background, background.center()
       return { point: backgroundCentre, piece: background }  if (@_stripPieceAPressGrabsBy frame, backgroundCentre) is background
-      for column in [0...32]
-        candidate = @_screenPixelOf background, new Point (background.left() + Math.round((column + 0.5) * background.width() / 32)), background.center().y
+      runsDown = background.height() > background.width()
+      for step in [0...32]
+        candidate = @_screenPixelOf background, (if runsDown
+          new Point background.center().x, background.top() + Math.round((step + 0.5) * background.height() / 32)
+        else
+          new Point background.left() + Math.round((step + 0.5) * background.width() / 32), background.center().y)
         return { point: candidate, piece: background }  if (@_stripPieceAPressGrabsBy frame, candidate) is background
     throw new Error "no point of #{frame}'s title strip takes hold of it — its title does not show, and its strip background is absent or covered at every sampled point"
 

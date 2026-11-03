@@ -673,7 +673,7 @@ assertion a recapture after a regression silently stores two different hashes an
   bottom-right HandleWdgt, non-float drag → setExtent; use deltas off the live bounds).
 - **A collapsed bar's grip, and the bar's own width** (`macroCollapsedBarGrip`, `macroCollapsedBarHasTheWindowsWidth`):
   the collapsed-bar follow-on to the chrome-button entry above. A collapsed `FrameWdgt` keeps its `.resizer` while the bar has
-  room beside its pieces (`FrameWdgt.offersAResizeHandle`, `shortestBarKeepingMyGrip`: 168 px for close + collapse), so the
+  room beside its pieces (`FrameWdgt.offersAResizeHandle`, `shortestBarKeepingMyGrip`: 129 px for close + collapse), so the
   ordinary `@resizeWindowBy_InputEvents win, delta` drives it. The drag sizes the BAR'S OWN width (`barsOwnWidth`): the bar keeps
   its height whatever the delta's y, the window comes back at the extent it had, and the bar goes back to that width at each
   collapse, also after the window has been resized. Past the floor the bar stops at `shortestBarKeepingMyGrip()`, so state a
@@ -687,6 +687,18 @@ assertion a recapture after a regression silently stores two different hashes an
   floor. Assert `"ew-resize"`, not `"nwse-resize"`, on a hovered bar grip, behind `unless @fingerMode()`. To press a bar and be
   sure of a MOVE, aim clear of the corner: `titleGrabPoint` already does. A band collapsed in its dock and lifted out carries its
   edit toggle at that corner, so it shows no grip at any width. No new verb.
+- **A toolbar window's bar crosses its run** (`macroToolbarWindowBarCrossesItsRun`, decision record
+  `docs/archive/toolbar-grid-and-bar-run.md`): open a floating toolbar with `world.openFrameHuggingPayload (new TextToolbarWdgt),
+  point` (it hugs a tall column) and SHAPE it with its own grip, `@resizeWindowTo_InputEvents win, extent`: wider than tall puts
+  its bar down its left and its grip strip down its right, taller than wide puts the bar across its top, and the grip keeps its
+  corner, so the verb works across the flip. Read the bar's side from public geometry (`win.bar.width()`/`height()` against the
+  strip's thickness, `frameBorderWidth + barIconSize + barRuleWidth`), the title from `win.label.isInCollapsedSubtree()`, the grip
+  strip from where the payload stops (`win.right() - win.contents.right()`), and the toggle's direction from its box
+  (`win.editButton.height() > win.editButton.width()`); the private `_runAxis`/`_barAxis` are not for macro source. A tap on the
+  standing toggle is `@moveToAndClick_InputEvents win.editButton`, read back with `win.isInEditMode()`. `titleGrabPoint` samples a
+  bar down a side along its length, so a side bar whose buttons cover its middle is still taken by its margin. ⚠
+  `assertValuesEqual` compares with `is`: compare two values at once as `[a, b].join()` on both sides, never as bare arrays.
+  No new verb.
 - **Duplicating a COLLAPSED window keeps state, extent and content** (`macroDuplicatedCollapsedWindowKeepsStateAndContent`):
   the chrome-state axis of the duplicate family (menu duplicates: the born-pinned entry; composite duplicates keep wiring: the
   slider/inspector entries). A collapsed `FrameWdgt` stores its pre-collapse geometry (`@extentWhenCollapsed` /
@@ -871,8 +883,9 @@ assertion a recapture after a regression silently stores two different hashes an
   (`FrameWdgt.wantsDetachOfChild` grants it to members of `@dockedFrames` — the spreadsheet-cell mechanism), so
   an ordinary `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf band.bar, [0.5,0.5]),
   destPoint` — no `yield`, no dwell verb — lifts the docked frame straight to the desktop, landing it as an
-  ordinary free-floating window (close piece, resizer and full title bar back the instant it lands — skin is
-  `f(lifetime, parentage)`, same rule as the pin-by-header entries above). Re-docking it is the drop-to-dock
+  ordinary free-floating window (close piece and resizer back the instant it lands — skin is
+  `f(lifetime, parentage)`, same rule as the pin-by-header entries above — and its bar where its RUN puts it: a band
+  holding a toolbar lands wide, so its bar stays down its side, untitled, as the next entry's test shows). Re-docking it is the drop-to-dock
   gesture again, grabbing the SAME frame's bar. Re-siding WITHOUT detaching is a menu action, not a drag — next.
 - **The band's own context menu: re-side and float, on the BAND, never the host** (`macroDocsToolbarDockSidesAndFloat`):
   a docked frame owns its own placement question, so "Dock" → <the other three sides> (`dockSideMenu` →
@@ -896,6 +909,15 @@ assertion a recapture after a regression silently stores two different hashes an
   (`band.height() == band.bar.height()`), still spanning the full body width. C17 (tap-anywhere-to-expand)
   applies here too: `@moveToAndClickAtFractionOf_InputEvents band.titlebarBackground, [0.7,0.5]` (a tap on the
   strip BACKGROUND, clear of the collapse button) re-expands it to its pre-collapse thickness.
+- **The toolbar grid: packed while it fits, spread only while full, a grid in a box**
+  (`macroToolbarGridPacksAndSpreadsOnlyWhenFull`, decision record `docs/archive/toolbar-grid-and-bar-run.md`): read a toolbar's
+  cells from its grid, `toolbar.contents.childrenNotHandlesNorCarets()` less `toolbar.contents.overflowChevron` and less any
+  hidden cell (`cell.isVisible`), in strip order. Two Docs Maker windows of different widths give both docked cases at once
+  (900 wide fits all ten text tools; 370 overflows): assert the packed band by its pitch
+  (`theme.toolThumbnailSize + theme.toolInternalPadding` between neighbours, `theme.toolAlongPadding` in from the strip's start)
+  and the full one by its chevron's distance from the far end (`toolAlongPadding`) and by the total spread being under one
+  pitch. A box shape needs a floating toolbar shaped by its grip (see the bar-run entry), its rows told apart by `top()`.
+  No new verb.
 - **View mode DISENGAGES every dock; the user's own collapse state survives the round trip**
   (`macroViewModeDisengagesDocks`): a host's mode flip (`@moveToAndClick_InputEvents win.editButton`) sets
   `dockedFrame.layoutSpec.engaged` for every docked frame — disengaged in view mode (zero layout contribution,

@@ -8,8 +8,9 @@
 #     darken, the cursor is the resize cursor and the frame it would resize is outlined. A finger
 #     never rests, so a finger is shown this while its press stands and not on its way past;
 #   - it is frameGripSize square, and sits frameGripInset in from the corner of its frame's CONTENT
-#     area, i.e. past the frame's border, inside the GRIP STRIP the frame keeps for it
-#     (FrameWdgt._gripStripThickness). The strip is why no grip lies over its frame's content, or over
+#     area, i.e. past the frame's border, inside the GRIP STRIP the frame keeps for it along its
+#     bottom, or down its right when its bar runs down its left (FrameWdgt._gripStripSide): either
+#     way the strip ends in that corner. The strip is why no grip lies over its frame's content, or over
 #     the grip of a window nested in that frame: each grip is pressed on its own window's strip;
 #   - a press anywhere in its square takes it, because the glyph appearance answers its whole box
 #     (Appearance.shapeContainsPoint). The grip is drawn large precisely because its hit area cannot

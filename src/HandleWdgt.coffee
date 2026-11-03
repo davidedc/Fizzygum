@@ -179,7 +179,7 @@ class HandleWdgt extends Widget
   # The two questions above, as a query: what my showing derives from, asked without asking whether I
   # show. A viewport that runs out to my parent's bottom-right corner keeps that corner free for me
   # by this answer (ViewportWdgt._resizerOverMyCorner), and a frame keeps a grip strip for its grip by
-  # it (FrameWdgt._gripStripThickness) -- a visibility is never a layout input.
+  # it (FrameWdgt._gripStripSide) -- a visibility is never a layout input.
   wouldShow: ->
     @parent? and @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)
 

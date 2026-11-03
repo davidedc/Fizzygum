@@ -195,33 +195,32 @@ class ToolPanelWdgt extends PanelWdgt
   # overflows sideways. Along: EVERY cell's run at the least gap, my along padding at either end of
   # it, capped by the room and, when capped, QUANTIZED DOWN to whole cells -- a sliver of a cell shows nothing anyone can
   # use, and the overflow chevron carries what is left out either way. Either way the run has no
-  # leftover, so nothing spreads until someone makes the strip longer.
+  # leftover.
   naturalGridExtentWithin: (room) ->
     columns = Math.min @_stripDepthInCells(), (@_cellsFittingIn room.x, @_crossPadding())
     rows = Math.min (Math.max 1, Math.ceil @_toolCells().length / columns), (@_cellsFittingIn room.y, @_alongPadding())
     new Point (@_naturalRunFor columns, @_crossPadding()), (@_naturalRunFor rows, @_alongPadding())
 
-  # WHERE EACH SLOT STARTS ALONG A STRIP `run` long, for `count` slots in use: the first
-  # `padding` in, the last ending `padding` short of the far end, and the leftover between
-  # them shared evenly -- SPACE-BETWEEN. One slot sits `padding` in. Each slot is rounded on its
-  # own, so a fractional share (a 61.25 step) never commits a fractional bound and the last slot
-  # still ends exactly at the padding.
-  _slotOffsetsAlong: (count, run, padding) ->
+  # WHERE EACH OF `count` SLOTS STARTS along one axis of my box, `run` long, `padding` in from
+  # either end. PACKED, the slots stand the least gap apart from the start and the leftover lies
+  # past the last, so a tool keeps its place however long the strip grows. SPREAD -- only while my
+  # box is FULL, which is the only time its leftover is less than one cell (owner ruling 2026-11-03,
+  # docs/archive/toolbar-grid-and-bar-run.md) -- the last slot ends `padding` short of the far end
+  # and the leftover is shared between the slots (space-between), which puts the chevron at the far
+  # end and moves each tool by a few pixels at most. One slot sits `padding` in either way. Each slot
+  # is rounded on its own, so a fractional share never commits a fractional bound and the last
+  # spread slot still ends exactly at the padding.
+  _slotOffsets: (count, run, padding, spread) ->
     return [padding] if count is 1
-    spread = run - 2 * padding - @_cellSide()
-    (padding + Math.round(i * spread / (count - 1)) for i in [0...count])
+    unless spread
+      return (padding + i * @_cellPitch() for i in [0...count])
+    leftover = run - 2 * padding - @_cellSide()
+    (padding + Math.round(i * leftover / (count - 1)) for i in [0...count])
 
   # place one cell in slot `slot` of my grid, centred in its cell box. Slots fill a `columns`-wide
-  # grid row by row; along the strip a slot stands where _slotOffsetsAlong put it, across the strip
-  # at my cross padding plus whole cell pitches.
+  # grid row by row, in reading order, at the column and row offsets _slotOffsets gave each axis.
   _placeInSlot: (w, slot, grid) ->
-    column = slot % grid.columns
-    row = Math.floor slot / grid.columns
-    alongIndex = if grid.vertical then row else column
-    crossIndex = if grid.vertical then column else row
-    along = grid.alongOffsets[alongIndex]
-    across = @_crossPadding() + crossIndex * @_cellPitch()
-    offset = if grid.vertical then new Point across, along else new Point along, across
+    offset = new Point grid.columnOffsets[slot % grid.columns], grid.rowOffsets[Math.floor slot / grid.columns]
     centring = new Point (@_cellSide() - w.width()) / 2, (@_cellSide() - w.height()) / 2
     w._applyMoveTo @position().add(offset).add(centring).round()
 
@@ -238,18 +237,16 @@ class ToolPanelWdgt extends PanelWdgt
     runW = @parent?.widthContentsMustFitWithin?() ? @width()
     runH = @parent?.heightContentsMustFitWithin?() ? @height()
 
-    # A STRIP runs along its longer axis, and toolRows is how many cells its CROSS axis takes.
-    # So a wide strip is toolRows deep and as many columns as fit, a tall one is toolRows wide
-    # and as many rows as fit -- one arrange, two directions. The fit counts cells at the least
-    # gap between my along padding at either end.
-    alongPadding = @_alongPadding()
+    # I am a GRID that fills my box: as many columns as fit across it and as many rows as fit down
+    # it, at the least gap. A strip is not a separate case -- it is a box one cell deep, so a docked
+    # band (whose depth is my dockThickness) is one row or one column because that is all its box
+    # holds. The one thing that still knows a direction is the padding: my along padding at the ends
+    # of my box's longer side, my cross padding along the other.
     vertical = runH > runW
-    if vertical
-      columns = @_stripDepthInCells()
-      rows = @_cellsFittingIn runH, alongPadding
-    else
-      columns = @_cellsFittingIn runW, alongPadding
-      rows = @_stripDepthInCells()
+    paddingX = if vertical then @_crossPadding() else @_alongPadding()
+    paddingY = if vertical then @_alongPadding() else @_crossPadding()
+    columns = @_cellsFittingIn runW, paddingX
+    rows = @_cellsFittingIn runH, paddingY
 
     # The trailing slot becomes the chevron's the moment one cell would be left out, so the
     # count that SHOWS is one short of the fit whenever anything overflows. When everything
@@ -257,15 +254,13 @@ class ToolPanelWdgt extends PanelWdgt
     overflows = cells.length > columns * rows
     shownCount = if overflows then columns * rows - 1 else cells.length
 
-    # The slots in use -- the shown cells, and the chevron's whenever anything overflows -- spread
-    # along the whole strip (_slotOffsetsAlong), down a tall strip as across a wide one: a strip
-    # longer than its cells need shares the leftover between them.
+    # The slots in use -- the shown cells, and the chevron's whenever anything overflows -- fill
+    # rows in reading order: packed while they all fit, spread across both axes while I am full.
     slotsInUse = if overflows then shownCount + 1 else shownCount
-    slotsAlong = if vertical then Math.ceil(slotsInUse / columns) else Math.min(slotsInUse, columns)
     grid =
       columns: columns
-      vertical: vertical
-      alongOffsets: @_slotOffsetsAlong slotsAlong, (if vertical then runH else runW), alongPadding
+      columnOffsets: @_slotOffsets Math.min(slotsInUse, columns), runW, paddingX, overflows
+      rowOffsets: @_slotOffsets Math.ceil(slotsInUse / columns), runH, paddingY, overflows
 
     for cell, i in cells
       if i < shownCount

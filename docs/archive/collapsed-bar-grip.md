@@ -2,6 +2,9 @@
 > width. The present-tense description lives in `docs/architecture/visual-design-system.md` (the "Resize grip" row), in
 > `docs/architecture/regularity-principles.md` and in the headers of `src/FrameGripWdgt.coffee` and the comments on
 > `FrameWdgt.offersAResizeHandle` and `FrameWdgt.barsOwnWidth`. Index: `docs/archive/INDEX.md`.
+> ⚠ **Amended 2026-11-03** by `docs/archive/toolbar-grid-and-bar-run.md`: a bar's pieces now keep their ends unless one
+> stands alone, so "if there is space" below is the padding, the pieces and ONE reach of the grip (129 px for close and
+> collapse), not the pieces with a reach on both sides (168 px); and `_gripStripThickness` is now `_gripStripSide`.
 
 # A collapsed window keeps its grip, and its bar can have a width of its own
 

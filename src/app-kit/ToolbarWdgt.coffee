@@ -1,6 +1,6 @@
 # The ONE shared toolbar construction (Frame-model plan §5.C): a scrollable
 # strip of tool thumbnails -- a ViewportWdgt wrapping a ToolPanelWdgt grid.
-# One subclass per palette; a subclass supplies only its item list
+# One subclass per toolbar; a subclass supplies only its item list
 # (_toolbarItems) and, where it differs, its docking defaults. The SAME
 # construction serves both toolbar homes, and in BOTH it is a FrameWdgt's content: FLOATING (a
 # window on the desktop, built by the toolbar creator buttons / ToolbarsApp) and DOCKED (a band
@@ -51,12 +51,20 @@ class ToolbarWdgt extends ViewportWdgt
   dockThickness: ->
     @contents.naturalGridCrossExtent()
 
+  # WHAT I SHOW SAYS WHAT I AM: my tools are my identity, so a frame around me needs no title while I
+  # show (FrameWdgt._payloadIdentifiesItself, which adds the "while"), and with nothing to read its
+  # bar is free to run down its side (FrameWdgt._runAxis). Not true of every payload: two text panes
+  # look alike and only their titles tell them apart, and a menu's rows are commands like mine but
+  # its title names the widget they act on, which its rows do not.
+  identifiesItself: ->
+    true
+
   # Clicking BETWEEN the buttons (the strip/grid background) must not steal the
   # editor focus pointer (world.editorFocusWdgt) from the widget being edited.
   excludedFromEditorFocusTracking: ->
     true
 
-  # Subclass hook: the palette's item list. Keep every entry a literal `new X`
+  # Subclass hook: the toolbar's item list. Keep every entry a literal `new X`
   # form so the boot dependency finder sees the class edges.
   _toolbarItems: ->
     []

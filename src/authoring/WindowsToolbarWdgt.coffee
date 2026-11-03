@@ -1,4 +1,4 @@
-# The pre-made-windows palette (floating home: WindowsToolbarCreatorButtonWdgt).
+# The pre-made-windows toolbar (floating home: WindowsToolbarCreatorButtonWdgt).
 
 class WindowsToolbarWdgt extends ToolbarWdgt
 
