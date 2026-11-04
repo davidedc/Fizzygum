@@ -21,16 +21,14 @@ class SheetCellStyle
     @isItalic = format?.italic is true
     @fontName = format?.fontName ? base.family
     @originallySetFontSize = format?.fontSize ? base.size
-    @horizontalAlignment = if format?.align? then AlignmentSpecHorizontal[format.align] else @_defaultAlignment()
+    # the alignment the cell SETS, or none: a cell without one shows its content's (numbers right,
+    # the rest left — SimpleSpreadsheetWdgt._textLookFor), and no alignment tool reads as active
+    # for it, so the tools hold still as the selection crosses numbers, text and empty cells
+    @horizontalAlignment = if format?.align? then AlignmentSpecHorizontal[format.align] else undefined
     # the font stacks a font tool sets by name (ChangeFontButtonWdgt, FormatAsCodeButtonWdgt): the
     # text widget's, so a cell and a text agree on what "mono" is
     for own key, value of StringWdgt.prototype when /FontStack$/.test key
       @[key] = value
-
-  # numbers stand right, everything else left (the sheet's own rule, SimpleSpreadsheetWdgt._textLookFor)
-  _defaultAlignment: ->
-    value = @sheet.model.cellAt(@address)?.value
-    if typeof value is "number" then AlignmentSpecHorizontal.RIGHT else AlignmentSpecHorizontal.LEFT
 
   toggleWeight: ->
     bold = not @isBold

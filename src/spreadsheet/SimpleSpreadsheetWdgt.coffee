@@ -12,8 +12,8 @@
 # presenter / passive StringWdgt text — "scalar text is a StringWdgt child, period", owner
 # direction 2026-07-24). I am a PAGE in my window (wantsWindowPageGutter), and my own paint is only
 # the page's edge, over my children (SheetAppearance). I am the model owner, the formula scope,
-# the keyboard receiver, the editor focus for every click in me (focusesAsAWhole), and the
-# geometry authority (the sizes below, times my zoom).
+# the editor focus for every click in me (focusesAsAWhole) and, while I am it, the keyboard's
+# receiver, and the geometry authority (the sizes below, times my zoom).
 #
 # Widgetising is owner direction (2026-07-05 cells; 2026-07-17 headers + chrome — plan §3-F F5,
 # with the byte-identity receipts): full Fizzygum composability — everything the user sees is a
@@ -66,8 +66,8 @@
 #     double-delivering into the fresh caret); Tab is swallowed at the cell. Multi-line
 #     editing stays the deferred CodePromptWdgt path (spec §9.1).
 #
-# Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers +
-# processKeyDown), focus-on-click; never a DOM listener.
+# Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers, which
+# I join when built, + processKeyDown, which acts while I am the editor focus); never a DOM listener.
 
 class SimpleSpreadsheetWdgt extends Widget
 
@@ -200,6 +200,10 @@ class SimpleSpreadsheetWdgt extends Widget
     # _reindexCellsNoSettle then adopts through the same two calls — no double grid).
     @_buildChromeNoSettle()
     @_reconcileViewportNoSettle()
+    # I hear the keyboard from the start and act on it while I am the editor focus (processKeyDown),
+    # as a video player hears it and acts while it is in front. A copy and a restore are receivers
+    # through the membership they carry (Widget's copy hook, the serializer's marker).
+    world.keyboardEventsReceivers.add @
     return
 
   colloquialName: -> "spreadsheet"
@@ -587,7 +591,8 @@ class SimpleSpreadsheetWdgt extends Widget
 
   # ── selection: pointer + keyboard ───────────────────────────────────────────────────────
 
-  # click a cell -> select it and take keyboard focus. The dispatcher hands every click
+  # click a cell -> select it (the click has already made me the editor focus, so the keys are
+  # mine: ActivePointerWdgt writes the focus before it dispatches the click). The dispatcher hands every click
   # handler the pointer position ALREADY inverse-mapped into the receiver's plane
   # (ActivePointerWdgt._pointerPositionInPlaneOf — the affine 4A convention; off any island it
   # IS the raw hand position, and the cell→panel→sheet escalation forwards it verbatim within
@@ -608,7 +613,6 @@ class SimpleSpreadsheetWdgt extends Widget
       if cell?
         @selectedCol = @viewOriginCol + cell.col
         @selectedRow = @viewOriginRow + cell.row
-        @_takeKeyboardFocus()
         @_noteSelectionMovedNoSettle()
     return
 
@@ -675,18 +679,6 @@ class SimpleSpreadsheetWdgt extends Widget
     return undefined if col < 0 or col >= @_visibleCols() or row < 0 or row >= @_visibleRows()
     {col: col, row: row}
 
-  # single-sheet keyboard focus: the sheet the user is typing into is the ONLY sheet receiving
-  # keys. Other sheets stay rendered but inactive — WITHOUT this, a DUPLICATED sheet (the copier's
-  # alignCopiedWidgetToKeyboardEventsReceiversSet inherits the original's keyboard-receiver
-  # membership) would sit in the receivers set too and edit in LOCKSTEP with this one. Non-sheet
-  # receivers (carets, …) are untouched. (Full multi-sheet focus was deferred in 2a; this is the
-  # minimal single-focus the multi-sheet case needs to behave.)
-  _takeKeyboardFocus: ->
-    return unless world?.keyboardEventsReceivers?
-    world.keyboardEventsReceivers.forEach (r) =>
-      world.keyboardEventsReceivers.delete r if (r isnt @) and (r instanceof SimpleSpreadsheetWdgt)
-    world.keyboardEventsReceivers.add @   # a Set — idempotent
-
   # local {x,y,w,h} rect of a viewport SLOT (relative to the widget top-left; sheet-space maps
   # in as address − view origin, F1 — at origin 0 slot == sheet coords). A slot outside the
   # viewport yields the notional off-screen rect (integer; used only for hidden rich cells,
@@ -702,21 +694,26 @@ class SimpleSpreadsheetWdgt extends Widget
   _isPrintable: (key, ctrlKey, metaKey) ->
     key? and key.length is 1 and not ctrlKey and not metaKey
 
-  # standard keyboard path (§1.17): in SELECTION mode this widget drives the grid keys
-  # (arrows / Tab / Enter / F2 / Delete / type-to-edit); while an edit is LIVE the CARET owns every
-  # key (this sheet stays a registered receiver — dispatch visits it first — so it must NOT
-  # double-handle; Enter / Escape / Tab come back through the accept / cancel / nextTab handlers of
-  # the cell or the formula bar holding the editor). PUBLIC event entry: it opens the ONE settle;
-  # the mode handler + edit lifecycle below are NoSettle cores (mount/teardown of the overlay
-  # editor mutate the tree, so they run inside this settle — the layering discipline).
+  # standard keyboard path (§1.17): the keys are mine while I am the EDITOR FOCUS — the thing the
+  # user works on, which a click in me, or my window's opening, makes me (WorldWdgt.openFrameWith) —
+  # and no caret is live. A live caret owns every key, whether it edits me (in a cell or the formula
+  # bar: Enter / Escape / Tab come back through the accept / cancel / nextTab handlers holding the
+  # editor) or any other text; and once the user works on something else, keys reach me and I let
+  # them pass. So of several sheets, only the focused one acts (a duplicate carries its original's
+  # membership and never edits in lockstep), and a sheet clicked earlier never takes the keys typed
+  # into another text. In SELECTION mode I drive the grid keys (arrows / Tab / Enter / F2 / Delete /
+  # type-to-edit). PUBLIC event entry: it opens the ONE settle; the mode handler + edit lifecycle
+  # below are NoSettle cores (mount/teardown of the overlay editor mutate the tree, so they run
+  # inside this settle — the layering discipline).
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
+    # early-return-sanctioned: every key reaches every receiver, and a key that is not mine must
+    # not open a settle.
+    return unless world.editorFocusWdgt is @ and not world.caret?
     @_settleLayoutsAfter =>
-      if @_editing
-        return if @_isCaretEditLive()
-        # a DANGLING edit — the caret was torn down by a path that fires no accept/cancel
-        # (a mid-edit grab, a subtree teardown) — self-heals: commit what was typed, then
-        # handle this key normally in selection mode (click-away-commits semantics).
-        @_commitEditNoSettle()
+      # a DANGLING edit — the caret was torn down by a path that fires no accept/cancel (a mid-edit
+      # grab, a subtree teardown) — self-heals: commit what was typed, then handle this key normally
+      # in selection mode (click-away-commits semantics).
+      @_commitEditNoSettle() if @_editing
       @_processKeyWhileSelectingNoSettle key, code, shiftKey, ctrlKey, altKey, metaKey
     return
 
@@ -864,7 +861,6 @@ class SimpleSpreadsheetWdgt extends Widget
       @_commitEditNoSettle() if @_editing
       @selectedCol = colRow.col
       @selectedRow = colRow.row
-      @_takeKeyboardFocus()
       @_noteSelectionMovedNoSettle()
       @_startEditNoSettle @_currentCellSource()
     editor = @_liveEditorWdgt()
@@ -881,7 +877,6 @@ class SimpleSpreadsheetWdgt extends Widget
     return if @_editing and @_editInBar and @_isCaretEditLive()
     @_settleLayoutsAfter =>
       @_commitEditNoSettle() if @_editing
-      @_takeKeyboardFocus()
       @_startEditNoSettle @_currentCellSource(), true
     editor = @_liveEditorWdgt()
     world.caret.gotoSlot editor.slotAt pos if editor? and world.caret?
@@ -1313,7 +1308,7 @@ class SimpleSpreadsheetWdgt extends Widget
   # The @model? guard covers the deserialization path, where an Object.create'd instance can be
   # destroyed before its model lands; forEachCell over an empty Map is a no-op, and
   # removeAllEdgesOf is cheap for a cell that was never a node.
-  # Keyboard focus needs no line here — the base core drops me from world.keyboardEventsReceivers
+  # My keyboard membership needs no line here — the base core drops me from world.keyboardEventsReceivers
   # itself, and the whole subtree (panel, headers, cells, any live editor on a cell) goes down with
   # super's child destruction.
   _destroyNoSettle: ->

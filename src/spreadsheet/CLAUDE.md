@@ -337,9 +337,11 @@ destroyed.) This requires the plain data classes to be
 deep-copyable: `SheetModel`/`SheetCellRecord` ride the `Duplicator`'s generic walk, `SheetError`
 declares `keptByReferenceOnDeepCopy` (immutable), and the `@cells` Map clones through the
 engine's own `Map`/`Set` handlers. Derived fields are dropped on serialize
-(`@serializationTransients`) and copied-then-overwritten on deep-copy. **Single-sheet keyboard
-focus:** `_takeKeyboardFocus` removes other sheets from `world.keyboardEventsReceivers` first, so a
-duplicated sheet (which inherits receiver membership via the copier) doesn't edit in lockstep.
+(`@serializationTransients`) and copied-then-overwritten on deep-copy. **Keys follow the editor
+focus:** every sheet joins `world.keyboardEventsReceivers` when built (a copy or a restore through the
+membership it carries), and `processKeyDown` acts only while that sheet is `world.editorFocusWdgt`
+and no caret is live — so of several sheets only the focused one acts (a duplicate never edits in
+lockstep), and a sheet worked on earlier never takes keys typed into another text.
 
 ## Design north star (spec §9, F5, and the UX arc `docs/archive/spreadsheet-ux-plan.md`)
 
@@ -382,11 +384,15 @@ time, so a saved or duplicated sheet wears the current look.
   mounted either way and whichever view lacks the caret mirrors the other on the caret's
   `reactToKeystroke` escalation; `_liveEditorWdgt()` is the one that commits.
 - **Focus and formatting.** `focusesAsAWhole` makes every click in the sheet focus the SHEET
-  (`WorldWdgt._setEditorFocusNoSettle`); the text tools ask the focus for its `textStyleSubject` and
+  (`WorldWdgt._setEditorFocusNoSettle`), and a window opened around a sheet focuses it
+  (`WorldWdgt.openFrameWith`), so a fresh sheet takes typing and the arrows at once; the sheet acts on
+  keys only while it is the focus. The text tools ask the focus for its `textStyleSubject` and
   the sheet hands over a `SheetCellStyle` of the selected cell. Formatting is the record's `format`
   (bold, italic, fontName, fontSize, align, fill, decimals — DOCUMENT state, kept by a clear), written
   only through `restyleCell`; the cell's look derives from it (`_textLookFor`: numbers right, the
-  rest left unless the format aligns them; `_displayTextFor`: a number to its decimals). Every
+  rest left unless the format aligns them; `_displayTextFor`: a number to its decimals). The style
+  answers only the alignment the format SETS, so no alignment tool is active on a cell that sets
+  none and the tools hold still as the selection crosses numbers and text. Every
   selection move goes through `_moveSelectionNoSettle` and announces itself (`world.noteStyleChanged`
   + the bar's sync), so the tools' active looks follow the keyboard too.
 - **Keys.** One "commit and move" verb: Enter down, Shift+Enter up (the caret's `accept` carries the

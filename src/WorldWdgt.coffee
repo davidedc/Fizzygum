@@ -3572,12 +3572,16 @@ class WorldWdgt extends IconGridPanelWdgt
   # inspector/console/prompt spawners). Titled / _applyExtent windows build directly.
   # A framed CITIZEN (a FrameWdgt subclass that IS its own window -- Frame-model
   # plan §5.B) passes through un-wrapped: it is sized and placed directly.
+  #   A window opened around a widget FOCUSED AS A WHOLE selects it: such a widget shows its own
+  # selection from the start (a spreadsheet rings its selected cell), so the editing tools and the
+  # keys act on it at once, as they would after a click in it.
   openFrameWith: (contentWidget, extent, position) ->
     wm = @_frameAround contentWidget
     wm.setExtent extent
     wm._applyMoveTo position
     wm._moveWithin @
     @add wm
+    @_setEditorFocusNoSettle wm.contents if wm.contents?.focusesAsAWhole?()
     wm
 
   # The sibling door for a payload that names its OWN box: the opener says WHERE and the payload

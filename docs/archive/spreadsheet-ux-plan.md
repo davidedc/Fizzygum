@@ -449,6 +449,33 @@ a number does not spill).
   an engine-made error message differs between V8 and JSC while WebKit reuses Chrome's references — the error test shows a
   message it throws itself (`throw "over budget"`).
 
+## §6b After the close: the owner's two nitpicks (2026-11-04)
+
+Reported on the pushed arc (Fizzygum `0485b530`, tests `5a6cc24a3`), reproduced on the real build before any
+change (probe: `Fizzygum-tests/.scratch/sheet-ux/nits.js`), and fixed the same day:
+
+- **The alignment tools jumped as the selection moved.** `SheetCellStyle` answered a DEFAULT alignment for a
+  cell that sets none (numbers right, the rest left), so align-left lit on an empty or text cell and
+  align-right on a number. The style now answers only the alignment the cell's format SETS — none for
+  the rest, so no tool is active there — while what the cell SHOWS is unchanged (`_textLookFor`: numbers
+  right, else left, as Phase 3 step 3 ruled). The duplicate of the sheet's default rule in the style died with it.
+- **A fresh sheet ignored typing until a click.** A1 showed selected, but the click on the launcher had
+  made the LAUNCHER the editor focus and the sheet joined the keyboard receivers only on a click in it.
+  `WorldWdgt.openFrameWith` now selects the content of a window it opens when that content is focused
+  as a whole (only the sheet answers): it shows its own selection from the start, so the tools and the
+  keys act on it at once.
+- **Found while reproducing the second:** a sheet clicked once stayed a keyboard receiver for good — after a
+  click on the desktop the arrows still moved its selection, and a key typed into another text started an
+  edit in the sheet (whose caret then replaced the text's). The sheet now joins the receivers when built
+  (as `VideoPlayerWdgt` does) and its `processKeyDown` acts only while it is `world.editorFocusWdgt` and no
+  caret is live. `_takeKeyboardFocus` and its other-sheets sweep are gone: one focus means no lockstep.
+- **Verification:** the dpr1 suite failed exactly 23 spreadsheet tests, every one on pixels; a per-image
+  attribution of the diff page showed each change to be ONE 44 × 44 toolbar tool cell (two in `Duplicate`,
+  whose screenshot shows two toolbars): an align tool no longer lit on a cell that sets no alignment, and in
+  the party budget the bold tool now lit, its sheet opening focused on its bold title. New test
+  `macroSpreadsheetKeysFollowFocus` (typing into a fresh sheet with no click, the tools on a number, a
+  text and an empty cell, keys passing a sheet after a desktop click, two sheets).
+
 ## §7 Rejected alternatives (do not re-attempt)
 
 - **Picture zoom** (`setScaleFactor` on the sheet or window): text blurs — measured 2026-11-04.
