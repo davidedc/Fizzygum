@@ -475,6 +475,21 @@ change (probe: `Fizzygum-tests/.scratch/sheet-ux/nits.js`), and fixed the same d
   the party budget the bold tool now lit, its sheet opening focused on its bold title. New test
   `macroSpreadsheetKeysFollowFocus` (typing into a fresh sheet with no click, the tools on a number, a
   text and an empty cell, keys passing a sheet after a desktop click, two sheets).
+- **Then the menus' ticks** (pushed as Fizzygum `4625354b`, tests `20b6115b8` before it): the toolbar's
+  font menu ticked nothing, and — in the owner's own screenshot — a pinned zoom menu kept ticking 100%
+  after a zoom to 75% (this arc's `ticked:` was a build-time snapshot). Both are now
+  `MenuRowReflectionSpec` views: the zoom rows read the sheet (`currentZoomFactor`; the sheet announces
+  every zoom), the font rows the TOOLBAR, the stable mirror of whatever is being edited
+  (`TextToolbarWdgt.currentFontName`, re-announced from `mirrorTheEditedText`). One definition of the
+  style the focus hands over now serves the tools and the toolbar (`WorldWdgt.editorStyleSubject`), and
+  one font list both fonts menus (`StringWdgt.fontStackMenuEntries`, the text's own `_fontStackMenuEntries`
+  lifted to the class). The zoom menu is editor chrome like the font menu, so choosing a level leaves
+  the sheet the focus. Git history shows the toolbar's font menu never ticked; the text's own fonts menu
+  always did. Suite: 7 tests moved — the toolbar font menu's reserved tick column in
+  `macroFontMenuOpensAtVisualPositionInScrolledPane` (which now gives its stand-alone button a real toolbar as
+  holder), and six inspectors whose StringWdgt member list lost the instance method. New test
+  `macroSpreadsheetMenuTicksStayLive`. Same class, left as designed: the toolbar overflow's rows tick
+  their tools at pop time (`OverflowChevronButtonWdgt`, "derive-at-pop").
 
 ## §7 Rejected alternatives (do not re-attempt)
 

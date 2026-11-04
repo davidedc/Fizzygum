@@ -45,11 +45,19 @@ class TextToolbarWdgt extends ToolbarWdgt
 
   # The focus or its style moved: every one of my cells re-derives its look, asking its tool (a tool
   # with no state to mirror answers nothing and stays at rest). The hidden cells too, so a cell my
-  # strip shows later shows the focus as it is then.
+  # strip shows later shows the focus as it is then. And I pass the announcement on, so what shows
+  # the edited text THROUGH me re-reads it: my font menu's rows, ticked by currentFontName.
+  # markNonValueChange: what moved is not my value (I have none to deliver).
   mirrorTheEditedText: ->
     for cell in @contents.childrenNotHandlesNorCarets()
       cell.noteItemStateChanged?()
+    world.dataflow?.markNonValueChange @
     return
+
+  # the edited text's font: what my font menu's rows read to decide which is ticked
+  # (MenuRowReflectionSpec.readerName), as a text's own fonts menu reads StringWdgt.currentFontName
+  currentFontName: ->
+    world.editorStyleSubject()?.fontName
 
   _toolbarItems: -> [
     # the toolbar itself is the font-menu stash home (re-clicking re-focuses

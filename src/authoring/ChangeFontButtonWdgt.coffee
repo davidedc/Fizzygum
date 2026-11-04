@@ -4,9 +4,9 @@
 
 class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  # the object the font-selection menu is stashed on, so a re-click re-focuses
-  # the open menu instead of stacking a new one -- each home passes its own
-  # per-editor object (a toolbar, a document)
+  # the toolbar I stand in, which holds my font-selection menu — so a re-click re-focuses the open
+  # menu instead of stacking a new one — and which the menu's rows show the font of: it MIRRORS THE
+  # EDITED TEXT (TextToolbarWdgt.currentFontName), and announces whenever that text, or its style, moves
   fontSelectionMenuHolder: undefined
 
   toolTipMessage: "change font"
@@ -30,16 +30,14 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
      !@fontSelectionMenuHolder.fontSelectionMenu.destroyed
       @fontSelectionMenuHolder.fontSelectionMenu.popUp @_menuPopUpPoint(), world
     else
+      # the fonts every fonts menu offers (StringWdgt.fontStackMenuEntries), each row ticked while
+      # it is the edited text's font — a VIEW of my toolbar's mirror, so the tick follows a new
+      # selection and a new font, in this menu and in any pinned copy
       menu = new MenuWdgt @, target: @, title: "Fonts"
-      menu.addMenuItem "Arial", @, "setFontNameFromMenu", arg1: "justArialFontStack"
-      menu.addMenuItem "Times", @, "setFontNameFromMenu", arg1: "timesFontStack"
-      menu.addMenuItem "Georgia", @, "setFontNameFromMenu", arg1: "georgiaFontStack"
-      menu.addMenuItem "Garamo", @, "setFontNameFromMenu", arg1: "garamoFontStack"
-      menu.addMenuItem "Helve", @, "setFontNameFromMenu", arg1: "helveFontStack"
-      menu.addMenuItem "Verda", @, "setFontNameFromMenu", arg1: "verdaFontStack"
-      menu.addMenuItem "Treby", @, "setFontNameFromMenu", arg1: "trebuFontStack"
-      menu.addMenuItem "Heavy", @, "setFontNameFromMenu", arg1: "heavyFontStack"
-      menu.addMenuItem "Mono", @, "setFontNameFromMenu", arg1: "monoFontStack"
+      for [ fontStack, menuLabel ] in StringWdgt.fontStackMenuEntries()
+        menu.addMenuItem menuLabel, @, "setFontNameFromMenu",
+          arg1: fontStack
+          reflection: MenuRowReflectionSpec.tickWhen @fontSelectionMenuHolder, "currentFontName", fontStack, menuLabel
 
       menu.popUp @_menuPopUpPoint(), world
 
@@ -51,9 +49,7 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
       @fontSelectionMenuHolder.fontSelectionMenu = menu
 
-  # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu): my items carry the NAME of a
-  # font-stack field in arg1, which slot 3 of the dispatcher's fixed convention delivers here.
-  setFontNameFromMenu: (ignored1, ignored2, theNewFontName) ->
-    if @_styleSubject()?.setFontName?
-      widgetClickedLast = @_styleSubject()
-      widgetClickedLast.setFontName widgetClickedLast[theNewFontName]
+  # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu): my items carry the font stack in arg1,
+  # which slot 3 of the dispatcher's fixed convention delivers here.
+  setFontNameFromMenu: (ignored1, ignored2, theFontStack) ->
+    @_styleSubject()?.setFontName? theFontStack

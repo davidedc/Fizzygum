@@ -641,6 +641,11 @@ mark after `add` + `setExtent` adds nothing.
   Getting this wrong is not cosmetic: a spurious wire fire is inert for an ordinary value pin but
   **cascades** for a `bang` pin, which is a force-fire. See
   [`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md) §3a.
+  ⚠ **When WHOSE state a row shows changes, the source is the stable thing that follows it** — never
+  the object it points at this moment. The text toolbar's font menu shows the font of whatever is
+  being edited, and that changes with every click: its rows reflect the TOOLBAR
+  (`TextToolbarWdgt.currentFontName`, reading `world.editorStyleSubject()`), which already hears every
+  move of the focus or its style and re-announces it (`mirrorTheEditedText`, `markNonValueChange @`).
 
 ---
 

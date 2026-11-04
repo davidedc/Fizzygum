@@ -377,7 +377,9 @@ time, so a saved or duplicated sheet wears the current look.
   DOCUMENT state, own-only-when-zoomed) multiplies all of those through the `_colW` / `_rowH` /
   `_headerW` / `_headerH` / `textInsetPx` readers every placement uses — a re-layout, never a picture
   scale (which blurs text under SWCanvas, measured). `setZoomFactor` re-derives chrome, viewport and
-  every visible cell's look. Cells stay CONTENT (design doc §4.2); the finger is served by the
+  every visible cell's look, and announces (`markNonValueChange`): the zoom menu's rows are views of
+  `currentZoomFactor`, so a pinned one re-ticks; the menu is editor chrome, so a level chosen from it
+  leaves the sheet the focus. Cells stay CONTENT (design doc §4.2); the finger is served by the
   formula bar and the zoom.
 - **The formula bar** (`SheetFormulaBarWdgt`) is at the top of the grid (`_gridTop()`), never zoomed.
   An edit can start in the cell or in the bar (`_startEditNoSettle seed, inBar`); the cell's editor is

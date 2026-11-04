@@ -1761,6 +1761,14 @@ class WorldWdgt extends IconGridPanelWdgt
     @dataflow?.markNonValueChange @
     return
 
+  # THE STYLE THE EDITOR FOCUS HANDS OVER: what the editing tools act on and what mirrors the edited
+  # text reads — the focus's textStyleSubject when it has one (a spreadsheet hands over its selected
+  # cell's, SheetCellStyle), else the focus itself (a text is its own style). PUBLIC query; its
+  # changes are the ones I announce (a new focus, noteStyleChanged).
+  editorStyleSubject: ->
+    focus = @editorFocusWdgt
+    focus?.textStyleSubject?() ? focus
+
   # The widget the editor-focus selection outline frames (§5.D D-3, decisions D18/D21), or undefined.
   # editorFocusWdgt is the sticky focus POINTER (the last content clicked/dropped), read first as the
   # widget it SELECTS (_widgetTheFocusSelects: never the desktop, a top-level window, a detached widget

@@ -1356,20 +1356,21 @@ class StringWdgt extends Widget
   # (MenuRowReflectionSpec.readerName)
   currentFontName: -> @fontName
 
-  # my font stacks in menu order, paired with the label each shows — a list, so the menu is built by
-  # iterating it instead of nine hand-numbered call sites plus a parallel index table.
+  # THE FONTS A FONTS MENU OFFERS, in menu order, each stack paired with the label it shows — ONE list
+  # for every fonts menu (mine, and the text toolbar's font tool, ChangeFontButtonWdgt), so the
+  # menus are built by iterating it rather than by hand-numbered rows.
   # NB the "Treby" label intentionally differs from its trebuFontStack property name.
-  _fontStackMenuEntries: ->
+  @fontStackMenuEntries: ->
     [
-      [ @justArialFontStack, "Arial"   ]
-      [ @timesFontStack,     "Times"   ]
-      [ @georgiaFontStack,   "Georgia" ]
-      [ @garamoFontStack,    "Garamo"  ]
-      [ @helveFontStack,     "Helve"   ]
-      [ @verdaFontStack,     "Verda"   ]
-      [ @trebuFontStack,     "Treby"   ]
-      [ @heavyFontStack,     "Heavy"   ]
-      [ @monoFontStack,      "Mono"    ]
+      [ @::justArialFontStack, "Arial"   ]
+      [ @::timesFontStack,     "Times"   ]
+      [ @::georgiaFontStack,   "Georgia" ]
+      [ @::garamoFontStack,    "Garamo"  ]
+      [ @::helveFontStack,     "Helve"   ]
+      [ @::verdaFontStack,     "Verda"   ]
+      [ @::trebuFontStack,     "Treby"   ]
+      [ @::heavyFontStack,     "Heavy"   ]
+      [ @::monoFontStack,      "Mono"    ]
     ]
 
   fontsMenu: (ignored,targetWidget)->
@@ -1379,7 +1380,7 @@ class StringWdgt extends Widget
     # it whenever I announce a change, here and in every other open copy of this menu. Nothing
     # indexes rows[1..9] any more — that hand-numbering broke the day anyone added a divider, and it
     # could only ever fix up the ONE menu whose item had just been clicked.
-    for [ fontStack, menuLabel ] in @_fontStackMenuEntries()
+    for [ fontStack, menuLabel ] in StringWdgt.fontStackMenuEntries()
       menu.addMenuItem menuLabel, @, "setFontNameFromMenu",
         arg1: fontStack
         reflection: MenuRowReflectionSpec.tickWhen @, "currentFontName", fontStack, menuLabel

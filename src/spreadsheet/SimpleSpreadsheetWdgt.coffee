@@ -1055,12 +1055,18 @@ class SimpleSpreadsheetWdgt extends Widget
       @_reconcileCellNoSettle record, record.value if record? and cellWdgt.isVisible
     @_scrollToShowSelectionNoSettle()
     @_changed()
+    # ANNOUNCE it, so every open zoom menu re-ticks — this one, a pinned copy, or one left open while
+    # a script zoomed. markNonValueChange: my zoom is not a value I deliver.
+    world.dataflow.markNonValueChange @
     return
 
   # the zoom menu's row action (SheetFormulaBarWdgt.openZoomMenu): slot 1 is the menu item,
   # slot 2 the subject, slot 3 the level
   setZoomFromMenu: (ignored1, ignored2, factor) ->
     @setZoomFactor factor
+
+  # what a zoom menu row reads to decide whether it is the ticked one (MenuRowReflectionSpec.readerName)
+  currentZoomFactor: -> @zoomFactor
 
   # ── cell reconcile: classify → present into the cell's CellWdgt (spec §9.3/§9.4) ─────────────
   # Called from SheetCellRecord._cacheValue right after a cell recomputes, so it runs INSIDE the

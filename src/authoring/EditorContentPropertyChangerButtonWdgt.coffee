@@ -37,13 +37,12 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   excludedFromEditorFocusTracking: ->
     true
 
-  # WHAT I ACT ON: the editor focus's STYLE SUBJECT when it hands one over (textStyleSubject — a
-  # spreadsheet hands over its selected cell's style, SheetCellStyle), else the focus itself (a
-  # text is its own style). Every tool of the family reads and writes through this, so a tool
-  # works the same on a text and on a sheet's selected cell, and the focus decides what that is.
+  # WHAT I ACT ON: the style the editor focus hands over (WorldWdgt.editorStyleSubject — a
+  # spreadsheet's selected cell's style, SheetCellStyle, or a text itself). Every tool of the family
+  # reads and writes through this, so a tool works the same on a text and on a sheet's selected
+  # cell, and the focus decides what that is.
   _styleSubject: ->
-    focus = world.editorFocusWdgt
-    focus?.textStyleSubject?() ? focus
+    world.editorStyleSubject()
 
   constructor: (@color) ->
     super @color
