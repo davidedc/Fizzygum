@@ -1,5 +1,6 @@
 > **ARCHIVED — COMPLETE (2026-11-04).** Plan and decision record of the spreadsheet UX arc (owner rulings
-> R1–R13, §1); verification in §6a. The present-tense description lives in `src/spreadsheet/CLAUDE.md`
+> R1–R13, §1); verification in §6a; the follow-ups after the close in §6b (the owner's nitpicks, live
+> menu ticks) and §6c (the last build-time ticks). The present-tense description lives in `src/spreadsheet/CLAUDE.md`
 > ("The UX arc"), `docs/specs/dataflow-engine-spec.md` §9.1, `docs/architecture/visual-design-system.md`
 > (§4.2, §4.10, the font roles and the toolbar glyphs) and `src/macros/MACRO-PATTERNS.md` ("Spreadsheets");
 > what the arc left out on purpose is in `docs/BACKLOG.md` under this file's name. Index: `docs/archive/INDEX.md`.
@@ -491,6 +492,66 @@ change (probe: `Fizzygum-tests/.scratch/sheet-ux/nits.js`), and fixed the same d
   `macroSpreadsheetMenuTicksStayLive`. Same class, left as designed: the toolbar overflow's rows tick
   their tools at pop time (`OverflowChevronButtonWdgt`, "derive-at-pop").
 
+## §6c The last build-time ticks (2026-11-04)
+
+After §6b only two rows in `src` still fixed their tick when their menu was built, both exposed by
+pinning. The toolbar overflow ("»", `OverflowChevronButtonWdgt`) ticked a hidden tool by `isActiveTool` at
+pop time; its "derive-at-pop" design assumed a transient menu, which pinning makes it no longer. And
+`SimpleTextWdgt`'s "Soft wrap" row fixed both its tick and its ACTION at build (`softWrapOff` while
+wrapping, `softWrapOn` while not), so a pinned copy clicked twice did nothing the second time, beside
+TextWdgt's own row, which already reflected `isSoftWrapping`.
+
+- **Overflow rows reflect their tool's CELL** (`GlassBoxBottomWdgt.holdsActiveTool`, which the cell's
+  own look now reads too). The cell is already told at every move of its tool's state by whoever
+  decides it (`noteItemStateChanged`: TextToolbarWdgt on a focus or style move, PaintToolbarWdgt at
+  its arrange, the pointer on hover/press), so it passes the news on with `markNonValueChange @`. A
+  paint toolbar tells it from its arrange, which makes the cell the second layout-station announcer
+  beside `ViewportWdgt._reLayoutScrollbars`: a paint tool's row re-ticks one cycle later. A pinned
+  overflow is a palette of the tools it was popped with: its names and pictures stay as popped, its
+  ticks are live.
+- **One "Soft wrap" row for every text.** SimpleTextWdgt keeps TextWdgt's row (it removes it unless
+  it is its viewport's LONE text, `_isMyViewportsLoneText`) and specialises the row's verb:
+  `toggleSoftWrap` → `setSoftWrap not @isSoftWrapping()`, whose core flips the text's own `softWrap`,
+  takes the viewport with it only for a lone text, and announces. One state (the text's `softWrap`), one
+  reader, one verb name, one row. `softWrapOn`/`softWrapOff` are gone; the row now sits where TextWdgt
+  puts it, before "Run contents".
+- **The `ticked:` option is gone.** No caller passed it any more, and a tick always shows somebody's
+  state, so `CommandSpec`'s `ticked` and its read in `MenuItemWdgt` are deleted: a reflection is the
+  one door to a tick. Guidelines §10 states it, and adds that a toggle row's ACTION reads the state
+  when clicked.
+- **Found by the capstone gate, fixed at its root (owner's choice): a copy comes back DETACHED.** The
+  new test is the first to pop a PAINT toolbar's overflow, and the gate counted 8 end-of-cycle pushes
+  from the rows' miniatures: `_miniatureOf` resized and destroyed a `fullCopy` whose `parent` was still
+  the ORIGINAL's parent. The Duplicator kept that outside widget by reference, as it keeps any, though
+  that parent did not hold the copy. So the copy answered `isOrphan()` false and `root()` the world,
+  and both acts pushed layout into the live strip outside any settle. The serializer had always returned
+  a detach-root detached (reference §4, rule 3); the Duplicator now does the same
+  (`_cloneContentInto`: an outside `parent` → `undefined`), one rule for both walkers. An in-page twin
+  measured it first: 363/363 tests passing, pixels unchanged, 0 careless pushes suite-wide. One reader
+  depended on the stale pointer: the hand inflated a template's copy dragged out of a toolbar because
+  `oldParent instanceof GlassBoxBottomWdgt`, and no test covered it. The template branch now states
+  where the pick-up starts (`grab`'s `origin`, the template's situation), the inflate reads it from
+  `@grabOrigin` (the fact the sticky drop already used), and the overwrite of `@grabOrigin` after the
+  grab is gone. New test `macroTemplateDraggedOutOfToolbarInflates` pins it. The next gauntlet's
+  settle leg then caught `CACHED_DERIVATION_DIVERGED -- root is broken` in two duplication tests. A
+  copied menu's rows viewport had cached its root as ITSELF inside the walk (a descendant's hook
+  climbed `root()` before the viewport's `parent` was linked), and the Duplicator wired `parent`
+  directly, without announcing it, so the cache stayed "current". Some later step of the old path
+  happened to bump the structure version and hid it. Every `parent` link the Duplicator writes is now
+  announced as `_addChild` announces one (`noteStructureChange`). A copy also no longer
+  sends grab notifications to a parent that never held it (`_reactToChildGrabbed`, a `whereFrom`): a
+  stacked widget's copy picked up by `duplicateAndPickItUp` keeps its copied ratio state, as the
+  "Duplicate" menu's copy always did.
+- **Verification.** Changed set predicted before building and attributed on the dpr1 diff page
+  before recapture: one image, `macroTabletDockedToolbarChevron` image_2 (the overflow reserves its
+  tick column); `fg recapture --auto` at dpr 1+2, mouse then finger, recaptured only it, both gates
+  green. Two new tests, each captured at both densities on both pointers, followed by
+  `macroWindowsEmptyCollapsingUncollapsing` on both pointers with no world-inventory line, and each
+  proven to FAIL with its defect planted through `PRELUDE_JS`: `macroPinnedMenuTicksFollowTheirState`
+  (rows that never re-read their reflection, and a Soft wrap row whose action always unwraps), and
+  `macroTemplateDraggedOutOfToolbarInflates` (the grab's origin dropped: the copy arrives 44 x 44).
+  Close: `fg gauntlet` 19/19 green with no retries (922 s), and `fg homepage` OK.
+
 ## §7 Rejected alternatives (do not re-attempt)
 
 - **Picture zoom** (`setScaleFactor` on the sheet or window): text blurs — measured 2026-11-04.
@@ -525,3 +586,5 @@ Items of `docs/BACKLOG.md` this arc closes (they leave that file when it lands):
   opens its window around the sheet's own `defaultExtent()`, the one derivation.
 - [x] The spreadsheet's last row was clipped by the window's rounded bottom corners (window-page-gutter
   survey): the sheet is a PAGE, so the gutter keeps it clear of the corners.
+- [x] The last two build-time ticks (§6c): the toolbar overflow's rows and `SimpleTextWdgt`'s "Soft wrap"
+  row are `MenuRowReflectionSpec` views, and the `ticked:` option is gone; a copy comes back detached.

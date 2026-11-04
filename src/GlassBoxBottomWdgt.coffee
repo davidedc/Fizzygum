@@ -56,16 +56,27 @@ class GlassBoxBottomWdgt extends BoxWdgt
   # MY TOOL'S STATE MOVED: the widget a press on me reaches was hovered, pressed, released or left
   # (ParentStainerMixin's colour hook), or my tool became or stopped being the active one (told by
   # whoever decides that: PaintToolbarWdgt for the armed paint tool, TextToolbarWdgt when the edited
-  # text or its style moves). I re-derive my whole look.
+  # text or its style moves). I re-derive my whole look, and I pass the news on, so what shows my
+  # tool's state THROUGH me re-reads it: a toolbar overflow menu's row for my tool, ticked by
+  # holdsActiveTool (OverflowChevronButtonWdgt). markNonValueChange: what moved is not a value (I
+  # have none to deliver). A paint toolbar tells me from its arrange, so that news reaches a row one
+  # cycle later (DataflowEngine's header: a layout station may announce a non-value change).
   noteItemStateChanged: ->
     @_deriveMyLook()
+    world.dataflow?.markNonValueChange @
+
+  # Is my tool the ACTIVE one, by its own answer (isActiveTool, a capability: a tool that is never
+  # active answers nothing)? Read by my look and by a menu row that reflects me
+  # (MenuRowReflectionSpec.readerName).
+  holdsActiveTool: ->
+    @glassBoxItem()?.isActiveTool?() ? false
 
   # My look for my tool's state now: my fill and my rounding, from the theme (and no border: I never
   # set a stroke). Only a change repaints me, so a toolbar that tells every cell at each of its
   # arranges repaints none whose look stood still.
   _deriveMyLook: ->
     radius = WorldWdgt.theme.toolCellCornerRadius
-    fill = GlassBoxBottomWdgt.fillForToolState @thumbnailClickReceiver(), (@glassBoxItem()?.isActiveTool?() ? false)
+    fill = GlassBoxBottomWdgt.fillForToolState @thumbnailClickReceiver(), @holdsActiveTool()
     return if @cornerRadius is radius and @color?.equals fill
     @cornerRadius = radius
     @color = fill

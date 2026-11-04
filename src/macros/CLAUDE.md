@@ -392,7 +392,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   InspectorWdgt`; the `*FromTopInspector*` helpers target it (windowed or naked). Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
   **"Dev → Console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "Run all" button → `doAll`, runs the text with
   `@`=the console's target); its detail pane is a `SimpleTextWdgt` (a `TextWdgt`) — a synthetic right-click
-  can't open its "Do all"/context menu, it defaults to NON-wrapping (call `detailText.softWrapOn()` to wrap), and
+  can't open its "Do all"/context menu, it defaults to NON-wrapping (call `detailText.toggleSoftWrap()` to wrap), and
   it is only editable after a list-row is selected; it HIDES inherited properties by default (toggle
   `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);
   property editing is via the "Add…"/"Rename…"/"Remove"/"Save" footer buttons ("Save" → `save` → `injectProperty` on

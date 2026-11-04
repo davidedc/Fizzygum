@@ -15,7 +15,7 @@
 # TextWdgt (not just this one) can be contained text.
 # What's left specific to THIS class: pinning
 # _contentStackSpec.canSetHeightFreely = false (height is content-driven), the
-# viewport soft-wrap toggle (softWrapOn/Off), the dataflow plumbing
+# soft wrap a viewport's lone text shares with its viewport (toggleSoftWrap), the dataflow plumbing
 # (updateTarget + bang), and the panel-colour blend helpers. The CONTROLLER
 # chrome (wire verbs, the "Connect to" menu) is INHERITED — base StringWdgt
 # carries ControllerMixin. ⛔ Do not re-augment it here: a mixin's compiled
@@ -64,8 +64,11 @@ class SimpleTextWdgt extends TextWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     # each key is the EXACT label of a row my chain built (TextWdgt / StringWdgt
-    # addWidgetSpecificMenuEntries): a key that matches no row removes nothing, silently
-    menu.removeMenuItem "Soft wrap"
+    # addWidgetSpecificMenuEntries): a key that matches no row removes nothing, silently.
+    #   My chain's "Soft wrap" row (ticked while isSoftWrapping, acting through toggleSoftWrap) stays
+    # only while I am my viewport's lone text, the one place a wrap is mine to choose: anywhere else
+    # the width I wrap at is my container's to give.
+    menu.removeMenuItem "Soft wrap" unless @_isMyViewportsLoneText()
 
     menu.removeMenuItem "←☓→ Don't expand to fill"
     menu.removeMenuItem "←→ Expand to fill"
@@ -81,31 +84,24 @@ class SimpleTextWdgt extends TextWdgt
 
     @_addTargetConnectionMenuEntries menu
 
-    if @_amIDirectlyInsideViewport()
-      # the caret is a world singleton, compared by identity instead of
-      # `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
-      childrenNotCarets = @parent.children.filter (m) ->
-        m != world.caret
-      if childrenNotCarets.length == 1
-        menu.addLine()
-        # ONE "Soft wrap" row, ticked while my viewport wraps, and clicking it flips that. Its tick
-        # is fixed when the menu is built (`ticked:`), as the action it carries is.
-        if @parent.parent.isTextLineWrapping
-          menu.addMenuItem "Soft wrap", @, "softWrapOff", ticked: true
-        else
-          menu.addMenuItem "Soft wrap", @, "softWrapOn", ticked: false
-
     menu.removeConsecutiveLines()
 
+  # Am I my viewport's LONE text: directly on its plane, with nothing beside me but the caret (a
+  # world singleton, compared by identity)? Then my viewport wraps exactly while I do.
+  _isMyViewportsLoneText: ->
+    return false unless @_amIDirectlyInsideViewport()
+    (@parent.children.filter (m) -> m isnt world.caret).length is 1
 
-  softWrapOn:  -> @setSoftWrap true
-  softWrapOff: -> @setSoftWrap false
+  # MY SOFT WRAP, flipped -- what my chain's "Soft wrap" row does. A contained text re-lays its own
+  # box as it flips (setSoftWrap), and a viewport's lone text takes its viewport with it.
+  toggleSoftWrap: ->
+    @setSoftWrap not @isSoftWrapping()
 
-  # Toggle soft-wrap for a text inside a viewport. The directions are deliberately ASYMMETRIC: wrap ON
-  # re-constrains the content to the viewport (inside setTextLineWrapping) and lets the layout re-wrap; wrap
-  # OFF must _reLayoutSelf the text to its NATURAL un-wrapped width so the panel scrolls horizontally --
-  # because TextWdgt::_reLayoutSelf wraps to the current extent when @softWrap, but measures the full
-  # natural width when not.
+  # Set soft-wrap, and when I am my viewport's lone text, my viewport's with it. The directions are
+  # deliberately ASYMMETRIC: wrap ON re-constrains the content to the viewport (inside
+  # setTextLineWrapping) and lets the layout re-wrap; wrap OFF must _reLayoutSelf the text to its
+  # NATURAL un-wrapped width so the panel scrolls horizontally -- because TextWdgt::_reLayoutSelf
+  # wraps to the current extent when @softWrap, but measures the full natural width when not.
   #
   # This runs synchronously in a click handler with IMMEDIATE layout work (raw resize inside
   # setTextLineWrapping + an explicit _reLayoutSelf) instead of the framework's deferred _invalidateLayout()
@@ -123,13 +119,16 @@ class SimpleTextWdgt extends TextWdgt
     @_settleLayoutsAfter => @_setSoftWrapNoSettle wrap
 
   _setSoftWrapNoSettle: (wrap) ->
-    return if @parent.parent.isTextLineWrapping == wrap   # already in this state -- skip the relayout + repaint
+    return if @softWrap is wrap   # already in this state -- skip the relayout + repaint
     @softWrap = wrap
-    @parent.parent.setTextLineWrapping wrap
+    @parent.parent.setTextLineWrapping wrap if @_isMyViewportsLoneText()
     @_reLayoutSelf() unless wrap
     # (property sub-seam deletion) I re-laid MYSELF above; now climb so my tracking container re-fits -- via the
     # parent with me as trigger (NOT @_invalidateLayout, which re-marks me redundantly), the uniform-climb seam replacement.
     @parent?.parent?._invalidateLayout()   # (proper-layouts) re-fit the viewport grandparent; the trigger form @parent._invalidateLayout(@) gets dropped at the non-tracking @contents PanelWdgt, so reach past it (bare)
+    # ANNOUNCE it, so every open menu showing my "Soft wrap" row re-ticks -- markNonValueChange, as
+    # TextWdgt.toggleSoftWrap announces: soft wrap is not my value, which is my text.
+    world.dataflow.markNonValueChange @
 
   # the bang makes the node fire the current output value
   bang: (newvalue) ->
@@ -160,8 +159,8 @@ class SimpleTextWdgt extends TextWdgt
   # setText (above) + the inherited setFontSize / setFontName /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
   # container via StringWdgt::_reflowContainedTextThenInvalidateLayout (gated by FIT_BOX_TO_TEXT).
-  # softWrapOn/Off (above) are viewport-specific (they flip
-  # @parent.parent.isTextLineWrapping).
+  # setSoftWrap (above) re-lays the box itself, and flips my viewport's isTextLineWrapping while I
+  # am its lone text.
 
   # THE ITEM LOOK FOLLOWS THE EDIT MODE of the container I sit in (a document's stack, a stretchable
   # panel): its view-mode core asks me to blend in, its edit-mode core to contrast out

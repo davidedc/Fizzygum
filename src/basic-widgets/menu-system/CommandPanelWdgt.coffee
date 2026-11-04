@@ -325,7 +325,7 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     @maxWidthOfMenuEntries() + 2 * @padding
 
   # Does a leading TICK COLUMN run down my rows? Exactly while one of them ticks -- a row reflecting
-  # somebody's value, or one its builder made ticked or unticked (MenuItemWdgt.ticks) -- so that
+  # somebody's value (MenuItemWdgt.ticks) -- so that
   # every label of a menu with a tick in it starts at the same x, ticked or not. Never in a list: a
   # list's rows wear no indicators. A pure query, asked by my rows' own measures
   # (MenuItemWdgt._reservesTickColumn), so what a measure of mine reports is what my arrange commits.

@@ -602,8 +602,8 @@ mark after `add` + `setExtent` adds nothing.
   [convention] A row's label is its plain wording — no trailing arrow, no tick prefix. A row that opens
   a submenu passes `opensSubmenu: true` (what an action does cannot be read off its name, so its
   builder states it); the row then draws its chevron, and `fg menusweep` checks the statement against
-  the act (`SUBMENU_FLAG_MISMATCH`). A row ticked or not by construction passes `ticked: true` /
-  `ticked: false` (`SimpleTextWdgt`'s one "Soft wrap" row). Both travel `addMenuItem` opts →
+  the act (`SUBMENU_FLAG_MISMATCH`). A row that ticks passes a `reflection:` (next bullet) — the ONE
+  door to a tick, since a tick always shows somebody's state. Both travel `addMenuItem` opts →
   `CommandSpec` → own fields of `MenuItemWdgt`, so a duplicated, lifted-out or saved row keeps them; a
   menu holding any ticking row reserves the leading tick column in every row, so its labels align.
   The words follow `visual-design-system.md` §4.9: sentence case ("Pick up"); "…" exactly when the action
@@ -646,6 +646,14 @@ mark after `add` + `setExtent` adds nothing.
   being edited, and that changes with every click: its rows reflect the TOOLBAR
   (`TextToolbarWdgt.currentFontName`, reading `world.editorStyleSubject()`), which already hears every
   move of the focus or its style and re-announces it (`mirrorTheEditedText`, `markNonValueChange @`).
+  The same holds when the state is DERIVED from elsewhere: a tool's "active" is read off the edited text
+  or the person's hand, so the toolbar overflow's row for a tool reflects the tool's CELL
+  (`GlassBoxBottomWdgt.holdsActiveTool`), which every toolbar already tells at each such move
+  (`noteItemStateChanged`) and which passes it on.
+  ⚠ **A row's ACTION must not be fixed at build either.** A toggle row carries a toggle verb that reads
+  the state when clicked (`toggleSoftWrap`), never an "on" or "off" chosen by the builder; a subclass
+  whose toggle means more specialises the verb (`SimpleTextWdgt.toggleSoftWrap` takes its viewport with
+  it) and keeps its chain's row.
 
 ---
 

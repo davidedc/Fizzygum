@@ -48,8 +48,11 @@ formula/connection that writes a widget's text feeds this frame's geometry settl
 
 ⚠ **The one narrow exception, and why it is not a hole.** A layout station may announce a **non-value** change
 (`markNonValueChange`), which wakes only the `firesOnAnyChange` edges — consumers that RE-READ the producer rather
-than receive a value. `ViewportWdgt._reLayoutScrollbars` is the one caller: it tells whatever tracks it that its
-scroll geometry settled, so any number of scrollbars follow it rather than the two it holds fields for. This cannot
+than receive a value. Two callers make it: `ViewportWdgt._reLayoutScrollbars` tells whatever tracks it that its
+scroll geometry settled, so any number of scrollbars follow it rather than the two it holds fields for; and a tool
+cell told from a paint toolbar's arrange (`PaintToolbarWdgt._deriveToolHighlights` →
+`GlassBoxBottomWdgt.noteItemStateChanged`) passes on that its tool's active state may have moved, so a toolbar
+overflow menu's row for that tool re-ticks. This cannot
 re-enter the value settle (nothing is marked stale, no value is pulled) and it cannot loop (the announcement is
 dark unless someone re-reads, and re-reading marks nothing). What it costs is a cadence: an announcement raised
 *inside* `recalculateLayouts` has missed this cycle's dataflow station and is drained by the next one.

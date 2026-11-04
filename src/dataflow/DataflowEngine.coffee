@@ -88,10 +88,11 @@
 # coupling is one-way FOR VALUES (dataflow may dirty layout; layout must never markStale).
 # ⚠ A layout station MAY announce a NON-value change (markNonValueChange) — it wakes only the
 # re-readers, pulls nothing and marks nothing, so it cannot re-enter the value settle. Its one
-# cost is cadence: raised inside recalculateLayouts it has missed this cycle's station. The
-# single caller is ViewportWdgt._reLayoutScrollbars (connector plan §P8, where the resulting
-# lag is measured: zero frames for anything a gesture drives, since input is played before the
-# station; one frame only for a change born inside the layout pass).
+# cost is cadence: raised inside recalculateLayouts it has missed this cycle's station. Two
+# callers: ViewportWdgt._reLayoutScrollbars (connector plan §P8, where the resulting lag is
+# measured: zero frames for anything a gesture drives, since input is played before the station;
+# one frame only for a change born inside the layout pass), and a tool cell told from a paint
+# toolbar's arrange (GlassBoxBottomWdgt.noteItemStateChanged, PaintToolbarWdgt._deriveToolHighlights).
 #
 # ── THE INDEX IS DERIVED AND DISPOSABLE ─────────────────────────────────────────────────
 # Edges live LOCALLY on the widgets (a controller's `@wires`, one WireSpec each) and in formula text (a cell's

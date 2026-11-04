@@ -40,7 +40,7 @@
 class CommandSpec
 
   # what the row SAYS: a STRING, its plain wording. What it SHOWS beside that is the `icon` slot
-  # below, and the marks its indicators draw (`opensSubmenu`, `ticked` / `reflection`) -- named
+  # below, and the marks its indicators draw (`opensSubmenu`, `reflection`) -- named
   # slots, because a picture, a mark and a sentence are separate facts and none can be read out of
   # another.
   label: undefined
@@ -62,16 +62,13 @@ class CommandSpec
   # row highlights that widget on hover and is found by it (MenuItemWdgt.representedWidget).
   representsAWidget: false
   # a MenuRowReflectionSpec when this row is a VIEW of somebody else's value -- ticked while that
-  # value is the row's choice; undefined for an ordinary row
+  # value is the row's choice; undefined for an ordinary row. The one door to a tick: a row that
+  # shows a state reads it from its owner, never from a snapshot its builder took.
   reflection: undefined
   # does the row OPEN A SUBMENU? Its builder's to state (`opensSubmenu: true`), because what an
   # action does cannot be read off its name; the row then draws its chevron. A fact about what the
   # row DOES, so it travels with the record, and the label stays its plain wording.
   opensSubmenu: false
-  # the row's tick when the BUILDER knows it: true or false for a row ticked or not by
-  # construction (`ticked:`), undefined for one that never ticks. A row whose tick follows a live
-  # value takes a `reflection` instead.
-  ticked: undefined
   # what a MEMBER row (MemberRowWdgt) shows of its member beside the label, which names it: its
   # KIND TAG, a short word its builder chooses ("fn", "var"), and whether the name is DIMMED (shown
   # in a muted ink). Facts about the member, so they travel with the record; any other row ignores
@@ -92,6 +89,5 @@ class CommandSpec
     @representsAWidget = opts.representsAWidget ? false
     @reflection = opts.reflection
     @opensSubmenu = opts.opensSubmenu ? false
-    @ticked = opts.ticked
     @kindTag = opts.kindTag
     @dimmed = opts.dimmed ? false

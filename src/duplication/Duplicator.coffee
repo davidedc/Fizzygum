@@ -193,6 +193,20 @@ class Duplicator
       # painted: drop the stash — its dormant state, the same rule serializationTransients states.
       continue if /^_islandBufferSource/.test property
       value = obj[property]
+      # A widget's PARENT is a structural link, written here directly rather than through
+      # TreeNode._addChild, so it is ANNOUNCED as _addChild announces it (noteStructureChange): the
+      # per-widget hooks below run inside this walk, before every ancestor is linked, and a tree
+      # derivation they cache meanwhile (root, the first clipping parent) must not be read again once
+      # the copy is whole.
+      #   A ROOT of the copy -- a widget whose parent is outside the copied structure -- comes back
+      # DETACHED, never pointing at a parent that does not hold it: the serializer's detach-root rule
+      # (serialization-duplication-reference.md §4), one fact for both walkers. Its caller places it
+      # (adds it, carries it, files it to the shelf); until then it is an orphan, so nothing done to
+      # it reaches the tree its original stands in, and nothing reads that tree as where it came from.
+      if property is "parent" and (value instanceof Widget)
+        cloneOfMe.parent = if @widgetsInStructure.has value then @_duplicate value else undefined
+        WorldWdgt.noteStructureChange()
+        continue
       if !value?
         # undefined, null, undefined
         cloneOfMe[property] = undefined

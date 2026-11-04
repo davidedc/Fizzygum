@@ -261,8 +261,8 @@ assertion a recapture after a regression silently stores two different hashes an
   its menu (TextWdgt-family drift). Give it a `backgroundColor` so the float position is visible.
 - **Soft-wrap toggle** (`macroSoftWrapTogglesTextReflow`): `textBox.toggleSoftWrap()` DIRECTLY (the method the "Soft wrap" row calls; the row is ticked while wrapping) —
   a synthetic right-click on a TextWdgt does NOT open a usable context menu in a macro (it does on plain widgets; and
-  INSIDE a ViewportWdgt the panel's MERGED menu does open fine, with `SimpleTextWdgt`'s own `softWrapOff/On`
-  items — see the Scroll section's in-panel soft-wrap entry).
+  INSIDE a ViewportWdgt the panel's MERGED menu does open fine, its "Soft wrap" row acting through
+  `SimpleTextWdgt.toggleSoftWrap` — see the Scroll section's in-panel soft-wrap entry).
   NB the box does NOT grow on toggle: the overflowing no-wrap line CROPS with an ellipsis at the unchanged box width
   (the default CROP spec) — see the desktop-editing entry below for the SCALEDOWN/editing interplay.
 - **No-wrap desktop editing: caret-into-view slides the MORPH** (`macroSoftWrapping`): editing a no-wrap TextWdgt on
@@ -285,7 +285,7 @@ assertion a recapture after a regression silently stores two different hashes an
   CROP→SCALEDOWN shrink is load-bearing for inline-caret clicks. No new verb.
 - **Non-wrapping text self-resize** (`macroNonWrappingTextResizesToContent`): a `SimpleTextWdgt` (extends TextWdgt)
   resizes its OWN bounds to its text. Its ctor opts into `FIT_BOX_TO_TEXT` (`softWrap` defaults true = wrap to its own
-  width); `softWrap = false` turns wrapping OFF (what "soft wrap off" does, `softWrapOff`) — `softWrap`
+  width); `softWrap = false` turns wrapping OFF (what unticking "Soft wrap" does, through `toggleSoftWrap`) — `softWrap`
   REPLACED the retired `maxTextWidth` knob in the FIT_BOX_TO_TEXT arc. Set it BEFORE `world.add`; the add settles the
   re-flow, so no explicit re-flow call is needed (the public verb, when you do need one mid-flight, is `reflowText()`).
   In that mode `setText` re-lays-out SYNCHRONOUSLY
@@ -404,14 +404,14 @@ assertion a recapture after a regression silently stores two different hashes an
   start of a StringWdgt (four `macroStringWdgt*` tests) is nobody's bug: the target is standalone and taller than the offset.
 - **A wrapping text FIELD re-wraps on every container resize** (`macroWrappingTextFieldResizesOK`): the `InspectorWdgt`'s editable
   `@detail` pane is a `ViewportWdgt` holding a `SimpleTextWdgt` (a `TextWdgt`). It defaults to NON-wrapping (long lines
-  scroll horizontally); call `detailText.softWrapOn()` (sets the detail scroll panel's `isTextLineWrapping = true`,
-  `SimpleTextWdgt.coffee:103-109` — the method the "Soft wrap" menu item calls; driven directly because a synthetic right-click
+  scroll horizontally); call `detailText.toggleSoftWrap()` (the text being the pane's lone text, it sets the detail scroll
+  panel's `isTextLineWrapping = true` too, `SimpleTextWdgt.toggleSoftWrap` — the method the "Soft wrap" menu item calls; driven directly because a synthetic right-click
   on a `TextWdgt` can't open that menu) so the typed text wraps to the pane width. Then EVERY resize of the inspector WINDOW
   re-wraps it: drag the window resizer → `InspectorWdgt._reLayout` resizes the pane → `ViewportWdgt._positionAndResizeChildren` re-fits
   the wrapping text to the new pane width → `_reLayoutScrollbars` shows the V-bar when it no longer fits. Probe with a wide → narrow+tall
   progression: WIDTH changes re-break the lines. To type into the detail it must first be EDITABLE — select a property to arm it,
   clear it (`setText ""`) and focus with `detailText.edit()`; drop the caret with `world.stopEditing()` before the shots. (Re-authored
-  from the old two-pane naked version: the new inspector has ONE editable detail pane and needs `softWrapOn`.) No new verb.
+  from the old two-pane naked version: the new inspector has ONE editable detail pane and needs its wrap turned on.) No new verb.
 - **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextWdgt's right-click menu
   depends on what is selected. `setReceiver obj` (`TextWdgt.coffee:657-659`) installs `evaluationMenu` as the widget's
   `overridingContextMenu` (so `Widget.buildContextMenu` returns it directly); that menu prepends "Do all"/"Select all" when
@@ -1043,13 +1043,13 @@ assertion a recapture after a regression silently stores two different hashes an
   level — NO hierarchy descent (unlike a document paragraph); then the banked Meta+a-overtype prompt dance. While
   end-scrolled the tall text's centre is above the viewport clip — right-click a bottom FRACTION (`[0.5, 0.95]`).
   No new verb.
-- **Soft-wrap toggle INSIDE a scroll panel — `softWrapOff`/`softWrapOn`, NOT `toggleSoftWrap`**
+- **Soft-wrap toggle INSIDE a scroll panel — `SimpleTextWdgt.toggleSoftWrap` takes the panel with it**
   (`macroSimpleTextScrollPanelUpdatesWellWhenWrappingUnwrappingFromTheBottomOfContent`): on a `SimpleTextWdgt`
-  inside its scroll panel the "Soft wrap" row is the TEXT's OWN (`SimpleTextWdgt.addWidgetSpecificMenuEntries`, shown
-  only when it is the panel's LONE child): ONE row, ticked while the panel wraps (`ticked:` fixed at build), whose action
-  is `softWrapOff` while ticked and `softWrapOn` while not — `softWrapOff` (panel `isTextLineWrapping` false +
-  `softWrap = false` — `softWrap` replaced the retired `maxTextWidth`) / `softWrapOn` (both back, plus re-homing the panel's contents to the panel origin) —
-  TextWdgt's `toggleSoftWrap` is NOT involved. The bare-TextWdgt no-menu drift does NOT apply here either: the
+  inside its scroll panel the "Soft wrap" row is TextWdgt's own row, which `SimpleTextWdgt.addWidgetSpecificMenuEntries`
+  keeps only while the text is the panel's LONE child: ticked while the text wraps (`isSoftWrapping`, a reflection),
+  acting through `toggleSoftWrap`, which a lone text specialises — wrap OFF sets panel `isTextLineWrapping` false +
+  `softWrap = false` (`softWrap` replaced the retired `maxTextWidth`), wrap ON sets both back, plus re-homing the panel's
+  contents to the panel origin. The bare-TextWdgt no-menu drift does NOT apply here either: the
   merged in-panel menu OPENS for synthetic right-clicks, so drive the REAL row by its exact label
   (`moveToItemOfMenuAndClick … "Soft wrap"`) and assert its tick from the row itself (`row.isTicked()` before
   unwrapping; `row.ticks() and not row.isTicked()` after). Toggling OFF while scrolled at the END collapses the content to its
@@ -1192,6 +1192,15 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Drag/drop, attach/detach, duplicate
 
+- **Drag a tool out of a toolbar** (`macroTemplateDraggedOutOfToolbarInflates`): open the toolbar FLOATING
+  (`world.openFrameHuggingPayload (new SlidesToolbarWdgt), new Point 40, 40` shows every tool in a column), find the tool by
+  its class (`bar.topWdgtSuchThat (w) -> w instanceof SpeechBubbleWdgt`) and drag its CELL (`template.parent`, the press
+  may meet the cell's lid) with `@dragWidgetTo_InputEvents cell, point`. What lands is a fresh copy of the template (the
+  template stays in its cell): it leaves the glass box at its `extentToGetWhenDraggedFromGlassBox` (a speech bubble 105 x
+  80, any other tool the extent it had before the cell fitted it), centred under the pointer, so its top-left is the
+  drop point minus half its extent, floored. Assert the copy's extent and place by value. That inflate is decided by
+  the grab's stated origin (`grab`'s `origin`), because a copy is a detached root: prove such a test by dropping
+  the origin through `PRELUDE_JS` (the copy then arrives at the cell's 44 x 44). No new verb.
 - **Drag a widget into a container** (`macroSimpleDocumentManualBuildAndScroll`, `macroIconDroppedIntoDocumentFlows`):
   `@dragWidgetTo_InputEvents widget, target` float-grabs at the widget's centre (press-drag past the grab threshold) and drops it
   at a Point or onto a widget's centre. A SimpleDocument's INNER content panel (`VerticalStackPanelWdgt`,
@@ -2010,6 +2019,19 @@ assertion a recapture after a regression silently stores two different hashes an
   fix-ups could not do AT ALL (they ran only from the clicked item's own menu). A reflecting row is also
   BORN correct, so the first screenshot proves the build path with no fix-up pass. No new verb beyond the
   reader.
+- **A PINNED menu's ticks follow their state; a toggle row's click reads it** (`macroPinnedMenuTicksFollowTheirState`):
+  pin the menu (`@clickMenuHeaderToPin_InputEvents`), set it aside by its title, then move the state and read
+  `@tickedRowLabelOfMenu` again. A toolbar overflow: build a window too narrow for its docked strip
+  (`world.openFrameWith (new DocumentWdgt), (new Point 300, 330), …` hides the align tools) or a floating
+  `PaintToolbarWdgt` shaped into a short column (`@resizeWindowTo_InputEvents paint, new Point 58, 160` hides all
+  four), and pop it from `<strip>.contents.overflowChevron`; its rows reflect their tool cells, so a text tool's
+  tick follows the EDITED text (click into a paragraph first — a desktop click leaves no row ticked) and a paint
+  tool's the armed tool (one cycle later: a paint toolbar tells its cells from its arrange). Several rows can be
+  ticked at once there (bold and an alignment); `tickedRowLabelOfMenu` answers the first, so read a row's own
+  `isTicked()` when that matters. A toggle row: click the PINNED row twice and assert the state both times — a row
+  whose action was fixed when it was built does nothing the second time. Prove such a test by planting the stale
+  row through `PRELUDE_JS` (`MenuItemWdgt::_applyRowReflectionNoSettle` made a no-op, polled in once the class
+  exists). No new verb.
 
 ## Spreadsheets
 

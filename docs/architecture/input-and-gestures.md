@@ -406,6 +406,14 @@ so a replayed mouse drag waits out the threshold as a user's does, and a test ca
 Pinned by the value assertions of `SystemTest_macroSimpleDocumentHandlesOldInspector` (a window
 dragged out of a document lands exactly where the drag puts it, on either pointer).
 
+The glass-box inflate is decided by WHERE THE PICK-UP STARTED (`@grabOrigin.origin`, the fact the
+drop's sticky re-embed reads too), never by the grabbed widget's parent. A tool dragged out of a
+toolbar is a fresh copy of its template, and a copy is a detached root
+(`serialization-duplication-reference.md` §2) that stands nowhere yet; so the template branch of
+`determineGrabs` states the origin itself (`grab`'s `origin`: the template's situation), and a
+copy that leaves a glass box takes `extentToGetWhenDraggedFromGlassBox`, centred under the pointer.
+Pinned by `SystemTest_macroTemplateDraggedOutOfToolbarInflates`.
+
 `checkDraggingThreshold` (reached from `determineGrabs`) carries two touch-specific rules ahead
 of the ordinary grab-threshold test: a zero-displacement move on a touch stroke NEVER grabs — a
 finger holding perfectly still still emits a move to cross its hold window, and floating the

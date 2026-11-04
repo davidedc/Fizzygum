@@ -546,7 +546,7 @@ class ActivePointerWdgt extends Widget
     @dragEmbedLingerOriginWallTime = undefined
     @dragEmbedArmed = false
 
-  grab: (aWdgt, displacementDueToGrabDragThreshold,  switcherooHappened) ->
+  grab: (aWdgt, displacementDueToGrabDragThreshold,  switcherooHappened, origin) ->
     return undefined  if aWdgt == world
     oldParent = aWdgt.parent
     if !@isThisPointerFloatDraggingSomething()
@@ -554,10 +554,11 @@ class ActivePointerWdgt extends Widget
       world.stopEditing()
 
       # WHERE THE PICK-UP STARTED, for the drop's sticky re-embed, which compares its target with
-      # @grabOrigin.origin, the PRE-GRAB parent. Read before the release below takes the widget out of
-      # its host's layout. (For a template's copy determineGrabs records the TEMPLATE's situation over
-      # this one: the copy is picked up from where the template stands.)
-      @grabOrigin = aWdgt.situation()
+      # @grabOrigin.origin, the PRE-GRAB parent, and for the glass-box inflation below. Read before the
+      # release below takes the widget out of its host's layout. A widget made to be carried away
+      # stands nowhere yet (a template's fresh copy is a detached root), so its caller states where the
+      # pick-up starts (`origin`: the template's situation, determineGrabs).
+      @grabOrigin = origin ? aWdgt.situation()
       # I OWN the settle around this callback: _beforeBeingGrabbed releases the widget from its
       # host's layout (it unlocks from panels and drops its layout spec), which marks the widget
       # AND the holder chain it is leaving. A notification callback declares no settle of its own
@@ -574,7 +575,7 @@ class ActivePointerWdgt extends Widget
         # so just like the next case it's OK to center it under the pointer
         aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
         aWdgt._moveWithin world # raw flush+clamp here; a deferred moveWithin now exists, but switching this real-time grab to it is a Path-A determinism call
-      else if aWdgt.extentToGetWhenDraggedFromGlassBox? and (oldParent instanceof GlassBoxBottomWdgt)
+      else if aWdgt.extentToGetWhenDraggedFromGlassBox? and (@grabOrigin?.origin instanceof GlassBoxBottomWdgt)
         # in this case the widget is "inflating". So, all
         # visual references that the user might have around the
         # position of the grab go out of the window: just center
@@ -1706,9 +1707,8 @@ class ActivePointerWdgt extends Widget
 
           w = @wdgtToGrab.fullCopy()
           w.isTemplate = false
-          @grab w, displacementDueToGrabDragThreshold
           # the copy is picked up from where the TEMPLATE stands, so that is the grab's origin
-          @grabOrigin = @wdgtToGrab.situation()
+          @grab w, displacementDueToGrabDragThreshold, false, @wdgtToGrab.situation()
 
         else if @wdgtToGrab.detachesWhenDragged()
           if skipDragging or !@strokeMeansMouseDrag() then return

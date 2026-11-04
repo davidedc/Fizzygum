@@ -49,8 +49,9 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # MY TICK: undefined for a row that never ticks; true or false for one that does -- read from my
   # reflection when I am born and re-read whenever its source announces a change
-  # (_applyRowReflectionNoSettle), or fixed by my builder (addMenuItem's `ticked:`). Shown as a
-  # drawn tick in my leading tick column, never as text in my label, which stays my plain wording.
+  # (_applyRowReflectionNoSettle). A reflection is the only way a row ticks: a tick shows somebody's
+  # state, so it is read from them, never fixed when the menu is built. Shown as a drawn tick in my
+  # leading tick column, never as text in my label, which stays my plain wording.
   ticked: undefined
 
   # Is my leading TICK COLUMN reserved -- does my label start after it, ticked or not? My rows panel
@@ -117,9 +118,8 @@ class MenuItemWdgt extends LabelButtonWdgt
     @icon = commandSpec.icon
     @opensSubmenu = true  if commandSpec.opensSubmenu
     # a REFLECTING row is born showing the current value — no build-then-fix-up dance
-    ticked = if @rowReflection? then @rowReflection.isTicked() else commandSpec.ticked
-    if ticked?
-      @ticked = ticked
+    if @rowReflection?
+      @ticked = @rowReflection.isTicked()
       @_tickColumnReserved = true
     super commandSpec.target, commandSpec.action,
       closesUnpinnedPopUps: commandSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked

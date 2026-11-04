@@ -10,11 +10,14 @@
 # icon button's state inks (IconButtonWdgt._updateColor) never reach my glyph: my look reads my
 # state as it paints, so a transition writes no colour (_updateColor), and I hold none.
 #
-# The remainder menu is DERIVED at pop time from the tools currently hidden -- each row's name,
-# picture and tick (ticked while its tool is the active one) -- and it is a
-# transient pop-up: there is no wiring keeping it in step with the strip, because a strip that
-# re-arranges under an open menu dismisses that menu as it dismisses any other transient. One
-# widget, one staleness signal.
+# The remainder menu is DERIVED at pop time from the tools currently hidden -- each row's name and
+# picture -- and it is a transient pop-up: there is no wiring keeping its rows in step with the
+# strip, because a strip that re-arranges under an open menu dismisses that menu as it dismisses
+# any other transient. One widget, one staleness signal. Pinned, it is a palette of the tools it
+# was popped with: each row still names a tool and acts on the tool's cell, wherever the strip now
+# shows it. What a row SHOWS of its tool's state is a VIEW, though, never a picture: its tick
+# reflects the tool's cell (GlassBoxBottomWdgt.holdsActiveTool), which hears every move of that
+# state and announces it, so a pinned copy ticks the tool that is active now.
 
 class OverflowChevronButtonWdgt extends IconButtonWdgt
 
@@ -51,15 +54,19 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
     menu.actsAsEditorChrome = true
     for cell in hiddenCells
       tool = cell.glassBoxItem?() ? cell
-      # a hidden tool that is the ACTIVE one (isActiveTool: the armed paint tool, a text tool
-      # mirroring the edited text) says so with its row's tick, as its cell would with its plate --
-      # read now, at pop time, like everything else in this menu. The row names its tool by the
-      # tool's tooltip (or, lacking one, its colloquial name), capitalised as a row is ("Change
-      # font"); the tooltip itself reads as it does.
-      menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue (tool.toolTipMessage ? tool.colloquialName())), @, "triggerToolFromMenu",
+      # The row names its tool by the tool's tooltip (or, lacking one, its colloquial name),
+      # capitalised as a row is ("Change font"); the tooltip itself reads as it does.
+      label = CommandPanelWdgt.rowLabelOfValue (tool.toolTipMessage ? tool.colloquialName())
+      # a tool that can be the ACTIVE one (isActiveTool: the armed paint tool, a text tool
+      # mirroring the edited text) says so with its row's tick, as its cell does with its plate:
+      # the row reflects the cell. A tool that is never active, or a cell that is no tool cell,
+      # gives a row with no tick.
+      reflection = if tool.isActiveTool? and cell.holdsActiveTool?
+        MenuRowReflectionSpec.tickWhen cell, "holdsActiveTool", true, label
+      menu.addMenuItem label, @, "triggerToolFromMenu",
         arg1: cell
         icon: @_miniatureOf tool
-        ticked: (if tool.isActiveTool?() then true else undefined)
+        reflection: reflection
     menu.popUpAtHand()
 
   # A ROW SHOWS WHAT ITS TOOL LOOKS LIKE: a picture of the tool at glyph size, beside the name.
@@ -67,8 +74,9 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # rule the rest of this menu follows, so a strip that re-arranges never leaves a stale portrait
   # behind; the menu is transient and goes with the strip.
   #   A COPY is photographed rather than the tool itself, because fitting it to the glyph box
-  # means resizing it, and the tool on the strip must not move. The copy exists for one shot and
-  # is destroyed straight after: what the row keeps is a picture (InertIconHolderWdgt: pixels, or
+  # means resizing it, and the tool on the strip must not move. A copy comes back a detached root
+  # (Duplicator), so neither its resize nor its destruction reaches the strip. It exists for one
+  # shot and is destroyed straight after: what the row keeps is a picture (InertIconHolderWdgt: pixels, or
   # for a typed face a live copy of the face's appearance, never the tool), which is also what keeps
   # the row's tap the ROW's -- a live tool held on a row would take the tap itself.
   #   An undefined icon is simply a label-only row (MenuItemWdgt), so a tool that cannot be copied

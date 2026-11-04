@@ -99,6 +99,20 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   copy would SHARE it with the original (and destroy it with whichever dies first) while a
   save refuses it. A frame's empty-state placeholder exists only while it is mounted
   (`FrameWdgt.defaultContents`; `widget-authoring-guidelines.md`).
+- **A root's `parent` is the one external widget neither walker keeps.** Serialization writes
+  `null` for a detach-root's parent (§4, rule 3) and duplication sets the clone's `parent` to
+  `undefined` (`Duplicator._cloneContentInto`), so a copy comes back DETACHED, an orphan until
+  its caller places it. Kept, it would point at a parent that does not hold it: the copy would
+  answer `isOrphan()` false and `root()` the world, so resizing or destroying it would push layout
+  into the original's tree, and code reading where it came from would read the original's place.
+  A caller that carries a fresh copy away states where the pick-up starts instead
+  (`ActivePointerWdgt.grab`'s `origin`: a template's copy starts where the template stands).
+  Every `parent` the Duplicator writes is a structural link made outside `TreeNode._addChild`, so
+  it is announced as `_addChild` announces one (`WorldWdgt.noteStructureChange`). The per-widget
+  hooks (`alignCopiedWidgetTo*`, `_reactToBeingCopied`) run inside the walk, before every ancestor
+  is linked, and a tree derivation cached there (`root()`, which caches on every ancestor it climbs)
+  would otherwise be read again, stale, once the copy is whole (the settle leg's
+  `CACHED_DERIVATION_DIVERGED` rider catches exactly that).
 - **The in-structure set is the ARROW-CONTRACT closure, one computation for both walkers**
   (`Widget.allWidgetsInStructureForCopy`, reference-widgets plan §4.4): the root's subtree
   PLUS, through every in-structure icon that presents as content
@@ -177,7 +191,8 @@ At serialize time each encountered object is classified, in order:
    reached by the walk) → table slot, `{"$r": n}`.
 2. **Well-known** → `{"$wk": key}`, via `WellKnownObjects` (§4a).
 3. **A detach-root's `parent`** → `null` — the envelope root plus any embedded referent
-   figures the closure contributed. Deserialization returns the root *detached* (the
+   figures the closure contributed (duplication's twin: a copy's roots come back detached, §2).
+   Deserialization returns the root *detached* (the
    caller — menu action / drop handler / snapshot loader — decides where to attach it);
    an embedded referent figure restores detached too and is homed to the shelf by
    `ShortcutWdgt._afterDeserialization` (§2). One shape is refused up front: an icon saved
