@@ -757,8 +757,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # ⚠⚠ EVERY DESKTOP ICON IS BUILT WITHOUT ITS APP. An icon needs its ART -- all of it core, below
     # -- and the app's class NAME; the launcher resolves that name to a part when it is CLICKED
     # (AppLauncherWdgt's lazy mode). So the Makers' eight app classes sit
-    # in the lazy 'authoring' part they already build from, the ninth opener's FridgeMagnetsApp sits
-    # in lazy 'fizzytiles', and a session that never opens a Maker never downloads or compiles one.
+    # in the lazy 'authoring' part they already build from, Sheets Maker's SpreadsheetApp in lazy
+    # 'spreadsheet' beside the grid it opens, the last opener's FridgeMagnetsApp in lazy
+    # 'fizzytiles', and a session that never opens a Maker never downloads or compiles one.
     # ⇒ what forces an eager launcher is BOOT-TIME REACHABILITY, and an icon is not its app: reading
     # a name at boot is not reaching the class. (Before this, an eager sliver part existed for each
     # lazy app precisely because createDesktop constructed the app to ask it for its title and icon.)
@@ -776,6 +777,7 @@ class WorldWdgt extends IconGridPanelWdgt
     addOpener "HowToSaveMessageApp"
     menusHelper.binIconAndText()
     addOpener "SimpleDocumentApp"
+    addOpener "SpreadsheetApp"
     addOpener "FizzyPaintApp"
     addOpener "SimpleSlideApp"
     addOpener "DashboardsApp"
@@ -1723,7 +1725,10 @@ class WorldWdgt extends IconGridPanelWdgt
   # rather than at the sites that call it, so every path that writes the focus, present and future,
   # obeys it by construction; a window that comes to stand on my desktop with no write at all is
   # covered where the selection is read (_widgetTheFocusSelects).
+  #   A WIDGET FOCUSED AS A WHOLE takes a write naming any part of it (_focusedAsAWholeAround,
+  # applied first): a click on a spreadsheet's cell focuses the spreadsheet.
   _setEditorFocusNoSettle: (aWdgt) ->
+    aWdgt = @_focusedAsAWholeAround aWdgt if aWdgt?
     frame = @_frameSeenThroughIslands aWdgt if aWdgt?
     if frame?.isTopLevelWindow()
       return unless @editorFocusWdgt? and @_frameSeenThroughIslands(@editorFocusWdgt) is frame
@@ -1732,6 +1737,19 @@ class WorldWdgt extends IconGridPanelWdgt
     @editorFocusWdgt = aWdgt
     @dataflow?.markNonValueChange @
     return
+
+  # The widget a write naming `aWdgt` focuses: the nearest of aWdgt and its ancestors that is FOCUSED
+  # AS A WHOLE (answers focusesAsAWhole), else aWdgt itself. A spreadsheet answers it: a click on a
+  # cell, a header, its formula bar or a widget hosted in a cell focuses the SHEET, whose selection
+  # is what the editing tools act on (SimpleSpreadsheetWdgt.textStyleSubject) — never the label the
+  # click happened to hit. Like the top-level-window rule beside it, it sits in the one write, so
+  # every path that names a focus obeys it.
+  _focusedAsAWholeAround: (aWdgt) ->
+    w = aWdgt
+    while w? and w isnt @
+      return w if w.focusesAsAWhole?()
+      w = w.parent
+    aWdgt
 
   # A WIDGET'S STYLE MOVED -- a text's weight, slant, font or alignment (StringWdgt's setters), or
   # whatever an edit made under a widget may have touched (Widget.sourceChanged: an inspector's
@@ -1762,6 +1780,9 @@ class WorldWdgt extends IconGridPanelWdgt
     focus = @_widgetTheFocusSelects()
     return undefined unless focus?
     return undefined if focus.isDesktopIcon?()
+    # a focus that EXPLICITLY opts out of editing amenities shows its own selection (a spreadsheet,
+    # focused as a whole, rings its selected cell) — no outline round it, whatever its containers say
+    return undefined if focus.providesAmenitiesForEditing is false
     if focus.providesAmenitiesForEditing and focus.isInEditMode()
       return focus
     # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container that is in edit mode.

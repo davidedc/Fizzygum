@@ -2,9 +2,10 @@
 # a spreadsheet IS its window. A truly THIN FrameWdgt subclass over the naked
 # grid (SimpleSpreadsheetWdgt -- the model owner / formula scope / keyboard
 # receiver): the grid manages its own editing (no providesAmenitiesForEditing,
-# so the frame shows no edit toggle -- parity with the plain-wrapped era), the
-# window title comes from the kind name, close is the plain base flow, and
-# the frame's representativeIcon dispatch reaches the grid unchanged.
+# so the frame shows no edit toggle), its toolbar is the sheet toolbar, docked
+# on top at construction (buildToolbar), the window title comes from the kind
+# name, close is the plain base flow, and the frame's representativeIcon
+# dispatch reaches the grid unchanged.
 
 class SpreadsheetWdgt extends FrameWdgt
 
@@ -15,12 +16,17 @@ class SpreadsheetWdgt extends FrameWdgt
   # produce, but I extend FrameWdgt -- so without it the chain answers FrameWdgt's "window", not the
   # derivation, and the title below goes with it. (GenericPanelWdgt sits in the same trap.)
   colloquialName: ->
-    "spreadsheet"
+    "Sheets Maker"
 
-  # the kind names the window (identical text to the grid's own colloquialName,
-  # so the title is byte-what the plain-wrapped era derived from the content)
+  # the kind names the window: "Sheets Maker", as a Docs Maker window is titled "Docs Maker"
+  # (DocumentWdgt), the desktop Maker's own name
   _titleForContents: (aWdgt) ->
     @colloquialName()
+
+  # the frame docks this variant in its toolbar-slot (§5.C): the text tools, which act on the
+  # sheet's selected cell, and the sheet's own
+  buildToolbar: ->
+    new SheetToolbarWdgt
 
   # A citizen never falls back to the empty-window placeholder: losing the
   # payload rebuilds a FRESH grid. NOT during my own teardown (§5.B B3 case

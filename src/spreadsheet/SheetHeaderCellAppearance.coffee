@@ -8,16 +8,17 @@ class SheetHeaderCellAppearance extends Appearance
   alphaPolicy: "none"
 
   # F5 edge ownership (the edge kinds of SimpleSpreadsheetWdgt.paintGridEdges). The corner and
-  # the row headers stand on the sheet's OUTER LEFT boundary, so their left edge is none; a column
+  # the row headers stand on the sheet's OUTER LEFT boundary, where the sheet's page edge is the
+  # line, so their left edge is none; a column
   # header's left edge is the RULE right of the number column for the first column (slot 0), a
   # gridline for every other.
   _leftEdge: ->
     return undefined if @widget.kind is "row" or @widget.kind is "corner"
     if @widget.viewportSlot is 0 then "rule" else "gridline"
 
-  # The corner and the column headers stand on the sheet's OUTER TOP boundary, so their top edge
-  # is none; a row header's top edge is the RULE under the letter row for the first row (slot 0),
-  # a gridline for every other.
+  # The corner and the column headers stand right under the formula bar, whose bottom rule is the
+  # line there, so their top edge is none; a row header's top edge is the RULE under the letter row
+  # for the first row (slot 0), a gridline for every other.
   _topEdge: ->
     return undefined if @widget.kind is "column" or @widget.kind is "corner"
     if @widget.viewportSlot is 0 then "rule" else "gridline"

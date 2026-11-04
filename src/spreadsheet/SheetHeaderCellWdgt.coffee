@@ -66,25 +66,29 @@ class SheetHeaderCellWdgt extends Widget
       else undefined
 
   # Keep my label child in sync (create / retext / place) — called from the sheet's chrome
-  # ensure, whose build/scroll/resize/restore paths all funnel through buildHeader. The label
-  # is a passive StringWdgt (the CellWdgt scalar-text configuration, in fonts.buttonLabel and
-  # spreadsheetHeaderText, read from the theme as it is built); a scroll relabels in place through
-  # _setTextNoSettle's no-change guard. The corner has no label and never creates one.
+  # ensure, whose build/scroll/resize/zoom/restore paths all funnel through buildHeader. The label
+  # is a passive StringWdgt in the sheet's header font at its zoom (headerFontRole) and
+  # spreadsheetHeaderText, read as it is built, standing the sheet's text inset in from my left and
+  # centred on my height; a scroll relabels in place through _setTextNoSettle's no-change guard,
+  # and a zoom (a different font size) rebuilds it. The corner has no label and never creates one.
   # NoSettle: runs inside the chrome ensure's enclosing settle.
   _syncLabelNoSettle: ->
     label = @_labelText()
     return unless label?
+    role = @_sheetWidget.headerFontRole()
+    if @_labelWdgt? and @_labelWdgt.originallySetFontSize isnt role.size
+      @_labelWdgt._fullDestroyNoSettle()
+      @_labelWdgt = undefined
     if @_labelWdgt?
       @_labelWdgt._setTextNoSettle label
     else
       labelWdgt = new StringWdgt label,
-        fontRole: WorldWdgt.theme.fonts.buttonLabel
+        fontRole: role
         color: WorldWdgt.theme.spreadsheetHeaderText
       labelWdgt.isEditable = false
+      labelWdgt.verticalAlignment = AlignmentSpecVertical.MIDDLE
       @_addNoSettle labelWdgt
       @_labelWdgt = labelWdgt
-    # the (4,2) box inset places the TOP/LEFT-aligned glyphs at the exact position the
-    # pre-conversion painted label had (x 4, baseline height−6) — measured, a pure
-    # translation of identical glyph rasters (same idiom as CellWdgt's scalar child)
-    @_labelWdgt._applyBounds (@position().add new Point 4, 2), @extent().subtract new Point 4, 2
+    inset = @_sheetWidget.textInsetPx()
+    @_labelWdgt._applyBounds (@position().add new Point inset, 0), new Point (Math.max 1, @width() - inset), @height()
     return

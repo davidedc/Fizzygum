@@ -1,5 +1,7 @@
 # The "Super toolbar" -- the toolbar of toolbar-creator buttons
-# (ToolbarsApp opens it in a window; each button summons one specific toolbar).
+# (ToolbarsApp opens it in a window; each button summons one specific toolbar). EVERY TOOLBAR HAS AN
+# ENTRY here, the one place any toolbar can be called up floating, whichever window docks it too: the
+# text, snippets, slides, sheet, dashboards, plots, paint, patch-programming and windows toolbars.
 
 class SuperToolbarWdgt extends ToolbarWdgt
 
@@ -18,7 +20,10 @@ class SuperToolbarWdgt extends ToolbarWdgt
       new TextToolbarCreatorButtonWdgt
       new UsefulTextSnippetsToolbarCreatorButtonWdgt
       new SlidesToolbarCreatorButtonWdgt
+      new SheetToolbarCreatorButtonWdgt
+      new DashboardsToolbarCreatorButtonWdgt
       (new PlotsToolbarCreatorButtonWdgt if PlotsToolbarCreatorButtonWdgt?)
+      new PaintToolbarCreatorButtonWdgt
       new PatchProgrammingComponentsToolbarCreatorButtonWdgt
       new WindowsToolbarCreatorButtonWdgt
     ]

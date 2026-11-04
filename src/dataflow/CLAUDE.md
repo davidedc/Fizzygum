@@ -24,9 +24,10 @@ absence must be a NO-OP at every call site
 (`../../docs/architecture/build-and-packaging.md` §2) — the test for whether something can be a
 part at all. The same judgment keeps `src/meta` out.
 
-⇒ The spreadsheet's lazy-part door names ONE part in its `requiredParts` (`SpreadsheetApp`),
-awaited inside `launch`. Its parts.json `requires: ["app-kit"]` is the opposite case — what the
-door is MADE OF, ingested before the class exists — and neither reaches dataflow, which is core.
+⇒ Each of the spreadsheet's two lazy-part doors (`SpreadsheetApp`, `SampleSheetApp`) names ONE
+part in its `requiredParts`, awaited inside `launch`. The parts' `requires` lists are the opposite
+case — what a part is MADE OF, ingested before its classes exist — and none reaches dataflow, which
+is core.
 
 ## What's here
 

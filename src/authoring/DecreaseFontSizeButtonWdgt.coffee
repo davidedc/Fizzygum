@@ -8,8 +8,8 @@ class DecreaseFontSizeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   createAppearance: -> new DecreaseFontSizeIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   activated: ->
-    if world.editorFocusWdgt?.originallySetFontSize?
-      widgetClickedLast = world.editorFocusWdgt
+    if @_styleSubject()?.originallySetFontSize?
+      widgetClickedLast = @_styleSubject()
       if widgetClickedLast.originallySetFontSize > 90
         widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize - 10
       else if widgetClickedLast.originallySetFontSize > 80

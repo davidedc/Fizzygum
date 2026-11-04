@@ -47,7 +47,7 @@ const census = require('./census-call-arity.js');
 // required block, as with _paintInLocalScope's bodyFn) or when no reordering can help (a symmetric
 // two-slot partial-update record), the `undefined` is an operand with an absent value and the list
 // is right. So: a rise here is a regression; reaching 0 is not a goal.
-const BASELINE = 3;
+const BASELINE = 2;
 
 const SRC = [path.join(census.ROOT, 'Fizzygum', 'src')];
 

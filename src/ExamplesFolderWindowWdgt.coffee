@@ -75,7 +75,7 @@ class ExamplesFolderWindowWdgt extends FolderWindowWdgt
         L.addToFolder @, "SampleSlideApp"
         L.addToFolder @, "SampleDashboardApp"
         L.addToFolder @, "SampleDocApp"
-        L.addToFolder @, "SpreadsheetApp"
+        L.addToFolder @, "SampleSheetApp"
       callback()
 
   # ⚠⚠ POPULATION MUST NOT DEPEND ON WHICH RITUAL SHOWED ME — hence the step below, and this

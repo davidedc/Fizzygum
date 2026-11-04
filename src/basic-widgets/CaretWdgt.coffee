@@ -149,7 +149,7 @@ class CaretWdgt extends BlinkerWdgt
           # can't be `instanceof StringWdgt` (a TextWdgt is-a StringWdgt).
           # (type-test-elimination campaign)
           if @target.enterKeyAccepts?()
-            @accept()
+            @accept (if shiftKey then "Shift+Enter" else "Enter")
           else
             @insert "\n"
         when "Escape"
@@ -471,11 +471,15 @@ class CaretWdgt extends BlinkerWdgt
   # caret could never deliver (it climbed from undefined — nobody ever received these events
   # until the spreadsheet cell became the first consumer). The target is still parented
   # at this moment, so accept/cancel reach ITS parent chain — for a spreadsheet cell
-  # editor that is cell → cells panel → sheet.
-  accept: ->
+  # editor that is cell → cells panel → sheet, for its formula bar the bar.
+  #   `how` is the key that ended the edit, "Enter" or "Shift+Enter", and undefined when acting
+  # elsewhere ended it: a receiver that moves on after a key (a spreadsheet's selection steps
+  # down, or up) must not move when the user simply clicked away. It rides the escalation as its
+  # argument.
+  accept: (how) ->
     target = @target
     world.stopEditing()
-    target.escalateEvent "accept", undefined
+    target.escalateEvent "accept", how
 
   # User presses ESC
   cancel: ->

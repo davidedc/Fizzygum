@@ -667,7 +667,7 @@ class Theme
       focusedWindowTitle: {family: "Arial, sans-serif", size: 13, bold: true}
       # the small chrome labels: a text button's face (a toggle's and a chip's included), the save /
       # save + close labels, the Object Inspector's breadcrumb caption and mixin-donor label, a patch
-      # node's field labels, the video time labels, a spreadsheet header's letter or number
+      # node's field labels, the video time labels
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
       # every StringWdgt / TextWdgt built without a role
       defaultText: {family: "Arial, sans-serif", size: 13, bold: false}
@@ -692,8 +692,14 @@ class Theme
       # scaled with its em box (22 px text stands on 33 px lines).
       document: {family: "Arial, sans-serif", size: 15, bold: false, lineHeight: 22}
       # a spreadsheet cell's text (CellWdgt): its value at rest and the text typed into its editor,
-      # one role so the two align
-      spreadsheetCell: {family: "Arial, sans-serif", size: 12, bold: false}
+      # one role so the two align. The size is the sheet's at 100%: its zoom multiplies it
+      # (SimpleSpreadsheetWdgt._cellFontRole), and a cell's format may set its own.
+      spreadsheetCell: {family: "Arial, sans-serif", size: 16, bold: false}
+      # a spreadsheet header's letter or number, at 100% (the zoom multiplies it: headerFontRole)
+      spreadsheetHeader: {family: "Arial, sans-serif", size: 16, bold: false}
+      # the spreadsheet's formula bar (SheetFormulaBarWdgt): the address and the source, the cells'
+      # size at 100%; chrome, so it does not zoom
+      spreadsheetFormulaBar: {family: "Arial, sans-serif", size: 16, bold: false}
       # the CAPTION over each Fizzytiles pane ("Drag tiles here", "Tiles bin", ...), in the 15 px band
       # FridgeMagnetsWdgt lays it in: its em box, ceil(1.2 x size), must fit that band, or the
       # caption crops to nothing -- 12 px is the largest size that does
@@ -707,6 +713,9 @@ class Theme
       boldToolFace: {family: '"Times New Roman", serif', size: 20, bold: true}
       italicToolFace: {family: '"Times New Roman", serif', size: 20, bold: false, italic: true}
       codeToolFace: {family: '"Courier New", monospace', size: 15, bold: false}
+      # the sheet toolbar's decimals tools' ".0" / ".00" (FewerDecimals / MoreDecimalsIconAppearance):
+      # the code face's family, a step bolder and bigger so the dots read beside B and I
+      decimalsToolFace: {family: '"Courier New", monospace', size: 17, bold: true}
 
     # ---- METRICS ---------------------------------------------------------------------------
     # Chrome geometry (program ruling G2): a handle's side, its plate's rounding and its glyph
@@ -781,6 +790,9 @@ class Theme
     @frameGripSize = 36
     @frameGripInset = 3
     @frameGripStripThickness = 2 * @frameGripInset + @frameGripSize
+    # a spreadsheet's FORMULA BAR (SheetFormulaBarWdgt): its height, the 44 rule's — it is the
+    # chrome a finger edits a cell through — and it does not zoom
+    @spreadsheetFormulaBarHeight = 44
     # the FAT (hovered) width of a scroll indicator -- see scrollIndicatorThickness below for the
     # thin resting width.
     @scrollBarsThickness = 12

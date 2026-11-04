@@ -58,6 +58,15 @@ class SheetCellRecord
   # cell that actually received a drop carries the own property.
   widgetEntry: undefined
 
+  # the cell's FORMAT (docs/archive/spreadsheet-ux-plan.md R5): how its value shows — a plain object
+  # whose keys, each optional, are bold, italic, fontName, fontSize (px at 100%), align ("LEFT" /
+  # "CENTER" / "RIGHT"), fill (a Color) and decimals. DOCUMENT state, so it is saved, copied with
+  # the sheet, and survives scroll and zoom; never touched by a commit, so clearing a cell keeps it.
+  # Written through SimpleSpreadsheetWdgt.restyleCell (a fresh object each time, never mutated in
+  # place), or set whole as a sheet is built (SampleSheetApp). A PROTOTYPE default: only a formatted
+  # cell carries the own property.
+  format: undefined
+
   # @sheet is the owning SheetModel ("the sheet the cell belongs to"); @sheet.sheetWidget is the
   # SimpleSpreadsheetWdgt that paints it and serves as the formula scope (@ inside a formula).
   constructor: (@sheet, @address, @source = "") ->
@@ -120,9 +129,13 @@ class SheetCellRecord
   # "caches/recomputes", it does not "settle"). Repaint is the VIEW's business, not this record's:
   # every reconcile branch self-invalidates (the sheet's own _changed() on host, the cell's own
   # _changed() in showScalarNoSettle) — a damage rect, never a relayout.
+  #   The record holds `v` BEFORE the sheet presents it: what the presentation reads of the record
+  # (the formula bar's error message for the selected cell, the row's text spill, a number's default
+  # alignment) is the value being presented, never the one it replaces.
   _cacheValue: (v) ->
     sheetWidget = @sheet.sheetWidget
-    @value     = if sheetWidget? then (sheetWidget._reconcileCellNoSettle this, v) else v
+    @value     = v
+    @value     = sheetWidget._reconcileCellNoSettle this, v if sheetWidget?
     @errorFlag = @value instanceof SheetError
     @exportedCellValue()
 

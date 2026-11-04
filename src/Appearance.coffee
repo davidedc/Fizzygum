@@ -132,6 +132,16 @@ class Appearance
 
     aContext.restore()
 
+
+  # The scope of a paint that is NEVER in the shadow pass — an after-children stroke (a frame's or a
+  # page's edge), a border painted over its fill: _paintInLocalScope with no applied shadow. Its one
+  # `undefined` is that absent shadow VALUE, an operand, not a hole (R3 of
+  # docs/architecture/constructor-and-parameter-conventions.md): every caller of _paintInLocalScope
+  # passes all four arguments, because the trailing bodyFn is required. Naming the case here keeps
+  # that literal in one place.
+  _paintInUnshadowedScope: (aContext, clippingRectangle, bodyFn) ->
+    @_paintInLocalScope aContext, clippingRectangle, undefined, bodyFn
+
   # Fill a widget-local rect SNAPPED to the device-pixel grid — the quantization contract a
   # device-space fill carries, i.e. each edge Math.round()ed to a whole device pixel. For the
   # normal integer-geometry widget the snap is the identity (bit-exact same fill). It exists

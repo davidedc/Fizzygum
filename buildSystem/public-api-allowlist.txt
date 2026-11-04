@@ -15,7 +15,6 @@ setSoftWrap   # user-facing text-wrapping toggle
 # Protocol-shaped hooks (likely to gain dynamic/external callers; renaming a protocol invites churn):
 recalculateOutput         # patch nodes' reactive recompute protocol verb
 reactToTargetConnection   # connection protocol hook
-paintFunction             # icon appearances' polymorphic paint hook
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
 saveScript          # ScriptWdgt user action
@@ -32,3 +31,4 @@ bringUpReferencedWidget   # ShortcutWdgt shared "open the referenced widget" rit
 subWidgetsMergedPreferredBounds  # Widget §4.1 pure-measure API, sibling of the cross-called subWidgetsMergedFullBounds; the P5 scrolled-content contract implementations (scrolledContentMeasure) call it on THEMSELVES, which is what left it with only self-calls
 closeFromFrameBar         # FrameWdgt's close-from-the-bar ACTION — it runs the closeFromFrameBarPolicy (save-or-ask / close / destroy) that plain close() does not, so it is the verb a user or a script means by "close this window as its button would"; the bar-press handler is its only in-tree caller (a deliberate verb whose one in-tree caller is its own user-facing adapter)
 setLifetime               # FrameWdgt's runtime transient⇄persistent flip (frame-lifetime plan §2.1) — deliberate end-user/scripting API and the settling twin of _setLifetimeNoSettle; pinPopUp, the user-facing verb the strip tap and the "pin" row reach, is its only in-tree caller (a deliberate verb whose one in-tree caller is its own user-facing adapter)
+setZoomFactor             # a spreadsheet's zoom: user verb for scripting and the inspector (the formula bar's zoom menu calls it)

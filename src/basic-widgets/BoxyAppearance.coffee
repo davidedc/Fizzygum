@@ -208,15 +208,10 @@ class BoxyAppearance extends Appearance
   # once my widget's children have all painted, and only in the normal pass. It paints only when
   # _strokesAfterChildren, so the base paint has not stroked already. A standalone entry, so it
   # opens its own scope — local logical coordinates, clipped to the damage box.
-  #   ⚠ That `undefined` is the appliedShadow VALUE — "no shadow", the normal pass — not a skip to
-  # reach the block: every caller of _paintInLocalScope passes all four arguments, because the
-  # trailing bodyFn is required. It is NOT a hole under R3
-  # (docs/architecture/constructor-and-parameter-conventions.md) — the same value
-  # RectangularAppearance.paintStroke hands its scope; buildSystem/check-argument-holes.js counts it
-  # because a regex cannot tell an absent value from a skipped parameter.
+  # The normal pass only, so its scope applies no shadow (Appearance._paintInUnshadowedScope).
   paintStroke: (aContext, clippingRectangle) ->
     return unless @_strokesAfterChildren()
-    @_paintInLocalScope aContext, clippingRectangle, undefined, (ctx) =>
+    @_paintInUnshadowedScope aContext, clippingRectangle, (ctx) =>
       @_strokeOutlineInStrokeColor ctx
 
   # The one stroke body both entries share, inside an open scope: the 1-LOGICAL-px outline in my

@@ -7,30 +7,36 @@ build order + phase ledger:
 **[`../../docs/plans/dataflow-engine-implementation-plan.md`](../../docs/plans/dataflow-engine-implementation-plan.md)**.
 The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
 
-## Packaging: this directory is a LAZY PART, and its launcher is NOT in it
+## Packaging: this directory is a LAZY PART, with its desktop door inside it
 
-This directory is the `spreadsheet` part (`buildSystem/parts.json`), marked `"eager": false`: on
-`index.html` its 12 classes are not in the page — and, on a precompiled tree, not in
-`js/pre-compiled.js` — until something asks for them. Production ships it that way; the `lean`
-appliance profile does not ship it at all.
+This directory is the `spreadsheet` part (`buildSystem/parts.json`), marked `"eager": false` and
+`requires: ["app-kit", "authoring"]` (its launcher extends `WindowedApp`; its window docks a
+`SheetToolbarWdgt`, which lives in `authoring` with the text tools it extends): on `index.html` its
+classes are not in the page — and, on a precompiled tree, not in `js/pre-compiled.js` — until
+something asks for them. Production ships it that way; the `lean` appliance profile does not ship it
+at all.
 
-The one door is **`SpreadsheetApp.launch`**, which lives in the sibling directory
-[`../examples/`](../examples/) — one of the five doors of the desktop's Examples folder, and itself
-LAZY. It needs no eager sliver because a **folder is a door**: its contents are invisible until it is
-opened, so nothing here is reachable at boot the way a desktop icon is. Opening the folder fetches
-the five door classes and nothing else; clicking this one fetches the grid. The await is a
-`requiredParts: ["spreadsheet"]` declaration that the inherited `launch` consumes; the inline
-already-loaded path is a correctness requirement, not an optimisation (the suite runs
-eager-everything and measures cycles).
-⚠ An `if SimpleSpreadsheetWdgt?` guard would be WRONG here — for a lazy part that reads "not fetched
-yet" and swallows the click. The dataflow engine this app is built on is NOT lazy and NOT a part:
-`src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging.md` §2.
+It has TWO doors, each naming this ONE part in its `requiredParts`, which the inherited `launch`
+awaits (the inline already-loaded path is a correctness requirement, not an optimisation — the suite
+runs eager-everything and measures cycles):
+- **`SpreadsheetApp`** ("Sheets Maker", on the desktop) lives HERE, beside the grid it opens: a
+  desktop icon is built at boot from core art and the class NAME (AppLauncherWdgt's lazy mode), so the
+  door costs nothing until clicked, and the click fetches door and grid as one part — the way the
+  Makers live inside `authoring`.
+- **`SampleSheetApp`** (the Examples folder's "Spreadsheet", the party budget) lives in the sibling
+  [`../examples/sheet/`](../examples/sheet/), alone in its one-class `example-sheet` part: a FOLDER IS
+  A DOOR — opening the folder fetches its five doors and nothing else.
+⚠ An `if SimpleSpreadsheetWdgt?` guard would be WRONG anywhere here — for a lazy part that reads "not
+fetched yet" and swallows the click. The dataflow engine this app is built on is NOT lazy and NOT a
+part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging.md` §2.
 
 ## What's here (grows per phase)
 - `SimpleSpreadsheetWdgt.coffee` — the naked grid: the model owner / formula scope / keyboard
-  receiver / geometry authority (Phases 2a/2b/8 + follow-ons F5/F1/F6). It paints
-  NOTHING (undefined appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
-  `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (F6:
+  receiver / editor focus for every click in it (`focusesAsAWhole`) / geometry authority (Phases
+  2a/2b/8 + follow-ons F5/F1/F6, and the UX arc `docs/archive/spreadsheet-ux-plan.md`). It is a PAGE in
+  its window (`wantsWindowPageGutter`) and paints only its PAGE EDGE, over its children
+  (`SheetAppearance`) — every other visible thing is a child widget (see `SheetFormulaBarWdgt` /
+  `SheetCellsPanelWdgt` / `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (F6:
   `ClippingAtRectangularBoundsMixin`, cropping partial-edge headers; the panel crops partial
   cells). It materialises the widget chrome
   (`_buildChromeNoSettle` — sized with the sheet, headers built/trimmed to the visible
@@ -47,8 +53,27 @@ yet" and swallows the click. The dataflow engine this app is built on is NOT laz
   shared edge-stroke helper `paintGridEdges` (the edge-ownership colours + the crossing rule),
   owns `@model` and is the formula SCOPE (`@` inside a formula is this widget).
 - `SpreadsheetWdgt.coffee` — the FRAMED citizen (Frame-model §5.B, owner decision D2): a truly
-  thin `FrameWdgt` over the naked grid — ctor, `colloquialName`, the title hook, and a
-  teardown-guarded payload reset, nothing else. `SpreadsheetApp` opens this one.
+  thin `FrameWdgt` over the naked grid — ctor, `colloquialName` ("Sheets Maker", its title), its
+  toolbar (`buildToolbar` → `SheetToolbarWdgt`, docked on top), and a teardown-guarded payload reset,
+  nothing else. `SpreadsheetApp` and `SampleSheetApp` open this one.
+- `SpreadsheetApp.coffee` — the "Sheets Maker" desktop door (see Packaging); opens a sheet at its
+  `defaultExtent` (the formula bar over a 5 × 10 grid at 100%).
+- `SheetFormulaBarWdgt.coffee` + `SheetFormulaBarAppearance.coffee` — the FORMULA BAR, a frozen
+  row across the sheet's top, above the column headers: the selected cell's address, its source in
+  a text field (where a cell can also be edited, the cell following as it is typed), an error's
+  message, and the zoom button opening the zoom levels. CHROME at the size a finger needs
+  (`Theme.spreadsheetFormulaBarHeight`, 44) and never zoomed. Built, placed and synced by the sheet
+  (`syncNoSettle`), and ADOPTED on restore and duplicate like the cells (re-attached, kept by the
+  re-index sweep): rebuilding it there would build its zoom button, which settles, inside the
+  `_reactToBeingCopied` / `_afterDeserialization` notifications (the notification-settle gate).
+- `SheetAppearance.coffee` — the sheet's one paint of its own: the page edge, 1 px of
+  `stretchablePageEdge` on all four sides, painted after the children (the clipping mixin's
+  `paintStroke` call).
+- `SheetCellStyle.coffee` — what the editing tools act on while the sheet is the editor focus: the
+  selected cell's STYLE, answering the StringWdgt style protocol the text tools duck-type (`isBold`,
+  `toggleWeight`, …) plus the sheet tools' (`pickFillColor`, `fewerDecimals`, `moreDecimals`,
+  `enterSource`). A plain class made fresh per ask; it holds nothing — every write goes to the
+  record's format through `SimpleSpreadsheetWdgt.restyleCell`.
 - `SheetCellsPanelWdgt.coffee` (F5) — the TRANSPARENT `PanelWdgt` subclass spanning the data
   region and hosting the `CellWdgt`s (owner direction: cells attach into a container
   subclass). Undefined appearance (the sheet never painted a data background — the backdrop shows
@@ -316,30 +341,63 @@ engine's own `Map`/`Set` handlers. Derived fields are dropped on serialize
 focus:** `_takeKeyboardFocus` removes other sheets from `world.keyboardEventsReceivers` first, so a
 duplicated sheet (which inherits receiver membership via the copier) doesn't edit in lockstep.
 
-## Design north star (spec §9, as of F5 — 2026-07-17)
+## Design north star (spec §9, F5, and the UX arc `docs/archive/spreadsheet-ux-plan.md`)
 
-**The sheet paints NOTHING; every visible thing is a widget.** The data cells (`CellWdgt`,
-inside the transparent `SheetCellsPanelWdgt`) and the header cells (`SheetHeaderCellWdgt`,
-direct children) each paint their own fill/edges/ring and carry their label/value as CHILD
-widgets (hosted value / presenter / passive scalar-text `StringWdgt`) — the sheet is the model
-owner, formula scope, keyboard receiver and geometry authority, with an undefined appearance. This
-completes the arc: "painted chrome, widgetized contents" (Phase 4, sockets for rich cells
-only) → "widgetized viewport over painted chrome" (Phase 8, every visible DATA cell a widget)
-→ "everything a widget" (F5, owner direction 2026-07-17: anything selectable/clickable should
-be a Widget — headers included, toward future column/row selection). Two invariants carried
-over: widget count stays bounded by the VIEWPORT, not the sparse model — an off-screen cell
-(Z99 in a formula) is a live dataflow node whose record recomputes with NO widget; scroll
-(F1, landed 2026-07-17) materialises/recycles the viewport's widgets over the 26×100 logical
-sheet, with the hidden-rich-cell exemption keeping off-screen widget-VALUED cells' hosted
-widgets alive in the tree. And the cell is the two-way
-boundary adapter: it hosts the value/presenter widget and is the connection target
-interactive widget-sources (slider, picker, clock) fire into — each firing a `markStale` on
-the cell. Pixel law (F5 receipts, plan §3-F): every widget strokes its own TOP+LEFT edges;
-a gridline strokes BEFORE the header rule (the rule wins crossings — the crossing rule); the
-sheet's outer top and left boundary carries no edge (the window's strip rule and frame border
-are the lines there); nobody strokes right/bottom; no widget fills the data background (the
-backdrop shows through). Every colour is a `Theme` role (`spreadsheet*`), read at paint or
-build time, so a saved or duplicated sheet wears the current look.
+**The sheet paints only its page edge; every other visible thing is a widget.** The formula bar
+(`SheetFormulaBarWdgt`), the data cells (`CellWdgt`, inside the transparent
+`SheetCellsPanelWdgt`) and the header cells (`SheetHeaderCellWdgt`, direct children) each paint
+their own fill/edges/ring and carry their label/value as CHILD widgets (hosted value / presenter /
+passive scalar-text `StringWdgt`) — the sheet is the model owner, formula scope, keyboard receiver,
+editor focus and geometry authority, and its appearance (`SheetAppearance`) draws its 1 px page
+edge over all of them. The widgetisation's history: "painted chrome, widgetized contents" (Phase 4,
+sockets for rich cells only) → "widgetized viewport over painted chrome" (Phase 8, every visible
+DATA cell a widget) → "everything a widget" (F5, owner direction 2026-07-17: anything
+selectable/clickable should be a Widget — headers included, toward future column/row selection).
+Two invariants: widget count stays bounded by the VIEWPORT, not the sparse model — an off-screen cell
+(Z99 in a formula) is a live dataflow node whose record recomputes with NO widget; scroll (F1)
+materialises/recycles the viewport's widgets over the 26×100 logical sheet, with the
+hidden-rich-cell exemption keeping off-screen widget-VALUED cells' hosted widgets alive in the tree.
+And the cell is the two-way boundary adapter: it hosts the value/presenter widget and is the
+connection target interactive widget-sources (slider, picker, clock) fire into — each firing a
+`markStale` on the cell. Pixel law: every widget strokes its own TOP+LEFT edges; a gridline
+strokes BEFORE the header rule (the rule wins crossings — the crossing rule); no edge along the
+sheet's outer left (the page edge is the line) or under the formula bar (its bottom rule is), nor
+where a neighbour's text spills over a cell; nobody strokes right/bottom (the page edge is the line
+there too); no widget fills the data background (the window's paper shows through) except a cell
+whose format sets a fill. Every colour is a `Theme` role (`spreadsheet*`), read at paint or build
+time, so a saved or duplicated sheet wears the current look.
+
+## The UX arc (`docs/archive/spreadsheet-ux-plan.md`, owner rulings R1–R13)
+
+- **Page + sizes + zoom.** A PAGE in its window (the gutter, its own edge). At 100% a row is 36, a
+  column 104, the number column 48, the letter row 36, text 16 (`fonts.spreadsheetCell`,
+  `fonts.spreadsheetHeader`), vertically centred. `zoomFactor` (one of `ZOOM_LEVELS`, 60–200%,
+  DOCUMENT state, own-only-when-zoomed) multiplies all of those through the `_colW` / `_rowH` /
+  `_headerW` / `_headerH` / `textInsetPx` readers every placement uses — a re-layout, never a picture
+  scale (which blurs text under SWCanvas, measured). `setZoomFactor` re-derives chrome, viewport and
+  every visible cell's look. Cells stay CONTENT (design doc §4.2); the finger is served by the
+  formula bar and the zoom.
+- **The formula bar** (`SheetFormulaBarWdgt`) is at the top of the grid (`_gridTop()`), never zoomed.
+  An edit can start in the cell or in the bar (`_startEditNoSettle seed, inBar`); the cell's editor is
+  mounted either way and whichever view lacks the caret mirrors the other on the caret's
+  `reactToKeystroke` escalation; `_liveEditorWdgt()` is the one that commits.
+- **Focus and formatting.** `focusesAsAWhole` makes every click in the sheet focus the SHEET
+  (`WorldWdgt._setEditorFocusNoSettle`); the text tools ask the focus for its `textStyleSubject` and
+  the sheet hands over a `SheetCellStyle` of the selected cell. Formatting is the record's `format`
+  (bold, italic, fontName, fontSize, align, fill, decimals — DOCUMENT state, kept by a clear), written
+  only through `restyleCell`; the cell's look derives from it (`_textLookFor`: numbers right, the
+  rest left unless the format aligns them; `_displayTextFor`: a number to its decimals). Every
+  selection move goes through `_moveSelectionNoSettle` and announces itself (`world.noteStyleChanged`
+  + the bar's sync), so the tools' active looks follow the keyboard too.
+- **Keys.** One "commit and move" verb: Enter down, Shift+Enter up (the caret's `accept` carries the
+  key, `CaretWdgt.accept how`), Tab right, Shift+Tab left (`nextTab`/`previousTab` on the cell and the
+  bar → `tabFromEdit`); acting elsewhere commits without moving; Tab/Shift+Tab move in selection mode
+  too; Delete/Backspace clear the content and keep the format. Errors never block a commit.
+- **Text spill.** Left-aligned text runs on into empty cells to its right (`_reflowSpillOfRowNoSettle`,
+  per row, whenever a cell of the row is presented and for every row after a viewport change); a
+  covered cell strokes no left edge; numbers, errors, centre/right-aligned text and the editing cell
+  never spill. A spill width is measured at the text's built size (`CellWdgt.textNeedsWidth`) — a
+  fresh text has not fitted yet, so its fitting size is not the one to read.
 
 ## Phase 8 decisions / deviations (recorded also in the plan)
 
@@ -447,13 +505,15 @@ build time, so a saved or duplicated sheet wears the current look.
   v1 paints a fixed viewport that fits the window and defers scroll until the model exceeds it.
   The paint + hit-test math transplant into a scroll-child unchanged; sockets (2b/4) are
   unaffected. (F1 later made "no `ViewportWdgt`" permanent — see the F1 section above.)
-- **Text = 12px Arial** (`Theme.fonts.spreadsheetCell`; a header's label `fonts.buttonLabel`). SWCanvas ships bitmap atlases for Arial/Times/Courier only
-  (`src/boot/extensions/SWCanvasElement-extensions.coffee`), so 12px Arial is the deterministic
-  choice; left-aligned with a small pad in v1 (centering needs `measureText` — a later polish).
+- **Text in Arial** (`Theme.fonts.spreadsheetCell`, 16 px at 100% since the UX arc). SWCanvas ships
+  bitmap atlases for Arial/Times/Courier only (`src/boot/extensions/SWCanvasElement-extensions.coffee`),
+  so Arial is the deterministic choice.
 - **Its own icon**, `SpreadsheetIconWdgt` (core `src/icons`: the family's content card ruled as a grid with a
   header row and column), named by `AppCatalog` and answered by `SimpleSpreadsheetWdgt.representativeIcon`.
-- **Launcher in the examples folder** (not the desktop) to avoid shifting the desktop icon grid
-  (which would recapture many desktop screenshots). Tests open a sheet via `SpreadsheetApp.launch()`.
+- **The launcher is "Sheets Maker" on the desktop** (`SpreadsheetApp`), and the Examples folder holds
+  the party-budget example (`SampleSheetApp`). (The launcher first sat in the folder to avoid
+  shifting the desktop's icons in reference screenshots; test worlds draw no desktop, so that cost
+  never existed.) Tests open a sheet via `(new SpreadsheetApp).launch()`.
 
 ## Phase 2b decisions / deviations (recorded also in the plan)
 
@@ -480,16 +540,18 @@ build time, so a saved or duplicated sheet wears the current look.
   click-positioning / arrows / selection. Entry gestures: type-to-edit REPLACE (a printable
   key seeds a fresh editor), Enter/F2 edit the existing source (caret at end), double-click
   edits with the caret AT THE CLICKED SLOT (`startEditAtPointer`; the non-editable
-  scalar-text child escalates `doubleActivated` to the cell). Exit: Enter COMMITS and
-  Escape REVERTS via the caret's accept/cancel escalations (editor → cell → sheet's
-  `acceptCellEdit`/`cancelCellEdit`); acting elsewhere COMMITS (the pointer's click-away
+  scalar-text child escalates `doubleActivated` to the cell). Exit: Enter COMMITS (and, with
+  the UX arc, moves the selection down — Shift+Enter up) and Escape REVERTS via the caret's
+  accept/cancel escalations (editor → cell → sheet's `acceptCellEdit`/`cancelCellEdit`; the
+  formula bar's field reaches the same two); acting elsewhere COMMITS (the pointer's click-away
   funnel calls `caret.accept()`, the wheel commits before scrolling — tearing down a
   still-live caret in the same settle — and a DANGLING edit self-heals by committing on
   the sheet's next key/click). While the edit is live the sheet's `processKeyDown` ignores
   keys (`_isCaretEditLive`); the edit-starting key never double-delivers into the fresh
   caret because `KeydownInputEvent` dispatches over a SNAPSHOT of the receivers Set; Tab
-  is swallowed at the cell (`nextTab`/`previousTab` — commit-and-advance is a later
-  variant). Multi-line editing stays the deferred `CodePromptWdgt` path (spec §9.1).
+  and Shift+Tab commit and move right / left (`nextTab`/`previousTab` → `tabFromEdit`), so
+  they never climb to `WorldWdgt.nextTab`. Multi-line editing stays the deferred
+  `CodePromptWdgt` path (spec §9.1).
 - **Settle discipline:** the mount/teardown of the overlay editor mutates the tree, so the ONE
   layout settle is opened at the PUBLIC event entries (`processKeyDown` / `activated`, like
   `world.edit`) and every edit-lifecycle helper is a `*NoSettle` core using `_addNoSettle` /

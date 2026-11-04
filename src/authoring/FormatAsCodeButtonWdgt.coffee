@@ -9,8 +9,8 @@ class FormatAsCodeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   createAppearance: -> new FormatAsCodeIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   activated: ->
-    if world.editorFocusWdgt?.setFontName?
-      widgetClickedLast = world.editorFocusWdgt
+    if @_styleSubject()?.setFontName?
+      widgetClickedLast = @_styleSubject()
       if widgetClickedLast.fontName != widgetClickedLast.monoFontStack
         widgetClickedLast.setFontName widgetClickedLast.monoFontStack
       else
@@ -19,5 +19,5 @@ class FormatAsCodeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   # ACTIVE while the text I act on is in its mono stack -- the very test my toggle above makes, so I
   # show active exactly when a press would set it back to Arial (the family's mirror)
   isActiveTool: ->
-    focus = world.editorFocusWdgt
+    focus = @_styleSubject()
     focus?.setFontName? and focus.monoFontStack? and focus.fontName is focus.monoFontStack

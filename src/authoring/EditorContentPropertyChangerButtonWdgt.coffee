@@ -1,7 +1,8 @@
 # Base for the editor's "content property changer" buttons — the little icon
 # buttons in the text-editing toolbar (bold, italic, the alignment trio, font,
 # font-size, format-as-code, templates) that act on the LAST widget the user
-# clicked or dropped (world.editorFocusWdgt).
+# clicked or dropped (world.editorFocusWdgt) — or on the style it hands over
+# (_styleSubject: a spreadsheet hands over its selected cell's).
 #
 # They share: the hover/press state machine (HighlightableMixin), shown on the
 # tool cell each stands in rather than on the button (ParentStainerMixin: the
@@ -35,6 +36,14 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   # outside a toolbar (inside one, the toolbar's own declaration covers them).
   excludedFromEditorFocusTracking: ->
     true
+
+  # WHAT I ACT ON: the editor focus's STYLE SUBJECT when it hands one over (textStyleSubject — a
+  # spreadsheet hands over its selected cell's style, SheetCellStyle), else the focus itself (a
+  # text is its own style). Every tool of the family reads and writes through this, so a tool
+  # works the same on a text and on a sheet's selected cell, and the focus decides what that is.
+  _styleSubject: ->
+    focus = world.editorFocusWdgt
+    focus?.textStyleSubject?() ? focus
 
   constructor: (@color) ->
     super @color

@@ -1,17 +1,19 @@
 # SimpleSpreadsheetWdgt — the spreadsheet's grid (spec docs/specs/dataflow-engine-spec.md §9.1; Phase 8
-# "widgetise the grid" + follow-on F5 "the sheet paints NOTHING"). Every visible thing is a real
-# child widget: the data cells (CellWdgt, one per cell of the viewport — 6×14 at the default
-# open size, DERIVED from the sheet's extent since F6: a bigger window shows more cells, the
-# last column/row possibly partial — each the
-# VIEW of its SheetCellRecord) live inside a SheetCellsPanelWdgt whose fill is the data-region
-# background; the 21 header cells (SheetHeaderCellWdgt: column letters, row numbers, the corner)
-# are direct children, kept OUTSIDE the panel so a future scroll clip can never touch the frozen
-# headers. Each widget paints its own fill, its own TOP+LEFT grid edges (edge-ownership + the
-# crossing rule — see paintGridEdges) and — the selected cell — its own selection ring; every
-# label/value is a CHILD widget (hosted value / presenter / passive StringWdgt text — "scalar
-# text is a StringWdgt child, period", owner direction 2026-07-24). This widget has NO paint
-# of its own (undefined appearance): it is the model owner,
-# the formula scope, the keyboard receiver, and the geometry authority (the constants below).
+# "widgetise the grid" + follow-on F5; the page, the formula bar, zoom, formatting and the keys are
+# docs/archive/spreadsheet-ux-plan.md). Every visible thing but my page edge is a real child widget:
+# the FORMULA BAR across my top (SheetFormulaBarWdgt: the selected cell's address and source, an
+# error's message, the zoom control); the data cells (CellWdgt, one per cell of the viewport,
+# DERIVED from my extent: a bigger window shows more cells, the last column/row possibly partial —
+# each the VIEW of its SheetCellRecord) inside a SheetCellsPanelWdgt; the header cells
+# (SheetHeaderCellWdgt: column letters, row numbers, the corner) as direct children, kept OUTSIDE
+# the panel so a scroll clip can never touch the frozen headers. Each widget paints its own fill,
+# its own TOP+LEFT grid edges (edge-ownership + the crossing rule — see paintGridEdges) and — the
+# selected cell — its own selection ring; every label/value is a CHILD widget (hosted value /
+# presenter / passive StringWdgt text — "scalar text is a StringWdgt child, period", owner
+# direction 2026-07-24). I am a PAGE in my window (wantsWindowPageGutter), and my own paint is only
+# the page's edge, over my children (SheetAppearance). I am the model owner, the formula scope,
+# the keyboard receiver, the editor focus for every click in me (focusesAsAWhole), and the
+# geometry authority (the sizes below, times my zoom).
 #
 # Widgetising is owner direction (2026-07-05 cells; 2026-07-17 headers + chrome — plan §3-F F5,
 # with the byte-identity receipts): full Fizzygum composability — everything the user sees is a
@@ -89,24 +91,38 @@ class SimpleSpreadsheetWdgt extends Widget
   # drain → reconcile): a DERIVED presenter (a Color's swatch, spec §9.4 "one-way glass") is
   # rebuilt from the value, a scalar repaints, a state-bearing value-widget is RETAINED.
   # @model / @selected* ARE document state and serialize normally.
-  @serializationTransients: ["_editing", "_editCol", "_editRow", "_cells", "_cellsPanel", "_headerCells"]
+  @serializationTransients: ["_editing", "_editCol", "_editRow", "_editInBar", "_cells", "_cellsPanel", "_headerCells", "_fillPickAddress"]
 
-  # fixed grid geometry (no column resize in v1). The VIEWPORT — how many cell widgets are
+  # the grid's geometry at 100% (no column resize in v1): the sizes below are what ZOOM multiplies
+  # (zoomFactor, and the _colW / _rowH / _headerW / _headerH readers every placement goes through),
+  # so nothing reads them directly to place a pixel. The VIEWPORT — how many cell widgets are
   # materialised + visible at once — is DERIVED from the sheet's applied extent (F6, the
   # _viewportCols/Rows* derivations below): a bigger window shows MORE of the sheet, the last
   # visible column/row possibly PARTIAL (clipped). defaultViewportCols/Rows only size the
-  # DEFAULT fresh-sheet extent (_defaultExtent — the exact 6×14 grid, the pre-F6 fixed
-  # viewport, preserved byte-for-byte as the open size). sheetCols/sheetRows are the LOGICAL
-  # sheet the viewport scrolls over (F1 — still far under the address grammar's ZZ9999
-  # ceiling).
-  headerColWidth: 34     # the left row-number header column
-  headerRowHeight: 20    # the top column-letter header row
-  colWidth: 68
-  rowHeight: 20
-  defaultViewportCols: 6   # the default open size's viewport columns…
-  defaultViewportRows: 14  # …and rows (⇒ the 442×300 default content extent)
+  # DEFAULT fresh-sheet extent (defaultExtent). sheetCols/sheetRows are the LOGICAL sheet the
+  # viewport scrolls over (F1 — still far under the address grammar's ZZ9999 ceiling). Cells are
+  # CONTENT, not chrome targets (visual-design-system §4.2): a finger is served by the formula bar
+  # and by zoom, never by 44-tall rows.
+  headerColWidth: 48     # the left row-number header column
+  headerRowHeight: 36    # the top column-letter header row
+  colWidth: 104
+  rowHeight: 36
+  textInset: 4           # a cell's or a header's text stands this far in from its left edge
+  defaultViewportCols: 5   # the default open size's viewport columns…
+  defaultViewportRows: 10  # …and rows
   sheetCols: 26          # logical columns A..Z
   sheetRows: 100         # logical rows 1..100
+
+  # ZOOM: the sheet is laid out again at its sizes times this factor — never scaled as a picture,
+  # which blurs the text — so the cells, the headers, their text and its inset grow or shrink while
+  # every hairline (gridlines, the page edge, the selection ring) keeps its width, and the formula
+  # bar, the toolbar and the window keep theirs (they are the controls, at the size a finger needs).
+  # A hosted widget grows with its cell, which sizes it. One of ZOOM_LEVELS. The smallest is where
+  # the 16 px text reaches 9.6 px, over the 9 px the software renderer can draw. A PROTOTYPE
+  # default, own-only-when-zoomed (the viewOrigin idiom below), and DOCUMENT state: a saved zoomed
+  # sheet restores zoomed.
+  zoomFactor: 1
+  ZOOM_LEVELS: [0.6, 0.75, 1, 1.25, 1.5, 2]
 
   # the view origin (F1): the sheet-space col/row of the viewport's top-left cell. PROTOTYPE
   # defaults, own-only-when-scrolled (the 6a idiom): an unscrolled sheet serializes byte-for-byte
@@ -123,17 +139,25 @@ class SimpleSpreadsheetWdgt extends Widget
   # the sparse data model — this widget owns it and is its formula scope
   model: undefined
 
-  # editing state: which cell is being edited. The editor WIDGET lives on the editing cell.
+  # editing state: which cell is being edited, and whether the caret is in the formula bar's text
+  # (_editInBar) or in the editor WIDGET the editing cell holds. Either way the other one shows the
+  # same text, kept in step as it is typed (reactToKeystroke).
   _editing: undefined
   _editCol: undefined
   _editRow: undefined
+  _editInBar: undefined
 
-  # the cell index (address → its CellWdgt) and the chrome handles: the data-cells container
-  # and the header-cell index ("kind:index" → SheetHeaderCellWdgt). All three are TRANSIENT —
-  # rebuilt on restore by _reindexCellsNoSettle, never adopted from a snapshot.
+  # the cell index (address → its CellWdgt) and the chrome handles: the data-cells container and
+  # the header-cell index ("kind:index" → SheetHeaderCellWdgt), TRANSIENT — rebuilt on restore by
+  # _reindexCellsNoSettle, never adopted from a snapshot — and the formula bar, which IS adopted:
+  # it rides a snapshot or a copy as my child and is re-attached and re-synced, never rebuilt there
+  # (building its zoom button would open a settle inside the copy and restore notifications).
   _cells: undefined
   _cellsPanel: undefined
   _headerCells: undefined
+  _formulaBar: undefined
+  # the cell the fill tool's colour prompt is choosing for (pickFillFor → setFillOfSelection)
+  _fillPickAddress: undefined
 
   constructor: ->
     super()
@@ -147,6 +171,9 @@ class SimpleSpreadsheetWdgt extends Widget
     @_editing = false
     @_editCol = undefined
     @_editRow = undefined
+    @_editInBar = false
+    # the page's edge, painted over my children (SheetAppearance); otherwise I paint nothing
+    @appearance = new SheetAppearance @
     # cell index (spec §9.3/§9.4 classify→present): address → its CellWdgt. Every VISIBLE cell has one
     # (the viewport, materialised by _reconcileViewportNoSettle below — plus one HIDDEN one per
     # off-viewport widget-VALUED cell, F1); each renders its own value —
@@ -159,13 +186,14 @@ class SimpleSpreadsheetWdgt extends Widget
     # constants on restore (_reindexCellsNoSettle), never adopted from a snapshot.
     @_cellsPanel = undefined
     @_headerCells = new Map
-    # headers + one cell — the smallest extent at which the viewport derivations still answer
-    # a 1×1 viewport (F6; the __commitExtent leaf enforces this floor on every commit). An
-    # OWN field, set after super: the Widget constructor sets its own 5,5, so a prototype
-    # default here would be shadowed. (A pre-F6 snapshot restores its saved 5,5 — harmless:
-    # the derivations' Math.max 1 floor degrades gracefully below one cell.)
-    @minimumExtent = new Point (@headerColWidth + @colWidth), (@headerRowHeight + @rowHeight)
-    @_applyExtent @_defaultExtent()
+    @_formulaBar = undefined
+    # the formula bar + headers + one cell — the smallest extent at which the viewport
+    # derivations still answer a 1×1 viewport (F6; the __commitExtent leaf enforces this floor on
+    # every commit). An OWN field, set after super: the Widget constructor sets its own 5,5, so a
+    # prototype default here would be shadowed. (An older snapshot restores its saved floor —
+    # harmless: the derivations' Math.max 1 floor degrades gracefully below one cell.)
+    @minimumExtent = @_leastExtent()
+    @_applyExtent @defaultExtent()
     # materialise the widget chrome, then the viewport's grid of cell widgets (NoSettle: the
     # enclosing openFrameWith settles once — the DegreesConverterApp orphan-construction idiom;
     # a deserialize/duplicate skips the constructor and restores/copies the cells instead, which
@@ -175,6 +203,55 @@ class SimpleSpreadsheetWdgt extends Widget
     return
 
   colloquialName: -> "spreadsheet"
+
+  # I am a PAGE, a surface you work on (visual-design-system §4.10): a window keeps its page gutter
+  # around me on every side and between me and a docked toolbar, and I draw my own edge
+  # (SheetAppearance), because the window's lines do not run along mine.
+  wantsWindowPageGutter: -> true
+
+  # A click anywhere in me makes ME the editor focus, not the cell or label it hit: what the
+  # editing tools act on is my SELECTION, whichever way it moved (a click, the arrows, Enter, Tab),
+  # and I hand them my selected cell's style (textStyleSubject). WorldWdgt._setEditorFocusNoSettle
+  # asks this of the widget a click or drop names and of its ancestors.
+  focusesAsAWhole: -> true
+
+  # ...and, being the focus, I show my selection myself (the selected cell's ring), so I opt out of
+  # the editor-focus outline explicitly (WorldWdgt._widgetBeingEdited); my window shows no edit
+  # toggle either way (FrameWdgt asks this too).
+  providesAmenitiesForEditing: false
+
+  # ── geometry at the current zoom: every placement reads these, never the 100% sizes above ──
+  _colW: -> Math.round @colWidth * @zoomFactor
+  _rowH: -> Math.round @rowHeight * @zoomFactor
+  _headerW: -> Math.round @headerColWidth * @zoomFactor
+  _headerH: -> Math.round @headerRowHeight * @zoomFactor
+  textInsetPx: -> Math.round @textInset * @zoomFactor
+  # the formula bar's height: where the column headers start. It does not zoom.
+  _gridTop: -> WorldWdgt.theme.spreadsheetFormulaBarHeight
+
+  # the font a cell's text wears at the current zoom: the theme's cell role, its size (the cell's
+  # own, from its format, or the role's) times the zoom, its weight, slant and family from the
+  # cell's format where it sets them. A fresh object each time: a role is read by the text built
+  # from it, never mutated.
+  _cellFontRole: (format) ->
+    base = WorldWdgt.theme.fonts.spreadsheetCell
+    role = {family: base.family, size: base.size, bold: base.bold, italic: false}
+    if format?
+      role.size = format.fontSize if format.fontSize?
+      role.bold = format.bold if format.bold?
+      role.italic = format.italic if format.italic?
+      role.family = format.fontName if format.fontName?
+    role.size = role.size * @zoomFactor
+    role
+
+  # the font a header's label wears at the current zoom
+  headerFontRole: ->
+    base = WorldWdgt.theme.fonts.spreadsheetHeader
+    {family: base.family, size: base.size * @zoomFactor, bold: base.bold}
+
+  # the smallest extent: the formula bar, the headers and one cell
+  _leastExtent: ->
+    new Point (@_headerW() + @_colW()), (@_gridTop() + @_headerH() + @_rowH())
 
   # the picture a filed or aliased sheet wears (the generic object frame around it), and the one
   # its launcher wears through AppCatalog: the spreadsheet's own icon. The window (SpreadsheetWdgt)
@@ -190,18 +267,18 @@ class SimpleSpreadsheetWdgt extends Widget
   # protocol is exactly the fill-content protocol (V1): _setWidthSizeHeightAccordingly
   # applies the granted width and hands the height back, _applyHeight grants the free height,
   # preferredExtent answers the applied extent (which feeds the first-placement window hug
-  # with _defaultExtent below). The viewport DERIVES from that extent; a resize re-derives
-  # chrome + viewport in _reLayout below. The default open size is pinned by SpreadsheetApp
-  # (V4: window 452×336 − 36 chrome = 442×300 content, the exact 6×14 grid — the whole
-  # pre-F6 reference set renders byte-identically). The pre-F6 AnalogClockWdgt fixed-size
-  # pattern (chosen in Phase 2a for one-cycle settle determinism) is retired: the arrange
-  # below is idempotent and settles in the same one pass.
+  # with defaultExtent below). The viewport DERIVES from that extent; a resize re-derives
+  # chrome + viewport in _reLayout below. The default open size is SpreadsheetApp's: it opens
+  # its window around defaultExtent. The pre-F6 AnalogClockWdgt fixed-size pattern (chosen in
+  # Phase 2a for one-cycle settle determinism) is retired: the arrange below is idempotent and
+  # settles in the same one pass.
 
-  # the DEFAULT (fresh-sheet) extent: the exact default grid — the construction extent, and
-  # what the first-placement window hug reads back through the base preferredExtent.
-  _defaultExtent: ->
-    new Point (@headerColWidth + @defaultViewportCols * @colWidth),
-      (@headerRowHeight + @defaultViewportRows * @rowHeight)
+  # the DEFAULT (fresh-sheet) extent: the formula bar over the exact default grid — the
+  # construction extent, and what the first-placement window hug reads back through the base
+  # preferredExtent. PUBLIC: SpreadsheetApp opens its window around it.
+  defaultExtent: ->
+    new Point (@_headerW() + @defaultViewportCols * @_colW()),
+      (@_gridTop() + @_headerH() + @defaultViewportRows * @_rowH())
 
   # ── F6: the viewport DERIVES from the applied extent — never stored ──────────────────────
   # TWO derivation pairs; every consumer routes to the right one:
@@ -218,10 +295,10 @@ class SimpleSpreadsheetWdgt extends Widget
   # PURITY: these read APPLIED geometry (@width()/@height()) — legal at their call sites
   # (reconcile/clamps/arrange run after the extent is committed); they must never feed a
   # pure measure (preferredExtentForWidth stays the untouched base).
-  _viewportColsPartial: -> Math.max 1, Math.min @sheetCols, Math.ceil((@width() - @headerColWidth) / @colWidth)
-  _viewportRowsPartial: -> Math.max 1, Math.min @sheetRows, Math.ceil((@height() - @headerRowHeight) / @rowHeight)
-  _viewportColsFull: -> Math.max 1, Math.min @sheetCols, Math.floor((@width() - @headerColWidth) / @colWidth)
-  _viewportRowsFull: -> Math.max 1, Math.min @sheetRows, Math.floor((@height() - @headerRowHeight) / @rowHeight)
+  _viewportColsPartial: -> Math.max 1, Math.min @sheetCols, Math.ceil((@width() - @_headerW()) / @_colW())
+  _viewportRowsPartial: -> Math.max 1, Math.min @sheetRows, Math.ceil((@height() - @_gridTop() - @_headerH()) / @_rowH())
+  _viewportColsFull: -> Math.max 1, Math.min @sheetCols, Math.floor((@width() - @_headerW()) / @_colW())
+  _viewportRowsFull: -> Math.max 1, Math.min @sheetRows, Math.floor((@height() - @_gridTop() - @_headerH()) / @_rowH())
 
   # the partial viewport clamped to the LOGICAL REMAINDER at the current origin — the bound
   # the header build, the materialise loops and the hit-test share. Without the clamp, at the
@@ -259,9 +336,18 @@ class SimpleSpreadsheetWdgt extends Widget
       panel = new SheetCellsPanelWdgt
       @_addNoSettle panel
       @_cellsPanel = panel
+    # the formula bar spans my top, the full width, and does not zoom (SheetFormulaBarWdgt)
+    unless @_formulaBar?
+      bar = new SheetFormulaBarWdgt
+      bar.attachSheet this
+      @_addNoSettle bar
+      @_formulaBar = bar
+    @_formulaBar._applyBounds @position(), new Point @width(), @_gridTop()
+    @_formulaBar.syncNoSettle()
     # the data region spans from the headers to my bottom-right corner (F6 — pre-F6 this was
     # the fixed grid size, set once at build)
-    @_cellsPanel._applyBounds (@position().add new Point @headerColWidth, @headerRowHeight), new Point (@width() - @headerColWidth), (@height() - @headerRowHeight)
+    gridTop = @_gridTop()
+    @_cellsPanel._applyBounds (@position().add new Point @_headerW(), gridTop + @_headerH()), new Point (@width() - @_headerW()), (@height() - gridTop - @_headerH())
     @_cells.forEach (cell) =>
       @_cellsPanel._addNoSettle cell unless cell.parent is @_cellsPanel
     # (kind, topLeftOffset, extent, viewportSlot): the four loose geometry numbers are the two Point
@@ -283,14 +369,18 @@ class SimpleSpreadsheetWdgt extends Widget
       return
     visibleCols = @_visibleCols()
     visibleRows = @_visibleRows()
-    buildHeader "corner", Point.ZERO, (new Point @headerColWidth, @headerRowHeight)
+    headerW = @_headerW()
+    headerH = @_headerH()
+    colW = @_colW()
+    rowH = @_rowH()
+    buildHeader "corner", (new Point 0, gridTop), (new Point headerW, headerH)
     col = 0
     while col < visibleCols
-      buildHeader "column", (new Point (@headerColWidth + col * @colWidth), 0), (new Point @colWidth, @headerRowHeight), col
+      buildHeader "column", (new Point (headerW + col * colW), gridTop), (new Point colW, headerH), col
       col += 1
     row = 0
     while row < visibleRows
-      buildHeader "row", (new Point 0, (@headerRowHeight + row * @rowHeight)), (new Point @headerColWidth, @rowHeight), row
+      buildHeader "row", (new Point 0, (gridTop + headerH + row * rowH)), (new Point headerW, rowH), row
       row += 1
     # TRIM (F6): headers beyond the current viewport (the window shrank, or the origin
     # reached the sheet edge and the ex-partial slot is backdrop now) are DERIVED chrome —
@@ -348,7 +438,9 @@ class SimpleSpreadsheetWdgt extends Widget
       if slotCol >= 0 and slotCol < visibleCols and slotRow >= 0 and slotRow < visibleRows
         cellWdgt.show() unless cellWdgt.isVisible
         rect = @_cellRectLocal slotCol, slotRow
-        cellWdgt._applyMoveTo @position().add new Point rect.x, rect.y
+        # bounds, not just a move: a zoom resizes every cell, and its children follow
+        cellWdgt._applyBounds (@position().add new Point rect.x, rect.y), new Point rect.w, rect.h
+        cellWdgt.placeChildrenNoSettle @textInsetPx()
       else
         record = @model.cellAt address
         # the exemption predicate: the hosted widget IS the record's value (branch 1). On the
@@ -371,9 +463,10 @@ class SimpleSpreadsheetWdgt extends Widget
         unless @_cells.has address
           @_materialiseCellNoSettle address, slotCol, slotRow
           record = @model.cellAt address
-          @_reconcileCellNoSettle record, record.value if record?
+          @_presentCellNoSettle record, record.value if record?
         slotCol += 1
       slotRow += 1
+    @_reflowSpillOfRowNoSettle slotRow for slotRow in [0...visibleRows]
     return
 
   # ── F6: the resize seam — the sheet's own children-arrange ───────────────────────────────
@@ -436,11 +529,10 @@ class SimpleSpreadsheetWdgt extends Widget
     @_scrollByNoSettle colDelta, rowDelta if colDelta isnt 0 or rowDelta isnt 0
     return
 
-  # ── painting: the sheet paints NOTHING (F5) — only the shared edge-stroke helper lives here ──
-  # The sheet has an undefined @appearance (the Widget default), so the base
-  # paintIntoAreaOrBlitFromBackBuffer paints nothing: the cells panel fills the data region,
-  # the header cells fill their strips, and every widget strokes its own top+left edges + its
-  # own text/value/ring. (The old one-pass _paintGrid died here — plan §3-F F5, byte-identical
+  # ── painting: the sheet paints only its PAGE EDGE (SheetAppearance, over its children) ──
+  # Everything else is a child's: the cells panel spans the data region, the header cells fill
+  # their strips, the formula bar draws its field, and every widget strokes its own top+left
+  # edges + its own text/value/ring. (The old one-pass _paintGrid died here — plan §3-F F5, byte-identical
   # by the segmentation receipt, EXCEPT the selection ring which deliberately moved inside the
   # cell, the budgeted F2 recapture.)
 
@@ -451,14 +543,16 @@ class SimpleSpreadsheetWdgt extends Widget
   #   "rule"     — the header rule (spreadsheetHeaderRule): an edge on the line under the letter
   #                row or on the line right of the number column;
   #   "gridline" — a gridline (spreadsheetGridline): any other edge between two cells or headers;
-  #   undefined  — no line: the edge lies on the sheet's OUTER top or left boundary, where the
-  #                window's strip rule and frame border are the line (a second one there would
+  #   undefined  — no line: the edge lies on the sheet's OUTER left boundary, where the sheet's
+  #                own page edge is the line (SheetAppearance paints it over every child), or
+  #                under the formula bar, whose bottom rule is the line (a second one there would
   #                double it), so that pixel row or column shows the widget's own fill.
   # THE CROSSING RULE (F5 receipt A): a gridline strokes BEFORE the rule, so the rule wins every
   # pixel where the two cross. Left edge = a vertical at x 0.5 (rasterises into the widget's
   # FIRST pixel column); top edge = a horizontal at y 0.5. Each runs the widget's whole side, so
   # an inner line meets the outer boundary flush. Nobody strokes right or bottom: a neighbour
-  # strokes that line as its own left or top, and the sheet's outer right and bottom carry none.
+  # strokes that line as its own left or top, and along the sheet's outer right and bottom the
+  # page edge is the line.
   paintGridEdges: (aContext, width, height, leftEdge, topEdge) ->
     theme = WorldWdgt.theme
     edgeColorString = (edge) ->
@@ -515,7 +609,7 @@ class SimpleSpreadsheetWdgt extends Widget
         @selectedCol = @viewOriginCol + cell.col
         @selectedRow = @viewOriginRow + cell.row
         @_takeKeyboardFocus()
-        @_changed()
+        @_noteSelectionMovedNoSettle()
     return
 
   # F1 scroll: the sheet is a wheel surface (ActivePointerWdgt.processWheel climbs from the
@@ -544,7 +638,7 @@ class SimpleSpreadsheetWdgt extends Widget
     rowDelta = 0
     escalate = false
     if y isnt 0
-      steps = Math.max 1, Math.round((Math.abs(y) * WorldWdgt.preferencesAndSettings.wheelScaleY) / @rowHeight)
+      steps = Math.max 1, Math.round((Math.abs(y) * WorldWdgt.preferencesAndSettings.wheelScaleY) / @_rowH())
       delta = if y > 0 then -steps else steps
       # already at the travel limit in the requested direction ⇒ this axis escalates
       # (FULL counts, F6 — the same expressions as _scrollByNoSettle's clamps)
@@ -553,7 +647,7 @@ class SimpleSpreadsheetWdgt extends Widget
       else
         rowDelta = delta
     if x isnt 0
-      steps = Math.max 1, Math.round((Math.abs(x) * WorldWdgt.preferencesAndSettings.wheelScaleX) / @colWidth)
+      steps = Math.max 1, Math.round((Math.abs(x) * WorldWdgt.preferencesAndSettings.wheelScaleX) / @_colW())
       delta = if x > 0 then -steps else steps
       if (delta < 0 and @viewOriginCol <= 0) or (delta > 0 and @viewOriginCol >= @sheetCols - @_viewportColsFull())
         escalate = true
@@ -570,10 +664,11 @@ class SimpleSpreadsheetWdgt extends Widget
   _cellAtLocal: (localPos) ->
     x = localPos.x
     y = localPos.y
-    return undefined if x < @headerColWidth or y < @headerRowHeight
+    gridY = y - @_gridTop()
+    return undefined if x < @_headerW() or gridY < @_headerH()
     return undefined if x >= @width() or y >= @height()
-    col = Math.floor (x - @headerColWidth) / @colWidth
-    row = Math.floor (y - @headerRowHeight) / @rowHeight
+    col = Math.floor (x - @_headerW()) / @_colW()
+    row = Math.floor (gridY - @_headerH()) / @_rowH()
     # backdrop past the last visible/logical column-row is NOT a cell (F6). A click on a
     # PARTIAL edge cell selects it — v1: NO auto-scroll on click (arrows/edit follow, clicks
     # don't; the plan's recorded deviation-point, no deviation taken).
@@ -597,10 +692,10 @@ class SimpleSpreadsheetWdgt extends Widget
   # viewport yields the notional off-screen rect (integer; used only for hidden rich cells,
   # never painted).
   _cellRectLocal: (col, row) ->
-    x: @headerColWidth + col * @colWidth
-    y: @headerRowHeight + row * @rowHeight
-    w: @colWidth
-    h: @rowHeight
+    x: @_headerW() + col * @_colW()
+    y: @_gridTop() + @_headerH() + row * @_rowH()
+    w: @_colW()
+    h: @_rowH()
 
   # a single character that should type INTO a cell (starts / extends an edit); Arrow/Enter/etc.
   # are multi-character key names, so length-1 excludes them. Ctrl/Cmd chords are not text.
@@ -608,12 +703,12 @@ class SimpleSpreadsheetWdgt extends Widget
     key? and key.length is 1 and not ctrlKey and not metaKey
 
   # standard keyboard path (§1.17): in SELECTION mode this widget drives the grid keys
-  # (arrows / Enter / F2 / type-to-edit); while a cell edit is LIVE the CARET owns every key
-  # (this sheet stays a registered receiver — dispatch visits it first — so it must NOT
-  # double-handle; Enter/Escape come back through the cell's accept/cancel handlers, and the
-  # editor swallows Tab via the cell). PUBLIC event entry: it opens the ONE settle; the mode
-  # handler + edit lifecycle below are NoSettle cores (mount/teardown of the overlay editor
-  # mutate the tree, so they run inside this settle — the layering discipline).
+  # (arrows / Tab / Enter / F2 / Delete / type-to-edit); while an edit is LIVE the CARET owns every
+  # key (this sheet stays a registered receiver — dispatch visits it first — so it must NOT
+  # double-handle; Enter / Escape / Tab come back through the accept / cancel / nextTab handlers of
+  # the cell or the formula bar holding the editor). PUBLIC event entry: it opens the ONE settle;
+  # the mode handler + edit lifecycle below are NoSettle cores (mount/teardown of the overlay
+  # editor mutate the tree, so they run inside this settle — the layering discipline).
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     @_settleLayoutsAfter =>
       if @_editing
@@ -625,38 +720,63 @@ class SimpleSpreadsheetWdgt extends Widget
       @_processKeyWhileSelectingNoSettle key, code, shiftKey, ctrlKey, altKey, metaKey
     return
 
-  # is the standard caret currently editing THIS sheet's mounted cell editor? (read-only
-  # predicate; the caret is world chrome, so this is a world read, not a layout mutation)
+  # the text widget the caret edits for this sheet: the formula bar's text when the edit is in the
+  # bar, else the editing cell's editor (read-only)
+  _liveEditorWdgt: ->
+    if @_editInBar then @_formulaBar?.textWdgt else @_editingCellWdgt()?._editorWdgt
+
+  # is the standard caret currently editing THIS sheet's edit, in the cell or in the bar?
+  # (read-only predicate; the caret is world chrome, so this is a world read, not a layout mutation)
   _isCaretEditLive: ->
-    world.caret? and world.caret.target? and world.caret.target is @_editingCellWdgt()?._editorWdgt
+    editor = @_liveEditorWdgt()
+    editor? and world.caret? and world.caret.target is editor
 
   # selection mode: arrows move the single-cell selection over the LOGICAL sheet (clamped to
   # sheetCols/sheetRows — F1) and scroll-follow (past a viewport edge the origin shifts
-  # minimally to keep the selection in view); Enter/F2 edit the existing source; a printable
-  # key begins an edit seeded with that character (Excel-style type-to-edit).
+  # minimally to keep the selection in view); Tab / Shift+Tab move right / left as they do out of
+  # an edit; Enter/F2 edit the existing source; Delete and Backspace CLEAR the cell (its content,
+  # never its format); a printable key begins an edit seeded with that character (Excel-style
+  # type-to-edit).
   _processKeyWhileSelectingNoSettle: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
-    moved = false
     switch key
-      when "ArrowRight"
-        @selectedCol = Math.min @sheetCols - 1, @selectedCol + 1
-        moved = true
-      when "ArrowLeft"
-        @selectedCol = Math.max 0, @selectedCol - 1
-        moved = true
-      when "ArrowDown"
-        @selectedRow = Math.min @sheetRows - 1, @selectedRow + 1
-        moved = true
-      when "ArrowUp"
-        @selectedRow = Math.max 0, @selectedRow - 1
-        moved = true
-      when "Enter", "F2"
-        @_startEditNoSettle @_currentCellSource()
-        return
-    if moved
-      @_scrollToShowSelectionNoSettle()
-      @_changed()
-      return
-    @_startEditNoSettle key if @_isPrintable key, ctrlKey, metaKey
+      when "ArrowRight" then @_moveSelectionNoSettle 1, 0
+      when "ArrowLeft" then @_moveSelectionNoSettle -1, 0
+      when "ArrowDown" then @_moveSelectionNoSettle 0, 1
+      when "ArrowUp" then @_moveSelectionNoSettle 0, -1
+      when "Tab" then @_moveSelectionNoSettle (if shiftKey then -1 else 1), 0
+      when "Enter", "F2" then @_startEditNoSettle @_currentCellSource()
+      when "Delete", "Backspace" then @_clearSelectedCellNoSettle()
+      else
+        @_startEditNoSettle key if @_isPrintable key, ctrlKey, metaKey
+    return
+
+  # THE one move of the selection: by (dCol, dRow), clamped to the logical sheet, the view
+  # following it, and the move told to whatever mirrors my selection — the editing tools (their
+  # active looks read my selected cell's style through the world's style announcement, which only
+  # reaches them while I am the editor focus) and my formula bar.
+  _moveSelectionNoSettle: (dCol, dRow) ->
+    @selectedCol = Math.max 0, Math.min @sheetCols - 1, @selectedCol + dCol
+    @selectedRow = Math.max 0, Math.min @sheetRows - 1, @selectedRow + dRow
+    @_scrollToShowSelectionNoSettle()
+    @_noteSelectionMovedNoSettle()
+    return
+
+  _noteSelectionMovedNoSettle: ->
+    @_formulaBar?.syncNoSettle()
+    world.noteStyleChanged @
+    @_changed()
+    return
+
+  # clear the selected cell: a blank commit through the ordinary path (which also drops a dropped
+  # widget entry), keeping the record and so its format
+  _clearSelectedCellNoSettle: ->
+    address = @model.addressFor @selectedCol, @selectedRow
+    cell = @model.cellAt address
+    return unless cell? and (cell.source isnt "" or cell.widgetEntry?)
+    cell.widgetEntry = undefined if cell.widgetEntry?
+    FormulaCompiler.commit cell, ""
+    world.dataflow.markStale cell
+    @_formulaBar?.syncNoSettle()
     return
 
   # ── editing: the edit lifecycle + its live overlay editor (the socket precursor) ──────────
@@ -665,7 +785,11 @@ class SimpleSpreadsheetWdgt extends Widget
   _currentCellSource: ->
     @model.cellAt(@model.addressFor @selectedCol, @selectedRow)?.source ? ""
 
-  _startEditNoSettle: (seedText) ->
+  # Start an edit of the selected cell, its text `seedText`, with the caret in the cell's editor —
+  # or, `inBar`, in the formula bar's text. Both show the text either way: the cell's editor is
+  # mounted in both cases and the bar takes the same text, and whichever does not hold the caret
+  # follows it as it is typed (reactToKeystroke).
+  _startEditNoSettle: (seedText, inBar = false) ->
     return if @_editing
     # F1: the selection can sit OFF-viewport (wheel-scrolled away); editing it needs its
     # CellWdgt on screen for the overlay editor — scroll-follow first (Excel: typing jumps
@@ -674,22 +798,17 @@ class SimpleSpreadsheetWdgt extends Widget
     @_editing = true
     @_editCol = @selectedCol
     @_editRow = @selectedRow
-    @_mountEditorNoSettle seedText ? ""
-    # enter the STANDARD caret edit on the just-mounted editor (the NoSettle twin — we are
-    # inside this event's settle): the caret mounts as a child of the editing CELL
-    # (world.edit parents it into the editor's parent) with its slot at the text end —
-    # right for both a type-to-edit seed char and an Enter/F2 edit-of-existing-source.
-    # The dispatch snapshot (KeydownInputEvent) guarantees this new caret does NOT also
-    # receive the very key that started the edit.
-    editor = @_editingCellWdgt()?._editorWdgt
+    @_editInBar = inBar
+    @_editingCellWdgt()?._mountEditorNoSettle (seedText ? ""), (@_editorLookFor())
+    @_reflowSpillOfAddressNoSettle @model.addressFor @_editCol, @_editRow
+    @_formulaBar?.beginEditNoSettle (seedText ? ""), inBar
+    # enter the STANDARD caret edit on the editor that takes the caret (the NoSettle twin — we
+    # are inside this event's settle): the caret mounts as a child of the editor's parent with
+    # its slot at the text end — right for both a type-to-edit seed char and an Enter/F2
+    # edit-of-existing-source. The dispatch snapshot (KeydownInputEvent) guarantees this new
+    # caret does NOT also receive the very key that started the edit.
+    editor = @_liveEditorWdgt()
     world._editNoSettle editor if editor?
-    return
-
-  # the editor WIDGET lives on the editing CELL (F2, executed with F5): this sheet keeps the
-  # edit STATE (which cell, commit/cancel) and delegates mount/teardown — the cell holds the
-  # StringWdgt the caret types into and suppresses its own scalar text while it does.
-  _mountEditorNoSettle: (seedText) ->
-    @_editingCellWdgt()?._mountEditorNoSettle seedText
     return
 
   # the CellWdgt of the cell being edited, or undefined when not editing
@@ -699,13 +818,15 @@ class SimpleSpreadsheetWdgt extends Widget
 
   # commit: compile the source ONCE (FormulaCompiler) and mark the cell stale; the once-per-cycle
   # dataflow drain (this same doOneCycle) recomputes the value and the grid repaints. The
-  # source is what the user typed = the editor widget's TEXT (the caret typed straight into
-  # it; there is no separate buffer). A blank text is a legitimate commit (it EMPTIES the
-  # cell); an UNREACHABLE editor (its cell vanished under the edit — not a known path, the
-  # edit commits before any scroll) must NOT masquerade as one: abandon instead of blanking.
+  # source is what the user typed = the TEXT of the editor holding the caret (there is no
+  # separate buffer). A blank text is a legitimate commit (it EMPTIES the cell); an UNREACHABLE
+  # editor (its cell vanished under the edit — not a known path, the edit commits before any
+  # scroll) must NOT masquerade as one: abandon instead of blanking. An error never blocks a
+  # commit: a #SYNTAX, #ERR or #LOOP is the cell's VALUE (spec §9.6), shown in the cell and
+  # explained in the formula bar.
   _commitEditNoSettle: ->
     return unless @_editing
-    source = @_editingCellWdgt()?._editorWdgt?.text
+    source = @_liveEditorWdgt()?.text
     unless source?
       @_teardownEditorNoSettle()
       return
@@ -744,23 +865,45 @@ class SimpleSpreadsheetWdgt extends Widget
       @selectedCol = colRow.col
       @selectedRow = colRow.row
       @_takeKeyboardFocus()
+      @_noteSelectionMovedNoSettle()
       @_startEditNoSettle @_currentCellSource()
-      @_changed()
-    editor = @_editingCellWdgt()?._editorWdgt
+    editor = @_liveEditorWdgt()
     world.caret.gotoSlot editor.slotAt pos if editor? and world.caret?
     return
 
-  # PUBLIC (standard-caret editing): the editing cell's accept/cancel handlers forward here
-  # — the caret's escalation fires at event time OUTSIDE any settle (world.stopEditing
-  # already self-settled the caret teardown inside CaretWdgt.accept/cancel), so these open
-  # the ONE settle for the commit/cancel work, exactly like processKeyDown / activated.
-  # Guarded: an accept escalated by an unrelated nested editable text is a no-op.
-  acceptCellEdit: ->
+  # PUBLIC event entry: a click on the formula bar's text edits the selected cell THERE, the caret
+  # at the clicked slot (the bar forwards its plane-mapped pos, as a cell does). An edit already
+  # live in the bar keeps going — the click just places the caret, which is the caret's own
+  # business; an edit live in the cell commits first (acting elsewhere commits).
+  editInFormulaBarAtPointer: (pos) ->
+    # early-return-sanctioned: a click in the bar's text while the bar already holds the caret is
+    # the caret's own placement, nothing for me to settle.
+    return if @_editing and @_editInBar and @_isCaretEditLive()
+    @_settleLayoutsAfter =>
+      @_commitEditNoSettle() if @_editing
+      @_takeKeyboardFocus()
+      @_startEditNoSettle @_currentCellSource(), true
+    editor = @_liveEditorWdgt()
+    world.caret.gotoSlot editor.slotAt pos if editor? and world.caret?
+    return
+
+  # PUBLIC (standard-caret editing): the accept/cancel handlers of the editing cell or of the
+  # formula bar forward here — the caret's escalation fires at event time OUTSIDE any settle
+  # (world.stopEditing already self-settled the caret teardown inside CaretWdgt.accept/cancel), so
+  # these open the ONE settle for the commit/cancel work, exactly like processKeyDown /
+  # activated. `how` is the key that ended the edit: Enter moves the selection down, Shift+Enter
+  # up, and an edit ended by acting elsewhere (no key) leaves the selection where it is. Guarded:
+  # an accept escalated by an unrelated nested editable text is a no-op.
+  acceptCellEdit: (how) ->
     # early-return-sanctioned: an ESCALATION handler — an accept raised by an unrelated nested
     # editable text reaches us too, and for that case this method is the documented no-op above.
     # A no-op must not open a settle.
     return unless @_editing
-    @_settleLayoutsAfter => @_commitEditNoSettle()
+    @_settleLayoutsAfter =>
+      @_commitEditNoSettle()
+      switch how
+        when "Enter" then @_moveSelectionNoSettle 0, 1
+        when "Shift+Enter" then @_moveSelectionNoSettle 0, -1
     return
 
   cancelCellEdit: ->
@@ -770,20 +913,159 @@ class SimpleSpreadsheetWdgt extends Widget
     @_settleLayoutsAfter => @_cancelEditNoSettle()
     return
 
+  # PUBLIC: Tab (direction 1) or Shift+Tab (-1) pressed in the editor of the cell or the bar —
+  # commit, then move the selection right or left: Enter's verb on the other axis.
+  tabFromEdit: (direction) ->
+    # early-return-sanctioned: the escalation twin of acceptCellEdit's guard.
+    return unless @_editing
+    @_settleLayoutsAfter =>
+      @_commitEditNoSettle()
+      @_moveSelectionNoSettle direction, 0
+    return
+
+  # PUBLIC: a keystroke the caret just handled in a text inside me (CaretWdgt escalates it from
+  # its target). While I am editing, the view that does not hold the caret takes the text the
+  # one that does now shows, so the cell and the formula bar always agree. A keystroke in any
+  # other text (a hosted widget's field) is none of my business.
+  reactToKeystroke: ->
+    # early-return-sanctioned: an escalation from an unrelated nested text reaches me too.
+    return unless @_editing and @_isCaretEditLive()
+    text = @_liveEditorWdgt().text
+    @_settleLayoutsAfter =>
+      if @_editInBar
+        @_editingCellWdgt()?.mirrorEditTextNoSettle text
+      else
+        @_formulaBar?.mirrorEditTextNoSettle text
+    return
+
   _teardownEditorNoSettle: ->
     editingCell = @_editingCellWdgt()
     # a caret still LIVE on the mounted editor (a commit reached from the wheel-scroll
     # commit-before-scroll or the dangling-edit self-heal — not from the caret's own
     # accept/cancel, which tear the caret down first) must die WITH the editor: the caret
-    # is the CELL's child, not the editor's, so destroying the editor alone would orphan
-    # the caret targeting a dead widget (its paint-time re-sync reads the target).
+    # is the editor's PARENT's child, not the editor's, so destroying the editor alone would
+    # orphan the caret targeting a dead widget (its paint-time re-sync reads the target).
     world._stopEditingNoSettle() if @_isCaretEditLive()
     @_editing = false
     @_editCol = undefined
     @_editRow = undefined
+    @_editInBar = false
     editingCell?._teardownEditorNoSettle()
+    @_reflowSpillOfAddressNoSettle editingCell.address if editingCell?
+    @_formulaBar?.endEditNoSettle()
+    @_formulaBar?.syncNoSettle()
     @_changed()
     return
+
+  # ── what a cell looks like: its text's font, alignment and inset at the current zoom ──────
+
+  # the look of a cell's resting text, from its format and its value (CellWdgt.showScalarNoSettle):
+  # numbers stand right and everything else left unless the format says otherwise
+  _textLookFor: (cell, value) ->
+    format = cell?.format
+    alignment = if format?.align?
+      AlignmentSpecHorizontal[format.align]
+    else if typeof value is "number"
+      AlignmentSpecHorizontal.RIGHT
+    else
+      AlignmentSpecHorizontal.LEFT
+    {fontRole: (@_cellFontRole format), alignment: alignment, inset: @textInsetPx(), isError: (@isErrorValue value)}
+
+  # the look of the editor an edit mounts on the editing cell (CellWdgt._mountEditorNoSettle)
+  _editorLookFor: ->
+    cell = @model.cellAt @model.addressFor @_editCol, @_editRow
+    {fontRole: (@_cellFontRole cell?.format), inset: @textInsetPx()}
+
+  # a value as its cell shows it: a number to the format's decimal places when the format sets
+  # them, anything else as its own text
+  _displayTextFor: (cell, value) ->
+    return undefined unless value?
+    decimals = cell?.format?.decimals
+    if typeof value is "number" and decimals?
+      value.toFixed decimals
+    else
+      value.toString()
+
+  # PUBLIC: is `value` an error (a SheetError: #SYNTAX, #ERR, #LOOP)? The ONE place that asks, for
+  # my cells' ink and my formula bar's message.
+  isErrorValue: (value) ->
+    value instanceof SheetError
+
+  # PUBLIC: the fill a cell's format sets, or undefined (CellAppearance paints it under its edges)
+  fillOfAddress: (address) ->
+    @model.cellAt(address)?.format?.fill
+
+  # ── the selected cell's STYLE, for the editing tools (R4/R5 of docs/archive/spreadsheet-ux-plan.md) ──
+
+  # PUBLIC: what the editing tools act on while I am the editor focus — my selected cell's style
+  # (EditorContentPropertyChangerButtonWdgt._styleSubject asks it). A fresh SheetCellStyle each time,
+  # its fields read from the cell's format as it stands.
+  textStyleSubject: ->
+    new SheetCellStyle @, @model.addressFor @selectedCol, @selectedRow
+
+  # PUBLIC (SheetCellStyle): change the format of the cell at `address` — `change` mutates a
+  # format object, a copy of the cell's (or a fresh one) — then show the cell in it and tell the
+  # tools. Formatting an empty cell gives it a record (blank source) to hold the format.
+  restyleCell: (address, change) ->
+    cell = @model.getOrCreateCellAt address
+    format = Object.assign {}, (cell.format ? {})
+    change format
+    cell.format = format
+    @_settleLayoutsAfter =>
+      @_reconcileCellNoSettle cell, cell.value
+      @_cells.get(address)?.noteFormatChanged()
+    world.noteStyleChanged @
+    return
+
+  # PUBLIC (SheetCellStyle): enter `source` in the cell at `address` through the ordinary commit
+  # path, as if typed (the slider-in-cell tool)
+  enterSource: (address, source) ->
+    @_settleLayoutsAfter =>
+      @_commitEditNoSettle() if @_editing
+      cell = @model.getOrCreateCellAt address
+      cell.widgetEntry = undefined if cell.widgetEntry?
+      FormulaCompiler.commit cell, source
+      world.dataflow.markStale cell
+      @_formulaBar?.syncNoSettle()
+    return
+
+  # PUBLIC (SheetCellStyle): the fill tool's colour prompt, for the cell at `address`; the
+  # prompt's choice comes back through setFillOfSelection
+  pickFillFor: (address) ->
+    @_fillPickAddress = address
+    @pickColor "fill:", "setFillOfSelection", (@fillOfAddress(address) ? WorldWdgt.theme.paper)
+
+  # the colour prompt's callback (Widget.pickColor)
+  setFillOfSelection: (aColor) ->
+    address = @_fillPickAddress ? @model.addressFor @selectedCol, @selectedRow
+    @restyleCell address, (format) -> format.fill = aColor
+    return
+
+  # ── zoom (R3) ───────────────────────────────────────────────────────────────────────────
+
+  # PUBLIC: lay me out again at `factor` times my sizes (one of ZOOM_LEVELS): chrome, viewport
+  # and every visible cell's look re-derive, and the selection stays in view
+  setZoomFactor: (factor) ->
+    @_settleLayoutsAfter => @_setZoomFactorNoSettle factor
+
+  _setZoomFactorNoSettle: (factor) ->
+    return if factor is @zoomFactor
+    @_commitEditNoSettle() if @_editing
+    @zoomFactor = factor
+    @minimumExtent = @_leastExtent()
+    @_buildChromeNoSettle()
+    @_reconcileViewportNoSettle()
+    @_cells.forEach (cellWdgt, address) =>
+      record = @model.cellAt address
+      @_reconcileCellNoSettle record, record.value if record? and cellWdgt.isVisible
+    @_scrollToShowSelectionNoSettle()
+    @_changed()
+    return
+
+  # the zoom menu's row action (SheetFormulaBarWdgt.openZoomMenu): slot 1 is the menu item,
+  # slot 2 the subject, slot 3 the level
+  setZoomFromMenu: (ignored1, ignored2, factor) ->
+    @setZoomFactor factor
 
   # ── cell reconcile: classify → present into the cell's CellWdgt (spec §9.3/§9.4) ─────────────
   # Called from SheetCellRecord._cacheValue right after a cell recomputes, so it runs INSIDE the
@@ -809,6 +1091,11 @@ class SimpleSpreadsheetWdgt extends Widget
   #     just calls cellPresenter() again). A presenter is "one-way glass": it is NOT wired.
   #   branch 3 — scalar / error / undefined → no hosted widget: the cell PAINTS toString() (or clears if undefined).
   _reconcileCellNoSettle: (cell, value) ->
+    presented = @_presentCellNoSettle cell, value
+    @_reflowSpillOfAddressNoSettle cell.address if cell?
+    presented
+
+  _presentCellNoSettle: (cell, value) ->
     return value unless cell?
     cellWdgt = @_cells.get cell.address
     unless cellWdgt?
@@ -856,9 +1143,66 @@ class SimpleSpreadsheetWdgt extends Widget
       # a value class may answer cellPresenter yet decline (undefined) → fall through to branch 3
     # branch 3 — scalar / error / undefined: the cell presents the text via its scalar StringWdgt
     # child (dropping any hosted widget)
-    text = if value? then value.toString() else undefined
-    cellWdgt.showScalarNoSettle text, (value instanceof SheetError)
+    cellWdgt.showScalarNoSettle (@_displayTextFor cell, value), (@_textLookFor cell, value)
+    @_formulaBar?.syncNoSettle() if @isSelectedAddress cell.address
     value
+
+  # ── TEXT SPILL (docs/archive/spreadsheet-ux-plan.md R12) ──────────────────────────────────────
+  # Left-aligned TEXT runs on into EMPTY cells to its right, stopping at the first cell with content
+  # (or the viewport's edge); a covered cell strokes no left edge, so no gridline cuts through the
+  # text. Numbers never spill (a number cut short would read as a different number), nor errors, nor
+  # right- or centre-aligned text. A row's spill depends on every cell in it, so it is reflowed WHOLE
+  # whenever one of its cells is presented, and every visible row after the viewport changes. The
+  # editing cell counts as having content: its neighbour's text stops at it.
+
+  _reflowSpillOfAddressNoSettle: (address) ->
+    colRow = @model.colRowFor address
+    return unless colRow?
+    slotRow = colRow.row - @viewOriginRow
+    @_reflowSpillOfRowNoSettle slotRow if slotRow >= 0 and slotRow < @_visibleRows()
+    return
+
+  _reflowSpillOfRowNoSettle: (slotRow) ->
+    row = @viewOriginRow + slotRow
+    cols = @_visibleCols()
+    inset = @textInsetPx()
+    colW = @_colW()
+    cellAtSlot = (slotCol) => @_cells.get @model.addressFor (@viewOriginCol + slotCol), row
+    spill = []
+    covered = []
+    slotCol = 0
+    while slotCol < cols
+      cellWdgt = cellAtSlot slotCol
+      need = if @_spillsItsText cellWdgt then cellWdgt.textNeedsWidth inset
+      if need? and need > colW
+        reach = colW
+        next = slotCol + 1
+        while reach < need and next < cols and @_isEmptyForSpill cellAtSlot next
+          covered[next] = true
+          reach += colW
+          next += 1
+        spill[slotCol] = reach if reach > colW
+        slotCol = next
+      else
+        slotCol += 1
+    for slotCol in [0...cols]
+      cellAtSlot(slotCol)?.setSpillNoSettle spill[slotCol], (covered[slotCol] is true), inset
+    return
+
+  # does this cell's resting text spill? Left-aligned text that is not a number nor an error, shown
+  # by a cell that is not being edited
+  _spillsItsText: (cellWdgt) ->
+    return false unless cellWdgt?._scalarTextWdgt? and cellWdgt.isVisible and not cellWdgt._editorWdgt?
+    record = @model.cellAt cellWdgt.address
+    value = record?.value
+    return false if typeof value is "number" or @isErrorValue value
+    (@_textLookFor record, value).alignment is AlignmentSpecHorizontal.LEFT
+
+  # can a neighbour's text run over this cell? Only when it shows nothing at all and is not being
+  # edited
+  _isEmptyForSpill: (cellWdgt) ->
+    return false unless cellWdgt?
+    not cellWdgt._scalarTextWdgt? and not cellWdgt.hostedWidget? and not cellWdgt._editorWdgt?
 
   # a.equals?(b) when the value defines it (Color does), else identity — mirrors the engine's cutoff.
   _presentedValuesEqual: (a, b) ->
@@ -920,21 +1264,26 @@ class SimpleSpreadsheetWdgt extends Widget
     @_cells = new Map
     @_cellsPanel = undefined
     @_headerCells = new Map
+    # the formula bar is ADOPTED, like the cells: a copy or a snapshot carries it as my child (and
+    # my handle to it), so it is re-attached and kept by the sweep below, and the chrome ensure
+    # re-syncs it
+    @_formulaBar?.attachSheet this
     # rescue the data cells out of any snapshot chrome, up to direct children
     for child in @children.slice()
       if child instanceof SheetCellsPanelWdgt
         for inner in child.children.slice()
           @_addNoSettle inner if inner instanceof CellWdgt
-    # destroy everything that isn't a data cell: old chrome (now empty of cells) + strays
+    # destroy everything that isn't a data cell or the adopted formula bar: old chrome (now empty
+    # of cells) + strays
     for child in @children.slice()
-      child._fullDestroyNoSettle() unless child instanceof CellWdgt
+      child._fullDestroyNoSettle() unless child instanceof CellWdgt or child is @_formulaBar
     # adopt + index the snapshot's cells; sweep their stray children (a mid-edit editor)
     for child in @children.slice()
       if child instanceof CellWdgt
         child.attachSheet this
         child._editorWdgt = undefined
         child._scalarTextWdgt = undefined
-        child._scalarShowsError = false
+        child._scalarLookKey = undefined
         for grand in child.children.slice()
           grand._fullDestroyNoSettle() unless grand is child.hostedWidget
         @_cells.set child.address, child

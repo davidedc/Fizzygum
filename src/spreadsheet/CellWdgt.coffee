@@ -31,7 +31,7 @@
 # @address (which cell — re-indexed on restore) and @hostedWidget (a ref to the child, so a
 # VALUE-widget's runtime state — a dragged slider's position — rides the tree and survives save/load)
 # serialize. Transient: @_sheetWidget (a back-ref cycle, re-set on re-index), @presentedValue (the
-# branch-2 churn-skip), and @_scalarTextWdgt / @_scalarShowsError (the derived scalar-text child,
+# branch-2 churn-skip), and @_scalarTextWdgt / @_scalarLookKey (the derived scalar-text child,
 # rebuilt by the next reconcile). On restore the sheet re-indexes cells by address, then recompute
 # RETAINS a widget-valued cell's restored widget (class match) rather than rebuilding it —
 # presenters (derived) are rebuilt, scalars repaint, value-widgets (state-bearing) are kept. This
@@ -43,7 +43,7 @@ class CellWdgt extends Widget
   # @address + @hostedWidget serialize; the back-ref, churn-skip value, derived scalar-text
   # child and the overlay editor (a mid-edit snapshot restores to a settled, not-editing
   # sheet — the re-index destroys any stray non-hosted child) are rebuilt on restore.
-  @serializationTransients: ["_sheetWidget", "presentedValue", "_scalarTextWdgt", "_scalarShowsError", "_editorWdgt"]
+  @serializationTransients: ["_sheetWidget", "presentedValue", "_scalarTextWdgt", "_scalarLookKey", "_editorWdgt", "spillWidth", "spillCovered"]
 
   # a cell is GRID CHROME, solid with its panel — never rippable out by a drag (F4 close of a
   # latent F5 hole: when the cells moved into the SheetCellsPanelWdgt, the default
@@ -62,10 +62,16 @@ class CellWdgt extends Widget
   _sheetWidget: undefined
   # branch-3 text child (a passive StringWdgt), or undefined when empty/hosting
   _scalarTextWdgt: undefined
-  # true when the text child wears the error colour (SheetError badge)
-  _scalarShowsError: undefined
+  # the look the text child was built in (its font, alignment, inset and ink, as one key): a
+  # different look rebuilds the child, the same one only re-texts it
+  _scalarLookKey: undefined
   # the mounted overlay editor while THIS cell is being edited (F2/F5), or undefined
   _editorWdgt: undefined
+  # TEXT SPILL (docs/archive/spreadsheet-ux-plan.md R12), set by the sheet's row reflow: the width my
+  # text may run to, past my right edge over empty neighbours (undefined: my own width), and whether
+  # a neighbour's text runs over ME (then I stroke no left edge, so no gridline cuts through it)
+  spillWidth: undefined
+  spillCovered: false
 
   constructor: (address) ->
     super()
@@ -75,7 +81,7 @@ class CellWdgt extends Widget
     @presentedValue = undefined
     @_sheetWidget = undefined
     @_scalarTextWdgt = undefined
-    @_scalarShowsError = false
+    @_scalarLookKey = undefined
     @_editorWdgt = undefined
     # transparent: the cells panel under me fills the data background; I paint my own grid
     # edges + selection ring (F5 — "the sheet paints nothing") — my scalar text is a passive
@@ -92,28 +98,31 @@ class CellWdgt extends Widget
     return
 
   # ── branch 3: present the scalar value's text as my passive StringWdgt child ──────────────
-  # Same (4,2) box inset + font role (fonts.spreadsheetCell) the overlay editor uses (isEditable
-  # false here, true there) so resting and editing text align. Its ink is the theme's
-  # spreadsheetValueText, or spreadsheetErrorText for an error, read as the child is built: the
-  # child is derived and rebuilt on restore and duplicate, so it wears the current look. The
-  # pixels come from StringWdgt's standard immutable back buffers, so repeated labels share cached
-  # rasters world-wide. NoSettle:
-  # called from the sheet's reconcile, which runs inside the dataflow drain's layout settle
-  # (DataflowEngine._drainOnePass). Drops any hosted widget first (a cell that was rich and
-  # became a scalar). `text` undefined / "" clears the cell (an emptied cell shows nothing).
-  # Churn-tolerant: a per-cycle recompute (a `frame` cell) funnels into _setTextNoSettle's own
-  # no-change guard; an error↔value colour flip (rare) rebuilds the child.
-  showScalarNoSettle: (text, isError) ->
+  # `look` is what the sheet derives from my cell's format and value and from its zoom
+  # (SimpleSpreadsheetWdgt._textLookFor): {fontRole, alignment, inset, isError}. The text stands
+  # `inset` in from my left and right edges and is centred on my height (vertical MIDDLE), aligned
+  # left, centre or right in that span; its ink is the theme's spreadsheetValueText, or
+  # spreadsheetErrorText for an error, read as the child is built: the child is derived and
+  # rebuilt on restore and duplicate, so it wears the current look. The pixels come from
+  # StringWdgt's standard immutable back buffers, so repeated labels share cached rasters
+  # world-wide. NoSettle: called from the sheet's reconcile, which runs inside the dataflow
+  # drain's layout settle (DataflowEngine._drainOnePass), and from its restyle and zoom, inside
+  # theirs. Drops any hosted widget first (a cell that was rich and became a scalar). `text`
+  # undefined / "" clears the cell (an emptied cell shows nothing). Churn-tolerant: a per-cycle
+  # recompute (a `frame` cell) funnels into _setTextNoSettle's own no-change guard; a change of
+  # look (an error colour, a format, a zoom) rebuilds the child.
+  showScalarNoSettle: (text, look) ->
     @_unhostNoSettle() if @hostedWidget?
     scalarText = if text? and text != "" then text else undefined
-    showsError = isError is true
     if not scalarText?
       if @_scalarTextWdgt?
         @_scalarTextWdgt._fullDestroyNoSettle()
         @_scalarTextWdgt = undefined
+        @_scalarLookKey = undefined
         @_changed()
       return
-    if @_scalarTextWdgt? and @_scalarShowsError != showsError
+    key = @_lookKey look
+    if @_scalarTextWdgt? and @_scalarLookKey isnt key
       @_scalarTextWdgt._fullDestroyNoSettle()
       @_scalarTextWdgt = undefined
     if @_scalarTextWdgt?
@@ -121,19 +130,61 @@ class CellWdgt extends Widget
     else
       theme = WorldWdgt.theme
       textWdgt = new StringWdgt scalarText,
-        fontRole: theme.fonts.spreadsheetCell
-        color: (if showsError then theme.spreadsheetErrorText else theme.spreadsheetValueText)
+        fontRole: look.fontRole
+        color: (if look.isError then theme.spreadsheetErrorText else theme.spreadsheetValueText)
       textWdgt.isEditable = false
+      textWdgt.horizontalAlignment = look.alignment
+      textWdgt.verticalAlignment = AlignmentSpecVertical.MIDDLE
       @_addNoSettle textWdgt
-      # the (4,2) box inset places the child's TOP/LEFT-aligned glyphs at the exact position
-      # the pre-conversion painted text had (x 4, baseline height−6) — measured, a pure
-      # translation of identical glyph rasters, so the conversion changes no resting pixel
-      textWdgt._applyBounds (@position().add new Point 4, 2), @extent().subtract new Point 4, 2
       @_scalarTextWdgt = textWdgt
-      @_scalarShowsError = showsError
+      @_scalarLookKey = key
+      @_placeTextNoSettle textWdgt, look.inset
       # a commit's reconcile can land while my overlay editor is still mounted — the editor
       # shows the buffer, so the fresh child starts hidden and teardown reveals it
       textWdgt.__hide() if @_editorWdgt?
+    return
+
+  _lookKey: (look) ->
+    r = look.fontRole
+    [r.family, r.size, !!r.bold, !!r.italic, look.alignment, look.inset, !!look.isError].join "|"
+
+  # a text child's box: `inset` in from my left edge and from the right end of my spill (my own
+  # right edge when nothing spills), my whole height. The editor never spills: it stays in me.
+  _placeTextNoSettle: (textWdgt, inset) ->
+    span = if textWdgt is @_scalarTextWdgt and @spillWidth? then @spillWidth else @width()
+    textWdgt._applyBounds (@position().add new Point inset, 0), new Point (Math.max 1, span - 2 * inset), @height()
+    return
+
+  # the sheet's row reflow sets my spill: the width my text runs to (undefined: none) and whether
+  # a neighbour's text covers me. NoSettle: inside the reflow's settle.
+  setSpillNoSettle: (width, covered, inset) ->
+    return if width is @spillWidth and covered is @spillCovered
+    @spillWidth = width
+    @spillCovered = covered
+    @_placeTextNoSettle @_scalarTextWdgt, inset if @_scalarTextWdgt?
+    @_changed()
+    return
+
+  # the width my resting text needs (its text measured in its font at the size it was built in —
+  # a fresh text has not yet fitted, so its fitting size is not yet the one to read — plus its
+  # inset each side), or undefined when I show no text
+  textNeedsWidth: (inset) ->
+    text = @_scalarTextWdgt
+    return undefined unless text?
+    (Math.ceil text.calculateTextWidth text.text, text.originallySetFontSize) + 2 * inset
+
+  # my cell's FORMAT moved (SimpleSpreadsheetWdgt.restyleCell): my own pixels read it — the fill
+  # my appearance paints under my edges — so I repaint
+  noteFormatChanged: ->
+    @_changed()
+    return
+
+  # my children follow my box: the sheet calls this after it resizes me (a zoom) — a hosted
+  # widget fills me at the gridline inset, and my text and my editor keep their inset
+  placeChildrenNoSettle: (inset) ->
+    @_placeHostedNoSettle @hostedWidget if @hostedWidget?
+    @_placeTextNoSettle @_scalarTextWdgt, inset if @_scalarTextWdgt?
+    @_placeTextNoSettle @_editorWdgt, inset if @_editorWdgt?
     return
 
   # ── presentation: host a widget filling this cell (the sheet's _addNoSettle + _apply* idiom) ──
@@ -147,8 +198,14 @@ class CellWdgt extends Widget
     @_unhostNoSettle()
     @_scalarTextWdgt?._fullDestroyNoSettle()
     @_scalarTextWdgt = undefined
+    @_scalarLookKey = undefined
     @hostedWidget = widget
     @_addNoSettle widget
+    @_placeHostedNoSettle widget
+    return
+
+  # a hosted widget fills me, inset by the gridline so my borders and selection stay visible
+  _placeHostedNoSettle: (widget) ->
     inset = 2
     widget._applyBounds (@position().add new Point inset, inset), @extent().subtract new Point 2 * inset, 2 * inset
     return
@@ -247,24 +304,31 @@ class CellWdgt extends Widget
   # accept/cancel handlers below. All NoSettle cores: called from the sheet's edit
   # lifecycle, inside the ONE settle its public event entries (processKeyDown /
   # activated) open. A child of THIS cell at exactly the cell's rect.
-  _mountEditorNoSettle: (seedText) ->
+  # `look` is the sheet's editing look for my cell (SimpleSpreadsheetWdgt._editorLookFor): my
+  # format's font at the zoom, left-aligned, centred on my height, at the resting text's inset.
+  _mountEditorNoSettle: (seedText, look) ->
     # the editor replaces the resting scalar-text child visually for the edit's duration
     # (damage-free __hide — adding the editor repaints the same rect); teardown reveals it
     # again, which also serves the Escape-cancel path (no reconcile runs there)
     @_scalarTextWdgt?.__hide()
     editor = new StringWdgt seedText,
-      fontRole: WorldWdgt.theme.fonts.spreadsheetCell
+      fontRole: look.fontRole
       color: WorldWdgt.theme.spreadsheetValueText
     editor.isEditable = true
+    editor.verticalAlignment = AlignmentSpecVertical.MIDDLE
     # an edit never leaves the cell for the pop-out "edit:" prompt — a pop-out would bypass
     # the cell's commit semantics; an over-long text stays inline-ellipsised with the caret
     # clamping at the cell edge (see the StringWdgt field comment)
     editor.alwaysEditsInline = true
     @_addNoSettle editor
-    # the SAME (4,2) box inset as the resting scalar-text child, so the text does not
-    # shift when editing starts/ends — resting and editing glyphs sit at identical positions
-    editor._applyBounds (@position().add new Point 4, 2), @extent().subtract new Point 4, 2
+    @_placeTextNoSettle editor, look.inset
     @_editorWdgt = editor
+    return
+
+  # the text the editor shows, replaced as the formula bar's text is typed into (the sheet keeps
+  # the two in step, whichever holds the caret)
+  mirrorEditTextNoSettle: (text) ->
+    @_editorWdgt?._setTextNoSettle text
     return
 
   # ── standard-caret editing: the caret targets my editor child, and its accept (Enter /
@@ -274,8 +338,10 @@ class CellWdgt extends Widget
   # state; the sheet guards with `return unless @_editing`, so an accept escalated by an
   # UNRELATED editable text nested in my hosted widget (a dropped widget carrying entry
   # fields) is a harmless no-op.
-  accept: ->
-    @_sheetWidget?.acceptCellEdit()
+  # `how` names the key that ended the edit ("Enter" / "Shift+Enter", CaretWdgt.accept), or is
+  # undefined for an edit ended by acting elsewhere: the sheet moves the selection for a key only.
+  accept: (how) ->
+    @_sheetWidget?.acceptCellEdit how
     return
 
   cancel: ->
@@ -291,15 +357,16 @@ class CellWdgt extends Widget
     @_sheetWidget?.startEditAtPointer @address, pos
     return
 
-  # Tab must not LEAVE a cell edit: Widget.tab's climb would otherwise reach
-  # WorldWdgt.nextTab and hop the caret to an arbitrary entry field elsewhere in the world
-  # WITHOUT committing. Swallowed at the cell; Excel-style commit-and-advance-the-selection
-  # is a deliberate later variant.
+  # Tab commits the edit and moves the selection right (Shift+Tab: left), the one "commit and
+  # move" verb Enter shares (SimpleSpreadsheetWdgt.tabFromEdit). Handled here, so Widget.tab's
+  # climb never reaches WorldWdgt.nextTab and hops the caret to another entry field elsewhere.
   nextTab: (editField) ->
-    undefined
+    @_sheetWidget?.tabFromEdit 1
+    return
 
   previousTab: (editField) ->
-    undefined
+    @_sheetWidget?.tabFromEdit -1
+    return
 
   _teardownEditorNoSettle: ->
     editor = @_editorWdgt

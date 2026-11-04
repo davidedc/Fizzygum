@@ -8,10 +8,10 @@ class ItalicButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   createAppearance: -> new ItalicIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   activated: ->
-    if world.editorFocusWdgt?.toggleItalic?
-      world.editorFocusWdgt.toggleItalic()
+    @_styleSubject()?.toggleItalic?()
+    return
 
   # ACTIVE while the text I act on is italic: what I would undo if pressed (the family's mirror)
   isActiveTool: ->
-    focus = world.editorFocusWdgt
+    focus = @_styleSubject()
     focus?.toggleItalic? and focus.isItalic is true

@@ -346,8 +346,8 @@ client's:
   cells, hiding-not-destroying the widget-VALUED ones) — so this is NOT
   open-ended widget virtualization, just the standard bounded-viewport trick. The `CellWdgt` is the
   Phase-4 socket generalised to every cell.
-- **Everything a widget; the sheet paints NOTHING** *(F5, landed 2026-07-17 — the shipped form; plan
-  §3-F receipts)*: the headers become `SheetHeaderCellWdgt`s (toward future column/row selection), the
+- **Everything a widget; the sheet paints NOTHING** *(F5, landed 2026-07-17; the page edge below is the one
+  exception since the UX arc; plan §3-F receipts)*: the headers become `SheetHeaderCellWdgt`s (toward future column/row selection), the
   data cells live in a transparent `SheetCellsPanelWdgt` (a `PanelWdgt` subclass; its bounds-clipping
   crops F6's partial edge cells — pre-F6 it was only the F1 viewport's standing guard), and every widget
   paints its own fill/edges/label/value — the selection
@@ -356,6 +356,14 @@ client's:
   state/keyboard + the shared edge-stroke helper. Pixel law: per-widget TOP+LEFT edge ownership; the
   grid-coloured edge strokes before the dark edge (dark wins crossings); nobody strokes right/bottom;
   no data-background fill (the backdrop shows through, as always).
+- **The sheet as a page, with a formula bar and a zoom** *(the UX arc, 2026-11-04 — `docs/archive/spreadsheet-ux-plan.md`,
+  owner rulings R1–R13)*: the sheet is a PAGE in its window (the page gutter; its own 1 px edge, the one thing it
+  paints, over its children); a FORMULA BAR across its top (the selected cell's address, its source, an error's
+  message, the zoom control; chrome, never zoomed) where a cell can also be edited; its sizes (rows 36, columns 104,
+  text 16 at 100%) times a ZOOM factor, a re-layout and never a picture scale; a click anywhere in it focuses the
+  SHEET, and the editing tools act on its selected cell's style, held as the cell record's document-state
+  `format`; Enter/Shift+Enter/Tab/Shift+Tab commit and move, Delete clears and keeps the format; left-aligned text
+  spills into empty neighbours; its own toolbar (`SheetToolbarWdgt`); "Sheets Maker" on the desktop.
 - Layout discipline: the `StretchablePanelWdgt` pattern — immediate `_apply*` mutators
   inside `_reLayout`, bulk child moves inside one `@_repaintAsOneUnit =>` block (the
   self-covering damage-coalescing unit).

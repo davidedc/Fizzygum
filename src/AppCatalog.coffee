@@ -24,7 +24,7 @@
 
 class AppCatalog
 
-  # The desktop's nine, in createDesktop's order, then the Examples folder's five.
+  # The desktop's ten, in createDesktop's order, then the Examples folder's five.
   # ⚠ `icon` is a THUNK: it must not run until a launcher is actually being built, because on a
   # profile that cannot produce the app no widget should be constructed at all.
   #
@@ -57,6 +57,7 @@ class AppCatalog
   @entries: ->
     "HowToSaveMessageApp": {title: "How to save?",      icon: (-> new FloppyDiskIconWdgt)}
     "SimpleDocumentApp":   {title: "Docs Maker",        icon: (-> new TypewriterIconWdgt)}
+    "SpreadsheetApp":      {title: "Sheets Maker",      icon: (-> new SpreadsheetIconWdgt)}
     "FizzyPaintApp":       {title: "Draw",              icon: (-> new SprayCanIconWdgt)}
     "SimpleSlideApp":      {title: "Slides Maker",      icon: (-> new SimpleSlideIconWdgt)}
     "DashboardsApp":       {title: "Dashboards",        icon: (-> new DashboardsIconWdgt)}
@@ -68,7 +69,7 @@ class AppCatalog
     "SampleSlideApp":      {title: "Slide",             icon: (-> new SimpleSlideIconWdgt)}
     "SampleDashboardApp":  {title: "Dashboard",         icon: (-> new DashboardsIconWdgt)}
     "SampleDocApp":        {title: "Document",          icon: (-> new TypewriterIconWdgt)}
-    "SpreadsheetApp":      {title: "Spreadsheet",       icon: (-> new SpreadsheetIconWdgt)}
+    "SampleSheetApp":      {title: "Spreadsheet",       icon: (-> new SpreadsheetIconWdgt)}
 
   @get: (appClassName) ->
     @entries()[appClassName]

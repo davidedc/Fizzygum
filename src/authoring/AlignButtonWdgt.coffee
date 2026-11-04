@@ -14,13 +14,14 @@ class AlignButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   # ACTIVE while the text I would align directly already has my alignment
   isActiveTool: ->
-    focus = world.editorFocusWdgt
-    focus?[@alignDirectMethod]? and focus.horizontalAlignment is AlignmentSpecHorizontal[@horizontalAlignmentName]
+    subject = @_styleSubject()
+    subject?[@alignDirectMethod]? and subject.horizontalAlignment is AlignmentSpecHorizontal[@horizontalAlignmentName]
 
   activated: ->
+    subject = @_styleSubject()
     lastClicked = world.editorFocusWdgt
-    if lastClicked?[@alignDirectMethod]?
-      lastClicked[@alignDirectMethod]()
+    if subject?[@alignDirectMethod]?
+      subject[@alignDirectMethod]()
     else if lastClicked?
       root = lastClicked.findRootForGrab()
       if root?.layoutSpec?.isStackElementActive?()

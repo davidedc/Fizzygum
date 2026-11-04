@@ -2011,6 +2011,31 @@ assertion a recapture after a regression silently stores two different hashes an
   BORN correct, so the first screenshot proves the build path with no fix-up pass. No new verb beyond the
   reader.
 
+## Spreadsheets
+
+- **Aim at a cell through its widget, never through the sheet's sizes** (every `macroSpreadsheet*`): a cell's
+  place is `(@spreadsheetCellAt sheet, "C3").center()` — the built `CellWdgt` for that address, which the sheet
+  placed. The sheet's size fields (`colWidth`, `rowHeight`, `headerColWidth`, `headerRowHeight`) are its sizes at
+  100%: its ZOOM multiplies them and its formula bar sits above the column headers, so arithmetic on them aims
+  at the wrong pixel. A helper taking viewport slots maps them through the view origin
+  (`sheet.model.addressFor (sheet.viewOriginCol + col), (sheet.viewOriginRow + row)`), and is a `=>` so that
+  `@spreadsheetCellAt` is the toolkit's. A tilted sheet: `cell.localPointToScreen cell.center()`.
+- **Commit-and-move keys** (`macroSpreadsheetEnterTabDeleteMoves`): type with
+  `@syntheticEventsStringKeys_InputEvents`, then `@syntheticEventsShortcutsAndSpecialKeys_InputEvents` "Enter" /
+  "Shift+Enter" / "Tab" / "Shift+Tab" (commit, move down / up / right / left), "Delete" (clear, format kept); read
+  the selection as `sheet.model.addressFor sheet.selectedCol, sheet.selectedRow` and a value as
+  `sheet.model.cellAt(address)?.value`. A click elsewhere commits without moving.
+- **The toolbar on the selection** (`macroSpreadsheetToolbarActsOnSelection`): a click in a sheet makes the SHEET
+  `world.editorFocusWdgt`, so a tool found by class (`@findTopWidgetByClassNameOrClass BoldButtonWdgt`) acts on the
+  selected cell however the selection moved; assert the cell's `format` (document state) and the tool's
+  `isActiveTool()`. The fill tool opens the colour prompt: `picker = @getMostRecentlyOpenedMenu()`, its
+  `ColorPickerWdgt`'s palette at a fraction, then `@clickPromptButton_InputEvents picker, "OK"`.
+- **The formula bar** (`macroSpreadsheetFormulaBarEditsAndErrors`, `macroSpreadsheetPageAndZoom`):
+  `bar = @findTopWidgetByClassNameOrClass SheetFormulaBarWdgt`; read `bar.addressWdgt.text`, `bar.textWdgt.text`,
+  `bar.errorWdgt?.text`; click `bar.textWdgt` to edit in the bar ("End" to reach the text's end); zoom by clicking
+  `bar.zoomButton` and then `@moveToItemOfTopMenuAndClick_InputEvents "150%"` (the button is rebuilt with its new
+  label, so look the bar's button up again before the next press).
+
 ## Rendering & hit-testing
 
 - **Order-dependent transparency compositing** (`macroBoxTransparencyAndColorChanging`): two TRANSLUCENT, differently-coloured

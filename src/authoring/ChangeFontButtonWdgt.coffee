@@ -54,6 +54,6 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu): my items carry the NAME of a
   # font-stack field in arg1, which slot 3 of the dispatcher's fixed convention delivers here.
   setFontNameFromMenu: (ignored1, ignored2, theNewFontName) ->
-    if world.editorFocusWdgt?.setFontName?
-      widgetClickedLast = world.editorFocusWdgt
+    if @_styleSubject()?.setFontName?
+      widgetClickedLast = @_styleSubject()
       widgetClickedLast.setFontName widgetClickedLast[theNewFontName]
