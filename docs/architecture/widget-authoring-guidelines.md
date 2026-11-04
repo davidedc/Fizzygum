@@ -570,6 +570,12 @@ mark after `add` + `setExtent` adds nothing.
 
 - **Add your entries in `addWidgetSpecificMenuEntries`, and call `super` first.** [convention]
   Dropping `super` silently removes the base's layout-editing entries from your widget.
+- **One menu on every page — never fork a menu on `world.isIndexPage`.** [convention] What a menu
+  offers depends on which parts shipped and whether dev mode is on, and those are asked per item.
+  `isIndexPage` is false only on the test harness, so a fork on it splits "the product" from "the
+  tests", and the suite stops seeing what the product shows. Case law: a desktop row that threw,
+  unseen for nine years (connector plan, the menu-sweep entry), and a text's doubled connection block
+  (`docs/archive/spreadsheet-ux-plan.md` §6d).
 - **`addMenuItem label, target, action, opts`** — `action` is a **string method name on `target`**.
   A function closure fails obscurely (`@target[<function>]` coerces to an undefined key) and
   `ButtonWdgt.trigger` throws on it in any build carrying the harness. The fourth slot is the options
@@ -713,7 +719,10 @@ than a text scan because `pins()` is composed and a subclass may narrow it
 **To drive others**, `@augmentWith ControllerMixin`, declare `producesPinKind: "numerical"` (the kind
 of value you *produce* — one field read by both halves of the set-target UI, so its property-menu
 filter and its tooltip cannot describe different things), fire through `@_fireConnection value`, and
-append the shared connect block with `@_addTargetConnectionMenuEntries menu`. Your wires are a LIST
+append the shared connect block with `@_addTargetConnectionMenuEntries menu` after your own rows: it
+closes the menu, once. A subclass that adds rows puts them before the block, through a rows method its
+parent calls ahead of it (`StringWdgt._addTextMenuEntries`, which `TextWdgt` extends), and never calls
+the block again — a second call shows every wire twice. Your wires are a LIST
 (`@wires`, one `WireSpec` each), so you drive as many things as you are connected to. Pick the
 binding verb by **which way the value moves when the wire is made**:
 

@@ -1602,6 +1602,13 @@ assertion a recapture after a regression silently stores two different hashes an
   SLIDER (its button covers the centre at value 50, so target the LOWER TRACK). A controller INSIDE a container needs no extra
   argument: the right-click then opens the ancestor hierarchy menu, and the verb steps into the controller's own row by the
   widget (`openOwnMenuAtFractionOf_InputEvents_Macro`).
+- **Assert a controller's connection block by MEANING** (`macroTextMenuOffersOneConnectionBlock`): every controller's menu
+  ends with ONE block — "Connect", then one row per live wire (`ControllerMixin._addTargetConnectionMenuEntries`) — on
+  every page, texts included (a plain `StringWdgt` is a controller too). Read it off the open menu: the rows
+  (`menu.testItems().filter (item) -> item instanceof MenuItemWdgt`) hold exactly one labelled "Connect" and exactly one
+  standing for each wired target (`(@rowsOfMenuStandingFor menu, target).length`), and the LAST two rows are "Connect"
+  and the wire row. A text's menu is taller than the 880 world, so wheel it to its end (`@wheelOn_InputEvents menu, 3000`)
+  before a screenshot that should show the block, then rest the pointer on bare desktop so no row is hovered.
 - **Fan-OUT: one controller, many targets** (`macroPaletteFansOutAndDisconnects`): run connect AGAIN on a DIFFERENT target —
   since connector §P4 `wireTo` ADDS a `WireSpec` to the controller's `@wires` list instead of overwriting, so BOTH follow it and
   one click repaints both. ⚠ This is the OPPOSITE of the pre-§P4 behaviour, where a second connect silently dropped the first.

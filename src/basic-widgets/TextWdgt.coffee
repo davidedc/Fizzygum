@@ -622,7 +622,9 @@ class TextWdgt extends StringWdgt
   # what a reflecting menu row reads to decide whether it is ticked (MenuRowReflectionSpec.readerName)
   isSoftWrapping: -> @softWrap
 
-  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
+  # my rows after my chain's text rows, and so before the connection block that closes the menu
+  # (StringWdgt.addWidgetSpecificMenuEntries)
+  _addTextMenuEntries: (menu) ->
     super
     menu.addLine()
     # the row SHOWS my soft-wrap state rather than being built from a snapshot of it, so a menu left

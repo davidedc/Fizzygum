@@ -1388,8 +1388,18 @@ class StringWdgt extends Widget
     menu.popUpAtHand()
 
 
+  # My menu: the base's entries, my text rows, then the ONE connection block every controller ends
+  # its menu with (ControllerMixin._addTargetConnectionMenuEntries) — on every page, since what a
+  # text can connect to does not depend on which HTML file booted the world.
+  #   ⚠ The block closes the menu, so a subclass adds its rows by extending _addTextMenuEntries;
+  # rows appended after this method's super would land below it.
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
+    @_addTextMenuEntries menu
+    @_addTargetConnectionMenuEntries menu
+
+  # My text rows: content, font, style, alignment, fitting. TextWdgt extends them with its own.
+  _addTextMenuEntries: (menu) ->
     menu.addLine()
     menu.addMenuItem "Edit…", @, "editPopout", toolTip: "set this String's\ncontent"
     menu.addMenuItem "Font size…", @, "fontSizePopout", toolTip: "set this String's\nfont point size"
@@ -1444,18 +1454,6 @@ class StringWdgt extends Widget
       menu.addMenuItem "→← Shrink to fit", @, "togglefittingSpecWhenBoundsTooSmall"
     else
       menu.addMenuItem "→⋯← Crop to fit", @, "togglefittingSpecWhenBoundsTooSmall"
-
-    # Deliberately NOT routed through ControllerMixin._addTargetConnectionMenuEntries: I offer the
-    # connect item on the index page ONLY, which is the whole reason I build this block by hand.
-    # The wire rows below are unguarded on purpose — a connection I hold is worth showing and cutting
-    # wherever I am, even where I offer no way to make a new one.
-    if world.isIndexPage
-      menu.addLine()
-      # ONE row for the gestures, as the shared block does it: the submenu behind it offers "Connect
-      # to" and — when something can actually be bound to — "Bind ⇄". Grouping is what keeps a
-      # second gesture from costing every controller's menu a second row.
-      menu.addMenuItem "Connect", @, "openConnectionGestureMenu", opensSubmenu: true, toolTip: "connect to\nanother widget"
-    @_addWireMenuEntries menu
 
 
   togglefittingSpecWhenBoundsTooSmall: ->

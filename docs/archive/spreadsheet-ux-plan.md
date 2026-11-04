@@ -1,6 +1,6 @@
 > **ARCHIVED — COMPLETE (2026-11-04).** Plan and decision record of the spreadsheet UX arc (owner rulings
 > R1–R13, §1); verification in §6a; the follow-ups after the close in §6b (the owner's nitpicks, live
-> menu ticks) and §6c (the last build-time ticks). The present-tense description lives in `src/spreadsheet/CLAUDE.md`
+> menu ticks), §6c (the last build-time ticks) and §6d (one connection block per text). The present-tense description lives in `src/spreadsheet/CLAUDE.md`
 > ("The UX arc"), `docs/specs/dataflow-engine-spec.md` §9.1, `docs/architecture/visual-design-system.md`
 > (§4.2, §4.10, the font roles and the toolbar glyphs) and `src/macros/MACRO-PATTERNS.md` ("Spreadsheets");
 > what the arc left out on purpose is in `docs/BACKLOG.md` under this file's name. Index: `docs/archive/INDEX.md`.
@@ -552,6 +552,48 @@ TextWdgt's own row, which already reflected `isSoftWrapping`.
   `macroTemplateDraggedOutOfToolbarInflates` (the grab's origin dropped: the copy arrives 44 x 44).
   Close: `fg gauntlet` 19/19 green with no retries (922 s), and `fg homepage` OK.
 
+## §6d One connection block per text, on every page (2026-11-04)
+
+Found while probing §6c: on an index page a `SimpleTextWdgt`'s menu showed "Connect" twice. Measured on both
+pages before anything changed (probe over a StringWdgt, a TextWdgt, a SimpleTextWdgt, a TextAreaWdgt's merged
+menu and its lone text, each unwired and then wired). It was wider than filed. `StringWdgt` hand-built its own
+block: "Connect" only `if world.isIndexPage`, then its wire rows UNGUARDED, and `SimpleTextWdgt` appended the
+shared `ControllerMixin._addTargetConnectionMenuEntries` after it. So on the index page every SimpleTextWdgt
+showed "Connect" twice and each wire twice. On the harness page a wired SimpleTextWdgt showed each wire row
+twice, and a wired StringWdgt or TextWdgt showed its wire row with no divider and no way to make another.
+The suite drives the harness page and never photographs a wired text's menu, so nothing saw it.
+
+- **Why the guard existed.** It came in with the class's first controller rows (`067cd521`, 2018, "String2
+  now is a controller too"), one of the 2018 forks that kept the product's menus and the harness's apart. The
+  connector arc deleted that family's LABEL fork (§P4) and kept this one, with a comment that only restated
+  it. The desktop menu's fork (connector plan, the menu-sweep entry) and the widget menu's (build arc 3
+  phase 7, D1) were already unified by owner ruling, the product's rows winning and the harness gaining them.
+  This is the same case.
+- **ONE block, ONE builder, every page, LAST** (owner's choice of placement: "Last, like every controller").
+  `StringWdgt.addWidgetSpecificMenuEntries` is `super`, then `_addTextMenuEntries` (its text rows), then the
+  shared block. `TextWdgt` extends `_addTextMenuEntries` with "Soft wrap" and "Run contents" instead of
+  appending after `super`, so the block closes every text's menu as it closes every controller's.
+  StringWdgt's hand-built block and SimpleTextWdgt's second call are deleted, and the shared tooltip ("connect
+  this widget to another one") replaces StringWdgt's own. Rejected placement: the block after StringWdgt's
+  rows, with TextWdgt's rows below it. It is the smaller diff, but it puts "Connect" mid-menu for the two
+  commonest controllers and splits "Soft wrap" from the other layout rows.
+- **Durable residue.** Widget-authoring guidelines §10 (one menu on every page, never fork on `isIndexPage`)
+  and §11 (the block closes the menu once, and a subclass's rows go before it); the `ControllerMixin` header
+  says the same. This was the last menu fork on `isIndexPage` in `src`.
+- **Verification.** An in-page twin of the chosen shape, run over the suite before src was touched,
+  predicted one changed test (`macroOverTallMenuScrollsToReachItsLastRow`: a plain TextWdgt's menu now ends
+  with the block). The real change failed 11. All were attributed on the dpr1 diff page before recapture:
+  the over-tall menu's scrollbar thumb only (no visible row moved), and ten inspector tests whose
+  StringWdgt or TextWdgt member list gains `_addTextMenuEntries`, with the rows below it shifting. A twin
+  patches behaviour and adds no member, so it cannot predict member-list churn. `fg recapture --auto` at
+  dpr 1+2, mouse then finger, recaptured exactly those 11, and both completeness gates were green. New test
+  `macroTextMenuOffersOneConnectionBlock` (both controllers wired by the real gesture; one "Connect" and
+  one row per wire, last; image_1 the paragraph's menu wheeled to its end) was captured at both densities
+  on both pointers and followed by `macroWindowsEmptyCollapsingUncollapsing` on both pointers with no
+  world-inventory line. It FAILS with each defect planted through `PRELUDE_JS`: a second block (2
+  "Connect", 2 rows for the sink), and the index-page guard back (no "Connect" on the harness page).
+  Close: `fg gauntlet` 19/19 green with no retries (902 s), and `fg homepage` OK.
+
 ## §7 Rejected alternatives (do not re-attempt)
 
 - **Picture zoom** (`setScaleFactor` on the sheet or window): text blurs — measured 2026-11-04.
@@ -588,3 +630,5 @@ Items of `docs/BACKLOG.md` this arc closes (they leave that file when it lands):
   survey): the sheet is a PAGE, so the gutter keeps it clear of the corners.
 - [x] The last two build-time ticks (§6c): the toolbar overflow's rows and `SimpleTextWdgt`'s "Soft wrap"
   row are `MenuRowReflectionSpec` views, and the `ticked:` option is gone; a copy comes back detached.
+- [x] A text's menu showed "Connect" twice on an index page, and a wired text its wire rows twice on any
+  page (§6d): one connection block per text, from the shared builder, last, on every page.

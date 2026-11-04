@@ -396,17 +396,21 @@ ControllerMixin =
         world.dataflow.markNonValueChange wire
 
       # ---- the connection menu -------------------------------------------------------------
-      # The shared "connect a target" block, appended identically by every controller (SliderWdgt,
-      # SimpleTextWdgt, PaletteWdgt, FanoutPinWdgt and the patch nodes) right after its `super`: a
-      # divider, the "Connect" gesture submenu, then ONE ROW PER LIVE WIRE.
+      # The shared "connect a target" block, appended identically by every class that carries me and
+      # owns wires of its own (SliderWdgt, StringWdgt and so every text, PaletteWdgt, ColorPickerWdgt,
+      # FanoutPinWdgt and the patch nodes — a FanoutWdgt drives only its pins, whose menus offer it)
+      # after its own rows, so it closes the menu on every page: a divider, the
+      # "Connect" gesture submenu, then ONE ROW PER LIVE WIRE. A subclass that adds rows puts them
+      # before it (StringWdgt._addTextMenuEntries); a second call would show every wire twice.
       #   ⭐ Those rows are the point of §P4. A single-slot controller had nothing to show — its one
       # connection was invisible, and re-targeting silently dropped it. A controller that owns a list
       # can SHOW what it drives, and each row opens that wire's own little menu (policy + disconnect),
       # so wiring is legible and reversible for the first time.
-      #   ⛔ NO isIndexPage label fork: "set target" is the name of a SINGLE-SLOT world and would be a
-      # false promise here, since the gesture connects *a* target, one of however many I already
-      # drive. (StringWdgt keeps its own hand-rolled variant — it guards the whole block behind
-      # isIndexPage, so it is deliberately NOT routed through here.)
+      #   ⛔ NO isIndexPage fork, of the label or of the block: `isIndexPage` is false only on the test
+      # harness, so a fork on it splits "the product" from "the tests" — and hides from the suite
+      # whatever the product shows (it hid a text's doubled block). "Set target" is the name of a
+      # SINGLE-SLOT world and would be a false promise here, since the gesture connects *a* target,
+      # one of however many I already drive.
       #   ⭐ The GESTURES are grouped behind one submenu row, and the live wires are not. That split is
       # the meaning of the two halves: "Connect" opens the things I can DO, while a wire row is a
       # thing that IS — a status line you read, and cut from where you read it.
@@ -482,8 +486,7 @@ ControllerMixin =
 
       # One row per live wire, each naming what it drives ("Panel · color", WireSpec.descriptionsOf)
       # and opening that wire's own menu. Nothing at all when I am unwired, so an unconnected
-      # controller's menu is unchanged. Shared with StringWdgt, which builds the rest of its
-      # connection block by hand.
+      # controller's menu is unchanged.
       #   The ARROW is the whole reading of the relationship's direction: ➜ for a wire that only
       # drives, ⇄ for one that also carries values back — a tracking wire or half of a bound pair.
       # Derived per row at open time, so a menu never shows a direction that has stopped being true.

@@ -63,8 +63,9 @@ class SimpleTextWdgt extends TextWdgt
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    # each key is the EXACT label of a row my chain built (TextWdgt / StringWdgt
-    # addWidgetSpecificMenuEntries): a key that matches no row removes nothing, silently.
+    # each key is the EXACT label of a row my chain built (TextWdgt / StringWdgt _addTextMenuEntries):
+    # a key that matches no row removes nothing, silently. My connection block is my chain's too
+    # (StringWdgt appends it last), so I add none.
     #   My chain's "Soft wrap" row (ticked while isSoftWrapping, acting through toggleSoftWrap) stays
     # only while I am my viewport's lone text, the one place a wrap is mine to choose: anywhere else
     # the width I wrap at is my container's to give.
@@ -81,8 +82,6 @@ class SimpleTextWdgt extends TextWdgt
     menu.removeMenuItem "↑ Align top"
     menu.removeMenuItem "⍿ Align middle"
     menu.removeMenuItem "↓ Align bottom"
-
-    @_addTargetConnectionMenuEntries menu
 
     menu.removeConsecutiveLines()
 
