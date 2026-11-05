@@ -21,10 +21,8 @@ class PreferencesAndSettings
   # from, which is precisely what the same flag on Wallpaper exists to prevent.
   keptByReferenceOnDeepCopy: true
 
-  # Serialization needs no new arm: WellKnownObjects already matches me BY IDENTITY against
-  # WorldWdgt.preferencesAndSettings and re-binds on restore (its keyFor and resolve both carry
-  # "preferences"). This marker states that key alongside the identity check, as Wallpaper does.
-  wellKnownKey: "preferences"
+  # Serialization: WellKnownObjects' table matches me BY IDENTITY against
+  # WorldWdgt.preferencesAndSettings ("preferences") and re-binds on restore -- no marker here.
 
   # the smallest font height this browser renders (the probe above): StringWdgt.fontHeight
   # floors the size it measures at it.

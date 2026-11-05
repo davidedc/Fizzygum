@@ -17,10 +17,10 @@
 # simpler — it is exactly what a cross-session restore needs: the same key must bind to
 # the NEW session's singletons, not to a stale map captured when the file was written.
 #
-# The `wellKnownKey` marker on the collaborator classes (Wallpaper, WidgetFactory,
-# WindowedApp) documents intent and is the general fallback for
-# keyFor; the per-world singletons are matched primarily by identity against the live
-# world, so keyFor is robust even where no marker is declared.
+# The per-world singletons are matched BY IDENTITY against the live world, through the one table
+# below, so they declare nothing. A `wellKnownKey` class marker is the fallback for a family the
+# table cannot list, whose key carries a name: the app singletons (WindowedApp's
+# `wellKnownKey: -> "app:" + @constructor.name`).
 class WellKnownObjects
 
   # THE WELL-KNOWN SINGLETONS: key -> the object it names in the LIVE world, read afresh on every

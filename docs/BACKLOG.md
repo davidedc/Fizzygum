@@ -17,9 +17,6 @@ per README rules 2 and 5.
       appearances, the census's app list, the retired repaint verbs in check-layering + the call
       census, check-plane-discipline's position queries, the tier-naming families, the CoffeeScript
       helper globals, the ungated `LAYOUT_ERROR` / `RECALC_NONCONVERGENCE` tokens.
-- [ ] Owner call, from Tier 2 (§4.5): the four string `wellKnownKey` markers (Preferences, Wallpaper,
-      DataflowEngine, WidgetFactory) repeat `WellKnownObjects`' table keys and are now asserted against
-      it; they are redundant with the identity match — delete them, or keep them asserted.
 - [ ] Tier 3 (§5): diagnostic tools reporting on a stale picture (aim-census, layout-audit and
       revisit-trace preludes, census-nosettle-naming, heap-forensics roots, smoke-boot).
 - [ ] Tier 4 (§6): the standing guard — allowlists report unused entries; a hand-list gate; the doctrine.

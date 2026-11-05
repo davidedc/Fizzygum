@@ -110,9 +110,8 @@ class DataflowEngine
   keptByReferenceOnDeepCopy: true
 
   # Serialization: encoded as {"$wk":"dataflow"} and re-bound to the destination world's engine
-  # on restore. Needs BOTH the keyFor identity check AND the resolve switch arm in
-  # WellKnownObjects (keyFor alone saves fine but the load then dies on the unknown key).
-  wellKnownKey: "dataflow"
+  # on restore -- one entry in WellKnownObjects' table, which keyFor (identity against
+  # world.dataflow) and resolve both read, so no marker is declared here.
 
   # A never-fire cap: a divergent side-effect loop becomes a loud, attributed error instead of a
   # frozen frame. Generous — measured peaks are 1–2 passes (spec §5).

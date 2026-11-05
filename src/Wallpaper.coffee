@@ -24,11 +24,9 @@ class Wallpaper
   keptByReferenceOnDeepCopy: true
 
   # Serialization: this per-world singleton is encoded symbolically as {"$wk":"wallpaper"}
-  # and re-bound to the destination world's own wallpaper on restore. WellKnownObjects
-  # matches it primarily by identity against world.wallpaper; this marker documents intent
-  # and is the eventual replacement for keptByReferenceOnDeepCopy. See
+  # and re-bound to the destination world's own wallpaper on restore -- WellKnownObjects' table
+  # matches it by identity against world.wallpaper, so no marker is declared here. See
   # docs/architecture/serialization-duplication-reference.md §4a.
-  wellKnownKey: "wallpaper"
 
   constructor: ->
     @patternName = @pattern1

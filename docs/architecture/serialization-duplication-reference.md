@@ -52,8 +52,8 @@ share — and what this doc is the single source of truth for — is the per-cla
 
 - the **traversal contract** (own-properties, the cycle/shared-object table, the
   external-widget test against `allWidgetsInStructure`) — §2 below;
-- `@serializationTransients` (fields to skip) and `wellKnownKey` (symbolic singletons) —
-  §5, §4; both consulted by duplication too;
+- `@serializationTransients` (fields to skip) and the well-known singletons (`WellKnownObjects`) —
+  §5, §4;
 - the `rebuildDerivedValue(s)` derived-value protocol — §5;
 - the native-type handlers' logic (Array/Date/Canvas, and the element kinds neither walker carries) — §6 — and the
   native-type DETECTION itself, factored into the one shared
@@ -223,17 +223,21 @@ derived/disposable and never serialized), `bin`, `shelf`, `preferences`, and
 
 - `WellKnownObjects.keyFor(obj)` → symbolic key or `undefined`.
 - `WellKnownObjects.resolve(key)` → the live object in the **current** world, or `undefined`
-  (an unknown key is the deserializer's cue to raise a rich error).
+  when that singleton is absent (an `app:` key naming a class this build lacks, too); a key no
+  build writes THROWS — and `Deserializer._envelopeShapeProblem` refuses a file carrying one up
+  front (`WellKnownObjects.isKnownKey` over `Serializer.wellKnownKeysIn`).
 
 **It is lazy, not snapshotted.** Keys resolve against the live `world` on demand rather
 than from a boot-time map. This is boot-order-safe (bin/apps are built after the
 world) and — crucially — correct for cross-session restore: a key binds to the *new*
 session's singletons, not to a stale map. The per-world singletons are matched by identity
-against the live world in `keyFor`; the `wellKnownKey` marker on the collaborator classes
-(`Wallpaper` → `"wallpaper"`, `WidgetFactory` → `"widgetFactory"`, `DataflowEngine` →
-`"dataflow"`, `PreferencesAndSettings` → `"preferences"`, `WindowedApp` →
-`"app:" + @constructor.name`) is the general fallback
-and documents intent (it is the eventual replacement for `keptByReferenceOnDeepCopy`).
+against the live world, through ONE table (`WellKnownObjects._liveSingletons`: `world`, `hand`,
+`wallpaper`, `widgetFactory`, `dataflow`, `bin`, `shelf`, `preferences`) that `keyFor` matches by
+identity and `resolve` looks keys up in, so those classes declare no marker. The class marker
+`wellKnownKey` remains only for the family the table cannot list because its key carries a name:
+`WindowedApp`'s `"app:" + @constructor.name`. A marker the table does not know is refused at save,
+and a key no build writes is refused at load (an envelope shape problem, before a world load's
+teardown).
 `WellKnownObjects.resolveApp(className)` completes the `app:` branch: it resolves the name through
 boot's `classNamed` (a key is a name read out of a file, so one naming a native global or an inherited
 property of `window` is left unresolved, never `new`-ed), `new`s the named

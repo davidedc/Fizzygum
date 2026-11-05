@@ -250,9 +250,10 @@ fails it and a run that passes without it (plants under `Fizzygum-tests/.scratch
    an unknown non-app key THROWS in `resolve` and is refused up front by the shape check (via the
    shared walk `Serializer.wellKnownKeysIn`, which `classNamesIn` now uses too); a class marker
    (`wellKnownKey`) the table lacks is refused at save. App keys naming an absent class still
-   resolve to undefined (unchanged, rig-gated). ⚠ The four classes' string `wellKnownKey` markers
-   are now ASSERTED rather than deleted — they are redundant with the identity match; deleting them
-   is a separate, owner-visible decision.
+   resolve to undefined (unchanged, rig-gated). The four classes' string `wellKnownKey` markers
+   (PreferencesAndSettings, Wallpaper, DataflowEngine, WidgetFactory), redundant with the identity
+   match, were DELETED on the owner's call; the marker survives only as `WindowedApp`'s
+   `"app:" + @constructor.name`.
 6. **Derived state**: ONE predicate `Widget.isDerivedStateField` (cache pairs, `childrenBoundsUpdatedAt`,
    `_islandBufferSource*`), read by the Serializer, the Duplicator and WorldInventory; the 19 hand-listed
    cache names left `Widget.@serializationTransients`.
