@@ -14,17 +14,6 @@ class Serializer
   @FORMAT: "fizzygum"
   @FORMAT_VERSION: 1
 
-  # The world slots that each hold (at most) one singleton-app window. A slot may be undefined, or
-  # hold an ORPHANED-but-revivable window (the app's launch() checks parent?). See
-  # WindowedApp and the world snapshot (§11).
-  @WORLD_APP_SLOTS: [
-    "degreesConverterWindow"
-    "howToSaveDocWindow"
-    "sampleDashboardWindow"
-    "sampleSlideWindow"
-    "sampleDocWindow"
-  ]
-
   # The `@serializationTransients` declarations merged up a class's chain, as one Set of
   # property names the serializer must SKIP. A subclass's declaration ADDS to (never shadows)
   # its ancestors' -- the merge is boot's classStaticListMergedUpTheChain
@@ -99,7 +88,7 @@ class Serializer
   # dozen event-listener CLOSURES) — the walker would crash on the first one (a CanvasPattern
   # on @appearance, exactly defect D8). Instead the genuine world state is captured in an
   # explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS — the desktop
-  # children, the off-tree bin, the non-undefined app-slot windows, the templates window — are
+  # children, the off-tree bin, the registered app windows (world.appWindows), the templates window — are
   # walked into the object table. A snapshot restores a SETTLED world (§1): the hand-held
   # widget and the caret are dropped by construction (they live outside the snapshot roots);
   # open UNPINNED menus/pop-ups ARE world children, so the filter below drops them explicitly.
@@ -114,15 +103,14 @@ class Serializer
     # ref would otherwise pull an excluded child back into the object table). The reconciler
     # recreates ephemerals from live state after a restore.
     snapshotChildren = (child for child in (theWorld.children or []) when not (child.isEphemeral?() or child.isTransientPopUp?()))
-    # snapshot roots (deduped by the widgetSet Set below); an app-slot window may also be a
-    # desktop child, an orphan in the bin, or off-tree — all are captured here.
+    # snapshot roots (deduped by the widgetSet Set below); an app window may also be a desktop
+    # child, an orphan in the bin or on the shelf, or off-tree — all are captured here.
+    liveAppWindows = ([appName, appWindow] for [appName, appWindow] from theWorld.appWindows when not appWindow.destroyed)
     roots = []
     roots.push child for child in snapshotChildren
     roots.push theWorld.binWdgt if theWorld.binWdgt?
     roots.push theWorld.shelfWdgt if theWorld.shelfWdgt?
-    for slot in Serializer.WORLD_APP_SLOTS
-      slotWindow = theWorld[slot]
-      roots.push slotWindow if slotWindow? and not slotWindow.destroyed
+    roots.push appWindow for [appName, appWindow] in liveAppWindows
     roots.push theWorld.simpleEditorTemplates if theWorld.simpleEditorTemplates? and not theWorld.simpleEditorTemplates.destroyed
     widgetSet = new Set
     for aRoot in roots when aRoot?
@@ -158,12 +146,10 @@ class Serializer
     # their state is captured by NAME here rather than through the object table. The armed drawing
     # tool is a KEY, so it captures as itself; a restore applies it to the live users positionally.
     section.users = ({armedDrawingTool: eachUser.armedDrawingTool} for eachUser in (theWorld.users or []))
-    # app-slot windows + the templates window (may be orphaned-but-revivable).
-    appSlots = {}
-    for slot in Serializer.WORLD_APP_SLOTS
-      slotWindow = theWorld[slot]
-      appSlots[slot] = ref(slotWindow, "the world → ." + slot) if slotWindow? and not slotWindow.destroyed
-    section.appSlots = appSlots
+    # the app windows, by app class name, + the templates window (may be orphaned-but-revivable).
+    section.appWindows = {}
+    for [appName, appWindow] in liveAppWindows
+      section.appWindows[appName] = ref appWindow, "the world → .appWindows → " + appName
     if theWorld.simpleEditorTemplates? and not theWorld.simpleEditorTemplates.destroyed
       section.simpleEditorTemplates = ref theWorld.simpleEditorTemplates, "the world → .simpleEditorTemplates"
     section.bin = ref(theWorld.binWdgt, "the world → .binWdgt") if theWorld.binWdgt?

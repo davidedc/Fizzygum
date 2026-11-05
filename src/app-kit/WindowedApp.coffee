@@ -2,16 +2,16 @@
 # (Draw, Docs Maker, Slides Maker, the sample doc/slide/dashboard examples, the
 # degrees converter, ...). It lifts the launch / opener / bring-up apparatus that
 # used to be copy-pasted across ~12 MenusHelper methods into ONE place. A subclass
-# declares the parts its window is built from (and, for a singleton app, the world
-# slot that holds its one window) and implements buildWindow; this base owns:
+# declares the parts its window is built from (and, for an app that opens ONE window,
+# that it does: opensOneWindow) and implements buildWindow; this base owns:
 #   - createOpener: builds the AppLauncherWdgt (the
 #     desktop or in-folder shortcut) pointing at this app's "launch" action, and
 # ⚠ WHAT AN APP LOOKS LIKE IS NOT DECLARED HERE. Its caption, icon and tooltip live
 # in AppCatalog, keyed by class NAME, because the desktop draws an app's icon at BOOT
 # for an app whose class has not been fetched -- reading a field off this object would
 # make every app eager again. See AppCatalog's header and build-and-packaging.md §2.
-#   - launch: for a singleton app (slot set) brings the existing window forward or
-#     builds it; for a fresh app builds a new window and runs the windowOpened hook
+#   - launch: for an app that opens ONE window, brings that window forward or builds
+#     it; for any other app builds a new window and runs the windowOpened hook
 #     (e.g. to spawn the adjacent Info widget).
 # The launcher stores THIS object as its reflection target, and launchers are
 # deep-copyable desktop widgets, so this declares keptByReferenceOnDeepCopy: true
@@ -28,7 +28,12 @@ class WindowedApp
   wellKnownKey: -> "app:" + @constructor.name
 
   # --- per-app configuration (subclasses override) ---
-  slot: undefined           # world.<slot> holds the single window; undefined => a fresh window every launch
+  # true: the app opens ONE window, kept in world.appWindows under my class name and brought forward
+  # on every later launch (the Examples, How to save?); false: a fresh window every launch (the
+  # Makers). The registry is the one place the world keeps such windows, so whatever else must know
+  # them -- the storage sort, the liveness roots, a snapshot, a teardown -- walks it, and an app
+  # opening one window needs nothing beyond this line.
+  opensOneWindow: false
 
   # THE PARTS THIS APP'S buildWindow BUILDS FROM. One declaration with two readers, which is the
   # whole point of stating it as data rather than writing the await by hand in each subclass:
@@ -55,9 +60,9 @@ class WindowedApp
   windowOpened: (newlyOpenedWindow) ->   # after a FRESH (non-singleton) launch; no-op by default
 
   # --- shared apparatus (written once) ---
-  # My NAME: the caption AppCatalog gives my launcher. An app that opens ONE document (a `slot` app)
-  # titles that document's window with it, read here rather than retyped in buildWindow, so the
-  # icon and the window it opens say the same thing.
+  # My NAME: the caption AppCatalog gives my launcher. An app that opens ONE window (opensOneWindow)
+  # titles that window with it, read here rather than retyped in buildWindow, so the icon and the
+  # window it opens say the same thing.
   _title: -> AppCatalog.get(@constructor.name).title
 
   # Put this app's EAGER launcher on the desktop. Takes NOTHING, and that is load-bearing: it is
@@ -84,11 +89,11 @@ class WindowedApp
         @_launchNow()
 
   _launchNow: ->
-    if @slot?
-      existingWindow = world[@slot]
+    if @opensOneWindow
+      existingWindow = world.appWindows.get @constructor.name
       if existingWindow? and !existingWindow.destroyed and existingWindow.parent?
         # §7.5 Bug B (model a) + latent 2 (Option B): the singleton may have been closed to the bin AS
-        # A FIGURE -- if it was tilted/scaled (sugar) or explicitly islanded, world[@slot] is the window but
+        # A FIGURE -- if it was tilted/scaled (sugar) or explicitly islanded, the registered window is the window but
         # its enclosing sole-content island is what carries the transform, so re-home and reposition the
         # FIGURE, not the bare window (moving an island-resident window by SCREEN coords would be a plane
         # mismatch, 4A-2). Off any island the figure is the window itself ⇒ byte-identical to the pre-Bug-B path.
@@ -103,8 +108,8 @@ class WindowedApp
         # explicitly or the next desktop reflow snaps it back to the old spot.
         figure._rememberFractionalSituationInHoldingPanel()
         return
-      world[@slot] = @buildWindow()
-      # an app-slot write is a reachability chokepoint (the slot is what the
+      world.appWindows.set @constructor.name, @buildWindow()
+      # a registry write is a reachability chokepoint (the registry is what the
       # classifier's furniture marking reads) -- mark for the storage sort
       world.noteStorageMembershipMayHaveChanged()
     else

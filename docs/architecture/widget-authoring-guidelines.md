@@ -872,7 +872,7 @@ slot in the once-per-cycle walk otherwise.
 the public wrapper is skipped exactly when a whole subtree goes away — the case that matters most.
 
 What a widget cleans up itself: anything it put in a world-level registry that the base does not know
-about (a reference tracker, an open-pop-up set, an app slot). What it does not: `steppingWdgts`,
+about (a reference tracker, an open-pop-up set, the app-window registry). What it does not: `steppingWdgts`,
 `keyboardEventsReceivers`, `wdgtsDetectingClickOutsideMeOrAnyOfMeChildren` and its dataflow edges —
 `Widget._destroyNoSettle` already drops all of those, and it tells the hand
 (`ActivePointerWdgt.noteWidgetDestroyed`), which forgets every press booking the dying widget is or

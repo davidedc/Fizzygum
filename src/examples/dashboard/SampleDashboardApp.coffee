@@ -1,18 +1,18 @@
 # SampleDashboardApp -- the Examples folder's "Plots and maps" (an interactive dashboard
 # of plots, maps, sliders and speech bubbles). One of the per-app
 # WindowedApp subclasses (Phase 6 step 6c.3): it declares the parts
-# its window needs and the singleton world slot, and builds its window inline in
+# its window needs and that it opens ONE window, and builds its window inline in
 # buildWindow; the base owns the launcher/opener + bring-up-or-create launch logic, and
 # AppCatalog (keyed by class name) holds its launcher title/icon.
 # The window body was lifted verbatim from MenusHelper's
-# createSampleDashboardWindowOrBringItUpIfAlreadyCreated (minus the final world-slot
-# assignment, now done by the base's launch).
+# createSampleDashboardWindowOrBringItUpIfAlreadyCreated (minus the final registration
+# of the window, which the base's launch does).
 
 class SampleDashboardApp extends WindowedApp
 
   requiredParts: ["maps", "plots", "authoring"]
 
-  slot:  "sampleDashboardWindow"
+  opensOneWindow: true
 
   buildWindow: ->
     slideWdgt = new DashboardWdgt

@@ -12,7 +12,7 @@ class SampleSheetApp extends WindowedApp
 
   requiredParts: ["spreadsheet"]
 
-  slot:  "sampleSheetWindow"
+  opensOneWindow: true
 
   # [address, source] of every entry, one per line (a member body is compiled on its own, so the
   # array hangs off an arrow), and the one cell shown in bold
@@ -46,5 +46,5 @@ class SampleSheetApp extends WindowedApp
     sheetWindow.setTitleWithoutPrependedContentName @_title()
     # closing just closes (no save prompt) -- a sample is not worth saving (the SampleDocApp policy)
     sheetWindow.closeFromFrameBarPolicy = 'close'
-    # return the WINDOW: the base stores it in world[@slot] for the bring-forward-on-relaunch path
+    # return the WINDOW: the base registers it in world.appWindows for the bring-forward-on-relaunch path
     sheetWindow

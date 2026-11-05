@@ -1,7 +1,7 @@
 # SampleDocApp -- the Examples folder's "Interactive doc" (a SimpleDocument showing what can be
 # embedded in a text document: an interactive 3D plot, a connected slider, etc.). One
 # of the per-app WindowedApp subclasses (Phase 6 step 6c.3): it
-# declares its required parts and the singleton world slot and builds its window
+# declares its required parts and that it opens ONE window, and builds its window
 # inline in buildWindow; its launcher title and icon live in AppCatalog, not here.
 # The base owns the launcher/opener + bring-up-or-create launch logic. The window
 # body was folded in verbatim from the former SimpleDocumentSampleWdgt.create (a
@@ -11,7 +11,7 @@ class SampleDocApp extends WindowedApp
 
   requiredParts: ["plots", "authoring"]
 
-  slot:  "sampleDocWindow"
+  opensOneWindow: true
 
   buildWindow: ->
     doc = new DocumentWdgt
@@ -62,7 +62,6 @@ class SampleDocApp extends WindowedApp
     # saving. The tracked close policy (§5.E E2).
     doc.closeFromFrameBarPolicy = 'close'
 
-    # return the WINDOW: the base stores it in world[@slot] for the
-    # bring-forward-on-relaunch path. (The old code fell off the end returning
-    # the monkey-patch closure, so the slot held a FUNCTION -- latent.)
+    # return the WINDOW: the base registers it in world.appWindows for the
+    # bring-forward-on-relaunch path
     return doc

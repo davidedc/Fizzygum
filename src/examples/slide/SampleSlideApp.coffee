@@ -1,19 +1,19 @@
 # SampleSlideApp -- the Examples folder's "New York City": a slide (a
 # scrolling USA map with a pin, a small bar plot, a caption and a wiki link).
 # One of the per-app WindowedApp
-# subclasses (Phase 6 step 6c.2): it declares its required parts and the singleton
-# world slot, and builds its window in buildWindow; its launcher title and icon
+# subclasses (Phase 6 step 6c.2): it declares its required parts and that it opens
+# ONE window, and builds its window in buildWindow; its launcher title and icon
 # live in AppCatalog, not here (see WindowedApp's header). The
 # base class owns the launcher/opener construction and the bring-up-or-create
 # launch logic. The window body was lifted verbatim from MenusHelper (the
-# createSampleSlideWindow... builder, minus its final world-slot assignment, now
-# done by the base's launch).
+# createSampleSlideWindow... builder, minus its final registration of the window,
+# which the base's launch does).
 
 class SampleSlideApp extends WindowedApp
 
   requiredParts: ["maps", "plots", "authoring"]
 
-  slot:  "sampleSlideWindow"
+  opensOneWindow: true
 
   buildWindow: ->
     slideWdgt = new SlideWdgt

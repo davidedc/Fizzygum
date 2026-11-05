@@ -1,19 +1,19 @@
 # DegreesConverterApp -- the Examples folder's "°C ↔ °F converter" (a patch-
 # programming window wiring two sliders/calc nodes into a live converter). One of the
 # per-app WindowedApp subclasses (Phase 6 step 6c.3): it declares
-# the singleton world slot and builds its window inline in buildWindow; its launcher
+# that it opens ONE window and builds its window inline in buildWindow; its launcher
 # caption lives in AppCatalog, keyed by class name, and it has NO icon there (its art
 # is in the lazy examples-icons part, passed in by ExamplesFolderWindowWdgt -- the one
 # override in the system). The base owns the launcher/opener + bring-up-or-create
 # launch logic. The window body was lifted verbatim from MenusHelper's
-# createDegreesConverterWindowOrBringItUpIfAlreadyCreated (minus the final world-slot
-# assignment, now done by the base's launch).
+# createDegreesConverterWindowOrBringItUpIfAlreadyCreated (minus the final registration
+# of the window, which the base's launch does).
 
 class DegreesConverterApp extends WindowedApp
 
   requiredParts: ["authoring"]
 
-  slot:  "degreesConverterWindow"
+  opensOneWindow: true
 
   buildWindow: ->
     xCorrection = 32

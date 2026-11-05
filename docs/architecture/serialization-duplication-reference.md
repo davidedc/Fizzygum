@@ -236,7 +236,7 @@ boot's `classNamed` (a key is a name read out of a file, so one naming a native 
 property of `window` is left unresolved, never `new`-ed), `new`s the named
 `WindowedApp` subclass and MEMOIZES one instance per class
 (`@_appSingletons`), which is safe because such an app is a stateless config holder — its one
-window lives on `world[@slot]`, not on the app (§11).
+window lives in the world's app-window registry (`world.appWindows`, keyed by class name), not on the app (§11).
 
 The link is symbolic and reconstructable — it preserves identity, which a bare opaque
 `"$EXTERNAL"` marker cannot.
@@ -530,8 +530,8 @@ furniture and stay): the desktop `world.children`, the off-tree `world.binWdgt` 
 `world.shelfWdgt` subtrees (the two STORAGE containers — the eager storage sort keeps the
 shelf holding the reachable residents and the bin the lost ones, `StorageSorter`; a snapshot
 taken with a sort still pending is legitimate — each resident serializes wherever it rests
-and re-sorts on the first cycle after load), each non-undefined app-slot window
-(`Serializer.WORLD_APP_SLOTS` — may be orphaned-but-revivable), and
+and re-sorts on the first cycle after load), each registered app window (`world.appWindows`,
+the windows of the apps that open ONE window — may be orphaned-but-revivable), and
 `world.simpleEditorTemplates`. `widgetSet` = the union of their subtrees; the
 world itself is excluded (a pointer *to* it becomes `{"$wk":"world"}`).
 
@@ -546,7 +546,7 @@ unserializable value still raises the rich `SerializationError`.
 `infoDocFlags` (the `world.infoDoc_*_created` own booleans),
 `untitledNamingCounters`, `users` (`world.users` — each `User`'s `armedDrawingTool` KEY,
 captured by name like the naming service since a `User` is a plain delegated collaborator,
-not a tree object), `appSlots` (`{slot:{$r}}`), `simpleEditorTemplates` (`{$r}`),
+not a tree object), `appWindows` (`{AppClassName:{$r}}`), `simpleEditorTemplates` (`{$r}`),
 `bin` (`{$r}`), `shelf` (`{$r}`), `preferences` (a FORCED data record — `refFor` would give the
 `{"$wk":"preferences"}` symbolic link, but the section needs the actual values, restored onto
 the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
@@ -592,7 +592,7 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    with the hand's drag-embed record cleared by the verb a release uses); the two storage
    containers `binWdgt`/`shelfWdgt`, DESTROYED WHOLE and let go of (they are snapshot roots that
    neither caller keeps, so emptying them would leak the shells on every load — and they die
-   before the core's paint-queue filter, since a dying widget re-marks damage); the app slots +
+   before the core's paint-queue filter, since a dying widget re-marks damage); the app-window registry +
    `simpleEditorTemplates`, the highlight tracking structures, `errorConsole` /
    `lastEditedText` / `_editorSelectedWidget`, the tooltip / pop-up / clicked-hierarchy / handle /
    scroll-momentum / paint-error collections, the `_damageSuppressionDepth` counter, and the
@@ -618,7 +618,7 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
 4. Restore the static `preferences` bag; apply the scalars (isDevMode/alpha/infoDoc/naming/
    icon-count) to the LIVE world; **install** the restored (self-contained, off-tree)
    `binWdgt` and `shelfWdgt` (the teardown destroyed the previous pair) so every `{$r}` pointer
-   at them (the bin opener's target, …) stays consistent; re-bind the app-slot / templates windows (orphaned-but-revivable — not
+   at them (the bin opener's target, …) stays consistent; re-bind the app windows (into `world.appWindows`) and the templates window (orphaned-but-revivable — not
    re-attached to the desktop). Restore completion marks the storage sort pending
    (`noteStorageMembershipMayHaveChanged`), so a mid-pending snapshot re-sorts on the first
    cycle.
@@ -633,8 +633,8 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    Never a raw layout core (DETERMINISM.md risk 4).
 
 `WellKnownObjects.resolveApp(className)` returns a **memoized fresh app singleton** — an
-`WindowedApp` subclass is a stateless config holder (its one window lives on
-`world[@slot]`, not on the app), so a fresh instance is behaviourally identical and safe to
+`WindowedApp` subclass is a stateless config holder (its one window lives in
+`world.appWindows`, not on the app), so a fresh instance is behaviourally identical and safe to
 `new` during a restore. `world.serialize()` is a **guided `SerializationError`** pointing at
 `serializeWorldSnapshot`.
 

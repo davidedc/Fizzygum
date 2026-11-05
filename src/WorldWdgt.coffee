@@ -390,6 +390,13 @@ class WorldWdgt extends IconGridPanelWdgt
   widgetsReferencingOtherWidgets: undefined
   incrementalGcSessionId: 0
 
+  # The window of each app that opens ONE window (WindowedApp.opensOneWindow), keyed by the app's
+  # class name -- the name AppCatalog keys it by. The ONE place the world keeps them: the launch
+  # that brings a window back, the storage sort (a closed one stays reachable, so it is shelved, not
+  # binned), the liveness roots, a snapshot and the teardown all walk this Map rather than a list of
+  # names, so no app can be missing from any of them. A window may be orphaned-but-revivable.
+  appWindows: undefined
+
   # the desktop lays down icons vertically
   laysIconsHorizontallyInGrid: false
   iconsLayingInGridWrapCount: 5
@@ -541,6 +548,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @pendingFractionalBookkeepingSeeds = new Set
     @pendingFractionalReRecords = new Set
     @widgetsReferencingOtherWidgets = new Set
+    @appWindows = new Map
     @errorsWhileRepainting = []
     @widgetsGivingErrorWhileRepainting = []
     @layoutErrorsToReport = []
@@ -2896,7 +2904,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # PRODUCT feature — these ship in production (they are core-part code). The world is NOT saved as a
   # widget record (that would drag in its canvases/caches/hand/listener closures and crash the
   # walker, defect D8); Serializer.serializeWorld captures the desktop tree + off-tree bin
-  # + app-slot windows into the object table, and the genuine world state into a `world` section.
+  # + the registered app windows into the object table, and the genuine world state into a `world` section.
 
   serializeWorldSnapshot: (opts = {}) ->
     Serializer.serializeWorld @, opts
@@ -3059,13 +3067,13 @@ class WorldWdgt extends IconGridPanelWdgt
         @users?[i]?.armDrawingTool eachRecord.armedDrawingTool
       # 6. install the restored (self-contained, off-tree) storage containers (the teardown
       #    destroyed the previous pair) so every $r pointer at them (the bin opener's target, ...)
-      #    stays consistent, and re-bind the app-slot / templates windows (orphaned-but-revivable —
-      #    NOT re-attached to the desktop here).
+      #    stays consistent, and re-bind the app windows (into the registry, @appWindows) and the
+      #    templates window (orphaned-but-revivable — NOT re-attached to the desktop here).
       restoredBin = resolve section.bin
       @binWdgt = restoredBin if restoredBin?
       restoredShelf = resolve section.shelf
       @shelfWdgt = restoredShelf if restoredShelf?
-      @[slot] = resolve(refVal) for own slot, refVal of (section.appSlots or {})
+      @appWindows.set appName, resolve(refVal) for own appName, refVal of (section.appWindows or {})
       @simpleEditorTemplates = resolve(section.simpleEditorTemplates) if section.simpleEditorTemplates?
     finally
       @binWdgt ?= new BinWdgt
@@ -3236,6 +3244,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @widgetsBeingHighlighted = new Set
     @steppingWdgts = new Set
     @widgetsReferencingOtherWidgets = new Set
+    @appWindows = new Map
     @widgetsGivingErrorWhileRepainting = []
     @widgetsWithMaybeChangedPaintBounds = []
     @widgetsWithMaybeChangedFullPaintBounds = []
@@ -3354,13 +3363,13 @@ class WorldWdgt extends IconGridPanelWdgt
     # The station re-derives it from the restored desktop on the next cycle, and the frames a load
     # re-adds derive their look while nothing is focused, so the station's flip finds them all unfocused.
     @_focusedFrame = undefined
-    # DANGLING WORLD SLOTS. These are bare world fields holding a widget that fullDestroyChildren
-    # above just destroyed, so each would keep a DEAD reference into the next test (or, on the load
-    # path, into the rest of the session). StorageSorter's furniture marking reads world[slot] and
-    # simpleEditorTemplates unconditionally, so a dead ref there is walked every sort. The loader
-    # re-binds both from the snapshot afterwards (step 6), which is exactly the teardown-empties /
-    # caller-fills split this core is built on.
-    @[slot] = undefined for slot in Serializer.WORLD_APP_SLOTS
+    # DANGLING APP WINDOWS. The app-window registry and simpleEditorTemplates hold widgets that
+    # fullDestroyChildren above just destroyed, so each would keep a DEAD reference into the next
+    # test (or, on the load path, into the rest of the session). StorageSorter's furniture marking
+    # reads both unconditionally, so a dead ref there is walked every sort. The loader re-binds both
+    # from the snapshot afterwards (step 6), which is exactly the teardown-empties / caller-fills
+    # split this core is built on.
+    @appWindows.clear()
     @simpleEditorTemplates = undefined
     # the error console is worse than a dead ref: _showErrorsHappenedInRepaintingStepInPreviousCycle
     # only builds one `if !@errorConsole?`, so a destroyed-but-non-undefined console makes every later
@@ -3803,7 +3812,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # any event that may change which storage container a widget belongs in --
   # the reference tracker's mutations, wire add / un-wire / wire-holder death
   # (liveness follows wires too -- graph-edges plan §4.3), close filing,
-  # arrivals into/departures from an open bin window, app-slot writes,
+  # arrivals into/departures from an open bin window, app-window registrations,
   # snapshot restore. Mark-only and O(1), so it is safe inside bulk destroy
   # storms; the sort itself drains once per cycle in doOneCycle.
   noteStorageMembershipMayHaveChanged: ->
@@ -3834,8 +3843,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # also reach the containers' own chrome appends them itself (WorldInventory does).
   graphLivenessRoots: ->
     roots = [@, @hand]
-    for slot in Serializer.WORLD_APP_SLOTS
-      roots.push @[slot] if @[slot]?
+    roots.push appWindow for appWindow from @appWindows.values()
     roots.push @simpleEditorTemplates if @simpleEditorTemplates?
     binContents = @binWdgt?.viewport?.contents
     roots.push binContents.children... if binContents?

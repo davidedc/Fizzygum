@@ -1,6 +1,6 @@
 # HowToSaveMessageApp -- the "How to save?" desktop app (a SimpleDocument explaining
 # how to save). One of the per-app WindowedApp subclasses (Phase 6
-# step 6c.3): it declares the parts its window needs and the singleton world slot, and
+# step 6c.3): it declares the parts its window needs and that it opens ONE window, and
 # builds its window inline in buildWindow; the base owns the launcher/opener + the
 # bring-up-or-create launch logic, and AppCatalog (keyed by class name) holds its
 # launcher title/icon. Its opener is on the DESKTOP (no folder), so WorldWdgt's
@@ -13,7 +13,7 @@ class HowToSaveMessageApp extends WindowedApp
 
   requiredParts: ["authoring"]
 
-  slot:  "howToSaveDocWindow"
+  opensOneWindow: true
 
   buildWindow: ->
     doc = new DocumentWdgt

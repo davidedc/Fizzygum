@@ -1,7 +1,8 @@
 # SpreadsheetApp — the "Sheets Maker" desktop launcher/opener (one of the WindowedApp subclasses; the
 # DegreesConverterApp shape). Its title/icon are read from AppCatalog (keyed by class name, not by this
-# class); this file only builds the window -- the base owns createOpener + launch. `slot: undefined`
-# ⇒ a FRESH window every launch (multiple sheets allowed — the sheet is NOT a world singleton).
+# class); this file only builds the window -- the base owns createOpener + launch. Like every Maker it
+# does not open ONE window (WindowedApp.opensOneWindow stays false), so each launch opens a FRESH
+# sheet (multiple sheets allowed — the sheet is NOT a world singleton).
 #
 # Opens a SpreadsheetWdgt citizen (a FrameWdgt over the SimpleSpreadsheetWdgt grid -- §5.B;
 # openFrameWith passes the framed citizen through). See docs/specs/dataflow-engine-spec.md §9.1 and
@@ -16,8 +17,6 @@
 class SpreadsheetApp extends WindowedApp
 
   requiredParts: ["spreadsheet"]
-
-  slot:  undefined   # multiple sheets — a fresh window every launch (no world slot)
 
   # My launcher wears the spreadsheet's own icon, SpreadsheetIconWdgt (core art, named by
   # AppCatalog's entry; the sheet's representativeIcon answers the same one).

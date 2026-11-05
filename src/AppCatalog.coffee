@@ -21,7 +21,7 @@
 # widget, so a per-placement name would put two differently-named icons for the same app side by
 # side the moment one is dragged out of the Examples folder onto the desktop. Hence deliberately NO
 # per-call-site label override: a folder shows an app's name, it does not rename it.
-#   The window a door opens reads the same name: an app that opens ONE document (a `slot` app — the
+#   The window a door opens reads the same name: an app that opens ONE window (opensOneWindow — the
 # Examples, "How to save?") titles it through WindowedApp._title, so the icon and the window it
 # opens cannot disagree. An Examples door is therefore named for what its document holds — its
 # icon already shows the kind. A Maker opens a fresh, untitled document each time, so its window is

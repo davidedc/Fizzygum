@@ -8,7 +8,7 @@
 # through chokepoints (the reference tracker's three mutation sites, wire
 # add / un-wire / wire-holder death — liveness follows wires too, graph-edges
 # plan §4.3 — close filing, arrivals into / departures from an open bin
-# window, the app-slot writes, snapshot restore). Each chokepoint calls the mark-only
+# window, an app window's registration, snapshot restore). Each chokepoint calls the mark-only
 # world.noteStorageMembershipMayHaveChanged() -- O(1), safe inside bulk destroy
 # storms -- and the pending sort DRAINS once per world cycle in doOneCycle,
 # between the dataflow drain and the layout flush (the dataflow-station
@@ -97,12 +97,11 @@ class StorageSorter
     @_seedFromSubtreeEdges world.hand, newGcSessionId if world.hand?
 
     # phase B -- system furniture parked in storage is reachable through WORLD
-    # FIELDS: the app singletons (world[slot], revived by their launchers) and
-    # the editor templates window (revived by TemplatesButtonWdgt). Marked
-    # before the fixpoint so edges held INSIDE them relay like any other
-    # reachable resident's.
-    for slot in Serializer.WORLD_APP_SLOTS
-      world[slot]?.markItAndItsParentsAsReachable newGcSessionId
+    # FIELDS: the windows of the apps that open ONE window (world.appWindows,
+    # revived by their launchers) and the editor templates window (revived by
+    # TemplatesButtonWdgt). Marked before the fixpoint so edges held INSIDE them
+    # relay like any other reachable resident's.
+    appWindow.markItAndItsParentsAsReachable newGcSessionId for appWindow from world.appWindows.values()
     world.simpleEditorTemplates?.markItAndItsParentsAsReachable newGcSessionId
 
     # phase C fixpoint: a storage resident whose chain became reachable relays
