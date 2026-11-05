@@ -44,18 +44,20 @@ const { methodBoundary } = require('./lib/coffee-method-header');   // class AND
 const EXEMPT = /#\s*raw-screen-pointer-sanctioned:\s*\S/;    // marker WITH a non-empty reason
 const RAW_READ = /world\.hand\.position\(\)/;
 const MAPPED = /screenPointToMyPlane/;
+// the dispatched handlers come from the ONE table both body gates read (lib/pointer-handlers.js),
+// which this gate also holds against ActivePointerWdgt, both ways, below
+const pointerHandlers = require('./lib/pointer-handlers');
 const HANDLER_NAMES = new Set([
-  'pressBegan',
-  'pressEnded', 'pressCancelled',
-  'activated', 'contextMenuRequested',
-  'doubleActivated', 'tripleActivated',
-  'hoverMoved', 'pressMoved',
-  'hoverEntered', 'hoverExited',
-  'nonFloatDragging', 'endOfNonFloatDrag',
-  'scrolledBy',
+  ...pointerHandlers.HANDLER_NAMES,
   // not dispatched by name, but the per-frame / per-event pointer consumers of the drag-scroll (see SCOPE)
   'takeStrokeScrollFrom', 'latchStrokeScroll',
 ]);
+const tableProblems = pointerHandlers.dispatchProblems(SRC);
+if (tableProblems.length) {
+  console.error(`raw-pointer-reads gate: the pointer-handler table (buildSystem/lib/pointer-handlers.js) disagrees with ActivePointerWdgt:`);
+  for (const p of tableProblems) console.error('  ' + p);
+  process.exit(1);
+}
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;

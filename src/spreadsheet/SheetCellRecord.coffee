@@ -155,8 +155,6 @@ class SheetCellRecord
     # the frame counter). Formulas NEVER read the wall clock — all time enters through the source,
     # pulled here from the one-timestamp-per-cycle. The reactive EDGE that re-runs this cell on each
     # tick was declared by FormulaCompiler.commit; the source ticks only while such a cell exists.
-    if name is "seconds"
-      return world?.dataflow?.secondsSource().dataflowValue()
-    if name is "frame"
-      return world?.dataflow?.frameSource().dataflowValue()
+    if Object::hasOwnProperty.call FormulaCompiler.TIME_SOURCES, name
+      return FormulaCompiler.timeSourceFor(name, world?.dataflow)?.dataflowValue()
     undefined

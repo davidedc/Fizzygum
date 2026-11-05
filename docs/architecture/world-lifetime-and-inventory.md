@@ -96,8 +96,10 @@ green suite):
   a self-capping store like an LRU states no cap — the store is its own enforcement) or
   `monotonic-ok` (free-running by design). Everything undeclared must be STABLE.
 - **Report-only dimensions** — the bulk aggregates (`objects.*`, `strings.*`, `canvases.*`,
-  `containers.*`, `typedArrays.*`): every bounded-cache admission moves them, so they inform
-  forensics but never gate.
+  `containers.*`, `typedArrays.*`) and the walk's own `walker.*`: every bounded-cache admission
+  moves them, so they inform forensics but never gate. Which family is which is ONE table,
+  `WorldInventory.KEY_FAMILIES`, naming every family the inventory emits; a family it does not
+  name is GATED — a new one fails closed until it is declared there with its reason.
 
 ## 4. How to read a failure
 

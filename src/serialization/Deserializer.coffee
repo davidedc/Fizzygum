@@ -103,27 +103,13 @@ class Deserializer
         for name in record.derived
           canvas = shells[i][name.replace "Context", ""]
           shells[i][name] = canvas.getContext "2d" if canvas?.getContext?
-    # (c) re-register world-set memberships recorded at serialize time.
-    # ⚠ Re-registration hands the shell to machinery that reads its fields, so every marker
-    # carries a verdict against the transients this restore just dropped: STEPPING's loop
-    # re-seeds the dropped lastTime itself (a restored throttled stepper NaN-stalled until it
-    # did — see _runChildrensStepFunction); the KEYBOARD dispatch reads only the prototype
-    # method, and the one receiver with transient state (the spreadsheet) rebuilds it in the
-    # per-class hook, pass (d) below, before any event can arrive; the REFERENCE TRACKER's
-    # consumers read destroyed + referencedWidget, both serialized (ShortcutWdgt declares no
-    # transients); the OPENPOPUPS consumers read isOrphan()/instanceNumericID (re-derived /
-    # serialized), and the dropped closure mark restores false — the correct state for a
-    # pinned pop-up. A NEW marker must state its verdict here: what does the re-registered
-    # machinery read, and is any of it transient-dropped?
+    # (c) re-register world-set memberships recorded at serialize time: each marker names its set in
+    # Serializer.WORLD_SET_MEMBERSHIPS, the table the save wrote it from, which also holds each
+    # marker's verdict on what the re-registered machinery reads. Every marker is one of its keys:
+    # _envelopeShapeProblem refused the envelope up front otherwise.
     if world?
       for record, i in records when record.memberships?
-        shell = shells[i]
-        for m in record.memberships
-          switch m
-            when "stepping"         then world.steppingWdgts?.add shell
-            when "keyboardReceiver" then world.keyboardEventsReceivers?.add shell
-            when "referenceTracker" then world.widgetsReferencingOtherWidgets?.add shell
-            when "openPopUp"        then world.openPopUps?.add shell
+        world[Serializer.WORLD_SET_MEMBERSHIPS[marker]]?.add shells[i] for marker in record.memberships
     # (d) per-class post-restore hook (absorbs ad-hoc deserialization guards). A hook that re-makes
     # an element the page loads from its holder's path (an image) answers that load's promise, and
     # whenReady waits for it: the restore is ready when what it re-made has arrived, not merely when
@@ -176,6 +162,16 @@ class Deserializer
     for record, i in envelope.objects
       unless record? and typeof record.class is "string"
         return "its object table is malformed (entry " + i + " names no class)"
+      # a world-set membership this build has no set for would be dropped by the restore: refused
+      # here instead. An own-property test, because a marker is DATA read out of a file.
+      for marker in (record.memberships or [])
+        unless Object::hasOwnProperty.call Serializer.WORLD_SET_MEMBERSHIPS, marker
+          return "its object table is malformed (entry " + i + " records a membership of '" + marker +
+            "', a world set this build does not have)"
+    # a well-known key no Fizzygum build writes would bind to nothing: refused here, before anything is
+    # built (an app key naming a class this build lacks is NOT one -- it is left undefined, resolveApp)
+    for key in Serializer.wellKnownKeysIn envelope
+      return "it names the well-known object '" + key + "', which no Fizzygum build has" unless WellKnownObjects.isKnownKey key
     undefined
 
   # --- native-type tag registry ---

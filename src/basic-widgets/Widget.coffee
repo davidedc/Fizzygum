@@ -47,29 +47,9 @@ class Widget extends TreeNode
     # under a name that rides a save.)
     "backBuffer", "backBufferContext"
     "_backBufferShadowSilhouette", "_backBufferShadowSilhouetteSource"
-    "cachedFullBounds", "checkFullBoundsCache", "childrenBoundsUpdatedAt"
-    # the root() cache (TreeNode) — the ONE cache pair that was missing here: a STALE
-    # cachedRoot can point into a subtree destroyed since the last structure change
-    # (root() itself never reads it stale — it checks structureVersion — but the
-    # serializer walks the raw field), so capture-mode world snapshots pulled dead
-    # subtrees in and crashed on their unserializable handler functions (found by the
-    # bin/shelf probe's mid-sort snapshot check, 2026-07-23). Recomputed on demand.
-    "cachedRoot", "checkRootCache"
-    # the firstParentClippingAtBounds() cache (TreeNode) — the SAME identity-cache hazard as
-    # cachedRoot above (it points at a WIDGET, and the serializer walks the raw field), found
-    # missing here by the 2026-08-20 twins-rider review while fixing the Duplicator's copy of
-    # the whole cache family. Recomputed on demand.
-    "cachedFirstParentClippingAtBounds", "checkFirstParentClippingAtBoundsCache"
-    "cachedFullClippedBounds", "checkFullClippedBoundsCache"
-    "cachedVisibleBasedOnIsVisibleProperty", "checkVisibleBasedOnIsVisiblePropertyCache"
-    "cachedClippedThroughBounds", "checkClippedThroughBoundsCache"
-    "cachedClipThrough", "checkClipThroughCache"
-    "cachedIsInCollapsedSubtree", "checkIsInCollapsedSubtreeCache"
-    # §4.4 island buffer cache source-lane fields: ephemeral per-frame paint state (a widget ref +
-    # a virtual rect), consumed at flesh-out — never persist them (a snapshot must not pin an island).
-    # The Duplicator drops them too (a clone never painted into any buffer; a copied stash would
-    # deposit a false "vacated" rect onto the ORIGINAL's island and pin it — see _cloneContentInto).
-    "_islandBufferSourceIsland", "_islandBufferSourceVirtualRect"
+    # (the DERIVED-STATE fields -- every cached<X>/check<X>Cache pair, childrenBoundsUpdatedAt, the
+    # island source-lane stash -- are not listed: the serializer skips them by NAME, through
+    # Widget.isDerivedStateField below, so a new cache pair needs no line here)
     # flush-scoped settle-engine bookkeeping (ordered down-walk Stage B1): the flag mirrors the
     # work-list's lifecycle and is cleared when the drain completes, so persisting it would only
     # bake a stale own-property into saved files (a restored flag has no matching work-list entry).
@@ -94,6 +74,24 @@ class Widget extends TreeNode
     "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
     "srcDamageRectIndex", "dstDamageRectIndex"
   ]
+
+  # DERIVED STATE, told by the field's NAME -- ONE rule with three readers that must agree: the
+  # Serializer never writes such a field, the Duplicator never copies one, and WorldInventory never
+  # counts retention through one.
+  #   - the version-keyed cache pairs, cached<X> + check<X>Cache (TreeNode's root() and
+  #     firstParentClippingAtBounds(), my bounds/clip/visibility caches), and the frame-stamped
+  #     childrenBoundsUpdatedAt: each re-derives on its first read. A copied cache arrives stamped at
+  #     the CURRENT version yet holds the ORIGINAL's value (a mid-assembly clone's root() answered
+  #     the original's world), and a saved one can point into a subtree destroyed since the last
+  #     structure change (root() never reads it stale, but a walker reads the raw field), which pulls
+  #     dead subtrees into a snapshot;
+  #   - the island source-lane stash, _islandBufferSource* (transforms §8.1): per-frame paint state
+  #     consumed at flesh-out. A snapshot must not pin an island, and a clone has never painted, so a
+  #     copied stash would deposit a false "vacated" rect onto the original's island.
+  # A new cache is covered by being NAMED like one: there is no list to add it to.
+  @isDerivedStateField: (name) ->
+    /^cached[A-Z]/.test(name) or /^check[A-Z].*Cache$/.test(name) or
+      name is "childrenBoundsUpdatedAt" or /^_islandBufferSource/.test(name)
 
   appearance: undefined
 

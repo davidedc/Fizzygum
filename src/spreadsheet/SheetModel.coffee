@@ -17,12 +17,20 @@ class SheetModel
   # Duplicator's own Map handler; @sheetWidget maps to the copied widget through the copier's
   # identity tracking.
 
-  # canonical cell-address shape: 1–2 uppercase letters + a 1-based row 1..9999. Kept in sync
-  # with FormulaCompiler's in-source scan regex; `looksLikeCellRef` is the ANCHORED full-string
-  # test (the scan uses the un-anchored, boundary-guarded variant).
+  # canonical cell-address shape: 1–2 uppercase letters + a 1-based row 1..9999, written ONCE.
+  # `looksLikeCellRef` is the ANCHORED full-string test; cellRefScan is the same grammar
+  # un-anchored and boundary-guarded, built from this pattern, for finding the references in a
+  # formula's source (FormulaCompiler).
   @cellAddressPattern: /^[A-Z]{1,2}[1-9][0-9]{0,3}$/
 
   @looksLikeCellRef: (name) -> SheetModel.cellAddressPattern.test name
+
+  # A FRESH global regex each call (a /g regex carries lastIndex between uses). The `(?<![\w$.])`
+  # lookbehind excludes property access, so `foo.A1` is NOT a reference; `(?![\w$])` excludes
+  # longer identifiers. JS lookbehind is supported on every engine the suite runs (current
+  # Chrome/Puppeteer, Playwright WebKit, production Safari >= 16.4).
+  @cellRefScan: ->
+    new RegExp "(?<![\\w$.])" + SheetModel.cellAddressPattern.source[1...-1] + "(?![\\w$])", "g"
 
   constructor: (@sheetWidget) ->
     # address string ("A1") -> SheetCellRecord. Insertion order is irrelevant (paint walks it,

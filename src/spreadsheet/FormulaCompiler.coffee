@@ -20,17 +20,17 @@
 
 class FormulaCompiler
 
-  # un-anchored, boundary-guarded cell-ref scan (kept in sync with SheetModel.cellAddressPattern,
-  # the anchored full-string test). The `(?<![\w$.])` lookbehind excludes property access, so
-  # `foo.A1` is NOT a reference; `(?![\w$])` excludes longer identifiers. JS lookbehind is
-  # supported on every engine the suite runs (current Chrome/Puppeteer, Playwright WebKit,
-  # production Safari >= 16.4).
-  @cellRefScan: /(?<![\w$.])[A-Z]{1,2}[1-9][0-9]{0,3}(?![\w$])/g
+  # Reserved time-binding identifiers (spec §6) -> the world time source each binds. Each, when it
+  # appears as a bare identifier, binds as a formula parameter carrying that source's pulled value
+  # (SheetCellRecord's resolver) AND becomes an edge from that source (commit, below) -- ONE table
+  # for the three readers, so a binding cannot be scanned and then resolve to nothing. Not
+  # cell-ref-shaped, so they never collide with an address.
+  @TIME_SOURCES: {seconds: ((engine) -> engine.secondsSource()), frame: ((engine) -> engine.frameSource())}
 
-  # Reserved time-binding identifiers (spec §6): each, when it appears as a bare identifier, binds
-  # as a formula parameter carrying the matching time source's pulled value AND becomes an edge to
-  # that source. Not cell-ref-shaped, so they never collide with an address.
-  @timeBindingNames: ["seconds", "frame"]
+  # the time source `name` binds (an own key of @TIME_SOURCES), from `engine`, or undefined
+  @timeSourceFor: (name, engine) ->
+    return undefined unless engine? and Object::hasOwnProperty.call FormulaCompiler.TIME_SOURCES, name
+    FormulaCompiler.TIME_SOURCES[name] engine
 
   # Strip CoffeeScript comments and string literals to a SCAN COPY (whitespace-preserving-ish),
   # so an address-shaped substring inside a comment or string is NOT mistaken for a reference
@@ -58,7 +58,7 @@ class FormulaCompiler
       seen.add n
       names.push n
     # cell references
-    (scanCopy.match(FormulaCompiler.cellRefScan) ? []).forEach push
+    (scanCopy.match(SheetModel.cellRefScan()) ? []).forEach push
     # FormulaHelpers veneer names (Phase 3+): bind each helper whose name appears as a bare
     # identifier. Guarded so 2b (no veneer yet) simply finds none.
     if FormulaHelpers?
@@ -68,7 +68,7 @@ class FormulaCompiler
     # time bindings (spec §6): `seconds` / `frame` bind as parameters carrying the time sources'
     # pulled values, and each becomes an edge to its source (commit, below). Boundary-guarded so
     # `secondsElapsed`, `frameRate`, or `foo.frame` do NOT match.
-    for timeName in FormulaCompiler.timeBindingNames
+    for own timeName of FormulaCompiler.TIME_SOURCES
       boundaryRe = new RegExp "(?<![\\w$.])" + timeName + "(?![\\w$])"
       push timeName if boundaryRe.test scanCopy
     names
@@ -126,8 +126,8 @@ class FormulaCompiler
     # No cycle check — a source has no inputs, so it can never close a loop. The engine's addEdge
     # bumps the source's subscriber count, registering it in the stepping loop on its first cell.
     if engine?
-      engine.addEdge engine.secondsSource(), cell if "seconds" in boundNames
-      engine.addEdge engine.frameSource(),  cell if "frame"   in boundNames
+      for own timeName of FormulaCompiler.TIME_SOURCES when timeName in boundNames
+        engine.addEdge FormulaCompiler.timeSourceFor(timeName, engine), cell
     cell.compiledFn = compiledFn
     cell.boundNames = boundNames
     cell.errorFlag  = false

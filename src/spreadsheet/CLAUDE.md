@@ -110,7 +110,7 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   error propagation arrive in 2c.
 - `FormulaCompiler.coffee` (2b) — stateless (class methods): `commit(cell, source)` scans the
   source (comments/strings stripped) for the identifiers to bind — cell refs (`A1`), helper
-  names, and the time bindings `seconds`/`frame` (5, `@timeBindingNames`) — builds the
+  names, and the time bindings `seconds`/`frame` (5, `@TIME_SOURCES` — binding → its source, the one table the scan, the edges and `SheetCellRecord`'s resolver read) — builds the
   `"(names) ->\n  <source>"` wrapper and compiles it ONCE via `compileFGCode` (bare) to
   `@compiledFn`; a compile failure yields a `#SYNTAX` `SheetError`. `commit` also declares the
   reactive edges: cell refs (with a cycle check) and time-source edges (`seconds`/`frame` → the

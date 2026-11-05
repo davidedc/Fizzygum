@@ -459,9 +459,6 @@ class WorldWdgt extends IconGridPanelWdgt
   # every caller soaks (@pinouts?.…) and it is legitimately undefined in a production build.
   pinouts: undefined
 
-  # the simple-editor templates carried in a whole-world snapshot; undefined until one is loaded.
-  simpleEditorTemplates: undefined
-
   isIndexPage: undefined
   # dev mode: the in-world editing/inspection affordances. Toggled from the world menu.
   isDevMode: undefined
@@ -3067,14 +3064,13 @@ class WorldWdgt extends IconGridPanelWdgt
         @users?[i]?.armDrawingTool eachRecord.armedDrawingTool
       # 6. install the restored (self-contained, off-tree) storage containers (the teardown
       #    destroyed the previous pair) so every $r pointer at them (the bin opener's target, ...)
-      #    stays consistent, and re-bind the app windows (into the registry, @appWindows) and the
-      #    templates window (orphaned-but-revivable — NOT re-attached to the desktop here).
+      #    stays consistent, and re-bind the app windows into the registry, @appWindows
+      #    (orphaned-but-revivable — NOT re-attached to the desktop here).
       restoredBin = resolve section.bin
       @binWdgt = restoredBin if restoredBin?
       restoredShelf = resolve section.shelf
       @shelfWdgt = restoredShelf if restoredShelf?
       @appWindows.set appName, resolve(refVal) for own appName, refVal of (section.appWindows or {})
-      @simpleEditorTemplates = resolve(section.simpleEditorTemplates) if section.simpleEditorTemplates?
     finally
       @binWdgt ?= new BinWdgt
       @shelfWdgt ?= new ShelfWdgt
@@ -3363,14 +3359,12 @@ class WorldWdgt extends IconGridPanelWdgt
     # The station re-derives it from the restored desktop on the next cycle, and the frames a load
     # re-adds derive their look while nothing is focused, so the station's flip finds them all unfocused.
     @_focusedFrame = undefined
-    # DANGLING APP WINDOWS. The app-window registry and simpleEditorTemplates hold widgets that
-    # fullDestroyChildren above just destroyed, so each would keep a DEAD reference into the next
-    # test (or, on the load path, into the rest of the session). StorageSorter's furniture marking
-    # reads both unconditionally, so a dead ref there is walked every sort. The loader re-binds both
-    # from the snapshot afterwards (step 6), which is exactly the teardown-empties / caller-fills
-    # split this core is built on.
+    # DANGLING APP WINDOWS. The app-window registry holds widgets that fullDestroyChildren above
+    # just destroyed, so it would keep DEAD references into the next test (or, on the load path,
+    # into the rest of the session). StorageSorter's furniture marking reads it unconditionally, so
+    # a dead ref there is walked every sort. The loader re-binds it from the snapshot afterwards
+    # (step 6), which is exactly the teardown-empties / caller-fills split this core is built on.
     @appWindows.clear()
-    @simpleEditorTemplates = undefined
     # the error console is worse than a dead ref: _showErrorsHappenedInRepaintingStepInPreviousCycle
     # only builds one `if !@errorConsole?`, so a destroyed-but-non-undefined console makes every later
     # paint error in the page report into a dead widget -- silently swallowing the errors the
@@ -3844,7 +3838,6 @@ class WorldWdgt extends IconGridPanelWdgt
   graphLivenessRoots: ->
     roots = [@, @hand]
     roots.push appWindow for appWindow from @appWindows.values()
-    roots.push @simpleEditorTemplates if @simpleEditorTemplates?
     binContents = @binWdgt?.viewport?.contents
     roots.push binContents.children... if binContents?
     roots.push @shelfWdgt.children... if @shelfWdgt?

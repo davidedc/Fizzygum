@@ -98,11 +98,10 @@ class StorageSorter
 
     # phase B -- system furniture parked in storage is reachable through WORLD
     # FIELDS: the windows of the apps that open ONE window (world.appWindows,
-    # revived by their launchers) and the editor templates window (revived by
-    # TemplatesButtonWdgt). Marked before the fixpoint so edges held INSIDE them
+    # revived by their doors -- a launcher, or for TemplatesApp the editor's
+    # templates button). Marked before the fixpoint so edges held INSIDE them
     # relay like any other reachable resident's.
     appWindow.markItAndItsParentsAsReachable newGcSessionId for appWindow from world.appWindows.values()
-    world.simpleEditorTemplates?.markItAndItsParentsAsReachable newGcSessionId
 
     # phase C fixpoint: a storage resident whose chain became reachable relays
     # its subtree's edges to ITS targets; chains resolve progressively until no

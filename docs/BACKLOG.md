@@ -11,15 +11,15 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
-### `plans/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (PLAN ONLY, 2026-11-05)
+### `plans/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; Tier 2 LANDED)
 - [ ] Tier 1 (§3): ten gates/rigs that silently check less today — the serialization rig's
       `COLLECTIONS` and `DRAG_SLOTS`, menusweep's unswept menu contributors, pinsweep's 0-wearer
       appearances, the census's app list, the retired repaint verbs in check-layering + the call
       census, check-plane-discipline's position queries, the tier-naming families, the CoffeeScript
       helper globals, the ungated `LAYOUT_ERROR` / `RECALC_NONCONVERGENCE` tokens.
-- [ ] Tier 2 (§4): shipping mirrors — ⚑ the templates window beside `world.appWindows`, ⚑ InfoDocs
-      titles/icons vs AppCatalog, a stale `requires` in parts.json, snapshot memberships,
-      WellKnownObjects, the derived-cache rule, pointer-handler names.
+- [ ] Owner call, from Tier 2 (§4.5): the four string `wellKnownKey` markers (Preferences, Wallpaper,
+      DataflowEngine, WidgetFactory) repeat `WellKnownObjects`' table keys and are now asserted against
+      it; they are redundant with the identity match — delete them, or keep them asserted.
 - [ ] Tier 3 (§5): diagnostic tools reporting on a stale picture (aim-census, layout-audit and
       revisit-trace preludes, census-nosettle-naming, heap-forensics roots, smoke-boot).
 - [ ] Tier 4 (§6): the standing guard — allowlists report unused entries; a hand-list gate; the doctrine.

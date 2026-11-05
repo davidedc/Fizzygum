@@ -25,7 +25,8 @@
 # Examples, "How to save?") titles it through WindowedApp._title, so the icon and the window it
 # opens cannot disagree. An Examples door is therefore named for what its document holds — its
 # icon already shows the kind. A Maker opens a fresh, untitled document each time, so its window is
-# the document's and not the app's.
+# the document's and not the app's; the one-shot info window beside it is the app's, and InfoDocs
+# reads its heading, its "<name> info" window title and its icon from here.
 
 class AppCatalog
 

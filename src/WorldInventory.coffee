@@ -48,22 +48,37 @@ class WorldInventory
   # (harness-owned stores -- the runner's own state machine -- are declared by the harness
   # audit seam pushing onto this table: the instrument must not name harness classes)
 
-  # Cache-shaped property names are DERIVED state, skipped exactly as the Duplicator
-  # skips them when field-copying (Duplicator._cloneContentInto).
-  @_derivedCacheName: (name) ->
-    /^cached[A-Z]/.test(name) or /^check[A-Z].*Cache$/.test(name) or
-      name is "childrenBoundsUpdatedAt" or /^_islandBufferSource/.test(name)
-
   # own-static names that are meta-machinery, not state (`instances` is reported
   # through its own instances.<Class> dimension)
   @_skippedStaticNames: new Set ["prototype", "__super__", "name", "length", "caller", "arguments", "instances"]
 
-  # The gate's teeth. Bulk aggregates (objects.*, strings.*, canvases.*, containers.*,
-  # typedArrays.*) are REPORT-ONLY diagnostics: every bounded-cache admission moves
-  # them, so gating them would fire on legitimate churn (the ratchet's own first-cut
-  # lesson: 1469 hits on a green suite).
+  # The gate's teeth: EVERY key family takeInventory emits, by its prefix, and whether a change across
+  # resetWorld FAILS (gated) or is only reported. The bulk aggregates (objects.*, strings.*,
+  # canvases.*, containers.*, typedArrays.*) are REPORT-ONLY diagnostics: every bounded-cache
+  # admission moves them, so gating them would fire on legitimate churn (the ratchet's own first-cut
+  # lesson: 1469 hits on a green suite); walker.* counts the walk's own errors.
+  # ⚠ An UNDECLARED family is GATED: a new one fails closed, naming its key, until it is declared here
+  # with its reason -- never silently unwatched.
+  @KEY_FAMILIES:
+    instances:    "gated"
+    statics:      "gated"
+    world:        "gated"
+    dom:          "gated"
+    swCanvasText: "gated"
+    hashCode:     "gated"
+    sourceVault:  "gated"
+    classes:      "gated"
+    objects:      "report-only"
+    strings:      "report-only"
+    canvases:     "report-only"
+    containers:   "report-only"
+    typedArrays:  "report-only"
+    walker:       "report-only"
+
   @_gatedKey: (key) ->
-    /^(instances|statics|world|dom|swCanvasText|hashCode|sourceVault|classes)\./.test key
+    family = key.split(".")[0]
+    return true unless Object::hasOwnProperty.call WorldInventory.KEY_FAMILIES, family
+    WorldInventory.KEY_FAMILIES[family] is "gated"
 
   @_policyFor: (key) ->
     for declaration in WorldInventory.pageLifetimeStores
@@ -205,7 +220,7 @@ class WorldInventory
           zombies.push {id: passiveId(value), path: pathOf(value)}
         transients = transientsOf ctor, ctorName
         for own name of value
-          continue if WorldInventory._derivedCacheName name
+          continue if Widget.isDerivedStateField name
           continue if transients?.has name
           descriptor = undefined
           try
@@ -249,7 +264,7 @@ class WorldInventory
     # rows so a declared growth policy has a row to check
     if world?
       for own fieldName of world
-        continue if WorldInventory._derivedCacheName fieldName
+        continue if Widget.isDerivedStateField fieldName
         descriptor = undefined
         try
           descriptor = Object.getOwnPropertyDescriptor world, fieldName

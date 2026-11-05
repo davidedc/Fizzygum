@@ -1,4 +1,5 @@
-# Opens / re-focuses the editor's "useful snippets" templates window.
+# Opens / re-focuses the editor's "useful snippets" templates window -- the one window of
+# TemplatesApp, which keeps it in world.appWindows (see there).
 # See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
 class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
@@ -7,27 +8,5 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  bringTemplatesWindowIntoView: ->
-    world.simpleEditorTemplates.bringToForeground()
-    world.simpleEditorTemplates._applyMoveTo world.hand.position().subtract new Point 50, 50
-    world.simpleEditorTemplates._moveWithin world
-
   activated: ->
-    if world.simpleEditorTemplates?
-      if world.simpleEditorTemplates.destroyed or !world.simpleEditorTemplates.parent?
-        templatesWindow = TemplatesWindowWdgt.create()
-        @positionTemplatesWindowAndRegisterIt templatesWindow
-      else if world.shelfWdgt.holds world.simpleEditorTemplates
-        world.add world.simpleEditorTemplates
-        @bringTemplatesWindowIntoView()
-      else if !world.simpleEditorTemplates.destroyed and world.simpleEditorTemplates.parent == world
-        @bringTemplatesWindowIntoView()
-    else
-      templatesWindow = TemplatesWindowWdgt.create()
-      @positionTemplatesWindowAndRegisterIt templatesWindow
-
-  positionTemplatesWindowAndRegisterIt: (templatesWindow) ->
-    templatesWindow._applyMoveTo world.hand.position().subtract new Point 50, 50
-    templatesWindow._moveWithin world
-    world.add templatesWindow
-    world.simpleEditorTemplates = templatesWindow
+    (new TemplatesApp).launch()

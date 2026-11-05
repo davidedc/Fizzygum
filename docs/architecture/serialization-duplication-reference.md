@@ -177,7 +177,10 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
   immutable-color dedupe is preserved.
 - `iid` records the original `instanceNumericID` (informational for `kind:"widget"`;
   restored for `kind:"world"`). `memberships` records world-set membership at save time
-  (§5).
+  (§5), as markers from ONE table both directions read, `Serializer.WORLD_SET_MEMBERSHIPS`
+  (marker → world Set field, each with its verdict on what the re-registered machinery reads); a
+  marker outside it makes the envelope malformed, refused up front (`_envelopeShapeProblem`) —
+  so before a world load's teardown — rather than dropped by the restore.
 - Output is **deterministic** given identical world state (the serializer touches no ID
   counters — §7). A `prettyPrint` option indents for humans/diffs.
 
@@ -250,8 +253,14 @@ inherited (merged up the chain like the codebase's other class-body conventions)
 
 ```coffee
 class Widget extends TreeNode
-  @serializationTransients: ["lastTime", "cachedFullBounds", …]  # skipped at serialize
+  @serializationTransients: ["lastTime", "backBuffer", …]  # skipped at serialize
 ```
+
+DERIVED STATE needs no declaration: the serializer also skips every field `Widget.isDerivedStateField`
+names — the version-keyed cache pairs (`cached<X>` + `check<X>Cache`), `childrenBoundsUpdatedAt` and the
+island source-lane stash `_islandBufferSource*` — the ONE rule the Duplicator (never copies one) and
+`WorldInventory` (never counts retention through one) read too, so a new cache is covered by being
+NAMED like one.
 
 - **The reader** is `Serializer.transientsForClass(klass)` — a Set over boot's
   `classStaticListMergedUpTheChain klass, "serializationTransients"` (`src/boot/globalFunctions.coffee`),
@@ -366,7 +375,7 @@ class Widget extends TreeNode
 
 | Class | Transients | Why |
 |---|---|---|
-| `Widget` (caches) | `lastTime`; the render caches `backBuffer`/`backBufferContext` and their shadow-silhouette twins; the `WorldWdgt.geometryVersion`-keyed geometry caches (`cachedFullBounds`, `cachedFullClippedBounds`, `cachedVisibleBasedOnIsVisibleProperty`, `cachedClippedThroughBounds`, `cachedClipThrough`, `cachedIsInCollapsedSubtree` — each with its `check…Cache` twin — plus `childrenBoundsUpdatedAt`); the `root()` cache `cachedRoot`/`checkRootCache`; the island-buffer source lane `_islandBufferSourceIsland`/`_islandBufferSourceVirtualRect`; the flush-scoped `hasDirtyDescendant` | frame timing + derived caches, all re-derived on demand after restore. ⚠ `cachedRoot` is the one whose absence bit: `root()` itself never reads it stale (it checks `structureVersion`) but the SERIALIZER walks the raw field, so a stale pointer dragged destroyed subtrees — and their unserializable handler functions — into capture-mode world snapshots |
+| `Widget` (caches) | `lastTime`; the render caches `backBuffer`/`backBufferContext` and their shadow-silhouette twins; the flush-scoped `hasDirtyDescendant`; the damage-rect bookkeeping. NOT listed, because skipped by NAME (`Widget.isDerivedStateField`): every geometry/identity cache pair (`cachedFullBounds`, `cachedRoot`, … each with its `check…Cache` twin), `childrenBoundsUpdatedAt`, the island-buffer source lane `_islandBufferSource*` | frame timing + derived caches, all re-derived on demand after restore. ⚠ An identity cache is the one whose absence bites: `root()` itself never reads `cachedRoot` stale (it checks `structureVersion`) but a walker reads the raw field, so a stale pointer drags destroyed subtrees — and their unserializable handler functions — into capture-mode world snapshots |
 | `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcDamageRectIndex`, `dstDamageRectIndex` | per-frame damage-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
 | `FrameWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs. It sat on `Widget` while the merge was broken (the base was the only place a declaration was safe); with the merge fixed it is declared by the class that owns and reads it |
 | `SimpleImageWdgt` | `img`, `imageLoaded` | the loaded `Image` and whether it has arrived are facts about THIS page: `_afterDeserialization` and `_reactToBeingCopied` reload `imagePath`, the one saved part of the picture (a carried `true` would draw an undecoded image: a throw under SWCanvas, nothing natively — and a copy whose load the original started never repaints) |
@@ -531,8 +540,8 @@ furniture and stay): the desktop `world.children`, the off-tree `world.binWdgt` 
 shelf holding the reachable residents and the bin the lost ones, `StorageSorter`; a snapshot
 taken with a sort still pending is legitimate — each resident serializes wherever it rests
 and re-sorts on the first cycle after load), each registered app window (`world.appWindows`,
-the windows of the apps that open ONE window — may be orphaned-but-revivable), and
-`world.simpleEditorTemplates`. `widgetSet` = the union of their subtrees; the
+the windows of the apps that open ONE window, the Docs Maker's templates window among them
+(`TemplatesApp`) — may be orphaned-but-revivable). `widgetSet` = the union of their subtrees; the
 world itself is excluded (a pointer *to* it becomes `{"$wk":"world"}`).
 
 **`onExternalPointer: "capture"`** (world default, vs `"throw"` for widgets): an off-tree
@@ -546,7 +555,7 @@ unserializable value still raises the rich `SerializationError`.
 `infoDocFlags` (the `world.infoDoc_*_created` own booleans),
 `untitledNamingCounters`, `users` (`world.users` — each `User`'s `armedDrawingTool` KEY,
 captured by name like the naming service since a `User` is a plain delegated collaborator,
-not a tree object), `appWindows` (`{AppClassName:{$r}}`), `simpleEditorTemplates` (`{$r}`),
+not a tree object), `appWindows` (`{AppClassName:{$r}}`),
 `bin` (`{$r}`), `shelf` (`{$r}`), `preferences` (a FORCED data record — `refFor` would give the
 `{"$wk":"preferences"}` symbolic link, but the section needs the actual values, restored onto
 the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
@@ -592,8 +601,8 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    with the hand's drag-embed record cleared by the verb a release uses); the two storage
    containers `binWdgt`/`shelfWdgt`, DESTROYED WHOLE and let go of (they are snapshot roots that
    neither caller keeps, so emptying them would leak the shells on every load — and they die
-   before the core's paint-queue filter, since a dying widget re-marks damage); the app-window registry +
-   `simpleEditorTemplates`, the highlight tracking structures, `errorConsole` /
+   before the core's paint-queue filter, since a dying widget re-marks damage); the app-window registry,
+   the highlight tracking structures, `errorConsole` /
    `lastEditedText` / `_editorSelectedWidget`, the tooltip / pop-up / clicked-hierarchy / handle /
    scroll-momentum / paint-error collections, the `_damageSuppressionDepth` counter, and the
    one-shot `infoDoc*` flags. Restoring what the world should LOOK like afterwards is the
@@ -618,7 +627,7 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
 4. Restore the static `preferences` bag; apply the scalars (isDevMode/alpha/infoDoc/naming/
    icon-count) to the LIVE world; **install** the restored (self-contained, off-tree)
    `binWdgt` and `shelfWdgt` (the teardown destroyed the previous pair) so every `{$r}` pointer
-   at them (the bin opener's target, …) stays consistent; re-bind the app windows (into `world.appWindows`) and the templates window (orphaned-but-revivable — not
+   at them (the bin opener's target, …) stays consistent; re-bind the app windows into `world.appWindows` (orphaned-but-revivable — not
    re-attached to the desktop). Restore completion marks the storage sort pending
    (`noteStorageMembershipMayHaveChanged`), so a mid-pending snapshot re-sorts on the first
    cycle.

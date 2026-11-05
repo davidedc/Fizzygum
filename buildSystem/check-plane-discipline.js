@@ -68,15 +68,13 @@ const MAPPED_RE = /screenPointToMyPlane|localPointToScreen|mapRectToScreen|scree
 const NON_WIDGET_ROOTS = new Set(['Math', 'Rectangle', 'Point', 'window', 'JSON', 'Object']);
 
 // the pointer handlers whose FIRST parameter is the pointer position (C1 checks the ones of them that
-// some `escalateEvent` call forwards)
-const POS_HANDLER_NAMES = new Set([
-  'pressBegan', 'pressEnded',
-  'activated', 'contextMenuRequested', 'doubleActivated', 'tripleActivated',
-  'hoverMoved', 'pressMoved',
-]);
+// some `escalateEvent` call forwards), and the handler handed the raw SCREEN pointer with the
+// position of that parameter (C2) -- both read from the ONE handler table (lib/pointer-handlers.js),
+// which check-raw-pointer-reads.js holds against what ActivePointerWdgt actually dispatches
+const pointerHandlers = require('./lib/pointer-handlers');
+const POS_HANDLER_NAMES = new Set(pointerHandlers.PLANE_POS_HANDLER_NAMES);
 const ESCALATE_CALL_RE = /escalateEvent\s*\(?\s*["']([A-Za-z_$][A-Za-z0-9_$]*)["']/g;
-// the handler handed the raw SCREEN pointer, and the position of that parameter (C2)
-const RAW_SCREEN_POS_HANDLERS = new Map([['nonFloatDragging', 1]]);
+const RAW_SCREEN_POS_HANDLERS = pointerHandlers.RAW_SCREEN_POS_HANDLERS;
 const ESCALATED_EXEMPT = /#\s*escalated-pos-sanctioned:\s*\S/;
 
 function walk(dir, acc) {

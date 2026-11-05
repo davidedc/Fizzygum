@@ -29,8 +29,8 @@ class WindowedApp
 
   # --- per-app configuration (subclasses override) ---
   # true: the app opens ONE window, kept in world.appWindows under my class name and brought forward
-  # on every later launch (the Examples, How to save?); false: a fresh window every launch (the
-  # Makers). The registry is the one place the world keeps such windows, so whatever else must know
+  # on every later launch (the Examples, How to save?, the Docs Maker's templates window); false: a
+  # fresh window every launch (the Makers). The registry is the one place the world keeps such windows, so whatever else must know
   # them -- the storage sort, the liveness roots, a snapshot, a teardown -- walks it, and an app
   # opening one window needs nothing beyond this line.
   opensOneWindow: false

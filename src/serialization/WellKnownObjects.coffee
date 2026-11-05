@@ -23,43 +23,55 @@
 # world, so keyFor is robust even where no marker is declared.
 class WellKnownObjects
 
+  # THE WELL-KNOWN SINGLETONS: key -> the object it names in the LIVE world, read afresh on every
+  # call (the DESIGN above). ONE table for both directions -- keyFor matches an object against it by
+  # identity, resolve looks a key up in it -- so a key cannot be written on save and then fail to bind
+  # on load. The app singletons are the one family outside it, because their key carries the class
+  # name: "app:<ClassName>", answered by resolveApp.
+  # ⚠ ONE LINE PER ENTRY, NO COMMENTS INSIDE THE OBJECT: a method body compiles alone (AppCatalog's
+  # header says why).
+  @_liveSingletons: ->
+    "world":         (world if world?)
+    "hand":          world?.hand
+    "wallpaper":     world?.wallpaper
+    "widgetFactory": world?.widgetFactory
+    "dataflow":      world?.dataflow
+    "bin":           world?.binWdgt
+    "shelf":         world?.shelfWdgt
+    "preferences":   WorldWdgt.preferencesAndSettings
+
+  # Is `key` one a Fizzygum file can carry: a table key, or an app key? A key is DATA read out of a
+  # file, hence the own-property test (a plain lookup also answers `constructor`, `__proto__`).
+  @isKnownKey: (key) ->
+    return false unless typeof key is "string"
+    Object::hasOwnProperty.call(@_liveSingletons(), key) or key.indexOf("app:") is 0
+
   # live object -> symbolic key, or undefined if the object is not well-known.
   @keyFor: (obj) ->
     return undefined unless obj?
-    if world?
-      return "world"         if obj is world
-      return "hand"          if obj is world.hand
-      return "wallpaper"     if obj is world.wallpaper
-      return "widgetFactory" if obj is world.widgetFactory
-      return "dataflow"      if obj is world.dataflow
-      return "bin"      if obj is world.binWdgt
-      return "shelf"    if obj is world.shelfWdgt
-    return "preferences"     if obj is WorldWdgt.preferencesAndSettings
+    for own key, live of @_liveSingletons()
+      return key if live is obj
     # general fallback: a class-declared marker (data string or computed method),
-    # e.g. app singletons expose `wellKnownKey: -> "app:" + @constructor.name`.
+    # e.g. app singletons expose `wellKnownKey: -> "app:" + @constructor.name`. A marker the table
+    # does not know would be written into a file that no load can bind: refused here, loudly.
     wk = obj.wellKnownKey
     wk = wk.call obj if typeof wk is "function"
-    return wk if wk?
-    undefined
+    return undefined unless wk?
+    unless @isKnownKey wk
+      throw new SerializationError ("an object declares the well-known key '" + wk + "', which WellKnownObjects does not have")
+    wk
 
-  # symbolic key -> the live object in the CURRENT world, or undefined if the key is unknown
-  # (an unknown key is the deserializer's cue to raise a rich error).
+  # symbolic key -> the live object in the CURRENT world (undefined when that singleton is absent,
+  # e.g. a world with no wallpaper yet, or an app class this build lacks -- see resolveApp). A key
+  # no Fizzygum build writes THROWS: the deserializer refuses such a file up front
+  # (Deserializer._envelopeShapeProblem asks isKnownKey), so this throw is the net for every other
+  # caller.
   @resolve: (key) ->
     return undefined unless key?
-    switch key
-      when "world"         then world
-      when "hand"          then world?.hand
-      when "wallpaper"     then world?.wallpaper
-      when "widgetFactory" then world?.widgetFactory
-      when "dataflow"      then world?.dataflow
-      when "bin"      then world?.binWdgt
-      when "shelf"    then world?.shelfWdgt
-      when "preferences"   then WorldWdgt.preferencesAndSettings
-      else
-        if key.indexOf("app:") is 0
-          @resolveApp key.substring 4
-        else
-          undefined
+    singletons = @_liveSingletons()
+    return singletons[key] if Object::hasOwnProperty.call singletons, key
+    return @resolveApp key.substring 4 if typeof key is "string" and key.indexOf("app:") is 0
+    throw new SerializationError ("it names the well-known object '" + key + "', which no Fizzygum build has"), direction: "load"
 
   # Resolve the per-app singleton for a windowed-app class name (e.g. the target of a
   # deserialized desktop launcher). An WindowedApp subclass is a

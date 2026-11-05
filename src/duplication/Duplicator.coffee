@@ -176,22 +176,14 @@ class Duplicator
     # re-assigned (the JS runtime has a copy-on-write mechanism when you change
     # the properties of an object). Also includes the "parent" property.
     for own property of obj
-      # the version-keyed derived-cache pairs (cached* / check*Cache, plus the frame-stamped
-      # childrenBoundsUpdatedAt) are NEVER copied: a field-copied cache arrives stamped at the
-      # CURRENT version yet holds the ORIGINAL's value — measured by the settle leg's
-      # CACHED_DERIVATION_DIVERGED rider: a mid-assembly clone's root() answered the ORIGINAL's
-      # world (cachedRoot kept-by-reference + checkRootCache verbatim). Left unset, the clone
-      # re-derives on first read — the same rule Widget.serializationTransients states for the
-      # serializer, keyed here on the cache pairs' naming convention.
-      continue if /^cached[A-Z]/.test(property) or /^check[A-Z].*Cache$/.test(property) or property is "childrenBoundsUpdatedAt"
-      # the island source-lane stash (Widget._islandBufferSourceIsland/-VirtualRect, transforms §8.1)
-      # is per-frame paint state that persists until a damage flush consumes it or the next
-      # non-island paint clears it, so a copy CAN observe a live one — and when the enclosing
-      # island is OUTSIDE the copied structure the clone would keep it as a LIVE reference, so the
-      # clone's first damage flush would deposit a false "vacated" rect onto a buffer it never
-      # painted into (a spurious partial rebuild) and pin the island until then. A clone has never
-      # painted: drop the stash — its dormant state, the same rule serializationTransients states.
-      continue if /^_islandBufferSource/.test property
+      # DERIVED STATE is NEVER copied (Widget.isDerivedStateField, the one rule the Serializer and
+      # WorldInventory read too): the version-keyed cache pairs, left unset, re-derive on first
+      # read -- a field-copied one arrives stamped at the CURRENT version yet holds the ORIGINAL's
+      # value (the settle leg's CACHED_DERIVATION_DIVERGED rider measures it); and the island
+      # source-lane stash persists until a damage flush consumes it, so a copy CAN observe a live
+      # one, and with the island OUTSIDE the copied structure the clone's first damage flush would
+      # deposit a false "vacated" rect onto a buffer it never painted into and pin the island.
+      continue if Widget.isDerivedStateField property
       value = obj[property]
       # A widget's PARENT is a structural link, written here directly rather than through
       # TreeNode._addChild, so it is ANNOUNCED as _addChild announces it (noteStructureChange): the

@@ -5,4 +5,4 @@ class PatchProgrammingApp extends WindowedApp
   requiredParts: ["authoring"]
 
   buildWindow:  -> world.openFrameWith (new PatchProgrammingWdgt), (new Point 460, 400), world.hand.position()
-  windowOpened: (wm) -> InfoDocs.createNextTo "patchProgramming", wm
+  windowOpened: (wm) -> InfoDocs.createNextTo @constructor.name, wm

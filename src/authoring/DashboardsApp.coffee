@@ -7,4 +7,4 @@ class DashboardsApp extends WindowedApp
   optionalParts: ["maps", "plots"]
 
   buildWindow:  -> world.openFrameWith (new DashboardWdgt), (new Point 460, 400), world.hand.position()
-  windowOpened: (wm) -> InfoDocs.createNextTo "dashboards", wm
+  windowOpened: (wm) -> InfoDocs.createNextTo @constructor.name, wm

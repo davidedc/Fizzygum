@@ -1,7 +1,7 @@
 # Hand-kept lists: derive them, or make them fail when they go stale
 
-**STATUS: PLAN ONLY (2026-11-05). Written to be executed COLD by an LLM or engineer with ZERO prior context.**
-Nothing below is landed except §1 (the app-window registry), which is the arc that prompted the audit.
+**STATUS (2026-11-05): §1 and Tier 2 (§4) LANDED — see the §4 ledger at the end; Tiers 1, 3, 4 OPEN.
+Written to be executed COLD by an LLM or engineer with ZERO prior context.**
 
 **Mandate.** Eliminate the class of defect, not its instances: a list that NAMES things declared
 elsewhere (classes, fields, methods, tokens, parts) must either be DERIVED from where those things are
@@ -214,3 +214,55 @@ forbidden-path lists need a positive control on a dev tree); `scripts/classify-d
 Memory notes: app-window-registry, document-icons-and-maker-documents. Related gate docs:
 `docs/architecture/lint-and-static-checks.md`; the census engine pattern `buildSystem/check-dead-methods.js`
 (the allowlist-reports-stale idiom). Raw audit reports: re-derivable by §2.
+
+## §4 ledger — Tier 2 LANDED (2026-11-05)
+
+Owner calls (AskUserQuestion, both the recommended option): ⚑1 = the templates window becomes a
+one-window app; ⚑2 = InfoDocs reads its names from AppCatalog. Each item was proven by a plant that
+fails it and a run that passes without it (plants under `Fizzygum-tests/.scratch/hand-lists-t2/`).
+
+1. ⚑ **Templates window** → `TemplatesApp` (`src/authoring`, `opensOneWindow: true`, buildWindow =
+   `TemplatesWindowWdgt.create()` + the old first-open placement, no AppCatalog entry — it has no
+   launcher, and an entry would make the serialization rig report a missing one).
+   `TemplatesButtonWdgt.activated` = `(new TemplatesApp).launch()`. `world.simpleEditorTemplates` and
+   all 7 special cases DELETED (field, restore, teardown, liveness roots, storage sort, snapshot root
+   + section). Behaviour now uniform with every app window: a re-open lands at hand+(100,-50), a
+   window nested elsewhere is pulled back to the desktop. `SystemTest_macroOneWindowAppsKeepTheirWindowOnTheShelf`
+   gained the templates button as its seventh door (no test clicked it before); plant
+   `plant-unregistered-templates.js` fails exactly that leg; follower-proven on both pointers.
+   Call-separation [U] baseline 104 → 101 (the button's two self-only helpers went; one older gain banked).
+2. ⚑ **InfoDocs** keyed by app class name; an app entry states only its body, and its heading,
+   "<name> info" window title and icon come from AppCatalog (`InfoDocs._identityOf`, which throws on
+   an app entry stating a title/icon, a non-app entry stating none, or an unknown key — probe
+   `probe-infodocs-identity.js`). Callers pass `@constructor.name`. Titles now: "Dashboards info",
+   "Draw info", "Generic panel info" (were "Dashboards Maker info", "Drawings Maker info", "Generic
+   panels info"); headings "Dashboards", "Draw". Predicted changed set EMPTY — no test opens those
+   three info windows — and the suite confirmed it (zero recaptures). Every app-keyed doc is built by
+   the `apps` gauntlet leg.
+3. **parts.json**: `example-degrees-converter` requires `app-kit` only. `check-part-edges.js` now
+   fails a `requires` entry the requiring part's code never names (comments/strings excluded); the
+   real stale entry was the plant (1 of 21 → fixed, 0 of 20); `--self-test` covers the rule.
+4. **Snapshot memberships**: ONE table `Serializer.WORLD_SET_MEMBERSHIPS` (marker → world Set field,
+   with the per-marker verdicts), read by the writer and the decoder; an unknown marker is an
+   envelope shape problem (`Deserializer._envelopeShapeProblem`), so a world load refuses it BEFORE
+   its teardown and `deserialize` throws up front.
+5. **WellKnownObjects**: ONE table `_liveSingletons` read by `keyFor` (identity) and `resolve` (lookup);
+   an unknown non-app key THROWS in `resolve` and is refused up front by the shape check (via the
+   shared walk `Serializer.wellKnownKeysIn`, which `classNamesIn` now uses too); a class marker
+   (`wellKnownKey`) the table lacks is refused at save. App keys naming an absent class still
+   resolve to undefined (unchanged, rig-gated). ⚠ The four classes' string `wellKnownKey` markers
+   are now ASSERTED rather than deleted — they are redundant with the identity match; deleting them
+   is a separate, owner-visible decision.
+6. **Derived state**: ONE predicate `Widget.isDerivedStateField` (cache pairs, `childrenBoundsUpdatedAt`,
+   `_islandBufferSource*`), read by the Serializer, the Duplicator and WorldInventory; the 19 hand-listed
+   cache names left `Widget.@serializationTransients`.
+7. **Pointer handlers**: ONE table `buildSystem/lib/pointer-handlers.js` read by both body gates and
+   held against `ActivePointerWdgt` both ways (a table name the dispatcher never names; a method
+   handed a pointer position that the table lacks, minus stated `POSITION_QUERIES`). Three plants
+   (renamed handler, new positional dispatch, renamed query) each caught. Stated blind spot: a new
+   handler dispatched with no position.
+8. **Small mirrors**: `FormulaCompiler.TIME_SOURCES` (binding → source thunk) replaces
+   `timeBindingNames` + the two hand-spelled resolvers; `SheetModel.cellRefScan()` is DERIVED from
+   `cellAddressPattern` (identical source, probed); `WorldInventory.KEY_FAMILIES` names all 14
+   key families (8 gated, 6 report-only) and an undeclared family fails CLOSED (gated).
+

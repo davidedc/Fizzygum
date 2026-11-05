@@ -108,7 +108,9 @@ reference and `extends` its classes with the build staying green. Found while ad
 `app-kit` edges, and fixed there. **Both directions are proven rather than argued** — planting an
 unguarded `new SpeechBubbleWdgt` and an `@augmentWith ParentStainerMixin` in `dev-tools` reported
 `0 / 0` before and fails with a named site after. ⚠ Cycles are rejected by the build: a cycle has no
-valid ingest order.
+valid ingest order. And an entry must EARN its place: `check-part-edges.js` fails a `requires` entry
+when no source of the requiring part names, in code, a class the required part owns — an unused entry
+still orders a fetch, and the reason written beside it no longer holds.
 
 ⚠ **A per-site await is the finer instrument, and `requires` is the one that reaches where an await
 cannot.** Prefer the await when the reference sits somewhere with a seam: `demos` names `plots` from

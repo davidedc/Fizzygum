@@ -14,6 +14,29 @@ class Serializer
   @FORMAT: "fizzygum"
   @FORMAT_VERSION: 1
 
+  # THE WORLD SETS A RECORD'S `memberships` NAME: marker -> the world field holding that Set. ONE
+  # table, read by both directions -- the save writes a marker for each set holding the widget, and
+  # the restore re-adds the shell to the set its marker names (Deserializer, pass (c)) -- so a set
+  # cannot be saved and then dropped on load. A marker outside it makes the file unrestorable, said
+  # up front (Deserializer._envelopeShapeProblem) rather than dropped in silence.
+  # ⚠ Re-registration hands the shell to machinery that reads its fields, so every marker carries a
+  # verdict against the transients a restore drops: STEPPING's loop re-seeds the dropped lastTime
+  # itself (a restored throttled stepper NaN-stalls otherwise -- see _runChildrensStepFunction); the
+  # KEYBOARD dispatch reads only the prototype method, and the one receiver with transient state (the
+  # spreadsheet) rebuilds it in the per-class hook, pass (d), before any event can arrive; the
+  # REFERENCE TRACKER's consumers read destroyed + referencedWidget, both serialized (ShortcutWdgt
+  # declares no transients); the OPENPOPUPS consumers read isOrphan()/instanceNumericID (re-derived /
+  # serialized), and the dropped closure mark restores false -- the correct state for a pinned pop-up
+  # (a serialized pop-up is a PINNED one: transient pop-ups never reach a world snapshot, and the
+  # membership must ride along or the restored world loses track of it -- mostRecentlyCreatedPopUp and
+  # the lazy orphan pruning consult the set). A NEW marker must state its verdict here: what does the
+  # re-registered machinery read, and is any of it transient-dropped?
+  @WORLD_SET_MEMBERSHIPS:
+    stepping:         "steppingWdgts"
+    keyboardReceiver: "keyboardEventsReceivers"
+    referenceTracker: "widgetsReferencingOtherWidgets"
+    openPopUp:        "openPopUps"
+
   # The `@serializationTransients` declarations merged up a class's chain, as one Set of
   # property names the serializer must SKIP. A subclass's declaration ADDS to (never shadows)
   # its ancestors' -- the merge is boot's classStaticListMergedUpTheChain
@@ -88,7 +111,7 @@ class Serializer
   # dozen event-listener CLOSURES) — the walker would crash on the first one (a CanvasPattern
   # on @appearance, exactly defect D8). Instead the genuine world state is captured in an
   # explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS — the desktop
-  # children, the off-tree bin, the registered app windows (world.appWindows), the templates window — are
+  # children, the off-tree bin and shelf, the registered app windows (world.appWindows) — are
   # walked into the object table. A snapshot restores a SETTLED world (§1): the hand-held
   # widget and the caret are dropped by construction (they live outside the snapshot roots);
   # open UNPINNED menus/pop-ups ARE world children, so the filter below drops them explicitly.
@@ -111,7 +134,6 @@ class Serializer
     roots.push theWorld.binWdgt if theWorld.binWdgt?
     roots.push theWorld.shelfWdgt if theWorld.shelfWdgt?
     roots.push appWindow for [appName, appWindow] in liveAppWindows
-    roots.push theWorld.simpleEditorTemplates if theWorld.simpleEditorTemplates? and not theWorld.simpleEditorTemplates.destroyed
     widgetSet = new Set
     for aRoot in roots when aRoot?
       widgetSet.add w for w in aRoot.allChildrenBottomToTop()
@@ -146,12 +168,10 @@ class Serializer
     # their state is captured by NAME here rather than through the object table. The armed drawing
     # tool is a KEY, so it captures as itself; a restore applies it to the live users positionally.
     section.users = ({armedDrawingTool: eachUser.armedDrawingTool} for eachUser in (theWorld.users or []))
-    # the app windows, by app class name, + the templates window (may be orphaned-but-revivable).
+    # the app windows, by app class name (each may be orphaned-but-revivable).
     section.appWindows = {}
     for [appName, appWindow] in liveAppWindows
       section.appWindows[appName] = ref appWindow, "the world → .appWindows → " + appName
-    if theWorld.simpleEditorTemplates? and not theWorld.simpleEditorTemplates.destroyed
-      section.simpleEditorTemplates = ref theWorld.simpleEditorTemplates, "the world → .simpleEditorTemplates"
     section.bin = ref(theWorld.binWdgt, "the world → .binWdgt") if theWorld.binWdgt?
     section.shelf = ref(theWorld.shelfWdgt, "the world → .shelfWdgt") if theWorld.shelfWdgt?
     # preferences: a FORCED data record. refFor would give {"$wk":"preferences"} (the
@@ -207,21 +227,29 @@ class Serializer
       names.push name unless name in names
     for record in (envelope?.objects ? [])
       add record?.class
-    # walk the whole envelope for app: well-known keys (they can sit at any depth)
+    for key in @wellKnownKeysIn envelope when typeof key is "string" and key.indexOf("app:") is 0
+      add key.substring 4
+    names
+
+  # Every `{"$wk": key}` key an envelope carries, at any depth (a well-known reference can sit in any
+  # record's props, or in the world section), in walk order and with repeats. A pure read of the
+  # envelope: classNamesIn takes the app keys from it, and Deserializer._envelopeShapeProblem refuses
+  # a file carrying a key no build writes -- both before anything is changed.
+  @wellKnownKeysIn: (envelope) ->
+    keys = []
     seen = new Set
     visit = (value) ->
       return unless value? and typeof value is "object"
       return if seen.has value
       seen.add value
-      if typeof value.$wk is "string" and value.$wk.indexOf("app:") is 0
-        add value.$wk.substring 4
+      keys.push value.$wk if value.$wk?
       if Array.isArray value
         visit item for item in value
       else
         visit nested for own key, nested of value
       return
     visit envelope
-    names
+    keys
 
   # --- the shared object-table encoder -----------------------------------------------------
   # Builds `objects` (the versioned record table) for a set of in-structure widgets, and
@@ -302,6 +330,7 @@ class Serializer
       for own name of obj
         continue if name is "instanceNumericID" or name is "className"
         continue if transients.has name
+        continue if Widget.isDerivedStateField name     # derived state is re-derived, never written
         if isDetachRoot and name is "parent"
           # a detach-root restores DETACHED; the caller (envelope root) or the restore
           # policy (an embedded referent figure — homed to the shelf) decides where it goes.
@@ -314,17 +343,10 @@ class Serializer
         props[name] = refFor value, (path + " → ." + name), obj, name
       props
 
+    # the world sets holding the widget, by their markers (@WORLD_SET_MEMBERSHIPS, in its order)
     membershipsFor = (widget) ->
-      m = []
-      return m unless world?
-      m.push "stepping"         if world.steppingWdgts?.has widget
-      m.push "keyboardReceiver" if world.keyboardEventsReceivers?.has widget
-      m.push "referenceTracker" if world.widgetsReferencingOtherWidgets?.has widget
-      # a serialized pop-up is a PINNED one (transient pop-ups never reach a world snapshot);
-      # its openPopUps membership must ride along or the restored world loses track of it
-      # (mostRecentlyCreatedPopUp / the lazy orphan pruning consult this set).
-      m.push "openPopUp"        if world.openPopUps?.has widget
-      m
+      return [] unless world?
+      (marker for own marker, setField of Serializer.WORLD_SET_MEMBERSHIPS when world[setField]?.has widget)
 
     populateRecord = (record, obj, path) ->
       # --- native / special types: $-tagged records (user class names can't collide) ---

@@ -88,6 +88,14 @@
  *      `declaredRequires` filters those entries out. (eager->EAGER is fine: both are in the
  *      artifact from frame one, so shipping-together is the whole of what could go wrong.)
  *
+ * AN UNUSED `requires` FAILS TOO -- rule 8 read the other way. An entry is a claim that the part
+ * names something the required part owns, and every entry must be backed by at least one CODE
+ * reference (never a comment or a string: `requires` orders class DEFINITION, and a name held as
+ * data needs none) from a source of the requiring part to a class of the required part. An entry
+ * nothing backs still orders a fetch fully first, and the reason written beside it in parts.json no
+ * longer holds. Blind spot: an entry backed only by a MEMBER the required part installs reads as
+ * unused (no part requires one today) -- a loud false failure, never a silent pass.
+ *
  * ⛔ CROSS-PART INHERITANCE is only safe under `requires`. A door naming several parts goes through
  * ensureAllLoaded = Promise.all, so they arrive concurrently with nothing ordering them, and
  * `class X extends Y` across that boundary is a race rather than a catchable error. Only
@@ -246,6 +254,21 @@ function superReaches(classModel, installedOn, partOfClass, fileOf) {
   return out;
 }
 
+// ---- unused `requires` (see the header): the pure half ---------------------------------------
+// `parts` is parts.json's table; `partsNamedInCode` maps a part to the Set of other parts whose
+// classes its code names. Returns [{ part, requires }], one per `requires` entry nothing backs.
+function unusedRequires(parts, partsNamedInCode) {
+  const out = [];
+  for (const [name, part] of Object.entries(parts)) {
+    if (name.startsWith('//')) continue;
+    const named = partsNamedInCode.get(name) || new Set();
+    for (const required of part.requires || []) {
+      if (!named.has(required)) out.push({ part: name, requires: required });
+    }
+  }
+  return out;
+}
+
 // ---- --self-test: every clause both ways, on in-memory fixtures ------------------------------
 if (process.argv.includes('--self-test')) {
   let ok = true;
@@ -342,6 +365,16 @@ if (process.argv.includes('--self-test')) {
   check('(c) a test on a member others define does not',  supers.includes('Leaf7:4'), true);
   check('(c) exactly those two reaches in the fixture',    supers, ['Leaf:4', 'Leaf7:4']);
 
+  // unused requires: an entry is backed only by a class of that part named in code
+  const unused = unusedRequires(
+    { '//': 'a comment key is no part', door: { requires: ['kit', 'art'] }, kit: {}, art: {},
+      empty: { requires: ['kit'] }, plain: {} },
+    new Map([['door', new Set(['kit', 'other'])]])).map(v => `${v.part}->${v.requires}`);
+  check('requires: a named part backs it, an unnamed one does not', unused.includes('door->kit'), false);
+  check('requires: an entry nothing names is reported',              unused.includes('door->art'), true);
+  check('requires: a part with no scanned code backs nothing',       unused.includes('empty->kit'), true);
+  check('requires: exactly those two in the fixture',                unused, ['door->art', 'empty->kit']);
+
   console.log(ok ? '[part-edges] self-test PASS' : '[part-edges] self-test FAIL');
   process.exit(ok ? 0 : 1);
 }
@@ -404,6 +437,7 @@ const patterns = names.map(n => ({
 const refViolations = [];
 const inheritViolations = [];
 const memberViolations = [];
+const partsNamedInCode = new Map();   // part -> Set(other parts whose classes its code names)
 
 // EVERY file that is present at boot is in scope, not just core's. An EAGER part is in the artifact
 // from the first frame exactly as core is, so `samples` naming a lazy `plots` class unguarded is the
@@ -482,12 +516,15 @@ for (const rel of scanned) {
     for (const q of declared[1].match(/["']([^"']+)["']/g) || []) satisfied.add(q.slice(1, -1));
   }
 
+  if (!partsNamedInCode.has(owner)) partsNamedInCode.set(owner, new Set());
   for (let i = 0; i < lines.length; i++) {
     const code = codePartOf(lines[i]);
     if (!code.trim()) continue;
     for (const p of patterns) {
-      if (p.owner === owner || satisfied.has(p.owner)) continue;
+      if (p.owner === owner) continue;
       if (!p.ref.test(code)) continue;
+      partsNamedInCode.get(owner).add(p.owner);     // what the unused-`requires` rule reads
+      if (satisfied.has(p.owner)) continue;
       if (p.inherit.test(code)) {
         inheritViolations.push({ rel, from: owner, line: i + 1, name: p.name, owner: p.owner, text: lines[i].trim() });
         continue;
@@ -516,13 +553,26 @@ if (installedOn.size) {
   }
 }
 
+const requiresViolations = unusedRequires(parts, partsNamedInCode);
+const requiresEntries = Object.entries(parts).filter(([n]) => !n.startsWith('//'))
+  .reduce((sum, [, p]) => sum + (p.requires || []).length, 0);
+
 console.log(`[part-edges] scan done — ${scanned.length} source(s) present at boot or in a part vs ` +
   `${partClassOwner.size} part-owned class(es) in ${new Set(partClassOwner.values()).size} part(s)` +
   (membersSkipped ? `; installed members SKIPPED -- ${membersSkipped}` :
     ` and ${installedBy.size} member(s) that ${edgeCount} install edge(s) put onto classes outside their ` +
     `part (${soleProvider.size} that part's alone)`) +
   `: ${refViolations.length} unguarded reference(s), ${inheritViolations.length} inheritance edge(s)` +
-  (membersSkipped ? '.' : `, ${memberViolations.length} unguarded reach(es) of an installed member.`));
+  (membersSkipped ? '' : `, ${memberViolations.length} unguarded reach(es) of an installed member`) +
+  `, ${requiresViolations.length} of ${requiresEntries} \`requires\` entr(ies) naming a part the code never names.`);
+
+if (requiresViolations.length) {
+  console.error('\n[part-edges] FAIL -- a parts.json `requires` entry names a part whose classes the requiring part');
+  console.error("never names in code. `requires` orders the required part's load fully first, so an entry nothing");
+  console.error('uses still costs a fetch, and its stated reason no longer holds -- delete it (and its "//requires"');
+  console.error('justification), or, if something genuinely needs it, that something names one of its classes:');
+  for (const v of requiresViolations) console.error(`  ${v.part} requires '${v.requires}'`);
+}
 
 if (inheritViolations.length) {
   console.error('\n[part-edges] FAIL -- core INHERITS from a part. This is not guardable: you cannot');
@@ -568,7 +618,7 @@ if (memberViolations.length) {
   console.error('it to call. If the member is product, it does not belong in the part: promote it.');
 }
 
-if (inheritViolations.length || refViolations.length || memberViolations.length) process.exit(1);
+if (inheritViolations.length || refViolations.length || memberViolations.length || requiresViolations.length) process.exit(1);
 console.log(membersSkipped ? '[part-edges] OK -- every core reference into a part is guarded.' :
   '[part-edges] OK -- every core reference into a part, to a class or to a member it installs, is guarded.');
 process.exit(0);
