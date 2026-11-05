@@ -289,7 +289,13 @@ widget picture, the shortcut badge), and share its rules:
   from 4, rings only where the ring's hole survives.
 - **Shared shapes**: Patch programming, Slides Maker, Generic panel, Dashboards and the Spreadsheet stand on ONE
   content card (`_contentCardMetrics` / `_contentCard`: the design's 34 × 24 motif at the family's line); the object
-  and script frames on ONE page with a folded corner (`_pageMetrics` / `_page`). The shortcut badge (a paper box, an
+  and script frames on ONE page with a folded corner (`_pageMetrics` / `_page`), as tall as the glyph square and 35
+  units wide.
+- **A Maker wears its glyph bare; a DOCUMENT wears the page with that glyph inside** (`GenericObjectIconWdgt`): a
+  saved document, a filed widget, an Examples door. The glyph fills the page's PICTURE square, `PAGE_PICTURE` (31) of
+  the 44 units, centred: 28 px at the 40 px tile glyph, the size from which the Dashboards glyph draws its charts.
+  The fold stays above that square. A door with art of its own (the C-F converter, How to save?) wears that instead.
+  The shortcut badge (a paper box, an
   ink frame, a one-line paper knockout ring and a straight 45° arrow) takes its host glyph's line and sits at its
   `HOST_SHARE` (0.3) of the host's square, bottom left.
 - Constants are in design units over `GLYPH_GRID`, so each proportion is a named knob; detail drops by rule (a

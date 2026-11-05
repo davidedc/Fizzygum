@@ -96,7 +96,7 @@ class AppLauncherWdgt extends DesktopLinkWdgt
       # like. Loud, because the boot smoke fails on console errors and will catch it immediately.
       console.error "AppCatalog has no entry for '#{appClassName}'"
       return undefined
-    icon = if iconOverride? then iconOverride() else entry.icon()
+    icon = if iconOverride? then iconOverride() else AppCatalog.iconOf appClassName
     launcher = new @ entry.title, icon, opts.target, opts.callback
     launcher.toolTipMessage = entry.toolTip  if entry.toolTip?
     launcher

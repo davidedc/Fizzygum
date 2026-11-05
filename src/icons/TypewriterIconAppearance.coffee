@@ -1,8 +1,9 @@
 class TypewriterIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE typewriter in the design's style, the icon of the Docs Maker (its
-  # launcher, its info doc), of the Examples folder's "Interactive doc"
-  # opener and of a document's shortcut: the draft's "docs"
+  # launcher, its info doc) and the kind shown on a text document's icon (the
+  # page around it at 28 px, GenericObjectIconWdgt: a filed document, the
+  # Examples folder's "Interactive doc" door): the draft's "docs"
   # glyph (docs/archive/redesign/desktop-canvas.html), drawn by the idiom of
   # docs/plans/pixel-icons-plan.md §5b. Line art in ink, every line on the
   # glyph line unit t (SizeAwareIconAppearance._glyphLineUnit), with paper
@@ -72,8 +73,11 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   # node, read on its exact span too, so the ring never turns back into a dot
   # as S grows), else a solid dot: a fillCircle from MIN_ROUND_KNOB px, a
   # hand-placed square below it. The lever's arm shifts at most a px a row
-  # (its outer corner moves right to hold that); with no row for the arm
-  # under the stub, there is no lever. The keys are all one size and one
+  # (its outer corner moves right to hold that); with fewer than MIN_LEVER_ARM
+  # rows for the arm under the stub, on the rounded or the exact size, there is
+  # no lever (a shorter one reads as noise, not a lever: owner, 2026-11-05) --
+  # none below S = 33, so none on a document icon's 28 px picture at dpr 1. The
+  # keys are all one size and one
   # shape: a fillCircle from MIN_ROUND_KEY px, a hand-placed square below it
   # (the non-AA backend draws a 2 px circle as one row of 2 and a 3 px one as
   # a plus). They keep a px of paper from each other and from the body's
@@ -123,6 +127,7 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   MIN_ROUND_KNOB: 4       # px: the smallest knob drawn round; a smaller one is a square
   MIN_RING: 6             # px: the smallest knob drawn as a ring, across ...
   MIN_RING_HOLE: 2        # px: ... and the smallest hole a ring keeps; a smaller knob is a solid dot
+  MIN_LEVER_ARM: 3        # rows: the shortest lever arm drawn; with fewer there is no lever
   MIN_KEY: 2              # px: the smallest key, across
   MIN_ROUND_KEY: 4        # px: the smallest key drawn round; a smaller one is a square
   KEY_TIERS: [[2, 5], [1, 5], [1, 3]]   # the keyboards the keys thin through, as [rows, keys a row], the draft's first (path dots x 11, 16.5, 22, 27.5 and 33, y 27 and 32); each row's keys the middle ones of a full row
@@ -277,12 +282,16 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   # The arm's left edge moves from the corner to that last place by the same
   # amount every row, at most a px (the corner moves right to hold that); the
   # stub reaches at least a px past the arm on the row under it, so its end
-  # is free. With no row for the arm below the stub, there is no lever
+  # is free. With fewer than MIN_LEVER_ARM rows (and t) for the arm below the
+  # stub, there is no lever -- read on the arm's exact span too (the knob's top
+  # from the stub's at the unrounded size), so the lever never turns back off
+  # as S grows: none below S = 33, a lever from there
   _typewriterLeverMetrics: (m, px) ->
-    {t, knob, knobLeft, knobTop} = m
+    {S, t, knob, knobLeft, knobTop} = m
     top = m.top + px(@LEVER_TOP - @TOP)
     last = knobTop - 1
-    m.hasLever = last - top >= t
+    exactArm = S * (@CARRIAGE_TOP + (@CARRIAGE_HEIGHT - @KNOB_SIZE) / 2 - @LEVER_TOP) / @GLYPH_GRID - 1
+    m.hasLever = Math.min(last - top, exactArm) >= Math.max t, @MIN_LEVER_ARM
     return unless m.hasLever
     base = knobLeft + Math.floor (knob - t) / 2
     left = Math.max m.square.left, knobLeft - px(@LEVER_OVERHANG), base - (last - top)

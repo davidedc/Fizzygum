@@ -1,3 +1,8 @@
+# The icon of a DOCUMENT, or of any filed widget: the family's page (ObjectIconWdgt) with the
+# thing's own picture inside it -- for a document, the glyph of the kind that made it (its
+# representativeIcon, which is the glyph its Maker wears on the desktop). A filed or aliased widget
+# wears it (ShortcutWdgt._defaultInnerIcon), and so does an Examples door, whose catalog entry
+# names the Maker its document is made with (AppCatalog's `madeWith`).
 class GenericObjectIconWdgt extends GenericCompositeIconWdgt
 
   objectIcon: undefined
@@ -25,7 +30,10 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     @_reLayoutWithOwnContents newBoundsForThisLayout
 
   # position my contents against my CURRENT frame (already committed by
-  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me): the
+  # page fills the largest square centred in me, and the picture is the page's own PICTURE square,
+  # its PAGE_PICTURE share of that square, centred too -- the one square the page's fold keeps
+  # clear of (SizeAwareIconAppearance._pageMetrics)
   _layOutOwnContents: ->
 
     height = @height()
@@ -37,8 +45,9 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     # the top-left corner of the squareDim-sized square centered in the widget
     inscribedSquareTopLeft = centerPoint.subtract new Point squareDim/2, squareDim/2
 
-    @icon._applyBounds ((centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()), (new Point squareDim*50/100, squareDim*50/100).round()
-
+    page = @objectIcon.appearance
+    pictureSide = squareDim * page.PAGE_PICTURE / page.GLYPH_GRID
+    @icon._applyBounds ((centerPoint.subtract new Point pictureSide/2, pictureSide/2).round()), (new Point pictureSide, pictureSide).round()
 
     # rounded: a square centred in a box whose width and height differ by an odd amount starts on a
     # half pixel, and a widget is placed in integer pixels

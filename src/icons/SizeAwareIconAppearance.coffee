@@ -283,10 +283,10 @@ class SizeAwareIconAppearance extends IconAppearance
   # ---- the document page of an icon drawn in the design's style ------------
   # The family's DOCUMENT PAGE, the twin of the content card: a portrait sheet
   # whose top-right corner is FOLDED. The object frame (ObjectIconAppearance,
-  # which holds a widget's own picture in its middle) and the script frame
-  # (ScriptIconAppearance) stand on it, so a filed widget and a script read as
-  # one kind of thing. One outline in ink on the glyph line unit t, a paper
-  # interior inset t (the border idiom):
+  # which holds a widget's own picture -- a document's KIND -- in its PICTURE
+  # square) and the script frame (ScriptIconAppearance) stand on it, so a filed
+  # widget, a document and a script read as one kind of thing. One outline in
+  # ink on the glyph line unit t, a paper interior inset t (the border idiom):
   #   - the SHEET: a portrait box, its bottom corners and its top-left corner
   #     rounded at PAGE_CORNER (the inner radius t less), its top-right corner
   #     cut by a 45-degree CHAMFER, the Floppy's idiom: the chamfer's two edges
@@ -299,19 +299,23 @@ class SizeAwareIconAppearance extends IconAppearance
   #     line), and the triangle they close with the chamfer is paper.
   #   Detail by rule: the fold (the cut) is the half pixel nearest
   # S * PAGE_FOLD / GLYPH_GRID, never less than 1.5 px, and never so deep that
-  # the flap's foot line reaches the glyph square's middle half (where the
-  # object frame's picture lies); the flap is drawn only where its paper
-  # triangle keeps MIN_FLAP_PAPER px along each leg (else the corner is a plain
-  # cut, which still reads as a page). A corner radius under PAGE_MIN_CORNER
-  # px is square. The sheet is centred in S both ways (spans of S's parity),
-  # like the card.
-  #   Proportions: the INK edges of a one-unit line on a 44-unit path (its
+  # the flap's foot line reaches the PICTURE square (PAGE_PICTURE, centred in
+  # the glyph square: where the object frame's picture lies); the flap is drawn
+  # only where its paper triangle keeps MIN_FLAP_PAPER px along each leg (else
+  # the corner is a plain cut, which still reads as a page). A corner radius
+  # under PAGE_MIN_CORNER px is square. The sheet is centred in S both ways
+  # (spans of S's parity), like the card.
+  #   Proportions (owner-chosen, 2026-11-05: the picture as big as lets a
+  # dashboard draw its charts at the desktop's 40 px, the page as tall as the
+  # glyph square): the INK edges of a one-unit line on a 44-unit path (its
   # centre line moved out half a unit), in GLYPH_GRID units.
-  PAGE_LEFT: 7.5        # path x 8 and 36: a 28-unit sheet, the 22-unit picture square (the
-  PAGE_RIGHT: 36.5      #   composite's middle 50%) inside it with 2.5 units of paper either side
-  PAGE_TOP: 3.5         # path y 4 and 40
-  PAGE_BOTTOM: 40.5
-  PAGE_FOLD: 7.5        # what the chamfer's outer edge cuts off the top wall and the right wall
+  PAGE_LEFT: 4.5        # path x 5 and 39: a 35-unit sheet, the 31-unit picture square inside it
+  PAGE_RIGHT: 39.5      #   with a unit of paper either side, inside the walls
+  PAGE_TOP: 0           # path y 0.5 and 43.5: the whole glyph square's height
+  PAGE_BOTTOM: 44
+  PAGE_PICTURE: 31      # the PICTURE square's side, centred in the glyph square: 28 px at the desktop's
+                        #   40, the size the dashboard glyph draws its charts from
+  PAGE_FOLD: 7          # what the chamfer's outer edge cuts off the top wall and the right wall
   PAGE_CORNER: 2.5      # the rounded corners' outer radius (the Folder's; the inner one t less)
   MIN_FLAP_PAPER: 2     # px of paper the flap's triangle keeps along each leg, or no flap
   PAGE_MIN_CORNER: 2    # px: a smaller corner radius is square
@@ -336,9 +340,10 @@ class SizeAwareIconAppearance extends IconAppearance
     r = px @PAGE_CORNER
     r = 0 if r < @PAGE_MIN_CORNER
     r = Math.min r, Math.floor(w / 2) - t
-    # the fold stays above the glyph square's MIDDLE HALF (the square GenericObjectIconWdgt lays
-    # a widget's picture in: from round(S / 4), half of S): the flap's foot line ends above it
-    cut = Math.max 1, Math.min(Math.floor(S * @PAGE_FOLD / @GLYPH_GRID), y + Math.round(S / 4) - top - t)
+    # the fold stays above the PICTURE square (the square GenericObjectIconWdgt lays a widget's
+    # picture in, PAGE_PICTURE centred in S): the flap's foot line ends above it
+    pictureTop = y + Math.round S * (@GLYPH_GRID - @PAGE_PICTURE) / 2 / @GLYPH_GRID
+    cut = Math.max 1, Math.min(Math.floor(S * @PAGE_FOLD / @GLYPH_GRID), pictureTop - top - t)
     # the flap's L: its vertical line's columns [flapX, flapX + t), hanging from the top wall at
     # the chamfer's start; its horizontal line's rows [flapY, flapY + t), meeting the right wall
     # at the chamfer's end. The paper triangle between the L and the chamfer has legs of

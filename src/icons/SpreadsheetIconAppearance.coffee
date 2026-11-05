@@ -1,9 +1,11 @@
 class SpreadsheetIconAppearance extends SizeAwareIconAppearance
 
   # SIZE-AWARE spreadsheet in the design's style: the spreadsheet's own icon
-  # (SpreadsheetIconWdgt -- the Examples folder's Spreadsheet launcher through
-  # AppCatalog, and a filed or aliased sheet through SimpleSpreadsheetWdgt's
-  # representativeIcon), 40 px on the desktop and in a folder, 80 at dpr 2.
+  # (SpreadsheetIconWdgt -- the Sheets Maker's launcher through AppCatalog, 40 px
+  # on the desktop, 80 at dpr 2, and the kind shown on a sheet's document icon,
+  # the page around it at 28 px (GenericObjectIconWdgt: a filed or aliased
+  # sheet through SimpleSpreadsheetWdgt's representativeIcon, the Examples
+  # folder's "Party budget" door).
   # It stands on the family's shared CONTENT CARD (_contentCardMetrics /
   # _contentCard), ruled as a sheet:
   #   - the CARD: one rounded outline, its walls t;

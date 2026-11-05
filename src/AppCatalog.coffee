@@ -49,6 +49,10 @@ class AppCatalog
   # key order inside an entry does not matter: an unparenthesised `->` in an object literal swallows
   # the rest of the line, so anything after it would parse as part of its body.
   #
+  # A door to ONE document states `madeWith` (the Maker its document is made with) INSTEAD of an
+  # `icon`: its art is that document's icon, derived by iconOf below, so the kind's glyph is
+  # written once, on its Maker's entry.
+  #
   # ⚠ `DegreesConverterApp` has NO `icon`, and that is forced rather than chosen: its art lives in
   # the LAZY `examples-icons` part and check-part-edges.js reads ONE LINE AT A TIME, so naming it in
   # this CORE file would be an unguarded core->lazy reference and fail the build whenever the thunk
@@ -71,10 +75,22 @@ class AppCatalog
     "ToolbarsApp":         {title: "Super toolbar",     icon: (-> new ToolbarsIconWdgt), toolTip: "a toolbar to rule them all"}
     "FridgeMagnetsApp":    {title: "Fizzytiles",        icon: (-> new FridgeMagnetsIconWdgt), toolTip: "fridge magnets"}
     "DegreesConverterApp": {title: "°C ↔ °F converter"}
-    "SampleSlideApp":      {title: "New York City",     icon: (-> new SimpleSlideIconWdgt)}
-    "SampleDashboardApp":  {title: "Plots and maps",    icon: (-> new DashboardsIconWdgt)}
-    "SampleDocApp":        {title: "Interactive doc",   icon: (-> new TypewriterIconWdgt)}
-    "SampleSheetApp":      {title: "Party budget",      icon: (-> new SpreadsheetIconWdgt)}
+    "SampleSlideApp":      {title: "New York City",     madeWith: "SimpleSlideApp"}
+    "SampleDashboardApp":  {title: "Plots and maps",    madeWith: "DashboardsApp"}
+    "SampleDocApp":        {title: "Interactive doc",   madeWith: "SimpleDocumentApp"}
+    "SampleSheetApp":      {title: "Party budget",      madeWith: "SpreadsheetApp"}
 
   @get: (appClassName) ->
     @entries()[appClassName]
+
+  # The art an app's launcher wears: its own `icon`, or -- for a door to ONE document, whose entry
+  # names the Maker that document is made with (`madeWith`) -- the DOCUMENT icon, the family's page
+  # with that Maker's glyph inside: what the same document wears once a user files it
+  # (ShortcutWdgt._defaultInnerIcon), so a door and a saved document read alike. A door that wants
+  # other art states its own `icon` (or, the converter, has it passed in: AppLauncherWdgt.addToFolder).
+  @iconOf: (appClassName) ->
+    entry = @get appClassName
+    if entry.madeWith?
+      new GenericObjectIconWdgt @iconOf entry.madeWith
+    else
+      entry.icon()

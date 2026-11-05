@@ -15,9 +15,10 @@
 # ShortcutWdgt.bringUpReferencedWidget is fire-and-forget (ButtonWdgt discards a click
 # action's return value), so it CAN await. ⇒ boot-time REACHABILITY is what forces eagerness.
 #
-# ⚠ ONLY THE C-F ART MOVED, and that is not an oversight. The folder's other four icons — the
-# typewriter, the slide, the dashboards glyph and the generic shortcut frame — are drawn by DESKTOP
-# icons and by FolderWindowWdgt/BinOpenerWdgt at boot, so they are core whatever this folder does.
+# ⚠ ONLY THE C-F ART MOVED, and that is not an oversight. The folder's other four icons are document
+# icons — the page with a Maker's glyph inside (AppCatalog.iconOf) — and both the page and the
+# glyphs are drawn by the desktop's Makers and by every filed document, so they are core whatever
+# this folder does.
 # The C-F glyph is 9.5 KB of vector art that nothing else names, which is exactly what made it worth
 # a part of its own.
 #

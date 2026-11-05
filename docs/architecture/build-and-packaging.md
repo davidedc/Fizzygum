@@ -247,6 +247,11 @@ by the same reachability: the caption must exist before the app's code is fetche
 reads the catalog, never the other way round. (A Maker opens a fresh, untitled document each time;
 its window is the document's, not the app's.) Since a door's icon already shows its kind, an
 Examples door is named for its document's content ("Party budget", not "Spreadsheet").
+A door's ART follows the same one-place rule. An Examples door opens a DOCUMENT, so it wears the
+document icon: the family's page with a Maker's glyph inside (`GenericObjectIconWdgt`), which is what
+the same document wears once a user saves it. Its entry does not repeat that glyph: it names the
+Maker its document is made with (`madeWith: "SpreadsheetApp"`), and `AppCatalog.iconOf` derives the
+icon from that Maker's entry, so each kind's glyph is written once.
 The one override that exists is for an ICON and is forced: the C↔F door's art is in the lazy
 `examples-icons` part, which a core file may not name, so `ExamplesFolderWindowWdgt` passes it in
 from inside the `whenAllLoaded` scope that makes naming it legal.
