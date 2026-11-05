@@ -1048,8 +1048,9 @@ class Widget extends TreeNode
   # Set my width and re-fit my height / children to it. The width->height POLICY is
   # POLYMORPHIC: shape-keepers override this WHOLE method (AnalogClockWdgt -> square,
   # KeepsRatioWhenInVerticalStackMixin -> ratio, the icons / Stretchable* -> their own
-  # extent rule). The base just sets the width and lets a deferred-layout widget re-fit its
-  # children. HOW that re-fit is triggered depends on WHETHER A LAYOUT PASS IS ALREADY RUNNING:
+  # extent rule). The base sets the width and re-fits a size-tracking widget's children at it NOW:
+  # a deferred-layout widget always, a non-deferred tracking container (a window, a stack) when
+  # the width left its re-fit pending (the branch below). HOW the deferred re-fit is triggered depends on WHETHER A LAYOUT PASS IS ALREADY RUNNING:
   #  - normally (from an event handler / the public-setter flush): @_invalidateLayout() --
   #    schedule the re-fit for the current frame's recalculateLayouts (the deferred path).
   #  - WHILE recalculateLayouts is running (a CONTAINER sizing this child from inside its own
@@ -1072,6 +1073,17 @@ class Widget extends TreeNode
     if @implementsDeferredLayout()
       # immediate mutator: APPLY the re-fit now (synchronous _reLayout), never SCHEDULE it
       # (no _invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
+      @_reLayout()
+    else if @_reLayoutChildren? and !@layoutIsValid and !@_reLayoutMayResizeOwnWidth?()
+      # A size-tracking container that pins implementsDeferredLayout false (a window, a stack): the
+      # width just applied left its re-fit PENDING, so settle it now -- the same _reLayout() the
+      # settle loop would run on its own turn, pulled into my container's arrange, so byte-exact.
+      # Then the height handed back is the one I take at this width. Left to my own later visit, a
+      # height that follows the width (a window round a ratio-keeping plot, a stack of wrapped text)
+      # changes after my container has placed me, and the settle-time up-edge re-visits it
+      # (sync-settle-in-arrange, docs/archive/upedge-endgame-plan.md §6 P2). EXCLUDES a widget whose
+      # re-lay may re-negotiate its OWN width (a free-floating window before its first placement):
+      # settled early, it diverges from its normal independent settle.
       @_reLayout()
     @height()
 

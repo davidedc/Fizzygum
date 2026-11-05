@@ -233,6 +233,13 @@ children's *applied* bounds (`subWidgetsMergedFullBounds`): it reads genuine use
 layout feedback. It is the layout system's single named state-read — do not add a second. Where a container child
 genuinely must be sized-then-measured, the value is **handed forward** from the sizing call
 (`_setWidthSizeHeightAccordingly` returns its resulting height) rather than mutated-then-read-back.
+That height is FINAL for every size-tracking child: the call re-fits a deferred-layout widget at once, and
+settles a non-deferred tracking container (a window, a stack) whose re-fit the new width left pending — the
+same `_reLayout()` the settle loop would run on the child's own turn, pulled into the caller's arrange, so
+byte-exact. Without it, a child whose height follows its width (a window round a ratio-keeping plot) changes
+after its container has placed it, and the up-edge re-visits the container. The one exclusion is a widget
+whose re-lay may re-negotiate its OWN width (`FrameWdgt._reLayoutMayResizeOwnWidth`: a free-floating window
+before its first placement), which is left to its independent settle.
 
 ### 4.2 The layout-spec FAMILY — one object per attachment, carried by the child
 
