@@ -894,40 +894,24 @@ class FrameWdgt extends Widget
   # the per-instance `closeFromFrameBar = -> …` monkey-patches the sample/info
   # factories used to inject. 'saveOrAsk'
   # (default) runs the per-kind hook below; 'close'/'destroy' are the one-shot
-  # sample/info behaviours -- a property, not injected code.
+  # sample/info behaviours -- a property, not injected code. 'destroy' destroys the
+  # WHOLE window, its subtree with it: a single-widget destroy would leave every
+  # child alive, registered and unreachable for the rest of the session.
   closeFromFrameBarPolicy: 'saveOrAsk'
 
   closeFromFrameBar: ->
     switch @closeFromFrameBarPolicy
       when 'close' then @close()
-      when 'destroy' then @destroy()
+      when 'destroy' then @fullDestroy()
       else @_closeFromFrameBarWhenSaveOrAsk()
 
   # The 'saveOrAsk' hook. Base = a plain frame lets its CONTENT decide how to
   # close (ScriptWdgt/ErrorsLogViewer/BinWdgt/generic windows, via
-  # Widget.closeFromContainerFrame); the document/panel citizens override this
-  # with @_saveOrAskThenCloseCitizen, and FolderWindowWdgt with its own variant.
+  # Widget.closeFromContainerFrame); the Makers' documents override it with the
+  # save-or-destroy close they share (MakerDocumentWdgt), and FolderWindowWdgt
+  # with its own variant.
   _closeFromFrameBarWhenSaveOrAsk: ->
     @contents?.closeFromContainerFrame @
-
-  # Shared save-or-ask-then-close for the document/panel citizens (§5.E E2: the
-  # body was duplicated verbatim on DocumentWdgt + GenericPanelWdgt). Template
-  # method: it calls the per-kind @hasStartingContentBeenChangedByUser(). No real
-  # contents to save -> fullDestroy; else the save prompt; else just close.
-  _saveOrAskThenCloseCitizen: ->
-    # public-call-sanctioned + nosettle-sanctioned: this IS the close-from-bar
-    # action (a top-level bar-button event handler); @fullDestroy / @close are the
-    # public self-settling close verbs it legitimately triggers -- exactly as the
-    # public closeFromFrameBar it was extracted from did (this dedup only moved the
-    # shared body down a level). Reaching the NoSettle cores would leave the world
-    # unsettled after a top-level bar press.
-    if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceOrWireIntoWdgt @
-      @fullDestroy()
-    else if !world.anyReferenceOrWireIntoWdgt @
-      prompt = new SaveShortcutPromptWdgt @, @
-      prompt.popUpAtHand()
-    else
-      @close()
 
   # The title-bar buttons announce their press to their holder (the bar, which
   # forwards here) instead of testing `@parent instanceof FrameWdgt` themselves

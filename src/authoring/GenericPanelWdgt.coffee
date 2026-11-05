@@ -1,38 +1,32 @@
 # The GENERIC-PANEL framed citizen AND the container-citizen family BASE
-# (Frame-model plan §5.B): a stretchable panel IS its window. Builds the
-# shared naked payload -- a StretchableWidgetContainerWdgt -- and declares the
-# family's shared knowledge: the save-or-destroy close policy, the
-# payload-rebuild reset, the kind-names-the-window title. SlideWdgt /
-# DashboardWdgt / PatchProgrammingWdgt are thin subclasses (kind name + icon +
-# toolbar variant) -- the same two-role shape the retired
-# StretchableEditableWdgt family had, minus the editor middle layer, whose
-# coordination relays dissolved into the frame<->payload protocols (§5.B
+# (Frame-model plan §5.B): a stretchable panel IS its window. One of the Makers'
+# documents (MakerDocumentWdgt, which owns the title, the save-or-destroy close
+# and the payload rebuild every such document shares): this class builds the
+# family's shared naked payload -- a StretchableWidgetContainerWdgt -- and states
+# what counts as the user having changed it. SlideWdgt / DashboardWdgt /
+# PatchProgrammingWdgt / ImageWdgt are thin subclasses (kind name + icon +
+# toolbar variant, and ImageWdgt its own payload) -- the same two-role shape the
+# retired StretchableEditableWdgt family had, minus the editor middle layer,
+# whose coordination relays dissolved into the frame<->payload protocols (§5.B
 # B-iii): the CONTAINER owns the edit mode + ratio behaviour, the frame does
 # the chrome.
 
-class GenericPanelWdgt extends FrameWdgt
+class GenericPanelWdgt extends MakerDocumentWdgt
 
   providesAmenitiesForEditing: true
 
-  constructor: ->
-    super @_makeStartingPayload()
-
   # the family's payload hook (the DocumentWdgt shape): the ctor AND the reset
-  # below build through it, so a subclass with a richer apparatus (ImageWdgt's
-  # canvas + glass) overrides ONE method.
+  # build through it (MakerDocumentWdgt), so a subclass with a richer apparatus
+  # (ImageWdgt's canvas + glass) overrides ONE method.
   _makeStartingPayload: ->
     new StretchableWidgetContainerWdgt
 
   # ⚠ Do NOT delete this as "the same as the derivation". It IS what Widget's derivation would
   # produce, but I extend FrameWdgt -- so without it the chain answers FrameWdgt's "window", not the
-  # derivation, and the title below goes with it. (SpreadsheetWdgt sits in the same trap.)
+  # derivation, and the window's title goes with it (MakerDocumentWdgt titles it with this).
+  # (SpreadsheetWdgt sits in the same trap.)
   colloquialName: ->
     "generic panel"
-
-  # the kind names the window -- the base hook would title from the payload's
-  # colloquialName ("stretchable panel")
-  _titleForContents: (aWdgt) ->
-    @colloquialName()
 
   representativeIcon: ->
     new GenericPanelIconWdgt
@@ -41,20 +35,3 @@ class GenericPanelWdgt extends FrameWdgt
   # "user changed something" signal (byte-what the retired editor checked)
   hasStartingContentBeenChangedByUser: ->
     @contents?.ratio?
-
-  # The save-or-destroy close policy (§5.E E2: the shared body lives on
-  # FrameWdgt now; this is the citizen's 'saveOrAsk' hook). The citizen IS the
-  # window, so the save prompt takes it in both roles -- the FolderWindowWdgt shape.
-  _closeFromFrameBarWhenSaveOrAsk: ->
-    @_saveOrAskThenCloseCitizen()
-
-  # A citizen never falls back to the empty-window placeholder: losing the
-  # payload rebuilds a FRESH container (was the retired editor's
-  # _reactToChildPickedUp recreate). NOT during my own teardown (§5.B B3 case
-  # law: constructing a fresh child inside the destroy-until-empty iteration
-  # never terminates).
-  _resetToDefaultContents: ->
-    return if @_beingFullDestroyed
-    @_retireDockedFramesNoSettle()
-    @contents = @_makeStartingPayload()
-    @_buildAndConnectChildrenNoSettle()

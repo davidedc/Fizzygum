@@ -52,10 +52,15 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   `acceptCellEdit`/`cancelCellEdit`, and an edit COMMITS before any scroll), houses the
   shared edge-stroke helper `paintGridEdges` (the edge-ownership colours + the crossing rule),
   owns `@model` and is the formula SCOPE (`@` inside a formula is this widget).
-- `SpreadsheetWdgt.coffee` — the FRAMED citizen (Frame-model §5.B, owner decision D2): a truly
-  thin `FrameWdgt` over the naked grid — ctor, `colloquialName` ("Sheets Maker", its title), its
-  toolbar (`buildToolbar` → `SheetToolbarWdgt`, docked on top), and a teardown-guarded payload reset,
-  nothing else. `SpreadsheetApp` and `SampleSheetApp` open this one.
+- `SpreadsheetWdgt.coffee` — the FRAMED citizen (Frame-model §5.B, owner decision D2): one of the
+  Makers' documents (`MakerDocumentWdgt`, in `authoring`, which owns the window title, the
+  save-or-destroy close and the teardown-guarded payload reset every such document shares), and a
+  thin one over the naked grid: its payload, `colloquialName` ("Sheets Maker", its title), its
+  toolbar (`buildToolbar` → `SheetToolbarWdgt`, docked on top), and whether the user has put
+  anything in it (`hasStartingContentBeenChangedByUser`: some cell holds an entry or a format,
+  `SheetModel.isBlank`), nothing else. Closed with something in it, a sheet offers to be saved as a
+  desktop icon; closed blank, it is destroyed. `SpreadsheetApp` and `SampleSheetApp` open this one
+  (the sample sets its close policy to `'close'`, so it never offers).
 - `SpreadsheetApp.coffee` — the "Sheets Maker" desktop door (see Packaging); opens a sheet at its
   `defaultExtent` (the formula bar over a 5 × 10 grid at 100%).
 - `SheetFormulaBarWdgt.coffee` + `SheetFormulaBarAppearance.coffee` — the FORMULA BAR, a frozen

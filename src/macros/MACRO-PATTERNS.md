@@ -940,6 +940,19 @@ assertion a recapture after a regression silently stores two different hashes an
   New York City slide holds a map window of the same name) or by its class (the door decides the class). Close each with
   `@closeWindow_InputEvents` before the next click: a door's window opens at a fixed spot over the folder. Open a desktop
   door before the folder, which opens over the desktop's icon column. No new verb.
+- **Close a Maker's document and save it** (`macroMakerDocumentsOfferToSaveOnClose`): a Maker's door is
+  `AppLauncherWdgt.addToDesktop "SpreadsheetApp"` (or `"SimpleDocumentApp"`, `"SimpleSlideApp"`, …), found again by its
+  caption, `world.topWdgtSuchThat (w) -> w instanceof AppLauncherWdgt and w.label.text is "Sheets Maker"`. A Maker's FIRST
+  launch in a world also opens its one-shot info window, itself a `DocumentWdgt`: the document the click opened is the
+  added window of the document's class whose `closeFromFrameBarPolicy is "saveOrAsk"` (the info window's is `"destroy"`);
+  close the info window with `@closeWindow_InputEvents`. Change the document with real input (type into a sheet's
+  cell or a text's slot, `@dragWidgetTo_InputEvents widget, slideWindow.contents` into a panel kind), then
+  `@closeWindow_InputEvents documentWindow`: a changed one opens a `SaveShortcutPromptWdgt` (a world child), whose OK is
+  `@clickPromptButton_InputEvents prompt, "OK"`; it leaves one `ShortcutWdgt` on the desktop with
+  `referencedWidget` the document and `representsContents` true, and files the window to the shelf. An unchanged one
+  opens no prompt and ends `destroyed`. (`MakerDocumentWdgt._closeFromFrameBarWhenSaveOrAsk` is the whole rule.) The
+  test's door-opening subroutine RETURNS the document window (`sheetWindow = openMakerDocument_InputEvents_Macro
+  "Sheets Maker", SpreadsheetWdgt`, an explicit `return`). No new verb.
 
 ## Scroll & scrollbars
 

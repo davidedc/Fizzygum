@@ -83,3 +83,12 @@ class SheetModel
 
   # paint / recompute helper: visit every stored cell as (record, address).
   forEachCell: (fn) -> @cells.forEach fn
+
+  # true while no cell holds anything the user put there: an entry (a source or a dropped widget)
+  # or a format. The store's size does not answer this, because a record can exist and be empty: a
+  # formula's reference creates the record it names, and Delete clears an entry but keeps the cell.
+  # (Whether a closed sheet is worth offering to save: SpreadsheetWdgt.)
+  isBlank: ->
+    for record from @cells.values()
+      return false if record.source.trim() isnt "" or record.widgetEntry? or record.format?
+    true
