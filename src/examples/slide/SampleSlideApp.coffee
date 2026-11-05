@@ -1,6 +1,6 @@
-# SampleSlideApp -- the "sample slide" example app: the New York City slide (a
-# scrolling USA map with a pin, a small bar plot, a caption and a wiki link),
-# opened from the examples folder. One of the per-app WindowedApp
+# SampleSlideApp -- the Examples folder's "New York City": a slide (a
+# scrolling USA map with a pin, a small bar plot, a caption and a wiki link).
+# One of the per-app WindowedApp
 # subclasses (Phase 6 step 6c.2): it declares its required parts and the singleton
 # world slot, and builds its window in buildWindow; its launcher title and icon
 # live in AppCatalog, not here (see WindowedApp's header). The
@@ -58,7 +58,7 @@ class SampleSlideApp extends WindowedApp
 
     slideWdgt._applyBounds (new Point 114, 10), new Point 596, 592
     world.add slideWdgt
-    slideWdgt.setTitleWithoutPrependedContentName "Sample slide"
+    slideWdgt.setTitleWithoutPrependedContentName @_title()
 
     slideWdgt.disableDragsDropsAndEditing()
 

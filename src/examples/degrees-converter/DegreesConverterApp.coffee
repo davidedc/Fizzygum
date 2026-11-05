@@ -1,4 +1,4 @@
-# DegreesConverterApp -- the "C <-> F" degrees-converter example app (a patch-
+# DegreesConverterApp -- the Examples folder's "°C ↔ °F converter" (a patch-
 # programming window wiring two sliders/calc nodes into a live converter). One of the
 # per-app WindowedApp subclasses (Phase 6 step 6c.3): it declares
 # the singleton world slot and builds its window inline in buildWindow; its launcher
@@ -86,7 +86,7 @@ class DegreesConverterApp extends WindowedApp
     # docs/archive/disable-editing-family-convert-plan.md.
     patchProgrammingWdgt.disableDragsDropsAndEditing()
     world.add patchProgrammingWdgt
-    patchProgrammingWdgt.setTitleWithoutPrependedContentName "°C ↔ °F converter"
+    patchProgrammingWdgt.setTitleWithoutPrependedContentName @_title()
 
     cText.isEditable = true
     fText.isEditable = true

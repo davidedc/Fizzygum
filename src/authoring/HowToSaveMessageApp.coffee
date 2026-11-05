@@ -64,7 +64,7 @@ class HowToSaveMessageApp extends WindowedApp
 
     doc._applyBounds (new Point 114, 10), new Point 365, 447
     world.add doc
-    doc.setTitleWithoutPrependedContentName "How to save?"
+    doc.setTitleWithoutPrependedContentName @_title()
 
     doc.disableDragsDropsAndEditing()
 

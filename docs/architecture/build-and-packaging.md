@@ -240,6 +240,13 @@ Keyed by name, always.
 ⚠ **An app has ONE name**, so there is no per-call-site label override. A launcher's caption is
 stored on the widget, so a placement-dependent name would put two differently-named icons for the
 same app side by side as soon as one is dragged out of the Examples folder onto the desktop.
+The window reads that name too: an app that opens ONE document (a `slot` app — the five Examples
+doors, "How to save?") titles it with `WindowedApp._title`, the catalog's caption, never a string
+typed in `buildWindow`, so the icon and the window it opens cannot disagree. The direction is forced
+by the same reachability: the caption must exist before the app's code is fetched, so the window
+reads the catalog, never the other way round. (A Maker opens a fresh, untitled document each time;
+its window is the document's, not the app's.) Since a door's icon already shows its kind, an
+Examples door is named for its document's content ("Party budget", not "Spreadsheet").
 The one override that exists is for an ICON and is forced: the C↔F door's art is in the lazy
 `examples-icons` part, which a core file may not name, so `ExamplesFolderWindowWdgt` passes it in
 from inside the `whenAllLoaded` scope that makes naming it legal.

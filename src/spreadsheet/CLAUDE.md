@@ -23,7 +23,7 @@ runs eager-everything and measures cycles):
   desktop icon is built at boot from core art and the class NAME (AppLauncherWdgt's lazy mode), so the
   door costs nothing until clicked, and the click fetches door and grid as one part — the way the
   Makers live inside `authoring`.
-- **`SampleSheetApp`** (the Examples folder's "Spreadsheet", the party budget) lives in the sibling
+- **`SampleSheetApp`** (the Examples folder's "Party budget") lives in the sibling
   [`../examples/sheet/`](../examples/sheet/), alone in its one-class `example-sheet` part: a FOLDER IS
   A DOOR — opening the folder fetches its five doors and nothing else.
 ⚠ An `if SimpleSpreadsheetWdgt?` guard would be WRONG anywhere here — for a lazy part that reads "not

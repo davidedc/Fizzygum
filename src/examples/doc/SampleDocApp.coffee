@@ -1,4 +1,4 @@
-# SampleDocApp -- the "sample doc" example app (a SimpleDocument showing what can be
+# SampleDocApp -- the Examples folder's "Interactive doc" (a SimpleDocument showing what can be
 # embedded in a text document: an interactive 3D plot, a connected slider, etc.). One
 # of the per-app WindowedApp subclasses (Phase 6 step 6c.3): it
 # declares its required parts and the singleton world slot and builds its window
@@ -53,7 +53,7 @@ class SampleDocApp extends WindowedApp
 
     doc._applyBounds (new Point 257, 110), new Point 331, 545
     world.add doc
-    doc.setTitleWithoutPrependedContentName "Sample text document"
+    doc.setTitleWithoutPrependedContentName @_title()
 
     doc.disableDragsDropsAndEditing()
 
@@ -66,5 +66,3 @@ class SampleDocApp extends WindowedApp
     # bring-forward-on-relaunch path. (The old code fell off the end returning
     # the monkey-patch closure, so the slot held a FUNCTION -- latent.)
     return doc
-
-    return wm

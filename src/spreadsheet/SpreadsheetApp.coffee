@@ -11,7 +11,7 @@
 # is built at boot from core art and this class's NAME (AppLauncherWdgt's lazy mode), so the door costs
 # nothing until it is clicked, and the click fetches door and grid as ONE part: one click, one fetch,
 # the way the Makers live inside the 'authoring' part they build from. (The Examples folder's
-# "Spreadsheet" is a different door, SampleSheetApp, alone in its own one-class part.)
+# "Party budget" is a different door, SampleSheetApp, alone in its own one-class part.)
 
 class SpreadsheetApp extends WindowedApp
 

@@ -63,7 +63,7 @@ class WellKnownObjects
 
   # Resolve the per-app singleton for a windowed-app class name (e.g. the target of a
   # deserialized desktop launcher). An WindowedApp subclass is a
-  # STATELESS config holder — it declares a title/icon/slot and a launch()/buildWindow()
+  # STATELESS config holder — it declares its parts and slot and a launch()/buildWindow()
   # apparatus, but keeps no per-world mutable state (the one window it opens lives on
   # world[@slot], not on the app object). So a fresh instance is behaviourally identical to
   # the one the original launcher pointed at, and it is safe to `new` during a restore (the

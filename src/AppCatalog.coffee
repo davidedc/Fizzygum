@@ -21,6 +21,11 @@
 # widget, so a per-placement name would put two differently-named icons for the same app side by
 # side the moment one is dragged out of the Examples folder onto the desktop. Hence deliberately NO
 # per-call-site label override: a folder shows an app's name, it does not rename it.
+#   The window a door opens reads the same name: an app that opens ONE document (a `slot` app — the
+# Examples, "How to save?") titles it through WindowedApp._title, so the icon and the window it
+# opens cannot disagree. An Examples door is therefore named for what its document holds — its
+# icon already shows the kind. A Maker opens a fresh, untitled document each time, so its window is
+# the document's and not the app's.
 
 class AppCatalog
 
@@ -65,11 +70,11 @@ class AppCatalog
     "GenericPanelApp":     {title: "Generic panel",     icon: (-> new GenericPanelIconWdgt)}
     "ToolbarsApp":         {title: "Super toolbar",     icon: (-> new ToolbarsIconWdgt), toolTip: "a toolbar to rule them all"}
     "FridgeMagnetsApp":    {title: "Fizzytiles",        icon: (-> new FridgeMagnetsIconWdgt), toolTip: "fridge magnets"}
-    "DegreesConverterApp": {title: "C-F converter"}
-    "SampleSlideApp":      {title: "Slide",             icon: (-> new SimpleSlideIconWdgt)}
-    "SampleDashboardApp":  {title: "Dashboard",         icon: (-> new DashboardsIconWdgt)}
-    "SampleDocApp":        {title: "Document",          icon: (-> new TypewriterIconWdgt)}
-    "SampleSheetApp":      {title: "Spreadsheet",       icon: (-> new SpreadsheetIconWdgt)}
+    "DegreesConverterApp": {title: "°C ↔ °F converter"}
+    "SampleSlideApp":      {title: "New York City",     icon: (-> new SimpleSlideIconWdgt)}
+    "SampleDashboardApp":  {title: "Plots and maps",    icon: (-> new DashboardsIconWdgt)}
+    "SampleDocApp":        {title: "Interactive doc",   icon: (-> new TypewriterIconWdgt)}
+    "SampleSheetApp":      {title: "Party budget",      icon: (-> new SpreadsheetIconWdgt)}
 
   @get: (appClassName) ->
     @entries()[appClassName]

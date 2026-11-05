@@ -929,6 +929,17 @@ assertion a recapture after a regression silently stores two different hashes an
   `@assertScreenshotsIdentical` between the pre-view and post-edit shots (byte-identical, GHOST-conform:
   visibility never feeds back into state). No new verb (drives the same `editButton` click the edit-toggle
   entries elsewhere in this file use).
+- **Open an app from its door, and tell the window it opened** (`macroExamplesDoorsNameTheirWindows`): build doors as the
+  desktop does — `AppLauncherWdgt.addToDesktop "HowToSaveMessageApp"`, and the Examples folder with
+  `world.makeFolder "Examples", new ExamplesFolderWindowWdgt` (EMPTY until first opened; its shortcut's click,
+  `@moveToAndClick_InputEvents (world.topWdgtSuchThat (w) -> w instanceof FolderShortcutWdgt)`, fills it, and on the harness
+  page every part is eager, so that is inline). The doors are `examples.contents.contents.children.filter (w) -> w instanceof
+  AppLauncherWdgt`, in the folder's order, and a door is opened by `@moveToAndClick_InputEvents door`: its centre is on its
+  glyph, a press on the tile. The window a click opened is the desktop child it ADDED — `before = world.children.slice()`,
+  then `world.children.filter (w) -> (w not in before) and w instanceof FrameWdgt` — never a window found by its title (the
+  New York City slide holds a map window of the same name) or by its class (the door decides the class). Close each with
+  `@closeWindow_InputEvents` before the next click: a door's window opens at a fixed spot over the folder. Open a desktop
+  door before the folder, which opens over the desktop's icon column. No new verb.
 
 ## Scroll & scrollbars
 

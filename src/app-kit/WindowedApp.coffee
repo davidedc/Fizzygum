@@ -55,6 +55,11 @@ class WindowedApp
   windowOpened: (newlyOpenedWindow) ->   # after a FRESH (non-singleton) launch; no-op by default
 
   # --- shared apparatus (written once) ---
+  # My NAME: the caption AppCatalog gives my launcher. An app that opens ONE document (a `slot` app)
+  # titles that document's window with it, read here rather than retyped in buildWindow, so the
+  # icon and the window it opens say the same thing.
+  _title: -> AppCatalog.get(@constructor.name).title
+
   # Put this app's EAGER launcher on the desktop. Takes NOTHING, and that is load-bearing: it is
   # wired to demo menu items, and ButtonWdgt dispatches actions with a fixed four-slot convention
   # (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), so any parameter here would

@@ -1,4 +1,4 @@
-# SampleDashboardApp -- the "sample dashboard" example app (an interactive dashboard
+# SampleDashboardApp -- the Examples folder's "Plots and maps" (an interactive dashboard
 # of plots, maps, sliders and speech bubbles). One of the per-app
 # WindowedApp subclasses (Phase 6 step 6c.3): it declares the parts
 # its window needs and the singleton world slot, and builds its window inline in
@@ -87,7 +87,7 @@ class SampleDashboardApp extends WindowedApp
 
     slideWdgt._applyBounds (new Point 114, 10), new Point 596, 592
     world.add slideWdgt
-    slideWdgt.setTitleWithoutPrependedContentName "Sample dashboard"
+    slideWdgt.setTitleWithoutPrependedContentName @_title()
 
 
     slideWdgt.disableDragsDropsAndEditing()

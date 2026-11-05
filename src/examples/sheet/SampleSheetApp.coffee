@@ -1,4 +1,4 @@
-# SampleSheetApp — the Examples folder's "Spreadsheet": a small PARTY BUDGET that shows what this
+# SampleSheetApp — the Examples folder's "Party budget": a small budget that shows what this
 # spreadsheet does that others do not. A slider lives in a cell (B3) and drives the formulas that read
 # it (C3, then the total and what is left); a cell's formula returns a COLOUR (C8: green while the
 # total is within the budget, red over it), which the cell shows as a swatch. Drag the slider and the
@@ -43,7 +43,7 @@ class SampleSheetApp extends WindowedApp
       world.dataflow.markStale cell
     sheet.model.getOrCreateCellAt(@BOLD).format = {bold: true}
     world.openFrameWith sheetWindow, (sheetWindow.extentWrappingPayloadAt sheet.defaultExtent()), (new Point 150, 110)
-    sheetWindow.setTitleWithoutPrependedContentName "Party budget"
+    sheetWindow.setTitleWithoutPrependedContentName @_title()
     # closing just closes (no save prompt) -- a sample is not worth saving (the SampleDocApp policy)
     sheetWindow.closeFromFrameBarPolicy = 'close'
     # return the WINDOW: the base stores it in world[@slot] for the bring-forward-on-relaunch path
