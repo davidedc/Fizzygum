@@ -241,7 +241,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   testing what a half-finished gesture leaves behind (`ActivePointerWdgt.processPointerCancel`).
 - **L2 locators**: `findWidgetByTextDescription([desc,occ,total])` (the recorded-identity bridge — wraps
   `world.getWidgetViaTextLabel`), `findTopWidgetByClassNameOrClass`, `pointAtFractionOf`, `getMostRecentlyOpenedMenu`,
-  `getTextMenuItemFromMenu` (a row by its EXACT label), `rowOfMenuStandingFor menu, widget` (a row that NAMES a widget —
+  `getTextMenuItemFromMenu` (a row by its EXACT label; it throws a named error on no row or several) and its query twin
+  `getTextMenuItemsFromMenu` (every such row, in order; never throws), `rowOfMenuStandingFor menu, widget` (a row that NAMES a widget —
   a hierarchy menu's, a chooser's, a wire's — found by that widget, `MenuItemWdgt.representedWidget`; it throws a named
   error on no row or several) and its query twin `rowsOfMenuStandingFor` (every such row, in order; never throws, so a
   step can ask whether a menu offers a widget at all); plus the SCREEN-family pair for widgets on any MAPPED

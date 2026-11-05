@@ -466,7 +466,8 @@ assertion a recapture after a regression silently stores two different hashes an
   `@clickPromptButton_InputEvents prompt, "OK"`; the row verbs cannot see it).
 - **Finding a row: by its EXACT label, or by the WIDGET it stands for.** A WORDING row ("Duplicate", "→← Shrink to fit",
   "Layout in stack") is named by its exact label, any leading glyph included — `moveToItemOfMenuAndClick_InputEvents` /
-  `getTextMenuItemFromMenu`. A row that NAMES a widget — a hierarchy menu's row, the "new parent" chooser's (a widget's
+  `getTextMenuItemFromMenu` (the row itself: it throws a named error, listing the menu's labels, on no row or several) and
+  `getTextMenuItemsFromMenu` to ASK (an array; never throws — "does the menu offer it", "how many"). A row that NAMES a widget — a hierarchy menu's row, the "new parent" chooser's (a widget's
   "Attach"), the "target" chooser's (a handle's "Attach", a controller's "Connect to"), the "bind with" chooser's, a
   controller's wire row — reads that widget's HUMAN name (`Widget.rowName`: "Rectangle", "Window", "Desktop" for the world;
   a wire row "Panel · color ➜"), told apart from the menu's other rows only where two would read alike
@@ -1604,10 +1605,10 @@ assertion a recapture after a regression silently stores two different hashes an
   widget (`openOwnMenuAtFractionOf_InputEvents_Macro`).
 - **Assert a controller's connection block by MEANING** (`macroTextMenuOffersOneConnectionBlock`): every controller's menu
   ends with ONE block — "Connect", then one row per live wire (`ControllerMixin._addTargetConnectionMenuEntries`) — on
-  every page, texts included (a plain `StringWdgt` is a controller too). Read it off the open menu: the rows
-  (`menu.testItems().filter (item) -> item instanceof MenuItemWdgt`) hold exactly one labelled "Connect" and exactly one
-  standing for each wired target (`(@rowsOfMenuStandingFor menu, target).length`), and the LAST two rows are "Connect"
-  and the wire row. A text's menu is taller than the 880 world, so wheel it to its end (`@wheelOn_InputEvents menu, 3000`)
+  every page, texts included (a plain `StringWdgt` is a controller too). Read it off the open menu with the two query
+  lookups: exactly one row labelled "Connect" (`(@getTextMenuItemsFromMenu menu, "Connect").length`) and exactly one
+  standing for each wired target (`(@rowsOfMenuStandingFor menu, target).length`); and the LAST two rows
+  (`menu.testItems().filter (item) -> item instanceof MenuItemWdgt`) are "Connect" and the wire row. A text's menu is taller than the 880 world, so wheel it to its end (`@wheelOn_InputEvents menu, 3000`)
   before a screenshot that should show the block, then rest the pointer on bare desktop so no row is hovered.
 - **Fan-OUT: one controller, many targets** (`macroPaletteFansOutAndDisconnects`): run connect AGAIN on a DIFFERENT target —
   since connector §P4 `wireTo` ADDS a `WireSpec` to the controller's `@wires` list instead of overwriting, so BOTH follow it and

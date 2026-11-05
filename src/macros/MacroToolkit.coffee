@@ -1956,13 +1956,30 @@ class MacroToolkit
     return rowEnd - boxEnd if rowEnd > boxEnd
     0
 
+  # ── ROWS BY THEIR EXACT LABEL ─────────────────────────────────────────────────────────────────
+  # The same pair, and the same rule, as the rows found by the widget they stand for (below): a
+  # QUERY that never throws, and a finder that names what went wrong.
+
+  # Every row of theMenu labelled exactly theLabel, in row order — a QUERY: it scrolls nothing and
+  # never throws, so a step can ask whether a menu offers a row at all, or how many it offers.
+  getTextMenuItemsFromMenu: (theMenu, theLabel) ->
+    return [] unless theMenu?
+    theMenu.collectAllChildrenBottomToTopSuchThat (item) -> item.labelString? and item.labelString == theLabel
+
+  # THE row of theMenu labelled exactly theLabel, brought into view if the menu's rows scroll.
+  # THROWS a named error when no row has that label — listing the labels the menu does have — or
+  # when several do: a click there would land on whichever one a search met first. A missing or
+  # ambiguous row is a broken step, never one to skip.
   getTextMenuItemFromMenu: (theMenu, theLabel) ->
-    theItem = theMenu.topWdgtSuchThat (item) ->
-      if item.labelString?
-        item.labelString == theLabel
-      else
-        false
-    @_menuRowScrolledIntoView theItem
+    unless theMenu?
+      throw new Error "no menu to find the row labelled \"#{theLabel}\" in"
+    rows = @getTextMenuItemsFromMenu theMenu, theLabel
+    if rows.length isnt 1
+      labelled = theMenu.collectAllChildrenBottomToTopSuchThat (item) -> item.labelString?
+      labels = ("\"#{each.labelString}\"" for each in labelled)
+      problem = if rows.length is 0 then "has no row labelled" else "has #{rows.length} rows labelled"
+      throw new Error "#{theMenu} #{problem} \"#{theLabel}\" (its rows: #{if labels.length then labels.join ', ' else 'none'})"
+    @_menuRowScrolledIntoView rows[0]
 
   # Move to and click a menu item by its label, in a SPECIFIC menu you already hold a reference
   # to. Prefer this over moveToItemOfTopMenuAndClick_InputEvents whenever you interact with a popup more

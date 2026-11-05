@@ -1,6 +1,7 @@
 > **ARCHIVED — COMPLETE (2026-11-04).** Plan and decision record of the spreadsheet UX arc (owner rulings
 > R1–R13, §1); verification in §6a; the follow-ups after the close in §6b (the owner's nitpicks, live
-> menu ticks), §6c (the last build-time ticks) and §6d (one connection block per text). The present-tense description lives in `src/spreadsheet/CLAUDE.md`
+> menu ticks), §6c (the last build-time ticks), §6d (one connection block per text) and §6e (two test-machinery
+> fixes found verifying §6d). The present-tense description lives in `src/spreadsheet/CLAUDE.md`
 > ("The UX arc"), `docs/specs/dataflow-engine-spec.md` §9.1, `docs/architecture/visual-design-system.md`
 > (§4.2, §4.10, the font roles and the toolbar glyphs) and `src/macros/MACRO-PATTERNS.md` ("Spreadsheets");
 > what the arc left out on purpose is in `docs/BACKLOG.md` under this file's name. Index: `docs/archive/INDEX.md`.
@@ -594,6 +595,43 @@ The suite drives the harness page and never photographs a wired text's menu, so 
   "Connect", 2 rows for the sink), and the index-page guard back (no "Connect" on the harness page).
   Close: `fg gauntlet` 19/19 green with no retries (902 s), and `fg homepage` OK.
 
+## §6e After §6d: two things its verification exposed (2026-11-04)
+
+Both came out of proving §6d's test, and both are in the test machinery rather than the product.
+
+- **The two row lookups follow ONE rule.** Planting §6d's guard back made the new test fail with
+  `Cannot read properties of undefined (reading 'x')`: `MacroToolkit.getTextMenuItemFromMenu` (a row by its
+  exact label) answered `undefined` for a missing row, so the click after it crashed. Its sibling,
+  `rowOfMenuStandingFor` (a row by the widget it stands for), throws a named error and has a query twin that
+  never throws. The label lookup is now the same pair. `getTextMenuItemFromMenu` throws a named error on no
+  row or several (an ambiguous label would click whichever row a search met first), listing the menu's
+  labels; `getTextMenuItemsFromMenu` is the query that never throws, for "does the menu offer it" and "how
+  many". The name is kept: its ~25 callers, and the label click verbs built on it, already mean "the row".
+  The one caller that used it as a query (`macroPinnedMenuTicksFollowTheirState`) moved to the twin. The
+  suite showed no test leaning on a missing or duplicated label. The planted guard now fails as `a MenuWdgt
+  has no row labelled "Connect" (its rows: …)`.
+- **`macroOverTallMenuScrollsToReachItsLastRow` proves what it says again.** Its words described a 440 px
+  world (a 498 px menu, three rows over), and its wheel of 400 was meant to reach "the travel limit". Measured
+  in the 1920×880 test world it runs in, the plain TextWdgt's menu wants 1462 px of rows against an 833 px
+  rows viewport: 629 px of travel, with 13 of its 31 rows past the fold. So the wheel stopped mid-track. The
+  final click on "→← Shrink to fit" still passed, because the row verbs scroll an off-view row into view
+  themselves (`MacroToolkit._menuRowScrolledIntoView`). The test's discriminating claim, that the scroll made
+  the row reachable, was therefore being met by the toolkit, not by the wheel. The wheel is now 3000 (far
+  past the travel), and four value assertions carry the claim instead of prose numbers:
+  - the menu is the world's height;
+  - its rows scroll;
+  - after the wheel they sit at their travel limit;
+  - finding the row scrolls nothing, so the wheel alone brought it on-world.
+
+  A planted short wheel (3000 arriving as 400) fails the last two by name, where the old test passed. The
+  four metadata fields are re-worded and state no measured height, so an unrelated menu row cannot make them
+  stale again. image_3 now shows the rows' end.
+- **Verification.** The suite on the stricter lookup failed exactly one test, the over-tall test's image_3
+  (its wheel now reaches the end), attributed on the dpr1 diff page. `fg recapture --auto` at dpr 1+2,
+  mouse then finger, recaptured only that image, and both completeness gates were green. Both plants
+  failed by name: the short wheel, and §6d's guard (now a named missing row). Close: `fg gauntlet` 19/19
+  green with no retries (885 s), and `fg homepage` OK.
+
 ## §7 Rejected alternatives (do not re-attempt)
 
 - **Picture zoom** (`setScaleFactor` on the sheet or window): text blurs — measured 2026-11-04.
@@ -632,3 +670,5 @@ Items of `docs/BACKLOG.md` this arc closes (they leave that file when it lands):
   row are `MenuRowReflectionSpec` views, and the `ticked:` option is gone; a copy comes back detached.
 - [x] A text's menu showed "Connect" twice on an index page, and a wired text its wire rows twice on any
   page (§6d): one connection block per text, from the shared builder, last, on every page.
+- [x] Two observations found verifying §6d (§6e): the label row lookup fails by name and has a query twin;
+  the over-tall-menu test's wheel reaches the end again, its claim asserted by value.
