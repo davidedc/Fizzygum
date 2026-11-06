@@ -109,7 +109,7 @@ class Class
   _nameTheConstructorFunction: (aString) ->
     named = aString.replace /function[ \t]*\(/, => "function " + @name + "("
     if named is aString
-      console.error "could not give the constructor of " + @name + " a parse-time name: " + aString
+      console.error "CONSTRUCTOR_NOT_NAMED: could not give the constructor of " + @name + " a parse-time name: " + aString
     named
 
   # A member name that must NOT become a function-expression name, because a named function
@@ -178,7 +178,7 @@ class Class
     # patterns are literals in it -- so an expression-shaped detector reports the stripper
     # itself, on every build.
     if /^var\b[^;]*\b(hasProp|indexOf|slice)\s*=/m.test aString
-      console.error "code contains a helper var, it shouldn't: " +  aString
+      console.error "HELPER_VAR_NOT_STRIPPED: code contains a helper var, it shouldn't: " +  aString
       debugger
 
     return aString
@@ -203,7 +203,10 @@ class Class
   # restore path replays before any instance exists.
   applyMemberEdit: (memberName, source) ->
     proto = window[@name].prototype
-    compiled = compileFGCode ("window.__fzEditedClassMember = " + (@_equivalentforSuper memberName, source)), true
+    # the typed source sits behind the assignment, so a compile error is placed in it (typedFrom);
+    # a `super` the rewrite expands shifts the columns after it on its line
+    assignment = "window.__fzEditedClassMember = "
+    compiled = compileFGCode assignment + (@_equivalentforSuper memberName, source), true, typedFrom: assignment.length
     eval.call window, compiled
     proto[memberName] = window.__fzEditedClassMember
     delete window.__fzEditedClassMember
@@ -542,7 +545,7 @@ class Class
           if window.srcLoadCompileDebugWrites then console.log "actually evalling " + @name + " to create the class"
           eval.call window, JS_string_definitions
         catch err
-          console.error " error " + err + " evaling : " + JS_string_definitions
+          console.error "SOURCE_EVAL_FAILED: " + err + " evaling : " + JS_string_definitions
           alert " error " + err + " evaling : " + JS_string_definitions
 
 

@@ -364,9 +364,16 @@ They verify the *behaviour* the names promise (the ground truth the static scann
 dispatch). Full description: `docs/architecture/layering-naming-convention.md`.
 
 **The ALWAYS-ON runtime asserts (no flag, no prelude).** A handful of invariants are cheap enough to check
-inline and are caught nowhere else, so they `console.error` a TOKEN that both headless runners fail on
-(`run-all-headless.js`, `run-macro-test-headless.js` — seven tokens on that gate today). Each exists because
-the screenshot suite structurally cannot see the violation:
+inline and are caught nowhere else, so they `console.error` a TOKEN that the three headless runners fail on
+(`run-all-headless.js`, `run-macro-test-headless.js`, `run-sequence-headless.js`; the list is
+`Fizzygum-tests/scripts/lib/gate-tokens.js`). The runners are FAIL-CLOSED beyond the list: any error-type
+console line, and any uncaught page error, fails the test too, unless the line OPENS with a token excused by
+design (`DATAFLOW_ERROR`, a formula that throws). And every `console.error` in `src/` and the harness opens with
+an ALL-CAPS token, held by `lib/gate-tokens-selftest.js` (`npm run selftest`): an error with no name is an
+assertion nothing could report by name, so the selftest refuses it when it is written, and the token it gets is
+then either gated or excused with one of two stated kinds (`by-design`, or `not-distinctive` — a word too common
+to match as a substring, which still fails as an error line). Each always-on assert exists because the
+screenshot suite structurally cannot see the violation:
 - `NON_FINITE_GEOMETRY` / `NON_INTEGER_GEOMETRY` — `Widget._assertBoundsWellFormed`, see
   [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md).
 - `POPUP_LARGER_THAN_WORLD` — `FrameWdgt._assertFitsInTheWorld`: a pop-up bigger than the world has rows

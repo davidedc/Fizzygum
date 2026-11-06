@@ -64,14 +64,14 @@ class StackLayoutEngine
       totDesired = desiredMain
       extraSpace = availMain - desiredMain
       if extraSpace < 0
-        console.error "this shouldn't happen, extraSpace is negative: " + extraSpace
+        console.error "STACK_DISTRIBUTION_INVARIANT: extraSpace is negative: " + extraSpace
 
       if maxMargin > 0
         fillByDesiredFraction = 0
       else if maxMargin == 0
         fillByDesiredFraction = 1
       else
-        console.error "this shouldn't happen, maxMargin negative: " + maxMargin + " max: " + maxMain + " desired: " + desiredMain
+        console.error "STACK_DISTRIBUTION_INVARIANT: maxMargin negative: " + maxMargin + " max: " + maxMain + " desired: " + desiredMain
         fillByDesiredFraction = 0
 
       childMainFor = (C) ->
@@ -130,7 +130,7 @@ class StackLayoutEngine
           Math.round(childMainHi)
       childMainLo = childMainHi
       if childMainLo > mainHiBound + 5
-        console.error "division-stack distribution overflowed its allocated extent by " + (childMainLo - mainHiBound)
+        console.error "STACK_DISTRIBUTION_INVARIANT: division-stack distribution overflowed its allocated extent by " + (childMainLo - mainHiBound)
       # layout-apply-sanctioned: this IS the arrange — the engine is the extracted body of
       # Widget._reLayout's division branch, re-laying each child it just placed
       C._reLayout childBounds

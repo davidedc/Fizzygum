@@ -17,7 +17,6 @@ recalculateOutput         # patch nodes' reactive recompute protocol verb
 reactToTargetConnection   # connection protocol hook
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
-saveScript          # ScriptWdgt user action
 textPrompt          # Widget code-entry prompt door, sibling of prompt/inform/pickColor — inspector / live-code surface
 setProgram          # LCLProgramRunner programming API
 # Kept public for structural reasons (T5 execution findings, 2026-07-12):

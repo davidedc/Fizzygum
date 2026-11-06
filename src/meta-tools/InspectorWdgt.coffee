@@ -812,11 +812,14 @@ class InspectorWdgt extends Widget
   # Shared save scaffolding: object inspectors inject the property, class
   # inspectors evaluate an assignment — the only differing step is isolated in
   # the overridable applyPropertyEdit hook (ClassInspectorWdgt overrides it).
+  # Every apply compiles before it changes anything, so an edit that is not code changes nothing:
+  # it is reported, and stays MODIFIED, Save still enabled (Widget._savingTypedCode). Answers
+  # whether it saved (ClassInspectorWdgt.overrideInThisClass reads it).
   save: ->
-    if !@list.selected? then return
+    if !@list.selected? then return false
     txt = @detail.contents.children[0].text.toString()
     propertyName = @list.selected.labelString
-    @applyPropertyEdit propertyName, txt
+    return false unless @_savingTypedCode => @applyPropertyEdit propertyName, txt
 
     @detail.textWdgt.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
@@ -827,6 +830,7 @@ class InspectorWdgt extends Widget
     for eachWidget in world.widgetsGivingErrorWhileRepainting
       eachWidget.show()
     world.widgetsGivingErrorWhileRepainting = []
+    true
 
   # the one differing step between object- and class-inspector save: an object
   # inspector injects the property onto the instance (ClassInspectorWdgt

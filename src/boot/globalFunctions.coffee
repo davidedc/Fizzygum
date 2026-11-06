@@ -513,10 +513,10 @@ bootstrapSWCanvasFontsThen = (callback) ->
     ]).then finish, (err) ->
       # onRejected — do NOT also run finish() on a callback throw (that would
       # double-fire). A genuine load failure still boots the world (text broken).
-      console.error "Fizzygum: SWCanvas font bootstrap failed (text may be broken):", err
+      console.error "SWCANVAS_FONT_BOOTSTRAP_FAILED: the font bundles did not load (text may be broken):", err
       finish()
   catch err
-    console.error "Fizzygum: SWCanvas font bootstrap threw (text may be broken):", err
+    console.error "SWCANVAS_FONT_BOOTSTRAP_FAILED: the font bootstrap threw (text may be broken):", err
     finish()
 
 # THE ONE DEFINITION OF "A READY WORLD": what a freshly-constructed WorldWdgt still needs before

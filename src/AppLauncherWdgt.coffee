@@ -94,7 +94,7 @@ class AppLauncherWdgt extends DesktopLinkWdgt
     if !entry?
       # a programming error, not a packaging one: the app exists but nothing says what it looks
       # like. Loud, because the boot smoke fails on console errors and will catch it immediately.
-      console.error "AppCatalog has no entry for '#{appClassName}'"
+      console.error "APP_CATALOG_ENTRY_MISSING: AppCatalog has no entry for '#{appClassName}'"
       return undefined
     icon = if iconOverride? then iconOverride() else AppCatalog.iconOf appClassName
     launcher = new @ entry.title, icon, opts.target, opts.callback

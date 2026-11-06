@@ -95,7 +95,17 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
 
   return promiseChain
 
-compileFGCode = (codeSource, bare) ->
+# opts.typedFrom: the index in codeSource where text a PERSON TYPED begins (default 0, the whole
+# source) -- a save that compiles the typed text behind an assignment ("@name = " + text) passes the
+# prefix's length. A compile error then carries its place in THAT text as `typedLocation` ({line,
+# column}, 0-based like the compiler's own): the compiler counts from the start of codeSource, so
+# behind a prefix its line-1 column is off by the prefix's length. A place inside the prefix itself
+# gets no typedLocation, and neither does a failure the compiler gives no place for (this minimal
+# compiler throws a plain TypeError on `import`/`export`). Every error thrown here is marked
+# `isCompileError`: whatever the compiler threw, the text did not compile, which is what a gesture
+# over typed code reports (Widget._informOfCompileErrorOrRethrow), apart from code that compiled and
+# then threw.
+compileFGCode = (codeSource, bare, opts = {}) ->
   try
     # Coffeescript v2 is used
     compiled = CoffeeScript.compile codeSource,{"bare":bare}
@@ -106,8 +116,17 @@ compileFGCode = (codeSource, bare) ->
     errorMessage += err + "\n"
     # the compiler's own SyntaxError rides along as the cause: its `location` says where the text
     # stops being CoffeeScript, which a gesture reporting to a person reads
-    # (Widget._reportingCompileErrors)
-    throw new Error errorMessage, cause: err
+    # (Widget._reportingCompileErrors / _savingTypedCode)
+    error = new Error errorMessage, cause: err
+    error.isCompileError = true
+    if err?.location?
+      linesBefore = codeSource.slice(0, opts.typedFrom ? 0).split "\n"
+      typedLine = err.location.first_line - (linesBefore.length - 1)
+      typedColumn = err.location.first_column
+      typedColumn -= linesBefore[linesBefore.length - 1].length  if typedLine is 0
+      if typedLine >= 0 and typedColumn >= 0
+        error.typedLocation = line: typedLine, column: typedColumn
+    throw error
 
 
   return compiled

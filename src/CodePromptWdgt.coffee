@@ -72,12 +72,16 @@ class CodePromptWdgt extends CodeAreaWdgt
   # button re-disables until the text diverges again. It is NOT a menu action: nothing dispatches
   # it through ButtonWdgt's fixed 4-slot convention, so it carries no leading dispatcher slots and
   # no caller has to punch `undefined` past them (R3).
+  # My value is code, and its receiver compiles it before storing it: code that does not compile
+  # is refused -- reported, nothing changed, the text still modified here (Widget._savingTypedCode).
+  # Answers whether it was delivered.
   deliverValue: ->
-    @target[@callback].call @target, @_promptValue()
+    return false unless @_savingTypedCode => @target[@callback].call @target, @_promptValue()
     @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+    true
 
+  # a refused value keeps me open, with the person's text in me
   deliverValueAndClose: ->
-    @deliverValue()
-    @close()
+    @close()  if @deliverValue()
 

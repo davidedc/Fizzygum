@@ -129,18 +129,26 @@ class ClassInspectorWdgt extends InspectorWdgt
   # IS the true post-state: the prototype then carries `<name>_source`, which is
   # what a re-selection would attribute the member to (and what applyMemberEdit's
   # live-override shadow guard keys off), so future donor edits skip this class.
+  # A save that does not complete overrides nothing -- refused (an edit that does not compile,
+  # InspectorWdgt.save) or thrown (code that compiled and then threw, on to the Error log): the
+  # member stays the mixin's, attribution, button and label all.
   overrideInThisClass: ->
     if !@list.selected? then return
     return unless @currentPropertySourceMixin?
     return if @currentPropertySourceIsStatic
-    theMixinName = @currentPropertySourceMixin.name
+    theMixin = @currentPropertySourceMixin
     @currentPropertySourceMixin = undefined
+    saved = false
+    try
+      saved = @save()
+    finally
+      @currentPropertySourceMixin = theMixin  unless saved
+    return unless saved
     @overrideInThisClassButton?.hide()
     # the donor label follows the attribution: the member is class-owned now, and my breadcrumb band
     # re-flows without the label
     @mixinDonorLabel?.setText ""
-    @save()
-    @inform "overridden in " + @inspectedObject.constructor.name + "\n(" + theMixinName + "Mixin edits no longer affect it)"
+    @inform "overridden in " + @inspectedObject.constructor.name + "\n(" + theMixin.name + "Mixin edits no longer affect it)"
 
   # the class name follows the dash as DATA, exactly as the breadcrumb's chip shows it ("Class
   # Inspector — RectangleWdgt"): a class inspector's subject IS the class
@@ -161,16 +169,14 @@ class ClassInspectorWdgt extends InspectorWdgt
     # (Mixin.applyMemberEdit) -- the class inspector is prototype-level truth, and
     # a mixin member's prototype-level truth is the mixin. Logged with scope
     # "mixin" so a world snapshot carries and replays it (SourceEditsRegistry).
+    # Its failure is any save's (InspectorWdgt.save runs me through Widget._savingTypedCode): an edit
+    # that does not compile changes nothing and is reported; any other throw reaches the Error log.
     if @currentPropertySourceMixin?
       theMixin = @currentPropertySourceMixin
-      try
-        if @currentPropertySourceIsStatic
-          updatedCount = theMixin.applyStaticEdit propertyName, txt
-        else
-          updatedCount = theMixin.applyMemberEdit propertyName, txt
-      catch error
-        @inform "mixin edit failed:\n" + error.message
-        return
+      if @currentPropertySourceIsStatic
+        updatedCount = theMixin.applyStaticEdit propertyName, txt
+      else
+        updatedCount = theMixin.applyMemberEdit propertyName, txt
       world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, propertyName, txt, @currentPropertySourceIsStatic
       # (the apply*Edit already ran notifyInstancesOfSourceChange per consumer class)
       @inform "saved to " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"

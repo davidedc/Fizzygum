@@ -570,6 +570,16 @@ mark after `add` + `setExtent` adds nothing.
   today) — a finger must hold before a drag over your content means anything OTHER than scroll.
   Declare one only if it is genuinely true of your class; most widgets answer neither and take the
   grammar's default. Deep home: [`input-and-gestures.md`](input-and-gestures.md).
+- **A gesture over code a person TYPED never throws a compile error at them.** Text that is not CoffeeScript is
+  an ordinary answer to "run this" or "save this", not a fault, and thrown it would reach the world's crash
+  path (a soft reset, and an Error log showing the framework's own stack). A RUN gesture (Run contents, Do all,
+  Try it, …) wraps the run in `@_reportingCompileErrors => …`; a SAVE gesture (Save, Save + close, a code
+  prompt's OK) wraps its apply in `@_savingTypedCode => …`, which answers whether it applied, and the gesture
+  marks the text saved or closes only on `true`. Either reports the compiler's message beside the hand at the
+  place in the TYPED text. The apply must compile before it stores anything, so a refused save has changed
+  nothing; a route that compiles the text behind a prefix (`"@" + name + " = "`) passes the prefix's length as
+  `compileFGCode`'s `typedFrom`, so the position names a place in what the person sees. Code that compiles and
+  then throws still goes to the Error log, where its stack is the person's own.
 - **No wall-clock, no timers, no randomness** in render/layout/input code: the suite asserts byte-exact
   pixels and those diverge under parallel load. The cycle and step machinery are the sanctioned clock
   (`../../Fizzygum-tests/DETERMINISM.md`).

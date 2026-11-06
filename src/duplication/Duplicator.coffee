@@ -130,7 +130,7 @@ class Duplicator
     # is refused here, never cloned into a shell of the native's prototype that carries none of its
     # internal state.
     unless ctor? and (ctor is Object or classNamed(ctor.name) is ctor)
-      console.error "Duplicator: cannot duplicate a value of unrecognized type (" + (ctor?.name or "no constructor") + ")"
+      console.error "DUPLICATE_UNRECOGNIZED_TYPE: the Duplicator cannot duplicate a value of unrecognized type (" + (ctor?.name or "no constructor") + ")"
       debugger
       throw new Error "Duplicator: cannot duplicate a value of unrecognized type"
 

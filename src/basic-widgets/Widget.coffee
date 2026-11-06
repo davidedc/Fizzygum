@@ -4192,11 +4192,19 @@ class Widget extends TreeNode
 
   # Injecting code /////////////////////////////////////////
 
+  # The program that injects ONE property: the typed value behind its assignment. Read by
+  # injectProperty, which runs it, and by compilePropertyAssignments, which compiles it ahead, so
+  # "compiles as it will be injected" has one definition. The typed text begins at its length minus
+  # the value's (compileFGCode's typedFrom).
+  @propertyAssignmentSource: (propertyName, txt) ->
+    "@" + propertyName + " = " + txt
+
   # if a function, the txt must contain the parameters and
   # the arrow and the body
   injectProperty: (propertyName, txt) ->
     # this.target[propertyName] = evaluate txt
-    @evaluateString "@" + propertyName + " = " + txt
+    assignment = Widget.propertyAssignmentSource propertyName, txt
+    @evaluateString assignment, typedFrom: assignment.length - txt.length
     # if we are saving a function, we'd like to
     # keep the source code so we can edit Coffeescript
     # again.
@@ -4209,19 +4217,45 @@ class Widget extends TreeNode
       world?.sourceEditsRegistry?.recordInstanceEdit? @, propertyName, txt
     @sourceChanged()
 
+  # Inject every `name = value` assignment a code blurb holds -- all of them or none: each is compiled
+  # before any is injected (compilePropertyAssignments), so a blurb that does not compile changes
+  # nothing.
   injectProperties: (codeBlurb) ->
+    for each in Widget.compilePropertyAssignments codeBlurb
+      @injectProperty each.name, each.source
+    return
 
+  # The `name = value` assignments a code blurb holds, in order, as {name, source} -- each one first
+  # COMPILED exactly as injectProperty will run it (propertyAssignmentSource), so a blurb that does
+  # not compile throws here, before anything is injected. Read by injectProperties and by the
+  # tool-code save that checks a blurb before storing it
+  # (CodeInjectingSimpleRectangularButtonWdgt.modifyCodeToBeInjected). A compile error names the
+  # assignment it is in (`typedIn`) and carries no position: the blurb is reshaped before it is split
+  # (blank lines doubled below), so no line counted here is one the person sees. A save that wants
+  # the place in the text compiles the text as typed first.
+  @compilePropertyAssignments: (codeBlurb) ->
     codeBlurb = codeBlurb.replace(/^[ \t]*$/gm,"\n")
     codeBlurb = codeBlurb + "\n# end injected code"
 
     # ([a-zA-Z_$][0-9a-zA-Z_$]*) is the variable name
     regex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)[ \t]*=[ \t]*([^]*?)(?=^[\w#$])/gm
 
+    assignments = []
     while (m = regex.exec(codeBlurb))?
       # This is necessary to avoid infinite loops with zero-width matches
       if m.index == regex.lastIndex
         regex.lastIndex++
-      @injectProperty m[1],m[2]
+      assignments.push name: m[1], source: m[2]
+
+    for each in assignments
+      assignment = Widget.propertyAssignmentSource each.name, each.source
+      try
+        compileFGCode assignment, true, typedFrom: assignment.length - each.source.length
+      catch error
+        error.typedIn = each.name
+        delete error.typedLocation
+        throw error
+    assignments
 
   # the remove twin of injectProperty ("Own" keeps it clear of InspectorWdgt's
   # same-named zero-arg button actions, which would otherwise shadow these on
@@ -5450,8 +5484,10 @@ class Widget extends TreeNode
   # (`TextWdgt`) and `Deserializer.compileFunction`, which needs the live function it compiled.
   # None of them throws when handed the wrong thing, so `fg menusweep` cannot see a regression here
   # — this comment is the guard, together with `SystemTest_macroEvaluateStringReturnsItsValue`.
-  evaluateString: (codeSource) ->
-    JSCode = compileFGCode codeSource, true
+  # opts.typedFrom: where in codeSource the text a person typed begins, for a caller that wraps it
+  # (injectProperty); it only places a compile error (compileFGCode).
+  evaluateString: (codeSource, opts = {}) ->
+    JSCode = compileFGCode codeSource, true, typedFrom: opts.typedFrom
     result = eval JSCode
     @_reLayoutSelf()
     @_changed()
@@ -5463,8 +5499,8 @@ class Widget extends TreeNode
   # compiler's words and at the line and column it names, and answer undefined, having run nothing.
   # Thrown on, it would reach the world's crash path (WorldWdgt's input-event catch), which
   # soft-resets the world, shows the Error log a stack of the framework's own calls, and leaves the
-  # clicked menu open. compileFGCode's failure is told apart by its cause, the compiler's own
-  # error, which alone carries a `location`. Anything else -- code that compiled and then
+  # clicked menu open. compileFGCode's failure is told apart by the mark it puts on it
+  # (_informOfCompileErrorOrRethrow). Anything else -- code that compiled and then
   # threw -- goes on to the Error log as any thrown error does, where the stack it shows is the
   # person's own code. ⚠ I answer what the gesture answers: "Show selection" and "Inspect selection"
   # read the value of the code they ran through me.
@@ -5472,12 +5508,39 @@ class Widget extends TreeNode
     try
       return runTypedCode()
     catch error
-      compilerError = error?.cause
-      throw error unless compilerError?.location?
-      where = compilerError.location
-      @inform "Cannot run this as code (line #{where.first_line + 1}, column #{where.first_column + 1}): " +
-        compilerError.message
+      @_informOfCompileErrorOrRethrow error, "run"
       return undefined
+
+  # The SAVE gestures -- a button that STORES code a person typed (a script window's "Save + close",
+  # an inspector's "Save", the paint tools' code prompt's "Save" and "OK") -- run their apply through
+  # me, and I answer whether it applied. A save refuses text that is not CoffeeScript AS A WHOLE:
+  # every apply compiles before it stores anything, so nothing has changed when I say so beside the
+  # hand ("Cannot save this as code …") and answer false -- and the gesture then neither marks the
+  # text saved nor closes, leaving the person's text in its editor, still modified, to fix and save
+  # again. Anything else thrown goes on to the Error log as any thrown error does.
+  _savingTypedCode: (applyTypedCode) ->
+    try
+      applyTypedCode()
+      return true
+    catch error
+      @_informOfCompileErrorOrRethrow error, "save"
+      return false
+
+  # The one reading of a compile error, for both kinds of gesture. compileFGCode marks every error it
+  # throws (`isCompileError`) and carries the compiler's own as its `cause`; its place in the text the
+  # person typed is `typedLocation`, absent when that place is not in it or the compiler gave none. A
+  # blurb of several assignments also names the one it is in (`typedIn`,
+  # Widget.compilePropertyAssignments).
+  _informOfCompileErrorOrRethrow: (error, verb) ->
+    throw error unless error?.isCompileError
+    compilerError = error.cause
+    where = error.typedLocation
+    place = []
+    place.push "in " + error.typedIn  if error.typedIn?
+    place.push "line #{where.line + 1}, column #{where.column + 1}"  if where?
+    placeText = if place.length then " (" + place.join(", ") + ")" else ""
+    @inform "Cannot #{verb} this as code" + placeText + ": " + compilerError.message
+    return
 
 
 
@@ -5810,7 +5873,7 @@ class Widget extends TreeNode
         childAxis = C.layoutSpec.axis
         axis ?= childAxis
         if childAxis != axis
-          console.error "mixed division axes under one container (" + @constructor?.name + ") — first child's axis '" + axis + "' wins"
+          console.error "MIXED_DIVISION_AXES under one container (" + @constructor?.name + ") — first child's axis '" + axis + "' wins"
     return axis
 
   # it's useful to know when a widget defers its layout

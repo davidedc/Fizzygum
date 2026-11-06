@@ -81,7 +81,7 @@ class Mixin
     # occur in THIS method's own compiled body -- the patterns just above are literals in it --
     # so an expression-shaped detector reports the stripper itself, on every build.
     if /^var\b[^;]*\b(hasProp|indexOf|slice)\s*=/m.test aString
-      console.error "code contains a helper var, it shouldn't: " +  aString
+      console.error "HELPER_VAR_NOT_STRIPPED: code contains a helper var, it shouldn't: " +  aString
       debugger
 
     return aString
@@ -105,7 +105,10 @@ class Mixin
   # before the class-body assignments -- and keeps winning). Returns the number of
   # consumer classes updated. Throws on compile errors.
   applyMemberEdit: (memberName, source) ->
-    compiled = compileFGCode ("window.__fzEditedMixinMember = " + (@_equivalentforSuper source)), true
+    # the typed source sits behind the assignment, so a compile error is placed in it (typedFrom);
+    # a `super` the rewrite expands shifts the columns after it on its line
+    assignment = "window.__fzEditedMixinMember = "
+    compiled = compileFGCode assignment + (@_equivalentforSuper source), true, typedFrom: assignment.length
     compiled = @_removeHelperFunctions compiled
     eval.call window, compiled
     editedValue = window.__fzEditedMixinMember
@@ -142,7 +145,8 @@ class Mixin
   # rewrite: a mixin static belongs to no instance-method chain. Returns the
   # number of consumer classes updated. Throws on compile errors.
   applyStaticEdit: (memberName, source) ->
-    compiled = compileFGCode ("window.__fzEditedMixinMember = " + source), true
+    assignment = "window.__fzEditedMixinMember = "
+    compiled = compileFGCode assignment + source, true, typedFrom: assignment.length
     compiled = @_removeHelperFunctions compiled
     eval.call window, compiled
     editedValue = window.__fzEditedMixinMember
@@ -242,7 +246,7 @@ class Mixin
         try
           eval.call window, JS_string_definitions
         catch err
-          console.error " error " + err + " evaling : " + JS_string_definitions
+          console.error "SOURCE_EVAL_FAILED: " + err + " evaling : " + JS_string_definitions
           debugger
         # Register this parsed mixin so the inspector can recover a mixin method's real CoffeeScript source
         # from @nonStaticPropertiesSources (InspectorWdgt.selectionFromList) instead of falling back to the

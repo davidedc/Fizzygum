@@ -2188,6 +2188,20 @@ assertion a recapture after a regression silently stores two different hashes an
   MUST be `@assert…` toolkit methods — `recordMacroAssertion` has "Macro" mid-token, which the invocation rewriter would mangle in
   macro SOURCE. `macroLonelySliderTargetsWorldOnly`: a lone controller can only target the WORLD — `openTargetSelector` lists
   bounds-intersecting widgets + always the world (`Widget.plausibleTargetAndDestinationWidgets`, `Widget.coffee:1092`); with nothing overlapping, the world's row, "Desktop", is the only item (assert its label AND that it leads on: `(@rowOfMenuStandingFor menu, world).opensSubmenu`).
+- **A gesture over typed code answered, not crashed — and nothing changed** (`macroScriptSaveRefusesCodeThatDoesNotCompile`,
+  `macroInspectorSaveRefusesCodeThatDoesNotCompile`, `macroClassInspectorSaveRefusesCodeThatDoesNotCompile`,
+  `macroToolCodeSaveRefusesCodeThatDoesNotCompile`): set the editor's text (`script.textWidget.setText …`, an inspector's
+  `detail.textWdgt`, a `CodePromptWdgt`'s `textWidget`), press the gesture's real button (`saveButton`, `okButton`), then
+  assert four things. (1) The message is SHOWN and says what the person reads: `message = @getMostRecentlyOpenedMenu()`,
+  `@popUpIsShown(message)`, and `message.title` equal to the full "Cannot save this as code (line L, column C): …". Read the
+  expected position off the CoffeeScript compiler run on the TYPED text alone, never off the build under test. (2) The crash
+  path never ran: `world.errorConsole is undefined` (each test starts on a freshly constructed world, so the Error log exists
+  only if something threw into it). (3) Nothing changed: the route's own state by IDENTITY (`script.functionFromCompiledCode
+  is functionBefore`, `ButtonWdgt::hoverEntered is hoverBefore`, the mixin's `nonStaticPropertiesSources[name]`). (4) The edit
+  survived: the editor still holds the text, Save is still enabled (`saveButton.isEnabled`), and a "… + close"/"OK" gesture
+  left its window up (`win.parent is world`, `prompt.isOrphan()` false). Dismiss with `@moveToItemOfMenuAndClick_InputEvents
+  message, "OK"` before the next gesture. A behaviour no gesture can reach any more (the prompt now refuses before injecting)
+  is checked by a direct call inside a `try` in the macro body, saying so in `provenance`.
 - **Button-trigger discipline** (`macroButtonTriggersOnlyOnSameWidgetMouseUp`): a button fires only when mouse-down AND mouse-up
   land on the SAME morph (`ActivePointerWdgt.processPointerUp` fires only `when w == @mouseDownWdgt`). To show "press then release
   elsewhere does NOT trigger", press on the button and release off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents

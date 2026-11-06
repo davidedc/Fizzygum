@@ -11,16 +11,21 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
+### `archive/typed-code-saves-and-error-tokens-plan.md` — Tier 1's two findings, plus fail-closed runners (CLOSED 2026-11-06; Units A–C done, see its ledger)
+- [ ] **A tool-code blurb's non-assignment line that IS CoffeeScript is still skipped silently.** The save now
+      refuses text that does not compile as typed. But `foo()` between two `name = value` assignments compiles,
+      and `Widget.compilePropertyAssignments`' splitter drops it, so it is stored and never runs. Refuse a blurb
+      whose lines are not all assignments? It is a format rule, not a compile one: the owner's call.
+- [ ] **`run-sequence-headless.js` given only unknown names plays the WHOLE manifest** (exit 1, ~3 min) instead of
+      refusing. Found when a zsh string of names reached it as one argument.
+- [ ] **check-call-separation's R4 census counts a public method NAMED in test metadata prose as a reference.** It
+      reads strings so that it sees string dispatch, so `applyPropertyEdit` left the self-only census because two
+      tests' `intent` text names it (banked 101 → 99 with that reason). A sentence edit can therefore move the
+      baseline; should the census skip the metadata files' prose fields?
+
 ### `archive/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; CLOSED 2026-11-06, all four tiers landed)
-- [ ] **Tier 1's findings, each recorded where its check states it (plan §3 ledger):**
-  - [ ] **A SAVE of typed code that does not compile still throws into the crash path**: `ScriptWdgt.saveScript`
-        ("Save + close", which sets `@savedScript` before it compiles) and the inspectors' save
-        (`InspectorWdgt.applyPropertyEdit` → `injectProperty` → `evaluateString`; the class inspector's mixin route
-        already reports) — the RUN gestures report through `Widget._reportingCompileErrors`; a save needs its own
-        answer for the half-applied state, so it was left out of that change.
-  - [ ] **An untokenized `console.error` fails nothing**: "this shouldn't happen" asserts in `StackLayoutEngine`,
-        the mixed-division-axes warning, `Duplicator`'s unrecognized type, `AppLauncherWdgt`'s missing catalog entry —
-        no gate token, so every runner lets them through (the gate-token selftest sees tokens only).
+- [x] Tier 1's two findings — CLOSED by `archive/typed-code-saves-and-error-tokens-plan.md` (moved to its BACKLOG
+      ledger).
 - [ ] **Tier 4's residue (plan §6 ledger):**
   - [ ] **The four LiveCodeLang vocabulary lists are the hand-list gate's whole Fizzygum baseline (4)**
         (`LCLCodePreprocessor`'s `qualifyingCommands` / `primitives` / `commandsExcludingScaleRotateMove` /

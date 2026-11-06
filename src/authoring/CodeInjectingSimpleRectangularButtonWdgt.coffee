@@ -77,6 +77,14 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
 
   # The textPrompt callback: the prompt delivers ONE argument, the composed source text
   # (CodePromptWdgt.deliverValue — the same value delivery every prompt makes).
+  # The new source is COMPILED before it is stored -- first as the person typed it, which places an
+  # error in the text they see and refuses a line the injection would skip (a stray `foo(` between
+  # assignments), then assignment by assignment exactly as it will be injected
+  # (Widget.compilePropertyAssignments). Source that is not code throws here, stores nothing, and the
+  # prompt reports it (CodePromptWdgt.deliverValue). Without this, an unarmed tool would keep it
+  # silently and throw at every later arm.
   modifyCodeToBeInjected: (newSource) ->
+    compileFGCode newSource, true
+    Widget.compilePropertyAssignments newSource
     @sourceCodeToBeInjected = newSource
     @target.newCodeToInjectFromButton? @

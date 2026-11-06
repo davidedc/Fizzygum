@@ -549,6 +549,11 @@ Archived docs are immutable history — the current-state truth lives in
   - ⭐⭐ the independent end-of-queue review moved the design: keying names Fizzygum does not define unmasks nothing and risks a false FAIL on a receiver the gate cannot read — key only to unmask; and a "make it bare" rule must wait until no call of the name is unresolved, or deleting the methods invites re-masking them
   - ⭐ a receiver-blind exemption can hide behind TWO masks: `BUILTINS` (closed for platform statics by keying) and the definition harvest's catch-all `name:`/`name =` form (open — BACKLOG)
   - ⚖ canvas-context carve-out by receiver spelling declined (one more site for a spelling list that misses two contexts today)
+- **`typed-code-saves-and-error-tokens-plan.md`** — COMPLETE (2026-11-06; the hand-kept-lists Tier 1 findings plus the owner's fail-closed ruling, executed in one session). A SAVE of typed code that does not compile is refused, atomically and in place, on all five save routes (`Widget._savingTypedCode`, one reporter with the run gestures; `compileFGCode` places the error in the TYPED text and marks every failure it throws). Every `console.error` in `src/` and the harness opens with a classified token (`gate-tokens-selftest.js`). The three headless runners are FAIL-CLOSED: any error line not excused by design, and any uncaught page error, fails the test (`lib/gate-tokens.js`, `failingConsoleLine`).
+  - ⭐⭐ the save census found FIVE routes, not the two BACKLOG named: the paint tool's code prompt stored bad source silently on an unarmed tool (every later arm threw), and the class inspector's mixin route "already reports" but returned as if it had saved
+  - ⭐⭐ a save compiles the typed text BEHIND a prefix (`@name = `), so the compiler's line-1 column was off by the prefix's length: positions come back through `compileFGCode`'s `typedFrom`
+  - ⭐ `NOT_GATED` meant two things under fail-closed: `by-design` excuses an error line, `not-distinctive` must still fail as one
+  - ⭐ the independent review found a boot the runner abandons and reloads still failing the run, a display flag (`AUDIT_ECHO`) changing a verdict, and the tool-code save skipping lines the splitter drops — all fixed before the close
 
 ## Build & toolchain
 

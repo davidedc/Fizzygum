@@ -75,17 +75,23 @@ class ScriptWdgt extends CodeAreaWdgt
 
     @_invalidateLayout()
 
+  # The save COMPILES before it stores: text that is not code leaves the saved script and its
+  # function as they were, is reported, and stays in my editor, still modified
+  # (Widget._savingTypedCode). Answers whether it saved.
   saveScript: ->
-    @savedScript = @textWidget.text
-    compiled = compileFGCode @savedScript, true
-    @functionFromCompiledCode = new Function compiled
+    text = @textWidget.text
+    saved = @_savingTypedCode =>
+      @functionFromCompiledCode = new Function compileFGCode text, true
+    return false unless saved
+    @savedScript = text
 
     @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+    true
 
+  # a refused save keeps the window open, with the person's text in it
   saveScriptAndClose: ->
-    @saveScript()
-    @closeFromContainerFrame @parent
+    @closeFromContainerFrame @parent  if @saveScript()
 
   doAll: ->
     # transient (see above): recompile from the saved source after a restore
