@@ -173,8 +173,21 @@ until the work-list is empty:
    derive the dirty flags + dirty ROOTS fresh, climbing current parent pointers
    for each root: descend parent-BEFORE-child along "has dirty descendant" flags,
        settling each not-yet-valid node (_reLayout), and re-laying any child
-       the arrange moved or resized
+       the arrange moved or resized, and any deeper composite it sized as a leaf
 ```
+
+**What the engine re-lays after an arrange.** An arrange places children through the override-*bypassing* tier
+(`_applyExtentBase` / `_applyMoveToBase`), so the child's own `_reLayout` does not run by itself. A leaf needs none (the
+base fires its `_reLayoutSelf`); a widget that places children of its own does. The engine re-lays it, in two ways that
+make one guarantee: (a) a SNAPSHOT of the settled node's children, taken before its `_reLayout` — any child whose frame
+moved or resized is re-laid after it; (b) for what the snapshot cannot see, a NOTE. An arrange can reach below its own
+children — a viewport runs its content stack's arrange itself (the `arrangesOwnScrolledChildren` contract), a stack
+sizes a nested window or stack through `_setWidthSizeHeightAccordingly`, which arranges that one's children too — and a
+composite such an arrange sizes as a leaf (children, but no `_reLayoutChildren`) is resized before its own parent is
+settled, so that parent's snapshot sees no change. `_applyExtentBase` notes it
+(`WorldWdgt.__noteCompositeResizedByAnArrange`), `_markLayoutAsFixed` strikes the note, and after each settled node's
+`_reLayout` the engine re-lays every composite still noted (`__reLayoutCompositesResizedSince`). The note map exists
+only while a flush runs, so a bypass resize made outside one is not noted.
 
 Two facts make this a *fixed-point* loop, not a fixed count of passes:
 

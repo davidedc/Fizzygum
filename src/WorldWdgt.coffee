@@ -500,6 +500,13 @@ class WorldWdgt extends IconGridPanelWdgt
   # zero-progress stuck-detection (DOWNWALK_UNREACHABLE_CHAINTOP).
   _downWalkRelaidCount: 0
 
+  # THE COMPOSITES AN ARRANGE SIZED AS LEAVES, still waiting for their own layout: widget -> the
+  # serial of the resize that noted it (__noteCompositeResizedByAnArrange). It exists only while a
+  # flush runs -- recalculateLayouts creates it and drops it -- so at rest the field is undefined and a
+  # note made outside a flush is ignored. See __reLayoutOneSettleNode for who reads it.
+  _compositesResizedByAnArrange: undefined
+  _arrangeResizeSerial: 0
+
   # self-settling public geometry API (prototype 2026-06-19): re-entrancy guards.
   # _inLayoutMutation is set while a public geometry setter is running its
   # core+flush; _recalculatingLayouts is set while recalculateLayouts runs. Both
@@ -1169,10 +1176,13 @@ class WorldWdgt extends IconGridPanelWdgt
     if @_recalculatingLayouts
       throw new Error "Fizzygum: re-entrant recalculateLayouts() -- a public geometry setter was called from within a layout pass. Internal layout code must use the immediate (geometry) mutators, not the public deferred API."
     @_recalculatingLayouts = true
+    @_compositesResizedByAnArrange = new Map
+    @_arrangeResizeSerial = 0
     try
       @_recalculateLayoutsBody()
     finally
       @_recalculatingLayouts = false
+      @_compositesResizedByAnArrange = undefined
       # (ordered down-walk Stage B1) the hasDirtyDescendant flags mirror the work-list: once the
       # drain has emptied it no widget is pending, so no flag may survive (a stale true would
       # weaken the reachability audit and, come Stage B2, cause spurious walk visits). Clear
@@ -1364,10 +1374,22 @@ class WorldWdgt extends IconGridPanelWdgt
       # fix. Runs through this same method recursively, so heals cascade, the up-edge applies
       # (no-op unless the child's OWN _reLayout moved its frame — an arrange-placed child re-applies
       # the same frame), the error containment applies, and the RECALC counter bounds it.
+      #   The snapshot sees my CHILDREN only, and my arrange can reach further: a viewport runs its
+      # content stack's arrange itself (ViewportWdgt._positionAndResizeChildren, the
+      # arrangesOwnScrolledChildren contract), a stack sizes a nested window or stack through
+      # _setWidthSizeHeightAccordingly, which arranges that one's children too. A composite those
+      # deeper arranges size as a LEAF (through _applyExtentBase) is a grandchild or deeper, and by
+      # the time its own parent is settled the resize has already happened, so that parent's snapshot
+      # sees no change. The base notes every such composite (__noteCompositeResizedByAnArrange) and
+      # the note is struck when it next marks its layout fixed, so after my re-lay I lay out the ones
+      # still noted (__reLayoutCompositesResizedSince) -- the same guarantee at any depth. The
+      # "How to save?" window's link row is the case that showed it: widened from 282 to 347 px by
+      # the document viewport's delegated stack arrange, its button stayed placed for 282.
       watchedChildren = undefined
       for c in node.children when c.layoutIsValid
         (watchedChildren ?= []).push [c, c.left(), c.top(), c.width(), c.height()]
       preL = node.left(); preT = node.top(); preW = node.width(); preH = node.height()
+      resizesNotedBefore = @_arrangeResizeSerial
       node._reLayout()
       myFrameChanged = node.left() != preL or node.top() != preT or node.width() != preW or node.height() != preH
       node._reFitMyTrackingContainerAfterSettle() if myFrameChanged
@@ -1375,6 +1397,7 @@ class WorldWdgt extends IconGridPanelWdgt
         for [c, cLeft, cTop, cWidth, cHeight] in watchedChildren
           if c.layoutIsValid and (c.left() != cLeft or c.top() != cTop or c.width() != cWidth or c.height() != cHeight)
             @__reLayoutOneSettleNode c
+      @__reLayoutCompositesResizedSince resizesNotedBefore, node
     catch err
       # We are INSIDE the recalculateLayouts flush here (_recalculatingLayouts is true), so this
       # block must do the ABSOLUTE MINIMUM and stay strictly non-flushing / non-invalidating:
@@ -1396,6 +1419,35 @@ class WorldWdgt extends IconGridPanelWdgt
     if @_downWalkRelaidCount > 100000
       console.error "RECALC_NONCONVERGENCE: recalculateLayouts did not terminate after 100000 re-lays. Last widget: " + (node.constructor?.name) + " spec=" + node.layoutSpec
       throw new Error "Fizzygum: RECALC_NONCONVERGENCE -- recalculateLayouts did not terminate after 100000 re-lays (a non-terminating layout cycle). Last widget: " + (node.constructor?.name)
+
+  # A COMPOSITE AN ARRANGE SIZED AS A LEAF. An arrange sizes a child it treats as a leaf through the
+  # override-bypassing _applyExtentBase (VerticalStackPanelWdgt's leaf branch), where a leaf heals
+  # itself (_reLayoutSelf). A widget that places its own children in its _reLayout yet is no tracking
+  # container (no _reLayoutChildren) -- a link row, a labelled button -- is sized the same way and is
+  # left with its children placed for its old extent until its own layout runs. The base notes it here;
+  # Widget._markLayoutAsFixed strikes the note (__strikeArrangeResizeNote), so what stays noted is
+  # exactly the composites nothing has laid out since an arrange resized them. Outside a flush there is
+  # no map and the note is dropped.
+  __noteCompositeResizedByAnArrange: (aWdgt) ->
+    @_compositesResizedByAnArrange?.set aWdgt, ++@_arrangeResizeSerial
+
+  __strikeArrangeResizeNote: (aWdgt) ->
+    @_compositesResizedByAnArrange?.delete aWdgt
+
+  # Lay out every composite noted after `serial` that nothing has laid out since: the resizes made
+  # while `node` was re-laid, at any depth below it (__reLayoutOneSettleNode). Each is settled the way
+  # the snapshot settles a moved child, so heals cascade and the up-edge, the error containment and
+  # the RECALC counter apply. Skipped, and struck all the same: `node` itself (its re-lay is the one
+  # just run), an invalid one (the walk settles it this flush anyway) and a destroyed one.
+  __reLayoutCompositesResizedSince: (serial, node) ->
+    noted = @_compositesResizedByAnArrange
+    return unless noted?.size
+    resized = []
+    noted.forEach (noteSerial, w) -> resized.push w if noteSerial > serial
+    # delete answers false for one an earlier re-lay in this loop has laid out (and struck) already
+    for w in resized when noted.delete w
+      @__reLayoutOneSettleNode w unless w is node or not w.layoutIsValid or w.destroyed
+    return
 
 
   clearPaintBoundsMaybeChangedFlags: ->

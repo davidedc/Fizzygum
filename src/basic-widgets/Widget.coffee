@@ -2697,6 +2697,10 @@ class Widget extends TreeNode
       @__commitExtent aPoint
       @_changed()
       @_reLayoutSelf()
+      # a leaf is healed by the line above; a composite sized as one (children, but no
+      # _reLayoutChildren) needs its own layout, which the settle engine runs for it
+      # (WorldWdgt.__noteCompositeResizedByAnArrange)
+      world?.__noteCompositeResizedByAnArrange @ if @children.length != 0 and not @_reLayoutChildren?
 
 
   # (proper-layouts, 2026-07-01) The notify-by-mutation seams that re-fit a freefloating content's
@@ -5452,8 +5456,30 @@ class Widget extends TreeNode
     @_reLayoutSelf()
     @_changed()
     result
-  
-  
+
+  # The RUN gestures -- a row or button that runs text a person typed ("Run contents", "Run
+  # selection", "Do all", "Show selection", "Try it", …) -- run it through me. Text that is not
+  # CoffeeScript is an ordinary answer to that gesture, not a fault: I say so beside the hand, in the
+  # compiler's words and at the line and column it names, and answer undefined, having run nothing.
+  # Thrown on, it would reach the world's crash path (WorldWdgt's input-event catch), which
+  # soft-resets the world, shows the Error log a stack of the framework's own calls, and leaves the
+  # clicked menu open. compileFGCode's failure is told apart by its cause, the compiler's own
+  # error, which alone carries a `location`. Anything else -- code that compiled and then
+  # threw -- goes on to the Error log as any thrown error does, where the stack it shows is the
+  # person's own code. ⚠ I answer what the gesture answers: "Show selection" and "Inspect selection"
+  # read the value of the code they ran through me.
+  _reportingCompileErrors: (runTypedCode) ->
+    try
+      return runTypedCode()
+    catch error
+      compilerError = error?.cause
+      throw error unless compilerError?.location?
+      where = compilerError.location
+      @inform "Cannot run this as code (line #{where.first_line + 1}, column #{where.first_column + 1}): " +
+        compilerError.message
+      return undefined
+
+
 
 
   # ------------------------------------------------------------------------------------
@@ -5820,6 +5846,8 @@ class Widget extends TreeNode
 
   _markLayoutAsFixed: ->
     @layoutIsValid = true
+    # laid out, so not among the composites an arrange left waiting (WorldWdgt.__noteCompositeResizedByAnArrange)
+    world?.__strikeArrangeResizeNote @
 
   _reLayout: (newBoundsForThisLayout) ->
 

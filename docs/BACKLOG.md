@@ -13,14 +13,11 @@ per README rules 2 and 5.
 
 ### `plans/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; Tiers 1 + 2 LANDED)
 - [ ] **Tier 1's findings, each recorded where its check states it (plan §3 ledger):**
-  - [ ] **A grandchild resize escapes the down-walk** (census `KNOWN_MOVERS`): `DocumentViewportWdgt._positionAndResizeChildren`
-        calls its stack's `_positionAndResizeChildren` directly, which widens the stack's children through
-        `_applyExtentBase`; the walk re-lays only the children an ARRANGE resized, so those grandchildren keep the
-        layout of a narrower frame — visible as a ~70 px gap beside the link button in the "How to save?" window
-        (3 px in the templates window). Engine-level, and its fix recaptures every test showing those windows: owner's call.
-  - [ ] **"Run contents" on prose throws** (menusweep `KNOWN` `THREW:doContents`): `TextWdgt.doContents` →
-        `Widget.evaluateString` → `compileFGCode` rethrows the compile error out of the menu action, with nothing shown
-        to the user (the Console's "Run all" shares the path). Report it instead of throwing?
+  - [ ] **A SAVE of typed code that does not compile still throws into the crash path**: `ScriptWdgt.saveScript`
+        ("Save + close", which sets `@savedScript` before it compiles) and the inspectors' save
+        (`InspectorWdgt.applyPropertyEdit` → `injectProperty` → `evaluateString`; the class inspector's mixin route
+        already reports) — the RUN gestures report through `Widget._reportingCompileErrors`; a save needs its own
+        answer for the half-applied state, so it was left out of that change.
   - [ ] **check-layering's static apply-corner families are not held to the source**: `isImmediateMutator` /
         `APPLY_CORNER` keep the `_commit(Extent|Bounds)AndNotify` arm that matches nothing and omit
         `_commitBounds` / `_applyGrantedBounds` (the tier-naming prelude now classifies both, asserted both ways).
@@ -30,8 +27,6 @@ per README rules 2 and 5.
 - [ ] Tier 3 (§5): diagnostic tools reporting on a stale picture (aim-census, layout-audit and
       revisit-trace preludes, census-nosettle-naming — which also hand-lists the repaint verbs `lib/repaint-verbs.js`
       now owns —, heap-forensics roots, smoke-boot).
-- [ ] Tier 3 (§5): diagnostic tools reporting on a stale picture (aim-census, layout-audit and
-      revisit-trace preludes, census-nosettle-naming, heap-forensics roots, smoke-boot).
 - [ ] Tier 4 (§6): the standing guard — allowlists report unused entries; a hand-list gate; the doctrine.
 
 ### `archive/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (IN EXECUTION 2026-08-20; phases 1–4 done, see the plan's STATUS box)

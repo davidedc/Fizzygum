@@ -336,3 +336,36 @@ build gates via `--files` or a scratch tree). Doctrine: `docs/architecture/lint-
     `DATAFLOW_ERROR` (green by design), `FIZZYGUM_USE_SWCANVAS` and `SHA256` (not distinctive — the runners match a
     token as a substring of every console line). The suite emits none of the new gates. Plant: an ungated token.
 
+**Follow-ups (2026-11-06, owner-directed after the Tier 1 review).** Two of the findings above are fixed:
+- **The grandchild resize** (item 5) is fixed in the settle engine. The B3 snapshot in
+  `WorldWdgt.__reLayoutOneSettleNode` saw only the settled node's children, and an arrange reaches deeper (a viewport
+  runs its stack's arrange; a stack sizes a nested window or stack through `_setWidthSizeHeightAccordingly`). Now
+  `_applyExtentBase` notes a composite it sizes as a leaf (children, no `_reLayoutChildren`),
+  `_markLayoutAsFixed` strikes the note, and after each settled node's `_reLayout` the engine re-lays whatever is
+  still noted (`__reLayoutCompositesResizedSince`) — the B3 guarantee at any depth (`layout.md` §3). The census's
+  `KNOWN_MOVERS` went stale exactly as designed and is empty. Plant: the note disabled → the census fails on
+  `SimpleLinkWdgt` / `SimpleVideoLinkWdgt` movers.
+- **"Run contents" on prose** (item 3): the finding's premise was half wrong — a real click DID show something: the
+  throw reached the world's input-event catch, which soft-resets the world, pops the Error log with the compiler's
+  message and a stack of the framework's own calls, and leaves the clicked menu open (the sweep calls the action
+  directly, so it saw only the throw). Every RUN gesture over typed text (`TextWdgt`'s Run contents / Do all / Do,
+  Show, Inspect selection; the console's two; the script's Try it) now goes through `Widget._reportingCompileErrors`:
+  text that does not compile is reported at the hand ("Cannot run this as code (line L, column C): …", read from
+  the compiler's own error, which `compileFGCode` now keeps as the thrown Error's `cause`); code that compiles and
+  then throws still reaches the Error log, where its stack is the person's own. The sweep's `KNOWN` entry is gone.
+  Plant: the helper rethrowing → the menu sweep fails `THREW:doContents`. The SAVE gestures stay open (BACKLOG).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+Two items relocated VERBATIM from `docs/BACKLOG.md` on 2026-11-06 (`docs/README.md` filing rule 2); how each closed
+is in the §3 ledger's follow-ups above. ⚠ The second item's "with nothing shown to the user" was wrong — see there.
+
+- [x] **A grandchild resize escapes the down-walk** (census `KNOWN_MOVERS`): `DocumentViewportWdgt._positionAndResizeChildren`
+      calls its stack's `_positionAndResizeChildren` directly, which widens the stack's children through
+      `_applyExtentBase`; the walk re-lays only the children an ARRANGE resized, so those grandchildren keep the
+      layout of a narrower frame — visible as a ~70 px gap beside the link button in the "How to save?" window
+      (3 px in the templates window). Engine-level, and its fix recaptures every test showing those windows: owner's call.
+- [x] **"Run contents" on prose throws** (menusweep `KNOWN` `THREW:doContents`): `TextWdgt.doContents` →
+      `Widget.evaluateString` → `compileFGCode` rethrows the compile error out of the menu action, with nothing shown
+      to the user (the Console's "Run all" shares the path). Report it instead of throwing?
+

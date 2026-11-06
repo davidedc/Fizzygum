@@ -691,9 +691,11 @@ class TextWdgt extends StringWdgt
     @edit()
     @selectAll()
 
+  # My RUN actions all go through Widget._reportingCompileErrors, so text that is not code is reported
+  # beside the hand rather than thrown at the world.
   doAll: ->
-    @receiver.evaluateString @text
-   
+    @_reportingCompileErrors => @receiver.evaluateString @text
+
   # this is set by the inspector. It tells the text widget
   # that any following doSelection/showSelection/inspectSelection
   # action needs to be done apropos a particular obj,
@@ -705,23 +707,21 @@ class TextWdgt extends StringWdgt
     @overridingContextMenu = @evaluationMenu
   
   doSelection: ->
-    @receiver.evaluateString @selection()
-    @edit()
+    @_reportingCompileErrors =>
+      @receiver.evaluateString @selection()
+      @edit()
 
   doContents: ->
-    if @receiver?
-      @receiver.evaluateString @text
-    else
-      @evaluateString @text
+    @_reportingCompileErrors => (@receiver ? @).evaluateString @text
 
   showSelection: ->
-    result = @receiver.evaluateString @selection()
+    result = @_reportingCompileErrors => @receiver.evaluateString @selection()
     if result? then @inform result
-  
+
   inspectSelection: ->
     # evaluateString is a pimped-up eval in
     # the Widget class.
-    result = @receiver.evaluateString @selection()
+    result = @_reportingCompileErrors => @receiver.evaluateString @selection()
     if result? then @spawnInspector result
 
   # selects the whole line (if it's wrapped, just

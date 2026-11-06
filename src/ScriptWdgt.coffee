@@ -93,8 +93,10 @@ class ScriptWdgt extends CodeAreaWdgt
       @functionFromCompiledCode = new Function compileFGCode @savedScript, true
     @functionFromCompiledCode?.call world
 
+  # runs the typed script, so text that is not code is reported beside the hand
+  # (Widget._reportingCompileErrors)
   tryIt: ->
-    world.evaluateString @textWidget.text
+    @_reportingCompileErrors => world.evaluateString @textWidget.text
 
   textContentModified: ->
 

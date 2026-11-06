@@ -36,17 +36,21 @@ class ConsoleWdgt extends CodeAreaWdgt
 
     @_invalidateLayout()
 
+  # both run typed code, so text that is not code is reported beside the hand
+  # (Widget._reportingCompileErrors)
   doSelection: ->
-    savedScript = @textWidget.selection()
-    compiled = compileFGCode savedScript, true
-    functionFromCompiledCode = new Function compiled
-    functionFromCompiledCode.call @target
+    @_reportingCompileErrors =>
+      savedScript = @textWidget.selection()
+      compiled = compileFGCode savedScript, true
+      functionFromCompiledCode = new Function compiled
+      functionFromCompiledCode.call @target
 
   doAll: ->
-    savedScript = @textWidget.text
-    compiled = compileFGCode savedScript, true
-    functionFromCompiledCode = new Function compiled
-    functionFromCompiledCode.call @target
+    @_reportingCompileErrors =>
+      savedScript = @textWidget.text
+      compiled = compileFGCode savedScript, true
+      functionFromCompiledCode = new Function compiled
+      functionFromCompiledCode.call @target
 
   # I contribute my own "run" entries to the context menu of the text I contain (run the
   # selection if any, then run all), targeting my doSelection/doAll. The text calls this

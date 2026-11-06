@@ -104,7 +104,10 @@ compileFGCode = (codeSource, bare) ->
     errorMessage += codeSource + "\n"
     errorMessage += "error:\n"
     errorMessage += err + "\n"
-    throw new Error errorMessage
+    # the compiler's own SyntaxError rides along as the cause: its `location` says where the text
+    # stops being CoffeeScript, which a gesture reporting to a person reads
+    # (Widget._reportingCompileErrors)
+    throw new Error errorMessage, cause: err
 
 
   return compiled
