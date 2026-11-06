@@ -1357,7 +1357,7 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 
 > **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `b51062e9`, tests `1d54b5d11`; NOT pushed).
 > `ActivePointerWdgt` now maps the pointer PER-RECEIVER through `screenPointToMyPlane` at BOTH `mouseMove`
-> dispatch sites — `determineGrabs` (`topWdgt.mouseMove`, :1007) and `dispatchEventsFollowingMouseMove`
+> dispatch sites — `determineGrabs` (`topWdgt.mouseMove`, :1007) and `_dispatchEventsFollowingMouseMove`
 > (`newWdgt.mouseMove`, :1149) — exactly the 4A-1 click-site mapping. Dormant-safe: identity off any island
 > ⇒ every existing test byte-identical (gauntlet 218/218 dpr1/dpr2/webkit + apps/paint/tiernaming/settle/
 > capstone + homepage all green). AUDIT of the other position-reading `mouseMove` consumers: `StringWdgt`
@@ -1370,7 +1370,7 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 - Symptom: in a rotated window the paint stroke appears offset from the cursor (the green cursor square
   and the black stroke are far apart).
 - Root cause: `ActivePointerWdgt` dispatches `mouseMove` with the RAW screen `@position()` at two sites —
-  `determineGrabs` (~:1007, `topWdgt.mouseMove pos`) and `dispatchEventsFollowingMouseMove` (~:1137,
+  `determineGrabs` (~:1007, `topWdgt.mouseMove pos`) and `_dispatchEventsFollowingMouseMove` (~:1137,
   `newWdgt.mouseMove?(@position(), @mouseButton)`). The paint tool's handler in
   `src/apps/ReconfigurablePaintWdgt.coffee` (`mouseMove = (pos) -> … context.translate pos.x, pos.y`, at
   ~:85/:99, :135/:143, :330/:338, :389/:397) draws at that raw pos, wrong-plane for a canvas inside a
@@ -1697,7 +1697,7 @@ wrappers (else self; the payload-side sibling of `_parentThroughSugarIslands`) �
 enumerated payload-policy sites: `drop`'s `requiresDeliberateEmbedding()` / `wantsToBeDropped()`
 tests, `dropTargetFor`'s and `resolveDragEmbedCandidates`'s `wantsDropOfChild payload` argument
 (`ActivePointerWdgt.coffee:171-197`), and the dwell state machine's payload classification
-(`updateDragEmbedStateMachine`). Audit each; do NOT blanket-replace — sites that need the FIGURE
+(`_updateDragEmbedStateMachine`). Audit each; do NOT blanket-replace — sites that need the FIGURE
 (geometry, add) keep the figure.
 
 **Structural-identity round-trip (the 4D risk-2 assertion) — define it precisely so the macro

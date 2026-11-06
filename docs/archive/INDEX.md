@@ -554,6 +554,16 @@ Archived docs are immutable history — the current-state truth lives in
   - ⭐⭐ a save compiles the typed text BEHIND a prefix (`@name = `), so the compiler's line-1 column was off by the prefix's length: positions come back through `compileFGCode`'s `typedFrom`
   - ⭐ `NOT_GATED` meant two things under fail-closed: `by-design` excuses an error line, `not-distinctive` must still fail as one
   - ⭐ the independent review found a boot the runner abandons and reloads still failing the run, a display flag (`AUDIT_ECHO`) changing a verdict, and the tool-code save skipping lines the splitter drops — all fixed before the close
+- **`typed-code-saves-residue-plan.md`** — COMPLETE (2026-11-06; the three BACKLOG items `typed-code-saves-and-error-tokens-plan.md` left, executed in one session, owner rulings D1 = refuse and D2 = read code and triage now).
+  - `run-sequence-headless.js` refuses, exit 2 with nothing played, any name it cannot play.
+  - A tool-code blurb refuses code outside its `name = value` assignments, by its typed line (`###` blocks and CRLF read as typed).
+  - check-call-separation's census reads the tests repo's CODE through `buildSystem/lib/tests-repo-code.js` (`scripts/` included; prose, comments and reference records not). Its triage: six `_` renames, twelve allowlisted, query baseline 99 → 113.
+  - ⭐⭐ each BACKLOG item's class was wider than filed:
+    - the runner also played NOTHING and exited 0 for a test the page filters;
+    - the splitter also dropped an indented line after a column-0 comment;
+    - the prose mask hid 40 names, not one, and `scripts/` (real callers) was never read.
+  - ⭐ T5's "a gate forbids the `_`-form" fallback took 4 of 10 renames ([G], [S]). Test a rename in seconds with the two gate scripts, not a build.
+  - ⭐ the independent review found what the author's plants missed: a macOS case-insensitive `existsSync`, `###` blocks and CRLF in a blurb, and a reader limit that can cut code (stated, measured clean).
 
 ## Build & toolchain
 

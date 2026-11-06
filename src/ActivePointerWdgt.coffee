@@ -202,7 +202,7 @@ class ActivePointerWdgt extends Widget
   # owes the leaving widget its last hoverExited (a menu row takes down the highlight on the widget it
   # stands for, a widget with a tooltip takes the tooltip down); the multi-click candidates, which
   # recognize only the widget a release lands on; and the drag-embed state, which the next dispatch
-  # takes down once nothing rides me (dispatchEventsFollowingMouseMove).
+  # takes down once nothing rides me (_dispatchEventsFollowingMouseMove).
   _forgetBookingsLeavingWith: (leavingWdgt) ->
     leavesWithIt = (booking) -> booking? and leavingWdgt.isAncestorOf booking
     @wdgtToGrab = undefined  if (leavingWdgt.parent is @) or leavesWithIt @wdgtToGrab
@@ -386,7 +386,7 @@ class ActivePointerWdgt extends Widget
     wdgtToDrop._applyMoveTo wdgtToDrop._clampedPositionWithin visibleBox, wdgtToDrop.position(), wdgtToDrop.extent()
 
   # === drag-embed dwell-to-arm state machine (docs/specs/drag-embed-interaction-spec.md §6) =======
-  # Runs once per pointer dispatch while float-dragging a payload (from dispatchEventsFollowingMouseMove,
+  # Runs once per pointer dispatch while float-dragging a payload (from _dispatchEventsFollowingMouseMove,
   # which fires per move AND per cycle on the hover re-sync). The ARM DECISION is pure elapsed EVENT-time
   # (never wall-clock — the doubleClickWindowMs template, NOT the autoscroll anomaly). It only mutates
   # declarative state (candidate / linger origin / armed) and declares ephemeral visuals; it does NOT
@@ -438,7 +438,7 @@ class ActivePointerWdgt extends Widget
     @dragEmbedLingerOriginEventTime = eventTime
     @dragEmbedLingerOriginWallTime = WorldWdgt.dateOfCurrentCycleStart
 
-  updateDragEmbedStateMachine: ->
+  _updateDragEmbedStateMachine: ->
     payload = @children[0]
     return unless payload?
     {candidate, reluctant, dockBand} = @resolveDragEmbedCandidates payload
@@ -664,7 +664,7 @@ class ActivePointerWdgt extends Widget
         # event-time then ARMS exactly on release, with no final micro-move needed — the S2-validated
         # still-hold case. Capture the verdict, THEN tear the affordances down (teardown clears the state
         # we just read).
-        @updateDragEmbedStateMachine()
+        @_updateDragEmbedStateMachine()
         wasArmed = @dragEmbedArmed
         overReluctantOnly = @dragEmbedReluctant?
         # the band the release resolved to, captured beside the arm verdict for the same reason: the
@@ -1650,7 +1650,7 @@ class ActivePointerWdgt extends Widget
 
     @determineGrabs pos, topWdgt, mouseOverNew
 
-    @dispatchEventsFollowingMouseMove mouseOverNew
+    @_dispatchEventsFollowingMouseMove mouseOverNew
 
   # THE GRAB/DRAG THRESHOLD: has the pressed widget's lift begun, and how far must it be corrected.
   # A pointer is noisy, and a press meant to select or to place a caret must not turn into a drag, so
@@ -1815,7 +1815,7 @@ class ActivePointerWdgt extends Widget
     # dpr-2-only flake in SystemTest_macroSliderTrackClickMovesButton: a heavy
     # SWCanvas cycle drains the down+up together, so no held-button frame ever
     # interposes to absorb the enter. Resolving it here is cadence/density-independent.
-    @dispatchEventsFollowingMouseMove mouseOverNew
+    @_dispatchEventsFollowingMouseMove mouseOverNew
 
   # The focus-tracking exclusion policy (§5.D): a click/drop must not move the
   # editor focus pointer (world.editorFocusWdgt)
@@ -1846,12 +1846,12 @@ class ActivePointerWdgt extends Widget
     # allParentsTopToBottom makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways
     mouseOverNew = new Set topWdgt.allParentsBottomToTop()
-    @dispatchEventsFollowingMouseMove mouseOverNew, false
+    @_dispatchEventsFollowingMouseMove mouseOverNew, false
 
   # `atDrainedEvent` names the SEAT this dispatch runs from: true at a drained pointer event (the
   # move pipeline and the teleport above), false at the per-cycle re-entry. Only the pressed-move
   # channel reads it — see the note beside the withhold below.
-  dispatchEventsFollowingMouseMove: (mouseOverNew, atDrainedEvent = true) ->
+  _dispatchEventsFollowingMouseMove: (mouseOverNew, atDrainedEvent = true) ->
 
     # NOTHING IS UNDER A POINTER THAT IS NOT THERE. While the glass is empty (a touch stroke ended
     # and none has begun), the widgets the last stroke walked over stay LEFT: no enter, no move, and
@@ -1927,7 +1927,7 @@ class ActivePointerWdgt extends Widget
     # drag-embed dwell state machine (spec §6): resolve candidate + arm, declare the visuals. Runs per
     # move AND per cycle (via the hover re-sync), so a moving drag and a stationary hold both update.
     if @isThisPointerFloatDraggingSomething()
-      @updateDragEmbedStateMachine()
+      @_updateDragEmbedStateMachine()
     else if @_dragEmbedOutlinedWdgt? or @dragEmbedDockBand? or world.dragEmbedDockBandDeclared? or
      world.dragEmbedChargeRingDeclared? or world.dragEmbedLabelDeclared? or world.dragEmbedLockBadgeDeclared?
       # a drag ended some other way than drop() — clean up. The test names every record that can

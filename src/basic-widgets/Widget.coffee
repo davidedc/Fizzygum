@@ -4225,27 +4225,33 @@ class Widget extends TreeNode
       @injectProperty each.name, each.source
     return
 
-  # The `name = value` assignments a code blurb holds, in order, as {name, source} -- each one first
-  # COMPILED exactly as injectProperty will run it (propertyAssignmentSource), so a blurb that does
-  # not compile throws here, before anything is injected. Read by injectProperties and by the
-  # tool-code save that checks a blurb before storing it
-  # (CodeInjectingSimpleRectangularButtonWdgt.modifyCodeToBeInjected). A compile error names the
-  # assignment it is in (`typedIn`) and carries no position: the blurb is reshaped before it is split
-  # (blank lines doubled below), so no line counted here is one the person sees. A save that wants
-  # the place in the text compiles the text as typed first.
+  # The `name = value` assignments a code blurb holds, in order, as {name, source}. A blurb holds
+  # assignments, comment lines and blank lines, and nothing else: a value runs from its `name =` to
+  # the next line that starts with a name, a `#` or a `$`, so any other code on such a line, and the
+  # lines after it up to the next assignment, would be stored and never run. Such code is refused
+  # here, by its line as typed (_refuseCodeOutsideAssignments). Each assignment is then COMPILED
+  # exactly as injectProperty will run it (propertyAssignmentSource), so a blurb that does not compile
+  # throws here, before anything is injected. Read by injectProperties and by the tool-code save that
+  # checks a blurb before storing it (CodeInjectingSimpleRectangularButtonWdgt.modifyCodeToBeInjected).
+  # A compile error names the assignment it is in (`typedIn`) and carries no position: the blurb is
+  # reshaped before it is split (blank lines doubled below), so no line counted here is one the
+  # person sees. A save that wants the place in the text compiles the text as typed first.
   @compilePropertyAssignments: (codeBlurb) ->
-    codeBlurb = codeBlurb.replace(/^[ \t]*$/gm,"\n")
-    codeBlurb = codeBlurb + "\n# end injected code"
+    reshaped = Widget._blurbAsTyped(codeBlurb).replace(/^[ \t]*$/gm,"\n") + "\n# end injected code"
 
     # ([a-zA-Z_$][0-9a-zA-Z_$]*) is the variable name
     regex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)[ \t]*=[ \t]*([^]*?)(?=^[\w#$])/gm
 
     assignments = []
-    while (m = regex.exec(codeBlurb))?
+    endOfPrevious = 0
+    while (m = regex.exec(reshaped))?
       # This is necessary to avoid infinite loops with zero-width matches
       if m.index == regex.lastIndex
         regex.lastIndex++
+      Widget._refuseCodeOutsideAssignments reshaped, endOfPrevious, m.index
+      endOfPrevious = m.index + m[0].length
       assignments.push name: m[1], source: m[2]
+    Widget._refuseCodeOutsideAssignments reshaped, endOfPrevious, reshaped.length
 
     for each in assignments
       assignment = Widget.propertyAssignmentSource each.name, each.source
@@ -4256,6 +4262,48 @@ class Widget extends TreeNode
         delete error.typedLocation
         throw error
     assignments
+
+  # The blurb's lines as the person typed them, in the one shape the splitter reads, line for line (so
+  # a line number still names a typed line): pasted CRLF/CR line ends become "\n", and a top-level
+  # `###` block comment becomes `#` line comments, each of its lines gaining a leading `#`. A block
+  # opens on a line starting with `###` (`####` is a line comment) and closes on the next line holding
+  # `###`. Without this a block's lines would read as code outside every assignment, and a
+  # `name = value` line inside one would be injected.
+  @_blurbAsTyped: (codeBlurb) ->
+    inBlock = false
+    lines = for eachLine in codeBlurb.replace(/\r\n?/g, "\n").split "\n"
+      if inBlock
+        inBlock = false if eachLine.indexOf("###") >= 0
+        "#" + eachLine
+      else if /^###(?!#)/.test eachLine
+        inBlock = eachLine.indexOf("###", 3) < 0
+        "#" + eachLine
+      else
+        eachLine
+    lines.join "\n"
+
+  # Throws at the first line of reshaped[from...to] -- text no assignment owns -- that is neither
+  # blank (any whitespace) nor a comment. The refusal reads like a compile error (`isCompileError`: the blurb does not
+  # compile AS A BLURB) and is placed on the line as typed (`typedLocation`, a line and no column).
+  # The reshaping doubled every blank line, so the typed line is the non-blank lines above this one
+  # plus half the blank ones.
+  @_refuseCodeOutsideAssignments: (reshaped, from, to) ->
+    lineStart = from
+    while lineStart < to
+      lineEnd = reshaped.indexOf "\n", lineStart
+      lineEnd = to if lineEnd is -1 or lineEnd > to
+      unless /^\s*(#|$)/.test reshaped.slice lineStart, lineEnd
+        linesAbove = reshaped.slice(0, lineStart).split "\n"
+        linesAbove.pop()
+        blankAbove = (eachLine for eachLine in linesAbove when /^[ \t]*$/.test eachLine).length
+        typedLine = linesAbove.length - blankAbove / 2
+        refusal = new Error "line #{typedLine + 1} of the code is not inside a name = value assignment",
+          cause: new Error "not inside a name = value assignment"
+        refusal.isCompileError = true
+        refusal.typedLocation = line: typedLine
+        throw refusal
+      lineStart = lineEnd + 1
+    return
 
   # the remove twin of injectProperty ("Own" keeps it clear of InspectorWdgt's
   # same-named zero-arg button actions, which would otherwise shadow these on
@@ -5528,8 +5576,9 @@ class Widget extends TreeNode
 
   # The one reading of a compile error, for both kinds of gesture. compileFGCode marks every error it
   # throws (`isCompileError`) and carries the compiler's own as its `cause`; its place in the text the
-  # person typed is `typedLocation`, absent when that place is not in it or the compiler gave none. A
-  # blurb of several assignments also names the one it is in (`typedIn`,
+  # person typed is `typedLocation`, absent when that place is not in it or the compiler gave none,
+  # and a line with no column when the fault is the whole line (a blurb's code outside its
+  # assignments). A blurb of several assignments also names the one it is in (`typedIn`,
   # Widget.compilePropertyAssignments).
   _informOfCompileErrorOrRethrow: (error, verb) ->
     throw error unless error?.isCompileError
@@ -5537,7 +5586,8 @@ class Widget extends TreeNode
     where = error.typedLocation
     place = []
     place.push "in " + error.typedIn  if error.typedIn?
-    place.push "line #{where.line + 1}, column #{where.column + 1}"  if where?
+    if where?
+      place.push "line #{where.line + 1}" + (if where.column? then ", column #{where.column + 1}" else "")
     placeText = if place.length then " (" + place.join(", ") + ")" else ""
     @inform "Cannot #{verb} this as code" + placeText + ": " + compilerError.message
     return

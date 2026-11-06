@@ -43,9 +43,11 @@
  *       REJECTED as a rule (plan §8).
  *
  *   R4  privatization candidates — public methods whose EVERY reference across src + the sibling
- *       test harness + the macro tests is a `@`-self call: never a `.member` call, never inside a
- *       string (menu/connection dispatch is name-string-driven, so strings count), never a bare
- *       identifier, never referenced in Fizzygum-tests. Provably not external API → candidates for
+ *       tests repo's CODE is a `@`-self call: never a `.member` call, never inside a string
+ *       (menu/connection dispatch is name-string-driven, so strings count), never a bare
+ *       identifier, never named by Fizzygum-tests' code — its harness, its macro sources or its
+ *       scripts/ rigs, comments cut and its prose, reference records and manifests unread
+ *       (lib/tests-repo-code.js). Provably not external API → candidates for
  *       a `_` rename (rule [U]; deliberate end-user API goes in buildSystem/public-api-allowlist.txt).
  *       NEEDS the sibling Fizzygum-tests repo; R4 is null (and rule [U] SKIPS) when it is absent.
  *
@@ -135,51 +137,12 @@ function stripLine(line, state) {
   return { code: out, state };
 }
 
-// Per-char mask for one raw line: 'code' | 'str' | 'cut' (comment), carrying the same multi-line
-// string state stripLine tracks (""" ''' `), so heredoc bodies mask as 'str'. Where stripLine
-// DELETES strings, this only LABELS them — so a caller can keep string CONTENT while still cutting
-// comments, and can tell "inside a string" from "code". R4's occurrence harvest needs that (strings
-// are dynamic-dispatch surface and must DISQUALIFY a privatization candidate); so does
-// census-hierarchy-duplication.js, which must compare method bodies with their string literals
-// INTACT (two bodies differing only in a string literal are NOT duplicates). Exported for that
-// reason — module-scope, and it captures nothing.
-function maskLine(line, state) {
-  const mask = new Array(line.length).fill('code');
-  let i = 0;
-  if (state) {
-    const end = line.indexOf(state);
-    if (end < 0) { mask.fill('str'); return { mask, state }; }
-    for (let j = 0; j < end + state.length; j++) mask[j] = 'str';
-    i = end + state.length;
-    state = null;
-  }
-  while (i < line.length) {
-    const three = line.substr(i, 3);
-    if (three === '"""' || three === "'''") {
-      const close = line.indexOf(three, i + 3);
-      const stop = close < 0 ? line.length : close + 3;
-      for (let j = i; j < stop; j++) mask[j] = 'str';
-      if (close < 0) return { mask, state: three };
-      i = stop; continue;
-    }
-    const c = line[i];
-    if (c === '`' || c === '"' || c === "'") {
-      let j = i + 1;
-      while (j < line.length) {
-        if (line[j] === '\\') { j += 2; continue; }
-        if (line[j] === c) break;
-        j++;
-      }
-      const stop = j >= line.length ? line.length : j + 1;
-      for (let k = i; k < stop; k++) mask[k] = 'str';
-      if (j >= line.length) return { mask, state: c === '`' ? '`' : null };  // unterminated: only ` spans lines
-      i = stop; continue;
-    }
-    if (c === '#') { for (let j = i; j < line.length; j++) mask[j] = 'cut'; break; }
-    i++;
-  }
-  return { mask, state };
-}
+// Per-char mask for one raw line ('code' | 'str' | 'cut'), carrying multi-line string state: it lives in
+// lib/coffee-mask.js, shared with lib/tests-repo-code.js, and is re-exported below for
+// census-hierarchy-duplication.js. R4's occurrence harvest needs it (strings are dynamic-dispatch
+// surface and must DISQUALIFY a privatization candidate).
+const { maskLine } = require('./lib/coffee-mask');
+const { testsRepoCode } = require('./lib/tests-repo-code');
 
 const { METHOD_HEADER, MIXIN_METHOD_HEADER, methodBoundary } = require('./lib/coffee-method-header');
 
@@ -486,19 +449,16 @@ function runCensus() {
   out.nameOcc = nameOcc;
   out.haveTestsRepo = fs.existsSync(TESTS) && fs.existsSync(HARNESS);
   if (out.haveTestsRepo) {
-    const harvestExternal = (files, isCoffee) => {
-      for (const p of files) {
-        for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
-          const hashIdx = isCoffee ? raw.indexOf('#') : -1;
-          const line = hashIdx >= 0 ? raw.slice(0, hashIdx) : raw;
-          let m;
-          WORD.lastIndex = 0;
-          while ((m = WORD.exec(line)) !== null) if (publicNames.has(m[0])) bump(m[0], 'external');
-        }
+    // The tests repo's CODE only (lib/tests-repo-code.js): the harness, the macro sources and the
+    // scripts/ rigs, strings kept (name dispatch) and comments cut. Its metadata prose, reference-image
+    // records and manifests are not code, so a sentence naming a method never counts as a call of it.
+    for (const { lines } of testsRepoCode(path.dirname(TESTS))) {
+      for (const line of lines) {
+        let m;
+        WORD.lastIndex = 0;
+        while ((m = WORD.exec(line)) !== null) if (publicNames.has(m[0])) bump(m[0], 'external');
       }
-    };
-    harvestExternal(collectFiles(HARNESS, '.coffee', []), true);
-    harvestExternal(collectFiles(TESTS, '.js', []), false);
+    }
     const R4 = [];
     for (const name of publicNames) {
       const o = nameOcc.get(name) || { self: 0, member: 0, other: 0, external: 0 };
@@ -546,6 +506,36 @@ if (require.main === module) {
       if (got !== expect) ok = false;
       console.log(`  ${got === expect ? 'ok  ' : 'FAIL'} ${JSON.stringify(line)} -> ${got} (expected ${expect})`);
     }
+    // R4's external half reads the tests repo's CODE (lib/tests-repo-code.js): each case is a file kind,
+    // its text, and the names a word scan of what the reader keeps must and must not find.
+    const reader = require('./lib/tests-repo-code');
+    const os = require('os');
+    const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'census-r4-'));
+    const put = (rel, text) => { const p = path.join(fixture, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
+    put('Automator-and-test-harness-src/H.coffee', 'x = "#{a}"; harnessCall()\n# harnessComment()\n');
+    put('tests/SystemTest_t/SystemTest_t.js', 'var SystemTest_t = { "intent": "metadataProse is named here" };\n');
+    put('tests/SystemTest_t/SystemTest_t_automationCommands.js',
+      '// jsComment\nvar c = { "mainMacroSource":\n`m = ->\n  # macroComment\n  w.macroCall()\n  w["macroString"]()`\n};\n');
+    put('tests/SystemTest_t/automation-assets/x/ref.js', 'var r = "referenceRecord";\n');
+    put('tests/testsManifest.js', 'var m = ["manifestEntry"];\n');
+    put('scripts/r.js', '  // scriptComment\n/* scriptBlock\n   scriptBlockToo */ scriptAfterBlock()\npage.evaluate(() => w.scriptCall()); // scriptTrailing\n');
+    put('scripts/node_modules/dep.js', 'nodeModule()\n');
+    put('scripts/.scratch/probe.js', 'scratchProbe()\n');
+    put('scripts/t.js', 'const css = `\n/* rule\n`; page.evaluate(() => w.afterTemplate());\nw.later();\n');
+    const seen = new Set();
+    for (const { lines } of reader.testsRepoCode(fixture)) for (const l of lines) for (const w of l.match(/[A-Za-z_]\w*/g) || []) seen.add(w);
+    fs.rmSync(fixture, { recursive: true, force: true });
+    const MUST = ['harnessCall', 'macroCall', 'macroString', 'scriptCall', 'scriptAfterBlock', 'scriptTrailing',
+      'afterTemplate', 'later'];
+    const MUST_NOT = ['harnessComment', 'metadataProse', 'jsComment', 'macroComment', 'referenceRecord', 'manifestEntry',
+      'scriptComment', 'scriptBlock', 'scriptBlockToo', 'nodeModule', 'scratchProbe'];
+    for (const w of MUST) { const good = seen.has(w); if (!good) ok = false; console.log(`  ${good ? 'ok  ' : 'FAIL'} tests-repo code names ${w}`); }
+    for (const w of MUST_NOT) { const good = !seen.has(w); if (!good) ok = false; console.log(`  ${good ? 'ok  ' : 'FAIL'} tests-repo code does not name ${w}`); }
+    // a macro file whose backticks do not pair is read whole, as JS: its CoffeeScript comment then counts
+    const unpaired = reader.macroCode('// lead\nvar c = `m = ->\n  # stillCounted\n').join('\n');
+    const keeps = /stillCounted/.test(unpaired) && !/lead/.test(unpaired);
+    if (!keeps) ok = false;
+    console.log(`  ${keeps ? 'ok  ' : 'FAIL'} an unpaired-backtick macro file is read whole as JS`);
     console.log(ok ? '[census] self-test PASS' : '[census] self-test FAIL');
     process.exit(ok ? 0 : 1);
   }

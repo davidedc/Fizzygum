@@ -578,8 +578,11 @@ mark after `add` + `setExtent` adds nothing.
   marks the text saved or closes only on `true`. Either reports the compiler's message beside the hand at the
   place in the TYPED text. The apply must compile before it stores anything, so a refused save has changed
   nothing; a route that compiles the text behind a prefix (`"@" + name + " = "`) passes the prefix's length as
-  `compileFGCode`'s `typedFrom`, so the position names a place in what the person sees. Code that compiles and
-  then throws still goes to the Error log, where its stack is the person's own.
+  `compileFGCode`'s `typedFrom`, so the position names a place in what the person sees. A text whose FORM
+  decides what runs is refused for its form the same way: a code blurb (`Widget.compilePropertyAssignments`)
+  holds `name = value` assignments, comments and blank lines only, so code outside its assignments, which would
+  be stored and never run, is refused by its line. Code that compiles and then throws still goes to the Error
+  log, where its stack is the person's own.
 - **No wall-clock, no timers, no randomness** in render/layout/input code: the suite asserts byte-exact
   pixels and those diverge under parallel load. The cycle and step machinery are the sanctioned clock
   (`../../Fizzygum-tests/DETERMINISM.md`).

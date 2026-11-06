@@ -11,17 +11,14 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
-### `archive/typed-code-saves-and-error-tokens-plan.md` — Tier 1's two findings, plus fail-closed runners (CLOSED 2026-11-06; Units A–C done, see its ledger)
-- [ ] **A tool-code blurb's non-assignment line that IS CoffeeScript is still skipped silently.** The save now
-      refuses text that does not compile as typed. But `foo()` between two `name = value` assignments compiles,
-      and `Widget.compilePropertyAssignments`' splitter drops it, so it is stored and never runs. Refuse a blurb
-      whose lines are not all assignments? It is a format rule, not a compile one: the owner's call.
-- [ ] **`run-sequence-headless.js` given only unknown names plays the WHOLE manifest** (exit 1, ~3 min) instead of
-      refusing. Found when a zsh string of names reached it as one argument.
-- [ ] **check-call-separation's R4 census counts a public method NAMED in test metadata prose as a reference.** It
-      reads strings so that it sees string dispatch, so `applyPropertyEdit` left the self-only census because two
-      tests' `intent` text names it (banked 101 → 99 with that reason). A sentence edit can therefore move the
-      baseline; should the census skip the metadata files' prose fields?
+### `archive/typed-code-saves-residue-plan.md` — the typed-code-saves arc's three residue items (CLOSED 2026-11-06; Units 1–3 done, see its ledger)
+- [ ] **The other gates that read the tests repo still read its prose and comments.** `check-call-separation`'s
+      census now reads the tests repo's CODE through `buildSystem/lib/tests-repo-code.js` (harness, macro sources
+      and `scripts/`, comments cut, metadata prose and reference records unread). `check-dead-methods` (the
+      "ordinary English word is unkillable" blind spot in `lint-and-static-checks.md`), `check-unresolved-sends`,
+      `check-hand-lists`, `check-relayout-repaints` and the arity and property-placement censuses read it their own
+      way. Adopting the reader may unmask findings of each gate's own (dead methods first), so each is its
+      gate's arc: measure, then triage.
 
 ### `archive/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; CLOSED 2026-11-06, all four tiers landed)
 - [x] Tier 1's two findings — CLOSED by `archive/typed-code-saves-and-error-tokens-plan.md` (moved to its BACKLOG

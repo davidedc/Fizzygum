@@ -84,7 +84,7 @@ class LCLTransforms
   # random < 0.5 then scale 0>` invoked bare chains into `scale 0` and a block that
   # returns undefined, so scale has already pushed before it can tell the push won't be
   # popped. Discards the popped matrix instead of restoring it (unlike popMatrix).
-  discardPushedMatrix: ->
+  _discardPushedMatrix: ->
     if @matrixStack.length
       @matrixStack.pop()
 
@@ -232,7 +232,7 @@ class LCLTransforms
       # we find out that the function is actually
       # a fake so we have to undo the push and leave
       if !result?
-        @discardPushedMatrix()
+        @_discardPushedMatrix()
         return
       startIndex++
     @popMatrix()

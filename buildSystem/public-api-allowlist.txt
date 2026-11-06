@@ -11,9 +11,15 @@ goHome        # caret keyboard verb — user command surface
 goEnd         # caret keyboard verb — user command surface
 deleteLeft    # caret keyboard verb — user command surface
 deleteRight   # caret keyboard verb — user command surface
-setSoftWrap   # user-facing text-wrapping toggle
+goLeft        # caret keyboard verb — user command surface
+goRight       # caret keyboard verb — user command surface
+goUp          # caret keyboard verb — user command surface
+goDown        # caret keyboard verb — user command surface
+setHorizontalAlignment  # StringWdgt's user-facing alignment setter (the align rows call it), sibling of the soft-wrap toggle
+setVerticalAlignment    # StringWdgt's user-facing alignment setter (the align rows call it), sibling of the soft-wrap toggle
+scrollX       # ViewportWdgt's scroll-by verb, sibling of scrollToBottom/setScrollPolicy, which macros call
+scrollY       # ViewportWdgt's scroll-by verb, sibling of scrollToBottom/setScrollPolicy, which macros call
 # Protocol-shaped hooks (likely to gain dynamic/external callers; renaming a protocol invites churn):
-recalculateOutput         # patch nodes' reactive recompute protocol verb
 reactToTargetConnection   # connection protocol hook
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
@@ -23,11 +29,13 @@ setProgram          # LCLProgramRunner programming API
 processDoubleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
 processTripleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
 addText             # ErrorsLogViewerWdgt log-append verb; its body drives the public .setText on the text pane — rule [A] forbids the _-form
-addDragAffordanceWidgets  # WorldWdgt frame-driven affordance rebuilder; drives public add/fullDestroy/setWidth — [A]/[G] forbid the _-form
 bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form
 createWidgetToBeHandled   # creator-button build protocol (5-class family); builds via public addMany/setExtent — [A]/[G] forbid the _-form
 bringUpReferencedWidget   # ShortcutWdgt shared "open the referenced widget" ritual; drives public show/spawnNextTo/setTitle on other widgets — [A]/[G] forbid the _-form
+addHighlightingWidgets    # WorldWdgt's per-cycle highlight reconciler; it destroys stale highlighters through the public fullDestroy — [G] forbids the _-form
+autoScroll                # ViewportWdgt's drag auto-scroll step; it scrolls through the public scrollX/scrollY — [S] forbids the _-form
+startAutoScrolling        # ViewportWdgt's drag auto-scroll start; its step drives the public autoScroll — [S] forbids the _-form
+wrapContent               # TransformFrameWdgt's slot-wrapping constructor helper; it builds through the public settling add — [S]/[G] forbid the _-form
 subWidgetsMergedPreferredBounds  # Widget §4.1 pure-measure API, sibling of the cross-called subWidgetsMergedFullBounds; the P5 scrolled-content contract implementations (scrolledContentMeasure) call it on THEMSELVES, which is what left it with only self-calls
 closeFromFrameBar         # FrameWdgt's close-from-the-bar ACTION — it runs the closeFromFrameBarPolicy (save-or-ask / close / destroy) that plain close() does not, so it is the verb a user or a script means by "close this window as its button would"; the bar-press handler is its only in-tree caller (a deliberate verb whose one in-tree caller is its own user-facing adapter)
-setLifetime               # FrameWdgt's runtime transient⇄persistent flip (frame-lifetime plan §2.1) — deliberate end-user/scripting API and the settling twin of _setLifetimeNoSettle; pinPopUp, the user-facing verb the strip tap and the "pin" row reach, is its only in-tree caller (a deliberate verb whose one in-tree caller is its own user-facing adapter)
 setZoomFactor             # a spreadsheet's zoom: user verb for scripting and the inspector (the formula bar's zoom menu calls it)

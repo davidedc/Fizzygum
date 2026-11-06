@@ -559,16 +559,28 @@ narrowed-R2 report. The campaign that owns the drawdown is **`docs/archive/publi
 the census at every tranche start. Methodology and blind spots are in the tool's header. Run from `Fizzygum/`:
 `node ./buildSystem/census-public-private-calls.js [--full|--json out.json|--self-test]`.
 
-⚠ **One blind spot worth knowing before you chase a phantom [U] NOTE: naming a method inside a macro
-source's COMMENT counts as a reference to it.** R4's reference set is harvested from the sibling tests
-repo, and a macro lives inside a JS template literal — so from the `.js` file's point of view the
-whole CoffeeScript body, `#` comments included, is string content, which is exactly what R4 must scan
-(a real call in a macro is string content too). The symptom is a `[U] allowlist entry is no longer
-self-only-public` NOTE appearing on a commit that added only a test. It is advisory, never a build
-failure — but the honest fix is to reword the comment, not to delete the allowlist entry.
+⚠ **R4's "referenced outside src" half reads the tests repo's CODE, and only its code**
+(`buildSystem/lib/tests-repo-code.js`):
+- the harness sources;
+- each macro command file's CoffeeScript macro sources (the JS template literals) and the JS around them;
+- `scripts/**/*.js`, whose `page.evaluate` bodies call core methods as directly as a macro does.
 
-⚠⚠ **The same harvesting rule gives `check-dead-methods` a blind spot it cannot close: a method whose
-NAME is an ordinary English word is effectively unkillable.** The gate is NAME-keyed — it has to be,
+Strings count, because a macro or a rig may dispatch by name. Comments do not, and neither do the metadata files'
+prose, the reference-image records or the generated manifests. So a sentence that names a method in a test's
+`intent`, or a `#` note in a macro, leaves the self-only census untouched, while a rig that really calls a method
+takes it out. Most of its limits err toward counting a word, which can only HIDE a candidate: the census is
+NAME-keyed, so a JS local named like a method counts; a trailing `// …` comment counts; a macro file whose
+backticks do not pair is read whole. A few can CUT code instead, which would invent a candidate and fail the build
+loudly, naming a method whose caller is plain to see. These are `lib/coffee-mask.js`'s misreadings of CoffeeScript
+(a `#` inside a regex literal, a "…" string spanning lines, a quote nested in `#{…}`) and a JS line inside a
+template literal that starts with `//` or `/*`. A token-by-token comparison against real lexers (2026-11-06) found
+none in the repo.
+⚠ The other gates that read the tests repo (`check-dead-methods` below, `check-unresolved-sends`,
+`check-hand-lists`, `check-relayout-repaints`, the arity and property-placement censuses) still read their own
+way; adopting the shared reader is BACKLOG.
+
+⚠⚠ **`check-dead-methods` still reads every word of the tests repo, prose included, which gives it a blind
+spot it cannot close: a method whose NAME is an ordinary English word is effectively unkillable.** The gate is NAME-keyed — it has to be,
 since a computed-name dispatch can name any method — and it harvests every identifier from every line
 of `src/`, the harness and the test `.js` files, with comments NOT stripped on the `.js` side. So a
 sentence like *"toggle its window-bar edit button OFF then ON"* in a test's `description` counts as a
@@ -976,7 +988,10 @@ source to satisfy a new rule.
   [A]–[T]); `checkMacroFile` (rule [D]); `DOUBLE_SETTLE_MARKER`/`T_SELF_PUB_CALL`/`checkDoubleSettle` ([T]).
 - `buildSystem/check-call-separation.js` — `BASELINE_S_SETTLING`/`BASELINE_S_EFFECTFUL` ([S]) +
   `BASELINE_U_EFFECTFUL`/`BASELINE_U_QUERY` ([U]) inline ratchets; reads `public-api-allowlist.txt`;
-  requires `census-public-private-calls.js` (`runCensus`, `PUBLIC_CALL_MARKER`).
+  requires `census-public-private-calls.js` (`runCensus`, `PUBLIC_CALL_MARKER`), whose R4 reads the tests repo's
+  code through `buildSystem/lib/tests-repo-code.js` (`testsRepoCode` / `coffeeCode` / `jsCode` / `macroCode`) and
+  masks CoffeeScript with `buildSystem/lib/coffee-mask.js` (`maskLine` / `codeOfCoffeeLine`); the census's
+  `--self-test` pins the reader.
 - `buildSystem/check-thin-wraps.js` — `HEADER`/`GUARD`/`EXEMPT`; twinless skip (`if (!byName.has(base)) continue`).
 - `buildSystem/check-constructors-build.js` — `METHOD`/`BUILD`/`EXEMPT`; the `inctor` state machine (multi-line-ctor-header aware).
 - `buildSystem/check-dead-methods.js` + `buildSystem/dead-method-allowlist.txt`.

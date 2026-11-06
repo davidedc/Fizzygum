@@ -91,7 +91,7 @@ how much the destination has to lose.
 | Pencil state shown by color only | `FrameWdgt.makePencilYellow/makePencilClear` `:536-548` |
 | Internal/external switch + `makeInternal`/`makeExternal` (re-skin, unlock, reparent to world) | `FrameWdgt.coffee:177-202, 525-534` |
 | Windows accept drops only while EMPTY ("Drop a widget in here" placeholder) | `FrameWdgt.coffee:398` (enable) · `:421` (disable on child landed) · `FrameContentsPlaceholderText` |
-| Drag-hover hooks (a carrying-hand enter/exit pair) were dispatched every move and implemented by nobody — DELETED, since a dead extension point is re-added when a consumer exists | `dispatchEventsFollowingMouseMove` |
+| Drag-hover hooks (a carrying-hand enter/exit pair) were dispatched every move and implemented by nobody — DELETED, since a dead extension point is re-added when a consumer exists | `_dispatchEventsFollowingMouseMove` |
 | Grab origin recorded at grab (return-anchor candidate) | `ActivePointerWdgt.coffee:196` (`grabOrigin = aWdgt.situation()`) |
 | Existing dwell precedents: 500ms autoscroll (wall-clock — the documented anomaly, do NOT copy) · 300ms multi-click (event-time — the template) | `ViewportWdgt.coffee:709` · `doubleClickWindowMs`, `ActivePointerWdgt.coffee:28` |
 | Drag threshold 7px (also the linger radius we reuse) | `PreferencesAndSettings.coffee:54` (`grabDragThreshold`) |
@@ -188,7 +188,7 @@ DROP's, never any default the payload might otherwise declare for itself.
 
 ## §5 — Candidate resolution (owner decisions 1 + 3)
 
-Runs on every pointer move while float-dragging (hook: `dispatchEventsFollowingMouseMove` — the hand's own
+Runs on every pointer move while float-dragging (hook: `_dispatchEventsFollowingMouseMove` — the hand's own
 over-list dispatch loop; the resolver is the same climb `dropTargetFor` does at release, so move-time preview and release-time outcome CANNOT disagree).
 **For a frame payload, this entire climb is subordinate to §4.1's dock-band check**, which runs first: a host
 offering a band under the pointer wins outright and the climb below never runs for that event.
@@ -392,7 +392,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
 
 ## §12 — Engineering + determinism notes
 
-- **Hook point**: candidate resolution + state machine live off `dispatchEventsFollowingMouseMove`
+- **Hook point**: candidate resolution + state machine live off `_dispatchEventsFollowingMouseMove`
   (`ActivePointerWdgt.coffee:933-963`); the hit-test already runs there every move, so the added cost is the
   short parent-climb. `drop()` (`:247`) loses the `wantsToBeDropped`→world forcing branch for windows (keeps it
   for `BinOpenerWdgt`-style widgets) and gains the ARMED/unarmed branch.

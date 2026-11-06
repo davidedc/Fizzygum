@@ -149,11 +149,11 @@ class StringWdgt extends Widget
   #   - fittingSpecWhenBoundsTooSmall: CROP (ellipsise via
   #     searchLongestFittingTextByMultiCroppingIt, keep the font) | SCALEDOWN
   #     (shrink the font so the whole text fits).
-  # Both are consumed only in fitToExtent(), called from reflowText().
+  # Both are consumed only in _fitToExtent(), called from reflowText().
   #
   # MODE 2, FIT_BOX_TO_TEXT (opt-in): the COMPLEMENTARY mode — the widget resizes
   # its OWN extent to hug its text, at the SET font size (the font is NEVER scaled:
-  # reflowText short-circuits fitToExtent for this mode and renders at
+  # reflowText short-circuits _fitToExtent for this mode and renders at
   # @originallySetFontSize — without that, SCALEUP's searchLargestFittingFont would
   # blow the font up, since the render leaks force every fit-measure to the set
   # size). The box-to-text SIZING lives in TextWdgt::_reLayoutSelf — a LAYOUT pass, NOT
@@ -898,7 +898,7 @@ class StringWdgt extends Widget
     extentOccupiedByText = new Point Math.ceil(@measureText text, overrideFontSize, @fitBold ? @isBold), @linePitch(overrideFontSize)
     return extentOccupiedByText.le @_textArea().extent()
 
-  fitToExtent: ->
+  _fitToExtent: ->
     # this if is just to check if the text fits in the
     # current extent. If it does, we either leave the size
     # as is or we try to
@@ -1524,7 +1524,7 @@ class StringWdgt extends Widget
     @_synchroniseTextAndActualText()
     # FIT_BOX_TO_TEXT sizes the BOX to the text at the SET font size (see
     # TextWdgt::_reLayoutSelf), so the font must NOT be scaled — render at
-    # @originallySetFontSize. We must skip fitToExtent here because its
+    # @originallySetFontSize. We must skip _fitToExtent here because its
     # scale-up/scale-down search is broken FOR this mode: the FIT_BOX_TO_TEXT
     # render leaks force every fit-measurement to @originallySetFontSize, so
     # searchLargestFittingFont sees "every candidate size fits" and returns the
@@ -1534,7 +1534,7 @@ class StringWdgt extends Widget
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       @_setFittingFontSize @originallySetFontSize
     else
-      @_setFittingFontSize @fitToExtent()
+      @_setFittingFontSize @_fitToExtent()
 
   # Make "the BOX sizes itself to the TEXT" behaviour for chrome labels (menu
   # items, menu headers, tooltips, plain buttons). The default model does the
@@ -1844,20 +1844,20 @@ class StringWdgt extends Widget
 
   # used when shift-clicking somewhere when there is
   # no selection ongoing
-  startSelectionUpToSlot: (previousCaretSlot, slotToExtendTo) ->
+  _startSelectionUpToSlot: (previousCaretSlot, slotToExtendTo) ->
     @startMark = previousCaretSlot
     @endMark = slotToExtendTo
     @_changed()
 
   # used when shift-clicking somewhere when there is
   # already a selection ongoing
-  extendSelectionUpToSlot: (slotToExtendTo) ->
+  _extendSelectionUpToSlot: (slotToExtendTo) ->
     @endMark = slotToExtendTo
     @_changed()
 
   # Caret-driven selection (shift + arrow / Home / End): anchor a fresh selection at slot if none
   # is ongoing, otherwise move the moving end to slot. Distinct from the shift-CLICK pair above
-  # (startSelectionUpToSlot / extendSelectionUpToSlot, which carry the click's previous caret slot)
+  # (_startSelectionUpToSlot / _extendSelectionUpToSlot, which carry the click's previous caret slot)
   # -- this one grows the selection to wherever the caret just moved. Used to be done inside
   # CaretWdgt.updateSelection by reading @target.startMark / @target.endMark directly. (Phase 7a)
   anchorOrExtendSelectionTo: (slot) ->
@@ -1920,10 +1920,10 @@ class StringWdgt extends Widget
 
       if shiftKey
         if @currentlySelecting()
-          @extendSelectionUpToSlot slotUserClickedOn
+          @_extendSelectionUpToSlot slotUserClickedOn
         else
           if previousCaretSlot?
-            @startSelectionUpToSlot previousCaretSlot, slotUserClickedOn
+            @_startSelectionUpToSlot previousCaretSlot, slotUserClickedOn
       else
         @clearSelection()
 

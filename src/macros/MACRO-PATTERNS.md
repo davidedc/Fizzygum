@@ -95,7 +95,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowUp"` / `@repeatSpecialKey_InputEvents "ArrowDown", n`.
 - **Shift-click extends a selection** (`macroShiftClickExtendsSelection`): a plain click drops a FIXED anchor caret;
   each `@shiftClickOnTextSlot_InputEvents txt, slot` grows the selection from the anchor to that slot
-  (StringWdgt/TextWdgt.activated reads shiftKey → `startSelectionUpToSlot`/`extendSelectionUpToSlot`); assert
+  (StringWdgt/TextWdgt.activated reads shiftKey → `_startSelectionUpToSlot`/`_extendSelectionUpToSlot`); assert
   `[txt.startMark, txt.endMark]` after each.
   Gotchas: TextWdgt softWrap wraps to the WIDGET width (`@width()`) so size it big with
   `setExtent` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
@@ -170,7 +170,7 @@ assertion a recapture after a regression silently stores two different hashes an
   demo menu EXPANDS its font to fill its bounds — the ctor overrides the inherited FLOAT default to SCALEUP
   (`TextWdgt.coffee:52` vs `StringWdgt.coffee:73`; the `"←→ Expand to fill"` / `"←☓→ Don't expand to fill"` menu
   pair is ONE toggle, `togglefittingSpecWhenBoundsTooLarge`, `StringWdgt.coffee:1001-1026`) — so whenever the text
-  fits at its set size, `fitToExtent` returns `searchLargestFittingFont` (`StringWdgt.coffee:286`, a deterministic
+  fits at its set size, `_fitToExtent` returns `searchLargestFittingFont` (`StringWdgt.coffee:286`, a deterministic
   binary search bounded at 200px and, under SWCanvas, at the largest shipped atlas size so the painted glyphs and the
   arithmetic `fontHeight` agree). DELETE a chunk and the font auto-GROWS to re-fill the box; the caret follows because
   `CaretWdgt.updateDimension` (`CaretWdgt.coffee:38-42`) sizes it from `@target.actualFontSizeUsedInRendering()` on
@@ -212,7 +212,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `setExtent` to a narrow width ellipsises; a narrower extent crops more. The screenshot's settle re-crops.
 - **Text shrink-to-fit (SCALEDOWN)** (`macroTextWdgtShrinksToFitLongToken`): the SCALEDOWN counterpart of the CROP
   ellipsisation above. When a wrapping `TextWdgt` holds a single UNBREAKABLE token wider than the box, the WHOLE text's
-  font is scaled DOWN uniformly until the token fits — `StringWdgt.fitToExtent` (`:537`, inherited) takes the SCALEDOWN
+  font is scaled DOWN uniformly until the token fits — `StringWdgt._fitToExtent` (`:537`, inherited) takes the SCALEDOWN
   branch (`:563-567`): keeps the full text and returns `searchLargestFittingFont` (a deterministic binary search) →
   `@fittingFontSize`. An unbreakable token forces it because TextWdgt's token-level wrapping is commented out
   (`TextWdgt.coffee:107-150`), so a space-less token is one over-wide line that only a font shrink can fit. A TextWdgt
@@ -225,7 +225,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **SCALEUP tracks a TYPED growing token — no jumps** (`macroTextWdgtNoJumpsInLayoutOfLongLine`): the LIVE-typing
   complement of shrink-to-fit above, on the OTHER branch: `fittingSpecWhenBoundsTooLarge = SCALEUP` is the TextWdgt
   constructor DEFAULT (`TextWdgt.coffee:52` — the demo "TextWdgt with background" ships it), and
-  `StringWdgt.fitToExtent`'s SCALEUP branch (`:554`) re-runs `searchLargestFittingFont` on EVERY content change. So
+  `StringWdgt._fitToExtent`'s SCALEUP branch (`:554`) re-runs `searchLargestFittingFont` on EVERY content change. So
   EMPTYING the text (click → `Meta+a` → `Backspace`, all queued input) maximises the font — the box shows a GIANT
   caret — and growing an unbreakable token through queued keystrokes (`@syntheticEventsStringKeys_InputEvents "aaaaaa"`)
   renders it giant on ONE line, stepping the whole line DOWN to the next largest fitting font exactly when one more
@@ -718,7 +718,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Window drop = DWELL-TO-ARM** (`macroInternalVsExternalWindowDrop` + the drag-embed dwell family — spec
   `docs/specs/drag-embed-interaction-spec.md` §6/§7): a WINDOW payload (`requiresDeliberateEmbedding → true`) embeds into a
   container ONLY after a **dwell** — held still over an eager/willing candidate for ≥ `dwellToArmMs` of elapsed EVENT-time
-  (`ActivePointerWdgt.updateDragEmbedStateMachine`; the release is itself an evaluation point). `ActivePointerWdgt.drop` branches
+  (`ActivePointerWdgt._updateDragEmbedStateMachine`; the release is itself an evaluation point). `ActivePointerWdgt.drop` branches
   on the armed bit: armed → nests (`@dropTargetFor`); unarmed → lands on the WORLD at the release point; over a VIEW-MODE
   (reluctant) container → also lands on the WORLD at the release point (the container refuses; no offset, no pill — the
   offset-landing + land-and-offer pill were DROPPED 2026-07-06). The old

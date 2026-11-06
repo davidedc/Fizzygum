@@ -130,7 +130,7 @@ exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
   (`Fizzygum-tests/DETERMINISM.md` §3n). That holds while a finger CARRIES something too: what it
   carries a payload over shows no hover look. What a drag shows is the drop's own feedback — the
   target's outline, a dock band, a window's charging ring and armed label
-  (`updateDragEmbedStateMachine`) — and every pointer gets that. So `HighlightableMixin` ends
+  (`_updateDragEmbedStateMachine`) — and every pointer gets that. So `HighlightableMixin` ends
   HIGHLIGHTED under a resting mouse and NORMAL otherwise, on both endings. A list row's look of being its list's SELECTION is no state it keeps, so neither ending
   has a selection to restore: the row reads it from the list's model as it paints
   (`MenuItemWdgt._shownState` → `CommandPanelWdgt.showsAsItsSelection`, the list's `selected`), a
@@ -162,7 +162,7 @@ drag for scrolling (`claimsPlainDragsForScrolling?()`) — a hold is demanded on
 would already mean a scroll. Otherwise the press must HOLD: `_advancePressAndHoldRecognition` runs
 at every drained pointer event of a live press **and** at the per-cycle hover re-sync
 (`WorldWdgt.doOneCycle` → `@hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()`
-→ `dispatchEventsFollowingMouseMove` → the recognizer's own tail) — the same seat the dwell
+→ `_dispatchEventsFollowingMouseMove` → the recognizer's own tail) — the same seat the dwell
 machine uses, so a moving finger and a motionless one are both advanced. The between-events check
 reads `_holdDecisionTime`: at a drained event that IS the event's own time; between events it may
 also consult `WorldWdgt.dateOfCurrentCycleStart`, but that consultation is SUPPRESSED whenever
@@ -183,7 +183,7 @@ channel.** Anything a per-cycle re-entry produces is counted in CYCLES — wall 
 everything a drained event produces is counted in EVENT time; where the two can disagree
 visibly, the cycle-driven half is suppressed while `Automator.animationsPacingControl` is active
 and the Automator is not idle. Beyond the momentum glide (`viewports-and-planes.md`) and the
-hold's between-events check above, `dispatchEventsFollowingMouseMove` takes an `atDrainedEvent`
+hold's between-events check above, `_dispatchEventsFollowingMouseMove` takes an `atDrainedEvent`
 seat argument — `true` from the move pipeline and the teleport, `false` from the per-cycle hover
 re-sync — and under a paced replay it dispatches `pressMoved` only from the drained-event seat.
 The reason is reproducibility of paint-by-drag: every pressed-move consumer is idempotent at a
@@ -231,7 +231,7 @@ its owner:
   press landed on chrome, which arms at the down.
 - **`ViewportWdgt`'s scroll-drag step** — see [`viewports-and-planes.md`](viewports-and-planes.md).
 - **The `pressMoved` channel**, at its ONE dispatch site: the over-list loop in
-  `dispatchEventsFollowingMouseMove`, which dispatches `hoverMoved(pos)` when no button is down and
+  `_dispatchEventsFollowingMouseMove`, which dispatches `hoverMoved(pos)` when no button is down and
   `pressMoved(pos, button)` when one is. While a touch stroke is un-armed, no pressed move is
   dispatched at all — a finger sliding over text must not extend the selection, and one sliding
   over a paint canvas must not draw, while the surface beneath it scrolls instead. Hover moves are
@@ -296,7 +296,7 @@ dispatches `hoverExited` to the whole `mouseOverList` and empties it, then sets
 `@_pointerIsAbsent = true`. That flag is what makes the dissolution STICK: the
 per-cycle hover re-sync would otherwise re-derive the over-list from wherever the hand happens to
 stand a cycle later, re-entering whatever the finger last touched — its tooltip countdown and a
-represented widget's highlight included. While `_pointerIsAbsent` is true, `dispatchEventsFollowingMouseMove` treats the
+represented widget's highlight included. While `_pointerIsAbsent` is true, `_dispatchEventsFollowingMouseMove` treats the
 mouse-over set as empty: nothing is under a pointer that is not there. The next
 `processPointerDown` of ANY kind clears the absence (a down states a position — the pointer is
 back), and so does any hover-capable move (a real mouse/pen move). A `'mouse'`/`'pen'` stroke
@@ -322,7 +322,7 @@ load-bearing twice over:
   bar — chrome the finger then drags or pages like a mouse does.
 
 The arrival is a hover move even when the finger lands exactly where the previous stroke went
-down. `dispatchEventsFollowingMouseMove` sends moves only "if the pointer actually moved", measured
+down. `_dispatchEventsFollowingMouseMove` sends moves only "if the pointer actually moved", measured
 against the stroke's down position (`@mouseDownPosition`) so that a press held still is not
 dragging; a press beginning drops the previous stroke's down position before its position head
 runs, so that comparison can never swallow the arrival. Kept, it would make a finger re-touching
