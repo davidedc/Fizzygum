@@ -344,8 +344,8 @@ class HandleWdgt extends Widget
   # HandleWdgt menu:
   attach: ->
     choices = world.plausibleTargetAndDestinationWidgets @
-    menu = new MenuWdgt @, target: @, title: "target"
     if choices.length > 0
+      menu = new MenuWdgt @, target: @, title: "target"
       # each row names its widget (CommandPanelWdgt.rowLabelsNaming)
       labels = CommandPanelWdgt.rowLabelsNaming choices
       choices.forEach (each, i) =>
@@ -354,4 +354,4 @@ class HandleWdgt extends Widget
       # Not pre-computed: finding eligible widgets is costly, so the list is calculated lazily
       # here, on menu-open; if none are found, show a message instead of hiding the entry.
       menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleIsAMessage: true
-    menu.popUpAtHand() if choices.length
+    menu.popUpAtHand()

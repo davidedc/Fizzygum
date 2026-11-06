@@ -27,17 +27,15 @@ per README rules 2 and 5.
         `colorCommands`): they mirror the commands `FridgeMagnets3DCanvasWdgt` implements, and only six of the 29 are
         exercised by a test. Their guard is `plans/livecodelang-cleanup-and-extensions-plan.md`'s R1 (the
         headless preprocessor gate reading the canvas's methods); then sanction them and drop the baseline to 0.
-  - [ ] **`BUILTINS` still masks 29 names Fizzygum also defines** (`push`, `add`, `get`, `close`, `focus`, `test`, …):
-        deleting the Fizzygum method behind one of them while a call survives is excused by the platform entry
-        (`check-unresolved-sends.js` is receiver-blind). A receiver-aware rule, or a split of each such name, is a gate
-        design of its own.
-  - [ ] **`HandleWdgt.attach` builds a "no widgets to attach to" message it never shows** (`menu.popUpAtHand() if
-        choices.length`, while the comment says it shows a message) — unreachable for a handle on the canvas (the world
-        is always a candidate). Owner's call: show it, or delete the dead branch.
-  - [ ] **`fg recapture-inspector` recaptures the MOUSE references only**: the churn set's finger references go stale
-        on the same change and take `fg recapture --auto --pointer=finger`. Fold a finger pass in?
-  - [ ] **The runner's summary line is parsed in three places** (`recapture.js`, `run-atlas-fuzz.js`,
-        `derive-inspector-churn-set.js`): one shared reader in `scripts/lib/`.
+
+### `archive/hand-lists-residue-plan.md` — the hand-kept-lists arc's residue (CLOSED 2026-11-06; §1–§4 + §1b done, see its ledger)
+- [ ] §4 **The unresolved-sends DEF harvest's catch-all form is a second mask** — `check-unresolved-sends.js` counts any
+      `name:` / `name =` key or local as a definition, so a data key or local of a name (`close:` in a theme table, a
+      local `add = ->`, `entries = []`) keeps every call of it resolved after every real method of that name is gone:
+      `close`, `add`, `get`, `clear`, `entries` (32 Fizzygum-receiver sites at the census). A callable-only harvest
+      would close it but must first learn the 67 method headers whose default value holds a paren (`clear: (color =
+      (…)) ->`), which only the catch-all form catches today. Stated in `lint-and-static-checks.md`'s unresolved-sends
+      paragraph; design needed (soundness first: a false FAIL breaks the build).
 
 ### `archive/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (IN EXECUTION 2026-08-20; phases 1–4 done, see the plan's STATUS box)
 The three-arc program (A in-band inventory instruments · B Chrome-only VM-truth riders · C the

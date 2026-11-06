@@ -1885,7 +1885,9 @@ class MacroToolkit
 
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set
-    # (Sets keep order of insertion)
+    # (Sets keep order of insertion). A pop-up files itself there when it is CONSTRUCTED, so one
+    # built and never popped is found too: the menu assertions hold it to popUpIsShown, and a test
+    # reading the menu directly asserts that on its own.
     freshlyCreated = Array.from(world.freshlyCreatedPopUps).pop()
     return freshlyCreated if freshlyCreated?
     return undefined unless @fingerMode()
@@ -2092,10 +2094,13 @@ class MacroToolkit
   # "waitNoInputsOngoing"` first). Locates the menu by MEANING (not by pointer position) and
   # records PASS/FAIL via recordMacroAssertion, so a mismatch fails the test exactly as a
   # screenshot mismatch would.
+  # The menu must be SHOWN (popUpIsShown): the most recently opened menu is the one most recently BUILT,
+  # and a menu built and never popped up has rows a user never sees.
   assertTopMenuItemCount: (expectedCount) ->
     theMenu = @getMostRecentlyOpenedMenu()
-    found = theMenu?.testNumberOfItems()
-    world.automator.player.recordMacroAssertion (found == expectedCount), "top menu item count", expectedCount, found
+    shown = @popUpIsShown theMenu
+    found = if shown then theMenu.testNumberOfItems() else @_whyNoShownMenu theMenu
+    world.automator.player.recordMacroAssertion (shown and found == expectedCount), "top menu item count", expectedCount, found
 
   # Assert the item LABEL STRINGS of the most-recently-opened menu, in order.
   # Like assertTopMenuItemCount it pushes no input events and does
@@ -2106,9 +2111,18 @@ class MacroToolkit
   # by the macro invocation rewriter (which only allows "Macro" as a trailing suffix).
   assertTopMenuItemStrings: (expectedLabels) ->
     theMenu = @getMostRecentlyOpenedMenu()
-    found = theMenu?.testItems().map (item) -> item.labelString
+    found = if @popUpIsShown theMenu then theMenu.testItems().map (item) -> item.labelString
     passed = (found?) and (found.length == expectedLabels.length) and (expectedLabels.every (label, i) -> found[i] == label)
-    world.automator.player.recordMacroAssertion passed, "top menu item strings", expectedLabels.join(" | "), (if found? then found.join(" | ") else "no menu")
+    world.automator.player.recordMacroAssertion passed, "top menu item strings", expectedLabels.join(" | "), (if found? then found.join(" | ") else @_whyNoShownMenu theMenu)
+
+  # Is this pop-up SHOWN — in the world's tree, or riding the hand — the way the product itself means
+  # it (the world's open-pop-up sweep prunes on the same isOrphan)? A query a test can assert on too.
+  popUpIsShown: (aPopUp) ->
+    aPopUp? and not aPopUp.isOrphan()
+
+  # what a menu assertion reports as "found" when there is no shown menu to read
+  _whyNoShownMenu: (aPopUp) ->
+    if aPopUp? then "a menu built but not shown" else "no menu"
 
   # Assert how many resize/move HandleWdgts are currently attached to a widget
   # (the "Resize/move…" chrome). Pushes no input events and does not yield.

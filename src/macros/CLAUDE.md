@@ -284,7 +284,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   like every widget-aimed press; an `inform` is a MENU, and its "OK" stays a row);
   clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
   `dragWindowResizerTo`); assertions (`assertValuesEqual` — the general expected-vs-found verb every non-pixel
-  claim goes through, `assertTopMenuItemCount`, `assertTopMenuItemStrings`,
+  claim goes through, `assertTopMenuItemCount`, `assertTopMenuItemStrings` — both on a SHOWN menu only,
+  `popUpIsShown menu` being the query they share,
   `assertHandleCountOn` — the resize/move-chrome count on a widget, for claims screenshots cannot see
   (stacked duplicate handles paint near-identically), `assertScreenshotsIdentical` — MANDATORY for every
   within-test byte-equality claim: call it right after the
@@ -345,7 +346,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   settle so the wrapped height is readable.
 - **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`. Capture a popup
   reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents` (a prompt's
-  buttons via `@clickPromptButton_InputEvents prompt, "OK"`).
+  buttons via `@clickPromptButton_InputEvents prompt, "OK"`). And "fresh" means BUILT, not shown: a pop-up joins that set
+  in its constructor, so the menu assertions hold the menu to `popUpIsShown`, and a step reading it directly asserts
+  `@popUpIsShown menu` first (`MACRO-PATTERNS.md`, the same entry).
 - **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** (one row per ancestor that has a menu, each a
   submenu row) — step into the ancestor you mean by the WIDGET, `@moveToRowOfTopMenuStandingForAndClick_InputEvents
   ancestor` (or `openOwnMenuAtFractionOf_InputEvents_Macro widget, fraction`, which right-clicks and steps in when a

@@ -463,7 +463,12 @@ assertion a recapture after a regression silently stores two different hashes an
   (`ActivePointerWdgt.processPointerUp`). Capture a popup reference RIGHT AFTER it opens and drive its later items through
   `@moveToItemOfMenuAndClick_InputEvents menu, "label"` whenever you touch the popup more than once (e.g. click a
   slider/palette INSIDE a prompt, THEN its "OK" — a prompt's OK is a BUTTON, pressed with
-  `@clickPromptButton_InputEvents prompt, "OK"`; the row verbs cannot see it).
+  `@clickPromptButton_InputEvents prompt, "OK"`; the row verbs cannot see it). ⚠ "Fresh" is a fact about CONSTRUCTION,
+  not about opening: `MenuWdgt`'s and `PromptWdgt`'s constructors file themselves in that set, so a pop-up BUILT and never
+  popped is found too. The menu assertions (`assertTopMenuItemCount`, `assertTopMenuItemStrings`) hold the menu to
+  `@popUpIsShown menu` — in the world's tree, the product's own `isOrphan` test — and fail on one that is not; a step that
+  reads the menu DIRECTLY (its `title`, a row's flag) asserts `@popUpIsShown menu` first
+  (`SystemTest_macroHandleAttachShowsNoTargetsMessage`, whose plant, a message built and dropped, passed its title checks).
 - **Finding a row: by its EXACT label, or by the WIDGET it stands for.** A WORDING row ("Duplicate", "→← Shrink to fit",
   "Layout in stack") is named by its exact label, any leading glyph included — `moveToItemOfMenuAndClick_InputEvents` /
   `getTextMenuItemFromMenu` (the row itself: it throws a named error, listing the menu's labels, on no row or several) and

@@ -42,7 +42,15 @@
 //   - The macro test .js files are NOT scanned (their template-literal bodies produce JS-side false
 //     positives; the macro surface is already policed by check-layering rule [D]).
 //   - No receiver typing: a name defined ANYWHERE resolves a call EVERYWHERE. Hierarchy-resolved
-//     `@`-self sends are a v2 item (plan §8.7).
+//     `@`-self sends are a v2 item (plan §8.7). The one receiver the gate reads is a literal
+//     identifier right against the dot, and only to match a KEYED BUILTINS entry (`Math.round`) — by
+//     NAME, so a local that borrows a platform global's name (`console = @parent…`) reads as it.
+//     ⚠ The one bounded exception to "never a false fail": once EVERY Fizzygum definition of a keyed
+//     name is deleted, a platform call of it whose receiver the gate cannot read (`window.Math.round(`,
+//     none today) fails beside the real ones. While any definition exists, every call resolves through it.
+//   - The DEF side's last form counts any `name:` / `name =` key or variable as a definition, so a
+//     data key or local of the name (`close:` in a theme table, a local `add = ->`) keeps a call of
+//     it resolved after every real method of that name is gone.
 //   - Block regexes (`///…///`) are not masked. Measured 2026-07-15: zero call-shaped tokens hide
 //     in one, so masking them would add regex-vs-division guesswork for no gain. The one probe
 //     artifact of this kind (`.times(` inside `/\.times([^\w\d])/` in LCLCodePreprocessor.coffee)
@@ -50,7 +58,10 @@
 //     prototype-extension DEF_FORM (lib/name-definitions.js) is harvested.
 //
 // EXEMPTIONS — two lists:
-//   BUILTINS (in-file, below)              — JS/DOM/canvas platform API. A fact about the platform.
+//   BUILTINS (in-file, below)              — JS/DOM/canvas platform API. A fact about the platform:
+//                                            BARE (`push`) by default, KEYED by receiver
+//                                            (`Math.round`) for a name Fizzygum also defines that
+//                                            only a platform global sends.
 //   unresolved-sends-allowlist.txt (file)  — vendor + genuinely-dynamic names, `name  # reason`.
 //                                            A fact about Fizzygum's dependencies. An entry with no
 //                                            unresolved call left FAILS as stale (STALE_ALLOWLIST_ENTRY).
@@ -159,6 +170,15 @@ function harvestDefs(files) {
 
 // ─── the senders ("calls") harvest ──────────────────────────────────────────────────────────────
 const CALL_RE = /([@.])([A-Za-z_$][\w$]*)\(/g;   // group 1 = the receiver sigil, kept so the report can echo the real call shape
+// The RECEIVER of a `.name(` call, when it is a bare identifier written right against the dot
+// (`Math.round(`, `x = JSON.parse(`): a literal name, never an expression (`@a.round(`, `a.b.round(`,
+// `(x).round(`, `Math .round(` and a string ending in an interpolation have none). A keyed BUILTINS
+// entry is matched against it.
+const RECEIVER_RE = /(?:^|[^\w$@.\])])([A-Za-z_$][\w$]*)$/;
+function literalReceiver(code, dotIndex) {
+  const m = code.slice(0, dotIndex).match(RECEIVER_RE);
+  return m ? m[1] : undefined;
+}
 
 // label a path for the report: src-relative, or harness/<file>
 function label(p) {
@@ -177,7 +197,8 @@ function harvestCalls(files) {
       CALL_RE.lastIndex = 0;
       while ((m = CALL_RE.exec(r.code)) !== null) {
         if (/^[A-Z]/.test(m[2])) continue;   // class-ish reference — the dependency finder's jurisdiction
-        sites.push({ name: m[2], sigil: m[1], at: `${label(p)}:${i + 1}`, text: raw.trim().slice(0, 110) });
+        const recv = m[1] === '.' ? literalReceiver(r.code, m.index) : undefined;
+        sites.push({ name: m[2], sigil: m[1], recv, at: `${label(p)}:${i + 1}`, text: raw.trim().slice(0, 110) });
       }
     });
   }
@@ -186,26 +207,48 @@ function harvestCalls(files) {
 
 // ─── the platform (JS / DOM / canvas builtins) ──────────────────────────────────────────────────
 // A fact about the PLATFORM, not about Fizzygum — hence in-file, not in the allowlist. Each entry is a
-// platform method some `[@.]name(` call in src+harness SENDS: a platform name is added the first time a
-// call sends it. An entry no call sends FAILS as stale (STALE_ALLOWLIST_ENTRY), because it is not
-// harmless: it excuses nothing today, yet once Fizzygum defines and calls a method of that name, deleting
-// the method while a call survives would be excused by the entry — the guaranteed TypeError this gate
-// exists to catch.
-// (A name that is sent AND also defined by Fizzygum — `push`, `get`, `close`, … — carries that risk while
-// it is listed; listing it is still right, because the platform call is real.)
-const BUILTINS = new Set(`
-push pop shift slice concat join filter forEach some every indexOf lastIndexOf includes sort reverse fill keys values entries
+// platform method some `[@.]name(` call in src+harness SENDS, in one of two forms:
+//   BARE   `name` — excuses EVERY call of the name. The default: the gate cannot type an instance (an
+//          Array's `push`, a canvas context's `save`, a Map's `get`).
+//   KEYED  `Recv.name` — for a name Fizzygum ALSO defines that only a platform global sends
+//          (`Math.round` beside `Point::round`). It excuses a call only when the receiver written right
+//          before the dot is that global, so once every Fizzygum `round` is deleted, a surviving
+//          `@bounds.round(` FAILS instead of being excused as platform API. Keying is for unmasking:
+//          while Fizzygum defines the name, every call of it resolves through that definition, so a
+//          receiver the gate cannot read (`window.Math.round(`) can never false-fail.
+// The form is held to the sends both ways: a bare name Fizzygum also defines, which every call sends to
+// a PLATFORM_GLOBALS receiver, fails until it is keyed (BUILTINS_NOT_KEYED); a keyed name Fizzygum no
+// longer defines, with no unresolved call of it left, has nothing to unmask and goes back to bare
+// (BUILTINS_KEYED_NOTHING_TO_UNMASK); a keyed receiver must be a PLATFORM_GLOBALS name
+// (BUILTINS_KEYED_OFF_PLATFORM); and an entry no call sends — bare, or keyed with no `Recv.name(` — fails
+// as stale (STALE_ALLOWLIST_ENTRY). Stale is not harmless: it excuses nothing today, yet once Fizzygum
+// defines and calls a method of that name, deleting the method while a call survives would be excused
+// by the entry — the guaranteed TypeError this gate exists to catch.
+// ⚠ A BARE name Fizzygum also defines (`save`, `get`, `clear`, `fill`, `toString`, …) still masks the
+// deletion of every Fizzygum implementor of it; listing it is still right, because the platform call
+// is real.
+const BUILTINS_TABLE = `
+push pop shift slice concat join filter forEach some every indexOf lastIndexOf includes sort reverse fill keys values
 charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match search padStart repeat substring substr
 toString toFixed valueOf hasOwnProperty toJSON
-abs floor ceil round sqrt pow min max random atan atan2 sin cos asin exp log sign
-now parse stringify create getOwnPropertyNames isArray from
+sqrt pow random atan atan2 sin cos asin exp log sign
+now parse stringify getOwnPropertyNames
 getContext measureText beginPath closePath stroke clip save restore translate scale setTransform drawImage getImageData createPattern
 preventDefault appendChild createElement getElementById getElementsByTagName querySelectorAll focus blur click
 then resolve all call test exec toDataURL
-add has get clear
-open close
+has get clear
+open
 isInteger isFinite isView
 getTime getHours getMinutes getSeconds getMilliseconds
+Math.abs Math.floor Math.ceil Math.round Math.min Math.max Array.isArray Array.from
+`.trim().split(/\s+/);
+const BUILTINS = new Set(BUILTINS_TABLE.filter((e) => !e.includes('.')));          // bare: any receiver
+const BUILTINS_KEYED = new Set(BUILTINS_TABLE.filter((e) => e.includes('.')));    // `Recv.name`: that receiver only
+// The platform's own globals, as a call's literal receiver: what a keyed entry may name, and what makes a
+// bare shared name "only ever sent to the platform". A fact about the platform; an entry no BUILTINS
+// call is sent to fails as stale, and one naming a Fizzygum class fails outright.
+const PLATFORM_GLOBALS = new Set(`
+Math Object Array ArrayBuffer Number String JSON Date Promise performance console document window
 `.trim().split(/\s+/));
 
 // ─── --self-test: prove the pure parts on in-memory fixtures (a lint that can't fail is worthless) ──
@@ -250,6 +293,17 @@ if (process.argv.includes('--self-test')) {
   };
   check('member + self calls harvested', callsOf('@aa()\nx.bb()\n'), ['aa', 'bb']);
   check('Capitalised name skipped',      callsOf('x.Foo()\n'), []);
+  // the receiver a keyed BUILTINS entry is matched against: a bare identifier right before the dot only
+  const recvsOf = (src) => {
+    const f = path.join(require('os').tmpdir(), `__ust_${process.pid}.coffee`);
+    fs.writeFileSync(f, src); const c = harvestCalls([f]).map((s) => s.recv || '-'); fs.unlinkSync(f); return c;
+  };
+  check('literal global receiver read',      recvsOf('x = Math.round(y)\nJSON.parse(s)\nf(Math.max(1, 2))\n'), ['Math', 'JSON', 'Math']);
+  check('a spaced dot is no receiver',       recvsOf('y = Math .floor(z)\n'), ['-']);
+  check('an interpolation is no receiver',   recvsOf('x = "a#{Math}".round(y)\ny = "#{q} #{document}".createElement(z)\n'), ['-', '-']);
+  check('an expression is no receiver',      recvsOf('@bounds.round()\na.Math.round()\n(x).round()\nlist[0].round()\n'), ['-', '-', '-', '-']);
+  check('@-self call has no receiver',       recvsOf('@round()\n'), ['-']);
+  check('a string is no receiver',           recvsOf('"Math".round()\n'), ['-']);
   console.log(ok ? '[unresolved-sends] self-test PASS' : '[unresolved-sends] self-test FAIL');
   process.exit(ok ? 0 : 1);
 }
@@ -280,8 +334,9 @@ if (fs.existsSync(ALLOWLIST)) {
 
 // name -> sites, for every call that resolves to nothing we know about
 const unresolved = new Map();
+const builtinExcuses = (s) => BUILTINS.has(s.name) || (s.recv !== undefined && BUILTINS_KEYED.has(s.recv + '.' + s.name));
 for (const s of sites) {
-  if (defined.has(s.name) || BUILTINS.has(s.name)) continue;
+  if (defined.has(s.name) || builtinExcuses(s)) continue;
   if (!unresolved.has(s.name)) unresolved.set(s.name, []);
   unresolved.get(s.name).push(s);
 }
@@ -302,9 +357,31 @@ if (process.argv.includes('--update-allowlist')) {
 const violations = [...unresolved.keys()].filter((n) => !allow.has(n)).sort();
 // A STALE allowlist entry — a name with no unresolved call left — excuses nothing today and would excuse the
 // next call of that name that nobody implements, so it FAILS (STALE_ALLOWLIST_ENTRY), saying which way it went.
-// A BUILTINS entry is held to the same rule: one no call sends is stale (see BUILTINS).
+// A BUILTINS entry is held to the same rule: one no call sends is stale (see BUILTINS), and so is its FORM.
 const sent = new Set(sites.map((s) => s.name));
-const unsentBuiltins = [...BUILTINS].filter((n) => !sent.has(n));
+const sentKeyed = new Set(sites.filter((s) => s.recv !== undefined).map((s) => s.recv + '.' + s.name));
+const unsentBuiltins = [...BUILTINS].filter((n) => !sent.has(n))
+  .map((n) => `BUILTINS ${n} — no \`[@.]${n}(\` call in src+harness sends it`)
+  .concat([...BUILTINS_KEYED].filter((e) => !sentKeyed.has(e))
+    .map((e) => `BUILTINS ${e} — no \`${e}(\` call in src+harness sends it`));
+const sentToGlobal = new Set(sites.filter((s) => s.recv !== undefined && PLATFORM_GLOBALS.has(s.recv) && builtinExcuses(s)).map((s) => s.recv));
+const staleGlobals = [...PLATFORM_GLOBALS].filter((g) => !sentToGlobal.has(g));
+const classNames = new Set(files.map((p) => path.basename(p, '.coffee')));
+const keyName = (e) => e.slice(e.indexOf('.') + 1), keyReceiver = (e) => e.slice(0, e.indexOf('.'));
+// a bare name Fizzygum also defines, which only platform globals send, masks Fizzygum's implementors of it
+const unkeyed = [...BUILTINS].filter((n) => defined.has(n) && sent.has(n) &&
+  sites.every((s) => s.name !== n || (s.recv !== undefined && PLATFORM_GLOBALS.has(s.recv))));
+// a keyed name Fizzygum does not define unmasks nothing (and a receiver the gate cannot read would
+// false-fail): once no call of it is left unresolved it goes back to bare
+const nothingToUnmask = [...BUILTINS_KEYED].filter((e) => !defined.has(keyName(e)) && !unresolved.has(keyName(e)));
+const formErrors = unkeyed.map((n) => `BUILTINS_NOT_KEYED ${n} — Fizzygum defines ${n}, and every \`.${n}(\` call sends it to a platform global (` +
+    [...new Set(sites.filter((s) => s.name === n).map((s) => s.recv))].join(', ') + `): list it keyed, as Recv.${n}, so it excuses only those`)
+  .concat(nothingToUnmask.map((e) => `BUILTINS_KEYED_NOTHING_TO_UNMASK ${e} — no definition of ${keyName(e)} is in src+harness: list it bare`))
+  .concat([...BUILTINS_KEYED].filter((e) => !PLATFORM_GLOBALS.has(keyReceiver(e)))
+    .map((e) => `BUILTINS_KEYED_OFF_PLATFORM ${e} — ${keyReceiver(e)} is not one of PLATFORM_GLOBALS`))
+  .concat([...PLATFORM_GLOBALS].filter((g) => classNames.has(g))
+    .map((g) => `PLATFORM_GLOBALS_NAMES_FIZZYGUM ${g} — ${g} is a Fizzygum class: its methods are Fizzygum's to define, not the platform's`))
+  .concat(staleGlobals.map((g) => `STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ${g} — no BUILTINS call in src+harness is sent to ${g}`));
 const stale = [...allow.keys()].filter((n) => !unresolved.has(n)).sort().map((n) =>
   `${n} — ${!sent.has(n) ? 'no `[@.]' + n + '(` call is left in src+harness'
     : defined.has(n) ? 'it resolves: a definition of it is in src+harness'
@@ -316,7 +393,11 @@ if (stale.length) {
 }
 if (unsentBuiltins.length) {
   console.error(`\n[unresolved-sends] FAIL — ${unsentBuiltins.length} BUILTINS entr${unsentBuiltins.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js that no call sends (delete each):`);
-  for (const n of unsentBuiltins) console.error(`  STALE_ALLOWLIST_ENTRY BUILTINS ${n} — no \`[@.]${n}(\` call in src+harness sends it, so it would only excuse the deletion of a future same-named Fizzygum method`);
+  for (const s of unsentBuiltins) console.error(`  STALE_ALLOWLIST_ENTRY ${s}, so it would only excuse the deletion of a future same-named Fizzygum method`);
+}
+if (formErrors.length) {
+  console.error(`\n[unresolved-sends] FAIL — ${formErrors.length} BUILTINS entr${formErrors.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js in the wrong form:`);
+  for (const e of formErrors) console.error(`  ${e}`);
 }
 
 if (violations.length) {
@@ -334,7 +415,7 @@ if (violations.length) {
   console.error('the BUILTINS set inside check-unresolved-sends.js instead.)');
   process.exit(1);
 }
-if (stale.length || unsentBuiltins.length) process.exit(1);
+if (stale.length || unsentBuiltins.length || formErrors.length) process.exit(1);
 
-console.log(`[unresolved-sends] OK — ${sites.length} calls checked, 0 unresolved (${defined.size} names implemented, ${allow.size} allowlisted).`);
+console.log(`[unresolved-sends] OK — ${sites.length} calls checked, 0 unresolved (${defined.size} names implemented, ${allow.size} allowlisted; BUILTINS ${BUILTINS.size} bare + ${BUILTINS_KEYED.size} keyed).`);
 process.exit(0);
