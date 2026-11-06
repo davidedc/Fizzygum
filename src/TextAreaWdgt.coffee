@@ -88,8 +88,8 @@ class TextAreaWdgt extends ViewportWdgt
     WorldWdgt.theme.textAreaFill
 
   # always content-sizing, wrap on or off (type-test-elimination ε; see
-  # ViewportWdgt.isContentSizing)
-  isContentSizing: ->
+  # ViewportWdgt._isContentSizing)
+  _isContentSizing: ->
     true
 
   initialiseDefaultFrameContentLayoutSpec: ->

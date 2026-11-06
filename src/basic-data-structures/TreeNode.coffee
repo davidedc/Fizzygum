@@ -326,14 +326,6 @@ class TreeNode
         return true
     return false
 
-  # The direct children of the parent of this node (current node not included).
-  # Currently unused.
-  siblings: ->
-    return []  unless @parent
-    siblings = @parent.children.slice()
-    siblings.remove @
-    return siblings
-
   amITheFirstSibling: ->
     if @parent.children[0] == @
       return true

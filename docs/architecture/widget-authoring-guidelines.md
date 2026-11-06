@@ -822,9 +822,9 @@ entry, settled world on return), and a `_<set>Connector` twin that JOINS the dra
 (`_settleLayoutsAfterOrJoinEnclosingPass`) — the engine's `DataflowEngine._applyWireValue` prefers
 `_<action>Connector` when one exists, so a wired delivery never reaches the settling wrapper
 mid-window. Worked examples: `StringWdgt.setText`/`setFontSize` (the pattern's origin) and
-`SwitchButtonWdgt.setToggleState`. ⚠ The connector is dispatched only by the computed name
-`"_#{action}Connector"`, invisible to the dead-method scan — add it to
-`buildSystem/dead-method-allowlist.txt` with that reason.
+`SwitchButtonWdgt.setToggleState`. The connector is dispatched only by the computed name
+`"_#{action}Connector"`, and the dead-method scan reads that name template
+(`buildSystem/lib/method-references.js`), so a new connector needs no allowlist entry.
 
 **Export a value** if the widget is meaningful as a spreadsheet cell's content: name your principal
 pin with `principalPinLabel: "value"`, and `Widget.exportedValue` reads it through that pin's `get`.

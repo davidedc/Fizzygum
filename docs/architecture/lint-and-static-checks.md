@@ -91,11 +91,11 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
 | shippable-coverage | `buildSystem/check-shippable-coverage.js` | ~:366 | every `src/` subdirectory holding `.coffee` files is CLAIMED BY A PART in `parts.json` — a dir no part claims ships NOTHING, exits 0, and surfaces only as a runtime `<NewClass> is not defined` | in-file `ALLOWLIST_PREFIXES`, now down to `src/boot/` alone (compiled by name from the shell script, never globbed) |
 | **layering** | **`buildSystem/check-layering.js`** | **~:388** | **flow soundness + the naming convention — rules [A]–[T] (§4); a class-side method's tier is read from its bare name (§6b)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
 | **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:407** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged`) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. The gated names are READ, not spelled: the repaint verbs from Widget's own definitions (`lib/repaint-verbs.js`, shared with `check-layering` and the call census), each also in its legacy public spelling so it cannot slip back in, plus the paint executor, whose name is asserted against `WorldWdgt.coffee` (stale ⇒ fail)** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (the structural add (the re-homed widget's old footprint and its new one)/drop/z-order/shadow dispatchers, the world's selection-overlay reconciler (two), the world's atlas-warm orchestration, FileLoading's async-asset repaint, and the own-sub-part marks in FrameWdgt (its rows, after a pin) and FrameBarWdgt (its background)) |
-| dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src (class methods, class-side methods — inventoried under their BARE name — and mixin members alike) but referenced nowhere (src + harness + macro `.js`); a name only ever ASSEMBLED at runtime (`klass[prefix + "Foo"]`) reads dead, a name written whole inside a string is seen | allowlist `dead-method-allowlist.txt`; fails on a NEW dead method, and on an entry no longer dead (`STALE_ALLOWLIST_ENTRY`) |
+| dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src (class methods, class-side methods — inventoried under their BARE name — and mixin members alike) that nothing REACHES, by the one reference rule `lib/method-references.js` (a property access, a whole-name string, a name template, a computed access on a named class — §3c) read from the CODE of src and the tests repo (harness, macro sources, `scripts/` rigs; never prose); a name ASSEMBLED with `+` or dispatched through an arbitrary object (`@target[action]`) reads dead | allowlist `dead-method-allowlist.txt`; fails on a NEW dead method, and on an entry no longer dead (`STALE_ALLOWLIST_ENTRY`) |
 | hand-lists | `buildSystem/check-hand-lists.js` | ~:446 | a STRING-LIST literal naming classes or members (at least two items, and at least half of them, are class or member names) is a DECLARATION (`@serializationTransients`, `requiredParts`, `optionalParts`) or carries `# hand-list-sanctioned: <what fails>` naming a REAL guard — an existing gate/rig file, `SystemTest_<name>` or emitted failure token, resolved mechanically — or it counts as UNSANCTIONED. Multi-line by design (the lists that rot are one name per line). Scans src + buildSystem and, when present, the tests repo's scripts + harness (that half SKIPS without it). ⚠ Blind to object tables, regex alternations, `switch` arms, push sequences and runtime-built names (§5). Modes: `--census` (every list, classified), `--files` (plants: every unsanctioned list fails), `--self-test` | inline per-repo `BASELINE_FIZZYGUM` / `BASELINE_TESTS` of unsanctioned lists (the stinks idiom); a sanction naming no guard, an empty one and a stale one (sanctioning no name list) fail outright |
-| **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:467** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API, BARE (`push`) by default and KEYED by receiver (`Math.round`) for a name Fizzygum also defines that only a platform global sends — the form held to the sends (`BUILTINS_NOT_KEYED`, `BUILTINS_KEYED_NOTHING_TO_UNMASK`, `BUILTINS_KEYED_OFF_PLATFORM`, a stated `PLATFORM_GLOBALS`) — and an entry excusing nothing fails (`STALE_ALLOWLIST_ENTRY`) in either |
+| **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:467** | the INVERSE of dead-method: a CALL `[@.]name(` in src, the harness or a test's macro source that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it (a macro's own definitions resolve only its own calls) | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API, BARE (`push`) by default and KEYED by receiver (`Math.round`) for a name Fizzygum also defines that only a platform global sends — the form held to the sends (`BUILTINS_NOT_KEYED`, `BUILTINS_KEYED_NOTHING_TO_UNMASK`, `BUILTINS_KEYED_OFF_PLATFORM`, a stated `PLATFORM_GLOBALS`) — and an entry excusing nothing fails (`STALE_ALLOWLIST_ENTRY`) in either |
 | stinks | `buildSystem/check-stinks.js` | ~:465 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
-| argument-holes | `buildSystem/check-argument-holes.js` | ~:486 | calls punching a bare `undefined` through to a later argument (R3) — the decisive **hole test** of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md). Shares `census-call-arity.js`'s parser, so gate and census cannot disagree. `src/` only, deliberately: the tests repo's `SystemTest_*.js` metadata is PROSE in string literals, and a doc edit must never break a build | inline `BASELINE = 3` (the conformance arc's measured floor of 2, plus `BoxyAppearance.paintStroke`'s "no shadow" value — the same `undefined`-as-a-value as `RectangularAppearance.paintStroke`'s). ⚠ It is a REGRESSION alarm, not an inventory — the honest tree-wide count is `census-call-arity.js --holes` (§3c) |
+| argument-holes | `buildSystem/check-argument-holes.js` | ~:486 | calls punching a bare `undefined` through to a later argument (R3) — the decisive **hole test** of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md). Shares `census-call-arity.js`'s parser, so gate and census cannot disagree. `src/` only, for now: the tests repo's CODE (read through `lib/tests-repo-code.js`, never its prose) carries sites the gate cannot judge yet — mostly `undefined` passed as a VALUE, which only the conventions doc's callers test tells from a hole — plus the button family's `(target, action, opts)` head (BACKLOG, `../archive/tests-repo-readers-plan.md` Unit D) | inline `BASELINE = 2`, its FLOOR: the two `undefined`-as-a-value sites, `_paintInLocalScope …, undefined, bodyFn` and `_applyTransformSugarNoSettle undefined, s`. ⚠ It is a REGRESSION alarm, not an inventory — the honest tree-wide count is `census-call-arity.js --holes` (§3c) |
 | **menu-actions** | **`buildSystem/check-menu-actions.js`** | **~:509** | **menu-item wiring. A menu action is dispatched through ButtonWdgt's fixed four-slot convention (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), which the call site never names. HARD (sound): a function literal in the action slot (`@target[@action]` coerces it to a string key, so the click throws); a string literal where `opts` goes; and — RULE 1b — a `@`-targeted string action that RESOLVES nowhere. RATCHET at 0: an UNREAD parameter on a menu-dispatched verb must be NAMED as unread (`ignored`/`unused`) — padding a signature to reach the slot you want puts widgets into parameters whose names promise otherwise, and forces every other caller to punch `undefined` through.** ⚠ TWO blind spots, both structural: it cannot see whether a parameter that IS read is read as the right THING; and it cannot see a parameter that is MISSING — a verb needing a subject it never declares reads as clean, because there is nothing unread to flag. (A THIRD is covered by RULE 1b: an action naming a method NOTHING defines. The general case stays unresolvable — the receiver of `addMenuItem "…", someExpression, "verb"` is a runtime value — but `@` names its receiver structurally, so the rule resolves the string against the union of `chainOf(X)` over every X whose chain contains the enclosing class, which is exactly the set `@` could be an instance of, plus the methods a `*TestSupport` class installs onto a core class. That union is what makes it SOUND: `Widget` wires `"setTargetAndActionWithOnesPickedFromMenu"`, which lives in `ControllerMixin`. 136 rows covered; the dead `"pin"` row of 2018 is the shape it catches. The runtime twin still owns the rest: non-`@` targets, and the dispatch itself.) Those blind spots are the class of bug only a rig that CLICKS the item can catch, which is why `fg menusweep` exists beside it — it resolves every row's action against its target BEFORE the liveness skip (so a row sitting behind a destructive one in the same walk is resolution-checked even where it is never dispatched) and carries a `MenuWdgt` and a `PromptWdgt` root, the two classes whose own context menu no other root stands in. It is also where a row's `opensSubmenu` flag (the drawn chevron) meets the act: each dispatched row must open a menu exactly when it is flagged (`SUBMENU_FLAG_MISMATCH`, allowlist `CONDITIONAL_OPENERS`), because no text scan can tell what an action opens — and where its LABEL meets the act too: "…" ends it exactly when the act asks for more from you (`ELLIPSIS_MISMATCH`, allowlist `ELLIPSIS_EXCEPTIONS`; ASCII "..." fails on its own, `ASCII_ELLIPSIS`), and every row seen is in sentence case (`SENTENCE_CASE`, allowlist `SENTENCE_CASE_EXCEPTIONS`). ⓘ RULE 1 has TWO DOORS: besides `addMenuItem`/`prependMenuItem`, `prompt`/`textPrompt` take a `callback` that the prompt's OK delivers to (`PromptWdgt.deliverValue`: `@target[@callback].call @target, value`) — the same proof applies, and those callbacks count as menu-dispatched verbs for the RULE 3 ratchet too. ⚠ A prompt's BUTTONS themselves (`PromptWdgt._addButtonsInto`: `close`, `deliverValue`; the save-shortcut prompt's `destroy`, `close`, `createReferenceAndCloseFromMenu`) are `new SimpleButtonWdgt target, "action"` constructions, which this gate does not read; `fg menusweep` covers the OK at runtime (it presses every prompt's `okButton` and fails on a prompt with none, `PROMPT_OK_MISSING`, or a run under its prompt floor, `PROMPT_OK_CHECK_VACUOUS`), and Close / Cancel / Don't save dispatch the parameterless `Widget.close` / `Widget.destroy`, which only the suite presses | rules 1–2 are HARD; the unread-parameter rule is the inline `RULE3_BASELINE = 0` ratchet |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:527 | a method owning a `_<name>NoSettle` twin — public `<name>` or private `_<name>` — is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
 | trailing-whitespace | `buildSystem/check-trailing-whitespace.js` | ~:546 | no trailing whitespace on a line that has CONTENT (`/\S[ \t]+$/`) — a trailing space after a bare `super` once silently dropped forwarded args | — (whitespace-only lines are deliberately NOT flagged: invisible, harmless, and in the hundreds) |
@@ -144,15 +144,22 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
   `setExtent` is dead weight. The conforming shape for a genuine repaint need is receiver-side: the method A invokes on B
   ends with `@_changed()` (e.g. `StretchableCanvasWdgt.getContextForPainting` marks its own canvas; the paint-tool
   sources no longer reach back). Scanner is line-based (naive comment strip, same trade as the raw-pointer gate); `@_changed()`
-  self-calls are dotless and never match, so only dotted receivers are judged. Harvests every identifier used where a method could be CALLED — across src
-  `.coffee`, the harness `.coffee`, and the macro `.js` (whose `mainMacroSource` strings carry the verbs they call). A
-  name that appears ONLY on its own def header (and comments) is DEAD. Fizzygum's dynamic dispatch is *property*-based
-  (the `Duplicator` engine walks `@[property]`), not name-built, so the false-positive rate is low; genuine exceptions go in
-  `dead-method-allowlist.txt`. `--update-allowlist` re-seeds the baseline. Needs the sibling tests repo for an accurate
-  reference set; SKIPS (not false-fails) if it is absent.
+  self-calls are dotless and never match, so only dotted receivers are judged.
+- **dead-method (`check-dead-methods.js`).** Inventories every method header in src (a class's, a class-side one under
+  its BARE name, a mixin member) and reads every place a method could be REACHED from, as code: src through
+  `lib/coffee-mask.js`, and the tests repo's harness, macro sources and `scripts/` rigs through `lib/tests-repo-code.js`.
+  What reaches a method is the one rule in `lib/method-references.js` (§3c): a property access, a whole-name string, a
+  name template (`"_#{@action}Connector"`) or a computed access on a named class (`FormulaHelpers[name]`); a bare word or
+  a comment reaches nothing. A method nothing reaches is DEAD. Genuine exceptions (a family member kept for symmetry, a
+  name assembled with `+`) go in `dead-method-allowlist.txt`. `--update-allowlist` re-seeds the baseline. Needs the
+  sibling tests repo for an accurate reference set; SKIPS (not false-fails) if it is absent.
 - **unresolved-sends (`check-unresolved-sends.js`).** The exact INVERSE of the dead-method gate (that one: defined but
   never sent; this one: sent but never defined). Pharo's `ReSentNotImplementedRule`, carried over 2026-07-15. It harvests
-  every call-shaped `[@.]name(` across src + the harness and fails on any name that NOTHING in that universe implements.
+  every call-shaped `[@.]name(` across src, the harness and every test's MACRO SOURCES (`lib/tests-repo-code.js`'s
+  `macroSources`: the CoffeeScript template literals alone, never the JS around them) and fails on any name that NOTHING
+  in the universe implements. A macro calls core methods as directly as the harness does, so a rename that misses a
+  macro's `.name(` fails the build rather than the suite; a macro's own definitions (a local helper, an object of
+  handlers) resolve its own calls only, and never widen the shared universe.
   Like dead-method it **SKIPS** (exit 0 + a loud note) when the sibling tests repo is absent — the harness is part of the
   definition universe (src calls into it behind `if Automator?`). It landed green on day one (7046 calls, 0 unresolved,
   ~0.1 s). Counting the harness as defined is right for ITS question and is exactly why it cannot see a shipping caller
@@ -169,8 +176,8 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
   coverage.
   Accepted reach limits (each a miss, never a false-fail): paren-calls only (paren-less `@foo arg` is too noisy to gate
   on — §8.7 of the carryover plan); string-dispatched sends are invisible (menu/button actions — that hole needs the
-  action-string checker); capital-initial names are skipped (the boot dependency finder's jurisdiction); macro `.js` is
-  not scanned (rule [D] polices it); no receiver typing, so a name defined ANYWHERE resolves a call EVERYWHERE.
+  action-string checker); capital-initial names are skipped (the boot dependency finder's jurisdiction); the def harvest is
+  line-anchored, so an inline object's key (`{ m: -> }`) defines nothing — written multi-line it does; no receiver typing, so a name defined ANYWHERE resolves a call EVERYWHERE.
   **The one receiver it reads** is a literal identifier written right against the dot, and only to match a KEYED
   `BUILTINS` entry. A platform name is BARE by default and excuses every call of it; it is KEYED (`Math.round`) when
   Fizzygum also defines the name and the platform has it only as a static of a global, so `Math.round(` is excused
@@ -478,7 +485,7 @@ human asks (`fg critique`, or directly). The clone scanners are on-demand only (
 | `census-hierarchy-duplication.js` | overrides that add nothing: `IDENTICAL-TO-INHERITED`, `SHADOWS-MIXIN`, `JUST-SENDS-SUPER` | Pharo `ReEquivalentSuperclassMethods`/`ReJustSendsSuper`/`ReLocalMethodsSameThanTrait`. The hierarchy-aware complement to jscpd/jsinspect, which know nothing of inheritance and so can never say "REMOVABLE". |
 | `census-property-placement.js` | properties at the wrong level (`PULL-UP`) or wrong scope (`DEMOTE`) | Pharo `ReInstVarInSubclasses`/`ReVariableReferencedOnce`. |
 | `census-widget-conformance.js` | the mechanical facets of `measurements/widget-practices-survey-2026-08-14.md`, so that survey is re-runnable rather than a one-off | Its ADVISORY run (exit 0, `--json`) prints six facets; the two OBJECTIVE ones are what `--gate` ratchets on the build (§3). Facet 5 (the pin setters) reads methods through the shared grouping (§6b), so a mixin's setter counts under the mixin's own name, and only a setter that takes a value counts. ⚠ Facets 3–6 are heuristics with real exceptions and must NEVER gate — and facet 3 in particular is **not a gap count**: since the widget arc's W7 made `colloquialName` DERIVE from the class name, a class declaring none still answers a true name, so the number says how much of the tree the derivation carries, not how much work is left. On the gated pair: green means "nothing got worse"; only a baseline of 0 also means "nothing is left" |
-| `census-call-arity.js` | call sites + top-level argument arity; `--holes` lists calls punching a bare `undefined` through to a later argument (R3) | ⚠⚠ **The real hole count — `positional-hole` sees only the two-adjacent-`undefined` subset and reads 0 while 50 stand.** Paren/quote-aware, joins continuation lines, scans BOTH repos. `--call=<method>` / `--super=<class>` / `new <Class>` modes; excludes `.call`/`.apply`/`.bind`, where `undefined` is a foreign API's *this*-arg. |
+| `census-call-arity.js` | call sites + top-level argument arity; `--holes` lists calls punching a bare `undefined` through to a later argument (R3) | ⚠⚠ **The real hole count — `positional-hole` sees only the two-adjacent-`undefined` subset and reads 0 while 50 stand.** Paren/quote-aware, joins continuation lines, scans BOTH repos' CODE (src through `lib/coffee-mask.js`, the tests repo through `lib/tests-repo-code.js` — never a test's metadata prose, its reference records or the manifests). `--call=<method>` / `--super=<class>` / `new <Class>` modes; excludes `.call`/`.apply`/`.bind`, where `undefined` is a foreign API's *this*-arg. |
 
 **Why the hierarchy-duplication and property-placement censuses can never be promoted to gates** — the reasons are
 specific, not ceremonial:
@@ -559,56 +566,64 @@ narrowed-R2 report. The campaign that owns the drawdown is **`docs/archive/publi
 the census at every tranche start. Methodology and blind spots are in the tool's header. Run from `Fizzygum/`:
 `node ./buildSystem/census-public-private-calls.js [--full|--json out.json|--self-test]`.
 
-⚠ **R4's "referenced outside src" half reads the tests repo's CODE, and only its code**
-(`buildSystem/lib/tests-repo-code.js`):
-- the harness sources;
-- each macro command file's CoffeeScript macro sources (the JS template literals) and the JS around them;
-- `scripts/**/*.js`, whose `page.evaluate` bodies call core methods as directly as a macro does.
+⚠⚠ **What counts as a REFERENCE to a method is ONE stated rule, `buildSystem/lib/method-references.js`, read
+from CODE.** Two gates ask it: `check-dead-methods` (is the method reached at all?) and R4 here (is it reached other
+than by its own `@`-self-calls?). A method is reached in exactly four ways, in CoffeeScript and JS alike:
+1. a property access: `@m`, `x.m`, `x?.m`, `C::m`, and a destructuring read of one (`{m, n: k} = x`,
+   `const { m } = x`, `({m}) ->`, `for {m} in xs`); a class-side def key `@m:` is not one;
+2. a whole-name string: `"m"` — string dispatch, the idiom of menu actions, `PinSpec` setters and `x["m"]`;
+3. a name template: `"_#{@action}Connector"` reaches every method it matches, each interpolation a wildcard (one with
+   no literal part, `"#{x}"`, is a coercion, not a name);
+4. a computed access on a named class: `FormulaHelpers[name]` (or `C?[k]`, `C?.[k]`) reaches every class-side
+   method of that class, `C::[k]` every instance method — its own, its mixins' and its ancestors'; a key that is one
+   whole literal (`C["m"]`) is clause 2's, and a write (`C[k] = …`) reaches nothing.
 
-Strings count, because a macro or a rig may dispatch by name. Comments do not, and neither do the metadata files'
-prose, the reference-image records or the generated manifests. So a sentence that names a method in a test's
-`intent`, or a `#` note in a macro, leaves the self-only census untouched, while a rig that really calls a method
-takes it out. Most of its limits err toward counting a word, which can only HIDE a candidate: the census is
-NAME-keyed, so a JS local named like a method counts; a trailing `// …` comment counts; a macro file whose
-backticks do not pair is read whole. A few can CUT code instead, which would invent a candidate and fail the build
-loudly, naming a method whose caller is plain to see. These are `lib/coffee-mask.js`'s misreadings of CoffeeScript
-(a `#` inside a regex literal, a "…" string spanning lines, a quote nested in `#{…}`) and a JS line inside a
-template literal that starts with `//` or `/*`. A token-by-token comparison against real lexers (2026-11-06) found
-none in the repo.
-⚠ The other gates that read the tests repo (`check-dead-methods` below, `check-unresolved-sends`,
-`check-hand-lists`, `check-relayout-repaints`, the arity and property-placement censuses) still read their own
-way; adopting the shared reader is BACKLOG.
+A BARE WORD reaches nothing — a local (`for toggle in …`), a parameter, an object key, a def's own name — and neither
+does a comment or prose. So a sentence in a test's `intent`, a `#` note in a macro, a debug-log label
+(`"addCommandsSeparations 1: "`) or a local named like a method keeps nothing alive. The code is read through two
+masks: src through `lib/coffee-mask.js`; the sibling tests repo through `lib/tests-repo-code.js`, which reads the
+harness, each macro command file (its JS LEXED by `lib/js-mask.js`, its CoffeeScript template literals through
+coffee-mask) and `scripts/**/*.js` (whose `page.evaluate` bodies call core methods as directly as a macro does), and
+never the metadata prose, the reference-image records or the generated manifests. Clauses 3 and 4 are DERIVED from the
+dispatch site, so the connector lane and the formula helpers need no allowlist entry: a new `FormulaHelpers` static is
+reached the moment it exists, as that class's header promises. Inside a string, R4 counts any reference as `other`
+(macro heredocs and dispatch strings are external surface), and a method computed dispatch reaches is `other` too.
 
-⚠⚠ **`check-dead-methods` still reads every word of the tests repo, prose included, which gives it a blind
-spot it cannot close: a method whose NAME is an ordinary English word is effectively unkillable.** The gate is NAME-keyed — it has to be,
-since a computed-name dispatch can name any method — and it harvests every identifier from every line
-of `src/`, the harness and the test `.js` files, with comments NOT stripped on the `.js` side. So a
-sentence like *"toggle its window-bar edit button OFF then ON"* in a test's `description` counts as a
-reference to `toggle`, and `ToggleButtonWdgt.toggle`/`.select` sat dead and invisible until they were
-found by hand (2026-08-18, connector §P10(d)). There is a second, independent half: the gate keys on
-the NAME alone, so it cannot tell two same-named methods on unrelated classes apart — a LIVE
-`ListWdgt.select` covers a DEAD `ToggleButtonWdgt.select` on its own. ⇒ **the gate is sound in the
-direction it claims** (what it flags really is dead) **and silently incomplete in the other**; do not
-read a green run as "no dead methods". Making it class-aware is not obviously right — the dynamic
-dispatch that forces name-keying would then start producing false positives — so this is recorded as
-a stated blind spot rather than a defect to fix blind — a conclusion now MEASURED rather than
-assumed (the measurement is in `../archive/connector-ubiquity-and-reflection-plan.md`'s BACKLOG
-ledger): only 10% of references to a colliding name carry any class information,
-so class-awareness would flag 543 pairs to find a handful; and excluding prose reveals nothing,
-because the real survivors are LOCAL VARIABLES sharing a method's name (`for toggle in …`) and
-human-readable strings sitting exactly where a string dispatch sits.
-⚠ The authoring corollary, for code you write: **never put a method's own exact name in a string inside
-its own body** (a label, a log tag, an error message's prefix) — it is a reference the gate counts, so that
-method can never be reported dead. The macro toolkit's aim-check labels (`_aimingAt target, "moveToAndClick"`)
-drop the `_InputEvents` suffix for exactly this reason: with the full names, a fraction verb that lost its last
-caller stayed invisible until it was found by hand.
-⭐⭐ **What makes that the right answer rather than a shrug: the methods a static reference scan
-cannot see are precisely the ones the two RUNTIME sweeps above already cover.** Every one of the 21
-methods reachable only by a bare word is string-dispatched — a `PinSpec` setter or an
-`addMenuItem`/`wireTo` action — and the pin sweep proves those setters RESOLVE while the menu sweep
-proves those actions do. "It resolves when dispatched" is strictly stronger than "the name appears
-somewhere in the tree", so the coverage is not merely equivalent, it is better, and it lives in the
-place that can actually establish it.
+Every limit errs toward ALIVE, so it can only HIDE a dead method or a privatization candidate:
+- a whole-word string equal to a method's name counts — a scan cannot tell a dispatch string from a table string (the
+  capstone's wrap list keeps `setMaxDim` reached);
+- a string that reads like code counts (`'MenuWdgt[own]'`), because code lives in strings here (macro sources,
+  tool-code blurbs, `"#{@m()}"`);
+- a coercion template with a short literal part (`"#{n}px"`) reaches every method it matches;
+- two same-named methods on unrelated classes cover each other. Making the rule class-aware was MEASURED and rejected
+  (`../archive/connector-ubiquity-and-reflection-plan.md`'s BACKLOG ledger): only 10% of references to a colliding
+  name carry any class information, so it would flag 543 pairs to find a handful.
+
+Still BLIND, as any name scan is: a name assembled with `+`, and a computed access on an arbitrary object
+(`@target[action]`) — those are each gate's allowlist. A few mask misreadings can CUT code instead, which would invent
+a finding and fail the build loudly with its site in view: coffee-mask's `#` inside a regex literal, a "…" string
+spanning lines, a quote nested in `#{…}`; js-mask's regex literal right after a value token (`if (x) /re/`), read as a
+division, which opens a block comment if it holds `/*`. Compared against the CoffeeScript lexer, js-tokens and acorn
+over the whole tests repo (2026-11-06): none cuts a word of code. ⇒ **both gates are sound in the direction they
+claim** (what they flag really is unreached) **and incomplete in the other**; do not read a green run as "no dead
+methods".
+⚠ The authoring corollary, for code you write: **never write a method's own exact name as a whole string inside its
+own body** (a label, a log tag) — that is a reference the rule counts, so the method can never be reported dead. The
+macro toolkit's aim-check labels (`_aimingAt target, "moveToAndClick"`) drop the `_InputEvents` suffix for exactly
+this reason.
+⭐⭐ **Why the residue is acceptable: the methods a static scan cannot judge are precisely the ones the two RUNTIME
+sweeps above cover.** A method reached only by a dispatch string is a `PinSpec` setter or an `addMenuItem`/`wireTo`
+action, and the pin sweep proves those setters RESOLVE while the menu sweep proves those actions do. "It resolves when
+dispatched" is strictly stronger than "the name appears somewhere in the tree", and it lives in the place that can
+establish it.
+
+⚠ **The other gates that read the tests repo read it for other questions, each measured
+(`../archive/tests-repo-readers-plan.md` §2).**
+- `census-call-arity` reads call SHAPES from the reader's code.
+- `check-unresolved-sends` reads the harness as definitions and calls, and each macro's CoffeeScript sources as calls.
+- `check-hand-lists` and `check-layering` rule [D] read comments ON PURPOSE: their sanction markers live there.
+- `check-relayout-repaints` is a tombstone scan, which must see a retired name even in a comment.
+- `census-property-placement` already masks the harness with coffee-mask.
 
 ---
 

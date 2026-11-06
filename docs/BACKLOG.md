@@ -12,13 +12,31 @@ per README rules 2 and 5.
 ## Open items by owning arc
 
 ### `archive/typed-code-saves-residue-plan.md` — the typed-code-saves arc's three residue items (CLOSED 2026-11-06; Units 1–3 done, see its ledger)
-- [ ] **The other gates that read the tests repo still read its prose and comments.** `check-call-separation`'s
-      census now reads the tests repo's CODE through `buildSystem/lib/tests-repo-code.js` (harness, macro sources
-      and `scripts/`, comments cut, metadata prose and reference records unread). `check-dead-methods` (the
-      "ordinary English word is unkillable" blind spot in `lint-and-static-checks.md`), `check-unresolved-sends`,
-      `check-hand-lists`, `check-relayout-repaints` and the arity and property-placement censuses read it their own
-      way. Adopting the reader may unmask findings of each gate's own (dead methods first), so each is its
-      gate's arc: measure, then triage.
+- [x] **The other gates that read the tests repo still read its prose and comments.** — CLOSED by
+      `archive/tests-repo-readers-plan.md` (moved to its ledger).
+
+### `archive/tests-repo-readers-plan.md` — one definition of a method reference, read from code (CLOSED 2026-11-06; Units 0, A, B, C, E done, see its ledger)
+- [ ] **`check-argument-holes` over the tests repo's code (owner ruling D5: its own fully planned arc).** The
+      gate is src-only because the hole census cannot yet tell an `undefined` VALUE from a hole. It needs two
+      pieces:
+  - [ ] a code-only call parser that applies the conventions doc's CALLERS TEST mechanically. By that test,
+        `@assertValuesEqual "…", undefined, x` and `processKeyDown key, undefined, …` are values.
+  - [ ] the button family's `(target, action, opts)` head moved into opts, as `SimpleRectangularButtonWdgt`
+        already has it. Its tests-only target-less fixtures are holes by both of the doc's rules. About 45 sites
+        plus `super` chains, both repos, pixel-neutral, one commit.
+
+  Measurements and probe: that plan's ledger, "Owner ruling D5".
+- [ ] **The buildSystem gates' `--self-test`s are run by nothing.** `check-dead-methods`,
+      `census-public-private-calls` (which also runs the reader's cases), `check-unresolved-sends`, `check-hand-lists`
+      and `check-part-edges` each prove their rules on fixtures, but neither the build, `fg` nor
+      `npm run selftest` invokes them, so a self-test can rot unnoticed. Found 2026-11-06.
+- [ ] **`aim-census.js` is run by no gate, so its own stale-name checks fire only when someone runs it.** Its
+      tables classify every MacroToolkit verb, and `check-hand-lists` accepts them as sanctioned on the strength of
+      `AIM-CENSUS STALE NAME`. Deleting a verb leaves its row stale until a hand run. (It exits 0 today; a planted
+      stale row was seen to print the token.)
+- [ ] **`census-property-placement`'s exclusion 1 counts every WORD inside any string** (`STRING_WORDS`, 3429)
+      as a possible by-name access. By the method-reference rule (`buildSystem/lib/method-references.js`) only a
+      whole-name string can reach a member. Advisory census; its tests-repo reading is already right.
 
 ### `archive/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; CLOSED 2026-11-06, all four tiers landed)
 - [x] Tier 1's two findings — CLOSED by `archive/typed-code-saves-and-error-tokens-plan.md` (moved to its BACKLOG

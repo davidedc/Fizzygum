@@ -203,7 +203,7 @@ class LCLCodePreprocessor
   ##
   ## @returns {string}
   ##
-  removeTickedDoOnce: (code, error) ->
+  _removeTickedDoOnce: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -215,7 +215,7 @@ class LCLCodePreprocessor
     # there.
     code = code.replace(/^(\s*)✓[ ]*doOnce[ \t]+.*$/gm, "$1noOperation")
 
-    if @detailedDebug then console.log "removeTickedDoOnce\n" + code + " error: " + error
+    if @detailedDebug then console.log "_removeTickedDoOnce\n" + code + " error: " + error
     if code.includes "✓"
       return [undefined,"✓ must be next to a doOnce"]
     return [code, error]
@@ -685,7 +685,7 @@ class LCLCodePreprocessor
     # to become "sin⨁ times"
     rx = RegExp("([^\\w\\d\\r\\n])("+(@allCommandsRegex+"|times")+")(?![\w\d])",'g')
     code = code.replace(rx, "$1⧻$2")
-    if @detailedDebug then console.log "transformTimesSyntax-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-1\n" + code + " error: " + error
 
 
     # "expression" functions such as in "sin a,b" need to become
@@ -695,7 +695,7 @@ class LCLCodePreprocessor
     rx = RegExp("(^|[^\\w\\d\\r\\n])("+expsAndUserFunctionsWithArgs+")([ \\(]+)(?![⧻\\+\\-*/%,⨁])",'gm')
     for i in [0...5]
       code = code.replace(rx, "$1$2$3⨁")
-      if @detailedDebug then console.log "transformTimesSyntax-2\n" + code + " error: " + error
+      if @detailedDebug then console.log "_transformTimesSyntax-2\n" + code + " error: " + error
 
     # remove blocker character to avoid "sin times"
     # to become "sin⨁ times"
@@ -703,12 +703,12 @@ class LCLCodePreprocessor
 
     return @normaliseCode(code, error)
 
-  transformTimesSyntax: (code, error) ->
+  _transformTimesSyntax: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
 
-    if @detailedDebug then console.log "transformTimesSyntax-0\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-0\n" + code + " error: " + error
 
     code = code.replace(/then/g, "then;")
     code = code.replace(/else/g, ";else;")
@@ -722,11 +722,11 @@ class LCLCodePreprocessor
     # simple mathematical expressions
     # e.g. rotate 2,a+1+3*(a*2.32+Math.PI) 2 times box
     code = code.replace(/(([\d\w\.\(\)]+([\t ]*[\+\-*\/⨁%,][\t ]*))+[\d\w\.\(\)]+|[\d\w\.\(\)]+) times[:]?(?![\w\d])/g, "♦ ($1).times ->")
-    if @detailedDebug then console.log "transformTimesSyntax-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3\n" + code + " error: " + error
 
     # strip the out parens if there is one too many
     code = code.replace(/\(\((([\d\w\.\(\)]+([\t ]*[\+\-*\/⨁%,][\t ]*))+[\d\w\.\(\)]+|[\d\w\.\(\)]+)\)\)\.times /g, "($1).times ")
-    if @detailedDebug then console.log "transformTimesSyntax-3.2\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.2\n" + code + " error: " + error
 
     allFunctionsRegex = @allCommandsRegex + "|" + @expressionsRegex
 
@@ -735,15 +735,15 @@ class LCLCodePreprocessor
     # e.g. rotate 2,a+1+3*(a*2.32+Math.PI) 2 times box
     rx = RegExp("("+allFunctionsRegex+")[\\t ]*;[; ]*\\(?(([\\d\\w\\.\\(\\)]+([\\t ]*[\\+\\-*/⨁%,][\\t ]*))+[\\d\\w\\.\\(\\)]+|[\\d\\w\\.\\(\\)]+)\\)\\.times ->",'g')
     code = code.replace(rx, "$1()♦ ($2).times ->")
-    if @detailedDebug then console.log "transformTimesSyntax-3.5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.5\n" + code + " error: " + error
 
     # whatever is remaining should be turned into a normal form with semicolon before it.
     code = code.replace(/\((([\d\w\.\(\)]+([\t ]*[\+\-*\/⨁%,][\t ]*))+[\d\w\.\(\)]+|[\d\w\.\(\)]+)\)[ \.]*times[\\t ]*[:]?[\\t ]*(?![\w\d])/g, ";($1).times ")
-    if @detailedDebug then console.log "transformTimesSyntax-3.55\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.55\n" + code + " error: " + error
 
     # whatever is remaining should be turned into a normal form with semicolon before it.
     code = code.replace(/[ ](([\d\w\.\(\)]+([\t ]*[\+\-*\/⨁%,][\t ]*))+[\d\w\.\(\)]+|[\d\w\.\(\)]+)\.times[\t ]*[:]?[\t ]*(?![\w\d])/g, "; $1.times ")
-    if @detailedDebug then console.log "transformTimesSyntax-3.56\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.56\n" + code + " error: " + error
 
     # transformation above transforms ;(sin ⨁ 5).times  ->  into ;(sin ⨁; 5).times   ->
     # so fixing that
@@ -752,10 +752,10 @@ class LCLCodePreprocessor
 
     # repairs myFunc = -> ; 20.times -> rotate -> box()
     code = code.replace(/->[\t ]*[♦;\t ]*[\t ]*\(/g, "-> (")
-    if @detailedDebug then console.log "transformTimesSyntax-3.57\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.57\n" + code + " error: " + error
 
     code = code.replace(/then[\t ]*[♦;\t ]*[\t ]*\(/g, "then (")
-    if @detailedDebug then console.log "transformTimesSyntax-3.57\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.57\n" + code + " error: " + error
 
     # the transformation above generates stuff like
     #   peg(); ;  (2).times ->
@@ -764,24 +764,24 @@ class LCLCodePreprocessor
     # so fixing these cases
     # but careful not to destroy the indentations
     code = code.replace(/->\s*;/g, "->")
-    if @detailedDebug then console.log "transformTimesSyntax-3.6\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.6\n" + code + " error: " + error
     code = code.replace(/([\w\d;])[\t ]?;[; ]+\(/g, "$1; (")
-    if @detailedDebug then console.log "transformTimesSyntax-3.7\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.7\n" + code + " error: " + error
     code = code.replace(/\)[ ]*;[; ]+\(/g, "); (")
-    if @detailedDebug then console.log "transformTimesSyntax-3.75\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.75\n" + code + " error: " + error
     code = code.replace(/^([\t ]*);[; ]+\(/gm, "$1(")
-    if @detailedDebug then console.log "transformTimesSyntax-3.8\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.8\n" + code + " error: " + error
     code = code.replace(/^([\t ]*)[♦;][;♦ ]*/gm, "$1")
-    if @detailedDebug then console.log "transformTimesSyntax-3.9\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-3.9\n" + code + " error: " + error
     
     # It's unclear whether the cases catered by the two
     # transformation below ever make sense.
     # without the following, "a = (2 times box)" becomes "(a = 2.times -> box())"
     code = code.replace(/(\()\s*([\w\d])([^;\r\n]*) times[:]?([^\w\d])/g, "$1 ($2$3).times -> $4")
-    if @detailedDebug then console.log "transformTimesSyntax-4\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-4\n" + code + " error: " + error
     # without the following, "a = 2 times box" becomes "(a = 2).times -> box()"
     code = code.replace(/(=)\s*([\w\d])([^;\r\n]*) times[:]?([^\w\d])/g, "$1 ($2$3).times -> $4")
-    if @detailedDebug then console.log "transformTimesSyntax-4\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-4\n" + code + " error: " + error
 
     # the [^;\r\n]*? is to make sure that we don't take ; within the times argument
     # example:
@@ -790,7 +790,7 @@ class LCLCodePreprocessor
     #  box; (box ;  2).times ->  peg
     # which is not correct
     code = code.replace(/;[ \t]*([\w\d])([^;\r\n]*?) times[:]?([^\w\d])/g, "♦ ($1$2).times -> $3")
-    if @detailedDebug then console.log "transformTimesSyntax-5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-5\n" + code + " error: " + error
 
     # the transformation above generates stuff like
     #   if true then; (2).times ->
@@ -798,12 +798,12 @@ class LCLCodePreprocessor
     code = code.replace(/if\s*;/g, "if")
     code = code.replace(/then\s*;/g, "then")
     code = code.replace(/else\s*;/g, "else")
-    if @detailedDebug then console.log "transformTimesSyntax-5.5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-5.5\n" + code + " error: " + error
 
 
     # takes care of cases like myFunc = -> 20 times rotate box
     code = code.replace(/(->)\s+([\w\d])(.*?) times[:]?([^\w\d])/g, "$1 ($2$3).times -> $4")
-    if @detailedDebug then console.log "transformTimesSyntax-6\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-6\n" + code + " error: " + error
 
 
     # last (catch all other cases where it captures everything
@@ -812,13 +812,13 @@ class LCLCodePreprocessor
     # the ^; is to avoid this matching:
     #   peg; times rotate box 2* wave (group1: p group2: eg; group3: rot...wave)
     code = code.replace(/([\w\d])(.*?) times[:]?([^\w\d])/g, "($1$2).times -> $3")
-    if @detailedDebug then console.log "transformTimesSyntax-7\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-7\n" + code + " error: " + error
 
     code = code.replace(/;+[\t ]*else/g, " else")
-    if @detailedDebug then console.log "transformTimesSyntax-8\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-8\n" + code + " error: " + error
 
     code = code.replace(/^(\t*) else/gm, "$1else")
-    if @detailedDebug then console.log "transformTimesSyntax-9\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesSyntax-9\n" + code + " error: " + error
 
     return @normaliseCode(code, error)
 
@@ -837,7 +837,7 @@ class LCLCodePreprocessor
   # is transformed by coffeescript in something
   # that doesn't make sense.
 
-  transformTimesWithVariableSyntax: (code, error) ->
+  _transformTimesWithVariableSyntax: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -845,17 +845,17 @@ class LCLCodePreprocessor
 
     code = code.replace(/\.times[\t ]*with[\t ]*(\w+)[\t ]*(:|;|,[\t ]*->)?/g, ".timesWithVariable -> ($1) $2")
 
-    if @detailedDebug then console.log "transformTimesWithVariableSyntax-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesWithVariableSyntax-1\n" + code + " error: " + error
 
     code = code.replace(/\.times[\t ]*->[\t ]*with[\t ]*(\w+)[\t ]*(:|;|,[\t ]*->)?/g, ".timesWithVariable -> ($1) ->")
 
-    if @detailedDebug then console.log "transformTimesWithVariableSyntax-2\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesWithVariableSyntax-2\n" + code + " error: " + error
 
     # now from intermediate form to the final form
 
     code = code.replace(/\.timesWithVariable[\t ]*->[\t ]*/g, ".timesWithVariable ")
 
-    if @detailedDebug then console.log "transformTimesWithVariableSyntax-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_transformTimesWithVariableSyntax-3\n" + code + " error: " + error
 
     return @normaliseCode(code, error)
 
@@ -867,7 +867,7 @@ class LCLCodePreprocessor
   # can work. Basically the function inside a needs to
   # be able to accept further functions to be chained.
 
-  adjustFunctionalReferences: (code, error, userDefinedFunctions, bracketsVariables) ->
+  _adjustFunctionalReferences: (code, error, userDefinedFunctions, bracketsVariables) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -892,23 +892,23 @@ class LCLCodePreprocessor
 
     code = code.replace(/→/g, "->")
 
-    if @detailedDebug then console.log "adjustFunctionalReferences-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_adjustFunctionalReferences-1\n" + code + " error: " + error
 
     return [code, error]
 
 
 
-  fixParamPassingInBracketedFunctions: (code, error, userDefinedFunctions) ->
+  _fixParamPassingInBracketedFunctions: (code, error, userDefinedFunctions) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
     code = code.replace(/\(\),? -> \(if parametersForBracketedFunctions/g, " -> (if parametersForBracketedFunctions")
 
-    if @detailedDebug then console.log "fixParamPassingInBracketedFunctions-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_fixParamPassingInBracketedFunctions-1\n" + code + " error: " + error
 
     return [code, error]
 
-  adjustImplicitCalls: (code, error, userDefinedFunctions, userDefinedFunctionsWithArguments, bracketsVariables) ->
+  _adjustImplicitCalls: (code, error, userDefinedFunctions, userDefinedFunctionsWithArguments, bracketsVariables) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -918,10 +918,10 @@ class LCLCodePreprocessor
     
     # adding () to single tokens on their own at the start of a line
     # ball
-    if @detailedDebug then console.log "adjustImplicitCalls-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_adjustImplicitCalls-1\n" + code + " error: " + error
     rx = RegExp("^([ \\t]*)("+allFunctionsRegex+")[ ]*$",'gm')
     code = code.replace(rx, "$1$2();")
-    if @detailedDebug then console.log "adjustImplicitCalls-2\n" + code + " error: " + error
+    if @detailedDebug then console.log "_adjustImplicitCalls-2\n" + code + " error: " + error
 
 
     # adding () to single tokens at the start of the line
@@ -930,7 +930,7 @@ class LCLCodePreprocessor
     # ball; somethingelse
     rx = RegExp("^([ \\t]*)("+allFunctionsRegex+")[ ]*;",'gm')
     code = code.replace(rx, "$1$2();")
-    if @detailedDebug then console.log "adjustImplicitCalls-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_adjustImplicitCalls-3\n" + code + " error: " + error
 
     # adding () to any functions not at the beginning of a line
     # and followed by a anything that might end the command
@@ -965,17 +965,17 @@ class LCLCodePreprocessor
     #replacing the arrow with one char
     code = code.replace(/->/g, "→")
 
-    if @detailedDebug then console.log "adjustImplicitCalls-4 brackets vars:" + bracketsVariables
+    if @detailedDebug then console.log "_adjustImplicitCalls-4 brackets vars:" + bracketsVariables
     rx = RegExp("([^\\w\\d\\r\\n])("+@allCommandsRegex+bracketsVariables+")[ \\t]*("+delimitersForCommands+")",'g')
     for i in [1..2]
       code = code.replace(rx, "$1$2()$3")
-    if @detailedDebug then console.log "adjustImplicitCalls-4\n" + code + " error: " + error
+    if @detailedDebug then console.log "_adjustImplicitCalls-4\n" + code + " error: " + error
 
     rx = RegExp("([^\\w\\d\\r\\n])("+expressionsAndUserDefinedFunctionsRegex+")([ \\t]*)("+delimitersForExpressionsWithSpaces+")",'g')
     if @detailedDebug then console.log rx
     for i in [1..2]
       code = code.replace(rx, "$1$2()$3$4")
-    if @detailedDebug then console.log "adjustImplicitCalls-5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_adjustImplicitCalls-5\n" + code + " error: " + error
 
     # handles case of tightly-packed keywords such as in
     # a = wave+wave+wave
@@ -983,7 +983,7 @@ class LCLCodePreprocessor
     if @detailedDebug then console.log rx
     for i in [1..2]
       code = code.replace(rx, "$1$2()$3")
-    if @detailedDebug then console.log "adjustImplicitCalls-5.5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_adjustImplicitCalls-5.5\n" + code + " error: " + error
 
 
     #box 0.5,2
@@ -1003,10 +1003,10 @@ class LCLCodePreprocessor
 
     code = code.replace(/→/g, "->")
 
-    if @detailedDebug then console.log "adjustImplicitCalls-7\n" + code + " error: " + error
+    if @detailedDebug then console.log "_adjustImplicitCalls-7\n" + code + " error: " + error
     return [code, error]
 
-  addCommandsSeparations: (code, error, userDefinedFunctions) ->
+  _addCommandsSeparations: (code, error, userDefinedFunctions) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1015,7 +1015,7 @@ class LCLCodePreprocessor
     
     rx = RegExp("("+@allCommandsRegex+")([ \\t]*)("+@allCommandsRegex+")([ ]*)($)?",'gm')
     code = code.replace(rx, "$1();$2$3$4$5")
-    if @detailedDebug then console.log "addCommandsSeparations 1: " + code
+    if @detailedDebug then console.log "_addCommandsSeparations 1: " + code
 
     return [code, error]
 
@@ -1023,7 +1023,7 @@ class LCLCodePreprocessor
   # it easy to change qualities of some
   # primitives without affecting the
   # primitives that come afterwards.
-  findQualifiers: (code, error, bracketsVariables) ->
+  _findQualifiers: (code, error, bracketsVariables) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1062,11 +1062,11 @@ class LCLCodePreprocessor
     code = code.replace(/→/g, "->")
     code = code.replace(/♠/g, ">,")
 
-    if @detailedDebug then console.log "findQualifiers 4: " + code
+    if @detailedDebug then console.log "_findQualifiers 4: " + code
 
     return [code, error]
 
-  fleshOutQualifiers: (code, error, bracketsVariables, bracketsVariablesArray) ->
+  _fleshOutQualifiers: (code, error, bracketsVariables, bracketsVariablesArray) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1103,18 +1103,18 @@ class LCLCodePreprocessor
     while code != previousCodeTransformations
       previousCodeTransformations = code
 
-      if @detailedDebug then console.log "fleshOutQualifiers 0: @primitivesAndMatrixRegex: " + @primitivesAndMatrixRegex + " bracketsVariables: " + bracketsVariables + " primtvsAndQualsRegex: " + primtvsAndQualsRegex
+      if @detailedDebug then console.log "_fleshOutQualifiers 0: @primitivesAndMatrixRegex: " + @primitivesAndMatrixRegex + " bracketsVariables: " + bracketsVariables + " primtvsAndQualsRegex: " + primtvsAndQualsRegex
 
       rx = RegExp("(^|[^\\w\\d\\r\\n])(("+@primitivesAndMatrixRegex+bracketsVariables+")ing❤QUALIFIER)(?![\\w\\d\\(])([^\\r\\n;→]*?)("+primtvsAndQualsRegex+")([^;\\r\\n]*)(.*)",'gm')
       replacement = '$1$3$4→ $5$6;$7'
       code = code.replace(rx,replacement)
-      if @detailedDebug then console.log "fleshOutQualifiers 1: " + code
+      if @detailedDebug then console.log "_fleshOutQualifiers 1: " + code
 
       rx = RegExp("(^|[^\\w\\d\\r\\n])(("+@primitivesAndMatrixRegex+bracketsVariables+")ing❤QUALIFIER)(?![\\w\\d\\(])([^\\r\\n;→♦❤]*?)♦",'g')
       replacement = '$1$3$4 →'
       code = code.replace(rx,replacement)
 
-      if @detailedDebug then console.log "fleshOutQualifiers 2: " + code
+      if @detailedDebug then console.log "_fleshOutQualifiers 2: " + code
 
     # the transformations above creates
     # stuff like:
@@ -1137,21 +1137,21 @@ class LCLCodePreprocessor
     # these two are to satisfy idempotency
     code = code.replace(/->\s*→/g, "->")
     code = code.replace(/→\s*->/g, "->")
-    if @detailedDebug then console.log "fleshOutQualifiers 7: " + code
+    if @detailedDebug then console.log "_fleshOutQualifiers 7: " + code
 
     rx = RegExp("(^|[^\\w\\d\\r\\n])("+@primitivesAndMatrixRegex+bracketsVariables+")(?![\\w\\d\\(])(\\s*\\(?→)",'gm')
     replacement = '$1$2 ->'
     code = code.replace(rx,replacement)
-    if @detailedDebug then console.log "fleshOutQualifiers 9: " + code
+    if @detailedDebug then console.log "_fleshOutQualifiers 9: " + code
     
     # replace all the → that *do* need to be prepended
     # with a comma
     code = code.replace(/([^,])\s+([\(]?)→/g, "$1, $2->")
-    if @detailedDebug then console.log "fleshOutQualifiers 10: " + code
+    if @detailedDebug then console.log "_fleshOutQualifiers 10: " + code
 
     # replace all the remaining arrows
     code = code.replace(/→/g, "->")
-    if @detailedDebug then console.log "fleshOutQualifiers 11: " + code
+    if @detailedDebug then console.log "_fleshOutQualifiers 11: " + code
 
     code = code.replace(/;+[\t ]*else/g, " else")
     code = code.replace(/^(\t*) else/gm, "$1else")
@@ -1195,7 +1195,7 @@ class LCLCodePreprocessor
   # stuff like "myFunc() a" should actually be
   # "myFunc a".
 
-  findUserDefinedFunctions: (code, error) ->
+  _findUserDefinedFunctions: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1206,13 +1206,13 @@ class LCLCodePreprocessor
     rx = RegExp("([a-zA-Z\\d]+)([ \\t]*)=[ \\t]*->",'gm')
     while match = rx.exec code
       userDefinedFunctions.push(match[1])
-    if @detailedDebug then console.log "findUserDefinedFunctions-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_findUserDefinedFunctions-1\n" + code + " error: " + error
 
     # form a = () -> ...
     rx = RegExp("([a-zA-Z\\d]+)([ \\t]*)=[ \\t]*\\([ \\t]*\\)[ \\t]*->",'gm')
     while match = rx.exec code
       userDefinedFunctions.push(match[1])
-    if @detailedDebug then console.log "findUserDefinedFunctions-2\n" + code + " error: " + error
+    if @detailedDebug then console.log "_findUserDefinedFunctions-2\n" + code + " error: " + error
 
     # all other forms. Finds all forms so just check whether
     # we didn't get this function name already
@@ -1222,7 +1222,7 @@ class LCLCodePreprocessor
       if not @wasFunctionNameAlreadyFound functionName, userDefinedFunctions
         userDefinedFunctions.push(functionName)
         userDefinedFunctionsWithArguments.push(functionName)
-    if @detailedDebug then console.log "findUserDefinedFunctions-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_findUserDefinedFunctions-3\n" + code + " error: " + error
 
     userDefinedFunctions = userDefinedFunctions.join "|"
     if userDefinedFunctions != ""
@@ -1260,51 +1260,51 @@ class LCLCodePreprocessor
 
     return [code, error, bracketsVariables, bracketsVariablesArray]
 
-  putBackBracketVarOriginalName: (code, error) ->
+  _putBackBracketVarOriginalName: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
 
     rx = RegExp("BRACKETVAR([a-zA-Z\\d]+)BRACKETVAR",'gm')
     code = code.replace(rx, "$1")
-    if @detailedDebug then console.log "putBackBracketVarOriginalName-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_putBackBracketVarOriginalName-1\n" + code + " error: " + error
 
     return [code, error]
 
   # see the numbertimes file for more info on why this is needed
-  addScopeToTimes: (code, error) ->
+  _addScopeToTimes: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
     # --- this is for idempotency
     rx = RegExp("\.times -> @, ->",'gm')
     code = code.replace(rx, ".times ->")
-    if @detailedDebug then console.log "addScopeToTimes-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_addScopeToTimes-3\n" + code + " error: " + error
 
     rx = RegExp("\.times -> @,",'gm')
     code = code.replace(rx, ".times ->")
-    if @detailedDebug then console.log "addScopeToTimes-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_addScopeToTimes-3\n" + code + " error: " + error
     # ---------------------
 
 
     rx = RegExp("\.times ",'gm')
     code = code.replace(rx, ".times @, ")
-    if @detailedDebug then console.log "addScopeToTimes-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_addScopeToTimes-1\n" + code + " error: " + error
 
 
     # --- this is for idempotency
     rx = RegExp("\.timesWithVariable @, ",'gm')
     code = code.replace(rx, ".timesWithVariable ")
-    if @detailedDebug then console.log "addScopeToTimes-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_addScopeToTimes-3\n" + code + " error: " + error
     # ---------------------
 
     rx = RegExp("\.timesWithVariable ",'gm')
     code = code.replace(rx, ".timesWithVariable @, ")
-    if @detailedDebug then console.log "addScopeToTimes-4\n" + code + " error: " + error
+    if @detailedDebug then console.log "_addScopeToTimes-4\n" + code + " error: " + error
 
     return [code, error]
 
-  evaluateAllExpressions: (code, error, userDefinedFunctions) ->
+  _evaluateAllExpressions: (code, error, userDefinedFunctions) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1316,7 +1316,7 @@ class LCLCodePreprocessor
     
     rx = RegExp("([^;>\\( \\t\\r\\n])([ ])("+@allCommandsRegex+")([^\\w\\d\\r\\n])",'gm')
     code = code.replace(rx, "$1;$2$3$4")
-    if @detailedDebug then console.log "evaluateAllExpressions-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_evaluateAllExpressions-1\n" + code + " error: " + error
 
     # the transformation above can add a semicolon
     # after an else, fixing that
@@ -1324,10 +1324,10 @@ class LCLCodePreprocessor
 
     rx = RegExp("([^\\w\\d\\r\\n])("+allFunctionsRegex+")([ \\t]*);",'g')
     code = code.replace(rx, "$1$2();")
-    if @detailedDebug then console.log "evaluateAllExpressions-2\n" + code + " error: " + error
+    if @detailedDebug then console.log "_evaluateAllExpressions-2\n" + code + " error: " + error
     rx = RegExp("([^\\w\\d\\r\\n])("+allFunctionsRegex+")([ \\t]*)$",'gm')
     code = code.replace(rx, "$1$2();")
-    if @detailedDebug then console.log "evaluateAllExpressions-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_evaluateAllExpressions-3\n" + code + " error: " + error
 
 
     delimitersForCommandsMod = ":|;|\\,|\\?|//|\\#|\\selse|\\sthen"
@@ -1335,7 +1335,7 @@ class LCLCodePreprocessor
     delimitersForExpressions = delimitersForExpressions + userDefinedFunctions
     rx = RegExp("("+delimitersForExpressions+")([ \\t]*);",'g')
     code = code.replace(rx, "$1$2")
-    if @detailedDebug then console.log "evaluateAllExpressions-4\n" + code + " error: " + error
+    if @detailedDebug then console.log "_evaluateAllExpressions-4\n" + code + " error: " + error
 
 
     return @normaliseCode(code, error)
@@ -1387,7 +1387,7 @@ class LCLCodePreprocessor
   # color color stroke/fill color
   # color color color
 
-  rearrangeColorCommands: (code, error) ->
+  _rearrangeColorCommands: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1400,7 +1400,7 @@ class LCLCodePreprocessor
 
     rx = RegExp("(^[\\t ]*|;| )([\\t ]*)("+@colorsRegex+")(?![\\w\\d])",'gm')
     code = code.replace(rx, "$1$2♦$3♦")
-    if @detailedDebug then console.log "rearrangeColorCommands-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_rearrangeColorCommands-1\n" + code + " error: " + error
 
     # --- 1 color error cases
     rx = RegExp("(^[\\t ]*|[^\\w\\d\\r\\n])stroke[\\t ]+♦([^♦]*)♦[\\t ]+stroke([^\\w\\d\\r\\n]|$)",'gm')
@@ -1430,14 +1430,14 @@ class LCLCodePreprocessor
 
     rx = RegExp("(^|;| )([\\t ]*)("+@colorsCommandsRegex+")(?![\\w\\d])",'gm')
     code = code.replace(rx, "$1$2♠$3♠")
-    if @detailedDebug then console.log "rearrangeColorCommands-2\n" + code + " error: " + error
+    if @detailedDebug then console.log "_rearrangeColorCommands-2\n" + code + " error: " + error
 
 
     # stroke green red box
     # fill red red box which is kind of silly
     rx = RegExp("(^[\\t ]*|[^♦\\r\\n][\\t ]+)♠("+@colorsCommandsRegex+")♠[\\t ]+♦([^♦]*)♦[\\t ]+♦([^♦]*)♦[\\t ]+([^♠\\r\\n]*|$)",'gm')
     code = code.replace(rx, "$1♠$2♠ ♦$3♦ fill ♦$4♦ $5")
-    if @detailedDebug then console.log "rearrangeColorCommands-2.5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_rearrangeColorCommands-2.5\n" + code + " error: " + error
 
 
     rx = RegExp("(^[\\t ]*|[^♠\\r\\n][\\t ]+)♦([^♦]*)♦[\\t ]+♠("+@colorsCommandsRegex+")♠[\\t ]+♦([^♦]*)♦[\\t ]+([^♠\\r\\n]|$)",'gm')
@@ -1456,20 +1456,20 @@ class LCLCodePreprocessor
     # color on its own in a line -> fill color
     rx = RegExp("^([\\t ]*)♦([^♦]*)♦([ \\t]*)$",'gm')
     code = code.replace(rx, "$1♠fill♠ ♦$2♦ $3")
-    if @detailedDebug then console.log "rearrangeColorCommands-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_rearrangeColorCommands-3\n" + code + " error: " + error
 
     # 0.5)
     # noFill/noStroke/noColor color noFill/noStroke/noColor -> fill color
     rx = RegExp("(^[\\t ]*|; |([\\w\\d] *))♦([^♦]*)♦[ \\t]+([^♠\\r\\n])",'gm')
     code = code.replace(rx, "$1♠fill♠ ♦$3♦ $4")
-    if @detailedDebug then console.log "rearrangeColorCommands-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_rearrangeColorCommands-3\n" + code + " error: " + error
 
     
     # 1)
     # color1,exp color2 stroke/fill nocolor -> color1,exp stroke/fill color2 nocolor
     rx = RegExp("([\\t ]*)♦([^♦]*)♦[\\t ]+([,][\\t ]*)(([\\d\\w\\.\\(\\),]+([\\t ]*[\\+\\-*\\/⨁%,][\\t ]*))+[\\d\\w\\.\\(\\)]+|[\\d\\w\\.\\(\\)]+)*[\\t ]+♦([^♦]*)♦[\\t ]+♠("+@colorsCommandsRegex+")♠[\\t ]+(?!♦)",'gm')
     code = code.replace(rx, "$1♦$2♦$3$4 ♠$7♠ ♦$6♦")
-    if @detailedDebug then console.log "rearrangeColorCommands-4\n" + code + " error: " + error
+    if @detailedDebug then console.log "_rearrangeColorCommands-4\n" + code + " error: " + error
 
 
 
@@ -1478,13 +1478,13 @@ class LCLCodePreprocessor
     # noFill/noStroke color stroke/fill nocolor -> stroke/fill colour
     rx = RegExp("(^[\\t ]*|[^♠\\r\\n][\\t ]*)♦([^♦]*)♦[\\t ]*♠("+@colorsCommandsRegex+")♠([\\t ]+(?!♦)|$)",'gm')
     code = code.replace(rx, "$1♠$3♠ ♦$2♦ $4")
-    if @detailedDebug then console.log "rearrangeColorCommands-5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_rearrangeColorCommands-5\n" + code + " error: " + error
 
     # 2)
     # noFill/noStroke color stroke/fill1 stroke/fill2 -> stroke/fill1 colour stroke/fill2
     rx = RegExp("(^[\\t ]*|[^♠\\r\\n][\\t ]*)♦([^♦]*)♦[\\t ]*♠("+@colorsCommandsRegex+")♠[\\t ]*♠",'gm')
     code = code.replace(rx, "$1♠$3♠ ♦$2♦ ")
-    if @detailedDebug then console.log "rearrangeColorCommands-6\n" + code + " error: " + error
+    if @detailedDebug then console.log "_rearrangeColorCommands-6\n" + code + " error: " + error
 
     code = code.replace(/[♠♦]/g, "")
 
@@ -1529,7 +1529,7 @@ class LCLCodePreprocessor
   # 3) then an open parens replaces each
   # expression or user function followed by a space:
   #   rotate 3, wave(pulse / 10), -> box 3, 4
-  avoidLastArgumentInvocationOverflowing: (code, error, userDefinedFunctionsWithArguments) ->
+  _avoidLastArgumentInvocationOverflowing: (code, error, userDefinedFunctionsWithArguments) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1574,10 +1574,10 @@ class LCLCodePreprocessor
 
       numOfExpr = match3.length
 
-      if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing--1 number of matches: " + match3.length
-      if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing--1 finding qualifiers in: " + match2
-      if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing--1 finding using regex: " + rx2
-      if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing--1 number of parens to add: " + numOfExpr
+      if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing--1 number of matches: " + match3.length
+      if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing--1 finding qualifiers in: " + match2
+      if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing--1 finding using regex: " + rx2
+      if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing--1 number of parens to add: " + numOfExpr
 
       # add the closing parens
       code = code.replace(rx, "$1$2"+(Array(numOfExpr+1).join(")"))+"$3")
@@ -1588,19 +1588,19 @@ class LCLCodePreprocessor
       #   rotate 3, wave wave 2 box 3, 4
       for i in [0...numOfExpr]
         rx = RegExp("("+qualifyingFunctionsRegex+")([^☆]*)(("+expsAndUserFunctionsWithArgs+") +)([^☆\\r\\n]*)(☆)",'')
-        if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing-0 regex: " + rx
-        if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing-0 on: " + code
+        if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing-0 regex: " + rx
+        if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing-0 on: " + code
         
         code = code.replace(rx, "$1$2$4($5☆")
 
       rx = RegExp("("+qualifyingFunctionsRegex+")([^☆]*)(("+expsAndUserFunctionsWithArgs+") *)([^☆\\r\\n]*)(☆)",'')
-      if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing-0.5 regex: " + rx
-      if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing-0.5 on: " + code
+      if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing-0.5 regex: " + rx
+      if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing-0.5 on: " + code
       # finally, we change the arrow so that
       # we don't come back to this snippet of code again
       code = code.replace(rx, "$1$2$4$5, →")
 
-      if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing-1\n" + code + " error: " + error
+      if @detailedDebug then console.log "_avoidLastArgumentInvocationOverflowing-1\n" + code + " error: " + error
 
     code = code.replace(/☆/g, ", ->")
     code = code.replace(/→/g, "->")
@@ -1615,7 +1615,7 @@ class LCLCodePreprocessor
 
   # see the comment next to ifFunctional definition
   # to see what we are trying to achieve here.
-  substituteIfsInBracketsWithFunctionalVersion: (code, error) ->
+  _substituteIfsInBracketsWithFunctionalVersion: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1625,17 +1625,17 @@ class LCLCodePreprocessor
     code = code.replace(/(\w+\s*=\s*ifFunctional\s*.*)else(.*>\))/g, "$1>, <$2")
     code = code.replace(/›/g, ">")
 
-    if @detailedDebug then console.log "substituteIfsInBracketsWithFunctionalVersion-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_substituteIfsInBracketsWithFunctionalVersion-1\n" + code + " error: " + error
 
     return [code, error]
 
-  # runs the full preprocess, then prefixes every command call with @ so
+  # runs the full pipeline (_preprocess), then prefixes every command call with @ so
   # commands resolve off the runtime scope object rather than as bare
   # globals (e.g. LCLAPIs.box); called by LCLCodeCompiler.compileCode on
   # every compile.
   preprocessAndBindFunctionsToThis: (code, bracketsVariables) ->
 
-    [code, error] = @preprocess code, bracketsVariables
+    [code, error] = @_preprocess code, bracketsVariables
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -1647,49 +1647,49 @@ class LCLCodePreprocessor
     return [code, error]
 
 
-  preprocess: (code, bracketsVariables) ->
+  _preprocess: (code, bracketsVariables) ->
     # we'll keep any errors in here as we transform the code
     # as soon as there is any error, all next stages of
     # transformation do nothing
     error = undefined
 
-    if @detailedDebug then console.log "preprocess-0\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-0\n" + code + " error: " + error
 
     [code, stringsTable, error] = @removeStrings(code, error)
-    if @detailedDebug then console.log "preprocess-1\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-1\n" + code + " error: " + error
 
-    [code, error, userDefinedFunctions, userDefinedFunctionsWithArguments] = @findUserDefinedFunctions(code, error)
-    if @detailedDebug then console.log "preprocess-2\n" + code + " error: " + error
+    [code, error, userDefinedFunctions, userDefinedFunctionsWithArguments] = @_findUserDefinedFunctions(code, error)
+    if @detailedDebug then console.log "_preprocess-2\n" + code + " error: " + error
 
     [code, error, bracketsVariables, bracketsVariablesArray] = @findBracketVariables(code, error)
-    if @detailedDebug then console.log "preprocess-3\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-3\n" + code + " error: " + error
 
     #@qualifyingCommandsRegex = @qualifyingCommands + bracketsVariables
     #@allCommandsRegex = @allCommandsRegex + bracketsVariables
 
     [code, codeWithoutStringsOrComments] = @stripCommentsAndStrings(code, error)
-    if @detailedDebug then console.log "preprocess-4\n" + code + " error: " + error
-    [code, error] = @removeTickedDoOnce(code, error)
-    if @detailedDebug then console.log "preprocess-5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-4\n" + code + " error: " + error
+    [code, error] = @_removeTickedDoOnce(code, error)
+    if @detailedDebug then console.log "_preprocess-5\n" + code + " error: " + error
     [code, error] = @checkBasicSyntax(code, codeWithoutStringsOrComments, error)
-    if @detailedDebug then console.log "preprocess-6\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-6\n" + code + " error: " + error
 
-    [code, error] = @substituteIfsInBracketsWithFunctionalVersion(code, error)
-    if @detailedDebug then console.log "preprocess-6.5\n" + code + " error: " + error
+    [code, error] = @_substituteIfsInBracketsWithFunctionalVersion(code, error)
+    if @detailedDebug then console.log "_preprocess-6.5\n" + code + " error: " + error
 
     [code, error] = @removeDoubleChevrons(code, error)
-    if @detailedDebug then console.log "preprocess-7\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-7\n" + code + " error: " + error
 
-    [code, error] = @rearrangeColorCommands(code, error)
-    if @detailedDebug then console.log "preprocess-8\n" + code + " error: " + error
+    [code, error] = @_rearrangeColorCommands(code, error)
+    if @detailedDebug then console.log "_preprocess-8\n" + code + " error: " + error
 
 
 
     [code, error] = @normaliseTimesNotationFromInput(code, error)
-    if @detailedDebug then console.log "preprocess-10\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-10\n" + code + " error: " + error
 
     [code, error] = @checkBasicErrorsWithTimes(code, error)
-    if @detailedDebug then console.log "preprocess-11\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-11\n" + code + " error: " + error
     
 
 
@@ -1715,45 +1715,45 @@ class LCLCodePreprocessor
     # where exactly it is so that we can go back and mark it with a tick
     # (which prevents a second run to happen, as the tickmarks expand into
     # line comments).
-    if @detailedDebug then console.log "preprocess-12\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-12\n" + code + " error: " + error
     [code, error] = @addTracingInstructionsToDoOnceBlocks(code, error)
 
     a = @identifyBlockStarts code, error
-    [code, error] = @completeImplicitFunctionPasses code, a, error, userDefinedFunctionsWithArguments, bracketsVariables
-    if @detailedDebug then console.log "completeImplicitFunctionPasses:\n" + code + " error: " + error
+    [code, error] = @_completeImplicitFunctionPasses code, a, error, userDefinedFunctionsWithArguments, bracketsVariables
+    if @detailedDebug then console.log "_completeImplicitFunctionPasses:\n" + code + " error: " + error
 
     [code, error] = @bindFunctionsToArguments(code, error, userDefinedFunctionsWithArguments)
-    if @detailedDebug then console.log "preprocess-13\n" + code + " error: " + error
-    [code, error] = @transformTimesSyntax(code, error)
-    if @detailedDebug then console.log "preprocess-14\n" + code + " error: " + error
-    [code, error] = @transformTimesWithVariableSyntax(code, error)
-    if @detailedDebug then console.log "preprocess-15\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-13\n" + code + " error: " + error
+    [code, error] = @_transformTimesSyntax(code, error)
+    if @detailedDebug then console.log "_preprocess-14\n" + code + " error: " + error
+    [code, error] = @_transformTimesWithVariableSyntax(code, error)
+    if @detailedDebug then console.log "_preprocess-15\n" + code + " error: " + error
     [code, error] = @unbindFunctionsToArguments(code, error)
-    if @detailedDebug then console.log "preprocess-16\n" + code + " error: " + error
-    [code, error] = @findQualifiers(code, error,bracketsVariables)
-    if @detailedDebug then console.log "preprocess-17\n" + code + " error: " + error
-    [code, error] = @fleshOutQualifiers(code, error,bracketsVariables, bracketsVariablesArray)
-    if @detailedDebug then console.log "preprocess-18\n" + code + " error: " + error
-    [code, error] = @adjustFunctionalReferences(code, error, userDefinedFunctions, bracketsVariables)
-    if @detailedDebug then console.log "preprocess-19\n" + code + " error: " + error
-    [code, error] = @addCommandsSeparations(code, error, userDefinedFunctions)
-    if @detailedDebug then console.log "preprocess-20\n" + code + " error: " + error
-    [code, error] = @adjustImplicitCalls(code, error, userDefinedFunctions, userDefinedFunctionsWithArguments, bracketsVariables)
-    if @detailedDebug then console.log "preprocess-21\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-16\n" + code + " error: " + error
+    [code, error] = @_findQualifiers(code, error,bracketsVariables)
+    if @detailedDebug then console.log "_preprocess-17\n" + code + " error: " + error
+    [code, error] = @_fleshOutQualifiers(code, error,bracketsVariables, bracketsVariablesArray)
+    if @detailedDebug then console.log "_preprocess-18\n" + code + " error: " + error
+    [code, error] = @_adjustFunctionalReferences(code, error, userDefinedFunctions, bracketsVariables)
+    if @detailedDebug then console.log "_preprocess-19\n" + code + " error: " + error
+    [code, error] = @_addCommandsSeparations(code, error, userDefinedFunctions)
+    if @detailedDebug then console.log "_preprocess-20\n" + code + " error: " + error
+    [code, error] = @_adjustImplicitCalls(code, error, userDefinedFunctions, userDefinedFunctionsWithArguments, bracketsVariables)
+    if @detailedDebug then console.log "_preprocess-21\n" + code + " error: " + error
     [code, error] = @adjustDoubleSlashSyntaxForComments(code, error)
-    if @detailedDebug then console.log "preprocess-22\n" + code + " error: " + error
-    [code, error] = @evaluateAllExpressions(code, error, userDefinedFunctions)
-    if @detailedDebug then console.log "preprocess-23\n" + code + " error: " + error
-    [code, error] = @avoidLastArgumentInvocationOverflowing(code, error, userDefinedFunctionsWithArguments)
-    if @detailedDebug then console.log "preprocess-24\n" + code + " error: " + error
-    [code, error] = @fixParamPassingInBracketedFunctions(code, error, userDefinedFunctions)
-    if @detailedDebug then console.log "preprocess-25\n" + code + " error: " + error
-    [code, error] = @putBackBracketVarOriginalName(code, error)
-    if @detailedDebug then console.log "preprocess-26\n" + code + " error: " + error
-    [code, error] = @addScopeToTimes(code, error)
-    if @detailedDebug then console.log "preprocess-27\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-22\n" + code + " error: " + error
+    [code, error] = @_evaluateAllExpressions(code, error, userDefinedFunctions)
+    if @detailedDebug then console.log "_preprocess-23\n" + code + " error: " + error
+    [code, error] = @_avoidLastArgumentInvocationOverflowing(code, error, userDefinedFunctionsWithArguments)
+    if @detailedDebug then console.log "_preprocess-24\n" + code + " error: " + error
+    [code, error] = @_fixParamPassingInBracketedFunctions(code, error, userDefinedFunctions)
+    if @detailedDebug then console.log "_preprocess-25\n" + code + " error: " + error
+    [code, error] = @_putBackBracketVarOriginalName(code, error)
+    if @detailedDebug then console.log "_preprocess-26\n" + code + " error: " + error
+    [code, error] = @_addScopeToTimes(code, error)
+    if @detailedDebug then console.log "_preprocess-27\n" + code + " error: " + error
     [code, error] = @beautifyCode(code, error)
-    if @detailedDebug then console.log "preprocess-28\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-28\n" + code + " error: " + error
     
     # unfortunately some beautification depends on the () being there
     # so we need to put this function here after the beautification step
@@ -1765,13 +1765,13 @@ class LCLCodePreprocessor
     #  - other beautification
     # it would be better to have beautification as the very last step
     [code, error] = @simplifyFunctionDoingSimpleInvocation(code, error, userDefinedFunctions)
-    if @detailedDebug then console.log "preprocess-29\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-29\n" + code + " error: " + error
 
     [code, error] = @simplifyFunctionsAloneInParens(code, error, userDefinedFunctions, bracketsVariables)
-    if @detailedDebug then console.log "preprocess-29.5\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-29.5\n" + code + " error: " + error
 
     [code, error] = @injectStrings(code, stringsTable, error)
-    if @detailedDebug then console.log "preprocess-29\n" + code + " error: " + error
+    if @detailedDebug then console.log "_preprocess-29\n" + code + " error: " + error
 
 
     return [code, error, userDefinedFunctions]
@@ -1801,7 +1801,7 @@ class LCLCodePreprocessor
 
     return linesWithBlockStart
 
-  completeImplicitFunctionPasses: (code, linesWithBlockStart, error, userDefinedFunctionsWithArguments, bracketsVariables) ->
+  _completeImplicitFunctionPasses: (code, linesWithBlockStart, error, userDefinedFunctionsWithArguments, bracketsVariables) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 

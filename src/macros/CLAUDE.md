@@ -282,8 +282,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   buttons — [Close] [OK], or [Don't save] [Cancel] [OK] — that carry no `labelString`, so the row verbs cannot see them;
   the label is the button's face text, a missing label throws naming the labels the prompt has, and the press is verified
   like every widget-aimed press; an `inform` is a MENU, and its "OK" stays a row);
-  clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
-  `dragWindowResizerTo`); assertions (`assertValuesEqual` — the general expected-vs-found verb every non-pixel
+  clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`;
+  its resize is `resizeWindowBy`/`To` above); assertions (`assertValuesEqual` — the general expected-vs-found verb every non-pixel
   claim goes through, `assertTopMenuItemCount`, `assertTopMenuItemStrings` — both on a SHOWN menu only,
   `popUpIsShown menu` being the query they share,
   `assertHandleCountOn` — the resize/move-chrome count on a widget, for claims screenshots cannot see

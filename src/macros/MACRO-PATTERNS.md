@@ -47,7 +47,7 @@ assertion a recapture after a regression silently stores two different hashes an
   ⚠ A fraction into text picks whichever glyph the FONT puts there — the redesign changes every font size.
 - **Caret is alignment-INVARIANT and placement is alignment-AWARE** (`macroTextWdgtCaretPlacementUnderAlignments`): TWO
   complementary halves (the alignment-aware sibling of caret-placement-by-click above, which is LEFT-only), both turning on the
-  per-line shift `textHorizontalPosition` (`StringWdgt.coffee:607-614`, switched on `@horizontalAlignment` LEFT/CENTER/RIGHT).
+  per-line shift `_textHorizontalPosition` (`StringWdgt`, switched on `@horizontalAlignment` LEFT/CENTER/RIGHT).
   (1) **INVARIANCE:** once the caret is placed on a character, changing the alignment keeps it on the SAME character — it
   re-renders at its slot with the new shift (`TextWdgt.coffee:515`) and the menu-driven alignment change does NOT stop editing
   (clicking a menu item ABOUT the edited text is the carve-out at `ActivePointerWdgt.coffee:344-349`, so `world.caret` keeps its
@@ -675,8 +675,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Window-chrome buttons** (`macroWindowsEmptyClosing` / `…Collapsing…` / `…Resizing`): reach a window's OWN control by
   reference, not by hunting coordinates — `@closeWindow_InputEvents win` (`.closeButton`, a CloseIconButtonWdgt),
   `@collapseOrUncollapseWindow_InputEvents win` (`.collapseUncollapseSwitchButton` — the SAME verb collapses or uncollapses
-  per current state), `@dragWindowResizerTo_InputEvents win, (new Point win.right()+dx, win.bottom()+dy)` (`.resizer`, a
-  bottom-right HandleWdgt, non-float drag → setExtent; use deltas off the live bounds).
+  per current state), `@resizeWindowBy_InputEvents win, (new Point dW, dH)` (drags the `.resizer` grip, a non-float drag
+  → setExtent, so the extent changes by exactly that delta; `@resizeWindowTo_InputEvents win, extent` for an absolute one).
 - **A collapsed bar's grip, and the bar's own width** (`macroCollapsedBarGrip`, `macroCollapsedBarHasTheWindowsWidth`):
   the collapsed-bar follow-on to the chrome-button entry above. A collapsed `FrameWdgt` keeps its `.resizer` while the bar has
   room beside its pieces (`FrameWdgt.offersAResizeHandle`, `shortestBarKeepingMyGrip`: 129 px for close + collapse), so the
@@ -765,7 +765,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `FrameWdgt.add`
   (`:179`) re-parents it as FRAME CONTENT, `_positionAndResizeChildren` (`:384`) COUPLES their bounds (the free-floating
   OUTER window sizes itself to WRAP the content + chrome), relabelled "window with an internal window". Then
-  `@dragWindowResizerTo_InputEvents` resizes the outer and the inner content stretches to fill (the resizer lies in the
+  `@resizeWindowBy_InputEvents` resizes the outer and the inner content stretches to fill (the resizer lies in the
   outer window's grip strip, below the inner window). Shared fixture verbs: `buildExternalAndFreeInternalWindow_Macro()` (`return
   [extWin, intWin]`) + `dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin` (`return extWin`) — see
   "Composing macros" in CLAUDE.md (one test owns the composite screenshot, the other reuses the fixture without re-shooting).
@@ -808,7 +808,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsMouseClick_InputEvents()`). No new verb.
 - **Handle-resizing a wrapping-text window: width from the USER, height from the CONTENT**
   (`macroWindowWithPlainWrappingTextResizingFollowsContentSize`): the HANDLE-driven axis of the entry above. With a wrapping
-  `SimpleTextWdgt` as window content, a `@dragWindowResizerTo_InputEvents` drag only decides the WIDTH: the text re-wraps to
+  `SimpleTextWdgt` as window content, a `@resizeWindowBy_InputEvents` drag only decides the WIDTH: the text re-wraps to
   the new measure and the window's height snaps to the re-wrapped content, IGNORING the release point's y — widen (+140) and the
   window ends SHORTER than where the handle was released; narrow hard (to ~190) and it grows hundreds of pixels PAST the release
   point (off the canvas bottom — keep that clipping, the original's last shot had it; the visible release-vs-bottom gap IS the
@@ -831,7 +831,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `FrameWdgt._positionAndResizeChildren` sizes the content from the recommended WIDTH and SKIPS the free-height branch (`:466-468`, gated
   on `contentsRecursivelyCanSetHeightFreely`). Build `new FrameWdgt()` + `new AnalogClockWdgt` (self-sizes — no extent
   needed), drop the clock in with `@dragWidgetTo_InputEvents clock, win` (centre grab — no sub-widget), then
-  `@dragWindowResizerTo_InputEvents win, …` OUT and IN — the clock stays circular/square both ways. Also the first DYNAMIC content
+  `@resizeWindowBy_InputEvents win, …` OUT and IN — the clock stays circular/square both ways. Also the first DYNAMIC content
   (the clock, frozen during playback like the anchor test) inside a container.
 - **Dropping INTO a NESTED window — and the square constraint through TWO layers**
   (`macroWindowWithAClockInAWindowConstructionTwo`): a window's drop gate only closes once it has REAL content — the ctor
@@ -839,7 +839,7 @@ assertion a recapture after a regression silently stores two different hashes an
   real drop (`:264-268`) — so an internal window ALREADY adopted as an external window's content still ACCEPTS a drop while
   empty: `@dragWidgetTo_InputEvents clock, intWin` (the nested inner's centre is its placeholder) makes the clock the INNER
   window's content (the inner relabels "analog clock", the outer keeps "window with an internal window"), and the aspect
-  constraint then propagates through BOTH layers — `@dragWindowResizerTo_InputEvents extWin, …` re-fits the inner to the
+  constraint then propagates through BOTH layers — `@resizeWindowBy_InputEvents extWin, …` re-fits the inner to the
   outer's content area and the clock stays SQUARE within the inner (the clock-square entry above, one nesting deeper).
   Fixture: the shared window-in-window verbs + a frozen `AnalogClockWdgt`. CONSTRUCTION-ORDER NOTE (REP): this is assembly
   order TWO (nest the EMPTY inner first, then fill it in place); order ONE (fill the free inner first, then nest the loaded
@@ -1116,9 +1116,8 @@ assertion a recapture after a regression silently stores two different hashes an
   default `SimpleTextWdgt` first) + internal windows that adopt COLOURED RECTANGLES — the rectangles carry the width,
   because an adopting window WRAPS to its content (a preset extent is discarded), and they must be WIDER than the stack so the
   cap binds (it never stretches up). STAGE one drop at a time: grabs target widget CENTRES and the desktop is too small to park
-  everything without something covering someone else's centre. Squeeze/widen via `dragWindowResizerTo_InputEvents` with DELTAS
-  off `win.resizer.center()` (the verb releases the handle centre AT the destination — absolute corner targets shift the window
-  by the handle-centre offset): the cells re-cap against the LIVE stack width both ways, and the round trip is byte-identical.
+  everything without something covering someone else's centre. Squeeze/widen via `resizeWindowBy_InputEvents` (an extent
+  change, so no grip geometry is baked into the aim): the cells re-cap against the LIVE stack width both ways, and the round trip is byte-identical.
   The collapse round trip byte-matches the pre-collapse shot (strip glyphs are inked at build, gotcha (2) of the
   nested-collapse entry), and a SECOND round trip anchors it again. Park
   the pointer on one clear spot before every shot. No new verb.
@@ -1482,8 +1481,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A pristine inspector window resizes via its resizer** (`macroResizingPristineInspector`): the `InspectorWdgt` is always
   presented inside a `FrameWdgt`, and the WINDOW ships the bottom-right resizer. Inspect a string
   (`bringUpInspector_InputEvents_Macro s` → an `InspectorWdgt` window), park it near the top-left (the 560×410 window only just
-  fits the 960×440 canvas, so the resizer stays on-canvas), then SHRINK it via `@dragWindowResizerTo_InputEvents win, dest`
-  (compute `dest` off `win.topLeft()` so it stays in bounds and doesn't extend the world's scrollable extent). The drag runs the window resize → `_positionAndResizeChildren` → `InspectorWdgt._reLayout` re-flows its two panes
+  fits the 960×440 canvas, so the resizer stays on-canvas), then SHRINK it via `@resizeWindowBy_InputEvents win, (new Point -dW, -dH)`
+  (a shrink keeps the grip on-canvas and does not extend the world's scrollable extent). The drag runs the window resize → `_positionAndResizeChildren` → `InspectorWdgt._reLayout` re-flows its two panes
   (`@list`/`@detail`) + the hierarchy buttons, toggles and add/rename/remove/save footer — the visible proof. Move the pointer
   CLEAR before the post-resize shot (the drag ends on the window — a hover highlight would otherwise vary). (Re-authored from the
   old naked-inspector version, which dragged the inspector's OWN ctor resizer.) No new verb.
@@ -1494,7 +1493,7 @@ assertion a recapture after a regression silently stores two different hashes an
   gutted inspector re-flows just its REMAINING parts, gaps stay gaps, nothing crashes; (2) the list→detail wiring runs on
   OBJECT REFERENCES — the list's action `"selectionFromList"` fills `@detail.textWdgt` wherever it lives, so a DETACHED list
   still drives the DETACHED detail pane, before AND after the resize. Resize the gutted body with
-  `@dragWindowResizerTo_InputEvents win, dest`. Select rows in the DETACHED list by POSITION (`row.topLeft() + (12,8)` near
+  `@resizeWindowBy_InputEvents win, delta`. Select rows in the DETACHED list by POSITION (`row.topLeft() + (12,8)` near
   the top) — the inspector hides inherited props so a specific name isn't reliably present; click two different rows and
   watch the detached detail show two different values. Move the pointer CLEAR before each shot. (Re-authored from the old
   naked version, whose close/inspect footer buttons and `@work` pane are gone; closing is via the WINDOW, not a detached
@@ -1804,7 +1803,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `panel = win.topWdgtSuchThat (w) -> w.constructor.name is "StretchablePanelWdgt"` then filter
   `childrenNotHandlesNorCarets()` by class name (⚠ NOT `firstChildSuchThat`, which scans DIRECT children only —
   the panel is nested at `win.contents.contents`). A child's OWN corner resizer IS drivable as real input
-  (`@dragWindowResizerTo_InputEvents child, (new Point child.right()+dx, child.bottom()+dy)`); the release re-records
+  (`@resizeWindowBy_InputEvents child, (new Point dW, dH)`); the release re-records
   the child's spec (`HandleWdgt.pressEnded` → the world's post-flush re-record drain), so a later holder resize
   scales the USER's size — the second test pins exactly that. The third test pins the spec's per-ATTACHMENT
   lifecycle with value-asserts (detach nils the active spec; re-add derives a FRESH recorded spec whose four edge
@@ -2478,8 +2477,8 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   one shared object (island-content-preferences plan). Fixture = `clock = new AnalogClockWdgt; win = new FrameWdgt clock;
   win.moveTo …; world.add win; win.setExtent …` (the clock's own knob declares `canSetHeightFreely = false`). Drive the
   rotation via the public sugar (`clock.setRotationDegrees 30` — fixture-altitude; the rotate GESTURE is pinned elsewhere),
-  then assert the law twice over: PIXELS — `@dragWindowResizerTo_InputEvents win, (a point with a much larger Y)` before,
-  during and after the wrap; the window's height IGNORES the drag's Y in all three shots because the height-lock rides the
+  then assert the law twice over: PIXELS — `@resizeWindowBy_InputEvents win, (a delta with a much larger height)` before,
+  during and after the wrap; the window's height IGNORES the drag's height in all three shots because the height-lock rides the
   ONE knob — and IDENTITY — `@assertValuesEqual` on `win.contents.layoutSpec == clock._contentStackSpec` (slot) and
   `win.contents._contentStackSpec == clock._contentStackSpec` (field), each read carrying
   `# macro-private-call-sanctioned: identity ORACLE …` (the layering gate's rule [D] flags private reads in macro source;

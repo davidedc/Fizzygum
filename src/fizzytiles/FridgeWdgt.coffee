@@ -19,7 +19,7 @@ class FridgeWdgt extends PanelWdgt
   _surfaceStroke: ->
     WorldWdgt.theme.fizzytilesFridgeStroke
 
-  topMostMagnet: (setOfWidgets = @children) ->
+  _topMostMagnet: (setOfWidgets = @children) ->
     filtered = setOfWidgets.filter (m) ->
       m.putIntoWords? and !m.putIntoWords
 
@@ -112,14 +112,14 @@ class FridgeWdgt extends PanelWdgt
   # of it and we keep doing that recursively until
   # all the ones on the left are all COMPLETELY below
   # the top widget.
-  topLeftMostMagnet: ->
+  _topLeftMostMagnet: ->
     bag = @children.filter (m) ->
       m.putIntoWords? and !m.putIntoWords
 
     topMostMagnet = undefined
 
     while bag.length > 0
-      topMostMagnet = @topMostMagnet bag
+      topMostMagnet = @_topMostMagnet bag
       if !topMostMagnet? then return undefined
 
       # filter through the ones on the left
@@ -154,7 +154,7 @@ class FridgeWdgt extends PanelWdgt
     tabs = []
     @clearUpTranslitteratedFlags()
 
-    topLeftMostMagnet = @topLeftMostMagnet()
+    topLeftMostMagnet = @_topLeftMostMagnet()
     somethingBelow = topLeftMostMagnet
 
     while somethingBelow
@@ -183,7 +183,7 @@ class FridgeWdgt extends PanelWdgt
         currentTranslitteratedMagnet.putIntoWords = true
         somethingToTheRight = @magnetFollowing currentTranslitteratedMagnet
 
-      somethingBelow = @topLeftMostMagnet()
+      somethingBelow = @_topLeftMostMagnet()
 
     return translitteration.trim()
 

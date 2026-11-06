@@ -463,10 +463,10 @@ class TextWdgt extends StringWdgt
 
     @_prepareTextBufferContext backBufferContext
 
-    textVerticalPosition = @textVerticalPosition contentHeight
+    textVerticalPosition = @_textVerticalPosition contentHeight
 
     # now draw the actual text, line by line through the shared
-    # _drawTextLine. The per-line x comes from the base textHorizontalPosition
+    # _drawTextLine. The per-line x comes from the base _textHorizontalPosition
     # — the same function the caret/selection math (slotCoordinates) uses. Each line stands in
     # its line box, one pitch below the one before, and is drawn at the box's ink offset (the
     # LINE BOX queries in StringWdgt).
@@ -475,7 +475,7 @@ class TextWdgt extends StringWdgt
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText line)
-      x = @textHorizontalPosition width
+      x = @_textHorizontalPosition width
       lineTop = i * pitch
       i++
 
@@ -526,7 +526,7 @@ class TextWdgt extends StringWdgt
   # the top of the line's box (caretTopLeftAt moves it down to the caret box's top; a caret stands
   # just right of it).
   # This is in absolute world coordinates.
-  # Accounts for horizontal alignment via textHorizontalPosition (unlike
+  # Accounts for horizontal alignment via _textHorizontalPosition (unlike
   # StringWdgt.slotCoordinates, which is left-justified only).
   slotCoordinates: (slot) ->
     # PURE geometry (see StringWdgt.slotCoordinates): the overflow hand-off to the pop-out editor that used to
@@ -539,8 +539,8 @@ class TextWdgt extends StringWdgt
     xOffset = Math.ceil @measureText @wrappedLines[slotRow].substring(0,slotColumn)
     yOffset = slotRow * @linePitch @fittingFontSize
 
-    textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
-    textHorizontalPosition = @textHorizontalPosition lineWidth
+    textVerticalPosition = @_textVerticalPosition @heightOfPossiblyCroppedText
+    textHorizontalPosition = @_textHorizontalPosition lineWidth
 
     x = @left() + xOffset + textHorizontalPosition
     y = @top() + yOffset + textVerticalPosition
@@ -557,7 +557,7 @@ class TextWdgt extends StringWdgt
 
 
   pointIsAboveFirstLine: (aPoint) ->
-    textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
+    textVerticalPosition = @_textVerticalPosition @heightOfPossiblyCroppedText
 
     if aPoint.y - @top() < textVerticalPosition
       return 0
@@ -567,7 +567,7 @@ class TextWdgt extends StringWdgt
   # Returns the slot (index) closest to the given point
   # so the caret can be moved accordingly
   # Accounts for horizontal alignment (slotAtRow -> slotAtSingleLineString applies
-  # the textHorizontalPosition offset), not left-justified-only. A point in my padding picks
+  # the _textHorizontalPosition offset), not left-justified-only. A point in my padding picks
   # from the nearest point of my text area (StringWdgt._pointTakenOutOfPadding): the nearest
   # slot of the nearest line.
   slotAt: (aPoint) ->
@@ -576,7 +576,7 @@ class TextWdgt extends StringWdgt
     if (isPointBeforeFirstLine = @pointIsAboveFirstLine aPoint) != false
       return isPointBeforeFirstLine
 
-    textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
+    textVerticalPosition = @_textVerticalPosition @heightOfPossiblyCroppedText
 
     row = 0
 

@@ -3775,7 +3775,7 @@ class Widget extends TreeNode
   # IS the owner, so those stay bare. Used by the appear/disappear structural verbs
   # (destroy/hide/show/toggleVisibility/removeFromTree/collapse/uncollapse/add).
   _fullChangedIncludingShadowOwner: ->
-    firstParentOwningMyShadow = @firstParentOwningMyShadow()
+    firstParentOwningMyShadow = @_firstParentOwningMyShadow()
     if firstParentOwningMyShadow?
       # cross-invalidation-sanctioned: shadow plumbing — the repaint must start from the
       # ancestor OWNING my shadow, or its stale shadow stays on screen
@@ -4475,7 +4475,7 @@ class Widget extends TreeNode
   # the only trick here is that we stop at the first
   # clipping widget, because if a widget is inside a clipping
   # widget, it doesn't contribute to any shadow.
-  firstParentOwningMyShadow: ->
+  _firstParentOwningMyShadow: ->
     if @hasShadow()
       return @
 

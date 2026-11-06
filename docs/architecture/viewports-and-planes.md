@@ -269,7 +269,7 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
   it owns the plane's FRAME either way.
 - `scrolledContentMeasure(widthHint)` — the §4.1 pure measure: `PanelWdgt` measures its
   children at the viewport's hint, a stack at its own width; a folder/toolbar plane is never
-  content-sizing, so the viewport reads applied bounds back (`isContentSizing`).
+  content-sizing, so the viewport reads applied bounds back (`_isContentSizing`).
 - `managesOwnScrollPinning()` — the reset-scroll-on-resize POLICY: a real resize of a
   wrapping viewport zeroes the offset (re-wrapped text re-reads from the top) unless the
   plane declares it keeps its scroll across resizes (the wrapping stack — its scroll

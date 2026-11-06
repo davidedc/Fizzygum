@@ -32,22 +32,20 @@
 // `undefined` is not a hole — it is just an omitted argument spelled out). With no class/--call
 // filter it sweeps every call site in both repos, which is the honest "am I done" question.
 //
-// Scans: Fizzygum/src/**/*.coffee, Fizzygum-tests/tests/**/*.js (a macro source is CoffeeScript
-// inside a JS template literal, so the same tokenizer works), Fizzygum-tests/Automator-and-test-
-// harness-src (the harness is .coffee and lives in the OTHER repo — a grep rooted at Fizzygum/src
-// cannot see it, which is how a P6 miss set the wallpaper to `undefined` after every test), and
-// Fizzygum-tests/scripts.
+// Scans CODE, comments cut: Fizzygum/src/**/*.coffee through lib/coffee-mask.js (srcSources), and the
+// sibling Fizzygum-tests repo's code through lib/tests-repo-code.js (testsRepoSources) — the harness
+// (.coffee in the OTHER repo: a grep rooted at Fizzygum/src cannot see it, which is how a P6 miss set
+// the wallpaper to `undefined` after every test), each test's macro command file (its CoffeeScript macro
+// sources in JS template literals, the same tokenizer working on both) and scripts/. A test's metadata
+// prose, its reference-image records and the generated manifests are not code and are not read, so a
+// sentence about a call is never counted as one.
 
 const fs = require('fs');
 const path = require('path');
+const { codeOfCoffeeLine } = require('./lib/coffee-mask');
+const { testsRepoCode } = require('./lib/tests-repo-code');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const ROOTS = [
-  path.join(ROOT, 'Fizzygum', 'src'),
-  path.join(ROOT, 'Fizzygum-tests', 'tests'),
-  path.join(ROOT, 'Fizzygum-tests', 'Automator-and-test-harness-src'),
-  path.join(ROOT, 'Fizzygum-tests', 'scripts'),
-];
 
 const args = process.argv.slice(2);
 const minArgs = Number((args.find(a => a.startsWith('--min=')) || '--min=0').slice(6));
@@ -59,12 +57,24 @@ const holesOnly = args.includes('--holes');
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (e.name === 'node_modules' || e.name === '.git' || e.name === 'automation-assets') continue;
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee') || e.name.endsWith('.js')) acc.push(p);
+    else if (e.name.endsWith('.coffee')) acc.push(p);
   }
   return acc;
+}
+
+// The code a scan reads, as SOURCES: { file, lines }, each line with its comment characters blanked
+// (columns kept). src through coffee-mask; the tests repo's code through the shared reader.
+function srcSources() {
+  return walk(path.join(ROOT, 'Fizzygum', 'src'), []).sort().map((file) => {
+    let state = null;
+    const lines = fs.readFileSync(file, 'utf8').split('\n').map((l) => { const r = codeOfCoffeeLine(l, state); state = r.state; return r.code; });
+    return { file, lines };
+  });
+}
+function testsRepoSources() {
+  return testsRepoCode(path.join(ROOT, 'Fizzygum-tests')).map(({ file, lines }) => ({ file, lines }));
 }
 
 // Split an argument text into TOP-LEVEL arguments: commas inside (), [], {} or string literals
@@ -144,18 +154,15 @@ function callArgText(lines, li, col) {
 // buildSystem/check-argument-holes.js REQUIRES this module and calls collectHoles() rather than
 // re-implementing the parser — the census-public-private-calls.js precedent (ONE engine, several
 // consumers), and the reason the gate and this view can never disagree about what a hole is.
-function scanRows(roots, cfg) {
+function scanRows(sources, cfg) {
   const superOf = cfg.superOf || '';
   const callOf = cfg.callOf || '';
   const classes = cfg.classes || [];
   const sweepAll = !!cfg.sweepAll;
   const rows = [];
-  for (const p of roots.flatMap(r => walk(r, []))) {
-  const src = fs.readFileSync(p, 'utf8');
-  const lines = src.split('\n');
+  for (const { file: p, lines } of sources) {
   for (let li = 0; li < lines.length; li++) {
     const line = lines[li];
-    if (/^\s*(#|\/\/)/.test(line)) continue;   // whole-line comment
     const patterns = superOf
       ? [new RegExp('\\bsuper\\b', 'g')]
       : sweepAll
@@ -205,16 +212,16 @@ function dedupeBySite(rows) {
 }
 
 // THE one answer to "which calls punch `undefined` through to a later argument", shared by the gate.
-function collectHoles(roots) {
-  const rows = scanRows(roots, { sweepAll: true }).filter(isHole);
+function collectHoles(sources) {
+  const rows = scanRows(sources, { sweepAll: true }).filter(isHole);
   rows.sort((x, y) => y.n - x.n || x.file.localeCompare(y.file) || x.line - y.line);
   return dedupeBySite(rows);
 }
 
-module.exports = { scanRows, isHole, dedupeBySite, collectHoles, ROOT, ROOTS };
+module.exports = { scanRows, isHole, dedupeBySite, collectHoles, srcSources, testsRepoSources, ROOT };
 if (require.main !== module) return;
 
-const rows = scanRows(ROOTS, { superOf, callOf, classes, sweepAll: holesOnly && !callOf && !classes.length });
+const rows = scanRows([...srcSources(), ...testsRepoSources()], { superOf, callOf, classes, sweepAll: holesOnly && !callOf && !classes.length });
 rows.sort((x, y) => y.n - x.n || x.file.localeCompare(y.file) || x.line - y.line);
 let shown = rows.filter(r => r.n >= minArgs);
 if (holesOnly) shown = dedupeBySite(shown.filter(isHole));

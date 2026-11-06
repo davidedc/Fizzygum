@@ -578,7 +578,7 @@ class ViewportWdgt extends Widget
   # subclasses (TextAreaWdgt / VerticalStackViewportWdgt) always
   # are; a plain viewport is when text-wrapping. Class-level query, was two self-instanceof
   # tests at the arrange site (type-test-elimination ε).
-  isContentSizing: ->
+  _isContentSizing: ->
     @isTextLineWrapping
 
   # Where I place a bar of mine at a given cross-axis THICKNESS, `edgeInset` in from my edge: the
@@ -970,7 +970,7 @@ class ViewportWdgt extends Widget
     # above). The else-branch (folder / toolbar) is NOT a content-sizing target and keeps the applied read-back.
     # The MEASURE is the plane's own declaration (scrolledContentMeasure — a stack measures at
     # its own width, a plain plane at the hint; the P5 contract), the width hint is mine.
-    isContentSizing = @isContentSizing()
+    isContentSizing = @_isContentSizing()
     if isContentSizing
       # (schedule-valve V1) same viewport-derived width hint as the re-wrap above — see that comment.
       subBounds = (@contents.scrolledContentMeasure? @width() - totalPadding)?.ceil()

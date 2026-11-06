@@ -1,25 +1,24 @@
 #!/usr/bin/env node
-// check-dead-methods.js — build lint: flag methods DEFINED in src but referenced NOWHERE.
+// check-dead-methods.js — build lint: flag methods DEFINED in src but REACHED nowhere.
 //
 // Mirrors buildSystem/check-layering.js (a heuristic line scanner, exit 0 clean / 1 violation /
 // 2 operational). It finds every method header in src/**/*.coffee — a class's 2-space ones, a
 // mixin's onceAddedClassProperties members and the class-side `@name:` methods alike
 // (lib/coffee-method-header.js; a class-side method is inventoried under its BARE name, which is how
-// it is called: `Class.name` from outside, `@name` between the statics of one class) — then harvests every
-// identifier used anywhere a method could be CALLED — across src (.coffee), the test harness
-// (Fizzygum-tests/Automator-and-test-harness-src/*.coffee) and the macro SystemTests
-// (Fizzygum-tests/tests/**/*.js, whose mainMacroSource strings carry the verbs they call). A
-// method name that appears ONLY on its own def header (and in comments) is DEAD.
+// it is called: `Class.name` from outside, `@name` between the statics of one class) — then reads every
+// place a method could be reached FROM, as code: src (lib/coffee-mask.js) and the sibling Fizzygum-tests
+// repo's harness, macro sources and scripts/ rigs (lib/tests-repo-code.js; its metadata prose, reference
+// records and manifests are not code). What counts as reaching a method is lib/method-references.js, the one
+// definition: a property access (`@m`, `x.m`, `C::m`), a whole-name string (`"m"`, string dispatch), a name
+// template (`"_#{@action}Connector"`, every method it matches) or a computed access on a named class
+// (`FormulaHelpers[name]`, every method on that side). A bare word — a local, a parameter, an object key, a
+// def's own name — reaches nothing, and neither does a comment. A method nothing reaches is DEAD.
 //
-// Fizzygum's dynamic dispatch is PROPERTY-based (DeepCopierMixin walks @[property]); it does not
-// BUILD method names at runtime, and even a string-dispatched name ("foo") is caught as a token —
-// so the false-positive rate is low. The rare genuine exception (intentional public API, a method
-// dispatched by a computed name, a known gap to fix later) goes in dead-method-allowlist.txt.
-// ⚠ BLIND SPOT, the same for class-side and instance methods: a name that only ever exists
-// ASSEMBLED at runtime (`klass[prefix + "Foo"]()`) appears whole nowhere, so the method reads dead
-// although it is called. A name written whole inside a string — `klass["fooBar"]()` — IS seen, because
-// the harvest reads string contents as tokens. The converse is the price of matching by name: any
-// same-spelled token anywhere (a field, a local, another class's method) keeps a method alive.
+// The rare genuine exception (intentional public API kept for a family's symmetry, a method dispatched by a
+// name assembled with `+` or through an arbitrary object, `@target[action]`) goes in dead-method-allowlist.txt
+// with its reason. Every limit of the reference rule errs toward ALIVE (method-references.js's header), so
+// what this flags really is dead; the price of matching by name stands: two same-named methods on unrelated
+// classes cover each other.
 //
 // The lint FAILS on any dead method NOT in the allowlist, and on a STALE allowlist entry
 // (STALE_ALLOWLIST_ENTRY: a name no longer dead, or now auto-exempt by settle-tier symmetry), which
@@ -33,14 +32,13 @@ const fs = require('fs');
 const path = require('path');
 
 const SRC      = path.resolve(__dirname, '../src');
-const TESTS    = path.resolve(__dirname, '../../Fizzygum-tests/tests');
-const HARNESS  = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
 const ALLOWLIST = path.resolve(__dirname, 'dead-method-allowlist.txt');
 
-// methodSpans / methodBoundary group src (class methods + mixin members); HEADER is the 2-space class
-// method header, all the harness's classes use
-const { METHOD_HEADER: HEADER, methodBoundary, methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header');
-const WORD   = /[A-Za-z_]\w*/g;
+// methodSpans / methodBoundary group src (class methods + mixin members)
+const { methodBoundary, methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header');
+const { codeOfCoffeeLine } = require('./lib/coffee-mask');
+const testsRepo = require('./lib/tests-repo-code');
+const methodRefs = require('./lib/method-references');
 
 function walk(dir, ext, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -51,10 +49,7 @@ function walk(dir, ext, acc) {
   }
   return acc;
 }
-// The comment strip shared with the implementor harvest: '#{' opens CoffeeScript string
-// INTERPOLATION, not a comment, so a method referenced ONLY inside "…#{@foo()}…" stays a reference.
-// ('#{' inside a 'single-quoted' string is not interpolation, so this can over-count a reference
-// there — it errs fail-open: fewer dead flags, never a false flag.)
+// The allowlist's own `#` comments are cut with the implementor harvest's strip.
 const { stripComment } = require('./lib/name-definitions');
 
 // ── settle-tier symmetry helpers (pure; unit-tested via --self-test) ────────────────────────────────
@@ -106,24 +101,27 @@ if (process.argv.includes('--self-test')) {
   const invWant = JSON.stringify(['make(class-side)@3', '_helper(class-side)@5', 'doIt@7']);
   console[(inv === invWant) ? 'log' : 'error'](`  ${inv === invWant ? 'ok  ' : 'FAIL'} inventoryOf(class-side corpus) -> ${inv}`);
   if (inv !== invWant) ok = false;
-  // stripComment must treat '#{…}' as CODE (interpolation), not a comment (plan P4.2 regression).
-  const stripCases = [
-    ['x = "#{@onlyCalledInInterpolation()}" # real comment', 'x = "#{@onlyCalledInInterpolation()}" '],
-    ['s = "#{@a()} then #{@b()}"',                           's = "#{@a()} then #{@b()}"'],
-    ['# a pure comment line',                                ''],
-    ['y = 1 # note',                                         'y = 1 '],
-    ['plain code, no hash',                                  'plain code, no hash'],
+  // A src line is read as code (coffee-mask) and then by the reference rule: a method reached ONLY inside a
+  // string interpolation stays reached (plan P4.2 regression), and a comment reaches nothing.
+  const lineCases = [
+    ['x = "#{@onlyCalledInInterpolation()}" # real comment @notThis()', ['onlyCalledInInterpolation'], ['notThis']],
+    ["s = '# not a comment'; @afterHashInString()", ['afterHashInString'], []],
   ];
-  for (const [inp, want] of stripCases) {
-    const got = stripComment(inp);
-    console[(got === want) ? 'log' : 'error'](`  ${got === want ? 'ok  ' : 'FAIL'} stripComment(${JSON.stringify(inp)}) -> ${JSON.stringify(got)}`);
-    if (got !== want) ok = false;
+  for (const [inp, must, mustNot] of lineCases) {
+    const names = methodRefs.methodReferences(codeOfCoffeeLine(inp, null).code).names;
+    const good = must.every((n) => names.includes(n)) && mustNot.every((n) => !names.includes(n));
+    console[good ? 'log' : 'error'](`  ${good ? 'ok  ' : 'FAIL'} src line ${JSON.stringify(inp)} -> ${JSON.stringify(names)}`);
+    if (!good) ok = false;
   }
+  // the rule's cases and the reader's cases (both libs own them)
+  const log = (good, what) => console[good ? 'log' : 'error'](`  ${good ? 'ok  ' : 'FAIL'} ${what}`);
+  if (!methodRefs.selfTest(log)) ok = false;
+  if (!testsRepo.selfTest(log)) ok = false;
   console.log(ok ? '[dead-methods] self-test PASS' : '[dead-methods] self-test FAIL');
   process.exit(ok ? 0 : 1);
 }
 
-if (!fs.existsSync(TESTS) || !fs.existsSync(HARNESS)) {
+if (!fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'tests')) || !fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'Automator-and-test-harness-src'))) {
   console.log('[dead-methods] SKIP — sibling Fizzygum-tests not present (needs it for an accurate reference set).');
   process.exit(0);
 }
@@ -134,12 +132,22 @@ if (!fs.existsSync(TESTS) || !fs.existsSync(HARNESS)) {
 // A class-side method is inventoried under its BARE name (inventoryOf), and its own body is attributed to
 // it in the harvest below, so one static calling another (`@other` inside `@name`) is that other's reference.
 const defs = new Map();
+const methods = [];   // { name, cls, classSide }: what computed dispatch is resolved against (one class per file)
+const parentOf = new Map(), mixinsOf = new Map();   // the class chain a computed access resolves through
 const unseen = [];
 for (const p of walk(SRC, '.coffee', [])) {
   const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const cls = path.basename(p, '.coffee');
+  for (const l of lines) {
+    const c = /^class\s+([A-Za-z_]\w*)(?:\s+extends\s+([A-Za-z_]\w*))?/.exec(l);
+    if (c && c[1] === cls && c[2]) parentOf.set(cls, c[2]);
+    const a = /^\s+@augmentWith\s+([A-Za-z_]\w*)/.exec(l);
+    if (a) { if (!mixinsOf.has(cls)) mixinsOf.set(cls, []); mixinsOf.get(cls).push(a[1]); }
+  }
   for (const def of inventoryOf(lines)) {
     if (!defs.has(def.name)) defs.set(def.name, []);
     defs.get(def.name).push(path.relative(SRC, p) + ':' + (def.line + 1) + (def.classSide ? ' (class-side)' : ''));
+    methods.push({ name: def.name, cls: path.basename(p, '.coffee'), classSide: def.classSide });
   }
   for (const u of unseenMethodHeaders(lines)) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
 }
@@ -153,61 +161,57 @@ if (unseen.length) {
   process.exit(1);
 }
 
-// 2. every identifier USED (not on a def header, not in a comment)
+// 2. every method REACHED (lib/method-references.js), read from code
 const referenced = new Set();
-const referrers = new Map();   // token -> Set of owners that reference it (a src method name / '@toplevel' / '@external')
+const referrers = new Map();   // token -> Set of owners that reference it (a src method name / '@toplevel' / '@external' / '@computed')
+const templates = [], computedClasses = [];
 function addRef(token, owner) {
   referenced.add(token);
   let s = referrers.get(token);
   if (!s) referrers.set(token, (s = new Set()));
   s.add(owner);
 }
+function harvestLine(code, owner) {
+  const r = methodRefs.methodReferences(code);
+  for (const n of r.names) addRef(n, owner);
+  templates.push(...r.templates);
+  computedClasses.push(...r.classes);
+}
 // src: attribute each reference to its ENCLOSING method, so we can later tell whether a settle-twin is used by
 // something OTHER than the dead method itself. A method header (a class's 2-space one, or a mixin member's)
-// opens a method; its inline body (after `->`) and the 4+-space-indented lines below belong to it; class-level
-// lines (indent < 4, not a header) are '@toplevel'. A header line contributes only its inline body, so a method's
-// own name on its def line is never a reference to it. (`referenced` is the set a flat harvest of every
-// non-header token gives — the per-owner map is purely additive.)
+// opens a method; the header line itself (its default parameters, an inline body) and the 4+-space-indented
+// lines below belong to it; class-level lines (indent < 4, not a header) are '@toplevel'. A def's own name is a
+// key, never a reference, so a header needs no special case. (`referenced` is the flat set; the per-owner map
+// is purely additive.)
 function harvestSrc(files) {
   for (const p of files) {
-    let cur = null, mixinHashIndent = null;
+    let cur = null, mixinHashIndent = null, state = null;
     for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
       const b = methodBoundary(raw, mixinHashIndent);
       if (b) mixinHashIndent = b.mixinHashIndent;
+      const code = codeOfCoffeeLine(raw, state);
+      state = code.state;
+      let owner;
       // the owner is the method's INVENTORY name (a class-side one's bare name, as inventoryOf names it), so
       // the symmetry check below excludes a dead method's references to its own twin whichever side it is on
-      const m = b && b.kind === 'header' ? [raw, b.static ? b.method.slice(1) : b.method] : null;
-      let code, owner;
-      if (m) {
-        cur = m[1];
-        const gt = raw.indexOf('>');
-        code = stripComment(gt >= 0 ? raw.slice(gt + 1) : '');
-        owner = cur;
-      } else {
-        code = stripComment(raw);
-        const indent = raw.length - raw.trimStart().length;
-        owner = (indent >= 4 && cur) ? cur : '@toplevel';
-      }
-      const ws = code.match(WORD);
-      if (ws) for (const w of ws) addRef(w, owner);
-    }
-  }
-}
-// harness (.coffee) + macro tests (.js): every reference is an INDEPENDENT anchor ('@external') — it lives
-// outside the src pair, so it always counts as "the twin is used". (.coffee strips headers+comments as src does.)
-function harvestExternal(files, isCoffee) {
-  for (const p of files) {
-    for (let line of fs.readFileSync(p, 'utf8').split('\n')) {
-      if (isCoffee && HEADER.test(line)) { const gt = line.indexOf('>'); line = gt >= 0 ? line.slice(gt + 1) : ''; }
-      const code = isCoffee ? stripComment(line) : line;
-      const ws = code.match(WORD);
-      if (ws) for (const w of ws) addRef(w, '@external');
+      if (b && b.kind === 'header') owner = cur = (b.static ? b.method.slice(1) : b.method);
+      else owner = (raw.length - raw.trimStart().length >= 4 && cur) ? cur : '@toplevel';
+      harvestLine(code.code, owner);
     }
   }
 }
 harvestSrc(walk(SRC, '.coffee', []));
-harvestExternal(walk(HARNESS, '.coffee', []), true);
-harvestExternal(walk(TESTS, '.js', []), false);
+// the tests repo's code: every reference there is an INDEPENDENT anchor ('@external') — it lives outside the
+// src pair, so it always counts as "the twin is used"
+for (const { lines } of testsRepo.testsRepoCode()) for (const line of lines) harvestLine(line, '@external');
+// computed dispatch, resolved last against the whole inventory (a template or a class access may sit anywhere)
+// a class's chain: itself, its mixins, then its ancestors' chains — where a lookup on it resolves
+function chainOf(cls, seen = new Set()) {
+  if (seen.has(cls)) return [];
+  seen.add(cls);
+  return [cls, ...(mixinsOf.get(cls) || []), ...(parentOf.has(cls) ? chainOf(parentOf.get(cls), seen) : [])];
+}
+for (const n of methodRefs.reachedByComputedDispatch(templates, computedClasses, methods, chainOf)) addRef(n, '@computed');
 
 const dead = [...defs.keys()].filter((n) => !referenced.has(n)).sort();
 
@@ -239,7 +243,7 @@ if (fs.existsSync(ALLOWLIST)) {
 if (process.argv.includes('--update-allowlist')) {
   const header =
     '# Dead-method allowlist for buildSystem/check-dead-methods.js\n' +
-    '# Methods DEFINED in src but referenced nowhere (src + tests + harness).\n' +
+    '# Methods DEFINED in src but reached nowhere (src + the tests repo\'s code; lib/method-references.js).\n' +
     '# Seeded as a BASELINE to triage/delete later; the lint FAILS on any NEW dead method not here.\n' +
     '# Remove a name once you delete the method (or it gains a real caller): a stale entry FAILS the lint.\n' +
     '# One name per line; # = comment.\n' +
@@ -261,9 +265,11 @@ if (symmetryRetained.length) {
 }
 
 if (newDead.length) {
-  console.error(`\n[dead-methods] FAIL — ${newDead.length} method(s) defined but referenced nowhere (src/tests/harness) and not allowlisted:`);
+  console.error(`\n[dead-methods] FAIL — ${newDead.length} method(s) defined but reached nowhere (src, harness, macros, rigs) and not allowlisted:`);
   for (const n of newDead) console.error(`  ${n}  (${defs.get(n)[0]})`);
-  console.error('\nEither DELETE the method, or — if it is intentional public API / dispatched by a computed name —');
+  console.error('\nNothing reaches it by property access, whole-name string, name template or computed class access');
+  console.error('(lib/method-references.js). Either DELETE the method, or — if it is intentional public API, or');
+  console.error('dispatched by a name assembled with `+` or through an arbitrary object —');
   console.error('add its name to buildSystem/dead-method-allowlist.txt with a one-line reason.');
   console.error('(A wrapper/core twin kept for symmetry needs NO entry — auto-exempt when its settle-twin is live.)');
 }

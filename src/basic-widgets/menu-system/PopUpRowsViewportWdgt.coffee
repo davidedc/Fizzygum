@@ -46,7 +46,7 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   # My contents is a hug-sizing stack whose measure answers its full self-box — commit the
   # content frame from that pure measure (the VerticalStackViewportWdgt pattern), never from
   # the applied-bounds read-back branch.
-  isContentSizing: ->
+  _isContentSizing: ->
     true
 
   # As my frame's content I keep the size I have and I do not set my height freely: a pop-up IS

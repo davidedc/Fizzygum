@@ -564,6 +564,13 @@ Archived docs are immutable history — the current-state truth lives in
     - the prose mask hid 40 names, not one, and `scripts/` (real callers) was never read.
   - ⭐ T5's "a gate forbids the `_`-form" fallback took 4 of 10 renames ([G], [S]). Test a rename in seconds with the two gate scripts, not a build.
   - ⭐ the independent review found what the author's plants missed: a macOS case-insensitive `existsSync`, `###` blocks and CRLF in a blurb, and a reader limit that can cut code (stated, measured clean).
+- **`tests-repo-readers-plan.md`** — COMPLETE (2026-11-06; the typed-code-saves residue item, the other tests-repo readers, executed in one session; owner rulings D1 = one generic reference rule for both gates, D2 = delete, D3 = a real JS lexer, D4 = both widenings, D5 = argument-holes as its own arc).
+  - `buildSystem/lib/method-references.js`: the one definition of a reference to a method — a property access (destructuring included), a whole-name string, a name template, a computed access on a named class through its chain. A bare word reaches nothing. Read by `check-dead-methods` and R4.
+  - `buildSystem/lib/js-mask.js`: the reader lexes JS. Macro sources are found by the lexer and read as CoffeeScript.
+  - 4 dead methods deleted, 4 connector allowlist entries derived from their template, 24 R4 `_`-renames; `census-call-arity` reads code; `check-unresolved-sends` reads macro sends.
+  - ⭐⭐ the question was never "which files" but "what is a reference": `scripts/` holds NAME TABLES (aim-census classifies every toolkit verb) and src holds locals named like methods, and neither reaches anything.
+  - ⭐⭐ measure the change as it will land: R4 measured on its tests-repo half read +3; applied to both halves it was +28.
+  - ⭐ js-tokens decides a regex by lookahead and misreads `n / 8));  // …`; use it as an oracle, not as truth.
 
 ## Build & toolchain
 

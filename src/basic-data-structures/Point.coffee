@@ -143,21 +143,6 @@ class Point
       return 360 + theta.toDegrees()
     180 + theta.toDegrees()
   
-  theta: ->
-    #
-    #    answer the angle I make with origin in radians.
-    #    Right is 0, down is 90
-    #
-    if @x is 0
-      return (90).toRadians()  if @y >= 0
-      return (270).toRadians()
-    tan = @y / @x
-    theta = Math.atan(tan)
-    if @x >= 0
-      return theta  if @y >= 0
-      return (360).toRadians() + theta
-    (180).toRadians() + theta
-  
   
   # Point functions:
   distanceTo: (aPoint) ->

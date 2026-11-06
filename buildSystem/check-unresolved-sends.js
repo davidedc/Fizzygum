@@ -10,6 +10,11 @@
 // UNIVERSE = src/**/*.coffee + the sibling test harness
 // (Fizzygum-tests/Automator-and-test-harness-src/**/*.coffee — harness code is LIVE code: it is
 // compiled into every non-homepage build, and src calls into it behind `if Automator?` guards).
+// Its CALLS are also read from every test's MACRO SOURCES (lib/tests-repo-code.js's macroSources: the
+// CoffeeScript template literals alone, never the JS around them), because a macro calls core methods as
+// directly as the harness does: a rename that misses a macro's `.name(` fails here, at build time, instead
+// of in the suite. A macro's own definitions (a local helper, an object of handlers) resolve that macro's
+// own calls and no one else's, so they never widen the shared universe.
 // Like check-dead-methods, this SKIPS (exit 0 + a loud note) when the sibling tests repo is absent,
 // rather than false-fail a tests-stripped checkout.
 //
@@ -39,8 +44,6 @@
 //     closing that hole needs an action-string checker (plan §8.1).
 //   - Capital-initial names are skipped: `new Foo(`-adjacent class references are the boot
 //     dependency finder's jurisdiction (src/boot/dependencies-finding.coffee).
-//   - The macro test .js files are NOT scanned (their template-literal bodies produce JS-side false
-//     positives; the macro surface is already policed by check-layering rule [D]).
 //   - No receiver typing: a name defined ANYWHERE resolves a call EVERYWHERE. Hierarchy-resolved
 //     `@`-self sends are a v2 item (plan §8.7). The one receiver the gate reads is a literal
 //     identifier right against the dot, and only to match a KEYED BUILTINS entry (`Math.round`) — by
@@ -78,6 +81,8 @@ const defs = require('./lib/name-definitions.js');
 
 const SRC = path.resolve(__dirname, '../src');
 const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
+const TESTS_ROOT = path.resolve(__dirname, '../../Fizzygum-tests');
+const { macroSources } = require('./lib/tests-repo-code');
 const ALLOWLIST = path.resolve(__dirname, 'unresolved-sends-allowlist.txt');
 
 // ─── masking machinery ──────────────────────────────────────────────────────────────────────────
@@ -186,6 +191,31 @@ function label(p) {
        : 'harness/' + path.relative(HARNESS, p);
 }
 
+// A macro's sends: each top-level template of each test's command file, read as CoffeeScript exactly as
+// harvestCalls reads a .coffee file. Every site carries its macro's OWN definitions (`local`).
+function harvestMacroCalls() {
+  const sites = [];
+  for (const { file, sources } of macroSources(TESTS_ROOT)) {
+    const local = new Set();
+    for (const src of sources) defs.harvestDefs(src.text.split('\n'), local);
+    for (const src of sources) {
+      let state = null;
+      src.text.split('\n').forEach((raw, i) => {
+        const r = stripLine(raw, state);
+        state = r.state;
+        let m;
+        CALL_RE.lastIndex = 0;
+        while ((m = CALL_RE.exec(r.code)) !== null) {
+          if (/^[A-Z]/.test(m[2])) continue;
+          const recv = m[1] === '.' ? literalReceiver(r.code, m.index) : undefined;
+          sites.push({ name: m[2], sigil: m[1], recv, local, at: `${path.relative(TESTS_ROOT, file)}:${src.line + i}`, text: raw.trim().slice(0, 110) });
+        }
+      });
+    }
+  }
+  return sites;
+}
+
 function harvestCalls(files) {
   const sites = [];   // { name, at, text }
   for (const p of files) {
@@ -228,10 +258,10 @@ function harvestCalls(files) {
 // deletion of every Fizzygum implementor of it; listing it is still right, because the platform call
 // is real.
 const BUILTINS_TABLE = `
-push pop shift slice concat join filter forEach some every indexOf lastIndexOf includes sort reverse fill keys values
+push pop shift slice concat join filter map forEach some every indexOf lastIndexOf includes sort reverse fill keys values
 charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match search padStart repeat substring substr
 toString toFixed valueOf hasOwnProperty toJSON
-sqrt pow random atan atan2 sin cos asin exp log sign
+sqrt pow random atan2 sin cos asin exp log sign
 now parse stringify getOwnPropertyNames
 getContext measureText beginPath closePath stroke clip save restore translate scale setTransform drawImage getImageData createPattern
 preventDefault appendChild createElement getElementById getElementsByTagName querySelectorAll focus blur click
@@ -320,7 +350,7 @@ if (!fs.existsSync(HARNESS)) {
 
 const files = [...walk(SRC, '.coffee', []), ...walk(HARNESS, '.coffee', [])];
 const defined = harvestDefs(files);
-const sites = harvestCalls(files);
+const sites = [...harvestCalls(files), ...harvestMacroCalls()];
 
 const allow = new Map();   // name -> reason
 if (fs.existsSync(ALLOWLIST)) {
@@ -336,7 +366,7 @@ if (fs.existsSync(ALLOWLIST)) {
 const unresolved = new Map();
 const builtinExcuses = (s) => BUILTINS.has(s.name) || (s.recv !== undefined && BUILTINS_KEYED.has(s.recv + '.' + s.name));
 for (const s of sites) {
-  if (defined.has(s.name) || builtinExcuses(s)) continue;
+  if (defined.has(s.name) || (s.local && s.local.has(s.name)) || builtinExcuses(s)) continue;
   if (!unresolved.has(s.name)) unresolved.set(s.name, []);
   unresolved.get(s.name).push(s);
 }
@@ -361,9 +391,9 @@ const violations = [...unresolved.keys()].filter((n) => !allow.has(n)).sort();
 const sent = new Set(sites.map((s) => s.name));
 const sentKeyed = new Set(sites.filter((s) => s.recv !== undefined).map((s) => s.recv + '.' + s.name));
 const unsentBuiltins = [...BUILTINS].filter((n) => !sent.has(n))
-  .map((n) => `BUILTINS ${n} — no \`[@.]${n}(\` call in src+harness sends it`)
+  .map((n) => `BUILTINS ${n} — no \`[@.]${n}(\` call in src, the harness or a macro sends it`)
   .concat([...BUILTINS_KEYED].filter((e) => !sentKeyed.has(e))
-    .map((e) => `BUILTINS ${e} — no \`${e}(\` call in src+harness sends it`));
+    .map((e) => `BUILTINS ${e} — no \`${e}(\` call in src, the harness or a macro sends it`));
 const sentToGlobal = new Set(sites.filter((s) => s.recv !== undefined && PLATFORM_GLOBALS.has(s.recv) && builtinExcuses(s)).map((s) => s.recv));
 const staleGlobals = [...PLATFORM_GLOBALS].filter((g) => !sentToGlobal.has(g));
 const classNames = new Set(files.map((p) => path.basename(p, '.coffee')));
@@ -381,9 +411,9 @@ const formErrors = unkeyed.map((n) => `BUILTINS_NOT_KEYED ${n} — Fizzygum defi
     .map((e) => `BUILTINS_KEYED_OFF_PLATFORM ${e} — ${keyReceiver(e)} is not one of PLATFORM_GLOBALS`))
   .concat([...PLATFORM_GLOBALS].filter((g) => classNames.has(g))
     .map((g) => `PLATFORM_GLOBALS_NAMES_FIZZYGUM ${g} — ${g} is a Fizzygum class: its methods are Fizzygum's to define, not the platform's`))
-  .concat(staleGlobals.map((g) => `STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ${g} — no BUILTINS call in src+harness is sent to ${g}`));
+  .concat(staleGlobals.map((g) => `STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ${g} — no BUILTINS call in src, the harness or a macro is sent to ${g}`));
 const stale = [...allow.keys()].filter((n) => !unresolved.has(n)).sort().map((n) =>
-  `${n} — ${!sent.has(n) ? 'no `[@.]' + n + '(` call is left in src+harness'
+  `${n} — ${!sent.has(n) ? 'no `[@.]' + n + '(` call is left in src, the harness or a macro'
     : defined.has(n) ? 'it resolves: a definition of it is in src+harness'
     : 'it is a BUILTINS name'}`);
 
@@ -402,10 +432,10 @@ if (formErrors.length) {
 
 if (violations.length) {
   const n = violations.reduce((a, v) => a + unresolved.get(v).length, 0);
-  console.error(`\n[unresolved-sends] FAIL — ${n} call site(s) across ${violations.length} name(s) with no definition in src+harness:`);
+  console.error(`\n[unresolved-sends] FAIL — ${n} call site(s) across ${violations.length} name(s) with no definition in src+harness (or, for a macro, in its own source):`);
   for (const name of violations) {
     for (const s of unresolved.get(name)) {
-      console.error(`  ${s.at}: ${s.sigil}${name}( — no definition found in src+harness`);
+      console.error(`  ${s.at}: ${s.sigil}${name}( — no definition found in src+harness${s.local ? ' or in its own macro source' : ''}`);
       console.error(`      ${s.text}`);
     }
   }

@@ -43,11 +43,14 @@
  *       REJECTED as a rule (plan §8).
  *
  *   R4  privatization candidates — public methods whose EVERY reference across src + the sibling
- *       tests repo's CODE is a `@`-self call: never a `.member` call, never inside a string
- *       (menu/connection dispatch is name-string-driven, so strings count), never a bare
- *       identifier, never named by Fizzygum-tests' code — its harness, its macro sources or its
- *       scripts/ rigs, comments cut and its prose, reference records and manifests unread
- *       (lib/tests-repo-code.js). Provably not external API → candidates for
+ *       tests repo's CODE is a `@`-self call. A reference is what lib/method-references.js says
+ *       reaches a method (a property access, a whole-name string, a name template, a computed
+ *       access on a named class); a bare word — a local, a key, prose — is none and counts
+ *       nothing. So: never a `.member` access, never a reference inside a string (menu/connection
+ *       dispatch is name-string-driven, and a macro heredoc is external surface), never reached by
+ *       computed dispatch, never referenced by Fizzygum-tests' code — its harness, its macro
+ *       sources or its scripts/ rigs, comments cut and its prose, reference records and manifests
+ *       unread (lib/tests-repo-code.js). Provably not external API → candidates for
  *       a `_` rename (rule [U]; deliberate end-user API goes in buildSystem/public-api-allowlist.txt).
  *       NEEDS the sibling Fizzygum-tests repo; R4 is null (and rule [U] SKIPS) when it is absent.
  *
@@ -143,6 +146,7 @@ function stripLine(line, state) {
 // surface and must DISQUALIFY a privatization candidate).
 const { maskLine } = require('./lib/coffee-mask');
 const { testsRepoCode } = require('./lib/tests-repo-code');
+const methodRefs = require('./lib/method-references');
 
 const { METHOD_HEADER, MIXIN_METHOD_HEADER, methodBoundary } = require('./lib/coffee-method-header');
 
@@ -409,40 +413,37 @@ function runCensus() {
   }
 
   // ---- R4: privatization candidates (needs the sibling tests repo) ----
-  // Occurrence harvest KEEPS string literals and classifies each occurrence of a public method
-  // name. An occurrence INSIDE a string literal bumps 'other' REGARDLESS of its preceding char —
-  // strings are dynamic-dispatch / macro-heredoc surface, so they must DISQUALIFY a candidate
-  // (the 2026-07-12 T5 lesson: a `Macro.fromString """…"""` heredoc calling `@someToolkitVerb`
-  // was classified 'self' by the preceding-char rule, letting a de-facto macro-surface verb into
-  // the rename list — the rename then tripped rule [D]). Outside strings: `@` self / `.` member /
-  // bare "other". Comments are not counted; own def headers are excluded.
+  // Occurrence harvest: every REFERENCE to a public method name, by the one rule (lib/method-references.js —
+  // a property access, a whole-name string, a name template, a computed access on a named class), read from
+  // code (comments cut by coffee-mask). A bare word — a local, a key, a def's own name — is no reference and
+  // counts nothing. Outside strings: `@m` is a self-call, `.m`/`::m` a member access. INSIDE a string a
+  // reference bumps 'other' REGARDLESS of its form — strings are dynamic-dispatch / macro-heredoc surface, so
+  // they must DISQUALIFY a candidate (the 2026-07-12 T5 lesson: a `Macro.fromString """…"""` heredoc calling
+  // `@someToolkitVerb` was classified 'self', letting a de-facto macro-surface verb into the rename list — the
+  // rename then tripped rule [D]). A method computed dispatch reaches is 'other' too.
   const publicNames = new Set();
   for (const rec of allMethods) if (tierOf(rec.name) === 'public') publicNames.add(rec.name);
-  const nameOcc = new Map();   // name -> {self, member, other, external, defs}
+  const nameOcc = new Map();   // name -> {self, member, other, external}
   const bump = (name, kind) => {
     let o = nameOcc.get(name);
-    if (!o) nameOcc.set(name, (o = { self: 0, member: 0, other: 0, external: 0, defs: 0 }));
+    if (!o) nameOcc.set(name, (o = { self: 0, member: 0, other: 0, external: 0 }));
     o[kind]++;
   };
-  const WORD = /[A-Za-z_]\w*/g;
+  const templates = [], computedClasses = [];
   for (const file of srcFiles) {
     let mState = null;
     for (const raw of fs.readFileSync(file, 'utf8').split('\n')) {
       const { mask, state } = maskLine(raw, mState);
       mState = state;
-      let m;
-      WORD.lastIndex = 0;
-      while ((m = WORD.exec(raw)) !== null) {
-        const name = m[0];
-        if (!publicNames.has(name)) continue;
-        const where = mask[m.index] || 'code';
-        if (where === 'cut') continue;                           // comment — not counted
-        if (where === 'str') { bump(name, 'other'); continue; }  // in-string — disqualifies
-        const isDef = (METHOD_HEADER.test(raw) && raw.trimStart().startsWith(name + ':')) ||
-                      (MIXIN_METHOD_HEADER.test(raw) && new RegExp('^\\s+' + name + ':').test(raw));
-        if (isDef) { bump(name, 'defs'); continue; }
-        const before = m.index > 0 ? raw[m.index - 1] : '';
-        bump(name, before === '@' ? 'self' : before === '.' ? 'member' : 'other');
+      let code = '';
+      for (let k = 0; k < raw.length; k++) code += mask[k] === 'cut' ? ' ' : raw[k];
+      const r = methodRefs.methodReferences(code);
+      templates.push(...r.templates);
+      computedClasses.push(...r.classes);
+      for (const o of r.occurrences) {
+        if (!publicNames.has(o.name)) continue;
+        if (o.via === 'string' || mask[o.index] === 'str') bump(o.name, 'other');   // dispatch / macro surface
+        else bump(o.name, o.via === '@' ? 'self' : 'member');
       }
     }
   }
@@ -454,11 +455,17 @@ function runCensus() {
     // records and manifests are not code, so a sentence naming a method never counts as a call of it.
     for (const { lines } of testsRepoCode(path.dirname(TESTS))) {
       for (const line of lines) {
-        let m;
-        WORD.lastIndex = 0;
-        while ((m = WORD.exec(line)) !== null) if (publicNames.has(m[0])) bump(m[0], 'external');
+        const r = methodRefs.methodReferences(line);
+        templates.push(...r.templates);
+        computedClasses.push(...r.classes);
+        for (const n of r.names) if (publicNames.has(n)) bump(n, 'external');
       }
     }
+    // computed dispatch from either side (a "_#{a}Connector" template, a `C::[k]` access) reaches a method by a
+    // name no token spells: not a self-call, so it disqualifies like any other reference
+    const instanceMethods = allMethods.map((r) => ({ name: r.name, cls: r.cls, classSide: false }));
+    const chainNames = (c) => (classInfo.has(c) ? chainOf(c).map((i) => i.name) : [c]);
+    for (const n of methodRefs.reachedByComputedDispatch(templates, computedClasses, instanceMethods, chainNames)) if (publicNames.has(n)) bump(n, 'other');
     const R4 = [];
     for (const name of publicNames) {
       const o = nameOcc.get(name) || { self: 0, member: 0, other: 0, external: 0 };
@@ -506,36 +513,11 @@ if (require.main === module) {
       if (got !== expect) ok = false;
       console.log(`  ${got === expect ? 'ok  ' : 'FAIL'} ${JSON.stringify(line)} -> ${got} (expected ${expect})`);
     }
-    // R4's external half reads the tests repo's CODE (lib/tests-repo-code.js): each case is a file kind,
-    // its text, and the names a word scan of what the reader keeps must and must not find.
-    const reader = require('./lib/tests-repo-code');
-    const os = require('os');
-    const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'census-r4-'));
-    const put = (rel, text) => { const p = path.join(fixture, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
-    put('Automator-and-test-harness-src/H.coffee', 'x = "#{a}"; harnessCall()\n# harnessComment()\n');
-    put('tests/SystemTest_t/SystemTest_t.js', 'var SystemTest_t = { "intent": "metadataProse is named here" };\n');
-    put('tests/SystemTest_t/SystemTest_t_automationCommands.js',
-      '// jsComment\nvar c = { "mainMacroSource":\n`m = ->\n  # macroComment\n  w.macroCall()\n  w["macroString"]()`\n};\n');
-    put('tests/SystemTest_t/automation-assets/x/ref.js', 'var r = "referenceRecord";\n');
-    put('tests/testsManifest.js', 'var m = ["manifestEntry"];\n');
-    put('scripts/r.js', '  // scriptComment\n/* scriptBlock\n   scriptBlockToo */ scriptAfterBlock()\npage.evaluate(() => w.scriptCall()); // scriptTrailing\n');
-    put('scripts/node_modules/dep.js', 'nodeModule()\n');
-    put('scripts/.scratch/probe.js', 'scratchProbe()\n');
-    put('scripts/t.js', 'const css = `\n/* rule\n`; page.evaluate(() => w.afterTemplate());\nw.later();\n');
-    const seen = new Set();
-    for (const { lines } of reader.testsRepoCode(fixture)) for (const l of lines) for (const w of l.match(/[A-Za-z_]\w*/g) || []) seen.add(w);
-    fs.rmSync(fixture, { recursive: true, force: true });
-    const MUST = ['harnessCall', 'macroCall', 'macroString', 'scriptCall', 'scriptAfterBlock', 'scriptTrailing',
-      'afterTemplate', 'later'];
-    const MUST_NOT = ['harnessComment', 'metadataProse', 'jsComment', 'macroComment', 'referenceRecord', 'manifestEntry',
-      'scriptComment', 'scriptBlock', 'scriptBlockToo', 'nodeModule', 'scratchProbe'];
-    for (const w of MUST) { const good = seen.has(w); if (!good) ok = false; console.log(`  ${good ? 'ok  ' : 'FAIL'} tests-repo code names ${w}`); }
-    for (const w of MUST_NOT) { const good = !seen.has(w); if (!good) ok = false; console.log(`  ${good ? 'ok  ' : 'FAIL'} tests-repo code does not name ${w}`); }
-    // a macro file whose backticks do not pair is read whole, as JS: its CoffeeScript comment then counts
-    const unpaired = reader.macroCode('// lead\nvar c = `m = ->\n  # stillCounted\n').join('\n');
-    const keeps = /stillCounted/.test(unpaired) && !/lead/.test(unpaired);
-    if (!keeps) ok = false;
-    console.log(`  ${keeps ? 'ok  ' : 'FAIL'} an unpaired-backtick macro file is read whole as JS`);
+    // R4's external half reads the tests repo's CODE (lib/tests-repo-code.js): the reader's own cases.
+    const logCase = (good, what) => console.log(`  ${good ? 'ok  ' : 'FAIL'} ${what}`);
+    if (!require('./lib/tests-repo-code').selfTest(logCase)) ok = false;
+    // and the rule it reads references by (lib/method-references.js)
+    if (!methodRefs.selfTest(logCase)) ok = false;
     console.log(ok ? '[census] self-test PASS' : '[census] self-test FAIL');
     process.exit(ok ? 0 : 1);
   }

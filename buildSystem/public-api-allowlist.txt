@@ -23,6 +23,8 @@ scrollY       # ViewportWdgt's scroll-by verb, sibling of scrollToBottom/setScro
 reactToTargetConnection   # connection protocol hook
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
+forward             # PenWdgt turtle API, sibling of setHeading
+syntheticEventsMouseShiftClick_InputEvents  # MacroToolkit L1 synthetic-input primitive, the test-authoring family (syntheticEvents…_InputEvents); shiftClickOnTextSlot builds on it
 textPrompt          # Widget code-entry prompt door, sibling of prompt/inform/pickColor — inspector / live-code surface
 setProgram          # LCLProgramRunner programming API
 # Kept public for structural reasons (T5 execution findings, 2026-07-12):
@@ -36,6 +38,7 @@ addHighlightingWidgets    # WorldWdgt's per-cycle highlight reconciler; it destr
 autoScroll                # ViewportWdgt's drag auto-scroll step; it scrolls through the public scrollX/scrollY — [S] forbids the _-form
 startAutoScrolling        # ViewportWdgt's drag auto-scroll start; its step drives the public autoScroll — [S] forbids the _-form
 wrapContent               # TransformFrameWdgt's slot-wrapping constructor helper; it builds through the public settling add — [S]/[G] forbid the _-form
+cmd                       # CaretWdgt's meta-key command dispatcher (sibling of _ctrl); it runs the public settling undo — [S] forbids the _-form
 subWidgetsMergedPreferredBounds  # Widget §4.1 pure-measure API, sibling of the cross-called subWidgetsMergedFullBounds; the P5 scrolled-content contract implementations (scrolledContentMeasure) call it on THEMSELVES, which is what left it with only self-calls
 closeFromFrameBar         # FrameWdgt's close-from-the-bar ACTION — it runs the closeFromFrameBarPolicy (save-or-ask / close / destroy) that plain close() does not, so it is the verb a user or a script means by "close this window as its button would"; the bar-press handler is its only in-tree caller (a deliberate verb whose one in-tree caller is its own user-facing adapter)
 setZoomFactor             # a spreadsheet's zoom: user verb for scripting and the inspector (the formula bar's zoom menu calls it)

@@ -1689,20 +1689,6 @@ class MacroToolkit
   collapseOrUncollapseWindow_InputEvents: (windowWidget) ->
     @moveToAndClick_InputEvents windowWidget.collapseUncollapseSwitchButton
 
-  # Resize a FrameWdgt by dragging its resize handle to a destination. Every FrameWdgt builds a `.resizer`
-  # (its grip, a FrameGripWdgt: a HandleWdgt laid out at its bottom-right corner); a NON-float
-  # press-drag-release on it resizes the window (HandleWdgt.nonFloatDragging → setExtent on the window).
-  # The window-chrome sibling of close/collapse: reach the window's OWN resize control by reference (vs
-  # hunting a HandleWdgt by coordinates — several windows each have one). destination may be a Point or
-  # another widget (dragged to its centre).
-  # Verifies that the press lands on that resizer. Queues input events — follow with
-  # `yield "waitNoInputsOngoing"`.
-  dragWindowResizerTo_InputEvents: (windowWidget, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @_aimingAt windowWidget.resizer, "dragWindowResizerTo", =>
-      dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
-      [pressPoint, dropPoint] = @_handlePressAndDropPoints windowWidget.resizer, dropPoint
-      @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
-
   # RESIZE A FRAME BY ITS OWN GRIP so its EXTENT changes by exactly `extentDelta` (positive grows).
   # The grip's centre travels by the delta: a resize handle keeps the offset it was grabbed at
   # (HandleWdgt.nonFloatDragging places its top-left at the pointer less that offset) and sizes its

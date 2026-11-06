@@ -17,10 +17,14 @@
 // count, and it shares ONE parser with `census-call-arity.js` so the gate and the advisory view can
 // never disagree about what a hole is.
 //
-// SCOPE: `Fizzygum/src/**/*.coffee` only, deliberately.
-//   - The sibling tests repo carries ~25 more holes, but its `SystemTest_*.js` metadata is PROSE in
-//     string literals, which the tree-wide identifier sweep necessarily over-matches. A doc edit in
-//     a test must never break the build. Sweep those with `census-call-arity.js --holes` by hand.
+// SCOPE: `Fizzygum/src/**/*.coffee` only, for now (census.srcSources(), comments cut).
+//   - The sibling tests repo's CODE (the census reads it through lib/tests-repo-code.js, never its
+//     metadata prose) carries ~37 more sites, and the gate cannot judge them yet: most are `undefined`
+//     passed as a VALUE (`@assertValuesEqual "…", undefined, x`), which only the conventions doc's
+//     CALLERS TEST tells from a hole, and that is not mechanized; the real ones are the button
+//     family's (target, action, opts) head, which tests fill with `undefined` to reach `opts`.
+//     Extending the gate is BACKLOG (archive/tests-repo-readers-plan.md, Unit D). Sweep them with
+//     `census-call-arity.js --holes` by hand.
 //   - `.call`/`.apply`/`.bind` are excluded by the shared `isHole`: there `undefined` is a foreign
 //     API's THIS-arg, the ordinary idiom for "no receiver", not a skipped parameter.
 //
@@ -31,16 +35,16 @@
 const path = require('path');
 const census = require('./census-call-arity.js');
 
-// Seeded at 20, tightened to 9 (P8), to 2 at P9, and raised to 3 by redesign F2a
-// (BoxyAppearance.paintStroke, the same "no shadow" value as RectangularAppearance.paintStroke) —
-// which is this check's FLOOR, not a way-point.
+// 2 is this check's FLOOR, not a way-point (the conformance arc took it from 20 to 9 at P8 and to 2 at P9).
 //
-// ⚠⚠ THE REMAINING 3 ARE NOT HOLES, AND NO FUTURE SWEEP SHOULD "FIX" THEM. They are `undefined`
+// ⚠⚠ THE REMAINING 2 ARE NOT HOLES, AND NO FUTURE SWEEP SHOULD "FIX" THEM. They are `undefined`
 // used as a VALUE, which this regex cannot distinguish from a skipped parameter:
-//   - RectangularAppearance.paintStroke      an absent appliedShadow MEANS "no shadow"
-//   - BoxyAppearance.paintStroke             an absent appliedShadow MEANS "no shadow"
-//   - Widget._setScaleFactorNoSettle         an absent rotation MEANS "leave it unchanged"
-// Each is annotated at its call site. The test that separates the two cases, worked out by reading
+//   - Appearance._paintInLocalScope aContext, clip, undefined, bodyFn
+//                                           an absent appliedShadow MEANS "no shadow"
+//   - Widget._applyTransformSugarNoSettle undefined, s
+//                                           a symmetric two-slot partial update: an absent rotation
+//                                           MEANS "leave it unchanged"
+// They are the two worked "value" cases of constructor-and-parameter-conventions.md's callers test. The test that separates the two cases, worked out by reading
 // all nine of P8's survivors: a `undefined` is a HOLE when some OTHER caller of the same method
 // OMITS that trailing tail — i.e. the parameter list gives this caller no shorter way to reach a
 // later argument. When EVERY caller passes every argument (typically because the last one is a
@@ -49,7 +53,7 @@ const census = require('./census-call-arity.js');
 // is right. So: a rise here is a regression; reaching 0 is not a goal.
 const BASELINE = 2;
 
-const SRC = [path.join(census.ROOT, 'Fizzygum', 'src')];
+const SRC = census.srcSources();
 
 const holes = census.collectHoles(SRC);
 

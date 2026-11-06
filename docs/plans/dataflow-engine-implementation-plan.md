@@ -2152,7 +2152,7 @@ section's "fixed viewport" language + the panel bullet + a new F6 paragraph), NO
 
 **Tests.** `SystemTest_macroSpreadsheetResizeViewport`: open at default (screenshot =
 byte-identical baseline vs a fresh sheet — proves (3) in-test), drag the window resizer out
-by a NON-cell-multiple delta (`dragWindowResizerTo_InputEvents` — the window-chrome verb)
+by a NON-cell-multiple delta (`resizeWindowBy_InputEvents` — the window-chrome verb)
 → assert more cells/headers via the derivations (`evaluateString`), screenshot the partial
 edge column/row look; wheel-scroll in the enlarged state (clamps use full-counts — assert
 max-origin backdrop); resize back to the exact original corner → `assertScreenshotsIdentical`

@@ -425,7 +425,7 @@ class StringWdgt extends Widget
   # re-parenting re-lays me: Widget._reactToBeingAdded), and a text saved, loaded or duplicated
   # wears what its new place gives it.
   #   The inset moves every query that places my text, consistently: where my text starts
-  # (textVerticalPosition / textHorizontalPosition, which paint, slotCoordinates, slotAt, the caret
+  # (_textVerticalPosition / _textHorizontalPosition, which paint, slotCoordinates, slotAt, the caret
   # and the selection all read), the width it wraps at (TextWdgt.breakTextIntoLines), my box's size
   # (TextWdgt._reLayoutSelf and preferredExtentForWidth, the box hugs), whether my text fits
   # (doesTextFitInExtent), where a point picks a slot (_pointTakenOutOfPadding) and where a header
@@ -976,7 +976,7 @@ class StringWdgt extends Widget
   # aligned to (my box less my item inset, THE ITEM SHAPE), or centred. The paint and the caret /
   # selection math (slotCoordinates, slotAt) both read these, so the caret always sits on the text
   # it edits.
-  textVerticalPosition: (heightOfText) ->
+  _textVerticalPosition: (heightOfText) ->
     inset = @_textInset().y
     switch @verticalAlignment
       when AlignmentSpecVertical.TOP
@@ -986,7 +986,7 @@ class StringWdgt extends Widget
       when AlignmentSpecVertical.BOTTOM
         @height() - inset - heightOfText
 
-  textHorizontalPosition: (widthOfText) ->
+  _textHorizontalPosition: (widthOfText) ->
     inset = @_textInset().x
     switch @horizontalAlignment
       when AlignmentSpecHorizontal.LEFT
@@ -1142,9 +1142,9 @@ class StringWdgt extends Widget
 
 
     # my one line's box, placed by my vertical alignment, and the y its text is drawn at in it
-    lineTop = @textVerticalPosition heightOfText
+    lineTop = @_textVerticalPosition heightOfText
     textVerticalPosition = lineTop + @_lineInkOffset @fittingFontSize
-    textHorizontalPosition = @textHorizontalPosition widthOfText
+    textHorizontalPosition = @_textHorizontalPosition widthOfText
 
     # NB: no SHADOW is baked into this buffer. A text widget's shadow is the
     # unified widget drop-shadow (see Widget.coffee "How the shadow painting
@@ -1219,8 +1219,8 @@ class StringWdgt extends Widget
 
     widthOfText = @calculateTextWidth text
 
-    textVerticalPosition = @textVerticalPosition @linePitch @fittingFontSize
-    textHorizontalPosition = @textHorizontalPosition widthOfText
+    textVerticalPosition = @_textVerticalPosition @linePitch @fittingFontSize
+    textHorizontalPosition = @_textHorizontalPosition widthOfText
 
     x += textHorizontalPosition
     y += textVerticalPosition
@@ -1230,7 +1230,7 @@ class StringWdgt extends Widget
   slotAtSingleLineString: (xPosition, text) ->
 
     widthOfText = @calculateTextWidth text
-    textHorizontalPosition = @textHorizontalPosition widthOfText
+    textHorizontalPosition = @_textHorizontalPosition widthOfText
 
     xPosition = xPosition - textHorizontalPosition
     if xPosition - @left() >= widthOfText
@@ -1265,7 +1265,7 @@ class StringWdgt extends Widget
     idx
 
   pointIsAboveFirstLine: (aPoint) ->
-    textVerticalPosition = @textVerticalPosition @linePitch @fittingFontSize
+    textVerticalPosition = @_textVerticalPosition @linePitch @fittingFontSize
 
     if aPoint.y - @top() < textVerticalPosition
       return 0
@@ -1273,7 +1273,7 @@ class StringWdgt extends Widget
     return false
 
   pointIsUnderLastLine: (aPoint) ->
-    textVerticalPosition = @textVerticalPosition(@linePitch @fittingFontSize) + @linePitch(@fittingFontSize)
+    textVerticalPosition = @_textVerticalPosition(@linePitch @fittingFontSize) + @linePitch(@fittingFontSize)
 
     # if pointer is below the line, the slot is at
     # the last character.

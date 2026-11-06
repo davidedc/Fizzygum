@@ -313,12 +313,14 @@ shares `census-call-arity.js`'s paren-aware parser — so the gate and the advis
 (`fg critique`'s fourth census, or `census-call-arity.js --holes` for the tree-wide list) can never
 disagree about what a hole is — and it is ratcheted at **2**, which is its FLOOR: both survivors are
 `undefined`-as-a-value, annotated at their call sites, and driving it to 0 would mean converting a
-correct signature. It scans `Fizzygum/src/**` only, deliberately: the sibling tests repo's
-`SystemTest_*.js` metadata is English PROSE inside string literals, and a tree-wide identifier sweep
-reads sentences like *"…never undefined, on the two classes that break it…"* as a four-argument
-call. A doc edit in a test must never break a build, so that half is swept by hand with
-`census-call-arity.js --holes`, where the prose hits are obvious to a reader and invisible to a
-regex.
+correct signature. It scans `Fizzygum/src/**` only, for now. Both scanners read CODE (src through
+`lib/coffee-mask.js`, the sibling tests repo through `lib/tests-repo-code.js`, never a test's metadata
+prose), and the tests repo's code still carries sites the gate cannot judge: most pass `undefined` as
+a VALUE (`@assertValuesEqual "…", undefined, x`), which only the callers test above tells from a hole,
+and that test is not mechanized; the real ones are the button family's `(target, action, opts)` head,
+which tests fill with `undefined` to reach `opts`. Extending the gate is BACKLOG
+(`../archive/tests-repo-readers-plan.md`, Unit D); until then that half is swept by hand with
+`census-call-arity.js --holes`.
 
 ⚠ **That hand sweep is load-bearing, and skipping it has already cost once.** Connector §P4
 (2026-08-17) deleted `PaletteWdgt`'s leading `target` parameter — a hole with ELEVEN live call sites,
