@@ -536,6 +536,13 @@ Archived docs are immutable history — the current-state truth lives in
 - **`serialization-deserialization-plan.md`** — COMPLETE. Phased plan building the Serializer/Deserializer pair, file save/load, whole-world snapshot, and source-edit capture, replacing the buggy prototype.
   - ⚖ Duplication (DeepCopierMixin) kept fully untouched/pixel-identical while building the new serializer
   - ⚖ Any out-of-subtree pointer not a well-known singleton = a path-carrying error at serialize time
+- **`hand-kept-lists-plan.md`** — COMPLETE (2026-11-06; authored 2026-11-05 after Party budget's window went to the bin because a hand list of one-window apps' world fields missed it). A list that NAMES things declared elsewhere is DERIVED from the declaration or ASSERTS itself both ways. Tier 1 made ten gates/rigs that silently checked less derive or assert their names; Tier 2 the shipping mirrors (one registry/table each); Tier 3 the diagnostics; Tier 4 the standing guard — every stated table FAILS on a `STALE_ALLOWLIST_ENTRY`, the `check-hand-lists.js` gate (a string list naming classes/members is a declaration, sanctioned naming a real guard, or ratcheted: 4 left, the LiveCodeLang vocabulary), the doctrine (`lint-and-static-checks.md` §5).
+  - ⭐⭐⭐ the lists that rot are in the CHECKERS: a gate that hand-lists what the framework declares keeps running, matches less, and certifies what it never looked at — and a stale ALLOWLIST entry is the same failure one level up (it excuses whatever next reuses its name)
+  - ⭐⭐ a stale entry can be LOST REACH, not a dead entry: two menu-sweep entries "matched nothing" because the sweep no longer dispatched rows that still exist — regain the reach, then judge the entry
+  - ⭐⭐ an allowlist entry that IS hit can still be wrong: `popUpDemoTestMenu`'s hits were rows acting on a DESTROYED subject, not the async load its reason named — probe what an entry actually excuses
+  - ⭐⭐ writing a sanction is an audit: naming "what fails if this goes stale" found four lists whose staleness was silent (boot's meta-source list, the page-element hooks at the walker's call site, the bar's drop order, the census's widget exclusion)
+  - ⭐ "it ran" is not "its rows were clicked"; a name→flag map keyed by member names must be `Object.create(null)`; a prelude plant must not call `classNamed` mid-boot (it throws until `NativeValueKinds` compiles, silently ending the poll)
+  - ⚖ string lists only — object tables, regex alternations, `switch` arms and push sequences stay the reader's job (rejected: a per-line stink, which cannot see multi-line lists; banning string lists, which would be noise and push names into other shapes)
 
 ## Build & toolchain
 

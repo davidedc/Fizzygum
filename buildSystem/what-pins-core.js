@@ -420,6 +420,8 @@ function analyse(inject) {
 if (SELFTEST) {
   // ⚠ A tool that cannot be wrong is worthless. Three plants, each aimed at the ONE axis this can be
   // wrong on -- does it tell a door from a plain reference -- plus the four icons that must stay.
+  // hand-list-sanctioned: what-pins-core.js --selftest [FAIL]s and exits 1 on a name here no src file
+  // declares or the boot walk no longer reaches (run on demand: fg whatpins --selftest)
   const MUST_REACH = ['TypewriterIconWdgt', 'SimpleSlideIconWdgt', 'DashboardsIconWdgt', 'GenericShortcutIconWdgt'];
   let bad = 0;
   const ok = (cond, msg) => { console.log(`  ${cond ? '[PASS]' : '[FAIL]'} ${msg}`); if (!cond) bad++; };

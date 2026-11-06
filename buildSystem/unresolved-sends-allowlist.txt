@@ -8,7 +8,7 @@
 # worth more than the suppression.
 #
 # Format: `name  # reason`. The reason is the point — a bare name is an unexplained hole.
-# The gate prints a NOTE when an entry here starts resolving (delete it then).
+# The gate FAILS (STALE_ALLOWLIST_ENTRY) when an entry here excuses no unresolved call -- delete it then.
 #
 # Seeded 2026-07-15 (docs/lint-generic-rules-carryover-plan.md Phase 1). Every entry was triaged
 # against its real call site; there were exactly these 9 and no others.

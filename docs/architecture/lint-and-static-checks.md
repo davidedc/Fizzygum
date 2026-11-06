@@ -56,14 +56,18 @@ const isLowLevel = (name) =>
 // (the old /^raw[A-Z]/ arm is retired: zero raw* defs exist in src; rule [M] keeps them out)
 // the strict INNER subset (rule [E] subject): may MUTATE geometry, never SCHEDULE.
 const isImmediateMutator = (name) =>
-  /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)$/.test(name) ||            // the polymorphic apply corners (bare _apply*, ex *AndNotify — Tier B; NB _apply*Base is NOT matched)
-  /^_commit(Extent|Bounds)AndNotify$/.test(name) ||                             // notify-only corners
-  /^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$/.test(name) ||  // convenience movers
-  /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name);  // convenience setters/resizer
+  MUTATORS.polymorphicApplies.includes(name) ||   // the polymorphic apply corners `_apply<Geom>`, `_applyGrantedBounds` among them
+  MUTATORS.conveniences.includes(name);           // the convenience movers / setters / resizer (`_move*`, `_setWidthSizeHeightAccordingly`, `_resizeToWithoutSpacing`)
 ```
 
-`isLowLevel ⊃ isImmediateMutator` (every immediate mutator is `_`-prefixed). **Prose must POINT at these predicates,
-never re-define the tiers** — any doc that says "low-level"/"immediate mutator" means *exactly whatever these match*.
+`MUTATORS` is `buildSystem/lib/immediate-mutators.js`: the apply 2x2's NAMED groups (`polymorphicApplies`,
+`bypassTwins`, `commitCorners`, `conveniences`), asserted against src both ways — every entry names a method defined in
+src, and every Widget-own `_apply*`/`_commit*` method is claimed by a group or stated in its `NOT_CORNERS` table — so a
+renamed corner makes the gate exit 2 instead of quietly leaving rule [E]'s subject. The predicate deliberately reads two
+groups: the `_apply*Base` bypass twins and the silent `_commitBounds` are not [E]'s subject (rule [K] reads all three
+corner groups; `census-nosettle-naming.js` reads every group). `isLowLevel ⊃ isImmediateMutator` (every immediate
+mutator is `_`-prefixed). **Prose must POINT at these predicates, never re-define the tiers** — any doc that says
+"low-level"/"immediate mutator" means *exactly whatever these match*.
 The names come from the geometry-apply **2×2** of the naming convention (post-Tier-B REACT × DISPATCH: `__commit*` leaf /
 `_apply*Base` override-bypass arrange twin / `_apply*` polymorphic apply / `_commit*AndNotify` notify-only); the old
 `raw`/`silent`/`fullRaw` prefixes were
@@ -87,8 +91,9 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
 | shippable-coverage | `buildSystem/check-shippable-coverage.js` | ~:366 | every `src/` subdirectory holding `.coffee` files is CLAIMED BY A PART in `parts.json` — a dir no part claims ships NOTHING, exits 0, and surfaces only as a runtime `<NewClass> is not defined` | in-file `ALLOWLIST_PREFIXES`, now down to `src/boot/` alone (compiled by name from the shell script, never globbed) |
 | **layering** | **`buildSystem/check-layering.js`** | **~:388** | **flow soundness + the naming convention — rules [A]–[T] (§4); a class-side method's tier is read from its bare name (§6b)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
 | **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:407** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged`) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. The gated names are READ, not spelled: the repaint verbs from Widget's own definitions (`lib/repaint-verbs.js`, shared with `check-layering` and the call census), each also in its legacy public spelling so it cannot slip back in, plus the paint executor, whose name is asserted against `WorldWdgt.coffee` (stale ⇒ fail)** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (the structural add (the re-homed widget's old footprint and its new one)/drop/z-order/shadow dispatchers, the world's selection-overlay reconciler (two), the world's atlas-warm orchestration, FileLoading's async-asset repaint, and the own-sub-part marks in FrameWdgt (its rows, after a pin) and FrameBarWdgt (its background)) |
-| dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src (class methods, class-side methods — inventoried under their BARE name — and mixin members alike) but referenced nowhere (src + harness + macro `.js`); a name only ever ASSEMBLED at runtime (`klass[prefix + "Foo"]`) reads dead, a name written whole inside a string is seen | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
-| **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:446** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API |
+| dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src (class methods, class-side methods — inventoried under their BARE name — and mixin members alike) but referenced nowhere (src + harness + macro `.js`); a name only ever ASSEMBLED at runtime (`klass[prefix + "Foo"]`) reads dead, a name written whole inside a string is seen | allowlist `dead-method-allowlist.txt`; fails on a NEW dead method, and on an entry no longer dead (`STALE_ALLOWLIST_ENTRY`) |
+| hand-lists | `buildSystem/check-hand-lists.js` | ~:446 | a STRING-LIST literal naming classes or members (at least two items, and at least half of them, are class or member names) is a DECLARATION (`@serializationTransients`, `requiredParts`, `optionalParts`) or carries `# hand-list-sanctioned: <what fails>` naming a REAL guard — an existing gate/rig file, `SystemTest_<name>` or emitted failure token, resolved mechanically — or it counts as UNSANCTIONED. Multi-line by design (the lists that rot are one name per line). Scans src + buildSystem and, when present, the tests repo's scripts + harness (that half SKIPS without it). ⚠ Blind to object tables, regex alternations, `switch` arms, push sequences and runtime-built names (§5). Modes: `--census` (every list, classified), `--files` (plants: every unsanctioned list fails), `--self-test` | inline per-repo `BASELINE_FIZZYGUM` / `BASELINE_TESTS` of unsanctioned lists (the stinks idiom); a sanction naming no guard, an empty one and a stale one (sanctioning no name list) fail outright |
+| **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:467** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API, each name one some call sends — an entry excusing nothing fails (`STALE_ALLOWLIST_ENTRY`) in either |
 | stinks | `buildSystem/check-stinks.js` | ~:465 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | argument-holes | `buildSystem/check-argument-holes.js` | ~:486 | calls punching a bare `undefined` through to a later argument (R3) — the decisive **hole test** of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md). Shares `census-call-arity.js`'s parser, so gate and census cannot disagree. `src/` only, deliberately: the tests repo's `SystemTest_*.js` metadata is PROSE in string literals, and a doc edit must never break a build | inline `BASELINE = 3` (the conformance arc's measured floor of 2, plus `BoxyAppearance.paintStroke`'s "no shadow" value — the same `undefined`-as-a-value as `RectangularAppearance.paintStroke`'s). ⚠ It is a REGRESSION alarm, not an inventory — the honest tree-wide count is `census-call-arity.js --holes` (§3c) |
 | **menu-actions** | **`buildSystem/check-menu-actions.js`** | **~:509** | **menu-item wiring. A menu action is dispatched through ButtonWdgt's fixed four-slot convention (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), which the call site never names. HARD (sound): a function literal in the action slot (`@target[@action]` coerces it to a string key, so the click throws); a string literal where `opts` goes; and — RULE 1b — a `@`-targeted string action that RESOLVES nowhere. RATCHET at 0: an UNREAD parameter on a menu-dispatched verb must be NAMED as unread (`ignored`/`unused`) — padding a signature to reach the slot you want puts widgets into parameters whose names promise otherwise, and forces every other caller to punch `undefined` through.** ⚠ TWO blind spots, both structural: it cannot see whether a parameter that IS read is read as the right THING; and it cannot see a parameter that is MISSING — a verb needing a subject it never declares reads as clean, because there is nothing unread to flag. (A THIRD is covered by RULE 1b: an action naming a method NOTHING defines. The general case stays unresolvable — the receiver of `addMenuItem "…", someExpression, "verb"` is a runtime value — but `@` names its receiver structurally, so the rule resolves the string against the union of `chainOf(X)` over every X whose chain contains the enclosing class, which is exactly the set `@` could be an instance of, plus the methods a `*TestSupport` class installs onto a core class. That union is what makes it SOUND: `Widget` wires `"setTargetAndActionWithOnesPickedFromMenu"`, which lives in `ControllerMixin`. 136 rows covered; the dead `"pin"` row of 2018 is the shape it catches. The runtime twin still owns the rest: non-`@` targets, and the dispatch itself.) Those blind spots are the class of bug only a rig that CLICKS the item can catch, which is why `fg menusweep` exists beside it — it resolves every row's action against its target BEFORE the liveness skip (so a row sitting behind a destructive one in the same walk is resolution-checked even where it is never dispatched) and carries a `MenuWdgt` and a `PromptWdgt` root, the two classes whose own context menu no other root stands in. It is also where a row's `opensSubmenu` flag (the drawn chevron) meets the act: each dispatched row must open a menu exactly when it is flagged (`SUBMENU_FLAG_MISMATCH`, allowlist `CONDITIONAL_OPENERS`), because no text scan can tell what an action opens — and where its LABEL meets the act too: "…" ends it exactly when the act asks for more from you (`ELLIPSIS_MISMATCH`, allowlist `ELLIPSIS_EXCEPTIONS`; ASCII "..." fails on its own, `ASCII_ELLIPSIS`), and every row seen is in sentence case (`SENTENCE_CASE`, allowlist `SENTENCE_CASE_EXCEPTIONS`). ⓘ RULE 1 has TWO DOORS: besides `addMenuItem`/`prependMenuItem`, `prompt`/`textPrompt` take a `callback` that the prompt's OK delivers to (`PromptWdgt.deliverValue`: `@target[@callback].call @target, value`) — the same proof applies, and those callbacks count as menu-dispatched verbs for the RULE 3 ratchet too. ⚠ A prompt's BUTTONS themselves (`PromptWdgt._addButtonsInto`: `close`, `deliverValue`; the save-shortcut prompt's `destroy`, `close`, `createReferenceAndCloseFromMenu`) are `new SimpleButtonWdgt target, "action"` constructions, which this gate does not read; `fg menusweep` covers the OK at runtime (it presses every prompt's `okButton` and fails on a prompt with none, `PROMPT_OK_MISSING`, or a run under its prompt floor, `PROMPT_OK_CHECK_VACUOUS`), and Close / Cancel / Don't save dispatch the parameterless `Widget.close` / `Widget.destroy`, which only the suite presses | rules 1–2 are HARD; the unread-parameter rule is the inline `RULE3_BASELINE = 0` ratchet |
@@ -656,8 +661,9 @@ tighten incrementally):
   `buildSystem/dead-method-allowlist.txt` (dead-method) · `buildSystem/unresolved-sends-allowlist.txt`
   (unresolved-sends: vendor + genuinely-dynamic names; platform API goes in that checker's in-file `BUILTINS` instead) ·
   `buildSystem/public-api-allowlist.txt` (call-separation [U]: deliberate end-user inspector/scripting API).
-  Each of those gates prints a **stale-entry NOTE** when an entry stops being needed — `fg critique` is the one place
-  that resurfaces every such note at once.
+  Each of those gates **FAILS on a stale entry** — one that excuses nothing — naming it after the arc-wide
+  word `STALE_ALLOWLIST_ENTRY` (see "Every stated table fails on an entry that names nothing" below); a count that
+  falls below its baseline is a gain to bank, and stays a NOTE (`fg critique` resurfaces those).
 - **per-method / per-line marker** (the fourteen in-code markers tabled above): the justification
   lives at the method, no central list; a NEW unmarked violation fails the build. Best when the exception is a property
   of one method or one line, not a count.
@@ -667,17 +673,45 @@ that recognises things by NAME (verbs, fields, slots, classes, tokens) and keeps
 them goes vacuous the day the declaration moves: the matcher still runs, matches nothing, and reports a clean verdict.
 So a name list takes one of two shapes. **Derived** — read at the point of use from where the names are declared:
 `lib/repaint-verbs.js` (Widget's own `_changed`/`_fullChanged…`, for `check-layering` [I]/[K], the call census and
-`check-invalidation-receivers`), `check-plane-discipline` B's position queries (Widget's frame delegations), the syntax
-gate's provided helpers (`Class._memberNamesThatMustStayAnonymous`), and, in the tests repo's runtime rigs, the world's
-collections and drag-embed slots (serialization rig), the menu contributors (menu sweep), an appearance's wearers (pin
-sweep), the app battery (census). **Asserted** — a stated table that fails BOTH ways, on an entry naming nothing and on
-a name it should hold: `lib/pointer-handlers.js` against `ActivePointerWdgt`, the tier-naming families against every
-class's `_apply*`/`_commit*` methods, `GATE_TOKENS`/`NOT_GATED` against every `console.error "<TOKEN>` (its selftest),
-and every exclusion table beside a derivation (`NOT_POSITIONAL`, the rig's `NOT_EMPTIED_BY_THE_TEARDOWN`, the census's
-`KNOWN_MOVERS`). Two invariants make either shape trustworthy: **a derivation that finds nothing FAILS** (exit 2 /
-`*_VACUOUS`), because an empty set certifies everything; and **a check is believed only after a PLANT has been seen to
-fail it** — the drift planted (a `PRELUDE_JS` prelude for the runtime rigs, `--files` or a scratch tree for the build
-gates) and removed. Plan + ledger: [`../plans/hand-kept-lists-plan.md`](../plans/hand-kept-lists-plan.md).
+`check-invalidation-receivers`), `lib/settle-tiers.js` (Widget's `_settleLayoutsAfter…` methods, each held to its body
+both ways, for `check-layering` and both censuses), `lib/settling-setters.js` (the public geometry and text setters
+that self-settle, for `check-layering` [A]/[C] and the call census), `check-plane-discipline` B's position queries
+(Widget's frame delegations), the syntax gate's provided helpers (`Class._memberNamesThatMustStayAnonymous`), and, in
+the tests repo's runtime rigs, the world's collections and drag-embed slots (serialization rig), the menu contributors
+(menu sweep), an appearance's wearers (pin sweep), the app battery (census), the classes an audit prelude wraps
+(every own declarer, through `allClassFunctions()`). **Asserted** — a stated table that fails BOTH ways, on an entry
+naming nothing and on a name it should hold: `lib/pointer-handlers.js` against `ActivePointerWdgt`,
+`lib/immediate-mutators.js` against Widget's `_apply*`/`_commit*` methods (§2), the tier-naming families against every
+class's, a `*TestSupport`'s `@staticMembersToInstall` against its own class-side keys (`lib/install-edges.js`),
+`GATE_TOKENS`/`NOT_GATED` against every `console.error "<TOKEN>` (its selftest), and every exclusion table beside a
+derivation (`NOT_POSITIONAL`, the rig's `NOT_EMPTIED_BY_THE_TEARDOWN`, the census's `KNOWN_MOVERS`). Two invariants
+make either shape trustworthy: **a derivation that finds nothing FAILS** (exit 2 / `*_VACUOUS`), because an empty set
+certifies everything; and **a check is believed only after a PLANT has been seen to fail it** — the drift planted (a
+`PRELUDE_JS` prelude for the runtime rigs, `--files` or a scratch tree for the build gates) and removed. Plan + ledger:
+[`../archive/hand-kept-lists-plan.md`](../archive/hand-kept-lists-plan.md).
+
+**The rule holds for EVERY hand list, not only a gate's — and `check-hand-lists.js` holds the string-list shape of it.**
+A list anywhere in src, buildSystem, the harness or the tests repo's scripts that names classes or members declared
+elsewhere is DERIVED from the declaration, or ASSERTED against it both ways, or it is a second source of truth that
+"silently checks less" — the one failure mode no gate may have — the day the declaration moves, and treats one member
+differently from its siblings everywhere the list is read. The gate reads every string-list LITERAL with a multi-line tokenizer (the
+lists that rot are one name per line, which no per-line stink sees) and calls one a NAME list when at least two of its
+items, and at least half, are class or member names. Such a list is a DECLARATION (a class's own
+`@serializationTransients`, `requiredParts`, `optionalParts`), or carries `# hand-list-sanctioned: <what fails>` on its
+opening line or directly above it, whose text must NAME A REAL GUARD — an existing gate/rig file, an existing
+`SystemTest_<name>`, or a failure token the code emits (resolved mechanically; `SANCTION_NAMES_NO_GUARD`,
+`SANCTION_STALE` and `SANCTION_EMPTY` fail outright) — or it counts against a per-repo ratchet that only falls. Writing
+the sanction is the point: it forces the author to say what goes red when the list goes stale, and a reviewer can check
+the claim. ⚠ Blind spots, stated: it sees string-list literals only — not object tables keyed by names, regex
+alternations, `switch`/`when` arms, sequences of pushes, or names assembled at runtime — and a list under half names
+passes unseen; resolution proves the named guard EXISTS, not that it covers the list. **Every stated table fails on an
+entry that names nothing**, its companion rule: an allowlist, exemption, skip, fixture or install list — the three
+central `.txt` allowlists, `check-layering`'s caller allowlists and `USERLAND_FILES`, the stinks `exclude` prefixes,
+`BUILTINS`, the menu sweep's six tables, the pin sweep's `FIXTURES`, the lazy-icons `SAMPLE`, the serialization rig's
+`DAMAGE_FIELDS` and `SWCANVAS_ONLY_CHECKS`, `_worldStateAuditExemptions`, `SWCanvasBrokenTests` — reports an entry
+that matched nothing this run and FAILS on it, as `STALE_ALLOWLIST_ENTRY <table> <entry> — <why>` (a gate token in the
+page, so the suite runners fail on it too). A stale entry is worse than none: it reads as a decision about something
+that does not exist, and one keyed by a NAME silently excuses whatever next reuses that name.
 
 ---
 

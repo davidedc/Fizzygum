@@ -32,6 +32,9 @@
 // space by design, see its comment) lives in such a helper. ActivePointerWdgt.coffee is skipped
 // wholesale (it IS the hand/dispatcher). Screen-space PLACEMENT of new top-level widgets
 // (open-a-window-at-the-hand) lives outside handler-named methods and is untouched.
+// Both hand-kept names here are held to src, and a stale one FAILS (STALE_ALLOWLIST_ENTRY): an EXTRA
+// handler name no scanned method carries would leave the method it meant silently unscanned, and a
+// SKIPPED class that does not exist means the skip names something that moved.
 //
 // EXEMPTION: a `# raw-screen-pointer-sanctioned: <reason>` marker (non-empty reason) in the comment
 // block directly above the handler header. No current site needs it.
@@ -47,11 +50,11 @@ const MAPPED = /screenPointToMyPlane/;
 // the dispatched handlers come from the ONE table both body gates read (lib/pointer-handlers.js),
 // which this gate also holds against ActivePointerWdgt, both ways, below
 const pointerHandlers = require('./lib/pointer-handlers');
-const HANDLER_NAMES = new Set([
-  ...pointerHandlers.HANDLER_NAMES,
-  // not dispatched by name, but the per-frame / per-event pointer consumers of the drag-scroll (see SCOPE)
-  'takeStrokeScrollFrom', 'latchStrokeScroll',
-]);
+// not dispatched by name, but the per-frame / per-event pointer consumers of the drag-scroll (see SCOPE)
+// hand-list-sanctioned: check-raw-pointer-reads.js fails STALE_ALLOWLIST_ENTRY on a name no scanned class defines
+const EXTRA_HANDLER_NAMES = ['takeStrokeScrollFrom', 'latchStrokeScroll'];
+const HANDLER_NAMES = new Set([...pointerHandlers.HANDLER_NAMES, ...EXTRA_HANDLER_NAMES]);
+const SKIPPED_CLASSES = ['ActivePointerWdgt'];   // the hand/dispatcher itself
 const tableProblems = pointerHandlers.dispatchProblems(SRC);
 if (tableProblems.length) {
   console.error(`raw-pointer-reads gate: the pointer-handler table (buildSystem/lib/pointer-handlers.js) disagrees with ActivePointerWdgt:`);
@@ -72,9 +75,11 @@ function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line :
 
 const violations = [];
 let checked = 0, exempt = 0;
-for (const p of walk(SRC, [])) {
+const files = walk(SRC, []);
+const headersSeen = new Set();   // every method name a scanned file defines (EXTRA_HANDLER_NAMES are held to it)
+for (const p of files) {
   const cls = path.basename(p, '.coffee');
-  if (cls === 'ActivePointerWdgt') continue;                 // the hand/dispatcher itself
+  if (SKIPPED_CLASSES.includes(cls)) continue;
   const lines = fs.readFileSync(p, 'utf8').split('\n');
   let inHandler = false, handlerName = null, handlerExempt = false;
   let commentBlockHasExempt = false;
@@ -84,6 +89,7 @@ for (const p of walk(SRC, [])) {
     const boundary = methodBoundary(line, mixinHashIndent);
     if (boundary) mixinHashIndent = boundary.mixinHashIndent;
     if (boundary && boundary.kind === 'header') {
+      headersSeen.add(boundary.method);
       inHandler = HANDLER_NAMES.has(boundary.method);
       handlerName = boundary.method;
       handlerExempt = commentBlockHasExempt;
@@ -109,9 +115,22 @@ for (const p of walk(SRC, [])) {
   }
 }
 
-if (violations.length) {
-  console.error(`raw-pointer-reads gate: ${violations.length} violation(s) in ${checked} handler bodies scanned:`);
-  for (const v of violations) console.error('  ' + v);
+const classes = new Set(files.map((p) => path.basename(p, '.coffee')));
+const stale = [
+  ...EXTRA_HANDLER_NAMES.filter((n) => !headersSeen.has(n))
+    .map((n) => `EXTRA_HANDLER_NAMES '${n}' — no scanned class defines a method of that name, so the body it meant goes unscanned: point the entry at the method's new name (or delete it)`),
+  ...SKIPPED_CLASSES.filter((c) => !classes.has(c))
+    .map((c) => `SKIPPED_CLASSES '${c}' — no src file defines that class, so the skip names something that moved: point it at the dispatcher's new name (or delete it)`),
+];
+if (violations.length || stale.length) {
+  if (violations.length) {
+    console.error(`raw-pointer-reads gate: ${violations.length} violation(s) in ${checked} handler bodies scanned:`);
+    for (const v of violations) console.error('  ' + v);
+  }
+  if (stale.length) {
+    console.error(`raw-pointer-reads gate: ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in this gate's own tables:`);
+    for (const s of stale) console.error('  STALE_ALLOWLIST_ENTRY ' + s);
+  }
   process.exit(1);
 }
 console.log(`  raw-pointer-reads gate OK — ${checked} pointer-handler bodies scanned, ${exempt} exempt, 0 raw reads.`);

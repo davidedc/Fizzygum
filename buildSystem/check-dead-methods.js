@@ -21,8 +21,10 @@
 // the harvest reads string contents as tokens. The converse is the price of matching by name: any
 // same-spelled token anywhere (a field, a local, another class's method) keeps a method alive.
 //
-// The lint FAILS on any dead method NOT in the allowlist. Run with --update-allowlist to (re)seed
-// the allowlist file with the current dead set (the baseline).
+// The lint FAILS on any dead method NOT in the allowlist, and on a STALE allowlist entry
+// (STALE_ALLOWLIST_ENTRY: a name no longer dead, or now auto-exempt by settle-tier symmetry), which
+// excuses nothing today and would excuse the next dead method of that name. Run with
+// --update-allowlist to (re)seed the allowlist file with the current dead set (the baseline).
 //
 // NOTE: needs the sibling Fizzygum-tests repo for an accurate reference set; if it is absent
 // (e.g. a production build, which ships no test machinery) the check SKIPS rather than false-fail.
@@ -239,7 +241,8 @@ if (process.argv.includes('--update-allowlist')) {
     '# Dead-method allowlist for buildSystem/check-dead-methods.js\n' +
     '# Methods DEFINED in src but referenced nowhere (src + tests + harness).\n' +
     '# Seeded as a BASELINE to triage/delete later; the lint FAILS on any NEW dead method not here.\n' +
-    '# Remove a name once you delete the method (or it gains a real caller). One name per line; # = comment.\n' +
+    '# Remove a name once you delete the method (or it gains a real caller): a stale entry FAILS the lint.\n' +
+    '# One name per line; # = comment.\n' +
     '# (Settle-tier wrapper/core symmetry pairs are auto-exempt — see liveSettleTwin — so they are NOT seeded.)\n\n';
   fs.writeFileSync(ALLOWLIST, header + flaggableDead.join('\n') + '\n');
   console.log(`[dead-methods] wrote ${flaggableDead.length} names to ${path.relative(process.cwd(), ALLOWLIST)} (${symmetryRetained.length} symmetry pairs auto-exempt)`);
@@ -247,17 +250,14 @@ if (process.argv.includes('--update-allowlist')) {
 }
 
 const newDead = flaggableDead.filter((n) => !allow.has(n));
-const stale = [...allow].filter((n) => !dead.includes(n));                  // allowlisted but no longer dead/defined
-const redundant = [...allow].filter((n) => symmetryRetained.includes(n));  // allowlisted but now auto-exempt by symmetry
+// A STALE allowlist entry excuses nothing today and would excuse the next dead method of that name, so it FAILS:
+// one no longer dead (it gained a reference, or no method of that name is defined any more), or one now
+// auto-exempt by settle-tier symmetry (its twin is live, so the entry is redundant).
+const stale = [...allow].filter((n) => !dead.includes(n)).map((n) => `${n} — ${defs.has(n) ? 'no longer dead: it is referenced' : 'no method of that name is defined in src'}`);
+const redundant = [...allow].filter((n) => symmetryRetained.includes(n)).map((n) => `${n} — auto-exempt by settle-tier symmetry (live twin ${liveSettleTwin(n)}), so the entry is redundant`);
 
 if (symmetryRetained.length) {
   console.log(`[dead-methods] NOTE — ${symmetryRetained.length} dead method(s) auto-retained for settle-tier symmetry (live twin): ${symmetryRetained.map((n) => `${n}↔${liveSettleTwin(n)}`).join(', ')}`);
-}
-if (redundant.length) {
-  console.log(`[dead-methods] NOTE — ${redundant.length} allowlist entr${redundant.length === 1 ? 'y is' : 'ies are'} now redundant (covered by symmetry-awareness — delete from the allowlist): ${redundant.join(', ')}`);
-}
-if (stale.length) {
-  console.log(`[dead-methods] NOTE — ${stale.length} allowlist entr${stale.length === 1 ? 'y is' : 'ies are'} no longer dead (delete from the allowlist): ${stale.join(', ')}`);
 }
 
 if (newDead.length) {
@@ -266,8 +266,12 @@ if (newDead.length) {
   console.error('\nEither DELETE the method, or — if it is intentional public API / dispatched by a computed name —');
   console.error('add its name to buildSystem/dead-method-allowlist.txt with a one-line reason.');
   console.error('(A wrapper/core twin kept for symmetry needs NO entry — auto-exempt when its settle-twin is live.)');
-  process.exit(1);
 }
+if (stale.length || redundant.length) {
+  console.error(`\n[dead-methods] FAIL — ${stale.length + redundant.length} stale entr${stale.length + redundant.length === 1 ? 'y' : 'ies'} in buildSystem/dead-method-allowlist.txt (delete each):`);
+  for (const s of [...stale, ...redundant]) console.error(`  STALE_ALLOWLIST_ENTRY ${s}`);
+}
+if (newDead.length || stale.length || redundant.length) process.exit(1);
 
 console.log(`[dead-methods] OK — ${defs.size} method names scanned, ${dead.length} dead (${flaggableDead.length} allowlisted + ${symmetryRetained.length} symmetry-exempt), 0 new.`);
 process.exit(0);

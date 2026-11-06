@@ -8,7 +8,7 @@
  * surface is several NAMED families, and only a *core of a settling wrapper* must carry the
  * suffix so check-thin-wraps + layering rule [G] can pair it):
  *
- *   A) LYING SUFFIX — a *NoSettle-named def whose body reaches the settle tier
+ *   A) LYING SUFFIX — a *NoSettle-named def whose body reaches a settle tier
  *      (_settleLayoutsAfter or the join lane). Must be 0: the suffix claims "no settle".
  *   B) MIS-NAMED CORE — a settling wrapper whose SETTLE CLOSURE delegates the mutation to a
  *      private method that is neither a *NoSettle core nor a member of a recognized
@@ -16,21 +16,32 @@
  *      a `_<name>NoSettle` def and constrains its twin, so a wrapper whose core never took
  *      the suffix is invisible to it; layering [L] only bans the suffix on callbacks.
  *
- * Recognized non-settling families (per the Topic-3 inventory + check-layering.js consts):
- *   *NoSettle cores · the apply-2x2 corners + _apply*Base twins + _commit* corners +
- *   convenience movers/setters · __ leaves (incl. __commit*) · notification callbacks
- *   (_reactTo* and _before*, settle-neutral by rule [J]) · the layout machinery (_reLayout*,
- *   _positionAndResizeChildren, _reLayoutScrollbars, _invalidateLayout, _reFitContainer*,
- *   __markForRelayout) · the settle tiers themselves · _*Connector entrypoints (the [P]
- *   join lane) · *DeferredSettle twins ([O]) · plain _ helpers/queries (which have their OWN
- *   correct names — the plan's stated reason this is a census, not a sweep).
+ * Recognized non-settling families (the FAMILIES table below, per the Topic-3 inventory):
+ *   *NoSettle cores · the settle tiers themselves · the private repaint verbs · notification
+ *   callbacks (_reactTo* and _before*, settle-neutral by rule [J]) · the immediate geometry
+ *   mutators (the apply-2x2 corners, their _apply*Base twins, _commitBounds, and the convenience
+ *   movers/setters) · __ leaves (incl. __commit* and __markForRelayout) · the layout machinery
+ *   (_reLayout*, _positionAndResizeChildren, _invalidateLayout, _reFitContainer*,
+ *   _reFitMyTrackingContainer*) · _*Connector entrypoints (the [P] join lane) · *DeferredSettle
+ *   twins ([O]). Everything else is a plain _ helper/query, which has its OWN correct name —
+ *   the plan's stated reason this is a census, not a sweep.
+ *
+ * WHERE THE NAMES COME FROM. The settle tiers are READ from Widget by lib/settle-tiers.js, the
+ * repaint verbs by lib/repaint-verbs.js, and the immediate geometry mutators are the named groups of
+ * lib/immediate-mutators.js, which holds them to src both ways (every entry names a method defined in
+ * src; every Widget-own `_apply*`/`_commit*` method is claimed by a group or listed in its NOT_CORNERS);
+ * each library throws when its names are stale. The rest of FAMILIES is a stated table held to src
+ * here: every entry must match a method defined in src. An entry that matches nothing is a family that
+ * moved, and the methods it should recognise would fall to 'plain' with nothing said.
  *
  * Parsing machinery: stripLine is copied from check-layering.js (strips # comments + string
  * literals, carries multi-line string state); the method grouping is the shared
  * lib/coffee-method-header.js methodBoundary (2-space class methods, mixin onceAddedClassProperties
  * members).
  *
- * Exit 0 always (advisory). Run from anywhere: node buildSystem/census-nosettle-naming.js
+ * Exit 0 whatever buckets A/B hold (advisory). Exit 2, before any census is printed, when the
+ * census's own names are stale: a library throw, or a stated FAMILIES entry that names nothing.
+ * Run from anywhere: node buildSystem/census-nosettle-naming.js
  */
 
 const fs = require('fs');
@@ -39,31 +50,37 @@ const path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 const { methodBoundary } = require('./lib/coffee-method-header');
 
-const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;                       // the single-mutation tier
-const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;      // the reactive-connection lane
-const SETTLE_TIERS = new Set(['_settleLayoutsAfter', '_settleLayoutsAfterOrJoinEnclosingPass', '_settleLayoutsAfterBatch']);
+let SETTLE_TIERS, REPAINT_VERBS, IMMEDIATE_MUTATORS;
+try {
+  SETTLE_TIERS = require('./lib/settle-tiers').settleTiers(SRC).all;
+  REPAINT_VERBS = require('./lib/repaint-verbs').repaintVerbs(SRC);
+  // the immediate geometry mutators: they mutate geometry in place and never settle, so they carry no suffix —
+  // every group of the module (the polymorphic apply corners, their arrange-bypass *Base twins, the silent
+  // commit corner, the convenience movers / setters / resizer)
+  IMMEDIATE_MUTATORS = require('./lib/immediate-mutators').immediateMutators(SRC).all;
+} catch (e) { console.error('census-nosettle-naming: operational error:', e.message); process.exit(2); }
+const SETTLE_CALL = new RegExp('[@.]\\s*(' + SETTLE_TIERS.join('|') + ')\\b');   // any tier: the single one or the join lane
 
-// The recognized non-settling families (names that legitimately lack the NoSettle suffix).
-const CALLBACK = /^_(reactTo|before)[A-Z]/;                               // rule [J]/[L]
-const DOUBLE_UNDERSCORE = /^__/;                                          // the [I] leaves, incl. __commit* and __markForRelayout
-const IMMEDIATE_MUTATOR = new RegExp('^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)(Base)?$'
-  + '|^_commit(Extent|Bounds)(AndNotify)?$'
-  + '|^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$'
-  + '|^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$');
-const LAYOUT_MACHINERY = /^_(reLayout|positionAndResizeChildren|reLayoutScrollbars|invalidateLayout$|reFitContainer|reFitMyTrackingContainer)/;
-const CONNECTOR = /^_\w+Connector$/;                                      // rule [P]
-const DEFERRED_SETTLE = /DeferredSettle$/;                                // rule [O]
+// The recognized non-settling families (names that legitimately lack the NoSettle suffix), in the order
+// familyOf tries them. An entry is an exact NAME (a string) or a name PATTERN (a RegExp). A row tagged 'read'
+// takes its names from a library, which holds them to src itself; the other rows are stated here.
+const FAMILIES = [
+  ['nosettle-core',     [/NoSettle$/]],
+  ['settle-tier',       SETTLE_TIERS, 'read'],
+  ['invalidation',      REPAINT_VERBS, 'read'],                 // the PRIVATE repaint verbs (invalidation-privacy standing rule) — settle-neutral by design
+  ['callback',          [/^_reactTo[A-Z]/, /^_before[A-Z]/]],   // rule [J]/[L]
+  ['immediate-mutator', IMMEDIATE_MUTATORS, 'read'],
+  ['leaf',              [/^__/]],                               // the [I] leaves, incl. __commit* and __markForRelayout
+  ['layout-machinery',  [/^_reLayout/, /^_positionAndResizeChildren/, '_invalidateLayout', /^_reFitContainer/, /^_reFitMyTrackingContainer/]],
+  ['connector',         [/^_\w+Connector$/]],                   // rule [P]
+  ['deferred-settle',   [/DeferredSettle$/]],                   // rule [O]
+];
+const entryMatches = (entry, name) => (typeof entry === 'string' ? entry === name : entry.test(name));
 
 function familyOf(name) {
-  if (/NoSettle$/.test(name)) return 'nosettle-core';
-  if (SETTLE_TIERS.has(name)) return 'settle-tier';
-  if (name === '_changed' || name === '_fullChanged') return 'invalidation';   // the PRIVATE repaint verbs (invalidation-privacy standing rule) — settle-neutral by design
-  if (CALLBACK.test(name)) return 'callback';
-  if (IMMEDIATE_MUTATOR.test(name)) return 'immediate-mutator';
-  if (DOUBLE_UNDERSCORE.test(name)) return 'leaf';
-  if (LAYOUT_MACHINERY.test(name)) return 'layout-machinery';
-  if (CONNECTOR.test(name)) return 'connector';
-  if (DEFERRED_SETTLE.test(name)) return 'deferred-settle';
+  for (const [fam, entries] of FAMILIES) {
+    if (entries.some((e) => entryMatches(e, name))) return fam;
+  }
   return 'plain';                                                         // ordinary _ helper/query
 }
 
@@ -117,7 +134,7 @@ function collectCoffee(dir, out) {
 }
 
 // Pass 1: every method def, with its body lines (code-stripped, with raw indent kept).
-const defs = [];   // { klass, method, rel, line, body: [{n, code, indent}], settles, joins }
+const defs = [];   // { klass, method, rel, line, body: [{n, code, indent}], settles }
 for (const file of collectCoffee(SRC, [])) {
   const rel = path.relative(path.join(__dirname, '..'), file);
   const klass = path.basename(file, '.coffee');
@@ -136,7 +153,7 @@ for (const file of collectCoffee(SRC, [])) {
         // the settle tiers name INSTANCE methods; a class-side `@name` method ends the one above it and is
         // not a def of this census
         if (b.kind === 'header' && !b.static) {
-          cur = { klass, method: b.method, rel, line: n + 1, body: [], settles: false, joins: false };
+          cur = { klass, method: b.method, rel, line: n + 1, body: [], settles: false };
           continue;
         }
       }
@@ -145,14 +162,29 @@ for (const file of collectCoffee(SRC, [])) {
       const indent = raw.match(/^\s*/)[0].length;
       cur.body.push({ n: n + 1, code, indent });
       if (SETTLE_CALL.test(code)) cur.settles = true;
-      if (JOIN_CALL.test(code)) cur.joins = true;
     }
   }
   flush();
 }
 
+// The stated families held to src (see the header): an entry naming nothing stops the census before it prints a
+// picture keyed on stale names. (The library-read families were held where they are read, above.)
+const definedNames = new Set(defs.map(d => d.method));
+const staleness = [];
+for (const [fam, entries, source] of FAMILIES) {
+  if (source === 'read') continue;
+  for (const e of entries) {
+    if (![...definedNames].some(n => entryMatches(e, n))) staleness.push(`STALE_ALLOWLIST_ENTRY FAMILIES ${fam}: ${e} matches no method defined in src`);
+  }
+}
+if (staleness.length) {
+  console.error(`census-nosettle-naming: operational error: ${staleness.length} stale name(s) in the census's own tables (buildSystem/census-nosettle-naming.js):`);
+  for (const s of staleness) console.error('  ' + s);
+  process.exit(2);
+}
+
 // Bucket A: *NoSettle-named defs that settle (the suffix lies).
-const lying = defs.filter(d => /NoSettle$/.test(d.method) && (d.settles || d.joins));
+const lying = defs.filter(d => /NoSettle$/.test(d.method) && d.settles);
 
 // Bucket B: settling wrappers whose SETTLE CLOSURE calls a private non-family method.
 // The closure = calls on the settle line AFTER the settle token, plus deeper-indented
@@ -164,14 +196,13 @@ const lying = defs.filter(d => /NoSettle$/.test(d.method) && (d.settles || d.joi
 const PRIVATE_CALL = /[@.]\s*(_\w+)(?:\s*\(|[ \t]+(?!(?:then|and|or|is|isnt|not|if|unless|in|of)\b)(?=[@_$"'\[{A-Za-z0-9-]))/g;
 const misNamedCores = [];   // { wrapper: def, callee, n }
 for (const d of defs) {
-  if (!d.settles && !d.joins) continue;
-  if (SETTLE_TIERS.has(d.method)) continue;             // the tiers themselves are the flush
+  if (!d.settles) continue;
+  if (SETTLE_TIERS.includes(d.method)) continue;        // the tiers themselves are the flush
   for (let i = 0; i < d.body.length; i++) {
     const bl = d.body[i];
-    const isSettleLine = SETTLE_CALL.test(bl.code) || JOIN_CALL.test(bl.code);
-    if (!isSettleLine) continue;
     // calls on the settle line itself, past the settle token
-    const tok = bl.code.match(/_settleLayoutsAfter\w*/);
+    const tok = bl.code.match(SETTLE_CALL);
+    if (!tok) continue;
     const after = bl.code.slice(tok.index + tok[0].length);
     const closureLines = [{ n: bl.n, code: after }];
     for (let j = i + 1; j < d.body.length && d.body[j].indent > bl.indent; j++) {
@@ -185,7 +216,7 @@ for (const d of defs) {
         const fam = familyOf(callee);
         if (fam !== 'plain') continue;                  // NoSettle core / recognized family — fine
         // a callee that is ITSELF a settling wrapper somewhere is a [G] matter, not a naming one
-        if (defs.some(o => o.method === callee && (o.settles || o.joins))) continue;
+        if (defs.some(o => o.method === callee && o.settles)) continue;
         misNamedCores.push({ wrapper: d, callee, n: cl.n });
       }
     }
@@ -198,12 +229,14 @@ const tab = new Map();
 for (const d of privDefs) {
   const fam = familyOf(d.method);
   const row = tab.get(fam) || { settling: 0, non: 0 };
-  if (d.settles || d.joins) row.settling++; else row.non++;
+  if (d.settles) row.settling++; else row.non++;
   tab.set(fam, row);
 }
 
 console.log('census-nosettle-naming — Topic 3 (settle-tier-followups): non-settling private fns vs the *NoSettle suffix');
 console.log(`  method defs scanned: ${defs.length} (${privDefs.length} private/_-prefixed or NoSettle-suffixed)`);
+console.log(`  settle tiers (read from Widget): ${SETTLE_TIERS.join(', ')}`);
+console.log(`  repaint verbs (read from Widget): ${REPAINT_VERBS.join(', ')}`);
 console.log('\n  the _-prefixed surface, family × settles:');
 for (const [fam, row] of [...tab.entries()].sort((a, b) => (b[1].settling + b[1].non) - (a[1].settling + a[1].non))) {
   console.log(`    ${fam.padEnd(18)} settling=${String(row.settling).padStart(3)}  non-settling=${String(row.non).padStart(4)}`);

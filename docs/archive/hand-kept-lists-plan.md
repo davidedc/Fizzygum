@@ -1,7 +1,8 @@
 # Hand-kept lists: derive them, or make them fail when they go stale
 
-**STATUS (2026-11-05): §1, Tier 1 (§3) and Tier 2 (§4) LANDED — see the §3 and §4 ledgers at the end; Tiers 3, 4 OPEN.
-Written to be executed COLD by an LLM or engineer with ZERO prior context.**
+**STATUS (2026-11-06): CLOSED — §1 and all four tiers LANDED; see the §6, §5, §4 and §3 ledgers at the end. Open
+residue lives in `docs/BACKLOG.md` under this plan. Written to be executed COLD by an LLM or engineer with ZERO prior
+context.**
 
 **Mandate.** Eliminate the class of defect, not its instances: a list that NAMES things declared
 elsewhere (classes, fields, methods, tokens, parts) must either be DERIVED from where those things are
@@ -215,6 +216,109 @@ Memory notes: app-window-registry, document-icons-and-maker-documents. Related g
 `docs/architecture/lint-and-static-checks.md`; the census engine pattern `buildSystem/check-dead-methods.js`
 (the allowlist-reports-stale idiom). Raw audit reports: re-derivable by §2.
 
+## §6 ledger — Tier 4 LANDED (2026-11-06)
+
+Every check below was seen failing on a PLANT and passing without it (plants: `Fizzygum-tests/.scratch/hand-lists-t4/`;
+gates via scratch copies, rigs via scratch copies or `PRELUDE_JS`). Doctrine: `docs/architecture/lint-and-static-checks.md`
+§5 ("The rule holds for EVERY hand list…", "Every stated table fails on an entry that names nothing") and §3's
+`hand-lists` row; `widget-authoring-guidelines.md` §4.3 (a fact the world reads about a class goes in a registry its
+own code writes into; `world.appWindows`).
+
+1. **Allowlist hygiene (§6.1), widened to every stated table** (a read-only inventory found 37; 23 had no stale
+   handling). One word everywhere: `STALE_ALLOWLIST_ENTRY <table> <entry> — <why>` (a gate token in the page).
+   - Build gates: the three central `.txt` allowlists (their stale NOTE is a FAIL now; the dead-method symmetry-redundant
+     case too); `check-layering`'s `USERLAND_FILES` (a moved file made rule [R] check nothing), the [O]/[Q] caller
+     allowlists (keyed by method name in ANY class), `WRAPPER_EXCLUDED`; the stinks `exclude` prefixes;
+     `check-raw-pointer-reads`' extra handler names and skipped class; `check-shippable-coverage`'s and
+     `check-source-vault`'s exemptions; `check-plane-discipline`'s `NON_WIDGET_ROOTS` (finding: ALL SIX entries were
+     stale — none is ever a receiver; the table is empty and checked); `check-unresolved-sends`' `BUILTINS`, pruned from
+     249 names to the 107 some call sends (residual: 29 sent names Fizzygum also defines, BACKLOG).
+   - Harness: `WorldWdgt._worldStateAuditExemptions` (an exemption the sweep never meets, reported at the page's
+     baseline call); `SWCanvasBrokenTests` (a name the manifest lacks; a density's list is found by its
+     `testNamesDpi<N>` key, so a new density's list is used AND checked); `@staticMembersToInstall`, held to the support
+     class's own class-side keys both ways by `buildSystem/lib/install-edges.js` (`STALE_ALLOWLIST_ENTRY` /
+     `UNLISTED_STATIC`; its two gates exit 2 naming them).
+   - Rigs: the menu sweep's six tables (a direction-keyed entry counts only when ITS direction matched; skipped,
+     loudly, in a partial run); the pin sweep's `FIXTURES`; the lazy-icons `SAMPLE` (+ `ISOLATION_CHECK_VACUOUS`); the
+     serialization rig's `DAMAGE_FIELDS` (asserted, not derived — it states which fields must never ride a file) and
+     `SWCANVAS_ONLY_CHECKS` (held both ways on every full run).
+   - ⭐ Findings: two `CONDITIONAL_OPENERS` entries read stale on the first run because the sweep had LOST REACH (the
+     rows exist): a `HandleWdgt` root and an overflow-chevron remainder-menu root brought them back. With reach
+     restored, `HandleWdgt.attach` was really stale (a handle on the canvas always has the world as a candidate) and
+     `WorldWdgt.popUpDemoTestMenu` was excusing a mismatch its stated reason did not describe — a probe showed every
+     non-opening dispatch had a DESTROYED subject (the row's target, the world, was alive), so the walk now judges a
+     row's SUBJECT's liveness too (a dead subject is `stale`, like a dead target) and both entries were deleted.
+     Product finding (owner's call, BACKLOG): `HandleWdgt.attach` builds a "no widgets to attach to" message it never
+     shows.
+2. **The hand-list gate (§6.2)** — `buildSystem/check-hand-lists.js`, on the build beside the dead-method gate: the
+   census's multi-line tokenizer over src + buildSystem (+ the tests repo's scripts and harness when present; that half
+   SKIPS without it); a NAME list = at least two items, and at least half, that are class or member names; each is a
+   DECLARATION (`@serializationTransients`, `requiredParts`, `optionalParts`), SANCTIONED (`hand-list-sanctioned:` whose
+   text resolves to an existing gate/rig file, `SystemTest_<name>` or emitted token — `SANCTION_NAMES_NO_GUARD`,
+   `SANCTION_STALE`, `SANCTION_EMPTY` fail outright) or counted. `--census`, `--files`, `--self-test` (38 checks, proven
+   by 11 deliberately broken copies of the gate). The census found 52 name lists; the sanction pass (each guard's
+   claim checked, mostly by an in-memory plant) left **4 unsanctioned in Fizzygum — the LiveCodeLang vocabulary,
+   whose fix is that plan's R1 — and 0 in the tests repo**: `BASELINE_FIZZYGUM = 4`, `BASELINE_TESTS = 0`. Writing the
+   sanctions surfaced lists that went stale SILENTLY and were fixed instead of sanctioned: the boot's
+   `["Class", "Mixin", "globalFunctions"]` (now one boot constant `META_SYSTEM_SOURCES`, read by
+   `dependencies-finding` and the compile job; `globalFunctions` had no vault source and was a phantom job item);
+   `check-page-loaded-elements`' hooks (a hook renamed at its WALKER's call site kept the gate green — now held to the
+   walkers); `FrameBarWdgt.PIECE_DROP_ORDER` (a stale name was skipped by `indexOf >= 0`; no test narrows a strip until
+   a piece drops — now `BAR_PIECE_UNORDERED`, a gate token); the inspector popout list (held to the inspector's "…"
+   buttons, `POPOUT_BUTTON_UNSWEPT`); the serialization rig's shown-facts keys (derived from `shows()`) and remediation
+   names (held to the live classes); `aim-census`'s widget-source exclusion (derived from the `extends` graph). Two
+   diagnostics now fail on their own staleness: `aim-census.js` (exit 1 on a stale name, 2 on an empty derivation) and
+   the layout survey's aggregator (exit 1 when the prelude reported a stale name).
+3. **Shared name modules** (the same family was hand-spelled in two or three gates): `lib/settle-tiers.js` (Widget's
+   `_settleLayoutsAfter…`, held to its body both ways; `_settleLayoutsAfterBatch` was dead in the census),
+   `lib/settling-setters.js` (the public geometry/text setters that self-settle, DERIVED — the rule reproduces today's
+   eleven names exactly), `lib/immediate-mutators.js` (the apply 2x2's named groups, asserted both ways; five dead names
+   left `isImmediateMutator`, `_applyGrantedBounds` joined rule [E] at 0 new violations, rule [K]'s commit-corner arm
+   now has its real subject `_commitBounds`). Readers: `check-layering`, `census-public-private-calls`,
+   `census-nosettle-naming`.
+4. **Doctrine (§6.3)** — the two paragraphs and the table row in `lint-and-static-checks.md`, the
+   `widget-authoring-guidelines.md` §4.3 section, the gate count (31) in both CLAUDE.md files.
+
+## §5 ledger — Tier 3 LANDED (2026-11-06)
+
+Each tool reports on the real picture — its names DERIVED from the declarations, or its stated tables ASSERTED against
+them — and says so loudly when a name goes stale (diagnostics, not gates: a finding line or a non-zero exit, never a
+silently narrower picture). Each was run before and after, with every moved number explained.
+
+1. **`aim-census.js`** — `VERBS`/`NON_AIM_VERBS` are decision tables held to every `…_InputEvents` key of MacroToolkit
+   and every `…_InputEvents_Macro` its heredocs define (84 verbs): `AIM-CENSUS STALE NAME` / `UNCLASSIFIED VERB` /
+   `CLASSIFIED TWICE` / `STALE ARGUMENT` / `UNKNOWN VERB`; the press/text/screenshot patterns come from one table; the
+   geometry and locator names are read off the declaring classes; text, chrome and window classes from the `extends`
+   graph; `AIM_CENSUS_SRC` points it at a scratch tree for plants (11, all biting). 1777 → 1797 sites (the prompt-button
+   clicks the old table missed). Findings: `pressPointOf` credited as verb-verified; 20+ names that named nothing
+   (`WindowWdgt`, `ScrollbarWdgt`, eight chrome members, …); every prompt, inspector and console button invisible as
+   chrome.
+2. **`layout-audit-prelude.js`** — hooks `_playQueuedEvents` (the stale `playQueuedEvents` hook left every record
+   `boot:true`), the renamed setters; HOOKS/READS/TAGGED tables asserted at install (`LAYOUTAUDIT_STALE_NAME`,
+   `LAYOUTAUDIT_UNHOOKED_OVERRIDE`, held to the first test start); a tagged method is wrapped on every own declarer
+   under its scope through `allClassFunctions()` (16 overrides the class lists never tagged). Finding, fixed: records
+   stored the layout SPEC object, circular for a stack element, so the first such record would throw inside the wrapped
+   flush.
+3. **`revisit-trace-prelude.js`** — `contentStackSpec()`; `_reLayout` wraps from `allClassFunctions()` (an
+   `Object.keys(window)` walk missed classes shadowed by browser built-ins); the same assertion. ⭐ Plant lesson: a
+   prelude plant must not call `classNamed` mid-boot — it reads `NativeValueKinds`, which compiles late, and the throw
+   ended the plant's poll silently (a pageerror the LOG_FILE does not hold); plants now wait on the prelude's own gate
+   and say `PLANT NOT APPLIED` loudly.
+4. **`census-nosettle-naming.js`** — the three shared modules above; stale ⇒ exit 2.
+5. **`build-tree-fingerprint.js`** — a stamped file is recognised by CONTENT (the `buildVersion` form), where a stamp
+   belongs is read from each entry page's `<script src>`, and only the stamp's value is masked, so the rest of a boot
+   bundle is compared byte for byte; `[FORMAT] 2` (an old-format compare is INVALID — ⚠ `fg fingerprint` writes its
+   baseline with the COMMITTED copy, so it reads INVALID until this lands).
+6. **`heap-forensics.js`** — lens 1's roots = `world.graphLivenessRoots()` + bin + shelf; `--selftest` OK.
+7. **`smoke-boot-headless.js`** — the round-trip judges what the load leaves with the serialization rig's own scan (new
+   shared `scripts/lib/world-holdings.js`) on a world dirtied first (an error console and a tooltip, through product
+   API), failing VACUOUS unless the scan saw them; the forbidden-path lists get a positive control on a dev tree; a
+   `PRELUDE_JS` rail.
+8. **classify-diff + `fg recapture-inspector`** — one `scripts/inspector-churn-set.json` through
+   `scripts/lib/inspector-churn-set.js`; classify-diff warns on a stale name, `fg` refuses; re-derived by
+   `scripts/derive-inspector-churn-set.js` (the plant is an OWN field on every widget — the inspector hides inherited
+   members); `--check` MATCHES today (15 of 368).
+
 ## §4 ledger — Tier 2 LANDED (2026-11-05)
 
 Owner calls (AskUserQuestion, both the recommended option): ⚑1 = the templates window becomes a
@@ -369,3 +473,13 @@ is in the §3 ledger's follow-ups above. ⚠ The second item's "with nothing sho
       `Widget.evaluateString` → `compileFGCode` rethrows the compile error out of the menu action, with nothing shown
       to the user (the Console's "Run all" shares the path). Report it instead of throwing?
 
+Relocated VERBATIM from `docs/BACKLOG.md` on 2026-11-06 at the arc's close; each is closed by the §6 ledger (item 3)
+or the §5/§6 ledgers as a whole.
+
+  - [x] **check-layering's static apply-corner families are not held to the source**: `isImmediateMutator` /
+        `APPLY_CORNER` keep the `_commit(Extent|Bounds)AndNotify` arm that matches nothing and omit
+        `_commitBounds` / `_applyGrantedBounds` (the tier-naming prelude now classifies both, asserted both ways).
+- [x] Tier 3 (§5): diagnostic tools reporting on a stale picture (aim-census, layout-audit and
+      revisit-trace preludes, census-nosettle-naming — which also hand-lists the repaint verbs `lib/repaint-verbs.js`
+      now owns —, heap-forensics roots, smoke-boot).
+- [x] Tier 4 (§6): the standing guard — allowlists report unused entries; a hand-list gate; the doctrine.

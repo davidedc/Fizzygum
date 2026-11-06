@@ -23,7 +23,8 @@
  *       EFFECTFUL (the commands rule [S] cares about — rename first) / QUERY (cosmetic).
  *       Deliberate end-user API (Fizzygum is live-editable: a method can exist solely for a user
  *       to call from the in-world Object Inspector / scripting) goes in
- *       buildSystem/public-api-allowlist.txt (name + reason — the dead-method-allowlist idiom).
+ *       buildSystem/public-api-allowlist.txt (name + reason — the dead-method-allowlist idiom); an
+ *       entry that is no longer a self-only public method FAILS as stale (STALE_ALLOWLIST_ENTRY).
  *       NEEDS the sibling Fizzygum-tests repo for a sound reference set: SKIPS (never false-fails)
  *       when it is absent (e.g. a production build), exactly like check-dead-methods.js.
  *
@@ -34,7 +35,7 @@
  * check-layering.js) is the double-settle sibling. Dynamic dispatch stays invisible to all of
  * them — the runtime one-flush throw is the backstop.
  *
- * Exit codes: 0 clean · 1 violation (count exceeded a baseline) · 2 operational error.
+ * Exit codes: 0 clean · 1 violation (count exceeded a baseline, or a stale [U] allowlist entry) · 2 operational error.
  * Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-call-separation.js
  * Self-test: plant a `_foo: -> @somePublicCommand()` in a throwaway src class, confirm the count
  * bumps past the baseline and the build aborts; `# public-call-sanctioned: fixture` exempts it.
@@ -97,8 +98,13 @@ if (census.R4) {
   const candidates = census.R4.filter(r => !allow.has(r.name));
   const uEff = candidates.filter(r => r.effectful);
   const uQry = candidates.filter(r => !r.effectful);
+  // a STALE entry — no longer a self-only public method — excuses nothing today and would excuse the next
+  // self-only public method of that name, so it FAILS (STALE_ALLOWLIST_ENTRY)
   const stale = [...allow].filter(n => !census.R4.some(r => r.name === n));
-  if (stale.length) notes.push(`[U] ${stale.length} allowlist entr${stale.length === 1 ? 'y is' : 'ies are'} no longer self-only-public (delete from public-api-allowlist.txt): ${stale.join(', ')}`);
+  if (stale.length) {
+    problems.push(`[U] ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in buildSystem/public-api-allowlist.txt (delete each):`);
+    for (const n of stale) problems.push(`    STALE_ALLOWLIST_ENTRY ${n} — no longer a self-only public method (it gained a reference that is not an @-self call, went _-tier, or was deleted)`);
+  }
   if (uEff.length > BASELINE_U_EFFECTFUL) {
     problems.push(`[U] EFFECTFUL self-only public methods: ${uEff.length} EXCEEDS the baseline ${BASELINE_U_EFFECTFUL} — a NEW public command is referenced only by @-self calls, i.e. it is not external API. Name it _-tier from the start (or, if it is deliberate end-user API for the in-world inspector/scripting, add it to buildSystem/public-api-allowlist.txt with a reason).`);
     const newest = uEff.slice(0, 10).map(r => `${r.name} (${r.defs.slice(0, 3).join(', ')})`);

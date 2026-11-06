@@ -54,10 +54,24 @@ const path = require('path');
 
 const SRC = path.join(__dirname, '..', 'src');
 
-const PUBLIC_SETTERS = ['setExtent', 'moveTo', 'setBounds', 'setWidth', 'setHeight'];
-// NB moveWithin (ex-fullMoveWithin, public) is deliberately NOT here: it is a public CONVENIENCE that delegates
-// to the one-settle moveTo, so listing it would false-trip [C] (public-setter calls public-setter) on its
-// moveWithin -> moveTo call. Like fullMoveWithin pre-rename, it stays untracked (it self-settles via moveTo).
+// The names the rules key on are READ, never spelled here: the settling setters (lib/settling-setters.js), the
+// settle tiers (lib/settle-tiers.js) and the immediate geometry mutators (lib/immediate-mutators.js); the repaint
+// verbs are read the same way, by rule [I] below. Each library throws when its family is not where it reads it —
+// a hand list goes on matching the old names after a rename, and a rule keyed on a matcher that matches nothing
+// passes in silence — and this gate reports the throw as an operational error.
+let SETTERS, TIERS, MUTATORS;
+try {
+  SETTERS = require('./lib/settling-setters').settlingSetters(SRC);
+  TIERS = require('./lib/settle-tiers').settleTiers(SRC);
+  MUTATORS = require('./lib/immediate-mutators').immediateMutators(SRC);
+} catch (e) { console.error('check-layering: operational error:', e.message); process.exit(2); }
+
+// The public GEOMETRY setters: Widget's self-settling faces of its `_apply<Geom>` corners (setExtent, moveTo,
+// setBounds, setWidth, setHeight — lib/settling-setters.js states the rule). Widget's other settling setters
+// (moveWithin, setMaxDim, setRotationDegrees, setScaleFactor) face no apply corner, so they are not here: rule
+// [G] discovers them as settling wrappers, which keeps them out of [C] — moveWithin settles over its own
+// _moveWithinNoSettle core, never through moveTo.
+const PUBLIC_SETTERS = SETTERS.geometry;
 // a call to a public setter: leading @ or . then the lowercase public name (the _-prefixed low-level mutators
 // — _applyExtent / __commitExtent / etc. — don't match: the leading underscore sits between the @/. and the verb).
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
@@ -66,16 +80,16 @@ const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 // (in checkFile) when it is a canvas call -- a canvas receiver, or one of the boot canvas-extension files.
 const CANVAS_MOVETO = /\b(context|pctx|backBufferContext|aContext|ctx)\s*\.\s*moveTo\b/;
 const CANVAS_EXT_FILE = /boot[\/\\]extensions[\/\\].*[Cc]anvas/;
-// The SINGLE-settling text setters (StringWdgt): each self-settles via _settleLayoutsAfter, so being
-// reached from a layout pass / another settle throws the flow-violation. Low-level code that must set
-// text uses the NON-settling core (_setTextNoSettle) or a raw setter. NB sizeToTextAndDisableFitting is
-// not in THIS list (it is not one of the 7 text setters) but it is NOT a free pass: it now self-settles
-// via the SINGLE tier (_settleLayoutsAfter — it moved off the batch settler when the batch tier went to 0
-// callers), so rule [G] discovers it as a structural wrapper and forbids low-level code from calling it
-// (low-level code uses the core _sizeToTextAndDisableFittingNoSettle). The `[@.]\s*` anchor + `\b` make
-// `@setText`/`.setText` match while `@_setTextNoSettle`/`._setTextNoSettle` (the cores, leading `_`) and
-// `setTextLineWrapping` do NOT.
-const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleWeight', 'toggleItalic', 'toggleIsPassword'];
+// The SINGLE-settling text setters: StringWdgt's self-settling `set<X>`/`toggle<X>` methods (setText,
+// setFontSize, setFontName, toggleWeight, toggleItalic, toggleIsPassword — lib/settling-setters.js). Each
+// self-settles via _settleLayoutsAfter, so being reached from a layout pass / another settle throws the
+// flow-violation. Low-level code that must set text uses the NON-settling core (_setTextNoSettle) or a raw
+// setter. NB sizeToTextAndDisableFitting is not in THIS list (it sets no text property) but it is NOT a free
+// pass: it self-settles via the SINGLE tier, so rule [G] discovers it as a structural wrapper and forbids
+// low-level code from calling it (low-level code uses the core _sizeToTextAndDisableFittingNoSettle). The
+// `[@.]\s*` anchor + `\b` make `@setText`/`.setText` match while `@_setTextNoSettle`/`._setTextNoSettle` (the
+// cores, leading `_`) and `setTextLineWrapping` do NOT.
+const TEXT_SETTERS = SETTERS.text;
 const TEXT_SETTER_CALL = new RegExp('[@.]\\s*(' + TEXT_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
 const INVALIDATE_CALL = /[@.]\s*_invalidateLayout\b/;         // @_invalidateLayout / x._invalidateLayout
@@ -89,11 +103,12 @@ const VALVE_CALL = /[@.]\s*_scheduleRelayoutRespectingPhase\b/;  // the phase-va
 const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayout)\b(?!\?)(?!\s*(?:[!=]=|[<>]=?|is\b|isnt\b))/;
 const SANCTION_MARKER = 'layout-apply-sanctioned';        // the conscious-sign-off comment marker for [F]
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
-// The settle TIERS that legitimately drive recalculateLayouts(): the frame (doOneCycle), the public-setter
-// flush (_settleLayoutsAfter), and the reactive-connection lane (_settleLayoutsAfterOrJoinEnclosingPass — it
-// OPENS a settle exactly like _settleLayoutsAfter when it is the first hop of a cascade; see rule [P] and
-// docs/archive/connection-cascade-settle-fix-plan.md). Everything else is [A]/[B].
-const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleLayoutsAfterOrJoinEnclosingPass']);
+// The methods that legitimately drive recalculateLayouts(): the frame (doOneCycle) and every settle TIER read
+// from Widget (lib/settle-tiers.js) — the public-setter flush (_settleLayoutsAfter) and the reactive-connection
+// lane (_settleLayoutsAfterOrJoinEnclosingPass — it OPENS a settle exactly like _settleLayoutsAfter when it is the
+// first hop of a cascade; see rule [P] and docs/archive/connection-cascade-settle-fix-plan.md). Everything else
+// is [A]/[B].
+const RECALC_WHITELIST = new Set(['doOneCycle', ...TIERS.all]);
 
 const isLowLevel = (name) =>
   // (the old /^raw[A-Z]/, /^silent/ and /^fullRaw/ arms are all RETIRED: zero raw*/silent*/fullRaw*
@@ -135,21 +150,21 @@ const isLowLevel = (name) =>
 //
 // NAME-COVERAGE invariant (lint-ratchet Phase 2, 2026-06-25; kept current through the §6-5 mutator sweep, 2026-06-29):
 // every method that writes geometry immediately is recognizably LOW-LEVEL and named in the apply 2x2 family -- an
-// _apply* (or its _apply*Base override-bypass twin) / _commit*AndNotify CORNER, or a _move* / _setWidthSizeHeightAccordingly /
-// _setExtentToFractional* / _resizeToWithoutSpacing CONVENIENCE (all covered by [E], the SCHEDULE ban below), or a
+// _apply* (or its _apply*Base override-bypass twin) / _commitBounds CORNER, or a _move* / _setWidthSizeHeightAccordingly /
+// _resizeToWithoutSpacing CONVENIENCE (the corners and conveniences [E] covers, the SCHEDULE ban below), or a
 // __commit* LEAF (covered by the STRONGER [I] no-orchestration ban, which subsumes the schedule ban). The
 // structural silent* setters were renamed to the __hide/__addShadow/__add LEAVES (§3d/B13), now [I]-governed. None is
 // innocent-named, so [E]/[I] have no blind spot. The only non-low-level methods touching the cache-break are
 // constructor (@bounds init, not a mutation), _destroyNoSettle and removeFromTree (teardown / structural-removal
 // cache hygiene -- neither writes geometry; removeFromTree is a structural op that legitimately schedules). No escapee.
+// The names are the NAMED groups of lib/immediate-mutators.js, which holds every entry to a method defined in src
+// and every Widget `_apply*`/`_commit*` method to a group (stale ⇒ operational error above). The predicate reads the
+// two groups it means; it deliberately EXCLUDES the bypassTwins (`_apply*Base`, the top-down arrange's override-bypass
+// primitives) and the commitCorners (the silent `_commitBounds`), which [E] has never covered.
 const isImmediateMutator = (name) =>
-  /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)$/.test(name) ||            // ✓/✓ corners — the polymorphic apply (ex *AndNotify; Tier B 2026-07-02). NB _apply*Base is the arrange-bypass twin, NOT matched here.
-  /^_commit(Extent|Bounds)AndNotify$/.test(name) ||                             // notify-only corners (ex silentRawSet{Extent,Bounds})
-  /^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$/.test(name) ||  // convenience movers (ex fullRawMove*)
-  /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name);  // convenience setters/resizer (ex rawSet*/rawResize*). NB the ex-silent* structural setters are now __hide/__addShadow/__add LEAVES under [I], NOT immediate-mutators (like the __commit* leaves).
-// (the __commit* leaves are deliberately NOT matched here -- rule [I] governs them more strictly. The —/✓ arrange
-//  corners _applyExtentBase/_applyMoveByBase/_applyMoveToBase (+ the silent _commitBounds commit) react synchronously and were never [E]-covered;
-//  they stay out, exactly as their pre-sweep raw-less _arrangeApply* form was.)
+  MUTATORS.polymorphicApplies.includes(name) ||   // the polymorphic apply corners `_apply<Geom>`, the arrange engine's frame-commit `_applyGrantedBounds` among them
+  MUTATORS.conveniences.includes(name);           // the convenience movers / setters / resizer (`_move*`, `_setWidthSizeHeightAccordingly`, `_resizeToWithoutSpacing`)
+// (the __commit* leaves are deliberately NOT matched here -- rule [I] governs them more strictly.)
 
 // [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never
 // the framework's private (_) surface, nor the immediate-mutator geometry API (the _apply*/_commit*/__commit*
@@ -214,7 +229,7 @@ const MACRO_SANCTION = /#\s*macro-private-call-sanctioned:\s*\S/;   // [D] exemp
 // so it flags the very "cores call cores" pattern it exists to bless. Name-based reachability cannot model
 // the orphan guard (a receiver's attached-ness is dynamic), so this DIRECT rule is the maximal SOUND static
 // check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
-const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;          // SINGLE-mutation tier only (Batch absorbs nested settles)
+const SETTLE_CALL = new RegExp('[@.]\\s*' + TIERS.single + '\\b');   // the SINGLE-mutation tier only (_settleLayoutsAfter, read from Widget by lib/settle-tiers.js; `\b` keeps the join lane out)
 const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notification hook -- settle-neutral by convention (layering/naming convention §3)
 // The REPAINT verbs (_changed / _fullChanged / _fullChangedIncludingShadowOwner today) are READ from Widget's own
 // definitions by lib/repaint-verbs.js, never spelled here: a hand list goes on matching the old names after a rename,
@@ -228,8 +243,8 @@ catch (e) { console.error('check-layering: operational error:', e.message); proc
 // a schedule/settle (_invalidateLayout/recalculateLayouts/_settleLayoutsAfter*), or a public setter (PUBLIC_SETTERS). Scoped to
 // @-self (a .-receiver can't be typed -- like SELF_ADD_CALL); the runtime audit covers dynamic dispatch.
 // _reFitContainer* = the phase valve; _announce* = the announce-up seam (§9.4, ex _reFitContainerAfterRawGeometryChange / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt).
-const LEAF_FORBIDDEN = new RegExp('@\\s*(_reFitContainer\\w*|_announce\\w*|_reLayout\\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\\w*|'
-  + REPAINT_VERBS + '|' + PUBLIC_SETTERS.join('|') + ')\\b');
+const LEAF_FORBIDDEN = new RegExp('@\\s*(_reFitContainer\\w*|_announce\\w*|_reLayout\\w*|_invalidateLayout|recalculateLayouts|'
+  + TIERS.all.join('|') + '|' + REPAINT_VERBS + '|' + PUBLIC_SETTERS.join('|') + ')\\b');   // the settle tiers: every one Widget defines (lib/settle-tiers.js)
 
 // [K] the 2x2 apply-family NAME-CONSISTENCY corners (layering/naming convention §2/§4). Since the *AndNotify rename
 // (Tier B, 2026-07-02) the axis is REACT × DISPATCH: the polymorphic _apply<Geom> (ex *AndNotify) is the override
@@ -239,15 +254,18 @@ const LEAF_FORBIDDEN = new RegExp('@\\s*(_reFitContainer\\w*|_announce\\w*|_reLa
 // half is dead, deleted 2026-07-01 -- rule [N]) NOR DISPATCH to its polymorphic _apply* sibling (routing an arrange apply
 // back through the very override the twin exists to bypass -- e.g. ClippingAtRectangularBoundsMixin._applyMoveBy, the
 // override _applyMoveByBase must skip). The old "*AndNotify REACHES the seam" POSITIVE is retired with the seam (it was
-// the RUNTIME auditTierAndApplyNaming's job; the settle-time up-edge replaced the seam). The _commit*AndNotify "must not
-// react" half is vacuous (those corners collapsed into the __commit* leaves / _commitBounds 2026-07-01) -- kept as a
-// defensive arm. Scoped to the 2x2 CORNERS only: the convenience movers/setters (_move*/_set*/_resize*) delegate to a
-// polymorphic _apply* corner freely, so they are NOT subjects.
-const APPLY_CORNER = /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)$|^_apply(Extent|MoveBy|MoveTo)Base$|^_commit(Extent|Bounds)AndNotify$/;  // clean poly form | the 3 override-bypass *Base twins | the (collapsed) notify-only commit corners
+// the RUNTIME auditTierAndApplyNaming's job; the settle-time up-edge replaced the seam). The commit half holds the
+// silent commit corner (_commitBounds: no repaint, no self-relayout) to not REACTING; its reacting sibling is the
+// polymorphic frame-commit _applyGrantedBounds. Scoped to the 2x2 CORNERS only: the convenience movers/setters
+// (_move*/_set*/_resize*) delegate to a polymorphic _apply* corner freely, so they are NOT subjects. The corners are
+// the groups of lib/immediate-mutators.js (asserted against src there), read by membership, never by name shape.
+const BYPASS_TWINS = new Set(MUTATORS.bypassTwins);           // the override-bypass _apply*Base twins
+const COMMIT_CORNERS = new Set(MUTATORS.commitCorners);       // the silent commit corner
+const APPLY_CORNER = new Set([...MUTATORS.polymorphicApplies, ...BYPASS_TWINS, ...COMMIT_CORNERS]);   // the polymorphic applies | the bypass twins | the commit corner
 const K_SEAM_CALL  = /@\s*(_reFitContainer\w*|_announce\w*)\b/;   // the up-notify seam (the DISPATCH-axis negative): _reFitContainer* valve + the _announce* announce-up (dead, deleted 2026-07-01)
 const K_REACT_CALL = new RegExp('@\\s*(' + REPAINT_VERBS + '|_reLayout\\w*|_positionAndResizeChildren)\\b');   // repaint (the derived verbs, see [I]) / self- or child-relayout (the REACT axis)
-const K_POLY_APPLY = /[@.]\s*_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)(?![A-Za-z])/;           // a call to a polymorphic apply corner (the clean _apply*, NOT the _apply*Base twin) — routing an arrange apply back through the override it bypasses
-const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores)
+const K_POLY_APPLY = new RegExp('[@.]\\s*(' + MUTATORS.polymorphicApplies.join('|') + ')(?![A-Za-z])');   // a call to a polymorphic apply corner (NOT an _apply*Base twin: the lookahead) — routing an arrange apply back through the override it bypasses
+const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores); an entry no src class defines as a SETTLING method removes nothing from the wrapper set and FAILS as stale (STALE_ALLOWLIST_ENTRY)
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
                                           // excludes the Point#add-ambiguous member form @expr().add / pt.add / @_addNoSettle.
@@ -313,6 +331,8 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 // both callers). @-self / .-receiver scoped -- the callers are always direct; comment mentions are stripped
 // (stripLine). Extend the allowlist ONLY when a genuine new per-event stream (a wheel/scroll or key-repeat
 // handler) adopts a *DeferredSettle entrypoint -- a discrete caller reaching for one is exactly the bug this catches.
+// The allowlist is keyed by caller METHOD NAME in any class, so an entry that excuses no call this run FAILS as
+// stale (STALE_ALLOWLIST_ENTRY): left in place it would excuse whatever future method reuses the name.
 const DEFERRED_SETTLE_CALL = /[@.]\s*(\w+DeferredSettle)\b/;
 const DEFERRED_SETTLE_CALLER_ALLOWLIST = new Set(['nonFloatDragging']);
 
@@ -321,7 +341,7 @@ const DEFERRED_SETTLE_CALLER_ALLOWLIST = new Set(['nonFloatDragging']);
 // ONLY for a dedicated _<name>Connector entrypoint (which carries the connectionsCalculationToken cycle-guard whenever
 // its action can propagate onward; a sink connector like _setFontSizeConnector needs none). Any other caller must
 // use the self-settling _settleLayoutsAfter (which surfaces the flow violation) or a _<name>NoSettle core.
-const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;
+const JOIN_CALL = new RegExp('[@.]\\s*' + TIERS.join + '\\b');   // the join lane, read from Widget by lib/settle-tiers.js
 
 // [Q] the connector-CALLER rule (docs/archive/connection-cascade-settle-fix-plan.md §7e). A _<name>Connector entrypoint
 // JOINS an already-open layout pass instead of throwing the flow-violation guard (it IS the reactive-connection
@@ -330,6 +350,8 @@ const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;
 // node rendering its OWN output mid-cascade -- connection-cascade-settle-fix-plan.md step 4). The reactive dispatch
 // (ControllerMixin._fireConnection) resolves the connector name at RUNTIME (@target[actionToCall]) and is invisible
 // to this name-scanner regardless. Extend the allowlist only when another genuine mid-cascade self-render appears.
+// Keyed by caller METHOD NAME in any class, like [O]'s: an entry that excuses no call this run FAILS as stale
+// (STALE_ALLOWLIST_ENTRY).
 const CONNECTOR_CALL = /[@.]\s*(_\w+Connector)\b/;
 const CONNECTOR_CALLER_ALLOWLIST = new Set(['recalculateOutput']);
 
@@ -345,7 +367,8 @@ const CONNECTOR_CALLER_ALLOWLIST = new Set(['recalculateOutput']);
 // SCOPE (v1, deliberately narrow): MenusHelper only -- src/apps/** is a DIFFERENT population (constructor-core plumbing
 // that check-constructors-build.js MANDATES to use _addNoSettle / _apply* cores, fact 11's apps census), so it stays
 // OUT; a phase-2 extension keyed on the ENCLOSING method's tier (flag only calls from non-underscore methods) is the
-// banked follow-up.
+// banked follow-up. USERLAND_FILES is the ONLY set of files [R] scans, so an entry that is not a scanned src file
+// (moved, renamed, deleted) would leave [R] checking nothing: it FAILS as stale (STALE_ALLOWLIST_ENTRY).
 const USERLAND_FILES = new Set(['src/basic-widgets/menu-system/MenusHelper.coffee']);
 const USERLAND_PRIVATE_CALL = /([A-Za-z_$][\w$]*)(\._[a-zA-Z]\w*)/;   // <bare-identifier receiver>._name (a @-self call is @_name -- no identifier+dot -- so it is NOT matched; this._name is caught then excluded by name)
 const PRIVATE_USE_MARKER = 'private-use-sanctioned';   // the [R] per-LINE conscious sign-off (owner's escape hatch)
@@ -467,8 +490,12 @@ function discoverSettlingWrappers(files) {
     }
     flush();
   }
+  // a WRAPPER_EXCLUDED entry that no class defines as settling, or that is a settling setter (removed below
+  // anyway), removes nothing from the wrapper set: stale
+  const setterNames = new Set([...PUBLIC_SETTERS, ...TEXT_SETTERS]);
+  const staleWrapperExclusions = [...WRAPPER_EXCLUDED].filter((n) => !settlingClassesByName.has(n) || setterNames.has(n));
   for (const n of [...PUBLIC_SETTERS, ...TEXT_SETTERS, ...WRAPPER_EXCLUDED]) settlingClassesByName.delete(n);
-  return { settlingClassesByName, plainClassesByName, parentOf };
+  return { settlingClassesByName, plainClassesByName, parentOf, staleWrapperExclusions };
 }
 
 // [G] @-self resolution: walk `klass` + its ancestors to the NEAREST class defining `name`.
@@ -585,7 +612,7 @@ function checkFile(file, violations, gCtx, warnings) {
       }
     }
     if (isImmediateMutator(tier) && invalidate) {
-      violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — an apply/commit corner or convenience mover must only MUTATE geometry, never SCHEDULE layout (task #17)  — ${at}`);
+      violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — a polymorphic apply corner or convenience mover must only MUTATE geometry, never SCHEDULE layout (task #17)  — ${at}`);
     }
     // [E] schedule-valve containment (B4 hook retirement, ordered-downwalk plan §9-N1, 2026-07-16):
     // the phase-valve is [E]-banned in immediate mutators exactly like _invalidateLayout, with ONE
@@ -595,7 +622,7 @@ function checkFile(file, violations, gCtx, warnings) {
     // for explicit sanctioning, don't just call it.
     if (isImmediateMutator(tier) && VALVE_CALL.test(code) &&
         !(selfClass === 'Widget' && method === '_applyExtent')) {
-      violations.push(`[E] immediate mutator ${method}() calls _scheduleRelayoutRespectingPhase() — the ONE sanctioned schedule-valve lives in Widget._applyExtent (ordered-downwalk plan §9-N1); an apply/commit corner must not schedule  — ${at}`);
+      violations.push(`[E] immediate mutator ${method}() calls _scheduleRelayoutRespectingPhase() — the ONE sanctioned schedule-valve lives in Widget._applyExtent (ordered-downwalk plan §9-N1); a polymorphic apply corner must not schedule  — ${at}`);
     }
     // [J] settle-neutral callbacks (layering/naming convention §3/§4): a notification HOOK (_reactTo* / _before*)
     // must NOT open a settle -- the gesture/structural DISPATCHER owns the single _settleLayoutsAfter; the hook is
@@ -612,14 +639,14 @@ function checkFile(file, violations, gCtx, warnings) {
       if (leaf) violations.push(`[I] __ leaf ${method}() @-calls ${leaf[1]}() — a __ leaf must trigger no orchestration (seam/react/schedule/settle/public setter); keep it a pure bottom (layering/naming convention §1)  — ${at}`);
     }
     // [K] 2x2 apply-family name-consistency (the two statically-sound negatives; positive reaches-seam is the runtime audit's job, see the defs).
-    if (APPLY_CORNER.test(tier)) {
-      if (/Base$/.test(tier)) {
+    if (APPLY_CORNER.has(tier)) {
+      if (BYPASS_TWINS.has(tier)) {
         // override-BYPASS twin (_apply*Base) reacts only — must NOT fire the container re-fit seam nor DISPATCH to its polymorphic _apply* sibling (the corner it exists to bypass)
         if (K_SEAM_CALL.test(code)) violations.push(`[K] bypass twin ${method}() fires the re-fit seam — a _apply*Base primitive reacts only; the polymorphic dispatch point is the bare _apply* corner (layering/naming convention §2)  — ${at}`);
         else { const kc = code.match(K_POLY_APPLY); if (kc) violations.push(`[K] bypass twin ${method}() dispatches to polymorphic ${kc[0].replace(/^[@.]\s*/, '')}() — a _apply*Base must bypass the override, not route the arrange apply back through it (layering/naming convention §2)  — ${at}`); }
-      } else if (/^_commit/.test(tier) && K_REACT_CALL.test(code)) {
-        // notify-only corner (_commit*AndNotify) commits + notifies — must NOT react  [vacuous: these corners collapsed into the __commit* leaves / _commitBounds 2026-07-01]
-        violations.push(`[K] notify-only corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — _commit*AndNotify only commits; the reacting polymorphic mutator is _apply* (layering/naming convention §2)  — ${at}`);
+      } else if (COMMIT_CORNERS.has(tier) && K_REACT_CALL.test(code)) {
+        // the silent commit corner commits — must NOT react (repaint / re-layout)
+        violations.push(`[K] commit corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — a commit corner only commits; the reacting sibling is the polymorphic _apply* (the frame-commit _applyGrantedBounds) (layering/naming convention §2)  — ${at}`);
       }
       // the clean polymorphic _apply* (ex *AndNotify) reacts + IS the override dispatch point — no static negative:
       // its "reaches the container re-fit" is now the settle-time up-edge's job, not a corner-name invariant.
@@ -627,6 +654,7 @@ function checkFile(file, violations, gCtx, warnings) {
     // [O] the *DeferredSettle caller allowlist (see the consts above): a *DeferredSettle entrypoint defers its layout settle
     // to the ONE end-of-cycle flush, sound only inside an allowlisted per-event STREAM handler.
     const deferredSettle = code.match(DEFERRED_SETTLE_CALL);
+    if (deferredSettle && DEFERRED_SETTLE_CALLER_ALLOWLIST.has(tier)) gCtx.excused.deferredSettle.add(tier);
     if (deferredSettle && !DEFERRED_SETTLE_CALLER_ALLOWLIST.has(tier)) {
       violations.push(`[O] ${method}() calls ${deferredSettle[1]}() outside the deferred-settle-caller allowlist — a *DeferredSettle entrypoint DEFERS its layout settle to the ONE end-of-cycle flush, which is byte-identical (hence sound) only inside a per-event STREAM handler (drag/scroll/key burst) that never reads back the settled layout mid-cycle. A discrete/programmatic caller must use the self-settling setter. If this genuinely IS such a stream, add its method name to DEFERRED_SETTLE_CALLER_ALLOWLIST (layering/naming convention §4)  — ${at}`);
     }
@@ -640,6 +668,7 @@ function checkFile(file, violations, gCtx, warnings) {
     // [Q] the connector-caller allowlist (see CONNECTOR_CALL above): a hard-coded textual call to a _<name>Connector
     // must be a sanctioned mid-cascade self-render, else it smuggles a never-throwing setter past the flow guard.
     const connectorCall = code.match(CONNECTOR_CALL);
+    if (connectorCall && CONNECTOR_CALLER_ALLOWLIST.has(tier)) gCtx.excused.connector.add(tier);
     if (connectorCall && !CONNECTOR_CALLER_ALLOWLIST.has(tier)) {
       violations.push(`[Q] ${method}() calls ${connectorCall[1]}() outside the connector-caller allowlist — a _<name>Connector entrypoint JOINS an already-open layout pass instead of throwing the flow-violation guard (the reactive-connection settle lane, rule [P]); a hard-coded textual call to one smuggles a never-throwing setter past that guard. Only a sanctioned mid-cascade self-render (a patch node's recalculateOutput) may call one directly; the reactive dispatch resolves the connector name at runtime and needs no textual call. If this genuinely IS such a render, add its method name to CONNECTOR_CALLER_ALLOWLIST (connection-cascade-settle-fix-plan.md §7e)  — ${at}`);
     }
@@ -805,6 +834,7 @@ function main() {
   const wrapperNames = [...gCtx.settlingClassesByName.keys()];
   gCtx.WRAPPER_CALL = wrapperNames.length
     ? new RegExp('([@.])\\s*(' + wrapperNames.join('|') + ')\\b') : null;
+  gCtx.excused = { deferredSettle: new Set(), connector: new Set() };   // the [O]/[Q] caller names that excused a call this run
   const violations = [];
   const warnings = [];
   for (const f of files) {
@@ -829,6 +859,26 @@ function main() {
       catch (e) { console.error(`check-layering: operational error in ${MACRO_VERBS_FILE}:`, e.message); process.exit(2); }
     }
   }
+  // the exemption tables, each held to what it exempts this run (a stale entry is a violation, never a note)
+  for (const n of gCtx.staleWrapperExclusions) {
+    const why = PUBLIC_SETTERS.includes(n) || TEXT_SETTERS.includes(n)
+      ? `${n} is a settling setter, which [A] already takes out of the wrapper set`
+      : `no src class defines ${n} as a method that settles via _settleLayoutsAfter`;
+    violations.push(`[G] STALE_ALLOWLIST_ENTRY WRAPPER_EXCLUDED '${n}' — ${why}, so the exclusion removes nothing from the discovered wrapper set: delete the entry (or, if the wrapper was renamed, exclude the new name with the same reason)`);
+  }
+  const callerTables = [
+    ['O', 'DEFERRED_SETTLE_CALLER_ALLOWLIST', DEFERRED_SETTLE_CALLER_ALLOWLIST, gCtx.excused.deferredSettle, '*DeferredSettle'],
+    ['Q', 'CONNECTOR_CALLER_ALLOWLIST', CONNECTOR_CALLER_ALLOWLIST, gCtx.excused.connector, '_<name>Connector'],
+  ];
+  for (const [rule, table, allow, used, callee] of callerTables) {
+    for (const n of allow) {
+      if (!used.has(n)) violations.push(`[${rule}] STALE_ALLOWLIST_ENTRY ${table} '${n}' — no method named ${n} calls a ${callee} entrypoint this run, so the entry excuses nothing today and would excuse whatever future method reuses the name: delete it (or, if the caller was renamed, allowlist the new name)`);
+    }
+  }
+  const scanned = new Set(files.map((f) => path.relative(path.join(__dirname, '..'), f)));
+  for (const f of USERLAND_FILES) {
+    if (!scanned.has(f)) violations.push(`[R] STALE_ALLOWLIST_ENTRY USERLAND_FILES '${f}' — not a scanned src file, and USERLAND_FILES is the only set of files [R] reads, so [R] checks nothing there: point the entry at the file's new path (or delete it with the rule)`);
+  }
   if (warnings.length) {
     console.warn(`\n⚠ layering gate — ${warnings.length} [H] early-return-before-settle warning(s) (non-fatal):`);
     for (const w of warnings) console.warn('  ' + w);
@@ -838,12 +888,12 @@ function main() {
     console.error(`\n!!! layering gate FAILED — ${violations.length} violation(s):\n`);
     for (const v of violations) console.error('  ' + v);
     console.error('\nSee docs/archive/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
-    console.error('E: immediate geometry mutators (apply/commit corners + convenience movers) must not call _invalidateLayout) and docs/archive/deferred-layout-16-macro-breakages.md (A/B/C).');
+    console.error('E: immediate geometry mutators (polymorphic apply corners + convenience movers) must not call _invalidateLayout) and docs/archive/deferred-layout-16-macro-breakages.md (A/B/C).');
     console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/archive/deferred-layout-OVERVIEW.md §11.');
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
     console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming convention §1).');
     console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming convention §3).');
-    console.error('K: a 2x2 apply corner must match its name — a _apply*Base bypass twin must not fire the container re-fit seam nor dispatch to its polymorphic _apply* sibling; a _commit*AndNotify must not react (layering/naming convention §2).');
+    console.error('K: a 2x2 apply corner must match its name — a _apply*Base bypass twin must not fire the container re-fit seam nor dispatch to its polymorphic _apply* sibling; the silent commit corner (_commitBounds) must not react (layering/naming convention §2).');
     console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderFrame)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
     console.error('M: the retired raw*/silent*/fullRaw fragments and the _apply*AndNotify suffix must not reappear as method names (use _apply*/_apply*Base/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
     console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');

@@ -64,8 +64,7 @@ extractDependenciesFromSource = ->
 
   for eachFile in SourceVault.names()
 
-    if eachFile == "Class" then continue
-    if eachFile == "Mixin" then continue
+    continue if eachFile in META_SYSTEM_SOURCES
     if srcLoadCompileDebugWrites then console.log eachFile + " - "
     fileDependenciesSet = new Set
 

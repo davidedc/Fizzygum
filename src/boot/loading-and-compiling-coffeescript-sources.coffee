@@ -306,7 +306,10 @@ storeSourcesAndPotentiallyCompileThemAndExecuteThem = (justIngestSources) ->
   # one job, in dependency order; the scheduler fits as many per turn as its
   # time budget allows. The returned promise resolves when everything is in
   # (or rejects on the first compile error), just like the old chain did.
-  names = (eachFile for eachFile from loadOrder when eachFile not in ["Class", "Mixin", "globalFunctions"])
+  # the meta-system's own sources were compiled by hand before any batch (META_SYSTEM_SOURCES), and a
+  # name with no source in the vault -- globalFunctions, the boot code every source depends on -- has
+  # nothing to compile
+  names = (eachFile for eachFile from loadOrder when eachFile not in META_SYSTEM_SOURCES and SourceVault.get(eachFile)?)
   window.SourceCompileScheduler.enqueueJob(names, justIngestSources).then ->
     removeLogDiv()
 

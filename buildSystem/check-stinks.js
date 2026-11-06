@@ -29,7 +29,9 @@
 // — a directory (`'demos/'`, which covers its subdirectories too) or a file (`'Theme.coffee'`). Use
 // it when a smell is a smell only OUTSIDE some places (a colour literal is a look decision in a
 // chrome file and plain data in a demo). Every file the list does not name is scanned, so a NEW
-// file is counted by default; an exclusion is a decision someone wrote down, never an accident.
+// file is counted by default; an exclusion is a decision someone wrote down, never an accident. A
+// prefix that no src path starts with excludes nothing — a moved directory leaves it naming a place
+// that is gone — so it FAILS the build as stale (STALE_ALLOWLIST_ENTRY): fix the path or delete it.
 //
 // A stink may declare `sanctioned`: a list of { file, member, count, why } naming the sites INSIDE
 // scanned files where a hit is not the smell — a literal that is data, not a look decision. `file`
@@ -199,6 +201,7 @@ const files = walk(SRC, []);
 let over = 0;        // total occurrences ABOVE baseline (a build failure)
 let ratchetable = 0; // stinks now BELOW baseline (a chance to tighten)
 let badSanctions = 0; // STALE or COUNT-mismatched `sanctioned` entries (a build failure)
+let staleExcludes = 0; // `exclude` prefixes no src path starts with (a build failure)
 for (const stink of STINKS) {
   if (listId && stink.id !== listId) continue;
   const baseline = stink.baseline || 0;
@@ -231,11 +234,13 @@ for (const stink of STINKS) {
       for (const h of found) sanctionedHits.push([h, s.why]);
       hits = hits.filter(h => !found.includes(h));
     } else if (found.length === 0) {
-      sanctionFailures.push(`STALE SANCTION ${s.file}::${s.member} — no hit left there: delete the entry`);
+      sanctionFailures.push(`STALE SANCTION (STALE_ALLOWLIST_ENTRY) ${s.file}::${s.member} — no hit left there: delete the entry`);
     } else {
       sanctionFailures.push(`SANCTION COUNT ${s.file}::${s.member} — expects ${s.count}, found ${found.length}: decide each literal again, then set the count`);
     }
   }
+  const excludeFailures = (stink.exclude || []).filter(prefix => !files.some(p => srcRelative(p).startsWith(prefix)))
+    .map(prefix => `STALE_ALLOWLIST_ENTRY exclude '${prefix}' — no src path starts with it, so it excludes nothing: fix the path or delete the entry`);
   const n = hits.length;
   if (listId) {
     console.log(`[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline})`);
@@ -244,8 +249,13 @@ for (const stink of STINKS) {
       console.log(`[stinks] ${stink.id}: ${sanctionedHits.length} sanctioned site(s), not counted:`);
       for (const [h, why] of sanctionedHits) console.log(`    ${h}    -- ${why}`);
     }
-    for (const f of sanctionFailures) console.log(`    ${f}`);
+    for (const f of [...sanctionFailures, ...excludeFailures]) console.log(`    ${f}`);
     process.exit(0);
+  }
+  if (excludeFailures.length) {
+    staleExcludes += excludeFailures.length;
+    console.error(`[stinks] ${stink.id}: ${excludeFailures.length === 1 ? '1 exclude prefix names no src path' : `${excludeFailures.length} exclude prefixes name no src path`}:`);
+    for (const f of excludeFailures) console.error(`    ${f}`);
   }
   if (sanctionFailures.length) {
     badSanctions += sanctionFailures.length;
@@ -273,7 +283,10 @@ if (over) {
 if (badSanctions) {
   console.error(`\n[stinks] FAIL -- ${badSanctions} sanctioned entr${badSanctions === 1 ? 'y no longer matches' : 'ies no longer match'} the code it names (see above).`);
 }
-if (over || badSanctions) process.exit(1);
+if (staleExcludes) {
+  console.error(`\n[stinks] FAIL -- ${staleExcludes} exclude prefix${staleExcludes === 1 ? ' names' : 'es name'} no src path (see above).`);
+}
+if (over || badSanctions || staleExcludes) process.exit(1);
 
 console.log(`[stinks] OK -- all stinks within baseline.`);
 process.exit(0);

@@ -431,6 +431,27 @@ if ! $noSyntaxCheck ; then
   echo "... dead-method check OK"
 fi
 
+# --- build-time HAND-LIST gate (baseline-ratcheted) -----------------------------------
+# A string-list literal that NAMES classes or members declared elsewhere is a second source of truth:
+# when the declaration moves, the list -- and any gate keyed on it -- silently checks less. Such a
+# list must be the class's own DECLARATION (`@serializationTransients`, `requiredParts`,
+# `optionalParts`), carry `hand-list-sanctioned: <what fails>` naming a REAL guard (a gate/rig file,
+# a SystemTest, or a token the code emits), or be counted against a per-repo inline baseline that
+# only falls. Multi-line by design: the lists that rot are one name per line, which no per-line stink
+# can see. (buildSystem/check-hand-lists.js -- reads src/ + buildSystem/ and, when the sibling
+# Fizzygum-tests repo is present, its scripts/ + harness; without it the tests half SKIPS and says
+# so. Same --noSyntaxCheck escape hatch and explicit $? check as the gates above.)
+if ! $noSyntaxCheck ; then
+  echo "checking for hand-kept name lists (declared, sanctioned or ratcheted) ..."
+  node ./buildSystem/check-hand-lists.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: hand-list gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... hand-list check OK"
+fi
+
 # --- build-time UNRESOLVED-SENDS gate -------------------------------------------------
 # The exact INVERSE of the dead-method gate above: it flags a CALL `[@.]name(` whose name is
 # IMPLEMENTED NOWHERE in src + harness -- a guaranteed runtime TypeError on any path reaching it.

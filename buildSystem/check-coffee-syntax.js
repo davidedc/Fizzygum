@@ -193,6 +193,8 @@ function leadingVarNames(js) {
 // WHICH member the next stripped fragment belongs to (a class-side one is reported as `@name`).
 const helperLosses = [];   // [{ rel, cls, member, names }]
 let tapRel = null, tapMember = null, strippedFragments = 0;
+// hand-list-sanctioned: check-coffee-syntax.js fails (exit 2, and build_it_please.sh aborts) on a name
+// here Class.prototype no longer defines — the loop right below
 for (const m of ['_equivalentforSuper', '_removeHelperFunctions']) {
   if (typeof Class.prototype[m] !== 'function') fail('Class.prototype.' + m + ' is gone — the helper check cannot tap the meta-system\'s strip; re-read THE SECOND CHECK against src/meta/Class.coffee');
 }

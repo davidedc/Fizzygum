@@ -24,6 +24,9 @@ class FrameWdgt extends Widget
 
   # my four edge slots, in the order my arrange places them: the two full-width bands first, so
   # the flank columns share the vertical span left between them
+  # hand-list-sanctioned: SystemTest_macroDocsToolbarDockSidesAndFloat (the top band offer, and the "Right"
+  # and "Bottom" rows of the Dock submenu, built from this list) and SystemTest_macroDockAnyFrame (the left
+  # band offer) fail on a side missing here or spelled apart from my slots' keys
   @DOCK_SIDES: ["top", "bottom", "left", "right"]
 
   # TODO we already have the concept of "droplet" widget

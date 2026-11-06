@@ -62,6 +62,8 @@ const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
 
 const SRC = path.resolve(process.argv[2] || path.resolve(__dirname, '../src'));
+// hand-list-sanctioned: check-page-loaded-elements.js — a hook renamed in its holders fails each as
+// "the class chain defines no <hook>"; one renamed at its walker's call site fails as "neither walker calls"
 const HOOKS = ['_afterDeserialization', '_reactToBeingCopied'];
 const NOT_HELD_MARKER = /#\s*page-element-not-held:\s*\S/;
 const ELEMENT = String.raw`(?:new\s+(?:window\.)?(?:Image|Audio)\b|document\.createElement\s*\(?\s*['"](?:img|video|audio)['"])`;
@@ -202,6 +204,15 @@ for (const [name, k] of Object.entries(classes)) {
     if (missingHooks.length) why.push(`the class chain defines no ${missingHooks.join(' and no ')}`);
     if (why.length) violations.push({ name, field: w.field, at: w.at, text: w.text, why });
   }
+}
+
+// EACH HOOK IS ONE A WALKER CALLS — the Deserializer after a restore, the Duplicator after a copy — so a
+// hook renamed at its call site, which would leave every holder's re-make uncalled, fails here too
+const WALKERS = [path.join(SRC, 'serialization'), path.join(SRC, 'duplication')];
+for (const h of HOOKS) {
+  const call = new RegExp(String.raw`\.${h}\??\(`);
+  const called = WALKERS.some((d) => fs.existsSync(d) && walk(d, []).some((f) => fs.readFileSync(f, 'utf8').split('\n').some((l) => call.test(withoutComment(l)))));
+  if (!called) problems.push(`  HOOKS names ${h}, which neither walker (src/serialization, src/duplication) calls — a holder defining it re-makes nothing`);
 }
 
 if (problems.length) {

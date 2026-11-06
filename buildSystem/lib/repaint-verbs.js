@@ -23,6 +23,8 @@ const path = require('path');
 const { methodSpans } = require('./coffee-method-header');
 
 const REPAINT_VERB_NAME = /^_(changed|fullChanged\w*)$/;
+// hand-list-sanctioned: repaint-verbs.js throws on a name here Widget.coffee no longer defines, and
+// check-layering.js and check-invalidation-receivers.js exit 2 on that throw
 const REQUIRED = ['_changed', '_fullChanged'];
 
 // The repaint verbs, longest first (so an alternation built from them reads the longest name first).

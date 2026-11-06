@@ -11,23 +11,33 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
-### `plans/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; Tiers 1 + 2 LANDED)
+### `archive/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; CLOSED 2026-11-06, all four tiers landed)
 - [ ] **Tier 1's findings, each recorded where its check states it (plan §3 ledger):**
   - [ ] **A SAVE of typed code that does not compile still throws into the crash path**: `ScriptWdgt.saveScript`
         ("Save + close", which sets `@savedScript` before it compiles) and the inspectors' save
         (`InspectorWdgt.applyPropertyEdit` → `injectProperty` → `evaluateString`; the class inspector's mixin route
         already reports) — the RUN gestures report through `Widget._reportingCompileErrors`; a save needs its own
         answer for the half-applied state, so it was left out of that change.
-  - [ ] **check-layering's static apply-corner families are not held to the source**: `isImmediateMutator` /
-        `APPLY_CORNER` keep the `_commit(Extent|Bounds)AndNotify` arm that matches nothing and omit
-        `_commitBounds` / `_applyGrantedBounds` (the tier-naming prelude now classifies both, asserted both ways).
   - [ ] **An untokenized `console.error` fails nothing**: "this shouldn't happen" asserts in `StackLayoutEngine`,
         the mixed-division-axes warning, `Duplicator`'s unrecognized type, `AppLauncherWdgt`'s missing catalog entry —
         no gate token, so every runner lets them through (the gate-token selftest sees tokens only).
-- [ ] Tier 3 (§5): diagnostic tools reporting on a stale picture (aim-census, layout-audit and
-      revisit-trace preludes, census-nosettle-naming — which also hand-lists the repaint verbs `lib/repaint-verbs.js`
-      now owns —, heap-forensics roots, smoke-boot).
-- [ ] Tier 4 (§6): the standing guard — allowlists report unused entries; a hand-list gate; the doctrine.
+- [ ] **Tier 4's residue (plan §6 ledger):**
+  - [ ] **The four LiveCodeLang vocabulary lists are the hand-list gate's whole Fizzygum baseline (4)**
+        (`LCLCodePreprocessor`'s `qualifyingCommands` / `primitives` / `commandsExcludingScaleRotateMove` /
+        `colorCommands`): they mirror the commands `FridgeMagnets3DCanvasWdgt` implements, and only six of the 29 are
+        exercised by a test. Their guard is `plans/livecodelang-cleanup-and-extensions-plan.md`'s R1 (the
+        headless preprocessor gate reading the canvas's methods); then sanction them and drop the baseline to 0.
+  - [ ] **`BUILTINS` still masks 29 names Fizzygum also defines** (`push`, `add`, `get`, `close`, `focus`, `test`, …):
+        deleting the Fizzygum method behind one of them while a call survives is excused by the platform entry
+        (`check-unresolved-sends.js` is receiver-blind). A receiver-aware rule, or a split of each such name, is a gate
+        design of its own.
+  - [ ] **`HandleWdgt.attach` builds a "no widgets to attach to" message it never shows** (`menu.popUpAtHand() if
+        choices.length`, while the comment says it shows a message) — unreachable for a handle on the canvas (the world
+        is always a candidate). Owner's call: show it, or delete the dead branch.
+  - [ ] **`fg recapture-inspector` recaptures the MOUSE references only**: the churn set's finger references go stale
+        on the same change and take `fg recapture --auto --pointer=finger`. Fold a finger pass in?
+  - [ ] **The runner's summary line is parsed in three places** (`recapture.js`, `run-atlas-fuzz.js`,
+        `derive-inspector-churn-set.js`): one shared reader in `scripts/lib/`.
 
 ### `archive/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (IN EXECUTION 2026-08-20; phases 1–4 done, see the plan's STATUS box)
 The three-arc program (A in-band inventory instruments · B Chrome-only VM-truth riders · C the

@@ -267,8 +267,17 @@ if (!harnessPresent()) {
   // (`WorldTestSupport.installOnto WorldWdgt` & co in src/boot/globalFunctions.coffee) by the shared
   // harvest check-part-edges.js reads too. Only PROTOTYPE members: `@target[@action]` looks the
   // action up on an instance, which an installed static never reaches.
+  // The harvest REFUSES a support class it cannot read faithfully -- an installOnto shape it does not
+  // model, or a @staticMembersToInstall that disagrees with the statics the class declares -- and the
+  // refusal is reported as itself, exit 2 like check-part-edges.js: without a faithful member set this
+  // rule cannot be answered.
+  let edges;
+  try { edges = installEdges(); } catch (e) {
+    console.error('[menu-actions] FAIL — the boot install edges could not be read:\n' + e.message);
+    process.exit(2);
+  }
   const installedOn = new Map();   // core class name -> Set(member names)
-  for (const edge of installEdges()) {
+  for (const edge of edges) {
     if (!installedOn.has(edge.target)) installedOn.set(edge.target, new Set());
     const into = installedOn.get(edge.target);
     for (const m of edge.members) if (!m.isStatic) into.add(m.name);

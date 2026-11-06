@@ -52,7 +52,7 @@
 //    `scrolledBy` is exempt (deltas, not positions). Exemption marker for a future deliberate
 //    consumer: `# escalated-pos-sanctioned: <reason>` directly above the handler header.
 //
-// Exit codes: 0 clean · 1 violation (or a stale NOT_POSITIONAL entry) · 2 operational (Widget.coffee
+// Exit codes: 0 clean · 1 violation (or a stale NOT_POSITIONAL / NON_WIDGET_ROOTS entry) · 2 operational (Widget.coffee
 // unreadable, or the POSITIONAL derivation found nothing — which would make rule B vacuous).
 
 const fs = require('fs');
@@ -117,7 +117,14 @@ const BOUNDS_RE = new RegExp('(@?[A-Za-z_$][A-Za-z0-9_$]*)((?:\\.[A-Za-z_$][A-Za
 const BARE_RE = new RegExp('(?<![A-Za-z0-9_$.])@(' + POSITIONAL + ')\\s*\\(', 'g');
 const BARE_BOUNDS_RE = /(?<![A-Za-z0-9_$.])@bounds\b(?!\s*=[^=])/;
 const MAPPED_RE = /screenPointToMyPlane|localPointToScreen|mapRectToScreen|screenBounds|scrollTranslationOfChild|_scrollTranslation|scrollOffset/;
-const NON_WIDGET_ROOTS = new Set(['Math', 'Rectangle', 'Point', 'window', 'JSON', 'Object']);
+// receivers that are no widget (a class or a host object), never counted as a positional root of rule B. A root
+// listed here must be one some scanned line actually calls a position query (or `.bounds`) on, or it FAILS as
+// stale (STALE_ALLOWLIST_ENTRY): an entry that excuses nothing today would excuse the next line that mixes it.
+// Empty: no line in src calls a position query or `.bounds` on a class or host object (Math, Rectangle, Point,
+// window, JSON, Object each excuse nothing), and a line that did would be COUNTED by rule B — the safe
+// direction, where a reader classifies it — until a root is added here with the line it excuses.
+const NON_WIDGET_ROOTS = new Set([]);
+const nonWidgetRootsUsed = new Set();
 
 // the pointer handlers whose FIRST parameter is the pointer position (C1 checks the ones of them that
 // some `escalateEvent` call forwards), and the handler handed the raw SCREEN pointer with the
@@ -184,7 +191,7 @@ for (const p of files) {
       re.lastIndex = 0;
       let m;
       while ((m = re.exec(line)) !== null) {
-        if (NON_WIDGET_ROOTS.has(m[1])) continue;
+        if (NON_WIDGET_ROOTS.has(m[1])) { nonWidgetRootsUsed.add(m[1]); continue; }
         // '@bounds' as a chain root is the widget's OWN box (@bounds.left() === @left()) —
         // fold it into '@' so an accessor body is one receiver, not a phantom mix
         roots.add(m[1] === '@bounds' ? '@' : m[1]);
@@ -254,6 +261,12 @@ if (funnelViolations.length) {
   funnelViolations.forEach((l) => console.error('    ' + l));
 } else console.log('[plane-discipline A] offset funnel: 0 bare writes -- OK');
 
+const staleRoots = [...NON_WIDGET_ROOTS].filter((r) => !nonWidgetRootsUsed.has(r));
+if (staleRoots.length) {
+  failed = true;
+  console.error(`[plane-discipline B] FAIL — NON_WIDGET_ROOTS names ${staleRoots.length} root(s) no scanned line calls a position query or \`.bounds\` on:`);
+  for (const r of staleRoots) console.error(`    STALE_ALLOWLIST_ENTRY NON_WIDGET_ROOTS '${r}' — it excuses no line today: delete the entry`);
+}
 if (STALE_EXCLUSIONS.length) {
   failed = true;
   console.error(`[plane-discipline B] FAIL — NOT_POSITIONAL names ${STALE_EXCLUSIONS.length} method(s) the POSITIONAL derivation no longer catches on Widget: ${STALE_EXCLUSIONS.join(', ')} — a stale exclusion; delete the entry (or, if the method was renamed, exclude the new name with the same reason).`);

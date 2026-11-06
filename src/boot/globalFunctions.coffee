@@ -155,6 +155,16 @@ loadJSFilePromise = (fileName) ->
     tryToLoadFile()
 
 
+# THE META-SYSTEM'S OWN SOURCES, in the order they compile: the only sources boot fetches one by one
+# and compiles by hand, because every other source needs them to exist before it can be ingested.
+# dependencies-finding leaves them out of the load order and the compile job skips them, both by
+# reading this list.
+# hand-list-sanctioned: smoke-boot-headless.js — boot fetches js/coffeescript-sources/<name>-source.js
+# for each name here, and build.py writes that file only for a source it holds under that name, so a
+# stale name fails the fetch and the boot (the smoke fails on the failed request and the console error)
+META_SYSTEM_SOURCES = ["Mixin", "Class"]
+
+
 # there are two main ways of booting the world:
 # 1. without pre-compiled files. In this case the
 #    boot needs to load all the sources, compile
@@ -204,16 +214,14 @@ loadJSFilePromise = (fileName) ->
 # step 4 below is every eager batch — core's numbered batches, ≈1.9 MB on production — which would hand back the entire saving
 # that made the part lazy. These three files are ~39 KB.
 loadMetaSystemPromise = ->
-  Promise.all [
-    loadJSFilePromise("js/coffeescript-sources/Class-source.js"),
-    loadJSFilePromise("js/coffeescript-sources/Mixin-source.js")
-  ]
+  Promise.all (loadJSFilePromise "js/coffeescript-sources/#{eachName}-source.js" for eachName in META_SYSTEM_SOURCES)
   .then ->
     if bootLoadingDebugWrites then console.log "---- Class + Mixin sources loaded"
-    # the two meta-system sources are the only ones fetched individually and compiled by hand:
+    # the meta-system's sources are the only ones fetched individually and compiled by hand:
     # everything else needs Class/Mixin to already exist before it can be ingested.
-    eval.call window, compileFGCode SourceVault.get("Mixin"), true
-    eval.call window, compileFGCode SourceVault.get("Class"), true
+    for eachName in META_SYSTEM_SOURCES
+      eval.call window, compileFGCode SourceVault.get(eachName), true
+    return
   .then ->
     if bootLoadingDebugWrites then console.log "---- compiled the Mixin and Class sources"
     loadJSFilePromise("js/src/dependencies-finding-min.js")

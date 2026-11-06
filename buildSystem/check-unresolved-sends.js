@@ -52,7 +52,8 @@
 // EXEMPTIONS — two lists:
 //   BUILTINS (in-file, below)              — JS/DOM/canvas platform API. A fact about the platform.
 //   unresolved-sends-allowlist.txt (file)  — vendor + genuinely-dynamic names, `name  # reason`.
-//                                            A fact about Fizzygum's dependencies.
+//                                            A fact about Fizzygum's dependencies. An entry with no
+//                                            unresolved call left FAILS as stale (STALE_ALLOWLIST_ENTRY).
 //
 // Exit codes: 0 clean · 1 unresolved send not exempted · 2 operational error.
 // Flags: --update-allowlist (re-seed the allowlist with the current unresolved set)
@@ -184,25 +185,27 @@ function harvestCalls(files) {
 }
 
 // ─── the platform (JS / DOM / canvas builtins) ──────────────────────────────────────────────────
-// A fact about the PLATFORM, not about Fizzygum — hence in-file, not in the allowlist. Seeded from
-// the 2026-07-15 probe; extend when a genuinely-standard API surfaces.
+// A fact about the PLATFORM, not about Fizzygum — hence in-file, not in the allowlist. Each entry is a
+// platform method some `[@.]name(` call in src+harness SENDS: a platform name is added the first time a
+// call sends it. An entry no call sends FAILS as stale (STALE_ALLOWLIST_ENTRY), because it is not
+// harmless: it excuses nothing today, yet once Fizzygum defines and calls a method of that name, deleting
+// the method while a call survives would be excused by the entry — the guaranteed TypeError this gate
+// exists to catch.
+// (A name that is sent AND also defined by Fizzygum — `push`, `get`, `close`, … — carries that risk while
+// it is listed; listing it is still right, because the platform call is real.)
 const BUILTINS = new Set(`
-push pop shift unshift slice splice concat join map filter forEach reduce reduceRight some every find findIndex indexOf lastIndexOf includes sort reverse flat flatMap fill keys values entries
-charAt charCodeAt codePointAt fromCharCode toLowerCase toUpperCase trim trimStart trimEnd split replace replaceAll match matchAll search startsWith endsWith padStart padEnd repeat substring substr localeCompare normalize
-toString toFixed toPrecision valueOf hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toJSON
-abs floor ceil round sqrt pow min max random atan atan2 sin cos tan asin acos exp log log2 sign hypot trunc cbrt
-now parse stringify freeze assign create defineProperty getOwnPropertyNames getPrototypeOf setPrototypeOf isArray from of
-getContext fillRect strokeRect clearRect fillText strokeText measureText beginPath closePath moveTo lineTo bezierCurveTo quadraticCurveTo arc arcTo ellipse rect fill stroke clip save restore translate rotate scale transform setTransform resetTransform drawImage createImageData getImageData putImageData createLinearGradient createRadialGradient createPattern addColorStop setLineDash getLineDash isPointInPath isPointInStroke
-addEventListener removeEventListener dispatchEvent preventDefault stopPropagation stopImmediatePropagation getBoundingClientRect appendChild removeChild insertBefore setAttribute getAttribute removeAttribute createElement createTextNode getElementById getElementsByTagName querySelector querySelectorAll focus blur click
-setTimeout clearTimeout setInterval clearInterval requestAnimationFrame cancelAnimationFrame
-then catch finally resolve reject all race apply call bind test exec toDataURL toBlob
-add delete has get set clear next done readAsDataURL readAsText readAsArrayBuffer
-log warn error info debug trace group groupEnd table time timeEnd assert dir count
-open close write send setRequestHeader overrideMimeType getResponseHeader abort
-postMessage item namedItem contains matches closest remove append prepend before after
-isInteger isFinite isNaN parseFloat parseInt charCode keyCode preventExtensions isView
-stopImmediate propagation getTime getFullYear getMonth getDate getHours getMinutes getSeconds getMilliseconds getDay toISOString toUTCString getTimezoneOffset
-requestFullscreen exitFullscreen webkitRequestFullscreen mozRequestFullScreen msRequestFullscreen
+push pop shift slice concat join filter forEach some every indexOf lastIndexOf includes sort reverse fill keys values entries
+charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match search padStart repeat substring substr
+toString toFixed valueOf hasOwnProperty toJSON
+abs floor ceil round sqrt pow min max random atan atan2 sin cos asin exp log sign
+now parse stringify create getOwnPropertyNames isArray from
+getContext measureText beginPath closePath stroke clip save restore translate scale setTransform drawImage getImageData createPattern
+preventDefault appendChild createElement getElementById getElementsByTagName querySelectorAll focus blur click
+then resolve all call test exec toDataURL
+add has get clear
+open close
+isInteger isFinite isView
+getTime getHours getMinutes getSeconds getMilliseconds
 `.trim().split(/\s+/));
 
 // ─── --self-test: prove the pure parts on in-memory fixtures (a lint that can't fail is worthless) ──
@@ -290,17 +293,30 @@ if (process.argv.includes('--update-allowlist')) {
     '# Names CALLED as `[@.]name(` in src/harness but implemented nowhere in either — i.e. vendor\n' +
     '# APIs and genuinely-dynamic sends. Platform (JS/DOM/canvas) names do NOT belong here: they\n' +
     '# live in the in-file BUILTINS set. Format: `name  # reason` (the reason is the point).\n' +
-    '# The gate FAILS on any unresolved send not listed here.\n\n';
+    '# The gate FAILS on any unresolved send not listed here, and on an entry no unresolved call needs.\n\n';
   fs.writeFileSync(ALLOWLIST, header + names.map((n) => `${n}  # TODO: reason`).join('\n') + '\n');
   console.log(`[unresolved-sends] wrote ${names.length} name(s) to ${path.relative(process.cwd(), ALLOWLIST)}`);
   process.exit(0);
 }
 
 const violations = [...unresolved.keys()].filter((n) => !allow.has(n)).sort();
-const stale = [...allow.keys()].filter((n) => !unresolved.has(n)).sort();
+// A STALE allowlist entry — a name with no unresolved call left — excuses nothing today and would excuse the
+// next call of that name that nobody implements, so it FAILS (STALE_ALLOWLIST_ENTRY), saying which way it went.
+// A BUILTINS entry is held to the same rule: one no call sends is stale (see BUILTINS).
+const sent = new Set(sites.map((s) => s.name));
+const unsentBuiltins = [...BUILTINS].filter((n) => !sent.has(n));
+const stale = [...allow.keys()].filter((n) => !unresolved.has(n)).sort().map((n) =>
+  `${n} — ${!sent.has(n) ? 'no `[@.]' + n + '(` call is left in src+harness'
+    : defined.has(n) ? 'it resolves: a definition of it is in src+harness'
+    : 'it is a BUILTINS name'}`);
 
 if (stale.length) {
-  console.log(`[unresolved-sends] NOTE — ${stale.length} allowlist entr${stale.length === 1 ? 'y' : 'ies'} now resolve(s) (delete from buildSystem/unresolved-sends-allowlist.txt): ${stale.join(', ')}`);
+  console.error(`\n[unresolved-sends] FAIL — ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in buildSystem/unresolved-sends-allowlist.txt (delete each):`);
+  for (const s of stale) console.error(`  STALE_ALLOWLIST_ENTRY ${s}`);
+}
+if (unsentBuiltins.length) {
+  console.error(`\n[unresolved-sends] FAIL — ${unsentBuiltins.length} BUILTINS entr${unsentBuiltins.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js that no call sends (delete each):`);
+  for (const n of unsentBuiltins) console.error(`  STALE_ALLOWLIST_ENTRY BUILTINS ${n} — no \`[@.]${n}(\` call in src+harness sends it, so it would only excuse the deletion of a future same-named Fizzygum method`);
 }
 
 if (violations.length) {
@@ -318,6 +334,7 @@ if (violations.length) {
   console.error('the BUILTINS set inside check-unresolved-sends.js instead.)');
   process.exit(1);
 }
+if (stale.length || unsentBuiltins.length) process.exit(1);
 
 console.log(`[unresolved-sends] OK — ${sites.length} calls checked, 0 unresolved (${defined.size} names implemented, ${allow.size} allowlisted).`);
 process.exit(0);

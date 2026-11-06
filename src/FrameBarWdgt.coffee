@@ -38,7 +38,10 @@ class FrameBarWdgt extends Widget
   # switch, then the close button, and then the strip carries nothing at all. Least consequential
   # first -- editing is an amenity, collapsing is a convenience, and closing is the last thing a
   # window gives up. A roster name absent from this list is dropped after all of them (from the
-  # roster's own tail), so a piece added tomorrow degrades rather than overflowing.
+  # roster's own tail), so a piece added tomorrow degrades rather than overflowing -- and is reported,
+  # BAR_PIECE_UNORDERED (_pieceNamesThatFit).
+  # hand-list-sanctioned: BAR_PIECE_UNORDERED (_pieceNamesThatFit, a headless-runner gate token) fails
+  # every test whose frames carry a roster piece this order does not name: a piece renamed, or added
   @PIECE_DROP_ORDER: ["edit", "collapse", "close"]
 
   frame: undefined
@@ -630,6 +633,10 @@ class FrameBarWdgt extends Widget
   # PIECE_DROP_ORDER, so the progression is the ruled one (edit toggle, collapse, close) rather than
   # "whatever was last".
   _pieceNamesThatFit: (pieceNames, stripLength, spec) ->
+    # every piece my roster holds has its turn in the drop order: one the order does not name -- a piece
+    # renamed, or one added -- would go last, from the tail, instead of in its ruled turn
+    for pieceName in pieceNames when pieceName not in FrameBarWdgt.PIECE_DROP_ORDER
+      console.error "BAR_PIECE_UNORDERED: #{pieceName} is on a frame strip's roster and has no place in FrameBarWdgt.PIECE_DROP_ORDER"
     room = Math.max 0, stripLength - 2 * spec.padding
     kept = pieceNames.slice()
     for pieceName in FrameBarWdgt.PIECE_DROP_ORDER

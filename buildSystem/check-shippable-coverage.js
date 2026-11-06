@@ -36,6 +36,9 @@
  *     says the same thing in core's own comment. Empirically verified: on a clean tree,
  *     --list-shippable omits exactly the files under src/boot/** and nothing else.
  * (src/video-player/** was the second entry until arc 4 made it a PART — see ALLOWLIST_PREFIXES.)
+ * An entry is held to what it exempts: a prefix that exempts no unshipped file — its path is gone, or
+ * a part now claims everything under it — FAILS as stale (STALE_ALLOWLIST_ENTRY), since left in place it
+ * would silently hide the next real gap under that path.
  *
  * Any OTHER src/ subdirectory must appear, in full, in --list-shippable's output; a single
  * uncovered file (a new dir, or a dir no part claims) fails the build.
@@ -57,7 +60,8 @@ const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
 
 function fail(msg) { console.error('check-shippable-coverage: ' + msg); process.exit(2); }
 
-// hard-coded, commented allowlist — see header for why the one remaining prefix is legitimate.
+// hard-coded, commented allowlist — see header for why the one remaining prefix is legitimate (and why a
+// prefix that exempts nothing fails as stale).
 // src/video-player/ used to be here (it shipped only behind --includeVideoPlayer, so it was
 // correctly absent from a default build's list). It is now the 'video-player' PART, so the
 // partition claims it in every flavour and --list-shippable always names it: the exemption became
@@ -115,6 +119,17 @@ const fullRel = fullFiles.map(function (abs) {
 const unshipped = fullRel.filter(function (rel) {
   return !shippedSet.has(rel) && !isAllowlisted(rel);
 });
+// an allowlist prefix that exempts no unshipped file is stale (header)
+const staleAllowlist = ALLOWLIST_PREFIXES.filter(function (prefix) {
+  return !fullRel.some(function (rel) { return !shippedSet.has(rel) && rel.indexOf(prefix) === 0; });
+});
+if (staleAllowlist.length) {
+  for (const prefix of staleAllowlist) {
+    console.error('check-shippable-coverage: STALE_ALLOWLIST_ENTRY ALLOWLIST_PREFIXES \'' + prefix + '\' — it exempts no '
+      + 'unshipped .coffee file (no such path, or a part claims everything under it), so it would only hide the next '
+      + 'real gap there: delete the entry');
+  }
+}
 
 // ---- 4. report + exit ----
 if (unshipped.length) {
@@ -133,6 +148,7 @@ if (unshipped.length) {
     + 'directly — add it to the ALLOWLIST_PREFIXES list at the top of this script, with a reason.)');
   process.exit(1);
 }
+if (staleAllowlist.length) process.exit(1);
 
 console.log('shippable-coverage check: ' + fullRel.length + ' .coffee files under src/, all covered '
   + '(or allowlisted) — 0 gap(s)');

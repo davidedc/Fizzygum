@@ -261,7 +261,17 @@ and the class recomputes it. Post-restore and post-duplicate fixups have named h
 An undeclared derived field is not a warning — it makes every snapshot containing the widget fail to
 save.
 
-### 4.3 A mode is a field, not an installed function
+### 4.3 A fact the world reads about your class: declare it here, and write yourself into a world registry
+
+**[convention; `check-hand-lists.js` catches the string-list shape]** When the world must treat every widget
+or app of a kind alike — keep its one window, save it, root it for liveness, tear it down — the class declares
+the fact on ITSELF and its own code writes itself into a world-level registry that every reader walks; nothing
+anywhere keeps a list of the names. `world.appWindows` is the worked example: an app that opens one window says
+`opensOneWindow: true`, `WindowedApp` files that window under the app's class name, and the storage sort, the
+liveness roots, the snapshot and the teardown all walk the Map — a hand list of the apps beside their own
+declarations is how one app ends up treated differently by every reader at once.
+
+### 4.4 A mode is a field, not an installed function
 
 **[convention]** Never install own function properties on an instance to record a mode (`@pressBegan
 = -> …` inside an `enable*` call). A mode a widget can be in is a serializable **field** consumed by

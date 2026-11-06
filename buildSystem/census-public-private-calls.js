@@ -15,9 +15,10 @@
  *   R1  private → public self-call. Every CALL from a low-level method (leading `_`/`__`, or
  *       `*NoSettle` — same tiering as check-layering.js isLowLevel) to a public (no-underscore)
  *       method of the same object. Each callee is classified:
- *         SETTLING    — transitively reaches a settle (@_settleLayoutsAfter* or recalculateLayouts)
- *                       through @-self calls, or member-calls a known settling setter
- *                       (setExtent/moveTo/setBounds/setWidth/setHeight + the 7 text setters).
+ *         SETTLING    — transitively reaches a settle (a settle tier — lib/settle-tiers.js — or
+ *                       recalculateLayouts) through @-self calls, or member-calls a settling setter
+ *                       (the geometry + text setters lib/settling-setters.js reads from Widget and
+ *                       StringWdgt: setExtent/moveTo/setBounds/setWidth/setHeight, setText/setFontSize/…).
  *         EFFECTFUL   — transitively mutates state (own-field assignment [cache/memo/counter/hash
  *                       fields carved out — memoizing getters are morally queries], collection
  *                       mutation on an own field, a repaint, _invalidateLayout) but never settles.
@@ -218,10 +219,12 @@ function classifyOccurrence(code, endIdx) {
 }
 
 // ---------- effect-classification constants ----------
-const SETTLE_DIRECT = /[@.]\s*(_settleLayoutsAfter(OrJoinEnclosingPass)?|recalculateLayouts)\b/;
-const PUBLIC_SETTERS = ['setExtent', 'moveTo', 'setBounds', 'setWidth', 'setHeight'];
-const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleWeight', 'toggleItalic', 'toggleIsPassword'];
-const memberSettleRe = new RegExp('\\.\\s*(' + [...PUBLIC_SETTERS, ...TEXT_SETTERS].join('|') + ')\\b');
+// A direct settle (any settle tier, read from Widget by lib/settle-tiers.js, or the flush recalculateLayouts itself)
+// and a member call to a settling setter (the geometry + text setters lib/settling-setters.js reads from Widget and
+// StringWdgt — the same names check-layering's rules key on) are both built inside runCensus: each library throws
+// when its family is not where it reads it, and both callers turn a runCensus throw into an operational error.
+const { settleTierAlternation } = require('./lib/settle-tiers');
+const { settlingSetters } = require('./lib/settling-setters');
 // the canvas-context moveTo carve-out (same as check-layering rule [A]'s CANVAS_MOVETO)
 const CANVAS_MOVETO = /\b(context|pctx|backBufferContext|aContext|ctx|cacheCtx|targetContext)\s*\.\s*moveTo\b/;
 const FIELD_ASSIGN = /@([A-Za-z_]\w*)(\.[A-Za-z_]\w*)*\s*(\?=|\|\|=|\+=|-=|\*=|\/=|=(?![=>]))/;
@@ -243,6 +246,9 @@ const SCHEDULE_CALL = /[@.]\s*_invalidateLayout\b/;
 function runCensus() {
   if (!fs.existsSync(SRC)) throw new Error('cannot find src/ — run from the Fizzygum repo root');
   const REPAINT_CALL = new RegExp('[@.]\\s*(' + repaintVerbAlternation(SRC) + ')\\b');
+  const SETTLE_DIRECT = new RegExp('[@.]\\s*(' + settleTierAlternation(SRC) + '|recalculateLayouts)\\b');
+  const setters = settlingSetters(SRC);
+  const memberSettleRe = new RegExp('\\.\\s*(' + [...setters.geometry, ...setters.text].join('|') + ')\\b');
 
   // ---- phase 1: parse every src class ----
   const classInfo = new Map();   // name -> { name, parent, mixins[], methods: Map(name->rec), file }

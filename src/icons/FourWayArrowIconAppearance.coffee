@@ -55,4 +55,7 @@ class FourWayArrowIconAppearance extends DoubleArrowIconAppearance
     if m.diamond
       @_paintDiamond ctx, x, y, m
     else
+      # hand-list-sanctioned: SystemTest_macroHandleWdgtIsItselfResizable screenshots a move handle's
+      # four-way arrow, so an axis dropped here loses an arrow pair against its references (_paintArrows
+      # reads "x" as across and any other axis as down)
       @_paintArrows ctx, x, y, m, ["x", "y"]

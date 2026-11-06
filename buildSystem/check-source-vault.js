@@ -35,7 +35,9 @@
 // this gate about the mechanism it retired instead of quietly starting a different campaign.
 //
 // ONE EXEMPT FILE: src/boot/source-vault.coffee itself, whose header has to be able to name the
-// mechanism it replaced — a tombstone that cannot say what it buries is not a tombstone.
+// mechanism it replaced — a tombstone that cannot say what it buries is not a tombstone. An exempt
+// path that is no src file, or whose text holds no hit the exemption excuses, FAILS as stale
+// (STALE_ALLOWLIST_ENTRY): it would only hide the retired pattern if it ever came back there.
 //
 // Scope: src/**/*.coffee only (the build's own python/shell side is not text-wrapped source).
 // Runs for every build flavour — the rule is a property of the source, not of what is being built.
@@ -83,10 +85,14 @@ function walk(dir, out) {
 const hits = Object.create(null);
 for (const rule of RULES) hits[rule.id] = [];
 
+const exemptHits = Object.create(null);   // exempt path -> how many hits its exemption excused
 for (const file of walk(SRC, [])) {
   const rel = path.relative(REPO, file);
-  if (EXEMPT.includes(rel)) continue;
   const lines = fs.readFileSync(file, 'utf8').split('\n');
+  if (EXEMPT.includes(rel)) {
+    exemptHits[rel] = lines.filter((l) => RULES.some((rule) => rule.appliesTo(rel) && rule.re.test(l))).length;
+    continue;
+  }
   for (let i = 0; i < lines.length; i++) {
     for (const rule of RULES) {
       if (rule.appliesTo(rel) && rule.re.test(lines[i])) {
@@ -110,6 +116,13 @@ for (const rule of RULES) {
     for (const h of found) console.error(`    ${h}`);
     failed = true;
   }
+}
+
+for (const rel of EXEMPT) {
+  if (!(rel in exemptHits)) console.error(`\n[source-vault] FAIL -- STALE_ALLOWLIST_ENTRY EXEMPT '${rel}': no such src file, so the exemption names something that moved: fix the path or delete the entry.`);
+  else if (exemptHits[rel] === 0) console.error(`\n[source-vault] FAIL -- STALE_ALLOWLIST_ENTRY EXEMPT '${rel}': the file holds no hit of either rule, so the exemption excuses nothing: delete the entry.`);
+  else continue;
+  failed = true;
 }
 
 if (failed) process.exit(1);
