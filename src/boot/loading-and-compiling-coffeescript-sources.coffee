@@ -283,9 +283,13 @@ storeSourcesAndPotentiallyCompileThemAndExecuteThem = (justIngestSources) ->
   # ⚠ ALL THREE, including one no current source happens to need: the strip is helper-AGNOSTIC — it
   # removes the whole `var` block whatever that block declared — so dropping a global arms a
   # ReferenceError for the first member written in the shape that wants it.
-  # ⚠ And the list is CLOSED at what CoffeeScript declares in that block. A helper NOT defined here
-  # is stripped just the same and then missing: `%%` compiles to a `modulo` helper nobody defines,
-  # which is why check-stinks.js's `helper-compiling-operator` bans that operator outright.
+  # ⚠ And ONLY these three exist. Any other name the compiler declares in that block is stripped
+  # just the same and then missing — `%%` compiles to a `modulo` helper nobody defines, and a
+  # parameter default like `(c = @color ? @fallback()) ->` hoists a `ref` temporary there — so the
+  # build's syntax gate (buildSystem/check-coffee-syntax.js) compiles every class member the way
+  # boot does and FAILS one whose stripped block declares anything else. It reads this set from
+  # Class._memberNamesThatMustStayAnonymous and holds it against the three assignments below: to
+  # provide a fourth helper, assign it here AND add it to that list, or the gate stops.
   # (`extend`, the fourth helper name emitted class code calls, is not one of these — globalFunctions
   # defines it as a real function.)
   # ⚠ THIS IS THE COMPILE-AT-BOOT PATH. A precompiled artifact runs js/pre-compiled.js — the same

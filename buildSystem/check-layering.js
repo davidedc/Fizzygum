@@ -216,11 +216,20 @@ const MACRO_SANCTION = /#\s*macro-private-call-sanctioned:\s*\S/;   // [D] exemp
 // check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;          // SINGLE-mutation tier only (Batch absorbs nested settles)
 const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notification hook -- settle-neutral by convention (layering/naming convention §3)
+// The REPAINT verbs (_changed / _fullChanged / _fullChangedIncludingShadowOwner today) are READ from Widget's own
+// definitions by lib/repaint-verbs.js, never spelled here: a hand list goes on matching the old names after a rename,
+// and a pattern that matches nothing makes rules [I] and [K] pass in silence. The module throws when it finds the
+// family gone, which this gate reports as an operational error.
+let REPAINT_VERBS;
+try { REPAINT_VERBS = require('./lib/repaint-verbs').repaintVerbAlternation(SRC); }
+catch (e) { console.error('check-layering: operational error:', e.message); process.exit(2); }
 // [I] the orchestration verbs a __ LEAF must not @-self-call: the re-fit seam (_reFitContainer* valve + _announce* announce-up), a
-// react step (_reLayout\w* = _reLayoutSelf/_reLayoutChildren*/_reLayoutScrollbars/_reLayout; changed/fullChanged),
-// a schedule/settle (_invalidateLayout/recalculateLayouts/_settleLayoutsAfter*), or a public setter. Scoped to
+// react step (_reLayout\w* = _reLayoutSelf/_reLayoutChildren*/_reLayoutScrollbars/_reLayout; the repaint verbs),
+// a schedule/settle (_invalidateLayout/recalculateLayouts/_settleLayoutsAfter*), or a public setter (PUBLIC_SETTERS). Scoped to
 // @-self (a .-receiver can't be typed -- like SELF_ADD_CALL); the runtime audit covers dynamic dispatch.
-const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_announce\w*|_reLayout\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\w*|fullChanged|changed|setExtent|setBounds|setWidth|setHeight|moveTo)\b/;  // _reFitContainer* = the phase valve; _announce* = the announce-up seam (§9.4, ex _reFitContainerAfterRawGeometryChange / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt). public setters mirror PUBLIC_SETTERS (moveTo, not the retired fullMoveTo — §6-1)
+// _reFitContainer* = the phase valve; _announce* = the announce-up seam (§9.4, ex _reFitContainerAfterRawGeometryChange / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt).
+const LEAF_FORBIDDEN = new RegExp('@\\s*(_reFitContainer\\w*|_announce\\w*|_reLayout\\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\\w*|'
+  + REPAINT_VERBS + '|' + PUBLIC_SETTERS.join('|') + ')\\b');
 
 // [K] the 2x2 apply-family NAME-CONSISTENCY corners (layering/naming convention §2/§4). Since the *AndNotify rename
 // (Tier B, 2026-07-02) the axis is REACT × DISPATCH: the polymorphic _apply<Geom> (ex *AndNotify) is the override
@@ -236,7 +245,7 @@ const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_announce\w*|_reLayout\w*|_inval
 // polymorphic _apply* corner freely, so they are NOT subjects.
 const APPLY_CORNER = /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)$|^_apply(Extent|MoveBy|MoveTo)Base$|^_commit(Extent|Bounds)AndNotify$/;  // clean poly form | the 3 override-bypass *Base twins | the (collapsed) notify-only commit corners
 const K_SEAM_CALL  = /@\s*(_reFitContainer\w*|_announce\w*)\b/;   // the up-notify seam (the DISPATCH-axis negative): _reFitContainer* valve + the _announce* announce-up (dead, deleted 2026-07-01)
-const K_REACT_CALL = /@\s*(changed|fullChanged|_reLayout\w*|_positionAndResizeChildren)\b/;           // repaint / self- or child-relayout (the REACT axis)
+const K_REACT_CALL = new RegExp('@\\s*(' + REPAINT_VERBS + '|_reLayout\\w*|_positionAndResizeChildren)\\b');   // repaint (the derived verbs, see [I]) / self- or child-relayout (the REACT axis)
 const K_POLY_APPLY = /[@.]\s*_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)(?![A-Za-z])/;           // a call to a polymorphic apply corner (the clean _apply*, NOT the _apply*Base twin) — routing an arrange apply back through the override it bypasses
 const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores)
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget

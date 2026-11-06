@@ -115,7 +115,11 @@ class CanvasWdgt extends PanelWdgt
     return [@backBuffer, @backBufferContext]
 
 
-  clear: (color = @color ? @_surfaceFill()) ->
+  # The default is spelled with `if … then … else` rather than the `@color ? …` existence operator:
+  # in a parameter default that operator compiles to a temporary declared in the member's leading
+  # `var` head, which the meta-system strips (Class._removeHelperFunctions), so every call would
+  # leak a page-wide `ref` global (check-coffee-syntax.js fails a member that loses a name that way).
+  clear: (color = (if @color? then @color else @_surfaceFill())) ->
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
     # @backBuffer.width and @backBuffer.height are already in
     # physical coordinates so no need to adjust for pixelratio

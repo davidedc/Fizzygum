@@ -1,6 +1,6 @@
 # Hand-kept lists: derive them, or make them fail when they go stale
 
-**STATUS (2026-11-05): §1 and Tier 2 (§4) LANDED — see the §4 ledger at the end; Tiers 1, 3, 4 OPEN.
+**STATUS (2026-11-05): §1, Tier 1 (§3) and Tier 2 (§4) LANDED — see the §3 and §4 ledgers at the end; Tiers 3, 4 OPEN.
 Written to be executed COLD by an LLM or engineer with ZERO prior context.**
 
 **Mandate.** Eliminate the class of defect, not its instances: a list that NAMES things declared
@@ -266,4 +266,73 @@ fails it and a run that passes without it (plants under `Fizzygum-tests/.scratch
    `timeBindingNames` + the two hand-spelled resolvers; `SheetModel.cellRefScan()` is DERIVED from
    `cellAddressPattern` (identical source, probed); `WorldInventory.KEY_FAMILIES` names all 14
    key families (8 gated, 6 report-only) and an undeclared family fails CLOSED (gated).
+
+## §3 ledger — Tier 1 LANDED (2026-11-05)
+
+Every item was proven by a PLANT that fails exactly the new check, with a detail naming the plant, and a
+run that passes without it. Plants: `Fizzygum-tests/.scratch/hand-lists-t1/` (runtime rigs via the new
+`PRELUDE_JS` rail, `Fizzygum-tests/scripts/lib/prelude-from-env.js`, now honoured by every rig touched here;
+build gates via `--files` or a scratch tree). Doctrine: `docs/architecture/lint-and-static-checks.md` §5,
+"The names a gate keys on are DERIVED, or ASSERTED".
+
+1. **Serialization rig `COLLECTIONS`** → every own Set/Map/Array field of the world, read once the fixture has
+   dirtied it, minus `NOT_EMPTIED_BY_THE_TEARDOWN` (13 entries, each with its verified reason; the plan's reasons
+   were corrected for `widgetsReferencingOtherWidgets` — ShortcutWdgt unregisters it —, the layout work-list pair
+   and `users`). New check `collectionsClassified` (stale exclusion, empty derivation). `fixtureDirtied` names what
+   it did not dirty. The pending fractional sets are dirtied raw in the no-settle window, and
+   `transientCollectionsCleared` also reads CORPSES in the load's own turn — the cycle drains both sets, so a
+   post-settle read could never see them. Plants: unlisted collection, uncleared pending sets, stale exclusion.
+2. **`DRAG_SLOTS`** → `WorldWdgt.prototype`'s `dragEmbed…(Declared|Wdgt)` keys (8); the dock band is dirtied on the
+   converter's window; the count prose is gone. Plant: an unlisted slot.
+3. **Menu sweep** → contributors DERIVED (every class owning `addWidgetSpecificMenuEntries`), each wrapped to tag
+   the rows its call adds; REACHED = one of its rows was DISPATCHED (`MENU_CONTRIBUTOR_UNSWEPT` / `_CHECK_VACUOUS`);
+   an unbuilt root is `ROOT_UNBUILT`, a failure. ⭐ "Its code ran" was measured insufficient: in dev mode the
+   generic "Destroy" row precedes a widget's own rows, so on every bare representative the own rows arrived stale —
+   68 never clicked. Every recipe now yields `<Class>` and `<Class>[own rows]`; recipes take an optional `fill`
+   (a container's own rows need it to hold something); new nested roots: a fanout's pin, a division cell, a
+   document paragraph, a console's text. 32 → 54 roots, 20/20 contributors reached. Finding: "Run contents" on
+   prose throws (`KNOWN`, BACKLOG). Plants: a contributor no root reaches, an unbuildable root.
+4. **Pin sweep** → wearers = the `new <Appearance>` text edge ∪ the LIVE edge (`Widget.instances`, exact
+   appearance class) after a stated population (window, menu, prompt); `APPEARANCE_PIN_WITHOUT_WEARER` fails
+   (also `PINS_THREW`, `POPULATION_SHAPE_THREW`). FrameBodyAppearance 0 → 19 wearers. Plants: the frame's
+   `setCornerRadius` shadowed (21 violations; the old rig stayed green), a pin-contributing appearance nobody wears.
+5. **Staleness census** → the app battery is every class extending `WindowedApp` (16 — the class graph, not
+   AppCatalog: `TemplatesApp` has no launcher yet opens a window); `NOT_BATTERIED` (empty) fails stale; the hand
+   regex became `w !== world.hand`. ⭐ Finding: `SimpleLinkWdgt`/`SimpleVideoLinkWdgt` sit at stale geometry in the
+   "How to save?" and templates windows — a grandchild resize the down-walk never re-lays (root cause traced:
+   `DocumentViewportWdgt._positionAndResizeChildren` → the stack's `_positionAndResizeChildren` → `_applyExtentBase`).
+   Recorded in a new `KNOWN_MOVERS` table (stale entry fails); the engine fix is an owner call (BACKLOG).
+   Plants: an app the battery never saw, a stale `KNOWN_MOVERS` entry.
+6. **Repaint verbs** → ONE module `buildSystem/lib/repaint-verbs.js` (Widget's own `_changed` / `_fullChanged…`,
+   throws if either base verb is missing), read by check-layering [I]/[K] (output byte-identical), the call census
+   (`_createReferenceNoSettle → bringToForeground` re-classed, pre-sanctioned; the public-only `REACT_VERBS` branch,
+   which could never fire, deleted) and — beyond the plan, same defect — `check-invalidation-receivers.js`, whose
+   pattern still named `_updateBroken` (renamed `_repaintDamagedRects` 2026-08-18, header updated, regex not: the
+   paint executor was checked by nothing) and could not match `_fullChangedIncludingShadowOwner`. The executor's
+   name is now asserted against WorldWdgt. Finding: `Widget._addNoSettle`'s old-footprint mark was unmarked —
+   sanctioned as the structural-move twin of the mark below it. Plants: a leaf repaint, a dropped sanction, the
+   verb renamed (exit 2), a stray `world._repaintDamagedRects()`.
+7. **Plane discipline B** → the position queries are read from Widget.coffee (no-parameter methods answering a
+   one-line `@bounds` delegation, or named `…Bounds`) minus `NOT_POSITIONAL` (sizes, the screen query, a predicate;
+   stale fails, empty exits 2): 26 names (the four centres, the `…Tight` edges, the clipped/merged/SLOW rectangles
+   joined; `origin`/`corner`, never Widget methods, left). Baseline 28 → 31: three FridgeWdgt magnet-to-magnet
+   lines, same plane by construction. Plants: a new cross-plane line, a stale exclusion, a vacuous derivation.
+8. **Tier-naming families** → NAMED sets (leaf, arrange, notify — `_commitBounds` joins leaf and
+   `_applyGrantedBounds` notify, per `layering-naming-convention.md` §2; the dead `_commit…AndNotify` arm left) plus
+   a `NON_GEOMETRY` table, held to every class's own `_apply*`/`_commit*` METHODS both ways at install
+   (`TIERNAMING-UNCLASSIFIED` / `-STALE`; `-CLASSIFIED` is the measurement proof, its absence INVALID); the lines are
+   held and printed at the first test start, because the runner drops audit lines that precede one. The react verbs
+   are read from Widget too. Plants: an unclassified `_apply*` corner, a stale family name.
+9. **CoffeeScript helper globals** → `check-coffee-syntax.js` taps the real `Class._removeHelperFunctions` and fails a
+   member whose stripped `var` head declares a name outside the PROVIDED set (read from
+   `Class._memberNamesThatMustStayAnonymous`, held against boot's assignments); `--files` testing hook; the `%%`
+   stink retired. ⭐ Finding, fixed: `CanvasWdgt.clear`'s default `(color = @color ? @_surfaceFill())` hoisted a `ref`
+   temporary into the stripped head, so every call leaked a page-wide `window.ref`. Plants: `%%`, a range assignment,
+   a hoisted temporary (fail); a control member (passes).
+10. **Gate tokens** → `scripts/lib/gate-tokens-selftest.js` (in `npm run selftest`) holds `GATE_TOKENS` and a new
+    `NOT_GATED {token: reason}` table to every `console.error "<TOKEN>` in src + harness, both ways, with a corpus.
+    Gated now: `LAYOUT_ERROR`, `RECALC_NONCONVERGENCE`, and `SOURCE_COMPILE_FAILED` (its own comment promised every
+    headless gate fails on it; the runners file a boot-time token under "(boot/setup)"). Ungated, with reasons:
+    `DATAFLOW_ERROR` (green by design), `FIZZYGUM_USE_SWCANVAS` and `SHA256` (not distinctive — the runners match a
+    token as a substring of every console line). The suite emits none of the new gates. Plant: an ungated token.
 

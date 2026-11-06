@@ -262,8 +262,8 @@ class Color
     # The wrap on the red sextant is spelled out rather than written `%% 6`: CoffeeScript compiles
     # that operator into a `modulo` HELPER FUNCTION, and the meta-system strips the leading `var`
     # block (where helpers land) out of every member it compiles — Class._removeHelperFunctions —
-    # so a `%%` in a class member becomes a call to something that does not exist. It survives the
-    # build's syntax gate, because it is not a parse error.
+    # so a `%%` in a class member becomes a call to something that does not exist (the build's
+    # syntax gate, check-coffee-syntax.js, fails such a member).
     if max == r
       sextant = (g - b) / delta
       sextant += 6 if sextant < 0

@@ -1244,9 +1244,9 @@ class Widget extends TreeNode
 
   # Silently commit my bounds (origin + extent): translate my origin, then commit my extent via the __commitExtent
   # leaf -- NO repaint, NO self-relayout. Used for construction-time sizing and by the top-down arrange (a container
-  # sizing my frame already knows my new bounds, so no repaint/relayout is owed here).
-  # (Collapsed 2026-07-01) The old "non-notifying twin" _applyGrantedBounds and this method became byte-identical once the
-  # re-fit seam was deleted -- both are just a silent origin+extent commit -- so they are ONE method now (_commitBounds).
+  # sizing my frame already knows my new bounds, so no repaint/relayout is owed here). The silent-commit corner of
+  # the apply 2x2 (layering-naming-convention.md §2), a leaf-like bottom; its REACTING sibling is
+  # _applyGrantedBounds, the arrange engine's frame-commit, which repaints and applies its extent polymorphically.
   _commitBounds: (newBounds) ->
     if @bounds.equals newBounds
       return
@@ -3913,6 +3913,9 @@ class Widget extends TreeNode
     # container is invalidated AFTER _setLayoutSpec, further down, also via the param.)
     aWdgt.parent?._invalidateLayout(aWdgt)
 
+    # cross-invalidation-sanctioned: structural-move dispatcher — damages the OLD footprint of the
+    # widget being re-homed (from the ancestor owning its shadow) before it moves; the mark below
+    # damages the new one
     aWdgt._fullChangedIncludingShadowOwner()
 
     aWdgt._setLayoutSpec layoutSpec

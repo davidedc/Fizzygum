@@ -47,7 +47,32 @@
  * SAFE FAILURE DIRECTION: real syntax errors are thrown by CoffeeScript.compile
  * INSIDE the reused meta-compiler regardless of the shim, so a shim gap can never
  * silently MASK a real error — at worst it causes a loud operational error (exit 2),
- * which is fixed once. Exit codes: 0 = clean, 1 = syntax error(s), 2 = operational.
+ * which is fixed once.
+ *
+ * THE SECOND CHECK: A CLASS MEMBER MUST NOT LOSE A NAME TO THE HELPER STRIP. The compiler
+ * declares the helpers a construct needs in a `var` statement at the head of what it
+ * compiles (`%%` wants `modulo`, a range assignment `a[i..j] = b` wants `splice`, …), and
+ * Class._removeHelperFunctions cuts that whole head out of every member fragment, leaving
+ * the body to reach its helpers as FREE identifiers. Boot provides exactly three of them
+ * as globals (hasProp / indexOf / slice); any other name declared in that head is gone.
+ * A helper the body CALLS is then a ReferenceError at runtime; a compiler temporary the
+ * body ASSIGNS first (`ref`, which the compiler hoists to that head out of a parameter
+ * default such as `(c = @color ? @fallback()) ->`) silently becomes a page-wide global in
+ * the sloppy-mode eval. Both parse, so both would pass the syntax check above. So this gate
+ * taps the real strip (it sees exactly the text the meta-system cuts) and FAILS a fragment
+ * whose head declares a name outside the provided set, naming the class, the member and
+ * the name(s). The compiler's output is
+ * the authority on which helpers exist; the only list here is the PROVIDED one, read from
+ * Class._memberNamesThatMustStayAnonymous (the meta-system's own statement of the helper
+ * globals) and held against the `window.<name> = [].<m>` / `{}.<m>` assignments in
+ * src/boot that actually provide them: if the two disagree, the gate stops.
+ * A MIXIN is not checked: it compiles as a whole source and keeps its helper declarations
+ * (Mixin's strip, used only by live member edits, removes the three provided ones by name
+ * and leaves the rest declared), so no helper is lost there.
+ *
+ * Exit codes: 0 = clean, 1 = syntax error(s) or a member losing a helper,
+ * 2 = operational (including: the PROVIDED set cannot be established, or the tap on the
+ * strip saw no fragment — a check that sees nothing must not pass).
  *
  * FILE SET: obtained from `python3 buildSystem/build.py --list-shippable <args>` — the
  * single source of truth for what the build ships, so this gate can't drift from it.
@@ -55,6 +80,9 @@
  *
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
  *   node ./buildSystem/check-coffee-syntax.js [build flags...]
+ * TESTING HOOK — check given files instead of the shippable set (everything after the flag
+ * is a path, relative to the repo root or absolute; build flags before it are ignored):
+ *   node ./buildSystem/check-coffee-syntax.js --files <a.coffee> [<b.coffee> ...]
  */
 
 const path = require('path');
@@ -109,16 +137,96 @@ try {
   fail('the meta-compiler (Class.coffee/Mixin.coffee) itself failed to load: ' + e.message);
 }
 
-// ---- 3. get the shipped-source file list (single source of truth = build.py) ----
-let files;
-try {
-  const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...process.argv.slice(2)],
-    { cwd: REPO, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
-  files = out.split('\n').map(s => s.trim()).filter(Boolean);
-} catch (e) {
-  fail('could not get the shippable file list from build.py: ' + e.message);
+// ---- 2b. the PROVIDED helper globals (header: THE SECOND CHECK) ----
+//   Read from the meta-system's own declaration, and held against what boot actually assigns.
+const declared = Class._memberNamesThatMustStayAnonymous;
+if (!Array.isArray(declared) || !declared.length || !declared.every(n => typeof n === 'string')) {
+  fail('Class._memberNamesThatMustStayAnonymous is not a non-empty list of names — the helper globals boot provides cannot be established');
 }
-if (!files.length) fail('build.py --list-shippable returned no files');
+const PROVIDED = new Set(declared);
+{
+  const bootDir = path.join(REPO, 'src', 'boot');
+  const BOOT_HELPER = /^\s*window\.([A-Za-z_$][\w$]*)\s*=\s*(?:\[\]|\{\})\.[A-Za-z_$][\w$]*\s*$/;
+  const assigned = new Set();
+  const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+    const p = path.join(d, e.name);
+    if (e.isDirectory()) walk(p);
+    else if (e.name.endsWith('.coffee')) for (const line of fs.readFileSync(p, 'utf8').split('\n')) { const m = line.match(BOOT_HELPER); if (m) assigned.add(m[1]); }
+  } };
+  try { walk(bootDir); } catch (e) { fail('could not read ' + bootDir + ' to establish the helper globals: ' + e.message); }
+  const onlyDeclared = [...PROVIDED].filter(n => !assigned.has(n));
+  const onlyAssigned = [...assigned].filter(n => !PROVIDED.has(n));
+  if (onlyDeclared.length || onlyAssigned.length) {
+    fail('the helper globals disagree — Class._memberNamesThatMustStayAnonymous says [' + [...PROVIDED].join(', ')
+      + '], src/boot assigns window.<helper> for [' + [...assigned].join(', ') + ']'
+      + (onlyDeclared.length ? '; declared but never provided: ' + onlyDeclared.join(', ') : '')
+      + (onlyAssigned.length ? '; provided but not declared: ' + onlyAssigned.join(', ') : '')
+      + ' — make the two say the same thing');
+  }
+}
+
+// The names a compiled fragment's LEADING `var` statement declares — the head the strip cuts — or []
+// when the fragment opens with anything else. A helper's initializer can hold `;` and `,` inside its
+// own body (`modulo = function(a, b) { return …; }`), so declarators are split at depth 0 only.
+function leadingVarNames(js) {
+  if (!/^var\b/.test(js)) return [];
+  const names = [];
+  let depth = 0, quote = null, expectName = true;
+  for (let i = 3; i < js.length; i++) {
+    const c = js[i];
+    if (quote) { if (c === '\\') i++; else if (c === quote) quote = null; continue; }
+    if (expectName) {
+      const m = /^\s*([A-Za-z_$][\w$]*)/.exec(js.slice(i));
+      if (m) { names.push(m[1]); i += m[0].length - 1; expectName = false; continue; }
+    }
+    if (c === '"' || c === "'" || c === '`') quote = c;
+    else if ('([{'.includes(c)) depth++;
+    else if (')]}'.includes(c)) depth--;
+    else if (depth === 0 && c === ',') expectName = true;
+    else if (depth === 0 && c === ';') break;
+  }
+  return names;
+}
+
+// THE TAP: observe the real strip without changing it. `_equivalentforSuper` is the step every
+// member's source passes through just before it is compiled and handed to the strip, so it says
+// WHICH member the next stripped fragment belongs to (a class-side one is reported as `@name`).
+const helperLosses = [];   // [{ rel, cls, member, names }]
+let tapRel = null, tapMember = null, strippedFragments = 0;
+for (const m of ['_equivalentforSuper', '_removeHelperFunctions']) {
+  if (typeof Class.prototype[m] !== 'function') fail('Class.prototype.' + m + ' is gone — the helper check cannot tap the meta-system\'s strip; re-read THE SECOND CHECK against src/meta/Class.coffee');
+}
+const realEquivalentForSuper = Class.prototype._equivalentforSuper;
+Class.prototype._equivalentforSuper = function (fieldName, aString) {
+  const isStatic = this.nonStaticPropertiesSources?.[fieldName] !== aString && this.staticPropertiesSources?.[fieldName] === aString;
+  tapMember = (isStatic ? '@' : '') + fieldName;
+  return realEquivalentForSuper.apply(this, arguments);
+};
+const realRemoveHelperFunctions = Class.prototype._removeHelperFunctions;
+Class.prototype._removeHelperFunctions = function (compiled) {
+  strippedFragments++;
+  const lost = leadingVarNames(compiled).filter(n => !PROVIDED.has(n));
+  if (lost.length) helperLosses.push({ rel: tapRel, cls: this.name, member: tapMember, names: lost });
+  return realRemoveHelperFunctions.apply(this, arguments);
+};
+
+// ---- 3. get the shipped-source file list (single source of truth = build.py) ----
+//   …or, with the --files testing hook, exactly the files named after it.
+let files;
+const filesFlag = process.argv.indexOf('--files');
+if (filesFlag >= 0) {
+  files = process.argv.slice(filesFlag + 1);
+  if (!files.length) fail('--files names no file');
+} else {
+  try {
+    const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...process.argv.slice(2)],
+      { cwd: REPO, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+    files = out.split('\n').map(s => s.trim()).filter(Boolean);
+  } catch (e) {
+    fail('could not get the shippable file list from build.py: ' + e.message);
+  }
+  if (!files.length) fail('build.py --list-shippable returned no files');
+}
 
 // ---- 4. drive each source through the real meta-compiler ----
 const IS_CLASS = /^class +\w+/m;            // same test build.py uses (build.py:48)
@@ -143,6 +251,7 @@ try {
     }
     const isClass = IS_CLASS.test(src);
     const isMixin = IS_MIXIN.test(src);
+    tapRel = rel; tapMember = null;
     try {
       if (isClass) { nClass++; new Class(src, true, false); }
       else if (isMixin) { nMixin++; new Mixin(src, true, false); }
@@ -161,6 +270,19 @@ for (const f of failures) {
   console.error('FAIL ' + f.rel + loc);
   console.error('    ' + String(f.message).replace(/\n/g, '\n    '));
 }
+for (const h of helperLosses) {
+  console.error(`FAIL ${h.rel}  ${h.cls}.${h.member}: its compiled form declares ${h.names.map(n => '`' + n + '`').join(', ')} in the leading \`var\` head that`
+    + ` Class._removeHelperFunctions cuts out, and boot provides only ${[...PROVIDED].join(' / ')} as globals — so the body's use of`
+    + ` ${h.names.length === 1 ? 'it' : 'them'} has no declaration: a call to a helper throws ReferenceError at runtime, and an assigned compiler`
+    + ` temporary becomes a page-wide global. Rewrite the construct the compiler declares ${h.names.length === 1 ? 'it' : 'them'} for`
+    + ` (a helper is named for its construct; a temporary comes from a parameter default — move the default's logic into the body,`
+    + ` or spell it so it needs no temporary).`);
+}
+// a tap that saw nothing checked nothing: with classes compiled, the strip must have run
+if (nClass > 0 && strippedFragments === 0) {
+  fail(`the helper tap saw no stripped fragment across ${nClass} classes — Class no longer routes members through _removeHelperFunctions, so the helper check is vacuous; re-read THE SECOND CHECK against src/meta/Class.coffee`);
+}
 const checked = nClass + nMixin;
-console.log(`syntax check: ${checked} files (${nClass} classes, ${nMixin} mixins, ${nSkip} skipped) — ${failures.length} error(s)`);
-process.exit(failures.length ? 1 : 0);
+console.log(`syntax check: ${checked} files (${nClass} classes, ${nMixin} mixins, ${nSkip} skipped) — ${failures.length} error(s); `
+  + `${strippedFragments} class-member fragments checked against the provided helpers [${[...PROVIDED].join(', ')}] — ${helperLosses.length} losing a helper`);
+process.exit(failures.length || helperLosses.length ? 1 : 0);

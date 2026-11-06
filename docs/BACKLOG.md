@@ -11,12 +11,25 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
-### `plans/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; Tier 2 LANDED)
-- [ ] Tier 1 (§3): ten gates/rigs that silently check less today — the serialization rig's
-      `COLLECTIONS` and `DRAG_SLOTS`, menusweep's unswept menu contributors, pinsweep's 0-wearer
-      appearances, the census's app list, the retired repaint verbs in check-layering + the call
-      census, check-plane-discipline's position queries, the tier-naming families, the CoffeeScript
-      helper globals, the ungated `LAYOUT_ERROR` / `RECALC_NONCONVERGENCE` tokens.
+### `plans/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; Tiers 1 + 2 LANDED)
+- [ ] **Tier 1's findings, each recorded where its check states it (plan §3 ledger):**
+  - [ ] **A grandchild resize escapes the down-walk** (census `KNOWN_MOVERS`): `DocumentViewportWdgt._positionAndResizeChildren`
+        calls its stack's `_positionAndResizeChildren` directly, which widens the stack's children through
+        `_applyExtentBase`; the walk re-lays only the children an ARRANGE resized, so those grandchildren keep the
+        layout of a narrower frame — visible as a ~70 px gap beside the link button in the "How to save?" window
+        (3 px in the templates window). Engine-level, and its fix recaptures every test showing those windows: owner's call.
+  - [ ] **"Run contents" on prose throws** (menusweep `KNOWN` `THREW:doContents`): `TextWdgt.doContents` →
+        `Widget.evaluateString` → `compileFGCode` rethrows the compile error out of the menu action, with nothing shown
+        to the user (the Console's "Run all" shares the path). Report it instead of throwing?
+  - [ ] **check-layering's static apply-corner families are not held to the source**: `isImmediateMutator` /
+        `APPLY_CORNER` keep the `_commit(Extent|Bounds)AndNotify` arm that matches nothing and omit
+        `_commitBounds` / `_applyGrantedBounds` (the tier-naming prelude now classifies both, asserted both ways).
+  - [ ] **An untokenized `console.error` fails nothing**: "this shouldn't happen" asserts in `StackLayoutEngine`,
+        the mixed-division-axes warning, `Duplicator`'s unrecognized type, `AppLauncherWdgt`'s missing catalog entry —
+        no gate token, so every runner lets them through (the gate-token selftest sees tokens only).
+- [ ] Tier 3 (§5): diagnostic tools reporting on a stale picture (aim-census, layout-audit and
+      revisit-trace preludes, census-nosettle-naming — which also hand-lists the repaint verbs `lib/repaint-verbs.js`
+      now owns —, heap-forensics roots, smoke-boot).
 - [ ] Tier 3 (§5): diagnostic tools reporting on a stale picture (aim-census, layout-audit and
       revisit-trace preludes, census-nosettle-naming, heap-forensics roots, smoke-boot).
 - [ ] Tier 4 (§6): the standing guard — allowlists report unused entries; a hand-list gate; the doctrine.

@@ -20,10 +20,11 @@
  *                       (setExtent/moveTo/setBounds/setWidth/setHeight + the 7 text setters).
  *         EFFECTFUL   — transitively mutates state (own-field assignment [cache/memo/counter/hash
  *                       fields carved out — memoizing getters are morally queries], collection
- *                       mutation on an own field, changed/fullChanged, _invalidateLayout) but
- *                       never settles.
- *         REACT-VERB  — the callee is changed/fullChanged: the DESIGNED react step, legitimate
- *                       from `_` tier (rule [I] bans it only in `__` leaves). Never a violation.
+ *                       mutation on an own field, a repaint, _invalidateLayout) but never settles.
+ *                       A repaint is a call to one of the repaint verbs (`_changed`/`_fullChanged…`,
+ *                       read from Widget by lib/repaint-verbs.js). Those verbs are PRIVATE, so this
+ *                       census never meets one as a callee: they count as an effect of the method
+ *                       that calls them, never as a public command of their own.
  *         QUERY       — none of the above (pure by this analysis). Legitimate from private code.
  *       Rule [S]'s subject is SETTLING + EFFECTFUL ("hard sites"); a site whose CALLER method
  *       carries a `# public-call-sanctioned: <why>` marker is reported but not counted.
@@ -227,11 +228,12 @@ const FIELD_ASSIGN = /@([A-Za-z_]\w*)(\.[A-Za-z_]\w*)*\s*(\?=|\|\|=|\+=|-=|\*=|\
 // memoizing getters / cache hygiene / counters are morally queries — carve their writes out
 const CACHEY = /cache|Cache|memo|Memo|_last|Counter|counter|hash|Hash/;
 const COLLECTION_MUT = /@[A-Za-z_]\w*\.(push|splice|pop|shift|unshift|sort|reverse|set|delete|clear|add)\b/;
-const REPAINT_CALL = /[@.]\s*(changed|fullChanged)\b/;
+// a repaint: a call to one of the repaint verbs (_changed / _fullChanged…), READ from Widget's own
+// definitions by lib/repaint-verbs.js. Built inside runCensus: the module throws when it finds the
+// family gone, and both callers turn a runCensus throw into an operational error, so a renamed family
+// fails this engine (and the check-call-separation gate on it) instead of silently dropping the signal.
+const { repaintVerbAlternation } = require('./lib/repaint-verbs');
 const SCHEDULE_CALL = /[@.]\s*_invalidateLayout\b/;
-// changed/fullChanged are the DESIGNED react steps (naming convention §2 — banned only in __ leaves
-// by rule [I]); fullChangedIncludingShadowOwner is the same verb's shadow-aware variant (T3, 2026-07-12).
-const REACT_VERBS = new Set(['changed', 'fullChanged', 'fullChangedIncludingShadowOwner']);
 
 // ============================== THE ENGINE ==============================
 // Returns { stats, R1, R2, R2narrowed, R3, R4, haveTestsRepo }.
@@ -240,6 +242,7 @@ const REACT_VERBS = new Set(['changed', 'fullChanged', 'fullChangedIncludingShad
 //   R4 row:  { name, selfCalls, effectful, defs }   (R4 = null when the tests repo is absent)
 function runCensus() {
   if (!fs.existsSync(SRC)) throw new Error('cannot find src/ — run from the Fizzygum repo root');
+  const REPAINT_CALL = new RegExp('[@.]\\s*(' + repaintVerbAlternation(SRC) + ')\\b');
 
   // ---- phase 1: parse every src class ----
   const classInfo = new Map();   // name -> { name, parent, mixins[], methods: Map(name->rec), file }
@@ -413,8 +416,7 @@ function runCensus() {
     }
     if (callerTier !== 'public') {
       for (const c of pubCalls) {
-        const cc = REACT_VERBS.has(c.callee) ? 'REACT-VERB' : classifyCallee(rec.cls, c.callee);
-        out.R1.push({ cls: rec.cls, caller: rec.name, callee: c.callee, calleeClass: cc,
+        out.R1.push({ cls: rec.cls, caller: rec.name, callee: c.callee, calleeClass: classifyCallee(rec.cls, c.callee),
           sanctioned: rec.markers.has(PUBLIC_CALL_MARKER), at: rec.file + ':' + c.n });
       }
     }

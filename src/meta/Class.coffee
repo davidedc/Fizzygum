@@ -121,6 +121,9 @@ class Class
   # Nothing on this tree is one of these (3202 members scanned). The guard is here so that a member
   # added later degrades to "anonymous in a heap snapshot", which costs a name, rather than
   # "silently resolves to itself", which costs a day.
+  # This list is ALSO the build's statement of which helpers boot provides: check-coffee-syntax.js
+  # reads it, holds it against boot's `window.<helper> =` assignments (the two must agree), and
+  # fails any member whose stripped `var` head declares a name outside it.
   # ⚠ JS RESERVED WORDS ARE DELIBERATELY NOT LISTED. One would be an illegal function name, so the
   # eval below throws at class-build time -- at boot, for everyone, immediately -- and a failure
   # that loud needs no guard. Only the SILENT hazard is worth spending a list on. (Enumerating them
@@ -161,6 +164,9 @@ class Class
   # the helpers and goes in one cut, whatever it happened to declare -- helper-AGNOSTIC, which
   # is what that boot comment relies on. (Mixin's twin cannot do this: a mixin compiles as a
   # whole source, so its own name shares the statement -- see there.)
+  # Because the cut takes EVERY declaration, a name in that head other than the three globals
+  # (`modulo` from `%%`, a `ref` temporary hoisted out of a parameter default) is lost here;
+  # the build's syntax gate (check-coffee-syntax.js) taps this method and fails such a member.
   _removeHelperFunctions: (aString) ->
     aString = aString.replace /^var(.|\n)*?\(function/, "(function"
 

@@ -11,8 +11,9 @@
 //    defaults (`scrollOffsetX: 0`) are declarations, not writes.
 //
 // B. CROSS-PLANE POSITIONAL MIXING (count ratchet, the check-stinks idiom). POSITIONAL
-//    geometry (position/left/top/center/bounds/… — plane-RELATIVE, unlike width/height/
-//    extent which are plane-invariant) of two DISTINCT receivers combined on one line,
+//    geometry (the `bounds` field, and the position queries READ from Widget.coffee — see
+//    POSITIONAL below: position/left/topCenter/fullBounds/… — plane-RELATIVE, unlike width/
+//    height/extent which are plane-invariant) of two DISTINCT receivers combined on one line,
 //    with no mapping call on the line, is sound only when both receivers share a plane —
 //    and silently wrong otherwise, dormant at scroll offset 0 / identity transform (the
 //    class every hard bug of the paint-time scroll arc belonged to). Same-plane-by-
@@ -50,6 +51,9 @@
 //    when any augmenting class is a provider, C2 always (lib/coffee-method-header.js groups mixin members).
 //    `scrolledBy` is exempt (deltas, not positions). Exemption marker for a future deliberate
 //    consumer: `# escalated-pos-sanctioned: <reason>` directly above the handler header.
+//
+// Exit codes: 0 clean · 1 violation (or a stale NOT_POSITIONAL entry) · 2 operational (Widget.coffee
+// unreadable, or the POSITIONAL derivation found nothing — which would make rule B vacuous).
 
 const fs = require('fs');
 const path = require('path');
@@ -57,9 +61,57 @@ const SRC = path.resolve(__dirname, '../src');
 const { methodBoundary, methodSpans } = require('./lib/coffee-method-header');
 
 // ---- baseline for section B (the check-stinks idiom: exact count, move it consciously) ----
-const CROSS_PLANE_MIX_BASELINE = 28;
+// 31 lines. Three of them are reached through Widget's centre queries: FridgeWdgt's magnet-to-magnet
+// distances (`m.rightCenter().distanceTo(aMagnet.leftCenter())` in magnetToLeftOf, its mirror in
+// magnetFollowing, and magnetFollowing's reciprocity test). Every magnet compared there is a child of the
+// one fridge, so all share its plane — the same comparison as the fridge's edge tests
+// (`m.right() < aMagnet.right()`) counted beside them.
+const CROSS_PLANE_MIX_BASELINE = 31;
 
-const POSITIONAL = 'position|left|right|top|bottom|center|boundingBox|fullBounds|topLeft|topRight|bottomLeft|bottomRight|origin|corner';
+// ---- POSITIONAL: Widget's own position queries, READ from Widget.coffee, never hand-listed ----
+// THE RULE: a Widget instance method taking no parameter that answers a point, an edge or a rectangle
+// of the widget in its OWN plane, recognised by either of two shapes:
+//   (1) a FRAME DELEGATION — a body of ONE line that reads `@bounds` (`left: -> @bounds.left()`,
+//       `position: -> @bounds.origin`, `leftTight: -> @bounds.left() + @paddingLeft`);
+//   (2) a `…Bounds` RECTANGLE — a name ending in `Bounds` (`fullBounds`, `clippedThroughBounds`, …);
+// minus NOT_POSITIONAL, the names those shapes catch that are not plane-relative positions.
+// WHY READ: a hand-kept list drifts both ways — it keeps names Widget does not define (a Rectangle FIELD
+// such as `origin`, which a `\.name\s*\(` pattern never matches) and misses the queries Widget adds.
+// Read from the definitions, a new query is checked from the day it is written, and one Widget loses
+// leaves no dead arm behind. NOT_POSITIONAL is a declaration held against the derivation: an entry the
+// shapes no longer catch FAILS as stale. (A new `…Bounds` name that is not a position is the safe
+// direction: it can only ADD lines to rule B's count, where a reader classifies them.)
+// ⚠ VACUITY: a shape deriving nothing exits 2 — a rule B keyed on an empty vocabulary would match
+// nothing and report a clean count of whatever the `bounds` field alone finds.
+const NOT_POSITIONAL = {
+  extent: 'a SIZE — plane-invariant, which is what rule B is defined against',
+  width: 'a SIZE — plane-invariant, which is what rule B is defined against',
+  height: 'a SIZE — plane-invariant, which is what rule B is defined against',
+  screenBounds: 'the SCREEN-family query: already mapped (MAPPED_RE treats a line using it as mapped)',
+  hasMaybeChangedPaintBounds: 'a predicate: it answers a boolean, not a rectangle',
+};
+function derivePositional() {
+  const file = path.join(SRC, 'basic-widgets', 'Widget.coffee');
+  if (!fs.existsSync(file)) { console.error(`[plane-discipline] operational error: ${file} not found — rule B reads its position queries from it`); process.exit(2); }
+  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  // `foo: ->` and `foo: () ->` take none; `foo: (a) ->` and a wrapped `foo: (` do
+  const takesNoParameter = (header) => { const m = stripComment(header).match(/^\s*@?\w+:\s*\((.*)$/); return !m || /^\s*\)/.test(m[1]); };
+  const delegations = new Set(), rectangles = new Set();
+  for (const s of methodSpans(lines)) {
+    if (s.static || s.mixin || !takesNoParameter(lines[s.line])) continue;
+    const inline = (stripComment(lines[s.line]).match(/[-=]>(.*)$/) || [])[1] || '';   // a body written after the arrow
+    const body = [inline].concat(lines.slice(s.line + 1, s.end).map(stripComment)).filter((l) => l.trim());
+    if (body.length === 1 && /@bounds\b/.test(body[0])) delegations.add(s.name);
+    if (/Bounds$/.test(s.name)) rectangles.add(s.name);
+  }
+  const vacuous = [['frame delegations', delegations], ['…Bounds rectangles', rectangles]].filter(([, set]) => set.size === 0);
+  if (vacuous.length) { console.error(`[plane-discipline] operational error: the POSITIONAL derivation found no ${vacuous.map(([n]) => n).join(' and no ')} on Widget — rule B would be vacuous; re-read derivePositional's rule against Widget.coffee`); process.exit(2); }
+  const derived = new Set([...delegations, ...rectangles]);
+  const stale = Object.keys(NOT_POSITIONAL).filter((n) => !derived.has(n));
+  return { names: [...derived].filter((n) => !Object.prototype.hasOwnProperty.call(NOT_POSITIONAL, n)).sort((a, b) => b.length - a.length || a.localeCompare(b)), stale };
+}
+const { names: POSITIONAL_NAMES, stale: STALE_EXCLUSIONS } = derivePositional();
+const POSITIONAL = POSITIONAL_NAMES.join('|');
 const CALL_RE = new RegExp('(@?[A-Za-z_$][A-Za-z0-9_$]*)((?:\\.[A-Za-z_$][A-Za-z0-9_$]*)*?)\\.(' + POSITIONAL + ')\\s*\\(', 'g');
 const BOUNDS_RE = new RegExp('(@?[A-Za-z_$][A-Za-z0-9_$]*)((?:\\.[A-Za-z_$][A-Za-z0-9_$]*)*?)\\.(bounds)\\b(?!\\s*=[^=])', 'g');
 const BARE_RE = new RegExp('(?<![A-Za-z0-9_$.])@(' + POSITIONAL + ')\\s*\\(', 'g');
@@ -202,6 +254,10 @@ if (funnelViolations.length) {
   funnelViolations.forEach((l) => console.error('    ' + l));
 } else console.log('[plane-discipline A] offset funnel: 0 bare writes -- OK');
 
+if (STALE_EXCLUSIONS.length) {
+  failed = true;
+  console.error(`[plane-discipline B] FAIL — NOT_POSITIONAL names ${STALE_EXCLUSIONS.length} method(s) the POSITIONAL derivation no longer catches on Widget: ${STALE_EXCLUSIONS.join(', ')} — a stale exclusion; delete the entry (or, if the method was renamed, exclude the new name with the same reason).`);
+}
 if (mixLines.length !== CROSS_PLANE_MIX_BASELINE) {
   failed = true;
   console.error(`[plane-discipline B] FAIL — cross-plane positional-mix count ${mixLines.length} != baseline ${CROSS_PLANE_MIX_BASELINE}.`);
@@ -210,7 +266,7 @@ if (mixLines.length !== CROSS_PLANE_MIX_BASELINE) {
   else
     console.error('    Count DROPPED — good: lower the baseline to lock it in. Current lines:');
   mixLines.forEach((l) => console.error('    ' + l));
-} else console.log(`[plane-discipline B] cross-plane positional mixing: ${mixLines.length} (baseline ${CROSS_PLANE_MIX_BASELINE}) -- OK`);
+} else console.log(`[plane-discipline B] cross-plane positional mixing: ${mixLines.length} (baseline ${CROSS_PLANE_MIX_BASELINE}) -- OK (${POSITIONAL_NAMES.length} position queries read from Widget.coffee, ${Object.keys(NOT_POSITIONAL).length} excluded)`);
 
 if (escalationViolations.length) {
   failed = true;

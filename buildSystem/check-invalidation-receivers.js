@@ -30,7 +30,7 @@
 // EXEMPTION: a `# cross-invalidation-sanctioned: <reason>` marker (non-empty reason) on the
 // SAME line or the comment line(s) directly above. Sanctioned today: the structural-move
 // dispatchers (Widget._addNoSettle, Widget.bringToForeground,
-// Widget.fullChangedIncludingShadowOwner, ActivePointerWdgt.drop), the world's
+// Widget._fullChangedIncludingShadowOwner, ActivePointerWdgt.drop), the world's
 // selection-overlay reconciler (pull model — no target-side seam), FileLoading's deferred
 // async-asset repaint, and the own-sub-part sites where a NoSettle mutation tier is
 // deliberately non-invalidating (NumberPromptWdgt, MenuItemWdgt). Adding a NEW cross-widget
@@ -41,7 +41,23 @@ const fs = require('fs');
 const path = require('path');
 const SRC = path.resolve(__dirname, '../src');
 
-const CALL = /\.(_?changed|_?fullChanged|_?updateBroken)\??\(/g;
+// WHAT IS GATED, READ FROM THE SOURCE rather than spelled here: the repaint verbs Widget defines
+// (lib/repaint-verbs.js — `_changed`, `_fullChanged`, the `_fullChanged…` variants), each also in its
+// underscore-less legacy spelling so a pre-rename call cannot slip back in, plus the world's paint
+// executor, whose name is ASSERTED: a name WorldWdgt.coffee no longer defines fails the gate as stale.
+// A hand-spelled pattern here kept the executor's pre-rename name for months, so it was checked by
+// nothing, and could not match `_fullChangedIncludingShadowOwner` at all.
+const { repaintVerbs } = require('./lib/repaint-verbs');
+const PAINT_EXECUTOR = '_repaintDamagedRects';
+let VERBS;
+try { VERBS = repaintVerbs(SRC); } catch (e) { console.error('invalidation-receivers gate: ' + e.message); process.exit(2); }
+if (!new RegExp('^  ' + PAINT_EXECUTOR + '\\s*:', 'm').test(fs.readFileSync(path.join(SRC, 'WorldWdgt.coffee'), 'utf8'))) {
+  console.error(`invalidation-receivers gate: STALE — WorldWdgt.coffee defines no ${PAINT_EXECUTOR}, the paint executor this gate keeps private; rename PAINT_EXECUTOR to match`);
+  process.exit(1);
+}
+const GATED = VERBS.concat(VERBS.map((v) => v.replace(/^_/, '')), [PAINT_EXECUTOR])
+  .sort((a, b) => b.length - a.length);              // longest first, so an alternation reads the longest name
+const CALL = new RegExp('\\.(' + GATED.join('|') + ')\\??\\(', 'g');
 const EXEMPT = /#\s*cross-invalidation-sanctioned:\s*\S/;
 const RECEIVER_CHARS = /[\w$@?.()\[\]]/;
 const ALLOWED = new Set([]);   // no receiver is exempt — see the header
@@ -97,5 +113,5 @@ if (violations.length) {
   for (const v of violations) console.error('  ' + v);
   process.exit(1);
 }
-console.log(`  invalidation-receivers gate OK — ${sites} dotted changed()/fullChanged() sites: ${allowed} singleton-allowed, ${sanctioned} sanctioned, 0 violations.`);
+console.log(`  invalidation-receivers gate OK — ${sites} dotted [${GATED.join(', ')}] sites: ${allowed} singleton-allowed, ${sanctioned} sanctioned, 0 violations.`);
 process.exit(0);

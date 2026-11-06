@@ -8,8 +8,9 @@
  *
  * [S] — a PRIVATE method (leading `_`/`__` or `*NoSettle`) must not @-self-call a public COMMAND:
  *       a callee that (transitively, over @-self calls) SETTLES, or is EFFECTFUL (mutates own
- *       state / repaints / schedules layout). Public QUERIES and the react verbs changed/
- *       fullChanged are expressly allowed — that command/query cut is the whole point (the literal
+ *       state / repaints / schedules layout). Public QUERIES are expressly allowed (the repaint
+ *       verbs `_changed`/`_fullChanged…` are private, so calling one is no private→public call
+ *       at all) — that command/query cut is the whole point (the literal
  *       "no public self-calls from private code" was measured 2026-07-12 to be ~85% benign query
  *       noise and REJECTED — plan §8). A site whose CALLER method carries
  *       `# public-call-sanctioned: <why>` is exempt (the census reports it as sanctioned).
