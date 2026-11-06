@@ -468,8 +468,10 @@ The layout system holds three empty/zero baselines. A layout change that breaks 
   re-lay at each widget's *current* frame and diffs subtree geometry. Expected movers: **zero**. Any mover is a
   non-idempotent or stale arrange, fixed at the arrange.
 
-Plus the **paint-readonly gate**: paint schedules no layout (§1). These dynamic gates run under `./fg gauntlet`; the
-build-time lints and the read-only censuses are documented in `docs/architecture/lint-and-static-checks.md`.
+Plus **paint is read-only**: paint schedules no layout (§1), held by the same `capstone` pass, which also arms
+`WorldWdgt.auditPaintTimeLayoutScheduling` and fails on any schedule the product records during paint. These dynamic
+gates run under `./fg gauntlet`; the build-time lints and the read-only censuses are documented in
+`docs/architecture/lint-and-static-checks.md`.
 
 ---
 

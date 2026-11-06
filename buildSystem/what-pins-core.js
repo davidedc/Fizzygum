@@ -50,18 +50,19 @@
  * ⚠ The four icons that legitimately cannot move — TypewriterIconWdgt, SimpleSlideIconWdgt,
  * DashboardsIconWdgt, GenericShortcutIconWdgt — are drawn by desktop icons and by
  * FolderWindowWdgt/BinOpenerWdgt at boot, so the walk must REACH all four. It is checked:
- * `--selftest` asserts it, alongside planted classes that prove the door test can go both ways.
+ * what-pins-core-selftest.js asserts it, alongside planted classes that prove the door test can go both
+ * ways (run on every build by buildSystem/run-selftests.js).
  *
  * Usage:
  *   node buildSystem/what-pins-core.js [--profile homepage] [--list] [--roots N]
  *   node buildSystem/what-pins-core.js --why <ClassName>     # a shortest boot path to it
- *   node buildSystem/what-pins-core.js --selftest            # prove it can be wrong
  */
 
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { codePartOf, guardedPartsPerLine, isLazyPart, declaredRequires } = require('./lib/part-edge-scan');
+const { rejectUnknownArgs } = require('./lib/cli-args');
 
 const REPO = path.resolve(__dirname, '..');
 const BOOT_DIRS = ['src/boot', 'src/boot/extensions'];
@@ -76,7 +77,6 @@ const PROFILE = flag('--profile', 'homepage');
 const WHY = flag('--why', null);
 const TOP = parseInt(flag('--roots', '25'), 10);
 const LIST = argv.includes('--list');
-const SELFTEST = argv.includes('--selftest');
 
 function die(msg) { console.error('what-pins-core: ' + msg); process.exit(2); }
 
@@ -131,7 +131,7 @@ const declaredPartsIn = (text) => {
 /*
  * Build the reference graph.
  *
- * `inject` is what makes --selftest possible without writing a file into src/: it adds synthetic
+ * `inject` is what makes the self-test possible without writing a file into src/: it adds synthetic
  * image files and synthetic boot lines to this one run, so the door test can be exercised in both
  * directions on planted input rather than trusted.
  */
@@ -170,9 +170,13 @@ function buildGraph(inject) {
   for (const [rel, o] of Object.entries(inject.outsideFiles || {})) outside.push({ rel, part: o.part, text: o.text });
   for (const [rel, text] of Object.entries(inject.files || {})) addFile(rel, text, 'core');
 
-  // Longest-first so a name that is a suffix of another reads tidily; \b does the real work.
+  // Longest-first so a name that is a suffix of another reads tidily.
   const names = [...clsToFile.keys()].sort((a, b) => b.length - a.length);
-  const pat = new Map(names.map(n => [n, new RegExp('\\b' + n + '\\b')]));
+  // A class name is all word characters, so a line names it (`\bName\b`) exactly when one of the line's
+  // maximal \w runs IS the name: one Set lookup per word, not one regex per class per line (that product
+  // was the whole run time). Matches come back in `names` order, so every map below fills in that order.
+  const rank = new Map(names.map((n, i) => [n, i]));
+  const namesIn = (text) => [...new Set(text.match(/\w+/g) || [])].filter(w => rank.has(w)).sort((a, b) => rank.get(a) - rank.get(b));
 
   // A site is behind a DOOR when it is guarded/awaited for parts NONE of which is in this image.
   const doorPartsAt = (f, i) => {
@@ -206,8 +210,7 @@ function buildGraph(inject) {
       const code = f.code[i];
       if (!code.trim()) continue;
       const door = doorPartsAt(f, i);
-      for (const n of names) {
-        if (!pat.get(n).test(code)) continue;
+      for (const n of namesIn(code)) {
         if (door) {
           if (!doors.has(n)) doors.set(n, new Set());
           for (const p of door) doors.get(n).add(p);
@@ -233,8 +236,7 @@ function buildGraph(inject) {
     const satisfies = new Set([...directRequires(part), ...declaredPartsIn(text)]);
     for (const line of text.split('\n').map(codePartOf)) {
       if (!line.trim()) continue;
-      for (const n of names) {
-        if (!pat.get(n).test(line)) continue;
+      for (const n of namesIn(line)) {
         if (!doors.has(n)) doors.set(n, new Set());
         doors.get(n).add(part);
         addSite(n, part, satisfies);
@@ -417,219 +419,113 @@ function analyse(inject) {
   return { g, imageClasses, candidates };
 }
 
-if (SELFTEST) {
-  // ⚠ A tool that cannot be wrong is worthless. Three plants, each aimed at the ONE axis this can be
-  // wrong on -- does it tell a door from a plain reference -- plus the four icons that must stay.
-  // hand-list-sanctioned: what-pins-core.js --selftest [FAIL]s and exits 1 on a name here no src file
-  // declares or the boot walk no longer reaches (run on demand: fg whatpins --selftest)
-  const MUST_REACH = ['TypewriterIconWdgt', 'SimpleSlideIconWdgt', 'DashboardsIconWdgt', 'GenericShortcutIconWdgt'];
-  let bad = 0;
-  const ok = (cond, msg) => { console.log(`  ${cond ? '[PASS]' : '[FAIL]'} ${msg}`); if (!cond) bad++; };
+function main() {
+  rejectUnknownArgs(argv, ['--profile', '--why', '--list', '--roots'], 'what-pins-core');
+  const { g, imageClasses, candidates } = analyse();
 
-  const base = analyse();
-  for (const n of MUST_REACH) {
-    ok(base.g.clsToFile.has(n) && base.g.reached.has(n),
-      `${n} is REACHED from boot (drawn by a desktop icon / folder chrome — it may never be proposed)`);
-  }
-
-  const plantBody = (ref) => [
-    'class PlantHostWdgt extends Widget',
-    '  aMethod: ->', ref,
-  ].join('\n');
-
-  // (a) named ONLY from inside a lazy part's await -> must be a candidate, with that door named
-  const behind = analyse({
-    files: { 'src/PlantHostWdgt.coffee': plantBody(
-      '    world.parts.whenAllLoaded ["maps"], ->\n      new PlantedOrphanWdgt'),
-             'src/PlantedOrphanWdgt.coffee': 'class PlantedOrphanWdgt extends Widget\n' },
-    bootLines: ['    new PlantHostWdgt'],
-  });
-  ok(behind.candidates.includes('PlantedOrphanWdgt'),
-    'a class named ONLY inside `whenAllLoaded ["maps"]` is a CANDIDATE');
-  ok([...(behind.g.doors.get('PlantedOrphanWdgt') || [])].join() === 'maps',
-    "...and its door is reported as 'maps'");
-
-  // (b) the SAME reference, unguarded -> must NOT be a candidate. This is the half that fails if the
-  //     scanner were to treat every reference as a door (which would make every class movable).
-  const plain = analyse({
-    files: { 'src/PlantHostWdgt.coffee': plantBody('    new PlantedOrphanWdgt'),
-             'src/PlantedOrphanWdgt.coffee': 'class PlantedOrphanWdgt extends Widget\n' },
-    bootLines: ['    new PlantHostWdgt'],
-  });
-  ok(!plain.candidates.includes('PlantedOrphanWdgt'),
-    'the same reference UNGUARDED is NOT a candidate (the door test decides, not the reference)');
-
-  // (c) a reference that exists only in a COMMENT is not a reference at all
-  const prose = analyse({
-    files: { 'src/PlantHostWdgt.coffee': plantBody('    # see PlantedOrphanWdgt for the real one'),
-             'src/PlantedOrphanWdgt.coffee': 'class PlantedOrphanWdgt extends Widget\n' },
-    bootLines: ['    new PlantHostWdgt'],
-  });
-  ok(prose.candidates.includes('PlantedOrphanWdgt'),
-    'a class named only in PROSE is still a candidate (comments are stripped)');
-
-  // (d) SECTION 2's claim, which is the novel one: "sole route" must stop being true the moment a
-  //     SECOND route exists. TypewriterIconWdgt is reached from one line of createDesktop and solely
-  //     routes its own appearance; name that appearance from boot and the pair must break in two.
-  // (e) THE COST OF A MOVE, which is where this was wrong once. A door that declares
-  //     `requiredParts: ["authoring"]` may already name an authoring class — check-part-edges says
-  //     so (rule 7: the declaration IS the await). Modelling only parts.json `requires` made it
-  //     demand three edges on the example-* doors, each of which carries an explicit ⛔ against
-  //     exactly that, and the build then proved all three unnecessary.
-  const orphan = { 'src/PlantedOrphanWdgt.coffee': 'class PlantedOrphanWdgt extends Widget\n' };
-  const namedBy = (decl) => analyse({
-    files: orphan,
-    outsideFiles: {
-      'src/authoring/PlantAuthoringWdgt.coffee': { part: 'authoring', text: '  new PlantedOrphanWdgt\n' },
-      'src/examples/slide/PlantDoorApp.coffee': { part: 'example-slide', text: decl + '  new PlantedOrphanWdgt\n' },
-    },
-  });
-  const homeOf = (r) => homeFor(['PlantedOrphanWdgt'], r.g.doors.get('PlantedOrphanWdgt'), r.g.doorSites);
-  const declared = homeOf(namedBy('  requiredParts: ["authoring"]\n'));
-  const bare = homeOf(namedBy(''));
-  ok(declared.part === 'authoring' && declared.needsRequires.length === 0,
-    "a door declaring requiredParts:[\"authoring\"] needs NO parts.json edge to name an authoring class");
-  ok(bare.part === 'authoring' && bare.needsRequires.join() === 'example-slide',
-    '...and the same door WITHOUT that declaration does need one (the control)');
-
-  // (f) An EAGER door's `requires` on a LAZY home does not satisfy the gate: dev-tools (eager)
-  //     requires authoring (lazy) directly, but runs from the first frame, so its site still needs
-  //     a guard. The control is a LAZY door with the same direct `requires` (demos), which needs
-  //     nothing — so the case fails for the eager-owner discount and nothing else.
-  const namedFrom = (part, rel) => homeOf(analyse({
-    files: orphan,
-    outsideFiles: {
-      'src/authoring/PlantAuthoringWdgt.coffee': { part: 'authoring', text: '  new PlantedOrphanWdgt\n' },
-      [rel]: { part, text: '  new PlantedOrphanWdgt\n' },
-    },
-  }));
-  const eagerDoor = namedFrom('dev-tools', 'src/dev-tools/PlantDevWdgt.coffee');
-  const lazyDoor = namedFrom('demos', 'src/demos/PlantDemoWdgt.coffee');
-  ok(eagerDoor.part === 'authoring' && eagerDoor.needsGuard.join() === 'dev-tools',
-    "an EAGER door's direct requires on a LAZY home (dev-tools -> authoring) does NOT satisfy the gate");
-  ok(lazyDoor.part === 'authoring' && lazyDoor.needsGuard.length === 0 && lazyDoor.needsRequires.length === 0,
-    "...and a LAZY door's direct requires on it (demos -> authoring) does (the control)");
-
-  // (g) `requires` is ONE LEVEL for the gate. No real lazy chain reaches a part its owner does not
-  //     also require directly, so one is planted: a lazy part requiring only demos, which requires
-  //     authoring, must NOT read as permission to name an authoring class.
-  parts['plant-chain'] = { eager: false, requires: ['demos'], dirs: [] };
-  const chained = namedFrom('plant-chain', 'src/plant-chain/PlantChainWdgt.coffee');
-  delete parts['plant-chain'];
-  ok(chained.part === 'authoring' && chained.needsRequires.join() === 'plant-chain',
-    'a transitive requires chain (lazy plant -> demos -> authoring) does NOT satisfy the gate');
-
-  const soleBefore = dominatorSubtrees(base.g).subtree.get('TypewriterIconWdgt');
-  const second = analyse({ bootLines: ['    new TypewriterIconAppearance'] });
-  const soleAfter = dominatorSubtrees(second.g).subtree.get('TypewriterIconWdgt');
-  ok(soleBefore.count === 2 && soleAfter.count === 1,
-    `a SECOND boot route to TypewriterIconAppearance drops the sole-route subtree ` +
-    `${soleBefore.count} -> ${soleAfter.count} (dominance, not mere reachability)`);
-
-  console.log(bad ? `\nSELFTEST FAILED (${bad})` : '\nSELFTEST OK');
-  process.exit(bad ? 1 : 0);
-}
-
-const { g, imageClasses, candidates } = analyse();
-
-if (WHY) {
-  if (!g.clsToFile.has(WHY)) die(`'${WHY}' is not a class in the ${PROFILE} image`);
-  if (!g.reached.has(WHY)) {
-    const d = [...(g.doors.get(WHY) || [])];
-    console.log(`${WHY} is NOT reached from boot. Doors that name it: ${d.join(', ') || '(none at all)'}`);
+  if (WHY) {
+    if (!g.clsToFile.has(WHY)) die(`'${WHY}' is not a class in the ${PROFILE} image`);
+    if (!g.reached.has(WHY)) {
+      const d = [...(g.doors.get(WHY) || [])];
+      console.log(`${WHY} is NOT reached from boot. Doors that name it: ${d.join(', ') || '(none at all)'}`);
+      process.exit(0);
+    }
+    const chain = [];
+    for (let n = WHY; n !== BOOT; n = g.via.get(n).from) chain.unshift({ n, w: g.via.get(n).where });
+    console.log(`${BOOT}`);
+    for (const { n, w } of chain) console.log(`  -> ${n}\n       ${w.rel}:${w.line}  ${w.text}`);
     process.exit(0);
   }
-  const chain = [];
-  for (let n = WHY; n !== BOOT; n = g.via.get(n).from) chain.unshift({ n, w: g.via.get(n).where });
-  console.log(`${BOOT}`);
-  for (const { n, w } of chain) console.log(`  -> ${n}\n       ${w.rel}:${w.line}  ${w.text}`);
-  process.exit(0);
-}
 
-const tot = (list) => list.reduce((a, c) => {
-  const w = weightOf(g.clsToFile.get(c)); a.bytes += w.bytes; a.code += w.code; return a;
-}, { bytes: 0, code: 0 });
-const kb = (n) => (n / 1024).toFixed(1);
+  const tot = (list) => list.reduce((a, c) => {
+    const w = weightOf(g.clsToFile.get(c)); a.bytes += w.bytes; a.code += w.code; return a;
+  }, { bytes: 0, code: 0 });
+  const kb = (n) => (n / 1024).toFixed(1);
 
-const all = tot(imageClasses), cand = tot(candidates);
-console.log(`what-pins-core — profile '${PROFILE}': ${imageClasses.length} classes in the eager image ` +
-            `(${kb(all.bytes)} KB source, ${kb(all.code)} KB code)`);
-console.log(`  reached from src/boot without passing a lazy door: ${imageClasses.length - candidates.length}`);
-console.log(`  NOT reached — movable today: ${candidates.length} (${kb(cand.code)} KB code)\n`);
+  const all = tot(imageClasses), cand = tot(candidates);
+  console.log(`what-pins-core — profile '${PROFILE}': ${imageClasses.length} classes in the eager image ` +
+              `(${kb(all.bytes)} KB source, ${kb(all.code)} KB code)`);
+  console.log(`  reached from src/boot without passing a lazy door: ${imageClasses.length - candidates.length}`);
+  console.log(`  NOT reached — movable today: ${candidates.length} (${kb(cand.code)} KB code)\n`);
 
-// ---- 1. candidates ---------------------------------------------------------------------------
-console.log('== 1. IN THE IMAGE, YET NO BOOT PATH REACHES THEM ==');
-if (!candidates.length) {
-  console.log('  (none — every class in the image is named from the boot path without a door in between)');
-} else {
-  const byDoor = new Map();
-  // A part this profile does not ship at all is marked `*`: moving a class there takes it off THIS
-  // artifact, but it is a different decision from moving it behind a lazy door -- the class stops
-  // existing in production rather than arriving late, so it has to be dev-only material on merits.
-  for (const c of candidates) {
-    const set = g.doors.get(c) || new Set();
-    const d = [...set].sort().map(p => shipped.has(p) ? p : p + '*').join('+')
-      || '(named by nothing at all)';
-    if (!byDoor.has(d)) byDoor.set(d, { set, cs: [] });
-    byDoor.get(d).cs.push(c);
+  // ---- 1. candidates ---------------------------------------------------------------------------
+  console.log('== 1. IN THE IMAGE, YET NO BOOT PATH REACHES THEM ==');
+  if (!candidates.length) {
+    console.log('  (none — every class in the image is named from the boot path without a door in between)');
+  } else {
+    const byDoor = new Map();
+    // A part this profile does not ship at all is marked `*`: moving a class there takes it off THIS
+    // artifact, but it is a different decision from moving it behind a lazy door -- the class stops
+    // existing in production rather than arriving late, so it has to be dev-only material on merits.
+    for (const c of candidates) {
+      const set = g.doors.get(c) || new Set();
+      const d = [...set].sort().map(p => shipped.has(p) ? p : p + '*').join('+')
+        || '(named by nothing at all)';
+      if (!byDoor.has(d)) byDoor.set(d, { set, cs: [] });
+      byDoor.get(d).cs.push(c);
+    }
+    for (const [d, { set, cs }] of [...byDoor].sort((a, b) => tot(b[1].cs).code - tot(a[1].cs).code)) {
+      const w = tot(cs);
+      const h = set.size > 1 ? homeFor(cs, set, g.doorSites) : null;
+      const cost = !h ? [] : [
+        h.needsRequires.length ? `${h.needsRequires.map(m => `'${m}'`).join('+')} declare requires` : null,
+        h.needsGuard.length ? `EAGER ${h.needsGuard.map(m => `'${m}'`).join('+')} guard the site` : null,
+      ].filter(Boolean);
+      const home = !h ? '' : cost.length === 0
+        ? `   -> '${h.part}' — every other door already requires it`
+        : `   -> '${h.part}' iff ${cost.join(' AND ')}`;
+      console.log(`  ${d.padEnd(44)} ${String(cs.length).padStart(3)} class(es)  ${kb(w.code).padStart(6)} KB code${home}`);
+      if (LIST) for (const c of cs.sort()) console.log(`      ${g.clsToFile.get(c).rel}`);
+    }
+    console.log(`\n  * = a part '${PROFILE}' does not ship (a move there deletes it from this artifact,`);
+    console.log('      rather than deferring it — only right for genuinely dev-only material).');
+    console.log('  A single door means it moves into that part. TWO doors mean one of them declares a');
+    console.log('  parts.json `requires` on the other, or it stays. Verify with `fg hypopart` first --');
+    console.log('  an inheritance edge across the boundary means the grouping is wrong.');
   }
-  for (const [d, { set, cs }] of [...byDoor].sort((a, b) => tot(b[1].cs).code - tot(a[1].cs).code)) {
-    const w = tot(cs);
-    const h = set.size > 1 ? homeFor(cs, set, g.doorSites) : null;
-    const cost = !h ? [] : [
-      h.needsRequires.length ? `${h.needsRequires.map(m => `'${m}'`).join('+')} declare requires` : null,
-      h.needsGuard.length ? `EAGER ${h.needsGuard.map(m => `'${m}'`).join('+')} guard the site` : null,
-    ].filter(Boolean);
-    const home = !h ? '' : cost.length === 0
-      ? `   -> '${h.part}' — every other door already requires it`
-      : `   -> '${h.part}' iff ${cost.join(' AND ')}`;
-    console.log(`  ${d.padEnd(44)} ${String(cs.length).padStart(3)} class(es)  ${kb(w.code).padStart(6)} KB code${home}`);
-    if (LIST) for (const c of cs.sort()) console.log(`      ${g.clsToFile.get(c).rel}`);
+
+  // ---- 2. dominators ---------------------------------------------------------------------------
+  const { kids, subtree } = dominatorSubtrees(g);
+
+  // How many DISTINCT classes name it. This is the column that separates the two kinds of sole route:
+  // `Widget` dominates 27 classes and is named from 80 places -- structural, and no door will ever go
+  // in front of it. `DegreesConverterApp` dominated 2 and was named from one line of createDesktop,
+  // which is the shape worth reading. Weight alone puts the unactionable ones on top.
+  const refCount = new Map();
+  for (const [from, tos] of g.live) {
+    if (!g.reached.has(from)) continue;
+    for (const to of tos.keys()) refCount.set(to, (refCount.get(to) || 0) + 1);
   }
-  console.log(`\n  * = a part '${PROFILE}' does not ship (a move there deletes it from this artifact,`);
-  console.log('      rather than deferring it — only right for genuinely dev-only material).');
-  console.log('  A single door means it moves into that part. TWO doors mean one of them declares a');
-  console.log('  parts.json `requires` on the other, or it stays. Verify with `fg hypopart` first --');
-  console.log('  an inheritance edge across the boundary means the grouping is wrong.');
+  const ranked = [...subtree].filter(([n, s]) => n !== BOOT && s.count > 1)
+    .sort((a, b) => b[1].code - a[1].code).slice(0, TOP);
+  const fullSubtree = (n, out) => { for (const k of kids.get(n) || []) { out.push(k); fullSubtree(k, out); } return out; };
+
+  // ⛔ ANSWERED ALREADY, and it will be the biggest block in every run of this list: the ~18
+  // icon+appearance pairs (62.8 KB) drawn at boot by createDesktop and the desktop chrome. Owner
+  // decision 2026-08-02, do not re-raise. The art has to be in the boot payload in SOME
+  // representation, and a data format (SVG, bitmaps) would not be meaningfully smaller while LOSING
+  // what these classes buy: they are size-aware, choosing level of detail and integer-pixel geometry
+  // from their actual device size, which is what makes them crisp under the non-AA SWCanvas backend.
+  // Deferring them would pop icons in after first paint. The only residue would be prototype
+  // scaffolding for ~38 classes, and collecting it means writing an interpreter for a DSL strictly
+  // less expressive than CoffeeScript. ⇒ that weight is simply what drawing 18 icons costs.
+  console.log(`\n== 2. SOLE ROUTES: every boot path to these classes goes through ONE class ==`);
+  console.log('   Put a door in front of that class and its whole subtree leaves the image with it. This');
+  console.log('   is where the C-F art would have shown up: 2 classes, 9.6 KB, one naming site in');
+  console.log('   createDesktop. ⚠ These are QUESTIONS, not findings — a high `refs` means the class is');
+  console.log('   structural (Widget, WorldWdgt) and no door will ever go in front of it; a low one');
+  console.log('   means one decision holds that weight in the image, which is worth reading.\n');
+  console.log('   KB code  classes  refs   the sole route                     first reached at');
+  for (const [n, s] of ranked) {
+    const w = g.via.get(n).where;
+    console.log(`  ${kb(s.code).padStart(7)}  ${String(s.count).padStart(6)}  ${String(refCount.get(n) || 0).padStart(4)}   ` +
+                `${n.padEnd(34)} ${w.rel}:${w.line}`);
+    if (LIST) for (const k of fullSubtree(n, []).sort()) console.log(`               ${k}`);
+  }
+  console.log('\n`--why <Class>` prints a shortest boot path to any class. `--list` expands both sections.');
+  console.log('Then MEASURE: source bytes have missed the image delta in both directions four times running.');
 }
 
-// ---- 2. dominators ---------------------------------------------------------------------------
-const { kids, subtree } = dominatorSubtrees(g);
+module.exports = { analyse, dominatorSubtrees, homeFor, parts };
 
-// How many DISTINCT classes name it. This is the column that separates the two kinds of sole route:
-// `Widget` dominates 27 classes and is named from 80 places -- structural, and no door will ever go
-// in front of it. `DegreesConverterApp` dominated 2 and was named from one line of createDesktop,
-// which is the shape worth reading. Weight alone puts the unactionable ones on top.
-const refCount = new Map();
-for (const [from, tos] of g.live) {
-  if (!g.reached.has(from)) continue;
-  for (const to of tos.keys()) refCount.set(to, (refCount.get(to) || 0) + 1);
-}
-const ranked = [...subtree].filter(([n, s]) => n !== BOOT && s.count > 1)
-  .sort((a, b) => b[1].code - a[1].code).slice(0, TOP);
-const fullSubtree = (n, out) => { for (const k of kids.get(n) || []) { out.push(k); fullSubtree(k, out); } return out; };
-
-// ⛔ ANSWERED ALREADY, and it will be the biggest block in every run of this list: the ~18
-// icon+appearance pairs (62.8 KB) drawn at boot by createDesktop and the desktop chrome. Owner
-// decision 2026-08-02, do not re-raise. The art has to be in the boot payload in SOME
-// representation, and a data format (SVG, bitmaps) would not be meaningfully smaller while LOSING
-// what these classes buy: they are size-aware, choosing level of detail and integer-pixel geometry
-// from their actual device size, which is what makes them crisp under the non-AA SWCanvas backend.
-// Deferring them would pop icons in after first paint. The only residue would be prototype
-// scaffolding for ~38 classes, and collecting it means writing an interpreter for a DSL strictly
-// less expressive than CoffeeScript. ⇒ that weight is simply what drawing 18 icons costs.
-console.log(`\n== 2. SOLE ROUTES: every boot path to these classes goes through ONE class ==`);
-console.log('   Put a door in front of that class and its whole subtree leaves the image with it. This');
-console.log('   is where the C-F art would have shown up: 2 classes, 9.6 KB, one naming site in');
-console.log('   createDesktop. ⚠ These are QUESTIONS, not findings — a high `refs` means the class is');
-console.log('   structural (Widget, WorldWdgt) and no door will ever go in front of it; a low one');
-console.log('   means one decision holds that weight in the image, which is worth reading.\n');
-console.log('   KB code  classes  refs   the sole route                     first reached at');
-for (const [n, s] of ranked) {
-  const w = g.via.get(n).where;
-  console.log(`  ${kb(s.code).padStart(7)}  ${String(s.count).padStart(6)}  ${String(refCount.get(n) || 0).padStart(4)}   ` +
-              `${n.padEnd(34)} ${w.rel}:${w.line}`);
-  if (LIST) for (const k of fullSubtree(n, []).sort()) console.log(`               ${k}`);
-}
-console.log('\n`--why <Class>` prints a shortest boot path to any class. `--list` expands both sections.');
-console.log('Then MEASURE: source bytes have missed the image delta in both directions four times running.');
+if (require.main === module) main();

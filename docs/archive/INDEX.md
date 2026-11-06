@@ -571,6 +571,12 @@ Archived docs are immutable history — the current-state truth lives in
   - ⭐⭐ the question was never "which files" but "what is a reference": `scripts/` holds NAME TABLES (aim-census classifies every toolkit verb) and src holds locals named like methods, and neither reaches anything.
   - ⭐⭐ measure the change as it will land: R4 measured on its tests-repo half read +3; applied to both halves it was +28.
   - ⭐ js-tokens decides a regex by lookahead and misreads `n / 8));  // …`; use it as an oracle, not as truth.
+- **`unrun-checks-plan.md`** — COMPLETE (2026-11-06; the readers arc's two findings — gate self-tests and aim-census's table checks run by nothing — executed in one session as the class "a check nothing runs proves nothing"; owner rulings D1–D4 all (a): one file convention discovered by name, a sanction's guard must RUN derived, every prelude installed at commit points, all of F5–F9 in-arc).
+  - Self-tests are FILES (`*-selftest.js`: the build's first gate, `run-selftests.js`; `*-selftest-headless.js`: the gauntlet's `selftests` leg), found by name through `buildSystem/lib/what-runs.js`, ending with one shared verdict line and a case count; a self-test switch in code, or a file named like one that no tier runs, fails the build; gates refuse unknown flags.
+  - check-hand-lists: a sanction's guard must RUN (`SANCTION_GUARD_NEVER_RUNS`), derived from the build, the self-tests and fg's legs as INVOCATIONS (a small shell lexer, positive grammar); 18 of 40 sanctions had leaned on never-run guards. aim-census's tables run on every build; the paint-read-only audit (documented as a gauntlet gate, run by nothing) rides the capstone pass; the superseded cache-oracle gate deleted and its plant made a standing bite-proof.
+  - ⭐⭐ "runs" is INVOCATION, not mention — help strings, Error messages and docstrings name scripts that never run; and a self-test's own requires are fixtures, not runs.
+  - ⭐⭐ a "check that runs" can still be blind: the prelude-install self-test installed the table-holding preludes but played no test, and they report stale names only at the first test's start (the review's R1). Prove the CLAIM ("a stale name fails here") with a plant of exactly that shape.
+  - ⭐ deriving the run set FOUND a live bug: the capstone's backfill injected the wrong prelude, so it could only fail the gate.
 
 ## Build & toolchain
 

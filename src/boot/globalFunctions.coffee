@@ -159,9 +159,10 @@ loadJSFilePromise = (fileName) ->
 # and compiles by hand, because every other source needs them to exist before it can be ingested.
 # dependencies-finding leaves them out of the load order and the compile job skips them, both by
 # reading this list.
-# hand-list-sanctioned: smoke-boot-headless.js — boot fetches js/coffeescript-sources/<name>-source.js
+# hand-list-sanctioned: run-all-headless.js — boot fetches js/coffeescript-sources/<name>-source.js
 # for each name here, and build.py writes that file only for a source it holds under that name, so a
-# stale name fails the fetch and the boot (the smoke fails on the failed request and the console error)
+# stale name fails the fetch and every page's boot: every suite leg fails, and so does
+# smoke-boot-headless.js on the failed request and the console error
 META_SYSTEM_SOURCES = ["Mixin", "Class"]
 
 

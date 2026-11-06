@@ -82,7 +82,8 @@
  *   node ./buildSystem/census-public-private-calls.js            # summary + truncated lists
  *   node ./buildSystem/census-public-private-calls.js --full     # untruncated site/name lists
  *   node ./buildSystem/census-public-private-calls.js --json o.json   # machine-readable dump
- *   node ./buildSystem/census-public-private-calls.js --self-test     # call-extractor fixtures
+ * The call-extractor fixtures are census-public-private-calls-selftest.js (run on every build by
+ * buildSystem/run-selftests.js).
  *
  * CLI exit codes: 0 = ran (the CLI never "fails" on findings — enforcement is
  * check-call-separation.js's job), 2 = operational error.
@@ -498,30 +499,7 @@ module.exports = { runCensus, PUBLIC_CALL_MARKER, DOUBLE_SETTLE_MARKER, tierOf, 
 
 // ============================== THE CLI ==============================
 if (require.main === module) {
-  // --self-test: prove the call-shape decisions on fixtures (no repo needed).
-  if (process.argv.includes('--self-test')) {
-    const CASES = [
-      ['@foo()', 'foo', 'call'], ['@foo(a, b)', 'foo', 'call'],
-      ['@foo a', 'foo', 'call'], ['@foo @bar', 'foo', 'call'], ["@foo 'x'", 'foo', 'call'],
-      ['@foo if x', 'foo', 'ref'], ['@foo and @bar', 'foo', 'ref'], ['x = @foo', 'foo', 'ref'],
-      ['@foo = 3', 'foo', 'skip'], ['@foo ?= 3', 'foo', 'skip'], ['@foo.bar()', 'foo', 'skip'],
-      ['return unless @foo', 'foo', 'ref'],
-    ];
-    let ok = true;
-    for (const [line, name, expect] of CASES) {
-      const got = classifyOccurrence(line, line.indexOf('@' + name) + 1 + name.length);
-      if (got !== expect) ok = false;
-      console.log(`  ${got === expect ? 'ok  ' : 'FAIL'} ${JSON.stringify(line)} -> ${got} (expected ${expect})`);
-    }
-    // R4's external half reads the tests repo's CODE (lib/tests-repo-code.js): the reader's own cases.
-    const logCase = (good, what) => console.log(`  ${good ? 'ok  ' : 'FAIL'} ${what}`);
-    if (!require('./lib/tests-repo-code').selfTest(logCase)) ok = false;
-    // and the rule it reads references by (lib/method-references.js)
-    if (!methodRefs.selfTest(logCase)) ok = false;
-    console.log(ok ? '[census] self-test PASS' : '[census] self-test FAIL');
-    process.exit(ok ? 0 : 1);
-  }
-
+  require('./lib/cli-args').rejectUnknownArgs(process.argv.slice(2), ['--full', '--json'], 'census-public-private-calls');
   const FULL = process.argv.includes('--full');
   const jsonIdx = process.argv.indexOf('--json');
   const JSON_OUT = jsonIdx >= 0 ? process.argv[jsonIdx + 1] : null;

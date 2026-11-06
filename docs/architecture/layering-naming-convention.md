@@ -272,8 +272,8 @@ core-vs-convenience choice; which ⌀ notification gaps are worth filling.
 The static name-consistency catches mislabels a scanner can see; RUNTIME verifies the name matches what the body
 ACTUALLY does (the ground truth — indirect/dynamic-dispatch paths the scanner can't follow). Each audit is a PRELUDE
 that wraps prototypes once, before the page's own scripts run, and a standalone `run-*-gate.sh` that plays the WHOLE
-suite under it and reads what the wrappers logged — siblings of `run-capstone-gate.sh` / `run-paint-readonly-gate.sh`,
-and wired into `fg gauntlet`.
+suite under it and reads what the wrappers logged — siblings of `run-capstone-gate.sh` (whose pass also carries the
+paint-read-only audit), and wired into `fg gauntlet`.
 ⚠ **These two gates carry no `WorldWdgt` flag, and that is the design rather than an omission.** They once mirrored the
 `auditUndeclaredEndOfCycle` pattern — an off-by-default flag a prelude flips on, with the recording behind it — but the
 observation moved entirely into the prelude's own wrappers, which never consult a flag. The two vestigial flags were

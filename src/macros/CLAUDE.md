@@ -148,7 +148,9 @@ silently lands on something else changes the pixels, and a recapture would then 
   assert the caret or selection it produces), list rows by identity (`clickOnListItem_InputEvents`), an
   auto-scroll band (`autoScrollBandPointOf`). A fraction into text, a fraction of a title strip, an offset from a
   widget's edge into its chrome are exactly the aims a redesign moves.
-`Fizzygum-tests/scripts/aim-census.js` measures what is left (a census, not a gate — the runtime check is the gate).
+`Fizzygum-tests/scripts/aim-census.js` measures what is left (a census, not a gate — the runtime check is the gate). Its own
+tables, which classify every verb here, ARE held to this directory on every build (`--tables-only`): a verb deleted or
+renamed here must leave its row there in the same change.
 
 ## Playback speed (one global level — tests say NOTHING about it)
 

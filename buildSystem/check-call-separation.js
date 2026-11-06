@@ -38,8 +38,9 @@
  *
  * Exit codes: 0 clean · 1 violation (count exceeded a baseline, or a stale [U] allowlist entry) · 2 operational error.
  * Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-call-separation.js
- * Self-test: plant a `_foo: -> @somePublicCommand()` in a throwaway src class, confirm the count
- * bumps past the baseline and the build aborts; `# public-call-sanctioned: fixture` exempts it.
+ * To see it bite (a plant, by hand: no standing self-test runs one): add a `_foo: -> @somePublicCommand()` to a
+ * throwaway src class, confirm the count bumps past the baseline and the build aborts; `# public-call-sanctioned:
+ * fixture` exempts it. Its call-shape decisions are census-public-private-calls-selftest.js, run on every build.
  */
 
 const fs = require('fs');

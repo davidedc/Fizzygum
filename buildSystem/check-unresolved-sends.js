@@ -71,13 +71,14 @@
 //
 // Exit codes: 0 clean · 1 unresolved send not exempted · 2 operational error.
 // Flags: --update-allowlist (re-seed the allowlist with the current unresolved set)
-//        --self-test        (in-memory fixtures for the masker + both harvests; needs no repo)
+// Its in-memory fixtures for the masker and both harvests are check-unresolved-sends-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
 // The DEF side — its comment strip, its DEF_FORMS, the harvest — is the shared
 // lib/name-definitions.js, which check-part-edges.js reads too: one implementor harvest, not two.
 const defs = require('./lib/name-definitions.js');
+const { rejectUnknownArgs } = require('./lib/cli-args');
 
 const SRC = path.resolve(__dirname, '../src');
 const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
@@ -281,171 +282,121 @@ const PLATFORM_GLOBALS = new Set(`
 Math Object Array ArrayBuffer Number String JSON Date Promise performance console document window
 `.trim().split(/\s+/));
 
-// ─── --self-test: prove the pure parts on in-memory fixtures (a lint that can't fail is worthless) ──
-if (process.argv.includes('--self-test')) {
-  let ok = true;
-  const check = (label, got, want) => {
-    const pass = JSON.stringify(got) === JSON.stringify(want);
-    console[pass ? 'log' : 'error'](`  ${pass ? 'ok  ' : 'FAIL'} ${label} -> ${JSON.stringify(got)}${pass ? '' : ` (expected ${JSON.stringify(want)})`}`);
-    if (!pass) ok = false;
-  };
-  // masker: strings/comments masked, interpolation kept
-  const code1 = (l) => stripLine(l, null).code;
-  check('call in a comment is masked',        /@foo\(/.test(code1('x = 1 # @foo()')), false);
-  check('call in a string is masked',         /@foo\(/.test(code1('x = "@foo()"')), false);
-  check("call in a '-string is masked",       /@foo\(/.test(code1("x = '@foo()'")), false);
-  check('call in interpolation is KEPT',      /@foo\(/.test(code1('x = "a#{@foo()}b"')), true);
-  check('plain call survives',                /@foo\(/.test(code1('@foo()')), true);
-  check('heredoc opens multi-line state',     stripLine('x = """', null).state, '"""');
-  check('heredoc body masked, interp kept',   stripLine('@a() #{@b()}', '"""').code.includes('@b()'), true);
-  check('heredoc body code masked',           stripLine('@a() #{@b()}', '"""').code.includes('@a()'), false);
-  // def harvest: every form the probe proved necessary
-  const defsOf = (src) => {
-    const f = path.join(require('os').tmpdir(), `__ust_${process.pid}.coffee`);
-    fs.writeFileSync(f, src); const d = harvestDefs([f]); fs.unlinkSync(f); return [...d].sort();
-  };
-  check('2-space class method',  defsOf('  myMethod: (a) ->\n').includes('myMethod'), true);
-  check('prototype extension',   defsOf('Number::toRadians = ->\n').includes('toRadians'), true);
-  check('static fn',             defsOf('Math.getRandomInt = (min, max) ->\n').includes('getRandomInt'), true);
-  check('local-proto expando',   defsOf('  swContextProto.useLogicalPixels = ->\n').includes('useLogicalPixels'), true);
-  check('bare local fn',         defsOf('helper = ->\n').includes('helper'), true);
-  check('plain property key',    defsOf('  bounds: nil\n').includes('bounds'), true);
-  check('@-assignment key',      defsOf('    @myField = 3\n').includes('myField'), true);
-  // the DEF forms are line-ANCHORED, so a def inside a mid-line string is not harvested…
-  check('mid-line string def not harvested',   defsOf('x = "  fake: ->"\n').includes('fake'), false);
-  // …but a heredoc BODY line is (the naive strip keeps string content). Over-approximating like this
-  // is HARMLESS by construction: an extra implementor can only ever SUPPRESS a flag, never raise one.
-  check('heredoc-body def over-approximated', defsOf('code = """\n  fake: ->\n"""\n').includes('fake'), true);
-  // call harvest: capitals skipped
-  const callsOf = (src) => {
-    const f = path.join(require('os').tmpdir(), `__ust_${process.pid}.coffee`);
-    fs.writeFileSync(f, src); const c = harvestCalls([f]).map((s) => s.name); fs.unlinkSync(f); return c;
-  };
-  check('member + self calls harvested', callsOf('@aa()\nx.bb()\n'), ['aa', 'bb']);
-  check('Capitalised name skipped',      callsOf('x.Foo()\n'), []);
-  // the receiver a keyed BUILTINS entry is matched against: a bare identifier right before the dot only
-  const recvsOf = (src) => {
-    const f = path.join(require('os').tmpdir(), `__ust_${process.pid}.coffee`);
-    fs.writeFileSync(f, src); const c = harvestCalls([f]).map((s) => s.recv || '-'); fs.unlinkSync(f); return c;
-  };
-  check('literal global receiver read',      recvsOf('x = Math.round(y)\nJSON.parse(s)\nf(Math.max(1, 2))\n'), ['Math', 'JSON', 'Math']);
-  check('a spaced dot is no receiver',       recvsOf('y = Math .floor(z)\n'), ['-']);
-  check('an interpolation is no receiver',   recvsOf('x = "a#{Math}".round(y)\ny = "#{q} #{document}".createElement(z)\n'), ['-', '-']);
-  check('an expression is no receiver',      recvsOf('@bounds.round()\na.Math.round()\n(x).round()\nlist[0].round()\n'), ['-', '-', '-', '-']);
-  check('@-self call has no receiver',       recvsOf('@round()\n'), ['-']);
-  check('a string is no receiver',           recvsOf('"Math".round()\n'), ['-']);
-  console.log(ok ? '[unresolved-sends] self-test PASS' : '[unresolved-sends] self-test FAIL');
-  process.exit(ok ? 0 : 1);
-}
-
 // ─── run ────────────────────────────────────────────────────────────────────────────────────────
-if (!fs.existsSync(SRC)) {
-  console.error('[unresolved-sends] ERROR — cannot find src/ — run from the Fizzygum repo root.');
-  process.exit(2);
-}
-if (!fs.existsSync(HARNESS)) {
-  console.log('[unresolved-sends] SKIP — sibling Fizzygum-tests not present (its harness is part of the definition universe).');
-  process.exit(0);
-}
-
-const files = [...walk(SRC, '.coffee', []), ...walk(HARNESS, '.coffee', [])];
-const defined = harvestDefs(files);
-const sites = [...harvestCalls(files), ...harvestMacroCalls()];
-
-const allow = new Map();   // name -> reason
-if (fs.existsSync(ALLOWLIST)) {
-  for (const l of fs.readFileSync(ALLOWLIST, 'utf8').split('\n')) {
-    const t = l.trim();
-    if (!t || t.startsWith('#')) continue;
-    const hash = t.indexOf('#');
-    allow.set((hash < 0 ? t : t.slice(0, hash)).trim(), hash < 0 ? '' : t.slice(hash + 1).trim());
+function main() {
+  rejectUnknownArgs(process.argv.slice(2), ['--update-allowlist'], 'check-unresolved-sends');
+  if (!fs.existsSync(SRC)) {
+    console.error('[unresolved-sends] ERROR — cannot find src/ — run from the Fizzygum repo root.');
+    process.exit(2);
   }
-}
+  if (!fs.existsSync(HARNESS)) {
+    console.log('[unresolved-sends] SKIP — sibling Fizzygum-tests not present (its harness is part of the definition universe).');
+    process.exit(0);
+  }
 
-// name -> sites, for every call that resolves to nothing we know about
-const unresolved = new Map();
-const builtinExcuses = (s) => BUILTINS.has(s.name) || (s.recv !== undefined && BUILTINS_KEYED.has(s.recv + '.' + s.name));
-for (const s of sites) {
-  if (defined.has(s.name) || (s.local && s.local.has(s.name)) || builtinExcuses(s)) continue;
-  if (!unresolved.has(s.name)) unresolved.set(s.name, []);
-  unresolved.get(s.name).push(s);
-}
+  const files = [...walk(SRC, '.coffee', []), ...walk(HARNESS, '.coffee', [])];
+  const defined = harvestDefs(files);
+  const sites = [...harvestCalls(files), ...harvestMacroCalls()];
 
-if (process.argv.includes('--update-allowlist')) {
-  const names = [...unresolved.keys()].sort();
-  const header =
-    '# Unresolved-sends allowlist for buildSystem/check-unresolved-sends.js\n' +
-    '# Names CALLED as `[@.]name(` in src/harness but implemented nowhere in either — i.e. vendor\n' +
-    '# APIs and genuinely-dynamic sends. Platform (JS/DOM/canvas) names do NOT belong here: they\n' +
-    '# live in the in-file BUILTINS set. Format: `name  # reason` (the reason is the point).\n' +
-    '# The gate FAILS on any unresolved send not listed here, and on an entry no unresolved call needs.\n\n';
-  fs.writeFileSync(ALLOWLIST, header + names.map((n) => `${n}  # TODO: reason`).join('\n') + '\n');
-  console.log(`[unresolved-sends] wrote ${names.length} name(s) to ${path.relative(process.cwd(), ALLOWLIST)}`);
-  process.exit(0);
-}
-
-const violations = [...unresolved.keys()].filter((n) => !allow.has(n)).sort();
-// A STALE allowlist entry — a name with no unresolved call left — excuses nothing today and would excuse the
-// next call of that name that nobody implements, so it FAILS (STALE_ALLOWLIST_ENTRY), saying which way it went.
-// A BUILTINS entry is held to the same rule: one no call sends is stale (see BUILTINS), and so is its FORM.
-const sent = new Set(sites.map((s) => s.name));
-const sentKeyed = new Set(sites.filter((s) => s.recv !== undefined).map((s) => s.recv + '.' + s.name));
-const unsentBuiltins = [...BUILTINS].filter((n) => !sent.has(n))
-  .map((n) => `BUILTINS ${n} — no \`[@.]${n}(\` call in src, the harness or a macro sends it`)
-  .concat([...BUILTINS_KEYED].filter((e) => !sentKeyed.has(e))
-    .map((e) => `BUILTINS ${e} — no \`${e}(\` call in src, the harness or a macro sends it`));
-const sentToGlobal = new Set(sites.filter((s) => s.recv !== undefined && PLATFORM_GLOBALS.has(s.recv) && builtinExcuses(s)).map((s) => s.recv));
-const staleGlobals = [...PLATFORM_GLOBALS].filter((g) => !sentToGlobal.has(g));
-const classNames = new Set(files.map((p) => path.basename(p, '.coffee')));
-const keyName = (e) => e.slice(e.indexOf('.') + 1), keyReceiver = (e) => e.slice(0, e.indexOf('.'));
-// a bare name Fizzygum also defines, which only platform globals send, masks Fizzygum's implementors of it
-const unkeyed = [...BUILTINS].filter((n) => defined.has(n) && sent.has(n) &&
-  sites.every((s) => s.name !== n || (s.recv !== undefined && PLATFORM_GLOBALS.has(s.recv))));
-// a keyed name Fizzygum does not define unmasks nothing (and a receiver the gate cannot read would
-// false-fail): once no call of it is left unresolved it goes back to bare
-const nothingToUnmask = [...BUILTINS_KEYED].filter((e) => !defined.has(keyName(e)) && !unresolved.has(keyName(e)));
-const formErrors = unkeyed.map((n) => `BUILTINS_NOT_KEYED ${n} — Fizzygum defines ${n}, and every \`.${n}(\` call sends it to a platform global (` +
-    [...new Set(sites.filter((s) => s.name === n).map((s) => s.recv))].join(', ') + `): list it keyed, as Recv.${n}, so it excuses only those`)
-  .concat(nothingToUnmask.map((e) => `BUILTINS_KEYED_NOTHING_TO_UNMASK ${e} — no definition of ${keyName(e)} is in src+harness: list it bare`))
-  .concat([...BUILTINS_KEYED].filter((e) => !PLATFORM_GLOBALS.has(keyReceiver(e)))
-    .map((e) => `BUILTINS_KEYED_OFF_PLATFORM ${e} — ${keyReceiver(e)} is not one of PLATFORM_GLOBALS`))
-  .concat([...PLATFORM_GLOBALS].filter((g) => classNames.has(g))
-    .map((g) => `PLATFORM_GLOBALS_NAMES_FIZZYGUM ${g} — ${g} is a Fizzygum class: its methods are Fizzygum's to define, not the platform's`))
-  .concat(staleGlobals.map((g) => `STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ${g} — no BUILTINS call in src, the harness or a macro is sent to ${g}`));
-const stale = [...allow.keys()].filter((n) => !unresolved.has(n)).sort().map((n) =>
-  `${n} — ${!sent.has(n) ? 'no `[@.]' + n + '(` call is left in src, the harness or a macro'
-    : defined.has(n) ? 'it resolves: a definition of it is in src+harness'
-    : 'it is a BUILTINS name'}`);
-
-if (stale.length) {
-  console.error(`\n[unresolved-sends] FAIL — ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in buildSystem/unresolved-sends-allowlist.txt (delete each):`);
-  for (const s of stale) console.error(`  STALE_ALLOWLIST_ENTRY ${s}`);
-}
-if (unsentBuiltins.length) {
-  console.error(`\n[unresolved-sends] FAIL — ${unsentBuiltins.length} BUILTINS entr${unsentBuiltins.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js that no call sends (delete each):`);
-  for (const s of unsentBuiltins) console.error(`  STALE_ALLOWLIST_ENTRY ${s}, so it would only excuse the deletion of a future same-named Fizzygum method`);
-}
-if (formErrors.length) {
-  console.error(`\n[unresolved-sends] FAIL — ${formErrors.length} BUILTINS entr${formErrors.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js in the wrong form:`);
-  for (const e of formErrors) console.error(`  ${e}`);
-}
-
-if (violations.length) {
-  const n = violations.reduce((a, v) => a + unresolved.get(v).length, 0);
-  console.error(`\n[unresolved-sends] FAIL — ${n} call site(s) across ${violations.length} name(s) with no definition in src+harness (or, for a macro, in its own source):`);
-  for (const name of violations) {
-    for (const s of unresolved.get(name)) {
-      console.error(`  ${s.at}: ${s.sigil}${name}( — no definition found in src+harness${s.local ? ' or in its own macro source' : ''}`);
-      console.error(`      ${s.text}`);
+  const allow = new Map();   // name -> reason
+  if (fs.existsSync(ALLOWLIST)) {
+    for (const l of fs.readFileSync(ALLOWLIST, 'utf8').split('\n')) {
+      const t = l.trim();
+      if (!t || t.startsWith('#')) continue;
+      const hash = t.indexOf('#');
+      allow.set((hash < 0 ? t : t.slice(0, hash)).trim(), hash < 0 ? '' : t.slice(hash + 1).trim());
     }
   }
-  console.error('\nEither FIX the call (a name nobody implements is a runtime TypeError on any path that reaches it),');
-  console.error('or — if it is a vendor API / a genuinely dynamic send — add its name to');
-  console.error('buildSystem/unresolved-sends-allowlist.txt with a reason. (Standard JS/DOM/canvas API goes in');
-  console.error('the BUILTINS set inside check-unresolved-sends.js instead.)');
-  process.exit(1);
-}
-if (stale.length || unsentBuiltins.length || formErrors.length) process.exit(1);
 
-console.log(`[unresolved-sends] OK — ${sites.length} calls checked, 0 unresolved (${defined.size} names implemented, ${allow.size} allowlisted; BUILTINS ${BUILTINS.size} bare + ${BUILTINS_KEYED.size} keyed).`);
-process.exit(0);
+  // name -> sites, for every call that resolves to nothing we know about
+  const unresolved = new Map();
+  const builtinExcuses = (s) => BUILTINS.has(s.name) || (s.recv !== undefined && BUILTINS_KEYED.has(s.recv + '.' + s.name));
+  for (const s of sites) {
+    if (defined.has(s.name) || (s.local && s.local.has(s.name)) || builtinExcuses(s)) continue;
+    if (!unresolved.has(s.name)) unresolved.set(s.name, []);
+    unresolved.get(s.name).push(s);
+  }
+
+  if (process.argv.includes('--update-allowlist')) {
+    const names = [...unresolved.keys()].sort();
+    const header =
+      '# Unresolved-sends allowlist for buildSystem/check-unresolved-sends.js\n' +
+      '# Names CALLED as `[@.]name(` in src/harness but implemented nowhere in either — i.e. vendor\n' +
+      '# APIs and genuinely-dynamic sends. Platform (JS/DOM/canvas) names do NOT belong here: they\n' +
+      '# live in the in-file BUILTINS set. Format: `name  # reason` (the reason is the point).\n' +
+      '# The gate FAILS on any unresolved send not listed here, and on an entry no unresolved call needs.\n\n';
+    fs.writeFileSync(ALLOWLIST, header + names.map((n) => `${n}  # TODO: reason`).join('\n') + '\n');
+    console.log(`[unresolved-sends] wrote ${names.length} name(s) to ${path.relative(process.cwd(), ALLOWLIST)}`);
+    process.exit(0);
+  }
+
+  const violations = [...unresolved.keys()].filter((n) => !allow.has(n)).sort();
+  // A STALE allowlist entry — a name with no unresolved call left — excuses nothing today and would excuse the
+  // next call of that name that nobody implements, so it FAILS (STALE_ALLOWLIST_ENTRY), saying which way it went.
+  // A BUILTINS entry is held to the same rule: one no call sends is stale (see BUILTINS), and so is its FORM.
+  const sent = new Set(sites.map((s) => s.name));
+  const sentKeyed = new Set(sites.filter((s) => s.recv !== undefined).map((s) => s.recv + '.' + s.name));
+  const unsentBuiltins = [...BUILTINS].filter((n) => !sent.has(n))
+    .map((n) => `BUILTINS ${n} — no \`[@.]${n}(\` call in src, the harness or a macro sends it`)
+    .concat([...BUILTINS_KEYED].filter((e) => !sentKeyed.has(e))
+      .map((e) => `BUILTINS ${e} — no \`${e}(\` call in src, the harness or a macro sends it`));
+  const sentToGlobal = new Set(sites.filter((s) => s.recv !== undefined && PLATFORM_GLOBALS.has(s.recv) && builtinExcuses(s)).map((s) => s.recv));
+  const staleGlobals = [...PLATFORM_GLOBALS].filter((g) => !sentToGlobal.has(g));
+  const classNames = new Set(files.map((p) => path.basename(p, '.coffee')));
+  const keyName = (e) => e.slice(e.indexOf('.') + 1), keyReceiver = (e) => e.slice(0, e.indexOf('.'));
+  // a bare name Fizzygum also defines, which only platform globals send, masks Fizzygum's implementors of it
+  const unkeyed = [...BUILTINS].filter((n) => defined.has(n) && sent.has(n) &&
+    sites.every((s) => s.name !== n || (s.recv !== undefined && PLATFORM_GLOBALS.has(s.recv))));
+  // a keyed name Fizzygum does not define unmasks nothing (and a receiver the gate cannot read would
+  // false-fail): once no call of it is left unresolved it goes back to bare
+  const nothingToUnmask = [...BUILTINS_KEYED].filter((e) => !defined.has(keyName(e)) && !unresolved.has(keyName(e)));
+  const formErrors = unkeyed.map((n) => `BUILTINS_NOT_KEYED ${n} — Fizzygum defines ${n}, and every \`.${n}(\` call sends it to a platform global (` +
+      [...new Set(sites.filter((s) => s.name === n).map((s) => s.recv))].join(', ') + `): list it keyed, as Recv.${n}, so it excuses only those`)
+    .concat(nothingToUnmask.map((e) => `BUILTINS_KEYED_NOTHING_TO_UNMASK ${e} — no definition of ${keyName(e)} is in src+harness: list it bare`))
+    .concat([...BUILTINS_KEYED].filter((e) => !PLATFORM_GLOBALS.has(keyReceiver(e)))
+      .map((e) => `BUILTINS_KEYED_OFF_PLATFORM ${e} — ${keyReceiver(e)} is not one of PLATFORM_GLOBALS`))
+    .concat([...PLATFORM_GLOBALS].filter((g) => classNames.has(g))
+      .map((g) => `PLATFORM_GLOBALS_NAMES_FIZZYGUM ${g} — ${g} is a Fizzygum class: its methods are Fizzygum's to define, not the platform's`))
+    .concat(staleGlobals.map((g) => `STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ${g} — no BUILTINS call in src, the harness or a macro is sent to ${g}`));
+  const stale = [...allow.keys()].filter((n) => !unresolved.has(n)).sort().map((n) =>
+    `${n} — ${!sent.has(n) ? 'no `[@.]' + n + '(` call is left in src, the harness or a macro'
+      : defined.has(n) ? 'it resolves: a definition of it is in src+harness'
+      : 'it is a BUILTINS name'}`);
+
+  if (stale.length) {
+    console.error(`\n[unresolved-sends] FAIL — ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in buildSystem/unresolved-sends-allowlist.txt (delete each):`);
+    for (const s of stale) console.error(`  STALE_ALLOWLIST_ENTRY ${s}`);
+  }
+  if (unsentBuiltins.length) {
+    console.error(`\n[unresolved-sends] FAIL — ${unsentBuiltins.length} BUILTINS entr${unsentBuiltins.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js that no call sends (delete each):`);
+    for (const s of unsentBuiltins) console.error(`  STALE_ALLOWLIST_ENTRY ${s}, so it would only excuse the deletion of a future same-named Fizzygum method`);
+  }
+  if (formErrors.length) {
+    console.error(`\n[unresolved-sends] FAIL — ${formErrors.length} BUILTINS entr${formErrors.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js in the wrong form:`);
+    for (const e of formErrors) console.error(`  ${e}`);
+  }
+
+  if (violations.length) {
+    const n = violations.reduce((a, v) => a + unresolved.get(v).length, 0);
+    console.error(`\n[unresolved-sends] FAIL — ${n} call site(s) across ${violations.length} name(s) with no definition in src+harness (or, for a macro, in its own source):`);
+    for (const name of violations) {
+      for (const s of unresolved.get(name)) {
+        console.error(`  ${s.at}: ${s.sigil}${name}( — no definition found in src+harness${s.local ? ' or in its own macro source' : ''}`);
+        console.error(`      ${s.text}`);
+      }
+    }
+    console.error('\nEither FIX the call (a name nobody implements is a runtime TypeError on any path that reaches it),');
+    console.error('or — if it is a vendor API / a genuinely dynamic send — add its name to');
+    console.error('buildSystem/unresolved-sends-allowlist.txt with a reason. (Standard JS/DOM/canvas API goes in');
+    console.error('the BUILTINS set inside check-unresolved-sends.js instead.)');
+    process.exit(1);
+  }
+  if (stale.length || unsentBuiltins.length || formErrors.length) process.exit(1);
+
+  console.log(`[unresolved-sends] OK — ${sites.length} calls checked, 0 unresolved (${defined.size} names implemented, ${allow.size} allowlisted; BUILTINS ${BUILTINS.size} bare + ${BUILTINS_KEYED.size} keyed).`);
+  process.exit(0);
+}
+
+module.exports = { stripLine, harvestDefs, harvestCalls };
+
+if (require.main === module) main();

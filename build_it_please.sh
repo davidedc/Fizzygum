@@ -330,6 +330,26 @@ if [ "$?" != "0" ]; then
   exit 1
 fi
 
+# --- the self-tests: every checker's proof that it can fail, FIRST ----------------
+# A gate whose own proof fails gives verdicts not worth reading, so the proofs run before any
+# gate does. A self-test is a FILE, `<subject>-selftest.js`, found by NAME in buildSystem/ and
+# (when present) Fizzygum-tests/scripts/ — never listed — through lib/what-runs.js's naming table,
+# which check-hand-lists.js reads too, so a sanction may lean on a self-test exactly because this
+# runs it. Each must end with the shared verdict line and a case count (one that judged nothing
+# fails), and a self-test flag offered anywhere else in a script's code fails the step: a
+# self-test nothing runs is the defect this exists to make impossible
+# (docs/archive/unrun-checks-plan.md). Pure Node, ~2 s. (buildSystem/run-selftests.js -- same
+# --noSyntaxCheck escape hatch and explicit $? abort as every gate below.)
+if ! $noSyntaxCheck ; then
+  echo "running the gates' and tools' self-tests ..."
+  node ./buildSystem/run-selftests.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: a self-test failed -- aborting build." 1>&2
+    exit 1
+  fi
+fi
+
 # --- build-time CoffeeScript syntax gate ----------------------------------------
 # The ~470 class/mixin sources ship as TEXT and are compiled in-browser, so without
 # this a "green" build can still contain syntax errors that only blow up at boot.
@@ -902,6 +922,24 @@ if ! $noSyntaxCheck && $PROFILE_SHIPS_TESTS && [ -d ../Fizzygum-tests ] ; then
     exit 1
   fi
   echo "... visualisation pages OK"
+fi
+
+# --- the aim census's TABLES (../Fizzygum-tests/scripts/aim-census.js --tables-only) ------------
+# The census of where every macro test aims is a measurement, never a gate — but its own tables
+# classify every MacroToolkit verb and name the classes and members it reads, and those are held to
+# Fizzygum's source both ways (AIM-CENSUS STALE NAME / UNCLASSIFIED VERB / UNKNOWN VERB). Run here
+# so a verb deleted or renamed in src/macros fails the change that did it; check-hand-lists accepts
+# the census's sanctions because this runs them. ~0.2 s. Reads Fizzygum's src and the tests' macro
+# sources, whatever the profile ships, so it runs whenever the sibling repo is present (as
+# check-hand-lists' tests half does). Same --noSyntaxCheck escape hatch + explicit $? abort.
+if ! $noSyntaxCheck && [ -d ../Fizzygum-tests ] ; then
+  echo "checking the aim census's tables against the source ..."
+  node ../Fizzygum-tests/scripts/aim-census.js --tables-only
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: the aim census's tables are stale -- aborting build." 1>&2
+    exit 1
+  fi
 fi
 
 touch $SCRATCH_PATH/fizzygum-boot.coffee

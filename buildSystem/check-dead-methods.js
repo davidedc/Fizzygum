@@ -39,6 +39,7 @@ const { methodBoundary, methodSpans, unseenMethodHeaders } = require('./lib/coff
 const { codeOfCoffeeLine } = require('./lib/coffee-mask');
 const testsRepo = require('./lib/tests-repo-code');
 const methodRefs = require('./lib/method-references');
+const { rejectUnknownArgs } = require('./lib/cli-args');
 
 function walk(dir, ext, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -52,7 +53,7 @@ function walk(dir, ext, acc) {
 // The allowlist's own `#` comments are cut with the implementor harvest's strip.
 const { stripComment } = require('./lib/name-definitions');
 
-// ── settle-tier symmetry helpers (pure; unit-tested via --self-test) ────────────────────────────────
+// ── settle-tier symmetry helpers (pure; check-dead-methods-selftest.js drives them) ─────────────────
 // A public `<name>` and its private core `_<name>NoSettle` form ONE self-settling pair. When one side is
 // dead we may RETAIN it for symmetry — but ONLY if the OTHER side is INDEPENDENTLY used. `twinName` maps a
 // member to its partner; `independentlyReferenced` answers "is `token` referenced by some owner OTHER than
@@ -77,207 +78,170 @@ function independentlyReferenced(token, excluded, referrers) {
   return false;
 }
 
-// --self-test: prove the symmetry decision on synthetic referrer maps (runs without the sibling test repo).
-if (process.argv.includes('--self-test')) {
-  const R = (pairs) => new Map(pairs.map(([t, owners]) => [t, new Set(owners)]));
-  const cases = [
-    // [dead member, referrers-of-its-twin, expect RETAINED?]
-    ['setLabel',     R([['_setLabelNoSettle', ['setLabel', 'buildFridgeMagnets']]]), true],  // core used elsewhere -> keep the dead wrapper
-    ['setLabel',     R([['_setLabelNoSettle', ['setLabel']]]),                       false], // core used ONLY by the dead wrapper -> both dead
-    ['setLabel',     R([]),                                                          false], // nothing references the core at all
-    ['_fooNoSettle', R([['foo', ['someExternalCaller']]]),                           true],  // public twin live -> keep the dead core
-    ['_fooNoSettle', R([['foo', ['_fooNoSettle']]]),                                 false], // public twin referenced only from the core -> both dead
-  ];
-  let ok = true;
-  for (const [n, referrers, expect] of cases) {
-    const got = independentlyReferenced(twinName(n), n, referrers);
-    console[(got === expect) ? 'log' : 'error'](`  ${got === expect ? 'ok  ' : 'FAIL'} ${n}: retained=${got} (expected ${expect})`);
-    if (got !== expect) ok = false;
+function main() {
+  rejectUnknownArgs(process.argv.slice(2), ['--update-allowlist'], 'check-dead-methods');
+  if (!fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'tests')) || !fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'Automator-and-test-harness-src'))) {
+    console.log('[dead-methods] SKIP — sibling Fizzygum-tests not present (needs it for an accurate reference set).');
+    process.exit(0);
   }
-  // the inventory: a class-side method under its bare name and tagged, a class-side DATA key not at all,
-  // and the instance method written after the class-side ones still its own entry
-  const invLines = ['class K', '  @SOME_CONSTANT: 5', '  @make: (a) ->', '    @_helper a', '  @_helper: (a) -> a', '  @OTHER: "x"', '  doIt: ->', '    K.make 1'];
-  const inv = JSON.stringify(inventoryOf(invLines).map((d) => `${d.name}${d.classSide ? '(class-side)' : ''}@${d.line + 1}`));
-  const invWant = JSON.stringify(['make(class-side)@3', '_helper(class-side)@5', 'doIt@7']);
-  console[(inv === invWant) ? 'log' : 'error'](`  ${inv === invWant ? 'ok  ' : 'FAIL'} inventoryOf(class-side corpus) -> ${inv}`);
-  if (inv !== invWant) ok = false;
-  // A src line is read as code (coffee-mask) and then by the reference rule: a method reached ONLY inside a
-  // string interpolation stays reached (plan P4.2 regression), and a comment reaches nothing.
-  const lineCases = [
-    ['x = "#{@onlyCalledInInterpolation()}" # real comment @notThis()', ['onlyCalledInInterpolation'], ['notThis']],
-    ["s = '# not a comment'; @afterHashInString()", ['afterHashInString'], []],
-  ];
-  for (const [inp, must, mustNot] of lineCases) {
-    const names = methodRefs.methodReferences(codeOfCoffeeLine(inp, null).code).names;
-    const good = must.every((n) => names.includes(n)) && mustNot.every((n) => !names.includes(n));
-    console[good ? 'log' : 'error'](`  ${good ? 'ok  ' : 'FAIL'} src line ${JSON.stringify(inp)} -> ${JSON.stringify(names)}`);
-    if (!good) ok = false;
-  }
-  // the rule's cases and the reader's cases (both libs own them)
-  const log = (good, what) => console[good ? 'log' : 'error'](`  ${good ? 'ok  ' : 'FAIL'} ${what}`);
-  if (!methodRefs.selfTest(log)) ok = false;
-  if (!testsRepo.selfTest(log)) ok = false;
-  console.log(ok ? '[dead-methods] self-test PASS' : '[dead-methods] self-test FAIL');
-  process.exit(ok ? 0 : 1);
-}
 
-if (!fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'tests')) || !fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'Automator-and-test-harness-src'))) {
-  console.log('[dead-methods] SKIP — sibling Fizzygum-tests not present (needs it for an accurate reference set).');
-  process.exit(0);
-}
-
-// 1. every method header in src -> name => [first def location, ...]
-// This gate owns the method INVENTORY, so it also carries the guard for headers the shared matcher
-// cannot see: an unseen header is not a missing warning, it is a method NO gate checks at all.
-// A class-side method is inventoried under its BARE name (inventoryOf), and its own body is attributed to
-// it in the harvest below, so one static calling another (`@other` inside `@name`) is that other's reference.
-const defs = new Map();
-const methods = [];   // { name, cls, classSide }: what computed dispatch is resolved against (one class per file)
-const parentOf = new Map(), mixinsOf = new Map();   // the class chain a computed access resolves through
-const unseen = [];
-for (const p of walk(SRC, '.coffee', [])) {
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
-  const cls = path.basename(p, '.coffee');
-  for (const l of lines) {
-    const c = /^class\s+([A-Za-z_]\w*)(?:\s+extends\s+([A-Za-z_]\w*))?/.exec(l);
-    if (c && c[1] === cls && c[2]) parentOf.set(cls, c[2]);
-    const a = /^\s+@augmentWith\s+([A-Za-z_]\w*)/.exec(l);
-    if (a) { if (!mixinsOf.has(cls)) mixinsOf.set(cls, []); mixinsOf.get(cls).push(a[1]); }
+  // 1. every method header in src -> name => [first def location, ...]
+  // This gate owns the method INVENTORY, so it also carries the guard for headers the shared matcher
+  // cannot see: an unseen header is not a missing warning, it is a method NO gate checks at all.
+  // A class-side method is inventoried under its BARE name (inventoryOf), and its own body is attributed to
+  // it in the harvest below, so one static calling another (`@other` inside `@name`) is that other's reference.
+  const defs = new Map();
+  const methods = [];   // { name, cls, classSide }: what computed dispatch is resolved against (one class per file)
+  const parentOf = new Map(), mixinsOf = new Map();   // the class chain a computed access resolves through
+  const unseen = [];
+  for (const p of walk(SRC, '.coffee', [])) {
+    const lines = fs.readFileSync(p, 'utf8').split('\n');
+    const cls = path.basename(p, '.coffee');
+    for (const l of lines) {
+      const c = /^class\s+([A-Za-z_]\w*)(?:\s+extends\s+([A-Za-z_]\w*))?/.exec(l);
+      if (c && c[1] === cls && c[2]) parentOf.set(cls, c[2]);
+      const a = /^\s+@augmentWith\s+([A-Za-z_]\w*)/.exec(l);
+      if (a) { if (!mixinsOf.has(cls)) mixinsOf.set(cls, []); mixinsOf.get(cls).push(a[1]); }
+    }
+    for (const def of inventoryOf(lines)) {
+      if (!defs.has(def.name)) defs.set(def.name, []);
+      defs.get(def.name).push(path.relative(SRC, p) + ':' + (def.line + 1) + (def.classSide ? ' (class-side)' : ''));
+      methods.push({ name: def.name, cls: path.basename(p, '.coffee'), classSide: def.classSide });
+    }
+    for (const u of unseenMethodHeaders(lines)) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
   }
-  for (const def of inventoryOf(lines)) {
-    if (!defs.has(def.name)) defs.set(def.name, []);
-    defs.get(def.name).push(path.relative(SRC, p) + ':' + (def.line + 1) + (def.classSide ? ' (class-side)' : ''));
-    methods.push({ name: def.name, cls: path.basename(p, '.coffee'), classSide: def.classSide });
+  if (unseen.length) {
+    console.error(`[dead-methods] FAIL — ${unseen.length} method header(s) the shared matcher cannot see:`);
+    for (const u of unseen) console.error('   ' + u);
+    console.error('\nA method whose signature wraps must break immediately after the `(`, so that the header line');
+    console.error('ends there — every build gate groups a .coffee file by that shape, and a header none of them');
+    console.error('matches makes the WHOLE METHOD invisible to all of them, silently. Re-wrap the signature, or');
+    console.error('widen METHOD_HEADER in buildSystem/lib/coffee-method-header.js and re-run every gate.');
+    process.exit(1);
   }
-  for (const u of unseenMethodHeaders(lines)) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
-}
-if (unseen.length) {
-  console.error(`[dead-methods] FAIL — ${unseen.length} method header(s) the shared matcher cannot see:`);
-  for (const u of unseen) console.error('   ' + u);
-  console.error('\nA method whose signature wraps must break immediately after the `(`, so that the header line');
-  console.error('ends there — every build gate groups a .coffee file by that shape, and a header none of them');
-  console.error('matches makes the WHOLE METHOD invisible to all of them, silently. Re-wrap the signature, or');
-  console.error('widen METHOD_HEADER in buildSystem/lib/coffee-method-header.js and re-run every gate.');
-  process.exit(1);
-}
 
-// 2. every method REACHED (lib/method-references.js), read from code
-const referenced = new Set();
-const referrers = new Map();   // token -> Set of owners that reference it (a src method name / '@toplevel' / '@external' / '@computed')
-const templates = [], computedClasses = [];
-function addRef(token, owner) {
-  referenced.add(token);
-  let s = referrers.get(token);
-  if (!s) referrers.set(token, (s = new Set()));
-  s.add(owner);
-}
-function harvestLine(code, owner) {
-  const r = methodRefs.methodReferences(code);
-  for (const n of r.names) addRef(n, owner);
-  templates.push(...r.templates);
-  computedClasses.push(...r.classes);
-}
-// src: attribute each reference to its ENCLOSING method, so we can later tell whether a settle-twin is used by
-// something OTHER than the dead method itself. A method header (a class's 2-space one, or a mixin member's)
-// opens a method; the header line itself (its default parameters, an inline body) and the 4+-space-indented
-// lines below belong to it; class-level lines (indent < 4, not a header) are '@toplevel'. A def's own name is a
-// key, never a reference, so a header needs no special case. (`referenced` is the flat set; the per-owner map
-// is purely additive.)
-function harvestSrc(files) {
-  for (const p of files) {
-    let cur = null, mixinHashIndent = null, state = null;
-    for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
-      const b = methodBoundary(raw, mixinHashIndent);
-      if (b) mixinHashIndent = b.mixinHashIndent;
-      const code = codeOfCoffeeLine(raw, state);
-      state = code.state;
-      let owner;
-      // the owner is the method's INVENTORY name (a class-side one's bare name, as inventoryOf names it), so
-      // the symmetry check below excludes a dead method's references to its own twin whichever side it is on
-      if (b && b.kind === 'header') owner = cur = (b.static ? b.method.slice(1) : b.method);
-      else owner = (raw.length - raw.trimStart().length >= 4 && cur) ? cur : '@toplevel';
-      harvestLine(code.code, owner);
+  // 2. every method REACHED (lib/method-references.js), read from code
+  const referenced = new Set();
+  const referrers = new Map();   // token -> Set of owners that reference it (a src method name / '@toplevel' / '@external' / '@computed')
+  const templates = [], computedClasses = [];
+  function addRef(token, owner) {
+    referenced.add(token);
+    let s = referrers.get(token);
+    if (!s) referrers.set(token, (s = new Set()));
+    s.add(owner);
+  }
+  function harvestLine(code, owner) {
+    const r = methodRefs.methodReferences(code);
+    for (const n of r.names) addRef(n, owner);
+    templates.push(...r.templates);
+    computedClasses.push(...r.classes);
+  }
+  // src: attribute each reference to its ENCLOSING method, so we can later tell whether a settle-twin is used by
+  // something OTHER than the dead method itself. A method header (a class's 2-space one, or a mixin member's)
+  // opens a method; the header line itself (its default parameters, an inline body) and the 4+-space-indented
+  // lines below belong to it; class-level lines (indent < 4, not a header) are '@toplevel'. A def's own name is a
+  // key, never a reference, so a header needs no special case. (`referenced` is the flat set; the per-owner map
+  // is purely additive.)
+  function harvestSrc(files) {
+    for (const p of files) {
+      let cur = null, mixinHashIndent = null, state = null;
+      for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
+        const b = methodBoundary(raw, mixinHashIndent);
+        if (b) mixinHashIndent = b.mixinHashIndent;
+        const code = codeOfCoffeeLine(raw, state);
+        state = code.state;
+        let owner;
+        // the owner is the method's INVENTORY name (a class-side one's bare name, as inventoryOf names it), so
+        // the symmetry check below excludes a dead method's references to its own twin whichever side it is on
+        if (b && b.kind === 'header') owner = cur = (b.static ? b.method.slice(1) : b.method);
+        else owner = (raw.length - raw.trimStart().length >= 4 && cur) ? cur : '@toplevel';
+        harvestLine(code.code, owner);
+      }
     }
   }
-}
-harvestSrc(walk(SRC, '.coffee', []));
-// the tests repo's code: every reference there is an INDEPENDENT anchor ('@external') — it lives outside the
-// src pair, so it always counts as "the twin is used"
-for (const { lines } of testsRepo.testsRepoCode()) for (const line of lines) harvestLine(line, '@external');
-// computed dispatch, resolved last against the whole inventory (a template or a class access may sit anywhere)
-// a class's chain: itself, its mixins, then its ancestors' chains — where a lookup on it resolves
-function chainOf(cls, seen = new Set()) {
-  if (seen.has(cls)) return [];
-  seen.add(cls);
-  return [cls, ...(mixinsOf.get(cls) || []), ...(parentOf.has(cls) ? chainOf(parentOf.get(cls), seen) : [])];
-}
-for (const n of methodRefs.reachedByComputedDispatch(templates, computedClasses, methods, chainOf)) addRef(n, '@computed');
-
-const dead = [...defs.keys()].filter((n) => !referenced.has(n)).sort();
-
-// SYMMETRY-AWARE (Topic 2): a public `<name>` and its private `_<name>NoSettle` core form ONE self-settling
-// pair (the same pairing check-thin-wraps.js enforces). If a member is dead but its settle-twin is LIVE, it is
-// RETAINED FOR SYMMETRY, not genuinely dead — the gate exempts it WITHOUT a manual allowlist entry. Safe in
-// both directions: a dead public wrapper whose core is live (e.g. LabelButtonWdgt.setLabel, whose
-// _setLabelNoSettle core FridgeMagnets construction calls), and a dead core whose public API is live.
-// CRUCIALLY the twin must be used INDEPENDENTLY — referenced by some owner OTHER than `n` itself. A dead
-// public wrapper's body is the one place that references its core, so counting that self-reference would
-// SAVE a pair that is dead on BOTH sides. Excluding it (independentlyReferenced's `excluded` arg), a
-// both-dead pair is retained by neither and both get flagged. Returns the live twin's name or null.
-function liveSettleTwin(n) {
-  const twin = twinName(n);
-  return independentlyReferenced(twin, n, referrers) ? twin : null;
-}
-const symmetryRetained = dead.filter((n) => liveSettleTwin(n));
-const flaggableDead = dead.filter((n) => !liveSettleTwin(n));   // dead AND not covered by a live settle-twin
-
-// 3. allowlist
-const allow = new Set();
-if (fs.existsSync(ALLOWLIST)) {
-  for (const l of fs.readFileSync(ALLOWLIST, 'utf8').split('\n')) {
-    const t = stripComment(l).trim();
-    if (t) allow.add(t);
+  harvestSrc(walk(SRC, '.coffee', []));
+  // the tests repo's code: every reference there is an INDEPENDENT anchor ('@external') — it lives outside the
+  // src pair, so it always counts as "the twin is used"
+  for (const { lines } of testsRepo.testsRepoCode()) for (const line of lines) harvestLine(line, '@external');
+  // computed dispatch, resolved last against the whole inventory (a template or a class access may sit anywhere)
+  // a class's chain: itself, its mixins, then its ancestors' chains — where a lookup on it resolves
+  function chainOf(cls, seen = new Set()) {
+    if (seen.has(cls)) return [];
+    seen.add(cls);
+    return [cls, ...(mixinsOf.get(cls) || []), ...(parentOf.has(cls) ? chainOf(parentOf.get(cls), seen) : [])];
   }
-}
+  for (const n of methodRefs.reachedByComputedDispatch(templates, computedClasses, methods, chainOf)) addRef(n, '@computed');
 
-if (process.argv.includes('--update-allowlist')) {
-  const header =
-    '# Dead-method allowlist for buildSystem/check-dead-methods.js\n' +
-    '# Methods DEFINED in src but reached nowhere (src + the tests repo\'s code; lib/method-references.js).\n' +
-    '# Seeded as a BASELINE to triage/delete later; the lint FAILS on any NEW dead method not here.\n' +
-    '# Remove a name once you delete the method (or it gains a real caller): a stale entry FAILS the lint.\n' +
-    '# One name per line; # = comment.\n' +
-    '# (Settle-tier wrapper/core symmetry pairs are auto-exempt — see liveSettleTwin — so they are NOT seeded.)\n\n';
-  fs.writeFileSync(ALLOWLIST, header + flaggableDead.join('\n') + '\n');
-  console.log(`[dead-methods] wrote ${flaggableDead.length} names to ${path.relative(process.cwd(), ALLOWLIST)} (${symmetryRetained.length} symmetry pairs auto-exempt)`);
+  const dead = [...defs.keys()].filter((n) => !referenced.has(n)).sort();
+
+  // SYMMETRY-AWARE (Topic 2): a public `<name>` and its private `_<name>NoSettle` core form ONE self-settling
+  // pair (the same pairing check-thin-wraps.js enforces). If a member is dead but its settle-twin is LIVE, it is
+  // RETAINED FOR SYMMETRY, not genuinely dead — the gate exempts it WITHOUT a manual allowlist entry. Safe in
+  // both directions: a dead public wrapper whose core is live (e.g. LabelButtonWdgt.setLabel, whose
+  // _setLabelNoSettle core FridgeMagnets construction calls), and a dead core whose public API is live.
+  // CRUCIALLY the twin must be used INDEPENDENTLY — referenced by some owner OTHER than `n` itself. A dead
+  // public wrapper's body is the one place that references its core, so counting that self-reference would
+  // SAVE a pair that is dead on BOTH sides. Excluding it (independentlyReferenced's `excluded` arg), a
+  // both-dead pair is retained by neither and both get flagged. Returns the live twin's name or null.
+  function liveSettleTwin(n) {
+    const twin = twinName(n);
+    return independentlyReferenced(twin, n, referrers) ? twin : null;
+  }
+  const symmetryRetained = dead.filter((n) => liveSettleTwin(n));
+  const flaggableDead = dead.filter((n) => !liveSettleTwin(n));   // dead AND not covered by a live settle-twin
+
+  // 3. allowlist
+  const allow = new Set();
+  if (fs.existsSync(ALLOWLIST)) {
+    for (const l of fs.readFileSync(ALLOWLIST, 'utf8').split('\n')) {
+      const t = stripComment(l).trim();
+      if (t) allow.add(t);
+    }
+  }
+
+  if (process.argv.includes('--update-allowlist')) {
+    const header =
+      '# Dead-method allowlist for buildSystem/check-dead-methods.js\n' +
+      '# Methods DEFINED in src but reached nowhere (src + the tests repo\'s code; lib/method-references.js).\n' +
+      '# Seeded as a BASELINE to triage/delete later; the lint FAILS on any NEW dead method not here.\n' +
+      '# Remove a name once you delete the method (or it gains a real caller): a stale entry FAILS the lint.\n' +
+      '# One name per line; # = comment.\n' +
+      '# (Settle-tier wrapper/core symmetry pairs are auto-exempt — see liveSettleTwin — so they are NOT seeded.)\n\n';
+    fs.writeFileSync(ALLOWLIST, header + flaggableDead.join('\n') + '\n');
+    console.log(`[dead-methods] wrote ${flaggableDead.length} names to ${path.relative(process.cwd(), ALLOWLIST)} (${symmetryRetained.length} symmetry pairs auto-exempt)`);
+    process.exit(0);
+  }
+
+  const newDead = flaggableDead.filter((n) => !allow.has(n));
+  // A STALE allowlist entry excuses nothing today and would excuse the next dead method of that name, so it FAILS:
+  // one no longer dead (it gained a reference, or no method of that name is defined any more), or one now
+  // auto-exempt by settle-tier symmetry (its twin is live, so the entry is redundant).
+  const stale = [...allow].filter((n) => !dead.includes(n)).map((n) => `${n} — ${defs.has(n) ? 'no longer dead: it is referenced' : 'no method of that name is defined in src'}`);
+  const redundant = [...allow].filter((n) => symmetryRetained.includes(n)).map((n) => `${n} — auto-exempt by settle-tier symmetry (live twin ${liveSettleTwin(n)}), so the entry is redundant`);
+
+  if (symmetryRetained.length) {
+    console.log(`[dead-methods] NOTE — ${symmetryRetained.length} dead method(s) auto-retained for settle-tier symmetry (live twin): ${symmetryRetained.map((n) => `${n}↔${liveSettleTwin(n)}`).join(', ')}`);
+  }
+
+  if (newDead.length) {
+    console.error(`\n[dead-methods] FAIL — ${newDead.length} method(s) defined but reached nowhere (src, harness, macros, rigs) and not allowlisted:`);
+    for (const n of newDead) console.error(`  ${n}  (${defs.get(n)[0]})`);
+    console.error('\nNothing reaches it by property access, whole-name string, name template or computed class access');
+    console.error('(lib/method-references.js). Either DELETE the method, or — if it is intentional public API, or');
+    console.error('dispatched by a name assembled with `+` or through an arbitrary object —');
+    console.error('add its name to buildSystem/dead-method-allowlist.txt with a one-line reason.');
+    console.error('(A wrapper/core twin kept for symmetry needs NO entry — auto-exempt when its settle-twin is live.)');
+  }
+  if (stale.length || redundant.length) {
+    console.error(`\n[dead-methods] FAIL — ${stale.length + redundant.length} stale entr${stale.length + redundant.length === 1 ? 'y' : 'ies'} in buildSystem/dead-method-allowlist.txt (delete each):`);
+    for (const s of [...stale, ...redundant]) console.error(`  STALE_ALLOWLIST_ENTRY ${s}`);
+  }
+  if (newDead.length || stale.length || redundant.length) process.exit(1);
+
+  console.log(`[dead-methods] OK — ${defs.size} method names scanned, ${dead.length} dead (${flaggableDead.length} allowlisted + ${symmetryRetained.length} symmetry-exempt), 0 new.`);
   process.exit(0);
 }
 
-const newDead = flaggableDead.filter((n) => !allow.has(n));
-// A STALE allowlist entry excuses nothing today and would excuse the next dead method of that name, so it FAILS:
-// one no longer dead (it gained a reference, or no method of that name is defined any more), or one now
-// auto-exempt by settle-tier symmetry (its twin is live, so the entry is redundant).
-const stale = [...allow].filter((n) => !dead.includes(n)).map((n) => `${n} — ${defs.has(n) ? 'no longer dead: it is referenced' : 'no method of that name is defined in src'}`);
-const redundant = [...allow].filter((n) => symmetryRetained.includes(n)).map((n) => `${n} — auto-exempt by settle-tier symmetry (live twin ${liveSettleTwin(n)}), so the entry is redundant`);
+module.exports = { twinName, inventoryOf, independentlyReferenced };
 
-if (symmetryRetained.length) {
-  console.log(`[dead-methods] NOTE — ${symmetryRetained.length} dead method(s) auto-retained for settle-tier symmetry (live twin): ${symmetryRetained.map((n) => `${n}↔${liveSettleTwin(n)}`).join(', ')}`);
-}
-
-if (newDead.length) {
-  console.error(`\n[dead-methods] FAIL — ${newDead.length} method(s) defined but reached nowhere (src, harness, macros, rigs) and not allowlisted:`);
-  for (const n of newDead) console.error(`  ${n}  (${defs.get(n)[0]})`);
-  console.error('\nNothing reaches it by property access, whole-name string, name template or computed class access');
-  console.error('(lib/method-references.js). Either DELETE the method, or — if it is intentional public API, or');
-  console.error('dispatched by a name assembled with `+` or through an arbitrary object —');
-  console.error('add its name to buildSystem/dead-method-allowlist.txt with a one-line reason.');
-  console.error('(A wrapper/core twin kept for symmetry needs NO entry — auto-exempt when its settle-twin is live.)');
-}
-if (stale.length || redundant.length) {
-  console.error(`\n[dead-methods] FAIL — ${stale.length + redundant.length} stale entr${stale.length + redundant.length === 1 ? 'y' : 'ies'} in buildSystem/dead-method-allowlist.txt (delete each):`);
-  for (const s of [...stale, ...redundant]) console.error(`  STALE_ALLOWLIST_ENTRY ${s}`);
-}
-if (newDead.length || stale.length || redundant.length) process.exit(1);
-
-console.log(`[dead-methods] OK — ${defs.size} method names scanned, ${dead.length} dead (${flaggableDead.length} allowlisted + ${symmetryRetained.length} symmetry-exempt), 0 new.`);
-process.exit(0);
+if (require.main === module) main();

@@ -11,6 +11,14 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
+### `archive/unrun-checks-plan.md` — every check the workspace relies on runs (CLOSED 2026-11-06; Units 0, A–D done, see its ledger)
+- [ ] **Standing bite-proofs for the checks proven only by hand.** Self-tests and sanctions are now held to running,
+      but several gates' own RULES were proven by a plant once, at authoring, and nothing re-runs that plant: the
+      suite audit gates (tier-naming's leaf rule — its header says so — settle's [J], revisits, storage; each carries
+      a coverage line proving it WATCHED, none a planted violation proving it BITES) and check-call-separation's
+      by-hand plant recipe. The pattern exists: `notification-settle-audit/cache-oracle-selftest-headless.js` (planted
+      run must fail on the token, the control must pass), run by the gauntlet's `selftests` leg.
+
 ### `archive/typed-code-saves-residue-plan.md` — the typed-code-saves arc's three residue items (CLOSED 2026-11-06; Units 1–3 done, see its ledger)
 - [x] **The other gates that read the tests repo still read its prose and comments.** — CLOSED by
       `archive/tests-repo-readers-plan.md` (moved to its ledger).
@@ -26,14 +34,9 @@ per README rules 2 and 5.
         plus `super` chains, both repos, pixel-neutral, one commit.
 
   Measurements and probe: that plan's ledger, "Owner ruling D5".
-- [ ] **The buildSystem gates' `--self-test`s are run by nothing.** `check-dead-methods`,
-      `census-public-private-calls` (which also runs the reader's cases), `check-unresolved-sends`, `check-hand-lists`
-      and `check-part-edges` each prove their rules on fixtures, but neither the build, `fg` nor
-      `npm run selftest` invokes them, so a self-test can rot unnoticed. Found 2026-11-06.
-- [ ] **`aim-census.js` is run by no gate, so its own stale-name checks fire only when someone runs it.** Its
-      tables classify every MacroToolkit verb, and `check-hand-lists` accepts them as sanctioned on the strength of
-      `AIM-CENSUS STALE NAME`. Deleting a verb leaves its row stale until a hand run. (It exits 0 today; a planted
-      stale row was seen to print the token.)
+- [x] **The buildSystem gates' `--self-test`s are run by nothing.** — CLOSED by `archive/unrun-checks-plan.md`
+      (moved to its ledger).
+- [x] **`aim-census.js` is run by no gate.** — CLOSED by `archive/unrun-checks-plan.md` (moved to its ledger).
 - [ ] **`census-property-placement`'s exclusion 1 counts every WORD inside any string** (`STRING_WORDS`, 3429)
       as a possible by-name access. By the method-reference rule (`buildSystem/lib/method-references.js`) only a
       whole-name string can reach a member. Advisory census; its tests-repo reading is already right.
@@ -519,7 +522,7 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] `archive/swcanvas-invisible-pixel-hash-nondeterminism-plan.md` §5: backfill blast radius (SWCanvas ref count, scriptability) — uncounted
 - [ ] `archive/swcanvas-invisible-pixel-hash-nondeterminism-plan.md` §5: cross-engine (V8 vs JSC) invisible-pixel residue identity — unverified
 - [ ] `archive/god-class-decomposition-plan.md` Tier 3 / C21: context-menu construction relocation to menusHelper — deferred, screenshot label-strip risk
-- [ ] `archive/hover-resync-after-flush-plan.md` § CAPSTONE GATE WEAKNESS note: paint-readonly gate shares the careless-push-count-only weakness — still open backlog
+- [ ] `archive/hover-resync-after-flush-plan.md` § CAPSTONE GATE WEAKNESS note: the capstone's paint-time half (the paint-read-only audit, which now rides the capstone pass) shares the careless-push-count-only weakness — still open backlog
 - [ ] `archive/lint-generic-rules-carryover-plan.md` §8.2 A3: must-call-super table-driven rule — not built
 - [ ] `archive/lint-generic-rules-carryover-plan.md` §8.4 A6: dead-class detector (ReClassNotReferencedRule) — not built
 - [ ] `archive/lint-generic-rules-carryover-plan.md` §8.5 C: per-file metrics ratchet for god-class line counts — not built

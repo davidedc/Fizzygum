@@ -25,8 +25,9 @@
 // WHAT IT SCANS. The Fizzygum half: src/**/*.coffee and buildSystem/**/*.{js,py}. The tests half, when
 // the sibling Fizzygum-tests repo is present: scripts/**/*.js and Automator-and-test-harness-src/**/*.coffee.
 // Dot-directories (`.scratch`), node_modules and __pycache__ are skipped, and so is the tests repo's
-// tests/ — macro sources are test CONTENT, held by that repo's own gates. THIS file is skipped as well:
-// its --self-test corpus is made of exactly the lists it hunts, so scanning it would count the fixtures.
+// tests/ — macro sources are test CONTENT, held by that repo's own gates. Its self-test file
+// (check-hand-lists-selftest.js) is skipped as well: its corpus is made of exactly the lists this hunts, so
+// scanning it would count the fixtures.
 // Without the tests repo the tests half SKIPS and says so, as check-dead-methods.js and
 // check-part-edges.js do.
 //
@@ -60,24 +61,33 @@
 //     after a backtick or a quote is prose QUOTING the syntax, as this header does, and sanctions nothing.
 //   - UNSANCTIONED: everything else. These are what the ratchet counts.
 //
-// HOW A SANCTION'S GUARD IS RESOLVED — mechanically, by at least one of:
-//   (a) the basename of an existing gate or rig file: Fizzygum/buildSystem/*.js and lib/*.js,
-//       Fizzygum/build_it_please.sh, and every .js or .sh under Fizzygum-tests/scripts (the gate runners
-//       are shell scripts). This file does not count: it checks that a list is examined, never current;
-//   (b) `SystemTest_<name>` with an existing Fizzygum-tests/tests/SystemTest_<name>/ directory;
+// HOW A SANCTION'S GUARD IS RESOLVED — mechanically, and the guard must RUN, because a guard nothing runs
+// can never fail (docs/archive/unrun-checks-plan.md). At least one of:
+//   (a) the basename of a gate or rig file that RUNS: one lib/what-runs.js reaches from the build
+//       (build_it_please.sh), a discovered self-test, or a presuite/gauntlet leg of the umbrella's fg, by an
+//       invocation — never a mention. Candidates are Fizzygum/buildSystem/*.js and lib/*.js,
+//       build_it_please.sh, and every .js or .sh under Fizzygum-tests/scripts. This file does not count:
+//       it checks that a list is examined, never current;
+//   (b) `SystemTest_<name>` with an existing Fizzygum-tests/tests/SystemTest_<name>/ directory — it runs
+//       whenever the suite runner (run-all-headless.js) does;
 //   (c) an UPPER_SNAKE token — two or more segments joined by `_` or `-`, each starting with a letter
-//       (`MENU_CONTRIBUTOR_UNSWEPT`, `TIERNAMING-UNCLASSIFIED`) — that occurs in some scanned file
-//       OUTSIDE every sanction's own text, so a sanction cannot vouch for itself.
+//       (`MENU_CONTRIBUTOR_UNSWEPT`, `TIERNAMING-UNCLASSIFIED`) — that occurs, OUTSIDE every sanction's
+//       own text (so a sanction cannot vouch for itself), in a scanned file that runs: a script per (a), or
+//       a world source (src, the harness) when the suite runner runs, which fails every console line led
+//       by a token (Fizzygum-tests/scripts/lib/gate-tokens.js).
 //   A sanction's text is the rest of its marker's line plus the comment lines below it in the same block.
-//   One resolving none fails as SANCTION_NAMES_NO_GUARD — always, never ratcheted. A marker with no text
-//   on its own line fails as SANCTION_EMPTY; one that sanctions no name list fails as SANCTION_STALE (the
-//   list moved, became a declaration, or was derived away, and a marker that sanctions nothing reads to
-//   the next author as if it did). ⚠ Resolution proves the guard EXISTS, not that it covers the list: it
-//   makes the author name what fails, which a reviewer can then check; it cannot check it for them.
-//   Without the tests repo two things about a Fizzygum-half sanction cannot be decided — the guard it
-//   names may live there, and so may the harness classes that make its list a name list — so a sanction
-//   resolving no guard, or sitting above a list that reads as data, is listed UNVERIFIED in a NOTE rather
-//   than failed. One above a line where no list opens at all is SANCTION_STALE on every checkout.
+//   One resolving none fails as SANCTION_NAMES_NO_GUARD, and one whose every guard exists but never runs
+//   as SANCTION_GUARD_NEVER_RUNS — always, never ratcheted. A marker with no text on its own line fails as
+//   SANCTION_EMPTY; one that sanctions no name list fails as SANCTION_STALE (the list moved, became a
+//   declaration, or was derived away, and a marker that sanctions nothing reads to the next author as if
+//   it did). ⚠ Resolution proves the guard RUNS, not that it covers the list: it makes the author name
+//   what fails, which a reviewer can then check; it cannot check it for them.
+//   Undecidable on this checkout, so listed UNVERIFIED in a NOTE rather than failed:
+//   - without the tests repo, a Fizzygum-half sanction resolving no guard, or above a list that reads as
+//     data — the guard it names may live there, and so may the harness classes that make it a name list;
+//   - without the umbrella's fg (a bare clone of the repos), a sanction whose guards exist but are not
+//     seen to run — they may run in a leg (`--fg=<path>` reads another fg, or none).
+//   One above a line where no list opens at all is SANCTION_STALE on every checkout.
 //
 // THE RATCHET (the check-stinks.js idiom). BASELINE_FIZZYGUM and BASELINE_TESTS cap the UNSANCTIONED
 // name lists per repo. Above its baseline a repo FAILS, printing every unsanctioned list it holds; below
@@ -96,14 +106,19 @@
 //   node buildSystem/check-hand-lists.js                 the gate: exit 0 clean, 1 violation, 2 operational error
 //   node buildSystem/check-hand-lists.js --census [--names-only] [--min=N] [--files <path…>]
 //       every string list with at least N items (default 2) — its kind, item counts (classes / members /
-//       other), state, and each sanction's resolved guard — then exit 0: a census, never a gate
+//       other), state, and each sanction's resolved guard (and any it names that never runs) — then exit 0:
+//       a census, never a gate
 //   node buildSystem/check-hand-lists.js --files <path…>  only the given files; there EVERY unsanctioned
 //       name list is a violation (no ratchet), so a plant fails exactly
-//   node buildSystem/check-hand-lists.js --self-test      an in-memory corpus showing each direction bite
+//   --fg=<path>  read that file as the umbrella's fg (a path that does not exist = none: the bare-clone view)
+// Its self-test, an in-memory corpus showing each direction bite, is check-hand-lists-selftest.js (run by
+// buildSystem/run-selftests.js on every build).
 
 const fs = require('fs');
 const path = require('path');
 const { mixinMemberIndent } = require('./lib/coffee-method-header');
+const { rejectUnknownArgs } = require('./lib/cli-args');
+const { runSet, DEFAULT_LAYOUT: WHAT_RUNS_LAYOUT } = require('./lib/what-runs');
 
 const FIZZYGUM = path.resolve(__dirname, '..');
 const UMBRELLA = path.resolve(FIZZYGUM, '..');
@@ -114,6 +129,7 @@ const HARNESS = path.join(TESTS_REPO, 'Automator-and-test-harness-src');
 const SCRIPTS = path.join(TESTS_REPO, 'scripts');
 const TEST_DIRS = path.join(TESTS_REPO, 'tests');
 const SELF = path.resolve(__filename);
+const SELF_TEST_CORPUS = path.join(BUILD_SYSTEM, 'check-hand-lists-selftest.js');
 
 // Unsanctioned name lists in Fizzygum's own src/ + buildSystem/: the four LiveCodeLang command lists in
 // src/fizzytiles/LCLCodePreprocessor.coffee, whose guard is the headless preprocessor gate the open
@@ -152,16 +168,17 @@ function walk(dir, exts, acc = []) {
   return acc;
 }
 
-// ---- the per-file engine (pure: text in, records out — what --self-test drives) ----------------------
+// ---- the per-file engine (pure: text in, records out — what the self-test drives) --------------------
 
-// For each line, the column ranges that are COMMENT and the column where a LINE comment opens (-1 if
-// none), from a string-aware scan that restarts on every line; .js block comments carry across lines.
+// For each line, the column ranges that are COMMENT, the column where a LINE comment opens (-1 if none), and the
+// column ranges that are STRING literals (quotes included), from a string-aware scan that restarts on every line; .js
+// block comments carry across lines.
 function commentLayout(lines, lang) {
   const out = [];
   let inBlock = false;
   for (const line of lines) {
-    const ranges = [];
-    let lineCommentAt = -1, quote = null, blockFrom = inBlock ? 0 : -1;
+    const ranges = [], strings = [];
+    let lineCommentAt = -1, quote = null, quoteFrom = -1, blockFrom = inBlock ? 0 : -1;
     for (let i = 0; i < line.length; i++) {
       const c = line[i];
       if (blockFrom >= 0) {
@@ -170,10 +187,10 @@ function commentLayout(lines, lang) {
       }
       if (quote) {
         if (c === '\\') i++;
-        else if (c === quote) quote = null;
+        else if (c === quote) { quote = null; strings.push([quoteFrom, i + 1]); }
         continue;
       }
-      if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+      if (c === '"' || c === "'" || c === '`') { quote = c; quoteFrom = i; continue; }
       if (lang === 'hash' && c === '#') { lineCommentAt = i; break; }
       if (lang === 'slash' && c === '/' && line[i + 1] === '/') { lineCommentAt = i; break; }
       if (lang === 'slash' && c === '/' && line[i + 1] === '*') { blockFrom = i; i++; }
@@ -181,7 +198,8 @@ function commentLayout(lines, lang) {
     inBlock = blockFrom >= 0;
     if (inBlock) ranges.push([blockFrom, line.length]);
     if (lineCommentAt >= 0) ranges.push([lineCommentAt, line.length]);
-    out.push({ ranges, lineCommentAt });
+    if (quote) strings.push([quoteFrom, line.length]);   // a string the line leaves open
+    out.push({ ranges, lineCommentAt, strings });
   }
   return out;
 }
@@ -261,27 +279,35 @@ function analyse(text, lang) {
   return { lines, layout, lists, markers: markersIn(lines, layout) };
 }
 
-// The guard tokens (c) a set of analysed files offers: every UPPER_SNAKE token outside a sanction's text.
+// The guard tokens (c) a set of analysed files offers: every UPPER_SNAKE token EMITTED — inside a string literal in
+// code (a comment never runs, and a constant's name is not a failure anyone sees) — outside a sanction's text.
 function guardTokensOf(files) {
   const tokens = new Set();
   for (const f of files) {
-    const masked = new Map();   // line index -> the part of it that is not sanction text
-    for (const mk of f.markers) {
-      for (const k of mk.textLines) masked.set(k, k === mk.line - 1 ? f.lines[k].slice(0, f.layout[k].lineCommentAt) : '');
-    }
+    const sanctionText = new Set();
+    for (const mk of f.markers) for (const k of mk.textLines) sanctionText.add(k);
     f.lines.forEach((l, k) => {
-      for (const t of (masked.has(k) ? masked.get(k) : l).match(GUARD_TOKEN_RE) || []) tokens.add(t);
+      const comment = f.layout[k].ranges;
+      for (const [a, b] of f.layout[k].strings) {
+        if (comment.some(([ca, cb]) => a >= ca && a < cb)) continue;
+        if (sanctionText.has(k) && f.layout[k].lineCommentAt >= 0 && a >= f.layout[k].lineCommentAt) continue;
+        for (const t of l.slice(a, b).match(GUARD_TOKEN_RE) || []) tokens.add(t);
+      }
     });
   }
   return tokens;
 }
 
+// The guards a sanction's text names, in each of the two universes: { runs, exists }, runs ⊆ exists.
 function resolveGuard(text, guards) {
-  const via = [];
-  for (const t of text.match(GATE_FILE_RE) || []) if (guards.gateFiles.has(path.basename(t))) via.push(path.basename(t));
-  for (const t of text.match(SYSTEM_TEST_RE) || []) if (guards.testDirs.has(t)) via.push(t);
-  for (const t of text.match(GUARD_TOKEN_RE) || []) if (guards.tokens.has(t)) via.push(t);
-  return [...new Set(via)];
+  const find = (u) => {
+    const via = [];
+    for (const t of text.match(GATE_FILE_RE) || []) if (u.gateFiles.has(path.basename(t))) via.push(path.basename(t));
+    for (const t of text.match(SYSTEM_TEST_RE) || []) if (u.testDirs.has(t)) via.push(t);
+    for (const t of text.match(GUARD_TOKEN_RE) || []) if (u.tokens.has(t)) via.push(t);
+    return [...new Set(via)];
+  };
+  return { runs: find(guards.runs), exists: find(guards.exists) };
 }
 
 function classify(items, universe) {
@@ -302,10 +328,12 @@ function declarationKeyOf(file, list) {
   return m && DECLARATION_KEYS.has(m[1]) ? m[1] : undefined;
 }
 
-// files: analysed [{ rel, repo, ext, lines, layout, lists, markers }]; guards.complete is false when the
-// tests repo is absent, so the name universe lacks the harness classes and the guard universe lacks the
-// rigs. Returns every list with its classification and state, every resolved sanction, and every marker
-// problem (`note: true` = reported, not failed).
+// files: analysed [{ rel, repo, ext, lines, layout, lists, markers }]. guards: { exists, runs } (each
+// { gateFiles, testDirs, tokens }), complete (false when the tests repo is absent, so the name universe lacks
+// the harness classes and the guard universe lacks the rigs) and runsKnown (false when the umbrella's fg is
+// absent, so the commit-point legs cannot be read and "never runs" cannot be decided). Returns every list
+// with its classification and state, every resolved sanction, and every marker problem (`note: true` =
+// reported, not failed).
 function evaluate(files, universe, guards) {
   const lists = [], problems = [], sanctions = [];
   for (const f of files) {
@@ -334,9 +362,15 @@ function evaluate(files, universe, guards) {
         problems.push(maybeLive ? { token: 'SANCTION_UNVERIFIED', note: true, ...at } : { token: 'SANCTION_STALE', ...at });
         continue;
       }
-      const via = resolveGuard(mk.text, guards);
-      sanctions.push({ ...at, target: mk.target, via });
-      if (via.length) continue;
+      const { runs, exists } = resolveGuard(mk.text, guards);
+      sanctions.push({ ...at, target: mk.target, via: runs, neverRun: exists.filter(g => !runs.includes(g)) });
+      if (runs.length) continue;
+      if (exists.length) {
+        problems.push(guards.runsKnown && !undecidable
+          ? { token: 'SANCTION_GUARD_NEVER_RUNS', names: exists, ...at }
+          : { token: 'SANCTION_UNVERIFIED', note: true, ...at });
+        continue;
+      }
       problems.push(undecidable ? { token: 'SANCTION_UNVERIFIED', note: true, ...at } : { token: 'SANCTION_NAMES_NO_GUARD', ...at });
     }
   }
@@ -395,18 +429,18 @@ const where = (r) => `${r.file.rel}:${r.line}`;
 function printProblems(problems) {
   const say = {
     SANCTION_NAMES_NO_GUARD: 'its text names no real guard — the basename of an existing gate/rig file, an existing SystemTest_<name>, or an UPPER_SNAKE token some scanned file uses outside a sanction',
+    SANCTION_GUARD_NEVER_RUNS: 'every guard it names EXISTS, but nothing runs it — not the build, a discovered self-test, nor an fg presuite/gauntlet leg (lib/what-runs.js) — so it can never fail. Name a guard that runs, or make the guard run',
     SANCTION_EMPTY: 'the marker carries no text on its own line: say what fails if the list goes stale',
     SANCTION_STALE: 'it sanctions no name list — none opens on the line it reaches (its own when it trails code, else the first line below its comment block). The list moved, became a declaration or was derived away: move the marker, or delete it',
   };
   for (const p of problems.filter(q => !q.note)) {
     console.error(`  ${p.token}  ${where(p)}  "${clip(p.text)}"`);
-    console.error(`      ${say[p.token]}`);
+    console.error(`      ${say[p.token]}${p.names ? ` (named, never run: ${p.names.join(', ')})` : ''}`);
   }
 }
 
 function main(argv) {
-  if (argv.includes('--self-test')) return selfTest();
-
+  rejectUnknownArgs(argv, ['--census', '--names-only', '--min=', '--files', '--fg='], 'check-hand-lists');
   const census = argv.includes('--census');
   const filesFlag = argv.indexOf('--files');
   const given = filesFlag >= 0 ? argv.slice(filesFlag + 1).filter(a => !a.startsWith('--')) : undefined;
@@ -417,7 +451,7 @@ function main(argv) {
 
   const testsPresent = fs.existsSync(SCRIPTS) && fs.existsSync(HARNESS);
   const halves = [{ repo: 'fizzygum', label: 'Fizzygum', baseline: BASELINE_FIZZYGUM, paths: [
-    ...walk(SRC, ['.coffee']), ...walk(BUILD_SYSTEM, ['.js', '.py']).filter(p => path.resolve(p) !== SELF)] }];
+    ...walk(SRC, ['.coffee']), ...walk(BUILD_SYSTEM, ['.js', '.py']).filter(p => path.resolve(p) !== SELF_TEST_CORPUS)] }];
   if (testsPresent) {
     halves.push({ repo: 'tests', label: 'Fizzygum-tests', baseline: BASELINE_TESTS, paths: [
       ...walk(SCRIPTS, ['.js']), ...walk(HARNESS, ['.coffee'])] });
@@ -436,8 +470,22 @@ function main(argv) {
     return treeFiles.find(f => f.abs === abs) || loadFile(abs, 'given');
   });
   const universeFiles = [...treeFiles, ...givenFiles.filter(f => !treeFiles.includes(f))];
-  const guards = { gateFiles: gateFileNames(testsPresent), testDirs: testDirNames(testsPresent),
-                   tokens: guardTokensOf(universeFiles), complete: testsPresent };
+  // WHAT RUNS (lib/what-runs.js): the scripts the build, the discovered self-tests and fg's legs launch. The
+  // world's own sources (src, the harness) run when the suite runner does: a token one of them emits is failed
+  // on by every suite leg (scripts/lib/gate-tokens.js), and every SystemTest_ directory is a test that leg plays.
+  const fgArg = argv.find(a => a.startsWith('--fg='));
+  let ran;
+  try { ran = runSet({ ...WHAT_RUNS_LAYOUT, ...(fgArg ? { fg: path.resolve(fgArg.slice('--fg='.length)) } : {}) }); }
+  catch (e) { fail(e.message); }
+  const runBasenames = new Set([...ran.files].map(f => path.basename(f)));
+  const worldRuns = runBasenames.has('run-all-headless.js');
+  // this gate's own tokens never vouch for a sanction: it checks that a list is examined, never that it is current
+  const tokenFiles = universeFiles.filter(f => f.abs !== SELF);
+  const exists = { gateFiles: gateFileNames(testsPresent), testDirs: testDirNames(testsPresent), tokens: guardTokensOf(tokenFiles) };
+  const runs = { gateFiles: new Set([...exists.gateFiles].filter(n => runBasenames.has(n))),
+                 testDirs: worldRuns ? exists.testDirs : new Set(),
+                 tokens: guardTokensOf(tokenFiles.filter(f => ran.files.has(f.abs) || (worldRuns && f.ext === '.coffee'))) };
+  const guards = { exists, runs, complete: testsPresent, runsKnown: ran.fgPresent };
   const checked = given ? givenFiles : treeFiles;
   const { lists, problems, sanctions } = evaluate(checked, universe, guards);
 
@@ -453,7 +501,7 @@ function main(argv) {
     const unsanctioned = nameLists.filter(l => l.state === 'UNSANCTIONED');
     const counts = `${nameLists.length} name list(s) — ${countOf(nameLists, 'DECLARATION')} declaration, ` +
       `${countOf(nameLists, 'SANCTIONED')} sanctioned, ${unsanctioned.length} unsanctioned`;
-    for (const s of sanctions.filter(x => x.via.length)) console.log(`  sanction ${where(s)} -> line ${s.target}, guard: ${s.via.join(', ')}`);
+    for (const s of sanctions.filter(x => x.via.length)) console.log(`  sanction ${where(s)} -> line ${s.target}, guard that runs: ${s.via.join(', ')}`);
     if (unsanctioned.length) {
       over = true;
       console.error(`\n[hand-lists] FAIL — ${unsanctioned.length} unsanctioned name list(s) (with --files every one is a violation):`);
@@ -490,7 +538,8 @@ function main(argv) {
   }
 
   if (notes.length) {
-    console.log(`[hand-lists] NOTE — ${notes.length} sanction(s) UNVERIFIED: the guard each names, or the classes that make its list a name list, may live in the absent Fizzygum-tests repo:`);
+    const absent = [!testsPresent && 'the Fizzygum-tests repo', !ran.fgPresent && "the umbrella's fg (whose legs say what runs at a commit point)"].filter(Boolean).join(' and ');
+    console.log(`[hand-lists] NOTE — ${notes.length} sanction(s) UNVERIFIED: the guard each names, or the classes that make its list a name list, cannot be judged without ${absent}:`);
     for (const n of notes) console.log(`  ${where(n)}  "${clip(n.text)}"`);
   }
   if (failures.length) {
@@ -511,8 +560,11 @@ function printCensus(lists, sanctions, problems, { min, namesOnly, testsPresent 
   }
   if (sanctions.length || problems.length) {
     console.log('\nSANCTIONS');
-    for (const s of sanctions) console.log(`  ${where(s)} -> line ${s.target}  guard: ${s.via.length ? s.via.join(', ') : 'NONE'}  "${clip(s.text)}"`);
-    for (const p of problems) if (p.token !== 'SANCTION_NAMES_NO_GUARD' && p.token !== 'SANCTION_UNVERIFIED') console.log(`  ${where(p)}  ${p.token}  "${clip(p.text)}"`);
+    for (const s of sanctions) {
+      console.log(`  ${where(s)} -> line ${s.target}  guard: ${s.via.length ? s.via.join(', ') : 'NONE THAT RUNS'}` +
+        `${s.neverRun.length ? `  (named, never run: ${s.neverRun.join(', ')})` : ''}  "${clip(s.text)}"`);
+    }
+    for (const p of problems) if (!['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS', 'SANCTION_UNVERIFIED'].includes(p.token)) console.log(`  ${where(p)}  ${p.token}  "${clip(p.text)}"`);
   }
   const all = lists.filter(l => l.items.length >= min);
   const kinds = Object.keys(order).map(k => `${all.filter(l => l.kind === k).length} ${k}`).join(', ');
@@ -527,207 +579,6 @@ function printCensus(lists, sanctions, problems, { min, namesOnly, testsPresent 
   return 0;
 }
 
-// ---- --self-test: an in-memory corpus, each direction both ways --------------------------------------
-// The corpus is made of exactly what the gate hunts, which is why this file is never scanned. Every list
-// the engine finds in it, and every marker problem, must be one the expectations name — an unexpected
-// one fails too — so a tokenizer that finds nothing cannot pass the cases that expect a pass.
-
-const CORPUS = [
-  { rel: 'corpus/unsanctioned-classes.coffee', text: [
-    'class CorpusA',
-    '  @things: [',
-    '    "Widget"      # the base',
-    '    # an interleaved comment line',
-    '    "PanelWdgt",',
-    '    "FrameWdgt"',
-    '  ]',
-    '  # prose quoting a list opens none: ["Widget", "PanelWdgt"]',
-    '  @interpolated: ["#{x} Widget", "Widget", "MenuWdgt"]',
-  ] },
-  { rel: 'corpus/unsanctioned-members.js', text: [
-    "const VERBS = [",
-    "  'fooField', // a trailing comment",
-    "  /* a block comment */ 'barMethod',",
-    "  'bazKey',",
-    "];",
-    "// prose quoting a list opens none: ['fooField', 'barMethod']",
-    "/* nor in a block comment:",
-    " * ['fooField', 'barMethod'] */",
-    "const URLS = ['http://example', 'Widget', 'PanelWdgt'];",
-  ] },
-  { rel: 'corpus/declaration.coffee', text: [
-    'class CorpusC',
-    '  @serializationTransients: [',
-    '    "fooField"',
-    '    "barMethod"',
-    '  ]',
-    '  requiredParts: ["Widget", "MenuWdgt"]',
-    '  @notADeclarationKey: ["fooField", "barMethod"]',
-    '  someMethod: ->',
-    '    @serializationTransients: ["fooField", "bazKey"]',
-  ] },
-  { rel: 'corpus/sanctioned-gate-file.js', text: [
-    "// The sweep below reads these.",
-    "// hand-list-sanctioned: check-dead-methods.js fails when one of these",
-    "// names stops being defined",
-    "const SANCTIONED_BY_FILE = ['fooField', 'quxVerb'];",
-    "const SANCTIONED_INLINE = ['barMethod', 'bazKey'];   // hand-list-sanctioned: SystemTest_corpusFixture fails without them",
-  ] },
-  { rel: 'corpus/sanctioned-token.coffee', text: [
-    'class CorpusD',
-    '  # hand-list-sanctioned: the rig fails CORPUS_GUARD_TOKEN on a name it cannot find',
-    '  @kept: ["Widget", "MenuWdgt"]',
-    '  # hand-list-sanctioned: ONLY_IN_THIS_SANCTION fails, which nothing else says',
-    '  @selfVouched: ["Widget", "PanelWdgt"]',
-  ] },
-  { rel: 'corpus/token-emitter.js', text: [
-    "console.error('CORPUS_GUARD_TOKEN: a name the rig could not find');",
-  ] },
-  { rel: 'corpus/sanctions-wrong.js', text: [
-    "// hand-list-sanctioned: trust me",
-    "const TRUSTED = ['fooField', 'barMethod'];",
-    "// hand-list-sanctioned: check-no-such-gate.js fails",
-    "const NO_SUCH_GATE = ['fooField', 'bazKey'];",
-    "// hand-list-sanctioned:",
-    "const EMPTY_MARKED = ['quxVerb', 'bazKey'];",
-  ] },
-  { rel: 'corpus/separated.js', text: [
-    "// hand-list-sanctioned: check-dead-methods.js fails on a stale name",
-    "const unrelated = 1;",
-    "const SEPARATED = ['fooField', 'barMethod'];",
-  ] },
-  { rel: 'corpus/separated.coffee', text: [
-    'class CorpusF',
-    '  # hand-list-sanctioned: check-dead-methods.js fails on a stale name',
-    '',
-    '  @blankSeparated: ["Widget", "FrameWdgt"]',
-    '  # hand-list-sanctioned: check-dead-methods.js fails on a stale name',
-    '  @colours: ["red", "green", "blue"]',
-    '  # hand-list-sanctioned: check-dead-methods.js fails on a stale name',
-    '  @serializationTransients: ["fooField", "barMethod"]',
-  ] },
-  { rel: 'corpus/proportions.js', text: [
-    "const MOSTLY_DATA = ['Widget', 'PanelWdgt', 'alpha', 'beta', 'gamma'];",
-    "const EXACTLY_HALF = ['Widget', 'fooField', 'alpha', 'beta'];",
-    "const ONE_NAME = ['Widget', 'alpha'];",
-  ] },
-  { rel: 'corpus/quoted-marker.js', text: [
-    "// Prose quoting the syntax is no marker: write `hand-list-sanctioned: <what fails>` above a list,",
-    "// or \"hand-list-sanctioned: <what fails>\" in a string.",
-    "const COLOURS = ['red', 'green', 'Widget'];",
-  ] },
-  { rel: 'corpus/python.py', text: [
-    '# hand-list-sanctioned: check-dead-methods.js fails on a stale name',
-    'PY_NAMES = ["Widget", "MenuWdgt"]',
-    'PY_BARE = ["FrameWdgt", "PanelWdgt"]  # the comment on the line is no marker',
-  ] },
-];
-
-// [file, a substring unique to the list's opening line, expected state, expected kind]
-const EXPECTED_LISTS = [
-  ['corpus/unsanctioned-classes.coffee', '@things:', 'UNSANCTIONED', 'CLASSES'],         // multi-line, interleaved comments
-  ['corpus/unsanctioned-classes.coffee', '@interpolated:', 'UNSANCTIONED', 'CLASSES'],   // a `#` inside a string opens no comment
-  ['corpus/unsanctioned-members.js', 'const VERBS', 'UNSANCTIONED', 'MEMBERS'],          // `//` and block comments between items
-  ['corpus/unsanctioned-members.js', 'const URLS', 'UNSANCTIONED', 'CLASSES'],           // a `//` inside a string opens no comment
-  ['corpus/declaration.coffee', '@serializationTransients: [', 'DECLARATION', 'MEMBERS'],
-  ['corpus/declaration.coffee', 'requiredParts:', 'DECLARATION', 'CLASSES'],
-  ['corpus/declaration.coffee', '@notADeclarationKey:', 'UNSANCTIONED', 'MEMBERS'],      // a key the table does not hold
-  ['corpus/declaration.coffee', '    @serializationTransients:', 'UNSANCTIONED', 'MEMBERS'], // not at the class-body indent
-  ['corpus/sanctioned-gate-file.js', 'SANCTIONED_BY_FILE', 'SANCTIONED', 'MEMBERS'],    // guard (a), block above, wrapped text
-  ['corpus/sanctioned-gate-file.js', 'SANCTIONED_INLINE', 'SANCTIONED', 'MEMBERS'],     // guard (b), on the opening line
-  ['corpus/sanctioned-token.coffee', '@kept:', 'SANCTIONED', 'CLASSES'],                // guard (c), `#` marker
-  ['corpus/sanctioned-token.coffee', '@selfVouched:', 'SANCTIONED', 'CLASSES'],         // …whose token only it says: no guard
-  ['corpus/sanctions-wrong.js', 'TRUSTED', 'SANCTIONED', 'MEMBERS'],
-  ['corpus/sanctions-wrong.js', 'NO_SUCH_GATE', 'SANCTIONED', 'MEMBERS'],
-  ['corpus/sanctions-wrong.js', 'EMPTY_MARKED', 'SANCTIONED', 'MEMBERS'],
-  ['corpus/separated.js', 'SEPARATED', 'UNSANCTIONED', 'MEMBERS'],                      // a code line breaks the block
-  ['corpus/separated.coffee', '@blankSeparated:', 'UNSANCTIONED', 'CLASSES'],           // a blank line breaks the block
-  ['corpus/separated.coffee', '@colours:', '-', 'other'],
-  ['corpus/separated.coffee', '@serializationTransients:', 'DECLARATION', 'MEMBERS'],
-  ['corpus/proportions.js', 'MOSTLY_DATA', '-', 'other'],                               // 2 names of 5: under half
-  ['corpus/proportions.js', 'EXACTLY_HALF', 'UNSANCTIONED', 'MIXED'],                   // 2 of 4: half is enough
-  ['corpus/proportions.js', 'ONE_NAME', '-', 'other'],                                  // half, but a lone name
-  ['corpus/quoted-marker.js', 'COLOURS', '-', 'other'],                                 // …and no SANCTION_STALE above it
-  ['corpus/python.py', 'PY_NAMES', 'SANCTIONED', 'CLASSES'],
-  ['corpus/python.py', 'PY_BARE', 'UNSANCTIONED', 'CLASSES'],
-];
-// [file, a substring unique to the marker's line, expected problem]
-const EXPECTED_PROBLEMS = [
-  ['corpus/sanctioned-token.coffee', 'ONLY_IN_THIS_SANCTION', 'SANCTION_NAMES_NO_GUARD'],
-  ['corpus/sanctions-wrong.js', 'trust me', 'SANCTION_NAMES_NO_GUARD'],
-  ['corpus/sanctions-wrong.js', 'check-no-such-gate.js', 'SANCTION_NAMES_NO_GUARD'],
-  ['corpus/sanctions-wrong.js', 'hand-list-sanctioned', 'SANCTION_EMPTY', 3],          // the bare marker
-  ['corpus/separated.js', 'hand-list-sanctioned', 'SANCTION_STALE'],
-  ['corpus/separated.coffee', 'hand-list-sanctioned', 'SANCTION_STALE', 1],             // above the blank line
-  ['corpus/separated.coffee', 'hand-list-sanctioned', 'SANCTION_STALE', 2],             // above a non-name list
-  ['corpus/separated.coffee', 'hand-list-sanctioned', 'SANCTION_STALE', 3],             // above a declaration
-];
-
-function selfTest() {
-  const universe = { classes: new Set(['Widget', 'PanelWdgt', 'FrameWdgt', 'MenuWdgt']),
-                     members: new Set(['fooField', 'barMethod', 'bazKey', 'quxVerb']) };
-  const files = CORPUS.map(c => {
-    const ext = path.extname(c.rel);
-    return { rel: c.rel, repo: 'fizzygum', ext, ...analyse(c.text.join('\n'), LANG_OF_EXT[ext]) };
-  });
-  const gateFiles = gateFileNames(false);
-  if (!gateFiles.has('check-dead-methods.js')) fail('self-test: the real tree has no buildSystem/check-dead-methods.js to resolve guard (a) against');
-  const guards = { gateFiles, testDirs: new Set(['SystemTest_corpusFixture']), tokens: guardTokensOf(files), complete: true };
-  const { lists, problems } = evaluate(files, universe, guards);
-  let ok = true;
-  const check = (pass, msg) => { console[pass ? 'log' : 'error'](`  ${pass ? 'ok  ' : 'FAIL'} ${msg}`); if (!pass) ok = false; };
-  const lineOf = (rel, needle, nth = 1) => {
-    const text = CORPUS.find(c => c.rel === rel).text;
-    let seen = 0;
-    for (let i = 0; i < text.length; i++) if (text[i].includes(needle) && ++seen === nth) return i + 1;
-    fail(`self-test corpus: no line ${nth} holding '${needle}' in ${rel}`);
-  };
-  const matchedLists = new Set();
-  for (const [rel, needle, state, kind] of EXPECTED_LISTS) {
-    const line = lineOf(rel, needle);
-    const got = lists.filter(l => l.file.rel === rel && l.line === line);
-    got.forEach(l => matchedLists.add(l));
-    const desc = got.map(l => `${l.state}/${l.kind}`).join(' ') || 'NOT FOUND';
-    check(got.length === 1 && got[0].state === state && got[0].kind === kind, `${rel}:${line} (${needle}) -> ${desc} (expected ${state}/${kind})`);
-  }
-  for (const l of lists.filter(x => !matchedLists.has(x))) check(false, `unexpected list ${l.file.rel}:${l.line} [${preview(l.items)}] -> ${l.state}/${l.kind}`);
-  const matchedProblems = new Set();
-  for (const [rel, needle, token, nth] of EXPECTED_PROBLEMS) {
-    const line = lineOf(rel, needle, nth);
-    const got = problems.filter(p => p.file.rel === rel && p.line === line);
-    got.forEach(p => matchedProblems.add(p));
-    check(got.length === 1 && got[0].token === token, `${rel}:${line} marker -> ${got.map(p => p.token).join(' ') || 'no problem'} (expected ${token})`);
-  }
-  for (const p of problems.filter(x => !matchedProblems.has(x))) check(false, `unexpected problem ${p.token} at ${p.file.rel}:${p.line}`);
-  // CONTROL: the corpus is not vacuous — the engine flags something, accepts something, and the same lists
-  // under an EMPTY universe are certified wholesale, which is why the gate exits 2 on one.
-  const flagged = lists.filter(l => l.state === 'UNSANCTIONED').length + problems.length;
-  const accepted = lists.filter(l => l.state === 'DECLARATION' || l.state === 'SANCTIONED').length;
-  check(flagged > 0 && accepted > 0, `control: the corpus both fails (${flagged}) and passes (${accepted}) — neither verdict is vacuous`);
-  const empty = evaluate(files, { classes: new Set(), members: new Set() }, guards);
-  check(empty.lists.every(l => !l.isName) && empty.lists.length === lists.length,
-    `control: an empty universe finds the same ${empty.lists.length} lists and calls none of them a name list`);
-  // WITHOUT THE TESTS REPO (guards.complete false, and here the universe lacking `MenuWdgt` as the absent
-  // harness's classes would be lacking): a sanction above a list that now reads as data, or naming no guard
-  // this checkout can see, is a NOTE; one above a line where no list opens stays a failure.
-  const partial = evaluate(files, { classes: new Set(['Widget', 'PanelWdgt', 'FrameWdgt']), members: universe.members },
-    { ...guards, complete: false });
-  const tokenAt = (r, rel, needle, nth) => {
-    const line = lineOf(rel, needle, nth);
-    return r.problems.filter(p => p.file.rel === rel && p.line === line).map(p => p.token + (p.note ? '(note)' : '')).join(' ') || 'none';
-  };
-  for (const [rel, needle, nth, want] of [
-    ['corpus/sanctioned-token.coffee', 'CORPUS_GUARD_TOKEN', 1, 'SANCTION_UNVERIFIED(note)'],  // its list names MenuWdgt
-    ['corpus/sanctions-wrong.js', 'trust me', 1, 'SANCTION_UNVERIFIED(note)'],
-    ['corpus/separated.js', 'hand-list-sanctioned', 1, 'SANCTION_STALE'],
-  ]) {
-    const got = tokenAt(partial, rel, needle, nth);
-    check(got === want, `tests repo absent: ${rel} marker -> ${got} (expected ${want})`);
-  }
-  console.log(ok ? '[hand-lists] self-test PASS' : '[hand-lists] self-test FAIL');
-  return ok ? 0 : 1;
-}
-
-module.exports = { analyse, classify, evaluate, resolveGuard };
+module.exports = { analyse, classify, evaluate, resolveGuard, guardTokensOf, gateFileNames, preview, LANG_OF_EXT };
 
 if (require.main === module) process.exit(main(process.argv.slice(2)));

@@ -220,9 +220,9 @@ exact closure variable holding a corpse. Two mechanism facts it encodes (measure
 instances are ANONYMOUS in heap snapshots (the meta-system's eval-built constructors leave
 V8 no reliable inferred name — suspects are mapped by `HeapProfiler.getHeapObjectId`,
 never by node name), and heap object ids are assigned lazily (the snapshot must be taken
-FIRST or every id answers "0"). `--selftest` plants a closure-held destroyed widget and
-requires itself to find it end-to-end while the in-band gate stays silent on it — run it
-after touching the tool.
+FIRST or every id answers "0"). Its self-test, `heap-forensics-selftest-headless.js` (the
+gauntlet's `selftests` leg), plants a closure-held destroyed widget and requires the tool to
+find it end-to-end while the in-band gate stays silent on it.
 
 **The door-callback law this tier enforced into the code** (found by the Arc B probe): a
 lazy-part door callback that acts ON A WIDGET must open with a destroyed-check — the wait
