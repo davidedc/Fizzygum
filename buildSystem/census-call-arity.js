@@ -2,9 +2,10 @@
 'use strict';
 // census-call-arity.js — QUERY the call sites of both repos, each with its real argument count: the work-list tool for
 // converting a family (which `new X` sites, which `super`s, which calls of a method — and how many arguments each
-// passes). ADVISORY: nothing gates on it. The VERDICT on those sites — which `undefined` is a hole, with its witness —
-// is check-argument-holes.js's alone (`--values` lists the ones it judges values); both read ONE table,
-// lib/call-sites.js, so the two can never disagree about what a call is.
+// passes). ADVISORY: nothing gates on it. The VERDICT on those sites — which `undefined` is a hole, with its witness;
+// which argument no parameter receives; which positional lands in an options slot — is check-call-arguments.js's alone
+// (`--values` lists the absences it judges values); both read ONE table, lib/call-sites.js, so the two can never
+// disagree about what a call is.
 //
 // The table is read by real parsers (lib/call-sites.js's header: the browser's own CoffeeScript 2.0.3 over every
 // class fragment as the meta-compiler splits and rewrites it, every mixin, every macro source and the MacroToolkit
@@ -25,7 +26,7 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const ARGV = process.argv.slice(2);
 for (const a of ARGV) {
   if (a.startsWith('--') && !/^--(min|super|call)=/.test(a)) {
-    console.error(`census-call-arity: unknown flag ${a}` + (a === '--holes' ? ' — the hole verdict is check-argument-holes.js\'s (run it; --values lists the values)' : ''));
+    console.error(`census-call-arity: unknown flag ${a}` + (a === '--holes' ? ' — the hole verdict is check-call-arguments.js\'s (run it; --values lists the values)' : ''));
     process.exit(2);
   }
 }

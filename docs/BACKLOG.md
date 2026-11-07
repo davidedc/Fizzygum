@@ -12,11 +12,11 @@ per README rules 2 and 5.
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **A positional argument handed to an `(opts = {})` head has no static check.** No `undefined` appears, so the
-      hole gate cannot see it, and the argument is silently taken AS the options object — the trap of every
-      conversion to options (Unit A held it with a temporary runtime tripwire). The call-sites table could carry a
-      second rule: a call passing MORE arguments than its callee declares, where the callee resolves to one
-      definition — which would also have caught the five dead `setValue(n, undefined, undefined)` arguments.
+- [x] **A positional argument handed to an `(opts = {})` head has no static check.** — CLOSED by
+      `archive/call-arguments-gate-plan.md`: the gate, renamed `check-call-arguments.js`, gained `EXTRA_ARGUMENT` (two or
+      more positionals, a dead argument) and `POSITIONAL_INTO_OPTIONS` (`@`, a literal, a `new`… alone); what they found
+      is in its ledger (moved there). A lone VARIABLE handed to an options slot (`new X target`) stays unchecked — a
+      stated limit (conventions doc §5), its whole-family check being `census-call-arity.js` after a conversion.
 - [ ] **Two readers of a test's macro sources.** `lib/tests-repo-code.js` `macroSources` (the COOKED text the page
       compiles, by line — the call-sites lib, check-unresolved-sends) and the tests repo's
       `check-macro-source-discipline.js` `macroSourcesOf` (the RAW text by character offset, which aim-census maps

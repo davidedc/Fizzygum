@@ -301,27 +301,57 @@ to make the call readable at all; two call-site groups that want disjoint tails.
 
 ## 5. What is enforced
 
-**`buildSystem/check-argument-holes.js` enforces the hole test on every build, over every call site in
+**`buildSystem/check-call-arguments.js` enforces three rules on every build, over every call site in
 BOTH repos, at an exact zero** — Fizzygum's `src/`, the tests repo's harness, every macro source, the
 `MacroToolkit` heredocs (the standard macro verbs, code in strings) and the tests repo's scripts. It
 reads them with real parsers (`buildSystem/lib/call-sites.js`): every class as the browser's
 meta-compiler splits it into member fragments and rewrites its `super`s, parsed by the browser's own
 CoffeeScript; the scripts with acorn. So an implicit object `face: x, toolTip: y` is ONE argument, a
-nested paren-less call is one argument of the outer call, and a string's contents are never a call. It
-applies R3's callers test mechanically and prints each hole with its WITNESS. An `undefined` every
-caller writes is judged a value (`--values` lists them — the `@assertValuesEqual "…", undefined, x`
-of the macros among them). There is no baseline and no sanction marker: a value the test misjudges is
-reshaped.
+nested paren-less call is one argument of the outer call, and a string's contents are never a call.
+There is no baseline and no sanction marker: a call the gate misjudges is reshaped.
+
+- **`HOLE`** — R3's callers test, applied mechanically: each hole is printed with its WITNESS. An
+  `undefined` every caller writes is judged a value (`--values` lists them — the
+  `@assertValuesEqual "…", undefined, x` of the macros among them).
+- **`EXTRA_ARGUMENT`** — a call passes more arguments than any definition it can reach declares: an
+  argument no parameter receives. Dead (a size handed to a constructor that takes none), or
+  mis-bound: a positional handed past an `(opts = {})` head, or a spelling that compiles to something
+  its author did not write. A call is judged only where its TARGET is certainly among the
+  definitions it reaches: what runs where it runs (page code, a macro program, a script module, each
+  seeing its own), a bare call resolved lexically, a `new` of the one class its name means there, a
+  send whose receiver is `@`/`this` or `X.` of a class whose whole chain the reader read (never an
+  `Array` or an `EventEmitter` above it); the declared count is the widest of them. Matching by name
+  alone would read `Math.max a, b, c` against `Point::max`: a foreign API's definitions are invisible.
+- **`POSITIONAL_INTO_OPTIONS`** — an argument of a kind the parse shows is no options object (`@`, a
+  literal, an array, a function, a `new`) lands in a parameter defaulting to `{}`, and is silently
+  taken AS the options object: `new SimpleButtonWdgt @` after the head became `(opts = {})`.
+
+⚠ **Spellings that compile to something else.** CoffeeScript's paren-less calls take whatever follows
+as arguments, so a line written as a SIBLING can be parsed as an argument. Each of these compiles
+without error and mis-binds:
+- an array (or any list) element written `f "a",` with the next element on the next line —
+  `[ f "a",⏎ f "b" ]` is ONE element, `f("a", f("b"))`: boot's first batch of script loads, spelled so,
+  awaited only its first file and started compiling before the CoffeeScript library was in.
+  `EXTRA_ARGUMENT` catches it when `f`'s parameters are known; give each element its own parentheses;
+- `X a: 1, b: 2,` followed by indented keys — TWO objects, `X({a, b}, {c})`; `EXTRA_ARGUMENT` catches it
+  against an `(opts = {})` head;
+- `super` alone on a line followed by indented keys — the meta-compiler's rewrite makes it a forwarding
+  `super` whose RESULT is then called with the keys, `….constructor.apply(this, arguments)({a: 1})`.
+Check a new spelling with `buildSystem/compile-fragment.js` before trusting it.
 
 What it cannot judge, by construction (its header holds the full list): a callee no code in either
 repo defines (`JSON.stringify`); a dynamic `new (classNamed name)`; the this-arg of `.call` / `.apply`
 / `.bind`; code inside a string other than the heredocs (a spreadsheet formula); a call of unknown
-arity (a spread, a forwarding bare `super`), which is never a witness; and a POSITIONAL argument handed
-to an `(opts = {})` head — no `undefined` appears, and the argument is silently taken AS the options
-object. That last one is the trap of every conversion to options: check a new spelling with
-`buildSystem/compile-fragment.js` first, and list a family's sites with `census-call-arity.js`
-(`<Class…>` for its `new`s, `--super=` for its supers, `--call=` for a method — the gate's own table,
-with each site's real argument count): after the conversion, every site of an `(opts)` head passes one.
+arity (a spread, a forwarding bare `super`), which is never a witness and never judged for arity. For
+the two arity rules besides: a send to a receiver the parse cannot see (`frame.m a`), or in a class
+with a foreign ancestor (`extends Array`); a callee some code also binds or assigns as a VALUE
+(`canvas.width = …` leaves every `@width()` unjudged); a callee taking any number (a splat,
+`arguments`); a method no code defines as a member or field (assembled at run time); a script's bare
+call of a name its module neither binds nor imports; `new @constructor` (it may build a subclass); and
+a lone VARIABLE handed to an options slot (`new X target`) — so
+after converting a head to options, list the family's sites with `census-call-arity.js` (`<Class…>`
+for its `new`s, `--super=` for its supers, `--call=` for a method — the gate's own table, with each
+site's real argument count): every site of an `(opts)` head passes one object.
 
 ⚠ **Why the gate reads the tests repo.** Connector §P4 deleted `PaletteWdgt`'s leading `target`
 parameter — a hole with ELEVEN live call sites, every one of them in a macro source, so a check of
@@ -345,12 +375,13 @@ plain JS `new SliderWdgt(0, 100, 40, 10)` in the rigs.
 ## 7. Current conformance
 
 **Both repos are conformant, constructors and methods alike.** Every constructor takes ≤4 operands or
-is named exempt under §3, and `check-argument-holes.js` holds every call site of both repos at zero
-holes (§5). The per-family measurements, the four heads that measurement overruled, and the
+is named exempt under §3, and `check-call-arguments.js` holds every call site of both repos at zero
+holes, zero extra arguments and zero positionals into options (§5). The per-family measurements, the four heads that measurement overruled, and the
 phase-by-phase record are in
 [`../archive/constructor-parameter-conformance-plan.md`](../archive/constructor-parameter-conformance-plan.md);
-the gate's own arc — the parser, the mechanized callers test, the button family's head — in
-[`../archive/argument-holes-both-repos-plan.md`](../archive/argument-holes-both-repos-plan.md).
+the gate's own arcs — the parser, the mechanized callers test, the button family's head — in
+[`../archive/argument-holes-both-repos-plan.md`](../archive/argument-holes-both-repos-plan.md),
+and the two arity rules in [`../archive/call-arguments-gate-plan.md`](../archive/call-arguments-gate-plan.md).
 
 ⚠⚠ **The last tail found was one layer BELOW the verbs already converted, and that is the lesson.**
 `add` was converted while `__add` / `_addChild` beneath it kept the same misleading parameter name

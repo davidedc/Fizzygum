@@ -512,24 +512,27 @@ if ! $noSyntaxCheck ; then
   echo "... stink check OK"
 fi
 
-# --- build-time ARGUMENT-HOLE gate (exact zero, both repos) ----------------------------
-# Enforces the HOLE TEST (R3 of docs/architecture/constructor-and-parameter-conventions.md): if any
-# call site must pass `undefined` to reach a later argument, the parameter list is wrong. Every call
-# site in BOTH repos — src, the harness, every macro source, the MacroToolkit heredocs, the tests
-# repo's scripts — read by real parsers (buildSystem/lib/call-sites.js, which census-call-arity.js
-# queries too), judged by the CALLERS TEST: an `undefined` is a hole iff another call of the same
-# callee passes fewer arguments (the gate prints that witness), else it is the operand's value.
-# Exact zero, no baseline; exit 2 (INVALID) when it cannot read a source. The tests repo absent, it
-# judges src alone and says so. Same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.
+# --- build-time CALL-ARGUMENTS gate (exact zero, both repos) ---------------------------
+# Every call's arguments against its callee (docs/architecture/constructor-and-parameter-conventions.md):
+# HOLE — the R3 hole test, if any call site must pass `undefined` to reach a later argument, the
+# parameter list is wrong (judged by the CALLERS TEST: a hole iff another call of the same callee
+# passes fewer arguments — the gate prints that witness, else the `undefined` is the operand's value);
+# EXTRA_ARGUMENT — a call passes more arguments than any definition it can reach declares (judged
+# only where its target is certainly among those); POSITIONAL_INTO_OPTIONS — `@`, a literal, an array, a
+# function or a `new` lands in an `opts = {}` slot. Every call site in BOTH repos — src, the harness,
+# every macro source, the MacroToolkit heredocs, the tests repo's scripts — read by real parsers
+# (buildSystem/lib/call-sites.js, which census-call-arity.js queries too). Exact zero, no baseline;
+# exit 2 (INVALID) when it cannot read a source. The tests repo absent, it judges src alone and says
+# so. Same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.
 if ! $noSyntaxCheck ; then
-  echo "checking for argument holes (the R3 hole test, both repos) ..."
-  node ./buildSystem/check-argument-holes.js
+  echo "checking call arguments (holes, extra arguments, positionals into options; both repos) ..."
+  node ./buildSystem/check-call-arguments.js
   if [ "$?" != "0" ]; then
     tput bel
-    echo "!!!!!!!!!!! error: argument-hole gate failed -- aborting build." 1>&2
+    echo "!!!!!!!!!!! error: call-arguments gate failed -- aborting build." 1>&2
     exit 1
   fi
-  echo "... argument-hole check OK"
+  echo "... call-arguments check OK"
 fi
 
 # --- build-time MENU-ACTION WIRING gate -----------------------------------------------

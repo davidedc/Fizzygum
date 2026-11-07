@@ -144,7 +144,7 @@ const derivedColloquialName = () =>
 // ── facet 4 (ADVISORY) — constructor positional-slot counts ─────────────────────────────────────
 // ⚠ NEVER gate on the number alone: value/geometry tuples and published user-facing spellings stay
 // positional however long they are (architecture/constructor-and-parameter-conventions.md). The
-// decisive test is the HOLE test, which check-argument-holes.js owns.
+// decisive test is the HOLE test, which check-call-arguments.js owns.
 function constructorSlots() {
   const rows = [];
   for (const name of [...classes.keys()].sort()) {

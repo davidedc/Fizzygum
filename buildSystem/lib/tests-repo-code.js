@@ -28,7 +28,7 @@
 //
 // Readers: census-public-private-calls.js (R4) and check-dead-methods.js (testsRepoCode);
 // check-unresolved-sends.js (macroSources: the macro sends); lib/call-sites.js — the reader behind
-// check-argument-holes.js and census-call-arity.js — (testsRepoFiles, macroSources). Its cases are
+// check-call-arguments.js and census-call-arity.js — (testsRepoFiles, macroSources). Its cases are
 // tests-repo-code-selftest.js.
 
 const fs = require('fs');
