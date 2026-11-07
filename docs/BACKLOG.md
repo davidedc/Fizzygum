@@ -11,13 +11,17 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
+### `archive/bite-proofs-plan.md` — a gate's rule is proven to bite by a standing self-test that runs the gate (CLOSED 2026-11-07; Units 0, A–C done, see its ledger)
+- [ ] **Only the gates whose rules were proven BY HAND have a bite-proof; most gates have none.** The arc's class was
+      "a rule proven by a planted violation once, at authoring" (the rules of eight gates). The broader
+      question, whether every gate the build or a gauntlet leg runs must carry a standing proof that its rule bites
+      (the 33 static gates mostly have none, and several have no self-test at all), is an audit of its own: survey the
+      gates, say which rules a plant could prove, and rule on whether the build should require one per gate (plan §8,
+      "a meta-rule").
+
 ### `archive/unrun-checks-plan.md` — every check the workspace relies on runs (CLOSED 2026-11-06; Units 0, A–D done, see its ledger)
-- [ ] **Standing bite-proofs for the checks proven only by hand.** Self-tests and sanctions are now held to running,
-      but several gates' own RULES were proven by a plant once, at authoring, and nothing re-runs that plant: the
-      suite audit gates (tier-naming's leaf rule — its header says so — settle's [J], revisits, storage; each carries
-      a coverage line proving it WATCHED, none a planted violation proving it BITES) and check-call-separation's
-      by-hand plant recipe. The pattern exists: `notification-settle-audit/cache-oracle-selftest-headless.js` (planted
-      run must fail on the token, the control must pass), run by the gauntlet's `selftests` leg.
+- [x] **Standing bite-proofs for the checks proven only by hand.** — CLOSED by `archive/bite-proofs-plan.md` (moved to
+      its ledger).
 
 ### `archive/typed-code-saves-residue-plan.md` — the typed-code-saves arc's three residue items (CLOSED 2026-11-06; Units 1–3 done, see its ledger)
 - [x] **The other gates that read the tests repo still read its prose and comments.** — CLOSED by

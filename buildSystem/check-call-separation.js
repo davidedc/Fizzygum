@@ -37,15 +37,25 @@
  * them — the runtime one-flush throw is the backstop.
  *
  * Exit codes: 0 clean · 1 violation (count exceeded a baseline, or a stale [U] allowlist entry) · 2 operational error.
- * Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-call-separation.js
- * To see it bite (a plant, by hand: no standing self-test runs one): add a `_foo: -> @somePublicCommand()` to a
- * throwaway src class, confirm the count bumps past the baseline and the build aborts; `# public-call-sanctioned:
- * fixture` exempts it. Its call-shape decisions are census-public-private-calls-selftest.js, run on every build.
+ * Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-call-separation.js [--src=DIR]
+ * (--src= checks another src tree: a copy carrying a plant). That it BITES is proven on every build by
+ * check-call-separation-selftest.js: the real gate, on a copy of src/ carrying a throwaway class whose private
+ * method self-calls a public settling command, must fail [S] naming the site, and the same method marked
+ * `# public-call-sanctioned:` must pass (lib/planted-src.js). Its call-shape decisions are
+ * census-public-private-calls-selftest.js.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { runCensus } = require('./census-public-private-calls.js');
+const { rejectUnknownArgs } = require('./lib/cli-args');
+
+// --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'check-call-separation');
+if (ARGV.some((a) => !a.startsWith('--'))) { console.error('[check-call-separation] ERROR — a src tree is named with --src=DIR'); process.exit(2); }
+const SRC_ARG = ARGV.find((a) => a.startsWith('--src='));
+const SRC_DIR = SRC_ARG ? path.resolve(SRC_ARG.slice('--src='.length)) : undefined;
 
 // ---- [S] baselines (RATCHET — tighten as the plan's tranches drain the sites; 0 = HARD) ----
 // Seeded 2026-07-12 from the census at rule birth (plan §3 snapshot: 2 SETTLING — the
@@ -70,7 +80,7 @@ function readAllowlist() {
 }
 
 let census;
-try { census = runCensus(); }
+try { census = runCensus({ src: SRC_DIR }); }
 catch (e) { console.error('[call-separation] operational error: ' + e.message); process.exit(2); }
 
 const problems = [];

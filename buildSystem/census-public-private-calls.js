@@ -207,23 +207,24 @@ const { repaintVerbAlternation } = require('./lib/repaint-verbs');
 const SCHEDULE_CALL = /[@.]\s*_invalidateLayout\b/;
 
 // ============================== THE ENGINE ==============================
-// Returns { stats, R1, R2, R2narrowed, R3, R4, haveTestsRepo }.
+// runCensus({ src }) reads the src tree it is given (default: this repo's src/; check-call-separation's --src= hands it a
+// planted copy). Returns { stats, R1, R2, R2narrowed, R3, R4, haveTestsRepo }.
 //   R1 row:  { cls, caller, callee, calleeClass, sanctioned, at }
 //   R2 row:  { cls, caller, ctor, callerDirectlySettles, sanctioned, callee, at }
 //   R4 row:  { name, selfCalls, effectful, defs }   (R4 = null when the tests repo is absent)
-function runCensus() {
-  if (!fs.existsSync(SRC)) throw new Error('cannot find src/ — run from the Fizzygum repo root');
-  const REPAINT_CALL = new RegExp('[@.]\\s*(' + repaintVerbAlternation(SRC) + ')\\b');
-  const SETTLE_DIRECT = new RegExp('[@.]\\s*(' + settleTierAlternation(SRC) + '|recalculateLayouts)\\b');
-  const setters = settlingSetters(SRC);
+function runCensus({ src = SRC } = {}) {
+  if (!fs.existsSync(src)) throw new Error('cannot find ' + src + ' — run from the Fizzygum repo root');
+  const REPAINT_CALL = new RegExp('[@.]\\s*(' + repaintVerbAlternation(src) + ')\\b');
+  const SETTLE_DIRECT = new RegExp('[@.]\\s*(' + settleTierAlternation(src) + '|recalculateLayouts)\\b');
+  const setters = settlingSetters(src);
   const memberSettleRe = new RegExp('\\.\\s*(' + [...setters.geometry, ...setters.text].join('|') + ')\\b');
 
   // ---- phase 1: parse every src class ----
   const classInfo = new Map();   // name -> { name, parent, mixins[], methods: Map(name->rec), file }
   const allMethods = [];         // rec: { name, cls, file, line, bodyLines: [{n, code}], markers:Set }
-  const srcFiles = collectFiles(SRC, '.coffee', []).sort();
+  const srcFiles = collectFiles(src, '.coffee', []).sort();
   for (const file of srcFiles) {
-    const rel = path.relative(SRC, file);
+    const rel = path.relative(src, file);
     const clsName = path.basename(file, '.coffee');
     const lines = fs.readFileSync(file, 'utf8').split('\n');
     let info = classInfo.get(clsName);

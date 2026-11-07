@@ -62,15 +62,22 @@
 //
 // Exit codes: 0 clean · 1 violation · 2 operational (no src/, or not one builder found — a run that
 // checked nothing is not a pass).
-// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-back-buffer-memos.js
-// Revert plant: give SimpleImageWdgt's builder a size memo (`@lastPaintedImageSize = @extent()`), or
-// delete the `# saved-content:` line above CanvasWdgt.drawnRaster — either fails the gate naming the field.
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-back-buffer-memos.js [--src=DIR]
+// That it BITES is proven on every build by check-back-buffer-memos-selftest.js: the real gate, on a copy of src/
+// carrying a throwaway widget whose builder records a memo, must fail naming the field, and the same field declared
+// a transient, or saved content, must pass (lib/planted-src.js).
 
 const fs = require('fs');
 const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
 
-const SRC = path.resolve(__dirname, '../src');
+const { rejectUnknownArgs } = require('./lib/cli-args');
+// --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'check-back-buffer-memos');
+if (ARGV.some((a) => !a.startsWith('--'))) { console.error('[check-back-buffer-memos] ERROR — a src tree is named with --src=DIR'); process.exit(2); }
+const SRC_ARG = ARGV.find((a) => a.startsWith('--src='));
+const SRC = SRC_ARG ? path.resolve(SRC_ARG.slice('--src='.length)) : path.resolve(__dirname, '../src');
 const BUILDER = '_createRefreshOrGetBackBuffer';
 const CONTENT_MARKER = /#\s*saved-content:\s*\S/;
 

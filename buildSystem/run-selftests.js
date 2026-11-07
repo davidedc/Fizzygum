@@ -27,13 +27,20 @@
 //                                the tests repo's tests/ (test content) are not scripts.
 // This file and lib/selftest-verdict.js are the machinery, exempt from both: they name the spellings to refuse them.
 //
+// Files run a POOL at a time, and their reports print in discovery order whatever order they finish in. Every gate's
+// bite-proof is one more file (a static gate's runs the real gate on a planted copy of src/, a suite gate's boots its
+// real gate on one test), so one at a time would grow the build's first gate and the gauntlet's selftests leg with
+// every proof added. The node tier runs NODE_POOL at once (each is CPU-bound and writes only its own temp files); the
+// headless tier HEADLESS_POOL, each file's own runs sequential, its children told to keep sibling files' browsers
+// (FIZZYGUM_KEEP_STALE_BROWSERS=1: a runner otherwise culls every headless browser it did not launch).
+//
 // Usage: node buildSystem/run-selftests.js [--headless] [--repo=fizzygum|tests]
 // Exit: 0 every self-test passed · 1 one failed (or one hides outside the convention) · 2 operational (none found).
 // The tests repo's half runs when ../Fizzygum-tests is present, and says when it is not.
 
 const fs = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
 const { DEFAULT_LAYOUT, discover, scriptFiles, shellCommands } = require('./lib/what-runs');
 const { maskJs } = require('./lib/js-mask');
 const { VERDICT_RE } = require('./lib/selftest-verdict');
@@ -46,6 +53,55 @@ const repoOf = (f) => (f.startsWith(DEFAULT_LAYOUT.tests + path.sep) ? 'tests' :
 const rootOf = (repo) => (repo === 'tests' ? DEFAULT_LAYOUT.tests : DEFAULT_LAYOUT.fizzygum);
 const rel = (f) => path.relative(UMBRELLA, f);
 const testsPresent = fs.existsSync(path.join(DEFAULT_LAYOUT.tests, 'scripts'));
+const NODE_POOL = 4;
+const HEADLESS_POOL = 3;
+
+// The pid and every descendant of it (ps), deepest first: a headless self-test runs gates that run runners, and a
+// timeout that killed only the file would leave them running — and writing — after the verdict.
+function processTree(pid) {
+  let rows = [];
+  try { rows = execFileSync('ps', ['-A', '-o', 'pid=,ppid='], { encoding: 'utf8' }).trim().split('\n').map((l) => l.trim().split(/\s+/).map(Number)); } catch (e) { /* no ps: the file alone */ }
+  const tree = [pid];
+  for (let i = 0; i < tree.length; i++) for (const [p, pp] of rows) if (pp === tree[i]) tree.push(p);
+  return tree.reverse();
+}
+
+// One self-test file, run to completion: { status, error?, stdout, stderr }, the shape judge() reads. A run past its
+// time limit is killed with everything it started, and reads as an error, never as a pass; so does a file that could
+// not be spawned at all.
+function runFile(f, { timeoutSecs, env }) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [f], { cwd: rootOf(repoOf(f)), env });
+    let stdout = '', stderr = '', error, settled = false;
+    const finish = (status) => { if (settled) return; settled = true; clearTimeout(timer); resolve({ status, error, stdout, stderr }); };
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (d) => { stdout += d; });
+    child.stderr.on('data', (d) => { stderr += d; });
+    const timer = setTimeout(() => {
+      error = { code: 'ETIMEDOUT' };
+      for (const p of processTree(child.pid)) { try { process.kill(p, 'SIGKILL'); } catch (e) { /* already gone */ } }
+    }, timeoutSecs * 1000);
+    child.on('error', (e) => { error = e; if (child.pid === undefined) finish(null); });
+    child.on('close', (status) => finish(status));
+  });
+}
+
+// Runs every file, at most `width` at a time, and hands each result to `report` in the files' own order.
+async function runAll(files, width, opts, report) {
+  const results = new Array(files.length);
+  let next = 0, printed = 0;
+  const flush = () => { while (printed < files.length && results[printed]) { report(files[printed], results[printed]); printed++; } };
+  const worker = async () => {
+    while (next < files.length) {
+      const i = next++, t = Date.now();
+      const r = await runFile(files[i], opts);
+      r.secs = ((Date.now() - t) / 1000).toFixed(2);
+      results[i] = r;
+      flush();
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(width, files.length) }, worker));
+}
 
 // ---- a self-test switch in code, outside the convention ---------------------------------------------------------
 const FLAG_VALUE = /^--self-?test(=.*)?$/i;
@@ -123,7 +179,7 @@ function judge(r) {
 }
 
 // ---- run ---------------------------------------------------------------------------------------------------------
-function main(argv) {
+async function main(argv) {
   const KNOWN = /^--(headless|repo=(fizzygum|tests))$/;
   for (const a of argv) if (!KNOWN.test(a)) { console.error(`[selftests] ERROR — unknown argument '${a}' (--headless, --repo=fizzygum|tests)`); process.exit(2); }
   const HEADLESS = argv.includes('--headless');
@@ -139,10 +195,10 @@ function main(argv) {
   const failures = [];
   let cases = 0;
   const t0 = Date.now();
-  for (const f of tests) {
-    const t = Date.now();
-    const r = spawnSync(process.execPath, [f], { cwd: rootOf(repoOf(f)), encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, timeout: (HEADLESS ? 600 : 120) * 1000 });
-    const secs = ((Date.now() - t) / 1000).toFixed(2);
+  const env = HEADLESS ? { ...process.env, FIZZYGUM_KEEP_STALE_BROWSERS: '1' } : process.env;
+  // the headless limit sits under the gauntlet leg's own alarm (600 s), so this runner always reports before it is killed
+  await runAll(tests, HEADLESS ? HEADLESS_POOL : NODE_POOL, { timeoutSecs: HEADLESS ? 480 : 120, env }, (f, r) => {
+    const secs = r.secs;
     const { token, cases: n } = judge(r);
     if (token) {
       failures.push(f);
@@ -153,7 +209,7 @@ function main(argv) {
       cases += n;
       console.log(`  PASS  ${rel(f)} — ${n} case${n === 1 ? '' : 's'} (${secs}s)`);
     }
-  }
+  });
 
   const hiding = [];
   for (const f of scriptFiles().filter(inScope)) {
@@ -182,6 +238,11 @@ function main(argv) {
   }
 }
 
-module.exports = { judge, offeredFlags, undiscovered };
+module.exports = { judge, offeredFlags, undiscovered, processTree };
 
-if (require.main === module) main(process.argv.slice(2));
+if (require.main === module) {
+  // a run that ends without reaching its verdict (the event loop drained with a file still owed) is no pass
+  let concluded = false;
+  process.on('exit', () => { if (!concluded && !process.exitCode) { console.error('[selftests] ERROR — the run ended before its verdict'); process.exitCode = 2; } });
+  main(process.argv.slice(2)).then(() => { concluded = true; }, (e) => { concluded = true; console.error(`[selftests] ERROR — ${e.stack || e}`); process.exitCode = 2; });
+}

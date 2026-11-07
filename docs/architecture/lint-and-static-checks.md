@@ -104,6 +104,22 @@ blind spots are in its header. Two rules read it:
 ⚠ What neither can hold is PROSE: a doc saying a gate runs at a commit point is checked by reading `fg`. Arc:
 `docs/archive/unrun-checks-plan.md`.
 
+**A gate's RULE is proven to BITE by a self-test that runs the GATE.** A rule proven by a planted violation once, at
+authoring, can stop biting and stay green, so the plant is a standing self-test, not a recipe in a header. It runs the
+REAL gate, never just the instrument under it: a proof of the instrument alone leaves the gate's own greps, counts and
+exit codes unproven, and that is where a reformatted line goes blind (a `sed` written for a field order the prelude
+does not emit leaves a report's summary unsubstituted, and nothing that asks only whether the gate failed notices). The
+planted run must fail on the RULE's own report naming the plant (not merely fail: a crash is no bite), and the
+unplanted CONTROL must pass. One shared machinery per kind:
+- **static gates**: `<gate>-selftest.js` runs the gate on a copy of `src/` carrying a throwaway class with the defect
+  (`--src=DIR`, `lib/planted-src.js`) — call-separation, back-buffer-memos, page-loaded-elements;
+- **suite audit gates**: `<gate>-selftest-headless.js` runs the gate on ONE test (`--tests=`, a private `--out=` dir),
+  a plant injected beside its prelude (`PRELUDE_JS`, `Fizzygum-tests/scripts/lib/gate-bite-proof.js`), one plant per
+  rule, confined to that test and bounded; and again with a test bucket no instrument observed
+  (`audit-preludes/unobserved-bucket-plant.js`; the capstone's two flags, one bucket each), which must read INVALID —
+  tier-naming, settle, revisits, storage, capstone (both rules).
+Arc: `docs/archive/bite-proofs-plan.md`.
+
 | Gate | File | Wired (`build_it_please.sh` — grep `check-<name>.js`; lines drift) | Enforces | Ratchet mechanism |
 |---|---|---|---|---|
 | **self-tests** | **`buildSystem/run-selftests.js`** | **~:333 (FIRST: a gate whose proof fails gives verdicts not worth reading)** | **every `<subject>-selftest.js` in `buildSystem/` and (when present) `Fizzygum-tests/scripts/`, found by NAME through `lib/what-runs.js`, exits 0 AND ends with the shared verdict line (`lib/selftest-verdict.js`: `[name] SELFTEST PASS — N cases`) with N ≥ 1 — else `SELFTEST_FAILED` / `SELFTEST_NO_VERDICT` / `SELFTEST_VACUOUS`; a self-test switch (`--self-test`, `--selftest`, a `…SELFTEST` variable, a `lib/cli.js` reader asking for one) offered in a script's CODE is `SELFTEST_OUTSIDE_CONVENTION`, and a file in either repo named like a self-test that no tier runs (misspelt, misplaced, wrong extension) is `SELFTEST_UNDISCOVERED`. ~2 s. `--headless` runs the `-selftest-headless.js` tier instead (the gauntlet's `selftests` leg); `--repo=tests` is `npm run selftest`** | — (discovery IS the registration: a new self-test is a new file) |
@@ -323,10 +339,11 @@ gates now carry a POSITIVE-COVERAGE assertion that closes this, in two shapes wo
   first real firing (a wrapped corner, a wrapped `_reactTo*`/`_before*` callback, a flush that visited any widget), and
   the gate requires it in every bucket.
 All of these mirror `run-paint-audit.js`'s `checked == expectedTotal` and `vm-truth-gate.js`'s three INVALID paths.
-⭐ **Every suite-wide audit gate now carries one**, and each was proven by plant in both directions — armed/firing gives
-`307/307` and the normal verdict; wrappers suppressed gives `0/307` and INVALID, while `prelude installed` still reads
-`307/307`, which is precisely why the install count was never coverage. The standing rule is the fuzz/vmtruth
-doctrine — **an unmeasured run is NEVER a pass**.
+⭐ **Every suite-wide audit gate now carries one, and its bite-proof re-proves it on every gauntlet** (the rule above,
+"a gate's RULE is proven to BITE"): a test bucket holding nothing but the runner's synthesised `prelude installed`
+header must read INVALID. That header is in every bucket of a shard whose prelude announced itself, which is precisely
+why the install count was never coverage — with the wrappers suppressed, `prelude installed` reads `307/307` beside
+`0/307` observed. The standing rule is the fuzz/vmtruth doctrine — **an unmeasured run is NEVER a pass**.
 ⚠ A coverage shortfall exits **2 = INVALID** everywhere, so a runner or wrapper that greps verdict lines must know the
 word (the local `fg` wrapper's `leg_headline` does; `fg` is uncommitted workspace tooling, so that is not in git).
 ⭐ **And a gate must not restate a rule the product already owns.** The paint-read-only audit (a rider on the `capstone` leg) used to carry its own copy of <!-- narration-ok: the lesson IS the divergence: a gate that copied a product predicate drifted from it -->

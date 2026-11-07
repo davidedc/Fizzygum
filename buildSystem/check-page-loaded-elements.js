@@ -50,18 +50,23 @@
 //
 // Exit codes: 0 clean · 1 violation · 2 operational (no src/, or not one element construction found — a
 // run that checked nothing is not a pass).
-// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-page-loaded-elements.js
-// [srcDir] — the optional argument checks another src tree (a copy carrying a revert plant).
-// Revert plants: drop "img" from SimpleImageWdgt's @serializationTransients, or delete its
-// _reactToBeingCopied or its _afterDeserialization, or drop "video" from VideoPlayerCanvasWdgt's — each
-// fails the gate naming the class and the field; delete the page-element-not-held line above the
-// Deserializer's decoder and it fails as unattributed.
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-page-loaded-elements.js [--src=DIR]
+// That it BITES is proven on every build by check-page-loaded-elements-selftest.js: the real gate, on a copy of src/
+// carrying one throwaway widget per clause — an element field not transient, a missing restore hook, a missing copy
+// hook, an element assigned to no field — must fail naming each, and the declared forms must pass
+// (lib/planted-src.js).
 
 const fs = require('fs');
 const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
 
-const SRC = path.resolve(process.argv[2] || path.resolve(__dirname, '../src'));
+const { rejectUnknownArgs } = require('./lib/cli-args');
+// --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'check-page-loaded-elements');
+if (ARGV.some((a) => !a.startsWith('--'))) { console.error('[check-page-loaded-elements] ERROR — a src tree is named with --src=DIR'); process.exit(2); }
+const SRC_ARG = ARGV.find((a) => a.startsWith('--src='));
+const SRC = SRC_ARG ? path.resolve(SRC_ARG.slice('--src='.length)) : path.resolve(__dirname, '../src');
 // hand-list-sanctioned: check-page-loaded-elements.js — a hook renamed in its holders fails each as
 // "the class chain defines no <hook>"; one renamed at its walker's call site fails as "neither walker calls"
 const HOOKS = ['_afterDeserialization', '_reactToBeingCopied'];
