@@ -1135,7 +1135,34 @@ The two items this arc closed, as BACKLOG held them:
       (…)) ->`), which only the catch-all form catches today. (Section "archive/hand-lists-residue-plan.md".) —
       CLOSED: Unit C (the callable-only harvest, its bite-proof seen failing on the old harvest).
 
-Filed by this arc: the heuristic masks of §8.3 "File" (BACKLOG, section "archive/every-gate-bites-plan.md").
+Filed by this arc: the heuristic masks of §8.3 "File" (BACKLOG, section "archive/every-gate-bites-plan.md"). Closed
+since, as BACKLOG held it:
+- [x] The suite's per-test watchdog cannot see an infinite JS loop: the page never yields, so the run hangs to the
+      10-minute protocol timeout instead of reading `STALLED` (the shard's poll `page.evaluate` waits on the page, and
+      the 5-minute backstop sits after that wait). A one-test suite run hung exactly so once, in-wave, inside the
+      tier-naming bite-proof's control (plan §8.5, gauntlet #2; cause not captured — a killed proof run now keeps its
+      files). — CLOSED 2026-11-07, owner-directed follow-on: every wait a runner makes on a page is bounded
+      (`answerWithin`, Fizzygum-tests `scripts/lib/headless-driver.js`). The suite runner reads an unanswered poll as a
+      frozen frame (`STALLED on <test> (… — the page stopped answering)`) and goes on in a FRESH page, the boot retry
+      too — measured on both engines: a `goto` away from a stuck page times out, a new page beside it loads at once.
+      The single runner reads it as TEST FAILED, the sequence runner as INVALID, each said so. Proved: suite-gate's
+      abandon run (a first page that stops answering, then a frozen world in the fresh page) and run-sequence's
+      stuck-page run, each seen failing with the bound neutralised; the single runner checked by hand (21 s, against
+      the 15-minute protocol timeout). `proveLeg`'s run limit moved past the runner's 5-minute backstop (6 min), and
+      `gate-bite-proof.js`'s dead `runGate`/`shellGate`/`nodeGate` were deleted. Found on the way, by a presuite build
+      that failed once and passed on five reruns: check-layering's proof saw rule R fired but its violation line, and
+      three `[D]` lines, missing — the gate's output ended mid-list. On macOS a pipe write is asynchronous in Node, and
+      a gate that prints and then calls `process.exit` loses what a slow reader had not taken (measured: ALL of a 1 MB
+      report, against a reader that waits 500 ms), while the registry's synchronous RULES line survives. Every gate
+      goes through `gate-rules.js`, so the registry now makes a main gate's stdout/stderr synchronous; its self-test
+      holds a 1 MB report and a slow reader to every line (0 of 2000 lines with the fix neutralised). And the `apps`
+      leg, which failed in-wave twice in this arc (passing alone both times: a discovery page whose world never became
+      ready in the wave's boot storm), now retries such a page ONCE in a fresh page, as the suite runners do, bounds
+      every wait on a page, and prints what the page logged with its verdict; its proof plants the retry. One bound
+      was too short: a BOOTING page's 5 s looks went unanswered through both 90 s windows in-wave and the shard was
+      abandoned (the leg passed alone) — compiling the world is long synchronous work under load, which the old
+      unbounded look simply waited out. A look at a booting page now waits up to the shard's own backstop (5 min); the
+      test-time poll keeps 5 s.
 
 ---
 

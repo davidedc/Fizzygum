@@ -93,4 +93,26 @@ t.check(parseRulesLine('[g] RULES fired: A B · of: A B C · unplantable: D').un
     parseRulesLine(out).gate === 'inner', "the RULES line of a NAMED gate is that gate's, not the first in the output", JSON.stringify(own));
 }
 
-t.done();
+// A gate's report reaches a SLOW reader whole: the gate prints far more than a pipe holds, then exits at once, while
+// its reader takes nothing for half a second (a proof's spawn under a loaded pool). Async pipe writes lose all of it.
+(async () => {
+  const file = path.join(dir, 'chatty-gate.js');
+  fs.writeFileSync(file, `'use strict';\nconst rules = require(${JSON.stringify(LIB)}).forGate(__filename);\n` +
+    `const line = 'x'.repeat(499);\nfor (let i = 0; i < 2000; i++) console.log(i + ' ' + line);\n` +
+    `console.error(rules.fired('RULE_ONE', '  the violation line, printed last'));\nprocess.exit(1);\n`);
+  const r = await new Promise((resolve) => {
+    const c = require('child_process').spawn(process.execPath, [file]);
+    let out = '', err = '';
+    c.stdout.pause(); c.stderr.pause();
+    setTimeout(() => {
+      c.stdout.on('data', (d) => { out += d; }); c.stderr.on('data', (d) => { err += d; });
+      c.stdout.resume(); c.stderr.resume();
+    }, 500);
+    c.on('close', (status) => resolve({ status, out, err }));
+  });
+  const lines = r.out.split('\n').filter((l) => /^\d+ x/.test(l)).length;
+  t.check(r.status === 1 && lines === 2000 && /the violation line, printed last/.test(r.err) && parseRulesLine(r.out + r.err),
+    'a gate that prints 1 MB and exits at once reaches a slow reader whole: every line, its violation line, its RULES line',
+    `exit ${r.status}, ${lines} of 2000 lines`);
+  t.done();
+})();

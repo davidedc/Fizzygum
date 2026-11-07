@@ -28,6 +28,11 @@
 // and the proof does not ask for it. A listed id the gate cannot fire is stale: BITE_UNPLANTABLE_STALE, exit 2, on
 // every run (so a removed rule takes its excuse with it).
 //
+// A GATE'S REPORT REACHES ITS READER WHOLE. A gate run as a program writes its stdout and stderr SYNCHRONOUSLY: on
+// macOS a write to a pipe is asynchronous in Node, so a gate that prints its findings and then calls process.exit
+// LOSES whatever its reader had not taken yet — all of it, measured, when the reader is slow (a proof's spawn under a
+// loaded pool) — while the RULES line, written synchronously at exit, survives: a rule fired with no violation line.
+//
 // A shell gate's twin is gate_rules_init / gate_rule in Fizzygum-tests/scripts/lib/audited-suite-with-infra-retry.sh
 // (the same exits, from an EXIT trap; its proof is that repo's lib/gate-rules-sh-selftest.js). This one's proof:
 // lib/gate-rules-selftest.js.
@@ -117,6 +122,11 @@ function forGate(file, { name } = {}) {
   // The verdict is the GATE's: a gate required as a library (a self-test exercising its exported engine) keeps the
   // registry but leaves its host's exit alone.
   const isMain = !!require.main && path.resolve(require.main.filename) === path.resolve(file);
+  if (isMain) {
+    for (const stream of [process.stdout, process.stderr]) {
+      if (stream._handle && typeof stream._handle.setBlocking === 'function') stream._handle.setBlocking(true);
+    }
+  }
   if (isMain) process.on('exit', (code) => {
     const write = (fd, s) => writeAll(fd, s + '\n');
     const stale = [...unplantable.keys()].filter((id) => !declared.has(id));

@@ -21,11 +21,6 @@ per README rules 2 and 5.
         (`archive/tests-repo-readers-plan.md`, below) would serve both.
   - [ ] `check-raw-pointer-reads`: a column-0 line inside a handler ends its body, and any `screenPointToMyPlane` on
         a line excuses every raw read on it.
-  - [ ] The suite's per-test watchdog cannot see an infinite JS loop: the page never yields, so the run hangs to the
-        10-minute protocol timeout instead of reading `STALLED` (the shard's poll `page.evaluate` waits on the page, and
-        the 5-minute backstop sits after that wait). A one-test suite run hung exactly so once, in-wave, inside the
-        tier-naming bite-proof's control (plan §8.5, gauntlet #2; cause not captured — a killed proof run now keeps its
-        files).
   - [ ] `vm-truth-gate.js` skips its heap-floor ceiling below 20 samples per page, so a short (`--tests=`) run never
         judges it; its proof plants `HEAP_FLOOR` on a fabricated `--audit-dir=` instead.
 

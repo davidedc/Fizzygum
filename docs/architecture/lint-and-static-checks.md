@@ -114,7 +114,9 @@ reformatted line goes blind). Three pieces hold it:
   tokens, a prelude's finding kinds). On the way out it prints `[<gate>] RULES fired: … · of: … · unplantable: …`; an
   exit 1 that named no rule reads as exit 2 (`RULELESS_FAILURE`: a failure no rule names is operational), a rule fired
   on an exit 0 likewise (`RULE_FIRED_BUT_PASSED`). A rule no plant can reach says why in the gate's header,
-  `// bite-unplantable: <ID> — <reason>` (stale if the gate cannot fire it). The shell gates' twin is
+  `// bite-unplantable: <ID> — <reason>` (stale if the gate cannot fire it). A gate run as a program writes its stdout
+  and stderr synchronously: on macOS a pipe write is asynchronous in Node, and a gate that prints and then calls
+  `process.exit` loses what a slow reader had not yet taken — every line of it, measured. The shell gates' twin is
   `gate_rules_init` / `gate_rule` in `Fizzygum-tests/scripts/lib/audited-suite-with-infra-retry.sh` (an EXIT trap).
 - **The proof**, one judge (`buildSystem/lib/prove-rules.js`) behind two runners: a static gate's `<gate>-selftest.js`
   plants a copy of its input tree (`lib/planted-src.js` `proveGate`, through the gate's `--src=` / `--tests-dir=` /
