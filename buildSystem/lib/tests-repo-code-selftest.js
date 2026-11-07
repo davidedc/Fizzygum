@@ -40,9 +40,20 @@ const MUST_NOT = ['harnessComment', 'metadataProse', 'headerTick', 'headerTock',
   'scriptBlockToo', 'scriptTrailing', 'afterDivision', 'tickComment', 'nodeModule', 'scratchProbe'];
 for (const w of MUST) t.check(seen.has(w), `tests-repo code names ${w}`);
 for (const w of MUST_NOT) t.check(!seen.has(w), `tests-repo code does not name ${w}`);
-// an unterminated template is still CoffeeScript text: its comment is cut, its code kept
-const open = macroCode('// lead\nvar c = `m = ->\n  # openComment\n  stillCode()\n').join('\n');
-const openOk = /stillCode/.test(open) && !/openComment/.test(open) && !/lead/.test(open);
-t.check(openOk, 'an unterminated macro template is read as CoffeeScript to the end');
+// JS that does not parse (an unterminated template) is REFUSED, naming why — never read by a guess
+let refusal = '';
+try { macroCode('// lead\nvar c = `m = ->\n  # openComment\n  stillCode()\n'); } catch (e) { refusal = e.message; }
+t.check(/^JS_MASK_UNPARSEABLE: .*Unterminated template/.test(refusal), `an unparseable macro file is refused, naming why (${refusal || 'no throw'})`);
+// a macro source is the COOKED text — what the page compiles — not the escapes as written: the file holds
+// `x = "a\\nb" # see \`it\``, the page compiles `x = "a\nb" # see `it``
+const cookFixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tests-repo-code-cook-'));
+fs.mkdirSync(path.join(cookFixture, 'tests', 'SystemTest_c'), { recursive: true });
+fs.writeFileSync(path.join(cookFixture, 'tests', 'SystemTest_c', 'SystemTest_c_automationCommands.js'),
+  'var c = { "mainMacroSource": `m = ->\n  x = "a\\\\nb" # see \\`it\\`\n` };\n');
+const cooked = macroSources(cookFixture);
+const cookedText = cooked.length === 1 ? cooked[0].sources[0].text : '';
+t.check(cookedText.includes('x = "a\\nb" # see `it`') && !cookedText.includes('\\`'),
+  `a macro source reads its escapes as the page does (${JSON.stringify(cookedText)})`);
+fs.rmSync(cookFixture, { recursive: true, force: true });
 
 t.done();

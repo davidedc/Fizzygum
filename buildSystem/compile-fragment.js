@@ -19,27 +19,15 @@
 // e.g.  printf 'add: (aWdgt, opts = {}) ->\n  super aWdgt, opts\n' \
 //         | node buildSystem/compile-fragment.js --stdin ViewportWdgt
 //
-// ⚠ The super rewrite below is TRANSCRIBED from Class.coffee's _equivalentforSuper, not shared
-// with it — this tool compiles ONE pasted fragment, while check-coffee-syntax.js drives whole
-// shipped sources through the real Class.coffee. If the meta-compiler's rewrite ever changes,
-// change it here too; Class.coffee is the source of truth.
+// The super rewrite is Class.coffee's OWN `_equivalentforSuper`, run through lib/meta-compiler.js — the same
+// meta-compiler check-coffee-syntax.js drives — so it cannot drift from what the browser does. The member it
+// rewrites for is the fragment's own key (`add: …` → `__super__.add`), `constructor` for a keyless fragment.
 
 const fs = require('fs');
 const path = require('path');
+const { loadMetaCompiler, rewriteSuper } = require('./lib/meta-compiler');
 const REPO = path.resolve(__dirname, '..');
-const COMPILER = path.join(REPO, 'auxiliary files', 'CoffeeScript', 'fizzygum-coffeescript-min.js');
-const mod = require(COMPILER);
-const CoffeeScript = (mod && mod.CoffeeScript) || mod;
-
-function rewriteSuper(src, className, fieldName = 'constructor') {
-  const superBase = className + '.__super__.' + fieldName;
-  let s = src;
-  s = s.replace(/super\(\)/g, superBase + '.call(this)');
-  s = s.replace(/super[ \t]*(#[^\n]*)?$/gm, (m, c) => superBase + '.apply(this, arguments)' + (c ? '  ' + c : ''));
-  s = s.replace(/super\(/g, superBase + '.call(this, ');
-  s = s.replace(/super /g, superBase + '.call this, ');
-  return s;
-}
+const { CoffeeScript, Class } = loadMetaCompiler({ srcDir: path.join(REPO, 'src') });
 
 // Pull the `constructor:` fragment out of a class file: from the `constructor:` line to the last
 // line indented deeper than it (the same shape Class.coffee's field splitter produces).
@@ -66,7 +54,8 @@ if (arg === '--stdin') {
   className = path.basename(arg, '.coffee');
   frag = extractConstructor(text);
 }
-const rewritten = rewriteSuper(frag, className);
+const memberName = (/^\s*@?([A-Za-z_$][\w$]*)\s*:/.exec(frag) || [])[1] || 'constructor';
+const rewritten = rewriteSuper(Class, className, memberName, frag);
 console.log('/* ---- fragment after the super rewrite ---- */');
 console.log(rewritten.split('\n').map(l => '// ' + l).join('\n'));
 console.log('/* ---- compiled ---- */');

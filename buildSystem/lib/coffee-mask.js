@@ -8,7 +8,7 @@
 //
 // Readers: census-public-private-calls.js (R4's src harvest; it re-exports maskLine for
 // census-hierarchy-duplication.js, which compares method bodies with their string literals intact),
-// check-dead-methods.js and census-call-arity.js (their src code), and lib/tests-repo-code.js (the tests
+// check-dead-methods.js (its src code), and lib/tests-repo-code.js (the tests
 // repo's CoffeeScript — the harness and each macro source — the same reading).
 //
 // Stated limits (shared by every reader): a `###` block comment's inner lines read as code, and a

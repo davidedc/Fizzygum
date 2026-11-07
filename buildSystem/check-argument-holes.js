@@ -1,89 +1,97 @@
 #!/usr/bin/env node
-// check-argument-holes.js — RATCHET on the hole test (R3 of
-// docs/architecture/constructor-and-parameter-conventions.md):
+// check-argument-holes.js — the HOLE TEST (R3 of docs/architecture/constructor-and-parameter-conventions.md), over
+// every call site in BOTH repos, as an exact zero:
 //
 //     if any call site must pass `undefined` to reach a later argument, the parameter list is wrong
 //
-// A hole is not a style blemish. It is PROOF that the skipped parameter is configuration rather
-// than identity, and that no single positional order can serve every caller — the remedy is a
-// trailing `opts = {}` (or, for a class exempt under §3, a reorder).
+// A hole is not a style blemish. It is PROOF that the skipped parameter is configuration rather than identity, and
+// that no single positional order serves every caller — the remedy is a trailing `opts = {}` (or, for a class exempt
+// under the doc's §3, a reorder), or, read as a diagnosis, a dead argument to delete.
 //
-// ⚠⚠ WHY THIS EXISTS ALONGSIDE THE `positional-hole` STINK. That stink matches two `undefined`s
-// ADJACENT ON ONE LINE. It is a fine instant alarm for the worst shape and it is HARD at 0 — but it
-// is blind to the two commonest holes: a SINGLE `undefined` (`holder.add w, undefined, spec`) and
-// one spread over a multi-line call. Reading its 0 as "the tree is clean" is exactly how the
-// conformance arc came to be archived as complete and re-opened the same day with ~50 holes
-// standing (docs/archive/constructor-parameter-conformance-plan.md §7c). This check is the honest
-// count, and it shares ONE parser with `census-call-arity.js` so the gate and the advisory view can
-// never disagree about what a hole is.
+// WHAT IT READS: lib/call-sites.js's table — every class fragment of Fizzygum/src and of the tests repo's harness as
+// the browser's meta-compiler splits and rewrites it (a `super` is an ordinary call there), every mixin and boot
+// file, every macro source as the page compiles it, the MacroToolkit heredocs, and the tests repo's scripts (acorn).
+// Real parsers: an implicit object is ONE argument, a nested paren-less call is one argument of the outer call, a
+// string's contents are never a call.
 //
-// SCOPE: `Fizzygum/src/**/*.coffee` only, for now (census.srcSources(), comments cut).
-//   - The sibling tests repo's CODE (the census reads it through lib/tests-repo-code.js, never its
-//     metadata prose) carries ~37 more sites, and the gate cannot judge them yet: most are `undefined`
-//     passed as a VALUE (`@assertValuesEqual "…", undefined, x`), which only the conventions doc's
-//     CALLERS TEST tells from a hole, and that is not mechanized; the real ones are the button
-//     family's (target, action, opts) head, which tests fill with `undefined` to reach `opts`.
-//     Extending the gate is BACKLOG (archive/tests-repo-readers-plan.md, Unit D). Sweep them with
-//     `census-call-arity.js --holes` by hand.
-//   - `.call`/`.apply`/`.bind` are excluded by the shared `isHole`: there `undefined` is a foreign
-//     API's THIS-arg, the ordinary idiom for "no receiver", not a skipped parameter.
+// THE CALLERS TEST, mechanized (lib/call-sites.js `callersTest`): a site with an `undefined` BEFORE a present argument
+// is a candidate; it is a HOLE iff another site of the same callee, of known arity, reaches LESS FAR (passes fewer
+// arguments, a trailing `undefined` counting as omitted) — that site is its WITNESS, printed beside it. Otherwise
+// every caller supplies the whole list and the `undefined` is the operand's VALUE (`_paintInLocalScope aContext,
+// clip, undefined, bodyFn` — all of its callers pass four). Owner rulings (docs/archive/argument-holes-both-repos-plan.md):
+// callees are grouped BY NAME whatever the receiver (more witnesses can only invent a hole, loudly — never hide one);
+// absence is `undefined` alone (`null` is a value by the house rule); no sanction marker — a value the test misjudges
+// is reshaped.
 //
-// RATCHET, the check-stinks idiom: FAIL when the count EXCEEDS the baseline (a regression), and
-// print a tighten-me note when it drops BELOW. Tighten the baseline in the SAME commit that drops
-// it. The target is 0.
+// STATED LIMITS — what it does not judge: a callee no code in either repo defines (`JSON.stringify`, DOM, Node) and a
+// `new` whose class no code defines or is computed (`new (classNamed name)`); the this-arg of `.call` / `.apply` /
+// `.bind` — so `fn.call undefined, a, undefined, b`, which forwards into `fn`, goes unread; code inside a string other
+// than the lifted heredocs (a spreadsheet formula, a `page.evaluate("…")` string); a site of unknown arity (a spread,
+// a forwarding bare `super`) is never a witness; a positional argument handed to an `(opts = {})` head (no
+// `undefined` appears). A bare call of a PARAMETER or of a function nested in another is its own callee; a top-level
+// function's calls group by name, from every file.
 //
-// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-argument-holes.js [--src=DIR]
-// — the rail checks another src tree (a planted one). That the ratchet BITES is proven on every build by
-// check-argument-holes-selftest.js.
+// Exit 0 = zero holes; 1 = holes (rule HOLE); 2 = INVALID, never a pass: a source it cannot parse (an interpolated
+// heredoc included), a super it cannot place on a class chain, or a half that read nothing while its input is there
+// (no class fragment in src; no harness file, no macro source or no script in a tests repo that exists).
+//
+// Run from Fizzygum/ (build_it_please.sh does): node ./buildSystem/check-argument-holes.js [--src=DIR]
+// [--tests-repo=DIR] [--values]. The rails check another tree (a planted one); a tests repo that is absent is skipped
+// and the pass line says so. --values lists the absences judged values, each with its callee's site count. That every
+// rule BITES — the value/hole distinction as a minimal pair, a hole in each repo, and both INVALIDs — is proven on
+// every build by check-argument-holes-selftest.js.
 
+const fs = require('fs');
 const path = require('path');
-const census = require('./census-call-arity.js');
+const { callSites, callersTest, describeCallee } = require('./lib/call-sites');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'argument-holes');
-rejectPositionalArgs(ARGV, 'argument-holes', 'a src tree is named with --src=DIR');
+rejectUnknownArgs(ARGV, ['--src=', '--tests-repo=', '--values'], 'argument-holes');
+rejectPositionalArgs(ARGV, 'argument-holes', 'trees are named with --src=DIR and --tests-repo=DIR');
 const SRC_DIR = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'argument-holes');
+const TESTS_ARG = ARGV.find((a) => a.startsWith('--tests-repo='));
+const TESTS_DIR = TESTS_ARG ? path.resolve(TESTS_ARG.slice('--tests-repo='.length)) : path.resolve(__dirname, '../../Fizzygum-tests');
+const SHOW_VALUES = ARGV.includes('--values');
+const ROOT = path.resolve(__dirname, '..', '..');
+const rel = (f) => path.relative(ROOT, f);
 
-// 2 is this check's FLOOR, not a way-point (the conformance arc took it from 20 to 9 at P8 and to 2 at P9).
-//
-// ⚠⚠ THE REMAINING 2 ARE NOT HOLES, AND NO FUTURE SWEEP SHOULD "FIX" THEM. They are `undefined`
-// used as a VALUE, which this regex cannot distinguish from a skipped parameter:
-//   - Appearance._paintInLocalScope aContext, clip, undefined, bodyFn
-//                                           an absent appliedShadow MEANS "no shadow"
-//   - Widget._applyTransformSugarNoSettle undefined, s
-//                                           a symmetric two-slot partial update: an absent rotation
-//                                           MEANS "leave it unchanged"
-// They are the two worked "value" cases of constructor-and-parameter-conventions.md's callers test. The test that separates the two cases, worked out by reading
-// all nine of P8's survivors: a `undefined` is a HOLE when some OTHER caller of the same method
-// OMITS that trailing tail — i.e. the parameter list gives this caller no shorter way to reach a
-// later argument. When EVERY caller passes every argument (typically because the last one is a
-// required block, as with _paintInLocalScope's bodyFn) or when no reordering can help (a symmetric
-// two-slot partial-update record), the `undefined` is an operand with an absent value and the list
-// is right. So: a rise here is a regression; reaching 0 is not a goal.
-const BASELINE = 2;
+function invalid(msg) { console.error(`[argument-holes] INVALID — ${msg}`); process.exit(2); }
 
-const SRC = census.srcSources(SRC_DIR);
-
-const holes = census.collectHoles(SRC);
-
-for (const r of holes) {
-  console.log(`  ${r.file}:${r.line}  ${r.callee}  [ ${r.args.join(' | ')} ]`);
+if (TESTS_ARG && !fs.existsSync(TESTS_DIR)) invalid(`--tests-repo names no directory: ${TESTS_DIR}`);
+const { sites, unreadable, counts } = callSites({ srcDir: SRC_DIR, testsRepoDir: TESTS_DIR });
+if (unreadable.length) {
+  for (const u of unreadable) console.error(`  ${rel(u.file)}${u.line ? ':' + u.line : ''}  ${u.message}`);
+  invalid(`${unreadable.length} source(s) it cannot read — a call there is unjudged, so the count above would be a guess`);
+}
+if (counts.fragments === 0) invalid(`it read no class fragment in ${SRC_DIR}`);
+const testsPresent = fs.existsSync(path.join(TESTS_DIR, 'tests'));
+if (testsPresent && !counts.testsRepo) invalid(`${TESTS_DIR} has tests/ but no Automator-and-test-harness-src/ — not a tests repo it can read`);
+if (counts.testsRepo && (counts.harness === 0 || counts.macro === 0 || counts.script === 0)) {
+  invalid(`it read ${counts.harness} harness file(s), ${counts.macro} macro source(s) and ${counts.script} script(s) in ${TESTS_DIR}`);
 }
 
-const n = holes.length;
-if (n > BASELINE) {
-  console.error(rules.fired('OVER_BASELINE', `\n[argument-holes] FAIL — ${n} site(s), baseline ${BASELINE}.`));
-  console.error('A call punching `undefined` through to reach a later argument means the parameter');
-  console.error('list is wrong (R3). Give the callee a trailing `opts = {}` and name the option, or');
-  console.error('— for a class exempt under §3 of the convention doc — reorder so the commonly-passed');
-  console.error('operand comes first. Law: docs/architecture/constructor-and-parameter-conventions.md');
+const verdict = callersTest(sites);
+const args = (s) => '[ ' + s.args.map((a) => a.text).join(' | ') + ' ]';
+
+for (const { site, witness } of verdict.holes) {
+  console.error(rules.fired('HOLE', `  ${rel(site.file)}:${site.line}  ${describeCallee(site)}  ${args(site)}  — HOLE: ${rel(witness.file)}:${witness.line} passes ${witness.reach}`));
+}
+if (SHOW_VALUES) for (const { site, sites: n } of verdict.values) console.log(`  value  ${rel(site.file)}:${site.line}  ${describeCallee(site)}  ${args(site)}  — every one of its ${n} site(s) fills the list`);
+
+const by = (w) => sites.filter((s) => s.where === w).length;
+const unknown = sites.filter((s) => !s.knownArity).length;
+const over = `${sites.length} calls (src ${by('src')}, harness ${by('harness')}, macros ${by('macro') + by('heredoc')}, scripts ${by('script')})`
+  + (counts.testsRepo ? '' : ` — the tests repo at ${TESTS_DIR} is absent, so only src is judged`);
+const n = verdict.holes.length;
+if (n > 0) {
+  console.error(`\n[argument-holes] FAIL — ${n} hole(s) over ${over}.`);
+  console.error('Each `undefined` above fills a slot only to reach a later argument: its witness passes fewer. The list is');
+  console.error('wrong (R3) — move the operands every caller does not supply into a trailing `opts = {}`, reorder a class');
+  console.error('exempt under §3, or, if the argument it reaches is dead, delete it. Law:');
+  console.error('docs/architecture/constructor-and-parameter-conventions.md');
   process.exit(1);
 }
-if (n < BASELINE) {
-  console.log(`\n[argument-holes] ${n} site(s) (baseline ${BASELINE}) -- UNDER`);
-  console.log(`NOTE: tighten the baseline to ${n} in buildSystem/check-argument-holes.js, in THIS commit.`);
-} else {
-  console.log(`\n[argument-holes] OK — ${n} site(s) (baseline ${BASELINE}).`);
-}
+console.log(`[argument-holes] OK — 0 holes over ${over}; ${verdict.values.length} absence(s) judged values (--values lists them); `
+  + `${verdict.foreign.length} in calls of foreign APIs and ${verdict.excluded.length} this-args not judged; ${unknown} site(s) of unknown arity never witness.`);

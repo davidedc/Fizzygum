@@ -589,6 +589,13 @@ Archived docs are immutable history — the current-state truth lives in
   - ⭐⭐ a census keyed on the FIRST edge to a file let a launched script escape — any launch edge makes a program; and the widened reading's one false launch was answered by the class (self-tests are proofs), not by an exemption.
   - ⭐ the masks the proofs exposed were real: a short shard read `[ok]`, an unfinished run-sequence exited 0, 32 serialization names held to nothing, console errors passed five rigs, a census report cut by `process.exit`, a space-separated `--prelude FILE` silently dropped.
   - ⭐ a pool starts longest-first or its longest file sets the tier (193.8 s → 153.1 s idle on the same 22 files).
+- **`argument-holes-both-repos-plan.md`** — COMPLETE (2026-11-07; the tests-repo-readers arc's ruling D5 as its own arc; owner rulings D1 the browser's own CoffeeScript + vendored acorn, D2 callees by NAME, D3 absence = `undefined` and witnesses by EFFECTIVE arity, D4 no sanction marker, D5 the `positional-hole` stink retired, D6 the video-player heads converted too; js-mask's hand lexer removed for acorn because it is build-time only). `check-argument-holes.js` judges every call site of both repos — 50,837 — at an exact zero through ONE reader (`buildSystem/lib/call-sites.js`), and the button family takes one options object.
+  - Rule (`constructor-and-parameter-conventions.md` R3, §5): an `undefined` before a present argument is a HOLE iff another call of the callee reaches less far — printed as its WITNESS; the census queries the same table.
+  - ⭐⭐ the minified 2.0.3 AST spells an argument-less `new X` as an Op node, not a Call — 873 sites, caught only by cross-checking every call against CoffeeScript 2.7's `ast: true`; those arity-0 sites are exactly the witnesses.
+  - ⭐⭐ a witness counted as WRITTEN kept a doc example a value — bending the mechanism to the doc; by R3's own disjoint-tails rule that record was options, so the case law changed instead.
+  - ⭐⭐ the review found the reader HIDING witnesses: a top-level function's calls split between a file-local key and a name key (67 names). A name is local only where nothing outside its unit can reach it; grouping wider can only invent a hole, never hide one.
+  - ⭐ the parser's residue was mostly DEAD arguments — an option FrameWdgt never reads, five `setValue` extras — read as a diagnosis, not reshaped.
+  - ⭐ a lib's own self-test caught a gap the real tree's verdicts never exercised (an indented macro helper read as foreign); fixture cases per reading are not ceremony.
 
 ## Build & toolchain
 

@@ -152,7 +152,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
 | hand-lists | `buildSystem/check-hand-lists.js` | ~:446 | a STRING-LIST literal naming classes or members (at least two items, and at least half of them, are class or member names) is a DECLARATION (`@serializationTransients`, `requiredParts`, `optionalParts`) or carries `# hand-list-sanctioned: <what fails>` naming a guard that RUNS — a gate/rig file the build, a discovered self-test or an `fg` presuite/gauntlet leg launches (`lib/what-runs.js`), a `SystemTest_<name>`, or a failure token a running file emits, resolved mechanically — or it counts as UNSANCTIONED. Multi-line by design (the lists that rot are one name per line). Scans src + buildSystem and, when present, the tests repo's scripts + harness (that half SKIPS without it). ⚠ Blind to object tables, regex alternations, `switch` arms, push sequences and runtime-built names (§5). Modes: `--census` (every list, classified, each guard as runs / never runs), `--files` (plants: every unsanctioned list fails), `--fg=<path>` (read another fg, or none); its self-test is `check-hand-lists-selftest.js` | inline per-repo `BASELINE_FIZZYGUM` / `BASELINE_TESTS` of unsanctioned lists (the stinks idiom); a sanction naming no guard, one whose every guard never runs (`SANCTION_GUARD_NEVER_RUNS`), an empty one and a stale one (sanctioning no name list) fail outright; without the umbrella's `fg` a guard that may run only in a leg is a NOTE |
 | **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:467** | the INVERSE of dead-method: a CALL `[@.]name(` in src, the harness or a test's macro source that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it (a macro's own definitions resolve only its own calls) | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API, BARE (`push`) by default and KEYED by receiver (`Math.round`) for a name Fizzygum also defines that only a platform global sends — the form held to the sends (`BUILTINS_NOT_KEYED`, `BUILTINS_KEYED_NOTHING_TO_UNMASK`, `BUILTINS_KEYED_OFF_PLATFORM`, a stated `PLATFORM_GLOBALS`) — and an entry excusing nothing fails (`STALE_ALLOWLIST_ENTRY`) in either |
 | stinks | `buildSystem/check-stinks.js` | ~:465 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
-| argument-holes | `buildSystem/check-argument-holes.js` | ~:486 | calls punching a bare `undefined` through to a later argument (R3) — the decisive **hole test** of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md). Shares `census-call-arity.js`'s parser, so gate and census cannot disagree. `src/` only, for now: the tests repo's CODE (read through `lib/tests-repo-code.js`, never its prose) carries sites the gate cannot judge yet — mostly `undefined` passed as a VALUE, which only the conventions doc's callers test tells from a hole — plus the button family's `(target, action, opts)` head (BACKLOG, `../archive/tests-repo-readers-plan.md` Unit D) | inline `BASELINE = 2`, its FLOOR: the two `undefined`-as-a-value sites, `_paintInLocalScope …, undefined, bodyFn` and `_applyTransformSugarNoSettle undefined, s`. ⚠ It is a REGRESSION alarm, not an inventory — the honest tree-wide count is `census-call-arity.js --holes` (§3c) |
+| argument-holes | `buildSystem/check-argument-holes.js` | ~:526 | a call punching a bare `undefined` through to a later argument (R3) — the decisive **hole test** of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md), over EVERY call site of BOTH repos (src, the harness, every macro source, the `MacroToolkit` heredocs, the tests repo's scripts), read by real parsers (`lib/call-sites.js`: the browser's own meta-compiler and CoffeeScript 2.0.3, acorn for JS — an implicit object is ONE argument, a string is never a call), with the doc's CALLERS TEST mechanized: an `undefined` before a present argument is a HOLE iff another call of the same callee reaches less far, and that WITNESS is printed beside it; otherwise a VALUE (`--values` lists them). One rule, `HOLE`; INVALID (exit 2) for a source it cannot read, a super it cannot place, or a half that read nothing. `census-call-arity.js` queries the same table (§3c) | none — an exact zero: no baseline and no sanction marker (a value the test misjudges is reshaped). Its stated limits — foreign callees, a dynamic `new`, this-args, code in strings other than the heredocs, unknown-arity calls, a positional argument handed to an `(opts)` head — are in its header and the conventions doc's §5 |
 | **menu-actions** | **`buildSystem/check-menu-actions.js`** | **~:509** | **menu-item wiring. A menu action is dispatched through ButtonWdgt's fixed four-slot convention (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), which the call site never names. HARD (sound): a function literal in the action slot (`@target[@action]` coerces it to a string key, so the click throws); a string literal where `opts` goes; and — RULE 1b — a `@`-targeted string action that RESOLVES nowhere. RATCHET at 0: an UNREAD parameter on a menu-dispatched verb must be NAMED as unread (`ignored`/`unused`) — padding a signature to reach the slot you want puts widgets into parameters whose names promise otherwise, and forces every other caller to punch `undefined` through.** ⚠ TWO blind spots, both structural: it cannot see whether a parameter that IS read is read as the right THING; and it cannot see a parameter that is MISSING — a verb needing a subject it never declares reads as clean, because there is nothing unread to flag. (A THIRD is covered by RULE 1b: an action naming a method NOTHING defines. The general case stays unresolvable — the receiver of `addMenuItem "…", someExpression, "verb"` is a runtime value — but `@` names its receiver structurally, so the rule resolves the string against the union of `chainOf(X)` over every X whose chain contains the enclosing class, which is exactly the set `@` could be an instance of, plus the methods a `*TestSupport` class installs onto a core class. That union is what makes it SOUND: `Widget` wires `"setTargetAndActionWithOnesPickedFromMenu"`, which lives in `ControllerMixin`. 136 rows covered; the dead `"pin"` row of 2018 is the shape it catches. The runtime twin still owns the rest: non-`@` targets, and the dispatch itself.) Those blind spots are the class of bug only a rig that CLICKS the item can catch, which is why `fg menusweep` exists beside it — it resolves every row's action against its target BEFORE the liveness skip (so a row sitting behind a destructive one in the same walk is resolution-checked even where it is never dispatched) and carries a `MenuWdgt` and a `PromptWdgt` root, the two classes whose own context menu no other root stands in. It is also where a row's `opensSubmenu` flag (the drawn chevron) meets the act: each dispatched row must open a menu exactly when it is flagged (`SUBMENU_FLAG_MISMATCH`, allowlist `CONDITIONAL_OPENERS`), because no text scan can tell what an action opens — and where its LABEL meets the act too: "…" ends it exactly when the act asks for more from you (`ELLIPSIS_MISMATCH`, allowlist `ELLIPSIS_EXCEPTIONS`; ASCII "..." fails on its own, `ASCII_ELLIPSIS`), and every row seen is in sentence case (`SENTENCE_CASE`, allowlist `SENTENCE_CASE_EXCEPTIONS`). ⓘ RULE 1 has TWO DOORS: besides `addMenuItem`/`prependMenuItem`, `prompt`/`textPrompt` take a `callback` that the prompt's OK delivers to (`PromptWdgt.deliverValue`: `@target[@callback].call @target, value`) — the same proof applies, and those callbacks count as menu-dispatched verbs for the RULE 3 ratchet too. ⚠ A prompt's BUTTONS themselves (`PromptWdgt._addButtonsInto`: `close`, `deliverValue`; the save-shortcut prompt's `destroy`, `close`, `createReferenceAndCloseFromMenu`) are `new SimpleButtonWdgt target, "action"` constructions, which this gate does not read; `fg menusweep` covers the OK at runtime (it presses every prompt's `okButton` and fails on a prompt with none, `PROMPT_OK_MISSING`, or a run under its prompt floor, `PROMPT_OK_CHECK_VACUOUS`), and Close / Cancel / Don't save dispatch the parameterless `Widget.close` / `Widget.destroy`, which only the suite presses | rules 1–2 are HARD; the unread-parameter rule is the inline `RULE3_BASELINE = 0` ratchet |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:527 | a method owning a `_<name>NoSettle` twin — public `<name>` or private `_<name>` — is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
 | trailing-whitespace | `buildSystem/check-trailing-whitespace.js` | ~:546 | no trailing whitespace on a line that has CONTENT (`/\S[ \t]+$/`) — a trailing space after a bare `super` once silently dropped forwarded args | — (whitespace-only lines are deliberately NOT flagged: invisible, harmless, and in the hundreds) |
@@ -274,9 +274,11 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   indent the shared grouping locks (`mixinMemberIndent`, §6b: 4 or 6 spaces) — a data member's key as well as a
   method's, since a sanctioned literal can sit in a field; an entry matches
   only at its exact count, and fails the build otherwise, so it is a declaration that cannot rot into a hiding place).
-  **Current stinks — thirteen: seven seeded 2026-07-15**, **three comment-hygiene
-  ratchets added at the 2026-07-17 comments cleanup**, `comment-past-receipt` (2026-08-09), `positional-hole`
-  (2026-08-15) and `raw-chrome-color` (2026-10-17). (`helper-compiling-operator`, the line ban on `%%`, is subsumed by
+  **Current stinks: seven seeded 2026-07-15**, **three comment-hygiene
+  ratchets added at the 2026-07-17 comments cleanup**, `comment-past-receipt` (2026-08-09) and `raw-chrome-color`
+  (2026-10-17). (There is no `positional-hole` stink: the argument-holes gate in §3 judges every call in both repos by
+  the callers test, and a line regex for two adjacent `undefined`s was a second, disagreeing definition of a hole —
+  it fired on a trailing pair and on an array literal, and saw no single-`undefined` or multi-line hole.) (`helper-compiling-operator`, the line ban on `%%`, is subsumed by
   the syntax gate's lost-helper check, which reads every helper from the compiler's own output.) One of the original
   seven, `undefined-literal`, has since been REPLACED rather than removed — see `nil-literal` below. Every baseline was MEASURED by the engine on its seeding day and
   every stink spot-checked against its real hits; they are ratchets recording that day's count, not verdicts — driving
@@ -291,7 +293,6 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   | `timer` | 4 | `setTimeout`/`setInterval` diverge at dpr2 under parallel load (bug-class B); the cycle/step machinery is the sanctioned clock |
   | `math-random` | 5 | breaks byte-exact screenshot determinism in render/layout/input code |
   | `instanceof-type-test` | 75 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`) |
-  | `positional-hole` | **0 (HARD)** | a call punching `undefined` through to reach a later argument PROVES the skipped parameter is configuration rather than identity — the decisive **hole test** (R3) of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md). Driven 51 → 0 family by family by [`../archive/constructor-parameter-conformance-plan.md`](../archive/constructor-parameter-conformance-plan.md). ⚠ A PASS is a FLOOR, not an inventory: the regex needs two `undefined`s adjacent on ONE line, so it is blind to a single-`undefined` hole and to one spread over a multi-line call — sweep a converted family by METHOD NAME across both repos instead. ⚠⚠ It also walks `Fizzygum/src/**/*.coffee` ONLY. So does `check-argument-holes.js`, deliberately (see its header) — which means **NO automatic check sees a hole in the sibling tests repo**, and the manual `census-call-arity.js --holes` that does see them is noisy enough there (test METADATA is prose in string literals, which the identifier sweep over-matches) that it is not run routinely. Measured 2026-08-17 (connector §P4): `PaletteWdgt`'s leading `target` parameter had ELEVEN live `new ColorPaletteWdgt undefined, …` holes in macro sources; both gates read clean, and the census would have listed all eleven had anyone run it. ⇒ after changing a constructor, run the census by hand — the gates cover `src/` only |
   | `raw-chrome-color` | 0 | a colour literal (`Color.create`, `new Color`, `Color.<CONSTANT>`, a CSS `'#hex'` / `'rgb(…)'` / `'rgba(…)'` string) in a CHROME file is a look decided outside `src/Theme.coffee` ([`visual-design-system.md`](visual-design-system.md)), so a restyle cannot reach it — read the surface's `WorldWdgt.theme` role (add one when the surface has none). Uses `exclude` (Theme, the Color class and value plumbing, CONTENT directories, ICON art — a NEW file is counted by default), `stringAware`, and `sanctioned`: the literals inside counted files that are DATA, not a look decision (wallpaper patterns, palette data, the paint tools' source strings, a new shape's content default, the debug overlay, DOM input styling, a pixel read), each declared by file and enclosing member with its count and reason — an entry whose member holds a different number of hits fails the build (`SANCTION COUNT`, or `STALE SANCTION` at 0), so the list can neither outlive nor widen what it names. At 0 it is a HARD rule: a chrome colour is a `Theme` role, read where it is used (a class-level state colour is derived at each state change, since a class-level declaration may not reference another class); `fg stinks --list raw-chrome-color` lists the sanctioned sites with their reasons |
   | `comment-meta-edit` | 0 | HARD: a comment arguing with itself ("the below is actually correct", "to be clear,") is process residue — state the surviving constraint once |
   | `comment-narration` | 88 | history narration in comments ("used to", "previously", "no longer", "in the old model") — history's home is `docs/archive/` + a pointer; a comment states what IS | <!-- narration-ok: this row DEFINES the narration rule, so it must quote its own trigger words -->
@@ -518,7 +519,7 @@ cannot trip it. Not on the build — docs prose should not block a build — so 
 **§3 is everything that can fail your build; this section is everything that cannot** — the split that §3b's severity
 policy prescribes. Five read-only censuses, all exit 0 (2 on operational error), all ≲1 s. Four are `--json`-capable and print
 SUMMARY COUNTS by default, with `--full` for the lists; `census-call-arity.js` is the exception — it is query-shaped
-(`--holes` / `--call=` / `--super=` / bare `new <Class>` names) and prints only what you asked for. One of them,
+(`--call=` / `--super=` / bare `new <Class>` names) and prints only what you asked for. One of them,
 `census-widget-conformance.js`, ALSO has a `--gate` mode that the build runs — that half is a gate and lives in §3's
 table. Run them from `Fizzygum/`
 — or all at once, with every ratchet's "tighten me" note, via **`fg critique`** (~5 s, read-only). It deliberately
@@ -529,9 +530,9 @@ excludes jscpd/jsinspect (minutes-slow — those stay on-demand behind `./find_d
 `fg critique` does not exist in a fresh checkout — only the `node ./buildSystem/census-*.js` commands below do. That is
 by design, but it means this doc, not `fg`, is the durable description. `fg critique` runs, in order: `check-stinks`,
 `check-dead-methods`, `check-unresolved-sends`, `check-call-separation` (reprinting only each one's `UNDER` / stale-entry
-NOTE), then the FIVE censuses' summary counts — `census-public-private-calls`, `census-hierarchy-duplication`,
-`census-property-placement`, `census-widget-conformance` (its advisory view), and `census-call-arity --holes`, the honest
-hole count the `positional-hole` stink cannot see — then an advisory-only footer.
+NOTE), then four censuses' summary counts — `census-public-private-calls`, `census-hierarchy-duplication`,
+`census-property-placement`, `census-widget-conformance` (its advisory view) — and the argument-holes gate's own verdict
+line (it also runs on every build), then an advisory-only footer.
 
 **When do these run?** The GATES run automatically on every build (any `build_it_please.sh`, `fg build/presuite/gauntlet`,
 `build_and_test.sh`, the save-watcher) — there is no CI here, so "automatic" means the build on your machine, and
@@ -544,7 +545,7 @@ human asks (`fg critique`, or directly). The clone scanners are on-demand only (
 | `census-hierarchy-duplication.js` | overrides that add nothing: `IDENTICAL-TO-INHERITED`, `SHADOWS-MIXIN`, `JUST-SENDS-SUPER` | Pharo `ReEquivalentSuperclassMethods`/`ReJustSendsSuper`/`ReLocalMethodsSameThanTrait`. The hierarchy-aware complement to jscpd/jsinspect, which know nothing of inheritance and so can never say "REMOVABLE". |
 | `census-property-placement.js` | properties at the wrong level (`PULL-UP`) or wrong scope (`DEMOTE`) | Pharo `ReInstVarInSubclasses`/`ReVariableReferencedOnce`. |
 | `census-widget-conformance.js` | the mechanical facets of `measurements/widget-practices-survey-2026-08-14.md`, so that survey is re-runnable rather than a one-off | Its ADVISORY run (exit 0, `--json`) prints six facets; the two OBJECTIVE ones are what `--gate` ratchets on the build (§3). Facet 5 (the pin setters) reads methods through the shared grouping (§6b), so a mixin's setter counts under the mixin's own name, and only a setter that takes a value counts. ⚠ Facets 3–6 are heuristics with real exceptions and must NEVER gate — and facet 3 in particular is **not a gap count**: since the widget arc's W7 made `colloquialName` DERIVE from the class name, a class declaring none still answers a true name, so the number says how much of the tree the derivation carries, not how much work is left. On the gated pair: green means "nothing got worse"; only a baseline of 0 also means "nothing is left" |
-| `census-call-arity.js` | call sites + top-level argument arity; `--holes` lists calls punching a bare `undefined` through to a later argument (R3) | ⚠⚠ **The real hole count — `positional-hole` sees only the two-adjacent-`undefined` subset and reads 0 while 50 stand.** Paren/quote-aware, joins continuation lines, scans BOTH repos' CODE (src through `lib/coffee-mask.js`, the tests repo through `lib/tests-repo-code.js` — never a test's metadata prose, its reference records or the manifests). `--call=<method>` / `--super=<class>` / `new <Class>` modes; excludes `.call`/`.apply`/`.bind`, where `undefined` is a foreign API's *this*-arg. |
+| `census-call-arity.js` | call sites with their REAL argument count: `new <Class>` names, `--super=<classes>` (the supers IN those classes), `--call=<methods>`, `--min=N` | The work-list tool for converting a family. It reads the argument-holes gate's own table (`lib/call-sites.js` — real parsers, both repos), so an implicit object is one argument and a string's contents are never a call, and the two cannot disagree about what a call is; the VERDICT on an `undefined` is the gate's (§3; `--values` there lists the values), never this tool's. A forwarding bare `super` shows `?`: its arity is its caller's. |
 
 **Why the hierarchy-duplication and property-placement censuses can never be promoted to gates** — the reasons are
 specific, not ceremonial:
@@ -641,7 +642,7 @@ A BARE WORD reaches nothing — a local (`for toggle in …`), a parameter, an o
 does a comment or prose. So a sentence in a test's `intent`, a `#` note in a macro, a debug-log label
 (`"addCommandsSeparations 1: "`) or a local named like a method keeps nothing alive. The code is read through two
 masks: src through `lib/coffee-mask.js`; the sibling tests repo through `lib/tests-repo-code.js`, which reads the
-harness, each macro command file (its JS LEXED by `lib/js-mask.js`, its CoffeeScript template literals through
+harness, each macro command file (its JS PARSED by `lib/js-mask.js`, on acorn, its CoffeeScript template literals through
 coffee-mask) and `scripts/**/*.js` (whose `page.evaluate` bodies call core methods as directly as a macro does), and
 never the metadata prose, the reference-image records or the generated manifests. Clauses 3 and 4 are DERIVED from the
 dispatch site, so the connector lane and the formula helpers need no allowlist entry: a new `FormulaHelpers` static is
@@ -661,9 +662,9 @@ Every limit errs toward ALIVE, so it can only HIDE a dead method or a privatizat
 Still BLIND, as any name scan is: a name assembled with `+`, and a computed access on an arbitrary object
 (`@target[action]`) — those are each gate's allowlist. A few mask misreadings can CUT code instead, which would invent
 a finding and fail the build loudly with its site in view: coffee-mask's `#` inside a regex literal, a "…" string
-spanning lines, a quote nested in `#{…}`; js-mask's regex literal right after a value token (`if (x) /re/`), read as a
-division, which opens a block comment if it holds `/*`. Compared against the CoffeeScript lexer, js-tokens and acorn
-over the whole tests repo (2026-11-06): none cuts a word of code. ⇒ **both gates are sound in the direction they
+spanning lines, a quote nested in `#{…}`. (The JS side PARSES — `lib/js-mask.js` on acorn — so it misreads nothing,
+and refuses a file that does not parse.) Compared against the CoffeeScript lexer over the whole tests repo
+(2026-11-06): none cuts a word of code. ⇒ **both gates are sound in the direction they
 claim** (what they flag really is unreached) **and incomplete in the other**; do not read a green run as "no dead
 methods".
 ⚠ The authoring corollary, for code you write: **never write a method's own exact name as a whole string inside its
@@ -678,7 +679,8 @@ establish it.
 
 ⚠ **The other gates that read the tests repo read it for other questions, each measured
 (`../archive/tests-repo-readers-plan.md` §2).**
-- `census-call-arity` reads call SHAPES from the reader's code.
+- `check-argument-holes` and `census-call-arity` read every CALL — through `lib/call-sites.js`, real parsers over the
+  harness's class fragments, each macro source as the page compiles it, the heredocs and the scripts.
 - `check-unresolved-sends` reads the harness as definitions and calls, and each macro's CoffeeScript sources as calls.
 - `check-hand-lists` and `check-layering` rule [D] read comments ON PURPOSE: their sanction markers live there.
 - `check-relayout-repaints` is a tombstone scan, which must see a retired name even in a comment.
@@ -729,7 +731,7 @@ whose body calls `@_settleLayoutsAfter` (`SETTLE_CALL` anchors on that exact nam
 ## 5. The in-code markers + the two ratchet idioms
 
 **Markers — "the justification lives AT the method, no central allowlist."** Each exempts a single method/line via a
-comment carrying a reason. All fifteen, in one place:
+comment carrying a reason. All of them, in one place:
 
 | Marker | Gate / rule | Exempts |
 |---|---|---|
@@ -1029,9 +1031,15 @@ you need text with strings intact, re-read the source and cut comments with `mas
 every *shipped source* through the real `Class.coffee`; `compile-fragment.js` compiles ONE pasted
 fragment the same fragmented way, for the question "what does this signature/call actually become".
 Use it before converting a parameter list — especially to confirm a trailing `key: value` lands as a
-SEPARATE final argument. ⚠ `coffee -bcp <wholefile>` is NOT a substitute: it applies ES-class
-semantics (parameters bound after `super`, bare `super` illegal as a statement) that this tree's
-emit does not have, and false-fails on most files.
+SEPARATE final argument. Its `super` rewrite is `Class.coffee`'s own, run through `lib/meta-compiler.js`
+(the shim the syntax gate uses), so it cannot drift from the browser's. ⚠⚠ Two spellings compile
+WITHOUT error and mis-bind: a `super` alone on its line with keys indented below it (the rewrite
+reads a bare `super` and forwards `arguments`, then CALLS the result with the object), and keys on
+the head line ending in a comma with more keys indented below (`new X target: t, action: a,` /
+`  face: f` — TWO object arguments, the second dropped by an `(opts)` head). Write `super(` … `)`,
+or `new X` with every key in one indented block. ⚠ `coffee -bcp <wholefile>` is NOT a substitute:
+it applies ES-class semantics (parameters bound after `super`, bare `super` illegal as a
+statement) that this tree's emit does not have, and false-fails on most files.
 
 **Self-test a rule (a lint that can't fail is worthless).** Plant a known violation in a throwaway source file, confirm
 the build/gate **aborts loudly** with the right message, confirm the marker exempts it, then **delete the fixture**:
@@ -1086,7 +1094,13 @@ source to satisfy a new rule.
 - `buildSystem/census-hierarchy-duplication.js` — `bodyTextOf` / `signatureOf` / `signatureHasEffect`.
 - `buildSystem/census-property-placement.js` — `STRING_WORDS` / `MEMBER_FILES` + `readAsMemberElsewhere` (the three
   exclusions); `lineOwnerOf` (the `@classlevel` attribution).
-- `buildSystem/check-coffee-syntax.js` — loads `src/meta/Class.coffee`/`Mixin.coffee` to compile fragmented.
+- `buildSystem/check-coffee-syntax.js` — loads `src/meta/Class.coffee`/`Mixin.coffee` through
+  `buildSystem/lib/meta-compiler.js` (`loadMetaCompiler` / `bundledCoffeeScript` / `rewriteSuper`, shared with
+  `lib/call-sites.js` and `compile-fragment.js`) to compile fragmented.
+- `buildSystem/check-argument-holes.js` — `callersTest` over `buildSystem/lib/call-sites.js`'s `callSites` (`csCallsOf`:
+  the three 2.0.3 call shapes; the identity pass; `lib/call-sites-selftest.js` holds one case per reading);
+  `census-call-arity.js` reads the same table. JS is parsed with `vendor/acorn/acorn.js` (pinned, README beside it),
+  which `lib/js-mask.js` (`maskJs`) uses too.
 - `Fizzygum-tests/scripts/check-tests-syntax.js`, `Fizzygum-tests/scripts/check-refs.js`,
   `Fizzygum-tests/scripts/check-visualisations.js`,
   `Fizzygum-tests/scripts/check-macro-source-discipline.js` — the last one's rule is a pure function

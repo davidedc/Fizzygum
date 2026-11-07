@@ -11,14 +11,27 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
+### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
+- [ ] **A positional argument handed to an `(opts = {})` head has no static check.** No `undefined` appears, so the
+      hole gate cannot see it, and the argument is silently taken AS the options object — the trap of every
+      conversion to options (Unit A held it with a temporary runtime tripwire). The call-sites table could carry a
+      second rule: a call passing MORE arguments than its callee declares, where the callee resolves to one
+      definition — which would also have caught the five dead `setValue(n, undefined, undefined)` arguments.
+- [ ] **Two readers of a test's macro sources.** `lib/tests-repo-code.js` `macroSources` (the COOKED text the page
+      compiles, by line — the call-sites lib, check-unresolved-sends) and the tests repo's
+      `check-macro-source-discipline.js` `macroSourcesOf` (the RAW text by character offset, which aim-census maps
+      back into the file). One reader would carry both the cooked text and a raw-offset map.
+- [ ] **`Class._equivalentforSuper` rewrites `super ` inside a string literal or a comment too** (a text
+      substitution): a member holding `"see super docs"` compiles a different string. Measured: only
+      `Class.coffee`'s own debug string matches, and Class.coffee is bootstrapped whole, never through the rewrite.
+
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes
       on purpose, filed with what it misses:
   - [ ] `check-invalidation-receivers` cuts a line at a `#` inside a string, so a cross-object invalidation after
         such a string on the same line goes unseen.
-  - [ ] `check-argument-holes` reads string contents as code (`@say "use undefined, then 1"` counts as a hole),
-        a reading it shares with the census parser; the code-only call parser of the tests-repo-readers D5 item
-        (`archive/tests-repo-readers-plan.md`, below) would serve both.
+  - [x] `check-argument-holes` reads string contents as code — CLOSED by `archive/argument-holes-both-repos-plan.md`:
+        a real parser reads the calls, and a string's contents are never one (moved to its ledger).
   - [ ] `check-raw-pointer-reads`: a column-0 line inside a handler ends its body, and any `screenPointToMyPlane` on
         a line excuses every raw read on it.
   - [ ] `vm-truth-gate.js` skips its heap-floor ceiling below 20 samples per page, so a short (`--tests=`) run never
@@ -37,16 +50,10 @@ per README rules 2 and 5.
       `archive/tests-repo-readers-plan.md` (moved to its ledger).
 
 ### `archive/tests-repo-readers-plan.md` — one definition of a method reference, read from code (CLOSED 2026-11-06; Units 0, A, B, C, E done, see its ledger)
-- [ ] **`check-argument-holes` over the tests repo's code (owner ruling D5: its own fully planned arc).** The
-      gate is src-only because the hole census cannot yet tell an `undefined` VALUE from a hole. It needs two
-      pieces:
-  - [ ] a code-only call parser that applies the conventions doc's CALLERS TEST mechanically. By that test,
-        `@assertValuesEqual "…", undefined, x` and `processKeyDown key, undefined, …` are values.
-  - [ ] the button family's `(target, action, opts)` head moved into opts, as `SimpleRectangularButtonWdgt`
-        already has it. Its tests-only target-less fixtures are holes by both of the doc's rules. About 45 sites
-        plus `super` chains, both repos, pixel-neutral, one commit.
-
-  Measurements and probe: that plan's ledger, "Owner ruling D5".
+- [x] **`check-argument-holes` over the tests repo's code (owner ruling D5).** — CLOSED by
+      `archive/argument-holes-both-repos-plan.md`: both pieces landed — the code-only call parser with the
+      callers test mechanized (an exact zero over both repos) and the button family's head in opts (moved to its
+      ledger).
 - [x] **The buildSystem gates' `--self-test`s are run by nothing.** — CLOSED by `archive/unrun-checks-plan.md`
       (moved to its ledger).
 - [x] **`aim-census.js` is run by no gate.** — CLOSED by `archive/unrun-checks-plan.md` (moved to its ledger).

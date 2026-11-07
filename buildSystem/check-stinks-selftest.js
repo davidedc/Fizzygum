@@ -18,7 +18,6 @@ const PLANT = {
   'timer': 'setTimeout (-> 1), 0',
   'math-random': 'bpR = Math.random()',
   'instanceof-type-test': 'bpI = bpX instanceof Widget',
-  'positional-hole': '@bpHole undefined, undefined, 1',
   'raw-chrome-color': 'bpC = new Color 1, 2, 3',
   'comment-meta-edit': '# to be clear, the bite-proof plant',
   'comment-narration': '# this used to be the bite-proof plant',

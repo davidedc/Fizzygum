@@ -1,240 +1,59 @@
 #!/usr/bin/env node
-// census-call-arity.js — enumerate call sites with their TOP-LEVEL argument count, across BOTH
-// repos, and (--holes) list the calls that punch `undefined` through to reach a later argument.
+'use strict';
+// census-call-arity.js — QUERY the call sites of both repos, each with its real argument count: the work-list tool for
+// converting a family (which `new X` sites, which `super`s, which calls of a method — and how many arguments each
+// passes). ADVISORY: nothing gates on it. The VERDICT on those sites — which `undefined` is a hole, with its witness —
+// is check-argument-holes.js's alone (`--values` lists the ones it judges values); both read ONE table,
+// lib/call-sites.js, so the two can never disagree about what a call is.
 //
-// ADVISORY. Nothing here gates; `fg critique` prints its summary. This is the tool the
-// constructor-conformance arc actually ran to build every phase's work list
-// (docs/archive/constructor-parameter-conformance-plan.md).
+// The table is read by real parsers (lib/call-sites.js's header: the browser's own CoffeeScript 2.0.3 over every
+// class fragment as the meta-compiler splits and rewrites it, every mixin, every macro source and the MacroToolkit
+// heredocs; acorn over the tests repo's scripts), so an implicit object `face: x, toolTip: y` is ONE argument, a
+// nested paren-less call is one argument of the outer call, and a string's contents are never a call.
 //
-// ⚠⚠ WHY IT EXISTS RATHER THAN A GREP. The `positional-hole` stink is a REGRESSION ALARM, not an
-// inventory: its regex needs two `undefined`s adjacent on ONE line, so it reads 0 while
-// single-`undefined` holes and multi-line holes stand. The arc was archived as complete on that
-// reading and re-opened the same day with ~9 sites left. **Ask this scanner whether a family is
-// done; never ask the gate.**
-//
-// A single-line comma grep is wrong in both directions: it counts commas inside string literals
-// and nested calls (`Color.create(230, 230, 130)`) as separators, it counts a trailing `#`
-// comment as an argument, and it cannot see the multi-line paren form — which is exactly where
-// the long calls live. This joins continuation lines and counts top-level arguments only.
-//
-// ⚠ CoffeeScript's paren-LESS call form is the subtle one: `f (a), b` means `f(a, b)` while
-// `f(a), b` means `(f(a)), b`. A scanner that skips whitespace before testing for `(` reads the
-// whole call as one argument and silently classifies an 8-argument site as a 1-argument one.
-//
-// Usage:
+// Usage (from Fizzygum/):
 //   node buildSystem/census-call-arity.js StringWdgt TextWdgt [--min=3]   # `new X` sites
-//   node buildSystem/census-call-arity.js --super=ButtonWdgt,LabelButtonWdgt   # subclass supers
-//   node buildSystem/census-call-arity.js --call=add,addMenuItem [--min=4]     # METHOD calls
-//   node buildSystem/census-call-arity.js --call=add --holes                   # just the holes
-//   node buildSystem/census-call-arity.js --holes                              # EVERY hole, tree-wide
-//
-// --holes reports any call with a bare `undefined` in NON-FINAL argument position (a trailing
-// `undefined` is not a hole — it is just an omitted argument spelled out). With no class/--call
-// filter it sweeps every call site in both repos, which is the honest "am I done" question.
-//
-// Scans CODE, comments cut: Fizzygum/src/**/*.coffee through lib/coffee-mask.js (srcSources), and the
-// sibling Fizzygum-tests repo's code through lib/tests-repo-code.js (testsRepoSources) — the harness
-// (.coffee in the OTHER repo: a grep rooted at Fizzygum/src cannot see it, which is how a P6 miss set
-// the wallpaper to `undefined` after every test), each test's macro command file (its CoffeeScript macro
-// sources in JS template literals, the same tokenizer working on both) and scripts/. A test's metadata
-// prose, its reference-image records and the generated manifests are not code and are not read, so a
-// sentence about a call is never counted as one.
+//   node buildSystem/census-call-arity.js --super=ButtonWdgt,LabelButtonWdgt   # the `super` calls IN those classes
+//   node buildSystem/census-call-arity.js --call=add,addMenuItem [--min=4]     # calls of those METHOD names
+// Each row: `<argument count>  <file>:<line>  <callee>  [ <arguments> ]`, most arguments first; then the total and
+// the arity histogram. A source the reader cannot parse is named on stderr.
 
-const fs = require('fs');
 const path = require('path');
-const { codeOfCoffeeLine } = require('./lib/coffee-mask');
-const { testsRepoCode } = require('./lib/tests-repo-code');
+const { callSites, describeCallee } = require('./lib/call-sites');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-
-const args = process.argv.slice(2);
-const minArgs = Number((args.find(a => a.startsWith('--min=')) || '--min=0').slice(6));
-const superOf = (args.find(a => a.startsWith('--super=')) || '').slice(8);
-const callOf = (args.find(a => a.startsWith('--call=')) || '').slice(7);
-const classes = args.filter(a => !a.startsWith('--'));
-const holesOnly = args.includes('--holes');
-
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
+const ARGV = process.argv.slice(2);
+for (const a of ARGV) {
+  if (a.startsWith('--') && !/^--(min|super|call)=/.test(a)) {
+    console.error(`census-call-arity: unknown flag ${a}` + (a === '--holes' ? ' — the hole verdict is check-argument-holes.js\'s (run it; --values lists the values)' : ''));
+    process.exit(2);
   }
-  return acc;
+}
+const flag = (name) => (ARGV.find((a) => a.startsWith(name + '=')) || '').slice(name.length + 1);
+const minArgs = Number(flag('--min') || 0);
+const superOf = flag('--super').split(',').filter(Boolean);
+const callOf = flag('--call').split(',').filter(Boolean);
+const classes = ARGV.filter((a) => !a.startsWith('--'));
+if (!classes.length && !superOf.length && !callOf.length) {
+  console.error('census-call-arity: name the classes (`new` sites), --super=<classes> or --call=<methods>');
+  process.exit(2);
 }
 
-// The code a scan reads, as SOURCES: { file, lines }, each line with its comment characters blanked
-// (columns kept). src through coffee-mask; the tests repo's code through the shared reader.
-function srcSources(srcDir = path.join(ROOT, 'Fizzygum', 'src')) {
-  return walk(srcDir, []).sort().map((file) => {
-    let state = null;
-    const lines = fs.readFileSync(file, 'utf8').split('\n').map((l) => { const r = codeOfCoffeeLine(l, state); state = r.state; return r.code; });
-    return { file, lines };
-  });
-}
-function testsRepoSources() {
-  return testsRepoCode(path.join(ROOT, 'Fizzygum-tests')).map(({ file, lines }) => ({ file, lines }));
-}
+const { sites, unreadable } = callSites({ srcDir: path.join(ROOT, 'Fizzygum', 'src'), testsRepoDir: path.join(ROOT, 'Fizzygum-tests') });
+for (const u of unreadable) console.error(`UNREADABLE ${path.relative(ROOT, u.file)}${u.line ? ':' + u.line : ''} — ${u.message}`);
 
-// Split an argument text into TOP-LEVEL arguments: commas inside (), [], {} or string literals
-// don't separate. Returns the list of trimmed argument sources.
-function topLevelArgs(text) {
-  const out = [];
-  let depth = 0, quote = null, cur = '', esc = false;
-  for (const ch of text) {
-    if (esc) { cur += ch; esc = false; continue; }
-    if (quote) {
-      cur += ch;
-      if (ch === '\\') esc = true;
-      else if (ch === quote) quote = null;
-      continue;
-    }
-    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; cur += ch; continue; }
-    if (ch === '(' || ch === '[' || ch === '{') depth++;
-    if (ch === ')' || ch === ']' || ch === '}') depth--;
-    if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue; }
-    cur += ch;
-  }
-  if (cur.trim()) out.push(cur.trim());
-  return out;
+const rows = sites.filter((s) =>
+  (classes.length && s.kind === 'new' && classes.includes(s.name)) ||
+  (superOf.length && s.kind === 'super' && superOf.includes(s.superOf)) ||
+  (callOf.length && (s.kind === 'send' || s.kind === 'bare') && callOf.includes(s.name)));
+const arity = (s) => (s.forwarding ? -1 : s.args.length);   // a forwarding super's arity is its caller's: listed last
+rows.sort((x, y) => arity(y) - arity(x) || x.file.localeCompare(y.file) || x.line - y.line);
+const shown = rows.filter((s) => s.args.length >= minArgs);
+for (const s of shown) {
+  const args = s.forwarding ? 'forwards its caller\'s arguments' : s.args.map((a) => a.text).join(' | ');
+  console.log(`${s.forwarding ? '?' : s.args.length}  ${path.relative(ROOT, s.file)}:${s.line}  ${describeCallee(s)}  [ ${args} ]`);
 }
-
-// Gather the argument text of a call starting at `idx` (just past the callee name).
-// Handles both the paren form `X(a, b)` and CoffeeScript's paren-less form `X a, b`, where the
-// call runs to end of line PLUS any continuation lines (a line ending in a comma, or a following
-// line indented deeper that starts inside an unclosed bracket).
-function callArgText(lines, li, col) {
-  let rest = lines[li].slice(col);
-  // ⚠ whitespace is significant: `X(a, b)` is a paren call, `X (a), b` is the paren-less form
-  // with a parenthesised FIRST ARGUMENT (CoffeeScript reads `f (a), b` as `f(a, b)`). Testing
-  // /^\s*\(/ conflates them and reports an 8-argument call as 1 argument.
-  const paren = /^\(/.test(rest);
-  let text = '', depth = 0, started = false, quote = null, esc = false, inComment = false;
-  let i = li;
-  while (i < lines.length) {
-    const line = i === li ? rest : '\n' + lines[i];
-    inComment = false;   // a `#` comment ends at the newline
-    for (const ch of line) {
-      if (esc) { text += ch; esc = false; continue; }
-      if (quote) {
-        text += ch;
-        if (ch === '\\') esc = true; else if (ch === quote) quote = null;
-        continue;
-      }
-      if (ch === '"' || ch === "'" || ch === '`') { quote = ch; text += ch; continue; }
-      // A trailing `#` comment is not an argument. The long calls annotate EVERY slot with one
-      // (`undefined, # @fontName`), so counting them splits one argument into two and inflates
-      // arity — PointerWdgt read as 17 arguments when it passes 8.
-      if (ch === '#') { inComment = true; }
-      if (inComment) continue;
-      if (paren) {
-        if (ch === '(') { depth++; started = true; if (depth === 1) { continue; } }
-        else if (ch === ')') { depth--; if (depth === 0) return { text, endLine: i }; }
-      } else {
-        if (ch === '(' || ch === '[' || ch === '{') depth++;
-        if (ch === ')' || ch === ']' || ch === '}') { if (depth === 0) return { text, endLine: i }; depth--; }
-      }
-      text += ch;
-    }
-    // end of a physical line
-    if (!paren && depth === 0) {
-      const trimmed = lines[i].replace(/#.*$/, '').trimEnd();
-      const next = lines[i + 1];
-      const continues = /,\s*$/.test(trimmed) ||
-        (next !== undefined && /^\s+/.test(next) && /^[^\s].*[,(]\s*$/.test('') === false && /,\s*$/.test(trimmed));
-      if (!continues) return { text, endLine: i };
-    }
-    i++;
-  }
-  return { text, endLine: lines.length - 1 };
-}
-
-// ---- the reusable scan -------------------------------------------------------------------
-// buildSystem/check-argument-holes.js REQUIRES this module and calls collectHoles() rather than
-// re-implementing the parser — the census-public-private-calls.js precedent (ONE engine, several
-// consumers), and the reason the gate and this view can never disagree about what a hole is.
-function scanRows(sources, cfg) {
-  const superOf = cfg.superOf || '';
-  const callOf = cfg.callOf || '';
-  const classes = cfg.classes || [];
-  const sweepAll = !!cfg.sweepAll;
-  const rows = [];
-  for (const { file: p, lines } of sources) {
-  for (let li = 0; li < lines.length; li++) {
-    const line = lines[li];
-    const patterns = superOf
-      ? [new RegExp('\\bsuper\\b', 'g')]
-      : sweepAll
-        // tree-wide hole sweep: any identifier followed by an argument list. Over-matches (it
-        // catches non-calls too); the `undefined`-in-non-final-position filter below is what
-        // makes the output meaningful, and a non-call cannot have one.
-        ? [/(?<!new\s)\b[A-Za-z_$][A-Za-z0-9_$]*\b(?!\s*:)/g]
-      : callOf
-        // a METHOD call: `x.name`, `@name` or a bare `name`, but NOT its own `name:` DEFINITION
-        // and not `new Name` (that is the --class mode).
-        ? callOf.split(',').map(c => new RegExp('(?<!new\\s)\\b' + c + '\\b(?!\\s*:)', 'g'))
-        : classes.map(c => new RegExp('\\bnew\\s+' + c + '\\b', 'g'));
-    for (const re of patterns) {
-      let m;
-      while ((m = re.exec(line)) !== null) {
-        const col = m.index + m[0].length;
-        const { text, endLine } = callArgText(lines, li, col);
-        const a = topLevelArgs(text);
-        rows.push({
-          file: path.relative(ROOT, p), line: li + 1, endLine: endLine + 1,
-          callee: m[0].replace(/\s+/g, ' '), n: a.length,
-          args: a.map(s => s.replace(/\s+/g, ' ')).map(s => s.length > 46 ? s.slice(0, 43) + '...' : s),
-        });
-      }
-    }
-  }
-  }
-  return rows;
-}
-
-// A HOLE = a bare `undefined` argument that is NOT the last one. A TRAILING `undefined` is not a
-// hole: nothing is being reached past, the caller merely spelled out an omission.
-// ⚠ EXCLUDED: `fn.call undefined, x` / `.apply` / `.bind` — there `undefined` is the THIS-ARG of a
-// foreign (language) API, the ordinary idiom for "no receiver", not a skipped parameter. Counting
-// them buries the real holes: they are ~90 of the ~115 raw hits in this tree.
-const FOREIGN_THISARG = /^(call|apply|bind)$/;
-const isHole = r => !FOREIGN_THISARG.test(r.callee.replace(/^.*[.@]/, '')) &&
-  r.args.some((a, i) => a === 'undefined' && i < r.args.length - 1);
-
-// In the tree-wide sweep every identifier on a line matches, so ONE physical call is reported once
-// per name in it (`_paintInLocalScope aContext, clippingRectangle, …` reports 4 times). Collapse to
-// one row per (file, line) — rows arrive arity-descending, so the first kept is the leftmost /
-// outermost callee, which is the real one.
-function dedupeBySite(rows) {
-  const seen = new Set();
-  return rows.filter(r => { const k = r.file + ':' + r.line; if (seen.has(k)) return false; seen.add(k); return true; });
-}
-
-// THE one answer to "which calls punch `undefined` through to a later argument", shared by the gate.
-function collectHoles(sources) {
-  const rows = scanRows(sources, { sweepAll: true }).filter(isHole);
-  rows.sort((x, y) => y.n - x.n || x.file.localeCompare(y.file) || x.line - y.line);
-  return dedupeBySite(rows);
-}
-
-module.exports = { scanRows, isHole, dedupeBySite, collectHoles, srcSources, testsRepoSources, ROOT };
-if (require.main !== module) return;
-
-const rows = scanRows([...srcSources(), ...testsRepoSources()], { superOf, callOf, classes, sweepAll: holesOnly && !callOf && !classes.length });
-rows.sort((x, y) => y.n - x.n || x.file.localeCompare(y.file) || x.line - y.line);
-let shown = rows.filter(r => r.n >= minArgs);
-if (holesOnly) shown = dedupeBySite(shown.filter(isHole));
-for (const r of shown) {
-  console.log(`${r.n}  ${r.file}:${r.line}${r.endLine !== r.line ? '-' + r.endLine : ''}  ${r.callee}  [ ${r.args.join(' | ')} ]`);
-}
-if (holesOnly) {
-  console.log(`\nHOLES: ${shown.length} call site(s) pass a bare \`undefined\` in NON-FINAL position.`);
-  console.log('Each one PROVES the skipped parameter is configuration, not identity (R3).');
-  console.log('⚠ The `positional-hole` stink sees only the two-adjacent-`undefined` subset — this is the real count.');
-} else {
-  const hist = {};
-  for (const r of rows) hist[r.n] = (hist[r.n] || 0) + 1;
-  console.log(`\nTOTAL ${rows.length} site(s); shown ${shown.length} (>=${minArgs} args). Arity histogram:`,
-    Object.keys(hist).sort((a, b) => a - b).map(k => `${k}:${hist[k]}`).join('  '));
-}
+const hist = {};
+for (const s of rows) { const k = s.forwarding ? '?' : s.args.length; hist[k] = (hist[k] || 0) + 1; }
+console.log(`\nTOTAL ${rows.length} site(s); shown ${shown.length} (>=${minArgs} args). Arity histogram:`,
+  Object.keys(hist).sort((a, b) => a - b).map((k) => `${k}:${hist[k]}`).join('  '));

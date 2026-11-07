@@ -512,18 +512,17 @@ if ! $noSyntaxCheck ; then
   echo "... stink check OK"
 fi
 
-# --- build-time ARGUMENT-HOLE gate (baseline-ratcheted) --------------------------------
+# --- build-time ARGUMENT-HOLE gate (exact zero, both repos) ----------------------------
 # Enforces the HOLE TEST (R3 of docs/architecture/constructor-and-parameter-conventions.md): if any
-# call site must pass `undefined` to reach a later argument, the parameter list is wrong. Shares ONE
-# parser with buildSystem/census-call-arity.js (the advisory view behind `fg critique`), so the gate
-# and the census can never disagree about what a hole is. This is the HONEST count: the
-# `positional-hole` stink above matches only two `undefined`s adjacent on one line, and reading its 0
-# as "clean" is how the conformance arc came to be archived complete and re-opened the same day with
-# ~50 holes standing. Baseline inline in the check; FAILS on a rise, prints a tighten-me note on a
-# drop. Scans src/ only (the tests repo's metadata PROSE would false-positive a build). Same
-# --noSyntaxCheck escape hatch + explicit $? abort as the gates above.
+# call site must pass `undefined` to reach a later argument, the parameter list is wrong. Every call
+# site in BOTH repos — src, the harness, every macro source, the MacroToolkit heredocs, the tests
+# repo's scripts — read by real parsers (buildSystem/lib/call-sites.js, which census-call-arity.js
+# queries too), judged by the CALLERS TEST: an `undefined` is a hole iff another call of the same
+# callee passes fewer arguments (the gate prints that witness), else it is the operand's value.
+# Exact zero, no baseline; exit 2 (INVALID) when it cannot read a source. The tests repo absent, it
+# judges src alone and says so. Same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.
 if ! $noSyntaxCheck ; then
-  echo "checking for argument holes (the R3 hole test, ratcheted) ..."
+  echo "checking for argument holes (the R3 hole test, both repos) ..."
   node ./buildSystem/check-argument-holes.js
   if [ "$?" != "0" ]; then
     tput bel

@@ -55,7 +55,7 @@ A positional parameter must pass **all** of these:
 
 - the **typical** caller passes it (not just an unusual one);
 - it has a **canonical position** in an order a reader can predict (a tuple, or an
-  established convention like `target, action`);
+  established convention like `addMenuItem`'s `label, target, action`);
 - it is **not** a bare `true`/`false` at most call sites.
 
 Four is the hard cap, and four is already generous — 137 of the 144 constructors in `src/`
@@ -88,19 +88,24 @@ the options object.
 ⚠⚠ **Not every `undefined` argument is a hole — some are the VALUE.** A parameter whose absence
 *means* something ("no shadow", "leave the rotation unchanged") is an operand like any other, and
 writing `undefined` for it is supplying it, not skipping it. ⚠ But that meaning is NOT the test —
-the third row below is a parameter whose absence is genuinely meaningful *and* a hole all the same.
-What separates them is the callers:
+the second and third rows below are parameters whose absence is genuinely meaningful *and* holes all
+the same. What separates them is the callers:
 
 > **A `undefined` is a hole iff some OTHER call site of the same callee OMITS that position's
 > trailing tail** — i.e. this caller writes `undefined` only because the list gives it no shorter
 > way to reach a later argument.
 
-Three worked cases, all from the same reading pass:
+The build applies this mechanically (§5): a call with an `undefined` before a present argument is a
+hole iff another call of the same callee REACHES LESS FAR — passes fewer arguments, a trailing
+`undefined` written out counting as omitted, since it means exactly what omitting it means — and the
+gate prints that other call, the WITNESS, beside it.
+
+Three worked cases:
 
 | site | verdict | why |
 |---|---|---|
-| `Appearance._paintInLocalScope aContext, clip, undefined, bodyFn` | **value** | all 14 callers pass all 4 arguments — `bodyFn` is a required trailing block, so there is no shorter form to punch past. The `undefined` is an `appliedShadow` that is genuinely absent |
-| `_applyTransformSugarNoSettle undefined, s` | **value** | a symmetric two-slot partial-update record (`degOrNil, sOrNil`): its mirror writes the absence in the other slot, so no order removes it |
+| `Appearance._paintInLocalScope aContext, clip, undefined, bodyFn` | **value** | every caller passes all 4 arguments — `bodyFn` is a required trailing block, so there is no shorter form to punch past. The `undefined` is an `appliedShadow` that is genuinely absent |
+| `_applyTransformSugarNoSettle undefined, s` | **HOLE**, though it reads like a value | a two-slot partial update whose two callers each want the OTHER slot (`deg, undefined` and `undefined, s`). "No order removes it" is precisely the SliderWdgt signature above — disjoint tails — so the slots are options: `_applyTransformSugarNoSettle rotation: deg` / `scale: s` |
 | `_insertAddersSuchThat scan, insert, undefined, isMember` | **HOLE** | the other caller stops at arity 3, omitting `isMember` — so this one is filling a slot purely to reach past it. Two callers, disjoint tails, textbook |
 
 The distinction matters in both directions: converting a value costs a real signature and buys
@@ -296,37 +301,31 @@ to make the call readable at all; two call-site groups that want disjoint tails.
 
 ## 5. What is enforced
 
-The hole test is mechanically checkable and is ratcheted by the `positional-hole` stink in
-`buildSystem/check-stinks.js` (see [`lint-and-static-checks.md`](lint-and-static-checks.md)):
-≥2 consecutive bare `undefined` arguments on a non-comment line. It is at **0**, and 0 is now a
-HARD rule — there is no site left to grandfather.
+**`buildSystem/check-argument-holes.js` enforces the hole test on every build, over every call site in
+BOTH repos, at an exact zero** — Fizzygum's `src/`, the tests repo's harness, every macro source, the
+`MacroToolkit` heredocs (the standard macro verbs, code in strings) and the tests repo's scripts. It
+reads them with real parsers (`buildSystem/lib/call-sites.js`): every class as the browser's
+meta-compiler splits it into member fragments and rewrites its `super`s, parsed by the browser's own
+CoffeeScript; the scripts with acorn. So an implicit object `face: x, toolTip: y` is ONE argument, a
+nested paren-less call is one argument of the outer call, and a string's contents are never a call. It
+applies R3's callers test mechanically and prints each hole with its WITNESS. An `undefined` every
+caller writes is judged a value (`--values` lists them — the `@assertValuesEqual "…", undefined, x`
+of the macros among them). There is no baseline and no sanction marker: a value the test misjudges is
+reshaped.
 
-⚠⚠ **A green gate is a floor, not a proof.** The regex needs two `undefined`s *adjacent on one
-line*, so it is blind to the two commonest holes: a **single** `undefined` (`holder.add w,
-undefined, w.divisionBox()`) and a hole spread over a **multi-line** call — the shapes that let the
-conformance arc be archived as complete once and re-opened the same day. It is a regression alarm for
-the worst shape, not an inventory. When you convert a family, sweep it by METHOD NAME across both
-repos and read the call list; do not ask the gate whether you are done.
+What it cannot judge, by construction (its header holds the full list): a callee no code in either
+repo defines (`JSON.stringify`); a dynamic `new (classNamed name)`; the this-arg of `.call` / `.apply`
+/ `.bind`; code inside a string other than the heredocs (a spreadsheet formula); a call of unknown
+arity (a spread, a forwarding bare `super`), which is never a witness; and a POSITIONAL argument handed
+to an `(opts = {})` head — no `undefined` appears, and the argument is silently taken AS the options
+object. That last one is the trap of every conversion to options: check a new spelling with
+`buildSystem/compile-fragment.js` first, and list a family's sites with `census-call-arity.js`
+(`<Class…>` for its `new`s, `--super=` for its supers, `--call=` for a method — the gate's own table,
+with each site's real argument count): after the conversion, every site of an `(opts)` head passes one.
 
-**`buildSystem/check-argument-holes.js` is the honest count**, and it also runs on every build. It
-shares `census-call-arity.js`'s paren-aware parser — so the gate and the advisory view
-(`fg critique`'s fourth census, or `census-call-arity.js --holes` for the tree-wide list) can never
-disagree about what a hole is — and it is ratcheted at **2**, which is its FLOOR: both survivors are
-`undefined`-as-a-value, annotated at their call sites, and driving it to 0 would mean converting a
-correct signature. It scans `Fizzygum/src/**` only, for now. Both scanners read CODE (src through
-`lib/coffee-mask.js`, the sibling tests repo through `lib/tests-repo-code.js`, never a test's metadata
-prose), and the tests repo's code still carries sites the gate cannot judge: most pass `undefined` as
-a VALUE (`@assertValuesEqual "…", undefined, x`), which only the callers test above tells from a hole,
-and that test is not mechanized; the real ones are the button family's `(target, action, opts)` head,
-which tests fill with `undefined` to reach `opts`. Extending the gate is BACKLOG
-(`../archive/tests-repo-readers-plan.md`, Unit D); until then that half is swept by hand with
-`census-call-arity.js --holes`.
-
-⚠ **That hand sweep is load-bearing, and skipping it has already cost once.** Connector §P4
-(2026-08-17) deleted `PaletteWdgt`'s leading `target` parameter — a hole with ELEVEN live call sites,
-every one of them in a macro source, so both automatic checks read clean throughout. The census
-lists all eleven in one run. ⇒ after changing any constructor, run it: the gates answer for `src/`
-and nothing answers for the tests repo.
+⚠ **Why the gate reads the tests repo.** Connector §P4 deleted `PaletteWdgt`'s leading `target`
+parameter — a hole with ELEVEN live call sites, every one of them in a macro source, so a check of
+`src/` alone read clean throughout. A test, a macro verb and a rig are callers like any other.
 
 Everything else here is convention, checked by review. The cap in R1, the vocabulary in R4 and
 the atomicity in R7 are not expressible as a text scan.
@@ -345,13 +344,13 @@ plain JS `new SliderWdgt(0, 100, 40, 10)` in the rigs.
 
 ## 7. Current conformance
 
-**`src/` is conformant, constructors and methods alike.** Every constructor takes ≤4 operands or is
-named exempt under §3; `positional-hole` sits at **0**, hard; and the honest counter
-`check-argument-holes.js` sits at its floor of **3**, every one of which is `undefined`-as-a-value
-(§5), annotated at their call sites. The per-family measurements, the four heads that measurement
-overruled, and the phase-by-phase record are in
-[`../archive/constructor-parameter-conformance-plan.md`](../archive/constructor-parameter-conformance-plan.md).
-The sibling tests repo is deliberately ungated and swept by hand — §5 gives the reason.
+**Both repos are conformant, constructors and methods alike.** Every constructor takes ≤4 operands or
+is named exempt under §3, and `check-argument-holes.js` holds every call site of both repos at zero
+holes (§5). The per-family measurements, the four heads that measurement overruled, and the
+phase-by-phase record are in
+[`../archive/constructor-parameter-conformance-plan.md`](../archive/constructor-parameter-conformance-plan.md);
+the gate's own arc — the parser, the mechanized callers test, the button family's head — in
+[`../archive/argument-holes-both-repos-plan.md`](../archive/argument-holes-both-repos-plan.md).
 
 ⚠⚠ **The last tail found was one layer BELOW the verbs already converted, and that is the lesson.**
 `add` was converted while `__add` / `_addChild` beneath it kept the same misleading parameter name
@@ -371,7 +370,10 @@ polymorphic **`add`** family — 7 overrides of inconsistent arity (4, 5 and 6 s
 `(aWdgt, opts = {})` — and finally the tail the gate could not see: `Appearance._paintInLocalScope`
 (whose two "options" turned out to be class-level declarations), the `createReference` family
 (reordered behind a new menu adapter), `cleanupMenuWdgts`, `fullImage`, `_insertAddersSuchThat` and
-the meta-compiler's own `Class.findUpTo`.
+the meta-compiler's own `Class.findUpTo`; the button family's own head — `(target, action, opts)` →
+ONE options object with `target:` and `action:` keys (a face-only button, a toggle's two faces and the
+rigs' fixtures had to write `undefined, undefined` to reach the options); and
+`_applyTransformSugarNoSettle`'s keyed partial update (R3's table).
 
 ⭐ **The convention is not constructor-specific, and the method phases are the proof.** Of the 51
 holes originally counted, 25 were ordinary **method** calls, and the last three phases were all

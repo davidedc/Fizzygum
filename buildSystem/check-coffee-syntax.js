@@ -27,26 +27,10 @@
  * pass as false). Because the real meta-compiler runs, any future change to it is
  * tracked automatically.
  *
- * THE SHIM (only new logic). Class/Mixin touch a few globals at construction time;
- * we provide minimal stand-ins as closed-over factory params + a `window` Proxy:
- *   - compileFGCode(src,bare)  -> CoffeeScript.compile (faithful 1-liner of the real
- *                                 wrapper, loading-and-compiling-...coffee:88-103)
- *   - srcLoadCompileDebugWrites-> false       (Mixin.coffee:63 reads it BARE; must be
- *                                 falsy or debug paths run)
- *   - JSSourcesContainer       -> {content:''}(Class.coffee:414, Mixin.coffee:96)
- *   - MixedClassKeywords       -> the real 3-entry list (Mixin's static parse pass
- *                                 filters the DSL hooks out of the 2-space keys)
- *   - window (Proxy): seeded {classDefinitionAsJS:[], srcLoadCompileDebugWrites:false}
- *                     (Class.coffee reads window.srcLoadCompileDebugWrites WITH the
- *                     window. prefix); every other key returns a truthy stub so
- *                     `window[superClassName].class` (:118) and
- *                     `window[@name].class = @` (:430) don't throw. Mode 2 never
- *                     reads these as real objects, so a stub is enough.
- *
- * SAFE FAILURE DIRECTION: real syntax errors are thrown by CoffeeScript.compile
- * INSIDE the reused meta-compiler regardless of the shim, so a shim gap can never
- * silently MASK a real error — at worst it causes a loud operational error (exit 2),
- * which is fixed once.
+ * THE SHIM — the globals Class/Mixin touch at construction time, and why a gap in it can never
+ * silently MASK a real error — lives in lib/meta-compiler.js, shared with lib/call-sites.js and
+ * compile-fragment.js. This gate hands it a compileFGCode that really compiles and remembers the
+ * fragment a parse error came from (so the report can find the file line).
  *
  * THE SECOND CHECK: A CLASS MEMBER MUST NOT LOSE A NAME TO THE HELPER STRIP. The compiler
  * declares the helpers a construct needs in a `var` statement at the head of what it
@@ -101,54 +85,21 @@ const SRC = dirArg(OWN_ARGV, '--src=', path.join(REPO, 'src'), 'check-coffee-syn
 const BUILD_ARGS = [...OWN_ARGV.filter((a) => !a.startsWith('--src=')), ...(SRC_GIVEN ? ['--src=' + SRC] : [])];
 // a listed `src/…` path names a file of the tree being checked; any other (the harness) is the repo-relative path it is
 const onDisk = (rel) => (rel.startsWith('src/') ? path.join(SRC, rel.slice(4)) : path.resolve(REPO, rel));
-const COMPILER = path.join(__dirname, '..', 'auxiliary files', 'CoffeeScript', 'fizzygum-coffeescript-min.js');
+const { bundledCoffeeScript, loadMetaCompiler } = require('./lib/meta-compiler');
 
 function fail(msg) { console.error('check-coffee-syntax: ' + msg); process.exit(2); }
 
-// ---- 1. load the SAME compiler the browser uses (2.0.3, not the 2.7.0 CLI) ----
-let CoffeeScript;
+// ---- 1+2. the SAME compiler the browser uses (2.0.3, not the 2.7.0 CLI) and the REAL Class.coffee / Mixin.coffee ----
+let CoffeeScript, Class, Mixin;
 try {
-  const mod = require(COMPILER);
-  CoffeeScript = (mod && mod.CoffeeScript) || mod;
-} catch (e) {
-  fail('could not load bundled compiler at "' + COMPILER + '": ' + e.message);
-}
-if (!CoffeeScript || typeof CoffeeScript.compile !== 'function') {
-  fail('bundled compiler did not expose a compile() function');
-}
-
-// ---- 2. compile + capture the REAL Class.coffee / Mixin.coffee ----
-//   They are plain classes that extend nothing and use no bare-super, so they
-//   compile as whole files (this is also how boot bootstraps them).
-let Class, Mixin;
-try {
-  const classJS = CoffeeScript.compile(fs.readFileSync(path.join(SRC, 'meta', 'Class.coffee'), 'utf8'), { bare: true });
-  const mixinJS = CoffeeScript.compile(fs.readFileSync(path.join(SRC, 'meta', 'Mixin.coffee'), 'utf8'), { bare: true });
-
-  // The shim globals are passed as factory PARAMETERS so the defined Class/Mixin
-  // methods close over them (no global pollution). `window` is a Proxy; see header.
-  const STUB = { class: null, prototype: {} };
-  const windowProxy = new Proxy({ classDefinitionAsJS: [], srcLoadCompileDebugWrites: false }, {
-    get(t, k) { return (k in t) ? t[k] : STUB; },
-    set(t, k, v) { t[k] = v; return true; }
-  });
-  const JSSourcesContainer = { content: '' };
+  CoffeeScript = bundledCoffeeScript();
   // a member's parse error locates itself in its FRAGMENT: remember the fragment, so the report can find the file line
   const compileFGCode = (src, bare) => {
     try { return CoffeeScript.compile(src, { bare: bare }); } catch (e) { if (e && typeof e === 'object') e.fizzygumFragment = src; throw e; }
   };
-
-  const factory = new Function(
-    'window', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites', 'MixedClassKeywords',
-    classJS + '\n;\n' + mixinJS + '\n;\nreturn { Class: Class, Mixin: Mixin };'
-  );
-  ({ Class, Mixin } = factory(windowProxy, compileFGCode, JSSourcesContainer, false,
-    ['onceAddedClassProperties', 'included', 'consumerClassNames']));
-  if (typeof Class !== 'function' || typeof Mixin !== 'function') {
-    fail('failed to capture Class/Mixin constructors from the meta-compiler');
-  }
+  ({ Class, Mixin } = loadMetaCompiler({ srcDir: SRC, compileFGCode }));
 } catch (e) {
-  fail('the meta-compiler (Class.coffee/Mixin.coffee) itself failed to load: ' + e.message);
+  fail(e.message);
 }
 
 // ---- 2b. the PROVIDED helper globals (header: THE SECOND CHECK) ----

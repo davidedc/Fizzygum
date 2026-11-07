@@ -219,7 +219,7 @@ function shellInvocations(text) {
 
 // A JS text's launches: [{ token }] from require() and from the string arguments of path.join / path.resolve.
 function jsLaunches(file, text) {
-  const { mask } = maskJs(text);
+  const { mask } = maskJs(text, file);
   const isCode = (i) => mask[i] === 'code';
   const out = [];
   for (const m of text.matchAll(/\brequire\(\s*(['"])([^'"]+)\1\s*\)/g)) {

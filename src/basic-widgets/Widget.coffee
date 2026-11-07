@@ -1923,30 +1923,28 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_setRotationDegreesNoSettle deg
 
   _setRotationDegreesNoSettle: (deg) ->
-    @_applyTransformSugarNoSettle deg, undefined
+    @_applyTransformSugarNoSettle rotation: deg
 
   setScaleFactor: (s) ->
     @_settleLayoutsAfter => @_setScaleFactorNoSettle s
 
   _setScaleFactorNoSettle: (s) ->
-    # ⚠ `undefined` here is the degOrNil VALUE — "leave the rotation unchanged" — not a skip to
-    # reach a later argument: this is a two-slot PARTIAL-UPDATE record, and its mirror one line
-    # above writes the same absence in the other slot. No order removes it, so it is not a hole
-    # under R3 (docs/architecture/constructor-and-parameter-conventions.md).
-    @_applyTransformSugarNoSettle undefined, s
+    @_applyTransformSugarNoSettle scale: s
 
-  # shared core: find-or-materialize the enclosing sugar island, apply the (partial) spec change,
-  # then dematerialize if it returned to identity. degOrNil / sOrNil: undefined means "leave unchanged".
-  _applyTransformSugarNoSettle: (degOrNil, sOrNil) ->
+  # shared core: find-or-materialize the enclosing sugar island, apply the PARTIAL change, then
+  # dematerialize if it returned to identity. The change is keyed — `rotation:` (degrees) and/or
+  # `scale:` — and an absent key leaves that part of the transform as it is: the two callers each
+  # want a different one, so no positional order could serve both (R3's options case).
+  _applyTransformSugarNoSettle: (change = {}) ->
     island = @_enclosingSugarIsland()
     if !island?
       # nothing exists yet: materialize only if the target is non-identity (else it is a no-op).
-      deg = degOrNil ? 0
-      s = sOrNil ? 1
+      deg = change.rotation ? 0
+      s = change.scale ? 1
       return if (deg % 360 == 0) and (s == 1)
       island = @_materializeSugarIslandNoSettle()
-    island._setRotationNoSettle degOrNil if degOrNil?
-    island._setScaleNoSettle sOrNil if sOrNil?
+    island._setRotationNoSettle change.rotation if change.rotation?
+    island._setScaleNoSettle change.scale if change.scale?
     @_dematerializeSugarIslandIfIdentityNoSettle island
 
   # the enclosing island IFF it was materialized by the sugar AND wraps EXACTLY me (so adjusting it
