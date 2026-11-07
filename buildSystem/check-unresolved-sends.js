@@ -11,7 +11,7 @@
 // (Fizzygum-tests/Automator-and-test-harness-src/**/*.coffee — harness code is LIVE code: it is
 // compiled into every non-homepage build, and src calls into it behind `if Automator?` guards).
 // Its CALLS are also read from every test's MACRO SOURCES (lib/tests-repo-code.js's macroSources: the
-// CoffeeScript template literals alone, never the JS around them), because a macro calls core methods as
+// CoffeeScript alone, as the page compiles it, never the JS around it), because a macro calls core methods as
 // directly as the harness does: a rename that misses a macro's `.name(` fails here, at build time, instead
 // of in the suite. A macro's own definitions (a local helper, an object of handlers) resolve that macro's
 // own calls and no one else's, so they never widen the shared universe.
@@ -199,7 +199,7 @@ function label(p) {
        : 'harness/' + path.relative(HARNESS, p);
 }
 
-// A macro's sends: each top-level template of each test's command file, read as CoffeeScript exactly as
+// A macro's sends: each macro source of each test's command file, read as CoffeeScript exactly as
 // harvestCalls reads a .coffee file. Every site carries its macro's OWN definitions (`local`).
 function harvestMacroCalls() {
   const sites = [];

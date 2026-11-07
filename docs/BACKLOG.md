@@ -17,10 +17,31 @@ per README rules 2 and 5.
       more positionals, a dead argument) and `POSITIONAL_INTO_OPTIONS` (`@`, a literal, a `new`… alone); what they found
       is in its ledger (moved there). A lone VARIABLE handed to an options slot (`new X target`) stays unchecked — a
       stated limit (conventions doc §5), its whole-family check being `census-call-arity.js` after a conversion.
-- [ ] **Two readers of a test's macro sources.** `lib/tests-repo-code.js` `macroSources` (the COOKED text the page
-      compiles, by line — the call-sites lib, check-unresolved-sends) and the tests repo's
-      `check-macro-source-discipline.js` `macroSourcesOf` (the RAW text by character offset, which aim-census maps
-      back into the file). One reader would carry both the cooked text and a raw-offset map.
+- [x] **Two readers of a test's macro sources.** — CLOSED 2026-11-07: ONE reader, `lib/tests-repo-code.js`
+      `macroSourcesIn` — the value of `mainMacroSource` and each `extraSubroutineSources` entry, found in the parse
+      (what the harness compiles), COOKED, each with its file line and its span; it refuses a source it cannot read
+      statically (`${…}`, not a template literal) or whose lines do not sit on the file's. No raw-offset map: no reader
+      maps a column back, and the lines are held aligned. The class was wider than filed — every Node reader of a
+      macro source moved onto it: the call-sites table (its sources and its JS-shell read), unresolved-sends,
+      `macroCode` (dead-methods, R4: it masked the JS-escaped text, which only happened to read right), the discipline
+      gate's `macroSourcesOf` and aim-census's text-context labeller, `macro-page-lib`'s regex (it stopped at an
+      escaped backtick: two visualisation pages had lost their whole step narration), the capture's whole-file
+      screenshot-name scan, and layering's whole-file rule [D]; `lib/js-mask.js`'s template list, left with no reader,
+      is gone. Every gate's output is byte-identical except where the cooked text differs from the escaped one
+      (one aim-census snippet, seven regenerated visualisation pages).
+- [ ] **Hand-rolled `#` comment cutters beside `lib/coffee-mask.js`** (found closing the item above). Several gates
+      cut CoffeeScript comments with their own per-line scan instead of coffee-mask, most of them at the first `#`
+      even inside a string — so a `"#{…}"` interpolation or a `#` in a string hides the code after it on that line:
+      `stripComment` in `check-stinks.js` (beside its string-aware twin), `check-invalidation-receivers.js` (filed
+      below), `check-plane-discipline.js`, `check-relayout-bounds-first.js`; `stripLine` in
+      `census-nosettle-naming.js`, `check-layering.js` and its kept-in-sync copy in `check-unresolved-sends.js`;
+      layering rule [D]'s `indexOf('#')`; `lib/name-definitions.js`'s `stripComment`; and the tests repo's
+      `check-macro-source-discipline.js` `stripComment` (quote-aware). One masker, measured gate by gate.
+- [ ] **Four walks find a test's command files** (found closing the item above): `lib/tests-repo-code.js`'s
+      `macroFiles` (every `*_automationCommands.js` under `tests/`, skipping `automation-assets/` and dot directories),
+      `check-layering.js`'s `collectMacros` (every one, nothing skipped), and the discipline gate's and aim-census's
+      `tests/SystemTest_*/<name>_automationCommands.js`. They agree today; the harness's own definition is the manifest
+      (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's.
 - [ ] **`Class._equivalentforSuper` rewrites `super ` inside a string literal or a comment too** (a text
       substitution): a member holding `"see super docs"` compiles a different string. Measured: only
       `Class.coffee`'s own debug string matches, and Class.coffee is bootstrapped whole, never through the rewrite.

@@ -1,21 +1,28 @@
 'use strict';
 // tests-repo-code-selftest.js — the tests-repo reader's cases (lib/tests-repo-code.js), on a throwaway fixture repo:
-// each a file and the words a scan of what the reader keeps must, or must not, find; macroSources giving a macro's
-// CoffeeScript alone; an unterminated template read to the end. Run by buildSystem/run-selftests.js on every build.
+// each a file and the words a scan of what the reader keeps must, or must not, find; the macro-source reader
+// (macroSourcesIn) — the sources by their KEYS, in file order (an extra written before the main source, a template that
+// is no source), each one's cooked text, file line and span, the shapes the page compiles, and its refusals; macroCode
+// laying two sources on one line; an unparseable file refused. Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { testsRepoCode, macroSources, macroCode } = require('./tests-repo-code');
+const { testsRepoCode, macroSources, macroSourcesIn, macroCode } = require('./tests-repo-code');
 const t = require('./selftest-verdict').cases('tests-repo-code');
 
 const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tests-repo-code-'));
 const put = (rel, text) => { const p = path.join(fixture, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
 put('Automator-and-test-harness-src/H.coffee', 'x = "#{a}"; harnessCall()\n# harnessComment()\n');
 put('tests/SystemTest_t/SystemTest_t.js', 'var SystemTest_t = { "intent": "metadataProse is named here" };\n');
-put('tests/SystemTest_t/SystemTest_t_automationCommands.js',
-  '// HEADER: the `headerTick` / `headerTock` fields\n// jsComment\nvar c = { "mainMacroSource":\n' +
-  '`m = ->\n  # macroComment\n  w.macroCall() # macroTrailing\n  w["macroString"]()\n  q = 7 // 2`\n}; // jsTrailing\n');
+// a stray template that is no macro source, the extra source written BEFORE the main one, and a CoffeeScript string
+// `"q\""` — written `"q\\""`, which masked as written would read the comment after it as a string
+const MACRO_FILE = 'tests/SystemTest_t/SystemTest_t_automationCommands.js';
+put(MACRO_FILE,
+  '// HEADER: the `headerTick` / `headerTock` fields\n// jsComment\nvar stray = `strayTemplateWord()`;\n' +
+  'var c = { "extraSubroutineSources": [`helper = ->\n  w.extraCall() # extraComment\n`],\n"mainMacroSource":\n' +
+  '`m = ->\n  # macroComment\n  w.macroCall() # macroTrailing\n  w["macroString"]()\n  z = "q\\\\"" # cookedOnlyComment\n' +
+  '  q = 7 // 2`\n}; // jsTrailing\n');
 put('tests/SystemTest_t/automation-assets/x/ref.js', 'var r = "referenceRecord";\n');
 put('tests/testsManifest.js', 'var m = ["manifestEntry"];\n');
 put('scripts/r.js', '#!/usr/bin/env shebangWord\n  // scriptComment\n/* scriptBlock\n   scriptBlockToo */ scriptAfterBlock()\n' +
@@ -27,23 +34,37 @@ put('scripts/.scratch/probe.js', 'scratchProbe()\n');
 put('scripts/t.js', 'const css = `\n/* rule\n// alsoTemplateText\n`; page.evaluate(() => w.afterTemplate());\nw.later();\n');
 const seen = new Set();
 for (const { lines } of testsRepoCode(fixture)) for (const l of lines) for (const w of l.match(/[A-Za-z_]\w*/g) || []) seen.add(w);
-// macroSources: the template's CoffeeScript alone, starting on its own line, and none of the JS around it
+// macroSources: the sources BY THEIR KEYS — never by order (the extra comes first here), never a stray template — in
+// file order, each one's CoffeeScript alone from its own file line, its span the text between its backticks
 const ms = macroSources(fixture);
-const one = ms.length === 1 && ms[0].sources.length === 1 ? ms[0].sources[0] : undefined;
-const msOk = !!one && one.line === 4 && /macroCall/.test(one.text) && !/mainMacroSource|HEADER|jsTrailing/.test(one.text);
-t.check(msOk, `macroSources gives the macro's CoffeeScript alone, from its line (${one ? one.line : 'none'})`);
+const srcs = ms.length === 1 ? ms[0].sources : [];
+const shape = srcs.map((s) => `${s.role}@${s.line}`).join(' ');
+t.check(shape === 'extra@4 main@8', `macroSources gives the extra and main sources by their keys, in file order, each from its line (${shape || 'none'})`);
+const [extra, main] = srcs;
+t.check(srcs.length === 2 && /extraCall/.test(extra.text) && /macroCall/.test(main.text)
+  && srcs.every((s) => !/strayTemplateWord|mainMacroSource|HEADER|jsTrailing/.test(s.text)), 'each macro source is its CoffeeScript alone, none of the JS around it');
+const fileText = fs.readFileSync(path.join(fixture, MACRO_FILE), 'utf8');
+t.check(srcs.length === 2 && srcs.every((s) => fileText[s.start - 1] === '`' && fileText[s.end] === '`')
+  && fileText.slice(main.start, main.end).includes('"q\\\\""') && main.text.includes('"q\\""'),
+  'a macro source\'s span is the text between its backticks, as written; its text, as cooked');
 fs.rmSync(fixture, { recursive: true, force: true });
-const MUST = ['harnessCall', 'macroCall', 'macroString', 'scriptCall', 'scriptAfterBlock', 'afterTemplate', 'later',
-  'afterSlashRegex', 'afterTickRegex', 'more', 'rule', 'alsoTemplateText'];
+const MUST = ['harnessCall', 'macroCall', 'macroString', 'extraCall', 'strayTemplateWord', 'scriptCall', 'scriptAfterBlock',
+  'afterTemplate', 'later', 'afterSlashRegex', 'afterTickRegex', 'more', 'rule', 'alsoTemplateText'];
 const MUST_NOT = ['harnessComment', 'metadataProse', 'headerTick', 'headerTock', 'jsComment', 'macroComment',
-  'macroTrailing', 'jsTrailing', 'referenceRecord', 'manifestEntry', 'shebangWord', 'scriptComment', 'scriptBlock',
-  'scriptBlockToo', 'scriptTrailing', 'afterDivision', 'tickComment', 'nodeModule', 'scratchProbe'];
+  'macroTrailing', 'extraComment', 'cookedOnlyComment', 'jsTrailing', 'referenceRecord', 'manifestEntry', 'shebangWord',
+  'scriptComment', 'scriptBlock', 'scriptBlockToo', 'scriptTrailing', 'afterDivision', 'tickComment', 'nodeModule',
+  'scratchProbe'];
 for (const w of MUST) t.check(seen.has(w), `tests-repo code names ${w}`);
 for (const w of MUST_NOT) t.check(!seen.has(w), `tests-repo code does not name ${w}`);
 // JS that does not parse (an unterminated template) is REFUSED, naming why — never read by a guess
 let refusal = '';
 try { macroCode('// lead\nvar c = `m = ->\n  # openComment\n  stillCode()\n'); } catch (e) { refusal = e.message; }
 t.check(/^JS_MASK_UNPARSEABLE: .*Unterminated template/.test(refusal), `an unparseable macro file is refused, naming why (${refusal || 'no throw'})`);
+// macroCode lays each source's masked text on its file line, keeping the JS before and after its backticks — two
+// sources on ONE line, the first shortened by cooking (`\``), the second's columns untouched by the first's splice
+const twoOnALine = macroCode('var c = { "extraSubroutineSources": [`a() # c\\`a`], "mainMacroSource": `bCall() # cb` };\n', 'f.js')[0];
+t.check(twoOnALine === 'var c = { "extraSubroutineSources": [`a()      `], "mainMacroSource": `bCall()     ` };',
+  `two macro sources on one line are each masked in place, the JS around them kept (${JSON.stringify(twoOnALine)})`);
 // a macro source is the COOKED text — what the page compiles — not the escapes as written: the file holds
 // `x = "a\\nb" # see \`it\``, the page compiles `x = "a\nb" # see `it``
 const cookFixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tests-repo-code-cook-'));
@@ -55,5 +76,24 @@ const cookedText = cooked.length === 1 ? cooked[0].sources[0].text : '';
 t.check(cookedText.includes('x = "a\\nb" # see `it`') && !cookedText.includes('\\`'),
   `a macro source reads its escapes as the page does (${JSON.stringify(cookedText)})`);
 fs.rmSync(cookFixture, { recursive: true, force: true });
+
+// macroSourcesIn, in memory, as the page compiles a command: a main source written as a string literal is its text,
+// and an extraSubroutineSources of `null` is none; and the refusals — each naming the file and the line, never a
+// source read by a guess
+const read = (text) => { try { return { sources: macroSourcesIn(text, 'f.js') }; } catch (e) { return { refusal: e.message }; } };
+const plain = read('var c = { "mainMacroSource": "m()", "extraSubroutineSources": null };\n');
+t.check(!!plain.sources && plain.sources.map((s) => s.role + ':' + s.text).join(' ') === 'main:m()',
+  `a string-literal main source is read, and null extras are none (${plain.refusal || JSON.stringify(plain.sources)})`);
+for (const [what, text, expect] of [
+  ['a source holding a `${…}`', 'var c = { "mainMacroSource": `a ${b}` };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:1 — its main source is neither a string literal nor a template literal without/],
+  ['a source that is a name, not a literal', 'var c = {\n "extraSubroutineSources": [`x()`, helper] };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:2 — its extra source is neither a string literal nor a template literal without/],
+  ['an extraSubroutineSources that is no array (the page would compile its characters)', 'var c = { "mainMacroSource": `m()`,\n "extraSubroutineSources": `one()` };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:2 — its extraSubroutineSources is no array/],
+  ['a source writing a line break as an escape', 'var c = {\n "mainMacroSource": `a\\nb` };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:2 — its main source writes a line break as an escape/],
+  // a written \n and a \⏎ in one source: the line COUNT still matches, every line after them sits one line off
+  ['a source whose `\\n` and `\\⏎` cancel out', 'var c = {\n "mainMacroSource": `a = "x\\ny"\nlong = 1 + \\\n2` };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:2 — its main source writes a line break as an escape/],
+]) {
+  const r = read(text);
+  t.check(!!r.refusal && expect.test(r.refusal), `${what} is refused, naming the file and line (${r.refusal || 'read as ' + JSON.stringify(r.sources)})`);
+}
 
 t.done();

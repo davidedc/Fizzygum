@@ -9,12 +9,12 @@
 //     call `<Cls>.__super__.<member>.call this, …` (a bare `super` forwards: `.apply(this, arguments)`); every MIXIN
 //     as one source after Mixin.coffee's rewrite; every other file (boot) whole. Parsed with the bundled
 //     CoffeeScript 2.0.3 `nodes()` — the browser's own grammar.
-//   - every test's macro sources (lib/tests-repo-code.js macroSources: the COOKED text the page compiles), as
+//   - every test's macro sources (lib/tests-repo-code.js macroSourcesIn: the COOKED text the page compiles), as
 //     authored — before Macro.coffee rewrites verb calls into `yield from`.
 //   - the `Macro.fromString "…"` HEREDOCS (MacroToolkit's standard verbs: CODE in a string): lifted and parsed, each
 //     line mapped back to its file line.
 //   - the tests repo's scripts and each macro file's JS shell: acorn (vendor/acorn), skipping the shell's macro
-//     templates. The file set is tests-repo-code's testsRepoFiles.
+//     sources (their spans, from the same macroSourcesIn read). The file set is tests-repo-code's testsRepoFiles.
 // ⚠ The 2.0.3 bundle is MINIFIED, so node kinds are told STRUCTURALLY, by their `children` names. A call is one of
 //   THREE shapes (found by cross-checking every call against CoffeeScript 2.7's `ast: true`, archive plan §9):
 //   a Call {variable, args} (`isNew` for `new X(args)` / `new X args`); an ARGUMENT-LESS `new X`, which is NOT a
@@ -93,8 +93,7 @@
 const fs = require('fs');
 const path = require('path');
 const { loadMetaCompiler } = require('./meta-compiler');
-const { macroSources, testsRepoFiles } = require('./tests-repo-code');
-const { maskJs } = require('./js-mask');
+const { macroSourcesIn, testsRepoFiles } = require('./tests-repo-code');
 const { harvestDefs } = require('./name-definitions');
 const acorn = require('../../vendor/acorn/acorn.js');
 
@@ -356,10 +355,17 @@ function callSites({ srcDir, testsRepoDir } = {}) {
 
   for (const file of walkFiles(srcDir, '.coffee')) { counts.src++; readCoffeeFile(file, 'src'); }
   const repo = testsRepoDir && testsRepoFiles(testsRepoDir);
+  // each macro command file's sources, through the one reader: parsed as CoffeeScript here, and skipped (by their spans)
+  // when its JS shell is read with the scripts below
+  const macroFilesRead = [];
   if (repo) {
     counts.testsRepo = true;
     for (const file of repo.harness) { counts.harness++; readCoffeeFile(file, 'harness'); }
-    for (const { file, sources } of macroSources(testsRepoDir)) {
+    for (const file of repo.macro) {
+      try { macroFilesRead.push({ file, sources: macroSourcesIn(fs.readFileSync(file, 'utf8'), file) }); }
+      catch (e) { unreadable.push({ file, message: e.message }); }
+    }
+    for (const { file, sources } of macroFilesRead) {
       for (const s of sources) {
         counts.macro++;
         harvestDefs(s.text.split('\n'), ours);
@@ -549,7 +555,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
     }
   }
 
-  // JS: the tests repo's scripts and each macro file's shell (its macro templates are CoffeeScript, read above)
+  // JS: the tests repo's scripts and each macro file's shell (its macro sources are CoffeeScript, read above)
   const imports = new Map();     // script file → Map(imported name → the module file defining it)
   if (repo) {
     const jsDefs = new Set();
@@ -691,12 +697,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
       });
     };
     for (const file of repo.script) { counts.script++; readJs(file, 'script', []); }
-    for (const file of repo.macro) {
-      let tpl = [];
-      try { tpl = maskJs(fs.readFileSync(file, 'utf8'), file).templates.filter((t) => t.depth === 0).map((t) => [t.start - 1, t.end + 1]); }
-      catch (e) { unreadable.push({ file, message: e.message }); continue; }
-      readJs(file, 'macro', tpl);
-    }
+    for (const { file, sources } of macroFilesRead) readJs(file, 'macro', sources.map((s) => [s.start - 1, s.end + 1]));
     for (const x of jsDefs) ours.add(x);
   }
 

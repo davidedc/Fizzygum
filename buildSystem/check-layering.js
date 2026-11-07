@@ -57,6 +57,7 @@ const fs = require('fs');
 const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { macroSourcesIn } = require('./lib/tests-repo-code');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, ['--src=', '--tests-dir='], 'check-layering');
@@ -194,8 +195,8 @@ const isImmediateMutator = (name) =>
 // settle during construction; attaching first makes the settle legitimate. (If some public geometry method
 // genuinely cannot work on an orphan, it should THROW on an orphan rather than invite a raw workaround.)
 //
-// Scope: BOTH the test macros (tests/*/*_automationCommands.js, scanned whole-file -- they are ~all macro
-// source) AND the shared macro VERBS in src/macros/MacroToolkit.coffee -- but for the latter only the
+// Scope: BOTH the test macros (the macro sources of tests/*/*_automationCommands.js, as the page compiles them --
+// lib/tests-repo-code.js's macroSourcesIn) AND the shared macro VERBS in src/macros/MacroToolkit.coffee -- but for the latter only the
 // `Macro.fromString """..."""` heredoc bodies (the L1/L2 toolkit METHODS around them are framework code that
 // legitimately uses the low-level API).
 const MACROS_DIR = dirArg(ARGV, '--tests-dir=', path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests'), 'check-layering');
@@ -801,15 +802,13 @@ function collectMacros(dir, out) {
   return out;
 }
 
-// Scan a macro test source for forbidden private/low-level calls (rule D). The macro CoffeeScript
-// lives in a backtick string inside this .js; a per-line `#`-comment strip is enough to avoid the
-// narrative comments (which legitimately mention e.g. adjustContentsBounds / @_moveWithin).
+// Scan macro lines for forbidden private/low-level calls (rule D): a test's macro sources (lineOf maps a source line to
+// its file line), or a whole file with heredocOnly. A per-line `#`-comment strip is enough to avoid the narrative
+// comments (which legitimately mention e.g. adjustContentsBounds / @_moveWithin).
 // heredocOnly: scan only the `Macro.fromString """..."""` bodies (for MacroToolkit.coffee, whose
-// surrounding L1/L2 toolkit methods are framework code). When false, scan the whole file (the test
-// automationCommands.js are ~all macro source).
-function checkMacroFile(file, violations, heredocOnly) {
+// surrounding L1/L2 toolkit methods are framework code).
+function checkMacroLines(file, lines, lineOf, violations, heredocOnly) {
   const rel = path.relative(path.join(__dirname, '..', '..'), file);
-  const lines = fs.readFileSync(file, 'utf8').split('\n');
   let inHeredoc = false;
   let pendingSanction = false;   // armed by a MACRO_SANCTION comment line, consumed by the next code line
   for (let n = 0; n < lines.length; n++) {
@@ -833,7 +832,7 @@ function checkMacroFile(file, violations, heredocOnly) {
     const hash = raw.indexOf('#');
     const code = hash >= 0 ? raw.slice(0, hash) : raw;
     const m = code.match(MACRO_FORBIDDEN_CALL);
-    if (m && !lineSanctioned) violations.push(rules.fired('D_MACRO_PRIVATE_CALL', `[D] macro calls private/low-level .${m[1]}() — ${rel}:${n + 1} `
+    if (m && !lineSanctioned) violations.push(rules.fired('D_MACRO_PRIVATE_CALL', `[D] macro calls private/low-level .${m[1]}() — ${rel}:${lineOf(n)} `
       + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/moveTo; `
       + `a test ORACLE may carry \`# macro-private-call-sanctioned: <reason>\`)`));
   }
@@ -871,13 +870,13 @@ function main() {
     catch (e) { console.error('check-layering: operational error collecting macros:', e.message); process.exit(2); }
     macroCount = macros.length;
     for (const f of macros) {
-      try { checkMacroFile(f, violations); }
+      try { for (const s of macroSourcesIn(fs.readFileSync(f, 'utf8'), f)) checkMacroLines(f, s.text.split('\n'), (n) => s.line + n, violations, false); }
       catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
     }
   }
   // the SHARED macro verbs in MacroToolkit.coffee (heredoc bodies only) are src: read whether or not the tests repo is
   if (fs.existsSync(MACRO_VERBS_FILE)) {
-    try { checkMacroFile(MACRO_VERBS_FILE, violations, true); macroCount++; }
+    try { checkMacroLines(MACRO_VERBS_FILE, fs.readFileSync(MACRO_VERBS_FILE, 'utf8').split('\n'), (n) => n + 1, violations, true); macroCount++; }
     catch (e) { console.error(`check-layering: operational error in ${MACRO_VERBS_FILE}:`, e.message); process.exit(2); }
   }
   // the exemption tables, each held to what it exempts this run (a stale entry is a violation, never a note)
