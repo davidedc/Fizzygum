@@ -1089,7 +1089,7 @@ class StringWdgt extends Widget
   # performed in here
   _createRefreshOrGetBackBuffer: ->
 
-    cacheKey = @createBufferCacheKey @horizontalAlignment, @verticalAlignment
+    cacheKey = @createBufferCacheKey()
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit?
       # we might have hit a previously cached

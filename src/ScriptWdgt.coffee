@@ -32,7 +32,7 @@ class ScriptWdgt extends CodeAreaWdgt
   functionFromCompiledCode: undefined
 
   constructor: (@savedScript = "") ->
-    super new Point 200,400
+    super()
     @_buildAndConnectChildren()
 
 

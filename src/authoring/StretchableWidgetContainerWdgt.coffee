@@ -18,7 +18,7 @@ class StretchableWidgetContainerWdgt extends Widget
   contents: undefined
 
   constructor: (@contents) ->
-    super new Point 300, 300
+    super()
     @_buildAndConnectChildren()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).

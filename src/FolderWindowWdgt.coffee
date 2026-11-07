@@ -24,7 +24,7 @@ class FolderWindowWdgt extends FrameWdgt
     # FrameWdgt._positionAndResizeChildren), while this is an extent my content is to take.
     panel = @contents.contents
     grid = panel.extentShowingIconGrid panel.iconsLayingInGridWrapCount, WorldWdgt.theme.folderWindowIconRows
-    @setExtent new Point (grid.x + @_chromeWidth()), (grid.y + @_chromeHeight(@contents.contentStackSpec()))
+    @setExtent new Point (grid.x + @_chromeWidth()), (grid.y + @_chromeHeight())
 
 
   # my ART, not a badge decision: the arrow contract (reference-widgets plan §4.4) reserves the

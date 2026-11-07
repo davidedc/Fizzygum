@@ -22,7 +22,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
 
   constructor: ->
-    super new Point 300, 300
+    super()
     @_buildAndConnectChildren()
 
     (loadJSFilePromise "./videos/Fizzygum-videos-private/privateVideosManifest.js").then \

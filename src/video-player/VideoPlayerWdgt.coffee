@@ -9,7 +9,7 @@ class VideoPlayerWdgt extends Widget
 
 
   constructor: ->
-    super new Point 300, 300
+    super()
     @_buildAndConnectChildren()
     world.keyboardEventsReceivers.add @
 

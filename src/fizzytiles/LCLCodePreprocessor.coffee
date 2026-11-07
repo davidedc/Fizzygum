@@ -1764,7 +1764,7 @@ class LCLCodePreprocessor
     #  - simplifyFunctionDoingSimpleInvocation
     #  - other beautification
     # it would be better to have beautification as the very last step
-    [code, error] = @simplifyFunctionDoingSimpleInvocation(code, error, userDefinedFunctions)
+    [code, error] = @simplifyFunctionDoingSimpleInvocation(code, error)
     if @detailedDebug then console.log "_preprocess-29\n" + code + " error: " + error
 
     [code, error] = @simplifyFunctionsAloneInParens(code, error, userDefinedFunctions, bracketsVariables)

@@ -19,7 +19,7 @@ class SimpleLinkWdgt extends Widget
   linkString: undefined
 
   constructor: (@descriptionString = "insert link caption here", @linkString = "http://www.google.com") ->
-    super new Point 405, 50
+    super()
     @_buildAndConnectChildren()
 
 

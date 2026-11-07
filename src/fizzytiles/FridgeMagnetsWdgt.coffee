@@ -22,7 +22,7 @@ class FridgeMagnetsWdgt extends Widget
 
 
   constructor: ->
-    super new Point 400, 400
+    super()
     @_buildAndConnectChildren()
 
   colloquialName: ->

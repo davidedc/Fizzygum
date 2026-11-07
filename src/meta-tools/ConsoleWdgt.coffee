@@ -9,7 +9,7 @@ class ConsoleWdgt extends CodeAreaWdgt
   functionFromCompiledCode: undefined
 
   constructor: (@target) ->
-    super new Point 200,400
+    super()
     @_buildAndConnectChildren()
 
   # my target's name follows the dash as it is: a proper name keeps its capitals ("Console — Docs

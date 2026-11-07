@@ -12,10 +12,11 @@ class BinWdgt extends Widget
   externalPadding: 0
 
   constructor: ->
-    # a naked (chrome-less) bin must establish its OWN usable extent (the
-    # InspectorWdgt idiom); the windowed path (BinOpenerWdgt) overrides this
-    # via the window's bounds.
-    super new Point 340, 270
+    super()
+    # a naked (chrome-less) bin — WidgetFactory.underTheCarpet builds one — must
+    # establish its OWN usable extent (the InspectorWdgt idiom); the windowed path
+    # (BinOpenerWdgt) overrides this via the window's bounds.
+    @__commitExtent new Point 340, 270
     # my only paint: my footer band's rule, my one seam (_seamRects)
     @appearance = new SeamRulesAppearance @
     # I only ever appear as a window's content (BinOpenerWdgt always wraps me in a

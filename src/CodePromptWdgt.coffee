@@ -23,7 +23,7 @@ class CodePromptWdgt extends CodeAreaWdgt
     # guarded: absence must leave the class-level "" standing, which a bare
     # assignment would overwrite with undefined (R5).
     @defaultContents = opts.defaultContents if opts.defaultContents?
-    super new Point 200,400
+    super()
     @_buildAndConnectChildren()
 
   colloquialName: ->

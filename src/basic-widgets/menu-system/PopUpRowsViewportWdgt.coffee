@@ -66,7 +66,7 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
     chromeHeight = 0
     if frame?.isFrame?() and @_contentStackSpec?
       chromeWidth = frame._chromeWidth()
-      chromeHeight = frame._chromeHeight @_contentStackSpec
+      chromeHeight = frame._chromeHeight()
     new Point (Math.min hug.x, world.width() - chromeWidth),
               (Math.min hug.y, world.height() - chromeHeight)
 
@@ -101,7 +101,7 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
     @_applyExtentBase measure
     @_reLayoutChildren()
     frame._applyExtentBase new Point (measure.x + frame._chromeWidth()),
-                                     (measure.y + (frame._chromeHeight @_contentStackSpec))
+                                     (measure.y + frame._chromeHeight())
     @_contentStackSpec.desiredWidth = undefined
     frame._scheduleRelayoutRespectingPhase()
     true

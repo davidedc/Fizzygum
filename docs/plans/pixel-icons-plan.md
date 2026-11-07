@@ -847,7 +847,7 @@ classes.
    contact sheet. This is the arc's ONE end-review point (with §5's contact-sheet decisions:
    logo / little-maps keep-or-convert).
 4. Recapture: check `capture-macro-test-references.js` for multi-name support; if
-   single-name, drive it serially (never parallel — boot-storm flake) via a thin loop script
+   single-name, drive it serially (one browser at a time) via a thin loop script
    in `.scratch/`, logging per-test verdicts; equivalent of `fg recapture <name>` (full flow,
    `--dprs=1,2`) per affected test. Budget: recapture-inspector does 15 tests in minutes;
    scale estimate accordingly and run in background.

@@ -421,11 +421,15 @@ boot = ->
   # The case that we want to optimise is the pre-compiled case:
   # the pre-compiled pack should ideally only contain everything
   # that is needed to boot the world.
+  # ⚠ Each element carries its own parentheses. Spelled `loadJSFilePromise "a",` with the next element on
+  # the next line, the paren-less call takes that element as its SECOND ARGUMENT: one element,
+  # `loadJSFilePromise("a", loadJSFilePromise("b"))`, both files fetched and only the first awaited — so the
+  # batch below starts before CoffeeScript is in, and a slow page fails with "CoffeeScript is not defined".
   bootLoadPromises = [
-    loadJSFilePromise "js/pre-compiled.js",
-    # coffeescript could nominally be loaded later
-    # if it wasn't for the fact that the paint tool needs it
-    loadJSFilePromise "js/libs/fizzygum-coffeescript-min.js"
+    loadJSFilePromise("js/pre-compiled.js")
+    # CoffeeScript is in this first batch because the next one compiles with it at once on a page that
+    # compiles its sources at boot, and the paint tool needs it on every page
+    loadJSFilePromise("js/libs/fizzygum-coffeescript-min.js")
   ]
 
   # FileSaver + jszip + the two test manifests are TEST machinery, so they load only for a
