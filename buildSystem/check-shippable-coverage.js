@@ -49,14 +49,23 @@
  * failure mode this gate exists to close.
  *
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
- *   node ./buildSystem/check-shippable-coverage.js [build flags...]
+ *   node ./buildSystem/check-shippable-coverage.js [--src=DIR] [build flags...]
+ * The build flags go to build.py (which refuses one it does not know); --src= checks another src tree (a copy
+ * carrying a plant), handed to build.py's listing too. That both rules BITE is proven on every build by
+ * check-shippable-coverage-selftest.js.
  */
 
 const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
+const { dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
+const ARGV = process.argv.slice(2);
+const SRC_GIVEN = ARGV.some((a) => a.startsWith('--src='));
+const SRC = dirArg(ARGV, '--src=', path.join(REPO, 'src'), 'check-shippable-coverage');
+const BUILD_ARGS = [...ARGV.filter((a) => !a.startsWith('--src=')), ...(SRC_GIVEN ? ['--src=' + SRC] : [])];
 
 function fail(msg) { console.error('check-shippable-coverage: ' + msg); process.exit(2); }
 
@@ -77,7 +86,7 @@ function isAllowlisted(relPath) {
 // ---- 1. the SHIPPED set, straight from build.py (single source of truth) ----
 let shippedSet;
 try {
-  const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...process.argv.slice(2)],
+  const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...BUILD_ARGS],
     { cwd: REPO, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   shippedSet = new Set(out.split('\n').map(function (s) { return s.trim(); }).filter(Boolean));
 } catch (e) {
@@ -104,15 +113,14 @@ function walkCoffeeFiles(dir, out) {
   return out;
 }
 
-const srcDir = path.join(REPO, 'src');
-if (!fs.existsSync(srcDir)) fail('no "src" directory found under "' + REPO + '"');
-const fullFiles = walkCoffeeFiles(srcDir, []);
+if (!fs.existsSync(SRC)) fail('no "src" directory found at "' + SRC + '"');
+const fullFiles = walkCoffeeFiles(SRC, []);
 if (!fullFiles.length) fail('found zero .coffee files under src/ — something is very wrong');
 
-// normalise to REPO-relative, forward-slash paths, e.g. "src/apps/DashboardsApp.coffee",
-// matching the format build.py --list-shippable prints.
+// normalise to `src/…`, forward-slash paths, e.g. "src/apps/DashboardsApp.coffee", matching the format build.py
+// --list-shippable prints (whichever src tree it lists).
 const fullRel = fullFiles.map(function (abs) {
-  return path.relative(REPO, abs).split(path.sep).join('/');
+  return 'src/' + path.relative(SRC, abs).split(path.sep).join('/');
 });
 
 // ---- 3. unshipped = FULL − SHIPPED − ALLOWLIST ----
@@ -125,9 +133,9 @@ const staleAllowlist = ALLOWLIST_PREFIXES.filter(function (prefix) {
 });
 if (staleAllowlist.length) {
   for (const prefix of staleAllowlist) {
-    console.error('check-shippable-coverage: STALE_ALLOWLIST_ENTRY ALLOWLIST_PREFIXES \'' + prefix + '\' — it exempts no '
+    console.error(rules.fired('STALE_ALLOWLIST_PREFIX', 'check-shippable-coverage: STALE_ALLOWLIST_ENTRY ALLOWLIST_PREFIXES \'' + prefix + '\' — it exempts no '
       + 'unshipped .coffee file (no such path, or a part claims everything under it), so it would only hide the next '
-      + 'real gap there: delete the entry');
+      + 'real gap there: delete the entry'));
   }
 }
 
@@ -137,15 +145,14 @@ if (unshipped.length) {
   const dirs = new Set(unshipped.map(function (rel) { return path.posix.dirname(rel); }));
   console.error('check-shippable-coverage: ' + unshipped.length + ' shipped .coffee file(s) under src/ '
     + 'are NOT covered by build.py\'s --list-shippable output:');
-  for (const rel of unshipped) console.error('  UNSHIPPED ' + rel);
+  for (const rel of unshipped) console.error(rules.fired('UNSHIPPED', '  UNSHIPPED ' + rel));
   console.error('');
-  console.error('Fix: add glob("src/<dir>/*.coffee") to buildSystem/build.py\'s shippable-source list '
-    + '(~lines 191-233) for each offending directory below, then re-run the build:');
+  console.error('Fix: claim each offending directory below in the part it belongs to (its "dirs" in '
+    + 'buildSystem/parts.json; a part\'s dirs are not recursive), then re-run the build:');
   for (const dir of Array.from(dirs).sort()) console.error('  ' + dir);
   console.error('');
-  console.error('(If the directory is DELIBERATELY conditional or built by a different mechanism — like '
-    + 'src/video-player/ behind --includeVideoPlayer, or src/boot/ which build_it_please.sh compiles '
-    + 'directly — add it to the ALLOWLIST_PREFIXES list at the top of this script, with a reason.)');
+  console.error('(A directory built by another mechanism — like src/boot/, which build_it_please.sh compiles by name — '
+    + 'goes on the ALLOWLIST_PREFIXES list at the top of this script, with a reason.)');
   process.exit(1);
 }
 if (staleAllowlist.length) process.exit(1);

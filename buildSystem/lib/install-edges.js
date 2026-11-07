@@ -48,9 +48,12 @@ const fs = require('fs');
 const path = require('path');
 const { stripComment } = require('./name-definitions.js');
 
+// `src` is the tree read (default this repo's src/; a gate's --src= rail hands it a planted copy); the harness is
+// always the sibling tests repo's.
 const SRC = path.resolve(__dirname, '../../src');
 const HARNESS = path.resolve(__dirname, '../../../Fizzygum-tests/Automator-and-test-harness-src');
-const BOOT_GLOBALS = path.join(SRC, 'boot/globalFunctions.coffee');
+const bootGlobalsOf = (src) => path.join(src, 'boot/globalFunctions.coffee');
+const BOOT_GLOBALS = bootGlobalsOf(SRC);
 
 const EDGE = /\b([A-Za-z_]\w*)\.installOnto\s+([A-Za-z_]\w*)/g;
 // a class-body key at the class-body indent: `name:` (prototype) or `@name:` (class side)
@@ -70,13 +73,14 @@ function walk(dir, acc) {
 
 // One class per file, filename = class name, so a support class is found by its basename in either
 // tree the build draws classes from.
-let fileOfClassCache = null;
-function fileOfClass(name) {
-  if (!fileOfClassCache) {
-    fileOfClassCache = new Map();
-    for (const p of [...walk(SRC, []), ...walk(HARNESS, [])]) fileOfClassCache.set(path.basename(p, '.coffee'), p);
+const fileOfClassCache = new Map();   // src -> (class name -> file)
+function fileOfClass(name, src = SRC) {
+  if (!fileOfClassCache.has(src)) {
+    const files = new Map();
+    for (const p of [...walk(src, []), ...walk(HARNESS, [])]) files.set(path.basename(p, '.coffee'), p);
+    fileOfClassCache.set(src, files);
   }
-  return fileOfClassCache.get(name);
+  return fileOfClassCache.get(src).get(name);
 }
 
 // The members `support`'s own @installOnto copies onto `target`, by its own body. Lines inside a
@@ -142,16 +146,17 @@ function installedMembersOf(support, target, file, drift) {
   return members;
 }
 
-function installEdges() {
-  if (!fs.existsSync(BOOT_GLOBALS)) return [];
+function installEdges(src = SRC) {
+  const bootGlobals = bootGlobalsOf(src);
+  if (!fs.existsSync(bootGlobals)) return [];
   const edges = [];
   const drift = [];
-  fs.readFileSync(BOOT_GLOBALS, 'utf8').split('\n').forEach((raw, i) => {
+  fs.readFileSync(bootGlobals, 'utf8').split('\n').forEach((raw, i) => {
     const code = stripComment(raw);
     let e;
     EDGE.lastIndex = 0;
     while ((e = EDGE.exec(code)) !== null) {
-      const supportFile = fileOfClass(e[1]);
+      const supportFile = fileOfClass(e[1], src);
       if (!supportFile) continue;           // its repo is not checked out -- see harnessPresent()
       edges.push({ support: e[1], target: e[2], supportFile, bootLine: i + 1,
                    members: installedMembersOf(e[1], e[2], supportFile, drift) });

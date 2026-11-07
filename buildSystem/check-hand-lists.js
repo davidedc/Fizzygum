@@ -37,10 +37,9 @@
 // plus a mixin's member keys at the indent its onceAddedClassProperties hash locks
 // (lib/coffee-method-header.js mixinMemberIndent: what a mixin puts on a widget is a member like any
 // other). Lines inside a heredoc declare nothing — a code sample in a string is not a class body. This
-// harvest is its own because no shared one answers this question: lib/name-definitions.js counts ANY
-// key at ANY indent (an option object's keys too — the over-approximation its two consumers rely on,
-// which here would turn data lists into "name lists"); lib/coffee-method-header.js sees METHODS only,
-// while the lists that rotted named FIELDS (world collections, drag-embed slots); lib/install-edges.js
+// harvest is its own because no shared one answers this question: lib/name-definitions.js and
+// lib/coffee-method-header.js see CALLABLE members only (a method header, a function), while the lists
+// that rotted named FIELDS (world collections, drag-embed slots); lib/install-edges.js
 // reads this same key shape privately, for one support class at a time. An EMPTY universe classifies
 // nothing as a name and so certifies everything: exit 2.
 //
@@ -117,13 +116,16 @@
 const fs = require('fs');
 const path = require('path');
 const { mixinMemberIndent } = require('./lib/coffee-method-header');
-const { rejectUnknownArgs } = require('./lib/cli-args');
+const { rejectUnknownArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+// the four failing sanction tokens; SANCTION_UNVERIFIED is a note, never a rule
+rules.declare(['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS', 'SANCTION_EMPTY', 'SANCTION_STALE']);
 const { runSet, DEFAULT_LAYOUT: WHAT_RUNS_LAYOUT } = require('./lib/what-runs');
 
 const FIZZYGUM = path.resolve(__dirname, '..');
 const UMBRELLA = path.resolve(FIZZYGUM, '..');
 const TESTS_REPO = path.join(UMBRELLA, 'Fizzygum-tests');
-const SRC = path.join(FIZZYGUM, 'src');
+let SRC = path.join(FIZZYGUM, 'src');   // main() reads the --src= rail
 const BUILD_SYSTEM = path.join(FIZZYGUM, 'buildSystem');
 const HARNESS = path.join(TESTS_REPO, 'Automator-and-test-harness-src');
 const SCRIPTS = path.join(TESTS_REPO, 'scripts');
@@ -434,13 +436,18 @@ function printProblems(problems) {
     SANCTION_STALE: 'it sanctions no name list — none opens on the line it reaches (its own when it trails code, else the first line below its comment block). The list moved, became a declaration or was derived away: move the marker, or delete it',
   };
   for (const p of problems.filter(q => !q.note)) {
-    console.error(`  ${p.token}  ${where(p)}  "${clip(p.text)}"`);
+    console.error(rules.fired(p.token, `  ${p.token}  ${where(p)}  "${clip(p.text)}"`));
     console.error(`      ${say[p.token]}${p.names ? ` (named, never run: ${p.names.join(', ')})` : ''}`);
   }
 }
 
 function main(argv) {
-  rejectUnknownArgs(argv, ['--census', '--names-only', '--min=', '--files', '--fg='], 'check-hand-lists');
+  // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-hand-lists.js [--src=DIR]
+  // [--census] [--files <paths…>] [--fg=<path>] — the rail reads another src tree (a copy carrying a plant) for the
+  // Fizzygum half and the name universe. That every rule BITES, in both modes, is proven on every build by
+  // check-hand-lists-selftest.js.
+  rejectUnknownArgs(argv, ['--census', '--names-only', '--min=', '--files', '--fg=', '--src='], 'check-hand-lists');
+  SRC = dirArg(argv.filter((a) => a.startsWith('--src=')), '--src=', SRC, 'check-hand-lists');
   const census = argv.includes('--census');
   const filesFlag = argv.indexOf('--files');
   const given = filesFlag >= 0 ? argv.slice(filesFlag + 1).filter(a => !a.startsWith('--')) : undefined;
@@ -484,7 +491,9 @@ function main(argv) {
   const exists = { gateFiles: gateFileNames(testsPresent), testDirs: testDirNames(testsPresent), tokens: guardTokensOf(tokenFiles) };
   const runs = { gateFiles: new Set([...exists.gateFiles].filter(n => runBasenames.has(n))),
                  testDirs: worldRuns ? exists.testDirs : new Set(),
-                 tokens: guardTokensOf(tokenFiles.filter(f => ran.files.has(f.abs) || (worldRuns && f.ext === '.coffee'))) };
+                 // a world source is a .coffee file the WORLD compiles — src or the harness — never a --files plant, which
+                 // would otherwise vouch for its own sanction through any token it prints
+                 tokens: guardTokensOf(tokenFiles.filter(f => ran.files.has(f.abs) || (worldRuns && f.ext === '.coffee' && f.repo !== 'given'))) };
   const guards = { exists, runs, complete: testsPresent, runsKnown: ran.fgPresent };
   const checked = given ? givenFiles : treeFiles;
   const { lists, problems, sanctions } = evaluate(checked, universe, guards);
@@ -505,7 +514,7 @@ function main(argv) {
     if (unsanctioned.length) {
       over = true;
       console.error(`\n[hand-lists] FAIL — ${unsanctioned.length} unsanctioned name list(s) (with --files every one is a violation):`);
-      for (const l of unsanctioned) console.error(`  UNSANCTIONED_NAME_LIST  ${where(l)}  [${preview(l.items)}]`);
+      for (const l of unsanctioned) console.error(rules.fired('UNSANCTIONED_NAME_LIST', `  UNSANCTIONED_NAME_LIST  ${where(l)}  [${preview(l.items)}]`));
     }
     console.log(`[hand-lists] ${over || failures.length ? '' : 'OK — '}${checked.length} given file(s): ${counts}.`);
   } else {
@@ -518,7 +527,7 @@ function main(argv) {
       if (unsanctioned.length > h.baseline) {
         over = true;
         console.error(`\n[hand-lists] FAIL — ${h.label} holds ${unsanctioned.length} unsanctioned name list(s), over its baseline of ${h.baseline}. Every one:`);
-        for (const l of unsanctioned) console.error(`  ${where(l)}  [${preview(l.items)}]`);
+        for (const l of unsanctioned) console.error(rules.fired('OVER_BASELINE', `  ${where(l)}  [${preview(l.items)}]`));
       } else if (unsanctioned.length < h.baseline && testsPresent) {
         // (without the harness classes some lists read as data, so a lower count there is no gain to bank)
         console.log(`[hand-lists] NOTE — ${h.label} is at ${unsanctioned.length} unsanctioned name list(s), below its baseline of ${h.baseline}: tighten BASELINE_${h.repo.toUpperCase()} in buildSystem/check-hand-lists.js to lock the gain in.`);

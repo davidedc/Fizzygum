@@ -2,7 +2,9 @@
 // check-dead-methods-selftest.js — check-dead-methods.js's own decisions on synthetic inputs (no tests repo needed):
 // the settle-twin symmetry rule, the class-side inventory, and a src line read as code and then by the reference
 // rule. The rule's and the tests-repo reader's own cases are lib/method-references-selftest.js and
-// lib/tests-repo-code-selftest.js. Run by buildSystem/run-selftests.js on every build.
+// lib/tests-repo-code-selftest.js. Those are unit tests of the engine; the gate's rules are proven to BITE at the end, by
+// running the REAL gate (the src walk, the tests repo's references, the allowlist, the exit) on a planted copy of src/
+// (lib/planted-src.js). Run by buildSystem/run-selftests.js on every build.
 
 const { twinName, inventoryOf, independentlyReferenced } = require('./check-dead-methods');
 const { codeOfCoffeeLine } = require('./lib/coffee-mask');
@@ -40,5 +42,62 @@ for (const [inp, must, mustNot] of lineCases) {
   const names = methodRefs.methodReferences(codeOfCoffeeLine(inp, null).code).names;
   t.check(must.every((n) => names.includes(n)) && mustNot.every((n) => !names.includes(n)), `src line ${JSON.stringify(inp)} -> ${JSON.stringify(names)}`);
 }
+
+// ---- the REAL gate on a planted src copy ---------------------------------------------------------------------------
+// A header the shared matcher cannot see stops the gate before every other rule, so it is a run of its own. The
+// stale-entry plants name REAL allowlist entries, read at run time: a public entry gains a reference, another public
+// entry gains a live settle twin (so the symmetry rule already exempts it), and a third entry's only definer is
+// deleted.
+const fs = require('fs');
+const path = require('path');
+const { proveGate, SRC } = require('./lib/planted-src');
+const allow = fs.readFileSync(path.join(__dirname, 'dead-method-allowlist.txt'), 'utf8').split('\n')
+  .map((l) => l.replace(/#.*/, '').trim()).filter(Boolean);
+const publicEntries = allow.filter((n) => /^[a-z]/.test(n));
+const [referenced, twinned] = publicEntries;
+// an entry whose every definition lives in ONE src file, so deleting that file leaves it defined nowhere
+const definers = (n) => fs.readdirSync(SRC, { recursive: true }).filter((f) => String(f).endsWith('.coffee'))
+  .filter((f) => new RegExp(`^  @?${n}\\s*:`, 'm').test(fs.readFileSync(path.join(SRC, String(f)), 'utf8')));
+const undefinedEntry = allow.find((n) => n !== referenced && n !== twinned && definers(n).length === 1);
+const cls = (name, ...body) => [`class ${name} extends Widget`, ...body, ''].join('\n');
+proveGate({
+  name: 'dead-methods',
+  cases: t,
+  gate: path.join(__dirname, 'check-dead-methods.js'),
+  pass: /^\[dead-methods\] OK — /m,
+  control: {
+    plants: {
+      'BiteProofReachedWdgt.coffee': cls('BiteProofReachedWdgt',
+        '  bpNames: ["biteProofByString", "biteProofUser"]',
+        '  biteProofByString: -> 1',
+        '  biteProofPub: -> 1',
+        '  _biteProofPubNoSettle: -> 1',
+        '  biteProofUser: -> @_biteProofPubNoSettle()'),
+    },
+    lines: [/^\[dead-methods\] NOTE — .*biteProofPub↔_biteProofPubNoSettle/m],
+  },
+  runs: [{
+    label: 'a header the shared matcher cannot see',
+    plants: { 'BiteProofUnseen.coffee': cls('BiteProofUnseen', '  biteProofWrapped: (a,', '    b) ->', '    1') },
+    expect: { UNSEEN_HEADER: /^   BiteProofUnseen\.coffee:2: biteProofWrapped: \(a,$/m },
+  }, {
+    label: 'a dead method; allowlist entries referenced, redundant, defined nowhere',
+    plants: {
+      'BiteProofDead.coffee': cls('BiteProofDead', '  biteProofNeverReached: -> 1'),
+      'BiteProofAllowlistPlants.coffee': cls('BiteProofAllowlistPlants',
+        '  bpNames: ["bpUseIt", "bpTwinCaller"]',
+        `  bpUseIt: -> @x.${referenced}()`,
+        `  _${twinned}NoSettle: -> 1`,
+        `  bpTwinCaller: -> @x._${twinned}NoSettle()`),
+    },
+    unplant: [definers(undefinedEntry)[0]],
+    expect: {
+      DEAD_METHOD: /^  biteProofNeverReached  \(BiteProofDead\.coffee:2\)$/m,
+      STALE_ENTRY_REFERENCED: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${referenced} — no longer dead: it is referenced$`, 'm'),
+      STALE_ENTRY_REDUNDANT: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${twinned} — auto-exempt by settle-tier symmetry \\(live twin _${twinned}NoSettle\\)`, 'm'),
+      STALE_ENTRY_UNDEFINED: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${undefinedEntry} — no method of that name is defined in src$`, 'm'),
+    },
+  }],
+});
 
 t.done();

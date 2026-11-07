@@ -29,3 +29,7 @@ addFunction     # LCL scope API: scope.addFunction(name, fn) (LCLProgramRunner)
 # ── SWCanvas bitmapText API (vendored: vendor/swcanvas.pin) ──
 loadFont                   # SWCanvas: bitmapText.loadFont(...)
 ensureMetricsBundleLoaded  # SWCanvas: bitmapText.ensureMetricsBundleLoaded()
+
+# ── a property that HOLDS a closure: genuinely dynamic sends (no definition form can name what it holds) ──
+overridingContextMenu   # Widget.overridingContextMenu holds a menu-building function a widget installs (TextWdgt: @evaluationMenu); called through it at Widget.coffee's context-menu lookup
+drawFunction            # LCLProgramRunner.drawFunction holds the compiled LiveCodeLang program, assigned at run time and called each frame

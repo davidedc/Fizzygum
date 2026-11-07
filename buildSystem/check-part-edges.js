@@ -113,8 +113,10 @@
  * there on every build that ships the caller?", so the rule lives here:
  *   - a member is part P's SYMBOL when P installs it onto a class outside P and NO file outside P
  *     that can ship (src/boot included) defines it -- by the implementor harvest
- *     check-unresolved-sends.js reads too (lib/name-definitions.js: a method, a static, a field, a
- *     key or an assignment target, OVER-approximated in the direction that flags less). Then on a
+ *     check-unresolved-sends.js reads too (lib/name-definitions.js: a CALLABLE definition — a method,
+ *     a static, a prototype extension, an expando or top-level function; a data key under the same
+ *     name withdraws nothing, which is right for the methods an installOnto installs, while a DATA
+ *     field a harness installed and core also declared would read as the harness's — none is). Then on a
  *     build without P nothing implements it, whatever the receiver, and that is what makes the
  *     receiver-blind clauses (a) and (b) sound rather than guesses;
  *   - in a file whose part is not P and is not satisfied for P (the class rule's own `requires` /
@@ -159,10 +161,13 @@ const { codePartOf, stringLiteralsOf, guardedPartsPerLine, isLazyPart,
         declaredRequires: declaredRequiresOf } = require('./lib/part-edge-scan');
 const { installEdges, harnessPresent } = require('./lib/install-edges');
 const { harvestDefs } = require('./lib/name-definitions');
-const { rejectUnknownArgs } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg, fileArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = path.resolve(__dirname, '..');
-const PARTS_FILE = path.join(REPO, 'buildSystem/parts.json');
+// the rule each member reach breaks, by its clause
+const MEMBER_RULE = { a: 'MEMBER_REFERENCE', b: 'MEMBER_DISPATCHED_BY_NAME', c: 'MEMBER_SUPER' };
+rules.declare(Object.values(MEMBER_RULE));
 
 function fail(msg) { console.error('check-part-edges: ' + msg); process.exit(2); }
 
@@ -172,8 +177,8 @@ function fail(msg) { console.error('check-part-edges: ' + msg); process.exit(2);
 // parts installing it onto a class outside themselves; `files` is [{ part, lines }] for everything
 // that can ship. A member qualifies when exactly one part installs it and no file of any OTHER part
 // defines it, by the implementor harvest check-unresolved-sends.js reads too
-// (lib/name-definitions.js). That harvest over-approximates, so an extra "definition" can only
-// withdraw a member here, never add one. Returns Map(member -> part).
+// (lib/name-definitions.js). Where that harvest over-approximates (a def-shaped line inside a string), an
+// extra "definition" can only withdraw a member here, never add one. Returns Map(member -> part).
 function soleProviders(installedBy, files) {
   const definingParts = new Map();    // member name -> Set(parts whose files define it)
   for (const { part, lines } of files) {
@@ -272,7 +277,19 @@ function unusedRequires(parts, partsNamedInCode) {
 }
 
 function main() {
-  rejectUnknownArgs(process.argv.slice(2), [], 'check-part-edges');
+  // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-part-edges.js [--src=DIR]
+  // [--parts=FILE] — the rails read another src tree and another parts.json (a bite-proof's planted copies); both reach
+  // build.py's listing, the class model and the boot install edges too. That every rule BITES, and that every guard
+  // form passes, is proven on every build by check-part-edges-selftest.js.
+  const argv = process.argv.slice(2);
+  rejectUnknownArgs(argv, ['--src=', '--parts='], 'check-part-edges');
+  rejectPositionalArgs(argv, 'check-part-edges', 'a src tree is named with --src=DIR, a parts file with --parts=FILE');
+  const SRC = dirArg(argv, '--src=', path.join(REPO, 'src'), 'check-part-edges');
+  const PARTS_FILE = fileArg(argv, '--parts=', path.join(REPO, 'buildSystem/parts.json'), 'check-part-edges');
+  const listArgs = [...(argv.some((a) => a.startsWith('--src=')) ? ['--src=' + SRC] : []),
+                    ...(argv.some((a) => a.startsWith('--parts=')) ? ['--parts=' + PARTS_FILE] : [])];
+  // a listed `src/…` path names a file of the tree being checked; any other (the harness) is the repo-relative path
+  const onDisk = (rel) => (rel.startsWith('src/') ? path.join(SRC, rel.slice(4)) : path.join(REPO, rel));
   let parts;
   try {
     parts = JSON.parse(fs.readFileSync(PARTS_FILE, 'utf8')).parts;
@@ -283,7 +300,7 @@ function main() {
   // ---- which file belongs to which part -------------------------------------------------------
   let shippable;
   try {
-    shippable = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable'],
+    shippable = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...listArgs],
       { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
   } catch (e) {
     fail('build.py --list-shippable failed: ' + e.message);
@@ -354,7 +371,7 @@ function main() {
   let edgeCount = 0;
   if (!membersSkipped) {
     let edges;
-    try { edges = installEdges(); } catch (e) { fail(e.message); }
+    try { edges = installEdges(SRC); } catch (e) { fail(e.message); }
     for (const edge of edges) {
       const part = ownerOfAnyClass.get(edge.support);
       if (!part || part === partOfClass(edge.target)) continue;
@@ -368,6 +385,10 @@ function main() {
     }
   }
 
+  // a member half that saw no install edge crossing a part checks nothing: with the harness present that is a broken
+  // harvest (lib/install-edges.js), never a clean tree
+  if (!membersSkipped && edgeCount === 0) fail('the harness is present but no install edge crosses a part — the installed-member half would check nothing; re-read lib/install-edges.js against src/boot/globalFunctions.coffee');
+
   // A member is its part's SYMBOL only if no file outside that part can define it. The definition
   // universe is everything that ships -- every part's files, and src/boot, which is in every bundle.
   const shippedFiles = [];             // [{ part, lines }]
@@ -377,13 +398,13 @@ function main() {
       for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
         const p = path.join(dir, e.name);
         if (e.isDirectory()) walkBoot(p);
-        else if (e.name.endsWith('.coffee')) bootFiles.push(path.relative(REPO, p));
+        else if (e.name.endsWith('.coffee')) bootFiles.push('src/' + path.relative(SRC, p).split(path.sep).join('/'));
       }
     };
-    walkBoot(path.join(REPO, 'src/boot'));
+    walkBoot(path.join(SRC, 'boot'));
     for (const rel of [...scanned, ...bootFiles]) {
       let lines;
-      try { lines = fs.readFileSync(path.join(REPO, rel), 'utf8').split('\n'); } catch (e) { continue; }
+      try { lines = fs.readFileSync(onDisk(rel), 'utf8').split('\n'); } catch (e) { continue; }
       shippedFiles.push({ part: partOfFile(rel) || 'core', lines });
     }
   }
@@ -393,7 +414,7 @@ function main() {
 
   for (const rel of scanned) {
     const owner = partOfFile(rel);
-    const abs = path.join(REPO, rel);
+    const abs = onDisk(rel);
     let lines;
     try { lines = fs.readFileSync(abs, 'utf8').split('\n'); } catch (e) { continue; }
     const guards = guardedPartsPerLine(lines, partClassOwner, parts, soleProvider);
@@ -440,7 +461,7 @@ function main() {
   // clause (c) needs the class model -- whose chain a `super` walks -- which is
   // census-public-private-calls.js's, reused rather than re-derived (check-menu-actions.js does the same).
   if (installedOn.size) {
-    const { classInfo, chainOf } = require('./census-public-private-calls.js').runCensus();
+    const { classInfo, chainOf } = require('./census-public-private-calls.js').runCensus({ src: SRC });
     for (const v of superReaches({ classInfo, chainOf }, installedOn, partOfClass, (n) => scannedFileOfClass.get(n))) {
       const file = scannedFileOfClass.get(v.cls);
       memberViolations.push({ ...v, from: file.owner, text: file.lines[v.line - 1].trim() });
@@ -465,7 +486,7 @@ function main() {
     console.error("never names in code. `requires` orders the required part's load fully first, so an entry nothing");
     console.error('uses still costs a fetch, and its stated reason no longer holds -- delete it (and its "//requires"');
     console.error('justification), or, if something genuinely needs it, that something names one of its classes:');
-    for (const v of requiresViolations) console.error(`  ${v.part} requires '${v.requires}'`);
+    for (const v of requiresViolations) console.error(rules.fired('UNUSED_REQUIRES', `  ${v.part} requires '${v.requires}'`));
   }
 
   if (inheritViolations.length) {
@@ -474,7 +495,7 @@ function main() {
     console.error('the base class / mixin is core material, so move it into core (or move the deriving');
     console.error('class into the part).');
     for (const v of inheritViolations) {
-      console.error(`  ${v.rel}:${v.line}  ${v.from} -> ${v.name} (part '${v.owner}')`);
+      console.error(rules.fired('INHERITS_FROM_PART', `  ${v.rel}:${v.line}  ${v.from} -> ${v.name} (part '${v.owner}')`));
       console.error(`      ${v.text}`);
     }
   }
@@ -484,7 +505,7 @@ function main() {
     console.error("On an artifact that does not carry the part -- or, for a LAZY part, before anything has");
     console.error("fetched it -- this throws '<TheClass> is not defined' at the moment the code runs:");
     for (const v of refViolations) {
-      console.error(`  ${v.rel}:${v.line}  ${v.from} -> ${v.name} (part '${v.owner}'${v.lazy ? ', LAZY' : ''})`);
+      console.error(rules.fired('UNGUARDED_CLASS_REF', `  ${v.rel}:${v.line}  ${v.from} -> ${v.name} (part '${v.owner}'${v.lazy ? ', LAZY' : ''})`));
       console.error(`      ${v.text}`);
     }
     console.error('\nFIX, for an EAGER part (present or absent, never late): guard the site --');
@@ -503,7 +524,7 @@ function main() {
     console.error('site throws, or a row dispatching it is dead:');
     for (const v of memberViolations) {
       const how = v.clause === 'c' ? `${v.cls}.${v.name} -> super` : v.clause === 'b' ? `"${v.name}"` : `.${v.name}`;
-      console.error(`  ${v.rel}:${v.line}  ${v.from} -> ${how} (installed by part '${v.part}'; (${v.clause}) ${CLAUSE[v.clause]})`);
+      console.error(rules.fired(MEMBER_RULE[v.clause], `  ${v.rel}:${v.line}  ${v.from} -> ${how} (installed by part '${v.part}'; (${v.clause}) ${CLAUSE[v.clause]})`));
       console.error(`      ${v.text}`);
     }
     console.error('\nFIX: guard the site for that part, exactly as for one of its classes --');

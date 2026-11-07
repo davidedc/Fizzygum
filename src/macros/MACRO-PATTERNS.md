@@ -1229,7 +1229,7 @@ assertion a recapture after a regression silently stores two different hashes an
   80, any other tool the extent it had before the cell fitted it), centred under the pointer, so its top-left is the
   drop point minus half its extent, floored. Assert the copy's extent and place by value. That inflate is decided by
   the grab's stated origin (`grab`'s `origin`), because a copy is a detached root: prove such a test by dropping
-  the origin through `PRELUDE_JS` (the copy then arrives at the cell's 44 x 44). No new verb.
+  the origin through a `--prelude=` plant (the copy then arrives at the cell's 44 x 44). No new verb.
 - **Drag a widget into a container** (`macroSimpleDocumentManualBuildAndScroll`, `macroIconDroppedIntoDocumentFlows`):
   `@dragWidgetTo_InputEvents widget, target` float-grabs at the widget's centre (press-drag past the grab threshold) and drops it
   at a Point or onto a widget's centre. A SimpleDocument's INNER content panel (`VerticalStackPanelWdgt`,
@@ -2066,7 +2066,7 @@ assertion a recapture after a regression silently stores two different hashes an
   ticked at once there (bold and an alignment); `tickedRowLabelOfMenu` answers the first, so read a row's own
   `isTicked()` when that matters. A toggle row: click the PINNED row twice and assert the state both times — a row
   whose action was fixed when it was built does nothing the second time. Prove such a test by planting the stale
-  row through `PRELUDE_JS` (`MenuItemWdgt::_applyRowReflectionNoSettle` made a no-op, polled in once the class
+  row through a `--prelude=` plant (`MenuItemWdgt::_applyRowReflectionNoSettle` made a no-op, polled in once the class
   exists). No new verb.
 
 ## Spreadsheets

@@ -32,15 +32,15 @@ numbers below say the drain is *cheap and shallow* in every shipped circuit.
 | `maxObservedPassCount` | running max of `lastDrainPassCount` this world session |
 | `lastDrainRecomputeCount` | node `dataflowRecompute()`s in the most recent drain (its work size) |
 
-**Re-measure suite-wide** with a `PRELUDE_JS` probe that logs each non-empty drain (the pattern
+**Re-measure suite-wide** with a `--prelude=` probe that logs each non-empty drain (the pattern
 of `coalescing-measurement.md`) — the throwaway used to produce the table below is
-`Fizzygum-tests` `PRELUDE_JS` wrapping `recalculateDataflow` to log
+a `Fizzygum-tests` prelude wrapping `recalculateDataflow` to log
 `passes=lastDrainPassCount recomputes=lastDrainRecomputeCount`, run per test at `--speed=fastest`
 (the suite's stress condition — many events drained per cycle):
 
 ```sh
 cd Fizzygum-tests
-env PRELUDE_JS=<probe>.js node scripts/run-macro-test-headless.js SystemTest_<name> --dpr=1 --speed=fastest \
+node scripts/run-macro-test-headless.js SystemTest_<name> --dpr=1 --speed=fastest --prelude=<probe>.js \
   | grep 'DFMEAS drain'
 ```
 

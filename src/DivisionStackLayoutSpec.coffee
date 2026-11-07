@@ -93,20 +93,17 @@ class DivisionStackLayoutSpec extends LayoutSpec
   # spec's CURRENT axis (main dim: width under 'x', height under 'y'); the cross pair of a
   # box stays construction/API-set — the read side tolerates any inconsistency (the
   # recursive dim walkers clamp desired/min to max, and getMaxDim clamps max to desired).
-  # thin-wrap-exempt: settles on @element (not @) — not a Widget; canonical otherwise
-  # (see VerticalStackLayoutSpec.setAlignmentToLeft).
+  # The four cross-align setters settle on @element (not @): the spec is not a Widget (see
+  # VerticalStackLayoutSpec.setAlignmentToLeft).
   setCrossAlignToStretch: ->
     @element._settleLayoutsAfter => @_setCrossAlignNoSettle "stretch"
 
-  # thin-wrap-exempt: settles on @element (not @) — not a Widget; canonical otherwise (see above).
   setCrossAlignToStart: ->
     @element._settleLayoutsAfter => @_setCrossAlignNoSettle "start"
 
-  # thin-wrap-exempt: settles on @element (not @) — not a Widget; canonical otherwise (see above).
   setCrossAlignToCenter: ->
     @element._settleLayoutsAfter => @_setCrossAlignNoSettle "center"
 
-  # thin-wrap-exempt: settles on @element (not @) — not a Widget; canonical otherwise (see above).
   setCrossAlignToEnd: ->
     @element._settleLayoutsAfter => @_setCrossAlignNoSettle "end"
 

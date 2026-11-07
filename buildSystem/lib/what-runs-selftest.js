@@ -33,30 +33,33 @@ write('Fizzygum/build_it_please.sh', [
   'EOF',
   'echo "first line',
   '  node buildSystem/multiline-echoed.js"',
-  // launched: a path built on a substitution, a default in an assignment of a command that runs one, a launch inside
-  // a substitution, a script run directly
+  // an assignment heading a command that runs an interpreter launches nothing: no runner takes a script that way
+  'ENV_RAIL=buildSystem/env-assigned.js node buildSystem/gate.js',
+  // launched: a path built on a substitution, a default in a flag's value, a launch inside a substitution, a script
+  // run directly
   'node "$(dirname "$0")/buildSystem/dirname-launched.js"',
-  'PRELUDE_JS="${3:-$PWD/buildSystem/defaulted.js}" \\',
-  '  node buildSystem/gate.js',
+  'node buildSystem/gate.js \\',
+  '  --prelude="${3:-$PWD/buildSystem/defaulted.js}"',
   'eval "$(node buildSystem/substituted.js "$x")"',
   './buildSystem/direct.sh --flag',
 ].join('\n'));
 write('Fizzygum/buildSystem/gate.js', [
   "const lib = require('./lib/used');",
+  "const both = require('./lib/both');",   // a module here, and a program a leg launches (leg.sh)
   "console.error('stale? run buildSystem/messaged.js');",
   "throw new Error('see ' + 'launched-by-message.js');",
   "spawnSync('node', [path.join(__dirname, 'launched.js')]);",
 ].join('\n'));
-for (const f of ['lib/used.js', 'launched.js', 'messaged.js', 'commented.js', 'echoed.js', 'hinted.js', 'run-selftests.js',
+for (const f of ['lib/used.js', 'lib/both.js', 'launched.js', 'messaged.js', 'commented.js', 'echoed.js', 'hinted.js', 'run-selftests.js',
                  'beta-selftest-headless.js', 'launched-by-message.js', 'tested.js', 'then-echoed.js', 'assigned-only.js',
                  'removed.js', 'heredoc.js', 'multiline-echoed.js', 'dirname-launched.js', 'defaulted.js', 'substituted.js',
-                 'direct.sh', 'cli-tool.js', 'fg-built.js', 'echo-unquoted.js']) write(`Fizzygum/buildSystem/${f}`, '');
+                 'direct.sh', 'cli-tool.js', 'fg-built.js', 'echo-unquoted.js', 'env-assigned.js']) write(`Fizzygum/buildSystem/${f}`, '');
 // a self-test exercises its subject on fixtures: a command-line tool only its self-test loads does not RUN
 write('Fizzygum/buildSystem/alpha-selftest.js', "const tool = require('./cli-tool');\n");
 write('Fizzygum/buildSystem/tool.py', '"""Run Fizzygum-tests/scripts/orphan.js afterwards."""\n');
 write('Fizzygum-tests/scripts/piped.sh', '');
 write('Fizzygum-tests/scripts/orphan.js', '');
-write('Fizzygum-tests/scripts/leg.sh', 'AUDIT_PRELUDE="$PWD/scripts/p/x-prelude.js" node scripts/runner.js\n');
+write('Fizzygum-tests/scripts/leg.sh', 'node scripts/runner.js --audit-prelude="$PWD/scripts/p/x-prelude.js"\nnode "$FZ/buildSystem/lib/both.js"\n');
 write('Fizzygum-tests/scripts/runner.js', '');
 write('Fizzygum-tests/scripts/suite-runner.js', '');
 write('Fizzygum-tests/scripts/p/x-prelude.js', '');
@@ -85,10 +88,15 @@ const RUN = ['build_it_please.sh', 'buildSystem/gate.js', 'buildSystem/lib/used.
 const NOT = ['buildSystem/commented.js', 'buildSystem/echoed.js', 'buildSystem/hinted.js', 'buildSystem/messaged.js',
              'buildSystem/launched-by-message.js', 'scripts/orphan.js', 'buildSystem/tested.js', 'buildSystem/then-echoed.js',
              'buildSystem/assigned-only.js', 'buildSystem/removed.js', 'buildSystem/heredoc.js', 'buildSystem/multiline-echoed.js',
-             'buildSystem/cli-tool.js', 'buildSystem/echo-unquoted.js'];
+             'buildSystem/cli-tool.js', 'buildSystem/echo-unquoted.js', 'buildSystem/env-assigned.js'];
 for (const f of RUN) t.check(runs.has(f), `with fg: ${f} RUNS`, `run set ${JSON.stringify([...runs])}`);
 for (const f of NOT) t.check(!runs.has(f), `with fg: ${f} is only named, never run`);
 t.check(withFg.fgPresent === true, 'fgPresent is true when the umbrella has fg');
+const howOf = (r) => withFg.how.get(path.join(root, 'Fizzygum', r));
+t.check(howOf('buildSystem/lib/both.js') === 'launched',
+  'a module some runner also LAUNCHES reads launched, though a require reached it first', `how: ${howOf('buildSystem/lib/both.js')}`);
+t.check(howOf('buildSystem/lib/used.js') === 'required', 'a module only required reads required', `how: ${howOf('buildSystem/lib/used.js')}`);
+t.check(howOf('build_it_please.sh') === 'root', 'the build reads root');
 
 fs.unlinkSync(layout.fg);
 const noFg = new Set(rel(runSet(layout).files));

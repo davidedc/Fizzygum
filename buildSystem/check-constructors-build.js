@@ -24,12 +24,22 @@
 // in-code idiom as the layering lint's `# layout-apply-sanctioned`. There is NO central allowlist — the
 // justification lives at the constructor.
 
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-constructors-build.js
+// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That the rule BITES — a one-line
+// constructor too — and that both marker placements excuse it, is proven on every build by
+// check-constructors-build-selftest.js.
+
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.resolve(__dirname, '../src');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'ctor-build');
+rejectPositionalArgs(ARGV, 'ctor-build', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'ctor-build');
 
-const METHOD = /^  ([A-Za-z_]\w*)\s*:/;             // 2-space-indent class method/field header
+const METHOD = /^  (@?[A-Za-z_]\w*)\s*:/;           // 2-space-indent class member header, class-side (`@name:`) too
 const BUILD  = /@_{0,2}add(Many)?(NoSettle)?[ (]/;  // @add / @addMany / @addNoSettle / @_addNoSettle / @__add / … on `this`
                                                     // (the __add structural LEAF counts too — a ctor building through it
                                                     // is still inline child-building, one tier deeper; the menu/slider
@@ -62,7 +72,12 @@ for (const p of walk(SRC, [])) {
     const m = METHOD.exec(lines[i]);
     if (m) {
       if (cur) { ctors.push(cur); cur = null; }
-      if (m[1] === 'constructor') cur = { start: i, body: [] };
+      if (m[1] === 'constructor') {
+        cur = { start: i, body: [] };
+        // a ONE-LINE constructor carries its body after the arrow: read it like a body line
+        const arrow = lines[i].search(/[-=]>/);
+        if (arrow >= 0 && lines[i].slice(arrow + 2).trim()) cur.body.push({ i, text: ' '.repeat(arrow + 2) + lines[i].slice(arrow + 2) });
+      }
       continue;
     }
     if (cur) cur.body.push({ i, text: lines[i] });
@@ -86,7 +101,7 @@ console.log(`[ctor-build] ${exemptCount} marked-exempt constructor(s) checked.`)
 if (violations.length) {
   console.error(`\n[ctor-build] FAIL — ${violations.length} constructor build-call(s): a constructor must not build its own children inline.`);
   for (const v of violations) {
-    console.error(`  ${v.cls}  (${v.file}:${v.line})`);
+    console.error(rules.fired('CTOR_BUILDS_CHILDREN', `  ${v.cls}  (${v.file}:${v.line})`));
     console.error(`    ${v.text}`);
   }
   console.error('\nMove the child-building into  _buildAndConnectChildrenNoSettle  and have the constructor call the');

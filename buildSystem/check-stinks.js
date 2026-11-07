@@ -58,8 +58,19 @@
 const fs = require('fs');
 const path = require('path');
 const { mixinMemberIndent } = require('./lib/coffee-method-header');   // a mixin hash's member indent
+const { rejectUnknownArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.resolve(__dirname, '../src');
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-stinks.js [--src=DIR]
+// [--list <id>] — the rail scans another src tree (a copy carrying a plant). That every stink, and every way a
+// `sanctioned` or `exclude` entry can go stale, BITES is proven on every build by check-stinks-selftest.js.
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src=', '--list'], 'stinks');
+{
+  const stray = ARGV.find((a, i) => !a.startsWith('--') && ARGV[i - 1] !== '--list');
+  if (stray !== undefined) { console.error(`[stinks] ERROR — unexpected argument '${stray}' (a src tree is named with --src=DIR)`); process.exit(2); }
+}
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'stinks');
 
 // Seeded 2026-07-15 (docs/archive/lint-generic-rules-carryover-plan.md Phase 2), carrying over the generic
 // cruft/idiom rules from Pharo's SmallLint/Renraku catalogue. Every baseline below was MEASURED by
@@ -92,7 +103,7 @@ const STINKS = [
   { id: 'math-random', baseline: 5,
     why: 'Math.random in render/layout/input code breaks byte-exact screenshot determinism',
     re: /\bMath\.random\b/ },
-  { id: 'instanceof-type-test', baseline: 75,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines); 95->93 (2026-07-30, banking a gain already landed; fg critique surfaced it); 93->88 (2026-08-04, layout spec-family arc: the enum dispatch + 5 spec-class instanceofs became capability queries); 88->87 (2026-08-09, banking a gain already landed; surfaced by the comments-audit stink run); 87->77 (2026-08-19, scroll-frame role arc: the viewport/plane role queries retired the composite's instanceof tests; surfaced by the comments-audit stink run); 77->78 (2026-08-19, paint-time-scroll-translation Phase 1: Widget._enclosingMappedPlaneRoot is a new canonical mapping walk and uses the walks' one island test); 78->81 (2026-08-20, WorldInventory: a reflective walker over arbitrary/host objects needs 3 tests no polymorphism can express — Widget for zombie identity, Node for DOM leaves, ArrayBuffer for typed-array leaves; the Map/Set tests delegate to NativeValueKinds); 81->80 (2026-08-26, gesture grammar P2: the macro toolkit's move verb resolved a Widget target to a screen point TWICE inline, and the finger verbs need the same resolution -- one _screenPointOfTarget now answers for all of them); 80->77 (2026-10-16, banking a gain gesture grammar P3 landed on 2026-08-26 without tightening: the macro toolkit's _widgetOfTarget decides "which widget" a verb was aimed at in one place, so four inline `instanceof Array` identifier tests became one; surfaced by this gate's own UNDER line); 77->76 (2026-10-18, redesign W2: the tooltip lays its text out one TextWdgt per line and no longer type-tests its contents widget); 76->75 (2026-10-20, redesign W5: the vertical stack picks a drop's slot by its children's middles, and its `instanceof Point` guard on the drop point goes)
+  { id: 'instanceof-type-test', baseline: 74,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines); 95->93 (2026-07-30, banking a gain already landed; fg critique surfaced it); 93->88 (2026-08-04, layout spec-family arc: the enum dispatch + 5 spec-class instanceofs became capability queries); 88->87 (2026-08-09, banking a gain already landed; surfaced by the comments-audit stink run); 87->77 (2026-08-19, scroll-frame role arc: the viewport/plane role queries retired the composite's instanceof tests; surfaced by the comments-audit stink run); 77->78 (2026-08-19, paint-time-scroll-translation Phase 1: Widget._enclosingMappedPlaneRoot is a new canonical mapping walk and uses the walks' one island test); 78->81 (2026-08-20, WorldInventory: a reflective walker over arbitrary/host objects needs 3 tests no polymorphism can express — Widget for zombie identity, Node for DOM leaves, ArrayBuffer for typed-array leaves; the Map/Set tests delegate to NativeValueKinds); 81->80 (2026-08-26, gesture grammar P2: the macro toolkit's move verb resolved a Widget target to a screen point TWICE inline, and the finger verbs need the same resolution -- one _screenPointOfTarget now answers for all of them); 80->77 (2026-10-16, banking a gain gesture grammar P3 landed on 2026-08-26 without tightening: the macro toolkit's _widgetOfTarget decides "which widget" a verb was aimed at in one place, so four inline `instanceof Array` identifier tests became one; surfaced by this gate's own UNDER line); 77->76 (2026-10-18, redesign W2: the tooltip lays its text out one TextWdgt per line and no longer type-tests its contents widget); 76->75 (2026-10-20, redesign W5: the vertical stack picks a drop's slot by its children's middles, and its `instanceof Point` guard on the drop point goes); 75->74 (2026-11-07, every-gate-bites Unit 0: banking a gain already landed — one new `instanceof` passed while the count sat UNDER)
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
     re: /\binstanceof\b/ },
   { id: 'positional-hole', baseline: 0,   // HARD as of 2026-08-16: the conformance arc drove this to zero and there is no site left to grandfather. Seeded 2026-08-15 at THIS engine's own count (51); tightened 51->30 (plan P2, the text family), 30->28 (P3, the button family), 28->25 (P5, the stragglers), 25->1 (P6, the METHOD families), 1->0 (P7, the `add` family). P4 moved it by zero and that was correct: every hole it removed spans MULTIPLE lines and this regex needs two `undefined`s adjacent on ONE — so a PASS here is a floor, not a proof. The HONEST count lives in buildSystem/check-argument-holes.js, which shares census-call-arity.js's paren-aware parser and catches the single-`undefined` and multi-line holes this regex cannot see. Keep this stink anyway: it is the instant alarm for the worst shape, at zero cost, inside the pass that is already running
@@ -135,7 +146,8 @@ const STINKS = [
   // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).
   { id: 'comment-meta-edit', baseline: 0, scope: 'comments',
     why: 'a comment arguing with itself ("the below is actually correct", "to be clear") is process residue — state the surviving constraint once, plainly',
-    re: /\b(the (below|above) is|is actually (correct|right|fine|wrong)|to be clear,)\b/i },
+    // (`to be clear,` ends in a comma, which no `\b` can follow before a space: it is matched on its own)
+    re: /\b(the (below|above) is|is actually (correct|right|fine|wrong))\b|\bto be clear,/i },
   { id: 'comment-narration', baseline: 87, scope: 'comments',   // tightened 105->104 on 2026-08-04 (comments-audit sweep removed one; locking the gain in); 104->103 on 2026-08-15 (MenuItemSpec's header stopped narrating what its constructor replaced when that constructor changed again); 103->102 on 2026-08-18 (SwitchButtonWdgt's setter comments rewritten in the settle-grammar conformance); 102->101 on 2026-08-21 (the shared teardown core's contract block stopped narrating what the two callers "used to" look like and states the two obligations instead); 101->100 on 2026-08-21 (the pointer hit-test rework: MenuWdgt's block states which object owns the shape answer instead of which one carried it before); 100->99 on 2026-08-25 (command-panel unification P1: de-positionalizing MenuItemWdgt.menuEntryPreferredWidth off @children[0] dropped its history receipt about the `debugger` statement the guard replaced -- the comment now states what the measure reads and why, by name); 99->96 on 2026-10-17 (redesign W1: the frame, strip and handle comments the wave rewrote state constraints instead of what they replaced); 96->92 on 2026-10-19 (redesign W4: the rewritten clock appearance and desktop-icon holder state what they draw instead of what they replaced); 92->91 on 2026-10-20 (redesign W5: the toolbar text tools' base class states what its tools share instead of what they once extended); 91->90 on 2026-10-21 (redesign G-A: the C-F demo icon states it inherits its parent's art instead of what it used to copy); 90->88 on 2026-10-21 (redesign G-B: HighlighterWdgt's header and style channel state its two forms instead of what it used to do and no longer uses); 88->87 on 2026-10-25 (residue-2 arc: ViewportWdgt's release-flush comment states the cadence-collapse rule instead of what the old flush used to drop)
     why: 'history narration ("used to", "previously", "no longer", "in the old model") belongs in docs/archive/ with a pointer, not inline — a comment states what IS',
     re: /\b(used to\b|previously\b|no longer\b|in the old (model|way|code)\b)/i },
@@ -197,6 +209,7 @@ if (listIdx >= 0 && !STINKS.some(s => s.id === listId)) {
   process.exit(2);
 }
 
+rules.declare(STINKS.map((s) => s.id));
 const files = walk(SRC, []);
 let over = 0;        // total occurrences ABOVE baseline (a build failure)
 let ratchetable = 0; // stinks now BELOW baseline (a chance to tighten)
@@ -234,13 +247,14 @@ for (const stink of STINKS) {
       for (const h of found) sanctionedHits.push([h, s.why]);
       hits = hits.filter(h => !found.includes(h));
     } else if (found.length === 0) {
-      sanctionFailures.push(`STALE SANCTION (STALE_ALLOWLIST_ENTRY) ${s.file}::${s.member} — no hit left there: delete the entry`);
+      sanctionFailures.push(rules.fired('STALE_SANCTION', `STALE SANCTION (STALE_ALLOWLIST_ENTRY) ${s.file}::${s.member} — no hit left there: delete the entry`));
     } else {
-      sanctionFailures.push(`SANCTION COUNT ${s.file}::${s.member} — expects ${s.count}, found ${found.length}: decide each literal again, then set the count`);
+      sanctionFailures.push(rules.fired('SANCTION_COUNT', `SANCTION COUNT ${s.file}::${s.member} — expects ${s.count}, found ${found.length}: decide each literal again, then set the count`));
     }
   }
   const excludeFailures = (stink.exclude || []).filter(prefix => !files.some(p => srcRelative(p).startsWith(prefix)))
     .map(prefix => `STALE_ALLOWLIST_ENTRY exclude '${prefix}' — no src path starts with it, so it excludes nothing: fix the path or delete the entry`);
+  if (!listId) excludeFailures.forEach((f, i) => { excludeFailures[i] = rules.fired('STALE_EXCLUDE', f); });
   const n = hits.length;
   if (listId) {
     console.log(`[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline})`);
@@ -263,7 +277,8 @@ for (const stink of STINKS) {
     for (const f of sanctionFailures) console.error(`    ${f}`);
   }
   const tag = n > baseline ? 'FAIL' : n < baseline ? 'UNDER' : 'OK';
-  console.log(`[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline})${stink.sanctioned ? `, ${sanctionedHits.length} sanctioned` : ''} -- ${tag}`);
+  const statusLine = `[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline})${stink.sanctioned ? `, ${sanctionedHits.length} sanctioned` : ''} -- ${tag}`;
+  console.log(n > baseline ? rules.fired(stink.id, statusLine) : statusLine);
   if (n > baseline) {
     over += n - baseline;
     console.error(`    ${stink.why}`);

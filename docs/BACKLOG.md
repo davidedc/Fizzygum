@@ -11,13 +11,27 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
+### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
+- [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes
+      on purpose, filed with what it misses:
+  - [ ] `check-invalidation-receivers` cuts a line at a `#` inside a string, so a cross-object invalidation after
+        such a string on the same line goes unseen.
+  - [ ] `check-argument-holes` reads string contents as code (`@say "use undefined, then 1"` counts as a hole),
+        a reading it shares with the census parser; the code-only call parser of the tests-repo-readers D5 item
+        (`archive/tests-repo-readers-plan.md`, below) would serve both.
+  - [ ] `check-raw-pointer-reads`: a column-0 line inside a handler ends its body, and any `screenPointToMyPlane` on
+        a line excuses every raw read on it.
+  - [ ] The suite's per-test watchdog cannot see an infinite JS loop: the page never yields, so the run hangs to the
+        10-minute protocol timeout instead of reading `STALLED` (the shard's poll `page.evaluate` waits on the page, and
+        the 5-minute backstop sits after that wait). A one-test suite run hung exactly so once, in-wave, inside the
+        tier-naming bite-proof's control (plan §8.5, gauntlet #2; cause not captured — a killed proof run now keeps its
+        files).
+  - [ ] `vm-truth-gate.js` skips its heap-floor ceiling below 20 samples per page, so a short (`--tests=`) run never
+        judges it; its proof plants `HEAP_FLOOR` on a fabricated `--audit-dir=` instead.
+
 ### `archive/bite-proofs-plan.md` — a gate's rule is proven to bite by a standing self-test that runs the gate (CLOSED 2026-11-07; Units 0, A–C done, see its ledger)
-- [ ] **Only the gates whose rules were proven BY HAND have a bite-proof; most gates have none.** The arc's class was
-      "a rule proven by a planted violation once, at authoring" (the rules of eight gates). The broader
-      question, whether every gate the build or a gauntlet leg runs must carry a standing proof that its rule bites
-      (the 33 static gates mostly have none, and several have no self-test at all), is an audit of its own: survey the
-      gates, say which rules a plant could prove, and rule on whether the build should require one per gate (plan §8,
-      "a meta-rule").
+- [x] **Only the gates whose rules were proven BY HAND have a bite-proof; most gates have none.** — CLOSED by
+      `archive/every-gate-bites-plan.md` (moved to its ledger).
 
 ### `archive/unrun-checks-plan.md` — every check the workspace relies on runs (CLOSED 2026-11-06; Units 0, A–D done, see its ledger)
 - [x] **Standing bite-proofs for the checks proven only by hand.** — CLOSED by `archive/bite-proofs-plan.md` (moved to
@@ -56,13 +70,8 @@ per README rules 2 and 5.
         headless preprocessor gate reading the canvas's methods); then sanction them and drop the baseline to 0.
 
 ### `archive/hand-lists-residue-plan.md` — the hand-kept-lists arc's residue (CLOSED 2026-11-06; §1–§4 + §1b done, see its ledger)
-- [ ] §4 **The unresolved-sends DEF harvest's catch-all form is a second mask** — `check-unresolved-sends.js` counts any
-      `name:` / `name =` key or local as a definition, so a data key or local of a name (`close:` in a theme table, a
-      local `add = ->`, `entries = []`) keeps every call of it resolved after every real method of that name is gone:
-      `close`, `add`, `get`, `clear`, `entries` (32 Fizzygum-receiver sites at the census). A callable-only harvest
-      would close it but must first learn the 67 method headers whose default value holds a paren (`clear: (color =
-      (…)) ->`), which only the catch-all form catches today. Stated in `lint-and-static-checks.md`'s unresolved-sends
-      paragraph; design needed (soundness first: a false FAIL breaks the build).
+- [x] §4 **The unresolved-sends DEF harvest's catch-all form is a second mask** — CLOSED by
+      `archive/every-gate-bites-plan.md` Unit C (moved to its ledger).
 
 ### `archive/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (IN EXECUTION 2026-08-20; phases 1–4 done, see the plan's STATUS box)
 The three-arc program (A in-band inventory instruments · B Chrome-only VM-truth riders · C the

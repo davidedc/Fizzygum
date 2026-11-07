@@ -46,9 +46,19 @@
 // Reference FIXED shapes: FanoutWdgt._reLayout (@_applyGrantedBounds near the top) and InspectorWdgt._reLayout
 // (@_applyMoveTo + @_applyExtent near the top). This is the DEF-side companion to that fix arc.
 
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-relayout-bounds-first.js
+// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That both rules BITE, and that every
+// accepted shape passes (counted), is proven on every build by check-relayout-bounds-first-selftest.js.
+
 const fs = require('fs');
 const path = require('path');
-const SRC = path.resolve(__dirname, '../src');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'relayout-bounds-first');
+rejectPositionalArgs(ARGV, 'relayout-bounds-first', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'relayout-bounds-first');
 
 const { methodSpans } = require('./lib/coffee-method-header');   // class methods and mixin members, one span each
 const EXEMPT = /#\s*relayout-bounds-first-exempt:\s*\S/;     // marker WITH a non-empty reason
@@ -72,6 +82,8 @@ function walk(dir, acc) {
   return acc;
 }
 function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
+// a quoted string's text is not code: `super` in a message is no call to it
+const stripStrings = (code) => code.replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
 // PASS 1 — parse every file once, so the hook rule below can resolve an INHERITED `_reLayout`
 // instead of assuming one. (Without this the three PatchNodeWdgt subclasses — which define the hook
@@ -135,15 +147,16 @@ for (const rec of FILES) {
     }
     if (marked) { exempt++; continue; }
     const end = bodyEnd(k);
-    // the own-contents template commits the granted bounds before the hook runs -- apply-first by
-    // construction. Counted separately so a conversion cannot quietly land in the `trivial` bucket.
-    if (lines.slice(head.i + 1, end).some((l) => DELEGATES.test(stripComment(l)))) { template++; continue; }
-    // Walk the body: has a SELF-apply been seen by the time we hit the first own-geometry read?
-    let firstGeom = -1, appliedBeforeGeom = false;
+    // Walk the body: has a SELF-apply been seen by the time we hit the first own-geometry read? Delegating to the
+    // own-contents template commits the granted bounds before the hook runs -- apply-first by construction, counted
+    // separately so a conversion cannot quietly land in the `trivial` bucket -- but only a delegation reached BEFORE
+    // any own-geometry read: a read ahead of it reads the previous pass's frame like any other.
+    let firstGeom = -1, appliedBeforeGeom = false, delegated = false;
     let sawBounds = false, sawMove = false, sawExtent = false, sawSuper = false;
     for (let j = head.i + 1; j < end; j++) {
       const code = stripComment(lines[j]);
       if (!code.trim()) continue;
+      if (DELEGATES.test(code) && !GEOM.test(code.replace(DELEGATES, ''))) { delegated = true; break; }
       if (GEOM.test(code)) {
         appliedBeforeGeom = sawBounds || sawSuper || (sawMove && sawExtent);
         firstGeom = j;
@@ -152,8 +165,9 @@ for (const rec of FILES) {
       if (APPLY_BOUNDS.test(code)) sawBounds = true;
       if (APPLY_MOVE.test(code)) sawMove = true;
       if (APPLY_EXTENT.test(code)) sawExtent = true;
-      if (SUPER.test(code)) sawSuper = true;
+      if (SUPER.test(stripStrings(code))) sawSuper = true;
     }
+    if (delegated) { template++; continue; }
     if (firstGeom === -1) { trivial++; continue; }           // no own-geometry positioning -> safe
     if (appliedBeforeGeom) { checked++; continue; }
     violations.push({ cls, file: path.relative(SRC, p), line: head.i + 1, geomLine: firstGeom + 1, geom: lines[firstGeom].trim() });
@@ -164,7 +178,8 @@ console.log(`[relayout-bounds-first] ${checked} apply-first + ${template} own-co
 if (violations.length) {
   console.error(`\n[relayout-bounds-first] FAIL -- ${violations.length} override(s) read own geometry BEFORE applying own bounds (children would lag one cadence on resize):`);
   for (const v of violations) {
-    console.error(`  ${v.cls}.${v.method || '_reLayout'}  (${v.file}:${v.line}) -- first own-geometry read at line ${v.geomLine}:  ${v.geom}`);
+    const line = `  ${v.cls}.${v.method || '_reLayout'}  (${v.file}:${v.line}) -- first own-geometry read at line ${v.geomLine}:  ${v.geom}`;
+    console.error(v.method === HOOK ? rules.fired('HOOK_WITHOUT_TEMPLATE', line) : rules.fired('READS_BEFORE_APPLY', line));
   }
   console.error('\nFIX: apply own bounds FIRST -- e.g. right after the collapse guard:');
   console.error('       newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout');
@@ -174,7 +189,8 @@ if (violations.length) {
   console.error('       _reLayout: (newBoundsForThisLayout) ->');
   console.error('         @_reLayoutWithOwnContents newBoundsForThisLayout');
   console.error('       _layOutOwnContents: ->  …  (bounds are already committed when this runs)');
-  console.error('Or add  # relayout-bounds-first-exempt: <reason>  directly above the _reLayout header.');
+  console.error('Or, for a _reLayout only, add  # relayout-bounds-first-exempt: <reason>  directly above its header (a');
+  console.error('_layOutOwnContents hook takes no marker: route its class through the template).');
   process.exit(1);
 }
 console.log('[relayout-bounds-first] OK -- every _reLayout applies its own bounds before reading its own geometry.');

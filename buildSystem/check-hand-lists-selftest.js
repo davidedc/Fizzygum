@@ -251,7 +251,75 @@ function main() {
     const got = tokenAt(noFg, rel, needle, nth);
     check(got === want, `fg absent: ${rel} marker -> ${got} (expected ${want})`);
   }
+  proveTheGate();
   t.done();
+}
+
+// ---- the REAL gate on a planted src copy ---------------------------------------------------------------------------
+// The engine cases above judge lists and sanctions in memory; here the gate itself — its walk of both halves, the name
+// universe, what-runs' run set, the ratchet, the exit — runs on a src copy carrying the plants (lib/planted-src.js),
+// and in --files mode on a planted file. The guard that never runs is read from lib/what-runs.js, not named here.
+function proveTheGate() {
+  const fs = require('fs');
+  const os = require('os');
+  const { proveGate } = require('./lib/planted-src');
+  const whatRuns = require('./lib/what-runs');
+  const ran = whatRuns.runSet().files;
+  const neverRun = whatRuns.scriptFiles().map((f) => [f, path.basename(f)])
+    .filter(([f, b]) => !ran.has(f) && f.includes(`${path.sep}buildSystem${path.sep}`) && /^[\w.-]+\.js$/.test(b) && !/selftest/.test(b))[0][1];
+  const given = fs.mkdtempSync(path.join(os.tmpdir(), 'check-hand-lists-selftest-'));
+  process.on('exit', () => fs.rmSync(given, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(given, 'bite-proof-list.js'), "const D = ['Widget', 'PanelWdgt'];\n");
+  // a planted .coffee printing the token its own sanction names: it must not vouch for itself
+  fs.writeFileSync(path.join(given, 'BiteProofSelfVouch.coffee'), ['class BiteProofSelfVouch',
+    '  # hand-list-sanctioned: BITE_PROOF_SELF_TOKEN', '  @bpNames: ["Widget", "PanelWdgt"]', '  bpSay: -> console.error "BITE_PROOF_SELF_TOKEN"', ''].join('\n'));
+  const cls = (name, ...body) => [`class ${name}`, ...body, ''].join('\n');
+  proveGate({
+    name: 'hand-lists',
+    cases: t,
+    gate: path.join(__dirname, 'check-hand-lists.js'),
+    pass: /^\[hand-lists\] OK — /m,
+    control: {
+      plants: {
+        'BiteProofHandListsOk.coffee': cls('BiteProofHandListsOk',
+          '  @serializationTransients: ["Widget", "PanelWdgt"]',
+          '  @bpSanctioned: ["Widget", "PanelWdgt"]   # hand-list-sanctioned: check-dead-methods.js',
+          '  @bpData: ["red", "green", "Widget"]',
+          '  @bpLone: ["Widget"]',
+          '  # @bpInAComment: ["Widget", "PanelWdgt"]'),
+      },
+    },
+    runs: [{
+      label: 'a list over the baseline, four wrong sanctions',
+      plants: {
+        'BiteProofHandLists.coffee': cls('BiteProofHandLists',
+          '  @bpThings: ["Widget", "PanelWdgt"]',
+          '  # hand-list-sanctioned:',
+          '  @bpEmpty: ["Widget", "PanelWdgt"]',
+          '  # hand-list-sanctioned: check-dead-methods.js',
+          '  bpNoList: 1',
+          '  # hand-list-sanctioned: trust me',
+          '  @bpNoGuard: ["Widget", "PanelWdgt"]',
+          `  # hand-list-sanctioned: ${neverRun}`,
+          '  @bpNeverRun: ["Widget", "PanelWdgt"]'),
+      },
+      expect: {
+        OVER_BASELINE: /^  \S*BiteProofHandLists\.coffee:2  \[Widget, PanelWdgt\]$/m,
+        SANCTION_EMPTY: /^  SANCTION_EMPTY  \S*BiteProofHandLists\.coffee:3  /m,
+        SANCTION_STALE: /^  SANCTION_STALE  \S*BiteProofHandLists\.coffee:5  /m,
+        SANCTION_NAMES_NO_GUARD: /^  SANCTION_NAMES_NO_GUARD  \S*BiteProofHandLists\.coffee:7  /m,
+        SANCTION_GUARD_NEVER_RUNS: new RegExp(`^  SANCTION_GUARD_NEVER_RUNS  \\S*BiteProofHandLists\\.coffee:9  [\\s\\S]*?\\(named, never run: ${neverRun.replace(/\./g, '\\.')}\\)`, 'm'),
+      },
+      absent: [/BiteProofHandListsOk/],
+    }, {
+      label: '--files: a planted list, and a plant that cannot vouch for itself',
+      args: ['--files', path.join(given, 'bite-proof-list.js'), path.join(given, 'BiteProofSelfVouch.coffee')],
+      expect: {
+        UNSANCTIONED_NAME_LIST: /^  UNSANCTIONED_NAME_LIST  \S*bite-proof-list\.js:1  \[Widget, PanelWdgt\]$/m,
+        SANCTION_GUARD_NEVER_RUNS: /^  SANCTION_GUARD_NEVER_RUNS  \S*BiteProofSelfVouch\.coffee:2  /m,
+      },
+    }],
+  });
 }
 
 main();

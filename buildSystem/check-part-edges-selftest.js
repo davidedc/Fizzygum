@@ -1,7 +1,9 @@
 'use strict';
 // check-part-edges-selftest.js — check-part-edges.js's clauses on in-memory fixtures, every one both ways: which
 // installed members are a part's own, the member guard (reference, by-name dispatch, super), and the unused-
-// `requires` rule. Run by buildSystem/run-selftests.js on every build.
+// `requires` rule. Those are unit tests of the engine; the gate's rules are proven to BITE at the end, by running the
+// REAL gate (build.py's listing, parts.json, the class model, the boot install edges) on a planted copy of src/ and a
+// planted parts.json (lib/planted-src.js). Run by buildSystem/run-selftests.js on every build.
 
 const { soleProviders, memberReaches, superReaches, unusedRequires } = require('./check-part-edges');
 const { codePartOf, guardedPartsPerLine } = require('./lib/part-edge-scan');
@@ -110,5 +112,56 @@ check('requires: an entry nothing names is reported',              unused.includ
 check('requires: a part with no scanned code backs nothing',       unused.includes('empty->kit'), true);
 check('requires: exactly those two in the fixture',                unused, ['door->art', 'empty->kit']);
 
+
+// ---- the REAL gate on a planted src copy (core = the src root: every plant is core code) ------------------------
+// Each member clause uses a DIFFERENT installed member: a member defined anywhere outside its installing part stops
+// being that part's symbol, and the (c) plant defines the member it overrides.
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { proveGate } = require('./lib/planted-src');
+const cls = (name, parent, ...body) => [`class ${name} extends ${parent}`, ...body, ''].join('\n');
+const partsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-part-edges-selftest-'));
+process.on('exit', () => fs.rmSync(partsDir, { recursive: true, force: true }));
+const plantedParts = JSON.parse(fs.readFileSync(path.join(__dirname, 'parts.json'), 'utf8'));
+plantedParts.parts.maps.requires = [...(plantedParts.parts.maps.requires || []), 'plots'];   // maps never names a plots class
+fs.writeFileSync(path.join(partsDir, 'parts.json'), JSON.stringify(plantedParts, null, 2));
+proveGate({
+  name: 'part-edges',
+  cases: t,
+  gate: path.join(__dirname, 'check-part-edges.js'),
+  pass: /^\[part-edges\] OK -- every core reference into a part, to a class or to a member it installs, is guarded\.$/m,
+  control: {
+    plants: {
+      'BiteProofPartGuardsWdgt.coffee': cls('BiteProofPartGuardsWdgt', 'Widget',
+        '  bpNamesOnly: ->', '    # HhmmssLabelWdgt in a comment', '    s = "HhmmssLabelWdgt in a string"',
+        '  bpSameLine: ->', '    @bpA = new HhmmssLabelWdgt() if HhmmssLabelWdgt?',
+        '  bpBlock: ->', '    if HhmmssLabelWdgt?', '      @bpB = new HhmmssLabelWdgt()',
+        '  bpEarly: ->', '    return unless HhmmssLabelWdgt?', '    @bpC = new HhmmssLabelWdgt()',
+        '  bpMembers: (w) ->', '    @serialiseToMemory?()', '    if w.deserialiseFromMemoryAndAttachToWorld?', '      w.deserialiseFromMemoryAndAttachToWorld()'),
+    },
+  },
+  runs: [{
+    label: 'an unguarded class, an inheritance, a member three ways, a requires entry nothing uses',
+    args: ['--parts=' + path.join(partsDir, 'parts.json')],   // a planted parts.json: maps requires plots
+    plants: {
+      'BiteProofPartRefWdgt.coffee': cls('BiteProofPartRefWdgt', 'Widget', '  bpMake: ->', '    @bpIcon = new SimpleUSAMapIconAppearance @', '    @bpLabel = new HhmmssLabelWdgt()'),
+      'BiteProofPartInheritWdgt.coffee': cls('BiteProofPartInheritWdgt', 'SimpleUSAMapIconAppearance'),
+      'BiteProofPartMemberWdgt.coffee': cls('BiteProofPartMemberWdgt', 'Widget', '  bpReach: (menu, w) ->', '    @serialiseToMemory()',
+        '    menu.addMenuItem "bp", w, "deserialiseFromMemoryAndAttachToWorld"'),
+      'BiteProofPartSuperWdgt.coffee': cls('BiteProofPartSuperWdgt', 'Widget', '  fullRenderCanvasAsItAppearsOnScreen: ->', '    super()'),
+    },
+    expect: {
+      UNGUARDED_CLASS_REF: /^  src\/BiteProofPartRefWdgt\.coffee:3  \S+ -> SimpleUSAMapIconAppearance \(part 'maps', LAZY\)$/m,
+      INHERITS_FROM_PART: /^  src\/BiteProofPartInheritWdgt\.coffee:1  \S+ -> SimpleUSAMapIconAppearance \(part 'maps'\)$/m,
+      MEMBER_REFERENCE: /^  src\/BiteProofPartMemberWdgt\.coffee:3  \S+ -> \.serialiseToMemory \(installed by part '\w+'; \(a\) a reference\)$/m,
+      MEMBER_DISPATCHED_BY_NAME: /^  src\/BiteProofPartMemberWdgt\.coffee:4  \S+ -> "deserialiseFromMemoryAndAttachToWorld" \(installed by part '\w+'; \(b\) dispatched by name\)$/m,
+      UNUSED_REQUIRES: /^  maps requires 'plots'$/m,
+      MEMBER_SUPER: /^  src\/BiteProofPartSuperWdgt\.coffee:\d+  \S+ -> BiteProofPartSuperWdgt\.fullRenderCanvasAsItAppearsOnScreen -> super \(installed by part '\w+'; \(c\) a super into it\)$/m,
+    },
+    lines: [/^  src\/BiteProofPartRefWdgt\.coffee:4  \S+ -> HhmmssLabelWdgt \(part 'video-player'\)$/m],
+    absent: [/BiteProofPartGuardsWdgt/],
+  }],
+});
 
 t.done();

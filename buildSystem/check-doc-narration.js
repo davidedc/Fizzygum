@@ -39,30 +39,45 @@
 
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const DOCS = path.join(__dirname, '..', 'docs');
+// [--docs=DIR] reads another docs tree (a planted one: the bite-proof's input, check-doc-narration-selftest.js, which
+// proves every rule below BITES). It never writes the real baseline from another tree.
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--full', '--write-baseline', '--docs='], 'doc-narration');
+rejectPositionalArgs(ARGV, 'doc-narration', 'a docs tree is named with --docs=DIR');
+if (ARGV.includes('--write-baseline') && ARGV.some((a) => a.startsWith('--docs='))) {
+  console.error('[doc-narration] ERROR — --write-baseline writes the real baseline: it never reads another docs tree');
+  process.exit(2);
+}
+const DOCS = dirArg(ARGV, '--docs=', path.join(__dirname, '..', 'docs'), 'doc-narration');
 const BUCKETS = ['architecture', 'tooling'];
 
 // Each rule is high-precision on purpose: a gate with a zero baseline only stays credible if it
 // does not cry wolf. Ambiguous phrasings ("no longer compiles", "the old value") are deliberately
 // NOT matched — they read as present-tense conditionals far more often than as narration.
+// [regex, label, rule id] — the id is what a failing run names (lib/gate-rules.js)
 const RULES = [
   // "used to" only — NOT a bare "use to", which is ordinary instruction ("use to bisect a bug").
-  [/\bused to\b/i,                                 'used to'],
-  [/\blong said\b/i,                               'long said'],
-  [/\bwas rewor(?:ded|ked)\b/i,                    'was reworded'],
+  [/\bused to\b/i,                                 'used to', 'USED_TO'],
+  [/\blong said\b/i,                               'long said', 'LONG_SAID'],
+  [/\bwas rewor(?:ded|ked)\b/i,                    'was reworded', 'WAS_REWORDED'],
   [/\b(?:was|were|been)\s+(?:deleted|removed|retired|renamed|replaced by|converted (?:from|to))\b/i,
-                                                   'past-tense change narration'],
-  [/\bformerly\b/i,                                'formerly'],
-  [/\bsince (?:hardened|deleted|removed|retired)\b/i, 'since <past participle>'],
-  [/\bExecuted\s+20\d\d/i,                         'Executed <date>'],
+                                                   'past-tense change narration', 'PAST_TENSE_CHANGE'],
+  [/\bformerly\b/i,                                'formerly', 'FORMERLY'],
+  [/\bsince (?:hardened|deleted|removed|retired)\b/i, 'since <past participle>', 'SINCE_PARTICIPLE'],
+  [/\bExecuted\s+20\d\d/i,                         'Executed <date>', 'EXECUTED_DATE'],
   [/\b(?:fixed|landed|added|changed|renamed|deleted|retired)\s+(?:on\s+)?20\d\d-\d\d-\d\d/i,
-                                                   '<verb> <date>'],
-  [/\b(?:until|since|as of)\s+20\d\d-\d\d-\d\d/i,  'until/since <date>'],
+                                                   '<verb> <date>', 'VERB_DATE'],
+  [/\b(?:until|since|as of)\s+20\d\d-\d\d-\d\d/i,  'until/since <date>', 'UNTIL_SINCE_DATE'],
   [/\bin (?:January|February|March|April|May|June|July|August|September|October|November|December)\s+20\d\d\b/i,
-                                                   'in <Month> <year>'],
-  [/\bthe (?:then|old)-[A-Z`]/,                    'the then-/old-<Thing>'],
+                                                   'in <Month> <year>', 'IN_MONTH_YEAR'],
+  // the Thing is a capitalised word or inline code — and inline code is stripped before the rules read a line, so
+  // `the old-\`Foo\`` reaches here as `the old- `
+  [/\bthe (?:then|old)-(?:[A-Z]|\s|$)/,             'the then-/old-<Thing>', 'THE_THEN_OLD_THING'],
 ];
+rules.declare(RULES.map((r) => r[2]));
 
 // A provenance stamp dates the VERIFICATION, not a change. Legitimate; skip the line.
 const STAMP = /\b(?:verified|re-verified|measured|snapshot(?:ted)?|stamped|as measured)\b/i;
@@ -89,6 +104,7 @@ const verbose = process.argv.includes('--full') || write;
 
 const counts = {};
 const hits = [];
+const hitsOf = {};   // rel -> [{ id, line }]
 let scanned = 0;
 for (const bucket of BUCKETS) {
   const dir = path.join(DOCS, bucket);
@@ -98,10 +114,12 @@ for (const bucket of BUCKETS) {
     scanned++;
     for (const [lineNo, line] of proseLines(fs.readFileSync(path.join(dir, name), 'utf8'))) {
       if (STAMP.test(line) || ALLOW.test(line)) continue;
-      for (const [re, label] of RULES) {
+      for (const [re, label, id] of RULES) {
         if (re.test(line)) {
           counts[rel] = (counts[rel] || 0) + 1;
-          hits.push(`  ${rel}:${lineNo}  [${label}]  …${line.trim().slice(0, 110)}`);
+          const hit = `  ${rel}:${lineNo}  [${label}]  …${line.trim().slice(0, 110)}`;
+          hits.push(hit);
+          (hitsOf[rel] = hitsOf[rel] || []).push({ id, line: hit });
           break;
         }
       }
@@ -109,6 +127,8 @@ for (const bucket of BUCKETS) {
   }
 }
 const total = Object.values(counts).reduce((a, b) => a + b, 0);
+// a run that read no doc checked nothing (a wrong root, a renamed bucket): no pass
+if (!scanned) { console.error(`[doc-narration] ERROR — no .md doc under ${BUCKETS.map((b) => path.join(DOCS, b)).join(' or ')} — a run that read nothing is no pass`); process.exit(2); }
 
 if (write) {
   fs.writeFileSync(BASELINE_PATH, JSON.stringify(counts, null, 2) + '\n');
@@ -136,6 +156,8 @@ if (verbose && hits.length) console.log(hits.join('\n') + '\n');
 if (risen.length) {
   console.log(`DOC-NARRATION ROSE — ${scanned} docs scanned, ${total} line(s) vs baseline ${baseTotal}:`);
   console.log(risen.join('\n'));
+  // every narration line of a file whose count rose, each naming the rule it breaks
+  for (const r of risen) for (const h of hitsOf[r.trim().split(':')[0]] || []) console.log(rules.fired(h.id, h.line));
   console.log('\nThese buckets are PRESENT TENSE (docs/README.md filing rule 3): state the current');
   console.log('fact without the history, or move the history to the plan/archive doc that owns it.');
   console.log('specs/, plans/, archive/ and measurements/ are chronological by design, not scanned.');

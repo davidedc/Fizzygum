@@ -22,4 +22,60 @@ function rejectUnknownArgs(argv, known, name) {
   }
 }
 
-module.exports = { rejectUnknownArgs };
+// A RAIL: a flag naming the tree a gate reads in place of its default — a copy carrying a plant (a bite-proof's input).
+// The rail is the ONE way to point a gate elsewhere (never an environment variable: an export would leak into every
+// later run). A rail given twice, empty, or naming no directory is refused (exit 2): `--src=` resolved as-is would be
+// the current directory, and a gate would then check the whole repo, or nothing, and pass.
+//   const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'check-x');
+function dirArg(argv, flag, fallback, name) {
+  refuseBare(argv, flag, name);
+  const given = argv.filter((a) => a.startsWith(flag));
+  if (!given.length) return fallback;
+  const refuse = (why) => { console.error(`[${name}] ERROR — ${flag}… ${why}`); process.exit(2); };
+  if (given.length > 1) refuse('is given more than once');
+  const value = given[0].slice(flag.length);
+  if (!value) refuse('is empty: it names the directory to read');
+  const dir = path.resolve(value);
+  let st;
+  try { st = require('fs').statSync(dir); } catch (e) { refuse(`names no such directory: ${dir}`); }
+  if (!st.isDirectory()) refuse(`names a file, not a directory: ${dir}`);
+  return dir;
+}
+
+// A rail written with a space (`--src DIR`) is refused (exit 2): its value is read only after the `=`, so the path would
+// be dropped and the gate would read its default tree, unplanted.
+function refuseBare(argv, flag, name) {
+  const bare = flag.replace(/=$/, '');
+  if (bare !== flag && argv.includes(bare)) {
+    console.error(`[${name}] ERROR — ${bare} takes its value after "=" (${flag}…): a space-separated value is not read`);
+    process.exit(2);
+  }
+}
+
+// The same rail for a FILE the gate reads in place of its default (a planted parts.json): refused when given twice,
+// empty, or naming no file.
+function fileArg(argv, flag, fallback, name) {
+  refuseBare(argv, flag, name);
+  const given = argv.filter((a) => a.startsWith(flag));
+  if (!given.length) return fallback;
+  const refuse = (why) => { console.error(`[${name}] ERROR — ${flag}… ${why}`); process.exit(2); };
+  if (given.length > 1) refuse('is given more than once');
+  const value = given[0].slice(flag.length);
+  if (!value) refuse('is empty: it names the file to read');
+  const file = path.resolve(value);
+  let st;
+  try { st = require('fs').statSync(file); } catch (e) { refuse(`names no such file: ${file}`); }
+  if (!st.isFile()) refuse(`names a directory, not a file: ${file}`);
+  return file;
+}
+
+// A gate that takes no positional argument refuses one (exit 2): a path written where a rail belongs would otherwise be
+// ignored, and the gate would check its default tree.
+function rejectPositionalArgs(argv, name, hint = '') {
+  const stray = argv.find((a) => !a.startsWith('--'));
+  if (stray === undefined) return;
+  console.error(`[${name}] ERROR — unexpected argument '${stray}'${hint ? ` (${hint})` : ''}`);
+  process.exit(2);
+}
+
+module.exports = { rejectUnknownArgs, dirArg, fileArg, rejectPositionalArgs };

@@ -25,10 +25,11 @@
 // (docs/archive/lint-ratchet-static-checks-plan.md): soundness beats reach. That trade is implemented as a
 // deliberate ASYMMETRY in how the two sides are masked — both err toward "fewer flags":
 //
-//   DEFS  are OVER-approximated: harvested with a naive (`#{`-aware) comment strip that KEEPS
-//         string literals, and the last DEF_FORM counts ANY `name:`/`name =` key as a definition
-//         (a property may hold a closure that gets called). A def "found" inside a string only ever
-//         ADDS to the implementor set → fewer flags. Keeping the naive strip here also immunizes
+//   DEFS  are the CALLABLE definitions (lib/name-definitions.js: a method header, a prototype
+//         extension, an expando or a top-level function — a data key or an indented local defines
+//         nothing), OVER-approximated only where they are read: a naive (`#{`-aware) comment strip
+//         that KEEPS string literals, so a def "found" inside a string only ever ADDS to the
+//         implementor set → fewer flags. Keeping the naive strip here also immunizes
 //         the def harvest from stripLine's known bogus-heredoc state: `TRIPLE_QUOTES = ///'''///`
 //         (src/boot/dependencies-finding.coffee:59) is a BLOCK REGEX whose `'''` reads to stripLine
 //         as an unterminated heredoc, blanking the rest of that file. Blanked DEFS would cause
@@ -51,9 +52,8 @@
 //     ⚠ The one bounded exception to "never a false fail": once EVERY Fizzygum definition of a keyed
 //     name is deleted, a platform call of it whose receiver the gate cannot read (`window.Math.round(`,
 //     none today) fails beside the real ones. While any definition exists, every call resolves through it.
-//   - The DEF side's last form counts any `name:` / `name =` key or variable as a definition, so a
-//     data key or local of the name (`close:` in a theme table, a local `add = ->`) keeps a call of
-//     it resolved after every real method of that name is gone.
+//   - A property that HOLDS a closure is no definition, so a call of one (`overridingContextMenu`,
+//     `drawFunction`) resolves only through its allowlist entry, which says so.
 //   - Block regexes (`///…///`) are not masked. Measured 2026-07-15: zero call-shaped tokens hide
 //     in one, so masking them would add regex-vs-division guesswork for no gain. The one probe
 //     artifact of this kind (`.times(` inside `/\.times([^\w\d])/` in LCLCodePreprocessor.coffee)
@@ -78,9 +78,16 @@ const path = require('path');
 // The DEF side — its comment strip, its DEF_FORMS, the harvest — is the shared
 // lib/name-definitions.js, which check-part-edges.js reads too: one implementor harvest, not two.
 const defs = require('./lib/name-definitions.js');
-const { rejectUnknownArgs } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+// bite-unplantable: BUILTINS_KEYED_OFF_PLATFORM — both sides are this file's own constants (BUILTINS_TABLE, PLATFORM_GLOBALS); a planted src tree reaches neither
 
-const SRC = path.resolve(__dirname, '../src');
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-unresolved-sends.js [--src=DIR]
+// — the rail reads another src tree (a copy carrying a plant); the harness and the macros stay the real ones. That
+// every rule BITES — a send left with no callable definition, among them one whose name survives only as a data
+// key, and each way an exemption table goes stale or takes the wrong form — is proven on every build by
+// check-unresolved-sends-selftest.js.
+let SRC = path.resolve(__dirname, '../src');   // main() reads the rail
 const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
 const TESTS_ROOT = path.resolve(__dirname, '../../Fizzygum-tests');
 const { macroSources } = require('./lib/tests-repo-code');
@@ -269,9 +276,9 @@ preventDefault appendChild createElement getElementById getElementsByTagName que
 then resolve all call test exec toDataURL
 has get clear
 open
-isInteger isFinite isView
+isInteger isFinite isView from
 getTime getHours getMinutes getSeconds getMilliseconds
-Math.abs Math.floor Math.ceil Math.round Math.min Math.max Array.isArray Array.from
+Math.abs Math.floor Math.ceil Math.round Math.min Math.max Array.isArray
 `.trim().split(/\s+/);
 const BUILTINS = new Set(BUILTINS_TABLE.filter((e) => !e.includes('.')));          // bare: any receiver
 const BUILTINS_KEYED = new Set(BUILTINS_TABLE.filter((e) => e.includes('.')));    // `Recv.name`: that receiver only
@@ -284,7 +291,14 @@ Math Object Array ArrayBuffer Number String JSON Date Promise performance consol
 
 // ─── run ────────────────────────────────────────────────────────────────────────────────────────
 function main() {
-  rejectUnknownArgs(process.argv.slice(2), ['--update-allowlist'], 'check-unresolved-sends');
+  const argv = process.argv.slice(2);
+  rejectUnknownArgs(argv, ['--update-allowlist', '--src='], 'unresolved-sends');
+  rejectPositionalArgs(argv, 'unresolved-sends', 'a src tree is named with --src=DIR');
+  SRC = dirArg(argv, '--src=', SRC, 'unresolved-sends');
+  if (argv.includes('--update-allowlist') && argv.some((a) => a.startsWith('--src='))) {
+    console.error('[unresolved-sends] ERROR — --update-allowlist writes the real allowlist: it never reads another src tree');
+    process.exit(2);
+  }
   if (!fs.existsSync(SRC)) {
     console.error('[unresolved-sends] ERROR — cannot find src/ — run from the Fizzygum repo root.');
     process.exit(2);
@@ -350,14 +364,14 @@ function main() {
   // a keyed name Fizzygum does not define unmasks nothing (and a receiver the gate cannot read would
   // false-fail): once no call of it is left unresolved it goes back to bare
   const nothingToUnmask = [...BUILTINS_KEYED].filter((e) => !defined.has(keyName(e)) && !unresolved.has(keyName(e)));
-  const formErrors = unkeyed.map((n) => `BUILTINS_NOT_KEYED ${n} — Fizzygum defines ${n}, and every \`.${n}(\` call sends it to a platform global (` +
-      [...new Set(sites.filter((s) => s.name === n).map((s) => s.recv))].join(', ') + `): list it keyed, as Recv.${n}, so it excuses only those`)
-    .concat(nothingToUnmask.map((e) => `BUILTINS_KEYED_NOTHING_TO_UNMASK ${e} — no definition of ${keyName(e)} is in src+harness: list it bare`))
+  const formErrors = unkeyed.map((n) => rules.fired('BUILTINS_NOT_KEYED', `BUILTINS_NOT_KEYED ${n} — Fizzygum defines ${n}, and every \`.${n}(\` call sends it to a platform global (` +
+      [...new Set(sites.filter((s) => s.name === n).map((s) => s.recv))].join(', ') + `): list it keyed, as Recv.${n}, so it excuses only those`))
+    .concat(nothingToUnmask.map((e) => rules.fired('BUILTINS_KEYED_NOTHING_TO_UNMASK', `BUILTINS_KEYED_NOTHING_TO_UNMASK ${e} — no definition of ${keyName(e)} is in src+harness: list it bare`)))
     .concat([...BUILTINS_KEYED].filter((e) => !PLATFORM_GLOBALS.has(keyReceiver(e)))
-      .map((e) => `BUILTINS_KEYED_OFF_PLATFORM ${e} — ${keyReceiver(e)} is not one of PLATFORM_GLOBALS`))
+      .map((e) => rules.fired('BUILTINS_KEYED_OFF_PLATFORM', `BUILTINS_KEYED_OFF_PLATFORM ${e} — ${keyReceiver(e)} is not one of PLATFORM_GLOBALS`)))
     .concat([...PLATFORM_GLOBALS].filter((g) => classNames.has(g))
-      .map((g) => `PLATFORM_GLOBALS_NAMES_FIZZYGUM ${g} — ${g} is a Fizzygum class: its methods are Fizzygum's to define, not the platform's`))
-    .concat(staleGlobals.map((g) => `STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ${g} — no BUILTINS call in src, the harness or a macro is sent to ${g}`));
+      .map((g) => rules.fired('PLATFORM_GLOBALS_NAMES_FIZZYGUM', `PLATFORM_GLOBALS_NAMES_FIZZYGUM ${g} — ${g} is a Fizzygum class: its methods are Fizzygum's to define, not the platform's`)))
+    .concat(staleGlobals.map((g) => rules.fired('STALE_PLATFORM_GLOBAL', `STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ${g} — no BUILTINS call in src, the harness or a macro is sent to ${g}`)));
   const stale = [...allow.keys()].filter((n) => !unresolved.has(n)).sort().map((n) =>
     `${n} — ${!sent.has(n) ? 'no `[@.]' + n + '(` call is left in src, the harness or a macro'
       : defined.has(n) ? 'it resolves: a definition of it is in src+harness'
@@ -365,11 +379,11 @@ function main() {
 
   if (stale.length) {
     console.error(`\n[unresolved-sends] FAIL — ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in buildSystem/unresolved-sends-allowlist.txt (delete each):`);
-    for (const s of stale) console.error(`  STALE_ALLOWLIST_ENTRY ${s}`);
+    for (const s of stale) console.error(rules.fired('STALE_ALLOWLIST_ENTRY', `  STALE_ALLOWLIST_ENTRY ${s}`));
   }
   if (unsentBuiltins.length) {
     console.error(`\n[unresolved-sends] FAIL — ${unsentBuiltins.length} BUILTINS entr${unsentBuiltins.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js that no call sends (delete each):`);
-    for (const s of unsentBuiltins) console.error(`  STALE_ALLOWLIST_ENTRY ${s}, so it would only excuse the deletion of a future same-named Fizzygum method`);
+    for (const s of unsentBuiltins) console.error(rules.fired('STALE_BUILTIN', `  STALE_ALLOWLIST_ENTRY ${s}, so it would only excuse the deletion of a future same-named Fizzygum method`));
   }
   if (formErrors.length) {
     console.error(`\n[unresolved-sends] FAIL — ${formErrors.length} BUILTINS entr${formErrors.length === 1 ? 'y' : 'ies'} in check-unresolved-sends.js in the wrong form:`);
@@ -381,7 +395,7 @@ function main() {
     console.error(`\n[unresolved-sends] FAIL — ${n} call site(s) across ${violations.length} name(s) with no definition in src+harness (or, for a macro, in its own source):`);
     for (const name of violations) {
       for (const s of unresolved.get(name)) {
-        console.error(`  ${s.at}: ${s.sigil}${name}( — no definition found in src+harness${s.local ? ' or in its own macro source' : ''}`);
+        console.error(rules.fired('UNRESOLVED_SEND', `  ${s.at}: ${s.sigil}${name}( — no definition found in src+harness${s.local ? ' or in its own macro source' : ''}`));
         console.error(`      ${s.text}`);
       }
     }

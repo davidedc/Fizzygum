@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# not-a-gate: the build step that derives a profile's flavour; it refuses a malformed profile, judging no code
 
 """
 buildProfile.py -- a build FLAVOUR as DATA: the one reader of buildSystem/profiles/*.json.
@@ -142,9 +143,10 @@ def fail(message):
     exit(1)
 
 
-def loadParts():
-    """The partition, from buildSystem/parts.json. Read that file's header before changing this."""
-    with codecs.open(PARTS_MANIFEST_FILE, "r", "utf-8") as f:
+def loadParts(path=PARTS_MANIFEST_FILE):
+    """The partition, from buildSystem/parts.json (or another parts file: a bite-proof's planted one, through
+    build.py --parts). Read that file's header before changing this."""
+    with codecs.open(path, "r", "utf-8") as f:
         parts = json.load(f)["parts"]
     checkRequiresGraph(parts)
     return parts

@@ -113,17 +113,15 @@ class VerticalStackLayoutSpec extends LayoutSpec
   # setElasticity / setWidthOfElementWhenAdded); the USER-FACING wording ("Elasticity…",
   # "Base width…", the prompt titles) deliberately keeps the old menu vocabulary — labels
   # are product wording and pixel-asserted, methods are code vocabulary.
-  # thin-wrap-exempt: the spec is NOT a Widget, so each setter settles on @element (the stack element), not @
-  # -- the thin-wrap gate's canonical form anchors _settleLayoutsAfter on @ (a self-settle). This is the same
-  # canonical thin wrap, just delegated to @element. (All 5 setters below are exempt for this reason.)
+  # The spec is NOT a Widget, so each setter settles on @element (the stack element), not @: the same thin wrap,
+  # delegated to @element. The thin-wrap gate's canonical form anchors _settleLayoutsAfter on @ (a self-settle), so
+  # each setter below that owns a _<name>NoSettle twin carries a thin-wrap-exempt marker for this reason.
   setAlignmentToLeft: ->
     @element._settleLayoutsAfter => @_setAlignmentNoSettle "left"
 
-  # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setAlignmentToRight: ->
     @element._settleLayoutsAfter => @_setAlignmentNoSettle "right"
 
-  # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setAlignmentToCenter: ->
     @element._settleLayoutsAfter => @_setAlignmentNoSettle "center"
 

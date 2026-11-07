@@ -20,10 +20,18 @@
 // means "nothing is left". Lowering a baseline after clearing occurrences is part of the work; raising
 // one needs a one-line reason here, exactly like check-stinks.js.
 
+// Run from the Fizzygum/ repo root: node ./buildSystem/census-widget-conformance.js [--gate] [--json] [--src=DIR] —
+// the rail reads another src tree (a copy carrying a plant). That both ratchets BITE under --gate, and that every
+// accepted declaration form passes, is proven on every build by census-widget-conformance-selftest.js.
+
 const fs = require('fs');
 const path = require('path');
 const { methodSpans } = require('./lib/coffee-method-header');   // facet 5's setters: class methods + mixin members
-const SRC = path.resolve(__dirname, '../src');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+rejectUnknownArgs(process.argv.slice(2), ['--gate', '--json', '--src='], 'widget-conformance');
+rejectPositionalArgs(process.argv.slice(2), 'widget-conformance', 'a src tree is named with --src=DIR');
+const SRC = dirArg(process.argv.slice(2), '--src=', path.resolve(__dirname, '../src'), 'widget-conformance');
 
 // ── the two ratcheted floors ────────────────────────────────────────────────────────────────────
 // ZERO since the connector arc's P9 (the `@target` disambiguation) retired W4c's floor: the four
@@ -98,7 +106,9 @@ function undeclaredFields() {
     const declared = new Set();
     for (const a of [...ch, ...new Set(ch.flatMap(mixinsOf))]) for (const d of declarationsOf(a)) declared.add(d);
     const body = codeOf(classes.get(name).text);
-    const written = new Set([...body.matchAll(/@([a-z_]\w*)\s*=(?!=|>)/g)].map((m) => m[1]));
+    // an assignment in any spelling — `=`, a compound `+=`/`?=`/`||=`, CoffeeScript's `or=`/`and=` — writes the field
+    // (a lazily-initialised one is written `@x ?= …`: the very field this facet exists for)
+    const written = new Set([...body.matchAll(/@([a-z_]\w*)\s*(?:[-+*\/%?]|\|\||&&|\bor|\band)?=(?!=|>)/g)].map((m) => m[1]));
     const ctor = /^ {2}constructor:\s*\(([^)]*)\)/m.exec(body);
     if (ctor) for (const m of ctor[1].matchAll(/@([A-Za-z_]\w*)/g)) written.add(m[1]);
     const missing = [...written].filter((f) => !declared.has(f)).sort();
@@ -198,12 +208,12 @@ const undeclaredFieldCount = undeclared.reduce((n, r) => n + r.fields.length, 0)
 if (GATE) {
   const fails = [];
   if (undeclared.length > BASELINE_UNDECLARED_CLASSES || undeclaredFieldCount > BASELINE_UNDECLARED_FIELDS) {
-    fails.push(`undeclared instance fields: ${undeclared.length} class(es) / ${undeclaredFieldCount} field(s) ` +
-               `-- baseline ${BASELINE_UNDECLARED_CLASSES}/${BASELINE_UNDECLARED_FIELDS}`);
+    fails.push(rules.fired('UNDECLARED_FIELD', `undeclared instance fields: ${undeclared.length} class(es) / ${undeclaredFieldCount} field(s) ` +
+               `-- baseline ${BASELINE_UNDECLARED_CLASSES}/${BASELINE_UNDECLARED_FIELDS}`));
     for (const r of undeclared) fails.push(`    ${r.cls} (${r.file}): ${r.fields.join(', ')}`);
   }
   if (prologues.length > BASELINE_PROLOGUE_COPIES) {
-    fails.push(`_reLayout prologue copies: ${prologues.length} -- baseline ${BASELINE_PROLOGUE_COPIES}`);
+    fails.push(rules.fired('PROLOGUE_COPY', `_reLayout prologue copies: ${prologues.length} -- baseline ${BASELINE_PROLOGUE_COPIES}`));
     for (const r of prologues) fails.push(`    ${r.cls} (${r.file})`);
   }
   if (fails.length) {

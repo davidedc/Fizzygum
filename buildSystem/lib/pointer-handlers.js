@@ -64,17 +64,19 @@ function stripComment(line) {
   return line;
 }
 
-// The problems with the table, read against ActivePointerWdgt's source (`srcRoot` = Fizzygum/src).
-// Returns [] when the table and the dispatcher agree.
+// The problems with the table, read against ActivePointerWdgt's source (`srcRoot` = Fizzygum/src), each
+// { kind, text } — the kind is the rule the reading gate fails on (PROBLEM_KINDS). [] when the two agree.
+const PROBLEM_KINDS = ['TABLE_SOURCE_MISSING', 'TABLE_UNKNOWN_NAME', 'TABLE_UNLISTED_DISPATCH', 'TABLE_POS_MISMATCH',
+  'TABLE_STALE_POSITION_QUERY', 'TABLE_UNMAPPED_PLANE_HANDLER'];
 function dispatchProblems(srcRoot) {
   const file = path.join(srcRoot, 'ActivePointerWdgt.coffee');
-  if (!fs.existsSync(file)) return ['ActivePointerWdgt.coffee not found at ' + file + ' — the handler table cannot be checked'];
+  if (!fs.existsSync(file)) return [{ kind: 'TABLE_SOURCE_MISSING', text: 'ActivePointerWdgt.coffee not found at ' + file + ' — the handler table cannot be checked' }];
   const code = fs.readFileSync(file, 'utf8').split('\n').map(stripComment);
   const text = code.join('\n');
   const problems = [];
   for (const n of names) {
     if (!new RegExp('\\b' + n + '\\b').test(text)) {
-      problems.push(`'${n}' is in the handler table but ActivePointerWdgt never names it — a retired or renamed handler`);
+      problems.push({ kind: 'TABLE_UNKNOWN_NAME', text: `'${n}' is in the handler table but ActivePointerWdgt never names it — a retired or renamed handler` });
     }
   }
   const positional = new Set();
@@ -88,16 +90,16 @@ function dispatchProblems(srcRoot) {
   for (const n of positional) {
     if (POSITION_QUERIES[n]) continue;
     if (!POINTER_HANDLERS[n]) {
-      problems.push(`ActivePointerWdgt hands a pointer position to '${n}', which the handler table does not know — add it (or, if it is a query, to POSITION_QUERIES with why)`);
+      problems.push({ kind: 'TABLE_UNLISTED_DISPATCH', text: `ActivePointerWdgt hands a pointer position to '${n}', which the handler table does not know — add it (or, if it is a query, to POSITION_QUERIES with why)` });
     } else if (POINTER_HANDLERS[n].pos !== 'plane') {
-      problems.push(`ActivePointerWdgt hands '${n}' a plane-mapped position, but the table says pos=${POINTER_HANDLERS[n].pos || 'none'}`);
+      problems.push({ kind: 'TABLE_POS_MISMATCH', text: `ActivePointerWdgt hands '${n}' a plane-mapped position, but the table says pos=${POINTER_HANDLERS[n].pos || 'none'}` });
     }
   }
   for (const q of Object.keys(POSITION_QUERIES)) {
-    if (!positional.has(q)) problems.push(`POSITION_QUERIES lists '${q}', which ActivePointerWdgt no longer hands a position — a stale entry`);
+    if (!positional.has(q)) problems.push({ kind: 'TABLE_STALE_POSITION_QUERY', text: `POSITION_QUERIES lists '${q}', which ActivePointerWdgt no longer hands a position — a stale entry` });
   }
   for (const n of namesWith('plane')) {
-    if (!positional.has(n)) problems.push(`the table says '${n}' is handed a plane-mapped position, but no dispatch of it in ActivePointerWdgt passes one`);
+    if (!positional.has(n)) problems.push({ kind: 'TABLE_UNMAPPED_PLANE_HANDLER', text: `the table says '${n}' is handed a plane-mapped position, but no dispatch of it in ActivePointerWdgt passes one` });
   }
   return problems;
 }
@@ -109,4 +111,5 @@ module.exports = {
   PLANE_POS_HANDLER_NAMES: namesWith('plane'),
   RAW_SCREEN_POS_HANDLERS: new Map(namesWith('screen').map((n) => [n, POINTER_HANDLERS[n].screenPosParam])),
   dispatchProblems,
+  PROBLEM_KINDS,
 };

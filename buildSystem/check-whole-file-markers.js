@@ -35,11 +35,21 @@
 // of what is being built. Documentation that DESCRIBES the retired mechanism (this file, parts.json,
 // build.py, the plan docs, src/macros/CLAUDE.md) is outside that scope by construction.
 
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-whole-file-markers.js
+// [--src=DIR] — the rail checks another src tree (a copy carrying a plant); paths print `src/…` from whichever tree
+// it reads. That every kind BITES, and that prose quoting a marker passes, is proven on every build by
+// check-whole-file-markers-selftest.js.
+
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.resolve(__dirname, '../src');
-const REPO = path.resolve(__dirname, '..');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'whole-file-markers');
+rejectPositionalArgs(ARGV, 'whole-file-markers', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'whole-file-markers');
 
 // Baselines MEASURED by this gate at the moment the mechanism died: 43 homepage + 2 macros +
 // 0 video-player = 45 marker lines across 45 files, all removed in arc 4 phase 1. Every kind is
@@ -65,6 +75,7 @@ const KINDS = [
     was: 0
   }
 ];
+rules.declare(KINDS.map((k) => k.id));
 
 function walk(dir, out) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -80,7 +91,7 @@ const found = Object.create(null);
 for (const k of KINDS) found[k.id] = [];
 
 for (const file of walk(SRC, [])) {
-  const rel = path.relative(REPO, file);
+  const rel = 'src/' + path.relative(SRC, file).split(path.sep).join('/');
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
@@ -105,7 +116,7 @@ for (const k of KINDS) {
     console.error(`  profiles which should not have it do not name (buildSystem/profiles/*.json), and make`);
     console.error(`  sure its call sites cope with the part's absence via 'if TheClass?'.`);
     console.error(`  ⛔ Do NOT invent a replacement marker syntax.`);
-    for (const f of found[k.id]) console.error(`    ${f}`);
+    for (const f of found[k.id]) console.error(rules.fired(k.id, `    ${f}`));
     failed = true;
   }
 }

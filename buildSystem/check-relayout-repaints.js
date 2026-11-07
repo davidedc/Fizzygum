@@ -17,18 +17,29 @@
 // retired-mechanism tombstones (check-region-markers.js, check-whole-file-markers.js):
 // the gate slot stays occupied so the retirement cannot silently un-happen.
 //
-// Exit 0 clean / 1 violation.
+// Exit 0 clean / 1 violation / 2 operational.
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-relayout-repaints.js
+// [--src=DIR] — the rail replaces the src root (a copy carrying a plant); the harness root stays the real one. Any
+// spelling CONTAINING a retired verb counts (`_disableTrackChanges`, `…NoSettle`): a renamed resurrection is still
+// one. That the rule BITES is proven on every build by check-relayout-repaints-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'relayout-repaints');
+rejectPositionalArgs(ARGV, 'relayout-repaints', 'a src tree is named with --src=DIR');
+const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
 const ROOTS = [
-  path.resolve(__dirname, '../src'),
+  dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'relayout-repaints'),
   // the harness compiles into the same world — a resurrection there is just as live
-  path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src'),
+  HARNESS,
 ];
 
-const RETIRED = /\b(disableTrackChanges|maybeEnableTrackChanges)\b/;
+const RETIRED = /(disableTrackChanges|maybeEnableTrackChanges)/;
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -40,6 +51,7 @@ function walk(dir, acc) {
   return acc;
 }
 
+if (!fs.existsSync(HARNESS)) console.log('[relayout-repaints] NOTE — the sibling Fizzygum-tests harness src is absent: src/ only.');
 const violations = [];
 let scanned = 0;
 for (const root of ROOTS) {
@@ -55,7 +67,7 @@ for (const root of ROOTS) {
 if (violations.length) {
   console.error(`\n[relayout-repaints] FAIL -- ${violations.length} occurrence(s) of the RETIRED paired suppression verbs (deleted 2026-08-11, repaint-as-one-unit arc):`);
   for (const v of violations) {
-    console.error(`  ${v.file}:${v.line}  ${v.text}`);
+    console.error(rules.fired('RETIRED_VERB', `  ${v.file}:${v.line}  ${v.text}`));
   }
   console.error('\nThe imperative disable/enable pair is retired: pairing and the covering repaint were caller');
   console.error('obligations, and both failure modes (a leaked frame, a forgotten cover) shipped real bugs.');

@@ -8,12 +8,23 @@
 // USER code, not the core framework, and even there is ideally temporary and eventually migrated into a
 // real class. Core is at 0 today; this gate keeps it there. A genuine exception carries a
 // `# stringified-script-sanctioned: <reason>` marker on the line or in the comment block directly above.
+// Any string handed to the constructor on its own line counts — a `"""` or `'''` block, a one-line string, with or
+// without parentheses; a block string opened on the NEXT line is not seen.
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-stringified-scripts.js
+// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That the rule BITES, and that both
+// sanction placements excuse it, is proven on every build by check-stringified-scripts-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.resolve(__dirname, '../src');
-const HIT = /new ScriptWdgt\s+"""/;                       // start of a stringified-script literal
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'stringified-scripts');
+rejectPositionalArgs(ARGV, 'stringified-scripts', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'stringified-scripts');
+const HIT = /new ScriptWdgt\b\s*\(?\s*["']/;               // a string handed to the constructor: stringified code
 const SANCTION = /#\s*stringified-script-sanctioned:\s*\S/; // marker WITH a non-empty reason
 
 function walk(dir, acc) {
@@ -45,7 +56,7 @@ for (const p of walk(SRC, [])) {
 console.log(`[stringified-scripts] scan done (${sanctioned} sanctioned).`);
 if (violations.length) {
   console.error(`\n[stringified-scripts] FAIL -- ${violations.length} stringified ScriptWdgt literal(s) in core:`);
-  for (const v of violations) console.error(`  ${v.file}:${v.line}`);
+  for (const v of violations) console.error(rules.fired('STRINGIFIED_SCRIPT', `  ${v.file}:${v.line}`));
   console.error('\nMove the script into user code / a real class, or add a');
   console.error('`# stringified-script-sanctioned: <reason>` marker on/above the line.');
   process.exit(1);

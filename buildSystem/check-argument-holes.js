@@ -31,9 +31,20 @@
 // RATCHET, the check-stinks idiom: FAIL when the count EXCEEDS the baseline (a regression), and
 // print a tighten-me note when it drops BELOW. Tighten the baseline in the SAME commit that drops
 // it. The target is 0.
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-argument-holes.js [--src=DIR]
+// — the rail checks another src tree (a planted one). That the ratchet BITES is proven on every build by
+// check-argument-holes-selftest.js.
 
 const path = require('path');
 const census = require('./census-call-arity.js');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'argument-holes');
+rejectPositionalArgs(ARGV, 'argument-holes', 'a src tree is named with --src=DIR');
+const SRC_DIR = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'argument-holes');
 
 // 2 is this check's FLOOR, not a way-point (the conformance arc took it from 20 to 9 at P8 and to 2 at P9).
 //
@@ -53,7 +64,7 @@ const census = require('./census-call-arity.js');
 // is right. So: a rise here is a regression; reaching 0 is not a goal.
 const BASELINE = 2;
 
-const SRC = census.srcSources();
+const SRC = census.srcSources(SRC_DIR);
 
 const holes = census.collectHoles(SRC);
 
@@ -63,7 +74,7 @@ for (const r of holes) {
 
 const n = holes.length;
 if (n > BASELINE) {
-  console.error(`\n[argument-holes] FAIL — ${n} site(s), baseline ${BASELINE}.`);
+  console.error(rules.fired('OVER_BASELINE', `\n[argument-holes] FAIL — ${n} site(s), baseline ${BASELINE}.`));
   console.error('A call punching `undefined` through to reach a later argument means the parameter');
   console.error('list is wrong (R3). Give the callee a trailing `opts = {}` and name the option, or');
   console.error('— for a class exempt under §3 of the convention doc — reorder so the commonly-passed');

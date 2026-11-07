@@ -89,11 +89,24 @@ const { installEdges, harnessPresent } = require('./lib/install-edges.js');
 // second copy of the subtlest part of the tree's static analysis, free to drift.
 const { runCensus } = require('./census-public-private-calls.js');
 
-const SRC = path.resolve(__dirname, '../src');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-menu-actions.js [--src=DIR] —
+// the rail checks another src tree (a copy carrying a plant), read whole: the class model (runCensus) and the boot
+// install edges come from it too, the harness from the sibling repo. That every rule BITES, through both doors, and
+// that every accepted form passes, is proven on every build by check-menu-actions-selftest.js.
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'menu-actions');
+rejectPositionalArgs(ARGV, 'menu-actions', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'menu-actions');
+// the rule each hard violation breaks, by the rule number it carries
+const HARD_RULE_IDS = { 1: 'RULE_1_FUNCTION_ACTION', '1b': 'RULE_1B_UNRESOLVED_ACTION', 2: 'RULE_2_STRING_OPTS' };
+rules.declare(Object.values(HARD_RULE_IDS));
 
 // Seeded 2026-08-16 at the count left after the menu-action arc converted the five padded verbs
 // (showOutputPins / removeOutputPins / makeFolderWindow / popUpDemoMenu / dockToolbarMenu). The
-// survivors are the sanctioned spelling — a slot named for the fact that it is skipped.
+// survivors are the sanctioned spelling — a slot named for the fact that it is skipped. At 0 it is
+// the FLOOR: the count can only hold or rise, so there is no tighten-the-baseline branch to take.
 const RULE3_BASELINE = 0;
 
 // A parameter name that DECLARES itself unread. `ignored`/`ignored2`/`unused` are the tree's
@@ -230,16 +243,20 @@ for (const p of files) {
     const name = span.name;
     if (!actionNames.has(name)) continue;
 
-    const sig = /\(([^)]*)\)/.exec(lines[i]);
+    // the signature may WRAP (`verb: (a,` … `b) ->`): read the header lines up to its arrow
+    let header = stripComment(lines[i]), last = i;
+    while (!/\)\s*[-=]>/.test(header) && /\(/.test(header) && last + 1 < span.end && last - i < 12) header += ' ' + stripComment(lines[++last]).trim();
+    const sig = /\(([^)]*)\)/.exec(header);
     if (!sig) continue;
     const params = sig[1].split(',').map(s => s.trim()).filter(Boolean)
       .map(s => s.replace(/\s*=.*$/, '').replace(/^@/, ''));
     if (!params.length) continue;
 
-    // body = the method's span: up to the next method (a class's, or a sibling member inside a mixin),
-    // a non-method class-level key, or EOF
-    let body = '';
-    for (let j = i + 1; j < span.end; j++) body += stripComment(lines[j]) + '\n';
+    // body = what follows the arrow on the header (a ONE-LINE verb's whole body) and the method's span: up to the next
+    // method (a class's, or a sibling member inside a mixin), a non-method class-level key, or EOF
+    const arrow = header.search(/\)\s*[-=]>/);
+    let body = (arrow >= 0 ? header.slice(header.indexOf('>', arrow) + 1) : '') + '\n';
+    for (let j = last + 1; j < span.end; j++) body += stripComment(lines[j]) + '\n';
     for (const prm of params) {
       if (DECLARED_UNREAD.test(prm)) continue;
       if (new RegExp(`\\b${prm}\\b`).test(body)) continue;
@@ -260,7 +277,7 @@ if (!harnessPresent()) {
   // miss would not be a proof. Same self-skip as check-dead-methods / check-unresolved-sends.
   ruleB.skipped = 'sibling Fizzygum-tests not present (its *TestSupport installs are part of the resolution universe)';
 } else {
-  const census = runCensus();
+  const census = runCensus({ src: SRC });
   const { classInfo, chainOf } = census;
 
   // harness members installed onto a core class, read from the ACTUAL boot edges
@@ -272,7 +289,7 @@ if (!harnessPresent()) {
   // refusal is reported as itself, exit 2 like check-part-edges.js: without a faithful member set this
   // rule cannot be answered.
   let edges;
-  try { edges = installEdges(); } catch (e) {
+  try { edges = installEdges(SRC); } catch (e) {
     console.error('[menu-actions] FAIL — the boot install edges could not be read:\n' + e.message);
     process.exit(2);
   }
@@ -315,7 +332,7 @@ if (!harnessPresent()) {
 
 let bad = 0;
 for (const h of hard) {
-  console.error(`[menu-actions] RULE ${h.rule} FAIL — ${h.rel}:${h.line}`);
+  console.error(rules.fired(HARD_RULE_IDS[h.rule], `[menu-actions] RULE ${h.rule} FAIL — ${h.rel}:${h.line}`));
   console.error(`    ${h.text}`);
   console.error(`    ${h.why}`);
   bad++;
@@ -334,15 +351,10 @@ if (bad) {
   process.exit(1);
 }
 if (unread.length > RULE3_BASELINE) {
-  console.error(`\n[menu-actions] FAIL — ${unread.length} unread menu-action parameter(s), baseline ${RULE3_BASELINE}.`);
+  console.error(rules.fired('RULE_3_UNREAD_PARAM', `\n[menu-actions] FAIL — ${unread.length} unread menu-action parameter(s), baseline ${RULE3_BASELINE}.`));
   console.error('A verb wired to a menu receives four dispatcher slots whether it wants them or not.');
   console.error('If a slot exists only to be skipped, NAME it so: `ignored`, `ignored2`, `unused`.');
   console.error('Otherwise read it — or drop it, and let the dispatcher\'s extra arguments fall away.');
   process.exit(1);
 }
-if (unread.length < RULE3_BASELINE) {
-  console.log(`\n[menu-actions] ${unread.length} unread parameter(s) (baseline ${RULE3_BASELINE}) -- UNDER`);
-  console.log(`NOTE: tighten RULE3_BASELINE to ${unread.length} in buildSystem/check-menu-actions.js, in THIS commit.`);
-} else {
-  console.log(`\n[menu-actions] OK — ${actionNames.size} menu-dispatched verb(s); ${ruleB.checked} \`@\`-targeted row(s) all resolve; 0 provably-wrong wirings; ${unread.length} unread parameter(s) (baseline ${RULE3_BASELINE}).`);
-}
+console.log(`\n[menu-actions] OK — ${actionNames.size} menu-dispatched verb(s); ${ruleB.checked} \`@\`-targeted row(s) all resolve; 0 provably-wrong wirings; ${unread.length} unread parameter(s) (baseline ${RULE3_BASELINE}).`);

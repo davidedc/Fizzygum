@@ -178,7 +178,7 @@ the teardown and the in-band audits — forces a double GC and asserts, with THR
   **SUSPECTS, not findings**: "the collector has not got to it yet" and "something is
   holding it" are indistinguishable from inside the page, so tier 1 declares nothing and
   **pins** each suspect where a heap snapshot can still address it. *Tier 2* (in the
-  runner, `AUDIT_RETAINER_CONFIRM=1`) takes one snapshot per shard at shard end and marks
+  runner, `--retainer-confirm`) takes one snapshot per shard at shard end and marks
   forward from the GC root **with the pin arrays subtracted by NODE** — never by edge name,
   because an array reaches its elements through a backing store whose edges are numeric
   slots, and dropping the array's own node is what drops the store with it. A suspect still

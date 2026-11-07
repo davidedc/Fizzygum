@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# not-a-gate: the build step that assembles the tree; the gates are the checks it is followed by
 
 """
 This script performs only some of the steps of the build:
@@ -108,8 +109,20 @@ parser.add_argument('--noSyntaxCheck', action='store_true')
 # syntax gate (buildSystem/check-coffee-syntax.js), so the gate's file set can never
 # drift from what the build actually wraps-as-text and compiles in-browser.
 parser.add_argument('--list-shippable', action='store_true')
+# --src=DIR / --parts=FILE, with --list-shippable only: list the partition of ANOTHER src tree, or by another parts.json
+# -- a static gate's bite-proof hands its gate a planted copy (buildSystem/lib/planted-src.js), and the gates that read
+# this list must read the copy's. A part directory under `src` is globbed under DIR instead; every path is still
+# printed `src/...`, so a gate maps it back onto the tree it was handed. An empty or missing value is refused.
+parser.add_argument('--src', default=None)
+parser.add_argument('--parts', default=None)
 
 args = parser.parse_args()
+if (args.src is not None or args.parts is not None) and not args.list_shippable:
+    parser.error("--src= and --parts= only qualify --list-shippable")
+if args.src is not None and (not args.src or not os.path.isdir(args.src)):
+    parser.error("--src= names no directory: %r" % args.src)
+if args.parts is not None and (not args.parts or not os.path.isfile(args.parts)):
+    parser.error("--parts= names no file: %r" % args.parts)
 
 
 # Writes one entry page from the single page source, substituting the backend
@@ -137,7 +150,7 @@ def generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas, eagerAllParts):
         f.write(content.replace(BOOT_SCRIPTS_PLACEHOLDER, bootScripts))
 
 
-def partitionFiles(parts):
+def partitionFiles(parts, srcRoot=None):
     """Every .coffee file the partition claims, in ANY flavour, as (orderedFilenames, partOfFile).
 
     Flavour-INDEPENDENT on purpose. Two build gates read this set through --list-shippable:
@@ -157,7 +170,11 @@ def partitionFiles(parts):
         if partName.startswith("//"):
             continue
         for eachDir in part["dirs"]:
-            for filename in glob(eachDir + "/*.coffee"):
+            # another src tree (--src): a src dir is globbed there, and named src/... as always
+            underSrc = srcRoot is not None and (eachDir == "src" or eachDir.startswith("src/"))
+            physical = (srcRoot.rstrip("/") + eachDir[3:]) if underSrc else eachDir
+            for found in glob(physical + "/*.coffee"):
+                filename = ("src" + found[len(srcRoot.rstrip("/")):]) if underSrc else found
                 if filename in partOfFile:
                     print("ERROR: %s is claimed by two parts: %s and %s. Every directory belongs to "
                           "exactly one part -- see %s." %
@@ -238,8 +255,8 @@ def shippedFiles(parts, partOfFile, orderedFilenames, profile, args):
 def main():
 
     profile = buildProfile.resolve(args.profile)
-    parts = loadParts()
-    allFilenames, partOfFile = partitionFiles(parts)
+    parts = loadParts(args.parts) if args.parts else loadParts()
+    allFilenames, partOfFile = partitionFiles(parts, args.src)
 
     # --list-shippable: emit the partition's file list and stop (see the argparse note above).
     # One path per line, consumed by buildSystem/check-coffee-syntax.js and

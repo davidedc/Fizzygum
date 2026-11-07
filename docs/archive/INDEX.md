@@ -583,6 +583,12 @@ Archived docs are immutable history — the current-state truth lives in
   - ⭐⭐ a plant that confines and bounds itself must also be ORDER-INDEPENDENT of the prelude: hook a method the prelude does not wrap, inside a frame it does. And a plant can fail to bite for a product reason: the storage plant's first shape was correctly filed away by the boot world's own pending drain.
   - ⭐ the review's two vacuity finds: a "names the plant" check matched words the gate's SUMMARY always prints; a two-flag coverage proof could not see either flag alone. Match the violation line itself; prove each condition with a bucket that satisfies the other.
   - ⭐ a shared runner lib changed for Chrome broke WebKit (Playwright's `evaluate` takes ONE argument) — presuite is Chrome-only, so run a WebKit subset before the gauntlet.
+- **`every-gate-bites-plan.md`** — COMPLETE (2026-11-07; the bite-proofs arc's one filed item, "every gate needs a standing bite-proof", taken as the meta-rule; owner rulings D1 gate-run per rule, D2 a rule REGISTRY lib, D3 every env plant rail a flag (PRELUDE_JS, AUDIT_*, AIM_CENSUS_SRC, FUZZ_* refused), D4 a callable-only unresolved-sends harvest).
+  - Rule (`lint-and-static-checks.md` §3): every script the build or an `fg` leg LAUNCHES names its rules (`buildSystem/lib/gate-rules.js`; shell twin `gate_rule`) and a self-test plants EVERY rule — `proveGate` (planted src copy) / `proveLeg` (page plant via `--prelude=`), one judge (`lib/prove-rules.js`); `run-selftests.js`'s census fails a gate without both (`GATE_WITHOUT_REGISTRY` / `GATE_WITHOUT_PROOF`); `// bite-unplantable: <ID> — <reason>`, `not-a-gate: <reason>`.
+  - ⭐⭐ "unplantable" is a claim to disprove: the review found four false (a shard abandon via `--max-stalls=1`, a launch page told by its viewport, a wait ended by a fast clock, an accessor that lies only inside the sweep).
+  - ⭐⭐ a census keyed on the FIRST edge to a file let a launched script escape — any launch edge makes a program; and the widened reading's one false launch was answered by the class (self-tests are proofs), not by an exemption.
+  - ⭐ the masks the proofs exposed were real: a short shard read `[ok]`, an unfinished run-sequence exited 0, 32 serialization names held to nothing, console errors passed five rigs, a census report cut by `process.exit`, a space-separated `--prelude FILE` silently dropped.
+  - ⭐ a pool starts longest-first or its longest file sets the tier (193.8 s → 153.1 s idle on the same 22 files).
 
 ## Build & toolchain
 

@@ -31,7 +31,6 @@
  * we provide minimal stand-ins as closed-over factory params + a `window` Proxy:
  *   - compileFGCode(src,bare)  -> CoffeeScript.compile (faithful 1-liner of the real
  *                                 wrapper, loading-and-compiling-...coffee:88-103)
- *   - nil                      -> undefined  (Fizzygum's undefined alias)
  *   - srcLoadCompileDebugWrites-> false       (Mixin.coffee:63 reads it BARE; must be
  *                                 falsy or debug paths run)
  *   - JSSourcesContainer       -> {content:''}(Class.coffee:414, Mixin.coffee:96)
@@ -79,7 +78,10 @@
  * All args we receive are forwarded so the set matches the build's flags.
  *
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
- *   node ./buildSystem/check-coffee-syntax.js [build flags...]
+ *   node ./buildSystem/check-coffee-syntax.js [--src=DIR] [build flags...]
+ * --src= checks another src tree (a copy carrying a plant): the meta-compiler, the boot helper globals and the
+ * listing (build.py --list-shippable --src=DIR) all come from it. That both rules BITE is proven on every build by
+ * check-coffee-syntax-selftest.js.
  * TESTING HOOK — check given files instead of the shippable set (everything after the flag
  * is a path, relative to the repo root or absolute; build flags before it are ignored):
  *   node ./buildSystem/check-coffee-syntax.js --files <a.coffee> [<b.coffee> ...]
@@ -88,8 +90,17 @@
 const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
+const { dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
+const FILES_FLAG = process.argv.indexOf('--files');
+const OWN_ARGV = FILES_FLAG >= 0 ? process.argv.slice(2, FILES_FLAG) : process.argv.slice(2);
+const SRC_GIVEN = OWN_ARGV.some((a) => a.startsWith('--src='));
+const SRC = dirArg(OWN_ARGV, '--src=', path.join(REPO, 'src'), 'check-coffee-syntax');
+const BUILD_ARGS = [...OWN_ARGV.filter((a) => !a.startsWith('--src=')), ...(SRC_GIVEN ? ['--src=' + SRC] : [])];
+// a listed `src/…` path names a file of the tree being checked; any other (the harness) is the repo-relative path it is
+const onDisk = (rel) => (rel.startsWith('src/') ? path.join(SRC, rel.slice(4)) : path.resolve(REPO, rel));
 const COMPILER = path.join(__dirname, '..', 'auxiliary files', 'CoffeeScript', 'fizzygum-coffeescript-min.js');
 
 function fail(msg) { console.error('check-coffee-syntax: ' + msg); process.exit(2); }
@@ -111,8 +122,8 @@ if (!CoffeeScript || typeof CoffeeScript.compile !== 'function') {
 //   compile as whole files (this is also how boot bootstraps them).
 let Class, Mixin;
 try {
-  const classJS = CoffeeScript.compile(fs.readFileSync(path.join(REPO, 'src', 'meta', 'Class.coffee'), 'utf8'), { bare: true });
-  const mixinJS = CoffeeScript.compile(fs.readFileSync(path.join(REPO, 'src', 'meta', 'Mixin.coffee'), 'utf8'), { bare: true });
+  const classJS = CoffeeScript.compile(fs.readFileSync(path.join(SRC, 'meta', 'Class.coffee'), 'utf8'), { bare: true });
+  const mixinJS = CoffeeScript.compile(fs.readFileSync(path.join(SRC, 'meta', 'Mixin.coffee'), 'utf8'), { bare: true });
 
   // The shim globals are passed as factory PARAMETERS so the defined Class/Mixin
   // methods close over them (no global pollution). `window` is a Proxy; see header.
@@ -122,13 +133,16 @@ try {
     set(t, k, v) { t[k] = v; return true; }
   });
   const JSSourcesContainer = { content: '' };
-  const compileFGCode = (src, bare) => CoffeeScript.compile(src, { bare: bare });
+  // a member's parse error locates itself in its FRAGMENT: remember the fragment, so the report can find the file line
+  const compileFGCode = (src, bare) => {
+    try { return CoffeeScript.compile(src, { bare: bare }); } catch (e) { if (e && typeof e === 'object') e.fizzygumFragment = src; throw e; }
+  };
 
   const factory = new Function(
-    'window', 'nil', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites', 'MixedClassKeywords',
+    'window', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites', 'MixedClassKeywords',
     classJS + '\n;\n' + mixinJS + '\n;\nreturn { Class: Class, Mixin: Mixin };'
   );
-  ({ Class, Mixin } = factory(windowProxy, undefined, compileFGCode, JSSourcesContainer, false,
+  ({ Class, Mixin } = factory(windowProxy, compileFGCode, JSSourcesContainer, false,
     ['onceAddedClassProperties', 'included', 'consumerClassNames']));
   if (typeof Class !== 'function' || typeof Mixin !== 'function') {
     fail('failed to capture Class/Mixin constructors from the meta-compiler');
@@ -145,7 +159,7 @@ if (!Array.isArray(declared) || !declared.length || !declared.every(n => typeof 
 }
 const PROVIDED = new Set(declared);
 {
-  const bootDir = path.join(REPO, 'src', 'boot');
+  const bootDir = path.join(SRC, 'boot');
   const BOOT_HELPER = /^\s*window\.([A-Za-z_$][\w$]*)\s*=\s*(?:\[\]|\{\})\.[A-Za-z_$][\w$]*\s*$/;
   const assigned = new Set();
   const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) {
@@ -221,7 +235,7 @@ if (filesFlag >= 0) {
   if (!files.length) fail('--files names no file');
 } else {
   try {
-    const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...process.argv.slice(2)],
+    const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...BUILD_ARGS],
       { cwd: REPO, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
     files = out.split('\n').map(s => s.trim()).filter(Boolean);
   } catch (e) {
@@ -246,7 +260,7 @@ try {
   for (const rel of files) {
     let src;
     try {
-      src = fs.readFileSync(path.resolve(REPO, rel), 'utf8');
+      src = fs.readFileSync(filesFlag >= 0 ? path.resolve(REPO, rel) : onDisk(rel), 'utf8');
     } catch (e) {
       failures.push({ rel, message: 'could not read file: ' + e.message });
       continue;
@@ -259,7 +273,7 @@ try {
       else if (isMixin) { nMixin++; new Mixin(src, true, false); }
       else { nSkip++; }  // not a class/mixin file: the build wraps none of these as text
     } catch (e) {
-      failures.push({ rel, message: (e && e.message) || String(e), location: e && e.location });
+      failures.push({ rel, message: (e && e.message) || String(e), location: e && e.location, fragment: e && e.fizzygumFragment, src });
     }
   }
 } finally {
@@ -267,18 +281,27 @@ try {
 }
 
 // ---- 5. report + exit ----
+// A class member compiles as its own FRAGMENT, so its error's line is the fragment's: report the file line whose text
+// is the fragment's failing line (when exactly one file line carries that text), else say whose line it is.
+function fileLocation(f) {
+  if (!f.location) return '';
+  const col = f.location.first_column + 1;
+  if (!f.fragment || !f.src) return ` (${f.location.first_line + 1}:${col})`;
+  const text = (f.fragment.split('\n')[f.location.first_line] || '').trim();
+  const at = text ? f.src.split('\n').map((l, i) => (l.trim() === text ? i + 1 : 0)).filter(Boolean) : [];
+  return at.length === 1 ? ` (${at[0]}:${col})` : ` (member fragment line ${f.location.first_line + 1}:${col})`;
+}
 for (const f of failures) {
-  const loc = f.location ? ` (${f.location.first_line + 1}:${f.location.first_column + 1})` : '';
-  console.error('FAIL ' + f.rel + loc);
+  console.error(rules.fired('PARSE_ERROR', 'FAIL ' + f.rel + fileLocation(f)));
   console.error('    ' + String(f.message).replace(/\n/g, '\n    '));
 }
 for (const h of helperLosses) {
-  console.error(`FAIL ${h.rel}  ${h.cls}.${h.member}: its compiled form declares ${h.names.map(n => '`' + n + '`').join(', ')} in the leading \`var\` head that`
+  console.error(rules.fired('LOST_HELPER', `FAIL ${h.rel}  ${h.cls}.${h.member}: its compiled form declares ${h.names.map(n => '`' + n + '`').join(', ')} in the leading \`var\` head that`
     + ` Class._removeHelperFunctions cuts out, and boot provides only ${[...PROVIDED].join(' / ')} as globals — so the body's use of`
     + ` ${h.names.length === 1 ? 'it' : 'them'} has no declaration: a call to a helper throws ReferenceError at runtime, and an assigned compiler`
     + ` temporary becomes a page-wide global. Rewrite the construct the compiler declares ${h.names.length === 1 ? 'it' : 'them'} for`
     + ` (a helper is named for its construct; a temporary comes from a parameter default — move the default's logic into the body,`
-    + ` or spell it so it needs no temporary).`);
+    + ` or spell it so it needs no temporary).`));
 }
 // a tap that saw nothing checked nothing: with classes compiled, the strip must have run
 if (nClass > 0 && strippedFragments === 0) {

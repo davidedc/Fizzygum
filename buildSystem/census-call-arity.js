@@ -66,8 +66,8 @@ function walk(dir, acc) {
 
 // The code a scan reads, as SOURCES: { file, lines }, each line with its comment characters blanked
 // (columns kept). src through coffee-mask; the tests repo's code through the shared reader.
-function srcSources() {
-  return walk(path.join(ROOT, 'Fizzygum', 'src'), []).sort().map((file) => {
+function srcSources(srcDir = path.join(ROOT, 'Fizzygum', 'src')) {
+  return walk(srcDir, []).sort().map((file) => {
     let state = null;
     const lines = fs.readFileSync(file, 'utf8').split('\n').map((l) => { const r = codeOfCoffeeLine(l, state); state = r.state; return r.code; });
     return { file, lines };

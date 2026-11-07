@@ -27,11 +27,21 @@
 //
 // Scope: src/**/*.coffee only. Runs for every build flavour (the count is a property of the source,
 // not of what is being built).
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-region-markers.js [--src=DIR]
+// — the rail checks another src tree (a copy carrying a plant). That every kind, the pairing rule and the
+// unknown-marker rule BITE, and that prose about the mechanism passes, is proven on every build by
+// check-region-markers-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.resolve(__dirname, '../src');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'region-markers');
+rejectPositionalArgs(ARGV, 'region-markers', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'region-markers');
 
 // Baselines MEASURED by this engine. Arc 3 started at 58 homepage + 3 macros + 2 video-player = 63
 // openers, all paired; each phase that re-homes sites tightens the number here to lock the gain in.
@@ -51,6 +61,7 @@ const KINDS = [
     why: 'video-player-only regions; they fold into the whole-file-marked video-player family',
     open: /^[ \t]*#\s*»>>\s*this part is only needed for VideoPlayer/ },
 ];
+rules.declare(KINDS.map((k) => k.id));
 
 // Any `»>>` line that matches no kind above is a marker the build does not understand — it strips
 // nothing, so it is a lie in the source. Prose ABOUT the mechanism (this arc's own explanatory
@@ -68,6 +79,7 @@ function walk(dir, acc) {
 }
 
 const counts = Object.fromEntries(KINDS.map(k => [k.id, 0]));
+const sites = Object.fromEntries(KINDS.map(k => [k.id, []]));
 const unpaired = [];
 const unknown = [];
 
@@ -83,6 +95,7 @@ for (const p of walk(SRC, [])) {
       continue;
     }
     counts[kind.id]++;
+    sites[kind.id].push(`${rel}:${i + 1}`);
     // pair it: the region ends at the next line carrying the closer character
     let j = i + 1;
     while (j < lines.length && !lines[j].includes('«')) j++;
@@ -98,13 +111,13 @@ let failed = false;
 
 if (unknown.length) {
   console.error(`\n[region-markers] FAIL -- ${unknown.length} »>> marker(s) build.py does not recognise (they strip NOTHING):`);
-  for (const u of unknown) console.error(`  ${u}`);
+  for (const u of unknown) console.error(rules.fired('UNKNOWN_MARKER', `  ${u}`));
   failed = true;
 }
 
 if (unpaired.length) {
   console.error(`\n[region-markers] FAIL -- ${unpaired.length} region opener(s) with no closing « :`);
-  for (const u of unpaired) console.error(`  ${u}`);
+  for (const u of unpaired) console.error(rules.fired('UNPAIRED_OPENER', `  ${u}`));
   console.error('An unclosed region swallows the rest of the file in the flavour that strips it.');
   failed = true;
 }
@@ -112,15 +125,14 @@ if (unpaired.length) {
 for (const k of KINDS) {
   const n = counts[k.id];
   if (n > k.baseline) {
-    console.error(`\n[region-markers] FAIL -- '${k.id}' regions: ${n} > baseline ${k.baseline}.`);
+    console.error(`\n[region-markers] FAIL -- '${k.id}' regions: ${n} > baseline ${k.baseline}:`);
+    for (const s of sites[k.id]) console.error(rules.fired(k.id, `    ${s}`));
     console.error(`  ${k.why}`);
     console.error('  The region mechanism is being RETIRED: do not add a region, and do not invent a');
     console.error('  replacement marker syntax. RE-HOME the code instead — promote it (it is product),');
     console.error('  move it to ../Fizzygum-tests/Automator-and-test-harness-src/ (it is test machinery),');
     console.error('  or extract it into its own collaborator class.');
     failed = true;
-  } else if (n < k.baseline) {
-    console.log(`[region-markers] '${k.id}' is DOWN to ${n} (baseline ${k.baseline}) -- tighten the baseline in ${path.basename(__filename)} to lock the gain in.`);
   }
 }
 

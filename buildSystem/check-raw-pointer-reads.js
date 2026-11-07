@@ -39,9 +39,21 @@
 // EXEMPTION: a `# raw-screen-pointer-sanctioned: <reason>` marker (non-empty reason) in the comment
 // block directly above the handler header. No current site needs it.
 
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-raw-pointer-reads.js
+// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That every rule BITES — a raw read, each
+// way the handler table can disagree with the dispatcher, a stale EXTRA_HANDLER_NAMES entry — and that every accepted
+// form passes, is proven on every build by check-raw-pointer-reads-selftest.js.
+
 const fs = require('fs');
 const path = require('path');
-const SRC = path.resolve(__dirname, '../src');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'raw-pointer-reads');
+rejectPositionalArgs(ARGV, 'raw-pointer-reads', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'raw-pointer-reads');
 
 const { methodBoundary } = require('./lib/coffee-method-header');   // class AND mixin-member method grouping
 const EXEMPT = /#\s*raw-screen-pointer-sanctioned:\s*\S/;    // marker WITH a non-empty reason
@@ -54,11 +66,13 @@ const pointerHandlers = require('./lib/pointer-handlers');
 // hand-list-sanctioned: check-raw-pointer-reads.js fails STALE_ALLOWLIST_ENTRY on a name no scanned class defines
 const EXTRA_HANDLER_NAMES = ['takeStrokeScrollFrom', 'latchStrokeScroll'];
 const HANDLER_NAMES = new Set([...pointerHandlers.HANDLER_NAMES, ...EXTRA_HANDLER_NAMES]);
-const SKIPPED_CLASSES = ['ActivePointerWdgt'];   // the hand/dispatcher itself
+// the hand/dispatcher itself: never stale, since a src tree without ActivePointerWdgt.coffee fails the table check below
+const SKIPPED_CLASSES = ['ActivePointerWdgt'];
+rules.declare(pointerHandlers.PROBLEM_KINDS);
 const tableProblems = pointerHandlers.dispatchProblems(SRC);
 if (tableProblems.length) {
   console.error(`raw-pointer-reads gate: the pointer-handler table (buildSystem/lib/pointer-handlers.js) disagrees with ActivePointerWdgt:`);
-  for (const p of tableProblems) console.error('  ' + p);
+  for (const p of tableProblems) console.error(rules.fired(p.kind, '  ' + p.text));
   process.exit(1);
 }
 
@@ -106,22 +120,17 @@ for (const p of files) {
     if (!inHandler || handlerExempt) continue;
     const code = stripComment(line);
     if (RAW_READ.test(code) && !MAPPED.test(code)) {
-      const rel = path.relative(path.resolve(__dirname, '..'), p);
-      violations.push(`[raw-pointer] ${cls}.${handlerName} reads world.hand.position() unmapped — ${rel}:${n + 1}\n`
+      const rel = 'src/' + path.relative(SRC, p).split(path.sep).join('/');
+      violations.push(rules.fired('RAW_READ', `[raw-pointer] ${cls}.${handlerName} reads world.hand.position() unmapped — ${rel}:${n + 1}\n`
         + `    consume the plane-mapped \`pos\` parameter, or map the sample at the read site:\n`
         + `    @screenPointToMyPlane world.hand.position()  (off-island this is the same point;\n`
-        + `    tilted it is the difference between the right cell and the wrong one)`);
+        + `    tilted it is the difference between the right cell and the wrong one)`));
     }
   }
 }
 
-const classes = new Set(files.map((p) => path.basename(p, '.coffee')));
-const stale = [
-  ...EXTRA_HANDLER_NAMES.filter((n) => !headersSeen.has(n))
-    .map((n) => `EXTRA_HANDLER_NAMES '${n}' — no scanned class defines a method of that name, so the body it meant goes unscanned: point the entry at the method's new name (or delete it)`),
-  ...SKIPPED_CLASSES.filter((c) => !classes.has(c))
-    .map((c) => `SKIPPED_CLASSES '${c}' — no src file defines that class, so the skip names something that moved: point it at the dispatcher's new name (or delete it)`),
-];
+const stale = EXTRA_HANDLER_NAMES.filter((n) => !headersSeen.has(n))
+  .map((n) => `EXTRA_HANDLER_NAMES '${n}' — no scanned class defines a method of that name, so the body it meant goes unscanned: point the entry at the method's new name (or delete it)`);
 if (violations.length || stale.length) {
   if (violations.length) {
     console.error(`raw-pointer-reads gate: ${violations.length} violation(s) in ${checked} handler bodies scanned:`);
@@ -129,7 +138,7 @@ if (violations.length || stale.length) {
   }
   if (stale.length) {
     console.error(`raw-pointer-reads gate: ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in this gate's own tables:`);
-    for (const s of stale) console.error('  STALE_ALLOWLIST_ENTRY ' + s);
+    for (const s of stale) console.error(rules.fired('STALE_EXTRA_HANDLER_NAME', '  STALE_ALLOWLIST_ENTRY ' + s));
   }
   process.exit(1);
 }

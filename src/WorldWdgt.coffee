@@ -3197,9 +3197,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # It answers `undefined` ON PURPOSE. The new world is `window.world`, which is how everything
   # reaches a world anyway; answering it instead would make every `page.evaluate(-> world.resetWorld())`
   # serialise a cyclic widget graph over the debugger protocol.
-  # thin-wrap-exempt: softReset (its hand.drop self-flushes) must precede the settle, and the
-  # dissolution + reconstruction follow it, so this is a SEQUENCE, not the bare
-  # @_settleLayoutsAfter => @_<name>NoSettle wrap.
+  # softReset (its hand.drop self-flushes) must precede the settle, and the dissolution + reconstruction
+  # follow it, so this is a SEQUENCE, not the bare @_settleLayoutsAfter => @_<name>NoSettle wrap.
   resetWorld: ->
     @_softResetWorld()
     @_settleLayoutsAfter => @_teardownWorldStructureNoSettle()

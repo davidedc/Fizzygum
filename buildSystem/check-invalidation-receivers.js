@@ -36,10 +36,21 @@
 // deliberately non-invalidating (NumberPromptWdgt, MenuItemWdgt). Adding a NEW cross-widget
 // invalidation requires either moving the mark into the receiver's mutation method (the
 // conforming shape) or a marker with a reason that survives review.
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-invalidation-receivers.js
+// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). Exit 0 clean / 1 violation /
+// 2 operational. That both rules BITE, and that every sanctioned form passes, is proven on every build by
+// check-invalidation-receivers-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
-const SRC = path.resolve(__dirname, '../src');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'invalidation-receivers');
+rejectPositionalArgs(ARGV, 'invalidation-receivers', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'invalidation-receivers');
 
 // WHAT IS GATED, READ FROM THE SOURCE rather than spelled here: the repaint verbs Widget defines
 // (lib/repaint-verbs.js — `_changed`, `_fullChanged`, the `_fullChanged…` variants), each also in its
@@ -52,7 +63,7 @@ const PAINT_EXECUTOR = '_repaintDamagedRects';
 let VERBS;
 try { VERBS = repaintVerbs(SRC); } catch (e) { console.error('invalidation-receivers gate: ' + e.message); process.exit(2); }
 if (!new RegExp('^  ' + PAINT_EXECUTOR + '\\s*:', 'm').test(fs.readFileSync(path.join(SRC, 'WorldWdgt.coffee'), 'utf8'))) {
-  console.error(`invalidation-receivers gate: STALE — WorldWdgt.coffee defines no ${PAINT_EXECUTOR}, the paint executor this gate keeps private; rename PAINT_EXECUTOR to match`);
+  console.error(rules.fired('STALE_PAINT_EXECUTOR', `invalidation-receivers gate: STALE — WorldWdgt.coffee defines no ${PAINT_EXECUTOR}, the paint executor this gate keeps private; rename PAINT_EXECUTOR to match`));
   process.exit(1);
 }
 const GATED = VERBS.concat(VERBS.map((v) => v.replace(/^_/, '')), [PAINT_EXECUTOR])
@@ -61,6 +72,7 @@ const CALL = new RegExp('\\.(' + GATED.join('|') + ')\\??\\(', 'g');
 const EXEMPT = /#\s*cross-invalidation-sanctioned:\s*\S/;
 const RECEIVER_CHARS = /[\w$@?.()\[\]]/;
 const ALLOWED = new Set([]);   // no receiver is exempt — see the header
+const SELF = new Set(['this', '@']);   // `this._changed()` is the self-call `@_changed()` spelled out: not a site at all
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -81,7 +93,7 @@ function receiverBefore(code, dotIndex) {
 const violations = [];
 let sites = 0, allowed = 0, sanctioned = 0;
 for (const p of walk(SRC, [])) {
-  const rel = path.relative(path.resolve(__dirname, '..'), p);
+  const rel = 'src/' + path.relative(SRC, p).split(path.sep).join('/');
   const lines = fs.readFileSync(p, 'utf8').split('\n');
   let pendingSanction = false;                       // set by a marker comment line, consumed by the next code line
   for (let n = 0; n < lines.length; n++) {
@@ -98,12 +110,13 @@ for (const p of walk(SRC, [])) {
     while ((m = CALL.exec(code)) !== null) {
       sites++;
       const recv = receiverBefore(code, m.index);
+      if (SELF.has(recv)) { sites--; continue; }
       if (ALLOWED.has(recv)) { allowed++; continue; }
       if (lineSanctioned) { sanctioned++; continue; }
-      violations.push(`[invalidation] ${rel}:${n + 1} — \`${recv || '<?>'}.${m[1]}()\` invalidates another widget\n`
+      violations.push(rules.fired('CROSS_INVALIDATION', `[invalidation] ${rel}:${n + 1} — \`${recv || '<?>'}.${m[1]}()\` invalidates another widget\n`
         + `    a widget invalidates only itself (widget-citizenship point 2): make the receiver mark\n`
         + `    itself changed inside the method you invoke on it — or, for genuine dispatcher plumbing,\n`
-        + `    add \`# cross-invalidation-sanctioned: <reason>\` on or directly above this line`);
+        + `    add \`# cross-invalidation-sanctioned: <reason>\` on or directly above this line`));
     }
   }
 }

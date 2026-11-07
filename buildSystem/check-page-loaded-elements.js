@@ -60,13 +60,13 @@ const fs = require('fs');
 const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
 
-const { rejectUnknownArgs } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 // --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, ['--src='], 'check-page-loaded-elements');
-if (ARGV.some((a) => !a.startsWith('--'))) { console.error('[check-page-loaded-elements] ERROR — a src tree is named with --src=DIR'); process.exit(2); }
-const SRC_ARG = ARGV.find((a) => a.startsWith('--src='));
-const SRC = SRC_ARG ? path.resolve(SRC_ARG.slice('--src='.length)) : path.resolve(__dirname, '../src');
+rejectPositionalArgs(ARGV, 'check-page-loaded-elements', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'check-page-loaded-elements');
 // hand-list-sanctioned: check-page-loaded-elements.js — a hook renamed in its holders fails each as
 // "the class chain defines no <hook>"; one renamed at its walker's call site fails as "neither walker calls"
 const HOOKS = ['_afterDeserialization', '_reactToBeingCopied'];
@@ -145,7 +145,7 @@ for (const p of walk(SRC, [])) {
   const file = path.relative(SRC, p);
   const spans = methodSpans(lines);
   for (const u of unseenMethodHeaders(lines)) {
-    if (HOOKS.some((h) => u.text.startsWith(h))) problems.push(`  ${file}:${u.line}  a hook header in a spelling the shared matcher cannot see — this gate would be blind to it: ${u.text}`);
+    if (HOOKS.some((h) => u.text.startsWith(h))) problems.push(rules.fired('UNSEEN_HOOK_HEADER', `  ${file}:${u.line}  a hook header in a spelling the shared matcher cannot see — this gate would be blind to it: ${u.text}`));
   }
   // every element construction in the file, attributed to the field it is written to (or to none)
   const writes = [];
@@ -159,7 +159,7 @@ for (const p of walk(SRC, [])) {
     while ((m = FIELD_WRITE_RE.exec(code))) fields.push(m[1]);
     if (!fields.length) {
       if (markedNotHeld(lines, i)) notHeld++;
-      else unattributed.push(`  ${file}:${i + 1}  ${raw.trim()}`);
+      else unattributed.push(rules.fired('UNATTRIBUTED_ELEMENT', `  ${file}:${i + 1}  ${raw.trim()}`));
       return;
     }
     const inMixinMember = spans.some((s) => s.mixin && i > s.line && i < s.end);
@@ -179,7 +179,7 @@ for (const p of walk(SRC, [])) {
   const mm = lines.map((l) => l.match(/^(\w+)\s*=\s*$/)).find(Boolean);
   if (mm && spans.some((s) => s.mixin)) {
     mixins[mm[1]] = { file, transients: new Set(listDeclaration(lines, 'serializationTransients')), methods: new Set(spans.filter((s) => s.mixin).map((s) => s.name)) };
-    for (const w of writes) if (w.inMixinMember) problems.push(`  ${w.at}  an element field (@${w.field}) assigned in the mixin ${mm[1]} — its transients and hooks are its consumers', which this gate cannot resolve per file`);
+    for (const w of writes) if (w.inMixinMember) problems.push(rules.fired('ELEMENT_FIELD_IN_MIXIN', `  ${w.at}  an element field (@${w.field}) assigned in the mixin ${mm[1]} — its transients and hooks are its consumers', which this gate cannot resolve per file`));
   }
 }
 
@@ -207,7 +207,8 @@ for (const [name, k] of Object.entries(classes)) {
     const why = [];
     if (!transients.has(w.field)) why.push(`not a serialization transient of the class chain`);
     if (missingHooks.length) why.push(`the class chain defines no ${missingHooks.join(' and no ')}`);
-    if (why.length) violations.push({ name, field: w.field, at: w.at, text: w.text, why });
+    if (why.length) violations.push({ name, field: w.field, at: w.at, text: w.text, why,
+      notTransient: !transients.has(w.field), noRestore: missingHooks.includes(HOOKS[0]), noCopy: missingHooks.includes(HOOKS[1]) });
   }
 }
 
@@ -217,7 +218,7 @@ const WALKERS = [path.join(SRC, 'serialization'), path.join(SRC, 'duplication')]
 for (const h of HOOKS) {
   const call = new RegExp(String.raw`\.${h}\??\(`);
   const called = WALKERS.some((d) => fs.existsSync(d) && walk(d, []).some((f) => fs.readFileSync(f, 'utf8').split('\n').some((l) => call.test(withoutComment(l)))));
-  if (!called) problems.push(`  HOOKS names ${h}, which neither walker (src/serialization, src/duplication) calls — a holder defining it re-makes nothing`);
+  if (!called) problems.push(rules.fired('HOOK_NOT_CALLED', `  HOOKS names ${h}, which neither walker (src/serialization, src/duplication) calls — a holder defining it re-makes nothing`));
 }
 
 if (problems.length) {
@@ -235,7 +236,12 @@ if (violations.length) {
   failed = true;
   console.error(`\n[page-loaded-elements] FAIL — ${violations.length} field(s) holding an element the page loads that a save or a copy would carry:`);
   for (const v of violations) {
-    console.error(`  ${v.name}.${v.field}  (${v.at}) — ${v.why.join('; ')}`);
+    // one line per violating field; each clause it breaks is its own rule
+    let line = `  ${v.name}.${v.field}  (${v.at}) — ${v.why.join('; ')}`;
+    if (v.notTransient) line = rules.fired('NOT_TRANSIENT', line);
+    if (v.noRestore) line = rules.fired('NO_RESTORE_HOOK', line);
+    if (v.noCopy) line = rules.fired('NO_COPY_HOOK', line);
+    console.error(line);
     console.error(`    ${v.text}`);
   }
 }

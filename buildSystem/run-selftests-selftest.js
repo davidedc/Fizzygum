@@ -6,7 +6,7 @@
 // self-test flag is not code offering one. Run by run-selftests.js itself, with every other self-test.
 
 const path = require('path');
-const { judge, offeredFlags, undiscovered } = require('./run-selftests');
+const { judge, offeredFlags, undiscovered, longestFirst } = require('./run-selftests');
 const t = require('./lib/selftest-verdict').cases('run-selftests');
 
 const RUNS = [
@@ -64,5 +64,92 @@ t.check(stray === 'buildSystem/b.selftest.js,scripts/c-self-test.js,docs/d-selft
   `undiscovered: misnamed, misplaced and wrong-extension self-tests are reported, a discovered one and a plain file are not -> ${stray}`);
 t.check(undiscovered([require.resolve('./run-selftests'), require.resolve('./lib/selftest-verdict')], new Set()).length === 0,
   'undiscovered: the runner and the verdict lib are the machinery, not self-tests');
+
+// ---- the REAL runner on a planted miniature workspace (--umbrella=) -------------------------------------------------
+// The cases above judge outputs and texts in memory; here the runner itself — discovery through lib/what-runs.js, the
+// pool, the verdict reading, the two hiding rules, the exit — runs over a workspace written in tmp at run time (a
+// committed fixture named like a self-test would itself fail the real build). The self-test switch is assembled, so
+// this file never holds the literal it refuses.
+const { proveGate } = require('./lib/planted-src');
+const SWITCH = '--self' + 'test';
+const verdict = (name, line) => `console.log(${JSON.stringify(`[${name}] SELFTEST ${line}`)});\n`;
+const BS = 'Fizzygum/buildSystem/';
+// the pool's start order: a file with no recorded time first, then longest first, ties in discovery order
+{
+  const order = longestFirst(['a', 'b', 'c', 'd', 'e'], { a: 1, b: 5, d: 3, e: 3 });
+  t.check(order.join() === '2,1,3,4,0', 'longestFirst: the unrecorded file, then the longest; a tie keeps discovery order', order.join());
+  t.check(longestFirst(['a', 'b'], {}).join() === '0,1', 'longestFirst: no record at all is discovery order');
+}
+
+// the gate census's fixtures: a build that launches gates, a gate that names its rules, and a proof — a self-test that
+// launches a gate through a proof helper it requires and calls, in code that never runs (the miniature has no lib/)
+const registryGate = "const rules = require('./lib/gate-rules').forGate(__filename);\n";
+const proofOf = (gate, name, call = true) => "const path = require('path');\n" +
+  `const GATE = path.join(__dirname, '${gate}');\n` +
+  `if (false) { const { proveGate } = require('./lib/planted-src');${call ? ' proveGate({ gate: GATE });' : ''} }\n` +
+  verdict(name, 'PASS — 1 case');
+proveGate({
+  name: 'run-selftests',
+  cases: t,
+  gate: path.join(__dirname, 'run-selftests.js'),
+  from: null,
+  rail: '--umbrella=',
+  pass: /^\[selftests\] OK — 1 self-test\(s\), 1 cases, /m,
+  control: {
+    plants: {
+      'Fizzygum/build_it_please.sh': 'node buildSystem/g-gate.js\n',
+      // a gate that builds its own self-test's path (to skip it) reads as launching it: a self-test is still no gate
+      [BS + 'g-gate.js']: registryGate + "const path = require('path');\nconst SELF = path.join(__dirname, 'g-gate-selftest.js');\n",
+      [BS + 'g-gate-selftest.js']: proofOf('g-gate.js', 'g-gate'),
+      [BS + 'mentions.js']: `// a comment may name ${SWITCH}; code may not offer it\n`,
+      'Fizzygum-tests/tests/SystemTest_x/named-like.selftest.js': '// test content, not a script\n',
+    },
+  },
+  runs: [{
+    label: 'a failing, a silent and a vacuous self-test; a switch offered; a misnamed self-test',
+    plants: {
+      [BS + 'p-selftest.js']: verdict('p', 'PASS — 1 case'),
+      [BS + 'f-selftest.js']: verdict('f', 'FAIL — 1 of 1 case') + 'process.exitCode = 1;\n',
+      [BS + 'n-selftest.js']: '// says nothing\n',
+      [BS + 'v-selftest.js']: verdict('v', 'PASS — 0 cases'),
+      [BS + 'offers.js']: `const flag = '${SWITCH}';\n`,
+      [BS + 'm.selftest.js']: verdict('m', 'PASS — 1 case'),
+    },
+    expect: {
+      SELFTEST_FAILED: /^  SELFTEST_FAILED  Fizzygum\/buildSystem\/f-selftest\.js  \(exit 1, /m,
+      SELFTEST_NO_VERDICT: /^  SELFTEST_NO_VERDICT  Fizzygum\/buildSystem\/n-selftest\.js  \(exit 0, /m,
+      SELFTEST_VACUOUS: /^  SELFTEST_VACUOUS  Fizzygum\/buildSystem\/v-selftest\.js  \(exit 0, /m,
+      SELFTEST_OUTSIDE_CONVENTION: /^  SELFTEST_OUTSIDE_CONVENTION  Fizzygum\/buildSystem\/offers\.js:1  /m,
+      SELFTEST_UNDISCOVERED: /^  SELFTEST_UNDISCOVERED  Fizzygum\/buildSystem\/m\.selftest\.js$/m,
+    },
+    absent: [/mentions\.js|named-like/],
+  }, {
+    label: 'the headless tier',
+    args: ['--headless'],
+    plants: { [BS + 'h-selftest-headless.js']: verdict('h', 'FAIL — 1 of 1 case') + 'process.exitCode = 1;\n' },
+    expect: { SELFTEST_FAILED: /^  SELFTEST_FAILED  Fizzygum\/buildSystem\/h-selftest-headless\.js  \(exit 1, /m },
+  }, {
+    label: 'the gate census: a gate no proof launches, a gate that names no rule, a build step that says so, a proof that ' +
+      'never calls its helper, a not-a-gate line below the header',
+    plants: {
+      'Fizzygum/build_it_please.sh': ['noproof-gate', 'noreg-gate', 'step', 'callless-gate', 'late-gate']
+        .map((g) => `node buildSystem/${g}.js\n`).join(''),
+      [BS + 'noproof-gate.js']: registryGate,
+      [BS + 'noreg-gate.js']: "console.log('no registry');\n",
+      [BS + 'noreg-gate-selftest.js']: proofOf('noreg-gate.js', 'noreg-gate'),
+      [BS + 'step.js']: "#!/usr/bin/env node\n'use strict';\n// not-a-gate: a build step, writing what the gates read\nconsole.log('x');\n",
+      [BS + 'callless-gate.js']: registryGate,
+      [BS + 'callless-gate-selftest.js']: proofOf('callless-gate.js', 'callless-gate', false),
+      [BS + 'late-gate.js']: registryGate + '// not-a-gate: below the code, so it states nothing about the file\n',
+    },
+    expect: {
+      GATE_WITHOUT_PROOF: /^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/noproof-gate\.js$/m,
+      GATE_WITHOUT_REGISTRY: /^  GATE_WITHOUT_REGISTRY  Fizzygum\/buildSystem\/noreg-gate\.js$/m,
+    },
+    lines: [/^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/callless-gate\.js$/m,
+            /^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/late-gate\.js$/m],
+    absent: [/step\.js/],
+  }],
+});
 
 t.done();

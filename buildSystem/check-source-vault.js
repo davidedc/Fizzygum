@@ -27,12 +27,11 @@
 // Comments are NOT exempt: a comment naming the dead mechanism as if it were live is exactly the
 // stale-documentation failure this repo's comment rubric targets. Say "the SourceVault" instead.
 //
-// DELIBERATELY OUT OF SCOPE — two `Object.keys(window)` scans OUTSIDE the boot layer that this gate
-// does NOT flag, so a later reader knows they were considered rather than missed:
-// src/WorldWdgt.coffee's widget-class list and src/serialization/Serializer.coffee's `*Wdgt`/`*Widget`
-// sweep. Both enumerate CLASSES (for a creation menu / for serialization), not SOURCES; they predate
-// this arc, have nothing to do with source delivery, and narrowing rule 2 to src/boot is what keeps
-// this gate about the mechanism it retired instead of quietly starting a different campaign.
+// DELIBERATELY OUT OF SCOPE — enumerating CLASSES, which is not source delivery: boot's
+// `allClassFunctions()` (src/boot/globalFunctions.coffee) walks `Object.getOwnPropertyNames window` for the class
+// marker, and the creation menu and the Serializer ask it. Rule 2 matches `Object.keys` of the window ITSELF (with or
+// without parentheses), never of a table hung on it (`Object.keys(window.FIZZYGUM_PARTS)`), and only in src/boot:
+// keeping it about the mechanism it retired is what stops it quietly starting a different campaign.
 //
 // ONE EXEMPT FILE: src/boot/source-vault.coffee itself, whose header has to be able to name the
 // mechanism it replaced — a tombstone that cannot say what it buries is not a tombstone. An exempt
@@ -41,12 +40,21 @@
 //
 // Scope: src/**/*.coffee only (the build's own python/shell side is not text-wrapped source).
 // Runs for every build flavour — the rule is a property of the source, not of what is being built.
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-source-vault.js [--src=DIR]
+// — the rail checks another src tree (a copy carrying a plant); paths are keyed `src/…` from whichever tree it reads,
+// so the exemption and rule 2's scope hold on a copy too. That both rules and both stale-exemption rules BITE is
+// proven on every build by check-source-vault-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const gateRules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.resolve(__dirname, '../src');
-const REPO = path.resolve(__dirname, '..');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'source-vault');
+rejectPositionalArgs(ARGV, 'source-vault', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'source-vault');
 
 // the tombstone itself — see the header
 const EXEMPT = ['src/boot/source-vault.coffee'];
@@ -64,7 +72,7 @@ const RULES = [
   },
   {
     id: 'boot-window-key-scan',
-    re: /Object\.keys\s*\(\s*window\s*\)/,
+    re: /Object\.keys\s*(?:\(\s*window\s*\)|\s+window\b(?!\s*[.\[(]))/,
     // BOOT LAYER ONLY: the two class-enumerating scans outside it are a different thing (header)
     appliesTo: (rel) => rel.startsWith('src/boot/'),
     baseline: 0,
@@ -72,6 +80,7 @@ const RULES = [
     instead: 'Enumerate with `SourceVault.names()`, or `SourceVault.namesForPart part` for one part.'
   }
 ];
+gateRules.declare(RULES.map((r) => r.id));
 
 function walk(dir, out) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -87,7 +96,7 @@ for (const rule of RULES) hits[rule.id] = [];
 
 const exemptHits = Object.create(null);   // exempt path -> how many hits its exemption excused
 for (const file of walk(SRC, [])) {
-  const rel = path.relative(REPO, file);
+  const rel = 'src/' + path.relative(SRC, file).split(path.sep).join('/');
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   if (EXEMPT.includes(rel)) {
     exemptHits[rel] = lines.filter((l) => RULES.some((rule) => rule.appliesTo(rel) && rule.re.test(l))).length;
@@ -113,14 +122,14 @@ for (const rule of RULES) {
     console.error(`\n[source-vault] FAIL -- '${rule.id}': ${found.length} > baseline ${rule.baseline}.`);
     console.error(`  ${rule.why}`);
     console.error(`  ${rule.instead}`);
-    for (const h of found) console.error(`    ${h}`);
+    for (const h of found) console.error(gateRules.fired(rule.id, `    ${h}`));
     failed = true;
   }
 }
 
 for (const rel of EXEMPT) {
-  if (!(rel in exemptHits)) console.error(`\n[source-vault] FAIL -- STALE_ALLOWLIST_ENTRY EXEMPT '${rel}': no such src file, so the exemption names something that moved: fix the path or delete the entry.`);
-  else if (exemptHits[rel] === 0) console.error(`\n[source-vault] FAIL -- STALE_ALLOWLIST_ENTRY EXEMPT '${rel}': the file holds no hit of either rule, so the exemption excuses nothing: delete the entry.`);
+  if (!(rel in exemptHits)) console.error(gateRules.fired('STALE_EXEMPT_MISSING', `\n[source-vault] FAIL -- STALE_ALLOWLIST_ENTRY EXEMPT '${rel}': no such src file, so the exemption names something that moved: fix the path or delete the entry.`));
+  else if (exemptHits[rel] === 0) console.error(gateRules.fired('STALE_EXEMPT_UNUSED', `\n[source-vault] FAIL -- STALE_ALLOWLIST_ENTRY EXEMPT '${rel}': the file holds no hit of either rule, so the exemption excuses nothing: delete the entry.`));
   else continue;
   failed = true;
 }

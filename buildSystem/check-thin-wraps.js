@@ -23,10 +23,23 @@
 // constrain. (This is the wrap-SHAPE check the self-settling API relies on; check-layering.js enforces
 // the complementary call-graph rule that the CORE reaches no public setter.)
 
+// A `# thin-wrap-exempt:` marker that excuses nothing — not directly above a public/private method that owns a same-class
+// `_<name>NoSettle` twin, so this gate never reads it — FAILS as stale: it states an exemption from a check that is not
+// made there, and a later reader trusts it. Explanatory text worth keeping stays a plain comment.
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-thin-wraps.js [--src=DIR] — the
+// rail checks another src tree (a copy carrying a plant). That both rules BITE, and that every accepted shape passes,
+// is proven on every build by check-thin-wraps-selftest.js.
+
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.resolve(__dirname, '../src');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'thin-wraps');
+rejectPositionalArgs(ARGV, 'thin-wraps', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'thin-wraps');
 
 const { methodSpans } = require('./lib/coffee-method-header');   // class methods and mixin members, one span each
 const GUARD  = /^return\s+(if|unless)\b/;               // idempotency guard clause
@@ -44,10 +57,12 @@ function walk(dir, acc) {
 function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
 
 const violations = [];
+const staleMarkers = [];
 let checked = 0, exempt = 0;
 for (const p of walk(SRC, [])) {
   const cls = path.basename(p, '.coffee');
   const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const usedMarkers = new Set();   // the marker lines an exemption below consumed
   const heads = [];
   for (const sp of methodSpans(lines)) heads.push({ name: sp.name, i: sp.line, end: sp.end });
   const byName = new Map(heads.map((h, k) => [h.name, k]));
@@ -65,7 +80,7 @@ for (const p of walk(SRC, [])) {
     // EXEMPTION: scan upward through the contiguous comment block directly above the public header.
     let marked = false;
     for (let j = head.i - 1; j >= 0 && /^\s*#/.test(lines[j]); j--) {
-      if (EXEMPT.test(lines[j])) { marked = true; break; }
+      if (EXEMPT.test(lines[j])) { marked = true; usedMarkers.add(j); break; }
     }
     if (marked) { exempt++; continue; }
     // the public method's code lines (comments + blanks removed)
@@ -79,18 +94,26 @@ for (const p of walk(SRC, [])) {
     if (rest.length === 1 && canonical.test(rest[0])) checked++;
     else violations.push({ key: cls + '.' + twinName, file: path.relative(SRC, p), line: head.i + 1, body });
   }
+  lines.forEach((l, j) => {
+    if (/^\s*#/.test(l) && EXEMPT.test(l) && !usedMarkers.has(j)) staleMarkers.push({ file: path.relative(SRC, p), line: j + 1 });
+  });
 }
 
 console.log(`[thin-wraps] ${checked} canonical wrapper(s) + ${exempt} marked-exempt checked.`);
 if (violations.length) {
   console.error(`\n[thin-wraps] FAIL -- ${violations.length} public method(s) own a _<name>NoSettle twin but are neither the canonical wrap nor marked exempt:`);
   for (const v of violations) {
-    console.error(`  ${v.key}  (${v.file}:${v.line})`);
+    console.error(rules.fired('NOT_CANONICAL', `  ${v.key}  (${v.file}:${v.line})`));
     console.error(`    body: ${JSON.stringify(v.body)}`);
   }
   console.error('\nCanonical: [return if/unless guards] then  @_settleLayoutsAfter => @_<name>NoSettle <args>.');
-  console.error('Or add a  # thin-wrap-exempt: <reason>  comment directly above the method (see the 3 in WorldWdgt).');
-  process.exit(1);
+  console.error('Or add a  # thin-wrap-exempt: <reason>  comment directly above the method.');
 }
+if (staleMarkers.length) {
+  console.error(`\n[thin-wraps] FAIL -- ${staleMarkers.length} # thin-wrap-exempt: marker(s) excuse nothing (no method owning a _<name>NoSettle twin directly below):`);
+  for (const s of staleMarkers) console.error(rules.fired('STALE_EXEMPT_MARKER', `  STALE_ALLOWLIST_ENTRY ${s.file}:${s.line}`));
+  console.error('Delete the marker; keep any explanation as a plain comment.');
+}
+if (violations.length || staleMarkers.length) process.exit(1);
 console.log('[thin-wraps] OK -- every public/NoSettle pair is the canonical wrap or marked exempt.');
 process.exit(0);

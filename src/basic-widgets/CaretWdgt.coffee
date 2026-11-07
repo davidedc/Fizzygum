@@ -324,8 +324,8 @@ class CaretWdgt extends BlinkerWdgt
   # a box-fitted text's size to be redone, and a pass measuring the old size would put the caret where the
   # next pass, measuring the new one, has to move it again -- a corrective second visit of the flush. Read
   # re-fitted, the pass the event runs inline and the flush's confirming pass measure the same text.
-  # thin-wrap-exempt: one convergence pass driven by the caret's _reLayout (no public twin -- settling is provided
-  # by the flush, not a self-settling wrapper).
+  # One convergence pass driven by the caret's _reLayout. It has no public twin: the flush settles it, no
+  # self-settling wrapper does.
   _oneScrollCaretIntoViewPassNoSettle: ->
     fontSize = @target.actualFontSizeUsedInRendering()
     pos = @_myTopLeftAtSlot()

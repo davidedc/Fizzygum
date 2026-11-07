@@ -104,25 +104,43 @@ blind spots are in its header. Two rules read it:
 ⚠ What neither can hold is PROSE: a doc saying a gate runs at a commit point is checked by reading `fg`. Arc:
 `docs/archive/unrun-checks-plan.md`.
 
-**A gate's RULE is proven to BITE by a self-test that runs the GATE.** A rule proven by a planted violation once, at
-authoring, can stop biting and stay green, so the plant is a standing self-test, not a recipe in a header. It runs the
-REAL gate, never just the instrument under it: a proof of the instrument alone leaves the gate's own greps, counts and
-exit codes unproven, and that is where a reformatted line goes blind (a `sed` written for a field order the prelude
-does not emit leaves a report's summary unsubstituted, and nothing that asks only whether the gate failed notices). The
-planted run must fail on the RULE's own report naming the plant (not merely fail: a crash is no bite), and the
-unplanted CONTROL must pass. One shared machinery per kind:
-- **static gates**: `<gate>-selftest.js` runs the gate on a copy of `src/` carrying a throwaway class with the defect
-  (`--src=DIR`, `lib/planted-src.js`) — call-separation, back-buffer-memos, page-loaded-elements;
-- **suite audit gates**: `<gate>-selftest-headless.js` runs the gate on ONE test (`--tests=`, a private `--out=` dir),
-  a plant injected beside its prelude (`PRELUDE_JS`, `Fizzygum-tests/scripts/lib/gate-bite-proof.js`), one plant per
-  rule, confined to that test and bounded; and again with a test bucket no instrument observed
-  (`audit-preludes/unobserved-bucket-plant.js`; the capstone's two flags, one bucket each), which must read INVALID —
-  tier-naming, settle, revisits, storage, capstone (both rules).
-Arc: `docs/archive/bite-proofs-plan.md`.
+**Every gate's every RULE is proven to BITE by a self-test that runs the GATE — and the build refuses a gate without
+one.** A rule proven by a planted violation once, at authoring, can stop biting and stay green, so the plant is a
+standing self-test, not a recipe in a header; and it runs the REAL gate, never just an engine or the instrument under it
+(a proof of the instrument alone leaves the gate's own greps, counts and exit codes unproven, and that is where a
+reformatted line goes blind). Three pieces hold it:
+- **The registry** (`buildSystem/lib/gate-rules.js`): a gate NAMES every rule it fails on — `rules.fired('<ID>', line)`,
+  the ids read from its own CODE (a `.fired(` literal) or `declare`d from a table it already keeps (stinks ids, gate
+  tokens, a prelude's finding kinds). On the way out it prints `[<gate>] RULES fired: … · of: … · unplantable: …`; an
+  exit 1 that named no rule reads as exit 2 (`RULELESS_FAILURE`: a failure no rule names is operational), a rule fired
+  on an exit 0 likewise (`RULE_FIRED_BUT_PASSED`). A rule no plant can reach says why in the gate's header,
+  `// bite-unplantable: <ID> — <reason>` (stale if the gate cannot fire it). The shell gates' twin is
+  `gate_rules_init` / `gate_rule` in `Fizzygum-tests/scripts/lib/audited-suite-with-infra-retry.sh` (an EXIT trap).
+- **The proof**, one judge (`buildSystem/lib/prove-rules.js`) behind two runners: a static gate's `<gate>-selftest.js`
+  plants a copy of its input tree (`lib/planted-src.js` `proveGate`, through the gate's `--src=` / `--tests-dir=` /
+  `--docs=` / `--parts=` / `--umbrella=` rail); a gauntlet leg's `<rig>-selftest-headless.js` plants page JavaScript
+  through the rig's `--prelude=` (`Fizzygum-tests/scripts/lib/gate-bite-proof.js` `proveLeg`), with the rig's own subset
+  rails keeping it cheap (`--tests=`, `--apps=`, `--sections=`, `--expectations=`, `--baseline=`, `--audit-dir=`).
+  The judge holds: the CONTROL (the input unplanted, plus every sanctioned form) passes firing no rule; each planted
+  run fails naming exactly the rules it planted, each matched by ITS OWN violation line (a crash is no bite, and a
+  summary count matches whatever happens); a plant of a measurement failure reads INVALID (exit 2, never a rule); and
+  together the runs plant EVERY rule the gate can fire — a gate that grows a rule fails its proof until the proof
+  plants it.
+- **The census** (`run-selftests.js`, the build's first gate): every script the build or an `fg` leg LAUNCHES
+  (`lib/what-runs.js`'s run set: ANY launch edge makes a script a program, however else it is reached — but never a
+  `*-prelude.js` instrument a gate injects, nor a self-test, which is a proof the runner judges by its own
+  `SELFTEST_*` rules) is a gate unless its HEADER says `not-a-gate: <reason>` (the build steps, a tool or reader a gate
+  runs and judges, a sourced library), and fails the build as `GATE_WITHOUT_REGISTRY` or `GATE_WITHOUT_PROOF` (no
+  self-test that calls a proof helper — `proveGate` / `proveLeg` — launches it, by `path.join(__dirname, '<gate>')`).
+  That census IS this table's proof column: every row below, and every gauntlet leg, has its proof, and a new gate
+  arrives with one or fails the build. A value flag written with a space (`--src DIR`, `--prelude FILE`, `--tests X`)
+  is refused (exit 2) by the shared readers (`lib/cli-args.js`, the tests repo's `lib/cli.js` and `lib/page-rails.js`):
+  its value would be dropped, and the run would check the default tree, unplanted.
+Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md`.
 
 | Gate | File | Wired (`build_it_please.sh` — grep `check-<name>.js`; lines drift) | Enforces | Ratchet mechanism |
 |---|---|---|---|---|
-| **self-tests** | **`buildSystem/run-selftests.js`** | **~:333 (FIRST: a gate whose proof fails gives verdicts not worth reading)** | **every `<subject>-selftest.js` in `buildSystem/` and (when present) `Fizzygum-tests/scripts/`, found by NAME through `lib/what-runs.js`, exits 0 AND ends with the shared verdict line (`lib/selftest-verdict.js`: `[name] SELFTEST PASS — N cases`) with N ≥ 1 — else `SELFTEST_FAILED` / `SELFTEST_NO_VERDICT` / `SELFTEST_VACUOUS`; a self-test switch (`--self-test`, `--selftest`, a `…SELFTEST` variable, a `lib/cli.js` reader asking for one) offered in a script's CODE is `SELFTEST_OUTSIDE_CONVENTION`, and a file in either repo named like a self-test that no tier runs (misspelt, misplaced, wrong extension) is `SELFTEST_UNDISCOVERED`. ~2 s. `--headless` runs the `-selftest-headless.js` tier instead (the gauntlet's `selftests` leg); `--repo=tests` is `npm run selftest`** | — (discovery IS the registration: a new self-test is a new file) |
+| **self-tests** | **`buildSystem/run-selftests.js`** | **~:333 (FIRST: a gate whose proof fails gives verdicts not worth reading)** | **every `<subject>-selftest.js` in `buildSystem/` and (when present) `Fizzygum-tests/scripts/`, found by NAME through `lib/what-runs.js`, exits 0 AND ends with the shared verdict line (`lib/selftest-verdict.js`: `[name] SELFTEST PASS — N cases`) with N ≥ 1 — else `SELFTEST_FAILED` / `SELFTEST_NO_VERDICT` / `SELFTEST_VACUOUS`; a self-test switch (`--self-test`, `--selftest`, a `…SELFTEST` variable, a `lib/cli.js` reader asking for one) offered in a script's CODE is `SELFTEST_OUTSIDE_CONVENTION`, and a file in either repo named like a self-test that no tier runs (misspelt, misplaced, wrong extension) is `SELFTEST_UNDISCOVERED`; and the GATE CENSUS (above): every launched gate names its rules (`GATE_WITHOUT_REGISTRY`) and has a proof that launches it (`GATE_WITHOUT_PROOF`). ~5 s. `--headless` runs the `-selftest-headless.js` tier instead (the gauntlet's `selftests` leg); `--repo=tests` is `npm run selftest`** | — (discovery IS the registration: a new self-test is a new file) |
 | aim-census tables | `Fizzygum-tests/scripts/aim-census.js --tables-only` | ~:928 | the aim census's own TABLES — every MacroToolkit verb classified, every class and member they name declared — held to Fizzygum's source and to the tests' calls both ways (`AIM-CENSUS STALE NAME` / `UNCLASSIFIED VERB` / `UNKNOWN VERB`, exit 1; `EMPTY DERIVATION`, exit 2), so a verb deleted or renamed in `src/macros` fails the change that did it. Its MEASUREMENT (where each test aims, and how much each aim assumes) stays advisory. ~0.2 s | — (runs whenever the sibling repo is present, whatever the profile ships) |
 | syntax | `buildSystem/check-coffee-syntax.js` | ~:343 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does; and a class MEMBER that LOSES A NAME to the meta-system's helper strip (its compiled `var` head declares anything outside the helper globals boot provides — a `modulo`/`splice` helper, a hoisted compiler temporary) | — (the provided set is read from `Class._memberNamesThatMustStayAnonymous` and held against boot's `window.<helper> =` assignments) |
 | shippable-coverage | `buildSystem/check-shippable-coverage.js` | ~:366 | every `src/` subdirectory holding `.coffee` files is CLAIMED BY A PART in `parts.json` — a dir no part claims ships NOTHING, exits 0, and surfaces only as a runtime `<NewClass> is not defined` | in-file `ALLOWLIST_PREFIXES`, now down to `src/boot/` alone (compiled by name from the shell script, never globbed) |
@@ -204,9 +222,10 @@ Arc: `docs/archive/bite-proofs-plan.md`.
   (`buildSystem/lib/name-definitions.js`), so the two gates cannot disagree about what is defined.
   It is deliberately built for **ZERO false positives at the cost of reach** — a false FAIL breaks the build on correct
   code, while a miss merely leaves a fault for the boot smoke / SystemTests. That trade is an ASYMMETRY in masking, and
-  both halves err toward "fewer flags": **defs are OVER-approximated** (naive `#{`-aware comment strip that KEEPS
-  strings; the last def-form counts ANY `name:`/`name =` key, since a property may hold a closure), while **calls are
-  UNDER-approximated** (`stripLine`-grade — strings and comments masked, `#{…}` interpolation kept as the code it is).
+  both halves err toward "fewer flags": **defs are CALLABLE** — a method header (`name:` / `@name:` whose value is an
+  arrow after a paren-counted parameter list, a signature wrapped after its `(`, or a `\` continuation), a prototype
+  extension, an expando function, or a top-level function; a data key or an indented local defines nothing — read
+  through a naive `#{`-aware comment strip that KEEPS strings, while **calls are UNDER-approximated** (`stripLine`-grade — strings and comments masked, `#{…}` interpolation kept as the code it is).
   Keeping the naive strip on the DEF side is load-bearing, not laziness: `TRIPLE_QUOTES = ///'''///`
   (`src/boot/dependencies-finding.coffee:59`) is a BLOCK REGEX whose `'''` reads to `stripLine` as an unterminated
   heredoc and blanks the rest of that file — blanked *defs* would cause false POSITIVES, blanked *calls* only cost
@@ -232,10 +251,9 @@ Arc: `docs/archive/bite-proofs-plan.md`.
   a receiver is matched by NAME, so a local that borrows a global's name (`console = …`) reads as the global; a BARE
   name Fizzygum also implements (`save`, `get`, `clear`, `fill`, `stroke`, `scale`, `measureText`, `keys`, `has`,
   `toString`, …) still excuses a Fizzygum-receiver call after every Fizzygum implementor of it is deleted — `toString`
-  cannot throw at all (it answers `"[object Object]"`, which a canvas style property silently ignores); and the DEF
-  side's catch-all form keeps a name "defined" through any data key or local of it (`close:` in a theme table, a local
-  `add = ->`), so `close`, `add`, `get`, `clear` and `entries` calls stay resolved with no real method of the name
-  left, whatever `BUILTINS` holds.
+  cannot throw at all (it answers `"[object Object]"`, which a canvas style property silently ignores); and a property
+  that HOLDS a closure is no definition, so a call of one (`overridingContextMenu`, `drawFunction`) resolves only through
+  its allowlist entry, which says so.
   **Two exemption lists, on purpose:** the in-file `BUILTINS` set is a fact about the PLATFORM (JS/DOM/canvas), while
   `unresolved-sends-allowlist.txt` is a fact about Fizzygum's VENDOR dependencies — one named API we reach at a few
   sites, where the recorded reason is worth more than the suppression (JSZip, WebCrypto, the LCL event router, the
@@ -339,8 +357,8 @@ gates now carry a POSITIVE-COVERAGE assertion that closes this, in two shapes wo
   first real firing (a wrapped corner, a wrapped `_reactTo*`/`_before*` callback, a flush that visited any widget), and
   the gate requires it in every bucket.
 All of these mirror `run-paint-audit.js`'s `checked == expectedTotal` and `vm-truth-gate.js`'s three INVALID paths.
-⭐ **Every suite-wide audit gate now carries one, and its bite-proof re-proves it on every gauntlet** (the rule above,
-"a gate's RULE is proven to BITE"): a test bucket holding nothing but the runner's synthesised `prelude installed`
+⭐ **Every suite-wide audit gate carries one, and its bite-proof re-proves it on every gauntlet** (the rule above,
+"every gate's every RULE is proven to BITE"): a test bucket holding nothing but the runner's synthesised `prelude installed`
 header must read INVALID. That header is in every bucket of a shard whose prelude announced itself, which is precisely
 why the install count was never coverage — with the wrappers suppressed, `prelude installed` reads `307/307` beside
 `0/307` observed. The standing rule is the fuzz/vmtruth doctrine — **an unmeasured run is NEVER a pass**.
@@ -781,7 +799,7 @@ class's, a `*TestSupport`'s `@staticMembersToInstall` against its own class-side
 derivation (`NOT_POSITIONAL`, the rig's `NOT_EMPTIED_BY_THE_TEARDOWN`, the census's `KNOWN_MOVERS`). Two invariants
 make either shape trustworthy: **a derivation that finds nothing FAILS** (exit 2 / `*_VACUOUS`), because an empty set
 certifies everything; and **a check is believed only after a PLANT has been seen to fail it** — the drift planted (a
-`PRELUDE_JS` prelude for the runtime rigs, `--files` or a scratch tree for the build gates) and removed. Plan + ledger:
+`--prelude=` plant for the runtime rigs, `--files` or a scratch tree for the build gates) and removed. Plan + ledger:
 [`../archive/hand-kept-lists-plan.md`](../archive/hand-kept-lists-plan.md).
 
 **The rule holds for EVERY hand list, not only a gate's — and `check-hand-lists.js` holds the string-list shape of it.**
@@ -1051,7 +1069,7 @@ source to satisfy a new rule.
 - `buildSystem/check-dead-methods.js` + `buildSystem/dead-method-allowlist.txt`.
 - `buildSystem/check-unresolved-sends.js` + `buildSystem/unresolved-sends-allowlist.txt` — `CALL_RE` / `BUILTINS` /
   `stripLine` + `interpolatedCode`; `check-unresolved-sends-selftest.js` (which also pins the def forms). The implementor harvest itself —
-  `stripComment` / `DEF_FORMS` / `harvestDefs`, over-approximated — is `buildSystem/lib/name-definitions.js`, shared
+  `stripComment` / `DEF_FORMS` / `harvestDefs`, callable-only — is `buildSystem/lib/name-definitions.js`, shared
   with `check-part-edges.js` (and `check-dead-methods.js` takes its `stripComment`).
 - `buildSystem/check-stinks.js` — the inline `baseline` per stink; `--list <id>` enumerates one stink's sites.
 - `buildSystem/check-part-edges.js` + `buildSystem/lib/part-edge-scan.js` — `codePartOf` / `stringLiteralsOf` /

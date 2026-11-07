@@ -10,11 +10,20 @@
 // marker or push the date forward. <date> is anything Date.parse understands, e.g.
 //   # CHECK AFTER 1 Jan 2027 00:00:00 GMT
 // A marker whose date is unparseable is also flagged (it can never fire, defeating the purpose).
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-scheduled-checks.js
+// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That both rules BITE is proven on every
+// build by check-scheduled-checks-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.resolve(__dirname, '../src');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'scheduled-checks');
+rejectPositionalArgs(ARGV, 'scheduled-checks', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'scheduled-checks');
 const MARKER = /#\s*CHECK AFTER\s+(.+?)\s*$/i;   // in a comment, capture the date to end-of-line
 const NOW = Date.now();
 
@@ -47,11 +56,11 @@ console.log(`[scheduled-checks] ${markers} CHECK-AFTER marker(s) scanned.`);
 if (overdue.length || malformed.length) {
   if (overdue.length) {
     console.error(`\n[scheduled-checks] FAIL -- ${overdue.length} CHECK-AFTER marker(s) are OVERDUE:`);
-    for (const v of overdue) console.error(`  ${v.file}:${v.line}  (due: ${v.date})`);
+    for (const v of overdue) console.error(rules.fired('OVERDUE', `  ${v.file}:${v.line}  (due: ${v.date})`));
   }
   if (malformed.length) {
     console.error(`\n[scheduled-checks] FAIL -- ${malformed.length} CHECK-AFTER marker(s) have an unparseable date:`);
-    for (const v of malformed) console.error(`  ${v.file}:${v.line}  (date: "${v.date}")`);
+    for (const v of malformed) console.error(rules.fired('UNPARSEABLE_DATE', `  ${v.file}:${v.line}  (date: "${v.date}")`));
   }
   console.error('\nRe-evaluate the flagged code, then delete the marker or push its date forward.');
   process.exit(1);

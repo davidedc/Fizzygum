@@ -11,7 +11,8 @@ the survey campaign it documents is complete).
 
 `Fizzygum-tests/scripts/end-of-cycle-audit/` (tracked):
 - **`layout-audit-prelude.js`** — a behaviour-neutral runtime prelude injected via `run-macro-test-headless.js`'s
-  `PRELUDE_JS` hook (single test) **or `run-all-headless.js`'s `AUDIT_PRELUDE`/`AUDIT_DIR` env hook (the SHARDED loop)**.
+  `--prelude=` flag (single test) **or `run-all-headless.js`'s `--audit-prelude=`/`--audit-dir=` flags (the SHARDED
+  loop)** — flags, never environment variables (`Fizzygum-tests/scripts/lib/page-rails.js`).
   It rAF-polls until `Widget`/`WorldWdgt`/`world` exist, then patches prototypes to log one `LAYOUTAUDIT <json>` line per
   **ORIGIN** survivor at the end-of-cycle flush. It also emits `LAYOUTAUDIT_TESTSTART <name>` and resets the
   boot/interaction boundary at each test transition, so a sharded run (one browser plays many tests) segments + classifies
@@ -22,7 +23,7 @@ the survey campaign it documents is complete).
   ancestor via an `invalidateLayout` re-entrancy depth counter.
 - **`audit-one.sh`** — one test headless at dpr1 with the prelude + `LOG_FILE`; emits `PASS/FAIL inst=YES/NO recs=N`.
 - **`run-audit-loop.sh`** — the whole suite **SHARDED** (`bash run-audit-loop.sh [shards=6]`): the SAME one-browser-per-
-  shard model as the suite (`run-all-headless.js`, via its `AUDIT_PRELUDE`/`AUDIT_DIR` hook), so the prelude is injected
+  shard model as the suite (`run-all-headless.js`, via its `--audit-prelude=`/`--audit-dir=` flags), so the prelude is injected
   once per shard and its `LAYOUTAUDIT` stream segmented into the same per-test logs. **~1.5–2 min**, and it stays there as
   the suite grows — the per-test path it replaced cost one cold browser boot per test (~20 min), i.e. it scaled linearly.
   A shard the 8-way cold-boot race drops is recovered per-test (audit-one.sh). Logs to the gitignored

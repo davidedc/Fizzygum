@@ -1,44 +1,39 @@
 'use strict';
 // check-back-buffer-memos-selftest.js — check-back-buffer-memos.js proved able to BITE, by running the REAL gate on a
-// planted copy of src/ (lib/planted-src.js). A throwaway widget whose back-buffer builder records a memo of what it
-// painted must fail the gate naming the field; the same field declared either way the rule accepts — a serialization
-// transient, or saved content — must pass, and so must the unplanted copy. Run by buildSystem/run-selftests.js on every
-// build.
+// planted copy of src/ (lib/planted-src.js): a back-buffer builder recording a memo of what it painted fails, naming
+// the class and the field; a builder header spelled so the shared matcher cannot see it, and a builder declared in a
+// mixin, are refused (the gate would be blind there). The memo field declared either way the rule accepts — a
+// serialization transient, or saved content — passes. Run by buildSystem/run-selftests.js on every build.
 
-const { plantedSrc, runGate } = require('./lib/planted-src');
-const t = require('./lib/selftest-verdict').cases('check-back-buffer-memos');
+const path = require('path');
+const { proveGate } = require('./lib/planted-src');
 
-const GATE = 'check-back-buffer-memos.js';
-const FILE = 'BiteProofMemoWdgt.coffee';
-const FIELD = 'bpLastPaintedSize';
-const plantText = (declaration) => [
-  'class BiteProofMemoWdgt extends Widget',
-  ...declaration,
-  '',
-  '  _createRefreshOrGetBackBuffer: ->',
-  `    @${FIELD} = @extent()`,
-  '    [@backBuffer, @backBufferContext]',
-  '',
-].join('\n');
+const builder = (cls, ...declaration) => [`class ${cls} extends Widget`, ...declaration, '',
+  '  _createRefreshOrGetBackBuffer: ->', '    @bpLastPaintedSize = @extent()', '    [@backBuffer, @backBufferContext]', ''].join('\n');
 
-const tree = plantedSrc();
-const passes = (r) => r.status === 0 && /\[back-buffer-memos\] OK/.test(r.out);
-
-const control = runGate(GATE, tree.dir);
-t.check(passes(control), 'the unplanted copy passes', control.why);
-
-tree.plant(FILE, plantText([]));
-const memo = runGate(GATE, tree.dir);
-// its own violation line: "  <Class>.<field>  (<file>:<n>, in <builder>)"
-t.check(memo.status === 1 && new RegExp(`^  BiteProofMemoWdgt\\.${FIELD}  \\(BiteProofMemoWdgt\\.coffee:\\d+, in _createRefreshOrGetBackBuffer\\)`, 'm').test(memo.out),
-  `a builder writing @${FIELD}, neither transient nor saved content, fails naming the class and the field`, memo.why);
-
-tree.plant(FILE, plantText([`  @serializationTransients: ["${FIELD}"]`]));
-const transient = runGate(GATE, tree.dir);
-t.check(passes(transient), 'the same field declared a serialization transient passes', transient.why);
-
-tree.plant(FILE, plantText(['  # saved-content: the bite-proof fixture of check-back-buffer-memos-selftest.js', `  ${FIELD}: undefined`]));
-const content = runGate(GATE, tree.dir);
-t.check(passes(content), 'the same field declared # saved-content: passes', content.why);
-
-t.done();
+proveGate({
+  name: 'check-back-buffer-memos',
+  gate: path.join(__dirname, 'check-back-buffer-memos.js'),
+  pass: /^\[back-buffer-memos\] OK/m,
+  control: {
+    plants: {
+      'BiteProofMemoTransientWdgt.coffee': builder('BiteProofMemoTransientWdgt', '  @serializationTransients: ["bpLastPaintedSize"]'),
+      'BiteProofMemoContentWdgt.coffee': builder('BiteProofMemoContentWdgt', '  # saved-content: the bite-proof fixture of check-back-buffer-memos-selftest.js', '  bpLastPaintedSize: undefined'),
+    },
+  },
+  runs: [{
+    label: 'a memo, an unseen builder header, a builder in a mixin',
+    plants: {
+      'BiteProofMemoWdgt.coffee': builder('BiteProofMemoWdgt'),
+      'BiteProofUnseenBuilderWdgt.coffee': ['class BiteProofUnseenBuilderWdgt extends Widget', '  _createRefreshOrGetBackBuffer: (a,', '      b) ->', '    [@backBuffer, @backBufferContext]', ''].join('\n'),
+      'BiteProofBuilderMixin.coffee': ['BiteProofBuilderMixin =', '', '  onceAddedClassProperties: (fromClass) ->', '    @addInstanceProperties fromClass,', '',
+        '      _createRefreshOrGetBackBuffer: ->', '        [@backBuffer, @backBufferContext]', ''].join('\n'),
+    },
+    expect: {
+      MEMO_RIDES_A_SAVE: /^  BiteProofMemoWdgt\.bpLastPaintedSize  \(BiteProofMemoWdgt\.coffee:4, in _createRefreshOrGetBackBuffer\)$/m,
+      UNSEEN_BUILDER_HEADER: /^  BiteProofUnseenBuilderWdgt\.coffee:2  a _createRefreshOrGetBackBuffer header in a spelling the shared matcher cannot see/m,
+      BUILDER_IN_MIXIN: /^  BiteProofBuilderMixin\.coffee:6  a _createRefreshOrGetBackBuffer declared in the mixin BiteProofBuilderMixin/m,
+    },
+    absent: [/BiteProofMemoTransientWdgt|BiteProofMemoContentWdgt/],
+  }],
+});

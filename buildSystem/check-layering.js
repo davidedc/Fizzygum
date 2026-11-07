@@ -46,13 +46,24 @@
  *
  * Exit codes: 0 = clean, 1 = layering violation(s), 2 = operational error.
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
- *   node ./buildSystem/check-layering.js
+ *   node ./buildSystem/check-layering.js [--src=DIR] [--tests-dir=DIR]
+ * The rails check another src tree, or another tests dir for [D]'s macro half (a copy carrying a plant). Paths are
+ * keyed `src/…` from whichever src tree it reads, so USERLAND_FILES and the canvas-extension exemption hold on a copy.
+ * That every rule BITES — each violation template, each stale-table rule, each sanctioned form passing — is proven on
+ * every build by check-layering-selftest.js.
  */
 
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 
-const SRC = path.join(__dirname, '..', 'src');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src=', '--tests-dir='], 'check-layering');
+rejectPositionalArgs(ARGV, 'check-layering', 'a src tree is named with --src=DIR, a tests dir with --tests-dir=DIR');
+const SRC = dirArg(ARGV, '--src=', path.join(__dirname, '..', 'src'), 'check-layering');
+// a src file's key: `src/<path under the tree>`, the same whichever tree is read (USERLAND_FILES, CANVAS_EXT_FILE)
+const srcKey = (file) => 'src/' + path.relative(SRC, file).split(path.sep).join('/');
 
 // The names the rules key on are READ, never spelled here: the settling setters (lib/settling-setters.js), the
 // settle tiers (lib/settle-tiers.js) and the immediate geometry mutators (lib/immediate-mutators.js); the repaint
@@ -187,7 +198,7 @@ const isImmediateMutator = (name) =>
 // source) AND the shared macro VERBS in src/macros/MacroToolkit.coffee -- but for the latter only the
 // `Macro.fromString """..."""` heredoc bodies (the L1/L2 toolkit METHODS around them are framework code that
 // legitimately uses the low-level API).
-const MACROS_DIR = path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests');
+const MACROS_DIR = dirArg(ARGV, '--tests-dir=', path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests'), 'check-layering');
 const MACRO_VERBS_FILE = path.join(SRC, 'macros', 'MacroToolkit.coffee');
 const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;
 const MACRO_SANCTION = /#\s*macro-private-call-sanctioned:\s*\S/;   // [D] exemption marker, reason required  // renamed geometry mutators + the ex-silent* structural leaves (__hide/__addShadow/__add) are now _-prefixed (caught by _[A-Za-z]); raw* = the pixel API, still macro-forbidden. (the dead fullRaw\w* and silent\w* arms were dropped with the §6-5 / §3d renames.)
@@ -457,6 +468,15 @@ const tierName = (name) => (name && name.startsWith('@') ? name.slice(1) : name)
 // checkFile resolves an @-SELF call up the `class X extends Y` chain to its NEAREST definer; a dotted
 // call's receiver is not statically inferable, so it stays conservative (flagged, with the plain
 // definers named so a false positive is sanctioned instead of "fixed" by deleting the setter).
+// A ONE-LINE method carries its body on its header line, after the arrow (`_x: (p) -> @setExtent p`); every rule
+// reads that body like any body line. A header with nothing after its arrow carries no call: ''.
+function inlineBodyOf(code) {
+  const arrow = code.search(/[-=]>/);
+  if (arrow < 0) return '';
+  const body = code.slice(arrow + 2);
+  return body.trim() ? ' '.repeat(arrow + 2) + body : '';
+}
+
 function discoverSettlingWrappers(files) {
   const settlingClassesByName = new Map();   // method name -> Set(defining class) where the def settles
   const plainClassesByName = new Map();      // method name -> Set(defining class) where it does NOT
@@ -472,7 +492,7 @@ function discoverSettlingWrappers(files) {
     let method = null, mixinHashIndent = null, strState = null, methodSettles = false;
     const flush = () => { if (method) addTo(methodSettles ? settlingClassesByName : plainClassesByName, method, klass); };
     for (let n = 0; n < lines.length; n++) {
-      const { code, state } = stripLine(lines[n], strState);
+      let { code, state } = stripLine(lines[n], strState);
       strState = state;
       const ext = code.match(/^class\s+([A-Za-z_]\w*)\s+extends\s+([A-Za-z_]\w*)/);
       if (ext) parentOf.set(ext[1], ext[2]);
@@ -483,7 +503,7 @@ function discoverSettlingWrappers(files) {
           // a class-side method is no wrapper: there is no instance for its `@_settleLayoutsAfter` to settle,
           // and as a definer it would stand in for the instance method of its bare name in nearestDefinerKind
           method = b.static ? null : b.method; mixinHashIndent = b.mixinHashIndent; methodSettles = false;
-          if (b.kind === 'header') continue;
+          if (b.kind === 'header' && !(code = inlineBodyOf(code))) continue;
         }
       }
       if (method && SETTLE_CALL.test(code)) methodSettles = true;
@@ -511,7 +531,7 @@ function nearestDefinerKind(name, klass, g) {
 }
 
 function checkFile(file, violations, gCtx, warnings) {
-  const rel = path.relative(path.join(__dirname, '..'), file);
+  const rel = srcKey(file);
   const selfClass = path.basename(file, '.coffee');   // one class per file; filename == class name
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let method = null;          // current method name (null = not inside a 2-space method)
@@ -524,7 +544,7 @@ function checkFile(file, violations, gCtx, warnings) {
   let strState = null;
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
-    const { code, state } = stripLine(raw, strState);
+    let { code, state } = stripLine(raw, strState);
     strState = state;
     if (strState === null) {                       // header detection only on fully-closed lines (mixin-aware)
       const b = methodBoundary(raw, mixinHashIndent);
@@ -536,17 +556,17 @@ function checkFile(file, violations, gCtx, warnings) {
           if (b.method) {
             const tier = tierName(b.method);
             if (CALLBACK_PREFIX.test(tier)) {
-              if (/NoSettle$/.test(tier)) violations.push(`[L] callback ${b.method}() carries NoSettle — a notification callback is a settle-neutral core; the dispatcher owns the one settle, so drop the suffix (layering/naming convention §3)  — ${rel}:${n + 1}`);
-              else if (!CALLBACK_SHAPE.test(tier)) violations.push(`[L] malformed callback ${b.method}() — must match _(reactTo|before)(Being|Child|HolderFrame)<Event> (layering/naming convention §3)  — ${rel}:${n + 1}`);
+              if (/NoSettle$/.test(tier)) violations.push(rules.fired('L_CALLBACK_NOSETTLE', `[L] callback ${b.method}() carries NoSettle — a notification callback is a settle-neutral core; the dispatcher owns the one settle, so drop the suffix (layering/naming convention §3)  — ${rel}:${n + 1}`));
+              else if (!CALLBACK_SHAPE.test(tier)) violations.push(rules.fired('L_MALFORMED_CALLBACK', `[L] malformed callback ${b.method}() — must match _(reactTo|before)(Being|Child|HolderFrame)<Event> (layering/naming convention §3)  — ${rel}:${n + 1}`));
             }
-            if (LEGACY_CALLBACK_FRAGMENT.test(tier)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderFrame)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`);
+            if (LEGACY_CALLBACK_FRAGMENT.test(tier)) violations.push(rules.fired('L_LEGACY_CALLBACK_FRAGMENT', `[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderFrame)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`));
             // [M] retired geometry/structural naming fragments (raw* / silent* / fullRaw — see consts above; raw-pixel accessors allowlisted).
-            if (FRAGMENT_BANNED.test(tier)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names. (layering/naming convention §4)  — ${rel}:${n + 1}`);
-            if (APPLY_ANDNOTIFY_BANNED.test(tier)) violations.push(`[M] retired apply-notify suffix ${b.method}() — the _apply*AndNotify corners were renamed to the bare polymorphic _apply* (Tier B, 2026-07-02, docs/archive/layout-optimizations-and-oo-cleanup-plan.md §3); "AndNotify" asserted a notify seam deleted 2026-07-01. Use _apply* (polymorphic) or _apply*Base (override-bypass twin). (layering/naming convention §4)  — ${rel}:${n + 1}`);
+            if (FRAGMENT_BANNED.test(tier)) violations.push(rules.fired('M_RETIRED_FRAGMENT', `[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names. (layering/naming convention §4)  — ${rel}:${n + 1}`));
+            if (APPLY_ANDNOTIFY_BANNED.test(tier)) violations.push(rules.fired('M_RETIRED_ANDNOTIFY', `[M] retired apply-notify suffix ${b.method}() — the _apply*AndNotify corners were renamed to the bare polymorphic _apply* (Tier B, 2026-07-02, docs/archive/layout-optimizations-and-oo-cleanup-plan.md §3); "AndNotify" asserted a notify seam deleted 2026-07-01. Use _apply* (polymorphic) or _apply*Base (override-bypass twin). (layering/naming convention §4)  — ${rel}:${n + 1}`));
             // [N] retired notify-by-mutation container seam (see the SEAM_VERB_BANNED const above): the deleted _announce*ToContainer verbs must not return as a def.
-            if (SEAM_VERB_BANNED.test(tier)) violations.push(`[N] retired container-seam verb ${b.method}() — the notify-by-mutation re-fit seam (_announce*ToContainer) was deleted 2026-07-01 and replaced by the settle-time up-edge _reFitMyTrackingContainerAfterSettle; do NOT re-introduce a mutation-driven container notification (assessment §4.1 / §6 rulebook rule 2)  — ${rel}:${n + 1}`);
+            if (SEAM_VERB_BANNED.test(tier)) violations.push(rules.fired('N_RETIRED_SEAM_VERB', `[N] retired container-seam verb ${b.method}() — the notify-by-mutation re-fit seam (_announce*ToContainer) was deleted 2026-07-01 and replaced by the settle-time up-edge _reFitMyTrackingContainerAfterSettle; do NOT re-introduce a mutation-driven container notification (assessment §4.1 / §6 rulebook rule 2)  — ${rel}:${n + 1}`));
           }
-          continue;           // the header line itself carries no call to check
+          if (!(code = inlineBodyOf(code))) continue;   // a header carries no call — a one-liner's body does
         }
       }
     }
@@ -576,11 +596,11 @@ function checkFile(file, violations, gCtx, warnings) {
     const recalc = RECALC_CALL.test(code);
     const invalidate = INVALIDATE_CALL.test(code);
     if (isLowLevel(tier)) {
-      if (pub) violations.push(`[A] low-level ${method}() calls public setter .${pub[1]}()  — ${at}`);
-      if (txt) violations.push(`[A] low-level ${method}() calls self-settling text setter .${txt[1]}() — set text from a layout pass via the non-settling _setTextNoSettle core (or a raw setter), never the single-settling public setter  — ${at}`);
+      if (pub) violations.push(rules.fired('A_PUBLIC_SETTER', `[A] low-level ${method}() calls public setter .${pub[1]}()  — ${at}`));
+      if (txt) violations.push(rules.fired('A_TEXT_SETTER', `[A] low-level ${method}() calls self-settling text setter .${txt[1]}() — set text from a layout pass via the non-settling _setTextNoSettle core (or a raw setter), never the single-settling public setter  — ${at}`));
       // recalc is OK from a whitelisted flush driver (the settle tiers are now _-prefixed, hence
       // low-level by name, but they ARE the flush — rule [B] below governs who may call recalc).
-      if (recalc && !RECALC_WHITELIST.has(tier)) violations.push(`[A] low-level ${method}() calls recalculateLayouts()  — ${at}`);
+      if (recalc && !RECALC_WHITELIST.has(tier)) violations.push(rules.fired('A_RECALC', `[A] low-level ${method}() calls recalculateLayouts()  — ${at}`));
       // [G] structural self-settling wrapper (discovered from _settleLayoutsAfter callers): low-level code
       // must reach the _<name>NoSettle core, never the public wrapper (it re-enters the single-mutation
       // flush). The settle tiers themselves (RECALC_WHITELIST) ARE the flush, so they are not [G] subjects.
@@ -603,16 +623,16 @@ function checkFile(file, violations, gCtx, warnings) {
             const alsoPlain = plains && plains.size
               ? ` NB ${wname} is ALSO a plain (non-settling) method on ${[...plains].join(', ')} — if the receiver is one of those, mark # ${NOSETTLE_MARKER}: receiver is <that class>.`
               : '';
-            violations.push(`[G] low-level ${method}() calls self-settling wrapper ${sigil === '@' ? '@' : '.'}${wname}() — reach the non-settling core (e.g. _${wname}NoSettle), not the public self-settling wrapper (or mark # ${NOSETTLE_MARKER}: <why>).${alsoPlain}  — ${at}`);
+            violations.push(rules.fired('G_SETTLING_WRAPPER', `[G] low-level ${method}() calls self-settling wrapper ${sigil === '@' ? '@' : '.'}${wname}() — reach the non-settling core (e.g. _${wname}NoSettle), not the public self-settling wrapper (or mark # ${NOSETTLE_MARKER}: <why>).${alsoPlain}  — ${at}`));
           }
         }
         // the unambiguous self-add @add (Widget.add) — the one add shape a name scanner can attribute (`.add` member
         // stays excluded as Point#add-ambiguous). Low-level code must use @_addNoSettle, not the self-settling add().
-        if (SELF_ADD_CALL.test(code)) violations.push(`[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add() (or mark # ${NOSETTLE_MARKER}: <why>)  — ${at}`);
+        if (SELF_ADD_CALL.test(code)) violations.push(rules.fired('G_SELF_ADD', `[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add() (or mark # ${NOSETTLE_MARKER}: <why>)  — ${at}`));
       }
     }
     if (isImmediateMutator(tier) && invalidate) {
-      violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — a polymorphic apply corner or convenience mover must only MUTATE geometry, never SCHEDULE layout (task #17)  — ${at}`);
+      violations.push(rules.fired('E_MUTATOR_INVALIDATES', `[E] immediate mutator ${method}() calls _invalidateLayout() — a polymorphic apply corner or convenience mover must only MUTATE geometry, never SCHEDULE layout (task #17)  — ${at}`));
     }
     // [E] schedule-valve containment (B4 hook retirement, ordered-downwalk plan §9-N1, 2026-07-16):
     // the phase-valve is [E]-banned in immediate mutators exactly like _invalidateLayout, with ONE
@@ -620,15 +640,15 @@ function checkFile(file, violations, gCtx, warnings) {
     // enqueue, phase-correct, convergent via the equal-extent top guard; see that method's comment).
     // Any other immediate mutator reaching the valve is a new mutator-schedules seam: bring it here
     // for explicit sanctioning, don't just call it.
-    if (isImmediateMutator(tier) && VALVE_CALL.test(code) &&
-        !(selfClass === 'Widget' && method === '_applyExtent')) {
-      violations.push(`[E] immediate mutator ${method}() calls _scheduleRelayoutRespectingPhase() — the ONE sanctioned schedule-valve lives in Widget._applyExtent (ordered-downwalk plan §9-N1); a polymorphic apply corner must not schedule  — ${at}`);
+    if (isImmediateMutator(tier) && VALVE_CALL.test(code) && selfClass === 'Widget' && method === '_applyExtent') gCtx.excused.valve = true;
+    else if (isImmediateMutator(tier) && VALVE_CALL.test(code)) {
+      violations.push(rules.fired('E_MUTATOR_VALVE', `[E] immediate mutator ${method}() calls _scheduleRelayoutRespectingPhase() — the ONE sanctioned schedule-valve lives in Widget._applyExtent (ordered-downwalk plan §9-N1); a polymorphic apply corner must not schedule  — ${at}`));
     }
     // [J] settle-neutral callbacks (layering/naming convention §3/§4): a notification HOOK (_reactTo* / _before*)
     // must NOT open a settle -- the gesture/structural DISPATCHER owns the single _settleLayoutsAfter; the hook is
     // a settle-neutral core. (recalculateLayouts inside a hook is already [A]/[B] -- hooks are _-prefixed = low-level.)
     if (CALLBACK_HOOK.test(tier) && SETTLE_CALL.test(code)) {
-      violations.push(`[J] notification hook ${method}() calls _settleLayoutsAfter — a callback is a settle-neutral core; the dispatcher owns the one settle (layering/naming convention §3)  — ${at}`);
+      violations.push(rules.fired('J_HOOK_SETTLES', `[J] notification hook ${method}() calls _settleLayoutsAfter — a callback is a settle-neutral core; the dispatcher owns the one settle (layering/naming convention §3)  — ${at}`));
     }
     // [I] the __ LEAF (HARD-FAIL, layering/naming convention §1/§4): a __ method is a true bottom -- via @-self it must
     // trigger NO orchestration (re-fit seam / react step / schedule-settle / public setter). Scoped to @-self (a
@@ -636,17 +656,17 @@ function checkFile(file, violations, gCtx, warnings) {
     // recalc/_invalidateLayout overlap [A]/[E] harmlessly.
     if (/^__/.test(tier)) {
       const leaf = code.match(LEAF_FORBIDDEN);
-      if (leaf) violations.push(`[I] __ leaf ${method}() @-calls ${leaf[1]}() — a __ leaf must trigger no orchestration (seam/react/schedule/settle/public setter); keep it a pure bottom (layering/naming convention §1)  — ${at}`);
+      if (leaf) violations.push(rules.fired('I_LEAF_ORCHESTRATES', `[I] __ leaf ${method}() @-calls ${leaf[1]}() — a __ leaf must trigger no orchestration (seam/react/schedule/settle/public setter); keep it a pure bottom (layering/naming convention §1)  — ${at}`));
     }
     // [K] 2x2 apply-family name-consistency (the two statically-sound negatives; positive reaches-seam is the runtime audit's job, see the defs).
     if (APPLY_CORNER.has(tier)) {
       if (BYPASS_TWINS.has(tier)) {
         // override-BYPASS twin (_apply*Base) reacts only — must NOT fire the container re-fit seam nor DISPATCH to its polymorphic _apply* sibling (the corner it exists to bypass)
-        if (K_SEAM_CALL.test(code)) violations.push(`[K] bypass twin ${method}() fires the re-fit seam — a _apply*Base primitive reacts only; the polymorphic dispatch point is the bare _apply* corner (layering/naming convention §2)  — ${at}`);
-        else { const kc = code.match(K_POLY_APPLY); if (kc) violations.push(`[K] bypass twin ${method}() dispatches to polymorphic ${kc[0].replace(/^[@.]\s*/, '')}() — a _apply*Base must bypass the override, not route the arrange apply back through it (layering/naming convention §2)  — ${at}`); }
+        if (K_SEAM_CALL.test(code)) violations.push(rules.fired('K_TWIN_SEAM', `[K] bypass twin ${method}() fires the re-fit seam — a _apply*Base primitive reacts only; the polymorphic dispatch point is the bare _apply* corner (layering/naming convention §2)  — ${at}`));
+        else { const kc = code.match(K_POLY_APPLY); if (kc) violations.push(rules.fired('K_TWIN_DISPATCH', `[K] bypass twin ${method}() dispatches to polymorphic ${kc[0].replace(/^[@.]\s*/, '')}() — a _apply*Base must bypass the override, not route the arrange apply back through it (layering/naming convention §2)  — ${at}`)); }
       } else if (COMMIT_CORNERS.has(tier) && K_REACT_CALL.test(code)) {
         // the silent commit corner commits — must NOT react (repaint / re-layout)
-        violations.push(`[K] commit corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — a commit corner only commits; the reacting sibling is the polymorphic _apply* (the frame-commit _applyGrantedBounds) (layering/naming convention §2)  — ${at}`);
+        violations.push(rules.fired('K_COMMIT_REACTS', `[K] commit corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — a commit corner only commits; the reacting sibling is the polymorphic _apply* (the frame-commit _applyGrantedBounds) (layering/naming convention §2)  — ${at}`));
       }
       // the clean polymorphic _apply* (ex *AndNotify) reacts + IS the override dispatch point — no static negative:
       // its "reaches the container re-fit" is now the settle-time up-edge's job, not a corner-name invariant.
@@ -656,35 +676,35 @@ function checkFile(file, violations, gCtx, warnings) {
     const deferredSettle = code.match(DEFERRED_SETTLE_CALL);
     if (deferredSettle && DEFERRED_SETTLE_CALLER_ALLOWLIST.has(tier)) gCtx.excused.deferredSettle.add(tier);
     if (deferredSettle && !DEFERRED_SETTLE_CALLER_ALLOWLIST.has(tier)) {
-      violations.push(`[O] ${method}() calls ${deferredSettle[1]}() outside the deferred-settle-caller allowlist — a *DeferredSettle entrypoint DEFERS its layout settle to the ONE end-of-cycle flush, which is byte-identical (hence sound) only inside a per-event STREAM handler (drag/scroll/key burst) that never reads back the settled layout mid-cycle. A discrete/programmatic caller must use the self-settling setter. If this genuinely IS such a stream, add its method name to DEFERRED_SETTLE_CALLER_ALLOWLIST (layering/naming convention §4)  — ${at}`);
+      violations.push(rules.fired('O_DEFERRED_SETTLE_CALLER', `[O] ${method}() calls ${deferredSettle[1]}() outside the deferred-settle-caller allowlist — a *DeferredSettle entrypoint DEFERS its layout settle to the ONE end-of-cycle flush, which is byte-identical (hence sound) only inside a per-event STREAM handler (drag/scroll/key burst) that never reads back the settled layout mid-cycle. A discrete/programmatic caller must use the self-settling setter. If this genuinely IS such a stream, add its method name to DEFERRED_SETTLE_CALLER_ALLOWLIST (layering/naming convention §4)  — ${at}`));
     }
     // [P] the connector-join caller rule (see JOIN_CALL above): _settleLayoutsAfterOrJoinEnclosingPass is the
     // reactive-connection settle lane -- it JOINS an open layout pass instead of throwing the flow-violation guard,
     // sound ONLY for a dedicated _<name>Connector entrypoint. Any other caller must use the self-settling lane.
     const join = code.match(JOIN_CALL);
     if (join && !/Connector$/.test(tier)) {
-      violations.push(`[P] ${method}() calls _settleLayoutsAfterOrJoinEnclosingPass() but is not a _<name>Connector entrypoint — the connector settle lane JOINS an open layout pass (it does NOT throw the flow-violation guard), sound only for a dedicated reactive-connection entrypoint carrying the connectionsCalculationToken cycle-guard. Use the self-settling _settleLayoutsAfter or a _<name>NoSettle core instead (connection-cascade-settle-fix-plan.md)  — ${at}`);
+      violations.push(rules.fired('P_JOIN_LANE_CALLER', `[P] ${method}() calls _settleLayoutsAfterOrJoinEnclosingPass() but is not a _<name>Connector entrypoint — the connector settle lane JOINS an open layout pass (it does NOT throw the flow-violation guard), sound only for a dedicated reactive-connection entrypoint carrying the connectionsCalculationToken cycle-guard. Use the self-settling _settleLayoutsAfter or a _<name>NoSettle core instead (connection-cascade-settle-fix-plan.md)  — ${at}`));
     }
     // [Q] the connector-caller allowlist (see CONNECTOR_CALL above): a hard-coded textual call to a _<name>Connector
     // must be a sanctioned mid-cascade self-render, else it smuggles a never-throwing setter past the flow guard.
     const connectorCall = code.match(CONNECTOR_CALL);
     if (connectorCall && CONNECTOR_CALLER_ALLOWLIST.has(tier)) gCtx.excused.connector.add(tier);
     if (connectorCall && !CONNECTOR_CALLER_ALLOWLIST.has(tier)) {
-      violations.push(`[Q] ${method}() calls ${connectorCall[1]}() outside the connector-caller allowlist — a _<name>Connector entrypoint JOINS an already-open layout pass instead of throwing the flow-violation guard (the reactive-connection settle lane, rule [P]); a hard-coded textual call to one smuggles a never-throwing setter past that guard. Only a sanctioned mid-cascade self-render (a patch node's recalculateOutput) may call one directly; the reactive dispatch resolves the connector name at runtime and needs no textual call. If this genuinely IS such a render, add its method name to CONNECTOR_CALLER_ALLOWLIST (connection-cascade-settle-fix-plan.md §7e)  — ${at}`);
+      violations.push(rules.fired('Q_CONNECTOR_CALLER', `[Q] ${method}() calls ${connectorCall[1]}() outside the connector-caller allowlist — a _<name>Connector entrypoint JOINS an already-open layout pass instead of throwing the flow-violation guard (the reactive-connection settle lane, rule [P]); a hard-coded textual call to one smuggles a never-throwing setter past that guard. Only a sanctioned mid-cascade self-render (a patch node's recalculateOutput) may call one directly; the reactive dispatch resolves the connector name at runtime and needs no textual call. If this genuinely IS such a render, add its method name to CONNECTOR_CALLER_ALLOWLIST (connection-cascade-settle-fix-plan.md §7e)  — ${at}`));
     }
     // [R] USERLAND-PUBLIC-API (see USERLAND_FILES / USERLAND_PRIVATE_CALL / PRIVATE_USE_MARKER above): in a
     // standard-user-use file, reach OTHER widgets through their PUBLIC API, not their _-underscore internals.
     if (USERLAND_FILES.has(rel) && !raw.includes(PRIVATE_USE_MARKER)) {
       const upc = code.match(USERLAND_PRIVATE_CALL);
       if (upc && upc[1] !== 'this') {
-        violations.push(`[R] userland ${method}() reaches into a private: ${upc[1]}${upc[2]}() — ${rel} is the standard-user-use exemplar (menu-built windows/panels) and must use the PUBLIC self-settling API (setBounds / moveTo / setExtent / setWidth / setHeight / moveWithin), not another widget's immediate _apply*/_move* cores (reserved for low-level / in-pass code). If the menu genuinely must reach a private, mark the line  # ${PRIVATE_USE_MARKER}: <why>  — ${at}`);
+        violations.push(rules.fired('R_USERLAND_PRIVATE', `[R] userland ${method}() reaches into a private: ${upc[1]}${upc[2]}() — ${rel} is the standard-user-use exemplar (menu-built windows/panels) and must use the PUBLIC self-settling API (setBounds / moveTo / setExtent / setWidth / setHeight / moveWithin), not another widget's immediate _apply*/_move* cores (reserved for low-level / in-pass code). If the menu genuinely must reach a private, mark the line  # ${PRIVATE_USE_MARKER}: <why>  — ${at}`));
       }
     }
     if (recalc && !RECALC_WHITELIST.has(tier)) {
-      violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`);
+      violations.push(rules.fired('B_RECALC_CALLER', `[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`));
     }
     if (PUBLIC_SET.has(tier) && pub && pub[1] !== tier) {
-      violations.push(`[C] public setter ${method}() calls another public setter .${pub[1]}()  — ${at}`);
+      violations.push(rules.fired('C_SETTER_CALLS_SETTER', `[C] public setter ${method}() calls another public setter .${pub[1]}()  — ${at}`));
     }
     // [F] the SCHEDULE/APPLY boundary, made auditable (deferred-layout-OVERVIEW.md §11). A method that is NEITHER
     // low-level NOR an immediate mutator -- i.e. a handler / property setter / menu action / gesture / constructor --
@@ -701,7 +721,7 @@ function checkFile(file, violations, gCtx, warnings) {
     if (!isLowLevel(tier) && !isImmediateMutator(tier)) {
       const apply = code.match(APPLY_CALL);
       if (apply && !methodMarked) {
-        violations.push(`[F] off-settle synchronous layout apply .${apply[1]}() in ${method}() — DEFER it (_invalidateLayout), or if it is at a settle point / a documented determinism-exempt family mark the method  # ${SANCTION_MARKER}: <why>  — ${at}`);
+        violations.push(rules.fired('F_OFF_SETTLE_APPLY', `[F] off-settle synchronous layout apply .${apply[1]}() in ${method}() — DEFER it (_invalidateLayout), or if it is at a settle point / a documented determinism-exempt family mark the method  # ${SANCTION_MARKER}: <why>  — ${at}`));
       }
     }
   }
@@ -725,7 +745,7 @@ const T_SELF_PUB_CALL = new RegExp('@\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b')
 const T_SELF_TEXT_CALL = new RegExp('@\\s*(' + TEXT_SETTERS.join('|') + ')\\b');
 
 function checkDoubleSettle(file, gCtx, violations) {
-  const rel = path.relative(path.join(__dirname, '..'), file);
+  const rel = srcKey(file);
   const selfClass = path.basename(file, '.coffee');
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let mixinHashIndent = null, strState = null;
@@ -733,14 +753,14 @@ function checkDoubleSettle(file, gCtx, violations) {
   const flush = () => {
     if (m && m.settleLine >= 0 && !RECALC_WHITELIST.has(tierName(m.name)) && !m.marked) {
       for (const s of m.sites) {
-        violations.push(`[T] ${m.name}() self-settles (${rel}:${m.settleLine}) AND @-calls settling ${s.label} — two flushes for one logical mutation; route the second call through its _<name>NoSettle core inside the ONE settle, or bless a deliberate/branch-exclusive pair with # ${DOUBLE_SETTLE_MARKER}: <why>  — ${rel}:${s.n}`);
+        violations.push(rules.fired('T_DOUBLE_SETTLE', `[T] ${m.name}() self-settles (${rel}:${m.settleLine}) AND @-calls settling ${s.label} — two flushes for one logical mutation; route the second call through its _<name>NoSettle core inside the ONE settle, or bless a deliberate/branch-exclusive pair with # ${DOUBLE_SETTLE_MARKER}: <why>  — ${rel}:${s.n}`));
       }
     }
     m = null;
   };
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
-    const { code, state } = stripLine(raw, strState);
+    let { code, state } = stripLine(raw, strState);
     strState = state;
     if (strState === null) {
       const b = methodBoundary(raw, mixinHashIndent);
@@ -748,7 +768,7 @@ function checkDoubleSettle(file, gCtx, violations) {
         flush();
         mixinHashIndent = b.mixinHashIndent;
         if (b.kind === 'header' && b.method) m = { name: b.method, settleLine: -1, marked: false, sites: [] };
-        continue;
+        if (!(b.kind === 'header' && b.method && (code = inlineBodyOf(code)))) continue;   // a one-liner's body is read
       }
     }
     if (!m) continue;
@@ -797,9 +817,10 @@ function checkMacroFile(file, violations, heredocOnly) {
     if (heredocOnly) {
       if (!inHeredoc) {
         if (/Macro\.fromString\s+"""/.test(raw)) inHeredoc = true;  // opener; its own line has no body call
+        pendingSanction = false;   // a marker never crosses a heredoc boundary: it names a call in ITS macro
         continue;
       }
-      if (/^\s*"""\s*$/.test(raw)) { inHeredoc = false; continue; }  // lone closing """
+      if (/^\s*"""\s*$/.test(raw)) { inHeredoc = false; pendingSanction = false; continue; }  // lone closing """
     }
     // [D] sanction marker: `# macro-private-call-sanctioned: <reason>` (non-empty reason) on the
     // same line or the comment line directly above exempts ONE call site — for the test ORACLES
@@ -812,9 +833,9 @@ function checkMacroFile(file, violations, heredocOnly) {
     const hash = raw.indexOf('#');
     const code = hash >= 0 ? raw.slice(0, hash) : raw;
     const m = code.match(MACRO_FORBIDDEN_CALL);
-    if (m && !lineSanctioned) violations.push(`[D] macro calls private/low-level .${m[1]}() — ${rel}:${n + 1} `
+    if (m && !lineSanctioned) violations.push(rules.fired('D_MACRO_PRIVATE_CALL', `[D] macro calls private/low-level .${m[1]}() — ${rel}:${n + 1} `
       + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/moveTo; `
-      + `a test ORACLE may carry \`# macro-private-call-sanctioned: <reason>\`)`);
+      + `a test ORACLE may carry \`# macro-private-call-sanctioned: <reason>\`)`));
   }
 }
 
@@ -834,7 +855,7 @@ function main() {
   const wrapperNames = [...gCtx.settlingClassesByName.keys()];
   gCtx.WRAPPER_CALL = wrapperNames.length
     ? new RegExp('([@.])\\s*(' + wrapperNames.join('|') + ')\\b') : null;
-  gCtx.excused = { deferredSettle: new Set(), connector: new Set() };   // the [O]/[Q] caller names that excused a call this run
+  gCtx.excused = { deferredSettle: new Set(), connector: new Set(), valve: false };   // the [O]/[Q] caller names that excused a call this run
   const violations = [];
   const warnings = [];
   for (const f of files) {
@@ -853,31 +874,35 @@ function main() {
       try { checkMacroFile(f, violations); }
       catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
     }
-    // also scan the SHARED macro verbs in MacroToolkit.coffee (heredoc bodies only)
-    if (fs.existsSync(MACRO_VERBS_FILE)) {
-      try { checkMacroFile(MACRO_VERBS_FILE, violations, true); macroCount++; }
-      catch (e) { console.error(`check-layering: operational error in ${MACRO_VERBS_FILE}:`, e.message); process.exit(2); }
-    }
+  }
+  // the SHARED macro verbs in MacroToolkit.coffee (heredoc bodies only) are src: read whether or not the tests repo is
+  if (fs.existsSync(MACRO_VERBS_FILE)) {
+    try { checkMacroFile(MACRO_VERBS_FILE, violations, true); macroCount++; }
+    catch (e) { console.error(`check-layering: operational error in ${MACRO_VERBS_FILE}:`, e.message); process.exit(2); }
   }
   // the exemption tables, each held to what it exempts this run (a stale entry is a violation, never a note)
   for (const n of gCtx.staleWrapperExclusions) {
     const why = PUBLIC_SETTERS.includes(n) || TEXT_SETTERS.includes(n)
       ? `${n} is a settling setter, which [A] already takes out of the wrapper set`
       : `no src class defines ${n} as a method that settles via _settleLayoutsAfter`;
-    violations.push(`[G] STALE_ALLOWLIST_ENTRY WRAPPER_EXCLUDED '${n}' — ${why}, so the exclusion removes nothing from the discovered wrapper set: delete the entry (or, if the wrapper was renamed, exclude the new name with the same reason)`);
+    violations.push(rules.fired('G_STALE_WRAPPER_EXCLUDED', `[G] STALE_ALLOWLIST_ENTRY WRAPPER_EXCLUDED '${n}' — ${why}, so the exclusion removes nothing from the discovered wrapper set: delete the entry (or, if the wrapper was renamed, exclude the new name with the same reason)`));
   }
   const callerTables = [
     ['O', 'DEFERRED_SETTLE_CALLER_ALLOWLIST', DEFERRED_SETTLE_CALLER_ALLOWLIST, gCtx.excused.deferredSettle, '*DeferredSettle'],
     ['Q', 'CONNECTOR_CALLER_ALLOWLIST', CONNECTOR_CALLER_ALLOWLIST, gCtx.excused.connector, '_<name>Connector'],
   ];
+  rules.declare(callerTables.map(([rule]) => `${rule}_STALE_CALLER_ALLOWLIST`));
   for (const [rule, table, allow, used, callee] of callerTables) {
     for (const n of allow) {
-      if (!used.has(n)) violations.push(`[${rule}] STALE_ALLOWLIST_ENTRY ${table} '${n}' — no method named ${n} calls a ${callee} entrypoint this run, so the entry excuses nothing today and would excuse whatever future method reuses the name: delete it (or, if the caller was renamed, allowlist the new name)`);
+      if (!used.has(n)) violations.push(rules.fired(`${rule}_STALE_CALLER_ALLOWLIST`, `[${rule}] STALE_ALLOWLIST_ENTRY ${table} '${n}' — no method named ${n} calls a ${callee} entrypoint this run, so the entry excuses nothing today and would excuse whatever future method reuses the name: delete it (or, if the caller was renamed, allowlist the new name)`));
     }
   }
-  const scanned = new Set(files.map((f) => path.relative(path.join(__dirname, '..'), f)));
+  if (!gCtx.excused.valve) {
+    violations.push(rules.fired('E_STALE_VALVE_EXEMPTION', `[E] STALE_ALLOWLIST_ENTRY the schedule-valve exemption Widget._applyExtent — no line of Widget._applyExtent reaches _scheduleRelayoutRespectingPhase this run, so the exemption excuses nothing and would excuse whatever future line of that method does: move it with the valve (or delete it)`));
+  }
+  const scanned = new Set(files.map(srcKey));
   for (const f of USERLAND_FILES) {
-    if (!scanned.has(f)) violations.push(`[R] STALE_ALLOWLIST_ENTRY USERLAND_FILES '${f}' — not a scanned src file, and USERLAND_FILES is the only set of files [R] reads, so [R] checks nothing there: point the entry at the file's new path (or delete it with the rule)`);
+    if (!scanned.has(f)) violations.push(rules.fired('R_STALE_USERLAND_FILES', `[R] STALE_ALLOWLIST_ENTRY USERLAND_FILES '${f}' — not a scanned src file, and USERLAND_FILES is the only set of files [R] reads, so [R] checks nothing there: point the entry at the file's new path (or delete it with the rule)`));
   }
   if (warnings.length) {
     console.warn(`\n⚠ layering gate — ${warnings.length} [H] early-return-before-settle warning(s) (non-fatal):`);
@@ -903,7 +928,7 @@ function main() {
     console.error('T: a method that self-settles (@_settleLayoutsAfter) must not ALSO @-call a settling public method (setter/wrapper/@add) — one flush per logical mutation; bless a deliberate/branch-exclusive pair with `# double-settle-sanctioned: <why>` (public/private call-separation plan §4.1).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R; ${wrapperNames.length} settling wrappers guarded, name-qualified)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R/T; ${wrapperNames.length} settling wrappers guarded, name-qualified)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

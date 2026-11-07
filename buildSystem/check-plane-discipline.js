@@ -54,10 +54,21 @@
 //
 // Exit codes: 0 clean · 1 violation (or a stale NOT_POSITIONAL / NON_WIDGET_ROOTS entry) · 2 operational (Widget.coffee
 // unreadable, or the POSITIONAL derivation found nothing — which would make rule B vacuous).
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-plane-discipline.js [--src=DIR]
+// — the rail checks another src tree (a copy carrying a plant). That every rule BITES, and that every accepted form
+// passes, is proven on every build by check-plane-discipline-selftest.js.
+// bite-unplantable: B_STALE_NON_WIDGET_ROOT — NON_WIDGET_ROOTS is empty, and a plant reaches only the src tree, never this gate's own table; the rule fires the day an entry is added and its excused line goes
 
 const fs = require('fs');
 const path = require('path');
-const SRC = path.resolve(__dirname, '../src');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, ['--src='], 'plane-discipline');
+rejectPositionalArgs(ARGV, 'plane-discipline', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'plane-discipline');
 const { methodBoundary, methodSpans } = require('./lib/coffee-method-header');
 
 // ---- baseline for section B (the check-stinks idiom: exact count, move it consciously) ----
@@ -181,7 +192,8 @@ for (const p of files) {
     while ((esc = ESCALATE_CALL_RE.exec(line)) !== null) escalatedNames.add(esc[1]);
 
     // A — bare offset writes
-    if (/(?:@|\.)scrollOffset[XY]\s*=[^=]/.test(line) && inMethod !== '_writeScrollOffset'
+    // any assignment spelling writes the offset: `=`, a compound `+=`/`?=`/`||=`, CoffeeScript's `or=`/`and=`
+    if (/(?:@|\.)scrollOffset[XY]\s*(?:[-+*\/%?]|\|\||&&|\bor|\band)?=[^=]/.test(line) && inMethod !== '_writeScrollOffset'
         && !/^\s*scrollOffset[XY]\s*:/.test(raw))
       funnelViolations.push(`${rel}:${i + 1}: [in ${inMethod}] ${raw.trim()}`);
 
@@ -247,8 +259,8 @@ for (const [cls, p, provider] of units) {
       if (c1 && passesItOn.test(code)) continue;        // forwarding the pos on is not reading it
       if (c2 && /screenPointToMyPlane/.test(code)) continue;
       escalationViolations.push(c1
-        ? `${path.relative(SRC, p)}:${j + 1}: ${cls}.${mSig[1]} reads its escalated '${posName}' (a descendant's plane) — re-derive from the hand: @screenPointToMyPlane world.hand.position()`
-        : `${path.relative(SRC, p)}:${j + 1}: ${cls}.${mSig[1]} reads the raw screen '${posName}' unmapped — map it on the same line: @screenPointToMyPlane ${posName}`);
+        ? { c1, text: `${path.relative(SRC, p)}:${j + 1}: ${cls}.${mSig[1]} reads its escalated '${posName}' (a descendant's plane) — re-derive from the hand: @screenPointToMyPlane world.hand.position()` }
+        : { c1, text: `${path.relative(SRC, p)}:${j + 1}: ${cls}.${mSig[1]} reads the raw screen '${posName}' unmapped — map it on the same line: @screenPointToMyPlane ${posName}` });
     }
   }
 }
@@ -258,33 +270,33 @@ let failed = false;
 if (funnelViolations.length) {
   failed = true;
   console.error(`[plane-discipline A] FAIL — ${funnelViolations.length} bare scrollOffset write(s) outside _writeScrollOffset:`);
-  funnelViolations.forEach((l) => console.error('    ' + l));
+  funnelViolations.forEach((l) => console.error(rules.fired('A_BARE_OFFSET_WRITE', '    ' + l)));
 } else console.log('[plane-discipline A] offset funnel: 0 bare writes -- OK');
 
 const staleRoots = [...NON_WIDGET_ROOTS].filter((r) => !nonWidgetRootsUsed.has(r));
 if (staleRoots.length) {
   failed = true;
   console.error(`[plane-discipline B] FAIL — NON_WIDGET_ROOTS names ${staleRoots.length} root(s) no scanned line calls a position query or \`.bounds\` on:`);
-  for (const r of staleRoots) console.error(`    STALE_ALLOWLIST_ENTRY NON_WIDGET_ROOTS '${r}' — it excuses no line today: delete the entry`);
+  for (const r of staleRoots) console.error(rules.fired('B_STALE_NON_WIDGET_ROOT', `    STALE_ALLOWLIST_ENTRY NON_WIDGET_ROOTS '${r}' — it excuses no line today: delete the entry`));
 }
 if (STALE_EXCLUSIONS.length) {
   failed = true;
-  console.error(`[plane-discipline B] FAIL — NOT_POSITIONAL names ${STALE_EXCLUSIONS.length} method(s) the POSITIONAL derivation no longer catches on Widget: ${STALE_EXCLUSIONS.join(', ')} — a stale exclusion; delete the entry (or, if the method was renamed, exclude the new name with the same reason).`);
+  console.error(rules.fired('B_STALE_NOT_POSITIONAL', `[plane-discipline B] FAIL — NOT_POSITIONAL names ${STALE_EXCLUSIONS.length} method(s) the POSITIONAL derivation no longer catches on Widget: ${STALE_EXCLUSIONS.join(', ')} — a stale exclusion; delete the entry (or, if the method was renamed, exclude the new name with the same reason).`));
 }
 if (mixLines.length !== CROSS_PLANE_MIX_BASELINE) {
   failed = true;
   console.error(`[plane-discipline B] FAIL — cross-plane positional-mix count ${mixLines.length} != baseline ${CROSS_PLANE_MIX_BASELINE}.`);
   if (mixLines.length > CROSS_PLANE_MIX_BASELINE)
-    console.error('    New mixed-positional line(s) — classify each: same-plane-by-construction => raise the baseline with a one-line reason in the commit; cross-plane => map it. Current lines:');
+    console.error(rules.fired('B_MIX_ROSE', '    New mixed-positional line(s) — classify each: same-plane-by-construction => raise the baseline with a one-line reason in the commit; cross-plane => map it. Current lines:'));
   else
-    console.error('    Count DROPPED — good: lower the baseline to lock it in. Current lines:');
+    console.error(rules.fired('B_MIX_DROPPED', '    Count DROPPED — good: lower the baseline to lock it in. Current lines:'));
   mixLines.forEach((l) => console.error('    ' + l));
 } else console.log(`[plane-discipline B] cross-plane positional mixing: ${mixLines.length} (baseline ${CROSS_PLANE_MIX_BASELINE}) -- OK (${POSITIONAL_NAMES.length} position queries read from Widget.coffee, ${Object.keys(NOT_POSITIONAL).length} excluded)`);
 
 if (escalationViolations.length) {
   failed = true;
   console.error(`[plane-discipline C] FAIL — ${escalationViolations.length} read(s) of a pointer position not in the receiver's plane:`);
-  escalationViolations.forEach((l) => console.error('    ' + l));
+  escalationViolations.forEach((v) => console.error(v.c1 ? rules.fired('C1_ESCALATED_POS', '    ' + v.text) : rules.fired('C2_RAW_SCREEN_POS', '    ' + v.text)));
 } else console.log(`[plane-discipline C] positions not in the receiver's plane: 0 reads -- OK (C1: ${c1Bodies} escalated-pos handler bodies [${[...escalatedPosHandlers].sort().join(', ')}] on ${providerDefiners.size} provider class(es) + subclasses + ${[...mixinFile.keys()].filter(mixinOnAProvider).length} mixin(s) augmenting one; C2: ${c2Bodies} raw-screen-pos bodies [${[...RAW_SCREEN_POS_HANDLERS.keys()].join(', ')}]; ${classFile.size} classes + ${mixinFile.size} mixins scanned)`);
 
 process.exit(failed ? 1 : 0);

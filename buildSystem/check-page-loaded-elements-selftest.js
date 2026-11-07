@@ -1,70 +1,57 @@
 'use strict';
-// check-page-loaded-elements-selftest.js — check-page-loaded-elements.js proved able to BITE, by running the REAL
-// gate on a planted copy of src/ (lib/planted-src.js), one throwaway widget per clause of its rule:
-//   (a) a field holding an element the page loads must be a serialization transient,
-//   (b) the class chain must re-make it after a restore AND after a copy (both hooks defined),
-//   and an element built on a line that assigns it to no field must say why no widget holds it.
-// Each violation must fail on its OWN violation line — "  <Class>.<field>  (<file>:<n>) — <the clause>", or the
-// unattributed line itself — never on the summary, which names every element field it saw; the fully declared widget,
-// the stated unheld element and the unplanted copy must pass. Run by buildSystem/run-selftests.js on every build.
+// check-page-loaded-elements-selftest.js — check-page-loaded-elements.js proved able to BITE, by running the REAL gate
+// on a planted copy of src/ (lib/planted-src.js), one throwaway widget per clause, each failing on its OWN violation
+// line ("  <Class>.<field>  (<file>:<n>) — <the clause>"), never the summary (which names every element field it
+// saw): a field holding an element the page loads that is not a serialization transient; a chain re-making it after a
+// copy but not a restore; after a restore but not a copy; an element built into no field and not said to be unheld; a
+// hook header the shared matcher cannot see; an element field assigned in a mixin; and a hook neither walker calls (the
+// copy's walkers edited so they never call it). The fully declared holder and the stated unheld element pass. Run by
+// buildSystem/run-selftests.js on every build.
 
-const { plantedSrc, runGate } = require('./lib/planted-src');
-const t = require('./lib/selftest-verdict').cases('check-page-loaded-elements');
+const path = require('path');
+const { proveGate } = require('./lib/planted-src');
 
-const GATE = 'check-page-loaded-elements.js';
-const FILE = 'BiteProofImageHolderWdgt.coffee';
-const CLS = 'BiteProofImageHolderWdgt';
-const FIELD = 'bpPlantedImage';
-const holder = ({ transient, restore, copy }) => [
-  `class ${CLS} extends Widget`,
-  ...(transient ? [`  @serializationTransients: ["${FIELD}"]`] : []),
-  '',
-  '  _bpLoadImage: ->',
-  `    @${FIELD} = new Image()`,
+const holder = (cls, { transient, restore, copy }) => [`class ${cls} extends Widget`,
+  ...(transient ? ['  @serializationTransients: ["bpPlantedImage"]'] : []), '',
+  '  _bpLoadImage: ->', '    @bpPlantedImage = new Image()',
   ...(restore ? ['', '  _afterDeserialization: ->', '    @_bpLoadImage()'] : []),
-  ...(copy ? ['', '  _reactToBeingCopied: ->', '    @_bpLoadImage()'] : []),
-  '',
-].join('\n');
-const unheld = (stated) => [
-  `class ${CLS} extends Widget`,
-  '',
-  '  _bpDecode: (dataURL) ->',
-  ...(stated ? ['    # page-element-not-held: the bite-proof fixture of check-page-loaded-elements-selftest.js'] : []),
-  '    img = new Image()',
-  '    img.src = dataURL',
-  '',
-].join('\n');
+  ...(copy ? ['', '  _reactToBeingCopied: ->', '    @_bpLoadImage()'] : []), ''].join('\n');
+const clause = (cls, text) => new RegExp(`^  ${cls}\\.bpPlantedImage  \\(${cls}\\.coffee:\\d+\\) — .*${text}`, 'm');
 
-const tree = plantedSrc();
-const passes = (r) => r.status === 0 && /\[page-loaded-elements\] OK/.test(r.out);
-const failsWith = (r, re) => r.status === 1 && re.test(r.out);
-const violation = (clause) => new RegExp(`^  ${CLS}\\.${FIELD}  \\(${CLS}\\.coffee:\\d+\\) — .*${clause}`, 'm');
-
-const control = runGate(GATE, tree.dir);
-t.check(passes(control), 'the unplanted copy passes', control.why);
-
-tree.plant(FILE, holder({ transient: false, restore: true, copy: true }));
-const notTransient = runGate(GATE, tree.dir);
-t.check(failsWith(notTransient, violation('not a serialization transient')), `(a) @${FIELD} not a serialization transient fails naming the class and the field`, notTransient.why);
-
-tree.plant(FILE, holder({ transient: true, restore: true, copy: false }));
-const noCopy = runGate(GATE, tree.dir);
-t.check(failsWith(noCopy, violation('no _reactToBeingCopied')), '(b) no _reactToBeingCopied in the chain fails naming the class and the hook', noCopy.why);
-
-tree.plant(FILE, holder({ transient: true, restore: false, copy: true }));
-const noRestore = runGate(GATE, tree.dir);
-t.check(failsWith(noRestore, violation('no _afterDeserialization')), '(b) no _afterDeserialization in the chain fails naming the class and the hook', noRestore.why);
-
-tree.plant(FILE, holder({ transient: true, restore: true, copy: true }));
-const declared = runGate(GATE, tree.dir);
-t.check(passes(declared), 'the fully declared holder passes', declared.why);
-
-tree.plant(FILE, unheld(false));
-const unattributed = runGate(GATE, tree.dir);
-t.check(failsWith(unattributed, new RegExp(`^  ${CLS}\\.coffee:\\d+  img = new Image\\(\\)`, 'm')), 'an element assigned to no field, unexplained, fails naming the line', unattributed.why);
-
-tree.plant(FILE, unheld(true));
-const stated = runGate(GATE, tree.dir);
-t.check(passes(stated), 'the same element with # page-element-not-held: passes', stated.why);
-
-t.done();
+proveGate({
+  name: 'check-page-loaded-elements',
+  gate: path.join(__dirname, 'check-page-loaded-elements.js'),
+  pass: /^\[page-loaded-elements\] OK/m,
+  control: {
+    plants: {
+      'BiteProofDeclaredHolderWdgt.coffee': holder('BiteProofDeclaredHolderWdgt', { transient: true, restore: true, copy: true }),
+      'BiteProofStatedUnheldWdgt.coffee': ['class BiteProofStatedUnheldWdgt extends Widget', '', '  _bpDecode: (dataURL) ->',
+        '    # page-element-not-held: the bite-proof fixture of check-page-loaded-elements-selftest.js', '    img = new Image()', '    img.src = dataURL', ''].join('\n'),
+    },
+  },
+  runs: [{
+    label: 'one widget per clause, a refused hook header, a mixin field',
+    plants: {
+      'BiteProofNotTransientWdgt.coffee': holder('BiteProofNotTransientWdgt', { transient: false, restore: true, copy: true }),
+      'BiteProofNoRestoreWdgt.coffee': holder('BiteProofNoRestoreWdgt', { transient: true, restore: false, copy: true }),
+      'BiteProofNoCopyWdgt.coffee': holder('BiteProofNoCopyWdgt', { transient: true, restore: true, copy: false }),
+      'BiteProofUnheldWdgt.coffee': ['class BiteProofUnheldWdgt extends Widget', '', '  _bpDecode: (dataURL) ->', '    img = new Image()', '    img.src = dataURL', ''].join('\n'),
+      'BiteProofUnseenHookWdgt.coffee': ['class BiteProofUnseenHookWdgt extends Widget', '  _afterDeserialization: (a,', '      b) ->', '    1', ''].join('\n'),
+      'BiteProofElementMixin.coffee': ['BiteProofElementMixin =', '', '  onceAddedClassProperties: (fromClass) ->', '    @addInstanceProperties fromClass,', '',
+        '      _bpLoad: ->', '        @bpMixinImage = new Image()', ''].join('\n'),
+    },
+    expect: {
+      NOT_TRANSIENT: clause('BiteProofNotTransientWdgt', 'not a serialization transient'),
+      NO_RESTORE_HOOK: clause('BiteProofNoRestoreWdgt', 'no _afterDeserialization'),
+      NO_COPY_HOOK: clause('BiteProofNoCopyWdgt', 'no _reactToBeingCopied'),
+      UNATTRIBUTED_ELEMENT: /^  BiteProofUnheldWdgt\.coffee:4  img = new Image\(\)$/m,
+      UNSEEN_HOOK_HEADER: /^  BiteProofUnseenHookWdgt\.coffee:2  a hook header in a spelling the shared matcher cannot see/m,
+      ELEMENT_FIELD_IN_MIXIN: /^  BiteProofElementMixin\.coffee:7  an element field \(@bpMixinImage\) assigned in the mixin BiteProofElementMixin/m,
+    },
+    absent: [/BiteProofDeclaredHolderWdgt\.bpPlantedImage|BiteProofStatedUnheldWdgt/],
+  }, {
+    label: 'a hook neither walker calls',
+    edits: [['duplication/Duplicator.coffee', /\._reactToBeingCopied\??\(/g, '._bpRenamedHook(']],   // its one caller
+    expect: { HOOK_NOT_CALLED: /^  HOOKS names _reactToBeingCopied, which neither walker \(src\/serialization, src\/duplication\) calls/m },
+  }],
+});

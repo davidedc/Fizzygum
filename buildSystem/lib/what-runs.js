@@ -14,9 +14,10 @@
 //
 // AN EDGE IS AN INVOCATION, NOT A MENTION. A file runs another when it LAUNCHES it:
 //   - shell (.sh, and fg's function bodies), read by a small lexer (shellCommands, below): a script that is the PROGRAM
-//     a command executes, that follows an INTERPRETER word (node, bash, sh, python3, source, `.`), or that is ASSIGNED
-//     in a command running one (`AUDIT_PRELUDE=x.js node …`). A printing command, a test, a file operation, a bare
-//     assignment, a heredoc body and a comment launch nothing; a `$( … )` substitution is a command of its own;
+//     a command executes, or that follows an INTERPRETER word (node, bash, sh, python3, source, `.`) — a flag's value
+//     included (`node runner.js --prelude=x.js`: the runner injects it into its pages). A printing command, a test, a
+//     file operation, an assignment, a heredoc body and a comment launch nothing; a `$( … )` substitution is a command
+//     of its own;
 //   - JavaScript: a `require('<relative path>')` (the module's code runs), or a script named among the string
 //     arguments of a `path.join(…)` / `path.resolve(…)` call — how every launch site locates what it spawns or
 //     injects, cwd-independently. A help or error message names a tool and never builds its path;
@@ -105,11 +106,13 @@ function resolver(files) {
 const SCRIPT_TOKEN = /[\w.\/\${}-]*?[\w.-]+\.(?:js|sh|py)\b/g;
 
 // ---- shell: a small lexer, enough to tell a LAUNCH from a mention -------------------------------------------------
-// A path runs when it is the PROGRAM a command executes (`./build_it_please.sh`), when it follows an INTERPRETER word
-// in the command (`node x.js`, `to 300 node x.js`, `xargs … bash x.sh`, `source x.sh`), or when it is ASSIGNED in a
-// command that runs one (`AUDIT_PRELUDE=x.js node runner.js`, `PRELUDE_JS="${3:-x.js}" … node …`). A printing command
-// (echo, printf, fg's ban, `:`) runs nothing, whatever it names; so does a test (`[ -f x.js ]`), a file operation or a
-// bare assignment. Each `$( … )` / backtick substitution is lexed as commands of its own (its place in the word is kept
+// A path runs when it is the PROGRAM a command executes (`./build_it_please.sh`), or when it follows an INTERPRETER
+// word in the command (`node x.js`, `to 300 node x.js`, `xargs … bash x.sh`, `source x.sh`) — a flag value included
+// (`node runner.js --prelude="${3:-x.js}"`). A printing command (echo, printf, fg's ban, `:`) runs nothing, whatever it
+// names; so does a test (`[ -f x.js ]`), a file operation or an assignment, even one heading a command that runs an
+// interpreter (`X=x.js node runner.js`): no runner takes a script through the environment — those rails are retired
+// and REFUSED (Fizzygum-tests/scripts/lib/page-rails.js) — so a script named that way reads as not run, the safe
+// direction. Each `$( … )` / backtick substitution is lexed as commands of its own (its place in the word is kept
 // as `$S`, so a path built on it still reads as a path); a heredoc's body is data; comments are cut.
 const INTERPRETERS = new Set(['node', 'bash', 'sh', 'zsh', 'python', 'python3', 'source', '.']);
 const PRINTERS = new Set(['echo', 'printf', 'ban', ':']);
@@ -207,10 +210,7 @@ function shellInvocations(text) {
     const launched = [];
     if (SCRIPT_TOKEN.test(words[k].text)) launched.push(words[k]);  // the program is itself a script
     SCRIPT_TOKEN.lastIndex = 0;
-    if (interpreter >= 0) {
-      launched.push(...words.slice(interpreter + 1));
-      launched.push(...words.slice(0, k).filter(isAssignment).map((w) => ({ text: w.text.slice(w.text.indexOf('=') + 1) })));
-    }
+    if (interpreter >= 0) launched.push(...words.slice(interpreter + 1));
     const line = words.map((w) => w.text).join(' ');
     for (const w of launched) for (const m of w.text.matchAll(SCRIPT_TOKEN)) out.push({ token: m[0], line });
   }
@@ -257,7 +257,11 @@ function fgRootText(fgPath) {
   return bodies.join('\n');
 }
 
-// { files: Set<abs path>, fgPresent, why: Map<abs path, string> } — every script the roots reach.
+// { files: Set<abs path>, fgPresent, why: Map<abs path, string>, how: Map<abs path, kind> } — every script the roots
+// reach; `how` says how it runs: 'root'; 'launched' when ANY edge launches it (the program of a shell command, a
+// script after an interpreter word, or a path.join/path.resolve launch in JS), even one first reached as a module —
+// a script some runner launches is a program with an exit code, however else it is reached; else 'required' (a JS
+// module) or 'discovered' (a discovering runner's convention). `why` keeps the first edge.
 function runSet(layout = DEFAULT_LAYOUT) {
   const files = scriptFiles(layout);
   const known = new Set(files);
@@ -266,14 +270,18 @@ function runSet(layout = DEFAULT_LAYOUT) {
   for (const k of Object.keys(CONVENTIONS)) discovered[k] = files.filter((f) => CONVENTIONS[k].re.test(path.basename(f)));
   const selfTests = new Set([...discovered.selftest, ...discovered.selftestHeadless]);
 
-  const reached = new Set(), why = new Map(), queue = [];
-  const add = (f, from) => { if (known.has(f) && !reached.has(f)) { reached.add(f); why.set(f, from); queue.push(f); } };
+  const reached = new Set(), why = new Map(), how = new Map(), queue = [];
+  const add = (f, from, kind) => {
+    if (!known.has(f)) return;
+    if (!reached.has(f)) { reached.add(f); why.set(f, from); how.set(f, kind); queue.push(f); return; }
+    if (kind === 'launched' && how.get(f) !== 'root') how.set(f, 'launched');
+  };
   const viaShell = (text, from) => {
     for (const { token, line } of shellInvocations(text)) {
       for (const f of resolve(token)) {
-        add(f, from);
+        add(f, from, 'launched');
         for (const [k, c] of Object.entries(CONVENTIONS)) {
-          if (c.onLine && path.basename(f) === c.runner && c.onLine(line)) for (const d of discovered[k]) add(d, `${path.basename(f)} (discovers ${k})`);
+          if (c.onLine && path.basename(f) === c.runner && c.onLine(line)) for (const d of discovered[k]) add(d, `${path.basename(f)} (discovers ${k})`, 'discovered');
         }
       }
     }
@@ -281,7 +289,7 @@ function runSet(layout = DEFAULT_LAYOUT) {
 
   const build = path.join(layout.fizzygum, 'build_it_please.sh');
   if (!fs.existsSync(build)) throw new Error(`what-runs: no ${build}`);
-  reached.add(build); why.set(build, 'ROOT: the build');
+  reached.add(build); why.set(build, 'ROOT: the build'); how.set(build, 'root');
   const before = reached.size;
   viaShell(fs.readFileSync(build, 'utf8'), 'build_it_please.sh');
   if (reached.size === before) throw new Error('what-runs: build_it_please.sh invokes no scanned script — the reading is broken');
@@ -292,7 +300,7 @@ function runSet(layout = DEFAULT_LAYOUT) {
     const f = queue.shift();
     const from = path.relative(path.dirname(layout.fizzygum), f);
     for (const [k, c] of Object.entries(CONVENTIONS)) {
-      if (!c.onLine && path.basename(f) === c.runner) for (const d of discovered[k]) add(d, `${path.basename(f)} (discovers ${k})`);
+      if (!c.onLine && path.basename(f) === c.runner) for (const d of discovered[k]) add(d, `${path.basename(f)} (discovers ${k})`, 'discovered');
     }
     if (f.endsWith('.py')) continue;
     // A SELF-TEST runs, but what it requires or launches is exercised on FIXTURES, not run as the real check: a
@@ -301,11 +309,11 @@ function runSet(layout = DEFAULT_LAYOUT) {
     const text = fs.readFileSync(f, 'utf8');
     if (f.endsWith('.sh')) { viaShell(text, from); continue; }
     for (const l of jsLaunches(f, text)) {
-      if (l.required) { for (const cand of [l.required, l.required + '.js', path.join(l.required, 'index.js')]) add(cand, from); }
-      else for (const t of resolve(l.token)) add(t, from);
+      if (l.required) { for (const cand of [l.required, l.required + '.js', path.join(l.required, 'index.js')]) add(cand, from, 'required'); }
+      else for (const t of resolve(l.token)) add(t, from, 'launched');
     }
   }
-  return { files: reached, fgPresent, why };
+  return { files: reached, fgPresent, why, how };
 }
 
 module.exports = { CONVENTIONS, DEFAULT_LAYOUT, scriptFiles, discover, runSet, shellCommands, shellInvocations, jsLaunches };

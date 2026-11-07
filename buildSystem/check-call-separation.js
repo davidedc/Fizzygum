@@ -48,14 +48,14 @@
 const fs = require('fs');
 const path = require('path');
 const { runCensus } = require('./census-public-private-calls.js');
-const { rejectUnknownArgs } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 
 // --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
+const rules = require('./lib/gate-rules').forGate(__filename);
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, ['--src='], 'check-call-separation');
-if (ARGV.some((a) => !a.startsWith('--'))) { console.error('[check-call-separation] ERROR — a src tree is named with --src=DIR'); process.exit(2); }
-const SRC_ARG = ARGV.find((a) => a.startsWith('--src='));
-const SRC_DIR = SRC_ARG ? path.resolve(SRC_ARG.slice('--src='.length)) : undefined;
+rejectPositionalArgs(ARGV, 'check-call-separation', 'a src tree is named with --src=DIR');
+const SRC_DIR = dirArg(ARGV, '--src=', undefined, 'check-call-separation');
 
 // ---- [S] baselines (RATCHET — tighten as the plan's tranches drain the sites; 0 = HARD) ----
 // Seeded 2026-07-12 from the census at rule birth (plan §3 snapshot: 2 SETTLING — the
@@ -92,16 +92,16 @@ const sSettling = hard.filter(r => r.calleeClass === 'SETTLING');
 const sEffectful = hard.filter(r => r.calleeClass === 'EFFECTFUL');
 const sanctionedCount = census.R1.filter(r => (r.calleeClass === 'SETTLING' || r.calleeClass === 'EFFECTFUL') && r.sanctioned).length;
 
-function checkRatchet(label, rows, baseline, describe) {
+function checkRatchet(label, rows, baseline, describe, rule) {
   if (rows.length > baseline) {
-    problems.push(`[S] ${label}: ${rows.length} unsanctioned site(s) EXCEEDS the baseline ${baseline} — a private method newly self-calls a public ${describe}. Fix it (rename the callee to _-tier, call its _<name>NoSettle core, or — for a conscious exception — mark the CALLER  # public-call-sanctioned: <why>); never raise the baseline to ship.`);
+    problems.push(rule(`[S] ${label}: ${rows.length} unsanctioned site(s) EXCEEDS the baseline ${baseline} — a private method newly self-calls a public ${describe}. Fix it (rename the callee to _-tier, call its _<name>NoSettle core, or — for a conscious exception — mark the CALLER  # public-call-sanctioned: <why>); never raise the baseline to ship.`));
     for (const r of rows) problems.push(`    ${r.cls}.${r.caller} -> @${r.callee}  ${r.at}`);
   } else if (rows.length < baseline) {
     notes.push(`[S] ${label}: ${rows.length} < baseline ${baseline} — tighten BASELINE_S_${label} in check-call-separation.js to lock the gain.`);
   }
 }
-checkRatchet('SETTLING', sSettling, BASELINE_S_SETTLING, 'settling command (it opens a second flush)');
-checkRatchet('EFFECTFUL', sEffectful, BASELINE_S_EFFECTFUL, 'effectful command');
+checkRatchet('SETTLING', sSettling, BASELINE_S_SETTLING, 'settling command (it opens a second flush)', (text) => rules.fired('S_SETTLING_SELF_CALL', text));
+checkRatchet('EFFECTFUL', sEffectful, BASELINE_S_EFFECTFUL, 'effectful command', (text) => rules.fired('S_EFFECTFUL_SELF_CALL', text));
 
 // ---------- [U] ----------
 let uMsg = 'SKIPPED (sibling Fizzygum-tests not present — needs its reference set)';
@@ -115,17 +115,17 @@ if (census.R4) {
   const stale = [...allow].filter(n => !census.R4.some(r => r.name === n));
   if (stale.length) {
     problems.push(`[U] ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in buildSystem/public-api-allowlist.txt (delete each):`);
-    for (const n of stale) problems.push(`    STALE_ALLOWLIST_ENTRY ${n} — no longer a self-only public method (it gained a reference that is not an @-self call, went _-tier, or was deleted)`);
+    for (const n of stale) problems.push(rules.fired('U_STALE_ALLOWLIST_ENTRY', `    STALE_ALLOWLIST_ENTRY ${n} — no longer a self-only public method (it gained a reference that is not an @-self call, went _-tier, or was deleted)`));
   }
   if (uEff.length > BASELINE_U_EFFECTFUL) {
-    problems.push(`[U] EFFECTFUL self-only public methods: ${uEff.length} EXCEEDS the baseline ${BASELINE_U_EFFECTFUL} — a NEW public command is referenced only by @-self calls, i.e. it is not external API. Name it _-tier from the start (or, if it is deliberate end-user API for the in-world inspector/scripting, add it to buildSystem/public-api-allowlist.txt with a reason).`);
+    problems.push(rules.fired('U_EFFECTFUL_SELF_ONLY', `[U] EFFECTFUL self-only public methods: ${uEff.length} EXCEEDS the baseline ${BASELINE_U_EFFECTFUL} — a NEW public command is referenced only by @-self calls, i.e. it is not external API. Name it _-tier from the start (or, if it is deliberate end-user API for the in-world inspector/scripting, add it to buildSystem/public-api-allowlist.txt with a reason).`));
     const newest = uEff.slice(0, 10).map(r => `${r.name} (${r.defs.slice(0, 3).join(', ')})`);
     problems.push(`    candidates include: ${newest.join('; ')}  — run  node ./buildSystem/census-public-private-calls.js --full  to identify the new one`);
   } else if (uEff.length < BASELINE_U_EFFECTFUL) {
     notes.push(`[U] EFFECTFUL: ${uEff.length} < baseline ${BASELINE_U_EFFECTFUL} — tighten BASELINE_U_EFFECTFUL to lock the gain.`);
   }
   if (uQry.length > BASELINE_U_QUERY) {
-    problems.push(`[U] QUERY self-only public methods: ${uQry.length} EXCEEDS the baseline ${BASELINE_U_QUERY} — a NEW public query is referenced only by @-self calls. Name it _-tier from the start (or allowlist deliberate end-user API).`);
+    problems.push(rules.fired('U_QUERY_SELF_ONLY', `[U] QUERY self-only public methods: ${uQry.length} EXCEEDS the baseline ${BASELINE_U_QUERY} — a NEW public query is referenced only by @-self calls. Name it _-tier from the start (or allowlist deliberate end-user API).`));
   } else if (uQry.length < BASELINE_U_QUERY) {
     notes.push(`[U] QUERY: ${uQry.length} < baseline ${BASELINE_U_QUERY} — tighten BASELINE_U_QUERY to lock the gain.`);
   }

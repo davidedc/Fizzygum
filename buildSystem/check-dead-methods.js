@@ -31,7 +31,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const SRC      = path.resolve(__dirname, '../src');
 const ALLOWLIST = path.resolve(__dirname, 'dead-method-allowlist.txt');
 
 // methodSpans / methodBoundary group src (class methods + mixin members)
@@ -39,7 +38,9 @@ const { methodBoundary, methodSpans, unseenMethodHeaders } = require('./lib/coff
 const { codeOfCoffeeLine } = require('./lib/coffee-mask');
 const testsRepo = require('./lib/tests-repo-code');
 const methodRefs = require('./lib/method-references');
-const { rejectUnknownArgs } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
+let SRC;   // main() reads the rail
 
 function walk(dir, ext, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -79,7 +80,18 @@ function independentlyReferenced(token, excluded, referrers) {
 }
 
 function main() {
-  rejectUnknownArgs(process.argv.slice(2), ['--update-allowlist'], 'check-dead-methods');
+  // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-dead-methods.js [--src=DIR] —
+  // the rail reads another src tree (a copy carrying a plant); the references are still the real tests repo's. That
+  // every rule BITES, and that every way of reaching a method keeps it alive, is proven on every build by
+  // check-dead-methods-selftest.js.
+  const argv = process.argv.slice(2);
+  rejectUnknownArgs(argv, ['--update-allowlist', '--src='], 'check-dead-methods');
+  rejectPositionalArgs(argv, 'check-dead-methods', 'a src tree is named with --src=DIR');
+  SRC = dirArg(argv, '--src=', path.resolve(__dirname, '../src'), 'check-dead-methods');
+  if (argv.includes('--update-allowlist') && argv.some((a) => a.startsWith('--src='))) {
+    console.error('[dead-methods] ERROR — --update-allowlist writes the real allowlist: it never reads another src tree');
+    process.exit(2);
+  }
   if (!fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'tests')) || !fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'Automator-and-test-harness-src'))) {
     console.log('[dead-methods] SKIP — sibling Fizzygum-tests not present (needs it for an accurate reference set).');
     process.exit(0);
@@ -112,7 +124,7 @@ function main() {
   }
   if (unseen.length) {
     console.error(`[dead-methods] FAIL — ${unseen.length} method header(s) the shared matcher cannot see:`);
-    for (const u of unseen) console.error('   ' + u);
+    for (const u of unseen) console.error(rules.fired('UNSEEN_HEADER', '   ' + u));
     console.error('\nA method whose signature wraps must break immediately after the `(`, so that the header line');
     console.error('ends there — every build gate groups a .coffee file by that shape, and a header none of them');
     console.error('matches makes the WHOLE METHOD invisible to all of them, silently. Re-wrap the signature, or');
@@ -216,8 +228,10 @@ function main() {
   // A STALE allowlist entry excuses nothing today and would excuse the next dead method of that name, so it FAILS:
   // one no longer dead (it gained a reference, or no method of that name is defined any more), or one now
   // auto-exempt by settle-tier symmetry (its twin is live, so the entry is redundant).
-  const stale = [...allow].filter((n) => !dead.includes(n)).map((n) => `${n} — ${defs.has(n) ? 'no longer dead: it is referenced' : 'no method of that name is defined in src'}`);
-  const redundant = [...allow].filter((n) => symmetryRetained.includes(n)).map((n) => `${n} — auto-exempt by settle-tier symmetry (live twin ${liveSettleTwin(n)}), so the entry is redundant`);
+  const stale = [...allow].filter((n) => !dead.includes(n)).map((n) => defs.has(n)
+    ? rules.fired('STALE_ENTRY_REFERENCED', `${n} — no longer dead: it is referenced`)
+    : rules.fired('STALE_ENTRY_UNDEFINED', `${n} — no method of that name is defined in src`));
+  const redundant = [...allow].filter((n) => symmetryRetained.includes(n)).map((n) => rules.fired('STALE_ENTRY_REDUNDANT', `${n} — auto-exempt by settle-tier symmetry (live twin ${liveSettleTwin(n)}), so the entry is redundant`));
 
   if (symmetryRetained.length) {
     console.log(`[dead-methods] NOTE — ${symmetryRetained.length} dead method(s) auto-retained for settle-tier symmetry (live twin): ${symmetryRetained.map((n) => `${n}↔${liveSettleTwin(n)}`).join(', ')}`);
@@ -225,7 +239,7 @@ function main() {
 
   if (newDead.length) {
     console.error(`\n[dead-methods] FAIL — ${newDead.length} method(s) defined but reached nowhere (src, harness, macros, rigs) and not allowlisted:`);
-    for (const n of newDead) console.error(`  ${n}  (${defs.get(n)[0]})`);
+    for (const n of newDead) console.error(rules.fired('DEAD_METHOD', `  ${n}  (${defs.get(n)[0]})`));
     console.error('\nNothing reaches it by property access, whole-name string, name template or computed class access');
     console.error('(lib/method-references.js). Either DELETE the method, or — if it is intentional public API, or');
     console.error('dispatched by a name assembled with `+` or through an arbitrary object —');

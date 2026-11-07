@@ -71,13 +71,13 @@ const fs = require('fs');
 const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
 
-const { rejectUnknownArgs } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const rules = require('./lib/gate-rules').forGate(__filename);
 // --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, ['--src='], 'check-back-buffer-memos');
-if (ARGV.some((a) => !a.startsWith('--'))) { console.error('[check-back-buffer-memos] ERROR — a src tree is named with --src=DIR'); process.exit(2); }
-const SRC_ARG = ARGV.find((a) => a.startsWith('--src='));
-const SRC = SRC_ARG ? path.resolve(SRC_ARG.slice('--src='.length)) : path.resolve(__dirname, '../src');
+rejectPositionalArgs(ARGV, 'check-back-buffer-memos', 'a src tree is named with --src=DIR');
+const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'check-back-buffer-memos');
 const BUILDER = '_createRefreshOrGetBackBuffer';
 const CONTENT_MARKER = /#\s*saved-content:\s*\S/;
 
@@ -169,7 +169,7 @@ for (const p of walk(SRC, [])) {
   const file = path.relative(SRC, p);
   const spans = methodSpans(lines);
   for (const u of unseenMethodHeaders(lines)) {
-    if (u.text.startsWith(BUILDER)) problems.push(`  ${file}:${u.line}  a ${BUILDER} header in a spelling the shared matcher cannot see — this gate would be blind to it: ${u.text}`);
+    if (u.text.startsWith(BUILDER)) problems.push(rules.fired('UNSEEN_BUILDER_HEADER', `  ${file}:${u.line}  a ${BUILDER} header in a spelling the shared matcher cannot see — this gate would be blind to it: ${u.text}`));
   }
   const cm = lines.map((l) => l.match(/^class\s+(\w+)(?:\s+extends\s+(\w+))?/)).find(Boolean);
   if (cm) {
@@ -186,7 +186,7 @@ for (const p of walk(SRC, [])) {
     const member = spans.find((s) => s.mixin);
     const indent = lines[member.line].match(/^ */)[0].length;
     mixins[mm[1]] = { file, spans, transients: new Set(listDeclaration(lines, 'serializationTransients')), content: contentFields(lines, indent) };
-    for (const s of spans) if (s.mixin && s.name === BUILDER) problems.push(`  ${file}:${s.line + 1}  a ${BUILDER} declared in the mixin ${mm[1]} — its transients are its consumers', which this gate cannot resolve per file`);
+    for (const s of spans) if (s.mixin && s.name === BUILDER) problems.push(rules.fired('BUILDER_IN_MIXIN', `  ${file}:${s.line + 1}  a ${BUILDER} declared in the mixin ${mm[1]} — its transients are its consumers', which this gate cannot resolve per file`));
   }
 }
 
@@ -254,7 +254,7 @@ console.log(`[back-buffer-memos] ${builders} back-buffer builder(s) checked acro
 if (violations.length) {
   console.error(`\n[back-buffer-memos] FAIL — ${violations.length} field(s) written by a back-buffer builder that ride a save:`);
   for (const v of violations) {
-    console.error(`  ${v.name}.${v.field}  (${v.at}, in ${v.via}${v.via === BUILDER ? '' : ', reached from ' + BUILDER})`);
+    console.error(rules.fired('MEMO_RIDES_A_SAVE', `  ${v.name}.${v.field}  (${v.at}, in ${v.via}${v.via === BUILDER ? '' : ', reached from ' + BUILDER})`));
     console.error(`    ${v.text}`);
   }
   console.error('\nA field written while the back buffer is built describes that buffer, which is a serialization');

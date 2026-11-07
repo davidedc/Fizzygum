@@ -18,7 +18,7 @@ frame differs. Measure, don't guess.
 
 ## The harness (`Fizzygum-tests/scripts/coalescing-measure/`)
 
-- `coalescing-measure-prelude.js` — injected via `PRELUDE_JS`. Logs, tagged with `WorldWdgt.frameCount`:
+- `coalescing-measure-prelude.js` — injected through the runner's `--prelude=` flag. Logs, tagged with `WorldWdgt.frameCount`:
   `CMEAS MOVE` (a `processPointerMove`), `CMEAS MUT m=<name>` (a watched per-event mutation), and `CMEAS FLUSH
   qlen=<n> inMut=<bool>` (a `recalculateLayouts` — `inMut=true` is a `_settleLayoutsAfter` self-settle,
   `inMut=false` is the doOneCycle end-of-cycle flush). Pure observation. Default watched mutation is
@@ -32,8 +32,8 @@ frame differs. Measure, don't guess.
 cd Fizzygum-tests
 # fastest = how the headless SUITE drains events (many per cycle); normal = closer to real-time pacing.
 for SP in fastest normal; do
-  env PRELUDE_JS=$PWD/scripts/coalescing-measure/coalescing-measure-prelude.js LOG_FILE=/tmp/cmeas-$SP.log \
-    node scripts/run-macro-test-headless.js SystemTest_<the-test> --dpr=1 --speed=$SP >/dev/null
+  env LOG_FILE=/tmp/cmeas-$SP.log node scripts/run-macro-test-headless.js SystemTest_<the-test> --dpr=1 --speed=$SP \
+    --prelude=$PWD/scripts/coalescing-measure/coalescing-measure-prelude.js >/dev/null
   node scripts/coalescing-measure/aggregate.js /tmp/cmeas-$SP.log
 done
 ```
