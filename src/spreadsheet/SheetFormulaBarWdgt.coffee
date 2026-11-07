@@ -82,7 +82,7 @@ class SheetFormulaBarWdgt extends Widget
       @zoomButton._fullDestroyNoSettle()
       @zoomButton = undefined
     unless @zoomButton?
-      @zoomButton = new SimpleButtonWdgt @, "openZoomMenu", face: (@_zoomLabel sheet.zoomFactor)
+      @zoomButton = new SimpleButtonWdgt target: @, action: "openZoomMenu", face: (@_zoomLabel sheet.zoomFactor)
       @_zoomShown = sheet.zoomFactor
       @_addNoSettle @zoomButton
     @_placeChildrenNoSettle()

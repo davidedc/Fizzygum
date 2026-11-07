@@ -39,14 +39,14 @@ class ChipWdgt extends SimpleButtonWdgt
   # a copy and a saved world keep.
   isCurrent: false
 
-  # SimpleButtonWdgt's head (target, action) and its opts, plus one key of my own, read guarded:
+  # SimpleButtonWdgt's opts (`target:` / `action:` among them), plus one key of my own, read guarded:
   #   current  (default false)  isCurrent
   # isCurrent is assigned before super: the base constructor derives my look (_inkMyFace,
   # _updateColor), and my look reads it.
-  constructor: (target, action, opts = {}) ->
+  constructor: (opts = {}) ->
     @isCurrent = !!(opts.current ? false)
 
-    super target, action, opts
+    super opts
 
     @cornerRadius = WorldWdgt.theme.chipCornerRadius
 

@@ -1501,8 +1501,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
   handle runs `HandleWdgt.nonFloatDragging → @target.setExtent`, never a click — `HandleWdgt.activated` is EMPTY and its
   `pressBegan` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
-  button cannot fire it. Fixture with a VISIBLE action: a standalone `new SimpleButtonWdgt box, "hide", face: "hide the box"`
-  wired to a target box's `hide()` (the shape is `(target, action, opts)` — the face is an `opts` key). Give the button a resize
+  button cannot fire it. Fixture with a VISIBLE action: a standalone `new SimpleButtonWdgt target: box, action: "hide", face: "hide the box"`
+  wired to a target box's `hide()` (a button takes ONE options object — target, action and face are all keys). Give the button a resize
   handle programmatically (`button.add new HandleWdgt` — a handle corner-attaches to whatever widget ADDS it
   (`defaultLayoutSpecWhenAddedTo`), and that widget becomes its `@target`; the same kind the
   resize/move menu adds; done directly because a small button offers no usable resize/move menu via synthetic right-click), then GROW
@@ -1604,7 +1604,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `setControllerTargetToWidgetProperty_InputEvents_Macro slider, toggle, "shown button", [0.5,0.85]`. The index is
   why a NUMERICAL wire drives it and there is no boolean payload kind — a two-button toggle is just the n=2 case — and
   the setter CLAMPS, so a slider running 0..100 lands on a real button at both extremes. Build the toggle with two
-  visibly different faces (`new ToggleButtonWdgt (new SimpleButtonWdgt undefined, undefined, face: "OFF"), (…face: "ON")`)
+  visibly different faces (`new ToggleButtonWdgt (new SimpleButtonWdgt face: "OFF"), (new SimpleButtonWdgt face: "ON")`)
   or the flip is invisible in the references. GOTCHA: binding PUSHES the controller's current value, so the toggle moves
   ON CONNECT before any drag — that shot is the one that proves the wire is live, so take it.
 - ⚠⚠ **THE `@` RULE, and the suffix tells you which: a `*_Macro` verb is a SUBROUTINE and takes NO `@`; a verb without
@@ -1662,10 +1662,10 @@ assertion a recapture after a regression silently stores two different hashes an
   childless DIRECT world child gives you. Pick the fixture that gives you the menu you mean, or step into the widget's own
   hierarchy row first, by the widget (`@moveToRowOfTopMenuStandingForAndClick_InputEvents button`, or
   `openOwnMenuAtFractionOf_InputEvents_Macro button, fraction`).
-  ⚠ **`ButtonWdgt`'s shape is `(target, action, opts)`** — a face is the `opts` key `face`, holding either a WIDGET or a
-  plain string (a string is wrapped into a centred `StringWdgt` for you, `ButtonWdgt._buildAndConnectChildrenNoSettle`).
-  A third positional string is silently accepted (it just becomes `opts`) and yields a button with no face at all: no throw,
-  nothing drawn.
+  ⚠ **`ButtonWdgt` takes ONE options object** — `target:`, `action:` and `face:` are all keys, the face holding either a
+  WIDGET or a plain string (a string is wrapped into a centred `StringWdgt` for you,
+  `ButtonWdgt._buildAndConnectChildrenNoSettle`). A positional argument is silently taken AS the options object — a
+  string yields a button with no face, a widget's own fields are read as options — with no throw.
   ⚠ A prompt opens with an edit already on its entry field and the CURRENT value in it, so
   `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` before typing, or the new digits join the old.
 - **PROMOTE a wire to two-way — "Follows it too"** (`macroSliderPromotedToFollowAScrollPanel`, connector §A2): the SAME row,

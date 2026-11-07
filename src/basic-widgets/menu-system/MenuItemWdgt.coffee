@@ -121,7 +121,11 @@ class MenuItemWdgt extends LabelButtonWdgt
     if @rowReflection?
       @ticked = @rowReflection.isTicked()
       @_tickColumnReserved = true
-    super commandSpec.target, commandSpec.action,
+    # ⚠ ONE object, so the parenthesised form: keys on the `super` line ending in a comma, with more
+    # keys below, compile to TWO objects and the second is silently dropped.
+    super(
+      target: commandSpec.target
+      action: commandSpec.action
       closesUnpinnedPopUps: commandSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       labelString: (@rowReflection?.label ? commandSpec.label or "Close")
       fontRole: opts.fontRole ? look.font
@@ -142,6 +146,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       arg1: commandSpec.argumentToAction1
       arg2: commandSpec.argumentToAction2
       representsAWidget: commandSpec.representsAWidget
+    )
     @actionableAsThumbnail = true
     @_subscribeToMyReflectedSource()
 

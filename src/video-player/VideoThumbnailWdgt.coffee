@@ -5,14 +5,11 @@ class VideoThumbnailWdgt extends SimpleRasterImageButtonWdgt
 
   videoPath: undefined
 
-  constructor: (
-      imagePath,
-      @videoPath,
-      target,
-      action
-      ) ->
+  # the two paths are my operands; the button family's opts (`target:`, `action:`) ride behind,
+  # and the video path is what a press hands the action (`arg1:`)
+  constructor: (imagePath, @videoPath, opts = {}) ->
 
-    super imagePath, target, action, @videoPath
+    super imagePath, Object.assign {}, opts, arg1: @videoPath
   
   setThumbnailAndVideoPath: (thumbnailPath, videoPath) ->
     @imageWdgt.loadImage thumbnailPath

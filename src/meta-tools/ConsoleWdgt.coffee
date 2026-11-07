@@ -24,13 +24,13 @@ class ConsoleWdgt extends CodeAreaWdgt
     # "do" buttons -------------------------------
     # NOTE that you can also "doAll" or "doSelection" via
     # the context menu entries in the text panel!
-    @runSelectionButton = new SimpleButtonWdgt @, "doSelection", face: "Run selection"
+    @runSelectionButton = new SimpleButtonWdgt target: @, action: "doSelection", face: "Run selection"
     # editor chrome: "Run selection" reads the current text selection, so its
     # press must not steal the focus pointer or end the edit (§5.D D2a).
     @runSelectionButton.actsAsEditorChrome = true
     @_addNoSettle @runSelectionButton
 
-    @runAllButton = new SimpleButtonWdgt @, "doAll", face: "Run all"
+    @runAllButton = new SimpleButtonWdgt target: @, action: "doAll", face: "Run all"
     @_addNoSettle @runAllButton
     # ---------------------------------------
 

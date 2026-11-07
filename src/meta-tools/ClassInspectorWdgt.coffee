@@ -19,7 +19,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     # the Widget branch, reachable now that an inspector opens on any value) gets a read-only
     # inspector with no footer band at all, and this button is one of its members.
     if @_subjectIsEditable()
-      @overrideInThisClassButton = new SimpleButtonWdgt @, "overrideInThisClass", face: "Override in this class"
+      @overrideInThisClassButton = new SimpleButtonWdgt target: @, action: "overrideInThisClass", face: "Override in this class"
       @_addNoSettle @overrideInThisClassButton
       @overrideInThisClassButton.hide()
 

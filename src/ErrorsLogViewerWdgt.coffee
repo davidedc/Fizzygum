@@ -78,16 +78,16 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @_buildMonoCodeAreaNoSettle @defaultContents
 
     # buttons -------------------------------
-    @clearButton = new SimpleButtonWdgt @, "clearTextPane", face: "Clear"
+    @clearButton = new SimpleButtonWdgt target: @, action: "clearTextPane", face: "Clear"
     @_addNoSettle @clearButton
 
 
     # my pause toggle: its fixed label, the one action that flips my paused field, and born
     # showing that field
-    @pauseToggle = new LabelledToggleWdgt @, "togglePaused", face: "Pause", on: @paused
+    @pauseToggle = new LabelledToggleWdgt target: @, action: "togglePaused", face: "Pause", on: @paused
     @_addNoSettle @pauseToggle
 
-    @okButton = new SimpleButtonWdgt @, "hideLog", face: "OK"
+    @okButton = new SimpleButtonWdgt target: @, action: "hideLog", face: "OK"
     @_addNoSettle @okButton
 
     @_invalidateLayout()

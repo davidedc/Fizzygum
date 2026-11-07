@@ -19,11 +19,12 @@ class MagnetWdgt extends LabelButtonWdgt
   isTemplate: true
 
   # A magnet has a target and no action — it is dragged, not triggered — so `target` is the
-  # whole head. (A bare `super` would forward `arguments` verbatim into LabelButtonWdgt's
-  # (target, action, opts), which is exactly how a signature change mis-binds a field in
-  # silence: the call must be explicit.)
+  # whole head, and it reaches LabelButtonWdgt as its one key. (A bare `super` would forward
+  # `arguments` verbatim into LabelButtonWdgt's (opts), binding the target AS the options
+  # object, which is exactly how a signature change mis-binds a field in silence: the call must
+  # be explicit.)
   constructor: (target) ->
-    super target, undefined
+    super target: target
     @defaultRejectDrags = false
 
   createAppearance: -> new MagnetAppearance @

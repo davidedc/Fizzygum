@@ -49,10 +49,10 @@ class SaveShortcutPromptWdgt extends PromptWdgt
   # save-as has its own three buttons, OK the primary action, and no leading divider (unlike the
   # base's).
   _addButtonsInto: (panel) ->
-    @dontSaveButton = new SimpleButtonWdgt @target, "destroy", face: "Don't save"
+    @dontSaveButton = new SimpleButtonWdgt target: @target, action: "destroy", face: "Don't save"
     # "Cancel" here just dismisses this prompt, but the target wdgt remains open.
-    @cancelButton = new SimpleButtonWdgt @, "close", face: "Cancel"
-    @okButton = new SimpleButtonWdgt @, "createReferenceAndCloseFromMenu", face: "OK", primary: true
+    @cancelButton = new SimpleButtonWdgt target: @, action: "close", face: "Cancel"
+    @okButton = new SimpleButtonWdgt target: @, action: "createReferenceAndCloseFromMenu", face: "OK", primary: true
     @_addButtonsRowInto panel, [@dontSaveButton, @cancelButton, @okButton]
 
   # THE MENU ADAPTER for my own OK button (the shape StringWdgt.setFontNameFromMenu describes: a

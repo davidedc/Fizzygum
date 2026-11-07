@@ -7,12 +7,9 @@ class SimpleRasterImageButtonWdgt extends SimpleButtonWdgt
   imagePath: undefined
   imageWdgt: undefined
 
-  constructor: (
-      @imagePath,
-      target,
-      action,
-      argumentToAction1
-      ) ->
+  # The image is my one operand; everything else is the button family's opts (`target:`,
+  # `action:`, `arg1:`, …), to which I add my own face and padding.
+  constructor: (@imagePath, opts = {}) ->
 
     # additional properties:
 
@@ -24,7 +21,4 @@ class SimpleRasterImageButtonWdgt extends SimpleButtonWdgt
     @imageWdgt.activated = (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
       @escalateEvent "activated", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
-    super target, action,
-      face: @imageWdgt
-      arg1: argumentToAction1
-      padding: 2
+    super Object.assign {}, opts, face: @imageWdgt, padding: 2

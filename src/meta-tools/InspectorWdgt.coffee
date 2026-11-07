@@ -178,11 +178,11 @@ class InspectorWdgt extends Widget
 
     # my filter's toggles, each with its fixed label and the one action that flips its field; the
     # state each shows is set from my filter once they all exist (_reflectFiltersOnToggles, below)
-    @showMethodsToggle = new LabelledToggleWdgt @, "toggleShowingMethods", face: "Methods"
+    @showMethodsToggle = new LabelledToggleWdgt target: @, action: "toggleShowingMethods", face: "Methods"
     @_addNoSettle @showMethodsToggle
-    @showFieldsToggle = new LabelledToggleWdgt @, "toggleShowingFields", face: "Fields"
+    @showFieldsToggle = new LabelledToggleWdgt target: @, action: "toggleShowingFields", face: "Fields"
     @_addNoSettle @showFieldsToggle
-    @showInheritedToggle = new LabelledToggleWdgt @, "toggleShowingInherited", face: "Inherited"
+    @showInheritedToggle = new LabelledToggleWdgt target: @, action: "toggleShowingInherited", face: "Inherited"
     @_addNoSettle @showInheritedToggle
     @_buildAndConnectOwnPropsOnlyToggle()
     @_reflectFiltersOnToggles()
@@ -257,7 +257,7 @@ class InspectorWdgt extends Widget
     for name, i in names
       # the NAME, never the link: names are data, while a prototype held by a chip would be deep-copied
       # by the Duplicator and refused by the Serializer
-      chip = new ChipWdgt @, "openClassInspector", face: name, arg1: name, current: i is names.length - 1
+      chip = new ChipWdgt target: @, action: "openClassInspector", face: name, arg1: name, current: i is names.length - 1
       @classChips.push chip
       @_addNoSettle chip
       if i < names.length - 1
@@ -449,19 +449,19 @@ class InspectorWdgt extends Widget
   # twin is the guarded footer band in `_reLayout`. Save is the primary action; the build sets the
   # enabled states (see the field declarations).
   _buildAndConnectEditRow: ->
-    @addPropertyButton = new SimpleButtonWdgt @, "addPropertyPopout", face: "Add…"
+    @addPropertyButton = new SimpleButtonWdgt target: @, action: "addPropertyPopout", face: "Add…"
     @_addNoSettle @addPropertyButton
-    @renamePropertyButton = new SimpleButtonWdgt @, "renamePropertyPopout", face: "Rename…"
+    @renamePropertyButton = new SimpleButtonWdgt target: @, action: "renamePropertyPopout", face: "Rename…"
     @_addNoSettle @renamePropertyButton
-    @removePropertyButton = new SimpleButtonWdgt @, "removeProperty", face: "Remove"
+    @removePropertyButton = new SimpleButtonWdgt target: @, action: "removeProperty", face: "Remove"
     @_addNoSettle @removePropertyButton
 
-    @saveButton = new SimpleButtonWdgt @, "save", face: "Save", primary: true
+    @saveButton = new SimpleButtonWdgt target: @, action: "save", face: "Save", primary: true
     @_addNoSettle @saveButton
 
   # my last toggle, which a class inspector does not build (ClassInspectorWdgt)
   _buildAndConnectOwnPropsOnlyToggle: ->
-    @showOwnPropsOnlyToggle = new LabelledToggleWdgt @, "toggleShowingOwnPropsOnly", face: "Own props only"
+    @showOwnPropsOnlyToggle = new LabelledToggleWdgt target: @, action: "toggleShowingOwnPropsOnly", face: "Own props only"
     @_addNoSettle @showOwnPropsOnlyToggle
 
   # A breadcrumb chip's class, in a class inspector. The chip's name came from my subject's chain

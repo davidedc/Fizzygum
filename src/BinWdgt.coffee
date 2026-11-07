@@ -53,7 +53,7 @@ class BinWdgt extends Widget
     @_addNoSettle @viewport
 
     # "…": the press asks first (emptyBinRequested's confirmation) and empties only on a yes
-    @emptyBinButton = new SimpleButtonWdgt @, "emptyBinRequested", face: "Empty bin…"
+    @emptyBinButton = new SimpleButtonWdgt target: @, action: "emptyBinRequested", face: "Empty bin…"
     @_addNoSettle @emptyBinButton
 
     @_invalidateLayout()

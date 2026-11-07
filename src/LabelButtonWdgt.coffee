@@ -37,8 +37,8 @@ class LabelButtonWdgt extends ButtonWdgt
   plateHeight: undefined
   centered: false
 
-  # Same head as ButtonWdgt — target/action — and the same opts object, extended with the
-  # label knobs this class adds. It forwards `opts` untouched rather than transcribing it,
+  # ButtonWdgt's opts object — `target:` / `action:` included — extended with the label knobs
+  # this class adds. It forwards `opts` untouched rather than transcribing it,
   # which is what makes the two vocabularies ONE vocabulary: an option added to ButtonWdgt is
   # available here with no edit.
   #
@@ -60,8 +60,8 @@ class LabelButtonWdgt extends ButtonWdgt
   # One not given stays unset, so I hold no colour or font of my own for it: a label button whose
   # look is its own reads it from the theme as it paints and as it builds its label (MagnetWdgt),
   # and a bare one has no fill and its label the default text role (StringWdgt's).
-  constructor: (target, action, opts = {}) ->
-    super target, action, opts
+  constructor: (opts = {}) ->
+    super opts
 
     @labelString = opts.labelString
     fontRole = opts.fontRole

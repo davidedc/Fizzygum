@@ -49,14 +49,14 @@ class SimpleButtonWdgt extends ButtonWdgt
   # constructor from opts.primary, so a copy keeps it.
   isPrimaryAction: false
 
-  # ButtonWdgt's head (target, action) and its opts, plus two keys of my own, each read guarded:
+  # ButtonWdgt's opts (`target:` / `action:` among them), plus two keys of my own, each read guarded:
   #   enabled  (default true)   the initial isEnabled
   #   primary  (default false)  isPrimaryAction
-  constructor: (target, action, opts = {}) ->
+  constructor: (opts = {}) ->
     @isEnabled = opts.enabled ? true
     @isPrimaryAction = opts.primary ? false
 
-    super target, action, opts
+    super opts
 
     @appearance = new BoxyAppearance @
     @cornerRadius = WorldWdgt.theme.buttonCornerRadius

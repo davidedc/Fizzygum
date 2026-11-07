@@ -606,7 +606,7 @@ mark after `add` + `setExtent` adds nothing.
 - **`@prompt msg, target, "methodName", opts`** — three operands then the options bag
   (`defaultContents:`, `intendedWidth:`, `floorNum:`, `ceilingNum:`, `isRounded:`); pass the target and
   the method *name*, not a bound method value. [gated — `buildSystem/check-menu-actions.js`]
-  `PromptWdgt`'s OK button targets the prompt itself (`new SimpleButtonWdgt @, "deliverValue", face: "OK"`)
+  `PromptWdgt`'s OK button targets the prompt itself (`new SimpleButtonWdgt target: @, action: "deliverValue", face: "OK"`)
   and `deliverValue` dispatches your callback by name one hop later
   (`@target[@callback].call @target, @_promptValue()`) — the same slot, so the same proof applies; the
   gate holds both doors to one standard, and those callbacks also count as menu-dispatched verbs for

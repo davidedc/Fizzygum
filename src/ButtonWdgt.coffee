@@ -44,10 +44,13 @@ class ButtonWdgt extends Widget
   # my constructor (LabelButtonWdgt).
   color: undefined
 
-  # target and action are the identity: WHO to tell and WHAT to say. They are the
-  # established pair, they are the only two a typical caller passes, and no reader has to
-  # look up their order. Everything else is an independently-optional knob and rides `opts`
-  # (docs/architecture/constructor-and-parameter-conventions.md).
+  # ALL options, no operand — `target:` and `action:` included. They say WHO to tell and WHAT to
+  # say, but not every caller has them when it builds me: a face-only button wired later, the two
+  # faces a ToggleButtonWdgt switches between (the toggle does the telling). As a positional
+  # head they made those callers write `undefined, undefined` to reach the options — and R3 of
+  # docs/architecture/constructor-and-parameter-conventions.md is that once there is a tail, every
+  # OPTIONAL operand is a hole. So the whole family speaks one vocabulary of keys, and a caller
+  # names only what it has.
   #
   # `closesUnpinnedPopUps` in particular is an OPTION rather than the leading positional: a bare
   # `true` opening nearly every call site is precisely the smell R1 names, and since it defaults
@@ -57,12 +60,15 @@ class ButtonWdgt extends Widget
   # below wraps a string into a centred StringWdgt — and an option is named for what the
   # CALLER means (R4).
   #
-  # NOTHING here is a `@param` beyond the head: a `@param` assigns unconditionally, so a
-  # subclass's prototype value for any of these fields is clobbered with `undefined` on every
-  # construction. `toolTipMessage` in particular is read GUARDED, which is what lets a subclass
-  # declare `toolTipMessage:` on its prototype and have it survive — the IconButtonWdgt family
-  # states its hover text that way.
-  constructor: (@target, @action, opts = {}) ->
+  # NOTHING here is a `@param`: a `@param` assigns unconditionally, so a subclass's prototype
+  # value for any of these fields would be clobbered with `undefined` on every construction.
+  # `toolTipMessage` in particular is read GUARDED, which is what lets a subclass declare
+  # `toolTipMessage:` on its prototype and have it survive — the IconButtonWdgt family states
+  # its hover text that way. target and action are read unconditionally, first — the place and
+  # the order a `@param` head assigns in (R6) — and no subclass declares either on its prototype.
+  constructor: (opts = {}) ->
+    @target = opts.target
+    @action = opts.action
     @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = opts.closesUnpinnedPopUps ? true
     @faceWidget = opts.face
     @subjectOfAction = opts.subject

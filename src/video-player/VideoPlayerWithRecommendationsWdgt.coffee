@@ -88,15 +88,15 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @thumbs = []
     for i in [0...@thumbnailsRows]
       for j in [0...@thumbnailsColumns]
-        thumb = new VideoThumbnailWdgt "./videos/big-buck-bunny_trailer_thumbnail.png", "./videos/big-buck-bunny_trailer.webm", @, "_onRecommendationClicked"
+        thumb = new VideoThumbnailWdgt "./videos/big-buck-bunny_trailer_thumbnail.png", "./videos/big-buck-bunny_trailer.webm", target: @, action: "_onRecommendationClicked"
         @recommendationsPane.add thumb
         @thumbs.push thumb
 
-    @prevButton = new SimpleButtonWdgt @, "prev", face: "❮"
+    @prevButton = new SimpleButtonWdgt target: @, action: "prev", face: "❮"
     @prevButton.faceWidget.alignMiddle()
     @recommendationsPane.add @prevButton
 
-    @nextButton = new SimpleButtonWdgt @, "next", face: "❯"
+    @nextButton = new SimpleButtonWdgt target: @, action: "next", face: "❯"
     @nextButton.faceWidget.alignMiddle()
     @recommendationsPane.add @nextButton
     

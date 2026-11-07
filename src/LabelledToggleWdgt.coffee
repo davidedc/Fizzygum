@@ -35,14 +35,14 @@ class LabelledToggleWdgt extends SimpleButtonWdgt
   # field a copy and a saved world keep.
   isOn: false
 
-  # SimpleButtonWdgt's head (target, action) and its opts, plus one key of my own, read guarded:
+  # SimpleButtonWdgt's opts (`target:` / `action:` among them), plus one key of my own, read guarded:
   #   on  (default false)  my initial isOn
   # isOn is assigned before super: the base constructor derives my look (_inkMyFace, _updateColor),
   # and my look reads it.
-  constructor: (target, action, opts = {}) ->
+  constructor: (opts = {}) ->
     @isOn = !!(opts.on ? false)
 
-    super target, action, opts
+    super opts
 
     @cornerRadius = WorldWdgt.theme.toggleCornerRadius
 

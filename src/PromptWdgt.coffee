@@ -156,8 +156,8 @@ class PromptWdgt extends FrameWdgt
     panel.addLine()
     # "Close" rather than "Cancel" because nothing this prompt changed is undone -- that would be
     # difficult with several prompts pinned down and changing the property concurrently.
-    @dismissButton = new SimpleButtonWdgt @, "close", face: "Close"
-    @okButton = new SimpleButtonWdgt @, "deliverValue", face: "OK", primary: true
+    @dismissButton = new SimpleButtonWdgt target: @, action: "close", face: "Close"
+    @okButton = new SimpleButtonWdgt target: @, action: "deliverValue", face: "OK", primary: true
     @_addButtonsRowInto panel, [@dismissButton, @okButton]
 
   # My buttons, in order, left to right, as the last row of my rows panel (PromptButtonsRowWdgt

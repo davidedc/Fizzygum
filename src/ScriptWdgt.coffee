@@ -61,10 +61,10 @@ class ScriptWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @savedScript
 
     # buttons -------------------------------
-    @runItButton = new SimpleButtonWdgt @, "tryIt", face: "Try it"
+    @runItButton = new SimpleButtonWdgt target: @, action: "tryIt", face: "Try it"
     @_addNoSettle @runItButton
 
-    @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: "Save + close", primary: true
+    @saveButton = new SimpleButtonWdgt target: @, action: "saveScriptAndClose", face: "Save + close", primary: true
     @_addNoSettle @saveButton
     # ---------------------------------------
 

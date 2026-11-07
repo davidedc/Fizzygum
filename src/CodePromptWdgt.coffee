@@ -34,13 +34,13 @@ class CodePromptWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @defaultContents
 
     # buttons -------------------------------
-    @cancelButton = new SimpleButtonWdgt @, "close", face: "Cancel"
+    @cancelButton = new SimpleButtonWdgt target: @, action: "close", face: "Cancel"
     @_addNoSettle @cancelButton
 
-    @saveButton = new SimpleButtonWdgt @, "deliverValue", face: "Save"
+    @saveButton = new SimpleButtonWdgt target: @, action: "deliverValue", face: "Save"
     @_addNoSettle @saveButton
 
-    @okButton = new SimpleButtonWdgt @, "deliverValueAndClose", face: "OK", primary: true
+    @okButton = new SimpleButtonWdgt target: @, action: "deliverValueAndClose", face: "OK", primary: true
     @_addNoSettle @okButton
     # ---------------------------------------
 

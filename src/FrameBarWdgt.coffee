@@ -487,10 +487,10 @@ class FrameBarWdgt extends Widget
 
   # The edit button's lifecycle is driven by the FRAME (it depends on the
   # content's providesAmenitiesForEditing and dies/respawns on collapse /
-  # uncollapse); the bar just houses the piece. The button targets the FRAME
-  # (bound ref) and asks its parent -- this bar -- what a press means.
+  # uncollapse); the bar just houses the piece. The button targets itself, like
+  # every IconButtonWdgt, and asks its parent -- this bar -- what a press means.
   _createAndAddEditButtonNoSettle: ->
-    @editButton = new EditIconButtonWdgt @frame
+    @editButton = new EditIconButtonWdgt
     @_addNoSettle @editButton
     @_inkGlyphButtons()
     @editButton

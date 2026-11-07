@@ -36,11 +36,11 @@ class IconButtonWdgt extends ButtonWdgt
   # sites, so it also covers a click landing on the icon's shape.
   excludedFromEditorFocusTracking: -> true
 
-  constructor: (@target) ->
-    # can't set the parent as the target directly because this widget might
-    # not have a parent yet, so the button targets ITSELF and routes the
-    # press to its own actOnClick (see the super args: target = @).
-    super @, 'actOnClick', face: new Widget
+  # No parameter: a caller has nothing to hand me. I can't target my parent directly because I
+  # might not have one yet, so I target ITSELF and route the press to my own actOnClick, which
+  # each subclass answers (the edit toggle asks its parent what a press means).
+  constructor: ->
+    super target: @, action: 'actOnClick', face: new Widget
     @appearance = @createAppearance()
 
   # HighlightableMixin's colour hook, which every one of its state transitions calls after setting
