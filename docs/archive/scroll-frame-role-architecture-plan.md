@@ -4,8 +4,10 @@
 plan was authored, each closed by a full 17-leg gauntlet (final: 17/17, 291s). The only pixel
 churn in the whole arc was the 8 menu-label tests P6's rename retitled (gated recapture, green
 at dpr1+2, webkit-reverified). Durable residue: `docs/architecture/viewports-and-planes.md`;
-deferred items are in `docs/BACKLOG.md` (transform-island scrolling §7.6, the menu-sandwich
-revisit §7.2, the non-default-plane up-relay, deeper role names). The old→new tables below are
+the four deferred items are closed: transform-island scrolling §7.6 by
+`paint-time-scroll-translation-plan.md`, the menu-sandwich revisit §7.2 by
+`menu-sandwich-dissolution-plan.md` (its ledger holds the refusal record), the non-default-plane
+up-relay by Fizzygum `7af238da`, the deeper role names in this plan's ledger. The old→new tables below are
 the rename's record — this archived text deliberately keeps the pre-rename vocabulary.**
 
 **STATUS BOX** (per-phase ledger, as executed)

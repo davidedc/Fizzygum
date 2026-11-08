@@ -366,4 +366,10 @@ de-arrowed icons churn every screenshot showing them).
   [`container-regularization-plan.md`](container-regularization-plan.md).
 - Landed history: `docs/archive/duplication-and-save-preserve-transforms-plan.md`,
   `docs/archive/drag-embed-implementation-plan.md`, `docs/archive/upedge-endgame-plan.md`.
-```
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] §4.1: prefix retired 2026-08-19 — owner-ratified SHORT ROLE NAMES (`ShortcutWdgt`, `AppLauncherWdgt`, `WindowedApp`, …; the `Reference*` sketch was rejected — launcher ≠ reference); table in the plan's §4.1 as-executed block
+- [x] §4.3: trash — RATIFIED 2026-08-18 as sever+close (one store, no views) and EXECUTED 2026-08-19 (`Widget.moveToTrash`, referent-death sever, conditional menu row, `fg graph` §5) + the R3 `bringUpReferencedWidget` rename
+- [x] §4.3/R5: drop into the OPEN BIN = trash intent — EXECUTED 2026-08-19 (both drop surfaces run the sever core; the drop sticks; drop-specific relay so automatic filing never severs)
+- [x] §4.4: the ARROW CONTRACT — ratified, pressure-tested AND EXECUTED 2026-08-19 (glyph = copy semantics via `ShortcutWdgt.representsContents`, ONE ctor assembly site; the closure `Widget.allWidgetsInStructureForCopy` feeds Duplicator AND `Serializer.buildEnvelope`; referent copies/restores filed to the shelf; the 6 wrong arrow wearers de-badged; bin refuses duplication; `fg graph` §6 = 19 checks, serialization rig +4) — see the plan's §4.4 as-executed block

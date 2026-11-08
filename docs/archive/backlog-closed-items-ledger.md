@@ -13,7 +13,8 @@ it was written under. Two of the naming-gloss entries did grow plans of their ow
 say so inline — `archive/dispatch-slot-protocol-plan.md` and
 `archive/damage-vocabulary-unification-plan.md` are the executable records; the lines below are
 the audit's own ledger of what it filed and what became of it. Nothing here is open work; the one
-naming-gloss item still open (the glyph-drawing duplication) stayed in `docs/BACKLOG.md`.
+naming-gloss item left open (the glyph-drawing duplication) closed in redesign G-B and is in
+`redesign/redesign-plan.md`'s ledger.
 
 ### Naming-gloss audit 2026-08-18 — names the comments had to apologise for
 Session-scoped audit (no plan doc; detectors in `Fizzygum-tests/.scratch/naming-gloss-audit.js` +

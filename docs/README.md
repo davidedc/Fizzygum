@@ -45,7 +45,8 @@ all arcs, each linking to the plan section that owns the detail).
 5. **Deferred/open items always have a `BACKLOG.md` line** pointing at the
    owning plan section — including items whose plan is archived (PARKED).
 6. **Archive is immutable.** Don't edit archived docs except to correct a
-   status stamp; supersede, don't rewrite.
+   status stamp or to receive closed items under rule 2; supersede, don't
+   rewrite.
 
 ## Architecture docs
 

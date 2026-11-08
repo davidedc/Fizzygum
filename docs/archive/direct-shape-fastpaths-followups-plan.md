@@ -14,7 +14,7 @@ stadium's apex columns); the P3 conversion additionally swept mechanically-safe 
 path-rects/circles to direct calls (owner-directed); the rotate-handle hairline ring
 was converted, found to vanish in scaled islands (sub-pixel width below every direct
 threshold), and REVERTED with a written reason — the four-swirlies glyph redesign is
-the real fix (BACKLOG). Case law: memory note `direct-shape-fastpaths-arc.md`.**
+the real fix (done in redesign G-B: `redesign/redesign-plan.md`'s ledger). Case law: memory note `direct-shape-fastpaths-arc.md`.**
 
 Authored 2026-08-07, immediately after the Boxy→roundRect arc closed. Every `file:line` was verified on authoring day but LINES DRIFT — the quoted
 method names and code are authoritative; re-grep before trusting a number.

@@ -296,8 +296,8 @@ arithmetic, or saturation at the same window bound for a `tight: false` plane un
 grow-to-fill), and the commit's `unless equals` guard then skips. A self-writer whose box the committer's
 arithmetic does NOT reproduce oscillates forever (`RECALC_NONCONVERGENCE`) — the menu rows
 panel was exactly that (the base children-union measure misses its bottom border, and the
-window-floor/grow-to-fill adjustments fight its tight hug; the BACKLOG's §7.2 record holds
-the falsification history), until `scrolledContentMeasureIsMyFrame` + its full-self-box
+window-floor/grow-to-fill adjustments fight its tight hug; the §7.2 record in
+`../archive/menu-sandwich-dissolution-plan.md`'s BACKLOG ledger holds the falsification history), until `scrolledContentMeasureIsMyFrame` + its full-self-box
 `scrolledContentMeasure` made the committer's box identical to the hug in every state —
 which is what let the pop-up's rows panel become its viewport's DIRECT contents (the
 menu-sandwich dissolution; `PopUpRowsPaneWdgt` is deleted). A free-width stack is fine as

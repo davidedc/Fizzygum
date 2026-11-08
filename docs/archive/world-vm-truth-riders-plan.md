@@ -555,3 +555,14 @@ the end unless the owner asks mid-arc.
   `registerThisInstance`, `_auditWorldInventoryNoSettle`, `AUDIT_PRELUDE`, `AUDIT_CHROME_ARGS`
   (D1, to be created), `launchChrome`, `LAYOUTAUDIT_TESTSTART`, `ensureLoaded`,
   `whenAllLoaded`, `showAdders`, `instanceNumericID`.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] Arc B EXECUTED 2026-08-20 (plan: `archive/world-vm-truth-riders-plan.md`; doctrine:
+      `architecture/world-lifetime-and-inventory.md` §6): the `fg vmtruth` gauntlet leg
+      (`vm-truth-gate.js` — forced-GC collectibility oracle + post-GC heap-floor gate +
+      INVALID-on-unmeasured), the `heap-forensics.js` four-lens tool (incl. `--selftest`),
+      the destroy-mid-load door race repaired at five funnel callbacks + gated in the
+      `parts` leg. (The named FinalizationRegistry oracle was ABSORBED by the WeakRef
+      sweep — same oracle made synchronous; see the plan's §8.)
+      (Section "archive/world-inventory-instruments-plan.md".)

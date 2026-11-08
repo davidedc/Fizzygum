@@ -542,3 +542,16 @@ messages and wait (Phase-0 of this program already has a pending commit; coordin
       arc): the catch-list names `dragAffordancesCleared`; `StorageSorter`'s Tier-A header states its two seats; and the
       class's root — the rig's `evaluate()` reading only REPORTED results — is fixed: an `EXPECTATIONS` name no backend
       reports is itself a MISMATCH (`SWCANVAS_ONLY_CHECKS` excuses the SW-only names on a `--native-only` run).
+- [x] Arc A EXECUTED IN FULL 2026-08-20 (all phases incl. both D5 prove-it-fails plants;
+      gauntlet 16/16) — doctrine doc: `architecture/world-lifetime-and-inventory.md`; execution
+      ledger: the plan's STATUS box + §5.1/§5.2. Archive the plan at the close ritual.
+- [x] DONE 2026-08-20 (post-arc rider): the two `Object.keys(window)` Wdgt/Widget SUFFIX scans
+      (`WorldWdgt.fullDestroyChildren` id-zeroing — which provably MISSED
+      `FrameContentsPlaceholderText` — and `Serializer.collectIdCounters`) now consume THE one
+      marker enumeration, boot's `allClassFunctions()` (`src/boot/globalFunctions.coffee`), which
+      `WorldInventory`'s roots consume too — three consumers, one definition of "a class".
+- [x] DONE 2026-08-20 (post-arc rider): the REACTIVATED `Class.subClasses` propagation now has
+      durable regression coverage — `SystemTest_macroClassSubclassesPropagation`, an
+      assertion-only macro test (6 assertions: registry populated, parent-knows-child,
+      inherited-property propagation fires, the redefinition guard holds and is non-vacuous),
+      running on both engines in every suite pass.
