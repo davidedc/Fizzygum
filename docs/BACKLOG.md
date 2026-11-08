@@ -25,15 +25,28 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       `check-layering.js`'s `collectMacros` (every one, nothing skipped), and the discipline gate's and aim-census's
       `tests/SystemTest_*/<name>_automationCommands.js`. They agree today; the harness's own definition is the manifest
       (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's.
-- [ ] **The instance inspector tells a widget of a rename or a removal twice** (found closing the
-      `notifyInstancesOfSourceChange` item, in the plan's ledger). `Widget.renameOwnProperty` and `removeOwnProperty`
-      call `@sourceChanged()` themselves, then `InspectorWdgt`'s rename and remove call `notifyInstancesOfSourceChange`,
-      which calls the inspected widget's `sourceChanged()` again. One of the two is the edit's notification; the
-      class inspector routes the same calls to its class, so which one goes needs reading both inspectors' paths.
 - [ ] **A mixin's static edit does not reach a consumer's subclasses** (found closing the same item).
       `Mixin.applyStaticEdit` writes the new static onto each consumer class, but `extend` copied a class's statics
       onto each subclass when the subclass was defined (`globalFunctions.coffee`'s `extend`), so a subclass keeps the
       old value while its instances are notified. No mixin declares a static today.
+- [ ] **`Deserializer.compileFunction` compiles through the run gesture** (found closing the instance inspector's
+      double notification, in the plan's ledger). A `{"$src"}` the load cannot hand to its widget's `injectProperty`
+      (one nested in an array or a map, or one on a non-widget) is compiled by `world.evaluateString`, which ends in
+      the world's `sourceChanged`: by reading, a repaint of the whole world per such function (the world's own
+      re-layout is a no-op), not measured. Compiling a function source needs no widget at all. Measure how often a
+      load takes this path first.
+- [ ] **A plain class-member rename or removal does not survive a snapshot load** (found closing the same item, and
+      stated in `ClassInspectorWdgt` at its raw steps). `_applyPropertyRemoval` / `_applyPropertyRename` delete and
+      re-key the prototype member: a `<name>_source` live override stays behind under the old name, and the edit is
+      not recorded in the `SourceEditsRegistry`, so a loaded world replays the class edits without it (the mixin path
+      records its removal, `recordMixinMemberRemoval`). By reading: a leftover `<name>_source` is also what the shadow
+      guards of `Mixin.applyMemberEdit` and `Mixin.removeMember` key off, so a removed override still blocks the
+      mixin's edits and removals of that member.
+- [ ] **`run-sequence-selftest-headless.js`'s "page stopping answering" case is load-sensitive** (seen closing the same
+      item: the gauntlet's `selftests` leg failed in the parallel wave on 2026-11-08 and passed its serial retry). Under
+      load the planted unresponsive page can run out the sequence's completion wait before the runner sees the page
+      stop answering, so the run still reads INVALID (exit 2) but prints "the sequence did not finish within …" instead
+      of the "page stopped answering" line the case requires. Make the case's two conditions unable to race.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

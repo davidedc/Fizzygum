@@ -368,8 +368,9 @@ NAMED like one.
     snapshot-restored throttled stepper never stepped again).
 - **Functions**: for an own function-valued property `foo` —
   - if a `foo_source` sibling exists (a user-injected method) → serialize `{"$src":
-    <source>}` and let `foo_source` ride as a normal string; restore recompiles via the
-    existing `injectProperty`/`evaluateString` path.
+    <source>}` and let `foo_source` ride as a normal string; restore recompiles it with
+    `injectProperty` on the owning widget (`Deserializer.compileFunction`, through
+    `world.evaluateString`, compiles one nested in an array or a map, or one on a non-widget).
   - else if `foo` is in the class's transients → dropped; the class recomputes it (e.g.
     patch nodes recompute `functionFromCompiledCode` from their text; scroll-momentum
     `@step` closures simply stop, which is correct for a settled restore).

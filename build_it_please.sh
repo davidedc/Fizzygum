@@ -861,7 +861,7 @@ fi
 # --- build-time macro EVAL-DISCIPLINE gate (only when tests are part of this build) ------------
 # A macro body IS CoffeeScript, so a call written as a string for `world.evaluateString` throws
 # away its bindings, this syntax gate, and any rename sweep's chance of finding it. Worse, it is
-# not a plain call: Widget.evaluateString ends in `_reLayoutSelf()` + `_changed()`, so the world
+# not a plain call: Widget.evaluateString ends in `sourceChanged()` (a re-layout and a repaint), so the world
 # form DAMAGES THE WHOLE WORLD — a fixture step written that way forces a full repaint that masks
 # a missing self-invalidation in whatever it just drove, which is exactly the defect class the
 # suite's incremental damage-rect screenshots exist to catch. The gate holds two rules over the

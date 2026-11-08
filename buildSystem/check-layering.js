@@ -181,7 +181,8 @@ const isImmediateMutator = (name) =>
 // [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never
 // the framework's private (_) surface, nor the immediate-mutator geometry API (the _apply*/_commit*/__commit*
 // corners + leaves [incl. the ex-silent* __hide/__addShadow/__add structural leaves], the _move*/_set*/_resize* movers).
-// HARD ban, no sanctioned escape. Two reasons: (1) the low-level geometry setters bypass the layout settle,
+// A HARD ban: its one escape is a LINE marked `# macro-private-call-sanctioned: <why>` (MACRO_SANCTION below), for
+// a line that READS or WRAPS a private member as an oracle or a spy, never one that drives the world. Two reasons: (1) the low-level geometry setters bypass the layout settle,
 // so a macro poking one on an ATTACHED widget leaks an off-settle container re-fit onto the per-frame
 // end-of-cycle flush (the end-of-cycle drawdown); (2) a macro reaching past the public API is testing
 // through a back door instead of the surface a user actually drives. This is also the gate that catches the

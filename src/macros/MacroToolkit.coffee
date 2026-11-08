@@ -293,9 +293,9 @@ class MacroToolkit
 
   # Install the linked macro code (pump header + linked verbs) with `@` = this
   # MacroToolkit instance, so the generator and the verbs it calls resolve their
-  # @helpers against this collaborator. Mirrors Widget.evaluateString's
-  # compile-then-eval, minus the _reLayoutSelf/changed tail (installing a macro paints
-  # nothing, and this collaborator has no widget methods).
+  # @helpers against this collaborator. Mirrors Widget._evaluateInMyScope, the
+  # compile-then-eval alone: nothing is told of it (installing a macro paints nothing, and this
+  # collaborator has no widget methods).
   evaluateString: (codeSource) ->
     eval compileFGCode codeSource, true
 

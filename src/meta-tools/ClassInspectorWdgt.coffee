@@ -5,7 +5,12 @@ class ClassInspectorWdgt extends InspectorWdgt
   # while such a member is selected
   overrideInThisClassButton: undefined
 
-  notifyInstancesOfSourceChange: ->
+  # My edit steps' one notification: every instance of my class and of its subclasses hears of the
+  # edit once (Class.notifyInstancesOfSourceChange). My plain-member steps are raw -- the
+  # assignments, deletes and re-keys below drive no instance machinery, and Class.applyMemberEdit
+  # leaves notifying to its caller -- so each ends here; a mixin-routed edit's Mixin method notifies
+  # each consumer class itself.
+  _notifyInstancesOfSourceChange: ->
     @inspectedObject.constructor.class.notifyInstancesOfSourceChange()
 
   # Override the NON-SETTLING core (not the wrapper): the inherited _buildAndConnectChildren wrapper settles
@@ -109,18 +114,25 @@ class ClassInspectorWdgt extends InspectorWdgt
       return
     super
 
-  # plain prototype members keep the RAW delete/re-key (the Widget-level twins
-  # would drive instance machinery -- sourceChanged -- against a prototype).
-  # Known gap, mirroring the base seam comments: a plain class-member removal
+  # plain prototype members keep the RAW delete, re-key and assignment (the Widget-level twins
+  # would drive instance machinery -- sourceChanged -- against a prototype), each ending in my
+  # one notification (_notifyInstancesOfSourceChange). Known gap, mirroring the base seam
+  # comments: a plain class-member removal
   # or rename leaves any <name>_source live override behind and is not
   # registry-recorded, so it does not replay on snapshot restore (the mixin
   # path above closes this with recordMixinMemberRemoval).
   _applyPropertyRemoval: (propertyName) ->
     delete @inspectedObject[propertyName]
+    @_notifyInstancesOfSourceChange()
 
   _applyPropertyRename: (oldName, newName) ->
     delete @inspectedObject[oldName]
     @inspectedObject[newName] = @currentProperty
+    @_notifyInstancesOfSourceChange()
+
+  _applyPropertyAddition: (prop) ->
+    @inspectedObject[prop] = undefined
+    @_notifyInstancesOfSourceChange()
 
   # The second save destination for a mixin-donated member: instead of editing the
   # DONOR (what plain save does while @currentPropertySourceMixin is set), keep the
@@ -191,4 +203,4 @@ class ClassInspectorWdgt extends InspectorWdgt
     # essential case.
     @inspectedObject.constructor.class.applyMemberEdit propertyName, txt
     world?.sourceEditsRegistry?.recordClassEdit? @inspectedObject, propertyName, txt
-    @notifyInstancesOfSourceChange()
+    @_notifyInstancesOfSourceChange()

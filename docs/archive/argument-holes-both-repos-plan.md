@@ -1179,3 +1179,23 @@ for (const s of sites) if (s.absentBefore.length) {
       `SystemTest_macroClassSubclassesPropagation`, which pinned the registry and the recursion, is replaced by
       `SystemTest_macroClassEditNotifiesInstances` (3 counts, each seen failing under a plant: the old recursion
       re-planted, own-class-only, every widget, nobody).
+- [x] **The instance inspector tells a widget of a rename or a removal twice** (found closing the
+      `notifyInstancesOfSourceChange` item, in the plan's ledger). `Widget.renameOwnProperty` and `removeOwnProperty`
+      call `@sourceChanged()` themselves, then `InspectorWdgt`'s rename and remove call `notifyInstancesOfSourceChange`,
+      which calls the inspected widget's `sourceChanged()` again. One of the two is the edit's notification; the
+      class inspector routes the same calls to its class, so which one goes needs reading both inspectors' paths. — CLOSED 2026-11-08: the edit
+      makes its one notification, and the inspector's buttons never notify. Measured before the fix (told / re-laid out):
+      instance add 1/1, save 1/2, rename 2/2, remove 2/2; the class inspector's plain add, save, rename and remove 1/1
+      for each instance of the class (its mixin-routed edits notify inside Mixin's own methods, once per consumer).
+      On a widget the edit methods notify (injectProperty and the new `addOwnProperty`, renameOwnProperty,
+      removeOwnProperty): injectProperty has six callers outside the inspector that rely on it. The class inspector's raw
+      steps each end in its one notification (`_notifyInstancesOfSourceChange`), since Class.applyMemberEdit leaves
+      notifying to its caller; `InspectorWdgt.notifyInstancesOfSourceChange` lost its callers and is gone. The save's
+      second re-layout was injectProperty evaluating through evaluateString, the run gesture, whose tail re-laid out and
+      repainted before injectProperty's own notification: the evaluation is split out (`Widget._evaluateInMyScope`), and
+      evaluateString ends in sourceChanged instead of a re-layout and a repaint of its own.
+      `SystemTest_macroInspectorEditTellsOnce` pins both inspectors' plain add, save, rename and remove, and a run
+      (evaluateString); on the tree before the fix it failed on exactly save, rename and remove. The two methods added to
+      Widget show in an inspector that lists inherited members: `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly`
+      scrolls such a list, and its images 2 and 3 moved by those two rows alone (with them hidden from the list it
+      matched); recaptured with the owner's sign-off, mouse and finger at dpr 1 and 2.

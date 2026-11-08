@@ -1810,7 +1810,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # A WIDGET'S STYLE MOVED -- a text's weight, slant, font or alignment (StringWdgt's setters), or
   # whatever an edit made under a widget may have touched (Widget.sourceChanged: an inspector's
-  # saved property). When that widget is the one being edited I announce it exactly as I announce a
+  # edit, code run against it, a class edit reaching it). When that widget is the one being edited I announce it exactly as I announce a
   # new focus, so what mirrors the edited text re-reads it; any other widget's style is nothing the
   # editor's tools show.
   noteStyleChanged: (aWdgt) ->

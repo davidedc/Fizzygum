@@ -3969,9 +3969,11 @@ class Widget extends TreeNode
     # and the __add seed's drain alone IS the last-write-wins record.)
     return aWdgt
 
-  # An edit made under me rather than through my setters -- an inspector's saved property
-  # (injectProperty), a class-level source edit reaching its instances -- may have moved my style,
-  # which the editor's tools mirror while I am the widget being edited (WorldWdgt.noteStyleChanged).
+  # An edit made under me rather than through my setters -- an inspector's edit (injectProperty and
+  # its add, rename and remove twins), code a person runs against me (evaluateString), a class-level
+  # source edit reaching its instances -- may have moved my style, which the editor's tools mirror
+  # while I am the widget being edited (WorldWdgt.noteStyleChanged). The edit itself tells me, once:
+  # each of those ends in this call, and nothing that drives them calls it again.
   sourceChanged: ->
     @_reLayoutSelf?()
     @_changed?()
@@ -4217,9 +4219,9 @@ class Widget extends TreeNode
   # if a function, the txt must contain the parameters and
   # the arrow and the body
   injectProperty: (propertyName, txt) ->
-    # this.target[propertyName] = evaluate txt
     assignment = Widget.propertyAssignmentSource propertyName, txt
-    @evaluateString assignment, typedFrom: assignment.length - txt.length
+    # the evaluation alone: this edit's one notification is the sourceChanged below
+    @_evaluateInMyScope assignment, typedFrom: assignment.length - txt.length
     # if we are saving a function, we'd like to
     # keep the source code so we can edit Coffeescript
     # again.
@@ -4320,8 +4322,13 @@ class Widget extends TreeNode
       lineStart = lineEnd + 1
     return
 
-  # the remove twin of injectProperty ("Own" keeps it clear of InspectorWdgt's
-  # same-named zero-arg button actions, which would otherwise shadow these on
+  # the add twin of injectProperty: a new own member, undefined until a save gives it a value
+  addOwnProperty: (propertyName) ->
+    @[propertyName] = undefined
+    @sourceChanged()
+
+  # the remove twin of injectProperty ("Own" keeps these clear of InspectorWdgt's
+  # same-named button actions, which would otherwise shadow them on
   # inspectors -- inspectors are Widgets too): drops the member AND its
   # <name>_source companion -- the companion rides serialization as {"$src"}
   # and would re-inject the removed member on snapshot restore.
@@ -5539,22 +5546,28 @@ class Widget extends TreeNode
       handler[functionName] args...  if handler[functionName]
   
   
-  # Widget eval. Used by the Inspector and the text widget.
-  # ⚠ The result is returned EXPLICITLY, and must stay that way. The relayout/repaint tail has to
-  # run AFTER the eval, so without this line CoffeeScript returns `_changed()`'s value — `true` or
-  # `undefined` — and the eval's own value is computed and dropped on the floor. Three callers read
-  # what comes back: the evaluation menu's "Show selection" and "Inspect selection"
-  # (`TextWdgt`) and `Deserializer.compileFunction`, which needs the live function it compiled.
-  # None of them throws when handed the wrong thing, so `fg menusweep` cannot see a regression here
-  # — this comment is the guard, together with `SystemTest_macroEvaluateStringReturnsItsValue`.
-  # opts.typedFrom: where in codeSource the text a person typed begins, for a caller that wraps it
-  # (injectProperty); it only places a compile error (compileFGCode).
-  evaluateString: (codeSource, opts = {}) ->
-    JSCode = compileFGCode codeSource, true, typedFrom: opts.typedFrom
-    result = eval JSCode
-    @_reLayoutSelf()
-    @_changed()
+  # Widget eval: the RUN gestures' (the text widget's evaluation menu on its receiver, a script
+  # window's run on the world) and the patch node's. Code run against me is an edit made under me,
+  # so it ends in the one notification every such edit makes (sourceChanged: a re-layout and a
+  # repaint).
+  # ⚠ The result is returned EXPLICITLY, and must stay that way. The notification has to run AFTER
+  # the eval, so without this line CoffeeScript returns `sourceChanged()`'s value and the eval's own
+  # value is computed and dropped on the floor. Three callers read what comes back: the evaluation
+  # menu's "Show selection" and "Inspect selection" (`TextWdgt`) and `Deserializer.compileFunction`,
+  # which needs the live function it compiled. None of them throws when handed the wrong thing, so
+  # `fg menusweep` cannot see a regression here — this comment is the guard, together with
+  # `SystemTest_macroEvaluateStringReturnsItsValue`.
+  evaluateString: (codeSource) ->
+    result = @_evaluateInMyScope codeSource
+    @sourceChanged()
     result
+
+  # The evaluation alone: codeSource compiled (compileFGCode) and run with me as `this`, its value
+  # answered, and nobody told: a caller makes its edit's one notification itself (evaluateString,
+  # injectProperty). opts.typedFrom: where in codeSource the text a person typed begins, for a caller
+  # that wraps it (injectProperty); it only places a compile error.
+  _evaluateInMyScope: (codeSource, opts = {}) ->
+    eval compileFGCode codeSource, true, typedFrom: opts.typedFrom
 
   # The RUN gestures -- a row or button that runs text a person typed ("Run contents", "Run
   # selection", "Do all", "Show selection", "Try it", …) -- run it through me. Text that is not

@@ -432,12 +432,12 @@ class InspectorWdgt extends Widget
 
 
   # Can this subject SERVICE an edit? An inspector is handed whatever the user asked to inspect,
-  # and only some of those implement the edit protocol — `injectProperty` / `removeOwnProperty` /
-  # `renameOwnProperty` / `sourceChanged`, which arrive together on Widget. A number, a string, a
-  # Point cannot: you cannot inject a property into 42. ⚠ A CAPABILITY query, never `instanceof
-  # Widget` — the question is "does it service the protocol", so a future non-widget that
-  # implements the four should get an editable inspector. The four always co-occur, so one probe
-  # answers for the row.
+  # and only some of those implement the edit protocol — `injectProperty` / `addOwnProperty` /
+  # `removeOwnProperty` / `renameOwnProperty` / `sourceChanged`, which arrive together on Widget. A
+  # number, a string, a Point cannot: you cannot inject a property into 42. ⚠ A CAPABILITY query,
+  # never `instanceof Widget` — the question is "does it service the protocol", so a future
+  # non-widget that implements the five should get an editable inspector. The five always co-occur,
+  # so one probe answers for the row.
   _subjectIsEditable: ->
     @inspectedObject.injectProperty?
 
@@ -805,10 +805,13 @@ class InspectorWdgt extends Widget
     pane.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
     return
 
-  notifyInstancesOfSourceChange: ->
-    @inspectedObject.sourceChanged()
-  
   #InspectorWdgt editing ops:
+  # Each of my four edits -- add, save, rename, remove -- is one STEP (an overridable hook:
+  # _applyPropertyAddition, applyPropertyEdit, _applyPropertyRename, _applyPropertyRemoval) followed
+  # by my own re-filter where my member set changed. The step makes the edit AND its one notification:
+  # on a widget the Widget edit protocol's own (addOwnProperty, injectProperty, renameOwnProperty,
+  # removeOwnProperty each end in sourceChanged), on a class ClassInspectorWdgt's overrides. Nothing
+  # here notifies again.
   # Shared save scaffolding: object inspectors inject the property, class
   # inspectors evaluate an assignment — the only differing step is isolated in
   # the overridable applyPropertyEdit hook (ClassInspectorWdgt overrides it).
@@ -845,15 +848,20 @@ class InspectorWdgt extends Widget
       @_addNamedProperty prop
 
   # the add core, past the prompt: the popout flow (addProperty) and the class
-  # inspector's destination menu both land here. Adding a member changes my member set and
-  # nothing else, so it re-filters me (_refilterMembers).
+  # inspector's destination menu both land here. Adding a member changes my member set, so it
+  # re-filters me (_refilterMembers).
   _addNamedProperty: (prop) ->
-    @inspectedObject[prop] = undefined
+    @_applyPropertyAddition prop
     # nosettle-sanctioned: gesture tail shared by two PUBLIC add actions (the popout
     # OK and the class inspector's destination menu), event-time only -- the re-filter
     # is that gesture's single settle
     @_refilterMembers()
-    @notifyInstancesOfSourceChange()
+
+  # the one differing step between object- and class-inspector add (mirroring applyPropertyEdit
+  # above): the object inspector delegates to the Widget-level addOwnProperty twin.
+  # ClassInspectorWdgt overrides this with its raw prototype assignment.
+  _applyPropertyAddition: (prop) ->
+    @inspectedObject.addOwnProperty prop
   
   addPropertyPopout: ->
     # Chrome cannot handle empty strings (others do), hence the "property" default
@@ -868,14 +876,12 @@ class InspectorWdgt extends Widget
   _applyPropertyRename: (oldName, newName) ->
     @inspectedObject.renameOwnProperty oldName, newName
 
-  # A rename, like a removal below, changes my member set and nothing else, so it re-filters me
-  # (_refilterMembers).
+  # A rename, like a removal below, changes my member set, so it re-filters me (_refilterMembers).
   renameProperty: (prop) ->
     propertyName = @list.selected.labelString
     @_applyPropertyRename propertyName, prop
 
     @_refilterMembers()
-    @notifyInstancesOfSourceChange()
   
   renamePropertyPopout: ->
     # nothing selected = nothing to rename: a fresh inspector has NO default selection
@@ -902,4 +908,3 @@ class InspectorWdgt extends Widget
     @_applyPropertyRemoval propertyName
 
     @_refilterMembers()
-    @notifyInstancesOfSourceChange()

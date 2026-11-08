@@ -101,7 +101,8 @@ positioning) and a behaviour whose UI trigger is genuinely blocked / is an escap
 ⛔ **And write that direct call as CODE, never as a string for `world.evaluateString`.** A macro body is already
 CoffeeScript, so the statement form keeps a real binding for the widget, is covered by the syntax gate, and carries a
 name a cross-repo rename sweep can find — a string does none of the three and fails at RUN time instead. It is also
-not a plain call: `Widget.evaluateString` compiles, evals, then `_reLayoutSelf()` **and `_changed()` on the receiver**,
+not a plain call: `Widget.evaluateString` compiles, evals, then tells the receiver it changed (**`sourceChanged()`: a
+re-layout and a repaint**),
 so `world.evaluateString` damages the WHOLE world — a fixture step written that way forces a full repaint and masks a
 missing self-invalidation in whatever it just drove, which is exactly what the incremental damage-rect screenshots
 exist to catch. A test may call it only where the eval is genuinely its SUBJECT, and declares that by carrying the
