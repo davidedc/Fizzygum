@@ -38,12 +38,13 @@
  *   VideoPlayCreatorButtonWdgt — an early cut of this census called it removable, wrongly).
  *
  * ── WHY THIS CAN NEVER BE A GATE (the severity policy — do not "promote" it) ────────────────────
- * Textual body equivalence is a CANDIDATE signal, never a proof of dispatch equivalence, because
- * `super` is META-COMPILED here: src/meta/Class.coffee (`_equivalentforSuper`) REWRITES every super
- * form when it compiles fragments in-browser, and a trailing space after a bare `super` silently
- * dropped forwarded arguments once (a real past bug — the reason buildSystem/check-trailing-
- * whitespace.js exists). Two textually-identical bodies can therefore dispatch differently. An
- * unsound signal must never gate: a false gate-PASS bakes regressions into byte-exact references.
+ * Textual body equivalence is a CANDIDATE signal, never a proof of dispatch equivalence, because a
+ * `super` binds to the class whose body it is written in (src/meta/Class.coffee's `_rewriteSuperCalls`
+ * spells it `<ThatClass>.__super__.<member>`), so the same text in a subclass and in its superclass
+ * calls different methods — an override whose body says `super` is a link in the chain, and removing
+ * it drops that link. Two textually-identical bodies can therefore
+ * dispatch differently. An unsound signal must never gate: a false gate-PASS bakes regressions into
+ * byte-exact references.
  * Every finding below needs human verification before any removal.
  *
  * ── CASE LAW — deliberate seams that must NOT be "cleaned up" ───────────────────────────────────

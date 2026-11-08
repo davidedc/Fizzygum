@@ -233,7 +233,7 @@ mis-bound field at worst. The button family (`ButtonWdgt` → `LabelButtonWdgt` 
 `SimpleRasterImageButtonWdgt`) is one unit; so is the text family.
 
 ⚠ A **bare** `super` forwards `arguments` — what the CALLER passed — not this constructor's
-defaulted parameters. `Class.coffee`'s `_equivalentforSuper` rewrites it to
+defaulted parameters. `Class.coffee`'s `_rewriteSuperCalls` rewrites it to
 `__super__.constructor.apply(this, arguments)`, and the `@param` assignments sit **above** that
 call (§R6), so the base then re-defaults every slot the caller omitted **straight over the
 subclass's own defaults**. A subclass that states defaults and forwards bare therefore states
@@ -334,9 +334,7 @@ without error and mis-binds:
   awaited only its first file and started compiling before the CoffeeScript library was in.
   `EXTRA_ARGUMENT` catches it when `f`'s parameters are known; give each element its own parentheses;
 - `X a: 1, b: 2,` followed by indented keys — TWO objects, `X({a, b}, {c})`; `EXTRA_ARGUMENT` catches it
-  against an `(opts = {})` head;
-- `super` alone on a line followed by indented keys — the meta-compiler's rewrite makes it a forwarding
-  `super` whose RESULT is then called with the keys, `….constructor.apply(this, arguments)({a: 1})`.
+  against an `(opts = {})` head.
 Check a new spelling with `buildSystem/compile-fragment.js` before trusting it.
 
 What it cannot judge, by construction (its header holds the full list): a callee no code in either

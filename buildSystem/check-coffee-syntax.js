@@ -22,8 +22,8 @@
  * gate LOADS AND RUNS THE REAL src/meta/Class.coffee and src/meta/Mixin.coffee in
  * Node and drives each source through `new Class(src, true, false)` /
  * `new Mixin(src, true, false)` — i.e. generate-precompiled mode, which compiles
- * every fragment exactly as the browser will, but builds no objects (the `eval` at
- * Class.coffee:419 / Mixin.coffee:99 is gated behind the 3rd "create" arg, which we
+ * every fragment exactly as the browser will, but builds no objects (the `eval` in
+ * Class's and Mixin's constructors is gated behind the 3rd "create" arg, which we
  * pass as false). Because the real meta-compiler runs, any future change to it is
  * tracked automatically.
  *
@@ -153,21 +153,21 @@ function leadingVarNames(js) {
   return names;
 }
 
-// THE TAP: observe the real strip without changing it. `_equivalentforSuper` is the step every
+// THE TAP: observe the real strip without changing it. `_rewriteSuperCalls` is the step every
 // member's source passes through just before it is compiled and handed to the strip, so it says
 // WHICH member the next stripped fragment belongs to (a class-side one is reported as `@name`).
 const helperLosses = [];   // [{ rel, cls, member, names }]
 let tapRel = null, tapMember = null, strippedFragments = 0;
 // hand-list-sanctioned: check-coffee-syntax.js fails (exit 2, and build_it_please.sh aborts) on a name
 // here Class.prototype no longer defines — the loop right below
-for (const m of ['_equivalentforSuper', '_removeHelperFunctions']) {
+for (const m of ['_rewriteSuperCalls', '_removeHelperFunctions']) {
   if (typeof Class.prototype[m] !== 'function') fail('Class.prototype.' + m + ' is gone — the helper check cannot tap the meta-system\'s strip; re-read THE SECOND CHECK against src/meta/Class.coffee');
 }
-const realEquivalentForSuper = Class.prototype._equivalentforSuper;
-Class.prototype._equivalentforSuper = function (fieldName, aString) {
+const realRewriteSuperCalls = Class.prototype._rewriteSuperCalls;
+Class.prototype._rewriteSuperCalls = function (fieldName, aString) {
   const isStatic = this.nonStaticPropertiesSources?.[fieldName] !== aString && this.staticPropertiesSources?.[fieldName] === aString;
   tapMember = (isStatic ? '@' : '') + fieldName;
-  return realEquivalentForSuper.apply(this, arguments);
+  return realRewriteSuperCalls.apply(this, arguments);
 };
 const realRemoveHelperFunctions = Class.prototype._removeHelperFunctions;
 Class.prototype._removeHelperFunctions = function (compiled) {

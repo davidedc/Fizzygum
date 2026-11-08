@@ -215,7 +215,7 @@ against the current tree. This plan is its executable distillation.
     - compiles the member;
     - sets `proto[memberName] = fn` and `proto[memberName + "_source"] = source`;
     - does not notify instances, which is the caller's job.
-  - **`_equivalentforSuper`:** rewrites `super` to `<ClassName>.__super__.<member>.call(this, …)`. It
+  - **`_rewriteSuperCalls`:** rewrites `super` to `<ClassName>.__super__.<member>.call(this, …)`. It
     is a **dynamic** lookup at call time, so a function swapped onto a superclass prototype *is* seen
     by subclass `super` calls (this matters for U2).
   - **Instance tracking:** `_addInstancesTracker` makes `window.<Class>.instances` work (widgets only;

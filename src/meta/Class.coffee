@@ -2,11 +2,13 @@
 # buildSystem/check-coffee-syntax.js loads THIS file in Node and drives every shipped
 # source through `new Class(src, true, false)` (generate-precompiled mode: it compiles
 # each fragment but eval's nothing) to catch CoffeeScript syntax errors at build time,
-# before they would otherwise only surface at in-browser boot. That checker provides a
-# tiny shim for the globals this class touches at construction time (window, undefined,
-# compileFGCode, JSSourcesContainer, srcLoadCompileDebugWrites). If you make the
-# constructor / its helpers read a NEW global, add a matching stand-in to that shim or
-# the gate will break with an operational (exit 2) error.
+# before they would otherwise only surface at in-browser boot. It loads it through
+# buildSystem/lib/meta-compiler.js (as every build tool that reads the meta-system does),
+# whose shim supplies the globals this class touches at construction time (window,
+# compileFGCode, JSSourcesContainer, srcLoadCompileDebugWrites, and CoffeeScript -- the
+# bundled compiler, whose lexer the super rewrite reads). If you make the constructor /
+# its helpers read a NEW global, add a matching stand-in to that shim or the gate will
+# break with an operational (exit 2) error.
 
 class Class
 
@@ -59,29 +61,83 @@ class Class
       aString += "\n    return\n"
     aString.replace(/^([ \t]*)return/gm, "$1this.registerThisInstance?();\n$1return")
     
-  _equivalentforSuper: (fieldName, aString) ->
-    if window.srcLoadCompileDebugWrites then console.log "removing super from: " + aString
-    # coffeescript won't compile "super" unless it's an instance
-    # method (i.e. if it comes inside a class), so we need to
-    # translate that manually into valid CS that doesn't use super.
-    #
-    # ORDER MATTERS -- these are sequential text substitutions on the method source:
-    #  1. `super()`                    -> a no-argument super call.
-    #  2. bare `super` ENDING THE LINE -> forward ALL arguments (.apply(this, arguments)). We tolerate
-    #     trailing whitespace and/or an inline `#` comment before the newline (the comment is
-    #     re-appended). This MUST come before rule 4: a trailing space -- e.g. before an inline
-    #     comment, or stray end-of-line whitespace -- would otherwise be caught by rule 4 as
-    #     `.call this, ` with NO effective argument, SILENTLY dropping the forwarded arguments. That
-    #     miscompiled `return super  # Path B` (StretchableEditableWdgt) into a no-arg super call,
-    #     which sized the app content to its 5px minimum extent -- the "thin vertical slice" bug.
-    #  3. `super(args)`                -> a call with those explicit args.
-    #  4. `super <args>`               -> a call with those space-separated args.
-    superBase = @name + ".__super__." + fieldName
-    aString = aString.replace(/super\(\)/g, superBase + ".call(this)")
-    aString = aString.replace /super[ \t]*(#[^\n]*)?$/gm, (match, comment) ->
-      superBase + ".apply(this, arguments)" + (if comment then "  " + comment else "")
-    aString = aString.replace(/super\(/g, superBase + ".call(this, ")
-    aString = aString.replace(/super /g, superBase + ".call this, ")
+  # A member's source with each of its `super`s spelled out as a call to the same-named member of
+  # the superclass's prototype -- Class.rewriteSuperCalls, which says why and how.
+  _rewriteSuperCalls: (memberName, source) ->
+    if window.srcLoadCompileDebugWrites then console.log "removing super from: " + source
+    Class.rewriteSuperCalls source, @name + ".__super__." + memberName
+
+  # THE SUPER REWRITE, for Class and Mixin alike: each passes the member its `super` means as
+  # `superBase` (Class: `<Name>.__super__.<member>`; Mixin: the class it was injected in, found at
+  # call time). CoffeeScript compiles `super` only inside a class body, and the meta-system
+  # compiles every member ALONE, so each `super` is spelled out as a call through `superBase`
+  # before the member is compiled.
+  #
+  # WHICH `super`s, and as WHAT call, are read from the lexer's tokens -- the reading the compiler
+  # is about to make of this very text -- never from the text. A `super` in a string, a comment or
+  # a regex is no SUPER token, and neither is the end of a name (`@_super`, `x.super`); the form is
+  # the call the parser sees, whatever whitespace, comment, operator or postfix `if` follows:
+  #   `super()`      an explicit call with no arguments  ->  superBase.call(this)
+  #   `super(a, b)`  an explicit call                    ->  superBase.call(this, a, b)
+  #   `super a, b`   an implicit call                    ->  superBase.call this, a, b
+  #   `super`        no call: it forwards every argument ->  superBase.apply(this, arguments)
+  # (Read from the text instead, `return super  # Path B` -- a trailing space before a comment --
+  # looks like an implicit call with no argument, and drops the arguments it forwards.)
+  # Left as written, for the compiler to refuse: a `super` an accessor or a soak continues
+  # (`super.x`, `super?.x`, `super::x`, `super[x]`, `super?()`, `super?`), and `do super`, which the
+  # lexer places at the `do`. A `super` in the body of a class nested in the member is that class's
+  # own, and the compiler spells it natively.
+  #
+  # Only the keyword, and an explicit call's opening parenthesis, is replaced, so every line of the
+  # source stays on its line: lib/call-sites.js maps a member's lines back onto its file by that.
+  # The text rewritten is the text the lexer reads: it drops a byte-order mark and every \r before
+  # reading, and so does the compiler, so each token's line and column sit exactly on it. A source
+  # the lexer refuses -- its errors carry their `location`, as compileFGCode reads them -- is handed
+  # on as written, so compileFGCode reports the error, placed where it is; any other failure is a
+  # fault, and propagates. (`CoffeeScript.tokens` is one of the calls this tree makes of the
+  # bundled compiler; the README beside it lists them.)
+  @rewriteSuperCalls: (source, superBase) ->
+    return source unless source.includes "super"
+    source = source.replace(/^\uFEFF/, "").replace(/\r/g, "")
+    try
+      tokens = CoffeeScript.tokens source
+    catch error
+      return source if error.location?
+      throw error
+    lineStarts = [0]
+    for i in [0...source.length] when source[i] is "\n"
+      lineStarts.push i + 1
+    offsetOf = (token) -> lineStarts[token[2].first_line] + token[2].first_column
+    edits = []
+    # one entry per open INDENT: true where it opens the body of a class nested in the member -- the
+    # INDENT that ends a class's header; a header that ends at a TERMINATOR or an OUTDENT has no body
+    classBodies = []
+    classOpened = false
+    for token, i in tokens
+      switch token[0]
+        when "CLASS" then classOpened = true
+        when "INDENT" then classBodies.push classOpened
+        when "OUTDENT"
+          classBodies.pop()
+          classOpened = false
+        when "TERMINATOR" then classOpened = false
+        when "SUPER"
+          continue if true in classBodies
+          at = offsetOf token
+          continue unless source.startsWith "super", at
+          next = tokens[i + 1]
+          if next[0] is "CALL_START" and not next.generated
+            opening = if tokens[i + 2][0] is "CALL_END" then ".call(this" else ".call(this, "
+            edits.push [at, offsetOf(next) + 1, superBase + opening]
+          else if next[0] is "CALL_START"
+            edits.push [at, at + 5, superBase + ".call this,"]
+          else unless next[0] in [".", "?.", "::", "?::", "INDEX_START", "INDEX_SOAK", "FUNC_EXIST", "?"]
+            edits.push [at, at + 5, superBase + ".apply(this, arguments)"]
+    # the last edit first, so each one leaves the offsets of those before it standing
+    for edit in edits by -1
+      [from, to, replacement] = edit
+      source = source.slice(0, from) + replacement + source.slice(to)
+    source
 
   # THE CLASS NAME MUST BE IN THE PARSED SOURCE, not patched on afterwards.
   #
@@ -103,7 +159,7 @@ class Class
   # The name binding a named function expression creates INSIDE its own scope is safe here:
   # it makes the class name resolve, within the constructor body, to the very function that
   # `window.<Name>` holds -- `extend` returns the same object it is handed -- which is what
-  # `_equivalentforSuper`'s bare `<Name>.__super__.constructor` already resolved to through
+  # `_rewriteSuperCalls`'s bare `<Name>.__super__.constructor` already resolved to through
   # the global. No emitted constructor declares a local of its own class's name, so nothing
   # shadows it.
   _nameTheConstructorFunction: (aString) ->
@@ -193,7 +249,7 @@ class Class
   # (The compiled output may re-declare the CoffeeScript helper vars -- indexOf etc.
   # -- at global scope; harmless, the globals already hold exactly those values.)
   # The super forms are rewritten exactly as the boot emit does
-  # (_equivalentforSuper), so an edited member keeps calling super; the source is
+  # (_rewriteSuperCalls), so an edited member keeps calling super; the source is
   # kept as the `<name>_source` sibling for EVERY member kind -- it is what keeps
   # the member editable as CoffeeScript, what the class inspector's view attributes
   # a field to, and what Mixin.applyMemberEdit's live-override shadow guard keys
@@ -206,7 +262,7 @@ class Class
     # the typed source sits behind the assignment, so a compile error is placed in it (typedFrom);
     # a `super` the rewrite expands shifts the columns after it on its line
     assignment = "window.__fzEditedClassMember = "
-    compiled = compileFGCode assignment + (@_equivalentforSuper memberName, source), true, typedFrom: assignment.length
+    compiled = compileFGCode assignment + (@_rewriteSuperCalls memberName, source), true, typedFrom: assignment.length
     eval.call window, compiled
     proto[memberName] = window.__fzEditedClassMember
     delete window.__fzEditedClassMember
@@ -407,7 +463,7 @@ class Class
 
         if window.srcLoadCompileDebugWrites then console.log "CS sources of constructor: " + @nonStaticPropertiesSources["constructor"]
         # if there is a source for the constructor
-        constructorDeclaration = @_equivalentforSuper "constructor", @nonStaticPropertiesSources["constructor"]
+        constructorDeclaration = @_rewriteSuperCalls "constructor", @nonStaticPropertiesSources["constructor"]
         constructorDeclaration = @_addInstancesTracker constructorDeclaration
         if window.srcLoadCompileDebugWrites then console.log "constructor declaration CS:\n" + constructorDeclaration
 
@@ -484,7 +540,7 @@ class Class
           if window.srcLoadCompileDebugWrites then console.log "building field " + fieldName + " ===== "
 
 
-          fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
+          fieldDeclaration = @_rewriteSuperCalls fieldName, fieldValue
 
           compiled = compileFGCode fieldDeclaration, true
 
@@ -503,7 +559,7 @@ class Class
         if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
           if window.srcLoadCompileDebugWrites then console.log "building STATIC field " + fieldName + " ===== "
 
-          fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
+          fieldDeclaration = @_rewriteSuperCalls fieldName, fieldValue
 
           compiled = compileFGCode fieldDeclaration, true
 

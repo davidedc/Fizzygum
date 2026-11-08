@@ -12,24 +12,8 @@ per README rules 2 and 5.
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [x] **A positional argument handed to an `(opts = {})` head has no static check.** — CLOSED by
-      `archive/call-arguments-gate-plan.md`: the gate, renamed `check-call-arguments.js`, gained `EXTRA_ARGUMENT` (two or
-      more positionals, a dead argument) and `POSITIONAL_INTO_OPTIONS` (`@`, a literal, a `new`… alone); what they found
-      is in its ledger (moved there). A lone VARIABLE handed to an options slot (`new X target`) stays unchecked — a
-      stated limit (conventions doc §5), its whole-family check being `census-call-arity.js` after a conversion.
-- [x] **Two readers of a test's macro sources.** — CLOSED 2026-11-07: ONE reader, `lib/tests-repo-code.js`
-      `macroSourcesIn` — the value of `mainMacroSource` and each `extraSubroutineSources` entry, found in the parse
-      (what the harness compiles), COOKED, each with its file line and its span; it refuses a source it cannot read
-      statically (`${…}`, not a template literal) or whose lines do not sit on the file's. No raw-offset map: no reader
-      maps a column back, and the lines are held aligned. The class was wider than filed — every Node reader of a
-      macro source moved onto it: the call-sites table (its sources and its JS-shell read), unresolved-sends,
-      `macroCode` (dead-methods, R4: it masked the JS-escaped text, which only happened to read right), the discipline
-      gate's `macroSourcesOf` and aim-census's text-context labeller, `macro-page-lib`'s regex (it stopped at an
-      escaped backtick: two visualisation pages had lost their whole step narration), the capture's whole-file
-      screenshot-name scan, and layering's whole-file rule [D]; `lib/js-mask.js`'s template list, left with no reader,
-      is gone. Every gate's output is byte-identical except where the cooked text differs from the escaped one
-      (one aim-census snippet, seven regenerated visualisation pages).
-- [ ] **Hand-rolled `#` comment cutters beside `lib/coffee-mask.js`** (found closing the item above). Several gates
+- [ ] **Hand-rolled `#` comment cutters beside `lib/coffee-mask.js`** (found closing "two readers of a test's macro
+      sources", in the plan's ledger). Several gates
       cut CoffeeScript comments with their own per-line scan instead of coffee-mask, most of them at the first `#`
       even inside a string — so a `"#{…}"` interpolation or a `#` in a string hides the code after it on that line:
       `stripComment` in `check-stinks.js` (beside its string-aware twin), `check-invalidation-receivers.js` (filed
@@ -37,14 +21,25 @@ per README rules 2 and 5.
       `census-nosettle-naming.js`, `check-layering.js` and its kept-in-sync copy in `check-unresolved-sends.js`;
       layering rule [D]'s `indexOf('#')`; `lib/name-definitions.js`'s `stripComment`; and the tests repo's
       `check-macro-source-discipline.js` `stripComment` (quote-aware). One masker, measured gate by gate.
-- [ ] **Four walks find a test's command files** (found closing the item above): `lib/tests-repo-code.js`'s
+- [ ] **Four walks find a test's command files** (found closing the same item): `lib/tests-repo-code.js`'s
       `macroFiles` (every `*_automationCommands.js` under `tests/`, skipping `automation-assets/` and dot directories),
       `check-layering.js`'s `collectMacros` (every one, nothing skipped), and the discipline gate's and aim-census's
       `tests/SystemTest_*/<name>_automationCommands.js`. They agree today; the harness's own definition is the manifest
       (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's.
-- [ ] **`Class._equivalentforSuper` rewrites `super ` inside a string literal or a comment too** (a text
-      substitution): a member holding `"see super docs"` compiles a different string. Measured: only
-      `Class.coffee`'s own debug string matches, and Class.coffee is bootstrapped whole, never through the rewrite.
+- [ ] **`Class._addInstancesTracker` is a text substitution too** (found closing the `_equivalentforSuper` item, in the
+      plan's ledger). It inserts
+      `this.registerThisInstance?()` before every `return` that opens a line of a constructor's text, and appends a
+      `return` when no line of the body opens with one. A `return` inside a nested function gets one:
+      `VideoPlayerWithRecommendationsWdgt`'s manifest callback (`return if @destroyed`) re-registers a player that was
+      destroyed before its manifest arrived, in every `instances` set — the corpse the door-callback law forbids (read,
+      not run: the part is flag-gated and no test opens it). A mid-line `return` gets none, and an early body-level
+      return with no final one leaves the fall-through unregistered (0 of each today). The appended `return` has a
+      second job: it stops a constructor from returning its last expression, which `new` would hand back instead of
+      the instance. And `registerThisInstance` walks the whole chain from `@constructor`, so the first constructor to
+      finish (the root class's) already registers the object in every set and each later call is redundant. One
+      registration per construction, in one place, and an unconditional `return` is the likely shape; it changes
+      every constructor's compiled text, so it needs its own survey (the inventory audits; a constructor that never
+      calls `super`).
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

@@ -287,15 +287,15 @@ function textOf(lines, ld) {
 function callSites({ srcDir, testsRepoDir } = {}) {
   const { CoffeeScript, Class, Mixin } = loadMetaCompiler({ srcDir, compileFGCode: () => '(function() {});' });
   const fragments = [];
-  const realClassRewrite = Class.prototype._equivalentforSuper;
-  Class.prototype._equivalentforSuper = function (member, text) {
+  const realClassRewrite = Class.prototype._rewriteSuperCalls;
+  Class.prototype._rewriteSuperCalls = function (member, text) {
     const out = realClassRewrite.apply(this, arguments);
     const isStatic = this.nonStaticPropertiesSources?.[member] !== text && this.staticPropertiesSources?.[member] === text;
     fragments.push({ member, isStatic, input: text, output: out });
     return out;
   };
-  const realMixinRewrite = Mixin.prototype._equivalentforSuper;
-  Mixin.prototype._equivalentforSuper = function (text) {
+  const realMixinRewrite = Mixin.prototype._rewriteSuperCalls;
+  Mixin.prototype._rewriteSuperCalls = function (text) {
     const out = realMixinRewrite.apply(this, arguments);
     fragments.push({ input: text, output: out });
     return out;
@@ -373,8 +373,8 @@ function callSites({ srcDir, testsRepoDir } = {}) {
       }
     }
   }
-  Class.prototype._equivalentforSuper = realClassRewrite;
-  Mixin.prototype._equivalentforSuper = realMixinRewrite;
+  Class.prototype._rewriteSuperCalls = realClassRewrite;
+  Mixin.prototype._rewriteSuperCalls = realMixinRewrite;
 
   // parse every CoffeeScript unit; lift the heredocs a parse finds
   const parsed = [];

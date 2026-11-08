@@ -19,7 +19,7 @@
 // e.g.  printf 'add: (aWdgt, opts = {}) ->\n  super aWdgt, opts\n' \
 //         | node buildSystem/compile-fragment.js --stdin ViewportWdgt
 //
-// The super rewrite is Class.coffee's OWN `_equivalentforSuper`, run through lib/meta-compiler.js — the same
+// The super rewrite is Class.coffee's OWN `_rewriteSuperCalls`, run through lib/meta-compiler.js — the same
 // meta-compiler check-coffee-syntax.js drives — so it cannot drift from what the browser does. The member it
 // rewrites for is the fragment's own key (`add: …` → `__super__.add`), `constructor` for a keyless fragment.
 

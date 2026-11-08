@@ -1089,3 +1089,35 @@ for (const s of sites) if (s.absentBefore.length) {
   witness ? hole(s, witness) : value(s);
 }
 ```
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **A positional argument handed to an `(opts = {})` head has no static check.** — CLOSED by
+      `archive/call-arguments-gate-plan.md`: the gate, renamed `check-call-arguments.js`, gained `EXTRA_ARGUMENT` (two or
+      more positionals, a dead argument) and `POSITIONAL_INTO_OPTIONS` (`@`, a literal, a `new`… alone); what they found
+      is in its ledger (moved there). A lone VARIABLE handed to an options slot (`new X target`) stays unchecked — a
+      stated limit (conventions doc §5), its whole-family check being `census-call-arity.js` after a conversion.
+- [x] **Two readers of a test's macro sources.** — CLOSED 2026-11-07: ONE reader, `lib/tests-repo-code.js`
+      `macroSourcesIn` — the value of `mainMacroSource` and each `extraSubroutineSources` entry, found in the parse
+      (what the harness compiles), COOKED, each with its file line and its span; it refuses a source it cannot read
+      statically (`${…}`, not a template literal) or whose lines do not sit on the file's. No raw-offset map: no reader
+      maps a column back, and the lines are held aligned. The class was wider than filed — every Node reader of a
+      macro source moved onto it: the call-sites table (its sources and its JS-shell read), unresolved-sends,
+      `macroCode` (dead-methods, R4: it masked the JS-escaped text, which only happened to read right), the discipline
+      gate's `macroSourcesOf` and aim-census's text-context labeller, `macro-page-lib`'s regex (it stopped at an
+      escaped backtick: two visualisation pages had lost their whole step narration), the capture's whole-file
+      screenshot-name scan, and layering's whole-file rule [D]; `lib/js-mask.js`'s template list, left with no reader,
+      is gone. Every gate's output is byte-identical except where the cooked text differs from the escaped one
+      (one aim-census snippet, seven regenerated visualisation pages).
+- [x] **`Class._equivalentforSuper` rewrites `super ` inside a string literal or a comment too.** — CLOSED 2026-11-07:
+      ONE super rewrite, `Class.rewriteSuperCalls` (Class's and Mixin's `_rewriteSuperCalls`, the old name's successor,
+      each hand it the member its `super` means), reads which `super`s there are and what call each makes from the
+      bundled compiler's lexer tokens, never from the text. The class was wider than filed: the text rules also rewrote
+      the end of a name (`@_super a`, `x.super()`) and misread real calls — `return super if a` and `super⇥a` failed to
+      compile, and silently: a `super` before an indented object called super's RESULT with it, `super + 1` passed `+1`
+      as an argument, `"#{ super }"` dropped the arguments it forwards, and a `super` in a class nested in a member was
+      bound to that member. The four-rule order and the trailing-space hazard behind the "thin vertical slice" bug
+      went with the text rules. Measured over the 6691 fragments the meta-compiler compiles from every source but its
+      own two: byte-identical except the comments of 8 fragments that said `super` (7 in the compiled JS); the
+      pre-compiled image byte-identical; the call table differs only in Class's and Mixin's own code.
+      `lib/meta-compiler-selftest.js` holds a case per reading (45; 31 mutations, all caught).

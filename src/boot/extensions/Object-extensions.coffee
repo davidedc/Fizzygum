@@ -25,7 +25,7 @@ Object::addInstanceProperties = (fromClass, obj) ->
     # resulting function objects are SHARED by every consumer, so finding this very function
     # already reachable through the prototype chain means the same mixin sits on an ancestor.
     # That is never meaningful (the members are already inherited) and it BREAKS the emulated
-    # `super` (Mixin._equivalentforSuper): super resolves through the INSTANCE's nearest
+    # `super` (Mixin._rewriteSuperCalls): super resolves through the INSTANCE's nearest
     # `_class_injected_in` marker, so with two injection levels the ancestor-level call
     # re-resolves to itself and any super-calling member recurses forever — measured with
     # ControllerMixin.graphEdgesOut when SimpleTextWdgt re-augmented over StringWdgt's mixin.

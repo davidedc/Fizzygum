@@ -4,13 +4,15 @@
 //
 // WHY THE REAL ONE. The browser never compiles a whole class file: Class.coffee splits each class into FRAGMENTS
 // (constructor + every member, each the rest of its `  name: …` header line plus its body lines verbatim), rewrites
-// every `super` form into a plain `__super__` call (`_equivalentforSuper`), and compiles each fragment with
-// {bare: true}; Mixin.coffee rewrites and compiles a mixin as one source. Re-porting that transform would drift, so
-// this loads and runs it. Readers: check-coffee-syntax.js (compiles every fragment: the syntax gate), lib/call-sites.js
-// (taps `_equivalentforSuper` for the fragments it parses) and compile-fragment.js (the real super rewrite).
+// every `super` into a plain `__super__` call (`_rewriteSuperCalls`, read from the lexer's tokens), and compiles
+// each fragment with {bare: true}; Mixin.coffee rewrites and compiles a mixin as one source. Re-porting that transform
+// would drift, so this loads and runs it. Readers: check-coffee-syntax.js (compiles every fragment: the syntax gate),
+// lib/call-sites.js (taps `_rewriteSuperCalls` for the fragments it parses) and compile-fragment.js (the real super
+// rewrite).
 //
 // THE SHIM. Class/Mixin touch a few globals at construction time; they are supplied as closed-over factory
 // parameters plus a `window` Proxy:
+//   - CoffeeScript               -> the bundled compiler (the super rewrite reads its lexer, `CoffeeScript.tokens`)
 //   - compileFGCode(src, bare, …) -> the caller's (default: CoffeeScript.compile — the real wrapper's one-liner,
 //                                    loading-and-compiling-coffeescript-sources.coffee). A reader that only needs
 //                                    the fragments passes a stub; Class's later steps accept `'(function() {});'`.
@@ -63,10 +65,10 @@ function loadMetaCompiler({ srcDir, compileFGCode } = {}) {
       set(t, k, v) { t[k] = v; return true; },
     });
     const factory = new Function(
-      'window', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites', 'MixedClassKeywords',
+      'window', 'CoffeeScript', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites', 'MixedClassKeywords',
       classJS + '\n;\n' + mixinJS + '\n;\nreturn { Class: Class, Mixin: Mixin };'
     );
-    ({ Class, Mixin } = factory(windowProxy, compile, { content: '' }, false, MIXED_CLASS_KEYWORDS));
+    ({ Class, Mixin } = factory(windowProxy, CoffeeScript, compile, { content: '' }, false, MIXED_CLASS_KEYWORDS));
   } catch (e) {
     throw new Error('META_COMPILER_UNAVAILABLE: the meta-compiler (Class.coffee/Mixin.coffee) itself failed to load: ' + e.message);
   }
@@ -79,7 +81,7 @@ function loadMetaCompiler({ srcDir, compileFGCode } = {}) {
 // The text a member's source becomes before it is compiled: Class.coffee's own super rewrite, run on `src` as the
 // member `memberName` of class `className` (the same text, line for line — the rewrite is same-line).
 function rewriteSuper(Class, className, memberName, src) {
-  return Class.prototype._equivalentforSuper.call({ name: className }, memberName, src);
+  return Class.prototype._rewriteSuperCalls.call({ name: className }, memberName, src);
 }
 
 module.exports = { bundledCoffeeScript, loadMetaCompiler, rewriteSuper, COMPILER };

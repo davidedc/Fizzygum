@@ -29,8 +29,8 @@ The policy:
   would trade the one-line `@augmentWith` declarations (the consumer count in §3) for ~100+ forwarding stubs or
   hierarchy surgery across the paint/input/clipping/copy subsystems (the most
   determinism-critical, screenshot-baked code), to delete ~350 lines of stable machinery
-  whose worst failure mode (the regex `super` rewriter) survives in `Class.coffee`
-  regardless.
+  whose most delicate part, the `super` rewrite, is the one every class goes through
+  (`Class.rewriteSuperCalls`) and would stay regardless.
 
 ## 2. How the mechanism works
 
@@ -52,18 +52,18 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   onto the consumer's prototype (`src/boot/extensions/Object-extensions.coffee`). The two
   hook names in `MixedClassKeywords` (`src/boot/globalFunctions.coffee`) are skipped.
 - **`super` is emulated, not real.** A mixin method belongs to no class at compile time,
-  so `Mixin._equivalentforSuper` (`src/meta/Mixin.coffee`) regex-rewrites `super` into
-  `window[@[arguments.callee.name + '_class_injected_in']].__super__[...]`, resolved via
+  so `Mixin._rewriteSuperCalls` (`src/meta/Mixin.coffee`) spells each `super` out as a call
+  through `window[@[arguments.callee.name + '_class_injected_in']].__super__[...]`, resolved via
   a `<methodName>_class_injected_in` companion property that `addInstanceProperties`
-  writes next to every injected function. Constraints that follow:
-  - all four super forms are rewritten — `super()`, bare `super` (forwards all
-    arguments), `super(args)`, `super arg, …` — mirroring the class-side rewriter
-    (`Class._equivalentforSuper`), with the same load-bearing rule order;
+  writes next to every injected function. The rewrite is the class side's own
+  (`Class.rewriteSuperCalls`, `src/meta/Class.coffee`), handed that target: it reads which
+  `super`s there are, and what call each makes, from CoffeeScript's lexer tokens, so a `super`
+  inside a string or a comment is left alone and the form is the call the parser sees. Constraints
+  that follow:
+  - every super CALL is rewritten — `super()`, bare `super` (forwards all arguments),
+    `super(args)`, `super arg, …`; a `super` an accessor or a soak continues (`super.x`,
+    `super?()`) is left as written, and the compiler refuses it;
   - `arguments.callee` pins the compiled output to sloppy mode;
-  - the rewrite rules are order-sensitive text substitutions, and the order is
-    load-bearing — the known trap is a bare `super` carrying a trailing inline comment,
-    which a mis-ordered rule set silently strips of all arguments. The same hazard class
-    exists for classes too; it is a cost of fragment-wise compilation, only partly a mixin cost.
   - default parameter values don't survive the mixin field parser (the workaround is
     manual `if !param?` defaulting in the method body).
   - ⛔ **one mixin, one level per inheritance chain — enforced at boot.** A mixin's members
