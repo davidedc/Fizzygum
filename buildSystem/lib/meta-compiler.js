@@ -21,8 +21,8 @@
 //   - JSSourcesContainer         -> { content: '' }
 //   - MixedClassKeywords         -> the real 3-entry list (Mixin's static parse pass filters the DSL hooks out)
 //   - window (Proxy)             -> seeded { classDefinitionAsJS: [], srcLoadCompileDebugWrites: false } (Class reads
-//                                    the flag WITH the `window.` prefix); every other key answers a stub, so
-//                                    `window[superClassName].class` and `window[@name].class = @` do not throw.
+//                                    the flag WITH the `window.` prefix); every other key answers a stub, so a
+//                                    superclass reads as loaded and `window[@name].class = @` does not throw.
 // Drive a source with `new Class(src, true, false)` / `new Mixin(src, true, false)` — generate-precompiled mode:
 // every fragment goes through compileFGCode exactly as in the browser, and no object is built (the `eval` is gated
 // behind the 3rd argument). Because the real meta-compiler runs, a change to it is tracked automatically.
@@ -60,7 +60,7 @@ function loadMetaCompiler({ srcDir, compileFGCode } = {}) {
   try {
     const classJS = CoffeeScript.compile(fs.readFileSync(path.join(srcDir, 'meta', 'Class.coffee'), 'utf8'), { bare: true });
     const mixinJS = CoffeeScript.compile(fs.readFileSync(path.join(srcDir, 'meta', 'Mixin.coffee'), 'utf8'), { bare: true });
-    const STUB = { class: null, prototype: {} };
+    const STUB = { prototype: {} };
     const windowProxy = new Proxy({ classDefinitionAsJS: [], srcLoadCompileDebugWrites: false }, {
       get(t, k) { return (k in t) ? t[k] : STUB; },
       set(t, k, v) { t[k] = v; return true; },

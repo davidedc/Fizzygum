@@ -2202,16 +2202,17 @@ assertion a recapture after a regression silently stores two different hashes an
   message, "OK"` before the next gesture. A behaviour no gesture can reach any more (the prompt now refuses before injecting)
   is checked by a direct call inside a `try` in the macro body, saying so in `provenance`.
 - **Count a framework call — a spy on the method, restored before the macro ends** (`macroInstancesRegistry`,
-  `macroClassSubclassesPropagation`): when the claim is HOW OFTEN something runs ("a construction registers a widget once"),
+  `macroClassEditNotifiesInstances`): when the claim is HOW OFTEN something runs ("a construction registers a widget once",
+  "an edit to a class reaches each of its instances once"),
   replace the method with a wrapper that records each call's receiver and calls through, `register =
   Widget::registerThisInstance` then `Widget::registerThisInstance = -> registered.push @; register.apply @, arguments`,
   act inside a `try` whose `finally` restores it, and count per object (`(r for r in registered when r is clock).length`),
   so a widget built on the way is no miscount. Restore it the way it was held: ASSIGN it back when the method is the
-  object's own (Widget.prototype's own `registerThisInstance`), `delete` the spy when it shadows an INHERITED one (the
-  propagation test's per-metaobject spy, so no same-valued own property is left behind) — always before the end, since the
-  next test runs on the same page. Assertion-only; each assertion is proven by a plant on `--prelude=` that breaks it — a
-  no-op `registerThisInstance`, a second registration from `assignUniqueID`, a class's set deleted — and seen failing by
-  its own line.
+  object's own (Widget.prototype's own `registerThisInstance`, `sourceChanged`), `delete` the spy when it shadows an
+  INHERITED one (so no same-valued own property is left behind) — always before the end, since the next test runs on the
+  same page. Assertion-only; each assertion is proven by a plant on `--prelude=` that breaks it — a no-op
+  `registerThisInstance`, a second registration from `assignUniqueID`, a class's set deleted, the old per-level
+  recursion re-planted — and seen failing by its own line.
 - **Button-trigger discipline** (`macroButtonTriggersOnlyOnSameWidgetMouseUp`): a button fires only when mouse-down AND mouse-up
   land on the SAME morph (`ActivePointerWdgt.processPointerUp` fires only `when w == @mouseDownWdgt`). To show "press then release
   elsewhere does NOT trigger", press on the button and release off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents

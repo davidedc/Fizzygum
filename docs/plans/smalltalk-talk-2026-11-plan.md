@@ -738,7 +738,7 @@ before adding any global.
 |---|---|
 | **Comment** | `classComment` (the class's header) |
 | **Protocols** | protocol · method count, with written ones in ink and inferred ones dimmed, then the computed groups: *overrides* (also defined up the chain), *from mixins* (`augmentedWith`), *edited this session* (`world.sourceEditsRegistry.records` for this class). Drill → a protocol group → **Methods** list → drill → a method |
-| **Hierarchy** | superclasses (base first), then `subClasses` (a `Set`); drill → class |
+| **Hierarchy** | superclasses (base first), then subclasses: the classes `allClassFunctions()` lists whose `__super__` is this class's prototype (the chain is the one record; no registry); drill → class |
 | **Instances** | `window[name].instances` (widgets only); drill → instance |
 | **Edits** | this class's `SourceEditsRegistry` records (the ChangeSet view) |
 

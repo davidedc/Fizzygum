@@ -352,8 +352,8 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
   # code and manually create any extensions
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
     if justIngestSources
-      # registers the class, its superclasses, its augmentations and the
-      # source code
+      # gives the class its metaobject: its source, its members' sources, the name of
+      # the class it extends and its mixins
       widgetClass = new Class fileContents, false, false
     else
       widgetClass = new Class fileContents, generatePreCompiledJS, true

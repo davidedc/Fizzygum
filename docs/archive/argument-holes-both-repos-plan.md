@@ -1159,3 +1159,23 @@ for (const s of sites) if (s.absentBefore.length) {
       Widget's one call, the Deserializer's two dead soaks, two corrected comments. `lib/meta-compiler-selftest.js` 72
       cases, 51 mutations all caught; `SystemTest_macroInstancesRegistry` pins the registry at run time (10 assertions,
       each seen failing under a plant).
+- [x] **`Class.notifyInstancesOfSourceChange` reads a class's `instances` set as its own instances** (found closing
+      the `_addInstancesTracker` item, in the plan's ledger). A widget is in the set of its class AND of every
+      superclass (`Widget.registerThisInstance`), so an edit to a class's member already notifies every subclass
+      instance through that class's set; the method then recurses into each subclass that does not redefine the
+      member and notifies its instances again, and a subclass that DOES redefine it is notified through the parent's
+      set all the same — the guard its comment states holds for the recursion only. Harmless today (`sourceChanged`
+      re-lays-out and repaints an instance), read, not run; `SystemTest_macroClassSubclassesPropagation` stubs the
+      recursion, so it cannot see the instance level. One walk would do: notify each instance in the class's set
+      unless a class between the instance's own and this one redefines the member. — CLOSED 2026-11-08, and the
+      shape filed here was wrong: an override can call super (203 of the tree's 1184 overriding members do), so a
+      subclass that redefines the member can still be changed by the edit. Measured before the fix, one notification
+      for `ButtonWdgt._reLayout`: a ButtonWdgt heard once, a SimpleRectangularButtonWdgt (inherits it) twice, a
+      LabelButtonWdgt (overrides it) once. Now the method notifies every instance in the edited class's set once —
+      exactly the instances of the class and of its subclasses — with no recursion and no member names (the
+      parameter is gone from the whole family: Class, InspectorWdgt, ClassInspectorWdgt, and Mixin's three calls).
+      `Class.subClasses` and `Class.superClass` lost their only reader and are gone; the prototype chain is the one
+      record of the hierarchy (the smalltalk-talk plan's Hierarchy view derives subclasses from it).
+      `SystemTest_macroClassSubclassesPropagation`, which pinned the registry and the recursion, is replaced by
+      `SystemTest_macroClassEditNotifiesInstances` (3 counts, each seen failing under a plant: the old recursion
+      re-planted, own-class-only, every widget, nobody).

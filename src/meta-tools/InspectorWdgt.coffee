@@ -805,7 +805,7 @@ class InspectorWdgt extends Widget
     pane.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
     return
 
-  notifyInstancesOfSourceChange: (propertiesArray)->
+  notifyInstancesOfSourceChange: ->
     @inspectedObject.sourceChanged()
   
   #InspectorWdgt editing ops:
@@ -853,7 +853,7 @@ class InspectorWdgt extends Widget
     # OK and the class inspector's destination menu), event-time only -- the re-filter
     # is that gesture's single settle
     @_refilterMembers()
-    @notifyInstancesOfSourceChange([prop])
+    @notifyInstancesOfSourceChange()
   
   addPropertyPopout: ->
     # Chrome cannot handle empty strings (others do), hence the "property" default
@@ -875,7 +875,7 @@ class InspectorWdgt extends Widget
     @_applyPropertyRename propertyName, prop
 
     @_refilterMembers()
-    @notifyInstancesOfSourceChange([prop, propertyName])
+    @notifyInstancesOfSourceChange()
   
   renamePropertyPopout: ->
     # nothing selected = nothing to rename: a fresh inspector has NO default selection
@@ -902,4 +902,4 @@ class InspectorWdgt extends Widget
     @_applyPropertyRemoval propertyName
 
     @_refilterMembers()
-    @notifyInstancesOfSourceChange([propertyName])
+    @notifyInstancesOfSourceChange()

@@ -113,7 +113,7 @@ class Mixin
       theClass::[memberName] = editedValue
       if typeof editedValue is "function"
         theClass::[memberName + "_class_injected_in"] = className
-      theClass.class?.notifyInstancesOfSourceChange? [memberName]
+      theClass.class?.notifyInstancesOfSourceChange?()
       updated++
     updated
 
@@ -139,7 +139,7 @@ class Mixin
       # SHADOW GUARD: skip a consumer whose class body declares this static itself
       continue if theClass.class?.staticPropertiesSources?[memberName]?
       theClass[memberName] = editedValue
-      theClass.class?.notifyInstancesOfSourceChange? [memberName]
+      theClass.class?.notifyInstancesOfSourceChange?()
       updated++
     updated
 
@@ -158,7 +158,7 @@ class Mixin
       continue if Object.prototype.hasOwnProperty.call theClass.prototype, memberName + "_source"
       delete theClass::[memberName]
       delete theClass::[memberName + "_class_injected_in"]
-      theClass.class?.notifyInstancesOfSourceChange? [memberName]
+      theClass.class?.notifyInstancesOfSourceChange?()
       updated++
     updated
 

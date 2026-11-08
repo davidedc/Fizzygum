@@ -26,15 +26,15 @@ per README rules 2 and 5.
       `check-layering.js`'s `collectMacros` (every one, nothing skipped), and the discipline gate's and aim-census's
       `tests/SystemTest_*/<name>_automationCommands.js`. They agree today; the harness's own definition is the manifest
       (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's.
-- [ ] **`Class.notifyInstancesOfSourceChange` reads a class's `instances` set as its own instances** (found closing
-      the `_addInstancesTracker` item, in the plan's ledger). A widget is in the set of its class AND of every
-      superclass (`Widget.registerThisInstance`), so an edit to a class's member already notifies every subclass
-      instance through that class's set; the method then recurses into each subclass that does not redefine the
-      member and notifies its instances again, and a subclass that DOES redefine it is notified through the parent's
-      set all the same — the guard its comment states holds for the recursion only. Harmless today (`sourceChanged`
-      re-lays-out and repaints an instance), read, not run; `SystemTest_macroClassSubclassesPropagation` stubs the
-      recursion, so it cannot see the instance level. One walk would do: notify each instance in the class's set
-      unless a class between the instance's own and this one redefines the member.
+- [ ] **The instance inspector tells a widget of a rename or a removal twice** (found closing the
+      `notifyInstancesOfSourceChange` item, in the plan's ledger). `Widget.renameOwnProperty` and `removeOwnProperty`
+      call `@sourceChanged()` themselves, then `InspectorWdgt`'s rename and remove call `notifyInstancesOfSourceChange`,
+      which calls the inspected widget's `sourceChanged()` again. One of the two is the edit's notification; the
+      class inspector routes the same calls to its class, so which one goes needs reading both inspectors' paths.
+- [ ] **A mixin's static edit does not reach a consumer's subclasses** (found closing the same item).
+      `Mixin.applyStaticEdit` writes the new static onto each consumer class, but `extend` copied a class's statics
+      onto each subclass when the subclass was defined (`globalFunctions.coffee`'s `extend`), so a subclass keeps the
+      old value while its instances are notified. No mixin declares a static today.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

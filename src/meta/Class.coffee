@@ -17,8 +17,6 @@ class Class
   name: ""
   superClassName: undefined
   augmentedWith: undefined
-  superClass: undefined
-  subClasses: undefined
   classRegex: /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
   propertyRegex: /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *(.*)/m
   augmentRegex: /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
@@ -290,19 +288,19 @@ class Class
     proto[memberName + "_source"] = source
     return
 
+  # The name of the class my source extends, or undefined. That class is read before me (the load
+  # order follows `extends`); one that is not loaded is refused here, before anything of mine is
+  # defined -- later, my emitted `__super__` line would fail at eval instead, leaving a half-built
+  # global behind.
   findIfItExtendsAnotherClass: (source) ->
-    # find if it extends some other class
     extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
     if (m = extendsRegex.exec(source))?
-        m.forEach (match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         superClassName = m[1]
-        if window.srcLoadCompileDebugWrites then console.log "we should have already loaded " + superClassName
-        superClass = window[superClassName].class
-
         if window.srcLoadCompileDebugWrites then console.log "superClassName: " + superClassName
+        unless window[superClassName]?
+          throw new Error "class " + @name + " extends " + superClassName + ", which is not loaded"
 
-    return [superClassName, superClass]
+    return superClassName
 
   # Collect lines up to a stop. Two operands — the lines and the pattern that ends the stash — because
   # all four callers supply exactly those; the three rarer controls ride opts, since each is wanted by
@@ -445,12 +443,10 @@ class Class
     if !window.classDefinitionAsJS?
       window.classDefinitionAsJS = []
 
-    @subClasses = new Set
-
     sourceLines = source.split "\n"
 
     [@name, ignored, sourceLines] = @findClassDescriptionHeaderCommentAndClassName sourceLines
-    [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
+    @superClassName = @findIfItExtendsAnotherClass source
     # find which mixins need to be mixed-in
     [@augmentedWith, ignored, sourceLines] = @findMixinsInTheClass sourceLines
 
@@ -612,20 +608,14 @@ class Class
     # (or if already created anyways, in pre-compiled mode)
     # then add the .class field
     window[@name].class = @
-    if @superClass?
-      @superClass.subClasses.add @
 
-
-
-  notifyInstancesOfSourceChange: (propertiesArray)->
-    window[@name].instances.forEach (eachInstance) =>
+  # After an edit to one of my members, every live instance of mine and of my subclasses hears of it
+  # once (Widget.sourceChanged: a re-layout and a repaint). My `instances` set holds exactly those:
+  # a widget is in the set of its class and of every superclass (Widget.registerThisInstance). None
+  # is left out, not even a subclass's whose own definition of the member overrides mine -- an
+  # override can call super, and many do -- since an instance told once too often costs one
+  # repaint, where one left out keeps a stale look.
+  notifyInstancesOfSourceChange: ->
+    window[@name].instances.forEach (eachInstance) ->
       eachInstance.sourceChanged()
-  
-    for eachProperty in propertiesArray
-      @subClasses.forEach (eachSubClass) =>
-        # if a subclass redefined a property, then
-        # the change doesn't apply, so there is no
-        # notification to propagate
-        if !eachSubClass.nonStaticPropertiesSources[eachProperty]?
-          eachSubClass.notifyInstancesOfSourceChange([eachProperty])
 

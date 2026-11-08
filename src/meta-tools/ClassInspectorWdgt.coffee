@@ -5,8 +5,8 @@ class ClassInspectorWdgt extends InspectorWdgt
   # while such a member is selected
   overrideInThisClassButton: undefined
 
-  notifyInstancesOfSourceChange: (propertiesArray)->
-    @inspectedObject.constructor.class.notifyInstancesOfSourceChange propertiesArray
+  notifyInstancesOfSourceChange: ->
+    @inspectedObject.constructor.class.notifyInstancesOfSourceChange()
 
   # Override the NON-SETTLING core (not the wrapper): the inherited _buildAndConnectChildren wrapper settles
   # once, and this extension -- my second save destination -- is built inside that single settle. My
@@ -191,4 +191,4 @@ class ClassInspectorWdgt extends InspectorWdgt
     # essential case.
     @inspectedObject.constructor.class.applyMemberEdit propertyName, txt
     world?.sourceEditsRegistry?.recordClassEdit? @inspectedObject, propertyName, txt
-    @notifyInstancesOfSourceChange([propertyName])
+    @notifyInstancesOfSourceChange()
