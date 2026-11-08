@@ -17,11 +17,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       and `node_modules`, some pass over nothing, and some also read the harness. A file one walk skips is read by the
       others, and nothing says which set a gate read. One definition of src's files, as `lib/tests-repo-code.js`'s
       `testNames` is of the tests.
-- [ ] **A mixin's static edit does not reach a consumer's subclasses** (found closing "two readers of a test's macro
-      sources", in the plan's ledger).
-      `Mixin.applyStaticEdit` writes the new static onto each consumer class, but `extend` copied a class's statics
-      onto each subclass when the subclass was defined (`globalFunctions.coffee`'s `extend`), so a subclass keeps the
-      old value while its instances are notified. No mixin declares a static today.
 - [ ] **`Deserializer.compileFunction` compiles through the run gesture** (found closing the instance inspector's
       double notification, in the plan's ledger). A `{"$src"}` the load cannot hand to its widget's `injectProperty`
       (one nested in an array or a map, or one on a non-widget) is compiled by `world.evaluateString`, which ends in

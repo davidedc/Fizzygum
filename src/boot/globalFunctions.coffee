@@ -114,8 +114,9 @@ window.superclassOf = (ctor) ->
 # that declares its own REPLACES that copy, so stopping at the first class found would lose every
 # ancestor's names, silently. (The serialization rig's transients.inheritedMergedNotReplaced
 # pins that for the transients.) A mixin's static is copied onto each consumer constructor as an
-# own property (Mixin's applyStaticEdit, shadow-guarded), so a mixin-declared list is found at
-# the consumer's own step.
+# own property (Object::augmentWith, in the consumer's class body), so a mixin-declared list is
+# found at the consumer's own step -- unless the consumer declares the same static itself, whose
+# own list then replaces the mixin's copy (a class's statics are assigned after its augmentWith).
 window.classStaticListMergedUpTheChain = (klass, staticName) ->
   merged = []
   ctor = klass

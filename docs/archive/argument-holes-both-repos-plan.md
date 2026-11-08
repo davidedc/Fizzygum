@@ -1253,3 +1253,25 @@ for (const s of sites) if (s.absentBefore.length) {
       gate holds the 15 verbs to its three rules. Each reader's self-test plants a verb its old reading missed (a `'''`
       heredoc, a verb in another file, an escape that keeps its lines). That every build tool walks src itself is
       filed beside the item.
+- [x] **A mixin's static edit does not reach a consumer's subclasses** (found closing "two readers of a test's macro
+      sources", in the plan's ledger).
+      `Mixin.applyStaticEdit` writes the new static onto each consumer class, but `extend` copied a class's statics
+      onto each subclass when the subclass was defined (`globalFunctions.coffee`'s `extend`), so a subclass keeps the
+      old value while its instances are notified. No mixin declares a static today. — CLOSED 2026-11-08 by
+      retirement: nothing could make the edit. No mixin declares a class-side key besides its
+      `onceAddedClassProperties` hook, so the static parse always came up empty; and no static was ever SAVED: the
+      class inspector lists a class's PROTOTYPE members (`for property of @inspectedObject`) while every static lives
+      on a constructor, and an object inspector opened on a constructor itself (a `constructor` row's double-click)
+      lists its statics read-only, its subject's own constructor being `Function`. No test or rig reached the leg. The
+      class-side machinery the
+      mixin-editing v2 plan's P4 added is deleted: Mixin's 2-space static parse and its `staticPropertiesSources`,
+      `Mixin.applyStaticEdit`, `InspectorWdgt._mixinProvidingStaticMember`, `currentPropertySourceIsStatic` with every
+      branch on it in `ClassInspectorWdgt`, `recordMixinEdit`'s `isStatic` and the registry's `static: true` replay;
+      the build shim's `MixedClassKeywords` stand-in went with the parse that read it. Beside it,
+      `selectionFromList`'s "static variables" branch is gone: for a non-function member whose value is undefined it
+      showed the same-named property of the subject's CONSTRUCTOR, so an inspected plain object's undefined `name`
+      read `"Object"` and its `length` read `1`. `SystemTest_macroInspectorShowsAnUndefinedFieldAsUndefined` plants
+      that, failing on the old code. Measured first: no class's field shares a name with a static of its class (550
+      classes, 14,508 undefined prototype fields), so no reference changed. `mixins.md` states that statics are outside
+      the inspector's editing, and that an edit to one would have to reach every subclass, since `extend` gives each
+      subclass its own copy.

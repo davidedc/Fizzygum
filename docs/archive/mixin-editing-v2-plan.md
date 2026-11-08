@@ -99,6 +99,10 @@ Show "from <Name>Mixin" when a mixin-donated member is selected.
   inherited/undefined and survives replay.
 
 ### P4 — mixin class-side statics: view + edit
+> **RETIRED 2026-11-08** — no gesture ever reached P4: no mixin declares a class-side key, and no static is ever
+> saved (the class inspector lists PROTOTYPE members, statics live on constructors, and an inspector on a constructor
+> is read-only). Its machinery is deleted; see the BACKLOG ledger of
+> `argument-holes-both-repos-plan.md` ("A mixin's static edit does not reach a consumer's subclasses").
 - TODAY: `Mixin.@staticPropertiesSources` is initialized `{}` and NEVER filled — the
   parser regex (`Mixin.coffee` ctor, 6-space fields) only captures instance members
   inside the `addInstanceProperties` block. Class-side keys (2-space keys of the literal,

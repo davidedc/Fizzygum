@@ -19,7 +19,6 @@
 //                                    the fragments passes a stub; Class's later steps accept `'(function() {});'`.
 //   - srcLoadCompileDebugWrites  -> false (Mixin.coffee reads it BARE; it must be falsy or debug paths run)
 //   - JSSourcesContainer         -> { content: '' }
-//   - MixedClassKeywords         -> the real 3-entry list (Mixin's static parse pass filters the DSL hooks out)
 //   - window (Proxy)             -> seeded { classDefinitionAsJS: [], srcLoadCompileDebugWrites: false } (Class reads
 //                                    the flag WITH the `window.` prefix); every other key answers a stub, so a
 //                                    superclass reads as loaded and `window[@name].class = @` does not throw.
@@ -34,7 +33,6 @@ const fs = require('fs');
 const path = require('path');
 
 const COMPILER = path.join(__dirname, '..', '..', 'auxiliary files', 'CoffeeScript', 'fizzygum-coffeescript-min.js');
-const MIXED_CLASS_KEYWORDS = ['onceAddedClassProperties', 'included', 'consumerClassNames'];
 
 // The bundled CoffeeScript 2.0.3 — the compiler the browser runs (not the 2.7 CLI).
 function bundledCoffeeScript() {
@@ -66,10 +64,10 @@ function loadMetaCompiler({ srcDir, compileFGCode } = {}) {
       set(t, k, v) { t[k] = v; return true; },
     });
     const factory = new Function(
-      'window', 'CoffeeScript', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites', 'MixedClassKeywords',
+      'window', 'CoffeeScript', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites',
       classJS + '\n;\n' + mixinJS + '\n;\nreturn { Class: Class, Mixin: Mixin };'
     );
-    ({ Class, Mixin } = factory(windowProxy, CoffeeScript, compile, { content: '' }, false, MIXED_CLASS_KEYWORDS));
+    ({ Class, Mixin } = factory(windowProxy, CoffeeScript, compile, { content: '' }, false));
   } catch (e) {
     throw new Error('META_COMPILER_UNAVAILABLE: the meta-compiler (Class.coffee/Mixin.coffee) itself failed to load: ' + e.message);
   }

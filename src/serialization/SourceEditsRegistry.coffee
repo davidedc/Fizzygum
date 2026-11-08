@@ -48,17 +48,14 @@ class SourceEditsRegistry
     return
 
   # record a mixin-scope edit (from ClassInspectorWdgt.applyPropertyEdit's mixin
-  # routing; `mixinName` is the parsed Mixin's name, without the "Mixin" suffix;
-  # `isStatic` true marks a class-side member -- replayed via applyStaticEdit).
-  recordMixinEdit: (mixinName, propertyName, source, isStatic = false) ->
+  # routing; `mixinName` is the parsed Mixin's name, without the "Mixin" suffix).
+  recordMixinEdit: (mixinName, propertyName, source) ->
     return unless mixinName? and propertyName?
-    record =
+    @records.push
       scope: "mixin"
       mixinName: mixinName
       propertyName: propertyName
       source: source
-    record.static = true if isStatic
-    @records.push record
     return
 
   # record a mixin-scope member REMOVAL (from ClassInspectorWdgt's remove routing).
@@ -134,8 +131,6 @@ class SourceEditsRegistry
       try
         if r.deleted
           theMixin.removeMember r.propertyName
-        else if r.static
-          theMixin.applyStaticEdit r.propertyName, r.source
         else
           theMixin.applyMemberEdit r.propertyName, r.source
       catch error

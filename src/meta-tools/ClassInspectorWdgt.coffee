@@ -29,9 +29,8 @@ class ClassInspectorWdgt extends InspectorWdgt
       @overrideInThisClassButton.hide()
 
   # The base's rename and remove follow my selection, and so does my second save destination: a
-  # mixin-donated INSTANCE member gets it offered; any other selection hides it (a static's override
-  # would need a constructor-side assignment -- not offered), and so does NO selection, since a
-  # re-filter clears the attribution with the list. Reached at the end of every selection
+  # mixin-donated member gets it offered; any other selection hides it, and so does NO selection,
+  # since a re-filter clears the attribution with the list. Reached at the end of every selection
   # (selectionFromList) and of every re-filter. (Visibility is not a layout input: whenever the
   # button EXISTS it is laid out in my footer band, shown or not, so showing or hiding it moves no
   # other button. Existence is the separate question the edit row answers -- a read-only subject
@@ -39,7 +38,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # `?.` here.)
   _reflectMemberSelection: ->
     super()
-    if @currentPropertySourceMixin? and !@currentPropertySourceIsStatic
+    if @currentPropertySourceMixin?
       @overrideInThisClassButton?.show()
     else
       @overrideInThisClassButton?.hide()
@@ -98,13 +97,13 @@ class ClassInspectorWdgt extends InspectorWdgt
     world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, prop, "undefined"
     @_refilterMembers()
 
-  # a mixin-donated INSTANCE member (not shadowed by this class) is removed from
+  # a mixin-donated member (not shadowed by this class) is removed from
   # the DONOR: every non-shadowing consumer class loses it (Mixin.removeMember),
-  # and the removal is logged so a world snapshot replays it. A plain member (and
-  # a mixin static) keeps the base prototype-delete flow. Either way my member set is all that
+  # and the removal is logged so a world snapshot replays it. A plain member keeps
+  # the base prototype-delete flow. Either way my member set is all that
   # changed, so I re-filter (_refilterMembers), which also drops the removed member's attribution.
   removeProperty: ->
-    if @currentPropertySourceMixin? and !@currentPropertySourceIsStatic and @list.selected?
+    if @currentPropertySourceMixin? and @list.selected?
       theMixin = @currentPropertySourceMixin
       propertyName = @list.selected.labelString
       updatedCount = theMixin.removeMember propertyName
@@ -147,7 +146,6 @@ class ClassInspectorWdgt extends InspectorWdgt
   overrideInThisClass: ->
     if !@list.selected? then return
     return unless @currentPropertySourceMixin?
-    return if @currentPropertySourceIsStatic
     theMixin = @currentPropertySourceMixin
     @currentPropertySourceMixin = undefined
     saved = false
@@ -185,12 +183,9 @@ class ClassInspectorWdgt extends InspectorWdgt
     # that does not compile changes nothing and is reported; any other throw reaches the Error log.
     if @currentPropertySourceMixin?
       theMixin = @currentPropertySourceMixin
-      if @currentPropertySourceIsStatic
-        updatedCount = theMixin.applyStaticEdit propertyName, txt
-      else
-        updatedCount = theMixin.applyMemberEdit propertyName, txt
-      world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, propertyName, txt, @currentPropertySourceIsStatic
-      # (the apply*Edit already ran notifyInstancesOfSourceChange per consumer class)
+      updatedCount = theMixin.applyMemberEdit propertyName, txt
+      world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, propertyName, txt
+      # (applyMemberEdit already ran notifyInstancesOfSourceChange per consumer class)
       @inform "saved to " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"
       return
 

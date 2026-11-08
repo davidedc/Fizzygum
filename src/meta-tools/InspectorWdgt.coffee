@@ -49,9 +49,6 @@ class InspectorWdgt extends Widget
   # selectionFromList, cleared with the selection by a re-filter; consulted by
   # ClassInspectorWdgt.applyPropertyEdit to route a save to the DONOR mixin.
   currentPropertySourceMixin: undefined
-  # true when the mixin-attributed selection is a CLASS-SIDE (static) member --
-  # the save then routes to Mixin.applyStaticEdit instead of applyMemberEdit
-  currentPropertySourceIsStatic: false
   # panes:
   list: undefined
   detail: undefined
@@ -328,7 +325,6 @@ class InspectorWdgt extends Widget
 
     @currentProperty = undefined
     @currentPropertySourceMixin = undefined
-    @currentPropertySourceIsStatic = false
     @mixinDonorLabel?._setTextNoSettle ""
 
     # my code pane back to empty and read-only, its empty text the text it compares against, so its
@@ -500,24 +496,12 @@ class InspectorWdgt extends Widget
   _sourceForFieldMember: (selected) ->
     undefined
 
-  # the static twin of _mixinProvidingMember: the parsed Mixin donating class-side
-  # member `selected` to `theClass` (undefined when none does)
-  _mixinProvidingStaticMember: (theClass, selected) ->
-    return undefined unless theClass?.augmentedWith?
-    for mixinName in theClass.augmentedWith
-      for theMixin in Mixin.allMixines
-        if (theMixin.name == mixinName or theMixin.name + "Mixin" == mixinName) and
-           theMixin.staticPropertiesSources[selected]?
-          return theMixin
-    undefined
-
   selectionFromList: (selected) ->
     if selected == undefined then return
 
     val = @inspectedObject[selected]
     @currentProperty = val
     @currentPropertySourceMixin = undefined
-    @currentPropertySourceIsStatic = false
 
     # functions should have a source somewhere
     # either in the object or in a superclass,
@@ -551,21 +535,9 @@ class InspectorWdgt extends Widget
           goingUpTargetProtChain = goingUpTargetProtChain.__proto__
       txt = val.toString()
     else
-      # this is for finding the static variables
-      if val is undefined
-        val = @inspectedObject.constructor[selected]
-        # a static may be MIXIN-donated (augmentWith copies the literal's class-side
-        # keys onto each consumer constructor at boot): show the donor's recorded
-        # source and remember the attribution so a class-inspector save routes to it
-        theMixinProvidingIt = @_mixinProvidingStaticMember @inspectedObject.constructor.class, selected
-        if theMixinProvidingIt?
-          @currentPropertySourceMixin = theMixinProvidingIt
-          @currentPropertySourceIsStatic = true
-          mixinStaticSource = theMixinProvidingIt.staticPropertiesSources[selected]
-
-      if mixinStaticSource?
-        txt = mixinStaticSource
-      else if (fieldSource = @_sourceForFieldMember selected)?
+      # a field shows its recorded source where there is one, else its own VALUE -- an undefined
+      # field reads "undefined", whatever its subject's constructor holds under the same name
+      if (fieldSource = @_sourceForFieldMember selected)?
         txt = fieldSource
       else if !val?
         txt = "undefined"

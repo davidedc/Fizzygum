@@ -4,15 +4,14 @@
 # compiles the source but eval's nothing) to catch CoffeeScript syntax errors at build
 # time, before they would otherwise only surface at in-browser boot. It loads it through
 # buildSystem/lib/meta-compiler.js, whose shim supplies the globals this class touches at
-# construction time (compileFGCode, JSSourcesContainer, srcLoadCompileDebugWrites,
-# MixedClassKeywords; Class, whose super rewrite it calls, is loaded beside it). If you make
+# construction time (compileFGCode, JSSourcesContainer, srcLoadCompileDebugWrites; Class,
+# whose super rewrite it calls, is loaded beside it). If you make
 # the constructor read a NEW global, add a matching stand-in to that shim or the gate will
 # break.
 
 class Mixin
   @allMixines: []
   nonStaticPropertiesSources: undefined
-  staticPropertiesSources: undefined
   name: ""
 
   # The mixin's source with each of its `super`s spelled out as a call -- Class.rewriteSuperCalls,
@@ -117,32 +116,6 @@ class Mixin
       updated++
     updated
 
-  # The class-side twin of applyMemberEdit: rewrite ONE static member on the donor
-  # and re-copy it onto every consumer CONSTRUCTOR whose own class body does not
-  # declare the same static (the boot-order rule, on the class side). No super
-  # rewrite: a mixin static belongs to no instance-method chain. Returns the
-  # number of consumer classes updated. Throws on compile errors.
-  applyStaticEdit: (memberName, source) ->
-    assignment = "window.__fzEditedMixinMember = "
-    compiled = compileFGCode assignment + source, true, typedFrom: assignment.length
-    compiled = @_removeHelperFunctions compiled
-    eval.call window, compiled
-    editedValue = window.__fzEditedMixinMember
-    delete window.__fzEditedMixinMember
-
-    @staticPropertiesSources[memberName] = source
-
-    updated = 0
-    for className in @_consumerClassNames()
-      theClass = window[className]
-      continue unless theClass?
-      # SHADOW GUARD: skip a consumer whose class body declares this static itself
-      continue if theClass.class?.staticPropertiesSources?[memberName]?
-      theClass[memberName] = editedValue
-      theClass.class?.notifyInstancesOfSourceChange?()
-      updated++
-    updated
-
   # Remove member `memberName` from this mixin: drop the recorded source and
   # delete the injected member (+ its fake-super companion) from every consumer
   # class -- except the shadowing ones (both guards, as applyMemberEdit), whose
@@ -165,7 +138,6 @@ class Mixin
   constructor: (source, generatePreCompiledJS, createMixin) ->
 
     @nonStaticPropertiesSources = {}
-    @staticPropertiesSources = {}
 
     # find the Mixin name
     mixinRegex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)Mixin *=/m
@@ -180,10 +152,10 @@ class Mixin
 
     sourceToBeParsed = source + "\n      $$$STOPTOKEN_LASTFIELD :"
 
-    # Now find all the fields definitions
-    # note that the constructor, methods, properties and static properties
-    # are ALL fields definitions, so we are basically going to cycle through
-    # everything
+    # Now find the instance members: the 6-space keys onceAddedClassProperties hands to
+    # addInstanceProperties, methods and fields alike, each a `name: value` definition. (The
+    # literal's 2-space class-side keys are not parsed: augmentWith copies them onto each
+    # consumer constructor, and nothing reads their source.)
 
     # to match a valid JS variable name (we just ignore the keywords):
     #    [a-zA-Z_$][0-9a-zA-Z_$]*
@@ -201,18 +173,6 @@ class Mixin
           if srcLoadCompileDebugWrites then console.log "not the stop field: " + m[1].valueOf()
 
         @nonStaticPropertiesSources[m[1]] = m[2]
-
-    # class-side (static) members: the literal's 2-space keys, copied onto each
-    # consumer CONSTRUCTOR by augmentWith's for-loop -- minus the mixin DSL's own
-    # hooks (MixedClassKeywords). Parsed so the inspector's static leg can show
-    # and edit them (applyStaticEdit); the shipped mixins currently declare none.
-    staticSourceToBeParsed = source + "\n  $$$STOPTOKEN_LASTFIELD :"
-    staticRegex = /^  ([a-zA-Z_$][0-9a-zA-Z_$]*) *: *([^]*?)(?=^  ([a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
-    while (m = staticRegex.exec(staticSourceToBeParsed))?
-        if (m.index == staticRegex.lastIndex)
-            staticRegex.lastIndex++
-        continue if MixedClassKeywords.indexOf(m[1]) >= 0
-        @staticPropertiesSources[m[1]] = m[2]
 
     if generatePreCompiledJS or createMixin
       JS_string_definitions = compileFGCode (@_rewriteSuperCalls source), true

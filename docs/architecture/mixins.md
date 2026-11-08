@@ -132,11 +132,16 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     when the class declares augmentations, and "Remove" on a mixin-donated member
     routes to `Mixin.removeMember` (deletes member + fake-super companion from every
     non-shadowing consumer; logged as a `deleted: true` registry record);
-  - **class-side statics**: the Mixin constructor parses the literal's 2-space keys
-    into `staticPropertiesSources` (DSL hooks excluded); the inspector attributes and
-    shows a donated static's source, and saves route to `Mixin.applyStaticEdit`
-    (re-copies onto every consumer CONSTRUCTOR, shadow-guarded by the consumer's own
-    class-side statics; registry records carry `static: true`).
+  - **class-side statics are outside it**: the class inspector lists a class's
+    PROTOTYPE members, and a static lives on the constructor, so no static — a class's
+    or a mixin's — is edited. (An object inspector opened on a constructor itself, by
+    double-clicking a `constructor` row, does list its statics, read-only: a constructor
+    answers no edit protocol.) A mixin's class-side keys (the literal's 2-space ones,
+    minus `MixedClassKeywords`) are copied onto each consumer constructor by
+    `augmentWith` and their source is not parsed. ⚠ Editing a static would have to
+    reach every SUBCLASS as well: `extend` gives each subclass its own copy of every
+    static of its parent as the subclass is defined, so re-copying onto the declaring
+    class (or a mixin's consumers) alone leaves the subclasses on the old value.
 - **Build/boot cost** — mixin sources ship as escaped text and are batched identically
   to classes; in the **`homepage` profile's** precompiled image the compile/eval/super-rewrite
   is baked in and only the cheap regex field-split runs per boot. Negligible either way.
