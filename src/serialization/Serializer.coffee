@@ -47,6 +47,13 @@ class Serializer
   @transientsForClass: (klass) ->
     new Set classStaticListMergedUpTheChain klass, "serializationTransients"
 
+  # Can an instance of `klass` carry a {"$src"}, a method injected into it? Only a class whose
+  # instances answer injectProperty (a widget's): the load compiles a {"$src"} with that very method.
+  # The one test of it, asked by the save (encodeFunction) and by the load's refusal
+  # (Deserializer._functionSourceOnANonWidget), so a save cannot write one the load refuses.
+  @classTakesInjectedMethods: (klass) ->
+    klass?.prototype?.injectProperty?
+
   # Serialize a widget subtree to a JSON envelope string.
   # opts:
   #   prettyPrint       — indent the JSON for humans/diffs (default false)
@@ -306,12 +313,18 @@ class Serializer
       {$r: encodeToSlot(value, path)}
 
     encodeFunction = (fn, owner, propName, path) ->
-      # a user-injected method carries its source in a sibling `<name>_source` string
-      if owner? and propName? and owner[propName + "_source"]?
-        return {$src: owner[propName + "_source"]}
+      # a widget's INJECTED method carries its source in its own sibling `<name>_source` string
+      # (Widget.injectProperty), and that is the one function the load restores, with the widget's own
+      # injectProperty: so a {"$src"} is written for nothing else. A `<name>_source` up the prototype
+      # chain is a CLASS edit's (Class.applyMemberEdit), not this function's source, and one that is
+      # not a string is no source at all.
+      sourceName = propName + "_source"
+      if owner? and propName? and Serializer.classTakesInjectedMethods(owner.constructor) and
+         Object::hasOwnProperty.call(owner, sourceName) and typeof owner[sourceName] is "string"
+        return {$src: owner[sourceName]}
       fail ("the function-valued property ." + propName + " has no editable source and is not a serialization transient"),
            path, "a function (" + propName + ")",
-           "Declare " + propName + " in the owning class's @serializationTransients (it will be recomputed on restore), or set its source via injectProperty."
+           "Declare " + propName + " in the owning class's @serializationTransients (it will be recomputed on restore), or, on a widget, set its source via injectProperty."
 
     # reserve a slot for `obj`, then populate its record; returns the slot index.
     encodeToSlot = (obj, path) ->

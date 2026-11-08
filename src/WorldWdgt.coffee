@@ -3008,13 +3008,14 @@ class WorldWdgt extends IconGridPanelWdgt
       world.inform "This is not a Fizzygum world snapshot file."
       return
     # A FILE THIS BUILD CAN NEVER RESTORE IS REFUSED HERE, before anything changes: a newer format
-    # version, a malformed object table, or a record naming a class that is neither here nor owned
-    # by a part this build ships. Each would make the restore throw AFTER step 1 has destroyed the
-    # whole desktop, leaving the user an empty one. Like the format check it is a fact about the
-    # file, so it precedes the confirm — nobody is asked to replace their desktop with a file that
-    # cannot load — and it precedes step 0, so a file refused anyway costs no part fetch. A class a
-    # LAZY part provides is not refused: that file takes step 0's load-then-re-enter path, and the
-    # re-entry passes this pure check again.
+    # version, a malformed object table, a method's source where no widget can take it, or a record
+    # naming a class that is neither here nor owned by a part this build ships. Each would make the
+    # restore throw AFTER step 1 has destroyed the whole desktop, leaving the user an empty one.
+    # Like the format check it is a fact about the file, so it precedes the confirm — nobody is
+    # asked to replace their desktop with a file that cannot load — and it precedes step 0, so a
+    # file refused anyway costs no part fetch. A class a LAZY part provides is not refused: that
+    # file takes step 0's load-then-re-enter path, and the re-entry runs this pure check again —
+    # which is also when a method's source on such a class is judged, still before step 1.
     whyNot = Deserializer.whyItCanNeverBeRestored envelope, (className) => @parts.canEverProvideClass className
     if whyNot?
       @inform "This world snapshot cannot be loaded here: " + whyNot + ".\nYour desktop has been left as it was."

@@ -1275,3 +1275,28 @@ for (const s of sites) if (s.absentBefore.length) {
       classes, 14,508 undefined prototype fields), so no reference changed. `mixins.md` states that statics are outside
       the inspector's editing, and that an edit to one would have to reach every subclass, since `extend` gives each
       subclass its own copy.
+- [x] **`Deserializer.compileFunction` compiles through the run gesture** (found closing the instance inspector's
+      double notification, in the plan's ledger). A `{"$src"}` the load cannot hand to its widget's `injectProperty`
+      (one nested in an array or a map, or one on a non-widget) is compiled by `world.evaluateString`, which ends in
+      the world's `sourceChanged`: by reading, a repaint of the whole world per such function (the world's own
+      re-layout is a no-op), not measured. Compiling a function source needs no widget at all. Measure how often a
+      load takes this path first. — CLOSED 2026-11-08 by
+      retirement: no load takes the path. Measured with a plant that fails any run reaching it (proven on hand-built
+      envelopes): the dpr-1 suite, both serialization rigs and the parts snapshot rig reach it from no load, the one
+      hit being a test calling it directly. No gesture's save writes such a `{"$src"}`: the Serializer encodes array,
+      map and set items with no owner, so a function there fails the save, and no writer of a `<name>_source`
+      (`injectProperty` and the rename, on a widget; `Class.applyMemberEdit`, on a prototype) reaches a non-widget.
+      Only code a person runs could plant one (a plain object holding `f` and `f_source`, which the old save wrote
+      through the chain read below); the save now refuses it as a function without its own source.
+      `Deserializer.compileFunction` and both its call sites are deleted, so a `{"$src"}` has one meaning, a
+      widget's injected method, compiled with that widget's `injectProperty`. A file holding one anywhere else is
+      refused before anything is built or torn down: one in a tag record by `_envelopeShapeProblem`, one on
+      a record of a class that cannot inject a method by `_functionSourceOnANonWidget`, which the world loader asks
+      through `whyItCanNeverBeRestored` (again on its re-entry with a lazy part's classes resident) and
+      `deserialize` asks before pass 1. The save's half matches: `encodeFunction` writes a `{"$src"}` only for an
+      OWN `<name>_source` string on an owner whose class takes injected methods (`Serializer.classTakesInjectedMethods`,
+      the load's own test), so a class edit's, on the prototype, is never written as an instance's. The
+      serialization rig plants all three (`world.loadGuard.strayFunctionSourceRefused`,
+      `widgetFileStrayFunctionSourceRefused`, `serialize2.functionSourceMustBeOwn`), each seen failing on the old
+      code; `SystemTest_macroEvaluateStringReturnsItsValue` drops its `compileFunction` assertions. Filed beside it:
+      a world snapshot cannot be saved while a class inspector is open.

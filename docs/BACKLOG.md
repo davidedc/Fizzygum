@@ -17,12 +17,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       and `node_modules`, some pass over nothing, and some also read the harness. A file one walk skips is read by the
       others, and nothing says which set a gate read. One definition of src's files, as `lib/tests-repo-code.js`'s
       `testNames` is of the tests.
-- [ ] **`Deserializer.compileFunction` compiles through the run gesture** (found closing the instance inspector's
-      double notification, in the plan's ledger). A `{"$src"}` the load cannot hand to its widget's `injectProperty`
-      (one nested in an array or a map, or one on a non-widget) is compiled by `world.evaluateString`, which ends in
-      the world's `sourceChanged`: by reading, a repaint of the whole world per such function (the world's own
-      re-layout is a no-op), not measured. Compiling a function source needs no widget at all. Measure how often a
-      load takes this path first.
+- [ ] **A world snapshot cannot be saved while a class inspector is open** (found closing "`Deserializer.compileFunction`
+      compiles through the run gesture", in the plan's ledger). A `ClassInspectorWdgt`'s subject is a class
+      PROTOTYPE, and the save writes it as a record of all its own members, so it meets the prototype's methods and
+      refuses: measured, `SerializationError: the function-valued property .constructor has no editable source`.
+      The refusal is loud, and it costs the user the whole snapshot. One direction to measure: a prototype belongs
+      to a class, not to the world, so a file could carry the class it names rather than its members.
 - [ ] **A plain class-member rename or removal does not survive a snapshot load** (found closing the same item, and
       stated in `ClassInspectorWdgt` at its raw steps). `_applyPropertyRemoval` / `_applyPropertyRename` delete and
       re-key the prototype member: a `<name>_source` live override stays behind under the old name, and the edit is

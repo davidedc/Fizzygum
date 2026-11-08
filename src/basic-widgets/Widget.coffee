@@ -5552,10 +5552,9 @@ class Widget extends TreeNode
   # repaint).
   # ⚠ The result is returned EXPLICITLY, and must stay that way. The notification has to run AFTER
   # the eval, so without this line CoffeeScript returns `sourceChanged()`'s value and the eval's own
-  # value is computed and dropped on the floor. Three callers read what comes back: the evaluation
-  # menu's "Show selection" and "Inspect selection" (`TextWdgt`) and `Deserializer.compileFunction`,
-  # which needs the live function it compiled. None of them throws when handed the wrong thing, so
-  # `fg menusweep` cannot see a regression here — this comment is the guard, together with
+  # value is computed and dropped on the floor. Two callers read what comes back: the evaluation
+  # menu's "Show selection" and "Inspect selection" (`TextWdgt`). Neither throws when handed the wrong
+  # thing, so `fg menusweep` cannot see a regression here — this comment is the guard, together with
   # `SystemTest_macroEvaluateStringReturnsItsValue`.
   evaluateString: (codeSource) ->
     result = @_evaluateInMyScope codeSource

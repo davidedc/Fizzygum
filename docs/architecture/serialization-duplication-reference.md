@@ -165,7 +165,8 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
 
 - **References are structured values, never in-band strings** — this is what fixes the old
   format's silent corruption of any user string starting with `$`. The three reference
-  forms (§4) are `{"$r":n}`, `{"$wk":key}`, `{"$src":coffee}` (plus `{"$ext":id}`, the token
+  forms (§4) are `{"$r":n}`, `{"$wk":key}`, `{"$src":coffee}` — a widget's injected method, only
+  ever a property of that widget's record — (plus `{"$ext":id}`, the token
   the tolerant `onExternalPointer:"record"` mode emits — resolvable by unique-id on restore,
   but no shipped caller selects that mode). A plain JSON object as a *value* is always a table
   slot (`$Object`), so a `props` value is unambiguously one of the reference forms by
@@ -367,10 +368,13 @@ NAMED like one.
     restored widget, so the stepping loop re-seeds it on first sight — without that, a
     snapshot-restored throttled stepper never stepped again).
 - **Functions**: for an own function-valued property `foo` —
-  - if a `foo_source` sibling exists (a user-injected method) → serialize `{"$src":
-    <source>}` and let `foo_source` ride as a normal string; restore recompiles it with
-    `injectProperty` on the owning widget (`Deserializer.compileFunction`, through
-    `world.evaluateString`, compiles one nested in an array or a map, or one on a non-widget).
+  - if the owner's class takes injected methods (a widget's, `Serializer.classTakesInjectedMethods`)
+    and the owner carries its OWN `foo_source` string (a user-injected method, `injectProperty`) →
+    serialize `{"$src": <source>}` and let `foo_source` ride as a normal string; restore
+    recompiles it with `injectProperty` on the owning widget. A `foo_source` up the prototype
+    chain is a class edit's (§12), not this function's, so it does not count. That
+    is the one place a save writes a `{"$src"}`, so a file holding one anywhere else is refused
+    up front (§9).
   - else if `foo` is in the class's transients → dropped; the class recomputes it (e.g.
     patch nodes recompute `functionFromCompiledCode` from their text; scroll-momentum
     `@step` closures simply stop, which is correct for a settled restore).
@@ -482,9 +486,10 @@ load this file: …" for a load, "Cannot serialize: …" for a save. Menu/file a
 ## 9. Deserializer
 
 `src/serialization/Deserializer.coffee`, five passes: (1) instantiate shells /
-native-type factories; (2) populate & link, resolving `$r`/`$wk`/`$src`/`$ext` at any
-nesting depth; (3) identity & registration (`registerThisInstance`); (4) fixups
-(compile `$src`, decode async assets into one `whenReady` promise,
+native-type factories; (2) populate & link, resolving `$r`/`$wk`/`$ext` at any
+nesting depth and setting each `$src` property aside; (3) identity & registration
+(`registerThisInstance`); (4) fixups (compile each `$src` with its widget's `injectProperty`,
+decode async assets into one `whenReady` promise,
 re-register `memberships`, per-class `_afterDeserialization` hook — whose answer, when it is a
 thenable (an element load the hook started), `whenReady` awaits too); (5) deliver a detached
 `{ widget, whenReady }` for the caller to attach. `Widget.deserialize` /
@@ -499,6 +504,18 @@ and then throw, or build a non-Fizzygum shell, after the desktop is gone. A reco
 answers fails as a load `SerializationError` (§8), from a widget file as from a world file. The rig's
 `world.loadGuard.notAClassRefused.*`, `widgetFileNotAClassIsALoadError`, `appKeyNotAClassUnresolved`
 and `idCountersRestoreOnlyClasses` hold it; `boot.classNamedIsTheOneDefinition` holds the predicate.
+
+A `{"$src"}` stands only as a property of a widget's record, since the load compiles it with that
+widget's `injectProperty` and a save writes no other (§5; both sides ask `Serializer.classTakesInjectedMethods`).
+One in a tag record (an `$Array` or `$Set` item, a `$Map` entry, an `$Object` property, any `TAG_BUILDERS`
+record) makes a malformed table (`Deserializer._envelopeShapeProblem`). One among the properties of a
+record of a class that cannot inject a method is refused by
+`_functionSourceOnANonWidget`, which judges only the classes resident when it is asked: the world loader
+asks it through `whyItCanNeverBeRestored` before its teardown, again on re-entering with a lazy part's
+classes loaded, and `deserialize` asks it before pass 1, so a refused widget file leaves no shell
+registered. The rig's `world.loadGuard.strayFunctionSourceRefused` and
+`widgetFileStrayFunctionSourceRefused` hold both, and `serialize2.functionSourceMustBeOwn` holds the
+save's half.
 
 ---
 
@@ -573,16 +590,20 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    - **The format check** (`format` + `kind:"world"`) — not a snapshot: one `inform`, stop.
    - **The refusal of a file this build can NEVER restore** — `Deserializer.whyItCanNeverBeRestored`
      (a pure read of the envelope) names the reason: a `formatVersion` newer than
-     `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array, or a record naming
-     no class), or a record class that is no tag (an own-property `TAG_BUILDERS` lookup) and no class
-     boot's `classNamed` answers, and that this artifact can never provide
+     `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array, a record naming
+     no class, or a `{"$src"}` in a tag record), a `{"$src"}` on a record of a class that cannot
+     inject a method (§9), or a record class that is no tag (an own-property `TAG_BUILDERS` lookup)
+     and no class boot's `classNamed` answers, and that this artifact can never provide
      (`world.parts.canEverProvideClass` — resident, or owned by a part this build ships, so a class
      a LAZY part provides is not a reason). One `inform` ("…Your desktop has been left as it
      was."), stop. It mirrors exactly the throws a restore would hit — `Deserializer.deserialize`
-     raises its envelope-level ones through the same helper (`_envelopeShapeProblem`), and
-     `@instantiate` keeps its per-record throw as the net for every other caller — and it precedes
-     the confirm (a fact about the FILE: nobody is asked to replace their desktop with a file that
-     cannot load) and the parts fetch (a file refused anyway costs no fetch).
+     raises its envelope-level ones through the same two helpers (`_envelopeShapeProblem`,
+     `_functionSourceOnANonWidget`), and `@instantiate` keeps its per-record throw as the net for
+     every other caller — and it precedes the confirm (a fact about the FILE: nobody is asked to
+     replace their desktop with a file that cannot load) and the parts fetch (a file refused anyway
+     costs no fetch). One reason waits for a lazy part: whether a class it provides can take a
+     method's source is judged once the part has loaded, when the loader re-enters — still before
+     the teardown, so that file too leaves the desktop as it was.
    - **The confirm** (a file/menu load warns it replaces the desktop AND can run code — §4.12; the
      rig / a macro pass `skipConfirm`).
    - **Pre-load what the file needs** — two bail-out-then-re-enter guards, in that order. They sit

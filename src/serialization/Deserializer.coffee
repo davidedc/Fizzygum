@@ -26,6 +26,9 @@ class Deserializer
     # whyItCanNeverBeRestored), so a file it lets through cannot fail one of these after it
     shapeProblem = @_envelopeShapeProblem envelope
     throw new SerializationError shapeProblem, direction: "load" if shapeProblem?
+    # and asked before the first shell is built, so a refused file leaves nothing registered
+    functionSourceProblem = @_functionSourceOnANonWidget envelope
+    throw new SerializationError functionSourceProblem, direction: "load" if functionSourceProblem?
 
     records = envelope.objects
     kind = envelope.kind or "widget"
@@ -47,8 +50,6 @@ class Deserializer
       if ref.$ext?
         # prefer a shell being restored (world snapshot); fall back to the live world.
         return shellByUniqueId.get(ref.$ext) ? @resolveExternal ref.$ext
-      # a $src at a non-property position (e.g. inside an array/Map) — rare; compile eagerly.
-      return @compileFunction(ref.$src) if ref.$src?
       undefined
 
     assignProps = (shell, props) ->
@@ -90,12 +91,11 @@ class Deserializer
         shell.registerThisInstance()
 
     # ---- Pass 4: fixups ----
-    # (a) compile user-injected methods via the existing injectProperty machinery
+    # (a) compile each injected method with its widget's own injectProperty: a {"$src"} stands only as a
+    #     property of a widget's record (_envelopeShapeProblem and _functionSourceOnANonWidget refused
+    #     every other place before pass 1)
     for job in srcJobs
-      if job.shell.injectProperty?
-        job.shell.injectProperty job.name, job.source
-      else
-        job.shell[job.name] = @compileFunction job.source
+      job.shell.injectProperty job.name, job.source
     # (b) rebuild any recorded derived contexts from their sibling canvases (naming
     #     convention: "<name>Context" <- canvas "<name>"; cf. CanvasRenderingContext2D)
     for record, i in records
@@ -129,7 +129,8 @@ class Deserializer
   # (no closing full stop), or undefined when it can. PURE — it only reads the envelope — which is
   # what lets WorldWdgt.loadWorldSnapshot ask it before its teardown destroys the desktop. It
   # predicts exactly the throws a restore would hit and no others: the envelope-level ones
-  # @deserialize raises up front (one helper answers both, so the two cannot drift), and
+  # @deserialize raises up front (the same two helpers answer both, so the two cannot drift: the
+  # envelope's shape, and a method's source on a class that cannot take one), and
   # @instantiate's per-record one — a record class with no tag builder that can never arrive. Its
   # first two tests ARE @instantiate's, made the same way (@_tagBuilderFor, then classNamed), so a
   # record class either passes them, and @instantiate builds it, or must be one that can still arrive.
@@ -141,6 +142,8 @@ class Deserializer
   @whyItCanNeverBeRestored: (envelope, canStillArrive) ->
     shapeProblem = @_envelopeShapeProblem envelope
     return shapeProblem if shapeProblem?
+    functionSourceProblem = @_functionSourceOnANonWidget envelope
+    return functionSourceProblem if functionSourceProblem?
     unbuildable = []
     for record in envelope.objects
       continue if @_tagBuilderFor(record.class)?
@@ -172,7 +175,45 @@ class Deserializer
     # built (an app key naming a class this build lacks is NOT one -- it is left undefined, resolveApp)
     for key in Serializer.wellKnownKeysIn envelope
       return "it names the well-known object '" + key + "', which no Fizzygum build has" unless WellKnownObjects.isKnownKey key
+    # a {"$src"} is a widget's injected method, the one function a save writes (Serializer's
+    # encodeFunction), so it stands only as a property of a class record: one in a tag record -- an
+    # $Array or $Set item, a $Map entry, an $Object property, any field of a Color -- is somewhere no
+    # save puts one
+    for record, i in envelope.objects when @_tagBuilderFor(record.class)?
+      if @_holdsFunctionSource @_refsOf record
+        return "its object table is malformed (entry " + i + " holds a method's source outside a widget)"
     undefined
+
+  # The class half of where a {"$src"} may stand, a clause in whyItCanNeverBeRestored's form or
+  # undefined: a class record's props, the only field the load reads of one, hold none unless its
+  # class takes injected methods (Serializer.classTakesInjectedMethods, the save's own test). It asks
+  # the classes resident NOW and leaves a class still to arrive unjudged: the world loader asks again
+  # on re-entering with its lazy parts loaded, still before its teardown, and the widget-file door
+  # asks before pass 1.
+  @_functionSourceOnANonWidget: (envelope) ->
+    for record, i in envelope.objects when !@_tagBuilderFor(record.class)?
+      klass = classNamed record.class
+      continue unless klass? and !Serializer.classTakesInjectedMethods klass
+      if @_holdsFunctionSource @_propRefsOf record
+        return "it gives a method's source to a " + record.class + " (entry " + i + "), and only a widget takes one"
+    undefined
+
+  # Is one of `refs` a {"$src"}? Each is one reference form: the objects it names are records of their own.
+  @_holdsFunctionSource: (refs) ->
+    refs.some (ref) -> ref? and typeof ref is "object" and ref.$src?
+
+  # The references a record carries: its items, its entries' keys and values, its props. A field of a
+  # shape the format does not have (items that are not a list, an entry that is not a pair) carries none
+  # here: this reads a record, it does not vet one, and its reader must answer for any file.
+  @_refsOf: (record) ->
+    refs = if Array.isArray record.items then record.items.slice() else []
+    if Array.isArray record.entries
+      refs = refs.concat entry for entry in record.entries when Array.isArray entry
+    refs.concat @_propRefsOf record
+
+  @_propRefsOf: (record) ->
+    return [] unless record.props? and typeof record.props is "object"
+    (ref for own name, ref of record.props)
 
   # --- native-type tag registry ---
   # One entry per serialization tag, consulted by BOTH passes: the pass-1 factory
@@ -280,12 +321,3 @@ class Deserializer
   @resolveExternal: (uniqueID) ->
     return undefined unless world?
     world.topWdgtSuchThat? (w) -> w.uniqueIDString?() is uniqueID
-
-  @compileFunction: (source) ->
-    # compile a bare "(args) -> body" CoffeeScript function source to a live function
-    # (rare fallback; the common path is injectProperty on the owning widget). Uses the
-    # live world's evaluateString (a Widget method) as the CoffeeScript entry point.
-    try
-      world?.evaluateString? "(" + source + ")"
-    catch e
-      undefined
