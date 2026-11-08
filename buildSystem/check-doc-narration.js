@@ -14,6 +14,12 @@
 //
 // SCOPE — deliberately NOT every bucket:
 //   CHECKED   architecture/ tooling/     present tense by definition
+//   CHECKED   BACKLOG.md                 for ONE thing: a closed item (a `- [x]` task item at any depth, any bullet,
+//                                        outside a fenced block). The file holds OPEN items only — filing rule 2
+//                                        moves a closed item, verbatim, into the ledger of the plan that closed it —
+//                                        so a `- [x]` there is an item that never moved. A hard zero with no baseline
+//                                        (BACKLOG_CLOSED_ITEM). Its prose is NOT judged for narration: an open item's
+//                                        "found 2026-10-23" is provenance.
 //   SKIPPED   specs/                     a spec states what the product must do, and its
 //                                        landing/change statements are load-bearing (owner
 //                                        direction 2026-08-09)
@@ -26,9 +32,10 @@
 // stale the verification is, which is useful and dateable. Narration is telling the story of
 // how the code got here.
 //
-// IT IS A RATCHET, not a zero-baseline gate — same shape as `check-stinks.js`. The buckets
-// carry pre-existing debt (mostly in the two gate-documentation docs, where a ban is explained
-// by narrating what was removed), and rewriting all of it at once risks damaging real content.
+// THE NARRATION RULES ARE A RATCHET, not a zero-baseline gate — same shape as `check-stinks.js`
+// (BACKLOG_CLOSED_ITEM is a hard zero: SCOPE above). The buckets carry pre-existing debt (mostly
+// in the two gate-documentation docs, where a ban is explained by narrating what was removed),
+// and rewriting all of it at once risks damaging real content.
 // So: a per-file baseline in `check-doc-narration-baseline.json`, and the check FAILS when any
 // file's count RISES or a new file starts narrating. Accretion stops today; the debt burns down
 // deliberately. Lower a number whenever you clean a doc — `--write-baseline` re-records.
@@ -137,6 +144,20 @@ if (write) {
   process.exit(0);
 }
 
+// BACKLOG.md's closed items (header, SCOPE). An index it cannot read is one this run checked nothing in: no pass.
+const BACKLOG_PATH = path.join(DOCS, 'BACKLOG.md');
+if (!fs.existsSync(BACKLOG_PATH)) { console.error(`[doc-narration] ERROR — no ${BACKLOG_PATH}: a run that cannot read the open-items index checked nothing there — no pass`); process.exit(2); }
+// A task-list item at any depth, any bullet (`-` `*` `+` `1.` `1)`), inside a quote too; a fenced block is skipped.
+const TASK_ITEM = /^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[([ xX])\](?=\s|$)/;
+const closedItems = [];
+let openItems = 0;
+for (const [lineNo, line] of proseLines(fs.readFileSync(BACKLOG_PATH, 'utf8'))) {
+  const m = line.match(TASK_ITEM);
+  if (!m) continue;
+  if (m[1] === ' ') openItems++;
+  else closedItems.push(`  docs/BACKLOG.md:${lineNo}  [closed item]  …${line.trim().slice(0, 110)}`);
+}
+
 const baseline = fs.existsSync(BASELINE_PATH)
   ? JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8')) : {};
 const baseTotal = Object.values(baseline).reduce((a, b) => a + b, 0);
@@ -153,6 +174,13 @@ for (const [f, b] of Object.entries(baseline)) {
 
 if (verbose && hits.length) console.log(hits.join('\n') + '\n');
 
+if (closedItems.length) {
+  console.log(`BACKLOG HOLDS CLOSED ITEMS — ${closedItems.length} line(s):`);
+  for (const line of closedItems) console.log(rules.fired('BACKLOG_CLOSED_ITEM', line));
+  console.log('\ndocs/BACKLOG.md holds OPEN items only (docs/README.md filing rule 2): move each closed item, verbatim,');
+  console.log('into the trailing `## BACKLOG ledger` section of the plan that closed it.');
+  if (risen.length) console.log('');
+}
 if (risen.length) {
   console.log(`DOC-NARRATION ROSE — ${scanned} docs scanned, ${total} line(s) vs baseline ${baseTotal}:`);
   console.log(risen.join('\n'));
@@ -162,10 +190,11 @@ if (risen.length) {
   console.log('fact without the history, or move the history to the plan/archive doc that owns it.');
   console.log('specs/, plans/, archive/ and measurements/ are chronological by design, not scanned.');
   console.log('Run with --full to list every line.');
-  process.exit(1);
 }
+if (closedItems.length || risen.length) process.exit(1);
 
-console.log(`OK — ${scanned} docs in ${BUCKETS.join('/')}; ${total} narration line(s), baseline ${baseTotal}.`);
+console.log(`OK — ${scanned} docs in ${BUCKETS.join('/')}; ${total} narration line(s), baseline ${baseTotal}; ` +
+  `BACKLOG.md ${openItems} open item(s), 0 closed.`);
 if (improved.length) {
   console.log('IMPROVED — bank it with `node buildSystem/check-doc-narration.js --write-baseline`:');
   console.log(improved.join('\n'));

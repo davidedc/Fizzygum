@@ -497,7 +497,8 @@ the dead one it replaced — and eventually contradict itself, one section stati
 another still proposed it.
 
 **Scope is deliberately narrow.** It scans `architecture/` + `tooling/` (present tense by definition)
-and NOTHING else: `specs/` is excluded because a spec's change/landing statements are load-bearing
+for narration, and `BACKLOG.md` for ONE thing — a closed item, read at the end of this section — and
+NOTHING else: `specs/` is excluded because a spec's change/landing statements are load-bearing
 (owner direction), and `plans/`, `archive/` and `measurements/` are chronological BY DESIGN — archive
 is immutable past tense, plans are future tense, measurements are dated snapshots.
 
@@ -513,6 +514,13 @@ drift as accepted. A provenance stamp ("verified against `src/` <date>")
 is NOT narration and is skipped; `<!-- narration-ok: reason -->` exempts a line that must quote the
 trigger words. Fenced blocks and inline code are stripped before matching, so file paths and SHAs
 cannot trip it. Not on the build — docs prose should not block a build — so it rides the gauntlet's `refs` leg (a commit point); `fg doc-narration` runs it alone.
+
+**`BACKLOG.md` holds OPEN items only** (filing rule 2: a closed item moves, verbatim, into the trailing
+`## BACKLOG ledger` of the plan that closed it), so a closed task item there (`- [x]` at any depth,
+under any bullet, outside a fenced block) is an item that never moved: `BACKLOG_CLOSED_ITEM`, a hard
+zero with no baseline and no hatch. Nothing else in the file is judged — an open item's "found
+2026-10-23" is its provenance, not narration — and the OK line states the open count it read. A docs
+tree with no `BACKLOG.md` is INVALID (exit 2), never a pass.
 
 ## 3c. The ANALYSIS tools (advisory censuses — never gates)
 

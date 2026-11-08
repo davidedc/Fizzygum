@@ -5,7 +5,8 @@ item leaves this file when it closes, and lands in the `## BACKLOG ledger` secti
 that closed it (README rule 2). A subsection's owning plan lives in `plans/` while the arc is
 active and in `archive/` once it closes; either way the open items it left behind stay here.
 Closed items whose arc never had a plan file are collected in
-`archive/backlog-closed-items-ledger.md`. Keep it current per README rules 2 and 5.
+`archive/backlog-closed-items-ledger.md`. Keep it current per README rules 2 and 5; a `- [x]` line
+here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` leg).
 
 ## Open items by owning arc
 
