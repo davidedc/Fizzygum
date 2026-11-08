@@ -4,7 +4,7 @@
 // absent-tests-repo NOTE rule. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
-const { analyse, evaluate, guardTokensOf, gateFileNames, preview, LANG_OF_EXT } = require('./check-hand-lists');
+const { analyse, evaluate, guardTokensOf, gateFileNames, harvestUniverse, preview, LANG_OF_EXT } = require('./check-hand-lists');
 const t = require('./lib/selftest-verdict').cases('hand-lists');
 
 function fail(msg) { console.error(`[hand-lists] self-test ERROR — ${msg}`); process.exit(2); }
@@ -23,6 +23,7 @@ const CORPUS = [
     '  ]',
     '  # prose quoting a list opens none: ["Widget", "PanelWdgt"]',
     '  @interpolated: ["#{x} Widget", "Widget", "MenuWdgt"]',
+    '  @afterRegex: /#/.test(x) and ["Widget", "MenuWdgt"]',
   ] },
   { rel: 'corpus/unsanctioned-members.js', text: [
     "const VERBS = [",
@@ -130,6 +131,7 @@ const CORPUS = [
 const EXPECTED_LISTS = [
   ['corpus/unsanctioned-classes.coffee', '@things:', 'UNSANCTIONED', 'CLASSES'],         // multi-line, interleaved comments
   ['corpus/unsanctioned-classes.coffee', '@interpolated:', 'UNSANCTIONED', 'CLASSES'],   // a `#` inside a string opens no comment
+  ['corpus/unsanctioned-classes.coffee', '@afterRegex:', 'UNSANCTIONED', 'CLASSES'],     // …nor one inside a regex
   ['corpus/unsanctioned-members.js', 'const VERBS', 'UNSANCTIONED', 'MEMBERS'],          // `//` and block comments between items
   ['corpus/unsanctioned-members.js', 'const URLS', 'UNSANCTIONED', 'CLASSES'],           // a `//` inside a string opens no comment
   ['corpus/declaration.coffee', '@serializationTransients: [', 'DECLARATION', 'MEMBERS'],
@@ -251,8 +253,29 @@ function main() {
     const got = tokenAt(noFg, rel, needle, nth);
     check(got === want, `fg absent: ${rel} marker -> ${got} (expected ${want})`);
   }
+  universeCases();
   proveTheGate();
   t.done();
+}
+
+// THE UNIVERSE a list's names are checked against: every class (a file's name) and every class-body key, read past
+// a heregex holding `'''` and never from a heredoc's lines.
+function universeCases() {
+  const fs = require('fs'), os = require('os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hand-lists-universe-'));
+  const file = path.join(dir, 'CorpusUniverse.coffee');
+  fs.writeFileSync(file, ['class CorpusUniverse',
+    "  corpusPattern: ///'''///",
+    '  corpusAfterPattern: -> 1',
+    '  corpusDoc: """',
+    '  corpusNotAKey: 1',
+    '  """',
+    '  @corpusAfterDoc: 2', ''].join('\n'));
+  const { classes, members } = harvestUniverse([file]);
+  fs.rmSync(dir, { recursive: true, force: true });
+  const got = [...classes, ...members].join(',');
+  t.check(got === 'CorpusUniverse,corpusPattern,corpusAfterPattern,corpusDoc,corpusAfterDoc',
+    "the universe: a key after a heregex holding ''' is a key, a heredoc's line is none", got);
 }
 
 // ---- the REAL gate on a planted src copy ---------------------------------------------------------------------------

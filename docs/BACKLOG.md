@@ -11,21 +11,18 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **Hand-rolled `#` comment cutters beside `lib/coffee-mask.js`** (found closing "two readers of a test's macro
-      sources", in the plan's ledger). Several gates
-      cut CoffeeScript comments with their own per-line scan instead of coffee-mask, most of them at the first `#`
-      even inside a string — so a `"#{…}"` interpolation or a `#` in a string hides the code after it on that line:
-      `stripComment` in `check-stinks.js` (beside its string-aware twin), `check-invalidation-receivers.js` (filed
-      below), `check-plane-discipline.js`, `check-relayout-bounds-first.js`; `stripLine` in
-      `census-nosettle-naming.js`, `check-layering.js` and its kept-in-sync copy in `check-unresolved-sends.js`;
-      layering rule [D]'s `indexOf('#')`; `lib/name-definitions.js`'s `stripComment`; and the tests repo's
-      `check-macro-source-discipline.js` `stripComment` (quote-aware). One masker, measured gate by gate.
-- [ ] **Four walks find a test's command files** (found closing the same item): `lib/tests-repo-code.js`'s
+- [ ] **Four walks find a test's command files** (found closing "two readers of a test's macro sources", in the
+      plan's ledger): `lib/tests-repo-code.js`'s
       `macroFiles` (every `*_automationCommands.js` under `tests/`, skipping `automation-assets/` and dot directories),
       `check-layering.js`'s `collectMacros` (every one, nothing skipped), and the discipline gate's and aim-census's
       `tests/SystemTest_*/<name>_automationCommands.js`. They agree today; the harness's own definition is the manifest
-      (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's.
-- [ ] **A mixin's static edit does not reach a consumer's subclasses** (found closing the same item).
+      (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's. Beside them, src's macro
+      sources — the bodies of MacroToolkit's `Macro.fromString` heredocs — are found three ways (found closing the
+      comment cutters item): `lib/call-sites.js` by parse, `check-layering.js`'s `macroVerbTexts` and `aim-census.js`'s
+      `toolkitVerbs` by an opener regex and a lone closing `"""`, reading the raw lines rather than the value the
+      compiler makes of them. One definition of where macro sources live, read as the text the page compiles.
+- [ ] **A mixin's static edit does not reach a consumer's subclasses** (found closing "two readers of a test's macro
+      sources", in the plan's ledger).
       `Mixin.applyStaticEdit` writes the new static onto each consumer class, but `extend` copied a class's statics
       onto each subclass when the subclass was defined (`globalFunctions.coffee`'s `extend`), so a subclass keeps the
       old value while its instances are notified. No mixin declares a static today.
@@ -51,8 +48,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes
       on purpose, filed with what it misses:
-  - [ ] `check-invalidation-receivers` cuts a line at a `#` inside a string, so a cross-object invalidation after
-        such a string on the same line goes unseen.
   - [ ] `check-raw-pointer-reads`: a column-0 line inside a handler ends its body, and any `screenPointToMyPlane` on
         a line excuses every raw read on it.
   - [ ] `vm-truth-gate.js` skips its heap-floor ceiling below 20 samples per page, so a short (`--tests=`) run never

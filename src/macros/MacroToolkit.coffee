@@ -1121,6 +1121,8 @@ class MacroToolkit
   # event-time window at every speed. The false-double-click guard is applied ONCE to the first click (vs a prior
   # distinct gesture); clicks 2..N are the DELIBERATE repeats that MUST fold, so they skip it.
   _syntheticEventsConsecutiveLeftClicks_InputEvents: (numberOfClicks = 2, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), millisecondsBetweenClicks = 120, clickMilliseconds = 50) ->
+    # public-call-sanctioned: syntheticEventsMouseDown/Up_InputEvents are L1 event-synthesis primitives (they
+    # push queued presses and releases, not any settling/orchestration) — the clicks this helper spaces in time.
     firstDownAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
     for i in [0...numberOfClicks]
       t = firstDownAbs + i * millisecondsBetweenClicks

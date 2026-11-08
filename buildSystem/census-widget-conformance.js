@@ -59,23 +59,23 @@ function walk(dir, acc = []) {
   }
   return acc;
 }
-// naive comment strip — the same trade every scanner in this directory makes
-const strip = (s) => s.split('\n').map((l) => (l.indexOf('#') < 0 ? l : l.slice(0, l.indexOf('#')))).join('\n');
-// A class's own CODE: its text with block strings and comments taken out. A block string ("""…"""
-// or '''…''') is DATA even when it holds CoffeeScript — PaintToolbarWdgt's tool sources are injected
-// onto the paint surface and run with @ bound to IT, so an `@queue =` in one is the surface's field,
-// never the toolbar's. Block strings go first: a `#` inside one is text, not a comment.
-const codeOf = (text) => strip(text.replace(/"""[\s\S]*?"""/g, '""').replace(/'''[\s\S]*?'''/g, "''"));
+// Every source is read through lib/coffee-mask.js, and every facet reads its BARE code: comments and literal contents
+// blanked, every line in place. A block string ('''…''' or """…""") is DATA even when it holds CoffeeScript —
+// PaintToolbarWdgt's tool sources are injected onto the paint surface and run with @ bound to IT, so an `@queue =` in
+// one is the surface's field, never the toolbar's.
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 // ── parse every source once ─────────────────────────────────────────────────────────────────────
-const classes = new Map();   // name -> { parent, text, file }
-const mixins  = new Map();   // name -> text
+const classes = new Map();   // name -> { parent, masked, code, file } (`code`: the bare text, see above)
+const mixins  = new Map();   // name -> { masked, code }
 for (const p of walk(SRC)) {
   const text = fs.readFileSync(p, 'utf8');
-  const c = /^class\s+(\w+)(?:\s+extends\s+(\w+))?/m.exec(text);
-  if (c) classes.set(c[1], { parent: c[2], text, file: path.relative(SRC, p) });
-  const m = /^(\w+Mixin)\s*=/m.exec(text);
-  if (m) mixins.set(m[1], text);
+  const masked = coffeeMask(text, path.relative(SRC, p));
+  const code = masked.map((l) => l.bare).join('\n');
+  const c = /^class\s+(\w+)(?:\s+extends\s+(\w+))?/m.exec(code);
+  if (c) classes.set(c[1], { parent: c[2], masked, code, file: path.relative(SRC, p) });
+  const m = /^(\w+Mixin)\s*=/m.exec(code);
+  if (m) mixins.set(m[1], { masked, code });
 }
 function chain(name) {
   const out = [];
@@ -88,11 +88,11 @@ function chain(name) {
 const isWidget = (name) => name === 'Widget' || chain(name).slice(1).includes('Widget');
 // a class-level declaration is `  name: <not a function>`; a mixin's sits deeper
 function declarationsOf(name) {
-  if (classes.has(name)) return new Set([...classes.get(name).text.matchAll(/^ {2}([A-Za-z_]\w*)\s*:\s*(?!\(|->|=>)/gm)].map((m) => m[1]));
-  if (mixins.has(name))  return new Set([...mixins.get(name).matchAll(/^\s{4,}([A-Za-z_]\w*)\s*:\s*(?!\(|->|=>)/gm)].map((m) => m[1]));
+  if (classes.has(name)) return new Set([...classes.get(name).code.matchAll(/^ {2}([A-Za-z_]\w*)\s*:\s*(?!\(|->|=>)/gm)].map((m) => m[1]));
+  if (mixins.has(name))  return new Set([...mixins.get(name).code.matchAll(/^\s{4,}([A-Za-z_]\w*)\s*:\s*(?!\(|->|=>)/gm)].map((m) => m[1]));
   return new Set();
 }
-const mixinsOf = (name) => [...(classes.get(name)?.text || '').matchAll(/@augmentWith\s+(\w+)/g)].map((m) => m[1]);
+const mixinsOf = (name) => [...(classes.get(name)?.code || '').matchAll(/@augmentWith\s+(\w+)/g)].map((m) => m[1]);
 
 // ── facet 1 (RATCHETED) — instance fields written but never declared at class level ─────────────
 // A prototype declaration is what makes a lazily-initialised field visible to duplication,
@@ -105,7 +105,7 @@ function undeclaredFields() {
     const ch = chain(name);
     const declared = new Set();
     for (const a of [...ch, ...new Set(ch.flatMap(mixinsOf))]) for (const d of declarationsOf(a)) declared.add(d);
-    const body = codeOf(classes.get(name).text);
+    const body = classes.get(name).code;
     // an assignment in any spelling — `=`, a compound `+=`/`?=`/`||=`, CoffeeScript's `or=`/`and=` — writes the field
     // (a lazily-initialised one is written `@x ?= …`: the very field this facet exists for)
     const written = new Set([...body.matchAll(/@([a-z_]\w*)\s*(?:[-+*\/%?]|\|\||&&|\bor|\band)?=(?!=|>)/g)].map((m) => m[1]));
@@ -125,7 +125,7 @@ function prologueCopies() {
   const rows = [];
   for (const name of [...classes.keys()].sort()) {
     if (name === 'Widget' || !isWidget(name)) continue;
-    const body = codeOf(classes.get(name).text);
+    const body = classes.get(name).code;
     if (/@__calculateNewBoundsWhenDoingLayout/.test(body)) rows.push({ cls: name, file: classes.get(name).file });
   }
   return rows;
@@ -139,7 +139,7 @@ function prologueCopies() {
 // a to-do list. A colloquial name is DRAWN (window titles, hierarchy menus), so any change here
 // moves pixels. Plan §2.7 "As landed".
 const derivedColloquialName = () =>
-  [...classes.keys()].sort().filter((n) => isWidget(n) && !/^ {2}colloquialName\s*:/m.test(classes.get(n).text));
+  [...classes.keys()].sort().filter((n) => isWidget(n) && !/^ {2}colloquialName\s*:/m.test(classes.get(n).code));
 
 // ── facet 4 (ADVISORY) — constructor positional-slot counts ─────────────────────────────────────
 // ⚠ NEVER gate on the number alone: value/geometry tuples and published user-facing spellings stay
@@ -149,7 +149,7 @@ function constructorSlots() {
   const rows = [];
   for (const name of [...classes.keys()].sort()) {
     if (!isWidget(name)) continue;
-    const m = /^ {2}constructor:\s*\(([^)]*)\)/m.exec(strip(classes.get(name).text));
+    const m = /^ {2}constructor:\s*\(([^)]*)\)/m.exec(classes.get(name).code);
     if (!m || !m[1].trim()) continue;
     const slots = m[1].split(',').filter((s) => s.trim()).length;
     const hasOpts = /\bopts\s*=|\bopts\b/.test(m[1]);
@@ -173,10 +173,10 @@ function setterParams(lines, at) {
 }
 function pinSetterShapes() {
   const rows = [];
-  const units = [...[...classes.keys()].filter(isWidget).map((n) => [n, classes.get(n).text]), ...mixins.entries()]
+  const units = [...[...classes.keys()].filter(isWidget).map((n) => [n, classes.get(n).code]), ...[...mixins].map(([n, m]) => [n, m.code])]
     .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   for (const [name, text] of units) {
-    const lines = strip(text).split('\n');
+    const lines = text.split('\n');
     for (const span of methodSpans(lines)) {
       if (span.static || !/^set[A-Z]/.test(span.name)) continue;
       const params = setterParams(lines, span.line);
@@ -191,11 +191,11 @@ function pinSetterShapes() {
 const missingHeaderComment = () =>
   [...classes.keys()].sort().filter((n) => {
     if (!isWidget(n)) return false;
-    const lines = classes.get(n).text.split('\n');
-    const at = lines.findIndex((l) => /^class\s+\w/.test(l));
+    const { masked, code } = classes.get(n);
+    const at = code.split('\n').findIndex((l) => /^class\s+\w/.test(l));
     for (let i = at - 1; i >= 0; i--) {
-      if (!lines[i].trim()) continue;
-      return !lines[i].trim().startsWith('#');
+      if (!masked[i].code.trim() && masked[i].comment === undefined) continue;
+      return !isCommentOnly(masked[i]);
     }
     return true;
   });

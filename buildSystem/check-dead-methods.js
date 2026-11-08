@@ -35,7 +35,8 @@ const ALLOWLIST = path.resolve(__dirname, 'dead-method-allowlist.txt');
 
 // methodSpans / methodBoundary group src (class methods + mixin members)
 const { methodBoundary, methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header');
-const { codeOfCoffeeLine } = require('./lib/coffee-mask');
+const { coffeeMask } = require('./lib/coffee-mask');
+const { readAllowlist } = require('./lib/allowlist-file');
 const testsRepo = require('./lib/tests-repo-code');
 const methodRefs = require('./lib/method-references');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
@@ -51,8 +52,6 @@ function walk(dir, ext, acc) {
   }
   return acc;
 }
-// The allowlist's own `#` comments are cut with the implementor harvest's strip.
-const { stripComment } = require('./lib/name-definitions');
 
 // ── settle-tier symmetry helpers (pure; check-dead-methods-selftest.js drives them) ─────────────────
 // A public `<name>` and its private core `_<name>NoSettle` form ONE self-settling pair. When one side is
@@ -106,8 +105,11 @@ function main() {
   const methods = [];   // { name, cls, classSide }: what computed dispatch is resolved against (one class per file)
   const parentOf = new Map(), mixinsOf = new Map();   // the class chain a computed access resolves through
   const unseen = [];
+  const masked = new Map();   // each src file's lib/coffee-mask.js reading, read once for both passes
   for (const p of walk(SRC, '.coffee', [])) {
-    const lines = fs.readFileSync(p, 'utf8').split('\n');
+    const text = fs.readFileSync(p, 'utf8');
+    const lines = text.split('\n');
+    masked.set(p, coffeeMask(text, path.relative(SRC, p)));
     const cls = path.basename(p, '.coffee');
     for (const l of lines) {
       const c = /^class\s+([A-Za-z_]\w*)(?:\s+extends\s+([A-Za-z_]\w*))?/.exec(l);
@@ -120,7 +122,7 @@ function main() {
       defs.get(def.name).push(path.relative(SRC, p) + ':' + (def.line + 1) + (def.classSide ? ' (class-side)' : ''));
       methods.push({ name: def.name, cls: path.basename(p, '.coffee'), classSide: def.classSide });
     }
-    for (const u of unseenMethodHeaders(lines)) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
+    for (const u of unseenMethodHeaders(lines, masked.get(p))) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
   }
   if (unseen.length) {
     console.error(`[dead-methods] FAIL — ${unseen.length} method header(s) the shared matcher cannot see:`);
@@ -156,22 +158,20 @@ function main() {
   // is purely additive.)
   function harvestSrc(files) {
     for (const p of files) {
-      let cur = null, mixinHashIndent = null, state = null;
-      for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
+      let cur = null, mixinHashIndent = null;
+      fs.readFileSync(p, 'utf8').split('\n').forEach((raw, i) => {
         const b = methodBoundary(raw, mixinHashIndent);
         if (b) mixinHashIndent = b.mixinHashIndent;
-        const code = codeOfCoffeeLine(raw, state);
-        state = code.state;
         let owner;
         // the owner is the method's INVENTORY name (a class-side one's bare name, as inventoryOf names it), so
         // the symmetry check below excludes a dead method's references to its own twin whichever side it is on
         if (b && b.kind === 'header') owner = cur = (b.static ? b.method.slice(1) : b.method);
         else owner = (raw.length - raw.trimStart().length >= 4 && cur) ? cur : '@toplevel';
-        harvestLine(code.code, owner);
-      }
+        harvestLine(masked.get(p)[i].code, owner);
+      });
     }
   }
-  harvestSrc(walk(SRC, '.coffee', []));
+  harvestSrc([...masked.keys()]);
   // the tests repo's code: every reference there is an INDEPENDENT anchor ('@external') — it lives outside the
   // src pair, so it always counts as "the twin is used"
   for (const { lines } of testsRepo.testsRepoCode()) for (const line of lines) harvestLine(line, '@external');
@@ -203,13 +203,7 @@ function main() {
   const flaggableDead = dead.filter((n) => !liveSettleTwin(n));   // dead AND not covered by a live settle-twin
 
   // 3. allowlist
-  const allow = new Set();
-  if (fs.existsSync(ALLOWLIST)) {
-    for (const l of fs.readFileSync(ALLOWLIST, 'utf8').split('\n')) {
-      const t = stripComment(l).trim();
-      if (t) allow.add(t);
-    }
-  }
+  const allow = new Set(readAllowlist(ALLOWLIST).keys());
 
   if (process.argv.includes('--update-allowlist')) {
     const header =

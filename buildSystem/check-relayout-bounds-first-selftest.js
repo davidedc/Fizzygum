@@ -1,8 +1,8 @@
 'use strict';
 // check-relayout-bounds-first-selftest.js — check-relayout-bounds-first.js proved able to BITE, by running the REAL
 // gate on a planted copy of src/ (lib/planted-src.js): a _reLayout reading its own geometry before applying its
-// bounds fails, and so does one reading before it delegates to the own-contents template, and one whose only "super"
-// is in a string; a _layOutOwnContents hook whose class never routes through the template fails. Every accepted
+// bounds fails, and so does one reading before it delegates to the own-contents template, one whose only "super"
+// is in a string, and one reading after a string holding `#` on its line; a _layOutOwnContents hook whose class never routes through the template fails. Every accepted
 // shape rides the control and is COUNTED into its bucket (apply-first ×4: granted bounds, the setBounds twin,
 // move + extent, super; template ×2: a delegating class and its hook-only subclass; no geometry read ×1; the marker
 // ×1). Run by buildSystem/run-selftests.js on every build.
@@ -39,6 +39,7 @@ proveGate({
       'BiteProofReadFirstWdgt.coffee': relayout('BiteProofReadFirstWdgt', 'Widget', '    @bpX = @width()', '    @_applyGrantedBounds newBoundsForThisLayout'),
       'BiteProofReadBeforeDelegateWdgt.coffee': relayout('BiteProofReadBeforeDelegateWdgt', 'Widget', '    @bpX = @width()', '    @_reLayoutWithOwnContents newBoundsForThisLayout'),
       'BiteProofStringSuperWdgt.coffee': relayout('BiteProofStringSuperWdgt', 'Widget', '    @bpS = "super"', '    @bpX = @width()'),
+      'BiteProofReadAfterHashWdgt.coffee': relayout('BiteProofReadAfterHashWdgt', 'Widget', '    q = "#"; @bpX = @width()', '    @_applyGrantedBounds newBoundsForThisLayout'),
       'BiteProofDeadHookWdgt.coffee': ['class BiteProofDeadHookWdgt extends Widget', '  _layOutOwnContents: ->', '    @bpX = @width()', ''].join('\n'),
     },
     expect: {
@@ -46,6 +47,7 @@ proveGate({
       HOOK_WITHOUT_TEMPLATE: /^  BiteProofDeadHookWdgt\._layOutOwnContents  \(BiteProofDeadHookWdgt\.coffee:2\) -- first own-geometry read at line 3:/m,
     },
     lines: [/^  BiteProofReadBeforeDelegateWdgt\._reLayout  \(BiteProofReadBeforeDelegateWdgt\.coffee:2\)/m,
-            /^  BiteProofStringSuperWdgt\._reLayout  \(BiteProofStringSuperWdgt\.coffee:2\) -- first own-geometry read at line 4:/m],
+            /^  BiteProofStringSuperWdgt\._reLayout  \(BiteProofStringSuperWdgt\.coffee:2\) -- first own-geometry read at line 4:/m,
+            /^  BiteProofReadAfterHashWdgt\._reLayout  \(BiteProofReadAfterHashWdgt\.coffee:2\) -- first own-geometry read at line 3:/m],
   }],
 });

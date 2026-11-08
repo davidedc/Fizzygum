@@ -122,7 +122,19 @@ function walk(dir, acc) {
   }
   return acc;
 }
-const stripComment = (line) => { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); };
+// Every file is read once through lib/coffee-mask.js: the rules read each line's code (its comment blanked, strings
+// KEPT — an action is dispatched by a string name, `addMenuItem "Label", target, "verb"`), except RULE 3's "is the
+// parameter read", which reads bare code (a parameter named only inside a string is not read).
+const { coffeeMask } = require('./lib/coffee-mask');
+const readings = new Map();
+function readingOf(p) {
+  if (!readings.has(p)) {
+    const text = fs.readFileSync(p, 'utf8');
+    const masked = coffeeMask(text, path.relative(SRC, p));
+    readings.set(p, { lines: text.split('\n'), code: masked.map((l) => l.code), bare: masked.map((l) => l.bare) });
+  }
+  return readings.get(p);
+}
 
 const files = walk(SRC, []);
 const hard = [];        // rule 1 + 2 violations
@@ -137,14 +149,14 @@ const atTargetSites = [];
 // (see its header). `ListWdgt:90` is the one wrapped call on this tree today and its options object
 // is entirely on the continuation lines, so rule 2 would never have looked at it. Continuations are
 // simply the deeper-indented lines that follow, joined here before any argument is counted.
-function joinContinuation(lines, i) {
+function joinContinuation(lines, code, i) {
   const indent = (lines[i].match(/^\s*/) || [''])[0].length;
-  let out = stripComment(lines[i]);
+  let out = code[i];
   for (let j = i + 1; j < lines.length; j++) {
     const nxt = lines[j];
     if (!nxt.trim()) break;
     if ((nxt.match(/^\s*/) || [''])[0].length <= indent) break;
-    out += ' ' + stripComment(nxt).trim();
+    out += ' ' + code[j].trim();
   }
   return out;
 }
@@ -152,7 +164,7 @@ function joinContinuation(lines, i) {
 for (const p of files) {
   const rel = path.relative(SRC, p);
   const cls = path.basename(p, '.coffee');
-  const allLines = fs.readFileSync(p, 'utf8').split('\n');
+  const { lines: allLines, code } = readingOf(p);
   // ---- RULE 1, second door: prompt / textPrompt -------------------------------------------
   // `prompt: (msg, target, callback, opts = {})` does not dispatch the callback itself — the prompt's
   // save/Ok does, by name (`PromptWdgt.deliverValue` / `CodePromptWdgt.deliverValue`:
@@ -167,8 +179,8 @@ for (const p of files) {
     // from the definition `prompt: (msg, target, callback, opts = {}) ->`. ⚠ An earlier spelling
     // keyed on the first ARGUMENT instead and matched only quoted/`@` first args, so it silently
     // missed every real site — all of which open with an expression (`menuItem.parent.title + …`).
-    if (!/[@.](?:textPrompt|prompt)\s+\S/.test(stripComment(raw))) return;
-    const m = /[@.](?:textPrompt|prompt)\s+(.*)$/.exec(joinContinuation(allLines, i));
+    if (!/[@.](?:textPrompt|prompt)\s+\S/.test(code[i])) return;
+    const m = /[@.](?:textPrompt|prompt)\s+(.*)$/.exec(joinContinuation(allLines, code, i));
     if (!m) return;
     const parts = splitTopLevel(m[1]);
     if (parts.length < 3) return;
@@ -186,8 +198,8 @@ for (const p of files) {
     }
   });
   allLines.forEach((raw, i) => {
-    if (!/\b(?:add|prepend)MenuItem\b/.test(stripComment(raw))) return;
-    const line = joinContinuation(allLines, i);
+    if (!/\b(?:add|prepend)MenuItem\b/.test(code[i])) return;
+    const line = joinContinuation(allLines, code, i);
     const m = /\b(?:add|prepend)MenuItem\s+(.*)$/.exec(line);
     if (!m) return;
     const args = m[1];
@@ -237,15 +249,18 @@ function splitTopLevel(s) {
 const unread = [];
 for (const p of files) {
   const rel = path.relative(SRC, p);
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const { lines, code, bare } = readingOf(p);
   for (const span of methodSpans(lines)) {
     const i = span.line;
     const name = span.name;
     if (!actionNames.has(name)) continue;
 
     // the signature may WRAP (`verb: (a,` … `b) ->`): read the header lines up to its arrow
-    let header = stripComment(lines[i]), last = i;
-    while (!/\)\s*[-=]>/.test(header) && /\(/.test(header) && last + 1 < span.end && last - i < 12) header += ' ' + stripComment(lines[++last]).trim();
+    let header = code[i], headerBare = bare[i], last = i;
+    while (!/\)\s*[-=]>/.test(header) && /\(/.test(header) && last + 1 < span.end && last - i < 12) {
+      header += ' ' + code[++last].trim();
+      headerBare += ' ' + bare[last].trim();
+    }
     const sig = /\(([^)]*)\)/.exec(header);
     if (!sig) continue;
     const params = sig[1].split(',').map(s => s.trim()).filter(Boolean)
@@ -254,9 +269,9 @@ for (const p of files) {
 
     // body = what follows the arrow on the header (a ONE-LINE verb's whole body) and the method's span: up to the next
     // method (a class's, or a sibling member inside a mixin), a non-method class-level key, or EOF
-    const arrow = header.search(/\)\s*[-=]>/);
-    let body = (arrow >= 0 ? header.slice(header.indexOf('>', arrow) + 1) : '') + '\n';
-    for (let j = last + 1; j < span.end; j++) body += stripComment(lines[j]) + '\n';
+    const arrow = headerBare.search(/\)\s*[-=]>/);
+    let body = (arrow >= 0 ? headerBare.slice(headerBare.indexOf('>', arrow) + 1) : '') + '\n';
+    for (let j = last + 1; j < span.end; j++) body += bare[j] + '\n';
     for (const prm of params) {
       if (DECLARED_UNREAD.test(prm)) continue;
       if (new RegExp(`\\b${prm}\\b`).test(body)) continue;

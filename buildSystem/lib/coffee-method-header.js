@@ -75,12 +75,14 @@ const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): +(?:(?:\(.*?\)\s*)?[-=]>|\(
 // ⚠ It also admits a RUN of spaces after the colon (`: +\S`), for the mirror-image reason: the
 // earlier `: \S` made the guard blind to the aligned `softWrapOn:  ->` spelling, which METHOD_HEADER
 // itself could not see either — nine methods checked by no gate, silently, until 2026-08-24.
-function unseenMethodHeaders(lines) {
+// `masked` is the file's lib/coffee-mask.js reading: the arrow and the parens are read off its bare code, so neither
+// a comment nor a literal (`label: "(open"`) can open a list or end in an arrow.
+function unseenMethodHeaders(lines, masked) {
   const out = [];
   lines.forEach((raw, i) => {
     if (!/^  [A-Za-z_]\w*\s*: +\S/.test(raw)) return;     // a class-level key with a value
     if (METHOD_HEADER.test(raw)) return;                  // …that we can already see
-    const code = raw.replace(/#.*$/, '');
+    const code = masked[i].bare;
     let depth = 0;
     for (const ch of code) { if (ch === '(') depth++; else if (ch === ')') depth--; }
     if (/[-=]>\s*$/.test(code) || depth > 0) out.push({ line: i + 1, text: raw.trim() });
@@ -110,9 +112,9 @@ function unseenMethodHeaders(lines) {
 // in a member's body). For a file with no onceAddedClassProperties it stays null throughout, and the
 // grouping is METHOD_HEADER's and STATIC_METHOD_HEADER's — except that a 2-space non-method key
 // (instance or class-side) or a column-0 line ENDS the method (kind 'end') instead of being folded into
-// the one above it. Feed it lines whose strings are closed where the gate can (check-layering and the
-// two censuses pass the string-stripped line): fed RAW lines, a heredoc line at column 0 ends the method
-// it sits in.
+// the one above it. It reads a RAW line, so a caller skips the lines that continue a literal (lib/coffee-mask.js
+// `continuesLiteral`), as check-layering and the two censuses do: fed a heredoc's line at column 0, it ends the
+// method the heredoc sits in.
 const MIXIN_CONTAINER = 'onceAddedClassProperties';
 function methodBoundary(raw, mixinHashIndent) {
   const m = raw.match(METHOD_HEADER);

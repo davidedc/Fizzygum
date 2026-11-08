@@ -17,21 +17,13 @@
 // one: no `[@.]name(` send reaches it, and counting one would keep a send resolved after every real method of its name
 // is gone (a catch-all key form masks 48 sent names, measured). A property that HOLDS a closure is
 // genuinely dynamic — check-unresolved-sends.js lists it in its allowlist, by name, with why.
-// It still OVER-approximates where it reads: the comment strip is NAIVE (`stripComment` below) and keeps string
-// literals, so a def-shaped line inside a heredoc BODY is harvested too — an extra definition can only make
-// check-unresolved-sends resolve one more send and check-part-edges withdraw one more flag. The forms are
+// It reads each line's CODE (lib/coffee-mask.js: the comment blanked, literals kept), so a def-shaped line inside a
+// heredoc BODY is harvested too: a heredoc holds code that defines names (MacroToolkit's verbs), and an extra
+// definition can only make check-unresolved-sends resolve one more send and check-part-edges withdraw one more flag.
+// The forms are
 // LINE-ANCHORED: a def-shaped run in the MIDDLE of a line (`x = "  fake: ->"`) is not one. check-unresolved-sends.js's
 // header explains the asymmetry with its call side. Its bite-proof deletes every callable definition of a name that
 // still has a data key, and requires the send to fail (check-unresolved-sends-selftest.js).
-
-// Cut at the first '#' that does NOT open a `#{…}` interpolation (the cut check-dead-methods.js makes
-// too) — string literals are deliberately KEPT, see above.
-function stripComment(line) {
-  for (let k = line.indexOf('#'); k >= 0; k = line.indexOf('#', k + 1)) {
-    if (line[k + 1] !== '{') return line.slice(0, k);
-  }
-  return line;
-}
 
 // Does a FUNCTION start at `i`: an optional parameter list (paren-counted, quotes skipped) and then an arrow?
 function functionAt(line, i) {
@@ -59,7 +51,7 @@ const DEF_FORMS = [
   { name: 'top-level',      re: /^([A-Za-z_$][\w$]*)\s*=/,                     value: 'function' },
 ];
 
-// The one name `line` (comment-stripped) defines, or undefined.
+// The one name a CODE line (its comment blanked) defines, or undefined.
 function definedName(line) {
   for (const f of DEF_FORMS) {
     const m = f.re.exec(line);
@@ -73,13 +65,14 @@ function definedName(line) {
   return undefined;
 }
 
-// The names `lines` define, added to `into` (a fresh Set by default), which is returned.
-function harvestDefs(lines, into = new Set()) {
-  for (const raw of lines) {
-    const name = definedName(stripComment(raw));
+// The names a text defines, read off its lib/coffee-mask.js reading (`masked`), added to `into` (a fresh Set by
+// default), which is returned.
+function harvestDefs(masked, into = new Set()) {
+  for (const { code } of masked) {
+    const name = definedName(code);
     if (name !== undefined) into.add(name);
   }
   return into;
 }
 
-module.exports = { stripComment, DEF_FORMS, definedName, harvestDefs };
+module.exports = { DEF_FORMS, definedName, harvestDefs };

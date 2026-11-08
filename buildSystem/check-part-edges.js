@@ -138,8 +138,7 @@
  *   site is dead without P on some receivers and fine on others, and a receiver-blind scan cannot
  *   tell which, so only its `super` is judged, by (c); a member reached through a COMPUTED name
  *   (`x[name]()` with the name built at runtime or arriving as data, or a string that only CONTAINS
- *   the name); a reference inside a `#{…}` interpolation, which codePartOf masks with the string
- *   around it; src/boot itself, which is outside the scanned set for both rules; a `super` in a
+ *   the name); src/boot itself, which is outside the scanned set for both rules; a `super` in a
  *   CLASS-SIDE method (the class model holds instance members only); and a member put on a class by
  *   anything other than an `installOnto` edge in src/boot/globalFunctions.coffee --
  *   lib/install-edges.js fails loudly on an `installOnto` whose body it does not model, but it cannot
@@ -156,8 +155,9 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-// strip trailing `# comment` while respecting quotes, and report whether code remains
-const { codePartOf, stringLiteralsOf, guardedPartsPerLine, isLazyPart,
+// every file is read through lib/coffee-mask.js: code is its bare view, a name used as data a literal's contents
+const { coffeeMask } = require('./lib/coffee-mask');
+const { stringLiteralsOf, guardedPartsPerLine, isLazyPart,
         declaredRequires: declaredRequiresOf } = require('./lib/part-edge-scan');
 const { installEdges, harnessPresent } = require('./lib/install-edges');
 const { harvestDefs } = require('./lib/name-definitions');
@@ -174,15 +174,15 @@ function fail(msg) { console.error('check-part-edges: ' + msg); process.exit(2);
 // ---- installed members: the pure half (what the self-test drives) ----------------------------
 
 // Which installed members are their part's SYMBOL. `installedBy` maps a member name to the Set of
-// parts installing it onto a class outside themselves; `files` is [{ part, lines }] for everything
+// parts installing it onto a class outside themselves; `files` is [{ part, masked }] for everything
 // that can ship. A member qualifies when exactly one part installs it and no file of any OTHER part
 // defines it, by the implementor harvest check-unresolved-sends.js reads too
 // (lib/name-definitions.js). Where that harvest over-approximates (a def-shaped line inside a string), an
 // extra "definition" can only withdraw a member here, never add one. Returns Map(member -> part).
 function soleProviders(installedBy, files) {
   const definingParts = new Map();    // member name -> Set(parts whose files define it)
-  for (const { part, lines } of files) {
-    for (const name of harvestDefs(lines)) {
+  for (const { part, masked } of files) {
+    for (const name of harvestDefs(masked)) {
       if (!installedBy.has(name)) continue;
       if (!definingParts.has(name)) definingParts.set(name, new Set());
       definingParts.get(name).add(part);
@@ -200,7 +200,7 @@ function soleProviders(installedBy, files) {
 // Clauses (a) and (b) over one file. `soleProvider` maps a member name to the part that alone
 // provides it; `owner` is the file's part and `isSatisfied(part)` the class rule's requires/
 // requiredParts answer for it. Returns [{ line, clause, name, part }], one per (line, clause, name).
-function memberReaches(lines, guards, soleProvider, owner, isSatisfied) {
+function memberReaches(masked, guards, soleProvider, owner, isSatisfied) {
   const out = [];
   const seen = new Set();
   const report = (i, clause, name, part) => {
@@ -215,8 +215,8 @@ function memberReaches(lines, guards, soleProvider, owner, isSatisfied) {
     return part;
   };
   const REF = /[@.]([A-Za-z_$][\w$]*)/g;
-  for (let i = 0; i < lines.length; i++) {
-    const code = codePartOf(lines[i]);
+  for (let i = 0; i < masked.length; i++) {
+    const code = masked[i].bare;
     let m;
     REF.lastIndex = 0;
     while ((m = REF.exec(code)) !== null) {
@@ -224,7 +224,7 @@ function memberReaches(lines, guards, soleProvider, owner, isSatisfied) {
       const part = reaches(m[1], i);
       if (part) report(i, 'a', m[1], part);
     }
-    for (const s of stringLiteralsOf(lines[i])) {
+    for (const s of stringLiteralsOf(masked[i])) {
       const part = reaches(s, i);
       if (part) report(i, 'b', s, part);
     }
@@ -391,7 +391,17 @@ function main() {
 
   // A member is its part's SYMBOL only if no file outside that part can define it. The definition
   // universe is everything that ships -- every part's files, and src/boot, which is in every bundle.
-  const shippedFiles = [];             // [{ part, lines }]
+  // each file's lines and lib/coffee-mask.js reading, read once for the definition harvest and the scan
+  const readings = new Map();
+  const readingOf = (rel) => {
+    if (!readings.has(rel)) {
+      let text;
+      try { text = fs.readFileSync(onDisk(rel), 'utf8'); } catch (e) { readings.set(rel, undefined); return undefined; }
+      readings.set(rel, { lines: text.split('\n'), masked: coffeeMask(text, rel) });
+    }
+    return readings.get(rel);
+  };
+  const shippedFiles = [];             // [{ part, masked }]
   if (installedBy.size) {
     const bootFiles = [];
     const walkBoot = (dir) => {
@@ -403,9 +413,9 @@ function main() {
     };
     walkBoot(path.join(SRC, 'boot'));
     for (const rel of [...scanned, ...bootFiles]) {
-      let lines;
-      try { lines = fs.readFileSync(onDisk(rel), 'utf8').split('\n'); } catch (e) { continue; }
-      shippedFiles.push({ part: partOfFile(rel) || 'core', lines });
+      const reading = readingOf(rel);
+      if (!reading) continue;
+      shippedFiles.push({ part: partOfFile(rel) || 'core', masked: reading.masked });
     }
   }
   const soleProvider = soleProviders(installedBy, shippedFiles);   // member name -> the one part that provides it
@@ -414,10 +424,10 @@ function main() {
 
   for (const rel of scanned) {
     const owner = partOfFile(rel);
-    const abs = onDisk(rel);
-    let lines;
-    try { lines = fs.readFileSync(abs, 'utf8').split('\n'); } catch (e) { continue; }
-    const guards = guardedPartsPerLine(lines, partClassOwner, parts, soleProvider);
+    const reading = readingOf(rel);
+    if (!reading) continue;
+    const { lines, masked } = reading;
+    const guards = guardedPartsPerLine(masked, partClassOwner, parts, soleProvider);
     const satisfied = declaredRequires(owner);
 
     // A CLASS-LEVEL DECLARATION covers the whole file. `requiredParts: ["authoring"]` on an
@@ -426,14 +436,14 @@ function main() {
     // one line at a time and could never infer that; reading the declaration is how it learns.
     // ⚠ `optionalParts` deliberately does NOT count -- that idiom runs the callback even when the
     // part never arrived, so those references still need a guard of their own.
-    const declared = /^\s*requiredParts\s*:\s*\[([^\]]*)\]/m.exec(lines.join('\n'));
+    const declared = /^\s*requiredParts\s*:\s*\[([^\]]*)\]/m.exec(masked.map((l) => l.code).join('\n'));
     if (declared) {
       for (const q of declared[1].match(/["']([^"']+)["']/g) || []) satisfied.add(q.slice(1, -1));
     }
 
     if (!partsNamedInCode.has(owner)) partsNamedInCode.set(owner, new Set());
     for (let i = 0; i < lines.length; i++) {
-      const code = codePartOf(lines[i]);
+      const code = masked[i].bare;
       if (!code.trim()) continue;
       for (const p of patterns) {
         if (p.owner === owner) continue;
@@ -452,7 +462,7 @@ function main() {
 
     // the installed-member clauses (a) and (b), against the same requires/requiredParts reading
     const isSatisfied = (part) => satisfied.has(part);
-    for (const v of memberReaches(lines, guards, soleProvider, owner, isSatisfied)) {
+    for (const v of memberReaches(masked, guards, soleProvider, owner, isSatisfied)) {
       memberViolations.push({ rel, from: owner, ...v, text: lines[v.line - 1].trim() });
     }
     scannedFileOfClass.set(path.basename(rel, '.coffee'), { rel, owner, guards, isSatisfied, lines });

@@ -33,7 +33,8 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { codePartOf, guardedPartsPerLine } = require('./lib/part-edge-scan');
+const { guardedPartsPerLine } = require('./lib/part-edge-scan');
+const { coffeeMask } = require('./lib/coffee-mask');
 
 const REPO = path.resolve(__dirname, '..');
 const parts = JSON.parse(fs.readFileSync(path.join(REPO, 'buildSystem/parts.json'), 'utf8')).parts;
@@ -84,10 +85,12 @@ const refs = [], inherits = [], guarded = [];
 for (const rel of shippable) {
   const owner = ownerOf(rel);
   if (!owner || member.has(rel)) continue;
-  const lines = fs.readFileSync(path.join(REPO, rel), 'utf8').split('\n');
-  const scopes = guardedPartsPerLine(lines, ownerOfClass, { [HYPO]: {} });
+  const text = fs.readFileSync(path.join(REPO, rel), 'utf8');
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, rel);
+  const scopes = guardedPartsPerLine(masked, ownerOfClass, { [HYPO]: {} });
   for (let i = 0; i < lines.length; i++) {
-    const code = codePartOf(lines[i]);
+    const code = masked[i].bare;
     if (!code.trim()) continue;
     for (const p of patterns) {
       if (!p.ref.test(code)) continue;
@@ -100,8 +103,8 @@ for (const rel of shippable) {
 }
 
 // ---- report -----------------------------------------------------------------------------------
-const codeBytes = (rel) => fs.readFileSync(path.join(REPO, rel), 'utf8').split('\n')
-  .reduce((a, l) => { const c = l.split('#')[0].replace(/\s+$/, ''); return c.trim() ? a + c.length + 1 : a; }, 0);
+const codeBytes = (rel) => coffeeMask(fs.readFileSync(path.join(REPO, rel), 'utf8'), rel)
+  .reduce((a, l) => { const c = l.code.replace(/\s+$/, ''); return c.trim() ? a + c.length + 1 : a; }, 0);
 const src = [...member].reduce((a, r) => a + fs.statSync(path.join(REPO, r)).size, 0);
 const cod = [...member].reduce((a, r) => a + codeBytes(r), 0);
 

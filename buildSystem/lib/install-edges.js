@@ -46,7 +46,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { stripComment } = require('./name-definitions.js');
+const { coffeeMask } = require('./coffee-mask');
 
 // `src` is the tree read (default this repo's src/; a gate's --src= rail hands it a planted copy); the harness is
 // always the sibling tests repo's.
@@ -88,23 +88,20 @@ function fileOfClass(name, src = SRC) {
 // @staticMembersToInstall that disagrees with the class's own class-side keys (see the header) adds
 // one line per disagreement to `drift`; installEdges refuses once every edge has been read.
 function installedMembersOf(support, target, file, drift) {
-  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  const text = fs.readFileSync(file, 'utf8');
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, file);   // lib/coffee-mask.js: a line inside a heredoc continues a literal
   const keys = [];                      // { name, isStatic, line }
-  let inHeredoc = false;
   for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const delimiters = (raw.match(/"""|'''/g) || []).length;
-    const wasInHeredoc = inHeredoc;
-    if (delimiters % 2) inHeredoc = !inHeredoc;
-    if (wasInHeredoc) continue;
-    const k = CLASS_BODY_KEY.exec(stripComment(raw));
+    if (masked[i].continuesLiteral) continue;
+    const k = CLASS_BODY_KEY.exec(masked[i].code);
     if (k) keys.push({ name: k[2], isStatic: k[1] === '@', line: i });
   }
 
   const header = keys.find(k => k.isStatic && k.name === 'installOnto');
   if (!header) throw new Error(`${support} is installed at boot but declares no @installOnto (${file})`);
   const next = keys.find(k => k.line > header.line);
-  const body = lines.slice(header.line + 1, next ? next.line : lines.length).map(stripComment).join('\n');
+  const body = masked.slice(header.line + 1, next ? next.line : lines.length).map((l) => l.bare).join('\n');
   const copiesPrototype = /\bof\s+@prototype\b/.test(body);
   const copiesStatics = /@staticMembersToInstall\b/.test(body);
   if (!copiesPrototype && !copiesStatics) {
@@ -119,12 +116,12 @@ function installedMembersOf(support, target, file, drift) {
   if (copiesStatics) {
     const list = keys.find(k => k.isStatic && k.name === 'staticMembersToInstall');
     if (list) {
-      let text = '';
+      let listText = '';                  // its names are strings: read from the code view, the bracket from the bare one
       for (let j = list.line; j < lines.length; j++) {
-        text += stripComment(lines[j]) + '\n';
-        if (lines[j].includes(']')) break;
+        listText += masked[j].code + '\n';
+        if (masked[j].bare.includes(']')) break;
       }
-      const listed = (text.slice(text.indexOf('[')).match(/["']([^"']+)["']/g) || []).map(q => q.slice(1, -1));
+      const listed = (listText.slice(listText.indexOf('[')).match(/["']([^"']+)["']/g) || []).map(q => q.slice(1, -1));
       for (const name of listed) members.push({ name, isStatic: true });
 
       // the assertion (see the header): the list must be exactly the class-side keys that are not
@@ -151,8 +148,7 @@ function installEdges(src = SRC) {
   if (!fs.existsSync(bootGlobals)) return [];
   const edges = [];
   const drift = [];
-  fs.readFileSync(bootGlobals, 'utf8').split('\n').forEach((raw, i) => {
-    const code = stripComment(raw);
+  coffeeMask(fs.readFileSync(bootGlobals, 'utf8'), bootGlobals).forEach(({ bare: code }, i) => {
     let e;
     EDGE.lastIndex = 0;
     while ((e = EDGE.exec(code)) !== null) {

@@ -1,7 +1,7 @@
 'use strict';
 // check-menu-actions-selftest.js — check-menu-actions.js proved able to BITE, by running the REAL gate (its class model,
 // the boot install edges, the harness's installed members) on a planted copy of src/ (lib/planted-src.js). RULE 1: a
-// function literal in a menu row's action slot fails, and in a prompt's callback slot. RULE 1b: an `@`-targeted row
+// function literal in a menu row's action slot fails (also behind a label holding `#`), and in a prompt's callback slot. RULE 1b: an `@`-targeted row
 // and prompt naming a method NO class `@` could be defines fail. RULE 2: a string where the options object goes fails.
 // RULE 3 — in a run of its own, since a hard violation exits before the ratchet — a menu verb with an unread
 // parameter fails, and so does one whose signature WRAPS. The accepted forms ride the control: an action held in a
@@ -39,14 +39,16 @@ proveGate({
         '    @prompt "bp fn", world, (-> 1)',
         '    menu.addMenuItem "bp dead", @, "bpVerbNobodyDefines"',
         '    @prompt "bp dead", @, "bpCallbackNobodyDefines"',
-        '    menu.addMenuItem "bp opts", world, "bpRuleTwoVerb", "a tooltip"'),
+        '    menu.addMenuItem "bp opts", world, "bpRuleTwoVerb", "a tooltip"',
+        '    menu.addMenuItem "bp #1", world, (-> 1)'),
     },
     expect: {
       RULE_1_FUNCTION_ACTION: /^\[menu-actions\] RULE 1 FAIL — BiteProofMenuHardWdgt\.coffee:3$/m,
       RULE_1B_UNRESOLVED_ACTION: /^\[menu-actions\] RULE 1b FAIL — BiteProofMenuHardWdgt\.coffee:5$/m,
       RULE_2_STRING_OPTS: /^\[menu-actions\] RULE 2 FAIL — BiteProofMenuHardWdgt\.coffee:7$/m,
     },
-    lines: [/^\[menu-actions\] RULE 1 FAIL — BiteProofMenuHardWdgt\.coffee:4$/m, /^\[menu-actions\] RULE 1b FAIL — BiteProofMenuHardWdgt\.coffee:6$/m],
+    lines: [/^\[menu-actions\] RULE 1 FAIL — BiteProofMenuHardWdgt\.coffee:4$/m, /^\[menu-actions\] RULE 1b FAIL — BiteProofMenuHardWdgt\.coffee:6$/m,
+      /^\[menu-actions\] RULE 1 FAIL — BiteProofMenuHardWdgt\.coffee:8$/m],
   }, {
     label: 'an unread parameter, a wrapped signature',
     plants: {

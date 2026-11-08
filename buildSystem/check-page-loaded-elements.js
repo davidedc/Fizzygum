@@ -59,6 +59,7 @@
 const fs = require('fs');
 const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
@@ -86,37 +87,19 @@ function walk(dir, acc) {
   return acc;
 }
 
-// The line with its comment removed and its strings KEPT (a tag name is a string: "video"). Quotes are
-// tracked so a `#` inside a string (`"#{x}"`) is not taken for a comment.
-function withoutComment(line) {
-  let out = '', q = null;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (q) {
-      if (ch === '\\') { out += ch + (line[i + 1] || ''); i++; continue; }
-      if (ch === q) q = null;
-      out += ch;
-      continue;
-    }
-    if (ch === '"' || ch === "'") { q = ch; out += ch; continue; }
-    if (ch === '#') break;
-    out += ch;
-  }
-  return out;
-}
-
 // The names a class-level list declaration holds — `@serializationTransients: [ … ]` (the key spelled
-// with or without the `@`: without is a mixin's class-side form) — read through to its closing bracket,
-// each line's comment dropped first so a quoted word in a comment is not taken for a name.
-function listDeclaration(lines, key) {
+// with or without the `@`: without is a mixin's class-side form) — read through to its closing bracket. The
+// brackets are found in the line's bare code (a `]` inside a string closes nothing) and the names read from its code
+// (comment blanked), so a quoted word in a comment is not taken for a name.
+function listDeclaration(lines, masked, key) {
   const head = new RegExp('^\\s*' + key + ':\\s*\\[');
   const start = lines.findIndex((l) => head.test(l));
   if (start < 0) return [];
   const out = [];
   for (let j = start; j < lines.length; j++) {
-    const code = withoutComment(lines[j]);
-    const from = j === start ? code.indexOf('[') + 1 : 0;
-    const close = code.indexOf(']', from);
+    const { bare, code } = masked[j];
+    const from = j === start ? bare.indexOf('[') + 1 : 0;
+    const close = bare.indexOf(']', from);
     const span = code.slice(from, close >= 0 ? close : code.length);
     const re = /"([^"]+)"|'([^']+)'/g;
     let m;
@@ -127,9 +110,10 @@ function listDeclaration(lines, key) {
 }
 
 // the line, or the contiguous comment block directly above it, carries the not-held marker
-function markedNotHeld(lines, i) {
-  if (NOT_HELD_MARKER.test(lines[i])) return true;
-  for (let j = i - 1; j >= 0 && /^\s*#/.test(lines[j]); j--) if (NOT_HELD_MARKER.test(lines[j])) return true;
+function markedNotHeld(masked, i) {
+  const marked = (j) => NOT_HELD_MARKER.test(masked[j].comment || '');
+  if (marked(i)) return true;
+  for (let j = i - 1; j >= 0 && isCommentOnly(masked[j]); j--) if (marked(j)) return true;
   return false;
 }
 
@@ -140,17 +124,21 @@ const mixins = {};    // name -> { file, transients:Set, methods:Set }
 const problems = [];
 const unattributed = [];
 let constructions = 0, notHeld = 0;
+const maskedFiles = new Map();   // each src file's lib/coffee-mask.js reading (the walkers' too, read below)
 for (const p of walk(SRC, [])) {
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const text = fs.readFileSync(p, 'utf8');
+  const lines = text.split('\n');
   const file = path.relative(SRC, p);
+  const masked = coffeeMask(text, file);
+  maskedFiles.set(p, masked);
   const spans = methodSpans(lines);
-  for (const u of unseenMethodHeaders(lines)) {
+  for (const u of unseenMethodHeaders(lines, masked)) {
     if (HOOKS.some((h) => u.text.startsWith(h))) problems.push(rules.fired('UNSEEN_HOOK_HEADER', `  ${file}:${u.line}  a hook header in a spelling the shared matcher cannot see — this gate would be blind to it: ${u.text}`));
   }
   // every element construction in the file, attributed to the field it is written to (or to none)
   const writes = [];
   lines.forEach((raw, i) => {
-    const code = withoutComment(raw);
+    const code = masked[i].code;            // strings kept: a tag name is a string ("video")
     if (!ELEMENT_RE.test(code)) return;
     constructions++;
     const fields = [];
@@ -158,7 +146,7 @@ for (const p of walk(SRC, [])) {
     FIELD_WRITE_RE.lastIndex = 0;
     while ((m = FIELD_WRITE_RE.exec(code))) fields.push(m[1]);
     if (!fields.length) {
-      if (markedNotHeld(lines, i)) notHeld++;
+      if (markedNotHeld(masked, i)) notHeld++;
       else unattributed.push(rules.fired('UNATTRIBUTED_ELEMENT', `  ${file}:${i + 1}  ${raw.trim()}`));
       return;
     }
@@ -169,7 +157,7 @@ for (const p of walk(SRC, [])) {
   if (cm) {
     classes[cm[1]] = {
       file, sup: cm[2],
-      transients: new Set(listDeclaration(lines, '@serializationTransients')),
+      transients: new Set(listDeclaration(lines, masked, '@serializationTransients')),
       methods: new Set(spans.filter((s) => !s.static && !s.mixin).map((s) => s.name)),
       augments: lines.map((l) => l.match(/^  @augmentWith\s+(\w+)/)).filter(Boolean).map((m) => m[1]),
       fields: writes,
@@ -178,7 +166,7 @@ for (const p of walk(SRC, [])) {
   }
   const mm = lines.map((l) => l.match(/^(\w+)\s*=\s*$/)).find(Boolean);
   if (mm && spans.some((s) => s.mixin)) {
-    mixins[mm[1]] = { file, transients: new Set(listDeclaration(lines, 'serializationTransients')), methods: new Set(spans.filter((s) => s.mixin).map((s) => s.name)) };
+    mixins[mm[1]] = { file, transients: new Set(listDeclaration(lines, masked, 'serializationTransients')), methods: new Set(spans.filter((s) => s.mixin).map((s) => s.name)) };
     for (const w of writes) if (w.inMixinMember) problems.push(rules.fired('ELEMENT_FIELD_IN_MIXIN', `  ${w.at}  an element field (@${w.field}) assigned in the mixin ${mm[1]} — its transients and hooks are its consumers', which this gate cannot resolve per file`));
   }
 }
@@ -217,7 +205,7 @@ for (const [name, k] of Object.entries(classes)) {
 const WALKERS = [path.join(SRC, 'serialization'), path.join(SRC, 'duplication')];
 for (const h of HOOKS) {
   const call = new RegExp(String.raw`\.${h}\??\(`);
-  const called = WALKERS.some((d) => fs.existsSync(d) && walk(d, []).some((f) => fs.readFileSync(f, 'utf8').split('\n').some((l) => call.test(withoutComment(l)))));
+  const called = WALKERS.some((d) => fs.existsSync(d) && walk(d, []).some((f) => maskedFiles.get(f).some((l) => call.test(l.code))));
   if (!called) problems.push(rules.fired('HOOK_NOT_CALLED', `  HOOKS names ${h}, which neither walker (src/serialization, src/duplication) calls — a holder defining it re-makes nothing`));
 }
 

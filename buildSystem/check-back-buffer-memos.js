@@ -70,6 +70,7 @@
 const fs = require('fs');
 const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
@@ -90,38 +91,19 @@ function walk(dir, acc) {
   return acc;
 }
 
-// The line with string contents blanked (every column kept) and its comment removed: what is CODE on it.
-// Quotes are tracked so a `#` inside a string (`"#{x}"`) is not taken for a comment.
-function codeOf(line) {
-  let out = '', q = null;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (q) {
-      if (ch === '\\') { i++; out += '  '; continue; }
-      if (ch === q) { q = null; out += ch; continue; }
-      out += ' ';
-      continue;
-    }
-    if (ch === '"' || ch === "'") { q = ch; out += ch; continue; }
-    if (ch === '#') break;
-    out += ch;
-  }
-  return out;
-}
-
 // The names a class-level list declaration holds — `@serializationTransients: [ … ]` (the key spelled
 // with or without the `@`: without is a mixin's class-side form) — read through to its closing bracket.
-// Each line's comment goes first, so a quoted word in a comment is not taken for a name: codeOf blanks
-// string CONTENTS but keeps every column, so its length marks where the raw line's code ends.
-function listDeclaration(lines, key) {
+// The brackets are found in the line's bare code (a `]` inside a string closes nothing) and the names read from
+// its code (comment blanked), so a quoted word in a comment is not taken for a name.
+function listDeclaration(lines, masked, key) {
   const head = new RegExp('^  ' + key + ':\\s*\\[');
   const start = lines.findIndex((l) => head.test(l));
   if (start < 0) return [];
   const out = [];
   for (let j = start; j < lines.length; j++) {
-    const code = codeOf(lines[j]);
-    const close = code.indexOf(']', j === start ? code.indexOf('[') + 1 : 0);
-    const span = lines[j].slice(j === start ? code.indexOf('[') + 1 : 0, close >= 0 ? close : code.length);
+    const { bare, code } = masked[j];
+    const close = bare.indexOf(']', j === start ? bare.indexOf('[') + 1 : 0);
+    const span = code.slice(j === start ? bare.indexOf('[') + 1 : 0, close >= 0 ? close : code.length);
     const re = /"([^"]+)"|'([^']+)'/g;
     let m;
     while ((m = re.exec(span))) out.push(m[1] || m[2]);
@@ -132,15 +114,16 @@ function listDeclaration(lines, key) {
 
 // Declared fields carrying the saved-content marker: a 2-space class field (or a mixin member key at the
 // file's member indent) whose own line, or the contiguous comment block directly above it, holds it.
-function contentFields(lines, keyIndent) {
+function contentFields(lines, masked, keyIndent) {
   const out = new Set();
   const keyRe = new RegExp('^' + ' '.repeat(keyIndent) + '([A-Za-z_]\\w*):(?!:)');
+  const marked = (j) => CONTENT_MARKER.test(masked[j].comment || '');
   lines.forEach((raw, i) => {
     const m = raw.match(keyRe);
     if (!m) return;
-    if (CONTENT_MARKER.test(raw)) { out.add(m[1]); return; }
-    for (let j = i - 1; j >= 0 && /^\s*#/.test(lines[j]); j--) {
-      if (CONTENT_MARKER.test(lines[j])) { out.add(m[1]); return; }
+    if (marked(i)) { out.add(m[1]); return; }
+    for (let j = i - 1; j >= 0 && isCommentOnly(masked[j]); j--) {
+      if (marked(j)) { out.add(m[1]); return; }
     }
   });
   return out;
@@ -161,22 +144,24 @@ function writtenFields(code) {
 
 if (!fs.existsSync(SRC)) { console.error('[back-buffer-memos] operational error: no src/ at ' + SRC); process.exit(2); }
 
-const classes = {};   // name -> { file, lines, sup, transients:Set, content:Set, augments:[] , spans }
+const classes = {};   // name -> { file, lines, masked, sup, transients:Set, content:Set, augments:[] , spans }
 const mixins = {};    // name -> { file, transients:Set, content:Set, spans }
 const problems = [];
 for (const p of walk(SRC, [])) {
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const text = fs.readFileSync(p, 'utf8');
+  const lines = text.split('\n');
   const file = path.relative(SRC, p);
+  const masked = coffeeMask(text, file);
   const spans = methodSpans(lines);
-  for (const u of unseenMethodHeaders(lines)) {
+  for (const u of unseenMethodHeaders(lines, masked)) {
     if (u.text.startsWith(BUILDER)) problems.push(rules.fired('UNSEEN_BUILDER_HEADER', `  ${file}:${u.line}  a ${BUILDER} header in a spelling the shared matcher cannot see — this gate would be blind to it: ${u.text}`));
   }
   const cm = lines.map((l) => l.match(/^class\s+(\w+)(?:\s+extends\s+(\w+))?/)).find(Boolean);
   if (cm) {
     classes[cm[1]] = {
-      file, lines, spans, sup: cm[2],
-      transients: new Set(listDeclaration(lines, '@serializationTransients')),
-      content: contentFields(lines, 2),
+      file, lines, masked, spans, sup: cm[2],
+      transients: new Set(listDeclaration(lines, masked, '@serializationTransients')),
+      content: contentFields(lines, masked, 2),
       augments: lines.map((l) => l.match(/^  @augmentWith\s+(\w+)/)).filter(Boolean).map((m) => m[1]),
     };
     continue;
@@ -185,7 +170,7 @@ for (const p of walk(SRC, [])) {
   if (mm && spans.some((s) => s.mixin)) {
     const member = spans.find((s) => s.mixin);
     const indent = lines[member.line].match(/^ */)[0].length;
-    mixins[mm[1]] = { file, spans, transients: new Set(listDeclaration(lines, 'serializationTransients')), content: contentFields(lines, indent) };
+    mixins[mm[1]] = { file, spans, transients: new Set(listDeclaration(lines, masked, 'serializationTransients')), content: contentFields(lines, masked, indent) };
     for (const s of spans) if (s.mixin && s.name === BUILDER) problems.push(rules.fired('BUILDER_IN_MIXIN', `  ${file}:${s.line + 1}  a ${BUILDER} declared in the mixin ${mm[1]} — its transients are its consumers', which this gate cannot resolve per file`));
   }
 }
@@ -214,7 +199,7 @@ for (const [name, k] of Object.entries(classes)) {
   builders++;
   // the builder and every same-file method it reaches through @name references, transitively — except
   // for a KEYED builder (see the header), whose own body is all that is read
-  const keyed = k.lines.slice(builder.line + 1, builder.end).some((l) => /\bworld\.cacheForImmutableBackBuffers\b/.test(codeOf(l)));
+  const keyed = k.masked.slice(builder.line + 1, builder.end).some((l) => /\bworld\.cacheForImmutableBackBuffers\b/.test(l.bare));
   if (keyed) keyedBuilders.push(name);
   const reached = [BUILDER], queue = keyed ? [] : [BUILDER];
   while (queue.length) {
@@ -222,7 +207,7 @@ for (const [name, k] of Object.entries(classes)) {
     for (let i = s.line + 1; i < s.end; i++) {
       const re = /@([A-Za-z_]\w*)/g;
       let m;
-      const code = codeOf(k.lines[i]);
+      const code = k.masked[i].bare;
       while ((m = re.exec(code))) {
         const n = m[1];
         if (n !== 'constructor' && methods.has(n) && !reached.includes(n)) { reached.push(n); queue.push(n); }
@@ -233,7 +218,7 @@ for (const [name, k] of Object.entries(classes)) {
   for (const mname of reached) {
     const s = methods.get(mname);
     for (let i = s.line + 1; i < s.end; i++) {
-      for (const f of writtenFields(codeOf(k.lines[i]))) {
+      for (const f of writtenFields(k.masked[i].bare)) {
         if (transients.has(f) || content.has(f)) continue;
         violations.push({ name, field: f, at: `${k.file}:${i + 1}`, via: mname, text: k.lines[i].trim() });
       }

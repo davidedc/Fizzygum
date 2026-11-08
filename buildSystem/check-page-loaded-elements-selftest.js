@@ -5,7 +5,8 @@
 // saw): a field holding an element the page loads that is not a serialization transient; a chain re-making it after a
 // copy but not a restore; after a restore but not a copy; an element built into no field and not said to be unheld; a
 // hook header the shared matcher cannot see; an element field assigned in a mixin; and a hook neither walker calls (the
-// copy's walkers edited so they never call it). The fully declared holder and the stated unheld element pass. Run by
+// copy's walkers edited so they never call it). The fully declared holder and the stated unheld element pass, and so
+// does an element named only in a comment after a regex holding a quote (no string is open there). Run by
 // buildSystem/run-selftests.js on every build.
 
 const path = require('path');
@@ -25,6 +26,8 @@ proveGate({
   control: {
     plants: {
       'BiteProofDeclaredHolderWdgt.coffee': holder('BiteProofDeclaredHolderWdgt', { transient: true, restore: true, copy: true }),
+      'BiteProofCommentAfterRegexWdgt.coffee': ['class BiteProofCommentAfterRegexWdgt extends Widget', '', '  _bpNote: ->',
+        '    q = /"/ # new Image() is named in this comment, built nowhere', ''].join('\n'),
       'BiteProofStatedUnheldWdgt.coffee': ['class BiteProofStatedUnheldWdgt extends Widget', '', '  _bpDecode: (dataURL) ->',
         '    # page-element-not-held: the bite-proof fixture of check-page-loaded-elements-selftest.js', '    img = new Image()', '    img.src = dataURL', ''].join('\n'),
     },

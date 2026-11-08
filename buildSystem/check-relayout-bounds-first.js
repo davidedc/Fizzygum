@@ -81,9 +81,8 @@ function walk(dir, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
-// a quoted string's text is not code: `super` in a message is no call to it
-const stripStrings = (code) => code.replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
+// every rule reads a line's bare code (lib/coffee-mask.js: comments and literal contents blanked); the marker its comment
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 // PASS 1 — parse every file once, so the hook rule below can resolve an INHERITED `_reLayout`
 // instead of assuming one. (Without this the three PatchNodeWdgt subclasses — which define the hook
@@ -91,19 +90,22 @@ const stripStrings = (code) => code.replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'
 const FILES = [];
 const byClass = new Map();
 for (const p of walk(SRC, [])) {
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const text = fs.readFileSync(p, 'utf8');
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, path.relative(SRC, p));
+  const bare = masked.map((l) => l.bare);
   const heads = [];
   for (const sp of methodSpans(lines)) heads.push({ name: sp.name, i: sp.line, end: sp.end });
   const bodyEnd = (k) => heads[k].end;
   const decl = /^class\s+(\w+)(?:\s+extends\s+(\w+))?/m.exec(lines.join('\n'));
   const rec = {
-    p, lines, heads, bodyEnd,
+    p, lines, masked, bare, heads, bodyEnd,
     cls: decl ? decl[1] : path.basename(p, '.coffee'),
     parent: decl ? decl[2] : undefined,
     hasOwnReLayout: heads.some((h) => h.name === '_reLayout'),
     delegatesToTemplate: heads.some((h, k) =>
       h.name === '_reLayout' &&
-      lines.slice(h.i + 1, bodyEnd(k)).some((l) => DELEGATES.test(stripComment(l)))),
+      bare.slice(h.i + 1, bodyEnd(k)).some((l) => DELEGATES.test(l))),
   };
   FILES.push(rec);
   byClass.set(rec.cls, rec);
@@ -123,7 +125,7 @@ function reachesTemplate(rec) {
 const violations = [];
 let checked = 0, exempt = 0, trivial = 0, template = 0;
 for (const rec of FILES) {
-  const { p, lines, heads, bodyEnd, cls, delegatesToTemplate } = rec;
+  const { p, lines, masked, bare, heads, bodyEnd, cls, delegatesToTemplate } = rec;
   if (cls === 'Widget') continue;                           // the base _reLayout IS the applier
   for (let k = 0; k < heads.length; k++) {
     if (heads[k].name !== '_reLayout' && heads[k].name !== HOOK) continue;
@@ -132,7 +134,7 @@ for (const rec of FILES) {
       // The template applies my bounds before calling me, so routing through it IS apply-first.
       // Counted with the _reLayout that delegates, not here; only a NON-delegating file is a finding.
       if (delegatesToTemplate) continue;
-      const geomAt = lines.slice(head.i + 1, bodyEnd(k)).findIndex((l) => GEOM.test(stripComment(l)));
+      const geomAt = bare.slice(head.i + 1, bodyEnd(k)).findIndex((l) => GEOM.test(l));
       if (geomAt === -1) continue;                            // reads no own geometry -> nothing to lag
       // no _reLayout of my own: RESOLVE the inherited one rather than trusting it
       if (!rec.hasOwnReLayout && reachesTemplate(rec)) { template++; continue; }
@@ -142,8 +144,8 @@ for (const rec of FILES) {
     }
     // EXEMPTION: scan upward through the contiguous comment block directly above the header.
     let marked = false;
-    for (let j = head.i - 1; j >= 0 && /^\s*#/.test(lines[j]); j--) {
-      if (EXEMPT.test(lines[j])) { marked = true; break; }
+    for (let j = head.i - 1; j >= 0 && isCommentOnly(masked[j]); j--) {
+      if (EXEMPT.test(masked[j].comment)) { marked = true; break; }
     }
     if (marked) { exempt++; continue; }
     const end = bodyEnd(k);
@@ -154,7 +156,7 @@ for (const rec of FILES) {
     let firstGeom = -1, appliedBeforeGeom = false, delegated = false;
     let sawBounds = false, sawMove = false, sawExtent = false, sawSuper = false;
     for (let j = head.i + 1; j < end; j++) {
-      const code = stripComment(lines[j]);
+      const code = bare[j];
       if (!code.trim()) continue;
       if (DELEGATES.test(code) && !GEOM.test(code.replace(DELEGATES, ''))) { delegated = true; break; }
       if (GEOM.test(code)) {
@@ -165,7 +167,7 @@ for (const rec of FILES) {
       if (APPLY_BOUNDS.test(code)) sawBounds = true;
       if (APPLY_MOVE.test(code)) sawMove = true;
       if (APPLY_EXTENT.test(code)) sawExtent = true;
-      if (SUPER.test(stripStrings(code))) sawSuper = true;
+      if (SUPER.test(code)) sawSuper = true;
     }
     if (delegated) { template++; continue; }
     if (firstGeom === -1) { trivial++; continue; }           // no own-geometry positioning -> safe

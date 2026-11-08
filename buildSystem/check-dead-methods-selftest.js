@@ -7,7 +7,8 @@
 // (lib/planted-src.js). Run by buildSystem/run-selftests.js on every build.
 
 const { twinName, inventoryOf, independentlyReferenced } = require('./check-dead-methods');
-const { codeOfCoffeeLine } = require('./lib/coffee-mask');
+const { coffeeMask } = require('./lib/coffee-mask');
+const { readAllowlist } = require('./lib/allowlist-file');
 const methodRefs = require('./lib/method-references');
 const t = require('./lib/selftest-verdict').cases('dead-methods');
 
@@ -33,13 +34,15 @@ const invWant = JSON.stringify(['make(class-side)@3', '_helper(class-side)@5', '
 t.check(inv === invWant, `inventoryOf(class-side corpus) -> ${inv}`);
 
 // A src line is read as code (coffee-mask) and then by the reference rule: a method reached ONLY inside a
-// string interpolation stays reached (plan P4.2 regression), and a comment reaches nothing.
+// string interpolation stays reached (plan P4.2 regression), a method called after a `#` that a string or a regex
+// holds stays reached, and a comment reaches nothing.
 const lineCases = [
   ['x = "#{@onlyCalledInInterpolation()}" # real comment @notThis()', ['onlyCalledInInterpolation'], ['notThis']],
   ["s = '# not a comment'; @afterHashInString()", ['afterHashInString'], []],
+  ['r = /#\\d+/; @afterHashInRegex() # @notThisEither()', ['afterHashInRegex'], ['notThisEither']],
 ];
 for (const [inp, must, mustNot] of lineCases) {
-  const names = methodRefs.methodReferences(codeOfCoffeeLine(inp, null).code).names;
+  const names = methodRefs.methodReferences(coffeeMask(inp)[0].code).names;
   t.check(must.every((n) => names.includes(n)) && mustNot.every((n) => !names.includes(n)), `src line ${JSON.stringify(inp)} -> ${JSON.stringify(names)}`);
 }
 
@@ -51,8 +54,7 @@ for (const [inp, must, mustNot] of lineCases) {
 const fs = require('fs');
 const path = require('path');
 const { proveGate, SRC } = require('./lib/planted-src');
-const allow = fs.readFileSync(path.join(__dirname, 'dead-method-allowlist.txt'), 'utf8').split('\n')
-  .map((l) => l.replace(/#.*/, '').trim()).filter(Boolean);
+const allow = [...readAllowlist(path.join(__dirname, 'dead-method-allowlist.txt')).keys()];
 const publicEntries = allow.filter((n) => /^[a-z]/.test(n));
 const [referenced, twinned] = publicEntries;
 // an entry whose every definition lives in ONE src file, so deleting that file leaves it defined nowhere
@@ -69,6 +71,7 @@ proveGate({
     plants: {
       'BiteProofReachedWdgt.coffee': cls('BiteProofReachedWdgt',
         '  bpNames: ["biteProofByString", "biteProofUser"]',
+        '  bpLabel: "(open"',
         '  biteProofByString: -> 1',
         '  biteProofPub: -> 1',
         '  _biteProofPubNoSettle: -> 1',

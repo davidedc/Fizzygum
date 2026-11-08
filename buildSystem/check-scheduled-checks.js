@@ -25,6 +25,7 @@ rejectUnknownArgs(ARGV, ['--src='], 'scheduled-checks');
 rejectPositionalArgs(ARGV, 'scheduled-checks', 'a src tree is named with --src=DIR');
 const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'scheduled-checks');
 const MARKER = /#\s*CHECK AFTER\s+(.+?)\s*$/i;   // in a comment, capture the date to end-of-line
+const { coffeeMask } = require('./lib/coffee-mask');   // each file's comments, as the lexer reads them
 const NOW = Date.now();
 
 function walk(dir, acc) {
@@ -40,9 +41,8 @@ function walk(dir, acc) {
 const overdue = [], malformed = [];
 let markers = 0;
 for (const p of walk(SRC, [])) {
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
-  lines.forEach((l, i) => {
-    const m = MARKER.exec(l);
+  coffeeMask(fs.readFileSync(p, 'utf8'), path.relative(SRC, p)).forEach((l, i) => {
+    const m = MARKER.exec(l.comment || '');
     if (!m) return;
     markers++;
     const when = Date.parse(m[1]);

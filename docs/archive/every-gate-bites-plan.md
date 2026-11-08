@@ -1164,6 +1164,11 @@ since, as BACKLOG held it:
       unbounded look simply waited out. A look at a booting page now waits up to the shard's own backstop (5 min); the
       test-time poll keeps 5 s.
 
+- [x] `check-invalidation-receivers` cuts a line at a `#` inside a string, so a cross-object invalidation after
+      such a string on the same line goes unseen. — CLOSED 2026-11-08 with
+      the comment cutters item (`archive/argument-holes-both-repos-plan.md`'s ledger): the gate reads each line's bare
+      code through `lib/coffee-mask.js`, and its self-test plants a reach-over after a string holding `#`.
+
 ---
 
 ## Appendix A — measuring the unresolved-sends mask (re-run before Unit C)

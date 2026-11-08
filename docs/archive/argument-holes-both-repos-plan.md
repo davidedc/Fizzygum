@@ -1199,3 +1199,30 @@ for (const s of sites) if (s.absentBefore.length) {
       Widget show in an inspector that lists inherited members: `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly`
       scrolls such a list, and its images 2 and 3 moved by those two rows alone (with them hidden from the list it
       matched); recaptured with the owner's sign-off, mouse and finger at dpr 1 and 2.
+- [x] **Hand-rolled `#` comment cutters beside `lib/coffee-mask.js`** (found closing "two readers of a test's macro
+      sources", in the plan's ledger). Several gates
+      cut CoffeeScript comments with their own per-line scan instead of coffee-mask, most of them at the first `#`
+      even inside a string — so a `"#{…}"` interpolation or a `#` in a string hides the code after it on that line:
+      `stripComment` in `check-stinks.js` (beside its string-aware twin), `check-invalidation-receivers.js` (filed
+      below), `check-plane-discipline.js`, `check-relayout-bounds-first.js`; `stripLine` in
+      `census-nosettle-naming.js`, `check-layering.js` and its kept-in-sync copy in `check-unresolved-sends.js`;
+      layering rule [D]'s `indexOf('#')`; `lib/name-definitions.js`'s `stripComment`; and the tests repo's
+      `check-macro-source-discipline.js` `stripComment` (quote-aware). One masker, measured gate by gate. — CLOSED 2026-11-08:
+      one masker. `lib/coffee-mask.js` reads CoffeeScript with the CoffeeScript lexer (`CoffeeScript.tokens`, the bundled
+      compiler) and gives every reader one call, `coffeeMask(text, where)`, one record per line, `{ mask, code, bare,
+      comment, continuesLiteral }` (with `isCommentOnly`), each text lexed once per process; its cases are
+      `lib/coffee-mask-selftest.js`. The ten filed were thirty-two: the
+      naive first-`#` cut in thirteen places, `name-definitions`' `#{`-aware cut, seven quote-aware one-line scans, four
+      stateful copies of `stripLine` (the census copy was live), aim-census' own lexer and four `"""` counters. All read
+      the masker now, and coffee-mask's own character scan is gone with them: it misread a `#` or a quote inside a regex,
+      took `///'''///` for a heredoc that never closes, and labelled interpolation code a string. Each gate's self-test
+      gained a plant seen failing on the old reading, and the `lib/` readers that had no self-test (install-edges,
+      settle-tiers, settling-setters) have one. What the move surfaced: `Macro.getName` was called only by
+      `@getName()` inside a heredoc interpolation (call-separation [U], 115 > 114), so it is gone and the template reads
+      `@_name`; `MacroToolkit._syntheticEventsConsecutiveLeftClicks_InputEvents` self-calls two public L1 primitives with
+      a string first argument, which the dropped-strings reading hid ([S], two sites), sanctioned like its two sibling
+      helpers; the commented-out tint line in `@PENCIL_TOOL_SOURCE` is a third colour in that tool's source text, whose
+      sanction counts 3. `part-edge-scan` read a line ending in an existence test (`foo() if X?`) as unfinished, which
+      had hidden that it never read `return <value> unless X?` as a bail-out; both are fixed and planted. The three
+      `*-allowlist.txt` files have one reader, `lib/allowlist-file.js`. Where src's `Macro.fromString` heredoc bodies are
+      found joins the four walks item.

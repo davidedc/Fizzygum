@@ -34,8 +34,8 @@
  * here: every entry must match a method defined in src. An entry that matches nothing is a family that
  * moved, and the methods it should recognise would fall to 'plain' with nothing said.
  *
- * Parsing machinery: stripLine is copied from check-layering.js (strips # comments + string
- * literals, carries multi-line string state); the method grouping is the shared
+ * Parsing machinery: every source is read through lib/coffee-mask.js (each line's bare code: comments
+ * and literal contents blanked); the method grouping is the shared
  * lib/coffee-method-header.js methodBoundary (2-space class methods, mixin onceAddedClassProperties
  * members).
  *
@@ -84,45 +84,8 @@ function familyOf(name) {
   return 'plain';                                                         // ordinary _ helper/query
 }
 
-// ---- stripLine: copied verbatim from check-layering.js ----
-function stripLine(line, state) {
-  if (state) {
-    const end = line.indexOf(state);
-    if (end < 0) return { code: '', state };
-    line = line.slice(end + state.length);
-    state = null;
-  }
-  let out = '';
-  let i = 0;
-  while (i < line.length) {
-    const three = line.substr(i, 3);
-    if (three === '"""' || three === "'''") {
-      const close = line.indexOf(three, i + 3);
-      if (close < 0) { state = three; break; }
-      i = close + 3; continue;
-    }
-    const c = line[i];
-    if (c === '`') {
-      const close = line.indexOf('`', i + 1);
-      if (close < 0) { state = '`'; break; }
-      i = close + 1; continue;
-    }
-    if (c === '"' || c === "'") {
-      let j = i + 1;
-      while (j < line.length) {
-        if (line[j] === '\\') { j += 2; continue; }
-        if (line[j] === c) break;
-        j++;
-      }
-      i = j + 1; continue;
-    }
-    if (c === '#') break;
-    out += c; i++;
-  }
-  return { code: out, state };
-}
+const { coffeeMask } = require('./lib/coffee-mask');
 
-// ---- end copied machinery ----
 
 function collectCoffee(dir, out) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -138,14 +101,15 @@ const defs = [];   // { klass, method, rel, line, body: [{n, code, indent}], set
 for (const file of collectCoffee(SRC, [])) {
   const rel = path.relative(path.join(__dirname, '..'), file);
   const klass = path.basename(file, '.coffee');
-  const lines = fs.readFileSync(file, 'utf8').split('\n');
-  let cur = null, mixinHashIndent = null, strState = null;
+  const text = fs.readFileSync(file, 'utf8');
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, rel);
+  let cur = null, mixinHashIndent = null;
   const flush = () => { if (cur) defs.push(cur); cur = null; };
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
-    const { code, state } = stripLine(raw, strState);
-    strState = state;
-    if (strState === null) {
+    const code = masked[n].bare;
+    if (!masked[n].continuesLiteral) {             // a line inside a heredoc holds no boundary
       const b = methodBoundary(raw, mixinHashIndent);
       if (b) {
         flush();

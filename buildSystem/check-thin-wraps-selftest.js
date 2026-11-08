@@ -3,8 +3,8 @@
 // src/ (lib/planted-src.js): a public method owning a _<name>NoSettle twin whose body is more than the canonical wrap
 // fails, named; a # thin-wrap-exempt: marker above a method with no twin fails as stale. The accepted shapes ride
 // the control and are COUNTED, so each is seen to be accepted rather than skipped: the canonical wrap behind a guard
-// and a private twin pair add two canonical wrappers, a marked non-canonical twin owner adds one exemption, and a
-// twinless _xNoSettle adds nothing. Run by buildSystem/run-selftests.js on every build.
+// and a private twin pair add two canonical wrappers, a marked non-canonical twin owner adds one exemption, a
+// twinless _xNoSettle adds nothing, and a marker's words written inside a heredoc are text, not a marker. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -30,6 +30,8 @@ proveGate({
         '  bpMarked: (a) ->', '    @bpExtra = a', '    @_settleLayoutsAfter => @_bpMarkedNoSettle a',
         '  _bpMarkedNoSettle: (a) ->', '    @bpValue = a',
         '  _bpLoneNoSettle: ->', '    @bpValue = 3'),
+      'BiteProofHeredocTextWdgt.coffee': lines('class BiteProofHeredocTextWdgt extends Widget',
+        '  bpSource: """', '  # thin-wrap-exempt: words inside a heredoc, no marker', '  """'),
     },
     lines: [new RegExp(`^\\[thin-wraps\\] ${Number(real[1]) + 2} canonical wrapper\\(s\\) \\+ ${Number(real[2]) + 1} marked-exempt checked\\.$`, 'm')],
   },

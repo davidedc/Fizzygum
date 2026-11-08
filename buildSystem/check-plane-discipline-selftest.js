@@ -1,7 +1,7 @@
 'use strict';
 // check-plane-discipline-selftest.js — check-plane-discipline.js proved able to BITE, by running the REAL gate on a
 // planted copy of src/ (lib/planted-src.js). A: a bare scrollOffset write outside _writeScrollOffset fails, a compound
-// `+=` too. B: one more line mixing two receivers' positions takes the count over its baseline; a NOT_POSITIONAL entry
+// `+=` too, and one after a regex holding `#` on its line. B: one more line mixing two receivers' positions takes the count over its baseline; a NOT_POSITIONAL entry
 // the derivation no longer catches (the copy's Widget predicate given a parameter) fails as stale; and, in a run of its
 // own, a real mixing line rewritten takes the count UNDER the baseline, which fails too (the count is exact). C1: a
 // scroll provider's escalated `activated` reading its `pos` fails, in a subclass too; C2: `nonFloatDragging` reading
@@ -39,7 +39,7 @@ proveGate({
   runs: [{
     label: 'a bare offset write, a new mix, a stale exclusion, escalated and raw positions read',
     plants: {
-      'BiteProofOffsetWriteWdgt.coffee': cls('BiteProofOffsetWriteWdgt', 'Widget', '  bpScrollTo: (x) ->', '    @scrollOffsetX = x', '  bpNudge: (d) ->', '    @scrollOffsetY += d'),
+      'BiteProofOffsetWriteWdgt.coffee': cls('BiteProofOffsetWriteWdgt', 'Widget', '  bpScrollTo: (x) ->', '    @scrollOffsetX = x', '  bpNudge: (d) ->', '    @scrollOffsetY += d', '  bpAfterRegex: (x) ->', '    r = /#x/; @scrollOffsetX = x'),
       'BiteProofMixWdgt.coffee': cls('BiteProofMixWdgt', 'Widget', '  bpMix: (a, b) ->', '    @bpGap = a.left() - b.left()'),
       'BiteProofEscalatedPosWdgt.coffee': cls('BiteProofEscalatedPosWdgt', 'Widget',
         '  scrollTranslationOfChild: (child) ->', '    undefined', '  bpForward: (pos) ->', '    @escalateEvent "activated", pos',
@@ -56,6 +56,7 @@ proveGate({
       C2_RAW_SCREEN_POS: /^    BiteProofRawScreenPosWdgt\.coffee:3: BiteProofRawScreenPosWdgt\.nonFloatDragging reads the raw screen 'pos' unmapped/m,
     },
     lines: [/^    BiteProofOffsetWriteWdgt\.coffee:5: \[in bpNudge\] @scrollOffsetY \+= d$/m,
+      /^    BiteProofOffsetWriteWdgt\.coffee:7: \[in bpAfterRegex\] r = \/#x\/; @scrollOffsetX = x$/m,
             /^    BiteProofMixWdgt\.coffee:3: \[a vs b\] @bpGap = a\.left\(\) - b\.left\(\)$/m,
             /^    BiteProofEscalatedPosSubWdgt\.coffee:3: BiteProofEscalatedPosSubWdgt\.activated reads its escalated 'pos'/m],
   }, {

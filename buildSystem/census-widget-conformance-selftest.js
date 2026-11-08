@@ -1,7 +1,7 @@
 'use strict';
 // census-widget-conformance-selftest.js — census-widget-conformance.js --gate proved able to BITE, by running the REAL
 // gate on a planted copy of src/ (lib/planted-src.js): a widget writing a field it never declares fails — written
-// with `=` or lazily with `?=` — named with the class; one more _reLayout prologue copy takes the ratchet over its
+// with `=` or lazily with `?=`, also after a string holding `#` on its line — named with the class; one more _reLayout prologue copy takes the ratchet over its
 // floor and fails, named. The declaration forms the facet accepts ride the control: a class-level declaration, a
 // field a mixin donates, a write inside a block string (data, not code), a comparison, a bound function. Run by
 // buildSystem/run-selftests.js on every build.
@@ -27,12 +27,12 @@ proveGate({
   runs: [{
     label: 'an undeclared field and one more prologue copy',
     plants: {
-      'BiteProofUndeclaredWdgt.coffee': lines('class BiteProofUndeclaredWdgt extends Widget', '  bpSet: ->', '    @bpUndeclared = 1', '  bpLazy: ->', '    @bpLazyField ?= 2'),
+      'BiteProofUndeclaredWdgt.coffee': lines('class BiteProofUndeclaredWdgt extends Widget', '  bpSet: ->', '    @bpUndeclared = 1', '  bpLazy: ->', '    @bpLazyField ?= 2', '  bpAfterHash: ->', '    q = "#"; @bpAfterHashField = 3'),
       'BiteProofPrologueWdgt.coffee': lines('class BiteProofPrologueWdgt extends Widget', '  _reLayout: (newBoundsForThisLayout) ->',
         '    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout', '    @_applyGrantedBounds newBoundsForThisLayout'),
     },
     expect: {
-      UNDECLARED_FIELD: /^      BiteProofUndeclaredWdgt \(BiteProofUndeclaredWdgt\.coffee\): bpLazyField, bpUndeclared$/m,
+      UNDECLARED_FIELD: /^      BiteProofUndeclaredWdgt \(BiteProofUndeclaredWdgt\.coffee\): bpAfterHashField, bpLazyField, bpUndeclared$/m,
       PROLOGUE_COPY: /^      BiteProofPrologueWdgt \(BiteProofPrologueWdgt\.coffee\)$/m,
     },
     absent: [/BiteProofDeclaredFieldsWdgt/],

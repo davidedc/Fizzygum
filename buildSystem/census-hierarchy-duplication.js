@@ -60,8 +60,8 @@
  *     the subtle part, and two copies would drift.
  *   - Bodies are compared with their STRING LITERALS INTACT (two bodies differing only in a string
  *     are NOT duplicates), so this file cannot use the census's own string-STRIPPED bodyLines; it
- *     re-reads each source and cuts comments with the census's exported maskLine (which LABELS
- *     strings rather than deleting them).
+ *     re-reads each source through lib/coffee-mask.js and takes its `code` view (comments blanked, strings
+ *     kept).
  *   - Normalization: cut comments, drop blank lines, DEDENT to the body's own minimum indent (so a
  *     4-space class method and an 8-space mixin-DSL method are comparable), collapse internal
  *     whitespace runs to one space. Relative indentation is PRESERVED — CoffeeScript is
@@ -74,7 +74,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runCensus, maskLine } = require('./census-public-private-calls.js');
+const { runCensus } = require('./census-public-private-calls.js');
+const { coffeeMask } = require('./lib/coffee-mask');
 
 const SRC = path.resolve(__dirname, '../src');
 const FULL = process.argv.includes('--full');
@@ -83,21 +84,12 @@ const JSON_OUT = jsonIdx >= 0 ? process.argv[jsonIdx + 1] : null;
 
 // ── body extraction ─────────────────────────────────────────────────────────────────────────────
 
-// Cut comments from every line of a file while KEEPING string content, carrying multi-line string
-// state from line 1 (so a heredoc opened earlier masks its body correctly).
+// Every line of a file with its comment blanked and its string content KEPT (lib/coffee-mask.js's code view).
 const strippedCache = new Map();
 function strippedLinesOf(relFile) {
   let lines = strippedCache.get(relFile);
   if (lines) return lines;
-  const raw = fs.readFileSync(path.join(SRC, relFile), 'utf8').split('\n');
-  let state = null;
-  lines = raw.map((line) => {
-    const r = maskLine(line, state);
-    state = r.state;
-    let out = '';
-    for (let i = 0; i < line.length; i++) if (r.mask[i] !== 'cut') out += line[i];
-    return out;
-  });
+  lines = coffeeMask(fs.readFileSync(path.join(SRC, relFile), 'utf8'), relFile).map((line) => line.code);
   strippedCache.set(relFile, lines);
   return lines;
 }

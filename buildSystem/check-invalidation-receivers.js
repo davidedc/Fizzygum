@@ -27,7 +27,10 @@
 // There is deliberately NO general-purpose public repaint verb (owner decision 2026-07-22 —
 // the old "restore display" menu entry was removed with it).
 //
-// EXEMPTION: a `# cross-invalidation-sanctioned: <reason>` marker (non-empty reason) on the
+// Each file is read through lib/coffee-mask.js: a call is matched on its bare code (comments and literal contents
+// blanked), so neither a comment nor a `#` or quote inside a string or regex can hide the call after it.
+//
+// EXEMPTION: a `# cross-invalidation-sanctioned: <reason>` marker (non-empty reason) in a comment on the
 // SAME line or the comment line(s) directly above. Sanctioned today: the structural-move
 // dispatchers (Widget._addNoSettle, Widget.bringToForeground,
 // Widget._fullChangedIncludingShadowOwner, ActivePointerWdgt.drop), the world's
@@ -83,7 +86,7 @@ function walk(dir, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 function receiverBefore(code, dotIndex) {
   let start = dotIndex;
   while (start > 0 && RECEIVER_CHARS.test(code[start - 1])) start--;
@@ -94,17 +97,18 @@ const violations = [];
 let sites = 0, allowed = 0, sanctioned = 0;
 for (const p of walk(SRC, [])) {
   const rel = 'src/' + path.relative(SRC, p).split(path.sep).join('/');
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const masked = coffeeMask(fs.readFileSync(p, 'utf8'), rel);
   let pendingSanction = false;                       // set by a marker comment line, consumed by the next code line
-  for (let n = 0; n < lines.length; n++) {
-    const line = lines[n];
-    if (/^\s*#/.test(line)) {                        // pure comment line: may arm the sanction for the code below
-      if (EXEMPT.test(line)) pendingSanction = true;
+  for (let n = 0; n < masked.length; n++) {
+    const line = masked[n];
+    const marked = EXEMPT.test(line.comment || '');
+    if (isCommentOnly(line)) {                       // pure comment line: may arm the sanction for the code below
+      if (marked) pendingSanction = true;
       continue;
     }
-    const lineSanctioned = pendingSanction || EXEMPT.test(line);
-    if (line.trim() !== '') pendingSanction = false; // any code line consumes the pending marker; blanks keep it
-    const code = stripComment(line);
+    const lineSanctioned = pendingSanction || marked;
+    if (line.code.trim() !== '') pendingSanction = false; // any code line consumes the pending marker; blanks keep it
+    const code = line.bare;
     let m;
     CALL.lastIndex = 0;
     while ((m = CALL.exec(code)) !== null) {

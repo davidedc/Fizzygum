@@ -19,14 +19,10 @@
 // JS is PARSED (lib/js-mask.js, on acorn): a comment is cut wherever it starts, a comment marker inside a
 // string or a template is text, and a macro file's macro sources are found by the grammar, so a backtick
 // inside a comment (every macro file's header names `intent` / `scenario` / … in one) opens nothing. A JS file
-// that does not parse is refused loudly (js-mask's JS_MASK_UNPARSEABLE), never read by a guess. A macro source is
-// CoffeeScript and is read through lib/coffee-mask.js — the text the page compiles, never the escaped text as written
-// (a CoffeeScript `"q\""` is written `"q\\""`, and masking that would read the rest of its line as a string).
-//
-// Stated limits: lib/coffee-mask.js's misreadings of CoffeeScript, some of which can CUT code — a `#` inside
-// a regex literal or heregex, a "…" string spanning lines, a quote nested in `#{…}`. In a reference gate
-// (dead methods, R4) a cut can only invent a finding, which fails the build loudly with its site in view.
-// Measured 2026-11-06 against the CoffeeScript lexer over the whole repo: none cuts a word of code.
+// that does not parse is refused loudly (js-mask's JS_MASK_UNPARSEABLE), never read by a guess. The harness and each
+// macro source are CoffeeScript, read through lib/coffee-mask.js, the CoffeeScript lexer's own reading; a macro
+// source as the text the page compiles, never the escaped text as written (a CoffeeScript `"q\""` is written
+// `"q\\""`, and masking that would read the rest of its line as a string).
 //
 // Readers: census-public-private-calls.js (R4) and check-dead-methods.js (testsRepoCode);
 // check-unresolved-sends.js (macroSources: the macro sends); lib/call-sites.js — the reader behind
@@ -37,7 +33,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { codeOfCoffeeLine } = require('./coffee-mask');
+const { coffeeMask } = require('./coffee-mask');
 const { maskJs, parseJs } = require('./js-mask');
 
 const DEFAULT_ROOT = path.resolve(__dirname, '../../../Fizzygum-tests');
@@ -53,10 +49,7 @@ function walk(dir, keep, acc) {
   return acc;
 }
 
-function coffeeCode(text) {
-  let state = null;
-  return text.split('\n').map((line) => { const r = codeOfCoffeeLine(line, state); state = r.state; return r.code; });
-}
+const coffeeCode = (text, file) => coffeeMask(text, file).map((line) => line.code);
 
 // The lines of a JS text whose mask is `mask`, its comments blanked (newlines kept).
 function uncommented(text, mask) {
@@ -75,7 +68,7 @@ function macroCode(text, file) {
   const column = (k) => k - (text.lastIndexOf('\n', k - 1) + 1);
   // the last source first, so a splice never moves the columns of a source still to come on the same line
   for (const s of macroSourcesIn(text, file, parsed.ast).reverse()) {
-    const code = coffeeCode(s.text);
+    const code = coffeeCode(s.text, `${file} (its macro source from line ${s.line})`);
     const first = s.line - 1, last = first + code.length - 1;
     const head = lines[first].slice(0, column(s.start)), tail = lines[last].slice(column(s.end));
     code.forEach((c, k) => { lines[first + k] = (k === 0 ? head : '') + c + (k === code.length - 1 ? tail : ''); });

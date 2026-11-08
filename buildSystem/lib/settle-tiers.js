@@ -23,7 +23,7 @@
 const fs = require('fs');
 const path = require('path');
 const { methodSpans } = require('./coffee-method-header');
-const { stripComment } = require('./name-definitions');
+const { coffeeMask } = require('./coffee-mask');
 
 const SETTLE_TIER_NAME = /^_settleLayoutsAfter\w*$/;
 const SINGLE = '_settleLayoutsAfter';                          // the single-mutation tier
@@ -37,11 +37,13 @@ function settleTiers(srcRoot) {
   if (!fs.existsSync(file)) {
     throw new Error(`settle-tiers: ${file} not found — the settle tiers are read from Widget's own definitions`);
   }
-  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  const text = fs.readFileSync(file, 'utf8');
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, file);
   const own = methodSpans(lines).filter((s) => !s.static && !s.mixin);
   const named = [...new Set(own.filter((s) => SETTLE_TIER_NAME.test(s.name)).map((s) => s.name))];
   const flushing = [...new Set(own
-    .filter((s) => lines.slice(s.line + 1, s.end).some((l) => FLUSH_CALL.test(stripComment(l))))
+    .filter((s) => masked.slice(s.line + 1, s.end).some((l) => FLUSH_CALL.test(l.bare)))
     .map((s) => s.name))];
   const problems = [];
   const missing = [SINGLE, JOIN].filter((n) => !named.includes(n));

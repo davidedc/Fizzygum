@@ -25,6 +25,7 @@
 //   found by any shape — add it here when you add the dispatch.
 const fs = require('fs');
 const path = require('path');
+const { coffeeMask } = require('./coffee-mask');
 
 const POINTER_HANDLERS = {
   pressBegan:           { pos: 'plane' },
@@ -52,18 +53,6 @@ const POSITION_QUERIES = {
 const names = Object.keys(POINTER_HANDLERS);
 const namesWith = (pos) => names.filter((n) => POINTER_HANDLERS[n].pos === pos);
 
-function stripComment(line) {
-  // a `#` outside a string starts a comment (the dispatcher's strings never contain one)
-  let quote = null;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (quote) { if (c === '\\') i++; else if (c === quote) quote = null; continue; }
-    if (c === '"' || c === "'") { quote = c; continue; }
-    if (c === '#') return line.slice(0, i);
-  }
-  return line;
-}
-
 // The problems with the table, read against ActivePointerWdgt's source (`srcRoot` = Fizzygum/src), each
 // { kind, text } — the kind is the rule the reading gate fails on (PROBLEM_KINDS). [] when the two agree.
 const PROBLEM_KINDS = ['TABLE_SOURCE_MISSING', 'TABLE_UNKNOWN_NAME', 'TABLE_UNLISTED_DISPATCH', 'TABLE_POS_MISMATCH',
@@ -71,7 +60,7 @@ const PROBLEM_KINDS = ['TABLE_SOURCE_MISSING', 'TABLE_UNKNOWN_NAME', 'TABLE_UNLI
 function dispatchProblems(srcRoot) {
   const file = path.join(srcRoot, 'ActivePointerWdgt.coffee');
   if (!fs.existsSync(file)) return [{ kind: 'TABLE_SOURCE_MISSING', text: 'ActivePointerWdgt.coffee not found at ' + file + ' — the handler table cannot be checked' }];
-  const code = fs.readFileSync(file, 'utf8').split('\n').map(stripComment);
+  const code = coffeeMask(fs.readFileSync(file, 'utf8'), file).map((l) => l.code);   // comments blanked, the dispatcher's strings kept
   const text = code.join('\n');
   const problems = [];
   for (const n of names) {

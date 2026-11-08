@@ -85,7 +85,7 @@ function walk(dir, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 const violations = [];
 let checked = 0, exempt = 0;
@@ -94,7 +94,9 @@ const headersSeen = new Set();   // every method name a scanned file defines (EX
 for (const p of files) {
   const cls = path.basename(p, '.coffee');
   if (SKIPPED_CLASSES.includes(cls)) continue;
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const text = fs.readFileSync(p, 'utf8');
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, path.relative(SRC, p));   // a read is matched on bare code; the marker in a comment
   let inHandler = false, handlerName = null, handlerExempt = false;
   let commentBlockHasExempt = false;
   let mixinHashIndent = null;
@@ -114,11 +116,11 @@ for (const p of files) {
     if (boundary) inHandler = false;                          // a non-method key or a column-0 line ends the method
     // track the comment block directly above the NEXT header: any code line breaks it, so a marker
     // inside the previous method's body exempts nothing
-    if (/^\s*#/.test(line)) { if (EXEMPT.test(line)) commentBlockHasExempt = true; }
+    if (isCommentOnly(masked[n])) { if (EXEMPT.test(masked[n].comment)) commentBlockHasExempt = true; }
     else if (line.trim() !== '') { commentBlockHasExempt = false; }
     else { /* blank keeps the block */ }
     if (!inHandler || handlerExempt) continue;
-    const code = stripComment(line);
+    const code = masked[n].bare;
     if (RAW_READ.test(code) && !MAPPED.test(code)) {
       const rel = 'src/' + path.relative(SRC, p).split(path.sep).join('/');
       violations.push(rules.fired('RAW_READ', `[raw-pointer] ${cls}.${handlerName} reads world.hand.position() unmapped — ${rel}:${n + 1}\n`

@@ -61,7 +61,8 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { codePartOf, guardedPartsPerLine, isLazyPart, declaredRequires } = require('./lib/part-edge-scan');
+const { guardedPartsPerLine, isLazyPart, declaredRequires } = require('./lib/part-edge-scan');
+const { coffeeMask } = require('./lib/coffee-mask');
 const { rejectUnknownArgs } = require('./lib/cli-args');
 
 const REPO = path.resolve(__dirname, '..');
@@ -123,8 +124,9 @@ if (!ownerOfClass.size) die('no part-owned classes found — is parts.json only 
 // and the shared definition is what keeps the two answers equal.
 const directRequires = (p) => declaredRequires(parts, p);
 
-const declaredPartsIn = (text) => {
-  const m = /^\s*requiredParts\s*:\s*\[([^\]]*)\]/m.exec(text);
+// read off the code (lib/coffee-mask.js: comments blanked), as check-part-edges reads it
+const declaredPartsIn = (masked) => {
+  const m = /^\s*requiredParts\s*:\s*\[([^\]]*)\]/m.exec(masked.map((l) => l.code).join('\n'));
   return m ? (m[1].match(/["']([^"']+)["']/g) || []).map(q => q.slice(1, -1)) : [];
 };
 
@@ -143,11 +145,12 @@ function buildGraph(inject) {
   const addFile = (rel, text, part) => {
     const cls = path.basename(rel, '.coffee');
     const lines = text.split('\n');
-    const guards = guardedPartsPerLine(lines, ownerOfClass, parts);
+    const masked = coffeeMask(text, rel);
+    const guards = guardedPartsPerLine(masked, ownerOfClass, parts);
     // A class-level `requiredParts: [...]` is an await covering the whole file (the inherited
     // `launch` awaits it before building anything), so the gate reads it and so does this.
-    const declaredParts = declaredPartsIn(text);
-    const f = { rel, cls, part, lines, guards, code: lines.map(codePartOf),
+    const declaredParts = declaredPartsIn(masked);
+    const f = { rel, cls, part, lines, masked, guards, code: masked.map((l) => l.bare),
                 behindDoor: declaredParts.length > 0 && !declaredParts.some(inImage),
                 doorParts: declaredParts.filter(p => !inImage(p)) };
     files.push(f);
@@ -230,11 +233,12 @@ function buildGraph(inject) {
   // is credited to that part.
   for (const { rel, part, text: injected } of outside) {
     const text = injected != null ? injected : fs.readFileSync(path.join(REPO, rel), 'utf8');
+    const masked = coffeeMask(text, rel);
     // what this FILE may legally name: its own part, whatever that part `requires`, and whatever
     // its class declares in requiredParts (which its inherited `launch` awaits — the declaration IS
     // the await, so check-part-edges honours it for the whole file)
-    const satisfies = new Set([...directRequires(part), ...declaredPartsIn(text)]);
-    for (const line of text.split('\n').map(codePartOf)) {
+    const satisfies = new Set([...directRequires(part), ...declaredPartsIn(masked)]);
+    for (const line of masked.map((l) => l.bare)) {
       if (!line.trim()) continue;
       for (const n of namesIn(line)) {
         if (!doors.has(n)) doors.set(n, new Set());
@@ -252,14 +256,15 @@ function buildGraph(inject) {
     for (const fn of fs.readdirSync(abs)) {
       if (!fn.endsWith('.coffee')) continue;
       const rel = path.posix.join(d, fn);
-      const lines = fs.readFileSync(path.join(REPO, rel), 'utf8').split('\n');
-      scanLines(BOOT, { rel, lines, code: lines.map(codePartOf),
-                        guards: guardedPartsPerLine(lines, ownerOfClass, parts),
+      const text = fs.readFileSync(path.join(REPO, rel), 'utf8');
+      const masked = coffeeMask(text, rel);
+      scanLines(BOOT, { rel, lines: text.split('\n'), code: masked.map((l) => l.bare),
+                        guards: guardedPartsPerLine(masked, ownerOfClass, parts),
                         behindDoor: false, doorParts: [] });
     }
   }
   for (const line of inject.bootLines || []) {
-    scanLines(BOOT, { rel: '«injected»', lines: [line], code: [codePartOf(line)],
+    scanLines(BOOT, { rel: '«injected»', lines: [line], code: [coffeeMask(line, 'an injected boot line')[0].bare],
                       guards: [new Set()], behindDoor: false, doorParts: [] });
   }
 
@@ -283,7 +288,7 @@ function buildGraph(inject) {
 // 4-class `maps` for the same source bytes), and comment bytes never reach a minified image at all.
 const weightOf = (f) => {
   let code = 0;
-  for (const l of f.lines) { const c = l.split('#')[0].replace(/\s+$/, ''); if (c.trim()) code += c.length + 1; }
+  for (const l of f.masked) { const c = l.code.replace(/\s+$/, ''); if (c.trim()) code += c.length + 1; }
   return { bytes: f.lines.join('\n').length, code };
 };
 

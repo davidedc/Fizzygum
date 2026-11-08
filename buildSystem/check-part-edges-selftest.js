@@ -6,7 +6,8 @@
 // planted parts.json (lib/planted-src.js). Run by buildSystem/run-selftests.js on every build.
 
 const { soleProviders, memberReaches, superReaches, unusedRequires } = require('./check-part-edges');
-const { codePartOf, guardedPartsPerLine } = require('./lib/part-edge-scan');
+const { guardedPartsPerLine } = require('./lib/part-edge-scan');
+const { coffeeMask } = require('./lib/coffee-mask');
 const t = require('./lib/selftest-verdict').cases('part-edges');
 
 // a case passes when what it got equals what it wants, compared as JSON
@@ -19,10 +20,11 @@ const classOwner = new Map([['WidgetTestSupport', 'harness']]);
 const sole = new Map([['serialiseToMemory', 'harness'], ['_sizeCanvasToTestScreenResolution', 'harness']]);
 const never = () => false;
 const reach = (src, owner = 'core', isSatisfied = never) => {
-  const lines = src.split('\n');
-  const guards = guardedPartsPerLine(lines, classOwner, fixtureParts, sole);
-  return memberReaches(lines, guards, sole, owner, isSatisfied).map(v => `${v.clause}:${v.line}:${v.name}`);
+  const masked = coffeeMask(src);
+  const guards = guardedPartsPerLine(masked, classOwner, fixtureParts, sole);
+  return memberReaches(masked, guards, sole, owner, isSatisfied).map(v => `${v.clause}:${v.line}:${v.name}`);
 };
+const file = (part, ...lines) => ({ part, masked: coffeeMask(lines.join('\n')) });
 
 // which installed members are the part's own: the support class defining them does not withdraw
 // them, nor does another file of the same part; a definition in any OTHER part does, and so does a
@@ -30,11 +32,11 @@ const reach = (src, owner = 'core', isSatisfied = never) => {
 const owned = soleProviders(
   new Map([['serialiseToMemory', new Set(['harness'])], ['makeSpacersOpaque', new Set(['harness'])],
            ['installedTwice', new Set(['harness', 'tools'])]]),
-  [{ part: 'harness',   lines: ['class WidgetTestSupport', '  serialiseToMemory: ->', '  makeSpacersOpaque: ->', '  installedTwice: ->'] },
-   { part: 'harness',   lines: ['class MacroToolkit', '  serialiseToMemory: -> 1'] },
-   { part: 'tools',     lines: ['class ToolsSupport', '  installedTwice: ->'] },
-   { part: 'authoring', lines: ['class LayoutSpacerWdgt extends Widget', '  makeSpacersOpaque: ->', '    @x = 1'] },
-   { part: 'core',      lines: ['class Caller', '  run: ->', '    x.serialiseToMemory()'] }]);
+  [file('harness',   'class WidgetTestSupport', '  serialiseToMemory: ->', '  makeSpacersOpaque: ->', '  installedTwice: ->'),
+   file('harness',   'class MacroToolkit', '  serialiseToMemory: -> 1'),
+   file('tools',     'class ToolsSupport', '  installedTwice: ->'),
+   file('authoring', 'class LayoutSpacerWdgt extends Widget', '  makeSpacersOpaque: ->', '    @x = 1'),
+   file('core',      'class Caller', '  run: ->', '    x.serialiseToMemory()')]);
 check('owned: only the part defines it, however often',  owned.get('serialiseToMemory'), 'harness');
 check('owned: a definition in another part withdraws it', owned.has('makeSpacersOpaque'), false);
 check('owned: two installing parts withdraw it',          owned.has('installedTwice'), false);
@@ -47,9 +49,14 @@ check('(a) a soak call is a guard',        reach('    @_sizeCanvasToTestScreenRe
 check('(a) a member test opens a scope',   reach('    if @_sizeCanvasToTestScreenResolution?\n      @serialiseToMemory()'), []);
 check('(a) ...which closes at its indent', reach('    if @_sizeCanvasToTestScreenResolution?\n      x = 1\n    @serialiseToMemory()'), ['a:3:serialiseToMemory']);
 check('(a) a member bail-out',             reach('  m: ->\n    return unless world.serialiseToMemory?\n    world.serialiseToMemory()'), []);
+check('(a) an existence test in the returned value is no bail-out', reach('  m: ->\n    return WidgetTestSupport? unless ready\n    y = 1\n    x.serialiseToMemory()'), ['a:4:serialiseToMemory']);
+check('(a) a bail-out returning a value',   reach('  m: ->\n    return undefined unless WidgetTestSupport?\n    y = 1\n    x.serialiseToMemory()'), []);
 check('(a) a class guard covers it',       reach('    if WidgetTestSupport?\n      x.serialiseToMemory()'), []);
 check('(a) defined outside the part',      reach('    x.sharedName()'), []);
 check('(a) in a comment',                  reach('    # @serialiseToMemory()'), []);
+check('(a) after a regex holding a quote', reach('    q = /"/; @serialiseToMemory()'), ['a:1:serialiseToMemory']);
+check('(a) a postfix guard ends with its line',   reach('    x() if WidgetTestSupport?\n    y.serialiseToMemory()'), ['a:2:serialiseToMemory']);
+check('(a) a guard written in a string guards nothing', reach('    f "WidgetTestSupport?", ->\n      x.serialiseToMemory()'), ['a:2:serialiseToMemory']);
 check('(a) in the installing part',        reach('    @serialiseToMemory()', 'harness'), []);
 check('(a) a requires-satisfied file',     reach('    @serialiseToMemory()', 'authoring', (p) => p === 'harness'), []);
 
@@ -78,17 +85,17 @@ const sources = {
 const classInfo = new Map();
 const files = new Map();
 for (const [name, s] of Object.entries(sources)) {
-  const lines = s.src.split('\n');
+  const masked = coffeeMask(s.src);
   const methods = new Map();
   let cur;
-  lines.forEach((l, i) => {
-    const h = /^  ([A-Za-z_]\w*): ->/.exec(l);
+  masked.forEach(({ bare }, i) => {
+    const h = /^  ([A-Za-z_]\w*): ->/.exec(bare);
     if (h) { cur = { bodyLines: [] }; methods.set(h[1], cur); return; }
-    if (cur) cur.bodyLines.push({ n: i + 1, code: codePartOf(l) });
+    if (cur) cur.bodyLines.push({ n: i + 1, code: bare });
   });
   classInfo.set(name, { name, parent: s.parent, mixins: [], methods });
   files.set(name, { rel: name + '.coffee', owner: s.part, isSatisfied: never,
-                    guards: guardedPartsPerLine(lines, classOwner, fixtureParts, sole) });
+                    guards: guardedPartsPerLine(masked, classOwner, fixtureParts, sole) });
 }
 const chainOf = (cls) => { const out = []; for (let c = classInfo.get(cls); c; c = classInfo.get(c.parent)) out.push(c); return out; };
 const supers = superReaches({ classInfo, chainOf }, new Map([['Widget', new Map([['makeSpacersOpaque', 'harness']])]]),

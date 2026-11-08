@@ -55,8 +55,8 @@
  *       NEEDS the sibling Fizzygum-tests repo; R4 is null (and rule [U] SKIPS) when it is absent.
  *
  * HOW (same philosophy as the check-*.js gates — a heuristic line scanner, no type inference):
- *   - Parsing machinery: stripLine is copied from check-layering.js (strips # comments + string
- *     literals with multi-line state); methods are grouped by the shared lib/coffee-method-header.js
+ *   - Parsing machinery: every source is read through lib/coffee-mask.js (R1-R3 read each line's bare code,
+ *     comments and literal contents blanked; R4 its code, literals kept); methods are grouped by the shared lib/coffee-method-header.js
  *     methodBoundary — 2-space class methods and mixin onceAddedClassProperties members.
  *   - Class = file basename (one-class-per-file); `extends` / `@augmentWith` edges regex-scanned
  *     exactly like src/boot/dependencies-finding.coffee does.
@@ -103,49 +103,10 @@ const PUBLIC_CALL_MARKER = 'public-call-sanctioned';
 // report shows which double-settle shapes are consciously signed off
 const DOUBLE_SETTLE_MARKER = 'double-settle-sanctioned';
 
-// ---------- scanner machinery (copied from check-layering.js — keep in sync) ----------
-function stripLine(line, state) {
-  if (state) {
-    const end = line.indexOf(state);
-    if (end < 0) return { code: '', state };
-    line = line.slice(end + state.length);
-    state = null;
-  }
-  let out = '';
-  let i = 0;
-  while (i < line.length) {
-    const three = line.substr(i, 3);
-    if (three === '"""' || three === "'''") {
-      const close = line.indexOf(three, i + 3);
-      if (close < 0) { state = three; break; }
-      i = close + 3; continue;
-    }
-    const c = line[i];
-    if (c === '`') {
-      const close = line.indexOf('`', i + 1);
-      if (close < 0) { state = '`'; break; }
-      i = close + 1; continue;
-    }
-    if (c === '"' || c === "'") {
-      let j = i + 1;
-      while (j < line.length) {
-        if (line[j] === '\\') { j += 2; continue; }
-        if (line[j] === c) break;
-        j++;
-      }
-      i = j + 1; continue;
-    }
-    if (c === '#') break;
-    out += c; i++;
-  }
-  return { code: out, state };
-}
 
-// Per-char mask for one raw line ('code' | 'str' | 'cut'), carrying multi-line string state: it lives in
-// lib/coffee-mask.js, shared with lib/tests-repo-code.js, and is re-exported below for
-// census-hierarchy-duplication.js. R4's occurrence harvest needs it (strings are dynamic-dispatch
-// surface and must DISQUALIFY a privatization candidate).
-const { maskLine } = require('./lib/coffee-mask');
+// The reading of every source: R4's occurrence harvest needs its per-character mask too (strings are
+// dynamic-dispatch surface and must DISQUALIFY a privatization candidate).
+const { coffeeMask } = require('./lib/coffee-mask');
 const { testsRepoCode } = require('./lib/tests-repo-code');
 const methodRefs = require('./lib/method-references');
 
@@ -223,22 +184,25 @@ function runCensus({ src = SRC } = {}) {
   const classInfo = new Map();   // name -> { name, parent, mixins[], methods: Map(name->rec), file }
   const allMethods = [];         // rec: { name, cls, file, line, bodyLines: [{n, code}], markers:Set }
   const srcFiles = collectFiles(src, '.coffee', []).sort();
+  const maskedFiles = new Map();   // file -> its lib/coffee-mask.js reading, read once for phase 1 and R4
   for (const file of srcFiles) {
     const rel = path.relative(src, file);
     const clsName = path.basename(file, '.coffee');
-    const lines = fs.readFileSync(file, 'utf8').split('\n');
+    const text = fs.readFileSync(file, 'utf8');
+    const lines = text.split('\n');
+    const masked = coffeeMask(text, rel);
+    maskedFiles.set(file, masked);
     let info = classInfo.get(clsName);
     if (!info) { info = { name: clsName, parent: null, mixins: [], methods: new Map(), file: rel }; classInfo.set(clsName, info); }
-    let mixinHashIndent = null, strState = null, cur = null;
+    let mixinHashIndent = null, cur = null;
     for (let n = 0; n < lines.length; n++) {
       const raw = lines[n];
-      const { code, state } = stripLine(raw, strState);
-      strState = state;
+      const code = masked[n].bare;
       const clsM = raw.match(/^class ([A-Za-z_]\w*)( extends ([A-Za-z_]\w*))?/);
       if (clsM && clsM[1] === clsName) info.parent = clsM[3] || null;
       const augM = code.match(/@augmentWith\s+([A-Za-z_]\w*)/);
       if (augM) info.mixins.push(augM[1]);
-      if (strState === null) {
+      if (!masked[n].continuesLiteral) {             // a line inside a heredoc holds no boundary
         const b = methodBoundary(raw, mixinHashIndent);
         if (b) {
           mixinHashIndent = b.mixinHashIndent;
@@ -258,9 +222,10 @@ function runCensus({ src = SRC } = {}) {
       }
       if (cur) {
         cur.bodyLines.push({ n: n + 1, code });
-        // markers live in comments -> read the RAW line (stripLine would eat them)
-        if (raw.includes(PUBLIC_CALL_MARKER)) cur.markers.add(PUBLIC_CALL_MARKER);
-        if (raw.includes(DOUBLE_SETTLE_MARKER)) cur.markers.add(DOUBLE_SETTLE_MARKER);
+        // markers live in comments: read the line's comment
+        const comment = masked[n].comment || '';
+        if (comment.includes(PUBLIC_CALL_MARKER)) cur.markers.add(PUBLIC_CALL_MARKER);
+        if (comment.includes(DOUBLE_SETTLE_MARKER)) cur.markers.add(DOUBLE_SETTLE_MARKER);
       }
     }
   }
@@ -433,12 +398,7 @@ function runCensus({ src = SRC } = {}) {
   };
   const templates = [], computedClasses = [];
   for (const file of srcFiles) {
-    let mState = null;
-    for (const raw of fs.readFileSync(file, 'utf8').split('\n')) {
-      const { mask, state } = maskLine(raw, mState);
-      mState = state;
-      let code = '';
-      for (let k = 0; k < raw.length; k++) code += mask[k] === 'cut' ? ' ' : raw[k];
+    for (const { mask, code } of maskedFiles.get(file)) {
       const r = methodRefs.methodReferences(code);
       templates.push(...r.templates);
       computedClasses.push(...r.classes);
@@ -496,7 +456,7 @@ function runCensus({ src = SRC } = {}) {
   return out;
 }
 
-module.exports = { runCensus, PUBLIC_CALL_MARKER, DOUBLE_SETTLE_MARKER, tierOf, classifyOccurrence, maskLine, METHOD_HEADER };
+module.exports = { runCensus, PUBLIC_CALL_MARKER, DOUBLE_SETTLE_MARKER, tierOf, classifyOccurrence, METHOD_HEADER };
 
 // ============================== THE CLI ==============================
 if (require.main === module) {

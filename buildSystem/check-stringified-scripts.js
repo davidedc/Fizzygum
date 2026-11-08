@@ -26,6 +26,9 @@ rejectPositionalArgs(ARGV, 'stringified-scripts', 'a src tree is named with --sr
 const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'stringified-scripts');
 const HIT = /new ScriptWdgt\b\s*\(?\s*["']/;               // a string handed to the constructor: stringified code
 const SANCTION = /#\s*stringified-script-sanctioned:\s*\S/; // marker WITH a non-empty reason
+// each file is read through lib/coffee-mask.js: a hit is matched on bare code (comments and literal contents blanked,
+// a literal's opening quote kept — the string handed to the constructor is the signal), the marker read from a comment
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -40,13 +43,13 @@ function walk(dir, acc) {
 const violations = [];
 let sanctioned = 0;
 for (const p of walk(SRC, [])) {
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
-  lines.forEach((l, i) => {
-    if (!HIT.test(l)) return;
+  const masked = coffeeMask(fs.readFileSync(p, 'utf8'), path.relative(SRC, p));
+  masked.forEach((l, i) => {
+    if (!HIT.test(l.bare)) return;
     // sanction: on the line itself, or in the contiguous comment block directly above
-    let ok = SANCTION.test(l);
-    for (let j = i - 1; !ok && j >= 0 && /^\s*#/.test(lines[j]); j--) {
-      if (SANCTION.test(lines[j])) ok = true;
+    let ok = SANCTION.test(l.comment || '');
+    for (let j = i - 1; !ok && j >= 0 && isCommentOnly(masked[j]); j--) {
+      if (SANCTION.test(masked[j].comment)) ok = true;
     }
     if (ok) sanctioned++;
     else violations.push({ file: path.relative(SRC, p), line: i + 1 });

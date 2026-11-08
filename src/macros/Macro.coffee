@@ -15,9 +15,6 @@ class Macro
   getBody: ->
     @_body
 
-  getName: ->
-    @_name
-
   @fromString: (macroString) ->
     # get the Macro name from the definition i.e.
     # from the line of the form
@@ -79,7 +76,7 @@ class Macro
         if !@macroGenerator?
           @_syntheticEventsMousePlace_InputEvents()
           @msSinceLastExecutedMacroStep = 0
-          @macroGenerator = #{@getName()}.call @
+          @macroGenerator = #{@_name}.call @
           return
 
         return unless @noCodeLoading()

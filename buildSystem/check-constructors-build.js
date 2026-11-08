@@ -56,13 +56,17 @@ function walk(dir, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
+// each file is read through lib/coffee-mask.js: a build call is matched on bare code, the marker read from a comment
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 const violations = [];
 let exemptCount = 0;
 for (const p of walk(SRC, [])) {
   const cls = path.basename(p, '.coffee');
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const text = fs.readFileSync(p, 'utf8');
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, path.relative(SRC, p));
+  const marked = (j) => EXEMPT.test(masked[j].comment || '');
 
   // Gather each constructor's body lines via the inctor state machine (a class can only have one, but
   // we stay general). A 2-space class header that is NOT `constructor` ends the current constructor.
@@ -75,24 +79,24 @@ for (const p of walk(SRC, [])) {
       if (m[1] === 'constructor') {
         cur = { start: i, body: [] };
         // a ONE-LINE constructor carries its body after the arrow: read it like a body line
-        const arrow = lines[i].search(/[-=]>/);
-        if (arrow >= 0 && lines[i].slice(arrow + 2).trim()) cur.body.push({ i, text: ' '.repeat(arrow + 2) + lines[i].slice(arrow + 2) });
+        const arrow = masked[i].bare.search(/[-=]>/);
+        if (arrow >= 0 && masked[i].bare.slice(arrow + 2).trim()) cur.body.push({ i, text: lines[i].slice(arrow + 2), code: ' '.repeat(arrow + 2) + masked[i].bare.slice(arrow + 2) });
       }
       continue;
     }
-    if (cur) cur.body.push({ i, text: lines[i] });
+    if (cur) cur.body.push({ i, text: lines[i], code: masked[i].bare });
   }
   if (cur) ctors.push(cur);
 
   for (const ctor of ctors) {
-    const hits = ctor.body.filter(L => BUILD.test(stripComment(L.text)));
+    const hits = ctor.body.filter(L => BUILD.test(L.code));
     if (!hits.length) continue;
     // exemption: marker in the body OR the contiguous comment block directly above the header
-    let marked = ctor.body.some(L => EXEMPT.test(L.text));
-    for (let j = ctor.start - 1; j >= 0 && /^\s*#/.test(lines[j]); j--) {
-      if (EXEMPT.test(lines[j])) { marked = true; break; }
+    let exempt = ctor.body.some(L => marked(L.i));
+    for (let j = ctor.start - 1; j >= 0 && isCommentOnly(masked[j]); j--) {
+      if (marked(j)) { exempt = true; break; }
     }
-    if (marked) { exemptCount++; continue; }
+    if (exempt) { exemptCount++; continue; }
     for (const h of hits) violations.push({ cls, file: path.relative(SRC, p), line: h.i + 1, text: h.text.trim() });
   }
 }

@@ -200,7 +200,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   `_addNoSettle`) covers every same-cycle geometry mutation, and a trailing `w._fullChanged()` after `add w` +
   `setExtent` is dead weight. The conforming shape for a genuine repaint need is receiver-side: the method A invokes on B
   ends with `@_changed()` (e.g. `StretchableCanvasWdgt.getContextForPainting` marks its own canvas; the paint-tool
-  sources no longer reach back). Scanner is line-based (naive comment strip, same trade as the raw-pointer gate); `@_changed()`
+  sources no longer reach back). Scanner is line-based, over each line's bare code (§6c); `@_changed()`
   self-calls are dotless and never match, so only dotted receivers are judged.
 - **dead-method (`check-dead-methods.js`).** Inventories every method header in src (a class's, a class-side one under
   its BARE name, a mixin member) and reads every place a method could be REACHED from, as code: src through
@@ -223,15 +223,14 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   of a harness-only member — `check-part-edges.js` asks that one, reading the same implementor harvest
   (`buildSystem/lib/name-definitions.js`), so the two gates cannot disagree about what is defined.
   It is deliberately built for **ZERO false positives at the cost of reach** — a false FAIL breaks the build on correct
-  code, while a miss merely leaves a fault for the boot smoke / SystemTests. That trade is an ASYMMETRY in masking, and
-  both halves err toward "fewer flags": **defs are CALLABLE** — a method header (`name:` / `@name:` whose value is an
-  arrow after a paren-counted parameter list, a signature wrapped after its `(`, or a `\` continuation), a prototype
-  extension, an expando function, or a top-level function; a data key or an indented local defines nothing — read
-  through a naive `#{`-aware comment strip that KEEPS strings, while **calls are UNDER-approximated** (`stripLine`-grade — strings and comments masked, `#{…}` interpolation kept as the code it is).
-  Keeping the naive strip on the DEF side is load-bearing, not laziness: `TRIPLE_QUOTES = ///'''///`
-  (`src/boot/dependencies-finding.coffee:59`) is a BLOCK REGEX whose `'''` reads to `stripLine` as an unterminated
-  heredoc and blanks the rest of that file — blanked *defs* would cause false POSITIVES, blanked *calls* only cost
-  coverage.
+  code, while a miss merely leaves a fault for the boot smoke / SystemTests. That trade is an ASYMMETRY in which
+  reading of a line (§6c) each side takes, and both halves err toward "fewer flags": **defs are CALLABLE** — a method
+  header (`name:` / `@name:` whose value is an arrow after a paren-counted parameter list, a signature wrapped after
+  its `(`, or a `\` continuation), a prototype extension, an expando function, or a top-level function; a data key or
+  an indented local defines nothing — read off each line's CODE, literals KEPT (a heredoc holds code that defines
+  names, MacroToolkit's verbs), so a def found inside a string only ever adds an implementor; while **calls are
+  UNDER-approximated**, read off each line's BARE code (literal contents blanked, `#{…}` interpolation kept as the
+  code it is).
   Accepted reach limits (each a miss, never a false-fail): paren-calls only (paren-less `@foo arg` is too noisy to gate
   on — §8.7 of the carryover plan); string-dispatched sends are invisible (menu/button actions — that hole needs the
   action-string checker); capital-initial names are skipped (the boot dependency finder's jurisdiction); the def harvest is
@@ -265,10 +264,11 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   that lives **inline** next to the rule (a smell is a count, not a named set — no separate allowlist). Build FAILS when
   a stink EXCEEDS its baseline; when it drops below, tighten the baseline to lock the gain (the gate prints a reminder;
   `fg critique` resurfaces it). Baseline 0 = a HARD rule. Scans `src/` only (not the harness — a stink is a statement
-  about the SHIPPED framework's idiom), per-LINE, over `#`-comment-stripped lines — except a stink declaring
-  `scope: 'comments'`, which matches the COMMENT part of each line instead (the comment-hygiene ratchets). A stink may
-  also declare `exclude` (src-relative path prefixes it does not scan — anything unlisted, a new file included, IS
-  scanned), `stringAware: true` (its comment cut skips a `#` inside a quoted string, so a `'#rrggbb'` survives) and
+  about the SHIPPED framework's idiom), per-LINE, over each line's bare code (§6c: a string that mentions `null` is not
+  a `null`) — except a stink declaring `scope: 'comments'`, which matches the line's COMMENT instead (the
+  comment-hygiene ratchets). A stink may also declare `exclude` (src-relative path prefixes it does not scan —
+  anything unlisted, a new file included, IS scanned), `readsLiterals: true` (it matches the line's code with its
+  literals kept, for a smell written inside a string: a CSS `'#rrggbb'`, a tool source's colours) and
   `sanctioned` (`{file, member, count, why}` entries naming hits INSIDE scanned files that are not the smell; a hit's
   member is the nearest class-body key above it at the 2-space indent, or in a mixin the nearest key at the member
   indent the shared grouping locks (`mixinMemberIndent`, §6b: 4 or 6 spaces) — a data member's key as well as a
@@ -293,16 +293,13 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   | `timer` | 4 | `setTimeout`/`setInterval` diverge at dpr2 under parallel load (bug-class B); the cycle/step machinery is the sanctioned clock |
   | `math-random` | 5 | breaks byte-exact screenshot determinism in render/layout/input code |
   | `instanceof-type-test` | 75 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`) |
-  | `raw-chrome-color` | 0 | a colour literal (`Color.create`, `new Color`, `Color.<CONSTANT>`, a CSS `'#hex'` / `'rgb(…)'` / `'rgba(…)'` string) in a CHROME file is a look decided outside `src/Theme.coffee` ([`visual-design-system.md`](visual-design-system.md)), so a restyle cannot reach it — read the surface's `WorldWdgt.theme` role (add one when the surface has none). Uses `exclude` (Theme, the Color class and value plumbing, CONTENT directories, ICON art — a NEW file is counted by default), `stringAware`, and `sanctioned`: the literals inside counted files that are DATA, not a look decision (wallpaper patterns, palette data, the paint tools' source strings, a new shape's content default, the debug overlay, DOM input styling, a pixel read), each declared by file and enclosing member with its count and reason — an entry whose member holds a different number of hits fails the build (`SANCTION COUNT`, or `STALE SANCTION` at 0), so the list can neither outlive nor widen what it names. At 0 it is a HARD rule: a chrome colour is a `Theme` role, read where it is used (a class-level state colour is derived at each state change, since a class-level declaration may not reference another class); `fg stinks --list raw-chrome-color` lists the sanctioned sites with their reasons |
+  | `raw-chrome-color` | 0 | a colour literal (`Color.create`, `new Color`, `Color.<CONSTANT>`, a CSS `'#hex'` / `'rgb(…)'` / `'rgba(…)'` string) in a CHROME file is a look decided outside `src/Theme.coffee` ([`visual-design-system.md`](visual-design-system.md)), so a restyle cannot reach it — read the surface's `WorldWdgt.theme` role (add one when the surface has none). Uses `exclude` (Theme, the Color class and value plumbing, CONTENT directories, ICON art — a NEW file is counted by default), `readsLiterals`, and `sanctioned`: the literals inside counted files that are DATA, not a look decision (wallpaper patterns, palette data, the paint tools' source strings, a new shape's content default, the debug overlay, DOM input styling, a pixel read), each declared by file and enclosing member with its count and reason — an entry whose member holds a different number of hits fails the build (`SANCTION COUNT`, or `STALE SANCTION` at 0), so the list can neither outlive nor widen what it names. At 0 it is a HARD rule: a chrome colour is a `Theme` role, read where it is used (a class-level state colour is derived at each state change, since a class-level declaration may not reference another class); `fg stinks --list raw-chrome-color` lists the sanctioned sites with their reasons |
   | `comment-meta-edit` | 0 | HARD: a comment arguing with itself ("the below is actually correct", "to be clear,") is process residue — state the surviving constraint once |
   | `comment-narration` | 88 | history narration in comments ("used to", "previously", "no longer", "in the old model") — history's home is `docs/archive/` + a pointer; a comment states what IS | <!-- narration-ok: this row DEFINES the narration rule, so it must quote its own trigger words -->
   | `commented-out-debug` | 0 | HARD: commented-out `alert(`/`debugger`/`console.log` is dead debug cruft — delete it; git remembers |
   | `comment-past-receipt` | 0 | HARD: a `was <old code>` conversion receipt narrates history — state the surviving present-tense contract (what the predicate answers, or why this spelling) and let `docs/archive/` keep the before-picture |
 
-  ⚠ The engine's `stripComment` is a naive `#` cut that does **not** mask STRINGS, so e.g. `null-literal` counts the
-  `"null"` inside a string as readily as a real `null`. That is ACCEPTED, not a bug: a ratchet measures REGRESSION, not an absolute. (Upgrading it
-  to the shared `stripLine` masking is banked as §8.8 of the carryover plan.) There is also no multi-line matcher — an
-  empty-catch stink would need one (§8.9).
+  There is no multi-line matcher — an empty-catch stink would need one (§8.9).
 - **thin-wrap (`check-thin-wraps.js`).** For a private `_<name>NoSettle`, its settling twin in the SAME class — the
   public `<name>` (e.g. `setLabel`) OR a private `_<name>` (e.g. the construction wrapper `_buildAndConnectChildren`,
   which is exactly what the constructor-build gate sends every widget author to) — must be, after comments/blanks:
@@ -549,7 +546,7 @@ human asks (`fg critique`, or directly). The clone scanners are on-demand only (
 
 | Census | Measures | Notes |
 |---|---|---|
-| `census-public-private-calls.js` | public/private SELF-call mixing (R1–R4) | ALSO the measurement ENGINE behind the [S]/[U] gate. Its `runCensus()` exports the whole-system **class model** (`classInfo` / `chainOf` / `resolve` — parent + `@augmentWith` mixins + methods + resolution order) and `maskLine`; the two censuses below REUSE it rather than re-implement it. |
+| `census-public-private-calls.js` | public/private SELF-call mixing (R1–R4) | ALSO the measurement ENGINE behind the [S]/[U] gate. Its `runCensus()` exports the whole-system **class model** (`classInfo` / `chainOf` / `resolve` — parent + `@augmentWith` mixins + methods + resolution order); the two censuses below REUSE it rather than re-implement it. |
 | `census-hierarchy-duplication.js` | overrides that add nothing: `IDENTICAL-TO-INHERITED`, `SHADOWS-MIXIN`, `JUST-SENDS-SUPER` | Pharo `ReEquivalentSuperclassMethods`/`ReJustSendsSuper`/`ReLocalMethodsSameThanTrait`. The hierarchy-aware complement to jscpd/jsinspect, which know nothing of inheritance and so can never say "REMOVABLE". |
 | `census-property-placement.js` | properties at the wrong level (`PULL-UP`) or wrong scope (`DEMOTE`) | Pharo `ReInstVarInSubclasses`/`ReVariableReferencedOnce`. |
 | `census-widget-conformance.js` | the mechanical facets of `measurements/widget-practices-survey-2026-08-14.md`, so that survey is re-runnable rather than a one-off | Its ADVISORY run (exit 0, `--json`) prints six facets; the two OBJECTIVE ones are what `--gate` ratchets on the build (§3). Facet 5 (the pin setters) reads methods through the shared grouping (§6b), so a mixin's setter counts under the mixin's own name, and only a setter that takes a value counts. ⚠ Facets 3–6 are heuristics with real exceptions and must NEVER gate — and facet 3 in particular is **not a gap count**: since the widget arc's W7 made `colloquialName` DERIVE from the class name, a class declaring none still answers a true name, so the number says how much of the tree the derivation carries, not how much work is left. On the gated pair: green means "nothing got worse"; only a baseline of 0 also means "nothing is left" |
@@ -649,13 +646,14 @@ than by its own `@`-self-calls?). A method is reached in exactly four ways, in C
 A BARE WORD reaches nothing — a local (`for toggle in …`), a parameter, an object key, a def's own name — and neither
 does a comment or prose. So a sentence in a test's `intent`, a `#` note in a macro, a debug-log label
 (`"addCommandsSeparations 1: "`) or a local named like a method keeps nothing alive. The code is read through two
-masks: src through `lib/coffee-mask.js`; the sibling tests repo through `lib/tests-repo-code.js`, which reads the
+readers: src through `lib/coffee-mask.js` (§6c); the sibling tests repo through `lib/tests-repo-code.js`, which reads the
 harness, each macro command file (its JS PARSED by `lib/js-mask.js`, on acorn, its macro sources through coffee-mask)
 and `scripts/**/*.js` (whose `page.evaluate` bodies call core methods as directly as a macro does), and never the
 metadata prose, the reference-image records or the generated manifests. Clauses 3 and 4 are DERIVED from the
 dispatch site, so the connector lane and the formula helpers need no allowlist entry: a new `FormulaHelpers` static is
 reached the moment it exists, as that class's header promises. Inside a string, R4 counts any reference as `other`
-(macro heredocs and dispatch strings are external surface), and a method computed dispatch reaches is `other` too.
+(macro heredocs and dispatch strings are external surface) — an interpolation's code is code, so `"#{@m()}"` is an
+@-self call —, and a method computed dispatch reaches is `other` too.
 
 A test's MACRO SOURCES have ONE reader, `lib/tests-repo-code.js`'s `macroSourcesIn`: the value of `mainMacroSource`
 and each `extraSubroutineSources` entry, found in the parse — what the harness compiles, never "every template
@@ -671,18 +669,16 @@ Every limit errs toward ALIVE, so it can only HIDE a dead method or a privatizat
 - a whole-word string equal to a method's name counts — a scan cannot tell a dispatch string from a table string (the
   capstone's wrap list keeps `setMaxDim` reached);
 - a string that reads like code counts (`'MenuWdgt[own]'`), because code lives in strings here (macro sources,
-  tool-code blurbs, `"#{@m()}"`);
+  tool-code blurbs);
 - a coercion template with a short literal part (`"#{n}px"`) reaches every method it matches;
 - two same-named methods on unrelated classes cover each other. Making the rule class-aware was MEASURED and rejected
   (`../archive/connector-ubiquity-and-reflection-plan.md`'s BACKLOG ledger): only 10% of references to a colliding
   name carry any class information, so it would flag 543 pairs to find a handful.
 
 Still BLIND, as any name scan is: a name assembled with `+`, and a computed access on an arbitrary object
-(`@target[action]`) — those are each gate's allowlist. A few mask misreadings can CUT code instead, which would invent
-a finding and fail the build loudly with its site in view: coffee-mask's `#` inside a regex literal, a "…" string
-spanning lines, a quote nested in `#{…}`. (The JS side PARSES — `lib/js-mask.js` on acorn — so it misreads nothing,
-and refuses a file that does not parse.) Compared against the CoffeeScript lexer over the whole tests repo
-(2026-11-06): none cuts a word of code. ⇒ **both gates are sound in the direction they
+(`@target[action]`) — those are each gate's allowlist. Neither reader misreads its language: CoffeeScript is read by
+its own lexer (§6c) and JS PARSED (`lib/js-mask.js`, on acorn), and each refuses a text it cannot read. ⇒ **both
+gates are sound in the direction they
 claim** (what they flag really is unreached) **and incomplete in the other**; do not read a green run as "no dead
 methods".
 ⚠ The authoring corollary, for code you write: **never write a method's own exact name as a whole string inside its
@@ -708,8 +704,8 @@ establish it.
 
 ## 4. `check-layering.js` rules
 
-The scanner strips `#` comments and string literals (carrying multi-line state) so a call-regex never matches a name in
-a throw-message or comment, groups lines into methods with the shared `methodBoundary` (`lib/coffee-method-header.js`,
+The scanner reads each line's bare code (§6c: comments and literal contents blanked) so a call-regex never matches a
+name in a throw-message or comment, groups lines into methods with the shared `methodBoundary` (`lib/coffee-method-header.js`,
 mixin-DSL aware, so a method defined inside a mixin's `onceAddedClassProperties` block is attributed too), and keys call detection off a leading
 `@`/`.` + the lowercase public name (so `@setExtent`/`.moveTo` match while `@_applyExtent`/`@_applyExtentBase`/`@_setTextNoSettle`
 do NOT — the leading `_` sits between the `@`/`.` and the verb). This co-design with the **naming convention** is why the
@@ -949,6 +945,43 @@ list, that `METHOD_HEADER` does not match. A future spelling therefore becomes a
 its own fix, instead of another silent hole. It reads the class-method indent only: a mixin member in a
 spelling `MIXIN_METHOD_HEADER` misses is not reported (none today).
 
+## 6c. What a line of CoffeeScript IS — ONE masker
+
+Every gate and census that reads CoffeeScript as code reads it through **`buildSystem/lib/coffee-mask.js`**'s
+`coffeeMask(text, where)`: one record per line, `{ mask, code, bare, comment, continuesLiteral }`.
+- `mask` — per character, `'code'` | `'str'` | `'lit'` | `'cut'`: `'str'` is a string's or a heredoc's text with its
+  quotes, `'lit'` any other literal's (a regex or heregex with its flags, a JS passthrough) — so a reader that wants
+  the strings, a name dispatched by one, counts no word of a regex —, everything between an interpolation's braces is
+  `'code'`, a comment `'cut'`.
+- `code` — the line with its comment blanked, literals kept: for a rule that reads a name dispatched by a string, a
+  colour written in a string, or the CoffeeScript a heredoc holds.
+- `bare` — the line with its comment and every literal's contents blanked, each literal's delimiters and an
+  interpolation's code kept: for a rule that reads code alone. `f "x", 1` reads `f " ", 1`, so a call given a literal
+  still reads as a call given an argument.
+- `comment` — the line's comment text, where a sanction marker is read; `isCommentOnly(record)` says whether a line
+  holds a comment and nothing else (the line a marker for the code below it is written on).
+- `continuesLiteral` — whether the line starts inside a literal an earlier line opened (a heredoc's body and closing
+  line, a string spanning lines): a reader looking for a class-body key or a method boundary skips it. (A line that
+  merely BEGINS with a literal does not continue one.)
+
+Every view keeps every column. The reading is the CoffeeScript lexer's own (`CoffeeScript.tokens`, the bundled compiler
+the page runs), so a `#` or a quote inside a string, a regex or a heregex, a string spanning lines, the `#` lines of a
+heredoc, `#{…}` interpolation (a comment inside a multi-line one included), a heregex's own `# …` comments and a `###`
+block all read as they compile; a text the lexer refuses is refused (`COFFEE_MASK_UNLEXABLE <where>:<line>`), never
+read by a guess — a gate it stops ends as an operational failure (exit 2) naming the file and line. A heredoc holding
+CoffeeScript (a tool's source, a `Macro.fromString` verb) is a literal like any string: a reader that treats one as code
+masks the heredoc's text as a text of its own, as layering's [D] does with the raw lines of MacroToolkit's verbs (raw,
+not the value the compiler makes of them: a `\` escape or a top-level `#{…}` in a verb would read differently, and
+none has one; one reader of where src's macro sources live, cooking them as `lib/call-sites.js` does, is BACKLOG's). A
+process lexes a text once — the records are kept by the text they read, so every reader of a file shares its reading
+(they are read-only) — and src costs about 0.4 s to lex.
+
+Re-implement none of it. A per-line `#` cut hides the code after a `#` that a string or a regex holds, and reads a
+heredoc's `#` lines as comments; a quote-aware line scan is opened by a quote inside a regex and then reads the
+comment after it as code; a stateful character scan reads `///'''///` as a heredoc that never closes. Its cases are
+`lib/coffee-mask-selftest.js`. A text that is not CoffeeScript has a reader of its own: a gate's `*-allowlist.txt`
+(`name  # reason`) is read by `lib/allowlist-file.js`, a tests-repo JS file by `lib/js-mask.js`.
+
 ## 7. Documented BOUNDARIES (reasoned gaps, not silent ones)
 
 What the layering gate deliberately does NOT cover, and why — so a maintainer reads a reasoned boundary, never a hole:
@@ -1016,8 +1049,9 @@ self-test below; triage every hit (fix the code, or mark with a reason); record 
 **Add a new rule — pick the TIER first (§3b): sound negative ⇒ gate · count-shaped ⇒ ratcheted stink ⇒ heuristic ⇒
 advisory census.** Shipping a heuristic as a gate is the one mistake this system cannot absorb.
 
-**Add a new gate.** Clone an existing `buildSystem/check-*.js` (line scanner: exit `0`/`1`/`2`; reuse `check-layering.js`'s
-`stripLine` and the shared grouping in `lib/coffee-method-header.js` — `methodSpans` / `methodBoundary`), then clone its **wiring block** in `build_it_please.sh`:
+**Add a new gate.** Clone an existing `buildSystem/check-*.js` (line scanner: exit `0`/`1`/`2`; read each file through
+`lib/coffee-mask.js`'s `coffeeMask` (§6c) and group it with `lib/coffee-method-header.js` — `methodSpans` /
+`methodBoundary`), then clone its **wiring block** in `build_it_please.sh`:
 ```sh
 if ! $noSyntaxCheck ; then
   echo "checking <thing> ..."
@@ -1036,13 +1070,13 @@ that derived fact is the same one that writes `BUILDFLAG_LOAD_TESTS`, so gate an
 whether this build has tests.
 
 **Add an advisory census.** `require('./census-public-private-calls.js')` and call `runCensus()` — it hands you the
-whole-system class model (`classInfo` / `chainOf` / `resolve`), `allMethods` with per-method body lines and markers, and
-`maskLine`. Do NOT re-implement the parse: Fizzygum is image-like (no module system, one class per file, every class a
+whole-system class model (`classInfo` / `chainOf` / `resolve`) and `allMethods` with per-method body lines and markers.
+Do NOT re-implement the parse: Fizzygum is image-like (no module system, one class per file, every class a
 global), so that model is the subtle part and a second copy would drift. Then: always exit 0 (2 on operational error),
 support `--json <file>`, print SUMMARY COUNTS by default with `--full` for the lists, add a step to `fg critique`, and
 write findings to the `duplication-report/triage-report.md` ledger rather than to a commit.
-⚠ `runCensus()`'s `bodyLines` carry STRING-STRIPPED code (fine for call extraction, wrong for comparing bodies) — if
-you need text with strings intact, re-read the source and cut comments with `maskLine`, as
+⚠ `runCensus()`'s `bodyLines` carry BARE code (literal contents blanked: fine for call extraction, wrong for comparing
+bodies) — if you need text with strings intact, re-read the source and take `coffeeMask`'s `code` view, as
 `census-hierarchy-duplication.js` does.
 
 **`compile-fragment.js` — the hand tool beside the syntax gate.** `check-coffee-syntax.js` drives
@@ -1082,24 +1116,26 @@ source to satisfy a new rule.
   `SEAM_VERB_BANNED` ([N]); `COALESCED_CALL`/`COALESCED_CALLER_ALLOWLIST` ([O]);
   `CONNECTOR_CALL`/`CONNECTOR_CALLER_ALLOWLIST` ([Q]); `USERLAND_FILES`/`USERLAND_PRIVATE_CALL`/`PRIVATE_USE_MARKER`
   ([R]);
-  `stripLine`; `methodBoundary` (imported from `lib/coffee-method-header.js`, mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules
-  [A]–[T]); `checkMacroLines` (rule [D]); `DOUBLE_SETTLE_MARKER`/`T_SELF_PUB_CALL`/`checkDoubleSettle` ([T]).
+  `readingOf` (each file's `coffeeMask`, read once for the three passes); `methodBoundary` (imported from
+  `lib/coffee-method-header.js`, mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules [A]–[T]);
+  `checkMacroText` + `macroVerbTexts` (rule [D]); `DOUBLE_SETTLE_MARKER`/`T_SELF_PUB_CALL`/`checkDoubleSettle` ([T]).
 - `buildSystem/check-call-separation.js` — `BASELINE_S_SETTLING`/`BASELINE_S_EFFECTFUL` ([S]) +
-  `BASELINE_U_EFFECTFUL`/`BASELINE_U_QUERY` ([U]) inline ratchets; reads `public-api-allowlist.txt`;
+  `BASELINE_U_EFFECTFUL`/`BASELINE_U_QUERY` ([U]) inline ratchets; reads `public-api-allowlist.txt` (through
+  `buildSystem/lib/allowlist-file.js`, the one reader of every `*-allowlist.txt`);
   requires `census-public-private-calls.js` (`runCensus`, `PUBLIC_CALL_MARKER`), whose R4 reads the tests repo's
   code through `buildSystem/lib/tests-repo-code.js` (`testsRepoCode` / `coffeeCode` / `jsCode` / `macroCode`, and
-  `macroSourcesIn`, the one reader of a test's macro sources) and masks CoffeeScript with
-  `buildSystem/lib/coffee-mask.js` (`maskLine` / `codeOfCoffeeLine`); the reader's cases are
-  `lib/tests-repo-code-selftest.js`, one per reading.
+  `macroSourcesIn`, the one reader of a test's macro sources) and reads CoffeeScript with
+  `buildSystem/lib/coffee-mask.js` (`coffeeMask`, §6c); the reader's cases are `lib/tests-repo-code-selftest.js`, one
+  per reading.
 - `buildSystem/check-thin-wraps.js` — `HEADER`/`GUARD`/`EXEMPT`; twinless skip (`if (!byName.has(base)) continue`).
 - `buildSystem/check-constructors-build.js` — `METHOD`/`BUILD`/`EXEMPT`; the `inctor` state machine (multi-line-ctor-header aware).
 - `buildSystem/check-dead-methods.js` + `buildSystem/dead-method-allowlist.txt`.
 - `buildSystem/check-unresolved-sends.js` + `buildSystem/unresolved-sends-allowlist.txt` — `CALL_RE` / `BUILTINS` /
-  `stripLine` + `interpolatedCode`; `check-unresolved-sends-selftest.js` (which also pins the def forms). The implementor harvest itself —
-  `stripComment` / `DEF_FORMS` / `harvestDefs`, callable-only — is `buildSystem/lib/name-definitions.js`, shared
-  with `check-part-edges.js` (and `check-dead-methods.js` takes its `stripComment`).
+  `readingOf`; `check-unresolved-sends-selftest.js` (which also pins the def forms and the call harvest). The
+  implementor harvest itself — `DEF_FORMS` / `definedName` / `harvestDefs`, callable-only, over a text's `coffeeMask`
+  reading — is `buildSystem/lib/name-definitions.js`, shared with `check-part-edges.js` and `lib/call-sites.js`.
 - `buildSystem/check-stinks.js` — the inline `baseline` per stink; `--list <id>` enumerates one stink's sites.
-- `buildSystem/check-part-edges.js` + `buildSystem/lib/part-edge-scan.js` — `codePartOf` / `stringLiteralsOf` /
+- `buildSystem/check-part-edges.js` + `buildSystem/lib/part-edge-scan.js` — `stringLiteralsOf` /
   `guardedPartsPerLine` (its optional `ownerOfMember` is the member existence guard) / `declaredRequires` (the
   eager-vs-lazy discount, which `what-pins-core.js` reads too); `buildSystem/lib/install-edges.js` (`installEdges` / `harnessPresent`); `soleProviders` /
   `memberReaches` / `superReaches`; `check-part-edges-selftest.js`.

@@ -38,9 +38,9 @@
  * EXHAUSTIVE, preventive check across ALL shipped source — and, unlike a runtime token,
  * it cannot be spoofed.
  *
- * HOW: a heuristic line scanner. It strips `#` comments and string literals (', ", ''',
- * """, `) so the call-detecting regexes never match a method name that merely appears in a
- * throw message or a comment; it groups lines into 2-space-indent methods. Call detection
+ * HOW: a heuristic line scanner. It reads each line's bare code (lib/coffee-mask.js: comments and
+ * every literal's contents blanked) so the call-detecting regexes never match a method name that
+ * merely appears in a throw message or a comment; it groups lines into 2-space-indent methods. Call detection
  * keys off the leading `@`/`.` and the LOWERCASE public name, so `@setExtent`/`.moveTo`
  * match while the low-level `@_applyExtent`/`@_applyMoveTo`/`@_commitBounds` do NOT.
  *
@@ -341,8 +341,8 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 // the CONVERSE -- that end-of-cycle mutations are DECLARED -- and treats any *DeferredSettle call as auto-declared
 // regardless of caller. So restrict the CALL to the allowlisted stream handlers by ENCLOSING-METHOD NAME (both
 // HandleWdgt and StackElementsSizeAdjustingWdgt name their drag handler nonFloatDragging, so the one name covers
-// both callers). @-self / .-receiver scoped -- the callers are always direct; comment mentions are stripped
-// (stripLine). Extend the allowlist ONLY when a genuine new per-event stream (a wheel/scroll or key-repeat
+// both callers). @-self / .-receiver scoped -- the callers are always direct; a comment or a string mentioning one
+// is blanked (lib/coffee-mask.js). Extend the allowlist ONLY when a genuine new per-event stream (a wheel/scroll or key-repeat
 // handler) adopts a *DeferredSettle entrypoint -- a discrete caller reaching for one is exactly the bug this catches.
 // The allowlist is keyed by caller METHOD NAME in any class, so an entry that excuses no call this run FAILS as
 // stale (STALE_ALLOWLIST_ENTRY): left in place it would excuse whatever future method reuses the name.
@@ -386,44 +386,20 @@ const USERLAND_FILES = new Set(['src/basic-widgets/menu-system/MenusHelper.coffe
 const USERLAND_PRIVATE_CALL = /([A-Za-z_$][\w$]*)(\._[a-zA-Z]\w*)/;   // <bare-identifier receiver>._name (a @-self call is @_name -- no identifier+dot -- so it is NOT matched; this._name is caught then excluded by name)
 const PRIVATE_USE_MARKER = 'private-use-sanctioned';   // the [R] per-LINE conscious sign-off (owner's escape hatch)
 
-// Strip string literals and trailing `#` comments from one line, carrying multi-line
-// string state across lines. Returns { code, state }.
-function stripLine(line, state) {
-  if (state) {                                   // currently inside a multi-line string
-    const end = line.indexOf(state);
-    if (end < 0) return { code: '', state };     // whole line is still inside it
-    line = line.slice(end + state.length);
-    state = null;
+// Every src file is read once through lib/coffee-mask.js: its lines and their reading (`bare` is the code every
+// rule matches — comments and literal contents blanked, an interpolation's code kept; `comment` carries the
+// sign-off markers), shared by the three passes over it.
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
+const readings = new Map();
+function readingOf(file) {
+  if (!readings.has(file)) {
+    const text = fs.readFileSync(file, 'utf8');
+    readings.set(file, { lines: text.split('\n'), masked: coffeeMask(text, srcKey(file)) });
   }
-  let out = '';
-  let i = 0;
-  while (i < line.length) {
-    const three = line.substr(i, 3);
-    if (three === '"""' || three === "'''") {
-      const close = line.indexOf(three, i + 3);
-      if (close < 0) { state = three; break; }
-      i = close + 3; continue;
-    }
-    const c = line[i];
-    if (c === '`') {
-      const close = line.indexOf('`', i + 1);
-      if (close < 0) { state = '`'; break; }
-      i = close + 1; continue;
-    }
-    if (c === '"' || c === "'") {                // single-line quoted string
-      let j = i + 1;
-      while (j < line.length) {
-        if (line[j] === '\\') { j += 2; continue; }
-        if (line[j] === c) break;
-        j++;
-      }
-      i = j + 1; continue;
-    }
-    if (c === '#') break;                         // comment to end of line
-    out += c; i++;
-  }
-  return { code: out, state };
+  return readings.get(file);
 }
+// a line holding a comment that carries `marker`
+const marks = (line, marker) => (line.comment || '').includes(marker);
 
 function collectCoffee(dir, out) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -490,15 +466,14 @@ function discoverSettlingWrappers(files) {
   };
   for (const file of files) {
     const klass = path.basename(file, '.coffee');   // one class per file; filename == class name
-    const lines = fs.readFileSync(file, 'utf8').split('\n');
-    let method = null, mixinHashIndent = null, strState = null, methodSettles = false;
+    const { lines, masked } = readingOf(file);
+    let method = null, mixinHashIndent = null, methodSettles = false;
     const flush = () => { if (method) addTo(methodSettles ? settlingClassesByName : plainClassesByName, method, klass); };
     for (let n = 0; n < lines.length; n++) {
-      let { code, state } = stripLine(lines[n], strState);
-      strState = state;
+      let code = masked[n].bare;
       const ext = code.match(/^class\s+([A-Za-z_]\w*)\s+extends\s+([A-Za-z_]\w*)/);
       if (ext) parentOf.set(ext[1], ext[2]);
-      if (strState === null) {
+      if (!masked[n].continuesLiteral) {           // a line inside a heredoc holds no boundary
         const b = methodBoundary(lines[n], mixinHashIndent);
         if (b) {
           flush();
@@ -535,7 +510,7 @@ function nearestDefinerKind(name, klass, g) {
 function checkFile(file, violations, gCtx, warnings) {
   const rel = srcKey(file);
   const selfClass = path.basename(file, '.coffee');   // one class per file; filename == class name
-  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  const { lines, masked } = readingOf(file);
   let method = null;          // current method name (null = not inside a 2-space method)
   let mixinHashIndent = null; // mixin-DSL grouping state (see methodBoundary): null = not in a mixin block
   let methodMarked = false;   // [F]: has a `# layout-apply-sanctioned` sign-off appeared in the current method?
@@ -543,12 +518,10 @@ function checkFile(file, violations, gCtx, warnings) {
   let methodGuardReturnLine = -1;     // [H]: line of a GUARD return seen before any _settleLayoutsAfter in this method
   let methodHWarned = false;          // [H]: already emitted the early-return-before-settle warning for this method
   let methodEarlyReturnMarked = false;// [H]: has a `# early-return-sanctioned` sign-off appeared in the current method?
-  let strState = null;
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
-    let { code, state } = stripLine(raw, strState);
-    strState = state;
-    if (strState === null) {                       // header detection only on fully-closed lines (mixin-aware)
+    let code = masked[n].bare;
+    if (!masked[n].continuesLiteral) {             // header detection only outside a heredoc (mixin-aware)
       const b = methodBoundary(raw, mixinHashIndent);
       if (b) {
         method = b.method; mixinHashIndent = b.mixinHashIndent;
@@ -574,9 +547,9 @@ function checkFile(file, violations, gCtx, warnings) {
     }
     if (!method) continue;
     const tier = tierName(method);   // what every name-classifying rule below reads; messages name `method`
-    if (raw.includes(SANCTION_MARKER)) methodMarked = true;  // [F] per-method conscious sign-off (any body line)
-    if (raw.includes(NOSETTLE_MARKER)) methodNoSettleMarked = true;  // [G] per-method conscious sign-off (any body line)
-    if (raw.includes(EARLY_RETURN_MARKER)) methodEarlyReturnMarked = true;  // [H] per-method conscious sign-off
+    if (marks(masked[n], SANCTION_MARKER)) methodMarked = true;  // [F] per-method conscious sign-off (any body line)
+    if (marks(masked[n], NOSETTLE_MARKER)) methodNoSettleMarked = true;  // [G] per-method conscious sign-off (any body line)
+    if (marks(masked[n], EARLY_RETURN_MARKER)) methodEarlyReturnMarked = true;  // [H] per-method conscious sign-off
     // [H] EARLY-RETURN-BEFORE-SETTLE (a WARNING, not a hard failure): a method that self-settles via
     // @_settleLayoutsAfter should be a THIN public wrapper. A GUARD return BEFORE that settle is an early-return
     // that almost always belongs INSIDE the _<name>NoSettle core -- otherwise the wrapper hides a guard, and the
@@ -696,7 +669,7 @@ function checkFile(file, violations, gCtx, warnings) {
     }
     // [R] USERLAND-PUBLIC-API (see USERLAND_FILES / USERLAND_PRIVATE_CALL / PRIVATE_USE_MARKER above): in a
     // standard-user-use file, reach OTHER widgets through their PUBLIC API, not their _-underscore internals.
-    if (USERLAND_FILES.has(rel) && !raw.includes(PRIVATE_USE_MARKER)) {
+    if (USERLAND_FILES.has(rel) && !marks(masked[n], PRIVATE_USE_MARKER)) {
       const upc = code.match(USERLAND_PRIVATE_CALL);
       if (upc && upc[1] !== 'this') {
         violations.push(rules.fired('R_USERLAND_PRIVATE', `[R] userland ${method}() reaches into a private: ${upc[1]}${upc[2]}() — ${rel} is the standard-user-use exemplar (menu-built windows/panels) and must use the PUBLIC self-settling API (setBounds / moveTo / setExtent / setWidth / setHeight / moveWithin), not another widget's immediate _apply*/_move* cores (reserved for low-level / in-pass code). If the menu genuinely must reach a private, mark the line  # ${PRIVATE_USE_MARKER}: <why>  — ${at}`));
@@ -749,8 +722,8 @@ const T_SELF_TEXT_CALL = new RegExp('@\\s*(' + TEXT_SETTERS.join('|') + ')\\b');
 function checkDoubleSettle(file, gCtx, violations) {
   const rel = srcKey(file);
   const selfClass = path.basename(file, '.coffee');
-  const lines = fs.readFileSync(file, 'utf8').split('\n');
-  let mixinHashIndent = null, strState = null;
+  const { lines, masked } = readingOf(file);
+  let mixinHashIndent = null;
   let m = null;   // current method accumulator: { name, settleLine, marked, sites: [{n, label}] }
   const flush = () => {
     if (m && m.settleLine >= 0 && !RECALC_WHITELIST.has(tierName(m.name)) && !m.marked) {
@@ -762,9 +735,8 @@ function checkDoubleSettle(file, gCtx, violations) {
   };
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
-    let { code, state } = stripLine(raw, strState);
-    strState = state;
-    if (strState === null) {
+    let code = masked[n].bare;
+    if (!masked[n].continuesLiteral) {
       const b = methodBoundary(raw, mixinHashIndent);
       if (b) {
         flush();
@@ -774,7 +746,7 @@ function checkDoubleSettle(file, gCtx, violations) {
       }
     }
     if (!m) continue;
-    if (raw.includes(DOUBLE_SETTLE_MARKER)) m.marked = true;
+    if (marks(masked[n], DOUBLE_SETTLE_MARKER)) m.marked = true;
     if (m.settleLine < 0 && SETTLE_CALL.test(code)) m.settleLine = n + 1;
     let pub = code.match(T_SELF_PUB_CALL);
     if (pub && pub[1] === 'moveTo' && (CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code))) pub = null;
@@ -803,40 +775,45 @@ function collectMacros(dir, out) {
   return out;
 }
 
-// Scan macro lines for forbidden private/low-level calls (rule D): a test's macro sources (lineOf maps a source line to
-// its file line), or a whole file with heredocOnly. A per-line `#`-comment strip is enough to avoid the narrative
-// comments (which legitimately mention e.g. adjustContentsBounds / @_moveWithin).
-// heredocOnly: scan only the `Macro.fromString """..."""` bodies (for MacroToolkit.coffee, whose
-// surrounding L1/L2 toolkit methods are framework code).
-function checkMacroLines(file, lines, lineOf, violations, heredocOnly) {
+// Rule D over ONE macro text — a test's macro source, or the body of one of MacroToolkit's `Macro.fromString """…"""`
+// heredocs — read as the CoffeeScript it is (lib/coffee-mask.js): a call is read off its bare code, so a narrative
+// comment (several legitimately mention adjustContentsBounds / @_moveWithin) or a string calls nothing, and the
+// sanction marker is read off its comment. lineOf maps a line of the text to its file line.
+function checkMacroText(file, text, lineOf, violations) {
   const rel = path.relative(path.join(__dirname, '..', '..'), file);
-  let inHeredoc = false;
   let pendingSanction = false;   // armed by a MACRO_SANCTION comment line, consumed by the next code line
-  for (let n = 0; n < lines.length; n++) {
-    const raw = lines[n];
-    if (heredocOnly) {
-      if (!inHeredoc) {
-        if (/Macro\.fromString\s+"""/.test(raw)) inHeredoc = true;  // opener; its own line has no body call
-        pendingSanction = false;   // a marker never crosses a heredoc boundary: it names a call in ITS macro
-        continue;
-      }
-      if (/^\s*"""\s*$/.test(raw)) { inHeredoc = false; pendingSanction = false; continue; }  // lone closing """
-    }
+  coffeeMask(text, `${rel} (the macro text from line ${lineOf(0)})`).forEach((line, n) => {
     // [D] sanction marker: `# macro-private-call-sanctioned: <reason>` (non-empty reason) on the
     // same line or the comment line directly above exempts ONE call site — for the test ORACLES
     // whose very purpose is the private call (e.g. world._fullChanged() as the ground-truth
     // full-repaint reference the incremental canvas is asserted against). Everything else stays
     // forbidden: a macro drives the world through the PUBLIC API.
-    if (/^\s*#/.test(raw)) { if (MACRO_SANCTION.test(raw)) pendingSanction = true; continue; }
-    const lineSanctioned = pendingSanction || MACRO_SANCTION.test(raw);
-    if (raw.trim() !== '') pendingSanction = false;
-    const hash = raw.indexOf('#');
-    const code = hash >= 0 ? raw.slice(0, hash) : raw;
-    const m = code.match(MACRO_FORBIDDEN_CALL);
+    const marked = MACRO_SANCTION.test(line.comment || '');
+    if (isCommentOnly(line)) { if (marked) pendingSanction = true; return; }
+    const lineSanctioned = pendingSanction || marked;
+    if (line.code.trim() !== '') pendingSanction = false;
+    const m = line.bare.match(MACRO_FORBIDDEN_CALL);
     if (m && !lineSanctioned) violations.push(rules.fired('D_MACRO_PRIVATE_CALL', `[D] macro calls private/low-level .${m[1]}() — ${rel}:${lineOf(n)} `
       + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/moveTo; `
       + `a test ORACLE may carry \`# macro-private-call-sanctioned: <reason>\`)`));
+  });
+}
+
+// The bodies of MacroToolkit.coffee's `Macro.fromString """` heredocs (the L1/L2 toolkit methods around them are
+// framework code): each { text, lineOf }, from the line after its opener to the line before its lone closing `"""`.
+// A marker never crosses a heredoc boundary: it names a call in ITS macro.
+function macroVerbTexts(file) {
+  const { lines, masked } = readingOf(file);
+  const out = [];
+  for (let n = 0; n < lines.length; n++) {
+    if (!/Macro\.fromString\s+"""/.test(masked[n].code)) continue;
+    let end = n + 1;
+    while (end < lines.length && !/^\s*"""\s*$/.test(lines[end])) end++;
+    const first = n + 1;
+    out.push({ text: lines.slice(first, end).join('\n'), lineOf: (k) => first + k + 1 });
+    n = end;
   }
+  return out;
 }
 
 function main() {
@@ -871,13 +848,13 @@ function main() {
     catch (e) { console.error('check-layering: operational error collecting macros:', e.message); process.exit(2); }
     macroCount = macros.length;
     for (const f of macros) {
-      try { for (const s of macroSourcesIn(fs.readFileSync(f, 'utf8'), f)) checkMacroLines(f, s.text.split('\n'), (n) => s.line + n, violations, false); }
+      try { for (const s of macroSourcesIn(fs.readFileSync(f, 'utf8'), f)) checkMacroText(f, s.text, (n) => s.line + n, violations); }
       catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
     }
   }
   // the SHARED macro verbs in MacroToolkit.coffee (heredoc bodies only) are src: read whether or not the tests repo is
   if (fs.existsSync(MACRO_VERBS_FILE)) {
-    try { checkMacroLines(MACRO_VERBS_FILE, fs.readFileSync(MACRO_VERBS_FILE, 'utf8').split('\n'), (n) => n + 1, violations, true); macroCount++; }
+    try { for (const v of macroVerbTexts(MACRO_VERBS_FILE)) checkMacroText(MACRO_VERBS_FILE, v.text, v.lineOf, violations); macroCount++; }
     catch (e) { console.error(`check-layering: operational error in ${MACRO_VERBS_FILE}:`, e.message); process.exit(2); }
   }
   // the exemption tables, each held to what it exempts this run (a stale entry is a violation, never a note)

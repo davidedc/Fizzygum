@@ -1,8 +1,8 @@
 'use strict';
 // check-invalidation-receivers-selftest.js — check-invalidation-receivers.js proved able to BITE, by running the REAL
 // gate on a planted copy of src/ (lib/planted-src.js): reaching over to invalidate another widget fails — in the
-// private spelling, the legacy public one, the world's paint executor, and with a sanction marker that gives no
-// reason; the paint executor renamed away fails the gate as STALE. The sanction on the line and directly above, and
+// private spelling, the legacy public one, the world's paint executor, with a sanction marker that gives no
+// reason, and after a string holding `#` on its line; the paint executor renamed away fails the gate as STALE. The sanction on the line and directly above, and
 // a self-call written `@` or `this`, pass. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
@@ -41,6 +41,8 @@ proveGate({
         '    world._repaintDamagedRects()',
         '  bareMarker: (other) ->',
         '    other._changed()   # cross-invalidation-sanctioned:',
+        '  afterHashString: (other) ->',
+        '    label = "#"; other._changed()',
         '',
       ].join('\n'),
     },
@@ -49,6 +51,7 @@ proveGate({
       /^  \[invalidation\] src\/BiteProofInvalidationWdgt\.coffee:5 — `other\.fullChanged\(\)`/m,
       /^  \[invalidation\] src\/BiteProofInvalidationWdgt\.coffee:7 — `world\._repaintDamagedRects\(\)`/m,
       /^  \[invalidation\] src\/BiteProofInvalidationWdgt\.coffee:9 — `other\._changed\(\)`/m,
+      /^  \[invalidation\] src\/BiteProofInvalidationWdgt\.coffee:11 — `other\._changed\(\)`/m,
     ],
     absent: [/BiteProofSanctionedInvalidationWdgt/],
   }, {

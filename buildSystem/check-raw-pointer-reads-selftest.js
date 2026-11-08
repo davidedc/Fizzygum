@@ -2,12 +2,14 @@
 // check-raw-pointer-reads-selftest.js — check-raw-pointer-reads.js proved able to BITE, by running the REAL gate on a
 // planted copy of src/ (lib/planted-src.js). A dispatched handler, and a drag-scroll consumer named in
 // EXTRA_HANDLER_NAMES, reading world.hand.position() unmapped fail, named — and so does one whose sanction marker sits
-// in the PREVIOUS method's body; an EXTRA_HANDLER_NAMES entry no class defines fails as stale. The handler table is
+// in the PREVIOUS method's body, or that follows a string holding `#` on its line; an EXTRA_HANDLER_NAMES entry no
+// class defines fails as stale. The handler table is
 // held against ActivePointerWdgt both ways, so the copy's dispatcher is edited (each edit anchored) until every kind of
 // disagreement fires: a table name it never names, a position handed to a name the table lacks, a plane position
 // handed to a handler the table says takes none, a POSITION_QUERIES entry no longer handed one, a plane handler no
 // dispatch maps for; and the dispatcher gone altogether. Mapping on the line, the marker above the header (a blank
-// line between), and a read in a helper or a comment pass. Run by buildSystem/run-selftests.js on every build.
+// line between), a read in a helper or a comment, and a dispatch named in the dispatcher's comment after a regex holding
+// a quote pass. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -26,6 +28,7 @@ proveGate({
         '  pressEnded: (pos) ->', '    @bpAt = world.hand.position()',
         '  bpHelper: ->', '    @bpAt = world.hand.position()'),
     },
+    edits: [[APW, /\s*$/, '\n\n  bpCommentAfterRegex: (w) ->\n    q = /"/ # w.bpUnlistedHandler @_pointerPositionInPlaneOf w\n']],
   },
   runs: [{
     label: 'raw reads, a marker in the wrong body, a stale extra name',
@@ -34,7 +37,7 @@ proveGate({
         '  pressBegan: (pos) ->', '    @bpAt = world.hand.position()',
         '  takeStrokeScrollFrom: (p) ->', '    @bpAt = world.hand.position()',
         '  bpHelper: ->', '    # raw-screen-pointer-sanctioned: inside the previous body, so it exempts nothing', '    x = 1',
-        '  pressEnded: (pos) ->', '    @bpAt = world.hand.position()'),
+        '  pressEnded: (pos) ->', '    @bpAt = world.hand.position()', '    q = "#"; @bpAt = world.hand.position()'),
     },
     edits: [['basic-widgets/ViewportWdgt.coffee', /^  latchStrokeScroll(\s*:)/m, '  latchStrokeScrollBiteProofRenamed$1']],
     expect: {
@@ -42,7 +45,8 @@ proveGate({
       STALE_EXTRA_HANDLER_NAME: /^  STALE_ALLOWLIST_ENTRY EXTRA_HANDLER_NAMES 'latchStrokeScroll' — /m,
     },
     lines: [/^  \[raw-pointer\] BiteProofRawPointerWdgt\.takeStrokeScrollFrom reads .* — src\/BiteProofRawPointerWdgt\.coffee:5$/m,
-            /^  \[raw-pointer\] BiteProofRawPointerWdgt\.pressEnded reads .* — src\/BiteProofRawPointerWdgt\.coffee:10$/m],
+            /^  \[raw-pointer\] BiteProofRawPointerWdgt\.pressEnded reads .* — src\/BiteProofRawPointerWdgt\.coffee:10$/m,
+            /^  \[raw-pointer\] BiteProofRawPointerWdgt\.pressEnded reads .* — src\/BiteProofRawPointerWdgt\.coffee:11$/m],
   }, {
     label: 'the handler table disagreeing with the dispatcher, every way',
     edits: [

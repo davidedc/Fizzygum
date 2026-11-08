@@ -95,6 +95,7 @@ const path = require('path');
 const { loadMetaCompiler } = require('./meta-compiler');
 const { macroSourcesIn, testsRepoFiles } = require('./tests-repo-code');
 const { harvestDefs } = require('./name-definitions');
+const { coffeeMask } = require('./coffee-mask');
 const acorn = require('../../vendor/acorn/acorn.js');
 
 const IS_CLASS = /^class +\w+/m;            // the tests build.py and check-coffee-syntax.js use
@@ -313,12 +314,17 @@ function callSites({ srcDir, testsRepoDir } = {}) {
     classDefs.get(name).push({ name, superName, hasCtor, home, file });
   };
   const ours = new Set();
+  // the names a CoffeeScript text defines join `ours`; a text the lexer refuses defines nothing here, since its parse
+  // below reports it as unreadable
+  const harvestDefsOf = (text, where) => {
+    try { harvestDefs(coffeeMask(text, where), ours); } catch (e) { if (!/^COFFEE_MASK_UNLEXABLE /.test(e.message)) throw e; }
+  };
   const counts = { src: 0, harness: 0, macro: 0, heredoc: 0, script: 0, fragments: 0, testsRepo: false };
 
   const readCoffeeFile = (file, where) => {
     const src = fs.readFileSync(file, 'utf8');
     const lines = src.split('\n');
-    harvestDefs(lines, ours);
+    harvestDefsOf(src, file);
     const before = fragments.length;
     const silence = [console.log, console.info, console.warn];
     console.log = console.info = console.warn = () => {};
@@ -368,7 +374,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
     for (const { file, sources } of macroFilesRead) {
       for (const s of sources) {
         counts.macro++;
-        harvestDefs(s.text.split('\n'), ours);
+        harvestDefsOf(s.text, `${file} (its macro source from line ${s.line})`);
         units.push({ file, where: 'macro', lang: 'coffee', home: 'macro:' + file, text: s.text, lineOf: (k0) => s.line + k0, scope: 'macros' });
       }
     }
@@ -403,7 +409,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
       const off = text.split('\n').findIndex((l, k) => l.trim() && (fileLines[open + k] || '').trim() !== l.trim());
       if (off >= 0) { unreadable.push({ file: u.file, line: open, message: `heredoc line ${off} is not on file line ${open + 1 + off}` }); continue; }
       counts.heredoc++;
-      harvestDefs(text.split('\n'), ours);
+      harvestDefsOf(text, `${u.file} (its heredoc from line ${open + 1})`);
       const hd = { file: u.file, where: 'heredoc', lang: 'coffee', home: 'verbs', text, lineOf: (k0) => open + 1 + k0, scope: 'macros' };
       parseCoffee(hd);
     }

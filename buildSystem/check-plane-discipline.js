@@ -101,17 +101,27 @@ const NOT_POSITIONAL = {
   screenBounds: 'the SCREEN-family query: already mapped (MAPPED_RE treats a line using it as mapped)',
   hasMaybeChangedPaintBounds: 'a predicate: it answers a boolean, not a rectangle',
 };
+// Every file is read once through lib/coffee-mask.js (lines + reading): the rules match each line's code (comment
+// blanked, strings KEPT — an escalated handler's name is a string: `escalateEvent "mouseMove"`), the marker its comment.
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
+const readings = new Map();
+function readingOf(p) {
+  if (!readings.has(p)) { const text = fs.readFileSync(p, 'utf8'); readings.set(p, { lines: text.split('\n'), masked: coffeeMask(text, path.relative(SRC, p)) }); }
+  return readings.get(p);
+}
+
 function derivePositional() {
   const file = path.join(SRC, 'basic-widgets', 'Widget.coffee');
   if (!fs.existsSync(file)) { console.error(`[plane-discipline] operational error: ${file} not found — rule B reads its position queries from it`); process.exit(2); }
-  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  const { lines, masked } = readingOf(file);
+  const bare = masked.map((l) => l.bare);
   // `foo: ->` and `foo: () ->` take none; `foo: (a) ->` and a wrapped `foo: (` do
-  const takesNoParameter = (header) => { const m = stripComment(header).match(/^\s*@?\w+:\s*\((.*)$/); return !m || /^\s*\)/.test(m[1]); };
+  const takesNoParameter = (header) => { const m = header.match(/^\s*@?\w+:\s*\((.*)$/); return !m || /^\s*\)/.test(m[1]); };
   const delegations = new Set(), rectangles = new Set();
   for (const s of methodSpans(lines)) {
-    if (s.static || s.mixin || !takesNoParameter(lines[s.line])) continue;
-    const inline = (stripComment(lines[s.line]).match(/[-=]>(.*)$/) || [])[1] || '';   // a body written after the arrow
-    const body = [inline].concat(lines.slice(s.line + 1, s.end).map(stripComment)).filter((l) => l.trim());
+    if (s.static || s.mixin || !takesNoParameter(bare[s.line])) continue;
+    const inline = (bare[s.line].match(/[-=]>(.*)$/) || [])[1] || '';   // a body written after the arrow
+    const body = [inline].concat(bare.slice(s.line + 1, s.end)).filter((l) => l.trim());
     if (body.length === 1 && /@bounds\b/.test(body[0])) delegations.add(s.name);
     if (/Bounds$/.test(s.name)) rectangles.add(s.name);
   }
@@ -155,7 +165,6 @@ function walk(dir, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
 
 const files = walk(SRC, []);
 const funnelViolations = [];
@@ -170,7 +179,7 @@ const augmentedBy = new Map();   // mixin -> Set of classes whose body says `@au
 // pass 1: scan lines; collect class graph + provider definers
 for (const p of files) {
   const rel = path.relative(SRC, p);
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const { lines, masked } = readingOf(p);
   let inMethod = '', mixinHashIndent = null;
   lines.forEach((raw, i) => {
     const cls = raw.match(/^class\s+([A-Za-z0-9_$]+)(?:\s+extends\s+([A-Za-z0-9_$]+))?/);
@@ -185,7 +194,7 @@ for (const p of files) {
       // attribute to the class this file declares (one class per file)
       for (const [c, f] of classFile) if (f === p) providerDefiners.add(c);
     }
-    const line = stripComment(raw);
+    const line = masked[i].code;
     if (!line.trim()) return;
     ESCALATE_CALL_RE.lastIndex = 0;
     let esc;
@@ -235,7 +244,7 @@ const mixinOnAProvider = (mx) => [...(augmentedBy.get(mx) || [])].some(providesT
 const units = [...classFile].map(([cls, p]) => [cls, p, providesTranslation(cls)])
   .concat([...mixinFile].map(([mx, p]) => [mx, p, mixinOnAProvider(mx)]));
 for (const [cls, p, provider] of units) {
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const { lines, masked } = readingOf(p);
   for (const span of methodSpans(lines)) {
     const i = span.line;
     const mSig = [lines[i], span.name];
@@ -247,14 +256,14 @@ for (const [cls, p, provider] of units) {
     const posName = paramNamed(params, c2 ? RAW_SCREEN_POS_HANDLERS.get(mSig[1]) : 0);
     if (!posName || posName.startsWith('ignored')) continue;
     let exempt = false;
-    for (let k = i - 1; k >= 0 && /^\s*#/.test(lines[k]); k--) if (ESCALATED_EXEMPT.test(lines[k])) exempt = true;
+    for (let k = i - 1; k >= 0 && isCommentOnly(masked[k]); k--) if (ESCALATED_EXEMPT.test(masked[k].comment)) exempt = true;
     if (exempt) continue;
     const reads = readsName(posName);
     const passesItOn = new RegExp('escalateEvent\\s*\\(?\\s*["\']' + mSig[1] + '["\']');
     if (c1) c1Bodies++; else c2Bodies++;
     // body span: the method's own (lib/coffee-method-header.js methodSpans)
     for (let j = i + 1; j < span.end; j++) {
-      const code = stripComment(lines[j]);
+      const code = masked[j].code;
       if (!reads.test(code)) continue;
       if (c1 && passesItOn.test(code)) continue;        // forwarding the pos on is not reading it
       if (c2 && /screenPointToMyPlane/.test(code)) continue;

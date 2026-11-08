@@ -59,6 +59,7 @@ proveGate({
         '  _biteProofLowLevelRecalc: ->', '    world.recalculateLayouts()',
         '  _biteProofOneLiner: (p) -> @setExtent p'),
       'BiteProofBWdgt.coffee': cls('BiteProofBWdgt', '  biteProofRecalc: ->', '    world.recalculateLayouts()'),
+      'BiteProofHeregexWdgt.coffee': cls('BiteProofHeregexWdgt', '  biteProofAfterHeregex: ->', "    r = ///'''///", '    world.recalculateLayouts()'),
       'BiteProofCWdgt.coffee': cls('BiteProofCWdgt', '  setWidth: (w) ->', '    super', '    @setExtent new Point w, 10'),
       'BiteProofEWdgt.coffee': cls('BiteProofEWdgt', '  _moveLeftSideTo: (x) ->', '    @_invalidateLayout()', '  _moveRightSideTo: (x) ->', '    @_scheduleRelayoutRespectingPhase()'),
       'BiteProofFWdgt.coffee': cls('BiteProofFWdgt', '  biteProofHandler: ->', '    @_reLayoutChildren()'),
@@ -93,7 +94,7 @@ proveGate({
     edits: [
       // [D] the toolkit's heredoc half: a private call, a raw* call, a marker with no reason, and a marker ending one
       // heredoc that must not excuse the first call of the next
-      ['macros/MacroToolkit.coffee', /\s*$/, `\n\n  biteProofMacros: ->\n    Macro.fromString ${Q3}\n      biteProofPrivateCall_Macro = (w) ->\n        w._biteProofPrivateVerb()\n        w.rawBiteProofPixel()\n        w._biteProofBareMarker()   # macro-private-call-sanctioned:\n        # macro-private-call-sanctioned: ends this heredoc\n    ${Q3}\n  biteProofMacrosNext: ->\n    Macro.fromString ${Q3}\n      w._biteProofLeakedSanction()\n    ${Q3}\n`],
+      ['macros/MacroToolkit.coffee', /\s*$/, `\n\n  biteProofMacros: ->\n    Macro.fromString ${Q3}\n      biteProofPrivateCall_Macro = (w) ->\n        w._biteProofPrivateVerb()\n        w.rawBiteProofPixel()\n        w._biteProofBareMarker()   # macro-private-call-sanctioned:\n        q = "#"; w._biteProofAfterHashCall()\n        # macro-private-call-sanctioned: ends this heredoc\n    ${Q3}\n  biteProofMacrosNext: ->\n    Macro.fromString ${Q3}\n      w._biteProofLeakedSanction()\n    ${Q3}\n`],
       // [R] the userland exemplar reaching into a private
       ['basic-widgets/menu-system/MenusHelper.coffee', /\s*$/, '\n\n  biteProofUserland: (w) ->\n    w._biteProofPrivateCore()\n'],
     ],
@@ -134,6 +135,8 @@ proveGate({
       /^  \[D\] macro calls private\/low-level \.rawBiteProofPixel\(\)/m,
       /^  \[D\] macro calls private\/low-level \._biteProofBareMarker\(\)/m,
       /^  \[D\] macro calls private\/low-level \._biteProofLeakedSanction\(\)/m,
+      /^  \[D\] macro calls private\/low-level \._biteProofAfterHashCall\(\)/m,
+      line('[B] recalculateLayouts() called from biteProofAfterHeregex()', 'BiteProofHeregexWdgt', 4),
       /^  \[T\] biteProofDoubleSettle\(\) self-settles .* AND @-calls settling text setter @setText\(\)/m,
       /^  \[T\] biteProofDoubleSettle\(\) self-settles .* AND @-calls settling wrapper @biteProofTWrapper\(\)/m,
       /^  \[T\] biteProofDoubleSettle\(\) self-settles .* AND @-calls settling @add \(self == Widget\.add\)/m,

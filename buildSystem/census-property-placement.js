@@ -79,7 +79,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runCensus, maskLine } = require('./census-public-private-calls.js');
+const { runCensus } = require('./census-public-private-calls.js');
+const { coffeeMask } = require('./lib/coffee-mask');
 
 const SRC = path.resolve(__dirname, '../src');
 const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
@@ -127,23 +128,21 @@ const MEMBER_FILES = new Map();   // name -> Set(relative file paths reading it 
   const MEMBER = /\.([A-Za-z_$][\w$]*)/g;
   for (const f of [...collectFiles(SRC, '.coffee', []), ...collectFiles(HARNESS, '.coffee', [])]) {
     const rel = f.startsWith(SRC) ? path.relative(SRC, f) : 'harness/' + path.relative(HARNESS, f);
-    let state = null;
-    for (const line of fs.readFileSync(f, 'utf8').split('\n')) {
-      const r = maskLine(line, state);
-      state = r.state;
+    const text = fs.readFileSync(f, 'utf8');
+    const lines = text.split('\n');
+    coffeeMask(text, rel).forEach(({ mask, bare: code }, i) => {
+      const line = lines[i];
       let m;
       WORD.lastIndex = 0;
       while ((m = WORD.exec(line)) !== null) {
-        if (r.mask[m.index] === 'str') STRING_WORDS.add(m[0]);
+        if (mask[m.index] === 'str') STRING_WORDS.add(m[0]);
       }
-      let code = '';
-      for (let k = 0; k < line.length; k++) code += (r.mask[k] === 'code' ? line[k] : ' ');
       MEMBER.lastIndex = 0;
       while ((m = MEMBER.exec(code)) !== null) {
         if (!MEMBER_FILES.has(m[1])) MEMBER_FILES.set(m[1], new Set());
         MEMBER_FILES.get(m[1]).add(rel);
       }
-    }
+    });
   }
 }
 // is `prop` read as `.prop` from a file other than its own class's?
@@ -164,13 +163,7 @@ const FIELD_ASSIGN = /@([A-Za-z_$][\w$]*)\s*(\?=|\|\|=|\+=|-=|\*=|\/=|=(?![=>]))
 const declared = new Map();   // className -> Map(prop -> { def: string|null, line })
 for (const info of classInfo.values()) {
   const props = new Map();
-  const raw = fs.readFileSync(path.join(SRC, info.file), 'utf8').split('\n');
-  let state = null;
-  raw.forEach((line, i) => {
-    const r = maskLine(line, state);
-    state = r.state;
-    let code = '';
-    for (let k = 0; k < line.length; k++) if (r.mask[k] !== 'cut') code += line[k];
+  coffeeMask(fs.readFileSync(path.join(SRC, info.file), 'utf8'), info.file).forEach(({ code }, i) => {
     if (!code.trim()) return;
 
     const d = PROP_DEFAULT.exec(code);
@@ -276,15 +269,7 @@ const codeLinesCache = new Map();
 function codeLinesOf(relFile) {
   let lines = codeLinesCache.get(relFile);
   if (lines) return lines;
-  const raw = fs.readFileSync(path.join(SRC, relFile), 'utf8').split('\n');
-  let state = null;
-  lines = raw.map((line) => {
-    const r = maskLine(line, state);
-    state = r.state;
-    let out = '';
-    for (let i = 0; i < line.length; i++) out += (r.mask[i] === 'code' ? line[i] : ' ');
-    return out;
-  });
+  lines = coffeeMask(fs.readFileSync(path.join(SRC, relFile), 'utf8'), relFile).map((line) => line.bare);
   codeLinesCache.set(relFile, lines);
   return lines;
 }

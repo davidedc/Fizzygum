@@ -1,12 +1,13 @@
 'use strict';
-// check-unresolved-sends-selftest.js — check-unresolved-sends.js's pure parts on in-memory fixtures: the masker
-// (strings and comments cut, interpolation kept), every definition form the implementor harvest needs, the call
-// harvest, and the literal receiver a keyed BUILTINS entry is matched against. A lint that cannot fail is
-// worthless. Run by buildSystem/run-selftests.js on every build.
+// check-unresolved-sends-selftest.js — check-unresolved-sends.js's pure parts on in-memory fixtures: every definition
+// form the implementor harvest needs, the call harvest (a call in a string or a comment is none, one in an
+// interpolation is, and so is one after a regex holding `#` or a heregex holding `'''`), and the literal receiver a
+// keyed BUILTINS entry is matched against. A lint that cannot fail is worthless. Run by buildSystem/run-selftests.js
+// on every build.
 
 const fs = require('fs');
 const path = require('path');
-const { stripLine, harvestDefs, harvestCalls } = require('./check-unresolved-sends');
+const { harvestDefs, harvestCalls } = require('./check-unresolved-sends');
 const t = require('./lib/selftest-verdict').cases('unresolved-sends');
 
 // a case passes when what it got equals what it wants, compared as JSON
@@ -14,16 +15,6 @@ const check = (label, got, want) => {
   const pass = JSON.stringify(got) === JSON.stringify(want);
   t.check(pass, `${label} -> ${JSON.stringify(got)}`, `expected ${JSON.stringify(want)}`);
 };
-// masker: strings/comments masked, interpolation kept
-const code1 = (l) => stripLine(l, null).code;
-check('call in a comment is masked',        /@foo\(/.test(code1('x = 1 # @foo()')), false);
-check('call in a string is masked',         /@foo\(/.test(code1('x = "@foo()"')), false);
-check("call in a '-string is masked",       /@foo\(/.test(code1("x = '@foo()'")), false);
-check('call in interpolation is KEPT',      /@foo\(/.test(code1('x = "a#{@foo()}b"')), true);
-check('plain call survives',                /@foo\(/.test(code1('@foo()')), true);
-check('heredoc opens multi-line state',     stripLine('x = """', null).state, '"""');
-check('heredoc body masked, interp kept',   stripLine('@a() #{@b()}', '"""').code.includes('@b()'), true);
-check('heredoc body code masked',           stripLine('@a() #{@b()}', '"""').code.includes('@a()'), false);
 // def harvest: every CALLABLE form, and none that is not (lib/name-definitions.js's header)
 const defsOf = (src) => {
   const f = path.join(require('os').tmpdir(), `__ust_${process.pid}.coffee`);
@@ -39,13 +30,14 @@ check('one-line class-side',   defsOf('  @style: -> theme.x\n').includes('style'
 check('paren-default header',  defsOf('  click: (w = @topWdgt()) ->\n').includes('click'), true);
 check('wrapped signature',     defsOf('  long: (\n    a\n  ) ->\n').includes('long'), true);
 check('continued header',      defsOf('  notify: \\\n    (a) ->\n').includes('notify'), true);
+check('a # in a default string', defsOf('  label: (s = "#") ->\n').includes('label'), true);
 // a value that is not a function defines nothing a `[@.]name(` send can reach: the masks the catch-all had
 check('plain property key is data',  defsOf('  bounds: undefined\n').includes('bounds'), false);
 check('@-assignment is data',        defsOf('    @myField = 3\n').includes('myField'), false);
 check('indented local fn is local',  defsOf('  draw: ->\n    width = (i) -> i\n').includes('width'), false);
 // the DEF forms are line-ANCHORED, so a def inside a mid-line string is not harvested…
 check('mid-line string def not harvested',   defsOf('x = "  fake: ->"\n').includes('fake'), false);
-// …but a heredoc BODY line is (the naive strip keeps string content). Over-approximating like this
+// …but a heredoc BODY line is (definitions are read off code with its literals kept). Over-approximating like this
 // is HARMLESS by construction: an extra implementor can only ever SUPPRESS a flag, never raise one.
 check('heredoc-body def over-approximated', defsOf('code = """\n  fake: ->\n"""\n').includes('fake'), true);
 // call harvest: capitals skipped
@@ -55,6 +47,12 @@ const callsOf = (src) => {
 };
 check('member + self calls harvested', callsOf('@aa()\nx.bb()\n'), ['aa', 'bb']);
 check('Capitalised name skipped',      callsOf('x.Foo()\n'), []);
+check('a call in a comment is none',   callsOf('x = 1 # @foo()\n'), []);
+check('a call in a string is none',    callsOf('x = "@foo()"\ny = \'@bar()\'\n'), []);
+check('a call in an interpolation is one', callsOf('x = "a#{@foo()}b"\n'), ['foo']);
+check('a heredoc body is text, its interpolation code', callsOf('x = """\n  @a() #{@b()}\n  """\n'), ['b']);
+check('a call after a regex holding # is one',   callsOf('r = /#x/; @after()\n'), ['after']);
+check("a call after a heregex holding ''' is one", callsOf("r = ///'''///\n@after()\n"), ['after']);
 // the receiver a keyed BUILTINS entry is matched against: a bare identifier right before the dot only
 const recvsOf = (src) => {
   const f = path.join(require('os').tmpdir(), `__ust_${process.pid}.coffee`);
@@ -74,11 +72,12 @@ check('a string is no receiver',           recvsOf('"Math".round()\n'), ['-']);
 // catch-all definition form kept such a send resolved (lib/name-definitions.js). The definers are found by the harvest
 // itself, so the plant follows the tree. Run 2 takes away what one entry of each table excuses.
 const { proveGate, SRC } = require('./lib/planted-src');
-const { definedName, stripComment: cut } = require('./lib/name-definitions');
+const { definedName } = require('./lib/name-definitions');
+const { coffeeMask } = require('./lib/coffee-mask');
 const MASKED = 'close';   // defined by a method, and still a data key (FrameWdgt's theme table)
 const definers = [];
 for (const f of fs.readdirSync(SRC, { recursive: true }).map(String).filter((f) => f.endsWith('.coffee'))) {
-  if (fs.readFileSync(path.join(SRC, f), 'utf8').split('\n').some((l) => definedName(cut(l)) === MASKED)) definers.push(f);
+  if (coffeeMask(fs.readFileSync(path.join(SRC, f), 'utf8'), f).some((l) => definedName(l.code) === MASKED)) definers.push(f);
 }
 const dataKeyKept = fs.readdirSync(SRC, { recursive: true }).map(String).filter((f) => f.endsWith('.coffee'))
   .some((f) => new RegExp(`^\\s*${MASKED}\\s*:\\s*[^-=(\\s]`, 'm').test(fs.readFileSync(path.join(SRC, f), 'utf8')));

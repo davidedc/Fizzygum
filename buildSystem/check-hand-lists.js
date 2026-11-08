@@ -155,7 +155,9 @@ const MARKER_RE = /(?<![`'"])hand-list-sanctioned:(.*)$/;
 const GUARD_TOKEN_RE = /(?<![\w-])[A-Z][A-Z0-9]*(?:[_-][A-Z][A-Z0-9]*)+(?![A-Za-z0-9])/g;
 const GATE_FILE_RE = /[\w.\/-]+\.(?:js|sh)\b/g;
 const SYSTEM_TEST_RE = /\bSystemTest_\w+/g;
-const LANG_OF_EXT = { '.coffee': 'hash', '.py': 'hash', '.js': 'slash' };
+const LANG_OF_EXT = { '.coffee': 'coffee', '.py': 'hash', '.js': 'slash' };
+const hashComments = (lang) => lang === 'hash' || lang === 'coffee';   // a `#` opens a comment
+const { coffeeMask } = require('./lib/coffee-mask');
 
 function fail(msg) { console.error(`[hand-lists] ERROR — ${msg}`); process.exit(2); }
 
@@ -173,9 +175,10 @@ function walk(dir, exts, acc = []) {
 // ---- the per-file engine (pure: text in, records out — what the self-test drives) --------------------
 
 // For each line, the column ranges that are COMMENT, the column where a LINE comment opens (-1 if none), and the
-// column ranges that are STRING literals (quotes included), from a string-aware scan that restarts on every line; .js
-// block comments carry across lines.
-function commentLayout(lines, lang) {
+// column ranges that are STRING literals (quotes included). CoffeeScript's is lib/coffee-mask.js's (coffeeLayout);
+// .py and .js are a string-aware scan that restarts on every line, .js block comments carrying across lines.
+function commentLayout(lines, lang, where) {
+  if (lang === 'coffee') return coffeeLayout(lines, where);
   const out = [];
   let inBlock = false;
   for (const line of lines) {
@@ -193,7 +196,7 @@ function commentLayout(lines, lang) {
         continue;
       }
       if (c === '"' || c === "'" || c === '`') { quote = c; quoteFrom = i; continue; }
-      if (lang === 'hash' && c === '#') { lineCommentAt = i; break; }
+      if (hashComments(lang) && c === '#') { lineCommentAt = i; break; }
       if (lang === 'slash' && c === '/' && line[i + 1] === '/') { lineCommentAt = i; break; }
       if (lang === 'slash' && c === '/' && line[i + 1] === '*') { blockFrom = i; i++; }
     }
@@ -206,6 +209,26 @@ function commentLayout(lines, lang) {
   return out;
 }
 
+// CoffeeScript's layout is lib/coffee-mask.js's reading (the lexer's): each run of comment, and each run of literal
+// text (its quotes included) as a string.
+function coffeeLayout(lines, where) {
+  return coffeeMask(lines.join('\n'), where).map(({ mask }) => {
+    const runs = (kind) => {
+      const out = [];
+      for (let k = 0; k < mask.length; k++) {
+        if (mask[k] !== kind) continue;
+        let j = k;
+        while (j < mask.length && mask[j] === kind) j++;
+        out.push([k, j]);
+        k = j - 1;
+      }
+      return out;
+    };
+    const ranges = runs('cut');
+    return { ranges, lineCommentAt: ranges.length ? ranges[0][0] : -1, strings: runs('str') };
+  });
+}
+
 // From just after a `[`, the items of a pure string list, or null when anything other than string
 // literals, separators and comments comes before its `]` (or the list is empty).
 function readStringList(text, j, lang) {
@@ -213,7 +236,7 @@ function readStringList(text, j, lang) {
   for (;;) {
     while (j < text.length && /[\s,]/.test(text[j])) j++;
     if (j >= text.length) return null;
-    if ((lang === 'hash' && text[j] === '#') || (lang === 'slash' && text.startsWith('//', j))) {
+    if ((hashComments(lang) && text[j] === '#') || (lang === 'slash' && text.startsWith('//', j))) {
       while (j < text.length && text[j] !== '\n') j++;
       continue;
     }
@@ -265,9 +288,9 @@ function markersIn(lines, layout) {
 }
 
 // One file, analysed: { lines, layout, lists: [{ line, col, items }], markers }.
-function analyse(text, lang) {
+function analyse(text, lang, where) {
   const lines = text.split('\n');
-  const layout = commentLayout(lines, lang);
+  const layout = commentLayout(lines, lang, where);
   const lists = [];
   let line = 0, lineStart = 0;
   for (let i = 0; i < text.length; i++) {
@@ -385,14 +408,13 @@ function harvestUniverse(coffeeFiles) {
   const classes = new Set(), members = new Set();
   for (const p of coffeeFiles) {
     classes.add(path.basename(p, '.coffee'));
-    const lines = fs.readFileSync(p, 'utf8').split('\n');
+    const text = fs.readFileSync(p, 'utf8');
+    const lines = text.split('\n');
+    const masked = coffeeMask(text, p);    // a line inside a heredoc declares nothing
     const mixinIndent = mixinMemberIndent(lines);
     const mixinKey = mixinIndent === undefined ? undefined : new RegExp(`^ {${mixinIndent}}([A-Za-z_$][\\w$]*)\\s*:(?!:)`);
-    let inHeredoc = false;
-    for (const raw of lines) {
-      const wasInHeredoc = inHeredoc;
-      if ((raw.match(/"""|'''/g) || []).length % 2) inHeredoc = !inHeredoc;
-      if (wasInHeredoc) continue;
+    for (const [i, raw] of lines.entries()) {
+      if (masked[i].continuesLiteral) continue;
       const m = /^  @?([A-Za-z_$][\w$]*)\s*:(?!:)/.exec(raw) || (mixinKey && mixinKey.exec(raw));
       if (m) members.add(m[1]);
     }
@@ -421,7 +443,7 @@ function loadFile(abs, repo) {
   const ext = path.extname(abs);
   const lang = LANG_OF_EXT[ext];
   if (!lang) fail(`${abs}: no comment syntax known for '${ext}' (scans .coffee, .py, .js)`);
-  return { abs, rel: path.relative(UMBRELLA, abs), repo, ext, ...analyse(fs.readFileSync(abs, 'utf8'), lang) };
+  return { abs, rel: path.relative(UMBRELLA, abs), repo, ext, ...analyse(fs.readFileSync(abs, 'utf8'), lang, abs) };
 }
 
 const preview = (items) => items.slice(0, 6).join(', ') + (items.length > 6 ? ', …' : '');
@@ -588,6 +610,6 @@ function printCensus(lists, sanctions, problems, { min, namesOnly, testsPresent 
   return 0;
 }
 
-module.exports = { analyse, classify, evaluate, resolveGuard, guardTokensOf, gateFileNames, preview, LANG_OF_EXT };
+module.exports = { analyse, classify, evaluate, resolveGuard, guardTokensOf, gateFileNames, harvestUniverse, preview, LANG_OF_EXT };
 
 if (require.main === module) process.exit(main(process.argv.slice(2)));

@@ -32,9 +32,9 @@ const d2p=new Map();
 for(const[n,p]of Object.entries(parts)){if(n.startsWith('//'))continue;for(const d of p.dirs||[])d2p.set(path.posix.normalize(d),n);}
 const own=r=>d2p.get(path.posix.normalize(path.posix.dirname(r)));
 const lazy=n=>parts[n]&&parts[n].eager===false;
-function code(l){let o='',q=null;for(let i=0;i<l.length;i++){const c=l[i];if(q){if(c==='\\'){i++;continue}if(c===q)q=null;continue}if(c==='"'||c==="'"){q=c;continue}if(c==='#')break;o+=c}return o}
+const {coffeeMask}=require('./lib/coffee-mask');   // a class is named in a file's bare code (comments and literals blanked)
 const txt=new Map();
-for(const r of shippable) if(own(r)) txt.set(r, fs.readFileSync(path.join(REPO,r),'utf8').split('\n').map(code).join('\n'));
+for(const r of shippable) if(own(r)) txt.set(r, coffeeMask(fs.readFileSync(path.join(REPO,r),'utf8'),r).map(l=>l.bare).join('\n'));
 const core=[...txt.keys()].filter(r=>own(r)==='core');
 let onlyLazy=[], bytes=0;
 for(const r of core){
@@ -48,7 +48,7 @@ for(const r of core){
 }
 console.log(`${onlyLazy.length} core file(s), ${(bytes/1024).toFixed(1)} KB source, are named ONLY by LAZY parts.`);
 const fs2=require('fs'),path2=require('path');
-const cb=r=>fs2.readFileSync(path2.join(REPO,r),'utf8').split('\n').reduce((a,l)=>{const c=l.split('#')[0].replace(/\s+$/,'');return c.trim()?a+c.length+1:a},0);
+const cb=r=>coffeeMask(fs2.readFileSync(path2.join(REPO,r),'utf8'),r).reduce((a,l)=>{const c=l.code.replace(/\s+$/,'');return c.trim()?a+c.length+1:a},0);
 const by={}; for(const[r,p]of onlyLazy){ (by[p]??={n:0,b:0}); by[p].n++; by[p].b+=cb(r); }
 for(const[p,v]of Object.entries(by).sort((a,b)=>b[1].b-a[1].b)) console.log(`  ${p.padEnd(24)} ${String(v.n).padStart(3)} files  ${(v.b/1024).toFixed(1).padStart(6)} KB code`);
 if(process.argv.includes('--list')){

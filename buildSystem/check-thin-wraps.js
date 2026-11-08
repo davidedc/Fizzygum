@@ -54,14 +54,18 @@ function walk(dir, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
+// each file is read through lib/coffee-mask.js: a body is its code lines (comments blanked), a marker sits in a comment
+const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 const violations = [];
 const staleMarkers = [];
 let checked = 0, exempt = 0;
 for (const p of walk(SRC, [])) {
   const cls = path.basename(p, '.coffee');
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const text = fs.readFileSync(p, 'utf8');
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, path.relative(SRC, p));
+  const markedLine = (j) => isCommentOnly(masked[j]) && EXEMPT.test(masked[j].comment);
   const usedMarkers = new Set();   // the marker lines an exemption below consumed
   const heads = [];
   for (const sp of methodSpans(lines)) heads.push({ name: sp.name, i: sp.line, end: sp.end });
@@ -79,14 +83,14 @@ for (const p of walk(SRC, [])) {
     const head = heads[twinIdx];
     // EXEMPTION: scan upward through the contiguous comment block directly above the public header.
     let marked = false;
-    for (let j = head.i - 1; j >= 0 && /^\s*#/.test(lines[j]); j--) {
-      if (EXEMPT.test(lines[j])) { marked = true; usedMarkers.add(j); break; }
+    for (let j = head.i - 1; j >= 0 && isCommentOnly(masked[j]); j--) {
+      if (markedLine(j)) { marked = true; usedMarkers.add(j); break; }
     }
     if (marked) { exempt++; continue; }
     // the public method's code lines (comments + blanks removed)
     const end = head.end;
     const body = [];
-    for (let j = head.i + 1; j < end; j++) { const c = stripComment(lines[j]).trim(); if (c) body.push(c); }
+    for (let j = head.i + 1; j < end; j++) { const c = masked[j].code.trim(); if (c) body.push(c); }
     // strip leading idempotency guards, then require exactly the canonical wrap
     let rest = body.slice();
     while (rest.length && GUARD.test(rest[0])) rest.shift();
@@ -95,7 +99,7 @@ for (const p of walk(SRC, [])) {
     else violations.push({ key: cls + '.' + twinName, file: path.relative(SRC, p), line: head.i + 1, body });
   }
   lines.forEach((l, j) => {
-    if (/^\s*#/.test(l) && EXEMPT.test(l) && !usedMarkers.has(j)) staleMarkers.push({ file: path.relative(SRC, p), line: j + 1 });
+    if (markedLine(j) && !usedMarkers.has(j)) staleMarkers.push({ file: path.relative(SRC, p), line: j + 1 });
   });
 }
 

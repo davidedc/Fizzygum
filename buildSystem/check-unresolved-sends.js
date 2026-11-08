@@ -23,20 +23,17 @@
 // false FAIL breaks the build on correct code, while a miss merely leaves a fault for the boot
 // smoke / SystemTests to catch. Same philosophy as the rejected transitive-[G] closure
 // (docs/archive/lint-ratchet-static-checks-plan.md): soundness beats reach. That trade is implemented as a
-// deliberate ASYMMETRY in how the two sides are masked — both err toward "fewer flags":
+// deliberate ASYMMETRY in which reading of each source (lib/coffee-mask.js) the two sides take — both err toward
+// "fewer flags":
 //
 //   DEFS  are the CALLABLE definitions (lib/name-definitions.js: a method header, a prototype
 //         extension, an expando or a top-level function — a data key or an indented local defines
-//         nothing), OVER-approximated only where they are read: a naive (`#{`-aware) comment strip
-//         that KEEPS string literals, so a def "found" inside a string only ever ADDS to the
-//         implementor set → fewer flags. Keeping the naive strip here also immunizes
-//         the def harvest from stripLine's known bogus-heredoc state: `TRIPLE_QUOTES = ///'''///`
-//         (src/boot/dependencies-finding.coffee:59) is a BLOCK REGEX whose `'''` reads to stripLine
-//         as an unterminated heredoc, blanking the rest of that file. Blanked DEFS would cause
-//         FALSE POSITIVES; blanked CALLS only cost coverage.
-//   CALLS are UNDER-approximated: harvested with the stripLine-grade masker below (comments AND
-//         string literals removed, multi-line state carried), so a call-shaped token inside a
-//         string or comment can never be flagged.
+//         nothing), read off each line's CODE (comment blanked, literals KEPT): a heredoc holds code
+//         that defines names (MacroToolkit's verbs), so a def "found" inside a string only ever ADDS
+//         to the implementor set → fewer flags.
+//   CALLS are read off each line's BARE code (comments and literal contents blanked, an
+//         interpolation's code kept — a method called ONLY as "…#{@foo()}…" is a genuine send), so a
+//         call-shaped token inside a string or comment can never be flagged.
 //
 // KNOWN GAPS (accepted; each is a reach limit, never a false-fail source):
 //   - PAREN-CALLS ONLY. CoffeeScript's paren-less `@foo arg` is not harvested — too noisy to gate
@@ -54,11 +51,6 @@
 //     none today) fails beside the real ones. While any definition exists, every call resolves through it.
 //   - A property that HOLDS a closure is no definition, so a call of one (`overridingContextMenu`,
 //     `drawFunction`) resolves only through its allowlist entry, which says so.
-//   - Block regexes (`///…///`) are not masked. Measured 2026-07-15: zero call-shaped tokens hide
-//     in one, so masking them would add regex-vs-division guesswork for no gain. The one probe
-//     artifact of this kind (`.times(` inside `/\.times([^\w\d])/` in LCLCodePreprocessor.coffee)
-//     resolves for real — `Number::times` is defined in src/boot/numbertimes.coffee:44 — once the
-//     prototype-extension DEF_FORM (lib/name-definitions.js) is harvested.
 //
 // EXEMPTIONS — two lists:
 //   BUILTINS (in-file, below)              — JS/DOM/canvas platform API. A fact about the platform:
@@ -71,13 +63,15 @@
 //
 // Exit codes: 0 clean · 1 unresolved send not exempted · 2 operational error.
 // Flags: --update-allowlist (re-seed the allowlist with the current unresolved set)
-// Its in-memory fixtures for the masker and both harvests are check-unresolved-sends-selftest.js.
+// Its in-memory fixtures for both harvests are check-unresolved-sends-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
-// The DEF side — its comment strip, its DEF_FORMS, the harvest — is the shared
-// lib/name-definitions.js, which check-part-edges.js reads too: one implementor harvest, not two.
+// The DEF side — its DEF_FORMS, the harvest — is the shared lib/name-definitions.js, which check-part-edges.js reads
+// too: one implementor harvest, not two.
 const defs = require('./lib/name-definitions.js');
+const { coffeeMask } = require('./lib/coffee-mask');
+const { readAllowlist } = require('./lib/allowlist-file');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
 // bite-unplantable: BUILTINS_KEYED_OFF_PLATFORM — both sides are this file's own constants (BUILTINS_TABLE, PLATFORM_GLOBALS); a planted src tree reaches neither
@@ -93,75 +87,14 @@ const TESTS_ROOT = path.resolve(__dirname, '../../Fizzygum-tests');
 const { macroSources } = require('./lib/tests-repo-code');
 const ALLOWLIST = path.resolve(__dirname, 'unresolved-sends-allowlist.txt');
 
-// ─── masking machinery ──────────────────────────────────────────────────────────────────────────
-
-// Pull the CODE out of `#{…}` interpolations in a double-quoted string BODY. Interpolation is a
-// double-quote-only feature in CoffeeScript ('…' and '''…''' bodies are literal), and it is real
-// code — a method called ONLY as "…#{@foo()}…" is a genuine send. (check-dead-methods makes the
-// mirror-image choice for the same reason: interpolation is code, not text.)
-function interpolatedCode(body) {
-  let out = '';
-  for (let i = 0; i < body.length - 1; i++) {
-    if (body[i] !== '#' || body[i + 1] !== '{') continue;
-    let depth = 1, j = i + 2;
-    for (; j < body.length && depth > 0; j++) {
-      if (body[j] === '{') depth++;
-      else if (body[j] === '}') depth--;
-    }
-    out += ' ' + body.slice(i + 2, depth > 0 ? body.length : j - 1) + ' ';
-    i = j - 1;
-  }
-  return out;
-}
-
-// CALL side: strip `#` comments and string literals, carrying multi-line string state across lines,
-// but KEEP interpolated code. Structure copied from check-layering.js's stripLine (kept in sync by
-// eye; the interpolation carve-out is this gate's addition). Returns { code, state }.
-function stripLine(line, state) {
-  if (state) {                                   // currently inside a multi-line string
-    const end = line.indexOf(state);
-    if (end < 0) return { code: state === '"""' ? interpolatedCode(line) : '', state };
-    const body = line.slice(0, end);
-    const head = state === '"""' ? interpolatedCode(body) : '';
-    line = line.slice(end + state.length);
-    state = null;
-    const rest = stripLine(line, null);
-    return { code: head + rest.code, state: rest.state };
-  }
-  let out = '';
-  let i = 0;
-  while (i < line.length) {
-    const three = line.substr(i, 3);
-    if (three === '"""' || three === "'''") {
-      const close = line.indexOf(three, i + 3);
-      if (close < 0) {
-        if (three === '"""') out += interpolatedCode(line.slice(i + 3));
-        return { code: out, state: three };
-      }
-      if (three === '"""') out += interpolatedCode(line.slice(i + 3, close));
-      i = close + 3; continue;
-    }
-    const c = line[i];
-    if (c === '`') {                             // JS passthrough — mask it (fail-open)
-      const close = line.indexOf('`', i + 1);
-      if (close < 0) return { code: out, state: '`' };
-      i = close + 1; continue;
-    }
-    if (c === '"' || c === "'") {                // single-line quoted string
-      let j = i + 1;
-      while (j < line.length) {
-        if (line[j] === '\\') { j += 2; continue; }
-        if (line[j] === c) break;
-        j++;
-      }
-      if (c === '"') out += interpolatedCode(line.slice(i + 1, Math.min(j, line.length)));
-      i = j + 1; continue;
-    }
-    if (c === '#') break;                         // comment to end of line
-    out += c; i++;
-  }
-  return { code: out, state };
-}
+// ─── reading ───────────────────────────────────────────────────────────────────────────────────
+// Each file is read through lib/coffee-mask.js once for both harvests (kept by path, for the text it had).
+const readings = new Map();   // path -> { text, masked }
+const readingOf = (p) => {
+  const text = fs.readFileSync(p, 'utf8');
+  if (!readings.has(p) || readings.get(p).text !== text) readings.set(p, { text, masked: coffeeMask(text, p) });
+  return readings.get(p).masked;
+};
 
 function walk(dir, ext, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -177,7 +110,7 @@ function walk(dir, ext, acc) {
 // The forms (and why each is there) live in lib/name-definitions.js's DEF_FORMS; this reads files.
 function harvestDefs(files) {
   const defined = new Set();
-  for (const p of files) defs.harvestDefs(fs.readFileSync(p, 'utf8').split('\n'), defined);
+  for (const p of files) defs.harvestDefs(readingOf(p), defined);
   return defined;
 }
 
@@ -205,21 +138,20 @@ function harvestMacroCalls() {
   const sites = [];
   for (const { file, sources } of macroSources(TESTS_ROOT)) {
     const local = new Set();
-    for (const src of sources) defs.harvestDefs(src.text.split('\n'), local);
-    for (const src of sources) {
-      let state = null;
-      src.text.split('\n').forEach((raw, i) => {
-        const r = stripLine(raw, state);
-        state = r.state;
+    const masked = sources.map((src) => coffeeMask(src.text, `${file} (its macro source from line ${src.line})`));
+    for (const m of masked) defs.harvestDefs(m, local);
+    sources.forEach((src, k) => {
+      const raws = src.text.split('\n');
+      masked[k].forEach(({ bare: code }, i) => {
         let m;
         CALL_RE.lastIndex = 0;
-        while ((m = CALL_RE.exec(r.code)) !== null) {
+        while ((m = CALL_RE.exec(code)) !== null) {
           if (/^[A-Z]/.test(m[2])) continue;
-          const recv = m[1] === '.' ? literalReceiver(r.code, m.index) : undefined;
-          sites.push({ name: m[2], sigil: m[1], recv, local, at: `${path.relative(TESTS_ROOT, file)}:${src.line + i}`, text: raw.trim().slice(0, 110) });
+          const recv = m[1] === '.' ? literalReceiver(code, m.index) : undefined;
+          sites.push({ name: m[2], sigil: m[1], recv, local, at: `${path.relative(TESTS_ROOT, file)}:${src.line + i}`, text: raws[i].trim().slice(0, 110) });
         }
       });
-    }
+    });
   }
   return sites;
 }
@@ -227,16 +159,14 @@ function harvestMacroCalls() {
 function harvestCalls(files) {
   const sites = [];   // { name, at, text }
   for (const p of files) {
-    let state = null;
-    fs.readFileSync(p, 'utf8').split('\n').forEach((raw, i) => {
-      const r = stripLine(raw, state);
-      state = r.state;
+    const raws = fs.readFileSync(p, 'utf8').split('\n');
+    readingOf(p).forEach(({ bare: code }, i) => {
       let m;
       CALL_RE.lastIndex = 0;
-      while ((m = CALL_RE.exec(r.code)) !== null) {
+      while ((m = CALL_RE.exec(code)) !== null) {
         if (/^[A-Z]/.test(m[2])) continue;   // class-ish reference — the dependency finder's jurisdiction
-        const recv = m[1] === '.' ? literalReceiver(r.code, m.index) : undefined;
-        sites.push({ name: m[2], sigil: m[1], recv, at: `${label(p)}:${i + 1}`, text: raw.trim().slice(0, 110) });
+        const recv = m[1] === '.' ? literalReceiver(code, m.index) : undefined;
+        sites.push({ name: m[2], sigil: m[1], recv, at: `${label(p)}:${i + 1}`, text: raws[i].trim().slice(0, 110) });
       }
     });
   }
@@ -312,15 +242,7 @@ function main() {
   const defined = harvestDefs(files);
   const sites = [...harvestCalls(files), ...harvestMacroCalls()];
 
-  const allow = new Map();   // name -> reason
-  if (fs.existsSync(ALLOWLIST)) {
-    for (const l of fs.readFileSync(ALLOWLIST, 'utf8').split('\n')) {
-      const t = l.trim();
-      if (!t || t.startsWith('#')) continue;
-      const hash = t.indexOf('#');
-      allow.set((hash < 0 ? t : t.slice(0, hash)).trim(), hash < 0 ? '' : t.slice(hash + 1).trim());
-    }
-  }
+  const allow = readAllowlist(ALLOWLIST);   // name -> reason
 
   // name -> sites, for every call that resolves to nothing we know about
   const unresolved = new Map();
@@ -411,6 +333,6 @@ function main() {
   process.exit(0);
 }
 
-module.exports = { stripLine, harvestDefs, harvestCalls };
+module.exports = { harvestDefs, harvestCalls };
 
 if (require.main === module) main();

@@ -7,9 +7,11 @@
  * grown a copy-pasted duplicate, which is exactly the shape that produced four bugs of one kind in
  * arc 4: one rule, encoded twice, drifting.
  *
- * `guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember)` returns, for each line, the SET OF
- * PARTS whose classes (and installed members) may be named there. All its sources are scope-opening
- * rather than line-local:
+ * `guardedPartsPerLine(masked, ownerOfClass, parts, ownerOfMember)` returns, for each line of a text read
+ * through lib/coffee-mask.js (`masked`), the SET OF PARTS whose classes (and installed members) may be named
+ * there. A guard is read off the line's bare code, so a `X?` in a comment or a string guards nothing; a line
+ * holding only a comment is blank to it, and a line inside a multi-line literal belongs to the line that
+ * opened it. All its sources are scope-opening rather than line-local:
  *   - an `X?` existence test (its own line, plus everything indented under it, plus a multi-line
  *     boolean continuation);
  *   - a `return unless X?` / `return if !X?` bail-out, which covers the rest of the method;
@@ -23,45 +25,22 @@
  *     the argument leaves every other caller's answer exactly what it was.
  * `declaredRequires(parts, partName)` is the parts.json half of the same question: which other parts
  * a part's `requires` lets it name unguarded (one level, and only what has ARRIVED when it runs).
- * `codePartOf(line)` strips comments and string literals: prose may name any class, and a class
- * NAME as data is the sanctioned indirection for a lazy part. `stringLiteralsOf(line)` is its
- * complement — the contents of the line's string literals, comments excluded — for a scan that has to
+ * A reference is read off a line's bare code (lib/coffee-mask.js): prose may name any class, and a class
+ * NAME as data is the sanctioned indirection for a lazy part. `stringLiteralsOf(record)` is its
+ * complement — the contents of the line's literals, comments excluded — for a scan that has to
  * read a name used AS data (a member dispatched by name).
  */
 
-function codePartOf(line) {
-  let out = '';
-  let quote = null;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (quote) {
-      if (c === '\\') { i++; continue; }
-      if (c === quote) quote = null;
-      continue;                     // characters inside a string are not code identifiers here
-    }
-    if (c === '"' || c === "'") { quote = c; continue; }
-    if (c === '#') break;           // rest of the line is a comment
-    out += c;
-  }
-  return out;
-}
-
-// The contents of every single-line string literal on the line, read with codePartOf's own lexing (so
-// the two always agree on where a string starts and ends) and stopping at a comment.
-function stringLiteralsOf(line) {
+// The contents of each literal on a line (a record of lib/coffee-mask.js): every run of literal text with its
+// quotes taken off. An interpolation's code splits its string into the runs around it.
+function stringLiteralsOf({ code, mask }) {
   const out = [];
-  let quote = null;
-  let cur = '';
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (quote) {
-      if (c === '\\') { cur += c + (line[i + 1] || ''); i++; continue; }
-      if (c === quote) { out.push(cur); quote = null; cur = ''; continue; }
-      cur += c;
-      continue;
-    }
-    if (c === '"' || c === "'") { quote = c; continue; }
-    if (c === '#') break;
+  for (let k = 0; k < code.length; k++) {
+    if (mask[k] !== 'str') continue;
+    let j = k;
+    while (j < code.length && mask[j] === 'str') j++;
+    out.push(code.slice(k, j).replace(/^["'`]+|["'`]+$/g, ''));
+    k = j - 1;
   }
   return out;
 }
@@ -81,19 +60,30 @@ const indentOf = (line) => line.length - line.replace(/^\s*/, '').length;
 // ends with a binary/opening operator, and the continuation may be indented LESS than the opener
 // (StringWdgt.toString does exactly that). So a continuation inherits its opener's guards outright,
 // independently of indentation.
-const CONTINUES = /(?:\b(?:and|or|not|is|isnt|then|else|unless|if|in|of)|&&|\|\||[,+\-*/%=<>?:.([{])\s*$/;
+// A return that only happens unless/if-not something — `return unless X?`, `return undefined if !x.m?` — and where its
+// condition starts (just past the `unless` / `if !`), or -1: only an existence test in the CONDITION guards what follows
+// (`return Lazy? unless ready` guards nothing).
+const BAIL_OUT = /^\s*return\b.*?\b(?:unless\b|if\s*!)/;
+const bailConditionAt = (code) => { const m = BAIL_OUT.exec(code); return m ? m[0].length : -1; };
+// A `?` continues only as the binary existential, written spaced (`a ?`): a line ending in `X?` ends in an
+// existence test (`foo() if Bar?`), which the lexer reads as finished.
+const CONTINUES = /(?:\b(?:and|or|not|is|isnt|then|else|unless|if|in|of)|&&|\|\||\s\?|[,+\-*/%=<>:.([{])\s*$/;
 
-function guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember) {
-  const perLine = lines.map(() => new Set());
+function guardedPartsPerLine(masked, ownerOfClass, parts, ownerOfMember) {
+  const perLine = masked.map(() => new Set());
   const openGuards = [];      // {indent, part} — active while we are deeper than indent
   let method = null;          // {indent, parts:Set} — a return-unless bail-out's scope
-  let prevCodeLine = -1;      // last non-blank line, for continuation detection
+  let prevCodeLine = -1;      // last line holding code, for continuation detection
 
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const ind = indentOf(raw);
-    const blank = raw.trim() === '';
-    const isContinuation = prevCodeLine >= 0 && CONTINUES.test(codePartOf(lines[prevCodeLine]));
+  for (let i = 0; i < masked.length; i++) {
+    const { bare: code, code: withLiterals } = masked[i];
+    if (masked[i].continuesLiteral) {             // inside a multi-line literal: the opener's line goes on
+      if (prevCodeLine >= 0) for (const p of perLine[prevCodeLine]) perLine[i].add(p);
+      continue;
+    }
+    const ind = indentOf(code);
+    const blank = code.trim() === '';
+    const isContinuation = prevCodeLine >= 0 && CONTINUES.test(masked[prevCodeLine].bare);
 
     if (!blank && !isContinuation) {
       while (openGuards.length && ind <= openGuards[openGuards.length - 1].indent) openGuards.pop();
@@ -109,18 +99,19 @@ function guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember) {
     if (blank) continue;
     prevCodeLine = i;
 
-    const m = /^(\s+)(?:@)?[\w$]+\s*:\s*(?:\(.*?\))?\s*[-=]>/.exec(raw);
+    const m = /^(\s+)(?:@)?[\w$]+\s*:\s*(?:\(.*?\))?\s*[-=]>/.exec(code);
     if (m) method = { indent: m[1].length, parts: new Set() };
 
-    // `return unless X?` / `return if !X?` -> guards the rest of the method
-    const bail = /^\s*return\b.*?\b([A-Z][\w$]*)\?/.exec(raw);
-    if (bail && /\breturn\s+(?:unless|if\s*!)/.test(raw)) {
+    // `return unless X?` / `return if !X?` -> guards the rest of the method (so does `return <value> unless X?`)
+    const bailAt = bailConditionAt(code);
+    const bail = bailAt >= 0 && /\b([A-Z][\w$]*)\?/.exec(code.slice(bailAt));
+    if (bail) {
       const part = ownerOfClass.get(bail[1]);
       if (part && method) { method.parts.add(part); perLine[i].add(part); }
     }
 
     // any `X?` existence test on this line guards this line and everything nested under it
-    const tests = raw.match(/\b[A-Z][\w$]*\?/g) || [];
+    const tests = code.match(/\b[A-Z][\w$]*\?/g) || [];
     for (const t of tests) {
       const part = ownerOfClass.get(t.slice(0, -1));
       if (!part) continue;
@@ -128,11 +119,9 @@ function guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember) {
       openGuards.push({ indent: ind, part });
     }
 
-    // ...and so does an existence test on a member only one part provides, read off the CODE (a
-    // member named in prose or as a string tests nothing), bail-out included
+    // ...and so does an existence test on a member only one part provides (a member named in prose or as
+    // a string tests nothing), bail-out included
     if (ownerOfMember) {
-      const code = codePartOf(raw);
-      const bails = /^\s*return\s+(?:unless|if\s*!)/.test(code);
       let t;
       MEMBER_EXISTENCE_TEST.lastIndex = 0;
       while ((t = MEMBER_EXISTENCE_TEST.exec(code)) !== null) {
@@ -140,7 +129,7 @@ function guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember) {
         if (!part) continue;
         perLine[i].add(part);
         openGuards.push({ indent: ind, part });
-        if (bails && method) method.parts.add(part);
+        if (bailAt >= 0 && t.index >= bailAt && method) method.parts.add(part);
       }
     }
 
@@ -151,7 +140,7 @@ function guardedPartsPerLine(lines, ownerOfClass, parts, ownerOfMember) {
     // toward `if X?` -- the one idiom that is WRONG for a lazy part, because it silently swallows
     // the click instead of fetching. Only whenAllLoaded counts: whenOptionalPartsLoaded runs its
     // callback even when the part never arrives, so a reference under it still needs its own guard.
-    const awaited = /\bwhenAllLoaded\s*\[([^\]]*)\]/.exec(raw);
+    const awaited = /\bwhenAllLoaded\s*\[([^\]]*)\]/.exec(withLiterals);   // its part names are strings
     if (awaited) {
       for (const m of awaited[1].match(/["']([^"']+)["']/g) || []) {
         const part = m.slice(1, -1);
@@ -186,4 +175,4 @@ function declaredRequires(parts, partName) {
   return new Set([partName, ...required.filter(r => ownerIsLazy || !isLazyPart(parts, r))]);
 }
 
-module.exports = { codePartOf, stringLiteralsOf, indentOf, guardedPartsPerLine, isLazyPart, declaredRequires };
+module.exports = { stringLiteralsOf, indentOf, guardedPartsPerLine, isLazyPart, declaredRequires };

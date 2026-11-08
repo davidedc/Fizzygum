@@ -2,7 +2,8 @@
 // check-stinks-selftest.js — check-stinks.js proved able to BITE, by running the REAL gate on a planted copy of src/
 // (lib/planted-src.js). Every stink is a ratchet, so the plant is sized from the counts the CONTROL prints: one file at
 // the src root carries, per stink, (baseline − count + 1) lines of a spelling only that stink matches — each stink then
-// FAILS, its own hit lines naming the plant. A sanctioned member holding one literal more than its entry says fails as
+// FAILS, its own hit lines naming the plant — a code stink also after a string holding `#` on its line, while a string
+// that only mentions it, or holds a comment's words, is no hit. A sanctioned member holding one literal more than its entry says fails as
 // SANCTION COUNT; in a second run, the sanctioned file deleted fails as STALE SANCTION and an excluded directory deleted
 // fails as a stale exclude. Run by buildSystem/run-selftests.js on every build.
 
@@ -34,6 +35,7 @@ proveGate({
     const counts = new Map([...control.out.matchAll(/^\[stinks\] (\S+): (\d+) site\(s\) \(baseline (\d+)\)/gm)].map((m) => [m[1], Number(m[3]) - Number(m[2]) + 1]));
     const lines = ['class BiteProofStinks', '  bpAll: ->'];
     for (const [id, text] of Object.entries(PLANT)) for (let k = 0; k < Math.max(1, counts.get(id) || 1); k++) lines.push('    ' + text);
+    lines.push('    bpH = "#"; bpNullAfterHash = null', '    bpS = "null"', '    bpQ = "# this used to be text, not a comment"');
     return [{
       label: 'every stink over its baseline, a sanction miscounted',
       plants: { 'BiteProofStinks.coffee': lines.join('\n') + '\n' },
@@ -42,6 +44,8 @@ proveGate({
         ...Object.fromEntries(Object.entries(PLANT).map(([id, text]) => [id, new RegExp(`^    BiteProofStinks\\.coffee:\\d+: ${esc(text)}$`, 'm')])),
         SANCTION_COUNT: /^    SANCTION COUNT WorldWdgt\.coffee::_showDamageRects — expects 1, found 2/m,
       },
+      lines: [/^    BiteProofStinks\.coffee:\d+: bpH = "#"; bpNullAfterHash = null$/m],
+      absent: [/BiteProofStinks\.coffee:\d+: bpS = "null"$/m, /BiteProofStinks\.coffee:\d+: bpQ = "# this used to be/m],
     }, {
       label: 'a sanctioned file and an excluded directory deleted',
       unplant: ['ColorPickerWdgt.coffee', 'examples-icons'],

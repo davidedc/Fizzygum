@@ -15,15 +15,16 @@
 // does not already agree.
 //
 // Scope: src/**/*.coffee only (NOT the sibling test harness) — a stink is a statement about the
-// SHIPPED framework's idiom. Per-LINE regex over `#`-comment-stripped lines; there is no multi-line
-// matcher (an empty-catch stink would need one — plan §8.9).
+// SHIPPED framework's idiom. Per-LINE regex over each line as lib/coffee-mask.js reads it: a code-scope
+// stink matches the line's BARE code (its comment and every literal's contents blanked), so a string
+// that mentions `null` or `debugger` is not the smell; there is no multi-line matcher (an empty-catch
+// stink would need one — plan §8.9).
 //
-// A stink may instead declare `scope: 'comments'` to match the COMMENT part of each line (from the
-// first `#` onward) rather than the code part — the comment-hygiene ratchets (2026-07-17 comments
-// cleanup) use this: comments must state present-tense constraints, not narrate history or carry
-// meta-edits/debug residue (history's home is docs/archive/ — see docs/README.md filing rules).
-// NB the naive `#` split means a `#` inside a string counts as a comment start here; accepted for
-// the same measures-regression-not-absolutes reason as above.
+// A stink may instead declare `scope: 'comments'` to match the COMMENT of each line (from the comment's
+// `#` onward; a `#` a string or a regex holds is not one) rather than its code — the comment-hygiene
+// ratchets (2026-07-17 comments cleanup) use this: comments must state present-tense constraints, not
+// narrate history or carry meta-edits/debug residue (history's home is docs/archive/ — see
+// docs/README.md filing rules).
 //
 // A stink may declare `exclude`: a list of src-relative path PREFIXES whose files it does not scan
 // — a directory (`'demos/'`, which covers its subdirectories too) or a file (`'Theme.coffee'`). Use
@@ -46,11 +47,9 @@
 // cannot outlive what it names, and it cannot silently absorb a new literal. `--list` prints the
 // sanctioned hits apart, each with its `why`.
 //
-// A code-scope stink may declare `stringAware: true` to cut the comment at the first `#` that sits
-// OUTSIDE a quoted string ('…', "…" incl. its `#{…}` interpolation, `…`), so a literal written
-// inside a string — a CSS `'#rrggbb'` — stays visible to `re`; the default naive cut takes that
-// `#` for a comment start and hides the rest of the line. A per-line scan cannot follow a string
-// across lines (`'''`/`"""` blocks) or into a regex literal; the naive cut has the same blind spots.
+// A code-scope stink may declare `readsLiterals: true` to match the line's CODE instead — its comment
+// blanked, its literals KEPT — when the smell is written inside a string: a CSS `'#rrggbb'`, or the
+// colours of a tool's source held in a heredoc.
 //
 // (Historical: the original settle-batch-with-core stink was retired when its target,
 // _settleLayoutsAfterBatch, was deleted, leaving the table empty until the 2026-07-15 seeding.)
@@ -78,9 +77,7 @@ const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'stinks');
 // These are RATCHETS, not verdicts: each records today's count so the number can only fall. Driving
 // any of them down is a FUTURE arc — the seeding arc deliberately changed no src.
 //
-// NB the counts are the ENGINE's, and stripComment (below) is a naive `#` cut that does NOT mask
-// STRINGS — so e.g. undefined-literal counts `typeof x is 'undefined'`. That is accepted: a ratchet
-// measures REGRESSION, not an absolute. (Masking upgrade = plan §8.8 backlog.)
+// NB the counts are the ENGINE's (each line as lib/coffee-mask.js reads it): a ratchet measures REGRESSION.
 const STINKS = [
   { id: 'debugger-statement', baseline: 33,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it)
     why: 'a debugger statement is left-in debug cruft; it hard-stops execution whenever devtools are open',
@@ -128,7 +125,7 @@ const STINKS = [
       { file: 'ColorPickerWdgt.coffee', member: 'constructor', count: 1, why: 'a value: the choice a picker opens with when given none' },
       { file: 'basic-widgets/Widget.coffee', member: 'color', count: 1, why: "a new shape's declared content default (plan §4 G \"Decisions settled\", Defaults)" },
       { file: 'basic-widgets/Widget.coffee', member: 'popUpColorSetter', count: 1, why: 'a value: the colour the colour prompt opens at' },
-      { file: 'authoring/PaintToolbarWdgt.coffee', member: '@PENCIL_TOOL_SOURCE', count: 2, why: "a paint tool's source text, which the user reads and edits: content" },
+      { file: 'authoring/PaintToolbarWdgt.coffee', member: '@PENCIL_TOOL_SOURCE', count: 3, why: "a paint tool's source text, which the user reads and edits: content" },
       { file: 'authoring/PaintToolbarWdgt.coffee', member: '@BRUSH_TOOL_SOURCE', count: 3, why: "a paint tool's source text, which the user reads and edits: content" },
       { file: 'authoring/PaintToolbarWdgt.coffee', member: '@TOOTHPASTE_TOOL_SOURCE', count: 5, why: "a paint tool's source text, which the user reads and edits: content" },
       { file: 'authoring/PaintToolbarWdgt.coffee', member: '@ERASER_TOOL_SOURCE', count: 3, why: "a paint tool's source text, which the user reads and edits: content" },
@@ -137,7 +134,7 @@ const STINKS = [
       { file: 'WorldWdgt.coffee', member: '_initVirtualKeyboard', count: 2, why: 'styling of an invisible DOM <input>, not canvas paint' },
       { file: 'mixins/BackBufferMixin.coffee', member: 'getPixelColor', count: 1, why: 'value plumbing: a Color built from read pixel bytes' },
     ],
-    stringAware: true,   // a CSS colour lives in a string ('#325FA2'); the naive cut would hide it
+    readsLiterals: true,   // a CSS colour lives in a string ('#325FA2'), a tool's colours in its source heredoc
     re: /\bColor\.create|\bnew Color\b|\bColor\.[A-Z][A-Z0-9_]*\b|(['"])#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})\1|['"]rgba?\(/ },
   // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).
   { id: 'comment-meta-edit', baseline: 0, scope: 'comments',
@@ -164,20 +161,12 @@ function walk(dir, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
-function commentPart(line) { const i = line.indexOf('#'); return i < 0 ? null : line.slice(i); }
-// the `stringAware` cut: the code before the first `#` outside a quoted string (header comment)
-function stripCommentOutsideStrings(line) {
-  let quote = null;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (quote) {
-      if (c === '\\') i++;
-      else if (c === quote) quote = null;
-    } else if (c === '"' || c === "'" || c === '`') quote = c;
-    else if (c === '#') return line.slice(0, i);
-  }
-  return line;
+// each src file's lines and lib/coffee-mask.js reading, read once for every stink
+const { coffeeMask } = require('./lib/coffee-mask');
+const readings = new Map();
+function readingOf(p) {
+  if (!readings.has(p)) { const text = fs.readFileSync(p, 'utf8'); readings.set(p, { lines: text.split('\n'), masked: coffeeMask(text, srcRelative(p)) }); }
+  return readings.get(p);
 }
 // src-relative, '/'-separated: the form `exclude` prefixes and `sanctioned` files are written in
 const srcRelative = p => path.relative(SRC, p).split(path.sep).join('/');
@@ -216,16 +205,14 @@ for (const stink of STINKS) {
   const baseline = stink.baseline || 0;
   let hits = [];
   const groups = new Map();   // `${file}::${member}` -> its hits, when the stink declares `sanctioned`
-  const codeCut = stink.stringAware ? stripCommentOutsideStrings : stripComment;
   for (const p of files) {
     const rel = srcRelative(p);
     if (stink.exclude && stink.exclude.some(prefix => rel.startsWith(prefix))) continue;
-    const text = fs.readFileSync(p, 'utf8');
-    const lines = text.split('\n');
+    const { lines, masked } = readingOf(p);
     const memberIndent = stink.sanctioned ? mixinMemberIndent(lines) : undefined;
     lines.forEach((line, i) => {
-      const subject = stink.scope === 'comments' ? commentPart(line) : codeCut(line);
-      if (subject === null || !stink.re.test(subject)) return;
+      const subject = stink.scope === 'comments' ? masked[i].comment : stink.readsLiterals ? masked[i].code : masked[i].bare;
+      if (subject === undefined || !stink.re.test(subject)) return;
       const hit = `${path.relative(SRC, p)}:${i + 1}: ${line.trim()}`;
       hits.push(hit);
       if (stink.sanctioned) {

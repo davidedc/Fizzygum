@@ -43,7 +43,7 @@
 const fs = require('fs');
 const path = require('path');
 const { methodSpans } = require('./coffee-method-header');
-const { stripComment } = require('./name-definitions');
+const { coffeeMask } = require('./coffee-mask');
 
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;
 const SUPER_CALL = /\bsuper\b/;
@@ -53,17 +53,20 @@ const TEXT_SETTER_NAME = /^(set|toggle)[A-Z]/;
 const REQUIRED = { geometry: ['setExtent', 'moveTo'], text: ['setText'] };
 const DEFINERS = { geometry: ['Widget', 'basic-widgets/Widget.coffee'], text: ['StringWdgt', 'basic-widgets/StringWdgt.coffee'] };
 
-// A method span's body lines, comment-stripped: the inline body after the header's arrow, then the rest.
-function bodyOf(lines, span) {
-  const header = lines[span.line];
+// A method span's body lines as bare code (lib/coffee-mask.js: comments and literal contents blanked): the inline
+// body after the header's arrow, then the rest.
+function bodyOf(masked, span) {
+  const header = masked[span.line].bare;
   const arrow = header.search(/[-=]>/);
-  return [arrow >= 0 ? header.slice(arrow + 2) : ''].concat(lines.slice(span.line + 1, span.end)).map(stripComment);
+  return [arrow >= 0 ? header.slice(arrow + 2) : ''].concat(masked.slice(span.line + 1, span.end).map((l) => l.bare));
 }
 const settles = (body) => body.some((l) => SETTLE_CALL.test(l));
 // a class's own instance methods (not class-side, not a mixin member), name -> body
-function ownMethods(lines) {
+function ownMethods(text, file) {
+  const lines = text.split('\n');
+  const masked = coffeeMask(text, file);
   const own = new Map();
-  for (const s of methodSpans(lines)) if (!s.static && !s.mixin && !own.has(s.name)) own.set(s.name, bodyOf(lines, s));
+  for (const s of methodSpans(lines)) if (!s.static && !s.mixin && !own.has(s.name)) own.set(s.name, bodyOf(masked, s));
   return own;
 }
 function readDefiner(srcRoot, family) {
@@ -71,7 +74,7 @@ function readDefiner(srcRoot, family) {
   if (!fs.existsSync(file)) {
     throw new Error(`settling-setters: ${file} not found — the ${family} setters are read from ${DEFINERS[family][0]}'s own definitions`);
   }
-  return ownMethods(fs.readFileSync(file, 'utf8').split('\n'));
+  return ownMethods(fs.readFileSync(file, 'utf8'), file);
 }
 function walk(dir, acc) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -108,15 +111,18 @@ function settlingSetters(srcRoot) {
   const defsByName = new Map();   // name -> [{ klass, rel, line, body }]
   const derived = new Map([...geometry].map((n) => [n, DEFINERS.geometry[0]]).concat([...text].map((n) => [n, DEFINERS.text[0]])));
   for (const file of walk(srcRoot, [])) {
-    const lines = fs.readFileSync(file, 'utf8').split('\n');
+    const text = fs.readFileSync(file, 'utf8');
+    const lines = text.split('\n');
     for (const l of lines) {
       const ext = l.match(/^class\s+([A-Za-z_]\w*)\s+extends\s+([A-Za-z_]\w*)/);
       if (ext) parentOf.set(ext[1], ext[2]);
     }
+    let masked;   // read only for a file defining a derived name
     for (const s of methodSpans(lines)) {
       if (s.static || s.mixin || !derived.has(s.name)) continue;
+      masked = masked || coffeeMask(text, path.relative(srcRoot, file));
       if (!defsByName.has(s.name)) defsByName.set(s.name, []);
-      defsByName.get(s.name).push({ klass: path.basename(file, '.coffee'), rel: path.relative(srcRoot, file), line: s.line + 1, body: bodyOf(lines, s) });
+      defsByName.get(s.name).push({ klass: path.basename(file, '.coffee'), rel: path.relative(srcRoot, file), line: s.line + 1, body: bodyOf(masked, s) });
     }
   }
   const descendsFrom = (klass, ancestor) => {
