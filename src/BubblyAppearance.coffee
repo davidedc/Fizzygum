@@ -1,10 +1,9 @@
 class BubblyAppearance extends BoxyAppearance
 
-  # No constructor: the meta-compiler synthesises a forward-everything one for a class
-  # without its own — `__super__.constructor.apply this, arguments` plus
-  # `registerThisInstance?()` (meta/Class.coffee) — equivalent to the explicit
-  # `(widget) -> super widget` this would otherwise need (its one call site, SpeechBubbleWdgt,
-  # passes one argument). Dedup case law: docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md.
+  # No constructor: the meta-compiler gives a class without its own the one CoffeeScript would,
+  # as if it were written `constructor: -> super`, which forwards every argument
+  # (meta/Class.coffee) — equivalent to the explicit `(widget) -> super widget` this would
+  # otherwise need (its one call site, SpeechBubbleWdgt, passes one argument). Dedup case law: docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md.
 
   # ===== the two shape answers, because my OUTLINE is not my superclass's =====
   # My rounded body occupies only the top (h - h/5) of the box; the bottom fifth is the tail

@@ -1132,3 +1132,30 @@ for (const s of sites) if (s.absentBefore.length) {
       own two: byte-identical except the comments of 8 fragments that said `super` (7 in the compiled JS); the
       pre-compiled image byte-identical; the call table differs only in Class's and Mixin's own code.
       `lib/meta-compiler-selftest.js` holds a case per reading (45; 31 mutations, all caught).
+- [x] **`Class._addInstancesTracker` is a text substitution too** (found closing the `_equivalentforSuper` item, in the
+      plan's ledger). It inserts
+      `this.registerThisInstance?()` before every `return` that opens a line of a constructor's text, and appends a
+      `return` when no line of the body opens with one. A `return` inside a nested function gets one:
+      `VideoPlayerWithRecommendationsWdgt`'s manifest callback (`return if @destroyed`) re-registers a player that was
+      destroyed before its manifest arrived, in every `instances` set — the corpse the door-callback law forbids (read,
+      not run: the part is flag-gated and no test opens it). A mid-line `return` gets none, and an early body-level
+      return with no final one leaves the fall-through unregistered (0 of each today). The appended `return` has a
+      second job: it stops a constructor from returning its last expression, which `new` would hand back instead of
+      the instance. And `registerThisInstance` walks the whole chain from `@constructor`, so the first constructor to
+      finish (the root class's) already registers the object in every set and each later call is redundant. One
+      registration per construction, in one place, and an unconditional `return` is the likely shape; it changes
+      every constructor's compiled text, so it needs its own survey (the inventory audits; a constructor that never
+      calls `super`). — CLOSED 2026-11-08: Widget's constructor registers each widget once, right after `super()`
+      (`Widget.registerThisInstance`), the moment the root's constructor used to; the meta-system writes nothing into
+      a constructor's text but a `return` (`Class.endingInReturn`, placed by the lexer: a block body at its first line's
+      indentation, a one-line or empty body moved onto its own line first; a constructor that is no `->` function is
+      refused, naming its class), and a class with no constructor gets the one CoffeeScript would,
+      `constructor: -> super`, through the same path. Every widget constructor calls super on every path (132
+      written, 157 forwarders); a suite run under a probe of every registration: before, 64,450 first registrations
+      from TreeNode's constructor and 184,414 redundant ones; after, every first one from Widget's and none redundant,
+      re-registered or of a destroyed widget, with the same first registrations per test (nine tests A/B against a
+      HEAD build). The 6691 compiled fragments: 6126 identical, each constructor's JS its old JS with the registration
+      cut (198; 4 more keep comments the injection lost, 2 that end in their own `return` emit it), 357 forwarders,
+      Widget's one call, the Deserializer's two dead soaks, two corrected comments. `lib/meta-compiler-selftest.js` 72
+      cases, 51 mutations all caught; `SystemTest_macroInstancesRegistry` pins the registry at run time (10 assertions,
+      each seen failing under a plant).

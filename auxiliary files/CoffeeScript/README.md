@@ -9,8 +9,9 @@ It is a **minimal, compile-only fork of CoffeeScript 2.0.3** that emits byte-for
 JavaScript to stock 2.0.3 for the subset Fizzygum uses, at ~19% smaller size (no Babel-ES5, no
 CLI/browser/repl/sourcemap/JSX/import-export/literate machinery). Fizzygum's whole CoffeeScript
 API surface at run time is two calls — `CoffeeScript.compile(source, {bare: true})`, and the lexer's
-`CoffeeScript.tokens(source)`, which the meta-system's super rewrite reads (`Class.rewriteSuperCalls`
-in `src/meta/Class.coffee`) — and the build tooling adds a third, the parser's `CoffeeScript.nodes(source)`
+`CoffeeScript.tokens(source)`, which the meta-system reads to rewrite a member's `super`s and to end
+every constructor in a `return` (`Class.rewriteSuperCalls` and `Class.endingInReturn` in
+`src/meta/Class.coffee`) — and the build tooling adds a third, the parser's `CoffeeScript.nodes(source)`
 (`buildSystem/lib/call-sites.js`, the call-arguments gate's reader). None of the removed machinery is
 reachable. A rebuild must keep all three exported (`tokens` and `nodes` cost nothing: compile runs the
 same lexer and parser); `buildSystem/lib/meta-compiler-selftest.js` and `lib/call-sites-selftest.js` fail

@@ -86,8 +86,8 @@ class Deserializer
         if kind is "world" and record.iid?
           shell.instanceNumericID = record.iid
         else
-          shell.assignUniqueID?()        # fresh id (like duplication) for kind:"widget"
-        shell.registerThisInstance?()
+          shell.assignUniqueID()        # fresh id (like duplication) for kind:"widget"
+        shell.registerThisInstance()
 
     # ---- Pass 4: fixups ----
     # (a) compile user-injected methods via the existing injectProperty machinery

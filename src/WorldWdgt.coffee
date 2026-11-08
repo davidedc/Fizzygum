@@ -3065,7 +3065,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # world's animation loop stops. The pair is built exactly as finishWorldSetup builds a fresh world's.
     try
       # 2. restore the per-class id counters into the freshly-zeroed space BEFORE deserializing,
-      #    so registerThisInstance sees the right high-water marks (§4.4/§4.9).
+      #    so assignUniqueID -- for a record that carries no iid, and for every widget built
+      #    after the load -- continues past the restored high-water marks (§4.4/§4.9).
       #    A key is a name read out of the file: classNamed, so one naming a native global or an
       #    inherited/accessor property of window writes onto nothing.
       if section.idCounters?

@@ -26,20 +26,15 @@ per README rules 2 and 5.
       `check-layering.js`'s `collectMacros` (every one, nothing skipped), and the discipline gate's and aim-census's
       `tests/SystemTest_*/<name>_automationCommands.js`. They agree today; the harness's own definition is the manifest
       (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's.
-- [ ] **`Class._addInstancesTracker` is a text substitution too** (found closing the `_equivalentforSuper` item, in the
-      plan's ledger). It inserts
-      `this.registerThisInstance?()` before every `return` that opens a line of a constructor's text, and appends a
-      `return` when no line of the body opens with one. A `return` inside a nested function gets one:
-      `VideoPlayerWithRecommendationsWdgt`'s manifest callback (`return if @destroyed`) re-registers a player that was
-      destroyed before its manifest arrived, in every `instances` set — the corpse the door-callback law forbids (read,
-      not run: the part is flag-gated and no test opens it). A mid-line `return` gets none, and an early body-level
-      return with no final one leaves the fall-through unregistered (0 of each today). The appended `return` has a
-      second job: it stops a constructor from returning its last expression, which `new` would hand back instead of
-      the instance. And `registerThisInstance` walks the whole chain from `@constructor`, so the first constructor to
-      finish (the root class's) already registers the object in every set and each later call is redundant. One
-      registration per construction, in one place, and an unconditional `return` is the likely shape; it changes
-      every constructor's compiled text, so it needs its own survey (the inventory audits; a constructor that never
-      calls `super`).
+- [ ] **`Class.notifyInstancesOfSourceChange` reads a class's `instances` set as its own instances** (found closing
+      the `_addInstancesTracker` item, in the plan's ledger). A widget is in the set of its class AND of every
+      superclass (`Widget.registerThisInstance`), so an edit to a class's member already notifies every subclass
+      instance through that class's set; the method then recurses into each subclass that does not redefine the
+      member and notifies its instances again, and a subclass that DOES redefine it is notified through the parent's
+      set all the same — the guard its comment states holds for the recursion only. Harmless today (`sourceChanged`
+      re-lays-out and repaints an instance), read, not run; `SystemTest_macroClassSubclassesPropagation` stubs the
+      recursion, so it cannot see the instance level. One walk would do: notify each instance in the class's set
+      unless a class between the instance's own and this one redefines the member.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

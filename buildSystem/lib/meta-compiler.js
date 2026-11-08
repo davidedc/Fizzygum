@@ -12,7 +12,8 @@
 //
 // THE SHIM. Class/Mixin touch a few globals at construction time; they are supplied as closed-over factory
 // parameters plus a `window` Proxy:
-//   - CoffeeScript               -> the bundled compiler (the super rewrite reads its lexer, `CoffeeScript.tokens`)
+//   - CoffeeScript               -> the bundled compiler (the super rewrite and every constructor's ending read its
+//                                    lexer, `CoffeeScript.tokens`)
 //   - compileFGCode(src, bare, …) -> the caller's (default: CoffeeScript.compile — the real wrapper's one-liner,
 //                                    loading-and-compiling-coffeescript-sources.coffee). A reader that only needs
 //                                    the fragments passes a stub; Class's later steps accept `'(function() {});'`.
@@ -80,8 +81,9 @@ function loadMetaCompiler({ srcDir, compileFGCode } = {}) {
 
 // The text a member's source becomes before it is compiled: Class.coffee's own super rewrite, run on `src` as the
 // member `memberName` of class `className` (the same text, line for line — the rewrite is same-line).
+// A receiver backed by Class's own prototype, so whatever the rewrite asks of `this` beyond the name is Class's.
 function rewriteSuper(Class, className, memberName, src) {
-  return Class.prototype._rewriteSuperCalls.call({ name: className }, memberName, src);
+  return Class.prototype._rewriteSuperCalls.call(Object.assign(Object.create(Class.prototype), { name: className }), memberName, src);
 }
 
 module.exports = { bundledCoffeeScript, loadMetaCompiler, rewriteSuper, COMPILER };

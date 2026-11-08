@@ -6,9 +6,9 @@
 # buildSystem/lib/meta-compiler.js (as every build tool that reads the meta-system does),
 # whose shim supplies the globals this class touches at construction time (window,
 # compileFGCode, JSSourcesContainer, srcLoadCompileDebugWrites, and CoffeeScript -- the
-# bundled compiler, whose lexer the super rewrite reads). If you make the constructor /
-# its helpers read a NEW global, add a matching stand-in to that shim or the gate will
-# break with an operational (exit 2) error.
+# bundled compiler, whose lexer the super rewrite and every constructor's ending read).
+# If you make the constructor / its helpers read a NEW global, add a matching stand-in to
+# that shim or the gate will break with an operational (exit 2) error.
 
 class Class
 
@@ -25,47 +25,33 @@ class Class
   topLevelCommentRegex: /^  #.*/m
 
 
-  # adds code into the constructor, such that when a
-  # Widget is created, it registers itself as in instance
-  # on the Class it belongs to AND TO ALL THE SUPERCLASSES
-  # The way it's added to all the superclasses is via
-  # the constructor always calling "super", so constructors
-  # up the chain cause the object to register itself
-  # with all the superclasses.
-  #
-  # TODO this mechanism can be tested like so:
-  # open AnalogClockWdgt and then from the console:
-  #    window.AnalogClockWdgt.instances
-  # ...should give one object
-  #    window.AnalogClockWdgt.__super__.constructor.instances.forEach((each) => console.log(each.constructor.name==="AnalogClockWdgt"));
-  # should only give one 'true'
-  #    window.AnalogClockWdgt.instances.forEach((each) => each.fullDestroy());
-  # should destroy all clocks
-  #    window.AnalogClockWdgt.instances
-  # should show empty set
-  #    window.AnalogClockWdgt.__super__.constructor.instances.forEach((each) => console.log(each.constructor.name==="AnalogClockWdgt"));
-  # should type all 'false'
-  #
-  # Note that only Widgets have that kind
-  # of tracking and hence the existence check of
-  # the registerThisInstance function
-  _addInstancesTracker: (aString) ->
-    # the regex to get the actual spacing under the constructor
-    # is:
-    # [ \t]*constructor:[ \t]*->.*$\n([ \t]*)
-    # but let's keep it simple: there are going to be four spaces under for the
-    # body of the constructor
+  # What a `super` in this class's `memberName` calls: the member of that name on the superclass's
+  # prototype.
+  _superOf: (memberName) ->
+    @name + ".__super__." + memberName
 
-    # if there is a return, keep it, otherwise add it
-    if !aString.includes "\n    return"
-      aString += "\n    return\n"
-    aString.replace(/^([ \t]*)return/gm, "$1this.registerThisInstance?();\n$1return")
-    
   # A member's source with each of its `super`s spelled out as a call to the same-named member of
   # the superclass's prototype -- Class.rewriteSuperCalls, which says why and how.
   _rewriteSuperCalls: (memberName, source) ->
     if window.srcLoadCompileDebugWrites then console.log "removing super from: " + source
-    Class.rewriteSuperCalls source, @name + ".__super__." + memberName
+    Class.rewriteSuperCalls source, @_superOf memberName
+
+  # The text the lexer reads of `source`: it drops a byte-order mark and every \r before reading,
+  # and so does the compiler, so each token's line and column sit exactly on what this returns.
+  @_textTheLexerReads: (source) ->
+    source.replace(/^\uFEFF/, "").replace(/\r/g, "")
+
+  # The lexer's tokens of `source`, or undefined where the lexer refuses it. Its errors carry their
+  # `location`, as compileFGCode reads them: the caller then hands the source on as written, so
+  # compileFGCode reports the error, placed where it is. Any other failure is a fault, and
+  # propagates. (`CoffeeScript.tokens` is one of the calls this tree makes of the bundled
+  # compiler; the README beside it lists them.)
+  @_tokensOf: (source) ->
+    try
+      CoffeeScript.tokens source
+    catch error
+      throw error unless error.location?
+      undefined
 
   # THE SUPER REWRITE, for Class and Mixin alike: each passes the member its `super` means as
   # `superBase` (Class: `<Name>.__super__.<member>`; Mixin: the class it was injected in, found at
@@ -90,20 +76,12 @@ class Class
   #
   # Only the keyword, and an explicit call's opening parenthesis, is replaced, so every line of the
   # source stays on its line: lib/call-sites.js maps a member's lines back onto its file by that.
-  # The text rewritten is the text the lexer reads: it drops a byte-order mark and every \r before
-  # reading, and so does the compiler, so each token's line and column sit exactly on it. A source
-  # the lexer refuses -- its errors carry their `location`, as compileFGCode reads them -- is handed
-  # on as written, so compileFGCode reports the error, placed where it is; any other failure is a
-  # fault, and propagates. (`CoffeeScript.tokens` is one of the calls this tree makes of the
-  # bundled compiler; the README beside it lists them.)
+  # The text rewritten is the text the lexer reads (_textTheLexerReads), so each token's line and
+  # column sit exactly on it; a source the lexer refuses is handed on as written (_tokensOf).
   @rewriteSuperCalls: (source, superBase) ->
     return source unless source.includes "super"
-    source = source.replace(/^\uFEFF/, "").replace(/\r/g, "")
-    try
-      tokens = CoffeeScript.tokens source
-    catch error
-      return source if error.location?
-      throw error
+    source = @_textTheLexerReads source
+    return source unless (tokens = @_tokensOf source)?
     lineStarts = [0]
     for i in [0...source.length] when source[i] is "\n"
       lineStarts.push i + 1
@@ -139,6 +117,50 @@ class Class
       source = source.slice(0, from) + replacement + source.slice(to)
     source
 
+  # EVERY CONSTRUCTOR ENDS IN `return`. CoffeeScript gives a class's constructor no implicit
+  # return, but the meta-system compiles each member ALONE, as a plain function, which hands back
+  # its last expression -- and `new` returns that instead of the instance whenever it is an object
+  # (a body ending `@appearance = new XAppearance @` would make `new` hand back the appearance).
+  # So the constructor's source ends in a `return` of its own function, placed by the lexer:
+  #   a body on lines of its own  ->  `return` as its last line, indented as its first line is
+  #     (spaces or tabs, as written)
+  #   a body on the arrow's line, or none  ->  the text after the arrow first moves to a line of
+  #     its own, at two spaces (every line that continues a member sits further right, past the
+  #     class's member column): a `return` after it on the arrow's line would belong to its last
+  #     branch -- `-> if a then b() else c(); return` returns `b()`. That body then sits one line
+  #     lower than written, so a compile error in it is reported one line low.
+  # The function's own arrow follows the comment lines the source may open on: it is the first
+  # token after them, or the one right after the parameter list that opens there (a default value
+  # can hold arrows of its own). A constructor that is no `->` function -- a bound `=>` one, which
+  # CoffeeScript refuses too, or any other value -- is refused, naming the class. A source the
+  # lexer refuses is handed on as written (_tokensOf), for compileFGCode to report. A `return` the
+  # source already ends in compiles to one `return;`.
+  @endingInReturn: (source, className) ->
+    source = @_textTheLexerReads source
+    return source unless (tokens = @_tokensOf source)?
+    start = 0
+    start++ while tokens[start]?[0] is "TERMINATOR" or (tokens[start]?[0] is "JS" and tokens[start].generated)
+    arrowAt = start
+    if tokens[start]?[0] is "PARAM_START"
+      depth = 0
+      for i in [start...tokens.length]
+        depth++ if tokens[i][0] is "PARAM_START"
+        if tokens[i][0] is "PARAM_END" and --depth is 0
+          arrowAt = i + 1
+          break
+    arrow = tokens[arrowAt]
+    unless arrow?[0] is "->"
+      throw new Error "the constructor of " + className + " is no `->` function: " + JSON.stringify source.slice 0, 60
+    # after an arrow the lexer always has an INDENT: a real one opens a body on lines of its own
+    next = tokens[arrowAt + 1]
+    lines = source.split "\n"
+    unless next.generated
+      bodyLine = lines[tokens[arrowAt + 2][2].first_line]
+      return source + "\n" + bodyLine.match(/^[ \t]*/)[0] + "return\n"
+    {last_line: line, last_column: column} = arrow[2]
+    lines[line] = lines[line].slice(0, column + 1) + "\n  " + lines[line].slice(column + 1).replace(/^\s+/, "")
+    lines.join("\n") + "\n  return\n"
+
   # THE CLASS NAME MUST BE IN THE PARSED SOURCE, not patched on afterwards.
   #
   # A heap snapshot names an object's node after its constructor, and DevTools names a
@@ -150,18 +172,17 @@ class Class
   # cannot name a single retained widget.
   #
   # So we turn the ANONYMOUS function expression CoffeeScript emitted into a NAMED one,
-  # inside the string that gets eval'd. Both emit shapes arrive here having opened their
-  # function with `function (`, and in both the constructor's own `function` is the first
-  # in the text:
-  #   explicit constructor source   ->  `(function(a, b) { ... });`
-  #   synthesized constructor       ->  `window.<Name> = function() { ... };`
+  # inside the string that gets eval'd. Every constructor arrives here in one shape --
+  # `window.<Name> = (function(a, b) { ... });` -- the class's own and the one the meta-system
+  # gives a class that writes none alike, so the constructor's own `function` is the first in
+  # the text.
   #
   # The name binding a named function expression creates INSIDE its own scope is safe here:
   # it makes the class name resolve, within the constructor body, to the very function that
   # `window.<Name>` holds -- `extend` returns the same object it is handed -- which is what
-  # `_rewriteSuperCalls`'s bare `<Name>.__super__.constructor` already resolved to through
-  # the global. No emitted constructor declares a local of its own class's name, so nothing
-  # shadows it.
+  # the super rewrite's bare `<Name>.__super__.constructor` (_superOf) already resolved to
+  # through the global. No emitted constructor declares a local of its own class's name, so
+  # nothing shadows it.
   _nameTheConstructorFunction: (aString) ->
     named = aString.replace /function[ \t]*\(/, => "function " + @name + "("
     if named is aString
@@ -454,40 +475,20 @@ class Class
       # collect all the definitions in JS form here
       JS_string_definitions = "// class " + @name + "\n\n"
 
-      # the class itself is a constructor function, the constructor.
-      # we have to find its source (if it exists), and
-      # we have to slightly modify it and then we have to
-      # actually create this function, hence creating the class.
-      if window.srcLoadCompileDebugWrites then console.log "adding the constructor"
-      if @nonStaticPropertiesSources.hasOwnProperty('constructor')
-
-        if window.srcLoadCompileDebugWrites then console.log "CS sources of constructor: " + @nonStaticPropertiesSources["constructor"]
-        # if there is a source for the constructor
-        constructorDeclaration = @_rewriteSuperCalls "constructor", @nonStaticPropertiesSources["constructor"]
-        constructorDeclaration = @_addInstancesTracker constructorDeclaration
-        if window.srcLoadCompileDebugWrites then console.log "constructor declaration CS:\n" + constructorDeclaration
-
-        compiled = compileFGCode constructorDeclaration, true
-
-        constructorDeclaration = @_removeHelperFunctions compiled
-        constructorDeclaration = "window." + @name + " = " + constructorDeclaration
+      # the class itself is its constructor function. A class that writes none gets the one
+      # CoffeeScript gives it, which forwards every argument: as if it were written
+      # `constructor: -> super`. That source is not the class's, so it skips the member step build
+      # tools read the source's members at (_rewriteSuperCalls) and goes to the same super rewrite
+      # directly. From there every constructor takes one path: it ends in `return`
+      # (Class.endingInReturn), is compiled, and is stripped of the helper head.
+      if @nonStaticPropertiesSources.hasOwnProperty "constructor"
+        constructorSource = @_rewriteSuperCalls "constructor", @nonStaticPropertiesSources.constructor
       else
-        # there is no constructor source, so we
-        # just have to synthesize one that does:
-        #  constructor ->
-        #    super
-        #    register instance
-        constructorDeclaration = """
-          window.#{@name} = ->
-            # first line here is equivalent to "super" the one
-            # passing all the arguments
-            window.#{@name}.__super__.constructor.apply this, arguments
-            # register instance (only Widgets have this method)
-            @registerThisInstance?()
-            return
-        """
-        if window.srcLoadCompileDebugWrites then console.log "constructor declaration CS:\n" + constructorDeclaration
-        constructorDeclaration = compileFGCode constructorDeclaration, true
+        constructorSource = Class.rewriteSuperCalls "->\n    super\n", @_superOf "constructor"
+      constructorSource = Class.endingInReturn constructorSource, @name
+      if window.srcLoadCompileDebugWrites then console.log "constructor declaration CS:\n" + constructorSource
+      compiled = compileFGCode constructorSource, true
+      constructorDeclaration = "window." + @name + " = " + @_removeHelperFunctions compiled
 
       # give the constructor function the class's name AT PARSE TIME -- see
       # _nameTheConstructorFunction: this is the only spelling heap snapshots and

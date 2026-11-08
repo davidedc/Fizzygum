@@ -218,8 +218,9 @@ against the current tree. This plan is its executable distillation.
   - **`_rewriteSuperCalls`:** rewrites `super` to `<ClassName>.__super__.<member>.call(this, …)`. It
     is a **dynamic** lookup at call time, so a function swapped onto a superclass prototype *is* seen
     by subclass `super` calls (this matters for U2).
-  - **Instance tracking:** `_addInstancesTracker` makes `window.<Class>.instances` work (widgets only;
-    see the class's header).
+  - **Instance sets:** it emits a `window.<Class>.instances` set for every class; Widget's constructor
+    puts each widget in its class's set and every superclass's (`Widget.registerThisInstance`; widgets
+    only).
 - `src/meta/Mixin.coffee`:
   - **Members are copied onto each consumer prototype.**
   - **A mixin's fake `super` resolves through

@@ -429,6 +429,9 @@ class Widget extends TreeNode
 
   constructor: ->
     super()
+    # every construction of every widget passes here, the one place it is registered (see
+    # registerThisInstance)
+    @registerThisInstance()
     @assignUniqueID()
 
     # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
@@ -445,8 +448,26 @@ class Widget extends TreeNode
     # so we wait and we let the actual extending
     # widget to draw itself.
 
-  # this happens when the Widget's constructor runs
-  # and also when the Widget is duplicated
+  # A widget is in the `instances` set of its class AND OF EVERY SUPERCLASS while it lives: this
+  # adds it to each, walking up from its own class (unregisterThisInstance takes it out of each).
+  # It is called once per widget that comes into being: by Widget's constructor -- every
+  # construction reaches it, since every widget constructor calls super -- by the Duplicator for
+  # a copy and by the Deserializer for a restored widget, neither of which runs a constructor.
+  # Only widgets register; every class carries the set (the meta-system emits it, and it is the
+  # mark boot's classNamed knows a class by), so another class's stays empty.
+  #
+  # TODO this mechanism can be tested like so:
+  # open AnalogClockWdgt and then from the console:
+  #    window.AnalogClockWdgt.instances
+  # ...should give one object
+  #    window.AnalogClockWdgt.__super__.constructor.instances.forEach((each) => console.log(each.constructor.name==="AnalogClockWdgt"));
+  # should only give one 'true'
+  #    window.AnalogClockWdgt.instances.forEach((each) => each.fullDestroy());
+  # should destroy all clocks
+  #    window.AnalogClockWdgt.instances
+  # should show empty set
+  #    window.AnalogClockWdgt.__super__.constructor.instances.forEach((each) => console.log(each.constructor.name==="AnalogClockWdgt"));
+  # should type all 'false'
   registerThisInstance: ->
     goingUpClassHierarchy = @constructor
     loop
@@ -457,14 +478,10 @@ class Widget extends TreeNode
       goingUpClassHierarchy.instances.add @
       goingUpClassHierarchy = goingUpClassHierarchy.__super__.constructor
 
-  # this happens when the Widget is destroyed
+  # When a widget is destroyed (_destroyNoSettle), and a world as it dissolves
+  # (WorldWdgt._dissolveWorldNoSettle): it leaves each `instances` set registerThisInstance
+  # put it in, its class's and every superclass's.
   unregisterThisInstance: ->
-    # remove instance from the instances tracker
-    # in the class. To see this: just create an
-    # AnalogClockWdgt, see that
-    # AnalogClockWdgt.instances has one
-    # element. Then delete the clock, and see that the
-    # tracker is now an empty array.
     goingUpClassHierarchy = @constructor
     loop
       # __super__ will always get to Object,

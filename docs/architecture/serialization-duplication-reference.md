@@ -624,7 +624,8 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    ⚠ From the teardown to step 4 the world has NO storage; the loader's `try/finally` guarantees
    a bin and a shelf whatever happens in between (a file carrying none, or a restore that throws),
    because the end-of-cycle storage drain needs both.
-3. Restore `idCounters` **before** deserializing (so `registerThisInstance` sees the right
+3. Restore `idCounters` **before** deserializing (so `assignUniqueID` — for a record that
+   carries no `iid`, and for every widget built after the load — continues past the restored
    high-water marks; each key is resolved through `classNamed`, so one naming no class writes onto
    nothing), then `Deserializer.deserialize` (`kind:"world"` preserves each `iid`;
    returns `shells` so the loader resolves the `world` section's `{$r}` refs).
