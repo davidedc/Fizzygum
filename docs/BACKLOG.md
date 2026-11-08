@@ -2,7 +2,7 @@
 
 Index only: the executable detail lives in the linked plan section. **OPEN items only** — an
 item leaves this file when it closes, and lands in the `## BACKLOG ledger` section of the plan
-that owns it (README rule 2). A subsection's owning plan lives in `plans/` while the arc is
+that closed it (README rule 2). A subsection's owning plan lives in `plans/` while the arc is
 active and in `archive/` once it closes; either way the open items it left behind stay here.
 Closed items whose arc never had a plan file are collected in
 `archive/backlog-closed-items-ledger.md`.
@@ -46,50 +46,23 @@ per README rules 2 and 5.
       on purpose, filed with what it misses:
   - [ ] `check-invalidation-receivers` cuts a line at a `#` inside a string, so a cross-object invalidation after
         such a string on the same line goes unseen.
-  - [x] `check-argument-holes` reads string contents as code — CLOSED by `archive/argument-holes-both-repos-plan.md`:
-        a real parser reads the calls, and a string's contents are never one (moved to its ledger).
   - [ ] `check-raw-pointer-reads`: a column-0 line inside a handler ends its body, and any `screenPointToMyPlane` on
         a line excuses every raw read on it.
   - [ ] `vm-truth-gate.js` skips its heap-floor ceiling below 20 samples per page, so a short (`--tests=`) run never
         judges it; its proof plants `HEAP_FLOOR` on a fabricated `--audit-dir=` instead.
 
-### `archive/bite-proofs-plan.md` — a gate's rule is proven to bite by a standing self-test that runs the gate (CLOSED 2026-11-07; Units 0, A–C done, see its ledger)
-- [x] **Only the gates whose rules were proven BY HAND have a bite-proof; most gates have none.** — CLOSED by
-      `archive/every-gate-bites-plan.md` (moved to its ledger).
-
-### `archive/unrun-checks-plan.md` — every check the workspace relies on runs (CLOSED 2026-11-06; Units 0, A–D done, see its ledger)
-- [x] **Standing bite-proofs for the checks proven only by hand.** — CLOSED by `archive/bite-proofs-plan.md` (moved to
-      its ledger).
-
-### `archive/typed-code-saves-residue-plan.md` — the typed-code-saves arc's three residue items (CLOSED 2026-11-06; Units 1–3 done, see its ledger)
-- [x] **The other gates that read the tests repo still read its prose and comments.** — CLOSED by
-      `archive/tests-repo-readers-plan.md` (moved to its ledger).
-
 ### `archive/tests-repo-readers-plan.md` — one definition of a method reference, read from code (CLOSED 2026-11-06; Units 0, A, B, C, E done, see its ledger)
-- [x] **`check-argument-holes` over the tests repo's code (owner ruling D5).** — CLOSED by
-      `archive/argument-holes-both-repos-plan.md`: both pieces landed — the code-only call parser with the
-      callers test mechanized (an exact zero over both repos) and the button family's head in opts (moved to its
-      ledger).
-- [x] **The buildSystem gates' `--self-test`s are run by nothing.** — CLOSED by `archive/unrun-checks-plan.md`
-      (moved to its ledger).
-- [x] **`aim-census.js` is run by no gate.** — CLOSED by `archive/unrun-checks-plan.md` (moved to its ledger).
 - [ ] **`census-property-placement`'s exclusion 1 counts every WORD inside any string** (`STRING_WORDS`, 3429)
       as a possible by-name access. By the method-reference rule (`buildSystem/lib/method-references.js`) only a
       whole-name string can reach a member. Advisory census; its tests-repo reading is already right.
 
 ### `archive/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; CLOSED 2026-11-06, all four tiers landed)
-- [x] Tier 1's two findings — CLOSED by `archive/typed-code-saves-and-error-tokens-plan.md` (moved to its BACKLOG
-      ledger).
 - [ ] **Tier 4's residue (plan §6 ledger):**
   - [ ] **The four LiveCodeLang vocabulary lists are the hand-list gate's whole Fizzygum baseline (4)**
         (`LCLCodePreprocessor`'s `qualifyingCommands` / `primitives` / `commandsExcludingScaleRotateMove` /
         `colorCommands`): they mirror the commands `FridgeMagnets3DCanvasWdgt` implements, and only six of the 29 are
         exercised by a test. Their guard is `plans/livecodelang-cleanup-and-extensions-plan.md`'s R1 (the
         headless preprocessor gate reading the canvas's methods); then sanction them and drop the baseline to 0.
-
-### `archive/hand-lists-residue-plan.md` — the hand-kept-lists arc's residue (CLOSED 2026-11-06; §1–§4 + §1b done, see its ledger)
-- [x] §4 **The unresolved-sends DEF harvest's catch-all form is a second mask** — CLOSED by
-      `archive/every-gate-bites-plan.md` Unit C (moved to its ledger).
 
 ### `archive/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (IN EXECUTION 2026-08-20; phases 1–4 done, see the plan's STATUS box)
 The three-arc program (A in-band inventory instruments · B Chrome-only VM-truth riders · C the

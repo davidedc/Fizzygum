@@ -1092,11 +1092,22 @@ for (const s of sites) if (s.absentBefore.length) {
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
-- [x] **A positional argument handed to an `(opts = {})` head has no static check.** — CLOSED by
-      `archive/call-arguments-gate-plan.md`: the gate, renamed `check-call-arguments.js`, gained `EXTRA_ARGUMENT` (two or
-      more positionals, a dead argument) and `POSITIONAL_INTO_OPTIONS` (`@`, a literal, a `new`… alone); what they found
-      is in its ledger (moved there). A lone VARIABLE handed to an options slot (`new X target`) stays unchecked — a
-      stated limit (conventions doc §5), its whole-family check being `census-call-arity.js` after a conversion.
+- [x] `check-argument-holes` reads string contents as code (`@say "use undefined, then 1"` counts as a hole),
+      a reading it shares with the census parser; the code-only call parser of the tests-repo-readers D5 item
+      (`archive/tests-repo-readers-plan.md`, below) would serve both. (Section "archive/every-gate-bites-plan.md",
+      the masks Unit 0 found.) — CLOSED here: a real parser reads the calls, and a string's contents are never one.
+- [x] **`check-argument-holes` over the tests repo's code (owner ruling D5: its own fully planned arc).** The
+      gate is src-only because the hole census cannot yet tell an `undefined` VALUE from a hole. It needs two
+      pieces:
+  - [x] a code-only call parser that applies the conventions doc's CALLERS TEST mechanically. By that test,
+        `@assertValuesEqual "…", undefined, x` and `processKeyDown key, undefined, …` are values.
+  - [x] the button family's `(target, action, opts)` head moved into opts, as `SimpleRectangularButtonWdgt`
+        already has it. Its tests-only target-less fixtures are holes by both of the doc's rules. About 45 sites
+        plus `super` chains, both repos, pixel-neutral, one commit.
+
+  Measurements and probe: that plan's ledger, "Owner ruling D5". (Section "archive/tests-repo-readers-plan.md".) —
+  CLOSED here: both pieces landed — the code-only call parser with the callers test mechanized (an exact zero over
+  both repos) and the button family's head in opts.
 - [x] **Two readers of a test's macro sources.** — CLOSED 2026-11-07: ONE reader, `lib/tests-repo-code.js`
       `macroSourcesIn` — the value of `mainMacroSource` and each `extraSubroutineSources` entry, found in the parse
       (what the harness compiles), COOKED, each with its file line and its span; it refuses a source it cannot read

@@ -160,3 +160,12 @@ each (`git commit -F <file>`), push asked separately.
     nine mutations (foreign base ignored, homes ignored, CS capture ignored, every `@` ours, getter callable, every
     home seen, keys alone suffice, `new @constructor` judged, imports never resolved) each fail their case.
     Real trees: 0 / 0 / 0 over 50,810 calls, 19,268 judged for arity (18,976 before the restructure).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **A positional argument handed to an `(opts = {})` head has no static check.** — CLOSED by
+      `archive/call-arguments-gate-plan.md`: the gate, renamed `check-call-arguments.js`, gained `EXTRA_ARGUMENT` (two or
+      more positionals, a dead argument) and `POSITIONAL_INTO_OPTIONS` (`@`, a literal, a `new`… alone); what they found
+      is in its ledger (moved there). A lone VARIABLE handed to an options slot (`new X target`) stays unchecked — a
+      stated limit (conventions doc §5), its whole-family check being `census-call-arity.js` after a conversion.
+      (Section "archive/argument-holes-both-repos-plan.md".)

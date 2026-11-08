@@ -30,8 +30,11 @@ all arcs, each linking to the plan section that owns the detail).
    (COMPLETE/FALSIFIED/PARKED + date + one line), add its line to
    `archive/INDEX.md`, and remove its items from `BACKLOG.md` — closed entries
    move VERBATIM into a trailing `## BACKLOG ledger (closed items, moved from
-   docs/BACKLOG.md)` section of the owning plan (or, plan-less, into
-   `archive/backlog-closed-items-ledger.md`).
+   docs/BACKLOG.md)` section of the plan that CLOSED them, beside how they
+   closed, naming the section an item was filed under when that is another
+   plan's. An item closed without
+   a plan of its own goes to the plan whose section held it; one whose arc
+   never had a plan, into `archive/backlog-closed-items-ledger.md`.
 3. **Durable residue goes to `architecture/`.** If an arc changed how a
    subsystem works, update that subsystem's architecture doc in the same arc —
    present tense, no changelog prose. The plan keeps the history; the

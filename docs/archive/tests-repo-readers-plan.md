@@ -464,3 +464,14 @@ Execution order: Unit 0 → Unit A → Unit C → `census-call-arity` adopts →
 - `docs/archive/typed-code-saves-residue-plan.md` (Unit 3: the reader's origin and R4's triage).
 - `docs/architecture/lint-and-static-checks.md` (the dead-method row and paragraph; R4's reader paragraph).
 - `docs/archive/connector-ubiquity-and-reflection-plan.md` BACKLOG ledger (the 2026-08-18 prose survey).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **The other gates that read the tests repo still read its prose and comments.** `check-call-separation`'s
+      census now reads the tests repo's CODE through `buildSystem/lib/tests-repo-code.js` (harness, macro sources
+      and `scripts/`, comments cut, metadata prose and reference records unread). `check-dead-methods` (the
+      "ordinary English word is unkillable" blind spot in `lint-and-static-checks.md`), `check-unresolved-sends`,
+      `check-hand-lists`, `check-relayout-repaints` and the arity and property-placement censuses read it their own
+      way. Adopting the reader may unmask findings of each gate's own (dead methods first), so each is its
+      gate's arc: measure, then triage. (Section "archive/typed-code-saves-residue-plan.md".) — CLOSED here: the
+      Mandate's Units.

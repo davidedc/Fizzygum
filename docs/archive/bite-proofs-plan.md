@@ -445,3 +445,13 @@ are unchanged, or it acts on the boot world, which T's reset dissolves. Any plan
 - `docs/architecture/lint-and-static-checks.md` §3 (every check runs) and the runtime audit gates section.
 - `Fizzygum-tests/CLAUDE.md` (the `PRELUDE_JS` plant rail; the self-tests paragraph).
 - Memory: `unrun-checks.md`.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **Standing bite-proofs for the checks proven only by hand.** Self-tests and sanctions are now held to running,
+      but several gates' own RULES were proven by a plant once, at authoring, and nothing re-runs that plant: the
+      suite audit gates (tier-naming's leaf rule — its header says so — settle's [J], revisits, storage; each carries
+      a coverage line proving it WATCHED, none a planted violation proving it BITES) and check-call-separation's
+      by-hand plant recipe. The pattern exists: `notification-settle-audit/cache-oracle-selftest-headless.js` (planted
+      run must fail on the token, the control must pass), run by the gauntlet's `selftests` leg. (Section
+      "archive/unrun-checks-plan.md".) — CLOSED here: §9.
