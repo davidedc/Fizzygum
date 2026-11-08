@@ -1300,3 +1300,45 @@ for (const s of sites) if (s.absentBefore.length) {
       `widgetFileStrayFunctionSourceRefused`, `serialize2.functionSourceMustBeOwn`), each seen failing on the old
       code; `SystemTest_macroEvaluateStringReturnsItsValue` drops its `compileFunction` assertions. Filed beside it:
       a world snapshot cannot be saved while a class inspector is open.
+- [x] **A plain class-member rename or removal does not survive a snapshot load** (found closing the same item, and
+      stated in `ClassInspectorWdgt` at its raw steps). `_applyPropertyRemoval` / `_applyPropertyRename` delete and
+      re-key the prototype member: a `<name>_source` live override stays behind under the old name, and the edit is
+      not recorded in the `SourceEditsRegistry`, so a loaded world replays the class edits without it (the mixin path
+      records its removal, `recordMixinMemberRemoval`). By reading: a leftover `<name>_source` is also what the shadow
+      guards of `Mixin.applyMemberEdit` and `Mixin.removeMember` key off, so a removed override still blocks the
+      mixin's edits and removals of that member. — CLOSED 2026-11-08. Every clause was measured true first, and more
+      beside it: a renamed member lost its CoffeeScript and its `super` kept calling the old name, a removed override
+      left the member undefined instead of giving back the mixin's, a class add was not recorded, and a donated
+      member's rename re-keyed one consumer. Each meta-object now keeps the CURRENT source of every member it defines
+      in `nonStaticPropertiesSources`, a `Class` as a `Mixin` already did: an edit writes it, `Class.removeMember`
+      deletes it. So the prototype `<name>_source` retires (it means only a widget's own injected method), and a
+      consumer's prototype holds its class's member, else its donor mixin's, else nothing: the live members are a
+      function of the two stores, which the load's two-pass replay reproduces. A rename is an edit under the new name
+      plus a removal of the old, recompiled so `super` follows the name (a member with no recorded source is refused);
+      a removal gives back the donor's CURRENT member (`Mixin.injectCurrentMemberInto`); a donated member's rename goes
+      to the donor; Mixin's two shadow guards are one (`_consumerDefinesItself`); a class removal is recorded
+      (`recordClassMemberRemoval`, `deleted: true`) and replayed, and an add is an edit to "undefined".
+      `ClassInspectorWdgt` has one step per scope and operation, each the meta-object's edit and its record, and each
+      gesture notifies once (Class and Mixin notify no one; Mixin's edits answer the consumer classes they updated).
+      Folded from the survey: F1, both meta-objects refuse `constructor` (`Class.refuseTheConstructor`) and both
+      inspectors show its code read-only; F2, Rename and Remove are offered, and act, only for a member the
+      inspector's subject OWNS (`InspectorWdgt._selectedMemberCanBeRenamedOrRemoved`: on a StringWdgt, 243 of 253
+      default rows offered a Rename that left the world unsavable); F3, KeepsRatioWhenInVerticalStackMixin and
+      BubblesEditModeToCoordinatorMixin re-indented to 6-space keys (8 members had no recorded source), and the boot
+      reports any such member (`MIXIN_MEMBER_UNRECORDED`, a gate token); F4, a member's companions
+      (`<m>_class_injected_in`, an injected method's `<m>_source`) are not listed. Plants, each seen failing on the
+      old code: six serialization-rig checks (`sourceEdits.classRenameReplayed`, `classRenameRecompiles`,
+      `classRemovalReplayed`, `classAddReplayed`, `removedOverrideRestoresDonor`, `donatedRenameRoutesToDonor`),
+      `SystemTest_macroInspectorEditTellsOnce` without its hand cleanup (its own prototype assertion), the tripwire
+      before the re-indent (8 lines), and the new `SystemTest_macroInspectorOffersOnlyWhatItsSubjectOwns` (6 of 8).
+      16 inspector tests recaptured on the owner's approval, mouse and finger at dpr 1 and 2: Rename and Remove greyed
+      on rows the subject does not own, and no companion rows. The independent review found that two mixins of one
+      class can define the same member (`_updateColor`, from HighlightableMixin and ParentStainerMixin, on three
+      classes), whose boot winner is the LAST: `Mixin.donorOf` now answers the last augmentation that defines a
+      member, every mixin edit reaches only the consumers it donates to (`_isTheDonorTo`), and a mixin removal hands
+      each such consumer the earlier donor's member, else none; a removal compiles what it falls back to before it
+      changes anything; and Add… and Rename… refuse `constructor` as a new name. Planted first, each failing on the
+      code before it: `sourceEdits.removedOverrideRestoresTheWinningDonor`, `sourceEdits.removalIsAllOrNothing`, and
+      four constructor-as-a-name assertions in the new test. Filed beside it: a snapshot load never undoes the page's
+      own earlier class edits; an object inspector opened on a class's prototype edits the class unrecorded; mixin
+      editing holds only where the page compiled its mixins.

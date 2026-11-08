@@ -259,24 +259,32 @@ class Class
     return aString
 
   # ===== live member editing =====
-  # The CLASS twin of Mixin.applyMemberEdit: rewrite ONE member on this class's
-  # prototype from CoffeeScript source, with the SAME compile shape the mixin twin
-  # uses -- a bare global-assignment eval, NOT Widget.evaluateString: that method's
-  # relayout/repaint tail treats its receiver as a WIDGET, and run on a PROTOTYPE
-  # it stamps widget-lifecycle fields (cachedRoot, dstDamageRectIndex, ...) onto the
-  # prototype as own properties, polluting every later member listing of the class.
-  # (The compiled output may re-declare the CoffeeScript helper vars -- indexOf etc.
-  # -- at global scope; harmless, the globals already hold exactly those values.)
-  # The super forms are rewritten exactly as the boot emit does
-  # (_rewriteSuperCalls), so an edited member keeps calling super; the source is
-  # kept as the `<name>_source` sibling for EVERY member kind -- it is what keeps
-  # the member editable as CoffeeScript, what the class inspector's view attributes
-  # a field to, and what Mixin.applyMemberEdit's live-override shadow guard keys
-  # off. Callers: ClassInspectorWdgt (live save and the override-in-this-class
-  # gesture) and SourceEditsRegistry.replayClassEdits (world-snapshot restore).
-  # Throws on compile errors. Notifying instances is the CALLER's business -- the
-  # restore path replays before any instance exists.
+  # My nonStaticPropertiesSources is the CURRENT source of every instance member I define: read
+  # from my source text at boot, then kept by my two edits below -- an edit writes a member's
+  # entry, a removal deletes it -- exactly as a Mixin keeps its own (Mixin.applyMemberEdit /
+  # removeMember). My prototype holds my member where I define one, else the member my donor
+  # mixin defines, else nothing. The live members are thereby a function of the stores, which is
+  # what lets a world snapshot reproduce them by replaying the edits in order
+  # (SourceEditsRegistry). It is also what keeps a member editable as CoffeeScript, what the class
+  # inspector attributes a member to, and what Mixin's shadow guard keys off.
+  # A rename is no edit of mine: it is an edit under the new name plus a removal of the old
+  # (ClassInspectorWdgt._applyPropertyRename), so the member is RECOMPILED and its `super` follows
+  # the new name (_superOf).
+  # Callers: ClassInspectorWdgt's edit steps and SourceEditsRegistry.replayClassEdits (world-snapshot
+  # restore). Notifying instances is the CALLER's business -- the restore path replays before any
+  # instance exists.
+
+  # Rewrite ONE member on my prototype from CoffeeScript source -- the CLASS twin of
+  # Mixin.applyMemberEdit, with the SAME compile shape: a bare global-assignment eval, NOT
+  # Widget.evaluateString, whose relayout/repaint tail treats its receiver as a WIDGET, and run on
+  # a PROTOTYPE stamps widget-lifecycle fields (cachedRoot, dstDamageRectIndex, ...) onto it as own
+  # properties, polluting every later member listing of the class. (The compiled output may
+  # re-declare the CoffeeScript helper vars -- indexOf etc. -- at global scope; harmless, the
+  # globals already hold exactly those values.) The super forms are rewritten exactly as the boot
+  # emit does (_rewriteSuperCalls), so an edited member keeps calling super. Throws on compile
+  # errors, having changed nothing.
   applyMemberEdit: (memberName, source) ->
+    Class.refuseTheConstructor memberName, @name
     proto = window[@name].prototype
     # the typed source sits behind the assignment, so a compile error is placed in it (typedFrom);
     # a `super` the rewrite expands shifts the columns after it on its line
@@ -285,7 +293,39 @@ class Class
     eval.call window, compiled
     proto[memberName] = window.__fzEditedClassMember
     delete window.__fzEditedClassMember
-    proto[memberName + "_source"] = source
+    @nonStaticPropertiesSources[memberName] = source
+    return
+
+  # Remove ONE member from my prototype, with its source and its injection companion
+  # (`<name>_class_injected_in`, Object::addInstanceProperties). Then boot order holds, as if I had
+  # never defined it: the mixin of mine that donates the member (Mixin.donorOf) gives it back --
+  # its CURRENT member -- since my body's member won over the injection only by coming after it.
+  # The donor's member is compiled before anything changes, so one that does not compile throws
+  # having changed nothing.
+  removeMember: (memberName) ->
+    Class.refuseTheConstructor memberName, @name
+    donor = Mixin.donorOf @, memberName
+    donorsMember = donor?.compiledCurrentMember memberName
+    proto = window[@name].prototype
+    delete proto[memberName]
+    delete proto[memberName + "_class_injected_in"]
+    delete @nonStaticPropertiesSources[memberName]
+    Mixin.injectInto @name, memberName, donorsMember if donor?
+    return
+
+  # Do I define member `memberName` -- did my source text, or a later edit, give it to me? (An OWN
+  # entry: my store is a plain object, whose inherited `constructor` is no member of mine.)
+  definesMember: (memberName) ->
+    Object::hasOwnProperty.call @nonStaticPropertiesSources, memberName
+
+  # `constructor` is no member to edit or remove, on a class or through a mixin: a prototype's
+  # `constructor` IS its class -- what every `.constructor.name` and `.constructor.class` read
+  # answers (the Serializer writes it as a saved widget's class) -- and an edit of it would never
+  # change what `new` runs. So the edits of both meta-objects refuse it, whoever calls them
+  # (Class.applyMemberEdit / removeMember, Mixin.applyMemberEdit / removeMember).
+  @refuseTheConstructor: (memberName, ownerName) ->
+    if memberName is "constructor"
+      throw new Error ownerName + "'s constructor is the class itself: it cannot be edited, renamed or removed as a member"
     return
 
   # The name of the class my source extends, or undefined. That class is read before me (the load

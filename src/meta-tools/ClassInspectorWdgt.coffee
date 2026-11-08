@@ -5,13 +5,47 @@ class ClassInspectorWdgt extends InspectorWdgt
   # while such a member is selected
   overrideInThisClassButton: undefined
 
-  # My edit steps' one notification: every instance of my class and of its subclasses hears of the
-  # edit once (Class.notifyInstancesOfSourceChange). My plain-member steps are raw -- the
-  # assignments, deletes and re-keys below drive no instance machinery, and Class.applyMemberEdit
-  # leaves notifying to its caller -- so each ends here; a mixin-routed edit's Mixin method notifies
-  # each consumer class itself.
+  # ===== my edit steps: ONE per (scope × operation) =====
+  # Each makes the meta-object's edit AND its registry record (SourceEditsRegistry), so no gesture
+  # of mine can change a prototype or a mixin unrecorded, and a world snapshot replays exactly what
+  # was done. None notifies: Class and Mixin leave that to their caller, and a gesture can be two
+  # steps (a rename is an edit under the new name and a removal of the old), while each instance
+  # must hear of the gesture ONCE -- so each gesture below ends in one notification.
+
+  _editClassMember: (memberName, source) ->
+    @inspectedObject.constructor.class.applyMemberEdit memberName, source
+    world?.sourceEditsRegistry?.recordClassEdit? @inspectedObject, memberName, source
+
+  _removeClassMember: (memberName) ->
+    @inspectedObject.constructor.class.removeMember memberName
+    world?.sourceEditsRegistry?.recordClassMemberRemoval? @inspectedObject, memberName
+
+  # (both mixin steps answer the names of the consumer classes they updated)
+  _editMixinMember: (theMixin, memberName, source) ->
+    updated = theMixin.applyMemberEdit memberName, source
+    world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, memberName, source
+    updated
+
+  _removeMixinMember: (theMixin, memberName) ->
+    updated = theMixin.removeMember memberName
+    world?.sourceEditsRegistry?.recordMixinMemberRemoval? theMixin.name, memberName
+    updated
+
+  # A class-scope gesture's one notification: every instance of my class and of its subclasses
+  # hears of the edit once (Class.notifyInstancesOfSourceChange).
   _notifyInstancesOfSourceChange: ->
     @inspectedObject.constructor.class.notifyInstancesOfSourceChange()
+
+  # A mixin-scope gesture's one notification: the instances of each consumer class it updated.
+  # No class is a consumer twice over through an ancestor (Object::addInstanceProperties refuses
+  # the same mixin twice in one chain), so no instance is in two of these sets.
+  _notifyConsumerClasses: (classNames) ->
+    (classNamed eachName).class.notifyInstancesOfSourceChange() for eachName in classNames
+    return
+
+  _informConsumerClassesUpdated: (whatHappened, theMixin, classNames) ->
+    count = classNames.length
+    @inform whatHappened + " " + theMixin.name + "Mixin\n(" + count + " consumer class" + (if count is 1 then "" else "es") + " updated)"
 
   # Override the NON-SETTLING core (not the wrapper): the inherited _buildAndConnectChildren wrapper settles
   # once, and this extension -- my second save destination -- is built inside that single settle. My
@@ -44,21 +78,18 @@ class ClassInspectorWdgt extends InspectorWdgt
       @overrideInThisClassButton?.hide()
 
   # Prototype-level truth for a FIELD: its recorded SOURCE, in boot order of
-  # authority -- a live class-scope override (`<name>_source`, kept by
-  # Class.applyMemberEdit for fields too), the class body's recorded source
-  # (chain walk, mirroring the function branch), then the mixin donor's (setting
+  # authority up the class chain -- the class's own current source (its body's, or an
+  # edit's since: Class.applyMemberEdit keeps it), then the mixin donor's (setting
   # the donor attribution, so the save routes to the mixin and the override
   # gesture is offered -- field parity with methods). undefined when no source is
   # recorded (the base then falls back to showing the VALUE).
   _sourceForFieldMember: (selected) ->
-    if @inspectedObject[selected + "_source"]?
-      return @inspectedObject[selected + "_source"]
     goingUpTargetProtChain = @inspectedObject
     while goingUpTargetProtChain?.constructor?.class?
       theClass = goingUpTargetProtChain.constructor.class
       if theClass.nonStaticPropertiesSources[selected]?
         return theClass.nonStaticPropertiesSources[selected]
-      theMixinProvidingIt = @_mixinProvidingMember theClass, selected
+      theMixinProvidingIt = Mixin.donorOf theClass, selected
       if theMixinProvidingIt?
         @currentPropertySourceMixin = theMixinProvidingIt
         return theMixinProvidingIt.nonStaticPropertiesSources[selected]
@@ -75,6 +106,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # added to a mixin appears on every non-shadowing consumer class and is logged
   # for snapshot replay). An unaugmented class keeps the base single-step flow.
   addProperty: (prop) ->
+    return if @_refusesAsANewMemberName prop
     augmentations = @inspectedObject.constructor.class?.augmentedWith
     if !augmentations? or augmentations.length is 0
       super
@@ -90,56 +122,71 @@ class ClassInspectorWdgt extends InspectorWdgt
   addPropertyToClass: (ignored, ignored2, prop) ->
     @_addNamedProperty prop
 
+  # a member added to a mixin is an edit of it to "undefined", as a member added to my class is
+  # (_applyPropertyAddition): every consumer class that does not define it gets it
   addPropertyToMixin: (ignored, ignored2, prop, mixinGlobalName) ->
-    theMixin = Mixin.allMixines.find (m) -> m.name + "Mixin" is mixinGlobalName or m.name is mixinGlobalName
+    theMixin = Mixin.named mixinGlobalName
     return unless theMixin?
-    theMixin.applyMemberEdit prop, "undefined"
-    world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, prop, "undefined"
+    @_notifyConsumerClasses @_editMixinMember theMixin, prop, "undefined"
     @_refilterMembers()
 
   # a mixin-donated member (not shadowed by this class) is removed from
-  # the DONOR: every non-shadowing consumer class loses it (Mixin.removeMember),
-  # and the removal is logged so a world snapshot replays it. A plain member keeps
-  # the base prototype-delete flow. Either way my member set is all that
-  # changed, so I re-filter (_refilterMembers), which also drops the removed member's attribution.
+  # the DONOR: every consumer class that does not define it loses it (Mixin.removeMember).
+  # A member of my class keeps the base flow (_applyPropertyRemoval). Either way my member set
+  # is all that changed, so I re-filter (_refilterMembers), which also drops the removed member's
+  # attribution.
   removeProperty: ->
-    if @currentPropertySourceMixin? and @list.selected?
+    if @currentPropertySourceMixin? and @_selectedMemberCanBeRenamedOrRemoved()
       theMixin = @currentPropertySourceMixin
       propertyName = @list.selected.labelString
-      updatedCount = theMixin.removeMember propertyName
-      world?.sourceEditsRegistry?.recordMixinMemberRemoval? theMixin.name, propertyName
+      updated = @_removeMixinMember theMixin, propertyName
+      @_notifyConsumerClasses updated
       @_refilterMembers()
-      @inform "removed from " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"
+      @_informConsumerClassesUpdated "removed from", theMixin, updated
       return
     super
 
-  # plain prototype members keep the RAW delete, re-key and assignment (the Widget-level twins
-  # would drive instance machinery -- sourceChanged -- against a prototype), each ending in my
-  # one notification (_notifyInstancesOfSourceChange). Known gap, mirroring the base seam
-  # comments: a plain class-member removal
-  # or rename leaves any <name>_source live override behind and is not
-  # registry-recorded, so it does not replay on snapshot restore (the mixin
-  # path above closes this with recordMixinMemberRemoval).
+  # My class's member, through the Class meta-object (never a raw delete, re-key or assignment
+  # on the prototype, after which the class's store of member sources would disagree with what
+  # its prototype holds, and neither the next edit nor a snapshot load could tell). Removing a
+  # member my class defines over a mixin's gives the mixin's back (Class.removeMember).
   _applyPropertyRemoval: (propertyName) ->
-    delete @inspectedObject[propertyName]
+    @_removeClassMember propertyName
     @_notifyInstancesOfSourceChange()
 
+  # A rename is an edit under the new name of the member's recorded SOURCE, then a removal of
+  # the old name: the member is recompiled, so its `super` calls the new name, and the record of
+  # it is the two steps. A donated member is renamed on its DONOR, for every consumer class, as
+  # its other edits are. A member my class has no source for (one its source never wrote, nor any
+  # edit since) has nothing to recompile, so it is refused. (`constructor` never gets here, either
+  # way round: InspectorWdgt.renameProperty refuses it.)
   _applyPropertyRename: (oldName, newName) ->
-    delete @inspectedObject[oldName]
-    @inspectedObject[newName] = @currentProperty
+    if (theMixin = @currentPropertySourceMixin)?
+      updated = @_editMixinMember theMixin, newName, theMixin.nonStaticPropertiesSources[oldName]
+      for eachName in @_removeMixinMember theMixin, oldName when eachName not in updated
+        updated.push eachName
+      @_notifyConsumerClasses updated
+      return
+    theClass = @inspectedObject.constructor.class
+    unless theClass.definesMember oldName
+      @inform oldName + " has no CoffeeScript\nsource in " + theClass.name + "\nto rename"
+      return
+    @_editClassMember newName, theClass.nonStaticPropertiesSources[oldName]
+    @_removeClassMember oldName
     @_notifyInstancesOfSourceChange()
 
+  # a member added to my class is an edit of it to "undefined", the twin of addPropertyToMixin
   _applyPropertyAddition: (prop) ->
-    @inspectedObject[prop] = undefined
+    @_editClassMember prop, "undefined"
     @_notifyInstancesOfSourceChange()
 
   # The second save destination for a mixin-donated member: instead of editing the
   # DONOR (what plain save does while @currentPropertySourceMixin is set), keep the
-  # edited source as a live override on THIS class's prototype only. Dropping the
-  # mixin attribution first makes the plain save routing do exactly that -- and undefined
-  # IS the true post-state: the prototype then carries `<name>_source`, which is
-  # what a re-selection would attribute the member to (and what applyMemberEdit's
-  # live-override shadow guard keys off), so future donor edits skip this class.
+  # edited source as an override on THIS class only. Dropping the mixin attribution
+  # first makes the plain save routing do exactly that -- and undefined IS the true
+  # post-state: my class's store of member sources then holds the member
+  # (Class.applyMemberEdit), which is what a re-selection attributes it to and what
+  # Mixin's one shadow guard keys off, so future donor edits skip this class.
   # A save that does not complete overrides nothing -- refused (an edit that does not compile,
   # InspectorWdgt.save) or thrown (code that compiled and then threw, on to the Error log): the
   # member stays the mixin's, attribution, button and label all.
@@ -170,32 +217,25 @@ class ClassInspectorWdgt extends InspectorWdgt
   _buildAndConnectOwnPropsOnlyToggle: ->
 
   # The shared save scaffolding lives in InspectorWdgt::save; a class inspector
-  # differs only in HOW it applies the edit: it evaluates the assignment against
-  # the class prototype (and keeps the source for functions so CoffeeScript
-  # stays editable).
+  # differs only in HOW it applies the edit: through the meta-object that owns the
+  # member, which compiles it and keeps its source so CoffeeScript stays editable.
+  # Its failure is any save's (InspectorWdgt.save runs me through Widget._savingTypedCode): an edit
+  # that does not compile changes nothing and is reported; any other throw reaches the Error log.
   applyPropertyEdit: (propertyName, txt) ->
-    # a mixin-donated member (not shadowed by this class's own body) edits the
-    # DONOR: the mixin recompiles it and re-injects it into every consumer class
+    # a mixin-donated member (not shadowed by this class) edits the DONOR: the mixin
+    # recompiles it and injects it into every consumer class that does not define it
     # (Mixin.applyMemberEdit) -- the class inspector is prototype-level truth, and
-    # a mixin member's prototype-level truth is the mixin. Logged with scope
-    # "mixin" so a world snapshot carries and replays it (SourceEditsRegistry).
-    # Its failure is any save's (InspectorWdgt.save runs me through Widget._savingTypedCode): an edit
-    # that does not compile changes nothing and is reported; any other throw reaches the Error log.
+    # a mixin member's prototype-level truth is the mixin
     if @currentPropertySourceMixin?
       theMixin = @currentPropertySourceMixin
-      updatedCount = theMixin.applyMemberEdit propertyName, txt
-      world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, propertyName, txt
-      # (applyMemberEdit already ran notifyInstancesOfSourceChange per consumer class)
-      @inform "saved to " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"
+      updated = @_editMixinMember theMixin, propertyName, txt
+      @_notifyConsumerClasses updated
+      @_informConsumerClassesUpdated "saved to", theMixin, updated
       return
 
-    # a plain class-prototype member: the Class meta-object owns the edit mechanics
+    # my class's own member, method or field: the Class meta-object owns the edit mechanics
     # (Class.applyMemberEdit, the class twin of the mixin routing above -- super
-    # rewritten exactly as at boot, `<name>_source` kept for CoffeeScript editability).
-    # Log the CLASS-scope source edit -- method or field -- so a world snapshot can
-    # carry AND replay it (§12). Unlike an instance edit, nothing else records a
-    # prototype edit — @inspectedObject is the class prototype, so this is the registry's
-    # essential case.
-    @inspectedObject.constructor.class.applyMemberEdit propertyName, txt
-    world?.sourceEditsRegistry?.recordClassEdit? @inspectedObject, propertyName, txt
+    # rewritten exactly as at boot). Unlike an instance edit, nothing but the record
+    # remembers a prototype edit -- the registry's essential case (§12).
+    @_editClassMember propertyName, txt
     @_notifyInstancesOfSourceChange()

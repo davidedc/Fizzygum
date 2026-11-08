@@ -94,44 +94,80 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   They agree today; nothing enforces that they keep agreeing (proposed gate, §8).
 - **Meta-system status: first-class for inspection AND editing.** The parsed
   `Mixin` instances register in `Mixin.allMixines` (create pass only — the build-time
-  syntax gate's parse-only pass never registers), and
-  `InspectorWdgt._mixinProvidingMember` consults each class's `augmentedWith` list to
-  show a mixin method's REAL CoffeeScript source in the inspector. The same attribution
-  routes a CLASS-inspector save to the
-  DONOR: `Mixin.applyMemberEdit` updates the recorded source, recompiles the member (the
-  mixin super rewrite; the function's `.name` is restored so the fake-super companion
-  lookup keeps working) and re-injects it into every consumer class recorded at
-  `augmentWith` time — skipping consumers whose class body shadows the member AND
-  consumers whose prototype carries a live class-scope override (`<name>_source`), so
-  the boot-order override rule keeps holding for overrides born at edit time too. Edits
-  log as scope-`"mixin"` records in `world.sourceEditsRegistry` and replay on world
-  restore (the reference doc §12). The attribution covers methods AND fields: a
-  donated method attributes through the function-branch chain walk (both inspector
-  types), and a donated FIELD attributes in the CLASS inspector via
-  `ClassInspectorWdgt._sourceForFieldMember` — prototype-level truth, shown in boot
-  order of authority (live `<name>_source` override, class-body source, mixin donor's
-  source) — while an OBJECT inspector keeps showing the instance's VALUE (per-instance
-  state is its own truth). Both live-edit twins (`Mixin.applyMemberEdit` /
-  `Class.applyMemberEdit`) compile through a bare global-assignment eval — never
-  `Widget.evaluateString` against a prototype: its relayout/repaint tail treats the
-  receiver as a WIDGET and stamps widget-lifecycle fields onto the prototype as own
-  properties, polluting every later member listing of the class. The full editing
-  vocabulary on top of that core:
+  syntax gate's parse-only pass never registers), and `Mixin.donorOf` consults a
+  class's `augmentedWith` list for the mixin that defines a member, so the inspector
+  shows a mixin member's REAL CoffeeScript source. A mixin's members are recorded from
+  its literal's 6-space keys; one written at any other indentation would still be
+  injected but recorded nowhere, and the boot reports it (`MIXIN_MEMBER_UNRECORDED`, a
+  gate token: `Mixin._reportMembersWithoutSource` runs the literal's
+  `onceAddedClassProperties` against a stand-in that collects the names it is handed).
+  - **One store per meta-object, kept CURRENT.** A `Class` and a `Mixin` each keep the
+    source of every instance member they define in `nonStaticPropertiesSources`: an
+    edit writes it, a removal deletes it (`Class.applyMemberEdit` / `removeMember`,
+    `Mixin.applyMemberEdit` / `removeMember`). A consumer's prototype holds its class's
+    member where the class defines one, else the member of its LAST augmentation that
+    defines it (`Mixin.donorOf` — two of a class's mixins can define the same member, as
+    `HighlightableMixin` and `ParentStainerMixin` both define `_updateColor`), else
+    nothing. Boot order made it so (`augmentWith` runs before the class-body
+    assignments, and each `augmentWith` injects over the one before it), and ONE
+    question keeps it so: a mixin edit or removal reaches a consumer only where that
+    mixin is the consumer's donor and its class does not define the member
+    (`Mixin._isTheDonorTo`), which covers the class body and every override born since;
+    a removal hands each consumer what boot order gives it without the removed member
+    (a class's: the donor's CURRENT member; a mixin's: the earlier donor's, else none),
+    compiled before anything changes. The live members are thereby a function of the
+    stores, which is why replaying the recorded edits reproduces them (the reference
+    doc §12). `<name>_source` means one thing only: a widget's own injected method's
+    source (`Widget.injectProperty`); no class or mixin edit writes one onto a prototype.
+  - Both live-edit twins compile through a bare global-assignment eval — never
+    `Widget.evaluateString` against a prototype: its relayout/repaint tail treats the
+    receiver as a WIDGET and stamps widget-lifecycle fields onto the prototype as own
+    properties, polluting every later member listing of the class. The mixin twin
+    restores the recompiled function's `.name`, so the fake-super companion lookup
+    keeps working. Neither notifies instances: the class inspector's gesture does,
+    once, and each of its steps — one per (scope × operation): `_editClassMember`,
+    `_removeClassMember`, `_editMixinMember`, `_removeMixinMember` — makes the
+    meta-object's edit AND its `world.sourceEditsRegistry` record.
+  - Both refuse `constructor` (`Class.refuseTheConstructor`): a prototype's
+    `constructor` IS its class, what every `.constructor.name` read answers.
+  - The attribution covers methods AND fields: a donated method attributes through
+    the function-branch chain walk (both inspector types), and a donated FIELD
+    attributes in the CLASS inspector via `ClassInspectorWdgt._sourceForFieldMember` —
+    prototype-level truth, shown in boot order of authority (the class's own current
+    source, then the mixin donor's) — while an OBJECT inspector keeps showing the
+    instance's VALUE (per-instance state is its own truth).
+
+  The editing vocabulary on top of that core:
+  - **Save** of a mixin-donated member edits the DONOR: `Mixin.applyMemberEdit`
+    recompiles the member (the mixin super rewrite) and injects it into every consumer
+    class recorded at `augmentWith` time that holds the member from it;
   - **"Override in this class"** (`ClassInspectorWdgt.overrideInThisClass`): a second
     save destination shown while a mixin-donated instance member (method or field) is
-    selected — keeps the edited source as a live override on THAT class's prototype
-    only (via `Class.applyMemberEdit`, the class twin, which super-rewrites exactly as
-    the boot emit does and keeps `<name>_source` for EVERY member kind — the view's
-    attribution key and the donor-edit shadow guard), after which donor edits skip the
-    class;
+    selected — keeps the edited source as an override on THAT class only (via
+    `Class.applyMemberEdit`, which writes the class's store), after which donor edits
+    skip the class;
   - a **"from `<Name>Mixin`" donor label** (`InspectorWdgt.mixinDonorLabel`) appears in
     the breadcrumb band, right after the class chips, of BOTH inspector types while a mixin-donated
     member is selected;
   - **add/remove**: the class inspector's "Add…" popout gains a destination step
-    (class or any of its mixins — a mixin add is `applyMemberEdit` with a new name)
-    when the class declares augmentations, and "Remove" on a mixin-donated member
-    routes to `Mixin.removeMember` (deletes member + fake-super companion from every
-    non-shadowing consumer; logged as a `deleted: true` registry record);
+    (class or any of its mixins — an add is an edit to `"undefined"`, on either)
+    when the class declares augmentations. "Remove" on a mixin-donated member
+    routes to `Mixin.removeMember` (each consumer that held it from that mixin falls
+    back to an earlier donor's member, else loses it with its fake-super companion);
+    "Remove" on a class's own member is `Class.removeMember`, which gives back the
+    donor mixin's CURRENT member when there is one (`Mixin.compiledCurrentMember`,
+    `Mixin.injectInto`) — boot order, as if the class had never defined it;
+  - **rename** is an edit under the new name plus a removal of the old, so the member
+    is RECOMPILED and its `super` follows the new name; a donated member is renamed on
+    its donor, for every consumer. A member with no recorded source has nothing to
+    recompile, and its rename is refused with a message;
+  - **what is offered**: "Rename…" and "Remove" are enabled, in both inspector types, only
+    for a member the inspector's subject OWNS (a donated member is its consumer
+    prototype's own) and never for `constructor`, whose code is shown read-only
+    (`InspectorWdgt._selectedMemberCanBeRenamedOrRemoved`, asked by the actions too); and a
+    member's companions — `<m>_class_injected_in`, an injected method's `<m>_source` —
+    are not listed (`InspectorWdgt._isACompanion`): they follow their member through its
+    edits;
   - **class-side statics are outside it**: the class inspector lists a class's
     PROTOTYPE members, and a static lives on the constructor, so no static — a class's
     or a mixin's — is edited. (An object inspector opened on a constructor itself, by

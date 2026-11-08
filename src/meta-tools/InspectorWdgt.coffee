@@ -292,14 +292,23 @@ class InspectorWdgt extends Widget
     @saveButton?.setEnabled false
 
   # Rename and remove act on the SELECTED member, so they are enabled exactly while my list has a
-  # selection: disabled as built, enabled by the first selection (selectionFromList), which lasts
-  # until my next re-filter, whose fresh list selects nothing. Their "select a property first"
-  # guards stay in the actions, which other callers reach directly. A read-only inspector has
-  # neither button.
+  # selection they can act on (_selectedMemberCanBeRenamedOrRemoved): disabled as built, then
+  # following each selection (selectionFromList) until my next re-filter, whose fresh list selects
+  # nothing. The actions ask the same question, since other callers reach them directly. A
+  # read-only inspector has neither button.
   _reflectMemberSelection: ->
-    selected = @list.selected?
-    @renamePropertyButton?.setEnabled selected
-    @removePropertyButton?.setEnabled selected
+    offered = @_selectedMemberCanBeRenamedOrRemoved()
+    @renamePropertyButton?.setEnabled offered
+    @removePropertyButton?.setEnabled offered
+
+  # Rename and remove act only on a member my subject OWNS. One up its prototype chain belongs to a
+  # class, and is edited in that class's inspector: removed here it would delete nothing, and
+  # renamed here it would become a copy of the class's member on my subject with no source of its
+  # own, which no world snapshot can save. Nor `constructor`, which is my subject's class itself
+  # (Class.refuseTheConstructor).
+  _selectedMemberCanBeRenamedOrRemoved: ->
+    name = @list?.selected?.labelString
+    name? and name isnt "constructor" and Object::hasOwnProperty.call @inspectedObject, name
 
   # My toggles show my filter: each is ON exactly while the showing* field it stands for is true.
   # The build and every re-filter end here, and nothing else sets a toggle of mine, so a toggle and
@@ -348,12 +357,12 @@ class InspectorWdgt extends Widget
   #   inherited    while showingInherited; otherwise only the members my subject's own class
   #                declares, and those stitched onto my subject that no class of its chain has
   #   own props    while showingOwnPropsOnly, only my subject's own properties
+  #   companions   never (_isACompanion)
   # sorted, unless my subject is an Array (whose order is its meaning).
   _filteredMemberNames: ->
     attribs = []
     for property of @inspectedObject
-      # dummy condition, to be refined
-      attribs.push property  if property
+      attribs.push property  if property and !@_isACompanion property
 
     if !@showingMethods
       attribs = attribs.filter (prop) => !Utils.isFunction @inspectedObject[prop]
@@ -373,6 +382,16 @@ class InspectorWdgt extends Widget
       attribs = attribs.filter (prop) => @inspectedObject.hasOwnProperty(prop)
 
     if @inspectedObject instanceof Array then attribs else attribs.sort()
+
+  # Is `prop` the bookkeeping COMPANION of another member, rather than a member of its own: the
+  # class a mixin's function member was injected in (`<m>_class_injected_in`,
+  # Object::addInstanceProperties), or the source of a method injected into my subject (`<m>_source`
+  # beside a function `<m>`, Widget.injectProperty)? Each follows its member through every edit of
+  # it (Widget.renameOwnProperty / removeOwnProperty, Class.removeMember, Mixin's injection), so a
+  # row of its own would only offer edits that orphan it.
+  _isACompanion: (prop) ->
+    return true if /_class_injected_in$/.test prop
+    (member = /^(.+)_source$/.exec prop)? and Utils.isFunction @inspectedObject[member[1]]
 
   # My member LIST, built from the names my filter lets through (_filteredMemberNames) and added to
   # me, where my layout places it in my body (_reLayout). The build makes the first one; a re-filter
@@ -472,26 +491,9 @@ class InspectorWdgt extends Widget
     classInspector = new ClassInspectorWdgt classLink
     world.openFrameWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
-  # The parsed Mixin that injects member `selected` into `theClass` (undefined when no
-  # augmentedWith mixin carries it). `augmentedWith` holds the mixin GLOBAL names
-  # ("ControllerMixin"); a parsed Mixin's @name is that minus the "Mixin" suffix
-  # ("Controller"), so match either form. Mixin.allMixines is the list of parsed Mixins
-  # (each carrying nonStaticPropertiesSources), populated at boot by Mixin's create
-  # pass. This powers BOTH the view (a mixin method shows real source instead of
-  # compiled JS -- the mixin leg the class-chain walk in selectionFromList lacked) and
-  # the edit routing (ClassInspectorWdgt saves a mixin-donated member to the donor).
-  _mixinProvidingMember: (theClass, selected) ->
-    return undefined unless theClass.augmentedWith?
-    for mixinName in theClass.augmentedWith
-      for theMixin in Mixin.allMixines
-        if (theMixin.name == mixinName or theMixin.name + "Mixin" == mixinName) and
-           theMixin.nonStaticPropertiesSources[selected]?
-          return theMixin
-    undefined
-
   # the recorded SOURCE of a non-function member, or undefined to show its VALUE. The
-  # class inspector overrides this with the prototype-level truth (live override /
-  # class body / mixin donor, setting the donor attribution); an OBJECT inspector
+  # class inspector overrides this with the prototype-level truth (the class's own source,
+  # else the mixin donor's, setting the donor attribution); an OBJECT inspector
   # keeps showing the instance's VALUE -- per-instance state is its own truth.
   _sourceForFieldMember: (selected) ->
     undefined
@@ -505,10 +507,12 @@ class InspectorWdgt extends Widget
 
     # functions should have a source somewhere
     # either in the object or in a superclass,
-    # try to find it.
+    # try to find it. My subject's OWN `<name>_source` is the source of a method injected into it
+    # (Widget.injectProperty); a class's sources live on its meta-object, walked below.
     if Utils.isFunction(val)
-      if @inspectedObject[selected + "_source"]?
-          val = @inspectedObject[selected + "_source"]
+      ownSource = if Object::hasOwnProperty.call @inspectedObject, selected + "_source" then @inspectedObject[selected + "_source"]
+      if ownSource?
+          val = ownSource
       else
         # Walk the Fizzygum class chain looking for the selected method's recorded source. Guard on
         # `.constructor?.class?` (a Fizzygum Class object) rather than the old `!= Object`: __proto__ yields
@@ -525,9 +529,9 @@ class InspectorWdgt extends Widget
             break
           # The method may be MIXIN-injected (e.g. ControllerMixin._fireConnection) -- not recorded on any
           # class's nonStaticPropertiesSources, but on the parsed Mixin. Consult each mixin this class
-          # augmentsWith so the inspector shows real CoffeeScript instead of the compiled-JS toString()
-          # below; remember the donor so a class-inspector save routes the edit to it.
-          theMixinProvidingIt = @_mixinProvidingMember theClass, selected
+          # augmentsWith (Mixin.donorOf) so the inspector shows real CoffeeScript instead of the
+          # compiled-JS toString() below; remember the donor so a class-inspector save routes the edit to it.
+          theMixinProvidingIt = Mixin.donorOf theClass, selected
           if theMixinProvidingIt?
             val = theMixinProvidingIt.nonStaticPropertiesSources[selected]
             @currentPropertySourceMixin = theMixinProvidingIt
@@ -553,7 +557,9 @@ class InspectorWdgt extends Widget
     cnts = @detail.textWdgt
     cnts.setText txt
     cnts.setReceiver @inspectedObject
-    cnts.isEditable = true
+    # `constructor`'s code is shown, never edited: it is my subject's class itself, which a save
+    # would replace (Class.refuseTheConstructor)
+    cnts.isEditable = selected isnt "constructor"
     cnts.enableSelecting()
     cnts.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
@@ -785,7 +791,7 @@ class InspectorWdgt extends Widget
   # removeOwnProperty each end in sourceChanged), on a class ClassInspectorWdgt's overrides. Nothing
   # here notifies again.
   # Shared save scaffolding: object inspectors inject the property, class
-  # inspectors evaluate an assignment — the only differing step is isolated in
+  # inspectors edit the member through its meta-object — the only differing step is isolated in
   # the overridable applyPropertyEdit hook (ClassInspectorWdgt overrides it).
   # Every apply compiles before it changes anything, so an edit that is not code changes nothing:
   # it is reported, and stays MODIFIED, Save still enabled (Widget._savingTypedCode). Answers
@@ -809,15 +815,23 @@ class InspectorWdgt extends Widget
 
   # the one differing step between object- and class-inspector save: an object
   # inspector injects the property onto the instance (ClassInspectorWdgt
-  # overrides this to evaluate an assignment against the class prototype).
+  # overrides this to edit the class's member through its meta-object).
   applyPropertyEdit: (propertyName, txt) ->
     # inject code will also break the layout and the widget
     @inspectedObject.injectProperty propertyName, txt
 
 
   addProperty: (prop) ->
-    if prop?
+    if prop? and !@_refusesAsANewMemberName prop
       @_addNamedProperty prop
+
+  # `constructor` is no name a member can take: a widget's or a prototype's `constructor` is its
+  # class, what every `.constructor` read answers (Class.refuseTheConstructor), so Add… and Rename…
+  # refuse it, saying why. Answers whether it refused.
+  _refusesAsANewMemberName: (name) ->
+    return false unless name is "constructor"
+    @inform "constructor is the class\nitself: no member can\ntake its name"
+    true
 
   # the add core, past the prompt: the popout flow (addProperty) and the class
   # inspector's destination menu both land here. Adding a member changes my member set, so it
@@ -831,7 +845,7 @@ class InspectorWdgt extends Widget
 
   # the one differing step between object- and class-inspector add (mirroring applyPropertyEdit
   # above): the object inspector delegates to the Widget-level addOwnProperty twin.
-  # ClassInspectorWdgt overrides this with its raw prototype assignment.
+  # ClassInspectorWdgt overrides this with its class edit step.
   _applyPropertyAddition: (prop) ->
     @inspectedObject.addOwnProperty prop
   
@@ -843,38 +857,49 @@ class InspectorWdgt extends Widget
   # (mirroring applyPropertyEdit above): the object inspector delegates to the
   # Widget-level renameOwnProperty twin, which moves the <name>_source
   # companion with the member -- otherwise a snapshot restore re-injects the
-  # method under the OLD name. ClassInspectorWdgt overrides this with its raw
-  # prototype re-keying.
+  # method under the OLD name. ClassInspectorWdgt overrides this with an edit under
+  # the new name and a removal of the old.
   _applyPropertyRename: (oldName, newName) ->
     @inspectedObject.renameOwnProperty oldName, newName
 
   # A rename, like a removal below, changes my member set, so it re-filters me (_refilterMembers).
+  # A rename to the name the member already has changes nothing, so it does nothing (each step's
+  # move would otherwise drop the member it moves onto itself); so does a rename of a member I do
+  # not offer to rename (_selectedMemberCanBeRenamedOrRemoved), as a click on my disabled button does.
+  # A rename to `constructor` is refused (_refusesAsANewMemberName).
   renameProperty: (prop) ->
+    return unless @_selectedMemberCanBeRenamedOrRemoved()
     propertyName = @list.selected.labelString
+    return if prop is propertyName
+    return if @_refusesAsANewMemberName prop
     @_applyPropertyRename propertyName, prop
 
     @_refilterMembers()
-  
+
   renamePropertyPopout: ->
     # nothing selected = nothing to rename: a fresh inspector has NO default selection
     unless @list?.selected?
       world.inform "select a\nproperty first"
       return
+    return unless @_selectedMemberCanBeRenamedOrRemoved()
     propertyName = @list.selected.labelString
     @prompt "property name:", @, "renameProperty", defaultContents: propertyName
   
   # removal's differing step, same seam as _applyPropertyRename: the object
   # inspector delegates to the Widget-level removeOwnProperty twin, which also
   # drops the <name>_source companion -- otherwise the {"$src"} serialization
-  # ride re-injects the removed member on snapshot restore.
+  # ride re-injects the removed member on snapshot restore. (ClassInspectorWdgt
+  # overrides this with its class removal step.)
   _applyPropertyRemoval: (propertyName) ->
     @inspectedObject.removeOwnProperty propertyName
 
   removeProperty: ->
-    # nothing selected = nothing to remove (see renamePropertyPopout)
+    # nothing selected = nothing to remove (see renamePropertyPopout), and a member I do not offer
+    # to remove stays (_selectedMemberCanBeRenamedOrRemoved)
     unless @list?.selected?
       world.inform "select a\nproperty first"
       return
+    return unless @_selectedMemberCanBeRenamedOrRemoved()
     propertyName = @list.selected.labelString
 
     @_applyPropertyRemoval propertyName

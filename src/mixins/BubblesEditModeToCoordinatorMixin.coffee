@@ -23,29 +23,29 @@ BubblesEditModeToCoordinatorMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-    # ⭐ THESE TWO CORES ARE THE ONLY READERS OF `triggeringWidget` IN THE TREE — the one use is the
-    # `@parent != triggeringWidget` test just below, which stops the toggle bouncing back to whoever
-    # raised it. Every OTHER core in the family — Widget's, FrameWdgt's, ViewportWdgt's — takes no
-    # such parameter, so a value handed to one of those would simply be dropped. Hence: pass it in
-    # from a public wrapper that has one (the two Stretchables, and Widget.editButtonPressedFromFrameBar,
-    # which supplies a real widget), let the fallback below stand in for a menu click that has no
-    # triggering widget, and `super()` WITHOUT it, because every core this can reach takes none.
-    _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-      if !triggeringWidget? then triggeringWidget = @
-      if @dragsDropsAndEditingEnabled
-        return
-      @parent?.showEditModeInBar?()
-      if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-        @parent._enableDragsDropsAndEditingNoSettle @
-      else
-        super()
+      # ⭐ THESE TWO CORES ARE THE ONLY READERS OF `triggeringWidget` IN THE TREE — the one use is the
+      # `@parent != triggeringWidget` test just below, which stops the toggle bouncing back to whoever
+      # raised it. Every OTHER core in the family — Widget's, FrameWdgt's, ViewportWdgt's — takes no
+      # such parameter, so a value handed to one of those would simply be dropped. Hence: pass it in
+      # from a public wrapper that has one (the two Stretchables, and Widget.editButtonPressedFromFrameBar,
+      # which supplies a real widget), let the fallback below stand in for a menu click that has no
+      # triggering widget, and `super()` WITHOUT it, because every core this can reach takes none.
+      _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
+        if !triggeringWidget? then triggeringWidget = @
+        if @dragsDropsAndEditingEnabled
+          return
+        @parent?.showEditModeInBar?()
+        if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
+          @parent._enableDragsDropsAndEditingNoSettle @
+        else
+          super()
 
-    _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-      if !triggeringWidget? then triggeringWidget = @
-      if !@dragsDropsAndEditingEnabled
-        return
-      @parent?.showViewModeInBar?()
-      if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-        @parent._disableDragsDropsAndEditingNoSettle @
-      else
-        super()
+      _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
+        if !triggeringWidget? then triggeringWidget = @
+        if !@dragsDropsAndEditingEnabled
+          return
+        @parent?.showViewModeInBar?()
+        if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
+          @parent._disableDragsDropsAndEditingNoSettle @
+        else
+          super()

@@ -23,13 +23,27 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       refuses: measured, `SerializationError: the function-valued property .constructor has no editable source`.
       The refusal is loud, and it costs the user the whole snapshot. One direction to measure: a prototype belongs
       to a class, not to the world, so a file could carry the class it names rather than its members.
-- [ ] **A plain class-member rename or removal does not survive a snapshot load** (found closing the same item, and
-      stated in `ClassInspectorWdgt` at its raw steps). `_applyPropertyRemoval` / `_applyPropertyRename` delete and
-      re-key the prototype member: a `<name>_source` live override stays behind under the old name, and the edit is
-      not recorded in the `SourceEditsRegistry`, so a loaded world replays the class edits without it (the mixin path
-      records its removal, `recordMixinMemberRemoval`). By reading: a leftover `<name>_source` is also what the shadow
-      guards of `Mixin.applyMemberEdit` and `Mixin.removeMember` key off, so a removed override still blocks the
-      mixin's edits and removals of that member.
+- [ ] **A snapshot load never undoes the page's own earlier class edits** (found closing "A plain class-member rename
+      or removal does not survive a snapshot load", in the plan's ledger; by reading, not measured).
+      `loadWorldSnapshot` replays the file's mixin- and class-scope records onto the page's classes AS THEY STAND:
+      a page that edited a class (or a mixin) before loading a file that never did keeps that edit, so the world it
+      loads is the file's edits on top of the page's, not the world the file was saved from. The two stores
+      (`Class` / `Mixin` `nonStaticPropertiesSources`) say what each class defines now; what the page booted with
+      is the class's source text (`SourceVault`), so a load could first return every edited member to it.
+- [ ] **An object inspector opened on a class's prototype edits the class unrecorded** (found by the independent
+      review closing "A plain class-member rename or removal does not survive a snapshot load", in the plan's ledger;
+      by reading, not measured). Double-clicking an object inspector's `constructor` row opens a read-only inspector
+      on the class function, whose `__super__` row opens an OBJECT inspector on the superclass's prototype. That one
+      is editable (a prototype inherits `injectProperty`), so its Save writes `<name>_source` onto the prototype and
+      records an "instance" edit no load replays, and its Add, Rename and Remove change the prototype with no
+      record, leaving the class's store of member sources stale. A prototype's edits belong to its class's
+      inspector: such a subject could open read-only, or open the class inspector instead.
+- [ ] **Mixin editing holds only where the page compiled its mixins** (found by the same review, by reading, not
+      measured). A pre-compiled page (`homepage`) only parses its mixins when their sources arrive, so
+      `Mixin.allMixines` stays empty: the inspector shows a donated member's compiled JS, `Class.removeMember` gives
+      no donor's member back, and `replayMixinEdits` drops every mixin record silently while
+      `unreplayableSourceEditsCount` counts none. And where parts load lazily, a consumer class defined after a mixin
+      edit gets the mixin's boot member, so its prototype disagrees with the mixin's store.
 - [ ] **`run-sequence-selftest-headless.js`'s "page stopping answering" case is load-sensitive** (seen closing the same
       item: the gauntlet's `selftests` leg failed in the parallel wave on 2026-11-08 and passed its serial retry). Under
       load the planted unresponsive page can run out the sequence's completion wait before the runner sees the page

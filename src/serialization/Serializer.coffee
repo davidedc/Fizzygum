@@ -315,9 +315,10 @@ class Serializer
     encodeFunction = (fn, owner, propName, path) ->
       # a widget's INJECTED method carries its source in its own sibling `<name>_source` string
       # (Widget.injectProperty), and that is the one function the load restores, with the widget's own
-      # injectProperty: so a {"$src"} is written for nothing else. A `<name>_source` up the prototype
-      # chain is a CLASS edit's (Class.applyMemberEdit), not this function's source, and one that is
-      # not a string is no source at all.
+      # injectProperty: so a {"$src"} is written for nothing else. Only the widget's OWN one counts: a
+      # class keeps its members' sources on its meta-object (Class.applyMemberEdit), so a
+      # `<name>_source` up the prototype chain is none of this function's, and one that is not a
+      # string is no source at all.
       sourceName = propName + "_source"
       if owner? and propName? and Serializer.classTakesInjectedMethods(owner.constructor) and
          Object::hasOwnProperty.call(owner, sourceName) and typeof owner[sourceName] is "string"

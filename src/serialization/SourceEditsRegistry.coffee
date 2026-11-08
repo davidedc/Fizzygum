@@ -7,16 +7,21 @@
 #     (Widget.injectProperty). These ALSO ride the serializer for free — the widget carries a
 #     `<name>_source` string, serialized as {"$src"} and re-injected on restore (§5). The
 #     registry's marginal value here is auditability (a durable record of what was edited).
-#   - "class": a class PROTOTYPE's method rewritten via the class inspector
-#     (ClassInspectorWdgt.applyPropertyEdit → Class.applyMemberEdit). This is the ESSENTIAL
-#     case: nothing else records it — a class edit mutates the live prototype but leaves no
-#     serializable trace (§2.7). The snapshot embeds it and REPLAYS it against the destination
-#     prototypes BEFORE deserialization, so restored shells (Object.create(prototype)) already
-#     see the edited methods.
+#   - "class": a class PROTOTYPE's member edited (Class.applyMemberEdit) or removed
+#     (Class.removeMember, record flagged `deleted: true`) through the class inspector's edit
+#     steps (ClassInspectorWdgt). This is the ESSENTIAL case: nothing else records it — a class
+#     edit mutates the live prototype but leaves no serializable trace (§2.7). The snapshot
+#     embeds it and REPLAYS it against the destination prototypes BEFORE deserialization, so
+#     restored shells (Object.create(prototype)) already see the edited methods.
 #   - "mixin": a mixin-donated member edited (Mixin.applyMemberEdit) or removed
 #     (Mixin.removeMember, record flagged `deleted: true`) through the class inspector's donor
 #     routing; replayed against the parsed mixins BEFORE the class-scope edits (boot-order
 #     analogy: augmentWith runs before class-body assignments).
+# In both of the last two, an ADD is an edit whose source is "undefined", and a RENAME is two
+# records: an edit under the new name, then a removal of the old. Each meta-object's member
+# sources are its CURRENT ones and its consumers' prototypes follow from them (Class.coffee,
+# "live member editing"), so replaying the records in order reproduces the session's live
+# members exactly.
 #
 # A record is plain JSON: {scope, className|mixinName, uniqueID?, propertyName, source?,
 # deleted?}. Embedded verbatim in the world envelope's `world.sourceEdits`.
@@ -47,8 +52,19 @@ class SourceEditsRegistry
       source: source
     return
 
-  # record a mixin-scope edit (from ClassInspectorWdgt.applyPropertyEdit's mixin
-  # routing; `mixinName` is the parsed Mixin's name, without the "Mixin" suffix).
+  # record a class-scope member REMOVAL (from ClassInspectorWdgt's class removal step; the
+  # prototype names the class, as above).
+  recordClassMemberRemoval: (classPrototype, propertyName) ->
+    return unless classPrototype? and propertyName?
+    @records.push
+      scope: "class"
+      className: classPrototype.constructor?.name
+      propertyName: propertyName
+      deleted: true
+    return
+
+  # record a mixin-scope edit (from ClassInspectorWdgt's mixin edit step; `mixinName` is the
+  # parsed Mixin's name, without the "Mixin" suffix).
   recordMixinEdit: (mixinName, propertyName, source) ->
     return unless mixinName? and propertyName?
     @records.push
@@ -58,7 +74,7 @@ class SourceEditsRegistry
       source: source
     return
 
-  # record a mixin-scope member REMOVAL (from ClassInspectorWdgt's remove routing).
+  # record a mixin-scope member REMOVAL (from ClassInspectorWdgt's mixin removal step).
   recordMixinMemberRemoval: (mixinName, propertyName) ->
     return unless mixinName? and propertyName?
     @records.push
@@ -95,10 +111,11 @@ class SourceEditsRegistry
     return 0 if SourceEditsRegistry.canReplaySourceEdits()
     (r for r in @records when r.scope is "class" or r.scope is "mixin").length
 
-  # replay the CLASS-scope edits against the live prototypes: each re-runs
-  # Class.applyMemberEdit — the same choke point the live class-inspector save uses,
-  # so the replay compiles exactly what the session compiled (incl. the super
-  # rewrite). Called by loadWorldSnapshot BEFORE deserialization, so a restored
+  # replay the CLASS-scope records IN ORDER against the live prototypes: an edit re-runs
+  # Class.applyMemberEdit, a removal (deleted: true) Class.removeMember — the same choke
+  # points the live class inspector's steps use, so the replay compiles exactly what the
+  # session compiled (incl. the super rewrite) and gives back a donor's member where the
+  # session did. Called by loadWorldSnapshot BEFORE deserialization, so a restored
   # shell already sees the edited methods. Instance-scope edits are NOT replayed
   # here — they ride the normal {"$src"} path on their own widget. A class edit
   # that no longer compiles (the class changed, a typo) is logged, not fatal.
@@ -108,7 +125,10 @@ class SourceEditsRegistry
       theClass = classNamed(r.className)?.class
       continue unless theClass?
       try
-        theClass.applyMemberEdit r.propertyName, r.source
+        if r.deleted
+          theClass.removeMember r.propertyName
+        else
+          theClass.applyMemberEdit r.propertyName, r.source
       catch error
         console?.log "world snapshot: class-scope source edit " + r.className + "." + r.propertyName + " could not be replayed: " + error.message
     return
@@ -126,7 +146,7 @@ class SourceEditsRegistry
     # mid-restore -- it reads Mixin.allMixines OUTSIDE the per-record try/catch below.
     return unless SourceEditsRegistry.canReplaySourceEdits()
     for r in @records when r.scope is "mixin"
-      theMixin = Mixin.allMixines.find (m) -> m.name is r.mixinName
+      theMixin = Mixin.named r.mixinName
       continue unless theMixin?
       try
         if r.deleted

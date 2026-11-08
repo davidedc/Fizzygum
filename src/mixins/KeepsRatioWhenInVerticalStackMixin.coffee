@@ -24,46 +24,46 @@ KeepsRatioWhenInVerticalStackMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-    _setWidthSizeHeightAccordingly: (newWidth) ->
-      @_resizeToWithoutSpacing?()
-      ratio = @height()/@width()
-      @_applyExtent new Point newWidth, Math.round newWidth * ratio
-      @height()  # Path B: hand the resulting height back — omitting it NaN-crashes a ratio-locked
-      # container's uncollapse (Widget._setWidthSizeHeightAccordingly; docs/archive/sizing-model-unification-plan.md).
+      _setWidthSizeHeightAccordingly: (newWidth) ->
+        @_resizeToWithoutSpacing?()
+        ratio = @height()/@width()
+        @_applyExtent new Point newWidth, Math.round newWidth * ratio
+        @height()  # Path B: hand the resulting height back — omitting it NaN-crashes a ratio-locked
+        # container's uncollapse (Widget._setWidthSizeHeightAccordingly; docs/archive/sizing-model-unification-plan.md).
 
-    # §4.1 pure measure: ratio-locked, so preferred height = round(width * current ratio)
-    # (mirrors _setWidthSizeHeightAccordingly above). No mutation, no seam.
-    preferredExtentForWidth: (availW) ->
-      new Point availW, Math.round availW * (@height()/@width())
+      # §4.1 pure measure: ratio-locked, so preferred height = round(width * current ratio)
+      # (mirrors _setWidthSizeHeightAccordingly above). No mutation, no seam.
+      preferredExtentForWidth: (availW) ->
+        new Point availW, Math.round availW * (@height()/@width())
 
-    _reactToHolderFrameGrabbed: (whereFrom) ->
-      # capability query replaces `whereFrom instanceof VerticalStackPanelWdgt`
-      # (type-test-elimination campaign)
-      if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
-        @_freeFromRatioConstraints()
+      _reactToHolderFrameGrabbed: (whereFrom) ->
+        # capability query replaces `whereFrom instanceof VerticalStackPanelWdgt`
+        # (type-test-elimination campaign)
+        if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
+          @_freeFromRatioConstraints()
 
-    _freeFromRatioConstraints: ->
-      if @_contentStackSpec?
-        @_contentStackSpec.canSetHeightFreely = true
+      _freeFromRatioConstraints: ->
+        if @_contentStackSpec?
+          @_contentStackSpec.canSetHeightFreely = true
 
-        availableHeight = world.height() - 20
-        if @parent.height() > availableHeight
-          @parent._applyExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
-          @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
-          @parent._moveWithin world
+          availableHeight = world.height() - 20
+          if @parent.height() > availableHeight
+            @parent._applyExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
+            @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
+            @parent._moveWithin world
 
-    _reactToHolderFrameDropped: (whereIn) ->
-      # capability query replaces `(whereIn instanceof VerticalStackPanelWdgt) and
-      # !(whereIn instanceof FrameWdgt)` (type-test-elimination campaign)
-      if whereIn?.imposesRatioConstraintOnDroppedChildren?()
-        @_constrainToRatio()
+      _reactToHolderFrameDropped: (whereIn) ->
+        # capability query replaces `(whereIn instanceof VerticalStackPanelWdgt) and
+        # !(whereIn instanceof FrameWdgt)` (type-test-elimination campaign)
+        if whereIn?.imposesRatioConstraintOnDroppedChildren?()
+          @_constrainToRatio()
 
-    _constrainToRatio: ->
-      if @_contentStackSpec?
-        @_contentStackSpec.canSetHeightFreely = false
-        # force a resize, so widget
-        # will take the right ratio --
-        # "_setWidthSizeHeightAccordingly"
-        # recalculates the height from
-        # the new width.
-        @_setWidthSizeHeightAccordingly @width()
+      _constrainToRatio: ->
+        if @_contentStackSpec?
+          @_contentStackSpec.canSetHeightFreely = false
+          # force a resize, so widget
+          # will take the right ratio --
+          # "_setWidthSizeHeightAccordingly"
+          # recalculates the height from
+          # the new width.
+          @_setWidthSizeHeightAccordingly @width()

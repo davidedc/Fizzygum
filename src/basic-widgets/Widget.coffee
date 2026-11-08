@@ -4337,12 +4337,12 @@ class Widget extends TreeNode
     delete @[propertyName + "_source"]
     @sourceChanged()
 
-  # the rename twin: re-keys the member and moves the <name>_source companion
+  # the rename twin: re-keys the member and moves its OWN <name>_source companion
   # with it, so a snapshot restores the member under the new name only.
   renameOwnProperty: (oldName, newName) ->
     @[newName] = @[oldName]
     delete @[oldName]
-    if @[oldName + "_source"]?
+    if Object::hasOwnProperty.call @, oldName + "_source"
       @[newName + "_source"] = @[oldName + "_source"]
       delete @[oldName + "_source"]
     @sourceChanged()

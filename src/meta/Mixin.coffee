@@ -65,75 +65,138 @@ class Mixin
 
   # ===== live member editing =====
   # The third edit scope, next to instance edits (Widget.injectProperty) and class
-  # edits (ClassInspectorWdgt.applyPropertyEdit): rewrite ONE injected member on the
-  # DONOR mixin and push the recompiled function to every consumer class, so the
-  # edit behaves as if the mixin had always said this. The inspector routes here
-  # when the selected member's source comes from a mixin (ClassInspectorWdgt).
+  # edits (Class.applyMemberEdit): rewrite ONE injected member on the DONOR mixin and
+  # push the recompiled member to every consumer class, so the edit behaves as if the
+  # mixin had always said this. The class inspector routes here when the selected
+  # member's source comes from a mixin (ClassInspectorWdgt).
+  # My nonStaticPropertiesSources is the CURRENT source of every member I inject (an edit
+  # writes it, a removal deletes it), as a Class's is of its own. A consumer's prototype holds
+  # the member its class defines, else the member of its LAST augmentation that defines it
+  # (Mixin.donorOf), else none: boot order put it so -- augmentWith runs before the class-body
+  # assignments, and each augmentWith injects over the one before it -- and every edit, mine and
+  # a class's, keeps it so (_isTheDonorTo). The live members are thereby a function of the stores.
+  # Notifying instances is the CALLER's business: my edits answer the consumer classes they
+  # updated, so a gesture made of several edits tells each instance once.
 
   # the classes this mixin is injected into -- recorded on the mixin LITERAL
   # (window.<name>Mixin) by Object::augmentWith at injection time.
   _consumerClassNames: ->
     window[@name + "Mixin"]?.consumerClassNames or []
 
-  # Apply an edit to member `memberName`: update the recorded source (the same
-  # store the inspector's view reads), recompile the single member with the mixin
-  # super rewrite, and re-inject it into every consumer class whose own class body
-  # does not shadow the member (the class body won at boot -- augmentWith runs
-  # before the class-body assignments -- and keeps winning). Returns the number of
-  # consumer classes updated. Throws on compile errors.
-  applyMemberEdit: (memberName, source) ->
+  # The parsed Mixin named `name` -- the mixin global's name ("HighlightableMixin", what a
+  # class's augmentedWith holds) or the parsed one's own ("Highlightable"). Mixin.allMixines is
+  # filled by the create pass below.
+  @named: (name) ->
+    Mixin.allMixines.find (m) -> m.name is name or m.name + "Mixin" is name
+
+  # The parsed Mixins among the augmentations of the class `theClass` (a Class meta-object) that
+  # define member `memberName`, in augmentation order.
+  @donorsOf: (theClass, memberName) ->
+    (theMixin for mixinName in (theClass.augmentedWith ? []) when (theMixin = Mixin.named mixinName)?.definesMember memberName)
+
+  # The parsed Mixin that DONATES member `memberName` to the class `theClass`: of its
+  # augmentations that define it, the LAST, whose member boot order left on the prototype; or
+  # undefined. The class inspector reads it to show a donated member's real CoffeeScript and to
+  # route its edits to the donor; Class.removeMember, to give the member back.
+  @donorOf: (theClass, memberName) ->
+    Mixin.donorsOf(theClass, memberName).pop()
+
+  # Do I define member `memberName`? (An OWN entry: my store is a plain object.)
+  definesMember: (memberName) ->
+    Object::hasOwnProperty.call @nonStaticPropertiesSources, memberName
+
+  # Does consumer class `theClass` (a class function) hold member `memberName` from ME? Not if
+  # its class defines the member itself -- the class won at boot, and a class edit or removal
+  # keeps its store current (Class.applyMemberEdit / removeMember), so that covers the class body
+  # and every override born since -- nor if another of its augmentations is the donor. This one
+  # question is how every edit of mine keeps a consumer's prototype what boot order says.
+  _isTheDonorTo: (theClass, memberName) ->
+    !theClass.class?.definesMember(memberName) and Mixin.donorOf(theClass.class, memberName) is @
+
+  # Member `memberName` compiled from `source` with the mixin super rewrite, evaluated on its
+  # own. Throws on compile errors, having changed nothing.
+  _compiledMember: (memberName, source) ->
     # the typed source sits behind the assignment, so a compile error is placed in it (typedFrom);
     # a `super` the rewrite expands shifts the columns after it on its line
     assignment = "window.__fzEditedMixinMember = "
     compiled = compileFGCode assignment + (@_rewriteSuperCalls source), true, typedFrom: assignment.length
     compiled = @_removeHelperFunctions compiled
     eval.call window, compiled
-    editedValue = window.__fzEditedMixinMember
+    value = window.__fzEditedMixinMember
     delete window.__fzEditedMixinMember
-    if typeof editedValue is "function"
+    if typeof value is "function"
       # the fake-super rewrite resolves its target through
       # `arguments.callee.name + "_class_injected_in"`: the object-literal form gave
       # the original function the member's name, the standalone recompile does not --
       # restore it.
-      Object.defineProperty editedValue, "name", { value: memberName, configurable: true }
+      Object.defineProperty value, "name", { value: memberName, configurable: true }
+    value
 
-    @nonStaticPropertiesSources[memberName] = source
+  # My CURRENT member `memberName`, compiled from my store -- what a consumer falls back to when
+  # the member it held over mine goes (Class.removeMember, and removeMember below). Throws on
+  # compile errors, so a caller compiles it before changing anything.
+  compiledCurrentMember: (memberName) ->
+    @_compiledMember memberName, @nonStaticPropertiesSources[memberName]
 
-    updated = 0
-    for className in @_consumerClassNames()
-      theClass = window[className]
-      continue unless theClass?
-      # SHADOW GUARD: skip a consumer whose class body defines this member itself...
-      continue if theClass.class?.nonStaticPropertiesSources?[memberName]?
-      # ...or whose prototype carries a LIVE class-scope override (`<name>_source`,
-      # written by ClassInspectorWdgt's prototype edit / override gesture) -- the
-      # same boot-order rule, applied to overrides born at edit time
-      continue if Object.prototype.hasOwnProperty.call theClass.prototype, memberName + "_source"
-      theClass::[memberName] = editedValue
-      if typeof editedValue is "function"
-        theClass::[memberName + "_class_injected_in"] = className
-      theClass.class?.notifyInstancesOfSourceChange?()
-      updated++
-    updated
-
-  # Remove member `memberName` from this mixin: drop the recorded source and
-  # delete the injected member (+ its fake-super companion) from every consumer
-  # class -- except the shadowing ones (both guards, as applyMemberEdit), whose
-  # own member never came from the injection. Returns the number of consumer
-  # classes updated.
-  removeMember: (memberName) ->
-    delete @nonStaticPropertiesSources[memberName]
-    updated = 0
-    for className in @_consumerClassNames()
-      theClass = window[className]
-      continue unless theClass?
-      continue if theClass.class?.nonStaticPropertiesSources?[memberName]?
-      continue if Object.prototype.hasOwnProperty.call theClass.prototype, memberName + "_source"
-      delete theClass::[memberName]
+  # The ONE injection of a member into a consumer class after boot: the member, and for a
+  # function the class it is injected in, which its `super` reads -- what
+  # Object::addInstanceProperties writes at boot.
+  @injectInto: (className, memberName, value) ->
+    theClass = window[className]
+    theClass::[memberName] = value
+    if typeof value is "function"
+      theClass::[memberName + "_class_injected_in"] = className
+    else
       delete theClass::[memberName + "_class_injected_in"]
-      theClass.class?.notifyInstancesOfSourceChange?()
-      updated++
-    updated
+    return
+
+  # Apply an edit to member `memberName`: recompile the single member, update my recorded
+  # source (the store the inspector's view reads), and inject the member into every consumer
+  # class that holds it from me (_isTheDonorTo). Answers the names of the consumer classes
+  # updated. Throws on compile errors, having changed nothing.
+  applyMemberEdit: (memberName, source) ->
+    Class.refuseTheConstructor memberName, @name + "Mixin"
+    editedValue = @_compiledMember memberName, source
+    @nonStaticPropertiesSources[memberName] = source
+    for className in @_consumerClassNames() when window[className]? and @_isTheDonorTo window[className], memberName
+      Mixin.injectInto className, memberName, editedValue
+      className
+
+  # Remove member `memberName` from this mixin: drop the recorded source, and give each consumer
+  # class that held the member from me what boot order gives it without mine -- the member of its
+  # augmentation before me that defines it, else none (the injected member and its fake-super
+  # companion deleted). Each fallback is compiled before anything changes, so one that does not
+  # compile throws having changed nothing. Answers the names of the consumer classes updated.
+  removeMember: (memberName) ->
+    Class.refuseTheConstructor memberName, @name + "Mixin"
+    fallbacks = for className in @_consumerClassNames() when window[className]? and @_isTheDonorTo window[className], memberName
+      previousDonor = Mixin.donorsOf(window[className].class, memberName).slice(-2)[0]
+      previousDonor = undefined if previousDonor is @
+      className: className, donor: previousDonor, value: previousDonor?.compiledCurrentMember memberName
+    delete @nonStaticPropertiesSources[memberName]
+    for each in fallbacks
+      if each.donor?
+        Mixin.injectInto each.className, memberName, each.value
+      else
+        delete window[each.className]::[memberName]
+        delete window[each.className]::[memberName + "_class_injected_in"]
+      each.className
+
+  # TRIPWIRE for an injected member I hold no source for. My parse (the constructor) reads the
+  # members as the 6-space keys of the literal onceAddedClassProperties hands to
+  # addInstanceProperties; a member written at any other indentation is injected all the same and
+  # recorded nowhere -- the inspector then shows its compiled JS, its edits cannot reach me, and a
+  # class that removes its own same-named member has nothing to fall back to. So the literal's
+  # hook is run once against a stand-in that only collects the member names it is handed (every
+  # mixin's onceAddedClassProperties does nothing else), and each one I do not define is reported.
+  _reportMembersWithoutSource: ->
+    injected = []
+    collector = addInstanceProperties: (fromClass, members) ->
+      injected.push key for own key of members when key not in MixedClassKeywords
+    window[@name + "Mixin"]?.onceAddedClassProperties?.call collector, @name
+    for key in injected when !@definesMember key
+      console.error "MIXIN_MEMBER_UNRECORDED: " + @name + "Mixin." + key + " is injected but has no recorded source -- write it as a 6-space key, as Mixin's parse reads them"
+    return
 
   constructor: (source, generatePreCompiledJS, createMixin) ->
 
@@ -192,6 +255,7 @@ class Mixin
         # parse-only `new Mixin(src, true, false)` (createMixin false) never reaches here, so allMixines stays
         # empty there.
         Mixin.allMixines.push @
+        @_reportMembersWithoutSource()
 
 
     #if @name == "LCLCodePreprocessor" then debugger

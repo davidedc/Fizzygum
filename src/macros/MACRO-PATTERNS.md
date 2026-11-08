@@ -2519,7 +2519,11 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
 - **`macroAddEditSaveRenameRemoveProperty`** (from 1057 cmds, 5 shots): inspect a string → an `InspectorWdgt` window, then add /
   set-value+save / rename / remove a property via the inspector's DIRECT footer BUTTONS — `addPropertyButton` ("Add…" → a "new
   property name:" prompt), `saveButton` ("Save" → `@target.injectProperty selectedName, detailText`), `renamePropertyButton`,
-  `removePropertyButton`. INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`autoSizeBoxToText`
+  `removePropertyButton` — the last two enabled only while the selected row is a member the inspector's subject OWNS and is not
+  `constructor` (`InspectorWdgt._selectedMemberCanBeRenamedOrRemoved`; their actions refuse the same rows, so a direct call is no
+  way round it): an object inspector's default list is its widget's CLASS's members, so rename an own one (a field the widget sets
+  on itself, or one added with "Add…", as this test does). The list carries no member's companion row (`<m>_source`,
+  `<m>_class_injected_in`; `_isACompanion`). INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`autoSizeBoxToText`
   sorts below the first rows, so SCROLL the list to the row by name before clicking it
   (`bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro`); a value/detail pane's text is a `TextWdgt` in a scroll-panel — set it with
   `detailText.setText`, not a click. The original asserted a byte-identical add→remove round-trip (image_1≡image_5); the new inspector's
@@ -2542,11 +2546,12 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   the override button keeps the edit on THIS class only (`overrideInThisClass` → `Class.applyMemberEdit`). Both popups dismiss via
   `@moveToItemOfTopMenuAndClick_InputEvents "OK"` (an `@inform` is a menu with an "OK" row, popped centered at the hand). No new verb.
   The FIELD sibling **`macroMixinFieldEditDonorAndOverride`** runs the same flow on `color_hover` (a donated FIELD attributes in
-  the class inspector via `_sourceForFieldMember` — the detail shows the donor's recorded SOURCE, "Color.SILVER"); its hover proof
+  the class inspector via `_sourceForFieldMember` — the detail shows the donor's recorded SOURCE, "undefined"); its hover proof
   goes through the UNCHANGED state machinery (`hoverEntered` → `_updateColor` → `@color_hover`), so the fixture needs no method edit.
   ⚠ BOTH tests RESTORE the donor's pristine source and lift the override in their macro TAIL (after the last shot, fixture-style
-  direct calls: capture `theMixin.nonStaticPropertiesSources[name]` at macro start; at the end `delete <Class>.prototype[name +
-  "_source"]` — lifting the live-override shadow guard — then `theMixin.applyMemberEdit name, orig`): a mixin/class edit mutates
+  direct calls: capture `theMixin.nonStaticPropertiesSources[name]` at macro start; at the end `<Class>.class.removeMember name`
+  — the override leaves the class's store, and the class gets the donor's member back — then `theMixin.applyMemberEdit name,
+  orig`): a mixin/class edit mutates
   the PARSED MIXIN STORE and consumer PROTOTYPES — state that outlives `resetWorld` and leaks into every later test in the shard
   (the passes-alone-fails-in-suite class; reproduce/prove with `run-sequence-headless.js` on the two-test sequence). ANY future
   test that edits a mixin or a class prototype must restore the same way.

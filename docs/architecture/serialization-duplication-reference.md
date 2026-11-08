@@ -371,8 +371,9 @@ NAMED like one.
   - if the owner's class takes injected methods (a widget's, `Serializer.classTakesInjectedMethods`)
     and the owner carries its OWN `foo_source` string (a user-injected method, `injectProperty`) →
     serialize `{"$src": <source>}` and let `foo_source` ride as a normal string; restore
-    recompiles it with `injectProperty` on the owning widget. A `foo_source` up the prototype
-    chain is a class edit's (§12), not this function's, so it does not count. That
+    recompiles it with `injectProperty` on the owning widget. Only the OWN one counts: a class
+    keeps its members' sources on its meta-object (§12), and a `foo_source` up the prototype
+    chain is none of this function's. That
     is the one place a save writes a `{"$src"}`, so a file holding one anywhere else is refused
     up front (§9).
   - else if `foo` is in the class's transients → dropped; the class recomputes it (e.g.
@@ -686,29 +687,39 @@ wallpaper): `serialization-roundtrip-headless.js`'s world leg.
 `SourceEditsRegistry.coffee` at `world.sourceEditsRegistry` (constructed in the WorldWdgt
 ctor; a PRODUCT collaborator in the `core` part, so every profile ships it). It logs in-world SOURCE edits so a
 whole-world snapshot can carry and replay them. Record: `{scope, className|mixinName,
-uniqueID?, propertyName, source}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
+uniqueID?, propertyName, source?, deleted?}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
 
-Three scopes, captured at the three edit choke points (function edits only — the `$src`-backed
-ones):
+Three scopes, captured at the three edit choke points:
 
 - **instance** — `Widget.injectProperty` records `recordInstanceEdit(widget, name, txt)`. These
   ALSO ride serialization on their own: the widget carries a `<name>_source` string →
   `{"$src"}` → re-injected on restore (§5). The registry adds auditability.
-- **class** — `ClassInspectorWdgt.applyPropertyEdit` records `recordClassEdit(prototype, name,
-  txt)` (its `@inspectedObject` is the class prototype — the link of the inspected object's own prototype
-  chain whose constructor bears the chip's name, `InspectorWdgt._classChainLinks`)
-  for EVERY member kind, methods and fields alike (both apply via `Class.applyMemberEdit`, which
-  keeps the `<name>_source` sibling for both). This is the ESSENTIAL case: a prototype edit
-  mutates the live class but leaves no other serializable trace (§2.7).
-- **mixin** — the same `ClassInspectorWdgt.applyPropertyEdit`, when the selected member's
-  source comes from a mixin (and the class body doesn't shadow it), routes the save to the
-  DONOR — `Mixin.applyMemberEdit` recompiles the member (mixin super rewrite, function name
-  restored for the fake-super companion lookup) and re-injects it into every non-shadowing
-  consumer class — and records `recordMixinEdit(mixinName, name, txt)`. Like a class edit,
-  a mixin edit leaves no other serializable trace. A member REMOVAL shares the scope as a
-  second record variant, `deleted: true` (`recordMixinMemberRemoval`, replayed via
-  `Mixin.removeMember`); replay walks the records in order, so remove-then-re-add lands in
-  its final state.
+- **class** — the class inspector's class edit step (`ClassInspectorWdgt._editClassMember`)
+  edits through `Class.applyMemberEdit` and records `recordClassEdit(prototype, name, txt)` (its
+  `@inspectedObject` is the class prototype — the link of the inspected object's own prototype
+  chain whose constructor bears the chip's name, `InspectorWdgt._classChainLinks`), for EVERY
+  member kind, methods and fields alike; its class removal step (`_removeClassMember`) removes
+  through `Class.removeMember` and records `recordClassMemberRemoval(prototype, name)`, a
+  `deleted: true` record. This is the ESSENTIAL case: a prototype edit mutates the live class
+  but leaves no other serializable trace (§2.7).
+- **mixin** — when the selected member's source comes from a mixin (and the class does not
+  define the member itself), the inspector's gestures route to the DONOR —
+  `Mixin.applyMemberEdit` recompiles the member (mixin super rewrite, function name restored
+  for the fake-super companion lookup) and injects it into every consumer class that does
+  not define it — and its mixin steps record `recordMixinEdit(mixinName, name, txt)` /
+  `recordMixinMemberRemoval(mixinName, name)` (`deleted: true`, replayed via
+  `Mixin.removeMember`). Like a class edit, a mixin edit leaves no other serializable trace.
+
+In both of the last two scopes an ADD is an edit whose source is `"undefined"`, and a RENAME is
+two records — an edit under the new name, then a removal of the old — so a renamed member is
+recompiled under its new name on replay as it was live. Each step makes the edit AND its record
+(`ClassInspectorWdgt`, one step per scope × operation), so no gesture of the class inspector
+changes a prototype unrecorded. Replay is EXACT because the live state is a function of two stores: each `Class`
+and each `Mixin` keeps the CURRENT source of every member it defines (an edit writes it, a
+removal deletes it), and a consumer's prototype holds its class's member where the class
+defines one, else the donor mixin's (a class removal gives the donor's current member back,
+`Class.removeMember`), else nothing (`docs/architecture/mixins.md`, meta-system status).
+Replay walks each scope's records in order, so remove-then-re-add lands in its final state.
 
 **Restore** (`loadWorldSnapshot`): the registry is rebuilt from `world.sourceEdits`
 (`SourceEditsRegistry.fromRecords`) and its **mixin- then class-scope edits are replayed
@@ -717,13 +728,16 @@ boot-order analogy: `augmentWith` runs before class-body assignments, so a class
 of the same member keeps winning), so a shell (`Object.create(prototype)`) already sees the
 edited methods; an edit that no longer compiles is logged, not fatal. Both replays are gated on
 `SourceEditsRegistry.canReplaySourceEdits()` — class- and mixin-scope replay drives the
-META-SYSTEM (`Class.applyMemberEdit`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only with
+META-SYSTEM (`Class.applyMemberEdit` / `removeMember`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only with
 the class SOURCE TEXT. An artifact built `sources: "none"` therefore cannot replay them at all,
 and says so once (`unreplayableSourceEditsCount` → one `inform`) rather than dropping the user's
 class edits silently. Instance-scope edits
 ride the normal `{"$src"}` path on their own widget — those still load on such a build, since
 they need only the compiler every profile ships. The rebuilt registry is installed AFTER deserialize (so the
 `$src` re-injections don't double-log into it). A file/menu load confirms first, warning that a
-snapshot can execute code (§4.12 of the plan). Proven fresh-session: an `injectProperty` method
-edit and a `ClassInspectorWdgt` prototype edit both survive into a fresh page where the prototype
-had no such method (`serialization-roundtrip-headless.js` source-edit leg).
+snapshot can execute code (§4.12 of the plan). Proven fresh-session by
+`serialization-roundtrip-headless.js`'s source-edit leg (`sourceEdits.*`): an `injectProperty`
+method edit, and the class inspector's add, save, rename and remove of a class's own member, of
+a body member never edited (its rename recompiled so `super` follows it), of an override of a
+donated member, and the rename of a donated member, each hold in a fresh page exactly as the
+editing page left them.
