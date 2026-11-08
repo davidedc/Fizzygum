@@ -17,9 +17,10 @@
 //
 // WHAT IT READS: lib/call-sites.js's table — every class fragment of Fizzygum/src and of the tests repo's harness as
 // the browser's meta-compiler splits and rewrites it (a `super` is an ordinary call there), every mixin and boot
-// file, every macro source as the page compiles it, the MacroToolkit heredocs, and the tests repo's scripts (acorn) —
-// and every definition those make. Real parsers: an implicit object is ONE argument, a nested paren-less call is one
-// argument of the outer call, a string's contents are never a call.
+// file, every macro source as the page compiles it (each test's, and each verb: a Macro.fromString literal of src or
+// the harness), and the tests repo's scripts (acorn) — and every definition those make. Real parsers: an implicit
+// object is ONE argument, a nested paren-less call is one argument of the outer call, a string's contents are never a
+// call.
 //
 // THE CALLERS TEST (HOLE), mechanized (lib/call-sites.js `callersTest`): a site with an `undefined` BEFORE a present
 // argument is a candidate; it is a HOLE iff another site of the same callee, of known arity, reaches LESS FAR (passes

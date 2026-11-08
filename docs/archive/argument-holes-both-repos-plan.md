@@ -1226,3 +1226,30 @@ for (const s of sites) if (s.absentBefore.length) {
       had hidden that it never read `return <value> unless X?` as a bail-out; both are fixed and planted. The three
       `*-allowlist.txt` files have one reader, `lib/allowlist-file.js`. Where src's `Macro.fromString` heredoc bodies are
       found joins the four walks item.
+- [x] **Four walks find a test's command files** (found closing "two readers of a test's macro sources", in the
+      plan's ledger): `lib/tests-repo-code.js`'s
+      `macroFiles` (every `*_automationCommands.js` under `tests/`, skipping `automation-assets/` and dot directories),
+      `check-layering.js`'s `collectMacros` (every one, nothing skipped), and the discipline gate's and aim-census's
+      `tests/SystemTest_*/<name>_automationCommands.js`. They agree today; the harness's own definition is the manifest
+      (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's. Beside them, src's macro
+      sources — the bodies of MacroToolkit's `Macro.fromString` heredocs — are found three ways (found closing the
+      comment cutters item): `lib/call-sites.js` by parse, `check-layering.js`'s `macroVerbTexts` and `aim-census.js`'s
+      `toolkitVerbs` by an opener regex and a lone closing `"""`, reading the raw lines rather than the value the
+      compiler makes of them. One definition of where macro sources live, read as the text the page compiles. — CLOSED 2026-11-08: one definition of
+      each. THE TESTS are `lib/tests-repo-code.js`'s `testNames`: every directory of `tests/`, each a `SystemTest_<x>`
+      holding the two files the harness loads by its name (`metadataFileOf`, `commandFileOf`); a tree that breaks that
+      is refused (`TESTS_DIRECTORY_MALFORMED`), never skipped, and `testNameOf` names a test from a word. The survey found
+      seven restatements of the test set and seven of the command file, not four: every gate that reads the tests one
+      by one (layering's [D], the discipline gate, aim-census, `check-tests-syntax`, `check-visualisations`,
+      `check-hand-lists`), the manifest generator, and the name checks of the runners, the capture tools, `check-refs`,
+      `recapture`, `reset-test-refs` and the churn set all read it now. Layering, the discipline gate, aim-census and the
+      syntax and visualisation gates each plant a malformed tree, seen read past by the old walk. `planted-src`'s reset removes the directories a plant made. THE MACRO SOURCES are
+      `lib/macro-sources.js`: `testMacroSourcesIn` (moved from `tests-repo-code`) and `verbMacroSourcesIn`, every
+      `Macro.fromString` string literal of a CoffeeScript file, read off the lexer's tokens (so a file only the
+      fragment compiler parses, as with a bare `super`, reads), cooked, each line on its file line, where `call-sites`
+      had lifted them from its parse. Layering's [D] reads
+      every src file's verbs, not MacroToolkit's alone; aim-census reads its verb table from it; and the two gates that
+      read test macro sources but no verb now read both: unresolved-sends checks the verbs' 10 calls, and the discipline
+      gate holds the 15 verbs to its three rules. Each reader's self-test plants a verb its old reading missed (a `'''`
+      heredoc, a verb in another file, an escape that keeps its lines). That every build tool walks src itself is
+      filed beside the item.

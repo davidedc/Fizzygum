@@ -2,7 +2,8 @@
 // planted-src-selftest.js — lib/planted-src.js's proveGate, held to what it promises: a correct proof passes, and a
 // proof that misses a rule, expects the wrong one, plants a neighbour, has a failing control, carries an edit that
 // did not apply, or leaks one run's plant into the next FAILS. Each proof is a child process over a fake gate in a
-// temp dir, since proveGate prints a verdict of its own. Run by buildSystem/run-selftests.js on every build.
+// temp dir, since proveGate prints a verdict of its own. And a planted tree's reset leaves no directory a plant made.
+// Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -74,5 +75,22 @@ t.check(r.status === 0, 'an in-copy edit applies, and reset() restores the file 
 r = proof(`const fs = require('fs');
 proveGate({ ...base, runs: [ONE, TWO], after: (t, res) => t.check(!fs.existsSync(res.tree.dir + '/PlantOne.coffee'), 'reset removed the plant') });`);
 t.check(r.status === 0 && /ok   reset removed the plant/.test(r.out), "one run's plant never leaks into the next (reset)", r.out);
+
+// reset() leaves the tree as `from` has it: a directory a plant made goes with the plant (a reader of directories — a
+// tests tree, where every directory is a test — would otherwise meet an empty one in the next run), and one `from`
+// holds stays, empty or not
+const { plantedTree } = require('./planted-src');
+fs.mkdirSync(path.join(fixture, 'kept'));
+const tree = plantedTree({ from: fixture });
+tree.plant('made/deeper/Plant.coffee', 'class Plant\n');
+tree.plant('kept/Plant.coffee', 'class Plant\n');
+tree.reset();
+t.check(!fs.existsSync(path.join(tree.dir, 'made')) && fs.existsSync(path.join(tree.dir, 'kept')) && fs.existsSync(path.join(tree.dir, 'Base.coffee')),
+  'reset() removes the directories a plant made, and keeps the ones the copy holds');
+const empty = plantedTree({ from: null });
+empty.plant('SystemTest_x/SystemTest_x.js', '');
+empty.reset();
+t.check(fs.readdirSync(empty.dir).length === 0, 'reset() of a fixture tree (from: null) leaves it empty');
+fs.rmdirSync(path.join(fixture, 'kept'));
 
 t.done();

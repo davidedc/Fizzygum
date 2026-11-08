@@ -9,12 +9,11 @@
 //     call `<Cls>.__super__.<member>.call this, …` (a bare `super` forwards: `.apply(this, arguments)`); every MIXIN
 //     as one source after Mixin.coffee's rewrite; every other file (boot) whole. Parsed with the bundled
 //     CoffeeScript 2.0.3 `nodes()` — the browser's own grammar.
-//   - every test's macro sources (lib/tests-repo-code.js macroSourcesIn: the COOKED text the page compiles), as
-//     authored — before Macro.coffee rewrites verb calls into `yield from`.
-//   - the `Macro.fromString "…"` HEREDOCS (MacroToolkit's standard verbs: CODE in a string): lifted and parsed, each
-//     line mapped back to its file line.
+//   - every macro source (lib/macro-sources.js: the COOKED text the page compiles, each line on its file line), as
+//     authored — before Macro.coffee rewrites verb calls into `yield from`: each test's, and every verb's (a
+//     `Macro.fromString "…"` literal of a CoffeeScript file, CODE in a string).
 //   - the tests repo's scripts and each macro file's JS shell: acorn (vendor/acorn), skipping the shell's macro
-//     sources (their spans, from the same macroSourcesIn read). The file set is tests-repo-code's testsRepoFiles.
+//     sources (their spans, from the same testMacroSourcesIn read). The file set is tests-repo-code's testsRepoFiles.
 // ⚠ The 2.0.3 bundle is MINIFIED, so node kinds are told STRUCTURALLY, by their `children` names. A call is one of
 //   THREE shapes (found by cross-checking every call against CoffeeScript 2.7's `ast: true`, archive plan §9):
 //   a Call {variable, args} (`isNew` for `new X(args)` / `new X args`); an ARGUMENT-LESS `new X`, which is NOT a
@@ -93,7 +92,8 @@
 const fs = require('fs');
 const path = require('path');
 const { loadMetaCompiler } = require('./meta-compiler');
-const { macroSourcesIn, testsRepoFiles } = require('./tests-repo-code');
+const { testsRepoFiles } = require('./tests-repo-code');
+const { testMacroSourcesIn, verbMacroSourcesIn } = require('./macro-sources');
 const { harvestDefs } = require('./name-definitions');
 const { coffeeMask } = require('./coffee-mask');
 const acorn = require('../../vendor/acorn/acorn.js');
@@ -359,16 +359,17 @@ function callSites({ srcDir, testsRepoDir } = {}) {
     }
   };
 
-  for (const file of walkFiles(srcDir, '.coffee')) { counts.src++; readCoffeeFile(file, 'src'); }
+  const coffeeFiles = walkFiles(srcDir, '.coffee');
+  for (const file of coffeeFiles) { counts.src++; readCoffeeFile(file, 'src'); }
   const repo = testsRepoDir && testsRepoFiles(testsRepoDir);
   // each macro command file's sources, through the one reader: parsed as CoffeeScript here, and skipped (by their spans)
   // when its JS shell is read with the scripts below
   const macroFilesRead = [];
   if (repo) {
     counts.testsRepo = true;
-    for (const file of repo.harness) { counts.harness++; readCoffeeFile(file, 'harness'); }
+    for (const file of repo.harness) { counts.harness++; readCoffeeFile(file, 'harness'); coffeeFiles.push(file); }
     for (const file of repo.macro) {
-      try { macroFilesRead.push({ file, sources: macroSourcesIn(fs.readFileSync(file, 'utf8'), file) }); }
+      try { macroFilesRead.push({ file, sources: testMacroSourcesIn(fs.readFileSync(file, 'utf8'), file) }); }
       catch (e) { unreadable.push({ file, message: e.message }); }
     }
     for (const { file, sources } of macroFilesRead) {
@@ -382,36 +383,22 @@ function callSites({ srcDir, testsRepoDir } = {}) {
   Class.prototype._rewriteSuperCalls = realClassRewrite;
   Mixin.prototype._rewriteSuperCalls = realMixinRewrite;
 
-  // parse every CoffeeScript unit; lift the heredocs a parse finds
+  // parse every CoffeeScript unit
   const parsed = [];
   const parseCoffee = (u) => {
     try { parsed.push({ u, ast: CoffeeScript.nodes(u.text) }); return true; }
     catch (e) { unreadable.push({ file: u.file, line: e.location ? u.lineOf(e.location.first_line) : undefined, message: 'CoffeeScript: ' + e.message }); return false; }
   };
   for (const u of units) parseCoffee(u);
-  for (const { u, ast } of parsed.slice()) {
-    const fileLines = fs.readFileSync(u.file, 'utf8').split('\n');
-    for (const c of csCallsOf(ast)) {
-      const v = c.variable;
-      if (c.isNew || !isValue(v) || !isLiteral(v.base) || v.base.value !== 'Macro' || v.properties.length !== 1 || propName(v.properties[0]) !== 'fromString') continue;
-      if (c.args.length !== 1) continue;
-      const a = c.args[0];
-      // a REFERENCE (`eachSource`, `@mainMacroSource`) passes the macro sources themselves, read as macro units;
-      // anything else computed — an interpolated heredoc — is code no reader can see
-      const isReference = isValue(a) && isLiteral(a.base) && (a.base.value === 'this' || IDENT.test(a.base.value)) && a.properties.every(isAccess);
-      if (isReference) continue;
-      if (!isValue(a) || a.properties.length || !isStringLit(a.base)) {
-        unreadable.push({ file: u.file, line: u.lineOf(c.ld.first_line), message: 'a Macro.fromString argument computed at run time (an interpolated heredoc?): its code cannot be read' });
-        continue;
-      }
-      const open = u.lineOf(a.locationData.first_line);
-      const text = new Function('return ' + a.base.value)();
-      const off = text.split('\n').findIndex((l, k) => l.trim() && (fileLines[open + k] || '').trim() !== l.trim());
-      if (off >= 0) { unreadable.push({ file: u.file, line: open, message: `heredoc line ${off} is not on file line ${open + 1 + off}` }); continue; }
+  // the verbs — every Macro.fromString literal of a CoffeeScript file read above, through the one reader
+  // (lib/macro-sources.js): cooked, on its file lines
+  for (const file of coffeeFiles) {
+    let verbs;
+    try { verbs = verbMacroSourcesIn(fs.readFileSync(file, 'utf8'), file); } catch (e) { unreadable.push({ file, message: e.message }); continue; }
+    for (const v of verbs) {
       counts.heredoc++;
-      harvestDefsOf(text, `${u.file} (its heredoc from line ${open + 1})`);
-      const hd = { file: u.file, where: 'heredoc', lang: 'coffee', home: 'verbs', text, lineOf: (k0) => open + 1 + k0, scope: 'macros' };
-      parseCoffee(hd);
+      harvestDefsOf(v.text, `${file} (its verb from line ${v.line})`);
+      parseCoffee({ file, where: 'heredoc', lang: 'coffee', home: 'verbs', text: v.text, lineOf: (k0) => v.line + k0, scope: 'macros' });
     }
   }
 

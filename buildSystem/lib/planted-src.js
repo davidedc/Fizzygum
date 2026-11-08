@@ -52,8 +52,8 @@ function sweepStaleCopies() {
 }
 
 // A temp tree: a copy of `from` (default src/), or an empty dir (`from: null`), removed at process exit. Every path a
-// plant, unplant or edit touches is remembered, and reset() puts each back as `from` has it — so one copy serves a
-// proof's every run.
+// plant, unplant or edit touches is remembered, and reset() puts each back as `from` has it, the directories a plant
+// made included — so one copy serves a proof's every run.
 function plantedTree({ from = SRC } = {}) {
   sweepStaleCopies();
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), PREFIX));
@@ -80,6 +80,12 @@ function plantedTree({ from = SRC } = {}) {
         fs.rmSync(p, { recursive: true, force: true });
         const orig = from && path.join(from, rel);
         if (orig && fs.existsSync(orig)) fs.cpSync(orig, p, { recursive: true });
+        // a directory a plant made goes with it, so the next run reads the tree `from` has, empty directories included
+        for (let d = path.dirname(rel); d !== '.'; d = path.dirname(d)) {
+          const here = path.join(dir, d);
+          if ((from && fs.existsSync(path.join(from, d))) || !fs.existsSync(here) || fs.readdirSync(here).length) break;
+          fs.rmdirSync(here);
+        }
       }
       touched.clear();
     },

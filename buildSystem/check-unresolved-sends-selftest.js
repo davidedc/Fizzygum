@@ -100,6 +100,9 @@ proveGate({
       'BiteProofSends.coffee': ['class BiteProofSends', '  bpMasked: (w) ->', `    w.${MASKED}()`, '  bpNobody: ->', '    @biteProofNoSuchMethod()',
         '  digest: -> 1', '  isView: -> 1', ''].join('\n'),
       'performance.coffee': 'class performance\n',
+      // a verb's send (a Macro.fromString literal of src), which the file's own reading sees only as a string
+      'BiteProofSendsVerbs.coffee': ['class BiteProofSendsVerbs', '  standard: ->', '    Macro.fromString """', '      bp_Macro = (w) ->',
+        '        w.biteProofVerbSend()', '    """', ''].join('\n'),
     },
     expect: {
       UNRESOLVED_SEND: new RegExp(`^  src/BiteProofSends\\.coffee:3: \\.${MASKED}\\( — no definition found in src\\+harness$`, 'm'),
@@ -107,7 +110,8 @@ proveGate({
       BUILTINS_NOT_KEYED: /^  BUILTINS_NOT_KEYED isView — Fizzygum defines isView, and every `\.isView\(` call sends it to a platform global \(ArrayBuffer\)/m,
       PLATFORM_GLOBALS_NAMES_FIZZYGUM: /^  PLATFORM_GLOBALS_NAMES_FIZZYGUM performance — performance is a Fizzygum class/m,
     },
-    lines: [/^  src\/BiteProofSends\.coffee:5: @biteProofNoSuchMethod\( — no definition found/m],
+    lines: [/^  src\/BiteProofSends\.coffee:5: @biteProofNoSuchMethod\( — no definition found/m,
+            /^  src\/BiteProofSendsVerbs\.coffee:5: \.biteProofVerbSend\( — no definition found/m],
     absent: [/BiteProofSendsOk/],
   }, {
     label: 'what one entry of each table excuses, taken away',

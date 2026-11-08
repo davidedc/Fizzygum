@@ -57,7 +57,8 @@ const fs = require('fs');
 const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
-const { macroSourcesIn } = require('./lib/tests-repo-code');
+const { commandFiles } = require('./lib/tests-repo-code');
+const { testMacroSourcesIn, verbMacroSourcesIn } = require('./lib/macro-sources');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, ['--src=', '--tests-dir='], 'check-layering');
@@ -196,12 +197,11 @@ const isImmediateMutator = (name) =>
 // settle during construction; attaching first makes the settle legitimate. (If some public geometry method
 // genuinely cannot work on an orphan, it should THROW on an orphan rather than invite a raw workaround.)
 //
-// Scope: BOTH the test macros (the macro sources of tests/*/*_automationCommands.js, as the page compiles them --
-// lib/tests-repo-code.js's macroSourcesIn) AND the shared macro VERBS in src/macros/MacroToolkit.coffee -- but for the latter only the
-// `Macro.fromString """..."""` heredoc bodies (the L1/L2 toolkit METHODS around them are framework code that
-// legitimately uses the low-level API).
+// Scope: BOTH the test macros (the macro sources of every test's command file, as the page compiles them --
+// lib/tests-repo-code.js's commandFiles, lib/macro-sources.js's testMacroSourcesIn) AND the shared macro VERBS -- every
+// `Macro.fromString` literal of src (verbMacroSourcesIn), the text alone (the L1/L2 toolkit METHODS around MacroToolkit's
+// are framework code that legitimately uses the low-level API).
 const MACROS_DIR = dirArg(ARGV, '--tests-dir=', path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests'), 'check-layering');
-const MACRO_VERBS_FILE = path.join(SRC, 'macros', 'MacroToolkit.coffee');
 const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;
 const MACRO_SANCTION = /#\s*macro-private-call-sanctioned:\s*\S/;   // [D] exemption marker, reason required  // renamed geometry mutators + the ex-silent* structural leaves (__hide/__addShadow/__add) are now _-prefixed (caught by _[A-Za-z]); raw* = the pixel API, still macro-forbidden. (the dead fullRaw\w* and silent\w* arms were dropped with the §6-5 / §3d renames.)
 
@@ -766,19 +766,11 @@ function checkDoubleSettle(file, gCtx, violations) {
   flush();
 }
 
-function collectMacros(dir, out) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) collectMacros(p, out);
-    else if (e.name.endsWith('_automationCommands.js')) out.push(p);
-  }
-  return out;
-}
-
-// Rule D over ONE macro text — a test's macro source, or the body of one of MacroToolkit's `Macro.fromString """…"""`
-// heredocs — read as the CoffeeScript it is (lib/coffee-mask.js): a call is read off its bare code, so a narrative
-// comment (several legitimately mention adjustContentsBounds / @_moveWithin) or a string calls nothing, and the
-// sanction marker is read off its comment. lineOf maps a line of the text to its file line.
+// Rule D over ONE macro text — a test's macro source, or a verb (a `Macro.fromString` literal of src) — read as the
+// CoffeeScript it is (lib/coffee-mask.js): a call is read off its bare code, so a narrative comment (several
+// legitimately mention adjustContentsBounds / @_moveWithin) or a string calls nothing, and the sanction marker is read
+// off its comment. A marker never crosses a source's boundary: it names a call in ITS source. lineOf maps a line of the
+// text to its file line.
 function checkMacroText(file, text, lineOf, violations) {
   const rel = path.relative(path.join(__dirname, '..', '..'), file);
   let pendingSanction = false;   // armed by a MACRO_SANCTION comment line, consumed by the next code line
@@ -797,23 +789,6 @@ function checkMacroText(file, text, lineOf, violations) {
       + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/moveTo; `
       + `a test ORACLE may carry \`# macro-private-call-sanctioned: <reason>\`)`));
   });
-}
-
-// The bodies of MacroToolkit.coffee's `Macro.fromString """` heredocs (the L1/L2 toolkit methods around them are
-// framework code): each { text, lineOf }, from the line after its opener to the line before its lone closing `"""`.
-// A marker never crosses a heredoc boundary: it names a call in ITS macro.
-function macroVerbTexts(file) {
-  const { lines, masked } = readingOf(file);
-  const out = [];
-  for (let n = 0; n < lines.length; n++) {
-    if (!/Macro\.fromString\s+"""/.test(masked[n].code)) continue;
-    let end = n + 1;
-    while (end < lines.length && !/^\s*"""\s*$/.test(lines[end])) end++;
-    const first = n + 1;
-    out.push({ text: lines.slice(first, end).join('\n'), lineOf: (k) => first + k + 1 });
-    n = end;
-  }
-  return out;
 }
 
 function main() {
@@ -844,18 +819,21 @@ function main() {
   let macroCount = 0;
   if (fs.existsSync(MACROS_DIR)) {           // absent when the sibling tests repo is not checked out — skip [D] then
     let macros;
-    try { macros = collectMacros(MACROS_DIR, []); }
+    try { macros = commandFiles(MACROS_DIR); }
     catch (e) { console.error('check-layering: operational error collecting macros:', e.message); process.exit(2); }
     macroCount = macros.length;
     for (const f of macros) {
-      try { for (const s of macroSourcesIn(fs.readFileSync(f, 'utf8'), f)) checkMacroText(f, s.text, (n) => s.line + n, violations); }
+      try { for (const s of testMacroSourcesIn(fs.readFileSync(f, 'utf8'), f)) checkMacroText(f, s.text, (n) => s.line + n, violations); }
       catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
     }
   }
-  // the SHARED macro verbs in MacroToolkit.coffee (heredoc bodies only) are src: read whether or not the tests repo is
-  if (fs.existsSync(MACRO_VERBS_FILE)) {
-    try { for (const v of macroVerbTexts(MACRO_VERBS_FILE)) checkMacroText(MACRO_VERBS_FILE, v.text, v.lineOf, violations); macroCount++; }
-    catch (e) { console.error(`check-layering: operational error in ${MACRO_VERBS_FILE}:`, e.message); process.exit(2); }
+  // the SHARED macro verbs are src: read whether or not the tests repo is
+  for (const f of files) {
+    try {
+      const verbs = verbMacroSourcesIn(fs.readFileSync(f, 'utf8'), f);
+      if (verbs.length) macroCount++;
+      for (const v of verbs) checkMacroText(f, v.text, (n) => v.line + n, violations);
+    } catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
   }
   // the exemption tables, each held to what it exempts this run (a stale entry is a violation, never a note)
   for (const n of gCtx.staleWrapperExclusions) {

@@ -91,13 +91,18 @@ put(path.join(src, 'BpInterpolated.coffee'), [
   'class BpInterpolated', '  subs: ->', '    Macro.fromString """', '      i_Macro = ->', '        @bpHeredoc #{2}', '    """', ''].join('\n'));
 put(path.join(src, 'BpToolkit.coffee'), [
   'class BpToolkit', '  subs: ->', '    Macro.fromString """', '      hd_Macro = ->', '        @bpHeredoc 1, undefined, 3', '    """', ''].join('\n'));
+// a verb whose escape keeps its lines (`\\d` compiles to `\d`): its text is the compiled one, each line on its file line
+put(path.join(src, 'BpEscaped.coffee'), [
+  'class BpEscaped', '  subs: ->', '    Macro.fromString """', '      esc_Macro = ->', '        r = /\\\\d/', '        @bpEscaped 1', '    """', ''].join('\n'));
 put(path.join(src, 'BpMixin.coffee'), [
   'BpMixin =', '  onceAddedClassProperties: (fromClass) ->', '    @addInstanceProperties fromClass,', '',
   '    bpMixed: (t) ->', '      inner = -> 1', '      super()', ''].join('\n'));
 put(path.join(repo, 'Automator-and-test-harness-src', 'BpHarness.coffee'), ['class BpHarness', '  m: ->', '    @bpCallee 2', ''].join('\n'));
+put(path.join(repo, 'tests', 'SystemTest_bp', 'SystemTest_bp.js'), 'var SystemTest_bp = {};\n');
 put(path.join(repo, 'tests', 'SystemTest_bp', 'SystemTest_bp_automationCommands.js'),
   'var c = { "mainMacroSource": `m_Macro = ->\n  helper = (a, b) -> a\n  helper undefined, 2\n  @bpCallee 8\n' +
   '  class BpProbe\n    constructor: (a, b, c) -> @a = a\n  new window.BpProbe 1, undefined, 3\n  new BpProbe 1\n` };\n');
+put(path.join(repo, 'tests', 'SystemTest_bad', 'SystemTest_bad.js'), 'var SystemTest_bad = {};\n');
 put(path.join(repo, 'tests', 'SystemTest_bad', 'SystemTest_bad_automationCommands.js'),
   'var c = { "mainMacroSource": `m_Macro = ->\n  f (\n` };\n');
 put(path.join(repo, 'scripts', 's.js'), [
@@ -138,6 +143,8 @@ t.check(one('BpChild.coffee', 22, (s) => s.kind === 'new')?.callee.foreign, 'a d
 t.check(one('BpChild.coffee', 11, named('bpCallee'))?.candidate === false && one('BpChild.coffee', 11, named('bpCallee')).reach === 1,
   'a trailing `undefined` is no candidate, and reaches 1');
 t.check(one('BpToolkit.coffee', 5, named('bpHeredoc'))?.where === 'heredoc', 'a lifted heredoc\'s call IS a call, on its own file line');
+t.check(one('BpEscaped.coffee', 6, named('bpEscaped'))?.where === 'heredoc' && !r.unreadable.some((u) => path.basename(u.file) === 'BpEscaped.coffee'),
+  'a verb whose escape keeps its lines is read, its call on its own file line');
 t.check(one('BpMixin.coffee', 7, (s) => s.kind === 'super')?.name === 'bpMixed', 'a mixin super is the INNERMOST function-valued member around it');
 t.check(one('SystemTest_bp_automationCommands.js', 3, named('helper'))?.callee.key === 'name:helper', 'a macro-local helper is a NAME (macros and verbs link into one program)');
 t.check(r.unreadable.some((u) => path.basename(u.file) === 'SystemTest_bad_automationCommands.js'), 'a macro that does not parse is UNREADABLE, never skipped');
@@ -153,7 +160,7 @@ t.check(one('bp-globals.coffee', 2, named('bpGlobal'))?.callee.key === 'name:bpG
   'a top-level function is ONE callee in its own file and in every other');
 t.check(one('SystemTest_bp_automationCommands.js', 7, (s) => s.kind === 'new')?.callee.key === 'ctor:BpProbe', 'a class a MACRO defines is a callee, reached through `new window.X` too');
 t.check(r.sites.some((s) => s.where === 'harness' && path.basename(s.file) === 'BpHarness.coffee' && s.name === 'bpCallee'), 'the harness is read: its class fragments are call sites');
-t.check(r.unreadable.some((u) => path.basename(u.file) === 'BpInterpolated.coffee' && /computed at run time/.test(u.message)), 'an interpolated heredoc is UNREADABLE, never skipped');
+t.check(r.unreadable.some((u) => path.basename(u.file) === 'BpInterpolated.coffee' && /^MACRO_SOURCE_UNREADABLE: \S*BpInterpolated\.coffee:\d+ — a Macro\.fromString argument computed when the page runs/.test(u.message)), 'an interpolated heredoc is UNREADABLE, never skipped');
 
 const v = callersTest(r.sites);
 const verdict = (base, line, name) => v.holes.find((h) => path.basename(h.site.file) === base && h.site.line === line && h.site.name === name) ? 'HOLE'
@@ -211,6 +218,12 @@ const fixture = (files) => {
     put(path.join(root2, 'tests-repo', 'Automator-and-test-harness-src', 'H.coffee'), 'class H\n  h: -> 1\n');
     fs.mkdirSync(path.join(root2, 'tests-repo', 'tests'), { recursive: true });
     for (const [rel, text] of Object.entries(files)) put(path.join(root2, rel), text);
+    // each planted test's metadata file, which a test holds beside its commands and which is no code (so not a fixture
+    // file the check below asks to be read)
+    for (const rel of Object.keys(files)) {
+      const m = /^tests-repo\/tests\/(\w+)\/\1_automationCommands\.js$/.exec(rel);
+      if (m) put(path.join(root2, 'tests-repo', 'tests', m[1], m[1] + '.js'), 'var t = {};\n');
+    }
     const table = callSites({ srcDir: path.join(root2, 'src'), testsRepoDir: path.join(root2, 'tests-repo') });
     // every fixture file was READ — a reading that skipped one would pass its case on nothing
     const read = new Set([...table.sites, ...[...table.defs.values()].flat()].map((x) => path.relative(root2, x.file)));

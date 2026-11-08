@@ -4,7 +4,7 @@
 // That repo holds code in three places, and they are what this reads:
 //   - the harness sources (Automator-and-test-harness-src/*.coffee);
 //   - each test's macro command file (tests/<name>/<name>_automationCommands.js): its CoffeeScript
-//     macro sources, which sit in JS template literals (macroSourcesIn, below), and the JS around them;
+//     macro sources, which sit in JS template literals (lib/macro-sources.js), and the JS around them;
 //   - the Node rigs (scripts/**/*.js), whose page.evaluate bodies call core methods directly.
 // Strings are KEPT: a macro or a rig may dispatch a method by its name, and code lives in strings. Comments
 // are CUT: a comment calls nothing. And everything else under tests/ is left out — the metadata files
@@ -24,17 +24,18 @@
 // source as the text the page compiles, never the escaped text as written (a CoffeeScript `"q\""` is written
 // `"q\\""`, and masking that would read the rest of its line as a string).
 //
-// Readers: census-public-private-calls.js (R4) and check-dead-methods.js (testsRepoCode);
-// check-unresolved-sends.js (macroSources: the macro sends); lib/call-sites.js — the reader behind
-// check-call-arguments.js and census-call-arity.js — (testsRepoFiles, macroSourcesIn); check-layering.js (rule D, over
-// macroSourcesIn); and the tests repo's check-macro-source-discipline.js, aim-census.js, macro-page-lib.js (the
-// visualisation's per-step comments) and capture-macro-test-references.js (the screenshot names), all over
-// macroSourcesIn — ONE definition of a macro source for every Node reader. Its cases are tests-repo-code-selftest.js.
+// Readers: census-public-private-calls.js (R4) and check-dead-methods.js (testsRepoCode); check-unresolved-sends.js
+// (macroSources: the macro sends); lib/call-sites.js — the reader behind check-call-arguments.js and
+// census-call-arity.js — (testsRepoFiles); and every reader that walks the tests one by one (THE TESTS, below): the
+// gates check-layering.js [D], check-hand-lists.js, and the tests repo's check-macro-source-discipline.js, aim-census.js,
+// check-tests-syntax.js, check-visualisations.js and check-refs.js; its manifest generator (scripts/lib/tests-manifests.js);
+// its runners and capture tools. Its cases are tests-repo-code-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
 const { coffeeMask } = require('./coffee-mask');
 const { maskJs, parseJs } = require('./js-mask');
+const { testMacroSourcesIn } = require('./macro-sources');
 
 const DEFAULT_ROOT = path.resolve(__dirname, '../../../Fizzygum-tests');
 
@@ -67,7 +68,7 @@ function macroCode(text, file) {
   const lines = uncommented(text, maskJs(text, file, parsed).mask);
   const column = (k) => k - (text.lastIndexOf('\n', k - 1) + 1);
   // the last source first, so a splice never moves the columns of a source still to come on the same line
-  for (const s of macroSourcesIn(text, file, parsed.ast).reverse()) {
+  for (const s of testMacroSourcesIn(text, file, parsed.ast).reverse()) {
     const code = coffeeCode(s.text, `${file} (its macro source from line ${s.line})`);
     const first = s.line - 1, last = first + code.length - 1;
     const head = lines[first].slice(0, column(s.start)), tail = lines[last].slice(column(s.end));
@@ -76,73 +77,57 @@ function macroCode(text, file) {
   return lines;
 }
 
-// THE MACRO SOURCES of a test's command file — what the harness compiles (AutomatorEventCommandStartMacro): the value
-// of its `mainMacroSource`, and each element of its `extraSubroutineSources` array (none when that is absent, `null` or
-// `undefined`), found in the parse, in file order, as [{ role: 'main' | 'extra', line, start, end, text }]. `text` is
-// COOKED — the CoffeeScript the page compiles, each JS escape read as the character it makes — and the caller reads it
-// as CoffeeScript, comments and all; `start`/`end` is its span in the file, inside its backticks (or quotes), the way to
-// the JS around it; `line` (1-based) is the file line of its first line, and line k of `text` sits on file line
-// `line + k`. Refused, MACRO_SOURCE_UNREADABLE naming the file and the line — never read by a guess:
-//   - a source that is neither a string literal nor a template literal without `${…}` (the file does not hold its
-//     text: a `${…}` is computed when the page runs), and an `extraSubroutineSources` that is no array (the page
-//     compiles each of its elements: a string's elements would be its characters);
-//   - a source whose escapes add or remove a line break (a written `\n`, a `\⏎`): a reader reporting `line + k` would
-//     name the wrong line.
-// `ast` is the file's parse (lib/js-mask.js parseJs), when the caller has it.
-const LINE_CONTINUATION = /(?<!\\)(?:\\\\)*\\\r?\n/;
-function macroSourcesIn(text, file, ast = parseJs(text, file).ast) {
-  const lineAt = (k) => text.slice(0, k).split('\n').length;
-  const refuse = (k, why) => { throw new Error(`MACRO_SOURCE_UNREADABLE: ${file || 'a text'}:${lineAt(k)} — ${why}`); };
-  const sources = [];
-  const take = (v, role, at) => {
-    const isText = !!v && ((v.type === 'Literal' && typeof v.value === 'string') || (v.type === 'TemplateLiteral' && !v.expressions.length));
-    if (!isText) refuse(v ? v.start : at, `its ${role} source is neither a string literal nor a template literal without \`\${…}\`, so the file does not hold its text`);
-    const start = v.start + 1, end = v.end - 1, raw = text.slice(start, end);
-    const cooked = v.type === 'Literal' ? v.value : v.quasis[0].value.cooked;
-    if (cooked.split('\n').length !== raw.split('\n').length || LINE_CONTINUATION.test(raw)) {
-      refuse(start, `its ${role} source writes a line break as an escape (\\n or \\⏎), so its lines do not sit on the file's`);
+// THE TESTS — what the harness plays, and the two files it loads for each, by name. Every DIRECTORY of tests/ is a test
+// (the manifest lists exactly these: scripts/lib/tests-manifests.js), each one named `SystemTest_<x>` and holding its
+// metadata, `<name>.js`, and its commands, `<name>_automationCommands.js` — the paths AutomatorLoader's loadTestMetadata
+// and loadTest build from the name. A directory that is not such a test is refused, TESTS_DIRECTORY_MALFORMED naming
+// it, never skipped: the harness would play it, so a reader that passed it over would pass a test it never read.
+// `testsDir` is the tests/ directory (a gate's --tests-dir= rail hands it another).
+//   testNames(testsDir)          every test's name, sorted by code point; [] when there is no tests/ directory
+//   testNameOf(word)             the test a word names: `macroX` and `SystemTest_macroX` both name SystemTest_macroX
+//   TEST_PREFIX                  `SystemTest_`, which every test's name starts with
+//   commandFileOf(testsDir, n)   test n's command file
+//   metadataFileOf(testsDir, n)  test n's metadata file
+//   commandFiles(testsDir)       every test's command file
+const DEFAULT_TESTS = path.join(DEFAULT_ROOT, 'tests');
+const TEST_PREFIX = 'SystemTest_';
+const byCodePoint = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const commandFileOf = (testsDir, name) => path.join(testsDir, name, name + '_automationCommands.js');
+const metadataFileOf = (testsDir, name) => path.join(testsDir, name, name + '.js');
+const testNameOf = (word) => (word.startsWith(TEST_PREFIX) ? word : TEST_PREFIX + word);
+function testNames(testsDir = DEFAULT_TESTS) {
+  if (!fs.existsSync(testsDir)) return [];
+  const names = fs.readdirSync(testsDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort(byCodePoint);
+  for (const name of names) {
+    const refuse = (why) => { throw new Error(`TESTS_DIRECTORY_MALFORMED: ${path.join(testsDir, name)} — ${why}`); };
+    if (!name.startsWith(TEST_PREFIX)) refuse(`a directory of tests/ is a test the harness plays, and a test is named ${TEST_PREFIX}<name>`);
+    // spelled exactly: macOS answers existsSync for any letter case, and a page served from a case-sensitive file
+    // system loads only the exact name
+    const held = new Set(fs.readdirSync(path.join(testsDir, name)));
+    for (const [file, what] of [[metadataFileOf(testsDir, name), 'metadata'], [commandFileOf(testsDir, name), 'command']]) {
+      if (!held.has(path.basename(file))) refuse(`it has no ${what} file ${path.basename(file)}, which the harness loads by its name`);
     }
-    sources.push({ role, line: lineAt(start), start, end, text: cooked });
-  };
-  const visit = (node) => {
-    if (Array.isArray(node)) { for (const x of node) visit(x); return; }
-    if (!node || typeof node.type !== 'string') return;
-    const key = node.type === 'Property' && !node.computed && (node.key.name || node.key.value);
-    if (key === 'mainMacroSource') { take(node.value, 'main'); return; }
-    if (key === 'extraSubroutineSources') {
-      const v = node.value;
-      if ((v.type === 'Literal' && v.value === null) || (v.type === 'Identifier' && v.name === 'undefined')) return;
-      if (v.type !== 'ArrayExpression') refuse(v.start, 'its extraSubroutineSources is no array (the page compiles each of its elements)');
-      for (const e of v.elements) take(e, 'extra', v.start);
-      return;
-    }
-    for (const k of Object.keys(node)) if (k !== 'type' && node[k] && typeof node[k] === 'object') visit(node[k]);
-  };
-  visit(ast);
-  return sources;
+  }
+  return names;
 }
+const commandFiles = (testsDir = DEFAULT_TESTS) => testNames(testsDir).map((name) => commandFileOf(testsDir, name));
 
-// The macro sources of each test's command file: [{ file, sources }], sources as macroSourcesIn gives them. For a gate
-// that reads macro CODE as CoffeeScript and must not see the JS around it.
+// The macro sources of each test's command file: [{ file, sources }], sources as lib/macro-sources.js testMacroSourcesIn
+// gives them. For a gate that reads macro CODE as CoffeeScript and must not see the JS around it.
 function macroSources(root = DEFAULT_ROOT) {
-  return macroFiles(root).map((file) => ({ file, sources: macroSourcesIn(fs.readFileSync(file, 'utf8'), file) }));
+  return commandFiles(path.join(root, 'tests')).map((file) => ({ file, sources: testMacroSourcesIn(fs.readFileSync(file, 'utf8'), file) }));
 }
 
 // THE FILE SET — which files of the tests repo are code, by kind: { harness, macro, script }, each sorted absolute
 // paths; undefined when the repo is absent (no harness or no tests/ directory). The readers of the repo's code as a
 // whole take their files from here (testsRepoCode, macroSources, the call-sites table), so those cannot disagree about
-// what is code; the gates that walk the tests themselves (the macro source discipline gate, aim-census, layering's
-// [D]) read each command file they find through macroSourcesIn.
-function macroFiles(root) {
-  const tests = path.join(root, 'tests');
-  return fs.existsSync(tests) ? walk(tests, (n) => n.endsWith('_automationCommands.js'), []).sort() : [];
-}
+// what is code; a gate that reads the tests one by one takes them from testNames.
 function testsRepoFiles(root = DEFAULT_ROOT) {
   const harness = path.join(root, 'Automator-and-test-harness-src');
   if (!fs.existsSync(harness) || !fs.existsSync(path.join(root, 'tests'))) return undefined;
   return {
     harness: walk(harness, (n) => n.endsWith('.coffee'), []).sort(),
-    macro: macroFiles(root),
+    macro: commandFiles(path.join(root, 'tests')),
     script: walk(path.join(root, 'scripts'), (n) => n.endsWith('.js'), []).sort(),
   };
 }
@@ -157,4 +142,5 @@ function testsRepoCode(root = DEFAULT_ROOT) {
   return out;
 }
 
-module.exports = { testsRepoCode, testsRepoFiles, macroSources, macroSourcesIn, coffeeCode, jsCode, macroCode, DEFAULT_ROOT };
+module.exports = { testsRepoCode, testsRepoFiles, macroSources, coffeeCode, jsCode, macroCode, DEFAULT_ROOT,
+  DEFAULT_TESTS, TEST_PREFIX, testNames, testNameOf, commandFileOf, metadataFileOf, commandFiles };

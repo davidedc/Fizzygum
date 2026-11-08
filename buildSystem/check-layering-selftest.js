@@ -20,8 +20,14 @@ const Q3 = '"""';
 const testsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-layering-selftest-tests-'));
 process.on('exit', () => fs.rmSync(testsDir, { recursive: true, force: true }));
 fs.mkdirSync(path.join(testsDir, 'SystemTest_BiteProofMacro'));
+fs.writeFileSync(path.join(testsDir, 'SystemTest_BiteProofMacro', 'SystemTest_BiteProofMacro.js'), 'var SystemTest_BiteProofMacro = {};\n');
 fs.writeFileSync(path.join(testsDir, 'SystemTest_BiteProofMacro', 'SystemTest_BiteProofMacro_automationCommands.js'),
   'var SystemTest_BiteProofMacro_automationCommands = { "mainMacroSource": `\n  w = world.firstChild()\n  w._biteProofTestsHalfCall()\n` };\n');
+// the same tests dir with a directory that is no test (lib/tests-repo-code.js testNames refuses it): [D] cannot read it
+const malformedTestsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-layering-selftest-malformed-'));
+process.on('exit', () => fs.rmSync(malformedTestsDir, { recursive: true, force: true }));
+fs.cpSync(testsDir, malformedTestsDir, { recursive: true });
+fs.mkdirSync(path.join(malformedTestsDir, 'scratch'));
 
 proveGate({
   name: 'check-layering',
@@ -59,6 +65,9 @@ proveGate({
         '  _biteProofLowLevelRecalc: ->', '    world.recalculateLayouts()',
         '  _biteProofOneLiner: (p) -> @setExtent p'),
       'BiteProofBWdgt.coffee': cls('BiteProofBWdgt', '  biteProofRecalc: ->', '    world.recalculateLayouts()'),
+      // [D] a verb anywhere in src, in a '''-heredoc: every Macro.fromString literal is a macro source
+      'BiteProofVerbHost.coffee': ['class BiteProofVerbHost', '  biteProofVerbs: ->', "    Macro.fromString '''",
+        '      biteProofOtherFile_Macro = (w) ->', '        w._biteProofVerbElsewhere()', "    '''", ''].join('\n'),
       'BiteProofHeregexWdgt.coffee': cls('BiteProofHeregexWdgt', '  biteProofAfterHeregex: ->', "    r = ///'''///", '    world.recalculateLayouts()'),
       'BiteProofCWdgt.coffee': cls('BiteProofCWdgt', '  setWidth: (w) ->', '    super', '    @setExtent new Point w, 10'),
       'BiteProofEWdgt.coffee': cls('BiteProofEWdgt', '  _moveLeftSideTo: (x) ->', '    @_invalidateLayout()', '  _moveRightSideTo: (x) ->', '    @_scheduleRelayoutRespectingPhase()'),
@@ -136,6 +145,7 @@ proveGate({
       /^  \[D\] macro calls private\/low-level \._biteProofBareMarker\(\)/m,
       /^  \[D\] macro calls private\/low-level \._biteProofLeakedSanction\(\)/m,
       /^  \[D\] macro calls private\/low-level \._biteProofAfterHashCall\(\)/m,
+      /^  \[D\] macro calls private\/low-level \._biteProofVerbElsewhere\(\) — \S*BiteProofVerbHost\.coffee:5 /m,
       line('[B] recalculateLayouts() called from biteProofAfterHeregex()', 'BiteProofHeregexWdgt', 4),
       /^  \[T\] biteProofDoubleSettle\(\) self-settles .* AND @-calls settling text setter @setText\(\)/m,
       /^  \[T\] biteProofDoubleSettle\(\) self-settles .* AND @-calls settling wrapper @biteProofTWrapper\(\)/m,
@@ -166,5 +176,10 @@ proveGate({
     label: "[D]'s whole-file half over a planted tests dir",
     args: ['--tests-dir=' + testsDir],
     expect: { D_MACRO_PRIVATE_CALL: /^  \[D\] macro calls private\/low-level \._biteProofTestsHalfCall\(\) — \S*SystemTest_BiteProofMacro_automationCommands\.js:3 /m },
+  }, {
+    label: 'a tests dir holding a directory that is no test',
+    args: ['--tests-dir=' + malformedTestsDir],
+    exit: 2,
+    lines: [/TESTS_DIRECTORY_MALFORMED: \S*\/scratch — /],
   }],
 });

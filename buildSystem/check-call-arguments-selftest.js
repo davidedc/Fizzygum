@@ -66,22 +66,26 @@ const repo = (files) => {
 process.on('exit', () => { for (const d of repos) fs.rmSync(d, { recursive: true, force: true }); });
 const macro = (body) => 'var c = { "mainMacroSource": `m_Macro = ->\n' + body + '\n` };\n';
 const MACRO = 'tests/SystemTest_bp/SystemTest_bp_automationCommands.js';
+const META = { 'tests/SystemTest_bp/SystemTest_bp.js': 'var SystemTest_bp = {};\n' };   // a test is its two files
 const valuesRepo = repo({
   [HARNESS]: harness(['@bpH 1, undefined, 3', '@bpH 4, 5, 6']),
+  ...META,
   [MACRO]: macro('  @bpCallee 9, undefined, 9'),
   'scripts/s.js': 'function bpLocal(a, b, c) { return a; }\nbpLocal(1, undefined, 3);\nbpLocal(4, 5, 6);\n',
 });
 const holesRepo = repo({
   [HARNESS]: harness(['@bpH 1, undefined, 3', '@bpH 1']),
+  ...META,
   [MACRO]: macro('  x = new BpButton undefined, undefined, face: "x"\n  y = new BpButton face: "y"'),
   'scripts/s.js': 'function bpLocal(a, b, c) { return a; }\nbpLocal(1, undefined, 3);\nbpLocal(1);\n',
 });
 const arityRepo = repo({
   [HARNESS]: harness(['@bpH 1, 2, 3, 4']),
+  ...META,
   [MACRO]: macro('  b = new BpButton 1, 2, @'),
   'scripts/s.js': 'function bpLocal(a, b, c) { return a; }\nbpLocal(1, 2, 3, 4);\n',
 });
-const badRepo = repo({ [HARNESS]: harness(['@bpH 1, 2, 3']), [MACRO]: macro('  f ('), 'scripts/s.js': 'ok();\n' });
+const badRepo = repo({ [HARNESS]: harness(['@bpH 1, 2, 3']), ...META, [MACRO]: macro('  f ('), 'scripts/s.js': 'ok();\n' });
 const emptyRepo = repo({});
 
 proveGate({

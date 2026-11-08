@@ -1,14 +1,16 @@
 'use strict';
 // tests-repo-code-selftest.js — the tests-repo reader's cases (lib/tests-repo-code.js), on a throwaway fixture repo:
-// each a file and the words a scan of what the reader keeps must, or must not, find; the macro-source reader
-// (macroSourcesIn) — the sources by their KEYS, in file order (an extra written before the main source, a template that
-// is no source), each one's cooked text, file line and span, the shapes the page compiles, and its refusals; macroCode
-// laying two sources on one line; an unparseable file refused. Run by buildSystem/run-selftests.js on every build.
+// each a file and the words a scan of what the reader keeps must, or must not, find; a command file's macro sources
+// through the file set (macroSources) — by their KEYS, in file order (an extra written before the main source, a
+// template that is no source), each one's cooked text, file line and span (the in-memory cases of the reader itself are
+// lib/macro-sources-selftest.js); macroCode laying two sources on one line; an unparseable file refused; and THE TESTS — every directory of tests/ is one, holding
+// its two files by its name, so a command file anywhere else is no test's, and a directory that is not such a test is
+// refused. Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { testsRepoCode, macroSources, macroSourcesIn, macroCode } = require('./tests-repo-code');
+const { testsRepoCode, macroSources, macroCode, testNames, testNameOf, commandFileOf, metadataFileOf } = require('./tests-repo-code');
 const t = require('./selftest-verdict').cases('tests-repo-code');
 
 const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tests-repo-code-'));
@@ -24,6 +26,8 @@ put(MACRO_FILE,
   '`m = ->\n  # macroComment\n  w.macroCall() # macroTrailing\n  w["macroString"]()\n  z = "q\\\\"" # cookedOnlyComment\n' +
   '  q = 7 // 2`\n}; // jsTrailing\n');
 put('tests/SystemTest_t/automation-assets/x/ref.js', 'var r = "referenceRecord";\n');
+// a command file that is not its directory's own: the harness never loads it, so it is no test's code
+put('tests/SystemTest_t/nested/SystemTest_n_automationCommands.js', 'var c = { "mainMacroSource": `nestedMacroCall()` };\n');
 put('tests/testsManifest.js', 'var m = ["manifestEntry"];\n');
 put('scripts/r.js', '#!/usr/bin/env shebangWord\n  // scriptComment\n/* scriptBlock\n   scriptBlockToo */ scriptAfterBlock()\n' +
   'page.evaluate(() => w.scriptCall()); // scriptTrailing\nconst k = n / 8; // afterDivision\n' +
@@ -53,7 +57,7 @@ const MUST = ['harnessCall', 'macroCall', 'macroString', 'extraCall', 'strayTemp
 const MUST_NOT = ['harnessComment', 'metadataProse', 'headerTick', 'headerTock', 'jsComment', 'macroComment',
   'macroTrailing', 'extraComment', 'cookedOnlyComment', 'jsTrailing', 'referenceRecord', 'manifestEntry', 'shebangWord',
   'scriptComment', 'scriptBlock', 'scriptBlockToo', 'scriptTrailing', 'afterDivision', 'tickComment', 'nodeModule',
-  'scratchProbe'];
+  'scratchProbe', 'nestedMacroCall'];
 for (const w of MUST) t.check(seen.has(w), `tests-repo code names ${w}`);
 for (const w of MUST_NOT) t.check(!seen.has(w), `tests-repo code does not name ${w}`);
 // JS that does not parse (an unterminated template) is REFUSED, naming why — never read by a guess
@@ -69,6 +73,7 @@ t.check(twoOnALine === 'var c = { "extraSubroutineSources": [`a()      `], "main
 // `x = "a\\nb" # see \`it\``, the page compiles `x = "a\nb" # see `it``
 const cookFixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tests-repo-code-cook-'));
 fs.mkdirSync(path.join(cookFixture, 'tests', 'SystemTest_c'), { recursive: true });
+fs.writeFileSync(path.join(cookFixture, 'tests', 'SystemTest_c', 'SystemTest_c.js'), 'var SystemTest_c = {};\n');
 fs.writeFileSync(path.join(cookFixture, 'tests', 'SystemTest_c', 'SystemTest_c_automationCommands.js'),
   'var c = { "mainMacroSource": `m = ->\n  x = "a\\\\nb" # see \\`it\\`\n` };\n');
 const cooked = macroSources(cookFixture);
@@ -77,23 +82,43 @@ t.check(cookedText.includes('x = "a\\nb" # see `it`') && !cookedText.includes('\
   `a macro source reads its escapes as the page does (${JSON.stringify(cookedText)})`);
 fs.rmSync(cookFixture, { recursive: true, force: true });
 
-// macroSourcesIn, in memory, as the page compiles a command: a main source written as a string literal is its text,
-// and an extraSubroutineSources of `null` is none; and the refusals — each naming the file and the line, never a
-// source read by a guess
-const read = (text) => { try { return { sources: macroSourcesIn(text, 'f.js') }; } catch (e) { return { refusal: e.message }; } };
-const plain = read('var c = { "mainMacroSource": "m()", "extraSubroutineSources": null };\n');
-t.check(!!plain.sources && plain.sources.map((s) => s.role + ':' + s.text).join(' ') === 'main:m()',
-  `a string-literal main source is read, and null extras are none (${plain.refusal || JSON.stringify(plain.sources)})`);
-for (const [what, text, expect] of [
-  ['a source holding a `${…}`', 'var c = { "mainMacroSource": `a ${b}` };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:1 — its main source is neither a string literal nor a template literal without/],
-  ['a source that is a name, not a literal', 'var c = {\n "extraSubroutineSources": [`x()`, helper] };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:2 — its extra source is neither a string literal nor a template literal without/],
-  ['an extraSubroutineSources that is no array (the page would compile its characters)', 'var c = { "mainMacroSource": `m()`,\n "extraSubroutineSources": `one()` };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:2 — its extraSubroutineSources is no array/],
-  ['a source writing a line break as an escape', 'var c = {\n "mainMacroSource": `a\\nb` };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:2 — its main source writes a line break as an escape/],
-  // a written \n and a \⏎ in one source: the line COUNT still matches, every line after them sits one line off
-  ['a source whose `\\n` and `\\⏎` cancel out', 'var c = {\n "mainMacroSource": `a = "x\\ny"\nlong = 1 + \\\n2` };\n', /^MACRO_SOURCE_UNREADABLE: f\.js:2 — its main source writes a line break as an escape/],
+// THE TESTS: every directory of tests/, each holding its metadata and its command file by its name; a directory that is
+// not such a test is refused through every reader (here macroSources), naming it — never skipped
+const layout = fs.mkdtempSync(path.join(os.tmpdir(), 'tests-repo-code-layout-'));
+const layoutTests = path.join(layout, 'tests');
+const makeTest = (name, files = ['meta', 'commands']) => {
+  fs.mkdirSync(path.join(layoutTests, name), { recursive: true });
+  if (files.includes('meta')) fs.writeFileSync(path.join(layoutTests, name, name + '.js'), `var ${name} = {};\n`);
+  if (files.includes('commands')) fs.writeFileSync(path.join(layoutTests, name, name + '_automationCommands.js'), 'var c = { "mainMacroSource": `m()` };\n');
+};
+makeTest('SystemTest_b'); makeTest('SystemTest_a'); makeTest('SystemTest_a_b');
+fs.writeFileSync(path.join(layoutTests, 'testsManifest.js'), 'var m = [];\n');   // a file of tests/ is no test
+for (const [what, plant, unplant, expect] of [
+  ['a directory not named SystemTest_*', () => makeTest('scratch'), () => fs.rmSync(path.join(layoutTests, 'scratch'), { recursive: true }),
+    /^TESTS_DIRECTORY_MALFORMED: \S+\/tests\/scratch — a directory of tests\/ is a test the harness plays, and a test is named SystemTest_<name>$/],
+  ['a test with no metadata file', () => makeTest('SystemTest_noMeta', ['commands']), () => fs.rmSync(path.join(layoutTests, 'SystemTest_noMeta'), { recursive: true }),
+    /^TESTS_DIRECTORY_MALFORMED: \S+\/tests\/SystemTest_noMeta — it has no metadata file SystemTest_noMeta\.js, which the harness loads by its name$/],
+  ['a test whose metadata file differs in letter case', () => { makeTest('SystemTest_case', ['commands']); fs.writeFileSync(path.join(layoutTests, 'SystemTest_case', 'SystemTest_Case.js'), ''); },
+    () => fs.rmSync(path.join(layoutTests, 'SystemTest_case'), { recursive: true }),
+    /^TESTS_DIRECTORY_MALFORMED: \S+\/tests\/SystemTest_case — it has no metadata file SystemTest_case\.js, which the harness loads by its name$/],
+  ['a test with no command file (a copy whose files keep the old name)', () => { makeTest('SystemTest_copy', ['meta']); fs.writeFileSync(path.join(layoutTests, 'SystemTest_copy', 'SystemTest_old_automationCommands.js'), ''); },
+    () => fs.rmSync(path.join(layoutTests, 'SystemTest_copy'), { recursive: true }),
+    /^TESTS_DIRECTORY_MALFORMED: \S+\/tests\/SystemTest_copy — it has no command file SystemTest_copy_automationCommands\.js, which the harness loads by its name$/],
 ]) {
-  const r = read(text);
-  t.check(!!r.refusal && expect.test(r.refusal), `${what} is refused, naming the file and line (${r.refusal || 'read as ' + JSON.stringify(r.sources)})`);
+  plant();
+  let refusal = '';
+  try { macroSources(layout); } catch (e) { refusal = e.message; }
+  t.check(expect.test(refusal), `${what} is refused, naming it (${refusal || 'read without refusal'})`);
+  unplant();
 }
+const names = testNames(layoutTests).join(' ');
+t.check(names === 'SystemTest_a SystemTest_a_b SystemTest_b', `the tests are tests/' directories, sorted (${names})`);
+t.check(macroSources(layout).map((m) => path.basename(m.file)).join(' ') === 'SystemTest_a_automationCommands.js SystemTest_a_b_automationCommands.js SystemTest_b_automationCommands.js',
+  'every test\'s command file, by its name');
+t.check(testNameOf('macroX') === 'SystemTest_macroX' && testNameOf('SystemTest_macroX') === 'SystemTest_macroX', 'a word names its test with or without the prefix');
+t.check(testNames(path.join(layout, 'absent')).length === 0, 'no tests/ directory holds no tests');
+t.check(commandFileOf(layoutTests, 'SystemTest_a') === path.join(layoutTests, 'SystemTest_a', 'SystemTest_a_automationCommands.js')
+  && metadataFileOf(layoutTests, 'SystemTest_a') === path.join(layoutTests, 'SystemTest_a', 'SystemTest_a.js'), 'a test\'s two files, by its name');
+fs.rmSync(layout, { recursive: true, force: true });
 
 t.done();

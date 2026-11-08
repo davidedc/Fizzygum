@@ -10,11 +10,12 @@
 // UNIVERSE = src/**/*.coffee + the sibling test harness
 // (Fizzygum-tests/Automator-and-test-harness-src/**/*.coffee — harness code is LIVE code: it is
 // compiled into every non-homepage build, and src calls into it behind `if Automator?` guards).
-// Its CALLS are also read from every test's MACRO SOURCES (lib/tests-repo-code.js's macroSources: the
-// CoffeeScript alone, as the page compiles it, never the JS around it), because a macro calls core methods as
-// directly as the harness does: a rename that misses a macro's `.name(` fails here, at build time, instead
-// of in the suite. A macro's own definitions (a local helper, an object of handlers) resolve that macro's
-// own calls and no one else's, so they never widen the shared universe.
+// Its CALLS are also read from every MACRO SOURCE (lib/macro-sources.js: the CoffeeScript alone, as the page compiles
+// it — each test's, never the JS around it, and each verb's, a `Macro.fromString` literal of src or the harness, which
+// a reading of the file's own code sees only as a string), because a macro calls core methods as directly as the
+// harness does: a rename that misses a macro's `.name(` fails here, at build time, instead of in the suite. A macro's
+// own definitions (a local helper, an object of handlers) resolve that macro's own calls and no one else's, so they
+// never widen the shared universe.
 // Like check-dead-methods, this SKIPS (exit 0 + a loud note) when the sibling tests repo is absent,
 // rather than false-fail a tests-stripped checkout.
 //
@@ -85,6 +86,7 @@ let SRC = path.resolve(__dirname, '../src');   // main() reads the rail
 const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
 const TESTS_ROOT = path.resolve(__dirname, '../../Fizzygum-tests');
 const { macroSources } = require('./lib/tests-repo-code');
+const { verbMacroSourcesIn } = require('./lib/macro-sources');
 const ALLOWLIST = path.resolve(__dirname, 'unresolved-sends-allowlist.txt');
 
 // ─── reading ───────────────────────────────────────────────────────────────────────────────────
@@ -132,27 +134,31 @@ function label(p) {
        : 'harness/' + path.relative(HARNESS, p);
 }
 
-// A macro's sends: each macro source of each test's command file, read as CoffeeScript exactly as
-// harvestCalls reads a .coffee file. Every site carries its macro's OWN definitions (`local`).
-function harvestMacroCalls() {
+// A macro's sends: each macro source of a file (a test's command file, a .coffee file's verbs), read as CoffeeScript
+// exactly as harvestCalls reads a .coffee file. Every site carries its file's macro sources' OWN definitions (`local`).
+function sendsOfMacroSources(sources, where, at) {
   const sites = [];
-  for (const { file, sources } of macroSources(TESTS_ROOT)) {
-    const local = new Set();
-    const masked = sources.map((src) => coffeeMask(src.text, `${file} (its macro source from line ${src.line})`));
-    for (const m of masked) defs.harvestDefs(m, local);
-    sources.forEach((src, k) => {
-      const raws = src.text.split('\n');
-      masked[k].forEach(({ bare: code }, i) => {
-        let m;
-        CALL_RE.lastIndex = 0;
-        while ((m = CALL_RE.exec(code)) !== null) {
-          if (/^[A-Z]/.test(m[2])) continue;
-          const recv = m[1] === '.' ? literalReceiver(code, m.index) : undefined;
-          sites.push({ name: m[2], sigil: m[1], recv, local, at: `${path.relative(TESTS_ROOT, file)}:${src.line + i}`, text: raws[i].trim().slice(0, 110) });
-        }
-      });
+  const local = new Set();
+  const masked = sources.map((src) => coffeeMask(src.text, `${where} (its macro source from line ${src.line})`));
+  for (const m of masked) defs.harvestDefs(m, local);
+  sources.forEach((src, k) => {
+    const raws = src.text.split('\n');
+    masked[k].forEach(({ bare: code }, i) => {
+      let m;
+      CALL_RE.lastIndex = 0;
+      while ((m = CALL_RE.exec(code)) !== null) {
+        if (/^[A-Z]/.test(m[2])) continue;
+        const recv = m[1] === '.' ? literalReceiver(code, m.index) : undefined;
+        sites.push({ name: m[2], sigil: m[1], recv, local, at: `${at}:${src.line + i}`, text: raws[i].trim().slice(0, 110) });
+      }
     });
-  }
+  });
+  return sites;
+}
+function harvestMacroCalls(files) {
+  const sites = [];
+  for (const { file, sources } of macroSources(TESTS_ROOT)) sites.push(...sendsOfMacroSources(sources, file, path.relative(TESTS_ROOT, file)));
+  for (const p of files) sites.push(...sendsOfMacroSources(verbMacroSourcesIn(fs.readFileSync(p, 'utf8'), p), p, label(p)));
   return sites;
 }
 
@@ -240,7 +246,7 @@ function main() {
 
   const files = [...walk(SRC, '.coffee', []), ...walk(HARNESS, '.coffee', [])];
   const defined = harvestDefs(files);
-  const sites = [...harvestCalls(files), ...harvestMacroCalls()];
+  const sites = [...harvestCalls(files), ...harvestMacroCalls(files)];
 
   const allow = readAllowlist(ALLOWLIST);   // name -> reason
 

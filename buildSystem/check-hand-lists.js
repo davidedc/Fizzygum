@@ -67,8 +67,8 @@
 //       invocation — never a mention. Candidates are Fizzygum/buildSystem/*.js and lib/*.js,
 //       build_it_please.sh, and every .js or .sh under Fizzygum-tests/scripts. This file does not count:
 //       it checks that a list is examined, never current;
-//   (b) `SystemTest_<name>` with an existing Fizzygum-tests/tests/SystemTest_<name>/ directory — it runs
-//       whenever the suite runner (run-all-headless.js) does;
+//   (b) `SystemTest_<name>` naming a test (lib/tests-repo-code.js testNames) — it runs whenever the suite runner
+//       (run-all-headless.js) does;
 //   (c) an UPPER_SNAKE token — two or more segments joined by `_` or `-`, each starting with a letter
 //       (`MENU_CONTRIBUTOR_UNSWEPT`, `TIERNAMING-UNCLASSIFIED`) — that occurs, OUTSIDE every sanction's
 //       own text (so a sanction cannot vouch for itself), in a scanned file that runs: a script per (a), or
@@ -116,6 +116,7 @@
 const fs = require('fs');
 const path = require('path');
 const { mixinMemberIndent } = require('./lib/coffee-method-header');
+const { testNames } = require('./lib/tests-repo-code');
 const { rejectUnknownArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
 // the four failing sanction tokens; SANCTION_UNVERIFIED is a note, never a rule
@@ -433,10 +434,9 @@ function gateFileNames(testsPresent) {
   return names;
 }
 
+// the tests (lib/tests-repo-code.js testNames, which refuses a tests tree it cannot read as tests)
 function testDirNames(testsPresent) {
-  if (!testsPresent || !fs.existsSync(TEST_DIRS)) return new Set();
-  return new Set(fs.readdirSync(TEST_DIRS, { withFileTypes: true })
-    .filter(e => e.isDirectory() && e.name.startsWith('SystemTest_')).map(e => e.name));
+  return new Set(testsPresent ? testNames(TEST_DIRS) : []);
 }
 
 function loadFile(abs, repo) {

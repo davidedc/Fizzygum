@@ -11,16 +11,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **Four walks find a test's command files** (found closing "two readers of a test's macro sources", in the
-      plan's ledger): `lib/tests-repo-code.js`'s
-      `macroFiles` (every `*_automationCommands.js` under `tests/`, skipping `automation-assets/` and dot directories),
-      `check-layering.js`'s `collectMacros` (every one, nothing skipped), and the discipline gate's and aim-census's
-      `tests/SystemTest_*/<name>_automationCommands.js`. They agree today; the harness's own definition is the manifest
-      (`tests/`'s subdirectories, `generate-tests-manifests.js`). One file set, the manifest's. Beside them, src's macro
-      sources — the bodies of MacroToolkit's `Macro.fromString` heredocs — are found three ways (found closing the
-      comment cutters item): `lib/call-sites.js` by parse, `check-layering.js`'s `macroVerbTexts` and `aim-census.js`'s
-      `toolkitVerbs` by an opener regex and a lone closing `"""`, reading the raw lines rather than the value the
-      compiler makes of them. One definition of where macro sources live, read as the text the page compiles.
+- [ ] **Every build tool walks src for itself** (found closing the four walks item, in the plan's ledger). About
+      forty build tools each list src's `.coffee` files with a walk of their own (`collectCoffee`, `walkFiles`, a local
+      `walk`, `lib/macro-sources.js`'s `verbMacroSources`, …), with different skip rules: some pass over dot directories
+      and `node_modules`, some pass over nothing, and some also read the harness. A file one walk skips is read by the
+      others, and nothing says which set a gate read. One definition of src's files, as `lib/tests-repo-code.js`'s
+      `testNames` is of the tests.
 - [ ] **A mixin's static edit does not reach a consumer's subclasses** (found closing "two readers of a test's macro
       sources", in the plan's ledger).
       `Mixin.applyStaticEdit` writes the new static onto each consumer class, but `extend` copied a class's statics
