@@ -75,8 +75,8 @@ class Mixin
   # (Mixin.donorOf), else none: boot order put it so -- augmentWith runs before the class-body
   # assignments, and each augmentWith injects over the one before it -- and every edit, mine and
   # a class's, keeps it so (_isTheDonorTo). The live members are thereby a function of the stores.
-  # Notifying instances is the CALLER's business: my edits answer the consumer classes they
-  # updated, so a gesture made of several edits tells each instance once.
+  # Telling the widgets is the CALLER's business (Class.notifyWidgetsOfAnEditTo): my edits answer
+  # the consumer classes they updated, so a gesture made of several edits tells each widget once.
 
   # the classes this mixin is injected into -- recorded on the mixin LITERAL
   # (window.<name>Mixin) by Object::augmentWith at injection time.

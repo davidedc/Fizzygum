@@ -17,8 +17,8 @@
 #   - the BODY: the member list, inspectorListColumnWidth wide but never more than half my width,
 #     then a 1 px seam, then the code pane out to my right edge;
 #   - the FOOTER band (FooterBandLayout): Add… Rename… Remove at its left, Save -- the primary
-#     action -- at its right. A read-only inspector (a subject that cannot service an edit) has no
-#     footer band, and its body runs to my bottom.
+#     action -- at its right. A read-only inspector (a subject that cannot service my edits,
+#     _subjectIsEditable) has no footer band, and its body runs to my bottom.
 # A band keeps its controls at their own size: where my width is less than a band's controls need,
 # they run past my right edge -- the breadcrumb wraps instead, and only a piece wider than a whole
 # row runs past it -- and I clip them there, naked or windowed alike.
@@ -316,10 +316,11 @@ class InspectorWdgt extends Widget
   # class, and is edited in that class's inspector: removed here it would delete nothing, and
   # renamed here it would become a copy of the class's member on my subject with no source of its
   # own, which no world snapshot can save. Nor `constructor`, which is my subject's class itself
-  # (Class.refuseTheConstructor).
+  # (Class.refuseTheConstructor). Nor anything, while my subject is no subject of my edits
+  # (_subjectIsEditable).
   _selectedMemberCanBeRenamedOrRemoved: ->
     name = @list?.selected?.labelString
-    name? and name isnt "constructor" and Object::hasOwnProperty.call @inspectedObject, name
+    name? and name isnt "constructor" and @_subjectIsEditable() and Object::hasOwnProperty.call @inspectedObject, name
 
   # My toggles show my filter: each is ON exactly while the showing* field it stands for is true.
   # The build and every re-filter end here, and nothing else sets a toggle of mine, so a toggle and
@@ -445,26 +446,41 @@ class InspectorWdgt extends Widget
 
   # A DOUBLE-CLICK on a member row (ListWdgt.openRow hands me its member's name, after the click that
   # selected it): when the member's value is an object -- the only kind of value with members to show
-  # -- a NAKED inspector of my own class on it, at the pointer, so its fields can be viewed and
-  # changed; any other value opens nothing.
+  # -- a NAKED inspector on it, at the pointer, of the kind its value calls for
+  # (InspectorWdgt.inspectorClassFor): so a class function's `__super__` opens its superclass's class
+  # inspector, and a class inspector's `constructor` an object inspector on the class function. Any
+  # other value opens nothing.
   inspectMemberValue: (memberName) ->
     value = @inspectedObject[memberName]
     return unless Utils.isObject value
-    inspector = new @constructor value
+    inspector = new (InspectorWdgt.inspectorClassFor value) value
     inspector._applyMoveTo world.hand.position()
     inspector._moveWithin world
     world.add inspector
 
+  # WHICH INSPECTOR a value calls for, asked by every door that hands an inspector an arbitrary value
+  # (my row double-click, Widget.spawnInspector): a Fizzygum class's PROTOTYPE is its class, and gets
+  # the class inspector, whose edits go through the class's meta-object and are recorded; any other
+  # value gets the object inspector. So a class is viewed and edited in one place.
+  @inspectorClassFor: (value) ->
+    if isAClassPrototype value then ClassInspectorWdgt else InspectorWdgt
 
-  # Can this subject SERVICE an edit? An inspector is handed whatever the user asked to inspect,
-  # and only some of those implement the edit protocol — `injectProperty` / `addOwnProperty` /
-  # `removeOwnProperty` / `renameOwnProperty` / `sourceChanged`, which arrive together on Widget. A
-  # number, a string, a Point cannot: you cannot inject a property into 42. ⚠ A CAPABILITY query,
-  # never `instanceof Widget` — the question is "does it service the protocol", so a future
-  # non-widget that implements the five should get an editable inspector. The five always co-occur,
-  # so one probe answers for the row.
+
+  # Can this subject SERVICE an edit of mine? An inspector is handed whatever the user asked to
+  # inspect, and an object inspector edits an OBJECT through the instance edit protocol --
+  # `injectProperty` / `addOwnProperty` / `removeOwnProperty` / `renameOwnProperty` / `sourceChanged`,
+  # which arrive together on Widget. A number, a string, a Point cannot: you cannot inject a property
+  # into 42. ⚠ A CAPABILITY query, never `instanceof Widget` — the question is "does it service the
+  # protocol", so a future non-widget that implements the five should get an editable inspector. The
+  # five always co-occur, so one probe answers for the row. A class's PROTOTYPE answers the probe too,
+  # through inheritance, and is no object of mine to edit: its members are its class's, edited in its
+  # class inspector through the meta-object and recorded (ClassInspectorWdgt states that scope). The
+  # doors never hand me one (inspectorClassFor); one I hold anyway -- built by code, or from a file --
+  # is read-only, and my current chip opens its class inspector. Read-only means more than a missing
+  # footer: a restored inspector keeps the buttons its file holds, so my edit gestures ask this too
+  # (save, addProperty, and rename and remove through _selectedMemberCanBeRenamedOrRemoved).
   _subjectIsEditable: ->
-    @inspectedObject.injectProperty?
+    @inspectedObject.injectProperty? and !isAClassPrototype @inspectedObject
 
   # The EDIT ROW -- my footer band's buttons -- as ONE unit: built, laid out and reached into
   # together, so it exists or it does not, and my footer band with it. An inspector on a subject
@@ -817,7 +833,7 @@ class InspectorWdgt extends Widget
   # it is reported, and stays MODIFIED, Save still enabled (Widget._savingTypedCode). Answers
   # whether it saved (ClassInspectorWdgt.overrideInThisClass reads it).
   save: ->
-    if !@list.selected? then return false
+    return false unless @list.selected? and @_subjectIsEditable()
     txt = @detail.contents.children[0].text.toString()
     propertyName = @list.selected.labelString
     return false unless @_savingTypedCode => @applyPropertyEdit propertyName, txt
@@ -842,7 +858,7 @@ class InspectorWdgt extends Widget
 
 
   addProperty: (prop) ->
-    if prop? and !@_refusesAsANewMemberName prop
+    if prop? and @_subjectIsEditable() and !@_refusesAsANewMemberName prop
       @_addNamedProperty prop
 
   # `constructor` is no name a member can take: a widget's or a prototype's `constructor` is its

@@ -98,8 +98,8 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   Widget-branch prototype is `instanceof Widget`, so the external-widget rule below would read it
   as a widget, and a non-widget one would be copied into an object posing as its class's prototype.
   (A class FUNCTION rides a copy uncopied, as every function does, and a save names it by its class
-  too.) A class inspector's subject is one; an object inspector opened on a `__super__` row is
-  another.
+  too.) A class inspector's subject is one, whichever door opened it (a `__super__` row, Inspect
+  selection, a breadcrumb chip).
 - A `Widget` NOT in the **in-structure set** is **external**: duplication keeps the live
   reference (so a duplicate can stay wired to an outside widget); serialization cannot
   keep a live pointer, so this is where the well-known / error policy applies (§4). That is
@@ -265,8 +265,8 @@ window lives in the world's app-window registry (`world.appWindows`, keyed by cl
 
 **The class keys.** A class, and its own prototype, belong to the PAGE rather than to the
 world: every page holding the class has them. A widget pointing at one (a class inspector's
-subject is a class's prototype; an object inspector can be opened on a class function, or on a
-prototype through a `__super__` row) writes `"class:<Name>"` / `"prototype:<Name>"`, and the load
+subject is a class's prototype, which a `__super__` row and Inspect selection open in it too; an
+object inspector can be opened on a class function) writes `"class:<Name>"` / `"prototype:<Name>"`, and the load
 binds the key through `classNamed` to the LOADING page's class, with the file's class-scope edits
 replayed onto it first (§12). A record of the prototype's members
 would restore as a fake instance, and its methods have no source a file can carry.
@@ -789,7 +789,13 @@ In both of the last two scopes an ADD is an edit whose source is `"undefined"`, 
 two records — an edit under the new name, then a removal of the old — so a renamed member is
 recompiled under its new name on replay as it was live. Each step makes the edit AND its record
 (`ClassInspectorWdgt`, one step per scope × operation), so no gesture of the class inspector
-changes a prototype unrecorded. Replay is EXACT because the live state is a function of two stores: each `Class`
+changes a prototype unrecorded. And no other inspector changes one at all: every door that hands
+an inspector an arbitrary value opens a class's prototype in its class inspector
+(`InspectorWdgt.inspectorClassFor`: the member row's double-click, `Widget.spawnInspector`), and an
+object inspector that holds one anyway (built by code, or from a file) is read-only — a prototype
+answers the instance edit protocol only through inheritance (`InspectorWdgt._subjectIsEditable`), and
+its edit gestures ask that too, since a restored inspector keeps the buttons its file holds.
+The class inspector edits the prototype of ANY Fizzygum class, a value class's included. Replay is EXACT because the live state is a function of two stores: each `Class`
 and each `Mixin` keeps the CURRENT source of every member it defines (an edit writes it, a
 removal deletes it), and a consumer's prototype holds its class's member where the class
 defines one, else the donor mixin's (a class removal gives the donor's current member back,

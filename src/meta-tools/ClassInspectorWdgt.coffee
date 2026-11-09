@@ -9,8 +9,8 @@ class ClassInspectorWdgt extends InspectorWdgt
   # Each makes the meta-object's edit AND its registry record (SourceEditsRegistry), so no gesture
   # of mine can change a prototype or a mixin unrecorded, and a world snapshot replays exactly what
   # was done. None notifies: Class and Mixin leave that to their caller, and a gesture can be two
-  # steps (a rename is an edit under the new name and a removal of the old), while each instance
-  # must hear of the gesture ONCE -- so each gesture below ends in one notification.
+  # steps (a rename is an edit under the new name and a removal of the old), while each widget the
+  # gesture can have changed must hear of it ONCE -- so each gesture below ends in one notification.
 
   _editClassMember: (memberName, source) ->
     @inspectedObject.constructor.class.applyMemberEdit memberName, source
@@ -31,17 +31,15 @@ class ClassInspectorWdgt extends InspectorWdgt
     world?.sourceEditsRegistry?.recordMixinMemberRemoval? theMixin.name, memberName
     updated
 
-  # A class-scope gesture's one notification: every instance of my class and of its subclasses
-  # hears of the edit once (Class.notifyInstancesOfSourceChange).
-  _notifyInstancesOfSourceChange: ->
-    @inspectedObject.constructor.class.notifyInstancesOfSourceChange()
+  # A class-scope gesture's one notification: every widget the edit to my class can have changed
+  # hears of it once (Class.notifyWidgetsOfAnEditTo, Class.widgetsAnEditCanChange).
+  _notifyWidgetsOfSourceChange: ->
+    Class.notifyWidgetsOfAnEditTo [@inspectedObject.constructor.class]
 
-  # A mixin-scope gesture's one notification: the instances of each consumer class it updated.
-  # No class is a consumer twice over through an ancestor (Object::addInstanceProperties refuses
-  # the same mixin twice in one chain), so no instance is in two of these sets.
+  # A mixin-scope gesture's one notification: every widget the edit to each consumer class it
+  # updated can have changed hears of it once, however many of those classes name it.
   _notifyConsumerClasses: (classNames) ->
-    (classNamed eachName).class.notifyInstancesOfSourceChange() for eachName in classNames
-    return
+    Class.notifyWidgetsOfAnEditTo ((classNamed eachName).class for eachName in classNames)
 
   _informConsumerClassesUpdated: (whatHappened, theMixin, classNames) ->
     count = classNames.length
@@ -54,13 +52,23 @@ class ClassInspectorWdgt extends InspectorWdgt
   _buildAndConnectChildrenNoSettle: ->
     super
     # part of the base's EDIT ROW, my footer band, so it exists on the same condition the rest of
-    # that row does: a class whose prototype cannot service an edit (a Point, a Color — anything off
-    # the Widget branch, reachable now that an inspector opens on any value) gets a read-only
-    # inspector with no footer band at all, and this button is one of its members.
+    # that row does (_subjectIsEditable): a subject that is no Fizzygum class's prototype gets a
+    # read-only inspector with no footer band at all, and this button is one of its members.
     if @_subjectIsEditable()
       @overrideInThisClassButton = new SimpleButtonWdgt target: @, action: "overrideInThisClass", face: "Override in this class"
       @_addNoSettle @overrideInThisClassButton
       @overrideInThisClassButton.hide()
+
+  # My edit scope: a CLASS, through its meta-object (Class.applyMemberEdit / removeMember, and
+  # Mixin's for a donated member), recorded for a snapshot to replay -- so my subject must be a
+  # Fizzygum class's PROTOTYPE (isAClassPrototype), and every such class is mine to edit, a value
+  # class or an appearance as much as a widget class: the meta-object serves them all, and the edit
+  # reaches whoever can show it (Class.widgetsAnEditCanChange). A value class's INSTANCES stay immutable --
+  # an object inspector on one is read-only -- while its class's members are edited here. Any other
+  # subject gets a read-only inspector: a built-in class's prototype (an inspector on a number names
+  # Number), or a value a code path handed me.
+  _subjectIsEditable: ->
+    isAClassPrototype @inspectedObject
 
   # The base's rename and remove follow my selection, and so does my second save destination: a
   # mixin-donated member gets it offered; any other selection hides it, and so does NO selection,
@@ -106,6 +114,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # added to a mixin appears on every non-shadowing consumer class and is logged
   # for snapshot replay). An unaugmented class keeps the base single-step flow.
   addProperty: (prop) ->
+    return unless @_subjectIsEditable()
     return if @_refusesAsANewMemberName prop
     augmentations = @inspectedObject.constructor.class?.augmentedWith
     if !augmentations? or augmentations.length is 0
@@ -151,7 +160,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # member my class defines over a mixin's gives the mixin's back (Class.removeMember).
   _applyPropertyRemoval: (propertyName) ->
     @_removeClassMember propertyName
-    @_notifyInstancesOfSourceChange()
+    @_notifyWidgetsOfSourceChange()
 
   # A rename is an edit under the new name of the member's recorded SOURCE, then a removal of
   # the old name: the member is recompiled, so its `super` calls the new name, and the record of
@@ -172,12 +181,12 @@ class ClassInspectorWdgt extends InspectorWdgt
       return
     @_editClassMember newName, theClass.nonStaticPropertiesSources[oldName]
     @_removeClassMember oldName
-    @_notifyInstancesOfSourceChange()
+    @_notifyWidgetsOfSourceChange()
 
   # a member added to my class is an edit of it to "undefined", the twin of addPropertyToMixin
   _applyPropertyAddition: (prop) ->
     @_editClassMember prop, "undefined"
-    @_notifyInstancesOfSourceChange()
+    @_notifyWidgetsOfSourceChange()
 
   # The second save destination for a mixin-donated member: instead of editing the
   # DONOR (what plain save does while @currentPropertySourceMixinName is set), keep the
@@ -236,4 +245,4 @@ class ClassInspectorWdgt extends InspectorWdgt
     # rewritten exactly as at boot). Unlike an instance edit, nothing but the record
     # remembers a prototype edit -- the registry's essential case (§12).
     @_editClassMember propertyName, txt
-    @_notifyInstancesOfSourceChange()
+    @_notifyWidgetsOfSourceChange()

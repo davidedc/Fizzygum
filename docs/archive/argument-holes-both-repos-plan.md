@@ -1558,3 +1558,38 @@ for (const s of sites) if (s.absentBefore.length) {
       "The widget-file door never loads the lazy part a file needs" (above, in this ledger). Measured: such a launcher
       loads with no target, and its first click throws. A key that names a class must resolve, so such a file is
       refused at either door before anything is built (`appKeyNotAClassRefused`, `widgetFileAppKeyIsALoadError`).
+- [x] **An object inspector opened on a class's prototype edits the class unrecorded** (found by the independent
+      review closing "A plain class-member rename or removal does not survive a snapshot load", in the plan's ledger;
+      by reading, not measured). Double-clicking an object inspector's `constructor` row opens a read-only inspector
+      on the class function, whose `__super__` row opens an OBJECT inspector on the superclass's prototype. That one
+      is editable (a prototype inherits `injectProperty`), so its Save writes `<name>_source` onto the prototype and
+      records an "instance" edit no load replays, and its Add, Rename and Remove change the prototype with no
+      record, leaving the class's store of member sources stale. A prototype's edits belong to its class's
+      inspector: such a subject could open read-only, or open the class inspector instead.
+      — CLOSED 2026-11-09. MEASURED wider than filed (survey: `Fizzygum-tests/.scratch/prototype-inspector-edits/`):
+      TWO doors handed an object inspector a class's prototype, the row double-click and `Widget.spawnInspector`
+      (Inspect selection, any class); its Save, Add, Rename and Remove changed the class with a stale member store, a
+      never-replayed `instance` record, and nothing on a fresh-page load; `sourceChanged` stamped widget-lifecycle
+      fields onto the prototype (a new instance's `root()` answered the prototype); its `<m>_source` companion
+      outranked the class's store in every inspector after; its title threw on five classes. One query,
+      `InspectorWdgt.inspectorClassFor`, now picks the inspector a value calls for at both doors (a class's prototype
+      gets its class inspector, and a class inspector's `constructor` row an object inspector); each inspector's
+      `_subjectIsEditable` states its scope (an object inspector never a class's prototype; a class inspector the
+      prototype of ANY Fizzygum class); `Utils.colloquialNameOf` names a class's prototype from its class. Owner
+      ruling the same day: value classes are editable live, so the class inspector edits Point, Color, appearances…,
+      and such an edit tells every widget once: `Class.widgetsAnEditCanChange` answers by class relation, and
+      `Class.notifyWidgetsOfAnEditTo` tells the union of a gesture's classes once (it replaced
+      `notifyInstancesOfSourceChange`). Read-only holds at the edit gestures too (save, add, rename, remove ask
+      `_subjectIsEditable`), since a restored inspector keeps the buttons its file holds. Proven by
+      `SystemTest_macroInspectorOpensAClassInItsClassInspector` (assertion-only) and a new union case in
+      `SystemTest_macroClassEditNotifiesInstances`: eleven plants, each failing its own assertion and `world.inspector.classSubjectsSurviveSnapshot`'s new fact. "The menu sweep builds its class inspector on an instance" folded (below); the class
+      inspector's code-pane receiver added to "The evaluation menu is unreachable in an inspector's code pane".
+- [x] **The menu sweep builds its class inspector on an instance** (found closing the same item; by reading).
+      `menu-click-sweep-headless.js`'s `ClassInspectorWdgt` root is `new Klass(t)` on a RectangleWdgt instance, while
+      the product builds one only on a class's prototype. On a prototype, the sweep's driven Add… and Rename… OKs would
+      edit a real class in the middle of the sweep, so the root wants a class of its own to edit.
+      — CLOSED 2026-11-09, folded into "An object inspector opened on a class's prototype edits the class unrecorded"
+      (above): a class inspector on an instance is read-only there, so the root had to change. MEASURED: the old root's
+      Add… OK already added `property` to the RectangleWdgt CLASS mid-sweep. The root and its button fixture now
+      inspect the prototype of `MenuSweepOwnWdgt`, a class the sweep makes in the page with the meta-system
+      (`new Class source, false, true`), so its OKs edit no class the sweep uses.

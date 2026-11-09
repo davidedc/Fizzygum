@@ -4864,7 +4864,8 @@ class Widget extends TreeNode
       # whenAllLoaded hop because this closure runs after a SECOND await (the reflective
       # layer) — one guard at the acting site covers both waits
       return if inspectee.destroyed
-      inspector = new (window["InspectorWdgt"]) inspectee
+      # the inspector the inspectee calls for: a class's prototype gets its class inspector
+      inspector = new (window["InspectorWdgt"].inspectorClassFor inspectee) inspectee
       world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
     world.parts.whenAllLoaded ["meta-tools"], ->
       if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector

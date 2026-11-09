@@ -2307,6 +2307,18 @@ assertion a recapture after a regression silently stores two different hashes an
   a right-click on the construct lands on a CONTAINED widget, so the ancestor hierarchy menu opens first — step into the
   construct's row by the widget, `@moveToRowOfMenuStandingForAndClick_InputEvents @getMostRecentlyOpenedMenu(), sp`, then click
   the policy row on the construct's own menu ("Don't scroll (crop)" / "Allow scrolling"). No new verb.
+- **Inspector row double-click opens the inspector its value calls for** (`macroInspectorOpensAClassInItsClassInspector`,
+  assertion-only, no screenshots): a member row's double-click (`ListWdgt.openRow` → `InspectorWdgt.inspectMemberValue`)
+  opens a NAKED inspector at the pointer, of the kind `InspectorWdgt.inspectorClassFor` picks — a class's prototype its
+  CLASS inspector, anything else an object inspector. Drive it as real input on the row widget itself:
+  `@doubleClickAtFractionOf_InputEvents (inspector.list.listContents.topWdgtSuchThat (w) -> w.labelString is "__super__"),
+  [0.5, 0.5]`, then find the inspector it opened by its SUBJECT (`world.topWdgtSuchThat (w) -> w instanceof InspectorWdgt and
+  w.inspectedObject is X`), never as "the newest". The row must SHOW to take the press (the aim check fails it otherwise): pick
+  a subject whose row sorts into the first rows (a `RectangleWdgt`'s `constructor`, a class function's `__super__`, a
+  class inspector on `BoxWdgt.prototype`, whose only row is `constructor`), or scroll it in first
+  (`bringInViewAndClickOnListItem_InputEvents_Macro`). The double-click replays under a finger as a double tap, unchanged. A
+  class edit inside a test (a value class's member added through its class inspector) is taken off again in a `finally`,
+  since the page outlives the test.
 
 ## Touch and the finger run mode
 

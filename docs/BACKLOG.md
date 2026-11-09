@@ -18,14 +18,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       loads is the file's edits on top of the page's, not the world the file was saved from. The two stores
       (`Class` / `Mixin` `nonStaticPropertiesSources`) say what each class defines now; what the page booted with
       is the class's source text (`SourceVault`), so a load could first return every edited member to it.
-- [ ] **An object inspector opened on a class's prototype edits the class unrecorded** (found by the independent
-      review closing "A plain class-member rename or removal does not survive a snapshot load", in the plan's ledger;
-      by reading, not measured). Double-clicking an object inspector's `constructor` row opens a read-only inspector
-      on the class function, whose `__super__` row opens an OBJECT inspector on the superclass's prototype. That one
-      is editable (a prototype inherits `injectProperty`), so its Save writes `<name>_source` onto the prototype and
-      records an "instance" edit no load replays, and its Add, Rename and Remove change the prototype with no
-      record, leaving the class's store of member sources stale. A prototype's edits belong to its class's
-      inspector: such a subject could open read-only, or open the class inspector instead.
 - [ ] **Mixin editing holds only where the page compiled its mixins** (found by the same review, by reading, not
       measured). A pre-compiled page (`homepage`) only parses its mixins when their sources arrive, so
       `Mixin.allMixines` stays empty: the inspector shows a donated member's compiled JS, `Class.removeMember` gives
@@ -84,10 +76,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
         precondition, a `<name>Context` field beside its canvas `<name>`, that neither one states.
       - The Serializer's comment says the deserializer rebuilds the value, but the Deserializer's pass 4(b) reads a
         `record.derived` list that no save writes. After a load, each widget rebuilds its own context, lazily.
-- [ ] **The menu sweep builds its class inspector on an instance** (found closing the same item; by reading).
-      `menu-click-sweep-headless.js`'s `ClassInspectorWdgt` root is `new Klass(t)` on a RectangleWdgt instance, while
-      the product builds one only on a class's prototype. On a prototype, the sweep's driven Add… and Rename… OKs would
-      edit a real class in the middle of the sweep, so the root wants a class of its own to edit.
 - [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
       loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
       `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function
@@ -107,6 +95,13 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       stays false and the memoized promise rejected: every later inspector open (`Widget.spawnInspector`) and every
       file holding an inspector (`Deserializer._needsTheReflectiveLayer`) then waits on, or is refused for, a layer
       that is there.
+- [ ] **A class edit refreshes only what a repaint shows** (found by the independent review closing "An object
+      inspector opened on a class's prototype edits the class unrecorded", in the plan's ledger; by reading). A class
+      inspector's edit tells each widget it can have changed through `Widget.sourceChanged`: the widget's own
+      `_reLayoutSelf` hook (empty on most classes), a repaint, and the editor's style note. It neither invalidates a
+      layout nor flushes a cache built from the edited code (`world.cacheForImmutableBackBuffers`, a text's measured
+      lines). So an edit that changes geometry or cached text — of a widget class, and now of a value class, an
+      appearance or a layout spec, whose edit tells every widget — shows only once something else invalidates it.
 - [ ] **The evaluation menu is unreachable in an inspector's code pane** (found by the independent review closing the
       same item; by reading). The inspector arms its code pane's text with a receiver (`TextWdgt.setReceiver`), and a
       text with a receiver answers its evaluation menu ("Do all", "Inspect selection", …) as its
@@ -114,6 +109,14 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       (`takesOverAndMergesChildrensMenus`), so a right-click asks the `TextAreaWdgt`, which answers no such menu, and
       the generic menu shows. The macro tests of the evaluation menu build a standalone `TextWdgt` for this reason
       (MACRO-PATTERNS.md, "Evaluation menu reflects text selection").
+      Once it is reachable, a CLASS inspector's pane runs against the class's PROTOTYPE (its receiver,
+      `codePaneRunsAgainstItsSubject` in the serialization rig): its run gestures would call `Widget.evaluateString` on
+      the prototype, whose `sourceChanged` stamps widget-lifecycle fields onto it (measured closing "An object inspector
+      opened on a class's prototype edits the class unrecorded": a new instance's `root()` then answers the prototype),
+      and any `@x = …` typed there edits the class unrecorded. A value class's prototype (Point, Color: their class
+      inspector edits them) has no `evaluateString` at all, so each run gesture there would throw; and a read-only
+      object inspector holding a prototype (built by code, or from a file) has the same receiver. The fix must choose
+      that pane's receiver.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

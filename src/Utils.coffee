@@ -34,6 +34,10 @@ class Utils
 
   # ASK the value; derive only when it cannot answer. This is the form for a caller holding an
   # ARBITRARY value — today the object inspector, which is handed whatever the user asked to
-  # inspect. Widgets keep answering through their own (often overridden) method.
+  # inspect. Widgets keep answering through their own (often overridden) method. A class's
+  # PROTOTYPE is never asked: it carries its class's methods but is no instance, so asking it runs
+  # instance code on none (several overrides read state only an instance has, and throw); it is
+  # named from its class.
   @colloquialNameOf: (value) ->
+    return Utils.derivedColloquialName value if isAClassPrototype value
     value?.colloquialName?() ? Utils.derivedColloquialName value

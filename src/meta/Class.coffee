@@ -271,8 +271,8 @@ class Class
   # (ClassInspectorWdgt._applyPropertyRename), so the member is RECOMPILED and its `super` follows
   # the new name (_superOf).
   # Callers: ClassInspectorWdgt's edit steps and SourceEditsRegistry.replayClassEdits (world-snapshot
-  # restore). Notifying instances is the CALLER's business -- the restore path replays before any
-  # instance exists.
+  # restore). Telling the widgets is the CALLER's business (Class.notifyWidgetsOfAnEditTo) -- the
+  # restore path replays before any instance exists.
 
   # Rewrite ONE member on my prototype from CoffeeScript source -- the CLASS twin of
   # Mixin.applyMemberEdit, with the SAME compile shape: a bare global-assignment eval, NOT
@@ -649,13 +649,29 @@ class Class
     # then add the .class field
     window[@name].class = @
 
-  # After an edit to one of my members, every live instance of mine and of my subclasses hears of it
-  # once (Widget.sourceChanged: a re-layout and a repaint). My `instances` set holds exactly those:
-  # a widget is in the set of its class and of every superclass (Widget.registerThisInstance). None
-  # is left out, not even a subclass's whose own definition of the member overrides mine -- an
-  # override can call super, and many do -- since an instance told once too often costs one
-  # repaint, where one left out keeps a stale look.
-  notifyInstancesOfSourceChange: ->
-    window[@name].instances.forEach (eachInstance) ->
-      eachInstance.sourceChanged()
+  # The WIDGETS an edit to one of my members can have changed, as a Set. While my instances are
+  # widgets -- I am Widget, or on its branch -- they are my `instances` set: a widget is in the set
+  # of its class and of every superclass (Widget.registerThisInstance), so it holds my subclasses'
+  # too, and none is left out, not even a subclass's whose own definition of the member overrides
+  # mine -- an override can call super, and many do -- since a widget told once too often costs one
+  # repaint, where one left out keeps a stale look. Any other class (a value class, an appearance, a
+  # layout spec) has no instance that registers, and any widget may paint with it, so its answer is
+  # every widget (Widget's set) -- the very set TreeNode's holds, above Widget, which every widget
+  # registers in too. Asked by class RELATION, never by a member my prototype holds: a member is
+  # exactly what an edit of mine can add or take away.
+  widgetsAnEditCanChange: ->
+    klass = window[@name]
+    if klass is Widget or Widget::isPrototypeOf klass.prototype then klass.instances else Widget.instances
+
+  # After an edit -- one gesture, which can change several classes (a mixin edit changes each consumer
+  # class it updates) -- every widget it can have changed hears of it ONCE (Widget.sourceChanged: its
+  # re-layout hook and a repaint): the union of the classes' answers, each widget told once however
+  # many of them name it. Callers: the class inspector's gestures. A snapshot's replay tells no one:
+  # it runs before any instance exists.
+  @notifyWidgetsOfAnEditTo: (classes) ->
+    widgets = new Set
+    for eachClass in classes
+      eachClass.widgetsAnEditCanChange().forEach (eachWidget) -> widgets.add eachWidget
+    widgets.forEach (eachWidget) -> eachWidget.sourceChanged()
+    return
 
