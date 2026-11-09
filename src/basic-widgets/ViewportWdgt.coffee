@@ -81,6 +81,14 @@ class ViewportWdgt extends Widget
     "_pointerInScrollBand"
   ]
 
+  # A RESTORED viewport lays itself out again at the next settle, so its arrange re-derives what no
+  # file carries: my bars' indicator presentation (SliderWdgt.indicatorMode, from my overflow and the
+  # dropped hover state, _refreshScrollIndicators). A restored world is otherwise already settled, so
+  # no arrange would come, and my bars would wear the plain slider's look -- a hollow thumb over a
+  # track the saved alpha hides -- until something re-laid me out.
+  _afterDeserialization: ->
+    @_scheduleRelayoutRespectingPhase()
+
   # Capability query: is aWdgt one of MY scrollbars? A SliderWdgt asks this of its parent to know whether
   # it is CHROME (a scrollbar → excluded from the editor-focus selection overlay) or content (a dropped
   # value control → framable). Only my actual bars match, so a content slider dropped into my content stays

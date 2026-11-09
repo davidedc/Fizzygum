@@ -200,15 +200,6 @@ class Widget extends TreeNode
   # weird if that caused a drag of anything.
   defaultRejectDrags: false
 
-  # if you place a menu construction function here,
-  # it gets the priority over the normal context
-  # menu. This is done for example in the Inspector
-  # panes, where the context menu is about running the
-  # code contained in the text panel, rather than
-  # to fiddle with the properties of the text panel
-  # itself.
-  overridingContextMenu: undefined
-
   # menu merging is useful when you want a "parent"
   # menu to take over the menus of their children.
   # This assumes that for certain widgets is OK to just exist
@@ -4921,8 +4912,11 @@ class Widget extends TreeNode
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
       widgetToAskMenuTo = anyParentsTakingOverMyMenu[0]
 
-    if widgetToAskMenuTo.overridingContextMenu
-      return widgetToAskMenuTo.overridingContextMenu()
+    # a widget whose context menu is a menu of its own answers it here, ahead of the generic one (a
+    # text with a receiver: its evaluation menu, TextWdgt.overridingContextMenu). A `?`-dispatched
+    # capability, nothing on Widget; undefined is "no menu of my own".
+    overridingMenu = widgetToAskMenuTo.overridingContextMenu?()
+    return overridingMenu if overridingMenu?
 
     if world.isDevMode
       hierarchyMenuWidgets = widgetToAskMenuTo.getHierarchyMenuWidgets()

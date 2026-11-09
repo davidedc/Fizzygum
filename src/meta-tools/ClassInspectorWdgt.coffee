@@ -72,7 +72,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # `?.` here.)
   _reflectMemberSelection: ->
     super()
-    if @currentPropertySourceMixin?
+    if @currentPropertySourceMixinName?
       @overrideInThisClassButton?.show()
     else
       @overrideInThisClassButton?.hide()
@@ -91,7 +91,7 @@ class ClassInspectorWdgt extends InspectorWdgt
         return theClass.nonStaticPropertiesSources[selected]
       theMixinProvidingIt = Mixin.donorOf theClass, selected
       if theMixinProvidingIt?
-        @currentPropertySourceMixin = theMixinProvidingIt
+        @currentPropertySourceMixinName = theMixinProvidingIt.name
         return theMixinProvidingIt.nonStaticPropertiesSources[selected]
       goingUpTargetProtChain = goingUpTargetProtChain.__proto__
     undefined
@@ -136,8 +136,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # is all that changed, so I re-filter (_refilterMembers), which also drops the removed member's
   # attribution.
   removeProperty: ->
-    if @currentPropertySourceMixin? and @_selectedMemberCanBeRenamedOrRemoved()
-      theMixin = @currentPropertySourceMixin
+    if (theMixin = @_currentPropertySourceMixin())? and @_selectedMemberCanBeRenamedOrRemoved()
       propertyName = @list.selected.labelString
       updated = @_removeMixinMember theMixin, propertyName
       @_notifyConsumerClasses updated
@@ -161,7 +160,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # edit since) has nothing to recompile, so it is refused. (`constructor` never gets here, either
   # way round: InspectorWdgt.renameProperty refuses it.)
   _applyPropertyRename: (oldName, newName) ->
-    if (theMixin = @currentPropertySourceMixin)?
+    if (theMixin = @_currentPropertySourceMixin())?
       updated = @_editMixinMember theMixin, newName, theMixin.nonStaticPropertiesSources[oldName]
       for eachName in @_removeMixinMember theMixin, oldName when eachName not in updated
         updated.push eachName
@@ -181,7 +180,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     @_notifyInstancesOfSourceChange()
 
   # The second save destination for a mixin-donated member: instead of editing the
-  # DONOR (what plain save does while @currentPropertySourceMixin is set), keep the
+  # DONOR (what plain save does while @currentPropertySourceMixinName is set), keep the
   # edited source as an override on THIS class only. Dropping the mixin attribution
   # first makes the plain save routing do exactly that -- and undefined IS the true
   # post-state: my class's store of member sources then holds the member
@@ -192,20 +191,20 @@ class ClassInspectorWdgt extends InspectorWdgt
   # member stays the mixin's, attribution, button and label all.
   overrideInThisClass: ->
     if !@list.selected? then return
-    return unless @currentPropertySourceMixin?
-    theMixin = @currentPropertySourceMixin
-    @currentPropertySourceMixin = undefined
+    return unless @currentPropertySourceMixinName?
+    theMixinName = @currentPropertySourceMixinName
+    @currentPropertySourceMixinName = undefined
     saved = false
     try
       saved = @save()
     finally
-      @currentPropertySourceMixin = theMixin  unless saved
+      @currentPropertySourceMixinName = theMixinName  unless saved
     return unless saved
     @overrideInThisClassButton?.hide()
     # the donor label follows the attribution: the member is class-owned now, and my breadcrumb band
     # re-flows without the label
     @mixinDonorLabel?.setText ""
-    @inform "overridden in " + @inspectedObject.constructor.name + "\n(" + theMixin.name + "Mixin edits no longer affect it)"
+    @inform "overridden in " + @inspectedObject.constructor.name + "\n(" + theMixinName + "Mixin edits no longer affect it)"
 
   # the class name follows the dash as DATA, exactly as the breadcrumb's chip shows it ("Class
   # Inspector — RectangleWdgt"): a class inspector's subject IS the class
@@ -226,8 +225,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     # recompiles it and injects it into every consumer class that does not define it
     # (Mixin.applyMemberEdit) -- the class inspector is prototype-level truth, and
     # a mixin member's prototype-level truth is the mixin
-    if @currentPropertySourceMixin?
-      theMixin = @currentPropertySourceMixin
+    if (theMixin = @_currentPropertySourceMixin())?
       updated = @_editMixinMember theMixin, propertyName, txt
       @_notifyConsumerClasses updated
       @_informConsumerClassesUpdated "saved to", theMixin, updated

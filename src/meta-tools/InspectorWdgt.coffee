@@ -43,12 +43,13 @@ class InspectorWdgt extends Widget
   # information flow (a dataflow consumer, a dispatch receiver) or a tracked reference edge, and
   # reading one as the other is the hazard this name exists to remove
   inspectedObject: undefined
-  currentProperty: undefined
-  # the parsed Mixin whose source the currently-selected member's view came from
+  # the NAME of the parsed Mixin whose source the currently-selected member's view came from
   # (undefined when the source came from the instance or the class chain). Set by
-  # selectionFromList, cleared with the selection by a re-filter; consulted by
-  # ClassInspectorWdgt.applyPropertyEdit to route a save to the DONOR mixin.
-  currentPropertySourceMixin: undefined
+  # selectionFromList, cleared with the selection by a re-filter; its Mixin
+  # (_currentPropertySourceMixin) is consulted by ClassInspectorWdgt.applyPropertyEdit to route a
+  # save to the DONOR mixin. A name, as my chips hold class names: it is data, while a Mixin object
+  # is none a file can carry, so a world saved with a donated member selected keeps the attribution.
+  currentPropertySourceMixinName: undefined
   # panes:
   list: undefined
   detail: undefined
@@ -252,8 +253,10 @@ class InspectorWdgt extends Widget
     @classSeparators = []
     names = (link.constructor.name for link in @_classChainLinks())
     for name, i in names
-      # the NAME, never the link: names are data, while a prototype held by a chip would be deep-copied
-      # by the Duplicator and refused by the Serializer
+      # the NAME, never the link: a name is data, which openClassInspector resolves along my subject's
+      # chain when the chip is pressed. A link can be a BUILT-IN class's prototype (an inspector on a
+      # number names Number), which no file can carry: only a Fizzygum class's is named by its class
+      # (WellKnownObjects.classKeyFor)
       chip = new ChipWdgt target: @, action: "openClassInspector", face: name, arg1: name, current: i is names.length - 1
       @classChips.push chip
       @_addNoSettle chip
@@ -332,8 +335,7 @@ class InspectorWdgt extends Widget
   _refilterMembersNoSettle: ->
     @_buildAndConnectMemberList()
 
-    @currentProperty = undefined
-    @currentPropertySourceMixin = undefined
+    @currentPropertySourceMixinName = undefined
     @mixinDonorLabel?._setTextNoSettle ""
 
     # my code pane back to empty and read-only, its empty text the text it compares against, so its
@@ -498,12 +500,22 @@ class InspectorWdgt extends Widget
   _sourceForFieldMember: (selected) ->
     undefined
 
+  # The parsed Mixin my selected member's view came from (currentPropertySourceMixinName), or
+  # undefined when it came from my subject or its class chain. A name this page has no mixin for --
+  # a world saved by a build whose mixins differ -- THROWS, naming it: the edit the attribution routes
+  # (to the donor) must never be re-routed silently to my class.
+  _currentPropertySourceMixin: ->
+    return undefined unless @currentPropertySourceMixinName?
+    theMixin = Mixin.named @currentPropertySourceMixinName
+    unless theMixin?
+      throw new Error "the selected member came from " + @currentPropertySourceMixinName + "Mixin, which this page does not have"
+    theMixin
+
   selectionFromList: (selected) ->
     if selected == undefined then return
 
     val = @inspectedObject[selected]
-    @currentProperty = val
-    @currentPropertySourceMixin = undefined
+    @currentPropertySourceMixinName = undefined
 
     # functions should have a source somewhere
     # either in the object or in a superclass,
@@ -534,7 +546,7 @@ class InspectorWdgt extends Widget
           theMixinProvidingIt = Mixin.donorOf theClass, selected
           if theMixinProvidingIt?
             val = theMixinProvidingIt.nonStaticPropertiesSources[selected]
-            @currentPropertySourceMixin = theMixinProvidingIt
+            @currentPropertySourceMixinName = theMixinProvidingIt.name
             break
           goingUpTargetProtChain = goingUpTargetProtChain.__proto__
       txt = val.toString()
@@ -552,7 +564,7 @@ class InspectorWdgt extends Widget
 
     # the donor label hugs its new text and asks me to re-lay: my breadcrumb band re-flows, so the
     # label can take a row of its own, or give one back, and my bands below follow
-    @mixinDonorLabel?.setText (if @currentPropertySourceMixin? then "from " + @currentPropertySourceMixin.name + "Mixin" else "")
+    @mixinDonorLabel?.setText (if @currentPropertySourceMixinName? then "from " + @currentPropertySourceMixinName + "Mixin" else "")
 
     cnts = @detail.textWdgt
     cnts.setText txt

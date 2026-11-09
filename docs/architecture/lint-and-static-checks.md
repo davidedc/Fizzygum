@@ -256,8 +256,8 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   name Fizzygum also implements (`save`, `get`, `clear`, `fill`, `stroke`, `scale`, `measureText`, `keys`, `has`,
   `toString`, …) still excuses a Fizzygum-receiver call after every Fizzygum implementor of it is deleted — `toString`
   cannot throw at all (it answers `"[object Object]"`, which a canvas style property silently ignores); and a property
-  that HOLDS a closure is no definition, so a call of one (`overridingContextMenu`, `drawFunction`) resolves only through
-  its allowlist entry, which says so.
+  that HOLDS a closure is no definition, so a call of one (`drawFunction`) resolves only through its allowlist entry, which
+  says so.
   **Two exemption lists, on purpose:** the in-file `BUILTINS` set is a fact about the PLATFORM (JS/DOM/canvas), while
   `unresolved-sends-allowlist.txt` is a fact about Fizzygum's VENDOR dependencies — one named API we reach at a few
   sites, where the recorded reason is worth more than the suppression (JSZip, WebCrypto, the LCL event router, the

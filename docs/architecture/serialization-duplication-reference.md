@@ -92,6 +92,14 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   `ShadowInfo`, `TransformSpec`, `SheetError`), which serialize as ordinary values
   (sharing round-trips via the identity-keyed object table). See
   `docs/architecture/immutable-value-classes.md` §4.
+- A class's own **prototype** belongs to the PAGE, not to the copy or the file: both walkers
+  recognise one (boot's `isAClassPrototype`, built on `classNamed`) before any other reading of
+  it. Duplication shares it; serialization names it by its class (§4a). Asked first because a
+  Widget-branch prototype is `instanceof Widget`, so the external-widget rule below would read it
+  as a widget, and a non-widget one would be copied into an object posing as its class's prototype.
+  (A class FUNCTION rides a copy uncopied, as every function does, and a save names it by its class
+  too.) A class inspector's subject is one; an object inspector opened on a `__super__` row is
+  another.
 - A `Widget` NOT in the **in-structure set** is **external**: duplication keeps the live
   reference (so a duplicate can stay wired to an outside widget); serialization cannot
   keep a live pointer, so this is where the well-known / error policy applies (§4). That is
@@ -165,7 +173,8 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
 
 - **References are structured values, never in-band strings** — this is what fixes the old
   format's silent corruption of any user string starting with `$`. The three reference
-  forms (§4) are `{"$r":n}`, `{"$wk":key}`, `{"$src":coffee}` — a widget's injected method, only
+  forms (§4) are `{"$r":n}`, `{"$wk":key}` — a well-known object, or a class or a class's
+  prototype named by its class (§4a) — `{"$src":coffee}` — a widget's injected method, only
   ever a property of that widget's record — (plus `{"$ext":id}`, the token
   the tolerant `onExternalPointer:"record"` mode emits — resolvable by unique-id on restore,
   but no shipped caller selects that mode). A plain JSON object as a *value* is always a table
@@ -191,6 +200,9 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
 
 At serialize time each encountered object is classified, in order:
 
+0. **A class, or a class's own prototype** → `{"$wk": "class:<Name>"}` /
+   `{"$wk": "prototype:<Name>"}` (§4a), asked before every reading below — a class function would
+   otherwise meet the function policy (§5) and a Widget-branch prototype the widget rules.
 1. **In-structure** (a widget in the arrow-contract closure — §2, or any non-widget
    reached by the walk) → table slot, `{"$r": n}`.
 2. **Well-known** → `{"$wk": key}`, via `WellKnownObjects` (§4a).
@@ -212,7 +224,8 @@ At serialize time each encountered object is classified, in order:
    shipped caller today.
 
 Function-valued own properties are handled by the function policy (§5), not this
-classification. Transient fields (§5) never reach classification at all.
+classification — except a CLASS, which step 0 names by its class before the function policy is
+asked. Transient fields (§5) never reach classification at all.
 
 ### 4a. WellKnownObjects
 
@@ -224,9 +237,10 @@ derived/disposable and never serialized), `bin`, `shelf`, `preferences`, and
 
 - `WellKnownObjects.keyFor(obj)` → symbolic key or `undefined`.
 - `WellKnownObjects.resolve(key)` → the live object in the **current** world, or `undefined`
-  when that singleton is absent (an `app:` key naming a class this build lacks, too); a key no
-  build writes THROWS — and `Deserializer._envelopeShapeProblem` refuses a file carrying one up
-  front (`WellKnownObjects.isKnownKey` over `Serializer.wellKnownKeysIn`).
+  when that singleton is absent (an `app:` key naming a class this build lacks, too); a CLASS
+  key naming a class this build lacks THROWS (refused before a world load's teardown — the class
+  keys, below), and so does a key no build writes — `Deserializer._envelopeShapeProblem` refuses a
+  file carrying one up front (`WellKnownObjects.isKnownKey` over `Serializer.wellKnownKeysIn`).
 
 **It is lazy, not snapshotted.** Keys resolve against the live `world` on demand rather
 than from a boot-time map. This is boot-order-safe (bin/apps are built after the
@@ -245,6 +259,28 @@ property of `window` is left unresolved, never `new`-ed), `new`s the named
 `WindowedApp` subclass and MEMOIZES one instance per class
 (`@_appSingletons`), which is safe because such an app is a stateless config holder — its one
 window lives in the world's app-window registry (`world.appWindows`, keyed by class name), not on the app (§11).
+
+**The class keys.** A class, and its own prototype, belong to the PAGE rather than to the
+world: every page holding the class has them. A widget pointing at one (a class inspector's
+subject is a class's prototype; an object inspector can be opened on a class function, or on a
+prototype through a `__super__` row) writes `"class:<Name>"` / `"prototype:<Name>"`, and the load
+binds the key through `classNamed` to the LOADING page's class, with the file's class-scope edits
+replayed onto it first (§12). A record of the prototype's members
+would restore as a fake instance, and its methods have no source a file can carry.
+- `WellKnownObjects.classKeyFor` answers the two keys, and `keyFor` asks it FIRST, before the
+  singleton table and the `wellKnownKey` marker: a marker that is a METHOD is read through the
+  prototype chain, so a `WindowedApp` subclass's prototype would otherwise answer its `app:` key
+  and load as the app's singleton.
+- A class key naming a class the loading page cannot provide is REFUSED, never left undefined as
+  an unresolved `app:` key is (the widget holding it would have nothing to show or edit):
+  `WellKnownObjects.resolve` throws in `Deserializer.instantiate`'s words, and
+  `Deserializer.whyItCanNeverBeRestored` refuses such a world file before the teardown, reading
+  the key names (`Serializer.classKeyNamesIn`) as it reads record classes.
+- `Serializer.classNamesIn` includes them, so a class that a lazy part provides is loaded before
+  the restore.
+- A BUILT-IN class's prototype (a number's `Number`) is not a Fizzygum class, has no key, and is
+  refused like any other unrecognized value. So an inspector's breadcrumb chips hold class NAMES,
+  never the links.
 
 The link is symbolic and reconstructable — it preserves identity, which a bare opaque
 `"$EXTERNAL"` marker cannot.
@@ -368,7 +404,9 @@ NAMED like one.
     restored widget, so the stepping loop re-seeds it on first sight — without that, a
     snapshot-restored throttled stepper never stepped again).
 - **Functions**: for an own function-valued property `foo` —
-  - if the owner's class takes injected methods (a widget's, `Serializer.classTakesInjectedMethods`)
+  - if `foo` holds a CLASS → `{"$wk": "class:<Name>"}`, named by its class (§4 step 0, §4a), asked
+    before everything below;
+  - else if the owner's class takes injected methods (a widget's, `Serializer.classTakesInjectedMethods`)
     and the owner carries its OWN `foo_source` string (a user-injected method, `injectProperty`) →
     serialize `{"$src": <source>}` and let `foo_source` ride as a normal string; restore
     recompiles it with `injectProperty` on the owning widget. Only the OWN one counts: a class
@@ -562,7 +600,8 @@ furniture and stay): the desktop `world.children`, the off-tree `world.binWdgt` 
 `world.shelfWdgt` subtrees (the two STORAGE containers — the eager storage sort keeps the
 shelf holding the reachable residents and the bin the lost ones, `StorageSorter`; a snapshot
 taken with a sort still pending is legitimate — each resident serializes wherever it rests
-and re-sorts on the first cycle after load), each registered app window (`world.appWindows`,
+and re-sorts on the first cycle after load; a CLOSED window rests in the bin, `Widget._closeNoSettle`,
+so it is saved and restored like an open one), each registered app window (`world.appWindows`,
 the windows of the apps that open ONE window, the Docs Maker's templates window among them
 (`TemplatesApp`) — may be orphaned-but-revivable). `widgetSet` = the union of their subtrees; the
 world itself is excluded (a pointer *to* it becomes `{"$wk":"world"}`).

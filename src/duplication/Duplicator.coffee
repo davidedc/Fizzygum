@@ -47,6 +47,13 @@ class Duplicator
 
     return @clonesByOriginal.get value if @clonesByOriginal.has value
 
+    # a class's own prototype belongs to the page, not to the copy: shared, the Serializer's same fact
+    # (it names one by its class, WellKnownObjects.classKeyFor). Asked before the widget rule below,
+    # because a Widget-branch prototype is `instanceof Widget`, and a non-widget one would otherwise be
+    # copied into an object posing as its class's prototype. (A class FUNCTION rides along uncopied,
+    # as every function does, above.)
+    return value if isAClassPrototype value
+
     if (value instanceof Widget) and !@widgetsInStructure.has value
       return value
 

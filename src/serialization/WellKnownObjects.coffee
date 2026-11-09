@@ -21,6 +21,18 @@
 # below, so they declare nothing. A `wellKnownKey` class marker is the fallback for a family the
 # table cannot list, whose key carries a name: the app singletons (WindowedApp's
 # `wellKnownKey: -> "app:" + @constructor.name`).
+#
+# THE CLASS KEYS. A class, and its own prototype, belong to the PAGE, not to the world: every page
+# holding the class has them, and a widget can point at one (a class inspector's subject is a class's
+# prototype; an object inspector can be opened on a class function). Such a pointer is named by its
+# class, "class:<Name>" or "prototype:<Name>", and bound through classNamed in the loading page -- a
+# record of the prototype's members would restore as a fake instance, and its methods have no source
+# a file can carry. They are answered BEFORE the singleton table and the marker (classKeyFor), because
+# a marker that is a METHOD is read through the prototype chain: a WindowedApp subclass's prototype
+# would otherwise answer its app key and load as the app singleton. A class key naming a class the
+# loading page cannot provide is refused (resolve, and Deserializer.whyItCanNeverBeRestored before a
+# world load's teardown), never left undefined as an app key is: the widget holding it would be left
+# with nothing to show or edit.
 class WellKnownObjects
 
   # THE WELL-KNOWN SINGLETONS: key -> the object it names in the LIVE world, read afresh on every
@@ -44,11 +56,34 @@ class WellKnownObjects
   # file, hence the own-property test (a plain lookup also answers `constructor`, `__proto__`).
   @isKnownKey: (key) ->
     return false unless typeof key is "string"
-    Object::hasOwnProperty.call(@_liveSingletons(), key) or key.indexOf("app:") is 0
+    Object::hasOwnProperty.call(@_liveSingletons(), key) or key.indexOf("app:") is 0 or @classNameInClassKey(key)?
+
+  # A class or a class's own prototype -> its CLASS KEY (the header's), or undefined for any other
+  # value. Asked first by keyFor, and by the Serializer before it reads a value as a function or a
+  # widget: a Widget-branch prototype is `instanceof Widget`.
+  @classKeyFor: (value) ->
+    return "class:" + value.name if typeof value is "function" and classNamed(value.name) is value
+    return "prototype:" + value.constructor.name if isAClassPrototype value
+    undefined
+
+  # The class name a class key carries, or undefined for any other key (an app key included: it names
+  # an app's singleton, not a class). Read by the load's class-name readers
+  # (Serializer.classKeyNamesIn) and by resolve.
+  @classNameInClassKey: (key) ->
+    return undefined unless typeof key is "string"
+    name = if key.indexOf("class:") is 0
+      key.substring 6
+    else if key.indexOf("prototype:") is 0
+      key.substring 10
+    # a key with no name after its prefix is no class key (no save writes one): refused as a key no
+    # build writes
+    if name then name else undefined
 
   # live object -> symbolic key, or undefined if the object is not well-known.
   @keyFor: (obj) ->
     return undefined unless obj?
+    classKey = @classKeyFor obj
+    return classKey if classKey?
     for own key, live of @_liveSingletons()
       return key if live is obj
     # general fallback: a class-declared marker (data string or computed method),
@@ -62,15 +97,23 @@ class WellKnownObjects
     wk
 
   # symbolic key -> the live object in the CURRENT world (undefined when that singleton is absent,
-  # e.g. a world with no wallpaper yet, or an app class this build lacks -- see resolveApp). A key
-  # no Fizzygum build writes THROWS: the deserializer refuses such a file up front
-  # (Deserializer._envelopeShapeProblem asks isKnownKey), so this throw is the net for every other
-  # caller.
+  # e.g. a world with no wallpaper yet, or an app class this build lacks -- see resolveApp). A class
+  # key resolves to the class, or its prototype, in THIS page, and one naming a class the page does
+  # not have THROWS, in Deserializer.instantiate's words for a record of such a class: the world
+  # loader refuses that file up front (Deserializer.whyItCanNeverBeRestored), so the throw is the net
+  # for every other caller. A key no Fizzygum build writes THROWS too: the deserializer refuses such a
+  # file up front (Deserializer._envelopeShapeProblem asks isKnownKey).
   @resolve: (key) ->
     return undefined unless key?
     singletons = @_liveSingletons()
     return singletons[key] if Object::hasOwnProperty.call singletons, key
     return @resolveApp key.substring 4 if typeof key is "string" and key.indexOf("app:") is 0
+    className = @classNameInClassKey key
+    if className?
+      klass = classNamed className
+      unless klass?
+        throw new SerializationError ("it references the class '" + className + "', which does not exist in this build"), direction: "load"
+      return if key.indexOf("prototype:") is 0 then klass.prototype else klass
     throw new SerializationError ("it names the well-known object '" + key + "', which no Fizzygum build has"), direction: "load"
 
   # Resolve the per-app singleton for a windowed-app class name (e.g. the target of a

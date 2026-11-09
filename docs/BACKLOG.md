@@ -11,12 +11,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **A world snapshot cannot be saved while a class inspector is open** (found closing "`Deserializer.compileFunction`
-      compiles through the run gesture", in the plan's ledger). A `ClassInspectorWdgt`'s subject is a class
-      PROTOTYPE, and the save writes it as a record of all its own members, so it meets the prototype's methods and
-      refuses: measured, `SerializationError: the function-valued property .constructor has no editable source`.
-      The refusal is loud, and it costs the user the whole snapshot. One direction to measure: a prototype belongs
-      to a class, not to the world, so a file could carry the class it names rather than its members.
 - [ ] **A snapshot load never undoes the page's own earlier class edits** (found closing "A plain class-member rename
       or removal does not survive a snapshot load", in the plan's ledger; by reading, not measured).
       `loadWorldSnapshot` replays the file's mixin- and class-scope records onto the page's classes AS THEY STAND:
@@ -80,6 +74,40 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       Its pattern is `new Date\s*\(`, so a paren-less read of the clock is not counted: `WorldWdgt`'s cycle-start
       `new Date`, `AnalogClockWdgt`'s constructor, the harness's command pacing (`(new Date).getTime()` in
       `AutomatorPlayer.replayTestCommands`) and `EventCommand`'s `@date = new Date`.
+- [ ] **A value answering `rebuildDerivedValue` is dropped from a save, and breaks a copy, wherever it stands**
+      (found closing "A world snapshot cannot be saved while a class inspector is open", in the plan's ledger;
+      measured).
+      - An inspector on a canvas context (a world inspector's `worldCanvasContext` row) saves without its subject, and
+        the restored inspector throws at its first row click (`Cannot read properties of undefined (reading
+        'canvas')`). A Duplicate of it throws (`… reading 'getContext'`).
+      - The Serializer's skip (`encodeOwnProps`) and the Duplicator's rebuild (`_rebuildDerivedValues`) both rely on a
+        precondition, a `<name>Context` field beside its canvas `<name>`, that neither one states.
+      - The Serializer's comment says the deserializer rebuilds the value, but the Deserializer's pass 4(b) reads a
+        `record.derived` list that no save writes. After a load, each widget rebuilds its own context, lazily.
+- [ ] **The menu sweep builds its class inspector on an instance** (found closing the same item; by reading).
+      `menu-click-sweep-headless.js`'s `ClassInspectorWdgt` root is `new Klass(t)` on a RectangleWdgt instance, while
+      the product builds one only on a class's prototype. On a prototype, the sweep's driven Add… and Rename… OKs would
+      edit a real class in the middle of the sweep, so the root wants a class of its own to edit.
+- [ ] **The widget-file door never loads the lazy part a file needs** (found closing the same item; measured).
+      - A `FridgeMagnetsWdgt` file saved on the harness page and opened on `index.html` is refused with "it references
+        the class 'FridgeMagnetsWdgt', which does not exist in this build", and the part is never fetched. The message
+        is false: the build has the class, lazily.
+      - `WorldWdgt.loadWorldSnapshot` first asks `parts.partsNeededFor Serializer.classNamesIn envelope`.
+        `FileLoading.loadEnvelopeString`'s `widget` branch goes straight to `Deserializer.deserialize`.
+- [ ] **A restored inspector does not wait for the reflective layer** (found closing the same item; by reading).
+      `Widget.spawnInspector` awaits the reflective layer for any inspector, because an inspector reads the class member
+      maps. `loadWorldSnapshot` asks for the layer only when the file carries class or mixin edits
+      (`_snapshotNeedsTheReflectiveLayer`). So on a `sources: "lazy"` build, a snapshot restores an inspector before
+      its member maps exist. On such a build, a restored class inspector with a mixin-donated member selected
+      resolves its donor by name (`InspectorWdgt._currentPropertySourceMixin`) through a `Mixin` that is not there
+      yet.
+- [ ] **The evaluation menu is unreachable in an inspector's code pane** (found by the independent review closing the
+      same item; by reading). The inspector arms its code pane's text with a receiver (`TextWdgt.setReceiver`), and a
+      text with a receiver answers its evaluation menu ("Do all", "Inspect selection", …) as its
+      `overridingContextMenu`. But that text sits inside a `TextAreaWdgt`, which takes over its children's menus
+      (`takesOverAndMergesChildrensMenus`), so a right-click asks the `TextAreaWdgt`, which answers no such menu, and
+      the generic menu shows. The macro tests of the evaluation menu build a standalone `TextWdgt` for this reason
+      (MACRO-PATTERNS.md, "Evaluation menu reflects text selection").
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

@@ -219,10 +219,11 @@ class Serializer
     counters
 
   # Every class name an envelope references, so a loader can find out what it will NEED before it
-  # changes anything. Two sources, because a snapshot names classes in two ways:
+  # changes anything. Three sources, because a snapshot names classes in three ways:
   #   - each object record's `class` (what Deserializer.instantiate resolves through classNamed);
   #   - the `{"$wk": "app:<ClassName>"}` app-singleton keys (what WellKnownObjects.resolveApp
-  #     resolves the same way) -- a desktop launcher's target arrives only through one of these.
+  #     resolves the same way) -- a desktop launcher's target arrives only through one of these;
+  #   - the class keys, `{"$wk": "class:<ClassName>"}` / `"prototype:<ClassName>"` (classKeyNamesIn).
   # The `$`-prefixed tags ($Array, $Map, $Canvas, ...) are native-type builders, not classes, so
   # they are skipped. Used by WorldWdgt.loadWorldSnapshot to pre-load any lazily-loadable PART the
   # file needs; it is a pure read of the envelope, which is what lets it run before the teardown.
@@ -236,6 +237,18 @@ class Serializer
       add record?.class
     for key in @wellKnownKeysIn envelope when typeof key is "string" and key.indexOf("app:") is 0
       add key.substring 4
+    add name for name in @classKeyNamesIn envelope
+    names
+
+  # The class names an envelope's CLASS KEYS carry (WellKnownObjects.classNameInClassKey), in walk
+  # order, each once. Unlike an app key's, each must resolve or the restore throws: the world loader's
+  # pre-teardown refusal reads them as it reads record classes (Deserializer.whyItCanNeverBeRestored),
+  # and classNamesIn hands them to the lazy-part pre-load. A pure read of the envelope.
+  @classKeyNamesIn: (envelope) ->
+    names = []
+    for key in @wellKnownKeysIn envelope
+      name = WellKnownObjects.classNameInClassKey key
+      names.push name if name? and name not in names
     names
 
   # Every `{"$wk": key}` key an envelope carries, at any depth (a well-known reference can sit in any
@@ -288,6 +301,11 @@ class Serializer
       return null unless value?
       t = typeof value
       return value if t is "string" or t is "number" or t is "boolean"
+      # a class, or a class's own prototype, belongs to the page: named by its class (the class keys,
+      # WellKnownObjects' header), asked before the function and widget readings below, either of which
+      # it would otherwise meet (a Widget-branch prototype is `instanceof Widget`)
+      classKey = WellKnownObjects.classKeyFor value
+      return {$wk: classKey} if classKey?
       return encodeFunction(value, owner, propName, path) if t is "function"
       # objects:
       if value instanceof Widget

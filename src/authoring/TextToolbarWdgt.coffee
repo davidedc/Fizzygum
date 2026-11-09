@@ -29,6 +29,7 @@ class TextToolbarWdgt extends ToolbarWdgt
     @_followTheEditedText()
 
   _afterDeserialization: ->
+    super
     @_followTheEditedText()
 
   _reactToBeingCopied: ->

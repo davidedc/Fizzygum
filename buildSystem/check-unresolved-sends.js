@@ -50,8 +50,8 @@
 //     ⚠ The one bounded exception to "never a false fail": once EVERY Fizzygum definition of a keyed
 //     name is deleted, a platform call of it whose receiver the gate cannot read (`window.Math.round(`,
 //     none today) fails beside the real ones. While any definition exists, every call resolves through it.
-//   - A property that HOLDS a closure is no definition, so a call of one (`overridingContextMenu`,
-//     `drawFunction`) resolves only through its allowlist entry, which says so.
+//   - A property that HOLDS a closure is no definition, so a call of one (`drawFunction`) resolves
+//     only through its allowlist entry, which says so.
 //
 // EXEMPTIONS — two lists:
 //   BUILTINS (in-file, below)              — JS/DOM/canvas platform API. A fact about the platform:

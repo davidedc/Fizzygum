@@ -45,9 +45,9 @@ class SliderWdgt extends CircleBoxWdgt
   plainTrackAlpha: 1
   plainThumbAlpha: 1
   # The presentation does not ride a file: my viewport RE-DERIVES it from its own overflow at the
-  # first arrange after a restore, exactly as it does on a freshly built world, so a snapshot
-  # carrying a mode could only ever disagree with it. Merged up the chain by
-  # Serializer.transientsForClass, which ADDS to Widget's list.
+  # first arrange after a restore (which its _afterDeserialization schedules), exactly as it does on
+  # a freshly built world, so a snapshot carrying a mode could only ever disagree with it. Merged up
+  # the chain by Serializer.transientsForClass, which ADDS to Widget's list.
   @serializationTransients: ["indicatorMode"]
 
   # I drive numbers, and the number I export is my `value` pin (see `pins`, below).

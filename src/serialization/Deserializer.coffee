@@ -135,10 +135,12 @@ class Deserializer
   # first two tests ARE @instantiate's, made the same way (@_tagBuilderFor, then classNamed), so a
   # record class either passes them, and @instantiate builds it, or must be one that can still arrive.
   # WHAT can still arrive is the caller's to say: the world passes PartsRegistry.canEverProvideClass,
-  # so a class a LAZY part provides is not a reason (that file loads the part first). An
-  # app-singleton {"$wk"} key is not checked, because an unresolved one is left undefined rather
-  # than thrown (@resolveWellKnown). The format check stays with each caller (the loader's also
-  # wants kind:"world"), so the envelope is taken to be a Fizzygum one.
+  # so a class a LAZY part provides is not a reason (that file loads the part first). A class key
+  # ({"$wk": "class:<Name>"} / "prototype:<Name>") is held to the same test as a record class, because
+  # resolving one this build lacks throws (WellKnownObjects.resolve). An app-singleton {"$wk"} key is
+  # not checked, because an unresolved one is left undefined rather than thrown (@resolveWellKnown).
+  # The format check stays with each caller (the loader's also wants kind:"world"), so the envelope is
+  # taken to be a Fizzygum one.
   @whyItCanNeverBeRestored: (envelope, canStillArrive) ->
     shapeProblem = @_envelopeShapeProblem envelope
     return shapeProblem if shapeProblem?
@@ -150,6 +152,10 @@ class Deserializer
       continue if classNamed(record.class)?
       continue if canStillArrive record.class
       unbuildable.push record.class unless record.class in unbuildable
+    for className in Serializer.classKeyNamesIn envelope
+      continue if classNamed(className)?
+      continue if canStillArrive className
+      unbuildable.push className unless className in unbuildable
     return undefined unless unbuildable.length
     "it uses " + unbuildable.join(", ") + ", which this build does not have"
 
@@ -313,7 +319,9 @@ class Deserializer
   @resolveWellKnown: (key) ->
     resolved = WellKnownObjects.resolve key
     # An unresolved well-known (e.g. an app singleton not present in this world) is left as
-    # undefined rather than aborting the whole restore; the widget simply loses that link.
+    # undefined rather than aborting the whole restore; the widget simply loses that link. A class
+    # key is the exception: one naming a class this build lacks throws (WellKnownObjects.resolve),
+    # and the world loader refuses such a file before its teardown (whyItCanNeverBeRestored).
     resolved
 
   # A same-world re-link token ({"$ext": uniqueID}) — used by the world snapshot's tolerant

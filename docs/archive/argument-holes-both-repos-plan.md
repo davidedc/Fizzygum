@@ -1410,3 +1410,68 @@ for (const s of sites) if (s.absentBefore.length) {
       gate re-masks all of the compiled sources; `find_similar_code.sh` stops at its mirror; build freshness reads only
       the sources' mtimes; every tool walks the tooling's own files for itself; the wall-clock stink does not see `new
       Date` without parentheses.
+- [x] **A world snapshot cannot be saved while a class inspector is open** (found closing "`Deserializer.compileFunction`
+      compiles through the run gesture", in the plan's ledger). A `ClassInspectorWdgt`'s subject is a class
+      PROTOTYPE, and the save writes it as a record of all its own members, so it meets the prototype's methods and
+      refuses: measured, `SerializationError: the function-valued property .constructor has no editable source`.
+      The refusal is loud, and it costs the user the whole snapshot. One direction to measure: a prototype belongs
+      to a class, not to the world, so a file could carry the class it names rather than its members. — CLOSED
+      2026-11-09. Measured first, the fact was wider than the filing:
+      - a CLOSED class inspector rests in the bin, a snapshot root, so the save stayed refused until the bin was
+        emptied;
+      - an object inspector on a class function (its `constructor` row) or on a prototype (its `__super__` row)
+        refused alike;
+      - "Save to file…" of a class inspector's window refused naming a widget that does not exist ("RectangleWdgt#0":
+        a prototype answers `uniqueIDString`);
+      - a class inspector on a `WindowedApp` subclass SAVED, and loaded onto the app's singleton instance, because the
+        prototype answered its `app:` key through the inherited `wellKnownKey` method;
+      - ANY inspector with a member selected refused, through three fields holding what no file can carry:
+        `TextWdgt.overridingContextMenu` (`setReceiver` stored the method `evaluationMenu` in it),
+        `InspectorWdgt.currentProperty` (the selected value, read nowhere) and `currentPropertySourceMixin` (the donor
+        Mixin object; found by the new check's first run).
+      What landed:
+      - A class and its own prototype belong to the page, and a file names them by their class: `{"$wk":
+        "class:<Name>"}` / `"prototype:<Name>"`. `WellKnownObjects.classKeyFor` answers them, asked first by the
+        Serializer's `refFor` and by `keyFor`, before the singleton table and the marker; boot's `isAClassPrototype`
+        sits beside `classNamed`. The load binds the key through `classNamed` in the loading page.
+      - A key naming a class the page cannot provide is refused: `WellKnownObjects.resolve` throws, and
+        `Deserializer.whyItCanNeverBeRestored` reads the key names (`Serializer.classKeyNamesIn`) as it reads record
+        classes, before the teardown. `classNamesIn` hands the names to the lazy-part pre-load.
+      - The Duplicator shares a class's prototype by the same predicate. A non-widget one used to be copied into an
+        object posing as its prototype (measured on `SourceEditsRegistry`'s).
+      - `currentProperty` is deleted. A text with a receiver answers its evaluation menu as `overridingContextMenu()`,
+        a `?`-dispatched capability; Widget's field and its unresolved-sends allowlist entry go. The inspector holds
+        its donor mixin's NAME (`currentPropertySourceMixinName`, resolved by `Mixin.named`).
+      - A restored viewport lays itself out again at the next settle (`ViewportWdgt._afterDeserialization`; the
+        two toolbars' hooks now call `super`). The new check found this: `SliderWdgt.indicatorMode` is
+        transient, and nothing arranged a settled restore, so every restored viewport whose bars showed wore
+        them in the plain slider's look (a hollow thumb) until its next arrange.
+      - The long tail (a plain function, `window`, a DOM element, a Promise or a Mixin as a subject) stays a loud
+        refusal.
+      The proof is the serialization rig's `world.inspector.classSubjectsSurviveSnapshot`. It saves and loads a
+      desktop holding:
+      - a class inspector with a mixin-donated method selected, and an object inspector with that method selected;
+      - one on the class function, and one on its `__super__`;
+      - a `SpreadsheetApp` class inspector closed into the bin.
+      It requires the same pixels, every subject the page's own, and the restored class inspector still editing. It
+      was seen failing on its first two runs (the donor Mixin, then the hollow thumbs) and under three plants: no class
+      keys; `setReceiver` keeping a function field; the marker answered before the class key.
+      One test's pixels move: `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly` (images 2 and 3) lists
+      inherited members, and Widget's `overridingContextMenu` row is gone. This was proven by a plant restoring exactly
+      that field, under which the test passes on the old references. It was recaptured (mouse and finger, dpr 1 and
+      2) with the owner's approval.
+      The independent review found:
+      - the check's row-click fact passed whatever the click did (the restored pane already held the text), and its
+        donated member was chosen by key order: it now re-filters to an empty pane, names the donated member, and
+        reads the donor attribution back before any click;
+      - the refusal side was unchecked: `world.loadGuard.classKeyNotAClassRefused` (the world door, desktop kept) and
+        `world.loadGuard.widgetFileClassKeyIsALoadError` (one load inform) now hold it, each seen failing under a
+        plant (the refusal reading no class keys; an absent class key resolving to undefined);
+      - a restored donor name the page cannot resolve would have routed an edit silently to the class: it throws,
+        naming the mixin;
+      - a key with no name after its prefix counted as a class key: it is none;
+      - comments claimed the inspector's code pane shows the evaluation menu, which it never does (filed).
+      Filed beside it: a value answering `rebuildDerivedValue` is dropped from a save, and breaks a copy, wherever it
+      stands; the menu sweep builds its class inspector on an instance; the widget-file door never loads the lazy part a
+      file needs; a restored inspector does not wait for the reflective layer; the evaluation menu is unreachable in an
+      inspector's code pane.

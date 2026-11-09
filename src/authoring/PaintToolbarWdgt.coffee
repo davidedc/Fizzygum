@@ -415,6 +415,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
   # A palette arriving any way OTHER than construction still has to watch the same hand: neither a
   # deserialized shell nor a duplicate runs a constructor, so each re-makes its one edge here.
   _afterDeserialization: ->
+    super
     @_subscribeToTheArmedDrawingTool()
 
   _reactToBeingCopied: ->

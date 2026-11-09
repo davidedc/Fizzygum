@@ -413,10 +413,10 @@ assertion a recapture after a regression silently stores two different hashes an
   clear it (`setText ""`) and focus with `detailText.edit()`; drop the caret with `world.stopEditing()` before the shots. (Re-authored
   from the old two-pane naked version: the new inspector has ONE editable detail pane and needs its wrap turned on.) No new verb.
 - **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextWdgt's right-click menu
-  depends on what is selected. `setReceiver obj` (`TextWdgt.coffee:657-659`) installs `evaluationMenu` as the widget's
-  `overridingContextMenu` (so `Widget.buildContextMenu` returns it directly); that menu prepends "Do all"/"Select all" when
-  `@text.length>0` (`:618`) and ALSO "Do selection"/"Show selection"/"Inspect selection" ONLY when `@selection()` is non-empty
-  (`:625`). Fixture: a STANDALONE `new TextWdgt "3 + 4", backgroundColor: bg, backgroundTransparency: 1` (the inspector's detail pane is a
+  depends on what is selected. `setReceiver obj` gives the text a receiver, and a text with a receiver answers its
+  `evaluationMenu` as its `overridingContextMenu()` (so `Widget.buildContextMenu` returns it directly); that menu prepends "Do all"/"Select all" when
+  `@text.length>0` and ALSO "Do selection"/"Show selection"/"Inspect selection" ONLY when `@selection()` is non-empty
+ . Fixture: a STANDALONE `new TextWdgt "3 + 4", backgroundColor: bg, backgroundTransparency: 1` (the inspector's detail pane is a
   `SimpleTextWdgt` inside a scroll panel — build the TextWdgt directly to exercise THIS path), `isEditable=true` + `setReceiver world`, sized so the text
   FITS (else a click opens the "edit:" prompt). Beats: click in → `@openMenuOf_InputEvents txt` (UNSELECTED shot) → dismiss with
   a mouse-down on empty desktop, RE-CLICK in, `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` → `@openMenuOf_InputEvents
@@ -424,7 +424,7 @@ assertion a recapture after a regression silently stores two different hashes an
   so you MUST re-click into the field before Meta+a, or select-all routes nowhere and the selected shot silently equals the unselected one.
 - **Empty editable text omits "Select all"** (`macroEmptyStringDoesntGiveSelectAllOption`): the negative/exclusion sibling of the
   evaluation-menu entry above. `evaluationMenu` builds `@buildHierarchyMenu()` FIRST and only prepends "Do all"/"Select all" inside
-  `if @text.length>0` (`TextWdgt.coffee:618`), so on an EMPTY field the right-click menu is JUST the hierarchy row standing for the
+  `if @text.length>0` (`TextWdgt.evaluationMenu`), so on an EMPTY field the right-click menu is JUST the hierarchy row standing for the
   text ("Text") — neither item present. Same fixture as the selection sibling (`new TextWdgt("", …)` + `isEditable=true` + `setReceiver world`,
   sized to fit) but START EMPTY: right-click → screenshot (no select-all), then click in + `@syntheticEventsStringKeys_InputEvents
   "asdf"` (NON-empty, no selection) → right-click → screenshot ("Do all"/"Select all" prepended above the "Text" row). The two

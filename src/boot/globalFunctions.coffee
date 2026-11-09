@@ -86,6 +86,20 @@ window.allClassFunctions = ->
     result.push klass if klass?
   result
 
+# IS THIS VALUE A FIZZYGUM CLASS'S OWN PROTOTYPE? classNamed's inverse question for the object a
+# class's members live on: it OWNS a `constructor` (an instance owns none), that constructor is the
+# class classNamed answers for its name, and the class's prototype is this very object (an own
+# `constructor` member added to some other object is no link: cf. InspectorWdgt._classChainLinks).
+# ⚠ Not `instanceof`: a Widget-branch prototype is `instanceof Widget`, so a walker that asks that
+# alone reads the prototype as a widget. Consumers: both graph walkers -- a prototype belongs to the
+# page, not to the world, so the Serializer names it by its class (WellKnownObjects.classKeyFor) and
+# the Duplicator shares it.
+window.isAClassPrototype = (value) ->
+  return false unless value? and typeof value is "object"
+  return false unless Object::hasOwnProperty.call value, "constructor"
+  klass = value.constructor
+  typeof klass is "function" and classNamed(klass.name) is klass and klass.prototype is value
+
 # The superclass CONSTRUCTOR of a class, or undefined at the top of the chain. `__super__` is
 # the parent's PROTOTYPE, whose `.constructor` is the parent (`extend` builds the child
 # prototype so that link holds). A root class carries `__super__ = Object.prototype`, whose

@@ -654,9 +654,8 @@ class TextWdgt extends StringWdgt
     @alignment = "center"
     @_changed()
   
-  # text widget evaluation. This menu is placed as the
-  # "overridingContextMenu" in the Inspector panes, where
-  # the text contents is executed against the target Widget
+  # text widget evaluation: the menu I answer in place of my generic context menu while I have a
+  # receiver (overridingContextMenu), whose items run my text against that receiver
   evaluationMenu: ->
     menu = @buildHierarchyMenu()
 
@@ -696,15 +695,18 @@ class TextWdgt extends StringWdgt
   doAll: ->
     @_reportingCompileErrors => @receiver.evaluateString @text
 
-  # this is set by the inspector. It tells the text widget
-  # that any following doSelection/showSelection/inspectSelection
-  # action needs to be done apropos a particular obj,
-  # and also replaces the normal context menu with the evaluation Menu
-  # because if you right click in these panes of the Inspector you
-  # want to "run" code that has been typed
+  # The object my RUN actions (doAll, doSelection, showSelection, inspectSelection) evaluate against,
+  # set by the inspector on its code pane. It is the one fact: my context menu follows from it
+  # (overridingContextMenu), so nothing else is set beside it.
   setReceiver: (obj) ->
     @receiver = obj
-    @overridingContextMenu = @evaluationMenu
+
+  # While I have a receiver, a right-click in me wants to RUN what is typed, so my context menu is the
+  # evaluation menu; otherwise undefined, and I get the generic one (Widget.buildContextMenu asks this
+  # by `?`, as a capability nothing on Widget answers). A query of the receiver, never a function kept
+  # in a field: a field holding a function is one no file can carry.
+  overridingContextMenu: ->
+    @evaluationMenu() if @receiver?
   
   doSelection: ->
     @_reportingCompileErrors =>
