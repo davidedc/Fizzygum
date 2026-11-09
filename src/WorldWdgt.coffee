@@ -723,6 +723,12 @@ class WorldWdgt extends IconGridPanelWdgt
   colloquialName: ->
     "Desktop"
 
+  # What code typed in a text on me runs against when no tool around it names something else
+  # (TextWdgt._codeReceiver, whose climb ends at me): I am the workspace's receiver, as a script
+  # window's "Try it" is.
+  codeReceiver: ->
+    @
+
   createErrorConsole: ->
     errorsLogViewerWdgt = new ErrorsLogViewerWdgt()
     wm = new FrameWdgt errorsLogViewerWdgt

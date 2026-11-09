@@ -102,21 +102,13 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       layout nor flushes a cache built from the edited code (`world.cacheForImmutableBackBuffers`, a text's measured
       lines). So an edit that changes geometry or cached text — of a widget class, and now of a value class, an
       appearance or a layout spec, whose edit tells every widget — shows only once something else invalidates it.
-- [ ] **The evaluation menu is unreachable in an inspector's code pane** (found by the independent review closing the
-      same item; by reading). The inspector arms its code pane's text with a receiver (`TextWdgt.setReceiver`), and a
-      text with a receiver answers its evaluation menu ("Do all", "Inspect selection", …) as its
-      `overridingContextMenu`. But that text sits inside a `TextAreaWdgt`, which takes over its children's menus
-      (`takesOverAndMergesChildrensMenus`), so a right-click asks the `TextAreaWdgt`, which answers no such menu, and
-      the generic menu shows. The macro tests of the evaluation menu build a standalone `TextWdgt` for this reason
-      (MACRO-PATTERNS.md, "Evaluation menu reflects text selection").
-      Once it is reachable, a CLASS inspector's pane runs against the class's PROTOTYPE (its receiver,
-      `codePaneRunsAgainstItsSubject` in the serialization rig): its run gestures would call `Widget.evaluateString` on
-      the prototype, whose `sourceChanged` stamps widget-lifecycle fields onto it (measured closing "An object inspector
-      opened on a class's prototype edits the class unrecorded": a new instance's `root()` then answers the prototype),
-      and any `@x = …` typed there edits the class unrecorded. A value class's prototype (Point, Color: their class
-      inspector edits them) has no `evaluateString` at all, so each run gesture there would throw; and a read-only
-      object inspector holding a prototype (built by code, or from a file) has the same receiver. The fix must choose
-      that pane's receiver.
+- [ ] **A run that sets a widget field to a function blocks every world snapshot** (found closing "The evaluation menu is
+      unreachable in an inspector's code pane", in the plan's ledger; measured). Code run against a widget (a text's run
+      rows, a console's buttons) that assigns a function to a field — `@f = -> 42` — leaves an own function property with
+      no source, and `serializeWorldSnapshot` then throws "the function-valued property .f has no editable source and is
+      not a serialization transient", for every later save, until the field is removed by hand. The recorded way to give
+      a widget a method is the inspector's Add / Save (`injectProperty` keeps `<m>_source`). Whether such a field should be
+      carried as source, refused at the run, or reported at the save with a way out is open.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

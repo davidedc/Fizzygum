@@ -1593,3 +1593,41 @@ for (const s of sites) if (s.absentBefore.length) {
       Add… OK already added `property` to the RectangleWdgt CLASS mid-sweep. The root and its button fixture now
       inspect the prototype of `MenuSweepOwnWdgt`, a class the sweep makes in the page with the meta-system
       (`new Class source, false, true`), so its OKs edit no class the sweep uses.
+- [x] **The evaluation menu is unreachable in an inspector's code pane** (found by the independent review closing the
+      same item; by reading). The inspector arms its code pane's text with a receiver (`TextWdgt.setReceiver`), and a
+      text with a receiver answers its evaluation menu ("Do all", "Inspect selection", …) as its
+      `overridingContextMenu`. But that text sits inside a `TextAreaWdgt`, which takes over its children's menus
+      (`takesOverAndMergesChildrensMenus`), so a right-click asks the `TextAreaWdgt`, which answers no such menu, and
+      the generic menu shows. The macro tests of the evaluation menu build a standalone `TextWdgt` for this reason
+      (MACRO-PATTERNS.md, "Evaluation menu reflects text selection").
+      Once it is reachable, a CLASS inspector's pane runs against the class's PROTOTYPE (its receiver,
+      `codePaneRunsAgainstItsSubject` in the serialization rig): its run gestures would call `Widget.evaluateString` on
+      the prototype, whose `sourceChanged` stamps widget-lifecycle fields onto it (measured closing "An object inspector
+      opened on a class's prototype edits the class unrecorded": a new instance's `root()` then answers the prototype),
+      and any `@x = …` typed there edits the class unrecorded. A value class's prototype (Point, Color: their class
+      inspector edits them) has no `evaluateString` at all, so each run gesture there would throw; and a read-only
+      object inspector holding a prototype (built by code, or from a file) has the same receiver. The fix must choose
+      that pane's receiver.
+      — CLOSED 2026-11-09. MEASURED wider than filed (survey: `Fizzygum-tests/.scratch/inspector-code-pane-menu/`): no
+      press — a right-click or a finger hold, on an object inspector on a widget, 42 or a Point, a class inspector on a
+      widget class or on Point, or an object inspector holding a prototype — opened the evaluation menu, since
+      `Widget.buildContextMenu` asked the TAKER, and its one product setter was the inspector's pane, so the menu was
+      reachable by nothing. The pane's one reachable run row, "Run contents" (the area's merged menu, under dev mode's
+      hierarchy menu), ran the pane against its receiver: on 42, a Point or `Point.prototype` it threw to the Error log; in
+      a class inspector it stamped widget-lifecycle fields onto the prototype, unrecorded. Four run families disagreed on
+      `@` (a text with no receiver ran against ITSELF; a script window's "Try it" against the world; a console through
+      its own evaluator). Rulings (owner: "proceed with your recommendations"): a text's run rows ("Run selection", "Show
+      selection", "Inspect selection" while something is selected, "Run contents") live among its own rows
+      (`TextWdgt._addTextMenuEntries`), and the overriding menu, `evaluationMenu`, the `receiver` field, `setReceiver`,
+      `doAll`, `doSelection`, `doContents`, `selectAllAndEdit` and `buildContextMenu`'s hook are deleted; what they run
+      against is a QUERY of the text's place (`TextWdgt._codeReceiver`: the nearest container defining `codeReceiver`
+      answers — `WorldWdgt` itself, `ConsoleWdgt` its target, `InspectorWdgt` its subject while it edits it,
+      `ClassInspectorWdgt` nothing); a console's and a script window's buttons dispatch their text's own run verbs
+      (`ConsoleWdgt.addRunMenuEntriesForText`, `ScriptWdgt.tryIt` and the console's dead `functionFromCompiledCode`
+      field are gone). A selection runs as selected, its indentation included; a run leaves the text's editing as it finds it; a run whose text no longer stands where a receiver is named says so. A run is no source edit (`Widget.evaluateString`'s header). Proven by
+      `SystemTest_macroTextRunRowsReflectSelection` and `SystemTest_macroInspectorCodePaneRunsAgainstItsSubject` (mouse
+      and finger), which replace `SystemTest_macroEvaluationMenuReflectsTextSelection` and the retired
+      `SystemTest_macroEmptyStringDoesntGiveSelectAllOption`; the menu sweep's console root and three code-pane roots (an object inspector on a widget and on a Point, a class inspector); and
+      `world.inspector.classSubjectsSurviveSnapshot`'s rewritten `codePaneRunsAgainstItsSubject` and new
+      `classCodePaneRunsNothing` — each failed by its own plant. Filed: "A run that sets a widget field to a function
+      blocks every world snapshot".

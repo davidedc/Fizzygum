@@ -61,7 +61,10 @@ class ScriptWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @savedScript
 
     # buttons -------------------------------
-    @runItButton = new SimpleButtonWdgt target: @, action: "tryIt", face: "Try it"
+    # "Try it" runs the typed script as my text's own "Run contents" row does -- against the world,
+    # which names the code receiver of a text no tool claims (TextWdgt._codeReceiver) -- and so
+    # reports text that is not code beside the hand
+    @runItButton = new SimpleButtonWdgt target: @textWidget, action: "runContents", face: "Try it"
     @_addNoSettle @runItButton
 
     @saveButton = new SimpleButtonWdgt target: @, action: "saveScriptAndClose", face: "Save + close", primary: true
@@ -98,11 +101,6 @@ class ScriptWdgt extends CodeAreaWdgt
     if !@functionFromCompiledCode? and @savedScript
       @functionFromCompiledCode = new Function compileFGCode @savedScript, true
     @functionFromCompiledCode?.call world
-
-  # runs the typed script, so text that is not code is reported beside the hand
-  # (Widget._reportingCompileErrors)
-  tryIt: ->
-    @_reportingCompileErrors => world.evaluateString @textWidget.text
 
   textContentModified: ->
 

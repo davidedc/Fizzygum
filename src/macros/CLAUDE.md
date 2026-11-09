@@ -397,9 +397,11 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   overflows makes its alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2, so shrink the WIDTH (keep
   the detail fitting) for a deterministic resize shot. Find the inspector with `@findTopWidgetByClassNameOrClass
   InspectorWdgt`; the `*FromTopInspector*` helpers target it (windowed or naked). Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
-  **"Dev → Console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "Run all" button → `doAll`, runs the text with
-  `@`=the console's target); its detail pane is a `SimpleTextWdgt` (a `TextWdgt`) — a synthetic right-click
-  can't open its "Do all"/context menu, it defaults to NON-wrapping (call `detailText.toggleSoftWrap()` to wrap), and
+  **"Dev → Console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "Run all" button → its text's `runContents`, runs the
+  text with `@`=the console's target); its detail pane is a `SimpleTextWdgt` (a `TextWdgt`) in a text area nested in the inspector, so
+  a press in it — synthetic or a person's — opens dev mode's HIERARCHY menu, whose row standing for the text area opens the area's own
+  menu with the text's rows, its run rows among them (MACRO-PATTERNS.md, "An inspector's code pane runs against its subject"); it
+  defaults to NON-wrapping (call `detailText.toggleSoftWrap()` to wrap), and
   it is only editable after a list-row is selected; it HIDES inherited properties by default (toggle
   `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);
   property editing is via the "Add…"/"Rename…"/"Remove"/"Save" footer buttons ("Save" → `save` → `injectProperty` on

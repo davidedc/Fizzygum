@@ -572,7 +572,7 @@ mark after `add` + `setExtent` adds nothing.
   grammar's default. Deep home: [`input-and-gestures.md`](input-and-gestures.md).
 - **A gesture over code a person TYPED never throws a compile error at them.** Text that is not CoffeeScript is
   an ordinary answer to "run this" or "save this", not a fault, and thrown it would reach the world's crash
-  path (a soft reset, and an Error log showing the framework's own stack). A RUN gesture (Run contents, Do all,
+  path (a soft reset, and an Error log showing the framework's own stack). A RUN gesture (Run contents, Run selection,
   Try it, …) wraps the run in `@_reportingCompileErrors => …`; a SAVE gesture (Save, Save + close, a code
   prompt's OK) wraps its apply in `@_savingTypedCode => …`, which answers whether it applied, and the gesture
   marks the text saved or closes only on `true`. Either reports the compiler's message beside the hand at the

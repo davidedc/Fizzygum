@@ -70,6 +70,14 @@ class ClassInspectorWdgt extends InspectorWdgt
   _subjectIsEditable: ->
     isAClassPrototype @inspectedObject
 
+  # My code pane runs no code (TextWdgt._codeReceiver): I hold a class and no instance of it. Code
+  # run against the prototype would stamp a widget's lifecycle fields onto it and change the class
+  # unrecorded -- a value class's prototype cannot run it at all -- and code run against the class
+  # function would make statics unrecorded. My edits are my Save, Add, Rename and Remove, which a
+  # snapshot replays; to run code against an instance, inspect one.
+  codeReceiver: ->
+    undefined
+
   # The base's rename and remove follow my selection, and so does my second save destination: a
   # mixin-donated member gets it offered; any other selection hides it, and so does NO selection,
   # since a re-filter clears the attribution with the list. Reached at the end of every selection

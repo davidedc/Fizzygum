@@ -4773,7 +4773,7 @@ class Widget extends TreeNode
 
   
   # Pop a one-line bubble showing a VALUE. ⚠ The empty case is ABSENCE, not falsiness: `0`, `""`
-  # and `false` are values somebody asked to see — the evaluation menu's "Show selection" hands
+  # and `false` are values somebody asked to see — a text's "Show selection" run row hands
   # this whatever the selected snippet evaluated to — so this tests `msg?`, never `msg`. Absence
   # is spelled the way the language spells it, as everywhere else in the codebase.
   # The `toString?` arm is not defensiveness about ordinary values: an object built with a null
@@ -4912,12 +4912,6 @@ class Widget extends TreeNode
       m.takesOverAndMergesChildrensMenus
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
       widgetToAskMenuTo = anyParentsTakingOverMyMenu[0]
-
-    # a widget whose context menu is a menu of its own answers it here, ahead of the generic one (a
-    # text with a receiver: its evaluation menu, TextWdgt.overridingContextMenu). A `?`-dispatched
-    # capability, nothing on Widget; undefined is "no menu of my own".
-    overridingMenu = widgetToAskMenuTo.overridingContextMenu?()
-    return overridingMenu if overridingMenu?
 
     if world.isDevMode
       hierarchyMenuWidgets = widgetToAskMenuTo.getHierarchyMenuWidgets()
@@ -5541,16 +5535,19 @@ class Widget extends TreeNode
       handler[functionName] args...  if handler[functionName]
   
   
-  # Widget eval: the RUN gestures' (the text widget's evaluation menu on its receiver, a script
-  # window's run on the world) and the patch node's. Code run against me is an edit made under me,
-  # so it ends in the one notification every such edit makes (sourceChanged: a re-layout and a
-  # repaint).
+  # Widget eval: the RUN gestures' -- a text's run rows and a console's buttons, against the text's
+  # code receiver (TextWdgt._codeReceiver), a script window's "Try it" through its text -- and the
+  # patch node's. Code run against me is an edit made under me, so it ends in the one notification
+  # every such edit makes (sourceChanged: a re-layout and a repaint). It is an edit of my STATE, not
+  # of any code: the SourceEditsRegistry does not hear it, and a world snapshot carries what it left
+  # in my fields.
   # ⚠ The result is returned EXPLICITLY, and must stay that way. The notification has to run AFTER
   # the eval, so without this line CoffeeScript returns `sourceChanged()`'s value and the eval's own
-  # value is computed and dropped on the floor. Two callers read what comes back: the evaluation
-  # menu's "Show selection" and "Inspect selection" (`TextWdgt`). Neither throws when handed the wrong
-  # thing, so `fg menusweep` cannot see a regression here — this comment is the guard, together with
-  # `SystemTest_macroEvaluateStringReturnsItsValue`.
+  # value is computed and dropped on the floor. Two callers read what comes back: a text's "Show
+  # selection" and "Inspect selection" (`TextWdgt`). Neither throws when handed the wrong thing, so
+  # a dispatch alone sees nothing; what guards it is this comment,
+  # `SystemTest_macroEvaluateStringReturnsItsValue`, and `fg menusweep`'s text roots, which run `@`
+  # and require it to come back as the receiver.
   evaluateString: (codeSource) ->
     result = @_evaluateInMyScope codeSource
     @sourceChanged()
@@ -5564,7 +5561,7 @@ class Widget extends TreeNode
     eval compileFGCode codeSource, true, typedFrom: opts.typedFrom
 
   # The RUN gestures -- a row or button that runs text a person typed ("Run contents", "Run
-  # selection", "Do all", "Show selection", "Try it", …) -- run it through me. Text that is not
+  # selection", "Show selection", "Run all", "Try it", …) -- run it through me. Text that is not
   # CoffeeScript is an ordinary answer to that gesture, not a fault: I say so beside the hand, in the
   # compiler's words and at the line and column it names, and answer undefined, having run nothing.
   # Thrown on, it would reach the world's crash path (WorldWdgt's input-event catch), which

@@ -26,8 +26,6 @@ class TextWdgt extends StringWdgt
   # "left" / "right" / "center", set by the three alignment menu actions
   alignment: undefined
 
-  #additional properties for ad-hoc evaluation:
-  receiver: undefined
   heightOfPossiblyCroppedText: undefined
   widthOfPossiblyCroppedText: undefined
 
@@ -631,17 +629,18 @@ class TextWdgt extends StringWdgt
     # open while the state changes (another copy of this menu, a script) re-ticks instead of lying
     menu.addMenuItem "Soft wrap", @, "toggleSoftWrap",
       reflection: MenuRowReflectionSpec.tickWhen @, "isSoftWrapping", true, "Soft wrap"
-    menu.addLine()
 
-    # a console contributes its own run-menu entries (Run selection / Run contents); a text not in a
-    # console runs its own contents. Was a 3-level `instanceof ConsoleWdgt` reach-through.
-    # (type-test-elimination campaign)
-    console = @parent?.parent?.parent
-    if console?.addRunMenuEntriesForText?
-      console.addRunMenuEntriesForText menu, @
-    else
-      menu.addMenuItem "Run contents", @, "doContents"
-  
+    # my RUN rows, in a group of their own: code typed in me runs against what the place I stand in
+    # names (_codeReceiver), and where it names nothing I offer none. The selection rows only while
+    # something other than blanks is selected.
+    return unless @_codeReceiver()?
+    menu.addLine()
+    if @selection().trim() != ''
+      menu.addMenuItem "Run selection", @, "runSelection"
+      menu.addMenuItem "Show selection", @, "showSelection", toolTip: "run the\nselected code\nand show its value"
+      menu.addMenuItem "Inspect selection", @, "inspectSelection", toolTip: "run the\nselected code\nand inspect its value"
+    menu.addMenuItem "Run contents", @, "runContents"
+
   setAlignmentToLeft: ->
     @alignment = "left"
     @_changed()
@@ -654,25 +653,6 @@ class TextWdgt extends StringWdgt
     @alignment = "center"
     @_changed()
   
-  # text widget evaluation: the menu I answer in place of my generic context menu while I have a
-  # receiver (overridingContextMenu), whose items run my text against that receiver
-  evaluationMenu: ->
-    menu = @buildHierarchyMenu()
-
-    if @text.length > 0
-      menu.prependLine()
-      menu.prependMenuItem "Select all", @, "selectAllAndEdit"
-      menu.prependMenuItem "Do all", @, "doAll"
-
-    # only show the do it / show it / inspect it entries
-    # if there is actually something selected.
-    if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
-      menu.prependLine()
-      menu.prependMenuItem "Inspect selection", @, "inspectSelection", toolTip: "evaluate the\nselected expression\nand inspect the result"
-      menu.prependMenuItem "Show selection", @, "showSelection", toolTip: "evaluate the\nselected expression\nand show the result"
-      menu.prependMenuItem "Do selection", @, "doSelection", toolTip: "evaluate the\nselected expression"
-    menu
-
   # Multi-line text inserts a newline on Enter rather than accepting -- override of
   # StringWdgt.enterKeyAccepts, inherited by all TextWdgt subclasses. (type-test-elimination campaign)
   enterKeyAccepts: ->
@@ -686,45 +666,51 @@ class TextWdgt extends StringWdgt
     @_changed()
     return super
 
-  selectAllAndEdit: ->
-    @edit()
-    @selectAll()
+  # The object code typed in me runs against, asked of the place I stand in rather than kept in a
+  # field: the nearest container of mine that DEFINES codeReceiver answers, and its answer stands
+  # even when it is nothing. The world answers itself, at the root of every climb; a tool that
+  # names a receiver answers on the way up (ConsoleWdgt: its target; InspectorWdgt: its subject
+  # while it edits it; ClassInspectorWdgt: nothing). A text no container of which answers -- one
+  # outside the world and every tool -- has none.
+  _codeReceiver: ->
+    container = @parent
+    while container?
+      return container.codeReceiver() if container.codeReceiver?
+      container = container.parent
+    undefined
 
-  # My RUN actions all go through Widget._reportingCompileErrors, so text that is not code is reported
-  # beside the hand rather than thrown at the world.
-  doAll: ->
-    @_reportingCompileErrors => @receiver.evaluateString @text
+  # My RUN actions -- the run rows I add to my menu (_addTextMenuEntries), and a console's buttons
+  # -- run typed code against my code receiver, asked as they run (_runningTypedCode). Show and
+  # Inspect answer what the code answered. A selection runs as it is selected, its indentation
+  # included: whole indented lines compile as they stand and would not once trimmed. A run leaves
+  # my editing as it finds it: the caret stays and so does the selection that ran, to run again or
+  # to edit (re-entering the edit would drop the selection, and open the pop-out editor on a text
+  # that does not fit).
+  runContents: ->
+    @_runningTypedCode @text
 
-  # The object my RUN actions (doAll, doSelection, showSelection, inspectSelection) evaluate against,
-  # set by the inspector on its code pane. It is the one fact: my context menu follows from it
-  # (overridingContextMenu), so nothing else is set beside it.
-  setReceiver: (obj) ->
-    @receiver = obj
-
-  # While I have a receiver, a right-click in me wants to RUN what is typed, so my context menu is the
-  # evaluation menu; otherwise undefined, and I get the generic one (Widget.buildContextMenu asks this
-  # by `?`, as a capability nothing on Widget answers). A query of the receiver, never a function kept
-  # in a field: a field holding a function is one no file can carry.
-  overridingContextMenu: ->
-    @evaluationMenu() if @receiver?
-  
-  doSelection: ->
-    @_reportingCompileErrors =>
-      @receiver.evaluateString @selection()
-      @edit()
-
-  doContents: ->
-    @_reportingCompileErrors => (@receiver ? @).evaluateString @text
+  runSelection: ->
+    @_runningTypedCode @selection()
 
   showSelection: ->
-    result = @_reportingCompileErrors => @receiver.evaluateString @selection()
+    result = @_runningTypedCode @selection()
     if result? then @inform result
 
   inspectSelection: ->
-    # evaluateString is a pimped-up eval in
-    # the Widget class.
-    result = @_reportingCompileErrors => @receiver.evaluateString @selection()
+    result = @_runningTypedCode @selection()
     if result? then @spawnInspector result
+
+  # Run typed code against my code receiver through Widget.evaluateString, inside
+  # Widget._reportingCompileErrors, so text that is not code is reported beside the hand rather than
+  # thrown at the world. The receiver is asked again here, at the run: a row offered while I stood
+  # in a place that names one can be clicked after I moved to one that names none (a pinned menu,
+  # a window closed into the bin), and then I say so instead of running nothing silently.
+  _runningTypedCode: (code) ->
+    receiver = @_codeReceiver()
+    unless receiver?
+      @inform "There is nothing here for this code to run against"
+      return undefined
+    @_reportingCompileErrors => receiver.evaluateString code
 
   # selects the whole line (if it's wrapped, just
   # what sits on the very line, not what wraps

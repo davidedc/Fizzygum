@@ -20,7 +20,7 @@
 // clicks a slider's "floor..." — three such items sat broken behind that tripwire. A build-time
 // check needs no one to click.
 // RULE 1 has TWO doors, because there are two ways into a name-dispatched slot. Besides
-// addMenuItem/prependMenuItem, `prompt` / `textPrompt` take a `callback` that the prompt's save/Ok
+// addMenuItem, `prompt` / `textPrompt` take a `callback` that the prompt's save/Ok
 // dispatches by name (`PromptWdgt.deliverValue` / `CodePromptWdgt.deliverValue`:
 // `@target[@callback].call @target, @_promptValue()`)
 // — the same proof one hop later, so the callbacks count as menu-dispatched verbs for RULE 3 as well.
@@ -136,7 +136,7 @@ const actionNames = new Set();   // every verb reached from a menu
 // class IS the file's basename. { cls, rel, line, action, door, text }
 const atTargetSites = [];
 
-// ---- pass 1: read every addMenuItem/prependMenuItem call site -------------------------------
+// ---- pass 1: read every addMenuItem call site -------------------------------
 // ⚠ A CALL MAY WRAP, and a scan that reads one line at a time is blind to everything past the
 // break — the same blind spot that hid two methods from six gates until lib/coffee-method-header.js
 // (see its header). `ListWdgt:90` is the one wrapped call on this tree today and its options object
@@ -191,9 +191,9 @@ for (const p of files) {
     }
   });
   allLines.forEach((raw, i) => {
-    if (!/\b(?:add|prepend)MenuItem\b/.test(code[i])) return;
+    if (!/\baddMenuItem\b/.test(code[i])) return;
     const line = joinContinuation(allLines, code, i);
-    const m = /\b(?:add|prepend)MenuItem\s+(.*)$/.exec(line);
+    const m = /\baddMenuItem\s+(.*)$/.exec(line);
     if (!m) return;
     const args = m[1];
     // the action is the 3rd argument; find it by splitting on top-level commas

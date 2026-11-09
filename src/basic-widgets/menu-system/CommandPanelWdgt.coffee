@@ -196,10 +196,6 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     item = @createLine()
     @__add item
 
-  prependLine: ->
-    item = @createLine()
-    @__add item, atIndex: 0
-
   # Builds a row from a CommandSpec and this panel's context: the LOOK my rows wear -- a member
   # list's rows are MemberRowWdgts, whose look is their own; otherwise a MenuItemWdgt in a plain
   # list's look when I select on click and a menu row's when I do not (the row picks its font and
@@ -291,9 +287,6 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # an opts object (the spec's own constructor defaults fill any omitted opt).
   addMenuItem: (label, target, action, opts = {}) ->
     @__add @_createMenuItem @_commandSpecFrom label, target, action, opts
-
-  prependMenuItem: (label, target, action, opts = {}) ->
-    @__add (@_createMenuItem @_commandSpecFrom label, target, action, opts), atIndex: 0
 
   # The spec takes the SAME label/target/action head and the SAME opts vocabulary
   # this method is handed, so it forwards rather than transcribes -- an opt added

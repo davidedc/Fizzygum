@@ -140,14 +140,8 @@ class MenuWdgt extends FrameWdgt
   addLine: ->
     @rowsPanel.addLine()
 
-  prependLine: ->
-    @rowsPanel.prependLine()
-
   addMenuItem: (label, target, action, opts = {}) ->
     @rowsPanel.addMenuItem label, target, action, opts
-
-  prependMenuItem: (label, target, action, opts = {}) ->
-    @rowsPanel.prependMenuItem label, target, action, opts
 
   removeMenuItem: (label) ->
     @rowsPanel.removeMenuItem label

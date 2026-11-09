@@ -888,8 +888,8 @@ class ActivePointerWdgt extends Widget
 
       # There is a caret on the screen: depending on what the user clicked, we may need to close the
       # ongoing edit (delete the caret, un-select). Don't interrupt editing if the click is inside the
-      # most-recently-created popup/menu belonging to the edited text (e.g. doSelection reads the
-      # current selection).
+      # most-recently-created popup/menu belonging to the edited text (e.g. its "Run selection" row
+      # reads the current selection).
       if actionedWdgt isnt world.caret.target
         # user clicked on something other than what the
         # caret is attached to: ending an edit by acting elsewhere ACCEPTS it (caret.accept =

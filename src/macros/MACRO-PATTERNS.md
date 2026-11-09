@@ -412,25 +412,29 @@ assertion a recapture after a regression silently stores two different hashes an
   progression: WIDTH changes re-break the lines. To type into the detail it must first be EDITABLE — select a property to arm it,
   clear it (`setText ""`) and focus with `detailText.edit()`; drop the caret with `world.stopEditing()` before the shots. (Re-authored
   from the old two-pane naked version: the new inspector has ONE editable detail pane and needs its wrap turned on.) No new verb.
-- **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextWdgt's right-click menu
-  depends on what is selected. `setReceiver obj` gives the text a receiver, and a text with a receiver answers its
-  `evaluationMenu` as its `overridingContextMenu()` (so `Widget.buildContextMenu` returns it directly); that menu prepends "Do all"/"Select all" when
-  `@text.length>0` and ALSO "Do selection"/"Show selection"/"Inspect selection" ONLY when `@selection()` is non-empty
- . Fixture: a STANDALONE `new TextWdgt "3 + 4", backgroundColor: bg, backgroundTransparency: 1` (the inspector's detail pane is a
-  `SimpleTextWdgt` inside a scroll panel — build the TextWdgt directly to exercise THIS path), `isEditable=true` + `setReceiver world`, sized so the text
-  FITS (else a click opens the "edit:" prompt). Beats: click in → `@openMenuOf_InputEvents txt` (UNSELECTED shot) → dismiss with
-  a mouse-down on empty desktop, RE-CLICK in, `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` → `@openMenuOf_InputEvents
-  txt` (SELECTED shot: text highlighted white-on-blue + the 3 extra items). GOTCHA: opening then dismissing the menu ENDS editing,
-  so you MUST re-click into the field before Meta+a, or select-all routes nowhere and the selected shot silently equals the unselected one.
-- **Empty editable text omits "Select all"** (`macroEmptyStringDoesntGiveSelectAllOption`): the negative/exclusion sibling of the
-  evaluation-menu entry above. `evaluationMenu` builds `@buildHierarchyMenu()` FIRST and only prepends "Do all"/"Select all" inside
-  `if @text.length>0` (`TextWdgt.evaluationMenu`), so on an EMPTY field the right-click menu is JUST the hierarchy row standing for the
-  text ("Text") — neither item present. Same fixture as the selection sibling (`new TextWdgt("", …)` + `isEditable=true` + `setReceiver world`,
-  sized to fit) but START EMPTY: right-click → screenshot (no select-all), then click in + `@syntheticEventsStringKeys_InputEvents
-  "asdf"` (NON-empty, no selection) → right-click → screenshot ("Do all"/"Select all" prepended above the "Text" row). The two
-  shots (absent vs present) ARE the assertion. GOTCHAS: do NOT select the text (Meta+a) — that trips the SEPARATE `:625` selection gate
-  and adds the "…selection" items, muddying the empty-vs-filled contrast; re-click the field before typing (dismissing the first menu
-  ends editing); screenshot-only (an exact menu-strings assertion is brittle — `evaluationMenu` prepends separator RectangleWdgts with no `labelString`).
+- **A text's run rows reflect its selection** (`macroTextRunRowsReflectSelection`): every text adds its RUN rows among its own
+  rows (`TextWdgt._addTextMenuEntries`, after "Soft wrap", before "Connect"): "Run contents" always, and "Run selection" / "Show
+  selection" / "Inspect selection" ONLY while the trimmed selection is non-empty — offered at all only while the text's PLACE
+  names a code receiver (`TextWdgt._codeReceiver`: the nearest container defining `codeReceiver` answers — a console its target,
+  an object inspector its subject while it edits it, a class inspector nothing, the world itself at the root). Fixture: a
+  STANDALONE editable `new TextWdgt "@colloquialName()", backgroundColor: bg, backgroundTransparency: 1` on the world — a text on
+  the world opens its OWN menu on a right-click, not a hierarchy menu — sized so the text FITS (else a click opens the "edit:"
+  prompt). `@colloquialName()` answers the name of whatever it ran against, so "Show selection" showing "Desktop" proves the
+  receiver. Assert the rows BY MEANING: the labels of the rows whose `target is` the text, joined into one string
+  (`assertValuesEqual` compares arrays by identity, so compare a joined string). GOTCHAS: a text's full menu is taller than
+  the screen and SCROLLS — bring its last row into view before a shot (`@getTextMenuItemFromMenu menu, "Connect"` scrolls
+  the row it finds), or the run rows are below the fold; dismissing a menu ENDS editing, so re-click into the text before
+  Meta+a, or select-all routes nowhere and the selected menu silently equals the unselected one.
+- **An inspector's code pane runs against its subject** (`macroInspectorCodePaneRunsAgainstItsSubject`): the pane's text sits in
+  a `TextAreaWdgt` that takes over its children's menus, nested in the inspector, so a press in the pane opens dev mode's
+  HIERARCHY menu (`Widget.buildContextMenu` asks the TAKER); its row standing for the text area
+  (`@moveToRowOfMenuStandingForAndClick_InputEvents menu, inspector.detail`) opens the area's own menu, which merges the
+  text's rows — its run rows among them. The selection survives both presses, on both pointers. Open the inspector the way a
+  user does (`clickMenuItemOfWidget_InputEvents_Macro subject, "Inspect"`), click a member with an editable pane
+  (`bringInViewAndClickOnListItem_InputEvents_Macro inspector.list, "selectAll"` on a StringWdgt subject — a subject whose
+  class owns no member, e.g. RectangleWdgt, lists only `constructor`, whose pane is read-only), type code over the shown
+  source and select it. The class inspector (the breadcrumb's current chip opens it) offers NO run row on its pane: it holds no
+  instance.
 - **Add an indented paragraph to a document via its layout menu** (`macroSimpleDocumentCanAddIndentedParagraph`): a
   `DocumentViewportWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
   (`(doc.contents.childrenNotHandlesNorCarets())[0]`) — reformat THAT (add a Lorem paragraph below for reflow context). Drive its
@@ -2272,8 +2276,9 @@ assertion a recapture after a regression silently stores two different hashes an
   arc Phase 0). Inside `fullImage` there is no such margin, so probe-level checks there catch even the absorbed offsets.
 - **Eval a snippet against the inspected object via the CONSOLE** (`macroInspectorWorkAreaEvaluatesCoffeeScript`): the new `InspectorWdgt`
   has no work/execution pane, but each widget's **"Dev → Console"** menu opens a `ConsoleWdgt` — an editable code area (`@textWidget`) plus
-  "Run selection" / "Run all" buttons. **"Run all" → `ConsoleWdgt.doAll`** compiles the code area's text and runs it with `@` = the console's
-  target (`ConsoleWdgt.coffee:66-70`) — the direct equivalent of the old inspector work-pane's "do all". So open the console on a string
+  "Run selection" / "Run all" buttons. **"Run all" dispatches the code area's own `runContents`** (the run row "Run contents"), which runs
+  its text with `@` = the code receiver the console names, its target (`ConsoleWdgt.codeReceiver`) — the direct equivalent of the old
+  inspector work-pane's "do all". So open the console on a string
   (`clickMenuItemOfWidget_InputEvents_Macro s, "Dev"` → `@moveToItemOfTopMenuAndClick_InputEvents "Console"`), find it
   (`@findTopWidgetByClassNameOrClass ConsoleWdgt`), set the code with `consoleWdgt.textWidget.setText "@inform 'coffeescript!'"` (a fixture
   convenience — the EVAL is driven by the real UI button), then click `consoleWdgt.runAllButton` → the snippet runs against the string and

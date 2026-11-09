@@ -106,8 +106,8 @@ class InspectorWdgt extends Widget
   padding: undefined
 
   # ⚠ Through the SERVICE, never `@inspectedObject.colloquialName()`: an inspector is handed
-  # whatever the user asked to inspect, and that is not always a widget — the evaluation menu's
-  # "Inspect selection" hands it the VALUE of a snippet, so it can be a number, a string, a Point.
+  # whatever the user asked to inspect, and that is not always a widget — a text's "Inspect
+  # selection" run row hands it the VALUE of a snippet, so it can be a number, a string, a Point.
   # Asking a number for a method is a category error; the service names it from its class instead.
   # The subject's name follows the dash AS IT IS ("Object Inspector — analog clock", "Object
   # Inspector — Docs Maker"): my window title's display case touches only its first character.
@@ -482,6 +482,14 @@ class InspectorWdgt extends Widget
   _subjectIsEditable: ->
     @inspectedObject.injectProperty? and !isAClassPrototype @inspectedObject
 
+  # What code typed in my code pane runs against (TextWdgt._codeReceiver): my subject, exactly while I
+  # edit it. Code run against a widget is an edit made under it (Widget.evaluateString), so my run
+  # scope is my edit scope; a subject I do not edit -- a number, an immutable Point, a plain object,
+  # a function, a class's prototype -- gets no run rows at all, rather than rows that throw, write
+  # to a value meant to stay as it is, or change a class unrecorded.
+  codeReceiver: ->
+    @inspectedObject if @_subjectIsEditable()
+
   # The EDIT ROW -- my footer band's buttons -- as ONE unit: built, laid out and reached into
   # together, so it exists or it does not, and my footer band with it. An inspector on a subject
   # that cannot service an edit is a READ-ONLY inspector, which is the honest presentation rather
@@ -592,7 +600,6 @@ class InspectorWdgt extends Widget
 
     cnts = @detail.textWdgt
     cnts.setText txt
-    cnts.setReceiver @inspectedObject
     # `constructor`'s code is shown, never edited: it is my subject's class itself, which a save
     # would replace (Class.refuseTheConstructor)
     cnts.isEditable = selected isnt "constructor"
