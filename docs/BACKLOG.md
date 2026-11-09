@@ -44,11 +44,23 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       no donor's member back, and `replayMixinEdits` drops every mixin record silently while
       `unreplayableSourceEditsCount` counts none. And where parts load lazily, a consumer class defined after a mixin
       edit gets the mixin's boot member, so its prototype disagrees with the mixin's store.
-- [ ] **`run-sequence-selftest-headless.js`'s "page stopping answering" case is load-sensitive** (seen closing the same
-      item: the gauntlet's `selftests` leg failed in the parallel wave on 2026-11-08 and passed its serial retry). Under
-      load the planted unresponsive page can run out the sequence's completion wait before the runner sees the page
-      stop answering, so the run still reads INVALID (exit 2) but prints "the sequence did not finish within …" instead
-      of the "page stopped answering" line the case requires. Make the case's two conditions unable to race.
+- [ ] **The three suite runners wait for a page to boot three ways** (found closing
+      "`run-sequence-selftest-headless.js`'s 'page stopping answering' case is load-sensitive", in the plan's ledger).
+      The suite runner gives a shard 90 s of boot looks, each answered up to its 5-min backstop, and names a page that
+      never starts; the single runner bounds each wait of its drive; the sequence runner makes 300 looks of up to 5 s
+      each, so a page stuck while it boots is waited on for about 25 minutes in silence (measured: no line in 120 s,
+      then killed), and a world that never boots but answers falls through to a raw ReferenceError that names no rule
+      (by reading). One boot wait, with one bound and one named line, shared by the three, as `answerWithin` is.
+- [ ] **A plant's give-up comes after its run has ended** (found by the independent review closing the same item, in
+      the plan's ledger). Twelve plant polls, in nine `*-selftest-headless.js` files, say `PLANT_NOT_APPLIED` only after
+      12000 or 20000 polls of 5 ms (60–100 s). The runs measured close their page sooner: the sequence proof's four
+      runs take 36 s together, the menu and pin sweeps' proofs 23 s and 12 s. So a renamed class fails its case only
+      as a rule not fired, never by the "every plant applies" line that the `hand-list-sanctioned:` comments in the
+      suite-gate, menu-sweep and pin-sweep proofs cite. Measured on the harness page and `index-sw.html`:
+      `window.world` stays undefined until the world is built, after every eager class is defined, so "the world is
+      up and the class is not" is a give-up a run reaches. It does not fit every plant: the staleness census boots
+      `index.html`, where `SpreadsheetApp` arrives with a lazy part after the world, and one census give-up waits for
+      the world itself.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

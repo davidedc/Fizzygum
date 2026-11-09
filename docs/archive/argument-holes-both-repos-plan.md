@@ -1342,3 +1342,29 @@ for (const s of sites) if (s.absentBefore.length) {
       four constructor-as-a-name assertions in the new test. Filed beside it: a snapshot load never undoes the page's
       own earlier class edits; an object inspector opened on a class's prototype edits the class unrecorded; mixin
       editing holds only where the page compiled its mixins.
+- [x] **`run-sequence-selftest-headless.js`'s "page stopping answering" case is load-sensitive** (seen closing the same
+      item: the gauntlet's `selftests` leg failed in the parallel wave on 2026-11-08 and passed its serial retry). Under
+      load the planted unresponsive page can run out the sequence's completion wait before the runner sees the page
+      stop answering, so the run still reads INVALID (exit 2) but prints "the sequence did not finish within …" instead
+      of the "page stopped answering" line the case requires. Make the case's two conditions unable to race. — CLOSED
+      2026-11-09. The race was the case's, not the runner's: both lines are true readings, and the plant (the second
+      test's cycle looping) fired about 1.8 s into a 5 s wall-clock window. CPU load barely moved it, while two levers
+      printed the in-wave line exactly: `--complete-secs=1`, and the first test's cycles slowed by 200 ms each. The
+      stuck plant now sticks in the very call that starts the sequence (`AutomatorPlayer.prototype.runAllSystemTests`),
+      before the run's in-page completion wait has started its clock, at `--complete-secs=1`. That wait cannot end
+      first at any load or window: under both levers it reads "stopped answering", and the case takes 8.5 s instead of
+      12.7 s. Planted, it fails against a runner without the play phase's bound (the protocol timeout, never the line).
+      The frozen plant freezes the first test, TEST, not the second. Folded: the suite-gate selftest's abandon case
+      had the same shape. Its page hung 1.5 s into a 3 s stall window, and at `--test-stall-secs=1` the STALLED line lost
+      "— the page stopped answering". Its page now stops answering right after the runner's first poll (scheduled
+      from that poll's read of `Automator.prototype.collectedFailureImages`), so the look that closes the window is
+      always unanswered: Chrome and WebKit, at 3 s and at 1 s. Folded too: every `PLANT_NOT_APPLIED` is said with
+      console.error, and `lib/gate-bite-proof.js`'s header states why. Every runner and rig prints a page's error
+      lines, and none prints a log line that does not read as a failure (measured through the sequence, suite and
+      single runners and both sweeps). So ten console.log lines, in seven files, never reached the judge's "every
+      plant applies", the check three `hand-list-sanctioned:` comments cite. Planted with a give-up its run reaches, a
+      plant whose class never appears now fails that check by name. The independent review found that the frozen plant
+      had lost its guard on the test-name query (a missing method would have thrown in every cycle and read as a
+      freeze); the guard is back. It also found that the plants polling for classes give up only after 60–100 s, when
+      their runs have closed the page. Filed beside it: the three suite runners wait for a page to boot three ways; a
+      plant's give-up comes after its run has ended.
