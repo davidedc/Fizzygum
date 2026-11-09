@@ -95,13 +95,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       stays false and the memoized promise rejected: every later inspector open (`Widget.spawnInspector`) and every
       file holding an inspector (`Deserializer._needsTheReflectiveLayer`) then waits on, or is refused for, a layer
       that is there.
-- [ ] **A class edit refreshes only what a repaint shows** (found by the independent review closing "An object
-      inspector opened on a class's prototype edits the class unrecorded", in the plan's ledger; by reading). A class
-      inspector's edit tells each widget it can have changed through `Widget.sourceChanged`: the widget's own
-      `_reLayoutSelf` hook (empty on most classes), a repaint, and the editor's style note. It neither invalidates a
-      layout nor flushes a cache built from the edited code (`world.cacheForImmutableBackBuffers`, a text's measured
-      lines). So an edit that changes geometry or cached text — of a widget class, and now of a value class, an
-      appearance or a layout spec, whose edit tells every widget — shows only once something else invalidates it.
 - [ ] **A run that sets a widget field to a function blocks every world snapshot** (found closing "The evaluation menu is
       unreachable in an inspector's code pane", in the plan's ledger; measured). Code run against a widget (a text's run
       rows, a console's buttons) that assigns a function to a field — `@f = -> 42` — leaves an own function property with
@@ -109,6 +102,30 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       not a serialization transient", for every later save, until the field is removed by hand. The recorded way to give
       a widget a method is the inspector's Add / Save (`injectProperty` keeps `<m>_source`). Whether such a field should be
       carried as source, refused at the run, or reported at the save with a way out is open.
+- [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
+      refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
+      `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the
+      class inspector's member rows shrank, and their `ScrolledPaneWdgt` stayed 9164 px tall where a second refresh
+      makes it 7420, after which it is stable. At rest no pixel differs, but the scroll range is wrong until then. A
+      settled world that a second re-lay still moves is a question for the engine.
+- [ ] **A value's per-instance memo outlives an edit of the method that fills it** (found closing the same item; by
+      reading; low). `Color.toString` memoizes into `_derived_String` (`Color.coffee:216`): an edit of `toString` that
+      keeps the memo guard leaves every live colour — the interned theme colours among them — answering its old
+      string, and no flush reaches a value's own memo (`WorldWdgt.noteCodeChanged` drops the caches built from code,
+      not state a value keeps).
+- [ ] **A palette's back-buffer key names its class and extent, not code of its own** (found by the independent review
+      closing "A class edit refreshes only what a repaint shows", in the plan's ledger; by reading; low).
+      `PaletteWdgt.createBufferCacheKey` (`PaletteWdgt.coffee:81`) keys the shared buffer by class and extent alone,
+      so an object inspector's Save of `fillPaletteBuffer` on one palette hits the shared entry and shows nothing, and
+      after any flush whichever same-class, same-size palette paints first fills that entry for all of them. Texts carry
+      a hash of the code they hold of their own in their keys (`StringWdgt._ownCodeKeySuffix`); palettes do not.
+- [ ] **The inspector churn set cannot see a class inspector's member list move** (found closing the same item;
+      measured). `scripts/derive-inspector-churn-set.js` plants one enumerable own field on every widget, which moves
+      every OBJECT inspector's member list; a member added to a CLASS moves a class inspector's list instead, which that
+      plant never touches. Closing the item added `StringWdgt._ownCodeKeySuffix` and `_sourceChangedNoSettle`, and
+      `SystemTest_macroInspectorCodePaneRunsAgainstItsSubject` (whose image 3 is a class inspector on `StringWdgt`) moved
+      with the churn set while not in it — so `fg recapture-inspector` and `classify-diff.js`'s corroboration pass over
+      it. A second plant, a member added to a class's prototype, would derive the class half.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

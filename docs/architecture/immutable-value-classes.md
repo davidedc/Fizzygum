@@ -32,9 +32,10 @@ Consequences, all load-bearing:
   fields, not its class's code: a value class's members are edited in its class inspector as any
   class's are (`Class.applyMemberEdit`, recorded and replayed by a world snapshot,
   `serialization-duplication-reference.md` §12), and its existing instances run the edited member
-  at once. A value class has no widget instances to tell, so every widget is told of its edit
-  (`Widget.sourceChanged`: a repaint), since any of them may paint with it
-  (`Class.notifyWidgetsOfAnEditTo`). An object
+  at once, and every widget hears that code changed, as for any class edit
+  (`WorldWdgt.noteCodeChanged`, `mixins.md` §2), since any of them may paint with it. What an
+  instance already memoized from the edited code (a colour's cached string) keeps until it is
+  computed again. An object
   inspector on a value INSTANCE stays read-only: a value services no instance edit protocol.
 
 ## 2. The shortcut rule (canonical instances)

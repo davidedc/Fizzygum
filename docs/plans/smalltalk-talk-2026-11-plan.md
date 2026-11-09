@@ -747,7 +747,7 @@ before adding any global.
 
 | View | Content |
 |---|---|
-| **Source** | An embedded `ClassInspectorWdgt` on the class, with that member selected. Construct it the way `InspectorWdgt.openClassInspector` does, then `selectionFromList memberName`. So saving uses the existing edit path (`applyMemberEdit` + `recordClassEdit` + `Class.notifyWidgetsOfAnEditTo`) |
+| **Source** | An embedded `ClassInspectorWdgt` on the class, with that member selected. Construct it the way `InspectorWdgt.openClassInspector` does, then `selectionFromList memberName`. So saving uses the existing edit path (`applyMemberEdit` + `recordClassEdit` + `world.noteCodeChanged`) |
 | **Senders** | Every member, across `SourceVault.names()` → class/mixin member sources, whose body references the name. Mirror `buildSystem/lib/method-references.js`: a property access `@m` / `.m` and a whole-name string `"m"` count, while a bare word or a comment does not. Rows read Smalltalk-style, `AnalogClockWdgt>>step`; drill → MethodRef |
 | **Implementors** | Classes whose `nonStaticPropertiesSources` has the name, plus mixins (`Mixin.allMixines`) |
 

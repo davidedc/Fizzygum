@@ -20,9 +20,9 @@ how the machinery works; the plan is the *build order*.
 > snapshot (§11 — `WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot`,
 > `Serializer.serializeWorld`, `WellKnownObjects.resolveApp`, `FileLoading`'s `kind:"world"`
 > branch; pixel-identical desktop round-trip same-page + cross-session at dpr 1/2), and
-> source-edit capture (§12 — `SourceEditsRegistry` at `world.sourceEditsRegistry`, hooked at
-> `Widget.injectProperty` + `ClassInspectorWdgt.applyPropertyEdit`, embedded in and replayed
-> from the world snapshot). The phase ledger that tracked its construction is history — it
+> source-edit capture (§12 — `SourceEditsRegistry` at `world.sourceEditsRegistry`, recorded by
+> the inspectors' gestures — `InspectorWdgt.applyPropertyEdit` and the class inspector's edit
+> steps — embedded in and replayed from the world snapshot). The phase ledger that tracked its construction is history — it
 > lives in the companion plan above, with the decisions it resolved.
 >
 > NB: every shipping `src/` directory must be claimed by exactly one **part** in
@@ -764,11 +764,16 @@ ctor; a PRODUCT collaborator in the `core` part, so every profile ships it). It 
 whole-world snapshot can carry and replay them. Record: `{scope, className|mixinName,
 uniqueID?, propertyName, source?, deleted?}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
 
-Three scopes, captured at the three edit choke points:
+Three scopes, each recorded by the person's GESTURE that makes it, never by the edit verb the
+gesture drives (`mixins.md` §2 — a meta-object or a meta-verb edits; the gesture tells and records):
 
-- **instance** — `Widget.injectProperty` records `recordInstanceEdit(widget, name, txt)`. These
-  ALSO ride serialization on their own: the widget carries a `<name>_source` string →
-  `{"$src"}` → re-injected on restore (§5). The registry adds auditability.
+- **instance** — the object inspector's Save (`InspectorWdgt.applyPropertyEdit`) records
+  `recordInstanceEdit(widget, name, txt)` when the value it saves is a function.
+  `Widget.injectProperty` itself records nothing: the product injects its own handlers through it
+  (an `ImageWdgt`'s overlay, a paint tool's switch) and a load re-injects each `{"$src"}` through
+  it, none of them an edit a person made. Instance edits ALSO ride serialization on their own: the
+  widget carries a `<name>_source` string → `{"$src"}` → re-injected on restore (§5). The registry
+  adds auditability.
 - **class** — the class inspector's class edit step (`ClassInspectorWdgt._editClassMember`)
   edits through `Class.applyMemberEdit` and records `recordClassEdit(prototype, name, txt)` (its
   `@inspectedObject` is the class prototype — the link of the inspected object's own prototype
@@ -807,7 +812,12 @@ Replay walks each scope's records in order, so remove-then-re-add lands in its f
 BEFORE deserialization** (`replayMixinEdits` then `replayClassEdits` — mixin first, the
 boot-order analogy: `augmentWith` runs before class-body assignments, so a class-scope edit
 of the same member keeps winning), so a shell (`Object.create(prototype)`) already sees the
-edited methods; an edit that no longer compiles is logged, not fatal. Both replays are gated on
+edited methods; an edit that no longer compiles is logged, not fatal. Each replay answers how
+many records it applied, and when any did, the load tells the world its code changed
+(`WorldWdgt.noteCodeChanged`, the class inspector's own notification): a load KEEPS its world, and
+with it every cache the old code filled — measured lines, line breaks, immutable back buffers,
+each keyed by content — so a page that already showed the edited class's widgets would otherwise
+re-show the old code's look, one file making two worlds. Both replays are gated on
 `SourceEditsRegistry.canReplaySourceEdits()` — class- and mixin-scope replay drives the
 META-SYSTEM (`Class.applyMemberEdit` / `removeMember`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only from
 the class source directory (with the reflective layer, which the load fetches first wherever it can come —
@@ -815,11 +825,12 @@ the class source directory (with the reflective layer, which the load fetches fi
 and says so once (`unreplayableSourceEditsCount` → one `inform`) rather than dropping the user's
 class edits silently. Instance-scope edits
 ride the normal `{"$src"}` path on their own widget — those still load on such a build, since
-they need only the compiler every profile ships. The rebuilt registry is installed AFTER deserialize (so the
-`$src` re-injections don't double-log into it). A file/menu load confirms first, warning that a
+they need only the compiler every profile ships. The rebuilt registry is installed after deserialize,
+with the rest of the world. A file/menu load confirms first, warning that a
 snapshot can execute code (§4.12 of the plan). Proven fresh-session by
 `serialization-roundtrip-headless.js`'s source-edit leg (`sourceEdits.*`): an `injectProperty`
 method edit, and the class inspector's add, save, rename and remove of a class's own member, of
 a body member never edited (its rename recompiled so `super` follows it), of an override of a
 donated member, and the rename of a donated member, each hold in a fresh page exactly as the
-editing page left them.
+editing page left them; and a page that already showed a text before loading a file carrying a
+class edit of it shows exactly what the fresh page shows (`sourceEdits.warmLoadEqualsColdLoad`).

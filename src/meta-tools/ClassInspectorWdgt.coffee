@@ -9,8 +9,8 @@ class ClassInspectorWdgt extends InspectorWdgt
   # Each makes the meta-object's edit AND its registry record (SourceEditsRegistry), so no gesture
   # of mine can change a prototype or a mixin unrecorded, and a world snapshot replays exactly what
   # was done. None notifies: Class and Mixin leave that to their caller, and a gesture can be two
-  # steps (a rename is an edit under the new name and a removal of the old), while each widget the
-  # gesture can have changed must hear of it ONCE -- so each gesture below ends in one notification.
+  # steps (a rename is an edit under the new name and a removal of the old) -- so each gesture below
+  # ends in ONE notification (_notifyOfEdit).
 
   _editClassMember: (memberName, source) ->
     @inspectedObject.constructor.class.applyMemberEdit memberName, source
@@ -31,15 +31,14 @@ class ClassInspectorWdgt extends InspectorWdgt
     world?.sourceEditsRegistry?.recordMixinMemberRemoval? theMixin.name, memberName
     updated
 
-  # A class-scope gesture's one notification: every widget the edit to my class can have changed
-  # hears of it once (Class.notifyWidgetsOfAnEditTo, Class.widgetsAnEditCanChange).
-  _notifyWidgetsOfSourceChange: ->
-    Class.notifyWidgetsOfAnEditTo [@inspectedObject.constructor.class]
-
-  # A mixin-scope gesture's one notification: every widget the edit to each consumer class it
-  # updated can have changed hears of it once, however many of those classes name it.
-  _notifyConsumerClasses: (classNames) ->
-    Class.notifyWidgetsOfAnEditTo ((classNamed eachName).class for eachName in classNames)
+  # My gestures' one notification: code changed under every widget (WorldWdgt.noteCodeChanged), which
+  # re-lays and repaints whatever derives from it -- the base's is my subject's alone, and my subject
+  # is a class.
+  _notifyOfEdit: ->
+    # nosettle-sanctioned: the tail of my edit gestures (Save, Add…, Rename…, Remove, a mixin
+    # destination's row), reached at event time and never inside a settle -- the notification is the
+    # edit's own settle
+    world.noteCodeChanged()
 
   _informConsumerClassesUpdated: (whatHappened, theMixin, classNames) ->
     count = classNames.length
@@ -63,7 +62,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # Mixin's for a donated member), recorded for a snapshot to replay -- so my subject must be a
   # Fizzygum class's PROTOTYPE (isAClassPrototype), and every such class is mine to edit, a value
   # class or an appearance as much as a widget class: the meta-object serves them all, and the edit
-  # reaches whoever can show it (Class.widgetsAnEditCanChange). A value class's INSTANCES stay immutable --
+  # reaches whoever can show it (WorldWdgt.noteCodeChanged). A value class's INSTANCES stay immutable --
   # an object inspector on one is read-only -- while its class's members are edited here. Any other
   # subject gets a read-only inspector: a built-in class's prototype (an inspector on a number names
   # Number), or a value a code path handed me.
@@ -144,7 +143,8 @@ class ClassInspectorWdgt extends InspectorWdgt
   addPropertyToMixin: (ignored, ignored2, prop, mixinGlobalName) ->
     theMixin = Mixin.named mixinGlobalName
     return unless theMixin?
-    @_notifyConsumerClasses @_editMixinMember theMixin, prop, "undefined"
+    @_editMixinMember theMixin, prop, "undefined"
+    @_notifyOfEdit()
     @_refilterMembers()
 
   # a mixin-donated member (not shadowed by this class) is removed from
@@ -156,7 +156,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     if (theMixin = @_currentPropertySourceMixin())? and @_selectedMemberCanBeRenamedOrRemoved()
       propertyName = @list.selected.labelString
       updated = @_removeMixinMember theMixin, propertyName
-      @_notifyConsumerClasses updated
+      @_notifyOfEdit()
       @_refilterMembers()
       @_informConsumerClassesUpdated "removed from", theMixin, updated
       return
@@ -168,7 +168,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # member my class defines over a mixin's gives the mixin's back (Class.removeMember).
   _applyPropertyRemoval: (propertyName) ->
     @_removeClassMember propertyName
-    @_notifyWidgetsOfSourceChange()
+    @_notifyOfEdit()
 
   # A rename is an edit under the new name of the member's recorded SOURCE, then a removal of
   # the old name: the member is recompiled, so its `super` calls the new name, and the record of
@@ -178,10 +178,9 @@ class ClassInspectorWdgt extends InspectorWdgt
   # way round: InspectorWdgt.renameProperty refuses it.)
   _applyPropertyRename: (oldName, newName) ->
     if (theMixin = @_currentPropertySourceMixin())?
-      updated = @_editMixinMember theMixin, newName, theMixin.nonStaticPropertiesSources[oldName]
-      for eachName in @_removeMixinMember theMixin, oldName when eachName not in updated
-        updated.push eachName
-      @_notifyConsumerClasses updated
+      @_editMixinMember theMixin, newName, theMixin.nonStaticPropertiesSources[oldName]
+      @_removeMixinMember theMixin, oldName
+      @_notifyOfEdit()
       return
     theClass = @inspectedObject.constructor.class
     unless theClass.definesMember oldName
@@ -189,12 +188,12 @@ class ClassInspectorWdgt extends InspectorWdgt
       return
     @_editClassMember newName, theClass.nonStaticPropertiesSources[oldName]
     @_removeClassMember oldName
-    @_notifyWidgetsOfSourceChange()
+    @_notifyOfEdit()
 
   # a member added to my class is an edit of it to "undefined", the twin of addPropertyToMixin
   _applyPropertyAddition: (prop) ->
     @_editClassMember prop, "undefined"
-    @_notifyWidgetsOfSourceChange()
+    @_notifyOfEdit()
 
   # The second save destination for a mixin-donated member: instead of editing the
   # DONOR (what plain save does while @currentPropertySourceMixinName is set), keep the
@@ -244,7 +243,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     # a mixin member's prototype-level truth is the mixin
     if (theMixin = @_currentPropertySourceMixin())?
       updated = @_editMixinMember theMixin, propertyName, txt
-      @_notifyConsumerClasses updated
+      @_notifyOfEdit()
       @_informConsumerClassesUpdated "saved to", theMixin, updated
       return
 
@@ -253,4 +252,4 @@ class ClassInspectorWdgt extends InspectorWdgt
     # rewritten exactly as at boot). Unlike an instance edit, nothing but the record
     # remembers a prototype edit -- the registry's essential case (§12).
     @_editClassMember propertyName, txt
-    @_notifyWidgetsOfSourceChange()
+    @_notifyOfEdit()

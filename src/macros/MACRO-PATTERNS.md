@@ -16,10 +16,8 @@ See `CLAUDE.md` for those rules.
 
 ⛔ **A direct call is written as CODE, never as a string handed to `world.evaluateString`.** A macro body IS
 CoffeeScript: anything the string could say can be a statement instead, and the statement keeps a real binding
-for the widget, is covered by the syntax gate, and carries a name a rename sweep can find. `evaluateString` is
-also not a plain call — it compiles text, evals it, then re-lays-out AND DAMAGES THE WHOLE WORLD, so a fixture
-step written that way forces a full repaint and MASKS a missing self-invalidation in whatever it just drove
-(screenshots read the incremental damage-rect canvas precisely to stay sensitive to that). A test may call
+for the widget, is covered by the syntax gate, and carries a name a rename sweep can find. (`evaluateString` is the
+evaluation alone: it tells no one, as every edit verb does — the person's run gesture tells the receiver.) A test may call
 `world.evaluateString` only if the eval is genuinely its SUBJECT, and it says so by carrying the `evaluateString`
 tag in its metadata — which is what the build's `check-macro-source-discipline` gate enforces, along with the harder
 rule that `@evaluateString` (MacroToolkit's own, `@` bound to the toolkit) is always wrong. `fg status` counts the
@@ -2206,13 +2204,13 @@ assertion a recapture after a regression silently stores two different hashes an
   message, "OK"` before the next gesture. A behaviour no gesture can reach any more (the prompt now refuses before injecting)
   is checked by a direct call inside a `try` in the macro body, saying so in `provenance`.
 - **Count a framework call — a spy on the method, restored before the macro ends** (`macroInstancesRegistry`,
-  `macroClassEditNotifiesInstances`): when the claim is HOW OFTEN something runs ("a construction registers a widget once",
-  "an edit to a class reaches each of its instances once"),
+  `macroInspectorEditTellsOnce`): when the claim is HOW OFTEN something runs ("a construction registers a widget once",
+  "a class edit tells every live widget once"),
   replace the method with a wrapper that records each call's receiver and calls through, `register =
   Widget::registerThisInstance` then `Widget::registerThisInstance = -> registered.push @; register.apply @, arguments`,
   act inside a `try` whose `finally` restores it, and count per object (`(r for r in registered when r is clock).length`),
   so a widget built on the way is no miscount. Restore it the way it was held: ASSIGN it back when the method is the
-  object's own (Widget.prototype's own `registerThisInstance`, `sourceChanged`), `delete` the spy when it shadows an
+  object's own (Widget.prototype's own `registerThisInstance`, `_codeChangedNoSettle`), `delete` the spy when it shadows an
   INHERITED one (so no same-valued own property is left behind) — always before the end, since the next test runs on the
   same page. Assertion-only; each assertion is proven by a plant on `--prelude=` that breaks it — a no-op
   `registerThisInstance`, a second registration from `assignUniqueID`, a class's set deleted, the old per-level
@@ -2239,7 +2237,8 @@ assertion a recapture after a regression silently stores two different hashes an
   ⚠ Park the pointer at a fixed empty-desktop spot before EVERY shot: a row under the pointer draws highlighted, so otherwise a shot
   differs merely by where the mouse stopped.
 - **In-system eval** (`macroEvaluateString`): `world.evaluateString "code"` runs arbitrary CoffeeScript against the live world
-  INLINE (compile, run with `@`=world, relayout/repaint) — this is what the old recorded `AutomatorEventCommandEvaluateString` command did (that command no longer exists).
+  INLINE (compile, run with `@`=world; the evaluation alone, telling no one — the snippet's own setters repaint what they
+  change) — this is what the old recorded `AutomatorEventCommandEvaluateString` command did (that command no longer exists).
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield
   "waitNoInputsOngoing"` before a screenshot. ⭐ **A test may call `world.evaluateString` only where the eval IS the
   subject, as here** — this one and `macroEvaluateStringReturnsItsValue` are the tests that qualify, and each says so
@@ -2274,6 +2273,22 @@ assertion a recapture after a regression silently stores two different hashes an
   bottom-right, +1 top-left), so (12,4) (window shifts UP 8) is fully absorbed and passes vacuously under a scalar-cull plant,
   while (−12,4) (window shifts DOWN 16 into 1px of top slack) fails it with a ~120-px stale band (measured, arbitrary-direction-shadows
   arc Phase 0). Inside `fullImage` there is no such margin, so probe-level checks there catch even the absorbed offsets.
+- **A live code edit shows on the next frame: a class of the test's OWN, and a shot against a REBUILD**
+  (`macroClassEditShowsOnTheNextFrame`): (1) never edit a shipped class — every later test in the page would meet it.
+  Make the class in the test with the meta-system, as a lazy part's classes are made: `[K] = (classNamed (new Class
+  source, false, true).name for source in [...])`, the source a CoffeeScript string (`\\n`-escaped inside the JS
+  template, or CoffeeScript joins the lines with spaces), its members the ones the test edits, so the class inspector
+  lists them as its own (a short list — `bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro` presses no bar
+  on a list that fits). (2) `delete window[K.name]` in the `finally`: a class kept for the page reads, at the next reset,
+  as page state that drifted (`WorldInventory` gates `classes.count`). (3) Make the edit with real presses — the row,
+  `@clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents` before or after a code string, Backspaces, typed text,
+  `@clickOnSaveButtonFromTopInspector_InputEvents` — in an inspector framed AWAY from the fixture with
+  `world.openFrameWith`, and close it before the shot, so no member list (which churns whenever a class gains a member)
+  is in any reference; keep the edited code lines short, or the press at the code string lands past the pane. (4) The
+  claim is a shot after the edit `@assertScreenshotsIdentical` to a shot of the same fixture REBUILT from scratch,
+  with the oracle's OWN flush first — the six `world.cacheForText*`/`cacheForParagraphs*` caches `.reset()` and
+  `world.resetImmutableBackBuffersCache()`, never the notification under test (`world.noteCodeChanged`), so a refresh
+  that misses a cache cannot also blind its oracle.
 - **Eval a snippet against the inspected object via the CONSOLE** (`macroInspectorWorkAreaEvaluatesCoffeeScript`): the new `InspectorWdgt`
   has no work/execution pane, but each widget's **"Dev → Console"** menu opens a `ConsoleWdgt` — an editable code area (`@textWidget`) plus
   "Run selection" / "Run all" buttons. **"Run all" dispatches the code area's own `runContents`** (the run row "Run contents"), which runs

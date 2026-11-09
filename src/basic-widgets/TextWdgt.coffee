@@ -165,8 +165,9 @@ class TextWdgt extends StringWdgt
       justCheckIfItFitsInThisExtent = null
       overrideFontSize = @originallySetFontSize
 
-    # the entry keeps a pitch-derived height and fit verdict, so my line box is part of its key
-    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + text.hashCode() + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix()
+    # the entry keeps a pitch-derived height and fit verdict, so my line box is part of its key, and so
+    # is code of my own (a linePitch of my own measures differently from my class's)
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + text.hashCode() + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix() + @_ownCodeKeySuffix
     textWrappingData = world.cacheForTextWrappingData.get cacheKey
     if textWrappingData? then return textWrappingData
     wrappedLinesOfWholeText = []
@@ -273,8 +274,9 @@ class TextWdgt extends StringWdgt
     else
       widgetWidth = Number.MAX_VALUE
 
-    # what this caches is getTextWrappingData's answer, which reads my line box
-    cacheKey = text.hashCode() + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + widgetWidth + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix()
+    # what this caches is getTextWrappingData's answer, which reads my line box and my code (my own
+    # getParagraphs, say)
+    cacheKey = text.hashCode() + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + widgetWidth + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix() + @_ownCodeKeySuffix
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
     if textWrappingData? then return textWrappingData
 
@@ -704,13 +706,19 @@ class TextWdgt extends StringWdgt
   # Widget._reportingCompileErrors, so text that is not code is reported beside the hand rather than
   # thrown at the world. The receiver is asked again here, at the run: a row offered while I stood
   # in a place that names one can be clicked after I moved to one that names none (a pinned menu,
-  # a window closed into the bin), and then I say so instead of running nothing silently.
+  # a window closed into the bin), and then I say so instead of running nothing silently. A run is
+  # the person's gesture, so it tells the receiver once it has run (Widget.sourceChanged) -- unless
+  # the code destroyed it: the evaluation alone tells no one.
   _runningTypedCode: (code) ->
     receiver = @_codeReceiver()
     unless receiver?
       @inform "There is nothing here for this code to run against"
       return undefined
-    @_reportingCompileErrors => receiver.evaluateString code
+    result = @_reportingCompileErrors => receiver.evaluateString code
+    # nosettle-sanctioned: the shared tail of my public run actions, reached at event time and never
+    # inside a settle -- the receiver's notification is the run's own settle
+    receiver.sourceChanged() unless receiver.destroyed
+    result
 
   # selects the whole line (if it's wrapped, just
   # what sits on the very line, not what wraps

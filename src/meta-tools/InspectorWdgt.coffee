@@ -829,10 +829,11 @@ class InspectorWdgt extends Widget
   #InspectorWdgt editing ops:
   # Each of my four edits -- add, save, rename, remove -- is one STEP (an overridable hook:
   # _applyPropertyAddition, applyPropertyEdit, _applyPropertyRename, _applyPropertyRemoval) followed
-  # by my own re-filter where my member set changed. The step makes the edit AND its one notification:
-  # on a widget the Widget edit protocol's own (addOwnProperty, injectProperty, renameOwnProperty,
-  # removeOwnProperty each end in sourceChanged), on a class ClassInspectorWdgt's overrides. Nothing
-  # here notifies again.
+  # by my own re-filter where my member set changed. The step is the person's gesture, so it makes the
+  # edit AND tells: on a widget, the Widget edit protocol's verb (addOwnProperty, injectProperty,
+  # renameOwnProperty, removeOwnProperty -- edits alone), a Save of a function also recording the
+  # edit for a world snapshot; on a class, ClassInspectorWdgt's overrides. Each ends in my ONE
+  # notification of an edit (_notifyOfEdit). Nothing here notifies again.
   # Shared save scaffolding: object inspectors inject the property, class
   # inspectors edit the member through its meta-object — the only differing step is isolated in
   # the overridable applyPropertyEdit hook (ClassInspectorWdgt overrides it).
@@ -858,10 +859,23 @@ class InspectorWdgt extends Widget
 
   # the one differing step between object- and class-inspector save: an object
   # inspector injects the property onto the instance (ClassInspectorWdgt
-  # overrides this to edit the class's member through its meta-object).
+  # overrides this to edit the class's member through its meta-object). A function saved is logged
+  # as an instance-scope source edit, which a world snapshot carries (SourceEditsRegistry, §12):
+  # this Save is the one writer of that record, so the product's own injections (a paint tool's
+  # handlers, a load's re-injections) log nothing.
   applyPropertyEdit: (propertyName, txt) ->
-    # inject code will also break the layout and the widget
     @inspectedObject.injectProperty propertyName, txt
+    if Utils.isFunction @inspectedObject[propertyName]
+      world?.sourceEditsRegistry?.recordInstanceEdit? @inspectedObject, propertyName, txt
+    @_notifyOfEdit()
+
+  # The one notification each of my edit gestures ends in, once its edit is made: my subject's
+  # (Widget.sourceChanged), since the edit was made under it. ClassInspectorWdgt's is the world's.
+  _notifyOfEdit: ->
+    # nosettle-sanctioned: the tail of my edit steps, which only my public gestures reach (Save, and
+    # the Add…, Rename… and Remove buttons), at event time and never inside a settle -- the
+    # notification is the edit's own settle
+    @inspectedObject.sourceChanged()
 
 
   addProperty: (prop) ->
@@ -891,6 +905,7 @@ class InspectorWdgt extends Widget
   # ClassInspectorWdgt overrides this with its class edit step.
   _applyPropertyAddition: (prop) ->
     @inspectedObject.addOwnProperty prop
+    @_notifyOfEdit()
   
   addPropertyPopout: ->
     # Chrome cannot handle empty strings (others do), hence the "property" default
@@ -904,6 +919,7 @@ class InspectorWdgt extends Widget
   # the new name and a removal of the old.
   _applyPropertyRename: (oldName, newName) ->
     @inspectedObject.renameOwnProperty oldName, newName
+    @_notifyOfEdit()
 
   # A rename, like a removal below, changes my member set, so it re-filters me (_refilterMembers).
   # A rename to the name the member already has changes nothing, so it does nothing (each step's
@@ -935,6 +951,7 @@ class InspectorWdgt extends Widget
   # overrides this with its class removal step.)
   _applyPropertyRemoval: (propertyName) ->
     @inspectedObject.removeOwnProperty propertyName
+    @_notifyOfEdit()
 
   removeProperty: ->
     # nothing selected = nothing to remove (see renamePropertyPopout), and a member I do not offer

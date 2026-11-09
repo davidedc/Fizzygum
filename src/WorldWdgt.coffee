@@ -242,6 +242,34 @@ class WorldWdgt extends IconGridPanelWdgt
     WorldWdgt.immutableBackBufferGeneration++
     @_fullChanged()
 
+  # PUBLIC notification: CODE changed under every widget -- a class inspector's gesture edited,
+  # added, renamed or removed a member of a class or of a mixin (ClassInspectorWdgt), or a snapshot's
+  # load replayed such edits (loadWorldSnapshot). What layout and paint DERIVE from code then shows
+  # on the next frame, as a fresh build would show it:
+  #   - every cache filled by running code is dropped: the six text caches (measurements, paragraph
+  #     and word splits, wrapping, line breaks) and the immutable back buffers
+  #     (resetImmutableBackBuffersCache, which also repaints everything). Each is keyed by CONTENT,
+  #     never by the code that filled it, so an entry from before the edit would come back;
+  #   - every live widget but me, off-tree ones included, runs the step of a code change
+  #     (Widget._codeChangedNoSettle: its re-layout hook, its layout invalidated, its style noted), in
+  #     one settle (my own repaint is the buffer reset's).
+  # The readers are the whole world, not the edited class's instances: a menu row re-fits its label's
+  # measured lines, a stack reads its children's layout specs, and any widget may paint with a value
+  # class or an appearance. What code already STORED (a colour a state change computed) shows the
+  # edit only at its next trigger, as in a fresh build: an edit changes code, not state.
+  noteCodeChanged: ->
+    @cacheForTextMeasurements.reset()
+    @cacheForTextParagraphSplits.reset()
+    @cacheForParagraphsWordsSplits.reset()
+    @cacheForParagraphsWrappingData.reset()
+    @cacheForTextWrappingData.reset()
+    @cacheForTextBreakingIntoLinesTopLevel.reset()
+    @resetImmutableBackBuffersCache()
+    @_settleLayoutsAfter =>
+      Widget.instances.forEach (eachWidget) =>
+        eachWidget._codeChangedNoSettle() unless eachWidget is @
+    return
+
   # PUBLIC notification (SWCanvas pages only — the fillText seam in SWCanvasElement-extensions
   # records the callers per DRAW): these widgets painted placeholder glyphs while their atlas
   # was cold, and the atlas has now warmed. Evict exactly the cache entries built during the
@@ -1815,8 +1843,8 @@ class WorldWdgt extends IconGridPanelWdgt
     aWdgt
 
   # A WIDGET'S STYLE MOVED -- a text's weight, slant, font or alignment (StringWdgt's setters), or
-  # whatever an edit made under a widget may have touched (Widget.sourceChanged: an inspector's
-  # edit, code run against it, a class edit reaching it). When that widget is the one being edited I announce it exactly as I announce a
+  # whatever a code change may have touched (Widget._codeChangedNoSettle: a person's edit under the
+  # widget, or code changed under every widget). When that widget is the one being edited I announce it exactly as I announce a
   # new focus, so what mirrors the edited text re-reads it; any other widget's style is nothing the
   # editor's tools show.
   noteStyleChanged: (aWdgt) ->
@@ -3075,8 +3103,9 @@ class WorldWdgt extends IconGridPanelWdgt
       # 2b. replay CLASS-scope source edits against the live prototypes BEFORE deserializing, so
       #     restored shells (Object.create(prototype)) already see the edited methods (§12). The
       #     confirm above warned that a load can run code the snapshot carries. Instance-scope
-      #     edits ride the normal {"$src"} path on their own widget. The rebuilt registry is
-      #     installed AFTER deserialize (below), so the $src re-injections don't double-log into it.
+      #     edits ride the normal {"$src"} path on their own widget, re-injected as plumbing that
+      #     records nothing (Widget.injectProperty). The rebuilt registry is installed with the
+      #     rest of the world, below.
       restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
       # An artifact that ships no class source text has no meta-system and can never replay these
       # (arc 5's lean profile). Say so ONCE, to the user, before restoring the rest: the alternative
@@ -3086,8 +3115,10 @@ class WorldWdgt extends IconGridPanelWdgt
         @inform "This build cannot re-apply the " + unreplayableCount + " class-level source edit" +
           (if unreplayableCount is 1 then "" else "s") + " this file carries.\n" +
           "Everything else in it loads normally."
-      restoredRegistry.replayMixinEdits()
-      restoredRegistry.replayClassEdits()
+      # Code changed under every widget when any record replayed (noteCodeChanged): a load keeps
+      # its world, and with it the caches the code before the replay filled.
+      replayed = restoredRegistry.replayMixinEdits() + restoredRegistry.replayClassEdits()
+      @noteCodeChanged() if replayed > 0
       # 3. deserialize the object table (kind:"world" preserves each widget's iid).
       result = Deserializer.deserialize envelope
       shells = result.shells or []

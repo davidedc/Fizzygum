@@ -2,9 +2,10 @@
 # can carry them and replay them on restore. Lives at world.sourceEditsRegistry. See
 # docs/architecture/serialization-duplication-reference.md §12.
 #
-# THREE scopes of edit, captured at the edit choke points:
-#   - "instance": a single widget's method rewritten via the property inspector
-#     (Widget.injectProperty). These ALSO ride the serializer for free — the widget carries a
+# THREE scopes of edit, each recorded by the person's GESTURE that makes it, never by the verb it
+# drives (the product calls those verbs as plumbing too, which no one edited):
+#   - "instance": a single widget's method rewritten by the object inspector's Save
+#     (InspectorWdgt.applyPropertyEdit). These ALSO ride the serializer for free — the widget carries a
 #     `<name>_source` string, serialized as {"$src"} and re-injected on restore (§5). The
 #     registry's marginal value here is auditability (a durable record of what was edited).
 #   - "class": a class PROTOTYPE's member edited (Class.applyMemberEdit) or removed
@@ -30,7 +31,7 @@ class SourceEditsRegistry
   constructor: ->
     @records = []
 
-  # record an instance-scope edit (from Widget.injectProperty).
+  # record an instance-scope edit (from the object inspector's Save, InspectorWdgt.applyPropertyEdit).
   recordInstanceEdit: (widget, propertyName, source) ->
     return unless widget? and propertyName?
     @records.push
@@ -122,8 +123,11 @@ class SourceEditsRegistry
   # shell already sees the edited methods. Instance-scope edits are NOT replayed
   # here — they ride the normal {"$src"} path on their own widget. A class edit
   # that no longer compiles (the class changed, a typo) is logged, not fatal.
+  # Answers how many records it applied: the load tells the world its code changed when any did
+  # (WorldWdgt.noteCodeChanged), as a class inspector's gesture does.
   replayClassEdits: ->
-    return unless SourceEditsRegistry.canReplaySourceEdits()
+    return 0 unless SourceEditsRegistry.canReplaySourceEdits()
+    applied = 0
     for r in @records when r.scope is "class"
       theClass = classNamed(r.className)?.class
       continue unless theClass?
@@ -132,9 +136,10 @@ class SourceEditsRegistry
           theClass.removeMember r.propertyName
         else
           theClass.applyMemberEdit r.propertyName, r.source
+        applied++
       catch error
         console?.log "world snapshot: class-scope source edit " + r.className + "." + r.propertyName + " could not be replayed: " + error.message
-    return
+    applied
 
   # replay the MIXIN-scope records IN ORDER: an edit re-runs Mixin.applyMemberEdit
   # (recompile + re-inject into every non-shadowing consumer class), a removal
@@ -143,11 +148,12 @@ class SourceEditsRegistry
   # restore BEFORE replayClassEdits -- the boot-order analogy: augmentWith runs
   # before class-body assignments, so a class-scope edit of the same member keeps
   # winning. A record whose mixin/member no longer compiles is logged, not fatal
-  # (same policy as replayClassEdits).
+  # (same policy as replayClassEdits). Answers how many records it applied, as replayClassEdits does.
   replayMixinEdits: ->
     # ⚠ Without this the very first line of the loop body would throw a bare `Mixin is not defined`
     # mid-restore -- it reads Mixin.allMixines OUTSIDE the per-record try/catch below.
-    return unless SourceEditsRegistry.canReplaySourceEdits()
+    return 0 unless SourceEditsRegistry.canReplaySourceEdits()
+    applied = 0
     for r in @records when r.scope is "mixin"
       theMixin = Mixin.named r.mixinName
       continue unless theMixin?
@@ -156,9 +162,10 @@ class SourceEditsRegistry
           theMixin.removeMember r.propertyName
         else
           theMixin.applyMemberEdit r.propertyName, r.source
+        applied++
       catch error
         console?.log "world snapshot: mixin-scope source edit " + r.mixinName + "." + r.propertyName + " could not be replayed: " + error.message
-    return
+    applied
 
   # rebuild a registry from the records embedded in a loaded snapshot.
   @fromRecords: (records) ->

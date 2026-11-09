@@ -119,15 +119,48 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     stores, which is why replaying the recorded edits reproduces them (the reference
     doc §12). `<name>_source` means one thing only: a widget's own injected method's
     source (`Widget.injectProperty`); no class or mixin edit writes one onto a prototype.
-  - Both live-edit twins compile through a bare global-assignment eval — never
-    `Widget.evaluateString` against a prototype: its relayout/repaint tail treats the
-    receiver as a WIDGET and stamps widget-lifecycle fields onto the prototype as own
-    properties, polluting every later member listing of the class. The mixin twin
-    restores the recompiled function's `.name`, so the fake-super companion lookup
-    keeps working. Neither notifies instances: the class inspector's gesture does,
-    once, and each of its steps — one per (scope × operation): `_editClassMember`,
-    `_removeClassMember`, `_editMixinMember`, `_removeMixinMember` — makes the
-    meta-object's edit AND its `world.sourceEditsRegistry` record.
+  - Both live-edit twins compile through a bare global-assignment eval and write the
+    result onto the prototype — nothing runs with a prototype as `this`, since code run
+    against one stamps whatever fields it sets onto it as own properties, polluting every
+    later member listing of the class. The mixin twin restores the recompiled function's
+    `.name`, so the fake-super companion lookup keeps working.
+  - **A meta-object or a meta-verb EDITS; the person's GESTURE TELLS and RECORDS.** This one
+    rule holds for every live edit, of a class or of one widget:
+    - The edit verbs tell no one and record nothing: `Class.applyMemberEdit` /
+      `removeMember`, `Mixin.applyMemberEdit` / `removeMember`, and a widget's
+      `injectProperty`, `addOwnProperty`, `renameOwnProperty`, `removeOwnProperty` and
+      `evaluateString`. The product calls the widget verbs as plumbing too — a patch node
+      compiles its formula with `evaluateString` on every recompute, a paint tool injects
+      its handlers, a load re-injects each `{"$src"}` — where nothing a person did is there
+      to show, and a gesture can be several edits (a rename is an edit plus a removal).
+    - The class inspector's gestures record each edit (each step — one per scope ×
+      operation: `_editClassMember`, `_removeClassMember`, `_editMixinMember`,
+      `_removeMixinMember` — makes the meta-object's edit AND its
+      `world.sourceEditsRegistry` record) and end in ONE `WorldWdgt.noteCodeChanged`, as a
+      snapshot load does once it has replayed a file's class and mixin edits.
+    - The object inspector's Save, Add, Rename and Remove end in their subject's ONE
+      `Widget.sourceChanged`, and its Save of a function records the instance edit
+      (`InspectorWdgt.applyPropertyEdit`). A text's run rows (a console's buttons and a
+      script window's "Try it" run through them) end in their receiver's `sourceChanged`;
+      a run edits state, not code, and records nothing.
+  - **What a code edit refreshes.** `noteCodeChanged` is code changed under EVERY widget:
+    every cache built by running code — the six text caches and the immutable back
+    buffers, each keyed by CONTENT and never by the code that filled it — is dropped, and
+    every live widget but the world, off-tree ones included, runs `Widget._codeChangedNoSettle` (its
+    `_reLayoutSelf` heal, its layout invalidated, its style noted) in one settle. The whole
+    world, because an edit's readers are not the edited class's instances: a menu row
+    re-fits its label's measured lines, a stack reads its children's layout specs, and any
+    widget may paint with a value class or an appearance. `sourceChanged` is that step on
+    one widget plus its subtree's repaint. So what layout and paint DERIVE from code shows
+    the edit on the next frame; what code already STORED — a colour a state change
+    computed into a field — shows it only at its next trigger, exactly as in a fresh build:
+    an edit changes code, not state. A text holding code of its OWN adds a hash of that code
+    to the key of every cache keyed by what it shows — its back buffer, its wrap, its line
+    breaks (`StringWdgt._ownCodeKeySuffix`, set by `sourceChanged`'s core and saved and
+    copied as a plain field) — so it never shares an entry with a twin running other code,
+    and a re-edit of its own code never meets the entries of the code it replaced. Pinned by `SystemTest_macroClassEditShowsOnTheNextFrame` (each edit's shot
+    against a rebuild from scratch) and `SystemTest_macroInspectorEditTellsOnce` (who is told,
+    how often, and what is recorded).
   - Both refuse `constructor` (`Class.refuseTheConstructor`): a prototype's
     `constructor` IS its class, what every `.constructor.name` read answers.
   - The attribution covers methods AND fields: a donated method attributes through

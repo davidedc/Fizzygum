@@ -3960,14 +3960,34 @@ class Widget extends TreeNode
     # and the __add seed's drain alone IS the last-write-wins record.)
     return aWdgt
 
-  # An edit made under me rather than through my setters -- an inspector's edit (injectProperty and
-  # its add, rename and remove twins), code a person runs against me (evaluateString), a class-level
-  # source edit reaching its instances -- may have moved my style, which the editor's tools mirror
-  # while I am the widget being edited (WorldWdgt.noteStyleChanged). The edit itself tells me, once:
-  # each of those ends in this call, and nothing that drives them calls it again.
+  # PUBLIC notification: a person edited code or state under me, through no setter of mine -- the
+  # object inspector's save, add, rename and remove, or a text's run rows (a console's buttons and a
+  # script window's "Try it" run through them). The person's GESTURE tells me, once, after its edit.
+  # The edit verbs it drives -- injectProperty and its add, rename and remove twins, evaluateString --
+  # tell no one, as a class's meta-object tells no one (Class.applyMemberEdit): the product calls
+  # them too, as plumbing (a patch node compiles its formula with evaluateString on every recompute, a
+  # paint tool injects its handlers, a load re-injects each {"$src"}), where there is no edit of a
+  # person's to show. What layout and paint derive from my code follows on the next frame; what my
+  # code already STORED does not, until its next trigger (an edit changes code, not state).
   sourceChanged: ->
+    @_settleLayoutsAfter => @_sourceChangedNoSettle()
+
+  # sourceChanged's core: the step every code change runs (_codeChangedNoSettle), then my whole
+  # subtree repainted, since the edit can have changed how any of it paints. (StringWdgt first notes
+  # whether I now hold code of my own, which keys my back buffer.)
+  _sourceChangedNoSettle: ->
+    @_codeChangedNoSettle()
+    @_fullChanged()
+
+  # What ONE widget does when code it runs may have changed: my re-layout hook heals me (_reLayoutSelf:
+  # a text re-measures its lines, a menu row re-fits its label), my layout is invalidated
+  # (_invalidateLayout, which climbs to the containers that arrange me), and my style is noted, which
+  # the editor's tools mirror while I am the widget being edited (WorldWdgt.noteStyleChanged).
+  # Callers: sourceChanged's core, for an edit made under me, and WorldWdgt.noteCodeChanged, for code
+  # changed under every widget (a class edit, a snapshot's replay).
+  _codeChangedNoSettle: ->
     @_reLayoutSelf?()
-    @_changed?()
+    @_invalidateLayout()
     world.noteStyleChanged @
 
   # this is done before the updating of the
@@ -4207,23 +4227,19 @@ class Widget extends TreeNode
   @propertyAssignmentSource: (propertyName, txt) ->
     "@" + propertyName + " = " + txt
 
-  # if a function, the txt must contain the parameters and
-  # the arrow and the body
+  # Give me the member `propertyName`, the value txt evaluates to (a function's txt holds its
+  # parameters, its arrow and its body). The edit alone: it tells no one and records nothing, as a
+  # class's meta-object does not (Class.applyMemberEdit) -- the object inspector's Save, the
+  # person's gesture, records the edit and tells me (InspectorWdgt.applyPropertyEdit), while the
+  # product's own injections (a paint tool's handlers, a load's {"$src"}) are plumbing with nothing
+  # to tell. A function keeps its source beside it, `<name>_source`, so it stays editable as
+  # CoffeeScript and rides serialization as {"$src"}.
   injectProperty: (propertyName, txt) ->
     assignment = Widget.propertyAssignmentSource propertyName, txt
-    # the evaluation alone: this edit's one notification is the sourceChanged below
-    @_evaluateInMyScope assignment, typedFrom: assignment.length - txt.length
-    # if we are saving a function, we'd like to
-    # keep the source code so we can edit Coffeescript
-    # again.
+    @evaluateString assignment, typedFrom: assignment.length - txt.length
     if Utils.isFunction @[propertyName]
       @[propertyName + "_source"] = txt
-      # log the instance-scope source edit so a world snapshot can carry it (§12). The edit
-      # also rides serialization on its own via `<name>_source` -> {"$src"}; the registry adds
-      # auditability. (A re-injection during a snapshot restore re-logs harmlessly — the loader
-      # replaces the whole registry from the snapshot's records.)
-      world?.sourceEditsRegistry?.recordInstanceEdit? @, propertyName, txt
-    @sourceChanged()
+    return
 
   # Inject every `name = value` assignment a code blurb holds -- all of them or none: each is compiled
   # before any is injected (compilePropertyAssignments), so a blurb that does not compile changes
@@ -4313,12 +4329,14 @@ class Widget extends TreeNode
       lineStart = lineEnd + 1
     return
 
-  # the add twin of injectProperty: a new own member, undefined until a save gives it a value
+  # The add, remove and rename twins of injectProperty, edits alone as it is: the gesture that drives
+  # one tells me (InspectorWdgt's add, rename and remove end in sourceChanged).
+  # the add twin: a new own member, undefined until a save gives it a value
   addOwnProperty: (propertyName) ->
     @[propertyName] = undefined
-    @sourceChanged()
+    return
 
-  # the remove twin of injectProperty ("Own" keeps these clear of InspectorWdgt's
+  # the remove twin ("Own" keeps these clear of InspectorWdgt's
   # same-named button actions, which would otherwise shadow them on
   # inspectors -- inspectors are Widgets too): drops the member AND its
   # <name>_source companion -- the companion rides serialization as {"$src"}
@@ -4326,7 +4344,7 @@ class Widget extends TreeNode
   removeOwnProperty: (propertyName) ->
     delete @[propertyName]
     delete @[propertyName + "_source"]
-    @sourceChanged()
+    return
 
   # the rename twin: re-keys the member and moves its OWN <name>_source companion
   # with it, so a snapshot restores the member under the new name only.
@@ -4336,7 +4354,7 @@ class Widget extends TreeNode
     if Object::hasOwnProperty.call @, oldName + "_source"
       @[newName + "_source"] = @[oldName + "_source"]
       delete @[oldName + "_source"]
-    @sourceChanged()
+    return
 
   # Widget dragging (and dropping) /////////////////////////////////////////
   
@@ -5535,29 +5553,17 @@ class Widget extends TreeNode
       handler[functionName] args...  if handler[functionName]
   
   
-  # Widget eval: the RUN gestures' -- a text's run rows and a console's buttons, against the text's
-  # code receiver (TextWdgt._codeReceiver), a script window's "Try it" through its text -- and the
-  # patch node's. Code run against me is an edit made under me, so it ends in the one notification
-  # every such edit makes (sourceChanged: a re-layout and a repaint). It is an edit of my STATE, not
-  # of any code: the SourceEditsRegistry does not hear it, and a world snapshot carries what it left
-  # in my fields.
-  # ⚠ The result is returned EXPLICITLY, and must stay that way. The notification has to run AFTER
-  # the eval, so without this line CoffeeScript returns `sourceChanged()`'s value and the eval's own
-  # value is computed and dropped on the floor. Two callers read what comes back: a text's "Show
-  # selection" and "Inspect selection" (`TextWdgt`). Neither throws when handed the wrong thing, so
-  # a dispatch alone sees nothing; what guards it is this comment,
-  # `SystemTest_macroEvaluateStringReturnsItsValue`, and `fg menusweep`'s text roots, which run `@`
-  # and require it to come back as the receiver.
-  evaluateString: (codeSource) ->
-    result = @_evaluateInMyScope codeSource
-    @sourceChanged()
-    result
-
-  # The evaluation alone: codeSource compiled (compileFGCode) and run with me as `this`, its value
-  # answered, and nobody told: a caller makes its edit's one notification itself (evaluateString,
-  # injectProperty). opts.typedFrom: where in codeSource the text a person typed begins, for a caller
-  # that wraps it (injectProperty); it only places a compile error.
-  _evaluateInMyScope: (codeSource, opts = {}) ->
+  # Widget eval: codeSource compiled (compileFGCode) and run with me as `this`, its value answered.
+  # The evaluation alone: like injectProperty, it tells no one -- the person's run gesture tells me
+  # once it has run (TextWdgt._runningTypedCode: a text's run rows, which a console's buttons and a
+  # script window's "Try it" run through), while the patch node that compiles its formula through me
+  # on every recompute is plumbing. A run edits my STATE, not any code: the SourceEditsRegistry does
+  # not hear it, and a world snapshot carries what it left in my fields. Two callers read the value:
+  # a text's "Show selection" and "Inspect selection" (TextWdgt), which `fg menusweep`'s text roots
+  # and `SystemTest_macroEvaluateStringReturnsItsValue` hold to it. opts.typedFrom: where in
+  # codeSource the text a person typed begins, for a caller that wraps it (injectProperty); it only
+  # places a compile error.
+  evaluateString: (codeSource, opts = {}) ->
     eval compileFGCode codeSource, true, typedFrom: opts.typedFrom
 
   # The RUN gestures -- a row or button that runs text a person typed ("Run contents", "Run

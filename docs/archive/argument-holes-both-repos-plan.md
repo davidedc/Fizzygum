@@ -1631,3 +1631,54 @@ for (const s of sites) if (s.absentBefore.length) {
       `world.inspector.classSubjectsSurviveSnapshot`'s rewritten `codePaneRunsAgainstItsSubject` and new
       `classCodePaneRunsNothing` — each failed by its own plant. Filed: "A run that sets a widget field to a function
       blocks every world snapshot".
+- [x] **A class edit refreshes only what a repaint shows** (found by the independent review closing "An object
+      inspector opened on a class's prototype edits the class unrecorded", in the plan's ledger; by reading). A class
+      inspector's edit tells each widget it can have changed through `Widget.sourceChanged`: the widget's own
+      `_reLayoutSelf` hook (empty on most classes), a repaint, and the editor's style note. It neither invalidates a
+      layout nor flushes a cache built from the edited code (`world.cacheForImmutableBackBuffers`, a text's measured
+      lines). So an edit that changes geometry or cached text — of a widget class, and now of a value class, an
+      appearance or a layout spec, whose edit tells every widget — shows only once something else invalidates it.
+      — CLOSED 2026-11-09. MEASURED wider than filed (survey: `Fizzygum-tests/.scratch/class-edit-refresh/`): a geometry
+      edit (a widget method, a field default, a Remove, a layout-spec field, a run) never showed until something else
+      re-laid the widget; a cached paint or measured-lines edit stayed stale even after a resize BACK (the caches are
+      keyed by content, so the old key returned); a world census of 835 widgets left 767 stale after one
+      `FrameWdgt._titlebarHeight` edit; a warm page's snapshot load restored the OLD code's pixels (a load keeps its
+      world and its caches); an instance's own `_drawTextLine` took its twin's buffer, then painted the twin after any
+      flush; and the instance verbs were also product plumbing (a patch node's `evaluateString` on every recompute,
+      `ImageWdgt`, the paint tools and the Deserializer's `injectProperty`), which logged 4 "person's" instance records
+      per `ImageWdgt`. Rulings (owner: "revise/confirm per clean minimal + Do The Right Thing regardless of churn, then
+      proceed"), under ONE principle — a meta-object or a meta-verb EDITS; the person's GESTURE TELLS and RECORDS:
+      `WorldWdgt.noteCodeChanged` (public) drops the six text caches and the immutable back buffers
+      (`resetImmutableBackBuffersCache`) and runs every live widget's `Widget._codeChangedNoSettle` (its `_reLayoutSelf`
+      heal, `_invalidateLayout`, the style note) in one settle, off-tree widgets included;
+      `Class.widgetsAnEditCanChange` and `Class.notifyWidgetsOfAnEditTo` are deleted, and the class inspector's gestures
+      end in ONE `_notifyOfEdit` (`world.noteCodeChanged`). `Widget.sourceChanged` is the canonical self-settling wrap
+      of `_sourceChangedNoSettle` (the step plus `_fullChanged`), reached only from the person's gestures: the object
+      inspector's four (its `_notifyOfEdit`) and a text's run rows (`TextWdgt._runningTypedCode`). `injectProperty`, its
+      add, rename and remove twins and `evaluateString` (now the evaluation alone; `_evaluateInMyScope` folded in) tell
+      no one; `injectProperty` records nothing, and the object inspector's Save records a function it saves
+      (`InspectorWdgt.applyPropertyEdit`, the one writer of `recordInstanceEdit`). A text holding code of its own adds a
+      hash of that code to the keys of its back buffer, its wrap and its line breaks (`StringWdgt._ownCodeKeySuffix`, a
+      plain field set by `sourceChanged`'s core) — the ruled shape keyed by the text's IDENTITY, and the item's
+      independent review found by reading that a second own-code edit then met its first edit's buffer, and an own
+      `linePitch` read its twin's cached fit. The two snapshot replays answer how many records they applied, and
+      `loadWorldSnapshot` calls `noteCodeChanged` when any did. The principle and what a code edit refreshes are stated
+      once, in `docs/architecture/mixins.md` §2. Measured on the fixed build with the survey's probes: every class-side
+      case shows its edit on the next frame, the census leaves 0 stale (bar A1), warm load = cold load, and an
+      `ImageWdgt` logs 0 records. Proven by the new `SystemTest_macroClassEditShowsOnTheNextFrame` (mouse and finger;
+      test-own classes made and deleted in the test; each edit's shot against a rebuild after the oracle's own flush;
+      its fifth step, added after the review, re-edits a string's own code and saves a fitted text's own `linePitch`
+      beside an unedited twin), the rewritten `SystemTest_macroInspectorEditTellsOnce` (gestures, verbs alone, every
+      live widget once, the record column) and the serialization rig's `sourceEdits.warmLoadEqualsColdLoad`; each failed
+      by its own plant (`plants/` in the survey directory: no layout invalidation in the step, no text-cache flush, no
+      back-buffer flush, no own-code key, the reviewed identity key and a code hash on the buffer only fail the new
+      test's identities; the narrow scope, the refresh put back in the verbs, the verbs recording and the Save not
+      recording fail TellsOnce's rows; no load refresh fails the rig's warm-load fact; the controls pass).
+      `SystemTest_macroClassEditNotifiesInstances` is retired (its subject, a class relation choosing whom to tell, is
+      deleted); `SystemTest_macroInspectorOpensAClassInItsClassInspector` drops its value-class "every widget hears"
+      assertions. The inspector member-list churn set (and `InspectorCodePaneRunsAgainstItsSubject`, whose class
+      inspector on `StringWdgt` lists the class's new members) was recaptured, owner-approved. Toolkit:
+      `scrollInspectorListItemIntoView_InputEvents` presses no bar on a list that fits. Filed: "A scrolled pane keeps
+      its height when its content shrinks in the same settle", "A value's per-instance memo outlives an edit of the
+      method that fills it", "A palette's back-buffer key names its class and extent, not code of its own" and "The
+      inspector churn set cannot see a class inspector's member list move".

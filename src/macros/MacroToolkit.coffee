@@ -293,7 +293,7 @@ class MacroToolkit
 
   # Install the linked macro code (pump header + linked verbs) with `@` = this
   # MacroToolkit instance, so the generator and the verbs it calls resolve their
-  # @helpers against this collaborator. Mirrors Widget._evaluateInMyScope, the
+  # @helpers against this collaborator. Mirrors Widget.evaluateString, the
   # compile-then-eval alone: nothing is told of it (installing a macro paints nothing, and this
   # collaborator has no widget methods).
   evaluateString: (codeSource) ->
@@ -2244,7 +2244,11 @@ class MacroToolkit
   # property). Number of scroll positions = total - visibleRows (rows you can put at the top), so
   # aiming (index - 2) at the top puts the target 2 rows down. Robust to member-list length: the
   # target always lands at the same safe offset, to within one thumb pixel of the bar's travel.
+  # A list whose rows all fit shows no vertical bar and has nothing to bring into view, so nothing is
+  # pressed (as bringcodeStringFromTopInspectorInView_InputEvents does for the code pane): a press
+  # where the bar would be lands on the pane beneath it.
   scrollInspectorListItemIntoView_InputEvents: (list, itemString) ->
+    return  unless list.vBar.visibleBasedOnIsVisibleProperty()
     index = list.elements.indexOf itemString
 
     # The row PITCH is the distance from one row's top to the next one's, so it counts whatever gap
