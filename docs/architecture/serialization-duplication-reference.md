@@ -421,7 +421,16 @@ NAMED like one.
   - else if `foo` is in the class's transients → dropped; the class recomputes it (e.g.
     patch nodes recompute `functionFromCompiledCode` from their text; scroll-momentum
     `@step` closures simply stop, which is correct for a settled restore).
-  - else → `SerializationError` with the property path (never a silent drop).
+  - else → `SerializationError` with the property path (never a silent drop). No text restores such a
+    function faithfully — a closure over a run's locals, a native, a class member's body — so this is
+    where a function a person's RUN left in state (`@f = -> 42`, `Widget.evaluateString`) ends: the
+    refusal names the widget holding it, and its remedy names the person's gestures first — for a
+    function held directly in a widget's field, an object inspector's Remove, or its Save as
+    CoffeeScript, which keeps the source and rides as `{"$src"}`; for one held deeper (in an array,
+    a Map, a Set or a plain object), the Remove of the field that follows the last widget its path
+    names — then the class's (`@serializationTransients`, for a field its own code sets). A
+    function in a slot has no property name, and is "a function" at its path. The rig's
+    `world.saveRefusal.*` hold the three.
 
 **The declarations whose REASON is not obvious from the field name:**
 
@@ -522,7 +531,10 @@ avoid a phantom boot dependency) carrying `name`, human `message`, and the struc
 this build cannot restore) — and `toString()` opens with words that say which one failed: "Cannot
 load this file: …" for a load, "Cannot serialize: …" for a save. Menu/file actions catch it and
 `world.inform` that rendering; headless rigs assert on the structured fields (the rig's
-`world.loadGuard.fileDropInformsOnLoadError` also asserts the load wording).
+`world.loadGuard.fileDropInformsOnLoadError` also asserts the load wording). A save's `path` is the
+full property path from the root, and names each widget as the walk enters it
+(`Serializer._pathEntering`): `the world → .children[3] (RectangleWdgt#12) → .f`, a desktop child by
+its index in the snapshot's `children`, so a person can find the widget the refusal is about.
 
 ---
 

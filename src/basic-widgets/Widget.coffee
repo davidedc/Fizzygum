@@ -5558,11 +5558,14 @@ class Widget extends TreeNode
   # once it has run (TextWdgt._runningTypedCode: a text's run rows, which a console's buttons and a
   # script window's "Try it" run through), while the patch node that compiles its formula through me
   # on every recompute is plumbing. A run edits my STATE, not any code: the SourceEditsRegistry does
-  # not hear it, and a world snapshot carries what it left in my fields. Two callers read the value:
-  # a text's "Show selection" and "Inspect selection" (TextWdgt), which `fg menusweep`'s text roots
-  # and `SystemTest_macroEvaluateStringReturnsItsValue` hold to it. opts.typedFrom: where in
-  # codeSource the text a person typed begins, for a caller that wraps it (injectProperty); it only
-  # places a compile error.
+  # not hear it, and a world snapshot carries what it left in my fields -- what a file can carry: a
+  # function it left has no source, so the save refuses it and names where it is (Serializer,
+  # encodeFunction), until an inspector's Remove of the field holding it (or, for a function held
+  # directly in a field, a Save of it as CoffeeScript) clears it. Two callers read
+  # the value: a text's "Show selection" and "Inspect selection" (TextWdgt), which `fg menusweep`'s
+  # text roots and `SystemTest_macroEvaluateStringReturnsItsValue` hold to it. opts.typedFrom: where
+  # in codeSource the text a person typed begins, for a caller that wraps it (injectProperty); it
+  # only places a compile error.
   evaluateString: (codeSource, opts = {}) ->
     eval compileFGCode codeSource, true, typedFrom: opts.typedFrom
 

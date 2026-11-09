@@ -95,13 +95,24 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       stays false and the memoized promise rejected: every later inspector open (`Widget.spawnInspector`) and every
       file holding an inspector (`Deserializer._needsTheReflectiveLayer`) then waits on, or is refused for, a layer
       that is there.
-- [ ] **A run that sets a widget field to a function blocks every world snapshot** (found closing "The evaluation menu is
-      unreachable in an inspector's code pane", in the plan's ledger; measured). Code run against a widget (a text's run
-      rows, a console's buttons) that assigns a function to a field — `@f = -> 42` — leaves an own function property with
-      no source, and `serializeWorldSnapshot` then throws "the function-valued property .f has no editable source and is
-      not a serialization transient", for every later save, until the field is removed by hand. The recorded way to give
-      a widget a method is the inspector's Add / Save (`injectProperty` keeps `<m>_source`). Whether such a field should be
-      carried as source, refused at the run, or reported at the save with a way out is open.
+- [ ] **A save refused for a function a run left does not offer its way out** (found closing "A run that sets a
+      widget field to a function blocks every world snapshot", in the plan's ledger; OWNER DECISION). The refusal names
+      the widget, the field and the gestures that clear it (an inspector's Remove, or its Save as
+      CoffeeScript), and every later save is refused until the person takes one. Whether the refusal should also
+      OFFER that way out (a button that removes the field, or opens an inspector on the widget), whether a save
+      should instead LEAVE such a function out and say so (a told drop, against the serializer's "never a silent
+      drop" unless a told drop is ruled not silent), or whether a run should WARN when it leaves one, is a UX call.
+- [ ] **An object inspector hides a widget's own field that shadows a member it inherits** (found by the independent
+      review closing "A run that sets a widget field to a function blocks every world snapshot", in the plan's ledger;
+      by reading). With "inherited" off (the default), `InspectorWdgt._filteredMemberNames` keeps a member only if the
+      subject's own class's prototype defines it or no prototype up the chain does, so a run's `@step = -> …` (an own
+      field named like `Widget.step`) is not listed; with "inherited" on, selecting it shows the CLASS's recorded
+      source, not the widget's own function (`selectionFromList` walks the class chain before the value's own text).
+      What "inherited" should hide for an own field that shadows a declaration is a question for the inspector's
+      design: every widget's own state fields (`color`, `bounds`, …) shadow a prototype declaration the same way.
+- [ ] **A save writes NaN and ±Infinity as null** (found by the same review; by reading). `Serializer`'s `refFor`
+      answers a number as itself, and `JSON.stringify` writes `NaN`, `Infinity` and `-Infinity` as `null`, so a field
+      holding one restores as `null`, with no word: the silent drop the serializer otherwise refuses.
 - [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
       refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
       `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the

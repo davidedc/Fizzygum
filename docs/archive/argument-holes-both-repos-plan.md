@@ -1682,3 +1682,37 @@ for (const s of sites) if (s.absentBefore.length) {
       its height when its content shrinks in the same settle", "A value's per-instance memo outlives an edit of the
       method that fills it", "A palette's back-buffer key names its class and extent, not code of its own" and "The
       inspector churn set cannot see a class inspector's member list move".
+- [x] **A run that sets a widget field to a function blocks every world snapshot** (found closing "The evaluation menu is
+      unreachable in an inspector's code pane", in the plan's ledger; measured). Code run against a widget (a text's run
+      rows, a console's buttons) that assigns a function to a field — `@f = -> 42` — leaves an own function property with
+      no source, and `serializeWorldSnapshot` then throws "the function-valued property .f has no editable source and is
+      not a serialization transient", for every later save, until the field is removed by hand. The recorded way to give
+      a widget a method is the inspector's Add / Save (`injectProperty` keeps `<m>_source`). Whether such a field should be
+      carried as source, refused at the run, or reported at the save with a way out is open.
+      — CLOSED 2026-11-09 (self-ruled overnight). MEASURED (survey: `Fizzygum-tests/.scratch/function-field-snapshot/`):
+      eight shapes of a function a run leaves in state — an own field (`-> 42`, `=> @width()`), a closure over a run's
+      local, a class member's reference, a native, a function in a plain object, in an array, and on ANOTHER widget —
+      each refused the world save and the widget save alike; a Remove of the field cleared every one, and a Save as
+      CoffeeScript (`injectProperty`, which keeps a source for a function value only) each function held directly in a
+      field; a Duplicate shares the function. What blocked the person was the REPORT: its
+      path, `the world → .children → .f`, named no widget (`serializeWorld` refed every desktop child at that one
+      path, and entering a widget's record added nothing to it, though the `SerializationError` header documents
+      `… → .contents (SliderWdgt#5) → …`); a function in an array slot read "the function-valued property
+      .undefined", "Declare undefined in …"; and the remedy named `@serializationTransients` and `injectProperty`, a
+      developer's, not the gestures that clear it. Rulings (self-ruled overnight, under "clean minimal + Do The Right
+      Thing"): the save is where such a function is handled — carrying it as source is unfaithful (a run's function
+      has only compiled JS, and a closure, a native or a member's body restores wrong or not at all), and a run sees
+      only its receiver (three of the eight shapes are not the receiver's own field) and edits state by contract; the
+      save already refuses, and keeps refusing (never a silent drop). Landed: `Serializer._pathEntering` names each
+      widget as the walk enters it, the world section indexes its children (`the world → .children[3]
+      (RectangleWdgt#12) → .f`), a slot's function is "a function has no editable source" at its path, and the remedy
+      names the person's gestures first (for a function held directly in a widget's field, the inspector's Remove or
+      its Save as CoffeeScript; for one held deeper, the Remove of the field that follows the last widget the path
+      names) and the class's `@serializationTransients` second; `Widget.evaluateString` and the reference doc (§5
+      functions, §8) state that a function a run leaves has no source a file could carry. Proven by the serialization rig's
+      `world.saveRefusal.namesTheWidget` / `namesTheSlot` / `wayOutClears`, each failed by its own plant (`plants/`:
+      no widget name, no child index, a slot read as a property, a developer's remedy, a Save that keeps no source;
+      the control passes). The item's independent review found the claims of what clears it wider than measured (scoped
+      as above) and two adjacent defects. Filed: "A save refused for a function a run left does not offer its
+      way out" (owner-gated), "An object inspector hides a widget's own field that shadows a member it inherits" and
+      "A save writes NaN and ±Infinity as null".

@@ -54,6 +54,14 @@ class Serializer
   @classTakesInjectedMethods: (klass) ->
     klass?.prototype?.injectProperty?
 
+  # A refusal's path (SerializationError) one step on, INTO the widget a property, a slot or a
+  # world section holds, named as the walk enters it -- "… → .contents (SliderWdgt#5) → .target"
+  # -- so a refusal met inside its record names the widget a person has to find. Every widget the
+  # walk reaches is entered here (_buildObjectTable's refFor); a widget save's root is named by
+  # the path's start.
+  @_pathEntering: (path, widget) ->
+    path + " (" + widget.uniqueIDString() + ")"
+
   # Serialize a widget subtree to a JSON envelope string.
   # opts:
   #   prettyPrint       — indent the JSON for humans/diffs (default false)
@@ -156,7 +164,7 @@ class Serializer
 
     # --- the explicit world section (plain, greppable; outside the object table) ---
     section = {}
-    section.children = (ref(c, "the world → .children") for c in snapshotChildren)
+    section.children = (ref(c, "the world → .children[" + i + "]") for c, i in snapshotChildren)
     section.desktopColor = ref(theWorld.color, "the world → .color") if theWorld.color?
     section.alpha = theWorld.alpha if theWorld.alpha?
     section.isDevMode = theWorld.isDevMode
@@ -277,7 +285,7 @@ class Serializer
       return encodeFunction(value, owner, propName, path) if t is "function"
       # objects:
       if value instanceof Widget
-        return {$r: encodeToSlot(value, path)} if widgetSet.has value
+        return {$r: encodeToSlot(value, Serializer._pathEntering(path, value))} if widgetSet.has value
         wk = WellKnownObjects.keyFor value
         return {$wk: wk} if wk?
         # external, non-well-known widget — the canonical rich-error case
@@ -289,7 +297,7 @@ class Serializer
           # demo PointerWdgt stands in for, off the tree) and "everything is in-structure"
           # is the intent (§4.9). Self-policing: if it reaches a truly unserializable value it
           # throws the same rich error below.
-          when "capture" then return {$r: encodeToSlot(value, path)}
+          when "capture" then return {$r: encodeToSlot(value, Serializer._pathEntering(path, value))}
           else fail (value.uniqueIDString() + " is outside the serialized structure and is not a well-known object"),
                     path, describe(value),
                     "Serialize a common container that holds both widgets; or clear the connection; or register the target as a well-known object."
@@ -309,9 +317,20 @@ class Serializer
       if owner? and propName? and Serializer.classTakesInjectedMethods(owner.constructor) and
          Object::hasOwnProperty.call(owner, sourceName) and typeof owner[sourceName] is "string"
         return {$src: owner[sourceName]}
-      fail ("the function-valued property ." + propName + " has no editable source and is not a serialization transient"),
-           path, "a function (" + propName + ")",
-           "Declare " + propName + " in the owning class's @serializationTransients (it will be recomputed on restore), or, on a widget, set its source via injectProperty."
+      # Any other function is refused, never dropped: no text restores it faithfully (a closure over
+      # a run's locals, a native, a class member's body). The usual way a WIDGET comes to hold one is
+      # a person's run (`@f = -> 42`, Widget.evaluateString), so the remedy names the person's
+      # gestures first -- for a function held directly in a widget's field, an object inspector's
+      # Remove, or its Save as CoffeeScript, which keeps the source; for one held deeper (in an
+      # array, a Map, a Set or a plain object), the Remove of the field that follows the last widget
+      # its path names -- and then the class's own, for a field its code sets. A function in a slot
+      # has no property name: its path says where it is.
+      held = if propName? then "the function-valued property ." + propName else "a function"
+      if propName? and owner? and Serializer.classTakesInjectedMethods owner.constructor
+        remediation = "Remove ." + propName + " with an inspector on " + owner.uniqueIDString() + ", or Save it there as CoffeeScript (an inspector's Save keeps a method's source). If " + owner.constructor.name + "'s own code sets it, declare it in that class's @serializationTransients and recompute it on restore."
+        fail (held + " has no editable source and is not a serialization transient"), path, "a function (" + propName + ")", remediation
+      fail (held + " has no editable source"), path, "a function",
+           "Remove the field holding it -- on a widget, the field that follows the last widget the path names, with an inspector's Remove -- or, if a class's own code keeps it there, declare that field in the class's @serializationTransients and recompute it on restore."
 
     # reserve a slot for `obj`, then populate its record; returns the slot index.
     encodeToSlot = (obj, path) ->
