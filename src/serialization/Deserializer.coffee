@@ -22,8 +22,8 @@ class Deserializer
       throw new SerializationError "not a Fizzygum serialization envelope",
         offender: "format=" + envelope?.format
         direction: "load"
-    # the same envelope-level verdict the world loader asks for BEFORE its teardown (through
-    # whyItCanNeverBeRestored), so a file it lets through cannot fail one of these after it
+    # the same envelope-level verdict both file doors ask for before anything changes (through
+    # whyItCanNeverBeRestored), so a file they let through cannot fail one of these after it
     shapeProblem = @_envelopeShapeProblem envelope
     throw new SerializationError shapeProblem, direction: "load" if shapeProblem?
     # and asked before the first shell is built, so a refused file leaves nothing registered
@@ -46,7 +46,10 @@ class Deserializer
       t = typeof ref
       return ref if t is "string" or t is "number" or t is "boolean"
       return shells[ref.$r] if ref.$r?              # $r may legitimately be 0
-      return @resolveWellKnown ref.$wk if ref.$wk?
+      # a singleton absent from this world (no wallpaper yet, say) resolves to undefined and the widget
+      # loses that link; a key naming a CLASS this page lacks throws instead (WellKnownObjects.resolve),
+      # and both file doors refuse such a file before anything is built (whyItCanNeverBeRestored)
+      return WellKnownObjects.resolve ref.$wk if ref.$wk?
       if ref.$ext?
         # prefer a shell being restored (world snapshot); fall back to the live world.
         return shellByUniqueId.get(ref.$ext) ? @resolveExternal ref.$ext
@@ -127,49 +130,112 @@ class Deserializer
 
   # WHY THIS BUILD CAN NEVER RESTORE THIS ENVELOPE, as a clause to follow "cannot be loaded here: "
   # (no closing full stop), or undefined when it can. PURE — it only reads the envelope — which is
-  # what lets WorldWdgt.loadWorldSnapshot ask it before its teardown destroys the desktop. It
-  # predicts exactly the throws a restore would hit and no others: the envelope-level ones
-  # @deserialize raises up front (the same two helpers answer both, so the two cannot drift: the
-  # envelope's shape, and a method's source on a class that cannot take one), and
-  # @instantiate's per-record one — a record class with no tag builder that can never arrive. Its
-  # first two tests ARE @instantiate's, made the same way (@_tagBuilderFor, then classNamed), so a
-  # record class either passes them, and @instantiate builds it, or must be one that can still arrive.
-  # WHAT can still arrive is the caller's to say: the world passes PartsRegistry.canEverProvideClass,
-  # so a class a LAZY part provides is not a reason (that file loads the part first). A class key
-  # ({"$wk": "class:<Name>"} / "prototype:<Name>") is held to the same test as a record class, because
-  # resolving one this build lacks throws (WellKnownObjects.resolve). An app-singleton {"$wk"} key is
-  # not checked, because an unresolved one is left undefined rather than thrown (@resolveWellKnown).
-  # The format check stays with each caller (the loader's also wants kind:"world"), so the envelope is
-  # taken to be a Fizzygum one.
+  # what lets both file doors ask it before anything changes (WorldWdgt.loadWorldSnapshot before its
+  # teardown destroys the desktop, FileLoading's widget door before the first shell). It predicts
+  # exactly the throws a restore would hit and no others: the envelope-level ones @deserialize raises
+  # up front (the same two helpers answer both, so the two cannot drift: the envelope's shape, and a
+  # method's source on a class that cannot take one), and the ones that resolve a NAME read out of
+  # the file -- @instantiate's per-record one, and
+  # WellKnownObjects.resolve's for a class key or an app key. The names are @classNamesIn, the one list
+  # of the classes a file needs, which the parts pre-load reads too (loadWhatItNeeds), so a file is
+  # refused for exactly the names its restore would fail on: each is tested as the restore resolves it,
+  # through classNamed, so it either passes, and resolves, or must be one that can still arrive. WHAT
+  # can still arrive is the caller's to say: both file doors pass PartsRegistry.canEverProvideClass, so
+  # a class a LAZY part provides is not a reason (that file loads the part first). The format check stays
+  # with each caller (the world loader's also wants kind:"world"), so the envelope is taken to be a
+  # Fizzygum one.
   @whyItCanNeverBeRestored: (envelope, canStillArrive) ->
     shapeProblem = @_envelopeShapeProblem envelope
     return shapeProblem if shapeProblem?
     functionSourceProblem = @_functionSourceOnANonWidget envelope
     return functionSourceProblem if functionSourceProblem?
     unbuildable = []
-    for record in envelope.objects
-      continue if @_tagBuilderFor(record.class)?
-      continue if classNamed(record.class)?
-      continue if canStillArrive record.class
-      unbuildable.push record.class unless record.class in unbuildable
-    for className in Serializer.classKeyNamesIn envelope
+    for className in @classNamesIn envelope
       continue if classNamed(className)?
       continue if canStillArrive className
-      unbuildable.push className unless className in unbuildable
+      unbuildable.push className
     return undefined unless unbuildable.length
     "it uses " + unbuildable.join(", ") + ", which this build does not have"
 
+  # Every class name an envelope references, each once: THE list of what restoring it NEEDS, read before
+  # anything is changed. Three sources, because a file names classes in three ways, and the restore
+  # resolves each through classNamed or throws:
+  #   - each object record's `class`, unless it is a native-type TAG (@instantiate builds $Array, $Map,
+  #     Color, ... from @TAG_BUILDERS, and a record of any other name through classNamed);
+  #   - the `{"$wk": "app:<ClassName>"}` app-singleton keys (WellKnownObjects.resolveApp) -- an eager
+  #     desktop launcher's target arrives only through one of these;
+  #   - the class keys, `{"$wk": "class:<ClassName>"}` / `"prototype:<ClassName>"`.
+  # Nothing else is left out, whatever its spelling: a name no class answers is one the restore would
+  # fail on, so it must reach the refusal. Two readers, and the point of one list is that they cannot
+  # disagree: the refusal of a file this build can never restore (whyItCanNeverBeRestored) and the
+  # pre-load of the lazy parts it needs (loadWhatItNeeds). A pure read of the envelope, which is what
+  # lets both run before a world load's teardown.
+  @classNamesIn: (envelope) ->
+    names = []
+    add = (name) -> names.push name if typeof name is "string" and name.length and name not in names
+    for record in (envelope?.objects ? []) when record? and !@_tagBuilderFor(record.class)?
+      add record.class
+    for key in Serializer.wellKnownKeysIn envelope
+      add (WellKnownObjects.appNameInAppKey(key) ? WellKnownObjects.classNameInClassKey(key))
+    names
+
+  # WHAT THIS ENVELOPE NEEDS BEFORE IT CAN BE RESTORED, loaded. Answers undefined when it is all
+  # resident -- every build the suite runs, so there the restore goes on INLINE, a world cycle no later
+  # -- else a promise that resolves once the next thing has arrived, for the caller to RE-ENTER its
+  # load on. One thing per trip, in this order, so the second is asked on the re-entry:
+  #   1. the LAZY PARTS that own the classes it names (@classNamesIn), which are not defined until their
+  #      part loads;
+  #   2. the REFLECTIVE LAYER, when the file needs it (_needsTheReflectiveLayer), which reads a
+  #      declaration off the classes step 1 brought in.
+  # Both file doors ask it before anything changes -- WorldWdgt.loadWorldSnapshot before its teardown,
+  # FileLoading's widget door before the first shell -- so a load that fails here leaves everything as
+  # it was. A FILE THAT DID NOT ARRIVE is that load failing, and becomes a load SerializationError the
+  # doors report: a part's or the layer's file rejects with a bare string (loadJSFilePromise), and only
+  # here is it known that a file being restored needed it. Any other rejection is a bug in loading the
+  # code, and stays one (the door rethrows it).
+  @loadWhatItNeeds: (envelope) ->
+    missingParts = world.parts.partsNeededFor @classNamesIn envelope
+    if missingParts.length
+      return world.parts.ensureAllLoaded(missingParts).catch (reason) ->
+        throw reason unless typeof reason is "string"
+        throw new SerializationError ("a part of Fizzygum it needs did not load (" + missingParts.join(", ") + "): " + reason), direction: "load"
+    if @_needsTheReflectiveLayer envelope
+      return ensureReflectiveLayerLoaded().catch (reason) ->
+        throw reason unless typeof reason is "string"
+        throw new SerializationError ("the class sources it needs did not load: " + reason), direction: "load"
+    undefined
+
+  # Does restoring this envelope need the reflective layer -- the class source text, and the member
+  # maps the meta-system registers from it -- which has NOT loaded but still could? False wherever it
+  # has loaded (a compile-at-boot page once booted, any page once something has asked for it) and on a
+  # build that can never load it, so in practice a wait is paid only on a `sources: "lazy"` build, and
+  # there only for a file that needs the layer:
+  #   - one carrying class- or mixin-scope source edits, which are replayed against the meta-system;
+  #   - one holding a widget whose class READS the member maps (`readsClassMemberMaps`, an inspector,
+  #     which shows and edits a member's source: before the layer it would show compiled JS, and its
+  #     edits would have no class record to go to). The declaration is read off the RESIDENT class of a
+  #     record, so this is asked once the file's parts have arrived (loadWhatItNeeds' order).
+  # The question is whether the layer has LOADED, not whether the meta-system is here: a lazy part's
+  # load brings Class and Mixin in on their own (PartsRegistry._loadPartPromise), without the eager
+  # classes' sources.
+  @_needsTheReflectiveLayer: (envelope) ->
+    return false if reflectiveLayerIsLoaded()
+    return false unless reflectiveLayerCanLoad()
+    replaysClassEdits = (envelope.world?.sourceEdits ? []).some (eachRecord) -> eachRecord.scope is "class" or eachRecord.scope is "mixin"
+    holdsAMemberMapsReader = envelope.objects.some (record) -> record? and classNamed(record.class)?.prototype.readsClassMemberMaps is true
+    replaysClassEdits or holdsAMemberMapsReader
+
   # What makes an envelope unrestorable WHOEVER restores it and whatever this build contains — a
   # clause in whyItCanNeverBeRestored's form, or undefined. Every record the Serializer writes
-  # carries a string `class` (a class name or a $-tag), and @instantiate resolves nothing else, so
-  # a record without one is a malformed table, not an unknown class.
+  # carries a non-empty string `class` (a class name or a tag), and @instantiate resolves nothing else,
+  # so a record without one is a malformed table, not an unknown class.
   @_envelopeShapeProblem: (envelope) ->
     if envelope.formatVersion > Serializer.FORMAT_VERSION
       return "it is format version " + envelope.formatVersion + ", newer than this build understands (" +
         Serializer.FORMAT_VERSION + "). Update Fizzygum and retry"
     return "its object table is missing" unless Array.isArray envelope.objects
     for record, i in envelope.objects
-      unless record? and typeof record.class is "string"
+      unless record? and typeof record.class is "string" and record.class.length
         return "its object table is malformed (entry " + i + " names no class)"
       # a world-set membership this build has no set for would be dropped by the restore: refused
       # here instead. An own-property test, because a marker is DATA read out of a file.
@@ -178,7 +244,8 @@ class Deserializer
           return "its object table is malformed (entry " + i + " records a membership of '" + marker +
             "', a world set this build does not have)"
     # a well-known key no Fizzygum build writes would bind to nothing: refused here, before anything is
-    # built (an app key naming a class this build lacks is NOT one -- it is left undefined, resolveApp)
+    # built (an app or class key naming a class this build lacks is not one: it is a known key, and
+    # whyItCanNeverBeRestored refuses it as a class this build does not have)
     for key in Serializer.wellKnownKeysIn envelope
       return "it names the well-known object '" + key + "', which no Fizzygum build has" unless WellKnownObjects.isKnownKey key
     # a {"$src"} is a widget's injected method, the one function a save writes (Serializer's
@@ -193,9 +260,9 @@ class Deserializer
   # The class half of where a {"$src"} may stand, a clause in whyItCanNeverBeRestored's form or
   # undefined: a class record's props, the only field the load reads of one, hold none unless its
   # class takes injected methods (Serializer.classTakesInjectedMethods, the save's own test). It asks
-  # the classes resident NOW and leaves a class still to arrive unjudged: the world loader asks again
-  # on re-entering with its lazy parts loaded, still before its teardown, and the widget-file door
-  # asks before pass 1.
+  # the classes resident NOW and leaves a class still to arrive unjudged: both file doors ask again on
+  # re-entering with their lazy parts loaded (loadWhatItNeeds), the world loader still before its
+  # teardown, and @deserialize asks before pass 1.
   @_functionSourceOnANonWidget: (envelope) ->
     for record, i in envelope.objects when !@_tagBuilderFor(record.class)?
       klass = classNamed record.class
@@ -309,20 +376,10 @@ class Deserializer
     # classNamed, so a record naming a native global or an inherited/accessor property of window
     # fails here as a load error instead of building a non-Fizzygum shell or throwing a TypeError
     klass = classNamed record.class
-    # the world loader refuses such a file before its teardown (whyItCanNeverBeRestored mirrors
+    # both file doors refuse such a file before anything is built (whyItCanNeverBeRestored mirrors
     # this test); this throw is the net for every other caller
-    unless klass?
-      throw new SerializationError ("it references the class '" + record.class +
-        "', which does not exist in this build"), direction: "load"
+    throw SerializationError.forMissingClass record.class unless klass?
     Object.create klass.prototype
-
-  @resolveWellKnown: (key) ->
-    resolved = WellKnownObjects.resolve key
-    # An unresolved well-known (e.g. an app singleton not present in this world) is left as
-    # undefined rather than aborting the whole restore; the widget simply loses that link. A class
-    # key is the exception: one naming a class this build lacks throws (WellKnownObjects.resolve),
-    # and the world loader refuses such a file before its teardown (whyItCanNeverBeRestored).
-    resolved
 
   # A same-world re-link token ({"$ext": uniqueID}) — used by the world snapshot's tolerant
   # pass. Resolve against the live world by unique-id string; undefined if absent.

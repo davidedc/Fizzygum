@@ -93,14 +93,17 @@ class SourceEditsRegistry
   #
   # Both replays drive the META-SYSTEM -- Class.applyMemberEdit, Mixin.allMixines -- and the
   # meta-system is not in the pre-compiled image: Class and Mixin are the only two classes absent
-  # from it (they are what compiled everything else), so they arrive only with the class SOURCE TEXT.
-  # An artifact built with sources: "none" ships neither, and can therefore never replay these
-  # records, no matter how long it waits.
+  # from it (they are what compiled everything else), so they arrive only from the class source
+  # directory -- with the reflective layer, or alone ahead of a lazy part's load. An artifact built
+  # with sources: "none" ships neither, and can therefore never replay these records, no matter how
+  # long it waits.
   #
   # ⚠ This asks about the CAPABILITY, not the build flag, deliberately: it is the actual
-  # precondition, it keeps a BUILDFLAG out of class code (no other class reads one), and it stays
-  # correct for a future sources: "lazy" build, where the honest answer before the layer loads is
-  # "not yet" rather than "never".
+  # precondition, and it keeps a BUILDFLAG out of class code (no other class reads one). It is asked
+  # once a load has brought the reflective layer in wherever it can come (Deserializer.loadWhatItNeeds,
+  # before the replay), so by then `Mixin?` is false only where the layer can never arrive. Whether
+  # the layer has ARRIVED is a different question, reflectiveLayerIsLoaded's: Class and Mixin alone
+  # do not bring the eager classes' member maps.
   @canReplaySourceEdits: -> Mixin?
 
   # How many records this build will NOT be able to replay -- so a load can say so ONCE, plainly,

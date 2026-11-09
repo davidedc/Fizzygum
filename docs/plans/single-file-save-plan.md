@@ -116,7 +116,8 @@ The built page is *already* 99% of a single-file app:
     re-enters itself after `@parts.ensureAllLoaded` (positioned BEFORE any mutation — the in-code
     comment calls that placement "the whole correctness argument");
     **step 0b** (`:2386-2388`) does the same for the reflective layer when the snapshot carries
-    class/mixin-level `sourceEdits` (`_snapshotNeedsTheReflectiveLayer`, `:2346`). Then:
+    class/mixin-level `sourceEdits` (since folded into step 0 as one step both file doors take,
+    `Deserializer.loadWhatItNeeds` with its `_needsTheReflectiveLayer`). Then:
     structural teardown via the SHARED shipping core (`@_settleLayoutsAfter =>
     @_teardownWorldStructureNoSettle()`, `:2392` — the same core the test teardown calls),
     id-counter restore, mixin-then-class edit replay, `Deserializer.deserialize`, app-slot/bin/

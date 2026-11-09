@@ -39,6 +39,14 @@ class InspectorWdgt extends Widget
   # silhouette is my box, so my children add nothing to the shadow a naked inspector casts.
   @augmentWith ClippingAtRectangularBoundsMixin, @name
 
+  # I read the class MEMBER MAPS (a member's recorded source, its donor mixin), which exist only once
+  # the reflective layer has arrived, and on a `sources: "lazy"` build it has not until someone asks.
+  # Opening me asks first (Widget.spawnInspector); restoring me from a file asks because of this
+  # declaration (Deserializer._needsTheReflectiveLayer, which both file doors consult), so a restored
+  # inspector never shows compiled JS for a member or edits a class with no record. A class that does
+  # not read the maps declares nothing: the console needs this part, not the layer.
+  readsClassMemberMaps: true
+
   # the object I am a view OF, and deliberately not called `target`: `@target` elsewhere means
   # information flow (a dataflow consumer, a dispatch receiver) or a tracked reference edge, and
   # reading one as the other is the hazard this name exists to remove

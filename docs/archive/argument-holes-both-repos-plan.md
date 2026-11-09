@@ -1475,3 +1475,86 @@ for (const s of sites) if (s.absentBefore.length) {
       stands; the menu sweep builds its class inspector on an instance; the widget-file door never loads the lazy part a
       file needs; a restored inspector does not wait for the reflective layer; the evaluation menu is unreachable in an
       inspector's code pane.
+- [x] **The widget-file door never loads the lazy part a file needs** (found closing the same item; measured).
+      - A `FridgeMagnetsWdgt` file saved on the harness page and opened on `index.html` is refused with "it references
+        the class 'FridgeMagnetsWdgt', which does not exist in this build", and the part is never fetched. The message
+        is false: the build has the class, lazily.
+      - `WorldWdgt.loadWorldSnapshot` first asks `parts.partsNeededFor Serializer.classNamesIn envelope`.
+        `FileLoading.loadEnvelopeString`'s `widget` branch goes straight to `Deserializer.deserialize`. — CLOSED
+      2026-11-09. Measured on the dev `index.html` (where parts are lazy) and on a `sources: "lazy"` tree, the fact was
+      wider than the filing:
+      - every widget file naming a lazy class was refused with that false message, so no inspector file could be
+        opened on `index.html` or on `homepage`, where `meta-tools` is lazy;
+      - an eager launcher's `app:` key loaded silently dead at the widget door, and its first click threw; a key
+        naming an app no part provides loaded dead at BOTH doors (the world-inventory filing below, folded);
+      - the refusal and the pre-load read two lists of the classes a file needs, which differed by exactly the app
+        keys;
+      - a world file whose part failed to load gave no message and an unhandled rejection, and `loadEnvelopeString`
+        answered nothing a caller could await.
+      What changes:
+      - `Deserializer.classNamesIn` is the ONE list (record classes that are no tag, app keys, class keys; it
+        replaces `Serializer.classNamesIn` and `classKeyNamesIn`), read by the refusal and by the pre-load.
+      - A key that names a class must resolve: `WellKnownObjects.resolveApp` throws as `resolve` does for a class
+        key, and `Deserializer.whyItCanNeverBeRestored` refuses such a file at either door before anything is built.
+        An `app:` key with no name after its prefix is no key.
+      - `Deserializer.loadWhatItNeeds` is the one step both doors take before anything changes: the missing lazy
+        parts, then the reflective layer (`_needsTheReflectiveLayer`), one per trip, re-entering after each. A
+        failure is a load `SerializationError` naming what did not arrive.
+      - The widget door (`FileLoading._loadWidgetEnvelope`) takes the world door's guards before its first shell.
+        `_reportingSerializationErrors` reports a returned promise's rejection as it reports a throw, and
+        `loadEnvelopeString` returns the promise. This settles the "failed async door" owner decision for the two
+        FILE doors (the decision stays open for the others).
+      - One message for a class the page lacks, `SerializationError.forMissingClass`, in the refusal's words: "it
+        uses X, which this page has not loaded" when a part of this build provides it, "…which this build does not
+        have" otherwise.
+      The proof:
+      - `parts-snapshot-load-headless.js` (the `parts` leg, on `index.html`) gains `WIDGET_FILE_LOADS_ITS_PARTS`,
+        `WIDGET_FILE_REFUSED_UP_FRONT` and `FILE_DOOR_REPORTS_A_FAILED_PART`, each seen failing alone under its plant
+        in `parts-snapshot-load-selftest-headless.js` (the old widget door, no up-front refusal, a reporter of the
+        synchronous half only);
+      - the serialization rig's `world.loadGuard.appKeyNotAClassRefused` (the world door, desktop kept) and
+        `widgetFileAppKeyIsALoadError` (one inform, and the net throwing) replace `appKeyNotAClassUnresolved`, each
+        seen failing under a one-off plant (the refusal blind to app keys; `resolveApp` answering undefined);
+      - the boot smoke (`fg homepage`) restores a class inspector from both kinds of file on a `sources: "lazy"`
+        tree and requires its member's CoffeeScript, seen failing under a plant (no restore waiting for the layer).
+      The independent review found (all fixed):
+      - the one list had dropped names by their spelling (`$`-prefixed, empty), so the world door's refusal let a
+        `{"class": "$Nope"}` record or a `"prototype:$Array"` key through to throw after the teardown. The list
+        moved to `Deserializer.classNamesIn`, beside the tag table, and leaves out exactly the records the table
+        builds and nothing by spelling; an empty record class is a malformed table. The serialization rig's
+        `world.loadGuard.tagLikeNameRefused` and the empty-class corruption of `malformedEnvelopeRefused` hold it,
+        each seen failing under a one-off plant (the `$` filter; the shape accepting an empty class);
+      - the parts rig's absent-`app:`-key case passed with no refusal at all (the net threw the same words): each
+        absent case now stands beside a class of a lazy part of its own, so a refusal that lets it through fetches;
+      - every rejection of a part's load became a message, a bug while loading included: only a file that did not
+        arrive (a string rejection, `loadJSFilePromise`'s) is the load failing, and anything else stays a rejection
+        (the parts rig's third (E) case);
+      - the boot smoke's fresh pages waited only for the world, which a precompiled tree builds before the file
+        defining `compileFGCode` arrives: they wait for the boot to finish;
+      - the layer predicate read every name for the declaration, keys included: it reads the records' classes;
+      - one wording for a class the page lacks (the refusal's), one reader of an app key's name
+        (`WellKnownObjects.appNameInAppKey`), and `Deserializer.resolveWellKnown`, a pass-through, inlined;
+      - stale comments and docs (`PartsRegistry`, `SourceEditsRegistry.canReplaySourceEdits`, the explainer, an
+        active plan).
+      Filed beside it: a widget file runs the code it carries at load, with no confirm; an `app:` key naming a class
+      that is no app is `new`-ed during a restore; the reflective layer reads as absent until the boot's tail has run.
+- [x] **A restored inspector does not wait for the reflective layer** (found closing the same item; by reading).
+      `Widget.spawnInspector` awaits the reflective layer for any inspector, because an inspector reads the class member
+      maps. `loadWorldSnapshot` asks for the layer only when the file carries class or mixin edits
+      (`_snapshotNeedsTheReflectiveLayer`). So on a `sources: "lazy"` build, a snapshot restores an inspector before
+      its member maps exist. On such a build, a restored class inspector with a mixin-donated member selected
+      resolves its donor by name (`InspectorWdgt._currentPropertySourceMixin`) through a `Mixin` that is not there
+      yet. — CLOSED
+      2026-11-09 with "The widget-file door never loads the lazy part a file needs" (above), folded as one question:
+      what must be resident before a file is restored. MEASURED there on a `dev-precompiled` tree: a class inspector
+      on a CORE class, restored from either kind of file before the layer, showed compiled JS for its selected
+      member (a lazy part's class has its maps: its part load runs `new Class`). `InspectorWdgt` declares
+      `readsClassMemberMaps`, and `Deserializer._needsTheReflectiveLayer` (replacing
+      `WorldWdgt._snapshotNeedsTheReflectiveLayer`) asks for the layer for a file holding such a widget, at both
+      doors. It asks whether the layer has LOADED rather than whether the meta-system is here: a lazy part's load
+      brings `Class` and `Mixin` in on their own, so the old test (`Mixin?`) skipped the layer for a file whose
+      parts had loaded first (by reading).
+- [x] **An `app:` well-known key naming a class no build part provides restores a launcher with no target, silently** (found 2026-10-23, code-read only; the default desktop snapshot carries no `app:` keys): `WellKnownObjects.resolveApp` answers undefined and the load goes on. Owner's call whether such a launcher should be dropped, kept dead, or the file refused like an unbuildable record class. — CLOSED 2026-11-09 by
+      "The widget-file door never loads the lazy part a file needs" (above, in this ledger). Measured: such a launcher
+      loads with no target, and its first click throws. A key that names a class must resolve, so such a file is
+      refused at either door before anything is built (`appKeyNotAClassRefused`, `widgetFileAppKeyIsALoadError`).

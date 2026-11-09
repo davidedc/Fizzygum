@@ -315,7 +315,7 @@
   lets Fizzygum <em>show and rewrite its own code</em>. On a precompiled tree it is not needed to
   run the world, so it becomes a policy (<code>sources</code>): <strong>background</strong> —
   fetch it once the world is up; <strong>lazy</strong> — fetch it on first demand (opening an
-  inspector, or loading a snapshot that carries class-level source edits); <strong>none</strong> —
+  inspector, or opening a file (either kind) that holds one or carries class-level source edits); <strong>none</strong> —
   ship none of it (no inspectors; snapshots with class-level source edits are refused with a
   clear error). What never varies: the runtime <em>compiler</em> and <code>compileFGCode</code>
   ship in every profile — runtime compilation is product behaviour, not a dev affordance.</p>

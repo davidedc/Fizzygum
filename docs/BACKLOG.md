@@ -88,19 +88,25 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       `menu-click-sweep-headless.js`'s `ClassInspectorWdgt` root is `new Klass(t)` on a RectangleWdgt instance, while
       the product builds one only on a class's prototype. On a prototype, the sweep's driven Add… and Rename… OKs would
       edit a real class in the middle of the sweep, so the root wants a class of its own to edit.
-- [ ] **The widget-file door never loads the lazy part a file needs** (found closing the same item; measured).
-      - A `FridgeMagnetsWdgt` file saved on the harness page and opened on `index.html` is refused with "it references
-        the class 'FridgeMagnetsWdgt', which does not exist in this build", and the part is never fetched. The message
-        is false: the build has the class, lazily.
-      - `WorldWdgt.loadWorldSnapshot` first asks `parts.partsNeededFor Serializer.classNamesIn envelope`.
-        `FileLoading.loadEnvelopeString`'s `widget` branch goes straight to `Deserializer.deserialize`.
-- [ ] **A restored inspector does not wait for the reflective layer** (found closing the same item; by reading).
-      `Widget.spawnInspector` awaits the reflective layer for any inspector, because an inspector reads the class member
-      maps. `loadWorldSnapshot` asks for the layer only when the file carries class or mixin edits
-      (`_snapshotNeedsTheReflectiveLayer`). So on a `sources: "lazy"` build, a snapshot restores an inspector before
-      its member maps exist. On such a build, a restored class inspector with a mixin-donated member selected
-      resolves its donor by name (`InspectorWdgt._currentPropertySourceMixin`) through a `Mixin` that is not there
-      yet.
+- [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
+      loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
+      `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function
+      literal: a file whose method source is `(window.x = 1; -> 42)` set `window.x` on load, through the drop and
+      "Open from file…". The world door asks first ("…can run code the snapshot carries"); the widget door asks
+      nothing. Whether a widget file carrying a `{"$src"}` should confirm, or a `{"$src"}` be held to a function
+      literal, is a product call.
+- [ ] **An `app:` key naming a class that is no app is `new`-ed during a restore** (found by the independent review
+      closing "The widget-file door never loads the lazy part a file needs", in the plan's ledger; by reading).
+      `WellKnownObjects.resolveApp` builds an instance of whatever class `classNamed` answers, so
+      `{"$wk": "app:WorldWdgt"}` would run `new WorldWdgt` in the middle of a restore, and that constructor's first act
+      is to make itself `window.world`. A key that names a class must name one of the KIND the key stands for (an app
+      key, a `WindowedApp` subclass, which core cannot name: the part-edges gate), and the refusal must say so too.
+- [ ] **The reflective layer reads as absent until the boot's tail has run** (found by the same review; by reading).
+      On a compile-at-boot page, `reflectiveLayerHasLoaded` turns true only after `createWorldAndStartStepping` and
+      `runPostBootActionsOnce`, though the world was compiled from the layer. If a post-boot step throws, the flag
+      stays false and the memoized promise rejected: every later inspector open (`Widget.spawnInspector`) and every
+      file holding an inspector (`Deserializer._needsTheReflectiveLayer`) then waits on, or is refused for, a layer
+      that is there.
 - [ ] **The evaluation menu is unreachable in an inspector's code pane** (found by the independent review closing the
       same item; by reading). The inspector arms its code pane's text with a receiver (`TextWdgt.setReceiver`), and a
       text with a receiver answers its evaluation menu ("Do all", "Inspect selection", …) as its
@@ -131,8 +137,7 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
         headless preprocessor gate reading the canvas's methods); then sanction them and drop the baseline to 0.
 
 ### `archive/world-inventory-instruments-plan.md` — the object-lifetime program, stated in that plan's §0 (Arcs A, B and C CLOSED 2026-08-20/21)
-- [ ] **OWNER DECISION (2026-08-21, from the async-rejection sweep): a failed async door tells the user NOTHING.** Every product promise chain was swept for missing `.catch` (13 `.then` in `boot/globalFunctions.coffee`, 10 in `PartsRegistry.coffee`, 3 each in `WorldWdgt.coffee` and `boot/loading-and-compiling-coffeescript-sources.coffee`, 2 in `Widget.coffee`, 1 each in `FileLoading`/`DemoMenus`/`VideoPlayerWithRecommendationsWdgt`/`SWCanvasElement-extensions`). ⭐ **The sweep's finding is that these are NOT N defects** — the subsystem has thought about rejection and handles the parts that matter: `PartsRegistry` neutralises unhandled rejections centrally (`inFlight.catch -> undefined`), `canEverProvideClass` keeps an icon off screen when its part can never arrive (the `lean` dead-icon rule), `whenOptionalPartsLoaded` exists precisely so a door cannot become "a click that can only reject", and `loadWorldSnapshot` bails out BEFORE mutating so a failed load "leaves the user with nothing instead of the desktop they still have". What is uniformly absent is USER FEEDBACK: on a TRANSIENT failure of a part the build does ship (a bad read over `file://`, a corrupt part file), the click silently does nothing — consistently, everywhere, which is what suggests it is a decision rather than an oversight. The question is whether a failed door should `inform`, and it is a product call. ⚠ Note this is a DIFFERENT shape from the `saveFailedScreenshots` bug fixed the same day: that one was PARTIAL failure discarding work that had already succeeded, which is a bug on any reading; these are all-or-nothing by design. ⚠ One more door of this kind (found 2026-10-23, the focus-residue arc): a world file dropped on the desktop that needs a lazy part or the reflective layer makes `loadWorldSnapshot` return a promise and RE-ENTER once that arrives, and `FileLoading._reportingSerializationErrors` covers only the synchronous load — a part that fails to load leaves the desktop untouched with no message, and a re-entered load that throws after its teardown leaves an empty desktop (bin and shelf intact) with no message.
-- [ ] **An `app:` well-known key naming a class no build part provides restores a launcher with no target, silently** (found 2026-10-23, code-read only; the default desktop snapshot carries no `app:` keys): `WellKnownObjects.resolveApp` answers undefined and the load goes on. Owner's call whether such a launcher should be dropped, kept dead, or the file refused like an unbuildable record class.
+- [ ] **OWNER DECISION (2026-08-21, from the async-rejection sweep): a failed async door tells the user NOTHING.** Every product promise chain was swept for missing `.catch` (13 `.then` in `boot/globalFunctions.coffee`, 10 in `PartsRegistry.coffee`, 3 each in `WorldWdgt.coffee` and `boot/loading-and-compiling-coffeescript-sources.coffee`, 2 in `Widget.coffee`, 1 each in `FileLoading`/`DemoMenus`/`VideoPlayerWithRecommendationsWdgt`/`SWCanvasElement-extensions`). ⭐ **The sweep's finding is that these are NOT N defects** — the subsystem has thought about rejection and handles the parts that matter: `PartsRegistry` neutralises unhandled rejections centrally (`inFlight.catch -> undefined`), `canEverProvideClass` keeps an icon off screen when its part can never arrive (the `lean` dead-icon rule), `whenOptionalPartsLoaded` exists precisely so a door cannot become "a click that can only reject", and `loadWorldSnapshot` bails out BEFORE mutating so a failed load "leaves the user with nothing instead of the desktop they still have". What is uniformly absent is USER FEEDBACK: on a TRANSIENT failure of a part the build does ship (a bad read over `file://`, a corrupt part file), the click silently does nothing — consistently, everywhere, which is what suggests it is a decision rather than an oversight. The question is whether a failed door should `inform`, and it is a product call. ⚠ Note this is a DIFFERENT shape from the `saveFailedScreenshots` bug fixed the same day: that one was PARTIAL failure discarding work that had already succeeded, which is a bug on any reading; these are all-or-nothing by design. The two FILE doors are settled: a drop or "Open from file…" reports a load's asynchronous failure as it reports a synchronous one (`FileLoading._reportingSerializationErrors`, argument-holes ledger, "The widget-file door never loads the lazy part a file needs"). The question stands for every other async door.
 - [ ] StorageSorter-roots unification (plan D2's stated non-goal): `StorageSorter._runClassifier`'s
       phases build their own root/marking enumeration — examine folding it onto
       `WorldWdgt.graphLivenessRoots()` in a dedicated pass, NOT by side-effect of another arc.

@@ -218,43 +218,11 @@ class Serializer
         counters[klass.name] = klass.lastBuiltInstanceNumericID
     counters
 
-  # Every class name an envelope references, so a loader can find out what it will NEED before it
-  # changes anything. Three sources, because a snapshot names classes in three ways:
-  #   - each object record's `class` (what Deserializer.instantiate resolves through classNamed);
-  #   - the `{"$wk": "app:<ClassName>"}` app-singleton keys (what WellKnownObjects.resolveApp
-  #     resolves the same way) -- a desktop launcher's target arrives only through one of these;
-  #   - the class keys, `{"$wk": "class:<ClassName>"}` / `"prototype:<ClassName>"` (classKeyNamesIn).
-  # The `$`-prefixed tags ($Array, $Map, $Canvas, ...) are native-type builders, not classes, so
-  # they are skipped. Used by WorldWdgt.loadWorldSnapshot to pre-load any lazily-loadable PART the
-  # file needs; it is a pure read of the envelope, which is what lets it run before the teardown.
-  @classNamesIn: (envelope) ->
-    names = []
-    add = (name) ->
-      return unless name? and typeof name is "string"
-      return if name.charAt(0) is "$"
-      names.push name unless name in names
-    for record in (envelope?.objects ? [])
-      add record?.class
-    for key in @wellKnownKeysIn envelope when typeof key is "string" and key.indexOf("app:") is 0
-      add key.substring 4
-    add name for name in @classKeyNamesIn envelope
-    names
-
-  # The class names an envelope's CLASS KEYS carry (WellKnownObjects.classNameInClassKey), in walk
-  # order, each once. Unlike an app key's, each must resolve or the restore throws: the world loader's
-  # pre-teardown refusal reads them as it reads record classes (Deserializer.whyItCanNeverBeRestored),
-  # and classNamesIn hands them to the lazy-part pre-load. A pure read of the envelope.
-  @classKeyNamesIn: (envelope) ->
-    names = []
-    for key in @wellKnownKeysIn envelope
-      name = WellKnownObjects.classNameInClassKey key
-      names.push name if name? and name not in names
-    names
-
   # Every `{"$wk": key}` key an envelope carries, at any depth (a well-known reference can sit in any
   # record's props, or in the world section), in walk order and with repeats. A pure read of the
-  # envelope: classNamesIn takes the app keys from it, and Deserializer._envelopeShapeProblem refuses
-  # a file carrying a key no build writes -- both before anything is changed.
+  # envelope: Deserializer.classNamesIn takes the app and class keys from it, and
+  # Deserializer._envelopeShapeProblem refuses a file carrying a key no build writes -- both before
+  # anything is changed.
   @wellKnownKeysIn: (envelope) ->
     keys = []
     seen = new Set

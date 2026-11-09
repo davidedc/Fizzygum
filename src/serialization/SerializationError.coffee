@@ -51,3 +51,13 @@ class SerializationError
     parts.push "  offending value: " + @offender if @offender?
     parts.push "  " + @remediation if @remediation?
     parts.join "\n"
+
+  # The load error for a class a file names and this page cannot build: a record's class
+  # (Deserializer.instantiate), a class key's or an app key's (WellKnownObjects.resolve). The words of
+  # the file doors' refusal (Deserializer.whyItCanNeverBeRestored), and true ones: a class a LAZY part
+  # of this build provides is missing only from the page, until its part loads. The file doors load
+  # such a part first (Deserializer.loadWhatItNeeds), so that half is met only by a synchronous caller
+  # (Widget.deserialize, a direct deserialize).
+  @forMissingClass: (className) ->
+    lack = if world?.parts?.canEverProvideClass className then "this page has not loaded" else "this build does not have"
+    new SerializationError ("it uses " + className + ", which " + lack), direction: "load"

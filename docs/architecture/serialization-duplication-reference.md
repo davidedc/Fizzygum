@@ -237,10 +237,13 @@ derived/disposable and never serialized), `bin`, `shelf`, `preferences`, and
 
 - `WellKnownObjects.keyFor(obj)` → symbolic key or `undefined`.
 - `WellKnownObjects.resolve(key)` → the live object in the **current** world, or `undefined`
-  when that singleton is absent (an `app:` key naming a class this build lacks, too); a CLASS
-  key naming a class this build lacks THROWS (refused before a world load's teardown — the class
-  keys, below), and so does a key no build writes — `Deserializer._envelopeShapeProblem` refuses a
-  file carrying one up front (`WellKnownObjects.isKnownKey` over `Serializer.wellKnownKeysIn`).
+  when that singleton is absent (a world with no wallpaper yet). A key that names a CLASS — an
+  `app:` key, a class key (below) — naming a class this page lacks THROWS, in the words
+  `Deserializer.instantiate` uses for a record of such a class (`SerializationError.forMissingClass`),
+  and both file doors refuse such a file before anything is built (§9). So does a key no build
+  writes — `Deserializer._envelopeShapeProblem` refuses a file carrying one up front
+  (`WellKnownObjects.isKnownKey` over `Serializer.wellKnownKeysIn`; an `app:` or class key with no
+  name after its prefix is one).
 
 **It is lazy, not snapshotted.** Keys resolve against the live `world` on demand rather
 than from a boot-time map. This is boot-order-safe (bin/apps are built after the
@@ -255,7 +258,7 @@ and a key no build writes is refused at load (an envelope shape problem, before 
 teardown).
 `WellKnownObjects.resolveApp(className)` completes the `app:` branch: it resolves the name through
 boot's `classNamed` (a key is a name read out of a file, so one naming a native global or an inherited
-property of `window` is left unresolved, never `new`-ed), `new`s the named
+property of `window` is no class, and throws like any class this page lacks — never `new`-ed), `new`s the named
 `WindowedApp` subclass and MEMOIZES one instance per class
 (`@_appSingletons`), which is safe because such an app is a stateless config holder — its one
 window lives in the world's app-window registry (`world.appWindows`, keyed by class name), not on the app (§11).
@@ -271,13 +274,14 @@ would restore as a fake instance, and its methods have no source a file can carr
   singleton table and the `wellKnownKey` marker: a marker that is a METHOD is read through the
   prototype chain, so a `WindowedApp` subclass's prototype would otherwise answer its `app:` key
   and load as the app's singleton.
-- A class key naming a class the loading page cannot provide is REFUSED, never left undefined as
-  an unresolved `app:` key is (the widget holding it would have nothing to show or edit):
+- A KEY THAT NAMES A CLASS MUST RESOLVE. A class key or an `app:` key naming a class the loading
+  page cannot provide is REFUSED, never left undefined: the widget holding it would have nothing to
+  show, edit or launch (an eager launcher whose app is undefined throws on its first click).
   `WellKnownObjects.resolve` throws in `Deserializer.instantiate`'s words, and
-  `Deserializer.whyItCanNeverBeRestored` refuses such a world file before the teardown, reading
-  the key names (`Serializer.classKeyNamesIn`) as it reads record classes.
-- `Serializer.classNamesIn` includes them, so a class that a lazy part provides is loaded before
-  the restore.
+  `Deserializer.whyItCanNeverBeRestored` refuses such a file at either door before anything is
+  built, reading its names from `Deserializer.classNamesIn` — the ONE list of the classes a file needs,
+  record classes and both kinds of key, which the lazy-part pre-load reads too (§9), so a class a
+  lazy part provides is loaded before the restore rather than refused.
 - A BUILT-IN class's prototype (a number's `Number`) is not a Fizzygum class, has no key, and is
   refused like any other unrecognized value. So an inspector's breadcrumb chips hold class NAMES,
   never the links.
@@ -540,9 +544,35 @@ read out of a file, and a plain lookup answers it wrongly three ways: it finds I
 (`constructor`, `toString`, `__proto__`), runs the browser's ACCESSORS (`location`), and finds every
 NATIVE global (`Object`, `Array`) — each of which would pass the world loader's pre-teardown refusal
 and then throw, or build a non-Fizzygum shell, after the desktop is gone. A record class neither lookup
-answers fails as a load `SerializationError` (§8), from a widget file as from a world file. The rig's
-`world.loadGuard.notAClassRefused.*`, `widgetFileNotAClassIsALoadError`, `appKeyNotAClassUnresolved`
+answers fails as a load `SerializationError` (§8), from a widget file as from a world file, and so does
+an `app:` or class key naming one (§4a). The three nets share one message,
+`SerializationError.forMissingClass`, and it is true: a class a LAZY part of this build provides is
+"…which this page has not loaded", and only one no part provides "…which this build does not have" — the
+refusal's own words.
+(The file doors never reach the net with a lazy class, since they load its part first; a synchronous
+caller — `Widget.deserialize`, a direct `Deserializer.deserialize` — can.) The rig's
+`world.loadGuard.notAClassRefused.*`, `widgetFileNotAClassIsALoadError`, `appKeyNotAClassRefused`
 and `idCountersRestoreOnlyClasses` hold it; `boot.classNamedIsTheOneDefinition` holds the predicate.
+
+**What a file needs is loaded before anything is built, at both file doors.** Restoring a file
+needs every class it names to be defined, and on a `sources: "lazy"` build some files need the
+reflective layer too. `Deserializer.loadWhatItNeeds envelope` answers `undefined` when everything is
+resident — every build the suite runs, so there the restore goes on inline — and otherwise a promise
+for the next thing, for the door to RE-ENTER its load on, one thing per trip:
+1. the LAZY PARTS owning the classes `Deserializer.classNamesIn` lists (record classes that are no
+   native-type tag, `app:` keys, class keys — the same list the refusal reads, so a class no part can
+   provide is refused before any fetch; what a part's arrival can still refuse is a method's source on
+   one of its classes, judged on the re-entry);
+2. then the reflective layer, when `Deserializer._needsTheReflectiveLayer` says the file needs it: it
+   is absent but can load, and the file carries class- or mixin-scope source edits (§12) or holds a
+   widget whose class declares `readsClassMemberMaps` — `InspectorWdgt`, which shows and edits a
+   member's recorded source, and before the layer would show compiled JS. That declaration is read off
+   the resident class, which is why it is asked on the trip after the parts.
+A failed load rejects with a load `SerializationError` naming what did not arrive, which the file door
+reports (§10). `parts-snapshot-load-headless.js` holds the parts half on the dev `index.html`
+(`WIDGET_FILE_LOADS_ITS_PARTS`, `WIDGET_FILE_REFUSED_UP_FRONT`, `FILE_DOOR_REPORTS_A_FAILED_PART`,
+beside the world door's sections); the production boot smoke (`fg homepage`) holds the layer half on a
+`sources: "lazy"` tree.
 
 A `{"$src"}` stands only as a property of a widget's record, since the load compiles it with that
 widget's `injectProperty` and a save writes no other (§5; both sides ask `Serializer.classTakesInjectedMethods`).
@@ -564,11 +594,17 @@ save's half.
 Safari `data:` fallback) and `FileLoading.coffee` (drag-drop via `WorldWdgt`'s drop
 handler + a hidden `<input type=file>`; envelope-sniff router on the `kind` field). Single
 extension `*.fzw.json` for both widget and world files (owner decision, plan §8.3);
-routing is on `kind`, never the filename. Both branches restore through
-`FileLoading._reportingSerializationErrors`, so a `SerializationError` from a widget file OR a
-world load is one `inform`, never an uncaught error in the reader's callback (anything else is a
-bug and propagates); it covers the SYNCHRONOUS load only — a world file that waits for a lazy part
-or the reflective layer re-enters through a promise nothing observes. **Ships in every profile** — `src/serialization` is
+routing is on `kind`, never the filename. Both doors take the same guards before anything is built,
+from the same functions: the refusal of a file this build can never restore
+(`Deserializer.whyItCanNeverBeRestored`, naming every class it lacks), then what the file needs, loaded
+(`Deserializer.loadWhatItNeeds`, §9), re-entering once it arrives. The widget door's "before anything
+changes" is before the first shell (`FileLoading._loadWidgetEnvelope`), the world door's before its
+teardown (§11). Both restore through `FileLoading._reportingSerializationErrors`, so a
+`SerializationError` from a widget file OR a world load is one `inform`, never an uncaught error in
+the reader's callback (anything else is a bug and propagates) — and that holds for a load's
+ASYNCHRONOUS half too: a load that waits answers a promise (`loadEnvelopeString` returns it), and
+its rejection is reported the same way, whether a part the file needs did not load or a re-entered
+load failed. **Ships in every profile** — `src/serialization` is
 `core`-part code and file save/load is a product feature (`buildSystem/parts.json`).
 `file://` capability map: works — Blob
 download, `input type=file`, drag-drop + FileReader, `data:` URLs, script-tag injection;
@@ -632,7 +668,8 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      (a pure read of the envelope) names the reason: a `formatVersion` newer than
      `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array, a record naming
      no class, or a `{"$src"}` in a tag record), a `{"$src"}` on a record of a class that cannot
-     inject a method (§9), or a record class that is no tag (an own-property `TAG_BUILDERS` lookup)
+     inject a method (§9), or a class the file names — a record's class, an `app:` key's, a class
+     key's (`Deserializer.classNamesIn`, a record's only when it is no tag — an own-property `TAG_BUILDERS` lookup)
      and no class boot's `classNamed` answers, and that this artifact can never provide
      (`world.parts.canEverProvideClass` — resident, or owned by a part this build ships, so a class
      a LAZY part provides is not a reason). One `inform` ("…Your desktop has been left as it
@@ -646,17 +683,16 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      the teardown, so that file too leaves the desktop as it was.
    - **The confirm** (a file/menu load warns it replaces the desktop AND can run code — §4.12; the
      rig / a macro pass `skipConfirm`).
-   - **Pre-load what the file needs** — two bail-out-then-re-enter guards, in that order. They sit
-     after the confirm so the user is asked exactly once (the re-entry passes `skipConfirm` for that
-     reason and no other).
-   - **Lazy parts.** `Serializer.classNamesIn` reads the envelope (a pure read) for record classes
-     and `app:` well-known keys; any class living in a LAZY part this page has never loaded is
-     fetched via `world.parts.ensureAllLoaded`, and the loader then RE-ENTERS itself.
-   - **The META-SYSTEM, same shape.** On a `sources: "lazy"` build whose file carries class- or
-     mixin-scope source edits, `ensureReflectiveLayerLoaded()` then re-enter. A build that can
-     NEVER load it (`sources: "none"`) does not come through here at all — it takes the refusal
-     instead, telling the user once, before the world is rebuilt, how many class-level edits it
-     cannot re-apply (`SourceEditsRegistry.unreplayableSourceEditsCount` — §12).
+   - **Pre-load what the file needs** — `Deserializer.loadWhatItNeeds` (§9, the step the widget door
+     takes too), one bail-out-then-re-enter per thing: the LAZY PARTS owning the classes
+     `Deserializer.classNamesIn` lists, then the reflective layer when the file carries class- or
+     mixin-scope source edits or holds an inspector (`readsClassMemberMaps`). It sits after the confirm
+     so the user is asked exactly once (the re-entry passes `skipConfirm` for that reason and no
+     other). A part that fails to load rejects with a load `SerializationError`, the desktop as it was,
+     and the file door reports it (§10). A build that can NEVER load the layer (`sources: "none"`) does
+     not wait for it — it takes the notice instead, telling the user once, before the world is
+     rebuilt, how many class-level edits it cannot re-apply
+     (`SourceEditsRegistry.unreplayableSourceEditsCount` — §12).
 2. **Structural teardown** — `_teardownWorldStructureNoSettle`, the SHARED shipping core this and
    `resetWorld` both call (the reset then dissolves its world and constructs a new one; a load keeps
    its world). Its contract: after
@@ -767,8 +803,9 @@ boot-order analogy: `augmentWith` runs before class-body assignments, so a class
 of the same member keeps winning), so a shell (`Object.create(prototype)`) already sees the
 edited methods; an edit that no longer compiles is logged, not fatal. Both replays are gated on
 `SourceEditsRegistry.canReplaySourceEdits()` — class- and mixin-scope replay drives the
-META-SYSTEM (`Class.applyMemberEdit` / `removeMember`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only with
-the class SOURCE TEXT. An artifact built `sources: "none"` therefore cannot replay them at all,
+META-SYSTEM (`Class.applyMemberEdit` / `removeMember`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only from
+the class source directory (with the reflective layer, which the load fetches first wherever it can come —
+§9 — or alone ahead of a lazy part). An artifact built `sources: "none"` therefore cannot replay them at all,
 and says so once (`unreplayableSourceEditsCount` → one `inform`) rather than dropping the user's
 class edits silently. Instance-scope edits
 ride the normal `{"$src"}` path on their own widget — those still load on such a build, since

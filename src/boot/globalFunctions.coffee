@@ -489,7 +489,8 @@ boot = ->
     #                 fetched BY NAME, not through the manifest, and would 404.
     #   "lazy"        not now: the first consumer calls ensureReflectiveLayerLoaded() and waits.
     #                 Today that is opening an inspector (Widget.spawnInspector) or restoring a
-    #                 snapshot that carries class-level source edits (WorldWdgt.loadWorldSnapshot).
+    #                 file that holds one or carries class-level source edits
+    #                 (Deserializer.loadWhatItNeeds, which both file doors ask).
     #   "background"  now, behind the running world -- the historical behaviour.
     #
     # ⚠ `window.preCompiled` is load-bearing in this condition, not defensive. The ONE boot that must

@@ -2987,29 +2987,21 @@ class WorldWdgt extends IconGridPanelWdgt
   # with the `harness` part, so this could never call it — and every step below is one half of that
   # core's split contract: the core drops all references to what it destroyed, and this method fills
   # the world back in.
-  # Does restoring this snapshot need a reflective layer that is NOT here yet but still could be?
-  # True only on a `sources: "lazy"` build, before anything has asked for it, for a file that
-  # actually carries class- or mixin-scope source edits -- so no other build ever pays a wait.
-  _snapshotNeedsTheReflectiveLayer: (envelope) ->
-    return false if SourceEditsRegistry.canReplaySourceEdits()
-    return false unless reflectiveLayerCanLoad()
-    records = envelope?.world?.sourceEdits
-    return false unless records?
-    records.some (eachRecord) -> eachRecord.scope is "class" or eachRecord.scope is "mixin"
-
   loadWorldSnapshot: (envelopeOrString, opts = {}) ->
     # early-return-sanctioned: every guard below MUST precede the settle, and none of them can live
     # in a core that only runs after the teardown they exist to prevent — a format check that informs
     # and stops, a refusal of a file this build can never restore (it informs and stops too), a user
-    # confirm that may decline, and the lazy-part and reflective-layer branches, which RE-ENTER this
-    # same public method once what they wait for arrives rather than continuing.
+    # confirm that may decline, and the branch that loads what the file needs (lazy parts, the
+    # reflective layer), which RE-ENTERS this same public method once that arrives rather than
+    # continuing.
     envelope = if typeof envelopeOrString is "string" then JSON.parse(envelopeOrString) else envelopeOrString
     unless envelope? and envelope.format is Serializer.FORMAT and envelope.kind is "world"
       world.inform "This is not a Fizzygum world snapshot file."
       return
     # A FILE THIS BUILD CAN NEVER RESTORE IS REFUSED HERE, before anything changes: a newer format
-    # version, a malformed object table, a method's source where no widget can take it, or a record
-    # or a class key naming a class that is neither here nor owned by a part this build ships. Each
+    # version, a malformed object table, a method's source where no widget can take it, or a record,
+    # an app key or a class key naming a class that is neither here nor owned by a part this build
+    # ships (Deserializer.classNamesIn, the one list of the classes a file needs). Each
     # would make the restore throw AFTER step 1 has destroyed the whole desktop, leaving the user an
     # empty one.
     # Like the format check it is a fact about the file, so it precedes the confirm — nobody is
@@ -3024,33 +3016,32 @@ class WorldWdgt extends IconGridPanelWdgt
     unless opts.skipConfirm
       msg = "Load this world snapshot?\n\nIt REPLACES everything on your desktop, and can run code the snapshot carries."
       return unless (typeof window.confirm is "function") and window.confirm msg
-    # 0. A snapshot can name classes that live in a LAZY part this page has never loaded (a saved
-    #    Fizzytiles window on a freshly-booted index.html). Load those parts FIRST, then re-enter.
+    # 0. WHAT THE FILE NEEDS, LOADED FIRST, then re-enter (Deserializer.loadWhatItNeeds, the step the
+    #    widget door takes too). A snapshot can name classes that live in a LAZY part this page has
+    #    never loaded (a saved Fizzytiles window on a freshly-booted index.html); and on a
+    #    `sources: "lazy"` build it can need the reflective layer, which nothing has asked for yet --
+    #    for its CLASS-level source edits, replayed against the meta-system, or for an inspector it
+    #    holds, which reads the class member maps. One thing per trip, then re-enter: it cannot loop,
+    #    because each trip's predicate requires its thing to be absent, and the re-entry runs with it
+    #    present. A build that can NEVER load the layer (`sources: "none"`) does not wait for it; it
+    #    takes step 2b's notice below instead.
     #
     #    ⚠ THE POSITION OF THIS BLOCK IS THE WHOLE CORRECTNESS ARGUMENT. Step 1 below destroys the
     #    entire desktop, so the bail-out has to happen before ANY mutation: the re-entry then runs
-    #    the body below exactly once, on an intact world, with every class already resident. Put it
+    #    the body below exactly once, on an intact world, with everything already resident. Put it
     #    any lower and a lazy load would re-enter over a half-torn-down world — and a part that
     #    FAILS to load would leave the user with nothing instead of the desktop they still have.
     #    The scan itself is pure (it only reads the envelope), and it sits after the confirm so the
     #    user is asked exactly once; the re-entry passes skipConfirm for that reason and no other.
-    missingParts = @parts.partsNeededFor Serializer.classNamesIn envelope
-    if missingParts.length
+    #    A failure rejects with a load SerializationError, which the file door reports
+    #    (FileLoading._reportingSerializationErrors).
+    arriving = Deserializer.loadWhatItNeeds envelope
+    if arriving?
       # double-settle-sanctioned: BRANCH-EXCLUSIVE, and that is the whole design. This branch
       # RETURNS before reaching any of the settling body below, so the re-entered call performs the
       # one and only flush; the two never run in one pass. It is a tail re-entry precisely so that
       # nothing is mutated twice (or, worse, torn down twice).
-      return @parts.ensureAllLoaded(missingParts).then =>
-        @loadWorldSnapshot envelope, Object.assign {}, opts, skipConfirm: true
-    # 0b. Same bail-out-then-re-enter shape, and for the same reason, as the missing-parts block
-    #     above: a snapshot's CLASS-level source edits are replayed against the META-SYSTEM, which on
-    #     a `sources: "lazy"` build has not arrived unless something asked for it. Ask here -- before
-    #     any mutation, after the confirm, so the user is prompted exactly once -- and re-enter.
-    #     It cannot loop: the predicate requires the layer to be absent, and the re-entry runs with
-    #     it present. A build that can NEVER load it (`sources: "none"`) does not come through here
-    #     at all; it takes step 2b's notice below instead.
-    if @_snapshotNeedsTheReflectiveLayer envelope
-      return ensureReflectiveLayerLoaded().then =>
+      return arriving.then =>
         @loadWorldSnapshot envelope, Object.assign {}, opts, skipConfirm: true
     section = envelope.world or {}
     # 1. tear the current world down — one settle over the shared NoSettle core, which also zeroes

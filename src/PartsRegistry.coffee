@@ -167,7 +167,7 @@ class PartsRegistry
       inFlight = withRequirements.then ->
         # ⚠ THE ONE PLACE A PART BECOMES PRESENT, so the one place the page-lifetime record is
         # written. `ensureAllLoaded`, `whenAllLoaded`, `whenOptionalPartsLoaded`, `launch`,
-        # `whenClassAvailable` and the snapshot loader's pre-scan all reach a part through
+        # `whenClassAvailable` and the file doors' pre-load all reach a part through
         # `ensureLoaded`, and a required part is loaded by its own trip through it -- so one write
         # here covers every caller AND the transitive closure. A path that ever flips a part to
         # LOADED without coming through this continuation must record it here too, or a later world
@@ -288,8 +288,8 @@ class PartsRegistry
     return unless part?
     @whenAllLoaded [part], callback
 
-  # Which not-yet-loaded parts a set of class names needs. Used by the snapshot loader: a saved
-  # world can name classes this page has never loaded.
+  # Which not-yet-loaded parts a set of class names needs. Used by both file doors, through
+  # Deserializer.loadWhatItNeeds: a saved world or widget can name classes this page has never loaded.
   partsNeededFor: (classNames) ->
     needed = []
     for eachName in classNames
