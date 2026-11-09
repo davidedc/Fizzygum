@@ -10,7 +10,8 @@
 //                                        compiler's lexer (the reading lib/coffee-mask.js takes of every file, so a
 //                                        file only the parser refuses, as it does a bare `super`, reads). A file that
 //                                        never names `fromString` holds none and is not lexed.
-//   verbMacroSources(srcDir)             every src file's verbs: [{ file, sources }], one entry per file holding any.
+//   verbMacroSources(roots)              every compiled source's verbs (lib/source-files.js compiledFiles: src and the
+//                                        harness of roots = { src, testsRepo }): [{ file, sources }], one per file holding any.
 //                                        (A reader that walks src for its own reasons reads each file it holds through
 //                                        verbMacroSourcesIn instead.)
 // Each source, in file order: { role: 'main' | 'extra' | 'verb', line, text }, a test's also { start, end }, its span in
@@ -32,9 +33,9 @@
 // aim-census.js, macro-page-lib.js and capture-macro-test-references.js. Cases: lib/macro-sources-selftest.js.
 
 const fs = require('fs');
-const path = require('path');
 const { parseJs } = require('./js-mask');
 const { bundledCoffeeScript } = require('./meta-compiler');
+const { compiledFiles } = require('./source-files');
 
 // a line continuation: in a JS template a `\` right before the line break; in a CoffeeScript string, before blanks too
 const JS_LINE_CONTINUATION = /(?<!\\)(?:\\\\)*\\\r?\n/;
@@ -136,19 +137,13 @@ function verbMacroSourcesIn(text, file) {
   return sources;
 }
 
-function verbMacroSources(srcDir) {
+// the files are lib/source-files.js compiledFiles', which refuses a malformed tree (SOURCE_TREE_MALFORMED)
+function verbMacroSources(roots) {
   const out = [];
-  const walk = (dir) => {
-    for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
-      const p = path.join(dir, e.name);
-      if (e.isDirectory()) walk(p);
-      else if (e.name.endsWith('.coffee')) {
-        const sources = verbMacroSourcesIn(fs.readFileSync(p, 'utf8'), p);
-        if (sources.length) out.push({ file: p, sources });
-      }
-    }
-  };
-  walk(srcDir);
+  for (const p of compiledFiles(roots)) {
+    const sources = verbMacroSourcesIn(fs.readFileSync(p, 'utf8'), p);
+    if (sources.length) out.push({ file: p, sources });
+  }
   return out;
 }
 

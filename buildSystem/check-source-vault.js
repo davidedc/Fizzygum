@@ -16,7 +16,7 @@
 // gated grows back. This is the cheap tombstone. Both patterns below are FORBIDDEN OUTRIGHT — there
 // is no baseline to tighten, because the conversion completed inside the phase that started it.
 //
-// WHAT IT FORBIDS, in src/**/*.coffee:
+// WHAT IT FORBIDS, in the compiled sources:
 //   1. the `_coffeSource` identifier, ANYWHERE (a global read, a global write, or a built-up
 //      "<name>_coffeSource" string). The naming convention WAS the registry, so banning the
 //      identifier bans the mechanism. Read a source with `SourceVault.get name` instead.
@@ -38,23 +38,25 @@
 // path that is no src file, or whose text holds no hit the exemption excuses, FAILS as stale
 // (STALE_ALLOWLIST_ENTRY): it would only hide the retired pattern if it ever came back there.
 //
-// Scope: src/**/*.coffee only (the build's own python/shell side is not text-wrapped source).
-// Runs for every build flavour — the rule is a property of the source, not of what is being built.
+// Scope: the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness; the build's own
+// python/shell side is not text-wrapped source). Runs for every build flavour — the rule is a property of the source,
+// not of what is being built.
 //
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-source-vault.js [--src=DIR]
-// — the rail checks another src tree (a copy carrying a plant); paths are keyed `src/…` from whichever tree it reads,
-// so the exemption and rule 2's scope hold on a copy too. That both rules and both stale-exemption rules BITE is
-// proven on every build by check-source-vault-selftest.js.
+// [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant); paths are keyed
+// `src/…` from whichever src tree it reads (`harness/…` for a harness file), so the exemption and rule 2's scope hold
+// on a copy too. That both rules and both stale-exemption rules BITE is proven on every build by
+// check-source-vault-selftest.js.
 
 const fs = require('fs');
-const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const gateRules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'source-vault');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'source-vault');
 rejectPositionalArgs(ARGV, 'source-vault', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'source-vault');
+const ROOTS = sourceRoots(ARGV, 'source-vault');
 
 // the tombstone itself — see the header
 const EXEMPT = ['src/boot/source-vault.coffee'];
@@ -64,7 +66,7 @@ const RULES = [
     id: 'coffeSource-global',
     // matches window.Foo_coffeSource, window[x + "_coffeSource"], bare Foo_coffeSource, ...
     re: /_coffeSource/,
-    // every .coffee under src/
+    // every compiled source
     appliesTo: () => true,
     baseline: 0,
     why: 'The per-class `window.<Name>_coffeSource` globals are RETIRED (arc 4).',
@@ -82,21 +84,12 @@ const RULES = [
 ];
 gateRules.declare(RULES.map((r) => r.id));
 
-function walk(dir, out) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, entry.name);
-    if (entry.isDirectory()) walk(p, out);
-    else if (entry.isFile() && entry.name.endsWith('.coffee')) out.push(p);
-  }
-  return out;
-}
-
 const hits = Object.create(null);
 for (const rule of RULES) hits[rule.id] = [];
 
 const exemptHits = Object.create(null);   // exempt path -> how many hits its exemption excused
-for (const file of walk(SRC, [])) {
-  const rel = 'src/' + path.relative(SRC, file).split(path.sep).join('/');
+for (const file of compiledFiles(ROOTS)) {
+  const rel = sourceName(file, ROOTS, 'src/');
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   if (EXEMPT.includes(rel)) {
     exemptHits[rel] = lines.filter((l) => RULES.some((rule) => rule.appliesTo(rel) && rule.re.test(l))).length;

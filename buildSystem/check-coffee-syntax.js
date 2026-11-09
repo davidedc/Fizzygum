@@ -62,10 +62,11 @@
  * All args we receive are forwarded so the set matches the build's flags.
  *
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
- *   node ./buildSystem/check-coffee-syntax.js [--src=DIR] [build flags...]
+ *   node ./buildSystem/check-coffee-syntax.js [--src=DIR] [--tests-repo=DIR] [build flags...]
  * --src= checks another src tree (a copy carrying a plant): the meta-compiler, the boot helper globals and the
- * listing (build.py --list-shippable --src=DIR) all come from it. That both rules BITE is proven on every build by
- * check-coffee-syntax-selftest.js.
+ * listing (build.py --list-shippable --src=DIR) all come from it; --tests-repo= another tests repo, whose harness the
+ * listing names (lib/source-files.js sourceRoots). That both rules BITE, in src and in the harness, is proven on every
+ * build by check-coffee-syntax-selftest.js.
  * TESTING HOOK — check given files instead of the shippable set (everything after the flag
  * is a path, relative to the repo root or absolute; build flags before it are ignored):
  *   node ./buildSystem/check-coffee-syntax.js --files <a.coffee> [<b.coffee> ...]
@@ -74,17 +75,23 @@
 const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
-const { dirArg } = require('./lib/cli-args');
+const { coffeeFilesIn, sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
 const FILES_FLAG = process.argv.indexOf('--files');
 const OWN_ARGV = FILES_FLAG >= 0 ? process.argv.slice(2, FILES_FLAG) : process.argv.slice(2);
-const SRC_GIVEN = OWN_ARGV.some((a) => a.startsWith('--src='));
-const SRC = dirArg(OWN_ARGV, '--src=', path.join(REPO, 'src'), 'check-coffee-syntax');
-const BUILD_ARGS = [...OWN_ARGV.filter((a) => !a.startsWith('--src=')), ...(SRC_GIVEN ? ['--src=' + SRC] : [])];
-// a listed `src/…` path names a file of the tree being checked; any other (the harness) is the repo-relative path it is
-const onDisk = (rel) => (rel.startsWith('src/') ? path.join(SRC, rel.slice(4)) : path.resolve(REPO, rel));
+const ROOTS = sourceRoots(OWN_ARGV, 'check-coffee-syntax');
+const SRC = ROOTS.src;
+// a rail given goes to build.py's listing as the resolved tree; every other argument is a build flag
+const given = (rail) => OWN_ARGV.some((a) => a.startsWith(rail));
+const BUILD_ARGS = [...OWN_ARGV.filter((a) => !SOURCE_RAILS.some((r) => a.startsWith(r))),
+  ...(given('--src=') ? ['--src=' + SRC] : []), ...(given('--tests-repo=') ? ['--tests-repo=' + ROOTS.testsRepo] : [])];
+// a listed `src/…` path names a file of the src tree being checked, a `../Fizzygum-tests/…` one a file of the tests
+// repo being checked (build.py spells both as parts.json does)
+const TESTS_LISTED = '../Fizzygum-tests/';
+const onDisk = (rel) => (rel.startsWith('src/') ? path.join(SRC, rel.slice(4))
+  : rel.startsWith(TESTS_LISTED) ? path.join(ROOTS.testsRepo, rel.slice(TESTS_LISTED.length)) : path.resolve(REPO, rel));
 const { bundledCoffeeScript, loadMetaCompiler } = require('./lib/meta-compiler');
 
 function fail(msg) { console.error('check-coffee-syntax: ' + msg); process.exit(2); }
@@ -113,12 +120,9 @@ const PROVIDED = new Set(declared);
   const bootDir = path.join(SRC, 'boot');
   const BOOT_HELPER = /^\s*window\.([A-Za-z_$][\w$]*)\s*=\s*(?:\[\]|\{\})\.[A-Za-z_$][\w$]*\s*$/;
   const assigned = new Set();
-  const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) {
-    const p = path.join(d, e.name);
-    if (e.isDirectory()) walk(p);
-    else if (e.name.endsWith('.coffee')) for (const line of fs.readFileSync(p, 'utf8').split('\n')) { const m = line.match(BOOT_HELPER); if (m) assigned.add(m[1]); }
-  } };
-  try { walk(bootDir); } catch (e) { fail('could not read ' + bootDir + ' to establish the helper globals: ' + e.message); }
+  let bootFiles;   // src/boot's .coffee files, as lib/source-files.js lists them
+  try { bootFiles = coffeeFilesIn(bootDir); } catch (e) { fail('could not read ' + bootDir + ' to establish the helper globals: ' + e.message); }
+  for (const p of bootFiles) for (const line of fs.readFileSync(p, 'utf8').split('\n')) { const m = line.match(BOOT_HELPER); if (m) assigned.add(m[1]); }
   const onlyDeclared = [...PROVIDED].filter(n => !assigned.has(n));
   const onlyAssigned = [...assigned].filter(n => !PROVIDED.has(n));
   if (onlyDeclared.length || onlyAssigned.length) {

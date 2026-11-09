@@ -1,7 +1,8 @@
 'use strict';
 // check-plane-discipline-selftest.js — check-plane-discipline.js proved able to BITE, by running the REAL gate on a
-// planted copy of src/ (lib/planted-src.js). A: a bare scrollOffset write outside _writeScrollOffset fails, a compound
-// `+=` too, and one after a regex holding `#` on its line. B: one more line mixing two receivers' positions takes the count over its baseline; a NOT_POSITIONAL entry
+// planted copy of src/ and of the tests repo's harness (lib/planted-src.js). A: a bare scrollOffset write outside
+// _writeScrollOffset fails, a compound `+=` too, one after a regex holding `#` on its line, and one in a harness file
+// (named harness/<path>, in a run of its own). B: one more line mixing two receivers' positions takes the count over its baseline; a NOT_POSITIONAL entry
 // the derivation no longer catches (the copy's Widget predicate given a parameter) fails as stale; and, in a run of its
 // own, a real mixing line rewritten takes the count UNDER the baseline, which fails too (the count is exact). C1: a
 // scroll provider's escalated `activated` reading its `pos` fails, in a subclass too; C2: `nonFloatDragging` reading
@@ -17,6 +18,7 @@ const cls = (name, parent, ...body) => [`class ${name} extends ${parent}`, ...bo
 proveGate({
   name: 'check-plane-discipline',
   gate: path.join(__dirname, 'check-plane-discipline.js'),
+  testsRepo: true,
   pass: /^\[plane-discipline C\] positions not in the receiver's plane: 0 reads -- OK/m,
   control: {
     plants: {
@@ -59,6 +61,10 @@ proveGate({
       /^    BiteProofOffsetWriteWdgt\.coffee:7: \[in bpAfterRegex\] r = \/#x\/; @scrollOffsetX = x$/m,
             /^    BiteProofMixWdgt\.coffee:3: \[a vs b\] @bpGap = a\.left\(\) - b\.left\(\)$/m,
             /^    BiteProofEscalatedPosSubWdgt\.coffee:3: BiteProofEscalatedPosSubWdgt\.activated reads its escalated 'pos'/m],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessOffsetWriteWdgt.coffee': cls('BiteProofHarnessOffsetWriteWdgt', 'Widget', '  bpScrollTo: (x) ->', '    @scrollOffsetX = x') },
+    expect: { A_BARE_OFFSET_WRITE: /^    harness\/BiteProofHarnessOffsetWriteWdgt\.coffee:3: \[in bpScrollTo\] @scrollOffsetX = x$/m },
   }, {
     label: 'a real mixing line rewritten: the count drops',
     edits: [['fizzytiles/FridgeWdgt.coffee', /m\.rightCenter\(\)\.distanceTo\(aMagnet\.leftCenter\(\)\)/, 'm.distanceTo(aMagnet)']],

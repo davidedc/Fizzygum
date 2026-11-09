@@ -21,8 +21,10 @@ function srcWith(files) {
   }
   return src;
 }
+// the miniature src alone: a tests repo that does not exist holds no harness (lib/source-files.js harnessFiles)
+const NO_TESTS_REPO = path.join(root, 'no-tests-repo');
 function outcome(src) {
-  try { const s = settlingSetters(src); return s.geometry.join(',') + ' | ' + s.text.join(','); } catch (e) { return 'THROWS ' + e.message; }
+  try { const s = settlingSetters({ src, testsRepo: NO_TESTS_REPO }); return s.geometry.join(',') + ' | ' + s.text.join(','); } catch (e) { return 'THROWS ' + e.message; }
 }
 const WIDGET = ['class Widget',
   '  _applyExtent: (e) -> @e = e',

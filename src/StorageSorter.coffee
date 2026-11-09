@@ -155,7 +155,7 @@ class StorageSorter
   # every bin and shelf resident -- destroyed, parent-desynced, or classified
   # onto the wrong side -- every tracker member for destruction, and that no
   # sort is left pending. At the TEST-TEARDOWN seat
-  # (WorldTestSupport._beforeWorldDissolveNoSettle: after the shared
+  # (WorldTestSupport._beforeBeingDissolved: after the shared
   # structural teardown, before dissolution; no session id) the core has
   # already destroyed and let go of both containers, so the bin and shelf
   # scans find nothing to read and only the tracker scan is live: a destroyed

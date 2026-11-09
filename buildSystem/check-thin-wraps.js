@@ -27,44 +27,38 @@
 // `_<name>NoSettle` twin, so this gate never reads it — FAILS as stale: it states an exemption from a check that is not
 // made there, and a later reader trusts it. Explanatory text worth keeping stays a plain comment.
 //
-// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-thin-wraps.js [--src=DIR] — the
-// rail checks another src tree (a copy carrying a plant). That both rules BITE, and that every accepted shape passes,
-// is proven on every build by check-thin-wraps-selftest.js.
+// It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
+//
+// Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-thin-wraps.js [--src=DIR]
+// [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant). That both rules BITE,
+// and that every accepted shape passes, is proven on every build by check-thin-wraps-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'thin-wraps');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'thin-wraps');
 rejectPositionalArgs(ARGV, 'thin-wraps', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'thin-wraps');
+const ROOTS = sourceRoots(ARGV, 'thin-wraps');
 
 const { methodSpans } = require('./lib/coffee-method-header');   // class methods and mixin members, one span each
 const GUARD  = /^return\s+(if|unless)\b/;               // idempotency guard clause
 const EXEMPT = /#\s*thin-wrap-exempt:\s*\S/;            // marker WITH a non-empty reason
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
 // each file is read through lib/coffee-mask.js: a body is its code lines (comments blanked), a marker sits in a comment
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 const violations = [];
 const staleMarkers = [];
 let checked = 0, exempt = 0;
-for (const p of walk(SRC, [])) {
+for (const p of compiledFiles(ROOTS)) {
   const cls = path.basename(p, '.coffee');
   const text = fs.readFileSync(p, 'utf8');
   const lines = text.split('\n');
-  const masked = coffeeMask(text, path.relative(SRC, p));
+  const masked = coffeeMask(text, sourceName(p, ROOTS));
   const markedLine = (j) => isCommentOnly(masked[j]) && EXEMPT.test(masked[j].comment);
   const usedMarkers = new Set();   // the marker lines an exemption below consumed
   const heads = [];
@@ -96,10 +90,10 @@ for (const p of walk(SRC, [])) {
     while (rest.length && GUARD.test(rest[0])) rest.shift();
     const canonical = new RegExp('^@_settleLayoutsAfter\\s*=>\\s*@_' + base + 'NoSettle\\b');
     if (rest.length === 1 && canonical.test(rest[0])) checked++;
-    else violations.push({ key: cls + '.' + twinName, file: path.relative(SRC, p), line: head.i + 1, body });
+    else violations.push({ key: cls + '.' + twinName, file: sourceName(p, ROOTS), line: head.i + 1, body });
   }
   lines.forEach((l, j) => {
-    if (markedLine(j) && !usedMarkers.has(j)) staleMarkers.push({ file: path.relative(SRC, p), line: j + 1 });
+    if (markedLine(j) && !usedMarkers.has(j)) staleMarkers.push({ file: sourceName(p, ROOTS), line: j + 1 });
   });
 }
 

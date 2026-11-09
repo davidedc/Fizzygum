@@ -1,7 +1,8 @@
 'use strict';
 // check-menu-actions-selftest.js — check-menu-actions.js proved able to BITE, by running the REAL gate (its class model,
-// the boot install edges, the harness's installed members) on a planted copy of src/ (lib/planted-src.js). RULE 1: a
-// function literal in a menu row's action slot fails (also behind a label holding `#`), and in a prompt's callback slot. RULE 1b: an `@`-targeted row
+// the boot install edges, the harness's installed members) on a planted copy of src/ and of the tests repo's harness
+// (lib/planted-src.js). RULE 1: a function literal in a menu row's action slot fails (also behind a label holding `#`,
+// and in a harness file, named harness/<path>, in a run of its own), and in a prompt's callback slot. RULE 1b: an `@`-targeted row
 // and prompt naming a method NO class `@` could be defines fail. RULE 2: a string where the options object goes fails.
 // RULE 3 — in a run of its own, since a hard violation exits before the ratchet — a menu verb with an unread
 // parameter fails, and so does one whose signature WRAPS. The accepted forms ride the control: an action held in a
@@ -16,6 +17,7 @@ const cls = (name, parent, ...body) => [`class ${name} extends ${parent}`, ...bo
 proveGate({
   name: 'check-menu-actions',
   gate: path.join(__dirname, 'check-menu-actions.js'),
+  testsRepo: true,
   pass: /^\[menu-actions\] OK — \d+ menu-dispatched verb\(s\); \d+ `@`-targeted row\(s\) all resolve; 0 provably-wrong wirings; 0 unread parameter\(s\)/m,
   control: {
     plants: {
@@ -49,6 +51,10 @@ proveGate({
     },
     lines: [/^\[menu-actions\] RULE 1 FAIL — BiteProofMenuHardWdgt\.coffee:4$/m, /^\[menu-actions\] RULE 1b FAIL — BiteProofMenuHardWdgt\.coffee:6$/m,
       /^\[menu-actions\] RULE 1 FAIL — BiteProofMenuHardWdgt\.coffee:8$/m],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessMenuHardWdgt.coffee': cls('BiteProofHarnessMenuHardWdgt', 'Widget', '  bpWire: (menu) ->', '    menu.addMenuItem "bp fn", world, (-> 1)') },
+    expect: { RULE_1_FUNCTION_ACTION: /^\[menu-actions\] RULE 1 FAIL — harness\/BiteProofHarnessMenuHardWdgt\.coffee:3$/m },
   }, {
     label: 'an unread parameter, a wrapped signature',
     plants: {

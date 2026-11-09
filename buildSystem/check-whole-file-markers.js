@@ -31,25 +31,26 @@
 // the lesson generalises: invisible text-level exclusion is the wrong tool, not a tool with the
 // wrong spelling. If a file should not ship somewhere, put it in a part that does not ship there.
 //
-// Scope: src/**/*.coffee. Runs for every build flavour — the rule is a property of the source, not
-// of what is being built. Documentation that DESCRIBES the retired mechanism (this file, parts.json,
-// build.py, the plan docs, src/macros/CLAUDE.md) is outside that scope by construction.
+// Scope: the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness). Runs for every
+// build flavour — the rule is a property of the source, not of what is being built. Documentation that DESCRIBES the
+// retired mechanism (this file, parts.json, build.py, the plan docs, src/macros/CLAUDE.md) is outside that scope by
+// construction.
 
 //
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-whole-file-markers.js
-// [--src=DIR] — the rail checks another src tree (a copy carrying a plant); paths print `src/…` from whichever tree
-// it reads. That every kind BITES, and that prose quoting a marker passes, is proven on every build by
-// check-whole-file-markers-selftest.js.
+// [--src=DIR] [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant); paths
+// print `src/…` from whichever src tree it reads, `harness/…` for a harness file. That every kind BITES, and that
+// prose quoting a marker passes, is proven on every build by check-whole-file-markers-selftest.js.
 
 const fs = require('fs');
-const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'whole-file-markers');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'whole-file-markers');
 rejectPositionalArgs(ARGV, 'whole-file-markers', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'whole-file-markers');
+const ROOTS = sourceRoots(ARGV, 'whole-file-markers');
 
 // Baselines MEASURED by this gate at the moment the mechanism died: 43 homepage + 2 macros +
 // 0 video-player = 45 marker lines across 45 files, all removed in arc 4 phase 1. Every kind is
@@ -77,21 +78,11 @@ const KINDS = [
 ];
 rules.declare(KINDS.map((k) => k.id));
 
-function walk(dir, out) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, entry.name);
-    if (entry.isSymbolicLink()) continue;
-    if (entry.isDirectory()) walk(p, out);
-    else if (entry.isFile() && entry.name.endsWith('.coffee')) out.push(p);
-  }
-  return out;
-}
-
 const found = Object.create(null);
 for (const k of KINDS) found[k.id] = [];
 
-for (const file of walk(SRC, [])) {
-  const rel = 'src/' + path.relative(SRC, file).split(path.sep).join('/');
+for (const file of compiledFiles(ROOTS)) {
+  const rel = sourceName(file, ROOTS, 'src/');
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();

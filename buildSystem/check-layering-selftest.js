@@ -1,10 +1,11 @@
 'use strict';
 // check-layering-selftest.js — check-layering.js proved able to BITE, rule by rule, by running the REAL gate on a
-// planted copy of src/ (lib/planted-src.js). One planted run carries a throwaway class per rule (each violation
-// matched on its OWN line, naming the plant); a second run makes each exemption table stale by editing the real
-// holders it excuses in the copy (anchored, so a holder that moved fails loudly); a third points [D]'s whole-file
-// half at a planted tests dir. The control is the unplanted copy plus every sanctioned form, which must pass. Run by
-// buildSystem/run-selftests.js on every build.
+// planted copy of src/ and of the tests repo's code (lib/planted-src.js). One planted run carries a throwaway class per
+// rule (each violation matched on its OWN line, naming the plant); a second run makes each exemption table stale by
+// editing the real holders it excuses in the copy (anchored, so a holder that moved fails loudly); a third plants an [A]
+// violation in a harness file, named harness/<path>; a fourth points [D]'s whole-file half at a planted tests dir. The
+// control is the unplanted copy plus every sanctioned form, which must pass. Run by buildSystem/run-selftests.js on
+// every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -32,6 +33,7 @@ fs.mkdirSync(path.join(malformedTestsDir, 'scratch'));
 proveGate({
   name: 'check-layering',
   gate: path.join(__dirname, 'check-layering.js'),
+  testsRepo: true,
   pass: /^layering gate: \d+ source\(s\) \+ \d+ macro\(s\) — 0 violations/m,
   control: {
     plants: {
@@ -163,6 +165,7 @@ proveGate({
       ...['authoring/CalculatingPatchNodeWdgt', 'patch-programming-experimental/RegexSubstitutionPatchNodeWdgt',
         'patch-programming-experimental/DiffingPatchNodeWdgt'].map((f) => [`${f}.coffee`, /\._setTextConnector\b/g, '._setTextBiteProofStaleCall']),
       ['basic-widgets/Widget.coffee', /(\n  _applyExtent:[\s\S]*?)@_scheduleRelayoutRespectingPhase\(\)/, '$1@_biteProofRenamedValve()'],
+      ['harness/AutomatorPlayer.coffee', /world\.recalculateLayouts\(\) unless world\._recalculatingLayouts/, 'world.biteProofNoFlush() unless world._recalculatingLayouts'],
     ],
     unplant: ['basic-widgets/menu-system/MenusHelper.coffee'],
     expect: {
@@ -171,7 +174,12 @@ proveGate({
       Q_STALE_CALLER_ALLOWLIST: /^  \[Q\] STALE_ALLOWLIST_ENTRY CONNECTOR_CALLER_ALLOWLIST 'recalculateOutput' — /m,
       E_STALE_VALVE_EXEMPTION: /^  \[E\] STALE_ALLOWLIST_ENTRY the schedule-valve exemption Widget\._applyExtent — /m,
       R_STALE_USERLAND_FILES: /^  \[R\] STALE_ALLOWLIST_ENTRY USERLAND_FILES 'src\/basic-widgets\/menu-system\/MenusHelper\.coffee' — /m,
+      B_STALE_RECALC_ORACLE: /^  \[B\] STALE_ALLOWLIST_ENTRY RECALC_ORACLES '_checkPaintTruthfulness' — /m,
     },
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessAWdgt.coffee': cls('BiteProofHarnessAWdgt', '  _biteProofLowLevelSetter: ->', '    @setExtent new Point 10, 10') },
+    expect: { A_PUBLIC_SETTER: /^  \[A\] low-level _biteProofLowLevelSetter\(\) calls public setter \.setExtent\(\).*  — harness\/BiteProofHarnessAWdgt\.coffee:3$/m },
   }, {
     label: "[D]'s whole-file half over a planted tests dir",
     args: ['--tests-dir=' + testsDir],

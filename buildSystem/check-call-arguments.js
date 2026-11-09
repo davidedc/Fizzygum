@@ -55,45 +55,50 @@
 // variable handed to an options slot (`new X target`): only an argument whose kind the parse shows is judged there.
 //
 // Exit 0 = zero violations; 1 = a rule fired; 2 = INVALID, never a pass: a source it cannot parse (an interpolated
-// heredoc included), a super it cannot place on a class chain, or a half that read nothing while its input is there
-// (no class fragment in src; no harness file, no macro source or no script in a tests repo that exists).
+// heredoc included), a super it cannot place on a class chain, a source tree lib/source-files.js refuses
+// (SOURCE_TREE_MALFORMED: a symlink, a src or a harness holding no .coffee file), or a half that read nothing while its
+// input is there (no class fragment in src; no macro source or no script in a tests repo that exists).
 //
 // Run from Fizzygum/ (build_it_please.sh does): node ./buildSystem/check-call-arguments.js [--src=DIR]
-// [--tests-repo=DIR] [--values]. The rails check another tree (a planted one); a tests repo that is absent is skipped
-// and the pass line says so. --values lists the absences judged values, each with its callee's site count. That every
-// rule BITES — the value/hole distinction as a minimal pair, a hole in each repo, an extra argument and a positional
-// into options in each repo, and both INVALIDs — is proven on every build by check-call-arguments-selftest.js.
+// [--tests-repo=DIR] [--values]. The rails (lib/source-files.js sourceRoots) check another tree (a planted one); a
+// tests repo that is absent is skipped and the pass line says so. --values lists the absences judged values, each with
+// its callee's site count. That every rule BITES — the value/hole distinction as a minimal pair, a hole in each repo,
+// an extra argument and a positional into options in each repo, and both INVALIDs — is proven on every build by
+// check-call-arguments-selftest.js.
 
-const fs = require('fs');
 const path = require('path');
 const { callSites, callersTest, arityTest, describeCallee } = require('./lib/call-sites');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src=', '--tests-repo=', '--values'], 'call-arguments');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS, '--values'], 'call-arguments');
 rejectPositionalArgs(ARGV, 'call-arguments', 'trees are named with --src=DIR and --tests-repo=DIR');
-const SRC_DIR = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'call-arguments');
-const TESTS_ARG = ARGV.find((a) => a.startsWith('--tests-repo='));
-const TESTS_DIR = TESTS_ARG ? path.resolve(TESTS_ARG.slice('--tests-repo='.length)) : path.resolve(__dirname, '../../Fizzygum-tests');
+const ROOTS = sourceRoots(ARGV, 'call-arguments');
+const SRC_DIR = ROOTS.src;
+const TESTS_DIR = ROOTS.testsRepo;
 const SHOW_VALUES = ARGV.includes('--values');
 const ROOT = path.resolve(__dirname, '..', '..');
 const rel = (f) => path.relative(ROOT, f);
 
 function invalid(msg) { console.error(`[call-arguments] INVALID — ${msg}`); process.exit(2); }
 
-if (TESTS_ARG && !fs.existsSync(TESTS_DIR)) invalid(`--tests-repo names no directory: ${TESTS_DIR}`);
-const table = callSites({ srcDir: SRC_DIR, testsRepoDir: TESTS_DIR });
+let table;
+try { table = callSites({ srcDir: SRC_DIR, testsRepoDir: TESTS_DIR }); } catch (e) {
+  // a source tree lib/source-files.js refuses is read by no one: a call there is unjudged
+  if (/^SOURCE_TREE_MALFORMED /.test(e.message)) invalid(e.message);
+  throw e;
+}
 const { sites, unreadable, counts } = table;
 if (unreadable.length) {
   for (const u of unreadable) console.error(`  ${rel(u.file)}${u.line ? ':' + u.line : ''}  ${u.message}`);
   invalid(`${unreadable.length} source(s) it cannot read — a call there is unjudged, so the count above would be a guess`);
 }
 if (counts.fragments === 0) invalid(`it read no class fragment in ${SRC_DIR}`);
-const testsPresent = fs.existsSync(path.join(TESTS_DIR, 'tests'));
-if (testsPresent && !counts.testsRepo) invalid(`${TESTS_DIR} has tests/ but no Automator-and-test-harness-src/ — not a tests repo it can read`);
-if (counts.testsRepo && (counts.harness === 0 || counts.macro === 0 || counts.script === 0)) {
-  invalid(`it read ${counts.harness} harness file(s), ${counts.macro} macro source(s) and ${counts.script} script(s) in ${TESTS_DIR}`);
+// (a harness with no file is refused above, SOURCE_TREE_MALFORMED)
+if (counts.testsRepo && (counts.macro === 0 || counts.script === 0)) {
+  invalid(`it read ${counts.macro} macro source(s) and ${counts.script} script(s) in ${TESTS_DIR}`);
 }
 
 const verdict = callersTest(sites);

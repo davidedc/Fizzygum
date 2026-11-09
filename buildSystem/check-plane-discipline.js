@@ -55,20 +55,25 @@
 // Exit codes: 0 clean · 1 violation (or a stale NOT_POSITIONAL / NON_WIDGET_ROOTS entry) · 2 operational (Widget.coffee
 // unreadable, or the POSITIONAL derivation found nothing — which would make rule B vacuous).
 //
+// It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness); Widget.coffee,
+// which rule B reads its position queries from, is src's.
+//
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-plane-discipline.js [--src=DIR]
-// — the rail checks another src tree (a copy carrying a plant). That every rule BITES, and that every accepted form
-// passes, is proven on every build by check-plane-discipline-selftest.js.
+// [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant). That every rule
+// BITES, and that every accepted form passes, is proven on every build by check-plane-discipline-selftest.js.
 // bite-unplantable: B_STALE_NON_WIDGET_ROOT — NON_WIDGET_ROOTS is empty, and a plant reaches only the src tree, never this gate's own table; the rule fires the day an entry is added and its excused line goes
 
 const fs = require('fs');
 const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'plane-discipline');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'plane-discipline');
 rejectPositionalArgs(ARGV, 'plane-discipline', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'plane-discipline');
+const ROOTS = sourceRoots(ARGV, 'plane-discipline');
+const SRC = ROOTS.src;
 const { methodBoundary, methodSpans } = require('./lib/coffee-method-header');
 
 // ---- baseline for section B (the check-stinks idiom: exact count, move it consciously) ----
@@ -106,7 +111,7 @@ const NOT_POSITIONAL = {
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 const readings = new Map();
 function readingOf(p) {
-  if (!readings.has(p)) { const text = fs.readFileSync(p, 'utf8'); readings.set(p, { lines: text.split('\n'), masked: coffeeMask(text, path.relative(SRC, p)) }); }
+  if (!readings.has(p)) { const text = fs.readFileSync(p, 'utf8'); readings.set(p, { lines: text.split('\n'), masked: coffeeMask(text, sourceName(p, ROOTS)) }); }
   return readings.get(p);
 }
 
@@ -157,16 +162,7 @@ const ESCALATE_CALL_RE = /escalateEvent\s*\(?\s*["']([A-Za-z_$][A-Za-z0-9_$]*)["
 const RAW_SCREEN_POS_HANDLERS = pointerHandlers.RAW_SCREEN_POS_HANDLERS;
 const ESCALATED_EXEMPT = /#\s*escalated-pos-sanctioned:\s*\S/;
 
-function walk(dir, acc) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
-
-const files = walk(SRC, []);
+const files = compiledFiles(ROOTS);
 const funnelViolations = [];
 const mixLines = [];
 const providerDefiners = new Set();
@@ -178,7 +174,7 @@ const augmentedBy = new Map();   // mixin -> Set of classes whose body says `@au
 
 // pass 1: scan lines; collect class graph + provider definers
 for (const p of files) {
-  const rel = path.relative(SRC, p);
+  const rel = sourceName(p, ROOTS);
   const { lines, masked } = readingOf(p);
   let inMethod = '', mixinHashIndent = null;
   lines.forEach((raw, i) => {
@@ -268,8 +264,8 @@ for (const [cls, p, provider] of units) {
       if (c1 && passesItOn.test(code)) continue;        // forwarding the pos on is not reading it
       if (c2 && /screenPointToMyPlane/.test(code)) continue;
       escalationViolations.push(c1
-        ? { c1, text: `${path.relative(SRC, p)}:${j + 1}: ${cls}.${mSig[1]} reads its escalated '${posName}' (a descendant's plane) — re-derive from the hand: @screenPointToMyPlane world.hand.position()` }
-        : { c1, text: `${path.relative(SRC, p)}:${j + 1}: ${cls}.${mSig[1]} reads the raw screen '${posName}' unmapped — map it on the same line: @screenPointToMyPlane ${posName}` });
+        ? { c1, text: `${sourceName(p, ROOTS)}:${j + 1}: ${cls}.${mSig[1]} reads its escalated '${posName}' (a descendant's plane) — re-derive from the hand: @screenPointToMyPlane world.hand.position()` }
+        : { c1, text: `${sourceName(p, ROOTS)}:${j + 1}: ${cls}.${mSig[1]} reads the raw screen '${posName}' unmapped — map it on the same line: @screenPointToMyPlane ${posName}` });
     }
   }
 }

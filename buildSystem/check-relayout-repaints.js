@@ -20,48 +20,33 @@
 // Exit 0 clean / 1 violation / 2 operational.
 //
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-relayout-repaints.js
-// [--src=DIR] — the rail replaces the src root (a copy carrying a plant); the harness root stays the real one. Any
-// spelling CONTAINING a retired verb counts (`_disableTrackChanges`, `…NoSettle`): a renamed resurrection is still
-// one. That the rule BITES is proven on every build by check-relayout-repaints-selftest.js.
+// [--src=DIR] [--tests-repo=DIR] — the rails replace the src root and the tests repo whose harness it reads (a copy
+// carrying a plant). It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's
+// harness, which compiles into the same world — a resurrection there is just as live). Any spelling CONTAINING a
+// retired verb counts (`_disableTrackChanges`, `…NoSettle`): a renamed resurrection is still one. That the rule BITES
+// is proven on every build by check-relayout-repaints-selftest.js.
 
 const fs = require('fs');
-const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'relayout-repaints');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'relayout-repaints');
 rejectPositionalArgs(ARGV, 'relayout-repaints', 'a src tree is named with --src=DIR');
-const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
-const ROOTS = [
-  dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'relayout-repaints'),
-  // the harness compiles into the same world — a resurrection there is just as live
-  HARNESS,
-];
+const ROOTS = sourceRoots(ARGV, 'relayout-repaints');
 
 const RETIRED = /(disableTrackChanges|maybeEnableTrackChanges)/;
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
-
-if (!fs.existsSync(HARNESS)) console.log('[relayout-repaints] NOTE — the sibling Fizzygum-tests harness src is absent: src/ only.');
+if (!fs.existsSync(ROOTS.testsRepo)) console.log('[relayout-repaints] NOTE — the sibling Fizzygum-tests repo is absent: src/ only.');
 const violations = [];
 let scanned = 0;
-for (const root of ROOTS) {
-  for (const p of walk(root, [])) {
-    scanned++;
-    const lines = fs.readFileSync(p, 'utf8').split('\n');
-    lines.forEach((l, i) => {
-      if (RETIRED.test(l)) violations.push({ file: p, line: i + 1, text: l.trim() });
-    });
-  }
+for (const p of compiledFiles(ROOTS)) {
+  scanned++;
+  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  lines.forEach((l, i) => {
+    if (RETIRED.test(l)) violations.push({ file: p, line: i + 1, text: l.trim() });
+  });
 }
 
 if (violations.length) {

@@ -1,7 +1,8 @@
 'use strict';
 // check-call-separation-selftest.js — check-call-separation.js proved able to BITE, by running the REAL gate (its census
-// over the src copy and the tests repo's references) on a planted copy of src/ (lib/planted-src.js). [S]: a private
-// method self-calling a public SETTLING command fails, and one self-calling a public EFFECTFUL command fails. [U]: a
+// over the src copy and the tests repo's references) on a planted copy of src/ and of the tests repo's code
+// (lib/planted-src.js). [S]: a private method self-calling a public SETTLING command fails, in src and in a harness
+// file (named harness/<path>, in a run of its own) alike, and one self-calling a public EFFECTFUL command fails. [U]: a
 // public command referenced only by @-self calls fails; public queries referenced only by @-self calls fail once they
 // take the query count over its baseline (the plant is sized from the count the control prints); an allowlist entry
 // that gained a real outside reference fails as stale. A self-call is seen whatever comes before it on its line or
@@ -20,6 +21,7 @@ const cls = (name, ...body) => [`class ${name} extends Widget`, ...body, ''].joi
 proveGate({
   name: 'check-call-separation',
   gate: path.join(__dirname, 'check-call-separation.js'),
+  testsRepo: true,
   pass: /^\[call-separation\] OK — \[S\] 0\/0 settling \+ 0\/0 effectful/m,
   control: { plants: { 'BiteProofSanctionedCallWdgt.coffee': cls('BiteProofSanctionedCallWdgt', '  _bpSanctioned: ->', '    # public-call-sanctioned: the bite-proof fixture', '    @destroy()') } },
   runs: (control) => {
@@ -51,6 +53,10 @@ proveGate({
         /^      BiteProofCallSeparationWdgt\._bpAfterRegexCaller -> @bpEffectfulCmd  /m,
         /^      BiteProofCallSeparationWdgt\._bpStringArgCaller -> @bpEffectfulCmd  /m],
       absent: [/BiteProofSanctionedCallWdgt/],
+    }, {
+      label: 'a harness file',
+      plants: { 'harness/BiteProofHarnessCallSeparationWdgt.coffee': cls('BiteProofHarnessCallSeparationWdgt', '  _bpPlantedPrivate: ->', '    @destroy()') },
+      expect: { S_SETTLING_SELF_CALL: /^      BiteProofHarnessCallSeparationWdgt\._bpPlantedPrivate -> @destroy  harness\/BiteProofHarnessCallSeparationWdgt\.coffee:3$/m },
     }];
   },
 });

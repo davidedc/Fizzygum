@@ -306,10 +306,10 @@ class ActivePointerWdgt extends Widget
 
     if Automator? and
      Automator.state == Automator.PLAYING
-      Automator.fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
+      Automator.fade 'rightMouseButtonIndicator', 0, 1, 10
       setTimeout \
         =>
-          Automator.fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
+          Automator.fade 'rightMouseButtonIndicator', 1, 0, 500
         , 100
     
     contextMenu = wdgtTheMenuIsAbout.buildContextMenu()
@@ -1251,9 +1251,9 @@ class ActivePointerWdgt extends Widget
 
     if Automator? and Automator.state == Automator.PLAYING
       if e.button is 2 or e.ctrlKey
-        Automator.fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
+        Automator.fade 'rightMouseButtonIndicator', 0, 1, 10
       else
-        Automator.fade 'leftMouseButtonIndicator', 0, 1, 10, new Date().getTime()
+        Automator.fade 'leftMouseButtonIndicator', 0, 1, 10
 
 
     @mouseDownPosition = @position()
@@ -1312,9 +1312,9 @@ class ActivePointerWdgt extends Widget
 
     if Automator? and Automator.state == Automator.PLAYING
       if e.button is 2
-        Automator.fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
+        Automator.fade 'rightMouseButtonIndicator', 1, 0, 500
       else
-        Automator.fade 'leftMouseButtonIndicator', 1, 0, 500, new Date().getTime()
+        Automator.fade 'leftMouseButtonIndicator', 1, 0, 500
 
     w = @topWdgtUnderPointer()
 

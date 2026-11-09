@@ -161,7 +161,8 @@ const { stringLiteralsOf, guardedPartsPerLine, isLazyPart,
         declaredRequires: declaredRequiresOf } = require('./lib/part-edge-scan');
 const { installEdges, harnessPresent } = require('./lib/install-edges');
 const { harvestDefs } = require('./lib/name-definitions');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg, fileArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs, fileArg } = require('./lib/cli-args');
+const { coffeeFilesIn, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = path.resolve(__dirname, '..');
@@ -278,18 +279,24 @@ function unusedRequires(parts, partsNamedInCode) {
 
 function main() {
   // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-part-edges.js [--src=DIR]
-  // [--parts=FILE] — the rails read another src tree and another parts.json (a bite-proof's planted copies); both reach
-  // build.py's listing, the class model and the boot install edges too. That every rule BITES, and that every guard
-  // form passes, is proven on every build by check-part-edges-selftest.js.
+  // [--tests-repo=DIR] [--parts=FILE] — the rails read another src tree, another tests repo and another parts.json (a
+  // bite-proof's planted copies); each reaches build.py's listing, the class model and the boot install edges too
+  // (lib/source-files.js sourceRoots: the compiled sources are src/ and the tests repo's harness). That every rule
+  // BITES, and that every guard form passes, is proven on every build by check-part-edges-selftest.js.
   const argv = process.argv.slice(2);
-  rejectUnknownArgs(argv, ['--src=', '--parts='], 'check-part-edges');
+  rejectUnknownArgs(argv, [...SOURCE_RAILS, '--parts='], 'check-part-edges');
   rejectPositionalArgs(argv, 'check-part-edges', 'a src tree is named with --src=DIR, a parts file with --parts=FILE');
-  const SRC = dirArg(argv, '--src=', path.join(REPO, 'src'), 'check-part-edges');
+  const ROOTS = sourceRoots(argv, 'check-part-edges');
+  const SRC = ROOTS.src;
   const PARTS_FILE = fileArg(argv, '--parts=', path.join(REPO, 'buildSystem/parts.json'), 'check-part-edges');
   const listArgs = [...(argv.some((a) => a.startsWith('--src=')) ? ['--src=' + SRC] : []),
+                    ...(argv.some((a) => a.startsWith('--tests-repo=')) ? ['--tests-repo=' + ROOTS.testsRepo] : []),
                     ...(argv.some((a) => a.startsWith('--parts=')) ? ['--parts=' + PARTS_FILE] : [])];
-  // a listed `src/…` path names a file of the tree being checked; any other (the harness) is the repo-relative path
-  const onDisk = (rel) => (rel.startsWith('src/') ? path.join(SRC, rel.slice(4)) : path.join(REPO, rel));
+  // a listed `src/…` path names a file of the src tree being checked, a `../Fizzygum-tests/…` one a file of the tests
+  // repo being checked; any other is the repo-relative path
+  const TESTS_LISTED = '../Fizzygum-tests/';
+  const onDisk = (rel) => (rel.startsWith('src/') ? path.join(SRC, rel.slice(4))
+    : rel.startsWith(TESTS_LISTED) ? path.join(ROOTS.testsRepo, rel.slice(TESTS_LISTED.length)) : path.join(REPO, rel));
   let parts;
   try {
     parts = JSON.parse(fs.readFileSync(PARTS_FILE, 'utf8')).parts;
@@ -364,14 +371,14 @@ function main() {
   for (const rel of scanned) ownerOfAnyClass.set(path.basename(rel, '.coffee'), partOfFile(rel));
   const partOfClass = (name) => ownerOfAnyClass.get(name) || 'core';
 
-  const membersSkipped = harnessPresent() ? '' :
+  const membersSkipped = harnessPresent(ROOTS.testsRepo) ? '' :
     'sibling Fizzygum-tests not present (its *TestSupport classes are what installs the members)';
   const installedBy = new Map();     // member name -> Set(parts installing it onto a class outside themselves)
   const installedOn = new Map();     // target class -> Map(prototype member -> installing part), for clause (c)
   let edgeCount = 0;
   if (!membersSkipped) {
     let edges;
-    try { edges = installEdges(SRC); } catch (e) { fail(e.message); }
+    try { edges = installEdges(ROOTS); } catch (e) { fail(e.message); }
     for (const edge of edges) {
       const part = ownerOfAnyClass.get(edge.support);
       if (!part || part === partOfClass(edge.target)) continue;
@@ -403,15 +410,7 @@ function main() {
   };
   const shippedFiles = [];             // [{ part, masked }]
   if (installedBy.size) {
-    const bootFiles = [];
-    const walkBoot = (dir) => {
-      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-        const p = path.join(dir, e.name);
-        if (e.isDirectory()) walkBoot(p);
-        else if (e.name.endsWith('.coffee')) bootFiles.push('src/' + path.relative(SRC, p).split(path.sep).join('/'));
-      }
-    };
-    walkBoot(path.join(SRC, 'boot'));
+    const bootFiles = coffeeFilesIn(path.join(SRC, 'boot')).map((p) => sourceName(p, ROOTS, 'src/'));
     for (const rel of [...scanned, ...bootFiles]) {
       const reading = readingOf(rel);
       if (!reading) continue;
@@ -471,7 +470,7 @@ function main() {
   // clause (c) needs the class model -- whose chain a `super` walks -- which is
   // census-public-private-calls.js's, reused rather than re-derived (check-menu-actions.js does the same).
   if (installedOn.size) {
-    const { classInfo, chainOf } = require('./census-public-private-calls.js').runCensus({ src: SRC });
+    const { classInfo, chainOf } = require('./census-public-private-calls.js').runCensus(ROOTS);
     for (const v of superReaches({ classInfo, chainOf }, installedOn, partOfClass, (n) => scannedFileOfClass.get(n))) {
       const file = scannedFileOfClass.get(v.cls);
       memberViolations.push({ ...v, from: file.owner, text: file.lines[v.line - 1].trim() });

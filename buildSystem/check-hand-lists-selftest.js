@@ -280,8 +280,9 @@ function universeCases() {
 
 // ---- the REAL gate on a planted src copy ---------------------------------------------------------------------------
 // The engine cases above judge lists and sanctions in memory; here the gate itself — its walk of both halves, the name
-// universe, what-runs' run set, the ratchet, the exit — runs on a src copy carrying the plants (lib/planted-src.js),
-// and in --files mode on a planted file. The guard that never runs is read from lib/what-runs.js, not named here.
+// universe, what-runs' run set, the ratchet, the exit — runs on copies of src and of the tests repo's code carrying the
+// plants (lib/planted-src.js; a list in the harness copy is over the tests repo's baseline), and in --files mode on a
+// planted file. The guard that never runs is read from lib/what-runs.js, not named here.
 function proveTheGate() {
   const fs = require('fs');
   const os = require('os');
@@ -301,6 +302,7 @@ function proveTheGate() {
     name: 'hand-lists',
     cases: t,
     gate: path.join(__dirname, 'check-hand-lists.js'),
+    testsRepo: true,
     pass: /^\[hand-lists\] OK — /m,
     control: {
       plants: {
@@ -334,6 +336,11 @@ function proveTheGate() {
         SANCTION_GUARD_NEVER_RUNS: new RegExp(`^  SANCTION_GUARD_NEVER_RUNS  \\S*BiteProofHandLists\\.coffee:9  [\\s\\S]*?\\(named, never run: ${neverRun.replace(/\./g, '\\.')}\\)`, 'm'),
       },
       absent: [/BiteProofHandListsOk/],
+    }, {
+      // the tests repo's half reads the harness of the copy, its run set the copy's scripts (lib/what-runs.js)
+      label: 'a harness file: a list over the tests repo\'s baseline',
+      plants: { 'harness/BiteProofHarnessHandLists.coffee': cls('BiteProofHarnessHandLists', '  @bpThings: ["Widget", "PanelWdgt"]') },
+      expect: { OVER_BASELINE: /^  \S*Automator-and-test-harness-src\/BiteProofHarnessHandLists\.coffee:2  \[Widget, PanelWdgt\]$/m },
     }, {
       label: '--files: a planted list, and a plant that cannot vouch for itself',
       args: ['--files', path.join(given, 'bite-proof-list.js'), path.join(given, 'BiteProofSelfVouch.coffee')],

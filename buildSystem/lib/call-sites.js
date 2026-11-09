@@ -8,7 +8,8 @@
 //     (lib/meta-compiler.js) — each member fragment AFTER Class.coffee's super rewrite, so a `super` is an ordinary
 //     call `<Cls>.__super__.<member>.call this, …` (a bare `super` forwards: `.apply(this, arguments)`); every MIXIN
 //     as one source after Mixin.coffee's rewrite; every other file (boot) whole. Parsed with the bundled
-//     CoffeeScript 2.0.3 `nodes()` — the browser's own grammar.
+//     CoffeeScript 2.0.3 `nodes()` — the browser's own grammar. The files are lib/source-files.js's: srcFiles, and the
+//     harness of testsRepoFiles (harnessFiles).
 //   - every macro source (lib/macro-sources.js: the COOKED text the page compiles, each line on its file line), as
 //     authored — before Macro.coffee rewrites verb calls into `yield from`: each test's, and every verb's (a
 //     `Macro.fromString "…"` literal of a CoffeeScript file, CODE in a string).
@@ -93,6 +94,7 @@ const fs = require('fs');
 const path = require('path');
 const { loadMetaCompiler } = require('./meta-compiler');
 const { testsRepoFiles } = require('./tests-repo-code');
+const { srcFiles } = require('./source-files');
 const { testMacroSourcesIn, verbMacroSourcesIn } = require('./macro-sources');
 const { harvestDefs } = require('./name-definitions');
 const { coffeeMask } = require('./coffee-mask');
@@ -102,16 +104,6 @@ const IS_CLASS = /^class +\w+/m;            // the tests build.py and check-coff
 const IS_MIXIN = /^(\w+Mixin)\s*=/m;
 const IDENT = /^[A-Za-z_$][\w$]*$/;
 const THIS_ARG = new Set(['call', 'apply', 'bind']);
-
-function walkFiles(dir, ext, acc = []) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (e.name.startsWith('.') || e.name === 'node_modules') continue;
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walkFiles(p, ext, acc); else if (e.name.endsWith(ext)) acc.push(p);
-  }
-  return acc.sort();
-}
 
 // ---- the 2.0.3 AST, read structurally ---------------------------------------------------------------------------
 const kids = (n) => (n && typeof n === 'object' && Array.isArray(n.children)) ? n.children : null;
@@ -359,7 +351,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
     }
   };
 
-  const coffeeFiles = walkFiles(srcDir, '.coffee');
+  const coffeeFiles = srcFiles(srcDir);
   for (const file of coffeeFiles) { counts.src++; readCoffeeFile(file, 'src'); }
   const repo = testsRepoDir && testsRepoFiles(testsRepoDir);
   // each macro command file's sources, through the one reader: parsed as CoffeeScript here, and skipped (by their spans)

@@ -38,20 +38,20 @@
  * too): each reports the refusal and exits non-zero. A support class with no list installs no statics
  * and is not asked.
  *
- * `installEdges()` returns one record per edge, in boot order:
+ * `installEdges(roots)` returns one record per edge, in boot order:
  *     { support, target, supportFile, bootLine, members: [{ name, isStatic }] }
  * A support class whose file is absent (the sibling tests repo is not checked out) yields NO edge;
- * `harnessPresent()` is how a caller tells that case apart from "nothing is installed" and skips.
+ * `harnessPresent(testsRepo)` is how a caller tells that case apart from "nothing is installed" and skips.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { coffeeMask } = require('./coffee-mask');
+const { compiledFiles, harnessFiles, SRC, TESTS_REPO } = require('./source-files');
 
-// `src` is the tree read (default this repo's src/; a gate's --src= rail hands it a planted copy); the harness is
-// always the sibling tests repo's.
-const SRC = path.resolve(__dirname, '../../src');
-const HARNESS = path.resolve(__dirname, '../../../Fizzygum-tests/Automator-and-test-harness-src');
+// `roots` is the gate's { src, testsRepo } (lib/source-files.js sourceRoots: default this umbrella's trees; a gate's
+// --src= / --tests-repo= rails hand it planted copies). Boot's edges are read from src, the support classes from the
+// compiled sources (compiledFiles: src and the tests repo's harness).
 const bootGlobalsOf = (src) => path.join(src, 'boot/globalFunctions.coffee');
 const BOOT_GLOBALS = bootGlobalsOf(SRC);
 
@@ -59,28 +59,19 @@ const EDGE = /\b([A-Za-z_]\w*)\.installOnto\s+([A-Za-z_]\w*)/g;
 // a class-body key at the class-body indent: `name:` (prototype) or `@name:` (class side)
 const CLASS_BODY_KEY = /^  (@?)([A-Za-z_$][\w$]*)\s*:(?!:)/;
 
-const harnessPresent = () => fs.existsSync(HARNESS);
-
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
+const harnessPresent = (testsRepo = TESTS_REPO) => harnessFiles(testsRepo) !== undefined;
 
 // One class per file, filename = class name, so a support class is found by its basename in either
 // tree the build draws classes from.
-const fileOfClassCache = new Map();   // src -> (class name -> file)
-function fileOfClass(name, src = SRC) {
-  if (!fileOfClassCache.has(src)) {
+const fileOfClassCache = new Map();   // src + testsRepo -> (class name -> file)
+function fileOfClass(name, { src = SRC, testsRepo = TESTS_REPO } = {}) {
+  const key = src + '\0' + testsRepo;
+  if (!fileOfClassCache.has(key)) {
     const files = new Map();
-    for (const p of [...walk(src, []), ...walk(HARNESS, [])]) files.set(path.basename(p, '.coffee'), p);
-    fileOfClassCache.set(src, files);
+    for (const p of compiledFiles({ src, testsRepo })) files.set(path.basename(p, '.coffee'), p);
+    fileOfClassCache.set(key, files);
   }
-  return fileOfClassCache.get(src).get(name);
+  return fileOfClassCache.get(key).get(name);
 }
 
 // The members `support`'s own @installOnto copies onto `target`, by its own body. Lines inside a
@@ -143,7 +134,7 @@ function installedMembersOf(support, target, file, drift) {
   return members;
 }
 
-function installEdges(src = SRC) {
+function installEdges({ src = SRC, testsRepo = TESTS_REPO } = {}) {
   const bootGlobals = bootGlobalsOf(src);
   if (!fs.existsSync(bootGlobals)) return [];
   const edges = [];
@@ -152,7 +143,7 @@ function installEdges(src = SRC) {
     let e;
     EDGE.lastIndex = 0;
     while ((e = EDGE.exec(code)) !== null) {
-      const supportFile = fileOfClass(e[1], src);
+      const supportFile = fileOfClass(e[1], { src, testsRepo });
       if (!supportFile) continue;           // its repo is not checked out -- see harnessPresent()
       edges.push({ support: e[1], target: e[2], supportFile, bootLine: i + 1,
                    members: installedMembersOf(e[1], e[2], supportFile, drift) });
@@ -167,4 +158,4 @@ function installEdges(src = SRC) {
   return edges;
 }
 
-module.exports = { installEdges, harnessPresent, HARNESS, BOOT_GLOBALS };
+module.exports = { installEdges, harnessPresent, BOOT_GLOBALS };

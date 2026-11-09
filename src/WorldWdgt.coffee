@@ -691,12 +691,12 @@ class WorldWdgt extends IconGridPanelWdgt
   # absolutely positioned and only moves on a resize / explicit reposition — and
   # appending control-panel messages (not an ancestor of the canvas) never moves
   # it — so we cache the value and invalidate it only where the canvas geometry
-  # actually changes (see invalidateCanvasPositionCache callers). Fizzygum's world
+  # actually changes (see _invalidateCanvasPositionCache callers). Fizzygum's world
   # canvas fills a fixed viewport, so page scroll is not a factor; add scroll
   # invalidation here if the canvas is ever embedded in a scrollable container.
   _cachedCanvasPosition: undefined
 
-  invalidateCanvasPositionCache: ->
+  _invalidateCanvasPositionCache: ->
     @_cachedCanvasPosition = undefined
 
   # answer the absolute coordinates of the world canvas within the document
@@ -2412,7 +2412,7 @@ class WorldWdgt extends IconGridPanelWdgt
       @_reLayoutDesktop()
     # the canvas may have been repositioned (style.left/top above) and/or resized —
     # drop the memoised position so the next read reflects the new geometry
-    @invalidateCanvasPositionCache()
+    @_invalidateCanvasPositionCache()
 
 
   # The desktop consumes its children's proportional records (position-only, in
@@ -2769,7 +2769,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @resizeBrowserEventListener = (event) =>
       # a window resize can move the canvas within the document even when it does
       # not route through stretchWorldToFillEntirePage — invalidate eagerly
-      @invalidateCanvasPositionCache()
+      @_invalidateCanvasPositionCache()
       @inputEventsQueue.push ResizeInputEvent.fromBrowserEvent event
 
     # this is a DOM thing, little to do with other r e s i z e methods
@@ -3181,7 +3181,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # replaced it and mutating a world it never belonged to.
   #
   # The two `?.`-soaked hooks are the harness's seats, and WHERE each sits is its meaning:
-  #   _beforeWorldDissolveNoSettle runs on the world the finished test ran IN. Its question — did
+  #   _beforeBeingDissolved runs on the world the finished test ran IN. Its question — did
   #     this test leave residue the teardown could not reach — is about THIS world, and is
   #     meaningless asked of a world that has existed for no time at all.
   #   _afterWorldResetNoSettle runs on the world that now owns the page: construction determinism
@@ -3204,7 +3204,7 @@ class WorldWdgt extends IconGridPanelWdgt
   resetWorld: ->
     @_softResetWorld()
     @_settleLayoutsAfter => @_teardownWorldStructureNoSettle()
-    @_beforeWorldDissolveNoSettle?()
+    @_beforeBeingDissolved?()
     @_dissolveWorldNoSettle()
     # @_bootAutoAdjustToFillEntireBrowserAlsoOnResize is the value BOOT passed (the constructor
     # records it at its own tail), so the replacement is built the way boot built this one — NOT

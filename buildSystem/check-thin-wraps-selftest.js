@@ -1,7 +1,8 @@
 'use strict';
 // check-thin-wraps-selftest.js — check-thin-wraps.js proved able to BITE, by running the REAL gate on a planted copy of
-// src/ (lib/planted-src.js): a public method owning a _<name>NoSettle twin whose body is more than the canonical wrap
-// fails, named; a # thin-wrap-exempt: marker above a method with no twin fails as stale. The accepted shapes ride
+// src/ and of the tests repo's harness (lib/planted-src.js): a public method owning a _<name>NoSettle twin whose body is
+// more than the canonical wrap fails, named, in src and in a harness file (named harness/<path>) alike; a
+// # thin-wrap-exempt: marker above a method with no twin fails as stale. The accepted shapes ride
 // the control and are COUNTED, so each is seen to be accepted rather than skipped: the canonical wrap behind a guard
 // and a private twin pair add two canonical wrappers, a marked non-canonical twin owner adds one exemption, a
 // twinless _xNoSettle adds nothing, and a marker's words written inside a heredoc are text, not a marker. Run by buildSystem/run-selftests.js on every build.
@@ -18,6 +19,7 @@ const lines = (...l) => [...l, ''].join('\n');
 proveGate({
   name: 'check-thin-wraps',
   gate: GATE,
+  testsRepo: true,
   pass: /^\[thin-wraps\] OK -- every public\/NoSettle pair is the canonical wrap or marked exempt\.$/m,
   control: {
     plants: {
@@ -48,5 +50,13 @@ proveGate({
       NOT_CANONICAL: /^  BiteProofThinWrapWdgt\.bpThinWrap  \(BiteProofThinWrapWdgt\.coffee:2\)$/m,
       STALE_EXEMPT_MARKER: /^  STALE_ALLOWLIST_ENTRY BiteProofThinWrapWdgt\.coffee:7$/m,
     },
+  }, {
+    label: 'a harness file',
+    plants: {
+      'harness/BiteProofHarnessThinWrapWdgt.coffee': lines('class BiteProofHarnessThinWrapWdgt extends Widget',
+        '  bpThinWrap: (a) ->', '    @bpExtra = a', '    @_settleLayoutsAfter => @_bpThinWrapNoSettle a',
+        '  _bpThinWrapNoSettle: (a) ->', '    @bpValue = a'),
+    },
+    expect: { NOT_CANONICAL: /^  BiteProofHarnessThinWrapWdgt\.bpThinWrap  \(harness\/BiteProofHarnessThinWrapWdgt\.coffee:2\)$/m },
   }],
 });

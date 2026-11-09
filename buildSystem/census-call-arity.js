@@ -16,16 +16,18 @@
 //   node buildSystem/census-call-arity.js StringWdgt TextWdgt [--min=3]   # `new X` sites
 //   node buildSystem/census-call-arity.js --super=ButtonWdgt,LabelButtonWdgt   # the `super` calls IN those classes
 //   node buildSystem/census-call-arity.js --call=add,addMenuItem [--min=4]     # calls of those METHOD names
+//   … [--src=DIR] [--tests-repo=DIR]   # the rails (lib/source-files.js sourceRoots) read another src tree / tests repo
 // Each row: `<argument count>  <file>:<line>  <callee>  [ <arguments> ]`, most arguments first; then the total and
 // the arity histogram. A source the reader cannot parse is named on stderr.
 
 const path = require('path');
 const { callSites, describeCallee } = require('./lib/call-sites');
+const { sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const ARGV = process.argv.slice(2);
 for (const a of ARGV) {
-  if (a.startsWith('--') && !/^--(min|super|call)=/.test(a)) {
+  if (a.startsWith('--') && !/^--(min|super|call)=/.test(a) && !SOURCE_RAILS.some((r) => a.startsWith(r))) {
     console.error(`census-call-arity: unknown flag ${a}` + (a === '--holes' ? ' — the hole verdict is check-call-arguments.js\'s (run it; --values lists the values)' : ''));
     process.exit(2);
   }
@@ -40,7 +42,8 @@ if (!classes.length && !superOf.length && !callOf.length) {
   process.exit(2);
 }
 
-const { sites, unreadable } = callSites({ srcDir: path.join(ROOT, 'Fizzygum', 'src'), testsRepoDir: path.join(ROOT, 'Fizzygum-tests') });
+const ROOTS = sourceRoots(ARGV, 'census-call-arity');
+const { sites, unreadable } = callSites({ srcDir: ROOTS.src, testsRepoDir: ROOTS.testsRepo });
 for (const u of unreadable) console.error(`UNREADABLE ${path.relative(ROOT, u.file)}${u.line ? ':' + u.line : ''} — ${u.message}`);
 
 const rows = sites.filter((s) =>

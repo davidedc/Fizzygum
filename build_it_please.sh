@@ -369,20 +369,18 @@ if ! $noSyntaxCheck ; then
   echo "... CoffeeScript syntax OK"
 fi
 
-# --- build-time SHIPPABLE-COVERAGE gate (every src/ dir with .coffee files must ship) --
-# build.py's shipped-file list (~lines 191-233) is a hand-maintained sequence of
-# glob("src/<dir>/*.coffee") calls, one per directory. A NEW src/ subdirectory ships NOTHING
-# until a matching glob() line is added by hand -- the build still exits 0, and the syntax
-# gate above (which reads the same --list-shippable set) silently skips the new dir too; the
-# only symptom is a runtime `<NewClass> is not defined`. This gate diffs "every .coffee file
-# that actually exists under src/" against build.py's own --list-shippable output and fails
-# loudly on any survivor (allowlisting the two legitimate exceptions: src/video-player/, which
-# ships only behind --includeVideoPlayer, and src/boot/, which build_it_please.sh compiles
-# directly and build.py never globs at all -- see buildSystem/check-shippable-coverage.js for
-# the full rationale). We pass "${args[@]}" so it checks exactly the flags THIS build uses.
+# --- build-time SHIPPABLE-COVERAGE gate (every directory of the compiled sources must ship) --
+# The shipped-file list is buildSystem/parts.json's `dirs`, named directory by directory. A NEW
+# directory of src/ or of the harness ships NOTHING until a part claims it -- the build still exits 0,
+# and the syntax gate above (which reads the same --list-shippable set) skips it too; the only symptom
+# is a runtime `<NewClass> is not defined`. This gate diffs every .coffee file the build could compile
+# (buildSystem/lib/source-files.js compiledFiles: src/ and the harness) against build.py's own
+# --list-shippable output and fails loudly on any survivor (src/boot/, which this script compiles by
+# name, is the one exemption -- see buildSystem/check-shippable-coverage.js for the full rationale).
+# We pass "${args[@]}" so it checks exactly the flags THIS build uses.
 # Same --noSyntaxCheck escape hatch and explicit $? check as the syntax gate above.
 if ! $noSyntaxCheck ; then
-  echo "checking shippable-source coverage of all src/ directories ..."
+  echo "checking shippable-source coverage of the compiled sources (src/ and the harness) ..."
   node ./buildSystem/check-shippable-coverage.js "${args[@]}"
   if [ "$?" != "0" ]; then
     tput bel
@@ -402,7 +400,8 @@ fi
 # calls another; [E] a raw/silent/fullRaw mutator must not _invalidateLayout; [F] a non-mutator handler
 # must DEFER a container apply or mark it; [D] a SystemTest macro must not call a private/low-level
 # method. (buildSystem/check-layering.js — same --noSyntaxCheck escape hatch and explicit $? check as the
-# syntax gates around it; scans src/ + the tests' macros directly so needs no args.)
+# syntax gates around it; reads the compiled sources (src/ and the harness) and the tests' macros directly, so
+# needs no args.)
 if ! $noSyntaxCheck ; then
   echo "checking public-API layering of all shipped sources ..."
   node ./buildSystem/check-layering.js
@@ -434,7 +433,8 @@ if ! $noSyntaxCheck ; then
 fi
 
 # --- build-time DEAD-METHOD gate ------------------------------------------------------
-# Flags methods DEFINED in src but referenced NOWHERE (src + tests + harness) -- catches
+# Flags methods DEFINED in the compiled sources (src/ and the harness) but referenced NOWHERE (them + the tests'
+# macros and scripts) -- catches
 # dead code like the addRaw / fullRawMoveCenterTo deletions. A baseline of known-dead methods
 # is allowlisted in buildSystem/dead-method-allowlist.txt (a to-triage list); the gate FAILS
 # only on a NEW dead method not in that list. (buildSystem/check-dead-methods.js -- self-skips
@@ -500,7 +500,7 @@ fi
 # BELOW. Seven are seeded (2026-07-15, docs/archive/lint-generic-rules-carryover-plan.md Phase 2): debugger 36,
 # undefined 89, null 10, wall-clock 19, timer 3, Math.random 5, instanceof 105 -- the determinism and
 # nil-convention rules that were manual-only until then. Same --noSyntaxCheck escape hatch and explicit
-# $? check as the gates above; scans src/ only, so it runs for every build flavour (incl. production).
+# $? check as the gates above; reads the compiled sources (src/ and the harness) whatever the flavour ships, so it runs for every build flavour (incl. production).
 if ! $noSyntaxCheck ; then
   echo "checking for stinks (smells ratcheted to a baseline) ..."
   node ./buildSystem/check-stinks.js
@@ -564,7 +564,7 @@ fi
 # delegate to the core through the single-mutation settle tier. Genuine exceptions carry a per-method
 # `# thin-wrap-exempt: <reason>` marker (no central allowlist). (buildSystem/check-thin-wraps.js --
 # complements check-layering.js, which enforces that the CORE reaches no public setter. Same
-# --noSyntaxCheck escape hatch + explicit $? abort as the gates above; scans src/ only.)
+# --noSyntaxCheck escape hatch + explicit $? abort as the gates above; reads the compiled sources (src/ and the harness).)
 if ! $noSyntaxCheck ; then
   echo "checking public/Core thin-wrap shape ..."
   node ./buildSystem/check-thin-wraps.js
@@ -578,7 +578,7 @@ fi
 
 # --- build-time HYGIENE gates (ported from the retired SourceVault console tool, P2-T3 follow-up) ------
 # Four cheap line-scanner lints, each with the same --noSyntaxCheck escape hatch + explicit $? abort as
-# the gates above; all scan src/ only, so they run for every build flavour (incl. production):
+# the gates above; all read the compiled sources (src/ and the harness, buildSystem/lib/source-files.js) whatever the flavour ships, so they run for every build flavour (incl. production):
 #   * check-trailing-whitespace.js — no trailing whitespace after content on a line.
 #   * check-scheduled-checks.js     — no OVERDUE `# CHECK AFTER <date>` reminder (a build-dated time bomb).
 #   * check-stringified-scripts.js  — no `new ScriptWdgt """..."""` stringified-code literal in core.
@@ -660,7 +660,7 @@ fi
 # settle-tier FLUSHES a top-level `new X()` and AUTO-DEFERS one built in-flush (inside a callback). Genuine
 # exceptions carry a per-constructor `# constructor-build-exempt: <reason>` marker (no central allowlist).
 # (buildSystem/check-constructors-build.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
-# gates above; scans src/ only, so it runs for every build flavour incl. production.)
+# gates above; reads the compiled sources (src/ and the harness) whatever the flavour ships, so it runs for every build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking constructors do not build children inline ..."
   node ./buildSystem/check-constructors-build.js
@@ -701,7 +701,7 @@ fi
 # widgets). A _reLayout that positions children from the newBoundsForThisLayout PARAM (or positions none)
 # passes trivially. Genuine exceptions carry a per-method `# relayout-bounds-first-exempt: <reason>` marker
 # (no central allowlist). (buildSystem/check-relayout-bounds-first.js -- same --noSyntaxCheck escape hatch +
-# explicit $? abort as the gates above; scans src/ only, so it runs for every build flavour incl. production.)
+# explicit $? abort as the gates above; reads the compiled sources (src/ and the harness) whatever the flavour ships, so it runs for every build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking _reLayout applies own bounds before reading own geometry ..."
   node ./buildSystem/check-relayout-bounds-first.js
@@ -722,7 +722,7 @@ fi
 # stays advisory: run `node ./buildSystem/census-widget-conformance.js` (or --json) to see it all.
 # ⚠ BOTH BASELINES ARE FLOORS, NOT ZEROS, and each remaining occurrence is a stated decision named in the
 # script. Green means "nothing got worse", never "nothing is left".
-# (same --noSyntaxCheck escape hatch + explicit $? abort as the gates above; scans src/ only, so it runs
+# (same --noSyntaxCheck escape hatch + explicit $? abort as the gates above; reads the compiled sources (src/ and the harness) whatever the flavour ships, so it runs
 # for every build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking widget-practices conformance ratchets ..."
@@ -807,7 +807,7 @@ fi
 # (`screenPointToMyPlane` on the same line — the drag-scroll idiom). Genuine exceptions carry a
 # per-method `# raw-screen-pointer-sanctioned: <reason>` marker. (buildSystem/
 # check-raw-pointer-reads.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
-# gates above; scans src/ only, so it runs for every build flavour incl. production.)
+# gates above; reads the compiled sources (src/ and the harness) whatever the flavour ships, so it runs for every build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking pointer handlers consume the plane-mapped pointer (raw-pointer gate) ..."
   node ./buildSystem/check-raw-pointer-reads.js

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /*
- * check-shippable-coverage.js — build-time guard: every src/ subdirectory that contains
- * .coffee files must be CLAIMED BY A PART in buildSystem/parts.json.
+ * check-shippable-coverage.js — build-time guard: every directory of the compiled sources (src/ and the
+ * tests repo's harness) that contains .coffee files must be CLAIMED BY A PART in buildSystem/parts.json.
  *
  * WHY THIS EXISTS
  * The shipped-file list is hand-maintained: it used to be a sequence of `glob("src/<dir>/*.coffee")`
@@ -12,7 +12,8 @@
  * same --list-shippable set) silently skips the new dir too. The only symptom is a runtime
  * `<NewClass> is not defined` the first time something references a class in the forgotten dir —
  * this cost a red presuite in phase C1. This gate closes that gap by comparing "every .coffee file
- * that actually exists under src/" against "what the partition says ships".
+ * the build could compile" against "what the partition says ships". The harness is held the same
+ * way: parts.json names its directories one by one too, so a new harness subdirectory ships nothing.
  *
  * Since arc 4, --list-shippable is FLAVOUR-INDEPENDENT (it lists the whole partition, not what one
  * build flavour keeps), which is what this gate and the syntax gate both want: coverage of the
@@ -24,7 +25,10 @@
  * 1. SHIPPED set: `python3 buildSystem/build.py --list-shippable <forwarded args>` — the exact
  *    same source of truth buildSystem/check-coffee-syntax.js uses, so this gate can't drift
  *    from what the build actually wraps-as-text and compiles in-browser.
- * 2. FULL set: every .coffee file that actually exists under src/ (recursive fs walk).
+ * 2. FULL set: lib/source-files.js compiledFiles — every .coffee file under src/ and the harness, the
+ *    one definition every gate reads (a dot directory, a node_modules or a dot file included, so a file
+ *    there FAILS here as UNSHIPPED; a symlink anywhere is refused, SOURCE_TREE_MALFORMED). Each is named
+ *    as --list-shippable spells it: `src/…`, and `../Fizzygum-tests/Automator-and-test-harness-src/…`.
  * 3. unshipped = FULL − SHIPPED − ALLOWLIST. Any survivor FAILS the check.
  *
  * THE ALLOWLIST (ONE prefix, verified legitimate on a clean tree — it is not a real coverage gap,
@@ -40,7 +44,7 @@
  * a part now claims everything under it — FAILS as stale (STALE_ALLOWLIST_ENTRY), since left in place it
  * would silently hide the next real gap under that path.
  *
- * Any OTHER src/ subdirectory must appear, in full, in --list-shippable's output; a single
+ * Any OTHER directory must appear, in full, in --list-shippable's output; a single
  * uncovered file (a new dir, or a dir no part claims) fails the build.
  *
  * SAFE FAILURE DIRECTION: worst case the allowlist is too narrow and the gate cries wolf on a
@@ -49,23 +53,27 @@
  * failure mode this gate exists to close.
  *
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
- *   node ./buildSystem/check-shippable-coverage.js [--src=DIR] [build flags...]
- * The build flags go to build.py (which refuses one it does not know); --src= checks another src tree (a copy
- * carrying a plant), handed to build.py's listing too. That both rules BITE is proven on every build by
+ *   node ./buildSystem/check-shippable-coverage.js [--src=DIR] [--tests-repo=DIR] [build flags...]
+ * The build flags go to build.py (which refuses one it does not know); --src= and --tests-repo= check other trees (a
+ * copy carrying a plant), handed to build.py's listing too. That both rules BITE is proven on every build by
  * check-shippable-coverage-selftest.js.
  */
 
 const path = require('path');
-const fs = require('fs');
 const { execFileSync } = require('child_process');
-const { dirArg } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS, HARNESS_DIR } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
 const ARGV = process.argv.slice(2);
-const SRC_GIVEN = ARGV.some((a) => a.startsWith('--src='));
-const SRC = dirArg(ARGV, '--src=', path.join(REPO, 'src'), 'check-shippable-coverage');
-const BUILD_ARGS = [...ARGV.filter((a) => !a.startsWith('--src=')), ...(SRC_GIVEN ? ['--src=' + SRC] : [])];
+const ROOTS = sourceRoots(ARGV, 'check-shippable-coverage');
+// a rail given goes to build.py's listing as the resolved tree; every other argument is a build flag
+const isRail = (a) => SOURCE_RAILS.some((r) => a.startsWith(r));
+const BUILD_ARGS = [...ARGV.filter((a) => !isRail(a)),
+  ...(ARGV.some((a) => a.startsWith('--src=')) ? ['--src=' + ROOTS.src] : []),
+  ...(ARGV.some((a) => a.startsWith('--tests-repo=')) ? ['--tests-repo=' + ROOTS.testsRepo] : [])];
+// how --list-shippable spells a harness file (parts.json names the harness's directories from Fizzygum/)
+const HARNESS_LISTED = '../Fizzygum-tests/' + HARNESS_DIR + '/';
 
 function fail(msg) { console.error('check-shippable-coverage: ' + msg); process.exit(2); }
 
@@ -94,34 +102,16 @@ try {
 }
 if (!shippedSet.size) fail('build.py --list-shippable returned no files');
 
-// ---- 2. the FULL set: every .coffee file that actually exists under src/ ----
-function walkCoffeeFiles(dir, out) {
-  let entries;
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch (e) {
-    fail('could not read directory "' + dir + '": ' + e.message);
-  }
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      walkCoffeeFiles(full, out);
-    } else if (entry.isFile() && entry.name.endsWith('.coffee')) {
-      out.push(full);
-    }
-  }
-  return out;
+// ---- 2. the FULL set: every .coffee file the build could compile, named as --list-shippable names it ----
+let fullRel;
+try {
+  fullRel = compiledFiles(ROOTS).map(function (file) {
+    const name = sourceName(file, ROOTS, 'src/');
+    return name.startsWith('harness/') ? HARNESS_LISTED + name.slice('harness/'.length) : name;
+  });
+} catch (e) {
+  fail(e.message);
 }
-
-if (!fs.existsSync(SRC)) fail('no "src" directory found at "' + SRC + '"');
-const fullFiles = walkCoffeeFiles(SRC, []);
-if (!fullFiles.length) fail('found zero .coffee files under src/ — something is very wrong');
-
-// normalise to `src/…`, forward-slash paths, e.g. "src/apps/DashboardsApp.coffee", matching the format build.py
-// --list-shippable prints (whichever src tree it lists).
-const fullRel = fullFiles.map(function (abs) {
-  return 'src/' + path.relative(SRC, abs).split(path.sep).join('/');
-});
 
 // ---- 3. unshipped = FULL − SHIPPED − ALLOWLIST ----
 const unshipped = fullRel.filter(function (rel) {
@@ -143,7 +133,7 @@ if (staleAllowlist.length) {
 if (unshipped.length) {
   unshipped.sort();
   const dirs = new Set(unshipped.map(function (rel) { return path.posix.dirname(rel); }));
-  console.error('check-shippable-coverage: ' + unshipped.length + ' shipped .coffee file(s) under src/ '
+  console.error('check-shippable-coverage: ' + unshipped.length + ' .coffee file(s) of the compiled sources '
     + 'are NOT covered by build.py\'s --list-shippable output:');
   for (const rel of unshipped) console.error(rules.fired('UNSHIPPED', '  UNSHIPPED ' + rel));
   console.error('');
@@ -157,6 +147,6 @@ if (unshipped.length) {
 }
 if (staleAllowlist.length) process.exit(1);
 
-console.log('shippable-coverage check: ' + fullRel.length + ' .coffee files under src/, all covered '
+console.log('shippable-coverage check: ' + fullRel.length + ' .coffee files under src/ and the harness, all covered '
   + '(or allowlisted) — 0 gap(s)');
 process.exit(0);

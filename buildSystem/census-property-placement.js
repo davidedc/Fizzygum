@@ -73,39 +73,35 @@
  *   - Method attribution for the DEMOTE report reuses the census's own method boundaries.
  *
  * USAGE (run from the Fizzygum/ repo root, like the gates):
- *   node ./buildSystem/census-property-placement.js [--json out.json] [--full]
+ *   node ./buildSystem/census-property-placement.js [--json out.json] [--full] [--src=DIR] [--tests-repo=DIR]
+ * It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness); the rails
+ * read another src tree / tests repo.
  * Exit codes: 0 = ran · 2 = operational error.
  */
 
 const fs = require('fs');
-const path = require('path');
 const { runCensus } = require('./census-public-private-calls.js');
 const { coffeeMask } = require('./lib/coffee-mask');
+const { rejectUnknownArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 
-const SRC = path.resolve(__dirname, '../src');
-const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
-const FULL = process.argv.includes('--full');
-const jsonIdx = process.argv.indexOf('--json');
-const JSON_OUT = jsonIdx >= 0 ? process.argv[jsonIdx + 1] : null;
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS, '--full', '--json'], 'census-property-placement');
+const ROOTS = sourceRoots(ARGV, 'census-property-placement');
+const FULL = ARGV.includes('--full');
+const jsonIdx = ARGV.indexOf('--json');
+const JSON_OUT = jsonIdx >= 0 ? ARGV[jsonIdx + 1] : null;
 
 let out;
 try {
-  out = runCensus();
+  out = runCensus(ROOTS);
 } catch (e) {
   console.error('[property-placement] ERROR — ' + e.message);
   process.exit(2);
 }
 const { classInfo, chainOf, allMethods } = out;
-
-function collectFiles(dir, ext, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) collectFiles(p, ext, acc);
-    else if (e.name.endsWith(ext)) acc.push(p);
-  }
-  return acc;
-}
+// each compiled source by the name the class model gives its file (lib/source-files.js sourceName)
+const FILE_OF = new Map(compiledFiles(ROOTS).map((f) => [sourceName(f, ROOTS), f]));
 
 // ── exclusions 1 & 3, harvested in one pass over src + harness ──────────────────────────────────
 // STRING_WORDS  (exclusion 1) — every word appearing inside a STRING. A property named there may be
@@ -126,8 +122,7 @@ const MEMBER_FILES = new Map();   // name -> Set(relative file paths reading it 
 {
   const WORD = /[A-Za-z_$][\w$]*/g;
   const MEMBER = /\.([A-Za-z_$][\w$]*)/g;
-  for (const f of [...collectFiles(SRC, '.coffee', []), ...collectFiles(HARNESS, '.coffee', [])]) {
-    const rel = f.startsWith(SRC) ? path.relative(SRC, f) : 'harness/' + path.relative(HARNESS, f);
+  for (const [rel, f] of FILE_OF) {
     const text = fs.readFileSync(f, 'utf8');
     const lines = text.split('\n');
     coffeeMask(text, rel).forEach(({ mask, bare: code }, i) => {
@@ -163,7 +158,7 @@ const FIELD_ASSIGN = /@([A-Za-z_$][\w$]*)\s*(\?=|\|\|=|\+=|-=|\*=|\/=|=(?![=>]))
 const declared = new Map();   // className -> Map(prop -> { def: string|null, line })
 for (const info of classInfo.values()) {
   const props = new Map();
-  coffeeMask(fs.readFileSync(path.join(SRC, info.file), 'utf8'), info.file).forEach(({ code }, i) => {
+  coffeeMask(fs.readFileSync(FILE_OF.get(info.file), 'utf8'), info.file).forEach(({ code }, i) => {
     if (!code.trim()) return;
 
     const d = PROP_DEFAULT.exec(code);
@@ -269,7 +264,7 @@ const codeLinesCache = new Map();
 function codeLinesOf(relFile) {
   let lines = codeLinesCache.get(relFile);
   if (lines) return lines;
-  lines = coffeeMask(fs.readFileSync(path.join(SRC, relFile), 'utf8'), relFile).map((line) => line.bare);
+  lines = coffeeMask(fs.readFileSync(FILE_OF.get(relFile), 'utf8'), relFile).map((line) => line.bare);
   codeLinesCache.set(relFile, lines);
   return lines;
 }

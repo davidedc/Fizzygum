@@ -1,8 +1,9 @@
 'use strict';
 // check-raw-pointer-reads-selftest.js — check-raw-pointer-reads.js proved able to BITE, by running the REAL gate on a
-// planted copy of src/ (lib/planted-src.js). A dispatched handler, and a drag-scroll consumer named in
-// EXTRA_HANDLER_NAMES, reading world.hand.position() unmapped fail, named — and so does one whose sanction marker sits
-// in the PREVIOUS method's body, or that follows a string holding `#` on its line; an EXTRA_HANDLER_NAMES entry no
+// planted copy of src/ and of the tests repo's harness (lib/planted-src.js). A dispatched handler, and a drag-scroll
+// consumer named in EXTRA_HANDLER_NAMES, reading world.hand.position() unmapped fail, named — and so does one whose
+// sanction marker sits in the PREVIOUS method's body, or that follows a string holding `#` on its line, or that lives in
+// a harness file (named harness/<path>); an EXTRA_HANDLER_NAMES entry no
 // class defines fails as stale. The handler table is
 // held against ActivePointerWdgt both ways, so the copy's dispatcher is edited (each edit anchored) until every kind of
 // disagreement fires: a table name it never names, a position handed to a name the table lacks, a plane position
@@ -19,6 +20,7 @@ const APW = 'ActivePointerWdgt.coffee';
 proveGate({
   name: 'check-raw-pointer-reads',
   gate: path.join(__dirname, 'check-raw-pointer-reads.js'),
+  testsRepo: true,
   pass: /^  raw-pointer-reads gate OK — \d+ pointer-handler bodies scanned, 1 exempt, 0 raw reads\.$/m,
   control: {
     plants: {
@@ -47,6 +49,10 @@ proveGate({
     lines: [/^  \[raw-pointer\] BiteProofRawPointerWdgt\.takeStrokeScrollFrom reads .* — src\/BiteProofRawPointerWdgt\.coffee:5$/m,
             /^  \[raw-pointer\] BiteProofRawPointerWdgt\.pressEnded reads .* — src\/BiteProofRawPointerWdgt\.coffee:10$/m,
             /^  \[raw-pointer\] BiteProofRawPointerWdgt\.pressEnded reads .* — src\/BiteProofRawPointerWdgt\.coffee:11$/m],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessRawPointerWdgt.coffee': cls('BiteProofHarnessRawPointerWdgt', '  pressBegan: (pos) ->', '    @bpAt = world.hand.position()') },
+    expect: { RAW_READ: /^  \[raw-pointer\] BiteProofHarnessRawPointerWdgt\.pressBegan reads world\.hand\.position\(\) unmapped — harness\/BiteProofHarnessRawPointerWdgt\.coffee:3$/m },
   }, {
     label: 'the handler table disagreeing with the dispatcher, every way',
     edits: [

@@ -1,8 +1,9 @@
 'use strict';
 // check-trailing-whitespace-selftest.js — check-trailing-whitespace.js proved able to BITE, by running the REAL gate on
-// a planted copy of src/ (lib/planted-src.js): a line ending in a space, one ending in a tab and a CRLF line with a
-// space before its \r each fail it, named by file and line; a line that is only indentation passes. Run by
-// buildSystem/run-selftests.js on every build.
+// a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): a line ending in a space, one ending in a
+// tab and a CRLF line with a space before its \r each fail it, named by file and line, and so does a harness file's line
+// ending in a space, named harness/<path>; a line that is only indentation passes. Run by buildSystem/run-selftests.js
+// on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -10,6 +11,7 @@ const { proveGate } = require('./lib/planted-src');
 proveGate({
   name: 'check-trailing-whitespace',
   gate: path.join(__dirname, 'check-trailing-whitespace.js'),
+  testsRepo: true,
   pass: /^\[trailing-whitespace\] OK/m,
   control: { plants: { 'BiteProofIndentOnlyLine.coffee': 'class BiteProofIndentOnlyLine\n  a: -> 1\n    \n  b: -> 2\n' } },
   runs: [{
@@ -18,5 +20,9 @@ proveGate({
     expect: { TRAILING_WHITESPACE: /^  BiteProofTrailingWhitespace\.coffee:2$/m },
     lines: [/^  BiteProofTrailingWhitespace\.coffee:3$/m, /^  BiteProofTrailingWhitespace\.coffee:4$/m],
     absent: [/BiteProofIndentOnlyLine/],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessTrailingWhitespace.coffee': 'class BiteProofHarnessTrailingWhitespace\n  aSpace: -> 1 \n' },
+    expect: { TRAILING_WHITESPACE: /^  harness\/BiteProofHarnessTrailingWhitespace\.coffee:2$/m },
   }],
 });

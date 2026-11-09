@@ -3,6 +3,8 @@
 // proof that misses a rule, expects the wrong one, plants a neighbour, has a failing control, carries an edit that
 // did not apply, or leaks one run's plant into the next FAILS. Each proof is a child process over a fake gate in a
 // temp dir, since proveGate prints a verdict of its own. And a planted tree's reset leaves no directory a plant made.
+// A tree with a tests-repo copy holds that repo's code and no reference image, plants a `harness/` key in the copy's
+// harness (refused on a tree without one), resets it from the repo, and proveGate hands the gate the copy.
 // Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
@@ -92,5 +94,45 @@ empty.plant('SystemTest_x/SystemTest_x.js', '');
 empty.reset();
 t.check(fs.readdirSync(empty.dir).length === 0, 'reset() of a fixture tree (from: null) leaves it empty');
 fs.rmdirSync(path.join(fixture, 'kept'));
+
+// testsRepo: a copy of a tests repo's CODE — its harness, each test's two files, its scripts; not its reference images —
+// where a key `harness/<rel>` plants, and which every gate run is handed as --tests-repo=
+const repo = path.join(dir, 'repo');
+const put = (rel, text) => { const p = path.join(repo, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
+put('Automator-and-test-harness-src/H.coffee', 'class H\n  marker: -> "harness"\n');
+put('tests/SystemTest_a/SystemTest_a.js', 'var SystemTest_a = {};\n');
+put('tests/SystemTest_a/SystemTest_a_automationCommands.js', 'var c = {};\n');
+put('tests/SystemTest_a/automation-assets/ref.png', 'pixels');
+put('scripts/s.js', 's();\n');
+const withRepo = plantedTree({ from: fixture, testsRepo: repo });
+const copied = (rel) => fs.existsSync(path.join(withRepo.testsRepo, rel));
+t.check(['Automator-and-test-harness-src/H.coffee', 'tests/SystemTest_a/SystemTest_a.js', 'tests/SystemTest_a/SystemTest_a_automationCommands.js', 'scripts/s.js'].every(copied)
+  && !copied('tests/SystemTest_a/automation-assets'), 'the tests-repo copy holds the harness, each test\'s two files and the scripts, and no reference image');
+withRepo.plant('harness/made/P.coffee', 'class P\n');
+withRepo.edit('harness/H.coffee', /"harness"/, '"edited"');
+const harnessCopy = path.join(withRepo.testsRepo, 'Automator-and-test-harness-src');
+t.check(fs.existsSync(path.join(harnessCopy, 'made/P.coffee')) && !fs.existsSync(path.join(withRepo.dir, 'harness')),
+  'a key harness/<rel> plants in the copy\'s harness, not in the src copy');
+withRepo.reset();
+t.check(!fs.existsSync(path.join(harnessCopy, 'made')) && /"harness"/.test(fs.readFileSync(path.join(harnessCopy, 'H.coffee'), 'utf8')),
+  'reset() puts the harness back as the tests repo has it, the directories a plant made removed');
+let thrown = '';
+try { tree.plant('harness/P.coffee', 'class P\n'); } catch (e) { thrown = e.message; }
+t.check(/no tests-repo copy/.test(thrown), 'a harness/ key on a tree without a tests-repo copy is refused, never planted in src', thrown || 'planted');
+// end to end: a fake gate reading --tests-repo= sees a plant made in the harness copy
+const harnessGate = path.join(dir, 'fake-harness-gate.js');
+fs.writeFileSync(harnessGate, `'use strict';
+const fs = require('fs'), path = require('path');
+const rules = require(${JSON.stringify(path.join(__dirname, 'gate-rules.js'))}).forGate(__filename);
+const { dirArg, rejectUnknownArgs } = require(${JSON.stringify(path.join(__dirname, 'cli-args.js'))});
+const argv = process.argv.slice(2);
+rejectUnknownArgs(argv, ['--src=', '--tests-repo='], 'fake-harness-gate');
+const REPO = dirArg(argv, '--tests-repo=', '/nowhere', 'fake-harness-gate');
+if (fs.existsSync(path.join(REPO, 'Automator-and-test-harness-src', 'PlantH.coffee'))) { console.error(rules.fired('RULE_ONE', '  harness/PlantH.coffee: rule one')); process.exit(1); }
+console.log('[fake-harness-gate] OK');
+`);
+r = proof(`proveGate({ name: 'fake-harness-proof', gate: ${JSON.stringify(harnessGate)}, from: ${JSON.stringify(fixture)}, testsRepo: ${JSON.stringify(repo)},
+  pass: /\\[fake-harness-gate\\] OK/, runs: [{ label: 'a harness plant', plants: { 'harness/PlantH.coffee': 'class PlantH\\n' }, expect: { RULE_ONE: /^  harness\\/PlantH\\.coffee: rule one$/m } }] });`);
+t.check(r.status === 0 && /SELFTEST PASS/.test(r.out), 'proveGate hands every run --tests-repo=<the copy>, and a harness/ plant reaches the gate', r.out);
 
 t.done();

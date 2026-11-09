@@ -67,25 +67,31 @@ check('a string is no receiver',           recvsOf('"Math".round()\n'), ['-']);
 
 // ---- the REAL gate on a planted src copy ---------------------------------------------------------------------------
 // The cases above judge the harvests in memory; here the gate itself — the walk, the harness and macro sources, both
-// exemption tables, the exit — runs on a src copy (lib/planted-src.js). THE MASK THIS HARVEST CLOSED: every callable
-// definition of a name that still has a DATA key elsewhere is removed from the copy, and a send of it must FAIL — the
-// catch-all definition form kept such a send resolved (lib/name-definitions.js). The definers are found by the harvest
-// itself, so the plant follows the tree. Run 2 takes away what one entry of each table excuses.
+// exemption tables, the exit — runs on a src copy and a copy of the tests repo's code (lib/planted-src.js). THE MASK
+// THIS HARVEST CLOSED: every callable definition of a name that still has a DATA key elsewhere is removed from the copy,
+// and a send of it must FAIL — the catch-all definition form kept such a send resolved (lib/name-definitions.js). The
+// definers are found by the harvest itself, so the plant follows the tree. Run 2 takes away what one entry of each
+// table excuses. Run 3 plants a send nobody defines in a harness file, which fails named harness/<path>.
 const { proveGate, SRC } = require('./lib/planted-src');
 const { definedName } = require('./lib/name-definitions');
 const { coffeeMask } = require('./lib/coffee-mask');
+const { compiledFiles } = require('./lib/source-files');
 const MASKED = 'close';   // defined by a method, and still a data key (FrameWdgt's theme table)
+// the compiled sources the gate reads (src/ and the harness); the definers src-relative — the plant edits only the
+// src copy, so a definer outside it (a `../` path) would keep the send resolved
+const COMPILED = compiledFiles({ src: SRC });
 const definers = [];
-for (const f of fs.readdirSync(SRC, { recursive: true }).map(String).filter((f) => f.endsWith('.coffee'))) {
-  if (coffeeMask(fs.readFileSync(path.join(SRC, f), 'utf8'), f).some((l) => definedName(l.code) === MASKED)) definers.push(f);
+for (const f of COMPILED) {
+  if (coffeeMask(fs.readFileSync(f, 'utf8'), f).some((l) => definedName(l.code) === MASKED)) definers.push(path.relative(SRC, f));
 }
-const dataKeyKept = fs.readdirSync(SRC, { recursive: true }).map(String).filter((f) => f.endsWith('.coffee'))
-  .some((f) => new RegExp(`^\\s*${MASKED}\\s*:\\s*[^-=(\\s]`, 'm').test(fs.readFileSync(path.join(SRC, f), 'utf8')));
-t.check(definers.length > 0 && dataKeyKept, `the masked name '${MASKED}' has a callable definer (${definers.join(', ')}) and a data key that stays`);
+const dataKeyKept = COMPILED.some((f) => new RegExp(`^\\s*${MASKED}\\s*:\\s*[^-=(\\s]`, 'm').test(fs.readFileSync(f, 'utf8')));
+t.check(definers.length > 0 && definers.every((f) => !f.startsWith('..')) && dataKeyKept,
+  `the masked name '${MASKED}' has a callable definer, each in src (${definers.join(', ')}), and a data key that stays`);
 proveGate({
   name: 'unresolved-sends',
   cases: t,
   gate: path.join(__dirname, 'check-unresolved-sends.js'),
+  testsRepo: true,
   pass: /^\[unresolved-sends\] OK — /m,
   control: {
     plants: {
@@ -123,6 +129,10 @@ proveGate({
       BUILTINS_KEYED_NOTHING_TO_UNMASK: /^  BUILTINS_KEYED_NOTHING_TO_UNMASK Array\.isArray — no definition of isArray is in src\+harness: list it bare$/m,
       STALE_PLATFORM_GLOBAL: /^  STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ArrayBuffer — no BUILTINS call/m,
     },
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessSends.coffee': ['class BiteProofHarnessSends', '  bpNobody: ->', '    @biteProofHarnessNoSuchMethod()', ''].join('\n') },
+    expect: { UNRESOLVED_SEND: /^  harness\/BiteProofHarnessSends\.coffee:3: @biteProofHarnessNoSuchMethod\( — no definition found in src\+harness$/m },
   }],
 });
 

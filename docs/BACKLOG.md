@@ -11,12 +11,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **Every build tool walks src for itself** (found closing the four walks item, in the plan's ledger). About
-      forty build tools each list src's `.coffee` files with a walk of their own (`collectCoffee`, `walkFiles`, a local
-      `walk`, `lib/macro-sources.js`'s `verbMacroSources`, …), with different skip rules: some pass over dot directories
-      and `node_modules`, some pass over nothing, and some also read the harness. A file one walk skips is read by the
-      others, and nothing says which set a gate read. One definition of src's files, as `lib/tests-repo-code.js`'s
-      `testNames` is of the tests.
 - [ ] **A world snapshot cannot be saved while a class inspector is open** (found closing "`Deserializer.compileFunction`
       compiles through the run gesture", in the plan's ledger). A `ClassInspectorWdgt`'s subject is a class
       PROTOTYPE, and the save writes it as a record of all its own members, so it meets the prototype's methods and
@@ -61,6 +55,31 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       up and the class is not" is a give-up a run reaches. It does not fit every plant: the staleness census boots
       `index.html`, where `SpreadsheetApp` arrives with a lazy part after the world, and one census give-up waits for
       the world itself.
+- [ ] **The boot files are a hand-list in the build script** (found closing "Every build tool walks src for itself",
+      in the plan's ledger). `build_it_please.sh` cats and compiles the 14 `src/boot` files by name, and
+      `check-shippable-coverage.js` exempts `src/boot/` whole, so a new boot file ships nothing and no gate notices.
+      Boot's order as data, one list the build and the gates read, is its own design.
+- [ ] **Every gate re-masks all of the compiled sources** (found closing the same item; measured). Masking src takes
+      about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
+      build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
+- [ ] **`find_similar_code.sh` stops at its mirror** (found closing the same item; measured).
+      `buildSystem/coffee-to-js-mirror.js` fails on `src/meta/Class.coffee` under CoffeeScript 1 ("unexpected ."),
+      exits 1, and the script stops at "mirror compile FAILED". Class.coffee last changed in 7891f3a8, 2243cab7 and
+      57959d14 (2026-11-08).
+- [ ] **Build freshness reads only the sources' mtimes** (found closing the same item; by reading). An edit to
+      `parts.json`, `buildSystem/*`, `src/index.html` or the runtime prelude leaves a stale build reading FRESH, to
+      `lib/assert-build-fresh.js` (and every runner that asks it) and to the umbrella `fg status`.
+- [ ] **Every tool walks the tooling's own files for itself** (found closing the same item; by reading). About seven
+      walks list the `.js` files of `buildSystem/` and `scripts/`, with different skip rules: `lib/what-runs.js`,
+      `run-selftests.js` and `check-hand-lists.js` pass over dot directories, `node_modules` and `__pycache__`;
+      `lib/tests-repo-code.js`'s scripts walk, dot directories and `node_modules`; `lib/cli-selftest.js`, `node_modules`
+      in one walk and dot directories too in another; `find_similar_code.sh`, `node_modules` and `.scratch`. Latent
+      today (`scripts/` holds no dot directory). It is the compiled sources' defect on another tree, where
+      `node_modules` is real, so it wants a definition of its own.
+- [ ] **The wall-clock stink does not see `new Date` without parentheses** (found closing the same item; by reading).
+      Its pattern is `new Date\s*\(`, so a paren-less read of the clock is not counted: `WorldWdgt`'s cycle-start
+      `new Date`, `AnalogClockWdgt`'s constructor, the harness's command pacing (`(new Date).getTime()` in
+      `AutomatorPlayer.replayTestCommands`) and `EventCommand`'s `@date = new Date`.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

@@ -1,7 +1,8 @@
 'use strict';
 // census-widget-conformance-selftest.js — census-widget-conformance.js --gate proved able to BITE, by running the REAL
-// gate on a planted copy of src/ (lib/planted-src.js): a widget writing a field it never declares fails — written
-// with `=` or lazily with `?=`, also after a string holding `#` on its line — named with the class; one more _reLayout prologue copy takes the ratchet over its
+// gate on a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): a widget writing a field it
+// never declares fails — written with `=` or lazily with `?=`, also after a string holding `#` on its line, also in a
+// harness file (named harness/<path>) — named with the class; one more _reLayout prologue copy takes the ratchet over its
 // floor and fails, named. The declaration forms the facet accepts ride the control: a class-level declaration, a
 // field a mixin donates, a write inside a block string (data, not code), a comparison, a bound function. Run by
 // buildSystem/run-selftests.js on every build.
@@ -14,6 +15,7 @@ proveGate({
   name: 'census-widget-conformance',
   gate: path.join(__dirname, 'census-widget-conformance.js'),
   args: ['--gate'],
+  testsRepo: true,
   pass: /^\[widget-conformance\] OK -- undeclared fields 0\/0 \(baseline 0\/0\)/m,
   control: {
     plants: {
@@ -36,5 +38,9 @@ proveGate({
       PROLOGUE_COPY: /^      BiteProofPrologueWdgt \(BiteProofPrologueWdgt\.coffee\)$/m,
     },
     absent: [/BiteProofDeclaredFieldsWdgt/],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessUndeclaredWdgt.coffee': lines('class BiteProofHarnessUndeclaredWdgt extends Widget', '  bpSet: ->', '    @bpHarnessUndeclared = 1') },
+    expect: { UNDECLARED_FIELD: /^      BiteProofHarnessUndeclaredWdgt \(harness\/BiteProofHarnessUndeclaredWdgt\.coffee\): bpHarnessUndeclared$/m },
   }],
 });

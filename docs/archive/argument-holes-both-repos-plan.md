@@ -1368,3 +1368,45 @@ for (const s of sites) if (s.absentBefore.length) {
       freeze); the guard is back. It also found that the plants polling for classes give up only after 60–100 s, when
       their runs have closed the page. Filed beside it: the three suite runners wait for a page to boot three ways; a
       plant's give-up comes after its run has ended.
+- [x] **Every build tool walks src for itself** (found closing the four walks item, in the plan's ledger). About
+      forty build tools each list src's `.coffee` files with a walk of their own (`collectCoffee`, `walkFiles`, a local
+      `walk`, `lib/macro-sources.js`'s `verbMacroSources`, …), with different skip rules: some pass over dot directories
+      and `node_modules`, some pass over nothing, and some also read the harness. A file one walk skips is read by the
+      others, and nothing says which set a gate read. One definition of src's files, as `lib/tests-repo-code.js`'s
+      `testNames` is of the tests. — CLOSED
+      2026-11-09. Measured first: about 45 walk definitions all read the same 561 src files, so the skip-rule split
+      was latent (only symlinks were live: a symlinked directory was read, shipped and seen by nothing); the live split
+      was the ROOT — 21 tools read src without the harness the build compiles beside it, and 7 of them fired on it.
+      ONE definition, `buildSystem/lib/source-files.js`: `coffeeFilesIn(root)` (every `.coffee` file, a dot directory's
+      and a `node_modules`' included, code-point order; a symlink anywhere, a missing root and an empty one REFUSED,
+      `SOURCE_TREE_MALFORMED`), `srcFiles`, `harnessFiles`, `compiledFiles` (src and the harness), the two rails
+      `--src=` / `--tests-repo=` (`sourceRoots`) and the printed names (`sourceName`: `harness/<rel>`). Every gate and
+      census reads `compiledFiles`, and so do `testsRepoFiles`' harness, aim-census, the gate-tokens self-test and
+      `assert-build-fresh` (`newestSource`, which torture and the single runner call; `fswalk.newestFile` deleted);
+      `fg status` counts the harness. The coverage gate's full set is `compiledFiles` (`build.py --list-shippable` takes
+      `--tests-repo=` too): planted, a dot directory, a dot file and a new harness subdirectory each fail as UNSHIPPED.
+      `lib/planted-src.js` copies the tests repo's code (`testsRepo: true`: its harness, each test's two files and the
+      scripts `lib/what-runs.js` reads; a plant keyed `harness/<rel>` lands in its harness; the copy is named
+      `Fizzygum-tests`, so hand-lists' run set, now the rail's, finds its scripts by the paths the build names them by),
+      and each gate reading the compiled sources (the syntax gate, aim-census and the macro-source discipline gate among
+      them, each given `--tests-repo=`) plants one harness violation in its proof, each seen failing. The harness meets
+      src's rules: the retired `»>>` markers (four pairs) and the four "Ex-`»>>`" headers, the two whole-file markers,
+      seven empty first-line comments, a `debugger`, twelve commented-out debug lines and nine narrating comments are
+      gone; `Automator.fade` reads the clock itself (its 26 callers, 6 in src, passed it: wall-clock 19 -> 13), and the
+      harness's four real-time clocks, two DOM colours, three DOM `onload = null`s and one `SerializationError` catch
+      are sanctioned by name; the paint audit carries three `cross-invalidation-sanctioned:` markers and layering [B]
+      names it in `RECALC_ORACLES` (held stale, `B_STALE_RECALC_ORACLE`), the overlay's images `page-element-not-held:`;
+      the reset seat `_beforeWorldDissolveNoSettle` is `_beforeBeingDissolved` (rule [L]); dead-methods inventories the
+      harness, so `EventCommand.execute` and `addToZipAsJS` are deleted and `loadAndRunSingleTestFromName`, the console
+      entry point, is allowlisted; call-separation's [U] counts a harness class's own `@` calls as self, so 17 harness
+      methods and `WorldWdgt.invalidateCanvasPositionCache` (self-only once the harness's installed calls count as self)
+      are `_`-tier, and two whose `_`-form [S] forbids are allowlisted. The independent review found [U] blind to the
+      harness (it read it twice, once as external), the syntax gate handing build.py the `--tests-repo=` copy and
+      reading the real harness, aim-census and the freshness guard refusing with exit 1, aim-census and the discipline
+      gate without the harness's rail, [B]'s oracle entry held by nothing, call-arguments' half-read INVALID left
+      unreached, the null and instanceof ratchets raised where the plan named sanctions, and the copy missing the
+      tests repo's shell scripts; each is fixed as above. Folded: the orphan
+      `combine-all-coffee-sources.sh` deleted. Filed beside it: the boot files are a hand-list in the build script; every
+      gate re-masks all of the compiled sources; `find_similar_code.sh` stops at its mirror; build freshness reads only
+      the sources' mtimes; every tool walks the tooling's own files for itself; the wall-clock stink does not see `new
+      Date` without parentheses.

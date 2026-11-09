@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-// check-dead-methods.js — build lint: flag methods DEFINED in src but REACHED nowhere.
+// check-dead-methods.js — build lint: flag methods DEFINED in the compiled sources but REACHED nowhere.
 //
 // Mirrors buildSystem/check-layering.js (a heuristic line scanner, exit 0 clean / 1 violation /
-// 2 operational). It finds every method header in src/**/*.coffee — a class's 2-space ones, a
-// mixin's onceAddedClassProperties members and the class-side `@name:` methods alike
-// (lib/coffee-method-header.js; a class-side method is inventoried under its BARE name, which is how
-// it is called: `Class.name` from outside, `@name` between the statics of one class) — then reads every
-// place a method could be reached FROM, as code: src (lib/coffee-mask.js) and the sibling Fizzygum-tests
-// repo's harness, macro sources and scripts/ rigs (lib/tests-repo-code.js; its metadata prose, reference
-// records and manifests are not code). What counts as reaching a method is lib/method-references.js, the one
+// 2 operational). It finds every method header in the compiled sources (lib/source-files.js compiledFiles:
+// src/ and the tests repo's harness) — a class's 2-space ones, a mixin's onceAddedClassProperties members and
+// the class-side `@name:` methods alike (lib/coffee-method-header.js; a class-side method is inventoried under
+// its BARE name, which is how it is called: `Class.name` from outside, `@name` between the statics of one
+// class) — then reads every place a method could be reached FROM, as code: the compiled sources
+// (lib/coffee-mask.js, each reference attributed to its enclosing method) and the sibling Fizzygum-tests repo's
+// macro sources and scripts/ rigs (lib/tests-repo-code.js; its metadata prose, reference records and manifests
+// are not code). What counts as reaching a method is lib/method-references.js, the one
 // definition: a property access (`@m`, `x.m`, `C::m`), a whole-name string (`"m"`, string dispatch), a name
 // template (`"_#{@action}Connector"`, every method it matches) or a computed access on a named class
 // (`FormulaHelpers[name]`, every method on that side). A bare word — a local, a parameter, an object key, a
@@ -39,25 +40,17 @@ const { coffeeMask } = require('./lib/coffee-mask');
 const { readAllowlist } = require('./lib/allowlist-file');
 const testsRepo = require('./lib/tests-repo-code');
 const methodRefs = require('./lib/method-references');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
-let SRC;   // main() reads the rail
-
-function walk(dir, ext, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, ext, acc);
-    else if (e.name.endsWith(ext)) acc.push(p);
-  }
-  return acc;
-}
+let ROOTS;   // main() reads the rails
 
 // ── settle-tier symmetry helpers (pure; check-dead-methods-selftest.js drives them) ─────────────────
 // A public `<name>` and its private core `_<name>NoSettle` form ONE self-settling pair. When one side is
 // dead we may RETAIN it for symmetry — but ONLY if the OTHER side is INDEPENDENTLY used. `twinName` maps a
 // member to its partner; `independentlyReferenced` answers "is `token` referenced by some owner OTHER than
-// `excluded`?" (owner = a src method name, '@toplevel' for class-level src, or '@external' for harness/tests).
+// `excluded`?" (owner = a compiled source's method name, '@toplevel' for class-level code, or '@external' for the
+// tests repo's macros and rigs).
 // The `excluded` guard is what closes the masking hole: a dead public wrapper's body is the one place that
 // references its core (`setLabel -> @_setLabelNoSettle`), so without excluding that body the core looks "used"
 // and a pair dead on BOTH sides would be saved. Excluding it, a both-dead pair is retained by neither.
@@ -79,24 +72,25 @@ function independentlyReferenced(token, excluded, referrers) {
 }
 
 function main() {
-  // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-dead-methods.js [--src=DIR] —
-  // the rail reads another src tree (a copy carrying a plant); the references are still the real tests repo's. That
-  // every rule BITES, and that every way of reaching a method keeps it alive, is proven on every build by
+  // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-dead-methods.js [--src=DIR]
+  // [--tests-repo=DIR] — the rails read another src tree or tests repo (a copy carrying a plant). That every rule
+  // BITES, and that every way of reaching a method keeps it alive, is proven on every build by
   // check-dead-methods-selftest.js.
   const argv = process.argv.slice(2);
-  rejectUnknownArgs(argv, ['--update-allowlist', '--src='], 'check-dead-methods');
+  rejectUnknownArgs(argv, ['--update-allowlist', ...SOURCE_RAILS], 'check-dead-methods');
   rejectPositionalArgs(argv, 'check-dead-methods', 'a src tree is named with --src=DIR');
-  SRC = dirArg(argv, '--src=', path.resolve(__dirname, '../src'), 'check-dead-methods');
-  if (argv.includes('--update-allowlist') && argv.some((a) => a.startsWith('--src='))) {
-    console.error('[dead-methods] ERROR — --update-allowlist writes the real allowlist: it never reads another src tree');
+  ROOTS = sourceRoots(argv, 'check-dead-methods');
+  if (argv.includes('--update-allowlist') && argv.some((a) => SOURCE_RAILS.some((r) => a.startsWith(r)))) {
+    console.error('[dead-methods] ERROR — --update-allowlist writes the real allowlist: it never reads another src tree or tests repo');
     process.exit(2);
   }
-  if (!fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'tests')) || !fs.existsSync(path.join(testsRepo.DEFAULT_ROOT, 'Automator-and-test-harness-src'))) {
+  // a tests repo holding tests/ holds its harness too: compiledFiles below refuses one that does not
+  if (!fs.existsSync(path.join(ROOTS.testsRepo, 'tests'))) {
     console.log('[dead-methods] SKIP — sibling Fizzygum-tests not present (needs it for an accurate reference set).');
     process.exit(0);
   }
 
-  // 1. every method header in src -> name => [first def location, ...]
+  // 1. every method header in the compiled sources -> name => [first def location, ...]
   // This gate owns the method INVENTORY, so it also carries the guard for headers the shared matcher
   // cannot see: an unseen header is not a missing warning, it is a method NO gate checks at all.
   // A class-side method is inventoried under its BARE name (inventoryOf), and its own body is attributed to
@@ -105,11 +99,11 @@ function main() {
   const methods = [];   // { name, cls, classSide }: what computed dispatch is resolved against (one class per file)
   const parentOf = new Map(), mixinsOf = new Map();   // the class chain a computed access resolves through
   const unseen = [];
-  const masked = new Map();   // each src file's lib/coffee-mask.js reading, read once for both passes
-  for (const p of walk(SRC, '.coffee', [])) {
+  const masked = new Map();   // each compiled source's lib/coffee-mask.js reading, read once for both passes
+  for (const p of compiledFiles(ROOTS)) {
     const text = fs.readFileSync(p, 'utf8');
     const lines = text.split('\n');
-    masked.set(p, coffeeMask(text, path.relative(SRC, p)));
+    masked.set(p, coffeeMask(text, sourceName(p, ROOTS)));
     const cls = path.basename(p, '.coffee');
     for (const l of lines) {
       const c = /^class\s+([A-Za-z_]\w*)(?:\s+extends\s+([A-Za-z_]\w*))?/.exec(l);
@@ -119,10 +113,10 @@ function main() {
     }
     for (const def of inventoryOf(lines)) {
       if (!defs.has(def.name)) defs.set(def.name, []);
-      defs.get(def.name).push(path.relative(SRC, p) + ':' + (def.line + 1) + (def.classSide ? ' (class-side)' : ''));
+      defs.get(def.name).push(sourceName(p, ROOTS) + ':' + (def.line + 1) + (def.classSide ? ' (class-side)' : ''));
       methods.push({ name: def.name, cls: path.basename(p, '.coffee'), classSide: def.classSide });
     }
-    for (const u of unseenMethodHeaders(lines, masked.get(p))) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
+    for (const u of unseenMethodHeaders(lines, masked.get(p))) unseen.push(`${sourceName(p, ROOTS)}:${u.line}: ${u.text}`);
   }
   if (unseen.length) {
     console.error(`[dead-methods] FAIL — ${unseen.length} method header(s) the shared matcher cannot see:`);
@@ -136,7 +130,7 @@ function main() {
 
   // 2. every method REACHED (lib/method-references.js), read from code
   const referenced = new Set();
-  const referrers = new Map();   // token -> Set of owners that reference it (a src method name / '@toplevel' / '@external' / '@computed')
+  const referrers = new Map();   // token -> Set of owners that reference it (a compiled source's method name / '@toplevel' / '@external' / '@computed')
   const templates = [], computedClasses = [];
   function addRef(token, owner) {
     referenced.add(token);
@@ -150,7 +144,7 @@ function main() {
     templates.push(...r.templates);
     computedClasses.push(...r.classes);
   }
-  // src: attribute each reference to its ENCLOSING method, so we can later tell whether a settle-twin is used by
+  // the compiled sources: attribute each reference to its ENCLOSING method, so we can later tell whether a settle-twin is used by
   // something OTHER than the dead method itself. A method header (a class's 2-space one, or a mixin member's)
   // opens a method; the header line itself (its default parameters, an inline body) and the 4+-space-indented
   // lines below belong to it; class-level lines (indent < 4, not a header) are '@toplevel'. A def's own name is a
@@ -172,9 +166,13 @@ function main() {
     }
   }
   harvestSrc([...masked.keys()]);
-  // the tests repo's code: every reference there is an INDEPENDENT anchor ('@external') — it lives outside the
-  // src pair, so it always counts as "the twin is used"
-  for (const { lines } of testsRepo.testsRepoCode()) for (const line of lines) harvestLine(line, '@external');
+  // the tests repo's macros and rigs: every reference there is an INDEPENDENT anchor ('@external') — it lives outside
+  // the compiled pair, so it always counts as "the twin is used". Its harness is a compiled source, read above with
+  // each reference attributed to its method: read again as '@external', a dead harness wrapper's call of its own core
+  // would save the pair.
+  for (const { kind, lines } of testsRepo.testsRepoCode(ROOTS.testsRepo)) {
+    if (kind !== 'harness') for (const line of lines) harvestLine(line, '@external');
+  }
   // computed dispatch, resolved last against the whole inventory (a template or a class access may sit anywhere)
   // a class's chain: itself, its mixins, then its ancestors' chains — where a lookup on it resolves
   function chainOf(cls, seen = new Set()) {
@@ -208,7 +206,8 @@ function main() {
   if (process.argv.includes('--update-allowlist')) {
     const header =
       '# Dead-method allowlist for buildSystem/check-dead-methods.js\n' +
-      '# Methods DEFINED in src but reached nowhere (src + the tests repo\'s code; lib/method-references.js).\n' +
+      '# Methods DEFINED in the compiled sources (src + the harness) but reached nowhere (they + the tests repo\'s code;\n' +
+      '# lib/method-references.js).\n' +
       '# Seeded as a BASELINE to triage/delete later; the lint FAILS on any NEW dead method not here.\n' +
       '# Remove a name once you delete the method (or it gains a real caller): a stale entry FAILS the lint.\n' +
       '# One name per line; # = comment.\n' +
@@ -224,7 +223,7 @@ function main() {
   // auto-exempt by settle-tier symmetry (its twin is live, so the entry is redundant).
   const stale = [...allow].filter((n) => !dead.includes(n)).map((n) => defs.has(n)
     ? rules.fired('STALE_ENTRY_REFERENCED', `${n} — no longer dead: it is referenced`)
-    : rules.fired('STALE_ENTRY_UNDEFINED', `${n} — no method of that name is defined in src`));
+    : rules.fired('STALE_ENTRY_UNDEFINED', `${n} — no method of that name is defined in the compiled sources`));
   const redundant = [...allow].filter((n) => symmetryRetained.includes(n)).map((n) => rules.fired('STALE_ENTRY_REDUNDANT', `${n} — auto-exempt by settle-tier symmetry (live twin ${liveSettleTwin(n)}), so the entry is redundant`));
 
   if (symmetryRetained.length) {

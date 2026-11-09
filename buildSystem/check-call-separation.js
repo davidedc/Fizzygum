@@ -37,8 +37,9 @@
  * them — the runtime one-flush throw is the backstop.
  *
  * Exit codes: 0 clean · 1 violation (count exceeded a baseline, or a stale [U] allowlist entry) · 2 operational error.
+ * It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness), through the census.
  * Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-call-separation.js [--src=DIR]
- * (--src= checks another src tree: a copy carrying a plant). That it BITES is proven on every build by
+ * [--tests-repo=DIR] (the rails check another src tree or tests repo: a copy carrying a plant). That it BITES is proven on every build by
  * check-call-separation-selftest.js: the real gate, on a copy of src/ carrying a throwaway class whose private
  * method self-calls a public settling command, must fail [S] naming the site, and the same method marked
  * `# public-call-sanctioned:` must pass (lib/planted-src.js). Its call-shape decisions are
@@ -48,14 +49,16 @@
 const path = require('path');
 const { runCensus } = require('./census-public-private-calls.js');
 const { readAllowlist } = require('./lib/allowlist-file');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 
-// --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
+// --src=DIR / --tests-repo=DIR check another src tree / tests repo in place of this umbrella's: a copy carrying a plant
+// (the self-test's rail)
 const rules = require('./lib/gate-rules').forGate(__filename);
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'check-call-separation');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'check-call-separation');
 rejectPositionalArgs(ARGV, 'check-call-separation', 'a src tree is named with --src=DIR');
-const SRC_DIR = dirArg(ARGV, '--src=', undefined, 'check-call-separation');
+const ROOTS = sourceRoots(ARGV, 'check-call-separation');
 
 // ---- [S] baselines (RATCHET — tighten as the plan's tranches drain the sites; 0 = HARD) ----
 // Seeded 2026-07-12 from the census at rule birth (plan §3 snapshot: 2 SETTLING — the
@@ -70,7 +73,7 @@ const ALLOWLIST = path.resolve(__dirname, 'public-api-allowlist.txt');
 
 
 let census;
-try { census = runCensus({ src: SRC_DIR }); }
+try { census = runCensus(ROOTS); }
 catch (e) { console.error('[call-separation] operational error: ' + e.message); process.exit(2); }
 
 const problems = [];

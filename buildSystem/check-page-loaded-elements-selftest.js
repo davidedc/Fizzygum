@@ -1,10 +1,11 @@
 'use strict';
 // check-page-loaded-elements-selftest.js — check-page-loaded-elements.js proved able to BITE, by running the REAL gate
-// on a planted copy of src/ (lib/planted-src.js), one throwaway widget per clause, each failing on its OWN violation
-// line ("  <Class>.<field>  (<file>:<n>) — <the clause>"), never the summary (which names every element field it
-// saw): a field holding an element the page loads that is not a serialization transient; a chain re-making it after a
-// copy but not a restore; after a restore but not a copy; an element built into no field and not said to be unheld; a
-// hook header the shared matcher cannot see; an element field assigned in a mixin; and a hook neither walker calls (the
+// on a planted copy of src/ and of the tests repo's harness (lib/planted-src.js), one throwaway widget per clause, each
+// failing on its OWN violation line ("  <Class>.<field>  (<file>:<n>) — <the clause>"), never the summary (which names
+// every element field it saw): a field holding an element the page loads that is not a serialization transient; a
+// chain re-making it after a copy but not a restore; after a restore but not a copy; an element built into no field and
+// not said to be unheld, in src and in a harness file (named harness/<path>) alike; a hook header the shared matcher
+// cannot see; an element field assigned in a mixin; and a hook neither walker calls (the
 // copy's walkers edited so they never call it). The fully declared holder and the stated unheld element pass, and so
 // does an element named only in a comment after a regex holding a quote (no string is open there). Run by
 // buildSystem/run-selftests.js on every build.
@@ -22,6 +23,7 @@ const clause = (cls, text) => new RegExp(`^  ${cls}\\.bpPlantedImage  \\(${cls}\
 proveGate({
   name: 'check-page-loaded-elements',
   gate: path.join(__dirname, 'check-page-loaded-elements.js'),
+  testsRepo: true,
   pass: /^\[page-loaded-elements\] OK/m,
   control: {
     plants: {
@@ -52,6 +54,10 @@ proveGate({
       ELEMENT_FIELD_IN_MIXIN: /^  BiteProofElementMixin\.coffee:7  an element field \(@bpMixinImage\) assigned in the mixin BiteProofElementMixin/m,
     },
     absent: [/BiteProofDeclaredHolderWdgt\.bpPlantedImage|BiteProofStatedUnheldWdgt/],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessUnheldWdgt.coffee': ['class BiteProofHarnessUnheldWdgt extends Widget', '', '  _bpDecode: (dataURL) ->', '    img = new Image()', '    img.src = dataURL', ''].join('\n') },
+    expect: { UNATTRIBUTED_ELEMENT: /^  harness\/BiteProofHarnessUnheldWdgt\.coffee:4  img = new Image\(\)$/m },
   }, {
     label: 'a hook neither walker calls',
     edits: [['duplication/Duplicator.coffee', /\._reactToBeingCopied\??\(/g, '._bpRenamedHook(']],   // its one caller

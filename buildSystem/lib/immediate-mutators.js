@@ -17,9 +17,9 @@
 // `APPLY_CORNER` (rule [K]'s subject: polymorphicApplies + bypassTwins + commitCorners) — and
 // census-nosettle-naming.js (every group: its `immediate-mutator` family).
 //
-// ASSERTED, both ways: the groups are a stated table held to src. Every entry must name an instance method
-// defined in src — an entry naming nothing is a group that moved, and a rule keyed on it checks less with a
-// clean verdict. And every Widget-own `_apply*` / `_commit*` method (the corner SHAPE; Widget is where the
+// ASSERTED, both ways: the groups are a stated table held to the compiled sources (lib/source-files.js compiledFiles:
+// src and the tests repo's harness). Every entry must name an instance method defined in them — an entry naming
+// nothing is a group that moved, and a rule keyed on it checks less with a clean verdict. And every Widget-own `_apply*` / `_commit*` method (the corner SHAPE; Widget is where the
 // corners are defined — a subclass overrides one, it does not introduce one) must be claimed by a group or
 // listed in NOT_CORNERS with what it is instead; a NOT_CORNERS entry that is no Widget method, or that a group
 // also claims, is stale. Any of these THROWS, and a caller exits 2 naming it: the table is the tool's own
@@ -27,6 +27,7 @@
 const fs = require('fs');
 const path = require('path');
 const { methodSpans } = require('./coffee-method-header');
+const { compiledFiles } = require('./source-files');
 
 const GROUPS = {
   // hand-list-sanctioned: immediateMutators() throws STALE_ALLOWLIST_ENTRY on an entry naming no src method, and on a Widget corner no group claims — check-layering.js and census-nosettle-naming.js exit 2
@@ -45,25 +46,16 @@ const NOT_CORNERS = {
 };
 const CORNER_SHAPE = /^_(apply|commit)[A-Z]/;
 
-function walk(dir, acc) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
-
 // { polymorphicApplies, bypassTwins, commitCorners, conveniences, all } — each an array of method names, `all`
-// every group's names. `srcRoot` = Fizzygum/src.
-function immediateMutators(srcRoot) {
-  const widgetFile = path.join(srcRoot, 'basic-widgets', 'Widget.coffee');
+// every group's names. `roots` = the gate's { src, testsRepo } (lib/source-files.js sourceRoots); Widget is src's.
+function immediateMutators(roots) {
+  const widgetFile = path.join(roots.src, 'basic-widgets', 'Widget.coffee');
   if (!fs.existsSync(widgetFile)) {
     throw new Error(`immediate-mutators: ${widgetFile} not found — the corner shapes are held against Widget's own definitions`);
   }
   const defined = new Set();
   let widgetOwn = [];
-  for (const file of walk(srcRoot, [])) {
+  for (const file of compiledFiles(roots)) {
     const own = methodSpans(fs.readFileSync(file, 'utf8').split('\n')).filter((s) => !s.static).map((s) => s.name);
     for (const n of own) defined.add(n);
     if (file === widgetFile) widgetOwn = own;
@@ -72,7 +64,7 @@ function immediateMutators(srcRoot) {
   for (const [group, names] of Object.entries(GROUPS)) for (const n of names) claimed.set(n, group);
   const problems = [];
   for (const [n, group] of claimed) {
-    if (!defined.has(n)) problems.push(`STALE_ALLOWLIST_ENTRY ${group}: ${n} names no method defined in src`);
+    if (!defined.has(n)) problems.push(`STALE_ALLOWLIST_ENTRY ${group}: ${n} names no method defined in the compiled sources`);
   }
   for (const n of Object.keys(NOT_CORNERS)) {
     if (!widgetOwn.includes(n)) problems.push(`STALE_ALLOWLIST_ENTRY NOT_CORNERS: ${n} is not a Widget method`);

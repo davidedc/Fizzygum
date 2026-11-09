@@ -16,7 +16,8 @@
  *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame), the settle tier
  *      _settleLayoutsAfter (the public-setter flush), and the reactive-connection settle lane
  *      _settleLayoutsAfterOrJoinEnclosingPass (which OPENS a settle just like _settleLayoutsAfter on a
- *      cascade's first hop — rule [P] / connection-cascade-settle-fix-plan.md). Nowhere else.
+ *      cascade's first hop — rule [P] / connection-cascade-settle-fix-plan.md) — and the oracles RECALC_ORACLES names (the
+ *      harness's paint-truthfulness audit, which completes the frame it observes). Nowhere else.
  *   C) A public geometry setter must NOT call another public geometry setter (that would
  *      flush more than once per logical mutation).
  *   G) A LOW-LEVEL method must NOT directly call a STRUCTURAL self-settling wrapper -- add's siblings
@@ -46,9 +47,11 @@
  *
  * Exit codes: 0 = clean, 1 = layering violation(s), 2 = operational error.
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
- *   node ./buildSystem/check-layering.js [--src=DIR] [--tests-dir=DIR]
- * The rails check another src tree, or another tests dir for [D]'s macro half (a copy carrying a plant). Paths are
- * keyed `src/…` from whichever src tree it reads, so USERLAND_FILES and the canvas-extension exemption hold on a copy.
+ *   node ./buildSystem/check-layering.js [--src=DIR] [--tests-repo=DIR] [--tests-dir=DIR]
+ * It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness). The rails
+ * check another src tree, another tests repo, or another tests dir for [D]'s macro half (default: the tests repo's
+ * tests/) — a copy carrying a plant. Paths are keyed `src/…` from whichever src tree it reads (`harness/…` for a
+ * harness file), so USERLAND_FILES and the canvas-extension exemption hold on a copy.
  * That every rule BITES — each violation template, each stale-table rule, each sanctioned form passing — is proven on
  * every build by check-layering-selftest.js.
  */
@@ -56,16 +59,19 @@
 const fs = require('fs');
 const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 const { commandFiles } = require('./lib/tests-repo-code');
 const { testMacroSourcesIn, verbMacroSourcesIn } = require('./lib/macro-sources');
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src=', '--tests-dir='], 'check-layering');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS, '--tests-dir='], 'check-layering');
 rejectPositionalArgs(ARGV, 'check-layering', 'a src tree is named with --src=DIR, a tests dir with --tests-dir=DIR');
-const SRC = dirArg(ARGV, '--src=', path.join(__dirname, '..', 'src'), 'check-layering');
-// a src file's key: `src/<path under the tree>`, the same whichever tree is read (USERLAND_FILES, CANVAS_EXT_FILE)
-const srcKey = (file) => 'src/' + path.relative(SRC, file).split(path.sep).join('/');
+const ROOTS = sourceRoots(ARGV, 'check-layering');
+const SRC = ROOTS.src;
+// a src file's key: `src/<path under the tree>`, the same whichever tree is read (USERLAND_FILES, CANVAS_EXT_FILE); a
+// harness file's `harness/<path>` (lib/source-files.js sourceName)
+const srcKey = (file) => sourceName(file, ROOTS, 'src/');
 
 // The names the rules key on are READ, never spelled here: the settling setters (lib/settling-setters.js), the
 // settle tiers (lib/settle-tiers.js) and the immediate geometry mutators (lib/immediate-mutators.js); the repaint
@@ -74,9 +80,9 @@ const srcKey = (file) => 'src/' + path.relative(SRC, file).split(path.sep).join(
 // passes in silence — and this gate reports the throw as an operational error.
 let SETTERS, TIERS, MUTATORS;
 try {
-  SETTERS = require('./lib/settling-setters').settlingSetters(SRC);
+  SETTERS = require('./lib/settling-setters').settlingSetters(ROOTS);
   TIERS = require('./lib/settle-tiers').settleTiers(SRC);
-  MUTATORS = require('./lib/immediate-mutators').immediateMutators(SRC);
+  MUTATORS = require('./lib/immediate-mutators').immediateMutators(ROOTS);
 } catch (e) { console.error('check-layering: operational error:', e.message); process.exit(2); }
 
 // The public GEOMETRY setters: Widget's self-settling faces of its `_apply<Geom>` corners (setExtent, moveTo,
@@ -119,15 +125,18 @@ const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 // The methods that legitimately drive recalculateLayouts(): the frame (doOneCycle) and every settle TIER read
 // from Widget (lib/settle-tiers.js) — the public-setter flush (_settleLayoutsAfter) and the reactive-connection
 // lane (_settleLayoutsAfterOrJoinEnclosingPass — it OPENS a settle exactly like _settleLayoutsAfter when it is the
-// first hop of a cascade; see rule [P] and docs/archive/connection-cascade-settle-fix-plan.md). Everything else
-// is [A]/[B].
-const RECALC_WHITELIST = new Set(['doOneCycle', ...TIERS.all]);
+// first hop of a cascade; see rule [P] and docs/archive/connection-cascade-settle-fix-plan.md) — and the ORACLES outside
+// the world, RECALC_ORACLES: the harness's paint-truthfulness audit (AutomatorPlayer._checkPaintTruthfulness) completes
+// the frame it observes, the layout flush doOneCycle would run, before it baselines the canvas. An oracle that drives no
+// flush this run is a stale entry (B_STALE_RECALC_ORACLE): left in place it would excuse whatever future method reuses
+// the name. Everything else is [A]/[B].
+const RECALC_ORACLES = new Set(['_checkPaintTruthfulness']);
+const RECALC_WHITELIST = new Set(['doOneCycle', ...TIERS.all, ...RECALC_ORACLES]);
 
 const isLowLevel = (name) =>
-  // (the old /^raw[A-Z]/, /^silent/ and /^fullRaw/ arms are all RETIRED: zero raw*/silent*/fullRaw*
-  //  method DEFS exist in src — the geometry/structural families were renamed onto the _/__ tiers
-  //  (§6/§3d), rule [M] bans them from reappearing, and the raw-PIXEL accessors
-  //  (rawPixelInfo/rawPixelHash/rawRGBA) live in the tests-repo harness, which this gate never scans.)
+  // (no /^raw[A-Z]/, /^silent/ or /^fullRaw/ arm: zero raw*/silent*/fullRaw* method DEFS exist in the compiled
+  //  sources — the geometry/structural families sit on the _/__ tiers (§6/§3d) and rule [M] bans them from
+  //  reappearing; the harness's raw-PIXEL data, `rawPixelInfo`, is a parameter, never a method.)
   /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
                             // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop / _amIDirectlyInside*)
@@ -201,7 +210,7 @@ const isImmediateMutator = (name) =>
 // lib/tests-repo-code.js's commandFiles, lib/macro-sources.js's testMacroSourcesIn) AND the shared macro VERBS -- every
 // `Macro.fromString` literal of src (verbMacroSourcesIn), the text alone (the L1/L2 toolkit METHODS around MacroToolkit's
 // are framework code that legitimately uses the low-level API).
-const MACROS_DIR = dirArg(ARGV, '--tests-dir=', path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests'), 'check-layering');
+const MACROS_DIR = dirArg(ARGV, '--tests-dir=', path.join(ROOTS.testsRepo, 'tests'), 'check-layering');
 const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;
 const MACRO_SANCTION = /#\s*macro-private-call-sanctioned:\s*\S/;   // [D] exemption marker, reason required  // renamed geometry mutators + the ex-silent* structural leaves (__hide/__addShadow/__add) are now _-prefixed (caught by _[A-Za-z]); raw* = the pixel API, still macro-forbidden. (the dead fullRaw\w* and silent\w* arms were dropped with the §6-5 / §3d renames.)
 
@@ -313,8 +322,8 @@ const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepar
 // SUBTREE-AWARE vocabulary (fullChanged / fullCopy / fullDestroy / fullBounds / fullPaintInto / fullImage* -- ~25
 // live defs), out of scope for this campaign. Only the specific retired `fullRaw` mover prefix is caught.
 const FRAGMENT_BANNED = /^(silent[A-Z]|raw[A-Z]|fullRaw)/;
-// (no allowlist: the raw-PIXEL accessors (rawPixelInfo/rawPixelHash/rawRGBA — raw pixel DATA, not raw
-// geometry) live in the tests-repo harness, which this gate never scans, so the ban is unconditional in src.)
+// (no allowlist: the ban is unconditional over the compiled sources, the harness included, whose raw-PIXEL data
+// `rawPixelInfo` is a parameter, never a method name.)
 const APPLY_ANDNOTIFY_BANNED = /^_apply\w*AndNotify$/;  // [M] the retired _apply*AndNotify polymorphic-apply suffix (Tier B, 2026-07-02): the corners dropped it to the bare _apply* once the notify seam was deleted (2026-07-01). NB _commit*AndNotify is a DIFFERENT (collapsed) corner, deliberately not caught here.
 
 // [N] the retired notify-by-mutation CONTAINER SEAM must not be re-defined (Opt-4 hygiene guard, 2026-07-01). The two
@@ -400,15 +409,6 @@ function readingOf(file) {
 }
 // a line holding a comment that carries `marker`
 const marks = (line, marker) => (line.comment || '').includes(marker);
-
-function collectCoffee(dir, out) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) collectCoffee(p, out);
-    else if (e.name.endsWith('.coffee')) out.push(p);
-  }
-  return out;
-}
 
 const { methodBoundary } = require('./lib/coffee-method-header');   // class methods AND mixin members, see below
 
@@ -569,6 +569,7 @@ function checkFile(file, violations, gCtx, warnings) {
     if (pub && pub[1] === 'moveTo' && (CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code))) pub = null;
     const txt = code.match(TEXT_SETTER_CALL);
     const recalc = RECALC_CALL.test(code);
+    if (recalc && RECALC_ORACLES.has(tier)) gCtx.excused.recalcOracles.add(tier);
     const invalidate = INVALIDATE_CALL.test(code);
     if (isLowLevel(tier)) {
       if (pub) violations.push(rules.fired('A_PUBLIC_SETTER', `[A] low-level ${method}() calls public setter .${pub[1]}()  — ${at}`));
@@ -676,7 +677,7 @@ function checkFile(file, violations, gCtx, warnings) {
       }
     }
     if (recalc && !RECALC_WHITELIST.has(tier)) {
-      violations.push(rules.fired('B_RECALC_CALLER', `[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`));
+      violations.push(rules.fired('B_RECALC_CALLER', `[B] recalculateLayouts() called from ${method}() (only doOneCycle, the settle tiers and a named oracle may)  — ${at}`));
     }
     if (PUBLIC_SET.has(tier) && pub && pub[1] !== tier) {
       violations.push(rules.fired('C_SETTER_CALLS_SETTER', `[C] public setter ${method}() calls another public setter .${pub[1]}()  — ${at}`));
@@ -794,7 +795,7 @@ function checkMacroText(file, text, lineOf, violations) {
 function main() {
   let files;
   try {
-    files = collectCoffee(SRC, []);
+    files = compiledFiles(ROOTS);
   } catch (e) {
     console.error('check-layering: operational error collecting sources:', e.message);
     process.exit(2);
@@ -807,7 +808,8 @@ function main() {
   const wrapperNames = [...gCtx.settlingClassesByName.keys()];
   gCtx.WRAPPER_CALL = wrapperNames.length
     ? new RegExp('([@.])\\s*(' + wrapperNames.join('|') + ')\\b') : null;
-  gCtx.excused = { deferredSettle: new Set(), connector: new Set(), valve: false };   // the [O]/[Q] caller names that excused a call this run
+  // the [O]/[Q] caller names that excused a call this run, and the [B] oracles that drove a flush
+  gCtx.excused = { deferredSettle: new Set(), connector: new Set(), valve: false, recalcOracles: new Set() };
   const violations = [];
   const warnings = [];
   for (const f of files) {
@@ -827,7 +829,8 @@ function main() {
       catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
     }
   }
-  // the SHARED macro verbs are src: read whether or not the tests repo is
+  // the SHARED macro verbs: every Macro.fromString literal of the compiled sources (src's read whether or not the tests
+  // repo is there)
   for (const f of files) {
     try {
       const verbs = verbMacroSourcesIn(fs.readFileSync(f, 'utf8'), f);
@@ -851,6 +854,9 @@ function main() {
     for (const n of allow) {
       if (!used.has(n)) violations.push(rules.fired(`${rule}_STALE_CALLER_ALLOWLIST`, `[${rule}] STALE_ALLOWLIST_ENTRY ${table} '${n}' — no method named ${n} calls a ${callee} entrypoint this run, so the entry excuses nothing today and would excuse whatever future method reuses the name: delete it (or, if the caller was renamed, allowlist the new name)`));
     }
+  }
+  for (const n of RECALC_ORACLES) {
+    if (!gCtx.excused.recalcOracles.has(n)) violations.push(rules.fired('B_STALE_RECALC_ORACLE', `[B] STALE_ALLOWLIST_ENTRY RECALC_ORACLES '${n}' — no method named ${n} calls recalculateLayouts() this run, so the entry excuses nothing today and would excuse whatever future method reuses the name: delete it (or, if the oracle was renamed, name the new one)`));
   }
   if (!gCtx.excused.valve) {
     violations.push(rules.fired('E_STALE_VALVE_EXEMPTION', `[E] STALE_ALLOWLIST_ENTRY the schedule-valve exemption Widget._applyExtent — no line of Widget._applyExtent reaches _scheduleRelayoutRespectingPhase this run, so the exemption excuses nothing and would excuse whatever future line of that method does: move it with the valve (or delete it)`));

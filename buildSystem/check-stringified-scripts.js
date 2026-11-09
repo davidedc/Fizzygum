@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // check-stringified-scripts.js — build lint: no stringified-code ScriptWdgt literals in core source.
 // Ported from the retired SourceVault.allSourcesContainingStringifiedCodeForScript console tool (P2-T3
-// follow-up). Scans src/ only; mirrors check-thin-wraps.js / check-stinks.js (line scanner; exit 0
-// clean / 1 violation).
+// follow-up). Reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's
+// harness); mirrors check-thin-wraps.js / check-stinks.js (line scanner; exit 0 clean / 1 violation).
 //
 // POLICY: stringified code (`scriptWdgt = new ScriptWdgt """..."""`) should be rare — it belongs in
 // USER code, not the core framework, and even there is ideally temporary and eventually migrated into a
@@ -12,38 +12,29 @@
 // without parentheses; a block string opened on the NEXT line is not seen.
 //
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-stringified-scripts.js
-// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That the rule BITES, and that both
-// sanction placements excuse it, is proven on every build by check-stringified-scripts-selftest.js.
+// [--src=DIR] [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant). That the
+// rule BITES, and that both sanction placements excuse it, is proven on every build by
+// check-stringified-scripts-selftest.js.
 
 const fs = require('fs');
-const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'stringified-scripts');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'stringified-scripts');
 rejectPositionalArgs(ARGV, 'stringified-scripts', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'stringified-scripts');
+const ROOTS = sourceRoots(ARGV, 'stringified-scripts');
 const HIT = /new ScriptWdgt\b\s*\(?\s*["']/;               // a string handed to the constructor: stringified code
 const SANCTION = /#\s*stringified-script-sanctioned:\s*\S/; // marker WITH a non-empty reason
 // each file is read through lib/coffee-mask.js: a hit is matched on bare code (comments and literal contents blanked,
 // a literal's opening quote kept — the string handed to the constructor is the signal), the marker read from a comment
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
-
 const violations = [];
 let sanctioned = 0;
-for (const p of walk(SRC, [])) {
-  const masked = coffeeMask(fs.readFileSync(p, 'utf8'), path.relative(SRC, p));
+for (const p of compiledFiles(ROOTS)) {
+  const masked = coffeeMask(fs.readFileSync(p, 'utf8'), sourceName(p, ROOTS));
   masked.forEach((l, i) => {
     if (!HIT.test(l.bare)) return;
     // sanction: on the line itself, or in the contiguous comment block directly above
@@ -52,7 +43,7 @@ for (const p of walk(SRC, [])) {
       if (SANCTION.test(masked[j].comment)) ok = true;
     }
     if (ok) sanctioned++;
-    else violations.push({ file: path.relative(SRC, p), line: i + 1 });
+    else violations.push({ file: sourceName(p, ROOTS), line: i + 1 });
   });
 }
 

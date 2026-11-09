@@ -44,6 +44,7 @@ const fs = require('fs');
 const path = require('path');
 const { methodSpans } = require('./coffee-method-header');
 const { coffeeMask } = require('./coffee-mask');
+const { compiledFiles, sourceName } = require('./source-files');
 
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;
 const SUPER_CALL = /\bsuper\b/;
@@ -76,18 +77,11 @@ function readDefiner(srcRoot, family) {
   }
   return ownMethods(fs.readFileSync(file, 'utf8'), file);
 }
-function walk(dir, acc) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
-
 // { geometry: [...], text: [...] } — each family's names, longest first (so an alternation built from them
-// reads the longest name first). `srcRoot` = Fizzygum/src.
-function settlingSetters(srcRoot) {
+// reads the longest name first). `roots` = the gate's { src, testsRepo } (lib/source-files.js sourceRoots): the
+// definers are read from src, the overrides from every compiled source (compiledFiles: src and the harness).
+function settlingSetters(roots) {
+  const srcRoot = roots.src;
   const widget = readDefiner(srcRoot, 'geometry');
   const geometry = new Set();
   for (const name of widget.keys()) {
@@ -110,7 +104,7 @@ function settlingSetters(srcRoot) {
   const parentOf = new Map();
   const defsByName = new Map();   // name -> [{ klass, rel, line, body }]
   const derived = new Map([...geometry].map((n) => [n, DEFINERS.geometry[0]]).concat([...text].map((n) => [n, DEFINERS.text[0]])));
-  for (const file of walk(srcRoot, [])) {
+  for (const file of compiledFiles(roots)) {
     const text = fs.readFileSync(file, 'utf8');
     const lines = text.split('\n');
     for (const l of lines) {
@@ -120,9 +114,9 @@ function settlingSetters(srcRoot) {
     let masked;   // read only for a file defining a derived name
     for (const s of methodSpans(lines)) {
       if (s.static || s.mixin || !derived.has(s.name)) continue;
-      masked = masked || coffeeMask(text, path.relative(srcRoot, file));
+      masked = masked || coffeeMask(text, sourceName(file, roots));
       if (!defsByName.has(s.name)) defsByName.set(s.name, []);
-      defsByName.get(s.name).push({ klass: path.basename(file, '.coffee'), rel: path.relative(srcRoot, file), line: s.line + 1, body: bodyOf(masked, s) });
+      defsByName.get(s.name).push({ klass: path.basename(file, '.coffee'), rel: sourceName(file, roots, 'src/'), line: s.line + 1, body: bodyOf(masked, s) });
     }
   }
   const descendsFrom = (klass, ancestor) => {
@@ -134,7 +128,7 @@ function settlingSetters(srcRoot) {
     for (const d of defsByName.get(name) || []) {
       if (d.klass === definer || !descendsFrom(d.klass, definer)) continue;
       if (!settles(d.body) && !d.body.some((l) => SUPER_CALL.test(l))) {
-        problems.push(`${d.klass}.${name} (src/${d.rel}:${d.line}) overrides the settling ${definer}.${name} but neither settles nor calls super — on ${d.klass} the name the gates read as settling does not settle`);
+        problems.push(`${d.klass}.${name} (${d.rel}:${d.line}) overrides the settling ${definer}.${name} but neither settles nor calls super — on ${d.klass} the name the gates read as settling does not settle`);
       }
     }
   }

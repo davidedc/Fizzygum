@@ -5,9 +5,10 @@
 // parse fails; members whose compiled head declares a helper the strip cuts (`%%` → modulo, a parameter-default
 // temporary → ref) fail, named by class and member. The forms the fragmented compile tolerates — a field set before
 // a bare `super`, the three provided helpers (`in`, a slice, `for own`), and a mixin using `%%` (a mixin keeps its
-// helpers) — pass. The tree is src/meta + src/boot + the plants: the gate reads the meta-compiler and the helper
-// globals from those, and the listing finds the plants where core's part claims the src root. Run by
-// buildSystem/run-selftests.js on every build.
+// helpers) — pass; and a harness file's member that does not parse fails, named as the listing names it. The tree is
+// src/meta + src/boot + the plants, beside a copy of the tests repo's code: the gate reads the meta-compiler and the
+// helper globals from those, and the listing finds the plants where core's part claims the src root and the harness
+// part claims the harness. Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -23,6 +24,7 @@ proveGate({
   name: 'check-coffee-syntax',
   gate: path.join(__dirname, 'check-coffee-syntax.js'),
   from: base,
+  testsRepo: true,
   pass: /^syntax check: \d+ files \(\d+ classes, \d+ mixins, \d+ skipped\) — 0 error\(s\); [1-9]\d* class-member fragments checked against the provided helpers \[.*\] — 0 losing a helper$/m,
   control: {
     plants: {
@@ -52,5 +54,10 @@ proveGate({
     },
     lines: [/^FAIL src\/BiteProofParseErrorMixin\.coffee \(8:\d+\)$/m,
             /^FAIL src\/BiteProofHelperLossWdgt\.coffee  BiteProofHelperLossWdgt\.biteProofTemp: its compiled form declares `ref`/m],
+  }, {
+    label: 'a harness file: a member that does not parse',
+    plants: { 'harness/BiteProofHarnessParseError.coffee': lines('class BiteProofHarnessParseError', '',
+      '  biteProofBroken: ->', '    if (', '    2') },
+    expect: { PARSE_ERROR: /^FAIL \.\.\/Fizzygum-tests\/Automator-and-test-harness-src\/BiteProofHarnessParseError\.coffee \(5:\d+\)$/m },
   }],
 });

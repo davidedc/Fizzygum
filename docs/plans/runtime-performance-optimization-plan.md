@@ -310,7 +310,7 @@ two reference-set disruptions.
 Plumbing: `compareScreenshots` (`:248`) and its callers must await the digest (the Automator
 command sequence already advances via per-frame polling — insert the await at the
 screenshot-command completion gate; the world keeps cycling while the hash resolves). Two more
-sync callers exist: `liveCanvasFingerprintNow` (`:62`, paint audit) — await it too — and the
+sync callers exist: `_liveCanvasFingerprintNow` (`AutomatorPlayer`, paint audit) — await it too — and the
 `SystemTestsReferenceImage` **constructor** (`SystemTestsReferenceImage.coffee:28`), which
 cannot `await`; it is capture/failure-only (cold), so leave it on the sync JS `SHA256` (same
 digest by spec). Net: crypto.subtle for the hot path, retained sync JS for the cold path.

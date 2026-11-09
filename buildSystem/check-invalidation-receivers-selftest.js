@@ -1,8 +1,9 @@
 'use strict';
 // check-invalidation-receivers-selftest.js — check-invalidation-receivers.js proved able to BITE, by running the REAL
-// gate on a planted copy of src/ (lib/planted-src.js): reaching over to invalidate another widget fails — in the
-// private spelling, the legacy public one, the world's paint executor, with a sanction marker that gives no
-// reason, and after a string holding `#` on its line; the paint executor renamed away fails the gate as STALE. The sanction on the line and directly above, and
+// gate on a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): reaching over to invalidate
+// another widget fails — in the private spelling, the legacy public one, the world's paint executor, with a sanction
+// marker that gives no reason, after a string holding `#` on its line, and in a harness file (named harness/<path>);
+// the paint executor renamed away fails the gate as STALE. The sanction on the line and directly above, and
 // a self-call written `@` or `this`, pass. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
@@ -11,6 +12,7 @@ const { proveGate } = require('./lib/planted-src');
 proveGate({
   name: 'check-invalidation-receivers',
   gate: path.join(__dirname, 'check-invalidation-receivers.js'),
+  testsRepo: true,
   pass: /invalidation-receivers gate OK/,
   control: {
     plants: {
@@ -54,6 +56,10 @@ proveGate({
       /^  \[invalidation\] src\/BiteProofInvalidationWdgt\.coffee:11 — `other\._changed\(\)`/m,
     ],
     absent: [/BiteProofSanctionedInvalidationWdgt/],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessInvalidationWdgt.coffee': 'class BiteProofHarnessInvalidationWdgt extends Widget\n  reachOver: (other) ->\n    other._changed()\n' },
+    expect: { CROSS_INVALIDATION: /^  \[invalidation\] harness\/BiteProofHarnessInvalidationWdgt\.coffee:3 — `other\._changed\(\)` invalidates another widget$/m },
   }, {
     label: 'the paint executor renamed away',
     edits: [['WorldWdgt.coffee', /^  _repaintDamagedRects(\s*:)/m, '  _repaintDamagedRectsBiteProofRenamed$1']],

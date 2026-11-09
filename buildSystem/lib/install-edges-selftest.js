@@ -21,9 +21,11 @@ function srcWith(boot, support) {
   fs.writeFileSync(path.join(src, 'BpSupport.coffee'), ['class BpSupport', ...support, ''].join('\n'));
   return src;
 }
+// the miniature src alone: a tests repo that does not exist holds no harness (lib/source-files.js harnessFiles)
+const NO_TESTS_REPO = path.join(root, 'no-tests-repo');
 function outcome(src) {
   try {
-    return installEdges(src).map((e) => `${e.support}->${e.target}@${e.bootLine}:${e.members.map((m) => (m.isStatic ? '@' : '') + m.name).join(',')}`).join(' ');
+    return installEdges({ src, testsRepo: NO_TESTS_REPO }).map((e) => `${e.support}->${e.target}@${e.bootLine}:${e.members.map((m) => (m.isStatic ? '@' : '') + m.name).join(',')}`).join(' ');
   } catch (e) { return 'THROWS ' + e.message; }
 }
 const EDGE = '  BpSupport.installOnto Widget if BpSupport?';

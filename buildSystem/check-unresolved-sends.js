@@ -7,8 +7,8 @@
 // the shipped universe is a guaranteed runtime TypeError on any path that reaches it. Pharo
 // ancestry: ReSentNotImplementedRule.
 //
-// UNIVERSE = src/**/*.coffee + the sibling test harness
-// (Fizzygum-tests/Automator-and-test-harness-src/**/*.coffee — harness code is LIVE code: it is
+// UNIVERSE = the compiled sources (lib/source-files.js compiledFiles: src/ and the sibling tests repo's harness,
+// Fizzygum-tests/Automator-and-test-harness-src/ — harness code is LIVE code: it is
 // compiled into every non-homepage build, and src calls into it behind `if Automator?` guards).
 // Its CALLS are also read from every MACRO SOURCE (lib/macro-sources.js: the CoffeeScript alone, as the page compiles
 // it — each test's, never the JS around it, and each verb's, a `Macro.fromString` literal of src or the harness, which
@@ -73,18 +73,17 @@ const path = require('path');
 const defs = require('./lib/name-definitions.js');
 const { coffeeMask } = require('./lib/coffee-mask');
 const { readAllowlist } = require('./lib/allowlist-file');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, harnessFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 // bite-unplantable: BUILTINS_KEYED_OFF_PLATFORM — both sides are this file's own constants (BUILTINS_TABLE, PLATFORM_GLOBALS); a planted src tree reaches neither
 
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-unresolved-sends.js [--src=DIR]
-// — the rail reads another src tree (a copy carrying a plant); the harness and the macros stay the real ones. That
-// every rule BITES — a send left with no callable definition, among them one whose name survives only as a data
-// key, and each way an exemption table goes stale or takes the wrong form — is proven on every build by
-// check-unresolved-sends-selftest.js.
-let SRC = path.resolve(__dirname, '../src');   // main() reads the rail
-const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
-const TESTS_ROOT = path.resolve(__dirname, '../../Fizzygum-tests');
+// [--tests-repo=DIR] — the rails read another src tree or tests repo (a copy carrying a plant); the tests repo's
+// harness and macros are read from the one given. That every rule BITES — a send left with no callable definition,
+// among them one whose name survives only as a data key, and each way an exemption table goes stale or takes the
+// wrong form — is proven on every build by check-unresolved-sends-selftest.js.
+let ROOTS;   // main() reads the rails
 const { macroSources } = require('./lib/tests-repo-code');
 const { verbMacroSourcesIn } = require('./lib/macro-sources');
 const ALLOWLIST = path.resolve(__dirname, 'unresolved-sends-allowlist.txt');
@@ -97,16 +96,6 @@ const readingOf = (p) => {
   if (!readings.has(p) || readings.get(p).text !== text) readings.set(p, { text, masked: coffeeMask(text, p) });
   return readings.get(p).masked;
 };
-
-function walk(dir, ext, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, ext, acc);
-    else if (e.name.endsWith(ext)) acc.push(p);
-  }
-  return acc;
-}
 
 // ─── the implementors ("defs") harvest ──────────────────────────────────────────────────────────
 // The forms (and why each is there) live in lib/name-definitions.js's DEF_FORMS; this reads files.
@@ -128,11 +117,8 @@ function literalReceiver(code, dotIndex) {
   return m ? m[1] : undefined;
 }
 
-// label a path for the report: src-relative, or harness/<file>
-function label(p) {
-  return p.startsWith(SRC) ? 'src/' + path.relative(SRC, p)
-       : 'harness/' + path.relative(HARNESS, p);
-}
+// label a path for the report: src/<file>, or harness/<file> (lib/source-files.js sourceName)
+const label = (p) => sourceName(p, ROOTS, 'src/');
 
 // A macro's sends: each macro source of a file (a test's command file, a .coffee file's verbs), read as CoffeeScript
 // exactly as harvestCalls reads a .coffee file. Every site carries its file's macro sources' OWN definitions (`local`).
@@ -157,7 +143,7 @@ function sendsOfMacroSources(sources, where, at) {
 }
 function harvestMacroCalls(files) {
   const sites = [];
-  for (const { file, sources } of macroSources(TESTS_ROOT)) sites.push(...sendsOfMacroSources(sources, file, path.relative(TESTS_ROOT, file)));
+  for (const { file, sources } of macroSources(ROOTS.testsRepo)) sites.push(...sendsOfMacroSources(sources, file, path.relative(ROOTS.testsRepo, file)));
   for (const p of files) sites.push(...sendsOfMacroSources(verbMacroSourcesIn(fs.readFileSync(p, 'utf8'), p), p, label(p)));
   return sites;
 }
@@ -228,23 +214,23 @@ Math Object Array ArrayBuffer Number String JSON Date Promise performance consol
 // ─── run ────────────────────────────────────────────────────────────────────────────────────────
 function main() {
   const argv = process.argv.slice(2);
-  rejectUnknownArgs(argv, ['--update-allowlist', '--src='], 'unresolved-sends');
+  rejectUnknownArgs(argv, ['--update-allowlist', ...SOURCE_RAILS], 'unresolved-sends');
   rejectPositionalArgs(argv, 'unresolved-sends', 'a src tree is named with --src=DIR');
-  SRC = dirArg(argv, '--src=', SRC, 'unresolved-sends');
-  if (argv.includes('--update-allowlist') && argv.some((a) => a.startsWith('--src='))) {
-    console.error('[unresolved-sends] ERROR — --update-allowlist writes the real allowlist: it never reads another src tree');
+  ROOTS = sourceRoots(argv, 'unresolved-sends');
+  if (argv.includes('--update-allowlist') && argv.some((a) => SOURCE_RAILS.some((r) => a.startsWith(r)))) {
+    console.error('[unresolved-sends] ERROR — --update-allowlist writes the real allowlist: it never reads another src tree or tests repo');
     process.exit(2);
   }
-  if (!fs.existsSync(SRC)) {
+  if (!fs.existsSync(ROOTS.src)) {
     console.error('[unresolved-sends] ERROR — cannot find src/ — run from the Fizzygum repo root.');
     process.exit(2);
   }
-  if (!fs.existsSync(HARNESS)) {
+  if (!harnessFiles(ROOTS.testsRepo)) {
     console.log('[unresolved-sends] SKIP — sibling Fizzygum-tests not present (its harness is part of the definition universe).');
     process.exit(0);
   }
 
-  const files = [...walk(SRC, '.coffee', []), ...walk(HARNESS, '.coffee', [])];
+  const files = compiledFiles(ROOTS);
   const defined = harvestDefs(files);
   const sites = [...harvestCalls(files), ...harvestMacroCalls(files)];
 

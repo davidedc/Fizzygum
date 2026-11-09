@@ -1,8 +1,9 @@
 'use strict';
 // check-stringified-scripts-selftest.js — check-stringified-scripts.js proved able to BITE, by running the REAL gate on
-// a planted copy of src/ (lib/planted-src.js): a ScriptWdgt built from a """ block, a ''' block, a parenthesised
-// block and a one-line string each fail it, and so do a sanction with no reason, one cut off by a blank line, and the
-// words of one written after a heredoc's opening quotes (heredoc text, not a comment); the sanction directly above
+// a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): a ScriptWdgt built from a """ block, a
+// ''' block, a parenthesised block and a one-line string each fail it, and so do a sanction with no reason, one cut off
+// by a blank line, the words of one written after a heredoc's opening quotes (heredoc text, not a comment), and a
+// one-line string in a harness file, named harness/<path>; the sanction directly above
 // (through a second comment line) and on the line itself both pass, counted. Run by
 // buildSystem/run-selftests.js on every build.
 
@@ -13,6 +14,7 @@ const Q3 = '"""';
 proveGate({
   name: 'check-stringified-scripts',
   gate: path.join(__dirname, 'check-stringified-scripts.js'),
+  testsRepo: true,
   pass: /^\[stringified-scripts\] OK/m,
   control: {
     plants: {
@@ -62,5 +64,9 @@ proveGate({
     },
     expect: { STRINGIFIED_SCRIPT: /^  BiteProofStringifiedScript\.coffee:3$/m },
     lines: [6, 9, 12, 15, 19, 21].map((n) => new RegExp(`^  BiteProofStringifiedScript\\.coffee:${n}$`, 'm')),
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessStringifiedScript.coffee': 'class BiteProofHarnessStringifiedScript\n  oneLine: ->\n    s = new ScriptWdgt "1 + 1"\n' },
+    expect: { STRINGIFIED_SCRIPT: /^  harness\/BiteProofHarnessStringifiedScript\.coffee:3$/m },
   }],
 });

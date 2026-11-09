@@ -4,7 +4,8 @@
 // rule. The rule's and the tests-repo reader's own cases are lib/method-references-selftest.js and
 // lib/tests-repo-code-selftest.js. Those are unit tests of the engine; the gate's rules are proven to BITE at the end, by
 // running the REAL gate (the src walk, the tests repo's references, the allowlist, the exit) on a planted copy of src/
-// (lib/planted-src.js). Run by buildSystem/run-selftests.js on every build.
+// and of the tests repo's code (lib/planted-src.js), a method defined in a harness file and reached nowhere failing as
+// dead, named harness/<path>. Run by buildSystem/run-selftests.js on every build.
 
 const { twinName, inventoryOf, independentlyReferenced } = require('./check-dead-methods');
 const { coffeeMask } = require('./lib/coffee-mask');
@@ -54,18 +55,22 @@ for (const [inp, must, mustNot] of lineCases) {
 const fs = require('fs');
 const path = require('path');
 const { proveGate, SRC } = require('./lib/planted-src');
+const { compiledFiles } = require('./lib/source-files');
 const allow = [...readAllowlist(path.join(__dirname, 'dead-method-allowlist.txt')).keys()];
 const publicEntries = allow.filter((n) => /^[a-z]/.test(n));
 const [referenced, twinned] = publicEntries;
-// an entry whose every definition lives in ONE src file, so deleting that file leaves it defined nowhere
-const definers = (n) => fs.readdirSync(SRC, { recursive: true }).filter((f) => String(f).endsWith('.coffee'))
-  .filter((f) => new RegExp(`^  @?${n}\\s*:`, 'm').test(fs.readFileSync(path.join(SRC, String(f)), 'utf8')));
-const undefinedEntry = allow.find((n) => n !== referenced && n !== twinned && definers(n).length === 1);
+// an entry whose every definition among the compiled sources the gate reads lives in ONE src file (the plant can
+// delete only the copy's), so deleting that file leaves it defined nowhere; its path is the copy's, src-relative
+const definers = (n) => compiledFiles({ src: SRC })
+  .filter((f) => new RegExp(`^  @?${n}\\s*:`, 'm').test(fs.readFileSync(f, 'utf8')))
+  .map((f) => path.relative(SRC, f));
+const undefinedEntry = allow.find((n) => n !== referenced && n !== twinned && definers(n).length === 1 && !definers(n)[0].startsWith('..'));
 const cls = (name, ...body) => [`class ${name} extends Widget`, ...body, ''].join('\n');
 proveGate({
   name: 'dead-methods',
   cases: t,
   gate: path.join(__dirname, 'check-dead-methods.js'),
+  testsRepo: true,
   pass: /^\[dead-methods\] OK — /m,
   control: {
     plants: {
@@ -98,8 +103,12 @@ proveGate({
       DEAD_METHOD: /^  biteProofNeverReached  \(BiteProofDead\.coffee:2\)$/m,
       STALE_ENTRY_REFERENCED: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${referenced} — no longer dead: it is referenced$`, 'm'),
       STALE_ENTRY_REDUNDANT: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${twinned} — auto-exempt by settle-tier symmetry \\(live twin _${twinned}NoSettle\\)`, 'm'),
-      STALE_ENTRY_UNDEFINED: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${undefinedEntry} — no method of that name is defined in src$`, 'm'),
+      STALE_ENTRY_UNDEFINED: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${undefinedEntry} — no method of that name is defined in the compiled sources$`, 'm'),
     },
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessDead.coffee': cls('BiteProofHarnessDead', '  biteProofHarnessNeverReached: -> 1') },
+    expect: { DEAD_METHOD: /^  biteProofHarnessNeverReached  \(harness\/BiteProofHarnessDead\.coffee:2\)$/m },
   }],
 });
 

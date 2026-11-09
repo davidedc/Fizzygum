@@ -1,11 +1,16 @@
 # Dead-method allowlist for buildSystem/check-dead-methods.js
-# Methods DEFINED in src that nothing reaches (lib/method-references.js: no property access, whole-name string,
-# name template or computed class access anywhere in src or the tests repo's code), kept on purpose.
+# Methods DEFINED in the compiled sources (src and the harness, lib/source-files.js) that nothing reaches
+# (lib/method-references.js: no property access, whole-name string, name template or computed class access anywhere
+# in them or the tests repo's code), kept on purpose.
 # The lint FAILS on any NEW dead method not here, and on an entry that is no longer dead. Remove a name once you
 # delete the method (or it gains a real caller). One name per line; # = comment. Settle-tier wrapper/core symmetry
 # pairs (a public <name> whose _<name>NoSettle core is live, or vice-versa) are AUTO-exempt via liveSettleTwin, and
 # a method reached by computed dispatch the rule reads (a "_#{action}Connector" template, a FormulaHelpers[name]
 # access) is simply reached -- neither needs an entry here. The entries are grouped by why they stay.
+
+# --- Typed by a person in the browser's devtools console, which no code reads (Fizzygum-tests/CLAUDE.md,
+#     "Running tests (browser devtools console)"). ---
+loadAndRunSingleTestFromName                       # world.automator.loader: run one test by name
 
 # --- Kept as intentional API: coherent families / clean value-class accessors (a member is just currently
 #     unused; deleting it would leave a lopsided surface). ---

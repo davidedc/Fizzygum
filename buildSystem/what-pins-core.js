@@ -64,9 +64,10 @@ const { execFileSync } = require('child_process');
 const { guardedPartsPerLine, isLazyPart, declaredRequires } = require('./lib/part-edge-scan');
 const { coffeeMask } = require('./lib/coffee-mask');
 const { rejectUnknownArgs } = require('./lib/cli-args');
+const { coffeeFilesIn, sourceName } = require('./lib/source-files');
 
 const REPO = path.resolve(__dirname, '..');
-const BOOT_DIRS = ['src/boot', 'src/boot/extensions'];
+const SRC = path.join(REPO, 'src');
 const BOOT = '«boot»';
 
 const argv = process.argv.slice(2);
@@ -248,20 +249,16 @@ function buildGraph(inject) {
     }
   }
 
-  // ROOTS: src/boot/* is compiled at build time and always present, so whatever it names unguarded
-  // is in the image by definition. Everything else is reached THROUGH one of these.
-  for (const d of BOOT_DIRS) {
-    const abs = path.join(REPO, d);
-    if (!fs.existsSync(abs)) continue;
-    for (const fn of fs.readdirSync(abs)) {
-      if (!fn.endsWith('.coffee')) continue;
-      const rel = path.posix.join(d, fn);
-      const text = fs.readFileSync(path.join(REPO, rel), 'utf8');
-      const masked = coffeeMask(text, rel);
-      scanLines(BOOT, { rel, lines: text.split('\n'), code: masked.map((l) => l.bare),
-                        guards: guardedPartsPerLine(masked, ownerOfClass, parts),
-                        behindDoor: false, doorParts: [] });
-    }
+  // ROOTS: src/boot/** is compiled at build time and always present, so whatever it names unguarded
+  // is in the image by definition. Everything else is reached THROUGH one of these. Its files are
+  // lib/source-files.js coffeeFilesIn's (which refuses a malformed tree: SOURCE_TREE_MALFORMED).
+  for (const abs of coffeeFilesIn(path.join(SRC, 'boot'))) {
+    const rel = sourceName(abs, { src: SRC }, 'src/');
+    const text = fs.readFileSync(abs, 'utf8');
+    const masked = coffeeMask(text, rel);
+    scanLines(BOOT, { rel, lines: text.split('\n'), code: masked.map((l) => l.bare),
+                      guards: guardedPartsPerLine(masked, ownerOfClass, parts),
+                      behindDoor: false, doorParts: [] });
   }
   for (const line of inject.bootLines || []) {
     scanLines(BOOT, { rel: '«injected»', lines: [line], code: [coffeeMask(line, 'an injected boot line')[0].bare],

@@ -32,28 +32,34 @@
 // space by design, see its comment) lives in such a helper. ActivePointerWdgt.coffee is skipped
 // wholesale (it IS the hand/dispatcher). Screen-space PLACEMENT of new top-level widgets
 // (open-a-window-at-the-hand) lives outside handler-named methods and is untouched.
-// Both hand-kept names here are held to src, and a stale one FAILS (STALE_ALLOWLIST_ENTRY): an EXTRA
+// Both hand-kept names here are held to the sources it scans, and a stale one FAILS (STALE_ALLOWLIST_ENTRY): an EXTRA
 // handler name no scanned method carries would leave the method it meant silently unscanned, and a
 // SKIPPED class that does not exist means the skip names something that moved.
 //
 // EXEMPTION: a `# raw-screen-pointer-sanctioned: <reason>` marker (non-empty reason) in the comment
 // block directly above the handler header. No current site needs it.
+//
+// The bodies scanned are those of the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's
+// harness); the dispatcher the handler table is held to is src's ActivePointerWdgt.
 
 //
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-raw-pointer-reads.js
-// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That every rule BITES — a raw read, each
-// way the handler table can disagree with the dispatcher, a stale EXTRA_HANDLER_NAMES entry — and that every accepted
-// form passes, is proven on every build by check-raw-pointer-reads-selftest.js.
+// [--src=DIR] [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant). That
+// every rule BITES — a raw read, each way the handler table can disagree with the dispatcher, a stale
+// EXTRA_HANDLER_NAMES entry — and that every accepted form passes, is proven on every build by
+// check-raw-pointer-reads-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'raw-pointer-reads');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'raw-pointer-reads');
 rejectPositionalArgs(ARGV, 'raw-pointer-reads', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'raw-pointer-reads');
+const ROOTS = sourceRoots(ARGV, 'raw-pointer-reads');
+const SRC = ROOTS.src;
 
 const { methodBoundary } = require('./lib/coffee-method-header');   // class AND mixin-member method grouping
 const EXEMPT = /#\s*raw-screen-pointer-sanctioned:\s*\S/;    // marker WITH a non-empty reason
@@ -76,27 +82,18 @@ if (tableProblems.length) {
   process.exit(1);
 }
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 const violations = [];
 let checked = 0, exempt = 0;
-const files = walk(SRC, []);
+const files = compiledFiles(ROOTS);
 const headersSeen = new Set();   // every method name a scanned file defines (EXTRA_HANDLER_NAMES are held to it)
 for (const p of files) {
   const cls = path.basename(p, '.coffee');
   if (SKIPPED_CLASSES.includes(cls)) continue;
   const text = fs.readFileSync(p, 'utf8');
   const lines = text.split('\n');
-  const masked = coffeeMask(text, path.relative(SRC, p));   // a read is matched on bare code; the marker in a comment
+  const masked = coffeeMask(text, sourceName(p, ROOTS));   // a read is matched on bare code; the marker in a comment
   let inHandler = false, handlerName = null, handlerExempt = false;
   let commentBlockHasExempt = false;
   let mixinHashIndent = null;
@@ -122,7 +119,7 @@ for (const p of files) {
     if (!inHandler || handlerExempt) continue;
     const code = masked[n].bare;
     if (RAW_READ.test(code) && !MAPPED.test(code)) {
-      const rel = 'src/' + path.relative(SRC, p).split(path.sep).join('/');
+      const rel = sourceName(p, ROOTS, 'src/');
       violations.push(rules.fired('RAW_READ', `[raw-pointer] ${cls}.${handlerName} reads world.hand.position() unmapped — ${rel}:${n + 1}\n`
         + `    consume the plane-mapped \`pos\` parameter, or map the sample at the read site:\n`
         + `    @screenPointToMyPlane world.hand.position()  (off-island this is the same point;\n`

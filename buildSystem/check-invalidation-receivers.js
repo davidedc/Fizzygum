@@ -5,9 +5,10 @@
 // THE RULE (docs/architecture/widget-citizenship.md, contract point 2). A widget invalidates
 // only itself: `@_changed()` / `@_fullChanged()` — PRIVATE since the 2026-07-22 phase-2
 // rename (invalidation is not exposed as API anywhere; the only external callers are the
-// test ORACLES, sanctioned by name). The paint executor `_repaintDamagedRects` (the world's
+// test ORACLES, each carrying the EXEMPTION marker below). The paint executor `_repaintDamagedRects` (the world's
 // once-per-cycle damage-rect flush) is in the same private family and gated here too — only
-// the world's own cycle runs it; the harness paint audit is its one sanctioned outside caller.
+// the world's own cycle runs it, and an outside caller carries the EXEMPTION marker below (the
+// harness's paint-truthfulness audit, the oracle that forces the ground-truth repaint).
 // If A's action affects B's pixels, B marks itself changed inside
 // the method A invoked on it — A never reaches over with `B._changed()`. The pattern below
 // also matches the pre-rename public spellings so a legacy-name call cannot slip back in.
@@ -40,20 +41,25 @@
 // invalidation requires either moving the mark into the receiver's mutation method (the
 // conforming shape) or a marker with a reason that survives review.
 //
+// It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness); the verbs it
+// gates are read from src's Widget and WorldWdgt.
+//
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-invalidation-receivers.js
-// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). Exit 0 clean / 1 violation /
-// 2 operational. That both rules BITE, and that every sanctioned form passes, is proven on every build by
-// check-invalidation-receivers-selftest.js.
+// [--src=DIR] [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant). Exit 0
+// clean / 1 violation / 2 operational. That both rules BITE, and that every sanctioned form passes, is proven on every
+// build by check-invalidation-receivers-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'invalidation-receivers');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'invalidation-receivers');
 rejectPositionalArgs(ARGV, 'invalidation-receivers', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'invalidation-receivers');
+const ROOTS = sourceRoots(ARGV, 'invalidation-receivers');
+const SRC = ROOTS.src;
 
 // WHAT IS GATED, READ FROM THE SOURCE rather than spelled here: the repaint verbs Widget defines
 // (lib/repaint-verbs.js — `_changed`, `_fullChanged`, the `_fullChanged…` variants), each also in its
@@ -77,15 +83,6 @@ const RECEIVER_CHARS = /[\w$@?.()\[\]]/;
 const ALLOWED = new Set([]);   // no receiver is exempt — see the header
 const SELF = new Set(['this', '@']);   // `this._changed()` is the self-call `@_changed()` spelled out: not a site at all
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 function receiverBefore(code, dotIndex) {
   let start = dotIndex;
@@ -95,8 +92,8 @@ function receiverBefore(code, dotIndex) {
 
 const violations = [];
 let sites = 0, allowed = 0, sanctioned = 0;
-for (const p of walk(SRC, [])) {
-  const rel = 'src/' + path.relative(SRC, p).split(path.sep).join('/');
+for (const p of compiledFiles(ROOTS)) {
+  const rel = sourceName(p, ROOTS, 'src/');
   const masked = coffeeMask(fs.readFileSync(p, 'utf8'), rel);
   let pendingSanction = false;                       // set by a marker comment line, consumed by the next code line
   for (let n = 0; n < masked.length; n++) {

@@ -18,7 +18,8 @@
 //                                                              → EXTRA_ARGUMENT ×2, POSITIONAL_INTO_OPTIONS
 //   the tests repo: a harness `@bpH 1, 2, 3, 4`, a script `bpLocal(1, 2, 3, 4)`, a macro `new BpButton 1, 2, @`
 //                                                              → EXTRA_ARGUMENT ×2, POSITIONAL_INTO_OPTIONS
-//   a macro that does not parse; a tests repo with no harness, no macro and no script     → INVALID (exit 2), no rule
+//   a macro that does not parse; a tests repo whose harness holds no file (SOURCE_TREE_MALFORMED); one with a harness
+//   but no macro and no script                                                           → INVALID (exit 2), no rule
 // Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
@@ -87,6 +88,7 @@ const arityRepo = repo({
 });
 const badRepo = repo({ [HARNESS]: harness(['@bpH 1, 2, 3']), ...META, [MACRO]: macro('  f ('), 'scripts/s.js': 'ok();\n' });
 const emptyRepo = repo({});
+const harnessOnlyRepo = repo({ [HARNESS]: harness(['@bpH 1, 2, 3']) });
 
 proveGate({
   name: 'check-call-arguments',
@@ -136,10 +138,16 @@ proveGate({
     exit: 2,
     lines: [/SystemTest_bp_automationCommands\.js.*CoffeeScript/, /^\[call-arguments\] INVALID — 1 source\(s\) it cannot read/m],
   }, {
-    label: 'a tests repo holding no harness, no macro and no script',
+    label: 'a tests repo whose harness holds no file',
     plants: src(),
     args: [emptyRepo],
     exit: 2,
-    lines: [/^\[call-arguments\] INVALID — it read 0 harness file\(s\), 0 macro source\(s\) and 0 script\(s\)/m],
+    lines: [/^\[call-arguments\] INVALID — SOURCE_TREE_MALFORMED \S*Automator-and-test-harness-src: it holds no \.coffee file/m],
+  }, {
+    label: 'a tests repo holding a harness, no macro and no script',
+    plants: src(),
+    args: [harnessOnlyRepo],
+    exit: 2,
+    lines: [/^\[call-arguments\] INVALID — it read 0 macro source\(s\) and 0 script\(s\)/m],
   }],
 });

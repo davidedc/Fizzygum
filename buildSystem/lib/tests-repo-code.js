@@ -36,13 +36,13 @@ const path = require('path');
 const { coffeeMask } = require('./coffee-mask');
 const { maskJs, parseJs } = require('./js-mask');
 const { testMacroSourcesIn } = require('./macro-sources');
+const { harnessFiles, TESTS_REPO: DEFAULT_ROOT, byCodePoint } = require('./source-files');
 
-const DEFAULT_ROOT = path.resolve(__dirname, '../../../Fizzygum-tests');
-
+// the Node rigs: every .js file under scripts/ but a dot directory's (a gitignored `.scratch/`) or a node_modules'
 function walk(dir, keep, acc) {
   if (!fs.existsSync(dir)) return acc;
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (e.name === 'node_modules' || e.name === 'automation-assets' || e.name.startsWith('.')) continue;
+    if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p, keep, acc);
     else if (keep(e.name)) acc.push(p);
@@ -79,7 +79,7 @@ function macroCode(text, file) {
 
 // THE TESTS — what the harness plays, and the two files it loads for each, by name. Every DIRECTORY of tests/ is a test
 // (the manifest lists exactly these: scripts/lib/tests-manifests.js), each one named `SystemTest_<x>` and holding its
-// metadata, `<name>.js`, and its commands, `<name>_automationCommands.js` — the paths AutomatorLoader's loadTestMetadata
+// metadata, `<name>.js`, and its commands, `<name>_automationCommands.js` — the paths AutomatorLoader's _loadTestMetadata
 // and loadTest build from the name. A directory that is not such a test is refused, TESTS_DIRECTORY_MALFORMED naming
 // it, never skipped: the harness would play it, so a reader that passed it over would pass a test it never read.
 // `testsDir` is the tests/ directory (a gate's --tests-dir= rail hands it another).
@@ -91,7 +91,6 @@ function macroCode(text, file) {
 //   commandFiles(testsDir)       every test's command file
 const DEFAULT_TESTS = path.join(DEFAULT_ROOT, 'tests');
 const TEST_PREFIX = 'SystemTest_';
-const byCodePoint = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const commandFileOf = (testsDir, name) => path.join(testsDir, name, name + '_automationCommands.js');
 const metadataFileOf = (testsDir, name) => path.join(testsDir, name, name + '.js');
 const testNameOf = (word) => (word.startsWith(TEST_PREFIX) ? word : TEST_PREFIX + word);
@@ -119,16 +118,18 @@ function macroSources(root = DEFAULT_ROOT) {
 }
 
 // THE FILE SET — which files of the tests repo are code, by kind: { harness, macro, script }, each sorted absolute
-// paths; undefined when the repo is absent (no harness or no tests/ directory). The readers of the repo's code as a
-// whole take their files from here (testsRepoCode, macroSources, the call-sites table), so those cannot disagree about
-// what is code; a gate that reads the tests one by one takes them from testNames.
+// paths; undefined when the repo is absent. The harness is lib/source-files.js's harnessFiles, the one definition every
+// gate reading the compiled sources shares (it refuses a tests repo without a harness, SOURCE_TREE_MALFORMED); the macros
+// are THE TESTS' command files. The readers of the repo's code as a whole take their files from here (testsRepoCode,
+// the call-sites table), so those cannot disagree about what is code; a gate that reads the tests one by one takes them
+// from testNames.
 function testsRepoFiles(root = DEFAULT_ROOT) {
-  const harness = path.join(root, 'Automator-and-test-harness-src');
-  if (!fs.existsSync(harness) || !fs.existsSync(path.join(root, 'tests'))) return undefined;
+  const harness = harnessFiles(root);
+  if (!harness) return undefined;
   return {
-    harness: walk(harness, (n) => n.endsWith('.coffee'), []).sort(),
+    harness,
     macro: commandFiles(path.join(root, 'tests')),
-    script: walk(path.join(root, 'scripts'), (n) => n.endsWith('.js'), []).sort(),
+    script: walk(path.join(root, 'scripts'), (n) => n.endsWith('.js'), []).sort(byCodePoint),
   };
 }
 

@@ -31,6 +31,7 @@
 const fs = require('fs');
 const path = require('path');
 const cs1 = require('coffeescript-v1'); // npm alias of coffeescript@1.12.7
+const { coffeeFilesIn } = require('./lib/source-files');
 
 const outDir = process.argv[2];
 if (!outDir) {
@@ -50,17 +51,15 @@ const PREAMBLE_HELPERS = [
   'modulo = function(a, b) { return (+a % (b = +b) + b) % b; }',
 ];
 
-const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-  const p = path.join(dir, e.name);
-  return e.isDirectory() ? walk(p) : (e.name.endsWith('.coffee') ? [p] : []);
-});
+// srcRoot's .coffee files, as lib/source-files.js lists them (it refuses a malformed tree: SOURCE_TREE_MALFORMED)
+const files = coffeeFilesIn(srcRoot);
 
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 
 const failures = [];
 let ok = 0;
-for (const file of walk(srcRoot)) {
+for (const file of files) {
   const rel = path.relative(srcRoot, file);
   const shimmed = fs.readFileSync(file, 'utf8').replace(/\bsuper\b/g, '__SUPER__');
   let js;

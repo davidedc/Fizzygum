@@ -389,7 +389,7 @@ boot = ->
     window.FIZZYGUM_POINTER_KIND = bootQueryParams.get("pointer")
 
   # ?intro=0|off — suppress the per-test faded TITLE/DESCRIPTION slide the test
-  # player shows BEFORE each SystemTest (AutomatorPlayer.setUpIntroSlide). That
+  # player shows BEFORE each SystemTest (AutomatorPlayer._setUpIntroSlide). That
   # slide is purely for a HUMAN watching a run; it costs a fixed ~2.5s of real
   # wall-clock per test (a 2s dwell + a 0.5s fade), unaffected by ?speed=, so for
   # a headless/CI sweep it is ~half the total runtime and pure waste. It is

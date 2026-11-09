@@ -28,10 +28,10 @@
  *
  * WHERE THE NAMES COME FROM. The settle tiers are READ from Widget by lib/settle-tiers.js, the
  * repaint verbs by lib/repaint-verbs.js, and the immediate geometry mutators are the named groups of
- * lib/immediate-mutators.js, which holds them to src both ways (every entry names a method defined in
- * src; every Widget-own `_apply*`/`_commit*` method is claimed by a group or listed in its NOT_CORNERS);
- * each library throws when its names are stale. The rest of FAMILIES is a stated table held to src
- * here: every entry must match a method defined in src. An entry that matches nothing is a family that
+ * lib/immediate-mutators.js, which holds them to the compiled sources both ways (every entry names a method
+ * defined there; every Widget-own `_apply*`/`_commit*` method is claimed by a group or listed in its NOT_CORNERS);
+ * each library throws when its names are stale. The rest of FAMILIES is a stated table held to the compiled
+ * sources here: every entry must match a method defined there. An entry that matches nothing is a family that
  * moved, and the methods it should recognise would fall to 'plain' with nothing said.
  *
  * Parsing machinery: every source is read through lib/coffee-mask.js (each line's bare code: comments
@@ -39,15 +39,24 @@
  * lib/coffee-method-header.js methodBoundary (2-space class methods, mixin onceAddedClassProperties
  * members).
  *
+ * It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
+ *
  * Exit 0 whatever buckets A/B hold (advisory). Exit 2, before any census is printed, when the
  * census's own names are stale: a library throw, or a stated FAMILIES entry that names nothing.
- * Run from anywhere: node buildSystem/census-nosettle-naming.js
+ * Run from anywhere: node buildSystem/census-nosettle-naming.js [--src=DIR] [--tests-repo=DIR] (the rails read
+ * another src tree / tests repo)
  */
 
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 
-const SRC = path.join(__dirname, '..', 'src');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'census-nosettle-naming');
+rejectPositionalArgs(ARGV, 'census-nosettle-naming', 'a src tree is named with --src=DIR');
+const ROOTS = sourceRoots(ARGV, 'census-nosettle-naming');
+const SRC = ROOTS.src;
 const { methodBoundary } = require('./lib/coffee-method-header');
 
 let SETTLE_TIERS, REPAINT_VERBS, IMMEDIATE_MUTATORS;
@@ -57,7 +66,7 @@ try {
   // the immediate geometry mutators: they mutate geometry in place and never settle, so they carry no suffix —
   // every group of the module (the polymorphic apply corners, their arrange-bypass *Base twins, the silent
   // commit corner, the convenience movers / setters / resizer)
-  IMMEDIATE_MUTATORS = require('./lib/immediate-mutators').immediateMutators(SRC).all;
+  IMMEDIATE_MUTATORS = require('./lib/immediate-mutators').immediateMutators(ROOTS).all;
 } catch (e) { console.error('census-nosettle-naming: operational error:', e.message); process.exit(2); }
 const SETTLE_CALL = new RegExp('[@.]\\s*(' + SETTLE_TIERS.join('|') + ')\\b');   // any tier: the single one or the join lane
 
@@ -86,20 +95,10 @@ function familyOf(name) {
 
 const { coffeeMask } = require('./lib/coffee-mask');
 
-
-function collectCoffee(dir, out) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) collectCoffee(p, out);
-    else if (e.name.endsWith('.coffee')) out.push(p);
-  }
-  return out;
-}
-
 // Pass 1: every method def, with its body lines (code-stripped, with raw indent kept).
 const defs = [];   // { klass, method, rel, line, body: [{n, code, indent}], settles }
-for (const file of collectCoffee(SRC, [])) {
-  const rel = path.relative(path.join(__dirname, '..'), file);
+for (const file of compiledFiles(ROOTS)) {
+  const rel = sourceName(file, ROOTS, 'src/');
   const klass = path.basename(file, '.coffee');
   const text = fs.readFileSync(file, 'utf8');
   const lines = text.split('\n');
@@ -131,14 +130,14 @@ for (const file of collectCoffee(SRC, [])) {
   flush();
 }
 
-// The stated families held to src (see the header): an entry naming nothing stops the census before it prints a
-// picture keyed on stale names. (The library-read families were held where they are read, above.)
+// The stated families held to the compiled sources (see the header): an entry naming nothing stops the census before it
+// prints a picture keyed on stale names. (The library-read families were held where they are read, above.)
 const definedNames = new Set(defs.map(d => d.method));
 const staleness = [];
 for (const [fam, entries, source] of FAMILIES) {
   if (source === 'read') continue;
   for (const e of entries) {
-    if (![...definedNames].some(n => entryMatches(e, n))) staleness.push(`STALE_ALLOWLIST_ENTRY FAMILIES ${fam}: ${e} matches no method defined in src`);
+    if (![...definedNames].some(n => entryMatches(e, n))) staleness.push(`STALE_ALLOWLIST_ENTRY FAMILIES ${fam}: ${e} matches no method defined in the compiled sources`);
   }
 }
 if (staleness.length) {

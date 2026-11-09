@@ -14,8 +14,10 @@
 // decoration — it is what a future reader gets INSTEAD of the arguing; write it for someone who
 // does not already agree.
 //
-// Scope: src/**/*.coffee only (NOT the sibling test harness) — a stink is a statement about the
-// SHIPPED framework's idiom. Per-LINE regex over each line as lib/coffee-mask.js reads it: a code-scope
+// Scope: the compiled sources, src/ and the tests repo's harness alike (lib/source-files.js compiledFiles) — each
+// repo's conventions claim its harness (one absence value, no retired markers, comments that state what IS), so a
+// stink holds the harness as it holds src, and a harness site that is not the smell is `sanctioned` by name like any
+// other (the harness's own DOM overlay animating in real time, say). Per-LINE regex over each line as lib/coffee-mask.js reads it: a code-scope
 // stink matches the line's BARE code (its comment and every literal's contents blanked), so a string
 // that mentions `null` or `debugger` is not the smell; there is no multi-line matcher (an empty-catch
 // stink would need one — plan §8.9).
@@ -57,19 +59,21 @@
 const fs = require('fs');
 const path = require('path');
 const { mixinMemberIndent } = require('./lib/coffee-method-header');   // a mixin hash's member indent
-const { rejectUnknownArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-stinks.js [--src=DIR]
-// [--list <id>] — the rail scans another src tree (a copy carrying a plant). That every stink, and every way a
-// `sanctioned` or `exclude` entry can go stale, BITES is proven on every build by check-stinks-selftest.js.
+// [--tests-repo=DIR] [--list <id>] — the rails scan another src tree or tests repo (a copy carrying a plant); the
+// files are the compiled sources (lib/source-files.js compiledFiles). That every stink, and every way a `sanctioned`
+// or `exclude` entry can go stale, BITES is proven on every build by check-stinks-selftest.js.
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src=', '--list'], 'stinks');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS, '--list'], 'stinks');
 {
   const stray = ARGV.find((a, i) => !a.startsWith('--') && ARGV[i - 1] !== '--list');
   if (stray !== undefined) { console.error(`[stinks] ERROR — unexpected argument '${stray}' (a src tree is named with --src=DIR)`); process.exit(2); }
 }
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'stinks');
+const ROOTS = sourceRoots(ARGV, 'stinks');
 
 // Seeded 2026-07-15 (docs/archive/lint-generic-rules-carryover-plan.md Phase 2), carrying over the generic
 // cruft/idiom rules from Pharo's SmallLint/Renraku catalogue. Every baseline below was MEASURED by
@@ -90,9 +94,22 @@ const STINKS = [
     re: /\bnil\b/ },
   { id: 'null-literal', baseline: 6,   // tightened 9->8 on 2026-08-13 (the DemoMenus stack-panel `null`s were a live CS2 default-param bug); 8->6 on 2026-10-25 (save/restore-fidelity arc: SimpleImageWdgt no longer tears down a replaced Image load with `onload = null` / `@img = null` -- a replaced load runs to its end and claims nothing)
     why: "the codebase uses `undefined` as its ONE absence value, never `null` — the JS-interop sites (JSON.stringify's arg, DOM `onload = null`) are the tolerated tail",
+    // the harness's DOM tail: a script tag's handlers cleared once it has loaded
+    sanctioned: [
+      { file: 'harness/AutomatorLoader.coffee', member: 'loadTest', count: 1, why: "a loaded script tag's `onload` cleared: the DOM's own reset value" },
+      { file: 'harness/AutomatorLoader.coffee', member: 'loadImagesOfTest', count: 1, why: "a loaded script tag's `onload` and `onerror` cleared: the DOM's own reset value" },
+      { file: 'harness/AutomatorLoader.coffee', member: '_loadTestMetadata', count: 1, why: "a loaded script tag's `onload` cleared: the DOM's own reset value" },
+    ],
     re: /\bnull\b/ },
-  { id: 'wall-clock', baseline: 19,
+  { id: 'wall-clock', baseline: 13,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it
     why: 'Date.now()/new Date() in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock)',
+    // the harness's own clocks, which no world reads: its DOM overlay fades in real time, and its run clock times a run
+    sanctioned: [
+      { file: 'harness/Automator.coffee', member: '@fade', count: 1, why: "a fade of the control panel's DOM overlay starts at the real time it is asked for" },
+      { file: 'harness/Automator.coffee', member: '@_fadeStep', count: 1, why: "a fade step of the control panel's DOM overlay, paced in real time" },
+      { file: 'harness/AutomatorPlayer.coffee', member: '_timeSinceStartOfTestsAsString', count: 1, why: 'the run clock the control panel shows, in real time' },
+      { file: 'harness/AutomatorPlayer.coffee', member: 'runAllSystemTests', count: 1, why: 'the run clock starts when a run starts' },
+    ],
     re: /\b(Date\.now\s*\(|new Date\s*\()/ },
   { id: 'timer', baseline: 4,   // raised 3->4 on 2026-08-04: SourceCompileScheduler._ensurePumpScheduled pumps the compile-at-boot ingest, which runs only while NO world exists (same nature as the waitNextJSEventLoopCycle timer beside it) — bug-class B needs a live suite world to bite
     why: 'setTimeout/setInterval diverge at dpr2 under parallel load (DETERMINISM.md bug-class B: heavy cycles starve timers); the cycle/step machinery is the sanctioned clock',
@@ -102,6 +119,9 @@ const STINKS = [
     re: /\bMath\.random\b/ },
   { id: 'instanceof-type-test', baseline: 74,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines); 95->93 (2026-07-30, banking a gain already landed; fg critique surfaced it); 93->88 (2026-08-04, layout spec-family arc: the enum dispatch + 5 spec-class instanceofs became capability queries); 88->87 (2026-08-09, banking a gain already landed; surfaced by the comments-audit stink run); 87->77 (2026-08-19, scroll-frame role arc: the viewport/plane role queries retired the composite's instanceof tests; surfaced by the comments-audit stink run); 77->78 (2026-08-19, paint-time-scroll-translation Phase 1: Widget._enclosingMappedPlaneRoot is a new canonical mapping walk and uses the walks' one island test); 78->81 (2026-08-20, WorldInventory: a reflective walker over arbitrary/host objects needs 3 tests no polymorphism can express — Widget for zombie identity, Node for DOM leaves, ArrayBuffer for typed-array leaves; the Map/Set tests delegate to NativeValueKinds); 81->80 (2026-08-26, gesture grammar P2: the macro toolkit's move verb resolved a Widget target to a screen point TWICE inline, and the finger verbs need the same resolution -- one _screenPointOfTarget now answers for all of them); 80->77 (2026-10-16, banking a gain gesture grammar P3 landed on 2026-08-26 without tightening: the macro toolkit's _widgetOfTarget decides "which widget" a verb was aimed at in one place, so four inline `instanceof Array` identifier tests became one; surfaced by this gate's own UNDER line); 77->76 (2026-10-18, redesign W2: the tooltip lays its text out one TextWdgt per line and no longer type-tests its contents widget); 76->75 (2026-10-20, redesign W5: the vertical stack picks a drop's slot by its children's middles, and its `instanceof Point` guard on the drop point goes); 75->74 (2026-11-07, every-gate-bites Unit 0: banking a gain already landed — one new `instanceof` passed while the count sat UNDER)
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
+    sanctioned: [
+      { file: 'harness/WidgetTestSupport.coffee', member: 'serialiseToMemory', count: 1, why: "a catch telling the serializer's own refusal (SerializationError) from a bug: an exception's class is what it is" },
+    ],
     re: /\binstanceof\b/ },
   // (No stink for CoffeeScript helper-compiling constructs such as `%%`: check-coffee-syntax.js compiles every
   // class member the browser's way and fails any whose stripped `var` head declares a name boot does not
@@ -133,6 +153,8 @@ const STINKS = [
       { file: 'WorldWdgt.coffee', member: '_showDamageRects', count: 1, why: 'the debug damage overlay: random colours by design' },
       { file: 'WorldWdgt.coffee', member: '_initVirtualKeyboard', count: 2, why: 'styling of an invisible DOM <input>, not canvas paint' },
       { file: 'mixins/BackBufferMixin.coffee', member: 'getPixelColor', count: 1, why: 'value plumbing: a Color built from read pixel bytes' },
+      { file: 'harness/WorldTestSupport.coffee', member: 'nextStartupAction', count: 1, why: "the harness page's DOM background when a startup run ends, not canvas paint" },
+      { file: 'harness/WorldTestSupport.coffee', member: '_sizeCanvasToTestScreenResolution', count: 1, why: "the harness page's DOM background around the test canvas, not canvas paint" },
     ],
     readsLiterals: true,   // a CSS colour lives in a string ('#325FA2'), a tool's colours in its source heredoc
     re: /\bColor\.create|\bnew Color\b|\bColor\.[A-Z][A-Z0-9_]*\b|(['"])#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})\1|['"]rgba?\(/ },
@@ -152,24 +174,16 @@ const STINKS = [
     re: /\b(was|were) `|\bthis once was\b|\bformerly\b|\brenamed from\b/i },
 ];
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
-// each src file's lines and lib/coffee-mask.js reading, read once for every stink
+// each scanned file's lines and lib/coffee-mask.js reading, read once for every stink
 const { coffeeMask } = require('./lib/coffee-mask');
 const readings = new Map();
 function readingOf(p) {
   if (!readings.has(p)) { const text = fs.readFileSync(p, 'utf8'); readings.set(p, { lines: text.split('\n'), masked: coffeeMask(text, srcRelative(p)) }); }
   return readings.get(p);
 }
-// src-relative, '/'-separated: the form `exclude` prefixes and `sanctioned` files are written in
-const srcRelative = p => path.relative(SRC, p).split(path.sep).join('/');
+// src-relative, '/'-separated: the form `exclude` prefixes and `sanctioned` files are written in (a harness file's is
+// `harness/<path>`, lib/source-files.js sourceName)
+const srcRelative = p => sourceName(p, ROOTS);
 
 // the ENCLOSING MEMBER of line i, as `sanctioned` names it (header comment): the nearest class-body
 // key above at the 2-space indent, or — in a mixin file — at `memberIndent`, the indent its hash's
@@ -195,8 +209,8 @@ if (listIdx >= 0 && !STINKS.some(s => s.id === listId)) {
 }
 
 rules.declare(STINKS.map((s) => s.id));
-const files = walk(SRC, []);
-let over = 0;        // total occurrences ABOVE baseline (a build failure)
+const files = compiledFiles(ROOTS);
+let over = 0;       // total occurrences ABOVE baseline (a build failure)
 let ratchetable = 0; // stinks now BELOW baseline (a chance to tighten)
 let badSanctions = 0; // STALE or COUNT-mismatched `sanctioned` entries (a build failure)
 let staleExcludes = 0; // `exclude` prefixes no src path starts with (a build failure)
@@ -213,7 +227,7 @@ for (const stink of STINKS) {
     lines.forEach((line, i) => {
       const subject = stink.scope === 'comments' ? masked[i].comment : stink.readsLiterals ? masked[i].code : masked[i].bare;
       if (subject === undefined || !stink.re.test(subject)) return;
-      const hit = `${path.relative(SRC, p)}:${i + 1}: ${line.trim()}`;
+      const hit = `${srcRelative(p)}:${i + 1}: ${line.trim()}`;
       hits.push(hit);
       if (stink.sanctioned) {
         const key = `${rel}::${enclosingMember(lines, i, memberIndent)}`;

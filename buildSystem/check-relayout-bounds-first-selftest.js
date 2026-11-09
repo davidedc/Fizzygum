@@ -1,8 +1,9 @@
 'use strict';
 // check-relayout-bounds-first-selftest.js — check-relayout-bounds-first.js proved able to BITE, by running the REAL
-// gate on a planted copy of src/ (lib/planted-src.js): a _reLayout reading its own geometry before applying its
-// bounds fails, and so does one reading before it delegates to the own-contents template, one whose only "super"
-// is in a string, and one reading after a string holding `#` on its line; a _layOutOwnContents hook whose class never routes through the template fails. Every accepted
+// gate on a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): a _reLayout reading its own
+// geometry before applying its bounds fails, and so does one reading before it delegates to the own-contents template,
+// one whose only "super" is in a string, one reading after a string holding `#` on its line, and one in a harness file
+// (named harness/<path>); a _layOutOwnContents hook whose class never routes through the template fails. Every accepted
 // shape rides the control and is COUNTED into its bucket (apply-first ×4: granted bounds, the setBounds twin,
 // move + extent, super; template ×2: a delegating class and its hook-only subclass; no geometry read ×1; the marker
 // ×1). Run by buildSystem/run-selftests.js on every build.
@@ -19,6 +20,7 @@ const relayout = (cls, parent, ...body) => [`class ${cls} extends ${parent}`, ' 
 proveGate({
   name: 'check-relayout-bounds-first',
   gate: GATE,
+  testsRepo: true,
   pass: /^\[relayout-bounds-first\] OK -- every _reLayout applies its own bounds before reading its own geometry\.$/m,
   control: {
     plants: {
@@ -49,5 +51,9 @@ proveGate({
     lines: [/^  BiteProofReadBeforeDelegateWdgt\._reLayout  \(BiteProofReadBeforeDelegateWdgt\.coffee:2\)/m,
             /^  BiteProofStringSuperWdgt\._reLayout  \(BiteProofStringSuperWdgt\.coffee:2\) -- first own-geometry read at line 4:/m,
             /^  BiteProofReadAfterHashWdgt\._reLayout  \(BiteProofReadAfterHashWdgt\.coffee:2\) -- first own-geometry read at line 3:/m],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessReadFirstWdgt.coffee': relayout('BiteProofHarnessReadFirstWdgt', 'Widget', '    @bpX = @width()', '    @_applyGrantedBounds newBoundsForThisLayout') },
+    expect: { READS_BEFORE_APPLY: /^  BiteProofHarnessReadFirstWdgt\._reLayout  \(harness\/BiteProofHarnessReadFirstWdgt\.coffee:2\) -- first own-geometry read at line 3:  @bpX = @width\(\)$/m },
   }],
 });

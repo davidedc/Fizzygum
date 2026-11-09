@@ -68,19 +68,26 @@
  *     indentation-significant, so flattening it would equate different programs.
  *
  * USAGE (run from the Fizzygum/ repo root, like the gates):
- *   node ./buildSystem/census-hierarchy-duplication.js [--json out.json] [--full]
+ *   node ./buildSystem/census-hierarchy-duplication.js [--json out.json] [--full] [--src=DIR] [--tests-repo=DIR]
+ * It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness); the rails
+ * read another src tree / tests repo.
  * Exit codes: 0 = ran · 2 = operational error.
  */
 
 const fs = require('fs');
-const path = require('path');
 const { runCensus } = require('./census-public-private-calls.js');
 const { coffeeMask } = require('./lib/coffee-mask');
+const { rejectUnknownArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 
-const SRC = path.resolve(__dirname, '../src');
-const FULL = process.argv.includes('--full');
-const jsonIdx = process.argv.indexOf('--json');
-const JSON_OUT = jsonIdx >= 0 ? process.argv[jsonIdx + 1] : null;
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS, '--full', '--json'], 'census-hierarchy-duplication');
+const ROOTS = sourceRoots(ARGV, 'census-hierarchy-duplication');
+const FULL = ARGV.includes('--full');
+const jsonIdx = ARGV.indexOf('--json');
+const JSON_OUT = jsonIdx >= 0 ? ARGV[jsonIdx + 1] : null;
+// each compiled source by the name the class model gives its file (lib/source-files.js sourceName)
+const FILE_OF = new Map(compiledFiles(ROOTS).map((f) => [sourceName(f, ROOTS), f]));
 
 // ── body extraction ─────────────────────────────────────────────────────────────────────────────
 
@@ -89,7 +96,7 @@ const strippedCache = new Map();
 function strippedLinesOf(relFile) {
   let lines = strippedCache.get(relFile);
   if (lines) return lines;
-  lines = coffeeMask(fs.readFileSync(path.join(SRC, relFile), 'utf8'), relFile).map((line) => line.code);
+  lines = coffeeMask(fs.readFileSync(FILE_OF.get(relFile), 'utf8'), relFile).map((line) => line.code);
   strippedCache.set(relFile, lines);
   return lines;
 }
@@ -142,7 +149,7 @@ function bodyTextOf(rec) {
 // ── run ─────────────────────────────────────────────────────────────────────────────────────────
 let out;
 try {
-  out = runCensus();
+  out = runCensus(ROOTS);
 } catch (e) {
   console.error('[hierarchy-duplication] ERROR — ' + e.message);
   process.exit(2);

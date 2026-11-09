@@ -25,23 +25,23 @@
 // It also checks PAIRING: an opener whose region never closes would silently swallow the rest of
 // the file in the stripped flavour. That is a hard failure at any baseline.
 //
-// Scope: src/**/*.coffee only. Runs for every build flavour (the count is a property of the source,
-// not of what is being built).
+// Scope: the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness). Runs for every
+// build flavour (the count is a property of the source, not of what is being built).
 //
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-region-markers.js [--src=DIR]
-// — the rail checks another src tree (a copy carrying a plant). That every kind, the pairing rule and the
-// unknown-marker rule BITE, and that prose about the mechanism passes, is proven on every build by
-// check-region-markers-selftest.js.
+// [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant). That every kind, the
+// pairing rule and the unknown-marker rule BITE, and that prose about the mechanism passes, is proven on every build
+// by check-region-markers-selftest.js.
 
 const fs = require('fs');
-const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'region-markers');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'region-markers');
 rejectPositionalArgs(ARGV, 'region-markers', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'region-markers');
+const ROOTS = sourceRoots(ARGV, 'region-markers');
 
 // Baselines MEASURED by this engine. Arc 3 started at 58 homepage + 3 macros + 2 video-player = 63
 // openers, all paired; each phase that re-homes sites tightens the number here to lock the gain in.
@@ -68,23 +68,13 @@ rules.declare(KINDS.map((k) => k.id));
 // comments) is exempted with the marker below.
 const PROSE = /#.*»>>.*\bmarkers?\b/;
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
-
 const counts = Object.fromEntries(KINDS.map(k => [k.id, 0]));
 const sites = Object.fromEntries(KINDS.map(k => [k.id, []]));
 const unpaired = [];
 const unknown = [];
 
-for (const p of walk(SRC, [])) {
-  const rel = path.relative(SRC, p);
+for (const p of compiledFiles(ROOTS)) {
+  const rel = sourceName(p, ROOTS);
   const lines = fs.readFileSync(p, 'utf8').split('\n');
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
@@ -130,7 +120,7 @@ for (const k of KINDS) {
     console.error(`  ${k.why}`);
     console.error('  The region mechanism is being RETIRED: do not add a region, and do not invent a');
     console.error('  replacement marker syntax. RE-HOME the code instead — promote it (it is product),');
-    console.error('  move it to ../Fizzygum-tests/Automator-and-test-harness-src/ (it is test machinery),');
+    console.error('  move it to ../Fizzygum-tests/Automator-and-test-harness-src/ as a *TestSupport class (it is test machinery),');
     console.error('  or extract it into its own collaborator class.');
     failed = true;
   }

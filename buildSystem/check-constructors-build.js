@@ -23,21 +23,24 @@
 // marker in its body or the contiguous comment block directly above its header (reason required). Same
 // in-code idiom as the layering lint's `# layout-apply-sanctioned`. There is NO central allowlist — the
 // justification lives at the constructor.
+//
+// It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
 
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-constructors-build.js
-// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That the rule BITES — a one-line
-// constructor too — and that both marker placements excuse it, is proven on every build by
+// [--src=DIR] [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant). That the
+// rule BITES — a one-line constructor too — and that both marker placements excuse it, is proven on every build by
 // check-constructors-build-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'ctor-build');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'ctor-build');
 rejectPositionalArgs(ARGV, 'ctor-build', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'ctor-build');
+const ROOTS = sourceRoots(ARGV, 'ctor-build');
 
 const METHOD = /^  (@?[A-Za-z_]\w*)\s*:/;           // 2-space-indent class member header, class-side (`@name:`) too
 const BUILD  = /@_{0,2}add(Many)?(NoSettle)?[ (]/;  // @add / @addMany / @addNoSettle / @_addNoSettle / @__add / … on `this`
@@ -47,25 +50,16 @@ const BUILD  = /@_{0,2}add(Many)?(NoSettle)?[ (]/;  // @add / @addMany / @addNoS
                                                     // docs/archive/menu-slider-ctor-conversion-plan.md)
 const EXEMPT = /#\s*constructor-build-exempt:\s*\S/; // marker WITH a non-empty reason
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
 // each file is read through lib/coffee-mask.js: a build call is matched on bare code, the marker read from a comment
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 const violations = [];
 let exemptCount = 0;
-for (const p of walk(SRC, [])) {
+for (const p of compiledFiles(ROOTS)) {
   const cls = path.basename(p, '.coffee');
   const text = fs.readFileSync(p, 'utf8');
   const lines = text.split('\n');
-  const masked = coffeeMask(text, path.relative(SRC, p));
+  const masked = coffeeMask(text, sourceName(p, ROOTS));
   const marked = (j) => EXEMPT.test(masked[j].comment || '');
 
   // Gather each constructor's body lines via the inctor state machine (a class can only have one, but
@@ -97,7 +91,7 @@ for (const p of walk(SRC, [])) {
       if (marked(j)) { exempt = true; break; }
     }
     if (exempt) { exemptCount++; continue; }
-    for (const h of hits) violations.push({ cls, file: path.relative(SRC, p), line: h.i + 1, text: h.text.trim() });
+    for (const h of hits) violations.push({ cls, file: sourceName(p, ROOTS), line: h.i + 1, text: h.text.trim() });
   }
 }
 

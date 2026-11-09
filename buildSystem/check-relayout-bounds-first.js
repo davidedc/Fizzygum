@@ -46,19 +46,23 @@
 // Reference FIXED shapes: FanoutWdgt._reLayout (@_applyGrantedBounds near the top) and InspectorWdgt._reLayout
 // (@_applyMoveTo + @_applyExtent near the top). This is the DEF-side companion to that fix arc.
 
+// It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
+//
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-relayout-bounds-first.js
-// [--src=DIR] — the rail checks another src tree (a copy carrying a plant). That both rules BITE, and that every
-// accepted shape passes (counted), is proven on every build by check-relayout-bounds-first-selftest.js.
+// [--src=DIR] [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant). That
+// both rules BITE, and that every accepted shape passes (counted), is proven on every build by
+// check-relayout-bounds-first-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'relayout-bounds-first');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'relayout-bounds-first');
 rejectPositionalArgs(ARGV, 'relayout-bounds-first', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'relayout-bounds-first');
+const ROOTS = sourceRoots(ARGV, 'relayout-bounds-first');
 
 const { methodSpans } = require('./lib/coffee-method-header');   // class methods and mixin members, one span each
 const EXEMPT = /#\s*relayout-bounds-first-exempt:\s*\S/;     // marker WITH a non-empty reason
@@ -72,15 +76,6 @@ const SUPER        = /\bsuper\b|Widget::_reLayout\b/;
 const DELEGATES    = /@_reLayoutWithOwnContents\b/;          // the own-contents template applies bounds for me
 const HOOK         = '_layOutOwnContents';                   // …and calls THIS with the frame already committed
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
 // every rule reads a line's bare code (lib/coffee-mask.js: comments and literal contents blanked); the marker its comment
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
@@ -89,10 +84,10 @@ const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 // and no `_reLayout` — would be waved through on trust.)
 const FILES = [];
 const byClass = new Map();
-for (const p of walk(SRC, [])) {
+for (const p of compiledFiles(ROOTS)) {
   const text = fs.readFileSync(p, 'utf8');
   const lines = text.split('\n');
-  const masked = coffeeMask(text, path.relative(SRC, p));
+  const masked = coffeeMask(text, sourceName(p, ROOTS));
   const bare = masked.map((l) => l.bare);
   const heads = [];
   for (const sp of methodSpans(lines)) heads.push({ name: sp.name, i: sp.line, end: sp.end });
@@ -139,7 +134,7 @@ for (const rec of FILES) {
       // no _reLayout of my own: RESOLVE the inherited one rather than trusting it
       if (!rec.hasOwnReLayout && reachesTemplate(rec)) { template++; continue; }
       const g = head.i + 1 + geomAt;
-      violations.push({ cls, file: path.relative(SRC, p), method: HOOK, line: head.i + 1, geomLine: g + 1, geom: lines[g].trim() });
+      violations.push({ cls, file: sourceName(p, ROOTS), method: HOOK, line: head.i + 1, geomLine: g + 1, geom: lines[g].trim() });
       continue;
     }
     // EXEMPTION: scan upward through the contiguous comment block directly above the header.
@@ -172,7 +167,7 @@ for (const rec of FILES) {
     if (delegated) { template++; continue; }
     if (firstGeom === -1) { trivial++; continue; }           // no own-geometry positioning -> safe
     if (appliedBeforeGeom) { checked++; continue; }
-    violations.push({ cls, file: path.relative(SRC, p), line: head.i + 1, geomLine: firstGeom + 1, geom: lines[firstGeom].trim() });
+    violations.push({ cls, file: sourceName(p, ROOTS), line: head.i + 1, geomLine: firstGeom + 1, geom: lines[firstGeom].trim() });
   }
 }
 

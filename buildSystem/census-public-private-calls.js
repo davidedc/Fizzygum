@@ -82,6 +82,8 @@
  *   node ./buildSystem/census-public-private-calls.js            # summary + truncated lists
  *   node ./buildSystem/census-public-private-calls.js --full     # untruncated site/name lists
  *   node ./buildSystem/census-public-private-calls.js --json o.json   # machine-readable dump
+ *   … [--src=DIR] [--tests-repo=DIR]   # the rails (lib/source-files.js sourceRoots) read another src tree / tests repo
+ * It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
  * The call-extractor fixtures are census-public-private-calls-selftest.js (run on every build by
  * buildSystem/run-selftests.js).
  *
@@ -91,10 +93,7 @@
 
 const fs = require('fs');
 const path = require('path');
-
-const SRC = path.resolve(__dirname, '../src');
-const TESTS = path.resolve(__dirname, '../../Fizzygum-tests/tests');
-const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
+const { compiledFiles, sourceName, sourceRoots, SOURCE_RAILS, SRC, TESTS_REPO } = require('./lib/source-files');
 
 // the [S] per-method conscious sign-off: a hard R1 site whose CALLER carries this marker is
 // reported but NOT counted by the gate (mirror of check-layering's nosettle-sanctioned mechanics)
@@ -111,16 +110,6 @@ const { testsRepoCode } = require('./lib/tests-repo-code');
 const methodRefs = require('./lib/method-references');
 
 const { METHOD_HEADER, MIXIN_METHOD_HEADER, methodBoundary } = require('./lib/coffee-method-header');
-
-function collectFiles(dir, ext, out) {
-  if (!fs.existsSync(dir)) return out;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) collectFiles(p, ext, out);
-    else if (e.name.endsWith(ext)) out.push(p);
-  }
-  return out;
-}
 
 // ---------- tiering (same name-keyed tiers as check-layering.js isLowLevel) ----------
 const tierOf = (name) =>
@@ -168,25 +157,27 @@ const { repaintVerbAlternation } = require('./lib/repaint-verbs');
 const SCHEDULE_CALL = /[@.]\s*_invalidateLayout\b/;
 
 // ============================== THE ENGINE ==============================
-// runCensus({ src }) reads the src tree it is given (default: this repo's src/; check-call-separation's --src= hands it a
-// planted copy). Returns { stats, R1, R2, R2narrowed, R3, R4, haveTestsRepo }.
+// runCensus({ src, testsRepo }) reads the compiled sources of the trees it is given (lib/source-files.js compiledFiles:
+// src and the tests repo's harness; default this umbrella's, a gate's --src= / --tests-repo= rails hand it planted
+// copies), and R4 the tests repo's code besides. Returns { stats, R1, R2, R2narrowed, R3, R4, haveTestsRepo }.
 //   R1 row:  { cls, caller, callee, calleeClass, sanctioned, at }
 //   R2 row:  { cls, caller, ctor, callerDirectlySettles, sanctioned, callee, at }
 //   R4 row:  { name, selfCalls, effectful, defs }   (R4 = null when the tests repo is absent)
-function runCensus({ src = SRC } = {}) {
+function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
   if (!fs.existsSync(src)) throw new Error('cannot find ' + src + ' — run from the Fizzygum repo root');
+  const roots = { src, testsRepo };
   const REPAINT_CALL = new RegExp('[@.]\\s*(' + repaintVerbAlternation(src) + ')\\b');
   const SETTLE_DIRECT = new RegExp('[@.]\\s*(' + settleTierAlternation(src) + '|recalculateLayouts)\\b');
-  const setters = settlingSetters(src);
+  const setters = settlingSetters(roots);
   const memberSettleRe = new RegExp('\\.\\s*(' + [...setters.geometry, ...setters.text].join('|') + ')\\b');
 
-  // ---- phase 1: parse every src class ----
+  // ---- phase 1: parse every compiled class ----
   const classInfo = new Map();   // name -> { name, parent, mixins[], methods: Map(name->rec), file }
   const allMethods = [];         // rec: { name, cls, file, line, bodyLines: [{n, code}], markers:Set }
-  const srcFiles = collectFiles(src, '.coffee', []).sort();
+  const sourceFiles = compiledFiles(roots);
   const maskedFiles = new Map();   // file -> its lib/coffee-mask.js reading, read once for phase 1 and R4
-  for (const file of srcFiles) {
-    const rel = path.relative(src, file);
+  for (const file of sourceFiles) {
+    const rel = sourceName(file, roots);
     const clsName = path.basename(file, '.coffee');
     const text = fs.readFileSync(file, 'utf8');
     const lines = text.split('\n');
@@ -345,7 +336,7 @@ function runCensus({ src = SRC } = {}) {
     const t = tierOf(rec.name);
     if (t === 'public') nPub++; else if (t === 'leaf') nLeaf++; else nPriv++;
   }
-  out.stats = { files: srcFiles.length, classes: classInfo.size, methods: allMethods.length, public: nPub, private: nPriv, leaf: nLeaf };
+  out.stats = { files: sourceFiles.length, classes: classInfo.size, methods: allMethods.length, public: nPub, private: nPriv, leaf: nLeaf };
 
   for (const rec of allMethods) {
     const callerTier = tierOf(rec.name);
@@ -397,7 +388,7 @@ function runCensus({ src = SRC } = {}) {
     o[kind]++;
   };
   const templates = [], computedClasses = [];
-  for (const file of srcFiles) {
+  for (const file of sourceFiles) {
     for (const { mask, code } of maskedFiles.get(file)) {
       const r = methodRefs.methodReferences(code);
       templates.push(...r.templates);
@@ -410,12 +401,16 @@ function runCensus({ src = SRC } = {}) {
     }
   }
   out.nameOcc = nameOcc;
-  out.haveTestsRepo = fs.existsSync(TESTS) && fs.existsSync(HARNESS);
+  // a tests repo that exists holds its harness (compiledFiles above refuses one that does not)
+  out.haveTestsRepo = fs.existsSync(path.join(testsRepo, 'tests'));
   if (out.haveTestsRepo) {
-    // The tests repo's CODE only (lib/tests-repo-code.js): the harness, the macro sources and the
-    // scripts/ rigs, strings kept (name dispatch) and comments cut. Its metadata prose, reference-image
-    // records and manifests are not code, so a sentence naming a method never counts as a call of it.
-    for (const { lines } of testsRepoCode(path.dirname(TESTS))) {
+    // The rest of the tests repo's CODE (lib/tests-repo-code.js): the macro sources and the scripts/ rigs,
+    // strings kept (name dispatch) and comments cut. Its metadata prose, reference-image records and
+    // manifests are not code, so a sentence naming a method never counts as a call of it. The harness is
+    // a compiled source, read above with each reference classified by its receiver: read again here, a
+    // harness class's own `@m` would count as EXTERNAL and no harness method could be self-only.
+    for (const { kind, lines } of testsRepoCode(testsRepo)) {
+      if (kind === 'harness') continue;
       for (const line of lines) {
         const r = methodRefs.methodReferences(line);
         templates.push(...r.templates);
@@ -460,13 +455,14 @@ module.exports = { runCensus, PUBLIC_CALL_MARKER, DOUBLE_SETTLE_MARKER, tierOf, 
 
 // ============================== THE CLI ==============================
 if (require.main === module) {
-  require('./lib/cli-args').rejectUnknownArgs(process.argv.slice(2), ['--full', '--json'], 'census-public-private-calls');
+  require('./lib/cli-args').rejectUnknownArgs(process.argv.slice(2), [...SOURCE_RAILS, '--full', '--json'], 'census-public-private-calls');
+  const ROOTS = sourceRoots(process.argv.slice(2), 'census-public-private-calls');
   const FULL = process.argv.includes('--full');
   const jsonIdx = process.argv.indexOf('--json');
   const JSON_OUT = jsonIdx >= 0 ? process.argv[jsonIdx + 1] : null;
 
   let out;
-  try { out = runCensus(); }
+  try { out = runCensus(ROOTS); }
   catch (e) { console.error('[census] ' + e.message); process.exit(2); }
 
   const trunc = (arr, n) => (FULL ? arr : arr.slice(0, n));

@@ -2,8 +2,10 @@
 // check-part-edges-selftest.js — check-part-edges.js's clauses on in-memory fixtures, every one both ways: which
 // installed members are a part's own, the member guard (reference, by-name dispatch, super), and the unused-
 // `requires` rule. Those are unit tests of the engine; the gate's rules are proven to BITE at the end, by running the
-// REAL gate (build.py's listing, parts.json, the class model, the boot install edges) on a planted copy of src/ and a
-// planted parts.json (lib/planted-src.js). Run by buildSystem/run-selftests.js on every build.
+// REAL gate (build.py's listing, parts.json, the class model, the boot install edges) on a planted copy of src/ and of
+// the tests repo's harness, and a planted parts.json (lib/planted-src.js); a harness file — the eager `harness` part —
+// naming a LAZY part's class unguarded fails, named by build.py's listing of it (../Fizzygum-tests/<path>). Run by
+// buildSystem/run-selftests.js on every build.
 
 const { soleProviders, memberReaches, superReaches, unusedRequires } = require('./check-part-edges');
 const { guardedPartsPerLine } = require('./lib/part-edge-scan');
@@ -137,6 +139,7 @@ proveGate({
   name: 'part-edges',
   cases: t,
   gate: path.join(__dirname, 'check-part-edges.js'),
+  testsRepo: true,
   pass: /^\[part-edges\] OK -- every core reference into a part, to a class or to a member it installs, is guarded\.$/m,
   control: {
     plants: {
@@ -168,6 +171,10 @@ proveGate({
     },
     lines: [/^  src\/BiteProofPartRefWdgt\.coffee:4  \S+ -> HhmmssLabelWdgt \(part 'video-player'\)$/m],
     absent: [/BiteProofPartGuardsWdgt/],
+  }, {
+    label: 'a harness file',
+    plants: { 'harness/BiteProofHarnessPartRefWdgt.coffee': cls('BiteProofHarnessPartRefWdgt', 'Widget', '  bpMake: ->', '    @bpIcon = new SimpleUSAMapIconAppearance @') },
+    expect: { UNGUARDED_CLASS_REF: /^  \.\.\/Fizzygum-tests\/Automator-and-test-harness-src\/BiteProofHarnessPartRefWdgt\.coffee:3  \S+ -> SimpleUSAMapIconAppearance \(part 'maps', LAZY\)$/m },
   }],
 });
 

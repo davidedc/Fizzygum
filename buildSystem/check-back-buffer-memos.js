@@ -37,7 +37,8 @@
 // helpers), whose fields are layout RESULTS computed from saved inputs and recomputed for every buffer
 // the key misses — following it would report them as memos, which they are not.
 //
-// IT READS ALL OF src/, every part, shipped or not — a build that does not ship a part still checks
+// IT READS ALL OF THE COMPILED SOURCES (lib/source-files.js compiledFiles: src/ and the tests repo's harness), every
+// part, shipped or not — a build that does not ship a part still checks
 // its code, which is the point: both raster-cache widgets that drew from a loaded resource live in the
 // flag-gated `video-player` part, which no default build carries and so no suite, rig or smoke runs.
 // Method grouping is the shared buildSystem/lib/coffee-method-header.js (methodSpans), so a mixin
@@ -63,6 +64,7 @@
 // Exit codes: 0 clean · 1 violation · 2 operational (no src/, or not one builder found — a run that
 // checked nothing is not a pass).
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-back-buffer-memos.js [--src=DIR]
+// [--tests-repo=DIR]
 // That it BITES is proven on every build by check-back-buffer-memos-selftest.js: the real gate, on a copy of src/
 // carrying a throwaway widget whose builder records a memo, must fail naming the field, and the same field declared
 // a transient, or saved content, must pass (lib/planted-src.js).
@@ -72,24 +74,18 @@ const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
-// --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
+// --src=DIR / --tests-repo=DIR check another src tree / tests repo in place of this umbrella's: a copy carrying a plant
+// (the self-test's rail)
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'check-back-buffer-memos');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'check-back-buffer-memos');
 rejectPositionalArgs(ARGV, 'check-back-buffer-memos', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'check-back-buffer-memos');
+const ROOTS = sourceRoots(ARGV, 'check-back-buffer-memos');
+const SRC = ROOTS.src;
 const BUILDER = '_createRefreshOrGetBackBuffer';
 const CONTENT_MARKER = /#\s*saved-content:\s*\S/;
-
-function walk(dir, acc) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
 
 // The names a class-level list declaration holds — `@serializationTransients: [ … ]` (the key spelled
 // with or without the `@`: without is a mixin's class-side form) — read through to its closing bracket.
@@ -147,10 +143,10 @@ if (!fs.existsSync(SRC)) { console.error('[back-buffer-memos] operational error:
 const classes = {};   // name -> { file, lines, masked, sup, transients:Set, content:Set, augments:[] , spans }
 const mixins = {};    // name -> { file, transients:Set, content:Set, spans }
 const problems = [];
-for (const p of walk(SRC, [])) {
+for (const p of compiledFiles(ROOTS)) {
   const text = fs.readFileSync(p, 'utf8');
   const lines = text.split('\n');
-  const file = path.relative(SRC, p);
+  const file = sourceName(p, ROOTS);
   const masked = coffeeMask(text, file);
   const spans = methodSpans(lines);
   for (const u of unseenMethodHeaders(lines, masked)) {

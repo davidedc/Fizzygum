@@ -27,7 +27,8 @@
 // (reason required) — the shape is the Deserializer's $Canvas decoder, a local image that decodes a
 // record's own data: URL and is dropped.
 //
-// IT READS ALL OF src/, every part, shipped or not: both element holders live in the flag-gated
+// IT READS ALL OF THE COMPILED SOURCES (lib/source-files.js compiledFiles: src/ and the tests repo's harness), every
+// part, shipped or not: both element holders live in the flag-gated
 // `video-player` part, which no default build carries and so no suite, rig or smoke runs.
 // Method grouping is the shared buildSystem/lib/coffee-method-header.js (methodSpans), so a mixin member
 // or a class-side key bounds a method exactly as every other gate sees it.
@@ -51,6 +52,7 @@
 // Exit codes: 0 clean · 1 violation · 2 operational (no src/, or not one element construction found — a
 // run that checked nothing is not a pass).
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-page-loaded-elements.js [--src=DIR]
+// [--tests-repo=DIR]
 // That it BITES is proven on every build by check-page-loaded-elements-selftest.js: the real gate, on a copy of src/
 // carrying one throwaway widget per clause — an element field not transient, a missing restore hook, a missing copy
 // hook, an element assigned to no field — must fail naming each, and the declared forms must pass
@@ -61,13 +63,16 @@ const path = require('path');
 const { methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header.js');
 const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
-const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { coffeeFilesIn, compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
-// --src=DIR checks another src tree in place of this repo's: a copy carrying a plant (the self-test's rail)
+// --src=DIR / --tests-repo=DIR check another src tree / tests repo in place of this umbrella's: a copy carrying a plant
+// (the self-test's rail)
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--src='], 'check-page-loaded-elements');
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'check-page-loaded-elements');
 rejectPositionalArgs(ARGV, 'check-page-loaded-elements', 'a src tree is named with --src=DIR');
-const SRC = dirArg(ARGV, '--src=', path.resolve(__dirname, '../src'), 'check-page-loaded-elements');
+const ROOTS = sourceRoots(ARGV, 'check-page-loaded-elements');
+const SRC = ROOTS.src;
 // hand-list-sanctioned: check-page-loaded-elements.js — a hook renamed in its holders fails each as
 // "the class chain defines no <hook>"; one renamed at its walker's call site fails as "neither walker calls"
 const HOOKS = ['_afterDeserialization', '_reactToBeingCopied'];
@@ -77,15 +82,6 @@ const ELEMENT_RE = new RegExp(ELEMENT, 'i');
 // a field written with an element: `@f = <element>`, or one link of a chained assignment that ends in one
 // (`img = @f = new Image()`)
 const FIELD_WRITE_RE = new RegExp(String.raw`@([A-Za-z_]\w*)\s*=(?!=)\s*(?:@?[A-Za-z_][\w.]*\s*=(?!=)\s*)*` + ELEMENT, 'gi');
-
-function walk(dir, acc) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (e.name.endsWith('.coffee')) acc.push(p);
-  }
-  return acc;
-}
 
 // The names a class-level list declaration holds — `@serializationTransients: [ … ]` (the key spelled
 // with or without the `@`: without is a mixin's class-side form) — read through to its closing bracket. The
@@ -124,11 +120,11 @@ const mixins = {};    // name -> { file, transients:Set, methods:Set }
 const problems = [];
 const unattributed = [];
 let constructions = 0, notHeld = 0;
-const maskedFiles = new Map();   // each src file's lib/coffee-mask.js reading (the walkers' too, read below)
-for (const p of walk(SRC, [])) {
+const maskedFiles = new Map();   // each compiled source's lib/coffee-mask.js reading (the walkers' too, read below)
+for (const p of compiledFiles(ROOTS)) {
   const text = fs.readFileSync(p, 'utf8');
   const lines = text.split('\n');
-  const file = path.relative(SRC, p);
+  const file = sourceName(p, ROOTS);
   const masked = coffeeMask(text, file);
   maskedFiles.set(p, masked);
   const spans = methodSpans(lines);
@@ -205,7 +201,7 @@ for (const [name, k] of Object.entries(classes)) {
 const WALKERS = [path.join(SRC, 'serialization'), path.join(SRC, 'duplication')];
 for (const h of HOOKS) {
   const call = new RegExp(String.raw`\.${h}\??\(`);
-  const called = WALKERS.some((d) => fs.existsSync(d) && walk(d, []).some((f) => maskedFiles.get(f).some((l) => call.test(l.code))));
+  const called = WALKERS.some((d) => fs.existsSync(d) && coffeeFilesIn(d).some((f) => maskedFiles.get(f).some((l) => call.test(l.code))));
   if (!called) problems.push(rules.fired('HOOK_NOT_CALLED', `  HOOKS names ${h}, which neither walker (src/serialization, src/duplication) calls — a holder defining it re-makes nothing`));
 }
 

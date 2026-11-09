@@ -24,7 +24,9 @@
 //
 // WHAT IT SCANS. The Fizzygum half: src/**/*.coffee and buildSystem/**/*.{js,py}. The tests half, when
 // the sibling Fizzygum-tests repo is present: scripts/**/*.js and Automator-and-test-harness-src/**/*.coffee.
-// Dot-directories (`.scratch`), node_modules and __pycache__ are skipped, and so is the tests repo's
+// The .coffee files are the compiled sources as lib/source-files.js lists them (srcFiles, harnessFiles: every
+// one, refusing a symlink); in the .js/.py walks, dot-directories (`.scratch`), node_modules and __pycache__ are
+// skipped, and so is the tests repo's
 // tests/ — macro sources are test CONTENT, held by that repo's own gates. Its self-test file
 // (check-hand-lists-selftest.js) is skipped as well: its corpus is made of exactly the lists this hunts, so
 // scanning it would count the fixtures.
@@ -117,7 +119,8 @@ const fs = require('fs');
 const path = require('path');
 const { mixinMemberIndent } = require('./lib/coffee-method-header');
 const { testNames } = require('./lib/tests-repo-code');
-const { rejectUnknownArgs, dirArg } = require('./lib/cli-args');
+const { rejectUnknownArgs } = require('./lib/cli-args');
+const { srcFiles, harnessFiles, compiledFiles, sourceRoots, SOURCE_RAILS, HARNESS_DIR } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 // the four failing sanction tokens; SANCTION_UNVERIFIED is a note, never a rule
 rules.declare(['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS', 'SANCTION_EMPTY', 'SANCTION_STALE']);
@@ -125,12 +128,9 @@ const { runSet, DEFAULT_LAYOUT: WHAT_RUNS_LAYOUT } = require('./lib/what-runs');
 
 const FIZZYGUM = path.resolve(__dirname, '..');
 const UMBRELLA = path.resolve(FIZZYGUM, '..');
-const TESTS_REPO = path.join(UMBRELLA, 'Fizzygum-tests');
-let SRC = path.join(FIZZYGUM, 'src');   // main() reads the --src= rail
 const BUILD_SYSTEM = path.join(FIZZYGUM, 'buildSystem');
-const HARNESS = path.join(TESTS_REPO, 'Automator-and-test-harness-src');
-const SCRIPTS = path.join(TESTS_REPO, 'scripts');
-const TEST_DIRS = path.join(TESTS_REPO, 'tests');
+// main() reads the --src= / --tests-repo= rails (lib/source-files.js sourceRoots) and places the tests repo's parts
+let ROOTS, HARNESS, SCRIPTS, TEST_DIRS;
 const SELF = path.resolve(__filename);
 const SELF_TEST_CORPUS = path.join(BUILD_SYSTEM, 'check-hand-lists-selftest.js');
 
@@ -465,11 +465,14 @@ function printProblems(problems) {
 
 function main(argv) {
   // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-hand-lists.js [--src=DIR]
-  // [--census] [--files <paths…>] [--fg=<path>] — the rail reads another src tree (a copy carrying a plant) for the
-  // Fizzygum half and the name universe. That every rule BITES, in both modes, is proven on every build by
-  // check-hand-lists-selftest.js.
-  rejectUnknownArgs(argv, ['--census', '--names-only', '--min=', '--files', '--fg=', '--src='], 'check-hand-lists');
-  SRC = dirArg(argv.filter((a) => a.startsWith('--src=')), '--src=', SRC, 'check-hand-lists');
+  // [--tests-repo=DIR] [--census] [--files <paths…>] [--fg=<path>] — the rails read another src tree for the Fizzygum
+  // half, another tests repo for the tests half (a copy carrying a plant), and both for the name universe. That every
+  // rule BITES, in both modes, is proven on every build by check-hand-lists-selftest.js.
+  rejectUnknownArgs(argv, ['--census', '--names-only', '--min=', '--files', '--fg=', ...SOURCE_RAILS], 'check-hand-lists');
+  ROOTS = sourceRoots(argv.filter((a) => SOURCE_RAILS.some((r) => a.startsWith(r))), 'check-hand-lists');
+  HARNESS = path.join(ROOTS.testsRepo, HARNESS_DIR);
+  SCRIPTS = path.join(ROOTS.testsRepo, 'scripts');
+  TEST_DIRS = path.join(ROOTS.testsRepo, 'tests');
   const census = argv.includes('--census');
   const filesFlag = argv.indexOf('--files');
   const given = filesFlag >= 0 ? argv.slice(filesFlag + 1).filter(a => !a.startsWith('--')) : undefined;
@@ -480,14 +483,14 @@ function main(argv) {
 
   const testsPresent = fs.existsSync(SCRIPTS) && fs.existsSync(HARNESS);
   const halves = [{ repo: 'fizzygum', label: 'Fizzygum', baseline: BASELINE_FIZZYGUM, paths: [
-    ...walk(SRC, ['.coffee']), ...walk(BUILD_SYSTEM, ['.js', '.py']).filter(p => path.resolve(p) !== SELF_TEST_CORPUS)] }];
+    ...srcFiles(ROOTS.src), ...walk(BUILD_SYSTEM, ['.js', '.py']).filter(p => path.resolve(p) !== SELF_TEST_CORPUS)] }];
   if (testsPresent) {
     halves.push({ repo: 'tests', label: 'Fizzygum-tests', baseline: BASELINE_TESTS, paths: [
-      ...walk(SCRIPTS, ['.js']), ...walk(HARNESS, ['.coffee'])] });
+      ...walk(SCRIPTS, ['.js']), ...harnessFiles(ROOTS.testsRepo)] });
   }
   for (const h of halves) if (!h.paths.length) fail(`the ${h.label} half holds no file to scan — a gate that reads nothing certifies everything`);
 
-  const universe = harvestUniverse([...walk(SRC, ['.coffee']), ...(testsPresent ? walk(HARNESS, ['.coffee']) : [])]);
+  const universe = harvestUniverse(compiledFiles(ROOTS));
   if (!universe.classes.size || !universe.members.size) {
     fail(`the name universe is empty (${universe.classes.size} class(es), ${universe.members.size} member(s)) — an empty universe classifies nothing as a name and certifies every list`);
   }
@@ -504,7 +507,8 @@ function main(argv) {
   // on by every suite leg (scripts/lib/gate-tokens.js), and every SystemTest_ directory is a test that leg plays.
   const fgArg = argv.find(a => a.startsWith('--fg='));
   let ran;
-  try { ran = runSet({ ...WHAT_RUNS_LAYOUT, ...(fgArg ? { fg: path.resolve(fgArg.slice('--fg='.length)) } : {}) }); }
+  // the tests repo's scripts are the --tests-repo= rail's, the ones this gate reads
+  try { ran = runSet({ ...WHAT_RUNS_LAYOUT, tests: ROOTS.testsRepo, ...(fgArg ? { fg: path.resolve(fgArg.slice('--fg='.length)) } : {}) }); }
   catch (e) { fail(e.message); }
   const runBasenames = new Set([...ran.files].map(f => path.basename(f)));
   const worldRuns = runBasenames.has('run-all-headless.js');

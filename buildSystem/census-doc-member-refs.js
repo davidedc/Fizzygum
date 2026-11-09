@@ -16,7 +16,8 @@
  * `@target` elsewhere means a dataflow consumer or a dispatch receiver), plus two members in
  * src/macros/CLAUDE.md that had drifted from code sitting a few files away.
  *
- * WHAT IT DOES. Indexes every class in BOTH repos' CoffeeScript (name, members, `extends` parent),
+ * WHAT IT DOES. Indexes every class of the compiled sources (lib/source-files.js compiledFiles: src/ and the tests
+ * repo's harness — name, members, `extends` parent),
  * then reads every CLAUDE.md and .claude/skills/*.md and checks each backticked `Class.member`
  * reference against the real chain. Resolution follows three paths a naive scan gets wrong:
  *   - INHERITANCE: walks the `extends` chain, so a base's member is not a false positive.
@@ -33,42 +34,41 @@
  * would need an allowlist of tombstones, which would rot faster than the docs it guards. So it
  * separates likely-tombstone lines from the rest and asks a human to read the remainder.
  *
- * Exit 0 always (advisory). Run from anywhere: node buildSystem/census-doc-member-refs.js
- * Flags: --all (do not hide the likely-tombstone bucket)
+ * Exit 0 (advisory), or 2 when the compiled sources cannot be read (lib/source-files.js refuses the tree). Run from anywhere: node buildSystem/census-doc-member-refs.js
+ * Flags: --all (do not hide the likely-tombstone bucket); --src=DIR / --tests-repo=DIR (the rails read another src
+ * tree / tests repo's classes)
  */
 const fs = require('fs');
 const path = require('path');
+const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
+const { compiledFiles, sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 
 const FZ = path.resolve(__dirname, '..');
 const ROOT = path.resolve(FZ, '..');
-const SHOW_ALL = process.argv.includes('--all');
+const ARGV = process.argv.slice(2);
+rejectUnknownArgs(ARGV, [...SOURCE_RAILS, '--all'], 'census-doc-member-refs');
+rejectPositionalArgs(ARGV, 'census-doc-member-refs', 'a src tree is named with --src=DIR');
+const ROOTS = sourceRoots(ARGV, 'census-doc-member-refs');
+const SHOW_ALL = ARGV.includes('--all');
 
 // ---- index every class: members + extends parent ---------------------------------------------
 const classes = new Map();
-function scanDir(dir) {
-  let entries;
-  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
-  for (const e of entries) {
-    if (e.name === 'node_modules' || e.name === '.git') continue;
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) { scanDir(p); continue; }
-    if (!e.name.endsWith('.coffee')) continue;
-    let current;
-    for (const line of fs.readFileSync(p, 'utf8').split('\n')) {
-      const cm = /^class\s+([A-Za-z_][A-Za-z0-9_]*)(?:\s+extends\s+([A-Za-z_][A-Za-z0-9_]*))?/.exec(line);
-      if (cm) { current = cm[1]; classes.set(current, { members: new Set(), parent: cm[2] }); continue; }
-      if (!current) continue;
-      const mm = /^  @?([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(line);
-      if (mm) classes.get(current).members.add(mm[1]);
-    }
+let compiled;
+try { compiled = compiledFiles(ROOTS); } catch (e) { console.error(`[census-doc-member-refs] ${e.message}`); process.exit(2); }
+for (const p of compiled) {
+  let current;
+  for (const line of fs.readFileSync(p, 'utf8').split('\n')) {
+    const cm = /^class\s+([A-Za-z_][A-Za-z0-9_]*)(?:\s+extends\s+([A-Za-z_][A-Za-z0-9_]*))?/.exec(line);
+    if (cm) { current = cm[1]; classes.set(current, { members: new Set(), parent: cm[2] }); continue; }
+    if (!current) continue;
+    const mm = /^  @?([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(line);
+    if (mm) classes.get(current).members.add(mm[1]);
   }
 }
-scanDir(path.join(FZ, 'src'));
-scanDir(path.join(ROOT, 'Fizzygum-tests', 'Automator-and-test-harness-src'));
 
 // ---- the *TestSupport -> core class map, READ from the boot path (never guessed) --------------
 const installs = new Map();
-const bootPath = path.join(FZ, 'src', 'boot', 'globalFunctions.coffee');
+const bootPath = path.join(ROOTS.src, 'boot', 'globalFunctions.coffee');
 if (fs.existsSync(bootPath)) {
   for (const m of fs.readFileSync(bootPath, 'utf8')
     .matchAll(/([A-Za-z_][A-Za-z0-9_]*TestSupport)\.installOnto\s+([A-Za-z_][A-Za-z0-9_]*)/g)) {
@@ -147,4 +147,4 @@ report('REFERENCES THAT DO NOT RESOLVE — read each one', live);
 if (SHOW_ALL) report('named in a likely TOMBSTONE (correct — the doc says it is gone)', tombstones);
 else console.log(`\n(${tombstones.length} more sit on lines that read as tombstones — correct usage. --all to list them.)`);
 console.log('\nAdvisory: a hit is a CANDIDATE. Docs legitimately name members of classes they do not\n' +
-            'own, and name retired ones in tombstones. Exit 0 always.');
+            'own, and name retired ones in tombstones. Exit 0 (advisory); 2 when the sources cannot be read.');
