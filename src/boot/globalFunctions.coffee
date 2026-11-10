@@ -249,6 +249,11 @@ ensureMetaSystemLoaded = ->
   metaSystemLoadPromise ?= loadMetaSystemPromise()
   metaSystemLoadPromise
 
+# THE REFLECTIVE LAYER's load (steps 1-5 above).
+# ⚠ ITS PROMISE COVERS THE LAYER AND NOTHING AFTER IT: a compile-at-boot page builds its world from the
+# layer, but the world's start and the post-boot actions are the BOOT's tail, chained after this
+# resolves (finishBootAfterTheLayer), so a tail that throws (a malformed ?startupActions=) leaves the
+# layer reading as loaded -- every inspector open and every file holding one asks that flag.
 loadReflectiveLayerPromise = ->
   ensureMetaSystemLoaded()
   .then ->
@@ -256,28 +261,27 @@ loadReflectiveLayerPromise = ->
     loadJSFilesWithCoffeescriptSourcesBatchesPromise()
   .then ->
     if bootLoadingDebugWrites then console.log "---- loaded all batches of coffeescript sources"
-    if window.preCompiled
-      # the world has already started stepping.
-      # No need to compile the sources as we already got the pre-compiled code
-      # (and it's already running).
-      (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
-        stillLoadingSources = false
-        runPostBootActionsOnce()
-    else
-      addLogDiv()
-      # there is no world to speak of yet, and no stepping: in this case
-      # we also compile all the sources to have something to build the world with!
-      (storeSourcesAndPotentiallyCompileThemAndExecuteThem false).then ->
-        stillLoadingSources = false
-        if Automator?
-          Automator.testsManifest = testsManifest
-          Automator.testsAssetsManifest = testsAssetsManifest
-      .then ->
-        # returns a promise (world creation is deferred under the SWCanvas
-        # backend), so chain the world-dependent code after it resolves.
-        createWorldAndStartStepping()
-      .then ->
-        runPostBootActionsOnce()
+    # beside a pre-compiled world, which is already stepping, the sources are only INGESTED (each
+    # class's meta-object); where there is no world yet they are compiled and executed, to have
+    # something to build it with
+    addLogDiv() unless window.preCompiled
+    storeSourcesAndPotentiallyCompileThemAndExecuteThem window.preCompiled
+  .then ->
+    stillLoadingSources = false
+
+# The boot's tail, once the layer it loaded has arrived (the "background" policy, and every
+# compile-at-boot page): beside a pre-compiled world only the post-boot actions; on a compile-at-boot
+# page the test manifests (the harness's automator reads them as the world is built), the world, then
+# the post-boot actions.
+finishBootAfterTheLayer = ->
+  return runPostBootActions() if window.preCompiled
+  if Automator?
+    Automator.testsManifest = testsManifest
+    Automator.testsAssetsManifest = testsAssetsManifest
+  # returns a promise (world creation is deferred under the SWCanvas backend), so the world-dependent
+  # code chains after it resolves
+  createWorldAndStartStepping().then ->
+    runPostBootActions()
 
 # WHO ASKED FOR THE REFLECTIVE LAYER, and has it arrived?
 #
@@ -300,16 +304,13 @@ reflectiveLayerIsLoaded = -> reflectiveLayerHasLoaded
 # Can it ever arrive? No, for exactly one policy: "none" ships none of the text.
 reflectiveLayerCanLoad = -> BUILDFLAG_SOURCES isnt "none"
 
-# The two things that must happen ONCE, after the world is up, no matter where this boot finished:
-# the test manifests the Automator reads, and the `?startupActions=` URL parameter. They live here
-# rather than in the tail of the source-ingest chain because a "lazy" or "none" build never runs that
-# chain at boot, and a startup action that fires on some profiles but not others is exactly the class
-# of bug a per-flavour code path breeds. The guard is what lets a lazy build call this at boot AND
-# again when the layer eventually lands, and still fire once.
-postBootActionsHaveRun = false
-runPostBootActionsOnce = ->
-  return if postBootActionsHaveRun
-  postBootActionsHaveRun = true
+# The two things that happen ONCE, after the world is up, no matter where this boot finished: the
+# test manifests the Automator reads, and the `?startupActions=` URL parameter. One function, called by
+# the boot's two mutually exclusive endings -- finishBootAfterTheLayer where the boot loads the layer,
+# and the skip below where it does not ("lazy", "none") -- because a startup action that fired on some
+# profiles but not others is exactly the class of bug a per-flavour code path breeds. A layer that lands
+# later, for a lazy build's first consumer, runs neither.
+runPostBootActions = ->
   if Automator?
     Automator.testsManifest = testsManifest
     Automator.testsAssetsManifest = testsAssetsManifest
@@ -499,11 +500,12 @@ boot = ->
     # `preCompiled = false` stub, and compiling those sources is how the image gets harvested. Drop
     # this clause and a lean build fails with "pre-compiled generation failed" (measured).
     if window.preCompiled and BUILDFLAG_SOURCES isnt "background"
-      # Nothing is loading, so say so -- and do the post-boot work the ingest tail would have done.
+      # Nothing is loading, so say so -- and do the post-boot work finishBootAfterTheLayer does after
+      # a layer the boot loads.
       stillLoadingSources = false
-      runPostBootActionsOnce()
+      runPostBootActions()
       return
-    ensureReflectiveLayerLoaded()
+    ensureReflectiveLayerLoaded().then finishBootAfterTheLayer
 
 
 # Load the SWCanvas bitmap-font metrics + the positioning bundle for the active

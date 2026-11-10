@@ -60,12 +60,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       "Open from file…". The world door asks first ("…can run code the snapshot carries"); the widget door asks
       nothing. Whether a widget file carrying a `{"$src"}` should confirm, or a `{"$src"}` be held to a function
       literal, is a product call.
-- [ ] **The reflective layer reads as absent until the boot's tail has run** (found by the same review; by reading).
-      On a compile-at-boot page, `reflectiveLayerHasLoaded` turns true only after `createWorldAndStartStepping` and
-      `runPostBootActionsOnce`, though the world was compiled from the layer. If a post-boot step throws, the flag
-      stays false and the memoized promise rejected: every later inspector open (`Widget.spawnInspector`) and every
-      file holding an inspector (`Deserializer._needsTheReflectiveLayer`) then waits on, or is refused for, a layer
-      that is there.
 - [ ] **A save refused for a function a run left does not offer its way out** (found closing "A run that sets a
       widget field to a function blocks every world snapshot", in the plan's ledger; OWNER DECISION). The refusal names
       the widget, the field and the gestures that clear it (an inspector's Remove, or its Save as

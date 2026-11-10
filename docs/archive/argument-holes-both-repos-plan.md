@@ -1854,3 +1854,27 @@ for (const s of sites) if (s.absentBefore.length) {
       `Deserializer.deserialize` (a spy; the no-up-front plant fails it) and drives the net through a direct
       deserialize. The lazy re-entry is held by reading: the same predicate re-runs. Filed (low): "A load judges an
       app key's kind by the page's edited members, then returns them to boot".
+- [x] **The reflective layer reads as absent until the boot's tail has run** (found by the same review; by reading).
+      On a compile-at-boot page, `reflectiveLayerHasLoaded` turns true only after `createWorldAndStartStepping` and
+      `runPostBootActionsOnce`, though the world was compiled from the layer. If a post-boot step throws, the flag
+      stays false and the memoized promise rejected: every later inspector open (`Widget.spawnInspector`) and every
+      file holding an inspector (`Deserializer._needsTheReflectiveLayer`) then waits on, or is refused for, a layer
+      that is there.
+      — CLOSED 2026-11-10 (self-ruled overnight). MEASURED (survey: `Fizzygum-tests/.scratch/reflective-layer-tail/`):
+      `index-sw.html` booted with a malformed `?startupActions=` (the tail's `world.nextStartupAction` throws) ran its
+      world with every source in, yet `reflectiveLayerIsLoaded()` answered false and `world.spawnInspector world` never
+      opened an inspector (the memoized promise rejected, surfacing again as a page error); a clean boot opened one.
+      Ruling (self-ruled overnight, under "clean minimal + Do The Right Thing"): a flag named "the layer has loaded"
+      means that — the layer's promise covers the meta-system, the batches and their ingest or compile, and the boot
+      chains its tail after it, apart from it; a clean boot keeps the order of its work (manifests, world, post-boot
+      actions), and the flag now turns true before the world is built (no reader runs in that window, read reader by
+      reader). Landed: `loadReflectiveLayerPromise` ends at the ingest/compile; `finishBootAfterTheLayer` is the boot's
+      tail; the post-boot actions' once-only guard, which the split made redundant (its two callers are now mutually
+      exclusive endings of the boot), is deleted (`runPostBootActions`); `docs/architecture/build-and-packaging.md` §5
+      states it, and `docs/plans/single-file-save-plan.md`'s description of the chain follows. On the fixed build the
+      malformed tail leaves the layer loaded and an inspector opening. Proven by the `apps` leg's new rule
+      `LAYER_ABSENT_AFTER_A_FAILED_TAIL` (`smoke-apps-headless.js`: the tail's own throw required, else INVALID; the
+      inspector, which waits on the lazy `meta-tools` part, polled for), failed by its bite-proof's plant (the layer
+      coupled to the tail again). The independent review found no defect in the split and the rig's fixed 2 s wait,
+      the vacuous case and the guard's stale reason, landed as above; the pre-compiled "background" ending has no
+      shipped profile and no rig.

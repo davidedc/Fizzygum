@@ -451,6 +451,11 @@ Facts worth knowing before touching any of this:
   (`if reflectiveLayerIsLoaded() then … else ensureReflectiveLayerLoaded().then …`). On every non-lazy build the layer
   is long since present, and deferring by even a microtask moves the effect a world CYCLE later — which the
   SystemTest suite measures.
+- **The layer's promise covers the layer and nothing after it.** On a compile-at-boot page the world is built FROM the
+  layer, but its start and the post-boot actions (the test manifests, `?startupActions=`) are the boot's tail,
+  chained after the layer resolves (`finishBootAfterTheLayer`), apart from it: a tail that throws leaves
+  `reflectiveLayerIsLoaded()` true and the memoized promise resolved, so inspectors and the files that hold one keep
+  working. The `apps` leg holds it (`LAYER_ABSENT_AFTER_A_FAILED_TAIL`: a malformed `?startupActions=`).
 
 ### Loading source per part
 

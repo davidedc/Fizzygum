@@ -273,12 +273,13 @@ Two small, surgical branches on `window.FIZZYGUM_SINGLE_FILE`:
    single-file page ALL of that content is already inline, executed in document order, so the
    branch is: `loadJSFilePromise` returns an immediately-resolved Promise under
    `FIZZYGUM_SINGLE_FILE`. One branch, one function; the rest of the chain — including the
-   compile-at-boot arm of `loadReflectiveLayerPromise` (ingest+compile from the vault,
-   `createWorldAndStartStepping()` at `:168`) — runs **unchanged** against the inline-populated
+   compile-at-boot arm of `loadReflectiveLayerPromise` (ingest+compile from the vault) and the
+   boot's tail chained after it, `finishBootAfterTheLayer` (`createWorldAndStartStepping()`, then
+   the post-boot actions) — runs **unchanged** against the inline-populated
    vault. The old per-site `maybeLoad` substitution and the per-site test-assets guard are
    OBSOLETE: with the loader itself inert, no 404 is possible (old risk R4 dissolves
    structurally). Verify only that `testsManifest` staying `undefined` is tolerated —
-   `runPostBootActionsOnce` (`:199-207`) is `Automator?`-guarded, and the `*TestSupport.installOnto`
+   `runPostBootActions` is `Automator?`-guarded, and the `*TestSupport.installOnto`
    grafts (`:429-433`) must be existence-guarded (they are expected to be; check).
 2. **Boot into the snapshot instead of the default desktop.** In `startWorld`
    (`globalFunctions.coffee:470-471`), replace
