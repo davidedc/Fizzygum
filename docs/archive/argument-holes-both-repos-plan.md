@@ -2020,3 +2020,46 @@ for (const s of sites) if (s.absentBefore.length) {
       memo are corrected. Rig: `sourceEdits.valueClassEditReachesLiveValues` (`serialization-roundtrip-headless.js`,
       its own page) — the class inspector edits `Color.toString` ("rgb(" made "RGB(") and an interned colour that
       painted before answers the edited string at once, then its boot string after the page returns to boot.
+- [x] **The suite's probe page waits for boot its own way** (found by the independent review closing "The three
+      suite runners wait for a page to boot three ways"; by reading). Before any shard, `scripts/lib/shards.js`
+      `probeTestsOrExit` boots the harness page once to count the run's tests and waits for the world INSIDE one raw
+      `page.evaluate` (60 s, no `answerWithin`), retries once, then exits 1 naming no rule (`RULELESS_FAILURE`, exit 2).
+      A world that never arrives meets this page first, so a real boot break reads as an operational failure, and a
+      page stuck while it boots is waited on until the protocol timeout (10 min, twice) in silence. The paint audit
+      shares it. The suite-gate proof keeps its plants off the probe page by design, so a planted proof of it needs
+      that rail first.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED by reading and by plants: the probe was the one test page the run
+      boots with no rail (`run-all`'s `--prelude=`/`--audit-prelude=` and console rule reached only shard pages) and it
+      booted a shard URL, so it started playing the suite while it counted (hence `pinSingleGroup`); the proof kept
+      plants off it only so its SHARD_SHORT plant would not shorten the probe's count. Rulings (self-ruled, SURVEY in
+      `Fizzygum-tests/.scratch/probe-page-boot-wait/`): the probe (`lib/shards.js` `probeTests`) boots through the
+      runners' one boot wait (`startedWithin` + `HARNESS_WORLD_STANDS`, the caller's own look bound — the suite's
+      `STALL_MS`) and asks for its list within 30 s; it opens the harness with no `?startupActions`, in both callers
+      (nothing plays on it; `pinSingleGroup` is gone, the groups' defaults are 1/0), through one URL base the shards'
+      URLs extend (`harnessUrl()`); the suite sets it up like every page it boots (`installRails`, and its failing
+      lines filed under `(probe)` — fail-closed); a probe page that does not start or does not list its tests fails the
+      run as `DID_NOT_START` (the sequence runner's name for the fact), `the probe page did not start within 90s —
+      nothing was played`, never retried — boot awaits every script; only a probe that threw or lost its page is
+      retried once (infrastructure; `lib/headless-driver.js` `pageGone`, now shared with `startedWithin`). A plant
+      found that a selection which drops its callback has its pending promise collected ("Promise was collected"),
+      which the first shape read as infrastructure; only a lost page is. Proven: the suite-gate proof plants
+      DID_NOT_START on both engines (the world's assignment swallowed on every page: the probe page meets it first;
+      90 s each, the shared bound), its SHARD_SHORT plant now drops its test only on a page that plays, and three
+      one-off plants bite (a list look whose callback is dropped / held → DID_NOT_START with its own line; an error
+      line only the probe page raises → the run fails naming UNTOKENIZED_CONSOLE_ERROR during `(probe)`, its shard
+      ok). The paint audit adapts its call and reads a probe page that did not start INVALID, as before, until its
+      own page waits name it (its BACKLOG item says so, and that its probe page's console is not read). The three JS
+      audit gates (storage, revisits, vmtruth) now read a probe page that never started as their embedded suite
+      failing (exit 1), not INVALID — as they read a shard that never starts. A failing line every page emits at boot
+      is filed twice, `(probe)` and `(boot/setup)`, with no verdict changed. The independent review's findings landed:
+      a renderer crash on the probe page closes its browser at once, as a shard's does, and `pageGone` counts a
+      crashed target, so the probe's look fails as infrastructure (retried) instead of waiting out its bound into
+      DID_NOT_START; the list look waits as long as a boot look (selecting loads every test's metadata script — 30 s
+      could trip under load); the dropped-`--tests` check comes before the zero check; a probe page whose rails fail
+      to install closes its browser. Measured: the proof's two 90 s runs took the one proof file to 343 s in the
+      gauntlet (its kill is 480 s) and made the selftests leg wave A's longest (343 s, total 1066 s against 991 s), so
+      the proof is one self-test per engine (`suite-gate-chrome-…`, `suite-gate-webkit-…`, sharing
+      `lib/suite-gate-proof.js`; the census holds each file to launching the runner itself) and the leg runs them at
+      once; `NEVER_STARTS` is `lib/gate-bite-proof.js`'s, shared with the sequence runner's proof; the every-rule run
+      also asserts an error line only the probe page raises. Not planted: a renderer crash (no page script can cause
+      one). Filed: "The rigs wait for their pages to boot a dozen ways, most of them in-page and unbounded".
