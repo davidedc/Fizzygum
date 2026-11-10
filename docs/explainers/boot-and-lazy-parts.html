@@ -243,7 +243,7 @@
     <tr><th><code>sources</code></th><th>Behaviour</th><th>Who ships it</th></tr>
     <tr><td class="k">background</td><td>fetch it once the world is up, off the critical path</td><td>the historical default</td></tr>
     <tr><td class="k">lazy</td><td>fetch on first demand — opening an inspector, or restoring a snapshot with class-level edits</td><td><strong>production</strong> (≈2.5 MB, roughly 72% of the tree, that a normal visit never downloads)</td></tr>
-    <tr><td class="k">none</td><td>never; ship none of it. No inspectors; class-level edits in a snapshot are refused with one clear report</td><td>the <code>lean</code> appliance</td></tr>
+    <tr><td class="k">none</td><td>never; ship none of it. No inspectors; a snapshot's class-level edits are not re-applied, and the load says so once</td><td>the <code>lean</code> appliance</td></tr>
   </table>
   </div>
 
@@ -443,7 +443,7 @@
         Examples folder's three tiers (empty at boot, art on open, one app per click), and that
         clicking one door leaves the other four undefined</td></tr>
     <tr><td class="k">parts-snapshot-load-headless.js</td>
-        <td>round-trips a snapshot CONTAINING a lazy part's widgets — the only path that exercises the pre-scan; also that a rejected load leaves the old world standing</td></tr>
+        <td>round-trips a snapshot CONTAINING a lazy part's widgets — the only path that exercises the pre-scan; also that a rejected load leaves the old world standing, and that a snapshot whose source edits name a lazy part's code loads that part before replaying them</td></tr>
     <tr><td class="k">smoke-boot-headless.js --production</td>
         <td>the only gate on a production tree: booted from the image, no SWCanvas payload, a snapshot round-trip, nothing fetched at boot — and it loads <strong>every</strong> lazy part, asserting each was absent at boot, that all its classes arrive, and that ZERO eager batches came with it</td></tr>
   </table>

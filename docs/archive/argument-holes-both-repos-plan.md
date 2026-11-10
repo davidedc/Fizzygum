@@ -2322,3 +2322,38 @@ for (const s of sites) if (s.absentBefore.length) {
       save's colour refusal emptied, by recompiling the static from its recorded source), the control green. Filed: "A
       load reads a reference form it does not know as undefined" (with the world section's own reader), "A tag
       record's other fields are not vetted on load", "`Color.create` never checks its components".
+- [x] **A snapshot's source edits of a lazy part's classes are dropped when the file holds none of its widgets**
+      (found by the independent review closing "A class a lazy part defines after a mixin edit takes the mixin's boot
+      member", in the plan's ledger; by reading, not measured). `Deserializer.classNamesIn` reads the object records
+      and the well-known keys, never `world.sourceEdits`, so `loadWhatItNeeds` does not load the part a class- or
+      mixin-scope record names; `replayClassEdits` / `replayMixinEdits` then pass over a class or mixin the page does
+      not have without a word, while the file's registry is installed whole: a re-save carries the record the page
+      never ran. On the dev `index.html`: edit `ParentStainerMixin._updateColor` (app-kit) or a `CreatorButtonWdgt`
+      member, close every app-kit widget, save, and load the file in a fresh page.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED (a probe on the dev `index.html`,
+      `Fizzygum-tests/.scratch/lazy-part-source-edits/`): a world file carrying a class-scope edit of
+      `CreatorButtonWdgt` and a mixin-scope edit of `ParentStainer` (app-kit), holding none of app-kit's widgets,
+      loaded on a fresh page without loading app-kit, installed both records, said nothing, and neither edit was in
+      force once the part loaded later; a re-save carried both. A mixin record holds the parsed name ("ParentStainer"),
+      the part manifest the source name ("ParentStainerMixin"); and the manifest lists no core sources, so a core
+      mixin answers `canEverProvideClass` false. RULED: the part pre-load (`Deserializer.loadWhatItNeeds`) also reads
+      the code the file's source edits name — `SourceEditsRegistry.namesOfTheCodeEditedIn`, a class's name and a
+      mixin's source name — reusing the one pre-load mechanism; NOT the refusal list (`classNamesIn`): an edit whose
+      code no part provides does not make the restore throw (the replay passes it over), and the core-mixin case
+      would refuse every file carrying a core mixin edit. So a class-level record the replay does not apply is told by
+      the load's existing notice (the lean build's "cannot re-apply"), never dropped in silence, and rides on for a
+      build that has the code. LANDED: `SourceEditsRegistry.namesOfTheCodeEditedIn` (a mixin taken by either
+      spelling, as `Mixin.named` takes it), read by `Deserializer.loadWhatItNeeds`; the notice counts the class-level
+      records the replay did NOT apply (`classLevelRecordCount` − applied: no meta-system, absent code, and a record
+      whose source this build does not compile — that last was log-only), the old predicting count deleted; one
+      `SourceEditsRegistry.isClassLevel`; the reference doc §9/§11/§12, build-and-packaging's `none` row and both
+      explainers (they said such edits are refused: they are told, not re-applied), the `parts` leg rows. PROVEN: the
+      probe — app-kit loads with the file, both edits in force; new sections of `parts-snapshot-load-headless.js` (the
+      `parts` leg): `SOURCE_EDITS_LOAD_THEIR_PARTS` — a class-only and a mixin-only file, each on its own page, each
+      needing no part through its classes, each edit in force after the load (the mixin's on the consumer's live
+      member), nothing said — and `UNREPLAYABLE_EDITS_ARE_TOLD` (an edit of a class no part provides, and one that does
+      not compile here: the file loads, one inform each, the record kept); the bite-proof plants each half of the name
+      mapping and the notice counting nothing, 8 of 8 rules. The independent review's findings landed (the split
+      files, the counted-not-predicted notice, the live-member check, the precondition as the pre-load's own
+      question, the docs drift). Filed: "A return to boot that fails is only logged", "A world file's source-edit
+      list is not vetted on load", "No gate loads an edit-carrying world on a `sources: "none"` or `"lazy"` tree".

@@ -316,8 +316,8 @@
   run the world, so it becomes a policy (<code>sources</code>): <strong>background</strong> —
   fetch it once the world is up; <strong>lazy</strong> — fetch it on first demand (opening an
   inspector, or opening a file (either kind) that holds one or carries class-level source edits); <strong>none</strong> —
-  ship none of it (no inspectors; snapshots with class-level source edits are refused with a
-  clear error). What never varies: the runtime <em>compiler</em> and <code>compileFGCode</code>
+  ship none of it (no inspectors; a snapshot's class-level source edits are not re-applied, and the
+  load says so once while it restores the rest). What never varies: the runtime <em>compiler</em> and <code>compileFGCode</code>
   ship in every profile — runtime compilation is product behaviour, not a dev affordance.</p>
 
   <h2>Launching a lazy part</h2>

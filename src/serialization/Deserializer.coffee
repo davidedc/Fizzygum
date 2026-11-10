@@ -189,7 +189,12 @@ class Deserializer
   # -- else a promise that resolves once the next thing has arrived, for the caller to RE-ENTER its
   # load on. One thing per trip, in this order, so the second is asked on the re-entry:
   #   1. the LAZY PARTS that own the classes it names (@classNamesIn), which are not defined until their
-  #      part loads;
+  #      part loads, and the code its class- and mixin-scope source edits name
+  #      (SourceEditsRegistry.namesOfTheCodeEditedIn), which the replay edits only once it is there --
+  #      an edit of a lazy part's code rides a file that holds none of that part's widgets. An edit
+  #      whose code no part provides is no reason to refuse the file (its restore does not need it):
+  #      the load tells the person the edits its replay did not apply (WorldWdgt.loadWorldSnapshot).
+  #      A part an edit alone needs that FAILS to load fails the load, as one a widget needs does;
   #   2. the REFLECTIVE LAYER, when the file needs it (_needsTheReflectiveLayer), which reads a
   #      declaration off the classes step 1 brought in.
   # Both file doors ask it before anything changes -- WorldWdgt.loadWorldSnapshot before its teardown,
@@ -199,7 +204,7 @@ class Deserializer
   # here is it known that a file being restored needed it. Any other rejection is a bug in loading the
   # code, and stays one (the door rethrows it).
   @loadWhatItNeeds: (envelope) ->
-    missingParts = world.parts.partsNeededFor @classNamesIn envelope
+    missingParts = world.parts.partsNeededFor @classNamesIn(envelope).concat SourceEditsRegistry.namesOfTheCodeEditedIn envelope?.world?.sourceEdits
     if missingParts.length
       return world.parts.ensureAllLoaded(missingParts).catch (reason) ->
         throw reason unless typeof reason is "string"
@@ -226,7 +231,7 @@ class Deserializer
   @_needsTheReflectiveLayer: (envelope) ->
     return false if reflectiveLayerIsLoaded()
     return false unless reflectiveLayerCanLoad()
-    replaysClassEdits = (envelope.world?.sourceEdits ? []).some (eachRecord) -> eachRecord.scope is "class" or eachRecord.scope is "mixin"
+    replaysClassEdits = (envelope.world?.sourceEdits ? []).some (eachRecord) -> SourceEditsRegistry.isClassLevel eachRecord
     holdsAMemberMapsReader = envelope.objects.some (record) -> record? and classNamed(record.class)?.prototype.readsClassMemberMaps is true
     replaysClassEdits or holdsAMemberMapsReader
 

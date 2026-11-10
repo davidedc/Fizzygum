@@ -3060,13 +3060,14 @@ class WorldWdgt extends IconGridPanelWdgt
       return unless (typeof window.confirm is "function") and window.confirm msg
     # 0. WHAT THE FILE NEEDS, LOADED FIRST, then re-enter (Deserializer.loadWhatItNeeds, the step the
     #    widget door takes too). A snapshot can name classes that live in a LAZY part this page has
-    #    never loaded (a saved Fizzytiles window on a freshly-booted index.html); and on a
+    #    never loaded (a saved Fizzytiles window on a freshly-booted index.html), and its class-level
+    #    source edits can name such a part's code with none of its widgets in the file; and on a
     #    `sources: "lazy"` build it can need the reflective layer, which nothing has asked for yet --
     #    for its CLASS-level source edits, replayed against the meta-system, or for an inspector it
     #    holds, which reads the class member maps. One thing per trip, then re-enter: it cannot loop,
     #    because each trip's predicate requires its thing to be absent, and the re-entry runs with it
-    #    present. A build that can NEVER load the layer (`sources: "none"`) does not wait for it; it
-    #    takes step 2b's notice below instead.
+    #    present. A build that can NEVER load the layer (`sources: "none"`) does not wait for it; its
+    #    replay applies nothing, and step 2b's notice says so.
     #
     #    ⚠ THE POSITION OF THIS BLOCK IS THE WHOLE CORRECTNESS ARGUMENT. Step 1 below destroys the
     #    entire desktop, so the bail-out has to happen before ANY mutation: the re-entry then runs
@@ -3115,14 +3116,6 @@ class WorldWdgt extends IconGridPanelWdgt
       #     records nothing (Widget.injectProperty). The rebuilt registry is installed with the
       #     rest of the world, below.
       restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
-      # An artifact that ships no class source text has no meta-system and can never replay these
-      # (arc 5's lean profile). Say so ONCE, to the user, before restoring the rest: the alternative
-      # is that their class edits vanish from the loaded world with only a console line to show for it.
-      # The widgets and their per-widget {"$src"} function edits still load normally.
-      if (unreplayableCount = restoredRegistry.unreplayableSourceEditsCount()) > 0
-        @inform "This build cannot re-apply the " + unreplayableCount + " class-level source edit" +
-          (if unreplayableCount is 1 then "" else "s") + " this file carries.\n" +
-          "Everything else in it loads normally."
       # The file's records reproduce its members from boot, so the page goes back to boot first: every
       # class and mixin member edited here returns to its source at boot
       # (SourceEditsRegistry.returnThePageToBootSources), and the loaded world is the file's, not the
@@ -3132,6 +3125,17 @@ class WorldWdgt extends IconGridPanelWdgt
       returned = SourceEditsRegistry.returnThePageToBootSources()
       replayed = restoredRegistry.replayMixinEdits() + restoredRegistry.replayClassEdits()
       @noteCodeChanged() if returned + replayed > 0
+      # Every class-level record the replay did NOT apply is said ONCE, to the user, before the rest is
+      # restored -- an artifact that ships no class source text has no meta-system and applies none (arc
+      # 5's lean profile); a build that lacks the class or mixin a record names (step 0 brought in every
+      # part that holds one) skips it; a record whose source this build does not compile is caught and
+      # logged. The
+      # alternative is that their class edits vanish from the loaded world without a word. The widgets
+      # and their per-widget {"$src"} function edits still load normally.
+      if (unreplayedCount = restoredRegistry.classLevelRecordCount() - replayed) > 0
+        @inform "This build cannot re-apply the " + unreplayedCount + " class-level source edit" +
+          (if unreplayedCount is 1 then "" else "s") + " this file carries.\n" +
+          "Everything else in it loads normally."
       # 3. deserialize the object table (kind:"world" preserves each widget's iid).
       result = Deserializer.deserialize envelope
       shells = result.shells or []

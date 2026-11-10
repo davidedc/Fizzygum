@@ -107,13 +107,33 @@ class SourceEditsRegistry
   # do not bring the eager classes' member maps.
   @canReplaySourceEdits: -> Mixin?
 
-  # How many records this build will NOT be able to replay -- so a load can say so ONCE, plainly,
-  # instead of dropping the user's class edits without a word. (Instance-scope records are absent
-  # from the count: they ride the {"$src"} path, which needs only the compiler, and every profile
-  # ships that.)
-  unreplayableSourceEditsCount: ->
-    return 0 if SourceEditsRegistry.canReplaySourceEdits()
-    (r for r in @records when r.scope is "class" or r.scope is "mixin").length
+  # Is `record` CLASS-LEVEL -- a class- or mixin-scope one, which the replays apply against the
+  # meta-system? (An instance-scope one rides the {"$src"} path on its own widget, which needs only the
+  # compiler, and every profile ships that.)
+  @isClassLevel: (record) ->
+    record?.scope is "class" or record?.scope is "mixin"
+
+  # How many class-level records I hold: what a load's replays would apply, so the load can tell the
+  # user, once, how many of them it did not (WorldWdgt.loadWorldSnapshot).
+  classLevelRecordCount: ->
+    (r for r in @records when SourceEditsRegistry.isClassLevel r).length
+
+  # The code the class-level records of a world file name, by the names the build's part manifest
+  # holds them by -- a class's name, and a mixin's source name: a record holds the parsed one
+  # ("Highlightable", whose source and global are "HighlightableMixin"), and either spelling is taken,
+  # as Mixin.named takes either (a name no part holds is passed over). What the parts pre-load brings in
+  # before the replay (Deserializer.loadWhatItNeeds), so an edit of a lazy part's code finds its class
+  # or mixin even when the file holds none of that part's widgets.
+  @namesOfTheCodeEditedIn: (records) ->
+    names = []
+    add = (name) -> names.push name if typeof name is "string" and name not in names
+    for r in (records ? [])
+      if r?.scope is "class"
+        add r.className
+      else if r?.scope is "mixin" and typeof r.mixinName is "string"
+        add r.mixinName
+        add r.mixinName + "Mixin"
+    names
 
   # THE PAGE AS IT BOOTED, which a replay starts from: the records reproduce a session's members from
   # boot (above), so a world-snapshot load first returns every meta-object to its boot sources. Each

@@ -141,6 +141,19 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
       same review; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
       label such a pane, or make it read-only?
+- [ ] **A return to boot that fails is only logged** (found by the independent review closing "A snapshot's source
+      edits of a lazy part's classes are dropped when the file holds none of its widgets", in the plan's ledger; by
+      reading). `SourceEditsRegistry.returnThePageToBootSources` catches a member it cannot return and only
+      `console.log`s it, after the teardown: the loaded world then runs the page's edited member where the file
+      expects boot's, with no word to the person and no gate token.
+- [ ] **A world file's source-edit list is not vetted on load** (found by the same review; by reading).
+      `_envelopeShapeProblem` does not look at `world.sourceEdits`: a non-array (`fromRecords`' `.slice`) or a `null`
+      entry throws after the teardown and leaves an empty desktop, and on a `sources: "lazy"` tree
+      `_needsTheReflectiveLayer` throws a TypeError before it.
+- [ ] **No gate loads an edit-carrying world on a `sources: "none"` or `"lazy"` tree** (found by the same review; by
+      reading). The lean build's "cannot re-apply" notice and a lazy build's trip order (the part, then the reflective
+      layer, then the replay) are proven by reading only: the rigs that load worlds with source edits drive the dev
+      tree, and `fg homepage`'s smoke round-trips a snapshot that carries none.
 - [ ] **A load reads a reference form it does not know as undefined** (found closing "A save writes NaN and
       ±Infinity as null", in the plan's ledger; by reading). `Deserializer.resolveRef` answers any object value carrying
       none of `$r`, `$wk`, `$ext`, `$num` (a `$src` is compiled apart) with `undefined`, and `_envelopeShapeProblem`
@@ -155,14 +168,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       takes any alpha, so a run's `Color.create 200, 0, 0, "0.5"` makes a colour whose cache key ("200,0,0,0.5") is the
       number alpha's too: the first one minted is every later `Color.create 200, 0, 0, 0.5` on the page. (A save
       refuses such a colour, naming it.)
-- [ ] **A snapshot's source edits of a lazy part's classes are dropped when the file holds none of its widgets**
-      (found by the independent review closing "A class a lazy part defines after a mixin edit takes the mixin's boot
-      member", in the plan's ledger; by reading, not measured). `Deserializer.classNamesIn` reads the object records
-      and the well-known keys, never `world.sourceEdits`, so `loadWhatItNeeds` does not load the part a class- or
-      mixin-scope record names; `replayClassEdits` / `replayMixinEdits` then pass over a class or mixin the page does
-      not have without a word, while the file's registry is installed whole: a re-save carries the record the page
-      never ran. On the dev `index.html`: edit `ParentStainerMixin._updateColor` (app-kit) or a `CreatorButtonWdgt`
-      member, close every app-kit widget, save, and load the file in a fresh page.
 - [ ] **A runtime object stamped derived is dropped from an inspector holding it** (found by the independent review
       closing "A value answering `rebuildDerivedValue` is dropped from a save, and breaks a copy, wherever it
       stands", in the plan's ledger; by reading, not measured). A value a class stamps with a no-op

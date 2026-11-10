@@ -601,7 +601,13 @@ for the next thing, for the door to RE-ENTER its load on, one thing per trip:
 1. the LAZY PARTS owning the classes `Deserializer.classNamesIn` lists (record classes that are no
    native-type tag, `app:` keys, class keys — the same list the refusal reads, so a class no part can
    provide is refused before any fetch; what a part's arrival can still refuse is a method's source on
-   one of its classes, or an `app:` key naming one of them that is not an app, judged on the re-entry);
+   one of its classes, or an `app:` key naming one of them that is not an app, judged on the re-entry),
+   and the parts owning the code a world file's class- and mixin-scope source edits name
+   (`SourceEditsRegistry.namesOfTheCodeEditedIn` — a class's name, a mixin's source name `<Name>Mixin`):
+   an edit of a lazy part's code rides a file that holds none of that part's widgets, and the replay
+   (§12) edits only what is there. An edit whose code no part provides refuses nothing — the restore does
+   not need it — and is counted by the load's notice instead (§11). A part an edit alone needs that fails to load
+   fails the load, as one a widget needs does;
 2. then the reflective layer, when `Deserializer._needsTheReflectiveLayer` says the file needs it: it
    is absent but can load, and the file carries class- or mixin-scope source edits (§12) or holds a
    widget whose class declares `readsClassMemberMaps` — `InspectorWdgt`, which shows and edits a
@@ -729,14 +735,17 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      rig / a macro pass `skipConfirm`).
    - **Pre-load what the file needs** — `Deserializer.loadWhatItNeeds` (§9, the step the widget door
      takes too), one bail-out-then-re-enter per thing: the LAZY PARTS owning the classes
-     `Deserializer.classNamesIn` lists, then the reflective layer when the file carries class- or
+     `Deserializer.classNamesIn` lists and the code its class- and mixin-scope source edits name
+     (`SourceEditsRegistry.namesOfTheCodeEditedIn`), then the reflective layer when the file carries class- or
      mixin-scope source edits or holds an inspector (`readsClassMemberMaps`). It sits after the confirm
      so the user is asked exactly once (the re-entry passes `skipConfirm` for that reason and no
      other). A part that fails to load rejects with a load `SerializationError`, the desktop as it was,
      and the file door reports it (§10). A build that can NEVER load the layer (`sources: "none"`) does
      not wait for it — it takes the notice instead, telling the user once, before the world is
      rebuilt, how many class-level edits it cannot re-apply
-     (`SourceEditsRegistry.unreplayableSourceEditsCount` — §12).
+     (§12): the class-level records its replay did not apply (`classLevelRecordCount` − the replays' applied
+     count) — none on such a build, and elsewhere each whose class or mixin this build lacks (every part that
+     could hold one has loaded) or whose source this build does not compile.
 2. **Structural teardown** — `_teardownWorldStructureNoSettle`, the SHARED shipping core this and
    `resetWorld` both call (the reset then dissolves its world and constructs a new one; a load keeps
    its world). Its contract: after
@@ -875,8 +884,9 @@ gated on `SourceEditsRegistry.canReplaySourceEdits()` — class- and mixin-scope
 META-SYSTEM (`Class.applyMemberEdit` / `removeMember`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only from
 the class source directory (with the reflective layer, which the load fetches first wherever it can come —
 §9 — or alone ahead of a lazy part). An artifact built `sources: "none"` therefore cannot replay them at all,
-and says so once (`unreplayableSourceEditsCount` → one `inform`) rather than dropping the user's
-class edits silently. Instance-scope edits
+and says so once (the class-level records the replay did not apply → one `inform`) rather than dropping the user's
+class edits silently — as does a build that lacks the class or mixin an edit names (the load first
+brings in every lazy part that holds an edited class or mixin, §9). Instance-scope edits
 ride the normal `{"$src"}` path on their own widget — those still load on such a build, since
 they need only the compiler every profile ships. The rebuilt registry is installed after deserialize,
 with the rest of the world. A file/menu load confirms first, warning that a
