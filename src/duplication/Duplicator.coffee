@@ -5,8 +5,9 @@
 #
 # Serialization (src/serialization/Serializer) is the side-effect-free sibling
 # of this walk: the two share the native-type taxonomy (NativeValueKinds) and
-# per-class KNOWLEDGE (keptByReferenceOnDeepCopy, rebuildDerivedValue,
-# getEmptyObjectOfSameTypeAsThisOne, _reactToBeingCopied) but no mutable state,
+# per-class KNOWLEDGE (keptByReferenceOnDeepCopy, rebuildDerivedValue -- and through
+# NativeValueKinds.isDerivedAt the @serializationTransients that say where a stamped value is
+# derived -- getEmptyObjectOfSameTypeAsThisOne, _reactToBeingCopied) but no mutable state,
 # so neither can regress the other.
 # See docs/architecture/serialization-duplication-reference.md.
 #
@@ -57,11 +58,12 @@ class Duplicator
     if (value instanceof Widget) and !@widgetsInStructure.has value
       return value
 
-    # a canvas context reached anywhere but beside the canvas it is drawn from -- an inspector's
-    # subject, a cache's slot -- is a page object outside the copied structure, kept by reference as an
-    # outside widget is. One beside its canvas is DERIVED there and never reaches this walk
-    # (_cloneContentInto asks NativeValueKinds.isDerivedAt first).
-    return value if NativeValueKinds.isCanvasContext value
+    # a value its holder rebuilds (it answers rebuildDerivedValue: a canvas context, a 3D pane's
+    # runtime) reached anywhere but where that holder rebuilds it -- an inspector's subject, a cache's
+    # slot -- is a page object outside the copied structure, kept by reference as an outside widget is.
+    # One where its holder rebuilds it is DERIVED there and never reaches this walk (_cloneContentInto
+    # asks NativeValueKinds.isDerivedAt first).
+    return value if NativeValueKinds.rebuildsItself value
 
     # native types, recognised through the same taxonomy the Serializer uses
     return @_copyArray value if NativeValueKinds.isArray value
@@ -217,7 +219,7 @@ class Duplicator
         cloneOfMe[property] = undefined
       else if typeof value is "object"
         if NativeValueKinds.isDerivedAt obj, property
-          # a value DERIVED here (a canvas context beside its canvas): skip it -- the
+          # a value DERIVED here (a canvas context beside its canvas, a stamped runtime value in a transient field): skip it -- the
           # _rebuildDerivedValues pass below rebuilds it on the clone.
           cloneOfMe[property] = undefined
         else if value.keptByReferenceOnDeepCopy
@@ -236,7 +238,7 @@ class Duplicator
         cloneOfMe[property] = value if property isnt "instanceNumericID"
     return
 
-  # A DERIVED value (NativeValueKinds.isDerivedAt: a canvas context beside its canvas) is not copied:
+  # A DERIVED value (NativeValueKinds.isDerivedAt: a canvas context beside its canvas, a stamped runtime value in a transient field) is not copied:
   # for each property derived on the ORIGINAL, its value rebuilds itself onto the clone
   # (rebuildDerivedValue).
   _rebuildDerivedValues: (cloneOfMe, theOriginal) ->

@@ -75,8 +75,9 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   prototype methods/fields are not copied — the shell is created with
   `Object.create(Class.prototype)` so they come from the prototype.
 - A property whose value is **DERIVED where it stands** (`NativeValueKinds.isDerivedAt`, the one
-  predicate both walkers ask: a value answering **`rebuildDerivedValue`**, and for a canvas 2D
-  context only beside the canvas it is drawn from — §5) is skipped by BOTH walkers. Only
+  predicate both walkers ask: a value answering **`rebuildDerivedValue`**, where its holder rebuilds
+  it — a canvas 2D context beside the canvas it is drawn from, any other in a field its holder's class
+  declares in `@serializationTransients` — §5) is skipped by BOTH walkers. Only
   DUPLICATION regenerates it (`Duplicator._rebuildDerivedValues` asks the ORIGINAL's value to
   rebuild onto the clone). SERIALIZATION drops it and does not restore it — the field comes back
   `undefined`, so a derived value a restored widget still needs is rebuilt by that class (lazily,
@@ -84,8 +85,9 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   prototype (they rebuild from their sibling canvas, `<name>Context` beside `<name>`) — and a
   rebuilt context is fresh and UNSCALED, so a primitive that draws through a context it holds
   lays the pixel ratio again itself (`CanvasWdgt.drawLine`); a class may also STAMP a no-op one
-  onto a runtime-only object to keep it out of both walks (§5). A context anywhere else is a page
-  object: a save refuses it, a copy keeps it by reference (`Duplicator._duplicate`).
+  onto a runtime-only object it keeps in a field it declares transient, to keep it out of both walks
+  there (§5). Such a value anywhere else is a page object: a save refuses it, a copy keeps it by
+  reference (`Duplicator._duplicate`).
 - A property whose value is flagged **`keptByReferenceOnDeepCopy`** is kept by reference
   on duplication. Two kinds of class declare it: world-level shared singletons
   (`Wallpaper`, `WidgetFactory`, `WindowedApp`, `DataflowEngine`,
@@ -401,28 +403,35 @@ NAMED like one.
   it stands, and only duplication rebuilds it on the copy; after a restore its holder rebuilds
   it, lazily, as a fresh widget builds it (or in its class's `_afterDeserialization`). Whether a
   value is derived is asked of its PLACE, in one predicate both walkers share
-  (`NativeValueKinds.isDerivedAt`): a stamped runtime object is derived wherever it stands; a
-  canvas context only beside the canvas it is drawn from, held as `<name>Context` next to that
-  canvas `<name>` on the same holder (where its rebuild reads the canvas from — the SWCanvas
-  context holds no `.canvas` to ask). Anywhere else a context is a page object like any other:
-  a save refuses it (`SerializationError`, a remedy saying so), a copy keeps it by reference —
-  an inspector on a canvas context (a world inspector's `worldCanvasContext` row) duplicates
-  inspecting the same context and refuses a save until it is closed. The rig's
-  `inspector.onACanvasContext*` hold both.
+  (`NativeValueKinds.isDerivedAt`): where its holder rebuilds it — a canvas context beside the
+  canvas it is drawn from, held as `<name>Context` next to that canvas `<name>` on the same holder
+  (where its rebuild reads the canvas from — the SWCanvas context holds no `.canvas` to ask); a
+  stamped runtime object in a field its holder's class declares in `@serializationTransients` (a 3D
+  pane's runtime, `FridgeMagnets3DCanvasWdgt._markTransient`). Anywhere else such a value is a page
+  object like any other: a save refuses it (`SerializationError`, one remedy for every kind), a copy
+  keeps it by reference — an inspector on one (a world inspector's `worldCanvasContext` row, a 3D
+  pane's `transforms` row double-clicked) duplicates inspecting the same value and refuses a save
+  until it is closed. The rig's `inspector.onACanvasContext*`, `inspector.onAPaneRuntimeValue*` and
+  `paneRuntime.derivedInThePanesOwnFields` hold it.
   - ⚠ **The two mechanisms do NOT cover each other** (2026-07-08 SW3D-port incident, ~1 h):
-    `@serializationTransients` is read by the FILE Serializer ONLY. The in-memory
-    **Duplicator** never consults it — its coverage comes from six mechanisms of its own:
+    `@serializationTransients` SKIPS a field for the FILE Serializer only. The in-memory
+    **Duplicator** never skips a field for being declared there — it reads the declaration only
+    through `NativeValueKinds.isDerivedAt`, to place a stamped value (below) — and its coverage
+    comes from six mechanisms of its own:
     a NAME-convention skip in `_cloneContentInto` (the version-keyed cache pairs
     `cached*`/`check*Cache` plus `childrenBoundsUpdatedAt`, and the island source-lane
     `_islandBufferSource*` pair), the `rebuildDerivedValue` skip-and-rebuild of a value derived
-    where it stands (`NativeValueKinds.isDerivedAt`), `keptByReferenceOnDeepCopy`, a canvas
-    context standing anywhere but beside its canvas kept by reference (`_duplicate`), the
+    where it stands (`NativeValueKinds.isDerivedAt`), `keptByReferenceOnDeepCopy`, a value
+    answering `rebuildDerivedValue` standing anywhere but where its holder rebuilds it kept by
+    reference (`_duplicate`), the
     `alignCopiedWidgetTo*` world-set aligners, and the per-class `_reactToBeingCopied` hook. A property covered by none of these gets
     deep-copied — and a runtime-only object there crashes the copy on the Duplicator's
     closed-set guard ("cannot duplicate a value of unrecognized type"). **Fix: stamp a
-    no-op `rebuildDerivedValue` on the runtime-only object itself** (that both skips the
-    copy and marks it derived); listing it in `@serializationTransients` as well is
-    correct but not sufficient.
+    no-op `rebuildDerivedValue` on the runtime-only object itself AND list its field in
+    `@serializationTransients`**: the stamp marks a value its holder rebuilds, the declaration
+    names the field where it does, and the two together make it derived THERE (skipped by the
+    copy and the save); the stamp alone makes it a page object everywhere (kept by reference by
+    a copy, refused by a save), the declaration alone covers only the save.
   - **Declaring a new transient therefore means deciding BOTH sides.** For the serializer:
     list it. For the Duplicator: pick the coverage — skip / rebuild / align / share / or
     field-copy WITH a stated reason it is safe on a clone; every current family carries
@@ -514,7 +523,10 @@ Native / special types the walkers special-case (duplication: the `Duplicator`'s
 types through the shared `NativeValueKinds`, which duck-types the canvas kind so the
 SWCanvas variant is caught too; its gradient predicate is duplication-only — see the
 gradient row — and its element predicates, `isImage`/`isVideo`, decide a refusal's remediation
-in the one walker and a field left `undefined` in the other). Anything that reaches neither a handler nor a plain object literal must be an
+in the one walker and a field left `undefined` in the other). A value that rebuilds itself
+(`NativeValueKinds.rebuildsItself`: a canvas context, a 3D pane's stamped runtime — a plain `{}` included) is
+asked about before any handler: where its holder rebuilds it, it is derived (§5); anywhere else a copy keeps it
+by reference and a save refuses it. Anything else that reaches neither a handler nor a plain object literal must be an
 instance of a class boot's `classNamed` answers for — the CLOSED SET, one rule shared by the two
 walkers (`Serializer`'s guard and `Duplicator._copyFizzygumObject`'s): an instance of a
 browser-native class with no handler (a `DOMRect`, a `CanvasGradient`) is refused, because a save

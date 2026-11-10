@@ -83,13 +83,14 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
     @currentFillRGB ?= @defaultFillRGB
     @backgroundRGB ?= @defaultBackgroundRGB
 
-  # The deep-copier (window duplication) and the file Serializer both DROP a
-  # property whose value carries a rebuildDerivedValue method -- such a value is derived wherever it
-  # stands (NativeValueKinds.isDerivedAt; a canvas context only beside its canvas) -- rather than
-  # trying to clone the Surface / typed-array / engine and crashing. Stamp that no-op onto each runtime object so the clone gets undefined
-  # and rebuilds it lazily on its next render (@_ensureRuntime / @_ensureEngine).
-  # Belt-and-suspenders with @serializationTransients, which also covers the
-  # compiled-program Functions the Serializer can't emit.
+  # The deep-copier (window duplication) and the file Serializer both DROP a value carrying a
+  # rebuildDerivedValue method where its holder rebuilds it -- for a value like these, a field its
+  # class declares in @serializationTransients (NativeValueKinds.isDerivedAt) -- rather than trying to
+  # clone the Surface / typed-array / engine and crashing. So I stamp that no-op onto each runtime
+  # object I keep in such a field: the clone gets undefined and rebuilds it lazily on its next render
+  # (@_ensureRuntime / @_ensureEngine), and a save leaves it out. The stamp and the declaration work
+  # together: one held anywhere else (an inspector on it) is a page object, which a copy shares and a
+  # save refuses. The declaration also covers the compiled-program Functions the Serializer can't emit.
   _transientRebuild: -> # intentionally empty — the widget rebuilds it lazily
 
   _markTransient: (obj) ->

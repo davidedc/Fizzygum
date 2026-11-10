@@ -373,8 +373,9 @@ class Serializer
           # policy (an embedded referent figure — homed to the shelf) decides where it goes.
           props.parent = null
           continue
-        # a value DERIVED here (NativeValueKinds.isDerivedAt: a canvas context beside its canvas) is
-        # left out: after a load its holder rebuilds it, lazily, as a fresh widget builds it
+        # a value DERIVED here (NativeValueKinds.isDerivedAt -- past the declared transients above, a
+        # canvas context beside its canvas) is left out: after a load its holder rebuilds it, lazily,
+        # as a fresh widget builds it
         continue if NativeValueKinds.isDerivedAt obj, name
         props[name] = refFor obj[name], (path + " → ." + name), obj, name
       props
@@ -385,6 +386,14 @@ class Serializer
       (marker for own marker, setField of Serializer.WORLD_SET_MEMBERSHIPS when world[setField]?.has widget)
 
     populateRecord = (record, obj, path) ->
+      # a value its holder rebuilds (NativeValueKinds.rebuildsItself: a canvas context, a 3D pane's
+      # runtime) reaching a record stands somewhere that holder does not rebuild it -- where it does, it
+      # is derived and never written (NativeValueKinds.isDerivedAt, encodeOwnProps) -- and no file can
+      # carry it: refused, whatever its type
+      if NativeValueKinds.rebuildsItself obj
+        fail ("a value its holder rebuilds (" + describe(obj) + ") cannot be serialized outside its holder's own field"),
+             path, describe(obj),
+             "A value its holder rebuilds -- a canvas context, a 3D pane's runtime -- is left out of a file, and rebuilt, only in its holder's own field: a canvas context beside the canvas it is drawn from (held as <name>Context next to that canvas <name>), anything else in a field its holder's class declares in @serializationTransients. Held anywhere else, no file can carry it: close what holds it (an inspector on it), or remove the field a run filled with it."
       # --- native / special types: $-tagged records (user class names can't collide) ---
       if NativeValueKinds.isArray obj
         record.class = "$Array"
@@ -447,8 +456,6 @@ class Serializer
       if classNamed(className) isnt obj.constructor
         remediation = if NativeValueKinds.isImage(obj) or NativeValueKinds.isVideo(obj)
           "An element the page loads is derived from its holder's path: keep the path in a field, declare the property holding the element in @serializationTransients, and re-make the element from the path in _afterDeserialization and _reactToBeingCopied."
-        else if NativeValueKinds.isCanvasContext obj
-          "A canvas context is left out of a file, and rebuilt, only beside the canvas it is drawn from (held as <name>Context next to that canvas <name>); held anywhere else (an inspector on it) no file can carry it: close what holds it."
         else
           "Declare the property holding it in @serializationTransients, or add a per-type handler for it."
         fail ("a value of an unrecognized type (" + className + ") cannot be serialized"),

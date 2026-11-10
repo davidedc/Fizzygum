@@ -2394,3 +2394,37 @@ for (const s of sites) if (s.absentBefore.length) {
       false comment on `step` deleted. Filed: "A viewport's gesture bookkeeping outlives its gesture", "Widget's
       `step` documentation is false", "A hook override that skips `super` is unguarded", "An object inspector removes
       its list's contents from a set nothing adds them to".
+- [x] **A runtime object stamped derived is dropped from an inspector holding it** (found by the independent review
+      closing "A value answering `rebuildDerivedValue` is dropped from a save, and breaks a copy, wherever it
+      stands", in the plan's ledger; by reading, not measured). A value a class stamps with a no-op
+      `rebuildDerivedValue` (`FridgeMagnets3DCanvasWdgt._markTransient`: its `transforms`, `meshCache`,
+      `lclCodeCompiler`, `surface`, `depth`, `engine`, `imageData`) is derived wherever it stands
+      (`NativeValueKinds.isDerivedAt`), so an inspector opened on one (a 3D pane's member row, double-clicked) loses
+      its subject on a Duplicate (the copy's first re-lay throws in `_subjectIsEditable`) and on a world save (the
+      restored inspector throws at every re-lay) — what a canvas context did before it became derived only beside its
+      canvas. Such a value is derived where its holder rebuilds it: the class that stamps it (its
+      `@serializationTransients` names the same fields), not an inspector.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED (a probe on index-sw.html, `Fizzygum-tests/.scratch/derived-at-home/`):
+      worse than filed — a Duplicate of an inspector on the 3D pane's `transforms`, `meshCache` or `surface` THREW in
+      the copy (its subject came back undefined), and a world save SUCCEEDED, dropping the subject in silence; the pane
+      itself copies (its runtime rebuilt) and saves. RULED: a value that rebuilds itself is derived WHERE ITS HOLDER
+      REBUILDS IT — a canvas context beside its canvas (as before), any other in a field its holder's class declares
+      in `@serializationTransients` (the declaration the pane already makes; the Duplicator skips no field for being
+      declared there, which is why the pane stamps) — and anywhere else it is a page object: the copy keeps it by reference, the save
+      refuses it, one remedy for every kind. The canvas context's own special cases in the two walkers became the one
+      rule (`Duplicator._duplicate` keeps any value answering `rebuildDerivedValue` by reference; the Serializer refuses
+      one at the top of `populateRecord`, the context-only remediation deleted). LANDED: `NativeValueKinds.isDerivedAt`,
+      `Duplicator._duplicate`, `Serializer`; the pane's comment; the reference doc §2/§5 — including its guidance for a
+      runtime-only object (stamp AND declare: the stamp alone now makes a page object). PROVEN: the probe — the copy
+      keeps the subject, the save is refused naming `.inspectedObject`; new serialization-rig checks
+      `paneRuntime.derivedInThePanesOwnFields`, `inspector.onAPaneRuntimeValueDuplicates`,
+      `inspector.onAPaneRuntimeValueRefusesTheSave` (the pane's runtime fields derived from its declaration, both
+      backends), the context checks green under the shared remedy — four plants (stamped values derived everywhere; derived
+      nowhere; the copy deep-copying them; the save not refusing them) each fail their checks. The independent
+      review's findings landed: ONE test of "rebuilds itself" (`NativeValueKinds.rebuildsItself`: it answers a
+      rebuildDerivedValue FUNCTION — a field of that name holding anything else used to count) in all three sites; the reference doc's "the Duplicator never consults `@serializationTransients`" (now
+      false) restated, §6 says such a value is asked about before any handler; the rig waits for the pane's first
+      render (its engine fields were otherwise unjudged) and asserts a copy's runtime field is DROPPED; the remedy
+      also names a field a run filled. Filed: "Three plans teach a stamp without its declaration", "Nothing holds every
+      stamped field to its declaration", "An inspector's Duplicate throws on a subject the copier refuses", "Is an
+      inspector's subject always a page object?" (the owner's).

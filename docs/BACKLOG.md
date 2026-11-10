@@ -131,6 +131,21 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
       same review; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
       label such a pane, or make it read-only?
+- [ ] **Three plans teach a stamp without its declaration** (found by the independent review closing "A runtime
+      object stamped derived is dropped from an inspector holding it", in the plan's ledger; by reading).
+      `docs/plans/creation-and-templates-plan.md` ("and/or stamp"), `dataflow-engine-implementation-plan.md` ("skipped
+      by the copier") and `affine-transforms-plan.md` name a no-op `rebuildDerivedValue` stamp as what keeps a
+      runtime-only object out of a copy; it does so only in a field its class declares in `@serializationTransients`
+      (stamp AND declare — the reference doc §5), else the stamp makes a page object, shared by a copy.
+- [ ] **Nothing holds every stamped field to its declaration** (found by the same review; by reading). A field a class
+      stamps (`FridgeMagnets3DCanvasWdgt._markTransient`) and leaves out of `@serializationTransients` is shared by every
+      copy (two panes rendering into one Surface); only the serialization rig's pane save would notice.
+- [ ] **An inspector's Duplicate throws on a subject the copier refuses** (found by the same review; by reading). An
+      inspector opened on a `Uint8ClampedArray` (the `data` row of a pane's `imageData`, a mesh's positions) duplicates
+      into `DUPLICATE_UNRECOGNIZED_TYPE`; its subject is a page object it inspects, not structure to copy.
+- [ ] **Is an inspector's subject always a page object?** (found by the same review; the owner's ruling). A Duplicate
+      deep-copies an ordinary data subject (an array, a plain object, a data-class instance), so the copy inspects a
+      detached clone rather than the live value it was opened on; a widget subject is shared (an outside widget).
 - [ ] **A viewport's gesture bookkeeping outlives its gesture** (found by the independent review closing "A
       drag-scroll leaves a viewport holding a function no save can write", in the plan's ledger; by reading). The edge
       auto-scroll's end (`ViewportWdgt`, the auto-scroll's own step) does not clear `world.wdgtsWithOngoingScrollMomentum`,
@@ -176,16 +191,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       takes any alpha, so a run's `Color.create 200, 0, 0, "0.5"` makes a colour whose cache key ("200,0,0,0.5") is the
       number alpha's too: the first one minted is every later `Color.create 200, 0, 0, 0.5` on the page. (A save
       refuses such a colour, naming it.)
-- [ ] **A runtime object stamped derived is dropped from an inspector holding it** (found by the independent review
-      closing "A value answering `rebuildDerivedValue` is dropped from a save, and breaks a copy, wherever it
-      stands", in the plan's ledger; by reading, not measured). A value a class stamps with a no-op
-      `rebuildDerivedValue` (`FridgeMagnets3DCanvasWdgt._markTransient`: its `transforms`, `meshCache`,
-      `lclCodeCompiler`, `surface`, `depth`, `engine`, `imageData`) is derived wherever it stands
-      (`NativeValueKinds.isDerivedAt`), so an inspector opened on one (a 3D pane's member row, double-clicked) loses
-      its subject on a Duplicate (the copy's first re-lay throws in `_subjectIsEditable`) and on a world save (the
-      restored inspector throws at every re-lay) — what a canvas context did before it became derived only beside its
-      canvas. Such a value is derived where its holder rebuilds it: the class that stamps it (its
-      `@serializationTransients` names the same fields), not an inspector.
 - [ ] **A load judges an app key's kind by the page's edited members, then returns them to boot** (found by the
       independent review closing "An `app:` key naming a class that is no app is `new`-ed during a restore", in the
       plan's ledger; by reading; low, contrived). `WellKnownObjects.isAppClass` reads a class's LIVE `wellKnownKey`, and
