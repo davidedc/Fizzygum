@@ -21,7 +21,8 @@
 // order of the absolute paths, so no gate's output depends on the file system's listing order.
 //
 // The partition (buildSystem/parts.json, build.py --list-shippable) answers a different question — which PART ships a
-// file — and src/boot is outside it. check-shippable-coverage.js is the one place that holds the two to each other.
+// file — and src/boot's files are declared there apart from it (each part's bootPrelude / bootScripts, build.py
+// --list-boot). check-shippable-coverage.js is the one place that holds the files to both.
 // Its cases are source-files-selftest.js.
 
 const fs = require('fs');

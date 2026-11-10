@@ -3,9 +3,9 @@
 // through it, build.py's --list-shippable) on planted copies of src/ and of the tests repo's code (lib/planted-src.js;
 // the full set is the compiled sources): a .coffee file in a directory no part claims fails, and so do a file in a dot
 // directory and a dot file; one in a NEW subdirectory of a claimed directory fails too (a part's dirs are not
-// recursive), in src and in the harness; the src/boot/ exemption fails as stale once the copy has no boot dir. A file in
-// a claimed directory, of src and of the harness, and one under src/boot/ pass. Run by buildSystem/run-selftests.js on
-// every build.
+// recursive), in src and in the harness; and a src/boot file no part declares (build.py --list-boot) fails. A file in a
+// claimed directory, of src and of the harness, passes, and so does every src/boot file the parts declare (the real
+// tree's own). Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -14,11 +14,10 @@ proveGate({
   name: 'check-shippable-coverage',
   gate: path.join(__dirname, 'check-shippable-coverage.js'),
   testsRepo: true,
-  pass: /^shippable-coverage check: \d+ \.coffee files under src\/ and the harness, all covered \(or allowlisted\) — 0 gap\(s\)$/m,
+  pass: /^shippable-coverage check: \d+ \.coffee files under src\/ and the harness, all covered — 0 gap\(s\)$/m,
   control: {
     plants: {
       'BiteProofClaimedWdgt.coffee': 'class BiteProofClaimedWdgt extends Widget\n',
-      'boot/BiteProofBootOnly.coffee': 'class BiteProofBootOnly\n',
       'harness/BiteProofClaimedHarness.coffee': 'class BiteProofClaimedHarness\n',
     },
   },
@@ -39,8 +38,9 @@ proveGate({
     plants: { 'harness/biteproof-nested/BiteProofNestedHarness.coffee': 'class BiteProofNestedHarness\n' },
     expect: { UNSHIPPED: /^  UNSHIPPED \.\.\/Fizzygum-tests\/Automator-and-test-harness-src\/biteproof-nested\/BiteProofNestedHarness\.coffee$/m },
   }, {
-    label: 'the boot exemption excusing nothing',
-    unplant: ['boot'],
-    expect: { STALE_ALLOWLIST_PREFIX: /STALE_ALLOWLIST_ENTRY ALLOWLIST_PREFIXES 'src\/boot\/' — it exempts no unshipped \.coffee file/ },
+    label: 'a src/boot file no part declares',
+    plants: { 'boot/BiteProofBootOnly.coffee': 'biteProofBootOnly = 1\n', 'boot/extensions/BiteProofExtension.coffee': 'x = 1\n' },
+    expect: { UNSHIPPED: /^  UNSHIPPED src\/boot\/BiteProofBootOnly\.coffee$/m },
+    lines: [/^  UNSHIPPED src\/boot\/extensions\/BiteProofExtension\.coffee$/m],
   }],
 });

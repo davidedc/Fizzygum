@@ -24,7 +24,8 @@ DERIVED here from those three (arc 5 PR-D6: derive, never declare):
     assembling the SWCanvas boot bundle               <- does any shipped entry render through SWCanvas?
     shipping the ~90 MB font-assets/                  <- same
     which non-source files land in the tree           <- the shipping parts' own `assets` / `vendor`
-    which src/boot/ pieces join the boot bundle       <- the shipping parts' own `bootPrelude`
+    which src/boot/ pieces join the boot bundle       <- the shipping parts' own `bootPrelude` (core's first)
+    which src/boot/ scripts are compiled for boot     <- the shipping parts' own `bootScripts`
     running the pre-compile driver + minifying it     <- form == "precompiled"
     whether js/coffeescript-sources/ exists at all    <- sources != "none"
     when the reflective layer loads, if ever          <- sources (BUILDFLAG_SOURCES in the bundle)
@@ -46,7 +47,7 @@ the full DERIVED table). The arc that produced this shape, with its measurements
 docs/archive/build-arc-5-packaging-profiles-plan.md.
 
 USAGE
-    build.py                imports this module and calls resolve(name)
+    build.py                imports this module and calls resolve(name) (and bootFiles(parts) for --list-boot)
     build_it_please.sh      eval's the shell assignments from:
     build_and_smoke.sh          python3 ./buildSystem/buildProfile.py --shell "$@"
                             (pass the build's WHOLE arg list -- this module owns `--profile` parsing,
@@ -71,6 +72,7 @@ DEFAULT_PROFILE_NAME = "dev"
 # THE PARTITION. buildSystem/parts.json names every part, the directories it owns, and its
 # non-source belongings; read its header comment before changing anything here or in build.py.
 PARTS_MANIFEST_FILE = "buildSystem/parts.json"
+CORE_PART = "core"   # the product: every profile ships it, and its boot pieces are the boot itself
 
 # THE ENTRY PAGES, as (filename, renders through SWCanvas?, loads every part at boot?).
 #
@@ -306,16 +308,59 @@ def shippingParts(parts, profile, includeVideoPlayer):
 
 
 def bootPrelude(parts, profile, includeVideoPlayer):
-    """The src/boot/ pieces that shipping parts contribute to the boot bundle.
+    """The src/boot/ pieces that shipping parts contribute to the boot bundle, in order.
 
-    A part can own more than sources: `assets` are copied, `vendor` payloads assembled, and a
-    `bootPrelude` piece is concatenated into the boot bundle. src/boot/numbertimes.coffee is the
-    one carrier -- it extends Number for the fizzytiles LiveCodeLang preprocessor, and used to be
-    appended under `if ! $homepage`, i.e. the shell knew a fact about a part."""
+    A part can own more than sources: `assets` are copied, `vendor` payloads assembled, and its
+    `bootPrelude` pieces are concatenated into the boot bundle -- core's own (boot itself: the
+    SourceVault, globalFunctions, the built-in prototype extensions) first, whatever its place in
+    parts.json, then every other shipping part's in partition order (e.g. fizzytiles'
+    numbertimes.coffee, which extends Number for the LiveCodeLang preprocessor)."""
     pieces = []
-    for (partName, part) in shippingParts(parts, profile, includeVideoPlayer):
+    shipping = shippingParts(parts, profile, includeVideoPlayer)
+    for (partName, part) in [p for p in shipping if p[0] == CORE_PART] + [p for p in shipping if p[0] != CORE_PART]:
         pieces.extend(part.get("bootPrelude", []))
     return pieces
+
+
+def bootScripts(parts, profile, includeVideoPlayer):
+    """The src/boot/ files that shipping parts have compiled one by one to js/src/<name>-min.js, which
+    boot fetches by name."""
+    scripts = []
+    for (partName, part) in shippingParts(parts, profile, includeVideoPlayer):
+        scripts.extend(part.get("bootScripts", []))
+    return scripts
+
+
+BOOT_DIRECTORY = "src/boot"
+
+def bootFiles(parts, srcRoot=None, partsFile=PARTS_MANIFEST_FILE):
+    """Every src/boot file ANY part declares (`bootPrelude` and `bootScripts`), as parts.json spells it --
+    flavour-independent, like the partition's own file list. Each must sit under src/boot/ (no `..`), exist
+    (in `srcRoot` when given: another src tree, a bite-proof's planted copy) and be declared once, and no two
+    boot scripts may share a name (each becomes js/src/<name>-min.js); anything else fails the build --
+    which asks this at its first step (--shell) and through build.py --list-boot, the list
+    check-shippable-coverage.js holds every src/boot file to."""
+    declaredBy = {}
+    scriptNames = {}
+    for name in partNames(parts):
+        for key in ("bootPrelude", "bootScripts"):
+            for piece in parts[name].get(key, []):
+                if not piece.startswith(BOOT_DIRECTORY + "/") or ".." in piece.split("/"):
+                    fail("part '%s' %s names '%s', which is not under %s/" % (name, key, piece, BOOT_DIRECTORY))
+                physical = (srcRoot.rstrip("/") + piece[len("src"):]) if srcRoot else piece
+                if not os.path.isfile(physical):
+                    fail("part '%s' %s names '%s', which does not exist" % (name, key, piece))
+                if piece in declaredBy:
+                    fail("'%s' is declared twice in %s: by part '%s' and by part '%s' (%s)"
+                         % (piece, partsFile, declaredBy[piece], name, key))
+                declaredBy[piece] = name
+                if key == "bootScripts":
+                    scriptName = os.path.basename(piece)
+                    if scriptName in scriptNames:
+                        fail("two bootScripts are both named '%s' (%s and %s): each is built as js/src/<name>-min.js"
+                             % (scriptName, scriptNames[scriptName], piece))
+                    scriptNames[scriptName] = piece
+    return list(declaredBy)
 
 
 def availableProfileNames():
@@ -373,7 +418,7 @@ def resolve(name):
 
     parts = loadParts()
     selectedParts = resolveSelection(declared["parts"], partNames(parts), "parts", name)
-    if "core" not in selectedParts:
+    if CORE_PART not in selectedParts:
         fail("profile '%s' does not ship the 'core' part -- core IS the product" % name)
 
     # An incoherent pairing, in the same family as "precompiled needs index.html": the in-world
@@ -478,12 +523,15 @@ def emitShellAssignments(argv):
     """The facts build_it_please.sh / build_and_smoke.sh need, as `eval`-able bash.
 
     Booleans are emitted as the literals true/false so the shell can keep its existing
-    `if $SOMETHING ; then` idiom, and the prelude comes out as a bash ARRAY (quoted with shlex, so a
-    path with a space cannot break the eval)."""
+    `if $SOMETHING ; then` idiom, and the boot pieces and scripts come out as bash ARRAYS (quoted with
+    shlex, so a path with a space cannot break the eval). The parts' boot declarations are checked
+    first (bootFiles), so a bad one fails the build at its first step, naming itself."""
     profile = resolve(profileNameFromArgv(argv))
     parts = loadParts()
+    bootFiles(parts)
     includeVideoPlayer = "--includeVideoPlayer" in argv
     prelude = bootPrelude(parts, profile, includeVideoPlayer)
+    scripts = bootScripts(parts, profile, includeVideoPlayer)
 
     print("PROFILE_NAME=%s" % shlex.quote(profile.name))
     print("PROFILE_FORM=%s" % shlex.quote(profile.form))
@@ -493,6 +541,7 @@ def emitShellAssignments(argv):
     print("PROFILE_SHIPS_SWCANVAS_ENTRY=%s" % ("true" if profile.shipsSWCanvasEntry else "false"))
     print("PROFILE_SHIPS_HARNESS_ENTRY=%s" % ("true" if profile.shipsHarnessEntry else "false"))
     print("PROFILE_BOOT_PRELUDE=(%s)" % " ".join(shlex.quote(piece) for piece in prelude))
+    print("PROFILE_BOOT_SCRIPTS=(%s)" % " ".join(shlex.quote(script) for script in scripts))
 
 
 if __name__ == "__main__":

@@ -126,31 +126,37 @@
 
   <h2>2 · The boot bundle, and why its order is load-bearing</h2>
 
-  <p>The bundle is the page's first script. It is assembled by concatenating CoffeeScript in a fixed
-  order, compiling it once and minifying it. The order is not cosmetic:</p>
+  <p>The bundle is the page's first script. It is assembled by concatenating CoffeeScript in an order that is
+  <em>data</em> — each part's <code>bootPrelude</code> in <code>buildSystem/parts.json</code>, core's first — compiling
+  it once and minifying it. The order is not cosmetic:</p>
 
   <div class="tablewrap">
   <table>
     <tr><th>#</th><th>Piece</th><th>Why here</th></tr>
-    <tr><td class="k">1</td><td class="k">source-vault.coffee</td>
-        <td><strong>First, always.</strong> Every generated <code>sources_batch_*.js</code> is a list of
+    <tr><td class="k">1</td><td class="k">the generated head</td>
+        <td>the build flags, and <code>window.FIZZYGUM_PARTS</code> (the parts manifest: each part's batch files,
+        eagerness and vendor payloads) — <em>in</em> the bundle rather than fetched because the batch loader needs
+        it immediately; data nothing reads until boot runs</td></tr>
+    <tr><td class="k">2</td><td class="k">source-vault.coffee</td>
+        <td>core's first piece. Every generated <code>sources_batch_*.js</code> is a list of
         <code>SourceVault.store(…)</code> calls, so the vault must exist before any batch can run.</td></tr>
-    <tr><td class="k">2</td><td class="k">partsManifest (generated)</td>
-        <td><code>window.FIZZYGUM_PARTS</code> — each part's batch files, eagerness and vendor payloads.
-        It is <em>in</em> the bundle rather than fetched because the batch loader needs it immediately.</td></tr>
     <tr><td class="k">3</td><td class="k">globalFunctions.coffee</td>
         <td>the boot sequence itself, plus <code>loadJSFilePromise</code> and the reflective-layer machinery</td></tr>
     <tr><td class="k">4</td><td class="k">extensions/*</td>
         <td>prototype extensions (Array, Object, Math, String, canvas…) that must exist before any class runs</td></tr>
-    <tr><td class="k">5</td><td class="k">each shipping part's <code>bootPrelude</code></td>
+    <tr><td class="k">5</td><td class="k">every other shipping part's <code>bootPrelude</code></td>
         <td>the same, but contributed BY a part — today only <code>numbertimes.coffee</code>, which
-        Fizzytiles' LiveCodeLang needs. A part owning its own boot piece is why the build script no
-        longer holds a fact about a part.</td></tr>
+        Fizzytiles' LiveCodeLang needs. A part owning its own boot piece is why the build script holds no fact
+        about a part, nor a list of boot files.</td></tr>
     <tr><td class="k">6</td><td class="k">the build stamp</td>
         <td><code>buildVersion</code>, from the source COMMIT and never the wall clock — so two builds of
         a clean tree at the same commit are byte-identical</td></tr>
   </table>
   </div>
+
+  <p>Beside the bundle, core's <code>bootScripts</code> are compiled one by one to <code>js/src/&lt;name&gt;-min.js</code>,
+  which boot fetches by name as it reaches them. Every <code>src/boot</code> file is declared by exactly one part
+  (<code>build.py --list-boot</code>), and <code>check-shippable-coverage.js</code> fails one nothing declares.</p>
 
   <h2>3 · Two boot paths</h2>
 

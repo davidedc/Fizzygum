@@ -397,7 +397,7 @@ function main() {
   if (!membersSkipped && edgeCount === 0) fail('the harness is present but no install edge crosses a part — the installed-member half would check nothing; re-read lib/install-edges.js against src/boot/globalFunctions.coffee');
 
   // A member is its part's SYMBOL only if no file outside that part can define it. The definition
-  // universe is everything that ships -- every part's files, and src/boot, which is in every bundle.
+  // universe is everything that ships -- every part's files, and src/boot (core's boot and every part's declared pieces).
   // each file's lines and lib/coffee-mask.js reading, read once for the definition harvest and the scan
   const readings = new Map();
   const readingOf = (rel) => {

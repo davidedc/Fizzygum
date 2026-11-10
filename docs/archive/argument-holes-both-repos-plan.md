@@ -2152,3 +2152,30 @@ for (const s of sites) if (s.absentBefore.length) {
       `DETERMINISM.md`'s busy-wait note names the `wall-clock` ratchet, not the `timer` stink. Filed: "The wall-clock
       stink does not see `performance.now()`" (the rule's wording names the wall clock meanwhile), "The automator event
       commands' constructors are code nothing runs".
+- [x] **The boot files are a hand-list in the build script** (found closing "Every build tool walks src for itself",
+      in the plan's ledger). `build_it_please.sh` cats and compiles the 14 `src/boot` files by name, and
+      `check-shippable-coverage.js` exempts `src/boot/` whole, so a new boot file ships nothing and no gate notices.
+      Boot's order as data, one list the build and the gates read, is its own design.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED by reading: the bundle was the build flags, `source-vault`, the
+      generated parts manifest, `globalFunctions` and eight extensions, each `cat` by name, then the shipping parts'
+      `bootPrelude` (fizzytiles' `numbertimes`); three standalone scripts were compiled by name; the coverage gate's one
+      allowlist entry exempted `src/boot/` whole. Rulings (self-ruled, SURVEY in
+      `Fizzygum-tests/.scratch/boot-files-as-data/`): boot's order is data in `parts.json`, reusing the mechanism
+      fizzytiles' piece already rode — core declares its `bootPrelude` (the SourceVault first, then `globalFunctions` and
+      the extensions) and a new `bootScripts` (`dependencies-finding`, `loading-and-compiling-coffeescript-sources`,
+      `logging-div`); the bundle is its generated head (the flags, then the manifest — nothing reads it before boot
+      runs) and every shipping part's `bootPrelude` in partition order; `build_it_please.sh` loops over
+      `PROFILE_BOOT_PRELUDE` and `PROFILE_BOOT_SCRIPTS` (`buildProfile.py`). `build.py --list-boot` lists every declared
+      boot file (flavour-independent; one not under `src/boot/`, missing, or named twice fails the build), and
+      `check-shippable-coverage.js` holds the compiled sources to `--list-shippable ∪ --list-boot`, so a boot file no
+      part declares is UNSHIPPED; the exemption, the allowlist mechanism and its STALE_ALLOWLIST_PREFIX rule are gone.
+      Proven: the coverage self-test plants an undeclared `src/boot` file and one under `src/boot/extensions` →
+      UNSHIPPED; the three boot scripts are byte-identical to the previous build's, and the two bundles differ only in
+      statement order (the manifest moved) and the build stamp; the gauntlet and `fg homepage`. The independent
+      review's findings landed: core's pieces come first in code (`buildProfile.bootPrelude`), never by parts.json's key
+      order; the declarations are checked at the build's first step (`buildProfile.py --shell`), so a bad one fails
+      naming itself rather than as the coverage gate's operational failure; a `..` in a piece and two boot scripts of
+      one name are refused, the "declared twice" line names both parts; `--list-boot` with `--list-shippable` is refused;
+      the loop quotes its paths; the boot explainer's bundle table, the vault's "must come FIRST" (it must be defined
+      before any batch runs) and six comments state the new shape. Filed: "The boot scripts' names are listed twice",
+      "Three tools read `src/boot` for themselves".

@@ -54,7 +54,14 @@ by which a flavour stops shipping something:
 | `dirs` | the `*.coffee` sources (not recursive: list each directory) |
 | `assets` | files copied into the tree, as `[source, destination-dir]` pairs |
 | `vendor` | payloads assembled from vendored pieces, as `{out, concat:[…]}` |
-| `bootPrelude` | `src/boot/*.coffee` pieces concatenated into the boot bundle |
+| `bootPrelude` | `src/boot/*.coffee` pieces concatenated, in order, into the boot bundle — core's own (the SourceVault first, then `globalFunctions` and the built-in prototype extensions) ahead of any other part's |
+| `bootScripts` | `src/boot/*.coffee` files compiled one by one to `js/src/<name>-min.js`, which boot fetches by name |
+
+Boot's order is data here, never a list in the build script: the bundle is its generated head (the build flags, the
+parts manifest), then core's `bootPrelude` (boot itself), then every other shipping part's in partition order, then the
+build stamp. Every `src/boot` file is declared by exactly one part (`build.py --list-boot` lists them; one that is not
+under `src/boot/`, missing, declared twice, or a boot script sharing another's name fails the build at its first step),
+and `check-shippable-coverage.js` holds `src/boot` to that list as it holds the rest of the tree to the `dirs`.
 
 Plus two properties that are **not** the same question:
 
@@ -388,7 +395,8 @@ facts above, never from the identity of a particular flavour. Nothing in this co
 | assembling the SWCanvas boot bundle | does any shipped entry render through SWCanvas? |
 | shipping the ~90 MB `font-assets/` (and re-pruning an inherited copy) | same |
 | which assets and vendor payloads land in the tree | the shipping parts' own `assets` / `vendor` |
-| which `src/boot/` pieces join the boot bundle | the shipping parts' own `bootPrelude` |
+| which `src/boot/` pieces join the boot bundle, in what order | the shipping parts' own `bootPrelude` (core's first) |
+| which `src/boot/` scripts are compiled for boot to fetch | the shipping parts' own `bootScripts` |
 | running the pre-compile driver, then minifying in place | `form == "precompiled"` |
 | whether `js/coffeescript-sources/` exists at all | `sources != "none"` |
 | when the reflective layer loads, if ever | `sources` → `BUILDFLAG_SOURCES` in the bundle |

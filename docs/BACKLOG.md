@@ -23,11 +23,8 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       predicate, bound and line. A page stuck while it boots is waited on until the protocol timeout. The runners'
       pages share `startedWithin` (`lib/headless-driver.js`); a rig's page asks a different question (a product world,
       no harness), so the rigs' one wait is `startedWithin` with a predicate of their own beside `HARNESS_WORLD_STANDS`.
-- [ ] **The boot files are a hand-list in the build script** (found closing "Every build tool walks src for itself",
-      in the plan's ledger). `build_it_please.sh` cats and compiles the 14 `src/boot` files by name, and
-      `check-shippable-coverage.js` exempts `src/boot/` whole, so a new boot file ships nothing and no gate notices.
-      Boot's order as data, one list the build and the gates read, is its own design.
-- [ ] **Every gate re-masks all of the compiled sources** (found closing the same item; measured). Masking src takes
+- [ ] **Every gate re-masks all of the compiled sources** (found closing "Every build tool walks src for itself", in
+      the plan's ledger; measured). Masking src takes
       about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
       build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
 - [ ] **`find_similar_code.sh` stops at its mirror** (found closing the same item; measured).
@@ -56,6 +53,17 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       `AutomatorEventCommand*` subclasses' constructors (each `super()` + `@automatorEventCommandName`; StartMacro's
       also `@mainMacroSource`, `@extraSubroutineSources`) never run, and their comments name a "static method
       executeEventCommand" that is an instance method found through `classNamed`.
+- [ ] **The boot scripts' names are listed twice** (found by the independent review closing "The boot files are a
+      hand-list in the build script", in the plan's ledger; by reading; low). `parts.json` core's `bootScripts` names the
+      three scripts the build compiles, and `src/boot/globalFunctions.coffee` fetches them by hand-written name
+      (`js/src/dependencies-finding-min.js`, `…loading-and-compiling-coffeescript-sources-min.js`,
+      `…logging-div-min.js`), as `build_it_please.sh`'s lean drop names `dependencies-finding-min.js`: rename one side
+      and the build stays green while the page fails its fetch at boot, caught only by a boot.
+- [ ] **Three tools read `src/boot` for themselves** (found by the same review; by reading; low).
+      `check-coffee-syntax.js` takes "the helper globals boot provides" from every `src/boot` file (the later-loaded
+      `bootScripts` and fizzytiles' piece included), `check-part-edges.js` attributes every boot file to core, and
+      `what-pins-core.js` roots its walk in all of them; each could read `build.py --list-boot` (its pieces in order,
+      by the part that declares them) instead of walking the directory.
 - [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
       loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
       `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function

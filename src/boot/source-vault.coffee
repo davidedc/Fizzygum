@@ -13,8 +13,9 @@
 # WHY A PLAIN OBJECT AND NOT A CLASS. The `Class`/`Mixin` meta-system is itself compiled FROM
 # sources held here (globalFunctions loads the Class and Mixin sources through this vault), so a
 # SourceVault that were a Class-system class would be a chicken-and-egg. It is a boot-level plain
-# object, compiled into the boot bundle, and it must come FIRST in that bundle: every generated
-# `sources_batch_*.js` file is a sequence of `SourceVault.store(…)` calls.
+# object, compiled into the boot bundle — core's first piece (buildSystem/parts.json) — and it must be
+# defined before any batch runs: every generated `sources_batch_*.js` file is a sequence of
+# `SourceVault.store(…)` calls, and the bundle is the entry page's first script.
 #
 # THE ESCAPING (moved in here from build.py's per-line emission). A JS string literal cannot
 # contain a raw quote, backslash or newline, so buildSystem/build.py replaces those three

@@ -147,7 +147,7 @@ coffee --version
 # ---- THE FLAVOUR: resolve the profile ------------------------------------------------------------
 # buildSystem/buildProfile.py loads buildSystem/profiles/<name>.json (default: dev) and hands back
 # the derived facts this script needs, as shell assignments:
-#   PROFILE_NAME PROFILE_FORM PROFILE_SHIPS_TESTS PROFILE_SHIPS_SWCANVAS_ENTRY PROFILE_BOOT_PRELUDE
+#   PROFILE_NAME PROFILE_FORM PROFILE_SHIPS_TESTS PROFILE_SHIPS_SWCANVAS_ENTRY PROFILE_BOOT_PRELUDE PROFILE_BOOT_SCRIPTS
 # It gets the WHOLE arg list because it owns --profile parsing for every caller.
 # ⚠ SUBSTITUTE FIRST, THEN eval. `eval "$(cmd)"` reports the EVAL's exit code, not the command's, so
 # a profile that failed to load would leave every PROFILE_* unset and this script would cheerfully
@@ -375,8 +375,8 @@ fi
 # and the syntax gate above (which reads the same --list-shippable set) skips it too; the only symptom
 # is a runtime `<NewClass> is not defined`. This gate diffs every .coffee file the build could compile
 # (buildSystem/lib/source-files.js compiledFiles: src/ and the harness) against build.py's own
-# --list-shippable output and fails loudly on any survivor (src/boot/, which this script compiles by
-# name, is the one exemption -- see buildSystem/check-shippable-coverage.js for the full rationale).
+# --list-shippable output, and every src/boot file against the parts' boot declarations (--list-boot),
+# and fails loudly on any survivor.
 # We pass "${args[@]}" so it checks exactly the flags THIS build uses.
 # Same --noSyntaxCheck escape hatch and explicit $? check as the syntax gate above.
 if ! $noSyntaxCheck ; then
@@ -964,57 +964,17 @@ printf "BUILDFLAG_SOURCES = '%s'\n" "$PROFILE_SOURCES" >> $SCRATCH_PATH/fizzygum
 # turn the coffeescript file into js in the js directory
 echo "compiling boot file..."
 
-# SourceVault FIRST, before anything else in the bundle: every generated sources_batch_*.js file
-# is a sequence of SourceVault.store(...) calls, and the bundle is the entry page's first script,
-# so the vault has to exist before any batch can run. It is deliberately NOT one of the standalone
-# js/src/*-min.js boot files further down — those are loaded later in the boot sequence, by which
-# time the batches would already have needed it.
-cat src/boot/source-vault.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
 # The parts manifest (window.FIZZYGUM_PARTS: per part, its batch files, eagerness and vendor
 # payloads) goes IN the bundle rather than being fetched: the batch loader needs it immediately.
-# build.py writes it from buildSystem/parts.json. It replaced numberOfSourceBatches.coffee, which
-# only ever said "there are N batches called sources_batch_0..N-1".
+# build.py writes it from buildSystem/parts.json. It is data nothing reads until boot runs, so it sits
+# with the build flags in the bundle's generated head.
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat $SCRATCH_PATH/partsManifest.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/globalFunctions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-# extensions -----------------------------------------------------
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/Array-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/Object-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/CanvasRenderingContext2D-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/SWCanvasElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/Math-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/Number-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/String-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/HTMLCanvasElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-# extensions -----------------------------------------------------
-
-# Boot-bundle pieces contributed by the parts that SHIP: prototype extensions that belong in the
-# bundle (they must exist before any class runs) but exist only for one part -- today that is
-# src/boot/numbertimes.coffee, which extends Number for the fizzytiles LiveCodeLang preprocessor and
-# is declared in fizzytiles' "bootPrelude" (buildSystem/parts.json). It used to be appended under
-# `if ! $homepage`: a fact about a part, hard-coded in the build script, in the one place where
-# nothing would ever check it against the part.
+# Then the boot itself: every shipping part's `bootPrelude` pieces (buildSystem/parts.json), in the
+# partition's order -- core's own first (the SourceVault, which every sources_batch_*.js needs before
+# it runs, then globalFunctions and the built-in prototype extensions), then e.g. fizzytiles'
+# numbertimes.coffee. The order is data in parts.json, never a list in this script.
 for eachPreludePiece in "${PROFILE_BOOT_PRELUDE[@]}" ; do
   printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
   cat "$eachPreludePiece" >> $SCRATCH_PATH/fizzygum-boot.coffee
@@ -1199,20 +1159,17 @@ mkdir -p $JSSRC_SCRATCH
 # output's directory, so make it explicitly now that only minified files land there.
 mkdir -p $BUILD_PATH/js/src
 
-# dependencies-finding computes the class LOAD ORDER from the source text, so it belongs to the
-# reflective layer and is loaded only from inside it (globalFunctions' loadReflectiveLayerPromise).
-# ⚠ It is built for EVERY profile even so, and dropped later for the ones that cannot use it: the
-# pre-compile driver harvests the image by booting this tree in COMPILE-AT-BOOT mode, which runs
-# that layer and fetches this file. Skipping it here made a lean build hang until puppeteer's
-# protocol timeout, with no error naming the missing file (measured).
-coffee -b -c -o $JSSRC_SCRATCH/ src/boot/dependencies-finding.coffee
-terser --compress --output $BUILD_PATH/js/src/dependencies-finding-min.js -- $JSSRC_SCRATCH/dependencies-finding.js
-
-coffee -b -c -o $JSSRC_SCRATCH/ src/boot/loading-and-compiling-coffeescript-sources.coffee
-terser --compress --output $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources-min.js -- $JSSRC_SCRATCH/loading-and-compiling-coffeescript-sources.js
-
-coffee -b -c -o $JSSRC_SCRATCH/ src/boot/logging-div.coffee
-terser --compress --output $BUILD_PATH/js/src/logging-div-min.js -- $JSSRC_SCRATCH/logging-div.js
+# The scripts boot fetches by name (js/src/<name>-min.js): the shipping parts' `bootScripts`
+# (buildSystem/parts.json), each compiled on its own. ⚠ dependencies-finding (the class LOAD ORDER,
+# read from the source text: the reflective layer's) is built for EVERY profile even so, and dropped
+# later for the ones that cannot use it: the pre-compile driver harvests the image by booting this tree
+# in COMPILE-AT-BOOT mode, which runs that layer and fetches this file. Skipping it here made a lean
+# build hang until puppeteer's protocol timeout, with no error naming the missing file (measured).
+for eachBootScript in "${PROFILE_BOOT_SCRIPTS[@]}" ; do
+  eachBootScriptName=$(basename "$eachBootScript" .coffee)
+  coffee -b -c -o "$JSSRC_SCRATCH/" "$eachBootScript"
+  terser --compress --output "$BUILD_PATH/js/src/$eachBootScriptName-min.js" -- "$JSSRC_SCRATCH/$eachBootScriptName.js"
+done
 
 echo "copying pre-compiled file"
 cp auxiliary\ files/pre-compiled.js $BUILD_PATH/js/pre-compiled.js

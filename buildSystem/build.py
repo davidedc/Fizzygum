@@ -109,7 +109,12 @@ parser.add_argument('--noSyntaxCheck', action='store_true')
 # syntax gate (buildSystem/check-coffee-syntax.js), so the gate's file set can never
 # drift from what the build actually wraps-as-text and compiles in-browser.
 parser.add_argument('--list-shippable', action='store_true')
-# --src=DIR / --tests-repo=DIR / --parts=FILE, with --list-shippable only: list the partition of ANOTHER src tree or
+# --list-boot: print the src/boot files the parts declare (their `bootPrelude` and `bootScripts`, one per line,
+# flavour-independent) and exit, failing on a piece that is not under src/boot/, does not exist, or is named twice.
+# Not classes, so not in --list-shippable (the syntax and part-edges gates compile what that lists the class way):
+# buildSystem/check-shippable-coverage.js reads both, so every src/boot file is held to a declaration too.
+parser.add_argument('--list-boot', action='store_true')
+# --src=DIR / --tests-repo=DIR / --parts=FILE, with a listing only: list the partition of ANOTHER src tree or
 # tests repo, or by another parts.json -- a static gate's bite-proof hands its gate a planted copy
 # (buildSystem/lib/planted-src.js), and the gates that read this list must read the copy's. A part directory under `src`
 # is globbed under the --src= DIR instead, one under `../Fizzygum-tests` under the --tests-repo= DIR; every path is still
@@ -120,8 +125,10 @@ parser.add_argument('--tests-repo', dest='testsRepo', default=None)
 parser.add_argument('--parts', default=None)
 
 args = parser.parse_args()
-if (args.src is not None or args.testsRepo is not None or args.parts is not None) and not args.list_shippable:
-    parser.error("--src=, --tests-repo= and --parts= only qualify --list-shippable")
+if args.list_shippable and args.list_boot:
+    parser.error("--list-shippable and --list-boot are two listings: ask for one")
+if (args.src is not None or args.testsRepo is not None or args.parts is not None) and not (args.list_shippable or args.list_boot):
+    parser.error("--src=, --tests-repo= and --parts= only qualify --list-shippable and --list-boot")
 if args.src is not None and (not args.src or not os.path.isdir(args.src)):
     parser.error("--src= names no directory: %r" % args.src)
 if args.testsRepo is not None and (not args.testsRepo or not os.path.isdir(args.testsRepo)):
@@ -267,6 +274,11 @@ def main():
 
     profile = buildProfile.resolve(args.profile)
     parts = loadParts(args.parts) if args.parts else loadParts()
+    # --list-boot: the parts' declared src/boot files (buildProfile.bootFiles checks each), then stop
+    if args.list_boot:
+        for filename in buildProfile.bootFiles(parts, args.src, args.parts or buildProfile.PARTS_MANIFEST_FILE):
+            print(filename)
+        return
     allFilenames, partOfFile = partitionFiles(parts, args.src, args.testsRepo)
 
     # --list-shippable: emit the partition's file list and stop (see the argparse note above).
