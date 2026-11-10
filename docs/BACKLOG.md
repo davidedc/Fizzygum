@@ -11,15 +11,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **The paint audit waits on its pages with no bound, and for boot inside the page** (found closing "The three
-      suite runners wait for a page to boot three ways", in the plan's ledger; by reading). `run-paint-audit.js` drives
-      each page through one raw `page.evaluate(driveAuditSuite, …)` — no `answerWithin` — whose in-page waits begin
-      with a boot wait of its own (90 s on a shard, 30 s for a single run), so a page stuck in a script is waited on
-      until the protocol timeout, and its boot is another copy of the wait the three runners now share
-      (`scripts/lib/headless-driver.js` `startedWithin`). Its probe (`lib/shards.js` `probeTests`, shared with the
-      suite) boots through `startedWithin`, but a probe page that did not start is thrown into the audit's catch and
-      reads INVALID (exit 2): the audit names no rule for a page that never starts, and it reads no console line of its
-      probe page (its pages' console rule is attached per shard, not by its page factory).
 - [ ] **`heap-forensics.js` waits for its page to boot its own way** (found by the same review; by reading). A
       120 s loop of raw `page.evaluate` looks (`window.world && WorldWdgt.frameCount > 5`, no `answerWithin`), ending
       in a bare `Error('harness did not boot')`; it runs in the `selftests` leg through its proof.

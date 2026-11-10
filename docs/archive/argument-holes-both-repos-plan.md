@@ -2063,3 +2063,37 @@ for (const s of sites) if (s.absentBefore.length) {
       once; `NEVER_STARTS` is `lib/gate-bite-proof.js`'s, shared with the sequence runner's proof; the every-rule run
       also asserts an error line only the probe page raises. Not planted: a renderer crash (no page script can cause
       one). Filed: "The rigs wait for their pages to boot a dozen ways, most of them in-page and unbounded".
+- [x] **The paint audit waits on its pages with no bound, and for boot inside the page** (found closing "The three
+      suite runners wait for a page to boot three ways", in the plan's ledger; by reading). `run-paint-audit.js` drives
+      each page through one raw `page.evaluate(driveAuditSuite, …)` — no `answerWithin` — whose in-page waits begin
+      with a boot wait of its own (90 s on a shard, 30 s for a single run), so a page stuck in a script is waited on
+      until the protocol timeout, and its boot is another copy of the wait the three runners now share
+      (`scripts/lib/headless-driver.js` `startedWithin`). Its probe (`lib/shards.js` `probeTests`, shared with the
+      suite) boots through `startedWithin`, but a probe page that did not start is thrown into the audit's catch and
+      reads INVALID (exit 2): the audit names no rule for a page that never starts, and it reads no console line of its
+      probe page (its pages' console rule is attached per shard, not by its page factory).
+      — CLOSED 2026-11-10 (self-ruled). MEASURED by reading and by plants: each page ran in one raw `page.evaluate`
+      holding an in-page boot wait of its own (90 s a shard, 30 s the single page) and an in-page completion wait
+      (600 s), so a page stuck in a script was waited on until the protocol timeout (640 s, behind fg's 720 s alarm); a
+      world that never booted read INVALID, which the file's own comments called a coverage hole; the probe page's
+      console was read by nobody, and the console rule was attached twice, near-identically. Rulings (self-ruled, SURVEY
+      in `Fizzygum-tests/.scratch/paint-audit-page-waits/`), the sequence runner's split: a page that did not start —
+      a shard's, the single page, the probe — is a finding, `DID_NOT_START` (`✗ PAINT-TRUTHFULNESS GATE FAILED: [shard 0]
+      the page did not start within 90s; … — nothing was audited there`), and the run's verdict (what other pages
+      measured is printed, and their unaudited tests are not also a COVERAGE_HOLE); a page that stops answering
+      mid-run leaves the measurement unfinished — INVALID, named on time. `newAuditPage(label, errors)` sets up every
+      audit page one way (the plant, the flag, the UA, the console rule, a renderer crash closing the browser);
+      `auditOnPage` boots through `startedWithin` + `HARNESS_WORLD_STANDS` (its startup run begun, on a shard page) and
+      polls the page from Node, each poll bounded (5 s), a page silent for 30 s named `the page stopped answering for
+      30s — a script stuck in a loop?`, the suite given 600 s; the in-page `driveAuditSuite` is gone. Proven: the
+      proof plants DID_NOT_START (NEVER_STARTS on both shard pages); one-off plants (`.scratch/paint-audit-page-waits/`):
+      the probe path (no `--tests`) and the single page under NEVER_STARTS → DID_NOT_START, a page stuck in a loop once
+      its second test plays → INVALID 30 s later (it was 640 s). The independent review's findings landed: the single
+      flow (`--shards=1`, fg's serial retry) selected its tests and started the run without waiting for the selection —
+      the race `AutomatorLoader.selectTestsFromTagsOrTestNames` forbids, under which a `--tests=` run could audit the
+      manifest's first test in place of a named one — and is now one shard of one group, whose `?startupActions` runner
+      waits; a call made after a page's session closed answers Puppeteer's "Attempted to use detached Frame", which
+      `pageGone` now counts (for every runner's boot wait), so a crash between two calls reads as a lost page, not one
+      still answering or never started; the run's whole bound counts from its navigation (600 s), inside fg's 720 s
+      alarm (the bounds had summed to ~820 s); a failing line no longer repeats its token; errors under a verdict that
+      does not judge them print under a heading; an audit error prints a `GATE INVALID` line fg's summary greps.
