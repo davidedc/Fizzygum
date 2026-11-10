@@ -665,3 +665,51 @@ class Class
     # then add the .class field
     window[@name].class = @
 
+    @_takeMixinMembersFromTheStores() if createClass
+
+  # A class made after an edit of a mixin it augments with -- a lazy part's, or one made at run time
+  # -- was augmented from the mixin's LITERAL, compiled at boot (Object::augmentWith), so it holds the
+  # mixin's boot members. For each member a store of one of my mixins has away from its boot source
+  # (an edit, an addition, a removal), I take what boot order gives a consumer from the stores, as
+  # every mixin edit gives it to a consumer made before it: my own member where I define one (my
+  # body ran after the augmentation), else my last augmentation's that defines it (Mixin.donorOf),
+  # else none -- and only where that differs from what augmentWith left, the BOOT donor's boot member
+  # (an unrelated mixin's unchanged member keeps the very function every consumer shares). Every
+  # member is compiled before anything changes, so one that does not compile throws having changed
+  # nothing. Run once my prototype is whole (my body assigned; my statics ran inside the class's eval,
+  # before this), and only by the pass that creates me: a pre-compiled image's classes were made
+  # before any edit could be.
+  _takeMixinMembersFromTheStores: ->
+    changes = new Map
+    for mixinName in @augmentedWith
+      for memberName in (Mixin.named(mixinName)?.membersAwayFromBoot() ? []) when not @definesMember(memberName) and not changes.has memberName
+        donor = Mixin.donorOf @, memberName
+        continue if donor? and donor is @_bootDonorOf(memberName) and not donor.membersAwayFromBoot().includes memberName
+        changes.set memberName, if donor? then {donor: donor, member: donor.compiledCurrentMember memberName}
+    changes.forEach (change, memberName) =>
+      if change? then Mixin.injectInto @name, memberName, change.member else Mixin.withdrawFrom @name, memberName
+    return
+
+  # The mixin of mine whose boot member augmentWith left on my prototype for `memberName`: the last
+  # of my augmentations whose source at boot defines it (Mixin.bootMemberSources), or undefined.
+  _bootDonorOf: (memberName) ->
+    bootDonors = for mixinName in @augmentedWith when (theMixin = Mixin.named mixinName)?.bootMemberSources()?
+      continue unless Object::hasOwnProperty.call theMixin.bootMemberSources(), memberName
+      theMixin
+    bootDonors.pop()
+
+  # The members whose source in `currentSources` (a meta-object's store) is not the one `bootSources`
+  # holds -- an edit, an addition or a removal -- never the constructor, which no edit reaches
+  # (refuseTheConstructor). The one comparison of a store with its boot, for both meta-objects
+  # (membersAwayFromBoot, here and on Mixin).
+  @membersAwayFrom: (currentSources, bootSources) ->
+    sourceIn = (sources, memberName) -> if Object::hasOwnProperty.call sources, memberName then sources[memberName]
+    memberNames = new Set Object.keys(currentSources).concat Object.keys bootSources
+    (memberName for memberName from memberNames when memberName isnt "constructor" and sourceIn(currentSources, memberName) isnt sourceIn(bootSources, memberName))
+
+  # My members away from my boot sources (bootMemberSources): none for a class with no boot.
+  membersAwayFromBoot: ->
+    bootSources = @bootMemberSources()
+    return [] unless bootSources?
+    Class.membersAwayFrom @nonStaticPropertiesSources, bootSources
+

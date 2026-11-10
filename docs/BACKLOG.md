@@ -11,13 +11,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **A class a lazy part defines after a mixin edit takes the mixin's boot member** (the half of "Mixin editing
-      holds only where the page compiled its mixins" left open when its other half — a pre-compiled page registered
-      no parsed mixin — closed with "A snapshot load never undoes the page's own earlier class edits", in the plan's
-      ledger; by reading, not measured). A consumer class is augmented from its mixin's compiled LITERAL
-      (`augmentWith`, `onceAddedClassProperties`), never from the mixin's store, so where parts load lazily a class
-      defined after an edit of its mixin gets the mixin's boot member, and its prototype disagrees with the store
-      the class inspector shows and a snapshot load returns from.
 - [ ] **The three suite runners wait for a page to boot three ways** (found closing
       "`run-sequence-selftest-headless.js`'s 'page stopping answering' case is load-sensitive", in the plan's ledger).
       The suite runner gives a shard 90 s of boot looks, each answered up to its 5-min backstop, and names a page that
@@ -107,6 +100,14 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **A save writes NaN and ±Infinity as null** (found by the same review; by reading). `Serializer`'s `refFor`
       answers a number as itself, and `JSON.stringify` writes `NaN`, `Infinity` and `-Infinity` as `null`, so a field
       holding one restores as `null`, with no word: the silent drop the serializer otherwise refuses.
+- [ ] **A snapshot's source edits of a lazy part's classes are dropped when the file holds none of its widgets**
+      (found by the independent review closing "A class a lazy part defines after a mixin edit takes the mixin's boot
+      member", in the plan's ledger; by reading, not measured). `Deserializer.classNamesIn` reads the object records
+      and the well-known keys, never `world.sourceEdits`, so `loadWhatItNeeds` does not load the part a class- or
+      mixin-scope record names; `replayClassEdits` / `replayMixinEdits` then pass over a class or mixin the page does
+      not have without a word, while the file's registry is installed whole: a re-save carries the record the page
+      never ran. On the dev `index.html`: edit `ParentStainerMixin._updateColor` (app-kit) or a `CreatorButtonWdgt`
+      member, close every app-kit widget, save, and load the file in a fresh page.
 - [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
       refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
       `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the

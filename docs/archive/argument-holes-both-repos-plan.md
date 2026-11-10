@@ -1757,3 +1757,35 @@ for (const s of sites) if (s.absentBefore.length) {
       failed by a plant that registers none. Also from the review: each member's return is caught and logged, as each
       record's replay is (the desktop is gone by then); the rig's deltas are exact. That item's other half stays
       open: "A class a lazy part defines after a mixin edit takes the mixin's boot member".
+- [x] **A class a lazy part defines after a mixin edit takes the mixin's boot member** (the half of "Mixin editing
+      holds only where the page compiled its mixins" left open when its other half — a pre-compiled page registered
+      no parsed mixin — closed with "A snapshot load never undoes the page's own earlier class edits", in the plan's
+      ledger; by reading, not measured). A consumer class is augmented from its mixin's compiled LITERAL
+      (`augmentWith`, `onceAddedClassProperties`), never from the mixin's store, so where parts load lazily a class
+      defined after an edit of its mixin gets the mixin's boot member, and its prototype disagrees with the store
+      the class inspector shows and a snapshot load returns from.
+      — CLOSED 2026-11-10 (self-ruled overnight). MEASURED (survey: `Fizzygum-tests/.scratch/lazy-consumer-mixin-edit/`):
+      on the dev `index.html`, after `HighlightableMixin`'s `hoverExited` was edited, a member added and `pressCancelled`
+      removed (its own verbs), the core consumer `ButtonWdgt` held all three as the store says, while
+      `CreatorButtonWdgt`, made when the lazy `app-kit` part loaded after the edits, held the BOOT member on all three
+      — though `Mixin.donorOf` answered Highlightable for it. Cause: `Object::augmentWith` injects the literal's
+      members, compiled at boot; a mixin edit reaches only the consumers recorded at its moment. Rulings (self-ruled
+      overnight, under "clean minimal + Do The Right Thing"): a class made after its mixins' edits takes, once whole
+      (its body assigned, its meta-object bound), what the consumer rule `Mixin`'s header states gives it from the
+      stores — its own member, else its last augmentation's (`donorOf`), else none — not in `augmentWith`, where the
+      class body is not assigned and `theClass.class` is still the parent's meta-object, and not by keeping a second,
+      recompiled copy of the literal. Landed: `Class._takeMixinMembersFromTheStores` (the create pass, after `.class`
+      is bound), `Class.membersAwayFrom` (the one store-vs-boot comparison, which `SourceEditsRegistry` now reuses),
+      `membersAwayFromBoot` on both meta-objects, `Mixin.bootMemberSources` parsed once; `docs/architecture/mixins.md`
+      states it. On the fixed build the lazy consumer takes all three. Proven by `parts-lazy-load-headless.js`'s
+      `LAZY_CONSUMER_TAKES_MIXIN_EDITS` (the `plots` part made after `KeepsRatioWhenInVerticalStackMixin`'s edit,
+      addition and removal on members only a holder frame's drag reaches; then a return to boot reaching the new
+      consumer too), failed by its bite-proof's plants (the take made a no-op; the new class dropped from the
+      mixin's consumers before the return). The item's independent review found no defect in the take and these to
+      tighten, landed: it compiles every member before it changes anything (all or nothing, as both removal verbs),
+      and injects only where the stores' answer differs from what the augmentation left (an unrelated mixin's
+      unchanged member keeps the one function every consumer shares, which the same-mixin-twice guard compares);
+      `Mixin.withdrawFrom` is the one undoing of an injection; and on the pre-compiled tree `fg homepage`'s
+      production smoke holds a class made at run time after a mixin edit to the store's member (failed by the same
+      no-op plant). Filed: "A snapshot's source edits of a lazy part's classes are dropped when the file holds none of
+      its widgets".

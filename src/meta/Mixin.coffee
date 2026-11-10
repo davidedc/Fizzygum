@@ -19,6 +19,8 @@ class Mixin
   # only parses (bootMemberSources, the build's syntax gate) and stays out of it.
   @allMixines: []
   nonStaticPropertiesSources: undefined
+  # bootMemberSources, parsed once
+  _bootMemberSources: undefined
   name: ""
 
   # The mixin's source with each of its `super`s spelled out as a call -- Class.rewriteSuperCalls,
@@ -92,8 +94,8 @@ class Mixin
     window[@name + "Mixin"]?.consumerClassNames or []
 
   # The parsed Mixin named `name` -- the mixin global's name ("HighlightableMixin", what a
-  # class's augmentedWith holds) or the parsed one's own ("Highlightable"). Mixin.allMixines is
-  # filled by the create pass below.
+  # class's augmentedWith holds) or the parsed one's own ("Highlightable"), among those registered
+  # (allMixines, register).
   @named: (name) ->
     Mixin.allMixines.find (m) -> m.name is name or m.name + "Mixin" is name
 
@@ -120,11 +122,21 @@ class Mixin
   # My members as my source text at boot gives them -- the SourceVault's text, parsed the way my
   # constructor parsed it (a Mixin made without its create flags parses and does nothing else): what a
   # world-snapshot load returns me to before it replays a file's edits
-  # (SourceEditsRegistry.returnThePageToBootSources). Undefined for a mixin the vault holds no text for.
+  # (SourceEditsRegistry.returnThePageToBootSources), and what a consumer class made after my edits
+  # is measured against (Class._takeMixinMembersFromTheStores, once per class made). Parsed once: the
+  # text is the page's for good, and every caller only reads the answer -- never mutate it. Undefined
+  # for a mixin the vault holds no text for.
   bootMemberSources: ->
+    return @_bootMemberSources if @_bootMemberSources?
     source = SourceVault.get @name + "Mixin"
     return undefined unless source?
-    new Mixin(source, false, false).nonStaticPropertiesSources
+    @_bootMemberSources = new Mixin(source, false, false).nonStaticPropertiesSources
+
+  # My members away from my boot sources (Class.membersAwayFrom): none for a mixin with no boot.
+  membersAwayFromBoot: ->
+    bootSources = @bootMemberSources()
+    return [] unless bootSources?
+    Class.membersAwayFrom @nonStaticPropertiesSources, bootSources
 
   # Do I define member `memberName`? (An OWN entry: my store is a plain object.)
   definesMember: (memberName) ->
@@ -175,6 +187,13 @@ class Mixin
       delete theClass::[memberName + "_class_injected_in"]
     return
 
+  # The injection undone: the member and its fake-super companion leave consumer class `className`'s
+  # prototype, which then holds what its chain gives it.
+  @withdrawFrom: (className, memberName) ->
+    delete window[className]::[memberName]
+    delete window[className]::[memberName + "_class_injected_in"]
+    return
+
   # Apply an edit to member `memberName`: recompile the single member, update my recorded
   # source (the store the inspector's view reads), and inject the member into every consumer
   # class that holds it from me (_isTheDonorTo). Answers the names of the consumer classes
@@ -203,8 +222,7 @@ class Mixin
       if each.donor?
         Mixin.injectInto each.className, memberName, each.value
       else
-        delete window[each.className]::[memberName]
-        delete window[each.className]::[memberName + "_class_injected_in"]
+        Mixin.withdrawFrom each.className, memberName
       each.className
 
   # TRIPWIRE for an injected member I hold no source for. My parse (the constructor) reads the

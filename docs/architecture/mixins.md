@@ -117,9 +117,17 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     (`Mixin._isTheDonorTo`), which covers the class body and every override born since;
     a removal hands each consumer what boot order gives it without the removed member
     (a class's: the donor's CURRENT member; a mixin's: the earlier donor's, else none),
-    compiled before anything changes. The live members are thereby a function of the
-    stores, which is why replaying the recorded edits reproduces them (the reference
-    doc §12). `<name>_source` means one thing only: a widget's own injected method's
+    compiled before anything changes. A class made AFTER an edit of one of its mixins —
+    a lazy part's, or one made at run time — was augmented from the mixin's literal,
+    compiled at boot, so once its prototype is whole it takes, for each member a store
+    of its mixins has away from boot, what that same rule gives it from the stores, where
+    that differs from what the augmentation left (`Class._takeMixinMembersFromTheStores`,
+    on the pass that creates it, all or nothing; the one store-vs-boot comparison is
+    `Class.membersAwayFrom`). The live members are thereby a function of the stores, which
+    is why replaying the recorded edits reproduces them (the reference doc §12).
+    `parts-lazy-load-headless.js` (`LAZY_CONSUMER_TAKES_MIXIN_EDITS`) holds it for a lazy
+    part on the dev `index.html` (the one page where a part loads after the boot), and
+    `fg homepage`'s production smoke for a class made at run time on the pre-compiled tree. `<name>_source` means one thing only: a widget's own injected method's
     source (`Widget.injectProperty`); no class or mixin edit writes one onto a prototype.
   - Both live-edit twins compile through a bare global-assignment eval and write the
     result onto the prototype — nothing runs with a prototype as `this`, since code run
