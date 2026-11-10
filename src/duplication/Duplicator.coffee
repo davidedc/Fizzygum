@@ -57,6 +57,12 @@ class Duplicator
     if (value instanceof Widget) and !@widgetsInStructure.has value
       return value
 
+    # a canvas context reached anywhere but beside the canvas it is drawn from -- an inspector's
+    # subject, a cache's slot -- is a page object outside the copied structure, kept by reference as an
+    # outside widget is. One beside its canvas is DERIVED there and never reaches this walk
+    # (_cloneContentInto asks NativeValueKinds.isDerivedAt first).
+    return value if NativeValueKinds.isCanvasContext value
+
     # native types, recognised through the same taxonomy the Serializer uses
     return @_copyArray value if NativeValueKinds.isArray value
     return @_copyMap value if NativeValueKinds.isMap value
@@ -210,10 +216,9 @@ class Duplicator
         # undefined, null, undefined
         cloneOfMe[property] = undefined
       else if typeof value is "object"
-        if value.rebuildDerivedValue?
-          # a value that can be rebuilt after the cloning (e.g. a canvas
-          # context): skip it — the rebuildDerivedValues pass below rebuilds it
-          # on the clone.
+        if NativeValueKinds.isDerivedAt obj, property
+          # a value DERIVED here (a canvas context beside its canvas): skip it -- the
+          # _rebuildDerivedValues pass below rebuilds it on the clone.
           cloneOfMe[property] = undefined
         else if value.keptByReferenceOnDeepCopy
           # Kept by reference, two kinds: a shared world-level singleton (e.g.
@@ -231,13 +236,11 @@ class Duplicator
         cloneOfMe[property] = value if property isnt "instanceNumericID"
     return
 
-  # some variables such as canvas contexts are not copied, as they are derived
-  # values, so we take care of fixing the temporaries here: for each property
-  # whose ORIGINAL value knows how to rebuild itself (rebuildDerivedValue), have
-  # it rebuild the value onto the clone.
+  # A DERIVED value (NativeValueKinds.isDerivedAt: a canvas context beside its canvas) is not copied:
+  # for each property derived on the ORIGINAL, its value rebuilds itself onto the clone
+  # (rebuildDerivedValue).
   _rebuildDerivedValues: (cloneOfMe, theOriginal) ->
     for property of cloneOfMe
-      if cloneOfMe.hasOwnProperty property
-        if theOriginal[property]?.rebuildDerivedValue?
-          theOriginal[property].rebuildDerivedValue cloneOfMe, property
+      if cloneOfMe.hasOwnProperty(property) and NativeValueKinds.isDerivedAt theOriginal, property
+        theOriginal[property].rebuildDerivedValue cloneOfMe, property
     return

@@ -84,9 +84,9 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
     @backgroundRGB ?= @defaultBackgroundRGB
 
   # The deep-copier (window duplication) and the file Serializer both DROP a
-  # property whose value carries a rebuildDerivedValue method (same idiom canvas
-  # contexts use), rather than trying to clone the Surface / typed-array / engine
-  # and crashing. Stamp that no-op onto each runtime object so the clone gets undefined
+  # property whose value carries a rebuildDerivedValue method -- such a value is derived wherever it
+  # stands (NativeValueKinds.isDerivedAt; a canvas context only beside its canvas) -- rather than
+  # trying to clone the Surface / typed-array / engine and crashing. Stamp that no-op onto each runtime object so the clone gets undefined
   # and rebuilds it lazily on its next render (@_ensureRuntime / @_ensureEngine).
   # Belt-and-suspenders with @serializationTransients, which also covers the
   # compiled-program Functions the Serializer can't emit.

@@ -10,8 +10,9 @@
 #   2. populate     — resolve $r/$wk/$ext refs at any depth and assign props/items/entries
 #   3. register     — identity (fresh id for kind:"widget", restored iid for kind:"world")
 #                     + registerThisInstance so Class.instances / GC / class-edit see it
-#   4. fixups       — compile $src functions, rebuild derived contexts, re-register world-set
-#                     memberships, run the per-class _afterDeserialization hook
+#   4. fixups       — compile $src functions, re-register world-set memberships, run the
+#                     per-class _afterDeserialization hook (a derived value -- a canvas context --
+#                     is in no record: its holder rebuilds it, lazily, as a fresh widget does)
 #   5. deliver      — return { widget, whenReady }
 class Deserializer
 
@@ -99,21 +100,14 @@ class Deserializer
     #     every other place before pass 1)
     for job in srcJobs
       job.shell.injectProperty job.name, job.source
-    # (b) rebuild any recorded derived contexts from their sibling canvases (naming
-    #     convention: "<name>Context" <- canvas "<name>"; cf. CanvasRenderingContext2D)
-    for record, i in records
-      if record.derived?
-        for name in record.derived
-          canvas = shells[i][name.replace "Context", ""]
-          shells[i][name] = canvas.getContext "2d" if canvas?.getContext?
-    # (c) re-register world-set memberships recorded at serialize time: each marker names its set in
+    # (b) re-register world-set memberships recorded at serialize time: each marker names its set in
     # Serializer.WORLD_SET_MEMBERSHIPS, the table the save wrote it from, which also holds each
     # marker's verdict on what the re-registered machinery reads. Every marker is one of its keys:
     # _envelopeShapeProblem refused the envelope up front otherwise.
     if world?
       for record, i in records when record.memberships?
         world[Serializer.WORLD_SET_MEMBERSHIPS[marker]]?.add shells[i] for marker in record.memberships
-    # (d) per-class post-restore hook (absorbs ad-hoc deserialization guards). A hook that re-makes
+    # (c) per-class post-restore hook (absorbs ad-hoc deserialization guards). A hook that re-makes
     # an element the page loads from its holder's path (an image) answers that load's promise, and
     # whenReady waits for it: the restore is ready when what it re-made has arrived, not merely when
     # its own records have decoded. Any other answer is ignored -- so a hook that is NOT reporting a

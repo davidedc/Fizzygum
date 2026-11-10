@@ -16,14 +16,14 @@ class Serializer
 
   # THE WORLD SETS A RECORD'S `memberships` NAME: marker -> the world field holding that Set. ONE
   # table, read by both directions -- the save writes a marker for each set holding the widget, and
-  # the restore re-adds the shell to the set its marker names (Deserializer, pass (c)) -- so a set
+  # the restore re-adds the shell to the set its marker names (Deserializer, pass 4(b)) -- so a set
   # cannot be saved and then dropped on load. A marker outside it makes the file unrestorable, said
   # up front (Deserializer._envelopeShapeProblem) rather than dropped in silence.
   # ⚠ Re-registration hands the shell to machinery that reads its fields, so every marker carries a
   # verdict against the transients a restore drops: STEPPING's loop re-seeds the dropped lastTime
   # itself (a restored throttled stepper NaN-stalls otherwise -- see _runChildrensStepFunction); the
   # KEYBOARD dispatch reads only the prototype method, and the one receiver with transient state (the
-  # spreadsheet) rebuilds it in the per-class hook, pass (d), before any event can arrive; the
+  # spreadsheet) rebuilds it in the per-class hook, pass 4(c), before any event can arrive; the
   # REFERENCE TRACKER's consumers read destroyed + referencedWidget, both serialized (ShortcutWdgt
   # declares no transients); the OPENPOPUPS consumers read isOrphan()/instanceNumericID (re-derived /
   # serialized), and the dropped closure mark restores false -- the correct state for a pinned pop-up
@@ -355,11 +355,10 @@ class Serializer
           # policy (an embedded referent figure — homed to the shelf) decides where it goes.
           props.parent = null
           continue
-        value = obj[name]
-        # derived value (a canvas 2D context): skip; the deserializer rebuilds it, exactly
-        # as the duplication path does.
-        continue if value? and typeof value is "object" and value.rebuildDerivedValue?
-        props[name] = refFor value, (path + " → ." + name), obj, name
+        # a value DERIVED here (NativeValueKinds.isDerivedAt: a canvas context beside its canvas) is
+        # left out: after a load its holder rebuilds it, lazily, as a fresh widget builds it
+        continue if NativeValueKinds.isDerivedAt obj, name
+        props[name] = refFor obj[name], (path + " → ." + name), obj, name
       props
 
     # the world sets holding the widget, by their markers (@WORLD_SET_MEMBERSHIPS, in its order)
@@ -424,6 +423,8 @@ class Serializer
       if classNamed(className) isnt obj.constructor
         remediation = if NativeValueKinds.isImage(obj) or NativeValueKinds.isVideo(obj)
           "An element the page loads is derived from its holder's path: keep the path in a field, declare the property holding the element in @serializationTransients, and re-make the element from the path in _afterDeserialization and _reactToBeingCopied."
+        else if NativeValueKinds.isCanvasContext obj
+          "A canvas context is left out of a file, and rebuilt, only beside the canvas it is drawn from (held as <name>Context next to that canvas <name>); held anywhere else (an inspector on it) no file can carry it: close what holds it."
         else
           "Declare the property holding it in @serializationTransients, or add a per-type handler for it."
         fail ("a value of an unrecognized type (" + className + ") cannot be serialized"),

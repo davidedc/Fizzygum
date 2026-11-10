@@ -1789,3 +1789,39 @@ for (const s of sites) if (s.absentBefore.length) {
       production smoke holds a class made at run time after a mixin edit to the store's member (failed by the same
       no-op plant). Filed: "A snapshot's source edits of a lazy part's classes are dropped when the file holds none of
       its widgets".
+- [x] **A value answering `rebuildDerivedValue` is dropped from a save, and breaks a copy, wherever it stands**
+      (found closing "A world snapshot cannot be saved while a class inspector is open", in the plan's ledger;
+      measured).
+      - An inspector on a canvas context (a world inspector's `worldCanvasContext` row) saves without its subject, and
+        the restored inspector throws at its first row click (`Cannot read properties of undefined (reading
+        'canvas')`). A Duplicate of it throws (`… reading 'getContext'`).
+      - The Serializer's skip (`encodeOwnProps`) and the Duplicator's rebuild (`_rebuildDerivedValues`) both rely on a
+        precondition, a `<name>Context` field beside its canvas `<name>`, that neither one states.
+      - The Serializer's comment says the deserializer rebuilds the value, but the Deserializer's pass 4(b) reads a
+        `record.derived` list that no save writes. After a load, each widget rebuilds its own context, lazily.
+      — CLOSED 2026-11-10 (self-ruled overnight). MEASURED (survey: `Fizzygum-tests/.scratch/derived-value-position/`):
+      an inspector whose subject is a canvas context — the world's, and a `CanvasWdgt`'s back buffer's — threw on
+      Duplicate (`… reading 'getContext'`); a world save left its subject out, and the restored inspector threw at
+      every re-lay (`LAYOUT_ERROR … _subjectIsEditable`) and at a row click. Both walkers judged "derived" by the value
+      alone, while a context's rebuild reads a canvas from its PLACE (`<name>Context` beside canvas `<name>`); the
+      SWCanvas context holds no `.canvas` to ask instead. A census of the live widgets found every widget's context in
+      that place. Rulings (self-ruled overnight, under "clean minimal + Do The Right Thing"): derivedness is a fact of
+      the place, asked in one predicate both walkers share; a context anywhere else is a page object like any other —
+      a save refuses it (never a silent drop, as for a function), a copy keeps it by reference (as for an outside
+      widget); the deserializer's dead rebuild pass goes. Landed: `NativeValueKinds.isCanvasContext` and `isDerivedAt`
+      (a stamped runtime object is derived wherever it stands, a context only beside its canvas);
+      `Serializer.encodeOwnProps` and the Duplicator skip and rebuild only what `isDerivedAt` answers; the Duplicator
+      keeps a context standing apart from its canvas by reference; the closed-set refusal of a context says what a
+      context needs and the person's way out (close what holds it); `Deserializer` pass 4(b) (`record.derived`, which
+      no save writes) deleted; the reference doc's derived-value paragraph states it. Proven by the serialization
+      rig's `inspector.onACanvasContextDuplicates` and `inspector.onACanvasContextRefusesTheSave` (both backends, both
+      subjects), each failed by its own plant (`plants/`: the value-only rule restored fails both; contexts not kept by
+      reference fails the first; the generic remedy fails the second; the control passes). The item's independent
+      review found no defect at its first severity and these, landed: "drawn from" is asked exactly, of the canvas
+      (`canvas.getContext "2d" is value` — a canvas keeps one 2D context on both backends), not inferred from a
+      canvas merely standing beside it; a context in a SLOT (an array, a Map, a cache) is kept by reference too, the
+      rule moved into `Duplicator._duplicate`; the reference doc's §2 traversal contract states the place rule; the
+      rig checks a context in an array, settles each copy in the world, and cleans up on failure. The positive branch
+      — a context beside its canvas still derived — fails, planted out, the rig's `world.everyAppSnapshot.FizzyPaintApp`
+      (its `behindTheScenesBackBufferContext`). Filed: "A runtime object stamped derived is dropped from an inspector
+      holding it".

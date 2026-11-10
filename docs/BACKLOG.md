@@ -53,16 +53,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       Its pattern is `new Date\s*\(`, so a paren-less read of the clock is not counted: `WorldWdgt`'s cycle-start
       `new Date`, `AnalogClockWdgt`'s constructor, the harness's command pacing (`(new Date).getTime()` in
       `AutomatorPlayer.replayTestCommands`) and `EventCommand`'s `@date = new Date`.
-- [ ] **A value answering `rebuildDerivedValue` is dropped from a save, and breaks a copy, wherever it stands**
-      (found closing "A world snapshot cannot be saved while a class inspector is open", in the plan's ledger;
-      measured).
-      - An inspector on a canvas context (a world inspector's `worldCanvasContext` row) saves without its subject, and
-        the restored inspector throws at its first row click (`Cannot read properties of undefined (reading
-        'canvas')`). A Duplicate of it throws (`… reading 'getContext'`).
-      - The Serializer's skip (`encodeOwnProps`) and the Duplicator's rebuild (`_rebuildDerivedValues`) both rely on a
-        precondition, a `<name>Context` field beside its canvas `<name>`, that neither one states.
-      - The Serializer's comment says the deserializer rebuilds the value, but the Deserializer's pass 4(b) reads a
-        `record.derived` list that no save writes. After a load, each widget rebuilds its own context, lazily.
 - [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
       loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
       `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function
@@ -108,6 +98,16 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       not have without a word, while the file's registry is installed whole: a re-save carries the record the page
       never ran. On the dev `index.html`: edit `ParentStainerMixin._updateColor` (app-kit) or a `CreatorButtonWdgt`
       member, close every app-kit widget, save, and load the file in a fresh page.
+- [ ] **A runtime object stamped derived is dropped from an inspector holding it** (found by the independent review
+      closing "A value answering `rebuildDerivedValue` is dropped from a save, and breaks a copy, wherever it
+      stands", in the plan's ledger; by reading, not measured). A value a class stamps with a no-op
+      `rebuildDerivedValue` (`FridgeMagnets3DCanvasWdgt._markTransient`: its `transforms`, `meshCache`,
+      `lclCodeCompiler`, `surface`, `depth`, `engine`, `imageData`) is derived wherever it stands
+      (`NativeValueKinds.isDerivedAt`), so an inspector opened on one (a 3D pane's member row, double-clicked) loses
+      its subject on a Duplicate (the copy's first re-lay throws in `_subjectIsEditable`) and on a world save (the
+      restored inspector throws at every re-lay) — what a canvas context did before it became derived only beside its
+      canvas. Such a value is derived where its holder rebuilds it: the class that stamps it (its
+      `@serializationTransients` names the same fields), not an inspector.
 - [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
       refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
       `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the

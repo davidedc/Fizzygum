@@ -25,6 +25,28 @@ class NativeValueKinds
   @isCanvasLike: (obj) ->
     (typeof obj.getContext is "function") and (typeof obj.toDataURL is "function")
 
+  # A canvas's 2D context, CanvasRenderingContext2D OR the SWCanvas one — duck-typed by the drawing
+  # protocol both carry (the SWCanvas context holds no `.canvas` back to its canvas).
+  @isCanvasContext: (obj) ->
+    (typeof obj.fillRect is "function") and (typeof obj.getImageData is "function")
+
+  # Is the value `holder[property]` DERIVED there -- one the holder rebuilds rather than carries, which
+  # the Serializer leaves out and the Duplicator rebuilds on the copy (its rebuildDerivedValue)? A
+  # value answering rebuildDerivedValue is, except a canvas context: that one is derived only BESIDE
+  # the canvas it is drawn from, held as `<name>Context` next to that canvas `<name>` on the same
+  # holder -- the place its rebuild reads the canvas from (CanvasRenderingContext2D
+  # ::rebuildDerivedValue). "Drawn from" is asked of the canvas, since the SWCanvas context holds no
+  # `.canvas`: a canvas keeps ONE 2D context on both backends, so its getContext "2d" is this very
+  # one. Anywhere else (an inspector's subject, a cache's slot) a context is a page object like any
+  # other: a save refuses it, a copy keeps it by reference (Duplicator._duplicate). The one answer
+  # both walkers ask, so they cannot disagree about it.
+  @isDerivedAt: (holder, property) ->
+    value = holder[property]
+    return false unless value? and typeof value is "object" and value.rebuildDerivedValue?
+    return true unless NativeValueKinds.isCanvasContext value
+    canvas = if property.endsWith "Context" then holder[property.replace "Context", ""]
+    canvas? and NativeValueKinds.isCanvasLike(canvas) and canvas.getContext("2d") is value
+
   @isVideo: (obj) ->
     window.HTMLVideoElement? and obj instanceof HTMLVideoElement
 

@@ -74,15 +74,18 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
 - **`own` enumerable properties only** are walked (`Duplicator._cloneContentInto`). Inherited
   prototype methods/fields are not copied — the shell is created with
   `Object.create(Class.prototype)` so they come from the prototype.
-- A property whose value has a **`rebuildDerivedValue`** method is a *derived* value and is
-  skipped by BOTH walkers. Only DUPLICATION regenerates it (`Duplicator._rebuildDerivedValues`
-  asks the ORIGINAL's value to rebuild onto the clone). SERIALIZATION drops it and does not
-  restore it — the field comes back `undefined`, so a derived value a restored widget still
-  needs must be rebuilt in that class's `_afterDeserialization`. Canvas 2D contexts define
-  `rebuildDerivedValue` on their prototype (they rebuild from their sibling canvas by naming
-  convention) — and a rebuilt context is fresh and UNSCALED, so a primitive that draws through a
-  context it holds lays the pixel ratio again itself (`CanvasWdgt.drawLine`); a class may also STAMP a no-op one onto a runtime-only object to keep it out of
-  both walks (§5).
+- A property whose value is **DERIVED where it stands** (`NativeValueKinds.isDerivedAt`, the one
+  predicate both walkers ask: a value answering **`rebuildDerivedValue`**, and for a canvas 2D
+  context only beside the canvas it is drawn from — §5) is skipped by BOTH walkers. Only
+  DUPLICATION regenerates it (`Duplicator._rebuildDerivedValues` asks the ORIGINAL's value to
+  rebuild onto the clone). SERIALIZATION drops it and does not restore it — the field comes back
+  `undefined`, so a derived value a restored widget still needs is rebuilt by that class (lazily,
+  or in its `_afterDeserialization`). Canvas 2D contexts define `rebuildDerivedValue` on their
+  prototype (they rebuild from their sibling canvas, `<name>Context` beside `<name>`) — and a
+  rebuilt context is fresh and UNSCALED, so a primitive that draws through a context it holds
+  lays the pixel ratio again itself (`CanvasWdgt.drawLine`); a class may also STAMP a no-op one
+  onto a runtime-only object to keep it out of both walks (§5). A context anywhere else is a page
+  object: a save refuses it, a copy keeps it by reference (`Duplicator._duplicate`).
 - A property whose value is flagged **`keptByReferenceOnDeepCopy`** is kept by reference
   on duplication. Two kinds of class declare it: world-level shared singletons
   (`Wallpaper`, `WidgetFactory`, `WindowedApp`, `DataflowEngine`,
@@ -378,19 +381,28 @@ NAMED like one.
   record of a browser-native class — which is what an undeclared cache produces on the two backends.
   ⚠ They see only what an app's FIRST paint reaches: a tool below a toolbar's fold builds no render
   state to trip on.
-- **Derived values** keep the existing `rebuildDerivedValue` protocol (canvas 2D
-  contexts): both walkers SKIP them, and only duplication rebuilds. The deserializer does
-  NOT — its pass-4(b) branch reads a `record.derived` list the serializer has never emitted,
-  so it is dead code. Rebuild what a restored widget needs in that class's
-  `_afterDeserialization`.
+- **Derived values** keep the `rebuildDerivedValue` protocol (canvas 2D contexts, and the
+  runtime objects a class stamps with a no-op rebuild): both walkers SKIP a value DERIVED where
+  it stands, and only duplication rebuilds it on the copy; after a restore its holder rebuilds
+  it, lazily, as a fresh widget builds it (or in its class's `_afterDeserialization`). Whether a
+  value is derived is asked of its PLACE, in one predicate both walkers share
+  (`NativeValueKinds.isDerivedAt`): a stamped runtime object is derived wherever it stands; a
+  canvas context only beside the canvas it is drawn from, held as `<name>Context` next to that
+  canvas `<name>` on the same holder (where its rebuild reads the canvas from — the SWCanvas
+  context holds no `.canvas` to ask). Anywhere else a context is a page object like any other:
+  a save refuses it (`SerializationError`, a remedy saying so), a copy keeps it by reference —
+  an inspector on a canvas context (a world inspector's `worldCanvasContext` row) duplicates
+  inspecting the same context and refuses a save until it is closed. The rig's
+  `inspector.onACanvasContext*` hold both.
   - ⚠ **The two mechanisms do NOT cover each other** (2026-07-08 SW3D-port incident, ~1 h):
     `@serializationTransients` is read by the FILE Serializer ONLY. The in-memory
-    **Duplicator** never consults it — its coverage comes from five mechanisms of its own:
+    **Duplicator** never consults it — its coverage comes from six mechanisms of its own:
     a NAME-convention skip in `_cloneContentInto` (the version-keyed cache pairs
     `cached*`/`check*Cache` plus `childrenBoundsUpdatedAt`, and the island source-lane
-    `_islandBufferSource*` pair), the VALUE-carried `rebuildDerivedValue` skip-and-rebuild,
-    `keptByReferenceOnDeepCopy`, the `alignCopiedWidgetTo*` world-set aligners, and the
-    per-class `_reactToBeingCopied` hook. A property covered by none of these gets
+    `_islandBufferSource*` pair), the `rebuildDerivedValue` skip-and-rebuild of a value derived
+    where it stands (`NativeValueKinds.isDerivedAt`), `keptByReferenceOnDeepCopy`, a canvas
+    context standing anywhere but beside its canvas kept by reference (`_duplicate`), the
+    `alignCopiedWidgetTo*` world-set aligners, and the per-class `_reactToBeingCopied` hook. A property covered by none of these gets
     deep-copied — and a runtime-only object there crashes the copy on the Duplicator's
     closed-set guard ("cannot duplicate a value of unrecognized type"). **Fix: stamp a
     no-op `rebuildDerivedValue` on the runtime-only object itself** (that both skips the

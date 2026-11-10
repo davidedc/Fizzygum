@@ -6,9 +6,9 @@ CanvasRenderingContext2D::useLogicalPixelsUntilRestore = ->
   @scale ceilPixelRatio, ceilPixelRatio
 
 CanvasRenderingContext2D::rebuildDerivedValue = (objectIBelongTo, myPropertyName) ->
-  # re-generate a context from the copied canvas. Assumes the canvas lives in a
-  # property named like this context property but without "Context"
-  # e.g. "backBufferContext" -> belongs to canvas named: "backBuffer"
+  # re-generate a context from the copied canvas, which lives in the property named like this context
+  # property without "Context" ("backBufferContext" -> the canvas "backBuffer"). Called only where the
+  # context is derived, i.e. drawn from that very canvas (NativeValueKinds.isDerivedAt).
   objectIBelongTo[myPropertyName] = objectIBelongTo[myPropertyName.replace "Context", ""].getContext "2d"
 
 # used to clip any subsequent drawing on the context
