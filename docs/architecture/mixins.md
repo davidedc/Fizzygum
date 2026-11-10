@@ -7,6 +7,10 @@
 
 ## 1. The standing position
 
+> ⚠ **Under review.** The owner's direction is to remove the mechanism:
+> `docs/plans/mixin-removal-plan.md` holds the plan and the evidence against this section's
+> premises and §5/§7's arithmetic. §2 (how the mechanism works) stands until that plan executes.
+
 **Keep the mechanism.** Mixins are the codebase's answer to a real gap — CoffeeScript is
 single-inheritance, and a handful of behaviours must be *injected into* classes on
 unrelated branches of the hierarchy, overriding framework hooks (`setColor`, `add`,
