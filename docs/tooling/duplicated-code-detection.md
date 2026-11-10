@@ -135,10 +135,16 @@ sanity-tested 2026-07-14; re-check future releases). What *does* work — nicely
 **jsinspect 0.12.7, the very tool of the 2019 experiment**, on a compiled-ES5 mirror:
 
 1. `buildSystem/coffee-to-js-mirror.js` compiles all of `src/` with **CoffeeScript 1**
-   (devDependency alias `coffeescript-v1`): CS 2.7 rejects ~106 files over bare-`super`
-   idioms that the bundled in-browser compiler accepts; CS1 fails only the 6 `super`-bearing
-   mixins, rescued by a textual `super`→`__SUPER__` shim (AST shape is all that matters
-   here). 484/484 compile. It also strips the byte-identical compiler-preamble helpers —
+   (devDependency alias `coffeescript-v1`): CS 2.7 rejects about a sixth of the files over
+   bare-`super` idioms that the bundled in-browser compiler accepts; CS1 fails only the
+   `super`-bearing mixins, rescued by a textual `super`→`__SUPER__` shim (AST shape is all
+   that matters here). Every file must compile, or the mirror exits 1 and the scan stops: a
+   paren-less call ending in an implicit object, as the condition of `while`/`if`/`unless`/
+   `else if`/`switch`/`when`/`for` (or a `… then` form, or `class … extends`), is refused by
+   CS1 and read by the page's compiler — parenthesize the call (`while r = f(a, k: v)`), which
+   compiles to the same JavaScript there. A clean mirror is no proof CS1 read a file as the
+   page does: some constructs compile to something else without refusing (`await f()` is a
+   call to `await` to CS1). The mirror also strips the byte-identical compiler-preamble helpers —
    without that, the top "duplicate" is the preamble, ×394 (the 2019 note's manual-cleanup
    step, now automated).
    ⚠ Never invoke CS1 via `node_modules/.bin/coffee` or the alias package's `bin/coffee`:

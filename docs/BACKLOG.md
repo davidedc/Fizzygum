@@ -27,10 +27,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       the plan's ledger; measured). Masking src takes
       about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
       build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
-- [ ] **`find_similar_code.sh` stops at its mirror** (found closing the same item; measured).
-      `buildSystem/coffee-to-js-mirror.js` fails on `src/meta/Class.coffee` under CoffeeScript 1 ("unexpected ."),
-      exits 1, and the script stops at "mirror compile FAILED". Class.coffee last changed in 7891f3a8, 2243cab7 and
-      57959d14 (2026-11-08).
 - [ ] **Build freshness reads only the sources' mtimes** (found closing the same item; by reading). An edit to
       `parts.json`, `buildSystem/*`, `src/index.html` or the runtime prelude leaves a stale build reading FRESH, to
       `lib/assert-build-fresh.js` (and every runner that asks it) and to the umbrella `fg status`.
@@ -64,6 +60,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       `bootScripts` and fizzytiles' piece included), `check-part-edges.js` attributes every boot file to core, and
       `what-pins-core.js` roots its walk in all of them; each could read `build.py --list-boot` (its pieces in order,
       by the part that declares them) instead of walking the directory.
+- [ ] **Nothing keeps the similar-code mirror working** (found closing "`find_similar_code.sh` stops at its mirror", in
+      the plan's ledger; measured; a trade-off, not queued by the loop). `buildSystem/coffee-to-js-mirror.js` compiles
+      the tree with CoffeeScript 1 for `find_similar_code.sh`, and no build or gate runs it, so a construct the two
+      compilers read differently stopped the scan unnoticed from f002a7b7 (2026-08-16) to 2026-11-10. Holding every source to the
+      mirror on each build would cost the mirror's run (a few seconds) per build: whether that is worth it is the same
+      question as "Every gate re-masks all of the compiled sources".
 - [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
       loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
       `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function

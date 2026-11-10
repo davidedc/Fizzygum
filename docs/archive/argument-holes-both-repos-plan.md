@@ -2179,3 +2179,22 @@ for (const s of sites) if (s.absentBefore.length) {
       the loop quotes its paths; the boot explainer's bundle table, the vault's "must come FIRST" (it must be defined
       before any batch runs) and six comments state the new shape. Filed: "The boot scripts' names are listed twice",
       "Three tools read `src/boot` for themselves".
+- [x] **`find_similar_code.sh` stops at its mirror** (found closing the same item; measured).
+      `buildSystem/coffee-to-js-mirror.js` fails on `src/meta/Class.coffee` under CoffeeScript 1 ("unexpected ."),
+      exits 1, and the script stops at "mirror compile FAILED". Class.coffee last changed in 7891f3a8, 2243cab7 and
+      57959d14 (2026-11-08).
+      — CLOSED 2026-11-10 (self-ruled). MEASURED: the failure is `Class.coffee:411`, `while returned = @findUpTo
+      remainingSourceLines, @augmentRegex, abortOn: @propertyRegex` followed by its block — a paren-less call ending in an
+      implicit object, as a condition, which CoffeeScript 2 (the page's) ends at the line and CoffeeScript 1 (the
+      mirror's) reads as continuing into the block; `:440` has the same shape. Not recent: it began at f002a7b7
+      (2026-08-16, the commit that gave `Class.findUpTo` its options; 92a010a4, 2026-08-13, compiles), and every
+      version since fails the same way; the three November commits above were a guess.
+      Ruling (self-ruled, SURVEY in `Fizzygum-tests/.scratch/similar-code-mirror/`): both calls are parenthesized — the
+      call's extent explicit to both compilers and to a reader; measured byte-identical JavaScript under the bundled
+      CoffeeScript 2, so the page runs the same code. The mirror compiles all 561 files and `find_similar_code.sh` runs
+      to its report again (129 structural matches). The independent review compiled the whole file both ways (byte-
+      identical) and compared every compiler-inserted token of CoffeeScript 1 and 2 over all 585 compiled sources: no
+      other instance, refusing or silently misread. Its findings landed: the mirror's header (where the scan's failure
+      message points) states the shape and the remedy, and that a clean mirror is no proof CS1 read a file as the page
+      does (`await f()`); the tooling doc says the same, without its stale counts. Filed: "Nothing keeps the
+      similar-code mirror working" (an owner trade-off: a build step costs seconds per build).

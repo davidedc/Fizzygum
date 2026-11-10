@@ -408,7 +408,7 @@ class Class
     augmentationComments = []
     augmentationNames = []
 
-    while returned = @findUpTo remainingSourceLines, @augmentRegex, abortOn: @propertyRegex
+    while returned = @findUpTo(remainingSourceLines, @augmentRegex, abortOn: @propertyRegex)
       augmentationNames.push (returned[0].match @augmentRegex)[1]
       augmentationComments.push returned[1]
       remainingSourceLines = returned[2]
@@ -437,7 +437,7 @@ class Class
         console.log "propertyFirstLineOfBody: \n" + propertyFirstLineOfBody
 
       propertyBodyExceptFirstLine = ""
-      if returned = @findUpTo remainingSourceLines, @topLevelCommentRegex, orStopOn: @propertyRegex, keepStashWhenEOF: true
+      if returned = @findUpTo(remainingSourceLines, @topLevelCommentRegex, orStopOn: @propertyRegex, keepStashWhenEOF: true)
         propertyBodyExceptFirstLine = returned[1]
         remainingSourceLines = returned[3] # leave the next top level comment or property regex IN
 

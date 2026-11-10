@@ -8,10 +8,18 @@
 //
 // Why CoffeeScript 1 (the `coffeescript-v1` npm-aliased devDependency), not the ^2.7.0 one:
 // the sources use CS1 idioms (notably bare `super`) that the bundled IN-BROWSER compiler
-// accepts but CS 2.x rejects — CS 2.7 fails ~106 of the 484 files, CS1 fails only the 6
-// mixins that use `super` outside a class. Those 6 are rescued by textually replacing
-// `super` with a `__SUPER__` call BEFORE compiling: semantics don't matter here, only AST
-// shape, and a plain call preserves it. (Do NOT use node_modules/.bin/coffee or the alias
+// accepts but CS 2.x rejects — CS 2.7 fails about a sixth of the files, CS1 only the mixins
+// that use `super` outside a class. Those are rescued by textually replacing `super` with a
+// `__SUPER__` call BEFORE compiling: semantics don't matter here, only AST shape, and a plain
+// call preserves it.
+// A file CS1 REFUSES fails the mirror (exit 1), and find_similar_code.sh stops: every file must
+// compile. The shape CS1 refuses that the page's compiler reads: a paren-less call ending in an
+// implicit object, as the condition of `while`/`if`/`unless`/`else if`/`switch`/`when`/`for`
+// (or a `… then` form, or `class … extends`) — CS1 reads the block after it as more of the
+// object. Parenthesize the call (`while r = f(a, k: v)`): the page's compiler emits the same
+// JavaScript. ⚠ A clean mirror is no proof CS1 read a file as the page does: some constructs
+// compile to something else without refusing (`await f()` becomes a call to a function named
+// `await`), which distorts the scan's AST for that function only. (Do NOT use node_modules/.bin/coffee or the alias
 // package's bin/coffee: CS1's stock bin silently PREFERS a locally-installed
 // node_modules/coffeescript — i.e. the 2.7.0 devDependency — so it must be bypassed via
 // the compiler API, which is what this script does.)
