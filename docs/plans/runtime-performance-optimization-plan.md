@@ -677,7 +677,7 @@ examined in full; owner discussion 2026-07-09):
   bug. A permanent maintenance tax not worth ~a few %.
 - **Conclusion**: no hybrid is BOTH correct-by-construction AND skips the key rebuild — those are
   logically opposed (re-derive-from-content vs don't). The surface-free frontier is to make derivation
-  CHEAPER (O2 memoizes the hash; the `.toString()`s are already memoized, e.g. `Color._derived_String`)
+  CHEAPER (O2 memoizes the hash)
   and to run the path LESS OFTEN (occlusion culling / O3 — don't build keys for widgets not repainted).
   O2 is the right-sized, zero-new-surface shave; it keeps every positive of the content-addressed design.
 
@@ -801,8 +801,10 @@ final-shape section.
 
 ## 9. Explicitly considered and rejected / deferred
 
-- **CSS-color parse caching** — already done on both sides (SWCanvas `ColorParser` has a
-  Map cache; Fizzygum `Color.toString` memoizes `_derived_String`). No item.
+- **CSS-color parse caching** — SWCanvas's `ColorParser` holds a Map cache keyed by the colour
+  string. Fizzygum's `Color.toString` builds its string on every call: measured at ~45 ns a call
+  and a few hundred calls a frame (about 10 µs; 0.3 ms in the heaviest measured cycle), so it keeps
+  no memo, and its comment names the cache that would fit if it ever shows up hot. No item.
 - **Native-backend headless suite** as a comparison baseline — the native leg does not run
   headless (first test never completes; reference/settle gates are SWCanvas-oriented).
   Framework share was instead derived by bucketing the sw=1 profile. (If a native headless

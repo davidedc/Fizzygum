@@ -7,7 +7,7 @@ class Macro
   _body: undefined
   _name: undefined
   # lazily-filled derivation of _body — a sanctioned memo on an otherwise immutable
-  # class, same pattern as Color._derived_String
+  # class: linkTo fills it, from the macro and the subroutines it is linked with
   _linkedCode: undefined
 
   constructor: (@_name, @_body) ->

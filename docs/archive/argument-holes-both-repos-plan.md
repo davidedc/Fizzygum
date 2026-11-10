@@ -1999,3 +1999,24 @@ for (const s of sites) if (s.absentBefore.length) {
       page", "The suite's probe page waits for boot its own way" (the review's HIGH: the suite counts its tests on a
       probe page that waits for boot in-page, unbounded, and meets a broken boot first), "`heap-forensics.js` waits for
       its page to boot its own way".
+- [x] **A value's per-instance memo outlives an edit of the method that fills it** (found closing the same item; by
+      reading; low). `Color.toString` memoizes into `_derived_String` (`Color.coffee:216`): an edit of `toString` that
+      keeps the memo guard leaves every live colour — the interned theme colours among them — answering its old
+      string, and no flush reaches a value's own memo (`WorldWdgt.noteCodeChanged` drops the caches built from code,
+      not state a value keeps).
+      — CLOSED 2026-11-10 (owner-ruled: option (a), the memo dropped). Parked by the overnight loop as a trade-off
+      (`Fizzygum-tests/.scratch/value-memo-edit/PARKED.md`), then MEASURED (`perf-probe.js`, `perf-probe-d.js` there, not
+      committed):
+      in Chrome's V8 on real colours, the memo's read is ~4 ns a call, a memo keyed by the function that built it the
+      same, one container the class holds (a WeakMap, emptied by `WorldWdgt.noteCodeChanged`) ~9 ns, and no memo
+      ~45 ns; the product calls `toString` 179 times per full desktop repaint and ~215–293 per cycle in two
+      paint-heavy tests (6,121 and 7,382 in their heaviest cycles). No memo costs ~10 µs a frame, ~0.3 ms in the
+      heaviest measured cycle. Ruling: (a) — a colour's string is a pure function of fields that never change, so
+      holding no copy leaves nothing a class edit can leave stale, and `Color` is no longer written after it is
+      made. `Color.toString` builds its string on every call; its comment names the cache that would fit if it ever
+      shows up hot (the WeakMap that `noteCodeChanged` empties, never a field on the instance).
+      `immutable-value-classes.md` states the rule (a value keeps no copy of what its code derives; a cache of it is
+      one container the class holds and the notification empties); the perf plan's two passages that counted on the
+      memo are corrected. Rig: `sourceEdits.valueClassEditReachesLiveValues` (`serialization-roundtrip-headless.js`,
+      its own page) — the class inspector edits `Color.toString` ("rgb(" made "RGB(") and an interned colour that
+      painted before answers the edited string at once, then its boot string after the page returns to boot.

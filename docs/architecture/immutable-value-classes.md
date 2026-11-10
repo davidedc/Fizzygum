@@ -33,9 +33,11 @@ Consequences, all load-bearing:
   class's are (`Class.applyMemberEdit`, recorded and replayed by a world snapshot,
   `serialization-duplication-reference.md` §12), and its existing instances run the edited member
   at once, and every widget hears that code changed, as for any class edit
-  (`WorldWdgt.noteCodeChanged`, `mixins.md` §2), since any of them may paint with it. What an
-  instance already memoized from the edited code (a colour's cached string) keeps until it is
-  computed again. An object
+  (`WorldWdgt.noteCodeChanged`, `mixins.md` §2), since any of them may paint with it. So a value
+  keeps no copy of what its own code derives from its fields — `Color.toString` builds its string on
+  every call — because a copy on the instance is out of the notification's reach: it would keep
+  answering what the old code computed. A cache of such a derivation, if one is ever needed, is ONE
+  container the class holds and `noteCodeChanged` empties. An object
   inspector on a value INSTANCE stays read-only: a value services no instance edit protocol.
 
 ## 2. The shortcut rule (canonical instances)
@@ -143,8 +145,8 @@ immutable — inert strings, but they are METHOD NAMES resolved late against a l
 never stored, so nothing serializes or duplicates it, and it deliberately has no `equals`
 because the equality a value class usually needs is the dataflow cutoff's and this never rides
 an edge as a value), `SheetError`
-(spec §9.5 purity law), `Macro` (with one sanctioned lazy memo, `_linkedCode` — same pattern
-as `Color._derived_String`), `Grid3D`/`PlaneGrid3D` (index arrays are built before
+(spec §9.5 purity law), `Macro` (with one sanctioned lazy memo, `_linkedCode`, filled by
+`linkTo`), `Grid3D`/`PlaneGrid3D` (index arrays are built before
 construction), the `InputEvent` family (events are values; `WheelInputEvent.fromBrowserEvent`
 writes on the RAW browser event before construction, which is outside the value;
 `WheelInputEvent` extends `InputEvent` directly, beside the `PointerInputEvent` family, not

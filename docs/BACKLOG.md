@@ -125,11 +125,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       class inspector's member rows shrank, and their `ScrolledPaneWdgt` stayed 9164 px tall where a second refresh
       makes it 7420, after which it is stable. At rest no pixel differs, but the scroll range is wrong until then. A
       settled world that a second re-lay still moves is a question for the engine.
-- [ ] **A value's per-instance memo outlives an edit of the method that fills it** (found closing the same item; by
-      reading; low). `Color.toString` memoizes into `_derived_String` (`Color.coffee:216`): an edit of `toString` that
-      keeps the memo guard leaves every live colour — the interned theme colours among them — answering its old
-      string, and no flush reaches a value's own memo (`WorldWdgt.noteCodeChanged` drops the caches built from code,
-      not state a value keeps).
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

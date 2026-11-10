@@ -173,8 +173,6 @@ class Color
   _b: undefined # intensity of blue as an integer between 0 and 255
   _a: undefined # opacity as a number between 0.0 (fully transparent) and 1.0 (fully opaque)
 
-  _derived_String: undefined
-
   # all values are optional, just (r, g, b) is fine
   # this should ONLY be used from the static factories
   # the reason being that from the static factories you can
@@ -211,14 +209,20 @@ class Color
     @_permanent[theColor._r + "," + theColor._g + "," + theColor._b + "," + theColor._a] = theColor
     theColor
 
-  # Color string representation: e.g. 'rgba(255,165,0,1)'
+  # Color string representation: e.g. 'rgba(255,165,0,1)'. Built on every call, and kept nowhere: a
+  # colour's fields never change, so its string is a pure function of them, and holding no copy leaves
+  # nothing for a class edit of this method to leave stale. Building it is a few concatenations, paid a
+  # few hundred times a frame — measured negligible (docs/archive/argument-holes-both-repos-plan.md, the
+  # ledger's "A value's per-instance memo outlives an edit of the method that fills it").
+  # Should it ever show up hot, the cache that fits is ONE container the class holds — a WeakMap from
+  # colour to string — emptied by WorldWdgt.noteCodeChanged beside the text caches it already drops
+  # (every cache filled by running code is dropped when code changes). Never a field on the instance:
+  # a value is not written after it is made, and no flush reaches every instance a widget may hold.
   toString: ->
-    if !@_derived_String
-      if @_a == 1
-        @_derived_String = "rgb(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + ")"
-      else
-        @_derived_String = "rgba(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + "," + @_a + ")"
-    return @_derived_String
+    if @_a == 1
+      "rgb(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + ")"
+    else
+      "rgba(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + "," + @_a + ")"
 
 
   # Color comparison:
