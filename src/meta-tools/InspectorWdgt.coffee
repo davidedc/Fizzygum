@@ -549,32 +549,33 @@ class InspectorWdgt extends Widget
     val = @inspectedObject[selected]
     @currentPropertySourceMixinName = undefined
 
-    # functions should have a source somewhere
-    # either in the object or in a superclass,
-    # try to find it. My subject's OWN `<name>_source` is the source of a method injected into it
-    # (Widget.injectProperty); a class's sources live on its meta-object, walked below.
+    # A function shows the source of the member my subject HAS, read where it is held: the first link
+    # of my subject's prototype chain that holds the member decides.
+    #   Held by anything but a Fizzygum class's prototype -- my subject itself, or an object it was
+    # made from -- it is a function of that holder's own: the source kept beside it (`<name>_source`,
+    # Widget.injectProperty), else its compiled text; never the source of a class member it shadows.
+    #   Held by a class's prototype, it is a class member: walked below.
     if Utils.isFunction(val)
-      ownSource = if Object::hasOwnProperty.call @inspectedObject, selected + "_source" then @inspectedObject[selected + "_source"]
-      if ownSource?
-          val = ownSource
+      holder = @inspectedObject
+      holder = Object.getPrototypeOf holder until !holder? or Object::hasOwnProperty.call holder, selected
+      if holder? and !isAClassPrototype holder
+        ownSource = if Object::hasOwnProperty.call holder, selected + "_source" then holder[selected + "_source"]
+        val = ownSource if ownSource?
       else
-        # Walk the Fizzygum class chain looking for the selected method's recorded source. Guard on
-        # `.constructor?.class?` (a Fizzygum Class object) rather than the old `!= Object`: __proto__ yields
-        # PROTOTYPES, never the Object CONSTRUCTOR, so `!= Object` never matched and the walk ran off the end to
-        # Object.prototype (whose `.constructor.class` is undefined) and THREW when the source was not found in
-        # any class. Not-found is legitimate: a mixin-injected method (e.g. ControllerMixin._fireConnection) is
-        # not recorded in any class's nonStaticPropertiesSources, so its source is not on the class chain -- fall
-        # through to val.toString() below instead of crashing. (V8 masked this; JSC surfaced it.)
+        # The CLASS WALK, from my subject's class up through every link that is a Fizzygum class's
+        # (`.constructor?.class?`): the first class that keeps a source for the member on its
+        # meta-object, or the first mixin a class takes it from. So a member a class's prototype holds
+        # with no source recorded (a wrapper) shows the CoffeeScript a class up the chain keeps for it,
+        # and one recorded nowhere reads as its compiled text below.
         goingUpTargetProtChain = @inspectedObject
         while goingUpTargetProtChain?.constructor?.class?
           theClass = goingUpTargetProtChain.constructor.class
           if theClass.nonStaticPropertiesSources[selected]?
             val = theClass.nonStaticPropertiesSources[selected]
             break
-          # The method may be MIXIN-injected (e.g. ControllerMixin._fireConnection) -- not recorded on any
-          # class's nonStaticPropertiesSources, but on the parsed Mixin. Consult each mixin this class
-          # augmentsWith (Mixin.donorOf) so the inspector shows real CoffeeScript instead of the
-          # compiled-JS toString() below; remember the donor so a class-inspector save routes the edit to it.
+          # A member a MIXIN donates (ControllerMixin._fireConnection) is recorded on the parsed Mixin, not
+          # on the classes it augments (Mixin.donorOf); its donor is remembered, so a class-inspector Save
+          # routes the edit to it.
           theMixinProvidingIt = Mixin.donorOf theClass, selected
           if theMixinProvidingIt?
             val = theMixinProvidingIt.nonStaticPropertiesSources[selected]

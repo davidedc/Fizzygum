@@ -98,14 +98,49 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       OFFER that way out (a button that removes the field, or opens an inspector on the widget), whether a save
       should instead LEAVE such a function out and say so (a told drop, against the serializer's "never a silent
       drop" unless a told drop is ruled not silent), or whether a run should WARN when it leaves one, is a UX call.
-- [ ] **An object inspector hides a widget's own field that shadows a member it inherits** (found by the independent
-      review closing "A run that sets a widget field to a function blocks every world snapshot", in the plan's ledger;
-      by reading). With "inherited" off (the default), `InspectorWdgt._filteredMemberNames` keeps a member only if the
-      subject's own class's prototype defines it or no prototype up the chain does, so a run's `@step = -> …` (an own
-      field named like `Widget.step`) is not listed; with "inherited" on, selecting it shows the CLASS's recorded
-      source, not the widget's own function (`selectionFromList` walks the class chain before the value's own text).
-      What "inherited" should hide for an own field that shadows a declaration is a question for the inspector's
-      design: every widget's own state fields (`color`, `bounds`, …) shadow a prototype declaration the same way.
+- [ ] **An object inspector's "Inherited" filter hides a value a widget holds under a name a superclass declares**
+      (found by the independent review closing "A run that sets a widget field to a function blocks every world
+      snapshot", in the plan's ledger; measured 2026-11-10 and PARKED for the owner: a design question). With
+      "Inherited" off (the default), `InspectorWdgt._filteredMemberNames` keeps a member only if the subject's own
+      class's prototype declares it or no prototype up the chain does, and "Own props only" narrows that further: an own
+      VALUE under a name a superclass declares counts as inherited, and `memberFactsOf` dims it. So a run's
+      `@step = -> …` (`Widget` declares `step`) is listed only with Inherited on, and so is every widget's own state
+      (`parent`, `bounds`, `color`, …): measured, a rectangle lists 1 row by default and 0 with "Own props only" while
+      owning 14; a text hides 23 own props, the world 24. The serializer's refusal of a run's function names this
+      inspector as the way out. What "Inherited" and "Own props only" mean for an own value is the inspector's design;
+      the dimming half is also one of "W3 follow-up"'s owner-review points (below). Options: keep (the remedy text then
+      says "turn on Inherited"); a value the subject holds is never inherited (the default list gains every own prop,
+      +10–24 rows on common widgets); "Own props only" lists every own prop whatever "Inherited" says (the default list
+      unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
+      2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
+      member it inherits".)
+- [ ] **A drag-scroll leaves a viewport holding a function no save can write** (found by the independent review
+      closing "An object inspector hides a widget's own field that shadows a member it inherits", in the plan's
+      ledger; measured). `ViewportWdgt._stopDragScrollStep` — at the next press, and where a stroke's glide ends — and
+      the auto-scroll's end stop the step by assigning `@step = noOperation`: an OWN function with no kept source, and
+      `step` is no serialization transient. Measured on `index-sw.html`: a ListWdgt after `_stopDragScrollStep`
+      refuses a world snapshot and its own save ("the function-valued property .step has no editable source and is not
+      a serialization transient"), and a copy owns the `step` too. A press on a lone drag-scrolling pane takes the
+      stroke (`pressBegan` → `takeStrokeScrollFrom`). serialization-duplication-reference.md's "scroll-momentum `@step`
+      closures simply stop" names a transient no class declares. Shape: end the step by deleting the own field (the
+      class's `step` shows through), and decide what a save during a stroke writes.
+- [ ] **A run that replaces a saved method leaves its kept source describing the old one** (found by the same review;
+      by reading). `Widget.injectProperty` keeps `<name>_source` beside the function it compiles; a run that reassigns
+      the field (`@m = -> …`, `Widget.evaluateString`) leaves the companion in place. The inspector's pane, a save's
+      `{"$src"}` (which the load compiles back) and `_sourceChangedNoSettle`'s own-code key then all read the OLD
+      source: a save silently restores code the widget no longer ran. Its mirror: a run that deletes the own function
+      while a class still declares the name leaves an orphaned `<name>_source`, which the inspector hides as a
+      companion (`_isACompanion`) and a save carries as a string.
+- [ ] **An object inspector on a class shows its statics as compiled text** (found by the same review; by reading).
+      `Class.staticPropertiesSources` keeps a class's static members' CoffeeScript; `selectionFromList` on a class
+      FUNCTION (`inspectorClassFor`) never reads it, and a static `extend` copied down has its source on the parent.
+- [ ] **The world's inspector offers to edit its browser listeners** (found by the same review; by reading). The world
+      holds its DOM listeners as own function fields (`pointerdownBrowserEventListener`, …), so an object inspector on
+      the world lists them with Remove, Rename and Save: changing one leaves the browser calling the old function, and
+      `removeEventListeners` passes the new one, which was never registered.
+- [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
+      same review; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
+      label such a pane, or make it read-only?
 - [ ] **A save writes NaN and ±Infinity as null** (found by the same review; by reading). `Serializer`'s `refFor`
       answers a number as itself, and `JSON.stringify` writes `NaN`, `Infinity` and `-Infinity` as `null`, so a field
       holding one restores as `null`, with no word: the silent drop the serializer otherwise refuses.

@@ -2260,3 +2260,35 @@ for (const s of sites) if (s.absentBefore.length) {
       and `check-hand-lists.js`, as a refused source tree does; the guard-name set keeps its scope (widening it let a
       sanction cite `vendor-swcanvas.sh`, which judges nothing); stale comments and the duplicate-code doc's §6.
       Filed: "A hand-list sanction can cite a script that judges nothing" (older than this item).
+- [x] **An object inspector hides a widget's own field that shadows a member it inherits** (found by the independent
+      review closing "A run that sets a widget field to a function blocks every world snapshot", in the plan's ledger;
+      by reading). With "inherited" off (the default), `InspectorWdgt._filteredMemberNames` keeps a member only if the
+      subject's own class's prototype defines it or no prototype up the chain does, so a run's `@step = -> …` (an own
+      field named like `Widget.step`) is not listed; with "inherited" on, selecting it shows the CLASS's recorded
+      source, not the widget's own function (`selectionFromList` walks the class chain before the value's own text).
+      What "inherited" should hide for an own field that shadows a declaration is a question for the inspector's
+      design: every widget's own state fields (`color`, `bounds`, …) shadow a prototype declaration the same way.
+      — its CODE PANE half CLOSED 2026-11-10 (self-ruled); its FILTER half stays open in the BACKLOG, retitled "An
+      object inspector's "Inherited" filter hides a value a widget holds under a name a superclass declares", parked
+      for the owner. MEASURED (a probe on the live page, `Fizzygum-tests/.scratch/inspector-own-shadow/`): a run's
+      `@step = -> 42` on a rectangle is listed only with "Inherited" on, and selected there the pane read `noOperation`
+      — `Widget`'s recorded `step` — not the rectangle's function; the world's own listener closures (fields `WorldWdgt`
+      declares `: undefined`) read "undefined" the same way. `selectionFromList` was the one place that showed a held
+      function as another member's source. RULED: the pane shows the member the subject HAS, read where it is held —
+      the first link of the prototype chain holding it decides: held by anything but a Fizzygum class's prototype, it
+      reads as the source kept beside it (`<name>_source`), else its compiled text; held by a class's prototype, the
+      class walk answers as before (a prototype-level wrapper still shows the CoffeeScript a class up the chain keeps).
+      The filter half is a design question (what "Inherited" and "Own props only" mean for an own value), so it is
+      parked, its options in the BACKLOG item. LANDED: `InspectorWdgt.selectionFromList`. PROVEN: of 6462 function
+      members on the six object and six class inspectors measured, only the world's 17 listener closures read
+      differently (now their code; elsewhere a viewport's own `step` and a patch node's compiled formula read their code
+      too); the new assertion-only `SystemTest_macroObjectInspectorShowsTheFunctionItsSubjectHolds` (an own `step` reads
+      its own text and offers Remove; Saved as `-> 7` and re-selected it reads `-> 7`; a twin reads `Widget`'s source and
+      offers no Remove) — two plants applied through `Class.applyMemberEdit` fail exactly its targets: the class walk
+      put back first fails the first leg's two pane assertions, the kept source ignored fails the Save leg's; its
+      follower clean on both pointers. The independent review's findings landed (the first-holder walk, the Save leg, the
+      comment's wording and the walk's old chronological comment, the test's metadata). Filed: "A drag-scroll leaves a
+      viewport holding a function no save can write" (measured: a world snapshot is refused after one), "A run that
+      replaces a saved method leaves its kept source describing the old one", "An object inspector on a class shows its
+      statics as compiled text", "The world's inspector offers to edit its browser listeners", "A function held with no
+      kept source shows compiled JavaScript in an editable CoffeeScript pane" (the owner's call).
