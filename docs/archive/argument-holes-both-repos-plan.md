@@ -2292,3 +2292,33 @@ for (const s of sites) if (s.absentBefore.length) {
       replaces a saved method leaves its kept source describing the old one", "An object inspector on a class shows its
       statics as compiled text", "The world's inspector offers to edit its browser listeners", "A function held with no
       kept source shows compiled JavaScript in an editable CoffeeScript pane" (the owner's call).
+- [x] **A save writes NaN and ±Infinity as null** (found by the same review; by reading). `Serializer`'s `refFor`
+      answers a number as itself, and `JSON.stringify` writes `NaN`, `Infinity` and `-Infinity` as `null`, so a field
+      holding one restores as `null`, with no word: the silent drop the serializer otherwise refuses.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED (a probe on the live page, `Fizzygum-tests/.scratch/nonfinite-numbers/`):
+      NaN, Infinity and -Infinity — in a field, an `$Array` item, a `$Map` key or value, a `$Set` item, an `$Object` prop —
+      were written `null` and restored `undefined`; -0 restored as 0; an invalid `Date` restored as the epoch (its `ms`
+      NaN, written `null`); a `Color` component NaN was written `null`. A booted world holds none: they come from runs and
+      data. RULED: carry them, never refuse (a number has a faithful text; the serializer refuses only what no text
+      restores), as a structured reference form `{"$num": text}` (the format's rule: references are structured, never
+      in-band strings), for every number JSON does not write as itself (NaN, ±Infinity AND -0, one rule), through one
+      encoder and one decoder for every number a record holds (references, `$Date`'s `ms`, `Color`'s `rgba`); a load
+      refuses up front a `{"$num"}` naming any other text and a `$Date` time or `Color` component that is no number;
+      `FORMAT_VERSION` unchanged (no compat obligations). LANDED: `Serializer.NUMBERS_JSON_CANNOT_WRITE` (the one list) +
+      `numberRef`, `Deserializer.numberFrom` + the vetting in `_envelopeShapeProblem`; reference doc §3, §6, §9, §11.
+      The first plant showed a `$Date` whose `ms` is no number threw a TypeError in the builder, so the vetting holds
+      the format's number fields too. The independent review's findings landed: a save now REFUSES a `Color` whose
+      component is no number (a run's string alpha saved, and the load refused the file: the closed-set rule); a
+      `Color`'s rgba is vetted as four numbers (a missing one threw after the teardown); the `$num` tests are
+      own-property ones (a `{"$num": null}` slipped the vetting); refusal texts are bounded and claim nothing about older
+      saves; the vetting walks a record's references once (and no longer copies a `$Map`'s entries quadratically);
+      `Color.create` keeps no -0 — its cache key read -0 and 0 as one colour, so a save's bytes would have depended on
+      which minted it first; `whyItCanNeverBeRestored`'s promise restated. PROVEN: the probe's every case round-trips
+      (`Object.is`); serialization-rig checks `serialize2.numbersJsonCannotWrite` (read back through every reference
+      kind; the `$Date` and `Color` forms asserted as written, since interning and NaN make their read-back
+      unobservable), `serialize2.colorComponentNotANumberRefused`, `world.loadGuard.unknownNumberTextRefused` (a bad
+      text in each reference kind, `null` included) and `world.loadGuard.numberFieldNotANumberRefused` (six bad
+      fields) — each fails under its plant (numbers written raw again; texts unvetted; number fields unvetted; the
+      save's colour refusal emptied, by recompiling the static from its recorded source), the control green. Filed: "A
+      load reads a reference form it does not know as undefined" (with the world section's own reader), "A tag
+      record's other fields are not vetted on load", "`Color.create` never checks its components".

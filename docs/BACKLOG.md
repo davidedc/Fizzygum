@@ -141,9 +141,20 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
       same review; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
       label such a pane, or make it read-only?
-- [ ] **A save writes NaN and ±Infinity as null** (found by the same review; by reading). `Serializer`'s `refFor`
-      answers a number as itself, and `JSON.stringify` writes `NaN`, `Infinity` and `-Infinity` as `null`, so a field
-      holding one restores as `null`, with no word: the silent drop the serializer otherwise refuses.
+- [ ] **A load reads a reference form it does not know as undefined** (found closing "A save writes NaN and
+      ±Infinity as null", in the plan's ledger; by reading). `Deserializer.resolveRef` answers any object value carrying
+      none of `$r`, `$wk`, `$ext`, `$num` (a `$src` is compiled apart) with `undefined`, and `_envelopeShapeProblem`
+      does not vet the forms: a file holding one — a newer build's form, a hand-edited file — loads with that value
+      silently gone. The world section has its own reader (`WorldWdgt.loadWorldSnapshot`'s `resolve`), which hands an
+      unknown object back raw, and nothing vets the section (`children`, `bin`, `shelf`, `alpha` take anything).
+- [ ] **A tag record's other fields are not vetted on load** (found by the independent review closing "A save writes
+      NaN and ±Infinity as null", in the plan's ledger; by reading). `_envelopeShapeProblem` holds a `$Date`'s time and
+      a `Color`'s components to numbers, but a `$Canvas`'s `w`/`h`/`pr`/`data` and a record's `iid` take anything: a
+      malformed one throws after a world load's teardown, or builds garbage in silence.
+- [ ] **`Color.create` never checks its components** (found by the same review; by reading). It rounds r, g and b and
+      takes any alpha, so a run's `Color.create 200, 0, 0, "0.5"` makes a colour whose cache key ("200,0,0,0.5") is the
+      number alpha's too: the first one minted is every later `Color.create 200, 0, 0, 0.5` on the page. (A save
+      refuses such a colour, naming it.)
 - [ ] **A snapshot's source edits of a lazy part's classes are dropped when the file holds none of its widgets**
       (found by the independent review closing "A class a lazy part defines after a mixin edit takes the mixin's boot
       member", in the plan's ledger; by reading, not measured). `Deserializer.classNamesIn` reads the object records

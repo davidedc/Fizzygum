@@ -187,9 +187,13 @@ class Color
   # times - caches constructed colors, since they are immutable
   # see https://stackoverflow.com/questions/929021/what-are-static-factory-methods
   @create: (r = 0, g = 0, b = 0, a = 1) ->
-    r = Math.round r
-    g = Math.round g
-    b = Math.round b
+    # a colour has no signed zero: a -0 (the round of a small negative) is the 0 the cache key reads
+    # it as, so the one instance of that colour holds 0 whichever spelling minted it first (`+ 0`
+    # turns -0 into 0 and leaves every other number as it is)
+    r = Math.round(r) + 0
+    g = Math.round(g) + 0
+    b = Math.round(b) + 0
+    a = 0 if Object.is a, -0
 
     cacheKey = r + "," + g + "," + b + "," + a
     permanentEntry = @_permanent[cacheKey]

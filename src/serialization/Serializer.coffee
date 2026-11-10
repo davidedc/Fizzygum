@@ -54,6 +54,21 @@ class Serializer
   @classTakesInjectedMethods: (klass) ->
     klass?.prototype?.injectProperty?
 
+  # The numbers JSON.stringify does not write as themselves -- it writes NaN and ±Infinity as null and
+  # -0 as 0 -- each with the text a {"$num"} carries it by. The one list of them: numberRef writes by
+  # it, Deserializer.numberFrom reads by it, and a text outside it is refused up front
+  # (Deserializer._envelopeShapeProblem).
+  @NUMBERS_JSON_CANNOT_WRITE: [["NaN", NaN], ["Infinity", Infinity], ["-Infinity", -Infinity], ["-0", -0]]
+
+  # A NUMBER as a file carries it: itself, when JSON writes it as itself; otherwise its text in a
+  # {"$num"}, so a save drops nothing in silence. Every number a record holds that can be any number
+  # is written through here: a reference, a $Date's time, a Color's components. (The integers the
+  # format keeps -- an iid, a $Canvas's size and pixel ratio -- are integers by construction.)
+  @numberRef: (n) ->
+    for [text, value] in Serializer.NUMBERS_JSON_CANNOT_WRITE
+      return {$num: text} if Object.is n, value
+    n
+
   # A refusal's path (SerializationError) one step on, INTO the widget a property, a slot or a
   # world section holds, named as the walk enters it -- "… → .contents (SliderWdgt#5) → .target"
   # -- so a refusal met inside its record names the widget a person has to find. Every widget the
@@ -276,7 +291,8 @@ class Serializer
     refFor = (value, path, owner, propName) ->
       return null unless value?
       t = typeof value
-      return value if t is "string" or t is "number" or t is "boolean"
+      return value if t is "string" or t is "boolean"
+      return Serializer.numberRef value if t is "number"
       # a class, or a class's own prototype, belongs to the page: named by its class (the class keys,
       # WellKnownObjects' header), asked before the function and widget readings below, either of which
       # it would otherwise meet (a Widget-branch prototype is `instanceof Widget`)
@@ -374,7 +390,7 @@ class Serializer
         return
       if NativeValueKinds.isDate obj
         record.class = "$Date"
-        record.ms = obj.getTime()
+        record.ms = Serializer.numberRef obj.getTime()   # an invalid date's is NaN
         return
       if NativeValueKinds.isCanvasLike obj
         # HTMLCanvasElement or SWCanvasElement (see NativeValueKinds). Its pixels are PHYSICAL, made at
@@ -399,9 +415,15 @@ class Serializer
         record.items = items
         return
       if obj instanceof Color
-        # restored through Color.create so immutable-color dedupe is preserved
+        # restored through Color.create so immutable-color dedupe is preserved. Its components are
+        # numbers, which the load holds it to: one that is not (a run's Color.create 200, 0, 0, "0.5") is
+        # refused here, as the load would refuse the file
         record.class = "Color"
-        record.rgba = [obj._r, obj._g, obj._b, obj._a]
+        components = [obj._r, obj._g, obj._b, obj._a]
+        for component in components when typeof component isnt "number"
+          fail ("a Color whose component is " + (if component? then typeof component else String component) + ", not a number, cannot be serialized"),
+               path, describe(obj), "Make the colour with numbers (Color.create r, g, b, a), or declare the property holding it in @serializationTransients."
+        record.rgba = (Serializer.numberRef component for component in components)
         return
       # --- a plain object literal ---
       if (not obj.constructor?) or obj.constructor is Object

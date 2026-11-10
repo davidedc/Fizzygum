@@ -7,7 +7,7 @@
 #
 # Five passes over the envelope:
 #   1. instantiate  — a shell per record (constructor NOT run), or the native-type factory
-#   2. populate     — resolve $r/$wk/$ext refs at any depth and assign props/items/entries
+#   2. populate     — resolve $r/$wk/$ext/$num refs at any depth and assign props/items/entries
 #   3. register     — identity (fresh id for kind:"widget", restored iid for kind:"world")
 #                     + registerThisInstance so Class.instances / GC / class-edit see it
 #   4. fixups       — compile $src functions, re-register world-set memberships, run the
@@ -46,6 +46,7 @@ class Deserializer
       return undefined unless ref?
       t = typeof ref
       return ref if t is "string" or t is "number" or t is "boolean"
+      return Deserializer.numberFrom ref if Deserializer._isNumberRef ref
       return shells[ref.$r] if ref.$r?              # $r may legitimately be 0
       # a singleton absent from this world (no wallpaper yet, say) resolves to undefined and the widget
       # loses that link; a key naming a CLASS this page lacks throws instead (WellKnownObjects.resolve),
@@ -126,9 +127,10 @@ class Deserializer
   # (no closing full stop), or undefined when it can. PURE — it only reads the envelope — which is
   # what lets both file doors ask it before anything changes (WorldWdgt.loadWorldSnapshot before its
   # teardown destroys the desktop, FileLoading's widget door before the first shell). It predicts
-  # exactly the throws a restore would hit and no others: the envelope-level ones @deserialize raises
-  # up front (the same two helpers answer both, so the two cannot drift: the envelope's shape, and a
-  # method's source on a class that cannot take one), and the ones that resolve a NAME read out of
+  # exactly the refusals @deserialize raises up front -- the same two helpers answer both, so the two
+  # cannot drift: the envelope's shape (which also refuses what a restore would silently drop or get
+  # wrong: a membership, a number written as no number, a $Date or Color field that is no number), and
+  # a method's source on a class that cannot take one -- and the throws that resolve a NAME read out of
   # the file -- @instantiate's per-record one, and
   # WellKnownObjects.resolve's for a class key or an app key. The names are @classNamesIn, the one list
   # of the classes a file needs, which the parts pre-load reads too (loadWhatItNeeds), so a file is
@@ -246,18 +248,26 @@ class Deserializer
         unless Object::hasOwnProperty.call Serializer.WORLD_SET_MEMBERSHIPS, marker
           return "its object table is malformed (entry " + i + " records a membership of '" + marker +
             "', a world set this build does not have)"
+      refs = @_refsOf record
+      # a {"$num"} carries a number JSON cannot write, by its text (Serializer.numberRef): one naming
+      # any other would restore as no number at all
+      for ref in refs when @_isNumberRef(ref) and !@_isNumberText ref.$num
+        return "its object table is malformed (entry " + i + " holds " + @_shown(ref) + ", a number written as no number a save writes)"
+      # where the format keeps NUMBERS -- a $Date's time, a Color's four components -- anything else
+      # would build an invalid date or a black channel, or throw after a world load's teardown
+      if (fieldProblem = @_numberFieldProblem record)?
+        return "its object table is malformed (entry " + i + ": " + fieldProblem + ")"
+      # a {"$src"} is a widget's injected method, the one function a save writes (Serializer's
+      # encodeFunction), so it stands only as a property of a class record: one in a tag record -- an
+      # $Array or $Set item, a $Map entry, an $Object property, any field of a Color -- is somewhere no
+      # save puts one
+      if @_tagBuilderFor(record.class)? and @_holdsFunctionSource refs
+        return "its object table is malformed (entry " + i + " holds a method's source outside a widget)"
     # a well-known key no Fizzygum build writes would bind to nothing: refused here, before anything is
     # built (an app or class key naming a class this build lacks is not one: it is a known key, and
     # whyItCanNeverBeRestored refuses it as a class this build does not have)
     for key in Serializer.wellKnownKeysIn envelope
       return "it names the well-known object '" + key + "', which no Fizzygum build has" unless WellKnownObjects.isKnownKey key
-    # a {"$src"} is a widget's injected method, the one function a save writes (Serializer's
-    # encodeFunction), so it stands only as a property of a class record: one in a tag record -- an
-    # $Array or $Set item, a $Map entry, an $Object property, any field of a Color -- is somewhere no
-    # save puts one
-    for record, i in envelope.objects when @_tagBuilderFor(record.class)?
-      if @_holdsFunctionSource @_refsOf record
-        return "its object table is malformed (entry " + i + " holds a method's source outside a widget)"
     undefined
 
   # The class half of where a {"$src"} may stand, a clause in whyItCanNeverBeRestored's form or
@@ -274,6 +284,42 @@ class Deserializer
         return "it gives a method's source to a " + record.class + " (entry " + i + "), and only a widget takes one"
     undefined
 
+  # The number a file's NUMBER stands for: itself, or the one a {"$num"} names by its text
+  # (Serializer.numberRef). A text no save writes is refused before anything is built
+  # (_envelopeShapeProblem), so this reads only a vetted file.
+  @numberFrom: (ref) ->
+    return ref if typeof ref is "number"
+    for [text, value] in Serializer.NUMBERS_JSON_CANNOT_WRITE when text is ref.$num
+      return value
+    undefined
+
+  @_isNumberText: (text) ->
+    Serializer.NUMBERS_JSON_CANNOT_WRITE.some (pair) -> pair[0] is text
+
+  # Is `value` the {"$num"} reference form? An own-property test, as for any key read out of a file:
+  # a {"$num": null} is one too, and the vetting refuses its text.
+  @_isNumberRef: (value) ->
+    value? and typeof value is "object" and Object::hasOwnProperty.call value, "$num"
+
+  # What is wrong with the NUMBERS a record keeps outside its references -- a $Date's time, a Color's
+  # four components, each a number or a {"$num"} naming one -- as a clause, or undefined.
+  @_numberFieldProblem: (record) ->
+    isANumber = (value) => typeof value is "number" or (@_isNumberRef(value) and @_isNumberText value.$num)
+    if record.class is "$Date" and !isANumber record.ms
+      return "a $Date whose time is " + @_shown(record.ms) + ", where the format keeps a number"
+    if record.class is "Color" and !(Array.isArray(record.rgba) and record.rgba.length is 4 and record.rgba.every isANumber)
+      return "a Color whose rgba is " + @_shown(record.rgba) + ", where the format keeps four numbers"
+    undefined
+
+  # A value read out of a file, shown in a refusal: its JSON, cut short -- the message is a person's
+  # to read, and an envelope handed in from code can hold what JSON cannot write (a cycle).
+  @_shown: (value) ->
+    try
+      shown = JSON.stringify(value) ? String value
+    catch
+      shown = String value
+    if shown.length > 60 then shown.slice(0, 60) + "…" else shown
+
   # Is one of `refs` a {"$src"}? Each is one reference form: the objects it names are records of their own.
   @_holdsFunctionSource: (refs) ->
     refs.some (ref) -> ref? and typeof ref is "object" and ref.$src?
@@ -284,8 +330,9 @@ class Deserializer
   @_refsOf: (record) ->
     refs = if Array.isArray record.items then record.items.slice() else []
     if Array.isArray record.entries
-      refs = refs.concat entry for entry in record.entries when Array.isArray entry
-    refs.concat @_propRefsOf record
+      refs.push entry... for entry in record.entries when Array.isArray entry
+    refs.push @_propRefsOf(record)...
+    refs
 
   @_propRefsOf: (record) ->
     return [] unless record.props? and typeof record.props is "object"
@@ -313,7 +360,7 @@ class Deserializer
       build:    (record, asyncPromises) -> new Set
       populate: (shell, record, resolveRef) -> shell.add resolveRef(item) for item in record.items
     "$Date":
-      build:    (record, asyncPromises) -> new Date record.ms
+      build:    (record, asyncPromises) -> new Date Deserializer.numberFrom record.ms
       populate: -> # fully built in pass 1 — nothing to populate
     "$Canvas":
       build: (record, asyncPromises) ->
@@ -362,7 +409,7 @@ class Deserializer
         canvas
       populate: -> # fully built in pass 1 — nothing to populate
     "Color":
-      build:    (record, asyncPromises) -> Color.create record.rgba[0], record.rgba[1], record.rgba[2], record.rgba[3]
+      build:    (record, asyncPromises) -> Color.create (Deserializer.numberFrom component for component in record.rgba)...
       populate: -> # fully built in pass 1 — nothing to populate
 
   # The tag builder a record's class names, or undefined. An OWN-property lookup, because a record

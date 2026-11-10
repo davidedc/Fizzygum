@@ -175,14 +175,24 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
 ```
 
 - **References are structured values, never in-band strings** — this is what fixes the old
-  format's silent corruption of any user string starting with `$`. The three reference
+  format's silent corruption of any user string starting with `$`. The reference
   forms (§4) are `{"$r":n}`, `{"$wk":key}` — a well-known object, or a class or a class's
   prototype named by its class (§4a) — `{"$src":coffee}` — a widget's injected method, only
-  ever a property of that widget's record — (plus `{"$ext":id}`, the token
+  ever a property of that widget's record — `{"$num":text}` — a number JSON cannot write as itself (below) —
+  (plus `{"$ext":id}`, the token
   the tolerant `onExternalPointer:"record"` mode emits — resolvable by unique-id on restore,
   but no shipped caller selects that mode). A plain JSON object as a *value* is always a table
   slot (`$Object`), so a `props` value is unambiguously one of the reference forms by
   construction; plain user strings need no escaping.
+- **A number is written as itself unless JSON cannot write it as itself**: `JSON.stringify` writes NaN and ±Infinity
+  as `null` and -0 as `0`, so those four ride as `{"$num": "NaN" | "Infinity" | "-Infinity" | "-0"}` — wherever a
+  record holds a number that can be any number: a reference, a `$Date`'s `ms` (an invalid date's is NaN), a `Color`'s
+  `rgba` (the integers the format keeps — an `iid`, a `$Canvas`'s size and ratio — are integers by construction).
+  `Serializer.NUMBERS_JSON_CANNOT_WRITE` is the one list; `Serializer.numberRef` writes by it and
+  `Deserializer.numberFrom` reads by it. A load refuses up front (`_envelopeShapeProblem`) a `{"$num"}` naming any
+  other text, and a `$Date` time or `Color` component that is no number (a `Color` keeps four); a save refuses a
+  `Color` whose component is no number, so it never writes what the load refuses. `Color.create` keeps no -0 (its
+  cache key reads -0 and 0 as one colour), so a save's bytes do not depend on which spelling minted a colour first.
 - **Native types carry `$`-prefixed class tags** (`$Array`/`$Date`/`$Canvas`/`$Object`/
   `$Map`/`$Set`). User class names are CoffeeScript identifiers and can
   never collide with a `$`-prefixed tag.
@@ -511,7 +521,7 @@ could not restore it and a copy would hold an object that throws on use:
 | Type | Serialize record | Notes |
 |---|---|---|
 | `Array` | `$Array` `items` | element-wise; own table slot; can be shared between properties |
-| `Date` | `$Date` `ms` | the tagged record is what keeps it restorable — a raw `Date` stringifies to a bare ISO string and cannot be deserialized back |
+| `Date` | `$Date` `ms` | the tagged record is what keeps it restorable — a raw `Date` stringifies to a bare ISO string and cannot be deserialized back; an invalid date's `ms` is `{"$num":"NaN"}` (§3), so it restores invalid, not as the epoch |
 | `Image` | *(no encoder)* | an element the page loads (§5): the SERIALIZER refuses it in any field that is not a declared transient, with the element remediation; DUPLICATION leaves the field `undefined` and the holder's `_reactToBeingCopied` re-makes it from its path |
 | `HTMLCanvasElement` | `$Canvas` `w`/`h`/`pr`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS`. The data is PHYSICAL pixels made at the saving page's `ceilPixelRatio`, which rides as `pr`. Every canvas that rides a save is its widget's logical size × that ratio (a drawn canvas's `drawnRaster`, FizzyPaint's `behindTheScenesBackBuffer`, a pinned menu row's `InertIconHolderWdgt.raster`), so at another ratio the builder makes the canvas at `w·cpr/pr × h·cpr/pr` and draws the decoded image into it: smoothing on when it shrinks (at 2 → 1 a box of four pixels), off when it enlarges (pixel replication — so 1 → 2 → 1 gives back the very pixels it started from, and no edge pixel is left part-transparent, which a smoothed SWCanvas enlargement does); 2 → 1 → 2 is lossy. Equal ratios take the unscaled draw, byte for byte, and a record without `pr` is taken at the loading page's ratio. The resample happens at the DECODE, never in the adopting widget: the canvas exists at its final size before its pixels arrive, and the file door attaches the widget before the decode lands — an adopter that copied a canvas still waiting for its pixels into a resized raster would lose the drawing outright under SWCanvas. The decode draws at the IDENTITY transform under save/restore: it lands after the restore has handed the canvas to its widget, and a canvas has one context, which that widget may already have scaled (its `_afterDeserialization`, its first paint); the save/restore keeps the smoothing setting off that context too. A resample is not what drawing at the new ratio would give, pixel for pixel — a cross-ratio restore has no reference to match. SWCanvas's `toDataURL` is its own deterministic encoder (per-row PNG filters + fixed-Huffman deflate, alpha kept): identical pixels give identical bytes on every engine, at ~1.2× the browser's own size on a drawn canvas |
 | `HTMLVideoElement` | *(no encoder)* | the same as `Image`: refused by a save, left `undefined` by a copy, re-made by its holder |
@@ -558,7 +568,7 @@ its index in the snapshot's `children`, so a person can find the widget the refu
 ## 9. Deserializer
 
 `src/serialization/Deserializer.coffee`, five passes: (1) instantiate shells /
-native-type factories; (2) populate & link, resolving `$r`/`$wk`/`$ext` at any
+native-type factories; (2) populate & link, resolving `$r`/`$wk`/`$ext`/`$num` at any
 nesting depth and setting each `$src` property aside; (3) identity & registration
 (`registerThisInstance`); (4) fixups (compile each `$src` with its widget's `injectProperty`,
 decode async assets into one `whenReady` promise,
@@ -696,7 +706,9 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    - **The refusal of a file this build can NEVER restore** — `Deserializer.whyItCanNeverBeRestored`
      (a pure read of the envelope) names the reason: a `formatVersion` newer than
      `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array, a record naming
-     no class, or a `{"$src"}` in a tag record), a `{"$src"}` on a record of a class that cannot
+     no class, a membership marker naming no world set, a `{"$num"}` naming no number a save writes that way, a
+     `$Date` time or `Color` component that is no number, or a `{"$src"}` in a tag record), a `{"$src"}` on a record
+     of a class that cannot
      inject a method (§9), or a class the file names — a record's class, an `app:` key's, a class
      key's (`Deserializer.classNamesIn`, a record's only when it is no tag — an own-property `TAG_BUILDERS` lookup)
      and no class boot's `classNamed` answers, and that this artifact can never provide
