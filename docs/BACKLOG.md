@@ -44,10 +44,18 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       in one walk and dot directories too in another; `find_similar_code.sh`, `node_modules` and `.scratch`. Latent
       today (`scripts/` holds no dot directory). It is the compiled sources' defect on another tree, where
       `node_modules` is real, so it wants a definition of its own.
-- [ ] **The wall-clock stink does not see `new Date` without parentheses** (found closing the same item; by reading).
-      Its pattern is `new Date\s*\(`, so a paren-less read of the clock is not counted: `WorldWdgt`'s cycle-start
-      `new Date`, `AnalogClockWdgt`'s constructor, the harness's command pacing (`(new Date).getTime()` in
-      `AutomatorPlayer.replayTestCommands`) and `EventCommand`'s `@date = new Date`.
+- [ ] **The wall-clock stink does not see `performance.now()`** (found by the independent review closing "The
+      wall-clock stink does not see `new Date` without parentheses", in the plan's ledger; by reading). Its rule names
+      the WALL clock (`Date.now()`, a `new Date` given no argument); `performance.now()` is a clock read it never
+      counts: `WorldWdgt.doOneCycle`'s `cycleStartPerfMs` (the end-of-frame compile budget, every cycle) and seven in
+      `src/boot/loading-and-compiling-coffeescript-sources.coffee` (the compile scheduler's per-frame budget). A
+      `performance.now()` added to render or layout code passes unseen. Each needs counting and sanctioning (a budget
+      that paces work, never what a widget draws) or fixing.
+- [ ] **The automator event commands' constructors are code nothing runs** (found by the same review; by reading).
+      Commands are rehydrated from their test's JSON (`Object.setPrototypeOf`), never constructed, so the eight
+      `AutomatorEventCommand*` subclasses' constructors (each `super()` + `@automatorEventCommandName`; StartMacro's
+      also `@mainMacroSource`, `@extraSubroutineSources`) never run, and their comments name a "static method
+      executeEventCommand" that is an instance method found through `classNamed`.
 - [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
       loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
       `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function

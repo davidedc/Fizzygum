@@ -16,7 +16,7 @@ const PLANT = {
   'debugger-statement': 'debugger',
   'nil-literal': 'bpNil = nil',
   'null-literal': 'bpNull = null',
-  'wall-clock': 'bpT = Date.now()',
+  'wall-clock': 'bpT = new Date',
   'timer': 'setTimeout (-> 1), 0',
   'math-random': 'bpR = Math.random()',
   'instanceof-type-test': 'bpI = bpX instanceof Widget',
@@ -38,6 +38,9 @@ proveGate({
     const lines = ['class BiteProofStinks', '  bpAll: ->'];
     for (const [id, text] of Object.entries(PLANT)) for (let k = 0; k < Math.max(1, counts.get(id) || 1); k++) lines.push('    ' + text);
     lines.push('    bpH = "#"; bpNullAfterHash = null', '    bpS = "null"', '    bpQ = "# this used to be text, not a comment"');
+    // the clock's other spellings each a hit, and a Date built from a value none
+    lines.push('    bpT2 = Date.now()', '    bpT3 = (new Date).getTime()', '    bpT4 = new Date - bpStart', '    bpT5 = [new Date]',
+               '    bpT6 = new Date or bpY', '    bpV = new Date bpMs', '    bpV2 = new Date -bpMs');
     return [{
       label: 'every stink over its baseline, a sanction miscounted',
       plants: { 'BiteProofStinks.coffee': lines.join('\n') + '\n' },
@@ -46,8 +49,11 @@ proveGate({
         ...Object.fromEntries(Object.entries(PLANT).map(([id, text]) => [id, new RegExp(`^    BiteProofStinks\\.coffee:\\d+: ${esc(text)}$`, 'm')])),
         SANCTION_COUNT: /^    SANCTION COUNT WorldWdgt\.coffee::_showDamageRects — expects 1, found 2/m,
       },
-      lines: [/^    BiteProofStinks\.coffee:\d+: bpH = "#"; bpNullAfterHash = null$/m],
-      absent: [/BiteProofStinks\.coffee:\d+: bpS = "null"$/m, /BiteProofStinks\.coffee:\d+: bpQ = "# this used to be/m],
+      lines: [/^    BiteProofStinks\.coffee:\d+: bpH = "#"; bpNullAfterHash = null$/m,
+              ...['bpT2 = Date.now()', 'bpT3 = (new Date).getTime()', 'bpT4 = new Date - bpStart', 'bpT5 = [new Date]', 'bpT6 = new Date or bpY']
+                .map((l) => new RegExp(`^    BiteProofStinks\\.coffee:\\d+: ${esc(l)}$`, 'm'))],
+      absent: [/BiteProofStinks\.coffee:\d+: bpS = "null"$/m, /BiteProofStinks\.coffee:\d+: bpQ = "# this used to be/m,
+               /BiteProofStinks\.coffee:\d+: bpV = new Date bpMs$/m, /BiteProofStinks\.coffee:\d+: bpV2 = new Date -bpMs$/m],
     }, {
       label: 'a sanctioned file and an excluded directory deleted',
       unplant: ['ColorPickerWdgt.coffee', 'examples-icons'],

@@ -2122,3 +2122,33 @@ for (const s of sites) if (s.absentBefore.length) {
       `puppeteer.launch` (`.scratch/heap-forensics-boot-wait/plant-harness.js`): NEVER_STARTS → status 2 with that line
       after 90 s, a world frozen once it stands → `the world stood but did not cycle for 30s`; a `--test=` run →
       CLEAN; the paint audit's stuck-page plant through `finishedWithin` → INVALID in 30 s.
+- [x] **The wall-clock stink does not see `new Date` without parentheses** (found closing the same item; by reading).
+      Its pattern is `new Date\s*\(`, so a paren-less read of the clock is not counted: `WorldWdgt`'s cycle-start
+      `new Date`, `AnalogClockWdgt`'s constructor, the harness's command pacing (`(new Date).getTime()` in
+      `AutomatorPlayer.replayTestCommands`) and `EventCommand`'s `@date = new Date`.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED: the four sites are the only paren-less clock reads in either tree;
+      four more `new Date <argument>` sites are VALUES, not clock reads (`WorldWdgt._updateTimeReferences`'s previous
+      cycle, `Deserializer`'s `record.ms`, `Duplicator`'s copy, `AnalogClockAppearance`'s pinned date), and the old
+      pattern would also count a `new Date(x)`. Rulings (self-ruled, SURVEY in
+      `Fizzygum-tests/.scratch/wall-clock-paren-less/`): the stink names a clock READ — `Date.now(` or a `new Date`
+      given no argument (`new Date()`, or one followed by the end of the line, a closing bracket, `.`, `,`, `;` or a
+      keyword operator); the world's cycle clock is sanctioned (the one read every widget takes its time from), the
+      analog clock's constructor too (a clock built outside a cycle has no cycle time and shows the real time until its
+      first tick; a playing test pins the date it draws), and the harness's command pacing (a clock no world reads);
+      `EventCommand`'s `@date` / `@dateJSON` were read by nothing — commands are rehydrated from their JSON, never
+      constructed — so the class goes, and `AutomatorEventCommand`, whose constructor only called `super()`, becomes
+      the root with no constructor. Its `@date.toJSON()` was the tree's one `toJSON(` call, so `check-unresolved-sends.js`'s
+      `toJSON` BUILTINS entry went stale and goes too. The baseline stays 13. Proven: `check-stinks-selftest.js` plants
+      `bpT = new Date` (the paren-less read) as the stink's spelling, and requires `Date.now()` and `(new Date).getTime()`
+      lines to be hits and `new Date bpMs` not; run against the old pattern it fails. The static-checks index's table
+      states the rule, its sanctions and what it cannot see (its `wall-clock`, `null-literal`, `instanceof-type-test`
+      and `comment-narration` baselines had gone stale: 19, 8, 75, 88 for 13, 6, 74, 87). The independent review's
+      findings landed: a `new Date` followed by a symbolic operator (`new Date - @start`, the usual elapsed-time
+      spelling, `/ 1000`, `||`, `>`, `?`, …, `instanceof`, `in`, `of`, a trailing loop) is a read too — a `-`/`+`
+      counts only when binary (touching `new Date`, or spaced on both sides), since `new Date -x` passes `-x`; the
+      self-test plants `new Date - bpStart`, `[new Date]` and `new Date or bpY` as hits and `new Date -bpMs` as a
+      value, and fails against the pattern before that fix; a read inside a string interpolation cannot be seen (the
+      mask blanks `#{ }`, where `new Date "2020"` would read the same), which the rule and the index state;
+      `DETERMINISM.md`'s busy-wait note names the `wall-clock` ratchet, not the `timer` stink. Filed: "The wall-clock
+      stink does not see `performance.now()`" (the rule's wording names the wall clock meanwhile), "The automator event
+      commands' constructors are code nothing runs".

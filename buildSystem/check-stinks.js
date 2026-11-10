@@ -102,15 +102,20 @@ const STINKS = [
     ],
     re: /\bnull\b/ },
   { id: 'wall-clock', baseline: 13,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it
-    why: 'Date.now()/new Date() in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock)',
-    // the harness's own clocks, which no world reads: its DOM overlay fades in real time, and its run clock times a run
+    why: 'a read of the wall clock (Date.now(), or a `new Date` given no argument — one followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` and `new Date -x` are values) in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock). Not seen: a read inside a string interpolation (the mask blanks `#{ }`)',
+    // the world's one clock, read once per cycle; a clock widget built outside a cycle; and the harness's own clocks,
+    // which no world reads: its DOM overlay fades in real time, its run clock times a run, its commands are paced
     sanctioned: [
+      { file: 'WorldWdgt.coffee', member: '_updateTimeReferences', count: 1, why: "the world's one clock: read once at each cycle's start, and every reader takes the cycle's time from WorldWdgt.dateOfCurrentCycleStart" },
+      { file: 'apps/AnalogClockWdgt.coffee', member: 'constructor', count: 1, why: 'a clock built outside a cycle (the desktop\'s, at boot, before the first) has no cycle time to read and shows the real time until its first tick; a playing test pins the date it draws' },
+      { file: 'harness/AutomatorPlayer.coffee', member: 'replayTestCommands', count: 1, why: "the pacing of a test's recorded commands, in real time" },
       { file: 'harness/Automator.coffee', member: '@fade', count: 1, why: "a fade of the control panel's DOM overlay starts at the real time it is asked for" },
       { file: 'harness/Automator.coffee', member: '@_fadeStep', count: 1, why: "a fade step of the control panel's DOM overlay, paced in real time" },
       { file: 'harness/AutomatorPlayer.coffee', member: '_timeSinceStartOfTestsAsString', count: 1, why: 'the run clock the control panel shows, in real time' },
       { file: 'harness/AutomatorPlayer.coffee', member: 'runAllSystemTests', count: 1, why: 'the run clock starts when a run starts' },
     ],
-    re: /\b(Date\.now\s*\(|new Date\s*\()/ },
+    // a `-`/`+` is binary (a read) touching `new Date` or spaced on both sides; `new Date -x` passes -x (a value)
+    re: /\bDate\.now\s*\(|\bnew Date(?:\s*\(\s*\)|(?=\s*$|\s*[)\].,;}*\/%|&^<>=!?]|[-+]|\s+[-+](?=\s)|\s+(?:or|and|if|unless|then|else|is|isnt|when|instanceof|in|of|while|until|for)\b))/ },
   { id: 'timer', baseline: 4,   // raised 3->4 on 2026-08-04: SourceCompileScheduler._ensurePumpScheduled pumps the compile-at-boot ingest, which runs only while NO world exists (same nature as the waitNextJSEventLoopCycle timer beside it) — bug-class B needs a live suite world to bite
     why: 'setTimeout/setInterval diverge at dpr2 under parallel load (DETERMINISM.md bug-class B: heavy cycles starve timers); the cycle/step machinery is the sanctioned clock',
     re: /\b(setTimeout|setInterval)\s*\(/ },
