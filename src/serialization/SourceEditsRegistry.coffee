@@ -107,6 +107,21 @@ class SourceEditsRegistry
   # do not bring the eager classes' member maps.
   @canReplaySourceEdits: -> Mixin?
 
+  # Is `r` a record as my writers above write one (and serializableRecords hands a save): a plain object
+  # with its scope, the code it names -- a class's name, a mixin's parsed name, an instance edit's class
+  # (with the widget's unique id where it had one) -- the member, and the source unless it is a
+  # removal. Asked of every record a world file carries, before the load changes anything
+  # (Deserializer._worldSectionProblem).
+  @isARecord: (r) ->
+    return false unless r? and typeof r is "object" and !Array.isArray r
+    isAName = (value) -> typeof value is "string" and value.length > 0
+    namesItsCode = switch r.scope
+      when "class" then isAName r.className
+      when "mixin" then isAName r.mixinName
+      when "instance" then isAName(r.className) and (!r.uniqueID? or typeof r.uniqueID is "string")
+      else false
+    namesItsCode and isAName(r.propertyName) and (r.deleted is true or typeof r.source is "string")
+
   # Is `record` CLASS-LEVEL -- a class- or mixin-scope one, which the replays apply against the
   # meta-system? (An instance-scope one rides the {"$src"} path on its own widget, which needs only the
   # compiler, and every profile ships that.)

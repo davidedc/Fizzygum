@@ -126,6 +126,7 @@ const STINKS = [
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
     sanctioned: [
       { file: 'harness/WidgetTestSupport.coffee', member: 'serialiseToMemory', count: 1, why: "a catch telling the serializer's own refusal (SerializationError) from a bug: an exception's class is what it is" },
+      { file: 'serialization/Deserializer.coffee', member: '@_couldBeAWidgetClass', count: 1, why: "a class a file's record names, judged before any instance of it exists: no widget can answer for a class it has not built" },
     ],
     re: /\binstanceof\b/ },
   // (No stink for CoffeeScript helper-compiling constructs such as `%%`: check-coffee-syntax.js compiles every

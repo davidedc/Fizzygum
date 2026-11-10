@@ -169,24 +169,28 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       reading). `SourceEditsRegistry.returnThePageToBootSources` catches a member it cannot return and only
       `console.log`s it, after the teardown: the loaded world then runs the page's edited member where the file
       expects boot's, with no word to the person and no gate token.
-- [ ] **A world file's source-edit list is not vetted on load** (found by the same review; by reading).
-      `_envelopeShapeProblem` does not look at `world.sourceEdits`: a non-array (`fromRecords`' `.slice`) or a `null`
-      entry throws after the teardown and leaves an empty desktop, and on a `sources: "lazy"` tree
-      `_needsTheReflectiveLayer` throws a TypeError before it.
 - [ ] **No gate loads an edit-carrying world on a `sources: "none"` or `"lazy"` tree** (found by the same review; by
       reading). The lean build's "cannot re-apply" notice and a lazy build's trip order (the part, then the reflective
       layer, then the replay) are proven by reading only: the rigs that load worlds with source edits drive the dev
       tree, and `fg homepage`'s smoke round-trips a snapshot that carries none.
-- [ ] **A load reads a reference form it does not know as undefined** (found closing "A save writes NaN and
-      ±Infinity as null", in the plan's ledger; by reading). `Deserializer.resolveRef` answers any object value carrying
-      none of `$r`, `$wk`, `$ext`, `$num` (a `$src` is compiled apart) with `undefined`, and `_envelopeShapeProblem`
-      does not vet the forms: a file holding one — a newer build's form, a hand-edited file — loads with that value
-      silently gone. The world section has its own reader (`WorldWdgt.loadWorldSnapshot`'s `resolve`), which hands an
-      unknown object back raw, and nothing vets the section (`children`, `bin`, `shelf`, `alpha` take anything).
-- [ ] **A tag record's other fields are not vetted on load** (found by the independent review closing "A save writes
-      NaN and ±Infinity as null", in the plan's ledger; by reading). `_envelopeShapeProblem` holds a `$Date`'s time and
-      a `Color`'s components to numbers, but a `$Canvas`'s `w`/`h`/`pr`/`data` and a record's `iid` take anything: a
-      malformed one throws after a world load's teardown, or builds garbage in silence.
+- [ ] **A `$Canvas`'s size is not bounded by the backend's surface** (found by the independent review closing "The load
+      vets the whole envelope up front", in the plan's ledger; by reading). On an SWCanvas page a canvas wider or taller
+      than 16384 px — saved by a native page, or resampled up by a load at a higher pixel ratio — throws in its builder
+      after the teardown; the bound is the loading page's backend's, so it is a load-time (not a shape) question.
+- [ ] **Duplicate or over-counter iids load** (found by the same review; by reading). Two records of one class with
+      one `iid`, or an `iid` above the file's own `idCounters` for its class, pass the vetting: two widgets then share a
+      `uniqueIDString`, or the next widget built collides with a restored one. No save writes either.
+- [ ] **Some envelope fields are type-checked only** (found by the same review; by reading; low). `formatVersion`
+      (missing, a string), `kind` (any value but "world" restores with fresh ids), `wallpaperPatternName` (any
+      string), a user's `armedDrawingTool` (any string), and unknown section or record fields pass unread.
+- [ ] **A user object with an own `$wk` key saves and then is refused** (found by the same review; by reading).
+      `Serializer.wellKnownKeysIn` visits a record's `props` container as if it were a reference, so a plain object a run
+      stores with an own `"$wk"` key saves, and the file is refused on load ("names the well-known object …").
+- [ ] **A widget file's source edits pre-load parts** (found by the same review; by reading). `loadWhatItNeeds` reads
+      `envelope.world.sourceEdits` for a widget file too, fetching parts and the reflective layer for edits that door
+      never replays (a widget file carries none a save writes).
+- [ ] **The info-doc prefix has four homes** (found by the same review; by reading). `InfoDocs`, `Serializer`,
+      `Deserializer._worldSectionProblem` and `WorldWdgt` each spell `infoDoc` for the world's own info-doc flags.
 - [ ] **`Color.create` never checks its components** (found by the same review; by reading). It rounds r, g and b and
       takes any alpha, so a run's `Color.create 200, 0, 0, "0.5"` makes a colour whose cache key ("200,0,0,0.5") is the
       number alpha's too: the first one minted is every later `Color.create 200, 0, 0, 0.5` on the page. (A save

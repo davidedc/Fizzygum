@@ -185,7 +185,8 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
   the tolerant `onExternalPointer:"record"` mode emits — resolvable by unique-id on restore,
   but no shipped caller selects that mode). A plain JSON object as a *value* is always a table
   slot (`$Object`), so a `props` value is unambiguously one of the reference forms by
-  construction; plain user strings need no escaping.
+  construction; plain user strings need no escaping. A load refuses up front any other object where a
+  reference goes (§11), so no form a build does not know is ever read as undefined in silence.
 - **A number is written as itself unless JSON cannot write it as itself**: `JSON.stringify` writes NaN and ±Infinity
   as `null` and -0 as `0`, so those four ride as `{"$num": "NaN" | "Infinity" | "-Infinity" | "-0"}` — wherever a
   record holds a number that can be any number: a reference, a `$Date`'s `ms` (an invalid date's is NaN), a `Color`'s
@@ -588,7 +589,8 @@ nesting depth and setting each `$src` property aside; (3) identity & registratio
 decode async assets into one `whenReady` promise,
 re-register `memberships`, per-class `_afterDeserialization` hook — whose answer, when it is a
 thenable (an element load the hook started), `whenReady` awaits too); (5) deliver a detached
-`{ widget, whenReady }` for the caller to attach. `Widget.deserialize` /
+`{ widget, whenReady }` for the caller to attach, with `resolve` — the one reader of the
+reference forms, which the world loader resolves its section's references with. `Widget.deserialize` /
 `world.deserialize` become thin delegates.
 
 A record's class becomes a builder or a class only through OWN lookups: `Deserializer._tagBuilderFor`
@@ -725,10 +727,18 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    - **The format check** (`format` + `kind:"world"`) — not a snapshot: one `inform`, stop.
    - **The refusal of a file this build can NEVER restore** — `Deserializer.whyItCanNeverBeRestored`
      (a pure read of the envelope) names the reason: a `formatVersion` newer than
-     `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array, a record naming
-     no class, a membership marker naming no world set, a `{"$num"}` naming no number a save writes that way, a
-     `$Date` time or `Color` component that is no number, or a `{"$src"}` in a tag record), a `{"$src"}` on a record
-     of a class that cannot
+     `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array; a record naming no class, or
+     whose own fields are not the shape a save writes — each tag states its own in `TAG_BUILDERS`' `shapeProblem`,
+     a `$Date`'s time and a `Color`'s components numbers among them, and a class record's `props` is an object, its
+     `iid` a whole number; a membership marker naming no world set; a reference no save writes
+     (`Deserializer._refProblem`: a scalar, or exactly one form — `$r` an index into the table, `$wk`/`$ext`/`$src` a
+     string, `$num` a known text); a `{"$src"}` in a tag record), a malformed world section
+     (`Deserializer._worldSectionProblem`: every field the section writes — its children and app windows `{"$r"}`s
+     to widgets' records, the bin a `BinWdgt`'s, the shelf a `ShelfWdgt`'s, the preferences the
+     `PreferencesAndSettings` record, the desktop colour a `Color`'s; its plain fields of their type; an info-doc flag
+     only under an `infoDoc…` name; the source-edit list record by record, as `SourceEditsRegistry.isARecord` reads
+     one), a widget file's `root` not a widget's record, `memberships` that are no list or stand on a record that is
+     no widget's, a `{"$src"}` on a record of a class that cannot
      inject a method (§9), or a class the file names — a record's class, an `app:` key's, a class
      key's (`Deserializer.classNamesIn`, a record's only when it is no tag — an own-property `TAG_BUILDERS` lookup)
      and no class boot's `classNamed` answers, and that this artifact can never provide

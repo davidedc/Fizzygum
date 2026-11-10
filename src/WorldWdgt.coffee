@@ -3033,7 +3033,8 @@ class WorldWdgt extends IconGridPanelWdgt
       world.inform "This is not a Fizzygum world snapshot file."
       return
     # A FILE THIS BUILD CAN NEVER RESTORE IS REFUSED HERE, before anything changes: a newer format
-    # version, a malformed object table, a method's source where no widget can take it, a record, an
+    # version, a malformed object table or world section (a record's shape, a reference's form, a
+    # section field), a method's source where no widget can take it, a record, an
     # app key or a class key naming a class that is neither here nor owned by a part this build ships
     # (Deserializer.classNamesIn, the one list of the classes a file needs), or an app key naming a
     # class that is not an app. Each would make the restore throw AFTER step 1 has destroyed the
@@ -3095,8 +3096,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # From the teardown to step 6 the world has NO STORAGE: the core destroyed the bin and the shelf
     # (snapshot roots, which no caller keeps), and step 6 installs the file's pair. The `finally`
     # guarantees a bin and a shelf whatever happens in between — a file carrying none, or a load
-    # that throws part-way (a record whose body is malformed, say: the refusal above vets the
-    # envelope's shape and its class names, not every record's contents) — because without them the
+    # that throws part-way (an edit whose source throws when it runs, say: the refusal above vets
+    # every record's and the section's shape, not what code does) — because without them the
     # next storage drain (StorageSorter.drainPendingSort, once per world cycle) throws, and the
     # world's animation loop stops. The pair is built exactly as finishWorldSetup builds a fresh world's.
     try
@@ -3138,12 +3139,9 @@ class WorldWdgt extends IconGridPanelWdgt
           "Everything else in it loads normally."
       # 3. deserialize the object table (kind:"world" preserves each widget's iid).
       result = Deserializer.deserialize envelope
-      shells = result.shells or []
-      resolve = (refOrVal) ->
-        return undefined unless refOrVal?
-        return shells[refOrVal.$r] if refOrVal.$r?
-        return WellKnownObjects.resolve refOrVal.$wk if refOrVal.$wk?
-        refOrVal
+      # the section's references resolve through the Deserializer's own reader (the refusal above vetted
+      # every one of them: Deserializer._worldSectionProblem)
+      resolve = result.resolve
       # 4. restore the static preferences bag (values only) from its forced data record.
       if section.preferences?
         restoredPrefs = resolve section.preferences

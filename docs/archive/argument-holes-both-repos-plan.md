@@ -2428,3 +2428,49 @@ for (const s of sites) if (s.absentBefore.length) {
       also names a field a run filled. Filed: "Three plans teach a stamp without its declaration", "Nothing holds every
       stamped field to its declaration", "An inspector's Duplicate throws on a subject the copier refuses", "Is an
       inspector's subject always a page object?" (the owner's).
+- [x] **A load reads a reference form it does not know as undefined** (found closing "A save writes NaN and
+      ±Infinity as null", in the plan's ledger; by reading). `Deserializer.resolveRef` answers any object value carrying
+      none of `$r`, `$wk`, `$ext`, `$num` (a `$src` is compiled apart) with `undefined`, and `_envelopeShapeProblem`
+      does not vet the forms: a file holding one — a newer build's form, a hand-edited file — loads with that value
+      silently gone. The world section has its own reader (`WorldWdgt.loadWorldSnapshot`'s `resolve`), which hands an
+      unknown object back raw, and nothing vets the section (`children`, `bin`, `shelf`, `alpha` take anything).
+- [x] **A tag record's other fields are not vetted on load** (found by the independent review closing "A save writes
+      NaN and ±Infinity as null", in the plan's ledger; by reading). `_envelopeShapeProblem` holds a `$Date`'s time and
+      a `Color`'s components to numbers, but a `$Canvas`'s `w`/`h`/`pr`/`data` and a record's `iid` take anything: a
+      malformed one throws after a world load's teardown, or builds garbage in silence.
+- [x] **A world file's source-edit list is not vetted on load** (found by the same review; by reading).
+      `_envelopeShapeProblem` does not look at `world.sourceEdits`: a non-array (`fromRecords`' `.slice`) or a `null`
+      entry throws after the teardown and leaves an empty desktop, and on a `sources: "lazy"` tree
+      `_needsTheReflectiveLayer` throws a TypeError before it.
+      — the three CLOSED 2026-11-10 together (self-ruled; loop unit U3, "the load vets the whole envelope up front").
+      MEASURED (`Fizzygum-tests/.scratch/envelope-vetting/probe.js`, one corruption per fresh page): THROWN AFTER THE
+      TEARDOWN, leaving an empty or broken desktop — an unknown reference form as an `$Array` item or a world child, a
+      `$Canvas` of no size, a `$Set` with no items, a source-edit list that is no list or holds `null`; LOADED SILENTLY
+      WRONG — an unknown form in a field (gone), a raw `bin`, `children` that are no list (an EMPTY desktop, no word), a
+      string `alpha`, a `{$r}` past the table, a `$Canvas` with no data, `$Array`/`$Map`/`$Object` fields of the wrong
+      shape, a string `iid`, a source edit with no scope. RULED: the load's own rule applied whole — a file a restore
+      would throw on or get wrong is refused up front, the desktop kept — with one home for each kind of knowledge:
+      each TAG states its record's shape in its `TAG_BUILDERS` entry (beside its build and populate; item 11's
+      `$Date`/`Color` number checks fold in), ONE reference-form check (`Deserializer._refProblem`), a class record's
+      own fields (`_classRecordShapeProblem`), ONE world-section check (`_worldSectionProblem`, every field the save
+      writes; an info-doc flag only under an `infoDoc…` name, since the load sets each on the world); the world loader's
+      own resolver is deleted for the Deserializer's (`resolve`, one reader of the forms). LANDED: `Deserializer`,
+      `WorldWdgt.loadWorldSnapshot`; the reference doc §3/§9/§11. PROVEN: the probe's 17 corruptions each refused up
+      front, the desktop kept; every real save still loads (both serialization rigs green); serialization-rig load
+      guards `world.loadGuard.unknownReferenceFormRefused`, `malformedRecordRefused`, `malformedWorldSectionRefused`
+      (both backends), each failing under its plant (references unvetted; record shapes unvetted; the section
+      unvetted), with the earlier number guards. The independent review's findings landed: a section reference must
+      name a record of the KIND its place holds (children and app windows a widget's — judged when the class is
+      resident, the door's re-entry judging a lazy one; the bin a `BinWdgt`'s, the shelf a `ShelfWdgt`'s, the
+      preferences and desktop colour their classes') — a `Point` child still threw after the teardown and a non-bin
+      bin would have stopped the world loop; a widget file's `root` is vetted the same way; `memberships` must be a list
+      on a widget's record; an own `__proto__` in props is refused; the one false refusal (a zero-sized canvas's
+      `"data:,"`) accepted; the source-edit record shape moved to its writer (`SourceEditsRegistry.isARecord`, a unique
+      id optional as declared); the dead `shells` field deleted; the type test `_couldBeAWidgetClass` sanctioned in
+      `check-stinks.js` (a class a file names, judged before an instance exists). Rig: (1i)/(1j) plant a `Point` child,
+      a non-bin bin, memberships on a non-widget, an own `__proto__`; ACCEPT CONTROL `world.loadGuard.wellFormedEdgeShapesAccepted`
+      (six edge shapes a save writes pass), `widgetFile.rootVetted`; plants: kinds unjudged, an over-strict vetting
+      (caught by the accept control). Filed: "A `$Canvas`'s size is not bounded by the backend's surface",
+      "Duplicate or over-counter iids load", "Some envelope fields are type-checked only", "A user object with an own
+      `$wk` key saves and then is refused", "A widget file's source edits pre-load parts", "The info-doc prefix has four
+      homes".
