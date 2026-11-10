@@ -261,8 +261,13 @@ and a key no build writes is refused at load (an envelope shape problem, before 
 teardown).
 `WellKnownObjects.resolveApp(className)` completes the `app:` branch: it resolves the name through
 boot's `classNamed` (a key is a name read out of a file, so one naming a native global or an inherited
-property of `window` is no class, and throws like any class this page lacks — never `new`-ed), `new`s the named
-`WindowedApp` subclass and MEMOIZES one instance per class
+property of `window` is no class, and throws like any class this page lacks — never `new`-ed), refuses a
+class that is not an app (`WellKnownObjects.isAppClass`: a class whose instances a save writes as that very key,
+through their `wellKnownKey` — a load accepts exactly what a save writes, and core names no app-kit class;
+the file doors refuse such a key up front, `Deserializer.whyItCanNeverBeRestored`, so `app:WorldWdgt` never
+runs a constructor that makes itself `window.world`; a launcher's lazy click asks the same of the app name
+it carries, `AppLauncherWdgt`), `new`s the named app — a `WindowedApp` subclass, or the stateless base itself —
+and MEMOIZES one instance per class
 (`@_appSingletons`), which is safe because such an app is a stateless config holder — its one
 window lives in the world's app-window registry (`world.appWindows`, keyed by class name), not on the app (§11).
 
@@ -586,7 +591,7 @@ for the next thing, for the door to RE-ENTER its load on, one thing per trip:
 1. the LAZY PARTS owning the classes `Deserializer.classNamesIn` lists (record classes that are no
    native-type tag, `app:` keys, class keys — the same list the refusal reads, so a class no part can
    provide is refused before any fetch; what a part's arrival can still refuse is a method's source on
-   one of its classes, judged on the re-entry);
+   one of its classes, or an `app:` key naming one of them that is not an app, judged on the re-entry);
 2. then the reflective layer, when `Deserializer._needsTheReflectiveLayer` says the file needs it: it
    is absent but can load, and the file carries class- or mixin-scope source edits (§12) or holds a
    widget whose class declares `readsClassMemberMaps` — `InspectorWdgt`, which shows and edits a
@@ -696,15 +701,18 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      key's (`Deserializer.classNamesIn`, a record's only when it is no tag — an own-property `TAG_BUILDERS` lookup)
      and no class boot's `classNamed` answers, and that this artifact can never provide
      (`world.parts.canEverProvideClass` — resident, or owned by a part this build ships, so a class
-     a LAZY part provides is not a reason). One `inform` ("…Your desktop has been left as it
+     a LAZY part provides is not a reason), or an `app:` key naming a class that is not an app
+     (`WellKnownObjects.isAppClass`, §4a). One `inform` ("…Your desktop has been left as it
      was."), stop. It mirrors exactly the throws a restore would hit — `Deserializer.deserialize`
      raises its envelope-level ones through the same two helpers (`_envelopeShapeProblem`,
-     `_functionSourceOnANonWidget`), and `@instantiate` keeps its per-record throw as the net for
-     every other caller — and it precedes the confirm (a fact about the FILE: nobody is asked to
-     replace their desktop with a file that cannot load) and the parts fetch (a file refused anyway
-     costs no fetch). One reason waits for a lazy part: whether a class it provides can take a
-     method's source is judged once the part has loaded, when the loader re-enters — still before
-     the teardown, so that file too leaves the desktop as it was.
+     `_functionSourceOnANonWidget`), and `@instantiate` and `WellKnownObjects.resolveApp` keep their
+     throws as the net for every other caller — and it precedes the confirm (a fact about the FILE:
+     nobody is asked to replace their desktop with a file that cannot load) and the parts fetch (a
+     file refused anyway costs no fetch). Two reasons wait for a lazy part, since they are asked of a
+     class it provides: whether that class can take a method's source, and whether an `app:` key
+     naming it names an app — judged once the part has loaded, when the loader re-enters, after the
+     confirm and the part's fetch and still before the teardown, so that file too leaves the desktop
+     as it was.
    - **The confirm** (a file/menu load warns it replaces the desktop AND can run code — §4.12; the
      rig / a macro pass `skipConfirm`).
    - **Pre-load what the file needs** — `Deserializer.loadWhatItNeeds` (§9, the step the widget door

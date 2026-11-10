@@ -133,7 +133,8 @@ class Deserializer
   # WellKnownObjects.resolve's for a class key or an app key. The names are @classNamesIn, the one list
   # of the classes a file needs, which the parts pre-load reads too (loadWhatItNeeds), so a file is
   # refused for exactly the names its restore would fail on: each is tested as the restore resolves it,
-  # through classNamed, so it either passes, and resolves, or must be one that can still arrive. WHAT
+  # through classNamed, so it either passes, and resolves, or must be one that can still arrive; and an
+  # app key's class, once resident, must be an app (WellKnownObjects.isAppClass), as resolveApp asks. WHAT
   # can still arrive is the caller's to say: both file doors pass PartsRegistry.canEverProvideClass, so
   # a class a LAZY part provides is not a reason (that file loads the part first). The format check stays
   # with each caller (the world loader's also wants kind:"world"), so the envelope is taken to be a
@@ -148,8 +149,16 @@ class Deserializer
       continue if classNamed(className)?
       continue if canStillArrive className
       unbuildable.push className
-    return undefined unless unbuildable.length
-    "it uses " + unbuildable.join(", ") + ", which this build does not have"
+    return "it uses " + unbuildable.join(", ") + ", which this build does not have" if unbuildable.length
+    # an app key must name a class of the app kind (WellKnownObjects.isAppClass); one still to arrive
+    # with a lazy part is judged on the door's re-entry, once it has
+    notApps = []
+    for key in Serializer.wellKnownKeysIn envelope
+      appName = WellKnownObjects.appNameInAppKey key
+      continue unless appName? and (appClass = classNamed appName)?
+      notApps.push appName unless WellKnownObjects.isAppClass(appClass) or appName in notApps
+    return WellKnownObjects.notAnAppReason notApps if notApps.length
+    undefined
 
   # Every class name an envelope references, each once: THE list of what restoring it NEEDS, read before
   # anything is changed. Three sources, because a file names classes in three ways, and the restore

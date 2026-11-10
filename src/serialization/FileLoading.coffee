@@ -69,10 +69,11 @@ class FileLoading
   # "before anything changes" is before the first shell is built, and it takes the world door's guards
   # there, from the same functions and in the same order (WorldWdgt.loadWorldSnapshot):
   #   1. a file this build can NEVER restore is refused, naming every class it lacks (a class a LAZY
-  #      part provides is not a reason), and no part is fetched for it;
+  #      part provides is not a reason) or every app key naming a class that is not an app, and no part
+  #      is fetched for it;
   #   2. what the file needs is loaded (Deserializer.loadWhatItNeeds), and this RE-ENTERS once it has
-  #      arrived -- which also judges a {"$src"} on a class that just arrived, in deserialize's own
-  #      pre-pass;
+  #      arrived -- which also judges an app key naming a class that just arrived, and a {"$src"} on
+  #      one, in deserialize's own pre-pass;
   #   3. then the restore.
   # Answers undefined when it restored inline, else the re-entered load's promise.
   @_loadWidgetEnvelope: (envelope, dropPoint) ->

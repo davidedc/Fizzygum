@@ -78,6 +78,26 @@ class WellKnownObjects
     name = key.substring 4
     if name then name else undefined
 
+  # Is `klass` of the kind an app key stands for: a class whose instances a save writes as that very
+  # key (keyFor, read on an instance of it)? A load accepts an app key only for such a class -- it
+  # accepts exactly what a save writes -- so a key naming a class that is not an app is refused, never
+  # `new`-ed in the middle of a restore (a WorldWdgt's constructor makes itself window.world). Asked of
+  # the class's own prototype chain, so core names no app-kit class (the part-edges gate); WindowedApp,
+  # the base, is of the kind too, and harmless: a stateless config holder. ⚠ It reads the class's LIVE
+  # members: a page that edited a class's wellKnownKey is judged by its edit.
+  @isAppClass: (klass) ->
+    return false unless klass?.prototype?
+    @keyFor(Object.create klass.prototype) is "app:" + klass.name
+
+  # The words of a refusal of app keys -- or a launcher's app name -- naming classes that are not apps
+  # (isAppClass): the file doors' up-front one (Deserializer.whyItCanNeverBeRestored), resolveApp's (the
+  # net) and a launcher's click (AppLauncherWdgt).
+  @notAnAppReason: (classNames) ->
+    if classNames.length is 1
+      "it names " + classNames[0] + " as an app, and that class is not an app"
+    else
+      "it names " + classNames.join(", ") + " as apps, and those classes are not apps"
+
   # The class name a class key carries, or undefined for any other key (an app key included: it names
   # an app's singleton, not a class). Read where appNameInAppKey is.
   @classNameInClassKey: (key) ->
@@ -139,10 +159,12 @@ class WellKnownObjects
   # semantics), and because the apps are stateless the cache is safe to keep across loads.
   # The name comes out of a file, so it is resolved by classNamed: an "app:" key naming a native
   # global or an inherited property of window is not a class, and THROWS like any class this page
-  # lacks (resolve's header), never `new`-ed.
+  # lacks (resolve's header), never `new`-ed; and one naming a class that is not an app (isAppClass)
+  # THROWS too, in the file doors' own words.
   @resolveApp: (className) ->
     appClass = classNamed className
     throw SerializationError.forMissingClass className unless appClass?
+    throw new SerializationError (WellKnownObjects.notAnAppReason [className]), direction: "load" unless WellKnownObjects.isAppClass appClass
     @_appSingletons ?= {}
     @_appSingletons[className] ?= new appClass
     @_appSingletons[className]

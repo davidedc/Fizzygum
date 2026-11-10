@@ -114,6 +114,12 @@ class AppLauncherWdgt extends DesktopLinkWdgt
     # for the snapshot loader. whenClassAvailable runs its callback INLINE when the class is already
     # in — the usual case after the first click — and inline is correctness, not economy: deferring
     # by a microtask moves the launch a whole world cycle later, and the suite measures cycles.
+    # The name is data -- a file carries it, as it carries an app key -- so it is resolved by classNamed,
+    # and only an app is made and launched (WellKnownObjects.isAppClass), never a class that is not one.
     appClassName = @appClassName
     world.parts.whenClassAvailable appClassName, ->
-      (new window[appClassName]).launch()
+      appClass = classNamed appClassName
+      unless WellKnownObjects.isAppClass appClass
+        world.inform "This launcher cannot launch: " + WellKnownObjects.notAnAppReason([appClassName]) + "."
+        return
+      (new appClass).launch()

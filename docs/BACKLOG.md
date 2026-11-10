@@ -60,12 +60,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       "Open from file…". The world door asks first ("…can run code the snapshot carries"); the widget door asks
       nothing. Whether a widget file carrying a `{"$src"}` should confirm, or a `{"$src"}` be held to a function
       literal, is a product call.
-- [ ] **An `app:` key naming a class that is no app is `new`-ed during a restore** (found by the independent review
-      closing "The widget-file door never loads the lazy part a file needs", in the plan's ledger; by reading).
-      `WellKnownObjects.resolveApp` builds an instance of whatever class `classNamed` answers, so
-      `{"$wk": "app:WorldWdgt"}` would run `new WorldWdgt` in the middle of a restore, and that constructor's first act
-      is to make itself `window.world`. A key that names a class must name one of the KIND the key stands for (an app
-      key, a `WindowedApp` subclass, which core cannot name: the part-edges gate), and the refusal must say so too.
 - [ ] **The reflective layer reads as absent until the boot's tail has run** (found by the same review; by reading).
       On a compile-at-boot page, `reflectiveLayerHasLoaded` turns true only after `createWorldAndStartStepping` and
       `runPostBootActionsOnce`, though the world was compiled from the layer. If a post-boot step throws, the flag
@@ -108,6 +102,14 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       restored inspector throws at every re-lay) — what a canvas context did before it became derived only beside its
       canvas. Such a value is derived where its holder rebuilds it: the class that stamps it (its
       `@serializationTransients` names the same fields), not an inspector.
+- [ ] **A load judges an app key's kind by the page's edited members, then returns them to boot** (found by the
+      independent review closing "An `app:` key naming a class that is no app is `new`-ed during a restore", in the
+      plan's ledger; by reading; low, contrived). `WellKnownObjects.isAppClass` reads a class's LIVE `wellKnownKey`, and
+      the world door asks it before its teardown, while the load returns the page's class edits to boot
+      (`SourceEditsRegistry.returnThePageToBootSources`) after it: a page that added or edited a class's
+      `wellKnownKey` passes the up-front judgement, and the restore's own `resolveApp` then throws after the teardown.
+      The up-front predicate is otherwise a pure read of the file; this one depends on page state the load is about
+      to change.
 - [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
       refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
       `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the

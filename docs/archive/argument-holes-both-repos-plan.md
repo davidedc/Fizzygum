@@ -1825,3 +1825,32 @@ for (const s of sites) if (s.absentBefore.length) {
       — a context beside its canvas still derived — fails, planted out, the rig's `world.everyAppSnapshot.FizzyPaintApp`
       (its `behindTheScenesBackBufferContext`). Filed: "A runtime object stamped derived is dropped from an inspector
       holding it".
+- [x] **An `app:` key naming a class that is no app is `new`-ed during a restore** (found by the independent review
+      closing "The widget-file door never loads the lazy part a file needs", in the plan's ledger; by reading).
+      `WellKnownObjects.resolveApp` builds an instance of whatever class `classNamed` answers, so
+      `{"$wk": "app:WorldWdgt"}` would run `new WorldWdgt` in the middle of a restore, and that constructor's first act
+      is to make itself `window.world`. A key that names a class must name one of the KIND the key stands for (an app
+      key, a `WindowedApp` subclass, which core cannot name: the part-edges gate), and the refusal must say so too.
+      — CLOSED 2026-11-10 (self-ruled overnight). MEASURED (survey: `Fizzygum-tests/.scratch/app-key-kind/`):
+      `resolveApp('RectangleWdgt')` built a RectangleWdgt, and a world file carrying `{"$wk": "app:StringWdgt"}`
+      passed the doors' up-front refusal and loaded, `new`-ing a StringWdgt mid-restore. Rulings (self-ruled
+      overnight, under "clean minimal + Do The Right Thing"): the kind is the save's own reading — a load accepts an
+      app key only for a class whose instances a save writes as that very key (their `wellKnownKey`), so it accepts
+      exactly what a save writes and names no app-kit class (measured: exactly the 16 apps and their stateless base);
+      refused up front by both file doors (re-judged on their re-entry once a lazy part arrives) and by the net.
+      Landed: `WellKnownObjects.isAppClass` and `notAnApp` (one message); `Deserializer.whyItCanNeverBeRestored` refuses
+      such a key before a world load's teardown and a widget file's first shell; `resolveApp` throws a load
+      `SerializationError` in the same words; the reference doc §4a states it. Proven by the serialization rig's
+      `world.loadGuard.appKeyNotAnAppRefused` (desktop kept, the informs name the class) and
+      `world.loadGuard.widgetFileAppKeyNotAnAppIsALoadError` (the widget door's informs, and the net building
+      nothing), failed by their plants (`plants/`: every class an app fails both; no up-front judgement fails the
+      world door's; no net fails the widget door's net; the control passes). The item's independent review found the
+      same bug class one door over, and these, landed: a lazy launcher's click `new`ed `window[appClassName]` — a
+      name a file carries — and now resolves it through `classNamed` and launches only an app (`isAppClass`), else
+      says so (`world.loadGuard.launcherAppNameNotAnAppLaunchesNothing`, failed by its plant); `isAppClass` reads the
+      save's own `keyFor`; one refusal wording, singular and plural; the refusal's comments and the reference doc
+      §9/§11 name the app kind among the reasons a lazy part's arrival can still refuse (on the re-entry, after the
+      confirm and the part's fetch); the widget door's check now proves the refusal comes before
+      `Deserializer.deserialize` (a spy; the no-up-front plant fails it) and drives the net through a direct
+      deserialize. The lazy re-entry is held by reading: the same predicate re-runs. Filed (low): "A load judges an
+      app key's kind by the page's edited members, then returns them to boot".
