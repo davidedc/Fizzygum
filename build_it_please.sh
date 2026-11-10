@@ -120,6 +120,35 @@ if [ ! -d ../Fizzygum-builds ]; then
   mkdir ../Fizzygum-builds
 fi
 
+# Mirrors SWCanvas's own BitmapText auto-fetch gate. The bulk SWCanvas bytes are
+# gitignored; on a fresh clone we fetch them from the committed pin so that
+# "git clone && build" Just Works (needs GitHub access on the first build only).
+SWCANVAS_VENDOR=vendor/swcanvas
+SWCANVAS_PIN=vendor/swcanvas.pin
+# The 3D-core artifacts are part of the presence check too: a vendor tree that
+# predates that dist target would silently fail the native bundle's assembly, so
+# treat it as not-populated and re-fetch.
+if [ ! -f "$SWCANVAS_VENDOR/swcanvas.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.js" ] || \
+   [ ! -f "$SWCANVAS_VENDOR/swcanvas-3d-core.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.min.js" ] || \
+   [ ! -f "$SWCANVAS_VENDOR/VERSION" ]; then
+  echo "SWCanvas bundle (incl. sw3d.js + the 3D-core target) missing — fetching from $SWCANVAS_PIN ..."
+  ./scripts/vendor-swcanvas.sh
+elif [ -f "$SWCANVAS_PIN" ]; then
+  PINNED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_PIN")
+  VENDORED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_VENDOR/VERSION")
+  if [ "$PINNED_SHA" != "$VENDORED_SHA" ]; then
+    echo "warning: vendor/swcanvas.pin ($PINNED_SHA) != vendored SWCanvas ($VENDORED_SHA)."
+    echo "         Run ./scripts/vendor-swcanvas.sh to refresh (not auto-refreshing to avoid a surprise long build)."
+  fi
+fi
+
+# THE BUILD'S START, before it reads any input (buildSystem/lib/build-inputs.js says what those are) and after the
+# vendored SWCanvas above is in place (a fresh clone fetches it: inputs this build only produced must not read newer
+# than its stamp): a start marker is laid, whose mtime the stamp takes at the very end, so an input edited WHILE this
+# build runs reads newer than its stamp. The previous stamp goes at the build's first write (the cleanup below).
+mkdir -p $BUILD_PATH
+touch "$BUILD_PATH/.build-start"
+
 if ! command -v terser &> /dev/null
 then
     echo "Terser could not be found, please see https://www.npmjs.com/package/terser"
@@ -169,33 +198,6 @@ eval "$PROFILE_VARS"
 echo "profile: $PROFILE_NAME — form $PROFILE_FORM, tests $PROFILE_SHIPS_TESTS, SWCanvas entry $PROFILE_SHIPS_SWCANVAS_ENTRY"
 
 # --- SWCanvas backend: ensure the vendored engine bundle is present ----------
-# Mirrors SWCanvas's own BitmapText auto-fetch gate. The bulk SWCanvas bytes are
-# gitignored; on a fresh clone we fetch them from the committed pin so that
-# "git clone && build" Just Works (needs GitHub access on the first build only).
-SWCANVAS_VENDOR=vendor/swcanvas
-SWCANVAS_PIN=vendor/swcanvas.pin
-# The 3D-core artifacts are part of the presence check too: a vendor tree that
-# predates that dist target would silently fail the native bundle's assembly, so
-# treat it as not-populated and re-fetch.
-if [ ! -f "$SWCANVAS_VENDOR/swcanvas.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.js" ] || \
-   [ ! -f "$SWCANVAS_VENDOR/swcanvas-3d-core.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.min.js" ] || \
-   [ ! -f "$SWCANVAS_VENDOR/VERSION" ]; then
-  echo "SWCanvas bundle (incl. sw3d.js + the 3D-core target) missing — fetching from $SWCANVAS_PIN ..."
-  ./scripts/vendor-swcanvas.sh
-elif [ -f "$SWCANVAS_PIN" ]; then
-  PINNED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_PIN")
-  VENDORED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_VENDOR/VERSION")
-  if [ "$PINNED_SHA" != "$VENDORED_SHA" ]; then
-    echo "warning: vendor/swcanvas.pin ($PINNED_SHA) != vendored SWCanvas ($VENDORED_SHA)."
-    echo "         Run ./scripts/vendor-swcanvas.sh to refresh (not auto-refreshing to avoid a surprise long build)."
-  fi
-fi
-
-if [ ! -d $BUILD_PATH ]; then
-  mkdir $BUILD_PATH
-fi
-
-
 # ---- the test-serving link: the ONLY two operations allowed on $BUILD_PATH/js/tests ----
 #
 # $BUILD_PATH/js/tests is a relative SYMLINK to the sibling tests repo's tests/ directory
@@ -220,6 +222,11 @@ remove_tests_link() {
 }
 
 # ---------------------------------------- cleanup -------------------------------------------
+
+# The build's first write: the previous stamp goes with the tree it described, so a build that does not complete
+# leaves NONE — never the last good build's, which would let a runner test whatever this one left half-written. (A
+# build that stops before this point, on an unknown profile or a missing tool, leaves the previous tree and its stamp.)
+rm -f "$BUILD_PATH/.build-stamp"
 
 rm -rf $BUILD_PATH/*.html
 rm -rf $BUILD_PATH/icons
@@ -280,9 +287,10 @@ if [ ! -d $BUILD_PATH/js/src ]; then
   mkdir $BUILD_PATH/js/src
 fi
 
-if [ ! -d $SCRATCH_PATH ]; then
-  mkdir $SCRATCH_PATH
-fi
+# the scratch is this build's own: a build that stopped half-way left its intermediates, which the boot bundle's
+# appends (>>) would otherwise build on
+rm -rf "$SCRATCH_PATH"
+mkdir "$SCRATCH_PATH"
 
 # ---- serve the tests through a link instead of copying them in ----
 # $BUILD_PATH/js/tests -> the sibling tests repo's tests/ directory. RELATIVE (so the whole
@@ -1020,13 +1028,12 @@ if ! $PROFILE_SHIPS_TESTS ; then
 fi
 
 terser --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BOOT_JS
-echo "... done minifying boot file"
-
 if [ "$?" != "0" ]; then
   tput bel;
-  echo "!!!!!!!!!!! error: coffeescript compilation failed!" 1>&2
+  echo "!!!!!!!!!!! error: minifying the boot file failed!" 1>&2
   exit 1
 fi
+echo "... done minifying boot file"
 
 # ---- the two boot bundles ------------------------------------------------------------------
 #
@@ -1254,11 +1261,17 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
   fi
 fi
 
-# BUILD STAMP: touched ONLY here, at the very end of a successful build, so its mtime == build-completion
-# time. The headless test runners refuse to run if any source .coffee is newer than this stamp (or it is
-# missing) -- so a build that didn't run / failed / ran from the wrong cwd can never be tested as if fresh.
-# See Fizzygum-tests/scripts/lib/assert-build-fresh.js.
-touch "$BUILD_PATH/.build-stamp"
+# BUILD STAMP: written ONLY here, at the very end of a successful build, with the mtime of the start marker laid
+# before the build read its first input. The suite runners refuse to run if any INPUT of the build is newer than this
+# stamp (or it is missing) -- so a build that didn't run / failed / ran from the wrong cwd, or whose inputs changed
+# while it ran, can never be tested as if fresh. The inputs: buildSystem/lib/build-inputs.js; the refusal:
+# Fizzygum-tests/scripts/lib/assert-build-fresh.js.
+if ! touch -r "$BUILD_PATH/.build-start" "$BUILD_PATH/.build-stamp" ; then
+  tput bel
+  echo "!!!!!!!!!!! error: could not write the build stamp (no .build-start: another build in this tree?)" 1>&2
+  exit 1
+fi
+rm -f "$BUILD_PATH/.build-start"
 
 # for OSX: say build done
 tput bel

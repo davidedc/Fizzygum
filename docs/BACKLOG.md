@@ -27,9 +27,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       the plan's ledger; measured). Masking src takes
       about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
       build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
-- [ ] **Build freshness reads only the sources' mtimes** (found closing the same item; by reading). An edit to
-      `parts.json`, `buildSystem/*`, `src/index.html` or the runtime prelude leaves a stale build reading FRESH, to
-      `lib/assert-build-fresh.js` (and every runner that asks it) and to the umbrella `fg status`.
 - [ ] **Every tool walks the tooling's own files for itself** (found closing the same item; by reading). About seven
       walks list the `.js` files of `buildSystem/` and `scripts/`, with different skip rules: `lib/what-runs.js`,
       `run-selftests.js` and `check-hand-lists.js` pass over dot directories, `node_modules` and `__pycache__`;
@@ -66,6 +63,28 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       compilers read differently stopped the scan unnoticed from f002a7b7 (2026-08-16) to 2026-11-10. Holding every source to the
       mirror on each build would cost the mirror's run (a few seconds) per build: whether that is worth it is the same
       question as "Every gate re-masks all of the compiled sources".
+- [ ] **The sequence runner never asks whether the build is stale** (found by the second independent review closing
+      "Build freshness reads only the sources' mtimes", in the plan's ledger; by reading). `run-sequence-headless.js` —
+      presuite's `fracplane` rider and every new test's follower proof — boots the harness with no
+      `lib/assert-build-fresh` call, so an edit not yet built is tested as if it were in the build, passing or failing
+      vacuously; the suite and single runners refuse such a build.
+- [ ] **A build that fails a step can still stamp itself** (found by the same review; by reading). `build_it_please.sh`
+      checks the boot minify's exit, but not the SWCanvas fetch (`vendor-swcanvas.sh`), the boot `coffee -b -c`
+      (caught only through the minify that follows), the SWCanvas bundle's `cat`s, the `bootScripts` loop's
+      `coffee`/`terser`, nor the `cp`s of the pre-compiled stub and `font-assets`: one of them failing still ends with a
+      stamp, and the runners test a tree that is missing a piece.
+- [ ] **A deleted input leaves a build reading FRESH** (found closing "Build freshness reads only the sources'
+      mtimes", in the plan's ledger; by reading). Freshness compares the newest mtime among the files a build is made
+      from (`buildSystem/lib/build-inputs.js`) against `.build-stamp`; a file DELETED since the build moves no
+      surviving file's time, so a removed class source (or a removed asset) leaves the build reading FRESH while it still
+      ships what is gone. The build could record the input list it read beside the stamp, and the check compare the
+      two lists as well as their times.
+- [ ] **`fg status` reads build freshness from the sources alone** (found closing "Build freshness reads only the
+      sources' mtimes", in the plan's ledger; by reading; `fg` is local workspace tooling, outside the backlog loop).
+      The runners now ask `Fizzygum/buildSystem/lib/build-inputs.js` (the files the build's output is made from)
+      against `.build-stamp`; `fg status`'s `build: FRESH/STALE` line still compares the sources' mtimes on its own, so
+      an edit of `parts.json`, `src/index.html`, `vendor/` or the build's Python still reads FRESH there while every
+      runner refuses the build. It could ask the same definition (`node -e` over build-inputs.js).
 - [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
       loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
       `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function

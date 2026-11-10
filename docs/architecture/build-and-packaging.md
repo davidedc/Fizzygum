@@ -612,6 +612,23 @@ not re-attempted: `docs/archive/core-app-slices-partition-plan.md` §4 Phase 3.
 
 There are **no flavour flags**. An unknown argument is a hard error that lists the available profiles.
 
+### Is the last build stale?
+
+`build_it_please.sh` lays a start marker before it reads any input (once the vendored SWCanvas a fresh clone fetches
+is in place), removes `Fizzygum-builds/latest/.build-stamp` at its first write to the tree, and gives the stamp that
+marker's time as its very last act: a build that did not complete leaves no stamp, and the stamp's time is when the last
+completed build began reading its inputs. A build is STALE when an INPUT — a file
+its output is made from — is newer than its stamp. `buildSystem/lib/build-inputs.js` is the one definition: the FILES
+the build names, never the directories holding them (a directory also holds what the build never reads — a
+subsystem's `CLAUDE.md`, an editor's swap file, a gate's vendored parser): every compiled source and `src/index.html`,
+the build script and its Python, `parts.json` and the profiles, each part's declared `assets` and `vendor` pieces, the
+files the build script names itself (the SWCanvas bundle's pieces, the pre-compiled stub) and every file under
+`font-assets/`. The gates are not inputs (they judge the output, they do not shape it), nor is the pre-compile driver (it
+shapes only a precompiled profile's image, which no runner tests). ⚠ A DELETED input is not seen (no surviving file's
+time moves). The suite runner, the single runner (except while it captures references), the paint audit and several
+rigs refuse a stale build (`Fizzygum-tests/scripts/lib/assert-build-fresh.js`; `FIZZYGUM_ALLOW_STALE_BUILD=1`
+overrides); the sequence runner and the reference-capture tool do not ask. ⚠ `fg status` prints FRESH/STALE by a check of its own, over the sources only.
+
 ## 7. Adding things
 
 - **A new part** — add it to `parts.json` with its `dirs`; `"parts": "all"` picks it up for the dev builds. Name it in

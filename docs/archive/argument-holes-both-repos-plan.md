@@ -2198,3 +2198,34 @@ for (const s of sites) if (s.absentBefore.length) {
       message points) states the shape and the remedy, and that a clean mirror is no proof CS1 read a file as the page
       does (`await f()`); the tooling doc says the same, without its stale counts. Filed: "Nothing keeps the
       similar-code mirror working" (an owner trade-off: a build step costs seconds per build).
+- [x] **Build freshness reads only the sources' mtimes** (found closing the same item; by reading). An edit to
+      `parts.json`, `buildSystem/*`, `src/index.html` or the runtime prelude leaves a stale build reading FRESH, to
+      `lib/assert-build-fresh.js` (and every runner that asks it) and to the umbrella `fg status`.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED by reading and by plants: the runners' guard
+      (`Fizzygum-tests/scripts/lib/assert-build-fresh.js`) and the single runner's and torture's own checks compared
+      only `compiledFiles` against the build — the single runner against the harness page's mtime, not the stamp; and
+      the stamp, touched at the build's END, let an input edited during the ~57 s build read FRESH, and a build that
+      failed kept the previous stamp. Rulings (self-ruled, SURVEY in `Fizzygum-tests/.scratch/build-freshness-inputs/`):
+      a build's inputs are the FILES its output is made from, one definition, `buildSystem/lib/build-inputs.js`
+      `newestBuildInput()` — every compiled source and `src/index.html`, the build script and its Python, `parts.json`
+      and the profiles, each part's declared `assets` and `vendor` pieces, the files the build script names itself and
+      every file under `font-assets/` — never the directories holding them; the gates and the pre-compile driver are not
+      inputs; `build_it_please.sh` lays `.build-start` before its first input read, removes the stamp at its first write
+      to the tree and gives the stamp the marker's time at its end (`touch -r`, checked), so a build that did not
+      complete leaves none and an edit during a build reads STALE; `lastBuildTime` and the stamp's path live beside the definition; the guard refuses a listing it
+      cannot make (exit 2); the single runner and torture ask the same two answers, and the single runner warns when no
+      build completed. The boot minify's exit is checked (it read the next `echo`'s). The FIRST shape walked `src/`,
+      `vendor/` and `auxiliary files/` whole with their directories' mtimes, to see deletions; the independent review
+      found it counted what the build never reads — a subsystem's `CLAUDE.md`, `.DS_Store`, an editor's swap file, a
+      gate's vendored parser — so a docs edit during a gauntlet would refuse every later leg; it was replaced before
+      landing. Proven by one-off plants: `src/index.html` or a font file touched → STALE naming it; `src/macros/
+      CLAUDE.md` touched, a dotfile made and removed in `src/`, `vendor/acorn` touched → FRESH; a source touched while a
+      build ran → STALE once it completed; a build aborted by a failing self-test → "no .build-stamp". The second
+      review's findings landed: a fresh clone fetches the vendored SWCanvas BEFORE the start marker (else its first
+      build read STALE on inputs it fetched itself); the build clears its scratch at the start (the newly checked minify
+      exit could leave intermediates the boot bundle's appends then built on — planted: garbage left in the scratch, the
+      next build passes); the old stamp goes only at the build's first write, so a build stopped by an unknown profile
+      keeps the tree and stamp it found (planted); the runners' freshness reports refuse a failed listing (exit 2); the
+      docs name which runners ask the guard. Filed: "A deleted input leaves a build reading FRESH", "`fg status` reads
+      build freshness from the sources alone" (fg is outside the loop), "The sequence runner never asks whether the build
+      is stale", "A build that fails a step can still stamp itself".
