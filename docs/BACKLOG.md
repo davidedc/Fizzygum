@@ -381,12 +381,12 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 - [ ] §7: banked v1-excluded items: precompiled file, SWCanvas strip, baked edits, dirty guard
 
 ### `plans/mixin-removal-plan.md`
-AUTHORED 2026-11-10 on the owner's direction: all eight mixins to ordinary homes, then the mechanism deleted. No code written; next = Phase 0. It supersedes the keep position of `architecture/mixins.md` §1/§7.
-- [ ] §6 S1: back buffer as a paint strategy (the crux: it cannot end as a base class) — not yet run
-- [ ] §6 S2: one pointer-state mechanism for the five implementations of §2.5 — not yet run
-- [ ] §6 S3: a single non-mixin home for the edit-mode relay — not yet run
-- [ ] §0.4: owner decisions D1–D5 (pointer-state shape; Controller as a base class or a collaborator; class names; the inspector's donor vocabulary; sequencing against the 2026-11-25 talk)
-- [ ] §7 Phases 1–9: the base-class moves (Clipping, KeepsRatio, Controller), the app-kit shared base, back buffer, pointer state, the edit-mode relay, the mechanism teardown, docs
+AUTHORED 2026-11-10 on the owner's direction: all eight mixins to ordinary homes, then the mechanism deleted. No code written. D2 (Controller = a base class) and D5 (the talk plan drops mixins) are decided; the three investigations have paper verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
+- [ ] §6 S1: the back buffer — empirical half (a build and a gauntlet on the paper verdict); open: where the fields are declared, the shadow twin's home, whether text keeps the shadowing `calculateKeyValues`
+- [ ] §6 S2: one pointer-state mechanism — empirical half, after D1
+- [ ] §6 S3: the edit-mode relay into `StretchablePanelWdgt` — empirical half
+- [ ] §0.4: owner decisions D1 (pointer-state shape, three candidates), D3 (class names), D4 (the inspector's donor vocabulary)
+- [ ] §7 Phases 1–9: the base-class moves (Clipping, KeepsRatio, Controller, the app-kit shared base) wait on nothing; then the back buffer, the edit-mode relay, pointer state, the mechanism teardown, docs
 
 ### `archive/onion-widget-composition-plan.md` — "The Frame model" — ✅ FLAGSHIP ARC COMPLETE 2026-07-20 (A·C·B·D·E); follow-ons below
 Naked `Simple*` capability → framed `*Wdgt` citizen (`FrameWdgt`, was `WindowWdgt`) → App=launcher. Intrinsic-framing principle LOCKED (D1–D9). Correctness-first — no churn deferrals. Every landed phase (§5 P0, A, B, C and its two dock tails, D-1/D-2/D-3, E, E1's refusal, E3, plus the build-tooling and census riders) is in that plan's § "BACKLOG ledger".

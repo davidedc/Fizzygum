@@ -1,8 +1,10 @@
 # Mixin removal — every mixin to an ordinary home, then delete the mechanism
 
-**STATUS: PLAN ONLY — AUTHORED 2026-11-10. No code written. Phase 0 (investigations S1–S3, owner
-decisions D1–D5) is the next step.** Written to be executed COLD by an LLM/engineer with ZERO prior
-context: everything needed is embedded here or one named-doc hop away.
+**STATUS: PLAN ONLY — AUTHORED 2026-11-10. No code written.** Written to be executed COLD by an
+LLM/engineer with ZERO prior context: everything needed is embedded here or one named-doc hop away.
+**Where it stands (§13):** D2 and D5 are decided. The three investigations have been done BY
+READING — each has a paper verdict, and an empirical half (a build and a gauntlet) still owed. D1,
+D3 and D4 are open. Phases 1–4 wait on nothing.
 
 Every fact below was read on 2026-11-10 at Fizzygum `a37b8ba4` (its `src/` unchanged since
 `2bc853f9`) / Fizzygum-tests `61adb7ce1`. **Line numbers are hints and drift; the quoted method name is authoritative — grep it
@@ -52,26 +54,27 @@ mechanism WORKS; only its keep-vs-remove POSITION is superseded by this plan.**
    A base class removes the workaround; it is not merely "as good".
 3. **`BackBufferMixin` is the crux, and it is NOT a blocker.** It cannot end as a base class:
    `CanvasWdgt` needs it together with clipping, and `StringWdgt`/`PaletteWdgt` need it together
-   with wiring. It must become a paint strategy (an `Appearance`) or, at worst, three widgets with
-   three one-line overrides over one shared helper (§6 S1). Either way removal is possible; the
-   investigation chooses the shape.
+   with wiring. Its three overrides dissolve onto the appearances a palette and a canvas already
+   have, plus one line on `StringWdgt`; what needs a home is its KIT — the blit, the pixel read
+   and the shadow twin (§6 S1).
 4. **Pointer state has five homes today, not one.** `HighlightableMixin` is one; four classes
    hand-roll the same hover/pressed machine beside it (§2.5). The job is ONE pointer-state
    mechanism for about ten classes, not "re-home a mixin with six consumers".
-5. **`BubblesEditModeToCoordinatorMixin` is the one genuine cross-branch case, and it must not be
-   "folded into its consumers".** It was created on 2026-07-27 precisely because its two cores sat
-   byte-identical in three classes (`docs/archive/mixin-application-tidyups-plan.md`, Item A).
-   Copying them back re-creates that triplication. It needs a single non-mixin home (§6 S3).
+5. **`BubblesEditModeToCoordinatorMixin` sits on three branches, and its relay is live on ONE.** It
+   was created on 2026-07-27 because its two cores sat byte-identical in three classes
+   (`docs/archive/mixin-application-tidyups-plan.md`, Item A), so copying them back is not an
+   option. Reading shows the relay can fire only in `StretchablePanelWdgt` (§6 S3): that class
+   keeps it as its own two methods, and the other two consumers inherit.
 
 ### 0.4 What is NOT decided — the owner's calls
 
-| # | Decision | Recommendation here | Where |
+| # | Decision | Recommendation / decision | Where |
 |---|---|---|---|
-| D1 | The shape of the one pointer-state mechanism | decide after S2 reports | §6 S2 |
-| D2 | `ControllerMixin`: base class, or a per-widget wiring collaborator | base class as the removal step; the collaborator is a separate question | §5.4 |
+| D1 | The shape of the one pointer-state mechanism | open: three candidates stand after S2's paper half | §6 S2 |
+| D2 | `ControllerMixin`: base class, or a per-widget wiring collaborator | **DECIDED 2026-11-10: base class** | §5.4 |
 | D3 | Names of the new classes (all names in this plan are WORKING names) | — | §5 |
 | D4 | The inspector loses "from `<X>Mixin`", "Override in this class" and the Add… destination step, with nothing in their place | accept: they exist only because of mixins | §7 Phase 8 |
-| D5 | Sequencing against the Smalltalk talk (2026-11-25, freeze 2026-11-21): `plans/smalltalk-talk-2026-11-plan.md` builds on mixin-aware meta features | no code phase of this plan lands before the talk unless the owner says so | §11 |
+| D5 | Coupling with the Smalltalk talk (2026-11-25, freeze 2026-11-21) | **DECIDED 2026-11-10: the talk plan drops mixins** (its D7), so neither plan builds on the other. When a code phase lands relative to the freeze is asked at that phase's commit | §11 |
 
 ### 0.5 Cold-execution protocol
 
@@ -81,8 +84,9 @@ mechanism WORKS; only its keep-vs-remove POSITION is superseded by this plan.**
    `docs/architecture/widget-authoring-guidelines.md`.
 3. Re-run the scan in §2.4 and compare with §2.2/§2.3. If anything differs, the tree moved: fix the
    plan's facts FIRST, in place, before executing.
-4. Phase 0 before any product edit. Each investigation ends by writing its verdict into §13 of
-   this file; D1–D5 are put to the owner with the evidence, and their answers recorded there too.
+4. Phases 1–4 wait on no investigation. Before Phase 5, 6 or 7, run the EMPIRICAL half of its
+   investigation (§6): each paper verdict in §13 was reached by reading and is a hypothesis until
+   a gauntlet has passed on it. Verdicts, and the owner's answers to D1, D3 and D4, go into §13.
 5. Then one phase at a time, in the order of §7. Each phase: edit → `fg presuite` while iterating
    → `fg gauntlet` (and `fg homepage` where the phase says) at the close → present a summary and a
    commit message to the owner and WAIT. Never commit or push without that approval.
@@ -188,6 +192,13 @@ A class-body member that shadows a mixin member, with whether it calls `super`:
 | `DesktopLinkWdgt._updateColor`, `UpperRightTriangleIconicButtonWdgt._updateColor` | replace the look | plain overrides, no `super` |
 | `StringWdgt.catchesPointerAt` | bounds / rounded-item test | replaces the mixin's per-pixel test, which is wrong for text |
 
+One member shadows `Widget`'s for callers that never asked for the mixin:
+`BackBufferMixin.calculateKeyValues`. It clamps the source rectangle to the BUFFER's pixel size
+where `Widget.calculateKeyValues` clamps to the widget's extent, and it needs `@backBuffer` to
+exist. On a back-buffered widget it answers `Appearance._calculateKeyValuesOrNil` (so a palette's
+mark and a canvas's border are clipped by it) and `Widget._paintEditorSelectionOverlayIfSelected`
+as well as the blit.
+
 Subclasses below a consumer that override a mixin member (their `super` reaches the consumer's
 prototype, i.e. the injected member, today and after conversion alike):
 `TransformFrameWdgt` (three Clipping members, two with `super`), `WorldWdgt.fullPaintIntoAreaOrBlitFromBackBuffer`
@@ -245,6 +256,18 @@ One class reads ANOTHER widget's stored state: `GlassBoxBottomWdgt.fillForToolSt
 reads `stateHolder.state` against `stateHolder.STATE_PRESSED` / `STATE_HIGHLIGHTED`, driven by
 `ParentStainerMixin._updateColor` → `@parent?.noteItemStateChanged?()`.
 
+Two facts about the hand's order of work, which decide what a hook may ask it:
+- `_dispatchEventsFollowingMouseMove` sends `hoverExited` to the leavers and `hoverEntered` to the
+  joiners BEFORE it replaces `mouseOverList` (the assignment is at its tail, ~:1925). Inside either
+  hook `restsOn(@)` still gives the previous answer.
+- `_climbPressFrom` adds a receiver to `_pressAudience` before telling it `pressBegan`, and both
+  endings strike a member off before telling it. Inside a press hook the audience is current.
+
+And why the copies exist: the mixin's look hook STORES. `_updateColor`'s default writes `@color`;
+`LabelButtonWdgt` restates the hooks, by its own comment, because the mixin's would "clobber" its
+fill — its look is read from `state` at paint (`LabelButtonAppearance`). `DesktopLinkWdgt` gets the
+same result by answering `_updateColor` with a bare `@_changed()`.
+
 ### 2.6 What the mechanism costs today
 
 - `src/meta/Mixin.coffee`: 299 lines. Mixin-only members elsewhere, by name:
@@ -255,9 +278,11 @@ reads `stateHolder.state` against `stateHolder.STATE_PRESSED` / `STATE_HIGHLIGHT
   `_currentPropertySourceMixin`, the `_class_injected_in` half of `_isACompanion`;
   `SourceEditsRegistry.recordMixinEdit`, `recordMixinMemberRemoval`, `replayMixinEdits`, the mixin
   half of `returnThePageToBootSources`.
-- 45 files under `buildSystem/` and 16 under the tests repo's `scripts/` (its `.scratch/` aside)
-  match the pattern in §7 Phase 8; none in the harness source. Not yet classified into comment /
-  DSL parsing / name-keyed rule.
+- 45 files under `buildSystem/` and 16 under the tests repo's `scripts/` reference the mechanism,
+  none in the harness source. Classified file by file in
+  `docs/measurements/mixin-teardown-census-2026-11-10.md`: in `buildSystem/`, 13 are comments only,
+  20 parse or model the mixin DSL, 6 hold a rule or plant keyed on a mixin, 6 do both; in the rigs,
+  8 are comments only and 8 hold expectations.
 - It is not stable machinery: `Mixin.coffee` and `Object-extensions.coffee` were touched by 23
   commits between June and November 2026 (1 in June, 9 in July, 4 in August, 9 in November) —
   `git log --since=2025-11-01 --format=%ad --date=format:%Y-%m -- src/meta/Mixin.coffee
@@ -361,29 +386,32 @@ pinned-`@ratio` variants (`Example3DPlotWdgt`, `StretchableWidgetContainerWdgt`)
 measures (`AnalogClockWdgt`, `GenericCompositeIconWdgt`, `WidgetHolderWithCaptionWdgt`,
 `TrackingTransformFrameWdgt`): that conversion was falsified (§10).
 
-### 5.3 `BackBufferMixin` → a paint strategy — shape chosen by S1
+### 5.3 `BackBufferMixin` → the two appearances that exist, one line on text, and a kit — S1
 
 `Widget` already delegates the three things the mixin overrides: `catchesPointerAt` →
 `@appearance.shapeContainsPoint` (~:547), `paintIntoAreaOrBlitFromBackBuffer` →
 `@appearance?.paintIntoAreaOrBlitFromBackBuffer` (~:595), `opaqueCoveredRect` →
 `@appearance?.opaqueCoveredRect()` (~:3079). Base `Appearance` answers `shapeContainsPoint` (bounds)
-and `opaqueCoveredRect` (`undefined`). See §6 S1 for the candidate shapes and the fallback.
+and `opaqueCoveredRect` (`undefined`). A palette answers through `PaletteAppearance`, a canvas
+through a `CanvasAppearance extends RectangularAppearance`, a text keeps one line and no
+appearance; the blit, the pixel read and the shadow twin move to one plain class. Detail, what is
+still open and the fallback: §6 S1.
 
-### 5.4 `ControllerMixin` → base class `ControllerWdgt extends Widget` (core) — D2
+### 5.4 `ControllerMixin` → base class `ControllerWdgt extends Widget` (core) — decided, D2
 
 Six consumers extend `Widget` directly; `SliderWdgt` takes `CircleBoxWdgt`'s constructor body and
-two methods itself (`SliderButtonWdgt` keeps `CircleBoxWdgt`). `graphEdgesOut`'s `super()` becomes
-real. Zero call-site changes, zero snapshot-format change (`@wires` stays a widget own-property).
-While `BackBufferMixin` is still a mixin, `StringWdgt` and `PaletteWdgt` can extend `ControllerWdgt`
-and keep augmenting it, so this does not wait on S1.
+two methods itself (`SliderButtonWdgt` keeps `CircleBoxWdgt`; nothing in `src/` or the tests
+type-tests a slider as a `CircleBoxWdgt`). `graphEdgesOut`'s `super()` becomes real. Zero call-site
+changes, zero snapshot-format change (`@wires` stays a widget own-property). While
+`BackBufferMixin` is still a mixin, `StringWdgt` and `PaletteWdgt` can extend `ControllerWdgt` and
+keep augmenting it, so this does not wait on S1.
 
-The alternative — a per-widget wiring collaborator (`@wiring`) owning the `WireSpec` list — moves
-about 19 lines in 10 `src/` files and 42 lines in 23 tests-repo files (pattern in §9.4), changes
-the snapshot format, and re-targets every wiring menu row. Its benefit is unrelated to mixins: it
-is the right design if ANY widget should be able to drive another (the target half of the wire
-protocol — `pins()`, `principalPin()` — is already on `Widget`). Recommendation: take the base
-class here; raise the collaborator as its own arc if wanted. Moving a base class to a collaborator
-later is no harder than moving a mixin to one now.
+Not chosen: a per-widget wiring collaborator (`@wiring`) owning the `WireSpec` list. It would touch
+about 19 lines in 10 `src/` files and 42 in 23 tests-repo files, change the snapshot format and
+re-target every wiring menu row, for a benefit unrelated to mixins — it is the right design only
+if ANY widget should be able to drive another (the target half of the wire protocol, `pins()` and
+`principalPin()`, is already on `Widget`). That is its own arc if ever wanted; moving a base class
+to a collaborator then is no harder than moving a mixin to one now.
 
 ### 5.5 `WidgetCreatorAndSmartPlacerOnClickMixin` + two of `ParentStainerMixin`'s four → a shared base in `app-kit` (working name `WidgetCreatingToolWdgt`)
 
@@ -401,21 +429,25 @@ look and its exceptions. `ParentStainerMixin` is that mechanism's look hook answ
 (`EditorContentPropertyChangerButtonWdgt`, `CodeInjectingSimpleRectangularButtonWdgt`) state that
 one line themselves.
 
-### 5.7 `BubblesEditModeToCoordinatorMixin` → a single non-mixin home — shape chosen by S3
+### 5.7 `BubblesEditModeToCoordinatorMixin` → two methods of `StretchablePanelWdgt` — S3
 
-Not a copy per consumer (§0.3 point 5).
+The relay can fire in one class only, so that class owns it; `StretchableWidgetContainerWdgt` and
+`VerticalStackViewportWdgt` drop the augmentation and inherit their parents' cores. Not a copy per
+consumer (§0.3 point 5). The argument, and what a build must still show: §6 S3.
 
 ---
 
 ## §6 Phase 0 — investigations
 
-Each runs on a throwaway WIP branch or `git worktree` (never `git stash`), lands nothing, and ends
-with a verdict written into §13.
+Each has two halves. The PAPER half was done on 2026-11-10 by reading the source, with nothing
+built or run; its verdict is below and in §13, and it is a hypothesis. The EMPIRICAL half runs on
+a throwaway WIP branch or `git worktree` (never `git stash`), lands nothing, and ends by confirming
+or correcting that verdict in §13.
 
-### S1 — back buffer as a paint strategy (the crux; run first)
+### S1 — the back buffer (the crux)
 
-**Question.** Can the three back-buffered widgets paint, hit-test and report coverage through
-`@appearance`, with the blit body existing once and no member injected or re-declared?
+**Question.** Can the three back-buffered widgets paint, hit-test and report coverage with the blit
+body existing once and no member injected or re-declared?
 
 **Facts to design against.**
 - The mixin holds four fields (`backBuffer`, `backBufferContext`, `_backBufferShadowSilhouette`,
@@ -425,112 +457,203 @@ with a verdict written into §13.
   `catchesPointerAt` per pixel, `opaqueCoveredRect` → `undefined`).
 - Each consumer family supplies `_createRefreshOrGetBackBuffer` (seven definers: `CanvasWdgt`,
   `StretchableCanvasWdgt`, `SimpleImageWdgt`, `VideoPlayerCanvasWdgt`, `StringWdgt`, `TextWdgt`,
-  `PaletteWdgt`) and reads `@backBuffer`/`@backBufferContext` freely in its own code. Text and
-  palette buffers are shared, immutable and cached by content; a canvas's raster is mutated in
-  place and can be saved content (`CanvasWdgt.drawnRaster`).
+  `PaletteWdgt`) and reads `@backBuffer`/`@backBufferContext` freely — about 140 sites in 16 files.
+  Text and palette buffers are shared, immutable and cached by content; a canvas's raster is
+  mutated in place and can be saved content (`CanvasWdgt.drawnRaster`).
 - Outside the three families, `PenWdgt`, `ToolTipWdgt` and `PaletteAppearance` read the buffer or
   call `getPixelColor` / `blitBackBufferInto`.
-- `StringWdgt` has NO appearance today, so every `@appearance?` read in `Widget` answers "none" for
-  text: `outlineIsStroked`, `paintStroke`, `addShapeSpecificMenuItems`, `_fillColor`,
-  `opaqueCoveredRect`, `clipToOutline`, `outlineCornerRadii`, `pins`
-  (`grep -nE "@appearance\??\." src/basic-widgets/Widget.coffee`). Giving text an appearance changes
-  each of those unless the new appearance answers exactly as "none" does.
+- `StringWdgt` has NO appearance today. Every optional answer `Widget` asks an appearance for is
+  probed with `?` — `outlineIsStroked`, `paintStroke`, `addShapeSpecificMenuItems`, `_fillColor`,
+  `outlineCornerRadii`, `pins` (`grep -n "@appearance" src/basic-widgets/Widget.coffee`) — and base
+  `Appearance` defines none of them, so a bare appearance would answer exactly as "none" does.
+- The serializer walks an appearance like any other object: an appearance is one more live object
+  and one more record in a saved file, per widget.
 - `CanvasWdgt` keeps `PanelWdgt`'s `RectangularAppearance` for its border: the clipping
   `fullPaint…` tail calls `@paintStroke`, which is the appearance's. So a canvas needs the
   rectangular answers AND the blit.
+- No class below the three consumers assigns an appearance of its own (13 subclasses checked), so
+  an answer on the family's appearance reaches all of them.
+- `calculateKeyValues` is shadowed for every caller (§2.3). A palette's and a canvas's buffers are
+  made at extent × pixel ratio, so the two variants agree there once the buffer is fresh. A text's
+  buffer is sized by its text and cached by content; nothing read so far shows it equals the
+  widget's bounds.
 - `buildSystem/check-back-buffer-memos.js` is a gate about these fields and reads `@augmentWith`.
 
-**Candidate shapes.**
-- *A — the appearance owns the route.* `BackBufferAppearance extends Appearance`: paint = the blit,
-  `shapeContainsPoint` = the per-pixel test, coverage = inherited `undefined`. `PaletteAppearance`
-  extends it and calls `super` before its mark (`PaletteWdgt`'s re-declared paint goes). Text takes
-  it bare. Open sub-question: the canvas needs it on top of `RectangularAppearance` — which is the
-  same "one behaviour, two branches" problem one level down, in the appearance tree. It is solved
-  if the blit body lives on something both appearance classes can call in one line.
-- *B — the fallback, always available.* A plain helper holding the blit, the silhouette twin and
-  the pixel read as functions of a widget; each of the three consumers declares its fields and
-  three one-line overrides. At most nine stubs (`StringWdgt` already overrides `catchesPointerAt`,
-  and with no appearance its coverage already answers `undefined`).
+**Paper verdict.** One appearance for all three is not the shape to build: every text would gain
+an appearance object (each menu row's label is a `StringWdgt`) to carry a one-line paint, and the
+canvas would need a second class on the `RectangularAppearance` branch anyway. Build this instead:
 
-**Accept when** the full gauntlet passes with ZERO reference recaptures at dpr 1, dpr 2 and WebKit
-(this is a pure re-routing) — including its `vmtruth` and `serialization` legs, which hold object
-lifetime and the transients — `check-back-buffer-memos.js` is re-pointed and its bite-proof still
-bites, and — for shape A — each `@appearance?` read above is listed with text's answer before and
-after, all equal.
+- **Palette.** `PaletteAppearance` answers all three: paint = the blit, then its mark, as today;
+  `shapeContainsPoint` = the per-pixel test; coverage = base `undefined`. `PaletteWdgt`'s
+  re-declared paint (§2.3) is deleted. No widget-side override.
+- **Canvas.** `CanvasAppearance extends RectangularAppearance` answers the three — paint = the
+  blit; `shapeContainsPoint` per pixel; coverage `undefined`, where `RectangularAppearance` claims
+  its box — and `CanvasWdgt` constructs it in place of the panel's. The three subclasses that
+  answer `catchesPointerAt` themselves keep doing so.
+- **Text.** No appearance. `StringWdgt` keeps ONE line, `paintIntoAreaOrBlitFromBackBuffer` calling
+  the blit. It already answers `catchesPointerAt`, and with no appearance
+  `Widget.opaqueCoveredRect` already answers `undefined`.
+- **The kit** — the blit, the buffer-clamped key values, the pixel read, the shadow twin — moves
+  to ONE plain class the three call. The four fields stay widget fields (140 sites).
 
-**If A fails twice,** take B. Do not start a third shape.
+**Still open; the empirical half decides them first.**
+- Where the four fields are declared once the mixin is gone, and whether the shadow twin stays two
+  per-widget fields or becomes a cache keyed by the buffer (texts sharing one immutable buffer
+  would then share one twin). Read `docs/architecture/world-lifetime-and-inventory.md` before
+  adding any page-lifetime state.
+- Whether `calculateKeyValues` must keep shadowing on text. Unless the two variants are shown equal
+  there, it stays a member of the text family; dropping it silently changes the clip of a selected
+  text's selection ring.
+
+**Empirical half — accept when** the full gauntlet passes with ZERO reference recaptures at dpr 1,
+dpr 2 and WebKit (this is a pure re-routing) — including its `vmtruth` and `serialization` legs,
+which hold object lifetime and the transients — `check-back-buffer-memos.js` is re-pointed and its
+bite-proof still bites, and a selected text, a selected palette and a selected canvas each paint
+their selection overlay as before (if no reference shows one, add the test BEFORE the change).
+
+**Fallback, always available.** Each of the three consumers declares three one-line overrides over
+the same kit: at most nine stubs, fewer in practice (text needs one). If the shape above fails
+twice, take this; do not start a third.
 
 ### S2 — one pointer-state mechanism
 
 **Question.** Can one implementation of the transition rules serve all of §2.5, and where does it
 live?
 
-**Candidates.**
-- *Derived from the hand.* No stored per-widget state: the hand already holds both facts
-  (`restsOn`, `_pressAudience`). It calls ONE optional hook at each transition; a widget's look
-  asks the hand what its state is. Costs nothing on `Widget`, and matches "derived, never stored".
-  Must be tested against: `SliderButtonWdgt` and `HandleWdgt` keeping the pressed look while the
-  pointer leaves mid-drag; `LabelButtonWdgt.activated` forcing the hover look; `DesktopLinkWdgt`'s
-  press on its plate NOT pressing the tile; `LayoutChromeWdgt._showsPressOnMyPlate`; a finger never
-  hovering; the tooltip countdown that today rides `hoverEntered`/`hoverExited`; and
-  `GlassBoxBottomWdgt` reading a child's state.
+**Paper findings.**
+1. *A hover hook cannot ask the hand; a press hook can* (§2.5's two ordering facts). "Derived from
+   the hand" therefore works only if the look is read at PAINT time, the hook merely invalidating —
+   or if the hand's hover bookkeeping is reordered, in the most determinism-sensitive file in the
+   tree.
+2. *The shared transitions must end in a look hook that stores nothing by default* (§2.5, why the
+   copies exist). With that, `LabelButtonWdgt` needs the hook and its two real differences, not
+   five restated methods.
+3. *The tooltip countdown is part of the protocol:* the same two lines (`startCountdownForBubbleHelp`
+   on entry, `world.destroyToolTips()` on exit) sit in three of the five hover implementations.
+4. *What each class keeps as its own exception:*
+
+   | Class | What it does differently |
+   |---|---|
+   | `DesktopLinkWdgt` | a press on its caption plate is not a press on its tile |
+   | `LayoutChromeWdgt` | pressed only where `_showsPressOnMyPlate()` |
+   | `SliderButtonWdgt`, `HandleWdgt` | stay pressed while the hand non-float-drags them, whatever the pointer is over; ignore a hover that arrives meanwhile |
+   | `HandleWdgt`, `LayoutChromeWdgt` | also end the pressed look at `endOfNonFloatDrag` |
+   | `LabelButtonWdgt` | `pressEnded` changes nothing; `activated` forces the hover look — for a finger too, which the mixin never shows hovered |
+   | `MenuItemWdgt` | a list row shows hover on its plate and ends its press at rest; it also highlights the widget it stands for |
+
+**Candidates after the paper half.**
+- *The hand tells an optional collaborator* (new). A widget that wants a pointer look owns one
+  small plain object; the hand sends the five facts to it beside the hooks it already sends; the
+  object keeps the state, runs the tooltip countdown and calls the widget's ONE look hook. No line
+  on `Widget`, no forwarding method, and the hand's bookkeeping order is untouched — the object is
+  TOLD, it never asks. Cost: five sends in `ActivePointerWdgt`, and one field per opted-in widget.
 - *Stored once, opt-in on `Widget`.* `Widget` answers the five hooks for widgets that opt in and
   calls one look hook (the first analysis estimated about 35 lines; it replaces five copies).
-  Against the shrink-`Widget` and no-base-default-for-a-capability rules, so it needs the owner's
-  approval (D1).
-- *Base class plus re-parenting.* Works for `ButtonWdgt` and the app-kit pair; leaves
-  `DesktopLinkWdgt`, the two icon buttons and the four hand-rolled copies where they are. Listed
-  for completeness; it does not reach the target.
+  Against the shrink-`Widget` and no-base-default-for-a-capability rules.
+- *Derived at paint time.* No stored state; each look asks the hand as it paints. It needs every
+  consumer's look to be read at paint — true of `LabelButtonWdgt` and `DesktopLinkWdgt`, false of
+  every class whose `_updateColor` writes `@color` — so it is the largest change of the three.
+- Not a candidate: a base class plus re-parenting. It serves `ButtonWdgt` and the app-kit pair and
+  leaves `DesktopLinkWdgt`, the two icon buttons and the four hand-rolled copies where they are.
 
 **Determinism.** The look must stay a function of the event stream: read
 `../../Fizzygum-tests/DETERMINISM.md` (§3n is the finger/hover case `pointerCanRest` cites) before
-designing, and prove any candidate with `fg fuzz` as well as the dpr 2 leg.
+building, and prove the chosen candidate with `fg fuzz` as well as the dpr 2 leg.
 
-**Accept when** the transition rules exist once, every class in §2.5 keeps only its look and its
-stated exception, and the gauntlet passes with zero recaptures.
+**Empirical half — accept when** the transition rules exist once, every class in §2.5 keeps only
+its look and its row of the table above, and the gauntlet passes with zero recaptures.
 
-**One `super` flips meaning under any base-class shape:** `DesktopLinkWdgt.pressBegan` (§2.3). Its
-`super` would start reaching the new base's `pressBegan`, pressing the tile on a caption press —
-the very thing the method exists to avoid. Restructure it in the same commit.
+**One `super` flips meaning under any shape that puts the transitions above `DesktopLinkWdgt`:**
+its `pressBegan` (§2.3) would start reaching them, pressing the tile on a caption press — the very
+thing the method exists to avoid. Restructure it in the same commit.
 
-### S3 — the single home for the edit-mode relay
+### S3 — the edit-mode relay
 
-**Facts.** The two cores take `(triggeringWidget)`, show the edit/view mode in the parent's bar,
-and — when the parent answers `coordinatesDragsDropsAndEditingForChildren?()` and is not the
-trigger — relay the toggle to it; otherwise `super()`. One class answers that query:
-`StretchableWidgetContainerWdgt` (~:268). `Widget`, `FrameWdgt` and `ViewportWdgt` define cores
-that take no parameter; `FrameWdgt` and `ViewportWdgt` call their `@contents`' cores passing `@`.
-The three consumers sit under three different parents (`Widget`, `PanelWdgt`, `ViewportWdgt`), and
-in `VerticalStackViewportWdgt` the `super()` reaches `ViewportWdgt`'s cores.
+**Facts.** The two cores take `(triggeringWidget)`, tell the parent's bar the new mode, and — when
+the parent answers `coordinatesDragsDropsAndEditingForChildren?()` and is not the trigger — relay
+the toggle to it; otherwise `super()`. `Widget`, `FrameWdgt` and `ViewportWdgt` define cores that
+take no parameter; `FrameWdgt`'s and `ViewportWdgt`'s call their `@contents`' cores passing `@`,
+and `Widget.editButtonPressedFromFrameBar` passes `@` to the public verbs. The three consumers are
+exactly the three classes whose menus offer "Enable editing" / "Disable editing"
+(`_addEditingLockMenuEntries`).
 
-**Candidates.** (a) `Widget`'s own two cores do the relay, scoped by the parent query the mixin
-already asks — then ANY child of a coordinator relays; establish which classes can be such a child
-and whether that changes behaviour. (b) The coordinator owns the relay and its children's toggle
-entry points call it. (c) Anything else that leaves ONE copy. A copy per consumer is not a
-candidate.
+**Paper verdict: the relay is live in one class.**
+- One class answers the coordinator query, `StretchableWidgetContainerWdgt` (~:268), and it has no
+  subclass. Through its constructor and its `add`, its direct children are its `@contents` — a
+  `StretchablePanelWdgt` unless a caller
+  passes one (`ImageWdgt` passes a `StretchableCanvasWdgt`, which is no consumer) — and what answers
+  `attachesToViewportDirectly` (`HandleWdgt`, `ModifiedTextTriangleAnnotationWdgt`), neither of
+  which toggles edit mode. Nothing in `src/` or the tests makes a `VerticalStackViewportWdgt`, or
+  a second container, a coordinator's direct child.
+- So in `VerticalStackViewportWdgt` and in the container itself the relay test is false wherever
+  they are built today, and the injected core reduces to an early `@parent?.showEditModeInBar?()`
+  — sent BEFORE the mode flag is written — followed by `super()`. `Widget`'s and `ViewportWdgt`'s
+  cores make that same call themselves after writing the flag, so the early one is superseded.
+- `triggeringWidget` exists to stop a relay bouncing back, and it cannot bounce: the coordinator's
+  core is `Widget`'s, which acts on `@contents` by writing its flag, never by calling its core.
+  Nobody passes the container as the trigger.
 
-**Accept when** one copy exists, no consumer names a mixin, and the gauntlet passes with zero
-recaptures (the 2026-07-27 arc that created the mixin was pixel-neutral; so is its inverse).
+**Shape.** `StretchablePanelWdgt` defines the two cores in its own class body: the guard, the
+relay when its parent coordinates, else a real `super()`. `StretchableWidgetContainerWdgt` and
+`VerticalStackViewportWdgt` drop the augmentation and inherit. One copy, in the one class that
+uses it. (Moving the relay into `Widget`'s cores instead would also start relaying from the canvas
+of an image window, which does not relay today.)
+
+**Then, in the same phase if the empirical half agrees:** the `triggeringWidget` parameter is dead
+everywhere — the two Stretchables' public wrappers, the `@` the three callers above pass, and the
+comments in `Widget`, `FrameWdgt` and `ViewportWdgt` that explain it. Delete it;
+`buildSystem/check-call-arguments.js` holds the call sites consistent.
+
+**Empirical half — accept when:**
+1. BEFORE the change, a `console.error` planted in the mixin's relay branch for any receiver that
+   is not a `StretchablePanelWdgt` (through a prelude, as the gates' bite-proofs plant) prints
+   nothing over the whole suite. That shows no test reaches it; the bullets above are the argument
+   that nothing else does.
+2. After the change the gauntlet passes with zero recaptures.
+3. One state is settled by hand: `Widget`'s core returns early, before telling the bar, when
+   `@contents` already holds the target mode and the receiver does not. Today the injected early
+   call still tells the bar in that state. Establish whether it can arise; if it can, keep a call.
 
 ---
 
 ## §7 Phases
 
-Order: the three base-class moves first (independent of every investigation), then the phases that
-wait on S1–S3, then the teardown. Each phase closes on `fg gauntlet`; the ones marked ⌂ also run
+Order: the base-class moves first (Phases 1–4, independent of every investigation), then the
+phases that wait on an investigation's empirical half, then the teardown. Each phase closes on `fg gauntlet`; the ones marked ⌂ also run
 `fg homepage` (they touch a lazy part or the meta layer).
 
 | Phase | What | Waits on | Expected references |
 |---|---|---|---|
 | 1 | Clipping → `ClippingWdgt` (§5.1) | — | pixel-identical; inspector member-list and class-chip shots move |
 | 2 | KeepsRatio → base class (§5.2) | — | same |
-| 3 | Controller → `ControllerWdgt` (§5.4) | D2 | same |
+| 3 | Controller → `ControllerWdgt` (§5.4) | — | same |
 | 4 ⌂ | The app-kit pair's shared base; SmartPlacer mixin deleted (§5.5) | — | same |
-| 5 | BackBuffer per S1 (§5.3) | S1 | pixel-identical |
-| 6 ⌂ | Pointer state per S2; Highlightable and ParentStainer deleted (§5.6) | S2, D1, Phase 4 | pixel-identical |
-| 7 ⌂ | Edit-mode relay per S3; Bubbles deleted (§5.7) | S3 | pixel-identical |
-| 8 ⌂ | Mechanism teardown | Phases 1–7, D4 | inspector shots; two tests retired |
+| 5 | BackBuffer per S1 (§5.3) | S1's empirical half | pixel-identical |
+| 6 ⌂ | The relay into `StretchablePanelWdgt`; Bubbles and `triggeringWidget` deleted (§5.7) | S3's empirical half | pixel-identical |
+| 7 ⌂ | Pointer state per S2; Highlightable and ParentStainer deleted — the LAST mixins (§5.6) | D1, S2's empirical half, Phase 4 | pixel-identical; two tests retired, two re-pointed |
+| 8 ⌂ | Mechanism teardown | Phases 1–7, D4 | inspector shots |
 | 9 | Docs and close | Phase 8 | — |
+
+**The mechanism is FROZEN from Phase 1.** No mixin feature changes while this plan runs. Its own
+tests and rig checks use a mixin as their subject, so they stop being runnable phase by phase, well
+before Phase 8 — the census's §1 and §4 list every one. The rule, applied in the phase that deletes
+the subject: a check that exists ONLY for the mechanism is retired there; a general check that
+merely uses a mixin as its example gets a new subject there, and keeps biting.
+
+| Phase | Check whose subject this phase deletes | Do |
+|---|---|---|
+| 2 | `parts-lazy-load-headless.js`, the `LAZY_CONSUMER_TAKES_MIXIN_EDITS` section, with its self-test's plants and second run (subject: KeepsRatio, through the lazy `plots` part) | retire (mechanism-only) |
+| 3 | `serialization-roundtrip-headless.js`, `world.inspector.classSubjectsSurviveSnapshot` (subject member: `openTargetSelector`) | drop its donor-attribution fact; point the rest at a member `SliderWdgt` owns or inherits |
+| 5 | `buildSystem/check-stinks.js`, the sanctioned entry naming `mixins/BackBufferMixin.coffee` / `getPixelColor` | re-point at the kit's new file (it fails loud, `STALE_SANCTION`, if forgotten) |
+| 7 | `SystemTest_macroMixinEditDonorAndOverride`, `SystemTest_macroMixinFieldEditDonorAndOverride`, and their two lines in `inspector-churn-set.json` | retire |
+| 7 | `SystemTest_macroClassInspectorSaveRefusesCodeThatDoesNotCompile`, `SystemTest_macroInspectorOffersOnlyWhatItsSubjectOwns` (they assert on a member `HighlightableMixin` gives `ButtonWdgt`) | new subject |
+| 7 | the serialization rig's four donor checks (`sourceEdits.removedOverrideRestoresDonor`, `…donatedRenameRoutesToDonor`, `…removedOverrideRestoresTheWinningDonor`, `…removalIsAllOrNothing`) | retire, with their names in `lib/serialization-expectations.js` |
+| 7 | `sourceEdits.loadOverPageEditsIsTheFilesWorld` and its two siblings; `boot.classNamedIsTheOneDefinition` | drop their mixin steps |
+| 7 | `smoke-boot-headless.js`, the three mixin verdicts (one requires `augmentations > 0`) | retire |
+
+Pointer state goes last among the mixins (Phase 7) because all four mixin-dependent SystemTests and
+most of the rig checks use `HighlightableMixin`: they then stand until the phase before the
+teardown.
 
 **Per-phase recipe for a base-class move (Phases 1–4).**
 1. Create the class file (one class per file, filename = class name) in a directory its part owns;
@@ -539,7 +662,7 @@ wait on S1–S3, then the teardown. Each phase closes on `fg gauntlet`; the ones
 3. Replace §2.3's workarounds that the move dissolves; delete the mixin file; remove its
    `@augmentWith` lines.
 4. Update comments that name the mixin (`grep -rn "<Name>Mixin" src ../Fizzygum-tests`), including
-   test descriptor metadata.
+   test descriptor metadata, and apply the row of the table above for this phase.
 5. Gate (§9). For Phase 1 also fix the LOCKSTEP comment on the two paint bodies and
    `docs/BACKLOG.md`'s owner-gated "lift scroll … to the clipping-mixin level" wording.
 
@@ -552,18 +675,23 @@ wait on S1–S3, then the teardown. Each phase closes on `fg gauntlet`; the ones
 - Delete the mixin-only members listed in §2.6, and the mixin branches inside shared methods of
   `Class`, both inspectors and `SourceEditsRegistry` (a snapshot's mixin-scope records stop
   existing; there is no compatibility obligation for old files).
-- Build tools and rigs: classify every hit of
-  `grep -rlE "[Mm]ixin|augmentWith|augmentedWith|_class_injected_in|onceAddedClassProperties|addInstanceProperties" buildSystem ../Fizzygum-tests/scripts ../Fizzygum-tests/Automator-and-test-harness-src`
-  as comment, DSL parsing, or a rule keyed on a mixin name; remove the parsing, re-point or retire
-  the rules (`SHADOWS-MIXIN` in `census-hierarchy-duplication.js`, `MIXIN_MEMBER_UNRECORDED` in
-  `lib/gate-tokens.js`, `LAZY_CONSUMER_TAKES_MIXIN_EDITS` in `parts-lazy-load-headless.js` and its
-  self-test), keeping every surviving gate's bite-proof biting.
-- Tests: retire `SystemTest_macroMixinEditDonorAndOverride` and
-  `SystemTest_macroMixinFieldEditDonorAndOverride` (they test the mechanism);
-  `SystemTest_macroClassInspectorSaveRefusesCodeThatDoesNotCompile` and
-  `SystemTest_macroInspectorOffersOnlyWhatItsSubjectOwns` assert on a member donated by
-  `HighlightableMixin` and need a new subject. 39 test directories name a `*Mixin` in all — the
-  rest in descriptor metadata or comments (`grep -rlE "[A-Za-z]+Mixin\b" ../Fizzygum-tests/tests`).
+- Build tools and rigs: work through the census file by file
+  (`docs/measurements/mixin-teardown-census-2026-11-10.md` §3; re-derive its file set first, with
+  `grep -rliE "mixin|augmentWith|augmentedWith|_class_injected_in|onceAddedClassProperties|addInstanceProperties" buildSystem ../Fizzygum-tests/scripts`
+  — case-INSENSITIVE, because the tokens are spelled `MIXIN_…`, and expect "mixing" among the
+  hits). Remove the DSL parsing; retire what remains of the mechanism-only rules
+  (`SHADOWS-MIXIN`, `MIXIN_MEMBER_UNRECORDED`, `BUILDER_IN_MIXIN`, `ELEMENT_FIELD_IN_MIXIN`) each
+  with its bite-proof; rename `MIXIN_CHAIN_TERMINATES`, a general check, in the rig and its
+  self-test together.
+- The loaders change in the SAME commit that deletes `Mixin.coffee` (census §4 answer 2):
+  `buildSystem/lib/meta-compiler.js`, `lib/call-sites.js` (it dereferences `Mixin`
+  unconditionally), `check-coffee-syntax.js` with its self-test's `pass` regex, and the three
+  self-tests that copy the file. Otherwise the syntax gate exits 2 and the build aborts.
+- `"src/mixins"` must leave `parts.json` by hand: `build.py` globs a missing directory to nothing,
+  so a stale entry is silent.
+- Tests: by now the four mixin-dependent SystemTests were handled in Phase 7. What remains is
+  prose — 39 test directories name a `*Mixin` in descriptor metadata or comments
+  (`grep -rlE "[A-Za-z]+Mixin\b" ../Fizzygum-tests/tests`).
 - The compiled output no longer needs `arguments.callee`; whether to move to strict mode is out of
   scope — record it in `docs/BACKLOG.md`.
 
@@ -600,6 +728,15 @@ changelog prose; add the base-class lookup rule and the new classes to
 - **R7 — the two detectors and the syntax gate** read the mixin DSL through the real `Mixin` class
   (`buildSystem/lib/meta-compiler.js`). Phase 8 removes them together; removing one half first
   breaks the build.
+- **R8 — a new home the gates cannot see.** `buildSystem/lib/coffee-method-header.js` (19 files
+  import it) is what lets a gate see a member written deeper than two spaces inside an object
+  literal — a mixin's. A member moved into a class body, at two spaces, is seen by the ordinary path; one
+  moved into any other object literal is seen by NOTHING, and a blind gate reports nothing. So
+  every new home in this plan is a class. Three gates then judge the moved members differently, in
+  the loud direction: `census-widget-conformance.js` wants each field declared in the consumer's
+  `extends` chain; `check-layering.js` starts resolving a definer kind for them; and
+  `check-plane-discipline.js` checks a base class's pointer handlers against the base, not against
+  its subclasses (census §3).
 
 ---
 
@@ -613,8 +750,14 @@ changelog prose; add the base-class lookup rule and the new classes to
 3. **References.** Expected outcome of every phase is pixel-identical outside inspector member
    lists and class chips. A diff elsewhere is a finding: attribute the pixels before anything else
    (`fg diffpage`), and never recapture to make it pass. Member-list churn is recaptured with
-   `fg recapture-inspector`, after a fresh build.
-4. **Counts to re-derive, not copy.** Wiring call sites, should D2 choose the collaborator:
+   `fg recapture-inspector`, after a fresh build. The shots that can move are those of the
+   inspector churn set — the tests whose screenshots render a live member list, 18 today
+   (`../Fizzygum-tests/scripts/inspector-churn-set.json`, re-derived by
+   `scripts/derive-inspector-churn-set.js`): an inspector lists a prototype's OWN members unless
+   "Inherited" is on, so a member that moves up to a base class leaves its consumer's list. Two of
+   the 18 are the mixin tests Phase 7 retires.
+4. **Counts are re-derived, never copied.** §5.4's wiring call-site figures, for the arc D2 did
+   not choose, come from
    `grep -rnE "\.(wireTo|unwireFrom|bindTo|declareWireTo|trackTarget|isWiredTo|isWiredToActionOf|openTargetSelector|setTargetAndActionWithOnesPickedFromMenu|disconnectWire|toggleFiresPerEventOfWire|toggleTrackingOfWire|openWireMenu|openConnectionGestureMenu|openBindSelector|canBind)\b"`
    over `src` (excluding the mixin file) and over the tests repo's `tests`, `scripts` and
    `Automator-and-test-harness-src`.
@@ -631,6 +774,14 @@ changelog prose; add the base-class lookup rule and the new classes to
 - **Forwarding stubs everywhere** (`mixins.md` §5-A): about 100 hand-written forwards. Unneeded
   once a base class or the appearance takes the member.
 - **`BackBufferMixin` as a base class.** Impossible: §2.1's overlaps.
+- **An appearance on every text, to carry the blit.** One more live object and one more saved
+  record per `StringWdgt`, for a one-line paint (§6 S1).
+- **A wiring collaborator inside this arc.** Not chosen (D2, §5.4): its cost and its benefit are
+  both unrelated to removing mixins.
+- **Deriving a pointer look from the hand inside a hover hook.** The hand's over-list is not yet
+  updated when the hook runs (§2.5).
+- **The edit-mode relay in `Widget`'s cores.** It would widen the relay to every child of a
+  coordinator, the canvas of an image window among them (§6 S3).
 - **Folding the Bubbles cores into the three consumers.** Re-creates the triplication the mixin was
   created to remove (`docs/archive/mixin-application-tidyups-plan.md`, Item A).
 - **Converting the pinned-`@ratio` variants onto the ratio protocol's shared home.** Falsified in
@@ -648,8 +799,9 @@ changelog prose; add the base-class lookup rule and the new classes to
 
 ## §11 Interactions with other plans and open items
 
-- `plans/smalltalk-talk-2026-11-plan.md` (talk 2026-11-25, freeze 2026-11-21) describes
-  `Mixin.coffee`, mixin edit records and a "from mixins" protocol group as demo material — D5.
+- `plans/smalltalk-talk-2026-11-plan.md` (talk 2026-11-25, freeze 2026-11-21) shows nothing of
+  mixins and builds nothing for them (its D7, this plan's D5). Its §1.1 states what its views leave
+  uncovered while the mechanism is still in the tree; that note goes when Phase 8 lands.
 - `plans/single-file-save-plan.md` ships `Mixin-source.js` and lists a mixin-then-class edit
   replay; both shrink after Phase 8. Whichever arc runs second re-verifies against the other.
 - `plans/creation-and-templates-plan.md` §4.3 plans to fold the creator zoo (`CreatorButtonWdgt`
@@ -657,7 +809,7 @@ changelog prose; add the base-class lookup rule and the new classes to
 - `docs/BACKLOG.md`, open items that change: "A snapshot's source edits of a lazy part's classes
   are dropped…" loses its mixin half; the owner-gated paint-time-scroll Phase 4 ("lift … to the
   clipping-mixin level") reads "to the clipping base class" after Phase 1 and becomes simpler; the
-  `fg recapture-inspector` item names the two tests Phase 8 retires.
+  `fg recapture-inspector` item names the two tests Phase 7 retires.
 
 ---
 
@@ -670,6 +822,8 @@ changelog prose; add the base-class lookup rule and the new classes to
 - `docs/architecture/widget-authoring-guidelines.md`, `appearance-paint-convention.md`,
   `viewports-and-planes.md`, `input-and-gestures.md`, `lint-and-static-checks.md`,
   `serialization-duplication-reference.md`, `build-and-packaging.md`.
+- `docs/measurements/mixin-teardown-census-2026-11-10.md` — every build tool and rig that
+  references the mechanism, what each needs, and which checks break in which phase.
 - `../../Fizzygum-tests/DETERMINISM.md` — before touching pointer state or the paint path.
 - `src/dataflow/CLAUDE.md` — before touching wiring.
 
@@ -679,11 +833,15 @@ changelog prose; add the base-class lookup rule and the new classes to
 
 | Item | Verdict / decision | Date | Evidence |
 |---|---|---|---|
-| S1 back buffer as a paint strategy | — | | |
-| S2 one pointer-state mechanism | — | | |
-| S3 the edit-mode relay's single home | — | | |
-| D1 pointer-state shape | — | | |
-| D2 Controller: base class or collaborator | — | | |
-| D3 class names | — | | |
-| D4 inspector loses the donor vocabulary | — | | |
-| D5 sequencing against the talk | — | | |
+| S1 the back buffer — paper half | Palette and canvas answer through their appearance; text keeps one line and no appearance; the kit moves to one plain class. Open: where the fields are declared, the shadow twin's home, whether text keeps the shadowing `calculateKeyValues` | 2026-11-10 | by reading; §6 S1 |
+| S1 — empirical half | — | | |
+| S2 pointer state — paper half | No candidate chosen. A hover hook cannot ask the hand; the look hook must store nothing by default; a new candidate (the hand tells an optional collaborator) joins the list | 2026-11-10 | by reading; §2.5, §6 S2 |
+| S2 — empirical half | — | | |
+| S3 the edit-mode relay — paper half | Live in `StretchablePanelWdgt` only: it keeps the two cores, the other two consumers inherit, and `triggeringWidget` can go | 2026-11-10 | by reading; §6 S3 |
+| S3 — empirical half | — | | |
+| Teardown census (Phase 8's input) | 61 files classified; checks break in the phase that deletes their subject, so the mechanism is frozen and pointer state goes last | 2026-11-10 | by reading; `docs/measurements/mixin-teardown-census-2026-11-10.md` |
+| D1 pointer-state shape | open | | |
+| D2 Controller: base class or collaborator | base class | 2026-11-10 | owner |
+| D3 class names | open | | |
+| D4 inspector loses the donor vocabulary | open | | |
+| D5 coupling with the talk | the talk plan drops mixins (its D7) | 2026-11-10 | owner |

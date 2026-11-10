@@ -4,6 +4,9 @@
 **STATUS: AUTHORED 2026-11-07. No code written. Every fact in §1 was re-verified against the tree at
 Fizzygum `c619e504` / tests `ce9e3a339` on 2026-11-07.** Line numbers drift: the quoted method or
 symbol name is authoritative, so grep it fresh before trusting a number.
+**REVISED 2026-11-10 (owner decision D7): mixins are out of the talk.** The mechanism is slated for
+removal (`plans/mixin-removal-plan.md`), so this plan shows nothing of it and builds nothing for it;
+§1.1, §1.2, §3, U0, U2, U4 and Appendix A changed in place.
 
 **HARD DEADLINE.** The talk is on **2026-11-25**, in a **45-minute** slot, at a Smalltalk conference.
 **Feature freeze is 2026-11-21**, leaving four days to rehearse. Everything here is ranked:
@@ -118,6 +121,7 @@ against the current tree. This plan is its executable distillation.
 | D4 | The new tool's name and door | Default: **"Explore"** in the Dev tools submenu. "Inspect" stays as it is until after the talk |
 | D5 | Commits | Per house rule, **ask before every commit/push**. At the start, ask the owner whether this plan gets a standing commit grant ("commit and continue while gates pass; ask before push"), as the affine-transforms plan did |
 | D6 | Where talk-only assets live (stage snapshots, demo mbox, deck) | Default: **outside the three repos**, in `~/Desktop/talk-2026-11-25/` |
+| D7 | Mixins in the talk | **LOCKED 2026-11-10**: none. Nothing on stage names a mixin and no unit builds a mixin-aware view, group or query; the mechanism is being removed (`plans/mixin-removal-plan.md`). What that leaves uncovered while it is still in the tree is stated once, in §1.1 |
 
 **D2 explained (protocols).**
 - **Inferred:** the tool computes each method's protocol from its name every time it looks, the way
@@ -204,7 +208,6 @@ against the current tree. This plan is its executable distillation.
     - `classRegex`;
     - `propertyRegex: /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *(.*)/m` (a member is a 2-space-indented
       `name:` line);
-    - `augmentRegex`;
     - `topLevelCommentRegex: /^  #.*/m`.
   - **`getSourceOfAllProperties`:** walks the body with `findUpTo` and stores each member's source in
     `nonStaticPropertiesSources` / `staticPropertiesSources`. The comment lines *before* a member come
@@ -221,18 +224,18 @@ against the current tree. This plan is its executable distillation.
   - **Instance sets:** it emits a `window.<Class>.instances` set for every class; Widget's constructor
     puts each widget in its class's set and every superclass's (`Widget.registerThisInstance`; widgets
     only).
-- `src/meta/Mixin.coffee`:
-  - **Members are copied onto each consumer prototype.**
-  - **A mixin's fake `super` resolves through
-    `window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name]`.** It
-    relies on the executing function's `.name`. A wrapper that calls the original with `.apply` keeps
-    that intact.
-  - **`Mixin.applyMemberEdit`** re-injects the edited member into every consumer that does not shadow
-    it.
+- **Mixins are out of this plan (D7)**, and still in the tree. Three things follow, none of them
+  work for this plan:
+  - a mixin's members are functions copied onto each consumer's prototype, so a per-prototype walk
+    (U2's wrapping) meets them as that class's own functions;
+  - their `super` is resolved through the executing function's own `.name`, which a wrapper that
+    calls the original with `.apply` leaves intact;
+  - U4 reads CLASS sources only: a member a mixin gives a class is in that class's inspector member
+    list and in none of U4's groups, and a sender written inside a mixin's body is not listed.
 - `src/serialization/SourceEditsRegistry.coffee`:
-  - `recordInstanceEdit`, `recordClassEdit`, `recordMixinEdit`, `recordMixinMemberRemoval`,
-    `serializableRecords`, `replayClassEdits`, `replayMixinEdits`.
-  - A record is `{scope, className|mixinName, uniqueID?, propertyName, source?, deleted?}`.
+  - `recordInstanceEdit`, `recordClassEdit`, `serializableRecords`, `replayClassEdits`.
+  - A record is `{scope, className, uniqueID?, propertyName, source?, deleted?}`. A mixin-scope
+    record carries `mixinName` in place of `className`; this plan's views pass over those.
 - `src/boot/source-vault.coffee`: `SourceVault.store(name, escapedText, part)`, `.get(name)`,
   `.names()`. It holds only sources whose part batch has loaded.
 
@@ -248,7 +251,9 @@ against the current tree. This plan is its executable distillation.
   - **Source display:** `selectionFromList` shows the *recorded CoffeeScript source*, never
     `fn.toString()`, unless no source is recorded. So a wrapped method still shows its CoffeeScript.
   - **Drilling:** `inspectMemberValue` opens a **naked** inspector at the pointer.
-- **`ClassInspectorWdgt`** (subclass): adds "Override in this class" for mixin-donated members.
+- **`ClassInspectorWdgt`** (subclass): the inspector on a class. Each of its edit steps makes the
+  class's edit and its registry record (`_editClassMember`: `Class.applyMemberEdit` +
+  `recordClassEdit`), and each gesture ends in one notification.
 - **Doors** (`src/basic-widgets/Widget.coffee`):
   - `inspect` → `spawnInspector`. The lazy-door pattern is:
     1. `world.parts.isAvailable "meta-tools"`;
@@ -434,7 +439,7 @@ precedent for U2's timer.
 - **Instrumentation without DevTools.**
   - Lively proved that "the system instruments itself" is a half-page of code: Ingalls's
     `Object.profiler` wraps each method in a counting proxy (Appendix A).
-  - Fizzygum's meta-system knows every class's members, every mixin donor and every source text, so
+  - Fizzygum's meta-system knows every class's members and every source text, so
     the same idea is *more* complete here, and needs no CDP or server, which the owner rules out.
   - The existing `docs/profiling/` Puppeteer/CDP harness stays an offline measuring tool.
 - **A moldable inspector without rewriting the inspector.**
@@ -471,7 +476,6 @@ Each spike's finding is written back into this doc, in the relevant unit, before
      - the clock keeps ticking and painting;
      - `super` calls into wrapped superclass members still work (wrap one `Widget.prototype` method
        the clock reaches through `super`);
-     - a mixin-donated member wrapped on a consumer prototype still resolves its fake super;
      - the inspector still shows CoffeeScript for a wrapped method.
   3. Measure `performance.now()` granularity on `file://` in Chrome and Safari.
   4. Then edit `drawSecondsHand` through the class inspector *while wrapped*, and confirm the edit
@@ -617,8 +621,7 @@ green.
     `Widget` methods run thousands of times per cycle, so they are opt-in.
   - Door shape: `spawnInspector`'s pattern.
 - **Stage line:** "Ingalls did this in half a page in 2008, with millisecond `Date`s. Ours is one
-  screen, with sub-millisecond `performance.now`. It is attributed through mixins, and it needs no
-  DevTools."
+  screen, with sub-millisecond `performance.now`, and it needs no DevTools."
 
 **Tracer ☆ ("Trace next cycle"), U2b:**
 - **Mechanism:** the same wrappers, recording a call tree for exactly one world cycle. Arm it, and
@@ -738,7 +741,7 @@ before adding any global.
 | View | Content |
 |---|---|
 | **Comment** | `classComment` (the class's header) |
-| **Protocols** | protocol · method count, with written ones in ink and inferred ones dimmed, then the computed groups: *overrides* (also defined up the chain), *from mixins* (`augmentedWith`), *edited this session* (`world.sourceEditsRegistry.records` for this class). Drill → a protocol group → **Methods** list → drill → a method |
+| **Protocols** | protocol · method count, with written ones in ink and inferred ones dimmed, then the computed groups: *overrides* (also defined up the chain), *edited this session* (`world.sourceEditsRegistry.records` for this class). Drill → a protocol group → **Methods** list → drill → a method |
 | **Hierarchy** | superclasses (base first), then subclasses: the classes `allClassFunctions()` lists whose `__super__` is this class's prototype (the chain is the one record; no registry); drill → class |
 | **Instances** | `window[name].instances` (widgets only); drill → instance |
 | **Edits** | this class's `SourceEditsRegistry` records (the ChangeSet view) |
@@ -748,13 +751,13 @@ before adding any global.
 | View | Content |
 |---|---|
 | **Source** | An embedded `ClassInspectorWdgt` on the class, with that member selected. Construct it the way `InspectorWdgt.openClassInspector` does, then `selectionFromList memberName`. So saving uses the existing edit path (`applyMemberEdit` + `recordClassEdit` + `world.noteCodeChanged`) |
-| **Senders** | Every member, across `SourceVault.names()` → class/mixin member sources, whose body references the name. Mirror `buildSystem/lib/method-references.js`: a property access `@m` / `.m` and a whole-name string `"m"` count, while a bare word or a comment does not. Rows read Smalltalk-style, `AnalogClockWdgt>>step`; drill → MethodRef |
-| **Implementors** | Classes whose `nonStaticPropertiesSources` has the name, plus mixins (`Mixin.allMixines`) |
+| **Senders** | Every class member, across `SourceVault.names()` → each class's member sources (a name that is no class is passed over), whose body references the name. Mirror `buildSystem/lib/method-references.js`: a property access `@m` / `.m` and a whole-name string `"m"` count, while a bare word or a comment does not. Rows read Smalltalk-style, `AnalogClockWdgt>>step`; drill → MethodRef |
+| **Implementors** | Classes whose `nonStaticPropertiesSources` has the name |
 
 **Query lists** (the owner's "browsers are just lists" note, Appendix C):
 - `SourceQueries` returns `QueryResult {title, items}` objects, which explore as lists.
 - ★: senders, implementors, instances, hierarchy.
-- ☆: subclasses of, users of a mixin, longest methods (by line count), methods calling `super`.
+- ☆: subclasses of, longest methods (by line count), methods calling `super`.
 - **Footer row:** if any lazy part is not loaded, a "N parts not loaded" row whose action loads them
   all (`world.parts.whenAllLoaded`). Searches see only stored sources (§1.1).
 
@@ -1162,8 +1165,7 @@ Differences in U2's `MethodTally`:
 - restore is by identity;
 - self time comes from a stack;
 - `performance.now()`;
-- `try/finally`;
-- mixin-donated members are covered because they are copied onto the prototype.
+- `try/finally`.
 
 ## Appendix B. Fizzylogo facts (verified 2026-11-07 against GitHub `davidedc/Fizzylogo`, last push 2018-12)
 
@@ -1231,7 +1233,7 @@ Number answer with priority 4:
     methods by cognitive complexity, all methods invoking `super`, all classes in a category, all
     instances of a class.
   - Clicking an item opens the related inspector, or the list becomes an extra first pane.
-  - U4's `QueryResult` lists are exactly this.
+  - U4's `QueryResult` lists are exactly this (the mixin list aside: D7).
 - **"these buttons should work across packages/classes/method families/methods":** new, cut, copy,
   paste, delete, duplicate, move.
 - **"wherever you have the 'do it' menu entry, you should have a 'make button'":** a clickable
