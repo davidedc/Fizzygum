@@ -11,13 +11,24 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **The three suite runners wait for a page to boot three ways** (found closing
-      "`run-sequence-selftest-headless.js`'s 'page stopping answering' case is load-sensitive", in the plan's ledger).
-      The suite runner gives a shard 90 s of boot looks, each answered up to its 5-min backstop, and names a page that
-      never starts; the single runner bounds each wait of its drive; the sequence runner makes 300 looks of up to 5 s
-      each, so a page stuck while it boots is waited on for about 25 minutes in silence (measured: no line in 120 s,
-      then killed), and a world that never boots but answers falls through to a raw ReferenceError that names no rule
-      (by reading). One boot wait, with one bound and one named line, shared by the three, as `answerWithin` is.
+- [ ] **The paint audit waits on its pages with no bound, and for boot inside the page** (found closing "The three
+      suite runners wait for a page to boot three ways", in the plan's ledger; by reading). `run-paint-audit.js` drives
+      each page through one raw `page.evaluate(driveAuditSuite, …)` — no `answerWithin` — whose in-page waits begin
+      with a boot wait of its own (90 s on a shard, 30 s for a single run), so a page stuck in a script is waited on
+      until the protocol timeout, and its boot is another copy of the wait the three runners now share
+      (`scripts/lib/headless-driver.js` `startedWithin`). It also counts its tests through the suite's probe page
+      (next item).
+- [ ] **The suite's probe page waits for boot its own way** (found by the independent review closing "The three
+      suite runners wait for a page to boot three ways"; by reading). Before any shard, `scripts/lib/shards.js`
+      `probeTestsOrExit` boots the harness page once to count the run's tests and waits for the world INSIDE one raw
+      `page.evaluate` (60 s, no `answerWithin`), retries once, then exits 1 naming no rule (`RULELESS_FAILURE`, exit 2).
+      A world that never arrives meets this page first, so a real boot break reads as an operational failure, and a
+      page stuck while it boots is waited on until the protocol timeout (10 min, twice) in silence. The paint audit
+      shares it. The suite-gate proof keeps its plants off the probe page by design, so a planted proof of it needs
+      that rail first.
+- [ ] **`heap-forensics.js` waits for its page to boot its own way** (found by the same review; by reading). A
+      120 s loop of raw `page.evaluate` looks (`window.world && WorldWdgt.frameCount > 5`, no `answerWithin`), ending
+      in a bare `Error('harness did not boot')`; it runs in the `selftests` leg through its proof.
 - [ ] **The boot files are a hand-list in the build script** (found closing "Every build tool walks src for itself",
       in the plan's ledger). `build_it_please.sh` cats and compiles the 14 `src/boot` files by name, and
       `check-shippable-coverage.js` exempts `src/boot/` whole, so a new boot file ships nothing and no gate notices.

@@ -1969,3 +1969,33 @@ for (const s of sites) if (s.absentBefore.length) {
       applies) state it. Converting plant bodies from template text to code let two gates see them, and both found a
       real defect: a HOLE (`arg` was configuration and moved into `opts`) and an EXTRA_ARGUMENT (a plant's replacement
       for `Deserializer.whyItCanNeverBeRestored` declared no parameters).
+- [x] **The three suite runners wait for a page to boot three ways** (found closing
+      "`run-sequence-selftest-headless.js`'s 'page stopping answering' case is load-sensitive", in the plan's ledger).
+      The suite runner gives a shard 90 s of boot looks, each answered up to its 5-min backstop, and names a page that
+      never starts; the single runner bounds each wait of its drive; the sequence runner makes 300 looks of up to 5 s
+      each, so a page stuck while it boots is waited on for about 25 minutes in silence (measured: no line in 120 s,
+      then killed), and a world that never boots but answers falls through to a raw ReferenceError that names no rule
+      (by reading). One boot wait, with one bound and one named line, shared by the three, as `answerWithin` is.
+      — CLOSED 2026-11-10 (self-ruled overnight). MEASURED on a world that never arrives (its `window.world`
+      assignment swallowed): the sequence runner ended in 32 s on a raw `TypeError: Cannot read properties of undefined
+      (reading 'automator')`, exit 2, no rule; the single runner printed TEST FAILED after 31 s with no line saying the
+      page never booted. Ruling (self-ruled overnight): ONE boot wait for a runner's test page, `startedWithin(page, ready, { lookMs, arg })`
+      in `scripts/lib/headless-driver.js` beside `answerWithin` — the suite's: 90 s of looks, each waiting out a long
+      boot (boot is where a page goes silent legitimately, measured in-wave), one line, `did not start
+      within 90s` (+ ` (the page stopped answering)`), the wording the docs already quote — with one page predicate,
+      `HARNESS_WORLD_STANDS` (a `WorldWdgt` in `window.world`, never the page's `<canvas id="world">`), which the suite
+      asks with its startup run begun. The suite's own `until` for its shard pages went with it; the single runner's in-page ready
+      step left its drive (DRIVE_ANSWER_MS 210 → 180 s); the sequence runner fails on a new rule, `DID_NOT_START`,
+      planted by its proof (a world that never arrives). After: the sequence runner prints `✗ the page did not start
+      within 90s — nothing was played` and exits 1, the single runner `…: the page did not start within 90s` + TEST
+      FAILED (both in 90 s, the one bound); `DETERMINISM.md` and the tests repo's CLAUDE.md state the wait beside
+      `answerWithin`. The independent review's findings landed: a look the protocol itself timed out reads as stopped
+      answering (the sequence runner's 240 s protocol timeout came before the look's bound); the single and sequence
+      runners look up to a minute (`BOOT_LOOK_MS`), so their verdict lands before their callers' 4–6 min kill timers
+      (the suite keeps its 5-min backstop); a page or browser LOST while it boots ends the wait at once, said so (the
+      sequence runner exits 2 on it, nothing measured), never read as a boot failure; the capture tool keeps the new
+      lines; the suite asks the same predicate, `{ playing: true }`; the sequence runner prints its header before the
+      boot and states its boot exits. Filed: "The paint audit waits on its pages with no bound, and for boot inside the
+      page", "The suite's probe page waits for boot its own way" (the review's HIGH: the suite counts its tests on a
+      probe page that waits for boot in-page, unbounded, and meets a broken boot first), "`heap-forensics.js` waits for
+      its page to boot its own way".
