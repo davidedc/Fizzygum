@@ -18,16 +18,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       each, so a page stuck while it boots is waited on for about 25 minutes in silence (measured: no line in 120 s,
       then killed), and a world that never boots but answers falls through to a raw ReferenceError that names no rule
       (by reading). One boot wait, with one bound and one named line, shared by the three, as `answerWithin` is.
-- [ ] **A plant's give-up comes after its run has ended** (found by the independent review closing the same item, in
-      the plan's ledger). Twelve plant polls, in nine `*-selftest-headless.js` files, say `PLANT_NOT_APPLIED` only after
-      12000 or 20000 polls of 5 ms (60–100 s). The runs measured close their page sooner: the sequence proof's four
-      runs take 36 s together, the menu and pin sweeps' proofs 23 s and 12 s. So a renamed class fails its case only
-      as a rule not fired, never by the "every plant applies" line that the `hand-list-sanctioned:` comments in the
-      suite-gate, menu-sweep and pin-sweep proofs cite. Measured on the harness page and `index-sw.html`:
-      `window.world` stays undefined until the world is built, after every eager class is defined, so "the world is
-      up and the class is not" is a give-up a run reaches. It does not fit every plant: the staleness census boots
-      `index.html`, where `SpreadsheetApp` arrives with a lazy part after the world, and one census give-up waits for
-      the world itself.
 - [ ] **The boot files are a hand-list in the build script** (found closing "Every build tool walks src for itself",
       in the plan's ledger). `build_it_please.sh` cats and compiles the 14 `src/boot` files by name, and
       `check-shippable-coverage.js` exempts `src/boot/` whole, so a new boot file ships nothing and no gate notices.

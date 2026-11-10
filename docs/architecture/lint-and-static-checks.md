@@ -126,7 +126,10 @@ reformatted line goes blind). Three pieces hold it:
   rails keeping it cheap (`--tests=`, `--apps=`, `--sections=`, `--expectations=`, `--baseline=`, `--audit-dir=`).
   The judge holds: the CONTROL (the input unplanted, plus every sanctioned form) passes firing no rule; each planted
   run fails naming exactly the rules it planted, each matched by ITS OWN violation line (a crash is no bite, and a
-  summary count matches whatever happens); a plant of a measurement failure reads INVALID (exit 2, never a rule); and
+  summary count matches whatever happens); every plant APPLIES (a page plant that cannot find its hook says
+  `PLANT_NOT_APPLIED` — an inline one through `gate-bite-proof.js` `whenPresent`, which gives up at the world, or once a
+  lazy part has arrived, so inside the run; a file plant 60 frames after the world); a plant of a
+  measurement failure reads INVALID (exit 2, never a rule); and
   together the runs plant EVERY rule the gate can fire — a gate that grows a rule fails its proof until the proof
   plants it.
 - **The census** (`run-selftests.js`, the build's first gate): every script the build or an `fg` leg LAUNCHES

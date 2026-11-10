@@ -1931,3 +1931,41 @@ for (const s of sites) if (s.absentBefore.length) {
       findings — the confirmations not checking the class half, stale self-descriptions, an unbounded poll, the
       attribution — landed as above. Filed: "`fg recapture-inspector` recaptures a churn-set test's behaviour shots
       blindly".
+- [x] **A plant's give-up comes after its run has ended** (found by the independent review closing the same item, in
+      the plan's ledger). Twelve plant polls, in nine `*-selftest-headless.js` files, say `PLANT_NOT_APPLIED` only after
+      12000 or 20000 polls of 5 ms (60–100 s). The runs measured close their page sooner: the sequence proof's four
+      runs take 36 s together, the menu and pin sweeps' proofs 23 s and 12 s. So a renamed class fails its case only
+      as a rule not fired, never by the "every plant applies" line that the `hand-list-sanctioned:` comments in the
+      suite-gate, menu-sweep and pin-sweep proofs cite. Measured on the harness page and `index-sw.html`:
+      `window.world` stays undefined until the world is built, after every eager class is defined, so "the world is
+      up and the class is not" is a give-up a run reaches. It does not fit every plant: the staleness census boots
+      `index.html`, where `SpreadsheetApp` arrives with a lazy part after the world, and one census give-up waits for
+      the world itself.
+      — CLOSED 2026-11-10 (self-ruled overnight). MEASURED: fourteen polls, not twelve (the library's shared
+      `suiteFailurePlant` and the census's boot poll, which had NO give-up), and fourteen more hook waits that never
+      gave up at all (graph-liveness, parts-snapshot-load ×4, parts-lazy-load ×3, parts-lazy-icons, smoke-apps, the
+      nested waits in the menu sweep ×2 and the pin sweep, and the file plant
+      `notification-settle-audit/cache-oracle-plant.js`). A
+      one-off bite (`Fizzygum-tests/.scratch/plant-give-up/bite.js`, not committed) ran the pin sweep — 3.7 s from
+      launch to close — with the old poll on a missing class: no `PLANT_NOT_APPLIED` line inside the run. It also
+      measured that even 200 polls after the world come too late, and boot's `startWorld` builds the world and its
+      bin, shelf and desktop in ONE synchronous call, so no poll ever sees a world without them. Ruling (self-ruled
+      overnight): ONE way a `proveLeg` proof's inline plant waits for its hook, `whenPresent(what, hooks, act, opts)`
+      in `scripts/lib/gate-bite-proof.js` — hooks as global names or dotted paths (or a page function, given the
+      world, for a hook no path names), giving up at the FIRST poll that sees the world, and, for a hook a LAZY part
+      brings (`opts.part`), once every class the build manifest lists for that part is in the page; waits for a moment
+      the run reaches (a test playing, a rig's probe) stay their plants' own. THE WORLD is a `WorldWdgt`: until the
+      boot bundle's own `world` variable shadows it, `window.world` is the page's `<canvas id="world">` (an element's
+      id is a window property) — the first gauntlet's `selftests` leg gave up falsely through it in three proofs, and
+      the independent review found the same, along with a `world.children` hook that would have acted on the canvas.
+      All thirteen proofs use it; `cache-oracle-plant.js` gives up as the other file plants do (60 frames after the
+      world), and its proof holds both its runs to every plant applying. Its own node self-test,
+      `scripts/lib/gate-bite-proof-selftest.js`, stages a boot on a fake page (the canvas phase, the world, a lazy part
+      arriving class by class), and fails on each defect this item had (the canvas as the world, the manifest read at
+      document start, a part's hooks skipped while it settles: `.scratch/plant-give-up/selftest-bite.js`). The bite,
+      re-run: a missing eager hook reads "not there once the world appeared" inside the 3.7 s pin sweep, a missing lazy
+      hook "not there once part spreadsheet arrived" on the census, a part the build lacks "(this build has no part
+      …)". The tests repo's CLAUDE.md (the plant rail) and `lint-and-static-checks.md` §3 (the judge: every plant
+      applies) state it. Converting plant bodies from template text to code let two gates see them, and both found a
+      real defect: a HOLE (`arg` was configuration and moved into `opts`) and an EXTRA_ARGUMENT (a plant's replacement
+      for `Deserializer.whyItCanNeverBeRestored` declared no parameters).
