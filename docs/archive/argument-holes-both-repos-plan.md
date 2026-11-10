@@ -2097,3 +2097,28 @@ for (const s of sites) if (s.absentBefore.length) {
       still answering or never started; the run's whole bound counts from its navigation (600 s), inside fg's 720 s
       alarm (the bounds had summed to ~820 s); a failing line no longer repeats its token; errors under a verdict that
       does not judge them print under a heading; an audit error prints a `GATE INVALID` line fg's summary greps.
+- [x] **`heap-forensics.js` waits for its page to boot its own way** (found by the same review; by reading). A
+      120 s loop of raw `page.evaluate` looks (`window.world && WorldWdgt.frameCount > 5`, no `answerWithin`), ending
+      in a bare `Error('harness did not boot')`; it runs in the `selftests` leg through its proof.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED by reading and by plants: the boot loop's looks were raw (a stuck page
+      held each one for the 240 s protocol timeout before the 120 s deadline was read), and its `--test=` path started
+      the run one second after a `selectTestsFromTagsOrTestNames` with no callback — the race the loader's own comment
+      forbids (a run started before the selection lands falls back to the whole manifest). Rulings (self-ruled, SURVEY
+      in `Fizzygum-tests/.scratch/heap-forensics-boot-wait/`): the page boots through the runners' one boot wait
+      (`startedWithin` + `HARNESS_WORLD_STANDS` on its raw Puppeteer page; the `frameCount > 5` heuristic is gone, and
+      the tool's findings on its own self-test are unchanged — measured against the committed tool); the run starts in
+      the selection's callback (bounded by the boot look's minute); the run's finish is the runners' wait for it,
+      `lib/headless-driver.js` `finishedWithin` (each look 5 s, a page with no clean answer for 30 s named — stopped
+      answering, or the error it kept answering — the whole run 300 s), which the paint audit's `auditOnPage` now uses
+      too, so the loop exists once. A page that did not load or start, like a run that did not finish, measured
+      nothing: status 2, `heap-forensics: the page did not start within 90s — nothing was measured`, no stack (it is a
+      forensic tool with no rule registry; its exit contract already said 2). The independent review's findings
+      landed: the old `frameCount > 5` had also proved two things — lens 2's wrap in place before the plant and the
+      reset, and the world's cycle alive — so after the boot wait the tool asks for both in bounded looks (the prelude
+      flags its install; `WorldWdgt.frameCount` must advance within 30 s), else status 2 named; `goto` takes the
+      runners' 60 s `load` bound and its failure is named; a throw from `runAllSystemTests` or from the selection is
+      named, a lost page said whole; the header's `--tests=A,B,C` says the manifest's order (the page plays them so).
+      Proven: its self-test (the plant found end to end, the in-band gate silent) passes; one-off harnesses wrapping
+      `puppeteer.launch` (`.scratch/heap-forensics-boot-wait/plant-harness.js`): NEVER_STARTS → status 2 with that line
+      after 90 s, a world frozen once it stands → `the world stood but did not cycle for 30s`; a `--test=` run →
+      CLEAN; the paint audit's stuck-page plant through `finishedWithin` → INVALID in 30 s.

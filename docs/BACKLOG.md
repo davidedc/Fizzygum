@@ -11,9 +11,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **`heap-forensics.js` waits for its page to boot its own way** (found by the same review; by reading). A
-      120 s loop of raw `page.evaluate` looks (`window.world && WorldWdgt.frameCount > 5`, no `answerWithin`), ending
-      in a bare `Error('harness did not boot')`; it runs in the `selftests` leg through its proof.
 - [ ] **The rigs wait for their pages to boot a dozen ways, most of them in-page and unbounded** (found closing "The
       suite's probe page waits for boot its own way", in the plan's ledger; by reading). A rig that boots a product
       page waits for its world its own way: `scripts/lib/headless-boot.js` `inPageWaitReady` (one raw in-page poll,
