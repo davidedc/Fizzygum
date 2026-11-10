@@ -92,7 +92,13 @@ self-tests and the umbrella `fg`'s presuite/gauntlet legs LAUNCH, plus the namin
 A launch is a shell command that executes the script or hands it to an interpreter (read by a small shell lexer, so an
 echo, a test, a heredoc or a comment that names a script runs nothing), a JS `require`, or a script named in a
 `path.join`/`path.resolve` call; a self-test's own edges are not followed (it exercises its subject on fixtures). The
-blind spots are in its header. Two rules read it:
+blind spots are in its header. It also holds the ONE definition of the TOOLING'S OWN FILES (`scriptFiles`): Fizzygum's
+`buildSystem/` and `scripts/` and top-level shell scripts, and the tests repo's `scripts/` — `.js`, `.sh`, `.py`; never a
+dot entry (a gitignored `scripts/.scratch`), a `node_modules` or a `__pycache__` (`skippedEntry`), and a symlink is refused
+(`TOOLING_TREE_MALFORMED`). Every reader of the tooling takes its files from it — the run set and discovery, the hand-list
+scan, the Node rigs' code set (`lib/tests-repo-code.js`), the tooling's own source-scanning self-tests, and the similar-
+and duplicate-code scans (`node buildSystem/lib/what-runs.js --list-scripts`) — as every reader of the CoffeeScript takes
+it from `lib/source-files.js`. Two rules read it:
 - **A SELF-TEST is a FILE, found by name and run** — `<subject>-selftest.js` (pure Node; the build's FIRST GATE runs every
   one in both repos) or `<subject>-selftest-headless.js` (needs the built page; the gauntlet's `selftests` leg). Each ends
   with the shared verdict line and its case count (`lib/selftest-verdict.js`). There is no self-test switch: one offered
@@ -146,7 +152,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
 
 | Gate | File | Wired (`build_it_please.sh` — grep `check-<name>.js`; lines drift) | Enforces | Ratchet mechanism |
 |---|---|---|---|---|
-| **self-tests** | **`buildSystem/run-selftests.js`** | **~:333 (FIRST: a gate whose proof fails gives verdicts not worth reading)** | **every `<subject>-selftest.js` in `buildSystem/` and (when present) `Fizzygum-tests/scripts/`, found by NAME through `lib/what-runs.js`, exits 0 AND ends with the shared verdict line (`lib/selftest-verdict.js`: `[name] SELFTEST PASS — N cases`) with N ≥ 1 — else `SELFTEST_FAILED` / `SELFTEST_NO_VERDICT` / `SELFTEST_VACUOUS`; a self-test switch (`--self-test`, `--selftest`, a `…SELFTEST` variable, a `lib/cli.js` reader asking for one) offered in a script's CODE is `SELFTEST_OUTSIDE_CONVENTION`, and a file in either repo named like a self-test that no tier runs (misspelt, misplaced, wrong extension) is `SELFTEST_UNDISCOVERED`; and the GATE CENSUS (above): every launched gate names its rules (`GATE_WITHOUT_REGISTRY`) and has a proof that launches it (`GATE_WITHOUT_PROOF`). ~5 s. `--headless` runs the `-selftest-headless.js` tier instead (the gauntlet's `selftests` leg); `--repo=tests` is `npm run selftest`** | — (discovery IS the registration: a new self-test is a new file) |
+| **self-tests** | **`buildSystem/run-selftests.js`** | **~:333 (FIRST: a gate whose proof fails gives verdicts not worth reading)** | **every `<subject>-selftest.js` among the tooling's own files (`lib/what-runs.js` `scriptFiles`: Fizzygum's `buildSystem/` and `scripts/`, and when present `Fizzygum-tests/scripts/`), found by NAME, exits 0 AND ends with the shared verdict line (`lib/selftest-verdict.js`: `[name] SELFTEST PASS — N cases`) with N ≥ 1 — else `SELFTEST_FAILED` / `SELFTEST_NO_VERDICT` / `SELFTEST_VACUOUS`; a self-test switch (`--self-test`, `--selftest`, a `…SELFTEST` variable, a `lib/cli.js` reader asking for one) offered in a script's CODE is `SELFTEST_OUTSIDE_CONVENTION`, and a file in either repo named like a self-test that no tier runs (misspelt, misplaced, wrong extension) is `SELFTEST_UNDISCOVERED`; and the GATE CENSUS (above): every launched gate names its rules (`GATE_WITHOUT_REGISTRY`) and has a proof that launches it (`GATE_WITHOUT_PROOF`). ~5 s. `--headless` runs the `-selftest-headless.js` tier instead (the gauntlet's `selftests` leg); `--repo=tests` is `npm run selftest`** | — (discovery IS the registration: a new self-test is a new file) |
 | aim-census tables | `Fizzygum-tests/scripts/aim-census.js --tables-only` | ~:928 | the aim census's own TABLES — every MacroToolkit verb classified, every class and member they name declared — held to Fizzygum's source and to the tests' calls both ways (`AIM-CENSUS STALE NAME` / `UNCLASSIFIED VERB` / `UNKNOWN VERB`, exit 1; `EMPTY DERIVATION`, exit 2), so a verb deleted or renamed in `src/macros` fails the change that did it. Its MEASUREMENT (where each test aims, and how much each aim assumes) stays advisory. ~0.2 s | — (runs whenever the sibling repo is present, whatever the profile ships) |
 | syntax | `buildSystem/check-coffee-syntax.js` | ~:343 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does; and a class MEMBER that LOSES A NAME to the meta-system's helper strip (its compiled `var` head declares anything outside the helper globals boot provides — a `modulo`/`splice` helper, a hoisted compiler temporary) | — (the provided set is read from `Class._memberNamesThatMustStayAnonymous` and held against boot's `window.<helper> =` assignments) |
 | shippable-coverage | `buildSystem/check-shippable-coverage.js` | ~:366 | every directory of the compiled sources (§3c: `src/` and the harness) holding `.coffee` files is CLAIMED BY A PART in `parts.json`, and every `src/boot` file DECLARED by one (its `bootPrelude` or `bootScripts`) — a dir no part claims, or a boot file none declares, ships NOTHING, exits 0, and surfaces only at runtime (a `<NewClass> is not defined`) | none: a `src/boot` file is held to a declaration too — its part's `bootPrelude` or `bootScripts` (`build.py --list-boot`) |
@@ -1203,9 +1209,9 @@ source to satisfy a new rule.
   `Fizzygum-tests/scripts/check-macro-source-discipline.js` — the last one's rule is a pure function
   (`violationsInTest`) so its acceptance corpus, `check-macro-source-discipline-selftest.js` (run on
   every build), can plant a violation in memory and require the gate to catch it.
-- `buildSystem/run-selftests.js` + `buildSystem/lib/what-runs.js` (`CONVENTIONS` / `discover` / `runSet`) +
-  `buildSystem/lib/selftest-verdict.js` (`VERDICT_RE` / `cases` / `verdict`) — the self-tests step and the run set
-  `check-hand-lists.js` reads.
+- `buildSystem/run-selftests.js` + `buildSystem/lib/what-runs.js` (`scriptFiles` / `skippedEntry` / `--list-scripts`,
+  `CONVENTIONS` / `discover` / `runSet`) + `buildSystem/lib/selftest-verdict.js` (`VERDICT_RE` / `cases` / `verdict`) —
+  the self-tests step, the tooling's own files every reader of them shares, and the run set `check-hand-lists.js` reads.
 - `build_it_please.sh` — gate wiring (~:333–945), each `if ! $noSyntaxCheck` + `$?`-gated `exit 1`; the four
   tests-repo gates additionally `&& $PROFILE_SHIPS_TESTS && [ -d ../Fizzygum-tests ]`.
 - `src/basic-widgets/Widget.coffee` — `_settleLayoutsAfter` (~:928; the one-flush throw ~:952); `_invalidateLayout`

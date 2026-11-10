@@ -25,9 +25,9 @@
 // WHAT IT SCANS. The Fizzygum half: src/**/*.coffee and buildSystem/**/*.{js,py}. The tests half, when
 // the sibling Fizzygum-tests repo is present: scripts/**/*.js and Automator-and-test-harness-src/**/*.coffee.
 // The .coffee files are the compiled sources as lib/source-files.js lists them (srcFiles, harnessFiles: every
-// one, refusing a symlink); in the .js/.py walks, dot-directories (`.scratch`), node_modules and __pycache__ are
-// skipped, and so is the tests repo's
-// tests/ — macro sources are test CONTENT, held by that repo's own gates. Its self-test file
+// one, refusing a symlink); the .js/.py files are the tooling's own (lib/what-runs.js scriptFiles: never a dot entry
+// such as `.scratch`, a node_modules or a __pycache__, a symlink refused). The tests repo's tests/ is skipped —
+// macro sources are test CONTENT, held by that repo's own gates. Its self-test file
 // (check-hand-lists-selftest.js) is skipped as well: its corpus is made of exactly the lists this hunts, so
 // scanning it would count the fixtures.
 // Without the tests repo the tests half SKIPS and says so, as check-dead-methods.js and
@@ -124,7 +124,7 @@ const { srcFiles, harnessFiles, compiledFiles, sourceRoots, SOURCE_RAILS, HARNES
 const rules = require('./lib/gate-rules').forGate(__filename);
 // the four failing sanction tokens; SANCTION_UNVERIFIED is a note, never a rule
 rules.declare(['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS', 'SANCTION_EMPTY', 'SANCTION_STALE']);
-const { runSet, DEFAULT_LAYOUT: WHAT_RUNS_LAYOUT } = require('./lib/what-runs');
+const { runSet, scriptFiles, DEFAULT_LAYOUT: WHAT_RUNS_LAYOUT } = require('./lib/what-runs');
 
 const FIZZYGUM = path.resolve(__dirname, '..');
 const UMBRELLA = path.resolve(FIZZYGUM, '..');
@@ -162,15 +162,12 @@ const { coffeeMask } = require('./lib/coffee-mask');
 
 function fail(msg) { console.error(`[hand-lists] ERROR — ${msg}`); process.exit(2); }
 
-function walk(dir, exts, acc = []) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '__pycache__') continue;
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, exts, acc);
-    else if (exts.some(x => e.name.endsWith(x))) acc.push(p);
-  }
-  return acc;
+// the tooling's own files under `dir` with one of `exts` — what-runs.js scriptFiles, the one definition of them (this
+// run's tests repo included, once main has read the rails; the real one before)
+function toolingFiles(dir, exts) {
+  const under = dir + path.sep;
+  return scriptFiles({ ...WHAT_RUNS_LAYOUT, tests: ROOTS ? ROOTS.testsRepo : WHAT_RUNS_LAYOUT.tests })
+    .filter(p => p.startsWith(under) && exts.some(x => p.endsWith(x)));
 }
 
 // ---- the per-file engine (pure: text in, records out — what the self-test drives) --------------------
@@ -423,13 +420,11 @@ function harvestUniverse(coffeeFiles) {
   return { classes, members };
 }
 
+// the names a sanction may cite as a guard file: buildSystem's .js files, build_it_please.sh, and the tests repo's
+// scripts' .js and .sh files when it is present — but this gate's own
 function gateFileNames(testsPresent) {
-  const names = new Set(['build_it_please.sh']);
-  for (const dir of [BUILD_SYSTEM, path.join(BUILD_SYSTEM, 'lib')]) {
-    if (!fs.existsSync(dir)) continue;
-    for (const n of fs.readdirSync(dir)) if (n.endsWith('.js')) names.add(n);
-  }
-  if (testsPresent) for (const p of walk(SCRIPTS, ['.js', '.sh'])) names.add(path.basename(p));
+  const names = new Set(['build_it_please.sh', ...toolingFiles(BUILD_SYSTEM, ['.js']).map(p => path.basename(p))]);
+  if (testsPresent) for (const p of toolingFiles(SCRIPTS, ['.js', '.sh'])) names.add(path.basename(p));
   names.delete(path.basename(SELF));
   return names;
 }
@@ -482,12 +477,15 @@ function main(argv) {
   if (!Number.isInteger(min) || min < 1) fail(`--min wants a positive integer, got '${minArg}'`);
 
   const testsPresent = fs.existsSync(SCRIPTS) && fs.existsSync(HARNESS);
-  const halves = [{ repo: 'fizzygum', label: 'Fizzygum', baseline: BASELINE_FIZZYGUM, paths: [
-    ...srcFiles(ROOTS.src), ...walk(BUILD_SYSTEM, ['.js', '.py']).filter(p => path.resolve(p) !== SELF_TEST_CORPUS)] }];
-  if (testsPresent) {
-    halves.push({ repo: 'tests', label: 'Fizzygum-tests', baseline: BASELINE_TESTS, paths: [
-      ...walk(SCRIPTS, ['.js']), ...harnessFiles(ROOTS.testsRepo)] });
-  }
+  const halves = [];
+  try {
+    halves.push({ repo: 'fizzygum', label: 'Fizzygum', baseline: BASELINE_FIZZYGUM, paths: [
+      ...srcFiles(ROOTS.src), ...toolingFiles(BUILD_SYSTEM, ['.js', '.py']).filter(p => path.resolve(p) !== SELF_TEST_CORPUS)] });
+    if (testsPresent) {
+      halves.push({ repo: 'tests', label: 'Fizzygum-tests', baseline: BASELINE_TESTS, paths: [
+        ...toolingFiles(SCRIPTS, ['.js']), ...harnessFiles(ROOTS.testsRepo)] });
+    }
+  } catch (e) { fail(e.message); }   // a tree the definitions refuse (SOURCE_/TOOLING_TREE_MALFORMED): nothing measured
   for (const h of halves) if (!h.paths.length) fail(`the ${h.label} half holds no file to scan — a gate that reads nothing certifies everything`);
 
   const universe = harvestUniverse(compiledFiles(ROOTS));

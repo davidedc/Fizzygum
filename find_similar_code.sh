@@ -44,8 +44,8 @@ fi
 
 # --tests: structural scan of the sibling Fizzygum-tests repo. scripts/*.js is plain node
 # JS, so jsinspect reads it in place (REAL line numbers — no mirror caveat); only the
-# harness .coffee needs the CS1 mirror. jsinspect's --ignore is a path REGEX (not a glob),
-# so unlike jscpd it CAN exclude the dot-dir .scratch.
+# harness .coffee needs the CS1 mirror. The scripts are the tooling's own files
+# (buildSystem/lib/what-runs.js scriptFiles), passed as files below.
 if [ "$1" = "--tests" ]; then
   shift
   HARNESS_MIRROR=duplication-report/tests/harness-mirror
@@ -59,18 +59,24 @@ if [ "$1" = "--tests" ]; then
   # ⚠ jsinspect's CLI HARD-CODES ignoring any path matching node_modules|bower_components|
   # test|spec (its --ignore only APPENDS) — "Fizzygum-tests", ".../tests/..." and even
   # "Inspector" (In-SPEC-tor) all match. Explicit FILE arguments bypass that filter, so we
-  # always expand the file lists ourselves (no spaces in these repos' script paths).
-  SCRIPT_FILES=$(find ../Fizzygum-tests/scripts -name '*.js' -not -path '*node_modules*' -not -path '*/.scratch/*')
+  # always expand the file lists ourselves (no spaces in these repos' script paths). The scripts are the tooling's own
+  # files (buildSystem/lib/what-runs.js scriptFiles, the one definition: never a gitignored scratch or a node_modules).
+  # Each is named from Fizzygum/ (../Fizzygum-tests/scripts/…), so where the umbrella lives never enters an argument.
+  ALL_TOOLING=$(node buildSystem/lib/what-runs.js --list-scripts) || { echo "find_similar_code: listing the tooling's files FAILED." 1>&2; exit 1; }
+  SCRIPT_FILES=()
+  while IFS= read -r f; do
+    case "$f" in */Fizzygum-all/Fizzygum-tests/scripts/*.js) SCRIPT_FILES+=("../${f##*/Fizzygum-all/}") ;; esac
+  done <<< "$ALL_TOOLING"
   echo "==> jsinspect structural scan of Fizzygum-tests (args: ${JIARGS[*]}) ..."
   "$JSINSPECT" "${JIARGS[@]}" --reporter json \
-    "$HARNESS_MIRROR"/*.js $SCRIPT_FILES > duplication-report/tests/jsinspect-report.json
+    "$HARNESS_MIRROR"/*.js "${SCRIPT_FILES[@]}" > duplication-report/tests/jsinspect-report.json
   RC=$?
   if [ "$RC" != "0" ] && [ "$RC" != "5" ]; then
     echo "find_similar_code: jsinspect (--tests) FAILED (exit $RC)." 1>&2
     exit "$RC"
   fi
   "$JSINSPECT" "${JIARGS[@]}" \
-    "$HARNESS_MIRROR"/*.js $SCRIPT_FILES > duplication-report/tests/jsinspect-report.txt
+    "$HARNESS_MIRROR"/*.js "${SCRIPT_FILES[@]}" > duplication-report/tests/jsinspect-report.txt
   RC=$?
   if [ "$RC" != "0" ] && [ "$RC" != "5" ]; then
     echo "find_similar_code: jsinspect (--tests, text reporter) FAILED (exit $RC)." 1>&2

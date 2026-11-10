@@ -2229,3 +2229,34 @@ for (const s of sites) if (s.absentBefore.length) {
       docs name which runners ask the guard. Filed: "A deleted input leaves a build reading FRESH", "`fg status` reads
       build freshness from the sources alone" (fg is outside the loop), "The sequence runner never asks whether the build
       is stale", "A build that fails a step can still stamp itself".
+- [x] **Every tool walks the tooling's own files for itself** (found closing the same item; by reading). About seven
+      walks list the `.js` files of `buildSystem/` and `scripts/`, with different skip rules: `lib/what-runs.js`,
+      `run-selftests.js` and `check-hand-lists.js` pass over dot directories, `node_modules` and `__pycache__`;
+      `lib/tests-repo-code.js`'s scripts walk, dot directories and `node_modules`; `lib/cli-selftest.js`, `node_modules`
+      in one walk and dot directories too in another; `find_similar_code.sh`, `node_modules` and `.scratch`. Latent
+      today (`scripts/` holds no dot directory). It is the compiled sources' defect on another tree, where
+      `node_modules` is real, so it wants a definition of its own.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED (a read-only census of every walk, SURVEY in
+      `Fizzygum-tests/.scratch/tooling-files/`): thirteen walks, seven rules, and they disagreed TODAY — not latent:
+      `scripts/.scratch/` exists (gitignored) and its `cache-oracle-gate/composed-selftest-prelude.js` was read by
+      `cli-selftest.js`'s first walk and by the duplicate-code scan (jscpd's ignore globs miss a `../` root) and by none
+      of the others; `Fizzygum/scripts/vendor-swcanvas.sh`, which the build LAUNCHES, sat in no root, so the gate census
+      never judged it. Rulings (self-ruled): the one definition is the shared walk that already existed,
+      `buildSystem/lib/what-runs.js` `scriptFiles(layout)` (it carries the workspace-layout rail run-selftests' bite-proof
+      uses) — it gains the `Fizzygum/scripts/` root, refuses a symlink (`TOOLING_TREE_MALFORMED`, as `lib/source-files.js`
+      refuses one in the sources), exports `skippedEntry` (dot entries, `node_modules`, `__pycache__`) and a
+      `--list-scripts` CLI; `run-selftests.js`'s repo-wide name scan shares `skippedEntry`; `lib/tests-repo-code.js`'s rig
+      set, `check-hand-lists.js`'s scan and guard-name set, `scripts/lib/cli-selftest.js`'s
+      two walks, and `find_similar_code.sh` / `find_duplicated_code.sh` (`--tests`; jscpd now gets the scripts as files,
+      so its `.scratch` filter went) all read it. `vendor-swcanvas.sh` states `not-a-gate` (a vendoring step). Proven:
+      the rig set is unchanged (125 files); every self-test and gate passes; one-off plants — the header removed →
+      `GATE_WITHOUT_REGISTRY` + `GATE_WITHOUT_PROOF` naming `Fizzygum/scripts/vendor-swcanvas.sh` (so the new root
+      reaches the census), a symlink in `scripts/` → `TOOLING_TREE_MALFORMED`; both scans run, no `.scratch` file in
+      either. `fg`'s lint (`git status` over changed files) is fg's own (outside the loop). The independent review's
+      findings landed: standing cases in `lib/what-runs-selftest.js` (the `scripts/` root — seen failing with the root
+      removed — the skipped entries, the top-level rule, the symlink refusal, the CLI); Fizzygum's top level gets the
+      same rules as the roots; the shell scans read the list into arrays of `../Fizzygum-tests/scripts/…` paths, so
+      where the umbrella lives never enters an argument; a refused tooling tree reads INVALID in `check-call-arguments.js`
+      and `check-hand-lists.js`, as a refused source tree does; the guard-name set keeps its scope (widening it let a
+      sanction cite `vendor-swcanvas.sh`, which judges nothing); stale comments and the duplicate-code doc's §6.
+      Filed: "A hand-list sanction can cite a script that judges nothing" (older than this item).

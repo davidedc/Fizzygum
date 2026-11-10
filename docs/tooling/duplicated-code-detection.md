@@ -122,9 +122,10 @@ script overrides them (e.g. `./find_duplicated_code.sh --min-tokens 35`).
    always expands the file lists itself — **never call the jsinspect bin with a directory
    argument.**
 6. **jscpd's `--ignore` globs cannot exclude dot-directories** (`**/.scratch/**` silently
-   matches nothing; `--gitignore` doesn't catch it either from a sibling cwd). The `--tests`
-   mode therefore greps `.scratch` pairs out of the ai handoff file; the json/console output
-   still contains them.
+   matches nothing; `--gitignore` doesn't catch it either from a sibling cwd). So both scans'
+   `--tests` modes pass the tests repo's scripts as FILES, the tooling's own
+   (`buildSystem/lib/what-runs.js` `scriptFiles`, `node buildSystem/lib/what-runs.js
+   --list-scripts`): never a gitignored scratch or a `node_modules`.
 
 ## Structural similarity: `./find_similar_code.sh` (Type-2 / renamed clones)
 

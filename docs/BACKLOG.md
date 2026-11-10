@@ -27,13 +27,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       the plan's ledger; measured). Masking src takes
       about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
       build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
-- [ ] **Every tool walks the tooling's own files for itself** (found closing the same item; by reading). About seven
-      walks list the `.js` files of `buildSystem/` and `scripts/`, with different skip rules: `lib/what-runs.js`,
-      `run-selftests.js` and `check-hand-lists.js` pass over dot directories, `node_modules` and `__pycache__`;
-      `lib/tests-repo-code.js`'s scripts walk, dot directories and `node_modules`; `lib/cli-selftest.js`, `node_modules`
-      in one walk and dot directories too in another; `find_similar_code.sh`, `node_modules` and `.scratch`. Latent
-      today (`scripts/` holds no dot directory). It is the compiled sources' defect on another tree, where
-      `node_modules` is real, so it wants a definition of its own.
 - [ ] **The wall-clock stink does not see `performance.now()`** (found by the independent review closing "The
       wall-clock stink does not see `new Date` without parentheses", in the plan's ledger; by reading). Its rule names
       the WALL clock (`Date.now()`, a `new Date` given no argument); `performance.now()` is a clock read it never
@@ -85,6 +78,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       against `.build-stamp`; `fg status`'s `build: FRESH/STALE` line still compares the sources' mtimes on its own, so
       an edit of `parts.json`, `src/index.html`, `vendor/` or the build's Python still reads FRESH there while every
       runner refuses the build. It could ask the same definition (`node -e` over build-inputs.js).
+- [ ] **A hand-list sanction can cite a script that judges nothing** (found by the independent review closing "Every
+      tool walks the tooling's own files for itself", in the plan's ledger; by reading; low). `check-hand-lists.js`
+      accepts as a guard any existing gate-file NAME that the run set holds, and the run set holds every launched or
+      required script: a required library (`coffee-mask.js`) or a script that states `not-a-gate` (the tests repo's
+      `generate-tests-manifests.js`, `recompress-swcanvas-references.js`) is citable, so a sanction can name a "guard"
+      that checks nothing. The gate census (`run-selftests.js` `gateCensus`) knows the true gate set.
 - [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
       loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
       `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function

@@ -56,7 +56,8 @@
 //
 // Exit 0 = zero violations; 1 = a rule fired; 2 = INVALID, never a pass: a source it cannot parse (an interpolated
 // heredoc included), a super it cannot place on a class chain, a source tree lib/source-files.js refuses
-// (SOURCE_TREE_MALFORMED: a symlink, a src or a harness holding no .coffee file), or a half that read nothing while its
+// (SOURCE_TREE_MALFORMED: a symlink, a src or a harness holding no .coffee file) or a tooling tree lib/what-runs.js
+// refuses (TOOLING_TREE_MALFORMED: a symlink among the scripts), or a half that read nothing while its
 // input is there (no class fragment in src; no macro source or no script in a tests repo that exists).
 //
 // Run from Fizzygum/ (build_it_please.sh does): node ./buildSystem/check-call-arguments.js [--src=DIR]
@@ -87,7 +88,7 @@ function invalid(msg) { console.error(`[call-arguments] INVALID — ${msg}`); pr
 let table;
 try { table = callSites({ srcDir: SRC_DIR, testsRepoDir: TESTS_DIR }); } catch (e) {
   // a source tree lib/source-files.js refuses is read by no one: a call there is unjudged
-  if (/^SOURCE_TREE_MALFORMED /.test(e.message)) invalid(e.message);
+  if (/^(SOURCE|TOOLING)_TREE_MALFORMED /.test(e.message)) invalid(e.message);
   throw e;
 }
 const { sites, unreadable, counts } = table;

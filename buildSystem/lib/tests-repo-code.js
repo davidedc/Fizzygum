@@ -13,8 +13,9 @@
 //
 // testsRepoCode(root) -> [{ file, kind: 'harness' | 'macro' | 'script', lines }], `lines` being the
 // file's lines with comment characters blanked (columns kept — save that a macro source's lines are its COOKED text,
-// so on a line holding a JS escape the columns after it move left); [] when the repo is absent. Dot-directories
-// (a gitignored `.scratch/` under scripts/) are not read: what a clean checkout lacks must not decide.
+// so on a line holding a JS escape the columns after it move left); [] when the repo is absent. The scripts are the
+// tooling's own files (lib/what-runs.js scriptFiles): never a dot entry (a gitignored `.scratch/`), a node_modules or a
+// __pycache__ — what a clean checkout lacks must not decide — and a symlink is refused (TOOLING_TREE_MALFORMED).
 //
 // JS is PARSED (lib/js-mask.js, on acorn): a comment is cut wherever it starts, a comment marker inside a
 // string or a template is text, and a macro file's macro sources are found by the grammar, so a backtick
@@ -37,17 +38,12 @@ const { coffeeMask } = require('./coffee-mask');
 const { maskJs, parseJs } = require('./js-mask');
 const { testMacroSourcesIn } = require('./macro-sources');
 const { harnessFiles, TESTS_REPO: DEFAULT_ROOT, byCodePoint } = require('./source-files');
+const { scriptFiles, DEFAULT_LAYOUT } = require('./what-runs');
 
-// the Node rigs: every .js file under scripts/ but a dot directory's (a gitignored `.scratch/`) or a node_modules'
-function walk(dir, keep, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, keep, acc);
-    else if (keep(e.name)) acc.push(p);
-  }
-  return acc;
+// the Node rigs: the .js files of the tooling's own files (what-runs.js scriptFiles, the one definition) under scripts/
+function rigFiles(root) {
+  const scripts = path.join(root, 'scripts') + path.sep;
+  return scriptFiles({ ...DEFAULT_LAYOUT, tests: root }).filter((f) => f.startsWith(scripts) && f.endsWith('.js')).sort(byCodePoint);
 }
 
 const coffeeCode = (text, file) => coffeeMask(text, file).map((line) => line.code);
@@ -129,7 +125,7 @@ function testsRepoFiles(root = DEFAULT_ROOT) {
   return {
     harness,
     macro: commandFiles(path.join(root, 'tests')),
-    script: walk(path.join(root, 'scripts'), (n) => n.endsWith('.js'), []).sort(byCodePoint),
+    script: rigFiles(root),
   };
 }
 

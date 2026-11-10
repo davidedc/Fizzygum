@@ -70,7 +70,7 @@ function copyTestsRepoCode(repo, dir) {
   if (!files) throw new Error(`planted-src: no tests repo at ${repo} to copy`);
   const tests = path.join(repo, 'tests');
   const scripts = scriptFiles({ fizzygum: FIZZYGUM, tests: repo }).filter((f) => f.startsWith(repo + path.sep));
-  const code = [...new Set([...files.harness, ...files.script, ...scripts,
+  const code = [...new Set([...files.harness, ...scripts,
     ...testNames(tests).flatMap((n) => [metadataFileOf(tests, n), commandFileOf(tests, n)])])];
   for (const p of code) {
     const q = path.join(dir, path.relative(repo, p));

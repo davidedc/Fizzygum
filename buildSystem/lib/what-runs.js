@@ -58,24 +58,35 @@ const CONVENTIONS = {
   prelude:          { re: /-prelude\.js$/,           runner: 'preludes-install-selftest-headless.js' },
 };
 
-// Every script file the readers consider: Fizzygum's buildSystem (recursively) and top-level shell scripts, and the
-// tests repo's scripts/ when present. Sorted, absolute.
+// THE TOOLING'S OWN FILES — the one definition every reader of them shares (the run set and discovery here, the hand-list
+// scan, the Node rigs' code set, the tooling's self-tests, the similar- and duplicate-code scans): Fizzygum's buildSystem/
+// and scripts/ (recursively) and its top-level shell scripts, and the tests repo's scripts/ when present; `.js`, `.sh` and
+// `.py` files. Never the tooling: a dot entry (a gitignored scratch such as scripts/.scratch, a dot file), a node_modules
+// (a dependency tree), a __pycache__ (bytecode) — skippedEntry() says so for any walk of the repos. A SYMLINK is refused
+// (TOOLING_TREE_MALFORMED, naming it), as lib/source-files.js refuses one in the sources: a walk that follows it reads a
+// file twice or outside the tree, one that does not reads it never, and the readers would disagree. Sorted, absolute.
+const skippedEntry = (name) => name.startsWith('.') || name === 'node_modules' || name === '__pycache__';
 function scriptFiles(layout = DEFAULT_LAYOUT) {
   const out = [];
-  const walk = (dir) => {
+  // `deep`: a root walked whole for .js/.sh/.py; else Fizzygum's own top level, for its .sh files alone
+  const visit = (dir, deep) => {
     if (!fs.existsSync(dir)) return;
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '__pycache__') continue;
+      if (skippedEntry(e.name)) continue;
       const p = path.join(dir, e.name);
-      if (e.isDirectory()) walk(p);
-      else if (/\.(js|sh|py)$/.test(e.name)) out.push(p);
+      const wanted = deep ? /\.(js|sh|py)$/.test(e.name) : /\.sh$/.test(e.name);
+      if (e.isSymbolicLink()) {
+        if (deep || wanted) throw new Error('TOOLING_TREE_MALFORMED ' + p + ': a symlink — the tooling\'s files are read where they are');
+        continue;
+      }
+      if (e.isDirectory()) { if (deep) visit(p, true); }
+      else if (e.isFile() && wanted) out.push(p);
     }
   };
-  walk(path.join(layout.fizzygum, 'buildSystem'));
-  if (fs.existsSync(layout.fizzygum)) {
-    for (const n of fs.readdirSync(layout.fizzygum)) if (n.endsWith('.sh')) out.push(path.join(layout.fizzygum, n));
-  }
-  walk(path.join(layout.tests, 'scripts'));
+  visit(path.join(layout.fizzygum, 'buildSystem'), true);
+  visit(path.join(layout.fizzygum, 'scripts'), true);
+  visit(layout.fizzygum, false);
+  visit(path.join(layout.tests, 'scripts'), true);
   return out.sort();
 }
 
@@ -316,4 +327,17 @@ function runSet(layout = DEFAULT_LAYOUT) {
   return { files: reached, fgPresent, why, how };
 }
 
-module.exports = { CONVENTIONS, DEFAULT_LAYOUT, scriptFiles, discover, runSet, shellCommands, shellInvocations, jsLaunches };
+module.exports = { CONVENTIONS, DEFAULT_LAYOUT, scriptFiles, skippedEntry, discover, runSet, shellCommands, shellInvocations,
+  jsLaunches };
+
+// `node buildSystem/lib/what-runs.js --list-scripts` prints scriptFiles(), one per line: how a shell tool reads the
+// tooling's files (find_similar_code.sh, find_duplicated_code.sh), never with a `find` of its own.
+if (require.main === module) {
+  if (process.argv[2] !== '--list-scripts' || process.argv.length !== 3) {
+    console.error('usage: node buildSystem/lib/what-runs.js --list-scripts');
+    process.exit(2);
+  }
+  let files;
+  try { files = scriptFiles(); } catch (e) { console.error('what-runs: ' + e.message); process.exit(2); }
+  for (const f of files) console.log(f);
+}

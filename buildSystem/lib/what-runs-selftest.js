@@ -7,7 +7,8 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { runSet, discover, shellInvocations } = require('./what-runs');
+const { runSet, discover, shellInvocations, scriptFiles } = require('./what-runs');
+const { spawnSync } = require('child_process');
 const t = require('./selftest-verdict').cases('what-runs');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'what-runs-selftest-'));
@@ -120,6 +121,34 @@ write('fg', 'fg_build(){\n  ./build_it_please.sh\n}\nrun_leg(){\n  :\n}\n');
 threw = '';
 try { runSet(layout); } catch (e) { threw = e.message; }
 t.check(/defines no fg_suite, run_lint/.test(threw), "an fg missing any of its four leg functions is an ERROR (a renamed one would drop its legs)", threw);
+
+// THE TOOLING'S OWN FILES (scriptFiles): every root, never a dot entry, a node_modules or a __pycache__, a symlink refused
+write('Fizzygum/scripts/vendor-step.sh', 'echo vendoring\n');
+write('Fizzygum/.hidden-top.sh', 'echo hidden\n');
+write('Fizzygum/not-a-script.txt', 'text\n');
+write('Fizzygum/buildSystem/__pycache__/cached.py', '');
+write('Fizzygum-tests/scripts/.scratch/scratch-selftest.js', '');
+write('Fizzygum-tests/scripts/node_modules/dep/index.js', '');
+write('Fizzygum-tests/scripts/.dotfile.js', '');
+const tooling = scriptFiles(layout).map((f) => path.relative(root, f));
+t.check(tooling.includes('Fizzygum/scripts/vendor-step.sh'), "scriptFiles walks Fizzygum's scripts/ (a script the build launches from there is the census's)");
+t.check(tooling.includes('Fizzygum/build_it_please.sh') && !tooling.includes('Fizzygum/.hidden-top.sh') && !tooling.includes('Fizzygum/not-a-script.txt'),
+  "scriptFiles takes Fizzygum's top-level .sh files and no dot file", tooling.filter((f) => f.split('/').length === 2).join());
+for (const skipped of ['Fizzygum/buildSystem/__pycache__/cached.py', 'Fizzygum-tests/scripts/.scratch/scratch-selftest.js',
+  'Fizzygum-tests/scripts/node_modules/dep/index.js', 'Fizzygum-tests/scripts/.dotfile.js']) {
+  t.check(!tooling.includes(skipped), `scriptFiles never takes ${skipped}`);
+}
+fs.symlinkSync(path.join(root, 'Fizzygum-tests/scripts/x.js'), path.join(root, 'Fizzygum-tests/scripts/linked.js'));
+threw = '';
+try { scriptFiles(layout); } catch (e) { threw = e.message; }
+t.check(/^TOOLING_TREE_MALFORMED .*linked\.js: a symlink/.test(threw), 'a symlink among the tooling is refused, TOOLING_TREE_MALFORMED naming it', threw);
+
+// its command line: the real tree's list, one per line; anything else is a usage error (exit 2)
+const cli = (args) => spawnSync(process.execPath, [path.join(__dirname, 'what-runs.js'), ...args], { encoding: 'utf8' });
+const listed = cli(['--list-scripts']);
+t.check(listed.status === 0 && listed.stdout.split('\n').some((l) => l.endsWith(path.join('buildSystem', 'lib', 'what-runs.js'))),
+  '--list-scripts prints the tooling, itself among it', String(listed.status));
+t.check(cli([]).status === 2 && cli(['--list-scripts', 'extra']).status === 2, 'what-runs.js with no or extra arguments is a usage error (exit 2)');
 
 fs.rmSync(root, { recursive: true, force: true });
 t.done();

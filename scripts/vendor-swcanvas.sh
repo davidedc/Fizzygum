@@ -2,6 +2,8 @@
 #
 # vendor-swcanvas.sh — vendor SWCanvas's built bundle into vendor/swcanvas/.
 #
+# not-a-gate: a vendoring step the build runs when vendor/swcanvas/ is incomplete; it judges nothing, it fetches
+#
 # This mirrors how SWCanvas itself vendors BitmapText: the bulk SWCanvas bytes
 # are NOT committed to Fizzygum's git (vendor/swcanvas/ is gitignored). Only the
 # one-line pin (vendor/swcanvas.pin, a commit SHA) is committed. A fresh clone's

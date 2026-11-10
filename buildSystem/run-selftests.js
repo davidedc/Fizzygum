@@ -53,7 +53,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn, execFileSync } = require('child_process');
-const { DEFAULT_LAYOUT, discover, scriptFiles, shellCommands, runSet, jsLaunches } = require('./lib/what-runs');
+const { DEFAULT_LAYOUT, discover, scriptFiles, skippedEntry, shellCommands, runSet, jsLaunches } = require('./lib/what-runs');
 const { maskJs } = require('./lib/js-mask');
 const { VERDICT_RE } = require('./lib/selftest-verdict');
 
@@ -185,13 +185,14 @@ function undiscovered(files, discovered) {
   return files.filter((f) => /self[-_ ]?test/i.test(path.basename(f)) && !discovered.has(f) && !MACHINERY.has(f));
 }
 
-// every file of a repo that could be a script: node_modules, dot-dirs and the tests repo's tests/ are skipped
+// every file of a repo that could be a script, skipping what is never the tooling (what-runs.js skippedEntry: dot
+// entries, node_modules, __pycache__) and the tests repo's tests/
 function repoFiles(root, skipDirs) {
   const out = [];
   const walk = (dir) => {
     if (!fs.existsSync(dir)) return;
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '__pycache__') continue;
+      if (skippedEntry(e.name)) continue;
       const p = path.join(dir, e.name);
       if (e.isDirectory()) { if (!skipDirs.includes(p)) walk(p); } else out.push(p);
     }
@@ -333,8 +334,8 @@ async function main(argv) {
     }
   }
   if (hiding.length || stray.length) {
-    console.error('      A self-test is a <subject>-selftest.js (or -selftest-headless.js) file under buildSystem/ or');
-    console.error('      Fizzygum-tests/scripts/, found and run by name; a switch that runs one, or a file named like one');
+    console.error('      A self-test is a <subject>-selftest.js (or -selftest-headless.js) file among the tooling\'s own files');
+    console.error('      (lib/what-runs.js scriptFiles), found and run by name; a switch that runs one, or a file named like one');
     console.error('      that no tier finds, is a self-test nothing runs.');
   }
 

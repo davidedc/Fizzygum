@@ -37,12 +37,18 @@ if [ ! -x "$JSCPD" ]; then
 fi
 
 # --tests: scan the sibling Fizzygum-tests repo (never covered by the src scan). Everything
-# is passed via CLI (CLI args override .jscpd.json). ⚠ jscpd's --ignore globs cannot exclude
-# DOT-directories (`**/.scratch/**` silently matches nothing), so .scratch pairs are filtered
-# out of the ai handoff file below; the json/console output still contains them.
+# is passed via CLI (CLI args override .jscpd.json). Its scripts are passed as FILES — the tooling's
+# own (buildSystem/lib/what-runs.js scriptFiles, the one definition: never a gitignored scratch or a
+# node_modules) — since jscpd's ignore globs cannot exclude a dot directory under a `../` root.
 if [ "$1" = "--tests" ]; then
   shift
-  TESTS_ARGS=(../Fizzygum-tests/Automator-and-test-harness-src ../Fizzygum-tests/scripts
+  ALL_TOOLING=$(node buildSystem/lib/what-runs.js --list-scripts) || { echo "find_duplicated_code: listing the tooling's files FAILED." 1>&2; exit 1; }
+  # each named from Fizzygum/ (../Fizzygum-tests/scripts/…): where the umbrella lives never enters an argument
+  SCRIPT_FILES=()
+  while IFS= read -r f; do
+    case "$f" in */Fizzygum-all/Fizzygum-tests/scripts/*.js) SCRIPT_FILES+=("../${f##*/Fizzygum-all/}") ;; esac
+  done <<< "$ALL_TOOLING"
+  TESTS_ARGS=(../Fizzygum-tests/Automator-and-test-harness-src "${SCRIPT_FILES[@]}"
     --format coffeescript,javascript --min-tokens 50 --min-lines 5
     --max-lines 20000 --max-size 2mb --ignore '**/node_modules/**'
     --output duplication-report/tests "$@")
@@ -56,8 +62,7 @@ if [ "$1" = "--tests" ]; then
   ESC=$(printf '\033')
   "$JSCPD" "${TESTS_ARGS[@]}" --reporters ai,silent 2>/dev/null \
     | sed "s/${ESC}\[[0-9;]*m//g" \
-    | awk '/^time:/{exit} {print}' \
-    | grep -v '\.scratch' > duplication-report/tests/jscpd-report.ai.txt
+    | awk '/^time:/{exit} {print}' > duplication-report/tests/jscpd-report.ai.txt
   RC=${PIPESTATUS[0]}
   if [ "$RC" != "0" ]; then
     echo "find_duplicated_code: ai-reporter pass (--tests) FAILED (exit $RC)." 1>&2
@@ -65,7 +70,7 @@ if [ "$1" = "--tests" ]; then
   fi
   echo ""
   echo "find_duplicated_code: DONE (Fizzygum-tests). Reports in duplication-report/tests/ ;"
-  echo "LLM handoff file: duplication-report/tests/jscpd-report.ai.txt (.scratch pairs filtered)"
+  echo "LLM handoff file: duplication-report/tests/jscpd-report.ai.txt"
   exit 0
 fi
 
