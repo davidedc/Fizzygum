@@ -419,6 +419,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
     @_subscribeToTheArmedDrawingTool()
 
   _reactToBeingCopied: ->
+    super
     @_subscribeToTheArmedDrawingTool()
 
   # ===== target resolution (§5.D D-ii 3, owner decision D11) =====

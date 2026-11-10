@@ -76,17 +76,42 @@ class ViewportWdgt extends Widget
 
   # Hovering does not ride a file: a restored world wakes with no pointer in any band, exactly as
   # a freshly built one does. (The thin/absent state needs no transient — it is re-derived from
-  # overflow at the first arrange.)
+  # overflow at the first arrange.) Nor does a gesture's scroll step (_scrollStep): a restored world
+  # has no gesture in progress, and the step is a closure no file can carry.
   @serializationTransients: [
     "_pointerInScrollBand"
+    "_scrollStep"
   ]
+
+  # THE PER-FRAME STEP OF THE SCROLL A GESTURE OF MINE RUNS -- a drag-scroll's stroke and glide
+  # (takeStrokeScrollFrom), or the edge auto-scroll while something is carried over my edge -- held
+  # only while one runs: its presence is THE answer to "does a gesture of mine run" (and I am in the
+  # stepping set exactly then). Runtime state of the gesture, never a member: a save leaves it out,
+  # and a copy or a restore runs no gesture of mine (_reactToBeingCopied, _afterDeserialization).
+  _scrollStep: undefined
+
+  # My step runs my gesture's scroll step. A `step` of a subclass's, or one a person gives me (an
+  # inspector's Save, a run), replaces mine as any override of a member does: it calls `super` to keep
+  # my gestures scrolling.
+  step: ->
+    @_scrollStep?()
+
+  # A COPY runs no gesture of mine: it was aligned into the stepping set because I was in it
+  # (Widget.alignCopiedWidgetToSteppingStructures) and holds my scroll step, a closure bound to me, so
+  # it drops both rather than go on scrolling me.
+  _reactToBeingCopied: ->
+    delete @_scrollStep
+    world.steppingWdgts.delete @
 
   # A RESTORED viewport lays itself out again at the next settle, so its arrange re-derives what no
   # file carries: my bars' indicator presentation (SliderWdgt.indicatorMode, from my overflow and the
   # dropped hover state, _refreshScrollIndicators). A restored world is otherwise already settled, so
   # no arrange would come, and my bars would wear the plain slider's look -- a hollow thumb over a
-  # track the saved alpha hides -- until something re-laid me out.
+  # track the saved alpha hides -- until something re-laid me out. Nor does it run a gesture: one
+  # saved mid-gesture comes back in the stepping set (its membership is saved; its scroll step, a
+  # transient, is not), which it leaves.
   _afterDeserialization: ->
+    world.steppingWdgts.delete @
     @_scheduleRelayoutRespectingPhase()
 
   # Capability query: is aWdgt one of MY scrollbars? A SliderWdgt asks this of its parent to know whether
@@ -1191,15 +1216,15 @@ class ViewportWdgt extends Widget
   # whichever frame first sees the hand let go, is where the stroke's step pays its release flush:
   # `pos` is the release point in my plane, an event-time fact. A frame that drains this release
   # together with the next press therefore finds nothing owed when that press stops my step
-  # (pressBegan). With no step of mine running I took no scroll from this stroke, and owe nothing.
+  # (pressBegan). With no scroll step of mine running I took no scroll from this stroke, and owe nothing.
   pressEnded: (pos) ->
-    @step pos  if world.steppingWdgts.has @
+    @_scrollStep pos  if @_scrollStep?
 
   # A stroke that stops being a press on me — confiscated (an abort), put away with me, or turned into
   # a lift — ends my part of it where the pointer stands as it ends; the step's own guards keep a lift
   # from getting a parting scroll.
   pressCancelled: ->
-    @step @screenPointToMyPlane world.hand.position()  if world.steppingWdgts.has @
+    @_scrollStep @screenPointToMyPlane world.hand.position()  if @_scrollStep?
 
   # THE LATCH, asked by the hand of this stroke's OWNER at the DRAINED EVENT where the press first
   # leaves the grab radius (ActivePointerWdgt._notePressTravelledPastDragThreshold), with the press
@@ -1210,8 +1235,8 @@ class ViewportWdgt extends Widget
   # the stroke is lifting what it pressed: then it is no scroll, and no pane takes it.
   latchStrokeScroll: (pressPoint, crossingPoint) ->
     return undefined  if world.hand.isThisPointerFloatDraggingSomething() or @_strokeWouldLiftWhatItPressed()
-    # a step of mine already running for this press means I took the stroke at the press, alone
-    return @  if world.steppingWdgts.has @
+    # a scroll step of mine already running for this press means I took the stroke at the press, alone
+    return @  if @_scrollStep?
     pane = ViewportWdgt.strokeScrollPaneFor pressPoint, (crossingPoint.subtract pressPoint), @
     return undefined  unless pane?
     # the latched pane scrolls the stroke from the press point, so it catches up the travel that
@@ -1275,8 +1300,8 @@ class ViewportWdgt extends Widget
 
   # End my drag-scroll step: its stroke, its flush and its glide are over. Nothing to do when none runs.
   _stopDragScrollStep: ->
-    return unless world.steppingWdgts.has @
-    @step = noOperation
+    return unless @_scrollStep?
+    delete @_scrollStep
     world.steppingWdgts.delete @
     world.wdgtsWithOngoingScrollMomentum.delete @
 
@@ -1336,7 +1361,7 @@ class ViewportWdgt extends Widget
       wasScrollDragging = false
       scrolledNow
     world.steppingWdgts.add @
-    @step = (strokeEndPos) =>
+    @_scrollStep = (strokeEndPos) =>
       scrollbarJustChanged = false
       everFloatDragged ||= world.hand.isThisPointerFloatDraggingSomething()
       if strokeEndPos?
@@ -1432,7 +1457,7 @@ class ViewportWdgt extends Widget
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
     world.steppingWdgts.add @
-    @step = =>
+    @_scrollStep = =>
       # mapped like every per-frame hand sample (identity for an un-nested viewport) — the
       # band test and autoScroll's delta arithmetic below both run in MY plane
       pos = @screenPointToMyPlane hand.position()
@@ -1442,7 +1467,7 @@ class ViewportWdgt extends Widget
         hand.isThisPointerFloatDraggingSomething()
           @autoScroll pos
       else
-        @step = noOperation
+        delete @_scrollStep
         world.steppingWdgts.delete @
         @autoScrollTrigger = undefined
   

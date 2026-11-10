@@ -83,10 +83,7 @@ class ListWdgt extends ViewportWdgt
     super()
     @contents.disableDrops()
     @_buildAndConnectChildren() # builds the list contents
-    # it's important to leave the step as the default noOperation
-    # instead of undefined because the scrollbars (inherited from Viewport)
-    # need the step function to react to mouse floatDrag.
-  
+
   # builds the list contents, via the _buildAndConnectChildren wrapper + NoSettle-core pattern. ListWdgt extends
   # ViewportWdgt, whose `add` is a CUSTOM override that redirects a non-frame child into @contents; the
   # non-settling twin of that redirect is `@contents._addNoSettle` (NOT the base `@_addNoSettle`, which would

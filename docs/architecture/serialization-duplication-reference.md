@@ -446,8 +446,10 @@ NAMED like one.
     is the one place a save writes a `{"$src"}`, so a file holding one anywhere else is refused
     up front (§9).
   - else if `foo` is in the class's transients → dropped; the class recomputes it (e.g.
-    patch nodes recompute `functionFromCompiledCode` from their text; scroll-momentum
-    `@step` closures simply stop, which is correct for a settled restore).
+    patch nodes recompute `functionFromCompiledCode` from their text; a viewport's gesture scroll
+    step, `_scrollStep`, simply stops, which is correct for a settled restore — its class `step` runs
+    it, so a drag-scroll never leaves a `step` of the viewport's own, and one saved mid-gesture leaves
+    the stepping set its `stepping` membership restored it into, in its `_afterDeserialization`).
   - else → `SerializationError` with the property path (never a silent drop). No text restores such a
     function faithfully — a closure over a run's locals, a native, a class member's body — so this is
     where a function a person's RUN left in state (`@f = -> 42`, `Widget.evaluateString`) ends: the

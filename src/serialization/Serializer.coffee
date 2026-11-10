@@ -21,7 +21,9 @@ class Serializer
   # up front (Deserializer._envelopeShapeProblem) rather than dropped in silence.
   # ⚠ Re-registration hands the shell to machinery that reads its fields, so every marker carries a
   # verdict against the transients a restore drops: STEPPING's loop re-seeds the dropped lastTime
-  # itself (a restored throttled stepper NaN-stalls otherwise -- see _runChildrensStepFunction); the
+  # itself (a restored throttled stepper NaN-stalls otherwise -- see _runChildrensStepFunction), and a
+  # viewport saved mid-gesture, whose dropped scroll step was the one thing it stepped for, leaves the
+  # set in its own hook, pass 4(c) (ViewportWdgt._afterDeserialization); the
   # KEYBOARD dispatch reads only the prototype method, and the one receiver with transient state (the
   # spreadsheet) rebuilds it in the per-class hook, pass 4(c), before any event can arrive; the
   # REFERENCE TRACKER's consumers read destroyed + referencedWidget, both serialized (ShortcutWdgt

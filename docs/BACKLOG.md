@@ -114,16 +114,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
       2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
       member it inherits".)
-- [ ] **A drag-scroll leaves a viewport holding a function no save can write** (found by the independent review
-      closing "An object inspector hides a widget's own field that shadows a member it inherits", in the plan's
-      ledger; measured). `ViewportWdgt._stopDragScrollStep` — at the next press, and where a stroke's glide ends — and
-      the auto-scroll's end stop the step by assigning `@step = noOperation`: an OWN function with no kept source, and
-      `step` is no serialization transient. Measured on `index-sw.html`: a ListWdgt after `_stopDragScrollStep`
-      refuses a world snapshot and its own save ("the function-valued property .step has no editable source and is not
-      a serialization transient"), and a copy owns the `step` too. A press on a lone drag-scrolling pane takes the
-      stroke (`pressBegan` → `takeStrokeScrollFrom`). serialization-duplication-reference.md's "scroll-momentum `@step`
-      closures simply stop" names a transient no class declares. Shape: end the step by deleting the own field (the
-      class's `step` shows through), and decide what a save during a stroke writes.
 - [ ] **A run that replaces a saved method leaves its kept source describing the old one** (found by the same review;
       by reading). `Widget.injectProperty` keeps `<name>_source` beside the function it compiles; a run that reassigns
       the field (`@m = -> …`, `Widget.evaluateString`) leaves the companion in place. The inspector's pane, a save's
@@ -141,6 +131,24 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
       same review; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
       label such a pane, or make it read-only?
+- [ ] **A viewport's gesture bookkeeping outlives its gesture** (found by the independent review closing "A
+      drag-scroll leaves a viewport holding a function no save can write", in the plan's ledger; by reading). The edge
+      auto-scroll's end (`ViewportWdgt`, the auto-scroll's own step) does not clear `world.wdgtsWithOngoingScrollMomentum`,
+      so an auto-scroll that replaced a running glide leaves `anyScrollMomentumOngoing()` true; `Widget._destroyNoSettle`
+      leaves a pane destroyed mid-glide in that set until a teardown; and `_stopDragScrollStep` ending an auto-scroll
+      leaves `autoScrollTrigger` set, so the next auto-scroll skips its 500 ms delay.
+- [ ] **Widget's `step` documentation is false** (found by the same review; by reading). `Widget.coffee`'s note on
+      `step: noOperation` says a `step` left as the no-op lets the children's steps run while an undefined one stops
+      them; `_runChildrensStepFunction` walks the flat stepping set, so nothing traverses children, and an undefined
+      `step` throws in the loop's `try`, soft-resetting the world.
+- [ ] **A hook override that skips `super` is unguarded** (found by the same review; by reading). Two toolbars
+      overrode `_reactToBeingCopied` without `super` the moment `ViewportWdgt` gained one, and nothing said so: no gate
+      holds an override of a per-class hook (`_reactToBeingCopied`, `_afterDeserialization`, …) to call the one it
+      shadows.
+- [ ] **An object inspector removes its list's contents from a set nothing adds them to** (found by the same review;
+      by reading). `InspectorWdgt._buildAndConnectMemberList` deletes `@list.listContents` from `world.steppingWdgts`
+      and says the list itself "still steps (its scrollbars need it)"; nothing adds a list's contents to the set, and
+      a list steps only while a gesture of its own runs.
 - [ ] **A return to boot that fails is only logged** (found by the independent review closing "A snapshot's source
       edits of a lazy part's classes are dropped when the file holds none of its widgets", in the plan's ledger; by
       reading). `SourceEditsRegistry.returnThePageToBootSources` catches a member it cannot return and only

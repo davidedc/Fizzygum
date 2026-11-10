@@ -2357,3 +2357,40 @@ for (const s of sites) if (s.absentBefore.length) {
       files, the counted-not-predicted notice, the live-member check, the precondition as the pre-load's own
       question, the docs drift). Filed: "A return to boot that fails is only logged", "A world file's source-edit
       list is not vetted on load", "No gate loads an edit-carrying world on a `sources: "none"` or `"lazy"` tree".
+- [x] **A drag-scroll leaves a viewport holding a function no save can write** (found by the independent review
+      closing "An object inspector hides a widget's own field that shadows a member it inherits", in the plan's
+      ledger; measured). `ViewportWdgt._stopDragScrollStep` — at the next press, and where a stroke's glide ends — and
+      the auto-scroll's end stop the step by assigning `@step = noOperation`: an OWN function with no kept source, and
+      `step` is no serialization transient. Measured on `index-sw.html`: a ListWdgt after `_stopDragScrollStep`
+      refuses a world snapshot and its own save ("the function-valued property .step has no editable source and is not
+      a serialization transient"), and a copy owns the `step` too. A press on a lone drag-scrolling pane takes the
+      stroke (`pressBegan` → `takeStrokeScrollFrom`). serialization-duplication-reference.md's "scroll-momentum `@step`
+      closures simply stop" names a transient no class declares. Shape: end the step by deleting the own field (the
+      class's `step` shows through), and decide what a save during a stroke writes.
+      — CLOSED 2026-11-10 (self-ruled). MEASURED (`Fizzygum-tests/.scratch/viewport-own-step/`): the probe as filed,
+      and every instance — ViewportWdgt is the only class assigning its own `step`: the stroke's closure
+      (`takeStrokeScrollFrom`), the edge auto-scroll's closure, and `noOperation` at both ends. Beyond the refusal after a
+      stroke: a save DURING a stroke or glide was refused too, and a COPY made mid-gesture was aligned into the stepping
+      set holding the original's bound closure — it stepped the original's scroll each frame and never left the set. No
+      viewport subclass defines a `step` of its own. RULED: the gesture's step is runtime state, never a member: it
+      lives in `_scrollStep` (undefined while no gesture runs), a `@serializationTransients` entry (a restored world has
+      no gesture in progress), dropped by a copy (`_reactToBeingCopied`, which also leaves the stepping set it was
+      aligned into); ViewportWdgt's class `step` runs it, and the stroke's ending calls it directly. So `step` is never
+      an own field unless a person makes it one. Rejected: deleting `step` at the two stops (leaves the mid-gesture
+      refusal and the copy driving its original); declaring `step` itself a transient (would drop a person's own `step`
+      method from a save in silence). LANDED: `ViewportWdgt` (`_scrollStep`, `step`, `_reactToBeingCopied`, the four
+      sites, `pressEnded`/`pressCancelled`); the reference doc §5's line (it named a transient no class declared).
+      PROVEN: the probe — after a stroke the world and the widget save, a copy owns no `step`; the new assertion-only
+      `SystemTest_macroDragScrolledPaneStillSaves` (a real background drag-scroll under both pointers, then both saves;
+      a copy made mid-stroke stays out of the stepping set) — two plants fail exactly their targets (the old own-step
+      assignment back; the copy keeping the scroll step), its follower clean on both pointers. The independent
+      review's findings landed: the two toolbars overriding `_reactToBeingCopied` without `super` (TextToolbarWdgt,
+      PaintToolbarWdgt) call it, else their copies still drove the original; a viewport saved mid-gesture came back in
+      the stepping set with nothing to step, so a restore and a copy leave the set unconditionally and "a gesture of
+      mine runs" is one predicate (`_scrollStep?`) everywhere; a person's or a subclass's own `step` replaces the
+      class's as any override does, so it calls `super` to keep the gestures scrolling (ruled, stated where `step`
+      is); the test now saves, restores and copies MID-stroke, and plants prove each: the scroll step taken out of the
+      transients fails the mid-stroke saves, a restore keeping its membership fails the restore's check; ListWdgt's
+      false comment on `step` deleted. Filed: "A viewport's gesture bookkeeping outlives its gesture", "Widget's
+      `step` documentation is false", "A hook override that skips `super` is unguarded", "An object inspector removes
+      its list's contents from a set nothing adds them to".

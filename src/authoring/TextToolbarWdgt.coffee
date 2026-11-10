@@ -33,6 +33,7 @@ class TextToolbarWdgt extends ToolbarWdgt
     @_followTheEditedText()
 
   _reactToBeingCopied: ->
+    super
     @_followTheEditedText()
 
   # Subscribe to the world's editor focus (once: the index already knows whether I am) and show the
