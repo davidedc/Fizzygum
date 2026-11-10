@@ -320,7 +320,8 @@ widget that reads it to repaint (`noteShownSelectionChanged`), since it cannot i
 itself.
 
 **A cached raster cannot carry anything per-instance — draw that half live, on top.** [convention]
-`BackBufferMixin` buffers are keyed on class + extent, so widgets of the same class and size share
+`BackBufferMixin` buffers are keyed on class + extent (+ the code a widget holds of its own,
+`Widget._ownCodeKeySuffix`), so widgets of the same class and size share
 one canvas (`world.cacheForImmutableBackBuffers`); nothing that differs between two such widgets can
 be painted into it. The shape is two layers in one appearance: `@widget.blitBackBufferInto` for the
 cached half, in device space, then the per-instance half inside `_paintInLocalScope`. `PaletteWdgt`

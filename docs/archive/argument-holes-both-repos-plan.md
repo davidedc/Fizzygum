@@ -1878,3 +1878,31 @@ for (const s of sites) if (s.absentBefore.length) {
       coupled to the tail again). The independent review found no defect in the split and the rig's fixed 2 s wait,
       the vacuous case and the guard's stale reason, landed as above; the pre-compiled "background" ending has no
       shipped profile and no rig.
+- [x] **A palette's back-buffer key names its class and extent, not code of its own** (found by the independent review
+      closing "A class edit refreshes only what a repaint shows", in the plan's ledger; by reading; low).
+      `PaletteWdgt.createBufferCacheKey` (`PaletteWdgt.coffee:81`) keys the shared buffer by class and extent alone,
+      so an object inspector's Save of `fillPaletteBuffer` on one palette hits the shared entry and shows nothing, and
+      after any flush whichever same-class, same-size palette paints first fills that entry for all of them. Texts carry
+      a hash of the code they hold of their own in their keys (`StringWdgt._ownCodeKeySuffix`); palettes do not.
+      — CLOSED 2026-11-10 (self-ruled overnight). MEASURED (survey: `Fizzygum-tests/.scratch/palette-own-code-key/`): two
+      120×80 ColorPaletteWdgts; the first given an own `fillPaletteBuffer` painting red (the inspector Save's verbs):
+      the red never showed (the shared entry for class + extent answered), and after a flush with the first painting
+      first its unedited twin showed red. Ruling (self-ruled overnight, under "clean minimal + Do The Right Thing"): one
+      mechanism for "the code a widget holds of its own keys every shared cache it fills" — the field and its upkeep
+      move from StringWdgt to Widget (`Widget._ownCodeKeySuffix`, kept by `Widget._sourceChangedNoSettle`, the
+      gesture's core; StringWdgt's copy deleted), and PaletteWdgt gains `createBufferCacheKey` (one spelling with the
+      texts') carrying it. On the fixed build both palettes show their own code in every paint order. Proven by the new
+      assertion-only `SystemTest_macroPaletteBufferKeyNamesItsOwnCode` (mouse and finger; real inspector Save and
+      Remove presses; follower proof clean on both), failed by its plants (`plants/`: the key without the suffix; the
+      gesture's core keeping none); `docs/architecture/mixins.md` states it. Moving the two members off StringWdgt shifted
+      eight tests' inspector member lists (the seven of the churn set and `InspectorCodePaneRunsAgainstItsSubject`'s
+      class inspector on StringWdgt, the churn set's known blind spot): every changed shot checked by eye
+      (`diffpage/`, `crops/`), all member-list churn, recaptured under the overnight grant, mouse and finger at dpr 1
+      and 2, both completeness gates green. The item's independent review found no defect in the move and these,
+      landed: the test pinned the key method, not the lookup (an inline key restored would have passed it) — it now
+      reads each palette's buffer through `getPixelColor` in both paint orders after a flush, and a third plant (the
+      inline key) fails it; a Save then a Remove left an own `_ownCodeKeySuffix` behind, now deleted when the widget
+      holds no own code; the palette passages of `PaletteAppearance`, `BackBufferMixin`, the appearance-paint
+      convention and the widget-authoring guidelines name the own code; `ClassEditShowsOnTheNextFrame`'s intent no
+      longer names the retired `_holdsOwnCode`. Filed: "A text's measurement, wrapping and split caches name no code
+      of its own" (the docs name the caches the suffix reaches).

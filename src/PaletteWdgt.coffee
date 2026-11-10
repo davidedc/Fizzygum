@@ -75,12 +75,17 @@ class PaletteWdgt extends Widget
   detachesWhenDragged: ->
     false
 
+  # My buffer's key in the SHARED cache: my class and my extent, which fix my pixels -- plus the code I
+  # hold of my own (Widget._ownCodeKeySuffix: an own fillPaletteBuffer paints what my class's does not),
+  # so a palette running other code never shares an entry with me.
+  createBufferCacheKey: ->
+    @constructor.name + "-" + @extent().toString() + @_ownCodeKeySuffix
+
   # no changes of position or extent should be performed in here. The cache
   # shell (key -> lookup -> allocate -> fill -> store) is shared; the subclass
   # paints the pixels via fillPaletteBuffer.
   _createRefreshOrGetBackBuffer: ->
-    cacheKey =
-      @constructor.name + "-" + @extent().toString()
+    cacheKey = @createBufferCacheKey()
 
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit? then return cacheHit

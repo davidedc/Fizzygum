@@ -3960,6 +3960,17 @@ class Widget extends TreeNode
     # and the __add seed's drain alone IS the last-write-wins record.)
     return aWdgt
 
+  # What the code I hold of my OWN -- functions I hold beside my class's: a person's (an object
+  # inspector's Save of a text's _drawTextLine, of a palette's fillPaletteBuffer), or plumbing's (a
+  # patch node's compiled formula, which no key of its reads) -- adds to the keys of the shared caches
+  # that read it, keyed by what I show: the immutable back buffers (StringWdgt and PaletteWdgt
+  # createBufferCacheKey) and TextWdgt's wrap and line-break caches. Nothing while I hold none, so I key
+  # my entries exactly as my class's code does; a hash of that code once I hold some, so a widget running
+  # other code never shares an entry with me, and an edit of my own code never meets the entries of the
+  # code it replaced. Set by the gesture that edits me (_sourceChangedNoSettle); a plain field, saved and
+  # copied with the code it describes, so a load or a copy keeps it without working it out again.
+  _ownCodeKeySuffix: ""
+
   # PUBLIC notification: a person edited code or state under me, through no setter of mine -- the
   # object inspector's save, add, rename and remove, or a text's run rows (a console's buttons and a
   # script window's "Try it" run through them). The person's GESTURE tells me, once, after its edit.
@@ -3972,10 +3983,20 @@ class Widget extends TreeNode
   sourceChanged: ->
     @_settleLayoutsAfter => @_sourceChangedNoSettle()
 
-  # sourceChanged's core: the step every code change runs (_codeChangedNoSettle), then my whole
-  # subtree repainted, since the edit can have changed how any of it paints. (StringWdgt first notes
-  # whether I now hold code of my own, which keys my back buffer.)
+  # sourceChanged's core: first noting the code the edit left me holding of my own (_ownCodeKeySuffix:
+  # each own function by name, with the source a save keeps beside it -- `<name>_source`,
+  # injectProperty -- or, for one a run assigned, its compiled text; the field stays my class's "" until
+  # I hold some), then the step every code change runs (_codeChangedNoSettle), then my whole subtree
+  # repainted, since the edit can have changed how any of it paints.
   _sourceChangedNoSettle: ->
+    ownFunctionNames = (eachKey for eachKey in Object.keys(@).sort() when Utils.isFunction @[eachKey])
+    ownCode = (eachName + ":" + (@[eachName + "_source"] ? @[eachName].toString()) for eachName in ownFunctionNames).join "\n"
+    if ownCode is ""
+      # back to my class's "": a field of my own would only travel with my saves and copies
+      delete @_ownCodeKeySuffix if Object::hasOwnProperty.call @, "_ownCodeKeySuffix"
+    else
+      ownCodeKeySuffix = "-ownCode" + ownCode.hashCode()
+      @_ownCodeKeySuffix = ownCodeKeySuffix unless ownCodeKeySuffix is @_ownCodeKeySuffix
     @_codeChangedNoSettle()
     @_fullChanged()
 

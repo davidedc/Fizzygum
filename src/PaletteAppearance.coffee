@@ -3,8 +3,8 @@
 # where THIS palette's own @choice sits on it.
 #
 # The split is forced, not stylistic: world.cacheForImmutableBackBuffers keys the buffer on class
-# + extent, so every palette of the same size draws from ONE canvas and no per-instance mark can
-# ever be painted into it. Hence blit (device space, BackBufferMixin's business) then mark (the
+# + extent (+ the code a palette holds of its own, PaletteWdgt.createBufferCacheKey), so every
+# palette of the same size draws from ONE canvas and no per-instance mark can ever be painted into it. Hence blit (device space, BackBufferMixin's business) then mark (the
 # standard logical-pixels local scope) — the same two-layer shape AnalogClockAppearance uses for
 # its cached face plus live hands.
 #

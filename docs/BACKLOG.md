@@ -104,6 +104,14 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       `wellKnownKey` passes the up-front judgement, and the restore's own `resolveApp` then throws after the teardown.
       The up-front predicate is otherwise a pure read of the file; this one depends on page state the load is about
       to change.
+- [ ] **A text's measurement, wrapping and split caches name no code of its own** (found by the independent review
+      closing "A palette's back-buffer key names its class and extent, not code of its own", in the plan's ledger; by
+      reading, not measured). `Widget._ownCodeKeySuffix` keys a text's back buffer and its two top-level text caches
+      (TextWdgt's wrap and line breaks), but four shared caches its code also fills do not carry it:
+      `cacheForParagraphsWrappingData` (`TextWdgt.coffee`, filled through `@measureText`), `cacheForTextMeasurements`
+      (`StringWdgt.coffee`), and the paragraph and word split caches. Twin texts of one font, width and paragraph: an
+      inspector Save of A's own `measureText` misses at A's top-level key and then hits the paragraph entry B filled,
+      so A's edit never shows; after a flush, whichever wraps first fills the entry for both.
 - [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
       refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
       `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the
@@ -115,12 +123,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       keeps the memo guard leaves every live colour — the interned theme colours among them — answering its old
       string, and no flush reaches a value's own memo (`WorldWdgt.noteCodeChanged` drops the caches built from code,
       not state a value keeps).
-- [ ] **A palette's back-buffer key names its class and extent, not code of its own** (found by the independent review
-      closing "A class edit refreshes only what a repaint shows", in the plan's ledger; by reading; low).
-      `PaletteWdgt.createBufferCacheKey` (`PaletteWdgt.coffee:81`) keys the shared buffer by class and extent alone,
-      so an object inspector's Save of `fillPaletteBuffer` on one palette hits the shared entry and shows nothing, and
-      after any flush whichever same-class, same-size palette paints first fills that entry for all of them. Texts carry
-      a hash of the code they hold of their own in their keys (`StringWdgt._ownCodeKeySuffix`); palettes do not.
 - [ ] **The inspector churn set cannot see a class inspector's member list move** (found closing the same item;
       measured). `scripts/derive-inspector-churn-set.js` plants one enumerable own field on every widget, which moves
       every OBJECT inspector's member list; a member added to a CLASS moves a class inspector's list instead, which that

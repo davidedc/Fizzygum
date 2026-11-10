@@ -240,16 +240,6 @@ class StringWdgt extends Widget
   undoHistory: undefined
   redoHistory: undefined
 
-  # What the code I hold of my OWN -- functions a person gave me (an object inspector's Save of
-  # _drawTextLine or linePitch, say) -- adds to the key of every cache keyed by what I show (my back
-  # buffer, my wrap and my line breaks: createBufferCacheKey, TextWdgt's two text caches): nothing while
-  # I hold none, so I key my entries exactly as my class's code does; a hash of that code once I hold
-  # some, so a text running other code never shares an entry with me, and an edit of my own code never
-  # meets the entries of the code it replaced. Set by the gesture that edits me (_sourceChangedNoSettle);
-  # a plain field, saved and copied with the code it describes, so a load or a copy keeps it without
-  # working it out again.
-  _ownCodeKeySuffix: ""
-
   # The text is the identity — what this widget SHOWS, and the one argument every caller
   # passes. Everything else, font SIZE included, is an independently-optional knob and rides
   # `opts` (docs/architecture/constructor-and-parameter-conventions.md).
@@ -985,17 +975,6 @@ class StringWdgt extends Widget
     @_lineBoxCacheKeySuffix() +
     @_itemShapeCacheKeySuffix() +
     @_ownCodeKeySuffix
-
-  # sourceChanged's core, first noting the code the edit left me holding of my own
-  # (_ownCodeKeySuffix): each own function by name, with the source a save keeps beside it
-  # (`<name>_source`, injectProperty) or, for one a run assigned, its compiled text. The field stays my
-  # class's "" until I hold some.
-  _sourceChangedNoSettle: ->
-    ownFunctionNames = (eachKey for eachKey in Object.keys(@).sort() when Utils.isFunction @[eachKey])
-    ownCode = (eachName + ":" + (@[eachName + "_source"] ? @[eachName].toString()) for eachName in ownFunctionNames).join "\n"
-    ownCodeKeySuffix = if ownCode is "" then "" else "-ownCode" + ownCode.hashCode()
-    @_ownCodeKeySuffix = ownCodeKeySuffix unless ownCodeKeySuffix is @_ownCodeKeySuffix
-    super
 
   # Where my text starts inside my box, along each axis: flush with the side of my text area it is
   # aligned to (my box less my item inset, THE ITEM SHAPE), or centred. The paint and the caret /

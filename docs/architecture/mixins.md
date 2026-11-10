@@ -165,13 +165,15 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     one widget plus its subtree's repaint. So what layout and paint DERIVE from code shows
     the edit on the next frame; what code already STORED — a colour a state change
     computed into a field — shows it only at its next trigger, exactly as in a fresh build:
-    an edit changes code, not state. A text holding code of its OWN adds a hash of that code
-    to the key of every cache keyed by what it shows — its back buffer, its wrap, its line
-    breaks (`StringWdgt._ownCodeKeySuffix`, set by `sourceChanged`'s core and saved and
-    copied as a plain field) — so it never shares an entry with a twin running other code,
-    and a re-edit of its own code never meets the entries of the code it replaced. Pinned by `SystemTest_macroClassEditShowsOnTheNextFrame` (each edit's shot
-    against a rebuild from scratch) and `SystemTest_macroInspectorEditTellsOnce` (who is told,
-    how often, and what is recorded).
+    an edit changes code, not state. A widget holding code of its OWN adds a hash of that
+    code to the keys of the shared caches that read it, keyed by what it shows — a text's back
+    buffer, wrap and line breaks, a palette's back buffer (`Widget._ownCodeKeySuffix`, set by
+    `sourceChanged`'s core and saved and copied as a plain field) — so it never shares an
+    entry with a twin running other code, and a re-edit of its own code never meets the
+    entries of the code it replaced. Pinned by `SystemTest_macroClassEditShowsOnTheNextFrame` (each edit's shot
+    against a rebuild from scratch), `SystemTest_macroPaletteBufferKeyNamesItsOwnCode` (a
+    palette's key) and `SystemTest_macroInspectorEditTellsOnce` (who is told, how often, and
+    what is recorded).
   - Both refuse `constructor` (`Class.refuseTheConstructor`): a prototype's
     `constructor` IS its class, what every `.constructor.name` read answers.
   - The attribution covers methods AND fields: a donated method attributes through
