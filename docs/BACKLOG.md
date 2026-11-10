@@ -112,6 +112,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       (`StringWdgt.coffee`), and the paragraph and word split caches. Twin texts of one font, width and paragraph: an
       inspector Save of A's own `measureText` misses at A's top-level key and then hits the paragraph entry B filled,
       so A's edit never shows; after a flush, whichever wraps first fills the entry for both.
+- [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** (found by the independent
+      review closing "The inspector churn set cannot see a class inspector's member list move", in the plan's ledger;
+      by reading; low). The churn set and its readers act per TEST, not per shot: a test in the set is recaptured whole,
+      so a shot that proves BEHAVIOUR rather than renders a member list (the hover colours in
+      `MixinEditDonorAndOverride` / `MixinFieldEditDonorAndOverride` images 3 and 5) is re-recorded with the member
+      list's churn, whatever it now shows. The set gained those two tests; the hazard is older and wider.
 - [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
       refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
       `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the
@@ -123,13 +129,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       keeps the memo guard leaves every live colour — the interned theme colours among them — answering its old
       string, and no flush reaches a value's own memo (`WorldWdgt.noteCodeChanged` drops the caches built from code,
       not state a value keeps).
-- [ ] **The inspector churn set cannot see a class inspector's member list move** (found closing the same item;
-      measured). `scripts/derive-inspector-churn-set.js` plants one enumerable own field on every widget, which moves
-      every OBJECT inspector's member list; a member added to a CLASS moves a class inspector's list instead, which that
-      plant never touches. Closing the item added `StringWdgt._ownCodeKeySuffix` and `_sourceChangedNoSettle`, and
-      `SystemTest_macroInspectorCodePaneRunsAgainstItsSubject` (whose image 3 is a class inspector on `StringWdgt`) moved
-      with the churn set while not in it — so `fg recapture-inspector` and `classify-diff.js`'s corroboration pass over
-      it. A second plant, a member added to a class's prototype, would derive the class half.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

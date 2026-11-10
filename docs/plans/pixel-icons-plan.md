@@ -849,11 +849,11 @@ classes.
 4. Recapture: check `capture-macro-test-references.js` for multi-name support; if
    single-name, drive it serially (one browser at a time) via a thin loop script
    in `.scratch/`, logging per-test verdicts; equivalent of `fg recapture <name>` (full flow,
-   `--dprs=1,2`) per affected test. Budget: recapture-inspector does 15 tests in minutes;
+   `--dprs=1,2`) per affected test. Budget: recapture-inspector does 18 tests in minutes;
    scale estimate accordingly and run in background.
 5. If inspector-set tests red with pure member-list diffs (new `PixelIconAppearance` members
    surfacing in an inspected object's panel): `fg recapture-inspector`. (Unlikely — the churn
-   set keys off Widget-side members — but check.)
+   set keys off inspector member lists — but check.)
 6. Close gate: full **`fg gauntlet`** green (11 legs incl. dpr2, webkit reusing SWCanvas refs,
    apps, paint audit, refs, revisits, census) + `fg homepage` boot check (homepage build
    excludes 10 icon pairs — must still compile/boot with the remaining pixel icons).

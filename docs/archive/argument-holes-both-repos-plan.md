@@ -1906,3 +1906,28 @@ for (const s of sites) if (s.absentBefore.length) {
       convention and the widget-authoring guidelines name the own code; `ClassEditShowsOnTheNextFrame`'s intent no
       longer names the retired `_holdsOwnCode`. Filed: "A text's measurement, wrapping and split caches name no code
       of its own" (the docs name the caches the suffix reaches).
+- [x] **The inspector churn set cannot see a class inspector's member list move** (found closing the same item;
+      measured). `scripts/derive-inspector-churn-set.js` plants one enumerable own field on every widget, which moves
+      every OBJECT inspector's member list; a member added to a CLASS moves a class inspector's list instead, which that
+      plant never touches. Closing the item added `StringWdgt._ownCodeKeySuffix` and `_sourceChangedNoSettle`, and
+      `SystemTest_macroInspectorCodePaneRunsAgainstItsSubject` (whose image 3 is a class inspector on `StringWdgt`) moved
+      with the churn set while not in it — so `fg recapture-inspector` and `classify-diff.js`'s corroboration pass over
+      it. A second plant, a member added to a class's prototype, would derive the class half.
+      — CLOSED 2026-11-10 (self-ruled overnight). MEASURED: with `derive-inspector-churn-set.js`'s plant extended to
+      give every class's PROTOTYPE the same no-op member once every class is compiled (a class inspector lists its
+      subject prototype's own members), `--check` found 3 tests the set lacked, each confirmed single-process (fails
+      alone with the plant, by pixels; passes alone without it): `InspectorCodePaneRunsAgainstItsSubject` (the one
+      that moved outside the set twice, with this item's two predecessors — authored after the set was last derived,
+      so a single union run cannot say which half reaches it), `MixinEditDonorAndOverride` and
+      `MixinFieldEditDonorAndOverride` (in the tree when the set was last derived and absent from it: only the class
+      half reaches them); no test outside the inspector family moved. Ruling (self-ruled overnight): the second plant
+      the item named, in the same run as the first (one derivation, the union), each half proven live. Landed: the
+      class-prototype half of `inspectorChurnPlant` and its liveness proof, per suite shard ("no class prototype
+      carried the field" → INVALID) and per single-test confirmation; a give-up naming the missing symbol once the
+      world is up; `scripts/inspector-churn-set.json` written (18 tests, its own description updated, since `--write`
+      keeps it); the tests repo's CLAUDE.md and `docs/plans/pixel-icons-plan.md`'s count state it. The liveness check
+      bites: the real planted log with its class lines stripped reads INVALID for every shard, the log as written reads
+      valid (`Fizzygum-tests/.scratch/derive-class-liveness-bite.js`, not committed). The independent review's
+      findings — the confirmations not checking the class half, stale self-descriptions, an unbounded poll, the
+      attribution — landed as above. Filed: "`fg recapture-inspector` recaptures a churn-set test's behaviour shots
+      blindly".
