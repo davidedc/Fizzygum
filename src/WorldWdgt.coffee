@@ -244,8 +244,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # PUBLIC notification: CODE changed under every widget -- a class inspector's gesture edited,
   # added, renamed or removed a member of a class or of a mixin (ClassInspectorWdgt), or a snapshot's
-  # load replayed such edits (loadWorldSnapshot). What layout and paint DERIVE from code then shows
-  # on the next frame, as a fresh build would show it:
+  # load returned the page's own such edits to boot and replayed the file's (loadWorldSnapshot). What
+  # layout and paint DERIVE from code then shows on the next frame, as a fresh build would show it:
   #   - every cache filled by running code is dropped: the six text caches (measurements, paragraph
   #     and word splits, wrapping, line breaks) and the immutable back buffers
   #     (resetImmutableBackBuffersCache, which also repaints everything). Each is keyed by CONTENT,
@@ -3047,8 +3047,15 @@ class WorldWdgt extends IconGridPanelWdgt
     if whyNot?
       @inform "This world snapshot cannot be loaded here: " + whyNot + ".\nYour desktop has been left as it was."
       return
+    # The confirm names everything the load replaces: the desktop, and every class member this page
+    # holds edited (by a person here, or by an earlier load), which step 2b returns to its source at
+    # boot (SourceEditsRegistry).
     unless opts.skipConfirm
-      msg = "Load this world snapshot?\n\nIt REPLACES everything on your desktop, and can run code the snapshot carries."
+      edited = SourceEditsRegistry.membersAwayFromBootCount()
+      msg = "Load this world snapshot?\n\nIt REPLACES everything on your desktop" +
+        (if edited is 1 then ", returns 1 edited class member to its source at boot" else "") +
+        (if edited > 1 then ", returns " + edited + " edited class members to their source at boot" else "") +
+        ", and can run code the snapshot carries."
       return unless (typeof window.confirm is "function") and window.confirm msg
     # 0. WHAT THE FILE NEEDS, LOADED FIRST, then re-enter (Deserializer.loadWhatItNeeds, the step the
     #    widget door takes too). A snapshot can name classes that live in a LAZY part this page has
@@ -3115,10 +3122,15 @@ class WorldWdgt extends IconGridPanelWdgt
         @inform "This build cannot re-apply the " + unreplayableCount + " class-level source edit" +
           (if unreplayableCount is 1 then "" else "s") + " this file carries.\n" +
           "Everything else in it loads normally."
-      # Code changed under every widget when any record replayed (noteCodeChanged): a load keeps
-      # its world, and with it the caches the code before the replay filled.
+      # The file's records reproduce its members from boot, so the page goes back to boot first: every
+      # class and mixin member edited here returns to its source at boot
+      # (SourceEditsRegistry.returnThePageToBootSources), and the loaded world is the file's, not the
+      # file's edits laid over this page's. Code changed under every widget when any member returned
+      # or any record replayed (noteCodeChanged): a load keeps its world, and with it the caches the
+      # code before the replay filled.
+      returned = SourceEditsRegistry.returnThePageToBootSources()
       replayed = restoredRegistry.replayMixinEdits() + restoredRegistry.replayClassEdits()
-      @noteCodeChanged() if replayed > 0
+      @noteCodeChanged() if returned + replayed > 0
       # 3. deserialize the object table (kind:"world" preserves each widget's iid).
       result = Deserializer.deserialize envelope
       shells = result.shells or []

@@ -433,7 +433,8 @@ Facts worth knowing before touching any of this:
   caught it, because the only lazy part until then (`fizzytiles`) does not ship in production, and the dev-tree rigs
   run compile-at-boot where the meta-system is present anyway. `fg homepage` now asserts it (§8).
 - Its entire runtime consumer surface is **`Mixin.allMixines` in the two inspectors** (`meta-tools`) and in core's
-  `SourceEditsRegistry`. There is no runtime `new Class`/`new Mixin` anywhere outside boot.
+  `SourceEditsRegistry`. There is no runtime `new Class` anywhere outside boot, and the one runtime `new Mixin`
+  outside it only parses a mixin's source text (`Mixin.bootMemberSources`, a snapshot load's return to boot).
 - **`compileFGCode` is NOT part of it.** It is defined in the same file the layer fetches
   (`js/src/loading-and-compiling-coffeescript-sources-min.js`) but `ScriptWdgt`, `Widget.evaluateString` and
   the spreadsheet's `FormulaCompiler` all call it at runtime, in core, in every profile — runtime compilation is

@@ -357,12 +357,14 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
       widgetClass = new Class fileContents, false, false
     else
       widgetClass = new Class fileContents, generatePreCompiledJS, true
-  # Loaded Mixins here:
+  # Loaded Mixins here, each registered as the page's parse of its mixin (Mixin.allMixines) on both
+  # paths: a pre-compiled image already runs the mixin's code, and its parse is still what the
+  # class inspector, a class removal and a snapshot's mixin records read.
   else if /^  onceAddedClassProperties:/m.test fileContents
     if justIngestSources
-      new Mixin fileContents, false, false
+      Mixin.register new Mixin fileContents, false, false
     else
-      new Mixin fileContents, generatePreCompiledJS, true
+      Mixin.register new Mixin fileContents, generatePreCompiledJS, true
 
   if srcLoadCompileDebugWrites then console.log "compiling and evalling " + fileName + " from source code"
   # (the loading log div is written by SourceCompileScheduler, once per drain

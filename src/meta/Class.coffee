@@ -270,10 +270,11 @@ class Class
   # A rename is no edit of mine: it is an edit under the new name plus a removal of the old
   # (ClassInspectorWdgt._applyPropertyRename), so the member is RECOMPILED and its `super` follows
   # the new name (_superOf).
-  # Callers: ClassInspectorWdgt's edit steps and SourceEditsRegistry.replayClassEdits (world-snapshot
-  # restore). I edit and tell no one: telling the widgets is my CALLER's business, and each caller
-  # ends in one WorldWdgt.noteCodeChanged -- a gesture once it has made all its edits, a load once
-  # it has replayed them all -- since an edit's readers are the whole world, not my instances (a
+  # Callers: ClassInspectorWdgt's edit steps, and a world-snapshot load's return to boot and replay
+  # (SourceEditsRegistry.returnThePageToBootSources, replayClassEdits). I edit and tell no one:
+  # telling the widgets is my CALLER's business, and each caller ends in one
+  # WorldWdgt.noteCodeChanged -- a gesture once it has made all its edits, a load once it has
+  # returned and replayed them all -- since an edit's readers are the whole world, not my instances (a
   # menu row re-fits its label, a stack reads its children's layout specs).
 
   # Rewrite ONE member on my prototype from CoffeeScript source -- the CLASS twin of
@@ -458,6 +459,29 @@ class Class
 
 
 
+  # A class's source text parsed into what it is made of: its name, the mixins it augments with
+  # (their lines, found first, so they do not mangle the member parse), and its static and instance
+  # member sources -- every field definition, the constructor, the methods and the static members
+  # alike. Pure: read by my constructor, and by bootMemberSources to read my source text again.
+  _parsedSource: (source) ->
+    sourceLines = source.split "\n"
+    [name, ignored, sourceLines] = @findClassDescriptionHeaderCommentAndClassName sourceLines
+    [augmentedWith, ignored, sourceLines] = @findMixinsInTheClass sourceLines
+    [staticPropertiesSources, nonStaticPropertiesSources] = @getSourceOfAllProperties sourceLines
+    name: name
+    augmentedWith: augmentedWith
+    staticPropertiesSources: staticPropertiesSources
+    nonStaticPropertiesSources: nonStaticPropertiesSources
+
+  # My instance members as my source text at boot gives them -- the SourceVault's text, the one my
+  # constructor parsed: what a world-snapshot load returns me to before it replays a file's edits
+  # (SourceEditsRegistry.returnThePageToBootSources). Undefined for a class the vault holds no text
+  # for: one made at run time has no boot.
+  bootMemberSources: ->
+    source = SourceVault.get @name
+    return undefined unless source?
+    @_parsedSource(source).nonStaticPropertiesSources
+
   findClassDescriptionHeaderCommentAndClassName: (sourceLines) ->
     [classLine, classDescriptionHeaderComment, remainingSourceLines] = @findUpTo sourceLines, @classRegex
     className = (classLine.match @classRegex)[1]
@@ -485,24 +509,14 @@ class Class
     if !window.classDefinitionAsJS?
       window.classDefinitionAsJS = []
 
-    sourceLines = source.split "\n"
-
-    [@name, ignored, sourceLines] = @findClassDescriptionHeaderCommentAndClassName sourceLines
+    parsed = @_parsedSource source
+    @name = parsed.name
     @superClassName = @findIfItExtendsAnotherClass source
-    # find which mixins need to be mixed-in
-    [@augmentedWith, ignored, sourceLines] = @findMixinsInTheClass sourceLines
+    @augmentedWith = parsed.augmentedWith
+    @staticPropertiesSources = parsed.staticPropertiesSources
+    @nonStaticPropertiesSources = parsed.nonStaticPropertiesSources
 
-    # remove the augmentations because we don't want
-    # them to mangle up the parsing
-    source = @removeAugmentations source
-
-    if window.srcLoadCompileDebugWrites then console.log "source ---------\n" + source
-
-    # Now find all the fields definitions
-    # note that the constructor, methods, properties and static properties
-    # are ALL fields definitions, so we are basically going to cycle through
-    # everything
-    [@staticPropertiesSources, @nonStaticPropertiesSources] = @getSourceOfAllProperties sourceLines
+    if window.srcLoadCompileDebugWrites then console.log "source ---------\n" + @removeAugmentations source
 
     if generatePreCompiledJS or createClass
       # --------------------

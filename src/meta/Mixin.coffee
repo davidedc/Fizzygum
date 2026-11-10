@@ -10,6 +10,13 @@
 # break.
 
 class Mixin
+  # Every mixin the page has parsed from its source: what the class inspector reads a donated
+  # member's CoffeeScript from (InspectorWdgt.selectionFromList), what a class removal gives a
+  # donor's member back from (donorOf), what a snapshot's mixin records replay onto. Filled through
+  # register by the one step that ingests a page's sources (boot's
+  # storeSourceAndPotentiallyCompileItAndExecuteIt), on BOTH its paths -- compiling a mixin to create
+  # it, and parsing one whose code a pre-compiled image already runs. A Mixin made anywhere else
+  # only parses (bootMemberSources, the build's syntax gate) and stays out of it.
   @allMixines: []
   nonStaticPropertiesSources: undefined
   name: ""
@@ -90,6 +97,14 @@ class Mixin
   @named: (name) ->
     Mixin.allMixines.find (m) -> m.name is name or m.name + "Mixin" is name
 
+  # Register `aMixin` as the page's parse of its mixin, once per name: the reflective layer's ingest
+  # walks every source the vault holds, a lazy part's already-ingested ones included, so a second
+  # parse of a registered mixin is not the page's -- the first, which edits may since have changed,
+  # stays.
+  @register: (aMixin) ->
+    Mixin.allMixines.push aMixin unless Mixin.named(aMixin.name)?
+    return
+
   # The parsed Mixins among the augmentations of the class `theClass` (a Class meta-object) that
   # define member `memberName`, in augmentation order.
   @donorsOf: (theClass, memberName) ->
@@ -101,6 +116,15 @@ class Mixin
   # route its edits to the donor; Class.removeMember, to give the member back.
   @donorOf: (theClass, memberName) ->
     Mixin.donorsOf(theClass, memberName).pop()
+
+  # My members as my source text at boot gives them -- the SourceVault's text, parsed the way my
+  # constructor parsed it (a Mixin made without its create flags parses and does nothing else): what a
+  # world-snapshot load returns me to before it replays a file's edits
+  # (SourceEditsRegistry.returnThePageToBootSources). Undefined for a mixin the vault holds no text for.
+  bootMemberSources: ->
+    source = SourceVault.get @name + "Mixin"
+    return undefined unless source?
+    new Mixin(source, false, false).nonStaticPropertiesSources
 
   # Do I define member `memberName`? (An OWN entry: my store is a plain object.)
   definesMember: (memberName) ->
@@ -250,12 +274,6 @@ class Mixin
         catch err
           console.error "SOURCE_EVAL_FAILED: " + err + " evaling : " + JS_string_definitions
           debugger
-        # Register this parsed mixin so the inspector can recover a mixin method's real CoffeeScript source
-        # from @nonStaticPropertiesSources (InspectorWdgt.selectionFromList) instead of falling back to the
-        # compiled JS of val.toString(). Only the real create pass registers -- the build-time syntax gate's
-        # parse-only `new Mixin(src, true, false)` (createMixin false) never reaches here, so allMixines stays
-        # empty there.
-        Mixin.allMixines.push @
         @_reportMembersWithoutSource()
 
 

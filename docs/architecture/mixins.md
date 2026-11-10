@@ -93,8 +93,10 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   `/^  onceAddedClassProperties:/m` (`loading-and-compiling-coffeescript-sources.coffee`).
   They agree today; nothing enforces that they keep agreeing (proposed gate, §8).
 - **Meta-system status: first-class for inspection AND editing.** The parsed
-  `Mixin` instances register in `Mixin.allMixines` (create pass only — the build-time
-  syntax gate's parse-only pass never registers), and `Mixin.donorOf` consults a
+  `Mixin` instances register in `Mixin.allMixines` (`Mixin.register`, from the one boot step
+  that ingests the page's sources, on both its paths: compiled to create, or parsed beside the
+  code a pre-compiled image already runs; a Mixin made only to parse — the build-time syntax
+  gate's, `Mixin.bootMemberSources` — never registers), and `Mixin.donorOf` consults a
   class's `augmentedWith` list for the mixin that defines a member, so the inspector
   shows a mixin member's REAL CoffeeScript source. A mixin's members are recorded from
   its literal's 6-space keys; one written at any other indentation would still be
@@ -137,7 +139,8 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
       operation: `_editClassMember`, `_removeClassMember`, `_editMixinMember`,
       `_removeMixinMember` — makes the meta-object's edit AND its
       `world.sourceEditsRegistry` record) and end in ONE `WorldWdgt.noteCodeChanged`, as a
-      snapshot load does once it has replayed a file's class and mixin edits.
+      snapshot load does once it has returned the page to boot and replayed a file's class
+      and mixin edits.
     - The object inspector's Save, Add, Rename and Remove end in their subject's ONE
       `Widget.sourceChanged`, and its Save of a function records the instance edit
       (`InspectorWdgt.applyPropertyEdit`). A text's run rows (a console's buttons and a

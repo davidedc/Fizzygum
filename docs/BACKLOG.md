@@ -11,19 +11,13 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **A snapshot load never undoes the page's own earlier class edits** (found closing "A plain class-member rename
-      or removal does not survive a snapshot load", in the plan's ledger; by reading, not measured).
-      `loadWorldSnapshot` replays the file's mixin- and class-scope records onto the page's classes AS THEY STAND:
-      a page that edited a class (or a mixin) before loading a file that never did keeps that edit, so the world it
-      loads is the file's edits on top of the page's, not the world the file was saved from. The two stores
-      (`Class` / `Mixin` `nonStaticPropertiesSources`) say what each class defines now; what the page booted with
-      is the class's source text (`SourceVault`), so a load could first return every edited member to it.
-- [ ] **Mixin editing holds only where the page compiled its mixins** (found by the same review, by reading, not
-      measured). A pre-compiled page (`homepage`) only parses its mixins when their sources arrive, so
-      `Mixin.allMixines` stays empty: the inspector shows a donated member's compiled JS, `Class.removeMember` gives
-      no donor's member back, and `replayMixinEdits` drops every mixin record silently while
-      `unreplayableSourceEditsCount` counts none. And where parts load lazily, a consumer class defined after a mixin
-      edit gets the mixin's boot member, so its prototype disagrees with the mixin's store.
+- [ ] **A class a lazy part defines after a mixin edit takes the mixin's boot member** (the half of "Mixin editing
+      holds only where the page compiled its mixins" left open when its other half — a pre-compiled page registered
+      no parsed mixin — closed with "A snapshot load never undoes the page's own earlier class edits", in the plan's
+      ledger; by reading, not measured). A consumer class is augmented from its mixin's compiled LITERAL
+      (`augmentWith`, `onceAddedClassProperties`), never from the mixin's store, so where parts load lazily a class
+      defined after an edit of its mixin gets the mixin's boot member, and its prototype disagrees with the store
+      the class inspector shows and a snapshot load returns from.
 - [ ] **The three suite runners wait for a page to boot three ways** (found closing
       "`run-sequence-selftest-headless.js`'s 'page stopping answering' case is load-sensitive", in the plan's ledger).
       The suite runner gives a shard 90 s of boot looks, each answered up to its 5-min backstop, and names a page that

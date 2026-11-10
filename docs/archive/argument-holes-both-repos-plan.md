@@ -1716,3 +1716,44 @@ for (const s of sites) if (s.absentBefore.length) {
       as above) and two adjacent defects. Filed: "A save refused for a function a run left does not offer its
       way out" (owner-gated), "An object inspector hides a widget's own field that shadows a member it inherits" and
       "A save writes NaN and ±Infinity as null".
+- [x] **A snapshot load never undoes the page's own earlier class edits** (found closing "A plain class-member rename
+      or removal does not survive a snapshot load", in the plan's ledger; by reading, not measured).
+      `loadWorldSnapshot` replays the file's mixin- and class-scope records onto the page's classes AS THEY STAND:
+      a page that edited a class (or a mixin) before loading a file that never did keeps that edit, so the world it
+      loads is the file's edits on top of the page's, not the world the file was saved from. The two stores
+      (`Class` / `Mixin` `nonStaticPropertiesSources`) say what each class defines now; what the page booted with
+      is the class's source text (`SourceVault`), so a load could first return every edited member to it.
+      — CLOSED 2026-11-09 (self-ruled overnight). MEASURED (survey: `Fizzygum-tests/.scratch/load-undoes-page-edits/`): on
+      `index-sw.html`, a page that added `RectangleWdgt.probeAdded`, edited `colloquialName`, removed
+      `TextWdgt.doesTextFitInExtent` and edited `HighlightableMixin._updateColor` (each as the class inspector's gesture
+      does, verb and record) kept all four after loading a pristine file; and the load installed the file's registry,
+      so the page held 0 records while it ran the four edits — a re-save carried none of them. One file, two worlds:
+      the page showed the edits, the file it saved restored without. Parsing each class's vault text as its
+      constructor did and comparing with its store read 550 classes in 18 ms, 0 differences on a pristine page, and
+      exactly the edited members after the edits. Rulings (self-ruled overnight, under "clean minimal + Do The Right
+      Thing"): the load returns the page to boot before it replays the file (the replay's own premise: the records
+      reproduce a session's members from boot); what the page edited is read from the stores against the vault, never
+      from a registry (a world's registry lists the edits made under it, while the prototypes are the page's: the
+      harness's `resetWorld` builds a world with an empty registry on an edited page); the return goes through each
+      meta-object's own `applyMemberEdit` / `removeMember`, mixins first, as boot injected them; the confirm names how
+      many members it returns. Landed: `Class._parsedSource` (the constructor's parse, one helper) and
+      `Class.bootMemberSources`; `Mixin.bootMemberSources` (a Mixin made without its create flags only parses);
+      `SourceEditsRegistry.returnThePageToBootSources` and `membersAwayFromBootCount`; `loadWorldSnapshot` returns the
+      page to boot before its replays, refreshes when any member returned or record replayed, and its confirm says
+      "returns N edited class members to their source at boot" when there are any; the registry header, `Class`'s
+      live-editing comment and the reference doc §12 state it. Proven by the serialization rig's
+      `sourceEdits.loadOverPageEditsIsTheFilesWorld` (a page's edit, addition, removal, donor edit and re-edit of the
+      file's member, then the file again: exactly the file's members away from boot, its version, its records),
+      `sourceEdits.loadConfirmNamesTheEditsItReturns` and `sourceEdits.loadReturnsThePageToBoot` (the file stripped
+      of its records: nothing away from boot, no record, a re-save carries none) — each failed by its plants
+      (`plants/`: no return, classes only, edited members only, the return after the replay, a silent confirm; the
+      control passes). The item's independent review found the return reaching an open defect: a pre-compiled page
+      registered no parsed mixin (the first half of "Mixin editing holds only where the page compiled its mixins"),
+      so a donated member the page had edited on its CLASS was deleted outright by the return, with no donor to give
+      back. Folded here (self-ruled overnight: fix the root): `Mixin.register`, called by the one boot step that
+      ingests a page's sources on both its paths, once per name, so every mixin a page parses is registered and a
+      Mixin made only to parse never is; proven on the `homepage` tree by `fg homepage`'s production smoke (every
+      mixin a class augments with is parsed; a donated member edited on its class returns to its donor's), both
+      failed by a plant that registers none. Also from the review: each member's return is caught and logged, as each
+      record's replay is (the desktop is gone by then); the rig's deltas are exact. That item's other half stays
+      open: "A class a lazy part defines after a mixin edit takes the mixin's boot member".

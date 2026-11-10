@@ -819,18 +819,27 @@ defines one, else the donor mixin's (a class removal gives the donor's current m
 `Class.removeMember`), else nothing (`docs/architecture/mixins.md`, meta-system status).
 Replay walks each scope's records in order, so remove-then-re-add lands in its final state.
 
-**Restore** (`loadWorldSnapshot`): the registry is rebuilt from `world.sourceEdits`
-(`SourceEditsRegistry.fromRecords`) and its **mixin- then class-scope edits are replayed
+**Restore** (`loadWorldSnapshot`): the records reproduce the file's members FROM BOOT, so the load
+first returns the page to boot (`SourceEditsRegistry.returnThePageToBootSources`): every mixin, then
+every class, gives each member whose source differs from the one its source text at boot gives
+(`Mixin` / `Class` `bootMemberSources`, the vault's text parsed as the constructor parsed it) that one
+back, through its own `applyMemberEdit` / `removeMember` — so a member the page added goes, one it
+removed comes back, and the loaded world is the file's, never the file's edits laid over the page's
+own. What the page edited is read from the STORES against the vault, not from a registry: a world's
+registry lists the edits made under it, while the prototypes are the page's. A class or mixin the
+vault holds no text for (one made at run time) has no boot and is left as it is. The load's confirm
+names how many members it would return (`membersAwayFromBootCount`). Then the registry is rebuilt from
+`world.sourceEdits` (`SourceEditsRegistry.fromRecords`) and its **mixin- then class-scope edits are replayed
 BEFORE deserialization** (`replayMixinEdits` then `replayClassEdits` — mixin first, the
 boot-order analogy: `augmentWith` runs before class-body assignments, so a class-scope edit
 of the same member keeps winning), so a shell (`Object.create(prototype)`) already sees the
-edited methods; an edit that no longer compiles is logged, not fatal. Each replay answers how
-many records it applied, and when any did, the load tells the world its code changed
+edited methods; an edit that no longer compiles is logged, not fatal. The return and each replay
+answer how many members or records they applied, and when any did, the load tells the world its code changed
 (`WorldWdgt.noteCodeChanged`, the class inspector's own notification): a load KEEPS its world, and
 with it every cache the old code filled — measured lines, line breaks, immutable back buffers,
 each keyed by content — so a page that already showed the edited class's widgets would otherwise
-re-show the old code's look, one file making two worlds. Both replays are gated on
-`SourceEditsRegistry.canReplaySourceEdits()` — class- and mixin-scope replay drives the
+re-show the old code's look, one file making two worlds. The return to boot and both replays are
+gated on `SourceEditsRegistry.canReplaySourceEdits()` — class- and mixin-scope replay drives the
 META-SYSTEM (`Class.applyMemberEdit` / `removeMember`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only from
 the class source directory (with the reflective layer, which the load fetches first wherever it can come —
 §9 — or alone ahead of a lazy part). An artifact built `sources: "none"` therefore cannot replay them at all,
@@ -846,3 +855,10 @@ a body member never edited (its rename recompiled so `super` follows it), of an 
 donated member, and the rename of a donated member, each hold in a fresh page exactly as the
 editing page left them; and a page that already showed a text before loading a file carrying a
 class edit of it shows exactly what the fresh page shows (`sourceEdits.warmLoadEqualsColdLoad`).
+A page's own edits — a class member edited, added and removed, a donor's member edited, a file's member
+re-edited — leave exactly the file's members away from boot when the file loads onto it
+(`sourceEdits.loadOverPageEditsIsTheFilesWorld`), the confirm names how many members the load returns
+(`sourceEdits.loadConfirmNamesTheEditsItReturns`), and a file carrying no records leaves the page at
+boot (`sourceEdits.loadReturnsThePageToBoot`). On a pre-compiled tree, where the meta-system parses
+sources beside code already running, `fg homepage`'s production smoke holds the parse of every mixin a
+class augments with and a donated member's return to its donor.

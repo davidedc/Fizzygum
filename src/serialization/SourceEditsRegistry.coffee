@@ -21,8 +21,8 @@
 # In both of the last two, an ADD is an edit whose source is "undefined", and a RENAME is two
 # records: an edit under the new name, then a removal of the old. Each meta-object's member
 # sources are its CURRENT ones and its consumers' prototypes follow from them (Class.coffee,
-# "live member editing"), so replaying the records in order reproduces the session's live
-# members exactly.
+# "live member editing"), so replaying the records in order, from boot, reproduces the session's
+# live members exactly -- and a load first returns the page to boot (returnThePageToBootSources).
 #
 # A record is plain JSON: {scope, className|mixinName, uniqueID?, propertyName, source?,
 # deleted?}. Embedded verbatim in the world envelope's `world.sourceEdits`.
@@ -114,6 +114,57 @@ class SourceEditsRegistry
   unreplayableSourceEditsCount: ->
     return 0 if SourceEditsRegistry.canReplaySourceEdits()
     (r for r in @records when r.scope is "class" or r.scope is "mixin").length
+
+  # THE PAGE AS IT BOOTED, which a replay starts from: the records reproduce a session's members from
+  # boot (above), so a world-snapshot load first returns every meta-object to its boot sources. Each
+  # member whose source differs from the one the meta-object's source text at boot gives (Class /
+  # Mixin bootMemberSources) gets that one back through the meta-object's own two edits, which keep
+  # every prototype a function of the stores -- so the members come back as boot made them, a class
+  # member's removal giving back its donor's (mixins go first, in boot's own order). What the page
+  # edited is read from the STORES, never from a registry: a world's registry lists the edits made
+  # under it, while the prototypes are the page's, and a world built on an edited page (the harness's
+  # resetWorld) starts with none. A class or mixin the vault holds no source text for (one made at run
+  # time) has no boot and is left as it is. A member that cannot be returned is logged and left, as a
+  # record that cannot be replayed is: the load has already torn the desktop down. Answers how many
+  # members it returned; 0 where this build has no meta-system (canReplaySourceEdits).
+  @returnThePageToBootSources: ->
+    returned = 0
+    for metaObject in SourceEditsRegistry._metaObjectsInBootOrder()
+      bootSources = metaObject.bootMemberSources()
+      continue unless bootSources?
+      for memberName in SourceEditsRegistry._membersAwayFromBoot metaObject, bootSources
+        try
+          if Object::hasOwnProperty.call bootSources, memberName
+            metaObject.applyMemberEdit memberName, bootSources[memberName]
+          else
+            metaObject.removeMember memberName
+          returned++
+        catch error
+          console?.log "world snapshot: " + metaObject.name + "." + memberName + " could not be returned to its source at boot: " + error.message
+    returned
+
+  # How many members returnThePageToBootSources would return, changing nothing: a load's confirm says
+  # so before it replaces anything.
+  @membersAwayFromBootCount: ->
+    count = 0
+    for metaObject in SourceEditsRegistry._metaObjectsInBootOrder()
+      bootSources = metaObject.bootMemberSources()
+      count += SourceEditsRegistry._membersAwayFromBoot(metaObject, bootSources).length if bootSources?
+    count
+
+  # Every parsed mixin, then every class's meta-object -- none where this build has no meta-system.
+  @_metaObjectsInBootOrder: ->
+    return [] unless SourceEditsRegistry.canReplaySourceEdits()
+    Mixin.allMixines.concat (eachClass.class for eachClass in allClassFunctions() when eachClass.class?)
+
+  # The members of `metaObject` whose current source (its store) is not the one `bootSources` holds:
+  # an edit, an addition or a removal. Never the constructor, which no edit reaches
+  # (Class.refuseTheConstructor).
+  @_membersAwayFromBoot: (metaObject, bootSources) ->
+    current = metaObject.nonStaticPropertiesSources
+    sourceIn = (sources, memberName) -> if Object::hasOwnProperty.call sources, memberName then sources[memberName]
+    memberNames = new Set Object.keys(current).concat Object.keys bootSources
+    (memberName for memberName from memberNames when memberName isnt "constructor" and sourceIn(current, memberName) isnt sourceIn(bootSources, memberName))
 
   # replay the CLASS-scope records IN ORDER against the live prototypes: an edit re-runs
   # Class.applyMemberEdit, a removal (deleted: true) Class.removeMember — the same choke
