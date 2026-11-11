@@ -999,9 +999,10 @@ class Widget extends TreeNode
   # What the world calls for me on each frame my fps is due, while — and only while — I am in
   # world.steppingWdgts. That set is FLAT: a widget steps because it joined it (a clock, a blinker,
   # a gesture's scroll), never because an ancestor did, and my children are not visited. The no-op
-  # is what a member of the set without a step of its own runs; an undefined step is an error the
-  # loop catches by soft-resetting the world and showing it in the error console, on every frame it
-  # is due (WorldWdgt._stepWidget).
+  # is what a member of the set without a step of its own runs. A step that throws (an undefined one
+  # included) is caught by the loop: the world soft-resets, shows the error once in the error console,
+  # and passes me by -- I stay a member -- until code changes give me another chance, as a widget whose
+  # paint throws is hidden until then (WorldWdgt._stepWidget, giveBannedWidgetsAnotherChance).
   step: noOperation
   
   

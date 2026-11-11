@@ -889,6 +889,11 @@ a `setTimeout` does not.
 Set `@fps` to the slowest rate that looks right, and `@synchronisedStepping = true` when the tick
 should align to wall-clock boundaries rather than to construction time (a clock's second hand).
 
+A step that THROWS bans its widget from stepping: the world shows the error once in the error console
+(which says so), soft-resets, and passes the widget by — it stays a member of the set — until code
+changes give it another chance (`WorldWdgt._stepWidget`, `giveBannedWidgetsAnotherChance`, which an
+inspector's Save calls): the step twin of a widget whose paint throws, which is hidden until then.
+
 **Prefer demand-driven subscription** — join when there is something to animate, leave when there is
 not, as `DataflowSource`, `ViewportWdgt`'s momentum and `SimpleImageWdgt` do. A permanent
 constructor-time subscription is acceptable for a widget that genuinely always animates, and costs a

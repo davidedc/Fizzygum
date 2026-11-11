@@ -852,12 +852,8 @@ class InspectorWdgt extends Widget
     @detail.textWdgt.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
 
-    # it's possible that the user might have fixed
-    # a "painting" error, so give another chance to all
-    # "banned" widgets (banned from repainting)
-    for eachWidget in world.widgetsGivingErrorWhileRepainting
-      eachWidget.show()
-    world.widgetsGivingErrorWhileRepainting = []
+    # the user may have fixed what made a widget's paint or step throw
+    world.giveBannedWidgetsAnotherChance()
     true
 
   # the one differing step between object- and class-inspector save: an object

@@ -63,6 +63,11 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
         toBeAddedToLog += "hence have been banned from re-painting themseves.\n"
         toBeAddedToLog += "Edit/save any source code to give them another chance.\n\n"
 
+      if world.widgetsGivingErrorWhileStepping.length != 0
+        toBeAddedToLog += "Some widgets crashed while stepping and\n"
+        toBeAddedToLog += "hence are not stepped any more.\n"
+        toBeAddedToLog += "Edit/save any source code to give them another chance.\n\n"
+
       toBeAddedToLog += err
       if err.stack?
         toBeAddedToLog += "\n\nStack:\n" + err.stack

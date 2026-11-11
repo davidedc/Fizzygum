@@ -179,9 +179,14 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
       Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
       `BoxyAppearance`), and the static-checks table states no blind spot for it.
-- [ ] **A step that throws throws on every frame it is due** (same review; by reading; low). `WorldWdgt._stepWidget`'s
-      catch soft-resets the world and reports to the error console, and leaves the member in the stepping set, so a
-      broken `step` repeats both on every due frame, with no removal or back-off.
+- [ ] **Only an inspector's Save gives a banned widget another chance** (found by the independent review closing "A step
+      that throws throws on every frame it is due", in the plan's ledger; reached: a person fixes a widget whose paint
+      or step threw by running typed code — a console's "Run all" redefining the method — or by a class edit's other
+      doors). `WorldWdgt.giveBannedWidgetsAnotherChance` is called by `InspectorWdgt.save` alone, so the widget stays
+      hidden or unstepped though its code is fixed, while the error log tells the person "Edit/save any source code to
+      give them another chance". The world already has one notice that code changed (`noteCodeChanged`, a class
+      edit's or a load's) and a typed run tells its receiver (`TextWdgt._runningTypedCode`): the re-admission belongs
+      where code changes, wherever that is.
 - [ ] **An auto-scroll's step is told a press's end as a stroke's would be** (found by the independent review closing
       "A viewport's gesture bookkeeping outlives its gesture", in the plan's ledger; by reading; low).
       `ViewportWdgt.pressEnded` / `pressCancelled` call whichever `_scrollStep` is installed with a point; an

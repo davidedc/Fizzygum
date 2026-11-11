@@ -3155,3 +3155,28 @@ for (const s of sites) if (s.absentBefore.length) {
       fail with the root removed. The independent review closing this unit found eleven defects in the first shape
       (three false `bite-unplantable` reasons among them), all fixed above. `fg gauntlet` green (20 legs, 1243 s; the `selftests` leg runs the new proof), `fg homepage`
       BOOT OK.
+- [x] **A step that throws throws on every frame it is due** (found by the independent review closing "Widget's `step`
+      documentation is false", in the plan's ledger; by reading; low). `WorldWdgt._stepWidget`'s
+      catch soft-resets the world and reports to the error console, and leaves the member in the stepping set, so a
+      broken `step` repeats both on every due frame, with no removal or back-off.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U24). Reached through the product: a person's broken `step` (an
+      inspector Save, a typed run) soft-resets the world on every frame it is due — the hand's carry and hover, any
+      drag — so nothing can be dragged. RULED: reuse the paint path's rule whole, not a new one — a widget whose paint
+      throws is hidden and banned (`widgetsGivingErrorWhileRepainting`) until an inspector's Save gives every banned
+      widget another chance, and the error log says so; a widget whose step throws now gets the same: banned
+      (`widgetsGivingErrorWhileStepping`, which the stepping loop passes by), its error shown once, the log saying
+      it is not stepped any more, and the same Save lifting the ban. It stays a member of `steppingWdgts`: membership
+      is the widget's (a saved world keeps it), the ban is the world's. The unit's first shape removed the offender
+      from the set instead, leaving re-joining "its own business"; the independent review closing this unit showed
+      that leaves no way back — a widget that joins the set at construction (a clock) could never step again, and an
+      active plan's "fix a failing step and watch it heal" beat could not work — where the paint path gives one.
+      LANDED: `WorldWdgt.giveBannedWidgetsAnotherChance` (the one re-admission, both bans; `InspectorWdgt.save` calls
+      it), the stepping twin list (declared, set in the constructor, emptied by the teardown core and the dissolve
+      beside its paint twin, which the serialization rig's teardown-hygiene fixture now dirties too), the loop's pass-by, the error log's stepping notice; `Widget.step`'s doc and the
+      authoring guidelines' §12. PROVEN: new `SystemTest_macroAStepThatThrowsStopsStepping` (assertion-only: a
+      rectangle whose fps-0 step counts and throws a string; after ten frames it stepped once, is banned yet still a
+      member, and the log says so; an inspector Save of a fixed step lifts the ban and it steps again) passes at dpr 1
+      and 2, under `--pointer=finger` and on WebKit; with the old `_stepWidget` re-applied through WorldWdgt's own
+      member edit it stepped 10 times, unbanned, the log silent (and the inspector could not be driven); with the old
+      `InspectorWdgt.save` the ban stayed and the fixed step never ran. `fg gauntlet` green (20 legs; `vmtruth` a load
+      flake: INVALID at its pin cap in the parallel wave, 0 retained, passed alone), `fg homepage` BOOT OK.

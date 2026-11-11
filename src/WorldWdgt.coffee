@@ -442,6 +442,10 @@ class WorldWdgt extends IconGridPanelWdgt
   errorsWhileRepainting: undefined
   paintingWidget: undefined
   widgetsGivingErrorWhileRepainting: undefined
+  # widgets whose step threw: the stepping loop passes them by until code changes give them another chance
+  # (giveBannedWidgetsAnotherChance), as the paint offenders above stay hidden until then. They stay members of
+  # steppingWdgts: membership is theirs (a saved world keeps it), the ban is mine.
+  widgetsGivingErrorWhileStepping: undefined
 
   # errors thrown by a _reLayout() DURING the recalculateLayouts flush. We can't build the
   # error console there: createErrorConsole uses the public, self-flushing geometry setters,
@@ -592,6 +596,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @appWindows = new Map
     @errorsWhileRepainting = []
     @widgetsGivingErrorWhileRepainting = []
+    @widgetsGivingErrorWhileStepping = []
     @layoutErrorsToReport = []
     @widgetsWithMaybeChangedPaintBounds = []
     @widgetsWithMaybeChangedFullPaintBounds = []
@@ -1687,6 +1692,15 @@ class WorldWdgt extends IconGridPanelWdgt
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
       @paintingWidget.__hide()
 
+  # Code changed (an inspector's save), and it may have fixed what made a widget's paint or step throw: every widget
+  # banned for it gets another chance -- a hidden one shows again, a passed-by one is stepped again.
+  giveBannedWidgetsAnotherChance: ->
+    for eachWidget in @widgetsGivingErrorWhileRepainting
+      eachWidget.show()
+    @widgetsGivingErrorWhileRepainting = []
+    @widgetsGivingErrorWhileStepping = []
+    return
+
   _resetDataStructuresForDamageRects: ->
     @damageRects = []
     @duplicatedDamageRectsTracker = {}
@@ -2351,6 +2365,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # TODO all these set modifications should be immutable...
     @steppingWdgts.forEach (eachSteppingWidget) =>
 
+      # a widget whose step threw waits for code to change (giveBannedWidgetsAnotherChance)
+      return if @widgetsGivingErrorWhileStepping.includes eachSteppingWidget
+
       # for objects where @fps is defined, check which ones are due to be stepped
       # and which ones want to wait.
       millisBetweenSteps = Math.round(1000 / eachSteppingWidget.fps)
@@ -2408,10 +2425,15 @@ class WorldWdgt extends IconGridPanelWdgt
 
 
 
+  # A widget whose step THROWS is banned from stepping, its error shown once -- the step twin of a widget whose paint
+  # throws, which is hidden (_hideOffendingWidget). Stepped on, it would throw, and soft-reset the world (the hand's
+  # carry and hover, any drag), on every frame it is due, and nothing could be dragged. Like a hidden one, it gets
+  # another chance when code changes (giveBannedWidgetsAnotherChance).
   _stepWidget: (whichWidget) ->
     try
       whichWidget.step()
     catch err
+      @widgetsGivingErrorWhileStepping.push whichWidget
       # public-call-sanctioned: createErrorConsole stays public (its body drives the public
       # setExtent/moveTo/add — rule [A] forbids the _-form); this discrete error-recovery path
       # consciously pops it outside any pass.
@@ -3359,6 +3381,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @widgetsReferencingOtherWidgets = new Set
     @appWindows = new Map
     @widgetsGivingErrorWhileRepainting = []
+    @widgetsGivingErrorWhileStepping = []
     @widgetsWithMaybeChangedPaintBounds = []
     @widgetsWithMaybeChangedFullPaintBounds = []
     @widgetsThatMaybeChangedLayout = []
@@ -3549,8 +3572,9 @@ class WorldWdgt extends IconGridPanelWdgt
     @dragEmbedLockBadgeWdgt = undefined
     @dragEmbedDockBandWdgt = undefined
     # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
-    # list never was, so it accumulated dead widgets for the whole life of the page.
+    # list never was, so it accumulated dead widgets for the whole life of the page. Its stepping twin likewise.
     @widgetsGivingErrorWhileRepainting = []
+    @widgetsGivingErrorWhileStepping = []
     # the current-event time register (the event-time clock the input consumers read --
     # multi-click staleness, the drag-charging ring's linger): between events it is stale
     # by definition, and across a teardown the next world's event clock may even REWIND
