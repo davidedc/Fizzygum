@@ -26,7 +26,6 @@ class ViewportWdgt extends Widget
   # answer, and the edit-mode focus walk climbs to the first opinion
   providesAmenitiesForEditing: true
 
-  autoScrollTrigger: undefined
   hasVelocity: true
   padding: 0 # around the scrollable area
   isTextLineWrapping: false
@@ -85,8 +84,8 @@ class ViewportWdgt extends Widget
 
   # THE PER-FRAME STEP OF THE SCROLL A GESTURE OF MINE RUNS -- a drag-scroll's stroke and glide
   # (takeStrokeScrollFrom), or the edge auto-scroll while something is carried over my edge -- held
-  # only while one runs: its presence is THE answer to "does a gesture of mine run" (and I am in the
-  # stepping set exactly then). Runtime state of the gesture, never a member: a save leaves it out,
+  # only while one runs: its presence is THE answer to "does a gesture of mine run" (and, while I live,
+  # I am in the stepping set exactly then). Runtime state of the gesture, never a member: a save leaves it out,
   # and a copy or a restore runs no gesture of mine (_reactToBeingCopied, _afterDeserialization).
   _scrollStep: undefined
 
@@ -98,10 +97,9 @@ class ViewportWdgt extends Widget
 
   # A COPY runs no gesture of mine: it was aligned into the stepping set because I was in it
   # (Widget.alignCopiedWidgetToSteppingStructures) and holds my scroll step, a closure bound to me, so
-  # it drops both rather than go on scrolling me.
+  # it ends that step rather than go on scrolling me.
   _reactToBeingCopied: ->
-    delete @_scrollStep
-    world.steppingWdgts.delete @
+    @_stopScrollStep()
 
   # A RESTORED viewport lays itself out again at the next settle, so its arrange re-derives what no
   # file carries: my bars' indicator presentation (SliderWdgt.indicatorMode, from my overflow and the
@@ -1190,9 +1188,9 @@ class ViewportWdgt extends Widget
     # climb goes on, so a drag over a cropping pane nested in a scrolling one reaches the scrolling one.
     if @scrollPolicy is 'never' or !@isScrollingByfloatDragging
       return super
-    # a press that reaches me starts a new stroke, so what my last stroke left running on me (its
-    # glide) ends here — the same press may latch me again
-    @_stopDragScrollStep()
+    # a press that reaches me starts a new stroke, so what my last gesture left running on me (a
+    # glide, an auto-scroll) ends here — the same press may latch me again
+    @_stopScrollStep()
     # The hand is told at the press: my content carries whatever the press landed on along with the
     # pointer, so a scroll's release lands back on it, and this fact is what keeps that release from
     # reading as a click on it, and what tells the press's audience inside me that the stroke is a
@@ -1298,12 +1296,18 @@ class ViewportWdgt extends Widget
   _strokeWouldLiftWhatItPressed: ->
     world.hand.wdgtToGrab?.detachesWhenDragged() and world.hand.strokeMeansMouseDrag()
 
-  # End my drag-scroll step: its stroke, its flush and its glide are over. Nothing to do when none runs.
-  _stopDragScrollStep: ->
+  # End my scroll step, whichever gesture runs it — a drag-scroll's stroke and glide, or an edge
+  # auto-scroll — and with it everything the gesture knew: what it ran on is its own (a glide's flag, an
+  # auto-scroll's start), so nothing of it is left to outlive it. Nothing to do when none runs.
+  _stopScrollStep: ->
     return unless @_scrollStep?
     delete @_scrollStep
     world.steppingWdgts.delete @
-    world.wdgtsWithOngoingScrollMomentum.delete @
+
+  # Is a drag-scroll's glide of mine running? The world asks it of every stepping widget
+  # (WorldWdgt.anyScrollMomentumOngoing); the answer is the running step's own, so it ends with the step.
+  isScrollGliding: ->
+    @_scrollStep?.glides is true
 
   # I TAKE THIS STROKE'S SCROLL, from `pressPoint` — the press point in MY plane. The stroke's one
   # drag-scroll step goes on me: called by its owner, which is me at the press when I am alone, or the
@@ -1361,7 +1365,7 @@ class ViewportWdgt extends Widget
       wasScrollDragging = false
       scrolledNow
     world.steppingWdgts.add @
-    @_scrollStep = (strokeEndPos) =>
+    @_scrollStep = strokeStep = (strokeEndPos) =>
       scrollbarJustChanged = false
       everFloatDragged ||= world.hand.isThisPointerFloatDraggingSomething()
       if strokeEndPos?
@@ -1403,17 +1407,17 @@ class ViewportWdgt extends Widget
           # length are FRAME-CADENCE driven (how many queued events played back in the final frame),
           # so under the test harness's animations pacing control the glide is SUPPRESSED outright —
           # the content stops exactly at the event-determined release offset and screenshots are
-          # reproducible across engines. While a glide IS running (normal interactive use) it is
-          # tracked in world.wdgtsWithOngoingScrollMomentum so the macro pump can hold until it
-          # settles (the font-atlas-wait idea).
+          # reproducible across engines. While a glide IS running (normal interactive use) the step
+          # says so (isScrollGliding), so the macro pump can hold until it settles (the
+          # font-atlas-wait idea).
           glideSuppressed = Automator? and
             Automator.animationsPacingControl and
             Automator.state != Automator.IDLE
           if !@hasVelocity or glideSuppressed or
           ((Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5))
-            @_stopDragScrollStep()
+            @_stopScrollStep()
           else
-            world.wdgtsWithOngoingScrollMomentum.add @
+            strokeStep.glides = true
             if @_dragScrollsHorizontally()
               deltaX = deltaX * friction
               if deltaX isnt 0
@@ -1454,8 +1458,13 @@ class ViewportWdgt extends Widget
     # edge-auto-scroll entry in src/macros/MACRO-PATTERNS.md).
     inset = WorldWdgt.theme.scrollBarsThickness * 3
     if @isOrphan() then return undefined
+    # an auto-scroll already running goes on: its start, and so its delay, is its own
+    return undefined  if @_scrollStep?.autoScrolls
+    # whatever else of mine runs — a drag-scroll's glide — ends here
+    @_stopScrollStep()
     hand = world.hand
-    @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
+    # when the auto-scroll starts, kept by its step: it scrolls only once half a second has passed
+    startedAt = Date.now()
     world.steppingWdgts.add @
     @_scrollStep = =>
       # mapped like every per-frame hand sample (identity for an un-nested viewport) — the
@@ -1465,14 +1474,12 @@ class ViewportWdgt extends Widget
       if @boundsContainPoint(pos) and
         !inner.containsPoint(pos) and
         hand.isThisPointerFloatDraggingSomething()
-          @autoScroll pos
+          @autoScroll pos  unless Date.now() - startedAt < 500
       else
-        delete @_scrollStep
-        world.steppingWdgts.delete @
-        @autoScrollTrigger = undefined
-  
+        @_stopScrollStep()
+    @_scrollStep.autoScrolls = true
+
   autoScroll: (pos) ->
-    return undefined  if Date.now() - @autoScrollTrigger < 500
     inset = WorldWdgt.theme.scrollBarsThickness * 3
     area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false

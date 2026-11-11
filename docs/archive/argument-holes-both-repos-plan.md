@@ -2747,3 +2747,28 @@ for (const s of sites) if (s.absentBefore.length) {
       cleanup plan's R14) and three built dynamically (`new @`, a class held in a variable), so no gate: the class
       has no other member. Docs: none describe the constructors or the classes. PROVEN: the build (syntax,
       call-arguments, dead-method gates) and two gauntlets (20/20 each); nothing a test runs changed.
+- [x] **A viewport's gesture bookkeeping outlives its gesture** (found by the independent review closing "A
+      drag-scroll leaves a viewport holding a function no save can write", in the plan's ledger; by reading). The edge
+      auto-scroll's end (`ViewportWdgt`, the auto-scroll's own step) does not clear `world.wdgtsWithOngoingScrollMomentum`,
+      so an auto-scroll that replaced a running glide leaves `anyScrollMomentumOngoing()` true; `Widget._destroyNoSettle`
+      leaves a pane destroyed mid-glide in that set until a teardown; and `_stopDragScrollStep` ending an auto-scroll
+      leaves `autoScrollTrigger` set, so the next auto-scroll skips its 500 ms delay.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U13). RULED: what a gesture knows rides on its step, and the step
+      ends at one place, so nothing is kept beside it for an end, a replacement, a destroy, a copy or a save to
+      forget. LANDED: `world.wdgtsWithOngoingScrollMomentum` is deleted (field, construction, teardown clear);
+      `WorldWdgt.anyScrollMomentumOngoing` asks every stepping widget `isScrollGliding?()`, as `anyKnobSlideOngoing`
+      already asks `isKnobSliding?()`, and `ViewportWdgt.isScrollGliding` reads a flag the glide sets on its own step
+      function. The `autoScrollTrigger` field is deleted: the auto-scroll's start is a local of its step, which waits
+      half a second from it; a running auto-scroll is marked on its step, so a re-entry keeps its start. Every scroll
+      step ends through `_stopScrollStep` (was `_stopDragScrollStep`): the auto-scroll's own end, a press, a glide's
+      fade, `startAutoScrolling` replacing a glide, and a copy's `_reactToBeingCopied`. Found beside the item, by
+      reading: the trigger was a plain field, so once a press had stopped an auto-scroll every later save of that
+      pane wrote a wall-clock time into the file, and a copy carried it (measured: the copy skipped its wait). Docs:
+      viewports-and-planes (the glide paragraph), the serialization reference's teardown list, Fizzygum/CLAUDE.md's
+      teardown list, MACRO-PATTERNS.md (twice), DETERMINISM.md's §3l fix line, the WorldWdgt teardown comment, one
+      test's intent and its visualisation page; the serialization rig's planted glide corpse is gone with the set.
+      PROVEN: a scratch probe (`.scratch/viewport-gesture-bookkeeping/probe.js`), each case on a fresh index-sw.html
+      page — on the old code (HEAD's two files put back and built) the control passes and A (destroyed mid-glide: a
+      glide still reported), B (an auto-scroll replaced a glide: still reported), C (an auto-scroll stopped, then a
+      second begun 700 ms later: 324 px scrolled by 300 ms) and D (the same on a copy) each fail, and E (a first
+      auto-scroll: nothing by 300 ms, scrolled by 900 ms) passes; on the new code all six pass.

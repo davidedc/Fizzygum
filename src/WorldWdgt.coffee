@@ -373,13 +373,6 @@ class WorldWdgt extends IconGridPanelWdgt
 
   steppingWdgts: undefined
 
-  # viewports whose post-release MOMENTUM glide is still running
-  # (ViewportWdgt's drag-to-scroll step decaying its last delta by
-  # friction each frame). Wall-clock/frame-cadence driven, so the macro
-  # pump holds "waitNoInputsOngoing" and screenshots until this drains —
-  # the same idea as waiting for font atlases before a capture.
-  wdgtsWithOngoingScrollMomentum: undefined
-
   # widgets that entered a fractional-consuming holder (me, or a StretchablePanelWdgt) this
   # turn and whose proportional bookkeeping the drain station derives once their builder is
   # done placing them -- the __add seed (stretch-fractional auto-bookkeeping arc). Cleared
@@ -392,8 +385,16 @@ class WorldWdgt extends IconGridPanelWdgt
   # flush, so the re-record reads the settled fixed point. Cleared in the world teardown.
   pendingFractionalReRecords: undefined
 
+  # Is a viewport's post-release MOMENTUM glide still running (ViewportWdgt's drag-to-scroll step decaying
+  # its last delta by friction each frame)? It is frame-cadence driven, so the macro pump holds
+  # "waitNoInputsOngoing" and screenshots until it settles — the same idea as waiting for font atlases
+  # before a capture. Asked of the stepping set rather than kept in a set of its own, as a knob's slide is
+  # below, so there is no second registry for a gesture's end, a destroy or a teardown to forget.
   anyScrollMomentumOngoing: ->
-    @wdgtsWithOngoingScrollMomentum.size > 0
+    gliding = false
+    @steppingWdgts.forEach (eachSteppingWidget) ->
+      gliding = true if eachSteppingWidget.isScrollGliding?()
+    gliding
 
   # Is an edit-mode toggle's knob still on its way (EditIconButtonWdgt)? A slide is cycle-clock driven,
   # so the macro pump holds until it has landed, as it does for a scroll glide. Asked of the stepping
@@ -576,7 +577,6 @@ class WorldWdgt extends IconGridPanelWdgt
     @currentHighlightingWidgets = new Set
     @widgetsBeingHighlighted = new Set
     @steppingWdgts = new Set
-    @wdgtsWithOngoingScrollMomentum = new Set
     @pendingFractionalBookkeepingSeeds = new Set
     @pendingFractionalReRecords = new Set
     @widgetsReferencingOtherWidgets = new Set
@@ -3483,7 +3483,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # stepping, the keyboard receivers, the click-outside set, the caret, the editor focus, dataflow,
     # the hand's press bookings -- and leaves these ephemeral world-level collections outside its
     # remit). So tearing down
-    # with a tooltip up, a menu open, handles shown, or a scroll still gliding leaks dead refs into
+    # with a tooltip up, a menu open or handles shown leaks dead refs into
     # whatever comes next -- the next test in the same headless process, or the loaded desktop.
     #   toolTipsList              destroyToolTips would then read bounds off a destroyed tooltip
     #   openPopUps / freshlyCreatedPopUps  mostRecentlyCreatedPopUp and the macro toolkit's
@@ -3491,9 +3491,6 @@ class WorldWdgt extends IconGridPanelWdgt
     #   popUpsMarkedForClosure    the next drain would close() an already-destroyed pop-up
     #   hierarchyOfClicked*       stale gesture bookkeeping (cleared per click, not per teardown)
     #   temporaryHandles...       dead resize/move handles
-    #   wdgtsWithOngoingScrollMomentum  the worst: anyScrollMomentumOngoing() stays true FOREVER,
-    #                             so the macro pump's waitNoInputsOngoing never settles and every
-    #                             later test in the page STALLS rather than fails
     @toolTipsList.clear()
     # ...and the tooltips not yet BORN. ⭐ OBLIGATION (B): the pending timers live in a CLASS-level
     # set (ToolTipWdgt.ongoingTimeouts), which outlives every world the page builds, so unlike the
@@ -3509,7 +3506,6 @@ class WorldWdgt extends IconGridPanelWdgt
     @hierarchyOfClickedWdgts.clear()
     @hierarchyOfClickedMenus.clear()
     @temporaryHandlesAndLayoutAdjusters.clear()
-    @wdgtsWithOngoingScrollMomentum.clear()
     @pendingFractionalBookkeepingSeeds.clear()
     @pendingFractionalReRecords.clear()
     # ...and the drag-embed affordances, which are the same bug in a shape the list above does not

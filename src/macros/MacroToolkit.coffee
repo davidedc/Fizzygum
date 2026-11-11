@@ -312,7 +312,7 @@ class MacroToolkit
   # The queue is drained AND no scroll-momentum glide is still settling: a ViewportWdgt's
   # post-release glide is frame-cadence driven and outlives the input queue, so without this gate a
   # screenshot races it (under the pacing control the glide is suppressed at the source —
-  # ViewportWdgt.takeStrokeScrollFrom — and this set stays empty; the gate is defense-in-depth for
+  # ViewportWdgt.takeStrokeScrollFrom — and no viewport is gliding; the gate is defense-in-depth for
   # any momentum that does run). An edit-mode toggle's knob, sliding after a press, holds it the same
   # way, but is not suppressed: its slide is the product's own path, and a landed knob is the same
   # pixels however many frames it took.

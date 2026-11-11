@@ -796,7 +796,7 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    before the core's paint-queue filter, since a dying widget re-marks damage); the app-window registry,
    the highlight tracking structures, `errorConsole` /
    `lastEditedText` / `_editorSelectedWidget`, the tooltip / pop-up / clicked-hierarchy / handle /
-   scroll-momentum / paint-error collections, the `_damageSuppressionDepth` counter, and the
+   paint-error collections, the `_damageSuppressionDepth` counter, and the
    one-shot `infoDoc*` flags. Restoring what the world should LOOK like afterwards is the
    CALLER's job, which is what steps 3-5 below are. `fullDestroyChildren` also zeroes every per-class
    `lastBuiltInstanceNumericID`, giving the clean id space the restored iids need.

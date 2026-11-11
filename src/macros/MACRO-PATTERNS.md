@@ -1126,7 +1126,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Edge auto-scroll while dragging** (`macroListWdgtAutoScrollsNearDraggedEdge`): a ViewportWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOfChild` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
-  yield generously. MUST hold long enough that the `autoScroll` 500ms `Date.now()` settle elapses and the scroll CLAMPS — via a
+  yield generously. MUST hold long enough that the auto-scroll's 500ms `Date.now()` settle (kept by its step, `startAutoScrolling`) elapses and the scroll CLAMPS — via a
   NON-scaled numeric `yield N` (real-time settle, speed-independent), so it's deterministic at every speed and needs no speed metadata.
   ⚠ A fixed hold is not enough on its own: the scroll moves a fixed step per FRAME, so a hold of N ms clamps only while frames
   come fast enough (at ~128 ms a cycle every 2.5 s hold stops short). After the hold, keep holding — `yield 100` in a bounded
@@ -1433,7 +1433,7 @@ assertion a recapture after a regression silently stores two different hashes an
   overflow or nothing visibly happens. Set the flags directly (the recording's inspector-eval route is covered ground).
   DETERMINISM — three cadence couplings live in the drag-to-scroll step: (1) POST-RELEASE MOMENTUM (a per-frame glide,
   friction 0.8 on the last frame's hand delta until <0.5px; its DISTANCE is cadence-dependent) — suppressed under
-  `Automator.animationsPacingControl`, and live glides register in `world.wdgtsWithOngoingScrollMomentum`, which gates
+  `Automator.animationsPacingControl`, and a live glide is asked of the stepping set (`world.anyScrollMomentumOngoing`, each viewport's `isScrollGliding`), which gates
   the macro pump's `noInputsOngoing`/`readyForMacroScreenshot` (never capture while momentum settles). The `Date.now()`-
   driven EDGE AUTO-SCROLL is NOT suppressed — it is load-bearing with its own test (the edge-auto-scroll entry above):
   its contract is the same saturation rule as (3); (2) RELEASE TRUNCATION — the step samples the hand per FRAME, so the pointer-path tail

@@ -123,13 +123,8 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **Is an inspector's subject always a page object?** (found by the same review; the owner's ruling). A Duplicate
       deep-copies an ordinary data subject (an array, a plain object, a data-class instance), so the copy inspects a
       detached clone rather than the live value it was opened on; a widget subject is shared (an outside widget).
-- [ ] **A viewport's gesture bookkeeping outlives its gesture** (found by the independent review closing "A
-      drag-scroll leaves a viewport holding a function no save can write", in the plan's ledger; by reading). The edge
-      auto-scroll's end (`ViewportWdgt`, the auto-scroll's own step) does not clear `world.wdgtsWithOngoingScrollMomentum`,
-      so an auto-scroll that replaced a running glide leaves `anyScrollMomentumOngoing()` true; `Widget._destroyNoSettle`
-      leaves a pane destroyed mid-glide in that set until a teardown; and `_stopDragScrollStep` ending an auto-scroll
-      leaves `autoScrollTrigger` set, so the next auto-scroll skips its 500 ms delay.
-- [ ] **Widget's `step` documentation is false** (found by the same review; by reading). `Widget.coffee`'s note on
+- [ ] **Widget's `step` documentation is false** (found by the independent review closing "A drag-scroll leaves a
+      viewport holding a function no save can write", in the plan's ledger; by reading). `Widget.coffee`'s note on
       `step: noOperation` says a `step` left as the no-op lets the children's steps run while an undefined one stops
       them; `_runChildrensStepFunction` walks the flat stepping set, so nothing traverses children, and an undefined
       `step` throws in the loop's `try`, soft-resetting the world.
@@ -141,6 +136,18 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       by reading). `InspectorWdgt._buildAndConnectMemberList` deletes `@list.listContents` from `world.steppingWdgts`
       and says the list itself "still steps (its scrollbars need it)"; nothing adds a list's contents to the set, and
       a list steps only while a gesture of its own runs.
+- [ ] **An auto-scroll's step is told a press's end as a stroke's would be** (found by the independent review closing
+      "A viewport's gesture bookkeeping outlives its gesture", in the plan's ledger; by reading; low).
+      `ViewportWdgt.pressEnded` / `pressCancelled` call whichever `_scrollStep` is installed with a point; an
+      auto-scroll's step takes none, so a press ending on a pane that is auto-scrolling runs one more auto-scroll frame.
+- [ ] **Nothing standing checks that a glide is seen** (same review; by reading; low). The suite suppresses glides under
+      the Automator's pacing control, so `ViewportWdgt.isScrollGliding` or `WorldWdgt.anyScrollMomentumOngoing`
+      answering false always would pass every gate, and the macro pump would screenshot a pane mid-glide in a session
+      without the control; only a scratch probe (`.scratch/viewport-gesture-bookkeeping/probe.js`) covers it.
+- [ ] **A test's provenance says the edge auto-scroll is suppressed under the pacing control** (same review; by
+      reading; low). `SystemTest_macroScrollPanelDragToScrollFlags`'s provenance (and its visualisation page) says so,
+      and names the retired `world.wdgtsWithOngoingScrollMomentum`; the auto-scroll is not suppressed (its contract is
+      saturation, DETERMINISM.md §3m).
 - [ ] **A `$Canvas`'s size is not bounded by the backend's surface** (found by the independent review closing "The load
       vets the whole envelope up front", in the plan's ledger; by reading). On an SWCanvas page a canvas wider or taller
       than 16384 px — saved by a native page, or resampled up by a load at a higher pixel ratio — throws in its builder
