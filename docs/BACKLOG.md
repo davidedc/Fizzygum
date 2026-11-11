@@ -114,16 +114,35 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
       2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
       member it inherits".)
-- [ ] **An object inspector on a class shows its statics as compiled text** (found by the same review; by reading).
-      `Class.staticPropertiesSources` keeps a class's static members' CoffeeScript; `selectionFromList` on a class
-      FUNCTION (`inspectorClassFor`) never reads it, and a static `extend` copied down has its source on the parent.
-- [ ] **The world's inspector offers to edit its browser listeners** (found by the same review; by reading). The world
+- [ ] **A run that replaces a class's member reads as a recorded source it no longer runs** (found by the independent
+      review closing "An object inspector on a class shows its statics as compiled text", in the plan's ledger; by
+      reading). The inspector reads the source a class's meta-object records for a NAME, never for a function: a run's
+      `Klass::m = -> …` on a prototype member shows `Klass`'s record — or, where `Klass` records none
+      (`RectangleWdgt::step = …`), the first class up the chain that does (Widget's `step`) — and a run's `Klass.s = ->
+      …` on a static `Klass` itself declares shows its record. (A static the holder copies from an ancestor is shown
+      only while it IS the ancestor's function, so a run's static on a child reads as compiled text.) For statics there
+      is no edit path, so `Class` could keep each static's compiled function at creation or ingest and the question
+      becomes answerable; for prototype members the class inspector's edits are the record, and a run's are not.
+- [ ] **`Object::augmentWith` copies the mixin literal's inherited keys too** (same review; by reading).
+      `Object-extensions.coffee`'s `augmentWith` walks the literal with a non-own `for … of`, so every mixin consumer's
+      class function — and, through `extend`, every subclass — owns `augmentWith`, `addInstanceProperties` and
+      `hashCode` (enumerable on `Object.prototype`) as undeclared statics, which an object inspector on such a class
+      lists. (`docs/architecture/mixins.md` says only the literal's own keys are copied.)
+- [ ] **The inspector's class walk reads a recorded source through the store's prototype** (same review; by reading).
+      `selectionFromList`'s class walk asks `theClass.nonStaticPropertiesSources[selected]?` of a plain `{}`, so
+      selecting `constructor` on a class that writes none shows `Object`'s native text; which source a constructor
+      row should show (the class's own, CoffeeScript-generated when it writes none) is the open part.
+- [ ] **The world's inspector offers to edit its browser listeners** (found by the independent review closing "A run
+      that sets a widget field to a function blocks every world snapshot", in the plan's ledger; by reading). The world
       holds its DOM listeners as own function fields (`pointerdownBrowserEventListener`, …), so an object inspector on
       the world lists them with Remove, Rename and Save: changing one leaves the browser calling the old function, and
       `removeEventListeners` passes the new one, which was never registered.
 - [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
-      same review; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
-      label such a pane, or make it read-only?
+      independent review closing "A run that sets a widget field to a function blocks every world snapshot", in the
+      plan's ledger; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
+      label such a pane, or make it read-only? The same holds, with real CoffeeScript, on a READ-ONLY subject (a class
+      function's statics): the pane is typeable and shows a modified mark, with no Save (noted closing "An object
+      inspector on a class shows its statics as compiled text").
 - [ ] **Three plans teach a stamp without its declaration** (found by the independent review closing "A runtime
       object stamped derived is dropped from an inspector holding it", in the plan's ledger; by reading).
       `docs/plans/creation-and-templates-plan.md` ("and/or stamp"), `dataflow-engine-implementation-plan.md` ("skipped

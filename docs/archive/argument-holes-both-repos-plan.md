@@ -2574,3 +2574,22 @@ for (const s of sites) if (s.absentBefore.length) {
       reverse: one instance, a number held; a text red and alpha through `new`; a -0 red and alpha through `new` held
       as 0; the string-minted colour saved as four numbers and loaded back as that very instance) fails under a plant
       restoring the old create and constructor.
+- [x] **An object inspector on a class shows its statics as compiled text** (found by the same review; by reading).
+      `Class.staticPropertiesSources` keeps a class's static members' CoffeeScript; `selectionFromList` on a class
+      FUNCTION (`inspectorClassFor`) never reads it, and a static `extend` copied down has its source on the parent.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U7). RULED: a static function's pane shows the CoffeeScript recorded
+      for THAT function, else its compiled text — never another class's code for a function this one does not run.
+      LANDED: `InspectorWdgt._recordedStaticSourceOf`, asked in `selectionFromList`'s holder branch after
+      `Widget.keptSourceOf`: for a Fizzygum class function, its own class's record when that class declares the static,
+      else the record of the first class up `superclassOf` that owns that VERY function under the name (a static
+      `extend` copied down); each store read for its OWN entries (a plain object's prototype answers `constructor`,
+      `hashCode`). Static FIELDS keep showing their value. The first shape read an ancestor's record by NAME, mirroring
+      the prototype class walk; the independent review showed it then put Widget's code in the pane for a static a run
+      had replaced on RectangleWdgt, where the identity test falls back to compiled text, which is true — so the walk
+      takes the test. A static a class itself declares and a run then replaced still reads as its record: FILED with
+      its prototype twin, with how statics could be made checkable. Docs: `mixins.md`, MACRO-PATTERNS (an entry).
+      PROVEN: the new assertion-only `SystemTest_macroObjectInspectorOnAClassShowsItsStaticsSource` (Color's own
+      `create`; PasteInputEvent's override of `fromBrowserEvent`; RectangleWdgt's copied-down `keptSourceOf`, then that
+      copy replaced as a run does; Widget's harness-installed `widgetFromUniqueIDString`, recorded nowhere) fails its
+      four record-expecting pane assertions under a plant restoring the old reading, and exactly the replaced case
+      under the first shape. Follower clean on both pointers.

@@ -2175,6 +2175,15 @@ assertion a recapture after a regression silently stores two different hashes an
   StringWdgt's) is keyed apart in every cache whose work runs its code (`Widget._ownCodeKeySuffix`); `world.noteCodeChanged()`
   is the flush a class edit makes.
 
+- **An object inspector on a CLASS, and a long text compared as a fact** (`macroObjectInspectorOnAClassShowsItsStaticsSource`):
+  `new InspectorWdgt Color` (the class FUNCTION, not `Color.prototype`, which `inspectorClassFor` gives a class
+  inspector) lists the class's statics as they are — they are the function's own properties, so "Inherited" need not
+  be clicked (clicking it adds `Function.prototype`'s and `Object.prototype`'s enumerable rows); a static function's
+  pane reads the CoffeeScript its class records (`Klass.class.staticPropertiesSources`), or, for one `extend` copied
+  down, the declaring ancestor's while the copy IS that ancestor's function — else its compiled text. ⚠ Assert a multi-line text as a FACT —
+  `@assertValuesEqual "…", true, (text is expected)` — not by passing the text: the runner relays only the console's
+  TAIL, so assertion lines printing whole sources push the earlier assertions out of the log you read.
+
 ## Assertions & eval
 
 - **Verified aims — a press must meet what it means** (every test; rule 4 of `CLAUDE.md`): the verbs that know their

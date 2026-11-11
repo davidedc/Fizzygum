@@ -456,6 +456,26 @@ class InspectorWdgt extends Widget
     inspector._moveWithin world
     world.add inspector
 
+  # The CoffeeScript recorded for the STATIC member `name` of a Fizzygum class FUNCTION, for the function it
+  # holds there: its own class's record when that class declares the static, else -- a static `extend`
+  # copied down -- the record of the first class up the chain (superclassOf) that owns that VERY function
+  # under the name and records a source for it. An ancestor's record is never read for a function the
+  # ancestor does not hold (a run's static on a child, an override no record names): that reads as its
+  # compiled text, which is true, where another class's source would be code this one does not run.
+  # Each store is read for its OWN entries (a plain object's prototype answers `constructor`,
+  # `hashCode`, ...). undefined for a holder that is no class function, or a static recorded nowhere.
+  @_recordedStaticSourceOf: (holder, name) ->
+    return undefined unless typeof holder is "function" and classNamed(holder.name) is holder
+    held = holder[name]
+    klass = holder
+    while klass?
+      sources = klass.class?.staticPropertiesSources
+      if sources? and Object::hasOwnProperty.call(sources, name) and
+         (klass is holder or (Object::hasOwnProperty.call(klass, name) and klass[name] is held))
+        return sources[name]
+      klass = superclassOf klass
+    undefined
+
   # WHICH INSPECTOR a value calls for, asked by every door that hands an inspector an arbitrary value
   # (my row double-click, Widget.spawnInspector): a Fizzygum class's PROTOTYPE is its class, and gets
   # the class inspector, whose edits go through the class's meta-object and are recorded; any other
@@ -551,13 +571,14 @@ class InspectorWdgt extends Widget
     # of my subject's prototype chain that holds the member decides.
     #   Held by anything but a Fizzygum class's prototype -- my subject itself, or an object it was
     # made from -- it is a function of that holder's own: the source it keeps (Widget.keptSourceOf, an
-    # injected one's), else its compiled text; never the source of a class member it shadows.
+    # injected one's), or, held by a class FUNCTION, the source recorded for that very static
+    # (_recordedStaticSourceOf), else its compiled text; never the source of a class member it shadows.
     #   Held by a class's prototype, it is a class member: walked below.
     if Utils.isFunction(val)
       holder = @inspectedObject
       holder = Object.getPrototypeOf holder until !holder? or Object::hasOwnProperty.call holder, selected
       if holder? and !isAClassPrototype holder
-        ownSource = Widget.keptSourceOf val
+        ownSource = Widget.keptSourceOf(val) ? InspectorWdgt._recordedStaticSourceOf holder, selected
         val = ownSource if ownSource?
       else
         # The CLASS WALK, from my subject's class up through every link that is a Fizzygum class's

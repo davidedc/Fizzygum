@@ -223,7 +223,10 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     PROTOTYPE members, and a static lives on the constructor, so no static — a class's
     or a mixin's — is edited. (An object inspector opened on a constructor itself, by
     double-clicking a `constructor` row, does list its statics, read-only: a constructor
-    answers no edit protocol.) A mixin's class-side keys (the literal's 2-space ones,
+    answers no edit protocol; a static function's pane reads the CoffeeScript its class
+    records for it, or, for one `extend` copied down, the declaring ancestor's while the copy
+    is still that very function — `InspectorWdgt._recordedStaticSourceOf` — else its compiled
+    text.) A mixin's class-side keys (the literal's 2-space ones,
     minus `MixedClassKeywords`) are copied onto each consumer constructor by
     `augmentWith` and their source is not parsed. ⚠ Editing a static would have to
     reach every SUBCLASS as well: `extend` gives each subclass its own copy of every
