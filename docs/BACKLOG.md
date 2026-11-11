@@ -612,17 +612,17 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
 - [ ] §4.4 follow-up: what does save-to-file mean for an ARROW'D shortcut (today: friendly error — no cross-file identity for a dangling-`.lnk` restore; needs its own decision)
 
 ### `plans/top-10-cleanups-plan.md`
-AUTHORED 2026-11-11, a ranked SURVEY of ten candidate cleanup arcs; nothing started, nothing approved. Each item carries its evidence, its re-measure command and its first step; an item that is taken up gets its own plan and its line here is replaced. ⛔ owner decision first on §1, §5, §7 and part of §10.
-- [ ] §1: put `fg` and the guard hook under version control (⛔ which repo); then delete `what-runs.js`'s `fgPresent` branch
-- [ ] §2: build logic in one language (port `build.py` + `buildProfile.py` to Node) and the gate sequence as a table
-- [ ] §3: one plane-mapping protocol for the ancestor walk (8 loops and 10 `instanceof TransformFrameWdgt` in `Widget`)
-- [ ] §4: derived-geometry caches — one oracle method (17 copies today), then one declared memo (perf-gated)
-- [ ] §5: icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted)
-- [ ] §6: the 15 `debugger`-only invariant traps report through a gated token, or are deleted with evidence
-- [ ] §7: the video-player part — delete it or gate it (⛔ owner); either way the one-carrier `requiresFlag` mechanism goes
-- [ ] §8: method-count and cognitive-complexity ratchets; split the sequential giants (supersedes the `lint-generic-rules-carryover-plan.md` §8.5 C line below once built)
-- [ ] §9: lift the browser-input bridge (seven listener methods) off `WorldWdgt`
-- [ ] §10: repository hygiene — nine orphan files, two vendoring homes, three closed plans at the tests-repo root, the empty `SWCanvasBrokenTests` lists (⛔ owner on the last)
+AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank); nothing started, nothing approved. Each item carries its evidence, its effort estimate, its re-measure command and its first step; an item that is taken up gets its own plan and its line here is replaced. ⛔ owner decision first on §2, §3, §9 and part of §1.
+- [ ] §1 (½ day): repository hygiene — nine orphan files, two vendoring homes, three closed plans at the tests-repo root, the empty `SWCanvasBrokenTests` lists (⛔ owner on the last)
+- [ ] §2 (½ day): put `fg` and the guard hook under version control (⛔ which repo); then delete `what-runs.js`'s `fgPresent` branch
+- [ ] §3 (½ to 1 day): the video-player part — delete it or gate it (⛔ owner); either way the one-carrier `requiresFlag` mechanism goes
+- [ ] §4 (1 day): the 15 `debugger`-only invariant traps report through a gated token, or are deleted with evidence
+- [ ] §5 (2 days): lift the browser-input bridge (seven listener methods) off `WorldWdgt`
+- [ ] §6 (3 days): one plane-mapping protocol for the ancestor walk (8 loops and 10 `instanceof TransformFrameWdgt` in `Widget`)
+- [ ] §7 (½ day, then 3 days): derived-geometry caches — one oracle method (17 copies today), then one declared memo (perf-gated)
+- [ ] §8 (1 day, then 2 to 3 days): method-count and cognitive-complexity ratchets; split the sequential giants (supersedes the `lint-generic-rules-carryover-plan.md` §8.5 C line below once built)
+- [ ] §9 (4 to 5 days): icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted)
+- [ ] §10 (5 to 6 days): build logic in one language (port `build.py` + `buildProfile.py` to Node) and the gate sequence as a table
 
 ## Residual / parked items (owning doc archived)
 

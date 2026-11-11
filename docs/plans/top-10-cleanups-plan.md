@@ -1,9 +1,10 @@
-# Top 10 code and architecture cleanups — a ranked survey
+# Top 10 code and architecture cleanups — a survey, ordered by effort
 
 > **PLAN ONLY. Written to be read and executed COLD by an LLM/engineer with ZERO prior context.**
-> This is a ranked SURVEY of ten candidate arcs, authored 2026-11-11. Nothing in it is started and
-> nothing in it is approved: each item is a proposal with its evidence, and four of the ten need an
-> owner decision before any code moves (marked in §1's table).
+> This is a SURVEY of ten candidate arcs, authored 2026-11-11 and ordered by effort, smallest
+> first. Nothing in it is started and nothing in it is approved: each item is a proposal with its
+> evidence, and four of the ten need an owner decision before any code moves (marked in the table
+> under "The list at a glance").
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -40,8 +41,8 @@ is left is structural, and no gate measures it. That is what this survey looked 
    not a finding; "the class gained 72 methods and nothing counts them" is (§8).
 2. **The remaining debt is duplicated MECHANISM, not duplicated text.** The exact-clone and
    near-clone scanners have been run to exhaustion. What they cannot see is two different ways of
-   asking one question (§3), one pattern written out by hand eight times with small variations
-   (§4), or one fact stated in two languages (§2).
+   asking one question (§6), one pattern written out by hand eight times with small variations
+   (§7), or one fact stated in two languages (§10).
 
 **How the list was made.** Sizes, class and method censuses, the existing censuses
 (`census-hierarchy-duplication.js`, `census-widget-conformance.js`), the stink ratchets
@@ -50,9 +51,15 @@ suspect file, and a read of the code behind each candidate. Then each candidate 
 against `docs/BACKLOG.md`, the active plans and `docs/archive/INDEX.md`, and dropped if an active
 plan already owns it (§12) or if earlier case law rejected it without new evidence (§13).
 
-**Ranking criterion.** Payoff in removed mechanism, weighted by confidence in the evidence,
-divided by cost and pixel risk. Cheap items with certain payoff rank above larger ones that need a
-spike or an owner decision.
+**Order.** The items are ordered by effort, smallest first, so the cheap ones can be taken without
+reading the expensive ones. Effort means the whole item, both steps where it has two, including
+its verification runs (one gauntlet is 15 to 20 minutes). The figures are ESTIMATES in working
+days, made from the evidence in each item; none is measured, and two items within half a day of
+each other could swap. Two items (§7, §8) have a small first step that stands alone, and the
+table shows it.
+
+The table's last column keeps the other useful ordering, by payoff: removed mechanism, weighted by
+confidence in the evidence, divided by cost and pixel risk (1 is the best return).
 
 ---
 
@@ -65,8 +72,9 @@ spike or an owner decision.
 3. **Items marked "owner decision first" stop at the decision.** Present the evidence and the
    options; do not start the code.
 4. **An item that is taken up becomes its own plan** in `docs/plans/` when it is more than a day's
-   work (§2, §3, §4, §5, §9), following `docs/README.md`'s filing rules; its line in
-   `docs/BACKLOG.md` then points at the new plan and this survey's line for it is removed.
+   work (§5 to §10; for §7 and §8, their second steps), following `docs/README.md`'s filing
+   rules; its line in `docs/BACKLOG.md` then points at the new plan and this survey's line for
+   it is removed.
 5. **Verify with the shared protocol in §14**, plus whatever the item adds.
 6. **Never commit or push without the owner's approval.** Present a summary and the proposed
    commit message and wait.
@@ -75,24 +83,84 @@ spike or an owner decision.
 
 ---
 
-## 1. The list at a glance
+## The list at a glance
 
-| # | Cleanup | What goes away | Size | Pixel risk | Owner decision first |
-|---|---|---|---|---|---|
-| 1 | Put `fg` and the guard hook under version control | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | Small | None | Yes: which repo |
-| 2 | Build logic in one language; the gate sequence as data | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | Medium | None (byte-identical trees) | No |
-| 3 | One plane-mapping protocol for the ancestor walk | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Medium | Low, hot path | No |
-| 4 | Derived-geometry caches: one oracle, then one memo | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | Small, then medium | None, then hot path | No |
-| 5 | Icon shells: one `IconWdgt` and a derived icon catalog | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Medium | Low to medium | Yes |
-| 6 | Silent invariant traps report, or go | 15 invariant checks that cannot fail a run | Small | May expose live faults | No |
-| 7 | The video-player part: delete it or gate it | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | Small | None | Yes |
-| 8 | Ratchets for method count and complexity; split the sequential giants | Unbounded regrowth of the four largest classes | Small, then medium | None for the ratchets | No |
-| 9 | Lift the browser-input bridge off `WorldWdgt` | 7 methods and the listener closures from the world class | Medium | Low | No |
-| 10 | Repository hygiene | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | Small | None | Partly |
+Ordered by effort, smallest first. Effort is an estimate in working days for the whole item.
+"Payoff rank" is the order by return on that effort (1 is the best).
+
+| # | Cleanup | Effort (estimate) | What goes away | Pixel risk | Owner decision first | Payoff rank |
+|---|---|---|---|---|---|---|
+| 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 |
+| 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 |
+| 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 |
+| 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 |
+| 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 |
+| 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 |
+| 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 |
+| 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 |
+| 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 |
+| 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 |
 
 ---
 
-## §1. Put `fg` and the guard hook under version control
+## §1. Repository hygiene
+
+**Effort.** About half a day, in independent commits. The orphan deletions are minutes. The
+vendoring move is nine `parts.json` rows, two library paths and one `fg fingerprint`. The three
+plan documents are a move plus their `INDEX.md` lines.
+
+Each line was checked for references across both repos, `fg` and the local tooling, excluding
+`docs/archive/`. MEASURED unless marked.
+
+**Orphan files in `Fizzygum/` (no reference anywhere):**
+
+| File | Note |
+|---|---|
+| `open_all_sources_in_TextWrangler.sh` | 57 bytes, last commit 2017-04-12 |
+| `buildSystem/OBSOLETE generateOverviewDoc.py` | named obsolete |
+| `buildSystem/generate-JSON-Manifest-for-directory.js` | |
+| `buildSystem/jsonToCoffeescriptVariable.js`, `buildSystem/jsonToJSVariable.js` | reference only each other |
+| `auxiliary files/find-tokens-used-only-once.sh` | |
+| `auxiliary files/all-color-literals-rgb-values-regexp.txt` | |
+| `auxiliary files/additional-icons/xPointerImage4.psd` | 138,970-byte Photoshop source |
+| `.gitmodules` | tracked, 0 bytes |
+
+**Stale but live.** `auxiliary files/pre-compiled.js` is a real build input (the "not
+pre-compiled" stub), but its header describes a flow that no longer exists (a zip download and
+the deleted `--homepage` flag). `package.json` names `"main": "index.js"`, which does not exist,
+and its `test` script is the `npm init` stub (see §2).
+
+**Two vendoring homes.** `vendor/` holds acorn, the SWCanvas builds and their pins.
+`auxiliary files/` holds three more third-party libraries (the CoffeeScript compiler, FileSaver,
+JSZip) and the `additional-icons/` images. The directory name contains a space and is quoted at
+every use (nine asset rows in `parts.json`, `lib/meta-compiler.js`, `lib/build-inputs.js`). One
+home for third-party code (`vendor/`) and one for images.
+
+**Closed plans in the wrong repo.** `Fizzygum-tests/` keeps three closed plan documents at its
+root: `MIGRATION-PLAN.md` (1,274 lines, closed 2026-06-12), `REFERENCE-FILENAME-GRAMMAR-PLAN.md`
+(448, closed 2026-08-22) and `SCREENSHOT-EQUALITY-PLAN.md` (157, closed 2026-06-12).
+`docs/README.md`'s filing rule sends a closed plan to `Fizzygum/docs/archive/` with an
+`INDEX.md` line. Check for inbound links before moving them.
+
+**An exclusion mechanism that excludes nothing (owner decision).** `SWCanvasBrokenTests` in the
+harness holds two skip lists, both empty (`testNamesDpi1: []`, `testNamesDpi2: []`). The loader
+filter, the stale-name report and two runner branches exist to serve them. Delete the mechanism,
+or keep it as a deliberate valve and say so in its header.
+
+**First step.** One commit per repo for the orphan files; the vendoring move as its own commit
+with an `fg fingerprint` showing only path changes.
+
+**Re-measure.** For any file `F`:
+`grep -rIl --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=archive -e "F" Fizzygum Fizzygum-tests fg`
+from the umbrella directory.
+
+---
+
+## §2. Put `fg` and the guard hook under version control
+
+**Effort.** About half a day: one file moved, a two-line shim left behind, one path derivation
+changed, the `fgPresent` branch and its self-test fixtures deleted, the guard hook re-tested, and
+the documents that say `fg` is in no repo corrected.
 
 **Evidence.**
 - MEASURED: `Fizzygum-all/fg` is a 929-line, 73,948-byte bash script with 32 subcommands. It is
@@ -145,7 +213,391 @@ the `fgPresent` deletion.
 
 ---
 
-## §2. Build logic in one language; the gate sequence as data
+## §3. The video-player part: delete it or gate it
+
+**Effort.** For deletion, half a day to a day: one directory and nine scripts removed, the flag
+taken out of `parts.json`, `buildProfile.py`, `build.py` and `build_it_please.sh`, two core guards
+removed, `SimpleImageWdgt` re-homed, and five BACKLOG items moved to a ledger. The gate option is
+larger and open-ended, since five defects have to be fixed first.
+
+**Evidence.**
+- MEASURED: the `video-player` part is `src/video-player/`, 12 files and 799 lines. In
+  `buildSystem/parts.json` it is the only part carrying `requiresFlag`, and
+  `buildProfile.py`'s `partShips` says the mechanism "survives profiles for exactly one carrier".
+  The `dev` profile selects every part (`"parts": "all"`), and the flag requirement is what keeps
+  this one out of it, so no default build ships the part and no gate has ever run its classes.
+- READ: it costs three build flags (`--includeVideoPlayer`, `--includeVideos`,
+  `--keepPreviousPrivateVideos`), an `includeVideoPlayer` parameter threaded through four
+  functions of `buildProfile.py`, two guards in core (`WorldWdgt.createDesktop`'s auto-launch and
+  `WorldWdgt.draftRunVideoPlayer`), and `video-related-scripts/` (nine shell scripts, last
+  committed 2025-05-16, referenced by nothing).
+- READ: `docs/BACKLOG.md` holds five open defects that live entirely inside the part: a world
+  holding the player cannot be saved; a boot with the part logs 304 `NON_INTEGER_GEOMETRY`
+  errors; a player with no loadable video is invisible and hangs a headless page when shown; it
+  throws under SWCanvas on every paint; `SimpleRasterImageButtonWdgt.imagePath` is a stale second
+  copy of its face's path.
+- READ: `SimpleImageWdgt`, the bitmap loader, was moved into this part because only the part used
+  it, and BACKLOG notes that building a load-image flow "means first deciding where the loader
+  belongs".
+
+**Why it matters.** This is code outside every guarantee the project enforces, known to be broken
+in five ways, kept reachable by a build mechanism that exists only for it.
+
+**Owner decision.** Two coherent answers:
+- **Delete** the part, the `requiresFlag` mechanism, the three flags, the two core guards and the
+  nine scripts; move `SimpleImageWdgt` to where the image flow will want it. Git keeps the rest.
+  The five BACKLOG items close as moot. Recommended unless the player is wanted again.
+- **Gate** it: drop `requiresFlag` and the flags, so `dev` ships the part like any other and the
+  suite page carries it, and fix the five defects under the normal gates. The 304 geometry
+  errors alone would fail the suite on the first run, so the fixes come first.
+
+Either answer removes the one-carrier mechanism. The related classes outside the part
+(`VideoPlayIconWdgt`, `VideoPlayIconAppearance`, `VideoPlayCreatorButtonWdgt`,
+`VideoPlayButtonWdgt`, `SimpleVideoLinkWdgt`) follow whichever answer is chosen.
+
+**First step after the decision.** For deletion:
+`grep -rn "Video\|video" Fizzygum/src --include='*.coffee' -l` to list every file to visit, then
+one commit, then `fg gauntlet` and `fg homepage`.
+
+**Re-measure.**
+`grep -n "requiresFlag" Fizzygum/buildSystem/parts.json Fizzygum/buildSystem/buildProfile.py`.
+
+---
+
+## §4. Silent invariant traps report, or go
+
+**Effort.** About a day: a counting prelude and two suite runs to learn which traps fire, fifteen
+small edits, one token added to the runners' fail list with its bite proof, and the stink's
+pattern widened. Longer if a trap turns out to be firing today.
+
+**Evidence.**
+- MEASURED: 36 lines in `src/` are a `debugger` statement: 32 standing alone and 4 written as
+  `if <condition> then debugger`. The `debugger-statement` stink's pattern is anchored at the
+  start of the line (`/^\s*debugger\b/`), so it counts 32 and does not see the other 4.
+- MEASURED: 21 of the 36 are followed by a report (17 `CACHED_DERIVATION_DIVERGED` errors, which
+  §7 removes, and 4 `throw`s). The other 15 are followed by nothing. Each sits in a branch that
+  has just detected a broken invariant, and its only action is a breakpoint, which does nothing
+  unless a developer has devtools open. The headless suite never does and neither does a user.
+- The 15, by method (line numbers as of the baseline): `WorldWdgt` damage-rectangle bookkeeping
+  (975, 999, 1013) and an input event without a time (2130); `TreeNode` (315); `StringWdgt`
+  text fitting (806, 900); `CaretWdgt` key handling (161); `BoxyAppearance` (152) and
+  `RectangularAppearance` (60), both `if !fill? then debugger` on the paint path;
+  `Class._removeHelperFunctions` (257) and `Mixin._removeHelperFunctions` (71);
+  `Mixin` (299); `ClippingAtRectangularBoundsMixin` (114); `HighlightableMixin` (59).
+
+**Why it matters.** A check that cannot fail a run gives false comfort. Two of these guard the
+paint path, where this project has already lost time to a fill that painted nothing "with no
+error anywhere" (`Fizzygum/CLAUDE.md`, the `@param` convention).
+
+**Fix shape.** One reporter, a `console.error` with a token that the headless runners fail on, in
+the same way they fail on `NON_INTEGER_GEOMETRY` (the tokens are listed in
+`Fizzygum-tests/scripts/lib/gate-tokens.js`). Each of the 15 then becomes a reporting check, or
+is deleted with the evidence that its condition cannot occur. With §7 done as well, the stink's
+baseline goes from 32 to 0, its pattern is widened to see the `then debugger` form, and it becomes
+a hard zero.
+
+**Risk.** A trap that starts reporting may be firing today, unseen. That is the purpose, and it
+sets the order of work.
+
+**First step.** A temporary prelude that counts how often each of the 15 branches is entered over
+one suite run, at dpr 1 and dpr 2. Branches never entered are converted directly; any that fire
+are a finding to bring to the owner before the token is wired into the fail-gate.
+
+**Re-measure.**
+`grep -rnE '^\s*debugger\s*$|then debugger\s*$' Fizzygum/src --include='*.coffee' | grep -v ':\s*#' | wc -l`.
+
+---
+
+## §5. Lift the browser-input bridge off `WorldWdgt`
+
+**Effort.** About two days: one new class whose roughly 160 code lines are moved, not written;
+the world's construction and both teardown paths rewired; the harness's call sites; then the
+lifetime gates.
+
+**Evidence.**
+- READ: seven adjacent methods of `WorldWdgt` (`_initVirtualKeyboard`,
+  `_initPointerEventListeners`, `_initKeyboardEventListeners`, `_initClipboardEventListeners`,
+  `_initOtherMiscEventListeners`, `initEventListeners`, `removeEventListeners`; 158 code lines)
+  install and remove the DOM listeners and keep their closures in fields of the world.
+- MEASURED: the family's outside surface is two calls, `initEventListeners()` and
+  `removeEventListeners()`, made from the harness (`AutomatorPlayer`, `WorldTestSupport`).
+- READ: `Serializer.serializeWorld`'s comment gives "a dozen event-listener CLOSURES" as one
+  reason the world cannot be serialised as an ordinary record.
+- READ: this is the established direction. `UntitledNamingService`, `WidgetFactory` and
+  `Wallpaper` left the world in the June arc, and `world.macroToolkit`, `world.pinouts`,
+  `world.parts`, `world.dataflow` and `WorldInventory` are collaborators of the same kind.
+
+**Why it matters.** The world is at once the root widget, the cycle driver and the page's DOM
+adapter. The DOM half is the one with a narrow seam and no determinism logic of its own: it
+translates browser events into `InputEvent` records for the queue.
+
+**Fix shape.** A plain collaborator class, constructed by the world, that owns the listener
+closures and feeds the world's input queue. The world keeps two delegating methods, or the
+harness calls the collaborator directly.
+
+**Risk.** The listeners are page-lifetime resources, so the teardown contract in
+`Fizzygum/CLAUDE.md` ("ONE world teardown, two callers, TWO obligations") applies: both
+`resetWorld` and `loadWorldSnapshot` must still release them, and `fg vmtruth` will name a leaked
+closure. Removing members from `WorldWdgt` can move an inspector reference if a test inspects the
+world (same case law as §7).
+
+**A second candidate, not yet examined.** `FrameWdgt`'s docking family (`dockSideAt` to
+`floatOutOfDock`, 131 code lines) is UNVERIFIED as a seam. Assess it in the same spike; do not
+assume it.
+
+**First step.** List every field the seven methods write and every reader of those fields
+outside them. If any reader is in the cycle or the hand, the seam is wider than it looks and the
+item should be re-scoped.
+
+**Re-measure.**
+`grep -nE '^  (_init[A-Za-z]+|initEventListeners|removeEventListeners):' Fizzygum/src/WorldWdgt.coffee`.
+
+---
+
+## §6. One plane-mapping protocol for the ancestor walk
+
+**Effort.** About three days: a day's spike to settle the protocol's shape, a day to convert the
+eight methods and the two implementers, and up to a day of A/A performance measurement and dpr-2
+verification.
+
+**Evidence.**
+- READ: `Widget.coffee` contains eight hand-written loops that climb `@parent` and ask each
+  ancestor how it maps its child's plane: `mapRectToScreen`, `screenPointToMyPlane`,
+  `localPointToScreen`, `_enclosingNonIdentityIsland`, `_enclosingMappedPlaneRoot`,
+  `screenBounds`, `accumulatedRotationDegrees` and `accumulatedScaleFactor`.
+- READ: each loop asks the question in two different ways. For a transform island it tests the
+  type and reaches into a field: `ancestor instanceof TransformFrameWdgt and
+  !ancestor.transformSpec.isIdentity()` (eight occurrences). For a scrolled plane, five of the
+  same loops ask a capability: `ancestor.scrollTranslationOfChild?(previous)` (one implementer,
+  `ViewportWdgt.scrollTranslationOfChild`).
+- MEASURED: 10 of `Widget.coffee`'s 13 `instanceof` tests name `TransformFrameWdgt`. The base
+  class names one of its own subclasses, and those ten are all the `instanceof TransformFrameWdgt`
+  tests in `src/`. The `instanceof-type-test` stink stands at 74.
+
+**Why it matters.** "How does this ancestor map its child?" is one question with two kinds of
+answer (an affine map, a translation). The scroll half already has the right shape: the ancestor
+answers for itself and the walker does not care what class it is. The island half predates that
+shape. A third kind of plane would today mean editing eight loops.
+
+**Fix shape.** One protocol that both ancestors answer, for example
+`planeMappingOfChild?(child)`, returning nothing for an ancestor that maps nothing (an identity
+island included). One upward iterator in `Widget` yields `(mapping, ancestor)` pairs, innermost
+first. The eight methods become short folds over it. The ten type tests and the `transformSpec`
+reach-ins disappear from the base class, and `TransformFrameWdgt` and `ViewportWdgt` each state
+their own mapping.
+
+**What stays different, on purpose.** READ: the loops are not identical. `screenBounds` maps
+exactly (`TransformSpec.mapRectExact`, raw float corners) where `mapRectToScreen` uses
+`mapRect`, which floors, ceils and pads by one pixel, and also deposits buffer damage on each
+island and tracks the outermost island clip. `TransformSpec`'s own comment keeps those two
+mapping bodies parallel so that the damage path "stays byte-untouched"; this item does not merge
+them. So the target is one iterator and eight small bodies, not one function.
+
+**Risk.** These are hot: `screenPointToMyPlane` runs per pointer event and `mapRectToScreen` per
+damage rectangle. The mapping an ancestor returns must not allocate per call; returning the
+island's own `transformSpec` and the viewport's existing translation `Point`, with the ancestor
+supplying the pivot, avoids it (UNVERIFIED: the two answers have different call shapes today,
+`spec.mapPoint(p, ancestor.bounds)` against `p.add(translation)`, and the spike must find one
+shape that costs nothing). Measure before and after with an A/A run first, since run-to-run noise
+on this machine is not small.
+
+**First step.** A spike on `localPointToScreen` and `screenBounds` only, behind the existing
+methods, with a temporary check that old and new agree on every call across one suite run.
+
+**Verification.** `fg presuite` (its `fracplane` rider is the inner loop's only dpr-2 view of
+rotated containers), then `fg gauntlet`. Expect zero reference changes.
+
+**Not owned elsewhere.** `plans/affine-transforms-plan.md`'s open items (§7.1 to §7.4) are
+features; none restructures the walk.
+
+**Re-measure.**
+`grep -n "instanceof TransformFrameWdgt" Fizzygum/src/basic-widgets/Widget.coffee | wc -l` and
+`grep -rn "scrollTranslationOfChild" Fizzygum/src --include='*.coffee' | grep -v ":\s*#"`.
+
+---
+
+## §7. Derived-geometry caches: one oracle, then one memo
+
+**Effort.** Step 1 is about half a day and stands alone. Step 2 is about three days and may be
+abandoned on its measurements: it needs a class-level declaration form that the meta-system
+understands, and an A/A performance comparison.
+
+**Evidence.**
+- READ: eight derived queries are memoised by hand against a global version counter: `root` and
+  `firstParentClippingAtBounds` in `TreeNode`; `visibleBasedOnIsVisibleProperty`, `fullBounds`,
+  `fullClippedBounds`, `clippedThroughBounds`, `clipThrough` and `isInCollapsedSubtree` in
+  `Widget`. Each keeps a `check<Name>Cache` stamp and a `cached<Name>` value and compares the
+  stamp with `WorldWdgt.geometryVersion`, `structureVersion` or `visibilityVersion`.
+- MEASURED: each has an uncached twin for verification. There are 16 `SLOW<name>` definitions,
+  because `WorldWdgt`, `ActivePointerWdgt`, `TransformFrameWdgt` and
+  `ClippingAtRectangularBoundsMixin` override the fast query and must override its twin with
+  it (`TransformFrameWdgt`'s comment: the twins "are overridden IN LOCKSTEP").
+- MEASURED: the comparison is written out 17 times, as
+  `if world.doubleCheckCachedMethodsResults` / compare / `debugger` /
+  `console.error "CACHED_DERIVATION_DIVERGED -- <name> is broken"`, some queries carrying it on
+  both the cached and the uncached path. Those are 17 of the 32 lines the `debugger-statement`
+  stink counts.
+- READ: the oracle is live, not vestigial. The gauntlet's `settle` leg arms the flag on the
+  world's prototype (`notification-settle-prelude.js`), and the runners fail on the token.
+
+**Why it matters.** The pattern is correct and worth keeping. Its expression is not: every query
+interleaves three concerns (compute, cache, verify), a new query means copying about twenty lines,
+and an override that forgets its twin weakens the oracle without any signal.
+
+**Fix shape, two steps.**
+1. **One oracle.** A single private method, for example `_reportIfCachedDiverges name, result,
+   slow`, holds the flag test, the comparison (`equals` for rectangles, identity otherwise) and
+   the `console.error`. The token text does not change, so the gate does not change. Seventeen
+   blocks and seventeen `debugger` lines go. No hot-path cost: the flag test already exists at
+   every site.
+2. **One memo.** Declare each derived query once: its name, the version counter it depends on,
+   its compute body, its slow twin. Generate the accessor at class-definition time so the fast
+   path stays a monomorphic field compare with no closure per call. An overriding class then
+   overrides a declaration, and the twin cannot be forgotten.
+
+**Risk.** Step 1 adds a member to `Widget`. The inspector's member lists are screenshotted, and a
+member added to or removed from a core prototype has moved inspector references before
+(`docs/archive/god-class-decomposition-plan.md`, guardrail 1); budget for a benign inspector
+recapture and confirm it is only that. Step 2 touches the hottest reads in the paint loop and has
+to pass the meta-system, which compiles class members from source text member by member
+(`src/meta/Class.coffee`): a class-level declaration helper must be something that pipeline and
+the inspector's source view both handle. If step 2 measures slower, stop after step 1.
+
+**First step.** Step 1 on `fullBounds` alone, then the whole family in one commit.
+
+**Verification.** The settle leg's own bite proof (`cache-oracle-selftest-headless.js`, run by the
+gauntlet's `selftests` leg) must still see a planted divergence. Then `fg gauntlet`.
+
+**Re-measure.**
+`grep -rn "doubleCheckCachedMethodsResults" Fizzygum/src --include='*.coffee' | grep -v ":\s*#" | wc -l`
+(17 branches plus the field's declaration) and
+`grep -rnE "^\s+SLOW[A-Za-z]+:" Fizzygum/src --include='*.coffee' | wc -l`.
+
+---
+
+## §8. Ratchets for method count and complexity; split the sequential giants
+
+**Effort.** The ratchets are about a day and stand alone: a new gate needs its rule registry
+entry and its bite proof, and `coffee-cc` is an npm devDependency today (`fg cc` asks for an
+`npm install` when it is missing), so the complexity half either makes it a build requirement or
+vendors it. The splits are two to three days more, one function at a time.
+
+**Evidence.**
+- MEASURED, method counts (a line matching a two-space-indented `name: … ->` definition) against
+  the June god-class arc's base `4c684991`:
+
+  | Class | Methods then | Methods now | Code lines now |
+  |---|---|---|---|
+  | `Widget` | 310 | 382 | 2,497 |
+  | `WorldWdgt` | 109 | 128 | 1,584 |
+  | `ActivePointerWdgt` | 30 | 65 | 730 |
+  | `FrameWdgt` | (class did not exist) | 173 | 1,044 |
+
+- MEASURED, cognitive complexity (`coffee-cc`, the tool behind `fg cc`): 4,446 functions, total
+  9,709. The top of the list: `WorldInventory#takeInventory` 130,
+  `Serializer#_buildObjectTable` 106, `ViewportWdgt#takeStrokeScrollFrom` 93,
+  `ActivePointerWdgt#processPointerUp` 80, `Deserializer#_worldSectionProblem` 76,
+  `Class#constructor` 70, `WorldWdgt#loadWorldSnapshot` 67, `Deserializer#deserialize` 61,
+  `Deserializer#_envelopeShapeProblem` 59,
+  `StringWdgt#searchLongestFittingTextByMultiCroppingIt` 55. (Two mixin bodies also score above
+  70, but the tool counts a whole mixin body as one function, and
+  `plans/mixin-removal-plan.md` re-homes them.)
+- READ: nothing holds either number. `docs/BACKLOG.md` carries the unbuilt item "per-file metrics
+  ratchet for god-class line counts" (`archive/lint-generic-rules-carryover-plan.md` §8.5 C).
+
+**Why it matters.** The June arc lifted what it could and judged the determinism core best left
+alone. Since then the three classes that existed took on 126 methods between them, and
+`FrameWdgt` arrived at 173, with no signal either way. Without a ratchet every future
+decomposition is a one-off.
+
+**Fix shape.**
+1. **Two ratchets, in the `check-stinks.js` style** (a recorded value that may fall and may not
+   rise): a method-count ceiling for the four classes, and a per-function complexity ceiling
+   where the functions already above it are recorded at today's value. Count methods, not lines:
+   a line ratchet would punish the comments this project asks for. This closes the BACKLOG item
+   in a better form.
+2. **Split the sequential giants.** UNVERIFIED, since these bodies were not read for this survey:
+   `takeInventory`, `_buildObjectTable`, `loadWorldSnapshot`, `deserialize` and the two
+   `Deserializer` validators look like phase-after-phase code, which splits into named phases
+   without changing behaviour. Test that per function before promising it.
+
+**Do not include.** `processPointerUp` and `takeStrokeScrollFrom` are input-recognition state
+machines in the determinism core. The June arc's Tier 4 verdict (LEAVE, no determinism-safe seam)
+covers them, and this survey found no new argument.
+
+**First step.** The ratchets, since they are small and stop the drift whatever else happens.
+
+**Re-measure.** `Fizzygum/node_modules/.bin/coffee-cc src` run from `Fizzygum/` (read-only), and
+`grep -cE '^  [A-Za-z_$][A-Za-z0-9_$]*: *(\([^)]*\))? *[-=]>' Fizzygum/src/basic-widgets/Widget.coffee`.
+
+---
+
+## §9. Icon shells: one `IconWdgt` and a derived icon catalog
+
+**Effort.** Four to five days: about 70 files deleted, 139 construction sites and 17 test files
+edited, the menu and its creators derived from one list, the colloquial-name derivation moved,
+and very likely a reference review with the owner.
+
+**Evidence.**
+- MEASURED: 72 classes extend `IconWdgt`. Fifty of them are exactly two code lines: the class
+  line and `createAppearance: -> new <X>IconAppearance @`. Sixty-nine are six code lines or
+  fewer; the extra lines are a stated `colloquialName` or a tooltip. The drawing lives in the
+  106 `*IconAppearance` files, which this item does not touch.
+- MEASURED: `src/demos/DemoMenus.coffee` carries 58 methods of the form
+  `create<X>IconWdgt: -> world.create new <X>IconWdgt` and 55 hand-written menu rows that name
+  them by string.
+- So one icon is stated four times in three files: the appearance, the shell class, the creator
+  method, the menu row.
+- READ: `docs/archive/oo-smells-refactoring-backlog.md` Phase 2 (2026-06-17) thinned the shells
+  to today's form and explicitly deferred "the aggressive form", collapsing the classes to a
+  registry, as "only worth it if a future need (e.g. data-driven icon menus) appears. Flag for an
+  owner decision." The hand-written menu and its 58 creators are that need, present in the tree.
+
+**Why it matters.** The shells are 12% of the files in `src/` and carry no behaviour. A shell
+class has to be compiled at boot on a compile-at-boot page, ordered by the dependency scanner,
+assigned to a part, and kept in step with the menu by hand.
+
+**Fix shape.** `IconWdgt` takes its appearance as its identity argument and the shells are
+deleted. The icon menu and its creators are generated from one ordered list of appearance
+classes. Two spellings are possible and the spike chooses:
+- `new IconWdgt new HeartIconAppearance`: keeps the `new X` spelling that the boot dependency
+  scanner reads (`src/boot/dependencies-finding.coffee`), but appearances are constructed with
+  their widget today (`new FooAppearance @`), so the widget would be bound after construction.
+- `new IconWdgt HeartIconAppearance`: reads better, but a bare class name passed as an argument
+  may be invisible to the dependency scanner and to `check-part-edges.js` (UNVERIFIED for the
+  gate; check both before choosing).
+
+**Costs, stated plainly.** MEASURED: 139 `new <X>IconWdgt` sites in `src/` and 17 test files that
+name an icon widget class (`HeartIconWdgt` 40 times, `GenericObjectIconWdgt` 13,
+`GenericShortcutIconWdgt` 9). A saved snapshot that names a deleted shell class stops loading.
+The colloquial name is derived from the class name today and is DRAWN in hierarchy menus, so it
+must be derived from the appearance class to the same string or those references move; the menu's
+row order must be kept by the list, not by enumeration.
+
+**Owner decision.** Whether class identity per icon is worth keeping for its own sake (an icon
+inspected in the running world shows `HeartIconWdgt` today and would show `IconWdgt` with a
+`HeartIconAppearance`).
+
+**Coordination.** `plans/pixel-icons-plan.md` P3 converts appearance files and leaves "Wdgt files
+untouched". The two compose; if both run, do this one first so P3 has fewer files to reason about.
+The creator-button shells (16 `CreatorButtonWdgt` subclasses and their kin) look alike but are
+owned by `plans/creation-and-templates-plan.md` §4.3 and are not part of this item.
+
+**First step.** Convert the eight `Arrow*IconWdgt` shells only (three code lines each, a stated
+colloquial name, about 25 construction sites between them) and take one `fg presuite`.
+
+**Re-measure.**
+`grep -rlE '^class [A-Za-z0-9_]+ extends IconWdgt' Fizzygum/src | wc -l` and
+`grep -cE '^  create[A-Za-z0-9]+IconWdgt: ' Fizzygum/src/demos/DemoMenus.coffee`.
+
+---
+
+## §10. Build logic in one language; the gate sequence as data
+
+**Effort.** Five to six days, in two parts that land separately. About three for the port: 614
+code lines of Python, seven gates and three shell scripts re-pointed, and a fingerprint per
+profile. About three for the gate table: the runner, `what-runs.js`, the bite-proof runner, and
+re-homing the per-gate comments.
 
 **Evidence.**
 - MEASURED: the build is written in three languages. `build_it_please.sh` is 1,302 lines of bash
@@ -211,405 +663,7 @@ runs every gate's bite proof) and `fg gauntlet` after each step.
 
 ---
 
-## §3. One plane-mapping protocol for the ancestor walk
-
-**Evidence.**
-- READ: `Widget.coffee` contains eight hand-written loops that climb `@parent` and ask each
-  ancestor how it maps its child's plane: `mapRectToScreen`, `screenPointToMyPlane`,
-  `localPointToScreen`, `_enclosingNonIdentityIsland`, `_enclosingMappedPlaneRoot`,
-  `screenBounds`, `accumulatedRotationDegrees` and `accumulatedScaleFactor`.
-- READ: each loop asks the question in two different ways. For a transform island it tests the
-  type and reaches into a field: `ancestor instanceof TransformFrameWdgt and
-  !ancestor.transformSpec.isIdentity()` (eight occurrences). For a scrolled plane, five of the
-  same loops ask a capability: `ancestor.scrollTranslationOfChild?(previous)` (one implementer,
-  `ViewportWdgt.scrollTranslationOfChild`).
-- MEASURED: 10 of `Widget.coffee`'s 13 `instanceof` tests name `TransformFrameWdgt`. The base
-  class names one of its own subclasses, and those ten are all the `instanceof TransformFrameWdgt`
-  tests in `src/`. The `instanceof-type-test` stink stands at 74.
-
-**Why it matters.** "How does this ancestor map its child?" is one question with two kinds of
-answer (an affine map, a translation). The scroll half already has the right shape: the ancestor
-answers for itself and the walker does not care what class it is. The island half predates that
-shape. A third kind of plane would today mean editing eight loops.
-
-**Fix shape.** One protocol that both ancestors answer, for example
-`planeMappingOfChild?(child)`, returning nothing for an ancestor that maps nothing (an identity
-island included). One upward iterator in `Widget` yields `(mapping, ancestor)` pairs, innermost
-first. The eight methods become short folds over it. The ten type tests and the `transformSpec`
-reach-ins disappear from the base class, and `TransformFrameWdgt` and `ViewportWdgt` each state
-their own mapping.
-
-**What stays different, on purpose.** READ: the loops are not identical. `screenBounds` maps
-exactly (`TransformSpec.mapRectExact`, raw float corners) where `mapRectToScreen` uses
-`mapRect`, which floors, ceils and pads by one pixel, and also deposits buffer damage on each
-island and tracks the outermost island clip. `TransformSpec`'s own comment keeps those two
-mapping bodies parallel so that the damage path "stays byte-untouched"; this item does not merge
-them. So the target is one iterator and eight small bodies, not one function.
-
-**Risk.** These are hot: `screenPointToMyPlane` runs per pointer event and `mapRectToScreen` per
-damage rectangle. The mapping an ancestor returns must not allocate per call; returning the
-island's own `transformSpec` and the viewport's existing translation `Point`, with the ancestor
-supplying the pivot, avoids it (UNVERIFIED: the two answers have different call shapes today,
-`spec.mapPoint(p, ancestor.bounds)` against `p.add(translation)`, and the spike must find one
-shape that costs nothing). Measure before and after with an A/A run first, since run-to-run noise
-on this machine is not small.
-
-**First step.** A spike on `localPointToScreen` and `screenBounds` only, behind the existing
-methods, with a temporary check that old and new agree on every call across one suite run.
-
-**Verification.** `fg presuite` (its `fracplane` rider is the inner loop's only dpr-2 view of
-rotated containers), then `fg gauntlet`. Expect zero reference changes.
-
-**Not owned elsewhere.** `plans/affine-transforms-plan.md`'s open items (§7.1 to §7.4) are
-features; none restructures the walk.
-
-**Re-measure.**
-`grep -n "instanceof TransformFrameWdgt" Fizzygum/src/basic-widgets/Widget.coffee | wc -l` and
-`grep -rn "scrollTranslationOfChild" Fizzygum/src --include='*.coffee' | grep -v ":\s*#"`.
-
----
-
-## §4. Derived-geometry caches: one oracle, then one memo
-
-**Evidence.**
-- READ: eight derived queries are memoised by hand against a global version counter: `root` and
-  `firstParentClippingAtBounds` in `TreeNode`; `visibleBasedOnIsVisibleProperty`, `fullBounds`,
-  `fullClippedBounds`, `clippedThroughBounds`, `clipThrough` and `isInCollapsedSubtree` in
-  `Widget`. Each keeps a `check<Name>Cache` stamp and a `cached<Name>` value and compares the
-  stamp with `WorldWdgt.geometryVersion`, `structureVersion` or `visibilityVersion`.
-- MEASURED: each has an uncached twin for verification. There are 16 `SLOW<name>` definitions,
-  because `WorldWdgt`, `ActivePointerWdgt`, `TransformFrameWdgt` and
-  `ClippingAtRectangularBoundsMixin` override the fast query and must override its twin with
-  it (`TransformFrameWdgt`'s comment: the twins "are overridden IN LOCKSTEP").
-- MEASURED: the comparison is written out 17 times, as
-  `if world.doubleCheckCachedMethodsResults` / compare / `debugger` /
-  `console.error "CACHED_DERIVATION_DIVERGED -- <name> is broken"`, some queries carrying it on
-  both the cached and the uncached path. Those are 17 of the 32 lines the `debugger-statement`
-  stink counts.
-- READ: the oracle is live, not vestigial. The gauntlet's `settle` leg arms the flag on the
-  world's prototype (`notification-settle-prelude.js`), and the runners fail on the token.
-
-**Why it matters.** The pattern is correct and worth keeping. Its expression is not: every query
-interleaves three concerns (compute, cache, verify), a new query means copying about twenty lines,
-and an override that forgets its twin weakens the oracle without any signal.
-
-**Fix shape, two steps.**
-1. **One oracle.** A single private method, for example `_reportIfCachedDiverges name, result,
-   slow`, holds the flag test, the comparison (`equals` for rectangles, identity otherwise) and
-   the `console.error`. The token text does not change, so the gate does not change. Seventeen
-   blocks and seventeen `debugger` lines go. No hot-path cost: the flag test already exists at
-   every site.
-2. **One memo.** Declare each derived query once: its name, the version counter it depends on,
-   its compute body, its slow twin. Generate the accessor at class-definition time so the fast
-   path stays a monomorphic field compare with no closure per call. An overriding class then
-   overrides a declaration, and the twin cannot be forgotten.
-
-**Risk.** Step 1 adds a member to `Widget`. The inspector's member lists are screenshotted, and a
-member added to or removed from a core prototype has moved inspector references before
-(`docs/archive/god-class-decomposition-plan.md`, guardrail 1); budget for a benign inspector
-recapture and confirm it is only that. Step 2 touches the hottest reads in the paint loop and has
-to pass the meta-system, which compiles class members from source text member by member
-(`src/meta/Class.coffee`): a class-level declaration helper must be something that pipeline and
-the inspector's source view both handle. If step 2 measures slower, stop after step 1.
-
-**First step.** Step 1 on `fullBounds` alone, then the whole family in one commit.
-
-**Verification.** The settle leg's own bite proof (`cache-oracle-selftest-headless.js`, run by the
-gauntlet's `selftests` leg) must still see a planted divergence. Then `fg gauntlet`.
-
-**Re-measure.**
-`grep -rn "doubleCheckCachedMethodsResults" Fizzygum/src --include='*.coffee' | grep -v ":\s*#" | wc -l`
-(17 branches plus the field's declaration) and
-`grep -rnE "^\s+SLOW[A-Za-z]+:" Fizzygum/src --include='*.coffee' | wc -l`.
-
----
-
-## §5. Icon shells: one `IconWdgt` and a derived icon catalog
-
-**Evidence.**
-- MEASURED: 72 classes extend `IconWdgt`. Fifty of them are exactly two code lines: the class
-  line and `createAppearance: -> new <X>IconAppearance @`. Sixty-nine are six code lines or
-  fewer; the extra lines are a stated `colloquialName` or a tooltip. The drawing lives in the
-  106 `*IconAppearance` files, which this item does not touch.
-- MEASURED: `src/demos/DemoMenus.coffee` carries 58 methods of the form
-  `create<X>IconWdgt: -> world.create new <X>IconWdgt` and 55 hand-written menu rows that name
-  them by string.
-- So one icon is stated four times in three files: the appearance, the shell class, the creator
-  method, the menu row.
-- READ: `docs/archive/oo-smells-refactoring-backlog.md` Phase 2 (2026-06-17) thinned the shells
-  to today's form and explicitly deferred "the aggressive form", collapsing the classes to a
-  registry, as "only worth it if a future need (e.g. data-driven icon menus) appears. Flag for an
-  owner decision." The hand-written menu and its 58 creators are that need, present in the tree.
-
-**Why it matters.** The shells are 12% of the files in `src/` and carry no behaviour. A shell
-class has to be compiled at boot on a compile-at-boot page, ordered by the dependency scanner,
-assigned to a part, and kept in step with the menu by hand.
-
-**Fix shape.** `IconWdgt` takes its appearance as its identity argument and the shells are
-deleted. The icon menu and its creators are generated from one ordered list of appearance
-classes. Two spellings are possible and the spike chooses:
-- `new IconWdgt new HeartIconAppearance`: keeps the `new X` spelling that the boot dependency
-  scanner reads (`src/boot/dependencies-finding.coffee`), but appearances are constructed with
-  their widget today (`new FooAppearance @`), so the widget would be bound after construction.
-- `new IconWdgt HeartIconAppearance`: reads better, but a bare class name passed as an argument
-  may be invisible to the dependency scanner and to `check-part-edges.js` (UNVERIFIED for the
-  gate; check both before choosing).
-
-**Costs, stated plainly.** MEASURED: 139 `new <X>IconWdgt` sites in `src/` and 17 test files that
-name an icon widget class (`HeartIconWdgt` 40 times, `GenericObjectIconWdgt` 13,
-`GenericShortcutIconWdgt` 9). A saved snapshot that names a deleted shell class stops loading.
-The colloquial name is derived from the class name today and is DRAWN in hierarchy menus, so it
-must be derived from the appearance class to the same string or those references move; the menu's
-row order must be kept by the list, not by enumeration.
-
-**Owner decision.** Whether class identity per icon is worth keeping for its own sake (an icon
-inspected in the running world shows `HeartIconWdgt` today and would show `IconWdgt` with a
-`HeartIconAppearance`).
-
-**Coordination.** `plans/pixel-icons-plan.md` P3 converts appearance files and leaves "Wdgt files
-untouched". The two compose; if both run, do this one first so P3 has fewer files to reason about.
-The creator-button shells (16 `CreatorButtonWdgt` subclasses and their kin) look alike but are
-owned by `plans/creation-and-templates-plan.md` §4.3 and are not part of this item.
-
-**First step.** Convert the eight `Arrow*IconWdgt` shells only (three code lines each, a stated
-colloquial name, about 25 construction sites between them) and take one `fg presuite`.
-
-**Re-measure.**
-`grep -rlE '^class [A-Za-z0-9_]+ extends IconWdgt' Fizzygum/src | wc -l` and
-`grep -cE '^  create[A-Za-z0-9]+IconWdgt: ' Fizzygum/src/demos/DemoMenus.coffee`.
-
----
-
-## §6. Silent invariant traps report, or go
-
-**Evidence.**
-- MEASURED: 36 lines in `src/` are a `debugger` statement: 32 standing alone and 4 written as
-  `if <condition> then debugger`. The `debugger-statement` stink's pattern is anchored at the
-  start of the line (`/^\s*debugger\b/`), so it counts 32 and does not see the other 4.
-- MEASURED: 21 of the 36 are followed by a report (17 `CACHED_DERIVATION_DIVERGED` errors, which
-  §4 removes, and 4 `throw`s). The other 15 are followed by nothing. Each sits in a branch that
-  has just detected a broken invariant, and its only action is a breakpoint, which does nothing
-  unless a developer has devtools open. The headless suite never does and neither does a user.
-- The 15, by method (line numbers as of the baseline): `WorldWdgt` damage-rectangle bookkeeping
-  (975, 999, 1013) and an input event without a time (2130); `TreeNode` (315); `StringWdgt`
-  text fitting (806, 900); `CaretWdgt` key handling (161); `BoxyAppearance` (152) and
-  `RectangularAppearance` (60), both `if !fill? then debugger` on the paint path;
-  `Class._removeHelperFunctions` (257) and `Mixin._removeHelperFunctions` (71);
-  `Mixin` (299); `ClippingAtRectangularBoundsMixin` (114); `HighlightableMixin` (59).
-
-**Why it matters.** A check that cannot fail a run gives false comfort. Two of these guard the
-paint path, where this project has already lost time to a fill that painted nothing "with no
-error anywhere" (`Fizzygum/CLAUDE.md`, the `@param` convention).
-
-**Fix shape.** One reporter, a `console.error` with a token that the headless runners fail on, in
-the same way they fail on `NON_INTEGER_GEOMETRY` (the tokens are listed in
-`Fizzygum-tests/scripts/lib/gate-tokens.js`). Each of the 15 then becomes a reporting check, or
-is deleted with the evidence that its condition cannot occur. With §4 done as well, the stink's
-baseline goes from 32 to 0, its pattern is widened to see the `then debugger` form, and it becomes
-a hard zero.
-
-**Risk.** A trap that starts reporting may be firing today, unseen. That is the purpose, and it
-sets the order of work.
-
-**First step.** A temporary prelude that counts how often each of the 15 branches is entered over
-one suite run, at dpr 1 and dpr 2. Branches never entered are converted directly; any that fire
-are a finding to bring to the owner before the token is wired into the fail-gate.
-
-**Re-measure.**
-`grep -rnE '^\s*debugger\s*$|then debugger\s*$' Fizzygum/src --include='*.coffee' | grep -v ':\s*#' | wc -l`.
-
----
-
-## §7. The video-player part: delete it or gate it
-
-**Evidence.**
-- MEASURED: the `video-player` part is `src/video-player/`, 12 files and 799 lines. In
-  `buildSystem/parts.json` it is the only part carrying `requiresFlag`, and
-  `buildProfile.py`'s `partShips` says the mechanism "survives profiles for exactly one carrier".
-  The `dev` profile selects every part (`"parts": "all"`), and the flag requirement is what keeps
-  this one out of it, so no default build ships the part and no gate has ever run its classes.
-- READ: it costs three build flags (`--includeVideoPlayer`, `--includeVideos`,
-  `--keepPreviousPrivateVideos`), an `includeVideoPlayer` parameter threaded through four
-  functions of `buildProfile.py`, two guards in core (`WorldWdgt.createDesktop`'s auto-launch and
-  `WorldWdgt.draftRunVideoPlayer`), and `video-related-scripts/` (nine shell scripts, last
-  committed 2025-05-16, referenced by nothing).
-- READ: `docs/BACKLOG.md` holds five open defects that live entirely inside the part: a world
-  holding the player cannot be saved; a boot with the part logs 304 `NON_INTEGER_GEOMETRY`
-  errors; a player with no loadable video is invisible and hangs a headless page when shown; it
-  throws under SWCanvas on every paint; `SimpleRasterImageButtonWdgt.imagePath` is a stale second
-  copy of its face's path.
-- READ: `SimpleImageWdgt`, the bitmap loader, was moved into this part because only the part used
-  it, and BACKLOG notes that building a load-image flow "means first deciding where the loader
-  belongs".
-
-**Why it matters.** This is code outside every guarantee the project enforces, known to be broken
-in five ways, kept reachable by a build mechanism that exists only for it.
-
-**Owner decision.** Two coherent answers:
-- **Delete** the part, the `requiresFlag` mechanism, the three flags, the two core guards and the
-  nine scripts; move `SimpleImageWdgt` to where the image flow will want it. Git keeps the rest.
-  The five BACKLOG items close as moot. Recommended unless the player is wanted again.
-- **Gate** it: drop `requiresFlag` and the flags, so `dev` ships the part like any other and the
-  suite page carries it, and fix the five defects under the normal gates. The 304 geometry
-  errors alone would fail the suite on the first run, so the fixes come first.
-
-Either answer removes the one-carrier mechanism. The related classes outside the part
-(`VideoPlayIconWdgt`, `VideoPlayIconAppearance`, `VideoPlayCreatorButtonWdgt`,
-`VideoPlayButtonWdgt`, `SimpleVideoLinkWdgt`) follow whichever answer is chosen.
-
-**First step after the decision.** For deletion:
-`grep -rn "Video\|video" Fizzygum/src --include='*.coffee' -l` to list every file to visit, then
-one commit, then `fg gauntlet` and `fg homepage`.
-
-**Re-measure.**
-`grep -n "requiresFlag" Fizzygum/buildSystem/parts.json Fizzygum/buildSystem/buildProfile.py`.
-
----
-
-## §8. Ratchets for method count and complexity; split the sequential giants
-
-**Evidence.**
-- MEASURED, method counts (a line matching a two-space-indented `name: … ->` definition) against
-  the June god-class arc's base `4c684991`:
-
-  | Class | Methods then | Methods now | Code lines now |
-  |---|---|---|---|
-  | `Widget` | 310 | 382 | 2,497 |
-  | `WorldWdgt` | 109 | 128 | 1,584 |
-  | `ActivePointerWdgt` | 30 | 65 | 730 |
-  | `FrameWdgt` | (class did not exist) | 173 | 1,044 |
-
-- MEASURED, cognitive complexity (`coffee-cc`, the tool behind `fg cc`): 4,446 functions, total
-  9,709. The top of the list: `WorldInventory#takeInventory` 130,
-  `Serializer#_buildObjectTable` 106, `ViewportWdgt#takeStrokeScrollFrom` 93,
-  `ActivePointerWdgt#processPointerUp` 80, `Deserializer#_worldSectionProblem` 76,
-  `Class#constructor` 70, `WorldWdgt#loadWorldSnapshot` 67, `Deserializer#deserialize` 61,
-  `Deserializer#_envelopeShapeProblem` 59,
-  `StringWdgt#searchLongestFittingTextByMultiCroppingIt` 55. (Two mixin bodies also score above
-  70, but the tool counts a whole mixin body as one function, and
-  `plans/mixin-removal-plan.md` re-homes them.)
-- READ: nothing holds either number. `docs/BACKLOG.md` carries the unbuilt item "per-file metrics
-  ratchet for god-class line counts" (`archive/lint-generic-rules-carryover-plan.md` §8.5 C).
-
-**Why it matters.** The June arc lifted what it could and judged the determinism core best left
-alone. Since then the three classes that existed took on 126 methods between them, and
-`FrameWdgt` arrived at 173, with no signal either way. Without a ratchet every future
-decomposition is a one-off.
-
-**Fix shape.**
-1. **Two ratchets, in the `check-stinks.js` style** (a recorded value that may fall and may not
-   rise): a method-count ceiling for the four classes, and a per-function complexity ceiling
-   where the functions already above it are recorded at today's value. Count methods, not lines:
-   a line ratchet would punish the comments this project asks for. This closes the BACKLOG item
-   in a better form.
-2. **Split the sequential giants.** UNVERIFIED, since these bodies were not read for this survey:
-   `takeInventory`, `_buildObjectTable`, `loadWorldSnapshot`, `deserialize` and the two
-   `Deserializer` validators look like phase-after-phase code, which splits into named phases
-   without changing behaviour. Test that per function before promising it.
-
-**Do not include.** `processPointerUp` and `takeStrokeScrollFrom` are input-recognition state
-machines in the determinism core. The June arc's Tier 4 verdict (LEAVE, no determinism-safe seam)
-covers them, and this survey found no new argument.
-
-**First step.** The ratchets, since they are small and stop the drift whatever else happens.
-
-**Re-measure.** `Fizzygum/node_modules/.bin/coffee-cc src` run from `Fizzygum/` (read-only), and
-`grep -cE '^  [A-Za-z_$][A-Za-z0-9_$]*: *(\([^)]*\))? *[-=]>' Fizzygum/src/basic-widgets/Widget.coffee`.
-
----
-
-## §9. Lift the browser-input bridge off `WorldWdgt`
-
-**Evidence.**
-- READ: seven adjacent methods of `WorldWdgt` (`_initVirtualKeyboard`,
-  `_initPointerEventListeners`, `_initKeyboardEventListeners`, `_initClipboardEventListeners`,
-  `_initOtherMiscEventListeners`, `initEventListeners`, `removeEventListeners`; 158 code lines)
-  install and remove the DOM listeners and keep their closures in fields of the world.
-- MEASURED: the family's outside surface is two calls, `initEventListeners()` and
-  `removeEventListeners()`, made from the harness (`AutomatorPlayer`, `WorldTestSupport`).
-- READ: `Serializer.serializeWorld`'s comment gives "a dozen event-listener CLOSURES" as one
-  reason the world cannot be serialised as an ordinary record.
-- READ: this is the established direction. `UntitledNamingService`, `WidgetFactory` and
-  `Wallpaper` left the world in the June arc, and `world.macroToolkit`, `world.pinouts`,
-  `world.parts`, `world.dataflow` and `WorldInventory` are collaborators of the same kind.
-
-**Why it matters.** The world is at once the root widget, the cycle driver and the page's DOM
-adapter. The DOM half is the one with a narrow seam and no determinism logic of its own: it
-translates browser events into `InputEvent` records for the queue.
-
-**Fix shape.** A plain collaborator class, constructed by the world, that owns the listener
-closures and feeds the world's input queue. The world keeps two delegating methods, or the
-harness calls the collaborator directly.
-
-**Risk.** The listeners are page-lifetime resources, so the teardown contract in
-`Fizzygum/CLAUDE.md` ("ONE world teardown, two callers, TWO obligations") applies: both
-`resetWorld` and `loadWorldSnapshot` must still release them, and `fg vmtruth` will name a leaked
-closure. Removing members from `WorldWdgt` can move an inspector reference if a test inspects the
-world (same case law as §4).
-
-**A second candidate, not yet examined.** `FrameWdgt`'s docking family (`dockSideAt` to
-`floatOutOfDock`, 131 code lines) is UNVERIFIED as a seam. Assess it in the same spike; do not
-assume it.
-
-**First step.** List every field the seven methods write and every reader of those fields
-outside them. If any reader is in the cycle or the hand, the seam is wider than it looks and the
-item should be re-scoped.
-
-**Re-measure.**
-`grep -nE '^  (_init[A-Za-z]+|initEventListeners|removeEventListeners):' Fizzygum/src/WorldWdgt.coffee`.
-
----
-
-## §10. Repository hygiene
-
-Each line was checked for references across both repos, `fg` and the local tooling, excluding
-`docs/archive/`. MEASURED unless marked.
-
-**Orphan files in `Fizzygum/` (no reference anywhere):**
-
-| File | Note |
-|---|---|
-| `open_all_sources_in_TextWrangler.sh` | 57 bytes, last commit 2017-04-12 |
-| `buildSystem/OBSOLETE generateOverviewDoc.py` | named obsolete |
-| `buildSystem/generate-JSON-Manifest-for-directory.js` | |
-| `buildSystem/jsonToCoffeescriptVariable.js`, `buildSystem/jsonToJSVariable.js` | reference only each other |
-| `auxiliary files/find-tokens-used-only-once.sh` | |
-| `auxiliary files/all-color-literals-rgb-values-regexp.txt` | |
-| `auxiliary files/additional-icons/xPointerImage4.psd` | 138,970-byte Photoshop source |
-| `.gitmodules` | tracked, 0 bytes |
-
-**Stale but live.** `auxiliary files/pre-compiled.js` is a real build input (the "not
-pre-compiled" stub), but its header describes a flow that no longer exists (a zip download and
-the deleted `--homepage` flag). `package.json` names `"main": "index.js"`, which does not exist,
-and its `test` script is the `npm init` stub (see §1).
-
-**Two vendoring homes.** `vendor/` holds acorn, the SWCanvas builds and their pins.
-`auxiliary files/` holds three more third-party libraries (the CoffeeScript compiler, FileSaver,
-JSZip) and the `additional-icons/` images. The directory name contains a space and is quoted at
-every use (nine asset rows in `parts.json`, `lib/meta-compiler.js`, `lib/build-inputs.js`). One
-home for third-party code (`vendor/`) and one for images.
-
-**Closed plans in the wrong repo.** `Fizzygum-tests/` keeps three closed plan documents at its
-root: `MIGRATION-PLAN.md` (1,274 lines, closed 2026-06-12), `REFERENCE-FILENAME-GRAMMAR-PLAN.md`
-(448, closed 2026-08-22) and `SCREENSHOT-EQUALITY-PLAN.md` (157, closed 2026-06-12).
-`docs/README.md`'s filing rule sends a closed plan to `Fizzygum/docs/archive/` with an
-`INDEX.md` line. Check for inbound links before moving them.
-
-**An exclusion mechanism that excludes nothing (owner decision).** `SWCanvasBrokenTests` in the
-harness holds two skip lists, both empty (`testNamesDpi1: []`, `testNamesDpi2: []`). The loader
-filter, the stale-name report and two runner branches exist to serve them. Delete the mechanism,
-or keep it as a deliberate valve and say so in its header.
-
-**First step.** One commit per repo for the orphan files; the vendoring move as its own commit
-with an `fg fingerprint` showing only path changes.
-
-**Re-measure.** For any file `F`:
-`grep -rIl --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=archive -e "F" Fizzygum Fizzygum-tests fg`
-from the umbrella directory.
-
----
-
-## 11. Measured and deliberately not ranked
+## 11. Measured and deliberately not listed
 
 - **Comment volume.** 31,425 comment lines against 38,332 code lines; in `Widget.coffee`,
   `WorldWdgt.coffee` and `FrameWdgt.coffee` comments outnumber code. The project treats comments
@@ -626,14 +680,14 @@ from the umbrella directory.
 - **`serialization-roundtrip-headless.js`.** 5,023 lines in one file, about 25 in-page check
   functions, already selectable by `--sections=`. Splitting it by section is mechanical and
   would help its readers, but nothing depends on it.
-- **The rest of the `instanceof` ratchet.** After §3 it would stand at 64. Twenty of those test
+- **The rest of the `instanceof` ratchet.** After §6 it would stand at 64. Twenty of those test
   for `Widget` itself and eleven for `Point`, which are mostly value checks, not layering
   problems. The existing ratchet is the right tool.
 - **Orphan classes.** A scan for classes that no other file's code names found one,
   `LCLProgramRunner`, which `buildSystem/dead-method-allowlist.txt` already records as awaiting
   the LiveCodeLang decision.
 
-## 12. Already owned elsewhere (not re-ranked)
+## 12. Already owned elsewhere (not listed again)
 
 | Topic | Owner |
 |---|---|
@@ -647,19 +701,19 @@ from the umbrella directory.
 ## 13. Case law that bounds these items (do not re-attempt blind)
 
 - **The determinism core of `Widget`, `WorldWdgt` and the hand was assessed and left.**
-  `docs/archive/god-class-decomposition-plan.md`, Tier 4: no determinism-safe seam. §8 and §9
+  `docs/archive/god-class-decomposition-plan.md`, Tier 4: no determinism-safe seam. §5 and §8
   stay outside it on purpose.
 - **Removing or adding a member on a core prototype is not automatically pixel-free.** The same
   plan's guardrail 1 corrected the assumption that pure moves need no recapture: inspector member
-  lists are screenshotted. §4 and §9 budget for it.
+  lists are screenshotted. §5 and §7 budget for it.
 - **The icon shells were kept on purpose once.** `docs/archive/oo-smells-refactoring-backlog.md`
-  Phase 2 chose the keep-the-classes form and named the condition for revisiting it. §5 argues
+  Phase 2 chose the keep-the-classes form and named the condition for revisiting it. §9 argues
   the condition is met; it does not claim the earlier choice was wrong.
 - **Text-level exclusion markers are retired and gated at zero** (`Fizzygum/CLAUDE.md`, "How a
-  build flavour excludes code"). Whatever §7 chooses, it must not introduce a marker or a new
+  build flavour excludes code"). Whatever §3 chooses, it must not introduce a marker or a new
   flag.
 - **A class rename or removal can move drawn labels.** Menu and hierarchy labels are derived from
-  class names (`Fizzygum/CLAUDE.md`, the `Wdgt` suffix note). §5 depends on this.
+  class names (`Fizzygum/CLAUDE.md`, the `Wdgt` suffix note). §9 depends on this.
 - **A "pixel-neutral" expectation is a hypothesis until measured.** Every item above that expects
   zero reference changes says how to confirm it.
 
@@ -673,7 +727,7 @@ Invoke the wrapper by absolute path; never pipe a gating call through a filter.
 /Users/davidedellacasa/code/Fizzygum-all/fg presuite    # inner loop: build, dpr-1 suite, paint audit, fracplane rider (about 3 min)
 /Users/davidedellacasa/code/Fizzygum-all/fg gauntlet    # commit point: 20 legs (about 15 to 20 min), run in the background, log to a file
 /Users/davidedellacasa/code/Fizzygum-all/fg homepage    # production profile boot and snapshot round-trip
-/Users/davidedellacasa/code/Fizzygum-all/fg fingerprint # build-tree diff against a baseline ref (§2, §10)
+/Users/davidedellacasa/code/Fizzygum-all/fg fingerprint # build-tree diff against a baseline ref (§1, §10)
 /Users/davidedellacasa/code/Fizzygum-all/fg cc          # cognitive complexity, read-only (§8)
 ```
 
@@ -684,20 +738,20 @@ and the owner has seen them. A fuzz or audit failure is never a reason to recapt
 
 - `Fizzygum/CLAUDE.md`, `Fizzygum-tests/CLAUDE.md`, `Fizzygum-tests/DETERMINISM.md`
 - `docs/README.md` (filing rules), `docs/BACKLOG.md`, `docs/archive/INDEX.md`
-- `docs/architecture/build-and-packaging.md` (§2, §7, §10)
-- `docs/architecture/lint-and-static-checks.md` (the gate index; §2, §6, §8)
-- `docs/architecture/transforms.md`, `docs/architecture/viewports-and-planes.md` (§3)
-- `docs/architecture/layout.md`, `docs/architecture/world-lifetime-and-inventory.md` (§4, §9)
-- `docs/architecture/widget-authoring-guidelines.md` §5 (the appearance factory; §5)
+- `docs/architecture/build-and-packaging.md` (§1, §3, §10)
+- `docs/architecture/lint-and-static-checks.md` (the gate index; §4, §8, §10)
+- `docs/architecture/transforms.md`, `docs/architecture/viewports-and-planes.md` (§6)
+- `docs/architecture/layout.md`, `docs/architecture/world-lifetime-and-inventory.md` (§5, §7)
+- `docs/architecture/widget-authoring-guidelines.md`, its §5 on the appearance factory (item §9)
 - `docs/archive/god-class-decomposition-plan.md`, `docs/archive/oo-smells-refactoring-backlog.md`
   (the two earlier arcs this survey builds on)
-- `buildSystem/lib/what-runs.js` (its header documents every root of "what runs"; §1, §2)
+- `buildSystem/lib/what-runs.js` (its header documents every root of "what runs"; §2, §10)
 
 ## 16. Start prompt for a fresh session
 
 ```
-Read Fizzygum/docs/plans/top-10-cleanups-plan.md in full (it is a ranked survey of ten
-candidate cleanups, none started). Then run
+Read Fizzygum/docs/plans/top-10-cleanups-plan.md in full (it is a survey of ten candidate
+cleanups, ordered by effort, none started). Then run
 /Users/davidedellacasa/code/Fizzygum-all/fg status and confirm no long operation is running.
 
 I want to take up item §<N>. Do this, in order:
