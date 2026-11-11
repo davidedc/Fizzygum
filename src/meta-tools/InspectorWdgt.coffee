@@ -114,6 +114,49 @@ class InspectorWdgt extends Widget
   colloquialName: ->
     "Object Inspector — " + Utils.colloquialNameOf @inspectedObject
 
+  # At most this many ITEMS of an indexed subject are listed: a person scrolls a list, and no list of a
+  # million rows is one -- a surface's pixel buffer, reached by drilling into a canvas, holds millions,
+  # and every row is a widget. A cut list is said in my code pane (_emptyPaneText).
+  @MOST_ITEMS_LISTED: 1000
+
+  # My subject's ITEMS -- an INDEXED subject's: an Array's (a subclass's too), a typed array's (a buffer
+  # view with a length; a DataView has none), a string's -- the first MOST_ITEMS_LISTED of them in index
+  # order, `itemCount` how many it holds; and the names of its other enumerable members, own and
+  # inherited (`named`). Any other subject has no items: every name is a member's.
+  #   A typed array's or a string's items are its indices below its length, and they are all its own
+  # names, so only its chain is walked for the others: a walk of its own names costs a key per item
+  # (a surface's pixels: millions, every time the list is built). An Array's items are the indices it
+  # HOLDS, read off the one walk of its names -- a sparse Array holds fewer than its length.
+  _subjectsItemsAndNames: ->
+    o = @inspectedObject
+    most = InspectorWdgt.MOST_ITEMS_LISTED
+    if typeof o is "string" or (NativeValueKinds.isBufferView(o) and typeof o.length is "number")
+      named = (property for property of Object.getPrototypeOf o)
+      return {items: (String i for i in [0...Math.min o.length, most]), itemCount: o.length, named}
+    items = []
+    named = []
+    itemCount = 0
+    holdsItems = o instanceof Array
+    for property of o
+      if holdsItems and InspectorWdgt._isAnIndex property
+        itemCount++
+        items.push property if items.length < most
+      else
+        named.push property
+    {items, itemCount, named}
+
+  # Is `name` an array index ("0", "1", ... below 2^32 - 1), as an indexed subject's items are named?
+  @_isAnIndex: (name) ->
+    /^(0|[1-9]\d*)$/.test(name) and Number(name) < 4294967295
+
+  # What my code pane shows while no member is selected: nothing -- or, when my list cuts an indexed
+  # subject's items, how many it lists of how many, so the list never reads as the whole collection,
+  # whichever way I was opened (a drilled-in inspector stands without a window and its title).
+  _emptyPaneText: ->
+    {items, itemCount} = @_subjectsItemsAndNames()
+    return "" unless itemCount > items.length
+    "The first " + items.length + " of " + itemCount + " items are listed."
+
   # My toggles' ACTIONS, one per toggle (a toggle hands itself in slot 1; none of them needs it).
   # Each flips the filter field its toggle stands for and re-filters me, in ONE settle: the field is
   # the filter's truth, and the re-filter shows every toggle its field (_reflectFiltersOnToggles).
@@ -201,13 +244,13 @@ class InspectorWdgt extends Widget
     # ink, codePanePadding in from its edges -- so the code starts that far right of my list | code
     # seam and that far below my body's top
     theme = WorldWdgt.theme
-    @detail = new TextAreaWdgt "", false, theme.codePanePadding, fontRole: theme.fonts.code, textColor: theme.codeText
+    @detail = new TextAreaWdgt @_emptyPaneText(), false, theme.codePanePadding, fontRole: theme.fonts.code, textColor: theme.codeText
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @_clearPaneLook @detail
-    # The pane opens EMPTY and UNMODIFIED: its empty text is the text it compares against until a
-    # selection loads a member's source (selectionFromList), so its modified-content indicator starts
-    # hidden and the content check below leaves save disabled.
+    # The pane opens EMPTY and UNMODIFIED (its empty text, _emptyPaneText, says a cut list): that text is
+    # the text it compares against until a selection loads a member's source (selectionFromList), so its
+    # modified-content indicator starts hidden and the content check below leaves save disabled.
     @detail.textWdgt.considerCurrentTextAsReferenceText()
     @detail.addModifiedContentIndicator()
 
@@ -352,7 +395,7 @@ class InspectorWdgt extends Widget
     # it would if the pane were destroyed (Widget._destroyNoSettle).
     world._stopEditingNoSettle() if world.caret? and @detail.isAncestorOf world.caret.target
     @textWidget.isEditable = false
-    @textWidget._setTextNoSettle ""
+    @textWidget._setTextNoSettle @_emptyPaneText()
     @textWidget.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
 
@@ -369,11 +412,11 @@ class InspectorWdgt extends Widget
   #                declares, and those stitched onto my subject that no class of its chain has
   #   own props    while showingOwnPropsOnly, only my subject's own properties
   #   companions   never (_isACompanion)
-  # sorted, unless my subject is an Array (whose order is its meaning).
+  # sorted -- after an INDEXED subject's items (an Array's, a typed array's), which come first in index
+  # order, whose order is their meaning, and at most MOST_ITEMS_LISTED of them.
   _filteredMemberNames: ->
-    attribs = []
-    for property of @inspectedObject
-      attribs.push property  if property and !@_isACompanion property
+    {items, named} = @_subjectsItemsAndNames()
+    attribs = (property for property in named when property and !@_isACompanion property)
 
     if !@showingMethods
       attribs = attribs.filter (prop) => !Utils.isFunction @inspectedObject[prop]
@@ -392,7 +435,13 @@ class InspectorWdgt extends Widget
     if @showingOwnPropsOnly
       attribs = attribs.filter (prop) => Object::hasOwnProperty.call @inspectedObject, prop
 
-    if @inspectedObject instanceof Array then attribs else attribs.sort()
+    attribs.sort()
+    # an indexed subject's ITEMS first, in their order (each its own, so the inherited and own-props
+    # filters keep them all; an Array may hold functions, so the methods and fields toggles hold for
+    # them too)
+    items = items.filter((i) => !Utils.isFunction @inspectedObject[i]) if !@showingMethods
+    items = items.filter((i) => Utils.isFunction @inspectedObject[i]) if !@showingFields
+    items.concat attribs
 
   # Is `prop` the bookkeeping COMPANION of another member, rather than a member of its own: the
   # class a mixin's function member was injected in (`<m>_class_injected_in`,

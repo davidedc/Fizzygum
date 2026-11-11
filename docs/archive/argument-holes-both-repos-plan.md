@@ -3262,3 +3262,33 @@ for (const s of sites) if (s.absentBefore.length) {
       `world.loadGuard.sourceEditWithASecondStatementRefused` (a class-level record), and (10)'s stray-source guard now
       held to its own refusal's words; with the old first-token reading planted, every door stored the text and ran
       it, and both loads took the file. `fg gauntlet` green (20 legs, no flake), `fg homepage` BOOT OK.
+- [x] **An inspector on a typed array orders its indices as strings, and enumerates all of them** (found by the
+      independent review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's
+      ledger; by reading; low). `InspectorWdgt` keeps the original order only for an `Array`, so a typed array lists 0, 1, 10,
+      11, … 2; and it lists and sorts every index on each re-lay, so one on a surface's pixels (millions) hangs the page.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U30, second shape). Reached through the product: on the SWCanvas
+      page an inspector drilled into the render canvas's surface and then its `data` (millions of bytes) builds a row
+      WIDGET per index and sorts them as strings — the page hangs; a typed array of more than ten items lists 0, 1, 10,
+      11, …, 2; and a long string, inspected with "Inspect selection", hangs the same way. RULED: ONE rule for every
+      INDEXED subject — an Array (a subclass too, as the meta-system's `InputEventsQueue` is), a typed array (a buffer
+      view with a length), a string — its items listed first, in index order, then its other members sorted as every
+      other subject's are; at most `InspectorWdgt.MOST_ITEMS_LISTED` (1000) items, since no list of a million rows is
+      one a person scrolls, and the CUT said where every inspector shows it, its code pane while no member is selected
+      ("The first 1000 of 6758400 items are listed."), so the list never reads as the whole collection. The first
+      shape said the cut in the window's title; the independent review closing this unit showed a drilled-in
+      inspector stands without a window (the very reach path), the strip crops a title's tail, and the title went
+      stale on a re-filter — so the pane, rebuilt with the list, says it. LANDED in `InspectorWdgt`:
+      `_subjectsItemsAndNames` (a typed array's or a string's items by index below its length, with no walk of its own
+      names — a key per item, millions on a surface; an Array's items the indices it HOLDS, read off the one walk of
+      its names, so a sparse Array lists what it has), `_isAnIndex` (below 2^32 − 1), `_filteredMemberNames` (the
+      methods and fields toggles hold for items too, an Array may hold functions), `_emptyPaneText`. A typed array's
+      own named expandos are not listed (its own names are not walked). PROVEN: the serialization rig's
+      `inspector.onAnIndexedSubjectListsItsItemsInOrderBounded` — a 12-byte typed array and a 12-character string list
+      0…11 in order with an empty pane; a 3,000-byte typed array and a 3,000-character string list fewer items than
+      they hold, in order, and the pane says how many of how many (the cut asserted against the collection, never the
+      page's own cap, which a plant can move); an Array lists its items and then its named members sorted; a sparse
+      Array its one held item; the methods toggle hides an item that is a function. Sizes the old listing still builds
+      quickly (two of 20,000 outran the protocol timeout under a plant), so a plant of it fails rather than hanging
+      the rig. Three plants, each failing it: the old rule (no
+      items: every name walked and sorted as a string), no cap, the cut said nowhere. `fg gauntlet` green (20 legs, no
+      flake), `fg homepage` BOOT OK.

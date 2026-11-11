@@ -151,11 +151,8 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       cannot be copied") names the value alone, and its remedy's "remove that field" does not say which; a Save of the
       same window names its root and the path to the field (`at: … → .r`). The two walkers' refusals should say as
       much as each other.
-- [ ] **An inspector on a typed array orders its indices as strings, and enumerates all of them** (found by the
-      independent review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's
-      ledger; by reading; low). `InspectorWdgt` keeps the original order only for an `Array`, so a typed array lists 0, 1, 10,
-      11, … 2; and it lists and sorts every index on each re-lay, so one on a surface's pixels (millions) hangs the page.
-- [ ] **The W3 plan's grep for typed arrays in `src/serialization/` now finds a predicate** (same review; by
+- [ ] **The W3 plan's grep for typed arrays in `src/serialization/` now finds a predicate** (found by the independent
+      review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's ledger; by
       reading; low). `docs/plans/wire-vocabulary-extensions-plan.md` reads the grep as 0 hits; it now finds 2 lines in
       `NativeValueKinds` (`isBuffer`'s comment and code: a predicate the Duplicator and `WorldInventory` ask — still no
       serializer arm, as the plan's S1 says).
