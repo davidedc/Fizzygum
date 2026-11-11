@@ -2165,6 +2165,16 @@ assertion a recapture after a regression silently stores two different hashes an
   to the canvas wires the turtle to the surface. Place with `pen.moveTo …` and call a drawing method DIRECTLY, e.g.
   `pen.sierpinski 400, 40` (synchronous).
 
+- **How a text WRAPS, read without a screenshot** (`macroTextOwnCodeKeysTheCachesItRunsIn`): ask the text's own
+  `breakTextIntoLines text` (its first element is the lines) — the query the render wrap asks and the world's shared text
+  caches serve, deterministic at any moment. ⚠ Do NOT read `wrappedLines`: a default `FIT_TEXT_TO_BOX` text fills it at
+  PAINT, and two texts of one font, extent and text share ONE immutable back buffer, so the second can show its twin's
+  pixels without ever wrapping (measured: `[2, 0]` lines right after both were added, after `waitForScreenshotReady`).
+  Ask the twin first when the claim is that a second text must NOT meet the entries the first filled. A text's OWN
+  code (an object inspector's Save of an inherited member — click `showInheritedToggle` first, `measureText` is
+  StringWdgt's) is keyed apart in every cache whose work runs its code (`Widget._ownCodeKeySuffix`); `world.noteCodeChanged()`
+  is the flush a class edit makes.
+
 ## Assertions & eval
 
 - **Verified aims — a press must meet what it means** (every test; rule 4 of `CLAUDE.md`): the verbs that know their
@@ -2554,8 +2564,8 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   `removePropertyButton` — the last two enabled only while the selected row is a member the inspector's subject OWNS and is not
   `constructor` (`InspectorWdgt._selectedMemberCanBeRenamedOrRemoved`; their actions refuse the same rows, so a direct call is no
   way round it): an object inspector's default list is its widget's CLASS's members, so rename an own one (a field the widget sets
-  on itself, or one added with "Add…", as this test does). The list carries no member's companion row (`<m>_source`,
-  `<m>_class_injected_in`; `_isACompanion`). INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`autoSizeBoxToText`
+  on itself, or one added with "Add…", as this test does). The list carries no member's companion row (`<m>_class_injected_in`;
+  `_isACompanion`), and an injected method has none to carry: its function keeps its source (`Widget.keptSourceOf`). INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`autoSizeBoxToText`
   sorts below the first rows, so SCROLL the list to the row by name before clicking it
   (`bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro`); a value/detail pane's text is a `TextWdgt` in a scroll-panel — set it with
   `detailText.setText`, not a click. The original asserted a byte-identical add→remove round-trip (image_1≡image_5); the new inspector's

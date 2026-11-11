@@ -5,8 +5,8 @@
 # THREE scopes of edit, each recorded by the person's GESTURE that makes it, never by the verb it
 # drives (the product calls those verbs as plumbing too, which no one edited):
 #   - "instance": a single widget's method rewritten by the object inspector's Save
-#     (InspectorWdgt.applyPropertyEdit). These ALSO ride the serializer for free — the widget carries a
-#     `<name>_source` string, serialized as {"$src"} and re-injected on restore (§5). The
+#     (InspectorWdgt.applyPropertyEdit). These ALSO ride the serializer for free — the injected function
+#     keeps its source (Widget.keptSourceOf), serialized as {"$src"} and re-injected on restore (§5). The
 #     registry's marginal value here is auditability (a durable record of what was edited).
 #   - "class": a class PROTOTYPE's member edited (Class.applyMemberEdit) or removed
 #     (Class.removeMember, record flagged `deleted: true`) through the class inspector's edit

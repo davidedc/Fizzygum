@@ -3964,7 +3964,11 @@ class Widget extends TreeNode
   # inspector's Save of a text's _drawTextLine, of a palette's fillPaletteBuffer), or plumbing's (a
   # patch node's compiled formula, which no key of its reads) -- adds to the keys of the shared caches
   # that read it, keyed by what I show: the immutable back buffers (StringWdgt and PaletteWdgt
-  # createBufferCacheKey) and TextWdgt's wrap and line-break caches. Nothing while I hold none, so I key
+  # createBufferCacheKey), and every shared cache whose work runs a text's code, since my own code
+  # can be any step of that work -- TextWdgt's wrap and line-break caches, its paragraph wrapping
+  # (through @measureText) and StringWdgt's measureText (through @eliminateInvisibleCharacter); a
+  # cache whose work runs none of my code (the paragraph and word splits, the font-box static) is
+  # keyed without it. Nothing while I hold none, so I key
   # my entries exactly as my class's code does; a hash of that code once I hold some, so a widget running
   # other code never shares an entry with me, and an edit of my own code never meets the entries of the
   # code it replaced. Set by the gesture that edits me (_sourceChangedNoSettle); a plain field, saved and
@@ -3984,13 +3988,13 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_sourceChangedNoSettle()
 
   # sourceChanged's core: first noting the code the edit left me holding of my own (_ownCodeKeySuffix:
-  # each own function by name, with the source a save keeps beside it -- `<name>_source`,
-  # injectProperty -- or, for one a run assigned, its compiled text; the field stays my class's "" until
-  # I hold some), then the step every code change runs (_codeChangedNoSettle), then my whole subtree
-  # repainted, since the edit can have changed how any of it paints.
+  # each own function by name, with the source it keeps (keptSourceOf) or, for one a run assigned, its
+  # compiled text; the field stays my class's "" until I hold some), then the step every code change
+  # runs (_codeChangedNoSettle), then my whole subtree repainted, since the edit can have changed how
+  # any of it paints.
   _sourceChangedNoSettle: ->
     ownFunctionNames = (eachKey for eachKey in Object.keys(@).sort() when Utils.isFunction @[eachKey])
-    ownCode = (eachName + ":" + (@[eachName + "_source"] ? @[eachName].toString()) for eachName in ownFunctionNames).join "\n"
+    ownCode = (eachName + ":" + (Widget.keptSourceOf(@[eachName]) ? @[eachName].toString()) for eachName in ownFunctionNames).join "\n"
     if ownCode is ""
       # back to my class's "": a field of my own would only travel with my saves and copies
       delete @_ownCodeKeySuffix if Object::hasOwnProperty.call @, "_ownCodeKeySuffix"
@@ -4253,14 +4257,46 @@ class Widget extends TreeNode
   # class's meta-object does not (Class.applyMemberEdit) -- the object inspector's Save, the
   # person's gesture, records the edit and tells me (InspectorWdgt.applyPropertyEdit), while the
   # product's own injections (a paint tool's handlers, a load's {"$src"}) are plumbing with nothing
-  # to tell. A function keeps its source beside it, `<name>_source`, so it stays editable as
-  # CoffeeScript and rides serialization as {"$src"}.
+  # to tell. A function the injection MAKES -- txt spells a function literal -- is kept with its source
+  # (Widget.keptSourceOf), so it stays editable as CoffeeScript and rides serialization as {"$src"}. A
+  # txt that names a function (`@f`, a class member, `Math.max`) makes none: what it names keeps the
+  # source it has, or none.
   injectProperty: (propertyName, txt) ->
     assignment = Widget.propertyAssignmentSource propertyName, txt
     @evaluateString assignment, typedFrom: assignment.length - txt.length
-    if Utils.isFunction @[propertyName]
-      @[propertyName + "_source"] = txt
+    injected = @[propertyName]
+    if Utils.isFunction(injected) and Widget._spellsAFunctionLiteral txt
+      Widget._keptSources.set injected, txt
     return
+
+  # Does txt SPELL a function literal: is its first token the start of one (a parameter list, or the
+  # arrow itself)? Read from the lexer's tokens, the reading the compiler makes of this very text
+  # (as Class reads a member's supers), never from the text -- so the comments and blank lines a
+  # person types above the function are passed over (the lexer hands a leading comment over as a
+  # GENERATED token, then a line end). Only then is txt the source of the function its injection
+  # gives me: a txt naming a function hands over a function made elsewhere, whose code it is not --
+  # `@f` is a field's name, and kept as f's source it would load as `@f = @f`.
+  @_spellsAFunctionLiteral: (txt) ->
+    try
+      tokens = CoffeeScript.tokens txt
+    catch
+      return false
+    for token in tokens when !token.generated and token[0] isnt "TERMINATOR"
+      return token[0] in ["PARAM_START", "->", "=>"]
+    false
+
+  # THE COFFEESCRIPT A FUNCTION WAS INJECTED FROM (injectProperty), kept BY THE FUNCTION, never by the
+  # field that holds it: whatever replaces or deletes a member takes the member's function, and its
+  # source with it, so no reader is handed one function's source for another (a run's `@m = -> …`
+  # leaves a function with none, which shows as compiled text and which a save refuses). A copy shares
+  # the function and so its source; an alias of it (`@g = @f`) holds the same function, and so has it
+  # too. undefined for any function no injection made -- a class member keeps its source on its
+  # meta-object (Class.applyMemberEdit). Read by the object inspector, the own-code key
+  # (_sourceChangedNoSettle) and the save's {"$src"} (Serializer). The store is weak: it writes to no
+  # function and keeps none alive.
+  @_keptSources: new WeakMap
+  @keptSourceOf: (aFunction) ->
+    Widget._keptSources.get aFunction if Utils.isFunction aFunction
 
   # Inject every `name = value` assignment a code blurb holds -- all of them or none: each is compiled
   # before any is injected (compilePropertyAssignments), so a blurb that does not compile changes
@@ -4359,22 +4395,16 @@ class Widget extends TreeNode
 
   # the remove twin ("Own" keeps these clear of InspectorWdgt's
   # same-named button actions, which would otherwise shadow them on
-  # inspectors -- inspectors are Widgets too): drops the member AND its
-  # <name>_source companion -- the companion rides serialization as {"$src"}
-  # and would re-inject the removed member on snapshot restore.
+  # inspectors -- inspectors are Widgets too): drops the member, and with its function the source the
+  # function keeps (keptSourceOf).
   removeOwnProperty: (propertyName) ->
     delete @[propertyName]
-    delete @[propertyName + "_source"]
     return
 
-  # the rename twin: re-keys the member and moves its OWN <name>_source companion
-  # with it, so a snapshot restores the member under the new name only.
+  # the rename twin: re-keys the member; its function carries its kept source to the new name.
   renameOwnProperty: (oldName, newName) ->
     @[newName] = @[oldName]
     delete @[oldName]
-    if Object::hasOwnProperty.call @, oldName + "_source"
-      @[newName + "_source"] = @[oldName + "_source"]
-      delete @[oldName + "_source"]
     return
 
   # Widget dragging (and dropping) /////////////////////////////////////////

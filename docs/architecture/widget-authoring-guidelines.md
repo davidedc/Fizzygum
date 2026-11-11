@@ -276,7 +276,7 @@ declarations is how one app ends up treated differently by every reader at once.
 **[convention]** Never install own function properties on an instance to record a mode (`@pressBegan
 = -> …` inside an `enable*` call). A mode a widget can be in is a serializable **field** consumed by
 prototype methods. `injectProperty` remains the sanctioned path for user-authored instance methods —
-it stores the `<name>_source` sibling that serializes.
+the function it compiles keeps its source (`Widget.keptSourceOf`), which serializes.
 
 ---
 

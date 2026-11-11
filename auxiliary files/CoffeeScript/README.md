@@ -11,7 +11,8 @@ CLI/browser/repl/sourcemap/JSX/import-export/literate machinery). Fizzygum's who
 API surface at run time is two calls — `CoffeeScript.compile(source, {bare: true})`, and the lexer's
 `CoffeeScript.tokens(source)`, which the meta-system reads to rewrite a member's `super`s and to end
 every constructor in a `return` (`Class.rewriteSuperCalls` and `Class.endingInReturn` in
-`src/meta/Class.coffee`) — and the build tooling adds a third, the parser's `CoffeeScript.nodes(source)`
+`src/meta/Class.coffee`), and which a widget's injection reads to tell a function literal from a text
+that names a function (`Widget._spellsAFunctionLiteral`) — and the build tooling adds a third, the parser's `CoffeeScript.nodes(source)`
 (`buildSystem/lib/call-sites.js`, the call-arguments gate's reader). None of the removed machinery is
 reachable. A rebuild must keep all three exported (`tokens` and `nodes` cost nothing: compile runs the
 same lexer and parser); `buildSystem/lib/meta-compiler-selftest.js` and `lib/call-sites-selftest.js` fail

@@ -66,6 +66,8 @@ class TextWdgt extends StringWdgt
     doesItFit = @breakTextIntoLines text, overrideFontSize, @_textArea().extent()
     return doesItFit
 
+  # The paragraph and word splits are keyed by their text alone: the split runs no code of mine, so
+  # my own code (Widget._ownCodeKeySuffix, which keys every cache whose work runs some) cannot change it.
   getParagraphs: (text) ->
     cacheKey = text.hashCode()
     paragraphs = world.cacheForTextParagraphSplits.get cacheKey
@@ -88,7 +90,7 @@ class TextWdgt extends StringWdgt
     string = string + @emptyCharacter
 
   getWrappingData: (overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph) ->
-    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + eachParagraph.hashCode()
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + eachParagraph.hashCode() + @_ownCodeKeySuffix
     wrappingData = world.cacheForParagraphsWrappingData.get cacheKey
 
 

@@ -396,13 +396,11 @@ class InspectorWdgt extends Widget
 
   # Is `prop` the bookkeeping COMPANION of another member, rather than a member of its own: the
   # class a mixin's function member was injected in (`<m>_class_injected_in`,
-  # Object::addInstanceProperties), or the source of a method injected into my subject (`<m>_source`
-  # beside a function `<m>`, Widget.injectProperty)? Each follows its member through every edit of
-  # it (Widget.renameOwnProperty / removeOwnProperty, Class.removeMember, Mixin's injection), so a
-  # row of its own would only offer edits that orphan it.
+  # Object::addInstanceProperties)? It follows its member through every edit of it
+  # (Class.removeMember, Mixin's injection), so a row of its own would only offer edits that orphan
+  # it. (An injected method's source is no companion: its function keeps it, Widget.keptSourceOf.)
   _isACompanion: (prop) ->
-    return true if /_class_injected_in$/.test prop
-    (member = /^(.+)_source$/.exec prop)? and Utils.isFunction @inspectedObject[member[1]]
+    /_class_injected_in$/.test prop
 
   # My member LIST, built from the names my filter lets through (_filteredMemberNames) and added to
   # me, where my layout places it in my body (_reLayout). The build makes the first one; a re-filter
@@ -552,14 +550,14 @@ class InspectorWdgt extends Widget
     # A function shows the source of the member my subject HAS, read where it is held: the first link
     # of my subject's prototype chain that holds the member decides.
     #   Held by anything but a Fizzygum class's prototype -- my subject itself, or an object it was
-    # made from -- it is a function of that holder's own: the source kept beside it (`<name>_source`,
-    # Widget.injectProperty), else its compiled text; never the source of a class member it shadows.
+    # made from -- it is a function of that holder's own: the source it keeps (Widget.keptSourceOf, an
+    # injected one's), else its compiled text; never the source of a class member it shadows.
     #   Held by a class's prototype, it is a class member: walked below.
     if Utils.isFunction(val)
       holder = @inspectedObject
       holder = Object.getPrototypeOf holder until !holder? or Object::hasOwnProperty.call holder, selected
       if holder? and !isAClassPrototype holder
-        ownSource = if Object::hasOwnProperty.call holder, selected + "_source" then holder[selected + "_source"]
+        ownSource = Widget.keptSourceOf val
         val = ownSource if ownSource?
       else
         # The CLASS WALK, from my subject's class up through every link that is a Fizzygum class's
@@ -914,9 +912,8 @@ class InspectorWdgt extends Widget
 
   # the one differing step between object- and class-inspector rename
   # (mirroring applyPropertyEdit above): the object inspector delegates to the
-  # Widget-level renameOwnProperty twin, which moves the <name>_source
-  # companion with the member -- otherwise a snapshot restore re-injects the
-  # method under the OLD name. ClassInspectorWdgt overrides this with an edit under
+  # Widget-level renameOwnProperty twin (an injected method's function carries its
+  # kept source to the new name). ClassInspectorWdgt overrides this with an edit under
   # the new name and a removal of the old.
   _applyPropertyRename: (oldName, newName) ->
     @inspectedObject.renameOwnProperty oldName, newName
@@ -946,9 +943,8 @@ class InspectorWdgt extends Widget
     @prompt "property name:", @, "renameProperty", defaultContents: propertyName
   
   # removal's differing step, same seam as _applyPropertyRename: the object
-  # inspector delegates to the Widget-level removeOwnProperty twin, which also
-  # drops the <name>_source companion -- otherwise the {"$src"} serialization
-  # ride re-injects the removed member on snapshot restore. (ClassInspectorWdgt
+  # inspector delegates to the Widget-level removeOwnProperty twin (the member's
+  # function goes, and its kept source with it). (ClassInspectorWdgt
   # overrides this with its class removal step.)
   _applyPropertyRemoval: (propertyName) ->
     @inspectedObject.removeOwnProperty propertyName

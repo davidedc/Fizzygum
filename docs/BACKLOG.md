@@ -114,13 +114,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
       2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
       member it inherits".)
-- [ ] **A run that replaces a saved method leaves its kept source describing the old one** (found by the same review;
-      by reading). `Widget.injectProperty` keeps `<name>_source` beside the function it compiles; a run that reassigns
-      the field (`@m = -> …`, `Widget.evaluateString`) leaves the companion in place. The inspector's pane, a save's
-      `{"$src"}` (which the load compiles back) and `_sourceChangedNoSettle`'s own-code key then all read the OLD
-      source: a save silently restores code the widget no longer ran. Its mirror: a run that deletes the own function
-      while a class still declares the name leaves an orphaned `<name>_source`, which the inspector hides as a
-      companion (`_isACompanion`) and a save carries as a string.
 - [ ] **An object inspector on a class shows its statics as compiled text** (found by the same review; by reading).
       `Class.staticPropertiesSources` keeps a class's static members' CoffeeScript; `selectionFromList` on a class
       FUNCTION (`inspectorClassFor`) never reads it, and a static `extend` copied down has its source on the parent.
@@ -212,6 +205,21 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       directions and runs none of the file's code, leaving the file direction; (e) refuse up front a file whose
       class-level records name `wellKnownKey` — static, and it fails in the safe direction; (f) return the page to
       boot after the confirm and before the teardown — a refused load has then already discarded the page's edits.
+- [ ] **A text that meets its twin's back buffer never reflows** (found by the independent review closing "A run that
+      replaces a saved method leaves its kept source describing the old one", in the plan's ledger; by reading, and the
+      measured `[2, 0]` in MACRO-PATTERNS' wrap-reading entry). `TextWdgt._createRefreshOrGetBackBuffer` takes its key
+      before `reflowText` and returns on a hit, so of two texts of one font, extent and text the second keeps an empty
+      `wrappedLines`; `slotAt` reads it, so a first click into that text can put the caret at its end.
+- [ ] **An own FIELD read inside cached text work keys nothing** (same review; by reading). The own-code key covers own
+      functions: an inspector Save of a text's own `emptyCharacter` (read in `TextWdgt.getWrappingData`) leaves twins
+      sharing entries computed with either value.
+- [ ] **A kept source of a fat-arrow method keeps its first receiver in copies** (same review; by reading;
+      pre-existing). An injected `=> @x` is one bound function, shared by a copy (the Duplicator passes functions
+      through), so the copy runs it on the original; a save and load re-bind it to the loaded widget.
+- [ ] **The Smalltalk talk plan describes a `<name>_source` field** (same review). `docs/plans/smalltalk-talk-2026-11-plan.md`
+      says `Class.applyMemberEdit` sets `proto[memberName + "_source"]` (false before this close too) and skips
+      `<name>_source` strings that no longer exist: the injected source is kept with its function (`Widget.keptSourceOf`).
+      Left for the owner, whose plan it is.
 - [ ] **A page member the load could not return to boot runs in the loaded world but is recorded nowhere** (found by
       the independent review closing "A failed return to boot is only logged", in the plan's ledger; by reading). The
       load's notice says so, and then installs the file's registry (`WorldWdgt.loadWorldSnapshot`): a save of the
@@ -223,14 +231,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **The world load promises "Everything else in the file loads normally" before deserialization can throw**
       (same review; pre-existing). `WorldWdgt.loadWorldSnapshot`'s step-2b notice precedes `Deserializer.deserialize`;
       a restore that throws after it has told the person the rest loaded.
-- [ ] **A text's measurement, wrapping and split caches name no code of its own** (found by the independent review
-      closing "A palette's back-buffer key names its class and extent, not code of its own", in the plan's ledger; by
-      reading, not measured). `Widget._ownCodeKeySuffix` keys a text's back buffer and its two top-level text caches
-      (TextWdgt's wrap and line breaks), but four shared caches its code also fills do not carry it:
-      `cacheForParagraphsWrappingData` (`TextWdgt.coffee`, filled through `@measureText`), `cacheForTextMeasurements`
-      (`StringWdgt.coffee`), and the paragraph and word split caches. Twin texts of one font, width and paragraph: an
-      inspector Save of A's own `measureText` misses at A's top-level key and then hits the paragraph entry B filled,
-      so A's edit never shows; after a flush, whichever wraps first fills the entry for both.
 - [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** (found by the independent
       review closing "The inspector churn set cannot see a class inspector's member list move", in the plan's ledger;
       by reading; low). The churn set and its readers act per TEST, not per shot: a test in the set is recaptured whole,

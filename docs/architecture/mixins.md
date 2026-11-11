@@ -131,8 +131,8 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     is why replaying the recorded edits reproduces them (the reference doc §12).
     `parts-lazy-load-headless.js` (`LAZY_CONSUMER_TAKES_MIXIN_EDITS`) holds it for a lazy
     part on the dev `index.html` (the one page where a part loads after the boot), and
-    `fg homepage`'s production smoke for a class made at run time on the pre-compiled tree. `<name>_source` means one thing only: a widget's own injected method's
-    source (`Widget.injectProperty`); no class or mixin edit writes one onto a prototype.
+    `fg homepage`'s production smoke for a class made at run time on the pre-compiled tree. An injected method's source is kept on its FUNCTION (`Widget.keptSourceOf`,
+    written by `Widget.injectProperty` only); no class or mixin edit writes one.
   - Both live-edit twins compile through a bare global-assignment eval and write the
     result onto the prototype — nothing runs with a prototype as `this`, since code run
     against one stamps whatever fields it sets onto it as own properties, polluting every
@@ -171,13 +171,14 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     computed into a field — shows it only at its next trigger, exactly as in a fresh build:
     an edit changes code, not state. A widget holding code of its OWN adds a hash of that
     code to the keys of the shared caches that read it, keyed by what it shows — a text's back
-    buffer, wrap and line breaks, a palette's back buffer (`Widget._ownCodeKeySuffix`, set by
+    buffer, every cache whose work runs its code (wrap and line breaks, paragraph wrapping,
+    measured widths — not the paragraph and word splits, which run none), a palette's back buffer (`Widget._ownCodeKeySuffix`, set by
     `sourceChanged`'s core and saved and copied as a plain field) — so it never shares an
     entry with a twin running other code, and a re-edit of its own code never meets the
     entries of the code it replaced. Pinned by `SystemTest_macroClassEditShowsOnTheNextFrame` (each edit's shot
     against a rebuild from scratch), `SystemTest_macroPaletteBufferKeyNamesItsOwnCode` (a
-    palette's key) and `SystemTest_macroInspectorEditTellsOnce` (who is told, how often, and
-    what is recorded).
+    palette's key), `SystemTest_macroTextOwnCodeKeysTheCachesItRunsIn` (a text's inner caches) and
+    `SystemTest_macroInspectorEditTellsOnce` (who is told, how often, and what is recorded).
   - Both refuse `constructor` (`Class.refuseTheConstructor`): a prototype's
     `constructor` IS its class, what every `.constructor.name` read answers.
   - The attribution covers methods AND fields: a donated method attributes through
@@ -215,9 +216,9 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     for a member the inspector's subject OWNS (a donated member is its consumer
     prototype's own) and never for `constructor`, whose code is shown read-only
     (`InspectorWdgt._selectedMemberCanBeRenamedOrRemoved`, asked by the actions too); and a
-    member's companions — `<m>_class_injected_in`, an injected method's `<m>_source` —
-    are not listed (`InspectorWdgt._isACompanion`): they follow their member through its
-    edits;
+    member's companion — `<m>_class_injected_in` — is not listed (`InspectorWdgt._isACompanion`):
+    it follows its member through its edits (an injected method's source is no companion: its
+    function keeps it, `Widget.keptSourceOf`);
   - **class-side statics are outside it**: the class inspector lists a class's
     PROTOTYPE members, and a static lives on the constructor, so no static — a class's
     or a mixin's — is edited. (An object inspector opened on a constructor itself, by

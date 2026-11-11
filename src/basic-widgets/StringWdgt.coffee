@@ -836,7 +836,7 @@ class StringWdgt extends Widget
   # see the largest fitting size. The weight is mine unless `bold` is given: my fit passes the
   # weight it is measured in (doesTextFitInExtent).
   measureText: (text, overrideFontSize = @fittingFontSize, bold = @isBold) ->
-    cacheKey =  @buildCanvasFontProperty(overrideFontSize, bold) + "-" + text.hashCode()
+    cacheKey =  @buildCanvasFontProperty(overrideFontSize, bold) + "-" + text.hashCode() + @_ownCodeKeySuffix
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit? then return cacheHit
     world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize, bold

@@ -448,11 +448,15 @@ NAMED like one.
   - if `foo` holds a CLASS → `{"$wk": "class:<Name>"}`, named by its class (§4 step 0, §4a), asked
     before everything below;
   - else if the owner's class takes injected methods (a widget's, `Serializer.classTakesInjectedMethods`)
-    and the owner carries its OWN `foo_source` string (a user-injected method, `injectProperty`) →
-    serialize `{"$src": <source>}` and let `foo_source` ride as a normal string; restore
-    recompiles it with `injectProperty` on the owning widget. Only the OWN one counts: a class
-    keeps its members' sources on its meta-object (§12), and a `foo_source` up the prototype
-    chain is none of this function's. That
+    and the function has a kept source (a user-injected method: `injectProperty` keeps the
+    CoffeeScript WITH the function it compiles — a weak store keyed by the function, read
+    through `Widget.keptSourceOf` — and only for a function it MAKES, a txt that spells a
+    function literal; a txt naming one, `@f`, keeps nothing, so the function it names keeps
+    the source it has, or none) → serialize
+    `{"$src": <source>}`; restore recompiles it with `injectProperty` on the owning widget.
+    The source is the FUNCTION's, never a field beside it, so it describes the function the
+    field holds now: a function a run assigned (`@foo = -> …`) keeps none and is refused below,
+    and a class keeps its members' sources on its meta-object (§12). That
     is the one place a save writes a `{"$src"}`, so a file holding one anywhere else is refused
     up front (§9).
   - else if `foo` is in the class's transients → dropped; the class recomputes it (e.g.
@@ -512,7 +516,7 @@ of own function properties installed by an `enable*` call. The one historical ca
 `StringWdgt.enableSelecting`'s own `pressBegan`/`pressMoved` closures, which crashed
 every snapshot containing a document, text panel, or patch-programming pane — is now the
 serializable `isSelectable` flag. (`injectProperty` remains the sanctioned path for
-USER-authored instance methods: it stores the `<name>_source` sibling that serializes as
+USER-authored instance methods: the function it compiles keeps its source, which serializes as
 `{"$src": …}`.)
 
 ---
@@ -644,8 +648,9 @@ record of a class that cannot inject a method is refused by
 asks it through `whyItCanNeverBeRestored` before its teardown, again on re-entering with a lazy part's
 classes loaded, and `deserialize` asks it before pass 1, so a refused widget file leaves no shell
 registered. The rig's `world.loadGuard.strayFunctionSourceRefused` and
-`widgetFileStrayFunctionSourceRefused` hold both, and `serialize2.functionSourceMustBeOwn` holds the
-save's half.
+`widgetFileStrayFunctionSourceRefused` hold both; on the save's side, `serialize2.runReplacedMethodIsRefused`
+holds that a `{"$src"}` is written only for the function a widget's field holds now, and
+`serialize2.keptSourceFollowsItsFunction` that a renamed member carries its source to its new name.
 
 ---
 
@@ -855,7 +860,7 @@ gesture drives (`mixins.md` §2 — a meta-object or a meta-verb edits; the gest
   `Widget.injectProperty` itself records nothing: the product injects its own handlers through it
   (an `ImageWdgt`'s overlay, a paint tool's switch) and a load re-injects each `{"$src"}` through
   it, none of them an edit a person made. Instance edits ALSO ride serialization on their own: the
-  widget carries a `<name>_source` string → `{"$src"}` → re-injected on restore (§5). The registry
+  injected function keeps its source → `{"$src"}` → re-injected on restore (§5). The registry
   adds auditability.
 - **class** — the class inspector's class edit step (`ClassInspectorWdgt._editClassMember`)
   edits through `Class.applyMemberEdit` and records `recordClassEdit(prototype, name, txt)` (its

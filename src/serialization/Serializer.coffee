@@ -325,16 +325,13 @@ class Serializer
       {$r: encodeToSlot(value, path)}
 
     encodeFunction = (fn, owner, propName, path) ->
-      # a widget's INJECTED method carries its source in its own sibling `<name>_source` string
-      # (Widget.injectProperty), and that is the one function the load restores, with the widget's own
-      # injectProperty: so a {"$src"} is written for nothing else. Only the widget's OWN one counts: a
-      # class keeps its members' sources on its meta-object (Class.applyMemberEdit), so a
-      # `<name>_source` up the prototype chain is none of this function's, and one that is not a
-      # string is no source at all.
-      sourceName = propName + "_source"
-      if owner? and propName? and Serializer.classTakesInjectedMethods(owner.constructor) and
-         Object::hasOwnProperty.call(owner, sourceName) and typeof owner[sourceName] is "string"
-        return {$src: owner[sourceName]}
+      # a widget's INJECTED method is kept with its source (Widget.keptSourceOf), and that is the one
+      # function the load restores, with the widget's own injectProperty: so a {"$src"} is written for
+      # nothing else, and only from a widget's own field. The source is the function's, so it describes
+      # the function the field holds now: one a run assigned has none.
+      keptSource = Widget.keptSourceOf fn
+      if owner? and propName? and Serializer.classTakesInjectedMethods(owner.constructor) and typeof keptSource is "string"
+        return {$src: keptSource}
       # Any other function is refused, never dropped: no text restores it faithfully (a closure over
       # a run's locals, a native, a class member's body). The usual way a WIDGET comes to hold one is
       # a person's run (`@f = -> 42`, Widget.evaluateString), so the remedy names the person's

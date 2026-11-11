@@ -2507,3 +2507,48 @@ for (const s of sites) if (s.absentBefore.length) {
       `homepage`, `lean` and `dev-precompiled` (`build_and_smoke.sh --profile …`), and fails on homepage under a plant
       skipping the reflective layer (the core edit not in force, a notice) and under one pre-loading no edit's code
       (app-kit not loaded, a notice). Measured: the whole production smoke takes 6 s.
+- [x] **A run that replaces a saved method leaves its kept source describing the old one** (found by the same review;
+      by reading). `Widget.injectProperty` keeps `<name>_source` beside the function it compiles; a run that reassigns
+      the field (`@m = -> …`, `Widget.evaluateString`) leaves the companion in place. The inspector's pane, a save's
+      `{"$src"}` (which the load compiles back) and `_sourceChangedNoSettle`'s own-code key then all read the OLD
+      source: a save silently restores code the widget no longer ran. Its mirror: a run that deletes the own function
+      while a class still declares the name leaves an orphaned `<name>_source`, which the inspector hides as a
+      companion (`_isACompanion`) and a save carries as a string.
+- [x] **A text's measurement, wrapping and split caches name no code of its own** (found by the independent review
+      closing "A palette's back-buffer key names its class and extent, not code of its own", in the plan's ledger; by
+      reading, not measured). `Widget._ownCodeKeySuffix` keys a text's back buffer and its two top-level text caches
+      (TextWdgt's wrap and line breaks), but four shared caches its code also fills do not carry it:
+      `cacheForParagraphsWrappingData` (`TextWdgt.coffee`, filled through `@measureText`), `cacheForTextMeasurements`
+      (`StringWdgt.coffee`), and the paragraph and word split caches. Twin texts of one font, width and paragraph: an
+      inspector Save of A's own `measureText` misses at A's top-level key and then hits the paragraph entry B filled,
+      so A's edit never shows; after a flush, whichever wraps first fills the entry for both.
+      — both CLOSED 2026-11-11 (self-ruled; loop unit U5). RULED: the source belongs to the FUNCTION, and only to a
+      function the injection makes; and a shared cache is keyed by a widget's own code wherever its work runs that
+      code. LANDED: `Widget.injectProperty` keeps the source WITH the function it compiles, in a weak store keyed by the
+      function (`Widget._keptSources`, a WeakMap: it writes to no function and keeps none alive), and only when txt
+      SPELLS a function literal — read from the lexer's tokens (`Widget._spellsAFunctionLiteral`: the first token the
+      person wrote opens a parameter list or is the arrow), so a txt naming a function (`@f`, a class member,
+      `Math.max`) keys nothing and the function it names keeps the source it has, or none. ONE accessor,
+      `Widget.keptSourceOf`, is read by the object inspector, the own-code key (`_sourceChangedNoSettle`) and the save's
+      `{"$src"}` (`Serializer`). The `<name>_source` field, its two followers (`removeOwnProperty` /
+      `renameOwnProperty`) and the inspector's companion rule for it are gone, so a run that replaces or deletes a member
+      takes the member's source with its function, and no orphan can be left. `TextWdgt.getWrappingData` (whose work
+      runs `@measureText`) and `StringWdgt.measureText` (whose work runs `@eliminateInvisibleCharacter`) key their caches
+      with `@_ownCodeKeySuffix`, as the top-level two and the back buffers do; the paragraph and word splits run no code
+      of the widget's (a plain `text.split`, like the font-box static) and stay keyed by their text. No compat
+      obligation for files carrying `<name>_source` strings (owner standing rule): such a field loads as the plain
+      string it is. The independent review found the first shape keyed whatever function an injection left — so an
+      inspector Save of `@f` naming a run's function gave it the source "@f", whose save no longer refused and whose
+      load ran `@f = @f` — which the literal rule closes; it also showed the split keys guarded nothing. PROVEN:
+      `SystemTest_macroObjectInspectorShowsTheFunctionItsSubjectHolds` gains a save of the kept source and a "replaced"
+      leg (a run replaces the saved method: the pane shows the run's function, a save refuses it naming it), whose two
+      assertions alone fail under a plant keeping a source per widget and member name (the old field's behaviour); the
+      new `SystemTest_macroTextOwnCodeKeysTheCachesItRunsIn` (twin texts; one given its own measureText, then its own
+      eliminateInvisibleCharacter, by inspector Saves) fails under a plant dropping the own-code key from the
+      paragraph-wrapping key, and exactly at its measured-widths leg under one dropping it from measureText's key; the
+      serialization rig's `serialize2.runReplacedMethodIsRefused`, `serialize2.keptSourceFollowsItsFunction` and
+      `serialize2.keptSourceSurvivesACopyAndALoad` (replacing the two guards that existed for the field's drift,
+      `functionSourceMustBeOwn` / `functionSourceMustBeAString`) each fail under their plant (a source per name; a
+      rename that hands over a new function; every function keyed, literal or not).
+      `SystemTest_macroInspectorOffersOnlyWhatItsSubjectOwns` drops its `_source` companion half. Followers clean on both
+      pointers.
