@@ -469,9 +469,12 @@ NAMED like one.
   - else if the owner's class takes injected methods (a widget's, `Serializer.classTakesInjectedMethods`)
     and the function has a kept source (a user-injected method: `injectProperty` keeps the
     CoffeeScript WITH the function it compiles — a weak store keyed by the function, read
-    through `Widget.keptSourceOf` — and only for a function it MAKES, a txt that spells a
-    function literal; a txt naming one, `@f`, keeps nothing, so the function it names keeps
-    the source it has, or none) → serialize
+    through `Widget.keptSourceOf` — and only for a function it MAKES, a txt that IS one function
+    literal (`Widget.spellsAFunctionLiteral`, read off the lexer's tokens); a txt naming one, `@f`,
+    keeps nothing, so the function it names keeps the source it has, or none; and a txt with a
+    statement after its function is stored by no door — an object's, a code blurb's, a class's or a
+    mixin's member edit refuses it like a compile error, `Widget.refuseCodeAfterAFunction` — since
+    every load and copy compiling it back would run that statement again) → serialize
     `{"$src": <source>}`; restore recompiles it with `injectProperty` on the owning widget. A COPY
     does the same, asking the same test (`Duplicator._compileInjectedMethods`): each injected method
     a widget's own field holds — a `@serializationTransients` one too, which the save drops and a copy
@@ -772,13 +775,15 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      record's `iid` above its class's count in the section's `idCounters`, absent meaning 0 (an id a widget of
      that class built after the load would take again) — both `iid` rules judging a widget class this page has,
      so a name it lacks keeps its own refusal; a membership marker naming no world set; a reference no save writes
-     (`Deserializer._refProblem`: a scalar, or exactly one form — `$r` an index into the table, `$wk`/`$ext`/`$src` a
-     string, `$num` a known text); a `{"$src"}` in a tag record), a malformed world section
+     (`Deserializer._refProblem`: a scalar, or exactly one form — `$r` an index into the table, `$wk`/`$ext` a
+     string, `$src` one function literal's source and nothing after it, `$num` a known text); a `{"$src"}` in a tag
+     record), a malformed world section
      (`Deserializer._worldSectionProblem`: every field the section writes — its children and app windows `{"$r"}`s
      to widgets' records, the bin a `BinWdgt`'s, the shelf a `ShelfWdgt`'s, the preferences the
      `PreferencesAndSettings` record, the desktop colour a `Color`'s; its plain fields of their type; an info-doc flag
      only under an `infoDoc_…` name (`WorldWdgt.isInfoDocFlagName`); the source-edit list record by record, as `SourceEditsRegistry.isARecord` reads
-     one), a widget file carrying a world section (no widget save writes one; its source edits would be fetched for
+     one, and no record's code a function with a statement after it, which every load replaying it would run),
+     a widget file carrying a world section (no widget save writes one; its source edits would be fetched for
      and never replayed), a widget file's `root` not a widget's record, `memberships` that are no list or stand on a record that is
      no widget's, a `{"$src"}` on a record of a class that cannot
      inject a method (§9), or a class the file names — a record's class, an `app:` key's, a class

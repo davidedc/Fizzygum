@@ -3226,3 +3226,39 @@ for (const s of sites) if (s.absentBefore.length) {
       copier, the lost menu-sweep detection, a prototype-less object refused, stale and overbroad claims), all fixed
       above; filed from it: "A copy's refusal names the value but not where it is held". `fg gauntlet` green on
       both shapes (20 legs each, no flake), `fg homepage` BOOT OK on both.
+- [x] **A kept source runs every statement it holds on every load and copy** (found by the independent review closing
+      "A kept source of a fat-arrow method keeps its first receiver in copies", in the plan's ledger; by reading).
+      `Widget.spellsAFunctionLiteral` reads only the FIRST token, so a Save of `-> 1` followed by a second line
+      (`world.inform "x"`) keeps the whole text as the function's source; `injectProperty` runs it as
+      `@["m"] = -> 1` then `world.inform "x"`, which every load ({"$src"}) and now every copy
+      (`Duplicator._compileInjectedMethods`) runs again.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U29, second shape). Reached through the product: an inspector Save
+      of a method's text holding a second statement after the function kept the whole text as the function's
+      source, so every copy and every load of a saved world ran that statement again — code run unasked; and a class's
+      or a mixin's member edit replayed by every load ran its second statement the same way. RULED: a member's code
+      that opens with a function IS that function, read as the compiler reads the text (the lexer's tokens: past a
+      parameter list, whose defaults may be functions of their own, to the function's own arrow; past its body's
+      INDENT … OUTDENT only line ends and comments) — so every door that stores a member's code refuses one with a
+      statement after its function, before anything runs or changes, as code that does not compile is refused, and a
+      loaded file is held to the same, the safety half. The first shape only stopped KEEPING such a text as the
+      function's source; the independent review closing this unit showed that left the person stuck (the save's
+      remedy, "Save it there as CoffeeScript", would refuse again forever), unnamed a mixin member edited that way
+      (its fake `super` then threw on every call) and left the class and mixin doors replaying the statement on every
+      load. LANDED: `Widget.functionLiteralReading` (the one reading: no function / one, or the line of the first
+      statement after it); `Widget.spellsAFunctionLiteral` reads it (its users, `injectProperty` keeping a source and
+      `Mixin._compiledMember` naming the function it makes); `Widget.refuseCodeAfterAFunction`, a refusal that reads
+      like a compile error placed on the statement's line (`isCompileError`, `typedLocation`), which
+      `_savingTypedCode` tells ("Cannot save this as code (line 2): a method's code is one function, and nothing may
+      follow it"), called by `injectProperty`, `compilePropertyAssignments` (a paint tool's code blurb, whose splitter
+      read a line not starting a name into the value before it), `Class.applyMemberEdit` and `Mixin.applyMemberEdit`;
+      the load refuses a `{"$src"}` that is not one function literal (`_refProblem`) and a source-edit record whose
+      code has a statement after its function (`_worldSectionProblem`). The rule was measured on twenty texts with the
+      global CoffeeScript 2.7 lexer; the reviewer re-ran about 110 on the page's bundled 2.0.3 and both agree. Docs:
+      the serialization reference (§5's kept source, §9's vetting). PROVEN: the serialization rig —
+      `serialize2.aStatementAfterAFunctionIsRefused` (each of the four doors refuses `-> 1⏎window.…++` at line 2,
+      storing nothing and running nothing; the inspector Save's gesture answers false and tells the person; a
+      multi-line function and one with a function default keep their sources), the load guards
+      `world.loadGuard.sourceWithASecondStatementRefused` (a `{"$src"}`) and
+      `world.loadGuard.sourceEditWithASecondStatementRefused` (a class-level record), and (10)'s stray-source guard now
+      held to its own refusal's words; with the old first-token reading planted, every door stored the text and ran
+      it, and both loads took the file. `fg gauntlet` green (20 legs, no flake), `fg homepage` BOOT OK.

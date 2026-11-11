@@ -370,6 +370,11 @@ class Deserializer
         return @_shown(value) + ", a reference to no entry of the table" unless Number.isInteger(value.$r) and 0 <= value.$r < objectCount
       when "$num"
         return @_shown(value) + ", a number written as no number a save writes" unless @_isNumberText value.$num
+      when "$src"
+        # a save writes the source of one function literal and nothing else (Widget.spellsAFunctionLiteral): a
+        # text holding more would run its other statements on every load that compiles it (injectProperty),
+        # and no door stores one (Widget.refuseCodeAfterAFunction)
+        return @_shown(value) + ", a method's source no save writes" unless typeof value.$src is "string" and Widget.spellsAFunctionLiteral value.$src
       else
         return @_shown(value) + ", a reference form no save writes" unless typeof value[keys[0]] is "string"
     undefined
@@ -455,6 +460,10 @@ class Deserializer
       return ".sourceEdits is " + @_shown(section.sourceEdits) + ", not a list" unless Array.isArray section.sourceEdits
       for r, i in section.sourceEdits when !SourceEditsRegistry.isARecord r
         return ".sourceEdits[" + i + "] is " + @_shown(r) + ", not a source edit"
+      # a member's code opening with a function is that function alone: no door stores one with a statement
+      # after it (Widget.refuseCodeAfterAFunction), which every load replaying the edit would run again
+      for r, i in section.sourceEdits when typeof r.source is "string" and Widget.functionLiteralReading(r.source)?.after?
+        return ".sourceEdits[" + i + "] holds a member's code with a statement after its function, which no save writes"
     undefined
 
   # A value read out of a file, shown in a refusal: its JSON, cut short -- the message is a person's

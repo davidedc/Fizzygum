@@ -4270,8 +4270,10 @@ class Widget extends TreeNode
   # to tell. A function the injection MAKES -- txt spells a function literal -- is kept with its source
   # (Widget.keptSourceOf), so it stays editable as CoffeeScript and rides serialization as {"$src"}. A
   # txt that names a function (`@f`, a class member, `Math.max`) makes none: what it names keeps the
-  # source it has, or none.
+  # source it has, or none. A txt with a statement after its function is refused before anything
+  # changes (refuseCodeAfterAFunction).
   injectProperty: (propertyName, txt) ->
+    Widget.refuseCodeAfterAFunction txt
     assignment = Widget.propertyAssignmentSource propertyName, txt
     @evaluateString assignment, typedFrom: assignment.length - txt.length
     injected = @[propertyName]
@@ -4279,21 +4281,65 @@ class Widget extends TreeNode
       Widget._keptSources.set injected, txt
     return
 
-  # Does txt SPELL a function literal: is its first token the start of one (a parameter list, or the
-  # arrow itself)? Read from the lexer's tokens, the reading the compiler makes of this very text
-  # (as Class reads a member's supers), never from the text -- so the comments and blank lines a
-  # person types above the function are passed over (the lexer hands a leading comment over as a
-  # GENERATED token, then a line end). Only then is txt the source of the function its injection
-  # gives me: a txt naming a function hands over a function made elsewhere, whose code it is not --
-  # `@f` is a field's name, and kept as f's source it would load as `@f = @f`.
-  @spellsAFunctionLiteral: (txt) ->
+  # How txt reads as a member's code, read from the lexer's tokens -- the reading the compiler makes of
+  # this very text (as Class reads a member's supers), never from the text, so the comments and blank
+  # lines a person types around a function are passed over (the lexer hands a comment over as a
+  # GENERATED token, and a one-line body sits inside a generated INDENT ... OUTDENT pair). Undefined when
+  # txt does not open with a function literal (a parameter list, or the arrow itself) -- a value, or a
+  # text NAMING a function made elsewhere. Else an object whose `after` is the 0-based line of the first
+  # statement that follows the function's body, and absent when nothing does (only line ends and
+  # generated tokens). The walk goes past a parameter list, whose default values may be functions of
+  # their own, to the function's own arrow, then counts its body's INDENT ... OUTDENT.
+  @functionLiteralReading: (txt) ->
     try
       tokens = CoffeeScript.tokens txt
     catch
-      return false
-    for token in tokens when !token.generated and token[0] isnt "TERMINATOR"
-      return token[0] in ["PARAM_START", "->", "=>"]
-    false
+      return undefined
+    i = 0
+    i++ while i < tokens.length and (tokens[i].generated or tokens[i][0] is "TERMINATOR")
+    return undefined unless tokens[i]?[0] in ["PARAM_START", "->", "=>"]
+    if tokens[i][0] is "PARAM_START"
+      paramDepth = 0
+      while i < tokens.length
+        paramDepth++ if tokens[i][0] is "PARAM_START"
+        paramDepth-- if tokens[i][0] is "PARAM_END"
+        i++
+        break if paramDepth is 0
+    return undefined unless tokens[i]?[0] in ["->", "=>"]
+    depth = 0
+    for token in tokens[i + 1..]
+      switch token[0]
+        when "INDENT" then depth++
+        when "OUTDENT" then depth--
+        else
+          return {after: token[2]?.first_line ? 0} if depth is 0 and token[0] isnt "TERMINATOR" and !token.generated
+    {}
+
+  # Does txt SPELL a function literal, and nothing else? Only then is txt the source of the function its
+  # injection gives me: a txt NAMING a function hands over a function made elsewhere, whose code it is
+  # not -- `@f` is a field's name, and kept as f's source it would load as `@f = @f`. (A txt with a
+  # statement after its function never reaches an injection: refuseCodeAfterAFunction.)
+  @spellsAFunctionLiteral: (txt) ->
+    reading = Widget.functionLiteralReading txt
+    reading? and !reading.after?
+
+  # A member's code that opens with a function IS that function: a statement after it is no part of the
+  # function, yet every load and copy compiling the code back (injectProperty, a replayed class or mixin
+  # edit) would run it again. So every door that stores a member's code -- an object's
+  # (injectProperty, the paint tools' code blurbs: compilePropertyAssignments), a class's
+  # (Class.applyMemberEdit), a mixin's (Mixin.applyMemberEdit) -- refuses such code before it changes
+  # anything, as code that does not compile is refused: the refusal reads like a compile error
+  # (`isCompileError`), placed on the statement's line as typed (`typedLocation`, a line and no column),
+  # which the saving gesture tells the person (Widget._savingTypedCode). The load holds a file to the
+  # same (Deserializer: a {"$src"}, a source-edit record).
+  @refuseCodeAfterAFunction: (txt) ->
+    after = Widget.functionLiteralReading(txt)?.after
+    return unless after?
+    refusal = new Error "line #{after + 1} of the code follows the method's function",
+      cause: new Error "a method's code is one function, and nothing may follow it"
+    refusal.isCompileError = true
+    refusal.typedLocation = line: after
+    throw refusal
 
   # THE COFFEESCRIPT A FUNCTION WAS INJECTED FROM (injectProperty), kept BY THE FUNCTION, never by the
   # field that holds it: whatever replaces or deletes a member takes the member's function, and its
@@ -4348,6 +4394,7 @@ class Widget extends TreeNode
     for each in assignments
       assignment = Widget.propertyAssignmentSource each.name, each.source
       try
+        Widget.refuseCodeAfterAFunction each.source
         compileFGCode assignment, true, typedFrom: assignment.length - each.source.length
       catch error
         error.typedIn = each.name

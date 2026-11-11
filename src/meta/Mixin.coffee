@@ -204,6 +204,7 @@ class Mixin
   # updated. Throws on compile errors, having changed nothing.
   applyMemberEdit: (memberName, source) ->
     Class.refuseTheConstructor memberName, @name + "Mixin"
+    Widget.refuseCodeAfterAFunction source
     editedValue = @_compiledMember memberName, source
     @nonStaticPropertiesSources[memberName] = source
     for className in @_consumerClassNames() when window[className]? and @_isTheDonorTo window[className], memberName

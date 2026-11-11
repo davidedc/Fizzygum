@@ -288,6 +288,7 @@ class Class
   # errors, having changed nothing.
   applyMemberEdit: (memberName, source) ->
     Class.refuseTheConstructor memberName, @name
+    Widget.refuseCodeAfterAFunction source
     proto = window[@name].prototype
     # the typed source sits behind the assignment, so a compile error is placed in it (typedFrom);
     # a `super` the rewrite expands shifts the columns after it on its line

@@ -278,14 +278,9 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       directions and runs none of the file's code, leaving the file direction; (e) refuse up front a file whose
       class-level records name `wellKnownKey` — static, and it fails in the safe direction; (f) return the page to
       boot after the confirm and before the teardown — a refused load has then already discarded the page's edits.
-- [ ] **A kept source runs every statement it holds on every load and copy** (found by the independent review closing
-      "A kept source of a fat-arrow method keeps its first receiver in copies", in the plan's ledger; by reading).
-      `Widget.spellsAFunctionLiteral` reads only the FIRST token, so a Save of `-> 1` followed by a second line
-      (`world.inform "x"`) keeps the whole text as the function's source; `injectProperty` runs it as
-      `@["m"] = -> 1` then `world.inform "x"`, which every load ({"$src"}) and now every copy
-      (`Duplicator._compileInjectedMethods`) runs again.
-- [ ] **A kept-source alias loses its identity on a copy and a load** (same review; by reading; pre-existing for the
-      load). `B.g = P.f` holds P's injected function; the copy and the load each compile `g` afresh on B's copy, so
+- [ ] **A kept-source alias loses its identity on a copy and a load** (found by the independent review closing "A kept
+      source of a fat-arrow method keeps its first receiver in copies", in the plan's ledger; by reading; pre-existing
+      for the load). `B.g = P.f` holds P's injected function; the copy and the load each compile `g` afresh on B's copy, so
       `B'.g` is bound to `B'` and is no longer `P'.f` — whether an alias across widgets should follow its referent is
       the open part.
 - [ ] **A copy pixel-copies every back buffer it will discard** (same review; by reading). `backBuffer` is a render
