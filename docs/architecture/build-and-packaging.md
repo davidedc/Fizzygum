@@ -625,9 +625,9 @@ the build script and its Python, `parts.json` and the profiles, each part's decl
 files the build script names itself (the SWCanvas bundle's pieces, the pre-compiled stub) and every file under
 `font-assets/`. The gates are not inputs (they judge the output, they do not shape it), nor is the pre-compile driver (it
 shapes only a precompiled profile's image, which no runner tests). ⚠ A DELETED input is not seen (no surviving file's
-time moves). The suite runner, the single runner (except while it captures references), the paint audit and several
-rigs refuse a stale build (`Fizzygum-tests/scripts/lib/assert-build-fresh.js`; `FIZZYGUM_ALLOW_STALE_BUILD=1`
-overrides); the sequence runner and the reference-capture tool do not ask. ⚠ `fg status` prints FRESH/STALE by a check of its own, over the sources only.
+time moves). The suite runner, the single runner (except while it captures references), the sequence runner (except
+for its `--list` / `--before` listings), the paint audit and several rigs refuse a stale build (`Fizzygum-tests/scripts/lib/assert-build-fresh.js`;
+`FIZZYGUM_ALLOW_STALE_BUILD=1` overrides); the reference-capture tool does not ask. ⚠ `fg status` prints FRESH/STALE by a check of its own, over the sources only.
 
 ## 7. Adding things
 

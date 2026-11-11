@@ -2593,3 +2593,42 @@ for (const s of sites) if (s.absentBefore.length) {
       copy replaced as a run does; Widget's harness-installed `widgetFromUniqueIDString`, recorded nowhere) fails its
       four record-expecting pane assertions under a plant restoring the old reading, and exactly the replaced case
       under the first shape. Follower clean on both pointers.
+- [x] **The rigs wait for their pages to boot a dozen ways, most of them in-page and unbounded** (found closing "The
+      suite's probe page waits for boot its own way", in the plan's ledger; by reading). A rig that boots a product
+      page waits for its world its own way: `scripts/lib/headless-boot.js` `inPageWaitReady` (one raw in-page poll,
+      given 60–120 s, bounded by `answerWithin` only in `smoke-apps-headless.js`; the graph and serialization rigs
+      wait on it raw, and the menu and pin sweeps also discard its answer, so a world that never arrives meets their
+      sweep as a raw TypeError), and local copies in `smoke-boot-headless.js` (`inPageWaitFor`),
+      `parts-lazy-icons-headless.js` (its own `inPageWaitReady`), `parts-lazy-load-headless.js`,
+      `parts-snapshot-load-headless.js`, `serialization-file-roundtrip-headless.js`,
+      `staleness-census.js`, `derive-inspector-churn-set.js` and `generate-pre-compiled-headless.js`, each with its own
+      predicate, bound and line. A page stuck while it boots is waited on until the protocol timeout. The runners'
+      pages share `startedWithin` (`lib/headless-driver.js`); a rig's page asks a different question (a product world,
+      no harness), so the rigs' one wait is `startedWithin` with a predicate of their own beside `HARNESS_WORLD_STANDS`.
+- [x] **The sequence runner never asks whether the build is stale** (found by the second independent review closing
+      "Build freshness reads only the sources' mtimes", in the plan's ledger; by reading). `run-sequence-headless.js` —
+      presuite's `fracplane` rider and every new test's follower proof — boots the harness with no
+      `lib/assert-build-fresh` call, so an edit not yet built is tested as if it were in the build, passing or failing
+      vacuously; the suite and single runners refuse such a build.
+      — both CLOSED 2026-11-11 (self-ruled; loop unit U8). RULED: one boot wait for every page a script boots, and
+      every runner asks whether the build is stale. LANDED: `lib/headless-driver.js` `PRODUCT_WORLD_STANDS` beside
+      `HARNESS_WORLD_STANDS` (a WorldWdgt in `window.world` with its render canvas, canvas and context; with
+      `{ booted: true }`, `stillLoadingSources === false` too) and `notStartedLine` (why a page did not start, as a
+      sentence — a lost page's own line said whole); graph-liveness, parts-lazy-icons, the menu and pin sweeps,
+      smoke-apps, both serialization rigs, the two parts load rigs (`booted`), the staleness census, the boot smoke
+      (its boot `booted`, since its probes load code on a precompiled tree, and its two legs) and the HiDPI check each
+      wait through `startedWithin` with it and read its answer by their subject: a boot check (the boot smoke, the HiDPI
+      check, smoke-apps' launch pages, WORLD_NOT_READY) fails it; any other rig has measured NOTHING, its own INVALID /
+      exit-2 path (the menu and pin sweeps, which discarded the answer and would have swept no world, now throw to
+      theirs). `lib/headless-boot.js` `inPageWaitReady` and the local copies are deleted. A wait for something other
+      than a world standing stays its own (derive-inspector-churn-set's in-page plant poll, generate-pre-compiled's
+      harvest signal, the boot smoke's text-settle and reflective-layer waits — their missing outside bound FILED).
+      `run-sequence-headless.js` asks `lib/assert-build-fresh` before it launches (its `--list` / `--before` listings
+      exempt). Docs: the tests CLAUDE.md, build-and-packaging §6, the guard's header, the sequence runner's help.
+      PROVEN: the menu sweep under a plant whose world never arrives exits 2 with "the page did not start within 90s —
+      nothing was swept" after the shared bound; smoke-apps' self-test plants the shared `NEVER_STARTS` on a launch page
+      (WORLD_NOT_READY) and on every page (INVALID) and pays the shared 90 s bound for each, as the runners' DID_NOT_START
+      proofs already do (no flag shortens it; the selftests leg measured 319 s before, 326 s after); the sequence runner
+      refuses a build an input is newer than, exit 2; two gauntlets green with every touched rig, `fg homepage` green
+      (the boot smoke on the production tree), and by hand the boot smoke on the dev tree, on `--profile lean`, and the
+      HiDPI check.

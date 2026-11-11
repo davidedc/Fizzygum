@@ -11,18 +11,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **The rigs wait for their pages to boot a dozen ways, most of them in-page and unbounded** (found closing "The
-      suite's probe page waits for boot its own way", in the plan's ledger; by reading). A rig that boots a product
-      page waits for its world its own way: `scripts/lib/headless-boot.js` `inPageWaitReady` (one raw in-page poll,
-      given 60–120 s, bounded by `answerWithin` only in `smoke-apps-headless.js`; the graph and serialization rigs
-      wait on it raw, and the menu and pin sweeps also discard its answer, so a world that never arrives meets their
-      sweep as a raw TypeError), and local copies in `smoke-boot-headless.js` (`inPageWaitFor`),
-      `parts-lazy-icons-headless.js` (its own `inPageWaitReady`), `parts-lazy-load-headless.js`,
-      `parts-snapshot-load-headless.js`, `serialization-file-roundtrip-headless.js`,
-      `staleness-census.js`, `derive-inspector-churn-set.js` and `generate-pre-compiled-headless.js`, each with its own
-      predicate, bound and line. A page stuck while it boots is waited on until the protocol timeout. The runners'
-      pages share `startedWithin` (`lib/headless-driver.js`); a rig's page asks a different question (a product world,
-      no harness), so the rigs' one wait is `startedWithin` with a predicate of their own beside `HARNESS_WORLD_STANDS`.
 - [ ] **Every gate re-masks all of the compiled sources** (found closing "Every build tool walks src for itself", in
       the plan's ledger; measured). Masking src takes
       about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
@@ -56,11 +44,22 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       compilers read differently stopped the scan unnoticed from f002a7b7 (2026-08-16) to 2026-11-10. Holding every source to the
       mirror on each build would cost the mirror's run (a few seconds) per build: whether that is worth it is the same
       question as "Every gate re-masks all of the compiled sources".
-- [ ] **The sequence runner never asks whether the build is stale** (found by the second independent review closing
-      "Build freshness reads only the sources' mtimes", in the plan's ledger; by reading). `run-sequence-headless.js` —
-      presuite's `fracplane` rider and every new test's follower proof — boots the harness with no
-      `lib/assert-build-fresh` call, so an edit not yet built is tested as if it were in the build, passing or failing
-      vacuously; the suite and single runners refuse such a build.
+- [ ] **Waits for something other than a world standing are in-page polls with no outside bound** (found by the
+      independent review closing "The rigs wait for their pages to boot a dozen ways", in the plan's ledger; by
+      reading). The boot smoke's text-settle, reflective-layer and lazy-part waits and parts-lazy-load's launch, settle
+      and lazy-consumer waits each poll inside the page with an in-page timeout, so a page stuck in a script holds them
+      until the protocol timeout; `answerWithin` would bound each from outside, as the boot wait is.
+- [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** (same review; by
+      reading). `startedWithin` has one line for every predicate, so a world standing whose boot never finished (a
+      rejected layer load, `stillLoadingSources` stuck) reads "did not start within 90s", where the boot smoke's own
+      wait used to say it did not finish booting.
+- [ ] **The profiling scripts boot their pages their own way** (same review). `docs/profiling/prof-run.js` and
+      `prof-interactive.js` keep their own world waits and "did not become ready" line, outside the shared boot wait.
+- [ ] **`fg`'s selftests-leg budget comment and its `run-sequence` usage are stale** (same review; `fg` is local
+      workspace tooling, outside the backlog loop). `fg`'s comment budgets the leg at about 153 s alone and 212 s in a
+      loaded wave A (measured 326 s on 2026-11-11, the smoke-apps self-test its longest file now that its two
+      never-starting pages wait the shared 90 s each), and its `run-sequence` usage does not say the runner now refuses a
+      stale build.
 - [ ] **A build that fails a step can still stamp itself** (found by the same review; by reading). `build_it_please.sh`
       checks the boot minify's exit, but not the SWCanvas fetch (`vendor-swcanvas.sh`), the boot `coffee -b -c`
       (caught only through the minify that follows), the SWCanvas bundle's `cat`s, the `bootScripts` loop's
