@@ -2180,8 +2180,9 @@ assertion a recapture after a regression silently stores two different hashes an
   `new InspectorWdgt Color` (the class FUNCTION, not `Color.prototype`, which `inspectorClassFor` gives a class
   inspector) lists the class's statics as they are — they are the function's own properties, so "Inherited" need not
   be clicked (clicking it adds `Function.prototype`'s and `Object.prototype`'s enumerable rows); a static function's
-  pane reads the CoffeeScript its class records (`Klass.class.staticPropertiesSources`), or, for one `extend` copied
-  down, the declaring ancestor's while the copy IS that ancestor's function — else its compiled text. ⚠ Assert a multi-line text as a FACT —
+  pane reads the CoffeeScript kept with that very function (`Class.memberRecordOf`) — its class's, the declaring
+  ancestor's for one `extend` copied down (the copy IS that function), a harness class's for one the harness
+  installs — else its compiled text. ⚠ Assert a multi-line text as a FACT —
   `@assertValuesEqual "…", true, (text is expected)` — not by passing the text: the runner relays only the console's
   TAIL, so assertion lines printing whole sources push the earlier assertions out of the log you read.
 

@@ -3013,3 +3013,63 @@ for (const s of sites) if (s.absentBefore.length) {
       moved (one row fewer, `emptyCharacter`); both recaptures' completeness gates green. A gauntlet before the
       review's fixes green but for one stale visualisation page (the own-code test's, regenerated) and the homepage
       green; again after them.
+- [x] **A run that replaces a class's member reads as a recorded source it no longer runs** (found by the independent
+      review closing "An object inspector on a class shows its statics as compiled text", in the plan's ledger; by
+      reading). The inspector reads the source a class's meta-object records for a NAME, never for a function: a run's
+      `Klass::m = -> …` on a prototype member shows `Klass`'s record — or, where `Klass` records none
+      (`RectangleWdgt::step = …`), the first class up the chain that does (Widget's `step`) — and a run's `Klass.s = ->
+      …` on a static `Klass` itself declares shows its record. (A static the holder copies from an ancestor is shown
+      only while it IS the ancestor's function, so a run's static on a child reads as compiled text.) For statics there
+      is no edit path, so `Class` could keep each static's compiled function at creation or ingest and the question
+      becomes answerable; for prototype members the class inspector's edits are the record, and a run's are not.
+- [x] **The inspector's class walk reads a recorded source through the store's prototype** (same review; by reading).
+      `selectionFromList`'s class walk asks `theClass.nonStaticPropertiesSources[selected]?` of a plain `{}`, so
+      selecting `constructor` on a class that writes none shows `Object`'s native text; which source a constructor
+      row should show (the class's own, CoffeeScript-generated when it writes none) is the open part.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U21, the two items above together). RULED: a source is kept WITH the
+      function made from it, never read by a name, and a record store answers no inherited name. MEASURED first: a
+      mixin's literal is evaluated afresh for every class it augments, so each consumer holds its OWN function for a
+      mixin member; the function itself is the identity that holds everywhere (the rule `Widget.keptSourceOf` keeps for
+      injected methods). LANDED: `Class.memberRecordOf` / `keepMemberRecord`, a weak store beside — never merged into —
+      `Widget._keptSources`, which the save reads (a class member written as a widget's `{"$src"}` would compile on its
+      own, `super` and all); a record is the source text, and a function's FIRST record is its record (a member whose
+      source names a function made elsewhere, `step: noOperation`, an edit to `Widget::bar`, leaves that function's
+      record alone). Kept where a member's function is made: a class made or ingested (`Class._keepMyMembersRecords`:
+      its own keys only — its members, statics, its class function for a constructor it writes, each member a mixin
+      injected with its donor's source), a class edit, every mixin member compiled
+      (`Mixin._compiledMember`, which also names only a function its source MAKES — `Widget.spellsAFunctionLiteral`,
+      made public for it). The inspector asks the function a class prototype holds (`selectionFromList`, the
+      name-keyed class walk gone) and a class function's static (`_recordedStaticSourceOf`); a donated member is
+      attributed by the class chain (the class does not define it, its donor does: `Mixin.donorOf`), never by a
+      record, since one function can stand in several places. A class inspector's rename renames the source the
+      held function keeps, and refuses a member whose function keeps none. The record stores (`Class` instance and
+      static, `Mixin`) are `Object.create null` (two `null-literal` sanctions: Object.create's argument for no
+      prototype), so the hand-written own-ness reads go — both `definesMember`, `membersAwayFrom`, the constructor
+      test at class creation, the boot-donor test, U19's `SourceEditsRegistry._ownSourceIn` — and the inspector
+      shows a subject with no prototype (`_subjectsClassPrototype`; a store, or a run's own `Object.create null`).
+      FIELDS keep the record by name (filed). The independent review found a crash it fixed — an inspector on a
+      meta-object's store, or the meta-object's row holding one, threw — and the rest: a shared function's record and
+      mixin label overwritten by its last writer (a Save then routed to the
+      wrong mixin), a rename recompiling a record the pane no longer showed, a whole-chain walk at every class's
+      creation (`Object.keys` now), an unreachable consumer-side writer (`Mixin._keepConsumersRecords`, deleted),
+      stale comments and docs, a test restore outside `finally`. Its ingest-time finding (a run's function replacing
+      a member before the reflective layer arrives is recorded as the class's) was fixed by skipping anonymous
+      functions at ingest and FALSIFIED by the production smoke — the minified image keeps no function names, so
+      every member went unrecorded on `homepage` — and reverted; it is filed with its options. Docs: `mixins.md`,
+      `MACRO-PATTERNS.md`. Filed: the mixin double-injection guard (measured), a field row read by name, the talk
+      plan's wrapped-member premise, the pre-compiled tree's run-before-the-layer edge.
+      PROVEN: `SystemTest_macroObjectInspectorShowsTheFunctionItsSubjectHolds` extended — the twin rectangle's
+      `constructor` row reads the constructor RectangleWdgt writes; a heart icon's createAppearance reads its record,
+      the run's replacement its compiled text (and a class inspector's rename of it is refused, the run's function
+      staying, no member made under the new name), put back the record again; its `constructor` row the class
+      function's own text; HeartIconWdgt defines neither `toString` nor `constructor`; an alias edit leaves the
+      function's record; an inspector on the record store and one on the Class meta-object both open and read —
+      plants: the old name-keyed walk fails the run-replaced, constructor and meta-object assertions; the records
+      answering nothing fail all five recorded-source ones; prototype-backed stores fail both `definesMember`; the
+      last writer winning fails the alias; the old rename fails both rename assertions; a class prototype read off
+      a subject with none throws. `SystemTest_macroObjectInspectorOnAClassShowsItsStaticsSource` extended (Color's own
+      `create` replaced by a run) and changed (the harness-installed `widgetFromUniqueIDString` reads as
+      WidgetTestSupport's CoffeeScript for that very function — measured in the page) — the old static lookup fails
+      exactly those two, the records answering nothing all five. A follower of both on both pointers clean; the dpr1
+      suite moved no reference. A gauntlet and the homepage green before the review's fixes; after them the gauntlet
+      green and the homepage smoke failing the ingest filter (above); with it reverted, both green.

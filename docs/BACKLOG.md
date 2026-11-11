@@ -79,24 +79,42 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
       2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
       member it inherits".)
-- [ ] **A run that replaces a class's member reads as a recorded source it no longer runs** (found by the independent
-      review closing "An object inspector on a class shows its statics as compiled text", in the plan's ledger; by
-      reading). The inspector reads the source a class's meta-object records for a NAME, never for a function: a run's
-      `Klass::m = -> …` on a prototype member shows `Klass`'s record — or, where `Klass` records none
-      (`RectangleWdgt::step = …`), the first class up the chain that does (Widget's `step`) — and a run's `Klass.s = ->
-      …` on a static `Klass` itself declares shows its record. (A static the holder copies from an ancestor is shown
-      only while it IS the ancestor's function, so a run's static on a child reads as compiled text.) For statics there
-      is no edit path, so `Class` could keep each static's compiled function at creation or ingest and the question
-      becomes answerable; for prototype members the class inspector's edits are the record, and a run's are not.
-- [ ] **`Object::augmentWith` copies the mixin literal's inherited keys too** (same review; by reading).
+- [ ] **A class inspector's field row reads its record by NAME, whatever value the prototype now holds** (found by the
+      independent review closing "A run that replaces a class's member reads as a recorded source it no longer runs",
+      in the plan's ledger; reached: a run's `Klass::f = 2` on a field Klass records as `1`, then a class inspector's
+      `f` row). `ClassInspectorWdgt._sourceForFieldMember` shows the class's (or the donor's) recorded source for a
+      field: a value has no identity to key a record to, so a run's write, or a method a run replaced with a value,
+      reads as a source the prototype no longer holds. Functions read the source kept with them (`Class.memberRecordOf`).
+- [ ] **On a pre-compiled tree, a member a run replaced before the reflective layer arrived reads as its class's
+      source** (found by the independent review closing "A run that replaces a class's member reads as a recorded
+      source it no longer runs", in the plan's ledger; reached on `homepage` / `dev-precompiled`: Run `X::m = -> …` in
+      a desktop text, then open the first inspector). The layer ingests each class beside the code the image runs
+      (`Class._keepMyMembersRecords`) and keeps a record for whatever function the prototype holds then. Telling a
+      run's function from the image's by its NAME was tried and FALSIFIED by the production smoke: the image is
+      minified (`terser --compress --mangle`), which drops function-expression names, so every image member is
+      anonymous too. Options (a trade-off, the owner's): keep function names in the image (`keep_fnames`; bytes
+      unmeasured) and skip anonymous functions at ingest; a boot-side note of the functions the image made, kept as
+      it defines each class; or accept it.
+- [ ] **A wrapped member reads as compiled text, which the Smalltalk talk plan says it never does** (same review;
+      reached by the plan's U2 MethodTally, which wraps every own function member of the profiled classes).
+      `docs/plans/smalltalk-talk-2026-11-plan.md` (S1, its §"selectionFromList shows the recorded CoffeeScript") relies
+      on the inspector reading a member's source by name; it reads the source kept with the FUNCTION, so a wrapper
+      shows its compiled JavaScript. Forwarding the record onto a wrapper (`Class.keepMemberRecord wrapper,
+      Class.memberRecordOf original`, public) or accepting compiled text: the plan's owner's call.
+- [ ] **The mixin double-injection guard compares functions no two consumers share** (found closing "A run that
+      replaces a class's member reads as a recorded source it no longer runs", in the plan's ledger; measured).
+      `Object::addInstanceProperties` says a mixin's members are "compiled ONCE and SHARED by every consumer" and
+      refuses a member whose very function the class already inherits; measured on the dev page, every mixin's literal
+      is evaluated afresh for each class it augments (a sample member of each of the eight mixins is a different
+      function in every consumer but the first), so the guard's `@::[key] is value` can never hold across two classes
+      and the same-mixin-twice case it names would pass silently. Whether to compare by name and donor instead, or to
+      evaluate the literal once, is the open part (overlaps the mixin-removal plan).
+- [ ] **`Object::augmentWith` copies the mixin literal's inherited keys too** (found by the independent review closing
+      "An object inspector on a class shows its statics as compiled text", in the plan's ledger; by reading).
       `Object-extensions.coffee`'s `augmentWith` walks the literal with a non-own `for … of`, so every mixin consumer's
       class function — and, through `extend`, every subclass — owns `augmentWith`, `addInstanceProperties` and
       `hashCode` (enumerable on `Object.prototype`) as undeclared statics, which an object inspector on such a class
       lists. (`docs/architecture/mixins.md` says only the literal's own keys are copied.)
-- [ ] **The inspector's class walk reads a recorded source through the store's prototype** (same review; by reading).
-      `selectionFromList`'s class walk asks `theClass.nonStaticPropertiesSources[selected]?` of a plain `{}`, so
-      selecting `constructor` on a class that writes none shows `Object`'s native text; which source a constructor
-      row should show (the class's own, CoffeeScript-generated when it writes none) is the open part.
 - [ ] **The world's inspector offers to edit its browser listeners** (found by the independent review closing "A run
       that sets a widget field to a function blocks every world snapshot", in the plan's ledger; by reading). The world
       holds its DOM listeners as own function fields (`pointerdownBrowserEventListener`, …), so an object inspector on
@@ -257,7 +275,7 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       boot after the confirm and before the teardown — a refused load has then already discarded the page's edits.
 - [ ] **A kept source runs every statement it holds on every load and copy** (found by the independent review closing
       "A kept source of a fat-arrow method keeps its first receiver in copies", in the plan's ledger; by reading).
-      `Widget._spellsAFunctionLiteral` reads only the FIRST token, so a Save of `-> 1` followed by a second line
+      `Widget.spellsAFunctionLiteral` reads only the FIRST token, so a Save of `-> 1` followed by a second line
       (`world.inform "x"`) keeps the whole text as the function's source; `injectProperty` runs it as
       `@["m"] = -> 1` then `world.inform "x"`, which every load ({"$src"}) and now every copy
       (`Duplicator._compileInjectedMethods`) runs again.

@@ -184,7 +184,12 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   - Both refuse `constructor` (`Class.refuseTheConstructor`): a prototype's
     `constructor` IS its class, what every `.constructor.name` read answers.
   - The attribution covers methods AND fields: a donated method attributes through
-    the function-branch chain walk (both inspector types), and a donated FIELD
+    the source its very FUNCTION keeps (`Class.memberRecordOf`, kept as each consumer's
+    function is made — a mixin's literal is evaluated afresh for every class it augments, so
+    each consumer holds its own function; both inspector types ask the function, never a
+    name, so a run's replacement reads as compiled text and a harness install as its harness
+    class's CoffeeScript; the donor is the class chain's to say — the class does not define the
+    member, its donor does, `Mixin.donorOf` — since one function can stand in several places), and a donated FIELD
     attributes in the CLASS inspector via `ClassInspectorWdgt._sourceForFieldMember` —
     prototype-level truth, shown in boot order of authority (the class's own current
     source, then the mixin donor's) — while an OBJECT inspector keeps showing the
@@ -226,9 +231,9 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     or a mixin's — is edited. (An object inspector opened on a constructor itself, by
     double-clicking a `constructor` row, does list its statics, read-only: a constructor
     answers no edit protocol; a static function's pane reads the CoffeeScript its class
-    records for it, or, for one `extend` copied down, the declaring ancestor's while the copy
-    is still that very function — `InspectorWdgt._recordedStaticSourceOf` — else its compiled
-    text.) A mixin's class-side keys (the literal's 2-space ones,
+    keeps with that very function (`Class.memberRecordOf` — for one `extend` copied down, the
+    declaring ancestor's, the copy being the same function), asked by
+    `InspectorWdgt._recordedStaticSourceOf` — else its compiled text.) A mixin's class-side keys (the literal's 2-space ones,
     minus `MixedClassKeywords`) are copied onto each consumer constructor by
     `augmentWith` and their source is not parsed. ⚠ Editing a static would have to
     reach every SUBCLASS as well: `extend` gives each subclass its own copy of every

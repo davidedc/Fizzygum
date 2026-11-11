@@ -102,6 +102,9 @@ const STINKS = [
       { file: 'harness/AutomatorLoader.coffee', member: 'loadTest', count: 1, why: "a loaded script tag's `onload` cleared: the DOM's own reset value" },
       { file: 'harness/AutomatorLoader.coffee', member: 'loadImagesOfTest', count: 1, why: "a loaded script tag's `onload` and `onerror` cleared: the DOM's own reset value" },
       { file: 'harness/AutomatorLoader.coffee', member: '_loadTestMetadata', count: 1, why: "a loaded script tag's `onload` cleared: the DOM's own reset value" },
+      // the meta-objects' record stores: an object with NO prototype, which Object.create spells with `null` alone
+      { file: 'meta/Class.coffee', member: 'getSourceOfAllProperties', count: 2, why: "Object.create's argument for an object with no prototype (`undefined` throws): a record store answers no inherited name" },
+      { file: 'meta/Mixin.coffee', member: 'constructor', count: 1, why: "Object.create's argument for an object with no prototype (`undefined` throws): a record store answers no inherited name" },
     ],
     re: /\bnull\b/ },
   { id: 'clock-read', baseline: 13,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it

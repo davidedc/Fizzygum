@@ -183,7 +183,10 @@ class ClassInspectorWdgt extends InspectorWdgt
       @_notifyOfEdit()
       return
     theClass = @inspectedObject.constructor.class
-    unless theClass.definesMember oldName
+    # a function member renames the source its FUNCTION keeps (Class.memberRecordOf) -- what my pane shows --
+    # so one a run replaced (it keeps none) is refused as a member with no source is
+    held = @inspectedObject[oldName]
+    unless theClass.definesMember(oldName) and (!Utils.isFunction(held) or Class.memberRecordOf(held) is theClass.nonStaticPropertiesSources[oldName])
       @inform oldName + " has no CoffeeScript\nsource in " + theClass.name + "\nto rename"
       return
     @_editClassMember newName, theClass.nonStaticPropertiesSources[oldName]

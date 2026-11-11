@@ -10,8 +10,8 @@
 # break.
 
 class Mixin
-  # Every mixin the page has parsed from its source: what the class inspector reads a donated
-  # member's CoffeeScript from (InspectorWdgt.selectionFromList), what a class removal gives a
+  # Every mixin the page has parsed from its source: what the inspectors attribute a donated member to
+  # (InspectorWdgt.selectionFromList, through donorOf), what a class removal gives a
   # donor's member back from (donorOf), what a snapshot's mixin records replay onto. Filled through
   # register by the one step that ingests a page's sources (boot's
   # storeSourceAndPotentiallyCompileItAndExecuteIt), on BOTH its paths -- compiling a mixin to create
@@ -114,8 +114,8 @@ class Mixin
 
   # The parsed Mixin that DONATES member `memberName` to the class `theClass`: of its
   # augmentations that define it, the LAST, whose member boot order left on the prototype; or
-  # undefined. The class inspector reads it to show a donated member's real CoffeeScript and to
-  # route its edits to the donor; Class.removeMember, to give the member back.
+  # undefined. The inspectors read it to attribute a donated member to its donor, which routes a class
+  # inspector's edits of it there; Class.removeMember, to give the member back.
   @donorOf: (theClass, memberName) ->
     Mixin.donorsOf(theClass, memberName).pop()
 
@@ -138,9 +138,9 @@ class Mixin
     return [] unless bootSources?
     Class.membersAwayFrom @nonStaticPropertiesSources, bootSources
 
-  # Do I define member `memberName`? (An OWN entry: my store is a plain object.)
+  # Do I define member `memberName`? (My store has no prototype: no inherited name is an entry of it.)
   definesMember: (memberName) ->
-    Object::hasOwnProperty.call @nonStaticPropertiesSources, memberName
+    memberName of @nonStaticPropertiesSources
 
   # Does consumer class `theClass` (a class function) hold member `memberName` from ME? Not if
   # its class defines the member itself -- the class won at boot, and a class edit or removal
@@ -161,12 +161,16 @@ class Mixin
     eval.call window, compiled
     value = window.__fzEditedMixinMember
     delete window.__fzEditedMixinMember
-    if typeof value is "function"
+    # only a function the source MAKES is named: a source naming one made elsewhere (`noOperation`) hands
+    # over that function, whose name is its own
+    if typeof value is "function" and Widget.spellsAFunctionLiteral source
       # the fake-super rewrite resolves its target through
       # `arguments.callee.name + "_class_injected_in"`: the object-literal form gave
       # the original function the member's name, the standalone recompile does not --
       # restore it.
       Object.defineProperty value, "name", { value: memberName, configurable: true }
+    # kept with its function, whichever consumer it goes to (Class.memberRecordOf)
+    Class.keepMemberRecord value, source
     value
 
   # My CURRENT member `memberName`, compiled from my store -- what a consumer falls back to when
@@ -195,7 +199,7 @@ class Mixin
     return
 
   # Apply an edit to member `memberName`: recompile the single member, update my recorded
-  # source (the store the inspector's view reads), and inject the member into every consumer
+  # source (the store a class inspector's field rows and renames read), and inject the member into every consumer
   # class that holds it from me (_isTheDonorTo). Answers the names of the consumer classes
   # updated. Throws on compile errors, having changed nothing.
   applyMemberEdit: (memberName, source) ->
@@ -243,7 +247,8 @@ class Mixin
 
   constructor: (source, generatePreCompiledJS, createMixin) ->
 
-    @nonStaticPropertiesSources = {}
+    # name -> source, with no prototype (as Class's stores): a name nobody recorded is no record
+    @nonStaticPropertiesSources = Object.create null
 
     # find the Mixin name
     mixinRegex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)Mixin *=/m

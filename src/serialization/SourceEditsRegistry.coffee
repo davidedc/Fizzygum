@@ -179,27 +179,22 @@ class SourceEditsRegistry
       scope = if Mixin.allMixines.indexOf(metaObject) >= 0 then "mixin" else "class"
       for memberName in Class.membersAwayFrom metaObject.nonStaticPropertiesSources, bootSources
         try
-          if Object::hasOwnProperty.call bootSources, memberName
+          if memberName of bootSources
             metaObject.applyMemberEdit memberName, bootSources[memberName]
           else
             metaObject.removeMember memberName
           returned++
         catch error
-          unreturned.push {metaObject, scope, memberName, source: SourceEditsRegistry._ownSourceIn(metaObject.nonStaticPropertiesSources, memberName)}
+          unreturned.push {metaObject, scope, memberName, source: metaObject.nonStaticPropertiesSources[memberName]}
           console?.log "world snapshot: " + metaObject.name + "." + memberName + " could not be returned to its source at boot: " + error.message
     {returned, unreturned}
-
-  # A member's OWN source in a meta-object's store, or undefined: the store is a plain object, so a
-  # member the page removed would otherwise read as whatever Object.prototype holds under its name.
-  @_ownSourceIn: (store, memberName) ->
-    if Object::hasOwnProperty.call(store, memberName) then store[memberName] else undefined
 
   # Which members returnThePageToBootSources LEFT (`unreturned`) the loaded world still runs as the PAGE
   # edited them -- read after the replay, which can have given one of them the file's own version: each
   # that still holds the source it was left running, unless this registry's last record of it (the file's)
   # says the same, which makes it the file's code, not the page's. Counted rather than predicted.
   pageMembersStillRunning: (unreturned) ->
-    (each for each in unreturned when SourceEditsRegistry._ownSourceIn(each.metaObject.nonStaticPropertiesSources, each.memberName) is each.source and !@_lastRecordSays each)
+    (each for each in unreturned when each.metaObject.nonStaticPropertiesSources[each.memberName] is each.source and !@_lastRecordSays each)
 
   # Does my last record of `each`'s member leave it as `each` holds it -- its source, or removed?
   _lastRecordSays: (each) ->

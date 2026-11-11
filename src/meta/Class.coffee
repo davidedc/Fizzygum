@@ -297,6 +297,7 @@ class Class
     proto[memberName] = window.__fzEditedClassMember
     delete window.__fzEditedClassMember
     @nonStaticPropertiesSources[memberName] = source
+    Class.keepMemberRecord proto[memberName], source
     return
 
   # Remove ONE member from my prototype, with its source and its injection companion
@@ -316,10 +317,10 @@ class Class
     Mixin.injectInto @name, memberName, donorsMember if donor?
     return
 
-  # Do I define member `memberName` -- did my source text, or a later edit, give it to me? (An OWN
-  # entry: my store is a plain object, whose inherited `constructor` is no member of mine.)
+  # Do I define member `memberName` -- did my source text, or a later edit, give it to me? (My store has no
+  # prototype: an inherited `constructor` is no entry of it.)
   definesMember: (memberName) ->
-    Object::hasOwnProperty.call @nonStaticPropertiesSources, memberName
+    memberName of @nonStaticPropertiesSources
 
   # `constructor` is no member to edit or remove, on a class or through a mixin: a prototype's
   # `constructor` IS its class -- what every `.constructor.name` and `.constructor.class` read
@@ -422,9 +423,11 @@ class Class
   removeAugmentations: (source) ->
     source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
 
+  # The two record stores, name -> source, carry NO prototype (Mixin's store neither): a name nobody recorded is
+  # no record at any reader -- `constructor`, `toString` and every other Object.prototype member included.
   getSourceOfAllProperties: (remainingSourceLines) ->
-    staticPropertiesSources = {}
-    nonStaticPropertiesSources = {}
+    staticPropertiesSources = Object.create null
+    nonStaticPropertiesSources = Object.create null
 
     while returned = @findUpTo remainingSourceLines, @propertyRegex
       propertyName = (returned[0].match @propertyRegex)[1]
@@ -533,7 +536,7 @@ class Class
       # tools read the source's members at (_rewriteSuperCalls) and goes to the same super rewrite
       # directly. From there every constructor takes one path: it ends in `return`
       # (Class.endingInReturn), is compiled, and is stripped of the helper head.
-      if @nonStaticPropertiesSources.hasOwnProperty "constructor"
+      if "constructor" of @nonStaticPropertiesSources
         constructorSource = @_rewriteSuperCalls "constructor", @nonStaticPropertiesSources.constructor
       else
         constructorSource = Class.rewriteSuperCalls "->\n    super\n", @_superOf "constructor"
@@ -666,6 +669,49 @@ class Class
     window[@name].class = @
 
     @_takeMixinMembersFromTheStores() if createClass
+    @_keepMyMembersRecords()
+
+  # THE SOURCE A MEMBER'S FUNCTION WAS MADE FROM, kept BY THE FUNCTION -- the rule Widget.keptSourceOf keeps for an
+  # injected method, for the same reason: whatever replaces a member takes its function, and its source with it, so
+  # no reader is handed one function's source for another. Kept where a member's function is made: a class made or
+  # ingested (_keepMyMembersRecords), a class edit (applyMemberEdit), every mixin member compiled
+  # (Mixin._compiledMember). A function's FIRST record is its record: a member whose source names a function made
+  # elsewhere (`step: noOperation`, an edit to `Widget::bar`) leaves that function's own record alone. A function no
+  # meta-object made (a run's) has none. Which mixin gave a class a member is not part of a record -- one function
+  # can stand in several places -- but the class chain's to say (Mixin.donorOf). Read by the inspectors, which ask
+  # the function their subject holds, never a name; never by the save, which writes a widget's injected methods only
+  # (a class member written as a widget's {"$src"} would compile on its own, `super` and all). Weak: it keeps no
+  # function alive.
+  @_memberRecords: new WeakMap
+  @memberRecordOf: (aFunction) ->
+    Class._memberRecords.get aFunction if typeof aFunction is "function"
+  @keepMemberRecord: (aFunction, source) ->
+    return unless typeof aFunction is "function" and source? and !Class._memberRecords.has aFunction
+    Class._memberRecords.set aFunction, source
+    return
+
+  # Keep, with each function my class holds, the source it was made from (Class.keepMemberRecord): my instance
+  # members and statics as I record them, my constructor's on my class function (where I write one), and each member
+  # a mixin of mine injected (its `_class_injected_in` companion says so), with its donor's source (Mixin.donorOf) --
+  # one function per consumer, since a mixin's literal is evaluated afresh for each class it augments. Run as I am
+  # made, and as the reflective layer INGESTS me beside the code a pre-compiled image already runs. ⚠ At an ingest a
+  # person's run may already have replaced a member, and its function cannot be told from the image's: the minified
+  # image keeps no function names, so both are anonymous -- such a member reads as my source (filed). My own keys
+  # only (Object.keys), never my whole chain's.
+  _keepMyMembersRecords: ->
+    klass = window[@name]
+    return unless klass?
+    proto = klass.prototype
+    keep = (aFunction, source) -> Class.keepMemberRecord aFunction, source
+    for memberName in Object.keys(proto) when memberName isnt "constructor" and memberName of @nonStaticPropertiesSources
+      keep proto[memberName], @nonStaticPropertiesSources[memberName]
+    keep klass, @nonStaticPropertiesSources.constructor
+    for staticName in Object.keys(klass) when staticName of @staticPropertiesSources
+      keep klass[staticName], @staticPropertiesSources[staticName]
+    return unless @augmentedWith?.length
+    for memberName in Object.keys(proto) when !@definesMember(memberName) and Object::hasOwnProperty.call(proto, memberName + "_class_injected_in") and (donor = Mixin.donorOf @, memberName)?
+      keep proto[memberName], donor.nonStaticPropertiesSources[memberName]
+    return
 
   # A class made after an edit of a mixin it augments with -- a lazy part's, or one made at run time
   # -- was augmented from the mixin's LITERAL, compiled at boot (Object::augmentWith), so it holds the
@@ -674,7 +720,7 @@ class Class
   # every mixin edit gives it to a consumer made before it: my own member where I define one (my
   # body ran after the augmentation), else my last augmentation's that defines it (Mixin.donorOf),
   # else none -- and only where that differs from what augmentWith left, the BOOT donor's boot member
-  # (an unrelated mixin's unchanged member keeps the very function every consumer shares). Every
+  # (an unrelated mixin's unchanged member keeps the function its augmentation gave me). Every
   # member is compiled before anything changes, so one that does not compile throws having changed
   # nothing. Run once my prototype is whole (my body assigned; my statics ran inside the class's eval,
   # before this), and only by the pass that creates me: a pre-compiled image's classes were made
@@ -694,7 +740,7 @@ class Class
   # of my augmentations whose source at boot defines it (Mixin.bootMemberSources), or undefined.
   _bootDonorOf: (memberName) ->
     bootDonors = for mixinName in @augmentedWith when (theMixin = Mixin.named mixinName)?.bootMemberSources()?
-      continue unless Object::hasOwnProperty.call theMixin.bootMemberSources(), memberName
+      continue unless memberName of theMixin.bootMemberSources()
       theMixin
     bootDonors.pop()
 
@@ -703,9 +749,8 @@ class Class
   # (refuseTheConstructor). The one comparison of a store with its boot, for both meta-objects
   # (membersAwayFromBoot, here and on Mixin).
   @membersAwayFrom: (currentSources, bootSources) ->
-    sourceIn = (sources, memberName) -> if Object::hasOwnProperty.call sources, memberName then sources[memberName]
     memberNames = new Set Object.keys(currentSources).concat Object.keys bootSources
-    (memberName for memberName from memberNames when memberName isnt "constructor" and sourceIn(currentSources, memberName) isnt sourceIn(bootSources, memberName))
+    (memberName for memberName from memberNames when memberName isnt "constructor" and currentSources[memberName] isnt bootSources[memberName])
 
   # My members away from my boot sources (bootMemberSources): none for a class with no boot.
   membersAwayFromBoot: ->

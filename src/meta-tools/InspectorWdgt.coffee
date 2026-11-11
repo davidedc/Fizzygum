@@ -386,11 +386,11 @@ class InspectorWdgt extends Widget
     #   1) the ones that are defined in the immediate class of the object (i.e. are own properties of the prototype)
     #   2) the ones that are just stitched to the object but are in none of the classes upwards i.e.
     #      are not a reachable property from the prototype
-    if !@showingInherited
-      attribs = attribs.filter (prop) => @inspectedObject.constructor.prototype.hasOwnProperty(prop) or (prop not of @inspectedObject.constructor.prototype)
+    if !@showingInherited and (classPrototype = @_subjectsClassPrototype())?
+      attribs = attribs.filter (prop) => Object::hasOwnProperty.call(classPrototype, prop) or (prop not of classPrototype)
 
     if @showingOwnPropsOnly
-      attribs = attribs.filter (prop) => @inspectedObject.hasOwnProperty(prop)
+      attribs = attribs.filter (prop) => Object::hasOwnProperty.call @inspectedObject, prop
 
     if @inspectedObject instanceof Array then attribs else attribs.sort()
 
@@ -436,7 +436,14 @@ class InspectorWdgt extends Widget
   # TODO show the static methods and variables in yet another color.
   memberFactsOf: (memberName) ->
     kindTag: if Utils.isFunction @inspectedObject[memberName] then "fn" else "var"
-    dimmed: !@inspectedObject.constructor.prototype.hasOwnProperty memberName
+    dimmed: !((classPrototype = @_subjectsClassPrototype())? and Object::hasOwnProperty.call classPrototype, memberName)
+
+  # The prototype my subject's class gives its instances, or undefined for a subject made with NO prototype
+  # (Object.create null -- a meta-object's record store, a run's own): no class declares any member of such a
+  # subject, so every one is its own, and its members are read with Object's methods, never its own.
+  _subjectsClassPrototype: ->
+    classPrototype = @inspectedObject?.constructor?.prototype
+    classPrototype if classPrototype? and typeof classPrototype is "object"
 
   # A DOUBLE-CLICK on a member row (ListWdgt.openRow hands me its member's name, after the click that
   # selected it): when the member's value is an object -- the only kind of value with members to show
@@ -452,25 +459,15 @@ class InspectorWdgt extends Widget
     inspector._moveWithin world
     world.add inspector
 
-  # The CoffeeScript recorded for the STATIC member `name` of a Fizzygum class FUNCTION, for the function it
-  # holds there: its own class's record when that class declares the static, else -- a static `extend`
-  # copied down -- the record of the first class up the chain (superclassOf) that owns that VERY function
-  # under the name and records a source for it. An ancestor's record is never read for a function the
-  # ancestor does not hold (a run's static on a child, an override no record names): that reads as its
-  # compiled text, which is true, where another class's source would be code this one does not run.
-  # Each store is read for its OWN entries (a plain object's prototype answers `constructor`,
-  # `hashCode`, ...). undefined for a holder that is no class function, or a static recorded nowhere.
+  # The CoffeeScript kept with the function a Fizzygum class FUNCTION holds as its STATIC `name`
+  # (Class.memberRecordOf): its own class's record, or -- a static `extend` copied down, still that very
+  # function -- the declaring ancestor's. A function no class made under a record (a run's static, an
+  # override no record names) has none and reads as its compiled text, which is true, where a source
+  # recorded under the NAME would be code this class does not run. undefined for a holder that is no
+  # class function, or a function with no record.
   @_recordedStaticSourceOf: (holder, name) ->
     return undefined unless typeof holder is "function" and classNamed(holder.name) is holder
-    held = holder[name]
-    klass = holder
-    while klass?
-      sources = klass.class?.staticPropertiesSources
-      if sources? and Object::hasOwnProperty.call(sources, name) and
-         (klass is holder or (Object::hasOwnProperty.call(klass, name) and klass[name] is held))
-        return sources[name]
-      klass = superclassOf klass
-    undefined
+    Class.memberRecordOf holder[name]
 
   # WHICH INSPECTOR a value calls for, asked by every door that hands an inspector an arbitrary value
   # (my row double-click, Widget.spawnInspector): a Fizzygum class's PROTOTYPE is its class, and gets
@@ -569,34 +566,23 @@ class InspectorWdgt extends Widget
     # made from -- it is a function of that holder's own: the source it keeps (Widget.keptSourceOf, an
     # injected one's), or, held by a class FUNCTION, the source recorded for that very static
     # (_recordedStaticSourceOf), else its compiled text; never the source of a class member it shadows.
-    #   Held by a class's prototype, it is a class member: walked below.
+    #   Held by a class's prototype, it is a class member: the source kept WITH that very function
+    # (Class.memberRecordOf), never a source recorded under its NAME, which a run's replacement need not
+    # be. A function with none reads as its compiled text. A member a MIXIN gave the holder's class -- one
+    # the class does not define, which its donor does (Mixin.donorOf; ControllerMixin._fireConnection) --
+    # is attributed to the donor, so a class-inspector Save routes the edit to it. A `constructor` row is
+    # the class function: its constructor's source where the class writes one, else its compiled text.
     if Utils.isFunction(val)
       holder = @inspectedObject
       holder = Object.getPrototypeOf holder until !holder? or Object::hasOwnProperty.call holder, selected
       if holder? and !isAClassPrototype holder
         ownSource = Widget.keptSourceOf(val) ? InspectorWdgt._recordedStaticSourceOf holder, selected
         val = ownSource if ownSource?
-      else
-        # The CLASS WALK, from my subject's class up through every link that is a Fizzygum class's
-        # (`.constructor?.class?`): the first class that keeps a source for the member on its
-        # meta-object, or the first mixin a class takes it from. So a member a class's prototype holds
-        # with no source recorded (a wrapper) shows the CoffeeScript a class up the chain keeps for it,
-        # and one recorded nowhere reads as its compiled text below.
-        goingUpTargetProtChain = @inspectedObject
-        while goingUpTargetProtChain?.constructor?.class?
-          theClass = goingUpTargetProtChain.constructor.class
-          if theClass.nonStaticPropertiesSources[selected]?
-            val = theClass.nonStaticPropertiesSources[selected]
-            break
-          # A member a MIXIN donates (ControllerMixin._fireConnection) is recorded on the parsed Mixin, not
-          # on the classes it augments (Mixin.donorOf); its donor is remembered, so a class-inspector Save
-          # routes the edit to it.
-          theMixinProvidingIt = Mixin.donorOf theClass, selected
-          if theMixinProvidingIt?
-            val = theMixinProvidingIt.nonStaticPropertiesSources[selected]
-            @currentPropertySourceMixinName = theMixinProvidingIt.name
-            break
-          goingUpTargetProtChain = goingUpTargetProtChain.__proto__
+      else if (source = Class.memberRecordOf val)?
+        val = source
+        theClass = holder?.constructor?.class
+        if theClass? and !theClass.definesMember(selected) and (donor = Mixin.donorOf theClass, selected)?
+          @currentPropertySourceMixinName = donor.name
       txt = val.toString()
     else
       # a field shows its recorded source where there is one, else its own VALUE -- an undefined
@@ -608,7 +594,8 @@ class InspectorWdgt extends Widget
       else if Utils.isString val
         txt = '"'+val+'"'
       else
-        txt = val.toString()
+        # a value with no prototype has no toString of its own: it reads as Object's does
+        txt = if Utils.isFunction val.toString then val.toString() else Object::toString.call val
 
     # the donor label hugs its new text and asks me to re-lay: my breadcrumb band re-flows, so the
     # label can take a row of its own, or give one back, and my bands below follow

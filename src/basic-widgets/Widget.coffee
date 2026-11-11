@@ -4267,7 +4267,7 @@ class Widget extends TreeNode
     assignment = Widget.propertyAssignmentSource propertyName, txt
     @evaluateString assignment, typedFrom: assignment.length - txt.length
     injected = @[propertyName]
-    if Utils.isFunction(injected) and Widget._spellsAFunctionLiteral txt
+    if Utils.isFunction(injected) and Widget.spellsAFunctionLiteral txt
       Widget._keptSources.set injected, txt
     return
 
@@ -4278,7 +4278,7 @@ class Widget extends TreeNode
   # GENERATED token, then a line end). Only then is txt the source of the function its injection
   # gives me: a txt naming a function hands over a function made elsewhere, whose code it is not --
   # `@f` is a field's name, and kept as f's source it would load as `@f = @f`.
-  @_spellsAFunctionLiteral: (txt) ->
+  @spellsAFunctionLiteral: (txt) ->
     try
       tokens = CoffeeScript.tokens txt
     catch
