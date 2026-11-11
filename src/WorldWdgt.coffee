@@ -3037,8 +3037,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # asked to replace their desktop with a file that cannot load — and it precedes step 0, so a
     # file refused anyway costs no part fetch. A class a LAZY part provides is not refused: that
     # file takes step 0's load-then-re-enter path, and the re-entry runs this pure check again —
-    # which is also when a method's source on such a class, and an app key naming it, are judged,
-    # after the confirm and the part's fetch, still before step 1.
+    # which is also when a method's source on such a class, an app key naming it, and its records' ids
+    # (a second record with one id, an id above its class's count) are judged, after the confirm and the
+    # part's fetch, still before step 1.
     whyNot = Deserializer.whyItCanNeverBeRestored envelope, (className) => @parts.canEverProvideClass className
     if whyNot?
       @inform "This world snapshot cannot be loaded here: " + whyNot + ".\nYour desktop has been left as it was."

@@ -2857,3 +2857,27 @@ for (const s of sites) if (s.absentBefore.length) {
       copy: false"); a view read as an Array — the save check ("SAVED"), the inspector check ("subject Array") and the
       sharing check (the DataView misplaced). Unplanted, all pass (61 native, 62 SWCanvas); a gauntlet and the
       homepage green on the shape before review #2's fixes, and again after them (20/20).
+- [x] **Duplicate or over-counter iids load** (found by the independent review closing "The load vets the
+      whole envelope up front", in the plan's ledger; by reading). Two records of one class with
+      one `iid`, or an `iid` above the file's own `idCounters` for its class, pass the vetting: two widgets then share a
+      `uniqueIDString`, or the next widget built collides with a restored one. No save writes either.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U17). RULED: a file no save writes is refused before anything
+      changes, as the rest of the envelope already is. LANDED, in `Deserializer._envelopeShapeProblem`: a second
+      record of one widget class with one `iid` is refused ("entry i is a second Class#iid": no save writes one; a
+      world load would restore two widgets sharing a `uniqueIDString`, an `{"$ext"}` resolving to the last); and, in
+      every WORLD file, with a section or without, a widget record's `iid` above its class's count in the section's
+      `idCounters` (absent = 0: the save took the iid from that very counter, so one above it is an id a widget of
+      its class built after the load would take again) — checked after the section's own shape, so a malformed
+      `idCounters` keeps its own refusal. Both judge a widget class this page HAS (`classNamed` +
+      `_couldBeAWidgetClass`): the first cut judged every record and the rig caught it — six existing refusals of a
+      name the build lacks (`$NotATag`, `constructor`, …) read "above its class's count" instead of naming the class;
+      a lazy part's class is judged when its door re-enters. The independent review traced every way a real save
+      writes ids and found neither shape writable; its fixes: the counter rule moved out of the world-section check
+      (a world file with no section escaped it), and the comments and docs that list the load's refusals name the
+      two rules. Docs: the serialization reference's list of up-front refusals and of the reasons that wait for a
+      lazy part. PROVEN: the serialization rig's `crossSession` section, both backends — four cases in
+      `world.loadGuard.malformedRecordRefused` (a record duplicated; its class's count below its iid; its class
+      missing from the counters; a world file with no section); a `--prelude=` plant that makes the vetting forget
+      exactly the two rules fails it (the corrupt files loaded: "desktop kept 0/17"); unplanted, all pass (39 native,
+      40 SWCanvas), the accept control among them; a gauntlet and the homepage green on the first shape, and again
+      after the review's fixes (20/20).

@@ -176,9 +176,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       vets the whole envelope up front", in the plan's ledger; by reading). On an SWCanvas page a canvas wider or taller
       than 16384 px — saved by a native page, or resampled up by a load at a higher pixel ratio — throws in its builder
       after the teardown; the bound is the loading page's backend's, so it is a load-time (not a shape) question.
-- [ ] **Duplicate or over-counter iids load** (found by the same review; by reading). Two records of one class with
-      one `iid`, or an `iid` above the file's own `idCounters` for its class, pass the vetting: two widgets then share a
-      `uniqueIDString`, or the next widget built collides with a restored one. No save writes either.
 - [ ] **Some envelope fields are type-checked only** (found by the same review; by reading; low). `formatVersion`
       (missing, a string), `kind` (any value but "world" restores with fresh ids), `wallpaperPatternName` (any
       string), a user's `armedDrawingTool` (any string), and unknown section or record fields pass unread.
@@ -190,6 +187,21 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       never replays (a widget file carries none a save writes).
 - [ ] **The info-doc prefix has four homes** (found by the same review; by reading). `InfoDocs`, `Serializer`,
       `Deserializer._worldSectionProblem` and `WorldWdgt` each spell `infoDoc` for the world's own info-doc flags.
+- [ ] **`world.loadGuard.unbuildableClassRefused` cannot tell which rule refused** (found by the independent review
+      closing "Duplicate or over-counter iids load", in the plan's ledger; by reading; low). Its expected cause
+      `'NoSuchClassWdgt'` also appears in a wrong refusal naming that class, so the check passes either way.
+- [ ] **A record sharing a surviving widget's id loads** (same review; by reading; low). Neither iid rule sees the widgets
+      a load keeps (the hand): a corrupt file's `ActivePointerWdgt` record of iid 1 restores a second widget sharing the
+      hand's `uniqueIDString`.
+- [ ] **The load restores a `WorldWdgt` counter no save writes** (same review; by reading; low).
+      `Serializer.collectIdCounters` skips `WorldWdgt`, but `loadWorldSnapshot`'s step 2 writes any class's key from
+      `.idCounters`, and the vetting does not refuse that one.
+- [ ] **A widget file's records are indexed by saved ids its load reassigns** (same review; by reading; low).
+      `Deserializer.deserialize` pass 1 indexes every record by its saved iid for `{"$ext"}` (a world file's form),
+      though a widget file's pass 3 gives each a fresh id.
+- [ ] **A lazy part's class is judged after the world door's confirm** (same review; by reading; low; pre-existing).
+      The reasons that need the class (a method's source, an app key, the two iid rules) wait for its part, so a
+      person can confirm replacing the desktop and only then be refused, after the part's fetch.
 - [ ] **A colour takes any number: NaN, ±Infinity and out-of-range components paint differently on each backend**
       (found closing "`Color.create` never checks its components", in the plan's ledger; by reading; a design call).
       `Color` reads every component as a number (`Color._channel`, `Color._alpha`), and any number makes a colour:

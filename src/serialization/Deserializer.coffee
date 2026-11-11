@@ -130,8 +130,9 @@ class Deserializer
   # teardown destroys the desktop, FileLoading's widget door before the first shell). It predicts
   # exactly the refusals @deserialize raises up front -- the same two helpers answer both, so the two
   # cannot drift: the envelope's shape (which also refuses what a restore would silently drop or get
-  # wrong: each record's shape, each reference's form, memberships, a world file's section, a widget
-  # file's root), and
+  # wrong: each record's shape, each reference's form, memberships, a second record of one widget with
+  # one id, a world file's section and its widgets' ids against their classes' counts, a widget file's
+  # root), and
   # a method's source on a class that cannot take one -- and the throws that resolve a NAME read out of
   # the file -- @instantiate's per-record one, and
   # WellKnownObjects.resolve's for a class key or an app key. The names are @classNamesIn, the one list
@@ -238,7 +239,8 @@ class Deserializer
     replaysClassEdits or holdsAMemberMapsReader
 
   # What makes an envelope unrestorable WHOEVER restores it and whatever this build contains — a
-  # clause in whyItCanNeverBeRestored's form, or undefined. Every record the Serializer writes
+  # clause in whyItCanNeverBeRestored's form, or undefined (its two id rules, which need the widget's class,
+  # judge a class this page has; the door asks again once a lazy part's has arrived). Every record the Serializer writes
   # carries a non-empty string `class` (a class name or a tag), and @instantiate resolves nothing else,
   # so a record without one is a malformed table, not an unknown class.
   @_envelopeShapeProblem: (envelope) ->
@@ -276,6 +278,16 @@ class Deserializer
       # save puts one
       if @_tagBuilderFor(record.class)? and @_holdsFunctionSource refs
         return "its object table is malformed (entry " + i + " holds a method's source outside a widget)"
+    # every record's identity is its own: a save writes each widget's iid once for its class, so a second
+    # record of one class with one iid is somewhere no save puts one (a world load would restore two widgets
+    # sharing a uniqueIDString, and an {"$ext"} would resolve to the last of them). Judged for a widget class
+    # this page has: a name it lacks is refused by name after this (whyItCanNeverBeRestored), or judged when
+    # its lazy part has arrived and the door re-enters
+    seenIdentities = new Set
+    for record, i in envelope.objects when record.iid? and classNamed(record.class)? and @_couldBeAWidgetClass(record.class)
+      identity = record.class + "#" + record.iid
+      return "its object table is malformed (entry " + i + " is a second " + identity + ")" if seenIdentities.has identity
+      seenIdentities.add identity
     # a well-known key no Fizzygum build writes would bind to nothing: refused here, before anything is
     # built (an app or class key naming a class this build lacks is not one: it is a known key, and
     # whyItCanNeverBeRestored refuses it as a class this build does not have)
@@ -284,6 +296,17 @@ class Deserializer
     # a world file's section, which the world loader reads beside the table
     if envelope.world? and (sectionProblem = @_worldSectionProblem envelope.world, envelope.objects)?
       return "its world section is malformed (" + sectionProblem + ")"
+    # a world file's widget record's iid is at most its class's count in the world's idCounters (absent: 0)
+    # -- the save took the iid from that very counter, so one above it is an id a widget of its class built
+    # after the load would take again. Every world file, with a section or without; after the section's own
+    # shape, so a malformed idCounters is refused as that; and, as the identities are, for a widget class
+    # this page has
+    if envelope.kind is "world"
+      counts = envelope.world?.idCounters ? {}
+      for record, i in envelope.objects when record.iid? and classNamed(record.class)? and @_couldBeAWidgetClass(record.class)
+        count = if Object::hasOwnProperty.call(counts, record.class) then counts[record.class] else 0
+        if record.iid > count
+          return "its object table is malformed (entry " + i + " is " + record.class + "#" + record.iid + ", above its class's count in the world's idCounters, " + count + ")"
     # a widget file's root, the widget its door adds to the world
     if envelope.kind isnt "world" and (rootProblem = @_recordReferenceProblem {$r: envelope.root}, envelope.objects, "a widget")?
       return "its root is malformed (" + rootProblem + ")"

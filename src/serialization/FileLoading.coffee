@@ -72,8 +72,8 @@ class FileLoading
   #      part provides is not a reason) or every app key naming a class that is not an app, and no part
   #      is fetched for it;
   #   2. what the file needs is loaded (Deserializer.loadWhatItNeeds), and this RE-ENTERS once it has
-  #      arrived -- which also judges an app key naming a class that just arrived, and a {"$src"} on
-  #      one, in deserialize's own pre-pass;
+  #      arrived -- which also judges an app key naming a class that just arrived, a {"$src"} on one,
+  #      and its records' ids, in deserialize's own pre-pass;
   #   3. then the restore.
   # Answers undefined when it restored inline, else the re-entered load's promise.
   @_loadWidgetEnvelope: (envelope, dropPoint) ->

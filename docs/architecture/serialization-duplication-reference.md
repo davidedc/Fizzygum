@@ -748,7 +748,11 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      `Serializer.FORMAT_VERSION`, a malformed object table (no `objects` array; a record naming no class, or
      whose own fields are not the shape a save writes — each tag states its own in `TAG_BUILDERS`' `shapeProblem`,
      a `$Date`'s time and a `Color`'s components numbers among them, and a class record's `props` is an object, its
-     `iid` a whole number; a membership marker naming no world set; a reference no save writes
+     `iid` a whole number; a second record of one widget class with one `iid` (no save writes one: a world load
+     would restore two widgets sharing a `uniqueIDString`); in a world file, with a section or without, a widget
+     record's `iid` above its class's count in the section's `idCounters`, absent meaning 0 (an id a widget of
+     that class built after the load would take again) — both `iid` rules judging a widget class this page has,
+     so a name it lacks keeps its own refusal; a membership marker naming no world set; a reference no save writes
      (`Deserializer._refProblem`: a scalar, or exactly one form — `$r` an index into the table, `$wk`/`$ext`/`$src` a
      string, `$num` a known text); a `{"$src"}` in a tag record), a malformed world section
      (`Deserializer._worldSectionProblem`: every field the section writes — its children and app windows `{"$r"}`s
@@ -768,9 +772,9 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      `_functionSourceOnANonWidget`), and `@instantiate` and `WellKnownObjects.resolveApp` keep their
      throws as the net for every other caller — and it precedes the confirm (a fact about the FILE:
      nobody is asked to replace their desktop with a file that cannot load) and the parts fetch (a
-     file refused anyway costs no fetch). Two reasons wait for a lazy part, since they are asked of a
-     class it provides: whether that class can take a method's source, and whether an `app:` key
-     naming it names an app — judged once the part has loaded, when the loader re-enters, after the
+     file refused anyway costs no fetch). Four reasons wait for a lazy part, since they are asked of a
+     class it provides: whether that class can take a method's source, whether an `app:` key naming
+     it names an app, and its records' two `iid` rules — judged once the part has loaded, when the loader re-enters, after the
      confirm and the part's fetch and still before the teardown, so that file too leaves the desktop
      as it was.
    - **The confirm** (a file/menu load warns it replaces the desktop AND can run code — §4.12; the
