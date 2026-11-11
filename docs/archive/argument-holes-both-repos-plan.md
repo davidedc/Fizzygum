@@ -2772,3 +2772,34 @@ for (const s of sites) if (s.absentBefore.length) {
       glide still reported), B (an auto-scroll replaced a glide: still reported), C (an auto-scroll stopped, then a
       second begun 700 ms later: 324 px scrolled by 300 ms) and D (the same on a copy) each fail, and E (a first
       auto-scroll: nothing by 300 ms, scrolled by 900 ms) passes; on the new code all six pass.
+- [x] **Widget's `step` documentation is false** (found by the independent review closing "A drag-scroll leaves a
+      viewport holding a function no save can write", in the plan's ledger; by reading). `Widget.coffee`'s note on
+      `step: noOperation` says a `step` left as the no-op lets the children's steps run while an undefined one stops
+      them; `_runChildrensStepFunction` walks the flat stepping set, so nothing traverses children, and an undefined
+      `step` throws in the loop's `try`, soft-resetting the world.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U14, with the next item). RULED: a comment states what IS, and
+      code nothing reaches goes. LANDED: Widget's note over `step: noOperation` says the world calls `step` on each
+      frame its fps is due, while — and only while — the widget is in `world.steppingWdgts`, a FLAT set (a widget
+      steps because it joined, never because an ancestor did; its children are not visited); the no-op is what a
+      member without a step of its own runs; an undefined step is an error the loop catches by soft-resetting the
+      world (and shows it in the error console, on every frame the step is due). Beside it, by reading: Widget's
+      `onNextStep` field ("Not currently used"; its one writer, `nextSteps`, was deleted on 2026-07-12 as dead, and
+      nothing has set it since) and `WorldWdgt._stepWidget`'s branch for it are deleted — so an object inspector's
+      Inherited view lists one row fewer — and so is `_stepWidget`'s `debugger` for an undefined step (the catch
+      below it already handles one; `debugger-statement` 33 → 32, the static-checks table with it). Docs: the
+      authoring guide's §12 already described stepping truly; no living doc described a child walk or `onNextStep`.
+- [x] **An object inspector removes its list's contents from a set nothing adds them to** (found by the same review;
+      by reading). `InspectorWdgt._buildAndConnectMemberList` deletes `@list.listContents` from `world.steppingWdgts`
+      and says the list itself "still steps (its scrollbars need it)"; nothing adds a list's contents to the set, and
+      a list steps only while a gesture of its own runs.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U14, with the item above). LANDED: the no-op delete and its false
+      comment are gone from `InspectorWdgt._buildAndConnectMemberList`. Measured: every class that joins
+      `world.steppingWdgts` itself (17, in src; the harness joins none) defines its own `step`, and none adds a list's
+      `listContents`; a copy (`alignCopiedWidgetToSteppingStructures`) or a loaded file's marker can enrol one only
+      where its original or its file says so, and there it would run the no-op — so the line was dead on every path.
+      A ListWdgt is a ViewportWdgt, stepping only while a scroll gesture of its own runs. Docs: none described it.
+      PROVEN (both items): the build (the stinks at 32 of 32) and the gauntlet; its one failure was predicted by the
+      review — `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly`, whose Inherited member lists lost the
+      `onNextStep` row (images 2 and 3, both densities: the same rows one row lower, the lists' own thumbs moved,
+      every difference mask black outside the lists; looked at in `fg diffpage`) — recaptured through the gated
+      recapture, mouse then finger (both COMPLETE); then a gauntlet (20/20) and the homepage, green.

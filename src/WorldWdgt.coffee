@@ -2400,12 +2400,6 @@ class WorldWdgt extends IconGridPanelWdgt
 
 
   _stepWidget: (whichWidget) ->
-    if whichWidget.onNextStep
-      nxt = whichWidget.onNextStep
-      whichWidget.onNextStep = undefined
-      nxt.call whichWidget
-    if !whichWidget.step?
-      debugger
     try
       whichWidget.step()
     catch err

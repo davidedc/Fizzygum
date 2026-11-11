@@ -425,10 +425,6 @@ class InspectorWdgt extends Widget
       memberFactsQuery: "memberFactsOf"
     @list.disableDrops()
     @_clearPaneLook @list
-
-    # @list.listContents (the CommandPanelWdgt holding this list's items) never animates, so it's
-    # dropped from world.steppingWdgts here. ListWdgt itself still steps (its scrollbars need it).
-    world.steppingWdgts.delete @list.listContents
     @_addNoSettle @list, atIndex: atIndex
 
   # WHAT MY LIST SHOWS OF A MEMBER beside its name (my list's memberFactsQuery, asked once per row

@@ -123,19 +123,22 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **Is an inspector's subject always a page object?** (found by the same review; the owner's ruling). A Duplicate
       deep-copies an ordinary data subject (an array, a plain object, a data-class instance), so the copy inspects a
       detached clone rather than the live value it was opened on; a widget subject is shared (an outside widget).
-- [ ] **Widget's `step` documentation is false** (found by the independent review closing "A drag-scroll leaves a
-      viewport holding a function no save can write", in the plan's ledger; by reading). `Widget.coffee`'s note on
-      `step: noOperation` says a `step` left as the no-op lets the children's steps run while an undefined one stops
-      them; `_runChildrensStepFunction` walks the flat stepping set, so nothing traverses children, and an undefined
-      `step` throws in the loop's `try`, soft-resetting the world.
-- [ ] **A hook override that skips `super` is unguarded** (found by the same review; by reading). Two toolbars
+- [ ] **A hook override that skips `super` is unguarded** (found by the independent review closing "A drag-scroll
+      leaves a viewport holding a function no save can write", in the plan's ledger; by reading). Two toolbars
       overrode `_reactToBeingCopied` without `super` the moment `ViewportWdgt` gained one, and nothing said so: no gate
       holds an override of a per-class hook (`_reactToBeingCopied`, `_afterDeserialization`, …) to call the one it
       shadows.
-- [ ] **An object inspector removes its list's contents from a set nothing adds them to** (found by the same review;
-      by reading). `InspectorWdgt._buildAndConnectMemberList` deletes `@list.listContents` from `world.steppingWdgts`
-      and says the list itself "still steps (its scrollbars need it)"; nothing adds a list's contents to the set, and
-      a list steps only while a gesture of its own runs.
+- [ ] **`_runChildrensStepFunction` walks no children** (found by the independent review closing "Widget's `step`
+      documentation is false", in the plan's ledger; by reading; low). `WorldWdgt._runChildrensStepFunction` walks the
+      flat `world.steppingWdgts`; its name, and six docs that cite it (`Fizzygum/CLAUDE.md` spells it without the
+      underscore), still describe the tree walk it replaced. Its comment says a member removed mid-walk is fine, and
+      not that one ADDED mid-walk (`Set.forEach` visits it) steps in the same frame.
+- [ ] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
+      Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
+      `BoxyAppearance`), and the static-checks table states no blind spot for it.
+- [ ] **A step that throws throws on every frame it is due** (same review; by reading; low). `WorldWdgt._stepWidget`'s
+      catch soft-resets the world and reports to the error console, and leaves the member in the stepping set, so a
+      broken `step` repeats both on every due frame, with no removal or back-off.
 - [ ] **An auto-scroll's step is told a press's end as a stroke's would be** (found by the independent review closing
       "A viewport's gesture bookkeeping outlives its gesture", in the plan's ledger; by reading; low).
       `ViewportWdgt.pressEnded` / `pressCancelled` call whichever `_scrollStep` is installed with a point; an
