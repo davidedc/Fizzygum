@@ -1706,6 +1706,11 @@ class ActivePointerWdgt extends Widget
           if skipDragging or !@strokeMeansMouseDrag() then return
 
           w = @wdgtToGrab.fullCopy()
+          # refused (Widget.fullCopy has told the person why): nothing to carry, and nothing to try again on
+          # the next move of this press
+          unless w?
+            @wdgtToGrab = undefined
+            return
           w.isTemplate = false
           # the copy is picked up from where the TEMPLATE stands, so that is the grab's origin
           @grab w, displacementDueToGrabDragThreshold, false, @wdgtToGrab.situation()

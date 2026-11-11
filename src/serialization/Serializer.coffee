@@ -445,7 +445,7 @@ class Serializer
         remediation = if NativeValueKinds.isImage(obj) or NativeValueKinds.isVideo(obj)
           "An element the page loads is derived from its holder's path: keep the path in a field, declare the property holding the element in @serializationTransients, and re-make the element from the path in _afterDeserialization and _reactToBeingCopied."
         else
-          "Declare the property holding it in @serializationTransients, or add a per-type handler for it."
+          SerializationError.UNRECOGNIZED_TYPE_REMEDY
         fail ("a value of an unrecognized type (" + className + ") cannot be serialized"),
              path, describe(obj), remediation
       record.class = className

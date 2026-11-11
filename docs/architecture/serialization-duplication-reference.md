@@ -121,11 +121,15 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   A caller that carries a fresh copy away states where the pick-up starts instead
   (`ActivePointerWdgt.grab`'s `origin`: a template's copy starts where the template stands).
   Every `parent` the Duplicator writes is a structural link made outside `TreeNode._addChild`, so
-  it is announced as `_addChild` announces one (`WorldWdgt.noteStructureChange`). The per-widget
-  hooks (`alignCopiedWidgetTo*`, `_reactToBeingCopied`) run inside the walk, before every ancestor
-  is linked, and a tree derivation cached there (`root()`, which caches on every ancestor it climbs)
-  would otherwise be read again, stale, once the copy is whole (the settle leg's
-  `CACHED_DERIVATION_DIVERGED` rider catches exactly that).
+  it is announced as `_addChild` announces one (`WorldWdgt.noteStructureChange`): a tree derivation
+  cached while the walk links its widgets (`root()`, which caches on every ancestor it climbs) would
+  otherwise be read again, stale, once the copy is whole (the settle leg's
+  `CACHED_DERIVATION_DIVERGED` rider catches exactly that). The per-widget hooks
+  (`alignCopiedWidgetTo*`, `_reactToBeingCopied`) run once the WHOLE copy is built — every widget
+  linked, before the caller places the copy — in the order the walk finished the objects (a child
+  before its parent), and each shell joins its classes' instance sets only then too (the
+  Duplicator's Note 3), so a copy refused part-way leaves no half-built widget registered or
+  aligned anywhere.
 - **The in-structure set is the ARROW-CONTRACT closure, one computation for both walkers**
   (`Widget.allWidgetsInStructureForCopy`, reference-widgets plan §4.4): the root's subtree
   PLUS, through every in-structure icon that presents as content
@@ -433,8 +437,13 @@ NAMED like one.
     reference (`_duplicate`), the
     `alignCopiedWidgetTo*` world-set aligners, a widget's injected method compiled afresh on the copy
     (`_compileInjectedMethods`), and the per-class `_reactToBeingCopied` hook. A property covered by none of these gets
-    deep-copied — and a runtime-only object there crashes the copy on the Duplicator's
-    closed-set guard ("cannot duplicate a value of unrecognized type"). ⚠ A BUFFER there does not crash:
+    deep-copied — and a runtime-only object there is REFUSED by the Duplicator's closed set, as the
+    save's refuses it: the walkers' one refusal (`SerializationError`, direction "copy": "Cannot copy: a
+    value of an unrecognized type (…) cannot be copied", with `SerializationError.UNRECOGNIZED_TYPE_REMEDY`,
+    the remedy both walkers give, which a class author meets by making the value one its holder
+    rebuilds — the Fix below), which `Widget.fullCopy` tells the person; the copy is built WHOLE before
+    any of it reaches the world (the Duplicator's Note 3), so a refusal leaves no half-built widget
+    registered or aligned (its shells did take fresh IDs). ⚠ A BUFFER there is not refused:
     it is data, copied silently (`_copyBuffer`), so a view onto a runtime object's buffer kept in an
     undeclared field leaves the copy holding a private copy of the original's bytes, which the copy's
     own rebuilt runtime never sees. **Fix: stamp a

@@ -16,6 +16,13 @@
 # in whatever other data structures the original widget was in (the
 # alignCopiedWidgetTo* hooks: damage rectangles, stepping, reference tracker,
 # keyboard receivers).
+# Note 3: a copy is BUILT WHOLE before anything outside it learns of it. Each widget shell's
+# registration in its classes' instance sets (in the order the walk built the shells) and each
+# object's alignment and last-chance hook (Note 2, _reactToBeingCopied; in the order the walk
+# finished the objects, a child before its parent) wait, and run only once the walk has copied
+# everything (duplicate). So a copy refused part-way -- a value of a type the copier does not
+# know (_copyFizzygumObject's closed set) -- leaves no half-built widget in an instance set, the
+# stepping set, a damage list or the keyboard receivers. (Its shells did take fresh IDs.)
 class Duplicator
 
   constructor: (allWidgetsInStructure) ->
@@ -27,11 +34,19 @@ class Duplicator
     # original -> clone, identity-keyed: the one place cycle/sharing bookkeeping
     # lives, shared by every handler below.
     @clonesByOriginal = new Map
+    # what waits for the walk to finish (Note 3): the widget shells to register, in the order they
+    # were built, and each object's alignment and last-chance hook, in the order it was finished
+    @_shellsToRegister = []
+    @_finishings = []
 
   # PUBLIC entry: copy `value` (and everything it reaches) into a live sibling
   # structure.
   duplicate: (value) ->
-    @_duplicate value
+    copy = @_duplicate value
+    # the whole copy is built: now the world learns of it (Note 3)
+    shell.registerThisInstance() for shell in @_shellsToRegister
+    finish() for finish in @_finishings
+    copy
 
   # PUBLIC lookup after a run: the clone made for `original` (undefined if the walk never
   # reached it). Widget.fullCopy uses this to find the fresh copies of the referent figures
@@ -155,16 +170,17 @@ class Duplicator
 
   _copyFizzygumObject: (obj) ->
     ctor = obj.constructor
-    # THE CLOSED SET, the same rule as the Serializer's generic branch: a plain object literal, or an
-    # instance of the class classNamed answers for its constructor's name. Anything else is a type the
-    # copier does not know -- a collaborator missing its keptByReferenceOnDeepCopy marker, or an
-    # instance of a browser-native class the dispatch above has no handler for (a DOMRect, say) -- and
-    # is refused here, never cloned into a shell of the native's prototype that carries none of its
-    # internal state.
-    unless ctor? and (ctor is Object or classNamed(ctor.name) is ctor)
-      console.error "DUPLICATE_UNRECOGNIZED_TYPE: the Duplicator cannot duplicate a value of unrecognized type (" + (ctor?.name or "no constructor") + ")"
-      debugger
-      throw new Error "Duplicator: cannot duplicate a value of unrecognized type"
+    # THE CLOSED SET, the same rule as the Serializer's generic branch: a plain object (an object
+    # literal, or one with no prototype -- a class's member stores are made so), or an instance of the
+    # class classNamed answers for its constructor's name. Anything else is a type the copier does not
+    # know -- an instance of a browser-native class the dispatch above has no handler for (a DOMRect),
+    # or of a vendored engine's (an SWCanvas surface an inspector was opened on) -- and is REFUSED
+    # here, never cloned into a shell of its prototype that carries none of its internal state: the
+    # walkers' one refusal, as the save's closed set refuses it, which the copy's gesture tells the
+    # person (Widget.fullCopy). Nothing the walk built so far reaches the world (Note 3).
+    unless !ctor? or ctor is Object or classNamed(ctor.name) is ctor
+      throw new SerializationError ("a value of an unrecognized type (" + ctor.name + ") cannot be copied"),
+        direction: "copy", offender: "an instance of " + ctor.name, remediation: SerializationError.UNRECOGNIZED_TYPE_REMEDY
 
     cloneOfMe = @_shellFor obj
     @clonesByOriginal.set obj, cloneOfMe
@@ -174,15 +190,15 @@ class Duplicator
     @_rebuildDerivedValues cloneOfMe, obj
     @_compileInjectedMethods cloneOfMe
 
-    # align the copy into the world-level trackers the original was in (Note 2).
-    obj.alignCopiedWidgetToDamageInfoDataStructures? cloneOfMe
-    obj.alignCopiedWidgetToSteppingStructures? cloneOfMe
-    obj.alignCopiedWidgetToReferenceTracker? cloneOfMe
-    obj.alignCopiedWidgetToKeyboardEventsReceiversSet? cloneOfMe
-
-    # last chance for a widget to do other cleanup, for example a button that is
+    # once the whole copy is built (Note 3): align the copy into the world-level trackers the original
+    # was in (Note 2), then give it a last chance to do other cleanup, for example a button that is
     # highlighted might want to un-highlight itself
-    cloneOfMe._reactToBeingCopied?()
+    @_finishings.push =>
+      obj.alignCopiedWidgetToDamageInfoDataStructures? cloneOfMe
+      obj.alignCopiedWidgetToSteppingStructures? cloneOfMe
+      obj.alignCopiedWidgetToReferenceTracker? cloneOfMe
+      obj.alignCopiedWidgetToKeyboardEventsReceiversSet? cloneOfMe
+      cloneOfMe._reactToBeingCopied?()
 
     cloneOfMe
 
@@ -195,11 +211,12 @@ class Duplicator
   #   3) the shell has the same type but none of the properties yet.
   _shellFor: (obj) ->
     return obj.getEmptyObjectOfSameTypeAsThisOne() if obj.getEmptyObjectOfSameTypeAsThisOne?
-    theClone = Object.create obj.constructor::
-    # add to the instances tracking (only Widgets have that kind of tracking),
-    # and although we don't run the constructor, at least initialise the clone
-    # with its own fresh ID.
-    theClone.registerThisInstance?()
+    # a prototype-less object (a plain object made with Object.create null) copies as one
+    theClone = Object.create (if obj.constructor? then obj.constructor.prototype else null)
+    # add to the instances tracking (only Widgets have that kind of tracking) once the
+    # whole copy is built (Note 3), and although we don't run the constructor, at least
+    # initialise the clone with its own fresh ID.
+    @_shellsToRegister.push theClone if theClone.registerThisInstance?
     theClone.assignUniqueID?()
     theClone
 
@@ -219,10 +236,9 @@ class Duplicator
       continue if Widget.isDerivedStateField property
       value = obj[property]
       # A widget's PARENT is a structural link, written here directly rather than through
-      # TreeNode._addChild, so it is ANNOUNCED as _addChild announces it (noteStructureChange): the
-      # per-widget hooks below run inside this walk, before every ancestor is linked, and a tree
-      # derivation they cache meanwhile (root, the first clipping parent) must not be read again once
-      # the copy is whole.
+      # TreeNode._addChild, so it is ANNOUNCED as _addChild announces it (noteStructureChange): a tree
+      # derivation cached while the walk links its widgets (root, the first clipping parent) must not
+      # be read again once the copy is whole.
       #   A ROOT of the copy -- a widget whose parent is outside the copied structure -- comes back
       # DETACHED, never pointing at a parent that does not hold it: the serializer's detach-root rule
       # (serialization-duplication-reference.md §4), one fact for both walkers. Its caller places it
@@ -260,8 +276,10 @@ class Duplicator
   # for each property derived on the ORIGINAL, its value rebuilds itself onto the clone
   # (rebuildDerivedValue).
   _rebuildDerivedValues: (cloneOfMe, theOriginal) ->
-    for property of cloneOfMe
-      if cloneOfMe.hasOwnProperty(property) and NativeValueKinds.isDerivedAt theOriginal, property
+    # `for own` (a hasOwnProperty borrowed from Object, never asked of the clone): a prototype-less
+    # clone has none of its own
+    for own property of cloneOfMe
+      if NativeValueKinds.isDerivedAt theOriginal, property
         theOriginal[property].rebuildDerivedValue cloneOfMe, property
     return
 

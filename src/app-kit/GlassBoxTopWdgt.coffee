@@ -26,6 +26,8 @@ class GlassBoxTopWdgt extends Widget
 
   createWidgetToBeHandled: ->
     widgetToBeHandled = @parent.children[0].fullCopy()
+    # refused (Widget.fullCopy has told the person why): nothing to hand over
+    return undefined unless widgetToBeHandled?
     widgetToBeHandled.isTemplate = false
     return widgetToBeHandled
 

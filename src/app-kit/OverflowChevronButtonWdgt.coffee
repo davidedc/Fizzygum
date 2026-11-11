@@ -80,10 +80,11 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # for a typed face a live copy of the face's appearance, never the tool), which is also what keeps
   # the row's tap the ROW's -- a live tool held on a row would take the tap itself.
   #   An undefined icon is simply a label-only row (MenuItemWdgt), so a tool that cannot be copied
-  # costs its row nothing.
+  # costs its row its picture (its copy's refusal is told, Widget.fullCopy).
   _miniatureOf: (tool) ->
     # nosettle-sanctioned: fullCopy has no NoSettle core -- it self-settles only to file copied
-    # referent figures to the shelf, which a toolbar tool contributes none of. I am reached ONLY
+    # referent figures to the shelf, which a toolbar tool contributes none of, and to tell a refused
+    # copy (an inform). I am reached ONLY
     # from actOnClick, an event-stream handler, so a settle here is legal and never mid-pass.
     picture = tool.fullCopy?()
     return undefined unless picture?

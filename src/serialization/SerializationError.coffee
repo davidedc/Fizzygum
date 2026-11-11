@@ -1,8 +1,10 @@
-# SerializationError — the ONE loud, path-carrying failure the serializer raises when
-# it meets a reference it cannot faithfully encode (an out-of-structure pointer that is
-# neither in the serialized subtree nor a well-known object), or a value it has no
-# handler for (e.g. an own function-valued property whose function keeps no source --
-# Widget.keptSourceOf -- and no transient declaration). See docs/architecture/serialization-duplication-reference.md.
+# SerializationError — the ONE loud failure the object-graph walkers raise: the serializer when it
+# meets a reference it cannot faithfully encode (an out-of-structure pointer that is neither in the
+# serialized subtree nor a well-known object) or a value it has no handler for (e.g. an own
+# function-valued property whose function keeps no source -- Widget.keptSourceOf -- and no transient
+# declaration), the deserializer when a file cannot be restored, and the Duplicator when a copy meets a
+# value of a type it does not carry (its closed set; it tracks no path, so its refusal names the value
+# alone). See docs/architecture/serialization-duplication-reference.md.
 #
 # It is DELIBERATELY a plain class (NOT `extends Error`): the boot-time dependency
 # finder (src/boot/dependencies-finding.coffee) treats an `extends X` target as a
@@ -21,9 +23,10 @@
 #                     "StringWdgt#9, which is outside the serialized structure and not a
 #                      well-known object"
 #   remediation     — one or more hints on how to make the save succeed
-#   direction       — "save" (the default: the Serializer's throws) or "load" (the Deserializer's: a
-#                     file this build cannot restore). The class serves both directions, and this is
-#                     what lets toString open with words that say which one failed
+#   direction       — "save" (the default: the Serializer's throws), "load" (the Deserializer's: a
+#                     file this build cannot restore) or "copy" (the Duplicator's: a value a copy cannot
+#                     carry). The class serves every direction, and this is what lets toString open with
+#                     words that say which one failed
 class SerializationError
 
   constructor: (@message = "serialization failed", details = {}) ->
@@ -44,13 +47,22 @@ class SerializationError
   # individual fields instead. The opening words follow @direction, so a refused or failed load
   # never reads as a failed save.
   toString: ->
-    opening = if @direction is "load" then "Cannot load this file: " else "Cannot serialize: "
+    opening = switch @direction
+      when "load" then "Cannot load this file: "
+      when "copy" then "Cannot copy: "
+      else "Cannot serialize: "
     parts = [opening + @message]
     parts.push "  root: " + @rootDescription if @rootDescription?
     parts.push "  at:   " + @path if @path?
     parts.push "  offending value: " + @offender if @offender?
     parts.push "  " + @remediation if @remediation?
     parts.join "\n"
+
+  # The remedy when a walker refuses a value of a type it does not carry (the Serializer's closed set, the
+  # Duplicator's): what a PERSON can do first -- an inspector on it, a field a run filled with it -- then what a
+  # class author can, in the one form both walkers honour (a value its holder rebuilds, derived where its class
+  # declares it: NativeValueKinds.isDerivedAt), so following it clears the save and the copy alike.
+  @UNRECOGNIZED_TYPE_REMEDY: "If an inspector is open on it, close the inspector (open a new one for a second view); if a run put it in a field, remove that field with an inspector's Remove. If a class's own code keeps it in a field, make it a value its holder rebuilds: stamp a rebuildDerivedValue on it and declare that field in the class's @serializationTransients, so a save leaves it out and a copy rebuilds it."
 
   # The load error for a class a file names and this page cannot build: a record's class
   # (Deserializer.instantiate), a class key's or an app key's (WellKnownObjects.resolve). The words of

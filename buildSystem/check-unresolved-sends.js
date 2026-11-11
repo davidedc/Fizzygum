@@ -190,7 +190,7 @@ function harvestCalls(files) {
 const BUILTINS_TABLE = `
 push pop shift slice concat join filter map forEach some every indexOf lastIndexOf includes sort reverse fill keys values
 charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match search padStart repeat substring substr
-toString toFixed valueOf hasOwnProperty
+toString toFixed valueOf
 sqrt pow random atan2 sin cos asin exp log sign
 now parse stringify getOwnPropertyNames
 getContext measureText beginPath closePath stroke clip save restore translate scale setTransform drawImage getImageData createPattern

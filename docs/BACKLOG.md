@@ -144,24 +144,24 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **The field census is blind to `@[name] =` writes** (same review; by reading; low).
       `census-widget-conformance.js` facet 1 (and the other `@field =` scanners) read a literal `@name` write, and their
       headers state no blind spot for a computed one.
-- [ ] **A Duplicate of an inspector on a SWCanvas Surface throws** (found by the independent review closing "An
-      inspector's Duplicate throws on a subject the copier refuses", in the plan's ledger; by reading). A world
-      inspector's `worldRenderCanvas` → `_surface` (or any SWCanvas widget's back buffer's) is an instance of a vendored
-      class the copier's closed set does not know: `DUPLICATE_UNRECOGNIZED_TYPE`. The same class of crash one level
-      above a buffer; whether the copy should share or copy it is the item below.
-- [ ] **An inspector on a typed array orders its indices as strings, and enumerates all of them** (same review; by
-      reading; low). `InspectorWdgt` keeps the original order only for an `Array`, so a typed array lists 0, 1, 10,
+- [ ] **A copy's refusal names the value but not where it is held** (found by the independent review closing "A
+      Duplicate of an inspector on a SWCanvas Surface throws", in the plan's ledger; reached: a person runs code that
+      puts a native in a widget's field — `@r = new DOMRect` — in a widget nested in a window, then Duplicates the
+      window). The copier tracks no path, so its refusal ("Cannot copy: a value of an unrecognized type (DOMRect)
+      cannot be copied") names the value alone, and its remedy's "remove that field" does not say which; a Save of the
+      same window names its root and the path to the field (`at: … → .r`). The two walkers' refusals should say as
+      much as each other.
+- [ ] **An inspector on a typed array orders its indices as strings, and enumerates all of them** (found by the
+      independent review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's
+      ledger; by reading; low). `InspectorWdgt` keeps the original order only for an `Array`, so a typed array lists 0, 1, 10,
       11, … 2; and it lists and sorts every index on each re-lay, so one on a surface's pixels (millions) hangs the page.
 - [ ] **The W3 plan's grep for typed arrays in `src/serialization/` now finds a predicate** (same review; by
       reading; low). `docs/plans/wire-vocabulary-extensions-plan.md` reads the grep as 0 hits; it now finds 2 lines in
       `NativeValueKinds` (`isBuffer`'s comment and code: a predicate the Duplicator and `WorldInventory` ask — still no
       serializer arm, as the plan's S1 says).
-- [ ] **A save refused for a buffer an inspector or a run holds names a class author's fix** (found by the second
+- [ ] **Both walkers drop an Array's or a buffer's own extra properties, by no stated rule** (found by the second
       independent review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's
-      ledger; by reading; low; pre-existing). The Serializer's closed-set remedy says "Declare the property holding it
-      in @serializationTransients", which neither an inspector's `.inspectedObject` nor a field a run filled can do.
-- [ ] **Both walkers drop an Array's or a buffer's own extra properties, by no stated rule** (same review; by reading;
-      low). `_copyArray`, `_copyBuffer` and the Serializer's `$Array` carry the items and nothing else.
+      ledger; by reading; low). `_copyArray`, `_copyBuffer` and the Serializer's `$Array` carry the items and nothing else.
 - [ ] **Is an inspector's subject always a page object?** (found by the independent review closing "A runtime object
       stamped derived is dropped from an inspector holding it", in the plan's ledger; the owner's ruling). A Duplicate
       deep-copies an ordinary data subject (an array, a plain object, a data-class instance), so the copy inspects a

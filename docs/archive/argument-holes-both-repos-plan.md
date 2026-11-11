@@ -3180,3 +3180,49 @@ for (const s of sites) if (s.absentBefore.length) {
       member edit it stepped 10 times, unbanned, the log silent (and the inspector could not be driven); with the old
       `InspectorWdgt.save` the ban stayed and the fixed step never ran. `fg gauntlet` green (20 legs; `vmtruth` a load
       flake: INVALID at its pin cap in the parallel wave, 0 retained, passed alone), `fg homepage` BOOT OK.
+- [x] **A Duplicate of an inspector on a SWCanvas Surface throws** (found by the independent review closing "An
+      inspector's Duplicate throws on a subject the copier refuses", in the plan's ledger; by reading). A world
+      inspector's `worldRenderCanvas` → `_surface` (or any SWCanvas widget's back buffer's) is an instance of a vendored
+      class the copier's closed set does not know: `DUPLICATE_UNRECOGNIZED_TYPE`. The same class of crash one level
+      above a buffer; whether the copy should share or copy it is the item below.
+- [x] **A save refused for a buffer an inspector or a run holds names a class author's fix** (found by the second
+      independent review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's
+      ledger; by reading; low; pre-existing). The Serializer's closed-set remedy says "Declare the property holding it
+      in @serializationTransients", which neither an inspector's `.inspectedObject` nor a field a run filled can do.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U28, the two items above together). Reached through the product: on
+      the SWCanvas page (the owner's), an inspector drilled into the render canvas's `_surface` (a vendored
+      `SWCanvas.Core.Surface`, whose width, height and stride are non-enumerable: no field copy is faithful), or any
+      native a run put in a widget's field, and Duplicate: a crash (`console.error` token, `debugger`, a bare throw);
+      and the save of the same refused with a remedy only a class author can take. RULED: ONE refusal for both walkers
+      — a copy refuses a value it cannot copy exactly as a save refuses one it cannot write — and ONE remedy text, the
+      person's gestures first (close an inspector open on it; remove a field a run filled, with an inspector's
+      Remove), then the class author's in the one form both walkers honour (make it a value its holder rebuilds:
+      stamp a `rebuildDerivedValue` on it and declare its field in `@serializationTransients`); and a refusal leaves
+      no half-built widget behind, so the copy is BUILT WHOLE before any of it reaches the world. Not decided here (the
+      owner's): whether an inspector's copy shares or copies its subject. LANDED: `SerializationError` serves a third
+      direction, "copy" ("Cannot copy: "), and carries `@UNRECOGNIZED_TYPE_REMEDY`, which both closed sets read; the
+      Duplicator's closed set throws it (no console line, no `debugger`: `DUPLICATE_UNRECOGNIZED_TYPE` leaves the gate
+      tokens, and the `debugger-statement` stink drops 32→31) and, as the save's does, takes a prototype-less object
+      for a plain one (a class's member stores are made so; `_shellFor` and `_rebuildDerivedValues` serve one, the
+      last `hasOwnProperty` send in src going with it, and its `BUILTINS` entry in `check-unresolved-sends.js`); its
+      Note 3: each widget shell's registration (in build order) and each object's alignment into the world's
+      trackers and its `_reactToBeingCopied` (in finish order, a child before its parent, as they ran before) wait
+      until `duplicate` has copied everything; `Widget.fullCopy` tells the refusal (`@inform`), beside its dead-item
+      refusal, and the sites that use its result guard it (`FrameWdgt.fullCopy`, `ActivePointerWdgt`'s template copy
+      — which also ends that grab, so the next move does not try and tell again — `GlassBoxTopWdgt`, the smart
+      placer); `fg menusweep` fails a representative's refused copy (`COPY_REFUSED`: a fresh widget keeping a value
+      no copy carries in a field of its own, the class author's defect the retired token used to catch), its proof
+      planting it. Stinks: the catch and the `Object.create null` sanctioned (precedents: `serialiseToMemory`, the
+      member stores). Docs: the serialization reference (the hooks' timing, the refusal), the lint index's table.
+      PROVEN: the serialization rig's `samePage` section, both backends — `duplicate.refusedPartWayLeavesNoHalfBuiltWidget`
+      (a copy refused at a rectangle holding a DOMRect, after it finished a stepping sibling: nothing left registered
+      or stepping), `inspector.onAnUnrecognizedValueRefusesTheDuplicate` (a DOMRect; on SWCanvas also the render
+      canvas's `_surface`, this item's own example: the real inform pop-up says "Cannot copy: a value of an
+      unrecognized type (…) cannot be copied" with the remedy and fits the world, nothing thrown),
+      `inspector.onAPrototypeLessObjectDuplicates` and `inspector.onABufferRefusalNamesThePersonsRemedyFirst`; and
+      `menu-click-sweep-selftest-headless.js` planting `COPY_REFUSED`. Four plants, each seen failing its own line:
+      the old closed set, shells registered as built, finishings run as each object is finished, the old remedy text.
+      The independent review closing this unit found fourteen defects in the first shape (a remedy false for the
+      copier, the lost menu-sweep detection, a prototype-less object refused, stale and overbroad claims), all fixed
+      above; filed from it: "A copy's refusal names the value but not where it is held". `fg gauntlet` green on
+      both shapes (20 legs each, no flake), `fg homepage` BOOT OK on both.

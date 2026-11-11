@@ -10,6 +10,8 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
         if partOfDoubleClick
           return
         widgetToBePlaced = @createWidgetToBeHandled()
+        # none made (a copy refused, and told): nothing to place
+        return unless widgetToBePlaced?
 
         # TODO un-handled cases:
         #  - empty window with drop-in placeholder

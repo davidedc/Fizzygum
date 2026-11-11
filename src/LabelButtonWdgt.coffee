@@ -174,11 +174,12 @@ class LabelButtonWdgt extends ButtonWdgt
 
   # a copied label button usually wants to un-highlight itself (e.g. when you
   # duplicate by clicking a "duplicate" button INSIDE it). Running an input-protocol verb on
-  # the MID-ASSEMBLY clone (an orphan — the hook fires before any attach) is deliberate and
-  # safe: hoverExited is the ONE home of the un-hover behaviour (state reset + tooltip
-  # teardown; a hand-copied body here would be a drift-prone twin), and its _changed()
-  # no-ops honestly on an orphan — the Duplicator drops the copied cache pairs, so the clone
-  # derives its own orphan root rather than answering the ORIGINAL's world.
+  # the clone BEFORE THE COPY IS PLACED (the hook fires once the whole copy is built, before its
+  # caller attaches it anywhere: the Duplicator's Note 3) is deliberate and safe: hoverExited is
+  # the ONE home of the un-hover behaviour (state reset + tooltip teardown; a hand-copied body
+  # here would be a drift-prone twin), and its _changed() no-ops honestly in an orphan copy — the
+  # Duplicator drops the copied cache pairs, so the clone derives its own orphan root rather than
+  # answering the ORIGINAL's world.
   _reactToBeingCopied: ->
     # public-call-sanctioned: hoverExited is the public pointer-event PROTOCOL verb (dispatched by
     # ActivePointerWdgt); reused to reset the copy's hover state — renaming it is not an option.

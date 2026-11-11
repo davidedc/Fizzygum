@@ -1887,6 +1887,8 @@ class FrameWdgt extends Widget
   # copies its skin and its width along with everything else.
   fullCopy: ->
     copiedWidget = super
+    # refused (Widget.fullCopy has told the person why)
+    return copiedWidget unless copiedWidget?
     lifetimeChanges = copiedWidget.isTransientPopUp()
     copiedWidget.onClickOutsideMeOrAnyOfMyChildren undefined
     copiedWidget.lifetime = 'persistent'

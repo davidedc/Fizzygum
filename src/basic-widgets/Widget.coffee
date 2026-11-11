@@ -4176,15 +4176,22 @@ class Widget extends TreeNode
   # For example, if the Widget appeared in a data
   # structure related to the damage rectangles mechanism,
   # we should place the copied widget there.
-  # double-settle-sanctioned: branch-exclusive — the destroyed arm informs and returns before
-  # the settle-wrapped referent filing can run.
+  # double-settle-sanctioned: branch-exclusive — the destroyed arm and the refused arm each inform and
+  # return before the settle-wrapped referent filing can run.
   fullCopy: ->
     if @destroyed
       @inform "The item you are\ntrying to copy\nis dead!"
       return undefined
     {structure, referentFigures} = @allWidgetsInStructureForCopy()
     duplicator = new Duplicator structure
-    copiedWidget = duplicator.duplicate @
+    try
+      copiedWidget = duplicator.duplicate @
+    catch error
+      throw error unless error instanceof SerializationError
+      # a value of a type the copier does not carry (Duplicator._copyFizzygumObject): refused and told,
+      # as a save is (saveToFile), and no half-built widget of the refused copy reached the world
+      @inform error.toString()
+      return undefined
     if referentFigures.length > 0
       @_settleLayoutsAfter => @_fileCopiedReferentFiguresToShelfNoSettle duplicator, referentFigures
     return copiedWidget

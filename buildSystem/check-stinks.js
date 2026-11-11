@@ -86,7 +86,7 @@ const ROOTS = sourceRoots(ARGV, 'stinks');
 //
 // NB the counts are the ENGINE's (each line as lib/coffee-mask.js reads it): a ratchet measures REGRESSION.
 const STINKS = [
-  { id: 'debugger-statement', baseline: 32,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it), 33->32 on 2026-11-11 (WorldWdgt._stepWidget's, a catch below already handles an undefined step)
+  { id: 'debugger-statement', baseline: 31,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it), 33->32 on 2026-11-11 (WorldWdgt._stepWidget's, a catch below already handles an undefined step), 32->31 on 2026-11-11 (Duplicator's closed set: a value a copy cannot carry is a refusal the person is told, not a programmer's stop)
     why: 'a debugger statement is left-in debug cruft; it hard-stops execution whenever devtools are open',
     re: /^\s*debugger\b/ },
   // `undefined-literal` (baseline 83) was DELETED on 2026-08-13: it enforced `nil` OVER `undefined`,
@@ -105,6 +105,7 @@ const STINKS = [
       // the meta-objects' record stores: an object with NO prototype, which Object.create spells with `null` alone
       { file: 'meta/Class.coffee', member: 'getSourceOfAllProperties', count: 2, why: "Object.create's argument for an object with no prototype (`undefined` throws): a record store answers no inherited name" },
       { file: 'meta/Mixin.coffee', member: 'constructor', count: 1, why: "Object.create's argument for an object with no prototype (`undefined` throws): a record store answers no inherited name" },
+      { file: 'duplication/Duplicator.coffee', member: '_shellFor', count: 1, why: "Object.create's argument for an object with no prototype (`undefined` throws): a prototype-less object copies as one" },
     ],
     re: /\bnull\b/ },
   { id: 'clock-read', baseline: 13,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it
@@ -141,6 +142,7 @@ const STINKS = [
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
     sanctioned: [
       { file: 'harness/WidgetTestSupport.coffee', member: 'serialiseToMemory', count: 1, why: "a catch telling the serializer's own refusal (SerializationError) from a bug: an exception's class is what it is" },
+      { file: 'basic-widgets/Widget.coffee', member: 'fullCopy', count: 1, why: "a catch telling the copier's own refusal (SerializationError, direction copy) from a bug: an exception's class is what it is" },
       { file: 'serialization/Deserializer.coffee', member: '@_couldBeAWidgetClass', count: 1, why: "a class a file's record names, judged before any instance of it exists: no widget can answer for a class it has not built" },
     ],
     re: /\binstanceof\b/ },
