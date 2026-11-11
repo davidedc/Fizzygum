@@ -65,8 +65,10 @@ class Duplicator
     # asks NativeValueKinds.isDerivedAt first).
     return value if NativeValueKinds.rebuildsItself value
 
-    # native types, recognised through the same taxonomy the Serializer uses
+    # native types, recognised through the same taxonomy the Serializer uses (two of its predicates, the
+    # buffer's and the gradient's, only the copier asks)
     return @_copyArray value if NativeValueKinds.isArray value
+    return @_copyBuffer value if NativeValueKinds.isBuffer value
     return @_copyMap value if NativeValueKinds.isMap value
     return @_copySet value if NativeValueKinds.isSet value
     return @_copyDate value if NativeValueKinds.isDate value
@@ -98,6 +100,21 @@ class Duplicator
     @_copyWithIdentity original, (=> []), (cloneOfMe) =>
       cloneOfMe[i] = @_duplicate original[i] for i in [0...original.length]
       return
+
+  # A buffer is DATA, copied as an Array is: an ArrayBuffer byte for byte, and a view onto one (a typed
+  # array, a DataView) rebuilt over the COPY of its buffer, at the same offset and length, by its own
+  # kind's constructor. The buffer goes through the identity bookkeeping, so views that share one buffer
+  # in the original share one buffer in the copy, as they did -- and so a view copies its WHOLE buffer,
+  # however small the view.
+  _copyBuffer: (original) ->
+    return @_copyWithIdentity original, (=> original.slice 0) unless NativeValueKinds.isBufferView original
+    bufferOfTheCopy = @_duplicate original.buffer
+    Kind = original.constructor
+    @_copyWithIdentity original, =>
+      if Kind.BYTES_PER_ELEMENT?
+        new Kind bufferOfTheCopy, original.byteOffset, original.length
+      else
+        new Kind bufferOfTheCopy, original.byteOffset, original.byteLength
 
   # Map keys are address-like primitives (e.g. the spreadsheet SheetModel's
   # "A1" strings), copied as-is; values clone through the shared identity

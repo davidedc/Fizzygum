@@ -123,7 +123,7 @@ proveGate({
     label: 'what one entry of each table excuses, taken away',
     edits: [['icons/CurledArrowsSquareIconAppearance.coffee', /Math\.asin\(/, 'Math.sin('],             // the one sender of asin
             ['serialization/NativeValueKinds.coffee', /^  @isArray(\s*:)/m, '  @isArrayBiteProofRenamed$1'],   // isArray's one definer
-            ['WorldInventory.coffee', /ArrayBuffer\.isView\(/, 'bpBuffer.isView(']],                     // ArrayBuffer's one BUILTINS send
+            ['serialization/NativeValueKinds.coffee', /ArrayBuffer\.isView\(/, 'bpBuffer.isView(']],     // ArrayBuffer's one BUILTINS send
     expect: {
       STALE_BUILTIN: /^  STALE_ALLOWLIST_ENTRY BUILTINS asin — no `\[@\.\]asin\(` call in src, the harness or a macro sends it/m,
       BUILTINS_KEYED_NOTHING_TO_UNMASK: /^  BUILTINS_KEYED_NOTHING_TO_UNMASK Array\.isArray — no definition of isArray is in src\+harness: list it bare$/m,

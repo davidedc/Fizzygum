@@ -122,11 +122,26 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **The field census is blind to `@[name] =` writes** (same review; by reading; low).
       `census-widget-conformance.js` facet 1 (and the other `@field =` scanners) read a literal `@name` write, and their
       headers state no blind spot for a computed one.
-- [ ] **An inspector's Duplicate throws on a subject the copier refuses** (found by the independent review closing "A
-      runtime object stamped derived is dropped from an inspector holding it", in the plan's ledger; by reading). An
-      inspector opened on a `Uint8ClampedArray` (the `data` row of a pane's `imageData`, a mesh's positions) duplicates
-      into `DUPLICATE_UNRECOGNIZED_TYPE`; its subject is a page object it inspects, not structure to copy.
-- [ ] **Is an inspector's subject always a page object?** (found by the same review; the owner's ruling). A Duplicate
+- [ ] **A Duplicate of an inspector on a SWCanvas Surface throws** (found by the independent review closing "An
+      inspector's Duplicate throws on a subject the copier refuses", in the plan's ledger; by reading). A world
+      inspector's `worldRenderCanvas` → `_surface` (or any SWCanvas widget's back buffer's) is an instance of a vendored
+      class the copier's closed set does not know: `DUPLICATE_UNRECOGNIZED_TYPE`. The same class of crash one level
+      above a buffer; whether the copy should share or copy it is the item below.
+- [ ] **An inspector on a typed array orders its indices as strings, and enumerates all of them** (same review; by
+      reading; low). `InspectorWdgt` keeps the original order only for an `Array`, so a typed array lists 0, 1, 10,
+      11, … 2; and it lists and sorts every index on each re-lay, so one on a surface's pixels (millions) hangs the page.
+- [ ] **The W3 plan's grep for typed arrays in `src/serialization/` now finds a predicate** (same review; by
+      reading; low). `docs/plans/wire-vocabulary-extensions-plan.md` reads the grep as 0 hits; it now finds 2 lines in
+      `NativeValueKinds` (`isBuffer`'s comment and code: a predicate the Duplicator and `WorldInventory` ask — still no
+      serializer arm, as the plan's S1 says).
+- [ ] **A save refused for a buffer an inspector or a run holds names a class author's fix** (found by the second
+      independent review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's
+      ledger; by reading; low; pre-existing). The Serializer's closed-set remedy says "Declare the property holding it
+      in @serializationTransients", which neither an inspector's `.inspectedObject` nor a field a run filled can do.
+- [ ] **Both walkers drop an Array's or a buffer's own extra properties, by no stated rule** (same review; by reading;
+      low). `_copyArray`, `_copyBuffer` and the Serializer's `$Array` carry the items and nothing else.
+- [ ] **Is an inspector's subject always a page object?** (found by the independent review closing "A runtime object
+      stamped derived is dropped from an inspector holding it", in the plan's ledger; the owner's ruling). A Duplicate
       deep-copies an ordinary data subject (an array, a plain object, a data-class instance), so the copy inspects a
       detached clone rather than the live value it was opened on; a widget subject is shared (an outside widget).
 - [ ] **A hook override that skips `super` is unguarded** (found by the independent review closing "A drag-scroll

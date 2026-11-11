@@ -166,7 +166,7 @@ class WorldInventory
         return
       return if visited.has value
       visited.add value
-      if ArrayBuffer.isView(value) or value instanceof ArrayBuffer
+      if NativeValueKinds.isBuffer value
         add "typedArrays.count", 1
         add "typedArrays.bytes", value.byteLength
         return

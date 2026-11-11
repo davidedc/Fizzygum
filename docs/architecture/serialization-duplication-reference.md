@@ -431,7 +431,10 @@ NAMED like one.
     reference (`_duplicate`), the
     `alignCopiedWidgetTo*` world-set aligners, and the per-class `_reactToBeingCopied` hook. A property covered by none of these gets
     deep-copied — and a runtime-only object there crashes the copy on the Duplicator's
-    closed-set guard ("cannot duplicate a value of unrecognized type"). **Fix: stamp a
+    closed-set guard ("cannot duplicate a value of unrecognized type"). ⚠ A BUFFER there does not crash:
+    it is data, copied silently (`_copyBuffer`), so a view onto a runtime object's buffer kept in an
+    undeclared field leaves the copy holding a private copy of the original's bytes, which the copy's
+    own rebuilt runtime never sees. **Fix: stamp a
     no-op `rebuildDerivedValue` on the runtime-only object itself AND list its field in
     `@serializationTransients`**: the stamp marks a value its holder rebuilds, the declaration
     names the field where it does, and the two together make it derived THERE (skipped by the
@@ -530,12 +533,17 @@ USER-authored instance methods: the function it compiles keeps its source, which
 Native / special types the walkers special-case (duplication: the `Duplicator`'s
 `_copy*` handlers; serialization: the `$`-tagged record encoders — both recognising
 types through the shared `NativeValueKinds`, which duck-types the canvas kind so the
-SWCanvas variant is caught too; its gradient predicate is duplication-only — see the
-gradient row — and its element predicates, `isImage`/`isVideo`, decide a refusal's remediation
+SWCanvas variant is caught too; its gradient and buffer predicates are duplication-only — see
+those rows — and its element predicates, `isImage`/`isVideo`, decide a refusal's remediation
 in the one walker and a field left `undefined` in the other). A value that rebuilds itself
 (`NativeValueKinds.rebuildsItself`: a canvas context, a 3D pane's stamped runtime — a plain `{}` included) is
 asked about before any handler: where its holder rebuilds it, it is derived (§5); anywhere else a copy keeps it
-by reference and a save refuses it. Anything else that reaches neither a handler nor a plain object literal must be an
+by reference and a save refuses it. A BUFFER (`NativeValueKinds.isBuffer`: an ArrayBuffer, or a view onto one — a
+typed array, a DataView) is data with a copy handler, `Duplicator._copyBuffer`: an ArrayBuffer byte for byte, a view
+rebuilt over the copy of its buffer at the same offset and length, the buffer going through the identity bookkeeping so
+views that share one buffer share one in the copy (the rig's `inspector.onABuffer*` and
+`duplicate.buffersSharingOneStayShared`); the Serializer has no arm for one, so its closed set refuses it. Anything
+else that reaches neither a handler nor a plain object literal must be an
 instance of a class boot's `classNamed` answers for — the CLOSED SET, one rule shared by the two
 walkers (`Serializer`'s guard and `Duplicator._copyFizzygumObject`'s): an instance of a
 browser-native class with no handler (a `DOMRect`, a `CanvasGradient`) is refused, because a save
@@ -550,6 +558,7 @@ could not restore it and a copy would hold an object that throws on use:
 | `HTMLVideoElement` | *(no encoder)* | the same as `Image`: refused by a save, left `undefined` by a copy, re-made by its holder |
 | `CanvasGradient` | *(no encoder)* | DUPLICATION clones it as `undefined` (`Duplicator._copyGradient`, via `NativeValueKinds.isGradientLike` — its one caller) and consumers rebuild. The SERIALIZER has no gradient branch: a gradient in an own property raises the unrecognized-type `SerializationError` under both backends (under native the closed-set guard refuses it: `classNamed` answers no class for a browser-native one). Keep gradients out of serialized own properties, or declare the property transient (§5). |
 | plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |
+| `ArrayBuffer` / typed array / `DataView` | *(no encoder)* | DUPLICATION copies it as data (`Duplicator._copyBuffer`, via `NativeValueKinds.isBuffer`): an ArrayBuffer byte for byte, a view rebuilt over the copy of its buffer at its offset and length, the buffer through the identity bookkeeping (views sharing one share one in the copy; a view copies its whole buffer). The SERIALIZER has no arm for one: its closed set refuses it |
 | `Color` | `Color` `rgba` | restored through `Color.create` (immutable dedupe) |
 
 ---

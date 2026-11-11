@@ -37,6 +37,18 @@ class NativeValueKinds
   @rebuildsItself: (value) ->
     value? and typeof value is "object" and typeof value.rebuildDerivedValue is "function"
 
+  # Is `value` a BUFFER -- an ArrayBuffer, or a view onto one (a typed array, a DataView)? DATA, which the
+  # copier copies faithfully as it copies an Array (Duplicator._copyBuffer) and the world's inventory
+  # counts as one opaque block of bytes (WorldInventory). The Serializer has no arm for one: its closed
+  # set refuses it. (A SharedArrayBuffer is no ArrayBuffer, so a view onto one meets the copier's closed
+  # set; a file:// page has none.)
+  @isBuffer: (value) ->
+    NativeValueKinds.isBufferView(value) or value instanceof ArrayBuffer
+
+  # Is `value` a VIEW onto a buffer (a typed array, a DataView)?
+  @isBufferView: (value) ->
+    ArrayBuffer.isView(value)
+
   # Is the value `holder[property]` DERIVED there -- one the holder rebuilds rather than carries, which
   # the Serializer leaves out and the Duplicator rebuilds on the copy (its rebuildDerivedValue)? A value
   # answering rebuildDerivedValue is derived WHERE ITS HOLDER REBUILDS IT, and nowhere else:

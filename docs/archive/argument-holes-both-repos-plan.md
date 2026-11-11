@@ -2823,3 +2823,37 @@ for (const s of sites) if (s.absentBefore.length) {
       class's transients, the other deletes its class-level declaration — and unplanted it passes; two gauntlets
       green (its `parts` leg drives the lazy Fizzytiles part on index.html; production ships no Fizzytiles, so
       `fg homepage` does not reach this).
+- [x] **An inspector's Duplicate throws on a subject the copier refuses** (found by the independent review closing "A
+      runtime object stamped derived is dropped from an inspector holding it", in the plan's ledger; by reading). An
+      inspector opened on a `Uint8ClampedArray` (the `data` row of a pane's `imageData`, a mesh's positions) duplicates
+      into `DUPLICATE_UNRECOGNIZED_TYPE`; its subject is a page object it inspects, not structure to copy.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U16, second shape). RULED: a buffer is DATA, which the copier copies
+      as it copies an Array — its own documented rule ("we deep-copy all kinds of data structures") — so the crash
+      goes and nothing the owner holds open is decided (the item below: whether an inspector's subject is a page
+      object; the W3 plan's S2 duplication default, "deep-copies with the group … owner picks"). The first shape
+      (a buffer as a page object: shared on copy, refused with a page-object remedy) was falsified by the
+      independent review: the copier meets every buffer, not only an inspector's subject, so a typed array a person
+      put in a widget's field would have been aliased between copies while an Array beside it was copied; it
+      answered both owner questions; and "every buffer is part of a 3D pane's runtime" is false (every SWCanvas back
+      buffer holds one). LANDED: `NativeValueKinds.isBuffer` (an ArrayBuffer, or a view onto one: a typed array, a
+      DataView) and `Duplicator._copyBuffer`: an ArrayBuffer byte for byte; a view rebuilt over the COPY of its
+      buffer at its offset and length, the buffer going through the identity bookkeeping so views sharing one buffer
+      share one in the copy. The Serializer is unchanged: it has no arm for a buffer (the W3 plan's S1 spike owns
+      that format), so its closed set refuses one, as before. `WorldInventory` asked the buffer question in its own
+      spelling and asks the one predicate now (its `instanceof ArrayBuffer` moves with it; the instanceof stink
+      stays 74); `check-unresolved-sends-selftest.js`'s stale-platform-global plant follows `ArrayBuffer`'s one send
+      to its new home. A second independent review of this shape found no bug; its fixes: the view test is one
+      predicate (`NativeValueKinds.isBufferView`), the rig's inspector check asserts no throw and a subject equal in
+      kind and bytes but NOT shared-vs-copied (the owner's question), the sharing check stands in its own block with a
+      DataView, and a plant proves the save check. Docs: the serialization reference (the dispatch order, §5's
+      warning that a buffer no longer crashes the copy, §6's table row). PROVEN: the serialization rig's `samePage`
+      section, both backends — `inspector.onABufferDuplicates` (on the buffers ≤ 1 KB the runtime's own fields hold,
+      and the ArrayBuffer under each, found by the language's own `ArrayBuffer.isView` so a plant of the predicate
+      cannot blind the search: here `transforms.worldMatrix` and its buffer — the BACKLOG item's own example, an
+      ImageData's pixels, is over that size and stands by analogy), `inspector.onABufferRefusesTheSave`, and
+      `duplicate.buffersSharingOneStayShared` (two typed arrays and a DataView onto one buffer a widget holds). Three
+      plants, each seen failing its own checks: `isBuffer` answering no — the inspector and sharing checks THREW
+      (closed set); a `_copyBuffer` that skips the identity bookkeeping — only the sharing check ("one buffer in the
+      copy: false"); a view read as an Array — the save check ("SAVED"), the inspector check ("subject Array") and the
+      sharing check (the DataView misplaced). Unplanted, all pass (61 native, 62 SWCanvas); a gauntlet and the
+      homepage green on the shape before review #2's fixes, and again after them (20/20).
