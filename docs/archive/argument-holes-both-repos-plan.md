@@ -2961,3 +2961,55 @@ for (const s of sites) if (s.absentBefore.length) {
       counts are known — the old order — fails the told check and the failed-restore check (two informs, the first
       "Everything else in the file loads normally."); unplanted, all 48 pass. A gauntlet and the homepage green
       before the review's fixes, and again after them.
+- [x] **A text that meets its twin's back buffer never reflows** (found by the independent review closing "A run that
+      replaces a saved method leaves its kept source describing the old one", in the plan's ledger; by reading, and the
+      measured `[2, 0]` in MACRO-PATTERNS' wrap-reading entry). `TextWdgt._createRefreshOrGetBackBuffer` takes its key
+      before `reflowText` and returns on a hit, so of two texts of one font, extent and text the second keeps an empty
+      `wrappedLines`; `slotAt` reads it, so a first click into that text can put the caret at its end.
+- [x] **An own FIELD read inside cached text work keys nothing** (same review; by reading). The own-code key covers own
+      functions: an inspector Save of a text's own `emptyCharacter` (read in `TextWdgt.getWrappingData`) leaves twins
+      sharing entries computed with either value.
+- [x] **A kept source of a fat-arrow method keeps its first receiver in copies** (same review; by reading;
+      pre-existing). An injected `=> @x` is one bound function, shared by a copy (the Duplicator passes functions
+      through), so the copy runs it on the original; a save and load re-bind it to the loaded widget.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U20, the three items above together). RULED: a text's model
+      describes the pixels it shows; a constant of the text model is no widget's field; a copy makes its injected
+      methods as a load does. MEASURED first: the first item's caret claim does not hold — placing a caret reflows the
+      text (`slotCoordinates` calls `reflowText`), so a first click into the twin lands where it is aimed even on the
+      old code; what holds is the stale wrap itself (the twin wraps on 0 lines beside the first's 4), read by every
+      reader that does not reflow first (`slotAt`'s line test, a macro reading `wrappedLines`), and StringWdgt's buffer
+      method had the same hit-before-reflow shape (a twin keeps its pre-reflow fit and crop). LANDED: (1) both
+      `StringWdgt._createRefreshOrGetBackBuffer` and `TextWdgt._createRefreshOrGetBackBuffer` meet any buffer they are
+      not already showing — painted now, or a twin's — reflowed, and tell the caret then; a buffer equal to
+      `@backBuffer` needs nothing (every blit and hit test asks for the buffer, so a reflow per hit would pay a fit
+      search per paint); (2) the line-end marker is `StringWdgt.INVISIBLE_CARRIAGE_RETURN`, a class constant, replacing
+      the prototype member `emptyCharacter`, which nothing set per widget and which an own visible value would have
+      broken (`eliminateInvisibleCharacter` strips the first such letter from every measured string) — keying it would
+      have touched five caches, the TextWdgt back buffer among them, its paint drawing the marker; (3)
+      `Duplicator._compileInjectedMethods` compiles each injected method afresh on the copy, from its kept source with
+      the copy's own `injectProperty`, for every own field of a widget (`Serializer.classTakesInjectedMethods`, now
+      asked by the copy too) holding one, so a fat arrow binds the copy. Docs: the
+      serialization reference's function row, `MACRO-PATTERNS.md`'s wrap-reading entry (the `[2, 0]` caveat gone),
+      `Widget.keptSourceOf`'s and the Duplicator's comments. The independent review found no paint loop or
+      re-entrancy (the reflow is idempotent; a key settles within two frames, as on a miss) and one regression: a copy
+      of an injected method RENAMED to a name that is no identifier (`my method`) threw mid-copy, as a load of one
+      already did — `@my method = …` reads as a call — so `Widget.propertyAssignmentSource` names the member by key
+      (`@["…"] = …`, its `#` escaped), mending both; its other fixes: a twin StringWdgt held too (its crop; TextWdgt
+      overrides the buffer method without super), the copy's fields said truly (a transient's injected method is
+      re-made too: the save drops it, a copy keeps it), the marker's last literal (`slotAtSingleLineString`) read from
+      the model, the reference doc's function and Duplicator-mechanism lines, the test's premise made non-vacuous and
+      its widgets destroyed; four findings filed. PROVEN: new assertion-only
+      `SystemTest_macroTwinTextWrapsOnItsOwn` (twin texts: the second shows the first's buffer and wraps on as many
+      lines, more than one; twin single-line texts: the same buffer and the same crop) — both old buffer methods
+      re-applied through each class's own member edit fail every twin assertion (the wrap "found: 0" against 4, the
+      crop the whole sentence), StringWdgt's alone fails exactly the line assertions; a follower on both pointers
+      clean; the serialization rig's new `serialize2.copiedFatArrowMethodAnswersTheCopy` (a copy's `=> @x` answers
+      the copy, a loaded one the loaded widget, under a plain and under a renamed `serRig probe #{answer}` name) —
+      `_compileInjectedMethods` emptied fails it on both backends ("copy": "the original"), the bare-name assignment
+      put back fails it ("probe is not defined"); unplanted, the `samePage` section passes (64 native, 65 SWCanvas);
+      `SystemTest_macroTextOwnCodeKeysTheCachesItRunsIn` reads the marker from the model and passes. Seven inspector
+      tests recaptured at dpr 1 and 2, mouse and finger, under the loop's member-list grant: every one of the 40 moved
+      shots, looked at in `fg diffpage`, was the same member-list rows scrolled a few pixels with the list's thumb dot
+      moved (one row fewer, `emptyCharacter`); both recaptures' completeness gates green. A gauntlet before the
+      review's fixes green but for one stale visualisation page (the own-code test's, regenerated) and the homepage
+      green; again after them.

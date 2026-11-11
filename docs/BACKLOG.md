@@ -255,18 +255,24 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       directions and runs none of the file's code, leaving the file direction; (e) refuse up front a file whose
       class-level records name `wellKnownKey` — static, and it fails in the safe direction; (f) return the page to
       boot after the confirm and before the teardown — a refused load has then already discarded the page's edits.
-- [ ] **A text that meets its twin's back buffer never reflows** (found by the independent review closing "A run that
-      replaces a saved method leaves its kept source describing the old one", in the plan's ledger; by reading, and the
-      measured `[2, 0]` in MACRO-PATTERNS' wrap-reading entry). `TextWdgt._createRefreshOrGetBackBuffer` takes its key
-      before `reflowText` and returns on a hit, so of two texts of one font, extent and text the second keeps an empty
-      `wrappedLines`; `slotAt` reads it, so a first click into that text can put the caret at its end.
-- [ ] **An own FIELD read inside cached text work keys nothing** (same review; by reading). The own-code key covers own
-      functions: an inspector Save of a text's own `emptyCharacter` (read in `TextWdgt.getWrappingData`) leaves twins
-      sharing entries computed with either value.
-- [ ] **A kept source of a fat-arrow method keeps its first receiver in copies** (same review; by reading;
-      pre-existing). An injected `=> @x` is one bound function, shared by a copy (the Duplicator passes functions
-      through), so the copy runs it on the original; a save and load re-bind it to the loaded widget.
-- [ ] **The Smalltalk talk plan describes a `<name>_source` field** (same review). `docs/plans/smalltalk-talk-2026-11-plan.md`
+- [ ] **A kept source runs every statement it holds on every load and copy** (found by the independent review closing
+      "A kept source of a fat-arrow method keeps its first receiver in copies", in the plan's ledger; by reading).
+      `Widget._spellsAFunctionLiteral` reads only the FIRST token, so a Save of `-> 1` followed by a second line
+      (`world.inform "x"`) keeps the whole text as the function's source; `injectProperty` runs it as
+      `@["m"] = -> 1` then `world.inform "x"`, which every load ({"$src"}) and now every copy
+      (`Duplicator._compileInjectedMethods`) runs again.
+- [ ] **A kept-source alias loses its identity on a copy and a load** (same review; by reading; pre-existing for the
+      load). `B.g = P.f` holds P's injected function; the copy and the load each compile `g` afresh on B's copy, so
+      `B'.g` is bound to `B'` and is no longer `P'.f` — whether an alias across widgets should follow its referent is
+      the open part.
+- [ ] **A copy pixel-copies every back buffer it will discard** (same review; by reading). `backBuffer` is a render
+      cache (a serialization transient, not `isDerivedAt`), so `_cloneContentInto` deep-copies the canvas
+      (`_copyCanvas`, a `drawImage`) for each widget of a copy, and the copy repaints at its first paint anyway.
+- [ ] **`eliminateInvisibleCharacter` strips only the first marker** (same review; by reading). `String.replace` with a
+      string pattern replaces one occurrence; a measured string holding two U+2063 (a user's text carrying one) is
+      measured with the second.
+- [ ] **The Smalltalk talk plan describes a `<name>_source` field** (found by the independent review closing "A run that
+      replaces a saved method leaves its kept source describing the old one", in the plan's ledger). `docs/plans/smalltalk-talk-2026-11-plan.md`
       says `Class.applyMemberEdit` sets `proto[memberName + "_source"]` (false before this close too) and skips
       `<name>_source` strings that no longer exist: the injected source is kept with its function (`Widget.keptSourceOf`).
       Left for the owner, whose plan it is.

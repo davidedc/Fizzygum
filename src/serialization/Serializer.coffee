@@ -51,8 +51,9 @@ class Serializer
 
   # Can an instance of `klass` carry a {"$src"}, a method injected into it? Only a class whose
   # instances answer injectProperty (a widget's): the load compiles a {"$src"} with that very method.
-  # The one test of it, asked by the save (encodeFunction) and by the load's refusal
-  # (Deserializer._functionSourceOnANonWidget), so a save cannot write one the load refuses.
+  # The one test of it, asked by the save (encodeFunction), by the load's refusal
+  # (Deserializer._functionSourceOnANonWidget), so a save cannot write one the load refuses, and by a copy,
+  # which compiles afresh, on the same widgets, every injected method it holds (Duplicator._compileInjectedMethods).
   @classTakesInjectedMethods: (klass) ->
     klass?.prototype?.injectProperty?
 

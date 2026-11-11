@@ -4248,9 +4248,11 @@ class Widget extends TreeNode
   # The program that injects ONE property: the typed value behind its assignment. Read by
   # injectProperty, which runs it, and by compilePropertyAssignments, which compiles it ahead, so
   # "compiles as it will be injected" has one definition. The typed text begins at its length minus
-  # the value's (compileFGCode's typedFrom).
+  # the value's (compileFGCode's typedFrom). The member is named by KEY (`@["…"] = `, its `#` escaped
+  # so no name interpolates), so any name a Rename… gives it assigns that very field: written bare,
+  # `@my method = …` would read as a call, `@my(method = …)`, and `@a.b = …` as a path.
   @propertyAssignmentSource: (propertyName, txt) ->
-    "@" + propertyName + " = " + txt
+    "@[" + JSON.stringify(propertyName).replace(/#/g, "\\#") + "] = " + txt
 
   # Give me the member `propertyName`, the value txt evaluates to (a function's txt holds its
   # parameters, its arrow and its body). The edit alone: it tells no one and records nothing, as a
@@ -4288,9 +4290,10 @@ class Widget extends TreeNode
   # THE COFFEESCRIPT A FUNCTION WAS INJECTED FROM (injectProperty), kept BY THE FUNCTION, never by the
   # field that holds it: whatever replaces or deletes a member takes the member's function, and its
   # source with it, so no reader is handed one function's source for another (a run's `@m = -> …`
-  # leaves a function with none, which shows as compiled text and which a save refuses). A copy shares
-  # the function and so its source; an alias of it (`@g = @f`) holds the same function, and so has it
-  # too. undefined for any function no injection made -- a class member keeps its source on its
+  # leaves a function with none, which shows as compiled text and which a save refuses). A copy
+  # compiles its own function from that source, as a load does (Duplicator._compileInjectedMethods), so
+  # a fat arrow binds the copy; an alias of it (`@g = @f`) holds the same function, and so has it too.
+  # undefined for any function no injection made -- a class member keeps its source on its
   # meta-object (Class.applyMemberEdit). Read by the object inspector, the own-code key
   # (_sourceChangedNoSettle) and the save's {"$src"} (Serializer). The store is weak: it writes to no
   # function and keeps none alive.

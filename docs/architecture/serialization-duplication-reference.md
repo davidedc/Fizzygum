@@ -102,8 +102,8 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   it. Duplication shares it; serialization names it by its class (§4a). Asked first because a
   Widget-branch prototype is `instanceof Widget`, so the external-widget rule below would read it
   as a widget, and a non-widget one would be copied into an object posing as its class's prototype.
-  (A class FUNCTION rides a copy uncopied, as every function does, and a save names it by its class
-  too.) A class inspector's subject is one, whichever door opened it (a `__super__` row, Inspect
+  (A class FUNCTION rides a copy uncopied, as every function does but a widget's injected method,
+  which the copy compiles afresh — §5's Functions — and a save names it by its class too.) A class inspector's subject is one, whichever door opened it (a `__super__` row, Inspect
   selection, a breadcrumb chip).
 - A `Widget` NOT in the **in-structure set** is **external**: duplication keeps the live
   reference (so a duplicate can stay wired to an outside widget); serialization cannot
@@ -424,14 +424,15 @@ NAMED like one.
     `@serializationTransients` SKIPS a field for the FILE Serializer only. The in-memory
     **Duplicator** never skips a field for being declared there — it reads the declaration only
     through `NativeValueKinds.isDerivedAt`, to place a stamped value (below) — and its coverage
-    comes from six mechanisms of its own:
+    comes from seven mechanisms of its own:
     a NAME-convention skip in `_cloneContentInto` (the version-keyed cache pairs
     `cached*`/`check*Cache` plus `childrenBoundsUpdatedAt`, and the island source-lane
     `_islandBufferSource*` pair), the `rebuildDerivedValue` skip-and-rebuild of a value derived
     where it stands (`NativeValueKinds.isDerivedAt`), `keptByReferenceOnDeepCopy`, a value
     answering `rebuildDerivedValue` standing anywhere but where its holder rebuilds it kept by
     reference (`_duplicate`), the
-    `alignCopiedWidgetTo*` world-set aligners, and the per-class `_reactToBeingCopied` hook. A property covered by none of these gets
+    `alignCopiedWidgetTo*` world-set aligners, a widget's injected method compiled afresh on the copy
+    (`_compileInjectedMethods`), and the per-class `_reactToBeingCopied` hook. A property covered by none of these gets
     deep-copied — and a runtime-only object there crashes the copy on the Duplicator's
     closed-set guard ("cannot duplicate a value of unrecognized type"). ⚠ A BUFFER there does not crash:
     it is data, copied silently (`_copyBuffer`), so a view onto a runtime object's buffer kept in an
@@ -462,7 +463,13 @@ NAMED like one.
     through `Widget.keptSourceOf` — and only for a function it MAKES, a txt that spells a
     function literal; a txt naming one, `@f`, keeps nothing, so the function it names keeps
     the source it has, or none) → serialize
-    `{"$src": <source>}`; restore recompiles it with `injectProperty` on the owning widget.
+    `{"$src": <source>}`; restore recompiles it with `injectProperty` on the owning widget. A COPY
+    does the same, asking the same test (`Duplicator._compileInjectedMethods`): each injected method
+    a widget's own field holds — a `@serializationTransients` one too, which the save drops and a copy
+    keeps — is compiled afresh on the copy, so a fat arrow (`=> @x`), bound to the widget that
+    compiled it, binds the copy instead of running on the original. The member is named by key in
+    the program that injects it (`Widget.propertyAssignmentSource`), so a renamed member whose name
+    is no identifier (`my method`) compiles too.
     The source is the FUNCTION's, never a field beside it, so it describes the function the
     field holds now: a function a run assigned (`@foo = -> …`) keeps none and is refused below,
     and a class keeps its members' sources on its meta-object (§12). That

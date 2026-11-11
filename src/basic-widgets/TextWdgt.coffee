@@ -87,7 +87,7 @@ class TextWdgt extends StringWdgt
 
   replaceLastSpaceWithInvisibleCarriageReturn: (string) ->
     string = string.substr(0, string.length-1)
-    string = string + @emptyCharacter
+    string = string + StringWdgt.INVISIBLE_CARRIAGE_RETURN
 
   getWrappingData: (overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph) ->
     cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + eachParagraph.hashCode() + @_ownCodeKeySuffix
@@ -136,7 +136,7 @@ class TextWdgt extends StringWdgt
             currentLine = @replaceLastSpaceWithInvisibleCarriageReturn currentLine
             # if we don't do this test there is a strange behaviour
             # when one types a very long word
-            if currentLine != @emptyCharacter
+            if currentLine != StringWdgt.INVISIBLE_CARRIAGE_RETURN
               wrappedLinesOfThisParagraph.push currentLine
               wrappedLineSlotsOfThisParagraph.push slotsInParagraph
               maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText currentLine, overrideFontSize
@@ -435,27 +435,19 @@ class TextWdgt extends StringWdgt
     cacheKey = @createBufferCacheKey()
 
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit?
-      # we might have hit a previously cached
-      # backBuffer but here we are interested in
-      # knowing whether the buffer we are gonna paint
-      # is the same as the one being shown now. If
-      # not, then we mark the caret as damaged.
-      if @backBuffer != cacheHit[0]
-        world.caret?.noteTextChanged()
-      return cacheHit
+    # A buffer I am not already showing -- a twin's too -- is met reflowed, my wrapping (wrappedLines,
+    # wrappedLineSlots) mine for every reader of it, and the caret told: StringWdgt._createRefreshOrGetBackBuffer.
+    return cacheHit if cacheHit? and @backBuffer is cacheHit[0]
 
     contentHeight = @reflowText()
+    world.caret?.noteTextChanged()
+    return cacheHit if cacheHit?
 
     # FIT_BOX_TO_TEXT paints its text exactly lineCount × linePitch tall at the SET font
     # size (the box was already grown to this, plus my item inset, by _reLayoutSelf; here we
     # only recompute the paint height, we do NOT resize — see the "no extent changes" note above).
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       contentHeight = @wrappedLines.length * @linePitch @originallySetFontSize
-
-    # if we are calculating a new buffer then
-    # for sure the caret has to be notified
-    world.caret?.noteTextChanged()
 
     backBuffer = HTMLCanvasElement.createOfPhysicalDimensions()
     backBufferContext = backBuffer.getContext "2d"

@@ -210,7 +210,12 @@ class StringWdgt extends Widget
 
   caretHorizPositionForVertMovement: undefined
 
-  emptyCharacter: '\u2063'
+  # THE INVISIBLE CARRIAGE RETURN (U+2063, the invisible separator): a wrapped line's last slot, where its
+  # trailing space or its paragraph's end stood (TextWdgt.replaceLastSpaceWithInvisibleCarriageReturn), so a
+  # line's length counts every slot it holds. One constant of the text model, never a widget's own field: the
+  # wrapping, the measuring (eliminateInvisibleCharacter) and the paint all read it inside the world's shared
+  # text caches, whose keys name every input a widget can hold on its own -- and this is not one.
+  @INVISIBLE_CARRIAGE_RETURN: '\u2063'
 
   # Since we let the browser paint the text, we can't guarantee that
   # a specific font will be available to the user.
@@ -827,7 +832,7 @@ class StringWdgt extends Widget
         @textPossiblyCroppedToFit = textToFit
 
   eliminateInvisibleCharacter: (string) ->
-    string.replace @emptyCharacter, ''
+    string.replace StringWdgt.INVISIBLE_CARRIAGE_RETURN, ''
 
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
@@ -939,8 +944,8 @@ class StringWdgt extends Widget
   # role (_textInk; drawSelection, _drawHeaderUnderline and _drawTextLine read them as they paint,
   # as _backgroundFill reads a role I wear), so a changed selection, a changed role, or a parent's
   # changed answer re-renders me.
-  #   My crop (textPossiblyCroppedToFit) is decided by the reflow a MISS runs, after this key is
-  # taken, so the key names the weight my fit is measured in itself, while it differs from the
+  #   My crop (textPossiblyCroppedToFit) is decided by the reflow that runs, after this key is taken,
+  # whenever I show a buffer I was not already showing (a miss, or a twin's), so the key names the weight my fit is measured in itself, while it differs from the
   # weight I draw in (the canvas font names that one): a text whose fit weight moves re-renders,
   # and two texts that differ only in it never share a buffer. While the two agree it adds nothing,
   # so such a text keys its buffer exactly as a text with no fit weight of its own.
@@ -1095,22 +1100,16 @@ class StringWdgt extends Widget
 
     cacheKey = @createBufferCacheKey()
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit?
-      # we might have hit a previously cached
-      # backBuffer but here we are interested in
-      # knowing whether the buffer we are gonna paint
-      # is the same as the one being shown now. If
-      # not, then we mark the caret as damaged.
-      if @backBuffer != cacheHit[0]
-        world.caret?.noteTextChanged()
-      return cacheHit
+    # A buffer I am already showing needs nothing. Any other -- one I paint now, or one a TWIN painted (a text
+    # of my key: everything the pixels are a function of), whose reflow ran on the twin and never on me -- is
+    # met reflowed, so my fit and my crop are mine for every reader of them (slotAt, slotCoordinates, the
+    # caret), and the caret is told, since the text it sits on changed.
+    return cacheHit if cacheHit? and @backBuffer is cacheHit[0]
 
     # public-call-sanctioned: reflowText is macro-called public text API (see _sizeToTextAndDisableFittingInMyParentsArrangeNoSettle).
     @reflowText()
-
-    # if we are calculating a new buffer then
-    # for sure the caret has to be notified
     world.caret?.noteTextChanged()
+    return cacheHit if cacheHit?
 
     text = @textPossiblyCroppedToFit
     # Initialize my surface property.
@@ -1238,7 +1237,7 @@ class StringWdgt extends Widget
 
     xPosition = xPosition - textHorizontalPosition
     if xPosition - @left() >= widthOfText
-      if text[text.length - 1] == '\u2063'
+      if text[text.length - 1] == StringWdgt.INVISIBLE_CARRIAGE_RETURN
         return text.length - 1
       else
         return text.length

@@ -41,7 +41,7 @@ class Duplicator
 
   # The dispatch core every handler recurses through. undefined normalizes to undefined;
   # boolean, number, bigint, string, symbol and function values ride along
-  # uncopied.
+  # uncopied (a widget's INJECTED method is then compiled afresh on its copy: _compileInjectedMethods).
   _duplicate: (value) ->
     return undefined if !value?
     return value if typeof value isnt "object"
@@ -172,6 +172,7 @@ class Duplicator
     @_cloneContentInto cloneOfMe, obj
     # cloneOfMe at this point is a full deep copy
     @_rebuildDerivedValues cloneOfMe, obj
+    @_compileInjectedMethods cloneOfMe
 
     # align the copy into the world-level trackers the original was in (Note 2).
     obj.alignCopiedWidgetToDamageInfoDataStructures? cloneOfMe
@@ -262,4 +263,18 @@ class Duplicator
     for property of cloneOfMe
       if cloneOfMe.hasOwnProperty(property) and NativeValueKinds.isDerivedAt theOriginal, property
         theOriginal[property].rebuildDerivedValue cloneOfMe, property
+    return
+
+  # A widget's INJECTED method (Widget.injectProperty, kept with its source: Widget.keptSourceOf) is compiled
+  # afresh on the copy, from that source and with the copy's own injectProperty -- as a load compiles each
+  # {"$src"} (Deserializer, pass 4): every own field of a widget (Serializer.classTakesInjectedMethods) that
+  # holds a function with a kept source, the fields a save writes a {"$src"} for and, since a copy keeps
+  # what a save drops, a @serializationTransients one too. Shared, a fat-arrow method
+  # (`=> @x`) is one function BOUND to the widget that compiled it, so the copy's would run on the original;
+  # compiled here, it binds the copy, and a thin-arrow one is simply a function of its own.
+  _compileInjectedMethods: (cloneOfMe) ->
+    return unless Serializer.classTakesInjectedMethods cloneOfMe.constructor
+    for own property, value of cloneOfMe
+      keptSource = Widget.keptSourceOf value
+      cloneOfMe.injectProperty property, keptSource if typeof keptSource is "string"
     return

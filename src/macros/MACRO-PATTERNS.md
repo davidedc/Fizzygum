@@ -2167,9 +2167,10 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **How a text WRAPS, read without a screenshot** (`macroTextOwnCodeKeysTheCachesItRunsIn`): ask the text's own
   `breakTextIntoLines text` (its first element is the lines) — the query the render wrap asks and the world's shared text
-  caches serve, deterministic at any moment. ⚠ Do NOT read `wrappedLines`: a default `FIT_TEXT_TO_BOX` text fills it at
-  PAINT, and two texts of one font, extent and text share ONE immutable back buffer, so the second can show its twin's
-  pixels without ever wrapping (measured: `[2, 0]` lines right after both were added, after `waitForScreenshotReady`).
+  caches serve, deterministic at any moment. `wrappedLines` is the wrap a default `FIT_TEXT_TO_BOX` text fills at PAINT,
+  so it reads only what the last paint left: two texts of one font, extent and text share ONE immutable back buffer, and
+  the second, meeting its twin's, reflows before it shows it (`StringWdgt._createRefreshOrGetBackBuffer`;
+  `macroTwinTextWrapsOnItsOwn` holds a twin's wrap, and a twin StringWdgt's crop).
   Ask the twin first when the claim is that a second text must NOT meet the entries the first filled. A text's OWN
   code (an object inspector's Save of an inherited member — click `showInheritedToggle` first, `measureText` is
   StringWdgt's) is keyed apart in every cache whose work runs its code (`Widget._ownCodeKeySuffix`); `world.noteCodeChanged()`
