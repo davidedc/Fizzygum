@@ -59,6 +59,9 @@ for (const f of ['lib/used.js', 'lib/both.js', 'launched.js', 'messaged.js', 'co
 write('Fizzygum/buildSystem/alpha-selftest.js', "const tool = require('./cli-tool');\n");
 write('Fizzygum/buildSystem/tool.py', '"""Run Fizzygum-tests/scripts/orphan.js afterwards."""\n');
 write('Fizzygum-tests/scripts/piped.sh', '');
+// the build's own pre-commit check is a root too: what it launches runs, with or without fg
+write('Fizzygum/build_and_smoke.sh', './build_it_please.sh "$@"\nnode ../Fizzygum-tests/scripts/smoked.js $SMOKE_ARGS\n');
+write('Fizzygum-tests/scripts/smoked.js', '// a smoke\n');
 write('Fizzygum-tests/scripts/orphan.js', '');
 write('Fizzygum-tests/scripts/leg.sh', 'node scripts/runner.js --audit-prelude="$PWD/scripts/p/x-prelude.js"\nnode "$FZ/buildSystem/lib/both.js"\n');
 write('Fizzygum-tests/scripts/runner.js', '');
@@ -85,7 +88,7 @@ const RUN = ['build_it_please.sh', 'buildSystem/gate.js', 'buildSystem/lib/used.
              'scripts/leg.sh', 'scripts/runner.js', 'scripts/p/x-prelude.js',
              'buildSystem/beta-selftest-headless.js', 'scripts/preludes-install-selftest-headless.js', 'scripts/q/y-prelude.js',
              'buildSystem/dirname-launched.js', 'buildSystem/defaulted.js', 'buildSystem/substituted.js', 'buildSystem/direct.sh',
-             'scripts/suite-runner.js', 'buildSystem/fg-built.js'];
+             'scripts/suite-runner.js', 'buildSystem/fg-built.js', 'build_and_smoke.sh', 'scripts/smoked.js'];
 const NOT = ['buildSystem/commented.js', 'buildSystem/echoed.js', 'buildSystem/hinted.js', 'buildSystem/messaged.js',
              'buildSystem/launched-by-message.js', 'scripts/orphan.js', 'buildSystem/tested.js', 'buildSystem/then-echoed.js',
              'buildSystem/assigned-only.js', 'buildSystem/removed.js', 'buildSystem/heredoc.js', 'buildSystem/multiline-echoed.js',
@@ -98,10 +101,12 @@ t.check(howOf('buildSystem/lib/both.js') === 'launched',
   'a module some runner also LAUNCHES reads launched, though a require reached it first', `how: ${howOf('buildSystem/lib/both.js')}`);
 t.check(howOf('buildSystem/lib/used.js') === 'required', 'a module only required reads required', `how: ${howOf('buildSystem/lib/used.js')}`);
 t.check(howOf('build_it_please.sh') === 'root', 'the build reads root');
+t.check(howOf('build_and_smoke.sh') === 'root', 'the build-and-smoke check reads root', `how: ${howOf('build_and_smoke.sh')}`);
+t.check(withFg.how.get(path.join(root, 'Fizzygum-tests', 'scripts/smoked.js')) === 'launched', 'what the build-and-smoke check runs reads launched');
 
 fs.unlinkSync(layout.fg);
 const noFg = new Set(rel(runSet(layout).files));
-for (const f of ['buildSystem/gate.js', 'buildSystem/alpha-selftest.js', 'scripts/piped.sh']) t.check(noFg.has(f), `without fg: ${f} still RUNS (the build reaches it)`);
+for (const f of ['buildSystem/gate.js', 'buildSystem/alpha-selftest.js', 'scripts/piped.sh', 'scripts/smoked.js']) t.check(noFg.has(f), `without fg: ${f} still RUNS (a versioned root reaches it)`);
 for (const f of ['scripts/leg.sh', 'scripts/runner.js', 'buildSystem/beta-selftest-headless.js', 'scripts/q/y-prelude.js']) {
   t.check(!noFg.has(f), `without fg: ${f} is not run (only a leg or the --headless runner reaches it)`);
 }

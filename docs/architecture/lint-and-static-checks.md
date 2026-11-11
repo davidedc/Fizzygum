@@ -138,7 +138,8 @@ reformatted line goes blind). Three pieces hold it:
   measurement failure reads INVALID (exit 2, never a rule); and
   together the runs plant EVERY rule the gate can fire — a gate that grows a rule fails its proof until the proof
   plants it.
-- **The census** (`run-selftests.js`, the build's first gate): every script the build or an `fg` leg LAUNCHES
+- **The census** (`run-selftests.js`, the build's first gate): every script the build, its pre-commit check
+  (`build_and_smoke.sh`, which launches the boot smoke) or an `fg` leg LAUNCHES
   (`lib/what-runs.js`'s run set: ANY launch edge makes a script a program, however else it is reached — but never a
   `*-prelude.js` instrument a gate injects, nor a self-test, which is a proof the runner judges by its own
   `SELFTEST_*` rules) is a gate unless its HEADER says `not-a-gate: <reason>` (the build steps, a tool or reader a gate

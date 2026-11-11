@@ -21,14 +21,14 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       compilers read differently stopped the scan unnoticed from f002a7b7 (2026-08-16) to 2026-11-10. Holding every source to the
       mirror on each build would cost the mirror's run (a few seconds) per build: whether that is worth it is the same
       question as "Every gate re-masks all of the compiled sources".
-- [ ] **The production boot smoke's follow-on checks can outlast `fg homepage`'s alarm with no verdict** (found by the
-      independent review closing "Waits for something other than a world standing are in-page polls with no outside
-      bound", in the plan's ledger; reached: `fg homepage` with a product hang in a part's or the reflective layer's
-      load). After its bounded waits, `smoke-boot-headless.js --production` opens fresh pages and awaits product
-      promises (`ensureLoaded('meta-tools')`, `loadEnvelopeString`, `loadWorldSnapshot`, the snapshot round-trip, the
-      rotation probe) through single unbounded evaluates, each up to Puppeteer's default 180 s protocol timeout; two of
-      them outlast `fg`'s 300 s alarm, which kills the smoke before it prints `BOOT OK` or `BOOT SMOKE FAILED`. A
-      single evaluate awaiting a product promise is not an in-page poll (`waitedInPage`): it wants a bound of its own.
+- [ ] **The parts-snapshot rig awaits product promises through unbounded evaluates** (found by the independent review
+      closing "The boot smoke is a gate with no rule registry and no standing bite-proof", in the plan's ledger;
+      reached: the gauntlet's `parts` leg, `fg parts`, with a product hang in a part's load or a file's restore).
+      `Fizzygum-tests/scripts/parts-snapshot-load-headless.js` makes eight single evaluates that await a product promise
+      — making the widget files, the rejecting load, the file doors' report, opening the widget files twice, making and
+      loading the source-edit files — each bounded only by Puppeteer's 180 s protocol timeout; two of them outlast the
+      leg's 300 s alarm, which kills the rig before it says which step hung. The boot smoke's are bounded through
+      `lib/headless-driver.js` `answeredWithin(promise, ms, what)`, which this rig can take as it stands.
 - [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** (found by the
       independent review closing "The rigs wait for their pages to boot a dozen ways", in the plan's ledger; by
       reading). `startedWithin` has one line for every predicate, so a world standing whose boot never finished (a
@@ -294,11 +294,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       says `Class.applyMemberEdit` sets `proto[memberName + "_source"]` (false before this close too) and skips
       `<name>_source` strings that no longer exist: the injected source is kept with its function (`Widget.keptSourceOf`).
       Left for the owner, whose plan it is.
-- [ ] **The boot smoke is a gate with no rule registry and no standing bite-proof** (found by the independent review
-      closing "A failed return to boot is only logged", in the plan's ledger; by reading).
-      `Fizzygum-tests/scripts/smoke-boot-headless.js` is launched by `fg homepage` and `build_and_smoke.sh`, neither of
-      them a root `lib/what-runs.js` walks, so the gate census never asked it for `lib/gate-rules.js` rules nor a
-      `proveLeg` proof: its legs' bites rest on `.scratch` plants (the class-level-edit leg's three).
 - [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** (found by the independent
       review closing "The inspector churn set cannot see a class inspector's member list move", in the plan's ledger;
       by reading; low). The churn set and its readers act per TEST, not per shot: a test in the set is recaptured whole,

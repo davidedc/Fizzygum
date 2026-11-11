@@ -3105,3 +3105,53 @@ for (const s of sites) if (s.absentBefore.length) {
       "Runtime.callFunctionOn timed out"); one planted stuck in the boot smoke's waits FAILS naming the lazy-part
       wait after 53 s (bound 45 s); the four converted rigs' controls pass. A gauntlet and the homepage green before
       the review's fixes; again after them.
+- [x] **The boot smoke is a gate with no rule registry and no standing bite-proof** (found by the independent review
+      closing "A failed return to boot is only logged", in the plan's ledger; by reading).
+      `Fizzygum-tests/scripts/smoke-boot-headless.js` is launched by `fg homepage` and `build_and_smoke.sh`, neither of
+      them a root `lib/what-runs.js` walks, so the gate census never asked it for `lib/gate-rules.js` rules nor a
+      `proveLeg` proof: its legs' bites rest on `.scratch` plants (the class-level-edit leg's three).
+- [x] **The production boot smoke's follow-on checks can outlast `fg homepage`'s alarm with no verdict** (found by the
+      independent review closing "Waits for something other than a world standing are in-page polls with no outside
+      bound", in the plan's ledger; reached: `fg homepage` with a product hang in a part's or the reflective layer's
+      load). After its bounded waits, `smoke-boot-headless.js --production` opens fresh pages and awaits product
+      promises (`ensureLoaded('meta-tools')`, `loadEnvelopeString`, `loadWorldSnapshot`, the snapshot round-trip, the
+      rotation probe) through single unbounded evaluates, each up to Puppeteer's default 180 s protocol timeout; two of
+      them outlast `fg`'s 300 s alarm, which kills the smoke before it prints `BOOT OK` or `BOOT SMOKE FAILED`. A
+      single evaluate awaiting a product promise is not an in-page poll (`waitedInPage`): it wants a bound of its own.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U23, the two items above together — the second folded in as the same
+      script). RULED: the census reads what a VERSIONED root launches — `build_and_smoke.sh`, the build's own
+      pre-commit check, becomes a root of `buildSystem/lib/what-runs.js` beside the build (no change to `fg`, which
+      stays read through its four leg functions) — and the boot smoke is then a gate like any other: it names every rule
+      it fails on, and a self-test plants each rule a dev tree can reach. LANDED: the census root (read when present,
+      like `fg`; its self-test gains the case, 65); `smoke-boot-headless.js` names 21 rules over its 32 failure lines
+      (`Fizzygum/buildSystem/lib/gate-rules.js`: `NO_ERRORS`, `PAGE_LOAD`, `WORLD_STANDS`, `LAZY_SPLIT_EAGER_PRESET`,
+      `LAZY_SPLIT`, `LAZY_PART_*`, `LAZY_SOURCES_*`, `HARNESS_INSTALLED`, `ROTATION`, `FORBIDDEN_PATH_SHIPPED`,
+      `DEV_PATH_MISSING`, `PRECOMPILED_IMAGE`, `NO_COMPILE_LOG_DIV`, `SNAPSHOT_ROUND_TRIP`, `CLASS_EDIT_FILE_LOADS`,
+      `RESTORED_INSPECTOR_WAITS`, and each check's vacuity its own: `SNAPSHOT_ROUND_TRIP_VACUOUS`,
+      `RESTORED_INSPECTOR_VACUOUS`), one declared `bite-unplantable` (`RESTORED_INSPECTOR_WAITS`: a door waiting for a
+      reflective layer absent when the files are made, which only a `sources: "lazy"` tree has); EVERY evaluate it makes
+      bounded — an in-page poll through `waitedInPage`, every single evaluate through `answeredWithin` (45 s, now
+      `lib/headless-driver.js`'s, which the parts-snapshot rig can take) — failing the rule its step serves, naming the
+      step; a page that stops answering stops every later probe on it (one hang, one rule); `WORLD_STANDS` only where
+      the world never stood; the lazy-part walk stops at the first part that does not load (a rejected one answers at
+      once); a page or browser lost reads INVALID, exit 2. So a product hang can no longer outlast `fg homepage`'s
+      alarm: the worst case, a broken lazy-part bootstrap, is one part's 15 s, the layer's 15 s and two fresh pages'
+      45 s. Docs: the lint index's census, both repos' CLAUDE.md, the census headers. PROVEN: new
+      `scripts/smoke-boot-selftest-headless.js` (`proveLeg`; the gauntlet's `selftests` leg) plants all 20 plantable
+      rules on the dev tree, read as the tree each rule needs, in nine runs: an error at boot, a rotation that rotates
+      nothing and an empty test manifest; `index.html`'s every-part-eager flag read true once boot is done; the
+      fizzytiles engine class in the page at boot, the first lazy part fetching an eager batch as it loads and the
+      second refusing to load (the rest "not loaded after the first that failed"); `index.html` stuck in a script inside the
+      text-settle wait (its world stood: `PAGE_LOAD` alone) and from its first line (`PAGE_LOAD`, `WORLD_STANDS`); the
+      sources flag read `"lazy"` once boot is done (this tree fetched its sources at boot and holds its layer, so the
+      restored-inspector probe reads VACUOUS) with the mixin reading finding none parsed; and `--production` on the dev
+      tree (which it is not: `FORBIDDEN_PATH_SHIPPED` and `PRECOMPILED_IMAGE` fire by the tree itself) twice — the log
+      div put back and every world load stuck (the round-trip read "did not answer within 45s (the snapshot
+      round-trip)", its page then skipping every later probe, said once; the edit-carrying file the same on its own
+      page); and the round-trip's fixture bringing up nothing — and a `--require` preload telling the smoke's own reading
+      of the tree that `font-assets/` is absent (`DEV_PATH_MISSING`; a mirror of the tree without it was measured and
+      dropped: the SWCanvas pages cannot stand without their fonts). Every plant is deterministic: a flag read
+      through a getter keyed on boot's end, a hook on a prototype present before the world. The census's own new cases
+      fail with the root removed. The independent review closing this unit found eleven defects in the first shape
+      (three false `bite-unplantable` reasons among them), all fixed above. `fg gauntlet` green (20 legs, 1243 s; the `selftests` leg runs the new proof), `fg homepage`
+      BOOT OK.

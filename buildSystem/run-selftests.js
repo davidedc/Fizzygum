@@ -26,7 +26,7 @@
 //                                extension, or outside the directories the conventions scan. node_modules, dot-dirs and
 //                                the tests repo's tests/ (test content) are not scripts.
 // This file and lib/selftest-verdict.js are the machinery, exempt from both: they name the spellings to refuse them.
-// AND EVERY GATE BITES (the node tier of a full run — the build's): every script the build or an `fg` leg LAUNCHES
+// AND EVERY GATE BITES (the node tier of a full run — the build's): every script the build, build_and_smoke.sh or an `fg` leg LAUNCHES
 // (lib/what-runs.js's run set: ANY launch edge makes it a program — but never an instrument a gate injects, nor a
 // self-test, which is a proof judged by the rules above) is a gate unless its header says why not (`// not-a-gate: <reason>`, `#` in a shell or Python file), and a gate
 //   GATE_WITHOUT_REGISTRY  names its rules through lib/gate-rules.js — JS: `require(…gate-rules…).forGate(__filename)`

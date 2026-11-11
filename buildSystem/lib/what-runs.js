@@ -7,9 +7,10 @@
 //   - check-hand-lists.js accepts a sanction's guard only when runSet() contains it.
 // Plan, measurements and the review it survived: docs/archive/unrun-checks-plan.md.
 //
-// THE ROOTS. Fizzygum/build_it_please.sh (every build) and, when the umbrella's local `fg` wrapper is present, the
-// bodies of its fg_build / fg_suite / run_lint / run_leg functions (the presuite and gauntlet legs; all four must be
-// found, or the reading is an ERROR). `fg` is in no repo, so a bare clone has the build root alone and runSet() says
+// THE ROOTS. Fizzygum/build_it_please.sh (every build); Fizzygum/build_and_smoke.sh when present (the build's own
+// pre-commit check: the boot smoke it launches is a gate like any other); and, when the umbrella's local `fg` wrapper is
+// present, the bodies of its fg_build / fg_suite / run_lint / run_leg functions (the presuite and gauntlet legs; all four
+// must be found, or the reading is an ERROR). `fg` is in no repo, so a bare clone has the two versioned roots alone and runSet() says
 // so (`fgPresent: false`); its readers then treat a commit-point-only fact as undecidable, never as false.
 //
 // AN EDGE IS AN INVOCATION, NOT A MENTION. A file runs another when it LAUNCHES it:
@@ -304,6 +305,11 @@ function runSet(layout = DEFAULT_LAYOUT) {
   const before = reached.size;
   viaShell(fs.readFileSync(build, 'utf8'), 'build_it_please.sh');
   if (reached.size === before) throw new Error('what-runs: build_it_please.sh invokes no scanned script — the reading is broken');
+  const buildAndSmoke = path.join(layout.fizzygum, 'build_and_smoke.sh');
+  if (fs.existsSync(buildAndSmoke)) {
+    reached.add(buildAndSmoke); why.set(buildAndSmoke, 'ROOT: the build-and-smoke check'); how.set(buildAndSmoke, 'root');
+    viaShell(fs.readFileSync(buildAndSmoke, 'utf8'), 'build_and_smoke.sh');
+  }
   const fgPresent = fs.existsSync(layout.fg);
   if (fgPresent) viaShell(fgRootText(layout.fg), 'ROOT: fg legs');
 
