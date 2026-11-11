@@ -139,7 +139,9 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     later member listing of the class. The mixin twin restores the recompiled function's
     `.name`, so the fake-super companion lookup keeps working.
   - **A meta-object or a meta-verb EDITS; the person's GESTURE TELLS and RECORDS.** This one
-    rule holds for every live edit, of a class or of one widget:
+    rule holds for every live edit, of a class or of one widget (a world load is the one other
+    recorder: it records a page member it could not return to boot that the loaded world still runs,
+    `SourceEditsRegistry.recordMembersStillRunning`):
     - The edit verbs tell no one and record nothing: `Class.applyMemberEdit` /
       `removeMember`, `Mixin.applyMemberEdit` / `removeMember`, and a widget's
       `injectProperty`, `addOwnProperty`, `renameOwnProperty`, `removeOwnProperty` and

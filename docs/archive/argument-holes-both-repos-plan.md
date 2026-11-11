@@ -2926,3 +2926,38 @@ for (const s of sites) if (s.absentBefore.length) {
       41 SWCanvas); a gauntlet and the homepage green before the review's fixes (one leg, the menu sweep, hung in
       `browser.close()` under the wave's load after its sweep had returned, and passed its serial retry), and again
       after the review's fixes (20/20, no flake).
+- [x] **A page member the load could not return to boot runs in the loaded world but is recorded nowhere** (found by
+      the independent review closing "A failed return to boot is only logged", in the plan's ledger; by reading). The
+      load's notice says so, and then installs the file's registry (`WorldWdgt.loadWorldSnapshot`): a save of the
+      loaded world omits that member's edit, so the file it writes differs from the world that wrote it.
+- [x] **The world load promises "Everything else in the file loads normally" before deserialization can throw**
+      (found by the independent review closing "A failed return to
+      boot is only logged", in the plan's ledger; pre-existing). `WorldWdgt.loadWorldSnapshot`'s step-2b notice precedes `Deserializer.deserialize`;
+      a restore that throws after it has told the person the rest loaded.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U19, the two items above together). RULED: the loaded world's registry
+      describes the code it runs, and a promise is made once it is true. LANDED: `SourceEditsRegistry
+      .returnThePageToBootSources` tags each member it could not return with its scope and the source it was left
+      running, read as the class's OWN source (`_ownSourceIn` — a removed member named like an `Object.prototype` one
+      must not read the inherited function as its source); after the replay, the restored registry's
+      `pageMembersStillRunning` names each such member still running the page's edit — unless the file's own last
+      record of it says the same, which makes it the file's code — and `recordMembersStillRunning` records each one
+      (its source, or a removal) exactly as the page's own edit would have been recorded, so a save of the loaded
+      world carries the code it runs and reloads into it, and a save→load cycle never grows the registry. The notice
+      counts what was recorded and is said ONCE: after step 9, once the rest has loaded ("Everything else in the file
+      loaded normally"), or, on a restore that throws, the counts alone before the error goes on — the return and the
+      replays did change the page's code. The independent review found no high-severity bug; its fixes are the
+      own-source read and the not-recorded-twice rule above (both by reading), the counts told on a failed restore
+      (it had been silent there), and the key order of a produced record matched to the session writers'. Docs: the
+      registry's header (a world load is its one other recorder), the serialization reference's account of the
+      notice and of the unreturned members (§11, §12), `mixins.md`. PROVEN: the serialization rig's `world` section
+      (SWCanvas, 48 checks) — `sourceEdits.unreturnedPageEditIsRecorded` (an added AND a removed member the load
+      could not return are in the loaded world's registry and its next save, which the load's own vetting accepts
+      and which, reloaded on a page at boot, runs both edits), `sourceEdits.recordedEditIsNotRecordedTwice` (a file
+      already recording the member gains no second record, and says nothing of it) and
+      `sourceEdits.failedRestoreTellsTheCountsWithoutThePromise` (a restore made to throw tells the counts once,
+      without the promise); planted, `recordMembersStillRunning` emptied fails the recorded check, the told check
+      and both checks that read the notice ("recorded [] / saved []"), the file's last record ignored fails the
+      not-twice check alone ("records of the added member 2, of the removed one 2"), and the promise said where the
+      counts are known — the old order — fails the told check and the failed-restore check (two informs, the first
+      "Everything else in the file loads normally."); unplanted, all 48 pass. A gauntlet and the homepage green
+      before the review's fixes, and again after them.

@@ -3072,7 +3072,7 @@ class WorldWdgt extends IconGridPanelWdgt
     #    holds, which reads the class member maps. One thing per trip, then re-enter: it cannot loop,
     #    because each trip's predicate requires its thing to be absent, and the re-entry runs with it
     #    present. A build that can NEVER load the layer (`sources: "none"`) does not wait for it; its
-    #    replay applies nothing, and step 2b's notice says so.
+    #    replay applies nothing, and the load's notice says so.
     #
     #    ⚠ THE POSITION OF THIS BLOCK IS THE WHOLE CORRECTNESS ARGUMENT. Step 1 below destroys the
     #    entire desktop, so the bail-out has to happen before ANY mutation: the re-entry then runs
@@ -3130,7 +3130,7 @@ class WorldWdgt extends IconGridPanelWdgt
       {returned, unreturned} = SourceEditsRegistry.returnThePageToBootSources()
       replayed = restoredRegistry.replayMixinEdits() + restoredRegistry.replayClassEdits()
       @noteCodeChanged() if returned + replayed > 0
-      # What either step did NOT do is said ONCE, to the user, before the rest is restored -- counted,
+      # What either step did NOT do is said ONCE, to the user, once the rest is restored -- counted,
       # never predicted. The class-level records the replay did not apply: an artifact that ships no
       # class source text has no meta-system and applies none (arc 5's lean profile); a build that lacks
       # the class or mixin a record names (step 0 brought in every part that holds one) skips it; a
@@ -3140,13 +3140,17 @@ class WorldWdgt extends IconGridPanelWdgt
       # alternative is that code changes in the loaded world without a word. The widgets and their
       # per-widget {"$src"} function edits still load normally.
       unreplayedCount = restoredRegistry.classLevelRecordCount() - replayed
-      stillEditedCount = SourceEditsRegistry.stillRunning unreturned
+      # the members it still runs as the page edited them are the loaded world's code now, so its registry
+      # records them (a save of it carries them) -- and the notice counts them
+      stillEditedCount = restoredRegistry.recordMembersStillRunning unreturned
+      # composed here, where the counts are known; SAID once the rest has loaded (after step 9), with the
+      # promise that everything else did -- or, if the restore throws, before its error, without it (the
+      # return and the replays changed the page's code either way)
       if unreplayedCount > 0 or stillEditedCount > 0
         plural = (n) -> if n is 1 then "" else "s"
-        @inform (if unreplayedCount > 0 then "This build cannot re-apply the " + unreplayedCount + " class-level source edit" + plural(unreplayedCount) + " this file carries.\n" else "") +
+        sourceEditsNotice = (if unreplayedCount > 0 then "This build cannot re-apply the " + unreplayedCount + " class-level source edit" + plural(unreplayedCount) + " this file carries.\n" else "") +
           (if stillEditedCount is 1 then "The loaded world still runs 1 edited class member of this page: it did not return to its source at boot.\n" else "") +
-          (if stillEditedCount > 1 then "The loaded world still runs " + stillEditedCount + " edited class members of this page: they did not return to their source at boot.\n" else "") +
-          "Everything else in the file loads normally."
+          (if stillEditedCount > 1 then "The loaded world still runs " + stillEditedCount + " edited class members of this page: they did not return to their source at boot.\n" else "")
       # 3. deserialize the object table (kind:"world" preserves each widget's iid).
       result = Deserializer.deserialize envelope
       # the section's references resolve through the Deserializer's own reader (the refusal above vetted
@@ -3179,6 +3183,9 @@ class WorldWdgt extends IconGridPanelWdgt
       restoredShelf = resolve section.shelf
       @shelfWdgt = restoredShelf if restoredShelf?
       @appWindows.set appName, resolve(refVal) for own appName, refVal of (section.appWindows or {})
+    catch error
+      @inform sourceEditsNotice.trim() if sourceEditsNotice?
+      throw error
     finally
       @binWdgt ?= new BinWdgt
       @shelfWdgt ?= new ShelfWdgt
@@ -3201,12 +3208,15 @@ class WorldWdgt extends IconGridPanelWdgt
     restoredColor = resolve section.desktopColor
     @setColor restoredColor if restoredColor?
     @wallpaper.setPattern section.wallpaperPatternName if section.wallpaperPatternName? and @wallpaper?
-    # 9. install the snapshot's source-edit registry (its class edits are already replayed;
-    #    this makes the loaded world's edit history authoritative), then repaint now and again
-    #    once any async image/canvas assets have decoded.
+    # 9. install the restored source-edit registry -- the file's records, then each page member the load
+    #    could not return that the loaded world still runs (its class edits are already replayed; this
+    #    makes the loaded world's edit history authoritative), then repaint now and again once any async
+    #    image/canvas assets have decoded.
     @sourceEditsRegistry = restoredRegistry
     result.whenReady?.then? => @_fullChanged()
     @_fullChanged()
+    # the notice, once the restore has run (the images and canvases it carries may still be decoding)
+    @inform sourceEditsNotice + "Everything else in the file loaded normally." if sourceEditsNotice?
     # restore completion: storage membership was rebuilt wholesale -- mark for
     # the next cycle's sort (a snapshot saved with the sort still pending is
     # legitimate: each resident serialized wherever it rested, and re-sorts here).

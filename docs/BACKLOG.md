@@ -206,6 +206,16 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       ledger; measured; low). In a parallel gauntlet wave `menu-click-sweep-headless.js` printed `swept`, then never
       `browser closed`: Chrome hung shutting down and the leg held until `fg`'s 300 s alarm (its serial retry passed).
       The sweep's result was already in hand; a bounded close (`answerWithin`) would let the rig report it.
+- [ ] **A load whose restore throws keeps the registry of the world it replaced** (found by the independent review
+      closing "A page member the load could not return to boot runs in the loaded world but is recorded nowhere", in
+      the plan's ledger; by reading; low). `loadWorldSnapshot` installs the restored registry only on success, though
+      by then the page's code is boot plus the file's replays plus the unreturned members: a save after the failed
+      load writes records that no longer describe it.
+- [ ] **A restored world's asset reload that fails is an unhandled rejection** (same review; by reading; low).
+      `result.whenReady?.then? => @_fullChanged()` (`WorldWdgt.loadWorldSnapshot`) has no rejection handler.
+- [ ] **The serialization reference numbers the load's steps apart from the code** (same review; by reading; low).
+      §11 counts the restore 1–5 where `loadWorldSnapshot` counts 0–9, and the notice's paragraph sits under its step
+      1 ("before anything changes") though the return and the replays run after the teardown.
 - [ ] **A colour takes any number: NaN, ±Infinity and out-of-range components paint differently on each backend**
       (found closing "`Color.create` never checks its components", in the plan's ledger; by reading; a design call).
       `Color` reads every component as a number (`Color._channel`, `Color._alpha`), and any number makes a colour:
@@ -260,17 +270,11 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       says `Class.applyMemberEdit` sets `proto[memberName + "_source"]` (false before this close too) and skips
       `<name>_source` strings that no longer exist: the injected source is kept with its function (`Widget.keptSourceOf`).
       Left for the owner, whose plan it is.
-- [ ] **A page member the load could not return to boot runs in the loaded world but is recorded nowhere** (found by
-      the independent review closing "A failed return to boot is only logged", in the plan's ledger; by reading). The
-      load's notice says so, and then installs the file's registry (`WorldWdgt.loadWorldSnapshot`): a save of the
-      loaded world omits that member's edit, so the file it writes differs from the world that wrote it.
-- [ ] **The boot smoke is a gate with no rule registry and no standing bite-proof** (same review; by reading).
+- [ ] **The boot smoke is a gate with no rule registry and no standing bite-proof** (found by the independent review
+      closing "A failed return to boot is only logged", in the plan's ledger; by reading).
       `Fizzygum-tests/scripts/smoke-boot-headless.js` is launched by `fg homepage` and `build_and_smoke.sh`, neither of
       them a root `lib/what-runs.js` walks, so the gate census never asked it for `lib/gate-rules.js` rules nor a
       `proveLeg` proof: its legs' bites rest on `.scratch` plants (the class-level-edit leg's three).
-- [ ] **The world load promises "Everything else in the file loads normally" before deserialization can throw**
-      (same review; pre-existing). `WorldWdgt.loadWorldSnapshot`'s step-2b notice precedes `Deserializer.deserialize`;
-      a restore that throws after it has told the person the rest loaded.
 - [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** (found by the independent
       review closing "The inspector churn set cannot see a class inspector's member list move", in the plan's ledger;
       by reading; low). The churn set and its readers act per TEST, not per shot: a test in the set is recaptured whole,

@@ -3,7 +3,9 @@
 # docs/architecture/serialization-duplication-reference.md §12.
 #
 # THREE scopes of edit, each recorded by the person's GESTURE that makes it, never by the verb it
-# drives (the product calls those verbs as plumbing too, which no one edited):
+# drives (the product calls those verbs as plumbing too, which no one edited) -- and, once, by a world
+# LOAD: a member of the page it could not return to boot, which the loaded world still runs, is recorded
+# as that member's edit would have been (recordMembersStillRunning), so a save carries the code it runs:
 #   - "instance": a single widget's method rewritten by the object inspector's Save
 #     (InspectorWdgt.applyPropertyEdit). These ALSO ride the serializer for free — the injected function
 #     keeps its source (Widget.keptSourceOf), serialized as {"$src"} and re-injected on restore (§5). The
@@ -161,16 +163,20 @@ class SourceEditsRegistry
   # page (the harness's resetWorld) starts with none. A class or mixin the vault holds no source text
   # for (one made at run time) has no boot and is left as it is. A member that cannot be returned is
   # logged and left, as a record that cannot be replayed is: the load has already torn the desktop
-  # down, and tells the user how many of them still run once the replay is done (@stillRunning,
+  # down, and tells the user how many of them still run once the replay is done (pageMembersStillRunning,
   # WorldWdgt.loadWorldSnapshot). Answers {returned, unreturned}: how many members it returned, and
-  # each one it left, with the source it was left running (undefined for a member the page removed);
-  # 0 and none where this build has no meta-system (canReplaySourceEdits).
+  # each one it left, with the source it was left running (undefined for a member the page removed --
+  # read by own-ness, so a removed member that shares a name with one of Object.prototype's is too);
+  # 0 and none where this build has no meta-system (canReplaySourceEdits). Each one left carries its scope
+  # ("mixin" or "class"), so it can be recorded as the record a session's edit of it would be
+  # (recordMembersStillRunning).
   @returnThePageToBootSources: ->
     returned = 0
     unreturned = []
     for metaObject in SourceEditsRegistry._metaObjectsInBootOrder()
       bootSources = metaObject.bootMemberSources()
       continue unless bootSources?
+      scope = if Mixin.allMixines.indexOf(metaObject) >= 0 then "mixin" else "class"
       for memberName in Class.membersAwayFrom metaObject.nonStaticPropertiesSources, bootSources
         try
           if Object::hasOwnProperty.call bootSources, memberName
@@ -179,15 +185,45 @@ class SourceEditsRegistry
             metaObject.removeMember memberName
           returned++
         catch error
-          unreturned.push {metaObject, memberName, source: metaObject.nonStaticPropertiesSources[memberName]}
+          unreturned.push {metaObject, scope, memberName, source: SourceEditsRegistry._ownSourceIn(metaObject.nonStaticPropertiesSources, memberName)}
           console?.log "world snapshot: " + metaObject.name + "." + memberName + " could not be returned to its source at boot: " + error.message
     {returned, unreturned}
 
-  # How many of the members returnThePageToBootSources LEFT still hold the source it left them
-  # running -- read after the replay, which can have given one of them the file's own version: those
-  # the page's edits still decide, counted rather than predicted.
-  @stillRunning: (unreturned) ->
-    (each for each in unreturned when each.metaObject.nonStaticPropertiesSources[each.memberName] is each.source).length
+  # A member's OWN source in a meta-object's store, or undefined: the store is a plain object, so a
+  # member the page removed would otherwise read as whatever Object.prototype holds under its name.
+  @_ownSourceIn: (store, memberName) ->
+    if Object::hasOwnProperty.call(store, memberName) then store[memberName] else undefined
+
+  # Which members returnThePageToBootSources LEFT (`unreturned`) the loaded world still runs as the PAGE
+  # edited them -- read after the replay, which can have given one of them the file's own version: each
+  # that still holds the source it was left running, unless this registry's last record of it (the file's)
+  # says the same, which makes it the file's code, not the page's. Counted rather than predicted.
+  pageMembersStillRunning: (unreturned) ->
+    (each for each in unreturned when SourceEditsRegistry._ownSourceIn(each.metaObject.nonStaticPropertiesSources, each.memberName) is each.source and !@_lastRecordSays each)
+
+  # Does my last record of `each`'s member leave it as `each` holds it -- its source, or removed?
+  _lastRecordSays: (each) ->
+    last = undefined
+    for record in @records when record.scope is each.scope and record.propertyName is each.memberName and
+        (if each.scope is "mixin" then record.mixinName else record.className) is each.metaObject.name
+      last = record
+    return false unless last?
+    if each.source? then last.deleted isnt true and last.source is each.source else last.deleted is true
+
+  # RECORD, after a load's replay, each page member the load could not return to boot that the loaded world
+  # still runs as the page edited it (pageMembersStillRunning): the loaded world runs it, so its registry --
+  # what a save of it writes -- says so, as the session's own edit of it would have (the same record), and a
+  # save of the loaded world reloads into the same code. Answers how many it recorded: the load's notice
+  # counts them.
+  recordMembersStillRunning: (unreturned) ->
+    stillRunning = @pageMembersStillRunning unreturned
+    for each in stillRunning
+      record = {scope: each.scope}
+      if each.scope is "mixin" then record.mixinName = each.metaObject.name else record.className = each.metaObject.name
+      record.propertyName = each.memberName
+      if each.source? then record.source = each.source else record.deleted = true
+      @records.push record
+    stillRunning.length
 
   # How many members returnThePageToBootSources would return, changing nothing: a load's confirm says
   # so before it replaces anything.

@@ -791,17 +791,22 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      so the user is asked exactly once (the re-entry passes `skipConfirm` for that reason and no
      other). A part that fails to load rejects with a load `SerializationError`, the desktop as it was,
      and the file door reports it (§10). A build that can NEVER load the layer (`sources: "none"`) does
-     not wait for it: its replay applies none of the file's class-level edits, and step 2b's notice
+     not wait for it: its replay applies none of the file's class-level edits, and the load's notice
      says how many.
-   The load's ONE notice (step 2b, §12) tells the user, before the world is rebuilt, what the return to
+   The load's ONE notice (composed where the counts are known, §12, and said once the rest has loaded, with
+   "everything else in the file loaded normally" — or, if the restore throws, before its error and without that
+   promise) tells the user what the return to
    boot and the replays did NOT do, each counted where it happens: the class-level records the replays
    did not apply (`classLevelRecordCount` − the replays' applied count — all of them on a `sources:
    "none"` build, and elsewhere each whose class or mixin this build lacks once every part that could
    hold one has loaded, or whose source this build does not compile); and the members this page had
    edited that are STILL its edited versions after the replay — each the return to boot could not give
    back (`returnThePageToBootSources` answers them, `unreturned`, with the source each was left
-   running) and no replayed record has since replaced (`SourceEditsRegistry.stillRunning`). A build with
-   no meta-system has no page edits to return, so there the second count is always 0.
+   running) and no replayed record has since replaced, nor the file's last record of that member already
+   describes (the registry's `pageMembersStillRunning`). Each of those is also RECORDED in the loaded world's
+   registry (`recordMembersStillRunning`, the record the page's own edit would have been), so a save of the
+   loaded world carries the code it runs. A build with no meta-system has
+   no page edits to return, so there the second count is always 0.
 2. **Structural teardown** — `_teardownWorldStructureNoSettle`, the SHARED shipping core this and
    `resetWorld` both call (the reset then dissolves its world and constructs a new one; a load keeps
    its world). Its contract: after
@@ -874,7 +879,9 @@ whole-world snapshot can carry and replay them. Record: `{scope, className|mixin
 uniqueID?, propertyName, source?, deleted?}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
 
 Three scopes, each recorded by the person's GESTURE that makes it, never by the edit verb the
-gesture drives (`mixins.md` §2 — a meta-object or a meta-verb edits; the gesture tells and records):
+gesture drives (`mixins.md` §2 — a meta-object or a meta-verb edits; the gesture tells and records) — and,
+once, by a world load: a member of the page it could not return to boot that the loaded world still runs is
+recorded as that member's edit would have been (`recordMembersStillRunning`, §11):
 
 - **instance** — the object inspector's Save (`InspectorWdgt.applyPropertyEdit`) records
   `recordInstanceEdit(widget, name, txt)` when the value it saves is a function.
@@ -947,8 +954,10 @@ and says so once (the class-level records the replay did not apply → one `info
 class edits silently — as does a build that lacks the class or mixin an edit names (the load first
 brings in every lazy part that holds an edited class or mixin, §9). Instance-scope edits
 ride the normal `{"$src"}` path on their own widget — those still load on such a build, since
-they need only the compiler every profile ships. The rebuilt registry is installed after deserialize,
-with the rest of the world. A file/menu load confirms first, warning that a
+they need only the compiler every profile ships. The rebuilt registry — the file's records, then each page
+member the load could not return that the loaded world still runs as the page edited it
+(`pageMembersStillRunning`: not one the file's own last record already describes) — is installed after
+deserialize, with the rest of the world. A file/menu load confirms first, warning that a
 snapshot can execute code (§4.12 of the plan). Proven fresh-session by
 `serialization-roundtrip-headless.js`'s source-edit leg (`sourceEdits.*`): an `injectProperty`
 method edit, and the class inspector's add, save, rename and remove of a class's own member, of
