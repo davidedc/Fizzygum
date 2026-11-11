@@ -46,7 +46,7 @@ class NativeValueKinds
   #     SWCanvas context holds no `.canvas`: a canvas keeps ONE 2D context on both backends, so its
   #     getContext "2d" is this very one;
   #   - any other in a field its holder's class declares in @serializationTransients -- the field the
-  #     holder rebuilds it in (a 3D pane's runtime, FridgeMagnets3DCanvasWdgt._markTransient).
+  #     holder rebuilds it in (a 3D pane's runtime, FridgeMagnets3DCanvasWdgt._keepTransient).
   # Anywhere else (an inspector's subject, a cache's slot) such a value is a page object like any
   # other: a save refuses it, a copy keeps it by reference (Duplicator._duplicate). The one answer both
   # walkers ask, so they cannot disagree about it.

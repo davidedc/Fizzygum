@@ -261,6 +261,13 @@ and the class recomputes it. Post-restore and post-duplicate fixups have named h
 An undeclared derived field is not a warning — it makes every snapshot containing the widget fail to
 save.
 
+A runtime object a COPY must not share (a 3D pane's surface, engine, matrices) needs one thing more: the
+Duplicator copies a declared transient like any other value unless the value says it rebuilds itself. So it
+is STAMPED (`rebuildDerivedValue`) and kept in a declared field — both, together: stamped anywhere else it
+is a page object a copy shares and a save refuses (`NativeValueKinds.isDerivedAt`). The worked example is
+`FridgeMagnets3DCanvasWdgt._keepTransient field, obj`, which stamps, stores, and reports
+`TRANSIENT_FIELD_UNDECLARED` (a gate token) for a field its class does not declare.
+
 ### 4.3 A fact the world reads about your class: declare it here, and write yourself into a world registry
 
 **[convention; `check-hand-lists.js` catches the string-list shape]** When the world must treat every widget

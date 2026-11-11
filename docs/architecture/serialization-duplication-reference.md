@@ -410,7 +410,9 @@ NAMED like one.
   canvas it is drawn from, held as `<name>Context` next to that canvas `<name>` on the same holder
   (where its rebuild reads the canvas from — the SWCanvas context holds no `.canvas` to ask); a
   stamped runtime object in a field its holder's class declares in `@serializationTransients` (a 3D
-  pane's runtime, `FridgeMagnets3DCanvasWdgt._markTransient`). Anywhere else such a value is a page
+  pane's runtime, `FridgeMagnets3DCanvasWdgt._keepTransient`, which names the field it fills and
+  reports one where the value is not derived — `TRANSIENT_FIELD_UNDECLARED`, a gate token: kept there,
+  the object would be shared by every copy). Anywhere else such a value is a page
   object like any other: a save refuses it (`SerializationError`, one remedy for every kind), a copy
   keeps it by reference — an inspector on one (a world inspector's `worldCanvasContext` row, a 3D
   pane's `transforms` row double-clicked) duplicates inspecting the same value and refuses a save

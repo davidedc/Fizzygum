@@ -77,9 +77,9 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # (re)build the non-serialized runtime helpers if this pane was just built,
   # restored, or duplicated.
   _ensureRuntime: ->
-    @transforms ?= @_markTransient new LCLTransforms @
-    @meshCache ?= @_markTransient {}
-    @lclCodeCompiler ?= @_markTransient new LCLCodeCompiler
+    @_keepTransient "transforms", new LCLTransforms @  unless @transforms?
+    @_keepTransient "meshCache", {}  unless @meshCache?
+    @_keepTransient "lclCodeCompiler", new LCLCodeCompiler  unless @lclCodeCompiler?
     @currentFillRGB ?= @defaultFillRGB
     @backgroundRGB ?= @defaultBackgroundRGB
 
@@ -93,8 +93,17 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # save refuses. The declaration also covers the compiled-program Functions the Serializer can't emit.
   _transientRebuild: -> # intentionally empty — the widget rebuilds it lazily
 
-  _markTransient: (obj) ->
+  # KEEP a runtime object in `field`, stamped as rebuilding itself, and then ask the derivation itself --
+  # NativeValueKinds.isDerivedAt, the predicate both walkers ask -- whether it is derived there, so the
+  # stamp and the derivation cannot disagree. Where it is not (the field missing from my
+  # @serializationTransients), the object would be SHARED by every copy of me (two panes rendering into
+  # one Surface) and refused by every save, so that is reported out loud; so is a field my class does not
+  # declare at class level, the declaration the build's field census cannot see through `@[field] =`.
+  _keepTransient: (field, obj) ->
     if obj? then obj.rebuildDerivedValue ?= @_transientRebuild
+    @[field] = obj
+    unless (field of @constructor.prototype) and (!obj? or NativeValueKinds.isDerivedAt @, field)
+      console.error "TRANSIENT_FIELD_UNDECLARED #{@constructor.name}.#{field}: a runtime object kept there is stamped as rebuilding itself, but the class does not declare the field both at class level and in @serializationTransients -- declare it in both"
     obj
 
   step: ->
@@ -119,12 +128,12 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
     physW = @backBuffer.width
     physH = @backBuffer.height
     return if @surface? and @surface.width == physW and @surface.height == physH
-    @surface = @_markTransient window.SWCanvas.Core.Surface physW, physH
-    @depth = @_markTransient new window.SWCanvas.Core.DepthBuffer physW, physH
+    @_keepTransient "surface", window.SWCanvas.Core.Surface physW, physH
+    @_keepTransient "depth", new window.SWCanvas.Core.DepthBuffer physW, physH
     # ImageData is a live view onto surface.data — re-create it whenever the
     # surface is rebuilt, never cache it across a resize.
-    @imageData = @_markTransient new ImageData @surface.data, physW, physH
-    @engine = @_markTransient window.SW3D.makeEngine window.SWCanvas, {width: physW, height: physH}
+    @_keepTransient "imageData", new ImageData @surface.data, physW, physH
+    @_keepTransient "engine", window.SW3D.makeEngine window.SWCanvas, {width: physW, height: physH}
     # Camera fixed: a unit box at the origin is ~22% of the pane height with
     # SW3D's default focal (height * 1.1).
     @engine.setCamera [0, 0, -5], 0

@@ -2803,3 +2803,23 @@ for (const s of sites) if (s.absentBefore.length) {
       `onNextStep` row (images 2 and 3, both densities: the same rows one row lower, the lists' own thumbs moved,
       every difference mask black outside the lists; looked at in `fg diffpage`) — recaptured through the gated
       recapture, mouse then finger (both COMPLETE); then a gauntlet (20/20) and the homepage, green.
+- [x] **Nothing holds every stamped field to its declaration** (found by the independent review closing "A runtime
+      object stamped derived is dropped from an inspector holding it", in the plan's ledger; by reading). A field a class
+      stamps (`FridgeMagnets3DCanvasWdgt._markTransient`) and leaves out of `@serializationTransients` is shared by every
+      copy (two panes rendering into one Surface); only the serialization rig's pane save would notice.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U15). RULED: the stamp names the field it fills and asks the
+      derivation itself whether the value is derived there, so the two cannot disagree. LANDED:
+      `FridgeMagnets3DCanvasWdgt._markTransient obj` is now `_keepTransient field, obj`: it stamps the object, stores
+      it in `@[field]`, and reports — `console.error "TRANSIENT_FIELD_UNDECLARED <Class>.<field> …"`, a gate token
+      (`Fizzygum-tests/scripts/lib/gate-tokens.js`) — a field its class does not declare at class level, or where
+      `NativeValueKinds.isDerivedAt` (the predicate both walkers ask) does not hold. The class-level half replaces
+      what the build's field census can no longer see (`census-widget-conformance.js` facet 1 reads `@field =`
+      writes, not `@[field] =`). The suite builds panes (two Fizzytiles tests), so a stamp added without both
+      declarations fails it at once. The seven stamping sites name their fields. Docs: the authoring guide's §4.2
+      (stamp AND declare, the worked example), the serialization reference's derived-values paragraph,
+      NativeValueKinds' comment, the gate-token registry's header, the serialization rig's section comment. PROVEN:
+      the single runner on `SystemTest_macroFizzytilesBoxTileRendersStaticCube` with a `--prelude=` plant fails naming
+      `TRANSIENT_FIELD_UNDECLARED FridgeMagnets3DCanvasWdgt.surface` for each half — one plant drops `surface` from the
+      class's transients, the other deletes its class-level declaration — and unplanted it passes; two gauntlets
+      green (its `parts` leg drives the lazy Fizzytiles part on index.html; production ships no Fizzytiles, so
+      `fg homepage` does not reach this).

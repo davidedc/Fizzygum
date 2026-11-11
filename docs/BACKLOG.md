@@ -114,10 +114,16 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       by the copier") and `affine-transforms-plan.md` name a no-op `rebuildDerivedValue` stamp as what keeps a
       runtime-only object out of a copy; it does so only in a field its class declares in `@serializationTransients`
       (stamp AND declare — the reference doc §5), else the stamp makes a page object, shared by a copy.
-- [ ] **Nothing holds every stamped field to its declaration** (found by the same review; by reading). A field a class
-      stamps (`FridgeMagnets3DCanvasWdgt._markTransient`) and leaves out of `@serializationTransients` is shared by every
-      copy (two panes rendering into one Surface); only the serialization rig's pane save would notice.
-- [ ] **An inspector's Duplicate throws on a subject the copier refuses** (found by the same review; by reading). An
+- [ ] **A runtime object can be stamped only by one class's private helper** (found by the independent review
+      closing "Nothing holds every stamped field to its declaration", in the plan's ledger; by reading; low).
+      `FridgeMagnets3DCanvasWdgt._keepTransient` holds a stamp to its declarations; a second class stamping
+      `rebuildDerivedValue` by hand has no such check, and nothing restricts where that stamp is written (a shared
+      helper, or a static rule on `rebuildDerivedValue` writes). Its firing is proven only by a scratch plant.
+- [ ] **The field census is blind to `@[name] =` writes** (same review; by reading; low).
+      `census-widget-conformance.js` facet 1 (and the other `@field =` scanners) read a literal `@name` write, and their
+      headers state no blind spot for a computed one.
+- [ ] **An inspector's Duplicate throws on a subject the copier refuses** (found by the independent review closing "A
+      runtime object stamped derived is dropped from an inspector holding it", in the plan's ledger; by reading). An
       inspector opened on a `Uint8ClampedArray` (the `data` row of a pane's `imageData`, a mesh's positions) duplicates
       into `DUPLICATE_UNRECOGNIZED_TYPE`; its subject is a page object it inspects, not structure to copy.
 - [ ] **Is an inspector's subject always a page object?** (found by the same review; the owner's ruling). A Duplicate
