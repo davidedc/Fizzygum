@@ -3123,20 +3123,26 @@ class WorldWdgt extends IconGridPanelWdgt
       # file's edits laid over this page's. Code changed under every widget when any member returned
       # or any record replayed (noteCodeChanged): a load keeps its world, and with it the caches the
       # code before the replay filled.
-      returned = SourceEditsRegistry.returnThePageToBootSources()
+      {returned, unreturned} = SourceEditsRegistry.returnThePageToBootSources()
       replayed = restoredRegistry.replayMixinEdits() + restoredRegistry.replayClassEdits()
       @noteCodeChanged() if returned + replayed > 0
-      # Every class-level record the replay did NOT apply is said ONCE, to the user, before the rest is
-      # restored -- an artifact that ships no class source text has no meta-system and applies none (arc
-      # 5's lean profile); a build that lacks the class or mixin a record names (step 0 brought in every
-      # part that holds one) skips it; a record whose source this build does not compile is caught and
-      # logged. The
-      # alternative is that their class edits vanish from the loaded world without a word. The widgets
-      # and their per-widget {"$src"} function edits still load normally.
-      if (unreplayedCount = restoredRegistry.classLevelRecordCount() - replayed) > 0
-        @inform "This build cannot re-apply the " + unreplayedCount + " class-level source edit" +
-          (if unreplayedCount is 1 then "" else "s") + " this file carries.\n" +
-          "Everything else in it loads normally."
+      # What either step did NOT do is said ONCE, to the user, before the rest is restored -- counted,
+      # never predicted. The class-level records the replay did not apply: an artifact that ships no
+      # class source text has no meta-system and applies none (arc 5's lean profile); a build that lacks
+      # the class or mixin a record names (step 0 brought in every part that holds one) skips it; a
+      # record whose source this build does not compile is caught and logged. And the members this page
+      # had edited that still run its edited version: each one the return could not give back (its boot
+      # source failed to apply, caught and logged) that no replayed record has since replaced. The
+      # alternative is that code changes in the loaded world without a word. The widgets and their
+      # per-widget {"$src"} function edits still load normally.
+      unreplayedCount = restoredRegistry.classLevelRecordCount() - replayed
+      stillEditedCount = SourceEditsRegistry.stillRunning unreturned
+      if unreplayedCount > 0 or stillEditedCount > 0
+        plural = (n) -> if n is 1 then "" else "s"
+        @inform (if unreplayedCount > 0 then "This build cannot re-apply the " + unreplayedCount + " class-level source edit" + plural(unreplayedCount) + " this file carries.\n" else "") +
+          (if stillEditedCount is 1 then "The loaded world still runs 1 edited class member of this page: it did not return to its source at boot.\n" else "") +
+          (if stillEditedCount > 1 then "The loaded world still runs " + stillEditedCount + " edited class members of this page: they did not return to their source at boot.\n" else "") +
+          "Everything else in the file loads normally."
       # 3. deserialize the object table (kind:"world" preserves each widget's iid).
       result = Deserializer.deserialize envelope
       # the section's references resolve through the Deserializer's own reader (the refusal above vetted

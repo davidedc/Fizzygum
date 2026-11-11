@@ -2474,3 +2474,36 @@ for (const s of sites) if (s.absentBefore.length) {
       "Duplicate or over-counter iids load", "Some envelope fields are type-checked only", "A user object with an own
       `$wk` key saves and then is refused", "A widget file's source edits pre-load parts", "The info-doc prefix has four
       homes".
+- [x] **A return to boot that fails is only logged** (found by the independent review closing "A snapshot's source
+      edits of a lazy part's classes are dropped when the file holds none of its widgets", in the plan's ledger; by
+      reading). `SourceEditsRegistry.returnThePageToBootSources` catches a member it cannot return and only
+      `console.log`s it, after the teardown: the loaded world then runs the page's edited member where the file
+      expects boot's, with no word to the person and no gate token.
+- [x] **No gate loads an edit-carrying world on a `sources: "none"` or `"lazy"` tree** (found by the same review; by
+      reading). The lean build's "cannot re-apply" notice and a lazy build's trip order (the part, then the reflective
+      layer, then the replay) are proven by reading only: the rigs that load worlds with source edits drive the dev
+      tree, and `fg homepage`'s smoke round-trips a snapshot that carries none.
+      — both CLOSED 2026-11-10 (self-ruled; loop unit U4, with "A load judges an app key's kind by the page's edited
+      members" PARKED for the owner, its options in the BACKLOG item). RULED: what the return to boot could not undo is
+      told in the load's ONE notice, beside the records the replay did not apply, COUNTED after the replay rather than
+      predicted from the return — `SourceEditsRegistry.returnThePageToBootSources` answers {returned, unreturned}, the
+      members it LEFT each with the source it was left running, and `SourceEditsRegistry.stillRunning` counts those that
+      still hold it once the replay is done (a file's own record of such a member replaces it, and is then not told):
+      "The loaded world still runs N edited class member(s) of this page: … did not return to … source at boot." No
+      gate token for an unreturned member: the product's rail is the person's notice, which the rig's checks prove, and
+      a token would fail the one check that plants the failure. And the production smoke loads an edit-carrying world
+      on a production tree, reading what must follow off the TREE (`BUILDFLAG_SOURCES`), never off its own flags.
+      LANDED: `SourceEditsRegistry`, `WorldWdgt.loadWorldSnapshot`; the `smoke-boot-headless.js --production` leg (a
+      fresh page: the booted world's own file plus class-scope edits — always a CORE class's, `StringWdgt`, whose
+      meta-object only the reflective layer's ingest provides, and app-kit's `CreatorButtonWdgt` where app-kit is absent
+      at boot, on a file that needs app-kit for nothing else; on `sources: "lazy"` the part, then the layer, then both
+      replayed, nothing said; on `sources: "none"`, told once that the edit cannot be re-applied); both legs that load
+      code on a precompiled tree check their boot wait; the reference doc §11/§12, `Fizzygum/CLAUDE.md`'s lean bullet,
+      build-and-packaging §8, the boot explainer, the tests CLAUDE.md, the lean profile's own note (it said such edits
+      are "refused"). PROVEN: the serialization rig's `sourceEdits.unreturnedPageEditIsTold` (a page member whose return
+      the rig makes fail: one notice, the member still on the page) fails, alone, under a plant reporting no member left,
+      and `sourceEdits.unreturnedPageEditTheFileReplacesIsNotTold` (the file's own record replaces it: no notice, the
+      file's version in force) fails, alone, under a plant telling every member left; the production smoke passes on
+      `homepage`, `lean` and `dev-precompiled` (`build_and_smoke.sh --profile …`), and fails on homepage under a plant
+      skipping the reflective layer (the core edit not in force, a notice) and under one pre-loading no edit's code
+      (app-kit not loaded, a notice). Measured: the whole production smoke takes 6 s.

@@ -765,11 +765,17 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      so the user is asked exactly once (the re-entry passes `skipConfirm` for that reason and no
      other). A part that fails to load rejects with a load `SerializationError`, the desktop as it was,
      and the file door reports it (§10). A build that can NEVER load the layer (`sources: "none"`) does
-     not wait for it — it takes the notice instead, telling the user once, before the world is
-     rebuilt, how many class-level edits it cannot re-apply
-     (§12): the class-level records its replay did not apply (`classLevelRecordCount` − the replays' applied
-     count) — none on such a build, and elsewhere each whose class or mixin this build lacks (every part that
-     could hold one has loaded) or whose source this build does not compile.
+     not wait for it: its replay applies none of the file's class-level edits, and step 2b's notice
+     says how many.
+   The load's ONE notice (step 2b, §12) tells the user, before the world is rebuilt, what the return to
+   boot and the replays did NOT do, each counted where it happens: the class-level records the replays
+   did not apply (`classLevelRecordCount` − the replays' applied count — all of them on a `sources:
+   "none"` build, and elsewhere each whose class or mixin this build lacks once every part that could
+   hold one has loaded, or whose source this build does not compile); and the members this page had
+   edited that are STILL its edited versions after the replay — each the return to boot could not give
+   back (`returnThePageToBootSources` answers them, `unreturned`, with the source each was left
+   running) and no replayed record has since replaced (`SourceEditsRegistry.stillRunning`). A build with
+   no meta-system has no page edits to return, so there the second count is always 0.
 2. **Structural teardown** — `_teardownWorldStructureNoSettle`, the SHARED shipping core this and
    `resetWorld` both call (the reset then dissolves its world and constructs a new one; a load keeps
    its world). Its contract: after
@@ -892,14 +898,17 @@ back, through its own `applyMemberEdit` / `removeMember` — so a member the pag
 removed comes back, and the loaded world is the file's, never the file's edits laid over the page's
 own. What the page edited is read from the STORES against the vault, not from a registry: a world's
 registry lists the edits made under it, while the prototypes are the page's. A class or mixin the
-vault holds no text for (one made at run time) has no boot and is left as it is. The load's confirm
+vault holds no text for (one made at run time) has no boot and is left as it is. A member whose boot
+source fails to apply is logged and left, and the return answers it among the ones it LEFT, with the
+source it was left running. The load's confirm
 names how many members it would return (`membersAwayFromBootCount`). Then the registry is rebuilt from
 `world.sourceEdits` (`SourceEditsRegistry.fromRecords`) and its **mixin- then class-scope edits are replayed
 BEFORE deserialization** (`replayMixinEdits` then `replayClassEdits` — mixin first, the
 boot-order analogy: `augmentWith` runs before class-body assignments, so a class-scope edit
 of the same member keeps winning), so a shell (`Object.create(prototype)`) already sees the
-edited methods; an edit that no longer compiles is logged, not fatal. The return and each replay
-answer how many members or records they applied, and when any did, the load tells the world its code changed
+edited methods; an edit that no longer compiles is logged, not fatal. The return answers how many
+members it returned and which it left; each replay answers how many records it applied; and when any
+member returned or any record applied, the load tells the world its code changed
 (`WorldWdgt.noteCodeChanged`, the class inspector's own notification): a load KEEPS its world, and
 with it every cache the old code filled — measured lines, line breaks, immutable back buffers,
 each keyed by content — so a page that already showed the edited class's widgets would otherwise

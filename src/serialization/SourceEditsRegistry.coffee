@@ -161,10 +161,13 @@ class SourceEditsRegistry
   # page (the harness's resetWorld) starts with none. A class or mixin the vault holds no source text
   # for (one made at run time) has no boot and is left as it is. A member that cannot be returned is
   # logged and left, as a record that cannot be replayed is: the load has already torn the desktop
-  # down. Answers how many members it returned; 0 where this build has no meta-system
-  # (canReplaySourceEdits).
+  # down, and tells the user how many of them still run once the replay is done (@stillRunning,
+  # WorldWdgt.loadWorldSnapshot). Answers {returned, unreturned}: how many members it returned, and
+  # each one it left, with the source it was left running (undefined for a member the page removed);
+  # 0 and none where this build has no meta-system (canReplaySourceEdits).
   @returnThePageToBootSources: ->
     returned = 0
+    unreturned = []
     for metaObject in SourceEditsRegistry._metaObjectsInBootOrder()
       bootSources = metaObject.bootMemberSources()
       continue unless bootSources?
@@ -176,8 +179,15 @@ class SourceEditsRegistry
             metaObject.removeMember memberName
           returned++
         catch error
+          unreturned.push {metaObject, memberName, source: metaObject.nonStaticPropertiesSources[memberName]}
           console?.log "world snapshot: " + metaObject.name + "." + memberName + " could not be returned to its source at boot: " + error.message
-    returned
+    {returned, unreturned}
+
+  # How many of the members returnThePageToBootSources LEFT still hold the source it left them
+  # running -- read after the replay, which can have given one of them the file's own version: those
+  # the page's edits still decide, counted rather than predicted.
+  @stillRunning: (unreturned) ->
+    (each for each in unreturned when each.metaObject.nonStaticPropertiesSources[each.memberName] is each.source).length
 
   # How many members returnThePageToBootSources would return, changing nothing: a load's confirm says
   # so before it replaces anything.

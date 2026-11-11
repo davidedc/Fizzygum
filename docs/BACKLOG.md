@@ -164,15 +164,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       by reading). `InspectorWdgt._buildAndConnectMemberList` deletes `@list.listContents` from `world.steppingWdgts`
       and says the list itself "still steps (its scrollbars need it)"; nothing adds a list's contents to the set, and
       a list steps only while a gesture of its own runs.
-- [ ] **A return to boot that fails is only logged** (found by the independent review closing "A snapshot's source
-      edits of a lazy part's classes are dropped when the file holds none of its widgets", in the plan's ledger; by
-      reading). `SourceEditsRegistry.returnThePageToBootSources` catches a member it cannot return and only
-      `console.log`s it, after the teardown: the loaded world then runs the page's edited member where the file
-      expects boot's, with no word to the person and no gate token.
-- [ ] **No gate loads an edit-carrying world on a `sources: "none"` or `"lazy"` tree** (found by the same review; by
-      reading). The lean build's "cannot re-apply" notice and a lazy build's trip order (the part, then the reflective
-      layer, then the replay) are proven by reading only: the rigs that load worlds with source edits drive the dev
-      tree, and `fg homepage`'s smoke round-trips a snapshot that carries none.
 - [ ] **A `$Canvas`'s size is not bounded by the backend's surface** (found by the independent review closing "The load
       vets the whole envelope up front", in the plan's ledger; by reading). On an SWCanvas page a canvas wider or taller
       than 16384 px — saved by a native page, or resampled up by a load at a higher pixel ratio — throws in its builder
@@ -202,7 +193,36 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       (`SourceEditsRegistry.returnThePageToBootSources`) after it: a page that added or edited a class's
       `wellKnownKey` passes the up-front judgement, and the restore's own `resolveApp` then throws after the teardown.
       The up-front predicate is otherwise a pure read of the file; this one depends on page state the load is about
-      to change.
+      to change. PARKED 2026-11-10 by the backlog loop for the owner (a design call): judging the kind
+      by the members the load WILL leave means either running the file's `wellKnownKey` source (or boot's) before the
+      confirm — code from the file, before the person agreed to load it — or moving the app-key judgement after the
+      return to boot and replay, which happen after the teardown, so a refusal there would leave an empty desktop.
+      The same seam has two more directions (found by the review closing [30]/[32], by reading): a FILE needs no page
+      edit to reach it — its own class-level record editing or removing `wellKnownKey`, beside an `app:` key, passes
+      the up-front judgement (the page's members) and empties the desktop when the replay removes the marker and
+      `resolveApp` throws; and a page that edited a REAL app's marker away has a genuine file refused up front,
+      although after the return to boot that class is an app again (desktop kept, refusal wrong).
+      Options: (a) leave it (contrived either way); (b) judge app kind by a fact no member edit changes — a class whose
+      prototype descends from `WindowedApp`, or a class-side (static) flag, which member edits cannot reach and which
+      names no app-kit class from core — dropping the marker as the definition; the WRITER changes too
+      (`WellKnownObjects.keyFor`'s marker fallback), or saving and loading disagree; the only option that closes all
+      three directions; (c) make the restore's own `resolveApp` refuse softly (an inform and an absent app) — against
+      `WellKnownObjects`' own law that a key naming a class must resolve; (d) judge app kind against the BOOT member
+      (the page's own vault text, trusted, and loaded wherever a page can have edited one), which closes both page
+      directions and runs none of the file's code, leaving the file direction; (e) refuse up front a file whose
+      class-level records name `wellKnownKey` — static, and it fails in the safe direction; (f) return the page to
+      boot after the confirm and before the teardown — a refused load has then already discarded the page's edits.
+- [ ] **A page member the load could not return to boot runs in the loaded world but is recorded nowhere** (found by
+      the independent review closing "A failed return to boot is only logged", in the plan's ledger; by reading). The
+      load's notice says so, and then installs the file's registry (`WorldWdgt.loadWorldSnapshot`): a save of the
+      loaded world omits that member's edit, so the file it writes differs from the world that wrote it.
+- [ ] **The boot smoke is a gate with no rule registry and no standing bite-proof** (same review; by reading).
+      `Fizzygum-tests/scripts/smoke-boot-headless.js` is launched by `fg homepage` and `build_and_smoke.sh`, neither of
+      them a root `lib/what-runs.js` walks, so the gate census never asked it for `lib/gate-rules.js` rules nor a
+      `proveLeg` proof: its legs' bites rest on `.scratch` plants (the class-level-edit leg's three).
+- [ ] **The world load promises "Everything else in the file loads normally" before deserialization can throw**
+      (same review; pre-existing). `WorldWdgt.loadWorldSnapshot`'s step-2b notice precedes `Deserializer.deserialize`;
+      a restore that throws after it has told the person the rest loaded.
 - [ ] **A text's measurement, wrapping and split caches name no code of its own** (found by the independent review
       closing "A palette's back-buffer key names its class and extent, not code of its own", in the plan's ledger; by
       reading, not measured). `Widget._ownCodeKeySuffix` keys a text's back buffer and its two top-level text caches

@@ -445,7 +445,7 @@
     <tr><td class="k">parts-snapshot-load-headless.js</td>
         <td>round-trips a snapshot CONTAINING a lazy part's widgets — the only path that exercises the pre-scan; also that a rejected load leaves the old world standing, and that a snapshot whose source edits name a lazy part's code loads that part before replaying them</td></tr>
     <tr><td class="k">smoke-boot-headless.js --production</td>
-        <td>the only gate on a production tree: booted from the image, no SWCanvas payload, a snapshot round-trip, nothing fetched at boot — and it loads <strong>every</strong> lazy part, asserting each was absent at boot, that all its classes arrive, and that ZERO eager batches came with it</td></tr>
+        <td>the only gate on a production tree: booted from the image, no SWCanvas payload, a snapshot round-trip, nothing fetched at boot — and it loads <strong>every</strong> lazy part, asserting each was absent at boot, that all its classes arrive, and that ZERO eager batches came with it; and it loads a world file carrying class-level source edits — a core class's, which needs the reflective layer, and a lazy part's class's, which needs that part — where both must arrive and both edits replay</td></tr>
   </table>
   </div>
 
