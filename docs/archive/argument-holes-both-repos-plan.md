@@ -3073,3 +3073,35 @@ for (const s of sites) if (s.absentBefore.length) {
       exactly those two, the records answering nothing all five. A follower of both on both pointers clean; the dpr1
       suite moved no reference. A gauntlet and the homepage green before the review's fixes; after them the gauntlet
       green and the homepage smoke failing the ingest filter (above); with it reverted, both green.
+- [x] **Waits for something other than a world standing are in-page polls with no outside bound** (found by the
+      independent review closing "The rigs wait for their pages to boot a dozen ways", in the plan's ledger; by
+      reading). The boot smoke's text-settle, reflective-layer and lazy-part waits and parts-lazy-load's launch, settle
+      and lazy-consumer waits each poll inside the page with an in-page timeout, so a page stuck in a script holds them
+      until the protocol timeout; `answerWithin` would bound each from outside, as the boot wait is.
+- [x] **The menu sweep waits on `browser.close()` with no bound** (found closing the serialization cleanup, in the plan's
+      ledger; measured; low). In a parallel gauntlet wave `menu-click-sweep-headless.js` printed `swept`, then never
+      `browser closed`: Chrome hung shutting down and the leg held until `fg`'s 300 s alarm (its serial retry passed).
+      The sweep's result was already in hand; a bounded close (`answerWithin`) would let the rig report it.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U22, the two items above together). RULED: every wait a script makes is
+      bounded from OUTSIDE — the rule `answerWithin` already kept for boot — closing the family, not the one rig.
+      MEASURED: 24 sites in 14 scripts awaited a raw `browser.close()`, and the adapter's own `close()` was unbounded
+      too; the boot smoke's text-settle, lazy-part and reflective-layer waits and parts-lazy-load's launch, settle and
+      lazy-consumer waits polled inside the page, and so did parts-snapshot-load's make and load waits, the HiDPI
+      check's text settle and the pre-compile generator's compile wait. LANDED (tests repo): `closedWithin(browser)` in
+      `scripts/lib/headless-driver.js` — the close raced against 30 s, then the browser's process killed (Puppeteer's;
+      a Playwright browser hands none) and one line naming the script; a rejecting close still rejects — through which
+      every script closes its browser, the adapter included; `waitedInPage(page, {what, ms}, fn, …)` — an in-page poll
+      handed its own timeout `ms` (so the two bounds cannot be stated apart) and raced against it plus 30 s,
+      throwing "the page stopped answering in its <what> wait" into the script's own failure path (a boot check
+      FAILS, a rig reads INVALID), at all ten such polls in five scripts. A single evaluate awaiting a PRODUCT promise
+      is no such poll (its bound is filed). Docs: the tests repo's CLAUDE.md, the driver's API header. The
+      independent review found no regression; its fixes: four polls the first pass had not reached (the claim
+      "every poll" was false), the self-test's guard naming the case that never settled, the timeout stated once,
+      a wider margin, the doc's "killed" true only for a Puppeteer browser; filed: the production smoke's
+      follow-on evaluates. PROVEN: new node-tier `scripts/lib/headless-driver-selftest.js` (10 cases on fakes that never settle,
+      with a guard timer, since a never-settling promise keeps no process alive) — each helper put back unbounded fails
+      it ("a case never settled"); a page planted to get stuck in a script inside parts-lazy-load's launch wait reads
+      INVALID naming the wait after 92 s (its bound 90 s), where HEAD's rig waited the protocol timeout (182 s,
+      "Runtime.callFunctionOn timed out"); one planted stuck in the boot smoke's waits FAILS naming the lazy-part
+      wait after 53 s (bound 45 s); the four converted rigs' controls pass. A gauntlet and the homepage green before
+      the review's fixes; again after them.

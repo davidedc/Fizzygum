@@ -21,12 +21,16 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       compilers read differently stopped the scan unnoticed from f002a7b7 (2026-08-16) to 2026-11-10. Holding every source to the
       mirror on each build would cost the mirror's run (a few seconds) per build: whether that is worth it is the same
       question as "Every gate re-masks all of the compiled sources".
-- [ ] **Waits for something other than a world standing are in-page polls with no outside bound** (found by the
+- [ ] **The production boot smoke's follow-on checks can outlast `fg homepage`'s alarm with no verdict** (found by the
+      independent review closing "Waits for something other than a world standing are in-page polls with no outside
+      bound", in the plan's ledger; reached: `fg homepage` with a product hang in a part's or the reflective layer's
+      load). After its bounded waits, `smoke-boot-headless.js --production` opens fresh pages and awaits product
+      promises (`ensureLoaded('meta-tools')`, `loadEnvelopeString`, `loadWorldSnapshot`, the snapshot round-trip, the
+      rotation probe) through single unbounded evaluates, each up to Puppeteer's default 180 s protocol timeout; two of
+      them outlast `fg`'s 300 s alarm, which kills the smoke before it prints `BOOT OK` or `BOOT SMOKE FAILED`. A
+      single evaluate awaiting a product promise is not an in-page poll (`waitedInPage`): it wants a bound of its own.
+- [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** (found by the
       independent review closing "The rigs wait for their pages to boot a dozen ways", in the plan's ledger; by
-      reading). The boot smoke's text-settle, reflective-layer and lazy-part waits and parts-lazy-load's launch, settle
-      and lazy-consumer waits each poll inside the page with an in-page timeout, so a page stuck in a script holds them
-      until the protocol timeout; `answerWithin` would bound each from outside, as the boot wait is.
-- [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** (same review; by
       reading). `startedWithin` has one line for every predicate, so a world standing whose boot never finished (a
       rejected layer load, `stillLoadingSources` stuck) reads "did not start within 90s", where the boot smoke's own
       wait used to say it did not finish booting.
@@ -220,10 +224,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **`Deserializer.deserialize` on a world file answers no widget and refuses nothing** (same review; by reading;
       low; pre-existing). Called directly on a `kind:"world"` envelope it answers `widget: shells[undefined]` (a world
       file has no root); only `loadWorldSnapshot` reads one.
-- [ ] **The menu sweep waits on `browser.close()` with no bound** (found closing the serialization cleanup, in the plan's
-      ledger; measured; low). In a parallel gauntlet wave `menu-click-sweep-headless.js` printed `swept`, then never
-      `browser closed`: Chrome hung shutting down and the leg held until `fg`'s 300 s alarm (its serial retry passed).
-      The sweep's result was already in hand; a bounded close (`answerWithin`) would let the rig report it.
 - [ ] **A load whose restore throws keeps the registry of the world it replaced** (found by the independent review
       closing "A page member the load could not return to boot runs in the loaded world but is recorded nowhere", in
       the plan's ledger; by reading; low). `loadWorldSnapshot` installs the restored registry only on success, though
