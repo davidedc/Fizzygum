@@ -66,10 +66,22 @@ class Serializer
   # {"$num"}, so a save drops nothing in silence. Every number a record holds that can be any number
   # is written through here: a reference, a $Date's time, a Color's components. (The integers the
   # format keeps -- an iid, a $Canvas's size and pixel ratio -- are integers by construction.)
+  # `n` is a number: every caller hands one (refFor asks typeof, a $Date's time is read through Date's own
+  # getTime, and the Color branch refuses a colour whose component is not, _colorComponentsProblem).
   @numberRef: (n) ->
     for [text, value] in Serializer.NUMBERS_JSON_CANNOT_WRITE
       return {$num: text} if Object.is n, value
     n
+
+  # What is wrong with a Color's components, as a clause, or undefined: each a number, as Color makes it
+  # (Color._channel, Color._alpha). One that is not was written into the colour after it was made -- a
+  # value class written after construction, by a run or by an edit of Color itself -- and the save would
+  # write a file the load refuses. The clause names the component and the KIND of what it holds, never
+  # the value (a cyclic object or a BigInt has no JSON).
+  @_colorComponentsProblem: (color) ->
+    for value, i in [color._r, color._g, color._b, color._a] when typeof value isnt "number"
+      return "its " + "rgba".charAt(i) + " component is " + (if value? then typeof value else "absent") + ", not a number"
+    undefined
 
   # A refusal's path (SerializationError) one step on, INTO the widget a property, a slot or a
   # world section holds, named as the walk enters it -- "… → .contents (SliderWdgt#5) → .target"
@@ -188,7 +200,7 @@ class Serializer
     section.wallpaperPatternName = theWorld.wallpaper?.patternName
     # info-doc "already created" flags: plain own booleans set on the world instance.
     infoDocFlags = {}
-    for own name of theWorld when name.indexOf("infoDoc") is 0
+    for own name of theWorld when WorldWdgt.isInfoDocFlagName name
       infoDocFlags[name] = theWorld[name]
     section.infoDocFlags = infoDocFlags
     # untitled-naming counters (a plain delegated collaborator — capture its counters).
@@ -242,27 +254,6 @@ class Serializer
       if (typeof klass.lastBuiltInstanceNumericID is "number") and klass.lastBuiltInstanceNumericID > 0
         counters[klass.name] = klass.lastBuiltInstanceNumericID
     counters
-
-  # Every `{"$wk": key}` key an envelope carries, at any depth (a well-known reference can sit in any
-  # record's props, or in the world section), in walk order and with repeats. A pure read of the
-  # envelope: Deserializer.classNamesIn takes the app and class keys from it, and
-  # Deserializer._envelopeShapeProblem refuses a file carrying a key no build writes -- both before
-  # anything is changed.
-  @wellKnownKeysIn: (envelope) ->
-    keys = []
-    seen = new Set
-    visit = (value) ->
-      return unless value? and typeof value is "object"
-      return if seen.has value
-      seen.add value
-      keys.push value.$wk if value.$wk?
-      if Array.isArray value
-        visit item for item in value
-      else
-        visit nested for own key, nested of value
-      return
-    visit envelope
-    keys
 
   # --- the shared object-table encoder -----------------------------------------------------
   # Builds `objects` (the versioned record table) for a set of in-structure widgets, and
@@ -398,7 +389,7 @@ class Serializer
         return
       if NativeValueKinds.isDate obj
         record.class = "$Date"
-        record.ms = Serializer.numberRef obj.getTime()   # an invalid date's is NaN
+        record.ms = Serializer.numberRef Date.prototype.getTime.call(obj)   # an invalid date's is NaN
         return
       if NativeValueKinds.isCanvasLike obj
         # HTMLCanvasElement or SWCanvasElement (see NativeValueKinds). Its pixels are PHYSICAL, made at
@@ -423,9 +414,12 @@ class Serializer
         record.items = items
         return
       if obj instanceof Color
-        # restored through Color.create so immutable-color dedupe is preserved. Its components are
-        # numbers -- a colour holds nothing else (Color._channel, Color._alpha), which is what the load
-        # holds a file's Color to
+        # restored through Color.create so immutable-color dedupe is preserved. Color makes its components
+        # numbers (Color._channel, Color._alpha), which is what the load holds a file's Color to; one
+        # written into after it was made is refused here, so a save never writes what the load refuses
+        if (colorProblem = Serializer._colorComponentsProblem obj)?
+          fail ("a Color (" + colorProblem + ") cannot be serialized"), path, describe(obj),
+            "A Color is immutable and shared: Color.create hands every holder of one colour the same object, so one written into after it was made -- by a run, or by an edit of Color itself -- has changed every holder of that colour. Put its components back (or undo the edit of Color), then save."
         record.class = "Color"
         record.rgba = (Serializer.numberRef component for component in [obj._r, obj._g, obj._b, obj._a])
         return

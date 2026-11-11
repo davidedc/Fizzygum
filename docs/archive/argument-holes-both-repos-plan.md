@@ -2881,3 +2881,48 @@ for (const s of sites) if (s.absentBefore.length) {
       exactly the two rules fails it (the corrupt files loaded: "desktop kept 0/17"); unplanted, all pass (39 native,
       40 SWCanvas), the accept control among them; a gauntlet and the homepage green on the first shape, and again
       after the review's fixes (20/20).
+- [x] **A user object with an own `$wk` key saves and then is refused** (found by the independent review closing "The load vets the
+      whole envelope up front", in the plan's ledger; by reading).
+      `Serializer.wellKnownKeysIn` visits a record's `props` container as if it were a reference, so a plain object a run
+      stores with an own `"$wk"` key saves, and the file is refused on load ("names the well-known object …").
+- [x] **A widget file's source edits pre-load parts** (found by the independent review closing "The load vets the
+      whole envelope up front", in the plan's ledger; by reading). `loadWhatItNeeds` reads
+      `envelope.world.sourceEdits` for a widget file too, fetching parts and the reflective layer for edits that door
+      never replays (a widget file carries none a save writes).
+- [x] **The info-doc prefix has four homes** (found by the independent review closing "The load vets the
+      whole envelope up front", in the plan's ledger; by reading). `InfoDocs`, `Serializer`,
+      `Deserializer._worldSectionProblem` and `WorldWdgt` each spell `infoDoc` for the world's own info-doc flags.
+- [x] **`Serializer.numberRef` writes a non-number through unchanged** (found by the independent review closing "`Color.create` never
+      checks its components", in the plan's ledger; by reading).
+      It is the one writer of every number a record holds (a reference, a `$Date`'s time, a Color's components), and
+      a value that is not a number — a console's `c._a = "x"` on a colour — is written as it is, so the save writes a
+      file the load refuses. One refusal there would cover every number the format keeps.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U18, the four items above together). RULED: what the format says
+      is read where the format puts it, and a name has one home. LANDED: (1) the well-known keys are read by
+      POSITION — `wellKnownKeysIn` moves to the Deserializer (its only reader) and takes a single-key
+      `{"$wk": string}` only from each record's references (`_refsOf`: items, map entries, the VALUES of props —
+      never a props container, whose own keys are property names; a world section holds its widgets as `{"$r"}`s, so
+      it carries none), so an object a run gave a widget with an own `$wk` key (alone, shaped exactly like a
+      reference, or beside others) round-trips;
+      (2) `_envelopeShapeProblem` refuses a widget file that carries a world section (no widget save writes one), so
+      neither `loadWhatItNeeds` nor `_needsTheReflectiveLayer` can fetch for source edits the widget door never
+      replays; (3) `WorldWdgt.infoDocFlagName` / `isInfoDocFlagName` are the info-doc flag's one name, asked by
+      InfoDocs, the save, the load's vetting and the teardown (the old spellings: `indexOf("infoDoc")` twice,
+      `/^infoDoc/`, `"infoDoc_" + key`); the rig keeps its own count, independent of the predicate under test;
+      (4) the save's Color branch refuses a colour whose component is not a number (`Serializer._colorComponentsProblem`,
+      naming the component and its kind, with the path), and a `$Date`'s time is read through `Date`'s own `getTime`
+      — so nothing hands `numberRef` a non-number, and it states that contract. The independent review found no
+      high-severity bug; its fixes: a stale claim that a save never meets such a Color (doc + comment), the new reader
+      set above `_refsOf`'s own comment, a remedy fit for an interned colour (a written-into colour has changed every
+      holder of it: put it back), a refusal message that cannot itself throw, the world-section walk dropped (no
+      cycle hazard; truly by position), the flag predicate the full `infoDoc_<key>_created` shape, and two rig checks
+      made able to fail (an unknown key beside others; the refusal's path). Docs: the serialization reference (the
+      well-known-key read, the up-front refusals, the info-doc flags, the Color row), `Fizzygum/CLAUDE.md`'s flag
+      spelling.
+      PROVEN: the serialization rig, both backends — `plainObject.ownWkKeyRoundTrips`, `color.writtenIntoRefusedBySave`
+      (`samePage`) and `widgetFile.worldSectionRefused` (`crossSession`), each seen failing its own plant alone: the
+      position-blind walk put back ("threw: it names the well-known object 'not a well-known key'"), the Color check
+      off ("SAVED"), the widget-file refusal off ("NOT REFUSED"); unplanted, all pass (63 native, 64 SWCanvas; 40 native,
+      41 SWCanvas); a gauntlet and the homepage green before the review's fixes (one leg, the menu sweep, hung in
+      `browser.close()` under the wave's load after its sweep had returned, and passed its serial retry), and again
+      after the review's fixes (20/20, no flake).

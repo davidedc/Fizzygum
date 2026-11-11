@@ -169,7 +169,7 @@ class InfoDocs
   # i.e. after `launch` already awaited; and WindowsToolbarCreatorButtonWdgt, which is in this part.
   @createNextTo: (key, nextToThisWidget) ->
     identity = @_identityOf key
-    flag = "infoDoc_" + key + "_created"
+    flag = WorldWdgt.infoDocFlagName key
     return if world[flag]
 
     doc = new DocumentWdgt

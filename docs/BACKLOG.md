@@ -179,14 +179,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **Some envelope fields are type-checked only** (found by the same review; by reading; low). `formatVersion`
       (missing, a string), `kind` (any value but "world" restores with fresh ids), `wallpaperPatternName` (any
       string), a user's `armedDrawingTool` (any string), and unknown section or record fields pass unread.
-- [ ] **A user object with an own `$wk` key saves and then is refused** (found by the same review; by reading).
-      `Serializer.wellKnownKeysIn` visits a record's `props` container as if it were a reference, so a plain object a run
-      stores with an own `"$wk"` key saves, and the file is refused on load ("names the well-known object …").
-- [ ] **A widget file's source edits pre-load parts** (found by the same review; by reading). `loadWhatItNeeds` reads
-      `envelope.world.sourceEdits` for a widget file too, fetching parts and the reflective layer for edits that door
-      never replays (a widget file carries none a save writes).
-- [ ] **The info-doc prefix has four homes** (found by the same review; by reading). `InfoDocs`, `Serializer`,
-      `Deserializer._worldSectionProblem` and `WorldWdgt` each spell `infoDoc` for the world's own info-doc flags.
 - [ ] **`world.loadGuard.unbuildableClassRefused` cannot tell which rule refused** (found by the independent review
       closing "Duplicate or over-counter iids load", in the plan's ledger; by reading; low). Its expected cause
       `'NoSuchClassWdgt'` also appears in a wrong refusal naming that class, so the check passes either way.
@@ -202,6 +194,18 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **A lazy part's class is judged after the world door's confirm** (same review; by reading; low; pre-existing).
       The reasons that need the class (a method's source, an app key, the two iid rules) wait for its part, so a
       person can confirm replacing the desktop and only then be refused, after the part's fetch.
+- [ ] **A save writes an info-doc flag that is no boolean, which the load refuses** (found by the independent review
+      closing the serialization cleanup — "A user object with an own `$wk` key saves and then is refused" and three
+      more — in the plan's ledger; by reading; low). The save sweeps every own world field the flag name fits and writes
+      its value as it is; a console `world.infoDoc_x_created = 1` makes a file `_worldSectionProblem` refuses — the
+      "save writes what the load refuses" class the Color refusal closed.
+- [ ] **`Deserializer.deserialize` on a world file answers no widget and refuses nothing** (same review; by reading;
+      low; pre-existing). Called directly on a `kind:"world"` envelope it answers `widget: shells[undefined]` (a world
+      file has no root); only `loadWorldSnapshot` reads one.
+- [ ] **The menu sweep waits on `browser.close()` with no bound** (found closing the serialization cleanup, in the plan's
+      ledger; measured; low). In a parallel gauntlet wave `menu-click-sweep-headless.js` printed `swept`, then never
+      `browser closed`: Chrome hung shutting down and the leg held until `fg`'s 300 s alarm (its serial retry passed).
+      The sweep's result was already in hand; a bounded close (`answerWithin`) would let the rig report it.
 - [ ] **A colour takes any number: NaN, ±Infinity and out-of-range components paint differently on each backend**
       (found closing "`Color.create` never checks its components", in the plan's ledger; by reading; a design call).
       `Color` reads every component as a number (`Color._channel`, `Color._alpha`), and any number makes a colour:
@@ -210,11 +214,8 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       same; `Color.create 300, 0, 0` keys apart from the `255, 0, 0` it paints as. Options: refuse a non-finite
       component (the format then needs no `{"$num"}` in a Color); clamp r, g, b to 0..255 and a to 0..1, one key per
       painted colour; leave it.
-- [ ] **`Serializer.numberRef` writes a non-number through unchanged** (found by the same close's review; by reading).
-      It is the one writer of every number a record holds (a reference, a `$Date`'s time, a Color's components), and
-      a value that is not a number — a console's `c._a = "x"` on a colour — is written as it is, so the save writes a
-      file the load refuses. One refusal there would cover every number the format keeps.
-- [ ] **Spreadsheet formulas are taught `new Color`, which the class calls factory-only** (same review).
+- [ ] **Spreadsheet formulas are taught `new Color`, which the class calls factory-only** (found by the independent
+      review closing "`Color.create` never checks its components", in the plan's ledger).
       `docs/specs/dataflow-engine-spec.md` teaches `new Color r, g, b` in a formula; `Color`'s constructor comment says
       it "should ONLY be used from the static factories" (`Color.create` interns, so a formula mints a fresh instance
       per recompute). Either teach `Color.create`, or say why a formula's colour need not be interned.

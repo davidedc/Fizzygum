@@ -132,7 +132,7 @@ class Deserializer
   # cannot drift: the envelope's shape (which also refuses what a restore would silently drop or get
   # wrong: each record's shape, each reference's form, memberships, a second record of one widget with
   # one id, a world file's section and its widgets' ids against their classes' counts, a widget file's
-  # root), and
+  # world section, a widget file's root), and
   # a method's source on a class that cannot take one -- and the throws that resolve a NAME read out of
   # the file -- @instantiate's per-record one, and
   # WellKnownObjects.resolve's for a class key or an app key. The names are @classNamesIn, the one list
@@ -158,7 +158,7 @@ class Deserializer
     # an app key must name a class of the app kind (WellKnownObjects.isAppClass); one still to arrive
     # with a lazy part is judged on the door's re-entry, once it has
     notApps = []
-    for key in Serializer.wellKnownKeysIn envelope
+    for key in Deserializer.wellKnownKeysIn envelope
       appName = WellKnownObjects.appNameInAppKey key
       continue unless appName? and (appClass = classNamed appName)?
       notApps.push appName unless WellKnownObjects.isAppClass(appClass) or appName in notApps
@@ -183,7 +183,7 @@ class Deserializer
     add = (name) -> names.push name if typeof name is "string" and name.length and name not in names
     for record in (envelope?.objects ? []) when record? and !@_tagBuilderFor(record.class)?
       add record.class
-    for key in Serializer.wellKnownKeysIn envelope
+    for key in Deserializer.wellKnownKeysIn envelope
       add (WellKnownObjects.appNameInAppKey(key) ? WellKnownObjects.classNameInClassKey(key))
     names
 
@@ -291,9 +291,12 @@ class Deserializer
     # a well-known key no Fizzygum build writes would bind to nothing: refused here, before anything is
     # built (an app or class key naming a class this build lacks is not one: it is a known key, and
     # whyItCanNeverBeRestored refuses it as a class this build does not have)
-    for key in Serializer.wellKnownKeysIn envelope
+    for key in Deserializer.wellKnownKeysIn envelope
       return "it names the well-known object '" + key + "', which no Fizzygum build has" unless WellKnownObjects.isKnownKey key
-    # a world file's section, which the world loader reads beside the table
+    # a world file's section, which the world loader reads beside the table; a widget file carries none (no
+    # widget save writes one), so neither the door's part loading nor its reflective-layer test reads source
+    # edits that door never replays
+    return "it carries a world section, which no widget file has" if envelope.kind isnt "world" and envelope.world?
     if envelope.world? and (sectionProblem = @_worldSectionProblem envelope.world, envelope.objects)?
       return "its world section is malformed (" + sectionProblem + ")"
     # a world file's widget record's iid is at most its class's count in the world's idCounters (absent: 0)
@@ -434,7 +437,7 @@ class Deserializer
     return ".wallpaperPatternName is " + @_shown(section.wallpaperPatternName) + ", not a name" if section.wallpaperPatternName? and typeof section.wallpaperPatternName isnt "string"
     if section.infoDocFlags?
       return ".infoDocFlags is " + @_shown(section.infoDocFlags) + ", not an object" unless @_isAPlainRecord section.infoDocFlags
-      for own name, flag of section.infoDocFlags when !(/^infoDoc/.test(name) and typeof flag is "boolean")
+      for own name, flag of section.infoDocFlags when !(WorldWdgt.isInfoDocFlagName(name) and typeof flag is "boolean")
         return ".infoDocFlags[" + @_shown(name) + "] is " + @_shown(flag) + ", not an info-doc flag"
     if section.untitledNamingCounters?
       return ".untitledNamingCounters is " + @_shown(section.untitledNamingCounters) + ", not an object" unless @_isAPlainRecord section.untitledNamingCounters
@@ -470,6 +473,20 @@ class Deserializer
   # Is one of `refs` a {"$src"}? Each is one reference form: the objects it names are records of their own.
   @_holdsFunctionSource: (refs) ->
     refs.some (ref) -> ref? and typeof ref is "object" and ref.$src?
+
+  # Every `{"$wk": key}` key an envelope carries, in walk order and with repeats, read by POSITION -- where
+  # the format puts a reference that can be one: each record's references (_refsOf: its items, its map
+  # entries, the VALUES of its props -- never a props container, whose own keys are property names, "$wk"
+  # among them if a run gave an object one). A reference is a single-key {"$wk": string}. (A world section
+  # holds its widgets as {"$r"}s, which _worldSectionProblem holds it to, so it carries none.) A pure read of
+  # the envelope: classNamesIn takes the app and class keys from it, and _envelopeShapeProblem refuses a
+  # file carrying a key no build writes -- both before anything is changed.
+  @wellKnownKeysIn: (envelope) ->
+    keys = []
+    isAReference = (value) -> value? and typeof value is "object" and typeof value.$wk is "string" and Object.keys(value).length is 1
+    for record in (if Array.isArray envelope?.objects then envelope.objects else []) when record? and typeof record is "object"
+      keys.push ref.$wk for ref in Deserializer._refsOf(record) when isAReference ref
+    keys
 
   # The references a record carries: its items, its entries' keys and values, its props. A field of a
   # shape the format does not have (items that are not a list, an entry that is not a pair) carries none

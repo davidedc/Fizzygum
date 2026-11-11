@@ -74,6 +74,15 @@ class WorldWdgt extends IconGridPanelWdgt
   # wall-clock setTimeout that can fire late under heavy-cycle load.
   @timeOfEventBeingProcessed: undefined
 
+  # THE NAME OF AN INFO-DOC FLAG, in one place: "the info doc of <key> was created" is an own boolean
+  # field of the world, `infoDoc_<key>_created`, set by InfoDocs, saved and restored with the world, and
+  # cleared by its teardown -- each of which asks here.
+  @infoDocFlagName: (key) ->
+    "infoDoc_" + key + "_created"
+
+  @isInfoDocFlagName: (name) ->
+    typeof name is "string" and /^infoDoc_.+_created$/.test name
+
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
@@ -3562,7 +3571,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # -- it never deletes a flag the live world has and the file lacks), so without this clear a flag
     # set before a load would survive it FOREVER and that info doc could never be created again in
     # the loaded world. Teardown empties, loader fills.
-    infoDocFlagNames = (name for own name of @ when name.indexOf("infoDoc") is 0)
+    infoDocFlagNames = (name for own name of @ when WorldWdgt.isInfoDocFlagName name)
     delete @[name] for name in infoDocFlagNames
     # the storage containers (bin, shelf) are world-owned widgets that are never tree children, so
     # fullDestroyChildren above cannot reach them -- and they are SNAPSHOT ROOTS that neither caller

@@ -194,9 +194,10 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
   `Serializer.NUMBERS_JSON_CANNOT_WRITE` is the one list; `Serializer.numberRef` writes by it and
   `Deserializer.numberFrom` reads by it. A load refuses up front (`_envelopeShapeProblem`) a `{"$num"}` naming any
   other text, and a `$Date` time or `Color` component that is no number (a `Color` keeps four); a save never
-  holds such a `Color` to write, since a colour holds numbers (its components normalized in one place, `Color._channel`
-  and `Color._alpha`, which the constructor and `create` before it keys both read), so it never writes what the load
-  refuses. `Color.create` keeps no -0 (its
+  writes one: a colour's components are normalized in one place (`Color._channel` and `Color._alpha`, which the
+  constructor and `create` before it keys both read), a colour written into after it was made is refused by the save
+  (`Serializer._colorComponentsProblem`), and a `$Date`'s time is read through `Date`'s own `getTime`, so it never
+  writes what the load refuses. `Color.create` keeps no -0 (its
   cache key reads -0 and 0 as one colour), so a save's bytes do not depend on which spelling minted a colour first.
 - **Native types carry `$`-prefixed class tags** (`$Array`/`$Date`/`$Canvas`/`$Object`/
   `$Map`/`$Set`). User class names are CoffeeScript identifiers and can
@@ -260,7 +261,8 @@ derived/disposable and never serialized), `bin`, `shelf`, `preferences`, and
   `Deserializer.instantiate` uses for a record of such a class (`SerializationError.forMissingClass`),
   and both file doors refuse such a file before anything is built (§9). So does a key no build
   writes — `Deserializer._envelopeShapeProblem` refuses a file carrying one up front
-  (`WellKnownObjects.isKnownKey` over `Serializer.wellKnownKeysIn`; an `app:` or class key with no
+  (`WellKnownObjects.isKnownKey` over `Deserializer.wellKnownKeysIn`, which reads a key only where the format puts a
+  reference — a record's references, never a props container, whose own keys are property names; an `app:` or class key with no
   name after its prefix is one).
 
 **It is lazy, not snapshotted.** Keys resolve against the live `world` on demand rather
@@ -559,7 +561,7 @@ could not restore it and a copy would hold an object that throws on use:
 | `CanvasGradient` | *(no encoder)* | DUPLICATION clones it as `undefined` (`Duplicator._copyGradient`, via `NativeValueKinds.isGradientLike` — its one caller) and consumers rebuild. The SERIALIZER has no gradient branch: a gradient in an own property raises the unrecognized-type `SerializationError` under both backends (under native the closed-set guard refuses it: `classNamed` answers no class for a browser-native one). Keep gradients out of serialized own properties, or declare the property transient (§5). |
 | plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |
 | `ArrayBuffer` / typed array / `DataView` | *(no encoder)* | DUPLICATION copies it as data (`Duplicator._copyBuffer`, via `NativeValueKinds.isBuffer`): an ArrayBuffer byte for byte, a view rebuilt over the copy of its buffer at its offset and length, the buffer through the identity bookkeeping (views sharing one share one in the copy; a view copies its whole buffer). The SERIALIZER has no arm for one: its closed set refuses it |
-| `Color` | `Color` `rgba` | restored through `Color.create` (immutable dedupe) |
+| `Color` | `Color` `rgba` | restored through `Color.create` (immutable dedupe); a save refuses a colour whose component is not a number — one written into after it was made (`Serializer._colorComponentsProblem`) |
 
 ---
 
@@ -729,7 +731,8 @@ unserializable value still raises the rich `SerializationError`.
 
 **The `world` envelope section** (outside `objects`, plain and greppable): `children`
 (`[{$r}…]`), `desktopColor` (`{$r}`), `alpha`, `isDevMode`, `wallpaperPatternName`,
-`infoDocFlags` (the `world.infoDoc_*_created` own booleans),
+`infoDocFlags` (the `world.infoDoc_*_created` own booleans — named in one place, `WorldWdgt.infoDocFlagName` /
+`isInfoDocFlagName`, which InfoDocs, the save, the load's vetting and the teardown all ask),
 `untitledNamingCounters`, `users` (`world.users` — each `User`'s `armedDrawingTool` KEY,
 captured by name like the naming service since a `User` is a plain delegated collaborator,
 not a tree object), `appWindows` (`{AppClassName:{$r}}`),
@@ -758,8 +761,9 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      (`Deserializer._worldSectionProblem`: every field the section writes — its children and app windows `{"$r"}`s
      to widgets' records, the bin a `BinWdgt`'s, the shelf a `ShelfWdgt`'s, the preferences the
      `PreferencesAndSettings` record, the desktop colour a `Color`'s; its plain fields of their type; an info-doc flag
-     only under an `infoDoc…` name; the source-edit list record by record, as `SourceEditsRegistry.isARecord` reads
-     one), a widget file's `root` not a widget's record, `memberships` that are no list or stand on a record that is
+     only under an `infoDoc_…` name (`WorldWdgt.isInfoDocFlagName`); the source-edit list record by record, as `SourceEditsRegistry.isARecord` reads
+     one), a widget file carrying a world section (no widget save writes one; its source edits would be fetched for
+     and never replayed), a widget file's `root` not a widget's record, `memberships` that are no list or stand on a record that is
      no widget's, a `{"$src"}` on a record of a class that cannot
      inject a method (§9), or a class the file names — a record's class, an `app:` key's, a class
      key's (`Deserializer.classNamesIn`, a record's only when it is no tag — an own-property `TAG_BUILDERS` lookup)
@@ -812,10 +816,10 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    the highlight tracking structures, `errorConsole` /
    `lastEditedText` / `_editorSelectedWidget`, the tooltip / pop-up / clicked-hierarchy / handle /
    paint-error collections, the `_damageSuppressionDepth` counter, and the
-   one-shot `infoDoc*` flags. Restoring what the world should LOOK like afterwards is the
+   one-shot `infoDoc_*` flags. Restoring what the world should LOOK like afterwards is the
    CALLER's job, which is what steps 3-5 below are. `fullDestroyChildren` also zeroes every per-class
    `lastBuiltInstanceNumericID`, giving the clean id space the restored iids need.
-   ⚠ The `infoDoc*` clear is load-bearing for step 4: that restore is **additive only**, so a flag
+   ⚠ The `infoDoc_*` clear is load-bearing for step 4: that restore is **additive only**, so a flag
    the live world has and the file lacks can only be removed here. The rig gate is
    `world.teardownHygiene.*` in `Fizzygum-tests/scripts/serialization-roundtrip-headless.js` —
    including `loadLeavesNoOrphanedWidgets`, which requires the in-band inventory's escaped and
