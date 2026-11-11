@@ -162,7 +162,8 @@ const { stringLiteralsOf, guardedPartsPerLine, isLazyPart,
 const { installEdges, harnessPresent } = require('./lib/install-edges');
 const { harvestDefs } = require('./lib/name-definitions');
 const { rejectUnknownArgs, rejectPositionalArgs, fileArg } = require('./lib/cli-args');
-const { coffeeFilesIn, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
+const { sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
+const { bootPieces } = require('./lib/boot-pieces');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = path.resolve(__dirname, '..');
@@ -410,11 +411,15 @@ function main() {
   };
   const shippedFiles = [];             // [{ part, masked }]
   if (installedBy.size) {
-    const bootFiles = coffeeFilesIn(path.join(SRC, 'boot')).map((p) => sourceName(p, ROOTS, 'src/'));
-    for (const rel of [...scanned, ...bootFiles]) {
+    // src/boot's files, each in the part that declares it (lib/boot-pieces.js: parts.json, through build.py --list-boot)
+    let pieces;
+    try { pieces = bootPieces(listArgs); } catch (e) { fail('build.py --list-boot failed: ' + e.message); }
+    if (!pieces.length) fail('build.py --list-boot listed no boot file: the boot files would drop out of the definitions unseen');
+    const partOfBootFile = new Map(pieces.map((piece) => [piece.file, piece.part]));
+    for (const rel of [...scanned, ...partOfBootFile.keys()]) {
       const reading = readingOf(rel);
       if (!reading) continue;
-      shippedFiles.push({ part: partOfFile(rel) || 'core', masked: reading.masked });
+      shippedFiles.push({ part: partOfBootFile.get(rel) || partOfFile(rel), masked: reading.masked });
     }
   }
   const soleProvider = soleProviders(installedBy, shippedFiles);   // member name -> the one part that provides it

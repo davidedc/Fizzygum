@@ -36,7 +36,12 @@
  *    that lists the class way), but they are declared all the same, in buildSystem/parts.json, and build.py fails a
  *    declared piece that does not exist.
  * 4. unshipped = FULL − SHIPPED − BOOT. Any survivor FAILS the check: a .coffee file in a directory no part claims,
- *    or a src/boot file no part declares, ships nothing.
+ *    or a src/boot file no part declares, ships nothing (UNSHIPPED).
+ * 5. BOOT FETCHES: boot fetches each boot script by name (`js/src/<name>-min.js`), so a rename on one side keeps every
+ *    gate green and 404s at every boot. Each name a boot file's CODE spells that way (its comments blanked, so a comment
+ *    naming an old name neither satisfies nor trips this) must be a bootScript of the file's OWN part
+ *    (BOOT_FETCH_UNDECLARED, naming file:line), and each bootScript must be fetched so by its part's boot files
+ *    (BOOT_SCRIPT_UNFETCHED). A name built at run time is invisible, and reads as no fetch.
  *
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
  *   node ./buildSystem/check-shippable-coverage.js [--src=DIR] [--tests-repo=DIR] [build flags...]
@@ -48,6 +53,9 @@
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS, HARNESS_DIR } = require('./lib/source-files');
+const { bootPieces, onDiskIn } = require('./lib/boot-pieces');
+const { coffeeMask } = require('./lib/coffee-mask');
+const fs = require('fs');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
@@ -80,7 +88,10 @@ function listing(flag) {
 // ---- 1. the SHIPPED set (the partition's classes) and the BOOT set (the parts' declared src/boot files), straight
 // from build.py (the single source of truth for both) ----
 const shippedSet = listing('--list-shippable');
-const bootSet = listing('--list-boot');
+let pieces;
+try { pieces = bootPieces(BUILD_ARGS); } catch (e) { fail('could not get build.py --list-boot: ' + e.message); }
+if (!pieces.length) fail('build.py --list-boot returned no files');
+const bootSet = new Set(pieces.map((piece) => piece.file));
 
 // ---- 2. the FULL set: every .coffee file the build could compile, named as --list-shippable names it ----
 let fullRel;
@@ -96,7 +107,40 @@ try {
 // ---- 3. unshipped = FULL − SHIPPED − BOOT ----
 const unshipped = fullRel.filter(function (rel) { return !shippedSet.has(rel) && !bootSet.has(rel); });
 
+// ---- 3b. boot's by-name fetches against the declared boot scripts (header, 5.) ----
+// every `js/src/<name>-min.js` a boot file's CODE names (its comments blanked: lib/coffee-mask.js), with its line
+const FETCH = /js\/src\/([A-Za-z0-9_-]+)-min\.js/g;
+const fetches = [];   // { name, at, part }
+for (const piece of pieces) {
+  let text;
+  try { text = fs.readFileSync(onDiskIn(ROOTS.src, piece), 'utf8'); } catch (e) { fail('cannot read ' + piece.file + ': ' + e.message); }
+  coffeeMask(text, piece.file).forEach((line, i) => {
+    for (const m of line.code.matchAll(FETCH)) fetches.push({ name: m[1], at: piece.file + ':' + (i + 1), part: piece.part });
+  });
+}
+const scriptOf = (piece) => path.posix.basename(piece.file, '.coffee');
+const declaredScripts = pieces.filter((piece) => piece.kind === 'script');
+const fetchProblems = [];
+for (const f of fetches) {
+  if (!declaredScripts.some((piece) => piece.part === f.part && scriptOf(piece) === f.name)) {
+    fetchProblems.push(rules.fired('BOOT_FETCH_UNDECLARED', '  BOOT_FETCH_UNDECLARED ' + f.at + ' fetches js/src/' + f.name +
+      '-min.js, which no bootScript of its own part (' + f.part + ') declares'));
+  }
+}
+for (const piece of declaredScripts) {
+  if (!fetches.some((f) => f.part === piece.part && f.name === scriptOf(piece))) {
+    fetchProblems.push(rules.fired('BOOT_SCRIPT_UNFETCHED', '  BOOT_SCRIPT_UNFETCHED ' + piece.file + ' (a bootScript of ' + piece.part +
+      ') is fetched by no code line of its part\'s boot files as js/src/' + scriptOf(piece) + '-min.js'));
+  }
+}
+
 // ---- 4. report + exit ----
+if (fetchProblems.length) {
+  console.error('check-shippable-coverage: boot fetches its scripts by name, and the names disagree with parts.json\'s bootScripts:');
+  for (const line of fetchProblems) console.error(line);
+  console.error('Fix: name each script in the same part\'s bootScripts and fetch it as a literal js/src/<name>-min.js in code ' +
+    '(a name built at run time is invisible here, and reads as no fetch) — a rename on one side only is a 404 at every boot.');
+}
 if (unshipped.length) {
   unshipped.sort();
   const dirs = new Set(unshipped.map(function (rel) { return path.posix.dirname(rel); }));
@@ -109,9 +153,9 @@ if (unshipped.length) {
     + '"bootPrelude" (a boot-bundle piece, in order) or "bootScripts" (a script boot fetches by name) — then re-run the '
     + 'build:');
   for (const dir of Array.from(dirs).sort()) console.error('  ' + dir);
-  process.exit(1);
 }
+if (unshipped.length || fetchProblems.length) process.exit(1);
 
 console.log('shippable-coverage check: ' + fullRel.length + ' .coffee files under src/ and the harness, all covered '
-  + '— 0 gap(s)');
+  + '— 0 gap(s); ' + fetches.length + ' boot fetch(es) of ' + declaredScripts.length + ' declared boot script(s), all agreeing');
 process.exit(0);

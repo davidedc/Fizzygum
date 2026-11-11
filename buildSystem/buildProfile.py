@@ -334,14 +334,16 @@ def bootScripts(parts, profile, includeVideoPlayer):
 BOOT_DIRECTORY = "src/boot"
 
 def bootFiles(parts, srcRoot=None, partsFile=PARTS_MANIFEST_FILE):
-    """Every src/boot file ANY part declares (`bootPrelude` and `bootScripts`), as parts.json spells it --
-    flavour-independent, like the partition's own file list. Each must sit under src/boot/ (no `..`), exist
+    """Every src/boot file ANY part declares (`bootPrelude` and `bootScripts`), as parts.json spells it, each as
+    (file, part, kind: "prelude" | "script"), in the parts' order -- flavour-independent, like the partition's own
+    file list. Each must sit under src/boot/ (no `..`), exist
     (in `srcRoot` when given: another src tree, a bite-proof's planted copy) and be declared once, and no two
     boot scripts may share a name (each becomes js/src/<name>-min.js); anything else fails the build --
     which asks this at its first step (--shell) and through build.py --list-boot, the list
     check-shippable-coverage.js holds every src/boot file to."""
     declaredBy = {}
     scriptNames = {}
+    piecesInOrder = []
     for name in partNames(parts):
         for key in ("bootPrelude", "bootScripts"):
             for piece in parts[name].get(key, []):
@@ -355,12 +357,17 @@ def bootFiles(parts, srcRoot=None, partsFile=PARTS_MANIFEST_FILE):
                          % (piece, partsFile, declaredBy[piece], name, key))
                 declaredBy[piece] = name
                 if key == "bootScripts":
+                    if not piece.endswith(".coffee"):
+                        fail("part '%s' bootScripts names '%s', which is no .coffee file (each is compiled to js/src/<name>-min.js)" % (name, piece))
                     scriptName = os.path.basename(piece)
                     if scriptName in scriptNames:
                         fail("two bootScripts are both named '%s' (%s and %s): each is built as js/src/<name>-min.js"
                              % (scriptName, scriptNames[scriptName], piece))
                     scriptNames[scriptName] = piece
-    return list(declaredBy)
+                    piecesInOrder.append((piece, name, "script"))
+                else:
+                    piecesInOrder.append((piece, name, "prelude"))
+    return piecesInOrder
 
 
 def availableProfileNames():

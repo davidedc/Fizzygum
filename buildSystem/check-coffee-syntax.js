@@ -48,7 +48,7 @@
  * the authority on which helpers exist; the only list here is the PROVIDED one, read from
  * Class._memberNamesThatMustStayAnonymous (the meta-system's own statement of the helper
  * globals) and held against the `window.<name> = [].<m>` / `{}.<m>` assignments in
- * src/boot that actually provide them: if the two disagree, the gate stops.
+ * core's boot files (lib/boot-pieces.js) that actually provide them: if the two disagree, the gate stops.
  * A MIXIN is not checked: it compiles as a whole source and keeps its helper declarations
  * (Mixin's strip, used only by live member edits, removes the three provided ones by name
  * and leaves the rest declared), so no helper is lost there.
@@ -68,14 +68,16 @@
  * listing names (lib/source-files.js sourceRoots). That both rules BITE, in src and in the harness, is proven on every
  * build by check-coffee-syntax-selftest.js.
  * TESTING HOOK — check given files instead of the shippable set (everything after the flag
- * is a path, relative to the repo root or absolute; build flags before it are ignored):
+ * is a path, relative to the repo root or absolute; build flags before it still reach build.py --list-boot, which reads
+ * the boot files the helper globals come from, and which refuses a flag it does not know):
  *   node ./buildSystem/check-coffee-syntax.js --files <a.coffee> [<b.coffee> ...]
  */
 
 const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
-const { coffeeFilesIn, sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
+const { sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
+const { bootPieces, onDiskIn } = require('./lib/boot-pieces');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
@@ -117,11 +119,14 @@ if (!Array.isArray(declared) || !declared.length || !declared.every(n => typeof 
 }
 const PROVIDED = new Set(declared);
 {
-  const bootDir = path.join(SRC, 'boot');
   const BOOT_HELPER = /^\s*window\.([A-Za-z_$][\w$]*)\s*=\s*(?:\[\]|\{\})\.[A-Za-z_$][\w$]*\s*$/;
   const assigned = new Set();
-  let bootFiles;   // src/boot's .coffee files, as lib/source-files.js lists them
-  try { bootFiles = coffeeFilesIn(bootDir); } catch (e) { fail('could not read ' + bootDir + ' to establish the helper globals: ' + e.message); }
+  // CORE's boot files (lib/boot-pieces.js, parts.json's declaration): the compile scheduler, a core boot script that
+  // every profile ships, assigns them before any class compiles, so they are there for every compiled member; a
+  // helper only another part's boot piece assigned would be missing wherever that part is not
+  let bootFiles;
+  try { bootFiles = bootPieces(BUILD_ARGS).filter((piece) => piece.part === 'core').map((piece) => onDiskIn(SRC, piece)); }
+  catch (e) { fail('could not list core\'s boot files (build.py --list-boot) to establish the helper globals: ' + e.message); }
   for (const p of bootFiles) for (const line of fs.readFileSync(p, 'utf8').split('\n')) { const m = line.match(BOOT_HELPER); if (m) assigned.add(m[1]); }
   const onlyDeclared = [...PROVIDED].filter(n => !assigned.has(n));
   const onlyAssigned = [...assigned].filter(n => !PROVIDED.has(n));

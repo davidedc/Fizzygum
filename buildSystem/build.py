@@ -110,8 +110,12 @@ parser.add_argument('--noSyntaxCheck', action='store_true')
 # syntax gate (buildSystem/check-coffee-syntax.js), so the gate's file set can never
 # drift from what the build actually wraps-as-text and compiles in-browser.
 parser.add_argument('--list-shippable', action='store_true')
-# --list-boot: print the src/boot files the parts declare (their `bootPrelude` and `bootScripts`, one per line,
-# flavour-independent) and exit, failing on a piece that is not under src/boot/, does not exist, or is named twice.
+# --list-boot: print the src/boot files the parts declare (their `bootPrelude` and `bootScripts`), one per line as
+# `<file>\t<part>\t<prelude|script>`, flavour-independent, and exit, failing on a piece that is not under src/boot/,
+# does not exist or is named twice, or a boot script that is no .coffee file. The one listing of the boot files
+# (buildSystem/lib/boot-pieces.js): the coverage gate reads its files and holds boot's by-name fetches to its scripts,
+# the syntax gate takes the helper globals from core's files, the part-edges gate each file's part, what-pins-core
+# its roots.
 # Not classes, so not in --list-shippable (the syntax and part-edges gates compile what that lists the class way):
 # buildSystem/check-shippable-coverage.js reads both, so every src/boot file is held to a declaration too.
 parser.add_argument('--list-boot', action='store_true')
@@ -277,8 +281,8 @@ def main():
     parts = loadParts(args.parts) if args.parts else loadParts()
     # --list-boot: the parts' declared src/boot files (buildProfile.bootFiles checks each), then stop
     if args.list_boot:
-        for filename in buildProfile.bootFiles(parts, args.src, args.parts or buildProfile.PARTS_MANIFEST_FILE):
-            print(filename)
+        for (filename, part, kind) in buildProfile.bootFiles(parts, args.src, args.parts or buildProfile.PARTS_MANIFEST_FILE):
+            print(filename + "\t" + part + "\t" + kind)
         return
     allFilenames, partOfFile = partitionFiles(parts, args.src, args.testsRepo)
 

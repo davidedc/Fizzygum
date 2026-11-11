@@ -27,17 +27,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       `AutomatorEventCommand*` subclasses' constructors (each `super()` + `@automatorEventCommandName`; StartMacro's
       also `@mainMacroSource`, `@extraSubroutineSources`) never run, and their comments name a "static method
       executeEventCommand" that is an instance method found through `classNamed`.
-- [ ] **The boot scripts' names are listed twice** (found by the independent review closing "The boot files are a
-      hand-list in the build script", in the plan's ledger; by reading; low). `parts.json` core's `bootScripts` names the
-      three scripts the build compiles, and `src/boot/globalFunctions.coffee` fetches them by hand-written name
-      (`js/src/dependencies-finding-min.js`, `…loading-and-compiling-coffeescript-sources-min.js`,
-      `…logging-div-min.js`), as `build_it_please.sh`'s lean drop names `dependencies-finding-min.js`: rename one side
-      and the build stays green while the page fails its fetch at boot, caught only by a boot.
-- [ ] **Three tools read `src/boot` for themselves** (found by the same review; by reading; low).
-      `check-coffee-syntax.js` takes "the helper globals boot provides" from every `src/boot` file (the later-loaded
-      `bootScripts` and fizzytiles' piece included), `check-part-edges.js` attributes every boot file to core, and
-      `what-pins-core.js` roots its walk in all of them; each could read `build.py --list-boot` (its pieces in order,
-      by the part that declares them) instead of walking the directory.
 - [ ] **Nothing keeps the similar-code mirror working** (found closing "`find_similar_code.sh` stops at its mirror", in
       the plan's ledger; measured; a trade-off, not queued by the loop). `buildSystem/coffee-to-js-mirror.js` compiles
       the tree with CoffeeScript 1 for `find_similar_code.sh`, and no build or gate runs it, so a construct the two

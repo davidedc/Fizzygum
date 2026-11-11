@@ -1274,6 +1274,10 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
   if [ "$PROFILE_SOURCES" = "none" ] ; then
     echo "sources policy 'none': dropping the reflective layer (it was only an input to the pre-compiled image)"
     rm -rf $BUILD_PATH/js/coffeescript-sources || build_failed "dropping the class sources (sources: none)"
+    # named here as boot fetches it (the coverage gate holds boot's fetches to parts.json's bootScripts, not this
+    # line): a file that is not there was renamed, and the lean tree would ship the layer's script under its new name,
+    # so this lean build fails here instead
+    [ -f $BUILD_PATH/js/src/dependencies-finding-min.js ] || build_failed "dropping the reflective layer's boot script (js/src/dependencies-finding-min.js was not built: renamed?)"
     rm -f $BUILD_PATH/js/src/dependencies-finding-min.js || build_failed "dropping the reflective layer's boot script (sources: none)"
   fi
 fi

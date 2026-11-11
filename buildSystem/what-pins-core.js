@@ -12,7 +12,8 @@
  * part. Two hops, one of them eager, and the question came back "must not move".
  *
  * WHAT THIS ASKS INSTEAD — reachability, not authorship. A class is in the image because something
- * on the BOOT PATH names it, so walk that path: start at src/boot/*, follow every reference that is
+ * on the BOOT PATH names it, so walk that path: start at the boot files (core's, and the bundle pieces of every part
+ * the profile ships: lib/boot-pieces.js), follow every reference that is
  * not behind a door, and see what you arrive at. Two answers fall out of the one walk, and the
  * second is the one that would have found the case above:
  *
@@ -64,7 +65,7 @@ const { execFileSync } = require('child_process');
 const { guardedPartsPerLine, isLazyPart, declaredRequires } = require('./lib/part-edge-scan');
 const { coffeeMask } = require('./lib/coffee-mask');
 const { rejectUnknownArgs } = require('./lib/cli-args');
-const { coffeeFilesIn, sourceName } = require('./lib/source-files');
+const { bootPieces, onDiskIn } = require('./lib/boot-pieces');
 
 const REPO = path.resolve(__dirname, '..');
 const SRC = path.join(REPO, 'src');
@@ -96,6 +97,14 @@ const isLazy = (p) => isLazyPart(parts, p);
 // part is lazy, so the image is exactly core -- which is why homepage and lean emit a byte-identical
 // js/pre-compiled.js, and why a packaging change can only be measured by fingerprinting ONE profile.
 const inImage = (p) => shipped.has(p) && !isLazy(p);
+
+// The boot files this profile's boot starts from (lib/boot-pieces.js, parts.json's declaration through build.py
+// --list-boot): core's — its bundle pieces and the scripts boot fetches — and the boot-BUNDLE pieces of every other
+// shipped part, which the bundle carries whatever that part's laziness. Listed once, at load: every analysis reads
+// the same ones.
+let BOOT_ROOTS;
+try { BOOT_ROOTS = bootPieces().filter((piece) => piece.part === 'core' || (piece.kind === 'prelude' && shipped.has(piece.part))); }
+catch (e) { die('build.py --list-boot failed: ' + e.message); }
 
 let shippable;
 try {
@@ -249,11 +258,11 @@ function buildGraph(inject) {
     }
   }
 
-  // ROOTS: src/boot/** is compiled at build time and always present, so whatever it names unguarded
-  // is in the image by definition. Everything else is reached THROUGH one of these. Its files are
-  // lib/source-files.js coffeeFilesIn's (which refuses a malformed tree: SOURCE_TREE_MALFORMED).
-  for (const abs of coffeeFilesIn(path.join(SRC, 'boot'))) {
-    const rel = sourceName(abs, { src: SRC }, 'src/');
+  // ROOTS: the boot files (BOOT_ROOTS, above) are compiled at build time and always present, so whatever they name
+  // unguarded is in the image by definition. Everything else is reached THROUGH one of these.
+  for (const piece of BOOT_ROOTS) {
+    const abs = onDiskIn(SRC, piece);
+    const rel = piece.file;
     const text = fs.readFileSync(abs, 'utf8');
     const masked = coffeeMask(text, rel);
     scanLines(BOOT, { rel, lines: text.split('\n'), code: masked.map((l) => l.bare),

@@ -59,9 +59,15 @@ by which a flavour stops shipping something:
 
 Boot's order is data here, never a list in the build script: the bundle is its generated head (the build flags, the
 parts manifest), then core's `bootPrelude` (boot itself), then every other shipping part's in partition order, then the
-build stamp. Every `src/boot` file is declared by exactly one part (`build.py --list-boot` lists them; one that is not
-under `src/boot/`, missing, declared twice, or a boot script sharing another's name fails the build at its first step),
-and `check-shippable-coverage.js` holds `src/boot` to that list as it holds the rest of the tree to the `dirs`.
+build stamp. Every `src/boot` file is declared by exactly one part, and `build.py --list-boot` is the ONE listing of
+them — each as `<file>\t<part>\t<prelude|script>`, read through `buildSystem/lib/boot-pieces.js`: the coverage gate
+holds `src/boot` to its files as it holds the rest of the tree to the `dirs` — and boot's by-name fetches to its
+scripts (a `js/src/<name>-min.js` in a boot file's code must be a boot script of that file's own part, and every boot
+script must be fetched so: `BOOT_FETCH_UNDECLARED` / `BOOT_SCRIPT_UNFETCHED`), so a rename on either side is a build
+failure, not a 404 at every boot — the syntax gate takes the helper globals from core's, the part-edges gate puts
+each file in its own part, and `what-pins-core.js` roots its walk in core's and every shipped part's bundle pieces. A
+piece not under `src/boot/`, missing, or declared twice, and a boot script sharing another's name or not a `.coffee`
+file, fail the build at its first step.
 
 Plus two properties that are **not** the same question:
 
@@ -519,7 +525,8 @@ pinned set is a **FIXPOINT** that converges over several rounds rather than one.
 an EAGER namer reads back "must not move" even when the whole chain is on-demand. That is how
 `DegreesConverterIconAppearance` — 9.5 KB of art nothing draws but one icon inside a folder — stayed
 in the production image until it was spotted BY EYE. `buildSystem/what-pins-core.js` (`fg whatpins`)
-asks the transitive form: walk out from `src/boot/*` following every reference not behind a door, and
+asks the transitive form: walk out from the boot files (core's, and every shipped part's boot-bundle pieces, as
+`build.py --list-boot` lists them) following every reference not behind a door, and
 whatever the walk never arrives at is movable, transitively, in one pass instead of over four
 move-rebuild-rerun rounds. The cost it quotes for a move is the gate's own: it reads `requires` through
 the same `declaredRequires` (`buildSystem/lib/part-edge-scan.js`), eager-owner discount included, so it

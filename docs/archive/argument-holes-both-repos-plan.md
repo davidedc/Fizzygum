@@ -2668,3 +2668,32 @@ for (const s of sites) if (s.absentBefore.length) {
       reads fresh, moved away reads STALE (gone) and is GONE from the tree a rebuild then makes; a vault escape character
       planted in a class source stops the build at build.py with no stamp and no record; the pre-compiled stub moved
       away stops it at its copy (first shape, same helper); the gauntlet and `fg homepage` green on the final shape.
+- [x] **The boot scripts' names are listed twice** (found by the independent review closing "The boot files are a
+      hand-list in the build script", in the plan's ledger; by reading; low). `parts.json` core's `bootScripts` names the
+      three scripts the build compiles, and `src/boot/globalFunctions.coffee` fetches them by hand-written name
+      (`js/src/dependencies-finding-min.js`, `…loading-and-compiling-coffeescript-sources-min.js`,
+      `…logging-div-min.js`), as `build_it_please.sh`'s lean drop names `dependencies-finding-min.js`: rename one side
+      and the build stays green while the page fails its fetch at boot, caught only by a boot.
+- [x] **Three tools read `src/boot` for themselves** (found by the same review; by reading; low).
+      `check-coffee-syntax.js` takes "the helper globals boot provides" from every `src/boot` file (the later-loaded
+      `bootScripts` and fizzytiles' piece included), `check-part-edges.js` attributes every boot file to core, and
+      `what-pins-core.js` roots its walk in all of them; each could read `build.py --list-boot` (its pieces in order,
+      by the part that declares them) instead of walking the directory.
+      — both CLOSED 2026-11-11 (self-ruled; loop unit U10). RULED: parts.json is the one definition of the boot files,
+      read through ONE listing, and a GATE holds boot's by-name fetches to it. LANDED: `build.py --list-boot` prints each
+      declared piece as `<file>\t<part>\t<prelude|script>` (`buildProfile.bootFiles` answers the tuples and refuses, with
+      its other malformations, a boot script that is no `.coffee` file), read through `buildSystem/lib/boot-pieces.js` by
+      the coverage gate (its files, and the fetches), the syntax gate (the helper globals from CORE's boot files —
+      measured: the compile scheduler, a core boot SCRIPT, assigns `hasProp`/`indexOf`/`slice`, so "the bundle only"
+      would refuse the real tree, as that gate's own self-test showed at once), the part-edges gate (each file in its
+      own part; an empty listing refused) and `what-pins-core.js` (rooted in core's files and every shipped part's
+      bundle pieces, listed once at load). `check-shippable-coverage.js`'s two new rules: BOOT_FETCH_UNDECLARED (a
+      `js/src/<name>-min.js` in a boot file's CODE, its comments blanked by `lib/coffee-mask.js`, that is no boot script
+      of the fetcher's own part, named file:line) and BOOT_SCRIPT_UNFETCHED (a declared script its part's boot files
+      never fetch so). Lean's drop of the reflective layer's script fails a lean build when that file was not built.
+      The first shape put the fetch check inside `buildProfile.py`, whose header says it judges no code — a rule the
+      gate census therefore never asked a proof of, over raw text that counted a comment as a fetch; the independent
+      review caught both, and the rule moved to a gate. Docs: build-and-packaging §1, the static-checks index (the
+      gate's row, §3c). PROVEN: `check-shippable-coverage-selftest.js` plants a fetch renamed in globalFunctions alone,
+      firing exactly both rules by their own lines, and its control carries a comment naming a retired script and
+      passes; the four readers' self-tests pass; a lean build and smoke pass by hand.
