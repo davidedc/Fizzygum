@@ -42,7 +42,10 @@
 // the 2-space indent — a method, a field, a static `@NAME` —, or in a mixin file the nearest key at
 // the indent of its instance-property hash's members, the one the shared grouping locks
 // (lib/coffee-method-header.js mixinMemberIndent: 4 or 6 spaces); a deeper key is an option
-// object's and never names a member). A group of hits matching an entry is not counted against the
+// object's and never names a member — or, reached first, the code at the left margin: a definition
+// there (lib/name-definitions.js definedName: a boot file's top-level function, an expando, a
+// prototype extension) names the member, any other code is `(top)`; a literal's body is skipped).
+// A group of hits matching an entry is not counted against the
 // baseline when its size equals `count` EXACTLY; otherwise the entry FAILS the build — 0 hits is a
 // STALE entry (delete it), any other number is a COUNT mismatch (a literal was added to or removed
 // from a sanctioned member: decide again). So the list is a DECLARATION, never a hiding place: it
@@ -101,10 +104,11 @@ const STINKS = [
       { file: 'harness/AutomatorLoader.coffee', member: '_loadTestMetadata', count: 1, why: "a loaded script tag's `onload` cleared: the DOM's own reset value" },
     ],
     re: /\bnull\b/ },
-  { id: 'wall-clock', baseline: 13,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it
-    why: 'a read of the wall clock (Date.now(), or a `new Date` given no argument — one followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` and `new Date -x` are values) in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock). Not seen: a read inside a string interpolation (the mask blanks `#{ }`)',
-    // the world's one clock, read once per cycle; a clock widget built outside a cycle; and the harness's own clocks,
-    // which no world reads: its DOM overlay fades in real time, its run clock times a run, its commands are paced
+  { id: 'clock-read', baseline: 13,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it
+    why: 'a read of a clock — the wall clock (Date.now(), or a `new Date` given no argument — one followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` and `new Date -x` are values) or the monotonic one (performance.now(), no more an event-stream fact than the wall clock), either one existentially too (`performance?.now()`, `Date.now?()`) — in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock). Not seen: a read inside a string interpolation (the mask blanks `#{ }`)',
+    // the world's one clock, read once per cycle; a clock widget built outside a cycle; the harness's own clocks,
+    // which no world reads: its DOM overlay fades in real time, its run clock times a run, its commands are paced; and
+    // the compile scheduler's frame budget, which decides how much compiling a cycle does
     sanctioned: [
       { file: 'WorldWdgt.coffee', member: '_updateTimeReferences', count: 1, why: "the world's one clock: read once at each cycle's start, and every reader takes the cycle's time from WorldWdgt.dateOfCurrentCycleStart" },
       { file: 'apps/AnalogClockWdgt.coffee', member: 'constructor', count: 1, why: 'a clock built outside a cycle (the desktop\'s, at boot, before the first) has no cycle time to read and shows the real time until its first tick; a playing test pins the date it draws' },
@@ -113,9 +117,17 @@ const STINKS = [
       { file: 'harness/Automator.coffee', member: '@_fadeStep', count: 1, why: "a fade step of the control panel's DOM overlay, paced in real time" },
       { file: 'harness/AutomatorPlayer.coffee', member: '_timeSinceStartOfTestsAsString', count: 1, why: 'the run clock the control panel shows, in real time' },
       { file: 'harness/AutomatorPlayer.coffee', member: 'runAllSystemTests', count: 1, why: 'the run clock starts when a run starts' },
+      // the compile scheduler's frame budget: how much compiling a cycle may still do, in real time. It paces WORK — how
+      // many queued sources compile this frame — so on index.html it decides in which frame a lazy part's door opens;
+      // a page under test is compile-at-boot with every part eager, so it queues no compile behind a running world and
+      // no test frame waits on this clock
+      { file: 'WorldWdgt.coffee', member: 'doOneCycle', count: 1, why: "the cycle's start, from which the end-of-frame compile drain measures the budget it has left (no test frame waits on it: a page under test queues no compile behind a running world)" },
+      { file: 'boot/loading-and-compiling-coffeescript-sources.coffee', member: 'drainAtEndOfCycle', count: 1, why: "the budget left in this frame for the compile drain: how many queued sources compile this cycle — on index.html, which frame a lazy part's door opens in; a page under test queues none" },
+      { file: 'boot/loading-and-compiling-coffeescript-sources.coffee', member: '_drain', count: 4, why: "the drain's own budget, each item's cost, and its debug report: the same pacing of queued compiles" },
+      { file: 'boot/loading-and-compiling-coffeescript-sources.coffee', member: 'storeSourceAndPotentiallyCompileItAndExecuteIt', count: 2, why: "a source's ingest time, logged only under srcLoadCompileDebugWrites" },
     ],
     // a `-`/`+` is binary (a read) touching `new Date` or spaced on both sides; `new Date -x` passes -x (a value)
-    re: /\bDate\.now\s*\(|\bnew Date(?:\s*\(\s*\)|(?=\s*$|\s*[)\].,;}*\/%|&^<>=!?]|[-+]|\s+[-+](?=\s)|\s+(?:or|and|if|unless|then|else|is|isnt|when|instanceof|in|of|while|until|for)\b))/ },
+    re: /\b(?:Date|performance)\??\.now\??\s*\(|\bnew Date(?:\s*\(\s*\)|(?=\s*$|\s*[)\].,;}*\/%|&^<>=!?]|[-+]|\s+[-+](?=\s)|\s+(?:or|and|if|unless|then|else|is|isnt|when|instanceof|in|of|while|until|for)\b))/ },
   { id: 'timer', baseline: 4,   // raised 3->4 on 2026-08-04: SourceCompileScheduler._ensurePumpScheduled pumps the compile-at-boot ingest, which runs only while NO world exists (same nature as the waitNextJSEventLoopCycle timer beside it) — bug-class B needs a live suite world to bite
     why: 'setTimeout/setInterval diverge at dpr2 under parallel load (DETERMINISM.md bug-class B: heavy cycles starve timers); the cycle/step machinery is the sanctioned clock',
     re: /\b(setTimeout|setInterval)\s*\(/ },
@@ -182,6 +194,7 @@ const STINKS = [
 
 // each scanned file's lines and lib/coffee-mask.js reading, read once for every stink
 const { coffeeMask } = require('./lib/coffee-mask');
+const { definedName } = require('./lib/name-definitions');
 const readings = new Map();
 function readingOf(p) {
   if (!readings.has(p)) { const text = fs.readFileSync(p, 'utf8'); readings.set(p, { lines: text.split('\n'), masked: coffeeMask(text, srcRelative(p)) }); }
@@ -191,16 +204,22 @@ function readingOf(p) {
 // `harness/<path>`, lib/source-files.js sourceName)
 const srcRelative = p => sourceName(p, ROOTS);
 
-// the ENCLOSING MEMBER of line i, as `sanctioned` names it (header comment): the nearest class-body
-// key above at the 2-space indent, or — in a mixin file — at `memberIndent`, the indent its hash's
-// members sit at (mixinMemberIndent; undefined for a file with no mixin member). A member is any KEY
-// there, a data member's as well as a method's, because a sanctioned literal can sit in a field.
-const CLASS_BODY_KEY = /^  (@?[A-Za-z_$][\w$]*)\s*:/;
-function enclosingMember(lines, i, memberIndent) {
-  const memberKey = memberIndent === undefined ? undefined : new RegExp(`^ {${memberIndent}}(@?[A-Za-z_$][\\w$]*)\\s*:`);
+// the ENCLOSING MEMBER of line i, as `sanctioned` names it (header comment): walking up from the hit, past every
+// line that continues a literal an earlier line opened (a heredoc's body defines nothing), the FIRST of
+//   - a class-body key at the 2-space indent, or — in a mixin file — at `memberIndent`, the indent its hash's members
+//     sit at (mixinMemberIndent; undefined for a file with no mixin member): its name. A member is any KEY there, a
+//     data member's as well as a method's, because a sanctioned literal can sit in a field; `Foo::bar =` is no key;
+//   - code at the left margin, which ends whatever body was above it: the name lib/name-definitions.js definedName
+//     reads there (a boot file's top-level function, an expando, a prototype extension), or `(top)` for any other
+//     code (a class header, a top-level statement — the hit's own line included).
+const CLASS_BODY_KEY = /^  (@?[A-Za-z_$][\w$]*)\s*:(?!:)/;
+function enclosingMember(lines, masked, i, memberIndent) {
+  const memberKey = memberIndent === undefined ? undefined : new RegExp(`^ {${memberIndent}}(@?[A-Za-z_$][\\w$]*)\\s*:(?!:)`);
   for (let j = i; j >= 0; j--) {
+    if (masked[j].continuesLiteral) continue;
     const m = lines[j].match(CLASS_BODY_KEY) || (memberKey && lines[j].match(memberKey));
     if (m) return m[1];
+    if (/^\S/.test(masked[j].code)) return definedName(masked[j].code) || '(top)';
   }
   return '(top)';
 }
@@ -236,7 +255,7 @@ for (const stink of STINKS) {
       const hit = `${srcRelative(p)}:${i + 1}: ${line.trim()}`;
       hits.push(hit);
       if (stink.sanctioned) {
-        const key = `${rel}::${enclosingMember(lines, i, memberIndent)}`;
+        const key = `${rel}::${enclosingMember(lines, masked, i, memberIndent)}`;
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(hit);
       }

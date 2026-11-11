@@ -320,8 +320,8 @@ against the current tree. This plan is its executable distillation.
 15. end-of-cycle captures;
 16. `_closeCycleBookkeepingNoSettle`.
 
-It already reads `performance.now()` for the compile budget (`cycleStartPerfMs`), which is the
-precedent for U2's timer.
+It already reads `performance.now()` for the compile budget (`cycleStartPerfMs`), a read the `clock-read`
+stink counts and sanctions by its member (2026-11-11): U2's timer is read the same way, and sanctioned the same way.
 
 - **Stepping:** a widget steps when it is in `world.steppingWdgts`, at its `fps` (`fps <= 0` = every
   cycle). `AnalogClockWdgt` adds itself in its constructor.
@@ -407,7 +407,7 @@ precedent for U2's timer.
 | `check-unresolved-sends.js` | Every sent name must be defined somewhere (the `aView` builder API included) |
 | `check-part-edges.js` | Core may not name a lazy part's class as a symbol. Use the door pattern of §1.2 (`new (classNamed "X")` after the part loads) |
 | `check-menu-actions.js` + `fg menusweep` | Every new menu row must resolve, and the runtime sweep *fires it*. A row that cannot run headless goes in the sweep's `SKIP` table **with its reason** |
-| `check-stinks.js` | `timer` (setTimeout/setInterval, baseline 4: **do not add one**); `wall-clock` (`Date.now()`/`new Date(`, baseline 19: use `performance.now()`); `instanceof-type-test` (baseline 74: use capability queries); `raw-chrome-color` (HARD 0: Theme roles only) |
+| `check-stinks.js` | `timer` (setTimeout/setInterval, baseline 4: **do not add one**); `clock-read` (`Date.now()`, an argument-less `new Date`, `performance.now()`, baseline 13: a profiler's clock reads are sanctioned by member in `check-stinks.js`, with their reason — never a raised baseline); `instanceof-type-test` (baseline 74: use capability queries); `raw-chrome-color` (HARD 0: Theme roles only) |
 | `check-layering.js` / call separation | The `NoSettle` / settle-tier naming and the public/private split (`_` prefix). Read lint doc §4 and §6 |
 | constructor conformance / argument holes | Identity args are positional, optional ones go in `opts` (PinSpec's constructor is the model) |
 | runtime legs: paint audit, settle, capstone, revisits, census, serialization, storage, vmtruth | A new widget must settle, paint truthfully, serialize (or declare transients), and be GC-collectible after destroy |
@@ -599,8 +599,10 @@ green.
   - **Rule 3, restoring:** on stop, put the original back **only if `proto[member]` is still our
     wrapper**. A live edit made while profiling has replaced the wrapper, and the edit must win (S1
     proves this).
-  - **Rule 4, timing:** use `performance.now()` (doOneCycle's precedent). Do not use `Date.now()`
-    (wall-clock stink) or timers.
+  - **Rule 4, timing:** use `performance.now()` (the monotonic clock, as the compile budget does), and
+    SANCTION each read in `check-stinks.js`'s `clock-read` entry by its member, with its reason: these
+    numbers ARE drawn (they stay out of reference screenshots, below), so the reason is "a profile the
+    person asked for", never "never a pixel". Never raise the stink's baseline instead; no timers.
   - **Rule 5, self time:** keep a shared stack. On entry push a frame; on exit (in `finally`) pop it,
     add the inclusive time to the parent frame's child time, and set self = inclusive − child time.
     `finally` keeps the stack balanced through exceptions.

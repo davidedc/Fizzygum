@@ -283,9 +283,11 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   anything unlisted, a new file included, IS scanned), `readsLiterals: true` (it matches the line's code with its
   literals kept, for a smell written inside a string: a CSS `'#rrggbb'`, a tool source's colours) and
   `sanctioned` (`{file, member, count, why}` entries naming hits INSIDE scanned files that are not the smell; a hit's
-  member is the nearest class-body key above it at the 2-space indent, or in a mixin the nearest key at the member
-  indent the shared grouping locks (`mixinMemberIndent`, §6b: 4 or 6 spaces) — a data member's key as well as a
-  method's, since a sanctioned literal can sit in a field; an entry matches
+  member is the nearest class-body key above it at the 2-space indent (`Object::x =` is no key), or in a mixin the
+  nearest key at the member indent the shared grouping locks (`mixinMemberIndent`, §6b: 4 or 6 spaces) — a data
+  member's key as well as a method's, since a sanctioned literal can sit in a field — or, reached first, the code at
+  the left margin: a definition there (`lib/name-definitions.js`: a top-level function, an expando, a prototype
+  extension) names the member, any other code is `(top)`; a literal's body never counts; an entry matches
   only at its exact count, and fails the build otherwise, so it is a declaration that cannot rot into a hiding place).
   **Current stinks: seven seeded 2026-07-15**, **three comment-hygiene
   ratchets added at the 2026-07-17 comments cleanup**, `comment-past-receipt` (2026-08-09) and `raw-chrome-color`
@@ -302,7 +304,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   | `debugger-statement` | 33 | left-in debug cruft; hard-stops execution whenever devtools are open (Pharo: `ReCodeCruftLeftInMethodsRule`) |
   | `nil-literal` | 0 | HARD: the `nil = undefined` global is RETIRED (`archive/nil-global-retirement.md`), so a `nil` is a ReferenceError waiting to happen. Replaced `undefined-literal` (baseline 83), which enforced the now-inverted convention |
   | `null-literal` | 6 | `undefined` is the ONE absence value; the JS-interop sites (`JSON.stringify`'s arg, `onload = null`) are the tolerated tail |
-  | `wall-clock` | 13 | a read of the wall clock — `Date.now()`, or a `new Date` given no argument (followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` / `new Date -x` are values) — breaks event-stream determinism (DETERMINISM.md — recognition keys off EVENT timestamps); sanctioned by name: the world's one per-cycle clock (`WorldWdgt._updateTimeReferences`), a clock widget built outside a cycle, and the harness's own clocks. Cannot see: a read inside a string interpolation (the mask blanks `#{ }`), and `performance.now()` |
+  | `clock-read` | 13 | a read of a clock — the wall clock (`Date.now()`, or a `new Date` given no argument, followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` / `new Date -x` are values) or the monotonic one (`performance.now()`) — breaks event-stream determinism (DETERMINISM.md — recognition keys off EVENT timestamps); sanctioned by name: the world's one per-cycle clock (`WorldWdgt._updateTimeReferences`), a clock widget built outside a cycle, the harness's own clocks, the compile scheduler's frame budget (`WorldWdgt.doOneCycle`, `SourceCompileScheduler.drainAtEndOfCycle` / `_drain`) — which paces how much compiling a frame does: on the pages the suite drives nothing is queued behind a running world, so no reference pixel depends on it, while on `index.html` it decides in which frame a lazy part's door opens (why laziness is held by rigs, not SystemTests) — and the ingest's debug timing. Its existential spellings count too (`performance?.now()`, `Date.now?()`). Cannot see: a read inside a string interpolation (the mask blanks `#{ }`); a clock passed uncalled (`performance.now.bind performance`, `opts.now ? Date.now`), read through a string key (`performance['now']()`) or by `do`; `Date()` without `new`; and clocks read through other APIs (`performance.timeOrigin`, `event.timeStamp`, a `requestAnimationFrame` callback's timestamp, `document.timeline`) |
   | `timer` | 4 | `setTimeout`/`setInterval` diverge at dpr2 under parallel load (bug-class B); the cycle/step machinery is the sanctioned clock |
   | `math-random` | 5 | breaks byte-exact screenshot determinism in render/layout/input code |
   | `instanceof-type-test` | 74 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`) |

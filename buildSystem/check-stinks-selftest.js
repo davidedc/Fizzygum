@@ -16,7 +16,7 @@ const PLANT = {
   'debugger-statement': 'debugger',
   'nil-literal': 'bpNil = nil',
   'null-literal': 'bpNull = null',
-  'wall-clock': 'bpT = new Date',
+  'clock-read': 'bpT = new Date',
   'timer': 'setTimeout (-> 1), 0',
   'math-random': 'bpR = Math.random()',
   'instanceof-type-test': 'bpI = bpX instanceof Widget',
@@ -26,6 +26,7 @@ const PLANT = {
   'commented-out-debug': '# debugger',
   'comment-past-receipt': '# formerly the bite-proof plant',
 };
+const BOOT_LOADER = 'boot/loading-and-compiling-coffeescript-sources.coffee';
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 proveGate({
@@ -40,18 +41,26 @@ proveGate({
     lines.push('    bpH = "#"; bpNullAfterHash = null', '    bpS = "null"', '    bpQ = "# this used to be text, not a comment"');
     // the clock's other spellings each a hit, and a Date built from a value none
     lines.push('    bpT2 = Date.now()', '    bpT3 = (new Date).getTime()', '    bpT4 = new Date - bpStart', '    bpT5 = [new Date]',
-               '    bpT6 = new Date or bpY', '    bpV = new Date bpMs', '    bpV2 = new Date -bpMs');
+               '    bpT6 = new Date or bpY', '    bpT7 = performance.now()', '    bpT8 = performance?.now()', '    bpT9 = Date.now?()',
+               '    bpV = new Date bpMs', '    bpV2 = new Date -bpMs');
     return [{
       label: 'every stink over its baseline, a sanction miscounted',
       plants: { 'BiteProofStinks.coffee': lines.join('\n') + '\n' },
-      edits: [['WorldWdgt.coffee', /^(  _showDamageRects: \(aContext\) ->\n)/m, '$1    bpC = new Color 1, 2, 3\n']],
+      // a clock read inside a sanctioned top-level function counts against its entry, one at the left margin after it
+      // does not (it is `(top)`)
+      edits: [['WorldWdgt.coffee', /^(  _showDamageRects: \(aContext\) ->\n)/m, '$1    bpC = new Color 1, 2, 3\n'],
+              [BOOT_LOADER, /^(  if srcLoadCompileDebugWrites then t0 = performance\.now\(\)\n)/m, '$1  bpTIn = performance.now()\n'],
+              [BOOT_LOADER, /\n$/, '\nbpTTop = performance.now()\n']],
       expect: {
         ...Object.fromEntries(Object.entries(PLANT).map(([id, text]) => [id, new RegExp(`^    BiteProofStinks\\.coffee:\\d+: ${esc(text)}$`, 'm')])),
         SANCTION_COUNT: /^    SANCTION COUNT WorldWdgt\.coffee::_showDamageRects — expects 1, found 2/m,
       },
       lines: [/^    BiteProofStinks\.coffee:\d+: bpH = "#"; bpNullAfterHash = null$/m,
-              ...['bpT2 = Date.now()', 'bpT3 = (new Date).getTime()', 'bpT4 = new Date - bpStart', 'bpT5 = [new Date]', 'bpT6 = new Date or bpY']
-                .map((l) => new RegExp(`^    BiteProofStinks\\.coffee:\\d+: ${esc(l)}$`, 'm'))],
+              ...['bpT2 = Date.now()', 'bpT3 = (new Date).getTime()', 'bpT4 = new Date - bpStart', 'bpT5 = [new Date]', 'bpT6 = new Date or bpY',
+                  'bpT7 = performance.now()', 'bpT8 = performance?.now()', 'bpT9 = Date.now?()']
+                .map((l) => new RegExp(`^    BiteProofStinks\\.coffee:\\d+: ${esc(l)}$`, 'm')),
+              new RegExp(`^    SANCTION COUNT ${esc(BOOT_LOADER)}::storeSourceAndPotentiallyCompileItAndExecuteIt — expects 2, found 3:`, 'm'),
+              new RegExp(`^    ${esc(BOOT_LOADER)}:\\d+: bpTTop = performance\\.now\\(\\)$`, 'm')],
       absent: [/BiteProofStinks\.coffee:\d+: bpS = "null"$/m, /BiteProofStinks\.coffee:\d+: bpQ = "# this used to be/m,
                /BiteProofStinks\.coffee:\d+: bpV = new Date bpMs$/m, /BiteProofStinks\.coffee:\d+: bpV2 = new Date -bpMs$/m],
     }, {

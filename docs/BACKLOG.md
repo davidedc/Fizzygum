@@ -15,13 +15,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       the plan's ledger; measured). Masking src takes
       about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
       build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
-- [ ] **The wall-clock stink does not see `performance.now()`** (found by the independent review closing "The
-      wall-clock stink does not see `new Date` without parentheses", in the plan's ledger; by reading). Its rule names
-      the WALL clock (`Date.now()`, a `new Date` given no argument); `performance.now()` is a clock read it never
-      counts: `WorldWdgt.doOneCycle`'s `cycleStartPerfMs` (the end-of-frame compile budget, every cycle) and seven in
-      `src/boot/loading-and-compiling-coffeescript-sources.coffee` (the compile scheduler's per-frame budget). A
-      `performance.now()` added to render or layout code passes unseen. Each needs counting and sanctioning (a budget
-      that paces work, never what a widget draws) or fixing.
 - [ ] **The automator event commands' constructors are code nothing runs** (found by the same review; by reading).
       Commands are rehydrated from their test's JSON (`Object.setPrototypeOf`), never constructed, so the eight
       `AutomatorEventCommand*` subclasses' constructors (each `super()` + `@automatorEventCommandName`; StartMacro's
@@ -251,6 +244,17 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       class inspector's member rows shrank, and their `ScrolledPaneWdgt` stayed 9164 px tall where a second refresh
       makes it 7420, after which it is stable. At rest no pixel differs, but the scroll range is wrong until then. A
       settled world that a second re-lay still moves is a question for the engine.
+- [ ] **Test macro sources are outside every stink's reach** (found by the independent review closing "The wall-clock
+      stink does not see `performance.now()`", in the plan's ledger; by reading; low). `check-stinks.js` reads the
+      compiled sources (`lib/source-files.js` `compiledFiles`: src and the harness); a macro body is CoffeeScript held
+      in a `tests/` template literal, which the gates that read macros (`check-macro-source-discipline.js`,
+      `check-call-arguments.js`, …) hold to other rules, so a macro that decides something on `Date.now()`,
+      `performance.now()`, `Math.random()` or a timer has no gate. No macro reads a clock
+      today (three mention one, in prose).
+- [ ] **A prototype extension written inside a block is `(top)` to a stink's sanction** (same review; by reading;
+      low). `check-stinks.js` names a member from a class-body key or from the code at the left margin; `Object::hashCode`
+      (`src/boot/extensions/Object-extensions.coffee`) and two of `String-extensions.coffee`'s sit indented under a
+      block, so a sanction there could not name its method. No stink hits one today.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes

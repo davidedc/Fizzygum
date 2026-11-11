@@ -2697,3 +2697,28 @@ for (const s of sites) if (s.absentBefore.length) {
       gate's row, §3c). PROVEN: `check-shippable-coverage-selftest.js` plants a fetch renamed in globalFunctions alone,
       firing exactly both rules by their own lines, and its control carries a comment naming a retired script and
       passes; the four readers' self-tests pass; a lean build and smoke pass by hand.
+- [x] **The wall-clock stink does not see `performance.now()`** (found by the independent review closing "The
+      wall-clock stink does not see `new Date` without parentheses", in the plan's ledger; by reading). Its rule names
+      the WALL clock (`Date.now()`, a `new Date` given no argument); `performance.now()` is a clock read it never
+      counts: `WorldWdgt.doOneCycle`'s `cycleStartPerfMs` (the end-of-frame compile budget, every cycle) and seven in
+      `src/boot/loading-and-compiling-coffeescript-sources.coffee` (the compile scheduler's per-frame budget). A
+      `performance.now()` added to render or layout code passes unseen. Each needs counting and sanctioning (a budget
+      that paces work, never what a widget draws) or fixing.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U11). RULED: one stink for every clock read, named for what it
+      counts. LANDED: `check-stinks.js` `wall-clock` is now `clock-read` and also counts `performance.now()`, either
+      clock existentially too (`performance?.now()`, `Date.now?()`); its eight `performance.now()` reads are
+      sanctioned by member, each reason saying the condition it rests on — the compile scheduler's frame budget
+      (`WorldWdgt.doOneCycle`'s cycle start, `SourceCompileScheduler.drainAtEndOfCycle` and `_drain`) decides how many
+      queued sources compile a frame, so on index.html in which frame a lazy part's door opens, and a page under test
+      queues no compile behind a running world; the ingest's debug timing
+      (`storeSourceAndPotentiallyCompileItAndExecuteIt`) is read only under `srcLoadCompileDebugWrites`. The baseline
+      stays 13 (the unsanctioned wall-clock reads). The stink's member rule now stops at the left margin: code there
+      ends the body above it and names the member `lib/name-definitions.js` `definedName` reads (a boot file's
+      top-level function, an expando, a prototype extension), any other code `(top)`; a heredoc's body is skipped and
+      `Foo::bar =` is no key. Before, a read in a top-level function was filed under the nearest class-body key ABOVE
+      it, in another object (`_updateBootLog`), and a top-level statement under the function before it; no existing
+      sanction moved. Docs: the static-checks index's row and §member, DETERMINISM.md's spin note, the talk plan's
+      three lines. PROVEN: `check-stinks-selftest.js` plants `performance.now()`, `performance?.now()` and
+      `Date.now?()` among the clock spellings, each a hit, and a clock read inside the sanctioned top-level function
+      (its entry then expects 2 and finds 3) with one at the left margin after it, which is `(top)` and leaves that
+      count at 3; the real tree reads 13 at its baseline with 15 sanctioned.
