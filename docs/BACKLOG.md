@@ -60,17 +60,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       loaded wave A (measured 326 s on 2026-11-11, the smoke-apps self-test its longest file now that its two
       never-starting pages wait the shared 90 s each), and its `run-sequence` usage does not say the runner now refuses a
       stale build.
-- [ ] **A build that fails a step can still stamp itself** (found by the same review; by reading). `build_it_please.sh`
-      checks the boot minify's exit, but not the SWCanvas fetch (`vendor-swcanvas.sh`), the boot `coffee -b -c`
-      (caught only through the minify that follows), the SWCanvas bundle's `cat`s, the `bootScripts` loop's
-      `coffee`/`terser`, nor the `cp`s of the pre-compiled stub and `font-assets`: one of them failing still ends with a
-      stamp, and the runners test a tree that is missing a piece.
-- [ ] **A deleted input leaves a build reading FRESH** (found closing "Build freshness reads only the sources'
-      mtimes", in the plan's ledger; by reading). Freshness compares the newest mtime among the files a build is made
-      from (`buildSystem/lib/build-inputs.js`) against `.build-stamp`; a file DELETED since the build moves no
-      surviving file's time, so a removed class source (or a removed asset) leaves the build reading FRESH while it still
-      ships what is gone. The build could record the input list it read beside the stamp, and the check compare the
-      two lists as well as their times.
 - [ ] **`fg status` reads build freshness from the sources alone** (found closing "Build freshness reads only the
       sources' mtimes", in the plan's ledger; by reading; `fg` is local workspace tooling, outside the backlog loop).
       The runners now ask `Fizzygum/buildSystem/lib/build-inputs.js` (the files the build's output is made from)

@@ -617,15 +617,24 @@ There are **no flavour flags**. An unknown argument is a hard error that lists t
 `build_it_please.sh` lays a start marker before it reads any input (once the vendored SWCanvas a fresh clone fetches
 is in place), removes `Fizzygum-builds/latest/.build-stamp` at its first write to the tree, and gives the stamp that
 marker's time as its very last act: a build that did not complete leaves no stamp, and the stamp's time is when the last
-completed build began reading its inputs. A build is STALE when an INPUT — a file
-its output is made from — is newer than its stamp. `buildSystem/lib/build-inputs.js` is the one definition: the FILES
+completed build began reading its inputs. With the marker the build RECORDS every input it is about to read, each
+with its mtime and size (`build-inputs.js --record`, headed by the marker's time), and promotes that record as it
+stamps: `Fizzygum/.latest-build-inputs`, kept OUTSIDE the tree it writes (gitignored) — the developer's input list is
+no part of an artifact, and anything derived from the inputs inside the tree would differ between any two builds `fg
+fingerprint` compares. A build is STALE when an INPUT — a file its output is made from — is not the one recorded:
+edited (during the build or since), deleted, renamed, added, or put back with an older time; or when the stamp or the
+record is missing, or the record is another build's (its start time is not the stamp's). `buildSystem/lib/build-inputs.js`
+is the one definition, and `buildStaleness()` the one question every freshness reader asks. The inputs are the FILES
 the build names, never the directories holding them (a directory also holds what the build never reads — a
 subsystem's `CLAUDE.md`, an editor's swap file, a gate's vendored parser): every compiled source and `src/index.html`,
-the build script and its Python, `parts.json` and the profiles, each part's declared `assets` and `vendor` pieces, the
-files the build script names itself (the SWCanvas bundle's pieces, the pre-compiled stub) and every file under
-`font-assets/`. The gates are not inputs (they judge the output, they do not shape it), nor is the pre-compile driver (it
-shapes only a precompiled profile's image, which no runner tests). ⚠ A DELETED input is not seen (no surviving file's
-time moves). The suite runner, the single runner (except while it captures references), the sequence runner (except
+the build script and its Python, `parts.json` and the profiles (`*.json`), each part's declared `assets` and `vendor`
+pieces, the files the build script names itself (the SWCanvas bundle's pieces, the pre-compiled stub) and every file
+under `font-assets/` (copied afresh each build, so a font deleted from the source is gone from the tree too). The gates
+are not inputs (they judge the output, they do not shape it), nor is the pre-compile driver (it shapes only a
+precompiled profile's image, which no runner tests). Every command that builds, copies, links or removes the tree's
+contents checks its own exit (by hand where it has a remedy to give, else `build_failed`; `build.py` exits 1 on each
+refusal), so a step that fails stops the build before it stamps a tree missing a piece — the `printf` lines appending a
+generated line to the boot bundle are the exception, failing only with the disk. The suite runner, the single runner (except while it captures references), the sequence runner (except
 for its `--list` / `--before` listings), the paint audit and several rigs refuse a stale build (`Fizzygum-tests/scripts/lib/assert-build-fresh.js`;
 `FIZZYGUM_ALLOW_STALE_BUILD=1` overrides); the reference-capture tool does not ask. ⚠ `fg status` prints FRESH/STALE by a check of its own, over the sources only.
 

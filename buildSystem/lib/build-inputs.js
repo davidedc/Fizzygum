@@ -1,44 +1,55 @@
 'use strict';
-// build-inputs.js — is the last build stale? The one answer: what a build's OUTPUT is made from, and when the last
-// build read it. The runners' guard (Fizzygum-tests/scripts/lib/assert-build-fresh.js) and the reports that state
-// freshness ask it.
+// not-a-gate: the build launches it (--record) only to RECORD what it reads; it judges nothing, and a listing it cannot
+// make throws, which the build reports through build_failed.
+// build-inputs.js — is the last build stale? The one answer: what a build's OUTPUT is made from, as each of those files
+// was when the last build began reading it. Every reader asks buildStaleness(): the runners' guard
+// (Fizzygum-tests/scripts/lib/assert-build-fresh.js), the single runner's capture-path warning and torture's report.
 //
 // THE INPUTS are the FILES the build names, never the directories that hold them (a directory also holds what the
 // build never reads — a subsystem's CLAUDE.md, an editor's swap file, a Finder .DS_Store, a gate's vendored parser — and
 // any churn there would read as a stale build):
 //   - every compiled source (lib/source-files.js compiledFiles: src's and the harness's .coffee, the boot files among
 //     them) and src/index.html, which every entry page is written from;
-//   - the build itself: build_it_please.sh, build.py, buildProfile.py, parts.json and the profiles;
+//   - the build itself: build_it_please.sh, build.py, buildProfile.py, parts.json and the profiles (`*.json`);
 //   - what the partition declares a part ships besides its sources: each `assets` source and each `vendor` piece;
 //   - what build_it_please.sh names itself (SHELL_INPUTS below — the SWCanvas bundle's pieces and the pre-compiled stub),
 //     and every file under font-assets/ (copied whole when an entry renders through SWCanvas).
 // Not inputs: the gates (they judge the output, they do not shape it, so a gate edit never makes a build stale), the
 // pre-compile driver (it shapes only a precompiled profile's image, which no runner tests; `fg homepage` runs it) and
 // the videos `--includeVideos` copies from ../Fizzygum-videos-public (outside the repos).
-// ⚠ A DELETED input is not seen: no surviving file's mtime moves (BACKLOG, "A deleted input leaves a build reading FRESH").
 //
-// THE STAMP: build_it_please.sh lays `latest/.build-start` before it reads any input (once the vendored SWCanvas a fresh
-// clone fetches is in place), removes `latest/.build-stamp` at its first write to the tree, and gives the stamp that
-// marker's mtime as its very last act. So a build that did not complete leaves NO stamp, and an input edited while the
-// build ran reads newer than it.
+// THE RECORD: build_it_please.sh lays `latest/.build-start` before it reads any input (once the vendored SWCanvas a
+// fresh clone fetches is in place) and records, with it, every input with its mtime and size (`--record`, headed by the
+// marker's own mtime); it removes the previous stamp and record at its first write to the tree, and promotes the record
+// and gives the stamp the marker's mtime as its very last act. So a build that did not complete leaves neither, the
+// record names the build it belongs to (its start time IS the stamp's), and an input deleted, renamed, added, edited
+// (during the build or since) or put back with an older time is not the one recorded — which no comparison of times
+// with the stamp could show for most of those. The record lives OUTSIDE the tree the build writes
+// (`Fizzygum/.latest-build-inputs`, gitignored): the developer's input list is no part of an artifact, and anything
+// derived from the inputs inside the tree would differ between any two builds `fg fingerprint` compares.
 //
-// newestBuildInput() -> { newest, newestFile } (a file that does not exist is skipped: a declared one the build would
-// fail on, an absent tests repo); lastBuildTime() -> the stamp's mtime, or undefined when no build completed. A
-// listing that fails throws.
+// buildInputs() -> every input file that exists, absolute, sorted (a declared file that does not exist is skipped: one
+// the build would fail on, an absent tests repo); inputRecordLines() -> the record's lines, `<path>\t<mtimeMs>\t<size>`,
+// the path relative to the umbrella; compareRecords(recorded, current) -> { changed, added, removed } (pure: two lists
+// of record lines); lastBuildTime() -> the stamp's mtime, or undefined; buildStaleness() -> { stale: false } or
+// { stale: true, why, changed, added, removed }. A listing that fails throws.
 
 const fs = require('fs');
 const path = require('path');
 const { compiledFiles } = require('./source-files');
 
 const FIZZYGUM = path.resolve(__dirname, '..', '..');
-const STAMP = path.resolve(FIZZYGUM, '..', 'Fizzygum-builds', 'latest', '.build-stamp');   // build_it_please.sh writes it
+const UMBRELLA = path.resolve(FIZZYGUM, '..');
+const STAMP = path.resolve(UMBRELLA, 'Fizzygum-builds', 'latest', '.build-stamp');   // build_it_please.sh writes it
+const RECORD = path.join(FIZZYGUM, '.latest-build-inputs');   // and this, outside the tree (gitignored)
 const BUILD_FILES = ['build_it_please.sh', 'buildSystem/build.py', 'buildSystem/buildProfile.py', 'buildSystem/parts.json',
   'src/index.html'];
 // the files build_it_please.sh reads by name, outside the partition: a rename there is a rename here (a name that no
 // longer exists is skipped, and that input goes unwatched)
 const SHELL_INPUTS = ['runtime-prelude/deterministic-trig.js', 'vendor/swcanvas/swcanvas.min.js', 'vendor/swcanvas/sw3d.js',
   'auxiliary files/pre-compiled.js'];
-const INPUT_TREES = ['buildSystem/profiles', 'font-assets'];   // every file under them
+const INPUT_TREES = ['font-assets'];   // every file under them
+const PROFILES = 'buildSystem/profiles';   // its *.json (an editor's backup beside them is no input)
 
 function declaredPayloads() {
   const parts = JSON.parse(fs.readFileSync(path.join(FIZZYGUM, 'buildSystem', 'parts.json'), 'utf8')).parts;
@@ -66,23 +77,57 @@ function filesUnder(dir) {
   return out;
 }
 
-function newestBuildInput() {
+function buildInputs() {
+  const profiles = path.join(FIZZYGUM, PROFILES);
   const files = [
     ...compiledFiles(),
     ...[...BUILD_FILES, ...SHELL_INPUTS, ...declaredPayloads()].map((f) => path.join(FIZZYGUM, f)),
+    ...fs.readdirSync(profiles).filter((f) => f.endsWith('.json')).map((f) => path.join(profiles, f)),
     ...INPUT_TREES.flatMap((d) => filesUnder(path.join(FIZZYGUM, d))),
   ];
-  let newest = 0, newestFile;
-  for (const file of files) {
-    let mtime;
-    try { mtime = fs.statSync(file).mtimeMs; } catch (_) { continue; }
-    if (mtime > newest) { newest = mtime; newestFile = file; }
+  return [...new Set(files)].filter((file) => fs.existsSync(file)).sort();
+}
+
+const relative = (file) => path.relative(UMBRELLA, file);
+
+function inputRecordLines() {
+  return buildInputs().map((file) => { const st = fs.statSync(file); return relative(file) + '\t' + st.mtimeMs + '\t' + st.size; });
+}
+
+function compareRecords(recorded, current) {
+  const entry = (line) => { const tab = line.indexOf('\t'); return [line.slice(0, tab), line.slice(tab + 1)]; };
+  const before = new Map(recorded.map(entry)), now = new Map(current.map(entry));
+  const changed = [], added = [], removed = [];
+  for (const [file, facts] of now) {
+    if (!before.has(file)) added.push(file); else if (before.get(file) !== facts) changed.push(file);
   }
-  return { newest, newestFile };
+  for (const file of before.keys()) if (!now.has(file)) removed.push(file);
+  return { changed: changed.sort(), added: added.sort(), removed: removed.sort() };
 }
 
 function lastBuildTime() {
   try { return fs.statSync(STAMP).mtimeMs; } catch (_) { return undefined; }
 }
 
-module.exports = { newestBuildInput, lastBuildTime };
+function buildStaleness() {
+  const stampTime = lastBuildTime();
+  if (stampTime === undefined) return { stale: true, why: 'no completed build (no .build-stamp: a build removes it as it starts)', changed: [], added: [], removed: [] };
+  let lines;
+  try { lines = fs.readFileSync(RECORD, 'utf8').split('\n').filter(Boolean); } catch (_) { lines = undefined; }
+  if (!lines || lines[0] !== '# build started at ' + stampTime) {
+    return { stale: true, why: 'no record of the inputs the last build read (' + relative(RECORD) + ' is ' +
+      (lines ? "another build's" : 'missing') + ')', changed: [], added: [], removed: [] };
+  }
+  const d = compareRecords(lines.slice(1), inputRecordLines());
+  const count = d.changed.length + d.added.length + d.removed.length;
+  if (!count) return { stale: false, stampTime };
+  return Object.assign({ stale: true, why: count + " of the build's inputs are not the ones the last build read" }, d);
+}
+
+if (require.main === module) {
+  const marker = process.argv[2] === '--record' && process.argv[3];
+  if (!marker) { console.error('build-inputs.js: the one invocation is --record <start marker> (exit 2)'); process.exit(2); }
+  process.stdout.write('# build started at ' + fs.statSync(marker).mtimeMs + '\n' + inputRecordLines().join('\n') + '\n');
+}
+
+module.exports = { buildInputs, inputRecordLines, compareRecords, lastBuildTime, buildStaleness };

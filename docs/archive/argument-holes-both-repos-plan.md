@@ -2632,3 +2632,39 @@ for (const s of sites) if (s.absentBefore.length) {
       refuses a build an input is newer than, exit 2; two gauntlets green with every touched rig, `fg homepage` green
       (the boot smoke on the production tree), and by hand the boot smoke on the dev tree, on `--profile lean`, and the
       HiDPI check.
+- [x] **A deleted input leaves a build reading FRESH** (found closing "Build freshness reads only the sources'
+      mtimes", in the plan's ledger; by reading). Freshness compares the newest mtime among the files a build is made
+      from (`buildSystem/lib/build-inputs.js`) against `.build-stamp`; a file DELETED since the build moves no
+      surviving file's time, so a removed class source (or a removed asset) leaves the build reading FRESH while it still
+      ships what is gone. The build could record the input list it read beside the stamp, and the check compare the
+      two lists as well as their times.
+- [x] **A build that fails a step can still stamp itself** (found by the same review; by reading). `build_it_please.sh`
+      checks the boot minify's exit, but not the SWCanvas fetch (`vendor-swcanvas.sh`), the boot `coffee -b -c`
+      (caught only through the minify that follows), the SWCanvas bundle's `cat`s, the `bootScripts` loop's
+      `coffee`/`terser`, nor the `cp`s of the pre-compiled stub and `font-assets`: one of them failing still ends with a
+      stamp, and the runners test a tree that is missing a piece.
+      — both CLOSED 2026-11-11 (self-ruled; loop unit U9). RULED: the build records WHAT it read — each input as it
+      was when the build began — outside the tree it writes, and every command that builds, copies, links or removes
+      the tree's contents checks its own exit. LANDED: `buildSystem/lib/build-inputs.js` `buildInputs()` (profiles'
+      `*.json` only now, not an editor's backup beside them), `--record <start marker>` (each input's path, mtime and
+      size, headed by the marker's time), the pure `compareRecords`, and `buildStaleness()` — the ONE freshness question
+      every reader asks (the runners' guard, the single runner's capture-path warning, torture's report; the old
+      newest-mtime-against-the-stamp check folds into it). `build_it_please.sh` writes the record with the start marker
+      to `Fizzygum/.latest-build-inputs.reading` (gitignored), removes the previous stamp and record at its first write,
+      and promotes the record as it stamps; node is checked up front (the build needs it whatever it skips); the stamp
+      step names a concurrent build again; `build_failed "<what>"`, the script's own error idiom in function form, on
+      every formerly unchecked step (the SWCanvas fetch, the boot compile and its harness-check strip, the parts
+      manifest's join, the bundles' `cat`s, the cleanups and directories, the tests link, the font-assets copy, the boot
+      scripts' compile and minify, the stub and video copies, the pre-compiled image's strip, minify and move, lean's
+      drops); font-assets copied AFRESH, so a font deleted from the source leaves the tree; `build.py`'s escape refusal
+      exits 1 (a bare `exit()` ended it with status 0 half-way, and the build stamped a tree with no parts manifest or
+      entry pages). The independent review found the first shape kept a names-only record INSIDE the tree (464 KB in
+      every artifact, the lean appliance's included, and an `fg fingerprint` that could never read identical), missed a
+      file put back with an older time, kept serving deleted fonts, and still had build.py's exit and a dozen steps
+      unchecked: each is fixed above. Docs: build-and-packaging §6, the tests CLAUDE.md, the guard's, the build's and
+      build-inputs.js's own comments. PROVEN: `build-inputs-selftest.js` (node tier, every build: an edit, an older
+      time, another size, a deletion, an old-time addition, a rename each read as a change; unchanged and reordered as
+      none); by hand, on the final shape, a font asset given an older time reads STALE (changed), its time put back
+      reads fresh, moved away reads STALE (gone) and is GONE from the tree a rebuild then makes; a vault escape character
+      planted in a class source stops the build at build.py with no stamp and no record; the pre-compiled stub moved
+      away stops it at its copy (first shape, same helper); the gauntlet and `fg homepage` green on the final shape.

@@ -28,6 +28,16 @@
 # `path/to/build_it_please.sh` would build against the wrong tree. Fail loudly if we cannot cd.
 cd "$(dirname "$0")" || { echo "build_it_please.sh: FATAL — cannot cd to my own directory ($(dirname "$0"))" >&2; exit 1; }
 
+# A STEP THAT FAILED stops the build here, before the tree is stamped (the stamp is the build's last act, so a tree
+# missing a piece is never tested as complete): this script's own error idiom in function form, for a step written
+# `<step> || build_failed "<what it was doing>"`. (This script has no `set -e`: every step that writes the tree checks
+# its own exit, by hand where it has a remedy of its own to give, else through here.)
+build_failed() {
+  tput bel
+  echo "!!!!!!!!!!! error: $1 failed" 1>&2
+  exit 1
+}
+
 BUILD_PATH=../Fizzygum-builds/latest
 SCRATCH_PATH=$BUILD_PATH/delete_me
 
@@ -132,7 +142,7 @@ if [ ! -f "$SWCANVAS_VENDOR/swcanvas.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.
    [ ! -f "$SWCANVAS_VENDOR/swcanvas-3d-core.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.min.js" ] || \
    [ ! -f "$SWCANVAS_VENDOR/VERSION" ]; then
   echo "SWCanvas bundle (incl. sw3d.js + the 3D-core target) missing — fetching from $SWCANVAS_PIN ..."
-  ./scripts/vendor-swcanvas.sh
+  ./scripts/vendor-swcanvas.sh || build_failed "fetching the vendored SWCanvas (./scripts/vendor-swcanvas.sh)"
 elif [ -f "$SWCANVAS_PIN" ]; then
   PINNED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_PIN")
   VENDORED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_VENDOR/VERSION")
@@ -146,8 +156,20 @@ fi
 # vendored SWCanvas above is in place (a fresh clone fetches it: inputs this build only produced must not read newer
 # than its stamp): a start marker is laid, whose mtime the stamp takes at the very end, so an input edited WHILE this
 # build runs reads newer than its stamp. The previous stamp goes at the build's first write (the cleanup below).
+# With the marker, WHAT the build is about to read, each input with its mtime and size (buildSystem/lib/build-inputs.js
+# --record): a record promoted with the stamp, so an input deleted, renamed, added or put back with an older time since
+# this build is seen too, which no comparison of times with the stamp shows. It is kept OUTSIDE the tree the build
+# writes (Fizzygum/.latest-build-inputs, gitignored): a record of the developer's inputs is no part of an artifact, and
+# anything derived from the inputs inside the tree would differ between any two builds `fg fingerprint` compares.
+# node lists them: the build needs it whatever else it is asked to skip.
+if ! command -v node &> /dev/null
+then
+    echo "Node.js could not be found; the build needs it (it records its inputs, and runs the syntax gate)."
+    exit 1
+fi
 mkdir -p $BUILD_PATH
 touch "$BUILD_PATH/.build-start"
+node buildSystem/lib/build-inputs.js --record "$BUILD_PATH/.build-start" > .latest-build-inputs.reading || build_failed "recording the build's inputs (buildSystem/lib/build-inputs.js)"
 
 if ! command -v terser &> /dev/null
 then
@@ -159,14 +181,6 @@ if ! command -v coffee &> /dev/null
 then
     echo "CoffeeScript could not be found, please install it using:"
     echo "npm install --global coffeescript"
-    exit 1
-fi
-
-# node runs the build-time syntax gate (buildSystem/check-coffee-syntax.js).
-if ! $noSyntaxCheck && ! command -v node &> /dev/null
-then
-    echo "Node.js could not be found; it is needed for the CoffeeScript syntax gate."
-    echo "Install Node, or re-run with --noSyntaxCheck to skip the gate."
     exit 1
 fi
 
@@ -216,7 +230,7 @@ echo "profile: $PROFILE_NAME — form $PROFILE_FORM, tests $PROFILE_SHIPS_TESTS,
 # spelling here, even a wrong one, can reach the real tests through the link.
 remove_tests_link() {
   if [ -L "$BUILD_PATH/js/tests" ]; then
-    rm -f "$BUILD_PATH/js/tests"
+    rm -f "$BUILD_PATH/js/tests" || build_failed "removing the previous tests link"
   fi
   return 0
 }
@@ -226,17 +240,17 @@ remove_tests_link() {
 # The build's first write: the previous stamp goes with the tree it described, so a build that does not complete
 # leaves NONE — never the last good build's, which would let a runner test whatever this one left half-written. (A
 # build that stops before this point, on an unknown profile or a missing tool, leaves the previous tree and its stamp.)
-rm -f "$BUILD_PATH/.build-stamp"
+rm -f "$BUILD_PATH/.build-stamp" .latest-build-inputs || build_failed "removing the previous build's stamp and record"
 
-rm -rf $BUILD_PATH/*.html
-rm -rf $BUILD_PATH/icons
+rm -rf $BUILD_PATH/*.html || build_failed "removing the previous entry pages"
+rm -rf $BUILD_PATH/icons || build_failed "removing the previous icons"
 
 # Drop the link BEFORE wiping js/ — `rm -rf` on a directory CONTAINING a symlink removes the
 # link and never descends through it (verified), but removing it first means the recursive
 # delete never meets a symlink at all.
 remove_tests_link
 # remove the whole $BUILD_PATH/js directory
-rm -rf $BUILD_PATH/js
+rm -rf $BUILD_PATH/js || build_failed "removing the previous js tree"
 
 if $keepPreviousPrivateVideos ; then
   if [ ! -d $BUILD_PATH/videos/Fizzygum-videos-private ]; then
@@ -252,7 +266,7 @@ if $keepPreviousPrivateVideos ; then
   fi
 else
   # remove the whole $BUILD_PATH/videos directory
-  rm -rf $BUILD_PATH/videos
+  rm -rf $BUILD_PATH/videos || build_failed "removing the previous videos"
 fi
 
 # read -p "Directories should be clean, press key to continue... " -n1 -s
@@ -262,11 +276,11 @@ fi
 
 
 if [ ! -d $BUILD_PATH/js ]; then
-  mkdir $BUILD_PATH/js
+  mkdir $BUILD_PATH/js || build_failed "making the js directory"
 fi
 
 if [ ! -d $BUILD_PATH/icons ]; then
-  mkdir $BUILD_PATH/icons
+  mkdir $BUILD_PATH/icons || build_failed "making the icons directory"
 fi
 
 if $includeVideos ; then
@@ -276,21 +290,21 @@ if $includeVideos ; then
 fi
 
 if [ ! -d $BUILD_PATH/js/libs ]; then
-  mkdir $BUILD_PATH/js/libs
+  mkdir $BUILD_PATH/js/libs || build_failed "making the js/libs directory"
 fi
 
 if [ ! -d $BUILD_PATH/js/coffeescript-sources ]; then
-  mkdir $BUILD_PATH/js/coffeescript-sources
+  mkdir $BUILD_PATH/js/coffeescript-sources || build_failed "making the class sources directory"
 fi
 
 if [ ! -d $BUILD_PATH/js/src ]; then
-  mkdir $BUILD_PATH/js/src
+  mkdir $BUILD_PATH/js/src || build_failed "making the js/src directory"
 fi
 
 # the scratch is this build's own: a build that stopped half-way left its intermediates, which the boot bundle's
 # appends (>>) would otherwise build on
-rm -rf "$SCRATCH_PATH"
-mkdir "$SCRATCH_PATH"
+rm -rf "$SCRATCH_PATH" || build_failed "removing the previous scratch directory"
+mkdir "$SCRATCH_PATH" || build_failed "making the scratch directory"
 
 # ---- serve the tests through a link instead of copying them in ----
 # $BUILD_PATH/js/tests -> the sibling tests repo's tests/ directory. RELATIVE (so the whole
@@ -305,7 +319,7 @@ if ! $PROFILE_SHIPS_TESTS ; then
   # condition is plain BUILDFLAG_LOAD_TESTS — see globalFunctions.coffee), so it needs nothing here.
   remove_tests_link
 else
-  ln -sfn ../../../Fizzygum-tests/tests $BUILD_PATH/js/tests
+  ln -sfn ../../../Fizzygum-tests/tests $BUILD_PATH/js/tests || build_failed "linking the tests (js/tests)"
   # The two manifests the booting world loads (js/tests/testsManifest.js +
   # testsAssetsManifest.js) are DERIVED from the tests/ tree and gitignored, so generate them
   # here — that keeps "build, then open index.html in a browser" working with no extra step.
@@ -977,7 +991,7 @@ echo "compiling boot file..."
 # build.py writes it from buildSystem/parts.json. It is data nothing reads until boot runs, so it sits
 # with the build flags in the bundle's generated head.
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat $SCRATCH_PATH/partsManifest.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat $SCRATCH_PATH/partsManifest.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee || build_failed "adding the parts manifest to the boot bundle"
 
 # Then the boot itself: every shipping part's `bootPrelude` pieces (buildSystem/parts.json), in the
 # partition's order -- core's own first (the SourceVault, which every sources_batch_*.js needs before
@@ -1006,7 +1020,7 @@ printf "\nbuildVersion = 'Fizzygum %s (%s)%s'" "$FG_BUILD_SHA" "$FG_BUILD_WHEN" 
 # JS, so it is an intermediate like $BOOT_MIN below (which the SW/native assembly already removes
 # with the same reasoning). Keeping intermediates out of the tree is what makes "what a flavour
 # ships" derivable instead of something a per-flavour prune list has to remember.
-coffee -b -c -o $SCRATCH_PATH/ $SCRATCH_PATH/fizzygum-boot.coffee
+coffee -b -c -o $SCRATCH_PATH/ $SCRATCH_PATH/fizzygum-boot.coffee || build_failed "compiling the boot bundle's CoffeeScript"
 BOOT_JS=$SCRATCH_PATH/fizzygum-boot.js
 echo "... done compiling boot file"
 
@@ -1023,8 +1037,8 @@ if ! $PROFILE_SHIPS_TESTS ; then
   #
   # notice that OSX sed is different from GNU sed, so we need to give the -i '' parameter which means
   # "in-place editing, but don't make a backup file"
-  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BOOT_JS
-  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BOOT_JS
+  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BOOT_JS || build_failed "stripping the harness checks from the boot code"
+  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BOOT_JS || build_failed "stripping the harness checks from the boot code"
 fi
 
 terser --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BOOT_JS
@@ -1070,16 +1084,16 @@ if $PROFILE_SHIPS_SWCANVAS_ENTRY ; then
   # rotated composites cross-engine byte-identical on the reference-matched pages. It runs before any
   # class source compiles, so no widget can ever observe the un-patched Math. Do not move it later.
   # See runtime-prelude/deterministic-trig.js and src/macros/MACRO-PATTERNS.md.
-  cat runtime-prelude/deterministic-trig.js > $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  cat runtime-prelude/deterministic-trig.js > $BUILD_PATH/js/fizzygum-boot-sw-min.js || build_failed "assembling the SW boot bundle (the deterministic trig)"
   printf '\n;try { DetTrig.install(Math); } catch (e) {}\n;\n' >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
-  cat $SWCANVAS_VENDOR/swcanvas.min.js >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  cat $SWCANVAS_VENDOR/swcanvas.min.js >> $BUILD_PATH/js/fizzygum-boot-sw-min.js || build_failed "assembling the SW boot bundle (SWCanvas)"
   printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
   # SW3D — the software-3D userland engine (examples/sw3d.js), bundled UNMINIFIED right after
   # SWCanvas so window.SW3D exists at boot. It reads SWCanvas.Core.* lazily (only inside
   # makeEngine at render time), so loading it after SWCanvas is sufficient.
-  cat $SWCANVAS_VENDOR/sw3d.js >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  cat $SWCANVAS_VENDOR/sw3d.js >> $BUILD_PATH/js/fizzygum-boot-sw-min.js || build_failed "assembling the SW boot bundle (SW3D)"
   printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
-  cat $BOOT_MIN >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  cat $BOOT_MIN >> $BUILD_PATH/js/fizzygum-boot-sw-min.js || build_failed "assembling the SW boot bundle (the boot code)"
   echo "... done assembling the SW boot bundle"
 fi
 
@@ -1097,7 +1111,7 @@ fi
 # reached for the global by name would throw `DetTrig is not defined` the moment a window was rotated;
 # ../Fizzygum-tests/scripts/smoke-boot-headless.js rotates a widget on this page to keep that honest.
 echo "assembling the native boot bundle (boot only — the 3D vendor rides with its part)..."
-cat $BOOT_MIN > $BUILD_PATH/js/fizzygum-boot-native-min.js
+cat $BOOT_MIN > $BUILD_PATH/js/fizzygum-boot-native-min.js || build_failed "assembling the native boot bundle"
 echo "... done assembling the native boot bundle"
 
 # ---- the fizzytiles 3D vendor payload, as a PART file --------------------------------------------
@@ -1138,12 +1152,15 @@ rm $BOOT_MIN
 if $PROFILE_SHIPS_SWCANVAS_ENTRY ; then
   if [ -d font-assets ] ; then
     echo "copying SWCanvas font assets..."
-    mkdir -p $BUILD_PATH/font-assets
-    cp -R font-assets/* $BUILD_PATH/font-assets/
+    # copied AFRESH: a copy over the previous one only adds and overwrites, so a font deleted from the source would
+    # still be served from the tree (and the record of the inputs would say it is gone)
+    rm -rf $BUILD_PATH/font-assets || build_failed "removing the previous font assets"
+    mkdir -p $BUILD_PATH/font-assets || build_failed "making the font-assets directory"
+    cp -R font-assets/* $BUILD_PATH/font-assets/ || build_failed "copying the SWCanvas font assets"
     echo "... done copying SWCanvas font assets"
   fi
 else
-  rm -rf $BUILD_PATH/font-assets
+  rm -rf $BUILD_PATH/font-assets || build_failed "removing the font assets no page here loads"
 fi
 
 # (the entry pages themselves are written by build.py from src/index.html — see its ENTRY_PAGES)
@@ -1161,10 +1178,10 @@ fi
 # into the scratch dir, never into the tree. It used to be compiled into js/src/ and then deleted
 # again by the --homepage prune, which is the same untidiness with a per-flavour list in front of it.
 JSSRC_SCRATCH=$SCRATCH_PATH/js-src
-mkdir -p $JSSRC_SCRATCH
+mkdir -p $JSSRC_SCRATCH || build_failed "making the boot scripts scratch directory"
 # js/src/ used to be created as a side effect of compiling INTO it; terser will not create its
 # output's directory, so make it explicitly now that only minified files land there.
-mkdir -p $BUILD_PATH/js/src
+mkdir -p $BUILD_PATH/js/src || build_failed "making the js/src directory"
 
 # The scripts boot fetches by name (js/src/<name>-min.js): the shipping parts' `bootScripts`
 # (buildSystem/parts.json), each compiled on its own. ⚠ dependencies-finding (the class LOAD ORDER,
@@ -1174,17 +1191,17 @@ mkdir -p $BUILD_PATH/js/src
 # build hang until puppeteer's protocol timeout, with no error naming the missing file (measured).
 for eachBootScript in "${PROFILE_BOOT_SCRIPTS[@]}" ; do
   eachBootScriptName=$(basename "$eachBootScript" .coffee)
-  coffee -b -c -o "$JSSRC_SCRATCH/" "$eachBootScript"
-  terser --compress --output "$BUILD_PATH/js/src/$eachBootScriptName-min.js" -- "$JSSRC_SCRATCH/$eachBootScriptName.js"
+  coffee -b -c -o "$JSSRC_SCRATCH/" "$eachBootScript" || build_failed "compiling the boot script $eachBootScript"
+  terser --compress --output "$BUILD_PATH/js/src/$eachBootScriptName-min.js" -- "$JSSRC_SCRATCH/$eachBootScriptName.js" || build_failed "minifying the boot script $eachBootScript"
 done
 
 echo "copying pre-compiled file"
-cp auxiliary\ files/pre-compiled.js $BUILD_PATH/js/pre-compiled.js
+cp auxiliary\ files/pre-compiled.js $BUILD_PATH/js/pre-compiled.js || build_failed "copying the pre-compiled stub"
 echo "... done"
 
 
 if $includeVideos ; then
-  cp ../Fizzygum-videos-public/* $BUILD_PATH/videos/
+  cp ../Fizzygum-videos-public/* $BUILD_PATH/videos/ || build_failed "copying the videos"
 fi
 
 echo "... done copying icon files"
@@ -1233,11 +1250,11 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
   #
   # notice that OSX sed is different from GNU sed, so we need to give the -i '' parameter which means
   # "in-place editing, but don't make a backup file"
-  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/pre-compiled.js
-  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/pre-compiled.js
+  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/pre-compiled.js || build_failed "stripping the harness checks from the pre-compiled image"
+  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/pre-compiled.js || build_failed "stripping the harness checks from the pre-compiled image"
 
-  terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js
-  mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js
+  terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js || build_failed "minifying the pre-compiled image"
+  mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js || build_failed "moving the minified pre-compiled image into place"
 
   # sources: "none" -- the appliance artifact. The class source text was a build INPUT: the driver
   # above harvested the pre-compiled image by booting this very tree in compile-at-boot mode and
@@ -1256,21 +1273,25 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
   # skip dependencies-finding and the generation boot hangs on a 404 until puppeteer times out.
   if [ "$PROFILE_SOURCES" = "none" ] ; then
     echo "sources policy 'none': dropping the reflective layer (it was only an input to the pre-compiled image)"
-    rm -rf $BUILD_PATH/js/coffeescript-sources
-    rm -f $BUILD_PATH/js/src/dependencies-finding-min.js
+    rm -rf $BUILD_PATH/js/coffeescript-sources || build_failed "dropping the class sources (sources: none)"
+    rm -f $BUILD_PATH/js/src/dependencies-finding-min.js || build_failed "dropping the reflective layer's boot script (sources: none)"
   fi
 fi
 
 # BUILD STAMP: written ONLY here, at the very end of a successful build, with the mtime of the start marker laid
-# before the build read its first input. The suite runners refuse to run if any INPUT of the build is newer than this
-# stamp (or it is missing) -- so a build that didn't run / failed / ran from the wrong cwd, or whose inputs changed
-# while it ran, can never be tested as if fresh. The inputs: buildSystem/lib/build-inputs.js; the refusal:
+# before the build read its first input, and with it the record of the inputs it read (Fizzygum/.latest-build-inputs,
+# bound to this stamp by that start time). The runners refuse to run if the inputs are not, each, the one recorded (its
+# mtime and size; one deleted, renamed, added or put back), or if the stamp or the record is missing -- so a build that
+# didn't run / failed / ran from the wrong cwd, or whose inputs changed while or since it ran, can never be tested as
+# if fresh. The inputs and the question: buildSystem/lib/build-inputs.js buildStaleness; the refusal:
 # Fizzygum-tests/scripts/lib/assert-build-fresh.js.
-if ! touch -r "$BUILD_PATH/.build-start" "$BUILD_PATH/.build-stamp" ; then
+if [ ! -f "$BUILD_PATH/.build-start" ] ; then
   tput bel
   echo "!!!!!!!!!!! error: could not write the build stamp (no .build-start: another build in this tree?)" 1>&2
   exit 1
 fi
+mv .latest-build-inputs.reading .latest-build-inputs || build_failed "recording the inputs this build read"
+touch -r "$BUILD_PATH/.build-start" "$BUILD_PATH/.build-stamp" || build_failed "writing the build stamp"
 rm -f "$BUILD_PATH/.build-start"
 
 # for OSX: say build done

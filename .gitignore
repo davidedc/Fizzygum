@@ -13,3 +13,7 @@ font-assets/
 buildSystem/__pycache__/
 # find_duplicated_code.sh (jscpd) output — regenerated on every run.
 duplication-report/
+# the build's record of the inputs it read (buildSystem/lib/build-inputs.js), kept beside the source, never in the
+# tree it writes: it describes ../Fizzygum-builds/latest, and changes with every build.
+/.latest-build-inputs
+/.latest-build-inputs.reading

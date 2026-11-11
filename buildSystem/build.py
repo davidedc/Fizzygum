@@ -32,6 +32,7 @@ import shutil
 import ntpath
 
 import argparse
+import sys
 
 # THE FLAVOUR, as data. buildProfile.py reads buildSystem/profiles/<name>.json and derives from it
 # everything this build used to decide by asking "is this the homepage?" -- read its header first.
@@ -406,8 +407,10 @@ def main():
             # since js (plain) strings can't span across multiple lines.
 
             if ("＂" in content) or ("⧹" in content) or ("⤶" in content):
-              print("ERROR: I'm replacing a special character with a character that is already present in " + filename + ". Likely to be a problem.")
-              exit()
+              # a refusal, never a stop: a bare exit() would end this script with status 0 half-way through
+              # the batches, and the build would stamp a tree with no parts manifest and no entry pages
+              print("ERROR: I'm replacing a special character with a character that is already present in " + filename + ". Likely to be a problem.", file=sys.stderr)
+              sys.exit(1)
 
             escaped_content = content.replace('"',"＂")
             escaped_content = escaped_content.replace("\\","⧹")
