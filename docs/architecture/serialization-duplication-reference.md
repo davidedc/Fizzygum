@@ -193,8 +193,10 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
   `rgba` (the integers the format keeps — an `iid`, a `$Canvas`'s size and ratio — are integers by construction).
   `Serializer.NUMBERS_JSON_CANNOT_WRITE` is the one list; `Serializer.numberRef` writes by it and
   `Deserializer.numberFrom` reads by it. A load refuses up front (`_envelopeShapeProblem`) a `{"$num"}` naming any
-  other text, and a `$Date` time or `Color` component that is no number (a `Color` keeps four); a save refuses a
-  `Color` whose component is no number, so it never writes what the load refuses. `Color.create` keeps no -0 (its
+  other text, and a `$Date` time or `Color` component that is no number (a `Color` keeps four); a save never
+  holds such a `Color` to write, since a colour holds numbers (its components normalized in one place, `Color._channel`
+  and `Color._alpha`, which the constructor and `create` before it keys both read), so it never writes what the load
+  refuses. `Color.create` keeps no -0 (its
   cache key reads -0 and 0 as one colour), so a save's bytes do not depend on which spelling minted a colour first.
 - **Native types carry `$`-prefixed class tags** (`$Array`/`$Date`/`$Canvas`/`$Object`/
   `$Map`/`$Set`). User class names are CoffeeScript identifiers and can

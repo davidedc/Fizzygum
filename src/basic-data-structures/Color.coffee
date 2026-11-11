@@ -179,21 +179,21 @@ class Color
   # go through a cache so you try to keep only ONE instance
   # of each color, say, BLACK, in the system.
   constructor: (@_r = 0, @_g = 0, @_b = 0, @_a = 1) ->
-    @_r = Math.round(@_r)
-    @_g = Math.round(@_g)
-    @_b = Math.round(@_b)
+    @_r = Color._channel @_r
+    @_g = Color._channel @_g
+    @_b = Color._channel @_b
+    @_a = Color._alpha @_a
 
   # static factory - this is the one that should be used all the
   # times - caches constructed colors, since they are immutable
   # see https://stackoverflow.com/questions/929021/what-are-static-factory-methods
   @create: (r = 0, g = 0, b = 0, a = 1) ->
-    # a colour has no signed zero: a -0 (the round of a small negative) is the 0 the cache key reads
-    # it as, so the one instance of that colour holds 0 whichever spelling minted it first (`+ 0`
-    # turns -0 into 0 and leaves every other number as it is)
-    r = Math.round(r) + 0
-    g = Math.round(g) + 0
-    b = Math.round(b) + 0
-    a = 0 if Object.is a, -0
+    # keyed by the components as the colour will hold them (_channel, _alpha), so every spelling of one
+    # colour finds its one instance
+    r = Color._channel r
+    g = Color._channel g
+    b = Color._channel b
+    a = Color._alpha a
 
     cacheKey = r + "," + g + "," + b + "," + a
     permanentEntry = @_permanent[cacheKey]
@@ -203,6 +203,21 @@ class Color
       cacheEntry = new @ r, g, b, a
       @_cache.set cacheKey, cacheEntry
     return cacheEntry
+
+  # A COLOUR HOLDS NUMBERS, normalized in this one place, which the constructor and @create (before it
+  # keys: its cache key is the components as text) both read, so every spelling of a colour is one
+  # colour, held one way. A component given as anything but a number is read as one, as a numerical
+  # pin reads its input (Number): a text cell's "200" is 200, and a string alpha "0.5" is the number 0.5
+  # -- else, kept as given, it would key apart from 0.5, or (were its text the number's) be minted first
+  # and then handed, string and all, to every later 0.5. A colour has no signed zero either: a -0 (the
+  # round of a small negative, or a -0 alpha) is the 0 the key reads it as (`+ 0` turns -0 into 0 and
+  # leaves every other number as it is), so a save's bytes do not depend on which spelling came first.
+  # A channel is a whole intensity, so it is rounded; an alpha is any opacity.
+  @_channel: (value) ->
+    Math.round(Number value) + 0
+
+  @_alpha: (value) ->
+    Number(value) + 0
 
   # the permanent twin of @create, used by the named constants above: interns the color
   # in @_permanent (never evicted), keeping it THE canonical instance for its rgba

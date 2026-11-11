@@ -104,7 +104,11 @@ definition).
 (`Color._cache`, 300 slots, 24h TTL). So a named constant stays THE canonical instance for the
 whole session, while ad-hoc colors dedupe best-effort. Derivations (`mixed`, `lighter`,
 `darker`) all route through `create` — never bare `new`, which would bypass the
-dedupe.
+dedupe. A colour HOLDS NUMBERS, normalized in one place (`Color._channel`, `Color._alpha`) that the
+constructor and `create` (before it keys — its key is the components as text) both read: a component
+given as anything else is read as a number, as a numerical pin reads its input (a text cell's `"200"`
+is 200, a string alpha `"0.5"` the number 0.5), a channel is rounded, and -0 is 0 — so every spelling
+of one colour is one colour, held one way.
 
 ## 4. The engine contracts (serialization / duplication)
 

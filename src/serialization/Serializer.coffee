@@ -424,14 +424,10 @@ class Serializer
         return
       if obj instanceof Color
         # restored through Color.create so immutable-color dedupe is preserved. Its components are
-        # numbers, which the load holds it to: one that is not (a run's Color.create 200, 0, 0, "0.5") is
-        # refused here, as the load would refuse the file
+        # numbers -- a colour holds nothing else (Color._channel, Color._alpha), which is what the load
+        # holds a file's Color to
         record.class = "Color"
-        components = [obj._r, obj._g, obj._b, obj._a]
-        for component in components when typeof component isnt "number"
-          fail ("a Color whose component is " + (if component? then typeof component else String component) + ", not a number, cannot be serialized"),
-               path, describe(obj), "Make the colour with numbers (Color.create r, g, b, a), or declare the property holding it in @serializationTransients."
-        record.rgba = (Serializer.numberRef component for component in components)
+        record.rgba = (Serializer.numberRef component for component in [obj._r, obj._g, obj._b, obj._a])
         return
       # --- a plain object literal ---
       if (not obj.constructor?) or obj.constructor is Object

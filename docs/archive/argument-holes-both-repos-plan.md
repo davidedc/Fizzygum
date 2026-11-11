@@ -2552,3 +2552,25 @@ for (const s of sites) if (s.absentBefore.length) {
       rename that hands over a new function; every function keyed, literal or not).
       `SystemTest_macroInspectorOffersOnlyWhatItsSubjectOwns` drops its `_source` companion half. Followers clean on both
       pointers.
+- [x] **`Color.create` never checks its components** (found by the same review; by reading). It rounds r, g and b and
+      takes any alpha, so a run's `Color.create 200, 0, 0, "0.5"` makes a colour whose cache key ("200,0,0,0.5") is the
+      number alpha's too: the first one minted is every later `Color.create 200, 0, 0, 0.5` on the page. (A save
+      refuses such a colour, naming it.)
+      — CLOSED 2026-11-11 (self-ruled; loop unit U6). RULED: a colour HOLDS NUMBERS, normalized in one place both
+      doors read — never refused: a component given as anything else is read as a number, as the house's numerical
+      pins read their input (Number). LANDED: `Color._channel` (Math.round of the number, -0 to 0) and `Color._alpha`
+      (the number, -0 to 0), read by `Color.create` BEFORE it keys and by the constructor, so a string alpha "0.5" is
+      the number 0.5 — one key, one instance, holding a number, whichever spelling is minted first — and `new Color`
+      keeps no -0 either (it used to, against the reference's "a save's bytes do not depend on which spelling came
+      first"). No Color can then hold a non-number, so the save's own refusal of one (`Serializer`'s Color branch) is
+      unreachable and is deleted — the load's vetting of a FILE's Color records stays (a file is outside input). The
+      first shape REFUSED a non-number component, after a census (the suite, the menu sweep, the apps smoke and the
+      pin sweep, under a prelude failing on any non-number reaching `Color.create`) met none; the independent review
+      showed it would have broken a path the census could not see — a spreadsheet formula over a text cell
+      (`new Color A1, 0, 0`, A1 reading "200"), which Math.round had always read as 200 — so the rule follows the
+      house's convention for numerical input instead. Whether a non-finite or out-of-range component should be
+      refused or clamped is FILED for the owner. Docs: the serialization reference §3, `immutable-value-classes.md`.
+      PROVEN: the serialization rig's `serialize2.colorComponentsAreNumbers` (a number alpha then its text, and the
+      reverse: one instance, a number held; a text red and alpha through `new`; a -0 red and alpha through `new` held
+      as 0; the string-minted colour saved as four numbers and loaded back as that very instance) fails under a plant
+      restoring the old create and constructor.

@@ -175,10 +175,22 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       never replays (a widget file carries none a save writes).
 - [ ] **The info-doc prefix has four homes** (found by the same review; by reading). `InfoDocs`, `Serializer`,
       `Deserializer._worldSectionProblem` and `WorldWdgt` each spell `infoDoc` for the world's own info-doc flags.
-- [ ] **`Color.create` never checks its components** (found by the same review; by reading). It rounds r, g and b and
-      takes any alpha, so a run's `Color.create 200, 0, 0, "0.5"` makes a colour whose cache key ("200,0,0,0.5") is the
-      number alpha's too: the first one minted is every later `Color.create 200, 0, 0, 0.5` on the page. (A save
-      refuses such a colour, naming it.)
+- [ ] **A colour takes any number: NaN, ±Infinity and out-of-range components paint differently on each backend**
+      (found closing "`Color.create` never checks its components", in the plan's ledger; by reading; a design call).
+      `Color` reads every component as a number (`Color._channel`, `Color._alpha`), and any number makes a colour:
+      `Color.create NaN, 0, 0` (as a non-numeric text reads) is `rgb(NaN,0,0)`, which the native canvas ignores (the
+      previous fill style paints) and SWCanvas parses as 0 (black; a NaN alpha stays opaque), and ±Infinity does the
+      same; `Color.create 300, 0, 0` keys apart from the `255, 0, 0` it paints as. Options: refuse a non-finite
+      component (the format then needs no `{"$num"}` in a Color); clamp r, g, b to 0..255 and a to 0..1, one key per
+      painted colour; leave it.
+- [ ] **`Serializer.numberRef` writes a non-number through unchanged** (found by the same close's review; by reading).
+      It is the one writer of every number a record holds (a reference, a `$Date`'s time, a Color's components), and
+      a value that is not a number — a console's `c._a = "x"` on a colour — is written as it is, so the save writes a
+      file the load refuses. One refusal there would cover every number the format keeps.
+- [ ] **Spreadsheet formulas are taught `new Color`, which the class calls factory-only** (same review).
+      `docs/specs/dataflow-engine-spec.md` teaches `new Color r, g, b` in a formula; `Color`'s constructor comment says
+      it "should ONLY be used from the static factories" (`Color.create` interns, so a formula mints a fresh instance
+      per recompute). Either teach `Color.create`, or say why a formula's colour need not be interned.
 - [ ] **A load judges an app key's kind by the page's edited members, then returns them to boot** (found by the
       independent review closing "An `app:` key naming a class that is no app is `new`-ed during a restore", in the
       plan's ledger; by reading; low, contrived). `WellKnownObjects.isAppClass` reads a class's LIVE `wellKnownKey`, and
