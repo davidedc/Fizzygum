@@ -2722,3 +2722,28 @@ for (const s of sites) if (s.absentBefore.length) {
       `Date.now?()` among the clock spellings, each a hit, and a clock read inside the sanctioned top-level function
       (its entry then expects 2 and finds 3) with one at the left margin after it, which is `(top)` and leaves that
       count at 3; the real tree reads 13 at its baseline with 15 sanctioned.
+- [x] **The automator event commands' constructors are code nothing runs** (found by the same review; by reading).
+      Commands are rehydrated from their test's JSON (`Object.setPrototypeOf`), never constructed, so the eight
+      `AutomatorEventCommand*` subclasses' constructors (each `super()` + `@automatorEventCommandName`; StartMacro's
+      also `@mainMacroSource`, `@extraSubroutineSources`) never run, and their comments name a "static method
+      executeEventCommand" that is an instance method found through `classNamed`.
+      — CLOSED 2026-11-11 (self-ruled; loop unit U12). RULED: a command is DATA, so its class declares the fields its
+      records carry, defines no constructor, and exists only while a record names it. LANDED: the eight constructors
+      are deleted (StartMacro's `(@mainMacroSource, @extraSubroutineSources)` with them), and so are their "static
+      method" comments; each class keeps its class-level fields and `executeEventCommand`. Three whole classes go too
+      (found by the independent review): `AutomatorEventCommandTurnOff{AnimationsPacingControl,
+      HidingOfWidgetsContentExtractInLabels,HidingOfWidgetsNumberIDInLabels}`, which no record, rig or doc names —
+      each test's preamble is ResetWorld, the three TurnOn toggles and StartMacro, and the reset puts the toggles back
+      itself (`WorldTestSupport._resetAutomatorTogglesNoSettle`). `AutomatorEventCommand`'s header states the
+      contract: a test's `_automationCommands.js` holds a command as a record naming its class, and playback gives the
+      record that class's prototype and calls `executeEventCommand` (`AutomatorPlayer.replayTestCommands`, whose own
+      comments now name the StartMacro command where they named a retired EvaluateString one, and three toggles where
+      they said four). Measured beside it: 18 of the 383 tests' commands-file headers said the four descriptive fields
+      were on the StartMacro command, and two more did not name the metadata file they are on; all 20 now name it, as
+      the other headers that say where the fields live do (one header says nothing of them, and its "four
+      determinism toggles" now says three). StartMacro's header no longer describes recorded tests in the present
+      tense. A probe of every class whose constructor no `new` reaches (it or a descendant, over src, the harness,
+      `tests/` and `scripts/`) found 12 of 205: the eight, `LCLProgramRunner` (dead whole, owned by the LiveCodeLang
+      cleanup plan's R14) and three built dynamically (`new @`, a class held in a variable), so no gate: the class
+      has no other member. Docs: none describe the constructors or the classes. PROVEN: the build (syntax,
+      call-arguments, dead-method gates) and two gauntlets (20/20 each); nothing a test runs changed.

@@ -15,11 +15,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       the plan's ledger; measured). Masking src takes
       about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
       build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
-- [ ] **The automator event commands' constructors are code nothing runs** (found by the same review; by reading).
-      Commands are rehydrated from their test's JSON (`Object.setPrototypeOf`), never constructed, so the eight
-      `AutomatorEventCommand*` subclasses' constructors (each `super()` + `@automatorEventCommandName`; StartMacro's
-      also `@mainMacroSource`, `@extraSubroutineSources`) never run, and their comments name a "static method
-      executeEventCommand" that is an instance method found through `classNamed`.
 - [ ] **Nothing keeps the similar-code mirror working** (found closing "`find_similar_code.sh` stops at its mirror", in
       the plan's ledger; measured; a trade-off, not queued by the loop). `buildSystem/coffee-to-js-mirror.js` compiles
       the tree with CoffeeScript 1 for `find_similar_code.sh`, and no build or gate runs it, so a construct the two
@@ -255,6 +250,13 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       low). `check-stinks.js` names a member from a class-body key or from the code at the left margin; `Object::hashCode`
       (`src/boot/extensions/Object-extensions.coffee`) and two of `String-extensions.coffee`'s sit indented under a
       block, so a sanction there could not name its method. No stink hits one today.
+- [ ] **Every test's two headers still call a macro test "the new style"** (found by the independent review closing
+      "The automator event commands' constructors are code nothing runs", in the plan's ledger; by reading; low). 380
+      `_automationCommands.js` and 381 metadata headers say "(the new style)", though macros are the only style and
+      the recorder is gone: a mechanical comment edit over both files of every test.
+- [ ] **No gate holds a commands-file header to its own test** (same review; by reading; low). A header names its
+      metadata file (`(<Name>.js)`), and a header copied from a sibling test would name the sibling's: nothing checks
+      it. The test the author-macro-test skill says to copy carried the stale wording 18 headers shared.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes
