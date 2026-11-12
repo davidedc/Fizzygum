@@ -304,13 +304,13 @@ class PartsRegistry
 
   _loadPartPromise: (partName) ->
     spec = window.FIZZYGUM_PARTS[partName]
-    # 0. THE META-SYSTEM. Ingesting this part's sources means `new Class` / `new Mixin`, and
-    # ordering them means findLoadOrder -- and a PRECOMPILED tree has none of the three until
-    # something asks: Class and Mixin are the only two classes absent from js/pre-compiled.js.
+    # 0. THE META-SYSTEM. Ingesting this part's sources means `new Class`, and ordering them means
+    # findLoadOrder -- and a PRECOMPILED tree has neither until something asks: of the classes the
+    # boot defines, Class is the one absent from js/pre-compiled.js.
     # ⚠⚠ Do NOT "simplify" this to ensureReflectiveLayerLoaded(): that also fetches every EAGER
     # part's batches (core's numbered batches, ≈1.9 MB on production), which is the entire saving
-    # this part being lazy bought. ~39 KB versus ≈1.9 MB. A compile-at-boot tree has already loaded it, and the
-    # promise is memoized, so there it costs nothing.
+    # this part being lazy bought; the meta-system's two files are a small fraction of that. A
+    # compile-at-boot tree has already loaded it, and the promise is memoized, so there it costs nothing.
     chain = ensureMetaSystemLoaded()
     # 1. vendor payloads next: a part's classes may need them at first use.
     for eachVendorFile in (spec.vendor ? [])
@@ -353,6 +353,6 @@ class PartsRegistry
   _ingestPartPromise: (partName) ->
     fresh = (name for name in SourceVault.namesForPart partName when not window[name]?)
     ordered = (name for name from findLoadOrder() when name in fresh)
-    # anything the load order did not mention (it skips Class/Mixin) still needs ingesting
+    # anything the load order did not mention (it skips Class) still needs ingesting
     ordered = ordered.concat (name for name in fresh when name not in ordered)
     window.SourceCompileScheduler.enqueueJob ordered, false

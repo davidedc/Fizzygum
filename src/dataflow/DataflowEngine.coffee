@@ -1,7 +1,7 @@
 # DataflowEngine — the world's ONE calculation engine (spec: docs/specs/dataflow-engine-spec.md).
 #
 # It is a plain delegated collaborator, NOT a Widget: the world HAS-A one, reachable as
-# `world.dataflow` (the MacroToolkit / WidgetFactory pattern, per the mixin phase-out). It
+# `world.dataflow` (the MacroToolkit / WidgetFactory pattern). It
 # ships in every build (a product feature — no homepage exclusion), so WorldWdgt constructs
 # it UNGUARDED, unlike the dev-only widgetFactory.
 #

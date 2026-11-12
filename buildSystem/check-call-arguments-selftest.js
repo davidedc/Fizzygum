@@ -1,7 +1,7 @@
 'use strict';
 // check-call-arguments-selftest.js — check-call-arguments.js proved able to BITE, rule by rule, by running the REAL gate
-// on a planted fixture (lib/planted-src.js): a src tree holding the real meta/Class.coffee + meta/Mixin.coffee (the
-// gate reads classes through the browser's own meta-compiler) and fixture classes, and a fixture TESTS REPO per run,
+// on a planted fixture (lib/planted-src.js): a src tree holding the real meta/Class.coffee (the gate reads classes
+// through the browser's own meta-compiler) and fixture classes, and a fixture TESTS REPO per run,
 // named by the run's `--tests-repo=` (the check-layering-selftest.js precedent for a second tree).
 //   control — only VALUES and forms that are no violation: `@bpCallee 1, undefined, 3` beside `@bpCallee 4, 5, 6`
 //     (every site fills the list), a trailing `undefined`, a string holding "undefined, then 1", a `.call undefined`
@@ -27,8 +27,7 @@ const os = require('os');
 const path = require('path');
 const { proveGate, SRC } = require('./lib/planted-src');
 
-const meta = {};
-for (const m of ['Class.coffee', 'Mixin.coffee']) meta['meta/' + m] = fs.readFileSync(path.join(SRC, 'meta', m), 'utf8');
+const meta = { 'meta/Class.coffee': fs.readFileSync(path.join(SRC, 'meta', 'Class.coffee'), 'utf8') };
 const TARGET = [
   'class BpTarget',
   '  bpCallee: (a, b, c) -> a',

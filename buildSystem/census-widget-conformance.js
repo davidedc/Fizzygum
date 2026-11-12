@@ -27,7 +27,7 @@
 // census-widget-conformance-selftest.js.
 
 const fs = require('fs');
-const { methodSpans } = require('./lib/coffee-method-header');   // facet 5's setters: class methods + mixin members
+const { methodSpans } = require('./lib/coffee-method-header');   // facet 5's setters: class methods
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
@@ -60,15 +60,12 @@ const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 
 // ── parse every source once ─────────────────────────────────────────────────────────────────────
 const classes = new Map();   // name -> { parent, masked, code, file } (`code`: the bare text, see above)
-const mixins  = new Map();   // name -> { masked, code }
 for (const p of compiledFiles(ROOTS)) {
   const text = fs.readFileSync(p, 'utf8');
   const masked = coffeeMask(text, sourceName(p, ROOTS));
   const code = masked.map((l) => l.bare).join('\n');
   const c = /^class\s+(\w+)(?:\s+extends\s+(\w+))?/m.exec(code);
   if (c) classes.set(c[1], { parent: c[2], masked, code, file: sourceName(p, ROOTS) });
-  const m = /^(\w+Mixin)\s*=/m.exec(code);
-  if (m) mixins.set(m[1], { masked, code });
 }
 function chain(name) {
   const out = [];
@@ -79,25 +76,22 @@ function chain(name) {
   return out;
 }
 const isWidget = (name) => name === 'Widget' || chain(name).slice(1).includes('Widget');
-// a class-level declaration is `  name: <not a function>`; a mixin's sits deeper
+// a class-level declaration is `  name: <not a function>`
 function declarationsOf(name) {
   if (classes.has(name)) return new Set([...classes.get(name).code.matchAll(/^ {2}([A-Za-z_]\w*)\s*:\s*(?!\(|->|=>)/gm)].map((m) => m[1]));
-  if (mixins.has(name))  return new Set([...mixins.get(name).code.matchAll(/^\s{4,}([A-Za-z_]\w*)\s*:\s*(?!\(|->|=>)/gm)].map((m) => m[1]));
   return new Set();
 }
-const mixinsOf = (name) => [...(classes.get(name)?.code || '').matchAll(/@augmentWith\s+(\w+)/g)].map((m) => m[1]);
 
 // ── facet 1 (RATCHETED) — instance fields written but never declared at class level ─────────────
 // A prototype declaration is what makes a lazily-initialised field visible to duplication,
-// serialization and the inspector (plan §3.3). Mixin-aware: a field a mixin donates IS declared, and
-// re-declaring it in the class body would CLOBBER the donated value (plan §3.4).
+// serialization and the inspector (plan §3.3). A declaration anywhere up the `extends` chain counts.
 function undeclaredFields() {
   const rows = [];
   for (const name of [...classes.keys()].sort()) {
     if (!isWidget(name)) continue;
     const ch = chain(name);
     const declared = new Set();
-    for (const a of [...ch, ...new Set(ch.flatMap(mixinsOf))]) for (const d of declarationsOf(a)) declared.add(d);
+    for (const a of ch) for (const d of declarationsOf(a)) declared.add(d);
     const body = classes.get(name).code;
     // an assignment in any spelling — `=`, a compound `+=`/`?=`/`||=`, CoffeeScript's `or=`/`and=` — writes the field
     // (a lazily-initialised one is written `@x ?= …`: the very field this facet exists for)
@@ -156,8 +150,7 @@ function constructorSlots() {
 // NumberPromptWdgt's pure sink), and the whole area is mid-flight between this plan's W6 and
 // plans/connector-ubiquity-and-reflection-plan.md. Reported so W6 can re-derive its table, not judged.
 // The setters are the instance methods the shared grouping finds (lib/coffee-method-header.js
-// methodSpans) in every widget class AND every mixin — a mixin's setter is reported under the
-// mixin's own name, where it is declared, never once per class it is stitched onto. A setter that
+// methodSpans) in every widget class, each reported under the class that declares it. A setter that
 // takes nothing (`setAlignmentToLeft: ->`) is an action, not a pin setter: there is no value to deliver.
 function setterParams(lines, at) {
   // the parameter list from the header line on — a wrapped list continues on the lines after it
@@ -166,7 +159,7 @@ function setterParams(lines, at) {
 }
 function pinSetterShapes() {
   const rows = [];
-  const units = [...[...classes.keys()].filter(isWidget).map((n) => [n, classes.get(n).code]), ...[...mixins].map(([n, m]) => [n, m.code])]
+  const units = [...classes.keys()].filter(isWidget).map((n) => [n, classes.get(n).code])
     .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   for (const [name, text] of units) {
     const lines = text.split('\n');

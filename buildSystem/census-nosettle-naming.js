@@ -36,8 +36,7 @@
  *
  * Parsing machinery: every source is read through lib/coffee-mask.js (each line's bare code: comments
  * and literal contents blanked); the method grouping is the shared
- * lib/coffee-method-header.js methodBoundary (2-space class methods, mixin onceAddedClassProperties
- * members).
+ * lib/coffee-method-header.js methodBoundary (2-space class methods).
  *
  * It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
  *
@@ -103,16 +102,15 @@ for (const file of compiledFiles(ROOTS)) {
   const text = fs.readFileSync(file, 'utf8');
   const lines = text.split('\n');
   const masked = coffeeMask(text, rel);
-  let cur = null, mixinHashIndent = null;
+  let cur = null;
   const flush = () => { if (cur) defs.push(cur); cur = null; };
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
     const code = masked[n].bare;
     if (!masked[n].continuesLiteral) {             // a line inside a heredoc holds no boundary
-      const b = methodBoundary(raw, mixinHashIndent);
+      const b = methodBoundary(raw);
       if (b) {
         flush();
-        mixinHashIndent = b.mixinHashIndent;
         // the settle tiers name INSTANCE methods; a class-side `@name` method ends the one above it and is
         // not a def of this census
         if (b.kind === 'header' && !b.static) {

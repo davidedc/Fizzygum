@@ -16,8 +16,8 @@
 //     of every conversion to options (`new SimpleButtonWdgt @` after the head became `(opts = {})`).
 //
 // WHAT IT READS: lib/call-sites.js's table — every class fragment of Fizzygum/src and of the tests repo's harness as
-// the browser's meta-compiler splits and rewrites it (a `super` is an ordinary call there), every mixin and boot
-// file, every macro source as the page compiles it (each test's, and each verb: a Macro.fromString literal of src or
+// the browser's meta-compiler splits and rewrites it (a `super` is an ordinary call there), every boot file, every
+// macro source as the page compiles it (each test's, and each verb: a Macro.fromString literal of src or
 // the harness), and the tests repo's scripts (acorn) — and every definition those make. Real parsers: an implicit
 // object is ONE argument, a nested paren-less call is one argument of the outer call, a string's contents are never a
 // call.

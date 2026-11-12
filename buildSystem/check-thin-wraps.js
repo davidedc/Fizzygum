@@ -44,7 +44,7 @@ rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'thin-wraps');
 rejectPositionalArgs(ARGV, 'thin-wraps', 'a src tree is named with --src=DIR');
 const ROOTS = sourceRoots(ARGV, 'thin-wraps');
 
-const { methodSpans } = require('./lib/coffee-method-header');   // class methods and mixin members, one span each
+const { methodSpans } = require('./lib/coffee-method-header');   // class methods, one span each
 const GUARD  = /^return\s+(if|unless)\b/;               // idempotency guard clause
 const EXEMPT = /#\s*thin-wrap-exempt:\s*\S/;            // marker WITH a non-empty reason
 

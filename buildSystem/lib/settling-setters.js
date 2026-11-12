@@ -33,7 +33,7 @@
 // the gates read as settling does not settle. (A same-named method on a class OUTSIDE the definer's
 // subtree is a different method the name match cannot tell apart — SheetCellStyle's toggleWeight /
 // toggleItalic / setFontName / setFontSize restyle a sheet cell — and is not held: every name match in
-// these gates is receiver-blind. A mixin member is read as outside, since a mixin is in no `extends` chain.)
+// these gates is receiver-blind.)
 //
 // ⚠ VACUITY GUARD. This THROWS — and a gate calling it then exits 2 naming the cause — when Widget.coffee or
 // StringWdgt.coffee is missing, when a family's base setter is not derived (setExtent and moveTo, the extent
@@ -62,12 +62,12 @@ function bodyOf(masked, span) {
   return [arrow >= 0 ? header.slice(arrow + 2) : ''].concat(masked.slice(span.line + 1, span.end).map((l) => l.bare));
 }
 const settles = (body) => body.some((l) => SETTLE_CALL.test(l));
-// a class's own instance methods (not class-side, not a mixin member), name -> body
+// a class's own instance methods (not class-side), name -> body
 function ownMethods(text, file) {
   const lines = text.split('\n');
   const masked = coffeeMask(text, file);
   const own = new Map();
-  for (const s of methodSpans(lines)) if (!s.static && !s.mixin && !own.has(s.name)) own.set(s.name, bodyOf(masked, s));
+  for (const s of methodSpans(lines)) if (!s.static && !own.has(s.name)) own.set(s.name, bodyOf(masked, s));
   return own;
 }
 function readDefiner(srcRoot, family) {
@@ -113,7 +113,7 @@ function settlingSetters(roots) {
     }
     let masked;   // read only for a file defining a derived name
     for (const s of methodSpans(lines)) {
-      if (s.static || s.mixin || !derived.has(s.name)) continue;
+      if (s.static || !derived.has(s.name)) continue;
       masked = masked || coffeeMask(text, sourceName(file, roots));
       if (!defsByName.has(s.name)) defsByName.set(s.name, []);
       defsByName.get(s.name).push({ klass: path.basename(file, '.coffee'), rel: sourceName(file, roots, 'src/'), line: s.line + 1, body: bodyOf(masked, s) });

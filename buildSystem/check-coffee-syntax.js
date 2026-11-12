@@ -4,30 +4,29 @@
  * check-coffee-syntax.js — build-time CoffeeScript syntax gate.
  *
  * WHY THIS EXISTS
- * Fizzygum ships its ~470 class/mixin sources as escaped TEXT and compiles them
+ * Fizzygum ships its ~470 class sources as escaped TEXT and compiles them
  * in-browser at boot (see CLAUDE.md). The build only runs `coffee` over src/boot/*,
- * so a green build has NEVER checked the syntax of the class/mixin files — a typo
+ * so a green build has NEVER checked the syntax of the class files — a typo
  * surfaces only when a human opens the build in a browser. This gate closes that gap.
  *
  * WHY IT DOES NOT JUST `CoffeeScript.compile(wholeFile)`
  * The browser NEVER compiles a whole class file. src/meta/Class.coffee splits each
  * class into fragments (constructor + every field) and compiles them SEPARATELY with
- * {bare:true}, AFTER stripping `@augmentWith` lines and rewriting every `super` form
+ * {bare:true}, AFTER rewriting every `super` form
  * (Fizzygum legally uses `@field=` before super() and bare `super`, both of which
  * vanilla CoffeeScript class syntax rejects). Compiling whole files therefore
  * false-fails on ~300 of ~500 files. DO NOT "simplify" this to a whole-file compile.
  *
  * HOW IT AVOIDS DUPLICATING THAT TRANSFORM
  * Instead of re-porting Class.coffee's fragmenting logic (which would drift), this
- * gate LOADS AND RUNS THE REAL src/meta/Class.coffee and src/meta/Mixin.coffee in
- * Node and drives each source through `new Class(src, true, false)` /
- * `new Mixin(src, true, false)` — i.e. generate-precompiled mode, which compiles
- * every fragment exactly as the browser will, but builds no objects (the `eval` in
- * Class's and Mixin's constructors is gated behind the 3rd "create" arg, which we
- * pass as false). Because the real meta-compiler runs, any future change to it is
+ * gate LOADS AND RUNS THE REAL src/meta/Class.coffee in Node and drives each source
+ * through `new Class(src, true, false)` — i.e. generate-precompiled mode, which
+ * compiles every fragment exactly as the browser will, but builds no objects (the
+ * `eval` in Class's constructor is gated behind the 3rd "create" arg, which we pass
+ * as false). Because the real meta-compiler runs, any future change to it is
  * tracked automatically.
  *
- * THE SHIM — the globals Class/Mixin touch at construction time, and why a gap in it can never
+ * THE SHIM — the globals Class touches at construction time, and why a gap in it can never
  * silently MASK a real error — lives in lib/meta-compiler.js, shared with lib/call-sites.js and
  * compile-fragment.js. This gate hands it a compileFGCode that really compiles and remembers the
  * fragment a parse error came from (so the report can find the file line).
@@ -49,9 +48,6 @@
  * Class._memberNamesThatMustStayAnonymous (the meta-system's own statement of the helper
  * globals) and held against the `window.<name> = [].<m>` / `{}.<m>` assignments in
  * core's boot files (lib/boot-pieces.js) that actually provide them: if the two disagree, the gate stops.
- * A MIXIN is not checked: it compiles as a whole source and keeps its helper declarations
- * (Mixin's strip, used only by live member edits, removes the three provided ones by name
- * and leaves the rest declared), so no helper is lost there.
  *
  * Exit codes: 0 = clean, 1 = syntax error(s) or a member losing a helper,
  * 2 = operational (including: the PROVIDED set cannot be established, or the tap on the
@@ -98,15 +94,15 @@ const { bundledCoffeeScript, loadMetaCompiler } = require('./lib/meta-compiler')
 
 function fail(msg) { console.error('check-coffee-syntax: ' + msg); process.exit(2); }
 
-// ---- 1+2. the SAME compiler the browser uses (2.0.3, not the 2.7.0 CLI) and the REAL Class.coffee / Mixin.coffee ----
-let CoffeeScript, Class, Mixin;
+// ---- 1+2. the SAME compiler the browser uses (2.0.3, not the 2.7.0 CLI) and the REAL Class.coffee ----
+let CoffeeScript, Class;
 try {
   CoffeeScript = bundledCoffeeScript();
   // a member's parse error locates itself in its FRAGMENT: remember the fragment, so the report can find the file line
   const compileFGCode = (src, bare) => {
     try { return CoffeeScript.compile(src, { bare: bare }); } catch (e) { if (e && typeof e === 'object') e.fizzygumFragment = src; throw e; }
   };
-  ({ Class, Mixin } = loadMetaCompiler({ srcDir: SRC, compileFGCode }));
+  ({ Class } = loadMetaCompiler({ srcDir: SRC, compileFGCode }));
 } catch (e) {
   fail(e.message);
 }
@@ -205,15 +201,14 @@ if (filesFlag >= 0) {
 }
 
 // ---- 4. drive each source through the real meta-compiler ----
-const IS_CLASS = /^class +\w+/m;            // same test build.py uses (build.py:48)
-const IS_MIXIN = /^(\w+Mixin)\s*=/m;        // same test build.py uses (build.py:49)
+const IS_CLASS = /^class +\w+/m;            // same test build.py uses (build.py IS_CLASS)
 
 // Silence the meta-compiler's own console noise (debug logs + the pre-existing
 // "code contains a helper var" warning from _removeHelperFunctions) while we drive
 // it; real syntax errors THROW and are caught below, they are not logged.
 const realLog = console.log, realInfo = console.info, realWarn = console.warn;
 const failures = [];
-let nClass = 0, nMixin = 0, nSkip = 0;
+let nClass = 0, nSkip = 0;
 
 console.log = console.info = console.warn = function () {};
 try {
@@ -225,13 +220,10 @@ try {
       failures.push({ rel, message: 'could not read file: ' + e.message });
       continue;
     }
-    const isClass = IS_CLASS.test(src);
-    const isMixin = IS_MIXIN.test(src);
     tapRel = rel; tapMember = null;
     try {
-      if (isClass) { nClass++; new Class(src, true, false); }
-      else if (isMixin) { nMixin++; new Mixin(src, true, false); }
-      else { nSkip++; }  // not a class/mixin file: the build wraps none of these as text
+      if (IS_CLASS.test(src)) { nClass++; new Class(src, true, false); }
+      else { nSkip++; }  // not a class file: the build wraps none of these as text
     } catch (e) {
       failures.push({ rel, message: (e && e.message) || String(e), location: e && e.location, fragment: e && e.fizzygumFragment, src });
     }
@@ -267,7 +259,6 @@ for (const h of helperLosses) {
 if (nClass > 0 && strippedFragments === 0) {
   fail(`the helper tap saw no stripped fragment across ${nClass} classes — Class no longer routes members through _removeHelperFunctions, so the helper check is vacuous; re-read THE SECOND CHECK against src/meta/Class.coffee`);
 }
-const checked = nClass + nMixin;
-console.log(`syntax check: ${checked} files (${nClass} classes, ${nMixin} mixins, ${nSkip} skipped) — ${failures.length} error(s); `
+console.log(`syntax check: ${nClass} files (${nClass} classes, ${nSkip} skipped) — ${failures.length} error(s); `
   + `${strippedFragments} class-member fragments checked against the provided helpers [${[...PROVIDED].join(', ')}] — ${helperLosses.length} losing a helper`);
 process.exit(failures.length || helperLosses.length ? 1 : 0);

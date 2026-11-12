@@ -1,6 +1,6 @@
 # MacroToolkit — the framework-side support for high-level "macro" SystemTests,
 # lifted out of WorldWdgt so the macro machinery has a cohesive, documented home.
-# Delegation, not a mixin: the world HAS-A one, reachable as world.macroToolkit
+# A plain collaborator the world delegates to: the world HAS-A one, reachable as world.macroToolkit
 # (created in the WorldWdgt constructor, guarded by `if MacroToolkit?` so a
 # build that does not ship the `harness` part, which owns src/macros, simply has none).
 #
@@ -1521,7 +1521,7 @@ class MacroToolkit
   # at call time), enqueue a Cut/Copy event CARRYING that text (Fizzygum keeps no internal clipboard — see the
   # comment above), and RETURN the text so the caller can paste it back. `eventClass` is CutInputEvent or
   # CopyInputEvent, passed as a value; both still load and are ordered correctly (build.py bundles every class;
-  # the dependency finder orders by new/extends/@augmentWith edges, and each carries its own `extends
+  # the dependency finder orders by new/extends edges, and each carries its own `extends
   # ClipboardInputEvent` edge — so dropping the two literal `new`s here changes nothing).
   _selectionToClipboardEvent_InputEvents: (eventClass, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     text = world.caret?.target?.selection()

@@ -4,8 +4,8 @@
 # each fragment but eval's nothing) to catch CoffeeScript syntax errors at build time,
 # before they would otherwise only surface at in-browser boot. It loads it through
 # buildSystem/lib/meta-compiler.js (as every build tool that reads the meta-system does),
-# whose shim supplies the globals this class touches at construction time (window,
-# compileFGCode, JSSourcesContainer, srcLoadCompileDebugWrites, and CoffeeScript -- the
+# whose shim supplies the globals this class touches at construction time (window, with
+# srcLoadCompileDebugWrites on it, compileFGCode, JSSourcesContainer, and CoffeeScript -- the
 # bundled compiler, whose lexer the super rewrite and every constructor's ending read).
 # If you make the constructor / its helpers read a NEW global, add a matching stand-in to
 # that shim or the gate will break with an operational (exit 2) error.
@@ -16,10 +16,8 @@ class Class
   staticPropertiesSources: undefined
   name: ""
   superClassName: undefined
-  augmentedWith: undefined
   classRegex: /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
   propertyRegex: /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *(.*)/m
-  augmentRegex: /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
   topLevelCommentRegex: /^  #.*/m
 
 
@@ -51,11 +49,10 @@ class Class
       throw error unless error.location?
       undefined
 
-  # THE SUPER REWRITE, for Class and Mixin alike: each passes the member its `super` means as
-  # `superBase` (Class: `<Name>.__super__.<member>`; Mixin: the class it was injected in, found at
-  # call time). CoffeeScript compiles `super` only inside a class body, and the meta-system
-  # compiles every member ALONE, so each `super` is spelled out as a call through `superBase`
-  # before the member is compiled.
+  # THE SUPER REWRITE: the caller passes the member its `super` means as `superBase`
+  # (`<Name>.__super__.<member>`, _superOf). CoffeeScript compiles `super` only inside a class
+  # body, and the meta-system compiles every member ALONE, so each `super` is spelled out as a
+  # call through `superBase` before the member is compiled.
   #
   # WHICH `super`s, and as WHAT call, are read from the lexer's tokens -- the reading the compiler
   # is about to make of this very text -- never from the text. A `super` in a string, a comment or
@@ -237,8 +234,7 @@ class Class
   #
   # A class member compiles to a bare function expression, so the whole `var` head belongs to
   # the helpers and goes in one cut, whatever it happened to declare -- helper-AGNOSTIC, which
-  # is what that boot comment relies on. (Mixin's twin cannot do this: a mixin compiles as a
-  # whole source, so its own name shares the statement -- see there.)
+  # is what that boot comment relies on.
   # Because the cut takes EVERY declaration, a name in that head other than the three globals
   # (`modulo` from `%%`, a `ref` temporary hoisted out of a parameter default) is lost here;
   # the build's syntax gate (check-coffee-syntax.js) taps this method and fails such a member.
@@ -249,9 +245,8 @@ class Class
     # helpers without opening on `(function`. ⚠ It keys off the emitted `var` STATEMENT
     # (anchored at column 0, which only a top-level declaration is, and reaching to the `;`
     # because the helpers may ride on continuation lines), NOT off the bare `[].indexOf`
-    # expressions: those occur in the compiled body of this method and of Mixin's twin -- their
-    # patterns are literals in it -- so an expression-shaped detector reports the stripper
-    # itself, on every build.
+    # expressions: those occur in the compiled body of this method -- its patterns are literals
+    # in it -- so an expression-shaped detector reports the stripper itself, on every build.
     if /^var\b[^;]*\b(hasProp|indexOf|slice)\s*=/m.test aString
       console.error "HELPER_VAR_NOT_STRIPPED: code contains a helper var, it shouldn't: " +  aString
       debugger
@@ -261,12 +256,10 @@ class Class
   # ===== live member editing =====
   # My nonStaticPropertiesSources is the CURRENT source of every instance member I define: read
   # from my source text at boot, then kept by my two edits below -- an edit writes a member's
-  # entry, a removal deletes it -- exactly as a Mixin keeps its own (Mixin.applyMemberEdit /
-  # removeMember). My prototype holds my member where I define one, else the member my donor
-  # mixin defines, else nothing. The live members are thereby a function of the stores, which is
-  # what lets a world snapshot reproduce them by replaying the edits in order
-  # (SourceEditsRegistry). It is also what keeps a member editable as CoffeeScript, what the class
-  # inspector attributes a member to, and what Mixin's shadow guard keys off.
+  # entry, a removal deletes it. My prototype holds my member where I define one, else nothing (my
+  # instances then inherit the member from my superclass). The live members are thereby a function
+  # of the stores, which is what lets a world snapshot reproduce them by replaying the edits in
+  # order (SourceEditsRegistry). It is also what keeps a member editable as CoffeeScript.
   # A rename is no edit of mine: it is an edit under the new name plus a removal of the old
   # (ClassInspectorWdgt._applyPropertyRename), so the member is RECOMPILED and its `super` follows
   # the new name (_superOf).
@@ -277,11 +270,10 @@ class Class
   # returned and replayed them all -- since an edit's readers are the whole world, not my instances (a
   # menu row re-fits its label, a stack reads its children's layout specs).
 
-  # Rewrite ONE member on my prototype from CoffeeScript source -- the CLASS twin of
-  # Mixin.applyMemberEdit, with the SAME compile shape: a bare global-assignment eval, then a plain
-  # write of the result onto the prototype, so nothing runs WITH the prototype as `this`: code run
-  # against a prototype stamps whatever fields it sets onto it as own properties, polluting every
-  # later member listing of the class. (The compiled output may
+  # Rewrite ONE member on my prototype from CoffeeScript source: a bare global-assignment eval,
+  # then a plain write of the result onto the prototype, so nothing runs WITH the prototype as
+  # `this`: code run against a prototype stamps whatever fields it sets onto it as own properties,
+  # polluting every later member listing of the class. (The compiled output may
   # re-declare the CoffeeScript helper vars -- indexOf etc. -- at global scope; harmless, the
   # globals already hold exactly those values.) The super forms are rewritten exactly as the boot
   # emit does (_rewriteSuperCalls), so an edited member keeps calling super. Throws on compile
@@ -302,22 +294,14 @@ class Class
     Class.refreshFieldRecord proto, memberName
     return
 
-  # Remove ONE member from my prototype, with its source and its injection companion
-  # (`<name>_class_injected_in`, Object::addInstanceProperties). Then boot order holds, as if I had
-  # never defined it: the mixin of mine that donates the member (Mixin.donorOf) gives it back --
-  # its CURRENT member -- since my body's member won over the injection only by coming after it.
-  # The donor's member is compiled before anything changes, so one that does not compile throws
-  # having changed nothing.
+  # Remove ONE member from my prototype, with its source and its field record. Then my instances
+  # read the member my superclass holds, if any, as if I had never defined it.
   removeMember: (memberName) ->
     Class.refuseTheConstructor memberName, @name
-    donor = Mixin.donorOf @, memberName
-    donorsMember = donor?.compiledCurrentMember memberName
     proto = window[@name].prototype
     delete proto[memberName]
-    delete proto[memberName + "_class_injected_in"]
     delete @nonStaticPropertiesSources[memberName]
     Class.refreshFieldRecord proto, memberName
-    Mixin.injectInto @name, memberName, donorsMember if donor?
     return
 
   # Do I define member `memberName` -- did my source text, or a later edit, give it to me? (My store has no
@@ -325,11 +309,10 @@ class Class
   definesMember: (memberName) ->
     memberName of @nonStaticPropertiesSources
 
-  # `constructor` is no member to edit or remove, on a class or through a mixin: a prototype's
-  # `constructor` IS its class -- what every `.constructor.name` and `.constructor.class` read
-  # answers (the Serializer writes it as a saved widget's class) -- and an edit of it would never
-  # change what `new` runs. So the edits of both meta-objects refuse it, whoever calls them
-  # (Class.applyMemberEdit / removeMember, Mixin.applyMemberEdit / removeMember).
+  # `constructor` is no member to edit or remove: a prototype's `constructor` IS its class -- what
+  # every `.constructor.name` and `.constructor.class` read answers (the Serializer writes it as a
+  # saved widget's class) -- and an edit of it would never change what `new` runs. So both edits
+  # refuse it, whoever calls them (applyMemberEdit / removeMember).
   @refuseTheConstructor: (memberName, ownerName) ->
     if memberName is "constructor"
       throw new Error ownerName + "'s constructor is the class itself: it cannot be edited, renamed or removed as a member"
@@ -350,19 +333,16 @@ class Class
     return superClassName
 
   # Collect lines up to a stop. Two operands — the lines and the pattern that ends the stash — because
-  # all four callers supply exactly those; the three rarer controls ride opts, since each is wanted by
-  # ONE caller and any positional order leaves the others skipping a slot (R3, the hole test:
-  # docs/architecture/constructor-and-parameter-conventions.md):
+  # all three callers supply exactly those; the two rarer controls ride opts, since only ONE caller
+  # wants them (docs/architecture/constructor-and-parameter-conventions.md):
   #   opts.orStopOn         a SECOND stop-positive; either pattern ends the stash
-  #   opts.abortOn          a stop-NEGATIVE: matching it abandons the stash and returns false
   #   opts.keepStashWhenEOF at end of input, return what was collected instead of failing
   findUpTo: (sourceLines, regexStopPositive, opts = {}) ->
     # This works by prospectively collecting lines until a
     # stop regex is found.
     # If a stop positive is found, we return the stash and the line with the stop.
-    # Otherwise, if a stop negative or end of file, we return false.
+    # Otherwise, at end of file, we return false (or, with keepStashWhenEOF, the stash).
     regexStopPositive2 = opts.orStopOn
-    regexStopNegative = opts.abortOn
     keepStashWhenEOF = opts.keepStashWhenEOF
 
     sourceLinesOrig = sourceLines
@@ -390,10 +370,6 @@ class Class
         remainingSourceLinesExcludingStopPositive = remainingSourceLinesIncludingStopPositive.slice 1
         return [stopPositiveLine, everythingUpToStopPositive, remainingSourceLinesExcludingStopPositive, remainingSourceLinesIncludingStopPositive]
 
-      else if regexStopNegative?.test eachLine
-        # found the stop negative: what we collected is no good
-        return false
-
       # no stop found yet, keep collecting
       linesUpToStop.push eachLine
 
@@ -404,29 +380,7 @@ class Class
       # what we collected is no good
       return false
 
-  findMixinsInTheClass: (remainingSourceLines) ->
-    # This works by prospectively collecting comment lines until an
-    # stop positive regex for augmentation is found, then stashing
-    # both the comment and the augmentation, then looping over what remains
-
-    augmentationComments = []
-    augmentationNames = []
-
-    while returned = @findUpTo(remainingSourceLines, @augmentRegex, abortOn: @propertyRegex)
-      augmentationNames.push (returned[0].match @augmentRegex)[1]
-      augmentationComments.push returned[1]
-      remainingSourceLines = returned[2]
-      if window.srcLoadCompileDebugWrites
-        console.log "augmentation: " + (returned[0].match @augmentRegex)[1] + " =========="
-        console.log "comments: \n" + returned[1]
-
-    return [augmentationNames, augmentationComments, remainingSourceLines]
-
-
-  removeAugmentations: (source) ->
-    source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
-
-  # The two record stores, name -> source, carry NO prototype (Mixin's store neither): a name nobody recorded is
+  # The two record stores, name -> source, carry NO prototype: a name nobody recorded is
   # no record at any reader -- `constructor`, `toString` and every other Object.prototype member included.
   getSourceOfAllProperties: (remainingSourceLines) ->
     staticPropertiesSources = Object.create null
@@ -465,17 +419,14 @@ class Class
 
 
 
-  # A class's source text parsed into what it is made of: its name, the mixins it augments with
-  # (their lines, found first, so they do not mangle the member parse), and its static and instance
+  # A class's source text parsed into what it is made of: its name, and its static and instance
   # member sources -- every field definition, the constructor, the methods and the static members
   # alike. Pure: read by my constructor, and by bootMemberSources to read my source text again.
   _parsedSource: (source) ->
     sourceLines = source.split "\n"
     [name, ignored, sourceLines] = @findClassDescriptionHeaderCommentAndClassName sourceLines
-    [augmentedWith, ignored, sourceLines] = @findMixinsInTheClass sourceLines
     [staticPropertiesSources, nonStaticPropertiesSources] = @getSourceOfAllProperties sourceLines
     name: name
-    augmentedWith: augmentedWith
     staticPropertiesSources: staticPropertiesSources
     nonStaticPropertiesSources: nonStaticPropertiesSources
 
@@ -518,11 +469,8 @@ class Class
     parsed = @_parsedSource source
     @name = parsed.name
     @superClassName = @findIfItExtendsAnotherClass source
-    @augmentedWith = parsed.augmentedWith
     @staticPropertiesSources = parsed.staticPropertiesSources
     @nonStaticPropertiesSources = parsed.nonStaticPropertiesSources
-
-    if window.srcLoadCompileDebugWrites then console.log "source ---------\n" + @removeAugmentations source
 
     if generatePreCompiledJS or createClass
       # --------------------
@@ -586,16 +534,9 @@ class Class
         JS_string_definitions += "window.#{@name}.__super__ = Object.prototype;" + "\n\n"
 
 
-      # if the class is augmented with one or more Mixins
-      for eachAugmentation in @augmentedWith
-        if window.srcLoadCompileDebugWrites then console.log "augmentedWith: " + eachAugmentation
-        # analogous to
-        #window[@name].augmentWith window[eachAugmentation], @name
-        JS_string_definitions += "window.#{@name}.augmentWith(window.#{eachAugmentation}, '#{@name}');" + "\n"
-
       # non-static fields, which are put in the prototype
       for own fieldName, fieldValue of @nonStaticPropertiesSources
-        if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
+        if fieldName != "constructor"
           if window.srcLoadCompileDebugWrites then console.log "building field " + fieldName + " ===== "
 
 
@@ -615,7 +556,7 @@ class Class
       # now the static fields, which are put in the constructor
       # rather than in the prototype
       for own fieldName, fieldValue of @staticPropertiesSources
-        if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
+        if fieldName != "constructor"
           if window.srcLoadCompileDebugWrites then console.log "building STATIC field " + fieldName + " ===== "
 
           fieldDeclaration = @_rewriteSuperCalls fieldName, fieldValue
@@ -671,17 +612,14 @@ class Class
     # then add the .class field
     window[@name].class = @
 
-    @_takeMixinMembersFromTheStores() if createClass
     @_keepMyMembersRecords()
 
   # THE SOURCE A MEMBER'S FUNCTION WAS MADE FROM, kept BY THE FUNCTION -- the rule Widget.keptSourceOf keeps for an
   # injected method, for the same reason: whatever replaces a member takes its function, and its source with it, so
   # no reader is handed one function's source for another. Kept where a member's function is made: a class made or
-  # ingested (_keepMyMembersRecords), a class edit (applyMemberEdit), every mixin member compiled
-  # (Mixin._compiledMember). A function's FIRST record is its record: a member whose source names a function made
-  # elsewhere (`step: noOperation`, an edit to `Widget::bar`) leaves that function's own record alone. A function no
-  # meta-object made (a run's) has none. Which mixin gave a class a member is not part of a record -- one function
-  # can stand in several places -- but the class chain's to say (Mixin.donorOf). Read by the inspectors, which ask
+  # ingested (_keepMyMembersRecords) and a class edit (applyMemberEdit). A function's FIRST record is its record: a
+  # member whose source names a function made elsewhere (`step: noOperation`, an edit to `Widget::bar`) leaves that
+  # function's own record alone. A function no meta-object made (a run's) has none. Read by the inspectors, which ask
   # the function their subject holds, never a name; never by the save, which writes a widget's injected methods only
   # (a class member written as a widget's {"$src"} would compile on its own, `super` and all). Weak: it keeps no
   # function alive.
@@ -698,12 +636,10 @@ class Class
   # class inspector shows a field's recorded source only while its subject still reads that very value
   # (fieldRecordHolds), never a source a run's write replaced (ClassInspectorWdgt._sourceForFieldMember), and a rename
   # carries a field's source only then too. Two ways a record is made:
-  #   - keepFieldRecord: a class BODY's field (_keepMyMembersRecords: its own and its mixins' donated ones), kept ONCE,
-  #     as a function's record is -- the reflective layer's ingest of a class already made keeps the record it has, never
-  #     a run's write since;
-  #   - refreshFieldRecord: an EDIT of a member (a class's, a mixin's injection, a removal, a withdrawal): a field's
-  #     record becomes the value the edit made, and a member gone, or now a function (which keeps its own record), leaves
-  #     no field record behind.
+  #   - keepFieldRecord: a class BODY's field (_keepMyMembersRecords), kept ONCE, as a function's record is -- the
+  #     reflective layer's ingest of a class already made keeps the record it has, never a run's write since;
+  #   - refreshFieldRecord: an EDIT of a member (an edit, a removal): a field's record becomes the value the edit made,
+  #     and a member gone, or now a function (which keeps its own record), leaves no field record behind.
   @_fieldRecords: new WeakMap
   @_fieldRecordsOf: (proto) ->
     Class._fieldRecords.set proto, new Map unless Class._fieldRecords.has proto
@@ -724,15 +660,12 @@ class Class
     !!values?.has(memberName) and Object.is values.get(memberName), value
 
   # Keep, with each function my class holds, the source it was made from (Class.keepMemberRecord): my instance
-  # members and statics as I record them, my constructor's on my class function (where I write one), and each member
-  # a mixin of mine injected (its `_class_injected_in` companion says so), with its donor's source (Mixin.donorOf) --
-  # one function per consumer, since a mixin's literal is evaluated afresh for each class it augments; and, with my
-  # prototype, the VALUE each of my fields' sources made, my own and my mixins' donated ones (Class.keepFieldRecord).
-  # Each record is kept once. Run as I am made, and as the reflective layer INGESTS me beside the code a pre-compiled
-  # image already runs. ⚠ At an ingest a person's run may already have replaced a member, and neither its function
-  # nor its value can be told from the image's: the minified image keeps no function names, so both are anonymous,
-  # and a value has no identity -- such a member reads as my source (filed). My own keys only (Object.keys), never my
-  # whole chain's.
+  # members and statics as I record them, and my constructor's on my class function (where I write one); and, with my
+  # prototype, the VALUE each of my fields' sources made (Class.keepFieldRecord). Each record is kept once. Run as I
+  # am made, and as the reflective layer INGESTS me beside the code a pre-compiled image already runs. ⚠ At an ingest
+  # a person's run may already have replaced a member, and neither its function nor its value can be told from the
+  # image's: the minified image keeps no function names, so both are anonymous, and a value has no identity -- such a
+  # member reads as my source (filed). My own keys only (Object.keys), never my whole chain's.
   _keepMyMembersRecords: ->
     klass = window[@name]
     return unless klass?
@@ -741,52 +674,15 @@ class Class
     for memberName in Object.keys(proto) when memberName isnt "constructor" and memberName of @nonStaticPropertiesSources
       keep proto[memberName], @nonStaticPropertiesSources[memberName]
       Class.keepFieldRecord proto, memberName unless typeof proto[memberName] is "function"
-    # a field a mixin of mine donated: the value its donor's source made here
-    for memberName in Object.keys(proto) when typeof proto[memberName] isnt "function" and !@definesMember(memberName) and Mixin.donorOf(@, memberName)?
-      Class.keepFieldRecord proto, memberName
     keep klass, @nonStaticPropertiesSources.constructor
     for staticName in Object.keys(klass) when staticName of @staticPropertiesSources
       keep klass[staticName], @staticPropertiesSources[staticName]
-    return unless @augmentedWith?.length
-    for memberName in Object.keys(proto) when !@definesMember(memberName) and Object::hasOwnProperty.call(proto, memberName + "_class_injected_in") and (donor = Mixin.donorOf @, memberName)?
-      keep proto[memberName], donor.nonStaticPropertiesSources[memberName]
     return
-
-  # A class made after an edit of a mixin it augments with -- a lazy part's, or one made at run time
-  # -- was augmented from the mixin's LITERAL, compiled at boot (Object::augmentWith), so it holds the
-  # mixin's boot members. For each member a store of one of my mixins has away from its boot source
-  # (an edit, an addition, a removal), I take what boot order gives a consumer from the stores, as
-  # every mixin edit gives it to a consumer made before it: my own member where I define one (my
-  # body ran after the augmentation), else my last augmentation's that defines it (Mixin.donorOf),
-  # else none -- and only where that differs from what augmentWith left, the BOOT donor's boot member
-  # (an unrelated mixin's unchanged member keeps the function its augmentation gave me). Every
-  # member is compiled before anything changes, so one that does not compile throws having changed
-  # nothing. Run once my prototype is whole (my body assigned; my statics ran inside the class's eval,
-  # before this), and only by the pass that creates me: a pre-compiled image's classes were made
-  # before any edit could be.
-  _takeMixinMembersFromTheStores: ->
-    changes = new Map
-    for mixinName in @augmentedWith
-      for memberName in (Mixin.named(mixinName)?.membersAwayFromBoot() ? []) when not @definesMember(memberName) and not changes.has memberName
-        donor = Mixin.donorOf @, memberName
-        continue if donor? and donor is @_bootDonorOf(memberName) and not donor.membersAwayFromBoot().includes memberName
-        changes.set memberName, if donor? then {donor: donor, member: donor.compiledCurrentMember memberName}
-    changes.forEach (change, memberName) =>
-      if change? then Mixin.injectInto @name, memberName, change.member else Mixin.withdrawFrom @name, memberName
-    return
-
-  # The mixin of mine whose boot member augmentWith left on my prototype for `memberName`: the last
-  # of my augmentations whose source at boot defines it (Mixin.bootMemberSources), or undefined.
-  _bootDonorOf: (memberName) ->
-    bootDonors = for mixinName in @augmentedWith when (theMixin = Mixin.named mixinName)?.bootMemberSources()?
-      continue unless memberName of theMixin.bootMemberSources()
-      theMixin
-    bootDonors.pop()
 
   # The members whose source in `currentSources` (a meta-object's store) is not the one `bootSources`
   # holds -- an edit, an addition or a removal -- never the constructor, which no edit reaches
-  # (refuseTheConstructor). The one comparison of a store with its boot, for both meta-objects
-  # (membersAwayFromBoot, here and on Mixin).
+  # (refuseTheConstructor). The one comparison of a store with its boot: membersAwayFromBoot below,
+  # and a world-snapshot load's return to boot (SourceEditsRegistry.returnThePageToBootSources).
   @membersAwayFrom: (currentSources, bootSources) ->
     memberNames = new Set Object.keys(currentSources).concat Object.keys bootSources
     (memberName for memberName from memberNames when memberName isnt "constructor" and currentSources[memberName] isnt bootSources[memberName])

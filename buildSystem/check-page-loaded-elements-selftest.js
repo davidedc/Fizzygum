@@ -5,8 +5,7 @@
 // every element field it saw): a field holding an element the page loads that is not a serialization transient; a
 // chain re-making it after a copy but not a restore; after a restore but not a copy; an element built into no field and
 // not said to be unheld, in src and in a harness file (named harness/<path>) alike; a hook header the shared matcher
-// cannot see; an element field assigned in a mixin; and a hook neither walker calls (the
-// copy's walkers edited so they never call it). The fully declared holder and the stated unheld element pass, and so
+// cannot see; and a hook neither walker calls (the copy's walkers edited so they never call it). The fully declared holder and the stated unheld element pass, and so
 // does an element named only in a comment after a regex holding a quote (no string is open there). Run by
 // buildSystem/run-selftests.js on every build.
 
@@ -35,15 +34,13 @@ proveGate({
     },
   },
   runs: [{
-    label: 'one widget per clause, a refused hook header, a mixin field',
+    label: 'one widget per clause, a refused hook header',
     plants: {
       'BiteProofNotTransientWdgt.coffee': holder('BiteProofNotTransientWdgt', { transient: false, restore: true, copy: true }),
       'BiteProofNoRestoreWdgt.coffee': holder('BiteProofNoRestoreWdgt', { transient: true, restore: false, copy: true }),
       'BiteProofNoCopyWdgt.coffee': holder('BiteProofNoCopyWdgt', { transient: true, restore: true, copy: false }),
       'BiteProofUnheldWdgt.coffee': ['class BiteProofUnheldWdgt extends Widget', '', '  _bpDecode: (dataURL) ->', '    img = new Image()', '    img.src = dataURL', ''].join('\n'),
       'BiteProofUnseenHookWdgt.coffee': ['class BiteProofUnseenHookWdgt extends Widget', '  _afterDeserialization: (a,', '      b) ->', '    1', ''].join('\n'),
-      'BiteProofElementMixin.coffee': ['BiteProofElementMixin =', '', '  onceAddedClassProperties: (fromClass) ->', '    @addInstanceProperties fromClass,', '',
-        '      _bpLoad: ->', '        @bpMixinImage = new Image()', ''].join('\n'),
     },
     expect: {
       NOT_TRANSIENT: clause('BiteProofNotTransientWdgt', 'not a serialization transient'),
@@ -51,7 +48,6 @@ proveGate({
       NO_COPY_HOOK: clause('BiteProofNoCopyWdgt', 'no _reactToBeingCopied'),
       UNATTRIBUTED_ELEMENT: /^  BiteProofUnheldWdgt\.coffee:4  img = new Image\(\)$/m,
       UNSEEN_HOOK_HEADER: /^  BiteProofUnseenHookWdgt\.coffee:2  a hook header in a spelling the shared matcher cannot see/m,
-      ELEMENT_FIELD_IN_MIXIN: /^  BiteProofElementMixin\.coffee:7  an element field \(@bpMixinImage\) assigned in the mixin BiteProofElementMixin/m,
     },
     absent: [/BiteProofDeclaredHolderWdgt\.bpPlantedImage|BiteProofStatedUnheldWdgt/],
   }, {

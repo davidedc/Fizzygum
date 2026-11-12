@@ -24,7 +24,7 @@ node ./buildSystem/census-property-placement.js      # fields at the wrong level
 Both scanners above are **blind to inheritance**: jscpd matches exact token runs and jsinspect matches
 AST shapes, so neither can ever say *"this override is REMOVABLE"* — an override and the parent method
 it duplicates are not textual twins sitting in one file. The censuses close exactly that gap
-(`IDENTICAL-TO-INHERITED` / `SHADOWS-MIXIN` / `JUST-SENDS-SUPER`; `PULL-UP` / `DEMOTE`). They are
+(`IDENTICAL-TO-INHERITED` / `JUST-SENDS-SUPER`; `PULL-UP` / `DEMOTE`). They are
 seconds-fast, so unlike jscpd/jsinspect they also run inside **`fg critique`**. They feed the SAME
 ledger (`duplication-report/triage-report.md`, ROUND 4 / 4b) and follow the same cycle below.
 ⚠ Their findings are CANDIDATES, never proofs — `super` is meta-compiled and property access is partly
@@ -224,8 +224,8 @@ counts are additive, not comparable to the exact/structural ones:
 | 2026-07-15 · Phase 3 (13 DEMOTEs actioned) | 1 | 0 | 0 | **10 — CLOSED, zero actionable** | **7** (+3, +62) |
 | 2026-07-15 · Phase 1 (`BubblyAppearance.constructor` deleted) + the case-law-15 listener fix | **0** | 0 | 0 | 10 — CLOSED | **4** (+3, +62) |
 
-✅ **The hierarchy-duplication census is now driven to ZERO on all three of its reports** (`IDENTICAL-TO-INHERITED` /
-`SHADOWS-MIXIN` / `JUST-SENDS-SUPER`). ⚠ The last one had been gated for two rounds behind a "constructor risk class"
+✅ **Round 4 drove the hierarchy-duplication census to ZERO on the three reports it then had** (`IDENTICAL-TO-INHERITED` /
+`SHADOWS-MIXIN` / `JUST-SENDS-SUPER`; the census keeps the first and the last, and its counts are re-run, not read here). ⚠ The last one had been gated for two rounds behind a "constructor risk class"
 that dissolved entirely on reading `meta/Class.coffee` — see case law 16. The property census's PULL-UP is CLOSED at 10
 (none actionable) and DEMOTE rests at 7 (all with recorded reasons), so **the whole hierarchy axis is now at its
 correct floor — a zero is not always reachable, and a non-zero is not always a debt.**
@@ -267,5 +267,6 @@ Suggested prompt shape: paste `jscpd-report.ai.txt`, ask for (1) clustering into
 (many pairs share one underlying template, e.g. the `info-widgets/*InfoWdgt` 25–36 block),
 (2) a ranked shortlist of extract-method/extract-base-class refactors with effort/risk,
 (3) explicit "leave alone" calls for coincidental or ctor-boilerplate matches. Remind it of
-repo rules: one class per file, `Mixin` system available, no imports (globals), and that
+repo rules: one class per file, no mixins (a shared behaviour lives in a base class, an appearance or a
+collaborator object), no imports (globals), and that
 behaviour changes must pass `fg presuite` / the SystemTest suite.

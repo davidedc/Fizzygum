@@ -57,7 +57,6 @@ extractDependenciesFromSource = ->
 
   EXTENDS = ///\sextends\s*(\w+)///
   IS_CLASS = ///\s*class\s+(\w+)///
-  REQUIRES_MIXIN = ///\s*@augmentWith\s+(\w+)///
   TRIPLE_QUOTES = ///'''///
   CONSTRUCTION_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*new\s*([a-zA-Z_$][0-9a-zA-Z_$]*)///
   CLASS_USE_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*([A-Z][0-9a-zA-Z_$]*)///
@@ -90,11 +89,6 @@ extractDependenciesFromSource = ->
         fileDependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " requires " + matches[1]
 
-      matches = eachLine.match REQUIRES_MIXIN
-      if goodMatch matches, eachFile
-        fileDependenciesSet.add matches[1]
-        if srcLoadCompileDebugWrites then console.log eachFile + " requires the mixin" + matches[1]
-
       matches = eachLine.match CONSTRUCTION_IN_CLASS_DECLARATION
       if goodMatch matches, eachFile
         fileDependenciesSet.add matches[1]
@@ -109,22 +103,20 @@ extractDependenciesFromSource = ->
 
   return dependenciesMap
 
-# In Javascript when you define a bunch of classes/mixins (just define them,
+# In Javascript when you define a bunch of classes (just define them,
 # before even running/instantiating/invoking them in any way) you have to
 # define them in _some_ order.
 #
-# There are the three rules that apply to us:
+# There are the two rules that apply to us:
 #  1. To extend a class A, A must have been defined first.
-#  2. if you augment a class with a mixin A, the mixin A must have been
-#     defined first.
-#  3. if a class defines its fields (static or non-static) values mentioning
+#  2. if a class defines its fields (static or non-static) values mentioning
 #     another class A, then A must have been defined first.
 #
 # If you don't follow these rules, the definitions will reference unknown
-# needed things (classes, mixins) and there will be an error.
+# needed classes and there will be an error.
 #
 # Once the definitions happen in the right order, all definitions are ready
-# and classes/mixins can then reference each other freely at "run" time.
+# and classes can then reference each other freely at "run" time.
 #
 # TODO we should check that we have some sort of error/communication when
 # there are circular dependencies or missing parts

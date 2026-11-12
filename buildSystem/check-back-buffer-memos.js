@@ -19,9 +19,7 @@
 //   - a serialization transient of the class chain: the class's own `@serializationTransients` plus
 //     every ancestor's, walked up `extends` — the source-level twin of boot's
 //     classStaticListMergedUpTheChain, which reads each class's OWN list and walks on past it, because
-//     `extend` copies statics down and a subclass's own list REPLACES that copy at runtime. A mixin's
-//     class-side `serializationTransients` key counts at each class that `@augmentWith`s it (the meta
-//     system copies a mixin's statics onto its consumers); or
+//     `extend` copies statics down and a subclass's own list REPLACES that copy at runtime; or
 //   - a field the class chain DECLARES as saved content: the declaration line carries, on itself or in
 //     the contiguous comment block directly above it,
 //         # saved-content: <what makes it content>
@@ -41,25 +39,24 @@
 // part, shipped or not — a build that does not ship a part still checks
 // its code, which is the point: both raster-cache widgets that drew from a loaded resource live in the
 // flag-gated `video-player` part, which no default build carries and so no suite, rig or smoke runs.
-// Method grouping is the shared buildSystem/lib/coffee-method-header.js (methodSpans), so a mixin
-// member or a class-side key bounds a method exactly as every other gate sees it.
+// Method grouping is the shared buildSystem/lib/coffee-method-header.js (methodSpans), so a class-side
+// key bounds a method exactly as every other gate sees it.
 //
 // BLIND SPOTS (stated, not silent):
 //   - a memo written by a method the builder does NOT reach: an onload/step/event handler that records
 //     "already loaded" or "already painted". SimpleImageWdgt's `imageLoaded` is that shape (written in
 //     an Image onload closure inside _loadImage); it is a serialization transient by declaration, and
 //     this gate would not have noticed if it were not.
-//   - methods reached across files (an ancestor's or a mixin's method the builder calls) and dynamic
+//   - methods reached across files (an ancestor's method the builder calls) and dynamic
 //     sends (`@[name]()`, a call through another receiver) are not followed; nor is anything a keyed
 //     builder reaches (above).
 //   - a write through an alias (`self = @`, `that.x = …`) or into a field's contents (`@a.b = …`,
 //     `@a[i] = …`) is not a field assignment to this scanner.
 //   - a memo in a paint path that is not a back-buffer builder (an appearance's paint, a blit) — those
 //     widgets keep no raster to describe, but a future one that did would need its own root here.
-// Two shapes it refuses LOUDLY rather than skipping: a back-buffer builder declared inside a MIXIN
-// (its transients would be its consumers', which a per-file scan cannot resolve), and a builder header
-// written in a spelling the shared matcher cannot see (unseenMethodHeaders) — a gate blind to a method
-// reports nothing about it, so blindness is made a failure.
+// One shape it refuses LOUDLY rather than skipping: a builder header written in a spelling the shared
+// matcher cannot see (unseenMethodHeaders) — a gate blind to a method reports nothing about it, so
+// blindness is made a failure.
 //
 // Exit codes: 0 clean · 1 violation · 2 operational (no src/, or not one builder found — a run that
 // checked nothing is not a pass).
@@ -87,8 +84,8 @@ const SRC = ROOTS.src;
 const BUILDER = '_createRefreshOrGetBackBuffer';
 const CONTENT_MARKER = /#\s*saved-content:\s*\S/;
 
-// The names a class-level list declaration holds — `@serializationTransients: [ … ]` (the key spelled
-// with or without the `@`: without is a mixin's class-side form) — read through to its closing bracket.
+// The names a class-level list declaration holds — `@serializationTransients: [ … ]` — read through to
+// its closing bracket.
 // The brackets are found in the line's bare code (a `]` inside a string closes nothing) and the names read from
 // its code (comment blanked), so a quoted word in a comment is not taken for a name.
 function listDeclaration(lines, masked, key) {
@@ -108,11 +105,11 @@ function listDeclaration(lines, masked, key) {
   return out;
 }
 
-// Declared fields carrying the saved-content marker: a 2-space class field (or a mixin member key at the
-// file's member indent) whose own line, or the contiguous comment block directly above it, holds it.
-function contentFields(lines, masked, keyIndent) {
+// Declared fields carrying the saved-content marker: a 2-space class field whose own line, or the
+// contiguous comment block directly above it, holds it.
+function contentFields(lines, masked) {
   const out = new Set();
-  const keyRe = new RegExp('^' + ' '.repeat(keyIndent) + '([A-Za-z_]\\w*):(?!:)');
+  const keyRe = /^  ([A-Za-z_]\w*):(?!:)/;
   const marked = (j) => CONTENT_MARKER.test(masked[j].comment || '');
   lines.forEach((raw, i) => {
     const m = raw.match(keyRe);
@@ -140,8 +137,7 @@ function writtenFields(code) {
 
 if (!fs.existsSync(SRC)) { console.error('[back-buffer-memos] operational error: no src/ at ' + SRC); process.exit(2); }
 
-const classes = {};   // name -> { file, lines, masked, sup, transients:Set, content:Set, augments:[] , spans }
-const mixins = {};    // name -> { file, transients:Set, content:Set, spans }
+const classes = {};   // name -> { file, lines, masked, sup, transients:Set, content:Set, spans }
 const problems = [];
 for (const p of compiledFiles(ROOTS)) {
   const text = fs.readFileSync(p, 'utf8');
@@ -157,21 +153,12 @@ for (const p of compiledFiles(ROOTS)) {
     classes[cm[1]] = {
       file, lines, masked, spans, sup: cm[2],
       transients: new Set(listDeclaration(lines, masked, '@serializationTransients')),
-      content: contentFields(lines, masked, 2),
-      augments: lines.map((l) => l.match(/^  @augmentWith\s+(\w+)/)).filter(Boolean).map((m) => m[1]),
+      content: contentFields(lines, masked),
     };
-    continue;
-  }
-  const mm = lines.map((l) => l.match(/^(\w+)\s*=\s*$/)).find(Boolean);
-  if (mm && spans.some((s) => s.mixin)) {
-    const member = spans.find((s) => s.mixin);
-    const indent = lines[member.line].match(/^ */)[0].length;
-    mixins[mm[1]] = { file, spans, transients: new Set(listDeclaration(lines, masked, 'serializationTransients')), content: contentFields(lines, masked, indent) };
-    for (const s of spans) if (s.mixin && s.name === BUILDER) problems.push(rules.fired('BUILDER_IN_MIXIN', `  ${file}:${s.line + 1}  a ${BUILDER} declared in the mixin ${mm[1]} — its transients are its consumers', which this gate cannot resolve per file`));
   }
 }
 
-// the chain's merged transients and saved-content declarations, a class's mixins counted at its own step
+// the chain's merged transients and saved-content declarations
 function chainSets(name) {
   const transients = new Set(), content = new Set(), seen = new Set();
   for (let c = name; c && classes[c] && !seen.has(c); c = classes[c].sup) {
@@ -179,7 +166,6 @@ function chainSets(name) {
     const k = classes[c];
     k.transients.forEach((x) => transients.add(x));
     k.content.forEach((x) => content.add(x));
-    for (const mx of k.augments) if (mixins[mx]) { mixins[mx].transients.forEach((x) => transients.add(x)); mixins[mx].content.forEach((x) => content.add(x)); }
   }
   return { transients, content };
 }
@@ -189,7 +175,7 @@ const keyedBuilders = [];
 let builders = 0;
 for (const [name, k] of Object.entries(classes)) {
   const methods = new Map();
-  for (const s of k.spans) if (!s.static && !s.mixin) methods.set(s.name, s);
+  for (const s of k.spans) if (!s.static) methods.set(s.name, s);
   const builder = methods.get(BUILDER);
   if (!builder) continue;
   builders++;

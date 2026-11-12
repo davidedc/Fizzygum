@@ -27,7 +27,7 @@ class ControllerWdgt extends Widget
   # single wire in four places and could describe no second one — gap G2: one out-edge ever, no
   # un-wire idiom, fan-out only via the unshipped FanoutWdgt.
   #   ⛔ There is deliberately NO @target/@action compatibility shim. The plan proposed accessors
-  # onto @wires[0], and this codebase cannot express one: Class/Mixin emit every member as
+  # onto @wires[0], and this codebase cannot express one: Class emits every member as
   # `prototype.<name> = <expr>` (Class.coffee), so a getter/setter is not writable here at all —
   # there is not one instance accessor in src/. And a shim would state each wire's target twice,
   # which is the drift PinSpec's own header warns about. So every site converted in one pass.
@@ -106,9 +106,10 @@ class ControllerWdgt extends Widget
     return wire
 
   # THE UN-WIRE VERB, which single-slot wiring could not have: drop one relationship and leave the
-  # others alone. Its first caller was already in the tree waiting for it — CellWdgt cleared the
-  # fields by hand under a comment reading "no un-wire idiom exists in ControllerMixin"; the
-  # "Disconnect" menu item is the second.
+  # others alone: the "Disconnect" menu item, a cell letting go of a value-widget grabbed out of it
+  # (CellWdgt._reactToChildGrabbed), the dataflow dropping a wire onto a node it lost
+  # (DataflowEngine), a wire onto a destroyed target pruned (_pruneWiresOntoDestroyedTargets), and the
+  # world severing the liveness edges into a widget it trashes (WorldWdgt).
   #   Both halves of a tracking wire go: the forward edge stops being derivable the moment the
   # record leaves the list (ensureWireEdges reconciles), but the reverse one is an edge OUT of the
   # target that only I can revoke, so it is dropped explicitly. Then the record itself dies as a

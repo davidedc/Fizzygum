@@ -11,8 +11,8 @@
 //      `` `on${kind}Changed` ``) reaches every method it matches, each interpolation a wildcard. One with no
 //      literal part (`"#{x}"`) is a coercion, not a name.
 //   4. a COMPUTED ACCESS ON A NAMED CLASS: `FormulaHelpers[name]` (or `C?[k]`, `C?.[k]`) reaches every class-side
-//      method of that class, `C::[k]` / `C.prototype[k]` every instance method — its own, its mixins' and its
-//      ancestors' (the caller supplies the chain). A key that is one whole literal (`C["m"]`) is clause 2's, and a
+//      method of that class, `C::[k]` / `C.prototype[k]` every instance method — its own and its ancestors'
+//      (the caller supplies the chain). A key that is one whole literal (`C["m"]`) is clause 2's, and a
 //      write (`C[k] = …`) reaches nothing.
 // NOT a reference: a BARE WORD — a local, a parameter, an object key, a def's own name — and anything a comment
 // or prose says. Callers pass CODE lines (comments cut: lib/coffee-mask.js, lib/tests-repo-code.js). Strings are
@@ -73,7 +73,7 @@ function methodReferences(line) {
 
 // The methods computed dispatch reaches: every method whose name matches a template, and every method on the
 // computed side of a named class or of anything in its chain. `methods` is [{ name, cls, classSide }]; `chainOf(cls)`
-// gives the class names a lookup on `cls` resolves through — itself, its mixins, its ancestors (by default itself).
+// gives the class names a lookup on `cls` resolves through — itself, then its ancestors (by default itself).
 function reachedByComputedDispatch(templates, classes, methods, chainOf = (cls) => [cls]) {
   const patterns = [...new Set(templates)].map((t) => new RegExp('^' + t.split('*').map((p) => p.replace(/\$/g, '\\$')).join('[\\w$]*') + '$'));
   const sides = new Set();

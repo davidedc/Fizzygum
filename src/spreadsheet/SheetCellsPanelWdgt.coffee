@@ -27,8 +27,8 @@
 # what crops them to the data region. (Pre-F6 it was only a standing guard: F1's
 # CELL-QUANTIZED scroll reconcile kept every visible cell tiling me exactly, so it cropped
 # nothing.) The frozen headers are direct sheet children, outside me, untouchable by it —
-# their partial-edge crop is the SHEET's own clip (F6: SimpleSpreadsheetWdgt augments the same
-# mixin).
+# their partial-edge crop is the SHEET's own clip (F6: SimpleSpreadsheetWdgt is a ClippingWdgt
+# too).
 #
 # v1 neutralisations of PanelWdgt behaviour — each preserves today's cells-parented-to-the-
 # sheet semantics exactly (receipts in the F5 plan section):

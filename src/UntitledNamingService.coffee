@@ -3,7 +3,7 @@
 # have been made so the Nth gets an " N" suffix.
 #
 # Lifted out of WorldWdgt as a plain delegated collaborator (the MacroToolkit
-# pattern — the codebase's mixins-to-delegation direction): the world HAS-A one,
+# pattern): the world HAS-A one,
 # created in the WorldWdgt constructor and reachable as
 # world.untitledNamingService. The counters live here now; like the old
 # WorldWdgt instance fields they simply reset to 0 with each new world (the

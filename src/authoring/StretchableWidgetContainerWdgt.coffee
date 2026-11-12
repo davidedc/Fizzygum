@@ -249,8 +249,8 @@ class StretchableWidgetContainerWdgt extends Widget
 
     else
       @contents._reLayout @bounds
-  # same as VerticalStackViewportWdgt, you can lock the contents.
-  # worth factoring it out as a mixin?
+  # same as VerticalStackViewportWdgt, you can lock the contents
+  # (the rows both build: Widget._addEditingLockMenuEntries).
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     @_addEditingLockMenuEntries menu, @childrenNotHandlesNorCarets()

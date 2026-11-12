@@ -5,7 +5,7 @@
 // part that installs it?). One rule encoded twice drifts (lib/part-edge-scan.js's header lesson).
 //
 // A DEFINITION IS A CALLABLE — something a `[@.]name(` send can reach:
-//   - a HEADER, `name:` or `@name:` at any indent (a class or class-side method, an object-literal or mixin member),
+//   - a HEADER, `name:` or `@name:` at any indent (a class or class-side method, an object-literal member),
 //     whose value is a function: an optional parameter list, read with a PAREN COUNTER (a default that holds a call,
 //     `(w = @topWdgtUnderPointer()) ->`, does not end it) and then an arrow, the body on the same line or not; or a
 //     signature wrapped right after its `(` (the one wrapped spelling every gate reads); or a header continued with a

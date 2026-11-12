@@ -64,7 +64,7 @@ rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'relayout-bounds-first');
 rejectPositionalArgs(ARGV, 'relayout-bounds-first', 'a src tree is named with --src=DIR');
 const ROOTS = sourceRoots(ARGV, 'relayout-bounds-first');
 
-const { methodSpans } = require('./lib/coffee-method-header');   // class methods and mixin members, one span each
+const { methodSpans } = require('./lib/coffee-method-header');   // class methods, one span each
 const EXEMPT = /#\s*relayout-bounds-first-exempt:\s*\S/;     // marker WITH a non-empty reason
 // own-geometry accessor reads that indicate positioning children against MY (about-to-change) frame:
 const GEOM = /@(?:left|right|top|bottom|width|height|position|topLeft|topRight|bottomLeft|bottomRight|center)\(\)|@bounds\b(?!\s*=)/;

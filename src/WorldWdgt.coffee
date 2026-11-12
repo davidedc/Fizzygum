@@ -253,7 +253,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @_fullChanged()
 
   # PUBLIC notification: CODE changed under every widget -- a class inspector's gesture edited,
-  # added, renamed or removed a member of a class or of a mixin (ClassInspectorWdgt), or a snapshot's
+  # added, renamed or removed a member of a class (ClassInspectorWdgt), or a snapshot's
   # load returned the page's own such edits to boot and replayed the file's (loadWorldSnapshot). What
   # layout and paint DERIVE from code then shows on the next frame, as a fresh build would show it:
   #   - every cache filled by running code is dropped: the six text caches (measurements, paragraph
@@ -1712,7 +1712,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # which change is the mend, so each asks again. Two notices call me: a person's edit or run under one widget
   # (Widget.sourceChanged: an object inspector's edits, a person's run of code -- a text's run rows, a script
   # shortcut's press, Widget._runningAPersonsCode) and a change of code under every widget
-  # (noteCodeChanged: a class's or a mixin's member edit; a load's replay calls it too, after the load's teardown
+  # (noteCodeChanged: a class's member edit; a load's replay calls it too, after the load's teardown
   # emptied both lists, so there it finds no one). A change that mended nothing has the widget throw once more, at a
   # throw's whole cost, and be banned again: the error log shown again, and brought to the front; for a paint, the
   # screen repainted; for a step, the world soft-reset (_softResetWorld: what the hand carries dropped, its hover and
@@ -3168,18 +3168,18 @@ class WorldWdgt extends IconGridPanelWdgt
       #     rest of the world, below.
       restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
       # The file's records reproduce its members from boot, so the page goes back to boot first: every
-      # class and mixin member edited here returns to its source at boot
+      # class member edited here returns to its source at boot
       # (SourceEditsRegistry.returnThePageToBootSources), and the loaded world is the file's, not the
       # file's edits laid over this page's. Code changed under every widget when any member returned
       # or any record replayed (noteCodeChanged): a load keeps its world, and with it the caches the
       # code before the replay filled.
       {returned, unreturned} = SourceEditsRegistry.returnThePageToBootSources()
-      replayed = restoredRegistry.replayMixinEdits() + restoredRegistry.replayClassEdits()
+      replayed = restoredRegistry.replayClassEdits()
       @noteCodeChanged() if returned + replayed > 0
       # What either step did NOT do is said ONCE, to the user, once the rest is restored -- counted,
       # never predicted. The class-level records the replay did not apply: an artifact that ships no
       # class source text has no meta-system and applies none (arc 5's lean profile); a build that lacks
-      # the class or mixin a record names (step 0 brought in every part that holds one) skips it; a
+      # the class a record names (step 0 brought in every part that holds one) skips it; a
       # record whose source this build does not compile is caught and logged. And the members this page
       # had edited that still run its edited version: each one the return could not give back (its boot
       # source failed to apply, caught and logged) that no replayed record has since replaced. The
@@ -3191,7 +3191,7 @@ class WorldWdgt extends IconGridPanelWdgt
       stillEditedCount = restoredRegistry.recordMembersStillRunning unreturned
       # composed here, where the counts are known; SAID once the rest has loaded (after step 9), with the
       # promise that everything else did -- or, if the restore throws, before its error, without it (the
-      # return and the replays changed the page's code either way)
+      # return and the replay changed the page's code either way)
       if unreplayedCount > 0 or stillEditedCount > 0
         plural = (n) -> if n is 1 then "" else "s"
         sourceEditsNotice = (if unreplayedCount > 0 then "This build cannot re-apply the " + unreplayedCount + " class-level source edit" + plural(unreplayedCount) + " this file carries.\n" else "") +
@@ -3236,7 +3236,7 @@ class WorldWdgt extends IconGridPanelWdgt
       @binWdgt ?= new BinWdgt
       @shelfWdgt ?= new ShelfWdgt
     # 7. attach the desktop children in ONE settle batch, via the base _addNoSettle so the
-    #    grid mixin does NOT re-place them (their restored positions are preserved) — the
+    #    icon grid (IconGridPanelWdgt.add) does NOT re-place them (their restored positions are preserved) — the
     #    sanctioned public-equivalent path (never a raw layout core; see DETERMINISM.md).
     #    Clear each child's parent first (deserialize pre-set it to {"$wk":"world"}) so the
     #    attach is a clean re-parent. The SNAPSHOT's attachment state is authoritative:

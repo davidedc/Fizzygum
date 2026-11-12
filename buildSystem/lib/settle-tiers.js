@@ -40,7 +40,7 @@ function settleTiers(srcRoot) {
   const text = fs.readFileSync(file, 'utf8');
   const lines = text.split('\n');
   const masked = coffeeMask(text, file);
-  const own = methodSpans(lines).filter((s) => !s.static && !s.mixin);
+  const own = methodSpans(lines).filter((s) => !s.static);
   const named = [...new Set(own.filter((s) => SETTLE_TIER_NAME.test(s.name)).map((s) => s.name))];
   const flushing = [...new Set(own
     .filter((s) => masked.slice(s.line + 1, s.end).some((l) => FLUSH_CALL.test(l.bare)))

@@ -15,15 +15,10 @@
  * Pharo ancestry (carried over 2026-07-15, docs/archive/lint-generic-rules-carryover-plan.md Phase 3):
  *   ReEquivalentSuperclassMethodsRule — an override equivalent to what it would inherit adds nothing
  *   ReJustSendsSuperRule             — an override that only forwards to super
- *   ReLocalMethodsSameThanTraitRule  — a method identical to what the mixin already provides
  *
- * WHAT IT REPORTS (three categories):
+ * WHAT IT REPORTS (two categories):
  *   IDENTICAL-TO-INHERITED  own method whose normalized body equals the NEAREST definition up its
  *                           chain (parent chain). Candidate: delete the override.
- *   SHADOWS-MIXIN           same, but the nearest definition comes from an @augmentWith mixin. Kept
- *                           SEPARATE on purpose: which copy wins is a src/meta/Class.coffee detail,
- *                           so this census flags the collision and lets a human decide which side
- *                           should go — it does not claim the override is dead.
  *   JUST-SENDS-SUPER        method whose entire normalized body is the single token `super`.
  *
  *   ⚠ `super()` and `super arg…` are deliberately NOT flagged. In CoffeeScript BARE `super` forwards
@@ -55,15 +50,15 @@
  * classify it under the ledger's existing "deliberate seam" category rather than as removable.
  *
  * METHOD (heuristics, no type inference — the house style):
- *   - Class model (parent, @augmentWith mixins, methods, resolution order) is REUSED wholesale from
+ *   - Class model (parent, methods, resolution order) is REUSED wholesale from
  *     census-public-private-calls.js via require() — see its runCensus() exports. Not copied: it is
  *     the subtle part, and two copies would drift.
  *   - Bodies are compared with their STRING LITERALS INTACT (two bodies differing only in a string
  *     are NOT duplicates), so this file cannot use the census's own string-STRIPPED bodyLines; it
  *     re-reads each source through lib/coffee-mask.js and takes its `code` view (comments blanked, strings
  *     kept).
- *   - Normalization: cut comments, drop blank lines, DEDENT to the body's own minimum indent (so a
- *     4-space class method and an 8-space mixin-DSL method are comparable), collapse internal
+ *   - Normalization: cut comments, drop blank lines, DEDENT to the body's own minimum indent (so two
+ *     bodies indented by different amounts are comparable), collapse internal
  *     whitespace runs to one space. Relative indentation is PRESERVED — CoffeeScript is
  *     indentation-significant, so flattening it would equate different programs.
  *
@@ -165,14 +160,10 @@ const bodyOf = (rec) => {
 const lineCount = (t) => (t ? t.split('\n').length : 0);
 
 const identical = [];      // parent-chain overrides equal to what they'd inherit
-const shadowsMixin = [];   // own def equal to a mixin-provided one
 const justSuper = [];      // body is the bare token `super`
 
 for (const info of classInfo.values()) {
   const chain = chainOf(info.name);
-  // classes reachable through THIS class's @augmentWith mixins (each mixin's own chain included)
-  const viaMixins = new Set();
-  for (const mx of info.mixins) for (const m of chainOf(mx)) viaMixins.add(m.name);
 
   for (const [name, rec] of info.methods) {
     const body = bodyOf(rec);
@@ -199,13 +190,12 @@ for (const info of classInfo.values()) {
       from: inherited.cls, fromAt: `${inherited.file}:${inherited.line}`,
       lines: lineCount(body),
     };
-    (viaMixins.has(inherited.cls) ? shadowsMixin : identical).push(row);
+    identical.push(row);
   }
 }
 
 const bySize = (a, b) => b.lines - a.lines || (a.cls + a.name < b.cls + b.name ? -1 : 1);
 identical.sort(bySize);
-shadowsMixin.sort(bySize);
 justSuper.sort((a, b) => (a.cls + a.name < b.cls + b.name ? -1 : 1));
 
 // ── report ──────────────────────────────────────────────────────────────────────────────────────
@@ -213,7 +203,7 @@ const trunc = (arr, n) => (FULL ? arr : arr.slice(0, n));
 
 console.log('=== census-hierarchy-duplication ===');
 console.log(`scanned ${classInfo.size} classes / ${out.allMethods.length} methods`);
-console.log(`IDENTICAL-TO-INHERITED: ${identical.length}   SHADOWS-MIXIN: ${shadowsMixin.length}   JUST-SENDS-SUPER: ${justSuper.length}`);
+console.log(`IDENTICAL-TO-INHERITED: ${identical.length}   JUST-SENDS-SUPER: ${justSuper.length}`);
 console.log('\nADVISORY — nothing here gates. Every finding is a CANDIDATE: `super` is meta-compiled');
 console.log('(src/meta/Class.coffee), so textual equivalence is not dispatch equivalence. Verify by hand.');
 
@@ -223,18 +213,12 @@ for (const r of trunc(identical, 40)) {
 }
 if (!FULL && identical.length > 40) console.log(`  … ${identical.length - 40} more (--full)`);
 
-console.log(`\n--- SHADOWS-MIXIN (${shadowsMixin.length}) — own def identical to the mixin's; decide which copy goes ---`);
-for (const r of trunc(shadowsMixin, 40)) {
-  console.log(`  ${r.at}: ${r.cls}.${r.name} == mixin ${r.from}.${r.name} (${r.lines} line${r.lines === 1 ? '' : 's'})  [${r.fromAt}]`);
-}
-if (!FULL && shadowsMixin.length > 40) console.log(`  … ${shadowsMixin.length - 40} more (--full)`);
-
 console.log(`\n--- JUST-SENDS-SUPER (${justSuper.length}) — bare \`super\` only (super()/super args NOT flagged) ---`);
 for (const r of trunc(justSuper, 40)) console.log(`  ${r.at}: ${r.cls}.${r.name}`);
 if (!FULL && justSuper.length > 40) console.log(`  … ${justSuper.length - 40} more (--full)`);
 
 if (JSON_OUT) {
-  fs.writeFileSync(JSON_OUT, JSON.stringify({ identical, shadowsMixin, justSuper }, null, 1));
+  fs.writeFileSync(JSON_OUT, JSON.stringify({ identical, justSuper }, null, 1));
   console.log('\n[hierarchy-duplication] JSON written to ' + JSON_OUT);
 }
 process.exit(0);

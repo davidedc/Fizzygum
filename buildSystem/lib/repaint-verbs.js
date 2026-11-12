@@ -36,7 +36,7 @@ function repaintVerbs(srcRoot) {
   }
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   const verbs = [...new Set(methodSpans(lines)
-    .filter((s) => !s.static && !s.mixin && REPAINT_VERB_NAME.test(s.name))
+    .filter((s) => !s.static && REPAINT_VERB_NAME.test(s.name))
     .map((s) => s.name))];
   const missing = REQUIRED.filter((n) => !verbs.includes(n));
   if (missing.length) {

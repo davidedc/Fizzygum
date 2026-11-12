@@ -75,26 +75,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
       2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
       member it inherits".)
-- [ ] **A mixin member's recorded source carries the next member's leading comment** (found by the independent review
-      closing "A class inspector's field row reads its record by NAME", in the plan's ledger; measured 2026-11-12 and
-      PARKED for the owner: its fix moves references outside the backlog loop's recapture grant; reached: a class
-      inspector on `VerticalStackPanelWdgt` — or `PanelWdgt`, `FrameWdgt`, any consumer of
-      `ClippingAtRectangularBoundsMixin` — selecting `clipsAtRectangularBounds`). `Mixin`'s source parse cuts each
-      member at the next 6-space key, so the comment block that documents the NEXT member
-      (`plausibleTargetAndDestinationWidgets`) becomes part of this one's recorded source: the pane shows another
-      member's documentation, and a Save of the row writes it into this member. `Class`'s parse cuts at a top-level
-      comment and is not affected. Measured: 45 of the 75 mixin members' recorded texts carry such a comment (the
-      constructor's own regex, in plain Node over all eight mixins), and no mixin has a member-level comment inside a
-      member's body. The fix, ruled and built (loop unit U36): ONE member reader — `Class`'s line reader made
-      class-side, `Class.memberSourcesOf(lines, memberRegex, commentRegex)` with a class-side `Class.findUpTo`, read by
-      `Mixin` with its 6-space patterns (`Mixin.MEMBER_REGEX`, `MEMBER_COMMENT_REGEX`) — builds clean (the syntax gate,
-      the stinks with the one `null` sanction moved to `@memberSourcesOf`) and passes the dpr-1 suite but one test:
-      `SystemTest_macroInspectorResizingOKEvenWhenTakenApart`'s images 2 and 3, whose code pane shows
-      `ControllerMixin._fireConnection` — its text loses the next member's comment, so the pane's vertical scrollbar
-      thumb grows (64 pixels, x 914–917, y 32–48, at dpr 1; its dpr-2 and finger references move alike). A code-pane
-      text change is not inspector member-list churn, the one recapture the loop holds. The patch waits in
-      `Fizzygum-tests/.scratch/mixin-member-comment/u36-one-member-reader.patch`, the survey beside it: applying it
-      wants that test recaptured (mouse and finger, dpr 1 and 2) and a proof check (the survey's).
 - [ ] **On a pre-compiled tree, a member a run replaced before the reflective layer arrived reads as its class's
       source** (found by the independent review closing "A run that replaces a class's member reads as a recorded
       source it no longer runs", in the plan's ledger; reached on `homepage` / `dev-precompiled`: Run `X::m = -> …` in
@@ -114,20 +94,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       on the inspector reading a member's source by name; it reads the source kept with the FUNCTION, so a wrapper
       shows its compiled JavaScript. Forwarding the record onto a wrapper (`Class.keepMemberRecord wrapper,
       Class.memberRecordOf original`, public) or accepting compiled text: the plan's owner's call.
-- [ ] **The mixin double-injection guard compares functions no two consumers share** (found closing "A run that
-      replaces a class's member reads as a recorded source it no longer runs", in the plan's ledger; measured).
-      `Object::addInstanceProperties` says a mixin's members are "compiled ONCE and SHARED by every consumer" and
-      refuses a member whose very function the class already inherits; measured on the dev page, every mixin's literal
-      is evaluated afresh for each class it augments (a sample member of each of the eight mixins is a different
-      function in every consumer but the first), so the guard's `@::[key] is value` can never hold across two classes
-      and the same-mixin-twice case it names would pass silently. Whether to compare by name and donor instead, or to
-      evaluate the literal once, is the open part (overlaps the mixin-removal plan).
-- [ ] **`Object::augmentWith` copies the mixin literal's inherited keys too** (found by the independent review closing
-      "An object inspector on a class shows its statics as compiled text", in the plan's ledger; by reading).
-      `Object-extensions.coffee`'s `augmentWith` walks the literal with a non-own `for … of`, so every mixin consumer's
-      class function — and, through `extend`, every subclass — owns `augmentWith`, `addInstanceProperties` and
-      `hashCode` (enumerable on `Object.prototype`) as undeclared statics, which an object inspector on such a class
-      lists. (`docs/architecture/mixins.md` says only the literal's own keys are copied.)
 - [ ] **The world's inspector offers to edit its browser listeners** (found by the independent review closing "A run
       that sets a widget field to a function blocks every world snapshot", in the plan's ledger; by reading). The world
       holds its DOM listeners as own function fields (`pointerdownBrowserEventListener`, …), so an object inspector on
@@ -294,9 +260,8 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** (found by the independent
       review closing "The inspector churn set cannot see a class inspector's member list move", in the plan's ledger;
       by reading; low). The churn set and its readers act per TEST, not per shot: a test in the set is recaptured whole,
-      so a shot that proves BEHAVIOUR rather than renders a member list (the hover colours in
-      `MixinEditDonorAndOverride` / `MixinFieldEditDonorAndOverride` images 3 and 5) is re-recorded with the member
-      list's churn, whatever it now shows. The set gained those two tests; the hazard is older and wider.
+      so a shot that proves BEHAVIOUR rather than renders a member list is re-recorded with the member
+      list's churn, whatever it now shows.
 - [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
       refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
       `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the
@@ -580,8 +545,7 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 - [ ] §7: banked v1-excluded items: precompiled file, SWCanvas strip, baked edits, dirty guard
 
 ### `plans/mixin-removal-plan.md`
-AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phases 1–7 have landed (its §13); the rest runs in its §7 order. All eleven owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
-- [ ] §7 Phase 8: the mechanism's teardown (waits on Phases 1–7)
+AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phases 1–8 have landed (its §13); Phase 9 is left. All eleven owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
 - [ ] §7 Phase 9: docs and close
 
 ### `archive/onion-widget-composition-plan.md` — "The Frame model" — ✅ FLAGSHIP ARC COMPLETE 2026-07-20 (A·C·B·D·E); follow-ons below
@@ -704,6 +668,7 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 
 ### One line each — every item names the archived plan and section that owns its detail
 
+- [ ] `plans/mixin-removal-plan.md` §7 Phase 8: classes are still evaluated in sloppy mode (an indirect `eval.call window`); with `Mixin`'s `arguments.callee` rewrite deleted, nothing the meta-system emits needs it any more — whether to compile classes in strict mode is open (out of that plan's scope).
 - [ ] (no plan; found 2026-11-12 by the mixin-removal loop's U7 review, `Fizzygum-tests/.scratch/mixin-removal-loop/u7-relay/` LEDGER) A `StretchableWidgetContainerWdgt` keeps a stale `@contents` once its page leaves it — "Pick up", "Delete" or "Attach" on the page of a slide, a dashboard, a generic panel or a patch-programming window — and nothing clears it: each re-lay of the container moves the departed page back to its box (`_reLayout` through `_reLayoutWithOwnContents`, no parent check), drops in its margin go to that page, `add` and "Attach" forward to it, and the window's edit toggle writes its flag (the state U7 found Phase 6's early bar call still needed for). Medium, by reading (the edit-toggle half measured: `u7-relay/probe-a1.js`). Fix shape: the container hears its child leave and lets it go; what the emptied window then shows is a product decision.
 - [ ] `archive/drag-embed-implementation-plan.md` (dwell-to-arm; case law `../../Fizzygum-tests/DETERMINISM.md` §3k): `SystemTest_macroInternalVsExternalWindowDrop`'s UNARMED drop is §3k's bug class — it carries the window, waits `waitNoInputsOngoing`, then clicks, and the click is stamped from the cycle that wait ends in, so under load the hold crosses `dwellToArmMs` (450) and the window nests. Seen once (2026-11-12, the mixin-removal loop's U2 gauntlet, its tiernaming leg's parallel wave: "the unarmed window landed on the world, not nested in the panel under it — expected: true found: false", images 1–3; passed the serial retry; log kept at `Fizzygum-tests/.scratch/mixin-removal-loop/u2-clipping/tiernaming-parallel-fail.log`). Fix per §3k: schedule the release in event time in the same step as the carry (`@clickAfterHoldingStill_InputEvents`), then confirm image_1 byte-identical.
 - [ ] `archive/atlas-delay-fuzz-tool-plan.md` §9: `fg fuzz` has NO working regression fixture — §5 test 3 (revert flake A's `waitForScreenshotReady` and expect a catch) does not reproduce: 13/13 passes under injection AND 3/3 with none, because a fresh page makes ~1 `loadFont` call against a ~one-frame window. A fixture needs a scenario with MANY atlas loads and a pixel read near one of them. Until then the tool's own failure paths are covered only by the canned-transcript corpus (`npm run selftest`) plus the two live INVALID drills.

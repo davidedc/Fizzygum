@@ -420,7 +420,7 @@ pair, `buildExternalAndFreeInternalWindow_Macro` + `dropInternalWindowIntoExtern
 
 ## The delegation model (the first in the codebase)
 
-The project is phasing out mixins for plain OO delegation; `MacroToolkit` is the first example. `world.macroToolkit` is
+A behaviour shared across unrelated classes lives in a plain collaborator object; `MacroToolkit` is the first example. `world.macroToolkit` is
 created in the `WorldWdgt` ctor: `if MacroToolkit? then @macroToolkit = new MacroToolkit` (the guard self-disables under
 a production build, where the part is absent). `world` keeps only the two per-cycle hooks (`doOneCycle` →
 `@macroToolkit?.progressOnMacroSteps()`; `updateTimeReferences` → bookkeeping). There is **no** `world.progressOnMacroSteps`

@@ -111,8 +111,8 @@ FORMS = ("compile-at-boot", "precompiled")
 
 # WHEN THE REFLECTIVE LAYER LOADS -- for a PRECOMPILED artifact only (see resolve()).
 #
-# "The reflective layer" is the class SOURCE TEXT plus the meta-system that parses it: the two
-# individually-fetched Class/Mixin sources, then every source batch, then an ingest-only pass
+# "The reflective layer" is the class SOURCE TEXT plus the meta-system that parses it: the
+# individually-fetched Class source, then every source batch, then an ingest-only pass
 # (`new Class src, false, false`) that registers each class's members and source against the class
 # the pre-compiled image already defined. A precompiled world RUNS without it -- it is what lets the
 # system inspect and rewrite itself, not what makes it go.
@@ -277,9 +277,9 @@ class Profile:
     @property
     def shipsSourceText(self):
         """Does `js/coffeescript-sources/` exist in this tree at all? `none` is the one policy that
-        drops it -- batches AND the two individually-fetched Class/Mixin sources, which are the only
-        two classes a pre-compiled image does NOT contain (measured) and which can do nothing with no
-        batches to ingest."""
+        drops it -- batches AND the individually-fetched Class source, which is the only class of the boot a
+        pre-compiled image does NOT contain (measured) and which can do nothing with no batches to
+        ingest."""
         return self.sources != "none"
 
     def selectsPart(self, partName):

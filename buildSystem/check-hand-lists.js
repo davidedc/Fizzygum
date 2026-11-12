@@ -35,10 +35,8 @@
 //
 // THE NAME UNIVERSE. CLASS names: the basename of every .coffee file under Fizzygum/src and the harness
 // (one class per file, filename = class name; src/boot's files count too, and name boot sources).
-// MEMBER names: every class-body key at the class-body indent (`  name:` / `  @name:`) in the same files,
-// plus a mixin's member keys at the indent its onceAddedClassProperties hash locks
-// (lib/coffee-method-header.js mixinMemberIndent: what a mixin puts on a widget is a member like any
-// other). Lines inside a heredoc declare nothing — a code sample in a string is not a class body. This
+// MEMBER names: every class-body key at the class-body indent (`  name:` / `  @name:`) in the same files.
+// Lines inside a heredoc declare nothing — a code sample in a string is not a class body. This
 // harvest is its own because no shared one answers this question: lib/name-definitions.js and
 // lib/coffee-method-header.js see CALLABLE members only (a method header, a function), while the lists
 // that rotted named FIELDS (world collections, drag-embed slots); lib/install-edges.js
@@ -117,7 +115,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { mixinMemberIndent } = require('./lib/coffee-method-header');
 const { testNames } = require('./lib/tests-repo-code');
 const { rejectUnknownArgs } = require('./lib/cli-args');
 const { srcFiles, harnessFiles, compiledFiles, sourceRoots, SOURCE_RAILS, HARNESS_DIR } = require('./lib/source-files');
@@ -410,11 +407,9 @@ function harvestUniverse(coffeeFiles) {
     const text = fs.readFileSync(p, 'utf8');
     const lines = text.split('\n');
     const masked = coffeeMask(text, p);    // a line inside a heredoc declares nothing
-    const mixinIndent = mixinMemberIndent(lines);
-    const mixinKey = mixinIndent === undefined ? undefined : new RegExp(`^ {${mixinIndent}}([A-Za-z_$][\\w$]*)\\s*:(?!:)`);
     for (const [i, raw] of lines.entries()) {
       if (masked[i].continuesLiteral) continue;
-      const m = /^  @?([A-Za-z_$][\w$]*)\s*:(?!:)/.exec(raw) || (mixinKey && mixinKey.exec(raw));
+      const m = /^  @?([A-Za-z_$][\w$]*)\s*:(?!:)/.exec(raw);
       if (m) members.add(m[1]);
     }
   }

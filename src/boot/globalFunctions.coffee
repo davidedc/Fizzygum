@@ -13,14 +13,6 @@ bootLoadingDebugWrites = false
 
 stillLoadingSources = undefined
 
-
-# This is used for mixins: MixedClassKeywords is used
-# to protect some methods so the are not copied to object,
-# because they have special meaning
-# (this comment from a stackOverflow answer from clyde
-# here: http://stackoverflow.com/a/8728164/1318347 )
-MixedClassKeywords = ['onceAddedClassProperties', 'included', 'consumerClassNames']
-
 noOperation = ->
     undefined
 
@@ -59,8 +51,8 @@ window.fizzygumPartIsEagerHere = (spec) ->
 # which a file record can name, and each of which would pass the snapshot loader's pre-teardown
 # refusal and then throw (or build a non-Fizzygum shell) after the desktop is gone. So: an OWN
 # property of window, a DATA property (reading the descriptor runs no getter), and a function
-# carrying the `instances` Set marker (see allClassFunctions below), which no native global, no
-# mixin, and neither Class nor Mixin carries.
+# carrying the `instances` Set marker (see allClassFunctions below), which no native global carries,
+# and neither does the meta-system's own Class.
 window.classNamed = (name) ->
   descriptor = Object.getOwnPropertyDescriptor window, name
   return undefined unless descriptor? and "value" of descriptor
@@ -149,10 +141,7 @@ window.superclassOf = (ctor) ->
 # that declares nothing an own COPY of its parent's list (harmless, the duplicates drop), and one
 # that declares its own REPLACES that copy, so stopping at the first class found would lose every
 # ancestor's names, silently. (The serialization rig's transients.inheritedMergedNotReplaced
-# pins that for the transients.) A mixin's static is copied onto each consumer constructor as an
-# own property (Object::augmentWith, in the consumer's class body), so a mixin-declared list is
-# found at the consumer's own step -- unless the consumer declares the same static itself, whose
-# own list then replaces the mixin's copy (a class's statics are assigned after its augmentWith).
+# pins that for the transients.)
 window.classStaticListMergedUpTheChain = (klass, staticName) ->
   merged = []
   ctor = klass
@@ -192,31 +181,26 @@ loadJSFilePromise = (fileName) ->
     tryToLoadFile()
 
 
-# THE META-SYSTEM'S OWN SOURCES, in the order they compile: the only sources boot fetches one by one
-# and compiles by hand, because every other source needs them to exist before it can be ingested.
-# dependencies-finding leaves them out of the load order and the compile job skips them, both by
-# reading this list.
-# hand-list-sanctioned: run-all-headless.js — boot fetches js/coffeescript-sources/<name>-source.js
-# for each name here, and build.py writes that file only for a source it holds under that name, so a
-# stale name fails the fetch and every page's boot: every suite leg fails, and so does
-# smoke-boot-headless.js on the failed request and the console error
-META_SYSTEM_SOURCES = ["Mixin", "Class"]
+# THE META-SYSTEM'S OWN SOURCE: the only source boot fetches on its own and compiles by hand, because
+# every other source needs `Class` to exist before it can be ingested. dependencies-finding leaves it
+# out of the load order and the compile job skips it, both by reading this list. Boot fetches
+# js/coffeescript-sources/<name>-source.js for each name here, and build.py writes that file only for
+# a source it holds under that name, so a stale name fails the fetch and every page's boot.
+META_SYSTEM_SOURCES = ["Class"]
 
 
 # there are two main ways of booting the world:
 # 1. without pre-compiled files. In this case the
 #    boot needs to load all the sources, compile
-#    them and build all the classes and mixins.
+#    them and build all the classes.
 #    The classes need to be appropriately chained
-#    into a class hierarchy and they need to be
-#    augmented with the desired mixins.
+#    into a class hierarchy.
 #    Only after all that the world will be able to
 #    start.
 # 2. with pre-compiled files. In this case there
 #    is a JS file that contains all the compiled
-#    JS versions of all the classes and mixins, plus
-#    all the code to build the class hierarchy and
-#    to augment the classes with the correct mixins.
+#    JS versions of all the classes, plus
+#    all the code to build the class hierarchy.
 #    So, no compilation of sources is needed for the
 #    world to start, so this is much faster. Whether the
 #    original coffeescript sources follow it -- so one can
@@ -227,41 +211,42 @@ META_SYSTEM_SOURCES = ["Mixin", "Class"]
 # THE REFLECTIVE LAYER: the class SOURCE TEXT, plus the meta-system that parses it.
 #
 # It is what lets the running system show and rewrite its own code -- the inspectors' member maps,
-# and a snapshot's class/mixin source edits. It is NOT what makes the world go: a pre-compiled world
+# and a snapshot's class source edits. It is NOT what makes the world go: a pre-compiled world
 # is already running before any of this, and (arc 5) a profile with sources: "none" never calls this
 # at all and ships none of the files it fetches.
 #
 # On the COMPILE-AT-BOOT path it is not optional and not "reflective" either -- there the sources ARE
 # the world, so the final step compiles and EXECUTES them (justIngestSources = false) and only then
 # is there a world to start. Both paths share the same five steps, which is why this is one function:
-#   1. the Class and Mixin sources, the only two classes a pre-compiled image does not contain
-#      (they are compiled here by hand, so nothing accumulated them into it)
-#   2. compile + eval those two: the meta-system must exist before any batch can be ingested
+#   1. the Class source, the one class of the boot a pre-compiled image does not contain (it is
+#      compiled here by hand, so nothing accumulated it into it)
+#   2. compile + eval it: the meta-system must exist before any batch can be ingested
 #   3. dependencies-finding, which computes the load order from the source text
 #   4. every eager part's source batches (window.FIZZYGUM_PARTS drives which)
 #   5. ingest-only (true) against the already-running classes, or compile-and-execute (false) to
 #      CREATE them
 # THE META-SYSTEM: steps 1-3 on their own, because a LAZY PART needs exactly them and nothing else.
 #
-# ⚠⚠ WHY THIS IS SPLIT OUT. Ingesting any source means `new Class` / `new Mixin` (see
+# ⚠⚠ WHY THIS IS SPLIT OUT. Ingesting any source means `new Class` (see
 # storeSourceAndPotentiallyCompileItAndExecuteIt), and ordering a batch means findLoadOrder -- and on
-# a PRECOMPILED tree none of the three exist: Class and Mixin are the only two classes absent from
-# js/pre-compiled.js, and findLoadOrder ships in a file nothing has injected yet. A lazy part loading
-# on such a tree therefore died with "findLoadOrder is not defined" until this split existed.
+# a PRECOMPILED tree neither exists: of the classes the boot defines, Class is the one absent from
+# js/pre-compiled.js, and
+# findLoadOrder ships in a file nothing has injected yet. A lazy part loading on such a tree therefore
+# died with "findLoadOrder is not defined" until this split existed.
 # PartsRegistry._loadPartPromise awaits this, and MUST NOT await the whole reflective layer instead:
 # step 4 below is every eager batch — core's numbered batches, ≈1.9 MB on production — which would hand back the entire saving
-# that made the part lazy. These three files are ~39 KB.
+# that made the part lazy. These two files are a small fraction of that.
 loadMetaSystemPromise = ->
   Promise.all (loadJSFilePromise "js/coffeescript-sources/#{eachName}-source.js" for eachName in META_SYSTEM_SOURCES)
   .then ->
-    if bootLoadingDebugWrites then console.log "---- Class + Mixin sources loaded"
-    # the meta-system's sources are the only ones fetched individually and compiled by hand:
-    # everything else needs Class/Mixin to already exist before it can be ingested.
+    if bootLoadingDebugWrites then console.log "---- Class source loaded"
+    # the meta-system's source is the only one fetched individually and compiled by hand:
+    # everything else needs Class to already exist before it can be ingested.
     for eachName in META_SYSTEM_SOURCES
       eval.call window, compileFGCode SourceVault.get(eachName), true, fromTheBuild: true
     return
   .then ->
-    if bootLoadingDebugWrites then console.log "---- compiled the Mixin and Class sources"
+    if bootLoadingDebugWrites then console.log "---- compiled the Class source"
     loadJSFilePromise("js/src/dependencies-finding-min.js")
 
 # Memoized like the layer itself: a part load and a later inspector open share ONE fetch of these.
@@ -508,8 +493,8 @@ boot = ->
     # WHEN does the reflective layer load? (buildProfile.py SOURCES_POLICIES)
     #   "none"        never: this artifact ships no class source text at all, so there is nothing to
     #                 fetch, nothing to ingest and no meta-system. The flag has to be answered here
-    #                 rather than by an empty parts manifest, because the Class and Mixin sources are
-    #                 fetched BY NAME, not through the manifest, and would 404.
+    #                 rather than by an empty parts manifest, because the Class source is fetched BY
+    #                 NAME, not through the manifest, and would 404.
     #   "lazy"        not now: the first consumer calls ensureReflectiveLayerLoaded() and waits.
     #                 Today that is opening an inspector (Widget.spawnInspector) or restoring a
     #                 file that holds one or carries class-level source edits

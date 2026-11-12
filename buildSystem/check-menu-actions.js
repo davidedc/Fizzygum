@@ -39,8 +39,6 @@
 //   `"setTargetAndActionWithOnesPickedFromMenu"` at `@`, and that verb lives in `ControllerWdgt` —
 //   only reachable because a ControllerWdgt (PaletteWdgt, StringWdgt, …) has `Widget` in its
 //   chain. Resolving against the enclosing class ALONE would false-fail there.
-//   ⓘ The same union covers a call site inside a MIXIN file for free: `@` in a mixin's own rows is
-//   the augmented widget, and every augmenting class has the mixin in its chain.
 //   ⓘ The harness is part of the universe: methods a `*TestSupport` class copies onto a core class
 //   (`WorldTestSupport.installOnto WorldWdgt`, read from src/boot/globalFunctions.coffee) are real
 //   methods of that class on any build shipping the harness part — `WorldWdgt`'s own
@@ -71,8 +69,7 @@
 // `menu.addMenuItem "…", someExpression, "verb"` is a runtime value and this tree dispatches through
 // a string. So a method whose NAME matches a menu action is checked even on a class no menu ever
 // wires — `ToggleButtonWdgt.select(whichOne)` is checked because `ListWdgt` wires a `"select"` — and
-// wherever the method is defined, a class body or a mixin's onceAddedClassProperties member alike
-// (lib/coffee-method-header.js methodSpans groups both). That
+// wherever the method is defined, in any class body (lib/coffee-method-header.js methodSpans). That
 // direction is deliberate: over-matching costs a spurious rule-3 hit (fix by naming the slot, which
 // is never wrong), while under-matching would let a real one through. If it ever false-positives on
 // a genuinely unrelated method, prefer renaming that method over loosening the rule.
@@ -83,7 +80,7 @@ const { methodSpans } = require('./lib/coffee-method-header.js');
 // The boot INSTALL EDGES (`*TestSupport.installOnto <CoreClass>`) and the members each one copies,
 // by installOnto's own semantics — one harvest, shared with check-part-edges.js.
 const { installEdges, harnessPresent } = require('./lib/install-edges.js');
-// The whole-system CLASS MODEL (parent, @augmentWith mixins, methods, resolution order) — RULE 1b's
+// The whole-system CLASS MODEL (parent, methods, resolution order) — RULE 1b's
 // engine, reused wholesale rather than re-derived, exactly as census-hierarchy-duplication.js and
 // census-property-placement.js reuse it. Re-implementing inheritance resolution here would be a
 // second copy of the subtlest part of the tree's static analysis, free to drift.
@@ -261,7 +258,7 @@ for (const p of files) {
     if (!params.length) continue;
 
     // body = what follows the arrow on the header (a ONE-LINE verb's whole body) and the method's span: up to the next
-    // method (a class's, or a sibling member inside a mixin), a non-method class-level key, or EOF
+    // method, a non-method class-level key, or EOF
     const arrow = headerBare.search(/\)\s*[-=]>/);
     let body = (arrow >= 0 ? headerBare.slice(headerBare.indexOf('>', arrow) + 1) : '') + '\n';
     for (let j = last + 1; j < span.end; j++) body += bare[j] + '\n';
@@ -275,8 +272,7 @@ for (const p of files) {
 
 // ---- pass 3 (RULE 1b): every `@`-targeted string action must resolve on a possible receiver -----
 // The resolution set for `@` inside class C is the union of `chainOf(X)` over every X whose chain
-// CONTAINS C — that is, C itself, every subclass of C, and every class that `@augmentWith`es C (the
-// census's chainOf already folds both edges into one order). A verb missing from all of them is
+// CONTAINS C — that is, C itself and every subclass of C. A verb missing from all of them is
 // dispatched at nothing: `@target[@action]` is undefined and the row throws on click.
 let ruleB = { checked: 0, skipped: '' };
 if (!harnessPresent(ROOTS.testsRepo)) {
@@ -334,7 +330,7 @@ if (!harnessPresent(ROOTS.testsRepo)) {
     }
     if (found) continue;
     hard.push({ rel: s.rel, line: s.line, rule: '1b', text: s.text,
-      why: `the ${s.door} targets \`@\` with action "${s.action}", and NO class that \`@\` could be here — ${s.cls}, its subclasses, its mixin consumers, their chains — defines it, so \`@target[@action]\` is undefined and the row throws when clicked` });
+      why: `the ${s.door} targets \`@\` with action "${s.action}", and NO class that \`@\` could be here — ${s.cls}, its subclasses, their chains — defines it, so \`@target[@action]\` is undefined and the row throws when clicked` });
   }
 }
 

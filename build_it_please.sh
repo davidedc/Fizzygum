@@ -373,10 +373,10 @@ if ! $noSyntaxCheck ; then
 fi
 
 # --- build-time CoffeeScript syntax gate ----------------------------------------
-# The ~470 class/mixin sources ship as TEXT and are compiled in-browser, so without
+# The ~470 class sources ship as TEXT and are compiled in-browser, so without
 # this a "green" build can still contain syntax errors that only blow up at boot.
-# The gate loads the REAL src/meta/Class.coffee + Mixin.coffee and drives every
-# shipped source through them (see buildSystem/check-coffee-syntax.js). We pass
+# The gate loads the REAL src/meta/Class.coffee and drives every shipped source
+# through it (see buildSystem/check-coffee-syntax.js). We pass
 # "${args[@]}" so the gate checks exactly the files THIS build ships.
 # NOTE: this script has no `set -e`, so we MUST check $? explicitly to abort
 # (mirrors the terser error-check further below). --noSyntaxCheck is the escape hatch.
@@ -1221,7 +1221,7 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
   # (There used to be a prune of the per-class source files here — build.py wrote one js file per
   # class next to the batches and nothing ever loaded them, so this line deleted ~500 of them again
   # for the production tree. Arc 4 stopped emitting them, so there is nothing left to prune: the
-  # sources directory now holds only the batches plus the two individually-loaded Class/Mixin sources.)
+  # sources directory now holds only the batches plus the one individually-loaded Class source.)
 
   # Generate the pre-compiled image. It MUST happen here, while js/pre-compiled.js is still the
   # `window.preCompiled = false` stub — compile-at-boot is exactly the mode that builds the image.

@@ -192,7 +192,7 @@ class Deserializer
   # -- else a promise that resolves once the next thing has arrived, for the caller to RE-ENTER its
   # load on. One thing per trip, in this order, so the second is asked on the re-entry:
   #   1. the LAZY PARTS that own the classes it names (@classNamesIn), which are not defined until their
-  #      part loads, and the code its class- and mixin-scope source edits name
+  #      part loads, and the code its class-scope source edits name
   #      (SourceEditsRegistry.namesOfTheCodeEditedIn), which the replay edits only once it is there --
   #      an edit of a lazy part's code rides a file that holds none of that part's widgets. An edit
   #      whose code no part provides is no reason to refuse the file (its restore does not need it):
@@ -223,13 +223,13 @@ class Deserializer
   # has loaded (a compile-at-boot page once booted, any page once something has asked for it) and on a
   # build that can never load it, so in practice a wait is paid only on a `sources: "lazy"` build, and
   # there only for a file that needs the layer:
-  #   - one carrying class- or mixin-scope source edits, which are replayed against the meta-system;
+  #   - one carrying class-scope source edits, which are replayed against the meta-system;
   #   - one holding a widget whose class READS the member maps (`readsClassMemberMaps`, an inspector,
   #     which shows and edits a member's source: before the layer it would show compiled JS, and its
   #     edits would have no class record to go to). The declaration is read off the RESIDENT class of a
   #     record, so this is asked once the file's parts have arrived (loadWhatItNeeds' order).
   # The question is whether the layer has LOADED, not whether the meta-system is here: a lazy part's
-  # load brings Class and Mixin in on their own (PartsRegistry._loadPartPromise), without the eager
+  # load brings Class in on its own (PartsRegistry._loadPartPromise), without the eager
   # classes' sources.
   @_needsTheReflectiveLayer: (envelope) ->
     return false if reflectiveLayerIsLoaded()

@@ -270,11 +270,9 @@ class CellWdgt extends Widget
     @hostedWidget = undefined if @hostedWidget is grabbedWdgt
     @presentedValue = undefined
     record.widgetEntry = undefined
-    # THE un-wire, which this site hand-rolled as a bare field-clear under a comment reading "no
-    # un-wire idiom exists in ControllerMixin — verified 2026-07-17". §P4 built one, and this was the
-    # caller it was built for: cut exactly the wire I made in wireValueWidget and leave any other
-    # connection this widget carries alone — which the old blanket removeAllEdgesOf could not do, and
-    # got away with only because a value-widget in a cell had no other edges to lose.
+    # THE un-wire (ControllerWdgt.unwireFrom), and this is the caller it was built for (§P4): cut
+    # exactly the wire I made in wireValueWidget and leave any other connection this widget carries
+    # alone -- which a blanket removeAllEdgesOf could not do.
     grabbedWdgt.unwireFrom? this, "cellInput"
     FormulaCompiler.commit record, ""
     world.dataflow?.markStale record

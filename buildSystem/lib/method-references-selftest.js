@@ -1,7 +1,7 @@
 'use strict';
 // method-references-selftest.js — the method-reference rule's cases (lib/method-references.js): each a code line and
 // what it must, and must not, reach; where each occurrence starts and how it is reached; and computed dispatch through
-// a class's ancestors and mixins. Run by buildSystem/run-selftests.js on every build.
+// a class's ancestors. Run by buildSystem/run-selftests.js on every build.
 
 const { methodReferences, reachedByComputedDispatch } = require('./method-references');
 const t = require('./selftest-verdict').cases('method-references');
@@ -38,11 +38,11 @@ const occWant = 'viaDot@4:. viaSelf@15:@ viaString@29:string';
 t.check(occ === occWant, `occurrences ${occ} (expected ${occWant})`);
 const methods = [{ name: '_setFooConnector', cls: 'A', classSide: false }, { name: 'setFoo', cls: 'A', classSide: false },
   { name: 'mix', cls: 'FormulaHelpers', classSide: true }, { name: 'instanceOnly', cls: 'FormulaHelpers', classSide: false }];
-methods.push({ name: 'inheritedOne', cls: 'Base', classSide: false }, { name: 'mixedIn', cls: 'SomeMixin', classSide: false },
+methods.push({ name: 'inheritedOne', cls: 'Base', classSide: false }, { name: 'middleOne', cls: 'Middle', classSide: false },
   { name: 'unrelated', cls: 'Other', classSide: false });
-const chain = (c) => (c === 'Derived' ? ['Derived', 'SomeMixin', 'Base'] : [c]);
+const chain = (c) => (c === 'Derived' ? ['Derived', 'Middle', 'Base'] : [c]);
 const reached = [...reachedByComputedDispatch(['_*Connector'], [{ cls: 'FormulaHelpers', side: 'class' }, { cls: 'Derived', side: 'instance' }], methods, chain)].sort().join(',');
-const want = '_setFooConnector,inheritedOne,mix,mixedIn';
+const want = '_setFooConnector,inheritedOne,middleOne,mix';
 t.check(reached === want, `computed dispatch reaches ${reached} (expected ${want})`);
 
 t.done();

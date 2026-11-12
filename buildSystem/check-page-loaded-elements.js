@@ -16,11 +16,9 @@
 // without parentheses, either quote) — must be
 //   (a) a serialization transient of the class chain: the class's own `@serializationTransients` plus
 //       every ancestor's, walked up `extends` (the source-level twin of boot's
-//       classStaticListMergedUpTheChain, which reads each class's OWN list and walks on past it), a
-//       mixin's class-side `serializationTransients` counted at each class that `@augmentWith`s it; and
+//       classStaticListMergedUpTheChain, which reads each class's OWN list and walks on past it); and
 //   (b) re-made by the class chain: it defines BOTH `_afterDeserialization` (a restore) and
-//       `_reactToBeingCopied` (a copy) as instance methods — on the class, an ancestor, or a mixin the
-//       class or an ancestor augments with.
+//       `_reactToBeingCopied` (a copy) as instance methods — on the class or an ancestor.
 // An element constructed on a line that assigns it to no field is not attributable to a field, and is
 // refused unless the line, or the contiguous comment block directly above it, says why no widget holds it:
 //     # page-element-not-held: <reason>
@@ -30,8 +28,8 @@
 // IT READS ALL OF THE COMPILED SOURCES (lib/source-files.js compiledFiles: src/ and the tests repo's harness), every
 // part, shipped or not: both element holders live in the flag-gated
 // `video-player` part, which no default build carries and so no suite, rig or smoke runs.
-// Method grouping is the shared buildSystem/lib/coffee-method-header.js (methodSpans), so a mixin member
-// or a class-side key bounds a method exactly as every other gate sees it.
+// Method grouping is the shared buildSystem/lib/coffee-method-header.js (methodSpans), so a class-side key
+// bounds a method exactly as every other gate sees it.
 //
 // BLIND SPOTS (stated, not silent):
 //   - an element reached without construction syntax on the line: a write through an alias
@@ -44,10 +42,9 @@
 //     follow the write.
 //   - a hook that exists but does not re-make the element: (b) asks that the chain DEFINES both hooks,
 //     not what their bodies do.
-// Two shapes it refuses LOUDLY rather than skipping: an element field assigned inside a MIXIN member (its
-// transients and its hooks are its consumers', which a per-file scan cannot resolve), and a hook header
-// written in a spelling the shared matcher cannot see (unseenMethodHeaders) — a gate blind to a method
-// reports nothing about it, so blindness is made a failure.
+// One shape it refuses LOUDLY rather than skipping: a hook header written in a spelling the shared matcher
+// cannot see (unseenMethodHeaders) — a gate blind to a method reports nothing about it, so blindness is
+// made a failure.
 //
 // Exit codes: 0 clean · 1 violation · 2 operational (no src/, or not one element construction found — a
 // run that checked nothing is not a pass).
@@ -83,9 +80,8 @@ const ELEMENT_RE = new RegExp(ELEMENT, 'i');
 // (`img = @f = new Image()`)
 const FIELD_WRITE_RE = new RegExp(String.raw`@([A-Za-z_]\w*)\s*=(?!=)\s*(?:@?[A-Za-z_][\w.]*\s*=(?!=)\s*)*` + ELEMENT, 'gi');
 
-// The names a class-level list declaration holds — `@serializationTransients: [ … ]` (the key spelled
-// with or without the `@`: without is a mixin's class-side form) — read through to its closing bracket. The
-// brackets are found in the line's bare code (a `]` inside a string closes nothing) and the names read from its code
+// The names a class-level list declaration holds — `@serializationTransients: [ … ]` — read through to its
+// closing bracket. The brackets are found in the line's bare code (a `]` inside a string closes nothing) and the names read from its code
 // (comment blanked), so a quoted word in a comment is not taken for a name.
 function listDeclaration(lines, masked, key) {
   const head = new RegExp('^\\s*' + key + ':\\s*\\[');
@@ -115,8 +111,7 @@ function markedNotHeld(masked, i) {
 
 if (!fs.existsSync(SRC)) { console.error('[page-loaded-elements] operational error: no src/ at ' + SRC); process.exit(2); }
 
-const classes = {};   // name -> { file, sup, transients:Set, methods:Set, augments:[], fields:[{field, at, text}] }
-const mixins = {};    // name -> { file, transients:Set, methods:Set }
+const classes = {};   // name -> { file, sup, transients:Set, methods:Set, fields:[{field, at, text}] }
 const problems = [];
 const unattributed = [];
 let constructions = 0, notHeld = 0;
@@ -146,28 +141,20 @@ for (const p of compiledFiles(ROOTS)) {
       else unattributed.push(rules.fired('UNATTRIBUTED_ELEMENT', `  ${file}:${i + 1}  ${raw.trim()}`));
       return;
     }
-    const inMixinMember = spans.some((s) => s.mixin && i > s.line && i < s.end);
-    for (const f of fields) writes.push({ field: f, at: `${file}:${i + 1}`, text: raw.trim(), inMixinMember });
+    for (const f of fields) writes.push({ field: f, at: `${file}:${i + 1}`, text: raw.trim() });
   });
   const cm = lines.map((l) => l.match(/^class\s+(\w+)(?:\s+extends\s+(\w+))?/)).find(Boolean);
   if (cm) {
     classes[cm[1]] = {
       file, sup: cm[2],
       transients: new Set(listDeclaration(lines, masked, '@serializationTransients')),
-      methods: new Set(spans.filter((s) => !s.static && !s.mixin).map((s) => s.name)),
-      augments: lines.map((l) => l.match(/^  @augmentWith\s+(\w+)/)).filter(Boolean).map((m) => m[1]),
+      methods: new Set(spans.filter((s) => !s.static).map((s) => s.name)),
       fields: writes,
     };
-    continue;
-  }
-  const mm = lines.map((l) => l.match(/^(\w+)\s*=\s*$/)).find(Boolean);
-  if (mm && spans.some((s) => s.mixin)) {
-    mixins[mm[1]] = { file, transients: new Set(listDeclaration(lines, masked, 'serializationTransients')), methods: new Set(spans.filter((s) => s.mixin).map((s) => s.name)) };
-    for (const w of writes) if (w.inMixinMember) problems.push(rules.fired('ELEMENT_FIELD_IN_MIXIN', `  ${w.at}  an element field (@${w.field}) assigned in the mixin ${mm[1]} — its transients and hooks are its consumers', which this gate cannot resolve per file`));
   }
 }
 
-// the chain's merged transients and instance methods, a class's mixins counted at its own step
+// the chain's merged transients and instance methods
 function chainSets(name) {
   const transients = new Set(), methods = new Set(), seen = new Set();
   for (let c = name; c && classes[c] && !seen.has(c); c = classes[c].sup) {
@@ -175,7 +162,6 @@ function chainSets(name) {
     const k = classes[c];
     k.transients.forEach((x) => transients.add(x));
     k.methods.forEach((x) => methods.add(x));
-    for (const mx of k.augments) if (mixins[mx]) { mixins[mx].transients.forEach((x) => transients.add(x)); mixins[mx].methods.forEach((x) => methods.add(x)); }
   }
   return { transients, methods };
 }

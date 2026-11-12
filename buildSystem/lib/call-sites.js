@@ -6,8 +6,8 @@
 // WHAT IS READ, AND HOW (each the way the code actually runs):
 //   - Fizzygum/src and the tests repo's harness: every CLASS through the browser's own meta-compiler
 //     (lib/meta-compiler.js) — each member fragment AFTER Class.coffee's super rewrite, so a `super` is an ordinary
-//     call `<Cls>.__super__.<member>.call this, …` (a bare `super` forwards: `.apply(this, arguments)`); every MIXIN
-//     as one source after Mixin.coffee's rewrite; every other file (boot) whole. Parsed with the bundled
+//     call `<Cls>.__super__.<member>.call this, …` (a bare `super` forwards: `.apply(this, arguments)`); every other
+//     file (boot) whole. Parsed with the bundled
 //     CoffeeScript 2.0.3 `nodes()` — the browser's own grammar. The files are lib/source-files.js's: srcFiles, and the
 //     harness of testsRepoFiles (harnessFiles).
 //   - every macro source (lib/macro-sources.js: the COOKED text the page compiles, each line on its file line), as
@@ -25,8 +25,7 @@
 //   forwarding, callee }. Its HOME is where it runs: 'page' (src, the harness), 'verbs' (the MacroToolkit heredocs),
 //   'macro:<file>' (one test's macro program), 'node:<file>' (a script module; a test file's JS shell runs in the
 //   page). `via` says what a send's receiver is when the parse alone shows it: 'this' — `@m` / `this.m` inside one of
-//   its unit's RECEIVER functions (a class member; a macro or a verb; a mixin's member, inside onceAddedClassProperties;
-//   a JS class's method or field initializer), through any `=>` / arrow, never under a `->` / `function` (it rebinds
+//   its unit's RECEIVER functions (a class member; a macro or a verb; a JS class's method or field initializer), through any `=>` / arrow, never under a `->` / `function` (it rebinds
 //   `this`) nor at a unit's top level (a boot file's `@` is `window`), with `cls` the class it is ('MacroToolkit' for a
 //   macro's), or a JS `super.m` — or 'name:<X>' for `X.m`. An argument's `kind` is what the parse alone shows it is:
 //   'this', 'literal' (a string, number, boolean, `null`, a regex), 'array', 'function', 'new', 'object', 'absent',
@@ -61,7 +60,7 @@
 // A DEFINITION (`defs`: callee key → [{ file, line, home, form, fn, arity, optsAt }]) is every binding of a callee's
 // name the code makes, keyed as its calls are, with the HOME it is made in. `form` says which calls can reach it: a
 // 'binding' (a plain name — an assignment, a function declaration, a parameter, a destructured or loop variable; a
-// BARE call reaches it, and `window.m = …` is one too), a 'member' (a class's or a mixin's member; a SEND reaches it —
+// BARE call reaches it, and `window.m = …` is one too), a 'member' (a class's member; a SEND reaches it —
 // a `constructor` is its class's `ctor:`), a 'field' (a property assigned: `@m = …`, `a.m = …`, `X::m = …`, `(@m) ->`;
 // a send reaches it), a 'key' (an object-literal key). `fn` false is DATA — a value whose arity no reader can know (a
 // closure held in a field, a parameter, a reassigned name, a JS getter's result); else `arity` is the parameter count
@@ -82,7 +81,7 @@
 // up the chain: Class.coffee's synthesized one, or a JS default, forwards to a base that takes none); `new
 // @constructor` may build a subclass (not judged). A send is judged only when its receiver is ours — `via` 'this' or a
 // `super` in a class whose whole chain is read (an `Array`, an `EventEmitter`, a computed or ambiguous parent above
-// it would hold members no reader sees; a mixin's `@` is any class it augments: ours), or `X.m` of such a class — and
+// it would hold members no reader sees), or `X.m` of such a class — and
 // some MEMBER or FIELD of its name exists (none: the target is assembled at run time); it then reaches the members,
 // fields and FUNCTION-valued object keys of that name (a computed install, `X::[k] = v`, takes them from an object).
 // A call matched by name alone to a receiver it cannot see would invent one — `Math.max a, b, c` against `Point::max`.
@@ -100,8 +99,7 @@ const { harvestDefs } = require('./name-definitions');
 const { coffeeMask } = require('./coffee-mask');
 const acorn = require('../../vendor/acorn/acorn.js');
 
-const IS_CLASS = /^class +\w+/m;            // the tests build.py and check-coffee-syntax.js use
-const IS_MIXIN = /^(\w+Mixin)\s*=/m;
+const IS_CLASS = /^class +\w+/m;            // the test build.py and check-coffee-syntax.js use
 const IDENT = /^[A-Za-z_$][\w$]*$/;
 const THIS_ARG = new Set(['call', 'apply', 'bind']);
 
@@ -278,19 +276,13 @@ function textOf(lines, ld) {
 // callSites({ srcDir, testsRepoDir }) -> { sites, unreadable: [{ file, line?, message }], counts, classes }
 // `testsRepoDir` absent or not a tests repo ⇒ only src is read (counts.testsRepo = false).
 function callSites({ srcDir, testsRepoDir } = {}) {
-  const { CoffeeScript, Class, Mixin } = loadMetaCompiler({ srcDir, compileFGCode: () => '(function() {});' });
+  const { CoffeeScript, Class } = loadMetaCompiler({ srcDir, compileFGCode: () => '(function() {});' });
   const fragments = [];
   const realClassRewrite = Class.prototype._rewriteSuperCalls;
   Class.prototype._rewriteSuperCalls = function (member, text) {
     const out = realClassRewrite.apply(this, arguments);
     const isStatic = this.nonStaticPropertiesSources?.[member] !== text && this.staticPropertiesSources?.[member] === text;
     fragments.push({ member, isStatic, input: text, output: out });
-    return out;
-  };
-  const realMixinRewrite = Mixin.prototype._rewriteSuperCalls;
-  Mixin.prototype._rewriteSuperCalls = function (text) {
-    const out = realMixinRewrite.apply(this, arguments);
-    fragments.push({ input: text, output: out });
     return out;
   };
 
@@ -323,7 +315,6 @@ function callSites({ srcDir, testsRepoDir } = {}) {
     let meta;
     try {
       if (IS_CLASS.test(src)) meta = { cls: new Class(src, true, false) };
-      else if (IS_MIXIN.test(src)) meta = { mixin: new Mixin(src, true, false) };
     } catch (e) { unreadable.push({ file, message: 'the meta-compiler: ' + e.message }); return; }
     finally { [console.log, console.info, console.warn] = silence; }
     if (meta && meta.cls) {
@@ -344,8 +335,6 @@ function callSites({ srcDir, testsRepoDir } = {}) {
         units.push({ file, where, lang: 'coffee', home: 'page', text: f.output, cls: c.name, lineOf: (k0) => h + k0 + 1,
           scope: file + '#' + (f.isStatic ? '@' : '') + f.member, member: f.member, isStatic: f.isStatic });
       }
-    } else if (meta && meta.mixin) {
-      for (const f of fragments.slice(before)) units.push({ file, where, lang: 'coffee', home: 'page', text: f.output, lineOf: (k0) => k0 + 1, scope: file, mixin: true });
     } else {
       units.push({ file, where, lang: 'coffee', home: 'page', text: src, lineOf: (k0) => k0 + 1, scope: file });
     }
@@ -373,7 +362,6 @@ function callSites({ srcDir, testsRepoDir } = {}) {
     }
   }
   Class.prototype._rewriteSuperCalls = realClassRewrite;
-  Mixin.prototype._rewriteSuperCalls = realMixinRewrite;
 
   // parse every CoffeeScript unit
   const parsed = [];
@@ -419,7 +407,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
       let inner = frame;
       if (isCode(n)) {
         inner = { id: n.locationData.first_line + ':' + n.locationData.first_column, parent: frame, code: n,
-          depth: frame ? frame.depth + 1 : 1, params: new Set(), assigns: new Set() };
+          params: new Set(), assigns: new Set() };
         for (const p of n.params) if (isParam(p)) for (const name of patternNames(p.name)) inner.params.add(name);
       }
       for (const c of n.children) scan(n[c], inner);
@@ -442,8 +430,6 @@ function callSites({ srcDir, testsRepoDir } = {}) {
       define(u.member === 'constructor' && !u.isStatic ? 'ctor:' + u.cls : 'name:' + u.member,
         { file: u.file, line: u.lineOf(0), home: u.home, form: 'member', ...csSignature(ast.expressions && ast.expressions[0]) });
     }
-    // a MIXIN's members are the object keys at its member level, inside onceAddedClassProperties (one function deep)
-    const mixinMember = (n) => u.mixin && frameOf.get(n) && frameOf.get(n).depth === 1;
     u.receivers = new Set();             // the functions whose `this` is the unit's own receiver (header, `via`)
     if (u.member !== undefined && unwrapCode(ast.expressions && ast.expressions[0])) u.receivers.add(unwrapCode(ast.expressions[0]));
     const walk = (n, cls) => {
@@ -470,9 +456,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
         const v = n.variable;
         if (n.context === 'object') {
           const k = objectKey(v);
-          const member = cls || mixinMember(n);
-          if (member && u.mixin && unwrapCode(n.value)) u.receivers.add(unwrapCode(n.value));
-          if (k !== undefined) define(cls && k === 'constructor' ? 'ctor:' + cls : 'name:' + k, { ...at(n), form: member ? 'member' : 'key', ...sig });
+          if (k !== undefined) define(cls && k === 'constructor' ? 'ctor:' + cls : 'name:' + k, { ...at(n), form: cls ? 'member' : 'key', ...sig });
         } else if (plainIdent(v)) {
           const name = plainIdent(v);
           if (macros && sig.fn) ours.add(name);
@@ -490,19 +474,13 @@ function callSites({ srcDir, testsRepoDir } = {}) {
   }
   for (const { u, ast } of parsed) {
     const lines = u.text.split('\n');
-    // a mixin's super resolves at run time through `arguments.callee.name`: the INNERMOST function-valued
-    // property around the call is the member it supers
-    const members = [];
-    if (u.mixin) walkCS(ast, (n) => { if (isAssign(n) && n.context === 'object' && isCode(n.value) && isValue(n.variable) && isLiteral(n.variable.base))
-      members.push({ name: n.variable.base.value, first: n.locationData.first_line, last: n.locationData.last_line }); });
-    const memberAt = (k0) => members.filter((m) => m.first <= k0 && k0 <= m.last).sort((a, b) => b.first - a.first)[0]?.name;
     const arg = (a) => {
       const kind = csArgKind(a);
       return { text: short(textOf(lines, a.locationData)), spread: kind === 'spread', absent: kind === 'absent', kind };
     };
-    // `@` is the unit's own receiver inside one of its RECEIVER functions (a class member; a macro or a verb; a
-    // mixin's member), through any `=>` (it keeps `this`), never under a `->` (it rebinds it) nor at a unit's top
-    // level (a boot file's `@` is `window`)
+    // `@` is the unit's own receiver inside one of its RECEIVER functions (a class member; a macro or a verb),
+    // through any `=>` (it keeps `this`), never under a `->` (it rebinds it) nor at a unit's top level (a boot
+    // file's `@` is `window`)
     const ownThis = (node) => {
       let f = u.frameOf.get(node);
       while (f && f.code.bound) f = f.parent;
@@ -522,7 +500,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
         const own = baseName === 'this' && props.length === 1 && last === 'constructor' && u.cls;
         Object.assign(site, { kind: 'new', selfNew: !!own, name: own ? u.cls : props.length ? last : (IDENT.test(baseName || '') ? baseName : undefined) });
       } else if (props.length >= 2 && (last === 'call' || last === 'apply') && props.some((p) => propName(p) === '__super__')) {
-        const member = u.cls ? (props.length === 3 ? propName(props[1]) : undefined) : (u.mixin ? memberAt(c.ld.first_line) : undefined);
+        const member = u.cls && props.length === 3 ? propName(props[1]) : undefined;
         Object.assign(site, { kind: 'super', name: member, superOf: u.cls });
         if (last === 'apply') { site.forwarding = true; args = []; } else args = args.slice(1);
       } else if (!props.length) {
@@ -787,7 +765,7 @@ function arityTest({ sites, defs, classDefs, imports }) {
       // nothing in the module binds it: Node's global, or the page's in a page.evaluate body — no reader knows which
       return own.length ? own : from ? bindings.filter((d) => d.home === 'node:' + from) : [];
     }
-    // a send: the receiver must be ours, its whole class chain read (a mixin's `@` is any class it augments: ours)
+    // a send: the receiver must be ours, its whole class chain read
     if (s.kind === 'super') { const c = classAt(s.superOf, s); if (!c || !chain(c)) return []; }
     else if (s.via === 'this') { if (s.cls) { const c = classAt(s.cls, s); if (!c || !chain(c)) return []; } }
     else if (s.via && s.via.startsWith('name:')) { const c = classAt(s.via.slice('name:'.length), s); if (!c || !chain(c)) return []; }

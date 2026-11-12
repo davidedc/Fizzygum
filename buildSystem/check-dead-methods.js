@@ -3,8 +3,7 @@
 //
 // Mirrors buildSystem/check-layering.js (a heuristic line scanner, exit 0 clean / 1 violation /
 // 2 operational). It finds every method header in the compiled sources (lib/source-files.js compiledFiles:
-// src/ and the tests repo's harness) — a class's 2-space ones, a mixin's onceAddedClassProperties members and
-// the class-side `@name:` methods alike (lib/coffee-method-header.js; a class-side method is inventoried under
+// src/ and the tests repo's harness) — a class's 2-space ones and the class-side `@name:` methods alike (lib/coffee-method-header.js; a class-side method is inventoried under
 // its BARE name, which is how it is called: `Class.name` from outside, `@name` between the statics of one
 // class) — then reads every place a method could be reached FROM, as code: the compiled sources
 // (lib/coffee-mask.js, each reference attributed to its enclosing method) and the sibling Fizzygum-tests repo's
@@ -34,7 +33,7 @@ const path = require('path');
 
 const ALLOWLIST = path.resolve(__dirname, 'dead-method-allowlist.txt');
 
-// methodSpans / methodBoundary group src (class methods + mixin members)
+// methodSpans / methodBoundary group src into class methods
 const { methodBoundary, methodSpans, unseenMethodHeaders } = require('./lib/coffee-method-header');
 const { coffeeMask } = require('./lib/coffee-mask');
 const { readAllowlist } = require('./lib/allowlist-file');
@@ -58,7 +57,7 @@ function twinName(n) {
   const core = /^_(.+)NoSettle$/.exec(n);
   return core ? core[1] : '_' + n + 'NoSettle';
 }
-// The INVENTORY of one file's methods: an instance method (a class's or a mixin member) under its own
+// The INVENTORY of one file's methods: an instance method under its own
 // name, a class-side method under its BARE name, tagged classSide so a report can say which. A class-side
 // DATA key (`@NAME: 5`) is no method, and methodSpans gives it no span.
 function inventoryOf(lines) {
@@ -97,7 +96,7 @@ function main() {
   // it in the harvest below, so one static calling another (`@other` inside `@name`) is that other's reference.
   const defs = new Map();
   const methods = [];   // { name, cls, classSide }: what computed dispatch is resolved against (one class per file)
-  const parentOf = new Map(), mixinsOf = new Map();   // the class chain a computed access resolves through
+  const parentOf = new Map();   // the class chain a computed access resolves through
   const unseen = [];
   const masked = new Map();   // each compiled source's lib/coffee-mask.js reading, read once for both passes
   for (const p of compiledFiles(ROOTS)) {
@@ -108,8 +107,6 @@ function main() {
     for (const l of lines) {
       const c = /^class\s+([A-Za-z_]\w*)(?:\s+extends\s+([A-Za-z_]\w*))?/.exec(l);
       if (c && c[1] === cls && c[2]) parentOf.set(cls, c[2]);
-      const a = /^\s+@augmentWith\s+([A-Za-z_]\w*)/.exec(l);
-      if (a) { if (!mixinsOf.has(cls)) mixinsOf.set(cls, []); mixinsOf.get(cls).push(a[1]); }
     }
     for (const def of inventoryOf(lines)) {
       if (!defs.has(def.name)) defs.set(def.name, []);
@@ -145,17 +142,15 @@ function main() {
     computedClasses.push(...r.classes);
   }
   // the compiled sources: attribute each reference to its ENCLOSING method, so we can later tell whether a settle-twin is used by
-  // something OTHER than the dead method itself. A method header (a class's 2-space one, or a mixin member's)
-  // opens a method; the header line itself (its default parameters, an inline body) and the 4+-space-indented
+  // something OTHER than the dead method itself. A method header (a class's 2-space one) opens a method; the header line itself (its default parameters, an inline body) and the 4+-space-indented
   // lines below belong to it; class-level lines (indent < 4, not a header) are '@toplevel'. A def's own name is a
   // key, never a reference, so a header needs no special case. (`referenced` is the flat set; the per-owner map
   // is purely additive.)
   function harvestSrc(files) {
     for (const p of files) {
-      let cur = null, mixinHashIndent = null;
+      let cur = null;
       fs.readFileSync(p, 'utf8').split('\n').forEach((raw, i) => {
-        const b = methodBoundary(raw, mixinHashIndent);
-        if (b) mixinHashIndent = b.mixinHashIndent;
+        const b = methodBoundary(raw);
         let owner;
         // the owner is the method's INVENTORY name (a class-side one's bare name, as inventoryOf names it), so
         // the symmetry check below excludes a dead method's references to its own twin whichever side it is on
@@ -174,11 +169,11 @@ function main() {
     if (kind !== 'harness') for (const line of lines) harvestLine(line, '@external');
   }
   // computed dispatch, resolved last against the whole inventory (a template or a class access may sit anywhere)
-  // a class's chain: itself, its mixins, then its ancestors' chains — where a lookup on it resolves
+  // a class's chain: itself, then its ancestors' chains — where a lookup on it resolves
   function chainOf(cls, seen = new Set()) {
     if (seen.has(cls)) return [];
     seen.add(cls);
-    return [cls, ...(mixinsOf.get(cls) || []), ...(parentOf.has(cls) ? chainOf(parentOf.get(cls), seen) : [])];
+    return [cls, ...(parentOf.has(cls) ? chainOf(parentOf.get(cls), seen) : [])];
   }
   for (const n of methodRefs.reachedByComputedDispatch(templates, computedClasses, methods, chainOf)) addRef(n, '@computed');
 

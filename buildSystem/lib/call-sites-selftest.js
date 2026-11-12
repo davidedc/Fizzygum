@@ -1,6 +1,6 @@
 'use strict';
 // call-sites-selftest.js — lib/call-sites.js's readings, one case each, on a throwaway fixture: a src tree (the real
-// meta/Class.coffee + meta/Mixin.coffee beside a few fixture classes) and a tests repo (a macro, a broken macro, a
+// meta/Class.coffee beside a few fixture classes) and a tests repo (a macro, a broken macro, a
 // script). Each case names the reading it holds — the three 2.0.3 call shapes, the implicit object, the nested
 // paren-less call, the three super forms, a string that is no call, a lifted heredoc on its file line (and an
 // interpolated one refused), the trailing absence, the this-arg exclusion, the JS forms (ES2022 included), the
@@ -22,7 +22,7 @@ const root = fs.mkdtempSync(path.join(os.tmpdir(), 'call-sites-'));
 const src = path.join(root, 'src');
 const repo = path.join(root, 'tests-repo');
 const put = (p, text) => { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
-for (const m of ['Class.coffee', 'Mixin.coffee']) put(path.join(src, 'meta', m), fs.readFileSync(path.join(REAL_SRC, 'meta', m), 'utf8'));
+put(path.join(src, 'meta', 'Class.coffee'), fs.readFileSync(path.join(REAL_SRC, 'meta', 'Class.coffee'), 'utf8'));
 put(path.join(src, 'BpBase.coffee'), [
   'class BpBase', '  constructor: (a, b, c) ->', '    @x = a', '  bpCallee: (a, b, c) -> a', '  bpOpts: (a, opts) -> a', ''].join('\n'));
 put(path.join(src, 'BpChild.coffee'), [
@@ -94,9 +94,6 @@ put(path.join(src, 'BpToolkit.coffee'), [
 // a verb whose escape keeps its lines (`\\d` compiles to `\d`): its text is the compiled one, each line on its file line
 put(path.join(src, 'BpEscaped.coffee'), [
   'class BpEscaped', '  subs: ->', '    Macro.fromString """', '      esc_Macro = ->', '        r = /\\\\d/', '        @bpEscaped 1', '    """', ''].join('\n'));
-put(path.join(src, 'BpMixin.coffee'), [
-  'BpMixin =', '  onceAddedClassProperties: (fromClass) ->', '    @addInstanceProperties fromClass,', '',
-  '    bpMixed: (t) ->', '      inner = -> 1', '      super()', ''].join('\n'));
 put(path.join(repo, 'Automator-and-test-harness-src', 'BpHarness.coffee'), ['class BpHarness', '  m: ->', '    @bpCallee 2', ''].join('\n'));
 put(path.join(repo, 'tests', 'SystemTest_bp', 'SystemTest_bp.js'), 'var SystemTest_bp = {};\n');
 put(path.join(repo, 'tests', 'SystemTest_bp', 'SystemTest_bp_automationCommands.js'),
@@ -145,7 +142,6 @@ t.check(one('BpChild.coffee', 11, named('bpCallee'))?.candidate === false && one
 t.check(one('BpToolkit.coffee', 5, named('bpHeredoc'))?.where === 'heredoc', 'a lifted heredoc\'s call IS a call, on its own file line');
 t.check(one('BpEscaped.coffee', 6, named('bpEscaped'))?.where === 'heredoc' && !r.unreadable.some((u) => path.basename(u.file) === 'BpEscaped.coffee'),
   'a verb whose escape keeps its lines is read, its call on its own file line');
-t.check(one('BpMixin.coffee', 7, (s) => s.kind === 'super')?.name === 'bpMixed', 'a mixin super is the INNERMOST function-valued member around it');
 t.check(one('SystemTest_bp_automationCommands.js', 3, named('helper'))?.callee.key === 'name:helper', 'a macro-local helper is a NAME (macros and verbs link into one program)');
 t.check(r.unreadable.some((u) => path.basename(u.file) === 'SystemTest_bad_automationCommands.js'), 'a macro that does not parse is UNREADABLE, never skipped');
 t.check(one('s.js', 2, named('loc'))?.callee.key === 'name:loc', 'a JS TOP-LEVEL function is a name (another file may call it)');
@@ -214,7 +210,7 @@ t.check(!opts('BpArity.coffee', 11, 'bpWide') && !opts('BpArity.coffee', 27, 'bp
 const fixture = (files) => {
   const root2 = fs.mkdtempSync(path.join(os.tmpdir(), 'call-sites-reach-'));
   try {
-    for (const m of ['Class.coffee', 'Mixin.coffee']) put(path.join(root2, 'src', 'meta', m), fs.readFileSync(path.join(REAL_SRC, 'meta', m), 'utf8'));
+    put(path.join(root2, 'src', 'meta', 'Class.coffee'), fs.readFileSync(path.join(REAL_SRC, 'meta', 'Class.coffee'), 'utf8'));
     put(path.join(root2, 'tests-repo', 'Automator-and-test-harness-src', 'H.coffee'), 'class H\n  h: -> 1\n');
     fs.mkdirSync(path.join(root2, 'tests-repo', 'tests'), { recursive: true });
     for (const [rel, text] of Object.entries(files)) put(path.join(root2, rel), text);
@@ -258,9 +254,9 @@ t.check(extras({ 'tests-repo/scripts/run.js': 'function run(a) { return a; }\nfu
   'a top-level call reaches the top-level function, past a same-named nested loop variable: judged');
 t.check(extras({ 'src/boot/foo.coffee': 'foo = (a, b) -> a\n@foo 1, 2\n', 'src/BpFoo.coffee': 'class BpFoo\n  foo: (a) -> a\n' }).length === 0,
   'a boot file\'s top-level `@` is `window`, not a class: its sends are not judged');
-t.check(extras({ 'src/BpMx.coffee': 'BpMxMixin =\n\n  onceAddedClassProperties: (fromClass) ->\n    [1].forEach (x) -> @foo 1, 2\n    @addInstanceProperties fromClass,\n\n      build: ->\n        @spec\n          render: (a) -> a\n',
-    'src/BpFoo2.coffee': 'class BpFoo2\n  foo: (a) -> a\n', 'src/BpRender.coffee': 'class BpRender\n  m: -> @render 1, 2\n' }).length === 0,
-  'a mixin: a `->` that is not one of its members rebinds `@`; a call no member or field anywhere defines is not judged');
+t.check(extras({ 'src/BpSpec.coffee': 'class BpSpec\n  build: ->\n    @spec\n      render: (a) -> a\n',
+    'src/BpRender.coffee': 'class BpRender\n  m: -> @render 1, 2\n' }).length === 0,
+  'an object-literal key is no member: a call no member or field anywhere defines is not judged');
 t.check(extras({ 'src/BpGo.coffee': 'class BpGo\n  m: -> @go 1, 2\n', 'src/BpGo2.coffee': 'class BpGo2\n  go: (a) -> a\n',
     'src/boot/go.coffee': 'impl = { go: (a, b) -> a }\nfor k, v of impl\n  BpGo::[k] = v\n' }).length === 0,
   'a function under an object key reaches a send too (a computed install `X::[k] = v`): it widens, never narrows');

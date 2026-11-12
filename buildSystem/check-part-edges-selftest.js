@@ -95,7 +95,7 @@ for (const [name, s] of Object.entries(sources)) {
     if (h) { cur = { bodyLines: [] }; methods.set(h[1], cur); return; }
     if (cur) cur.bodyLines.push({ n: i + 1, code: bare });
   });
-  classInfo.set(name, { name, parent: s.parent, mixins: [], methods });
+  classInfo.set(name, { name, parent: s.parent, methods });
   files.set(name, { rel: name + '.coffee', owner: s.part, isSatisfied: never,
                     guards: guardedPartsPerLine(masked, classOwner, fixtureParts, sole) });
 }

@@ -10,7 +10,7 @@
  *   - module (require(...).runCensus()): the same data, machine-shaped, for the gate.
  *
  * WHAT IT MEASURES (four censuses; "self-call" = `@name …` where `name` is a method somewhere in
- * the calling class's inheritance chain — own defs, `@augmentWith` mixins, `extends` ancestors):
+ * the calling class's inheritance chain — own defs, then `extends` ancestors):
  *
  *   R1  private → public self-call. Every CALL from a low-level method (leading `_`/`__`, or
  *       `*NoSettle` — same tiering as check-layering.js isLowLevel) to a public (no-underscore)
@@ -57,8 +57,8 @@
  * HOW (same philosophy as the check-*.js gates — a heuristic line scanner, no type inference):
  *   - Parsing machinery: every source is read through lib/coffee-mask.js (R1-R3 read each line's bare code,
  *     comments and literal contents blanked; R4 its code, literals kept); methods are grouped by the shared lib/coffee-method-header.js
- *     methodBoundary — 2-space class methods and mixin onceAddedClassProperties members.
- *   - Class = file basename (one-class-per-file); `extends` / `@augmentWith` edges regex-scanned
+ *     methodBoundary — 2-space class methods.
+ *   - Class = file basename (one-class-per-file); `extends` edges regex-scanned
  *     exactly like src/boot/dependencies-finding.coffee does.
  *   - A `@name` occurrence counts as a CALL when followed by `(`, or by whitespace + a value token
  *     that is not an operator/keyword (`@foo bar` calls; `@foo if x`, bare `@foo`, `@foo = …`,
@@ -109,7 +109,7 @@ const { coffeeMask } = require('./lib/coffee-mask');
 const { testsRepoCode } = require('./lib/tests-repo-code');
 const methodRefs = require('./lib/method-references');
 
-const { METHOD_HEADER, MIXIN_METHOD_HEADER, methodBoundary } = require('./lib/coffee-method-header');
+const { METHOD_HEADER, methodBoundary } = require('./lib/coffee-method-header');
 
 // ---------- tiering (same name-keyed tiers as check-layering.js isLowLevel) ----------
 const tierOf = (name) =>
@@ -172,7 +172,7 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
   const memberSettleRe = new RegExp('\\.\\s*(' + [...setters.geometry, ...setters.text].join('|') + ')\\b');
 
   // ---- phase 1: parse every compiled class ----
-  const classInfo = new Map();   // name -> { name, parent, mixins[], methods: Map(name->rec), file }
+  const classInfo = new Map();   // name -> { name, parent, methods: Map(name->rec), file }
   const allMethods = [];         // rec: { name, cls, file, line, bodyLines: [{n, code}], markers:Set }
   const sourceFiles = compiledFiles(roots);
   const maskedFiles = new Map();   // file -> its lib/coffee-mask.js reading, read once for phase 1 and R4
@@ -184,19 +184,16 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
     const masked = coffeeMask(text, rel);
     maskedFiles.set(file, masked);
     let info = classInfo.get(clsName);
-    if (!info) { info = { name: clsName, parent: null, mixins: [], methods: new Map(), file: rel }; classInfo.set(clsName, info); }
-    let mixinHashIndent = null, cur = null;
+    if (!info) { info = { name: clsName, parent: null, methods: new Map(), file: rel }; classInfo.set(clsName, info); }
+    let cur = null;
     for (let n = 0; n < lines.length; n++) {
       const raw = lines[n];
       const code = masked[n].bare;
       const clsM = raw.match(/^class ([A-Za-z_]\w*)( extends ([A-Za-z_]\w*))?/);
       if (clsM && clsM[1] === clsName) info.parent = clsM[3] || null;
-      const augM = code.match(/@augmentWith\s+([A-Za-z_]\w*)/);
-      if (augM) info.mixins.push(augM[1]);
       if (!masked[n].continuesLiteral) {             // a line inside a heredoc holds no boundary
-        const b = methodBoundary(raw, mixinHashIndent);
+        const b = methodBoundary(raw);
         if (b) {
-          mixinHashIndent = b.mixinHashIndent;
           // a class-side `@name` method is no instance method: its `@` is the class, so its body holds no
           // self-call this census measures — it ENDS the method above it and is not counted itself
           if (b.kind === 'header' && b.static) { cur = null; continue; }
@@ -221,7 +218,7 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
     }
   }
 
-  // ---- phase 2: inheritance-chain resolution (own -> mixins -> parent chain) ----
+  // ---- phase 2: inheritance-chain resolution (own -> parent chain) ----
   const chainCache = new Map();
   function chainOf(cls) {
     if (chainCache.has(cls)) return chainCache.get(cls);
@@ -232,7 +229,6 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
       const info = classInfo.get(name);
       if (!info) return;
       order.push(info);
-      for (const mx of info.mixins) visit(mx);
       if (info.parent) visit(info.parent);
     };
     visit(cls);
@@ -262,7 +258,7 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
       let m;
       while ((m = re.exec(code)) !== null) {
         const name = m[1];
-        if (name === 'constructor' || name === 'augmentWith') continue;
+        if (name === 'constructor') continue;
         if (!chainNames(rec.cls).has(name)) continue;   // a field / unknown — not a chain method
         const kind = classifyOccurrence(code, m.index + m[0].length);
         if (kind === 'skip') continue;
@@ -438,12 +434,12 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
   out.allMethods = allMethods;
   // The whole-system CLASS MODEL, exposed so sibling censuses don't re-implement it. Fizzygum is
   // image-like (no module system, one class per file, every class a global), so this model — every
-  // class's parent, @augmentWith mixins, methods, and the resolution order over them — is the
+  // class's parent, methods, and the resolution order over them — is the
   // expensive, subtle part that any hierarchy-aware analysis needs. Consumers:
   // census-hierarchy-duplication.js and census-property-placement.js (2026-07-15). Purely
   // additive: nothing here changes the four censuses or the [S]/[U] gate numbers.
-  //   classInfo : Map(className -> { name, parent, mixins[], methods: Map(name -> rec), file })
-  //   chainOf   : (cls) -> [classInfo…] in RESOLUTION order (own, then mixins, then parent chain)
+  //   classInfo : Map(className -> { name, parent, methods: Map(name -> rec), file })
+  //   chainOf   : (cls) -> [classInfo…] in RESOLUTION order (own, then parent chain)
   //   resolve   : (cls, methodName) -> the winning method rec, or null
   out.classInfo = classInfo;
   out.chainOf = chainOf;

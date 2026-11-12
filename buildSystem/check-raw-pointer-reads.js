@@ -17,9 +17,8 @@
 // that is handed none (`pressCancelled`, the press's cancel: a pure fact, no position) must map its
 // own read the same way.
 //
-// SCOPE. Method bodies — a class's 2-space-indent methods and a mixin's onceAddedClassProperties
-// members alike, grouped by the shared lib/coffee-method-header.js methodBoundary (a mixin's handlers
-// run on every widget it augments) — whose names are the
+// SCOPE. Method bodies — a class's 2-space-indent methods, grouped by the shared
+// lib/coffee-method-header.js methodBoundary — whose names are the
 // dispatched pointer-handler names below — closures defined inside them (a _settleLayoutsAfter thunk)
 // are inside the span and covered — plus the two ViewportWdgt drag-scroll methods that sample or
 // consume the pointer per frame / per event although no dispatcher calls them by a handler name:
@@ -60,7 +59,7 @@ rejectPositionalArgs(ARGV, 'raw-pointer-reads', 'a src tree is named with --src=
 const ROOTS = sourceRoots(ARGV, 'raw-pointer-reads');
 const SRC = ROOTS.src;
 
-const { methodBoundary } = require('./lib/coffee-method-header');   // class AND mixin-member method grouping
+const { methodBoundary } = require('./lib/coffee-method-header');   // class method grouping
 const EXEMPT = /#\s*raw-screen-pointer-sanctioned:\s*\S/;    // marker WITH a non-empty reason
 const RAW_READ = /world\.hand\.position\(\)/;
 const MAPPED = /screenPointToMyPlane/;
@@ -95,11 +94,9 @@ for (const p of files) {
   const masked = coffeeMask(text, sourceName(p, ROOTS));   // a read is matched on bare code; the marker in a comment
   let inHandler = false, handlerName = null, handlerExempt = false;
   let commentBlockHasExempt = false;
-  let mixinHashIndent = null;
   for (let n = 0; n < lines.length; n++) {
     const line = lines[n];
-    const boundary = methodBoundary(line, mixinHashIndent);
-    if (boundary) mixinHashIndent = boundary.mixinHashIndent;
+    const boundary = methodBoundary(line);
     if (boundary && boundary.kind === 'header') {
       headersSeen.add(boundary.method);
       inHandler = HANDLER_NAMES.has(boundary.method);

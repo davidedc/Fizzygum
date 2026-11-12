@@ -489,11 +489,9 @@ class Theme
     @inspectorPaneFill = Color.TRANSPARENT
     @inspectorPaneStroke = undefined
     # the inspector's BREADCRUMB band (its class chips wear the chip roles, above): the ink of its
-    # "Class" caption, of the drawn › separating two chips, and of its mixin-donor label ("from
-    # <Name>Mixin", while a mixin-donated member is selected).
+    # "Class" caption, and of the drawn › separating two chips.
     @inspectorBreadcrumbCaption = @muted2
     @inspectorBreadcrumbSeparator = @muted3
-    @inspectorDonorText = @muted2
 
     # the analog CLOCK (AnalogClockAppearance paints its face and marks, AnalogClockWdgt's hand
     # methods its hands and centre dot): its FACE, an opaque disc with no border ...
@@ -665,7 +663,7 @@ class Theme
       # focus flip never changes which characters a title shows
       focusedWindowTitle: {family: "Arial, sans-serif", size: 13, bold: true}
       # the small chrome labels: a text button's face (a toggle's and a chip's included), the save /
-      # save + close labels, the Object Inspector's breadcrumb caption and mixin-donor label, a patch
+      # save + close labels, the Object Inspector's breadcrumb caption, a patch
       # node's field labels, the video time labels
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
       # every StringWdgt / TextWdgt built without a role
@@ -1034,17 +1032,15 @@ class Theme
     # ... the BREADCRUMB band (InspectorWdgt._breadcrumbIn): its height while its chips take one row,
     # its rule included, the row's chips centred down the rest -- each further row of chips adds a
     # chip's height and breadcrumbGap to it; how far in from the band's left edge its "Class"
-    # caption starts, which is also how far short of its right edge its chips and its donor label
-    # end; the gap after the caption; the gap between a chip and the INK of the separator on either
-    # side of it (the draft's "all 4 apart", the ink standing where the draft's › glyph advances),
-    # which is also the gap between two rows of chips; the gap before the donor label; and the side
-    # of a separator's glyph square, whose chevron is the size of the draft's 12 px › (its ink 4 px
-    # wide, the glyph's advance) ...
+    # caption starts, which is also how far short of its right edge its chips end; the gap after
+    # the caption; the gap between a chip and the INK of the separator on either side of it (the
+    # draft's "all 4 apart", the ink standing where the draft's › glyph advances), which is also the
+    # gap between two rows of chips; and the side of a separator's glyph square, whose chevron is
+    # the size of the draft's 12 px › (its ink 4 px wide, the glyph's advance) ...
     @breadcrumbBandHeight = 44
     @breadcrumbInset = 12
     @breadcrumbCaptionGap = 8
     @breadcrumbGap = 4
-    @breadcrumbDonorGap = 8
     @breadcrumbSeparatorSize = 8
     # ... the TOGGLES band's height, how far in from its left edge its first toggle starts, and the
     # gap between two toggles ...

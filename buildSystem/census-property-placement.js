@@ -22,13 +22,13 @@
  *            serialization surface for nothing.
  *
  * ── WHY THIS CAN NEVER BE A GATE (severity policy — do not "promote" it) ────────────────────────
- * Property access here is partly DYNAMIC and therefore invisible to a name scanner: DeepCopierMixin
- * walks `@[property]`, and the serialization protocol drives off property-NAME STRINGS. A property
+ * Property access here is partly DYNAMIC and therefore invisible to a name scanner: the Duplicator
+ * walks `obj[property]`, and the serialization protocol drives off property-NAME STRINGS. A property
  * whose name appears in a string may be read by machinery this census cannot see, so "unused" is
  * never provable statically. An unsound signal must never gate.
  *
- * ⚠ KNOWN BLIND SPOT — whole-object ENUMERATION. `JSON.stringify(obj)`, DeepCopierMixin's
- * `@[property]` walk and the serializer reach EVERY own property of an object without ever naming
+ * ⚠ KNOWN BLIND SPOT — whole-object ENUMERATION. `JSON.stringify(obj)`, the Duplicator's
+ * `obj[property]` walk and the serializer reach EVERY own property of an object without ever naming
  * one, so no name scanner can see those reads. Exclusions 1 and 3 only catch properties named by a
  * string or read as a dotted `.member`; enumeration names nothing. This is why exclusion 4 presumes
  * a WRITE-ONLY field is enumeration payload rather than dead code. Do NOT try to detect enumeration
@@ -67,7 +67,7 @@
  *    observable — so they count as writes here, deliberately, to keep the census conservative.
  *
  * METHOD (heuristics, no type inference — the house style):
- *   - Class model (parent, mixins, methods, chain order) REUSED from census-public-private-calls.js.
+ *   - Class model (parent, methods, chain order) REUSED from census-public-private-calls.js.
  *   - "Declared property" = a 2-space class-body default whose value is not a function
  *     (`bounds: nil`, `color: Color.create 80,80,80`) UNION any `@name = …` instance assignment.
  *   - Method attribution for the DEMOTE report reuses the census's own method boundaries.
@@ -341,8 +341,8 @@ const tag = (r) => (r.inspectorVisible ? '  [inspector-visible]' : '');
 console.log('=== census-property-placement ===');
 console.log(`scanned ${classInfo.size} classes; ${[...declared.values()].reduce((a, m) => a + m.size, 0)} declared properties; ${STRING_WORDS.size} names excluded as string-reachable`);
 console.log(`PULL-UP: ${pullUp.length} (${pullUp.filter((r) => r.same).length} same-default)   DEMOTE: ${demote.length}`);
-console.log('\nADVISORY — nothing here gates. Property access is partly DYNAMIC (DeepCopierMixin walks');
-console.log('@[property]; serialization drives off name STRINGS), so "unused" is never provable statically.');
+console.log('\nADVISORY — nothing here gates. Property access is partly DYNAMIC (the Duplicator walks');
+console.log('obj[property]; serialization drives off name STRINGS), so "unused" is never provable statically.');
 console.log('[inspector-visible] = the class is Widget-family: acting on it churns the 15-screenshot');
 console.log('`fg recapture-inspector` set. That is a COST to budget, not a veto.');
 

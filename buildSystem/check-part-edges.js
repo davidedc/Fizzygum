@@ -13,8 +13,8 @@
  * and not a test.
  *
  * ⚠ WHY IT IS NOT DERIVED FROM THE DEPENDENCY SCANNER. src/boot/dependencies-finding.coffee, which
- * computes the boot load order, matches only five patterns: `\sextends\s*(\w+)`,
- * `\sREQUIRES\s*(\w+)`, `\s*@augmentWith\s+(\w+)`, and two restricted to a 2-space-indented
+ * computes the boot load order, matches only four patterns: `\sextends\s*(\w+)`,
+ * `\sREQUIRES\s*(\w+)`, and two restricted to a 2-space-indented
  * CLASS-BODY FIELD INITIALISER (`^\s\s@?ident\s*:\s*new\s*(Ident)` / `^\s\s@?ident\s*:\s*([A-Z]…)`).
  * A `new X` inside a METHOD BODY is invisible to it — and a method body is where every real launch
  * site lives. Aggregating that scan to part granularity (the original plan) would therefore have
@@ -24,9 +24,9 @@
  * TWO KINDS OF EDGE, TWO VERDICTS:
  *   - a REFERENCE (a construction, a static call, a mention) is fixable where it stands: guard it
  *     with `if TheClass?` for an eager part, or await `world.parts.ensureLoaded` for a lazy one.
- *   - `extends X` / `@augmentWith X` is NOT guardable at all — you cannot conditionally derive a
- *     class or conditionally mix in a mixin. It means the PARTITION IS WRONG: the base class or
- *     mixin is core material. Reported separately, and never with a "add a guard" suggestion.
+ *   - `extends X` is NOT guardable at all — you cannot conditionally derive a class. It means the
+ *     PARTITION IS WRONG: the base class is core material. Reported separately, and never with a
+ *     "add a guard" suggestion.
  *
  * WHAT COUNTS AS GUARDED (an occurrence is allowed if any holds):
  *   1. it is inside a `#` comment — prose may name anything;
@@ -350,7 +350,7 @@ function main() {
     // \b would match inside ActivePointerWdgt for the SUFFIX PointerWdgt only if preceded by a
     // non-word char, which it is not — so \b is sufficient. Verified against that exact pair.
     ref: new RegExp('\\b' + n + '\\b'),
-    inherit: new RegExp('(?:\\bextends\\s+' + n + '\\b)|(?:@augmentWith\\s+' + n + '\\b)')
+    inherit: new RegExp('\\bextends\\s+' + n + '\\b')
   }));
 
   const refViolations = [];
@@ -505,9 +505,8 @@ function main() {
 
   if (inheritViolations.length) {
     console.error('\n[part-edges] FAIL -- core INHERITS from a part. This is not guardable: you cannot');
-    console.error('conditionally extend a class or conditionally mix in a mixin. The PARTITION is wrong --');
-    console.error('the base class / mixin is core material, so move it into core (or move the deriving');
-    console.error('class into the part).');
+    console.error('conditionally extend a class. The PARTITION is wrong -- the base class is core');
+    console.error('material, so move it into core (or move the deriving class into the part).');
     for (const v of inheritViolations) {
       console.error(rules.fired('INHERITS_FROM_PART', `  ${v.rel}:${v.line}  ${v.from} -> ${v.name} (part '${v.owner}')`));
       console.error(`      ${v.text}`);

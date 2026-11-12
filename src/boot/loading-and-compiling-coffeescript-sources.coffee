@@ -78,11 +78,11 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
   # dependencies later on anyways.
   promiseChain = Promise.resolve()
 
-  # "Class" and "Mixin" travel in their part's batch too (build.py piles every source into
-  # its part's batch with no exceptions) even though both are already compiled by hand,
-  # early, by loadMetaSystemPromise. Fetching that batch later just re-registers their text
-  # in SourceVault -- storeSourcesAndPotentiallyCompileThemAndExecuteThem's "names" filter
-  # excludes them from the actual compile step by name, so nothing ever recompiles them.
+  # "Class" travels in its part's batch too (build.py piles every source into its part's
+  # batch with no exceptions) even though it is already compiled by hand, early, by
+  # loadMetaSystemPromise. Fetching that batch later just re-registers its text in
+  # SourceVault -- storeSourcesAndPotentiallyCompileThemAndExecuteThem's "names" filter
+  # excludes it from the actual compile step by name, so nothing ever recompiles it.
   batchNames = eagerSourceBatchNames()
   if srcLoadCompileDebugWrites then console.log "eager source batches: #{batchNames.length}"
   for eachBatchName in batchNames
@@ -105,7 +105,7 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
 # `isCompileError`: whatever the compiler threw -- or the engine, parsing what the compiler wrote --
 # the text did not compile, which is what a gesture over typed code reports
 # (Widget._informOfCompileErrorOrRethrow), apart from code that compiled and then threw.
-# opts.fromTheBuild: the source is the build's own (a class's or a mixin's, the meta-system's), which
+# opts.fromTheBuild: the source is the build's own (a class's, the meta-system's), which
 # skips the engine's parse below -- see there.
 compileFGCode = (codeSource, bare, opts = {}) ->
   try
@@ -362,7 +362,7 @@ storeSourcesAndPotentiallyCompileThemAndExecuteThem = (justIngestSources) ->
   # one job, in dependency order; the scheduler fits as many per turn as its
   # time budget allows. The returned promise resolves when everything is in
   # (or rejects on the first compile error), just like the old chain did.
-  # the meta-system's own sources were compiled by hand before any batch (META_SYSTEM_SOURCES), and a
+  # the meta-system's own source was compiled by hand before any batch (META_SYSTEM_SOURCES), and a
   # name with no source in the vault -- globalFunctions, the boot code every source depends on -- has
   # nothing to compile
   names = (eachFile for eachFile from loadOrder when eachFile not in META_SYSTEM_SOURCES and SourceVault.get(eachFile)?)
@@ -379,7 +379,7 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
   if srcLoadCompileDebugWrites then t0 = performance.now()
   if srcLoadCompileDebugWrites then console.log "checking whether " + fileName + " is already in the system "
 
-  # Only a ?generatePreCompiled boot wants Class/Mixin to ACCUMULATE the JS they compile
+  # Only a ?generatePreCompiled boot wants Class to ACCUMULATE the JS it compiles
   # (window.JSSourcesContainer.content, which the external driver reads back out —
   # ../Fizzygum-tests/scripts/generate-pre-compiled-headless.js). An ordinary boot compiles
   # to CREATE the classes and never reads that string, so it must not build it.
@@ -389,19 +389,11 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
   # code and manually create any extensions
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
     if justIngestSources
-      # gives the class its metaobject: its source, its members' sources, the name of
-      # the class it extends and its mixins
+      # gives the class its metaobject: its source, its members' sources and the name of
+      # the class it extends
       widgetClass = new Class fileContents, false, false
     else
       widgetClass = new Class fileContents, generatePreCompiledJS, true
-  # Loaded Mixins here, each registered as the page's parse of its mixin (Mixin.allMixines) on both
-  # paths: a pre-compiled image already runs the mixin's code, and its parse is still what the
-  # class inspector, a class removal and a snapshot's mixin records read.
-  else if /^  onceAddedClassProperties:/m.test fileContents
-    if justIngestSources
-      Mixin.register new Mixin fileContents, false, false
-    else
-      Mixin.register new Mixin fileContents, generatePreCompiledJS, true
 
   if srcLoadCompileDebugWrites then console.log "compiling and evalling " + fileName + " from source code"
   # (the loading log div is written by SourceCompileScheduler, once per drain

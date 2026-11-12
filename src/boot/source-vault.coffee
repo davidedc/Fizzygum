@@ -1,4 +1,4 @@
-# SourceVault — the ONE registry of every class/mixin source text the system knows, keyed by
+# SourceVault — the ONE registry of every class source text the system knows, keyed by
 # class name, each tagged with the PART it belongs to.
 #
 # WHY IT EXISTS. Fizzygum ships its ~500 classes as TEXT and compiles them in the browser (there
@@ -10,8 +10,8 @@
 # also gives the escaping ONE choke point (below) instead of ~500 inline `.replace` chains, and it
 # stops leaking ~500 names into the global namespace.
 #
-# WHY A PLAIN OBJECT AND NOT A CLASS. The `Class`/`Mixin` meta-system is itself compiled FROM
-# sources held here (globalFunctions loads the Class and Mixin sources through this vault), so a
+# WHY A PLAIN OBJECT AND NOT A CLASS. The `Class` meta-system is itself compiled FROM a source
+# held here (globalFunctions loads the Class source through this vault), so a
 # SourceVault that were a Class-system class would be a chicken-and-egg. It is a boot-level plain
 # object, compiled into the boot bundle — core's first piece (buildSystem/parts.json) — and it must be
 # defined before any batch runs: every generated `sources_batch_*.js` file is a sequence of
@@ -24,8 +24,8 @@
 # round-trip is exact. Keep these three characters in sync with build.py's STRING_BLOCK.
 #
 # ⚠ Every enumeration here walks the Map directly. Do NOT convert it to a plain object and use
-# `for … of`: Object-extensions.coffee puts `augmentWith`/`addInstanceProperties` on
-# Object.prototype, so an un-`own`ed walk over any object in this system also yields those.
+# `for … of`: Object-extensions.coffee puts `hashCode` on Object.prototype, so an un-`own`ed
+# walk over any object in this system also yields it.
 #
 # THE API GROWS WITH ITS CONSUMERS, and only with them -- twice over, here. `namesForPart` and a
 # `partOf` were both written in the phase that introduced this registry, had no callers, and were
@@ -40,7 +40,7 @@ window.SourceVault =
   # name -> {text, part}
   _entries: new Map
 
-  # Called once per class/mixin by the generated sources_batch_*.js files. `escapedText` is the
+  # Called once per class by the generated sources_batch_*.js files. `escapedText` is the
   # build's encoded form (see above); the decode happens here so the emitted call site is pure data.
   store: (name, escapedText, part) ->
     text = escapedText
@@ -50,7 +50,7 @@ window.SourceVault =
     @_entries.set name, {text: text, part: part}
     return
 
-  # The source text for a class/mixin name, or undefined if we hold no such source.
+  # The source text for a class name, or undefined if we hold no such source.
   get: (name) ->
     @_entries.get(name)?.text
 

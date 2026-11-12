@@ -8,10 +8,10 @@
 //
 // Why CoffeeScript 1 (the `coffeescript-v1` npm-aliased devDependency), not the ^2.7.0 one:
 // the sources use CS1 idioms (notably bare `super`) that the bundled IN-BROWSER compiler
-// accepts but CS 2.x rejects — CS 2.7 fails about a sixth of the files, CS1 only the mixins
-// that use `super` outside a class. Those are rescued by textually replacing `super` with a
-// `__SUPER__` call BEFORE compiling: semantics don't matter here, only AST shape, and a plain
-// call preserves it.
+// accepts but CS 2.x rejects — CS 2.7 fails about a sixth of the files. Every `super` is
+// textually replaced with a `__SUPER__` call BEFORE compiling, so a `super` CS1 cannot place in
+// a class never stops the mirror: semantics don't matter here, only AST shape, and a plain call
+// preserves it.
 // A file CS1 REFUSES fails the mirror (exit 1), and find_similar_code.sh stops: every file must
 // compile. The shape CS1 refuses that the page's compiler reads: a paren-less call ending in an
 // implicit object, as the condition of `while`/`if`/`unless`/`else if`/`switch`/`when`/`for`

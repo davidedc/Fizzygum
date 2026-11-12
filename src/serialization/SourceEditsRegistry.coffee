@@ -2,7 +2,7 @@
 # can carry them and replay them on restore. Lives at world.sourceEditsRegistry. See
 # docs/architecture/serialization-duplication-reference.md §12.
 #
-# THREE scopes of edit, each recorded by the person's GESTURE that makes it, never by the verb it
+# TWO scopes of edit, each recorded by the person's GESTURE that makes it, never by the verb it
 # drives (the product calls those verbs as plumbing too, which no one edited) -- and, once, by a world
 # LOAD: a member of the page it could not return to boot, which the loaded world still runs, is recorded
 # as that member's edit would have been (recordMembersStillRunning), so a save carries the code it runs:
@@ -16,18 +16,14 @@
 #     edit mutates the live prototype but leaves no serializable trace (§2.7). The snapshot
 #     embeds it and REPLAYS it against the destination prototypes BEFORE deserialization, so
 #     restored shells (Object.create(prototype)) already see the edited methods.
-#   - "mixin": a mixin-donated member edited (Mixin.applyMemberEdit) or removed
-#     (Mixin.removeMember, record flagged `deleted: true`) through the class inspector's donor
-#     routing; replayed against the parsed mixins BEFORE the class-scope edits (boot-order
-#     analogy: augmentWith runs before class-body assignments).
-# In both of the last two, an ADD is an edit whose source is "undefined", and a RENAME is two
-# records: an edit under the new name, then a removal of the old. Each meta-object's member
-# sources are its CURRENT ones and its consumers' prototypes follow from them (Class.coffee,
-# "live member editing"), so replaying the records in order, from boot, reproduces the session's
-# live members exactly -- and a load first returns the page to boot (returnThePageToBootSources).
+# In the class scope, an ADD is an edit whose source is "undefined", and a RENAME is two records: an
+# edit under the new name, then a removal of the old. A class's member sources are its CURRENT ones
+# and its prototype follows from them (Class.coffee, "live member editing"), so replaying the
+# records in order, from boot, reproduces the session's live members exactly -- and a load first
+# returns the page to boot (returnThePageToBootSources).
 #
-# A record is plain JSON: {scope, className|mixinName, uniqueID?, propertyName, source?,
-# deleted?}. Embedded verbatim in the world envelope's `world.sourceEdits`.
+# A record is plain JSON: {scope, className, uniqueID?, propertyName, source?, deleted?}. Embedded
+# verbatim in the world envelope's `world.sourceEdits`.
 class SourceEditsRegistry
 
   constructor: ->
@@ -66,117 +62,84 @@ class SourceEditsRegistry
       deleted: true
     return
 
-  # record a mixin-scope edit (from ClassInspectorWdgt's mixin edit step; `mixinName` is the
-  # parsed Mixin's name, without the "Mixin" suffix).
-  recordMixinEdit: (mixinName, propertyName, source) ->
-    return unless mixinName? and propertyName?
-    @records.push
-      scope: "mixin"
-      mixinName: mixinName
-      propertyName: propertyName
-      source: source
-    return
-
-  # record a mixin-scope member REMOVAL (from ClassInspectorWdgt's mixin removal step).
-  recordMixinMemberRemoval: (mixinName, propertyName) ->
-    return unless mixinName? and propertyName?
-    @records.push
-      scope: "mixin"
-      mixinName: mixinName
-      propertyName: propertyName
-      deleted: true
-    return
-
   # the plain-JSON records embedded in a world snapshot (shallow copies, so a later live edit
   # can't mutate an already-serialized array; the fields are all primitives).
   serializableRecords: ->
     (Object.assign {}, r) for r in @records
 
-  # CAN THIS BUILD REPLAY class/mixin-scope edits at all? (arc 5)
+  # CAN THIS BUILD REPLAY class-scope edits at all? (arc 5)
   #
-  # Both replays drive the META-SYSTEM -- Class.applyMemberEdit, Mixin.allMixines -- and the
-  # meta-system is not in the pre-compiled image: Class and Mixin are the only two classes absent
-  # from it (they are what compiled everything else), so they arrive only from the class source
-  # directory -- with the reflective layer, or alone ahead of a lazy part's load. An artifact built
-  # with sources: "none" ships neither, and can therefore never replay these records, no matter how
-  # long it waits.
+  # The replay drives the META-SYSTEM -- Class.applyMemberEdit / removeMember -- and the meta-system
+  # is not in the pre-compiled image: of the classes the boot defines, Class is the one absent from
+  # it (it is what compiled everything else), so it arrives only from the class source directory -- with the reflective
+  # layer, or alone ahead of a lazy part's load. An artifact built with sources: "none" ships no
+  # Class, and can therefore never replay these records, no matter how long it waits.
   #
   # ⚠ This asks about the CAPABILITY, not the build flag, deliberately: it is the actual
   # precondition, and it keeps a BUILDFLAG out of class code (no other class reads one). It is asked
   # once a load has brought the reflective layer in wherever it can come (Deserializer.loadWhatItNeeds,
-  # before the replay), so by then `Mixin?` is false only where the layer can never arrive. Whether
-  # the layer has ARRIVED is a different question, reflectiveLayerIsLoaded's: Class and Mixin alone
-  # do not bring the eager classes' member maps.
-  @canReplaySourceEdits: -> Mixin?
+  # before the replay), so by then `Class?` is false only where the layer can never arrive. Whether
+  # the layer has ARRIVED is a different question, reflectiveLayerIsLoaded's: Class alone does not
+  # bring the eager classes' member maps.
+  @canReplaySourceEdits: -> Class?
 
   # Is `r` a record as my writers above write one (and serializableRecords hands a save): a plain object
-  # with its scope, the code it names -- a class's name, a mixin's parsed name, an instance edit's class
-  # (with the widget's unique id where it had one) -- the member, and the source unless it is a
-  # removal. Asked of every record a world file carries, before the load changes anything
-  # (Deserializer._worldSectionProblem).
+  # with its scope, the code it names -- a class's name, an instance edit's class (with the widget's
+  # unique id where it had one) -- the member, and the source unless it is a removal. Asked of every
+  # record a world file carries, before the load changes anything (Deserializer._worldSectionProblem).
   @isARecord: (r) ->
     return false unless r? and typeof r is "object" and !Array.isArray r
     isAName = (value) -> typeof value is "string" and value.length > 0
     namesItsCode = switch r.scope
       when "class" then isAName r.className
-      when "mixin" then isAName r.mixinName
       when "instance" then isAName(r.className) and (!r.uniqueID? or typeof r.uniqueID is "string")
       else false
     namesItsCode and isAName(r.propertyName) and (r.deleted is true or typeof r.source is "string")
 
-  # Is `record` CLASS-LEVEL -- a class- or mixin-scope one, which the replays apply against the
-  # meta-system? (An instance-scope one rides the {"$src"} path on its own widget, which needs only the
-  # compiler, and every profile ships that.)
+  # Is `record` CLASS-LEVEL -- a class-scope one, which the replay applies against the meta-system?
+  # (An instance-scope one rides the {"$src"} path on its own widget, which needs only the compiler,
+  # and every profile ships that.)
   @isClassLevel: (record) ->
-    record?.scope is "class" or record?.scope is "mixin"
+    record?.scope is "class"
 
-  # How many class-level records I hold: what a load's replays would apply, so the load can tell the
+  # How many class-level records I hold: what a load's replay would apply, so the load can tell the
   # user, once, how many of them it did not (WorldWdgt.loadWorldSnapshot).
   classLevelRecordCount: ->
     (r for r in @records when SourceEditsRegistry.isClassLevel r).length
 
   # The code the class-level records of a world file name, by the names the build's part manifest
-  # holds them by -- a class's name, and a mixin's source name: a record holds the parsed one
-  # ("Foo", whose source and global are "FooMixin"), and either spelling is taken,
-  # as Mixin.named takes either (a name no part holds is passed over). What the parts pre-load brings in
-  # before the replay (Deserializer.loadWhatItNeeds), so an edit of a lazy part's code finds its class
-  # or mixin even when the file holds none of that part's widgets.
+  # holds them by: each class's name (a name no part holds is passed over). What the parts pre-load
+  # brings in before the replay (Deserializer.loadWhatItNeeds), so an edit of a lazy part's code finds
+  # its class even when the file holds none of that part's widgets.
   @namesOfTheCodeEditedIn: (records) ->
     names = []
     add = (name) -> names.push name if typeof name is "string" and name not in names
-    for r in (records ? [])
-      if r?.scope is "class"
-        add r.className
-      else if r?.scope is "mixin" and typeof r.mixinName is "string"
-        add r.mixinName
-        add r.mixinName + "Mixin"
+    for r in (records ? []) when r?.scope is "class"
+      add r.className
     names
 
   # THE PAGE AS IT BOOTED, which a replay starts from: the records reproduce a session's members from
-  # boot (above), so a world-snapshot load first returns every meta-object to its boot sources. Each
-  # member whose source differs from the one the meta-object's source text at boot gives (Class /
-  # Mixin bootMemberSources, Class.membersAwayFrom) gets that one back through the meta-object's own
+  # boot (above), so a world-snapshot load first returns every class's meta-object to its boot sources.
+  # Each member whose source differs from the one the class's source text at boot gives
+  # (Class.bootMemberSources, Class.membersAwayFrom) gets that one back through the meta-object's own
   # two edits, which keep every prototype a function of the stores -- so the members come back as
-  # boot made them, a class member's removal giving back its donor's (mixins go first, in boot's own
-  # order). What the page edited is read from the STORES, never from a registry: a world's registry
-  # lists the edits made under it, while the prototypes are the page's, and a world built on an edited
-  # page (the harness's resetWorld) starts with none. A class or mixin the vault holds no source text
+  # boot made them. What the page edited is read from the STORES, never from a registry: a world's
+  # registry lists the edits made under it, while the prototypes are the page's, and a world built on
+  # an edited page (the harness's resetWorld) starts with none. A class the vault holds no source text
   # for (one made at run time) has no boot and is left as it is. A member that cannot be returned is
   # logged and left, as a record that cannot be replayed is: the load has already torn the desktop
   # down, and tells the user how many of them still run once the replay is done (pageMembersStillRunning,
   # WorldWdgt.loadWorldSnapshot). Answers {returned, unreturned}: how many members it returned, and
   # each one it left, with the source it was left running (undefined for a member the page removed --
-  # read by own-ness, so a removed member that shares a name with one of Object.prototype's is too);
-  # 0 and none where this build has no meta-system (canReplaySourceEdits). Each one left carries its scope
-  # ("mixin" or "class"), so it can be recorded as the record a session's edit of it would be
-  # (recordMembersStillRunning).
+  # read by own-ness, so a removed member that shares a name with one of Object.prototype's is too),
+  # so it can be recorded as the record a session's edit of it would be (recordMembersStillRunning);
+  # 0 and none where this build has no meta-system (canReplaySourceEdits).
   @returnThePageToBootSources: ->
     returned = 0
     unreturned = []
     for metaObject in SourceEditsRegistry._metaObjectsInBootOrder()
       bootSources = metaObject.bootMemberSources()
       continue unless bootSources?
-      scope = if Mixin.allMixines.indexOf(metaObject) >= 0 then "mixin" else "class"
       for memberName in Class.membersAwayFrom metaObject.nonStaticPropertiesSources, bootSources
         try
           if memberName of bootSources
@@ -185,7 +148,7 @@ class SourceEditsRegistry
             metaObject.removeMember memberName
           returned++
         catch error
-          unreturned.push {metaObject, scope, memberName, source: metaObject.nonStaticPropertiesSources[memberName]}
+          unreturned.push {metaObject, memberName, source: metaObject.nonStaticPropertiesSources[memberName]}
           console?.log "world snapshot: " + metaObject.name + "." + memberName + " could not be returned to its source at boot: " + (error?.message ? textOfThrownValue error)
     {returned, unreturned}
 
@@ -199,8 +162,8 @@ class SourceEditsRegistry
   # Does my last record of `each`'s member leave it as `each` holds it -- its source, or removed?
   _lastRecordSays: (each) ->
     last = undefined
-    for record in @records when record.scope is each.scope and record.propertyName is each.memberName and
-        (if each.scope is "mixin" then record.mixinName else record.className) is each.metaObject.name
+    for record in @records when record.scope is "class" and record.propertyName is each.memberName and
+        record.className is each.metaObject.name
       last = record
     return false unless last?
     if each.source? then last.deleted isnt true and last.source is each.source else last.deleted is true
@@ -213,9 +176,7 @@ class SourceEditsRegistry
   recordMembersStillRunning: (unreturned) ->
     stillRunning = @pageMembersStillRunning unreturned
     for each in stillRunning
-      record = {scope: each.scope}
-      if each.scope is "mixin" then record.mixinName = each.metaObject.name else record.className = each.metaObject.name
-      record.propertyName = each.memberName
+      record = {scope: "class", className: each.metaObject.name, propertyName: each.memberName}
       if each.source? then record.source = each.source else record.deleted = true
       @records.push record
     stillRunning.length
@@ -227,16 +188,15 @@ class SourceEditsRegistry
     count += metaObject.membersAwayFromBoot().length for metaObject in SourceEditsRegistry._metaObjectsInBootOrder()
     count
 
-  # Every parsed mixin, then every class's meta-object -- none where this build has no meta-system.
+  # Every class's meta-object -- none where this build has no meta-system.
   @_metaObjectsInBootOrder: ->
     return [] unless SourceEditsRegistry.canReplaySourceEdits()
-    Mixin.allMixines.concat (eachClass.class for eachClass in allClassFunctions() when eachClass.class?)
+    (eachClass.class for eachClass in allClassFunctions() when eachClass.class?)
 
   # replay the CLASS-scope records IN ORDER against the live prototypes: an edit re-runs
   # Class.applyMemberEdit, a removal (deleted: true) Class.removeMember — the same choke
   # points the live class inspector's steps use, so the replay compiles exactly what the
-  # session compiled (incl. the super rewrite) and gives back a donor's member where the
-  # session did. Called by loadWorldSnapshot BEFORE deserialization, so a restored
+  # session compiled (incl. the super rewrite). Called by loadWorldSnapshot BEFORE deserialization, so a restored
   # shell already sees the edited methods. Instance-scope edits are NOT replayed
   # here — they ride the normal {"$src"} path on their own widget. A class edit
   # that no longer compiles (the class changed, a typo) is logged, not fatal.
@@ -256,32 +216,6 @@ class SourceEditsRegistry
         applied++
       catch error
         console?.log "world snapshot: class-scope source edit " + r.className + "." + r.propertyName + " could not be replayed: " + (error?.message ? textOfThrownValue error)
-    applied
-
-  # replay the MIXIN-scope records IN ORDER: an edit re-runs Mixin.applyMemberEdit
-  # (recompile + re-inject into every non-shadowing consumer class), a removal
-  # (deleted: true) re-runs Mixin.removeMember -- record order matters so a
-  # remove-then-re-add sequence lands in its final state. Called by the snapshot
-  # restore BEFORE replayClassEdits -- the boot-order analogy: augmentWith runs
-  # before class-body assignments, so a class-scope edit of the same member keeps
-  # winning. A record whose mixin/member no longer compiles is logged, not fatal
-  # (same policy as replayClassEdits). Answers how many records it applied, as replayClassEdits does.
-  replayMixinEdits: ->
-    # ⚠ Without this the very first line of the loop body would throw a bare `Mixin is not defined`
-    # mid-restore -- it reads Mixin.allMixines OUTSIDE the per-record try/catch below.
-    return 0 unless SourceEditsRegistry.canReplaySourceEdits()
-    applied = 0
-    for r in @records when r.scope is "mixin"
-      theMixin = Mixin.named r.mixinName
-      continue unless theMixin?
-      try
-        if r.deleted
-          theMixin.removeMember r.propertyName
-        else
-          theMixin.applyMemberEdit r.propertyName, r.source
-        applied++
-      catch error
-        console?.log "world snapshot: mixin-scope source edit " + r.mixinName + "." + r.propertyName + " could not be replayed: " + (error?.message ? textOfThrownValue error)
     applied
 
   # rebuild a registry from the records embedded in a loaded snapshot.

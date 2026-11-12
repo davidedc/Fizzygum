@@ -1,6 +1,6 @@
 'use strict';
 // meta-compiler-selftest.js — the meta-system's super rewrite (src/meta/Class.coffee `rewriteSuperCalls`, reached by
-// Class's and Mixin's `_rewriteSuperCalls`), loaded and run the way every build tool runs it: through
+// Class's `_rewriteSuperCalls`), loaded and run the way every build tool runs it: through
 // lib/meta-compiler.js, whose shim must hand it the bundled compiler's lexer. One case per reading:
 // - each form, read from the tokens and never from the text after the keyword (a trailing space before a comment, a
 //   postfix `if`, an operator, a tab, an implicit object on the next line, an empty call over two lines);
@@ -9,7 +9,7 @@
 // - a `super` in an interpolation, which is code; several on one line; every line kept on its line;
 // - the text the lexer reads (a byte-order mark, \r — lone or before a newline);
 // - a source the lexer refuses handed on as written, and any other failure propagating;
-// - the mixin's run-time target, and a class compiled whole, the rewrite reaching the compiler;
+// - a class compiled whole, the rewrite reaching the compiler;
 // - every constructor ending in `return` (Class.endingInReturn), each body shape read from the lexer: on lines of its
 //   own at any indentation (tabs too, a last line with no new line), empty, on the arrow's line (an `if … else`,
 //   deeper continuation lines, a parameter default holding an arrow, parameters over several lines, no space after
@@ -25,7 +25,7 @@ const { loadMetaCompiler, rewriteSuper } = require('./meta-compiler');
 const t = require('./selftest-verdict').cases('meta-compiler');
 
 const compiled = [];
-const { CoffeeScript, Class, Mixin } = loadMetaCompiler({
+const { CoffeeScript, Class } = loadMetaCompiler({
   srcDir: path.join(__dirname, '..', '..', 'src'),
   compileFGCode: (src, bare) => { const js = CoffeeScript.compile(src, { bare }); compiled.push({ src, js }); return js; },
 });
@@ -110,11 +110,6 @@ let fault = '';
 CoffeeScript.tokens = () => { throw new TypeError('planted fault'); };
 try { rewriteText('(a) ->\n  super a\n'); } catch (e) { fault = e.message; } finally { CoffeeScript.tokens = realTokens; }
 t.check(fault === 'planted fault', `a failure that is no refusal of the lexer propagates (${fault || 'swallowed'})`);
-
-// the mixin's target: the class the calling method was injected in, read at run time
-const mixed = Mixin.prototype._rewriteSuperCalls.call({}, 'XMixin =\n  m: (a) ->\n    super a\n');
-t.check(mixed === "XMixin =\n  m: (a) ->\n    window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name].call this, a\n",
-  `a mixin's super calls the class the method was injected in (${JSON.stringify(mixed)})`);
 
 // a class compiled whole through the meta-compiler: the rewritten member is what reaches the compiler
 compiled.length = 0;

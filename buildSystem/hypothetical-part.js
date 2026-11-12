@@ -77,7 +77,7 @@ for (const rel of member) ownerOfClass.set(path.basename(rel, '.coffee'), HYPO);
 const patterns = [...ownerOfClass.keys()].sort((a, b) => b.length - a.length).map(n => ({
   name: n,
   ref: new RegExp('\\b' + n + '\\b'),
-  inherit: new RegExp('(?:\\bextends\\s+' + n + '\\b)|(?:@augmentWith\\s+' + n + '\\b)')
+  inherit: new RegExp('\\bextends\\s+' + n + '\\b')
 }));
 
 // ---- scan everything that STAYS BEHIND --------------------------------------------------------

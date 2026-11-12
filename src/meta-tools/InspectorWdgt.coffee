@@ -9,9 +9,8 @@
 # mine. My box, top to bottom (_bandsIn):
 #   - the BREADCRUMB band (_breadcrumbIn): the "Class" caption, then a chip per class of my
 #     subject's chain, base class first, a drawn › between two chips, the last chip -- my subject's
-#     own class, or a class inspector's own class -- the CURRENT one, then, while a mixin-donated
-#     member is selected, the donor label; the pieces wrap to more rows where my width is less than
-#     they need, and the band's last row is its rule;
+#     own class, or a class inspector's own class -- the CURRENT one; the pieces wrap to more rows
+#     where my width is less than they need, and the band's last row is its rule;
 #   - the TOGGLES band, toggleBandHeight tall, its rule included: my toggles at their own size,
 #     toggleBandInset in and toggleBandGap apart, centred down the band;
 #   - the BODY: the member list, inspectorListColumnWidth wide but never more than half my width,
@@ -38,7 +37,7 @@ class InspectorWdgt extends ClippingWdgt
   # of that box right of me is its border, which it strokes over its children. Opaque, my
   # silhouette is my box, so my children add nothing to the shadow a naked inspector casts.
 
-  # I read the class MEMBER MAPS (a member's recorded source, its donor mixin), which exist only once
+  # I read the class MEMBER MAPS (a member's recorded source), which exist only once
   # the reflective layer has arrived, and on a `sources: "lazy"` build it has not until someone asks.
   # Opening me asks first (Widget.spawnInspector); restoring me from a file asks because of this
   # declaration (Deserializer._needsTheReflectiveLayer, which both file doors consult), so a restored
@@ -50,13 +49,6 @@ class InspectorWdgt extends ClippingWdgt
   # information flow (a dataflow consumer, a dispatch receiver) or a tracked reference edge, and
   # reading one as the other is the hazard this name exists to remove
   inspectedObject: undefined
-  # the NAME of the parsed Mixin whose source the currently-selected member's view came from
-  # (undefined when the source came from the instance or the class chain). Set by
-  # selectionFromList, cleared with the selection by a re-filter; its Mixin
-  # (_currentPropertySourceMixin) is consulted by ClassInspectorWdgt.applyPropertyEdit to route a
-  # save to the DONOR mixin. A name, as my chips hold class names: it is data, while a Mixin object
-  # is none a file can carry, so a world saved with a donated member selected keeps the attribution.
-  currentPropertySourceMixinName: undefined
   # panes:
   list: undefined
   detail: undefined
@@ -81,11 +73,6 @@ class InspectorWdgt extends ClippingWdgt
   showFieldsToggle: undefined
   showInheritedToggle: undefined
   showOwnPropsOnlyToggle: undefined
-
-  # "from <Name>Mixin" after my class chips, in my breadcrumb band, while a mixin-donated member is
-  # selected (the donor is provenance, like the class chain); empty otherwise, when it takes no room
-  # in the band
-  mixinDonorLabel: undefined
 
   # my member FILTER (_filteredMemberNames), and the one place its state lives: my toggles show it,
   # and a toggle's action flips it here (toggleShowing*).
@@ -287,12 +274,10 @@ class InspectorWdgt extends ClippingWdgt
 
   # My BREADCRUMB's pieces, added in my paint and hit order, left to right: the "Class" caption,
   # then a chip per class of my subject's chain (_classChainLinks), base class first, each but the
-  # last followed by its separator, then the mixin-donor label, blank until a donated member is
-  # selected (selectionFromList). The last chip is the CURRENT one. Every chip, the current one
+  # last followed by its separator. The last chip is the CURRENT one. Every chip, the current one
   # included, opens its class's ClassInspector: its action is openClassInspector, its class name in
-  # slot 3. The two labels hug their text, one line of fonts.buttonLabel tall (StringWdgt's box
-  # hug, which re-hugs a label whose text changes and then asks me to re-lay, so a donor label that
-  # appears or goes re-flows my band). Where each piece goes is _breadcrumbIn's.
+  # slot 3. The caption hugs its text, one line of fonts.buttonLabel tall (StringWdgt's box hug).
+  # Where each piece goes is _breadcrumbIn's.
   _buildAndConnectBreadcrumb: ->
     theme = WorldWdgt.theme
     @classCaption = new StringWdgt "Class", fontRole: theme.fonts.buttonLabel, color: theme.inspectorBreadcrumbCaption
@@ -314,10 +299,6 @@ class InspectorWdgt extends ClippingWdgt
         separator = new BreadcrumbSeparatorWdgt
         @classSeparators.push separator
         @_addNoSettle separator
-
-    @mixinDonorLabel = new StringWdgt "", fontRole: theme.fonts.buttonLabel, color: theme.inspectorDonorText
-    @mixinDonorLabel._sizeToTextAndDisableFittingNoSettle()
-    @_addNoSettle @mixinDonorLabel
 
   # The LINKS of the class chain my subject is made of, base class first: every object on its
   # prototype chain, my subject itself included, that is a class's OWN prototype (it owns its
@@ -377,17 +358,13 @@ class InspectorWdgt extends ClippingWdgt
   # renamed or removed -- so my member LIST is built again from my filter as it stands
   # (_buildAndConnectMemberList), and nothing else is: my toggles, my breadcrumb, my code pane and
   # my footer buttons stay the same widgets. What showed the old list's selection now shows none, as
-  # at my construction: no member is selected, my code pane is empty and read-only, the donor label
-  # is blank (and my breadcrumb band re-flows without it), and my footer's member buttons are
-  # disabled (_reflectMemberSelection). My toggles are then shown my filter.
+  # at my construction: no member is selected, my code pane is empty and read-only, and my footer's
+  # member buttons are disabled (_reflectMemberSelection). My toggles are then shown my filter.
   _refilterMembers: ->
     @_settleLayoutsAfter => @_refilterMembersNoSettle()
 
   _refilterMembersNoSettle: ->
     @_buildAndConnectMemberList()
-
-    @currentPropertySourceMixinName = undefined
-    @mixinDonorLabel?._setTextNoSettle ""
 
     # my code pane back to empty and read-only, its empty text the text it compares against, so its
     # modified-content indicator hides and save disables. An edit in progress in it ends first, as
@@ -410,12 +387,11 @@ class InspectorWdgt extends ClippingWdgt
   #   inherited    while showingInherited; otherwise only the members my subject's own class
   #                declares, and those stitched onto my subject that no class of its chain has
   #   own props    while showingOwnPropsOnly, only my subject's own properties
-  #   companions   never (_isACompanion)
   # sorted -- after an INDEXED subject's items (an Array's, a typed array's), which come first in index
   # order, whose order is their meaning, and at most MOST_ITEMS_LISTED of them.
   _filteredMemberNames: ->
     {items, named} = @_subjectsItemsAndNames()
-    attribs = (property for property in named when property and !@_isACompanion property)
+    attribs = (property for property in named when property)
 
     if !@showingMethods
       attribs = attribs.filter (prop) => !Utils.isFunction @inspectedObject[prop]
@@ -441,14 +417,6 @@ class InspectorWdgt extends ClippingWdgt
     items = items.filter((i) => !Utils.isFunction @inspectedObject[i]) if !@showingMethods
     items = items.filter((i) => Utils.isFunction @inspectedObject[i]) if !@showingFields
     items.concat attribs
-
-  # Is `prop` the bookkeeping COMPANION of another member, rather than a member of its own: the
-  # class a mixin's function member was injected in (`<m>_class_injected_in`,
-  # Object::addInstanceProperties)? It follows its member through every edit of it
-  # (Class.removeMember, Mixin's injection), so a row of its own would only offer edits that orphan
-  # it. (An injected method's source is no companion: its function keeps it, Widget.keptSourceOf.)
-  _isACompanion: (prop) ->
-    /_class_injected_in$/.test prop
 
   # My member LIST, built from the names my filter lets through (_filteredMemberNames) and added to
   # me, where my layout places it in my body (_reLayout). The build makes the first one; a re-filter
@@ -585,28 +553,16 @@ class InspectorWdgt extends ClippingWdgt
     world.openFrameWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
   # the recorded SOURCE of a non-function member, or undefined to show its VALUE. The
-  # class inspector overrides this with the prototype-level truth (the class's own source,
-  # else the mixin donor's, setting the donor attribution); an OBJECT inspector
-  # keeps showing the instance's VALUE -- per-instance state is its own truth.
+  # class inspector overrides this with the prototype-level truth (the source its class chain
+  # records); an OBJECT inspector keeps showing the instance's VALUE -- per-instance state is
+  # its own truth.
   _sourceForFieldMember: (selected) ->
     undefined
-
-  # The parsed Mixin my selected member's view came from (currentPropertySourceMixinName), or
-  # undefined when it came from my subject or its class chain. A name this page has no mixin for --
-  # a world saved by a build whose mixins differ -- THROWS, naming it: the edit the attribution routes
-  # (to the donor) must never be re-routed silently to my class.
-  _currentPropertySourceMixin: ->
-    return undefined unless @currentPropertySourceMixinName?
-    theMixin = Mixin.named @currentPropertySourceMixinName
-    unless theMixin?
-      throw new Error "the selected member came from " + @currentPropertySourceMixinName + "Mixin, which this page does not have"
-    theMixin
 
   selectionFromList: (selected) ->
     if selected == undefined then return
 
     val = @inspectedObject[selected]
-    @currentPropertySourceMixinName = undefined
 
     # A function shows the source of the member my subject HAS, read where it is held: the first link
     # of my subject's prototype chain that holds the member decides.
@@ -616,10 +572,8 @@ class InspectorWdgt extends ClippingWdgt
     # (_recordedStaticSourceOf), else its compiled text; never the source of a class member it shadows.
     #   Held by a class's prototype, it is a class member: the source kept WITH that very function
     # (Class.memberRecordOf), never a source recorded under its NAME, which a run's replacement need not
-    # be. A function with none reads as its compiled text. A member a MIXIN gave the holder's class -- one
-    # the class does not define, which its donor does (Mixin.donorOf) --
-    # is attributed to the donor, so a class-inspector Save routes the edit to it. A `constructor` row is
-    # the class function: its constructor's source where the class writes one, else its compiled text.
+    # be. A function with none reads as its compiled text. A `constructor` row is the class function:
+    # its constructor's source where the class writes one, else its compiled text.
     if Utils.isFunction(val)
       holder = @inspectedObject
       holder = Object.getPrototypeOf holder until !holder? or Object::hasOwnProperty.call holder, selected
@@ -628,9 +582,6 @@ class InspectorWdgt extends ClippingWdgt
         val = ownSource if ownSource?
       else if (source = Class.memberRecordOf val)?
         val = source
-        theClass = holder?.constructor?.class
-        if theClass? and !theClass.definesMember(selected) and (donor = Mixin.donorOf theClass, selected)?
-          @currentPropertySourceMixinName = donor.name
       txt = val.toString()
     else
       # a field shows its recorded source where there is one, else its own VALUE -- an undefined
@@ -644,10 +595,6 @@ class InspectorWdgt extends ClippingWdgt
       else
         # a value with no prototype has no toString of its own: it reads as Object's does
         txt = if Utils.isFunction val.toString then val.toString() else Object::toString.call val
-
-    # the donor label hugs its new text and asks me to re-lay: my breadcrumb band re-flows, so the
-    # label can take a row of its own, or give one back, and my bands below follow
-    @mixinDonorLabel?.setText (if @currentPropertySourceMixinName? then "from " + @currentPropertySourceMixinName + "Mixin" else "")
 
     cnts = @detail.textWdgt
     cnts.setText txt
@@ -692,8 +639,7 @@ class InspectorWdgt extends ClippingWdgt
       # The EDIT ROW's layout twin, my footer band: laid out exactly when it was built
       # (`_subjectIsEditable`, the SAME query as the build and as _bandsIn — a second spelling would
       # be a fact stated twice, and two facts will disagree). FooterBandLayout places every footer
-      # button that is my child, shown or not: visibility is not a layout input, so a hidden button
-      # (a class inspector's override) keeps its slot, and showing it moves nothing.
+      # button that is my child, shown or not: visibility is not a layout input.
       if @_subjectIsEditable()
         FooterBandLayout._arrange @, @_footerLeftButtons(), @_footerRightButtons()
 
@@ -757,16 +703,14 @@ class InspectorWdgt extends ClippingWdgt
   # after it; a later row starts where the first chip does, so the caption heads the whole chain. A
   # chip and the separator after it travel together: the separator's INK, not its square, starts
   # breadcrumbGap after the chip (ChevronRightIconAppearance.inkSpanX), and the next chip starts
-  # breadcrumbGap after the ink. The donor label, while it has text, follows the last chip
-  # breadcrumbDonorGap after it.
-  #   WRAPPING: a chip with its separator, or the donor label, that would end past breadcrumbInset
-  # short of the box's right edge starts the next row instead -- unless it is the first piece of
-  # its row, which then runs on past that edge (where I clip it). A blank donor label takes no room
-  # and opens no row: it stands right after the last chip.
-  #   A chip takes its own size (preferredExtent), a label its own one-line box, each centred down
-  # its row; a separator its glyph square, centred the same way. Only a piece still my child takes
-  # part, and a separator only while a later chip of mine follows it. Answers:
-  #   caption, donor     Rectangles, or undefined for a piece not placed
+  # breadcrumbGap after the ink.
+  #   WRAPPING: a chip with its separator that would end past breadcrumbInset short of the box's
+  # right edge starts the next row instead -- unless it is the first piece of its row, which then
+  # runs on past that edge (where I clip it).
+  #   A chip takes its own size (preferredExtent), the caption its own one-line box, each centred
+  # down its row; a separator its glyph square, centred the same way. Only a piece still my child
+  # takes part, and a separator only while a later chip of mine follows it. Answers:
+  #   caption            a Rectangle, or undefined when the caption is not placed
   #   chips, separators  Rectangles indexed as my classChips / classSeparators, undefined for a
   #                      piece not placed
   #   height             the band's height, its rule included: breadcrumbBandHeight, plus a chip's
@@ -788,7 +732,6 @@ class InspectorWdgt extends ClippingWdgt
     caption = undefined
     chips = []
     separators = []
-    donor = undefined
 
     x = box.left() + theme.breadcrumbInset
     if @classCaption?.parent is @
@@ -811,32 +754,20 @@ class InspectorWdgt extends ClippingWdgt
         separators[i] = centredInRow (new Point side, side), x + theme.breadcrumbGap - inkLeft
         x += theme.breadcrumbGap + inkRight - inkLeft + theme.breadcrumbGap
 
-    if @mixinDonorLabel?.parent is @
-      extent = @mixinDonorLabel.preferredExtent()
-      donorLeft = x
-      if @mixinDonorLabel.text isnt ""
-        donorLeft += theme.breadcrumbDonorGap  if x > rowStart
-        if x > rowStart and donorLeft + extent.x > limit
-          row++
-          donorLeft = rowStart
-      donor = centredInRow extent, donorLeft
-
     caption: caption
     chips: chips
     separators: separators
-    donor: donor
     height: theme.breadcrumbBandHeight + row * rowPitch
 
   # My BREADCRUMB's pieces where `crumbs` places them (_breadcrumbIn, in my bounds' coordinates): each
-  # chip at its own size, the caption, the separators and the donor label in their own boxes. A
-  # piece crumbs does not place -- one taken out of me -- is not mine to move.
+  # chip at its own size, the caption and the separators in their own boxes. A piece crumbs does
+  # not place -- one taken out of me -- is not mine to move.
   _layOutBreadcrumb: (crumbs) ->
     @classCaption._applyBounds crumbs.caption  if crumbs.caption?
     for chip, i in @classChips when crumbs.chips[i]?
       chip._reLayout crumbs.chips[i]
     for separator, i in @classSeparators when crumbs.separators[i]?
       separator._applyBounds crumbs.separators[i]
-    @mixinDonorLabel._applyBounds crumbs.donor  if crumbs.donor?
     return
 
   # My TOGGLES in `band` (the toggles band above its rule, in my bounds' coordinates): each at its
@@ -890,7 +821,7 @@ class InspectorWdgt extends ClippingWdgt
   # the overridable applyPropertyEdit hook (ClassInspectorWdgt overrides it).
   # Every apply compiles before it changes anything, so an edit that is not code changes nothing:
   # it is reported, and stays MODIFIED, Save still enabled (Widget._savingTypedCode). Answers
-  # whether it saved (ClassInspectorWdgt.overrideInThisClass reads it).
+  # whether it saved.
   save: ->
     return false unless @list.selected? and @_subjectIsEditable()
     txt = @detail.contents.children[0].text.toString()
@@ -922,9 +853,12 @@ class InspectorWdgt extends ClippingWdgt
     @inspectedObject.sourceChanged()
 
 
+  # the add, past the prompt (addPropertyPopout). Adding a member changes my member set, so it
+  # re-filters me (_refilterMembers).
   addProperty: (prop) ->
     if prop? and @_subjectIsEditable() and !@_refusesAsANewMemberName prop
-      @_addNamedProperty prop
+      @_applyPropertyAddition prop
+      @_refilterMembers()
 
   # `constructor` is no name a member can take: a widget's or a prototype's `constructor` is its
   # class, what every `.constructor` read answers (Class.refuseTheConstructor), so Add… and Rename…
@@ -933,16 +867,6 @@ class InspectorWdgt extends ClippingWdgt
     return false unless name is "constructor"
     @inform "constructor is the class\nitself: no member can\ntake its name"
     true
-
-  # the add core, past the prompt: the popout flow (addProperty) and the class
-  # inspector's destination menu both land here. Adding a member changes my member set, so it
-  # re-filters me (_refilterMembers).
-  _addNamedProperty: (prop) ->
-    @_applyPropertyAddition prop
-    # nosettle-sanctioned: gesture tail shared by two PUBLIC add actions (the popout
-    # OK and the class inspector's destination menu), event-time only -- the re-filter
-    # is that gesture's single settle
-    @_refilterMembers()
 
   # the one differing step between object- and class-inspector add (mirroring applyPropertyEdit
   # above): the object inspector delegates to the Widget-level addOwnProperty twin.

@@ -8,7 +8,7 @@
 // disagree about what a call is.
 //
 // The table is read by real parsers (lib/call-sites.js's header: the browser's own CoffeeScript 2.0.3 over every
-// class fragment as the meta-compiler splits and rewrites it, every mixin, every macro source and the MacroToolkit
+// class fragment as the meta-compiler splits and rewrites it, every macro source and the MacroToolkit
 // heredocs; acorn over the tests repo's scripts), so an implicit object `face: x, toolTip: y` is ONE argument, a
 // nested paren-less call is one argument of the outer call, and a string's contents are never a call.
 //

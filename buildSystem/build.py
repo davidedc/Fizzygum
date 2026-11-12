@@ -62,7 +62,6 @@ BOOT_SCRIPTS_PLACEHOLDER = "<!--FIZZYGUM_BOOT_SCRIPTS-->"
 # We precompile them in order to improve performance and increase
 # code readability
 IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
-IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 
 # HOW A FLAVOUR EXCLUDES CODE: it drops whole PARTS, named in buildSystem/parts.json. There is no
 # marker of any kind in a source file, and no regex here that reads one. Two mechanisms were retired
@@ -340,10 +339,10 @@ def main():
     # We used to ALSO write one js file per class next to the batches, and load
     # none of them: ~500 files and ~3 MB of duplicate source per dev build that
     # only the --homepage flavour bothered to delete again. Arc 4 dropped them.
-    # The two exceptions -- the Class and Mixin sources -- are still emitted as
-    # their own files below, because those two ARE loaded individually and early
-    # (globalFunctions loads them before any batch: the meta-system has to exist
-    # before a batch's contents can be ingested).
+    # The one exception -- the Class source -- is still emitted as its own file
+    # below, because it IS loaded individually and early (globalFunctions loads it
+    # before any batch: the meta-system has to exist before a batch's contents can
+    # be ingested).
 
     # Batches are cut PER PART, so a part's sources arrive as a unit that can be fetched on its
     # own. Core's batches keep the historical bare `sources_batch_<n>.js` name and every other
@@ -351,7 +350,7 @@ def main():
     # filenames unchanged is what lets a build be compared byte-for-byte against its predecessor
     # (which is how the marker->parts migration was proven not to change what ships).
     batchesOfPart = {}          # part -> [batch file basenames], in load order
-    classesOfPart = {}          # part -> [class/mixin names] (the manifest's class->part map)
+    classesOfPart = {}          # part -> [class names] (the manifest's class->part map)
     accumulator = {}            # part -> the batch text being filled
     minimumSourcesBatchSize = 150000
 
@@ -379,10 +378,9 @@ def main():
         # We check if the file is a class by searching its contents for a
         # class ... declaration.
         is_class_file = IS_CLASS.search(content)
-        is_mixin_file = IS_MIXIN.search(content)
 
 
-        # all the class and mixins files' coffeescript source is emitted as text
+        # every class file's coffeescript source is emitted as text
         # inside a SourceVault.store call, batched into a handful of js files.
         # The boot code loads those batches and then ingests/compiles each source
         # in dependency order. This is what lets Fizzygum load its classes as
@@ -398,7 +396,7 @@ def main():
         # own build and simply does not ship it -- build_it_please.sh drops the directory after the
         # driver has run, the same shape as the font-assets re-prune: derived from the policy, not a
         # list of files to delete.
-        if is_class_file or is_mixin_file:
+        if is_class_file:
 
             # backslashes and quotes and newlines all need
             # to be escaped. Quotes need to be escaped otherwise
@@ -425,10 +423,10 @@ def main():
             sourceName = ntpath.basename(filename).replace(".coffee","")
             escaped_content_with_declaration = STRING_BLOCK % (str(sourceName), str(escaped_content), partOfFile[filename])
 
-            # Class and Mixin are the two sources loaded individually and EARLY, because the
-            # meta-system has to exist before any batch's contents can be ingested (see
-            # globalFunctions' boot sequence). Every other source travels in a batch only.
-            if sourceName == "Class" or sourceName == "Mixin":
+            # Class is the one source loaded individually and EARLY, because the meta-system
+            # has to exist before any batch's contents can be ingested (see globalFunctions'
+            # boot sequence and its META_SYSTEM_SOURCES). Every other source travels in a batch only.
+            if sourceName == "Class":
                 with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceName+"-source.js", "w", "utf-8") as f:
                     f.write(escaped_content_with_declaration)
 

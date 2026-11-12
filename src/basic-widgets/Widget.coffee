@@ -4337,10 +4337,10 @@ class Widget extends TreeNode
     reading? and !reading.after?
 
   # A member's code that opens with a function IS that function: a statement after it is no part of the
-  # function, yet every load and copy compiling the code back (injectProperty, a replayed class or mixin
+  # function, yet every load and copy compiling the code back (injectProperty, a replayed class
   # edit) would run it again. So every door that stores a member's code -- an object's
   # (injectProperty, the paint tools' code blurbs: compilePropertyAssignments), a class's
-  # (Class.applyMemberEdit), a mixin's (Mixin.applyMemberEdit) -- refuses such code before it changes
+  # (Class.applyMemberEdit) -- refuses such code before it changes
   # anything, as code that does not compile is refused: the refusal reads like a compile error
   # (`isCompileError`), placed on the statement's line as typed (`typedLocation`, a line and no column),
   # which the saving gesture tells the person (Widget._savingTypedCode). The load holds a file to the

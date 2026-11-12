@@ -410,7 +410,7 @@ function readingOf(file) {
 // a line holding a comment that carries `marker`
 const marks = (line, marker) => (line.comment || '').includes(marker);
 
-const { methodBoundary } = require('./lib/coffee-method-header');   // class methods AND mixin members, see below
+const { methodBoundary } = require('./lib/coffee-method-header');   // class methods, see below
 
 // A CLASS-SIDE method's TIER is read from its bare name. The shared grouping reports it as `@name` (so no
 // gate mistakes it for an instance method of that name) and every message here names it so; but the tier
@@ -418,18 +418,10 @@ const { methodBoundary } = require('./lib/coffee-method-header');   // class met
 // exactly as for an instance method, so every rule that classifies a method by its name asks tierName.
 const tierName = (name) => (name && name.startsWith('@') ? name.slice(1) : name);
 
-// --- mixin-DSL awareness: ATTRIBUTE methods defined inside a mixin instead of lumping them into
-// onceAddedClassProperties. A mixin (src/mixins/*) declares its methods INSIDE a 2-space
-// `onceAddedClassProperties: (fromClass) -> @addInstanceProperties fromClass, { … }` block; the method
-// keys sit one nesting level deeper -- 4-space or 6-space (6 in every mixin in the tree
-// today). The shared lib/coffee-method-header.js methodBoundary() locks the hash indent from the
-// FIRST sub-method and treats siblings at that indent as headers (deeper lines = their bodies); for a
-// NON-mixin file mixinHashIndent stays null and the grouping is the 2-space METHOD_HEADER one.
-// What a fully-closed line does to the current method grouping:
-//   { method, mixinHashIndent, kind:'header'|'end' }  -- the line STARTS or ENDS a method
-//   null                                              -- the line is inside the current method's body
-// mixinHashIndent: null = not in a mixin block; -1 = in onceAddedClassProperties, awaiting the first
-// sub-method to lock the indent; >0 = the locked sub-method indent.
+// --- method grouping: the shared lib/coffee-method-header.js methodBoundary(), the 2-space
+// METHOD_HEADER / STATIC_METHOD_HEADER one. What a fully-closed line does to the current method grouping:
+//   { method, kind:'header'|'end' }  -- the line STARTS or ENDS a method
+//   null                             -- the line is inside the current method's body
 
 // [G] pre-pass: the set of public methods that self-settle via the SINGLE-mutation tier (their body
 // calls @_settleLayoutsAfter) -- the structural wrappers a low-level method must NOT call (it must reach
@@ -467,19 +459,19 @@ function discoverSettlingWrappers(files) {
   for (const file of files) {
     const klass = path.basename(file, '.coffee');   // one class per file; filename == class name
     const { lines, masked } = readingOf(file);
-    let method = null, mixinHashIndent = null, methodSettles = false;
+    let method = null, methodSettles = false;
     const flush = () => { if (method) addTo(methodSettles ? settlingClassesByName : plainClassesByName, method, klass); };
     for (let n = 0; n < lines.length; n++) {
       let code = masked[n].bare;
       const ext = code.match(/^class\s+([A-Za-z_]\w*)\s+extends\s+([A-Za-z_]\w*)/);
       if (ext) parentOf.set(ext[1], ext[2]);
       if (!masked[n].continuesLiteral) {           // a line inside a heredoc holds no boundary
-        const b = methodBoundary(lines[n], mixinHashIndent);
+        const b = methodBoundary(lines[n]);
         if (b) {
           flush();
           // a class-side method is no wrapper: there is no instance for its `@_settleLayoutsAfter` to settle,
           // and as a definer it would stand in for the instance method of its bare name in nearestDefinerKind
-          method = b.static ? null : b.method; mixinHashIndent = b.mixinHashIndent; methodSettles = false;
+          method = b.static ? null : b.method; methodSettles = false;
           if (b.kind === 'header' && !(code = inlineBodyOf(code))) continue;
         }
       }
@@ -496,7 +488,8 @@ function discoverSettlingWrappers(files) {
 }
 
 // [G] @-self resolution: walk `klass` + its ancestors to the NEAREST class defining `name`.
-// Returns 'settling' | 'plain' | null (not found in the chain — e.g. a mixin-provided method).
+// Returns 'settling' | 'plain' | null (not found in the chain — e.g. a member a *TestSupport class installs
+// at boot, which no class body of the chain defines).
 function nearestDefinerKind(name, klass, g) {
   const seen = new Set();                                   // cycle guard (defensive)
   for (let c = klass; c && !seen.has(c); c = g.parentOf.get(c)) {
@@ -512,7 +505,6 @@ function checkFile(file, violations, gCtx, warnings) {
   const selfClass = path.basename(file, '.coffee');   // one class per file; filename == class name
   const { lines, masked } = readingOf(file);
   let method = null;          // current method name (null = not inside a 2-space method)
-  let mixinHashIndent = null; // mixin-DSL grouping state (see methodBoundary): null = not in a mixin block
   let methodMarked = false;   // [F]: has a `# layout-apply-sanctioned` sign-off appeared in the current method?
   let methodNoSettleMarked = false;   // [G]: has a `# nosettle-sanctioned` sign-off appeared in the current method?
   let methodGuardReturnLine = -1;     // [H]: line of a GUARD return seen before any _settleLayoutsAfter in this method
@@ -521,10 +513,10 @@ function checkFile(file, violations, gCtx, warnings) {
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
     let code = masked[n].bare;
-    if (!masked[n].continuesLiteral) {             // header detection only outside a heredoc (mixin-aware)
-      const b = methodBoundary(raw, mixinHashIndent);
+    if (!masked[n].continuesLiteral) {             // header detection only outside a heredoc
+      const b = methodBoundary(raw);
       if (b) {
-        method = b.method; mixinHashIndent = b.mixinHashIndent;
+        method = b.method;
         methodMarked = false; methodNoSettleMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false;
         if (b.kind === 'header') {
           // [L] callback NAME convention (checked once, at the def): derivable shape + legacy-fragment ban (see consts above).
@@ -724,7 +716,6 @@ function checkDoubleSettle(file, gCtx, violations) {
   const rel = srcKey(file);
   const selfClass = path.basename(file, '.coffee');
   const { lines, masked } = readingOf(file);
-  let mixinHashIndent = null;
   let m = null;   // current method accumulator: { name, settleLine, marked, sites: [{n, label}] }
   const flush = () => {
     if (m && m.settleLine >= 0 && !RECALC_WHITELIST.has(tierName(m.name)) && !m.marked) {
@@ -738,10 +729,9 @@ function checkDoubleSettle(file, gCtx, violations) {
     const raw = lines[n];
     let code = masked[n].bare;
     if (!masked[n].continuesLiteral) {
-      const b = methodBoundary(raw, mixinHashIndent);
+      const b = methodBoundary(raw);
       if (b) {
         flush();
-        mixinHashIndent = b.mixinHashIndent;
         if (b.kind === 'header' && b.method) m = { name: b.method, settleLine: -1, marked: false, sites: [] };
         if (!(b.kind === 'header' && b.method && (code = inlineBodyOf(code)))) continue;   // a one-liner's body is read
       }
@@ -802,8 +792,7 @@ function main() {
   }
   // [G] pre-pass: discover the structural self-settling wrappers (single-tier), then a regex that
   // matches a CALL to one — capturing the @/. sigil so checkFile can resolve @-SELF calls by class
-  // (plan P4.3). Empty-set guard keeps the regex well-formed (a few dozen names in practice;
-  // mixin-aware -- see methodBoundary -- so a settling wrapper defined inside a mixin is attributed too).
+  // (plan P4.3). Empty-set guard keeps the regex well-formed (a few dozen names in practice).
   const gCtx = discoverSettlingWrappers(files);
   const wrapperNames = [...gCtx.settlingClassesByName.keys()];
   gCtx.WRAPPER_CALL = wrapperNames.length

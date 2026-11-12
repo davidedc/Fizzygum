@@ -39,9 +39,7 @@
 // A stink may declare `sanctioned`: a list of { file, member, count, why } naming the sites INSIDE
 // scanned files where a hit is not the smell — a literal that is data, not a look decision. `file`
 // is src-relative; `member` is the hit's ENCLOSING MEMBER (the nearest class-body key above it at
-// the 2-space indent — a method, a field, a static `@NAME` —, or in a mixin file the nearest key at
-// the indent of its instance-property hash's members, the one the shared grouping locks
-// (lib/coffee-method-header.js mixinMemberIndent: 4 or 6 spaces); a deeper key is an option
+// the 2-space indent — a method, a field, a static `@NAME` —; a deeper key is an option
 // object's and never names a member — or, reached first, the code at the left margin: a definition
 // there (lib/name-definitions.js definedName: a boot file's top-level function, an expando, a
 // prototype extension) names the member, any other code is `(top)`; a literal's body is skipped).
@@ -61,7 +59,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { mixinMemberIndent } = require('./lib/coffee-method-header');   // a mixin hash's member indent
 const { rejectUnknownArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
@@ -86,7 +83,7 @@ const ROOTS = sourceRoots(ARGV, 'stinks');
 //
 // NB the counts are the ENGINE's (each line as lib/coffee-mask.js reads it): a ratchet measures REGRESSION.
 const STINKS = [
-  { id: 'debugger-statement', baseline: 30,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it), 33->32 on 2026-11-11 (WorldWdgt._stepWidget's, a catch below already handles an undefined step), 32->31 on 2026-11-11 (Duplicator's closed set: a value a copy cannot carry is a refusal the person is told, not a programmer's stop), 31->30 on 2026-11-12 (HighlightableMixin's, deleted with the mixin)
+  { id: 'debugger-statement', baseline: 28,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it), 33->32 on 2026-11-11 (WorldWdgt._stepWidget's, a catch below already handles an undefined step), 32->31 on 2026-11-11 (Duplicator's closed set: a value a copy cannot carry is a refusal the person is told, not a programmer's stop), 31->30 on 2026-11-12 (HighlightableMixin's, deleted with the mixin), 30->28 on 2026-11-12 (meta/Mixin.coffee's two, deleted with the mixin mechanism)
     why: 'a debugger statement is left-in debug cruft; it hard-stops execution whenever devtools are open',
     re: /^\s*debugger\b/ },
   // `undefined-literal` (baseline 83) was DELETED on 2026-08-13: it enforced `nil` OVER `undefined`,
@@ -104,7 +101,6 @@ const STINKS = [
       { file: 'harness/AutomatorLoader.coffee', member: '_loadTestMetadata', count: 1, why: "a loaded script tag's `onload` cleared: the DOM's own reset value" },
       // the meta-objects' record stores: an object with NO prototype, which Object.create spells with `null` alone
       { file: 'meta/Class.coffee', member: 'getSourceOfAllProperties', count: 2, why: "Object.create's argument for an object with no prototype (`undefined` throws): a record store answers no inherited name" },
-      { file: 'meta/Mixin.coffee', member: 'constructor', count: 1, why: "Object.create's argument for an object with no prototype (`undefined` throws): a record store answers no inherited name" },
       { file: 'duplication/Duplicator.coffee', member: '_shellFor', count: 1, why: "Object.create's argument for an object with no prototype (`undefined` throws): a prototype-less object copies as one" },
     ],
     re: /\bnull\b/ },
@@ -186,7 +182,7 @@ const STINKS = [
     why: 'a comment arguing with itself ("the below is actually correct", "to be clear") is process residue — state the surviving constraint once, plainly',
     // (`to be clear,` ends in a comma, which no `\b` can follow before a space: it is matched on its own)
     re: /\b(the (below|above) is|is actually (correct|right|fine|wrong))\b|\bto be clear,/i },
-  { id: 'comment-narration', baseline: 87, scope: 'comments',   // tightened 105->104 on 2026-08-04 (comments-audit sweep removed one; locking the gain in); 104->103 on 2026-08-15 (MenuItemSpec's header stopped narrating what its constructor replaced when that constructor changed again); 103->102 on 2026-08-18 (SwitchButtonWdgt's setter comments rewritten in the settle-grammar conformance); 102->101 on 2026-08-21 (the shared teardown core's contract block stopped narrating what the two callers "used to" look like and states the two obligations instead); 101->100 on 2026-08-21 (the pointer hit-test rework: MenuWdgt's block states which object owns the shape answer instead of which one carried it before); 100->99 on 2026-08-25 (command-panel unification P1: de-positionalizing MenuItemWdgt.menuEntryPreferredWidth off @children[0] dropped its history receipt about the `debugger` statement the guard replaced -- the comment now states what the measure reads and why, by name); 99->96 on 2026-10-17 (redesign W1: the frame, strip and handle comments the wave rewrote state constraints instead of what they replaced); 96->92 on 2026-10-19 (redesign W4: the rewritten clock appearance and desktop-icon holder state what they draw instead of what they replaced); 92->91 on 2026-10-20 (redesign W5: the toolbar text tools' base class states what its tools share instead of what they once extended); 91->90 on 2026-10-21 (redesign G-A: the C-F demo icon states it inherits its parent's art instead of what it used to copy); 90->88 on 2026-10-21 (redesign G-B: HighlighterWdgt's header and style channel state its two forms instead of what it used to do and no longer uses); 88->87 on 2026-10-25 (residue-2 arc: ViewportWdgt's release-flush comment states the cadence-collapse rule instead of what the old flush used to drop)
+  { id: 'comment-narration', baseline: 84, scope: 'comments',   // tightened 105->104 on 2026-08-04 (comments-audit sweep removed one; locking the gain in); 104->103 on 2026-08-15 (MenuItemSpec's header stopped narrating what its constructor replaced when that constructor changed again); 103->102 on 2026-08-18 (SwitchButtonWdgt's setter comments rewritten in the settle-grammar conformance); 102->101 on 2026-08-21 (the shared teardown core's contract block stopped narrating what the two callers "used to" look like and states the two obligations instead); 101->100 on 2026-08-21 (the pointer hit-test rework: MenuWdgt's block states which object owns the shape answer instead of which one carried it before); 100->99 on 2026-08-25 (command-panel unification P1: de-positionalizing MenuItemWdgt.menuEntryPreferredWidth off @children[0] dropped its history receipt about the `debugger` statement the guard replaced -- the comment now states what the measure reads and why, by name); 99->96 on 2026-10-17 (redesign W1: the frame, strip and handle comments the wave rewrote state constraints instead of what they replaced); 96->92 on 2026-10-19 (redesign W4: the rewritten clock appearance and desktop-icon holder state what they draw instead of what they replaced); 92->91 on 2026-10-20 (redesign W5: the toolbar text tools' base class states what its tools share instead of what they once extended); 91->90 on 2026-10-21 (redesign G-A: the C-F demo icon states it inherits its parent's art instead of what it used to copy); 90->88 on 2026-10-21 (redesign G-B: HighlighterWdgt's header and style channel state its two forms instead of what it used to do and no longer uses); 88->87 on 2026-10-25 (residue-2 arc: ViewportWdgt's release-flush comment states the cadence-collapse rule instead of what the old flush used to drop); 87->84 on 2026-11-12 (the mixin mechanism's teardown deleted the comments that narrated it)
     why: 'history narration ("used to", "previously", "no longer", "in the old model") belongs in docs/archive/ with a pointer, not inline — a comment states what IS',
     re: /\b(used to\b|previously\b|no longer\b|in the old (model|way|code)\b)/i },
   { id: 'commented-out-debug', baseline: 0, scope: 'comments',
@@ -211,18 +207,16 @@ const srcRelative = p => sourceName(p, ROOTS);
 
 // the ENCLOSING MEMBER of line i, as `sanctioned` names it (header comment): walking up from the hit, past every
 // line that continues a literal an earlier line opened (a heredoc's body defines nothing), the FIRST of
-//   - a class-body key at the 2-space indent, or — in a mixin file — at `memberIndent`, the indent its hash's members
-//     sit at (mixinMemberIndent; undefined for a file with no mixin member): its name. A member is any KEY there, a
-//     data member's as well as a method's, because a sanctioned literal can sit in a field; `Foo::bar =` is no key;
+//   - a class-body key at the 2-space indent: its name. A member is any KEY there, a data member's as well as a
+//     method's, because a sanctioned literal can sit in a field; `Foo::bar =` is no key;
 //   - code at the left margin, which ends whatever body was above it: the name lib/name-definitions.js definedName
 //     reads there (a boot file's top-level function, an expando, a prototype extension), or `(top)` for any other
 //     code (a class header, a top-level statement — the hit's own line included).
 const CLASS_BODY_KEY = /^  (@?[A-Za-z_$][\w$]*)\s*:(?!:)/;
-function enclosingMember(lines, masked, i, memberIndent) {
-  const memberKey = memberIndent === undefined ? undefined : new RegExp(`^ {${memberIndent}}(@?[A-Za-z_$][\\w$]*)\\s*:(?!:)`);
+function enclosingMember(lines, masked, i) {
   for (let j = i; j >= 0; j--) {
     if (masked[j].continuesLiteral) continue;
-    const m = lines[j].match(CLASS_BODY_KEY) || (memberKey && lines[j].match(memberKey));
+    const m = lines[j].match(CLASS_BODY_KEY);
     if (m) return m[1];
     if (/^\S/.test(masked[j].code)) return definedName(masked[j].code) || '(top)';
   }
@@ -253,14 +247,13 @@ for (const stink of STINKS) {
     const rel = srcRelative(p);
     if (stink.exclude && stink.exclude.some(prefix => rel.startsWith(prefix))) continue;
     const { lines, masked } = readingOf(p);
-    const memberIndent = stink.sanctioned ? mixinMemberIndent(lines) : undefined;
     lines.forEach((line, i) => {
       const subject = stink.scope === 'comments' ? masked[i].comment : stink.readsLiterals ? masked[i].code : masked[i].bare;
       if (subject === undefined || !stink.re.test(subject)) return;
       const hit = `${srcRelative(p)}:${i + 1}: ${line.trim()}`;
       hits.push(hit);
       if (stink.sanctioned) {
-        const key = `${rel}::${enclosingMember(lines, masked, i, memberIndent)}`;
+        const key = `${rel}::${enclosingMember(lines, masked, i)}`;
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(hit);
       }
