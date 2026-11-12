@@ -40,7 +40,7 @@ class ScriptWdgt extends CodeAreaWdgt
     new ScriptIconWdgt
 
   # As window content I yield a SPECIAL desktop reference -- a script shortcut that runs the
-  # script on double-click, not a plain window reference. FrameWdgt consults this (from its menu
+  # script on a press, not a plain window reference. FrameWdgt consults this (from its menu
   # createReference AND its _buildShortcutWidget core seam, so a FILED script window keeps its
   # script-ness) instead of testing `@contents instanceof ScriptWdgt`; other contents don't
   # define it and fall to the default reference. (type-test-elimination campaign)

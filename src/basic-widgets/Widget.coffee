@@ -3603,7 +3603,7 @@ class Widget extends TreeNode
   # THE ONE seam deciding WHICH shortcut class represents me, consulted by the core above — so
   # the answer holds on EVERY creation path: the menu's "Create shortcut", a folder-drop filing,
   # and the save-close prompt all reach it. Overridden by FrameWdgt (its CONTENT may specialize
-  # — a script window yields a run-on-double-click ScriptShortcutWdgt) and FolderWindowWdgt
+  # — a script window yields a run-on-press ScriptShortcutWdgt) and FolderWindowWdgt
   # (a folder shortcut). Pure builder: the core places and sizes what this returns.
   _buildShortcutWidget: (referenceName, opts) ->
     new DocumentShortcutWdgt @, referenceName, representsContents: opts.representsContents
@@ -3977,8 +3977,9 @@ class Widget extends TreeNode
   _ownCodeKeySuffix: ""
 
   # PUBLIC notification: a person edited code or state under me, through no setter of mine -- the
-  # object inspector's save, add, rename and remove, or a text's run rows (a console's buttons and a
-  # script window's "Try it" run through them). The person's GESTURE tells me, once, after its edit.
+  # object inspector's save, add, rename and remove, or a run of their code (_runningAPersonsCode: a
+  # text's run rows, which a console's buttons and a script window's "Try it" run through, and a script
+  # shortcut's press, whose receiver is the world). The person's GESTURE tells me, once, after its edit.
   # The edit verbs it drives -- injectProperty and its add, rename and remove twins, evaluateString --
   # tell no one, as a class's meta-object tells no one (Class.applyMemberEdit): the product calls
   # them too, as plumbing (a patch node compiles its formula with evaluateString on every recompute, a
@@ -5668,13 +5669,13 @@ class Widget extends TreeNode
   
   # Widget eval: codeSource compiled (compileFGCode) and run with me as `this`, its value answered.
   # The evaluation alone: like injectProperty, it tells no one -- the person's run gesture tells me
-  # once it has run (TextWdgt._runningTypedCode: a text's run rows, which a console's buttons and a
-  # script window's "Try it" run through), while the patch node that compiles its formula through me
-  # on every recompute is plumbing. A run edits my STATE, not any code: the SourceEditsRegistry does
-  # not hear it, and a world snapshot carries what it left in my fields -- what a file can carry: a
-  # function it left has no source, so the save refuses it and names where it is (Serializer,
-  # encodeFunction), until an inspector's Remove of the field holding it (or, for a function held
-  # directly in a field, a Save of it as CoffeeScript) clears it. Two callers read
+  # once it has run (_runningAPersonsCode, through TextWdgt._runningTypedCode: a text's run rows,
+  # which a console's buttons and a script window's "Try it" run through), while the patch node that
+  # compiles its formula through me on every recompute is plumbing. A run edits my STATE, not any
+  # code: the SourceEditsRegistry does not hear it, and a world snapshot carries what it left in my
+  # fields -- what a file can carry: a function it left has no source, so the save refuses it and
+  # names where it is (Serializer, encodeFunction), until an inspector's Remove of the field holding
+  # it (or, for a function held directly in a field, a Save of it as CoffeeScript) clears it. Two callers read
   # the value: a text's "Show selection" and "Inspect selection" (TextWdgt), which `fg menusweep`'s
   # text roots and `SystemTest_macroEvaluateStringReturnsItsValue` hold to it. opts.typedFrom: where
   # in codeSource the text a person typed begins, for a caller that wraps it (injectProperty); it
@@ -5699,6 +5700,23 @@ class Widget extends TreeNode
     catch error
       @_informOfCompileErrorOrRethrow error, "run"
       return undefined
+
+  # The ONE seam a person's code runs through against its receiver -- a text's run rows
+  # (TextWdgt._runningTypedCode: a console's buttons and a script window's "Try it" too) and a script
+  # shortcut's press (ScriptShortcutWdgt). `run` runs code whose CoffeeScript has COMPILED -- the caller
+  # compiles the person's text first, so text that is not CoffeeScript, which runs nothing, never reaches
+  # me, while a compile error the running code meets (an edit verb it calls, injectProperty) is the run's
+  # own -- and the receiver is told once it has run (sourceChanged), whether it returned or threw part-way:
+  # the lines before a throw took effect, so what they changed shows and a widget they mended gets another
+  # chance. Unless the run destroyed it. Answers what the run answers; anything the run throws goes on
+  # after the receiver was told (should the telling itself throw, that throw goes on instead).
+  _runningAPersonsCode: (receiver, run) ->
+    try
+      run()
+    finally
+      # nosettle-sanctioned: reached from a person's run gesture at event time, never inside a settle --
+      # the receiver's notification is the run's own settle
+      receiver.sourceChanged() unless receiver.destroyed
 
   # The SAVE gestures -- a button that STORES code a person typed (a script window's "Save + close",
   # an inspector's "Save", the paint tools' code prompt's "Save" and "OK") -- run their apply through

@@ -187,15 +187,21 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
       Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
       `BoxyAppearance`), and the static-checks table states no blind spot for it.
-- [ ] **A run that throws, or a script shortcut's press, tells no one it changed anything** (found by the independent
-      review closing "Only an inspector's Save gives a banned widget another chance", in the plan's ledger; reached: a
-      console's "Run all" of a line that mends a widget's step followed by a line that throws, or a script whose code
-      mends it, run by pressing its desktop shortcut). `TextWdgt._runningTypedCode` tells its receiver
-      (`Widget.sourceChanged`) only when the run returned — `_reportingCompileErrors` rethrows a run's own error past
-      the notice, though the run's earlier lines took effect, while a run that did not compile, which changed nothing,
-      is told — and `ScriptShortcutWdgt`'s press runs `ScriptWdgt.doAll` against the world with no notice at all, where
-      the same script's "Try it" tells the world. Neither re-lays out or repaints what the run changed, nor gives a
-      banned widget another chance, while the error log says "Edit/save any source code to give them another chance".
+- [ ] **A person's `throw null` or `throw undefined` stops the world** (found by the independent review closing "A run that
+      throws, or a script shortcut's press, tells no one it changed anything", in the plan's ledger; by reading, a
+      HYPOTHESIS to measure first — possibly a page that stops responding; reached: a console on any widget runs
+      `throw null`, or a step `-> throw undefined`). The input catch and the step catch (`WorldWdgt`) hand the thrown value
+      to `ErrorsLogViewerWdgt.showUpWithError`, which reads `err.stack?` — a TypeError on `null`, thrown inside the catch,
+      out of `doOneCycle`, so the animation loop is never re-armed.
+- [ ] **A JavaScript parse error takes the crash path, and a script runs two ways** (found by the independent review
+      closing "A run that throws, or a script shortcut's press, tells no one it changed anything", in the plan's
+      ledger; reached: a console's "Run all" of `return 1`, or of a regex the engine refuses, `"a".match /[z-a]/`; a script
+      whose code returns early). CoffeeScript compiles both; the JavaScript engine refuses them when it parses, an error
+      no compile mark carries, so the run gesture and the script Save treat it as a crash (the world soft-reset, the
+      Error log showing a stack of the framework's own calls, a clicked menu left open) rather than saying it beside the
+      hand. And a script's "Try it" runs its text with a direct `eval` inside `Widget.evaluateString`, where its
+      shortcut's press runs the saved `new Function(…).call world`: a top-level `return` works in one and is a syntax
+      error in the other.
 - [ ] **A paint that throws after its children blames the last child painted** (found by the independent review
       closing "Only an inspector's Save gives a banned widget another chance", in the plan's ledger; by reading; a
       HYPOTHESIS to measure first — possibly a page hang). `Widget.fullPaint` sets `world.paintingWidget = @` before

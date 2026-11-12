@@ -700,19 +700,19 @@ class TextWdgt extends StringWdgt
   # Widget._reportingCompileErrors, so text that is not code is reported beside the hand rather than
   # thrown at the world. The receiver is asked again here, at the run: a row offered while I stood
   # in a place that names one can be clicked after I moved to one that names none (a pinned menu,
-  # a window closed into the bin), and then I say so instead of running nothing silently. A run is
-  # the person's gesture, so it tells the receiver once it has run (Widget.sourceChanged) -- unless
-  # the code destroyed it: the evaluation alone tells no one.
+  # a window closed into the bin), and then I say so instead of running nothing silently. The text is
+  # compiled FIRST: text that is not CoffeeScript ran nothing, is said beside the hand, and tells no one.
+  # A run is the person's gesture, so it tells the receiver once the code has run, returned or thrown
+  # part-way (Widget._runningAPersonsCode) -- unless the code destroyed it: the evaluation alone tells no
+  # one.
   _runningTypedCode: (code) ->
     receiver = @_codeReceiver()
     unless receiver?
       @inform "There is nothing here for this code to run against"
       return undefined
-    result = @_reportingCompileErrors => receiver.evaluateString code
-    # nosettle-sanctioned: the shared tail of my public run actions, reached at event time and never
-    # inside a settle -- the receiver's notification is the run's own settle
-    receiver.sourceChanged() unless receiver.destroyed
-    result
+    @_reportingCompileErrors =>
+      compileFGCode code, true
+      @_runningAPersonsCode receiver, => receiver.evaluateString code
 
   # selects the whole line (if it's wrapped, just
   # what sits on the very line, not what wraps

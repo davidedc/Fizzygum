@@ -3411,3 +3411,33 @@ for (const s of sites) if (s.absentBefore.length) {
       literally (` → .bpHeld`, ` → .bpMap (Map value)`, ` → .bpSet (Set item)`), the save of the same window the same
       path, and the Duplicate's one pop-up tells it on its "at:" line — on both backends; a plant of the old Duplicator
       (no root, no path) fails it, "copy: undefined | undefined".
+- [x] **A run that throws, or a script shortcut's press, tells no one it changed anything** (found by the independent
+      review closing "Only an inspector's Save gives a banned widget another chance", in the plan's ledger; reached: a
+      console's "Run all" of a line that mends a widget's step followed by a line that throws, or a script whose code
+      mends it, run by pressing its desktop shortcut). `TextWdgt._runningTypedCode` tells its receiver
+      (`Widget.sourceChanged`) only when the run returned — `_reportingCompileErrors` rethrows a run's own error past
+      the notice, though the run's earlier lines took effect, while a run that did not compile, which changed nothing,
+      is told — and `ScriptShortcutWdgt`'s press runs `ScriptWdgt.doAll` against the world with no notice at all, where
+      the same script's "Try it" tells the world. Neither re-lays out or repaints what the run changed, nor gives a
+      banned widget another chance, while the error log says "Edit/save any source code to give them another chance".
+      — CLOSED 2026-11-12 (self-ruled; loop unit U37). RULED: ONE seam for "a person's code ran against a receiver",
+      `Widget._runningAPersonsCode(receiver, run)` — it runs code whose CoffeeScript has compiled and tells the receiver
+      (`sourceChanged`) once it has RUN, returned or thrown part-way (the lines before a throw took effect, a compile
+      error the running code meets of its own making included), unless the run destroyed it. LANDED:
+      `TextWdgt._runningTypedCode` compiles the person's text FIRST — text that is not CoffeeScript ran nothing, is said
+      beside the hand (`_reportingCompileErrors`) and tells no one — then runs `receiver.evaluateString` through the
+      seam; `ScriptShortcutWdgt._activateMyTile` runs `doAll` through it with the world as receiver (a thrown error goes
+      on to the Error log, after the telling); the notices', the run's, `evaluateString`'s and
+      `giveBannedWidgetsAnotherChance`'s comments say so, and three comments' "run on double-click" became a press (a
+      desktop link runs on one). Its first shape decided "did not compile" by the error's compile MARK, so a run that mended a step and then
+      called an edit verb refusing text that is not CoffeeScript told no one — the unit's independent review found it.
+      `Widget` gaining `_runningAPersonsCode` moves one inspector member list:
+      `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly` (images 2 and 3, both lists scrolled by a row's
+      worth), recaptured under the loop's grant (mouse and finger, dpr 1 and 2). PROVEN:
+      `SystemTest_macroEveryCodeChangeGivesBannedWidgetsAnotherChance` gains four cases — a console run that mends a
+      banned probe's step and then throws lifts the ban; a script shortcut's click whose script mends a banned probe
+      lifts it; a console run of text that does not compile says so beside the hand and leaves a banned probe banned,
+      never stepped again; a console run that mends the step and then meets its own compile error (an
+      `injectProperty` of `(`) says it beside the hand and lifts the ban — passing alone and as a FOLLOWER (mouse and
+      finger, no `WORLD_INVENTORY_` line); the old `_runningTypedCode` fails the first case's two checks and the third's
+      "never stepped again", the old `_activateMyTile` the second's two, the first shape (planted) the fourth's two.

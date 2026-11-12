@@ -739,11 +739,11 @@ class FrameWdgt extends Widget
   # in general, windows just create a reference of themselves and
   # that is it. However, windows containing a ScriptWdgt create
   # a special type of reference that has a slightly different icon
-  # and when double-clicked actually runs the script rather than
+  # and when pressed actually runs the script rather than
   # bringing up the script
   # (the trailing opts rides through — the arrow-contract declaration, plan §4.4)
   createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
-    # ScriptWdgt content yields a special script shortcut (runs the script on double-click);
+    # ScriptWdgt content yields a special script shortcut (runs the script on a press);
     # any other content falls to the default reference via super. The content type decides via
     # specialFrameReferenceShortcut instead of `@contents instanceof ScriptWdgt`.
     # (type-test-elimination campaign)
@@ -760,7 +760,7 @@ class FrameWdgt extends Widget
   # The core's shortcut-class seam (Widget._buildShortcutWidget): my content's specialization
   # must hold on the paths that never reach the menu override above — a folder-drop FILING and
   # the save-close prompt both route through _createReferenceAndCloseNoSettle, so a filed script
-  # window keeps its script-ness (a run-on-double-click ScriptShortcutWdgt, not a plain document
+  # window keeps its script-ness (a run-on-press ScriptShortcutWdgt, not a plain document
   # shortcut). Content without a specialization falls to the base document shortcut.
   _buildShortcutWidget: (referenceName, opts) ->
     @contents?.specialFrameReferenceShortcut?(@, referenceName, opts) ? super referenceName, opts

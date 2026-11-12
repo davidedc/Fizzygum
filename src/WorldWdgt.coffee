@@ -1698,7 +1698,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # A person changed something, and it may have mended what made a widget's paint or step throw: every widget banned
   # for it gets another chance -- a hidden one shows again, a passed-by one is stepped again. The world cannot tell
   # which change is the mend, so each asks again. Two notices call me: a person's edit or run under one widget
-  # (Widget.sourceChanged: an object inspector's edits, a text's run rows) and a change of code under every widget
+  # (Widget.sourceChanged: an object inspector's edits, a person's run of code -- a text's run rows, a script
+  # shortcut's press, Widget._runningAPersonsCode) and a change of code under every widget
   # (noteCodeChanged: a class's or a mixin's member edit; a load's replay calls it too, after the load's teardown
   # emptied both lists, so there it finds no one). A change that mended nothing has the widget throw once more, at a
   # throw's whole cost, and be banned again: the error log shown again, and brought to the front; for a paint, the
