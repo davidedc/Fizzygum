@@ -1307,13 +1307,13 @@ class Widget extends TreeNode
   # - for a SliderWdgt's "set target" so you can change properties of another Widget
   # - by the HandleWdgt when you attach it to some other widget
   # Note that this method has a slightly different
-  # version in PanelWdgt (because it clips, so we need
+  # version in ClippingWdgt (because it clips, so we need
   # to check that we don't consider overlaps with
-  # widgets contained in a Panel that are clipped and
+  # widgets contained in a clipping widget that are clipped and
   # hence *actually* not overlapping).
   # The 5-clause "is THIS widget itself a plausible attach/set-target for theWidget" predicate — shared
   # verbatim by plausibleTargetAndDestinationWidgets below and by its clipping variant in
-  # ClippingAtRectangularBoundsMixin (the two differ only in whether they recurse into the children).
+  # ClippingWdgt (the two differ only in whether they recurse into the children).
   # Pure query, no side effects.
   # The overlap test runs in the SCREEN plane: either side can live on a mapped plane (a scrolled
   # pane's residents, an island's), where its @bounds are plane-local and a raw cross-plane
@@ -2316,7 +2316,7 @@ class Widget extends TreeNode
   # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry
   # now (what the FLOWRULE always wanted), a thin wrapper over the shared move core _applyMoveByBase. The "AndNotify"
   # suffix is historical -- but this twin is NOT collapsible into _applyMoveByBase (2026-07-01 twin-collapse verdict):
-  # it is the polymorphic DISPATCH POINT for the ClippingAtRectangularBoundsMixin scroll-optimization OVERRIDE
+  # it is the polymorphic DISPATCH POINT for the ClippingWdgt whole-subtree move OVERRIDE
   # (which repaints via @_changed, not @_fullChanged) and TransformFrameWdgt's anchor-ride override, whereas bare _applyMoveByBase
   # is the uniform base translate the top-down arrange calls for leaf children. Folding the overrides onto _applyMoveByBase
   # would route arrange moves through them on clipping panels and change their damage regions -- so the two names are a
@@ -2328,7 +2328,7 @@ class Widget extends TreeNode
   # The bare move primitives _applyMoveByBase / _applyMoveToBase, used by the top-down arrange for LEAF children: translate me
   # + my children + repaint via the UNIFORM base translate. A leaf child is placed through these rather than
   # _applyMoveBy / _applyMoveTo precisely so its move takes the base path and NOT the
-  # ClippingAtRectangularBoundsMixin / TransformFrameWdgt overrides _applyMoveBy dispatches to (see the
+  # ClippingWdgt / TransformFrameWdgt overrides _applyMoveBy dispatches to (see the
   # _applyMoveBy note above -- that override difference is why the two are not collapsible). _applyMoveByBase is
   # the shared move core (returns true iff it actually moved).
   _applyMoveByBase: (delta) ->
@@ -3147,7 +3147,7 @@ class Widget extends TreeNode
     # hides): mine while my full paint runs, my caller's again once it returns -- so what my content paint
     # draws after my children (the selection overlay) is blamed on me, never on my last child. An override of
     # this full paint that paints after super has, by then, had the blame given back to ITS caller, and takes
-    # it for that paint itself, as the clipping mixin does around its stroke and overlay. A throw leaves the
+    # it for that paint itself, as ClippingWdgt does around its stroke and overlay. A throw leaves the
     # blame where it was, on the widget whose paint threw.
     blameBefore = world.paintingWidget
     world.paintingWidget = @

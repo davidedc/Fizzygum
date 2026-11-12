@@ -34,9 +34,8 @@ frontmost (`world.children` is a back-to-front array), each painting its whole s
 on top. When an opaque window sits in front of that rect, the desktop fill and every rearward
 widget are painted and then **completely overpainted** — pure overdraw.
 
-The architecture already anticipated this: it is a documented TODO (GitHub issue #149) at
-`ClippingAtRectangularBoundsMixin.coffee`, and an opacity-driven child-skip already ships in the
-*shadow* path there. This feature adds the equivalent skip for **content** painting.
+The architecture already anticipated this (GitHub issue #149): an opacity-driven child-skip already
+ships in the *shadow* path of `ClippingWdgt.coffee`. This feature adds the equivalent skip for **content** painting.
 
 ## 2. The mechanism (Avenue A — stateless per-rect pre-scan)
 

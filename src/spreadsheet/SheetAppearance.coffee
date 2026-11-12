@@ -4,7 +4,7 @@
 # page are all paper and a side without its edge would have no boundary at all. Everything else the
 # sheet shows is a child's (its header cells, its cells, its formula bar).
 #   The edge is painted AFTER the children (paintStroke, which the sheet's
-# ClippingAtRectangularBoundsMixin calls once they have all painted), so a partial cell, a header's fill
+# ClippingWdgt calls once they have all painted), so a partial cell, a header's fill
 # or a hosted widget reaching the sheet's edge never paints over it. The two vertical sides stop short
 # of the horizontal ones, so no pixel is filled twice.
 

@@ -1,5 +1,5 @@
 # TransformFrameWdgt — the "island" that makes a widget subtree rotatable/scalable: an
-# invisible clipping frame (extends PanelWdgt for its ClippingAtRectangularBoundsMixin
+# invisible clipping frame (extends PanelWdgt, a ClippingWdgt, for its clipping
 # terminal) that owns ONE content subtree + a TransformSpec, rasterizing content
 # UN-transformed into a back buffer and compositing it through the transform at paint time.
 # DORMANT GUARANTEE: at identity every override here falls back to stock super, so an
@@ -405,7 +405,7 @@ class TransformFrameWdgt extends PanelWdgt
   # directly, bypassing these primitives), so these overrides cover exactly the DIRECT-move paths it
   # early-returns on — the THREE distinct primitives that rigidly translate this island's bounds (each
   # fires for a different move kind, never two for one move): _applyMoveBy (I am the mover — a drag or the
-  # 4D-2a / Bug-F pick-out re-home; ClippingAtRectangularBoundsMixin's move-and-notify path, which bypasses
+  # 4D-2a / Bug-F pick-out re-home; ClippingWdgt's move-and-notify path, which bypasses
   # _applyMoveByBase), _applyMoveByBase (I am arrange-placed as a leaf — the base path), and __commitMoveBy
   # (I am moved as a child of a moving ancestor). Restoring the fixed-point property also makes the pick-out
   # re-home's numeric delta correct under a pinned anchor. Dormant off pinned anchors (the entire pre-Bug-D
@@ -454,7 +454,7 @@ class TransformFrameWdgt extends PanelWdgt
     @_compositeIslandBuffer aContext, clippingRectangle, appliedShadow
 
   # The island is TRANSPARENT (appearance undefined), so it must cast its CONTENT's shadow,
-  # not a box silhouette. PanelWdgt/ClippingAtRectangularBoundsMixin's JustShadow
+  # not a box silhouette. ClippingWdgt's JustShadow
   # takes an opaque-panel shortcut (paint the box silhouette; skip children when
   # alpha==1) — wrong here (there is no box to silhouette). Revert to the BASE Widget
   # behaviour: translate to the shadow offset and paint the CONTENT as shadow, which
@@ -463,8 +463,8 @@ class TransformFrameWdgt extends PanelWdgt
   # as a world child would itself cast that shadow) and a non-identity island casts a
   # correctly SCALED content shadow for free (plan §4.8).
   _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
-    # Explicit GRANDPARENT delegation to the base Widget shadow-paint (was a byte-for-byte inline copy of it,
-    # kept in sync by hand): `super` can't reach it — it binds to PanelWdgt/ClippingAtRectangularBoundsMixin's
+    # Explicit delegation, past my clipping ancestors, to the base Widget shadow-paint (was a byte-for-byte inline copy of it,
+    # kept in sync by hand): `super` can't reach it — it binds to ClippingWdgt's
     # opaque-box override. The @…ContentPotentiallyAsShadow call inside Widget's body still dispatches on `@`
     # to THIS class's override, so the routing (and pixels) are identical.
     Widget::_fullPaintIntoAreaOrBlitFromBackBufferJustShadow.call @, aContext, clippingRectangle, appliedShadow
@@ -720,7 +720,7 @@ class TransformFrameWdgt extends PanelWdgt
 
   # ---------------------------------------------------------------------------
   # the island's TWO FACES for clipping/bounds (plan §4.11); mechanism: docs/architecture/transforms.md §4.
-  # fullClippedBounds / SLOWfullClippedBounds are inherited from ClippingAtRectangularBoundsMixin and
+  # fullClippedBounds / SLOWfullClippedBounds are inherited from ClippingWdgt and
   # delegate to clippedThroughBounds / SLOWclippedThroughBounds, so overriding those two (+ clipThrough)
   # is sufficient. SLOW-oracle twins are overridden IN LOCKSTEP (doubleCheckCachedMethodsResults gate).
   # ---------------------------------------------------------------------------

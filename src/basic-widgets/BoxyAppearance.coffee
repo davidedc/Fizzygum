@@ -198,13 +198,13 @@ class BoxyAppearance extends Appearance
 
   # Is my stroke painted AFTER my widget's children rather than with my fill? Only when I am asked
   # to stroke over them (strokesOverChildren) AND my widget clips its children
-  # (ClippingAtRectangularBoundsMixin: every frame) — the mixin's after-children call is what
+  # (a ClippingWdgt: every frame) — ClippingWdgt's after-children call is what
   # reaches paintStroke below. Then the children paint over my fill and the 1 px outline over them.
   # Otherwise a clipping widget's children paint over my outline.
   _strokesAfterChildren: ->
     @strokesOverChildren and @widget.clipsAtRectangularBounds
 
-  # My after-children stroke: ClippingAtRectangularBoundsMixin calls it (through Widget.paintStroke)
+  # My after-children stroke: ClippingWdgt calls it (through Widget.paintStroke)
   # once my widget's children have all painted, and only in the normal pass. It paints only when
   # _strokesAfterChildren, so the base paint has not stroked already. A standalone entry, so it
   # opens its own scope — local logical coordinates, clipped to the damage box.

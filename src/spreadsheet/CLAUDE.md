@@ -37,7 +37,7 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   its window (`wantsWindowPageGutter`) and paints only its PAGE EDGE, over its children
   (`SheetAppearance`) — every other visible thing is a child widget (see `SheetFormulaBarWdgt` /
   `SheetCellsPanelWdgt` / `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (F6:
-  `ClippingAtRectangularBoundsMixin`, cropping partial-edge headers; the panel crops partial
+  a `ClippingWdgt`, cropping partial-edge headers; the panel crops partial
   cells). It materialises the widget chrome
   (`_buildChromeNoSettle` — sized with the sheet, headers built/trimmed to the visible
   counts) + the VIEWPORT of cells over the 26×100 LOGICAL sheet — the viewport DERIVES from
@@ -72,7 +72,7 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   re-index sweep): rebuilding it there would build its zoom button, which settles, inside the
   `_reactToBeingCopied` / `_afterDeserialization` notifications (the notification-settle gate).
 - `SheetAppearance.coffee` — the sheet's one paint of its own: the page edge, 1 px of
-  `stretchablePageEdge` on all four sides, painted after the children (the clipping mixin's
+  `stretchablePageEdge` on all four sides, painted after the children (`ClippingWdgt`'s
   `paintStroke` call).
 - `SheetCellStyle.coffee` — what the editing tools act on while the sheet is the editor focus: the
   selected cell's STYLE, answering the StringWdgt style protocol the text tools duck-type (`isBold`,
@@ -505,7 +505,7 @@ time, so a saved or duplicated sheet wears the current look.
   (revisits). Every child places ABSOLUTELY from the sheet's frame, which subsumes
   float-follow on the arrange path; scroll re-runs the chrome ensure/trim (header validity
   is origin-dependent near the sheet edge).
-- **One clip for everything**: the sheet augments `ClippingAtRectangularBoundsMixin` (crops
+- **One clip for everything**: the sheet is a `ClippingWdgt` (crops
   the partial HEADERS, which live outside the panel); the panel's inherited clip crops the
   partial CELLS — both byte-invisible at the default size (suite-proven). The sheet gains
   `minimumExtent` = headers + one cell (102×40).

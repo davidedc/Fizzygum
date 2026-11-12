@@ -252,17 +252,16 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (verified 2026-08-18; 8 mixins, 1091 L, 33 consumer slots across 27 files)
+## 3. Inventory (7 mixins, 1014 L, 28 consumer slots across 21 files, counted 2026-11-12; the rows as verified 2026-08-18)
 
-Six live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
-in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 33 is the
-sum of the per-mixin consumer counts below, spread over 27 distinct files: `CreatorButtonWdgt` takes
-three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
+Five live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
+in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 28 is the
+sum of the per-mixin consumer counts below, spread over 21 distinct files: `CreatorButtonWdgt` and
+`GlassBoxTopWdgt` take three each, and `PaletteWdgt`, `StringWdgt` and
 `EditorContentPropertyChangerButtonWdgt` take two each.
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
-| `ClippingAtRectangularBoundsMixin` | 195 | 6 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `VerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt`, `InspectorWdgt` (clips its bands' overflowing controls, naked or windowed) | base class + unrelated branches | yes |
 | `ControllerMixin` | 516 | 7 — `SliderWdgt`, `StringWdgt` (whence `TextWdgt`/`SimpleTextWdgt` inherit it — SimpleTextWdgt's own augment was the double-injection the boot guard now forbids), `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | yes — `graphEdgesOut` (super-composed, graph-edges §4.2) |
 | `HighlightableMixin` | 54 | 6 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
@@ -280,14 +279,12 @@ for the inspector.)
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core — all 8 current mixins):** `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
+- **Genuine (the keep-core — all 7 current mixins):** `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
   patch-programming — and the home the dataflow engine deliberately built on),
   `HighlightableMixin` (input-hook state machine across ≥4 branches),
   `BackBufferMixin` (paint-path override; load-bearing for the unified shadow mechanism
   — the blit at α is WHY a transparent text widget's shadow is its glyphs),
-  `ClippingAtRectangularBoundsMixin` (overrides the geometry protocol — `fullBounds`,
-  cache-invalidation super-chains; the `ClippingBoxWdgt` diamond: `BoxWdgt` painting +
-  panel clipping), `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
+  `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
   bubbling to a coordinating parent, across Viewport/Panel/Widget branches),
   `KeepsRatioWhenInVerticalStackMixin`,
   `WidgetCreatorAndSmartPlacerOnClickMixin` (barely — 2 unrelated leaves), `ParentStainerMixin`
@@ -329,7 +326,7 @@ objects on the paint path). Three shapes, with costs:
   `@highlighter?.onMouseDown()`; consumers just instantiate the collaborator — zero
   stubs). Clean Strategy; precedent exists (Appearance). Frictions: adds a field + call
   site per hook to `Widget` (against the shrink-Widget doctrine), and for
-  Highlightable/BackBuffer/Clipping those hooks are the input/paint/geometry hot paths
+  Highlightable/BackBuffer those hooks are the input/paint hot paths
   — the most determinism-critical code, where restructuring means screenshot-level
   re-verification for zero functional gain.
 - **C — invert to an external engine** (visitor). Right where the "mixin" is really one
@@ -356,9 +353,8 @@ recurring conversion costs regardless of shape.
   `Serializer`/`Deserializer` all arrived that way. The one fold of misfiled mixins (§4) went to
   *inheritance homes* — fold into consumer / shared base — not to delegation, which the §1
   policy reserves for liftable responsibilities.
-- **New subsystems keep choosing mixins**: the spreadsheet (`SimpleSpreadsheetWdgt` → Clipping;
-  `SheetModel`/`SheetCellRecord` → Duplicator), the frame model (`FrameWdgt` → Clipping),
-  transforms (`TransformSpec` → Duplicator), the patch-programming base (`PatchNodeWdgt` →
+- **New subsystems keep choosing mixins**: the spreadsheet (`SheetModel`/`SheetCellRecord` →
+  Duplicator), transforms (`TransformSpec` → Duplicator), the patch-programming base (`PatchNodeWdgt` →
   Controller). `ControllerMixin` is the cohesive home of the whole wire-client protocol
   (`_fireConnection`, `firesPerEvent`, the shared connect-menu block); shared menu code lives
   INSIDE it. `docs/plans/creation-and-templates-plan.md` builds `FactoryWdgt` on the `Duplicator`.
@@ -381,7 +377,7 @@ Costs of keeping (all real, all now bounded):
 - two unsynchronized mixin detectors (open, cheap to gate).
 
 Costs of removing (why it loses):
-- the four biggest genuine-MI mixins (Clipping/Controller/Highlightable/BackBuffer) need
+- the three biggest genuine-MI mixins (Controller/Highlightable/BackBuffer) need
   stub forests (≈100+ methods) or new `Widget`
   extension points on the paint/input/geometry hot paths — determinism-critical,
   behaviour-neutral churn of exactly the kind this project's case law banks rather than

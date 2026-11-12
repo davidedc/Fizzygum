@@ -169,7 +169,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
   # drag lift's offset a caption's descenders reach below the plate as darker marks. The pass keeps
   # the offset and alpha it is given (my desktop shadow at rest, the lift while I am carried, an
   # ancestor's when one casts me). As for an opaque clipping panel
-  # (ClippingAtRectangularBoundsMixin), this holds while I am opaque: a translucent me lets my
+  # (ClippingWdgt), this holds while I am opaque: a translucent me lets my
   # children's coverage through.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     if appliedShadow? and @alpha == 1

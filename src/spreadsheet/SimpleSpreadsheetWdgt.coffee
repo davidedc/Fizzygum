@@ -69,15 +69,14 @@
 # Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers, which
 # I join when built, + processKeyDown, which acts while I am the editor focus); never a DOM listener.
 
-class SimpleSpreadsheetWdgt extends Widget
+class SimpleSpreadsheetWdgt extends ClippingWdgt
 
-  # F6: the sheet CLIPS at its bounds — ONE clip for everything. Partial edge cells stick
+  # F6: the sheet CLIPS at its bounds, as a ClippingWdgt — ONE clip for everything. Partial edge cells stick
   # past the cells panel's right/bottom edge and the panel's own clip crops them; but
   # partial-column/row HEADERS are direct sheet children OUTSIDE the panel (frozen), and
   # without a sheet-level clip they would paint past the sheet's edge into the window. At
   # the default size the clip crops nothing (chrome + cells tile the sheet rect exactly) —
   # byte-identity proven by the whole pre-F6 suite, not argued.
-  @augmentWith ClippingAtRectangularBoundsMixin, @name
 
   # transient UI state (rebuilt by interaction or from the tree, never document data): the
   # in-progress edit is dropped from a snapshot (a mid-edit save restores to a settled,

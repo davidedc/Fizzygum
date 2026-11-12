@@ -14,13 +14,12 @@
 # a frame is stackable and dockable anywhere, and every transition (pin, nest, dock, undock,
 # duplicate) is a state change or a reparent, never a rebuild.
 
-class FrameWdgt extends Widget
+class FrameWdgt extends ClippingWdgt
 
   # A frame's content can transiently stick out of the frame (mid width/height
-  # negotiation, mid drop), so clip at the bounds. The mixin also carries the
-  # _applyMoveTo scroll-optimization override -- the repaint path a parent stack
+  # negotiation, mid drop), so I clip at my bounds, as a ClippingWdgt. That base also
+  # carries the _applyMoveBy whole-subtree move override -- the repaint path a parent stack
   # takes when it moves this frame as a tracking-container child.
-  @augmentWith ClippingAtRectangularBoundsMixin, @name
 
   # my four edge slots, in the order my arrange places them: the two full-width bands first, so
   # the flank columns share the vertical span left between them
@@ -2140,14 +2139,14 @@ class FrameWdgt extends Widget
     return undefined unless radii? and Math.max(radii...) > 0
     radii
 
-  # My children's paint, intercepted at the content-recursion point the clipping mixin owns (the
-  # ViewportWdgt idiom). With no rounded child clip it IS the mixin's body, reached through
-  # PanelWdgt's injected copy (`super` here would bind to base Widget's un-clipping version); with
-  # one it is that body (kept in lockstep with it) with my children painted inside my outline.
+  # My children's paint, intercepted at the content-recursion point ClippingWdgt owns (the
+  # ViewportWdgt idiom). With no rounded child clip it IS ClippingWdgt's body, reached through
+  # `super`; with one it is that body (kept in lockstep with it) with my children painted inside
+  # my outline.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     radii = @_roundedChildClipRadii()
     if !radii?
-      return PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow.call @, aContext, clippingRectangle, appliedShadow
+      return super aContext, clippingRectangle, appliedShadow
     damagedPartOfFrame = @boundingBox().intersect clippingRectangle
     if !damagedPartOfFrame.isEmpty()
       if aContext == world.worldCanvasContext
@@ -2155,14 +2154,14 @@ class FrameWdgt extends Widget
       @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
       @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfFrame, appliedShadow, radii
 
-  # The shadow-pass twin. An OPAQUE frame's silhouette is its own box and paints no child (the
-  # mixin's short-circuit), so only a translucent frame has children to clip here — under the
+  # The shadow-pass twin. An OPAQUE frame's silhouette is its own box and paints no child
+  # (ClippingWdgt's short-circuit), so only a translucent frame has children to clip here — under the
   # shadow offset this pass translates by, which the clip follows because it is traced under the
   # context's own matrix.
   _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     radii = @_roundedChildClipRadii()
     if !radii? or @alpha == 1
-      return PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferJustShadow.call @, aContext, clippingRectangle, appliedShadow
+      return super aContext, clippingRectangle, appliedShadow
     clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       damagedPartOfFrame = @boundingBox().intersect clippingRectangle
@@ -2255,7 +2254,7 @@ class FrameWdgt extends Widget
   # the host of the selection ring (WorldWdgt.editorSelectionRingHost) -- my page's ring, over that
   # fill and under my children. Both of my paint paths reach here before they paint my children: the
   # rounded child clip's (_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow above) and
-  # the clipping mixin's. The shadow pass never paints the ring: a selection is no part of my
+  # ClippingWdgt's. The shadow pass never paints the ring: a selection is no part of my
   # silhouette.
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     super

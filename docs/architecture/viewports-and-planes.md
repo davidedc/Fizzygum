@@ -11,11 +11,11 @@ tables.
 
 A scrolling container decomposes into three responsibilities, each with an honest home:
 
-1. **The viewport** — `ViewportWdgt extends Widget` (NOT a panel: its children are chrome, not
+1. **The viewport** — `ViewportWdgt extends ClippingWdgt` (NOT a panel: its children are chrome, not
    content). An invisible-in-effect composite: its color/alpha MIMIC the plane's, so its own
    painted rect always lies under the plane, indistinguishable (only the pop-up pair pins a
-   true `alpha 0`); the `RectangularAppearance` is there for hit-testing parity. It wears
-   `ClippingAtRectangularBoundsMixin` directly and owns three pieces of chrome: the contents
+   true `alpha 0`); the `RectangularAppearance` is there for hit-testing parity. It clips at its
+   bounds, as every `ClippingWdgt` does, and owns three pieces of chrome: the contents
    panel and two `SliderWdgt` bars. `add` redirects any non-chrome child into the contents
    (chrome self-identifies via `attachesToViewportDirectly?()`). Scrolling never moves the
    plane: the offset is STORED TRUTH — two integer scalars `scrollOffsetX/Y`, frame-relative
@@ -341,7 +341,7 @@ generic viewport is "viewport"; composites take their contents' name
   press facts are exempt by construction: the hand drives the press climb and its endings and
   maps the pointer into EACH receiver's plane (the press lifecycle,
   [`input-and-gestures.md`](input-and-gestures.md)). The remaining horizon — lifting the offset + paint
-  interception from `ViewportWdgt` to the clipping-mixin level, making scrollability a
+  interception from `ViewportWdgt` to the clipping base class (`ClippingWdgt`), making scrollability a
   property of every panel — is designed but deliberately unlifted until a second user
   exists (the plan's owner-gated Phase 4).
 - The color/alpha up-relay serves EVERY plane: the pair lives on `PanelWdgt` (parent-soaked,

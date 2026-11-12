@@ -6,7 +6,7 @@
 # boundary), else along each side where its container letterboxes it and none along a side flush
 # with its container, where what lies past the container's edge is the boundary
 # (StretchablePanelWdgt._insetEdgeRects). Painted in paintStroke's place, so after the page's
-# children too (ClippingAtRectangularBoundsMixin re-strokes a clipping panel's border over its
+# children too (ClippingWdgt re-strokes a clipping panel's border over its
 # children), as the outline of any other panel is.
 
 class StretchablePanelAppearance extends RectangularAppearance

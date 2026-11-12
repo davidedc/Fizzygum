@@ -26,7 +26,7 @@ were untransformed — the **virtual plane**. The transform is applied only at c
 time. So layout, arrange, settle, and content code never see the matrix; only rendering,
 damage-mapping, and hit-testing do.
 
-`TransformFrameWdgt extends PanelWdgt` to inherit `ClippingAtRectangularBoundsMixin`: a
+`TransformFrameWdgt extends PanelWdgt` to inherit `ClippingWdgt`'s clipping: a
 clipping frame whose bounds-recursion terminates at itself and whose children clip to its
 box. The island's own `@bounds` is the **slot box** — integer, axis-aligned, absolute,
 ordinary Fizzygum geometry that layout sees. The frame paints no chrome of its own

@@ -66,7 +66,7 @@ any corner that REACTS is `_`, because `_changed`/`_reLayout*` are orchestration
 
 Only extent / moveBy / moveTo carry a `*Base` bypass twin — the corners the top-down arrange must be able to place a
 child through WITHOUT re-entering a subclass apply (extent overrides: the tracking-transform island / scroll / text /
-list; moveBy overrides: the transform island + the clipping mixin; moveTo has no polymorphic override today, but its
+list; moveBy overrides: the transform island + `ClippingWdgt`; moveTo has no polymorphic override today, but its
 `*Base` twin is itself overridden by the transform island to ride its pinned anchor).
 Bounds / width / height are polymorphic-only (no override to bypass). The bounds corner has two
 apply forms: `_applyBounds` — `setBounds`'s twin, a subtree-FOLLOWING place+size one-shot for the ubiquitous
@@ -83,7 +83,7 @@ listing it would false-trip rule [C] on its `moveWithin → moveTo` call.)
 > ¹ The `_commit*AndNotify` corners collapsed with the seam: `_commitExtentAndNotify` → the `__commitExtent` leaf;
 > `_commitBoundsAndNotify` + the silent bounds twin → one **`_commitBounds`**, a silent origin+extent commit, leaf-like
 > but single-`_` because it composes the extent leaf. The *move* twins did **NOT** collapse: polymorphic `_applyMoveBy`
-> is the dispatch point for the ClippingAtRectangularBoundsMixin / TransformFrameWdgt move overrides (the clipping one
+> is the dispatch point for the ClippingWdgt / TransformFrameWdgt move overrides (the clipping one
 > repaints via `@_changed`, not `@_fullChanged`; the island rides its pinned anchor), whereas `_applyMoveByBase` is the
 > uniform base translate the arrange needs for leaf children — a genuine dispatch distinction, not a redundant twin.
 
@@ -319,10 +319,10 @@ window / pinnable-window** via a mode flag — spanning what are now `PanelWdgt`
 deliberately does **NOT** do that merge — the SURFACE role stays distinct from the CHROME role, each named
 for what it is:
 
-- **`PanelWdgt`** — the general **clipping container** (the `ClippingAtRectangularBoundsMixin` home; 12 subclasses).
+- **`PanelWdgt`** — the general **clipping container** (a `ClippingWdgt`; 12 subclasses).
   No transient/pin behaviour, no chrome, and never gains either — a panel is not a candidate manifestation
   of anything else.
-- **`FrameWdgt`** — `extends Widget`: **chrome / identity**, holding a clipping panel for its content. Its
+- **`FrameWdgt`** — `extends ClippingWdgt`: **chrome / identity**, holding a clipping panel for its content. Its
   internal-vs-external skin, its bar roster, and its shadow are all DERIVED from state and parentage (the
   frame-lifetime-and-docking arc), so "becomes a window when embedded" or "becomes furniture when pinned" is
   already automatic — there is no manual switch. The `lifetime` field (`'transient'` / `'persistent'`) IS

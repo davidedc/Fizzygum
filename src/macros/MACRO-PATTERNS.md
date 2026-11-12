@@ -652,7 +652,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Menu from a framed item is not clipped by the frame** (`macroMenuFromFramedItemNotClipped`): a context menu opened
   from a widget INSIDE a clipping frame overflows the frame and is drawn in FULL — a context menu is a WORLD-level popup
   (`ActivePointerWdgt.openContextMenuAtPointer` `:104` → `buildContextMenu()` → `popUpAtHand()` → `FrameWdgt.popUp(hand,
-  world)`, attached to the WORLD), and clipping (`ClippingAtRectangularBoundsMixin`) only crops a frame's own DESCENDANTS,
+  world)`, attached to the WORLD), and clipping (`ClippingWdgt`) only crops a frame's own DESCENDANTS,
   so a world-level sibling menu drawn over the frame is never clipped by it. Build a narrow `PanelWdgt` (a clipping frame)
   with a child straddling an edge (cropped → proves the clip is active) and an inner item; `@moveToAndClickAtFractionOf_InputEvents
   innerItem, [0.5,0.5], "right button"` opens the item's hierarchy menu (one row per ancestor — a non-world child →
@@ -1162,8 +1162,8 @@ assertion a recapture after a regression silently stores two different hashes an
   new verb.
 - **A document flows, clips and scrolls live non-text widgets** (`macroDocumentScrollsMixedTextAndClocks`): a
   `DocumentViewportWdgt` is a general widget container, not just a text flow. `doc.add widget` re-parents any widget into its
-  inner `VerticalStackPanelWdgt` content stack (`ViewportWdgt.add → @contents.add`, `:186-194`), which `@augmentWith
-  ClippingAtRectangularBoundsMixin` clips to the panel box. On insert the stack re-squares an `AnalogClockWdgt` to its remembered width
+  inner `VerticalStackPanelWdgt` content stack (`ViewportWdgt.add → @contents.add`, `:186-194`), which, a
+  `ClippingWdgt`, clips to the panel box. On insert the stack re-squares an `AnalogClockWdgt` to its remembered width
   (`VerticalStackLayoutSpec.rememberInitialDimensions` + `AnalogClockWdgt._setWidthSizeHeightAccordingly`); getWidthInStack DISPLAYS
   that remembered width CLAMPED to the current column — so clocks added at distinct sizes stay distinct, one wider than the column is shown
   clamped (clipped at the panel edges as you scroll), and it GROWS BACK toward its remembered size when the document is WIDENED (the clamp
@@ -1269,8 +1269,8 @@ assertion a recapture after a regression silently stores two different hashes an
   contrast is asserted on an identical scene. No new verb.
 - **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedWidget`): both "Attach"
   (`Widget.attach`) and a controller's `"Connect"` → `"Connect to"` (`ControllerMixin.openTargetSelector`) build their candidate menus
-  from `world.plausibleTargetAndDestinationWidgets` (`Widget.coffee:1092`), but a `PanelWdgt` (which `@augmentWith
-  ClippingAtRectangularBoundsMixin`) OVERRIDES it (`ClippingAtRectangularBoundsMixin.coffee:17`) to recurse into its
+  from `world.plausibleTargetAndDestinationWidgets` (`Widget.coffee:1092`), but a `PanelWdgt` (a
+  `ClippingWdgt`) OVERRIDES it (`ClippingWdgt.plausibleTargetAndDestinationWidgets`) to recurse into its
   children ONLY where the PANEL's own bounds intersect the probe. So a child whose raw bounds stick out past the panel
   edge (clipped there) is UNREACHABLE as a candidate when the probe sits over the clipped-away part — the exclusion is a
   logical-AND of two raw-bounds intersections (`panel∩probe` AND `child∩probe`), NOT a per-pixel hit-test. Build `new
@@ -2105,8 +2105,8 @@ assertion a recapture after a regression silently stores two different hashes an
   the text reading through both. Only TWO shots — the one variable that matters is the stacking order; a third would just repeat.
   (Transparency + colour set via a test-local helper in `extraSubroutineSources`.)
 - **Panel + transparency + CROP + shadow; alpha does NOT cascade to children** (`macroPanelInPanelTransparencyAndStroke`): a
-  `PanelWdgt` ships a cream fill + a dark 1px stroke (the `defaultPanels*` colours) and `@augmentWith
-  ClippingAtRectangularBoundsMixin`, which CROPS its children to its bounds and re-paints the stroke AFTER the children (border on
+  `PanelWdgt` ships a cream fill + a dark 1px stroke (the `defaultPanels*` colours) and, as a
+  `ClippingWdgt`, CROPS its children to its bounds and re-paints the stroke AFTER the children (border on
   top of nested content). Nest a child inner panel AND a child box, each MOVED so part of it crosses the outer's RIGHT edge → both
   are CROPPED there (the crop), right where the outer (a world child) casts its desktop drop-shadow. Each widget multiplies only its
   OWN `@alpha` when painting (`RectangularAppearance`; stroke and fill share that one alpha — there is NO opaque-stroke-over-
@@ -2149,8 +2149,8 @@ assertion a recapture after a regression silently stores two different hashes an
   RectangleWdgt backdrop behind a `new BoxWdgt 55`, then `@moveToAndClickAtFractionOf_InputEvents box, [0.96,0.96]` (a corner —
   click passes THROUGH, backdrop comes forward) vs `[0.1,0.4]` (the body — box comes forward). The z-order flip on left-click
   (`bringToForeground`) is the observable.
-- **Rectangular clipping** (`macroClippingBoxClipsChildAtBounds`): a `ClippingBoxWdgt` is an ORDINARY BoxWdgt that merely
-  `@augmentWith ClippingAtRectangularBoundsMixin` (the whole class body) — the mixin clips children to its bounds. `new
+- **Rectangular clipping** (`macroClippingBoxClipsChildAtBounds`): a `ClippingBoxWdgt` is a `ClippingWdgt` with a
+  box's look (its whole class body is BoxWdgt's constructor) — `ClippingWdgt` clips children to its bounds. `new
   ClippingBoxWdgt` (setColor/setExtent/moveTo/world.add), `clipBox.add child`, then move the child
   (`child.moveTo …`) to STRADDLE each edge in turn — it's cut off at that edge, proving the clip is the box's fixed
   rectangle on every side.

@@ -3,9 +3,7 @@
 # It's a good idea to use me whenever it's clear that there is a
 # "container"/"contained" scenario going on.
 
-class PanelWdgt extends Widget
-
-  @augmentWith ClippingAtRectangularBoundsMixin, @name
+class PanelWdgt extends ClippingWdgt
 
   extraPadding: 0
   _acceptsDrops: true

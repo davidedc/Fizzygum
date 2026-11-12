@@ -21,7 +21,7 @@
 # drawn — the cheap-live-strokes slot here is reserved for the day a visible border is WANTED
 # (a deliberate, recaptured pixel change).
 #
-# The PanelWdgt clipping (ClippingAtRectangularBoundsMixin, active at my bounds) is
+# The PanelWdgt clipping (ClippingWdgt's, active at my bounds) is
 # LOAD-BEARING since F6: a window whose granted extent is not cell-quantized leaves the last
 # visible column/row PARTIAL — those cells stick past my right/bottom edge and this clip is
 # what crops them to the data region. (Pre-F6 it was only a standing guard: F1's

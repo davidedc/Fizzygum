@@ -28,16 +28,15 @@
 # (toggleShowing*), which flips that field and RE-FILTERS me (_refilterMembers): my member list is
 # rebuilt from the filter as it now stands, every other child of mine stays the same widget, and
 # every toggle is shown its field. Adding, renaming or removing a member re-filters me the same way.
-class InspectorWdgt extends Widget
+class InspectorWdgt extends ClippingWdgt
 
   # I CLIP my children -- their paint and their pointer targeting -- to my rectangle, the house way
-  # (the mixin every panel, viewport and frame wears): a control my width leaves no room for is cut
+  # (a ClippingWdgt, as every panel, viewport and frame is): a control my width leaves no room for is cut
   # at my right edge, where it shows nothing and catches no press, the same naked as in a window (a
   # target never extends beyond the widget that owns it, visual-design-system §4.2). In a window I lie
   # flush against, it changes no pixel: the window clips at its own box already, and the one column
   # of that box right of me is its border, which it strokes over its children. Opaque, my
   # silhouette is my box, so my children add nothing to the shadow a naked inspector casts.
-  @augmentWith ClippingAtRectangularBoundsMixin, @name
 
   # I read the class MEMBER MAPS (a member's recorded source, its donor mixin), which exist only once
   # the reflective layer has arrived, and on a `sources: "lazy"` build it has not until someone asks.

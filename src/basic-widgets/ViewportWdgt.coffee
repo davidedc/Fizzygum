@@ -8,13 +8,12 @@
 # lives one level down, on the plane — so the panel-family answers (its menu rows, its
 # lock-granting, its drop slots) are wrong here, and the few panel facts I do mean are stated
 # explicitly below (scroll-frame role plan P4).
-class ViewportWdgt extends Widget
+class ViewportWdgt extends ClippingWdgt
 
-  # I clip my chrome (and through it the scrolled content) at my bounds — the same mixin
-  # PanelWdgt wears, taken directly now (as FrameWdgt does). It also decides hit-testing
-  # together with the RectangularAppearance the constructor sets: opaque inside my bounds,
-  # even though my own rect is always painted UNDER the plane — occluded, not skipped.
-  @augmentWith ClippingAtRectangularBoundsMixin, @name
+  # As a ClippingWdgt I clip my chrome (and through it the scrolled content) at my bounds, as
+  # PanelWdgt and FrameWdgt do. Clipping also decides hit-testing together with the
+  # RectangularAppearance the constructor sets: opaque inside my bounds, even though my own rect
+  # is always painted UNDER the plane — occluded, not skipped.
 
   # the panel facts I genuinely mean, restated off PanelWdgt:
   # around-the-content padding a caller can add via setContents (reads: the arrange,
@@ -355,12 +354,11 @@ class ViewportWdgt extends Widget
   # composition is FP-exact). Culling needs nothing more: each descendant intersects the
   # descending rect with its own plane-local bounds, so scrolled-out content prunes exactly
   # as clipped-out content does. Zero translation takes the stock clipping path — dormancy —
-  # via PanelWdgt's injected mixin copy (`super` here would bind to base Widget's un-clipping
-  # version: the mixin is injected onto THIS prototype, and a class-body member shadows it).
+  # ClippingWdgt's body, through `super`.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     t = @_scrollTranslation()
     if t.x is 0 and t.y is 0
-      return PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow.call @, aContext, clippingRectangle, appliedShadow
+      return super aContext, clippingRectangle, appliedShadow
     damagedPartOfFrame = @boundingBox().intersect clippingRectangle
     if !damagedPartOfFrame.isEmpty()
       if aContext == world.worldCanvasContext
@@ -376,17 +374,17 @@ class ViewportWdgt extends Widget
         else
           child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
 
-  # The SHADOW-pass twin of the interception above (paint-time scroll review F3): the mixin's
+  # The SHADOW-pass twin of the interception above (paint-time scroll review F3): ClippingWdgt's
   # own-shadow entry enumerates children itself — bypassing the content pass — so without this
   # a viewport wearing its OWN shadow, painting translucent (alpha != 1, the one case whose
   # silhouette depends on the children), while scrolled, would silhouette the UNTRANSLATED
-  # content. Same two-step around the contents child, same dormant delegation to the injected
-  # mixin copy (`super` would bind to base Widget's un-clipping version).
+  # content. Same two-step around the contents child, same dormant delegation to ClippingWdgt's
+  # body through `super`.
   _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     t = @_scrollTranslation()
     if t.x is 0 and t.y is 0
-      return PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferJustShadow.call @, aContext, clippingRectangle, appliedShadow
-    # from here: the mixin's JustShadow body (kept in lockstep with it), with the contents
+      return super aContext, clippingRectangle, appliedShadow
+    # from here: ClippingWdgt's JustShadow body (kept in lockstep with it), with the contents
     # child painted through the scroll translation
     clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
@@ -395,7 +393,7 @@ class ViewportWdgt extends Widget
         aContext.save()
         aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
         @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
-        # opaque short-circuit as in the mixin: a fully opaque box's silhouette IS its box
+        # opaque short-circuit as in ClippingWdgt's: a fully opaque box's silhouette IS its box
         if @alpha != 1
           shadowTranslatedCull = damagedPartOfFrame.translateBy t.neg()
           @children.forEach (child) =>

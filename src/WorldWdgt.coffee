@@ -896,9 +896,9 @@ class WorldWdgt extends IconGridPanelWdgt
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
     # invokes the Widget's fullPaintIntoAreaOrBlitFromBackBuffer, which has only three implementations:
     #  * the default one by Widget which just invokes the paintIntoAreaOrBlitFromBackBuffer of all children
-    #  * the interesting one in PanelWdgt which a) narrows the damage
+    #  * the interesting one in ClippingWdgt which a) narrows the damage
     #    rectangle (intersecting it with its border
-    #    since the PanelWdgt clips at its border) and b) stops recursion on all
+    #    since a ClippingWdgt clips at its border) and b) stops recursion on all
     #    the children that are outside such intersection.
     #  * this implementation which just takes into account that the hand
     #    (which could contain a Widget being floatDragged)
@@ -932,7 +932,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # cull ONLY the live on-screen paint; scratch / back-buffer contexts (and their damage
     # bookkeeping) must be left exactly as they are
     return false if aContext != @worldCanvasContext
-    damagedPart = aRect.intersect @boundingBox()          # identical to the mixin's narrowing of the damage rect to the desktop
+    damagedPart = aRect.intersect @boundingBox()          # identical to ClippingWdgt's narrowing of the damage rect to the desktop
     return false if damagedPart.isEmpty()
     testRect = damagedPart.expandBy 1                      # +1px margin: painting rounds on the logical grid (calculateKeyValues)
     covererIndex = undefined
@@ -949,10 +949,10 @@ class WorldWdgt extends IconGridPanelWdgt
     # change), see occlusion-culling-plan.md §1b(b).
     @_recordDrawnAreaForNextDamageRects()
     # paint the coverer and everything in front of it, narrowed to damagedPart (byte-identical child
-    # trajectory to the mixin's own children loop, which narrows to the same rect)
+    # trajectory to ClippingWdgt's own children loop, which narrows to the same rect)
     for i in [covererIndex ... @children.length]
       @children[i].fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPart
-    # replicate the mixin's trailing panel-stroke pass (a no-op for the world unless a strokeColor is
+    # replicate ClippingWdgt's trailing panel-stroke pass (a no-op for the world unless a strokeColor is
     # ever set -- RectangularAppearance.paintStroke gates on @widget.strokeColor?)
     @paintStroke aContext, aRect
     return true

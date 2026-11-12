@@ -1,8 +1,6 @@
-class VerticalStackPanelWdgt extends Widget
-
-  # stacks don't necessarily enforce a width on contents
-  # so the contents could stick out, so we clip at the bounds
-  @augmentWith ClippingAtRectangularBoundsMixin, @name
+# Stacks don't necessarily enforce a width on contents, so the contents could stick out: I clip
+# at my bounds, as a ClippingWdgt.
+class VerticalStackPanelWdgt extends ClippingWdgt
 
   _acceptsDrops: true
   tight: true
@@ -395,8 +393,8 @@ class VerticalStackPanelWdgt extends Widget
 
       # Move the child -- same discriminator as the resize above, DIFFERENT reason (nothing
       # notifies anything anymore; the notify-by-mutation seam was deleted 2026-07-01):
-      # _applyMoveTo is the POLYMORPHIC move corner (ClippingAtRectangularBoundsMixin's
-      # scroll-optimization override dispatches through it), _applyMoveToBase the uniform
+      # _applyMoveTo is the POLYMORPHIC move corner (ClippingWdgt's
+      # whole-subtree move override dispatches through it), _applyMoveToBase the uniform
       # base translate. Each child KIND keeps the path it has always taken: a tracking
       # container (a clipping widget) keeps its override's repaint behaviour, a leaf keeps
       # the base translate. Unifying onto either name is a REPAINT-PATH change (e.g. a

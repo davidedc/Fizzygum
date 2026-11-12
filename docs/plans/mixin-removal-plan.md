@@ -1,6 +1,6 @@
 # Mixin removal — every mixin to an ordinary home, then delete the mechanism
 
-**STATUS: PLAN ONLY — AUTHORED 2026-11-10, MEASURED 2026-11-12. No code written.** Written to be
+**STATUS: EXECUTING — AUTHORED 2026-11-10, MEASURED 2026-11-12; Phase 1 landed 2026-11-12 (§13).** Written to be
 executed COLD by an LLM/engineer with ZERO prior context: everything needed is embedded here or one
 named-doc hop away.
 **Where it stands (§13):** all ten owner decisions are made — on the owner's stated criterion, the
@@ -97,8 +97,8 @@ mechanism WORKS; only its keep-vs-remove POSITION is superseded by this plan.**
    session owns `src/` and the tests: read and plan only, edit docs at most.
 2. Read this plan whole, then `docs/architecture/mixins.md` §2 (how the mechanism works) and
    `docs/architecture/widget-authoring-guidelines.md`.
-3. Re-run the scan in §2.4 and compare with §2.2/§2.3. If anything differs, the tree moved: fix the
-   plan's facts FIRST, in place, before executing.
+3. Re-run the scan in §2.4 and compare with §2.2/§2.3, less what the §13 rows of landed phases removed.
+   If anything else differs, the tree moved: fix the plan's facts FIRST, in place, before executing.
 4. Phases 1–4 wait on nothing. Each investigation has its paper verdict and its measured half
    (§6, §13); what it still owes is its change under the gauntlet, which IS its phase — and a
    measured verdict is still a hypothesis until that gauntlet has passed. Verdicts go into §13.
@@ -146,6 +146,10 @@ The full present-tense reference is `docs/architecture/mixins.md` §2. The parts
 ---
 
 ## §2 Exact current state
+
+**As of 2026-11-12, before Phase 1.** A landed phase moves these facts: its §13 row says what it
+removed (Phase 1: the Clipping row of §2.1, its 7 consumer slots, its four borrow sites of §2.3), and
+§2.4's cross-checks then print the remainder.
 
 ### 2.1 Inventory
 
@@ -241,8 +245,8 @@ Quick cross-checks:
 
 ```
 cd Fizzygum
-grep -rn "^  @augmentWith" src --include='*.coffee' | wc -l            # 35 consumer slots
-grep -rnE "[A-Z][A-Za-z]+Wdgt::[A-Za-z_]+\.(call|apply)" src --include='*.coffee'   # the 4 borrow sites
+grep -rn "^  @augmentWith" src --include='*.coffee' | wc -l            # 35 consumer slots before Phase 1
+grep -rnE "[A-Z][A-Za-z]+Wdgt::[A-Za-z_]+\.(call|apply)" src --include='*.coffee'   # the 4 borrow sites before Phase 1 (none after it)
 grep -rnE "arguments\.callee" src --include='*.coffee'                  # 2 lines, both mixin machinery
 ```
 
@@ -851,6 +855,9 @@ merely uses a mixin as its example gets a new subject there, and keeps biting.
 
 | Phase | Check whose subject this phase deletes | Do |
 |---|---|---|
+| 1 | `serialization-roundtrip-headless.js`, `inspector.aClassFieldRowShowsItsRecordOnlyWhileItsValueHolds` (newer than the census: three facts on the field `clipsAtRectangularBounds` the mixin donated to `VerticalStackPanelWdgt`) | retire the two donor facts (`donatedRecordShows`, `aMixinEditReadsAsItsSource`); keep the run's-write fact on the same field, now inherited from `ClippingWdgt` (`aRunsWriteOnAnInheritedFieldReadsAsItsValue`), seen failing on a plant |
+| 1 | `SystemTest_macroInspectorOpensAClassInItsClassInspector` (assertion-only: `ClippingBoxWdgt`'s `__super__` row opens `BoxWdgt`'s class inspector, then its `constructor` row) | its example becomes `PointerWdgt`, the other `BoxWdgt` subclass: `ClippingWdgt`'s class inspector lists its ten members, and the `constructor` row falls below the visible list |
+| 1 | `SystemTest_macroInstancesRegistry` (assertion-only: a `CanvasWdgt`'s chain of instances sets) | the chain gains `ClippingWdgt`: name it |
 | 2 | `parts-lazy-load-headless.js`, the `LAZY_CONSUMER_TAKES_MIXIN_EDITS` section, with its self-test's plants and second run (subject: KeepsRatio, through the lazy `plots` part) | retire (mechanism-only) |
 | 3 | `serialization-roundtrip-headless.js`, `world.inspector.classSubjectsSurviveSnapshot` (subject member: `openTargetSelector`) | drop its donor-attribution fact; point the rest at a member `SliderWdgt` owns or inherits |
 | 5 | `buildSystem/check-stinks.js`, the sanctioned entry naming `mixins/BackBufferMixin.coffee` / `getPixelColor` | re-point at `BackBuffer`'s file (it fails loud, `STALE_SANCTION`, if forgotten) |
@@ -872,7 +879,9 @@ teardown.
 3. Replace §2.3's workarounds that the move dissolves; delete the mixin file; remove its
    `@augmentWith` lines.
 4. Update comments that name the mixin (`grep -rn "<Name>Mixin" src ../Fizzygum-tests`), including
-   test descriptor metadata, and apply the row of the table above for this phase.
+   test descriptor metadata, and apply the row of the table above for this phase. An assertion that
+   spells a consumer's class chain, or opens an inspector on a consumer's superclass, moves with the
+   new base: grep the tests for each consumer's name beside its old parent's.
 5. Gate (§9). For Phase 1 also fix the LOCKSTEP comment on the two paint bodies and
    `docs/BACKLOG.md`'s owner-gated "lift scroll … to the clipping-mixin level" wording.
 
@@ -1056,6 +1065,7 @@ changelog prose; add the base-class lookup rule and the new classes to
 |---|---|---|---|
 | S1 the back buffer — paper half | Palette and canvas answer through their appearance; text keeps one line and no appearance; the rest becomes a `BackBuffer` object (D3). Open: whether text keeps the shadowing `calculateKeyValues` | 2026-11-10 | by reading; §6 S1 |
 | S1 — measured half | The two `calculateKeyValues` agree on every call the suite makes, at both densities; they differ only for a bare top-left `SCALEUP` `StringWdgt` in a box larger than its text. The buffer clamp is the blit's and goes into `BackBuffer`; text keeps no shadowing member (D10). The suite already paints a selected text, palette and canvas | 2026-11-12 | instrument over the suite at dpr 1 and 2, and a direct probe; §6 S1 |
+| Phase 1 — Clipping → `ClippingWdgt` | Landed as a pure move: the ten members moved verbatim into `src/basic-widgets/ClippingWdgt.coffee` (the text diff is one comment); seven consumers re-parented, `ClippingBoxWdgt` states `BoxWdgt`'s constructor; the four `PanelWdgt::….call @` borrows are `super`. The resolution map's every changed line is a spelling the compile path explains (a class member's function is named; the real `super` spells its target), each proven by undoing it and getting the old hash back. The map lists every member but constructors and statics, over the 547 classes of the dev build: `ClippingBoxWdgt`'s restated constructor, and the two descendants in the flag-gated `video-player` part (`SimpleImageWdgt`, `VideoPlayerCanvasWdgt`, which define no moved member), were checked by reading and by the independent review | 2026-11-12 | loop U2: `Fizzygum-tests/.scratch/mixin-removal-loop/u2-clipping/` (PREP.md, the map diffs, `reverse-check.py`); `fg presuite`, `fg gauntlet`, `fg homepage` (its LEDGER) |
 | S1 — the change under the gauntlet | — (Phase 5) | | |
 | S2 pointer state — paper half | A hover hook cannot ask the hand, so a look is asked at paint; the copies exist because the mixin's look hook stores a colour; the shape is D1's | 2026-11-10 | by reading; §2.5, §6 S2 |
 | S2 — measured half | Stored state and the hand's facts agree in every lit state the suite shows (35 classes, mouse and finger) but six cases, of which two are the classes' own rules and one a stale copy; `pressesOn` must ask that the pointer be over the widget; the tooltip bullet as first written would have given eight classes a tooltip. Questions D6–D9 | 2026-11-12 | instrument over the suite as a mouse and as a finger, and reading; §2.5, §6 S2 |
@@ -1085,3 +1095,4 @@ changelog prose; add the base-class lookup rule and the new classes to
 - [x] §6 S2: pointer state asked of the hand at paint — empirical half: every write of the hand's facts followed by the notification, and each case where a stored state carried history put to the owner — CLOSED 2026-11-12 as an item: the cases are measured and put to the owner as D6–D9 (§0.4, §6 S2), the writes outside the hand are listed (§2.5), and the change under the gauntlet is the Phase 7 line's.
 - [x] §6 S3: the edit-mode relay into `StretchablePanelWdgt` — empirical half — CLOSED 2026-11-12 as an item: its measured half is done (§6 S3: the relay is live from one door, which no test opens; the early-return state is reached by no product path), and the change, opened by a test of the relay, is the Phase 6 line's.
 - [x] §0.4: owner decisions D6–D9 (pointer looks that follow the pointer where a stored state lagged it; the slider thumb; a finger's hover on handles and layout chrome; the eight classes carrying a tooltip they never show) and D10 (the selection ring of a text smaller than its box) — each with a recommendation; Phase 7 waits on D6–D9, Phase 5 on D10 — CLOSED 2026-11-12: the owner chose the recommended option of each ("All A"), as §0.4 and §13 record; no phase waits on the owner.
+- [x] §7 Phase 1: Clipping → `ClippingWdgt` — CLOSED 2026-11-12 (loop). The ten members moved verbatim into the core base class `ClippingWdgt` (`src/basic-widgets/`), the seven consumers re-parented (`ClippingBoxWdgt` states `BoxWdgt`'s constructor), the four `PanelWdgt::….call @` borrows became `super`, the mixin file deleted. Proven by the resolution map over the dev build's 547 classes (every changed line explained and hash-proven; constructors, statics and the flag-gated video-player part checked by reading), the presuite, the gauntlet and `fg homepage`; one serialization fact re-pointed onto the inherited field and seen failing on a plant, two donor facts retired (§7 table, Phase 1 rows).

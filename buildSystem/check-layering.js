@@ -274,7 +274,7 @@ const LEAF_FORBIDDEN = new RegExp('@\\s*(_reFitContainer\\w*|_announce\\w*|_reLa
 // children. We enforce the STATICALLY-SOUND negative that survives post-seam-deletion (in checkFile below): a _apply*Base
 // bypass twin reacts only -- it must NOT fire the container re-fit seam (_reFitContainer* valve; the _announce* announce-up
 // half is dead, deleted 2026-07-01 -- rule [N]) NOR DISPATCH to its polymorphic _apply* sibling (routing an arrange apply
-// back through the very override the twin exists to bypass -- e.g. ClippingAtRectangularBoundsMixin._applyMoveBy, the
+// back through the very override the twin exists to bypass -- e.g. ClippingWdgt._applyMoveBy, the
 // override _applyMoveByBase must skip). The old "*AndNotify REACHES the seam" POSITIVE is retired with the seam (it was
 // the RUNTIME auditTierAndApplyNaming's job; the settle-time up-edge replaced the seam). The commit half holds the
 // silent commit corner (_commitBounds: no repaint, no self-relayout) to not REACTING; its reacting sibling is the
