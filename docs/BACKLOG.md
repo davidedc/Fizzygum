@@ -582,6 +582,7 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 ### `plans/mixin-removal-plan.md`
 AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phases 1–3 have landed (its §13); the rest runs in its §7 order. All ten owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
 - [ ] §7 Phase 4: the app-kit pair's shared base `CreatorWdgt`; the SmartPlacer mixin deleted
+- [ ] §0.4 D11 (OWNER, OPEN 2026-11-12): may Phase 4 recapture the one-digit change ("6 consumer classes" → "5") in two mixin tests' save pop-up — recommendation A; Phase 4 is parked on it, its patch kept
 - [ ] §7 Phase 5: the back buffer as two appearances, one line on text and a `BackBuffer` object
 - [ ] §7 Phase 6: a test of the edit-mode relay, then the relay into `StretchablePanelWdgt`; Bubbles and `triggeringWidget` deleted
 - [ ] §7 Phase 7: pointer state asked of the hand at paint; Highlightable and ParentStainer deleted (waits on Phase 4)
