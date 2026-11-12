@@ -35,10 +35,9 @@ class Widget extends TreeNode
   # See docs/architecture/serialization-duplication-reference.md §5.
   @serializationTransients: [
     # frame timing for throttled stepping (fps > 0, non-synchronised: BlinkerWdgt, the video
-    # widgets) — wall-clock, so it cannot ride a file. The DUPLICATOR must COPY it, and does:
-    # clones skip the constructor (the Date.now() seed never runs), so a dropped lastTime would
-    # leave _runChildrensStepFunction computing NaN milliseconds-remaining and the clone would
-    # never step; the copied value keeps a throttled clone's cadence in phase with its original.
+    # widgets) — wall-clock, so it cannot ride a file. A restored stepper has none, and the stepping
+    # loop re-seeds it on first sight (WorldWdgt._runChildrensStepFunction, `lastTime ?=`); the
+    # DUPLICATOR copies it, which keeps a throttled clone's cadence in phase with its original.
     "lastTime"
     # the back-buffer render cache (BackBufferMixin) — rebuilt on demand by
     # _createRefreshOrGetBackBuffer, so it is never serialized; the restored widget

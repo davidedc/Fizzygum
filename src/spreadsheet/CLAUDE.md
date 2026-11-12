@@ -104,8 +104,8 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   `getOrCreateCellAt`/`valueAt`). A plain class (not a Widget); back-ref `@sheetWidget`.
 - `SheetCellRecord.coffee` (2b) — one cell AND the dataflow node the engine holds by identity.
   Persistent `{@sheet, @address, @source, @widgetEntry}`; derived `{@compiledFn, @boundNames,
-  @value, @errorFlag}` in `@serializationTransients` (rebuilt on load/duplicate by
-  recommitting). Node protocol: `dataflowRecompute` (entry-first — F4 below — else run the
+  @value, @errorFlag}` in `@serializationTransients` and `@copyTransients` (left out of a save
+  and of a copy, rebuilt on load/duplicate by recommitting). Node protocol: `dataflowRecompute` (entry-first — F4 below — else run the
   formula, cache `@value`) / `dataflowValue` (what refs pull). Reactive reference EDGES +
   error propagation arrive in 2c.
 - `FormulaCompiler.coffee` (2b) — stateless (class methods): `commit(cell, source)` scans the
@@ -341,8 +341,9 @@ cells ride the snapshot and are adopted by the re-index — never a double grid.
 destroyed.) This requires the plain data classes to be
 deep-copyable: `SheetModel`/`SheetCellRecord` ride the `Duplicator`'s generic walk, `SheetError`
 declares `keptByReferenceOnDeepCopy` (immutable), and the `@cells` Map clones through the
-engine's own `Map`/`Set` handlers. Derived fields are dropped on serialize
-(`@serializationTransients`) and copied-then-overwritten on deep-copy. **Keys follow the editor
+engine's own `Map`/`Set` handlers. A cell record's derived fields are dropped on serialize
+(`@serializationTransients`) and left out of a copy (`@copyTransients`, the Duplicator's Note 5): the
+copied sheet recommits every cell and the next drain recomputes them, as a loaded one does. **Keys follow the editor
 focus:** every sheet joins `world.keyboardEventsReceivers` when built (a copy or a restore through the
 membership it carries), and `processKeyDown` acts only while that sheet is `world.editorFocusWdgt`
 and no caret is live — so of several sheets only the focused one acts (a duplicate never edits in

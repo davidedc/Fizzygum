@@ -428,7 +428,14 @@ NAMED like one.
     `@serializationTransients` SKIPS a field for the FILE Serializer only. The in-memory
     **Duplicator** never skips a field for being declared there — it reads the declaration only
     through `NativeValueKinds.isDerivedAt`, to place a stamped value (below) — and its coverage
-    comes from seven mechanisms of its own:
+    comes from eight mechanisms of its own:
+    a class's `@copyTransients` (merged up the chain like `@serializationTransients`): the fields
+    the copy rebuilds, LEFT OUT of it (the clone holds none of its own) — a sheet's cell records'
+    four derived fields, which the copied sheet recommits (`_reactToBeingCopied` marks every cell
+    stale; the next drain computes each value), so a formula's value of a type no copy carries (a
+    RegExp, an Error) never meets the copier (the Duplicator's Note 5). It is the class's statement,
+    field by field, never a blanket rule: a save's transients are rebuilt by a load's paths
+    (`_afterDeserialization`, the stepping loop's re-seed), and a copy runs other hooks;
     a NAME-convention skip in `_cloneContentInto` (the version-keyed cache pairs
     `cached*`/`check*Cache` plus `childrenBoundsUpdatedAt`, and the island source-lane
     `_islandBufferSource*` pair), the `rebuildDerivedValue` skip-and-rebuild of a value derived
@@ -622,9 +629,11 @@ refusal UNWINDS through each step the copy took (`Duplicator`'s Note 4), so a co
 no path. Both walkers spell a path with ONE vocabulary, `SerializationError`'s (`WORLD_ROOT`, `pathRoot`,
 `intoProperty`, `intoItem`, `intoKey`, the Map/Set steps, `enteringWidget`), so the two spell the same route
 alike: a value both refuse, reached the same way, is named at the same place (the serialization rig's
-`duplicate.aRefusalNamesWhereTheValueIsHeld` holds a field's, a Map value's and a Set item's paths equal and
+`duplicate.aRefusalNamesWhereTheValueIsHeld` holds a field's, a Map value's (named by its key when the key is
+a string, a number or a boolean: ` (Map value at "k")`) and a Set item's paths equal and
 spelled). What each REFUSES differs, by the rules above: a copy walks a `@serializationTransients` field a save
-leaves out, and keeps a function or a widget outside the structure that a save refuses.
+leaves out (unless its class names it in `@copyTransients`), and keeps a function or a widget outside the structure
+that a save refuses.
 
 ---
 

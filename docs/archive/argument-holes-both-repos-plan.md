@@ -3475,3 +3475,39 @@ for (const s of sites) if (s.absentBefore.length) {
       the panel (the panel not banned); no clear (the bystander banned); a catch banning the world (the world banned
       and hidden); no guard for an absent blame (an uncaught TypeError in the paint catch); the old loop (the page
       stops answering at the occlusion throw).
+- [x] **A sheet holding a formula's value no copy carries refuses its Duplicate** (found by the independent review
+      closing "A copy's refusal names the value but not where it is held", in the plan's ledger; by reading, a
+      HYPOTHESIS to measure first; reached: a Sheets window, a cell whose formula's value is a RegExp, an Error, a
+      DOMRect — `/a/` typed into it — then Duplicate the window). `SheetCellRecord.value` is a
+      `@serializationTransients` field, so a save leaves it out (a load recomputes it) while the copier walks it and
+      refuses a value outside its closed set: the window saves but cannot be duplicated, and the refusal's remedy (an
+      inspector's Remove of a field) does not fit — the mend is the formula. Its path, `… → .model → .cells (Map value)
+      → .value`, names no cell: a Map value's step names no key, in both walkers. `SheetCellRecord`'s header calls the
+      copy's brief sharing of the value harmless.
+      — CLOSED 2026-11-12 (self-ruled; loop unit U39). MEASURED first (`Fizzygum-tests/.scratch/sheet-copy-value/
+      probe.js`, a Sheets window, A1 entered through `enterSource`): `/a/`, `new Error "e"`, `new DOMRect 1, 2, 3, 4` —
+      the window SAVES and its Duplicate is REFUSED ("… (RegExp) cannot be copied … at: SpreadsheetWdgt#1 → .contents
+      (SimpleSpreadsheetWdgt#1) → .model → .cells (Map value) → .value"); `42` copies. The copied sheet already rebuilds
+      the record's four derived fields (`_reactToBeingCopied` marks every cell stale and the next drain computes each
+      value), but the copier walked them first. RULED: a class names the fields its COPY rebuilds, `@copyTransients`
+      (merged up the chain through the same `classStaticListMergedUpTheChain` as `@serializationTransients`); the copier
+      leaves them out and the clone holds none of its own (the Duplicator's Note 5, `_copyRebuilds`, cached per class).
+      Field by field, never a blanket "a copy leaves out what a save leaves out": a save's transients are rebuilt by a
+      LOAD's paths (`_afterDeserialization`, the stepping loop's re-seed), and a copy runs other hooks. And a Map
+      value's path step names a primitive key in both walkers, spelled as it reads (`SerializationError.intoMapValue`:
+      ` (Map value at "A1")`, ` (Map value at NaN)` — a number never through JSON, which writes NaN and ±Infinity as
+      null — a long string key cut). LANDED: `SheetCellRecord` declares its four derived fields; the reference doc's
+      Duplicator coverage list gains the eighth mechanism; `src/spreadsheet/CLAUDE.md`, the record's header, the
+      sheet's exemption comment (the copy path too) and SerializationError's vocabulary say so; `Widget`'s comment on
+      `lastTime` no longer claims a clone without it never steps (the stepping loop re-seeds it); the hand-lists gate
+      knows `@copyTransients` as a declaration. The unit's independent review found the first shape's reason for "no
+      blanket rule" false (that `lastTime` claim) and its key spelling wrong for NaN/±Infinity/-0. Stated consequences:
+      a cell record copied WITHOUT its sheet (an inspector on a sheet's model, duplicated) holds no values, as nothing
+      rebuilds them; a formula reading another cell through `@` rather than a reference reads it as a load does,
+      possibly before that cell's value is computed. PROVEN: the serialization rig's
+      `duplicate.aSheetFormulaValueNoCopyCarriesDuplicates` — a sheet whose A1 is a RegExp and B1 an Error duplicates,
+      the copy computing its OWN values, and the sheet still saves — on both backends;
+      `duplicate.aRefusalNamesWhereTheValueIsHeld`'s Map tails are ` → .bpMap (Map value at "k")` and ` → .bpNaNMap (Map
+      value at NaN)`, save and copy alike. Plants: no `@copyTransients` → the copy refused; the old Map step → the tail
+      fails; the first shape's JSON spelling → `(Map value at null)`. The probe re-run (`probe-after.log`): every
+      value's window saves and copies; the dpr-1 suite green.

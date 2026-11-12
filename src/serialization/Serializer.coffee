@@ -401,7 +401,7 @@ class Serializer
       if NativeValueKinds.isMap obj
         record.class = "$Map"
         entries = []
-        obj.forEach (v, k) -> entries.push [refFor(k, path + SerializationError.INTO_MAP_KEY), refFor(v, path + SerializationError.INTO_MAP_VALUE)]
+        obj.forEach (v, k) -> entries.push [refFor(k, path + SerializationError.INTO_MAP_KEY), refFor(v, path + SerializationError.intoMapValue k)]
         record.entries = entries
         return
       if NativeValueKinds.isSet obj

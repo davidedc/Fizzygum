@@ -145,7 +145,8 @@ const BASELINE_TESTS = 0;
 // The class-body keys whose list value IS a declaration: the class names facts about ITSELF, and the
 // code that acts on them reads them from the class, so there is no second copy to drift.
 const DECLARATION_KEYS = new Map([
-  ['@serializationTransients', 'the fields of its own the class tells the Serializer and Duplicator to skip, read through its class chain'],
+  ['@serializationTransients', 'the fields of its own the class tells the Serializer to skip, read through its class chain'],
+  ['@copyTransients', 'the fields of its own the class tells the Duplicator its copy rebuilds, read through its class chain'],
   ['requiredParts', "the parts an app's own launch awaits before it builds (check-part-edges.js reads the same list as the app's await)"],
   ['optionalParts', "the parts an app's own launch loads when they ship, read by that same launch"],
 ]);

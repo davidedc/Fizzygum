@@ -448,10 +448,11 @@ class SimpleSpreadsheetWdgt extends Widget
       else
         record = @model.cellAt address
         # the exemption predicate: the hosted widget IS the record's value (branch 1). On the
-        # RESTORE path the record's derived @value is still undefined (a serialization transient —
-        # the recommit + drain re-derive it AFTER this reconcile), so an adopted already-hosting
-        # cell keeps its exemption through the undefined disjunct: a snapshot only ever carries
-        # off-viewport cells for widget-VALUED records (this very invariant at save time).
+        # RESTORE path, and on the COPY path, the record's derived @value is still undefined (a
+        # serialization transient, and a copy transient -- the recommit + drain re-derive it AFTER
+        # this reconcile), so an adopted already-hosting cell keeps its exemption through the
+        # undefined disjunct: a snapshot or a copy only ever carries off-viewport cells for
+        # widget-VALUED records (this very invariant at save and copy time).
         keepsWidgetAlive = cellWdgt.hostedWidget? and record? and
           ((record.value is cellWdgt.hostedWidget) or (not record.value?))
         if keepsWidgetAlive

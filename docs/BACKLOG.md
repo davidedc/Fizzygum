@@ -153,15 +153,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **The field census is blind to `@[name] =` writes** (same review; by reading; low).
       `census-widget-conformance.js` facet 1 (and the other `@field =` scanners) read a literal `@name` write, and their
       headers state no blind spot for a computed one.
-- [ ] **A sheet holding a formula's value no copy carries refuses its Duplicate** (found by the independent review
-      closing "A copy's refusal names the value but not where it is held", in the plan's ledger; by reading, a
-      HYPOTHESIS to measure first; reached: a Sheets window, a cell whose formula's value is a RegExp, an Error, a
-      DOMRect — `/a/` typed into it — then Duplicate the window). `SheetCellRecord.value` is a
-      `@serializationTransients` field, so a save leaves it out (a load recomputes it) while the copier walks it and
-      refuses a value outside its closed set: the window saves but cannot be duplicated, and the refusal's remedy (an
-      inspector's Remove of a field) does not fit — the mend is the formula. Its path, `… → .model → .cells (Map value)
-      → .value`, names no cell: a Map value's step names no key, in both walkers. `SheetCellRecord`'s header calls the
-      copy's brief sharing of the value harmless.
 - [ ] **The W3 plan's grep for typed arrays in `src/serialization/` now finds a predicate** (found by the independent
       review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's ledger; by
       reading; low). `docs/plans/wire-vocabulary-extensions-plan.md` reads the grep as 0 hits; it now finds 2 lines in

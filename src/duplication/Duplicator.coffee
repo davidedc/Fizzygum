@@ -27,6 +27,14 @@
 # vocabulary: each step the walk took to reach it -- a property, an Array's item, a Map's value, a Set's item, a widget
 # of the copy entered -- is told to the refusal as it unwinds through that step (_refusalThrough), and duplicate names
 # the root. A copy that is not refused builds no path.
+# Note 5: a field a class names in its @copyTransients (merged up the chain, as @serializationTransients is) is LEFT
+# OUT of the copy -- the clone holds none of its own -- because the copy rebuilds it: a sheet's cell records' derived
+# fields, which the copied sheet recommits (SimpleSpreadsheetWdgt._reactToBeingCopied marks every cell stale, and the
+# next drain computes each value). The walk never meets their values, so a value of a type it does not carry, there,
+# refuses nothing. It is the class's statement, field by field, never a blanket "a copy leaves out what a save leaves
+# out": a save's transients are rebuilt by a LOAD's paths (_afterDeserialization, the stepping loop's re-seed), and a
+# copy runs other hooks, so a field joins only where its class's copy rebuilds it. (A record copied WITHOUT its sheet --
+# an inspector on a sheet's model, duplicated -- has nothing to rebuild them, and holds none.)
 class Duplicator
 
   constructor: (allWidgetsInStructure) ->
@@ -42,6 +50,8 @@ class Duplicator
     # were built, and each object's alignment and last-chance hook, in the order it was finished
     @_shellsToRegister = []
     @_finishings = []
+    # class -> the fields its copy rebuilds (Note 5), read once per class
+    @_copyTransientsByClass = new Map
 
   # PUBLIC entry: copy `value` (and everything it reaches) into a live sibling
   # structure. A refusal names `value` as its root, the path from it in front (Note 4).
@@ -154,7 +164,7 @@ class Duplicator
         try
           cloneOfMe.set key, @_duplicate value
         catch err
-          throw @_refusalThrough err, SerializationError.INTO_MAP_VALUE, value
+          throw @_refusalThrough err, (SerializationError.intoMapValue key), value
       return
 
   _copySet: (original) ->
@@ -266,6 +276,8 @@ class Duplicator
   # One own property of the original onto its clone: _cloneContentInto's step, apart so a refusal met under it is
   # told the property (Note 4).
   _clonePropertyInto: (cloneOfMe, obj, property, value) ->
+    # a field the class's copy rebuilds is left out (Note 5)
+    return if @_copyRebuilds obj, property
     # A widget's PARENT is a structural link, written here directly rather than through
     # TreeNode._addChild, so it is ANNOUNCED as _addChild announces it (noteStructureChange): a tree
     # derivation cached while the walk links its widgets (root, the first clipping parent) must not
@@ -303,6 +315,14 @@ class Duplicator
       cloneOfMe[property] = value if property isnt "instanceNumericID"
     return
 
+  # Does `obj`'s class name `property` among the fields its copy rebuilds (@copyTransients, Note 5)?
+  _copyRebuilds: (obj, property) ->
+    klass = obj.constructor
+    return false unless klass?
+    unless @_copyTransientsByClass.has klass
+      @_copyTransientsByClass.set klass, new Set classStaticListMergedUpTheChain klass, "copyTransients"
+    @_copyTransientsByClass.get(klass).has property
+
   # A copy refusal unwinding through a step the walk took is told that step, in front of the path it carries so far --
   # and the value the step reached named, as a save names it, when it is a widget of the copy (Note 4). Anything else
   # thrown passes as it is.
@@ -327,7 +347,8 @@ class Duplicator
   # afresh on the copy, from that source and with the copy's own injectProperty -- as a load compiles each
   # {"$src"} (Deserializer, pass 4): every own field of a widget (Serializer.classTakesInjectedMethods) that
   # holds a function with a kept source, the fields a save writes a {"$src"} for and, since a copy keeps
-  # what a save drops, a @serializationTransients one too. Shared, a fat-arrow method
+  # a @serializationTransients field a save drops (unless the class names it in @copyTransients), such a
+  # one too. Shared, a fat-arrow method
   # (`=> @x`) is one function BOUND to the widget that compiled it, so the copy's would run on the original;
   # compiled here, it binds the copy, and a thin-arrow one is simply a function of its own.
   _compileInjectedMethods: (cloneOfMe) ->

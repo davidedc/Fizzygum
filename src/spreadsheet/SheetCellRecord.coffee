@@ -15,7 +15,8 @@
 # (CellWdgt._reactToChildDropped), CLEARED by a user edit-commit on the cell
 # (SimpleSpreadsheetWdgt._commitEditNoSettle — typed content of any kind replaces the widget) and by
 # the drag-out (CellWdgt._reactToChildGrabbed).
-# Derived (rebuilt on load/duplicate, NEVER serialized — declared in @serializationTransients):
+# Derived (rebuilt on load and on duplicate, so neither a save nor a copy carries them — declared in
+# @serializationTransients and @copyTransients):
 #   @compiledFn   the once-compiled formula function (FormulaCompiler.commit)
 #   @boundNames   the identifier names bound as its parameters (cell refs / helpers / later time)
 #   @value        the last computed value (what the grid paints, what references pull)
@@ -42,16 +43,15 @@
 
 class SheetCellRecord
 
-  # deep-copied per sheet (a duplicated sheet gets its OWN records). The derived fields ride along:
-  # @compiledFn (a function) copies by reference and @value (maybe a SheetError, kept by reference)
-  # too — both are then OVERWRITTEN when the duplicated sheet recommits every cell (rebuild), so
-  # the brief sharing is harmless; @boundNames (an array) copies through the Duplicator's generic
-  # array walk (Duplicator._copyArray) -- there is no per-type ::deepCopy method any more (that
-  # mechanism retired with DeepCopierMixin's fold into the Duplicator engine). On the SERIALIZE
-  # side these four are dropped instead (@serializationTransients below), then rebuilt the same
-  # way on restore.
+  # deep-copied per sheet (a duplicated sheet gets its OWN records). The four derived fields are left
+  # out of a copy as they are left out of a save, and rebuilt the same way: the copied sheet recommits
+  # every cell (SimpleSpreadsheetWdgt._reactToBeingCopied marks each stale; the next drain computes its
+  # value), as a loaded one does (_afterDeserialization). Until then the copy's records hold none of
+  # them. So a formula's value of any kind -- a RegExp, an Error, a DOMRect, which no copy carries --
+  # never meets the copier (Duplicator's Note 5).
 
   @serializationTransients: ["compiledFn", "boundNames", "value", "errorFlag"]
+  @copyTransients: ["compiledFn", "boundNames", "value", "errorFlag"]
 
   # F4 widget-entry kind (see the header): a DROPPED desktop widget as the cell's value.
   # PERSISTENT (deliberately NOT in @serializationTransients) but a PROTOTYPE default — only a

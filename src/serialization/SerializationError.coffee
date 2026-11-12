@@ -60,10 +60,12 @@ class SerializationError
 
   # A refusal's PATH, one vocabulary for both walkers, so the two spell the same route alike: the root (a widget by
   # its ID, the one a person finds it by; a world snapshot's is WORLD_ROOT), then each step the walk took -- into a
-  # property, an Array's item, a record's key, a Map's key or value, a Set's item -- and a widget named as the walk
+  # property, an Array's item, a record's key, a Map's key or value (a value named by its key when the key is a
+  # string, a number or a boolean -- a sheet's cell by its address), a Set's item -- and a widget named as the walk
   # enters it. The Serializer writes a path as it descends; the Duplicator, only when a copy is refused, as the refusal
   # unwinds. (Which values each refuses differs: a copy walks the fields a save leaves out, @serializationTransients,
-  # and shares what a save refuses, a widget outside the structure, a function -- reference doc §8.)
+  # but for those its class's copy rebuilds, @copyTransients, and shares what a save refuses, a widget outside the
+  # structure, a function -- reference doc §8.)
   @WORLD_ROOT: "the world"
   @pathRoot: (root) ->
     if root.uniqueIDString? then root.uniqueIDString() else (root.constructor?.name ? "an object with no prototype")
@@ -71,7 +73,17 @@ class SerializationError
   @intoItem: (index) -> "[" + index + "]"
   @intoKey: (key) -> " → " + key
   @INTO_MAP_KEY: " (Map key)"
-  @INTO_MAP_VALUE: " (Map value)"
+  # (a key is spelled as it reads: a string quoted -- cut past MAP_KEY_SHOWN characters --, a number as itself, NaN,
+  # Infinity and -0 included, which JSON would write as null and 0)
+  @MAP_KEY_SHOWN: 40
+  @intoMapValue: (key) ->
+    keyText = switch typeof key
+      when "string"
+        quoted = JSON.stringify key
+        if quoted.length > SerializationError.MAP_KEY_SHOWN + 2 then quoted.slice(0, SerializationError.MAP_KEY_SHOWN + 1) + '…"' else quoted
+      when "number" then (if key is 0 and 1 / key < 0 then "-0" else String key)
+      when "boolean" then String key
+    if keyText? then " (Map value at " + keyText + ")" else " (Map value)"
   @INTO_SET_ITEM: " (Set item)"
   @enteringWidget: (widget) -> " (" + widget.uniqueIDString() + ")"
 
