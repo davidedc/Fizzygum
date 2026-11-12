@@ -439,7 +439,8 @@ NAMED like one.
     (`_compileInjectedMethods`), and the per-class `_reactToBeingCopied` hook. A property covered by none of these gets
     deep-copied — and a runtime-only object there is REFUSED by the Duplicator's closed set, as the
     save's refuses it: the walkers' one refusal (`SerializationError`, direction "copy": "Cannot copy: a
-    value of an unrecognized type (…) cannot be copied", with `SerializationError.UNRECOGNIZED_TYPE_REMEDY`,
+    value of an unrecognized type (…) cannot be copied", naming its root and the path to the field holding
+    the value, as a save's refusal does, with `SerializationError.UNRECOGNIZED_TYPE_REMEDY`,
     the remedy both walkers give, which a class author meets by making the value one its holder
     rebuilds — the Fix below), which `Widget.fullCopy` tells the person; the copy is built WHOLE before
     any of it reaches the world (the Duplicator's Note 3), so a refusal leaves no half-built widget
@@ -606,15 +607,24 @@ session-local (creation-order dependent, reset by `WorldWdgt.fullDestroyChildren
 `src/serialization/SerializationError.coffee` — a plain class (not `extends Error`, to
 avoid a phantom boot dependency) carrying `name`, human `message`, and the structured
 `rootDescription` / `path` / `offender` / `remediation` fields, plus a best-effort
-`.stack` and a multi-line `toString()`. One class serves both directions, so it also carries a
-`direction` — `"save"` (the default: the Serializer's throws) or `"load"` (the Deserializer's: a file
-this build cannot restore) — and `toString()` opens with words that say which one failed: "Cannot
-load this file: …" for a load, "Cannot serialize: …" for a save. Menu/file actions catch it and
+`.stack` and a multi-line `toString()`. One class serves every direction, so it also carries a
+`direction` — `"save"` (the default: the Serializer's throws), `"load"` (the Deserializer's: a file
+this build cannot restore) or `"copy"` (the Duplicator's: a value a copy cannot carry) — and
+`toString()` opens with words that say which one failed: "Cannot load this file: …" for a load,
+"Cannot copy: …" for a copy, "Cannot serialize: …" for a save. Menu/file actions catch it and
 `world.inform` that rendering; headless rigs assert on the structured fields (the rig's
 `world.loadGuard.fileDropInformsOnLoadError` also asserts the load wording). A save's `path` is the
-full property path from the root, and names each widget as the walk enters it
-(`Serializer._pathEntering`): `the world → .children[3] (RectangleWdgt#12) → .f`, a desktop child by
-its index in the snapshot's `children`, so a person can find the widget the refusal is about.
+full property path from the root, and names each widget as the walk enters it:
+`the world → .children[3] (RectangleWdgt#12) → .f`, a desktop child by its index in the snapshot's
+`children`, so a person can find the widget the refusal is about. A copy's refusal names its root and
+path alike — `FrameWdgt#1 → .contents (PanelWdgt#2) → .children[0] (RectangleWdgt#3) → .r` — told as the
+refusal UNWINDS through each step the copy took (`Duplicator`'s Note 4), so a copy that is not refused builds
+no path. Both walkers spell a path with ONE vocabulary, `SerializationError`'s (`WORLD_ROOT`, `pathRoot`,
+`intoProperty`, `intoItem`, `intoKey`, the Map/Set steps, `enteringWidget`), so the two spell the same route
+alike: a value both refuse, reached the same way, is named at the same place (the serialization rig's
+`duplicate.aRefusalNamesWhereTheValueIsHeld` holds a field's, a Map value's and a Set item's paths equal and
+spelled). What each REFUSES differs, by the rules above: a copy walks a `@serializationTransients` field a save
+leaves out, and keeps a function or a widget outside the structure that a save refuses.
 
 ---
 

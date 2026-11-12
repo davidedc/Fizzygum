@@ -3384,3 +3384,30 @@ for (const s of sites) if (s.absentBefore.length) {
       re-admission out of one notice, fail its checks (the run's two; the class edit's "stepped once more"), and the
       `sourceChanged` one also fails `SystemTest_macroAStepThatThrowsStopsStepping`'s Save half, which keeps proving
       the Save.
+- [x] **A copy's refusal names the value but not where it is held** (found by the independent review closing "A
+      Duplicate of an inspector on a SWCanvas Surface throws", in the plan's ledger; reached: a person runs code that
+      puts a native in a widget's field — `@r = new DOMRect` — in a widget nested in a window, then Duplicates the
+      window). The copier tracks no path, so its refusal ("Cannot copy: a value of an unrecognized type (DOMRect)
+      cannot be copied") names the value alone, and its remedy's "remove that field" does not say which; a Save of the
+      same window names its root and the path to the field (`at: … → .r`). The two walkers' refusals should say as
+      much as each other.
+      — CLOSED 2026-11-12 (self-ruled; loop unit U35). RULED: the copy's refusal names its root and path as the save's
+      does, and the two walkers spell a path with ONE vocabulary. The path is told as a copy refusal UNWINDS through
+      each step the walk took, so a copy that is not refused builds none (a copy is made on every Duplicate, template
+      drag and toolbar miniature, and should not pay for a refusal it does not meet);
+      the steps move to `SerializationError` (`pathRoot`, `intoProperty`, `intoItem`, `intoKey`, `INTO_MAP_KEY` /
+      `INTO_MAP_VALUE` / `INTO_SET_ITEM`, `enteringWidget`), the type both walkers raise and whose `path` they fill,
+      and the Serializer reads them there too (`Serializer._pathEntering` folds into `enteringWidget`; its text is
+      unchanged). LANDED: `Duplicator.duplicate` names the root; `_copyArray`, `_copyMap` (its values: keys are copied
+      as they are), `_copySet` and `_cloneContentInto` (its per-property step now `_clonePropertyInto`, called through
+      one `try`) tell an unwinding copy refusal their step through one helper, `_refusalThrough`, naming a widget of
+      the copy as entered (the Duplicator's Note 4); the reference doc (§8, which now names the copy direction too)
+      and SerializationError's header say so — the same ROUTE spelled alike; what each walker refuses still differs
+      (a copy walks the transient fields a save leaves out). "the world" is one constant, `WORLD_ROOT`. The menu
+      sweep's COPY_REFUSED line prints the refusal's "at:" line. PROVEN: the serialization rig's
+      `duplicate.aRefusalNamesWhereTheValueIsHeld` — a window holding a panel holding a rectangle whose field, a Map's
+      value or a Set's item a run filled with a DOMRect: the copy names the window its root and, e.g.,
+      `FrameWdgt#15 → .contents (PanelWdgt#5) → .children[0] (RectangleWdgt#29) → .bpHeld`, each path's tail spelled
+      literally (` → .bpHeld`, ` → .bpMap (Map value)`, ` → .bpSet (Set item)`), the save of the same window the same
+      path, and the Duplicate's one pop-up tells it on its "at:" line — on both backends; a plant of the old Duplicator
+      (no root, no path) fails it, "copy: undefined | undefined".

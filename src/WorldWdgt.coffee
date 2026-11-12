@@ -3031,7 +3031,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # Widget.serialize would crash the graph walker (D8). Point callers at the snapshot entry.
   serialize: (opts) ->
     throw new SerializationError "a whole world cannot be saved as a widget — call world.serializeWorldSnapshot() instead (menu: \"Save world snapshot…\")",
-      rootDescription: "the world"
+      rootDescription: SerializationError.WORLD_ROOT
       remediation: "Use world.serializeWorldSnapshot() to save the whole desktop, or serialize an individual widget subtree."
 
   # "Save world snapshot…" world-menu action: serialize + download over file://.

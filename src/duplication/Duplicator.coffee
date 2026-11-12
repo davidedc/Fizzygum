@@ -23,6 +23,10 @@
 # everything (duplicate). So a copy refused part-way -- a value of a type the copier does not
 # know (_copyFizzygumObject's closed set) -- leaves no half-built widget in an instance set, the
 # stepping set, a damage list or the keyboard receivers. (Its shells did take fresh IDs.)
+# Note 4: a refusal names where the refused value is held, as a save's does, in SerializationError's one path
+# vocabulary: each step the walk took to reach it -- a property, an Array's item, a Map's value, a Set's item, a widget
+# of the copy entered -- is told to the refusal as it unwinds through that step (_refusalThrough), and duplicate names
+# the root. A copy that is not refused builds no path.
 class Duplicator
 
   constructor: (allWidgetsInStructure) ->
@@ -40,9 +44,15 @@ class Duplicator
     @_finishings = []
 
   # PUBLIC entry: copy `value` (and everything it reaches) into a live sibling
-  # structure.
+  # structure. A refusal names `value` as its root, the path from it in front (Note 4).
   duplicate: (value) ->
-    copy = @_duplicate value
+    try
+      copy = @_duplicate value
+    catch err
+      if err?.direction is "copy"
+        err.rootDescription = SerializationError.pathRoot value
+        err.path = err.rootDescription + (err.path ? "")
+      throw err
     # the whole copy is built: now the world learns of it (Note 3)
     shell.registerThisInstance() for shell in @_shellsToRegister
     finish() for finish in @_finishings
@@ -113,7 +123,11 @@ class Duplicator
 
   _copyArray: (original) ->
     @_copyWithIdentity original, (=> []), (cloneOfMe) =>
-      cloneOfMe[i] = @_duplicate original[i] for i in [0...original.length]
+      for i in [0...original.length]
+        try
+          cloneOfMe[i] = @_duplicate original[i]
+        catch err
+          throw @_refusalThrough err, (SerializationError.intoItem i), original[i]
       return
 
   # A buffer is DATA, copied as an Array is: an ArrayBuffer byte for byte, and a view onto one (a typed
@@ -136,12 +150,20 @@ class Duplicator
   # bookkeeping like every other reference, so sharing and cycles are preserved.
   _copyMap: (original) ->
     @_copyWithIdentity original, (=> new Map), (cloneOfMe) =>
-      original.forEach (value, key) => cloneOfMe.set key, @_duplicate value
+      original.forEach (value, key) =>
+        try
+          cloneOfMe.set key, @_duplicate value
+        catch err
+          throw @_refusalThrough err, SerializationError.INTO_MAP_VALUE, value
       return
 
   _copySet: (original) ->
     @_copyWithIdentity original, (=> new Set), (cloneOfMe) =>
-      original.forEach (value) => cloneOfMe.add @_duplicate value
+      original.forEach (value) =>
+        try
+          cloneOfMe.add @_duplicate value
+        catch err
+          throw @_refusalThrough err, SerializationError.INTO_SET_ITEM, value
       return
 
   _copyDate: (original) ->
@@ -235,42 +257,60 @@ class Duplicator
       # deposit a false "vacated" rect onto a buffer it never painted into and pin the island.
       continue if Widget.isDerivedStateField property
       value = obj[property]
-      # A widget's PARENT is a structural link, written here directly rather than through
-      # TreeNode._addChild, so it is ANNOUNCED as _addChild announces it (noteStructureChange): a tree
-      # derivation cached while the walk links its widgets (root, the first clipping parent) must not
-      # be read again once the copy is whole.
-      #   A ROOT of the copy -- a widget whose parent is outside the copied structure -- comes back
-      # DETACHED, never pointing at a parent that does not hold it: the serializer's detach-root rule
-      # (serialization-duplication-reference.md §4), one fact for both walkers. Its caller places it
-      # (adds it, carries it, files it to the shelf); until then it is an orphan, so nothing done to
-      # it reaches the tree its original stands in, and nothing reads that tree as where it came from.
-      if property is "parent" and (value instanceof Widget)
-        cloneOfMe.parent = if @widgetsInStructure.has value then @_duplicate value else undefined
-        WorldWdgt.noteStructureChange()
-        continue
-      if !value?
-        # undefined, null, undefined
-        cloneOfMe[property] = undefined
-      else if typeof value is "object"
-        if NativeValueKinds.isDerivedAt obj, property
-          # a value DERIVED here (a canvas context beside its canvas, a stamped runtime value in a transient field): skip it -- the
-          # _rebuildDerivedValues pass below rebuilds it on the clone.
-          cloneOfMe[property] = undefined
-        else if value.keptByReferenceOnDeepCopy
-          # Kept by reference, two kinds: a shared world-level singleton (e.g.
-          # world.wallpaper, world.widgetFactory) is NOT part of the sub-structure
-          # being copied — exactly as the dispatch core returns a Widget outside the
-          # structure as-is; and an immutable value (Point, Rectangle, ShadowInfo,
-          # TransformSpec, SheetError) never changes, so sharing it is invisible.
-          # See docs/architecture/immutable-value-classes.md.
-          cloneOfMe[property] = value
-        else
-          cloneOfMe[property] = @_duplicate value
-      else
-        # boolean, number, bigint, string, symbol and function — except the
-        # clone's own fresh instanceNumericID, which must not be overwritten
-        cloneOfMe[property] = value if property isnt "instanceNumericID"
+      try
+        @_clonePropertyInto cloneOfMe, obj, property, value
+      catch err
+        throw @_refusalThrough err, (SerializationError.intoProperty property), value
     return
+
+  # One own property of the original onto its clone: _cloneContentInto's step, apart so a refusal met under it is
+  # told the property (Note 4).
+  _clonePropertyInto: (cloneOfMe, obj, property, value) ->
+    # A widget's PARENT is a structural link, written here directly rather than through
+    # TreeNode._addChild, so it is ANNOUNCED as _addChild announces it (noteStructureChange): a tree
+    # derivation cached while the walk links its widgets (root, the first clipping parent) must not
+    # be read again once the copy is whole.
+    #   A ROOT of the copy -- a widget whose parent is outside the copied structure -- comes back
+    # DETACHED, never pointing at a parent that does not hold it: the serializer's detach-root rule
+    # (serialization-duplication-reference.md §4), one fact for both walkers. Its caller places it
+    # (adds it, carries it, files it to the shelf); until then it is an orphan, so nothing done to
+    # it reaches the tree its original stands in, and nothing reads that tree as where it came from.
+    if property is "parent" and (value instanceof Widget)
+      cloneOfMe.parent = if @widgetsInStructure.has value then @_duplicate value else undefined
+      WorldWdgt.noteStructureChange()
+      return
+    if !value?
+      # undefined, null, undefined
+      cloneOfMe[property] = undefined
+    else if typeof value is "object"
+      if NativeValueKinds.isDerivedAt obj, property
+        # a value DERIVED here (a canvas context beside its canvas, a stamped runtime value in a transient field): skip it -- the
+        # _rebuildDerivedValues pass below rebuilds it on the clone.
+        cloneOfMe[property] = undefined
+      else if value.keptByReferenceOnDeepCopy
+        # Kept by reference, two kinds: a shared world-level singleton (e.g.
+        # world.wallpaper, world.widgetFactory) is NOT part of the sub-structure
+        # being copied — exactly as the dispatch core returns a Widget outside the
+        # structure as-is; and an immutable value (Point, Rectangle, ShadowInfo,
+        # TransformSpec, SheetError) never changes, so sharing it is invisible.
+        # See docs/architecture/immutable-value-classes.md.
+        cloneOfMe[property] = value
+      else
+        cloneOfMe[property] = @_duplicate value
+    else
+      # boolean, number, bigint, string, symbol and function — except the
+      # clone's own fresh instanceNumericID, which must not be overwritten
+      cloneOfMe[property] = value if property isnt "instanceNumericID"
+    return
+
+  # A copy refusal unwinding through a step the walk took is told that step, in front of the path it carries so far --
+  # and the value the step reached named, as a save names it, when it is a widget of the copy (Note 4). Anything else
+  # thrown passes as it is.
+  _refusalThrough: (err, step, value) ->
+    if err?.direction is "copy"
+      entered = if @widgetsInStructure.has value then SerializationError.enteringWidget value else ""
+      err.path = step + entered + (err.path ? "")
+    err
 
   # A DERIVED value (NativeValueKinds.isDerivedAt: a canvas context beside its canvas, a stamped runtime value in a transient field) is not copied:
   # for each property derived on the ORIGINAL, its value rebuilds itself onto the clone

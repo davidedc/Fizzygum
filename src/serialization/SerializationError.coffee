@@ -3,8 +3,8 @@
 # serialized subtree nor a well-known object) or a value it has no handler for (e.g. an own
 # function-valued property whose function keeps no source -- Widget.keptSourceOf -- and no transient
 # declaration), the deserializer when a file cannot be restored, and the Duplicator when a copy meets a
-# value of a type it does not carry (its closed set; it tracks no path, so its refusal names the value
-# alone). See docs/architecture/serialization-duplication-reference.md.
+# value of a type it does not carry (its closed set). A save's and a copy's refusal name where the value is
+# held alike, in the one path vocabulary below. See docs/architecture/serialization-duplication-reference.md.
 #
 # It is DELIBERATELY a plain class (NOT `extends Error`): the boot-time dependency
 # finder (src/boot/dependencies-finding.coffee) treats an `extends X` target as a
@@ -18,7 +18,7 @@
 # Fields:
 #   rootDescription — the serialization root, e.g. "FrameWdgt#1"
 #   path            — the property path from the root to the offending reference, e.g.
-#                     "FrameWdgt#1 → .contents (SliderWdgt#5) → .target"
+#                     "FrameWdgt#1 → .contents (SliderWdgt#5) → .target" (the path vocabulary below)
 #   offender        — a description of the thing that could not be encoded, e.g.
 #                     "StringWdgt#9, which is outside the serialized structure and not a
 #                      well-known object"
@@ -57,6 +57,23 @@ class SerializationError
     parts.push "  offending value: " + @offender if @offender?
     parts.push "  " + @remediation if @remediation?
     parts.join "\n"
+
+  # A refusal's PATH, one vocabulary for both walkers, so the two spell the same route alike: the root (a widget by
+  # its ID, the one a person finds it by; a world snapshot's is WORLD_ROOT), then each step the walk took -- into a
+  # property, an Array's item, a record's key, a Map's key or value, a Set's item -- and a widget named as the walk
+  # enters it. The Serializer writes a path as it descends; the Duplicator, only when a copy is refused, as the refusal
+  # unwinds. (Which values each refuses differs: a copy walks the fields a save leaves out, @serializationTransients,
+  # and shares what a save refuses, a widget outside the structure, a function -- reference doc §8.)
+  @WORLD_ROOT: "the world"
+  @pathRoot: (root) ->
+    if root.uniqueIDString? then root.uniqueIDString() else (root.constructor?.name ? "an object with no prototype")
+  @intoProperty: (name) -> " → ." + name
+  @intoItem: (index) -> "[" + index + "]"
+  @intoKey: (key) -> " → " + key
+  @INTO_MAP_KEY: " (Map key)"
+  @INTO_MAP_VALUE: " (Map value)"
+  @INTO_SET_ITEM: " (Set item)"
+  @enteringWidget: (widget) -> " (" + widget.uniqueIDString() + ")"
 
   # The remedy when a walker refuses a value of a type it does not carry (the Serializer's closed set, the
   # Duplicator's): what a PERSON can do first -- an inspector on it, a field a run filled with it -- then what a

@@ -84,14 +84,6 @@ class Serializer
       return "its " + "rgba".charAt(i) + " component is " + (if value? then typeof value else "absent") + ", not a number"
     undefined
 
-  # A refusal's path (SerializationError) one step on, INTO the widget a property, a slot or a
-  # world section holds, named as the walk enters it -- "… → .contents (SliderWdgt#5) → .target"
-  # -- so a refusal met inside its record names the widget a person has to find. Every widget the
-  # walk reaches is entered here (_buildObjectTable's refFor); a widget save's root is named by
-  # the path's start.
-  @_pathEntering: (path, widget) ->
-    path + " (" + widget.uniqueIDString() + ")"
-
   # Serialize a widget subtree to a JSON envelope string.
   # opts:
   #   prettyPrint       — indent the JSON for humans/diffs (default false)
@@ -107,7 +99,7 @@ class Serializer
   # object (e.g. the file-save path re-stringifies with a savedAt stamp).
   @buildEnvelope: (root, opts = {}) ->
     onExternal = opts.onExternalPointer or "throw"
-    rootDescription = if root.uniqueIDString? then root.uniqueIDString() else root.constructor.name
+    rootDescription = SerializationError.pathRoot root
     # the set of widgets that count as "in-structure" (O(1) membership); includes root — plus,
     # through the arrow contract's copy closure (Widget.allWidgetsInStructureForCopy, the ONE
     # closure fullCopy also consumes, so copy and save cannot disagree — reference-widgets plan
@@ -189,13 +181,15 @@ class Serializer
     # (§4.9) holds and no world state is silently dropped. (A stray {"$ext"} same-world token
     # is still resolvable by iid on restore, but "capture" leaves none for a settled world.)
     onExternal = opts.onExternalPointer or "capture"
-    table = @_buildObjectTable widgetSet, onExternal, "the world", undefined
+    table = @_buildObjectTable widgetSet, onExternal, SerializationError.WORLD_ROOT, undefined
     ref = table.refFor
 
     # --- the explicit world section (plain, greppable; outside the object table) ---
     section = {}
-    section.children = (ref(c, "the world → .children[" + i + "]") for c, i in snapshotChildren)
-    section.desktopColor = ref(theWorld.color, "the world → .color") if theWorld.color?
+    # each slot's path in the refusals' one vocabulary, from the world snapshot's root
+    worldPath = (name) -> SerializationError.WORLD_ROOT + SerializationError.intoProperty name
+    section.children = (ref(c, worldPath("children") + SerializationError.intoItem(i)) for c, i in snapshotChildren)
+    section.desktopColor = ref(theWorld.color, worldPath "color") if theWorld.color?
     section.alpha = theWorld.alpha if theWorld.alpha?
     section.isDevMode = theWorld.isDevMode
     section.wallpaperPatternName = theWorld.wallpaper?.patternName
@@ -216,14 +210,14 @@ class Serializer
     # the app windows, by app class name (each may be orphaned-but-revivable).
     section.appWindows = {}
     for [appName, appWindow] in liveAppWindows
-      section.appWindows[appName] = ref appWindow, "the world → .appWindows → " + appName
-    section.bin = ref(theWorld.binWdgt, "the world → .binWdgt") if theWorld.binWdgt?
-    section.shelf = ref(theWorld.shelfWdgt, "the world → .shelfWdgt") if theWorld.shelfWdgt?
+      section.appWindows[appName] = ref appWindow, worldPath("appWindows") + SerializationError.intoKey(appName)
+    section.bin = ref(theWorld.binWdgt, worldPath "binWdgt") if theWorld.binWdgt?
+    section.shelf = ref(theWorld.shelfWdgt, worldPath "shelfWdgt") if theWorld.shelfWdgt?
     # preferences: a FORCED data record. refFor would give {"$wk":"preferences"} (the
     # symbolic link that a widget-in-tree uses); here we need the actual values, restored
     # onto the static bag on load.
     if WorldWdgt.preferencesAndSettings?
-      section.preferences = {$r: table.encodeToSlot WorldWdgt.preferencesAndSettings, "the world → .preferences"}
+      section.preferences = {$r: table.encodeToSlot WorldWdgt.preferencesAndSettings, worldPath "preferences"}
     # per-class ID counters (restored into the freshly-zeroed ID space — §4.4/§4.9).
     section.idCounters = Serializer.collectIdCounters()
     # source edits (Phase 6) — embedded verbatim if the registry exists.
@@ -295,7 +289,9 @@ class Serializer
       return encodeFunction(value, owner, propName, path) if t is "function"
       # objects:
       if value instanceof Widget
-        return {$r: encodeToSlot(value, Serializer._pathEntering(path, value))} if widgetSet.has value
+        # a widget entered is named on the path, so a refusal met inside its record names the widget a person
+        # has to find
+        return {$r: encodeToSlot(value, path + SerializationError.enteringWidget(value))} if widgetSet.has value
         wk = WellKnownObjects.keyFor value
         return {$wk: wk} if wk?
         # external, non-well-known widget — the canonical rich-error case
@@ -307,7 +303,7 @@ class Serializer
           # demo PointerWdgt stands in for, off the tree) and "everything is in-structure"
           # is the intent (§4.9). Self-policing: if it reaches a truly unserializable value it
           # throws the same rich error below.
-          when "capture" then return {$r: encodeToSlot(value, Serializer._pathEntering(path, value))}
+          when "capture" then return {$r: encodeToSlot(value, path + SerializationError.enteringWidget(value))}
           else fail (value.uniqueIDString() + " is outside the serialized structure and is not a well-known object"),
                     path, describe(value),
                     "Serialize a common container that holds both widgets; or clear the connection; or register the target as a well-known object."
@@ -366,7 +362,7 @@ class Serializer
         # canvas context beside its canvas) is left out: after a load its holder rebuilds it, lazily,
         # as a fresh widget builds it
         continue if NativeValueKinds.isDerivedAt obj, name
-        props[name] = refFor obj[name], (path + " → ." + name), obj, name
+        props[name] = refFor obj[name], (path + SerializationError.intoProperty name), obj, name
       props
 
     # the world sets holding the widget, by their markers (@WORLD_SET_MEMBERSHIPS, in its order)
@@ -386,7 +382,7 @@ class Serializer
       # --- native / special types: $-tagged records (user class names can't collide) ---
       if NativeValueKinds.isArray obj
         record.class = "$Array"
-        record.items = (refFor(obj[i], path + "[" + i + "]") for i in [0...obj.length])
+        record.items = (refFor(obj[i], path + SerializationError.intoItem i) for i in [0...obj.length])
         return
       if NativeValueKinds.isDate obj
         record.class = "$Date"
@@ -405,13 +401,13 @@ class Serializer
       if NativeValueKinds.isMap obj
         record.class = "$Map"
         entries = []
-        obj.forEach (v, k) -> entries.push [refFor(k, path + " (Map key)"), refFor(v, path + " (Map value)")]
+        obj.forEach (v, k) -> entries.push [refFor(k, path + SerializationError.INTO_MAP_KEY), refFor(v, path + SerializationError.INTO_MAP_VALUE)]
         record.entries = entries
         return
       if NativeValueKinds.isSet obj
         record.class = "$Set"
         items = []
-        obj.forEach (x) -> items.push refFor(x, path + " (Set item)")
+        obj.forEach (x) -> items.push refFor(x, path + SerializationError.INTO_SET_ITEM)
         record.items = items
         return
       if obj instanceof Color
