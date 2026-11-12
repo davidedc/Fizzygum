@@ -186,7 +186,7 @@ class SourceEditsRegistry
           returned++
         catch error
           unreturned.push {metaObject, scope, memberName, source: metaObject.nonStaticPropertiesSources[memberName]}
-          console?.log "world snapshot: " + metaObject.name + "." + memberName + " could not be returned to its source at boot: " + error.message
+          console?.log "world snapshot: " + metaObject.name + "." + memberName + " could not be returned to its source at boot: " + (error?.message ? textOfThrownValue error)
     {returned, unreturned}
 
   # Which members returnThePageToBootSources LEFT (`unreturned`) the loaded world still runs as the PAGE
@@ -255,7 +255,7 @@ class SourceEditsRegistry
           theClass.applyMemberEdit r.propertyName, r.source
         applied++
       catch error
-        console?.log "world snapshot: class-scope source edit " + r.className + "." + r.propertyName + " could not be replayed: " + error.message
+        console?.log "world snapshot: class-scope source edit " + r.className + "." + r.propertyName + " could not be replayed: " + (error?.message ? textOfThrownValue error)
     applied
 
   # replay the MIXIN-scope records IN ORDER: an edit re-runs Mixin.applyMemberEdit
@@ -281,7 +281,7 @@ class SourceEditsRegistry
           theMixin.applyMemberEdit r.propertyName, r.source
         applied++
       catch error
-        console?.log "world snapshot: mixin-scope source edit " + r.mixinName + "." + r.propertyName + " could not be replayed: " + error.message
+        console?.log "world snapshot: mixin-scope source edit " + r.mixinName + "." + r.propertyName + " could not be replayed: " + (error?.message ? textOfThrownValue error)
     applied
 
   # rebuild a registry from the records embedded in a loaded snapshot.

@@ -68,9 +68,13 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
         toBeAddedToLog += "hence are not stepped any more.\n"
         toBeAddedToLog += "Edit/save any source code to give them another chance.\n\n"
 
-      toBeAddedToLog += err
-      if err.stack?
-        toBeAddedToLog += "\n\nStack:\n" + err.stack
+      # anything can be thrown -- null, undefined, a Symbol, an object with no prototype: the log says what
+      # was thrown, and a stack only where it carries one, both read so that no thrown value can make this
+      # report throw (textOfThrownValue, stackOfThrownValue)
+      toBeAddedToLog += textOfThrownValue err
+      stack = stackOfThrownValue err
+      if stack?
+        toBeAddedToLog += "\n\nStack:\n" + stack
       @addText toBeAddedToLog
 
     if !@parent.isVisible

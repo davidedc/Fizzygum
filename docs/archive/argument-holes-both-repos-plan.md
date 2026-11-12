@@ -3511,3 +3511,32 @@ for (const s of sites) if (s.absentBefore.length) {
       value at NaN)`, save and copy alike. Plants: no `@copyTransients` → the copy refused; the old Map step → the tail
       fails; the first shape's JSON spelling → `(Map value at null)`. The probe re-run (`probe-after.log`): every
       value's window saves and copies; the dpr-1 suite green.
+- [x] **A person's `throw null` or `throw undefined` stops the world** (found by the independent review closing "A run that
+      throws, or a script shortcut's press, tells no one it changed anything", in the plan's ledger; by reading, a
+      HYPOTHESIS to measure first — possibly a page that stops responding; reached: a console on any widget runs
+      `throw null`, or a step `-> throw undefined`). The input catch and the step catch (`WorldWdgt`) hand the thrown value
+      to `ErrorsLogViewerWdgt.showUpWithError`, which reads `err.stack?` — a TypeError on `null`, thrown inside the catch,
+      out of `doOneCycle`, so the animation loop is never re-armed.
+      — CLOSED 2026-11-12 (self-ruled; loop unit U40). MEASURED first (`Fizzygum-tests/.scratch/throw-null/probe.js`,
+      `index-sw.html`, a counter stepping every frame beside a step that throws): a step throwing `undefined` or `null`
+      STOPPED the world — the counter froze, the page error "Cannot read properties of undefined (reading 'stack')" from
+      `ErrorsLogViewerWdgt.showUpWithError`; a thrown string kept it cycling. A report that throws inside a world catch
+      escapes `doOneCycle`, and `animloop` re-arms only after a cycle returns. RULED: no report of a throw may itself
+      throw — every place that writes a thrown value into text reads it through ONE boot global, `textOfThrownValue`
+      (with `stackOfThrownValue`), which no value can make throw (a Symbol, an object with no prototype, one whose
+      toString throws included). Its first shape also armed `animloop`'s next frame before the cycle; the unit's
+      independent review showed that turns a stop into an ENDLESS REPLAY where a catch itself throws (the input queue
+      is cleared only after its catch: the person's code re-ran every frame — the plant log held 7227 errors from one
+      click) and lets a throwing macro end its test in green in the page, so that half was withdrawn; it also found the
+      first shape's log still choking on a Symbol and an object with no prototype (`"" + err`), and the same raw
+      writes elsewhere. LANDED: `textOfThrownValue` / `stackOfThrownValue` (src/boot/globalFunctions.coffee), read by
+      the error log, the LAYOUT_ERROR and DATAFLOW_ERROR lines, both SheetError builders (a formula's thrown Symbol
+      used to throw inside the dataflow catch), the source-edit replay's three notes (`error.message` of a thrown
+      null), and the harness's two catches (Automator's uncaught-error reporter, AutomatorPlayer's command-exception
+      line). PROVEN: a new assertion-only test, `SystemTest_macroAThrownNothingIsToldAndTheWorldGoesOn` — steps
+      throwing `undefined`, a Symbol and an object with no prototype are each banned and told (undefined,
+      Symbol(probe), [object Object]); a console's Run all, clicked, running `throw null`, is told (null); a formula
+      throwing a Symbol has an error value telling Symbol(probe) — passing at dpr 1 and 2, mouse and finger, Chrome and
+      WebKit, and as a FOLLOWER (no `WORLD_INVENTORY_` line); the dpr-1 suite green. Plants, each stopping the world at
+      its own case (an uncaught TypeError; the test cannot complete): the old log at `undefined`, the first shape's log
+      at the Symbol, the old cell record at the formula.

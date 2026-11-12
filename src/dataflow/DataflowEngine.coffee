@@ -651,7 +651,7 @@ class DataflowEngine
     stashed = @_errorsToReport
     @_errorsToReport = []
     stashed.forEach (each) ->
-      console.error "DATAFLOW_ERROR: a dataflowRecompute() threw: " + (each.error?.stack ? each.error)
+      console.error "DATAFLOW_ERROR: a dataflowRecompute() threw: " + (stackOfThrownValue(each.error) ? textOfThrownValue(each.error))
     return
 
   # ── GRAPH HELPERS ────────────────────────────────────────────────────────────────────────

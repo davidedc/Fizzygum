@@ -2229,7 +2229,7 @@ class WorldWdgt extends IconGridPanelWdgt
       # without this a broken app would no longer freeze (good) but would also go undetected (bad).
       # public-call-sanctioned: createErrorConsole stays public ([A] forbids the _-form); discrete
       # error-report path, consciously popped.
-      console.error "LAYOUT_ERROR: a _reLayout() threw during recalculateLayouts: " + (eachErr?.stack ? eachErr)
+      console.error "LAYOUT_ERROR: a _reLayout() threw during recalculateLayouts: " + (stackOfThrownValue(eachErr) ? textOfThrownValue(eachErr))
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 

@@ -79,6 +79,28 @@ window.classNamed = (name) ->
 # enumerable walk skips it.
 # Consumers: WorldWdgt.fullDestroyChildren's id-zeroing, Serializer.collectIdCounters,
 # WorldInventory's roots.
+# The TEXT of anything a throw can carry -- an Error, a string, null and undefined, a Symbol (`"" + it`
+# throws), an object with no prototype (no toString: String throws), one whose toString throws -- and its
+# stack where it carries one (a string). Every place that writes a thrown value into text (the error log,
+# the layout and dataflow error lines, a sheet's error value, the source-edit replay's notes, the
+# harness's catches) reads it through these two, so no report of a throw can itself throw: a report that
+# throws inside a catch escapes the world's cycle and stops it.
+window.textOfThrownValue = (value) ->
+  try
+    String value
+  catch notAString
+    try
+      Object::toString.call value
+    catch notEvenThat
+      "(a thrown value that cannot be written as text)"
+
+window.stackOfThrownValue = (value) ->
+  try
+    stack = value?.stack
+  catch unreadable
+    return undefined
+  if typeof stack is "string" then stack else undefined
+
 window.allClassFunctions = ->
   result = []
   for name in Object.getOwnPropertyNames window

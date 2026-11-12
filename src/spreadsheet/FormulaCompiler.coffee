@@ -103,7 +103,7 @@ class FormulaCompiler
       # compileFGCode throws a rich Error on a parse failure (boot ~88) — that IS the SYNTAX path.
       cell.compiledFn = undefined
       cell.boundNames = []
-      cell.value      = new SheetError "SYNTAX", (error?.message ? "" + error)
+      cell.value      = new SheetError "SYNTAX", (error?.message ? textOfThrownValue error)
       cell.errorFlag  = true
       return cell
 

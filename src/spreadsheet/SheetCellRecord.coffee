@@ -117,7 +117,7 @@ class SheetCellRecord
   # the drain cannot spin on the cell and references propagate the error (spec §5/§9.6). Detail is
   # logged to the console OUTSIDE the drain by the engine.
   dataflowNoteError: (error) ->
-    @_cacheValue new SheetError "ERR", (error?.message ? "" + error)
+    @_cacheValue new SheetError "ERR", (error?.message ? textOfThrownValue error)
 
   # Cache the computed value AND reconcile the cell's CellWdgt (spec §9.4 classify → present): the sheet
   # hosts/RETAINS a live widget (branch 1), mounts a swatch (branch 2), or paints the scalar text
