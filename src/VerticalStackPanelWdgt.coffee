@@ -32,7 +32,7 @@ class VerticalStackPanelWdgt extends ClippingWdgt
 
   # A vertical stack constrains a dropped child to its width/height ratio, and frees that
   # constraint when the child is grabbed back out. These container capabilities replace the
-  # `whereIn/whereFrom instanceof VerticalStackPanelWdgt` tests in the ratio mixin and
+  # `whereIn/whereFrom instanceof VerticalStackPanelWdgt` tests in the ratio-keeping hooks and
   # Example3DPlotWdgt; FrameWdgt declares its own pair (imposes false / releases true) --
   # a frame does NOT impose the ratio on its contents. (type-test-elimination campaign)
   imposesRatioConstraintOnDroppedChildren: ->

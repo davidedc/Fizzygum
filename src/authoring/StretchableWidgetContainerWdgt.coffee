@@ -113,16 +113,12 @@ class StretchableWidgetContainerWdgt extends Widget
     @contents?.paintingOverlay?()
 
   # ===== holder-frame ratio hooks (§5.B) =====
-  # Were KeepsRatioWhenInVerticalStackMixin's, applied to the retired editor
-  # middle layer -- which only RELAYED my own ratio machinery. As a framed
-  # citizen's direct content I answer the frame's dropped/grabbed
-  # notifications myself. (Hand-written, NOT the mixin -- deliberately: my sizing
-  # pair is the PINNED @ratio variant (content-aware, super-fallback), not the
-  # mixin's current-aspect one, so augmenting would inject six members only to
-  # have four immediately shadowed by my class body -- legal under the boot-order
-  # rule (class body wins over injections), but a misleading "augments-yet-
-  # overrides-most-of-it" read. Only these two 3-line relays would survive;
-  # not worth it.)
+  # As a framed citizen's direct content I answer the frame's dropped/grabbed
+  # notifications myself. (Hand-written, NOT a RatioLockedWdgt -- deliberately: my
+  # sizing pair is the PINNED @ratio variant (content-aware, super-fallback), not
+  # RatioLockedWdgt's current-aspect one. Extending it would CHANGE behaviour: my
+  # unpinned sizing falls back through `super` to Widget's pair, which would then be
+  # its ratio pair.)
   _reactToHolderFrameDropped: (whereIn) ->
     if whereIn?.imposesRatioConstraintOnDroppedChildren?()
       @_constrainToRatio()

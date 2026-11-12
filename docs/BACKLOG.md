@@ -580,8 +580,7 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 - [ ] §7: banked v1-excluded items: precompiled file, SWCanvas strip, baked edits, dirty guard
 
 ### `plans/mixin-removal-plan.md`
-AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phase 1 has landed (its §13); the rest runs in its §7 order. All ten owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
-- [ ] §7 Phase 2: KeepsRatio → `RatioLockedWdgt`
+AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phases 1–2 have landed (its §13); the rest runs in its §7 order. All ten owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
 - [ ] §7 Phase 3: Controller → `ControllerWdgt`
 - [ ] §7 Phase 4: the app-kit pair's shared base `CreatorWdgt`; the SmartPlacer mixin deleted
 - [ ] §7 Phase 5: the back buffer as two appearances, one line on text and a `BackBuffer` object

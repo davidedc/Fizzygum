@@ -1,6 +1,4 @@
-class GraphsPlotsChartsWdgt extends Widget
-
-  @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
+class GraphsPlotsChartsWdgt extends RatioLockedWdgt
 
   drawOnlyPartOfBoundingRect: false
   graphNumber: 1

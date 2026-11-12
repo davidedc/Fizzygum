@@ -1,6 +1,4 @@
-class IconWdgt extends Widget
-
-  @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
+class IconWdgt extends RatioLockedWdgt
 
   constructor: (@color = WorldWdgt.theme.iconInk) ->
     super()

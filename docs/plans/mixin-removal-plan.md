@@ -1,6 +1,6 @@
 # Mixin removal — every mixin to an ordinary home, then delete the mechanism
 
-**STATUS: EXECUTING — AUTHORED 2026-11-10, MEASURED 2026-11-12; Phase 1 landed 2026-11-12 (§13).** Written to be
+**STATUS: EXECUTING — AUTHORED 2026-11-10, MEASURED 2026-11-12; Phases 1–2 landed 2026-11-12 (§13).** Written to be
 executed COLD by an LLM/engineer with ZERO prior context: everything needed is embedded here or one
 named-doc hop away.
 **Where it stands (§13):** all ten owner decisions are made — on the owner's stated criterion, the
@@ -148,7 +148,8 @@ The full present-tense reference is `docs/architecture/mixins.md` §2. The parts
 ## §2 Exact current state
 
 **As of 2026-11-12, before Phase 1.** A landed phase moves these facts: its §13 row says what it
-removed (Phase 1: the Clipping row of §2.1, its 7 consumer slots, its four borrow sites of §2.3), and
+removed (Phase 1: the Clipping row of §2.1, its 7 consumer slots, its four borrow sites of §2.3; Phase 2: the
+KeepsRatio row, its 3 slots), and
 §2.4's cross-checks then print the remainder.
 
 ### 2.1 Inventory
@@ -403,9 +404,14 @@ already exists. The stub count goes from "≈100+" to at most nine (§6 S1's fal
 mixin member sits on the CONSUMER's own prototype. Afterwards it sits on base `B`, with the
 consumer extending `B`. For a consumer that extended `Widget` directly: every lookup resolves to
 the same body it does today, the consumer's own same-named members still win, and exactly two
-things change — (a) `super` inside a consumer member that shadows a moved member now reaches `B`'s
-member where it used to reach `Widget`'s; (b) the member is inherited, no longer the prototype's
-own, which changes inspector member lists and class chips. For a consumer that had another parent
+things change for its members — (a) `super` inside a consumer member that shadows a moved member now
+reaches `B`'s member where it used to reach `Widget`'s; (b) the member is inherited, no longer the
+prototype's own, which changes inspector member lists and class chips — and one for its statics:
+(c) a class copies its parent's own statics when it is defined (`extend`, `src/boot/globalFunctions.coffee`),
+so a consumer defined after boot (a lazy part's) starts `instancesCounter` and
+`lastBuiltInstanceNumericID` from `B`'s, never instantiated and so 0, where it took `Widget`'s live
+count. That reaches only the numbers in instance names (messages, saved files) until the next world
+reset, which zeroes every `lastBuiltInstanceNumericID`, and the never-reset profiling count `instancesCounter`. For a consumer that had another parent
 (§2.2's eight), that parent's contribution must be restated on the consumer, and nothing else.
 
 ### 5.1 `ClippingAtRectangularBoundsMixin` → base class `ClippingWdgt extends Widget` (core)
@@ -1066,6 +1072,7 @@ changelog prose; add the base-class lookup rule and the new classes to
 | S1 the back buffer — paper half | Palette and canvas answer through their appearance; text keeps one line and no appearance; the rest becomes a `BackBuffer` object (D3). Open: whether text keeps the shadowing `calculateKeyValues` | 2026-11-10 | by reading; §6 S1 |
 | S1 — measured half | The two `calculateKeyValues` agree on every call the suite makes, at both densities; they differ only for a bare top-left `SCALEUP` `StringWdgt` in a box larger than its text. The buffer clamp is the blit's and goes into `BackBuffer`; text keeps no shadowing member (D10). The suite already paints a selected text, palette and canvas | 2026-11-12 | instrument over the suite at dpr 1 and 2, and a direct probe; §6 S1 |
 | Phase 1 — Clipping → `ClippingWdgt` | Landed as a pure move: the ten members moved verbatim into `src/basic-widgets/ClippingWdgt.coffee` (the text diff is one comment); seven consumers re-parented, `ClippingBoxWdgt` states `BoxWdgt`'s constructor; the four `PanelWdgt::….call @` borrows are `super`. The resolution map's every changed line is a spelling the compile path explains (a class member's function is named; the real `super` spells its target), each proven by undoing it and getting the old hash back. The map lists every member but constructors and statics, over the 547 classes of the dev build: `ClippingBoxWdgt`'s restated constructor, and the two descendants in the flag-gated `video-player` part (`SimpleImageWdgt`, `VideoPlayerCanvasWdgt`, which define no moved member), were checked by reading and by the independent review | 2026-11-12 | loop U2: `Fizzygum-tests/.scratch/mixin-removal-loop/u2-clipping/` (PREP.md, the map diffs, `reverse-check.py`); `fg presuite`, `fg gauntlet`, `fg homepage` (its LEDGER) |
+| Phase 2 — KeepsRatio → `RatioLockedWdgt` | Landed as a pure move: the six members and the mixin's ASPECT CONTRACT header moved verbatim into `src/basic-widgets/RatioLockedWdgt.coffee` (the header gains an opening paragraph — what the class is, and its two deliberate non-subclasses — and "this mixin's" reads "mine"); `IconWdgt`, `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt` re-parented — no `super`, no shadowing, no borrow. The lazy-load rig's `LAZY_CONSUMER_TAKES_MIXIN_EDITS` retired with both its plants (mechanism-only, §7 table). The resolution map's every changed line is the class path naming a moved function, each proven by undoing it; the one change outside the map is (c) of the lookup rule above (the lazy plot bases' instance counters) | 2026-11-12 | loop U3: `Fizzygum-tests/.scratch/mixin-removal-loop/u3-ratio/`; `fg presuite`, `fg gauntlet`, `fg homepage` (its LEDGER) |
 | S1 — the change under the gauntlet | — (Phase 5) | | |
 | S2 pointer state — paper half | A hover hook cannot ask the hand, so a look is asked at paint; the copies exist because the mixin's look hook stores a colour; the shape is D1's | 2026-11-10 | by reading; §2.5, §6 S2 |
 | S2 — measured half | Stored state and the hand's facts agree in every lit state the suite shows (35 classes, mouse and finger) but six cases, of which two are the classes' own rules and one a stale copy; `pressesOn` must ask that the pointer be over the widget; the tooltip bullet as first written would have given eight classes a tooltip. Questions D6–D9 | 2026-11-12 | instrument over the suite as a mouse and as a finger, and reading; §2.5, §6 S2 |
@@ -1096,3 +1103,4 @@ changelog prose; add the base-class lookup rule and the new classes to
 - [x] §6 S3: the edit-mode relay into `StretchablePanelWdgt` — empirical half — CLOSED 2026-11-12 as an item: its measured half is done (§6 S3: the relay is live from one door, which no test opens; the early-return state is reached by no product path), and the change, opened by a test of the relay, is the Phase 6 line's.
 - [x] §0.4: owner decisions D6–D9 (pointer looks that follow the pointer where a stored state lagged it; the slider thumb; a finger's hover on handles and layout chrome; the eight classes carrying a tooltip they never show) and D10 (the selection ring of a text smaller than its box) — each with a recommendation; Phase 7 waits on D6–D9, Phase 5 on D10 — CLOSED 2026-11-12: the owner chose the recommended option of each ("All A"), as §0.4 and §13 record; no phase waits on the owner.
 - [x] §7 Phase 1: Clipping → `ClippingWdgt` — CLOSED 2026-11-12 (loop). The ten members moved verbatim into the core base class `ClippingWdgt` (`src/basic-widgets/`), the seven consumers re-parented (`ClippingBoxWdgt` states `BoxWdgt`'s constructor), the four `PanelWdgt::….call @` borrows became `super`, the mixin file deleted. Proven by the resolution map over the dev build's 547 classes (every changed line explained and hash-proven; constructors, statics and the flag-gated video-player part checked by reading), the presuite, the gauntlet and `fg homepage`; one serialization fact re-pointed onto the inherited field and seen failing on a plant, two donor facts retired (§7 table, Phase 1 rows).
+- [x] §7 Phase 2: KeepsRatio → `RatioLockedWdgt` — CLOSED 2026-11-12 (loop). The six members and the aspect-contract header moved verbatim into the core base class `RatioLockedWdgt` (`src/basic-widgets/`); `IconWdgt` and the two plot bases re-parented; the mixin file deleted; `parts-lazy-load-headless.js`'s `LAZY_CONSUMER_TAKES_MIXIN_EDITS` retired with its two plants (§7 table). Proven by the resolution map (every changed line explained and hash-proven), the presuite, the gauntlet and `fg homepage`.

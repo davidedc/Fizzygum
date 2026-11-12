@@ -65,13 +65,14 @@ class Example3DPlotWdgt extends Widget
   # The stack/window checks below ask the container capabilities
   # imposesRatioConstraintOnDroppedChildren / releasesRatioConstraintOnGrabbedChildren
   # rather than testing its class. (type-test-elimination campaign)
-  # Hand-written, NOT KeepsRatioWhenInVerticalStackMixin -- deliberately: this is
+  # Hand-written, NOT a RatioLockedWdgt -- deliberately: this is
   # the PINNED @ratio variant (captured at _constrainToRatio time, super-fallback
-  # when unpinned, vs the mixin's stateless current-aspect sizing), and it
+  # when unpinned, vs RatioLockedWdgt's stateless current-aspect sizing), and it
   # additionally wires the DIRECT drop/grab hooks (_reactToBeingDropped/
-  # _reactToBeingGrabbed) alongside the holder-frame pair. Augmenting would inject
-  # six members and have every one of them immediately shadowed by this class body
-  # -- legal (class body wins over injections) but a misleading read.
+  # _reactToBeingGrabbed) alongside the holder-frame pair. Extending RatioLockedWdgt
+  # would CHANGE behaviour, not just shadow its six members: my unpinned
+  # `_setWidthSizeHeightAccordingly` and `preferredExtentForWidth` fall back through
+  # `super` to Widget's width-invariant pair, which would then be its ratio pair.
 
   _reactToBeingDropped: (whereIn) ->
     super

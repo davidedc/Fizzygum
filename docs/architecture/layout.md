@@ -237,7 +237,7 @@ A container that must size itself to its content therefore cannot ask "how big w
 Every width→height widget defines a side-effect-free
 **`preferredExtentForWidth(availW) → Point`** — "what extent would I take at this width, without touching `@bounds`."
 It is overridden on `TextWdgt`, `VerticalStackPanelWdgt`, `FrameWdgt`, `AnalogClockWdgt`,
-`KeepsRatioWhenInVerticalStackMixin`, `TransformFrameWdgt` (and more); the base `Widget` default returns current
+`RatioLockedWdgt`, `TransformFrameWdgt` (and more); the base `Widget` default returns current
 height (width-invariant). A container measures its subtree with `Widget.subWidgetsMergedPreferredBounds` — the pure
 twin of the applied-bounds `subWidgetsMergedFullBounds`.
 
@@ -397,7 +397,7 @@ chrome excluded by the `isLayoutChrome` capability. A border layout is COMPOSITI
 `initialiseDefaultFrameContentLayoutSpec` override — e.g. the clock and `IconWdgt`; the spreadsheet is a grow-1
 fill); `grow 1` fills. A
 container-owned window sizes like a captured one from birth — the container owns its width; the free desktop-window
-hug is desktop behaviour. The aspect contract (`KeepsRatioWhenInVerticalStackMixin`) is documentation now, not a
+hug is desktop behaviour. The aspect contract (`RatioLockedWdgt`) is documentation now, not a
 cycle-breaker: a pure measure + role-appropriate grow, with the cycle structurally impossible.
 
 ### 4.3 ASKING containers vs DICTATING containers
@@ -506,7 +506,7 @@ To fit the engine, a new widget / container / layout spec honours, in priority o
    re-fits you after your content settles. Do not wire a manual notification.
 
 5. **Aspect content follows the aspect contract:** a pure `preferredExtentForWidth` + role-appropriate grow
-   (`grow 0` for a size-stable stack element, `grow 1` for fill), documented at `KeepsRatioWhenInVerticalStackMixin`.
+   (`grow 0` for a size-stable stack element, `grow 1` for fill), documented at `RatioLockedWdgt`.
 
 The SCHEDULE/APPLY invariant these realize is build-gated by lint `[F]`; a terminal synchronous apply that is
 genuinely sanctioned carries a `# layout-apply-sanctioned: <why>` marker. Prefer a capability query (`foo?()` the

@@ -973,9 +973,9 @@ class FrameWdgt extends ClippingWdgt
     true
 
   # A frame does NOT impose its ratio on dropped children (was the
-  # `!(whereIn instanceof FrameWdgt)` exclusion in the ratio mixin /
+  # `!(whereIn instanceof FrameWdgt)` exclusion in the ratio-keeping hooks /
   # Example3DPlotWdgt) -- but it DOES release the constraint when a child is
-  # grabbed back out, exactly as a stack does. The ratio mixin queries the
+  # grabbed back out, exactly as a stack does. RatioLockedWdgt queries the
   # holder via ?(), so an absent release method would silently stop releasing.
   # (type-test-elimination campaign; the release was inherited from the stack
   # until the A2a de-inherit made it explicit.)

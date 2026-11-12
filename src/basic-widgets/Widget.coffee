@@ -1053,7 +1053,7 @@ class Widget extends TreeNode
 
   # Set my width and re-fit my height / children to it. The width->height POLICY is
   # POLYMORPHIC: shape-keepers override this WHOLE method (AnalogClockWdgt -> square,
-  # KeepsRatioWhenInVerticalStackMixin -> ratio, the icons / Stretchable* -> their own
+  # RatioLockedWdgt -> ratio (the icons, the plots), GenericCompositeIconWdgt / Stretchable* -> their own
   # extent rule). The base sets the width and re-fits a size-tracking widget's children at it NOW:
   # a deferred-layout widget always, a non-deferred tracking container (a window, a stack) when
   # the width left its re-fit pending (the branch below). HOW the deferred re-fit is triggered depends on WHETHER A LAYOUT PASS IS ALREADY RUNNING:
@@ -1099,7 +1099,7 @@ class Widget extends TreeNode
   # BASE default is for a widget whose height is INVARIANT under width (a plain box, an icon, a menu): its
   # height at any width is just its current height. Width->height-coupled widgets OVERRIDE it with their
   # real measure -- TextWdgt (wrapped-text height), VerticalStackPanelWdgt (Sigma of children's),
-  # FrameWdgt (content + chrome), AnalogClockWdgt / KeepsRatioWhenInVerticalStackMixin (aspect). Reading
+  # FrameWdgt (content + chrome), AnalogClockWdgt / RatioLockedWdgt (aspect). Reading
   # @height()/@width() here is allowed: those are STABLE applied geometry, NOT a mutate-then-read-back.
   preferredExtentForWidth: (availW) ->
     new Point (availW ? @width()), @height()
@@ -2655,7 +2655,7 @@ class Widget extends TreeNode
   # NON_FINITE_GEOMETRY signature is what the boot-smoke / apps-launch gates and the SystemTest runners
   # fail on (see Fizzygum-tests). console.error, NOT throw -- non-fatal, so the guard never itself becomes
   # the crash it guards against. Born from the 2026-07-15 plot-uncollapse NaN
-  # (KeepsRatioWhenInVerticalStackMixin returned undefined -> FrameWdgt `stackHeight += undefined` -> NaN
+  # (the ratio-keeping _setWidthSizeHeightAccordingly returned undefined -> FrameWdgt `stackHeight += undefined` -> NaN
   # window height -> NaN damage rect). (This supersedes the old dormant no-op Point/Rectangle `debugIfFloats`
   # hooks, deleted in the same arc: a per-accessor check there was too hot AND would false-positive on the
   # legitimate fractional values that flow through those accessors; the never-legitimate non-finite case is

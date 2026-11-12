@@ -421,8 +421,8 @@ const tierName = (name) => (name && name.startsWith('@') ? name.slice(1) : name)
 // --- mixin-DSL awareness: ATTRIBUTE methods defined inside a mixin instead of lumping them into
 // onceAddedClassProperties. A mixin (src/mixins/*) declares its methods INSIDE a 2-space
 // `onceAddedClassProperties: (fromClass) -> @addInstanceProperties fromClass, { … }` block; the method
-// keys sit one nesting level deeper -- 4-space (e.g. KeepsRatioWhenInVerticalStackMixin) or 6-space
-// (most others). The shared lib/coffee-method-header.js methodBoundary() locks the hash indent from the
+// keys sit one nesting level deeper -- 4-space or 6-space (6 in every mixin in the tree
+// today). The shared lib/coffee-method-header.js methodBoundary() locks the hash indent from the
 // FIRST sub-method and treats siblings at that indent as headers (deeper lines = their bodies); for a
 // NON-mixin file mixinHashIndent stays null and the grouping is the 2-space METHOD_HEADER one.
 // What a fully-closed line does to the current method grouping:

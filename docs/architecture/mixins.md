@@ -129,9 +129,8 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     on the pass that creates it, all or nothing; the one store-vs-boot comparison is
     `Class.membersAwayFrom`). The live members are thereby a function of the stores, which
     is why replaying the recorded edits reproduces them (the reference doc §12).
-    `parts-lazy-load-headless.js` (`LAZY_CONSUMER_TAKES_MIXIN_EDITS`) holds it for a lazy
-    part on the dev `index.html` (the one page where a part loads after the boot), and
-    `fg homepage`'s production smoke for a class made at run time on the pre-compiled tree. An injected method's source is kept on its FUNCTION (`Widget.keptSourceOf`,
+    `fg homepage`'s production smoke holds it for a class made at run time on the pre-compiled
+    tree. An injected method's source is kept on its FUNCTION (`Widget.keptSourceOf`,
     written by `Widget.injectProperty` only); no class or mixin edit writes one.
   - Both live-edit twins compile through a bare global-assignment eval and write the
     result onto the prototype — nothing runs with a prototype as `this`, since code run
@@ -252,11 +251,11 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (7 mixins, 1014 L, 28 consumer slots across 21 files, counted 2026-11-12; the rows as verified 2026-08-18)
+## 3. Inventory (6 mixins, 945 L, 25 consumer slots across 18 files, counted 2026-11-12; the rows as verified 2026-08-18)
 
-Five live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
-in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 28 is the
-sum of the per-mixin consumer counts below, spread over 21 distinct files: `CreatorButtonWdgt` and
+Four live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
+in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 25 is the
+sum of the per-mixin consumer counts below, spread over 18 distinct files: `CreatorButtonWdgt` and
 `GlassBoxTopWdgt` take three each, and `PaletteWdgt`, `StringWdgt` and
 `EditorContentPropertyChangerButtonWdgt` take two each.
 
@@ -265,28 +264,29 @@ sum of the per-mixin consumer counts below, spread over 21 distinct files: `Crea
 | `ControllerMixin` | 516 | 7 — `SliderWdgt`, `StringWdgt` (whence `TextWdgt`/`SimpleTextWdgt` inherit it — SimpleTextWdgt's own augment was the double-injection the boot guard now forbids), `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | yes — `graphEdgesOut` (super-composed, graph-edges §4.2) |
 | `HighlightableMixin` | 54 | 6 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
-| `KeepsRatioWhenInVerticalStackMixin` | 69 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `VerticalStackViewportWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ViewportWdgt`) | unrelated branches (Viewport / Panel / Widget) | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
 | `ParentStainerMixin` |       28 | 4 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt`, `GlassBoxTopWdgt` (a thumbnail's lid), `CodeInjectingSimpleRectangularButtonWdgt` (a paint tool): a toolbar tool tells the tool cell it stands in that its pointer state changed (`GlassBoxBottomWdgt.noteItemStateChanged`), and the cell derives its own look | unrelated leaves | no |
 
-(The count excludes three that no longer exist as mixins: dead `ContainerMixin`, deleted;
-the five misfiled ones, folded into standard-OO homes — §4; and `DeepCopierMixin`, inverted
-into the `Duplicator` engine (`src/duplication/`) — §5-C. `Mixin.allMixines` is load-bearing
-for the inspector.)
+(The count excludes those that no longer exist as mixins: dead `ContainerMixin`, deleted;
+the five misfiled ones, folded into standard-OO homes — §4; `DeepCopierMixin`, inverted
+into the `Duplicator` engine (`src/duplication/`) — §5-C; and the clipping and the ratio-keeping
+ones, now the base classes `ClippingWdgt` and `RatioLockedWdgt` (`plans/mixin-removal-plan.md`).
+`RatioLockedWdgt`'s deliberate non-subclasses are `Example3DPlotWdgt` and
+`StretchableWidgetContainerWdgt`, which carry pinned-`@ratio` variants of its protocol (field-based,
+super-fallback): do not re-parent them onto it. `Mixin.allMixines` is load-bearing for the inspector.)
 
 ## 4. Which of these are GENUINE multiple inheritance
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core — all 7 current mixins):** `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
+- **Genuine (the keep-core — all 6 current mixins):** `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
   patch-programming — and the home the dataflow engine deliberately built on),
   `HighlightableMixin` (input-hook state machine across ≥4 branches),
   `BackBufferMixin` (paint-path override; load-bearing for the unified shadow mechanism
   — the blit at α is WHY a transparent text widget's shadow is its glyphs),
   `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
   bubbling to a coordinating parent, across Viewport/Panel/Widget branches),
-  `KeepsRatioWhenInVerticalStackMixin`,
   `WidgetCreatorAndSmartPlacerOnClickMixin` (barely — 2 unrelated leaves), `ParentStainerMixin`
   (4 unrelated leaves: the toolbar tools).
 - **Misfiled (single consumer / single subtree / config bag) — all five now live in

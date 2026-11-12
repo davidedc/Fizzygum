@@ -1,6 +1,4 @@
-class PlotWithAxesWdgt extends Widget
-
-  @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
+class PlotWithAxesWdgt extends RatioLockedWdgt
 
   # the plotted content, taken by the constructor, and the two AxisWdgts built around it
   plot: undefined

@@ -930,8 +930,7 @@ setters). They all take both the header spelling and the grouping from
 `MIXIN_METHOD_HEADER` say what a header line is; `methodBoundary` / `methodSpans` say which method a line
 belongs to — a class's 2-space methods, its class-side `@name:` methods and a mixin's
 `onceAddedClassProperties` members alike (the member indent is locked from the first member, and
-`mixinMemberIndent` answers it: 4-space in `KeepsRatioWhenInVerticalStackMixin` and
-`BubblesEditModeToCoordinatorMixin`, 6-space in the others). Re-declare neither locally — the module
+`mixinMemberIndent` answers it: 4-space or 6-space, 6-space in every mixin in the tree). Re-declare neither locally — the module
 exists because six copies of one regex had drifted into a shared blind spot nobody could see, and the
 grouping had been copied three times besides, while every gate that knew only `METHOD_HEADER` read a
 whole mixin as ONE method named `onceAddedClassProperties`.

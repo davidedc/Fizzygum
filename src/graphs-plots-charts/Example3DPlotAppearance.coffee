@@ -5,7 +5,7 @@
 # NB: this is the SAME paint scaffold the plot family shares in
 # GraphsPlotsChartsAppearance, but Example3DPlotWdgt extends Widget directly --
 # reparenting it onto the plot base would also pull in that base's constructor +
-# KeepsRatioWhenInVerticalStackMixin (a behaviour change), so this appearance copy is
+# RatioLockedWdgt's sizing (a behaviour change), so this appearance copy is
 # kept deliberately rather than deduplicated.
 
 class Example3DPlotAppearance extends Appearance

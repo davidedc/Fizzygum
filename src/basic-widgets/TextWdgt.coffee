@@ -323,7 +323,7 @@ class TextWdgt extends StringWdgt
   # affordance -- asserted by macroStackPanelLooseWhenEmptyTightWhenFilled image_3). The
   # class-owned-explicit-grow pattern mirrors the fixed/aspect pair's grow 0 (IconWdgt /
   # AnalogClockWdgt -- SimpleSpreadsheetWdgt has been a grow-1 fill since F6, per
-  # KeepsRatioWhenInVerticalStackMixin's header). A FIT_TEXT_TO_BOX text keeps its box (see the
+  # RatioLockedWdgt's header). A FIT_TEXT_TO_BOX text keeps its box (see the
   # measure above), so it keeps the base derivation; so does a spec that already carries a
   # decided grow (a prior placement's derivation or a user's elasticity edit) -- the ?= only
   # fills UNDECIDED. (U1 -- sizing-model unification §9.5.)

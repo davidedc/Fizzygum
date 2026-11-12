@@ -19,7 +19,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
   #   the stack width is fill-class and tracks; a narrower one keeps its size — D2-def). An
   #   EXPLICIT grow (the fixed/aspect classes' 0, a menu edit, a constructor arg) always wins
   #   over the derivation. (The aspect CONTRACT — pure measure + role-appropriate grow — is
-  #   documented at KeepsRatioWhenInVerticalStackMixin, D6.)
+  #   documented at RatioLockedWdgt, D6.)
   desiredWidth: undefined
   grow: undefined
   alignment: 'left'
