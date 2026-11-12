@@ -108,6 +108,10 @@ ClippingAtRectangularBoundsMixin =
         # This is because the border has to be drawn inside the Frame,
         # but the contents might paint over it. So, we need to
         # paint them AFTER the content has been painted.
+        # The blame for a paint that throws is mine for them: super gave it back to my caller as it returned,
+        # so I take it for my stroke and overlay, and give it back after (Widget.fullPaintIntoAreaOrBlitFromBackBuffer)
+        blameBefore = world.paintingWidget
+        world.paintingWidget = @
         if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
           if !appliedShadow?
             if !@paintStroke?
@@ -117,6 +121,8 @@ ClippingAtRectangularBoundsMixin =
             # (drawn to survive the children painting over it) would in turn paint over my selection frame.
             # (Base Widget draws it at the tail of its content-paint; a clipping panel needs it here.)
             @_paintEditorSelectionOverlayIfSelected aContext, clippingRectangle, appliedShadow
+        world.paintingWidget = blameBefore
+        return
 
       
       # ⚠ LOCKSTEP: ViewportWdgt overrides BOTH this method and _fullPaintIntoAreaOrBlitFromBackBufferJustShadow

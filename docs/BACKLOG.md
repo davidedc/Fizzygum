@@ -202,15 +202,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       hand. And a script's "Try it" runs its text with a direct `eval` inside `Widget.evaluateString`, where its
       shortcut's press runs the saved `new Function(…).call world`: a top-level `return` works in one and is a syntax
       error in the other.
-- [ ] **A paint that throws after its children blames the last child painted** (found by the independent review
-      closing "Only an inspector's Save gives a banned widget another chance", in the plan's ledger; by reading; a
-      HYPOTHESIS to measure first — possibly a page hang). `Widget.fullPaint` sets `world.paintingWidget = @` before
-      painting and nothing restores it after the children, so a throw in what a widget paints after them (the
-      selection overlay, `_paintEditorSelectionOverlayIfSelected`; a panel's stroke) would ban the innocent last
-      child; on the next pass `_hideOffendingWidget` finds it already banned and hides nothing more, while
-      `_queueErrorForLaterReporting` queues another error, so `_findOutAllOtherOffendingWidgetsAndPaintWholeScreen`'s
-      `until previousErrorsCount == currentErrorsCount` loop would never end. Reach: a class edit that makes a panel's
-      or a frame's after-children paint throw.
+- [ ] **A paint that throws and bans no one is told again on every frame** (found by the independent review closing "A
+      paint that throws after its children blames the last child painted", in the plan's ledger; reached: a class edit
+      that makes a desktop widget's `opaqueCoveredRect` throw — the world's occlusion scan meets it before any widget
+      paints — or one that makes the world's own paint throw). The retry loop ends on a pass that bans no one new, so
+      the page goes on, but nothing is banned: the next frame's paint throws the same way, and each error is added to
+      the error log, whose `addText` re-sets the whole growing log every time, so the page slows as it goes.
 - [ ] **An auto-scroll's step is told a press's end as a stroke's would be** (found by the independent review closing
       "A viewport's gesture bookkeeping outlives its gesture", in the plan's ledger; by reading; low).
       `ViewportWdgt.pressEnded` / `pressCancelled` call whichever `_scrollStep` is installed with a point; an

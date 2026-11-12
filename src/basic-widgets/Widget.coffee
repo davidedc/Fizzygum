@@ -3144,8 +3144,13 @@ class Widget extends TreeNode
 
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    # used to track which widget has been throwing
-    # an error while painting
+    # THE BLAME for a paint that throws (world.paintingWidget, the widget the world's paint catch bans and
+    # hides): mine while my full paint runs, my caller's again once it returns -- so what my content paint
+    # draws after my children (the selection overlay) is blamed on me, never on my last child. An override of
+    # this full paint that paints after super has, by then, had the blame given back to ITS caller, and takes
+    # it for that paint itself, as the clipping mixin does around its stroke and overlay. A throw leaves the
+    # blame where it was, on the widget whose paint threw.
+    blameBefore = world.paintingWidget
     world.paintingWidget = @
 
     # if there is a shadow "property" object
@@ -3168,6 +3173,9 @@ class Widget extends TreeNode
       if aContext == world.worldCanvasContext or world.paintingIntoIslandBuffer?
         @_recordDrawnAreaForNextDamageRects()
       @_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
+
+    world.paintingWidget = blameBefore
+    return
 
 
   # to draw the shadow, most of the times you have to draw the whole

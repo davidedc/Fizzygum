@@ -908,6 +908,10 @@ class WorldWdgt extends IconGridPanelWdgt
     # covers this damage rect, paint STARTING FROM it (skipping the desktop fill + every child behind
     # it, within this rect) instead of the full back-to-front super() pass. _paintedFromFrontmostCoverer
     # returns true iff it did that painting; otherwise we fall back to the normal super() path.
+    # No widget answers for a paint that throws until its own full paint runs and takes the blame
+    # (Widget.fullPaintIntoAreaOrBlitFromBackBuffer): a blame an earlier paint's throw left must not answer
+    # for this one.
+    @paintingWidget = undefined
     if !@_paintedFromFrontmostCoverer aContext, aRect
       super aContext, aRect
 
@@ -1554,7 +1558,6 @@ class WorldWdgt extends IconGridPanelWdgt
           catch err
             @resetWorldCanvasContext()
             @_queueErrorForLaterReporting err
-            @_hideOffendingWidget()
             @_softResetWorld()
 
       # IF we got errors while repainting, the
@@ -1638,20 +1641,25 @@ class WorldWdgt extends IconGridPanelWdgt
       false
 
   _findOutAllOtherOffendingWidgetsAndPaintWholeScreen: ->
-    # we keep repainting the whole screen until there are no
-    # errors.
+    # we keep repainting the whole screen while a pass finds a NEW offender.
     # Why do we need multiple repaints and not just one?
     # Because remember that when a widget throws an error while
     # repainting, it bubble all the way up and stops any
     # further repainting of the other widgets, potentially
     # preventing the finding of errors in the other
-    # widgets. Hence, we need to keep repainting until
-    # there are no errors.
+    # widgets. Hence, we need to keep repainting while
+    # each pass bans a widget it had not banned before.
+    # A pass that bans no one new ENDS the loop: a clean pass; a throw no widget is blamed for (the world's
+    # own paint, its occlusion scan -- _hideOffendingWidget); or a throw blamed on a widget already banned
+    # (one shown again while still listed: the error log's own window, which showUpWithError shows). Each
+    # would otherwise throw the same way on every pass, forever. Each pass either bans a new widget, of
+    # finitely many, or ends; its error is reported like the rest -- and a throw that bans no one comes back
+    # with the next frame's paint.
 
-    currentErrorsCount = @errorsWhileRepainting.length
-    previousErrorsCount = undefined
+    currentBannedCount = @widgetsGivingErrorWhileRepainting.length
+    previousBannedCount = undefined
     numberOfTotalRepaints = 0
-    until previousErrorsCount == currentErrorsCount
+    until previousBannedCount == currentBannedCount
       numberOfTotalRepaints++
       try
         # public-call-sanctioned: fullPaintIntoAreaOrBlitFromBackBuffer is the public paint-pipeline
@@ -1660,11 +1668,10 @@ class WorldWdgt extends IconGridPanelWdgt
       catch err
         @resetWorldCanvasContext()
         @_queueErrorForLaterReporting err
-        @_hideOffendingWidget()
         @_softResetWorld()
 
-      previousErrorsCount = currentErrorsCount
-      currentErrorsCount = @errorsWhileRepainting.length
+      previousBannedCount = currentBannedCount
+      currentBannedCount = @widgetsGivingErrorWhileRepainting.length
 
 
   resetWorldCanvasContext: ->
@@ -1686,11 +1693,15 @@ class WorldWdgt extends IconGridPanelWdgt
     # next cycle, and add the offending widget to a
     # "banned" list
     @errorsWhileRepainting.push err
-    if !@widgetsGivingErrorWhileRepainting.includes @paintingWidget
-      @widgetsGivingErrorWhileRepainting.push @paintingWidget
-      @paintingWidget.__hide()
+    @_hideOffendingWidget()
 
+  # The widget the blame names (the one whose full paint was running when the paint threw) is banned and
+  # hidden, once -- never the world itself: hidden, it would take the whole screen with it, the error log
+  # that says why included. A throw no widget is blamed for (the world's own paint, its occlusion scan)
+  # names no one: its error is reported and no one is banned, which also ends the retry loop
+  # (_findOutAllOtherOffendingWidgetsAndPaintWholeScreen).
   _hideOffendingWidget: ->
+    return if !@paintingWidget? or @paintingWidget is @
     if !@widgetsGivingErrorWhileRepainting.includes @paintingWidget
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
       @paintingWidget.__hide()

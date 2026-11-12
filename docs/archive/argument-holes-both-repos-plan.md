@@ -3441,3 +3441,37 @@ for (const s of sites) if (s.absentBefore.length) {
       `injectProperty` of `(`) says it beside the hand and lifts the ban — passing alone and as a FOLLOWER (mouse and
       finger, no `WORLD_INVENTORY_` line); the old `_runningTypedCode` fails the first case's two checks and the third's
       "never stepped again", the old `_activateMyTile` the second's two, the first shape (planted) the fourth's two.
+- [x] **A paint that throws after its children blames the last child painted** (found by the independent review
+      closing "Only an inspector's Save gives a banned widget another chance", in the plan's ledger; by reading; a
+      HYPOTHESIS to measure first — possibly a page hang). `Widget.fullPaint` sets `world.paintingWidget = @` before
+      painting and nothing restores it after the children, so a throw in what a widget paints after them (the
+      selection overlay, `_paintEditorSelectionOverlayIfSelected`; a panel's stroke) would ban the innocent last
+      child; on the next pass `_hideOffendingWidget` finds it already banned and hides nothing more, while
+      `_queueErrorForLaterReporting` queues another error, so `_findOutAllOtherOffendingWidgetsAndPaintWholeScreen`'s
+      `until previousErrorsCount == currentErrorsCount` loop would never end. Reach: a class edit that makes a panel's
+      or a frame's after-children paint throw.
+      — CLOSED 2026-11-12 (self-ruled; loop unit U38). MEASURED first (`Fizzygum-tests/.scratch/paint-blame/probe.js`,
+      `index-sw.html`, a fresh page per case): a rectangle with a child whose after-children step throws, and a panel
+      with a child whose stroke throws, each made the page STOP ANSWERING; with the retry loop capped at 50 passes, the
+      rectangle's case banned and hid the innocent CHILD while the parent went on throwing. RULED: the blame right by
+      construction AND the loop finite by construction. LANDED: `Widget.fullPaintIntoAreaOrBlitFromBackBuffer` takes
+      the blame (`world.paintingWidget`) as it starts and gives it back as it returns (a throw leaves it on the
+      thrower), so what a widget's content paint draws after its children is its own; an override that paints after
+      `super` has had the blame given back to its caller by then and takes it itself — the clipping mixin's full paint
+      does, around its stroke and overlay; the world's paint starts with no one to blame; `_hideOffendingWidget` bans
+      only a widget the blame names, never the world (hidden, it would take the screen and the error log with it), and
+      `_queueErrorForLaterReporting` calls it (the catches no longer call both);
+      `_findOutAllOtherOffendingWidgetsAndPaintWholeScreen` repaints while a pass bans someone new, so it ends on a pass
+      that bans no one new, whatever the blame — a throw that bans no one is told and comes back with the next frame's
+      paint (filed: "A paint that throws and bans no one is told again on every frame"). The unit's independent review
+      found the first shape's test blind to the loop's half (with the blame right, the old loop ends too) and its stated
+      reason for a fixture choice false. PROVEN: a new assertion-only test,
+      `SystemTest_macroAPaintAfterItsChildrenThatThrowsHidesItsOwner` — a rectangle whose selection-overlay step throws
+      and a panel whose stroke throws: each OWNER banned and hidden, its child neither; a throw the world's occlusion
+      scan meets before any widget paints, with a bystander named as a blame left over: no one banned, the bystander
+      shown, the error told; a throw the world is blamed for (its stroke): the world neither banned nor hidden —
+      passing at dpr 1 and 2, mouse and finger, Chrome and WebKit, and as a FOLLOWER (no `WORLD_INVENTORY_` line); the
+      dpr-1 suite green. Plants, each failing exactly its half: no give-back (the rectangle's child banned); no claim in
+      the panel (the panel not banned); no clear (the bystander banned); a catch banning the world (the world banned
+      and hidden); no guard for an absent blame (an uncaught TypeError in the paint catch); the old loop (the page
+      stops answering at the occlusion throw).
