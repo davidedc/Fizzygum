@@ -1,16 +1,25 @@
 # Mixin removal — every mixin to an ordinary home, then delete the mechanism
 
-**STATUS: PLAN ONLY — AUTHORED 2026-11-10. No code written.** Written to be executed COLD by an
-LLM/engineer with ZERO prior context: everything needed is embedded here or one named-doc hop away.
-**Where it stands (§13):** all five owner decisions are made. D1 and D3 were decided on the
-owner's stated criterion — the tree's cleanliness and orthogonality, whatever the churn. The three
-investigations have been done BY READING: each has a paper verdict, and an empirical half (a build
-and a gauntlet) still owed. Phases 1–4 wait on nothing.
+**STATUS: PLAN ONLY — AUTHORED 2026-11-10, MEASURED 2026-11-12. No code written.** Written to be
+executed COLD by an LLM/engineer with ZERO prior context: everything needed is embedded here or one
+named-doc hop away.
+**Where it stands (§13):** decisions D1–D5 are made — D1 and D3 on the owner's stated criterion,
+the tree's cleanliness and orthogonality, whatever the churn. The three investigations have a paper
+verdict (2026-11-10, by reading) and, since 2026-11-12, their MEASURED half: instruments over the
+whole suite and two direct probes, with nothing in `src/` changed. The measurements settled S1's
+open question, confirmed S3 and showed the suite cannot see its relay, and turned S2's promised
+behaviour questions into five decisions, D6–D10, which are OPEN. What each investigation still
+owes is its change under the gauntlet, which is its phase. Phases 1–4 wait on nothing; Phase 5
+waits on D10, Phase 7 on D6–D9.
 
-Every fact below was read on 2026-11-10 at Fizzygum `a37b8ba4` (its `src/` unchanged since
-`2bc853f9`) / Fizzygum-tests `61adb7ce1`. **Line numbers are hints and drift; the quoted method name is authoritative — grep it
-fresh before trusting a line.** Counts come with the command that produced them (§2.4); re-run it
-rather than carrying a number forward.
+Every fact below was read on 2026-11-10 at Fizzygum `a37b8ba4` / Fizzygum-tests `61adb7ce1` and
+re-checked on 2026-11-12 at Fizzygum `59728ec2` / Fizzygum-tests `e2ea7ad0d`: the §2.4 scan gives
+the same consumers, shadowing members and `super` targets; the counts and line hints that had
+drifted are corrected in place. **Line numbers are hints and drift; the quoted method name is
+authoritative — grep it fresh before trusting a line.** Counts come with the command that produced
+them (§2.4); re-run it rather than carrying a number forward. The scan as a script, the
+instruments, the probes and their output are in
+`Fizzygum-tests/.scratch/mixin-removal-loop/investigations/` (untracked).
 
 **Mandate.** Complete elimination: all eight mixins move to homes the rest of the system already
 understands (a base class, an `Appearance`, a collaborator, a hook on the object that owns the
@@ -76,6 +85,11 @@ mechanism WORKS; only its keep-vs-remove POSITION is superseded by this plan.**
 | D3 | Names of the new classes, and of the two new members on the hand's protocol | **DECIDED 2026-11-10:** `ClippingWdgt`, `RatioLockedWdgt`, `ControllerWdgt`, `CreatorWdgt`, `CanvasAppearance`, `BackBuffer`; `pressesOn`, `notePointerStateChanged` | §5.8 |
 | D4 | The inspector loses "from `<X>Mixin`", "Override in this class" and the Add… destination step, with nothing in their place | **DECIDED 2026-11-10: accepted** | §7 Phase 8 |
 | D5 | Coupling with the Smalltalk talk (2026-11-25, freeze 2026-11-21) | **DECIDED 2026-11-10: the talk plan drops mixins** (its D7), so neither plan builds on the other. When a code phase lands relative to the freeze is asked at that phase's commit | §11 |
+| D6 | Pointer looks that follow the pointer where a stored state lagged it: pressed again when a held press slides back onto its widget; no pressed or hovered look left behind by a release that was no click, a cancelled press, a click made by code, a re-parented chrome plate | OPEN — recommended: accept. Each is the look agreeing with what a release would do; no test reaches any of them | §6 S2 |
+| D7 | The slider thumb: hovered at once when its drag ends with the pointer on it (today: only once the pointer next moves), and not left hovered after a click when the pointer is elsewhere (today: until the pointer next crosses it) | OPEN — recommended: accept; 6 and 2 tests reach the two states, and the references that show them are recaptured after each is looked at | §6 S2 |
+| D8 | A finger shows no hover on a handle or a layout-chrome plate, as on everything else (today these two families light under a finger that is over them; one test has a finger carrying a payload over a droplet, which lights) | OPEN — recommended: accept — one rule, "a finger rests nowhere". The owner's to weigh: whether the lit droplet is wanted as a finger's drop cue | §6 S2 |
+| D9 | The eight classes that carry a `toolTipMessage` they never show (§2.5), once the hand shows the tooltip of whatever it enters | OPEN — recommended: no widget gains a tooltip. The eight give the name a tool panel shows for them another way (a tool is already named `toolTipMessage ? colloquialName()` by the overflow chevron), and `toolTipMessage` then means one thing. The alternative is a product change: a bare rectangle on the desktop says "rectangle" | §6 S2 |
+| D10 | The selection ring of a one-line text whose buffer is smaller than its box (a bare, top-left `StringWdgt` set to `SCALEUP`): it rings the box, as every other widget's does (today: the buffer) | OPEN — recommended: accept. The ring marks the widget, and a widget's bounds are its box; no test reaches the state | §6 S1 |
 
 ### 0.5 Cold-execution protocol
 
@@ -85,9 +99,10 @@ mechanism WORKS; only its keep-vs-remove POSITION is superseded by this plan.**
    `docs/architecture/widget-authoring-guidelines.md`.
 3. Re-run the scan in §2.4 and compare with §2.2/§2.3. If anything differs, the tree moved: fix the
    plan's facts FIRST, in place, before executing.
-4. Phases 1–4 wait on no investigation. Before Phase 5, 6 or 7, run the EMPIRICAL half of its
-   investigation (§6): each paper verdict in §13 was reached by reading and is a hypothesis until
-   a gauntlet has passed on it. Verdicts go into §13.
+4. Phases 1–4 wait on nothing. Each investigation has its paper verdict and its measured half
+   (§6, §13); what it still owes is its change under the gauntlet, which IS its phase — and a
+   measured verdict is still a hypothesis until that gauntlet has passed. Phase 5 needs D10
+   decided, Phase 7 needs D6–D9 (§0.4). Verdicts go into §13.
 5. Then one phase at a time, in the order of §7. Each phase: edit → `fg presuite` while iterating
    → `fg gauntlet` (and `fg homepage` where the phase says) at the close → present a summary and a
    commit message to the owner and WAIT. Never commit or push without that approval.
@@ -135,18 +150,18 @@ The full present-tense reference is `docs/architecture/mixins.md` §2. The parts
 
 ### 2.1 Inventory
 
-Eight mixins, 1,218 lines, 35 consumer slots over 28 classes. Six live in `src/mixins/` (part
+Eight mixins, 1,226 lines, 35 consumer slots over 28 classes. Six live in `src/mixins/` (part
 `core`), two in `src/app-kit/` (the lazy `app-kit` part).
 
 | Mixin | Lines | Members | Consumers | Members that call `super` |
 |---|---|---|---|---|
 | `ControllerMixin` | 582 | 31 | `SliderWdgt`, `StringWdgt`, `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` | `graphEdgesOut` |
-| `ClippingAtRectangularBoundsMixin` | 206 | 10 | `PanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `InspectorWdgt`, `SimpleSpreadsheetWdgt`, `VerticalStackPanelWdgt`, `ClippingBoxWdgt` | `fullPaintIntoAreaOrBlitFromBackBuffer` |
+| `ClippingAtRectangularBoundsMixin` | 212 | 10 | `PanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `InspectorWdgt`, `SimpleSpreadsheetWdgt`, `VerticalStackPanelWdgt`, `ClippingBoxWdgt` | `fullPaintIntoAreaOrBlitFromBackBuffer` |
 | `BackBufferMixin` | 178 | 11 | `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | none |
 | `HighlightableMixin` | 74 | 13 | `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `DesktopLinkWdgt`, `EditorContentPropertyChangerButtonWdgt`, `UpperRightTriangleIconicButtonWdgt` | `pressBegan` |
 | `KeepsRatioWhenInVerticalStackMixin` | 69 | 6 | `IconWdgt` (72 direct subclasses), `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt` | none |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 2 | `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt`, `VerticalStackViewportWdgt` | both |
-| `WidgetCreatorAndSmartPlacerOnClickMixin` | 37 | 1 | `CreatorButtonWdgt` (16 subclasses), `GlassBoxTopWdgt` | none |
+| `WidgetCreatorAndSmartPlacerOnClickMixin` | 39 | 1 | `CreatorButtonWdgt` (16 subclasses), `GlassBoxTopWdgt` | none |
 | `ParentStainerMixin` | 21 | 1 | `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `EditorContentPropertyChangerButtonWdgt`, `CodeInjectingSimpleRectangularButtonWdgt` | none |
 
 Classes that take more than one mixin — these are the real single-inheritance constraints:
@@ -186,8 +201,8 @@ A class-body member that shadows a mixin member, with whether it calls `super`:
 
 | Site | What it does | Why it is a workaround |
 |---|---|---|
-| `ViewportWdgt._fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow` and `…JustShadow` (`ViewportWdgt.coffee` ~:340, ~:365) | adds the scroll translation; on the zero-offset path calls `PanelWdgt::<same method>.call @, …` | it cannot `super` into the mixin's copy, so it borrows `PanelWdgt`'s injected copy |
-| `FrameWdgt`, the same two methods (`FrameWdgt.coffee` ~:2148, ~:2163) | adds the rounded child clip; the clip-off path calls `PanelWdgt::….call @` | same |
+| `ViewportWdgt._fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow` and `…JustShadow` (`ViewportWdgt.coffee` ~:363, ~:388) | adds the scroll translation; on the zero-offset path calls `PanelWdgt::<same method>.call @, …` | it cannot `super` into the mixin's copy, so it borrows `PanelWdgt`'s injected copy |
+| `FrameWdgt`, the same two methods (`FrameWdgt.coffee` ~:2150, ~:2165) | adds the rounded child clip; the clip-off path calls `PanelWdgt::….call @` | same |
 | `PaletteWdgt.paintIntoAreaOrBlitFromBackBuffer` (~:52) | re-declares `Widget`'s body (`@appearance?.paintIntoAreaOrBlitFromBackBuffer …`) | to UNDO the mixin's member, so `PaletteAppearance` can blit and then draw its mark |
 | `DesktopLinkWdgt.pressBegan` (`super` = YES) | retypes the mixin's two lines (`@state = @STATE_PRESSED`, `@_updateColor()`) under a condition, then `super` | its `super` skips the mixin and reaches `Widget.pressBegan` — today that is what it wants |
 | `DesktopLinkWdgt._updateColor`, `UpperRightTriangleIconicButtonWdgt._updateColor` | replace the look | plain overrides, no `super` |
@@ -255,7 +270,27 @@ press's AUDIENCE, held in `_pressAudience`), `pressEnded`, `pressCancelled`. It 
 
 One class reads ANOTHER widget's stored state: `GlassBoxBottomWdgt.fillForToolState(stateHolder, …)`
 reads `stateHolder.state` against `stateHolder.STATE_PRESSED` / `STATE_HIGHLIGHTED`, driven by
-`ParentStainerMixin._updateColor` → `@parent?.noteItemStateChanged?()`.
+`ParentStainerMixin._updateColor` → `@parent?.noteItemStateChanged?()`. It then STORES the answer:
+`_deriveMyLook` writes `@color` and `@cornerRadius`, a second copy of the tool's state.
+
+What else hangs on the same hooks (the 2026-11-12 survey, §6 S2):
+- `FrameGripWdgt` (a `HandleWdgt`) overrides `_setPointerState` to keep a third stored fact,
+  `_activeLookShowing`, and with it two pieces of WORLD state: the canvas cursor and the resize
+  outline it declares in `world.widgetsToBeHighlighted`.
+- `StackElementsSizeAdjustingWdgt` (a `LayoutChromeWdgt`) and `ExternalLinkButtonWdgt` set the
+  canvas cursor in their hover hooks. `SliderButtonWdgt` also answers `hoverMoved` and `activated`.
+- `HandleWdgt` and `LayoutChromeWdgt` light their plate on `hoverEntered` without asking
+  `pointerCanRest()`: they are the two families that show a hover under a finger.
+- Two of the hand's facts are written from OUTSIDE it: `WorldWdgt._softResetWorld` (the recovery
+  after a thrown error) clears `hand.mouseOverList` and `hand.nonFloatDraggedWdgt`, telling no
+  widget.
+- `_updateColor` has callers that are not transitions: constructors, `SimpleButtonWdgt.setEnabled`,
+  `LabelledToggleWdgt.setOn`, `IconButtonWdgt`'s ink setter.
+- `toolTipMessage` is carried by eight classes that never show it — `RectangleWdgt`,
+  `SpeechBubbleWdgt` and six of `src/authoring-icons/` (`BrushIconWdgt`, `DestroyIconWdgt`,
+  `EraserIconWdgt`, `MapPinIconWdgt`, `Pencil2IconWdgt`, `ToothpasteIconWdgt`): each holds one only
+  so that `ToolPanelWdgt` can copy it onto the `GlassBoxTopWdgt` standing over it in a tool panel.
+  (`OverflowChevronButtonWdgt` names a tool `tool.toolTipMessage ? tool.colloquialName()`.)
 
 Two facts about the hand's order of work, which decide what a hook may ask it:
 - `_dispatchEventsFollowingMouseMove` sends `hoverExited` to the leavers and `hoverEntered` to the
@@ -271,7 +306,7 @@ same result by answering `_updateColor` with a bare `@_changed()`.
 
 ### 2.6 What the mechanism costs today
 
-- `src/meta/Mixin.coffee`: 299 lines. Mixin-only members elsewhere, by name:
+- `src/meta/Mixin.coffee`: 308 lines. Mixin-only members elsewhere, by name:
   `Class.findMixinsInTheClass`, `removeAugmentations`, `_takeMixinMembersFromTheStores`,
   `_bootDonorOf`, `augmentedWith`, `augmentRegex`, the donor fallback in `Class.removeMember`;
   `ClassInspectorWdgt._editMixinMember`, `_removeMixinMember`, `addPropertyToMixin`,
@@ -279,11 +314,13 @@ same result by answering `_updateColor` with a bare `@_changed()`.
   `_currentPropertySourceMixin`, the `_class_injected_in` half of `_isACompanion`;
   `SourceEditsRegistry.recordMixinEdit`, `recordMixinMemberRemoval`, `replayMixinEdits`, the mixin
   half of `returnThePageToBootSources`.
-- 45 files under `buildSystem/` and 16 under the tests repo's `scripts/` reference the mechanism,
-  none in the harness source. Classified file by file in
-  `docs/measurements/mixin-teardown-census-2026-11-10.md`: in `buildSystem/`, 13 are comments only,
-  20 parse or model the mixin DSL, 6 hold a rule or plant keyed on a mixin, 6 do both; in the rigs,
-  8 are comments only and 8 hold expectations.
+- 45 files under `buildSystem/` and 19 under the tests repo's `scripts/` reference the mechanism,
+  none in the harness source. The census classifies the 45 and 16 of the 19 file by file
+  (`docs/measurements/mixin-teardown-census-2026-11-10.md`): in `buildSystem/`, 13 are comments
+  only, 20 parse or model the mixin DSL, 6 hold a rule or plant keyed on a mixin, 6 do both; in the
+  rigs, 8 are comments only and 8 hold expectations. Three rig files are newer than the census and
+  all three hold expectations: `parts-snapshot-load-headless.js` with its self-test, and
+  `smoke-boot-selftest-headless.js` (their checks are in §7's table).
 - It is not stable machinery: `Mixin.coffee` and `Object-extensions.coffee` were touched by 23
   commits between June and November 2026 (1 in June, 9 in July, 4 in August, 9 in November) —
   `git log --since=2025-11-01 --format=%ad --date=format:%Y-%m -- src/meta/Mixin.coffee
@@ -422,6 +459,10 @@ Phase 7, the pair's two other augmentations (stated once instead of twice). This
 own rule for a single-subtree mixin. (The first analysis proposed a world service for SmartPlacer;
 the shared base is smaller and keeps app-kit code in the lazy part.)
 `ToolbarCreatorButtonWdgt.activated` keeps overriding without `super`.
+One rig names this pair's consumer: `parts-snapshot-load-headless.js` reads a replayed edit of
+`ParentStainerMixin._updateColor` on `CreatorButtonWdgt.prototype`. Once `CreatorWdgt` is the
+consumer the member is inherited there, so the reading still finds it — confirm with the `parts`
+leg, do not assume.
 
 ### 5.6 `HighlightableMixin` + `ParentStainerMixin` → the hand knows, a widget asks as it paints — D1
 
@@ -457,10 +498,11 @@ Each takes the word the tree already uses for the thing.
 
 ## §6 Phase 0 — investigations
 
-Each has two halves. The PAPER half was done on 2026-11-10 by reading the source, with nothing
-built or run; its verdict is below and in §13, and it is a hypothesis. The EMPIRICAL half runs on
-a throwaway WIP branch or `git worktree` (never `git stash`), lands nothing, and ends by confirming
-or correcting that verdict in §13.
+Each has three parts. The PAPER verdict was reached on 2026-11-10 by reading the source, with
+nothing built or run. The MEASURED half was done on 2026-11-12 with nothing in `src/` changed:
+instruments riding the suite's `--audit-prelude=` rail, and direct probes of the states no test
+reaches; it confirmed or corrected the paper verdict, below and in §13. What is left is the CHANGE
+under the gauntlet, which is the investigation's phase (§7) and has an accept condition here.
 
 ### S1 — the back buffer (the crux)
 
@@ -520,16 +562,38 @@ canvas would need a second class on the `RectangularAppearance` branch anyway. B
   itself. About 140 sites in 16 files change spelling (`@backBufferContext` → the buffer's
   context); `Widget`'s transient list and `check-back-buffer-memos.js` follow the one field.
 
-**Still open; the empirical half decides it first.**
-- Whether `calculateKeyValues` must keep shadowing on text. Unless the two variants are shown equal
-  there, it stays a member of the text family; dropping it silently changes the clip of a selected
-  text's selection ring.
+**Measured 2026-11-12 — whether `calculateKeyValues` must keep shadowing on text (nothing in
+`src/` changed).** The two bodies differ in one term: the mixin clamps the width and height to the
+BUFFER's size, `Widget` to the widget's (`boundingBox()` is `@bounds`). An instrument on the
+suite's `--audit-prelude=` rail compared the two answers at every call of the mixin's member, and
+the buffer's size with the widget's extent times the pixel ratio, over the whole suite at dpr 1 and
+dpr 2 (`s1-s3-instrument.js`, output in `s1s3-dpr1/` and `s1s3-dpr2/`). Every call gave the same
+answer, whoever asked — the blit, the selection overlay, an appearance — on every back-buffered
+class the suite paints, texts included, and every buffer was exactly its widget's extent times the
+ratio.
 
-**Empirical half — accept when** the full gauntlet passes with ZERO reference recaptures at dpr 1,
+They can differ in ONE state, which a probe builds and no test reaches (`s1-s3-direct-probe.js`): a
+one-line `StringWdgt` set to `SCALEUP`, aligned top-left, with no background and no inset, in a box
+larger than its scaled text. `StringWdgt._createRefreshOrGetBackBuffer` then makes the buffer the
+TEXT's size: in a 300×120 box holding a 154×116 buffer, the mixin answers 154×116 and `Widget`
+300×120. (`TextWdgt`, whose default is `SCALEUP`, always makes its buffer its extent; a
+`StringWdgt`'s default is `FLOAT`, which takes the whole widget.)
+
+**Verdict.** The buffer-clamped rectangle is the BLIT's — a blit must never read past its buffer —
+and moves with it into `BackBuffer`. Nothing else needs it: text does NOT keep a shadowing
+`calculateKeyValues`, and the overlay and the appearances ask `Widget`'s. The one visible
+consequence is decision D10 (§0.4): the selection ring of a text in that state rings its box.
+
+25 tests paint the selection overlay of a back-buffered widget: a text in 23 of them, a palette in
+`macroPaletteDragPicksCorrectColourInRotatedIsland`, a canvas in `macroDemoMenuCatalogueParade` and
+`macroEveryPressIsToldItsEnding`. Phase 5 looks at those three tests' shots before it changes
+anything; if none holds the ring of a palette or of a canvas, it adds that shot first.
+
+**The change — accept when** the full gauntlet passes with ZERO reference recaptures at dpr 1,
 dpr 2 and WebKit (this is a pure re-routing) — including its `vmtruth` and `serialization` legs,
 which hold object lifetime and the transients — `check-back-buffer-memos.js` is re-pointed and its
 bite-proof still bites, and a selected text, a selected palette and a selected canvas each paint
-their selection overlay as before (if no reference shows one, add the test BEFORE the change).
+their selection overlay as before (the tests named above).
 
 **Fallback, always available.** Each of the three consumers declares three one-line overrides over
 the same `BackBuffer`: at most nine stubs, fewer in practice (text needs one). If the shape above fails
@@ -563,8 +627,11 @@ live?
 
 **The shape (D1): the hand knows; a widget asks as it paints.**
 - *One home for the facts.* The hand already holds them, and answers two questions about a widget:
-  `restsOn(aWdgt)`, which exists, and `pressesOn(aWdgt)` — `aWdgt` is in the press's audience, or
-  is what the hand is non-float-dragging. No widget stores a pointer state.
+  `restsOn(aWdgt)`, which exists, and `pressesOn(aWdgt)` — the hand is non-float-dragging `aWdgt`,
+  or `aWdgt` is in the press's audience AND the pointer is over it. The second half is measured,
+  not assumed: a press that slides off its widget shows no pressed look today, under a mouse or a
+  finger (the survey below met it on a button, a menu row and a handle), so membership of the
+  audience alone is not the look. No widget stores a pointer state.
 - *One home for each look.* A look is computed where it is painted — the appearance's `_fillColor`
   and its siblings, the paint-time hooks `DesktopLinkWdgt._fillForMyState`,
   `SimpleButtonWdgt._fillForMyState` and `LabelButtonAppearance` already are — from those two
@@ -579,9 +646,9 @@ live?
 - *The five hooks keep their ACTIONS* — raising on a press, highlighting the widget a row stands
   for, a list row's selection — and lose every look.
 - *Tooltips separate.* The countdown three hover implementations start by hand becomes the hand's
-  business for any widget it enters that carries a `toolTipMessage`. Today the field is set only
-  inside these families (`ButtonWdgt`, the icon and creator buttons, `CommandSpec`'s rows) —
-  confirm by grep before relying on it.
+  business for any widget it enters that carries a `toolTipMessage`. That is behaviour-neutral
+  only once the field means one thing: eight classes carry one they never show (§2.5), and as the
+  plan first stood each would have gained a tooltip. Decision D9 (§0.4) settles them.
 - *What it deletes:* `state`, the `STATE_*` constants and their copy in `SliderButtonWdgt`;
   `_updateColor` and every colour written at a transition; `HandleWdgt`'s and
   `LayoutChromeWdgt`'s `_setPointerState`; `LabelButtonWdgt._reactToBeingCopied`, which exists to
@@ -607,17 +674,70 @@ button. The two candidates below keep a stored copy and only reduce how often it
 - Not a candidate: a base class plus re-parenting. It serves `ButtonWdgt` and the app-kit pair and
   leaves `DesktopLinkWdgt`, the two icon buttons and the four hand-rolled copies where they are.
 
-**What the empirical half must settle.**
-- *Every write is followed by the notification.* A missed one leaves stale pixels. Enumerate the
-  writes of the five fields first; the paint audit, which holds incremental paint to a full
-  repaint, is the gate that sees a miss.
-- *Where a stored state carried HISTORY the hand does not.* `SliderButtonWdgt` ignores a hover that
-  arrives while the hand drags something and is not re-entered when the drag ends over it; a look
-  asked at paint shows the hover at once. Each such difference is listed and put to the owner as
-  a behaviour question. So the expectation here is pixel-identical EXCEPT those listed cases, and
-  none is recaptured before it is ruled on.
+**What the change must hold to.**
+- *Every write is followed by the notification.* A missed one leaves stale pixels; the paint audit,
+  which holds incremental paint to a full repaint, is the gate that sees a miss. The writes, by
+  method (`grep -nE "mouseOverList|_pressAudience|nonFloatDraggedWdgt *=|pointerType *=|_pointerIsAbsent *="`
+  over `src/ActivePointerWdgt.coffee` and `src/WorldWdgt.coffee`):
+  - `mouseOverList`: `_dispatchEventsFollowingMouseMove` (the one that matters, at its tail),
+    `_dissolveHoverStateOfTouchStroke`, `_forgetGestureBookkeepingNoSettle`;
+  - `_pressAudience`: `_climbPressFrom`, `_cancelPressOf`, `_endPressAt`,
+    `_forgetBookingsLeavingWith`, `_forgetPressBookkeeping`;
+  - `nonFloatDraggedWdgt`: `determineGrabs`, `nonFloatDragWdgtFarAwayToHere`, `processPointerUp`,
+    `_forgetBookingsLeavingWith`, `_forgetPressBookkeeping`;
+  - `pointerType`: `processPointerDown`, `processPointerMove`;
+  - `_pointerIsAbsent`: `processPointerDown`, `processPointerMove`,
+    `_dissolveHoverStateOfTouchStroke`, `_forgetGestureBookkeepingNoSettle`;
+  - and from outside the hand, `WorldWdgt._softResetWorld` (`mouseOverList`,
+    `nonFloatDraggedWdgt`), which becomes a call of a verb of the hand's.
+- *Where a stored state carried HISTORY the hand does not,* the look changes, and only as D6–D8
+  rule (the survey below lists every case). The expectation is pixel-identical EXCEPT those cases,
+  and none is recaptured before it is ruled on.
 - *Determinism.* Read `../../Fizzygum-tests/DETERMINISM.md` before building; prove the result with
   `fg fuzz` as well as the dpr 2 leg.
+
+**Measured 2026-11-12 — the survey (nothing in `src/` changed).** An instrument riding the
+suite's `--audit-prelude=` rail compared, at the end of every world cycle, each widget's STORED
+pointer state (the `STATE_*` family's `state`; the `_setPointerState` family's two booleans) with
+the state the hand's own facts give — pressed when the widget is in the press's audience or is
+non-float-dragged, hovered when the pointer can rest and the over-list holds it, at rest otherwise
+— over the whole suite, as a mouse (389 tests) and as a finger (374). The instrument and its
+per-test output: `Fizzygum-tests/.scratch/mixin-removal-loop/investigations/` (`s2-instrument.js`,
+`s2-mouse-dpr1/`, `s2-finger-dpr1/`).
+
+The two agree in every lit state the suite shows, on 35 classes, EXCEPT these (the count is
+the tests that reach the state, not the references that show it):
+
+| What the suite reaches | Stored today | The hand's facts | Tests | Verdict |
+|---|---|---|---|---|
+| A list row under the pointer (`MemberRowWdgt`, a `MenuItemWdgt` list row) | at rest (its highlighted look is its list's selection; its hover is its plate, when it has one) | hovered | 32 | not history: the row's own rule, which becomes a condition where it paints |
+| A press that slid off its widget, still held (a button, a menu row, a handle) | at rest | in the audience | 3 | not history once `pressesOn` asks that the pointer be over the widget (above) |
+| A slider thumb, the drag just ended with the pointer on it | at rest, until the pointer next moves | hovered | 6 | HISTORY — D7 |
+| A slider thumb after a click, the pointer elsewhere | hovered, until the pointer next crosses it | at rest | 2 | HISTORY — D7 |
+| A handle, or a layout-chrome plate (one of them a droplet under a finger carrying a payload), under a finger | hovered | at rest (a finger rests nowhere) | 2 | HISTORY of a kind: two families that never asked `pointerCanRest()` — D8 |
+| A desktop shortcut, the cycle after an error recovery emptied the over-list from outside the hand (`_softResetWorld`, §2.5) | hovered | at rest | 1 | a stale copy, gone a cycle later; the recovery's two writes move into a verb of the hand's, which tells |
+
+What the suite never reaches, found by reading, each a stored state the pointer has since left
+behind:
+- *Pressed, slid off, slid back, still held.* Today the widget shows its hover look under a mouse
+  and its rest look under a finger; a release there clicks it all the same (the hand clicks when
+  the widget under the release is the one the press landed on). Asked at paint it shows pressed
+  again. Every button family, the handles and the layout chrome. — D6
+- *A label button whose release is not a click* (a hold took the stroke, or a scroll) while the
+  pointer is still on it stays pressed until the pointer leaves; one `activated` by code stays
+  hovered with no pointer on it. — D6
+- *A slider thumb whose press is cancelled before it drags* stays pressed until the pointer
+  leaves: it answers neither ending, and its hover guards ignore a move while it is pressed. — D6
+- *A layout-chrome plate moved to another parent mid-press* drops its press today
+  (`_reactToBeingAdded`); asked at paint it shows the press while the hand still holds it. — D6
+- *A desktop shortcut pressed on its caption plate* shows no press on its tile. That needs where
+  the press LANDED, which the hand holds (`mouseDownPosition`): no change in behaviour, one more
+  thing the look asks the hand.
+
+So the paper verdict holds, with one correction (`pressesOn`) and one retraction (the tooltip
+bullet), and the behaviour questions it promised are D6–D9 in §0.4. None of D6's cases is reached
+by a test, so none moves a reference; D7's and D8's are, and U8's diff page will show which
+shots hold one.
 
 **Accept when** no widget holds a pointer state, every class in §2.5 keeps only a paint-time look
 and its row of the table above, and the gauntlet passes with no difference outside the ruled cases.
@@ -654,28 +774,54 @@ relay when its parent coordinates, else a real `super()`. `StretchableWidgetCont
 uses it. (Moving the relay into `Widget`'s cores instead would also start relaying from the canvas
 of an image window, which does not relay today.)
 
-**Then, in the same phase if the empirical half agrees:** the `triggeringWidget` parameter is dead
+**Then, in the same phase:** the `triggeringWidget` parameter is dead
 everywhere — the two Stretchables' public wrappers, the `@` the three callers above pass, and the
 comments in `Widget`, `FrameWdgt` and `ViewportWdgt` that explain it. Delete it;
 `buildSystem/check-call-arguments.js` holds the call sites consistent.
 
-**Empirical half — accept when:**
-1. BEFORE the change, a `console.error` planted in the mixin's relay branch for any receiver that
-   is not a `StretchablePanelWdgt` (through a prelude, as the gates' bite-proofs plant) prints
-   nothing over the whole suite. That shows no test reaches it; the bullets above are the argument
-   that nothing else does.
+**What the paper verdict left to be shown** (each is answered under "Measured", below):
+1. BEFORE the change, no test reaches the relay branch on a receiver that is not a
+   `StretchablePanelWdgt`.
 2. After the change the gauntlet passes with zero recaptures.
-3. One state is settled by hand: `Widget`'s core returns early, before telling the bar, when
-   `@contents` already holds the target mode and the receiver does not. Today the injected early
-   call still tells the bar in that state. Establish whether it can arise; if it can, keep a call.
+3. One state: `Widget`'s core returns early, before telling the bar, when `@contents` already
+   holds the target mode and the receiver does not. Today the injected early call still tells the
+   bar in that state. Can it arise? If it can, keep a call.
+
+**Measured 2026-11-12 (nothing in `src/` changed).**
+- *Step 1 holds, and shows more than it asked.* The instrument recorded every call of the two
+  injected cores on the three consumers over the whole suite, at dpr 1 and dpr 2 (82 distinct
+  facts in 23 tests; `s1-s3-instrument.js`). The relay branch never fires and the early-return
+  state is never met — and the cores injected into `StretchablePanelWdgt` are never CALLED: no test
+  toggles editing from a stretchable panel's own menu. So the suite cannot see the relay at all,
+  and step 2's "zero recaptures" says nothing about it.
+- *The relay is live, from one door.* A probe builds a slide — a `StretchableWidgetContainerWdgt`
+  in a window — and calls the lock verbs as the product does (`s1-s3-direct-probe.js`). The PANEL's
+  own menu verbs relay: its core hands the toggle to the container, naming itself. The container's
+  verbs and the window's do not relay. Every path leaves the window's, the container's and the
+  panel's modes agreeing. In that world the only direct child of a coordinator is the one
+  `StretchablePanelWdgt`.
+- *The bar is told two or three times a toggle today* — by the injected early call, by the core,
+  and by the frame for its own verb. `showEditModeInBar` / `showViewModeInBar` are idempotent
+  reflectors (their own comment), and the last telling always follows the flag: once the early
+  call goes, one fewer.
+- *Step 3: no product path reaches the state, so no call is kept for it.* `Widget`'s core writes
+  the container's flag and its contents' together; the panel's own core relays whenever its parent
+  coordinates; nobody calls the panel's core naming the container; a load and a copy carry both
+  flags as saved; and no call in the suite meets it. The probe makes it by writing the panel's flag
+  by hand: there the early call is all that tells the bar today.
+
+**So Phase 6 opens with a test, not with the change:** a macro test that toggles editing from a
+stretchable panel's own menu inside a slide window, under both pointers, and asserts the three
+modes and the bar's after each toggle — landed green on the unchanged tree. The change is then
+held by it, and the accept condition is that test and the gauntlet, not the gauntlet alone.
 
 ---
 
 ## §7 Phases
 
-Order: the base-class moves first (Phases 1–4, independent of every investigation), then the
-phases that wait on an investigation's empirical half, then the teardown. Each phase closes on `fg gauntlet`; the ones marked ⌂ also run
-`fg homepage` (they touch a lazy part or the meta layer).
+Order: the base-class moves first (Phases 1–4, independent of every investigation), then the three
+phases that carry an investigation's change, then the teardown. Each phase closes on `fg gauntlet`;
+the ones marked ⌂ also run `fg homepage` (they touch a lazy part or the meta layer).
 
 | Phase | What | Waits on | Expected references |
 |---|---|---|---|
@@ -683,9 +829,9 @@ phases that wait on an investigation's empirical half, then the teardown. Each p
 | 2 | KeepsRatio → base class (§5.2) | — | same |
 | 3 | Controller → `ControllerWdgt` (§5.4) | — | same |
 | 4 ⌂ | The app-kit pair's shared base; SmartPlacer mixin deleted (§5.5) | — | same |
-| 5 | BackBuffer per S1 (§5.3) | S1's empirical half | pixel-identical |
-| 6 ⌂ | The relay into `StretchablePanelWdgt`; Bubbles and `triggeringWidget` deleted (§5.7) | S3's empirical half | pixel-identical |
-| 7 ⌂ | Pointer state per S2; Highlightable and ParentStainer deleted — the LAST mixins (§5.6) | S2's empirical half, Phase 4 | pixel-identical; two tests retired, two re-pointed |
+| 5 | BackBuffer per S1 (§5.3) | D10 | pixel-identical |
+| 6 ⌂ | A test of the relay first, then the relay into `StretchablePanelWdgt`; Bubbles and `triggeringWidget` deleted (§5.7, §6 S3) | — | pixel-identical; one new test |
+| 7 ⌂ | Pointer state per S2; Highlightable and ParentStainer deleted — the LAST mixins (§5.6) | D6–D9, Phase 4 | pixel-identical outside the cases D6–D8 rule; two tests retired, two re-pointed |
 | 8 ⌂ | Mechanism teardown | Phases 1–7 | inspector shots |
 | 9 | Docs and close | Phase 8 | — |
 
@@ -704,7 +850,8 @@ merely uses a mixin as its example gets a new subject there, and keeps biting.
 | 7 | `SystemTest_macroClassInspectorSaveRefusesCodeThatDoesNotCompile`, `SystemTest_macroInspectorOffersOnlyWhatItsSubjectOwns` (they assert on a member `HighlightableMixin` gives `ButtonWdgt`) | new subject |
 | 7 | the serialization rig's four donor checks (`sourceEdits.removedOverrideRestoresDonor`, `…donatedRenameRoutesToDonor`, `…removedOverrideRestoresTheWinningDonor`, `…removalIsAllOrNothing`) | retire, with their names in `lib/serialization-expectations.js` |
 | 7 | `sourceEdits.loadOverPageEditsIsTheFilesWorld` and its two siblings; `boot.classNamedIsTheOneDefinition` | drop their mixin steps |
-| 7 | `smoke-boot-headless.js`, the three mixin verdicts (one requires `augmentations > 0`) | retire |
+| 7 | `smoke-boot-headless.js`, the three mixin verdicts (one requires `augmentations > 0`), with the plant of them in `smoke-boot-selftest-headless.js` (rule `LAZY_SOURCES_MIXINS`: `Mixin.named` answering nothing to the smoke's own reading) | retire |
+| 7 | `parts-snapshot-load-headless.js`, the mixin-scope half of `SOURCE_EDITS_LOAD_THEIR_PARTS` (subject: an edit of `ParentStainerMixin._updateColor`, read on `CreatorButtonWdgt`'s live member), with the plant `NO_MIXIN_EDIT_PRELOAD` in its self-test | retire the mixin half; the class-scope half (an edit of `CreatorButtonWdgt`) stays and keeps its plant |
 
 Pointer state goes last among the mixins (Phase 7) because all four mixin-dependent SystemTests and
 most of the rig checks use `HighlightableMixin`: they then stand until the phase before the
@@ -891,20 +1038,28 @@ changelog prose; add the base-class lookup rule and the new classes to
 | Item | Verdict / decision | Date | Evidence |
 |---|---|---|---|
 | S1 the back buffer — paper half | Palette and canvas answer through their appearance; text keeps one line and no appearance; the rest becomes a `BackBuffer` object (D3). Open: whether text keeps the shadowing `calculateKeyValues` | 2026-11-10 | by reading; §6 S1 |
-| S1 — empirical half | — | | |
+| S1 — measured half | The two `calculateKeyValues` agree on every call the suite makes, at both densities; they differ only for a bare top-left `SCALEUP` `StringWdgt` in a box larger than its text. The buffer clamp is the blit's and goes into `BackBuffer`; text keeps no shadowing member (D10). The suite already paints a selected text, palette and canvas | 2026-11-12 | instrument over the suite at dpr 1 and 2, and a direct probe; §6 S1 |
+| S1 — the change under the gauntlet | — (Phase 5) | | |
 | S2 pointer state — paper half | A hover hook cannot ask the hand, so a look is asked at paint; the copies exist because the mixin's look hook stores a colour; the shape is D1's | 2026-11-10 | by reading; §2.5, §6 S2 |
-| S2 — empirical half | — | | |
+| S2 — measured half | Stored state and the hand's facts agree in every lit state the suite shows (35 classes, mouse and finger) but six cases, of which two are the classes' own rules and one a stale copy; `pressesOn` must ask that the pointer be over the widget; the tooltip bullet as first written would have given eight classes a tooltip. Questions D6–D9 | 2026-11-12 | instrument over the suite as a mouse and as a finger, and reading; §2.5, §6 S2 |
+| S2 — the change under the gauntlet | — (Phase 7) | | |
 | S3 the edit-mode relay — paper half | Live in `StretchablePanelWdgt` only: it keeps the two cores, the other two consumers inherit, and `triggeringWidget` can go | 2026-11-10 | by reading; §6 S3 |
-| S3 — empirical half | — | | |
+| S3 — measured half | The relay is live from one door, a stretchable panel's own menu, which no test opens; the early-return state is reached by no product path; the bar is told two or three times a toggle today. Phase 6 opens with a test | 2026-11-12 | instrument over the suite at dpr 1 and 2, and a direct probe; §6 S3 |
+| S3 — the change under the gauntlet | — (Phase 6) | | |
 | Teardown census (Phase 8's input) | 61 files classified; checks break in the phase that deletes their subject, so the mechanism is frozen and pointer state goes last | 2026-11-10 | by reading; `docs/measurements/mixin-teardown-census-2026-11-10.md` |
 | D1 pointer-state shape | the hand knows, a widget asks as it paints (§6 S2) | 2026-11-10 | owner, confirming the recommendation made on their criterion (cleanliness and orthogonality, whatever the churn) |
 | D2 Controller: base class or collaborator | base class | 2026-11-10 | owner |
 | D3 names | the table of §5.8, `BackBuffer` as an object included | 2026-11-10 | owner, confirming the recommendation, same criterion |
 | D4 inspector loses the donor vocabulary | accepted | 2026-11-10 | owner |
 | D5 coupling with the talk | the talk plan drops mixins (its D7) | 2026-11-10 | owner |
+| Baseline re-check | The §2.4 scan unchanged in structure; counts and line hints corrected; three rig files newer than the census, their checks added to §7's table; the churn set and the four mixin-dependent tests as recorded | 2026-11-12 | §2, §7; `investigations/scan-2026-11-12.txt` |
+| D6–D10 | OPEN — recommendations in §0.4 | | |
 
 ---
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] §0.4: owner decisions D1 (pointer-state shape, three candidates), D3 (class names), D4 (the inspector's donor vocabulary) — all three made by the owner on 2026-11-10, as §13 records: D1, the hand knows and a widget asks as it paints; D3, the names of §5.8; D4, accepted.
+- [x] §6 S1: the back buffer as a `BackBuffer` object — empirical half (a build and a gauntlet on the paper verdict); open: whether text keeps the shadowing `calculateKeyValues` — CLOSED 2026-11-12 as an item: its measured half is done (§6 S1, §13: the two `calculateKeyValues` agree on every call the suite makes at both densities, and text keeps no shadowing member), and what it still owed, the change under the gauntlet, is the Phase 5 line's.
+- [x] §6 S2: pointer state asked of the hand at paint — empirical half: every write of the hand's facts followed by the notification, and each case where a stored state carried history put to the owner — CLOSED 2026-11-12 as an item: the cases are measured and put to the owner as D6–D9 (§0.4, §6 S2), the writes outside the hand are listed (§2.5), and the change under the gauntlet is the Phase 7 line's.
+- [x] §6 S3: the edit-mode relay into `StretchablePanelWdgt` — empirical half — CLOSED 2026-11-12 as an item: its measured half is done (§6 S3: the relay is live from one door, which no test opens; the early-return state is reached by no product path), and the change, opened by a test of the relay, is the Phase 6 line's.
