@@ -12,8 +12,6 @@
 
 class StretchableWidgetContainerWdgt extends Widget
 
-  @augmentWith BubblesEditModeToCoordinatorMixin, @name
-
   ratio: undefined
   contents: undefined
 
@@ -257,17 +255,24 @@ class StretchableWidgetContainerWdgt extends Widget
     super
     @_addEditingLockMenuEntries menu, @childrenNotHandlesNorCarets()
 
-  # I coordinate drags/drops/editing for my StretchablePanelWdgt child, which delegates
-  # its enable/disable up to me (it replaced `@parent instanceof
-  # StretchableWidgetContainerWdgt` with this query). I am in turn an editable child of
-  # a slide, so I bubble my own enable/disable up the same way. (type-test-elimination campaign)
+  # I coordinate drags/drops/editing for my StretchablePanelWdgt child, which hands its
+  # enable/disable to me (its cores ask this query rather than `@parent instanceof
+  # StretchableWidgetContainerWdgt`: type-test-elimination campaign).
   coordinatesDragsDropsAndEditingForChildren: ->
     true
 
-  # canonical settle-wraps; the bubbling cores they dispatch to are injected by
-  # BubblesEditModeToCoordinatorMixin
-  enableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+  # My toggle is Widget's -- it acts on me and on my contents -- but I tell my window's bar FIRST.
+  # Widget's core returns before telling it when my contents already hold the new mode and I do not,
+  # and that state is reachable: a page picked out of me stays my @contents, and toggled on its own
+  # it leaves me behind. My window's bar must follow my mode all the same.
+  _enableDragsDropsAndEditingNoSettle: ->
+    if @dragsDropsAndEditingEnabled
+      return
+    @parent?.showEditModeInBar?()
+    super()
 
-  disableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+  _disableDragsDropsAndEditingNoSettle: ->
+    if !@dragsDropsAndEditingEnabled
+      return
+    @parent?.showViewModeInBar?()
+    super()

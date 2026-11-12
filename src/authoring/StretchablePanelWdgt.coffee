@@ -9,8 +9,6 @@
 
 class StretchablePanelWdgt extends PanelWdgt
 
-  @augmentWith BubblesEditModeToCoordinatorMixin, @name
-
   # Like every panel I hold no colour of my own: my appearance reads my look from the theme as it
   # paints (my fill, _surfaceFill, and my edges, _insetEdgeRects -- it never asks the panel's
   # _surfaceStroke), so a page saved, loaded or duplicated wears the look of the world it is shown
@@ -144,10 +142,25 @@ class StretchablePanelWdgt extends PanelWdgt
     super
     @_addEditingLockMenuEntries menu, @childrenNotHandlesNorCarets()
 
-  # canonical settle-wraps; the bubbling cores they dispatch to are injected by
-  # BubblesEditModeToCoordinatorMixin
-  enableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+  # THE EDIT-MODE RELAY. A container that coordinates editing for its children
+  # (coordinatesDragsDropsAndEditingForChildren?() -- a slide's, a dashboard's StretchableWidgetContainerWdgt)
+  # owns the mode of the page it holds: a toggle raised on me, from my own menu's "Enable editing" /
+  # "Disable editing", is handed to it, and it acts on itself and on me and tells its window's bar. Anywhere
+  # else I act on myself (Widget's core). The query keeps the relay to a coordinator: Widget defines the
+  # cores, so a bare `@parent._enable…` would hand the toggle to ANY parent. It cannot come back to me: a
+  # coordinator's core is Widget's, which writes my flag and never calls my core.
+  _enableDragsDropsAndEditingNoSettle: ->
+    if @dragsDropsAndEditingEnabled
+      return
+    if @parent? and @parent.coordinatesDragsDropsAndEditingForChildren?()
+      @parent._enableDragsDropsAndEditingNoSettle()
+    else
+      super()
 
-  disableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+  _disableDragsDropsAndEditingNoSettle: ->
+    if !@dragsDropsAndEditingEnabled
+      return
+    if @parent? and @parent.coordinatesDragsDropsAndEditingForChildren?()
+      @parent._disableDragsDropsAndEditingNoSettle()
+    else
+      super()

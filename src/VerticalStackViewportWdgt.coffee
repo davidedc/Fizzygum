@@ -1,7 +1,5 @@
 class VerticalStackViewportWdgt extends ViewportWdgt
 
-  @augmentWith BubblesEditModeToCoordinatorMixin, @name
-
   # a stack/document's height IS its content — cropping it silently hides
   # paragraphs (see ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false

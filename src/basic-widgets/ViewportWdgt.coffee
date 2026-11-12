@@ -1638,11 +1638,6 @@ class ViewportWdgt extends ClippingWdgt
     if wraps
       @contents._applyBounds @position(), @extent()
 
-  # ⚠ NO `triggeringWidget` parameter here — see the note on FrameWdgt's pair. It is read in exactly
-  # one place tree-wide, BubblesEditModeToCoordinatorMixin's `@parent != triggeringWidget`, and that
-  # mixin is the core of the two Stretchables, not of a viewport. (A subclass whose core IS the
-  # mixin — VerticalStackViewportWdgt — still `super`s into this one; the argument it hands
-  # over is simply ignored, which is the honest outcome for a value nothing here consults.)
   enableDragsDropsAndEditing: ->
     @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()
 
@@ -1658,7 +1653,7 @@ class ViewportWdgt extends ClippingWdgt
     # windows standing in me whether they offer a grip, and they read my mode to answer
     @parent?.showEditModeInBar?()
 
-    @contents._enableDragsDropsAndEditingNoSettle @
+    @contents._enableDragsDropsAndEditingNoSettle()
 
   disableDragsDropsAndEditing: ->
     @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
@@ -1673,7 +1668,7 @@ class ViewportWdgt extends ClippingWdgt
     # (after the flag: see the enable core above)
     @parent?.showViewModeInBar?()
 
-    @contents._disableDragsDropsAndEditingNoSettle @
+    @contents._disableDragsDropsAndEditingNoSettle()
     # ELIMINATE (end-of-cycle-flush-drawdown): a disable-probe proved the deferred re-fit that used to
     # live here redundant -- disabling only changes appearance/drop-handling, and the cascade's
     # @contents._disableDragsDropsAndEditingNoSettle above already did the synchronous work. See

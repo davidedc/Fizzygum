@@ -2432,17 +2432,11 @@ class FrameWdgt extends ClippingWdgt
   # payload-specific propagation) and notify only @parent. I write no flag of my
   # own: my mode is my payload's (isInEditMode), which the bar's edit toggle switches
   # without passing through me.
-  # ⚠ NO `triggeringWidget` parameter here, unlike the Stretchables. That parameter exists ONLY to
-  # stop an edit-mode change bubbling back to whoever triggered it, and the only code that reads it
-  # is BubblesEditModeToCoordinatorMixin's `@parent != triggeringWidget` — which is the CORE of the
-  # two Stretchables, not of a frame. A frame that declared it would be accepting a value it then
-  # drops on the floor. The `@` passed DOWN to @contents below is a different thing and IS live:
-  # the contents may be mixin-cored, and that core reads it.
   enableDragsDropsAndEditing: ->
     @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()
 
   _enableDragsDropsAndEditingNoSettle: ->
-    @contents?._enableDragsDropsAndEditingNoSettle @
+    @contents?._enableDragsDropsAndEditingNoSettle()
     # public-call-sanctioned: showEditModeInBar is the window-bar mode PROTOCOL, driven
     # cross-object by content widgets (`@parent?.showEditModeInBar?()`), so it stays public — and
     # it settles nothing (it marks; my own settling wrapper above flushes the mark)
@@ -2452,7 +2446,7 @@ class FrameWdgt extends ClippingWdgt
     @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
 
   _disableDragsDropsAndEditingNoSettle: ->
-    @contents?._disableDragsDropsAndEditingNoSettle @
+    @contents?._disableDragsDropsAndEditingNoSettle()
     # public-call-sanctioned: showViewModeInBar is the window-bar mode PROTOCOL, driven
     # cross-object by content widgets (`@parent?.showViewModeInBar?()`), so it stays public — and
     # it settles nothing (it marks; my own settling wrapper above flushes the mark)
