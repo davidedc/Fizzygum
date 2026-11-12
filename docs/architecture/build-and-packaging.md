@@ -556,7 +556,7 @@ means making those parts lazy, and the two are no longer the same question:
   is a product decision about whether a flag-gated draft feature should launch itself.
 - `patch-programming-experimental` **no longer has a core entanglement to point at**, and that is
   worth knowing before the next round: nothing in core names `FanoutWdgt` or `FanoutPinWdgt` in CODE
-  any more — both survive only as prose in `WireSpec`/`ControllerMixin` — and the one live
+  any more — both survive only as prose in `WireSpec`/`ControllerWdgt` — and the one live
   construction site, `DemoMenus`, sits in a lazy part that already `requires` this one. What is left
   is a flag-less unfinished experiment that ships eagerly, so making it lazy is now a partition
   decision rather than a blocked one. 4.3 KB is still not the reason to take it.
@@ -597,7 +597,7 @@ production startup.
 wiring substrate (`DataflowEngine.ensureWireEdges` is how any widget wires to any other, and `WorldWdgt.doOneCycle`
 drains it every cycle), and its absence survives at no call site in either direction. A handful are written
 `world.dataflow?.…`, where a missing engine is silently ACCEPTED and the wire simply never fires; the ~thirty others
-name it bare — `ControllerMixin` a dozen times, `doOneCycle` on the cycle itself — where the first cycle throws.
+name it bare — `ControllerWdgt` a dozen times, `doOneCycle` on the cycle itself — where the first cycle throws.
 Quietly dead or loudly fatal; neither is the NO-OP the absence rule in §2 requires, which is the test for whether
 something can be a part at all — the same judgment keeps `src/meta` out. Recorded so it is
 not re-attempted: `docs/archive/core-app-slices-partition-plan.md` §4 Phase 3.

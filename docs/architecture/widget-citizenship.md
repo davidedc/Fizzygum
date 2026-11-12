@@ -94,8 +94,8 @@ citizen:
    is automatically editable and inspectable without any per-widget tooling.
 4. **It exposes pins.** A citizen is *wireable*: it enumerates the properties others may
    drive (`pins()`, one `PinSpec` each — which populate the target-chooser menus)
-   and can itself drive ANY NUMBER of them (`ControllerMixin`'s `@wires`, one `WireSpec` per
-   connection). These wires are not decoration: a wire IS a dataflow edge (the engine's edge index
+   and, if it is a controller (a `ControllerWdgt`), can itself drive ANY NUMBER of them (its
+   `@wires`, one `WireSpec` per connection). These wires are not decoration: a wire IS a dataflow edge (the engine's edge index
    derives from the wire list — [`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md)
    §8). The standing direction is to prefer such connector endpoints over bespoke
    callbacks/firing methods, because only pins are discoverable, rewireable, and

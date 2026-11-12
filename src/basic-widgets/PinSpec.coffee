@@ -51,7 +51,7 @@
 # binds whose reverse half silently never fires").
 #   ⚠ It is NOT what "Bind ⇄" consults. A bind at NODE granularity is two ordinary wires and its
 # reverse half fires from `updateTarget`; `announces` is the PIN-granularity precondition, read by
-# ControllerMixin.canTrackWire. The two granularities keep their own machinery (§P2's table).
+# ControllerWdgt._canTrackWire. The two granularities keep their own machinery (§P2's table).
 
 class PinSpec
 

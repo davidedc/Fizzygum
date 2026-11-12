@@ -10,9 +10,8 @@
 # (positionForColor) — plus its default size (defaultSize, if not the 80x50
 # default) and its colloquial name.
 
-class PaletteWdgt extends Widget
+class PaletteWdgt extends ControllerWdgt
 
-  @augmentWith ControllerMixin
   @augmentWith BackBufferMixin
 
   # The colour picked through me, and undefined until one IS — a real state, not a gap: `bang`
@@ -199,5 +198,5 @@ class PaletteWdgt extends Widget
     super
     @_addTargetConnectionMenuEntries menu
 
-  # openTargetSelector: -> taken from the ControllerMixin
+  # openTargetSelector: -> inherited from ControllerWdgt
   # openTargetPropertySelector: -> one shared method on Widget, driven by producesPinKind

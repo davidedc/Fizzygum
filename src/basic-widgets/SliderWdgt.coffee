@@ -4,9 +4,7 @@
 # The orientation is auto-derived from my geometry (taller-than-wide = vertical);
 # a user-forced orientation existed once and was simplified away as uncommon.
 
-class SliderWdgt extends CircleBoxWdgt
-
-  @augmentWith ControllerMixin
+class SliderWdgt extends ControllerWdgt
 
   # A slider is editor content when dropped alone (a value control you can select/align), but a
   # viewport's scrollbar is CHROME and must NOT get the editor-focus SELECTION overlay (§5.D D-3/D21). The
@@ -75,6 +73,8 @@ class SliderWdgt extends CircleBoxWdgt
     @color = opts.color
     @smallestValueIsAtBottomEnd = opts.smallestValueIsAtBottomEnd ? false
     super()
+    @appearance = new CircleBoxyAppearance(@)
+    @__commitExtent new Point 20, 100
     @alpha = @plainTrackAlpha
     # a scrollbar wearing its THIN indicator presentation is narrower than the generic 5px
     # floor every widget carries, and the dial that names that width must mean what it says.
@@ -88,16 +88,18 @@ class SliderWdgt extends CircleBoxWdgt
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   # The button used to be built BEFORE super -- legacy placement, nothing in the
-  # constructor chain reads @button (Widget/CircleBoxWdgt ctors size through the
+  # constructor chain reads @button (the Widget ctor and mine size through the
   # _commitBounds/__commitExtent leaves, which never dispatch to _applyExtent).
   _buildAndConnectChildrenNoSettle: ->
     @button = new SliderButtonWdgt
     @_addNoSettle @button
 
-  # ⚠ Do NOT delete this as "the same as the derivation". It IS what Widget's derivation would
-  # produce, but I extend CircleBoxWdgt -- so without it the chain answers "circle-box".
-  colloquialName: ->
-    "slider"
+  # My orientation follows my shape: taller than wide is vertical.
+  autoOrientation: ->
+    if @height() > @width()
+      return "vertical"
+    else
+      return "horizontal"
 
   # Wear an indicator presentation (my viewport derives it; see ViewportWdgt._refreshScrollIndicators).
   # PRESENTATION ONLY: my value, my range and my wiring are untouched, which is exactly why the
@@ -306,7 +308,7 @@ class SliderWdgt extends CircleBoxWdgt
   # divide by zero in unitSize.
   #   Public, and sound as the edge's action with no `_<action>Connector` lane: _updateSpecs applies
   # through the non-notifying re-lay tiers and opens no settle, so it JOINS the drain's pass settle
-  # the way setValue / setColor do (ControllerMixin._fireConnection's note on routing).
+  # the way setValue / setColor do (ControllerWdgt._fireConnection's note on routing).
   reflectTarget: ->
     wire = @_trackingWire()
     return unless wire?
@@ -317,7 +319,7 @@ class SliderWdgt extends CircleBoxWdgt
     @_updateSpecs range.start, range.stop, wire.target[pin.getterName](), range.size
 
   # Could I FOLLOW this pin of this target — is there a thumb geometry to derive?
-  # (ControllerMixin._canTrackWire, which asks this of the follower because only the follower knows
+  # (ControllerWdgt._canTrackWire, which asks this of the follower because only the follower knows
   # what it can render.) A scale is what I need and what most targets have no answer for, so this is
   # the condition that keeps the "Follows it too" row off almost every wire.
   #   ⚠ Asked again at fire time by reflectTarget, deliberately rather than cached: a menu is built

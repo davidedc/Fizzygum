@@ -18,10 +18,7 @@
 # soft wrap a viewport's lone text shares with its viewport (toggleSoftWrap), the dataflow plumbing
 # (updateTarget + bang), and the panel-colour blend helpers. The CONTROLLER
 # chrome (wire verbs, the "Connect to" menu) is INHERITED — base StringWdgt
-# carries ControllerMixin. ⛔ Do not re-augment it here: a mixin's compiled
-# members are ONE shared function object, so injecting the same mixin at two
-# levels of one chain makes every super-calling member (graphEdgesOut) recurse
-# forever — the addInstanceProperties guard now fails the boot on it.
+# is a ControllerWdgt.
 
 class SimpleTextWdgt extends TextWdgt
 

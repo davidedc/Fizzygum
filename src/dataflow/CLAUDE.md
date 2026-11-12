@@ -13,11 +13,11 @@ node-protocol contract.
 It looks like an app slice (it sits next to `src/spreadsheet/`, which IS a lazy part), and it is
 not one. **Owner decision, 2026-07-30**, with the enumeration behind it in
 `../../docs/archive/core-app-slices-partition-plan.md` §4 Phase 3: dataflow is the **wiring
-substrate**, not an app. `ControllerMixin`'s wire verbs (`wireTo` / `trackTarget` /
-`declareWireTo`) are how ANY widget wires itself to any other — each mirroring its list into the
+substrate**, not an app. `ControllerWdgt`'s wire verbs (`wireTo` / `trackTarget` /
+`declareWireTo`) are how a controller (any `ControllerWdgt`) wires itself to any other widget — each mirroring its list into the
 engine through `DataflowEngine.ensureWireEdges` — and `WorldWdgt.doOneCycle` drains it EVERY cycle.
-`ControllerMixin` alone reaches `world.dataflow` UNGUARDED at 13 sites; only the six
-spreadsheet/teardown reaches are optional-chained. Its absence would therefore be a boot-time throw
+`ControllerWdgt` alone reaches `world.dataflow` UNGUARDED at more than a dozen sites; the
+few optional-chained reaches are the spreadsheet's, the teardown's and some chrome's. Its absence would therefore be a boot-time throw
 or a dead wire, never a reduction: wires would never fire, sliders would stop driving their targets,
 patch nodes would go dead. That is broken rather than reduced, which fails the rule that a part's
 absence must be a NO-OP at every call site
@@ -63,7 +63,7 @@ edges through `removeEdgesInto`, so deleting a `seconds` cell decrements its sou
 ## Connections client — patch-programming migration (spec §8, plan Phase 6)
 
 The patch-programming circuits (widgets wired by a controller's wire list — `@wires`, one
-`WireSpec` each, via `ControllerMixin`) are the engine's SECOND client, ported by a strangler.
+`WireSpec` each, via `ControllerWdgt`) are the engine's SECOND client, ported by a strangler.
 Landed so far:
 
 - **6a — `firesPerEvent` (DARK).** A per-wire delivery policy: default `false` = **pooled** (one
@@ -74,7 +74,7 @@ Landed so far:
   the loose `@target`/`@action` fields used to keep it). It is flipped by the "Fires per event"
   row (ticked while the policy is on — a drawn tick, the label stays plain) in the menu the shared
   connection menu's row for EACH live wire opens
-  (`ControllerMixin._addTargetConnectionMenuEntries` → `openWireMenu` → `toggleFiresPerEventOfWire`, which flips the
+  (`ControllerWdgt._addTargetConnectionMenuEntries` → `openWireMenu` → `toggleFiresPerEventOfWire`, which flips the
   flag on the WIRE and announces it with `markNonValueChange`), offered by every controller —
   SliderWdgt, StringWdgt, the patch nodes, … — once a target is wired. 6a is DARK: **nothing reads
   the flag yet** — legacy `_fireConnection` delivery still runs, pixels unchanged. Phase 6b's
@@ -82,7 +82,7 @@ Landed so far:
   the policy ride the edge record's opts.
 
 - **6b — engine delivery behind `world.dataflowWiresEnabled` (default OFF).** When ON, a wire IS a
-  dataflow edge: `ControllerMixin`'s wire verbs declare `addEdge producer → wire.target
+  dataflow edge: `ControllerWdgt`'s wire verbs declare `addEdge producer → wire.target
   wire.edgeOpts()` through `ensureWireEdges`, which reconciles the whole list (re-wiring first
   `_removeOutgoingWireEdgesOf`, which spares `firesOnAnyChange` records), and `_fireConnection` becomes
   `markStale @` (a wire carries no value; the drain PULLS `dataflowValue`). **Edges are applied BY THE
@@ -230,7 +230,7 @@ every palette holds one `firesOnAnyChange` edge to it, re-deriving its highlight
   re-declared by the next derivation and the drain would deliver into the corpse — then
   `removeAllEdgesOf`, which drops the node from BOTH adjacency maps and the pools (a dead node
   left in the index is a leak AND a ghost recompute). The index is derived lazily, so sever alone
-  is partial; `ControllerMixin._pruneWiresOntoDestroyedTargets` (fire-time) is the same
+  is partial; `ControllerWdgt._pruneWiresOntoDestroyedTargets` (fire-time) is the same
   invariant's other chokepoint: no wire record outlives its target.
 - **A producer's out-edges are not all wires.** It owns as many WIRES as it has `WireSpec` records
   (connector plan §P4) plus any number of edges from consumers that merely re-read it, so a re-wire

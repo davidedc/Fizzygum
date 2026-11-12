@@ -353,7 +353,7 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 CLOSED 2026-08-02 — executed in full; the residue is in `architecture/build-and-packaging.md` §2/§5.
 As-landed record (the `app-kit` part itself, and the `check-part-edges.js` gate gap it found in
 passing): that plan's § "BACKLOG ledger". What stayed open is the two classes it could not move:
-- [ ] **The last two, and they are a DECISION not a gap: `CanvasWdgt` + `PatchNodeWdgt` (4.3 KB) stay in core.** The EAGER `video-player` and `patch-programming-experimental` parts EXTEND them, and an eager part cannot derive from a lazy one at all. Unblocking is not packaging work: `video-player` is auto-launched AT BOOT (a product decision about a flag-gated draft feature), and `patch-programming-experimental`'s `FanoutWdgt`/`FanoutPinWdgt` are named from core's dataflow wiring where `ControllerMixin.ensureWireEdge` has no async seam. ⛔ Do not re-attempt for the bytes. Full pricing: `architecture/build-and-packaging.md` §5.
+- [ ] **The last two, and they are a DECISION not a gap: `CanvasWdgt` + `PatchNodeWdgt` (4.3 KB) stay in core.** The EAGER `video-player` and `patch-programming-experimental` parts EXTEND them, and an eager part cannot derive from a lazy one at all. Unblocking is not packaging work: `video-player` is auto-launched AT BOOT (a product decision about a flag-gated draft feature), and `patch-programming-experimental`'s `FanoutWdgt`/`FanoutPinWdgt` are named from core's dataflow wiring where the wire verbs' `DataflowEngine.ensureWireEdges` has no async seam. ⛔ Do not re-attempt for the bytes. Full pricing: `architecture/build-and-packaging.md` §5.
 
 ### `archive/stroke-flip-and-fracplane-coverage-plan.md`
 CLOSED 2026-08-12 — executed in full the day it was authored; residue in `architecture/appearance-paint-convention.md` (stroke + overlay bullets) and the archive stamp. P1–P3 and the thin-stroke finding are in that plan's § "BACKLOG ledger". What remains open is one of the pre-existing defects the arc FOUND:
@@ -580,8 +580,7 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 - [ ] §7: banked v1-excluded items: precompiled file, SWCanvas strip, baked edits, dirty guard
 
 ### `plans/mixin-removal-plan.md`
-AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phases 1–2 have landed (its §13); the rest runs in its §7 order. All ten owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
-- [ ] §7 Phase 3: Controller → `ControllerWdgt`
+AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phases 1–3 have landed (its §13); the rest runs in its §7 order. All ten owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
 - [ ] §7 Phase 4: the app-kit pair's shared base `CreatorWdgt`; the SmartPlacer mixin deleted
 - [ ] §7 Phase 5: the back buffer as two appearances, one line on text and a `BackBuffer` object
 - [ ] §7 Phase 6: a test of the edit-mode relay, then the relay into `StretchablePanelWdgt`; Bubbles and `triggeringWidget` deleted
@@ -669,7 +668,7 @@ The arc that closed the residue arc's five items (the image widget's back-buffer
 - [ ] **A world holding the video player cannot be saved**: `SimpleRasterImageButtonWdgt` (~:24) assigns `activated` as an INSTANCE function, which the serializer refuses, so "Save world snapshot…" throws at `… → .imageWdgt → .activated` on any `--includeVideoPlayer` world, and so does saving the thumbnail, the face or the player (`Fizzygum-tests/.scratch/arc-r2/R12/logs/p8-vp-*.log`).
 - [ ] **A `--includeVideoPlayer` boot logs 304 `NON_INTEGER_GEOMETRY` errors** (same logs) — the integer-placement funnel is violated somewhere in the video-player part, which no gated build ships.
 - [ ] **The sw3d work is not vendored**: SWCanvas branch `sw3d-game` (6 commits, `examples/` only) forked from `main` before the pinned font-symbols commit and its `dist/sw3d.min.js` was never rebuilt; bring it in as its own pin bump, from a branch rebased onto `main` with a rebuilt dist, with its own whole-suite check (it reaches Fizzytiles).
-- [ ] `census-widget-conformance.js` facet 1 (`declarationsOf`): its `(?!\(|->|=>)` lookahead is defeated by backtracking, so every class-level key counts as a declaration — and that is LOAD-BEARING (a naive fix makes the ratcheted gate report `FridgeMagnets3DCanvasWdgt`'s function-valued fields); its mixin branch counts `ControllerMixin`'s option-object keys as donated fields. Fix both together, or not at all.
+- [ ] `census-widget-conformance.js` facet 1 (`declarationsOf`): its `(?!\(|->|=>)` lookahead is defeated by backtracking, so every class-level key counts as a declaration — and that is LOAD-BEARING (a naive fix makes the ratcheted gate report `FridgeMagnets3DCanvasWdgt`'s function-valued fields).
 
 ### Save/restore-fidelity arc 2026-10-25 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
 The arc that closed five save/restore and scroll items (a frame's placeholder exists only while shown; an element the page loads is derived from its holder's path, gate #30; a menu re-takes its width at a lifetime change; a viewport's frame covers its own box) measured these on the way and left them open:

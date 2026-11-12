@@ -6,10 +6,7 @@
 # handle; a palette carries both the handle and (through its choice marker) the picture, and so
 # does this.
 
-class ColorPickerWdgt extends Widget
-
-  @augmentWith ControllerMixin
-
+class ColorPickerWdgt extends ControllerWdgt
 
   # I drive colours: what the "target property" chooser filters the target's pins by, and the
   # adjective in the "set target" tooltip.

@@ -236,7 +236,7 @@ class Widget extends TreeNode
   # target's pins my "target property" chooser may offer ("numerical" | "string" | "color", or
   # "any" for a widget that forwards whatever it received). Only controllers declare it.
   #   ONE declaration feeds both halves of the set-target UI: `openTargetPropertySelector` filters the
-  # target's pins by it, and `ControllerMixin._addTargetConnectionMenuEntries` words its tooltip from
+  # target's pins by it, and `ControllerWdgt._addTargetConnectionMenuEntries` words its tooltip from
   # it. Stating the kind separately in each place lets the two drift silently — nothing compares a
   # tooltip's adjective against the menu it describes.
   producesPinKind: undefined
@@ -3953,7 +3953,7 @@ class Widget extends TreeNode
     # re-declaration is the add's to make, for the whole subtree — or a TRACKING control nested
     # inside (the scrollbar of a duplicated or snapshot-loaded viewport) never re-subscribes, and
     # stops following its content until a drag fires it. Idempotent. Forward edges need nothing
-    # here: a producer derives them itself on its first fire (ControllerMixin.updateTarget).
+    # here: a producer derives them itself on its first fire (the controller's updateTarget).
     unless aWdgt.isOrphan()
       aWdgt.forAllChildrenBottomToTop (each) -> each._ensureTrackingEdges?()
     if previousParent?._reactToChildRemoved?
@@ -5595,11 +5595,9 @@ class Widget extends TreeNode
   # The shared body of every controller widget's openTargetPropertySelector: pop up the "target
   # property" chooser, one item per drivable pin of the kind I produce. Each item wires
   # @action = that pin's setter onto theTarget via setTargetAndActionWithOnesPickedFromMenu (a
-  # ControllerMixin method -- every caller @augmentWith's it).
-  # Deliberately on Widget, NOT ControllerMixin: as an INHERITED member it is hidden from the
-  # inspector's default own-props view, so the controllers' inspected member lists are unshifted --
-  # a ControllerMixin method would be copied in as an OWN member of each and shift every one. (It
-  # DOES surface in the rarer inherited-props inspector view.)
+  # ControllerWdgt method -- every caller is a ControllerWdgt). As an INHERITED member it is hidden
+  # from the inspector's default own-props view, so the controllers' inspected member lists do not
+  # show it. (It DOES surface in the rarer inherited-props inspector view.)
   # A row shows its pin's label capitalised ("Alpha 0-100"); the pin keeps its label as it is, its
   # identity (pinLabelled, principalPinLabel, a wire's describeConnection).
   _popUpTargetPropertyMenu: (theTarget, pins) ->

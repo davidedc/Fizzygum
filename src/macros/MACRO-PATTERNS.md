@@ -1262,13 +1262,13 @@ assertion a recapture after a regression silently stores two different hashes an
   (`macroLonelySliderCantBeAttachedToAnything`): `Widget.attach` (`Widget.coffee:4525` → `_attachToChosenParent`) filters its
   `plausibleTargetAndDestinationWidgets` candidates by `each != @parent` — for a bare desktop widget the parent IS the world, so
   the list is EMPTY and the "no widgets to attach to" menu pops with ZERO items, while `"Connect"` → `"Connect to"`
-  (`ControllerMixin.openTargetSelector`) on the SAME fixture keeps the world (re-attaching to your parent is a no-op; controlling
+  (`ControllerWdgt.openTargetSelector`) on the SAME fixture keeps the world (re-attaching to your parent is a no-op; controlling
   it is meaningful). Assert the zero-item shape with `@assertTopMenuItemCount 0` + `@assertTopMenuItemStrings []` — the menu's
   title is NOT an item (`MenuWdgt.testItems` excludes `@label`), so a titled-but-empty menu counts 0. Reuses
   macroLonelySliderTargetsWorldOnly's lone-slider fixture verbatim (right-click the LOWER track), so the attach-vs-set-target
   contrast is asserted on an identical scene. No new verb.
 - **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedWidget`): both "Attach"
-  (`Widget.attach`) and a controller's `"Connect"` → `"Connect to"` (`ControllerMixin.openTargetSelector`) build their candidate menus
+  (`Widget.attach`) and a controller's `"Connect"` → `"Connect to"` (`ControllerWdgt.openTargetSelector`) build their candidate menus
   from `world.plausibleTargetAndDestinationWidgets` (`Widget.coffee:1092`), but a `PanelWdgt` (a
   `ClippingWdgt`) OVERRIDES it (`ClippingWdgt.plausibleTargetAndDestinationWidgets`) to recurse into its
   children ONLY where the PANEL's own bounds intersect the probe. So a child whose raw bounds stick out past the panel
@@ -1625,7 +1625,7 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Set target** (`macroPaletteSetTargetRecolorsPanel`): `setControllerTargetToWidgetProperty_InputEvents_Macro controller,
   panel, "color"` — the TARGET WIDGET, then the pin's label. It opens the controller's own menu (a ColorPaletteWdgt /
-  GrayPaletteWdgt / SliderWdgt / … with `ControllerMixin`) → "Connect" → "Connect to" (`openTargetSelector` lists only
+  GrayPaletteWdgt / SliderWdgt / … — a `ControllerWdgt`) → "Connect" → "Connect to" (`openTargetSelector` lists only
   bounds-INTERSECTING widgets, so it MUST OVERLAP the target) → the target's row of the "target" chooser, picked BY THE WIDGET
   (`rowOfMenuStandingFor` — the rows read human names, "Panel", "Rectangle 2", "Desktop") → the property's row of the "target
   property" chooser (the pin label capitalised at the row, "Color"; pass the pin label as the pin states it); thereafter acting on
@@ -1634,7 +1634,7 @@ assertion a recapture after a regression silently stores two different hashes an
   argument: the right-click then opens the ancestor hierarchy menu, and the verb steps into the controller's own row by the
   widget (`openOwnMenuAtFractionOf_InputEvents_Macro`).
 - **Assert a controller's connection block by MEANING** (`macroTextMenuOffersOneConnectionBlock`): every controller's menu
-  ends with ONE block — "Connect", then one row per live wire (`ControllerMixin._addTargetConnectionMenuEntries`) — on
+  ends with ONE block — "Connect", then one row per live wire (`ControllerWdgt._addTargetConnectionMenuEntries`) — on
   every page, texts included (a plain `StringWdgt` is a controller too). Read it off the open menu with the two query
   lookups: exactly one row labelled "Connect" (`(@getTextMenuItemsFromMenu menu, "Connect").length`) and exactly one
   standing for each wired target (`(@rowsOfMenuStandingFor menu, target).length`); and the LAST two rows
@@ -1674,7 +1674,7 @@ assertion a recapture after a regression silently stores two different hashes an
   one item further down. A wire only DRIVES; this makes the controller follow the pin it drives as well, so a slider wired onto
   a `ViewportWdgt`'s `scroll y` becomes a scrollbar for it. Navigate exactly as for "Fires per event" — the wire row by its
   target widget, then the `"Follows it too"` row — and click it again to demote.
-  ⚠ **The row is ABSENT unless the promotion would really work** (`ControllerMixin._canTrackWire`): the pin must be readable
+  ⚠ **The row is ABSENT unless the promotion would really work** (`ControllerWdgt._canTrackWire`): the pin must be readable
   AND declare `announces` on its `PinSpec`, the controller must be able to render that pin (`SliderWdgt._canReflectPin` wants a
   `SliderRange`, which today only a scroll frame answers), and it must not already be following another wire. So a macro that
   expects the row must pick a target that qualifies — a scroll frame — and `@assertTopMenuItemStrings` is how to prove it is
@@ -1708,7 +1708,7 @@ assertion a recapture after a regression silently stores two different hashes an
   argument**: a wire delivers its producer's PRINCIPAL value, so each side's pin is forced to be its principal one. Same
   3rd `controllerMenuFraction` arg as the connect verb, and it picks the "bind with" chooser's row BY THE TARGET WIDGET.
   ⚠ The item is offered only when something can ACTUALLY be bound to, so a fixture with no bindable neighbour shows no
-  "Bind ⇄" at all. ⭐ The chooser lists only widgets that can ACTUALLY be bound (read/write principal pin + `ControllerMixin`
+  "Bind ⇄" at all. ⭐ The chooser lists only widgets that can ACTUALLY be bound (read/write principal pin + being a `ControllerWdgt`
   + matching kinds) — a slider's knob owns no value, so it is never offered beside its slider. ⚠ PRECEDENCE is observable: the
   controller whose menu you open PUSHES its value, so start the two at different values if you want to photograph it.
 - **A two-way wire's row reads `⇄`, and cutting it cuts BOTH halves** (`macroBindTwoSlidersAndUnbind`): the arrow is DERIVED
@@ -1781,7 +1781,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (give them different track colours too, so the two sliders are easy to tell apart); and (2) wire the leg whose chooser lists
   BOTH sliders — `text→slider2`, since the text overlaps both — BY MEANING: right-click the text → `"Connect"` → `"Connect to"`,
   then in the "target" chooser pick the row whose target IS slider2. **The reusable bit — selecting a chooser row by the widget
-  it stands for:** `ControllerMixin.openTargetSelector` passes each candidate target widget as the row's `argumentToAction1`,
+  it stands for:** `ControllerWdgt.openTargetSelector` passes each candidate target widget as the row's `argumentToAction1`,
   which is what `MenuItemWdgt.representedWidget` answers, so `@moveToRowOfMenuStandingForAndClick_InputEvents menu, slider2`
   (the test spells the same query out, `menu.topWdgtSuchThat (item) -> (item instanceof MenuItemWdgt) and
   (item.argumentToAction1 == slider2)`), then `@moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "Value"`.

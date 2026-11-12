@@ -752,7 +752,7 @@ pins on their wearers and demands a live fixture for every `announces`. It is a 
 than a text scan because `pins()` is composed and a subclass may narrow it
 ([`lint-and-static-checks.md`](lint-and-static-checks.md)).
 
-**To drive others**, `@augmentWith ControllerMixin`, declare `producesPinKind: "numerical"` (the kind
+**To drive others**, extend `ControllerWdgt`, declare `producesPinKind: "numerical"` (the kind
 of value you *produce* — one field read by both halves of the set-target UI, so its property-menu
 filter and its tooltip cannot describe different things), fire through `@_fireConnection value`, and
 append the shared connect block with `@_addTargetConnectionMenuEntries menu` after your own rows: it
@@ -860,7 +860,7 @@ graphEdgesOut: ->
 
 The protocol is DERIVED — it reads fields that already exist and persist; never build a standing
 index behind it (decision G4 there), and never enumerate containment (the tree is its own API).
-Existing contributors: `ControllerMixin` (wires → flow), `ButtonWdgt` (`@target` → command),
+Existing contributors: `ControllerWdgt` (wires → flow), `ButtonWdgt` (`@target` → command),
 `ShortcutWdgt` (`referencedWidget` → reference). Ephemeral chrome pointers — a
 handle's, a prompt's, a caret's, a menu spec's `target` — are deliberately NOT edges: enumeration
 covers the durable widget graph. Liveness POLICY sits on top, in the protocol's consumers, and
@@ -1049,15 +1049,11 @@ right for inclusion and wrong for laziness — it silently swallows the user's c
 # A FooWdgt shows a bar whose length tracks a level, and drives any numerical pin
 # of a chosen target. A subclass supplies createAppearance (its skin).
 
-class FooWdgt extends Widget
-
-  @augmentWith ControllerMixin, @name
+class FooWdgt extends ControllerWdgt
 
   # every instance field declared here, so the Duplicator, the serializer and the
   # inspector see it even before the lazy initialisation that fills it in --
   # and so these class-body values are the real defaults
-  target: undefined
-  action: undefined
   level: 0
   caption: "foo"
   bar: undefined

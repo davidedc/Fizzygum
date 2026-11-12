@@ -2480,7 +2480,7 @@ class MacroToolkit
     """
 
     # Patch-programming "Connect to": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,
-    # SliderWdgt, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
+    # SliderWdgt, StringWdgt, … — any ControllerWdgt) to drive a property of
     # another widget. Open the controller's own menu (openOwnMenuAtFractionOf: right-clicked at
     # controllerMenuFraction, stepping through the hierarchy menu where one opens) -> "Connect" ->
     # "Connect to" (openTargetSelector): a "target" chooser of the widgets whose bounds INTERSECT the

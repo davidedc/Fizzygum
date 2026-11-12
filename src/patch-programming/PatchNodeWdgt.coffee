@@ -18,9 +18,7 @@
 # subclasses is fine. Arc 4 moved that FILES-not-markers way of saying it: the directory a file sits
 # in decides its part (buildSystem/parts.json), and a mixed directory is resolved by moving files.
 
-class PatchNodeWdgt extends Widget
-
-  @augmentWith ControllerMixin
+class PatchNodeWdgt extends ControllerWdgt
 
   textWidget: undefined
 

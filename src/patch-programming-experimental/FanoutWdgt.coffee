@@ -1,6 +1,4 @@
-class FanoutWdgt extends Widget
-
-  @augmentWith ControllerMixin
+class FanoutWdgt extends ControllerWdgt
 
   pinUp: undefined
   pinDown: undefined

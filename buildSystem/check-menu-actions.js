@@ -36,11 +36,11 @@
 // union of `chainOf(X)` over every X whose chain contains C. That union is what this rule resolves
 // against, and a miss is a provable dead row: NO possible receiver implements it.
 //   ⚠ The union is what keeps the rule SOUND rather than merely strict. `Widget` itself wires
-//   `"setTargetAndActionWithOnesPickedFromMenu"` at `@`, and that verb lives in `ControllerMixin` —
-//   only reachable because a `@augmentWith ControllerMixin` class (PaletteWdgt, StringWdgt, …) has
-//   `Widget` in its chain. Resolving against the enclosing class ALONE would false-fail there.
-//   ⓘ The same union covers a call site inside a MIXIN file for free: `@` in `ControllerMixin`'s own
-//   rows is the augmented widget, and every augmenting class has ControllerMixin in its chain.
+//   `"setTargetAndActionWithOnesPickedFromMenu"` at `@`, and that verb lives in `ControllerWdgt` —
+//   only reachable because a ControllerWdgt (PaletteWdgt, StringWdgt, …) has `Widget` in its
+//   chain. Resolving against the enclosing class ALONE would false-fail there.
+//   ⓘ The same union covers a call site inside a MIXIN file for free: `@` in a mixin's own rows is
+//   the augmented widget, and every augmenting class has the mixin in its chain.
 //   ⓘ The harness is part of the universe: methods a `*TestSupport` class copies onto a core class
 //   (`WorldTestSupport.installOnto WorldWdgt`, read from src/boot/globalFunctions.coffee) are real
 //   methods of that class on any build shipping the harness part — `WorldWdgt`'s own
@@ -72,7 +72,7 @@
 // a string. So a method whose NAME matches a menu action is checked even on a class no menu ever
 // wires — `ToggleButtonWdgt.select(whichOne)` is checked because `ListWdgt` wires a `"select"` — and
 // wherever the method is defined, a class body or a mixin's onceAddedClassProperties member alike
-// (ControllerMixin's wiring verbs; lib/coffee-method-header.js methodSpans groups both). That
+// (lib/coffee-method-header.js methodSpans groups both). That
 // direction is deliberate: over-matching costs a spurious rule-3 hit (fix by naming the slot, which
 // is never wrong), while under-matching would let a real one through. If it ever false-positives on
 // a genuinely unrelated method, prefer renaming that method over loosening the rule.

@@ -1,6 +1,6 @@
 # ONE WIRE of a controller: "I drive `action` on `target`", plus that wire's own policy.
 #
-# A controller owns a LIST of these (`@wires`, ControllerMixin), one record per relationship it
+# A controller owns a LIST of these (`@wires`, ControllerWdgt), one record per relationship it
 # drives. Gathering a wire's four facts into a record is what lets there be a SECOND one: the
 # alternative is four loose fields on the controller — target, action, delivery policy, tracking flag
 # — describing a single relationship in four places, with no slot for another and nothing to remove
@@ -44,7 +44,7 @@ class WireSpec
   # record so the policy is stored against the day it lands.
   firesPerEvent: false
   # do I also FOLLOW what I drive? A tracking wire declares the opposite edge as well
-  # (ControllerMixin._ensureTrackingEdges) — a scrollbar welded to its content.
+  # (ControllerWdgt._ensureTrackingEdges) — a scrollbar welded to its content.
   tracks: false
 
   # The policies are assigned only when asked for, so an ordinary wire carries neither as an own
@@ -70,7 +70,7 @@ class WireSpec
   isFiringPerEvent: -> @firesPerEvent
 
   # the same, for my "Follows it too" row: whether I also carry values BACK
-  # (ControllerMixin.toggleTrackingOfWire)
+  # (ControllerWdgt.toggleTrackingOfWire)
   isTracking: -> @tracks
 
   # How a menu names me: my target by its row name — as given, when the menu listing me has told it

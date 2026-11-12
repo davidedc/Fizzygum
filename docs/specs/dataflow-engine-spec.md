@@ -88,7 +88,7 @@ Node roles:
 
 ## 2. Edges live locally; the engine owns only a derived index
 
-- A **wire** is stored on the widget that owns it — one `WireSpec` record in `ControllerMixin`'s
+- A **wire** is stored on the widget that owns it — one `WireSpec` record in `ControllerWdgt`'s
   ordered `@wires` list, so one controller may hold several (connector plan §P4). This storage
   survives.
 - A **reference** is stored in the formula text of the cell (discovered by identifier scan,

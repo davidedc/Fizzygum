@@ -222,12 +222,12 @@ class DataflowEngine
     @_notifySubscriberCount producer
     return
 
-  # Ensure the edge index MIRRORS this producer's live WIRE LIST (ControllerMixin's `@wires`) — the TOTAL
+  # Ensure the edge index MIRRORS this producer's live WIRE LIST (ControllerWdgt's `@wires`) — the TOTAL
   # realisation of spec §8 "edges derive from the wires". Reconciling the whole list rather than one pair is
   # what makes un-wiring need no engine verb of its own: drop the record from the list, call this, and the
   # edge is gone because nothing derives it (connector plan §P4).
   # Idempotent — a no-op when every wire already has its matching edge and no extra wire edge survives — so it
-  # is cheap to call on every fire. Called both EAGERLY (ControllerMixin._addWire, so a menu wire's edge exists
+  # is cheap to call on every fire. Called both EAGERLY (ControllerWdgt._addWire, so a menu wire's edge exists
   # the moment it is made) and LAZILY (_fireConnection, so a wire established by DIRECT construction — the
   # NumberPromptWdgt slider — that never goes through the menu still declares its edge the first time it fires;
   # without this it would markStale with NO out-edge and deliver nothing, silently breaking the prompt (what the
@@ -266,7 +266,7 @@ class DataflowEngine
 
   # Remove the RE-READING edge producer -> consumer (the `firesOnAnyChange` half of a tracking wire),
   # which is the one kind `_removeOutgoingWireEdgesOf` deliberately spares and so can only be revoked
-  # by the consumer that declared it — ControllerMixin.unwireFrom, when the wire it belonged to goes.
+  # by the consumer that declared it — ControllerWdgt.unwireFrom, when the wire it belonged to goes.
   # ⚠ It spares WIRE records in the same direction, and that matters as soon as two widgets are bound
   # to each other (§P2): there, producer -> consumer carries the other side's wire as well as my
   # subscription, and dropping both would silently cut their wire when I merely stopped following them.
@@ -317,7 +317,7 @@ class DataflowEngine
   # record, tracking reverse edge, the wire record's own node death, membership chokepoint).
   # ⚠ The reverse index is derived LAZILY (a restored controller declares its edges on first
   # fire), so a producer that never fired since load is invisible here — the fire-time
-  # self-heal (ControllerMixin._pruneWiresOntoDestroyedTargets) is the same invariant's other
+  # self-heal (ControllerWdgt._pruneWiresOntoDestroyedTargets) is the same invariant's other
   # chokepoint; together they are total.
   # Called from Widget._destroyNoSettle BEFORE removeAllEdgesOf clears the index this reads.
   severWiresIntoDyingNode: (node) ->
@@ -333,7 +333,7 @@ class DataflowEngine
 
   # Is there already an edge producer -> consumer? The reverse index answers it directly. Lets a
   # consumer that may be asked to subscribe to the same source more than once (a controller
-  # re-deriving its tracking edges, ControllerMixin._ensureTrackingEdges) dedup without keeping its
+  # re-deriving its tracking edges, ControllerWdgt._ensureTrackingEdges) dedup without keeping its
   # own bookkeeping of what it has subscribed to: the index already knows, and a field would have to
   # be declared, duplicated and serialized like any other.
   hasEdge: (producer, consumer) ->
@@ -407,7 +407,7 @@ class DataflowEngine
     return
 
   # Run `deliver` — a controller offering its CURRENT value along a wire it has just made
-  # (ControllerMixin.wireTo → reactToTargetConnection) — with its value marks recorded as that
+  # (ControllerWdgt.wireTo → reactToTargetConnection) — with its value marks recorded as that
   # offer rather than as edits. The difference matters only on a ring: building a circuit marks
   # every stop, and a stop like a calculator node has no value of its own yet to offer, so letting
   # the LATEST such mark win a ring (the edit rule) would lap a ring from nothing. Connection marks
@@ -550,7 +550,7 @@ class DataflowEngine
   # 6b — apply each incoming WIRE edge (a producer→consumer edge carrying an ACTION) whose producer CHANGED
   # this pass: push the producer's pulled value onto the consumer via the action, routed through the target's
   # _<action>Connector lane if it defines one, else the public action — the SAME routing
-  # ControllerMixin._fireConnection uses, so the non-settling connector lane (§1.5/§1.14) is preserved and
+  # ControllerWdgt._fireConnection uses, so the non-settling connector lane (§1.5/§1.14) is preserved and
   # joins the pass settle. Sheet reference edges carry no action and are skipped, so the spreadsheet client is
   # untouched (only wire edges carry an action).
   # ⚠ EVERY record joining the pair is applied, not one: a controller owning a list of wires (§P4) can

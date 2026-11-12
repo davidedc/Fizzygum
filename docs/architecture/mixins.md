@@ -251,17 +251,15 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (6 mixins, 945 L, 25 consumer slots across 18 files, counted 2026-11-12; the rows as verified 2026-08-18)
+## 3. Inventory (5 mixins, 363 L, 18 consumer slots across 13 files, counted 2026-11-12; the rows as verified 2026-08-18)
 
-Four live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
-in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 25 is the
-sum of the per-mixin consumer counts below, spread over 18 distinct files: `CreatorButtonWdgt` and
-`GlassBoxTopWdgt` take three each, and `PaletteWdgt`, `StringWdgt` and
-`EditorContentPropertyChangerButtonWdgt` take two each.
+Three live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
+in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 18 is the
+sum of the per-mixin consumer counts below, spread over 13 distinct files: `CreatorButtonWdgt` and
+`GlassBoxTopWdgt` take three each, and `EditorContentPropertyChangerButtonWdgt` takes two.
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
-| `ControllerMixin` | 516 | 7 — `SliderWdgt`, `StringWdgt` (whence `TextWdgt`/`SimpleTextWdgt` inherit it — SimpleTextWdgt's own augment was the double-injection the boot guard now forbids), `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | yes — `graphEdgesOut` (super-composed, graph-edges §4.2) |
 | `HighlightableMixin` | 54 | 6 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `VerticalStackViewportWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ViewportWdgt`) | unrelated branches (Viewport / Panel / Widget) | yes |
@@ -270,8 +268,9 @@ sum of the per-mixin consumer counts below, spread over 18 distinct files: `Crea
 
 (The count excludes those that no longer exist as mixins: dead `ContainerMixin`, deleted;
 the five misfiled ones, folded into standard-OO homes — §4; `DeepCopierMixin`, inverted
-into the `Duplicator` engine (`src/duplication/`) — §5-C; and the clipping and the ratio-keeping
-ones, now the base classes `ClippingWdgt` and `RatioLockedWdgt` (`plans/mixin-removal-plan.md`).
+into the `Duplicator` engine (`src/duplication/`) — §5-C; and the clipping, the ratio-keeping
+and the controller ones, now the base classes `ClippingWdgt`, `RatioLockedWdgt` and `ControllerWdgt`
+(`plans/mixin-removal-plan.md`).
 `RatioLockedWdgt`'s deliberate non-subclasses are `Example3DPlotWdgt` and
 `StretchableWidgetContainerWdgt`, which carry pinned-`@ratio` variants of its protocol (field-based,
 super-fallback): do not re-parent them onto it. `Mixin.allMixines` is load-bearing for the inspector.)
@@ -280,9 +279,7 @@ super-fallback): do not re-parent them onto it. `Mixin.allMixines` is load-beari
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core — all 6 current mixins):** `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
-  patch-programming — and the home the dataflow engine deliberately built on),
-  `HighlightableMixin` (input-hook state machine across ≥4 branches),
+- **Genuine (the keep-core — all 5 current mixins):** `HighlightableMixin` (input-hook state machine across ≥4 branches),
   `BackBufferMixin` (paint-path override; load-bearing for the unified shadow mechanism
   — the blit at α is WHY a transparent text widget's shadow is its glyphs),
   `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
@@ -319,8 +316,7 @@ objects on the paint path). Three shapes, with costs:
   works. Genuine advantages: the stub gets REAL CoffeeScript `super` (the
   `arguments.callee` rewriter drops out), and the collaborator is a plain class — fully
   first-class everywhere. Cost is arithmetic: `HighlightableMixin` alone = 9 consumers
-  × ~5 hooks ≈ 45 stubs replacing 9 one-liners; `ControllerMixin` ≈ 20+ stubs plus
-  retargeting the by-name menu dispatch; cohesion degrades from one file to one file
+  × ~5 hooks ≈ 45 stubs replacing 9 one-liners; cohesion degrades from one file to one file
   plus N scattered stub blocks.
 - **B — base-class extension points** (the base hook consults an optional strategy:
   `@highlighter?.onMouseDown()`; consumers just instantiate the collaborator — zero
@@ -354,10 +350,7 @@ recurring conversion costs regardless of shape.
   *inheritance homes* — fold into consumer / shared base — not to delegation, which the §1
   policy reserves for liftable responsibilities.
 - **New subsystems keep choosing mixins**: the spreadsheet (`SheetModel`/`SheetCellRecord` →
-  Duplicator), transforms (`TransformSpec` → Duplicator), the patch-programming base (`PatchNodeWdgt` →
-  Controller). `ControllerMixin` is the cohesive home of the whole wire-client protocol
-  (`_fireConnection`, `firesPerEvent`, the shared connect-menu block); shared menu code lives
-  INSIDE it. `docs/plans/creation-and-templates-plan.md` builds `FactoryWdgt` on the `Duplicator`.
+  Duplicator), transforms (`TransformSpec` → Duplicator). `docs/plans/creation-and-templates-plan.md` builds `FactoryWdgt` on the `Duplicator`.
 - The platform *invests in* mixins rather than removing them: inspector source recovery
   (Tier H5), the `SHADOWS-MIXIN` census, mixin-DSL awareness in `check-layering`, the hardened
   super-rewriter, and stainer mixins reduced to clean 2-line overrides.
@@ -377,8 +370,8 @@ Costs of keeping (all real, all now bounded):
 - two unsynchronized mixin detectors (open, cheap to gate).
 
 Costs of removing (why it loses):
-- the three biggest genuine-MI mixins (Controller/Highlightable/BackBuffer) need
-  stub forests (≈100+ methods) or new `Widget`
+- the two biggest genuine-MI mixins (Highlightable/BackBuffer) need
+  stub forests or new `Widget`
   extension points on the paint/input/geometry hot paths — determinism-critical,
   behaviour-neutral churn of exactly the kind this project's case law banks rather than
   executes;
@@ -387,7 +380,7 @@ Costs of removing (why it loses):
 - ~350 L of machinery deleted, and §3's whole line total merely relocated, net LOC likely UP;
 - no active campaign is blocked by mixins (verified across all plan docs);
 - the equilibrium is healthy on its own terms: delegate what delegates
-  (serializer), inject what injects (dataflow client protocol), delete what's dead.
+  (serializer), inject what injects (pointer-state hooks), delete what's dead.
 
 ## 8. Proposed follow-ups (NOT scheduled; adopt via `BACKLOG.md` if picked up)
 
@@ -403,5 +396,5 @@ Costs of removing (why it loses):
 - `docs/archive/god-class-decomposition-plan.md` — the delegation precedent and the
   injected-vs-delegated carve-out.
 - `docs/archive/connection-cascade-settle-fix-plan.md` — how `_fireConnection` came to
-  live in `ControllerMixin`.
+  live with the wire verbs (`ControllerWdgt` today).
 - `src/macros/CLAUDE.md` — the `MacroToolkit` delegation exemplar.

@@ -17,10 +17,9 @@
 # this is because the code assumes that the .length property of a string is the number of characters in the string, which, as in the "ä"
 # example, is not true.
 
-class StringWdgt extends Widget
+class StringWdgt extends ControllerWdgt
 
   @augmentWith BackBufferMixin
-  @augmentWith ControllerMixin
 
   # CLICKING TEXT MEANS CLICKING THE LINE, not the strokes — so my whole box takes the pointer,
   # un-shadowing BackBufferMixin's per-pixel probe (a class-body member out-ranks a mixin's).
@@ -181,8 +180,8 @@ class StringWdgt extends Widget
   # and a FIT_BOX_TO_TEXT widget re-flows its box then invalidates its container
   # (_reflowContainedTextThenInvalidateLayout, below) so the surrounding layout follows.
   #
-  # Keep FIT_BOX_TO_TEXT implemented HERE (where the SWCanvas font cap,
-  # ControllerMixin and undo/redo already live); do NOT re-introduce a menu-only
+  # Keep FIT_BOX_TO_TEXT implemented HERE (where the SWCanvas font cap
+  # and undo/redo already live); do NOT re-introduce a menu-only
   # version whose toggle items are no-op handlers that don't actually resize the
   # widget — that approach was tried and is a dead end.
   # ===========================================================================
@@ -1392,7 +1391,7 @@ class StringWdgt extends Widget
 
 
   # My menu: the base's entries, my text rows, then the ONE connection block every controller ends
-  # its menu with (ControllerMixin._addTargetConnectionMenuEntries) — on every page, since what a
+  # its menu with (ControllerWdgt._addTargetConnectionMenuEntries) — on every page, since what a
   # text can connect to does not depend on which HTML file booted the world.
   #   ⚠ The block closes the menu, so a subclass adds its rows by extending _addTextMenuEntries;
   # rows appended after this method's super would land below it.

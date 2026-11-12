@@ -370,7 +370,7 @@ const JOIN_CALL = new RegExp('[@.]\\s*' + TIERS.join + '\\b');   // the join lan
 // settle lane -- see [P]); reaching one by a hard-coded @/.-textual call is a way to smuggle "a setText that never
 // throws" past that guard. The ONLY legitimate textual callers are the patch nodes' recalculateOutput renders (a
 // node rendering its OWN output mid-cascade -- connection-cascade-settle-fix-plan.md step 4). The reactive dispatch
-// (ControllerMixin._fireConnection) resolves the connector name at RUNTIME (@target[actionToCall]) and is invisible
+// (ControllerWdgt._fireConnection) resolves the connector name at RUNTIME (@target[actionToCall]) and is invisible
 // to this name-scanner regardless. Extend the allowlist only when another genuine mid-cascade self-render appears.
 // Keyed by caller METHOD NAME in any class, like [O]'s: an entry that excuses no call this run FAILS as stale
 // (STALE_ALLOWLIST_ENTRY).

@@ -617,7 +617,7 @@ class InspectorWdgt extends ClippingWdgt
     #   Held by a class's prototype, it is a class member: the source kept WITH that very function
     # (Class.memberRecordOf), never a source recorded under its NAME, which a run's replacement need not
     # be. A function with none reads as its compiled text. A member a MIXIN gave the holder's class -- one
-    # the class does not define, which its donor does (Mixin.donorOf; ControllerMixin._fireConnection) --
+    # the class does not define, which its donor does (Mixin.donorOf; HighlightableMixin's pointer hooks) --
     # is attributed to the donor, so a class-inspector Save routes the edit to it. A `constructor` row is
     # the class function: its constructor's source where the class writes one, else its compiled text.
     if Utils.isFunction(val)
