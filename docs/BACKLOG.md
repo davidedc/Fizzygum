@@ -83,12 +83,14 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
       2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
       member it inherits".)
-- [ ] **A class inspector's field row reads its record by NAME, whatever value the prototype now holds** (found by the
-      independent review closing "A run that replaces a class's member reads as a recorded source it no longer runs",
-      in the plan's ledger; reached: a run's `Klass::f = 2` on a field Klass records as `1`, then a class inspector's
-      `f` row). `ClassInspectorWdgt._sourceForFieldMember` shows the class's (or the donor's) recorded source for a
-      field: a value has no identity to key a record to, so a run's write, or a method a run replaced with a value,
-      reads as a source the prototype no longer holds. Functions read the source kept with them (`Class.memberRecordOf`).
+- [ ] **A mixin member's recorded source carries the next member's leading comment** (found by the independent review
+      closing "A class inspector's field row reads its record by NAME", in the plan's ledger; reached: a class
+      inspector on `VerticalStackPanelWdgt` — or `PanelWdgt`, `FrameWdgt`, any consumer of
+      `ClippingAtRectangularBoundsMixin` — selecting `clipsAtRectangularBounds`). `Mixin`'s source parse cuts each
+      member at the next 6-space key, so the comment block that documents the NEXT member
+      (`plausibleTargetAndDestinationWidgets`) becomes part of this one's recorded source: the pane shows another
+      member's documentation, and a Save of the row writes it into this member. `Class`'s parse cuts at a top-level
+      comment and is not affected.
 - [ ] **On a pre-compiled tree, a member a run replaced before the reflective layer arrived reads as its class's
       source** (found by the independent review closing "A run that replaces a class's member reads as a recorded
       source it no longer runs", in the plan's ledger; reached on `homepage` / `dev-precompiled`: Run `X::m = -> …` in
@@ -96,9 +98,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       (`Class._keepMyMembersRecords`) and keeps a record for whatever function the prototype holds then. Telling a
       run's function from the image's by its NAME was tried and FALSIFIED by the production smoke: the image is
       minified (`terser --compress --mangle`), which drops function-expression names, so every image member is
-      anonymous too. Options (a trade-off, the owner's): keep function names in the image (`keep_fnames`; bytes
-      unmeasured) and skip anonymous functions at ingest; a boot-side note of the functions the image made, kept as
-      it defines each class; or accept it.
+      anonymous too. A FIELD a run wrote before the layer arrived reads the same way (the ingest keeps the value the
+      prototype holds then as the field's record, `Class.keepFieldRecord`, and a value has no identity at all), which
+      the field half of "A class inspector's field row reads its record by NAME" left here. Options (a trade-off, the
+      owner's): keep function names in the image (`keep_fnames`; bytes unmeasured) and skip anonymous functions at
+      ingest; a boot-side note of the functions (and field values) the image made, kept as it defines each class; or
+      accept it.
 - [ ] **A wrapped member reads as compiled text, which the Smalltalk talk plan says it never does** (same review;
       reached by the plan's U2 MethodTally, which wraps every own function member of the profiled classes).
       `docs/plans/smalltalk-talk-2026-11-plan.md` (S1, its §"selectionFromList shows the recorded CoffeeScript") relies

@@ -96,16 +96,22 @@ class ClassInspectorWdgt extends InspectorWdgt
   # authority up the class chain -- the class's own current source (its body's, or an
   # edit's since: Class.applyMemberEdit keeps it), then the mixin donor's (setting
   # the donor attribution, so the save routes to the mixin and the override
-  # gesture is offered -- field parity with methods). undefined when no source is
-  # recorded (the base then falls back to showing the VALUE).
+  # gesture is offered -- field parity with methods) -- but only while my subject still
+  # reads the VALUE that source made there (Class.fieldRecordHolds): a value has no identity
+  # to key a record by, so a run's write (or one shadowing it further down) is told by the
+  # value it left, which I then show, as an object inspector does. undefined when no source
+  # is recorded, or its value is gone (the base then falls back to showing the VALUE).
   _sourceForFieldMember: (selected) ->
+    value = @inspectedObject[selected]
     goingUpTargetProtChain = @inspectedObject
     while goingUpTargetProtChain?.constructor?.class?
       theClass = goingUpTargetProtChain.constructor.class
       if theClass.nonStaticPropertiesSources[selected]?
+        return undefined unless Class.fieldRecordHolds goingUpTargetProtChain, selected, value
         return theClass.nonStaticPropertiesSources[selected]
       theMixinProvidingIt = Mixin.donorOf theClass, selected
       if theMixinProvidingIt?
+        return undefined unless Class.fieldRecordHolds goingUpTargetProtChain, selected, value
         @currentPropertySourceMixinName = theMixinProvidingIt.name
         return theMixinProvidingIt.nonStaticPropertiesSources[selected]
       goingUpTargetProtChain = goingUpTargetProtChain.__proto__
@@ -183,10 +189,14 @@ class ClassInspectorWdgt extends InspectorWdgt
       @_notifyOfEdit()
       return
     theClass = @inspectedObject.constructor.class
-    # a function member renames the source its FUNCTION keeps (Class.memberRecordOf) -- what my pane shows --
-    # so one a run replaced (it keeps none) is refused as a member with no source is
+    # a member renames the source my pane shows for it: a function's, the one its FUNCTION keeps
+    # (Class.memberRecordOf); a field's, its class's only while my subject holds the value it made
+    # (Class.fieldRecordHolds) -- so one a run replaced or rewrote (its source is no longer what it holds)
+    # is refused as a member with no source is
     held = @inspectedObject[oldName]
-    unless theClass.definesMember(oldName) and (!Utils.isFunction(held) or Class.memberRecordOf(held) is theClass.nonStaticPropertiesSources[oldName])
+    source = theClass.nonStaticPropertiesSources[oldName]
+    sourceIsWhatItHolds = if Utils.isFunction(held) then Class.memberRecordOf(held) is source else Class.fieldRecordHolds @inspectedObject, oldName, held
+    unless theClass.definesMember(oldName) and sourceIsWhatItHolds
       @inform oldName + " has no CoffeeScript\nsource in " + theClass.name + "\nto rename"
       return
     @_editClassMember newName, theClass.nonStaticPropertiesSources[oldName]

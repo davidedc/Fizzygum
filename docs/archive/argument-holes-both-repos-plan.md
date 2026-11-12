@@ -3292,3 +3292,35 @@ for (const s of sites) if (s.absentBefore.length) {
       the rig. Three plants, each failing it: the old rule (no
       items: every name walked and sorted as a string), no cap, the cut said nowhere. `fg gauntlet` green (20 legs, no
       flake), `fg homepage` BOOT OK.
+- [x] **A class inspector's field row reads its record by NAME, whatever value the prototype now holds** (found by the
+      independent review closing "A run that replaces a class's member reads as a recorded source it no longer runs",
+      in the plan's ledger; reached: a run's `Klass::f = 2` on a field Klass records as `1`, then a class inspector's
+      `f` row). `ClassInspectorWdgt._sourceForFieldMember` shows the class's (or the donor's) recorded source for a
+      field: a value has no identity to key a record to, so a run's write, or a method a run replaced with a value,
+      reads as a source the prototype no longer holds. Functions read the source kept with them (`Class.memberRecordOf`).
+      — CLOSED 2026-11-11 (self-ruled; loop unit U31). RULED: the field twin of the function rule — keep, WITH each
+      prototype, the VALUE each recorded field source made there, and show a field's recorded source only while the
+      inspected subject still reads that very value; otherwise the row shows the value, as an object inspector does;
+      and a rename carries a field's source only then too. LANDED: `Class.fieldRecordHolds` over a WeakMap of
+      prototype → Map of name → value (compared by `Object.is`), filled two ways — `keepFieldRecord`, a class BODY's
+      field (own, and its mixins' donated ones: `_keepMyMembersRecords`), kept ONCE as a function's record is, so the
+      reflective layer's later ingest of a class already made keeps the record it has; `refreshFieldRecord`, an EDIT
+      (`Class.applyMemberEdit`, `Class.removeMember`, `Mixin.injectInto`, `Mixin.withdrawFrom`), the record becoming
+      the value the edit made and dropped when the member is gone or is now a function; `ClassInspectorWdgt.
+      _sourceForFieldMember` asks it for the class's own source and the donor's alike (a write shadowing a field
+      further down reads as its value too), and `_applyPropertyRename`'s guard asks it for a field as it asks
+      `memberRecordOf` for a function. Docs: `mixins.md`'s donated-field attribution; the record-keeping header. The
+      first shape kept the LATEST value made everywhere and kept no record for a function: the independent review
+      closing this unit showed a re-ingest then overwrote a correct record with a run's value, a field edited into a
+      function kept a stale record that later vouched for a wrong source, and a rename of a row showing its value
+      carried the recorded source; all three fixed above. Left in the filed pre-compiled item: a run's write made
+      before the layer arrives on a pre-compiled tree, where no earlier record exists to keep. PROVEN: the
+      serialization rig's `inspector.aClassFieldRowShowsItsRecordOnlyWhileItsValueHolds` — a class body's record shows
+      (Widget's `clickOutsideMeOrAnyOfMeChildrenCallback`, whose source `[undefined]` is no value's text); on
+      `ListWdgt`'s `offersScrollPolicyToggle` a run's write reads as its value, a rename then is refused, a class edit
+      reads as its source, a field edited into a function and written back by a run as its value; on
+      `VerticalStackPanelWdgt`'s `clipsAtRectangularBounds` (donated by `ClippingAtRectangularBoundsMixin`) the donor's
+      source shows, attributed, a run's write as its value, a mixin edit as its source; every prototype and the mixin's
+      store put back. Two plants, each failing it: the old by-name reading (`fieldRecordHolds` answering yes) and the
+      first shape's record keeping (a member edited into a function keeping its stale field record). `fg gauntlet`
+      green on both shapes (20 legs each, no flake), `fg homepage` BOOT OK on both.

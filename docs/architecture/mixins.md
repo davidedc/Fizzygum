@@ -192,8 +192,11 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     member, its donor does, `Mixin.donorOf` — since one function can stand in several places), and a donated FIELD
     attributes in the CLASS inspector via `ClassInspectorWdgt._sourceForFieldMember` —
     prototype-level truth, shown in boot order of authority (the class's own current
-    source, then the mixin donor's) — while an OBJECT inspector keeps showing the
-    instance's VALUE (per-instance state is its own truth).
+    source, then the mixin donor's), and only while the prototype still holds the VALUE
+    that source made there (`Class.fieldRecordHolds`: a value has no identity of its own, so
+    each prototype keeps the value each field source made, and a run's write reads as its
+    value) — while an OBJECT inspector keeps showing the instance's VALUE (per-instance state
+    is its own truth).
 
   The editing vocabulary on top of that core:
   - **Save** of a mixin-donated member edits the DONOR: `Mixin.applyMemberEdit`

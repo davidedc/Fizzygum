@@ -189,6 +189,8 @@ class Mixin
       theClass::[memberName + "_class_injected_in"] = className
     else
       delete theClass::[memberName + "_class_injected_in"]
+    # the value the donor's edit made on this consumer, or none for a function (Class.refreshFieldRecord)
+    Class.refreshFieldRecord theClass::, memberName
     return
 
   # The injection undone: the member and its fake-super companion leave consumer class `className`'s
@@ -196,6 +198,7 @@ class Mixin
   @withdrawFrom: (className, memberName) ->
     delete window[className]::[memberName]
     delete window[className]::[memberName + "_class_injected_in"]
+    Class.refreshFieldRecord window[className]::, memberName
     return
 
   # Apply an edit to member `memberName`: recompile the single member, update my recorded

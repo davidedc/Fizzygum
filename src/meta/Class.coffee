@@ -299,6 +299,7 @@ class Class
     delete window.__fzEditedClassMember
     @nonStaticPropertiesSources[memberName] = source
     Class.keepMemberRecord proto[memberName], source
+    Class.refreshFieldRecord proto, memberName
     return
 
   # Remove ONE member from my prototype, with its source and its injection companion
@@ -315,6 +316,7 @@ class Class
     delete proto[memberName]
     delete proto[memberName + "_class_injected_in"]
     delete @nonStaticPropertiesSources[memberName]
+    Class.refreshFieldRecord proto, memberName
     Mixin.injectInto @name, memberName, donorsMember if donor?
     return
 
@@ -691,14 +693,46 @@ class Class
     Class._memberRecords.set aFunction, source
     return
 
+  # A FIELD's twin of the record kept with a function: a value has no identity to key a record by, so the VALUE each
+  # recorded field source made is kept with the PROTOTYPE it made it on (a prototype -> a Map of name -> value). A
+  # class inspector shows a field's recorded source only while its subject still reads that very value
+  # (fieldRecordHolds), never a source a run's write replaced (ClassInspectorWdgt._sourceForFieldMember), and a rename
+  # carries a field's source only then too. Two ways a record is made:
+  #   - keepFieldRecord: a class BODY's field (_keepMyMembersRecords: its own and its mixins' donated ones), kept ONCE,
+  #     as a function's record is -- the reflective layer's ingest of a class already made keeps the record it has, never
+  #     a run's write since;
+  #   - refreshFieldRecord: an EDIT of a member (a class's, a mixin's injection, a removal, a withdrawal): a field's
+  #     record becomes the value the edit made, and a member gone, or now a function (which keeps its own record), leaves
+  #     no field record behind.
+  @_fieldRecords: new WeakMap
+  @_fieldRecordsOf: (proto) ->
+    Class._fieldRecords.set proto, new Map unless Class._fieldRecords.has proto
+    Class._fieldRecords.get proto
+  @keepFieldRecord: (proto, memberName) ->
+    records = Class._fieldRecordsOf proto
+    records.set memberName, proto[memberName] unless records.has memberName
+    return
+  @refreshFieldRecord: (proto, memberName) ->
+    records = Class._fieldRecordsOf proto
+    if Object::hasOwnProperty.call(proto, memberName) and typeof proto[memberName] isnt "function"
+      records.set memberName, proto[memberName]
+    else
+      records.delete memberName
+    return
+  @fieldRecordHolds: (proto, memberName, value) ->
+    values = Class._fieldRecords.get proto
+    !!values?.has(memberName) and Object.is values.get(memberName), value
+
   # Keep, with each function my class holds, the source it was made from (Class.keepMemberRecord): my instance
   # members and statics as I record them, my constructor's on my class function (where I write one), and each member
   # a mixin of mine injected (its `_class_injected_in` companion says so), with its donor's source (Mixin.donorOf) --
-  # one function per consumer, since a mixin's literal is evaluated afresh for each class it augments. Run as I am
-  # made, and as the reflective layer INGESTS me beside the code a pre-compiled image already runs. ⚠ At an ingest a
-  # person's run may already have replaced a member, and its function cannot be told from the image's: the minified
-  # image keeps no function names, so both are anonymous -- such a member reads as my source (filed). My own keys
-  # only (Object.keys), never my whole chain's.
+  # one function per consumer, since a mixin's literal is evaluated afresh for each class it augments; and, with my
+  # prototype, the VALUE each of my fields' sources made, my own and my mixins' donated ones (Class.keepFieldRecord).
+  # Each record is kept once. Run as I am made, and as the reflective layer INGESTS me beside the code a pre-compiled
+  # image already runs. ⚠ At an ingest a person's run may already have replaced a member, and neither its function
+  # nor its value can be told from the image's: the minified image keeps no function names, so both are anonymous,
+  # and a value has no identity -- such a member reads as my source (filed). My own keys only (Object.keys), never my
+  # whole chain's.
   _keepMyMembersRecords: ->
     klass = window[@name]
     return unless klass?
@@ -706,6 +740,10 @@ class Class
     keep = (aFunction, source) -> Class.keepMemberRecord aFunction, source
     for memberName in Object.keys(proto) when memberName isnt "constructor" and memberName of @nonStaticPropertiesSources
       keep proto[memberName], @nonStaticPropertiesSources[memberName]
+      Class.keepFieldRecord proto, memberName unless typeof proto[memberName] is "function"
+    # a field a mixin of mine donated: the value its donor's source made here
+    for memberName in Object.keys(proto) when typeof proto[memberName] isnt "function" and !@definesMember(memberName) and Mixin.donorOf(@, memberName)?
+      Class.keepFieldRecord proto, memberName
     keep klass, @nonStaticPropertiesSources.constructor
     for staticName in Object.keys(klass) when staticName of @staticPropertiesSources
       keep klass[staticName], @staticPropertiesSources[staticName]
