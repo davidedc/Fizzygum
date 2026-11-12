@@ -21,14 +21,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       compilers read differently stopped the scan unnoticed from f002a7b7 (2026-08-16) to 2026-11-10. Holding every source to the
       mirror on each build would cost the mirror's run (a few seconds) per build: whether that is worth it is the same
       question as "Every gate re-masks all of the compiled sources".
-- [ ] **The parts-snapshot rig awaits product promises through unbounded evaluates** (found by the independent review
-      closing "The boot smoke is a gate with no rule registry and no standing bite-proof", in the plan's ledger;
-      reached: the gauntlet's `parts` leg, `fg parts`, with a product hang in a part's load or a file's restore).
-      `Fizzygum-tests/scripts/parts-snapshot-load-headless.js` makes eight single evaluates that await a product promise
-      — making the widget files, the rejecting load, the file doors' report, opening the widget files twice, making and
-      loading the source-edit files — each bounded only by Puppeteer's 180 s protocol timeout; two of them outlast the
-      leg's 300 s alarm, which kills the rig before it says which step hung. The boot smoke's are bounded through
-      `lib/headless-driver.js` `answeredWithin(promise, ms, what)`, which this rig can take as it stands.
 - [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** (found by the
       independent review closing "The rigs wait for their pages to boot a dozen ways", in the plan's ledger; by
       reading). `startedWithin` has one line for every predicate, so a world standing whose boot never finished (a

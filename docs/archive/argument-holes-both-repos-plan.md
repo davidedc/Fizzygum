@@ -3324,3 +3324,31 @@ for (const s of sites) if (s.absentBefore.length) {
       store put back. Two plants, each failing it: the old by-name reading (`fieldRecordHolds` answering yes) and the
       first shape's record keeping (a member edited into a function keeping its stale field record). `fg gauntlet`
       green on both shapes (20 legs each, no flake), `fg homepage` BOOT OK on both.
+- [x] **The parts-snapshot rig awaits product promises through unbounded evaluates** (found by the independent review
+      closing "The boot smoke is a gate with no rule registry and no standing bite-proof", in the plan's ledger;
+      reached: the gauntlet's `parts` leg, with a product hang in a part's load or a file's restore).
+      `Fizzygum-tests/scripts/parts-snapshot-load-headless.js` makes eight single evaluates that await a product promise
+      — making the widget files, the rejecting load, the file doors' report, opening the widget files twice, making and
+      loading the source-edit files — each bounded only by Puppeteer's 180 s protocol timeout; two of them outlast the
+      leg's 300 s alarm, which kills the rig before it says which step hung. The boot smoke's are bounded through
+      `lib/headless-driver.js` `answeredWithin(promise, ms, what)`, which this rig can take as it stands.
+      — CLOSED 2026-11-12 (self-ruled; loop unit U33). MEASURED first: at idle the filed alarm claim did not hold — a
+      step stuck in a script waited the protocol timeout, and the rig ended INVALID at 194 s, inside `fg`'s 300 s alarm
+      for it, saying only "Runtime.callFunctionOn timed out", no step named; a hang in a later step, or on a loaded
+      machine, can still pass the alarm. RULED: the boot smoke's bound, taken as it stands, by all three of the `parts`
+      leg's rigs (the independent review of the first shape found the two siblings unbounded the same way: the same
+      family, so one fix) — every single evaluate through `answeredWithin(promise, STEP_MS, what)` (60 s), so a hang
+      reads as each rig reads anything that stops it measuring, INVALID (exit 2), naming the step, at 60 s. LANDED:
+      `parts-snapshot-load-headless.js`'s eight evaluates (making the widget files, the rejecting load, the file doors
+      reporting a failed part, opening the widget files, opening the files no part can serve, making the source-edit
+      files, loading the class- and the mixin-edit file); `parts-lazy-icons-headless.js`'s seven (reading the desktop
+      at boot, opening the Examples folder, reading every icon's class name, the bin route and its on-tree reading,
+      clicking each sampled app and reading what it defined: each waits seconds on the page's own timers, which a
+      stuck page never runs); `parts-lazy-load-headless.js`'s five readings beside its polls. PROVEN: each rig's
+      proof gains an INVALID run (exit 2, its line, no rule) planting a hang in the earliest step it reaches — the
+      snapshot rig's the authoring part's load never settling ("… (making the widget files)", page 1, the first step
+      to ask for it; the pending load held, as the registry holds one in flight — a promise nothing holds is collected,
+      and the protocol answers at once, "Promise was collected", no step named), the icons rig's the folder's shortcut stuck in a script when pressed ("… (opening the Examples
+      folder)"), the load rig's a widget's layout editing stuck ("… (arming the destroy-mid-load race)"); with the
+      snapshot rig's bound removed (a copy of the rig), a stuck step waited the protocol timeout and named no step.
+      The proofs: 30 cases (252 s), 13 (126 s), 15 (131 s). `fg gauntlet` green on both shapes (20 legs each).
