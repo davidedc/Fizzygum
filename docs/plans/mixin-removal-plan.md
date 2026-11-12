@@ -3,14 +3,14 @@
 **STATUS: PLAN ONLY — AUTHORED 2026-11-10, MEASURED 2026-11-12. No code written.** Written to be
 executed COLD by an LLM/engineer with ZERO prior context: everything needed is embedded here or one
 named-doc hop away.
-**Where it stands (§13):** decisions D1–D5 are made — D1 and D3 on the owner's stated criterion,
-the tree's cleanliness and orthogonality, whatever the churn. The three investigations have a paper
+**Where it stands (§13):** all ten owner decisions are made — on the owner's stated criterion, the
+tree's cleanliness and regularity, whatever the churn. The three investigations have a paper
 verdict (2026-11-10, by reading) and, since 2026-11-12, their MEASURED half: instruments over the
 whole suite and two direct probes, with nothing in `src/` changed. The measurements settled S1's
 open question, confirmed S3 and showed the suite cannot see its relay, and turned S2's promised
-behaviour questions into five decisions, D6–D10, which are OPEN. What each investigation still
-owes is its change under the gauntlet, which is its phase. Phases 1–4 wait on nothing; Phase 5
-waits on D10, Phase 7 on D6–D9.
+behaviour questions into five decisions, D6–D10, which the owner made the same day. What each
+investigation still owes is its change under the gauntlet, which is its phase. No phase waits on
+the owner; Phases 7, 8 and 9 wait on the phases before them (§7).
 
 Every fact below was read on 2026-11-10 at Fizzygum `a37b8ba4` / Fizzygum-tests `61adb7ce1` and
 re-checked on 2026-11-12 at Fizzygum `59728ec2` / Fizzygum-tests `e2ea7ad0d`: the §2.4 scan gives
@@ -85,11 +85,11 @@ mechanism WORKS; only its keep-vs-remove POSITION is superseded by this plan.**
 | D3 | Names of the new classes, and of the two new members on the hand's protocol | **DECIDED 2026-11-10:** `ClippingWdgt`, `RatioLockedWdgt`, `ControllerWdgt`, `CreatorWdgt`, `CanvasAppearance`, `BackBuffer`; `pressesOn`, `notePointerStateChanged` | §5.8 |
 | D4 | The inspector loses "from `<X>Mixin`", "Override in this class" and the Add… destination step, with nothing in their place | **DECIDED 2026-11-10: accepted** | §7 Phase 8 |
 | D5 | Coupling with the Smalltalk talk (2026-11-25, freeze 2026-11-21) | **DECIDED 2026-11-10: the talk plan drops mixins** (its D7), so neither plan builds on the other. When a code phase lands relative to the freeze is asked at that phase's commit | §11 |
-| D6 | Pointer looks that follow the pointer where a stored state lagged it: pressed again when a held press slides back onto its widget; no pressed or hovered look left behind by a release that was no click, a cancelled press, a click made by code, a re-parented chrome plate | OPEN — recommended: accept. Each is the look agreeing with what a release would do; no test reaches any of them | §6 S2 |
-| D7 | The slider thumb: hovered at once when its drag ends with the pointer on it (today: only once the pointer next moves), and not left hovered after a click when the pointer is elsewhere (today: until the pointer next crosses it) | OPEN — recommended: accept; 6 and 2 tests reach the two states, and the references that show them are recaptured after each is looked at | §6 S2 |
-| D8 | A finger shows no hover on a handle or a layout-chrome plate, as on everything else (today these two families light under a finger that is over them; one test has a finger carrying a payload over a droplet, which lights) | OPEN — recommended: accept — one rule, "a finger rests nowhere". The owner's to weigh: whether the lit droplet is wanted as a finger's drop cue | §6 S2 |
-| D9 | The eight classes that carry a `toolTipMessage` they never show (§2.5), once the hand shows the tooltip of whatever it enters | OPEN — recommended: no widget gains a tooltip. The eight give the name a tool panel shows for them another way (a tool is already named `toolTipMessage ? colloquialName()` by the overflow chevron), and `toolTipMessage` then means one thing. The alternative is a product change: a bare rectangle on the desktop says "rectangle" | §6 S2 |
-| D10 | The selection ring of a one-line text whose buffer is smaller than its box (a bare, top-left `StringWdgt` set to `SCALEUP`): it rings the box, as every other widget's does (today: the buffer) | OPEN — recommended: accept. The ring marks the widget, and a widget's bounds are its box; no test reaches the state | §6 S1 |
+| D6 | Pointer looks where a stored state lagged the pointer | **DECIDED 2026-11-12: the look follows the pointer.** A held press that slides back onto its widget shows pressed again; no pressed or hovered look is left behind by a release that was no click, a cancelled press, a click made by code, or a re-parented chrome plate. Nothing is remembered to reproduce the old looks | §6 S2 |
+| D7 | The slider thumb's two quirks | **DECIDED 2026-11-12: the thumb follows the rule every button follows.** Hovered at once when its drag ends with the pointer on it; not left hovered after a click when the pointer is elsewhere. The references that show either state are recaptured after each is looked at | §6 S2 |
+| D8 | A finger over a handle or a layout-chrome plate | **DECIDED 2026-11-12: one rule — a finger rests nowhere, so it is shown no hover, on anything.** These two families lose the exception they had by omission; a drop slot no longer lights under a finger carrying a payload | §6 S2 |
+| D9 | The eight classes that carry a `toolTipMessage` they never show (§2.5) | **DECIDED 2026-11-12: no widget gains a tooltip, and `toolTipMessage` means one thing** — the tooltip shown when the pointer rests on me, which the hand shows. The eight stop carrying one; what a tool panel shows for a tool is the tool's NAME, stated apart (§6 S2) | §6 S2 |
+| D10 | The selection ring of a one-line text whose buffer is smaller than its box (a bare, top-left `StringWdgt` set to `SCALEUP`) | **DECIDED 2026-11-12: it rings the box,** as every other widget's does; the text family keeps no `calculateKeyValues` of its own | §6 S1 |
 
 ### 0.5 Cold-execution protocol
 
@@ -101,8 +101,7 @@ mechanism WORKS; only its keep-vs-remove POSITION is superseded by this plan.**
    plan's facts FIRST, in place, before executing.
 4. Phases 1–4 wait on nothing. Each investigation has its paper verdict and its measured half
    (§6, §13); what it still owes is its change under the gauntlet, which IS its phase — and a
-   measured verdict is still a hypothesis until that gauntlet has passed. Phase 5 needs D10
-   decided, Phase 7 needs D6–D9 (§0.4). Verdicts go into §13.
+   measured verdict is still a hypothesis until that gauntlet has passed. Verdicts go into §13.
 5. Then one phase at a time, in the order of §7. Each phase: edit → `fg presuite` while iterating
    → `fg gauntlet` (and `fg homepage` where the phase says) at the close → present a summary and a
    commit message to the owner and WAIT. Never commit or push without that approval.
@@ -647,8 +646,17 @@ live?
   for, a list row's selection — and lose every look.
 - *Tooltips separate.* The countdown three hover implementations start by hand becomes the hand's
   business for any widget it enters that carries a `toolTipMessage`. That is behaviour-neutral
-  only once the field means one thing: eight classes carry one they never show (§2.5), and as the
-  plan first stood each would have gained a tooltip. Decision D9 (§0.4) settles them.
+  only once the field means one thing — the tooltip shown when the pointer rests on me — and eight
+  classes carry one they never show (§2.5). By D9 they stop: what they held is the NAME OF THE
+  TOOL they make in a panel, a different fact, which has two readers today (`ToolPanelWdgt`, which
+  hands it to the cell's `GlassBoxTopWdgt` as that top's tooltip, and the overflow chevron's row)
+  and one reading, the chevron's: the tool's own word, else its colloquial name. For
+  `RectangleWdgt` and `SpeechBubbleWdgt` the colloquial name already IS the word, so their line
+  just goes. The six icons' colloquial names are other words — a `BrushIconWdgt` is a "brush
+  icon" and its tool a "brush", a `DestroyIconWdgt` is a `"Destroy" icon` and its tool an
+  "explosion" — so each of the six states its tool's word as a class-level field, `toolName`, and
+  both readers ask `toolName ? colloquialName()`. No line on `Widget`. Phase 7 proves the wording
+  held: every tool cell's tooltip and every overflow row, listed before and after, read the same.
 - *What it deletes:* `state`, the `STATE_*` constants and their copy in `SliderButtonWdgt`;
   `_updateColor` and every colour written at a transition; `HandleWdgt`'s and
   `LayoutChromeWdgt`'s `_setPointerState`; `LabelButtonWdgt._reactToBeingCopied`, which exists to
@@ -735,7 +743,7 @@ behind:
   thing the look asks the hand.
 
 So the paper verdict holds, with one correction (`pressesOn`) and one retraction (the tooltip
-bullet), and the behaviour questions it promised are D6–D9 in §0.4. None of D6's cases is reached
+bullet), and the behaviour questions it promised are D6–D9 in §0.4, decided the same day. None of D6's cases is reached
 by a test, so none moves a reference; D7's and D8's are, and U8's diff page will show which
 shots hold one.
 
@@ -829,9 +837,9 @@ the ones marked ⌂ also run `fg homepage` (they touch a lazy part or the meta l
 | 2 | KeepsRatio → base class (§5.2) | — | same |
 | 3 | Controller → `ControllerWdgt` (§5.4) | — | same |
 | 4 ⌂ | The app-kit pair's shared base; SmartPlacer mixin deleted (§5.5) | — | same |
-| 5 | BackBuffer per S1 (§5.3) | D10 | pixel-identical |
+| 5 | BackBuffer per S1 (§5.3) | — | pixel-identical |
 | 6 ⌂ | A test of the relay first, then the relay into `StretchablePanelWdgt`; Bubbles and `triggeringWidget` deleted (§5.7, §6 S3) | — | pixel-identical; one new test |
-| 7 ⌂ | Pointer state per S2; Highlightable and ParentStainer deleted — the LAST mixins (§5.6) | D6–D9, Phase 4 | pixel-identical outside the cases D6–D8 rule; two tests retired, two re-pointed |
+| 7 ⌂ | Pointer state per S2; Highlightable and ParentStainer deleted — the LAST mixins (§5.6) | Phase 4 | pixel-identical outside the cases D6–D8 rule; two tests retired, two re-pointed |
 | 8 ⌂ | Mechanism teardown | Phases 1–7 | inspector shots |
 | 9 | Docs and close | Phase 8 | — |
 
@@ -984,6 +992,15 @@ changelog prose; add the base-class lookup rule and the new classes to
   updated when the hook runs (§2.5). The look is asked at paint instead.
 - **A stored pointer state, wherever it is kept** — on each widget as today, once on `Widget`, or
   in a collaborator the hand tells (D1, §6 S2). Each is a second copy of what the hand knows.
+- **A remembered fact kept to reproduce a look the stored state used to give** — "this press left
+  its widget once", a thumb's "not hovered until the pointer next moves" (D6, D7). It is the
+  stored copy again, one case at a time.
+- **An exemption letting handles and layout plates light under a finger** (D8). If a finger
+  dragging a payload should be shown its drop target, that is a drop cue, for a mouse and a finger
+  alike, and the drag machinery's to give — its own arc, not a hover exception.
+- **Tooltips left in each family's hover hooks, or the eight name-only carriers gaining a tooltip**
+  (D9).
+- **The text family keeping its own `calculateKeyValues`** (D10).
 - **The edit-mode relay in `Widget`'s cores.** It would widen the relay to every child of a
   coordinator, the canvas of an image window among them (§6 S3).
 - **Folding the Bubbles cores into the three consumers.** Re-creates the triplication the mixin was
@@ -1053,7 +1070,11 @@ changelog prose; add the base-class lookup rule and the new classes to
 | D4 inspector loses the donor vocabulary | accepted | 2026-11-10 | owner |
 | D5 coupling with the talk | the talk plan drops mixins (its D7) | 2026-11-10 | owner |
 | Baseline re-check | The §2.4 scan unchanged in structure; counts and line hints corrected; three rig files newer than the census, their checks added to §7's table; the churn set and the four mixin-dependent tests as recorded | 2026-11-12 | §2, §7; `investigations/scan-2026-11-12.txt` |
-| D6–D10 | OPEN — recommendations in §0.4 | | |
+| D6 pointer looks where a stored state lagged | the look follows the pointer; nothing remembered | 2026-11-12 | owner, choosing the recommended option of two |
+| D7 the slider thumb | the rule every button follows | 2026-11-12 | owner, the recommended option of two |
+| D8 a finger over handles and layout chrome | one rule, no hover under a finger; not the exemption, and not a drop cue filed apart | 2026-11-12 | owner, the recommended option of three |
+| D9 the eight name-only tooltip carriers | no widget gains a tooltip; the tool's name is stated apart (`toolName`, §6 S2) | 2026-11-12 | owner, the recommended option of three |
+| D10 the ring of a text smaller than its box | it rings the box | 2026-11-12 | owner, the recommended option of two |
 
 ---
 
@@ -1063,3 +1084,4 @@ changelog prose; add the base-class lookup rule and the new classes to
 - [x] §6 S1: the back buffer as a `BackBuffer` object — empirical half (a build and a gauntlet on the paper verdict); open: whether text keeps the shadowing `calculateKeyValues` — CLOSED 2026-11-12 as an item: its measured half is done (§6 S1, §13: the two `calculateKeyValues` agree on every call the suite makes at both densities, and text keeps no shadowing member), and what it still owed, the change under the gauntlet, is the Phase 5 line's.
 - [x] §6 S2: pointer state asked of the hand at paint — empirical half: every write of the hand's facts followed by the notification, and each case where a stored state carried history put to the owner — CLOSED 2026-11-12 as an item: the cases are measured and put to the owner as D6–D9 (§0.4, §6 S2), the writes outside the hand are listed (§2.5), and the change under the gauntlet is the Phase 7 line's.
 - [x] §6 S3: the edit-mode relay into `StretchablePanelWdgt` — empirical half — CLOSED 2026-11-12 as an item: its measured half is done (§6 S3: the relay is live from one door, which no test opens; the early-return state is reached by no product path), and the change, opened by a test of the relay, is the Phase 6 line's.
+- [x] §0.4: owner decisions D6–D9 (pointer looks that follow the pointer where a stored state lagged it; the slider thumb; a finger's hover on handles and layout chrome; the eight classes carrying a tooltip they never show) and D10 (the selection ring of a text smaller than its box) — each with a recommendation; Phase 7 waits on D6–D9, Phase 5 on D10 — CLOSED 2026-11-12: the owner chose the recommended option of each ("All A"), as §0.4 and §13 record; no phase waits on the owner.
