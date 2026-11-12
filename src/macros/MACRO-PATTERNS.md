@@ -2218,8 +2218,8 @@ assertion a recapture after a regression silently stores two different hashes an
   `@popUpIsShown(message)`, and `message.title` equal to the full "Cannot save this as code (line L, column C): …". Read the
   expected position off the CoffeeScript compiler run on the TYPED text alone, never off the build under test. (2) The crash
   path never ran: `world.errorConsole is undefined` (each test starts on a freshly constructed world, so the Error log exists
-  only if something threw into it). (3) Nothing changed: the route's own state by IDENTITY (`script.functionFromCompiledCode
-  is functionBefore`, `ButtonWdgt::hoverEntered is hoverBefore`, the mixin's `nonStaticPropertiesSources[name]`). (4) The edit
+  only if something threw into it). (3) Nothing changed: the route's own state by IDENTITY (`script.savedScript
+  is savedBefore`, `ButtonWdgt::hoverEntered is hoverBefore`, the mixin's `nonStaticPropertiesSources[name]`). (4) The edit
   survived: the editor still holds the text, Save is still enabled (`saveButton.isEnabled`), and a "… + close"/"OK" gesture
   left its window up (`win.parent is world`, `prompt.isOrphan()` false). Dismiss with `@moveToItemOfMenuAndClick_InputEvents
   message, "OK"` before the next gesture. A behaviour no gesture can reach any more (the prompt now refuses before injecting)

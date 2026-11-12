@@ -696,23 +696,18 @@ class TextWdgt extends StringWdgt
     result = @_runningTypedCode @selection()
     if result? then @spawnInspector result
 
-  # Run typed code against my code receiver through Widget.evaluateString, inside
-  # Widget._reportingCompileErrors, so text that is not code is reported beside the hand rather than
-  # thrown at the world. The receiver is asked again here, at the run: a row offered while I stood
-  # in a place that names one can be clicked after I moved to one that names none (a pinned menu,
-  # a window closed into the bin), and then I say so instead of running nothing silently. The text is
-  # compiled FIRST: text that is not CoffeeScript ran nothing, is said beside the hand, and tells no one.
-  # A run is the person's gesture, so it tells the receiver once the code has run, returned or thrown
-  # part-way (Widget._runningAPersonsCode) -- unless the code destroyed it: the evaluation alone tells no
-  # one.
+  # Run typed code against my code receiver as every run gesture runs a person's code
+  # (Widget._runningTypedCodeAgainst): text that is not code is reported beside the hand rather than
+  # thrown at the world, and code that ran tells the receiver. The receiver is asked again here, at the
+  # run: a row offered while I stood in a place that names one can be clicked after I moved to one that
+  # names none (a pinned menu, a window closed into the bin), and then I say so instead of running
+  # nothing silently.
   _runningTypedCode: (code) ->
     receiver = @_codeReceiver()
     unless receiver?
       @inform "There is nothing here for this code to run against"
       return undefined
-    @_reportingCompileErrors =>
-      compileFGCode code, true
-      @_runningAPersonsCode receiver, => receiver.evaluateString code
+    @_runningTypedCodeAgainst receiver, code
 
   # selects the whole line (if it's wrapped, just
   # what sits on the very line, not what wraps

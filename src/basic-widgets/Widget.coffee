@@ -5676,8 +5676,8 @@ class Widget extends TreeNode
   
   # Widget eval: codeSource compiled (compileFGCode) and run with me as `this`, its value answered.
   # The evaluation alone: like injectProperty, it tells no one -- the person's run gesture tells me
-  # once it has run (_runningAPersonsCode, through TextWdgt._runningTypedCode: a text's run rows,
-  # which a console's buttons and a script window's "Try it" run through), while the patch node that
+  # once it has run (_runningAPersonsCode, through _runningTypedCodeAgainst: a text's run rows,
+  # which a console's buttons and a script window's "Try it" run through, and a script's press), while the patch node that
   # compiles its formula through me on every recompute is plumbing. A run edits my STATE, not any
   # code: the SourceEditsRegistry does not hear it, and a world snapshot carries what it left in my
   # fields -- what a file can carry: a function it left has no source, so the save refuses it and
@@ -5691,9 +5691,11 @@ class Widget extends TreeNode
     eval compileFGCode codeSource, true, typedFrom: opts.typedFrom
 
   # The RUN gestures -- a row or button that runs text a person typed ("Run contents", "Run
-  # selection", "Show selection", "Run all", "Try it", …) -- run it through me. Text that is not
-  # CoffeeScript is an ordinary answer to that gesture, not a fault: I say so beside the hand, in the
-  # compiler's words and at the line and column it names, and answer undefined, having run nothing.
+  # selection", "Show selection", "Run all", "Try it", …) or a script's press -- run it through me.
+  # Text that is not code is an ordinary answer to that gesture, not a fault: I say so beside the
+  # hand, in the compiler's words and at the line and column it names (or in the engine's, which name
+  # no place, when the JavaScript it compiled to does not parse), and answer undefined, having run
+  # nothing.
   # Thrown on, it would reach the world's crash path (WorldWdgt's input-event catch), which
   # soft-resets the world, shows the Error log a stack of the framework's own calls, and leaves the
   # clicked menu open. compileFGCode's failure is told apart by the mark it puts on it
@@ -5708,11 +5710,21 @@ class Widget extends TreeNode
       @_informOfCompileErrorOrRethrow error, "run"
       return undefined
 
-  # The ONE seam a person's code runs through against its receiver -- a text's run rows
-  # (TextWdgt._runningTypedCode: a console's buttons and a script window's "Try it" too) and a script
-  # shortcut's press (ScriptShortcutWdgt). `run` runs code whose CoffeeScript has COMPILED -- the caller
-  # compiles the person's text first, so text that is not CoffeeScript, which runs nothing, never reaches
-  # me, while a compile error the running code meets (an edit verb it calls, injectProperty) is the run's
+  # A run gesture over code a person wrote, against `receiver` -- a text's run rows
+  # (TextWdgt._runningTypedCode: a console's buttons and a script window's "Try it" too) and a script's
+  # press, which runs its saved text exactly as its "Try it" runs the typed one (ScriptWdgt.doAll). The
+  # text is compiled FIRST, under _reportingCompileErrors: text that is not code ran nothing, is said
+  # beside the hand and tells no one; code that compiled runs through _runningAPersonsCode. Answers what
+  # the code answers.
+  _runningTypedCodeAgainst: (receiver, code) ->
+    @_reportingCompileErrors =>
+      compileFGCode code, true
+      @_runningAPersonsCode receiver, => receiver.evaluateString code
+
+  # The ONE seam a person's code runs through against its receiver -- a run gesture's
+  # (_runningTypedCodeAgainst: a text's run rows, a script's press). `run` runs code that has COMPILED --
+  # the caller compiles the person's text first, so text that is not code, which runs nothing, never
+  # reaches me, while a compile error the running code meets (an edit verb it calls, injectProperty) is the run's
   # own -- and the receiver is told once it has run (sourceChanged), whether it returned or threw part-way:
   # the lines before a throw took effect, so what they changed shows and a widget they mended gets another
   # chance. Unless the run destroyed it. Answers what the run answers; anything the run throws goes on
@@ -5741,7 +5753,8 @@ class Widget extends TreeNode
       return false
 
   # The one reading of a compile error, for both kinds of gesture. compileFGCode marks every error it
-  # throws (`isCompileError`) and carries the compiler's own as its `cause`; its place in the text the
+  # throws (`isCompileError`) and carries the compiler's own as its `cause` (or the engine's, when the
+  # JavaScript the compiler wrote does not parse); its place in the text the
   # person typed is `typedLocation`, absent when that place is not in it or the compiler gave none,
   # and a line with no column when the fault is the whole line (a blurb's code outside its
   # assignments). A blurb of several assignments also names the one it is in (`typedIn`,

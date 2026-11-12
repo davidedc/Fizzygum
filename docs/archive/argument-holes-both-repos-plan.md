@@ -3540,3 +3540,59 @@ for (const s of sites) if (s.absentBefore.length) {
       WebKit, and as a FOLLOWER (no `WORLD_INVENTORY_` line); the dpr-1 suite green. Plants, each stopping the world at
       its own case (an uncaught TypeError; the test cannot complete): the old log at `undefined`, the first shape's log
       at the Symbol, the old cell record at the formula.
+- [x] **A JavaScript parse error takes the crash path, and a script runs two ways** (found by the independent review
+      closing "A run that throws, or a script shortcut's press, tells no one it changed anything", in the plan's
+      ledger; reached: a console's "Run all" of `return 1`, or of a regex the engine refuses, `"a".match /[z-a]/`; a script
+      whose code returns early). CoffeeScript compiles both; the JavaScript engine refuses them when it parses, an error
+      no compile mark carries, so the run gesture and the script Save treat it as a crash (the world soft-reset, the
+      Error log showing a stack of the framework's own calls, a clicked menu left open) rather than saying it beside the
+      hand. And a script's "Try it" runs its text with a direct `eval` inside `Widget.evaluateString`, where its
+      shortcut's press runs the saved `new Function(…).call world`: a top-level `return` works in one and is a syntax
+      error in the other.
+      — CLOSED 2026-11-12 (self-ruled; loop unit U41). MEASURED first (`Fizzygum-tests/.scratch/js-parse-error/probe.js`,
+      `index-sw.html`): a console's run of `return 1` and of `"a".match /[z-a]/` THREW a SyntaxError (the crash path),
+      while `1 +` was told beside the hand; a script `return 5` SAVED, its press answered 5, and its "Try it" threw. RULED:
+      `compileFGCode`'s contract is "JavaScript the engine can parse, or a compile error": after CoffeeScript compiles,
+      the engine parses the result in a helper of its own, `engineRefusalOf`, two ways that run nothing — as a FUNCTION
+      BODY (`new Function`, read first, honouring the text's own directive prologue: a text opening with 'use strict' is
+      read strict) and as EVAL CODE in a function (a direct eval whose first statement throws a primitive, compared by
+      value: refusing a top-level `return`). After the eval the helper reads only its catch's binding, assigned once the
+      eval has thrown — boot's functions are sloppy-mode, so the eval hoists what the text declares into the function
+      holding it (measured: with the check inline in `compileFGCode`, a back-ticked `function compiled() {}` replaced
+      the compiled result and the run ran nothing). A refusal carries the same `isCompileError` mark (no typed location:
+      the engine names no place in the CoffeeScript), so every gesture that reports or refuses a compile error covers it
+      through the one place it already reads. The build's own sources skip it (`fromTheBuild`: a class's and a mixin's
+      construction, the meta-system list) — keyed on ORIGIN, so a lazy part's arrival and a precompiled tree's
+      meta-system load skip it too, and a person's text is checked at every moment. A script runs ONE way: its press
+      (`ScriptWdgt.doAll`) runs its saved text exactly as its "Try it" runs the typed one, through one Widget seam,
+      `_runningTypedCodeAgainst` (compile first under `_reportingCompileErrors`, then `_runningAPersonsCode` →
+      `evaluateString`), so a saved text that does not compile — an older save can hold one — is told beside the hand,
+      not thrown at the world; the script's cached compiled function (`functionFromCompiledCode`) and its transient
+      declaration are gone, the Save compiles only to check. A sheet's SYNTAX error says the compiler's or the engine's
+      own message (the cause's), not `compileFGCode`'s whole report with the function the sheet wraps around a formula.
+      Its first shape read the text as eval code only, recognised its sentinel by a property read, gated on
+      `stillLoadingSources` (boot's eager layer only) and kept the script's cached function; the unit's independent
+      review found that a 'use strict' text's strict-only error passed the check and still took the crash path, that a
+      restored script whose saved text is a function body then crashed on its press (measured in the first shape's own
+      probe: the press compiled inside the run), that every SYNTAX message carried the wrapper, and that the boot
+      exemption's reason was wider than its flag. Measured: V8 refuses a bad regex inside a lazily parsed function
+      body at the check too (`b7-probe.log`). LANDED: `compileFGCode` + `engineRefusalOf`
+      (src/boot/loading-and-compiling-coffeescript-sources.coffee), `fromTheBuild` at Class/Mixin/the meta-system list,
+      `Widget._runningTypedCodeAgainst` (TextWdgt's run rows and `ScriptWdgt.doAll` through it), ScriptWdgt's Save and
+      press, ScriptShortcutWdgt's press, FormulaCompiler's SYNTAX message. PROVEN: a new assertion-only test,
+      `SystemTest_macroAJavaScriptParseErrorIsToldBesideTheHand` — a console's Run all, clicked, of `return 1`, of
+      `'a'.match /[z-a]/` and of `'use strict'` + `delete foo`, each told beside the hand in the engine's own words (read
+      from the running engine: V8 and JavaScriptCore word them differently); a run whose embedded JavaScript declares
+      `compiled` runs; a script saved once and edited to `return 5` refused at its Save + close in the engine's words,
+      its close never begun (no shortcut question), its saved script unchanged; a script holding `return 5`, its window
+      closed, pressed through its shortcut, told beside the hand; a formula the engine refuses saying exactly the
+      engine's words, one CoffeeScript refuses saying one line with no "error in compiling"; no Error log at the end —
+      passing at dpr 1 and 2, mouse and finger, Chrome and WebKit, and as a FOLLOWER (no `WORLD_INVENTORY_` line); the
+      dpr-1 suite green. Five plants, each failing the checks it stands for: no engine check (every console, Save and
+      press check); the check inline in `compileFGCode` (the embedded-JavaScript and the strict runs); the check reading
+      eval code only (the strict run); the old press, compiling a `new Function` inside the run (the press); the old
+      SYNTAX message (both formula checks). `SystemTest_macroScriptSaveRefusesCodeThatDoesNotCompile` lost its check on
+      the retired function, and its two window checks, which a Save that stored also passed (Save + close first asks
+      about a shortcut), read the question's absence now (plant: a Save that stores unchecked fails it). Recaptured: the object
+      inspector's member list in `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly` (a new `Widget` member adds
+      a row; every shot looked at first), mouse and finger, dpr 1 and 2.

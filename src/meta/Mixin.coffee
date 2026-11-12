@@ -290,7 +290,7 @@ class Mixin
         @nonStaticPropertiesSources[m[1]] = m[2]
 
     if generatePreCompiledJS or createMixin
-      JS_string_definitions = compileFGCode (@_rewriteSuperCalls source), true
+      JS_string_definitions = compileFGCode (@_rewriteSuperCalls source), true, fromTheBuild: true
       # Accumulate ONLY for a caller that wants the pre-compiled image — see the twin comment in
       # Class.coffee. A normal boot compiles to CREATE and never reads this string.
       if generatePreCompiledJS

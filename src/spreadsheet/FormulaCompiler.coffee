@@ -100,10 +100,13 @@ class FormulaCompiler
     try
       compiledFn = eval compileFGCode wrapperSource, true
     catch error
-      # compileFGCode throws a rich Error on a parse failure (boot ~88) — that IS the SYNTAX path.
+      # compileFGCode marks every failure (isCompileError) and carries the compiler's own -- or the
+      # engine's, when the JavaScript does not parse -- as its cause: that IS the SYNTAX path, and the
+      # cause's message is what the cell says (the formula bar shows it on one line; the wrapper is no
+      # text the person wrote)
       cell.compiledFn = undefined
       cell.boundNames = []
-      cell.value      = new SheetError "SYNTAX", (error?.message ? textOfThrownValue error)
+      cell.value      = new SheetError "SYNTAX", (error?.cause?.message ? error?.message ? textOfThrownValue error)
       cell.errorFlag  = true
       return cell
 

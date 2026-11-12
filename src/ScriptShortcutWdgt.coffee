@@ -19,9 +19,8 @@ class ScriptShortcutWdgt extends ShortcutWdgt
       @inform "The referenced item\nis dead!"
       return
 
-    # a person's code, run against the world: the world is told once it has run, as a text's run row
-    # tells its receiver (a thrown error goes on to the Error log, after the telling)
-    @_runningAPersonsCode world, => @referencedWidget.contents.doAll()
+    # a person's code, run against the world as a run gesture runs it (ScriptWdgt.doAll)
+    @referencedWidget.contents.doAll()
 
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

@@ -581,12 +581,17 @@ mark after `add` + `setExtent` adds nothing.
 - **A gesture over code a person TYPED never throws a compile error at them.** Text that is not CoffeeScript is
   an ordinary answer to "run this" or "save this", not a fault, and thrown it would reach the world's crash
   path (a soft reset, and an Error log showing the framework's own stack). A RUN gesture (Run contents, Run selection,
-  Try it, …) wraps the run in `@_reportingCompileErrors => …`; a SAVE gesture (Save, Save + close, a code
+  Try it, a script's press, …) runs through `@_runningTypedCodeAgainst receiver, code`, which compiles first
+  under `@_reportingCompileErrors` and then runs, telling the receiver; a SAVE gesture (Save, Save + close, a code
   prompt's OK) wraps its apply in `@_savingTypedCode => …`, which answers whether it applied, and the gesture
   marks the text saved or closes only on `true`. Either reports the compiler's message beside the hand at the
   place in the TYPED text. The apply must compile before it stores anything, so a refused save has changed
   nothing; a route that compiles the text behind a prefix (`"@" + name + " = "`) passes the prefix's length as
-  `compileFGCode`'s `typedFrom`, so the position names a place in what the person sees. A text whose FORM
+  `compileFGCode`'s `typedFrom`, so the position names a place in what the person sees. CoffeeScript whose
+  JavaScript the ENGINE refuses to parse (a top-level `return`, a regex it cannot read, a strict-mode error under
+  the text's own 'use strict') is a compile error too: `compileFGCode` has the engine parse what it compiled
+  (`engineRefusalOf`, two readings that run nothing) and marks a refusal like any other, in the engine's words and
+  with no place; only the build's own sources skip it (`fromTheBuild`). A text whose FORM
   decides what runs is refused for its form the same way: a code blurb (`Widget.compilePropertyAssignments`)
   holds `name = value` assignments, comments and blank lines only, so code outside its assignments, which would
   be stored and never run, is refused by its line. Code that compiles and then throws still goes to the Error

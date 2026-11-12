@@ -522,7 +522,6 @@ NAMED like one.
 | `VideoPlayerCanvasWdgt` | `video` | the `<video>` element is a page fact made from `videoPath`; `_afterDeserialization` and `_reactToBeingCopied` make their own, which plays from its beginning |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
-| `ScriptWdgt` | `functionFromCompiledCode` | the saved script COMPILED (`@savedScript` is the truth); `doAll` recompiles it on demand after a restore |
 | the gradient icon appearances (`ColorPalettePatchProgrammingIconAppearance`, `GrayscalePalettePatchProgrammingIconAppearance`, `VaporwaveBackgroundIconAppearance`, `VaporwaveSunIconAppearance`) | their cached gradient | a canvas gradient their paint builds lazily and rebuilds when absent; undeclared, a world snapshot saved with Patch Programming open throws "a value of an unrecognized type (LinearGradient)" under SWCanvas, and the closed-set guard refuses the `CanvasGradient` under native |
 
 The declarations are the inventory — `grep -rn "@serializationTransients" src/` lists every

@@ -21,15 +21,8 @@ class ScriptWdgt extends CodeAreaWdgt
   runItButton: undefined
   saveButton: undefined
 
+  # the script's text, run by its press (doAll); my editor holds the text being worked on until a Save
   savedScript: undefined
-  # the saved script COMPILED -- a derived Function (@savedScript is the truth),
-  # never serialized: an own function property has no editable source and would
-  # crash the serializer; doAll recompiles it on demand after a restore. A deep
-  # copy SHARES it (the Duplicator passes functions through): safe, because it is
-  # a closure-free `new Function` invoked with `.call world` -- a pure derivative
-  # of the same script text both widgets hold; a re-save recompiles per-widget.
-  @serializationTransients: ["functionFromCompiledCode"]
-  functionFromCompiledCode: undefined
 
   constructor: (@savedScript = "") ->
     super()
@@ -78,13 +71,11 @@ class ScriptWdgt extends CodeAreaWdgt
 
     @_invalidateLayout()
 
-  # The save COMPILES before it stores: text that is not code leaves the saved script and its
-  # function as they were, is reported, and stays in my editor, still modified
-  # (Widget._savingTypedCode). Answers whether it saved.
+  # The save COMPILES before it stores: text that is not code leaves the saved script as it was, is
+  # reported, and stays in my editor, still modified (Widget._savingTypedCode). Answers whether it saved.
   saveScript: ->
     text = @textWidget.text
-    saved = @_savingTypedCode =>
-      @functionFromCompiledCode = new Function compileFGCode text, true
+    saved = @_savingTypedCode => compileFGCode text, true
     return false unless saved
     @savedScript = text
 
@@ -96,11 +87,12 @@ class ScriptWdgt extends CodeAreaWdgt
   saveScriptAndClose: ->
     @closeFromContainerFrame @parent  if @saveScript()
 
+  # My press (ScriptShortcutWdgt): run my saved script exactly as my "Try it" runs my editor's text --
+  # against the world, as a run gesture (Widget._runningTypedCodeAgainst) -- so a script runs one way:
+  # text that does not compile (one a save from before a check could hold) is said beside the hand, and
+  # the world is told once it has run. Answers what the script answers.
   doAll: ->
-    # transient (see above): recompile from the saved source after a restore
-    if !@functionFromCompiledCode? and @savedScript
-      @functionFromCompiledCode = new Function compileFGCode @savedScript, true
-    @functionFromCompiledCode?.call world
+    @_runningTypedCodeAgainst world, @savedScript  if @savedScript
 
   textContentModified: ->
 

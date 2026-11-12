@@ -258,7 +258,7 @@ loadMetaSystemPromise = ->
     # the meta-system's sources are the only ones fetched individually and compiled by hand:
     # everything else needs Class/Mixin to already exist before it can be ingested.
     for eachName in META_SYSTEM_SOURCES
-      eval.call window, compileFGCode SourceVault.get(eachName), true
+      eval.call window, compileFGCode SourceVault.get(eachName), true, fromTheBuild: true
     return
   .then ->
     if bootLoadingDebugWrites then console.log "---- compiled the Mixin and Class sources"

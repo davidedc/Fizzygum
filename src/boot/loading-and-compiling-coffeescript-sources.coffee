@@ -102,9 +102,11 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
 # behind a prefix its line-1 column is off by the prefix's length. A place inside the prefix itself
 # gets no typedLocation, and neither does a failure the compiler gives no place for (this minimal
 # compiler throws a plain TypeError on `import`/`export`). Every error thrown here is marked
-# `isCompileError`: whatever the compiler threw, the text did not compile, which is what a gesture
-# over typed code reports (Widget._informOfCompileErrorOrRethrow), apart from code that compiled and
-# then threw.
+# `isCompileError`: whatever the compiler threw -- or the engine, parsing what the compiler wrote --
+# the text did not compile, which is what a gesture over typed code reports
+# (Widget._informOfCompileErrorOrRethrow), apart from code that compiled and then threw.
+# opts.fromTheBuild: the source is the build's own (a class's or a mixin's, the meta-system's), which
+# skips the engine's parse below -- see there.
 compileFGCode = (codeSource, bare, opts = {}) ->
   try
     # Coffeescript v2 is used
@@ -128,8 +130,43 @@ compileFGCode = (codeSource, bare, opts = {}) ->
         error.typedLocation = line: typedLine, column: typedColumn
     throw error
 
+  # ...and the ENGINE must be able to parse what it compiled: CoffeeScript passes through text the engine
+  # refuses (a top-level `return`, a regex it cannot read, a strict-mode error under a 'use strict' the
+  # text opens with), whose SyntaxError would reach a gesture unmarked and take the crash path. The
+  # engine's refusal is a compile error like any above, with no typed location (the engine names no place
+  # in the CoffeeScript). Not for the build's own sources: its syntax gate compiled them, one the engine
+  # refused fails loudly at its own eval, and parsing them again would only lengthen every boot and every
+  # lazy part's arrival.
+  unless opts.fromTheBuild
+    refusal = engineRefusalOf compiled
+    if refusal?
+      error = new Error "error in compiling:\n" + codeSource + "\nerror:\n" + textOfThrownValue(refusal) + "\n", cause: refusal
+      error.isCompileError = true
+      throw error
 
-  return compiled
+  compiled
+
+# What the engine says when it parses `javaScript` -- its SyntaxError -- or undefined when it parses. Read
+# two ways, neither of which can run anything: as a FUNCTION BODY (`new Function`, which honours the text's
+# own directive prologue, so a text opening with 'use strict' is read strict), and as EVAL CODE in a
+# function (a direct eval whose first statement throws, which refuses what only a function body takes: a
+# top-level `return`). A run reads a text as one of the two (Widget.evaluateString evals it in a function;
+# a sheet's formula is a function) or as global code (a class's member edit), and a text either reading
+# refuses is one a run would refuse -- back-ticked JavaScript the person wrote aside (`new.target` reads
+# differently in global code). The function body is read FIRST: the eval hoists what the text declares
+# into this function, so after it nothing is read but `thrown`, which its catch assigns once the eval has
+# thrown; the eval's own throw is a primitive compared by value, so nothing the text declares and nothing
+# on the page's prototypes can pass for it.
+engineRefusalOf = (javaScript) ->
+  try
+    new Function javaScript
+  catch thrown
+    return thrown
+  try
+    eval "throw 'it parses';\n" + javaScript
+  catch thrown
+    return thrown unless thrown is "it parses"
+  undefined
 
 # Compiles/ingests queued class sources under a TIME BUDGET -- the replacement for
 # the old one-class-per-turn pacing (which was encoded twice, here and in

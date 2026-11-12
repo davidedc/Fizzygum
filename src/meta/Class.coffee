@@ -545,7 +545,7 @@ class Class
         constructorSource = Class.rewriteSuperCalls "->\n    super\n", @_superOf "constructor"
       constructorSource = Class.endingInReturn constructorSource, @name
       if window.srcLoadCompileDebugWrites then console.log "constructor declaration CS:\n" + constructorSource
-      compiled = compileFGCode constructorSource, true
+      compiled = compileFGCode constructorSource, true, fromTheBuild: true
       constructorDeclaration = "window." + @name + " = " + @_removeHelperFunctions compiled
 
       # give the constructor function the class's name AT PARSE TIME -- see
@@ -601,7 +601,7 @@ class Class
 
           fieldDeclaration = @_rewriteSuperCalls fieldName, fieldValue
 
-          compiled = compileFGCode fieldDeclaration, true
+          compiled = compileFGCode fieldDeclaration, true, fromTheBuild: true
 
           fieldDeclaration = @_removeHelperFunctions compiled
           fieldDeclaration = @_nameTheMemberFunction fieldName, fieldDeclaration
@@ -620,7 +620,7 @@ class Class
 
           fieldDeclaration = @_rewriteSuperCalls fieldName, fieldValue
 
-          compiled = compileFGCode fieldDeclaration, true
+          compiled = compileFGCode fieldDeclaration, true, fromTheBuild: true
 
           fieldDeclaration = @_removeHelperFunctions compiled
           fieldDeclaration = @_nameTheMemberFunction fieldName, fieldDeclaration
