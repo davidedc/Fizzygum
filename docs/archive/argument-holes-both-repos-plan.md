@@ -3352,3 +3352,35 @@ for (const s of sites) if (s.absentBefore.length) {
       folder)"), the load rig's a widget's layout editing stuck ("… (arming the destroy-mid-load race)"); with the
       snapshot rig's bound removed (a copy of the rig), a stuck step waited the protocol timeout and named no step.
       The proofs: 30 cases (252 s), 13 (126 s), 15 (131 s). `fg gauntlet` green on both shapes (20 legs each).
+- [x] **Only an inspector's Save gives a banned widget another chance** (found by the independent review closing "A step
+      that throws throws on every frame it is due", in the plan's ledger; reached: a person fixes a widget whose paint
+      or step threw by running typed code — a console's "Run all" redefining the method — or by a class edit's other
+      doors). `WorldWdgt.giveBannedWidgetsAnotherChance` is called by `InspectorWdgt.save` alone, so the widget stays
+      hidden or unstepped though its code is fixed, while the error log tells the person "Edit/save any source code to
+      give them another chance". The world already has one notice that code changed (`noteCodeChanged`, a class
+      edit's or a load's) and a typed run tells its receiver (`TextWdgt._runningTypedCode`): the re-admission belongs
+      where code changes, wherever that is.
+      — CLOSED 2026-11-12 (self-ruled; loop unit U34). MEASURED (the callers, by grep): a person's code edits and the
+      text run rows end in one of two notices — `Widget.sourceChanged` (a person's edit or run under one widget: an
+      object inspector's save, add, rename and remove, and every text run row, `TextWdgt._runningTypedCode`) and
+      `WorldWdgt.noteCodeChanged` (a class inspector's member edits and mixin rows, `ClassInspectorWdgt._notifyOfEdit`;
+      a load's replay calls it too, after its teardown emptied both ban lists, so it finds no one there) — and the
+      re-admission sat beside neither. RULED: the re-admission rides both notices, so every gesture that tells anyone
+      it changed something gives every banned widget another chance, now and for any later gesture that tells; the
+      Save's own call is deleted (its edit reaches one of the two). LANDED: `Widget._sourceChangedNoSettle` (the core:
+      `sourceChanged` stays the canonical wrap, the thin-wraps gate's rule) and `noteCodeChanged` each call
+      `giveBannedWidgetsAnotherChance` (which settles nothing: it shows and un-bans), `InspectorWdgt.save`'s call gone;
+      the verb's, the notices' and widget-authoring-guidelines.md's stepping paragraph say so. The stated cost: the
+      world cannot tell which change is the mend, so a change that mended nothing has the widget throw once more, at a
+      throw's whole cost — the error log shown again and brought to the front, and for a step the world soft-reset
+      (what the hand carries dropped, its hover and the editing focus cleared) — what an inspector's Save that mended
+      nothing always cost, now on every run row too (the independent review's A1; ruled acceptable, the retry being
+      the point). Two gestures that change something tell NO notice, and so re-admit nothing: a run that throws after
+      changing something, and a script shortcut's press — filed ("A run that throws, or a script shortcut's press,
+      tells no one it changed anything"). PROVEN: a new assertion-only test,
+      `SystemTest_macroEveryCodeChangeGivesBannedWidgetsAnotherChance` — a console's run of a fixed step lifts a step
+      ban, a class inspector's Add steps a still-broken probe exactly once more — passing alone and as a FOLLOWER
+      (`run-sequence-headless.js`, mouse and finger, no `WORLD_INVENTORY_` line); two plants, each taking the
+      re-admission out of one notice, fail its checks (the run's two; the class edit's "stepped once more"), and the
+      `sourceChanged` one also fails `SystemTest_macroAStepThatThrowsStopsStepping`'s Save half, which keeps proving
+      the Save.

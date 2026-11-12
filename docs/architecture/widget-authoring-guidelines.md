@@ -891,8 +891,11 @@ should align to wall-clock boundaries rather than to construction time (a clock'
 
 A step that THROWS bans its widget from stepping: the world shows the error once in the error console
 (which says so), soft-resets, and passes the widget by — it stays a member of the set — until code
-changes give it another chance (`WorldWdgt._stepWidget`, `giveBannedWidgetsAnotherChance`, which an
-inspector's Save calls): the step twin of a widget whose paint throws, which is hidden until then.
+changes give it another chance (`WorldWdgt._stepWidget`, `giveBannedWidgetsAnotherChance`, which both
+change notices call — `Widget.sourceChanged`, a person's edit or run under one widget, an object inspector's or a
+text's run row, and `WorldWdgt.noteCodeChanged`, a class's or a mixin's member edit): the step twin of a widget
+whose paint throws, which is hidden until then. A change that mends nothing has the widget throw once more and be
+banned again, the error log shown again (and, for a step, the world soft-reset).
 
 **Prefer demand-driven subscription** — join when there is something to animate, leave when there is
 not, as `DataflowSource`, `ViewportWdgt`'s momentum and `SimpleImageWdgt` do. A permanent

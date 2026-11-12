@@ -265,8 +265,11 @@ class WorldWdgt extends IconGridPanelWdgt
   # The readers are the whole world, not the edited class's instances: a menu row re-fits its label's
   # measured lines, a stack reads its children's layout specs, and any widget may paint with a value
   # class or an appearance. What code already STORED (a colour a state change computed) shows the
-  # edit only at its next trigger, as in a fresh build: an edit changes code, not state.
+  # edit only at its next trigger, as in a fresh build: an edit changes code, not state. And the edit
+  # may have fixed what made a widget's paint or step throw: every banned widget gets another chance
+  # (giveBannedWidgetsAnotherChance).
   noteCodeChanged: ->
+    @giveBannedWidgetsAnotherChance()
     @cacheForTextMeasurements.reset()
     @cacheForTextParagraphSplits.reset()
     @cacheForParagraphsWordsSplits.reset()
@@ -1692,8 +1695,15 @@ class WorldWdgt extends IconGridPanelWdgt
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
       @paintingWidget.__hide()
 
-  # Code changed (an inspector's save), and it may have fixed what made a widget's paint or step throw: every widget
-  # banned for it gets another chance -- a hidden one shows again, a passed-by one is stepped again.
+  # A person changed something, and it may have mended what made a widget's paint or step throw: every widget banned
+  # for it gets another chance -- a hidden one shows again, a passed-by one is stepped again. The world cannot tell
+  # which change is the mend, so each asks again. Two notices call me: a person's edit or run under one widget
+  # (Widget.sourceChanged: an object inspector's edits, a text's run rows) and a change of code under every widget
+  # (noteCodeChanged: a class's or a mixin's member edit; a load's replay calls it too, after the load's teardown
+  # emptied both lists, so there it finds no one). A change that mended nothing has the widget throw once more, at a
+  # throw's whole cost, and be banned again: the error log shown again, and brought to the front; for a paint, the
+  # screen repainted; for a step, the world soft-reset (_softResetWorld: what the hand carries dropped, its hover and
+  # the editing focus cleared) -- what an inspector's Save that mended nothing has always cost.
   giveBannedWidgetsAnotherChance: ->
     for eachWidget in @widgetsGivingErrorWhileRepainting
       eachWidget.show()

@@ -900,9 +900,6 @@ class InspectorWdgt extends Widget
 
     @detail.textWdgt.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
-
-    # the user may have fixed what made a widget's paint or step throw
-    world.giveBannedWidgetsAnotherChance()
     true
 
   # the one differing step between object- and class-inspector save: an object

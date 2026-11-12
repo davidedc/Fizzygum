@@ -3984,7 +3984,9 @@ class Widget extends TreeNode
   # them too, as plumbing (a patch node compiles its formula with evaluateString on every recompute, a
   # paint tool injects its handlers, a load re-injects each {"$src"}), where there is no edit of a
   # person's to show. What layout and paint derive from my code follows on the next frame; what my
-  # code already STORED does not, until its next trigger (an edit changes code, not state).
+  # code already STORED does not, until its next trigger (an edit changes code, not state). And the
+  # edit may be what mends a widget whose paint or step threw -- a run reaches whatever it names, not
+  # only me -- so every banned widget gets another chance (WorldWdgt.giveBannedWidgetsAnotherChance).
   sourceChanged: ->
     @_settleLayoutsAfter => @_sourceChangedNoSettle()
 
@@ -3992,7 +3994,8 @@ class Widget extends TreeNode
   # each own function by name, with the source it keeps (keptSourceOf) or, for one a run assigned, its
   # compiled text; the field stays my class's "" until I hold some), then the step every code change
   # runs (_codeChangedNoSettle), then my whole subtree repainted, since the edit can have changed how
-  # any of it paints.
+  # any of it paints, then every banned widget given another chance (giveBannedWidgetsAnotherChance, which
+  # settles nothing: it shows and un-bans).
   _sourceChangedNoSettle: ->
     ownFunctionNames = (eachKey for eachKey in Object.keys(@).sort() when Utils.isFunction @[eachKey])
     ownCode = (eachName + ":" + (Widget.keptSourceOf(@[eachName]) ? @[eachName].toString()) for eachName in ownFunctionNames).join "\n"
@@ -4004,6 +4007,7 @@ class Widget extends TreeNode
       @_ownCodeKeySuffix = ownCodeKeySuffix unless ownCodeKeySuffix is @_ownCodeKeySuffix
     @_codeChangedNoSettle()
     @_fullChanged()
+    world.giveBannedWidgetsAnotherChance()
 
   # What ONE widget does when code it runs may have changed: my re-layout hook heals me (_reLayoutSelf:
   # a text re-measures its lines, a menu row re-fits its label), my layout is invalidated

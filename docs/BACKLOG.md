@@ -173,14 +173,24 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
 - [ ] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
       Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
       `BoxyAppearance`), and the static-checks table states no blind spot for it.
-- [ ] **Only an inspector's Save gives a banned widget another chance** (found by the independent review closing "A step
-      that throws throws on every frame it is due", in the plan's ledger; reached: a person fixes a widget whose paint
-      or step threw by running typed code — a console's "Run all" redefining the method — or by a class edit's other
-      doors). `WorldWdgt.giveBannedWidgetsAnotherChance` is called by `InspectorWdgt.save` alone, so the widget stays
-      hidden or unstepped though its code is fixed, while the error log tells the person "Edit/save any source code to
-      give them another chance". The world already has one notice that code changed (`noteCodeChanged`, a class
-      edit's or a load's) and a typed run tells its receiver (`TextWdgt._runningTypedCode`): the re-admission belongs
-      where code changes, wherever that is.
+- [ ] **A run that throws, or a script shortcut's press, tells no one it changed anything** (found by the independent
+      review closing "Only an inspector's Save gives a banned widget another chance", in the plan's ledger; reached: a
+      console's "Run all" of a line that mends a widget's step followed by a line that throws, or a script whose code
+      mends it, run by pressing its desktop shortcut). `TextWdgt._runningTypedCode` tells its receiver
+      (`Widget.sourceChanged`) only when the run returned — `_reportingCompileErrors` rethrows a run's own error past
+      the notice, though the run's earlier lines took effect, while a run that did not compile, which changed nothing,
+      is told — and `ScriptShortcutWdgt`'s press runs `ScriptWdgt.doAll` against the world with no notice at all, where
+      the same script's "Try it" tells the world. Neither re-lays out or repaints what the run changed, nor gives a
+      banned widget another chance, while the error log says "Edit/save any source code to give them another chance".
+- [ ] **A paint that throws after its children blames the last child painted** (found by the independent review
+      closing "Only an inspector's Save gives a banned widget another chance", in the plan's ledger; by reading; a
+      HYPOTHESIS to measure first — possibly a page hang). `Widget.fullPaint` sets `world.paintingWidget = @` before
+      painting and nothing restores it after the children, so a throw in what a widget paints after them (the
+      selection overlay, `_paintEditorSelectionOverlayIfSelected`; a panel's stroke) would ban the innocent last
+      child; on the next pass `_hideOffendingWidget` finds it already banned and hides nothing more, while
+      `_queueErrorForLaterReporting` queues another error, so `_findOutAllOtherOffendingWidgetsAndPaintWholeScreen`'s
+      `until previousErrorsCount == currentErrorsCount` loop would never end. Reach: a class edit that makes a panel's
+      or a frame's after-children paint throw.
 - [ ] **An auto-scroll's step is told a press's end as a stroke's would be** (found by the independent review closing
       "A viewport's gesture bookkeeping outlives its gesture", in the plan's ledger; by reading; low).
       `ViewportWdgt.pressEnded` / `pressCancelled` call whichever `_scrollStep` is installed with a point; an
