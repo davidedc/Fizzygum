@@ -595,11 +595,11 @@ finding.
 ⚠⚠ **A non-zero census count is not a backlog, and both censuses' most-recommended items were FALSE POSITIVES.**
 Across the arc they produced **26 findings that were technically true and wrong to act on** (16 write-only, 10
 pull-up) against **13 worth taking**. PULL-UP's own strongest finding — 3 verbatim-identical colour defaults —
-would have turned the desktop icons near-white, because each subclass `@augmentWith`es a mixin that injects the same
-properties **onto the subclass prototype**, so the class-body default exists to OVERRIDE the mixin, not to duplicate
-the parent (`Object-extensions.coffee:18` writes `@::[key] = value`; `meta/Class.coffee:350-373` emits all
-`augmentWith` before all class-body fields). The other rejections: dynamic `@[name + "IsConnected"]` access
-(`ControllerMixin:32-33`), whole-object enumeration, and deliberate per-family conventions. None is visible to a name
+would have turned the desktop icons near-white, because each subclass's prototype also received the same properties
+from elsewhere (in that 2026-07-15 tree, a mixin injecting them **onto the subclass prototype**), so the class-body
+default existed to OVERRIDE that value, not to duplicate the parent: a default is a duplicate only if nothing else
+writes the same key between the parent and the class. The other rejections: dynamic member access by a computed
+name (`@[name + "IsConnected"]` in that tree), whole-object enumeration, and deliberate per-family conventions. None is visible to a name
 scanner — which is exactly why these are advisory and can never be gates. **Treat a finding as a question, never an
 instruction.** Full case law (14 entries): `docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md`.
 
@@ -956,10 +956,6 @@ exactly two; the module's own header comment carries that account. What widening
 | 2 rule `[S]` sites | `FrameWdgt._reactToBeingDropped → @pinPopUp`, `Widget._destroyNoSettle → @onClickOutsideMeOrAnyOfMyChildren` — both conscious and correct, now carrying the `# public-call-sanctioned:` marker they could never be asked for |
 | 1 rule `[U]` site | `InspectorWdgt.filterProperties`, an internal helper wearing a public name — renamed `_filterProperties` |
 | +1 handler body | one pointer handler had never been scanned by `check-raw-pointer-reads` at all |
-| +6 handler bodies (the mixin grouping) | `HighlightableMixin`'s five press/hover handlers and `WidgetCreatorAndSmartPlacerOnClickMixin.activated`, now scanned by `check-raw-pointer-reads` — all clean |
-| +32 method names (62 mixin members) | `check-dead-methods` now inventories `ControllerMixin`'s wiring API and `BackBufferMixin`'s pixel trio — none dead (a member's own definition line no longer counts as a reference to it) |
-| 8 mixins in `check-plane-discipline` C | zero findings — their position handlers take no `pos`, or name it `ignored` |
-| +9 menu verbs in `check-menu-actions` RULE 3 | `ControllerMixin`'s wiring verbs — every parameter read or named unread |
 
 ⚠ **It happened a THIRD time, 2026-08-24**, found while building RULE 1b of `check-menu-actions` (which
 must know whether a class defines a method at all): the matcher demanded EXACTLY ONE space after the
@@ -982,8 +978,6 @@ side surfaced:
 | `FooterBandLayout.@arrange` | rule `[F]`: an in-pass placement (every caller is its host's own arrange) wearing a public name — renamed `@_arrange` |
 | `InfoDocs.@_buildInfoDocNextTo` | rule `[G]` ×4: a one-off builder wearing the low-level tier, calling four self-settling wrappers — folded into its single caller, the public `@createNextTo` |
 | `StackElementsSizeAdjustingWdgt.@includeInNewWidgetMenu` | dead — the menu that asked it is long gone; deleted |
-| `KeepsRatioWhenInVerticalStackMixin`, `BubblesEditModeToCoordinatorMixin` | `check-stinks` had keyed a mixin member at a hard-coded 6-space indent, so 55 lines of these two 4-space mixins were attributed to `onceAddedClassProperties` (no stink hit sat there yet) |
-| `ControllerMixin.setTargetAndActionWithOnesPickedFromMenu` | a mixin setter the census's private 2-space regex could not see (facet 5: 78 → 79 setters) |
 
 `unseenMethodHeaders()` in the same module is the **regression guard**: `check-dead-methods` (which owns
 the method inventory) FAILS on any class-level line that ends in an arrow, or opens an unbalanced paren

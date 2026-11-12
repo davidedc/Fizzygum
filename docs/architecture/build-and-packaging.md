@@ -119,8 +119,8 @@ every source present at boot (core **and** every eager part), not core alone.
 so if it hands every owner its full list, an eager part declaring `requires` on a lazy one can both
 reference and `extends` its classes with the build staying green. Found while adding the
 `app-kit` edges, and fixed there. **Both directions are proven rather than argued** — planting an
-unguarded `new SpeechBubbleWdgt` and an `@augmentWith ParentStainerMixin` in `dev-tools` reported
-`0 / 0` before and fails with a named site after. ⚠ Cycles are rejected by the build: a cycle has no
+unguarded `new SpeechBubbleWdgt` and an inheritance edge onto `app-kit` code (the proof's was a mixin
+augmentation) in `dev-tools` reported `0 / 0` before and fails with a named site after. ⚠ Cycles are rejected by the build: a cycle has no
 valid ingest order. And an entry must EARN its place: `check-part-edges.js` fails a `requires` entry
 when no source of the requiring part names, in code, a class the required part owns — an unused entry
 still orders a fetch, and the reason written beside it no longer holds.
@@ -418,8 +418,8 @@ belt-and-braces duplication.
 
 ## 5. The reflective layer, and the `sources` axis
 
-"The reflective layer" is the class SOURCE TEXT plus the meta-system that parses it: the two individually-fetched
-`Class`/`Mixin` sources, then every eager part's source batches, then an ingest-only pass
+"The reflective layer" is the class SOURCE TEXT plus the meta-system that parses it: the one individually-fetched
+source, `Class`'s (`META_SYSTEM_SOURCES`), then every eager part's source batches, then an ingest-only pass
 (`new Class src, false, false`) that registers each class's members and source text against the class the pre-compiled
 image already defined. `src/boot/globalFunctions.coffee`'s `loadReflectiveLayerPromise()` is all five steps.
 
@@ -434,12 +434,12 @@ is already running before any of it. Hence the axis:
 
 Facts worth knowing before touching any of this:
 
-- **`Class` and `Mixin` are the only two classes ABSENT from `js/pre-compiled.js`** — they are the pair that compiled
-  everything else, so nothing accumulated them into it. The meta-system reaches a precompiled world only through
+- **Of the classes the boot defines, `Class` is the one ABSENT from `js/pre-compiled.js`** — it compiled
+  everything else, so nothing accumulated it into it. The meta-system reaches a precompiled world only through
   this layer.
-- ⚠⚠ **A LAZY PART NEEDS THE META-SYSTEM, AND ONLY THE META-SYSTEM.** Ingesting a part's sources means `new Class` /
-  `new Mixin`, and ordering them means `findLoadOrder` — none of which a precompiled tree has until something fetches
-  them. So steps 1–3 are factored out as `ensureMetaSystemLoaded()` (~39 KB: the two meta sources plus
+- ⚠⚠ **A LAZY PART NEEDS THE META-SYSTEM, AND ONLY THE META-SYSTEM.** Ingesting a part's sources means `new Class`,
+  and ordering them means `findLoadOrder` — neither of which a precompiled tree has until something fetches
+  them. So steps 1–3 are factored out as `ensureMetaSystemLoaded()` (tens of KB: the `Class` source plus
   `dependencies-finding-min.js`), and `PartsRegistry._loadPartPromise` awaits **that**, never
   `ensureReflectiveLayerLoaded()` — which would also fetch step 4, every eager batch: on production that is the whole
   of core's source text, ≈1.9 MB of the tree's ≈2.5 MB, which is the entire saving that made the part lazy.
@@ -447,9 +447,10 @@ Facts worth knowing before touching any of this:
   Before this split existed, any lazy part on a production tree died with `findLoadOrder is not defined`; nothing
   caught it, because the only lazy part until then (`fizzytiles`) does not ship in production, and the dev-tree rigs
   run compile-at-boot where the meta-system is present anyway. `fg homepage` now asserts it (§8).
-- Its entire runtime consumer surface is **`Mixin.allMixines` in the two inspectors** (`meta-tools`) and in core's
-  `SourceEditsRegistry`. There is no runtime `new Class` anywhere outside boot, and the one runtime `new Mixin`
-  outside it only parses a mixin's source text (`Mixin.bootMemberSources`, a snapshot load's return to boot).
+- Its entire runtime consumer surface is **the two inspectors** (`meta-tools`: each class's meta-object and
+  `Class`'s member records) and core's `SourceEditsRegistry` (`Class?`, `Class.membersAwayFrom`, and each
+  meta-object's `bootMemberSources` / `applyMemberEdit` / `removeMember`, a snapshot load's return to boot and its
+  replay). There is no runtime `new Class` anywhere outside boot.
 - **`compileFGCode` is NOT part of it.** It is defined in the same file the layer fetches
   (`js/src/loading-and-compiling-coffeescript-sources-min.js`) but `ScriptWdgt`, `Widget.evaluateString` and
   the spreadsheet's `FormulaCompiler` all call it at runtime, in core, in every profile — runtime compilation is
@@ -670,7 +671,7 @@ real. The commands that speak to packaging:
 | Command | What it proves |
 |---|---|
 | `fg homepage` | the gate that exercises a PRODUCTION tree (the `lean` row below is the appliance's own): boots it, asserts `preCompiled === true`, no SWCanvas payload, a whole-world snapshot round-trip, and (when the tree says `BUILDFLAG_SOURCES === "lazy"`) that nothing is fetched at boot AND an inspector works after one open, and that a class inspector RESTORED from either kind of file waits for the layer and shows its member's CoffeeScript (two fresh pages, since the layer cannot be unloaded). ⚠ It also **loads EVERY lazy part the manifest declares**, one on-demand load each, and asserts each was absent at boot, that all its classes arrive, and that **zero eager batches** came with it. (Only the FIRST load runs on a tree with no meta-system yet, so only it proves the bootstrap; the rest prove the three things that regress per part — hence the loop rather than a sample, since a part added after the gate was written is otherwise untested by construction.) That check runs BEFORE the inspector one on purpose: opening an inspector pulls the meta-system in on its way past and would mask a broken part load entirely. Last, on a fresh page, it loads the booted world's own file plus class-level source edits — always a CORE class's (its meta-object comes from the reflective layer's ingest, so the edit replays only once the load has fetched the layer), and a lazy part's class's when that part is absent at boot (the load must fetch the part first; the file without the edits must not need it) — and on `sources: "lazy"` both must be in force with nothing said |
-| `fg gauntlet`'s `parts` leg (`parts-lazy-load` → `parts-snapshot-load` → `parts-lazy-icons`) | on the dev `index.html`: a part loads through the PRODUCT's own launcher (not a hand-rolled `ensureLoaded`), a file naming a not-yet-loaded part's class loads through EITHER door (a world snapshot, a widget file: its part fetched first, a file no part can serve refused up front with no fetch), a world snapshot whose class- or mixin-scope source edits name a lazy part's code loads that part before the replay — and a REJECTED part load leaves the desktop standing and is reported, which is what locates the bail-out above `loadWorldSnapshot`'s teardown — and every app icon is drawn with no app class defined, the Examples folder's three tiers included |
+| `fg gauntlet`'s `parts` leg (`parts-lazy-load` → `parts-snapshot-load` → `parts-lazy-icons`) | on the dev `index.html`: a part loads through the PRODUCT's own launcher (not a hand-rolled `ensureLoaded`), a file naming a not-yet-loaded part's class loads through EITHER door (a world snapshot, a widget file: its part fetched first, a file no part can serve refused up front with no fetch), a world snapshot whose class-scope source edits name a lazy part's class loads that part before the replay — and a REJECTED part load leaves the desktop standing and is reported, which is what locates the bail-out above `loadWorldSnapshot`'s teardown — and every app icon is drawn with no app class defined, the Examples folder's three tiers included |
 | `fg lazyprobe` | the icon rig `--exhaustive`: it CLICKS every icon (each needs a fresh page, so the gauntlet samples three shapes) and asserts each click fetches no more than its own app. `createDesktop` runs only on `index.html` and the two SWCanvas pages preset `FIZZYGUM_EAGER_ALL_PARTS`, so a green suite is NOT evidence that an on-demand path works |
 | `build_and_smoke.sh --profile lean` | the appliance boots and ships no source text. It IS a production tree — every `--production` assertion applies (the class-level-edit load included, which there must say ONCE that it cannot re-apply the core class's edit) — plus the one thing only it forbids: any class source text at all |
 | `node scripts/build-tree-fingerprint.js compare <a> <b>` (tests repo) | tree equivalence: the stored-source multiset + every file's size and hash |

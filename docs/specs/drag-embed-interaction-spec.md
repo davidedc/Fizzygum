@@ -356,7 +356,7 @@ byte-identical to the old stored-flag path, because the full skin re-derives to 
    `makeExternal`, `createAndAddInternalExternalSwitchButton`, the `internalExternalSwitchButton` field, the
    `alwaysShowInternalExternalButton` handling, and the whole internal/external icon family (the two icon-button
    classes + their icon widgets + their appearances) are all removed, plus the now-dead
-   `KeepsRatioWhenInVerticalStackMixin.holderWindowMadeIntoExternal`. **No eject button:** dragging a nested
+   `holderWindowMadeIntoExternal` of the ratio-locked widgets (`RatioLockedWdgt`). **No eject button:** dragging a nested
    window OUT to the desktop already ejects it (Phase 3's rule flip — an unarmed release over the world detaches;
    sticky re-embed only keeps it nested when released over its own container). The `internal` /
    `alwaysShowInternalExternalButton` constructor args (4th/5th at every `new FrameWdgt …, true, true` site)

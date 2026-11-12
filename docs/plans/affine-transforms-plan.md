@@ -51,8 +51,8 @@ pointer hit test is now `Widget.isPointerTargetAt` (the whole question, one call
 pointer here, TOTAL — false outside my bounds) → `Appearance.shapeContainsPoint` (my outline).
 `isTransparentAt` and the `noticesTransparentClick` flag are GONE: an island now declares
 `catchesPointerAt: -> false` (one member, not a pair), a whole-box catcher declares
-`catchesPointerAt: (p) -> @boundsContainPoint p`, and `BackBufferMixin` answers per pixel under the
-new name. The plane-mapping facts (3.4, §4.6) are unaffected — the point handed in is still
+`catchesPointerAt: (p) -> @boundsContainPoint p`, and a palette's and a canvas's appearance answer per
+pixel (`BackBuffer.isPaintedAt`). The plane-mapping facts (3.4, §4.6) are unaffected — the point handed in is still
 `screenPointToMyPlane`-mapped. Occlusion (§7.3) also moved: see
 [`docs/architecture/occlusion-culling.md`](../architecture/occlusion-culling.md) §2a.
 Living truth: [`docs/architecture/widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md) §5.

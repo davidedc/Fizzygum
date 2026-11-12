@@ -480,8 +480,8 @@ NAMED like one.
     through `Widget.keptSourceOf` — and only for a function it MAKES, a txt that IS one function
     literal (`Widget.spellsAFunctionLiteral`, read off the lexer's tokens); a txt naming one, `@f`,
     keeps nothing, so the function it names keeps the source it has, or none; and a txt with a
-    statement after its function is stored by no door — an object's, a code blurb's, a class's or a
-    mixin's member edit refuses it like a compile error, `Widget.refuseCodeAfterAFunction` — since
+    statement after its function is stored by no door — an object's, a code blurb's or a class's
+    member edit refuses it like a compile error, `Widget.refuseCodeAfterAFunction` — since
     every load and copy compiling it back would run that statement again) → serialize
     `{"$src": <source>}`; restore recompiles it with `injectProperty` on the owning widget. A COPY
     does the same, asking the same test (`Duplicator._compileInjectedMethods`): each injected method
@@ -674,14 +674,14 @@ for the next thing, for the door to RE-ENTER its load on, one thing per trip:
    native-type tag, `app:` keys, class keys — the same list the refusal reads, so a class no part can
    provide is refused before any fetch; what a part's arrival can still refuse is a method's source on
    one of its classes, or an `app:` key naming one of them that is not an app, judged on the re-entry),
-   and the parts owning the code a world file's class- and mixin-scope source edits name
-   (`SourceEditsRegistry.namesOfTheCodeEditedIn` — a class's name, a mixin's source name `<Name>Mixin`):
+   and the parts owning the classes a world file's class-scope source edits name
+   (`SourceEditsRegistry.namesOfTheCodeEditedIn` — each record's class name):
    an edit of a lazy part's code rides a file that holds none of that part's widgets, and the replay
    (§12) edits only what is there. An edit whose code no part provides refuses nothing — the restore does
    not need it — and is counted by the load's notice instead (§11). A part an edit alone needs that fails to load
    fails the load, as one a widget needs does;
 2. then the reflective layer, when `Deserializer._needsTheReflectiveLayer` says the file needs it: it
-   is absent but can load, and the file carries class- or mixin-scope source edits (§12) or holds a
+   is absent but can load, and the file carries class-scope source edits (§12) or holds a
    widget whose class declares `readsClassMemberMaps` — `InspectorWdgt`, which shows and edits a
    member's recorded source, and before the layer would show compiled JS. That declaration is read off
    the resident class, which is why it is asked on the trip after the parts.
@@ -824,9 +824,9 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
      rig / a macro pass `skipConfirm`).
    - **Pre-load what the file needs** — `Deserializer.loadWhatItNeeds` (§9, the step the widget door
      takes too), one bail-out-then-re-enter per thing: the LAZY PARTS owning the classes
-     `Deserializer.classNamesIn` lists and the code its class- and mixin-scope source edits name
-     (`SourceEditsRegistry.namesOfTheCodeEditedIn`), then the reflective layer when the file carries class- or
-     mixin-scope source edits or holds an inspector (`readsClassMemberMaps`). It sits after the confirm
+     `Deserializer.classNamesIn` lists and the classes its class-scope source edits name
+     (`SourceEditsRegistry.namesOfTheCodeEditedIn`), then the reflective layer when the file carries
+     class-scope source edits or holds an inspector (`readsClassMemberMaps`). It sits after the confirm
      so the user is asked exactly once (the re-entry passes `skipConfirm` for that reason and no
      other). A part that fails to load rejects with a load `SerializationError`, the desktop as it was,
      and the file door reports it (§10). A build that can NEVER load the layer (`sources: "none"`) does
@@ -835,9 +835,9 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    The load's ONE notice (composed where the counts are known, §12, and said once the rest has loaded, with
    "everything else in the file loaded normally" — or, if the restore throws, before its error and without that
    promise) tells the user what the return to
-   boot and the replays did NOT do, each counted where it happens: the class-level records the replays
-   did not apply (`classLevelRecordCount` − the replays' applied count — all of them on a `sources:
-   "none"` build, and elsewhere each whose class or mixin this build lacks once every part that could
+   boot and the replay did NOT do, each counted where it happens: the class-level records the replay
+   did not apply (`classLevelRecordCount` − the replay's applied count — all of them on a `sources:
+   "none"` build, and elsewhere each whose class this build lacks once every part that could
    hold one has loaded, or whose source this build does not compile); and the members this page had
    edited that are STILL its edited versions after the replay — each the return to boot could not give
    back (`returnThePageToBootSources` answers them, `unreturned`, with the source each was left
@@ -887,8 +887,8 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    re-attached to the desktop). Restore completion marks the storage sort pending
    (`noteStorageMembershipMayHaveChanged`), so a mid-pending snapshot re-sorts on the first
    cycle.
-5. Attach the desktop children in ONE settle batch via the base `_addNoSettle` (the grid mixin
-   overrides only `add`, so `_addNoSettle` does NOT re-place them — restored positions are
+5. Attach the desktop children in ONE settle batch via the base `_addNoSettle` (the icon grid,
+   `IconGridPanelWdgt`, overrides only `add`, so `_addNoSettle` does NOT re-place them — restored positions are
    preserved), **passing each child's deserialized `layoutSpec` through** — the snapshot's
    attachment state is authoritative: without the explicit arg the add resolves
    `defaultLayoutSpecWhenAddedTo` (undefined) over the restored slot, disarming the desktop
@@ -914,11 +914,13 @@ wallpaper): `serialization-roundtrip-headless.js`'s world leg.
 
 `SourceEditsRegistry.coffee` at `world.sourceEditsRegistry` (constructed in the WorldWdgt
 ctor; a PRODUCT collaborator in the `core` part, so every profile ships it). It logs in-world SOURCE edits so a
-whole-world snapshot can carry and replay them. Record: `{scope, className|mixinName,
+whole-world snapshot can carry and replay them. Record: `{scope, className,
 uniqueID?, propertyName, source?, deleted?}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
+A record of any other shape — a scope other than `"instance"` or `"class"` among them — is no record
+(`SourceEditsRegistry.isARecord`), and a file carrying one is refused whole as a malformed world section (§11).
 
-Three scopes, each recorded by the person's GESTURE that makes it, never by the edit verb the
-gesture drives (`mixins.md` §2 — a meta-object or a meta-verb edits; the gesture tells and records) — and,
+Two scopes, each recorded by the person's GESTURE that makes it, never by the edit verb the
+gesture drives (a meta-object or a meta-verb edits, telling no one and recording nothing; the gesture tells and records) — and,
 once, by a world load: a member of the page it could not return to boot that the loaded world still runs is
 recorded as that member's edit would have been (`recordMembersStillRunning`, §11):
 
@@ -937,61 +939,52 @@ recorded as that member's edit would have been (`recordMembersStillRunning`, §1
   through `Class.removeMember` and records `recordClassMemberRemoval(prototype, name)`, a
   `deleted: true` record. This is the ESSENTIAL case: a prototype edit mutates the live class
   but leaves no other serializable trace (§2.7).
-- **mixin** — when the selected member's source comes from a mixin (and the class does not
-  define the member itself), the inspector's gestures route to the DONOR —
-  `Mixin.applyMemberEdit` recompiles the member (mixin super rewrite, function name restored
-  for the fake-super companion lookup) and injects it into every consumer class that does
-  not define it — and its mixin steps record `recordMixinEdit(mixinName, name, txt)` /
-  `recordMixinMemberRemoval(mixinName, name)` (`deleted: true`, replayed via
-  `Mixin.removeMember`). Like a class edit, a mixin edit leaves no other serializable trace.
 
-In both of the last two scopes an ADD is an edit whose source is `"undefined"`, and a RENAME is
+In the class scope an ADD is an edit whose source is `"undefined"`, and a RENAME is
 two records — an edit under the new name, then a removal of the old — so a renamed member is
 recompiled under its new name on replay as it was live. Each step makes the edit AND its record
-(`ClassInspectorWdgt`, one step per scope × operation), so no gesture of the class inspector
+(`ClassInspectorWdgt`, one step per operation), so no gesture of the class inspector
 changes a prototype unrecorded. And no other inspector changes one at all: every door that hands
 an inspector an arbitrary value opens a class's prototype in its class inspector
 (`InspectorWdgt.inspectorClassFor`: the member row's double-click, `Widget.spawnInspector`), and an
 object inspector that holds one anyway (built by code, or from a file) is read-only — a prototype
 answers the instance edit protocol only through inheritance (`InspectorWdgt._subjectIsEditable`), and
 its edit gestures ask that too, since a restored inspector keeps the buttons its file holds.
-The class inspector edits the prototype of ANY Fizzygum class, a value class's included. Replay is EXACT because the live state is a function of two stores: each `Class`
-and each `Mixin` keeps the CURRENT source of every member it defines (an edit writes it, a
-removal deletes it), and a consumer's prototype holds its class's member where the class
-defines one, else the donor mixin's (a class removal gives the donor's current member back,
-`Class.removeMember`), else nothing (`docs/architecture/mixins.md`, meta-system status).
-Replay walks each scope's records in order, so remove-then-re-add lands in its final state.
+The class inspector edits the prototype of ANY Fizzygum class, a value class's included. Replay is EXACT because the live state is a function of one store: each `Class`
+keeps the CURRENT source of every member it defines (an edit writes it, a removal deletes it),
+and its prototype holds the member its store defines; after a removal its instances read the
+member its superclass holds, if any, as if it had never defined it (`Class.removeMember`;
+`Class.coffee`, "live member editing").
+Replay walks the records in order, so remove-then-re-add lands in its final state.
 
 **Restore** (`loadWorldSnapshot`): the records reproduce the file's members FROM BOOT, so the load
-first returns the page to boot (`SourceEditsRegistry.returnThePageToBootSources`): every mixin, then
-every class, gives each member whose source differs from the one its source text at boot gives
-(`Mixin` / `Class` `bootMemberSources`, the vault's text parsed as the constructor parsed it) that one
+first returns the page to boot (`SourceEditsRegistry.returnThePageToBootSources`): every class
+gives each member whose source differs from the one its source text at boot gives
+(`Class.bootMemberSources`, the vault's text parsed as the constructor parsed it) that one
 back, through its own `applyMemberEdit` / `removeMember` — so a member the page added goes, one it
 removed comes back, and the loaded world is the file's, never the file's edits laid over the page's
 own. What the page edited is read from the STORES against the vault, not from a registry: a world's
-registry lists the edits made under it, while the prototypes are the page's. A class or mixin the
+registry lists the edits made under it, while the prototypes are the page's. A class the
 vault holds no text for (one made at run time) has no boot and is left as it is. A member whose boot
 source fails to apply is logged and left, and the return answers it among the ones it LEFT, with the
 source it was left running. The load's confirm
 names how many members it would return (`membersAwayFromBootCount`). Then the registry is rebuilt from
-`world.sourceEdits` (`SourceEditsRegistry.fromRecords`) and its **mixin- then class-scope edits are replayed
-BEFORE deserialization** (`replayMixinEdits` then `replayClassEdits` — mixin first, the
-boot-order analogy: `augmentWith` runs before class-body assignments, so a class-scope edit
-of the same member keeps winning), so a shell (`Object.create(prototype)`) already sees the
+`world.sourceEdits` (`SourceEditsRegistry.fromRecords`) and its **class-scope edits are replayed
+BEFORE deserialization** (`replayClassEdits`), so a shell (`Object.create(prototype)`) already sees the
 edited methods; an edit that no longer compiles is logged, not fatal. The return answers how many
-members it returned and which it left; each replay answers how many records it applied; and when any
+members it returned and which it left; the replay answers how many records it applied; and when any
 member returned or any record applied, the load tells the world its code changed
 (`WorldWdgt.noteCodeChanged`, the class inspector's own notification): a load KEEPS its world, and
 with it every cache the old code filled — measured lines, line breaks, immutable back buffers,
 each keyed by content — so a page that already showed the edited class's widgets would otherwise
-re-show the old code's look, one file making two worlds. The return to boot and both replays are
-gated on `SourceEditsRegistry.canReplaySourceEdits()` — class- and mixin-scope replay drives the
-META-SYSTEM (`Class.applyMemberEdit` / `removeMember`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only from
+re-show the old code's look, one file making two worlds. The return to boot and the replay are
+gated on `SourceEditsRegistry.canReplaySourceEdits()` (`Class?`) — class-scope replay drives the
+META-SYSTEM (`Class.applyMemberEdit` / `removeMember`), and `Class` arrives only from
 the class source directory (with the reflective layer, which the load fetches first wherever it can come —
 §9 — or alone ahead of a lazy part). An artifact built `sources: "none"` therefore cannot replay them at all,
 and says so once (the class-level records the replay did not apply → one `inform`) rather than dropping the user's
-class edits silently — as does a build that lacks the class or mixin an edit names (the load first
-brings in every lazy part that holds an edited class or mixin, §9). Instance-scope edits
+class edits silently — as does a build that lacks the class an edit names (the load first
+brings in every lazy part that holds an edited class, §9). Instance-scope edits
 ride the normal `{"$src"}` path on their own widget — those still load on such a build, since
 they need only the compiler every profile ships. The rebuilt registry — the file's records, then each page
 member the load could not return that the loaded world still runs as the page edited it
@@ -999,15 +992,15 @@ member the load could not return that the loaded world still runs as the page ed
 deserialize, with the rest of the world. A file/menu load confirms first, warning that a
 snapshot can execute code (§4.12 of the plan). Proven fresh-session by
 `serialization-roundtrip-headless.js`'s source-edit leg (`sourceEdits.*`): an `injectProperty`
-method edit, and the class inspector's add, save, rename and remove of a class's own member, of
-a body member never edited (its rename recompiled so `super` follows it), of an override of a
-donated member, and the rename of a donated member, each hold in a fresh page exactly as the
-editing page left them; and a page that already showed a text before loading a file carrying a
+method edit, and the class inspector's add, save, rename and remove of a class's own member, and
+of a body member never edited (its rename recompiled so `super` follows it), each hold in a fresh
+page exactly as the editing page left them; and a page that already showed a text before loading a file carrying a
 class edit of it shows exactly what the fresh page shows (`sourceEdits.warmLoadEqualsColdLoad`).
-A page's own edits — a class member edited, added and removed, a donor's member edited, a file's member
+A page's own edits — a class member edited, added and removed, another class's member saved, a file's member
 re-edited — leave exactly the file's members away from boot when the file loads onto it
 (`sourceEdits.loadOverPageEditsIsTheFilesWorld`), the confirm names how many members the load returns
 (`sourceEdits.loadConfirmNamesTheEditsItReturns`), and a file carrying no records leaves the page at
 boot (`sourceEdits.loadReturnsThePageToBoot`). On a pre-compiled tree, where the meta-system parses
-sources beside code already running, `fg homepage`'s production smoke holds the parse of every mixin a
-class augments with and a donated member's return to its donor.
+sources beside code already running, `fg homepage`'s production smoke loads a world file carrying the
+class-scope edits of a core class and of a lazy part's class, and holds both in force after the load
+(`CLASS_EDIT_FILE_LOADS`).

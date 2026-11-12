@@ -67,12 +67,13 @@ The built page is *already* 99% of a single-file app:
   tree, ALL parts): boot bundle 18,386 B + CoffeeScript compiler
   (`js/libs/fizzygum-coffeescript-min.js`, 208,604 B) + `js/coffeescript-sources/` (23 files,
   2,778,000 B total: 21 per-part batch files `sources_batch_<n>` / `sources_batch_<part>_<n>` =
-  2,741,288 B, plus `Class-source.js` 24,250 + `Mixin-source.js` 12,462) + three boot helpers
+  2,741,288 B, plus `Class-source.js` 24,250 + `Mixin-source.js` 12,462 — a file no build writes
+  now: `archive/mixin-removal-plan.md` deleted `Mixin`, so `Class-source.js` is the one meta source) + three boot helpers
   (~7.8 KB: `loading-and-compiling…-min` 4,062, `dependencies-finding-min` 2,824,
   `logging-div-min` 905) + `pre-compiled.js` stub (257 B). A homepage-scope subset
   (core + meta-tools only) is smaller still.
 - **The booted page retains everything needed to regenerate its own code, in memory:**
-  - every class/mixin source in the **`SourceVault`** (`window.SourceVault`,
+  - every class source in the **`SourceVault`** (`window.SourceVault`,
     `src/boot/source-vault.coffee`) — the registry every generated `sources_batch_*.js` file stores
     into, keyed by class name and tagged with the PART the class belongs to. Never emptied.
     `SourceVault.names()` enumerates, `SourceVault.get name` reads one
@@ -84,7 +85,7 @@ The built page is *already* 99% of a single-file app:
     resident, still complete, still text.)
   - the `CoffeeScript` compiler global (kept resident — the paint tool needs it);
   - bonus: under `?generatePreCompiled`, `window.JSSourcesContainer.content` accumulates every
-    class's compiled JS (the guarded appends in `src/meta/Class.coffee` / `Mixin.coffee`) — this
+    class's compiled JS (the guarded appends in `src/meta/Class.coffee`) — this
     is what the headless packaging driver reads back out and writes to disk, **proving
     in-browser self-reconstruction already works.** (⚠ Build arc 2 GATED that accumulation on
     the `?generatePreCompiled` mode: an ordinary boot no longer builds the string, so a
@@ -116,11 +117,11 @@ The built page is *already* 99% of a single-file app:
     re-enters itself after `@parts.ensureAllLoaded` (positioned BEFORE any mutation — the in-code
     comment calls that placement "the whole correctness argument");
     **step 0b** (`:2386-2388`) does the same for the reflective layer when the snapshot carries
-    class/mixin-level `sourceEdits` (since folded into step 0 as one step both file doors take,
+    class-level `sourceEdits` (since folded into step 0 as one step both file doors take,
     `Deserializer.loadWhatItNeeds` with its `_needsTheReflectiveLayer`). Then:
     structural teardown via the SHARED shipping core (`@_settleLayoutsAfter =>
     @_teardownWorldStructureNoSettle()`, `:2392` — the same core the test teardown calls),
-    id-counter restore, mixin-then-class edit replay, `Deserializer.deserialize`, app-slot/bin/
+    id-counter restore, class edit replay, `Deserializer.deserialize`, app-slot/bin/
     shelf re-bind, one-settle child attach, colour/wallpaper, repaint + **`result.whenReady`**
     second repaint once async `$Canvas` data-URLs have decoded (`:2464`).
     **It `window.confirm`s unless `opts.skipConfirm`** (`:2358-2360`) — the boot path must pass
@@ -242,7 +243,7 @@ the artifact.
   <script> window.preCompiled = false;  /* the pre-compiled.js stub, inlined */ </script>
   <script> /* CoffeeScript compiler (2.0.3-based minimal build) */ </script>
   <script> /* vendor payloads of embedded 3D-carrying parts (e.g. fizzytiles-3d, 19 KB) */ </script>
-  <script> /* the Class + Mixin sources (SourceVault.store blocks) + the 3 boot helpers
+  <script> /* the Class source (a SourceVault.store block) + the 3 boot helpers
               (loading-and-compiling…, logging-div, dependencies-finding) */ </script>
   <script> /* source batches — SourceVault.store("<Name>", "…", "<part>") blocks, re-encoded (§4.5) */ </script>
   <script type="application/json" id="fizzygum-world-snapshot">
@@ -268,7 +269,7 @@ Two small, surgical branches on `window.FIZZYGUM_SINGLE_FILE`:
 1. **Short-circuit the loader at its ONE choke point.** Every script the boot chain fetches —
    `pre-compiled.js`, the compiler lib, the `BUILDFLAG_LOAD_TESTS` block
    (`globalFunctions.coffee:326-330`), the two always-loaded helpers (`:351-354`), and everything
-   `loadReflectiveLayerPromise()` (`:130-170`) fetches (Class/Mixin sources,
+   `loadReflectiveLayerPromise()` (`:130-170`) fetches (the Class source,
    `dependencies-finding-min`, the batch files) — goes through `loadJSFilePromise` (`:67`). On a
    single-file page ALL of that content is already inline, executed in document order, so the
    branch is: `loadJSFilePromise` returns an immediately-resolved Promise under
@@ -315,8 +316,8 @@ none read from the DOM:
   (`SourceVault.names()`, reading each text with `SourceVault.get name`; the same enumeration
   `dependencies-finding.coffee` uses), re-encode each with the escape spec (§4.5), and emit
   `SourceVault.store("<Name>", "…", "<part>")` blocks — carrying each source's PART through, so a
-  saved page reproduces the partition rather than flattening it. The `Class` and `Mixin` sources are
-  emitted in their own earlier block (they must compile before the batches — mirror the boot chain
+  saved page reproduces the partition rather than flattening it. The `Class` source is
+  emitted in its own earlier block (it must compile before the batches — mirror the boot chain
   order) and deduped out of the batch set. The shell must therefore include
   `src/boot/source-vault.coffee`'s compiled output before any batch block, exactly as the boot
   bundle does.
@@ -405,7 +406,7 @@ Rules:
 |---|---:|
 | NATIVE boot bundle (no SWCanvas 2D, no det-trig — D1) | 18.4 KB |
 | CoffeeScript compiler (minimal 2.0.3-based build) | 208.6 KB |
-| Sources: 21 per-part batches + Class/Mixin (re-encoded) | ~2.78 MB (all parts; core+meta-tools subset less) |
+| Sources: 21 per-part batches + Class (re-encoded) | ~2.78 MB (all parts; core+meta-tools subset less) |
 | Boot helpers ×3 | ~7.8 KB |
 | Parts manifest + presets + spinner data-URI + shell | ~3 KB |
 | Vendor payloads of embedded 3D parts (only if loaded) | +18.9 KB each |
@@ -435,7 +436,7 @@ on it).
   prerequisite work item (likely: the painted canvas must be an own serialized prop, not a
   transient) — decide with owner whether it gates v1 or ships as a known limitation.
 - **S2 — hand-built prototype:** a scratch node script that concatenates the CURRENT build's
-  artifacts (boot bundle, stub, compiler, Class/Mixin, helpers, batches) into one HTML per §4.1
+  artifacts (boot bundle, stub, compiler, Class, helpers, batches) into one HTML per §4.1
   (manually `<`-escaping for the prototype), plus a snapshot captured from a live session; open it
   headless; assert clean boot + pixel-match. Proves block ordering, charset, and escaping BEFORE
   any source is touched. (S2 needs a temporary hack for the §4.2 boot branches — e.g. a small

@@ -204,11 +204,11 @@
     is no seam to defer through. The fix is partition, not cleverness — put the button in the part it
     creates from, and its very existence proves the part is loaded.</p>
     <p style="margin:0"><b>3 · On a precompiled tree the part needs the META-SYSTEM first.</b>
-    Ingesting a part's sources means <code>new Class</code> / <code>new Mixin</code>, and ordering
-    them means <code>findLoadOrder</code> — and <em>none</em> of the three is in the image (of the
-    classes the harvesting boot DOES load, <code>Class</code> and <code>Mixin</code> are the only two
-    it lacks — they compiled everything else, so nothing accumulated them). So a part load
-    awaits <code>ensureMetaSystemLoaded()</code>, ~39 KB — and pointedly <em>not</em> the whole
+    Ingesting a part's sources means <code>new Class</code>, and ordering
+    them means <code>findLoadOrder</code> — and <em>neither</em> is in the image (of the
+    classes the harvesting boot DOES load, <code>Class</code> is the one
+    it lacks — it compiled everything else, so nothing accumulated it). So a part load
+    awaits <code>ensureMetaSystemLoaded()</code>, tens of KB — and pointedly <em>not</em> the whole
     reflective layer, which would fetch every eager batch and hand back the entire saving that made
     the part lazy in the first place.</p>
   </div>

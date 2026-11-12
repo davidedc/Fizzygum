@@ -39,7 +39,8 @@ O4b is DE-URGENTED). See §8 ledger + §7 + §5B.
   repaint, unlike the 99.9%-cached TextWdgt).
 - **`docs/plans/occlusion-culling-plan.md`** — skip painting widgets occluded by a fully-covering opaque
   rect within a damage rect (the ~35% fill-rasterization cluster is largely overdraw). The exact
-  optimization is a documented TODO (issue #149, `ClippingAtRectangularBoundsMixin.coffee:152-159`).
+  optimization was a documented TODO (issue #149, `ClippingAtRectangularBoundsMixin.coffee:152-159` on
+  2026-07-09; the clipping paint path is `ClippingWdgt`'s now).
   **✅ Avenue A LANDED 2026-07-09** (Fizzygum `1c3daece`; drag ~3.0× / draw ~2.1× / covered ~4.3×).
   The busy desktop was then **re-profiled** to find the next levers — see **§5B (new items O1–O4)**;
   the fill cluster is still ~62%, and **O1 (`data32.fill()` for opaque spans) LANDED 2026-07-09**

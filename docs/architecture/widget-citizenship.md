@@ -51,7 +51,7 @@ called **Zombie Kernel** in its early years — older notes and commits use both
 - **Lively Kernel** (Dan Ingalls et al., 2008) brought Morphic to JavaScript in the browser.
 - **morphic.js** (Jens Mönig; the UI substrate of Snap!) — Morphic on a single HTML5 canvas.
   **Fizzygum forked morphic.js (2012)** and has rewritten most of it: display-list rendering,
-  the settle/layout engine, class+instance tracking, mixins, serialization, dataflow. Every
+  the settle/layout engine, class+instance tracking, serialization, dataflow. Every
   widget class is a `*Wdgt`.
 
 ## The citizenship contract

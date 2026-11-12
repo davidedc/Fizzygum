@@ -56,7 +56,7 @@ default may land on a *narrow family base* where one exists, never on `Widget`.
   meaning and a second one makes both unreadable. [convention]
 - **Name for the role, not the mechanism.** `LayoutChromeWdgt`, `WidgetHolderWithCaptionWdgt` and
   `DragChargingRingWdgt` each say what the thing *is* in the world.
-- **Reference other classes by bare identifier** (`extends X`, `@augmentWith X`, `new X`) so the boot
+- **Reference other classes by bare identifier** (`extends X`, `new X`) so the boot
   dependency finder sees the edge. There is no import system; a class named any other way loads in the
   wrong order.
 
@@ -901,7 +901,7 @@ A step that THROWS bans its widget from stepping: the world shows the error once
 (which says so), soft-resets, and passes the widget by — it stays a member of the set — until code
 changes give it another chance (`WorldWdgt._stepWidget`, `giveBannedWidgetsAnotherChance`, which both
 change notices call — `Widget.sourceChanged`, a person's edit or run under one widget, an object inspector's or a
-text's run row, and `WorldWdgt.noteCodeChanged`, a class's or a mixin's member edit): the step twin of a widget
+text's run row, and `WorldWdgt.noteCodeChanged`, a class's member edit): the step twin of a widget
 whose paint throws, which is hidden until then. A change that mends nothing has the widget throw once more and be
 banned again, the error log shown again (and, for a step, the world soft-reset).
 
@@ -974,18 +974,28 @@ canonical constant ([`immutable-value-classes.md`](immutable-value-classes.md)).
 
 ---
 
-## 16. Inheritance, mixins, collaborators
+## 16. Inheritance and collaborators
 
-**[policy — [`mixins.md`](mixins.md)]** Pick by direction:
+**[policy]** Pick by direction:
 
 | you need | use |
 |---|---|
-| behaviour **injected into** classes on unrelated branches, overriding framework hooks | a **mixin** (`@augmentWith FooMixin, @name` — the trailing `@name` is cosmetic, since `Class.coffee` re-emits the call with the consumer class name either way; write it for the majority form) |
-| a cohesive responsibility that can be **delegated out** | a plain **collaborator** class (`world.macroToolkit`, `Wallpaper`, `WidgetFactory`) |
+| behaviour shared by classes on unrelated branches | a **base class** they all extend (`ClippingWdgt`, `RatioLockedWdgt`, `ControllerWdgt`, `CreatorWdgt`); for the paint half, an **appearance** (`CanvasAppearance`); for a responsibility, a **collaborator** (below) |
+| a cohesive responsibility that can be **delegated out** | a plain **collaborator** class (`world.macroToolkit`, `Wallpaper`, `WidgetFactory`, the `BackBuffer` a text, a palette or a canvas paints from) |
+| a look that depends on a fact another object owns | **ask the owner at paint** — a pointer look asks the hand (`world.hand.restsOn @`, `pressesOn @`, `holdsPressOn @`, read by `ButtonWdgt._shownState`) and the widget repaints when told (`notePointerStateChanged`); never a stored copy of the fact |
 | a specialization of one family | a **subclass** |
 
-No new mixin for a liftable responsibility, and no mixin with a single consumer or a single subtree —
-that folds into the consumer or a shared base.
+Every member lives in a CLASS body, at two spaces: a member written in any other object literal is seen by no
+gate ([`lint-and-static-checks.md`](lint-and-static-checks.md) §6b). There is no mixin mechanism (its history:
+[`../archive/mixins.md`](../archive/mixins.md)).
+
+**Moving a member up to a base class** changes exactly these lookups, and nothing else: the class's own
+same-named members still win; (a) a `super` in a member that shadows a moved one now reaches the base's member;
+(b) the member is inherited, no longer the prototype's own, so an inspector's default member list and its class
+chips show it there; (c) a class copies its parent's own statics when it is defined (`extend`,
+`src/boot/globalFunctions.coffee`), so a class defined after boot (a lazy part's) starts its instance counters from
+the base's. A class that had another parent restates what that parent contributed. Prove such a move by resolving
+every member of every class before and after, not by the suite: the suite sees only the classes a test exercises.
 
 **A base class in another part** is reachable only under a `requires` edge; a lazily-loaded class is
 reachable only by awaiting it. Ask the right question of `world.parts`:
@@ -1170,7 +1180,7 @@ the debt.
 - [`regularity-principles.md`](regularity-principles.md) — separate the fused axes; the name encodes the role.
 - [`layering-naming-convention.md`](layering-naming-convention.md) · [`layout.md`](layout.md) · [`transforms.md`](transforms.md) · [`appearance-paint-convention.md`](appearance-paint-convention.md) · [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md) — the mechanics.
 - [`visual-design-system.md`](visual-design-system.md) — where a widget's look is decided (`Theme`: palette, roles, font roles, metrics, shadows) and the rules it follows.
-- [`serialization-duplication-reference.md`](serialization-duplication-reference.md) · [`immutable-value-classes.md`](immutable-value-classes.md) · [`mixins.md`](mixins.md) · [`build-and-packaging.md`](build-and-packaging.md).
+- [`serialization-duplication-reference.md`](serialization-duplication-reference.md) · [`immutable-value-classes.md`](immutable-value-classes.md) · [`build-and-packaging.md`](build-and-packaging.md).
 - [`lint-and-static-checks.md`](lint-and-static-checks.md) — every gate cited above.
 - [`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md) — how the existing widget population scores against these rules (dated snapshot; re-run `buildSystem/census-widget-conformance.js` for the mechanical facets).
 - [`../archive/widget-practices-convergence-plan.md`](../archive/widget-practices-convergence-plan.md) — the arc bringing the existing tree to these rules.

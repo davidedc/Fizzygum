@@ -87,7 +87,7 @@ work is *landing reserved designs*, not inventing machinery.
   (`forcedSet.has(node) or not @_valuesEqual …`). **But the pools are Sets: two bangs
   in one cycle = one forced fire.** Count-preserving delivery does not exist today.
 - **`firesPerEvent` = landed DARK.** Per-wire prototype-default `false` on
-  `ControllerMixin` (~:71–95) with the shared "fires per event" menu toggle
+  `ControllerWdgt` (its `firesPerEvent` block, ~:538) with the shared "fires per event" menu toggle
   (`addFiresPerEventMenuEntry`/`toggleFiresPerEvent`); the flag rides the edge record.
   The deferral note lives in `DataflowEngine.markStale` (~:271–274): delivery POOLS
   regardless because (a) the two lanes are screen-indistinguishable (paint is once per
@@ -105,7 +105,7 @@ work is *landing reserved designs*, not inventing machinery.
   are behaviourally identical today. Riders for W2: `DiffingPatchNodeWdgt.setInput2`
   assigns `@input1` (a real, pre-existing bug); the `setInput*IsConnected` prototype
   flags on all three patch nodes are **written** (by
-  `ControllerMixin.setTargetAndActionWithOnesPickedFromMenu`) **but read nowhere** —
+  `ControllerWdgt.setTargetAndActionWithOnesPickedFromMenu`) **but read nowhere** —
   their reader was the deleted freshness gate.
 - **Value equality suits immutable payloads already.** `_valuesEqual: (a, b) -> if
   a?.equals? then a.equals b else a is b` — identity for anything without `.equals`.
@@ -216,7 +216,7 @@ stale".
 
 **Riders (do in the same item):** fix `DiffingPatchNodeWdgt.setInput2`'s `@input1`
 assignment bug; retire the written-never-read `setInput*IsConnected` flags (writer:
-`ControllerMixin.setTargetAndActionWithOnesPickedFromMenu` guard — keep the guard, it
+`ControllerWdgt.setTargetAndActionWithOnesPickedFromMenu` guard — keep the guard, it
 no-ops without the field, delete the prototype fields) and rationalize the now-
 redundant plain/`Hot` setter pairs once `cold` is a wire attribute (the per-NODE
 hot/cold vocabulary dissolves into the per-WIRE attribute; check menu-label screenshot
@@ -323,7 +323,7 @@ next. Owner gate on the whole plan: not started until owner says so.
 - `docs/specs/dataflow-engine-spec.md` — §3 verbs/values, §4 two lanes + drain
   placement, §5 re-entrancy, §8 patch client (bang, cold edges), §13 open questions.
 - `src/dataflow/DataflowEngine.coffee` (class header + `markStale` deferral note),
-  `src/dataflow/CLAUDE.md` (6a–6d landing record), `src/mixins/ControllerMixin.coffee`
+  `src/dataflow/CLAUDE.md` (6a–6d landing record), `src/basic-widgets/ControllerWdgt.coffee`
   (`firesPerEvent` block), `src/patch-programming/*` (bang, setter tables, W2 riders).
 - `docs/architecture/app-fit-criteria.md` facet 9 — the demand side (which apps this
   unlocks) and the payload-vs-edge-semantics framing.

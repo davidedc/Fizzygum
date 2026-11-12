@@ -5,7 +5,7 @@
 Fizzygum `c619e504` / tests `ce9e3a339` on 2026-11-07.** Line numbers drift: the quoted method or
 symbol name is authoritative, so grep it fresh before trusting a number.
 **REVISED 2026-11-10 (owner decision D7): mixins are out of the talk.** The mechanism is slated for
-removal (`plans/mixin-removal-plan.md`), so this plan shows nothing of it and builds nothing for it;
+removal (`archive/mixin-removal-plan.md`), so this plan shows nothing of it and builds nothing for it;
 §1.1, §1.2, §3, U0, U2, U4 and Appendix A changed in place.
 
 **HARD DEADLINE.** The talk is on **2026-11-25**, in a **45-minute** slot, at a Smalltalk conference.
@@ -121,7 +121,7 @@ against the current tree. This plan is its executable distillation.
 | D4 | The new tool's name and door | Default: **"Explore"** in the Dev tools submenu. "Inspect" stays as it is until after the talk |
 | D5 | Commits | Per house rule, **ask before every commit/push**. At the start, ask the owner whether this plan gets a standing commit grant ("commit and continue while gates pass; ask before push"), as the affine-transforms plan did |
 | D6 | Where talk-only assets live (stage snapshots, demo mbox, deck) | Default: **outside the three repos**, in `~/Desktop/talk-2026-11-25/` |
-| D7 | Mixins in the talk | **LOCKED 2026-11-10**: none. Nothing on stage names a mixin and no unit builds a mixin-aware view, group or query; the mechanism is being removed (`plans/mixin-removal-plan.md`). What that leaves uncovered while it is still in the tree is stated once, in §1.1 |
+| D7 | Mixins in the talk | **LOCKED 2026-11-10**: none. Nothing on stage names a mixin and no unit builds a mixin-aware view, group or query; the mechanism is being removed (`archive/mixin-removal-plan.md`). What that leaves uncovered while it is still in the tree is stated once, in §1.1 |
 
 **D2 explained (protocols).**
 - **Inferred:** the tool computes each method's protocol from its name every time it looks, the way
@@ -224,18 +224,13 @@ against the current tree. This plan is its executable distillation.
   - **Instance sets:** it emits a `window.<Class>.instances` set for every class; Widget's constructor
     puts each widget in its class's set and every superclass's (`Widget.registerThisInstance`; widgets
     only).
-- **Mixins are out of this plan (D7)**, and still in the tree. Three things follow, none of them
-  work for this plan:
-  - a mixin's members are functions copied onto each consumer's prototype, so a per-prototype walk
-    (U2's wrapping) meets them as that class's own functions;
-  - their `super` is resolved through the executing function's own `.name`, which a wrapper that
-    calls the original with `.apply` leaves intact;
-  - U4 reads CLASS sources only: a member a mixin gives a class is in that class's inspector member
-    list and in none of U4's groups, and a sender written inside a mixin's body is not listed.
+- **Mixins are out of this plan (D7)**, and out of the tree (`archive/mixin-removal-plan.md` moved
+  every member to an ordinary class and deleted the mechanism): every member is a class's own, so
+  U2's per-prototype walk and U4's class sources each meet a member where its class defines it.
 - `src/serialization/SourceEditsRegistry.coffee`:
   - `recordInstanceEdit`, `recordClassEdit`, `serializableRecords`, `replayClassEdits`.
-  - A record is `{scope, className, uniqueID?, propertyName, source?, deleted?}`. A mixin-scope
-    record carries `mixinName` in place of `className`; this plan's views pass over those.
+  - A record is `{scope, className, uniqueID?, propertyName, source?, deleted?}`, its scope
+    `"instance"` or `"class"`.
 - `src/boot/source-vault.coffee`: `SourceVault.store(name, escapedText, part)`, `.get(name)`,
   `.names()`. It holds only sources whose part batch has loaded.
 
@@ -593,7 +588,7 @@ green.
     - `reset()`;
     - `rows()` → `[{className, memberName, calls, inclusiveMs, selfMs}]`.
   - **Rule 1, what gets wrapped:** every own *function* member of each listed class's prototype,
-    except `constructor`. Strings such as `<name>_source` and `<name>_class_injected_in` are skipped.
+    except `constructor`. Strings such as `<name>_source` are skipped.
   - **Rule 2, where the originals live:** in a `Map` keyed `"Class.member"`, **never on the
     prototype**, so inspector member lists do not change.
   - **Rule 3, restoring:** on stop, put the original back **only if `proto[member]` is still our

@@ -130,7 +130,7 @@ review, with file:line receipts)*
    `nil-literal` stink, so a bare `nil` is a `ReferenceError` today: read every `nil` in the
    snippets below as `undefined` and write `undefined`; load order is auto-discovered by
    `src/boot/dependencies-finding.coffee` regex-scanning for the literal forms
-   `extends X`, `@augmentWith X`, `new X` — always reference classes with those literal
+   `extends X`, `new X` — always reference classes with those literal
    forms.
 3. **Collaborator construction site:** `WorldWdgt` constructor ~line 389
    (`@macroToolkit = new MacroToolkit`, `@widgetFactory = new WidgetFactory`). `world.dataflow`
@@ -142,8 +142,8 @@ review, with file:line receipts)*
    hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges → pinouting/highlighting →
    updateBroken`. The drain inserts between `runChildrensStepFunction` and
    `recalculateLayouts` (spec §4.1).
-5. **The ONE connection dispatch:** `ControllerMixin._fireConnection`
-   (`src/mixins/ControllerMixin.coffee`) routes to a target's `_<action>Connector` variant
+5. **The ONE connection dispatch:** `ControllerWdgt._fireConnection`
+   (`src/basic-widgets/ControllerWdgt.coffee`) routes to a target's `_<action>Connector` variant
    when defined (the non-settling lane that joins an enclosing pass), else the public
    action. Sink application (spec §4.2 item 5) uses this lane.
 6. **Stepping contract** (`WorldWdgt.runChildrensStepFunction`): membership is
@@ -191,7 +191,7 @@ review, with file:line receipts)*
     (NOMENCLATURE, dataflow table); Phase 6b must suppress or absorb it.
 14. **The connector lane opens a settle at first hop:**
     `_settleLayoutsAfterOrJoinEnclosingPass` joins an enclosing pass but OPENS a settle
-    when there is none (ControllerMixin header ~37–48; `check-layering.js`
+    when there is none (`ControllerWdgt._fireConnection`'s header; `check-layering.js`
     RECALC_WHITELIST). The drain therefore opens ONE settle per pass around its apply work
     (Phase 1 drain, step 5) — sinks never run off-settle (the end-of-cycle capstone audit
     exists to flag exactly that).
@@ -1587,8 +1587,8 @@ the value classes (spec §9.5); the menu is introspection + text generation only
   `buildWidgetContextMenu` ~4107; right-clicking a cell already opens the CELL's own context
   menu, since Phase 8 made cells real widgets). The entry appears only when the cell's record
   value is OPERABLE (below); it opens a submenu of method names (menu-building model: the 6a
-  controller menus + `ControllerMixin.openTargetSelector`'s `MenuWdgt` construction, incl. its
-  addMenuItem extra-argument idiom at ControllerMixin ~24 for passing the method name to the
+  controller menus + `ControllerWdgt.openTargetSelector`'s `MenuWdgt` construction, incl. its
+  addMenuItem extra-argument idiom at ControllerWdgt ~19 for passing the method name to the
   action).
 - **The entry row is a SUBMENU row, stated, never typed:** label it plain `"operate"` and build it
   with `opensSubmenu: true` (`menu.addMenuItem "operate", @, "<the submenu opener>", opensSubmenu:
@@ -2186,8 +2186,8 @@ concurrently with another spreadsheet arc.
 1. **Naming:** every new identifier passes `NOMENCLATURE.md`. In particular: no "settle",
    "invalidate", "dirty", "coalesced", "announce", "volatile" in dataflow code; "source"
    qualified.
-2. **Dependency finder:** reference classes only via literal `new X` / `extends X` /
-   `@augmentWith X` (§1.2). A dynamically-constructed class name breaks load order.
+2. **Dependency finder:** reference classes only via literal `new X` / `extends X`
+   (§1.2). A dynamically-constructed class name breaks load order.
 3. **Homepage build:** engine + spreadsheet ship (no whole-file exclusion). Test-only
    hooks guarded `if Automator?` or marked with the established exclusion comments.
 4. **Layout discipline:** widget code follows wrapper+core (`_settleLayoutsAfter` /

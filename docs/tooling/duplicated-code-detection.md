@@ -54,8 +54,8 @@ That pipeline is obsolete on every axis:
 
 - **jsinspect is abandoned** (last release 2017; chokes on modern JS, unmaintained AST parser).
 - **jscpd tokenizes CoffeeScript natively** (`coffeescript` is one of its ~220 auto-detected
-  formats), so there is **no compile step at all** — no file copying, no broken-mixin
-  pruning, no preamble cleanup, and every finding is a real `src/**.coffee` line range.
+  formats), so there is **no compile step at all** — no file copying, no pruning of files
+  bare compilation rejects, no preamble cleanup, and every finding is a real `src/**.coffee` line range.
 - jscpd is the current de-facto standard (bundled in super-linter/Mega-Linter, ~1M weekly
   npm downloads, actively maintained).
 
@@ -137,9 +137,9 @@ sanity-tested 2026-07-14; re-check future releases). What *does* work — nicely
 
 1. `buildSystem/coffee-to-js-mirror.js` compiles all of `src/` with **CoffeeScript 1**
    (devDependency alias `coffeescript-v1`): CS 2.7 rejects about a sixth of the files over
-   bare-`super` idioms that the bundled in-browser compiler accepts; CS1 fails only the
-   `super`-bearing mixins, rescued by a textual `super`→`__SUPER__` shim (AST shape is all
-   that matters here). Every file must compile, or the mirror exits 1 and the scan stops: a
+   bare-`super` idioms that the bundled in-browser compiler accepts; CS1 refuses only a `super`
+   it cannot place in a class, which a textual `super`→`__SUPER__` shim over every file turns
+   into a plain call (AST shape is all that matters here). Every file must compile, or the mirror exits 1 and the scan stops: a
    paren-less call ending in an implicit object, as the condition of `while`/`if`/`unless`/
    `else if`/`switch`/`when`/`for` (or a `… then` form, or `class … extends`), is refused by
    CS1 and read by the page's compiler — parenthesize the call (`while r = f(a, k: v)`), which
@@ -238,7 +238,8 @@ reference-image identity. See case law 10. It also re-attributed the withheld bu
 ⚠⚠ **PULL-UP is CLOSED at 10 and will stay there — all 10 were triaged 2026-07-15 and NONE is actionable** (case law
 11/12; `docs/archive/census-findings-triage-plan.md` Phase 2). It is not a debt, and re-triaging it is wasted work. Its own
 strongest finding — 3 verbatim-identical colour defaults — would have turned the desktop icons near-white, because each
-subclass `@augmentWith`es a mixin that injects the same properties onto the SUBCLASS prototype. **A non-zero census
+subclass's prototype also received the same properties from elsewhere (in the tree of that triage, a mixin injecting them
+onto the SUBCLASS prototype), so each class-body default overrode that value rather than duplicating the parent. **A non-zero census
 count is not automatically a backlog.**
 
 **Scoreboard for the hierarchy axis (2026-07-15, arc complete):** 23 findings actioned across all tranches

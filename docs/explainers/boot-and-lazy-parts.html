@@ -169,7 +169,7 @@
   <div class="trow">
     <div class="seg">boot bundle</div>
     <div class="seg">pre-compiled.js <em>(a stub)</em> + CoffeeScript compiler</div>
-    <div class="seg heavy">Class + Mixin sources → compile by hand</div>
+    <div class="seg heavy">the Class source → compile by hand</div>
     <div class="seg heavy">dependencies-finding</div>
     <div class="seg heavy">every eager part's batches</div>
     <div class="seg heavy">compile + EXECUTE all ~500 classes</div>
@@ -195,7 +195,7 @@
     assertion distinguishes a real image from a generator that produced nothing.</p>
     <p style="margin:0"><strong>And the image is harvested by booting the tree itself.</strong> The
     packaging driver opens the freshly-built page at <code>?generatePreCompiled</code> — the one mode
-    in which <code>Class</code>/<code>Mixin</code> accumulate the JS they compile — then reads that
+    in which <code>Class</code> accumulates the JS it compiles — then reads that
     string back out and writes the file from Node. Which is why <em>the source text is a build INPUT
     to every precompiled artifact</em>, even one whose profile says <code>sources: "none"</code>: the
     text must exist during the build and is dropped <em>after</em> the driver runs.</p>
@@ -215,8 +215,8 @@
       <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
       <rect x="10" y="10" width="470" height="76" rx="9" fill="var(--wash-s3)" stroke="var(--s3)"/>
-      <text class="t" x="24" y="30">ensureMetaSystemLoaded()  ·  ~39 KB</text>
-      <text class="m" x="24" y="49">1. fetch the Class + Mixin sources   2. compile + eval them</text>
+      <text class="t" x="24" y="30">ensureMetaSystemLoaded()  ·  tens of KB</text>
+      <text class="m" x="24" y="49">1. fetch the Class source   2. compile + eval it</text>
       <text class="m" x="24" y="66">3. fetch dependencies-finding (findLoadOrder)</text>
 
       <rect x="500" y="10" width="310" height="76" rx="9" fill="var(--wash-s2)" stroke="var(--s2)"/>
@@ -226,10 +226,10 @@
 
       <rect class="box" x="10" y="112" width="800" height="52"/>
       <text class="t" x="24" y="133">Why the split exists</text>
-      <text class="m" x="24" y="151">Of the classes this boot loads, Class and Mixin are the only two ABSENT from the image — they compiled everything else, not themselves.</text>
+      <text class="m" x="24" y="151">Of the classes this boot loads, Class is the one ABSENT from the image — it compiled everything else, not itself.</text>
     </svg>
-    <figcaption>A lazy part must ingest its own sources, which means <code>new Class</code> /
-    <code>new Mixin</code> and <code>findLoadOrder</code> — none of which a precompiled tree has until
+    <figcaption>A lazy part must ingest its own sources, which means <code>new Class</code>
+    and <code>findLoadOrder</code> — neither of which a precompiled tree has until
     something fetches them. <code>PartsRegistry</code> awaits the green box and
     <strong>must never await the whole layer instead</strong>: that would drag in step 4, every eager
     batch, and hand back the entire saving that made the part lazy.</figcaption>

@@ -112,7 +112,8 @@ house pattern of deriving load-order by scanning class sources
 The engine itself is a plain delegated collaborator, `world.dataflow` (`DataflowEngine`),
 `keptByReferenceOnDeepCopy: true`, and a `"dataflow"` entry in `WellKnownObjects`' table for the
 serializer — the
-`MacroToolkit`/`WidgetFactory` pattern, per the mixin phase-out.
+`MacroToolkit`/`WidgetFactory` pattern: a cohesive responsibility delegated out to a plain collaborator
+([`widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md) §16).
 
 ## 3. The two verbs, and what travels
 

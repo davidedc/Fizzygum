@@ -389,7 +389,7 @@ assertion a recapture after a regression silently stores two different hashes an
   where the member happens to fall in the list, so it MISSES whenever that row sits at or past the list's clipped bottom edge,
   and the click then lands on whatever is underneath. Underneath is the footer's "Add…" button, which opens a
   "new property name:" prompt: two tests (`macroWrappingTextFieldResizesOK`, `macroMultilineTextInputScrollsWell`) carried
-  that stray prompt in their committed references until 2026-08-17, when a change to `ControllerMixin`'s member set slid the
+  that stray prompt in their committed references until a change to a member set slid the
   row and the prompt silently disappeared. A THIRD (`macroInspectorResizingOKEvenWhenTakenApart`, whose list is DETACHED so
   there is nothing underneath to react) simply selected NOTHING, and its references had recorded an empty detail pane —
   against its own comments — for as long as they existed. All three now use the verb.

@@ -1,5 +1,9 @@
 # Mixins — mechanism, inventory, and the keep-vs-remove position
 
+> **STATUS: SUPERSEDED 2026-11-12.** The mechanism this doc describes is deleted: `archive/mixin-removal-plan.md`
+> moved every mixin to an ordinary home (Phases 1–7) and deleted `Mixin.coffee`, `augmentWith` and every path that
+> served them (Phase 8). Its keep position (§1, §7) is reversed. Kept as history of how the mechanism worked.
+
 > Verified against `src/` 2026-08-16. This doc is BOTH the evergreen reference for how the
 > mixin mechanism works and the standing position on keeping vs. removing it, with the
 > evidence embedded (self-contained per `docs/README.md`). The inventory table carries its

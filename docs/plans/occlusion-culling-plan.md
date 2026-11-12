@@ -22,7 +22,7 @@ P4/P5, not §1 below.** The coverage predicate now answers at TWO layers: `Widge
 keeps only the widget-side gates (not ephemeral; `@alpha == 1`; `@color._a == 1`) and then asks
 `@appearance?.opaqueCoveredRect()`, where the GEOMETRY lives beside the paint that creates it. Three
 §1 facts are therefore dead: the plain-paint-route **prototype-identity gate** is gone (the
-`BackBufferMixin` consumers it excluded now decline the claim themselves), the **exact-class
+back-buffered widgets it excluded — a text, a palette, a canvas — now decline the claim themselves), the **exact-class
 `switch`** is gone, and with it the "deliberately NON-polymorphic" argument — a claim IS inherited
 now, so a subclass that changes the outline must refuse it explicitly (`BubblyAppearance` does; its
 tail strip would otherwise be over-claimed). The nine widget-level custom painters this was written
@@ -71,7 +71,7 @@ rather than cd-chains for git):
 global is RETIRED — a bare `nil` is a `ReferenceError`, and the `nil-literal` stink holds it at zero);
 one class per file, filename == class name; NO import/require — every class is a global, so
 new code in Widget/WorldWdgt referencing `RectangularAppearance`/`BoxyAppearance`/`Rectangle` by
-bare name just works (the load-order regex scan only matters for `extends`/`@augmentWith`/`new X`
+bare name just works (the load-order regex scan only matters for `extends`/`new X`
 at class-definition time — none of which this plan adds); sources ship as escaped text and compile
 in-browser at boot (the build's syntax gate catches parse errors); scope every search to
 `Fizzygum/src` (the builds dir is ~1.3 GB / 20k+ files). **You are modifying the paint loop — read
@@ -290,7 +290,8 @@ intersected with its `clippedThroughBounds()` so an ancestor clip can't over-cla
 key. Then repainting a damage rect is a fast scan of this SHORT list: find the frontmost entry
 whose covered-rect `containsRectangle(damageRect)`, start painting from that widget, and paint
 only the widgets IN FRONT of it. This is the "top-n biggest opaque widgets" idea the TODO already
-suggests (`ClippingAtRectangularBoundsMixin.coffee:156`), made precise.
+suggested (`ClippingAtRectangularBoundsMixin.coffee:156` as verified 2026-07-09; the clipping paint
+path is `ClippingWdgt`'s now), made precise.
 - **The covered-rect is the key idea** — track the rectangle a widget *completely* covers, NOT its
   bounds, so **non-rectangular opaque shapes still participate** via their INSCRIBED opaque
   rectangle and every check stays a cheap rectangle-containment test. The geometry and gates are

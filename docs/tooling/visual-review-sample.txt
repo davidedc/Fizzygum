@@ -49,12 +49,12 @@ SystemTest_macroSpreadsheetOpenGrid
 SystemTest_macroTwoEditsOnOneRingInOneCycle
 SystemTest_macroSampleDashboardPlots
 # W3: buttons in footer bands (error log, console), prompt buttons (number + colour prompts), the Inspector
-# re-layout (breadcrumb + donor label, toggles, member rows, footer, taken apart), a two-button toggle fixture,
-# and a mono patch node (fonts.code)
+# re-layout (breadcrumb, toggles, member rows, footer, taken apart; an object and a class inspector side by side),
+# a two-button toggle fixture, and a mono patch node (fonts.code)
 SystemTest_macroErrorConsolePopsClean
 SystemTest_macroInspectorWorkAreaEvaluatesCoffeeScript
 SystemTest_macroBoxTransparencyAndColorChanging
-SystemTest_macroMixinEditDonorAndOverride
+SystemTest_macroInspectorCodePaneRunsAgainstItsSubject
 SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly
 SystemTest_macroInspectorResizingOKEvenWhenTakenApart
 SystemTest_macroSliderDrivesAToggleButton
@@ -85,7 +85,7 @@ SystemTest_macroMultilineTextInputScrollsWell
 # header in sentence case, value rows capitalised at the row (wallpapers), the text menu's pictograms and a wire
 # row with its direction glyph from the symbols atlas, a name row ("Desktop" in the target chooser, hierarchy
 # rows "Rectangle" / "Panel"), the fixed palette test (a bare palette, as it says), and the class inspector's
-# title plus informs in sentence case
+# title in sentence case (InspectorCodePaneRunsAgainstItsSubject, listed above)
 SystemTest_macroBindTwoSlidersAndUnbind
 SystemTest_macroUniqueTargetAndPropertyAreStillPresented
 SystemTest_macroAttachShowsNoTargetsMessage
@@ -93,7 +93,6 @@ SystemTest_macroWallpaperMenuTickTracksSelection
 SystemTest_macroFontsMenuFollowsAnApiChange
 SystemTest_macroScrollPanelMergesChildMenu
 SystemTest_macroMenuPinnedInScrollPanel
-SystemTest_macroMixinFieldEditDonorAndOverride
 # G-A: the spreadsheet with values, an error and a selection; the Fizzytiles window (magnets, panes, captions, the code
 # pane); a sample slide's page; the stretchable page flush and letterboxed under rotation; plots on the sample dashboard
 # (already listed); the folder window (DesktopShortcutIcons, listed); the error log's Pause toggle (listed)

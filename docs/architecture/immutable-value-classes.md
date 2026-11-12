@@ -33,7 +33,7 @@ Consequences, all load-bearing:
   class's are (`Class.applyMemberEdit`, recorded and replayed by a world snapshot,
   `serialization-duplication-reference.md` §12), and its existing instances run the edited member
   at once, and every widget hears that code changed, as for any class edit
-  (`WorldWdgt.noteCodeChanged`, `mixins.md` §2), since any of them may paint with it. So a value
+  (`WorldWdgt.noteCodeChanged`, the class inspector's one notification), since any of them may paint with it. So a value
   keeps no copy of what its own code derives from its fields — `Color.toString` builds its string on
   every call — because a copy on the instance is out of the notification's reach: it would keep
   answering what the old code computed. A cache of such a derivation, if one is ever needed, is ONE

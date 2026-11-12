@@ -283,7 +283,9 @@ pattern widened. Longer if a trap turns out to be firing today.
   text fitting (806, 900); `CaretWdgt` key handling (161); `BoxyAppearance` (152) and
   `RectangularAppearance` (60), both `if !fill? then debugger` on the paint path;
   `Class._removeHelperFunctions` (257) and `Mixin._removeHelperFunctions` (71);
-  `Mixin` (299); `ClippingAtRectangularBoundsMixin` (114); `HighlightableMixin` (59).
+  `Mixin` (299); `ClippingAtRectangularBoundsMixin` (114); `HighlightableMixin` (59). (The three in
+  `Mixin` and `HighlightableMixin` left with the mechanism, `archive/mixin-removal-plan.md`; the
+  clipping one is `ClippingWdgt`'s now.)
 
 **Why it matters.** A check that cannot fail a run gives false comfort. Two of these guard the
 paint path, where this project has already lost time to a fill that painted nothing "with no
@@ -430,7 +432,7 @@ understands, and an A/A performance comparison.
   stamp with `WorldWdgt.geometryVersion`, `structureVersion` or `visibilityVersion`.
 - MEASURED: each has an uncached twin for verification. There are 16 `SLOW<name>` definitions,
   because `WorldWdgt`, `ActivePointerWdgt`, `TransformFrameWdgt` and
-  `ClippingAtRectangularBoundsMixin` override the fast query and must override its twin with
+  `ClippingWdgt` override the fast query and must override its twin with
   it (`TransformFrameWdgt`'s comment: the twins "are overridden IN LOCKSTEP").
 - MEASURED: the comparison is written out 17 times, as
   `if world.doubleCheckCachedMethodsResults` / compare / `debugger` /
@@ -499,9 +501,9 @@ vendors it. The splits are two to three days more, one function at a time.
   `ActivePointerWdgt#processPointerUp` 80, `Deserializer#_worldSectionProblem` 76,
   `Class#constructor` 70, `WorldWdgt#loadWorldSnapshot` 67, `Deserializer#deserialize` 61,
   `Deserializer#_envelopeShapeProblem` 59,
-  `StringWdgt#searchLongestFittingTextByMultiCroppingIt` 55. (Two mixin bodies also score above
-  70, but the tool counts a whole mixin body as one function, and
-  `plans/mixin-removal-plan.md` re-homes them.)
+  `StringWdgt#searchLongestFittingTextByMultiCroppingIt` 55. (Two mixin bodies also scored above
+  70 at the survey, because the tool counted a whole mixin body as one function;
+  `archive/mixin-removal-plan.md` re-homed their members as class methods.)
 - READ: nothing holds either number. `docs/BACKLOG.md` carries the unbuilt item "per-file metrics
   ratchet for god-class line counts" (`archive/lint-generic-rules-carryover-plan.md` §8.5 C).
 
@@ -612,7 +614,7 @@ re-homing the per-gate comments.
   (`build_it_please.sh` twice, `build_and_test.sh`, `build_and_smoke.sh`), and three of them
   `eval` its output as shell assignments.
 - READ: one definition is stated twice across the language boundary. `check-coffee-syntax.js`
-  defines `IS_CLASS` and `IS_MIXIN` with the comment "same test build.py uses", and
+  defines `IS_CLASS` with the comment "same test build.py uses", and
   `lib/call-sites.js` repeats `IS_CLASS` with "the tests build.py and check-coffee-syntax.js use".
 - READ: the bridge has already cost real defects. The script's own comments record that
   `build.py`'s exit code went unchecked "for years", that `eval "$(cmd)"` had to be rewritten as
@@ -691,7 +693,7 @@ runs every gate's bite proof) and `fg gauntlet` after each step.
 
 | Topic | Owner |
 |---|---|
-| Removing the eight mixins and then the mixin mechanism (including the duplicated members of `Class.coffee` and `Mixin.coffee`) | `plans/mixin-removal-plan.md` |
+| Removing the eight mixins and then the mixin mechanism (including the duplicated members of `Class.coffee` and `Mixin.coffee`) | `archive/mixin-removal-plan.md` |
 | The creator-button and toolbar-button record classes ("the creator zoo") | `plans/creation-and-templates-plan.md` §4.3 |
 | Two icon-appearance generations (legacy fixed design space, size-aware) and pixel icons | `plans/pixel-icons-plan.md` |
 | LiveCodeLang and the unreferenced `LCLProgramRunner` | `plans/livecodelang-cleanup-and-extensions-plan.md` |

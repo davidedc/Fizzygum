@@ -350,7 +350,7 @@ dropped.)
 ---
 
 ## 7. Scope & non-goals
-- **SAFE under method renames:** the dependency-finder (scans `extends`/`@augmentWith`/`new`, not method names) and
+- **SAFE under method renames:** the dependency-finder (scans `extends`/`new`/`REQUIRES`, not method names) and
   the serialization/duplication engines (the `Serializer`/`Deserializer` pair and the `Duplicator` copy data, not
   method names) are unaffected.
 - **Naming + tier-reclassification only — no behaviour change.** Pixels stay identical except inspector member lists
