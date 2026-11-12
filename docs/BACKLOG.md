@@ -76,13 +76,25 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
       member it inherits".)
 - [ ] **A mixin member's recorded source carries the next member's leading comment** (found by the independent review
-      closing "A class inspector's field row reads its record by NAME", in the plan's ledger; reached: a class
+      closing "A class inspector's field row reads its record by NAME", in the plan's ledger; measured 2026-11-12 and
+      PARKED for the owner: its fix moves references outside the backlog loop's recapture grant; reached: a class
       inspector on `VerticalStackPanelWdgt` — or `PanelWdgt`, `FrameWdgt`, any consumer of
       `ClippingAtRectangularBoundsMixin` — selecting `clipsAtRectangularBounds`). `Mixin`'s source parse cuts each
       member at the next 6-space key, so the comment block that documents the NEXT member
       (`plausibleTargetAndDestinationWidgets`) becomes part of this one's recorded source: the pane shows another
       member's documentation, and a Save of the row writes it into this member. `Class`'s parse cuts at a top-level
-      comment and is not affected.
+      comment and is not affected. Measured: 45 of the 75 mixin members' recorded texts carry such a comment (the
+      constructor's own regex, in plain Node over all eight mixins), and no mixin has a member-level comment inside a
+      member's body. The fix, ruled and built (loop unit U36): ONE member reader — `Class`'s line reader made
+      class-side, `Class.memberSourcesOf(lines, memberRegex, commentRegex)` with a class-side `Class.findUpTo`, read by
+      `Mixin` with its 6-space patterns (`Mixin.MEMBER_REGEX`, `MEMBER_COMMENT_REGEX`) — builds clean (the syntax gate,
+      the stinks with the one `null` sanction moved to `@memberSourcesOf`) and passes the dpr-1 suite but one test:
+      `SystemTest_macroInspectorResizingOKEvenWhenTakenApart`'s images 2 and 3, whose code pane shows
+      `ControllerMixin._fireConnection` — its text loses the next member's comment, so the pane's vertical scrollbar
+      thumb grows (64 pixels, x 914–917, y 32–48, at dpr 1; its dpr-2 and finger references move alike). A code-pane
+      text change is not inspector member-list churn, the one recapture the loop holds. The patch waits in
+      `Fizzygum-tests/.scratch/mixin-member-comment/u36-one-member-reader.patch`, the survey beside it: applying it
+      wants that test recaptured (mouse and finger, dpr 1 and 2) and a proof check (the survey's).
 - [ ] **On a pre-compiled tree, a member a run replaced before the reflective layer arrived reads as its class's
       source** (found by the independent review closing "A run that replaces a class's member reads as a recorded
       source it no longer runs", in the plan's ledger; reached on `homepage` / `dev-precompiled`: Run `X::m = -> …` in
