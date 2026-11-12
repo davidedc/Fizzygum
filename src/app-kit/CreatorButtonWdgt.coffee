@@ -1,9 +1,4 @@
-class CreatorButtonWdgt extends Widget
-
-  # my hover / press state shows on the tool cell I stand in, never on me (ParentStainerMixin)
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
-  @augmentWith WidgetCreatorAndSmartPlacerOnClickMixin, @name
+class CreatorButtonWdgt extends CreatorWdgt
 
   actionableAsThumbnail: true
 

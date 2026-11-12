@@ -6,14 +6,10 @@
 # provides a larger target area to grab the
 # widget)
 #
-# I paint nothing. My hover / press state is the one the cell under me shows (ParentStainerMixin;
-# GlassBoxBottomWdgt reads the state of the widget a tap on it reaches, which is me).
+# I paint nothing. My hover / press state is the one the cell under me shows (CreatorWdgt's
+# ParentStainerMixin; GlassBoxBottomWdgt reads the state of the widget a tap on it reaches, which is me).
 
-class GlassBoxTopWdgt extends Widget
-
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
-  @augmentWith WidgetCreatorAndSmartPlacerOnClickMixin, @name
+class GlassBoxTopWdgt extends CreatorWdgt
 
   # the lid of a tool cell (GlassBoxBottomWdgt)
   colloquialName: -> "tool cell lid"

@@ -145,7 +145,7 @@ class StretchableWidgetContainerWdgt extends Widget
         @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
         @parent._moveWithin world
 
-  # Smart-placement protocol (WidgetCreatorAndSmartPlacerOnClickMixin routes a
+  # Smart-placement protocol (CreatorWdgt.activated routes a
   # creator-button click to a frame's CONTENT -- for the §5.B container
   # citizens that content is me; the retired editor's version centred in me
   # anyway).

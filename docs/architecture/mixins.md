@@ -251,24 +251,23 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (4 mixins, 185 L, 15 consumer slots across 10 files, counted 2026-11-12; the rows as verified 2026-08-18)
+## 3. Inventory (3 mixins, 146 L, 11 consumer slots across 9 files, counted 2026-11-12; the rows as verified 2026-08-18)
 
-Two live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
-in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 15 is the
-sum of the per-mixin consumer counts below, spread over 10 distinct files: `CreatorButtonWdgt` and
-`GlassBoxTopWdgt` take three each, and `EditorContentPropertyChangerButtonWdgt` takes two.
+Two live in `src/mixins/`; `ParentStainerMixin` lives in `src/app-kit/`, beside `CreatorWdgt`, one of
+the toolbar tools it serves. The 11 is the sum of the per-mixin consumer counts below, spread over 9
+distinct files: `CreatorWdgt` and `EditorContentPropertyChangerButtonWdgt` take two each.
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
-| `HighlightableMixin` | 54 | 6 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
+| `HighlightableMixin` | 54 | 5 — `ButtonWdgt`, `CreatorWdgt` (the creator buttons and a tool cell's lid), `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `VerticalStackViewportWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ViewportWdgt`) | unrelated branches (Viewport / Panel / Widget) | yes |
-| `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
-| `ParentStainerMixin` |       28 | 4 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt`, `GlassBoxTopWdgt` (a thumbnail's lid), `CodeInjectingSimpleRectangularButtonWdgt` (a paint tool): a toolbar tool tells the tool cell it stands in that its pointer state changed (`GlassBoxBottomWdgt.noteItemStateChanged`), and the cell derives its own look | unrelated leaves | no |
+| `ParentStainerMixin` |       28 | 3 — `CreatorWdgt` (the creator buttons and a thumbnail's lid), `EditorContentPropertyChangerButtonWdgt`, `CodeInjectingSimpleRectangularButtonWdgt` (a paint tool): a toolbar tool tells the tool cell it stands in that its pointer state changed (`GlassBoxBottomWdgt.noteItemStateChanged`), and the cell derives its own look | unrelated branches (a base and two leaves) | no |
 
 (The count excludes those that no longer exist as mixins: dead `ContainerMixin`, deleted;
 the five misfiled ones, folded into standard-OO homes — §4; `DeepCopierMixin`, inverted
 into the `Duplicator` engine (`src/duplication/`) — §5-C; and the clipping, the ratio-keeping
 and the controller ones, now the base classes `ClippingWdgt`, `RatioLockedWdgt` and `ControllerWdgt`;
+the creator one, now `CreatorWdgt`'s own `activated`;
 and the back-buffer one, now a plain object each back-buffered widget holds — a `BackBuffer`, which
 owns the canvas, its context, its shadow twin, the blit and the pixel read — with a palette and a
 canvas answering paint, hit and coverage through their appearances (`PaletteAppearance`,
@@ -281,11 +280,10 @@ super-fallback): do not re-parent them onto it. `Mixin.allMixines` is load-beari
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core — all 4 current mixins):** `HighlightableMixin` (input-hook state machine across ≥4 branches),
+- **Genuine (the keep-core — all 3 current mixins):** `HighlightableMixin` (input-hook state machine across ≥4 branches),
   `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
   bubbling to a coordinating parent, across Viewport/Panel/Widget branches),
-  `WidgetCreatorAndSmartPlacerOnClickMixin` (barely — 2 unrelated leaves), `ParentStainerMixin`
-  (4 unrelated leaves: the toolbar tools).
+  `ParentStainerMixin` (3 unrelated consumers: the toolbar tools' base `CreatorWdgt` and two leaves).
 - **Misfiled (single consumer / single subtree / config bag) — all five now live in
   standard-OO homes**, motivated by inspectability (a mixed-in member's
   source is view-only in the inspector, and it is unclear whether to edit the donor or

@@ -8,7 +8,7 @@ class ToolbarsApp extends WindowedApp
 
   # ⚠⚠ THE SAME TOOLBAR MUST NOT DEPEND ON HOW IT WAS OPENED. Every toolbar this window can pop
   # is built by a CREATOR BUTTON, which has no async seam
-  # (WidgetCreatorAndSmartPlacerOnClickMixin.activated and grabbedWidgetSwitcheroo both consume
+  # (CreatorWdgt.activated and grabbedWidgetSwitcheroo both consume
   # createWidgetToBeHandled()'s return value synchronously), so the await has to happen at the one
   # door that CAN await -- this one -- and for the parts the toolbars' CONTENTS come from, not just
   # the parts this window's own classes come from. ⚠ The suite cannot see a violation here: the

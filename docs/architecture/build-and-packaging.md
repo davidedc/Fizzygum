@@ -140,9 +140,10 @@ does not, or where a base class crosses the boundary.** Deciding it by taste ins
 ends up awaiting a part it cannot wait for.
 
 ⭐ **A SHARED BASE LAYER IS ITSELF A PART — `app-kit` — and it is the configuration `requires` was
-built for.** Nine classes are not any app's: the app protocol `WindowedApp`, the
-toolbar/creator-button family (`ToolbarWdgt`, `ToolbarCreatorButtonWdgt`, `CreatorButtonWdgt` and the
-two mixins they are made of), the tool-panel grid a toolbar lays its buttons out in (`ToolPanelWdgt`
+built for.** Ten classes and a mixin are not any app's: the app protocol `WindowedApp`, the
+toolbar/creator-button family (`ToolbarWdgt`, `ToolbarCreatorButtonWdgt`, `CreatorButtonWdgt`, the base
+`CreatorWdgt` it shares with `GlassBoxTopWdgt`, and `ParentStainerMixin`, which `CreatorWdgt` augments),
+the toolbar's overflow chevron (`OverflowChevronButtonWdgt` and its appearance), the tool-panel grid a toolbar lays its buttons out in (`ToolPanelWdgt`
 and its `GlassBoxTopWdgt` template header), and `SpeechBubbleWdgt`. **Nine** parts DERIVE from them
 across 44 inheritance edges, and eleven declare `requires` (`demos` and `dev-tools` merely
 reference). They sat in `core` for two arcs, and the reason is worth keeping because it is a
@@ -201,7 +202,7 @@ those parts in `optionalParts`, and the icon is drawn behind `canEverProvideClas
 still has a name so that the next door has to choose deliberately.)
 
 ⚠ **A lazy part needs an entry point that CAN await, and not every call site can.** A creator button
-cannot: `WidgetCreatorAndSmartPlacerOnClickMixin.activated` and `Widget.grabbedWidgetSwitcheroo`
+cannot: `CreatorWdgt.activated` and `Widget.grabbedWidgetSwitcheroo`
 both consume `createWidgetToBeHandled()`'s RETURN VALUE synchronously, so there is no seam to defer
 through. The resolution is partition, not cleverness — put the button in the part it creates from
 (`maps` owns `USAMapCreatorButtonWdgt`), so the button's mere EXISTENCE proves its part is loaded and

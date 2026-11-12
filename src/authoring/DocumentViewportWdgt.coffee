@@ -29,7 +29,7 @@ class DocumentViewportWdgt extends VerticalStackViewportWdgt
   receiverOfDropsAroundMe: ->
     @contents
 
-  # Smart-placement protocol (see WidgetCreatorAndSmartPlacerOnClickMixin):
+  # Smart-placement protocol (see CreatorWdgt.activated):
   # the placer routes a creator-button click to a frame's CONTENT --
   # `where.contents.smartPlace` -- and for a DocumentWdgt that content is this
   # viewport: append the click-created widget and scroll it into view. (§5.B: was
