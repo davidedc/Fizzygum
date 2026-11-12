@@ -99,8 +99,7 @@ class ToolTipWdgt extends Widget
       canvasWidget = new Widget
       canvasWidget.__commitWidth @contents.width
       canvasWidget.__commitHeight @contents.height
-      canvasWidget.backBuffer = @contents
-      canvasWidget.backBufferContext = canvasWidget.backBuffer.getContext "2d"
+      canvasWidget.backBuffer = new BackBuffer @contents, @contents.getContext "2d"
       @contentsWidgets = [canvasWidget]
       @_addNoSettle canvasWidget
       slotHeight = canvasWidget.height()

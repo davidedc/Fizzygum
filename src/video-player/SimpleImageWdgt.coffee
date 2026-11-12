@@ -62,14 +62,15 @@ class SimpleImageWdgt extends CanvasWdgt
     @_loadImage @imagePath
     return
 
-  # CanvasWdgt hands me a NEW raster exactly when there was none (I was just built, or restored) or my
-  # size changed, and a new raster is an unpainted one -- so the raster's identity is all I need to know
-  # whether the image is on it.
+  # CanvasWdgt makes me a NEW BackBuffer exactly when there was none (I was just built, or restored) or
+  # my size changed, and a new one does not hold my image (on a resize it holds the old raster copied
+  # onto paper, which I paint over whole) -- so my BackBuffer's identity is all I need to know whether
+  # the image is on it.
   _createRefreshOrGetBackBuffer: ->
     rasterBefore = @backBuffer
-    [@backBuffer, @backBufferContext] = super
+    super
     @_paintImageOnBackBuffer() unless @backBuffer is rasterBefore
-    return [@backBuffer, @backBufferContext]
+    return @backBuffer
 
 
   # Paints my picture on my raster: on every new raster, and once more when the image arrives (step).
@@ -79,7 +80,7 @@ class SimpleImageWdgt extends CanvasWdgt
   _paintImageOnBackBuffer: ->
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
 
-    context = @backBufferContext
+    context = @backBuffer.canvasContext
 
     context.fillStyle = Color.BLACK.toString()
     context.fillRect 0, 0, @extent().x, @extent().y
@@ -109,7 +110,7 @@ class SimpleImageWdgt extends CanvasWdgt
 
   # My raster fills my box — @_paintImageOnBackBuffer draws the image across the whole
   # @width()×@height() — so the pointer question has a constant answer and there is no reason to
-  # pay for BackBufferMixin's per-pixel probe (getPixelColor allocates an ImageData per hover
-  # sample). VideoPlayerCanvasWdgt says the same thing about its frames.
+  # pay for my CanvasAppearance's per-pixel probe (BackBuffer.isPaintedAt allocates an ImageData per
+  # hover sample). VideoPlayerCanvasWdgt says the same thing about its frames.
   catchesPointerAt: (aPoint) ->
     @boundsContainPoint aPoint

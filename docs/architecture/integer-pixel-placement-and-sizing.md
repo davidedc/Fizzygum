@@ -111,7 +111,7 @@ points in §2.
   a pure function of the event stream + final integer bounds. See `Fizzygum-tests/DETERMINISM.md`.
 - **dpr-independence.** Integer *logical* bounds × `ceilPixelRatio` = integer *device* pixels
   at dpr 1 and dpr 2 alike, so the same integer discipline holds at both densities.
-- **Back-buffer alignment.** A widget cached to an offscreen buffer (`BackBufferMixin`) is
+- **Back-buffer alignment.** A widget cached to an offscreen buffer (its `BackBuffer`) is
   blitted at its rounded device origin; integer placement is what lets that blit land on the
   pixel grid (see §5 for the important caveat).
 

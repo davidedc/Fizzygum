@@ -2562,8 +2562,8 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   contract-true black shadow scales all channels alike, while a shadow that re-tints the caster's own colours pulls each
   channel toward its hue (a red tint strays ~14). Assert at least one such pixel per caster, so the check cannot pass
   vacuously. Fixture = one caster per PAINT PATH, since
-  each path enforces the contract separately (Widget.coffee "How the shadow painting works"): coloured text (BackBufferMixin
-  blit), a coloured icon (Appearance scratch-silhouette), the ColorPaletteWdgt (immutable palette buffer). Also assert no
+  each path enforces the contract separately (Widget.coffee "How the shadow painting works"): coloured text (its
+  `BackBuffer`'s blit), a coloured icon (Appearance scratch-silhouette), the ColorPaletteWdgt (immutable palette buffer). Also assert no
   pixel LIGHTENED (> 2 luma) — the ghost-copy failure mode. Born with the 2026-08-03 shadow-colour alignment arc.
 
 ## The verb-establishing pilots

@@ -4,7 +4,7 @@
 #
 # The split is forced, not stylistic: world.cacheForImmutableBackBuffers keys the buffer on class
 # + extent (+ the code a palette holds of its own, PaletteWdgt.createBufferCacheKey), so every
-# palette of the same size draws from ONE canvas and no per-instance mark can ever be painted into it. Hence blit (device space, BackBufferMixin's business) then mark (the
+# palette of the same size draws from ONE canvas and no per-instance mark can ever be painted into it. Hence blit (device space, BackBuffer's business) then mark (the
 # standard logical-pixels local scope) — the same two-layer shape AnalogClockAppearance uses for
 # its cached face plus live hands.
 #
@@ -27,10 +27,15 @@ class PaletteAppearance extends Appearance
   @RING_RADIUS: 4
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-    @widget.blitBackBufferInto aContext, clippingRectangle, appliedShadow
+    BackBuffer.blitOf @widget, aContext, clippingRectangle, appliedShadow
     return if appliedShadow?
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
       @_paintChoiceMark ctx
+
+  # My palette takes the pointer only where its field is painted: the shape is answered per pixel
+  # (BackBuffer.isPaintedAt, TOTAL), as a canvas's is.
+  shapeContainsPoint: (aPoint) ->
+    BackBuffer.isPaintedAt @widget, aPoint
 
   # ONE mark, two renderings, decided by whether the palette can honestly point at the colour.
   _paintChoiceMark: (ctx) ->

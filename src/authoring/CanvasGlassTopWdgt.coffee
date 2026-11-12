@@ -13,8 +13,8 @@ class CanvasGlassTopWdgt extends CanvasWdgt
   # what a person calls me: the surface a drawing is painted on
   colloquialName: -> "paint surface"
 
-  # I clear myself to FULLY TRANSPARENT, so BackBufferMixin's per-pixel answer (which I would
-  # otherwise inherit from CanvasWdgt) is "the pointer is never on me" — and hover would stop
+  # I clear myself to FULLY TRANSPARENT, so my CanvasAppearance's per-pixel answer (which I would
+  # otherwise take, as every CanvasWdgt does) is "the pointer is never on me" — and hover would stop
   # registering the moment the paint surface is clean. My whole box takes the pointer instead:
   # that is what makes me the glass over the canvas. ⚠ It belongs HERE and not in whichever
   # client builds me (ImageWdgt today) — set from outside, a second client, or one dropped line,

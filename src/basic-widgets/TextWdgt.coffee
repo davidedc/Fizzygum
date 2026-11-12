@@ -188,7 +188,7 @@ class TextWdgt extends StringWdgt
       ## You'd also love to cache the bitmap of each paragraph
       ## rather than keeping one huge bitmap.
       ## so this wouldn't be a BackBuffer anymore
-      ## SO you need to REMOVE the mixin from this class.
+      ## SO this class would keep no backBuffer of its own.
       ## cause there would be a paint method and it would
       ## compose the
       ## it would be much better to handle AND in theory
@@ -437,11 +437,11 @@ class TextWdgt extends StringWdgt
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     # A buffer I am not already showing -- a twin's too -- is met reflowed, my wrapping (wrappedLines,
     # wrappedLineSlots) mine for every reader of it, and the caret told: StringWdgt._createRefreshOrGetBackBuffer.
-    return cacheHit if cacheHit? and @backBuffer is cacheHit[0]
+    return @backBuffer if cacheHit? and @backBuffer is cacheHit
 
     contentHeight = @reflowText()
     world.caret?.noteTextChanged()
-    return cacheHit if cacheHit?
+    return @backBuffer = cacheHit if cacheHit?
 
     # FIT_BOX_TO_TEXT paints its text exactly lineCount × linePitch tall at the SET font
     # size (the box was already grown to this, plus my item inset, by _reLayoutSelf; here we
@@ -449,11 +449,11 @@ class TextWdgt extends StringWdgt
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       contentHeight = @wrappedLines.length * @linePitch @originallySetFontSize
 
-    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions()
-    backBufferContext = backBuffer.getContext "2d"
+    canvas = HTMLCanvasElement.createOfPhysicalDimensions()
+    backBufferContext = canvas.getContext "2d"
 
-    backBuffer.width = @width() * ceilPixelRatio
-    backBuffer.height = @height() * ceilPixelRatio
+    canvas.width = @width() * ceilPixelRatio
+    canvas.height = @height() * ceilPixelRatio
 
     @_prepareTextBufferContext backBufferContext
 
@@ -488,9 +488,9 @@ class TextWdgt extends StringWdgt
 
     @drawSelection backBufferContext
 
-    cacheEntry = [backBuffer, backBufferContext]
-    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
-    return cacheEntry
+    @backBuffer = new BackBuffer canvas, backBufferContext
+    world.cacheForImmutableBackBuffers.set cacheKey, @backBuffer
+    return @backBuffer
 
 
   # text widget measuring ////

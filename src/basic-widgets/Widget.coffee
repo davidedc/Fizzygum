@@ -39,13 +39,12 @@ class Widget extends TreeNode
     # loop re-seeds it on first sight (WorldWdgt._runChildrensStepFunction, `lastTime ?=`); the
     # DUPLICATOR copies it, which keeps a throttled clone's cadence in phase with its original.
     "lastTime"
-    # the back-buffer render cache (BackBufferMixin) — rebuilt on demand by
-    # _createRefreshOrGetBackBuffer, so it is never serialized; the restored widget
-    # re-renders it on its first paint. The shadow-silhouette twin follows the same rule. (A DRAWN
-    # CanvasWdgt's raster is no cache but content: CanvasWdgt.drawnRaster holds that same canvas
-    # under a name that rides a save.)
-    "backBuffer", "backBufferContext"
-    "_backBufferShadowSilhouette", "_backBufferShadowSilhouetteSource"
+    # a widget's BackBuffer, its render cache — the canvas, its context and its shadow-silhouette
+    # twin all travel inside it. Rebuilt on demand by _createRefreshOrGetBackBuffer, so it is never
+    # serialized; the restored widget re-renders it on its first paint. (A DRAWN CanvasWdgt's raster
+    # is no cache but content: CanvasWdgt.drawnRaster holds that same canvas under a name that rides
+    # a save.)
+    "backBuffer"
     # (the DERIVED-STATE fields -- every cached<X>/check<X>Cache pair, childrenBoundsUpdatedAt, the
     # island source-lane stash -- are not listed: the serializer skips them by NAME, through
     # Widget.isDerivedStateField below, so a new cache pair needs no line here)
@@ -3074,8 +3073,9 @@ class Widget extends TreeNode
   # These three gates are WIDGET facts — how the widget's own paint is modulated — so they live
   # here; the GEOMETRY of the claim belongs to the shape and lives on the appearance
   # (Appearance.opaqueCoveredRect), beside the paint that creates it. Nothing here needs to test
-  # HOW a widget's paint is routed: a BackBufferMixin consumer blits a buffer of unknown
-  # per-pixel opacity, and the mixin declines the claim for itself.
+  # HOW a widget's paint is routed: a widget that blits its BackBuffer paints pixels of unknown
+  # opacity, and its appearance declines the claim (CanvasAppearance, PaletteAppearance) — a text,
+  # wearing none, makes none.
   opaqueCoveredRect: ->
     # ephemeral overlays (highlights, drag affordances) are translucent screen-toppers, never coverers
     return undefined if @isEphemeral()
@@ -3120,7 +3120,7 @@ class Widget extends TreeNode
   # proportionally fainter shadow (appliedShadow.alpha × its alpha), glyph AA edges
   # shade proportionally, a hole casts nothing. Every paint leaf honours the
   # contract by the cheapest correct means: appearances that control their fills
-  # swap them to Theme.shadowColor under appliedShadow; buffer blits (BackBufferMixin,
+  # swap them to Theme.shadowColor under appliedShadow; buffer blits (BackBuffer.blitInto,
   # the island composite) blit a cached black-silhouette twin
   # (HTMLCanvasElement.blackSilhouetteOf); arbitrary-coloured art (icons, the
   # clock) renders to a scratch and blits its silhouette

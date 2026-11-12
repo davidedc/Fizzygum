@@ -2,8 +2,8 @@
 'use strict';
 // check-back-buffer-memos.js — build gate: A WIDGET KEEPS NO MEMO OF ITS BACK BUFFER.
 //
-// A widget's back buffer is a Widget serialization transient (`backBuffer`/`backBufferContext` in
-// Widget's @serializationTransients): on almost every widget it is a render cache the next paint
+// A widget's back buffer is a Widget serialization transient (`backBuffer` in Widget's
+// @serializationTransients): on almost every widget it is a render cache the next paint
 // re-derives, so it never rides a save. A field that records what was painted INTO it — "the size I
 // last painted my image at", "the background is already laid" — describes that transient, and if the
 // field itself rides the save, the restored widget meets a fresh, unpainted raster together with a

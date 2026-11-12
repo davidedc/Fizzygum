@@ -15,9 +15,13 @@
 # drawnRaster.
 
 class CanvasWdgt extends PanelWdgt
-  @augmentWith BackBufferMixin
 
-  # MY DRAWN RASTER: the very canvas object BackBufferMixin holds as my backBuffer, held a second time
+  # my raster as a BackBuffer -- its canvas the same one drawnRaster names when I hold a drawing.
+  # Kept by _createRefreshOrGetBackBuffer, which makes a NEW one whenever it makes or adopts a canvas;
+  # a serialization transient (Widget's list).
+  backBuffer: undefined
+
+  # MY DRAWN RASTER: the very canvas object my backBuffer holds, held a second time
   # under a name that rides a save. On every other widget backBuffer is a RENDER CACHE, re-derived on
   # demand after a restore, so Widget declares it a serialization transient (and a subclass can only
   # add to that list, never drop from it); a drawn raster is CONTENT, so it is also held here, where
@@ -28,6 +32,15 @@ class CanvasWdgt extends PanelWdgt
   # through drawLine or clear.
   # saved-content: once a pen has drawn on me this raster is the drawing's only copy
   drawnRaster: undefined
+
+  constructor: ->
+    super()
+    @appearance = @createAppearance()
+
+  # I wear a CanvasAppearance in place of the panel's RectangularAppearance: my raster is my paint,
+  # my shape and my (absent) coverage claim, and the rectangular answers it extends stay mine for
+  # everything else, my border first.
+  createAppearance: -> new CanvasAppearance @
 
   # The paper I lay my raster on while I hold no colour of my own -- like every panel I hold none until
   # one is set on me (the soft hook a surface that wears a role answers: RectangularAppearance
@@ -64,55 +77,57 @@ class CanvasWdgt extends PanelWdgt
     # a canvas restored from a file or a snapshot comes back holding its drawn raster and no back
     # buffer (that one is a transient): the drawing IS the back buffer, at my pixel scaling
     if !@backBuffer? and @drawnRaster?
-      @backBuffer = @drawnRaster
-      @backBufferContext = @backBuffer.getContext "2d"
-      @backBufferContext.setTransform 1, 0, 0, 1, 0, 0
-      @backBufferContext.useLogicalPixelsUntilRestore()
+      context = @drawnRaster.getContext "2d"
+      context.setTransform 1, 0, 0, 1, 0, 0
+      context.useLogicalPixelsUntilRestore()
+      @backBuffer = new BackBuffer @drawnRaster, context
 
     if @backBuffer?
-      # @backBuffer.width and @backBuffer.height are already in
+      # my BackBuffer's canvas width and height are already in
       # physical coordinates so no need to adjust for pixelratio
-      backBufferExtent = new Point @backBuffer.width, @backBuffer.height
+      backBufferExtent = new Point @backBuffer.canvas.width, @backBuffer.canvas.height
       if backBufferExtent.equals extent.scaleBy ceilPixelRatio
-        return [@backBuffer, @backBufferContext]
+        return @backBuffer
       else
 
         original_backBuffer = @backBuffer
 
         # make a new canvas of the new size
-        @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
-        @backBufferContext = @backBuffer.getContext "2d"
+        canvas = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
+        context = canvas.getContext "2d"
 
         # paint the background over it all so there are
         # no holes in the new area (if the canvas is being
         # enlarged).
         paper = @color ? @_surfaceFill()
         if paper?
-          @backBufferContext.fillStyle = paper.toString()
-          @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
+          context.fillStyle = paper.toString()
+          context.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
         # copy back the original canvas in the new one.
-        @backBufferContext.drawImage original_backBuffer, 0, 0
-        
+        context.drawImage original_backBuffer.canvas, 0, 0
+
         # we leave the context with the correct pixel scaling.
         # ALWAYS leave the context with the correct pixel scaling.
-        @backBufferContext.useLogicalPixelsUntilRestore()
+        context.useLogicalPixelsUntilRestore()
+        @backBuffer = new BackBuffer canvas, context
         # the drawing moved to the new raster with the copy above
-        @drawnRaster = @backBuffer if @drawnRaster?
-        return [@backBuffer, @backBufferContext]
+        @drawnRaster = @backBuffer.canvas if @drawnRaster?
+        return @backBuffer
 
-    @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
-    @backBufferContext = @backBuffer.getContext "2d"
+    canvas = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
+    context = canvas.getContext "2d"
 
     paper = @color ? @_surfaceFill()
     if paper?
-      @backBufferContext.fillStyle = paper.toString()
-      @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
+      context.fillStyle = paper.toString()
+      context.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.useLogicalPixelsUntilRestore()
-    return [@backBuffer, @backBufferContext]
+    context.useLogicalPixelsUntilRestore()
+    @backBuffer = new BackBuffer canvas, context
+    return @backBuffer
 
 
   # The default is spelled with `if … then … else` rather than the `@color ? …` existence operator:
@@ -121,27 +136,26 @@ class CanvasWdgt extends PanelWdgt
   # leak a page-wide `ref` global (check-coffee-syntax.js fails a member that loses a name that way).
   clear: (color = (if @color? then @color else @_surfaceFill())) ->
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
-    # @backBuffer.width and @backBuffer.height are already in
+    # my BackBuffer's canvas width and height are already in
     # physical coordinates so no need to adjust for pixelratio
-    backBufferExtent = new Point @backBuffer.width, @backBuffer.height
-    
+    backBufferExtent = new Point @backBuffer.canvas.width, @backBuffer.canvas.height
+
     # just in case we get a dirty transformation matrix:
     # set it to the identity.
-    @backBufferContext.setTransform(1, 0, 0, 1, 0, 0)
+    @backBuffer.canvasContext.setTransform(1, 0, 0, 1, 0, 0)
     # no need to scale here because we get the physical pixels
     # in backBufferExtent
-    #@backBufferContext.useLogicalPixelsUntilRestore()
-    
-    @backBufferContext.fillStyle = color.toString()
-    @backBufferContext.fillRect 0, 0, backBufferExtent.x, backBufferExtent.y
+    #@backBuffer.canvasContext.useLogicalPixelsUntilRestore()
+
+    @backBuffer.canvasContext.fillStyle = color.toString()
+    @backBuffer.canvasContext.fillRect 0, 0, backBufferExtent.x, backBufferExtent.y
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.useLogicalPixelsUntilRestore()
-    @drawnRaster = @backBuffer
-    # the raster mutated in place, so the shadow-silhouette twin is stale (the mixin's
-    # identity check cannot see an in-place change)
-    @_backBufferShadowSilhouette = undefined
+    @backBuffer.canvasContext.useLogicalPixelsUntilRestore()
+    @drawnRaster = @backBuffer.canvas
+    # the raster mutated in place, so its shadow-silhouette twin is stale
+    @backBuffer.noteRasterChanged()
     @_changed()
 
   # The pen ASKS the canvas (PenWdgt.forward is the sole caller): a line primitive
@@ -153,7 +167,7 @@ class CanvasWdgt extends PanelWdgt
   drawLine: (start, dest, lineWidth, color) ->
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
 
-    context = @backBufferContext
+    context = @backBuffer.canvasContext
     # the line is in my logical pixels, so the context must scale by the pixel ratio -- and a copy's
     # does not: the Duplicator rebuilds a derived context straight off the copied canvas (a fresh,
     # unscaled one), so at a ratio above 1 a copy would take every line at a fraction of its size
@@ -170,9 +184,8 @@ class CanvasWdgt extends PanelWdgt
     context.moveTo from.x, from.y
     context.lineTo to.x, to.y
     context.stroke()
-    @drawnRaster = @backBuffer
-    # the raster mutated in place, so the shadow-silhouette twin is stale (the mixin's
-    # identity check cannot see an in-place change)
-    @_backBufferShadowSilhouette = undefined
+    @drawnRaster = @backBuffer.canvas
+    # the raster mutated in place, so its shadow-silhouette twin is stale
+    @backBuffer.noteRasterChanged()
     @_changed()
   

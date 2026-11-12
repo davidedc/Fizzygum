@@ -53,7 +53,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
 
       applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
-          context = @backBufferContext
+          context = @backBuffer.canvasContext
           context.setTransform 1, 0, 0, 1, 0, 0
           context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
           context.useLogicalPixelsUntilRestore()
@@ -96,7 +96,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
 
       applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
-          context = @backBufferContext
+          context = @backBuffer.canvasContext
           context.setTransform 1, 0, 0, 1, 0, 0
           context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
           context.useLogicalPixelsUntilRestore()
@@ -285,7 +285,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
 
       applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
-          context = @backBufferContext
+          context = @backBuffer.canvasContext
           context.setTransform 1, 0, 0, 1, 0, 0
           context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
           context.useLogicalPixelsUntilRestore()
@@ -338,7 +338,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
 
       applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
-          context = @backBufferContext
+          context = @backBuffer.canvasContext
           context.setTransform 1, 0, 0, 1, 0, 0
           context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
           context.useLogicalPixelsUntilRestore()

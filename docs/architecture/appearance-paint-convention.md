@@ -111,12 +111,11 @@ back-ref checks) stay in the caller, before the scope call.
 - **The analog clock** (`AnalogClockAppearance`): the same kind of work — its face, marks and hands
   are whole device pixels whose parity matches the face's centre (`pixelsForUnits`), so a hand is the
   same width pointing every way — in its own device-space preamble, anchored at the widget origin.
-- **Blits are preamble business**: `BackBufferMixin`'s buffer blit (named `blitBackBufferInto`, so
-  an appearance can compose it). `PaletteAppearance` is a two-layer shape over the mixin's blit: a cached
+- **Blits are preamble business**: a back-buffered widget's blit (`BackBuffer.blitOf`, named so
+  an appearance can compose it). `PaletteAppearance` is a two-layer shape over that blit: a cached
   buffer is keyed on class + extent (+ the code a widget holds of its own) and therefore SHARED, so anything per-instance — a palette's
   choice marker — has to be drawn live on top, and that half rides the scope. Such an appearance
-  keeps its own entry (it calls the blit before opening the scope) and its widget defines
-  `paintIntoAreaOrBlitFromBackBuffer` as the plain delegation, to un-shadow the mixin's member.
+  keeps its own entry (it calls the blit before opening the scope).
 - **Pattern fills**: a `CanvasPattern` anchors to the coordinate space — under the scope's CTM
   the tile would scale with the dpr and its phase would follow the translate.
   `DesktopAppearance._paintBackgroundPatternFill` therefore runs AFTER the scope closes, in

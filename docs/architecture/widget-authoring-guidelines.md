@@ -327,14 +327,12 @@ widget that reads it to repaint (`noteShownSelectionChanged`), since it cannot i
 itself.
 
 **A cached raster cannot carry anything per-instance — draw that half live, on top.** [convention]
-`BackBufferMixin` buffers are keyed on class + extent (+ the code a widget holds of its own,
-`Widget._ownCodeKeySuffix`), so widgets of the same class and size share
-one canvas (`world.cacheForImmutableBackBuffers`); nothing that differs between two such widgets can
-be painted into it. The shape is two layers in one appearance: `@widget.blitBackBufferInto` for the
+A cached `BackBuffer` is keyed on what its pixels are a function of (`createBufferCacheKey`) — for
+a palette, class + extent (+ the code a widget holds of its own, `Widget._ownCodeKeySuffix`), so palettes
+of the same class and size share one canvas (`world.cacheForImmutableBackBuffers`); nothing that differs
+between two such widgets can be painted into it. The shape is two layers in one appearance: `BackBuffer.blitOf @widget, …` for the
 cached half, in device space, then the per-instance half inside `_paintInLocalScope`. `PaletteWdgt`
-is the one widget on that shape today: its choice marker rides over the shared colour field, and it
-defines `paintIntoAreaOrBlitFromBackBuffer` as the plain delegation to `@appearance`, purely to
-un-shadow the mixin's own member — a class-body member out-ranks a mixin's. ⚠ Anything the live half
+is the one widget on that shape today: its choice marker rides over the shared colour field. ⚠ Anything the live half
 draws INSIDE the buffer's opaque footprint adds no coverage, so skip it on the shadow pass rather
 than paying for a silhouette that cannot differ.
 

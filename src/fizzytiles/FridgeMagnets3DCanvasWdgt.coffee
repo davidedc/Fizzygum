@@ -63,7 +63,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
       @graphicsCode = compilation.program
 
   # My raster is content; my BORDER is chrome, the fizzytiles3DPaneStroke role, read as it is
-  # painted (_surfaceStroke, which my RectangularAppearance asks while I hold no stroke colour of my
+  # painted (_surfaceStroke, which my CanvasAppearance's rectangular border asks while I hold no stroke colour of my
   # own -- like every panel I hold none), so a pane saved, loaded or duplicated wears the look of the
   # world it is shown in.
   constructor: ->
@@ -125,8 +125,8 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # at the pane's PHYSICAL pixel size. Sized to the back-buffer's own dimensions
   # (already physical integers) so the putImageData blit maps 1:1.
   _ensureEngine: ->
-    physW = @backBuffer.width
-    physH = @backBuffer.height
+    physW = @backBuffer.canvas.width
+    physH = @backBuffer.canvas.height
     return if @surface? and @surface.width == physW and @surface.height == physH
     @_keepTransient "surface", window.SWCanvas.Core.Surface physW, physH
     @_keepTransient "depth", new window.SWCanvas.Core.DepthBuffer physW, physH
@@ -175,9 +175,9 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
     # Blit the physical RGBA surface onto the (physical) back-buffer: identity
     # transform for the raw pixels, then restore logical-pixel scaling. ALWAYS
     # leave the context with the correct pixel scaling.
-    @backBufferContext.setTransform 1, 0, 0, 1, 0, 0
-    @backBufferContext.putImageData @imageData, 0, 0
-    @backBufferContext.useLogicalPixelsUntilRestore()
+    @backBuffer.canvasContext.setTransform 1, 0, 0, 1, 0, 0
+    @backBuffer.canvasContext.putImageData @imageData, 0, 0
+    @backBuffer.canvasContext.useLogicalPixelsUntilRestore()
 
   # ---- LCL primitives -------------------------------------------------------
 

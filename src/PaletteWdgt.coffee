@@ -12,7 +12,9 @@
 
 class PaletteWdgt extends ControllerWdgt
 
-  @augmentWith BackBufferMixin
+  # my colour field's BackBuffer, shared with every palette of my class, size and own code -- kept
+  # by _createRefreshOrGetBackBuffer, and a serialization transient (Widget's list)
+  backBuffer: undefined
 
   # The colour picked through me, and undefined until one IS — a real state, not a gap: `bang`
   # declines to fire without a choice, reactToTargetConnection deliberately fires nothing on
@@ -43,13 +45,6 @@ class PaletteWdgt extends ControllerWdgt
   # `new PaletteAppearance` edge — and so a subclass whose map wants a different MARK (a 1-D strip
   # would read better with a bar than with a ring) can say so in one line.
   createAppearance: -> new PaletteAppearance @
-
-  # BackBufferMixin's own paint would blit and stop, and I need the blit PLUS my choice marker on
-  # top — so route back to the plain appearance delegation (this is Widget's body; the mixin's
-  # member shadows it, and a class-body member out-ranks a mixin's). PaletteAppearance then
-  # composes the two, calling blitBackBufferInto for the device-space half.
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-    @appearance?.paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
   # subclass overrides this only if it wants a size other than the default
   defaultSize: -> new Point 80, 50
@@ -87,17 +82,17 @@ class PaletteWdgt extends ControllerWdgt
     cacheKey = @createBufferCacheKey()
 
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit? then return cacheHit
+    if cacheHit? then return @backBuffer = cacheHit
 
     extent = @extent()
-    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
-    backBufferContext = backBuffer.getContext "2d"
+    canvas = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
+    backBufferContext = canvas.getContext "2d"
     backBufferContext.useLogicalPixelsUntilRestore()
     @fillPaletteBuffer backBufferContext, extent
 
-    cacheEntry = [backBuffer, backBufferContext]
-    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
-    return cacheEntry
+    @backBuffer = new BackBuffer canvas, backBufferContext
+    world.cacheForImmutableBackBuffers.set cacheKey, @backBuffer
+    return @backBuffer
 
   # I am CHROME: a drag that starts on me sweeps my colours to pick one, which is the only thing I am
   # for, and nothing competes for it. The hand asks this of a press's ancestry
@@ -107,7 +102,7 @@ class PaletteWdgt extends ControllerWdgt
 
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
     # Affine transforms (§6 R4 audit tail): map the drag sample point into MY plane before reading the
-    # pixel. getPixelColor does aPoint.toLocalCoordinatesOf @ and samples my OWN un-rotated backbuffer, so
+    # pixel. BackBuffer.pixelColorOf does aPoint.toLocalCoordinatesOf me and samples my OWN un-rotated backbuffer, so
     # it needs a point in my (virtual) plane; ActivePointerWdgt passes `pos` RAW (screen), so for a palette
     # inside a non-identity island the un-mapped sample reads the WRONG pixel (often out of the backbuffer ⇒
     # transparent). pressBegan is fine (click dispatch plane-maps via _pointerPositionInPlaneOf); only the
@@ -133,7 +128,7 @@ class PaletteWdgt extends ControllerWdgt
   #   The repaint IS mine to ask for: my buffer is immutable, so the marker is the only thing on
   # screen a pick moves.
   _rememberColorPickedAt: (pointInMyPlane) ->
-    picked = @getPixelColor pointInMyPlane
+    picked = BackBuffer.pixelColorOf @, pointInMyPlane
     if picked.isFullyTransparent() then return undefined
     @choice = picked
     @_changed()

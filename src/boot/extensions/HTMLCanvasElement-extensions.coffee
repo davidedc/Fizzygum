@@ -46,7 +46,7 @@ HTMLCanvasElement.blackenIntoSilhouetteInPlace = (canvas, shadowColor) ->
 
 # A NEW canvas holding the black silhouette of `sourceCanvas` (which is left
 # untouched) — for shadow passes that blit an existing buffer (island buffers,
-# BackBufferMixin back buffers) rather than re-painting art.
+# a widget's BackBuffer) rather than re-painting art.
 HTMLCanvasElement.blackSilhouetteOf = (sourceCanvas, shadowColor) ->
   sil = HTMLCanvasElement.createOfPhysicalDimensions new Point sourceCanvas.width, sourceCanvas.height
   sil.getContext("2d").drawImage sourceCanvas, 0, 0

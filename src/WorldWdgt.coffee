@@ -152,8 +152,9 @@ class WorldWdgt extends IconGridPanelWdgt
   cacheForTextWrappingData: undefined
   cacheForTextBreakingIntoLinesTopLevel: undefined
 
-  # the island back-buffer cache: rendered buffers of transform islands whose content is
-  # unchanged, keyed by immutableBackBufferGeneration. Sized like the text caches above.
+  # the shared BackBuffers of texts and palettes, keyed by their content (each class's
+  # createBufferCacheKey: everything the buffer's pixels are a function of), so every text or
+  # palette drawn the same blits one buffer. Sized like the text measurement cache above.
   cacheForImmutableBackBuffers: undefined
 
   # By default the world will always fill

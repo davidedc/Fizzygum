@@ -524,7 +524,7 @@ say "damage"; "dirty" names layout invalidation and nothing else — the vocabul
 - `Widget._changed()` invalidates just this widget's rectangle; `Widget._fullChanged()` invalidates it plus its subtree.
 - `WorldWdgt._repaintDamagedRects()` repaints the accumulated damage rectangles once per frame, at the tail of
   `doOneCycle`, against already-settled geometry.
-- Widgets opting into `BackBufferMixin` (`src/mixins/BackBufferMixin.coffee`) cache themselves to an offscreen canvas;
+- A text, a palette and a canvas keep their picture in a `BackBuffer` (`src/basic-widgets/BackBuffer.coffee`), an offscreen canvas they blit;
   pluggable `*Appearance` objects do the drawing. (Integer placement is *necessary but not sufficient* for a back
   buffer to be byte-identical to a direct draw — see the integer-placement doc.)
 

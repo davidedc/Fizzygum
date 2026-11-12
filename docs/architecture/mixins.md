@@ -251,17 +251,16 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (5 mixins, 363 L, 18 consumer slots across 13 files, counted 2026-11-12; the rows as verified 2026-08-18)
+## 3. Inventory (4 mixins, 185 L, 15 consumer slots across 10 files, counted 2026-11-12; the rows as verified 2026-08-18)
 
-Three live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
-in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 18 is the
-sum of the per-mixin consumer counts below, spread over 13 distinct files: `CreatorButtonWdgt` and
+Two live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
+in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 15 is the
+sum of the per-mixin consumer counts below, spread over 10 distinct files: `CreatorButtonWdgt` and
 `GlassBoxTopWdgt` take three each, and `EditorContentPropertyChangerButtonWdgt` takes two.
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
 | `HighlightableMixin` | 54 | 6 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
-| `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `VerticalStackViewportWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ViewportWdgt`) | unrelated branches (Viewport / Panel / Widget) | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
 | `ParentStainerMixin` |       28 | 4 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt`, `GlassBoxTopWdgt` (a thumbnail's lid), `CodeInjectingSimpleRectangularButtonWdgt` (a paint tool): a toolbar tool tells the tool cell it stands in that its pointer state changed (`GlassBoxBottomWdgt.noteItemStateChanged`), and the cell derives its own look | unrelated leaves | no |
@@ -269,8 +268,11 @@ sum of the per-mixin consumer counts below, spread over 13 distinct files: `Crea
 (The count excludes those that no longer exist as mixins: dead `ContainerMixin`, deleted;
 the five misfiled ones, folded into standard-OO homes — §4; `DeepCopierMixin`, inverted
 into the `Duplicator` engine (`src/duplication/`) — §5-C; and the clipping, the ratio-keeping
-and the controller ones, now the base classes `ClippingWdgt`, `RatioLockedWdgt` and `ControllerWdgt`
-(`plans/mixin-removal-plan.md`).
+and the controller ones, now the base classes `ClippingWdgt`, `RatioLockedWdgt` and `ControllerWdgt`;
+and the back-buffer one, now a plain object each back-buffered widget holds — a `BackBuffer`, which
+owns the canvas, its context, its shadow twin, the blit and the pixel read — with a palette and a
+canvas answering paint, hit and coverage through their appearances (`PaletteAppearance`,
+`CanvasAppearance`) and a text through one line (`plans/mixin-removal-plan.md`).
 `RatioLockedWdgt`'s deliberate non-subclasses are `Example3DPlotWdgt` and
 `StretchableWidgetContainerWdgt`, which carry pinned-`@ratio` variants of its protocol (field-based,
 super-fallback): do not re-parent them onto it. `Mixin.allMixines` is load-bearing for the inspector.)
@@ -279,9 +281,7 @@ super-fallback): do not re-parent them onto it. `Mixin.allMixines` is load-beari
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core — all 5 current mixins):** `HighlightableMixin` (input-hook state machine across ≥4 branches),
-  `BackBufferMixin` (paint-path override; load-bearing for the unified shadow mechanism
-  — the blit at α is WHY a transparent text widget's shadow is its glyphs),
+- **Genuine (the keep-core — all 4 current mixins):** `HighlightableMixin` (input-hook state machine across ≥4 branches),
   `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
   bubbling to a coordinating parent, across Viewport/Panel/Widget branches),
   `WidgetCreatorAndSmartPlacerOnClickMixin` (barely — 2 unrelated leaves), `ParentStainerMixin`

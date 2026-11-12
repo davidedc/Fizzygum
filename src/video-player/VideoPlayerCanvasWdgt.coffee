@@ -23,12 +23,12 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
   @serializationTransients: ["video"]
 
   _createRefreshOrGetBackBuffer: ->
-    [@backBuffer, @backBufferContext] = super
+    super
     # TODO we don't actually need to put the current video frame on the backbuffer
     # every time this widget needs to draw itself (e.g. because something is being moved
     # briefly over it). We should just draw the backbuffer as is.
     @_paintNewFrame()
-    return [@backBuffer, @backBufferContext]
+    return @backBuffer
 
   constructor: (videoPath = "videos/big-buck-bunny_trailer.webm") ->
     super
@@ -102,21 +102,21 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
     # cache (the back buffer is a Widget serialization transient), so a "background already laid" memo
     # would ride a save that the raster does not, and a restored player would show its paper in the
     # letterbox. One fillRect costs less than the frame drawn over it.
-    @backBufferContext?.fillStyle = "black"
-    @backBufferContext?.fillRect 0, 0, @width(), @height()
+    @backBuffer?.canvasContext.fillStyle = "black"
+    @backBuffer?.canvasContext.fillRect 0, 0, @width(), @height()
 
     # paint the frame so that it is fully contained in the canvas
     # and also centered
     # TODO id: FACTOR_OUT_BOUNDS_WITHIN_BOUNDS_WITH_SPECIFIED_RATIO date: 6-May-2023
     if frameWidthKeepingRatioBasedOnHeight <= @width()
-      @backBufferContext?.drawImage(@video, Math.floor((@width() - frameWidthKeepingRatioBasedOnHeight)/2), 0, frameWidthKeepingRatioBasedOnHeight, @height());
+      @backBuffer?.canvasContext.drawImage(@video, Math.floor((@width() - frameWidthKeepingRatioBasedOnHeight)/2), 0, frameWidthKeepingRatioBasedOnHeight, @height());
     else
-      @backBufferContext?.drawImage(@video, 0, Math.floor((@height() - frameHeightKeepingRatioBasedOnWidth)/2), @width(), frameHeightKeepingRatioBasedOnWidth);
+      @backBuffer?.canvasContext.drawImage(@video, 0, Math.floor((@height() - frameHeightKeepingRatioBasedOnWidth)/2), @width(), frameHeightKeepingRatioBasedOnWidth);
 
 
 
   # A video frame fills my box (the drawImage above spans @width()/@height(), letterboxing
   # inside it), so the pointer question has a constant answer and there is no reason to pay for
-  # BackBufferMixin's per-pixel probe. SimpleImageWdgt says the same thing about its image.
+  # my CanvasAppearance's per-pixel probe. SimpleImageWdgt says the same thing about its image.
   catchesPointerAt: (aPoint) ->
     @boundsContainPoint aPoint

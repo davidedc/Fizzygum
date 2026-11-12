@@ -75,9 +75,10 @@ of the world, so it *is* asked. It overrides back to `undefined`. `DesktopAppear
 (a wallpaper tile sits *on* the full fill), as `MenuAppearance` does the boxy one;
 `SimpleDropletAppearance` (a rounded well) claims nothing.
 
-ⓘ The `BackBufferMixin` consumers (`StringWdgt`, `CanvasWdgt`, `PaletteWdgt` and their subclasses)
-blit an offscreen buffer of unknown per-pixel opacity: the mixin answers `undefined` for itself, so
-nothing at the widget layer has to test how a widget's paint is routed. Every other class that
+ⓘ The back-buffered widgets (`StringWdgt`, `CanvasWdgt`, `PaletteWdgt` and their subclasses) blit
+an offscreen buffer of unknown per-pixel opacity and claim nothing: a text has no appearance, and a
+palette's and a canvas's (`PaletteAppearance`, `CanvasAppearance`) answer `undefined`, so nothing at
+the widget layer has to test how a widget's paint is routed. Every other class that
 draws arbitrary pixels — `HandleWdgt`, `LayoutChromeWdgt`, `LabelButtonWdgt`, `PenWdgt`,
 `CellWdgt`, `SheetHeaderCellWdgt`, `AnalogClockWdgt`, `Example3DPlotWdgt`,
 `GraphsPlotsChartsWdgt` — does so through its own `*Appearance` subclass, which takes the base's

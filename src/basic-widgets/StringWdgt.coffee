@@ -19,13 +19,19 @@
 
 class StringWdgt extends ControllerWdgt
 
-  @augmentWith BackBufferMixin
+  # my picture's BackBuffer, shared with every text drawn the same -- kept by
+  # _createRefreshOrGetBackBuffer, and a serialization transient (Widget's list)
+  backBuffer: undefined
+
+  # A text has no appearance: its paint is its buffer.
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+    BackBuffer.blitOf @, aContext, clippingRectangle, appliedShadow
 
   # CLICKING TEXT MEANS CLICKING THE LINE, not the strokes — so my whole box takes the pointer,
-  # un-shadowing BackBufferMixin's per-pixel probe (a class-body member out-ranks a mixin's).
+  # never the per-pixel test a canvas or a palette answers with (BackBuffer.isPaintedAt).
   # This is not a nicety: 97% of a string's box is ink-free (measured on a 50×40 StringWdgt —
-  # 1946 of 2000 px), so per-pixel hit-testing would make text clickable only between the
-  # letters' own strokes, and dropping this would silently do exactly that.
+  # 1946 of 2000 px), so per-pixel hit-testing would make text clickable only on the
+  # letters' own strokes.
   #   Dressed as an ITEM (THE ITEM SHAPE, below) my box is a rounded block, pressed as a whole, and
   # it takes the pointer where its fill is: a logical pixel is mine iff its centre lies inside the
   # rounded outline (BoxyAppearance.roundedBoxContainsPixelCentreOf, the one rounded hit test), so a
@@ -1103,12 +1109,12 @@ class StringWdgt extends ControllerWdgt
     # of my key: everything the pixels are a function of), whose reflow ran on the twin and never on me -- is
     # met reflowed, so my fit and my crop are mine for every reader of them (slotAt, slotCoordinates, the
     # caret), and the caret is told, since the text it sits on changed.
-    return cacheHit if cacheHit? and @backBuffer is cacheHit[0]
+    return @backBuffer if cacheHit? and @backBuffer is cacheHit
 
     # public-call-sanctioned: reflowText is macro-called public text API (see _sizeToTextAndDisableFittingInMyParentsArrangeNoSettle).
     @reflowText()
     world.caret?.noteTextChanged()
-    return cacheHit if cacheHit?
+    return @backBuffer = cacheHit if cacheHit?
 
     text = @textPossiblyCroppedToFit
     # Initialize my surface property.
@@ -1136,9 +1142,9 @@ class StringWdgt extends ControllerWdgt
       width = widthOfText
       height = heightOfText
 
-    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions (new Point width, height).scaleBy ceilPixelRatio
+    canvas = HTMLCanvasElement.createOfPhysicalDimensions (new Point width, height).scaleBy ceilPixelRatio
 
-    backBufferContext = backBuffer.getContext "2d"
+    backBufferContext = canvas.getContext "2d"
 
     @_prepareTextBufferContext backBufferContext
 
@@ -1163,9 +1169,9 @@ class StringWdgt extends ControllerWdgt
 
     @drawSelection backBufferContext
 
-    cacheEntry = [backBuffer, backBufferContext]
-    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
-    return cacheEntry
+    @backBuffer = new BackBuffer canvas, backBufferContext
+    world.cacheForImmutableBackBuffers.set cacheKey, @backBuffer
+    return @backBuffer
 
   # Draw the selection. This is done by re-drawing the
   # selected text, one character at the time, just with

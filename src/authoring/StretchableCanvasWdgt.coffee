@@ -52,22 +52,22 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # just clean up the small canvas
     paper = @color ? @_surfaceFill()
     if !@anythingPaintedYet and paper?
-      @backBufferContext.fillStyle = paper.toString()
-      @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
+      @backBuffer.canvasContext.fillStyle = paper.toString()
+      @backBuffer.canvasContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
     # if something *has* been painted then
     # we need to paint the "behind the scenes" buffer into the
     # one we show on screen
     if @anythingPaintedYet
-      @backBufferContext.setTransform 1, 0, 0, 1, 0, 0
-      @backBufferContext.scale @width()/@extentWhenCanvasGotDirty.x, @height()/@extentWhenCanvasGotDirty.y
-      @backBufferContext.drawImage @behindTheScenesBackBuffer, 0, 0
+      @backBuffer.canvasContext.setTransform 1, 0, 0, 1, 0, 0
+      @backBuffer.canvasContext.scale @width()/@extentWhenCanvasGotDirty.x, @height()/@extentWhenCanvasGotDirty.y
+      @backBuffer.canvasContext.drawImage @behindTheScenesBackBuffer, 0, 0
 
     
     # we leave the context with the correct pixel scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.useLogicalPixelsUntilRestore()
-    return [@backBuffer, @backBufferContext]
+    @backBuffer.canvasContext.useLogicalPixelsUntilRestore()
+    return @backBuffer
 
 
   # don't need this at the moment, you'd need to
@@ -101,13 +101,14 @@ class StretchableCanvasWdgt extends CanvasWdgt
       @behindTheScenesBackBufferContext.useLogicalPixelsUntilRestore()
 
   _createNewFrontFacingBuffer: (extent) ->
-    @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
-    @backBufferContext = @backBuffer.getContext "2d"
+    canvas = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
+    context = canvas.getContext "2d"
 
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.useLogicalPixelsUntilRestore()
+    context.useLogicalPixelsUntilRestore()
+    @backBuffer = new BackBuffer canvas, context
 
 
   # Reconcile my paint buffers to the COMMITTED extent on every real resize (the schedule-valve
@@ -118,7 +119,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
   _reLayoutSelf: ->
     super
     targetPhysicalExtent = @extent().scaleBy ceilPixelRatio
-    unless @backBuffer? and @backBuffer.width == targetPhysicalExtent.x and @backBuffer.height == targetPhysicalExtent.y
+    unless @backBuffer? and @backBuffer.canvas.width == targetPhysicalExtent.x and @backBuffer.canvas.height == targetPhysicalExtent.y
       if !@behindTheScenesBackBuffer? or !@anythingPaintedYet
         @_createNewBehindTheScenesBuffer @extent()
       @_createNewFrontFacingBuffer @extent()
