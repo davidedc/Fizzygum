@@ -152,8 +152,8 @@ class Theme
     @barToggleKnob = @paper
     @barToggleKnobGlyph = @ink
     # the ink of an ICON BUTTON's glyph that no strip inks (an IconButtonWdgt standing on its own: the
-    # demo's close icon, a pointer's close button), read at each of its state changes
-    # (IconButtonWdgt._updateColor): at rest, and while it is hovered or pressed. A strip inks the
+    # demo's close icon, a pointer's close button), read as it is painted
+    # (IconButtonWdgt._fillForMyState): at rest, and while it is hovered or pressed. A strip inks the
     # glyphs it carries itself, with the bar glyph roles above (IconButtonWdgt.setGlyphInk).
     @iconButtonGlyph = @muted
     @iconButtonGlyphActive = @ink
@@ -345,11 +345,10 @@ class Theme
     @chipCurrentFill = @accentTint
     @chipCurrentStroke = @accent
     @chipCurrentText = @accent
-    # a PLAIN button -- one with no look of its own that wears HighlightableMixin's state colours: a
-    # bare ButtonWdgt given an appearance, a SimpleRectangularButtonWdgt (the demo's simple button and
-    # the demo switch's buttons) -- the button's look (visual-design-system §4.3): its fill at rest,
-    # hovered and pressed, re-derived at each state change (HighlightableMixin._updateColor). A colour
-    # set on the mixin's own state fields (color_normal / color_hover / color_pressed) wins over these.
+    # a PLAIN button -- one with no look of its own, which wears ButtonWdgt's state fills: a bare
+    # ButtonWdgt given an appearance, a SimpleRectangularButtonWdgt (the demo's simple button and the
+    # demo switch's buttons) -- the button's look (visual-design-system §4.3): its fill at rest,
+    # hovered and pressed, read as it is painted (ButtonWdgt._fillForMyState).
     @plainButtonFill = @paper
     @plainButtonHoverFill = @desk
     @plainButtonPressFill = @chrome
@@ -472,8 +471,8 @@ class Theme
     # overflow chevron -- the same in every state (the cell under a glyph shows the state).
     @toolbarGlyph = @ink
     # the corner "edit code" MARK (UpperRightTriangleIconicButtonWdgt: a paint tool's edit mark,
-    # EditableMarkWdgt): its triangle's fill at rest, hovered and pressed, re-derived at each state
-    # change (UpperRightTriangleIconicButtonWdgt._updateColor) ...
+    # EditableMarkWdgt): its triangle's fill at rest, hovered and pressed, read as it is painted
+    # (UpperRightTriangleIconicButtonWdgt._fillForMyState) ...
     @editMarkFill = @paper
     @editMarkHoverFill = @desk
     @editMarkPressFill = @chrome

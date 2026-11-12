@@ -7,8 +7,8 @@
 # I LOOK LIKE A TOOL in its cell (OverflowChevronAppearance): a plate in the tool cell's fill for my
 # state -- none at rest, hovered, pressed -- under the drawn » at the glyph size my strip names
 # (ToolPanelWdgt writes my glyphSize as it places me), in the toolbarGlyph ink in every state. The
-# icon button's state inks (IconButtonWdgt._updateColor) never reach my glyph: my look reads my
-# state as it paints, so a transition writes no colour (_updateColor), and I hold none.
+# icon button's state inks (IconButtonWdgt._fillForMyState) never reach my glyph: my appearance
+# inks it with its own colour, and reads my state off the hand as it paints, so I hold no colour.
 #
 # The remainder menu is DERIVED at pop time from the tools currently hidden -- each row's name and
 # picture -- and it is a transient pop-up: there is no wiring keeping its rows in step with the
@@ -32,11 +32,11 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   _showsChildAsAPicture: (child) ->
     child is @faceWidget
 
-  # HighlightableMixin's colour hook, which every one of its state transitions calls after setting
-  # @state. My look for a state is read from it as my appearance paints, so a transition only
-  # repaints me: no colour of mine is written here, and none a transition could leave behind.
-  _updateColor: ->
-    @_changed()
+  # I wear a tool cell's look, so a press or a hover on me lights it as it lights a cell
+  # (GlassBoxBottomWdgt.fillForToolState, which asks this of the widget whose state it shows): on my
+  # own plate, since I stand in no cell.
+  lightsAToolCell: ->
+    true
 
   actOnClick: ->
     # the strip owns the answer to "what is behind me" -- capability via ?(), so a chevron that
@@ -54,9 +54,11 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
     menu.actsAsEditorChrome = true
     for cell in hiddenCells
       tool = cell.glassBoxItem?() ? cell
-      # The row names its tool by the tool's tooltip (or, lacking one, its colloquial name),
-      # capitalised as a row is ("Change font"); the tooltip itself reads as it does.
-      label = CommandPanelWdgt.rowLabelOfValue (tool.toolTipMessage ? tool.colloquialName())
+      # The row names its tool by the tool's own word: the name it states as a tool in a panel
+      # (toolName: a rectangle's "rectangle", a brush icon's "brush" -- a fact of its own, since
+      # neither shows a tooltip), else the tooltip it shows, which names it ("change font"), else its
+      # colloquial name -- capitalised as a row is ("Change font"); the word itself reads as it does.
+      label = CommandPanelWdgt.rowLabelOfValue (tool.toolName ? tool.toolTipMessage ? tool.colloquialName())
       # a tool that can be the ACTIVE one (isActiveTool: the armed paint tool, a text tool
       # mirroring the edited text) says so with its row's tick, as its cell does with its plate:
       # the row reflects the cell. A tool that is never active, or a cell that is no tool cell,

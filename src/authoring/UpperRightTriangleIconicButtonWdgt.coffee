@@ -1,8 +1,8 @@
 # like an UpperRightTriangleWdgt, but it adds an icon on the top-right
 #
 # MY LOOK is the edit mark's (a paint tool's EditableMarkWdgt): my triangle's fill for my pointer
-# state -- editMarkFill at rest, editMarkHoverFill hovered, editMarkPressFill pressed -- derived at
-# each state change (_updateColor) and once as I am built, and the pencil on me in editMarkInk.
+# state -- editMarkFill at rest, editMarkHoverFill hovered, editMarkPressFill pressed -- asked of the
+# hand as I am painted (_fillForMyState), and the pencil on me in editMarkInk.
 
 # to test this:
 # create a canvas. then:
@@ -10,12 +10,15 @@
 
 class UpperRightTriangleIconicButtonWdgt extends UpperRightTriangleWdgt
 
-  @augmentWith HighlightableMixin, @name
+  # my triangle's fill for each pointer state, when one is set on me (a live edit); unset, each is
+  # the edit mark's role, read as I am painted (_fillForMyState)
+  color_normal: undefined
+  color_hover: undefined
+  color_pressed: undefined
 
   constructor: (parent) ->
     super
     @_buildAndConnectChildren()
-    @_updateColor()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
@@ -26,14 +29,20 @@ class UpperRightTriangleIconicButtonWdgt extends UpperRightTriangleWdgt
 
     @_addNoSettle pencilIconWdgt, layoutSpec: new CornerInternalLayoutSpec 'topRight', 1/2, 0
 
-  # HighlightableMixin's colour hook, which every one of its state transitions calls after setting
-  # @state: my triangle's fill for the state I am in now -- the state machine's own field for it
-  # when one is set (a live edit of the mixin's field reaches me too), else the edit mark's role,
-  # read here.
-  _updateColor: ->
+  # MY TRIANGLE'S FILL for the pointer state I show now, which my UpperRightTriangleAppearance asks as
+  # it paints: pressed while the hand presses me (ActivePointerWdgt.pressesOn), hovered while the
+  # pointer rests on me (restsOn), at rest otherwise -- my field for that state when one is set, else
+  # the edit mark's role, read here.
+  _fillForMyState: ->
     theme = WorldWdgt.theme
-    @color = switch @state
-      when @STATE_HIGHLIGHTED then @color_hover ? theme.editMarkHoverFill
-      when @STATE_PRESSED then @color_pressed ? theme.editMarkPressFill
-      else @color_normal ? theme.editMarkFill
+    if world.hand.pressesOn @
+      @color_pressed ? theme.editMarkPressFill
+    else if world.hand.restsOn @
+      @color_hover ? theme.editMarkHoverFill
+    else
+      @color_normal ? theme.editMarkFill
+
+  # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my fill
+  # is read from them as I am painted, so I repaint.
+  notePointerStateChanged: ->
     @_changed()

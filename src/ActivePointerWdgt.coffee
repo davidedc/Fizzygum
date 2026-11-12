@@ -56,8 +56,8 @@ class ActivePointerWdgt extends Widget
   # Widget.pressBegan). I drive that climb and RECORD who heard it, leaf first; the record is the
   # press's audience, and it is never re-walked: a lift re-parents what it picks up, so the chain at
   # the release is not the chain the press climbed.
-  #   Every member is told EXACTLY ONE ending, through ?() — a widget with no press look to undo
-  # declares neither verb:
+  #   Every member is told EXACTLY ONE ending, through ?() — a widget with nothing to do when its press
+  # ends declares neither verb:
   #  - pressCancelled(), the moment the stroke becomes something that is not a press on that content:
   #     · a SCROLL (_strokeScrolls, decided once, at the drained event where the press leaves the
   #       grab radius): the members inside the pane that took the stroke are cancelled — the pane
@@ -71,15 +71,19 @@ class ActivePointerWdgt extends Widget
   #    member still owed one, leaf first, each with the pointer in its own plane — wherever the
   #    release lands, on every release (a hold-consumed one and a scroll's included). Whether the
   #    release is also a CLICK is a separate decision, made after the endings (_strokeOwesNoClick).
-  # Neither ending says where the pointer is: a receiver picks the look it ends in from where the
-  # pointer actually stands, by asking me (restsOn), never by assuming it is still over it. A member
-  # that dies mid-stroke leaves the audience with its subtree (noteWidgetDestroyed), so no ending
-  # ever reaches a corpse.
+  # Neither ending says where the pointer is, and no look is picked at either: a widget's pointer look
+  # is asked of me as it paints (restsOn, pressesOn, holdsPressOn), and I tell it when my answers about
+  # it may have moved (_tellPointerStateChanged). A member that dies mid-stroke leaves the audience with
+  # its subtree (noteWidgetDestroyed), so no ending ever reaches a corpse.
   _pressAudience: undefined                  # the members still owed an ending, leaf first
   # THE FINGER LEFT THE GLASS: between touch strokes NO pointer rests anywhere, and while that is
   # true nothing is under one. A mouse or a pen never leaves — it stops — so this is false for
   # their whole life and every path they take is the path they always took.
   _pointerIsAbsent: false
+  # whether I was dragging something (isThisPointerDraggingSomething) when I last dispatched the
+  # pointer's position: a look may ask that too (a slider thumb shows no hover while I drag), so when it
+  # flips, every widget the pointer is over is told (_dispatchEventsFollowingMouseMove)
+  _draggingAtLastDispatch: false
   mouseOverList: undefined
   # One multi-click candidate each — widget + position + EVENT-TIME armed; see
   # MultiClickRecognizer. Replaces the six hand-mirrored double/triple fields. Instantiated
@@ -110,9 +114,9 @@ class ActivePointerWdgt extends Widget
   # teardown just destroyed -- and the armed multi-click records could even RECOGNIZE
   # across worlds once the event clock rewinds. Called from the shared teardown core
   # (WorldWdgt._teardownWorldStructureNoSettle), which BOTH teardown callers reach; the
-  # error-recovery _softResetWorld keeps its own narrower clears. Plain scalars
-  # (mouseButton, positions) are left alone: they hold no references and every gesture
-  # start re-establishes them.
+  # error-recovery _softResetWorld asks for a narrower forget (forgetHoverAndNonFloatDrag).
+  # Plain scalars (mouseButton, positions) are left alone: they hold no references and every
+  # gesture start re-establishes them.
   _forgetGestureBookkeepingNoSettle: ->
     @_forgetPressBookkeeping()
     @grabOrigin = undefined
@@ -122,7 +126,11 @@ class ActivePointerWdgt extends Widget
     # the highlight map, both of which the shared core has already emptied, so here those writes find
     # nothing left to do.
     @_endDragEmbedInteraction()
+    forgottenOverList = Array.from @mouseOverList
     @mouseOverList.clear()
+    # told like every other write of my answers: what the over-list held is the destroyed tree (told
+    # nothing, a corpse is owed nothing) and, on a file's load, the world that stays
+    @_tellPointerStateChanged forgottenOverList
     # a replacement world has been walked over by nobody, so the hand meets it as it meets a fresh
     # page: whatever the last stroke left is not a fact about this world
     @_pointerIsAbsent = false
@@ -144,16 +152,32 @@ class ActivePointerWdgt extends Widget
   # multi-click candidates — and, through the recognizer's own clear, the pane that took the press
   # and the one its stroke latched. Shared by the two occasions a press ends without a release — a
   # world teardown (above) and a cancelled stroke (processPointerCancel) — each of which then clears
-  # what only it owns. The audience is forgotten, not told: a cancelled stroke has told it already,
-  # and a teardown's audience died with its world.
+  # what only it owns. The audience is forgotten, not told an ending: a cancelled stroke has told it
+  # already, and a teardown's audience died with its world. Whoever loses a press answer here is told
+  # that my answers moved (the widget a cancelled stroke was non-float dragging, a slider's thumb).
   _forgetPressBookkeeping: ->
+    forgottenPress = @_pressAudience.concat [@nonFloatDraggedWdgt]
     @mouseDownWdgt = undefined
     @wdgtToGrab = undefined
     @nonFloatDraggedWdgt = undefined
     @_pressAudience = []
+    @_tellPointerStateChanged forgottenPress
     @doubleClick.forget()
     @tripleClick.forget()
     @_forgetPressAndHoldRecognition()
+    return
+
+  # PUBLIC — the world's recovery after a thrown error (WorldWdgt._softResetWorld) asks me to forget
+  # where the pointer is and what it non-float drags, without telling anybody an exit or the end of a
+  # drag: the world may be in no state to run them. The press's audience stays. Whoever thereby loses a
+  # rest or a press answer is told my answers moved (_tellPointerStateChanged), so no look stays lit by
+  # a fact I do not hold; the next hover re-sync enters whatever the pointer is over again.
+  forgetHoverAndNonFloatDrag: ->
+    forgotten = Array.from @mouseOverList
+    forgotten.push @nonFloatDraggedWdgt
+    @mouseOverList.clear()
+    @nonFloatDraggedWdgt = undefined
+    @_tellPointerStateChanged forgotten
     return
 
   # PUBLIC notification — a widget is dying. Widget._destroyNoSettle, the one funnel every death
@@ -200,17 +224,23 @@ class ActivePointerWdgt extends Widget
   # rather than the payload itself.
   #   Not forgotten here: the over-list, which the next dispatch re-derives from the tree and which
   # owes the leaving widget its last hoverExited (a menu row takes down the highlight on the widget it
-  # stands for, a widget with a tooltip takes the tooltip down); the multi-click candidates, which
-  # recognize only the widget a release lands on; and the drag-embed state, which the next dispatch
-  # takes down once nothing rides me (_dispatchEventsFollowingMouseMove).
+  # stands for, and I take down the tooltip of a widget that carries one); the multi-click
+  # candidates, which recognize only the widget a release lands on; and the drag-embed state, which
+  # the next dispatch takes down once nothing rides me (_dispatchEventsFollowingMouseMove).
+  #   What leaves the press's audience or stops being non-float dragged here loses a press answer, so
+  # it is told my answers moved (_tellPointerStateChanged), once both bookings are forgotten: a widget
+  # put away comes back showing no press. A corpse is told nothing.
   _forgetBookingsLeavingWith: (leavingWdgt) ->
     leavesWithIt = (booking) -> booking? and leavingWdgt.isAncestorOf booking
     @wdgtToGrab = undefined  if (leavingWdgt.parent is @) or leavesWithIt @wdgtToGrab
     @mouseDownWdgt = undefined  if leavesWithIt @mouseDownWdgt
+    forgottenPress = (member for member in @_pressAudience when leavesWithIt member)
+    forgottenPress.push @nonFloatDraggedWdgt  if leavesWithIt @nonFloatDraggedWdgt
     @nonFloatDraggedWdgt = undefined  if leavesWithIt @nonFloatDraggedWdgt
     @_pressScrollOwner = undefined  if leavesWithIt @_pressScrollOwner
     @_strokeScrollPane = undefined  if leavesWithIt @_strokeScrollPane
     @_pressAudience = (member for member in @_pressAudience when not leavesWithIt member)
+    @_tellPointerStateChanged forgottenPress
     return
 
   # Forget the press-and-hold recognizer's whole per-stroke state, and the stroke's scroll facts
@@ -1150,15 +1180,16 @@ class ActivePointerWdgt extends Widget
   # and a viewport a fattened indicator, with no pointer anywhere near them. A mouse or a pen DOES rest
   # where it stopped, so their strokes keep the over-list they built, untouched.
   #   This is the stroke's LAST act: both callers clear the press and the drag BEFORE it, so the
-  # exits it sends are final. A hoverExited that defers to a live drag (a slider thumb keeps its
-  # pressed look while the pointer outruns it) would ignore an exit sent while the drag still
-  # stands — and a finger let go ON a thumb it dragged has just lit it, since that release is a
-  # click on the thumb.
+  # exits it sends, and the answers it tells (_tellPointerStateChanged), are final: from here no
+  # widget is rested on or pressed.
   _dissolveHoverStateOfTouchStroke: ->
     return unless @pointerType is 'touch'
     @mouseOverList.forEach (old) =>
       old.hoverExited?()
+      world.destroyToolTips()  if old.toolTipMessage
+    leftBehind = Array.from @mouseOverList
     @mouseOverList.clear()
+    @_tellPointerStateChanged leftBehind
     # ...and the glass STAYS empty until a pointer comes back. Emptying the list alone would not
     # last: the per-cycle hover re-sync re-derives the set from where the hand happens to stand, so
     # a cycle later it would enter every widget the finger just left, tooltip and highlight and all.
@@ -1169,29 +1200,79 @@ class ActivePointerWdgt extends Widget
 
   # PUBLIC query — can the pointer REST at all? A mouse or a pen rests on whatever it stopped over; a
   # FINGER never rests anywhere — its stroke ends with the finger leaving the glass
-  # (_dissolveHoverStateOfTouchStroke). So a finger is shown no HOVER look: a widget asks this before
-  # showing one as the pointer arrives, as a press's ending asks restsOn, and the two answers agree
-  # whatever route a stroke took. Were a finger lit on arrival and left unlit when its press ends, a
+  # (_dissolveHoverStateOfTouchStroke). So a finger is shown no HOVER look: restsOn asks this, and
+  # every hover look is restsOn's answer, read as it paints, so a widget under a finger shows no hover
+  # whatever route the stroke took. Were a finger lit on arrival and left unlit when its press ends, a
   # widget under it would show either look depending on whether, within one cycle, the finger got
   # ahead of content its drag-scroll had not moved yet and came back over it at the next re-sync
   # (Fizzygum-tests DETERMINISM.md §3n).
   pointerCanRest: ->
     @pointerType isnt 'touch'
 
-  # PUBLIC query — does the pointer REST on `aWdgt`? Asked by a member of the press's audience as it
-  # picks the look it ends in: hovered when the pointer is over it, at rest when it is not — and
-  # never for a finger, even while the over-list still holds what it walked over.
+  # PUBLIC query — does the pointer REST on `aWdgt`? The HOVER look's one question, asked by every
+  # widget with one as it paints: yes while the pointer is over it, no when it is not — and never for
+  # a finger, even while the over-list still holds what it walked over.
   restsOn: (aWdgt) ->
     @pointerCanRest() and @mouseOverList.has aWdgt
 
-  # THE PRESS CLIMB, from `pressedWdgt` (the widget the primary press hit): each receiver is told
-  # pressBegan with the pointer in its own plane and joins the audience, and the climb goes on to its
-  # parent for as long as it answers that it passes the press on.
+  # PUBLIC query — does the press in progress HOLD `aWdgt`: is it in the press's audience, wherever the
+  # pointer is now? A LIST row's press look asks this (MenuItemWdgt._shownState), and so does its rows
+  # panel about each row (CommandPanelWdgt.showsAsItsSelection): a list row shows its press for as long
+  # as the press is held, slid off it or not, and its list's selection stands aside meanwhile.
+  holdsPressOn: (aWdgt) ->
+    aWdgt in @_pressAudience
+
+  # PUBLIC query — does the pointer PRESS `aWdgt`? The PRESS look's one question, asked by every widget
+  # with one as it paints: yes while I non-float drag it, wherever the pointer is (a slider's thumb, a
+  # handle), and while the press holds it with the pointer over it — a press slid off its widget shows
+  # no press there, and shows it again when it slides back.
+  pressesOn: (aWdgt) ->
+    @nonFloatDraggedWdgt is aWdgt or (@holdsPressOn(aWdgt) and @mouseOverList.has aWdgt)
+
+  # THE ONE NOTIFICATION of my answers (restsOn, pressesOn, holdsPressOn). Right after I write a fact
+  # they read -- the over-list, the press's audience, the widget I non-float drag, the kind of pointer
+  # -- I tell each widget whose answers that write may have moved: each one once, in the order given,
+  # through ?(). A widget with a pointer look answers notePointerStateChanged (it repaints, or a toolbar
+  # tool tells the cell it stands in); every other ignores it. It carries no answer -- no widget keeps
+  # one: a look asks me again as it paints -- and it moves no existing send of mine, every one of which
+  # keeps its place. A corpse is told nothing: it is owed nothing (noteWidgetDestroyed).
+  _tellPointerStateChanged: (widgets) ->
+    told = new Set
+    for each in widgets when each? and !each.destroyed and !told.has each
+      told.add each
+      each.notePointerStateChanged?()
+    return
+
+  # The widgets in exactly ONE of two over-lists -- those that left (in `before`'s order), then those
+  # that joined (in `after`'s): whose rest answer, and press answer, replacing the over-list may move.
+  # Empty when the two hold the same widgets, as the per-cycle re-sync's fresh list mostly does.
+  _membersOfOnlyOneOf: (before, after) ->
+    changed = []
+    before.forEach (each) -> changed.push each  unless after.has each
+    after.forEach (each) -> changed.push each  unless before.has each
+    changed
+
+  # THE KIND OF POINTER the stroke in progress belongs to, taken from its event (every down and every
+  # move). A switch between a finger and a pointer that rests moves restsOn for everything the pointer
+  # is over, so all of it is told.
+  _takePointerTypeOf: (e) ->
+    pointerCouldRest = @pointerCanRest()
+    @pointerType = e.pointerType
+    @_tellPointerStateChanged Array.from @mouseOverList  unless @pointerCanRest() is pointerCouldRest
+    return
+
+  # THE PRESS CLIMB, from `pressedWdgt` (the widget the primary press hit): each receiver joins the
+  # audience and is told pressBegan with the pointer in its own plane, and the climb goes on to its
+  # parent for as long as it answers that it passes the press on. Joining moves its press answer, so it
+  # is told so between the two, as every write of mine is told the moment it is made.
   _climbPressFrom: (pressedWdgt) ->
+    forgottenAudience = @_pressAudience
     @_pressAudience = []
+    @_tellPointerStateChanged forgottenAudience
     receiver = pressedWdgt
     while receiver?
       @_pressAudience.push receiver
+      @_tellPointerStateChanged [receiver]
       passesThePressOn = receiver.pressBegan @_pointerPositionInPlaneOf receiver
       return unless passesThePressOn is true
       receiver = receiver.parent
@@ -1200,11 +1281,13 @@ class ActivePointerWdgt extends Widget
   # THE ENDINGS. A member is struck off the audience before it is told, so an ending that sets off
   # another one cannot tell anybody twice; and members are taken one at a time from the live record,
   # so one that dies or is put away under an earlier member's ending has left it before its turn
-  # (noteWidgetDestroyed / noteWidgetClosed).
+  # (noteWidgetDestroyed / noteWidgetClosed). Being struck off moves a member's press answer, so it
+  # is told so (_tellPointerStateChanged) before its ending.
   #   pressCancelled to each member `isCancelled` answers true for, in audience order.
   _cancelPressOf: (isCancelled) ->
     while (member = @_pressAudience.find isCancelled)?
       @_pressAudience.splice (@_pressAudience.indexOf member), 1
+      @_tellPointerStateChanged [member]
       member.pressCancelled?()
     return
 
@@ -1212,11 +1295,12 @@ class ActivePointerWdgt extends Widget
   _endPressAt: (e) ->
     until @_pressAudience.length is 0
       member = @_pressAudience.shift()
+      @_tellPointerStateChanged [member]
       member.pressEnded? @_pointerPositionInPlaneOf(member), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
     return
 
   processPointerDown: (e) ->
-    @pointerType = e.pointerType
+    @_takePointerTypeOf e
     # a press begins: whatever the previous stroke recognized is spent (the press below re-establishes
     # it), and the position head right after must not advance a recognizer belonging to a dead stroke.
     # A previous press still owed an ending was never released (a down with no up between), so it is
@@ -1479,7 +1563,9 @@ class ActivePointerWdgt extends Widget
         @cleanupMenuWdgts w
 
     @mouseButton = undefined
+    noLongerDragged = @nonFloatDraggedWdgt
     @nonFloatDraggedWdgt = undefined
+    @_tellPointerStateChanged [noLongerDragged]
     @_dissolveHoverStateOfTouchStroke()
 
 
@@ -1615,7 +1701,7 @@ class ActivePointerWdgt extends Widget
   # ActivePointerWdgt tools
 
   processPointerMove: (e) ->
-    @pointerType = e.pointerType
+    @_takePointerTypeOf e
     # A HOVER-CAPABLE POINTER HAS COME BACK: a mouse or a pen moving states that something rests on
     # the glass again, wherever it goes. A finger's own moves say nothing of the sort — they belong
     # to a press, which ended the absence at its down.
@@ -1744,7 +1830,9 @@ class ActivePointerWdgt extends Widget
           # Users don't seem to click on a slider for any other
           # reason than to move it (as opposed to selecting them
           # or picking a position for a cursor), so it's OK.
+          previouslyDragged = @nonFloatDraggedWdgt
           @nonFloatDraggedWdgt = @wdgtToGrab
+          @_tellPointerStateChanged [previouslyDragged, @nonFloatDraggedWdgt]
           # Affine transforms (§6 4A-2): capture the grab offset IN THE GRABBED WIDGET'S OWN PLANE.
           # For a handle/slider inside a non-identity island the raw screen `pos` and the widget's
           # (virtual) position() live in different planes; screenPointToMyPlane maps the pointer into
@@ -1801,7 +1889,9 @@ class ActivePointerWdgt extends Widget
     mouseOverNew = new Set wdgtFarAway.allParentsBottomToTop()
     @previousNonFloatDraggingPos = wdgtFarAway.center()
     @nonFloatDragPositionWithinWdgtAtStart = (new Point wdgtFarAway.width()/2, wdgtFarAway.height()/2).round()
+    previouslyDragged = @nonFloatDraggedWdgt
     @nonFloatDraggedWdgt = wdgtFarAway
+    @_tellPointerStateChanged [previouslyDragged, wdgtFarAway]
     # this one calls the wdgtFarAway's nonFloatDragging method,
     # for example in case of a SliderWdgt invoking this on its
     # button, this causes the movement of the button
@@ -1811,15 +1901,15 @@ class ActivePointerWdgt extends Widget
 
     # The teleported widget is now under the (stationary) pointer. Resolve the
     # hoverEntered/hoverExited consequence of that geometry change NOW, while the
-    # non-float drag is active, so the widget's hoverEntered is consumed under the
-    # drag guard (e.g. SliderButtonWdgt.hoverEntered early-returns while the hand
-    # is dragging) and the widget is recorded in @mouseOverList. Otherwise the
-    # next per-cycle reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges
-    # (WorldWdgt.doOneCycle) can fire that hoverEntered AFTER mouse-up has already
-    # un-dragged the widget — spuriously HIGHLIGHTing it. Deferring this caused a
-    # dpr-2-only flake in SystemTest_macroSliderTrackClickMovesButton: a heavy
-    # SWCanvas cycle drains the down+up together, so no held-button frame ever
-    # interposes to absorb the enter. Resolving it here is cadence/density-independent.
+    # non-float drag is active, so the widget is recorded in @mouseOverList at the
+    # cause: its hover look is my restsOn, read off the over-list as it paints, so
+    # the drag's release finds it there and it shows its hover in the cycle that
+    # release drains in. Left to the next per-cycle
+    # reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges (WorldWdgt.doOneCycle),
+    # whether the hover shows at the release or a cycle later would depend on whether
+    # a heavy SWCanvas cycle drained the down+up together -- the dpr-2-only flake
+    # SystemTest_macroSliderTrackClickMovesButton showed when this was deferred.
+    # Resolving it here is cadence/density-independent.
     @_dispatchEventsFollowingMouseMove mouseOverNew
 
   # The focus-tracking exclusion policy (§5.D): a click/drop must not move the
@@ -1865,9 +1955,14 @@ class ActivePointerWdgt extends Widget
     # cleared the absence at its down, so this can never starve one.
     mouseOverNew = new Set  if @_pointerIsAbsent
 
+    # A LEAVER is told it was left, and the tooltip of one carrying a toolTipMessage comes down. A
+    # JOINER (below) is told it was entered, and, carrying one, starts its tooltip's countdown -- for any
+    # widget and any pointer: toolTipMessage is the tooltip shown when the pointer rests on its carrier,
+    # and showing it is mine, at the same moment as the hover hook it follows.
     @mouseOverList.forEach (old) =>
       unless mouseOverNew.has old
         old.hoverExited?()
+        world.destroyToolTips()  if old.toolTipMessage
 
     # THE GRAMMAR'S THIRD CONSUMER (ruling I2): while a touch stroke is UN-ARMED its moves mean
     # scroll and nothing else, so no widget is handed a PRESSED move — this is the site a paint tool
@@ -1910,6 +2005,7 @@ class ActivePointerWdgt extends Widget
 
       unless @mouseOverList.has newWdgt
         newWdgt.hoverEntered?()
+        newWdgt.startCountdownForBubbleHelp newWdgt.toolTipMessage  if newWdgt.toolTipMessage
 
       # autoScrolling support:
       if @isThisPointerFloatDraggingSomething()
@@ -1927,7 +2023,18 @@ class ActivePointerWdgt extends Widget
           # wantsDropOfChild / edge / start logic here). (type-test-elimination campaign)
           newWdgt.maybeStartAutoScrollForDraggedWidget? widgetBeingFloatDragged, @position()
 
+    # the hover hooks above read the OLD list (restsOn answers as it stood); once it is replaced, only
+    # the widgets that left or joined have answers that moved -- none at all when the per-cycle re-sync
+    # finds the same widgets in its fresh list -- unless whether I drag something flipped since my last
+    # dispatch (a drop, a grab, a non-float drag begun or ended), which every widget I am over may read:
+    # then all of them are told. This runs at least once a cycle (the per-cycle re-sync), before paint.
+    overListBefore = @mouseOverList
     @mouseOverList = mouseOverNew
+    draggingNow = @isThisPointerDraggingSomething()
+    toTell = @_membersOfOnlyOneOf overListBefore, mouseOverNew
+    toTell = toTell.concat Array.from mouseOverNew  unless draggingNow is @_draggingAtLastDispatch
+    @_draggingAtLastDispatch = draggingNow
+    @_tellPointerStateChanged toTell
 
     # drag-embed dwell state machine (spec §6): resolve candidate + arm, declare the visuals. Runs per
     # move AND per cycle (via the hover re-sync), so a moving drag and a stationary hold both update.

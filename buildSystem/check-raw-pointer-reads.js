@@ -19,7 +19,7 @@
 //
 // SCOPE. Method bodies — a class's 2-space-indent methods and a mixin's onceAddedClassProperties
 // members alike, grouped by the shared lib/coffee-method-header.js methodBoundary (a mixin's handlers
-// run on every widget it augments: HighlightableMixin's press/hover handlers) — whose names are the
+// run on every widget it augments) — whose names are the
 // dispatched pointer-handler names below — closures defined inside them (a _settleLayoutsAfter thunk)
 // are inside the span and covered — plus the two ViewportWdgt drag-scroll methods that sample or
 // consume the pointer per frame / per event although no dispatcher calls them by a handler name:

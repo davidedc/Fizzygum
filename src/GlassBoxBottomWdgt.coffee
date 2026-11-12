@@ -7,14 +7,15 @@
 # button): a square rounded at toolCellCornerRadius with no border; no fill at rest, so the glyph
 # stands alone on whatever the strip stands on; toolCellHoverFill while my tool is hovered,
 # toolCellPressedFill while it is pressed, toolCellActiveFill while it is the ACTIVE tool (hovered or
-# not; pressed shows pressed). The pointer state is HighlightableMixin's, kept by the widget a press
-# on me reaches (thumbnailClickReceiver: the lid, or the tool itself); whether my tool is active is
-# its own answer (isActiveTool, a capability: a tool that is never active answers nothing). The look
-# is re-derived from the two at EVERY transition, told to me by whatever moved
-# (noteItemStateChanged): the widget whose pointer state moved (ParentStainerMixin carries that for
-# every tool family and for the lid), and whoever decides which tool is active (PaintToolbarWdgt for
-# the armed paint tool, TextToolbarWdgt for the text tools, which mirror the edited text). No tool
-# pushes a colour onto me, so no family can leave one behind.
+# not; pressed shows pressed). The pointer state is the hand's answer about the widget a press on me
+# reaches (thumbnailClickReceiver: the lid, or the tool itself), when that widget is a tool that
+# lights its cell (lightsAToolCell); whether my tool is active is its own answer (isActiveTool, a
+# capability: a tool that is never active answers nothing). The look is read from the two as I am
+# painted (_fillForMyState), and repainted when I am told one moved (noteItemStateChanged): by the
+# tool whose pointer state moved (every tool family and the lid say so as the hand tells them), and
+# by whoever decides which tool is active (PaintToolbarWdgt for the armed paint tool,
+# TextToolbarWdgt for the text tools, which mirror the edited text). No tool pushes a colour onto
+# me, and I keep none, so no family can leave one behind.
 #
 # MY TOOL IS CUT TO MY OUTLINE: it lies flush in my square, so I paint my children inside my rounded
 # outline, and a press in one of my corner notches reaches neither me nor my tool but whatever lies
@@ -26,9 +27,9 @@ class GlassBoxBottomWdgt extends BoxWdgt
 
   colloquialName: -> "tool cell"
 
+  # my rounding is the tool cell's, from the theme, as I am built; my fill is read as I am painted
   constructor: ->
-    super()
-    @_deriveMyLook()
+    super WorldWdgt.theme.toolCellCornerRadius
 
   # Role query (replaces the `aWdgt instanceof GlassBoxBottomWdgt` wrap-idempotency guard in
   # ToolPanelWdgt.add): "am I already a glass-box template wrapper?" -- true
@@ -53,16 +54,17 @@ class GlassBoxBottomWdgt extends BoxWdgt
 
   # ===== my look =====
 
-  # MY TOOL'S STATE MOVED: the widget a press on me reaches was hovered, pressed, released or left
-  # (ParentStainerMixin's colour hook), or my tool became or stopped being the active one (told by
-  # whoever decides that: PaintToolbarWdgt for the armed paint tool, TextToolbarWdgt when the edited
-  # text or its style moves). I re-derive my whole look, and I pass the news on, so what shows my
-  # tool's state THROUGH me re-reads it: a toolbar overflow menu's row for my tool, ticked by
-  # holdsActiveTool (OverflowChevronButtonWdgt). markNonValueChange: what moved is not a value (I
-  # have none to deliver). A paint toolbar tells me from its arrange, so that news reaches a row one
-  # cycle later (DataflowEngine's header: a layout station may announce a non-value change).
+  # MY TOOL'S STATE MOVED: the hand's answers about the widget a press on me reaches moved (that
+  # widget's notePointerStateChanged tells me: CreatorWdgt, EditorContentPropertyChangerButtonWdgt,
+  # CodeInjectingSimpleRectangularButtonWdgt), or my tool became or stopped being the active one (told
+  # by whoever decides that: PaintToolbarWdgt for the armed paint tool, TextToolbarWdgt when the edited
+  # text or its style moves). My look is read as I am painted, so I repaint, and I pass the news on, so
+  # what shows my tool's state THROUGH me re-reads it: a toolbar overflow menu's row for my tool,
+  # ticked by holdsActiveTool (OverflowChevronButtonWdgt). markNonValueChange: what moved is not a
+  # value (I have none to deliver). A paint toolbar tells me from its arrange, so that news reaches a
+  # row one cycle later (DataflowEngine's header: a layout station may announce a non-value change).
   noteItemStateChanged: ->
-    @_deriveMyLook()
+    @_changed()
     world.dataflow?.markNonValueChange @
 
   # Is my tool the ACTIVE one, by its own answer (isActiveTool, a capability: a tool that is never
@@ -71,27 +73,23 @@ class GlassBoxBottomWdgt extends BoxWdgt
   holdsActiveTool: ->
     @glassBoxItem()?.isActiveTool?() ? false
 
-  # My look for my tool's state now: my fill and my rounding, from the theme (and no border: I never
-  # set a stroke). Only a change repaints me, so a toolbar that tells every cell at each of its
-  # arranges repaints none whose look stood still.
-  _deriveMyLook: ->
-    radius = WorldWdgt.theme.toolCellCornerRadius
-    fill = GlassBoxBottomWdgt.fillForToolState @thumbnailClickReceiver(), @holdsActiveTool()
-    return if @cornerRadius is radius and @color?.equals fill
-    @cornerRadius = radius
-    @color = fill
-    @_changed()
+  # My fill for my tool's state now, which my BoxyAppearance reads as it paints me (and no border: I
+  # answer no stroke).
+  _fillForMyState: ->
+    GlassBoxBottomWdgt.fillForToolState @thumbnailClickReceiver(), @holdsActiveTool()
 
-  # THE TOOL CELL'S FILL for a tool whose pointer state `stateHolder` keeps (HighlightableMixin's; an
-  # absent holder, or one keeping no such state, reads as at rest) and which is or is not the active
-  # tool: toolCellPressedFill while pressed, toolCellHoverFill while hovered, else toolCellActiveFill
-  # while active, else toolCellFill. ONE answer for every wearer of the look: my cells, and the
-  # toolbar's overflow chevron, which stands in no cell (OverflowChevronAppearance).
+  # THE TOOL CELL'S FILL for a tool whose pointer state `stateHolder` shows -- the hand's answers about
+  # it (ActivePointerWdgt.pressesOn, restsOn), when it is a tool that lights a cell (lightsAToolCell:
+  # every toolbar tool family, a cell's lid, the overflow chevron; an absent holder, or any other
+  # widget -- a menu row standing in a cell shows its own hover --, reads as at rest) -- and which is or
+  # is not the active tool: toolCellPressedFill while pressed, toolCellHoverFill while hovered, else
+  # toolCellActiveFill while active, else toolCellFill. ONE answer for every wearer of the look: my
+  # cells, and the toolbar's overflow chevron, which stands in no cell (OverflowChevronAppearance).
   @fillForToolState: (stateHolder, isActive) ->
     theme = WorldWdgt.theme
-    if stateHolder?.STATE_PRESSED?
-      return theme.toolCellPressedFill if stateHolder.state is stateHolder.STATE_PRESSED
-      return theme.toolCellHoverFill if stateHolder.state is stateHolder.STATE_HIGHLIGHTED
+    if stateHolder?.lightsAToolCell?()
+      return theme.toolCellPressedFill if world.hand.pressesOn stateHolder
+      return theme.toolCellHoverFill if world.hand.restsOn stateHolder
     if isActive then theme.toolCellActiveFill else theme.toolCellFill
 
   # ===== my tool, cut to my outline =====

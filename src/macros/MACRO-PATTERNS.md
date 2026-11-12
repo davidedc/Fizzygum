@@ -1001,8 +1001,9 @@ assertion a recapture after a regression silently stores two different hashes an
   (`dragSliderButtonToFraction`, the list and code scroll verbs) already aim through it. To hold the press across a
   `yield` and read the mid-press state, follow it with a pressed MOVE past the grab radius before the release
   (`@syntheticEventsMouseMove_InputEvents p, "left button", 300`): a finger resting still on a thumb is exactly what
-  press-and-hold opens a menu for, and a travelling press can never become a hold. Read thumb state as an INVARIANT that
-  holds under both pointers — `thumb.state is thumb.STATE_HIGHLIGHTED` equals `world.hand.mouseOverList.has(thumb)` — so the
+  press-and-hold opens a menu for, and a travelling press can never become a hold. Read the thumb's look as an INVARIANT that
+  holds under both pointers — while the hand drags nothing it shows hover (`_showsHover`) exactly when
+  `world.hand.mouseOverList.has(thumb)` — so the
   same assertion is honest for a mouse that rests on the thumb and a finger that left the glass.
 - **Nested scroll-panel wheel routing + limit escalation** (`macroNestedScrollPanelsRouteWheel`): the wheel scrolls the INNERMOST
   scrollable under the pointer and ESCALATES to the container once the inner is maxed (`ActivePointerWdgt.processWheel` walks up
@@ -1538,7 +1539,7 @@ assertion a recapture after a regression silently stores two different hashes an
   button.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand — image_2) → carry →
   `@syntheticEventsMouseUp_InputEvents()` (DROP, no menu — image_3) → then `@moveToAndClickAtFractionOf_InputEvents button, [0.5,0.5]` (a
   REAL click) → `@moveToItemOfTopMenuAndClick_InputEvents "Rectangle"` → carry+drop the new rectangle (image_4, the positive contrast). The
-  button reads GREY in the dropped shot (the pointer hovers it post-drop → STATE_HIGHLIGHTED) and white once the pointer leaves —
+  button reads GREY in the dropped shot (the pointer rests on it post-drop: the hand's `restsOn`) and white once the pointer leaves —
   deterministic. Complement of `macroButtonTriggersOnlyOnSameWidgetMouseUp` (a CONTAINER button with `rejectDrags=true` that AVOIDS
   float-drag) and `macroResizingButtonDoesntCauseItToClick` (a resize handle, not a body drag): this covers the world-parented,
   rejectDrags-false body-float-drag branch. The fixture row is the torn-off item's twin: plain label "Demo" AND
@@ -1577,8 +1578,7 @@ assertion a recapture after a regression silently stores two different hashes an
   drop. Clicking the embedded button stands the copy IN PLACE at +10,+10, never on the hand: the copy reaches the hand only through its own
   "Pick up", after which a plain move-then-click carries-and-drops it (NOT a held-drag — that is only for a free morph not already on the
   hand). Locate each generation's button by a LIVE-WORLD query — the new `PanelWdgt` not yet seen, then its
-  descendant `MenuItemWdgt` with `labelString == "Duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. (`_reactToBeingCopied`,
-  now on `MenuItemWdgt`, is only a cosmetic un-highlight, NOT the duplication mechanism.) No new verb.
+  descendant `MenuItemWdgt` with `labelString == "Duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. No new verb.
 - **ABORT a gesture the way a browser does — `pointercancel`** (`macroPointerCancelAbortsDragWithoutClick`,
   `macroPointerCancelEndsNonFloatDrag`): `@syntheticEventsPointerCancel_InputEvents()` queues a position-less
   `PointercancelInputEvent`, the one synthetic event with no user gesture behind it — the BROWSER confiscates the
@@ -1989,8 +1989,8 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Slider-button state colours + cross-slider grab** (`macroSliderButtonStateColors`): a `SliderButtonWdgt` paints, read at paint,
   `normalColor`/`highlightColor`/`pressColor` per state (else the theme's `sliderThumb*Fill` roles), inside a 1 px `sliderThumbStroke` wall
-  (`sliderThumbPressStroke` while pressed) (`hoverEntered → setHiglightedColor`, `pressBegan → setPressedColor`,
-  `hoverExited → setNormalColor`; each early-returns while the hand is dragging). `demoMenus.makeSlidersButtonsStatesBright()`
+  (`sliderThumbPressStroke` while pressed), each look read off the hand as it paints (`_showsPressed`: the hand presses or
+  non-float-drags it; `_showsHover`: the pointer rests on it and the hand is dragging nothing). `demoMenus.makeSlidersButtonsStatesBright()`
   (`DemoMenus.coffee:87` — the "Make sliders' buttons states bright" test-menu row; NOT the `menusHelper` global, which does
   not carry it) recolours every EXISTING slider button BLACK/BLUE/LIME — call it AFTER `world.add`; it writes the overrides without a repaint, so
   a test then calls `slider.button.setColor slider.button.normalColor`, which repaints. (A slider that is a viewport's scroll indicator ignores that scheme while it is one: its thumb wears the indicator's colours and no wall, `SliderButtonWdgt._fillForMyState` / `_strokeForMyState`.) HOLD each state:
@@ -2219,7 +2219,7 @@ assertion a recapture after a regression silently stores two different hashes an
   expected position off the CoffeeScript compiler run on the TYPED text alone, never off the build under test. (2) The crash
   path never ran: `world.errorConsole is undefined` (each test starts on a freshly constructed world, so the Error log exists
   only if something threw into it). (3) Nothing changed: the route's own state by IDENTITY (`script.savedScript
-  is savedBefore`, `ButtonWdgt::hoverEntered is hoverBefore`, the mixin's `nonStaticPropertiesSources[name]`). (4) The edit
+  is savedBefore`, the class member the Save was refused for unchanged). (4) The edit
   survived: the editor still holds the text, Save is still enabled (`saveButton.isEnabled`), and a "… + close"/"OK" gesture
   left its window up (`win.parent is world`, `prompt.isOrphan()` false). Dismiss with `@moveToItemOfMenuAndClick_InputEvents
   message, "OK"` before the next gesture. A behaviour no gesture can reach any more (the prompt now refuses before injecting)
@@ -2504,8 +2504,8 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   non-float drag stream through the island's hit-testing; assert the resize DIRECTION (grew/shrank) rather than magnitudes (the
   adjuster's transfer function is nonlinear).
 - **Scrolled-pane aiming discipline** (the scroll twin of the island rules above; case law:
-  `macroDuplicatedInspectorDrivesCopiedTargetOnly`, `macroMixinEditDonorAndOverride`,
-  `macroSimpleDocumentRemovingLastParagraphUpdatesScrollbarAndLeavesViewportAtEndOfDocument` — all three carried
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly`,
+  `macroSimpleDocumentRemovingLastParagraphUpdatesScrollbarAndLeavesViewportAtEndOfDocument` — both carried
   in-plane aims that silently missed once the offset model landed): a scrolled plane's residents NEVER move when
   the pane scrolls (paint-time scroll — the viewport's stored offset translates them at paint), so `row.top()`,
   `w.center()` etc. are PLANE values sitting offset-pixels away from the pixels. Every point fed to an input verb
@@ -2583,31 +2583,6 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   list sub-row scroll rendering leaves an invisible sub-pixel difference, so the round-trip is shown VISUALLY (re-select the same base
   property) rather than via `@assertScreenshotsIdentical`. (Re-authored when the old `InspectorMorph` was removed and the inspect path
   was made windowed; the old "edit..." menu became these direct buttons.)
-- **`macroMixinEditDonorAndOverride`** (authored new, 5 shots): LIVE MIXIN EDITING through the class inspector. Fixture: build the
-  class inspector DIRECTLY — `world.openFrameWith (new ClassInspectorWdgt SomeClass.prototype), (new Point 560, 410), pos` (the
-  `openClassInspector` shape) — and TARGET THE CLASS THAT DECLARES THE `@augmentWith` (here `ButtonWdgt`): the inspector hides
-  inherited members, so a SUBCLASS prototype's list carries no mixin-donated row at all — and the row-select helper's thumb-press
-  then degenerates into a window float-drag (the naked-inspector degenerate-vBar gotcha, windowed edition). A consumer instance
-  (a PLAIN `ButtonWdgt`, which INHERITS the injected member, given a `RectangularAppearance` so it paints its `@color`) on the
-  desktop proves each edit took via its HOVER colour (Highlightable's `hoverEntered` reads `color_hover`; park the pointer on the
-  button with a no-button `@syntheticEventsMouseMove_InputEvents` and screenshot the held hover — a plain `ButtonWdgt` has no
-  tooltip, so no timed bubble). ⚠ Not a `SimpleButtonWdgt`: it derives its whole look from the theme at every state change and
-  reads none of the mixin's colours, so a mixin edit would never reach its pixels. Selecting a mixin-donated row (the `selectInspectorRow` helper from the AddEditSave pilot works unchanged on a class
-  inspector) shows the donor label ("from `<Name>Mixin`", `InspectorWdgt.mixinDonorLabel`) and the "Override in this class" button
-  (`ClassInspectorWdgt.overrideInThisClassButton`, left of "Save"). A plain `saveButton` click routes to the DONOR
-  (`Mixin.applyMemberEdit` → every non-shadowing consumer class updates) and pops an `@inform` naming the mixin + consumer count;
-  the override button keeps the edit on THIS class only (`overrideInThisClass` → `Class.applyMemberEdit`). Both popups dismiss via
-  `@moveToItemOfTopMenuAndClick_InputEvents "OK"` (an `@inform` is a menu with an "OK" row, popped centered at the hand). No new verb.
-  The FIELD sibling **`macroMixinFieldEditDonorAndOverride`** runs the same flow on `color_hover` (a donated FIELD attributes in
-  the class inspector via `_sourceForFieldMember` — the detail shows the donor's recorded SOURCE, "undefined"); its hover proof
-  goes through the UNCHANGED state machinery (`hoverEntered` → `_updateColor` → `@color_hover`), so the fixture needs no method edit.
-  ⚠ BOTH tests RESTORE the donor's pristine source and lift the override in their macro TAIL (after the last shot, fixture-style
-  direct calls: capture `theMixin.nonStaticPropertiesSources[name]` at macro start; at the end `<Class>.class.removeMember name`
-  — the override leaves the class's store, and the class gets the donor's member back — then `theMixin.applyMemberEdit name,
-  orig`): a mixin/class edit mutates
-  the PARSED MIXIN STORE and consumer PROTOTYPES — state that outlives `resetWorld` and leaks into every later test in the shard
-  (the passes-alone-fails-in-suite class; reproduce/prove with `run-sequence-headless.js` on the two-test sequence). ANY future
-  test that edits a mixin or a class prototype must restore the same way.
 - **`macroCanMoveAndResizeColorPaletteWdgt`** (from 523 cmds): enter resize/move mode (`@openMenuOf_InputEvents` → "Resize/move…")
   then drag a corner handle; click empty desktop to exit before the screenshot.
 - **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `DocumentViewportWdgt`

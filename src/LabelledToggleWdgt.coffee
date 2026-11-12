@@ -10,9 +10,10 @@
 # setOn, so the two cannot disagree however the click is reached. A copy or a restored world
 # carries my isOn as an own field beside the host's, both copied from the one consistent state.
 #
-# MY LOOK is a pure function of three things, every value a Theme role or metric: my isOn, my
-# HighlightableMixin state (at rest, hovered, pressed) and my enabled flag. It is re-derived at every
-# transition (SimpleButtonWdgt._updateColor), so no transition leaves a colour behind:
+# MY LOOK is a pure function of three things, every value a Theme role or metric: my isOn, the
+# pointer state I show (at rest, hovered, pressed: ButtonWdgt._shownState, asked of the hand) and my
+# enabled flag. It is read as I am painted (_fillForMyState, _strokeForMyState), so no gesture leaves
+# a colour behind:
 #   OFF   no fill (toggleOffFill) inside a 1 px toggleOffStroke border, the label toggleOffText;
 #         hovered the toggleOffHoverFill, pressed the toggleOffPressFill inside the darker
 #         toggleOffPressStroke -- the button's feedback, so a press on a toggle reads as a press
@@ -37,8 +38,8 @@ class LabelledToggleWdgt extends SimpleButtonWdgt
 
   # SimpleButtonWdgt's opts (`target:` / `action:` among them), plus one key of my own, read guarded:
   #   on  (default false)  my initial isOn
-  # isOn is assigned before super: the base constructor derives my look (_inkMyFace, _updateColor),
-  # and my look reads it.
+  # isOn is assigned before super: the base constructor inks my face (_inkMyFace), and my face's ink
+  # reads it.
   constructor: (opts = {}) ->
     @isOn = !!(opts.on ? false)
 
@@ -54,22 +55,22 @@ class LabelledToggleWdgt extends SimpleButtonWdgt
     return if newState is @isOn
     @isOn = newState
     @_inkMyFace()
-    @_updateColor()
+    @_changed()
 
   _fillForMyState: ->
     return super() unless @isEnabled
     theme = WorldWdgt.theme
     return theme.toggleOnFill if @isOn
-    switch @state
-      when @STATE_PRESSED then theme.toggleOffPressFill
-      when @STATE_HIGHLIGHTED then theme.toggleOffHoverFill
+    switch @_shownState()
+      when "pressed" then theme.toggleOffPressFill
+      when "highlighted" then theme.toggleOffHoverFill
       else theme.toggleOffFill
 
   _strokeForMyState: ->
     return super() unless @isEnabled
     theme = WorldWdgt.theme
     return theme.toggleOnStroke if @isOn
-    if @state is @STATE_PRESSED then theme.toggleOffPressStroke else theme.toggleOffStroke
+    if @_shownState() is "pressed" then theme.toggleOffPressStroke else theme.toggleOffStroke
 
   # My label's ink follows my isOn and my enabled flag, never a hover or a press: the constructor,
   # setOn and setEnabled write it.

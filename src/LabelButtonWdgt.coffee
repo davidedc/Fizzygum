@@ -6,9 +6,9 @@
 # whose look is its own instead gives none, and answers its appearance (createAppearance) and its
 # label's font and ink (_labelTextOptions) itself: MagnetWdgt, a Fizzytiles word tile in the
 # button's look. It extends the modern button family (ButtonWdgt), inheriting the
-# target/action/trigger machinery and the HighlightableMixin state constants, but supplies its OWN
-# flat paint -- the button family draws no flat fill (ButtonWdgt is transparent, SimpleButtonWdgt
-# is a rounded box).
+# target/action/trigger machinery and the state its look shows (ButtonWdgt._shownState, asked of the
+# hand as it paints), but supplies its OWN flat paint -- the button family draws no flat fill
+# (ButtonWdgt is transparent, SimpleButtonWdgt is a rounded box).
 #
 # This is the shared base of MenuItemWdgt (menu and list rows) and MagnetWdgt
 # (fizzytiles word tiles).
@@ -172,57 +172,14 @@ class LabelButtonWdgt extends ButtonWdgt
       @centered = false
       @_reLayoutSelf()
 
-  # a copied label button usually wants to un-highlight itself (e.g. when you
-  # duplicate by clicking a "duplicate" button INSIDE it). Running an input-protocol verb on
-  # the clone BEFORE THE COPY IS PLACED (the hook fires once the whole copy is built, before its
-  # caller attaches it anywhere: the Duplicator's Note 3) is deliberate and safe: hoverExited is
-  # the ONE home of the un-hover behaviour (state reset + tooltip teardown; a hand-copied body
-  # here would be a drift-prone twin), and its _changed() no-ops honestly in an orphan copy — the
-  # Duplicator drops the copied cache pairs, so the clone derives its own orphan root rather than
-  # answering the ORIGINAL's world.
-  _reactToBeingCopied: ->
-    # public-call-sanctioned: hoverExited is the public pointer-event PROTOCOL verb (dispatched by
-    # ActivePointerWdgt); reused to reset the copy's hover state — renaming it is not an option.
-    @hoverExited()
-
-  # hovered as the pointer arrives — not under a finger, which rests nowhere
-  # (ActivePointerWdgt.pointerCanRest); the tooltip's countdown starts either way
-  hoverEntered: ->
-    if world.hand.pointerCanRest()
-      @state = @STATE_HIGHLIGHTED
-      @_changed()
-    @startCountdownForBubbleHelp @toolTipMessage  if @toolTipMessage
-
-  hoverExited: ->
-    @state = @STATE_NORMAL
-    @_changed()
-    world.destroyToolTips()  if @toolTipMessage
-
-  # A press shows PRESSED, raises me, and goes on up: Widget.pressBegan's body inline rather than
-  # through super, because ButtonWdgt's HighlightableMixin pressBegan would run _updateColor,
-  # clobbering @color (our normal fill).
-  pressBegan: (ignored_pos) ->
-    @state = @STATE_PRESSED
-    @_changed()
-    @bringToForeground()
-    true
-
-  # MY TWO ENDINGS (ActivePointerWdgt, the press's AUDIENCE). The release leaves my state as the press
-  # left it: a release that clicks me goes on to set it (activated -- HIGHLIGHTED), and
-  # HighlightableMixin's ending would write a state, and repaint me through _updateColor (clobbering
-  # my normal fill), right under that click. (A list row ends its press itself: MenuItemWdgt.)
-  pressEnded: ->
-
-  # A cancelled press is followed by no click, so it is mine to undo: hovered if the pointer rests on
-  # me, at rest otherwise.
-  pressCancelled: ->
-    @state = if world.hand.restsOn @ then @STATE_HIGHLIGHTED else @STATE_NORMAL
-    @_changed()
-
+  # MY CLICK: raised, any unpinned pop-up I sit in closed, my action triggered (and not escalated).
+  # My pointer LOOK is neither a click's to set nor a press's: it is the state I show
+  # (ButtonWdgt._shownState), read by my appearance as it paints -- hovered while the pointer rests
+  # on me, pressed while the hand presses me, at rest otherwise -- so a press, its release, a click,
+  # a cancel and a copy of me leave no look of their own behind. A press on me raises me and goes on
+  # up as any widget's does (Widget.pressBegan).
   activated: ->
     @bringToForeground()
-    @state = @STATE_HIGHLIGHTED
-    @_changed()
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       @propagateKillPopUps()
     @trigger()

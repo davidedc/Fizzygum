@@ -3,17 +3,15 @@
 # its "face" -- most often a line of text.
 #
 # MY LOOK is a pure function of two things, and every value in it is a Theme role or metric:
-#   my STATE    HighlightableMixin's: at rest, under the pointer (hovered), pressed
+#   my STATE    the one I show (ButtonWdgt._shownState, asked of the hand): at rest, under the
+#               pointer (hovered), pressed
 #   my ENABLED  flag (setEnabled)
 # At rest I paint buttonFill inside a 1 px buttonStroke border at buttonCornerRadius, hovered
 # buttonHoverFill, pressed buttonPressFill inside the darker buttonPressStroke. Disabled I keep my
 # shape and lose contrast: no fill (whatever is behind me shows), a buttonDisabledStroke border,
-# and no hover or pressed look. The look is re-derived from the state at EVERY transition
-# (_updateColor), for the mouse and the finger alike, so no transition can leave a colour of its
-# own behind. ⚠ That is also why I do not wear the MIXIN's colours (color_normal / color_hover /
-# color_pressed): a live edit of them reaches a plain ButtonWdgt and not me, so
-# SystemTest_macroMixinEditDonorAndOverride and its field sibling prove a live mixin edit on a
-# plain ButtonWdgt.
+# and no hover or pressed look. My BoxyAppearance reads the look as it paints me
+# (_fillForMyState, _strokeForMyState), for the mouse and the finger alike, so I hold no colour of
+# my own and no gesture can leave one behind.
 #
 # A LINE OF TEXT as my face (a string face, which ButtonWdgt builds, or a StringWdgt a host built
 # itself) gets three things more:
@@ -61,7 +59,6 @@ class SimpleButtonWdgt extends ButtonWdgt
     @appearance = new BoxyAppearance @
     @cornerRadius = WorldWdgt.theme.buttonCornerRadius
     @_inkMyFace()
-    @_updateColor()
 
   # Enable or disable me. My look follows at once, whatever state the pointer leaves me in: a
   # disabled button shows no hover or pressed look, and an enabled one shows the look of the state
@@ -71,7 +68,7 @@ class SimpleButtonWdgt extends ButtonWdgt
     return if enabled is @isEnabled
     @isEnabled = enabled
     @_inkMyFace()
-    @_updateColor()
+    @_changed()
 
   # A disabled button swallows the activation (see isEnabled).
   activated: ->
@@ -82,26 +79,20 @@ class SimpleButtonWdgt extends ButtonWdgt
     return unless @isEnabled
     super
 
-  # HighlightableMixin's colour hook, which every one of its state transitions calls (hoverEntered,
-  # hoverExited, pressBegan, pressEnded, pressCancelled) after setting @state. I answer it with my
-  # whole box look for the state I am in now, so the look is decided here and nowhere else.
-  _updateColor: ->
-    @color = @_fillForMyState()
-    @strokeColor = @_strokeForMyState()
-    @_changed()
-
+  # MY BOX'S LOOK for the state I show now, which my BoxyAppearance reads as it paints me (its
+  # _fillColor and _borderColor ask these first), so the look is decided here and nowhere else.
   _fillForMyState: ->
     theme = WorldWdgt.theme
     return theme.buttonDisabledFill unless @isEnabled
-    switch @state
-      when @STATE_PRESSED then theme.buttonPressFill
-      when @STATE_HIGHLIGHTED then theme.buttonHoverFill
+    switch @_shownState()
+      when "pressed" then theme.buttonPressFill
+      when "highlighted" then theme.buttonHoverFill
       else theme.buttonFill
 
   _strokeForMyState: ->
     theme = WorldWdgt.theme
     return theme.buttonDisabledStroke unless @isEnabled
-    if @state is @STATE_PRESSED then theme.buttonPressStroke else theme.buttonStroke
+    if @_shownState() is "pressed" then theme.buttonPressStroke else theme.buttonStroke
 
   # My text face's ink, which follows my enabled flag and nothing else: the constructor and
   # setEnabled write it, a hover or a press never does.

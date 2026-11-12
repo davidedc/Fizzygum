@@ -2,8 +2,8 @@
 # edit pieces, and a toolbar strip's overflow chevron.
 #
 # Each sends a message to a target object when pressed and draws its MARK -- the glyph -- through
-# an IconAppearance rather than through a label or a face widget. The glyph is painted in my
-# colour, so the hover/press state machine (HighlightableMixin) recolours it. What a pointer hits
+# an IconAppearance rather than through a label or a face widget. The glyph is painted in the ink of
+# the state I show (_fillForMyState, which my appearance asks as it paints). What a pointer hits
 # is my whole box, never the glyph's outline: an icon appearance keeps the base box test
 # (Appearance.shapeContainsPoint), because the box is the target and the glyph only the mark drawn
 # inside it (ruling G3). (The toolbar's overflow chevron re-answers both: it wears a tool cell's
@@ -14,9 +14,15 @@
 #   toolTipMessage     :  "…"                          (hover tooltip)
 #   actOnClick         -> …                            (what the press does)
 # My glyph's ink is the same for every subclass: a frame's strip inks the pieces it carries itself
-# (setGlyphInk, below), and a piece no strip inks wears the icon button's roles (_updateColor).
+# (setGlyphInk, below), and a piece no strip inks wears the icon button's roles (_fillForMyState).
 
 class IconButtonWdgt extends ButtonWdgt
+
+  # MY GLYPH'S INKS as the strip that carries me names them (setGlyphInk): at rest, hovered, pressed.
+  # Unset -- a piece no strip inks -- each state's ink is the icon button's role (_fillForMyState).
+  color_normal: undefined
+  color_hover: undefined
+  color_pressed: undefined
 
   # THE SIDE MY MARK IS DRAWN AT inside my box, read by IconAppearance.calculateRectangleOfIcon.
   # A chrome button is a TARGET first (ruling G3), so a title strip sizes me to the whole slot it
@@ -43,25 +49,22 @@ class IconButtonWdgt extends ButtonWdgt
     super target: @, action: 'actOnClick', face: new Widget
     @appearance = @createAppearance()
 
-  # HighlightableMixin's colour hook, which every one of its state transitions calls after setting
-  # @state (and ButtonWdgt's constructor, once): my glyph's ink for the state I am in now -- the
-  # state machine's own field for it when the strip that carries me has set one (setGlyphInk), else
-  # the icon button's role, read here: iconButtonGlyph at rest, iconButtonGlyphActive hovered and
-  # pressed. The constructor and every transition derive it the same way, so a pointer visit
-  # round-trips my glyph to the pixels it had.
-  _updateColor: ->
+  # MY GLYPH'S INK for the state I show now (ButtonWdgt._shownState), which my IconAppearance asks as
+  # it paints (its _iconColorString): the strip's ink for that state when the strip that carries me
+  # has set one (setGlyphInk), else the icon button's role, read here: iconButtonGlyph at rest,
+  # iconButtonGlyphActive hovered and pressed. Read at every paint and held nowhere, so a pointer
+  # visit round-trips my glyph to the pixels it had.
+  _fillForMyState: ->
     theme = WorldWdgt.theme
-    @color = switch @state
-      when @STATE_HIGHLIGHTED then @color_hover ? theme.iconButtonGlyphActive
-      when @STATE_PRESSED then @color_pressed ? theme.iconButtonGlyphActive
+    switch @_shownState()
+      when "highlighted" then @color_hover ? theme.iconButtonGlyphActive
+      when "pressed" then @color_pressed ? theme.iconButtonGlyphActive
       else @color_normal ? theme.iconButtonGlyph
-    @_changed()
 
   # MY GLYPH'S INK, as the strip that carries me names it (FrameBarWdgt._inkGlyphButtons, from its
-  # frame's look): `restInk` at rest, `activeInk` while I am hovered and while I am pressed. All the
-  # state machine's colours move together, so every transition paints the strip's ink, and @color
-  # follows at once, in whatever state I am in now. The same inks again are a no-op: a strip
-  # re-inks every piece it carries at each derivation of its skin.
+  # frame's look): `restInk` at rest, `activeInk` while I am hovered and while I am pressed. The three
+  # inks move together, and my glyph repaints in whatever state I show now. The same inks again are a
+  # no-op: a strip re-inks every piece it carries at each derivation of its skin.
   setGlyphInk: (restInk, activeInk) ->
     unchanged = @color_normal?.equals(restInk) and @color_hover?.equals(activeInk) and
       @color_pressed?.equals(activeInk)
@@ -69,4 +72,4 @@ class IconButtonWdgt extends ButtonWdgt
     @color_normal = restInk
     @color_hover = activeInk
     @color_pressed = activeInk
-    @_updateColor()
+    @_changed()

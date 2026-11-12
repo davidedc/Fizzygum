@@ -93,8 +93,8 @@ class Mixin
   _consumerClassNames: ->
     window[@name + "Mixin"]?.consumerClassNames or []
 
-  # The parsed Mixin named `name` -- the mixin global's name ("HighlightableMixin", what a
-  # class's augmentedWith holds) or the parsed one's own ("Highlightable"), among those registered
+  # The parsed Mixin named `name` -- the mixin global's name ("FooMixin", what a
+  # class's augmentedWith holds) or the parsed one's own ("Foo"), among those registered
   # (allMixines, register).
   @named: (name) ->
     Mixin.allMixines.find (m) -> m.name is name or m.name + "Mixin" is name

@@ -92,7 +92,11 @@ class ToolPanelWdgt extends PanelWdgt
 
         if !aWdgt.actionableAsThumbnail
           glassBoxTop = new GlassBoxTopWdgt
-          glassBoxTop.toolTipMessage = aWdgt.toolTipMessage
+          # the lid is what the pointer rests on, so its tooltip is the tool's NAME -- the word the
+          # tool states for what it is in a panel (toolName: "rectangle", "map pin") -- else the
+          # tooltip the tool shows itself (an app launcher, a button dropped into the panel); a tool
+          # with neither gets a lid with no tooltip
+          glassBoxTop.toolTipMessage = aWdgt.toolName ? aWdgt.toolTipMessage
           glassBoxBottom.add glassBoxTop
 
         # a provisional seat inside my padding: the arrange this add schedules places the cell

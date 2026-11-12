@@ -6,8 +6,8 @@
 # provides a larger target area to grab the
 # widget)
 #
-# I paint nothing. My hover / press state is the one the cell under me shows (CreatorWdgt's
-# ParentStainerMixin; GlassBoxBottomWdgt reads the state of the widget a tap on it reaches, which is me).
+# I paint nothing. My hover / press state is the one the cell under me shows (CreatorWdgt tells it;
+# GlassBoxBottomWdgt asks the hand about the widget a tap on it reaches, which is me).
 
 class GlassBoxTopWdgt extends CreatorWdgt
 

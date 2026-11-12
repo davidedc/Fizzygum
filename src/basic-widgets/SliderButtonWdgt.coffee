@@ -24,11 +24,6 @@ class SliderButtonWdgt extends CircleBoxWdgt
   highlightColor: undefined
   pressColor: undefined
 
-  state: 0
-  STATE_NORMAL: 0
-  STATE_HIGHLIGHTED: 1
-  STATE_PRESSED: 2
-
   # The whole thumb box grabs, not just the stadium my CircleBoxyAppearance draws inside it: a
   # slider you have to hit on the rounded cap is a slider that slips out of your hand.
   #   UNLESS my slider is a thin scroll INDICATOR, which is not a target at all (ruling G3): the
@@ -39,17 +34,28 @@ class SliderButtonWdgt extends CircleBoxWdgt
 
   # My slider has just put on, changed or taken off its indicator presentation (see
   # SliderWdgt.showAsScrollIndicator) and hands me the alpha that presentation shows me at. My look
-  # follows from the presentation and my state together, read as I am painted (_fillForMyState,
-  # _strokeForMyState), so a new presentation is a new look: I keep the alpha and repaint. My state
-  # is untouched.
+  # follows from the presentation and my pointer state together, read as I am painted
+  # (_fillForMyState, _strokeForMyState), so a new presentation is a new look: I keep the alpha and
+  # repaint.
   showAsScrollIndicatorThumb: (alpha) ->
     @alpha = alpha
     @_changed()
 
+  # MY POINTER STATE, asked of the hand as I am painted and kept nowhere. PRESSED while the hand
+  # presses me (ActivePointerWdgt.pressesOn): while it non-float drags me, wherever the pointer has
+  # run to, and while a press holds me with the pointer on me. HOVERED while the pointer rests on me
+  # (restsOn: never a finger) and the hand drags nothing -- a hand carrying a payload, or dragging
+  # anything in place, passes over me without lighting me. At rest otherwise.
+  _showsPressed: ->
+    world.hand.pressesOn @
+
+  _showsHover: ->
+    world.hand.restsOn(@) and not world.hand.isThisPointerDraggingSomething()
+
   # My look, read by my appearance as it paints me (CircleBoxyAppearance._fillColor / _borderColor):
-  # a function of my slider's indicator presentation and my state, and, while it wears none, of my
-  # fill overrides. A THIN indicator's thumb is not a control (ruling G3) and shows the scrollbar
-  # colour in every state; a FAT one shows it at rest and darkens under a pointer and while
+  # a function of my slider's indicator presentation and my pointer state, and, while it wears none,
+  # of my fill overrides. A THIN indicator's thumb is not a control (ruling G3) and shows the
+  # scrollbar colour in every state; a FAT one shows it at rest and darkens under a pointer and while
   # pressed; neither draws a border. A thumb whose slider is no indicator wears the button's look
   # (visual-design-system §4.3): its fill for my state (an override of mine, else the theme's
   # role) inside a 1 px border, the darker one while pressed. Every colour is the theme's or an
@@ -61,20 +67,18 @@ class SliderButtonWdgt extends CircleBoxWdgt
       when 'thin'
         theme.scrollIndicatorThumb
       when 'fat'
-        switch @state
-          when @STATE_PRESSED then theme.scrollIndicatorThumbPress
-          when @STATE_HIGHLIGHTED then theme.scrollIndicatorThumbHighlight
-          else theme.scrollIndicatorThumb
+        if @_showsPressed() then theme.scrollIndicatorThumbPress
+        else if @_showsHover() then theme.scrollIndicatorThumbHighlight
+        else theme.scrollIndicatorThumb
       else
-        switch @state
-          when @STATE_PRESSED then @pressColor ? theme.sliderThumbPressFill
-          when @STATE_HIGHLIGHTED then @highlightColor ? theme.sliderThumbHoverFill
-          else @normalColor ? theme.sliderThumbFill
+        if @_showsPressed() then @pressColor ? theme.sliderThumbPressFill
+        else if @_showsHover() then @highlightColor ? theme.sliderThumbHoverFill
+        else @normalColor ? theme.sliderThumbFill
 
   _strokeForMyState: ->
     return undefined if @parent?.indicatorMode?
     theme = WorldWdgt.theme
-    if @state is @STATE_PRESSED then theme.sliderThumbPressStroke else theme.sliderThumbStroke
+    if @_showsPressed() then theme.sliderThumbPressStroke else theme.sliderThumbStroke
 
   # the thumb's grab-corrected target POSITION (pointer mapped into my plane, minus the
   # within-thumb grab point), held for the duration of a knob drag — plane-local, so it
@@ -188,62 +192,18 @@ class SliderButtonWdgt extends CircleBoxWdgt
         # precondition for deferring this move later — see SliderWdgt.updateValue).
         @parent.updateValue newPosition
   
-  # The state transitions. Each one sets my state and repaints me; what that state shows is read
-  # as I am painted (_fillForMyState, _strokeForMyState), so the presentation my slider wears
-  # decides the look together with the state, and no transition writes a colour.
-  endOfNonFloatDrag: ->
-    if @state != @STATE_NORMAL
-      @state = @STATE_NORMAL
-      @_changed()
+  # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my look
+  # is read from them as I am painted, so I repaint. Neither a press, a hover nor the end of my drag
+  # writes a look: the presentation my slider wears and the hand's answers decide it together.
+  notePointerStateChanged: ->
+    @_changed()
 
-  _setHighlightedColor: ->
-    if @state != @STATE_HIGHLIGHTED
-      @state = @STATE_HIGHLIGHTED
-      @_changed()
-
-  _setNormalColor: ->
-    if @state != @STATE_NORMAL
-      @state = @STATE_NORMAL
-      @_changed()
-
-  setPressedColor: ->
-    if @state != @STATE_PRESSED
-      @state = @STATE_PRESSED
-      @_changed()
-
-  # A pointer merely resting on me highlights me, so I take the HOVER move channel and no
-  # other: a move under a live press is that press's business (a drag of me arrives as
-  # nonFloatDragging), never a reason to light up. A finger rests nowhere
-  # (ActivePointerWdgt.pointerCanRest), so it never lights me this way.
-  #   The other two guards are about a stroke whose effects OUTLIVE the moves that started it: a
-  # press state or a hand carrying something is still standing when the per-cycle hover
-  # re-sync comes round, and neither may re-highlight me.
-  hoverMoved: ->
-    if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething() or not world.hand.pointerCanRest()
-      return
-    @_setHighlightedColor()
-
-  # The same guards, because an ENTER can come after the press too: a finger's press on a thin
-  # scroll indicator meets a thumb its arrival has only just fattened, so the thumb joins the
-  # pointer's over-list at the next hover re-sync, under a press I am already showing.
-  hoverEntered: ->
-    if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething() or not world.hand.pointerCanRest()
-      return
-    @_setHighlightedColor()
-
-  hoverExited: ->
-    if world.hand.isThisPointerDraggingSomething()
-      return
-    @_setNormalColor()
-  
   # a press on me is the start of my drag, and STOPS here: my slider must not take it for a press on
   # its track, nor a pane around us for a drag-scroll
   pressBegan: (pos) ->
     @bringToForeground()
-    @setPressedColor()
     false
 
   activated: ->
     @bringToForeground()
-    @_setHighlightedColor()
   

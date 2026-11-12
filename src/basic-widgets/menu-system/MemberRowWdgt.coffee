@@ -101,4 +101,4 @@ class MemberRowWdgt extends MenuItemWdgt
   inkForChildText: (aText) ->
     return undefined unless aText is @kindTag
     theme = WorldWdgt.theme
-    if @_shownState() is @STATE_NORMAL then theme.memberRowTagText else theme.memberRowSelectedTagText
+    if @_shownState() is "atRest" then theme.memberRowTagText else theme.memberRowSelectedTagText

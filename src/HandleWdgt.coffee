@@ -10,9 +10,6 @@
 
 class HandleWdgt extends Widget
 
-  # where the pointer stands now is no fact about a saved or copied handle: it starts at rest
-  @serializationTransients: ["_isHovered", "_isPressed"]
-
   target: undefined
   inset: undefined
   type: undefined
@@ -28,15 +25,12 @@ class HandleWdgt extends Widget
   _rotateGrabStartRotationDegrees: undefined
   _rotateGrabStartPointerAngleDegrees: undefined
 
-  # MY POINTER STATE, two facts kept apart because they end apart: whether the pointer is over me
-  # (hoverEntered / hoverExited), and whether a press that began on me still stands (pressBegan,
-  # until its release or its cancel, the end of its drag, the pointer leaving me while nothing is
-  # dragged, or my moving to another parent). My plate shows the press while it stands and the
-  # hover otherwise (_plateFillForMyState), so its look after a gesture is a function of where the
-  # gesture left the pointer and me, whatever order the events of a busy cycle arrive in: a handle
-  # travels with its drag, so the pointer can leave and re-enter me under a press.
-  _isHovered: false
-  _isPressed: false
+  # MY POINTER STATE is the hand's, asked as I am painted and kept nowhere (_plateFillForMyState):
+  # pressed while the hand presses me (ActivePointerWdgt.pressesOn: while it drags me, wherever the
+  # pointer has run to, and while a press holds me with the pointer on me), hovered while the pointer
+  # rests on me (restsOn: never a finger), at rest otherwise. So my look after a gesture is a function
+  # of where the gesture left the pointer and me, whatever order the events of a busy cycle arrive
+  # in: a handle travels with its drag, so the pointer can leave and re-enter me under a press.
 
   # (No catchesPointerAt of my own: WHERE I react is my SHAPE, and the shape is my appearance's
   # business -- HandleAppearance answers my whole box for every type, the corner resizer's included,
@@ -152,9 +146,6 @@ class HandleWdgt extends Widget
       @target = whereTo
       @inset = @_cornerInsetFrom @target
       @cornerSpec.inset = @inset
-    # a press does not survive a change of parent, whatever makes it: a lift also cancels my press,
-    # but a drop or a builder moving me tells me nothing else
-    @_setPointerState @_isHovered, false
     @_castMyShadow()
     @_moveInFrontOfSiblings()
 
@@ -189,26 +180,23 @@ class HandleWdgt extends Widget
   # prevents the parent from doing anything.
   activated: ->
   # MY PRESS'S TWO ENDINGS (ActivePointerWdgt, the press's AUDIENCE) — the release, or the stroke
-  # turning into something else: either way the press is over, and whether my plate then shows the
-  # hover is the pointer's business (hoverEntered / hoverExited). Affine transforms (§6 Phase 4B): it
-  # is also the end of a rotate gesture — clear the grab-start state so the next grab re-captures its
-  # own reference angle. Harmless for the other handle types (fields stay undefined).
+  # turning into something else: either way the press is over, and what my plate then shows is the
+  # hand's answer (_plateFillForMyState). Affine transforms (§6 Phase 4B): it is also the end of a
+  # rotate gesture — clear the grab-start state so the next grab re-captures its own reference
+  # angle. Harmless for the other handle types (fields stay undefined).
   pressEnded: ->
-    @_setPointerState @_isHovered, false
     @_rotateGrabStartRotationDegrees = undefined
     @_rotateGrabStartPointerAngleDegrees = undefined
 
   pressCancelled: ->
-    @_setPointerState @_isHovered, false
     @_rotateGrabStartRotationDegrees = undefined
     @_rotateGrabStartPointerAngleDegrees = undefined
 
   # same here, the handle doesn't want to propagate
   # anything, otherwise the handle on a button
   # will trigger the button when resizing: the press STOPS here.
-  # The press shows on my plate whether or not I have a target.
+  # The press shows on my plate whether or not I have a target (the hand presses me either way).
   pressBegan: (pos) ->
-    @_setPointerState @_isHovered, true
     return false  unless @target
     @target.bringToForeground()
     # Affine transforms (§6 Phase 4B): capture the rotate gesture's reference frame AT PRESS — the
@@ -286,20 +274,13 @@ class HandleWdgt extends Widget
   _extentMyDragAsksOfMyTarget: (anExtent) ->
     anExtent
 
-  # HandleWdgt events:
-  hoverEntered: ->
-    @_setPointerState true, @_isPressed
+  # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my plate
+  # is read from them as I am painted, so I repaint.
+  notePointerStateChanged: ->
+    @_changed()
 
-  # The pointer leaving me ends my press unless it drags me: a drag carries me along, and the pointer
-  # may outrun me while it does, but a press that left without dragging is abandoned (the button's
-  # rule). A finger's stroke ends with this too, once its press and drag are cleared
-  # (ActivePointerWdgt._dissolveHoverStateOfTouchStroke), which ends a press its hold took over.
-  hoverExited: ->
-    @_setPointerState false, @_isPressed and world.hand.isThisPointerDraggingSomething()
-
-  # the drag that began on me is over, wherever the pointer is: so is my press
+  # the drag that began on me is over, wherever the pointer is
   endOfNonFloatDrag: ->
-    @_setPointerState @_isHovered, false
     # RE-RECORD request (the F6 family, auto-bookkeeping arc): the drag resized/moved my target by
     # user intent, so its fractional bookkeeping is stale. Asked here, at the end of the DRAG — which
     # every drag of mine reaches, however its release lands or if the stroke is aborted — and not at
@@ -309,28 +290,21 @@ class HandleWdgt extends Widget
     # proportions on the next holder reflow.
     world.pendingFractionalReRecords.add @target  if @target?
 
-  # my pointer state, and a repaint of me when it changes
-  _setPointerState: (hovered, pressed) ->
-    return if hovered is @_isHovered and pressed is @_isPressed
-    @_isHovered = hovered
-    @_isPressed = pressed
-    @_changed()
-
-  # my plate's fill and border for the pointer state I am in now, which my appearance reads as it
-  # paints: the press look while a press stands, else the hover look while the pointer is over me,
-  # else the rest look
+  # my plate's fill and border for the pointer state I show now, which my appearance reads as it
+  # paints: the press look while the hand presses me, else the hover look while the pointer rests on
+  # me, else the rest look
   _plateFillForMyState: ->
     theme = WorldWdgt.theme
-    if @_isPressed
+    if world.hand.pressesOn @
       theme.handlePlatePressFill
-    else if @_isHovered
+    else if world.hand.restsOn @
       theme.handlePlateHoverFill
     else
       theme.handlePlateFill
 
   _plateStrokeForMyState: ->
     theme = WorldWdgt.theme
-    if @_isPressed then theme.handlePlatePressStroke else theme.handlePlateStroke
+    if world.hand.pressesOn @ then theme.handlePlatePressStroke else theme.handlePlateStroke
 
   # Menu action ("Attach" -> the "target" chooser): corner-attach this handle to the chosen widget. A discrete
   # user action, so it goes through the public self-settling add() -- the corner placement comes from default

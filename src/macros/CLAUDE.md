@@ -368,7 +368,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 - **Menu items / magnets are now in the modern button family** — the deprecated `TriggerMorph` was deleted and replaced by
   a clean base **`LabelButtonWdgt`** (a flat label-bearing button) on the modern family: `Widget → ButtonWdgt` (was
   `EmptyButtonMorph`) `→ LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
-  `target`/`action`/`trigger` machinery + `HighlightableMixin` state constants from `ButtonWdgt` but paints its own
+  `target`/`action`/`trigger` machinery and the pointer look `_shownState` reads off the hand from `ButtonWdgt` but paints its own
   state fill from fields its builder sets (`LabelButtonAppearance`): menu rows a `desk` hover / `chrome` press plate of radius 6
   on a paper box, plain list rows a 40 px `desk` hover plate (a flag of their own: their highlighted state is their
   selection) and an `accentTint` plate while selected, on no fill, and a member row (the Object Inspector's list,

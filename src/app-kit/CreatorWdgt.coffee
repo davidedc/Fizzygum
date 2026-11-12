@@ -4,10 +4,16 @@
 
 class CreatorWdgt extends Widget
 
-  # my hover / press state shows on the tool cell I stand in, never on me (ParentStainerMixin). The
-  # order matters: both mixins define _updateColor, and the later one's (ParentStainerMixin's) is mine.
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
+  # MY HOVER AND PRESS show on the tool cell I stand in, never on me: the cell reads the hand's answers
+  # about me as it paints (GlassBoxBottomWdgt.fillForToolState asks this), and I tell it when they move.
+  lightsAToolCell: ->
+    true
+
+  # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my glyph
+  # keeps its one ink, so I tell the cell I stand in, which repaints over me. A parent that is no cell
+  # answers nothing.
+  notePointerStateChanged: ->
+    @parent?.noteItemStateChanged?()
 
 
   activated: (ignored, ignored2, ignored3, ignored4, ignored5, ignored6, ignored7, partOfDoubleClick) ->

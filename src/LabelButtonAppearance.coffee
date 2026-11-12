@@ -6,9 +6,10 @@
 # (a menu row) -- and below the plate too, when the widget's plateHeight stops it short of its
 # bottom (a list or a member row). At rest, a widget may still ask for a plate of its own
 # (_restPlateFill: a plain list row's hover, its highlighted look being its selection).
-#   The state I paint is the one my widget SHOWS: its own @state, unless it answers _shownState
-# (a soft hook) -- a list row does, since its highlighted look is its list's selection, a fact of
-# the list's model read as I paint and never stored on the row (MenuItemWdgt._shownState).
+#   The state I paint is the one my widget SHOWS (its _shownState, read as I paint and stored
+# nowhere): what the pointer's hand answers about it (ButtonWdgt._shownState) -- or, for a list
+# row, its press while the press holds it and its list's selection otherwise, a fact of the list's
+# model (MenuItemWdgt._shownState).
 # Solid BLACK over the whole box on the shadow pass, plate or no plate: the box is the silhouette.
 # The @label text is a child StringWdgt and paints itself; this appearance draws the fills and
 # the row's grip below.
@@ -28,13 +29,13 @@ class LabelButtonAppearance extends Appearance
         @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
         return
 
-      shownState = @widget._shownState?() ? @widget.state
+      shownState = @widget._shownState()
       stateColor = switch shownState
-        when @widget.STATE_NORMAL
+        when "atRest"
           @widget.color
-        when @widget.STATE_HIGHLIGHTED
+        when "highlighted"
           @widget.highlightColor
-        when @widget.STATE_PRESSED
+        when "pressed"
           @widget.pressColor
 
       if @widget.plateRadius?
@@ -58,7 +59,7 @@ class LabelButtonAppearance extends Appearance
     if @widget.color?
       ctx.fillStyle = @widget.color.toString()
       @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
-    plateColor = if shownState is @widget.STATE_NORMAL then @widget._restPlateFill?() else stateColor
+    plateColor = if shownState is "atRest" then @widget._restPlateFill?() else stateColor
     return unless plateColor?
     ctx.fillStyle = plateColor.toString()
     ctx.fillRoundRect 0, 0, @widget.width(), (@widget.plateHeight ? @widget.height()), @widget.plateRadius

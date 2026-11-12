@@ -223,8 +223,8 @@ class Duplicator
     @_compileInjectedMethods cloneOfMe
 
     # once the whole copy is built (Note 3): align the copy into the world-level trackers the original
-    # was in (Note 2), then give it a last chance to do other cleanup, for example a button that is
-    # highlighted might want to un-highlight itself
+    # was in (Note 2), then give it a last chance to do other cleanup, for example a viewport ends a
+    # scroll step that is still bound to the original (ViewportWdgt._reactToBeingCopied)
     @_finishings.push =>
       obj.alignCopiedWidgetToDamageInfoDataStructures? cloneOfMe
       obj.alignCopiedWidgetToSteppingStructures? cloneOfMe

@@ -126,18 +126,21 @@ class BoxyAppearance extends Appearance
   opaqueCoveredRect: ->
     @widget.boundingBox().insetBy Math.max(@_cornerRadii()...) + 1
 
-  # The colour I fill my widget's outline with: its own colour -- or, for a widget that holds none
-  # of its own because it wears a theme role until a colour is set on it, the role it answers (its
+  # The colour I fill my widget's outline with: the fill its pointer STATE shows, for a widget whose
+  # look is a function of its state (a button's box, SimpleButtonWdgt._fillForMyState; a tool cell's,
+  # GlassBoxBottomWdgt._fillForMyState); else its own colour -- or, for a widget that holds none of its
+  # own because it wears a theme role until a colour is set on it, the role it answers (its
   # _surfaceFill, a soft hook which, of the widgets wearing me, the speech bubble and a rows panel --
   # CommandPanelWdgt, under a MenuAppearance -- define), read here as I paint, so a saved or
   # duplicated widget wears the look of the world it is painted in.
   _fillColor: ->
-    @widget.color ? @widget._surfaceFill?()
+    @widget._fillForMyState?() ? @widget.color ? @widget._surfaceFill?()
 
-  # The colour I stroke my widget's 1 px outline with, the same way: its own strokeColor, else the
-  # role it answers (its _surfaceStroke, the same widgets' other soft hook); neither, no stroke.
+  # The colour I stroke my widget's 1 px outline with, the same way: the border its state shows (a
+  # button's, SimpleButtonWdgt._strokeForMyState), else its own strokeColor, else the role it answers
+  # (its _surfaceStroke, the same widgets' other soft hook); none of them, no stroke.
   _borderColor: ->
-    @widget.strokeColor ? @widget._surfaceStroke?()
+    @widget._strokeForMyState?() ? @widget.strokeColor ? @widget._surfaceStroke?()
 
   # This method only paints this very widget's "image",
   # it doesn't descend the children

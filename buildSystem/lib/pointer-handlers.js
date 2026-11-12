@@ -42,6 +42,9 @@ const POINTER_HANDLERS = {
   nonFloatDragging:     { pos: 'screen', screenPosParam: 1 },
   endOfNonFloatDrag:    {},
   scrolledBy:           {},
+  // the hand's answers (restsOn / pressesOn / holdsPressOn) about the receiver may have moved: no
+  // position, and a look is asked of the hand as it paints, never read off the pointer here
+  notePointerStateChanged: {},
 };
 
 // Methods the dispatcher hands a pointer position that are QUERIES, not handlers, each with why.

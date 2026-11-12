@@ -2,9 +2,9 @@
 # takes a rectangular shape, and can host
 # a widget to be used as "face"
 #
-# MY LOOK is the plain button's: my fill is HighlightableMixin's for my state (the plainButton*
-# roles, re-derived at every state change), inside a square 1 px border in the rectangular button's
-# role, read as my RectangularAppearance paints it (_surfaceStroke).
+# MY LOOK is the plain button's: my fill is the plainButton* role for the state I show
+# (ButtonWdgt._fillForMyState), inside a square 1 px border in the rectangular button's role, both
+# read as my RectangularAppearance paints me (_surfaceStroke).
 
 class SimpleRectangularButtonWdgt extends ButtonWdgt
 

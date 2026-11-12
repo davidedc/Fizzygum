@@ -5,8 +5,8 @@
 # what a magnet wants (a self-sized label, no box resize).
 #
 # MY LOOK is the design's button (visual-design-system §4.3, "a bordered rounded rectangle means
-# press me"), a pure function of my STATE (HighlightableMixin's, set by LabelButtonWdgt's
-# transitions) and the theme, read as I am painted (MagnetAppearance, through _fillForMyState /
+# press me"), a pure function of the pointer state I show (ButtonWdgt._shownState, asked of the
+# hand) and the theme, read as I am painted (MagnetAppearance, through _fillForMyState /
 # _strokeForMyState): magnetFill inside a 1 px magnetStroke border at rest, magnetHoverFill hovered,
 # magnetPressFill inside magnetPressStroke pressed, rounded at magnetCornerRadius. My label is a
 # code token, built in fonts.code and magnetText (_labelTextOptions). I hold no colour or font of
@@ -36,17 +36,17 @@ class MagnetWdgt extends LabelButtonWdgt
     fontRole: theme.fonts.code
     color: theme.magnetText
 
-  # my box's fill and border for the state I am in now, which my appearance reads as it paints
+  # my box's fill and border for the state I show now, which my appearance reads as it paints
   _fillForMyState: ->
     theme = WorldWdgt.theme
-    switch @state
-      when @STATE_PRESSED then theme.magnetPressFill
-      when @STATE_HIGHLIGHTED then theme.magnetHoverFill
+    switch @_shownState()
+      when "pressed" then theme.magnetPressFill
+      when "highlighted" then theme.magnetHoverFill
       else theme.magnetFill
 
   _strokeForMyState: ->
     theme = WorldWdgt.theme
-    if @state is @STATE_PRESSED then theme.magnetPressStroke else theme.magnetStroke
+    if @_shownState() is "pressed" then theme.magnetPressStroke else theme.magnetStroke
 
   rightCenter: ->
     new Point(@right(),@height()/2)

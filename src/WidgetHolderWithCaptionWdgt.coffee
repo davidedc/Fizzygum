@@ -106,8 +106,8 @@ class WidgetHolderWithCaptionWdgt extends Widget
   setColor: (aColor) ->
     @icon.setColor aColor
 
-  # My TILE's look, which my appearance asks as it paints: a bare holder has no pointer states and
-  # always shows the tile at rest (DesktopLinkWdgt answers from its hover and press state).
+  # My TILE's look, which my appearance asks as it paints: a bare holder shows no pointer state and
+  # always shows the tile at rest (DesktopLinkWdgt answers from the hand's answers about it).
   _fillForMyState: ->
     WorldWdgt.theme.desktopIconTileFill
 

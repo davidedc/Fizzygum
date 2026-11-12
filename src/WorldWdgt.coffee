@@ -2962,8 +2962,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # nosettle-sanctioned: error-recovery reset, reached only from the catch paths outside any
     # settle/pass — the hand's public self-settling drop() is exactly what a cleanup wants here.
     @hand.drop()
-    @hand.mouseOverList.clear()
-    @hand.nonFloatDraggedWdgt = undefined
+    # where the pointer is and what it non-float drags are the hand's facts, so the hand forgets them
+    # itself, and tells whoever shows a look by them
+    @hand.forgetHoverAndNonFloatDrag()
     @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
     @_setEditorFocusNoSettle undefined
 

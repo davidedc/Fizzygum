@@ -28,10 +28,11 @@
 
 class FrameGripWdgt extends HandleWdgt
 
-  # is my active look up? (see _showActiveLook.) Derived from my pointer state, which does not survive
-  # a save or a copy either, so a restored grip starts at rest.
-  @serializationTransients: ["_activeLookShowing", "_tapPressOrigin"]
-  _activeLookShowing: false
+  @serializationTransients: ["_tapPressOrigin", "_putMyLookIntoTheWorld"]
+
+  # whether my resize cursor and outline are up in the world, put there by me (_showMyActiveLookInTheWorld):
+  # world state I declared and must take down, never a pointer state (my look is asked of the hand)
+  _putMyLookIntoTheWorld: false
 
   # where a press on me began while my frame was collapsed, for as long as that press can still be a
   # tap on the bar: pressBegan sets it, and travelling the grab threshold clears it (nonFloatDragging).
@@ -66,8 +67,8 @@ class FrameGripWdgt extends HandleWdgt
   _gripInk: ->
     if @_standsOnACollapsedBar()
       bar = @target.bar
-      return if @_activeLookShowing then bar.activeGlyphInk else bar.glyphInk
-    if @_activeLookShowing then WorldWdgt.theme.frameGripActiveInk else WorldWdgt.theme.frameGripInk
+      return if @_showsActiveLook() then bar.activeGlyphInk else bar.glyphInk
+    if @_showsActiveLook() then WorldWdgt.theme.frameGripActiveInk else WorldWdgt.theme.frameGripInk
 
   # A press on a collapsed bar's grip might still be the bar's tap (see activated), so note where it began
   pressBegan: (pos) ->
@@ -109,28 +110,49 @@ class FrameGripWdgt extends HandleWdgt
     showedBefore = @isVisible
     super
     return if @isVisible is showedBefore
-    @_setPointerState false, false unless @isVisible
+    @_showMyActiveLookInTheWorld()
     @parent?.noteMyGripCameOrWent?()
 
-  _setPointerState: (hovered, pressed) ->
-    super
-    @_showActiveLook @_isPressed or (@_isHovered and world.hand.pointerCanRest())
+  # Do I show my ACTIVE LOOK -- what I am about to do? While the hand presses me
+  # (ActivePointerWdgt.pressesOn) or the pointer rests on me (restsOn: so a finger is shown it while
+  # its press stands and not on its way past), and only while I show at all. Asked of the hand each
+  # time it is needed, so nothing of it is kept on me, saved or copied.
+  _showsActiveLook: ->
+    @isVisible and (world.hand.pressesOn(@) or world.hand.restsOn(@))
 
-  # Everything I show while the pointer is on me or a press on me stands, as one change: my ink, the
-  # resize cursor (a collapsed bar sizes across only, and the cursor says so), and the outline around
-  # the frame that would resize (the highlight channel: the world's reconciler keeps it on the frame as
-  # the frame's box changes under the drag).
-  _showActiveLook: (active) ->
-    return if active is @_activeLookShowing
-    @_activeLookShowing = active
-    world.worldCanvas.style.cursor = if !active then '' else if @_standsOnACollapsedBar() then 'ew-resize' else 'nwse-resize'
-    if active and @target?
-      world.widgetsToBeHighlighted.set @target, HighlighterWdgt.resizeTargetOutlineStyle()
-    else if @target?
+  # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my ink is
+  # read from them as I am painted, so I repaint, and the two pieces of my active look that are WORLD
+  # state follow them now.
+  notePointerStateChanged: ->
+    @_showMyActiveLookInTheWorld()
+    super
+
+  # The world-state half of my active look, as one change: the resize cursor (a collapsed bar sizes
+  # across only, and the cursor says so) and the outline around the frame that would resize (the
+  # highlight channel: the world's reconciler keeps it on the frame as the frame's box changes under
+  # the drag) -- put up while I show my active look, taken down when I do not.
+  _showMyActiveLookInTheWorld: ->
+    if @_showsActiveLook()
+      world.worldCanvas.style.cursor = if @_standsOnACollapsedBar() then 'ew-resize' else 'nwse-resize'
+      world.widgetsToBeHighlighted.set @target, HighlighterWdgt.resizeTargetOutlineStyle()  if @target?
+      @_putMyLookIntoTheWorld = true
+    else
+      @_takeMyActiveLookOutOfTheWorld()
+
+  # Taking it down, only if I put it up (_putMyLookIntoTheWorld: what I declared into the world, not a
+  # pointer state -- my look itself is asked of the hand), so another grip's cursor and a drag's
+  # drop-candidate outline (the same colour) are never mine to remove: the cursor while it is still a
+  # resize cursor (a widget the pointer has just entered may have set its own), the outline while my
+  # frame's highlight is still the resize outline (a menu row standing for my frame lights it with a
+  # wash of its own).
+  _takeMyActiveLookOutOfTheWorld: ->
+    return unless @_putMyLookIntoTheWorld
+    @_putMyLookIntoTheWorld = false
+    world.worldCanvas.style.cursor = ''  if world.worldCanvas.style.cursor in ['ew-resize', 'nwse-resize']
+    if @target? and world.widgetsToBeHighlighted.get(@target)?.color is WorldWdgt.theme.resizeTargetOutline
       world.widgetsToBeHighlighted.delete @target
-    @_changed()
 
   # the outline and the cursor are world state that names me, and neither may outlive me
   _destroyNoSettle: ->
-    @_showActiveLook false
+    @_takeMyActiveLookOutOfTheWorld()
     super

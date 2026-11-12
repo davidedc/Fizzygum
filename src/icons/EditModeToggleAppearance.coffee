@@ -53,8 +53,9 @@ class EditModeToggleAppearance extends IconAppearance
     ctx.fillRoundRect knob.left(), knob.top(), knob.width(), knob.height(), knobThickness / 2
 
     # An icon is on the knob from the moment the knob is nearer to it than to the other end, so a
-    # slide hands the inks over at its midpoint.
-    offKnobInk = if @widget.state is @widget.STATE_NORMAL then look.barToggleGlyph else look.barGlyphActive
+    # slide hands the inks over at its midpoint. The one off the knob takes the active ink while my
+    # widget shows itself hovered or pressed (ButtonWdgt._shownState, asked of the hand).
+    offKnobInk = if @widget._shownState() is "atRest" then look.barToggleGlyph else look.barGlyphActive
     eyeOnKnob = position < 0.5
     eyeAlong = trackStart + inset + knobLength / 2
     centreAcross = trackSide + trackThickness / 2

@@ -246,9 +246,10 @@ class Widget extends TreeNode
   # (StringFieldWdgt's value), and then there is no setter to name it by.
   principalPinLabel: undefined
 
-  # hover help text. Declared on the base because this is where its consumer hook
-  # lives (startCountdownForBubbleHelp, below) and because HighlightableMixin reads
-  # it on whatever it is mixed into — branches that share no ancestor below Widget.
+  # hover help text: the tooltip shown when the pointer rests on me. Declared on the base because
+  # this is where its consumer hook lives (startCountdownForBubbleHelp, below) and because the hand
+  # reads it on whatever widget the pointer enters (ActivePointerWdgt starts the countdown for any
+  # one carrying it) — widgets on branches that share no ancestor below Widget.
   # A subclass may state its own by declaring a value; ButtonWdgt's constructor reads
   # opts.toolTip GUARDED so that a declared value survives construction.
   toolTipMessage: undefined
@@ -4748,7 +4749,8 @@ class Widget extends TreeNode
   # jumping its button, the world). An override states it on its last line, or ends in `super`, which
   # passes it on as any widget does. Every receiver then belongs to the press's audience and is told
   # exactly one ending — pressEnded at the release, or pressCancelled once the stroke scrolls, lifts
-  # or is aborted — both through ?(), so a widget with no press look to undo declares neither. The
+  # or is aborted — both through ?(), so a widget with nothing to do when its press ends declares
+  # neither (a press LOOK is no ending's: it is asked of the hand as it paints). The
   # contract lives with the hand's press bookkeeping (ActivePointerWdgt, the press's AUDIENCE).
   #   Mine: a press raises my focus root, and goes on.
   pressBegan: (ignored_pos) ->

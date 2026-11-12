@@ -423,12 +423,9 @@ class SliderWdgt extends ControllerWdgt
     # instead of `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)`
     # (type-test-elimination ε)
     if @button.parent == @ and @parent?.sliderTrackPressJumpsButton?()
+      # the hand now non-float drags my button, so the button shows pressed: that is the hand's
+      # answer about it (ActivePointerWdgt.pressesOn), and the hand tells it so
       world.hand.nonFloatDragWdgtFarAwayToHere @button, pos
-      # in an ideal world when a widget moves under the pointer
-      # it gets all the right events like hoverEntered etc.
-      # however that's difficult to do, just set the "pressed"
-      # color from here
-      @button.setPressedColor()
       return false
     true
 

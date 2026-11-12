@@ -548,19 +548,24 @@ mark after `add` + `setExtent` adds nothing.
   (`world.hand.strokeMeansMouseDrag()`), since that press may begin a scroll). The gestures still climb by escalation:
   `@escalateEvent "activated", pos` passes an activation you do not act on to the parent rather than
   swallowing it, and a handler that conditionally acts escalates on the other branch.
-- **A look you arm in `pressBegan`, you undo in BOTH endings.** Every widget the press reached is
+- **Every press ends in exactly one of the two endings.** Every widget the press reached is
   told exactly one of `pressEnded` (the release, wherever it lands) or `pressCancelled` (the stroke
   became a scroll, a lift, or was aborted) — the press lifecycle,
-  [`input-and-gestures.md`](input-and-gestures.md). Pick the look you end in from where the pointer
-  is, `world.hand.restsOn @` (hovered under a resting mouse, at rest otherwise — a finger never
-  rests), never by assuming it is still over you. `HighlightableMixin` already does this for both
-  endings; a widget with its own press look declares `pressCancelled` beside its `pressEnded`.
-- **Get hover/press feedback from `HighlightableMixin`** instead of colouring by hand in
-  `hoverEntered`/`hoverExited`: its `_updateColor` re-derives the colour at every state change — a set
-  `color_normal` / `color_hover` / `color_pressed` wins, else the plain button's theme roles. A widget with
-  a look of its own answers `_updateColor` with its own roles, read there (`SimpleButtonWdgt`,
-  `IconButtonWdgt`, the edit mark). Never declare a state colour at class level: a class-level
-  declaration cannot read `Theme`, so the colour would sit outside the design system.
+  [`input-and-gestures.md`](input-and-gestures.md). An ending carries no look: the hand strikes the
+  widget off the press before telling it either ending, and what the widget then shows is read at
+  paint (next point); a widget whose ending DOES something declares `pressCancelled` beside its
+  `pressEnded`.
+- **Get hover/press feedback from the hand, at paint** — no widget stores a pointer state. The hand
+  answers `world.hand.restsOn @` (a resting pointer is over me; a finger never rests) and
+  `world.hand.pressesOn @` (the hand non-float-drags me, or a live press holds me and the pointer is
+  over me; `holdsPressOn @` asks the press alone, as a list row does), and tells a widget whose
+  answers may have changed: `notePointerStateChanged`, answered `@_changed()` (a toolbar tool's:
+  `@parent?.noteItemStateChanged?()`). The look is computed where it is painted — `ButtonWdgt._shownState`
+  (`"pressed"` / `"highlighted"` / `"atRest"`) and a class's `_fillForMyState` / `_strokeForMyState`,
+  which its appearance asks before `@color` — from those answers and the class's own conditions
+  (`SimpleButtonWdgt`, `IconButtonWdgt`, the edit mark, the handles, the slider thumb). Never declare a
+  state colour at class level: a class-level declaration cannot read `Theme`, so the colour would sit
+  outside the design system.
 - **Chrome opts out of editor focus.** A widget that is manipulation chrome rather than content —
   handles, frame-bar buttons, toolbars, creator buttons — answers
   `excludedFromEditorFocusTracking: -> true`, so clicking it neither steals the editor-focus pointer

@@ -17,6 +17,11 @@ class SpeechBubbleWdgt extends Widget
   # the size a bubble takes when dragged out of the glass box
   extentToGetWhenDraggedFromGlassBox: undefined
 
+  # what I am as a tool in a panel, in a word: the lid over me in a tool cell shows it as its tooltip
+  # (ToolPanelWdgt), and a toolbar's overflow row names me by it (OverflowChevronButtonWdgt). I show
+  # no tooltip of my own.
+  toolName: "speech bubble"
+
   # no fill or stroke colour of my own until one is set on me (my color is declared undefined here,
   # over Widget's content default; my strokeColor is Widget's, undefined): until then my
   # BubblyAppearance paints me in the speech bubble's roles, read as I am painted (_surfaceFill,
@@ -28,7 +33,6 @@ class SpeechBubbleWdgt extends Widget
     @padding = 0
     @cornerRadius = WorldWdgt.theme.speechBubbleCornerRadius
     @appearance = new BubblyAppearance @
-    @toolTipMessage = "speech bubble"
     @_buildAndConnectChildren()
     @minimumExtent = new Point 10,10
     @extentToGetWhenDraggedFromGlassBox = new Point 105,80

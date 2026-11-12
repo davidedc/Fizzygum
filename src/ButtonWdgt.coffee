@@ -8,8 +8,6 @@
 
 class ButtonWdgt extends Widget
 
-  @augmentWith HighlightableMixin, @name
-
   target: undefined
   action: undefined
   # the widget my @action is ABOUT — trigger's slot 2. A menu row's panel fills it with its own
@@ -38,10 +36,9 @@ class ButtonWdgt extends Widget
   padding: 0
 
 
-  # overrides to superclass: no colour of my own until my state derives one (_updateColor, at the end
-  # of my constructor and at every state change), so a button never wears a new shape's content
-  # default. A subclass with a look of its own answers _updateColor itself, or sets its colour after
-  # my constructor (LabelButtonWdgt).
+  # overrides to superclass: no colour of my own -- my look is asked of the pointer as I am painted
+  # (_fillForMyState, below) -- so a button never wears a new shape's content default. A subclass
+  # whose look reads a colour of its own sets it after my constructor (LabelButtonWdgt).
   color: undefined
 
   # ALL options, no operand — `target:` and `action:` included. They say WHO to tell and WHAT to
@@ -85,8 +82,38 @@ class ButtonWdgt extends Widget
     @defaultRejectDrags = true
 
     @_buildAndConnectChildren()
-    # my colour for the state I am born in (at rest), derived as every state change derives it
-    @_updateColor()
+
+  # THE POINTER STATE MY LOOK SHOWS, asked of the hand as I am painted -- no button keeps one, so none
+  # is saved, copied or left behind by a gesture: "pressed" while the hand presses me
+  # (ActivePointerWdgt.pressesOn: a press that slid off me shows none, and shows again when it slides
+  # back), "highlighted" while the pointer rests on me (restsOn: never under a finger), "atRest"
+  # otherwise. Every look of the button family reads it (my plain fill below, a label button's
+  # appearance, a simple button's box, an icon button's glyph); a list row answers its own
+  # (MenuItemWdgt).
+  _shownState: ->
+    if world.hand.pressesOn @
+      "pressed"
+    else if world.hand.restsOn @
+      "highlighted"
+    else
+      "atRest"
+
+  # THE PLAIN BUTTON's fill for the state I show, read as I am painted by an appearance that asks it
+  # (RectangularAppearance: a bare ButtonWdgt given one, a SimpleRectangularButtonWdgt): the plain
+  # button's roles at rest, hovered and pressed. A subclass with a look of its own answers its own
+  # (SimpleButtonWdgt's box, IconButtonWdgt's glyph ink).
+  _fillForMyState: ->
+    theme = WorldWdgt.theme
+    switch @_shownState()
+      when "pressed" then theme.plainButtonPressFill
+      when "highlighted" then theme.plainButtonHoverFill
+      else theme.plainButtonFill
+
+  # THE HAND'S ANSWERS ABOUT ME MAY HAVE MOVED (ActivePointerWdgt._tellPointerStateChanged): my look is
+  # read from them as I am painted, so I repaint. A toolbar tool whose look is its cell's says so
+  # instead (CodeInjectingSimpleRectangularButtonWdgt).
+  notePointerStateChanged: ->
+    @_changed()
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   # This REPLACES the old "defer the face's layout until attach" hack. The old fear -- "a settle in a

@@ -11,10 +11,14 @@
 
 class RectangleWdgt extends Widget
 
+  # what I am as a tool in a panel, in a word: the lid over me in a tool cell shows it as its tooltip
+  # (ToolPanelWdgt), and a toolbar's overflow row names me by it (OverflowChevronButtonWdgt). I show
+  # no tooltip of my own.
+  toolName: "rectangle"
+
   constructor: (extent, color) ->
     super()
     @appearance = new RectangularAppearance @
     @__commitExtent(extent) if extent?
     @color = color if color?
-    @toolTipMessage = "rectangle"
 

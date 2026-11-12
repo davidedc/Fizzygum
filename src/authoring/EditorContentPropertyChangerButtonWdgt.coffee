@@ -4,11 +4,12 @@
 # clicked or dropped (world.editorFocusWdgt) — or on the style it hands over
 # (_styleSubject: a spreadsheet hands over its selected cell's).
 #
-# They share: the hover/press state machine (HighlightableMixin), shown on the
-# tool cell each stands in rather than on the button (ParentStainerMixin: the
-# cell derives its look from the state, GlassBoxBottomWdgt), the
-# thumbnail-actionability flag and the editor-chrome exclusion below. A subclass
-# supplies only its icon (createAppearance, in the toolbarGlyph ink), its tooltip
+# They share: a hover/press look shown on the tool cell each stands in rather
+# than on the button (the cell asks the hand about the button as it paints,
+# GlassBoxBottomWdgt, and the button tells the cell when the hand's answers
+# move), the thumbnail-actionability flag and the editor-chrome exclusion
+# below. A subclass supplies only its icon (createAppearance, in the
+# toolbarGlyph ink), its tooltip
 # (toolTipMessage), and its activated -- and, when it toggles a state of the text
 # it acts on (bold, italic, the mono font, an alignment), whether it is the ACTIVE
 # tool: isActiveTool, true while that text has the state, so its cell MIRRORS the
@@ -23,10 +24,18 @@
 
 class EditorContentPropertyChangerButtonWdgt extends IconWdgt
 
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
-
   actionableAsThumbnail: true
+
+  # MY HOVER AND PRESS show on the tool cell I stand in, never on me (GlassBoxBottomWdgt.fillForToolState
+  # asks this of the widget whose state a cell shows).
+  lightsAToolCell: ->
+    true
+
+  # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my glyph
+  # keeps its one ink, so I tell the cell I stand in, which repaints over me. A parent that is no cell
+  # answers nothing.
+  notePointerStateChanged: ->
+    @parent?.noteItemStateChanged?()
 
   # Editor CHROME (Frame-model plan §5.D D2a): pressing me acts ON the editor
   # focus, so the press must neither steal the focus pointer nor end the

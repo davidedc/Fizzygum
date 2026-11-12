@@ -9,11 +9,13 @@ class IconAppearance extends Appearance
   specificationSize: new Point 200, 200
 
   # Icon fill color as a string: the explicit ownColorInsteadOfWidgetColor if set,
-  # otherwise the host widget's color. Subclass paintFunctions call this instead of
+  # otherwise the fill the host widget's pointer STATE shows, for a widget whose ink is a
+  # function of its state (an icon button's glyph, IconButtonWdgt._fillForMyState), read as
+  # I paint, otherwise the host widget's color. Subclass paintFunctions call this instead of
   # repeating the ownColorInsteadOfWidgetColor?-ternary inline (was copied ~64×).
   # _-tier: internal paint helper, only ever @-self-called from paintFunctions.
   _iconColorString: ->
-    (@ownColorInsteadOfWidgetColor ? @widget.color).toString()
+    (@ownColorInsteadOfWidgetColor ? @widget._fillForMyState?() ? @widget.color).toString()
 
   # The system-wide icon outline colour, as a string (the theme's iconOutline role; Color.toString
   # computes the string once per Color and keeps it, so every paint after the first reads a field).

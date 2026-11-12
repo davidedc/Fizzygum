@@ -414,13 +414,13 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
 
   # DO I SHOW `row` AS MY LIST'S SELECTION? Asked by each of my rows as it paints
   # (MenuItemWdgt._shownState), so the look is read from the model and never kept in step with it:
-  # yes for the row my list holds selected (ListWdgt.selected) -- unless a press is on one of my rows,
-  # which takes the visible selection off every other row while it lasts, since that row becomes the
-  # selection if the press ends in a click. Only a list's panel is asked (a row asks when it
-  # isListItem).
+  # yes for the row my list holds selected (ListWdgt.selected) -- unless the press in progress holds
+  # one of my rows (ActivePointerWdgt.holdsPressOn), which takes the visible selection off every
+  # other row while it lasts, since that row becomes the selection if the press ends in a click.
+  # Only a list's panel is asked (a row asks when it isListItem).
   showsAsItsSelection: (row) ->
     return false  unless @target?.selected is row
-    not @children.some (each) -> each.STATE_PRESSED? and each.state is each.STATE_PRESSED
+    not @children.some (each) -> world.hand.holdsPressOn each
 
   # MY LIST'S SHOWN SELECTION MAY HAVE MOVED -- its model moved (ListWdgt.select), or a press on one of
   # my rows began or ended (MenuItemWdgt) -- and my rows read it as they paint (showsAsItsSelection),

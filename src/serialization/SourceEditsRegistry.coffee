@@ -137,7 +137,7 @@ class SourceEditsRegistry
 
   # The code the class-level records of a world file name, by the names the build's part manifest
   # holds them by -- a class's name, and a mixin's source name: a record holds the parsed one
-  # ("Highlightable", whose source and global are "HighlightableMixin"), and either spelling is taken,
+  # ("Foo", whose source and global are "FooMixin"), and either spelling is taken,
   # as Mixin.named takes either (a name no part holds is passed over). What the parts pre-load brings in
   # before the replay (Deserializer.loadWhatItNeeds), so an edit of a lazy part's code finds its class
   # or mixin even when the file holds none of that part's widgets.

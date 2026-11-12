@@ -580,8 +580,7 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 - [ ] §7: banked v1-excluded items: precompiled file, SWCanvas strip, baked edits, dirty guard
 
 ### `plans/mixin-removal-plan.md`
-AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phases 1–6 have landed (its §13); the rest runs in its §7 order. All eleven owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
-- [ ] §7 Phase 7: pointer state asked of the hand at paint; Highlightable and ParentStainer deleted (waits on Phase 4)
+AUTHORED 2026-11-10 on the owner's direction, MEASURED 2026-11-12: all eight mixins to ordinary homes, then the mechanism deleted. Phases 1–7 have landed (its §13); the rest runs in its §7 order. All eleven owner decisions are made and the three investigations have their measured verdicts (its §13). It supersedes the keep position of `architecture/mixins.md` §1/§7.
 - [ ] §7 Phase 8: the mechanism's teardown (waits on Phases 1–7)
 - [ ] §7 Phase 9: docs and close
 

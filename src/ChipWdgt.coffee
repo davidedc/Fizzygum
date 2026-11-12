@@ -8,9 +8,9 @@
 # stand in, so nothing about a click changes it.
 #
 # MY LOOK is a pure function of three things, every value a Theme role or metric: whether I am
-# current, my HighlightableMixin state (at rest, hovered, pressed) and my enabled flag. It is
-# re-derived at every transition (SimpleButtonWdgt._updateColor), so no transition leaves a colour
-# behind:
+# current, the pointer state I show (at rest, hovered, pressed: ButtonWdgt._shownState, asked of the
+# hand) and my enabled flag. It is read as I am painted (_fillForMyState, _strokeForMyState), so no
+# gesture leaves a colour behind:
 #   ANY OTHER  no fill (chipFill) inside a 1 px chipStroke border, the label chipText; hovered the
 #              chipHoverFill, pressed the chipPressFill inside the darker chipPressStroke -- the
 #              button's feedback, so a press on a chip reads as a press
@@ -41,8 +41,8 @@ class ChipWdgt extends SimpleButtonWdgt
 
   # SimpleButtonWdgt's opts (`target:` / `action:` among them), plus one key of my own, read guarded:
   #   current  (default false)  isCurrent
-  # isCurrent is assigned before super: the base constructor derives my look (_inkMyFace,
-  # _updateColor), and my look reads it.
+  # isCurrent is assigned before super: the base constructor inks my face (_inkMyFace), and my
+  # face's ink reads it.
   constructor: (opts = {}) ->
     @isCurrent = !!(opts.current ? false)
 
@@ -54,16 +54,16 @@ class ChipWdgt extends SimpleButtonWdgt
     return super() unless @isEnabled
     theme = WorldWdgt.theme
     return theme.chipCurrentFill if @isCurrent
-    switch @state
-      when @STATE_PRESSED then theme.chipPressFill
-      when @STATE_HIGHLIGHTED then theme.chipHoverFill
+    switch @_shownState()
+      when "pressed" then theme.chipPressFill
+      when "highlighted" then theme.chipHoverFill
       else theme.chipFill
 
   _strokeForMyState: ->
     return super() unless @isEnabled
     theme = WorldWdgt.theme
     return theme.chipCurrentStroke if @isCurrent
-    if @state is @STATE_PRESSED then theme.chipPressStroke else theme.chipStroke
+    if @_shownState() is "pressed" then theme.chipPressStroke else theme.chipStroke
 
   # My label's ink follows whether I am current and my enabled flag, never a hover or a press: the
   # constructor and setEnabled write it.

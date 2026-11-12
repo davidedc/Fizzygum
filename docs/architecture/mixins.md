@@ -112,8 +112,7 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     edit writes it, a removal deletes it (`Class.applyMemberEdit` / `removeMember`,
     `Mixin.applyMemberEdit` / `removeMember`). A consumer's prototype holds its class's
     member where the class defines one, else the member of its LAST augmentation that
-    defines it (`Mixin.donorOf` — two of a class's mixins can define the same member, as
-    `HighlightableMixin` and `ParentStainerMixin` both define `_updateColor`), else
+    defines it (`Mixin.donorOf` — two of a class's mixins can define the same member), else
     nothing. Boot order made it so (`augmentWith` runs before the class-body
     assignments, and each `augmentWith` injects over the one before it), and ONE
     question keeps it so: a mixin edit or removal reaches a consumer only where that
@@ -251,22 +250,18 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (2 mixins, 95 L, 8 consumer slots across 6 files, counted 2026-11-12; the rows as verified 2026-08-18)
+## 3. Inventory (0 mixins, counted 2026-11-12)
 
-`HighlightableMixin` lives in `src/mixins/`; `ParentStainerMixin` in `src/app-kit/`, beside `CreatorWdgt`, one
-of the toolbar tools it serves. The 8 is the sum of the per-mixin consumer counts below, spread over 6
-distinct files: `CreatorWdgt` and `EditorContentPropertyChangerButtonWdgt` take two each.
-
-| Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
-|---|---|---|---|---|
-| `HighlightableMixin` | 74 | 5 — `ButtonWdgt`, `CreatorWdgt` (the creator buttons and a tool cell's lid), `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
-| `ParentStainerMixin` | 21 | 3 — `CreatorWdgt` (the creator buttons and a thumbnail's lid), `EditorContentPropertyChangerButtonWdgt`, `CodeInjectingSimpleRectangularButtonWdgt` (a paint tool): a toolbar tool tells the tool cell it stands in that its pointer state changed (`GlassBoxBottomWdgt.noteItemStateChanged`), and the cell derives its own look | unrelated branches (a base and two leaves) | no |
+None is left: the mechanism stands with no consumer until `plans/mixin-removal-plan.md` Phase 8
+deletes it.
 
 (The count excludes those that no longer exist as mixins: dead `ContainerMixin`, deleted;
 the five misfiled ones, folded into standard-OO homes — §4; `DeepCopierMixin`, inverted
 into the `Duplicator` engine (`src/duplication/`) — §5-C; and the clipping, the ratio-keeping
 and the controller ones, now the base classes `ClippingWdgt`, `RatioLockedWdgt` and `ControllerWdgt`;
-the creator one, now `CreatorWdgt`'s own `activated`; the edit-mode relay, now two cores of
+the creator one, now `CreatorWdgt`'s own `activated`; the pointer-state pair (Highlightable and
+ParentStainer), now looks every widget computes at paint from the hand's answers (`restsOn`,
+`pressesOn`) and one notification, `notePointerStateChanged`, the hand sends; the edit-mode relay, now two cores of
 `StretchablePanelWdgt`, the one class that relays its toggle to a coordinating parent;
 and the back-buffer one, now a plain object each back-buffered widget holds — a `BackBuffer`, which
 owns the canvas, its context, its shadow twin, the blit and the pixel read — with a palette and a
@@ -280,8 +275,8 @@ super-fallback): do not re-parent them onto it. `Mixin.allMixines` is load-beari
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core — both current mixins):** `HighlightableMixin` (input-hook state machine across ≥4 branches),
-  `ParentStainerMixin` (3 unrelated consumers: the toolbar tools' base `CreatorWdgt` and two leaves).
+- **Genuine (the keep-core):** none is left — every behaviour this section once kept found an ordinary home
+  (`plans/mixin-removal-plan.md` §5).
 - **Misfiled (single consumer / single subtree / config bag) — all five now live in
   standard-OO homes**, motivated by inspectability (a mixed-in member's
   source is view-only in the inspector, and it is unclear whether to edit the donor or
@@ -311,7 +306,7 @@ objects on the paint path). Three shapes, with costs:
   hand-written stub: `pressBegan: -> @highlighter.onMouseDown(); super`). Always
   works. Genuine advantages: the stub gets REAL CoffeeScript `super` (the
   `arguments.callee` rewriter drops out), and the collaborator is a plain class — fully
-  first-class everywhere. Cost is arithmetic: `HighlightableMixin` alone = 9 consumers
+  first-class everywhere. Cost is arithmetic: a mixin of 9 consumers
   × ~5 hooks ≈ 45 stubs replacing 9 one-liners; cohesion degrades from one file to one file
   plus N scattered stub blocks.
 - **B — base-class extension points** (the base hook consults an optional strategy:

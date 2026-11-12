@@ -194,9 +194,9 @@ its own children: the Object Inspector does, naked or windowed).
 **The tool cell** (`GlassBoxBottomWdgt`, a toolbar's cell, holding one tool) is a pressable square with no border: at
 rest no fill at all (the band's `paper` shows), hovered `toolCellHoverFill` (`desk`), pressed `toolCellPressedFill`
 (`chrome`), ACTIVE `toolCellActiveFill` (`desk`, the draft's active tool), rounded at `toolCellCornerRadius` (6). The cell
-derives that look itself, from the state of the widget a tap on it reaches (its lid, or its tool) and from its tool's
-`isActiveTool`, every time a tool tells it something changed (`noteItemStateChanged`, through `ParentStainerMixin` for
-the pointer state, and from whatever decides the active state: Draw's armed tool, the text tools' mirror of the edited
+reads that look as it paints, from the hand's answers about the widget a tap on it reaches (its lid, or its tool:
+`pressesOn`, `restsOn`) and from its tool's `isActiveTool`, and repaints whenever a tool tells it something changed
+(`noteItemStateChanged`: a tool's `notePointerStateChanged` for the pointer state, and from whatever decides the active state: Draw's armed tool, the text tools' mirror of the edited
 text), so no tool leaves a stale colour on it. The text tools MIRROR the edited text (the editor focus,
 `world.editorFocusWdgt`, or the style it hands over: a spreadsheet hands over its selected cell's, `SheetCellStyle`):
 B is active while it is bold, I while it is italic, `</>` while it is monospaced, an align tool
@@ -451,7 +451,7 @@ exactly one owning widget:
 | Folder window | `FolderWindowWdgt`: its panel `folderPanelFill` (`paper`), read at paint; the panel and its viewport borderless (the window's frame and strip rule are the lines); its title "Folder — Examples" (§4.9) |
 | Fizzytiles | `FridgeMagnetsWdgt`'s fridge, tiles bin and output pane on `paper` inside `line` borders (`fizzytiles*` roles, read at paint), the four captions `fonts.fizzytilesCaption` in `fizzytilesCaptionText` (`muted2`); the code pane `fonts.code` in `codeText` on `fizzytilesCodePaneFill`, no border; a MAGNET (`MagnetWdgt`, `MagnetAppearance`) the button's look derived at paint from its state (`magnetFill` `paper` inside a `magnetStroke` `line` border, `magnetHoverFill` `desk` hovered, `magnetPressFill` `chrome` inside `magnetPressStroke` `frame` pressed, rounded at `magnetCornerRadius` 6; hit shape and silhouette the rounded box), its label a code token in `fonts.code` and `magnetText` (`ink`) |
 | Generic panel and viewport | `PanelWdgt` and `ViewportWdgt` hold no colour of their own and are painted in roles read at paint (`_surfaceFill`, `_surfaceStroke`): `panelFill` (`panel`) inside a 1 px `panelStroke` (`line`), and no border of their own as a window's whole content (`FrameWdgt.isMyContents`, asked at paint: `windowContentPanelStroke`, none — the frame's border and its strip's rule are that line). A viewport's default plane wears its viewport's pane look (`ViewportWdgt._paneFill`): its class's pane fill (`_defaultPaneFill`: a plain list's and a text area's `paper`, the stack sample's `panel`, a document's page), or the roles a builder dresses it in BY NAME (`wearPaneRoles`: the Object Inspector's panes, a code area, a patch node's text box, the bin's pane, a folder window's viewport), which travel with the pane wherever it is taken. A bare `VerticalStackPanelWdgt` wears the panel look (`stackPanelFill`, `stackPanelStroke`). A colour set on one (`setColor`) wins over its role. |
-| Plain buttons | a `HighlightableMixin` consumer with no look of its own (a bare `ButtonWdgt` given an appearance, the demo's `SimpleRectangularButtonWdgt`): `plainButtonFill` (`paper`) at rest, `plainButtonHoverFill` (`desk`) hovered, `plainButtonPressFill` (`chrome`) pressed, re-derived at each state change (the mixin's `_updateColor`; a set `color_normal` / `color_hover` / `color_pressed` wins); the rectangular button's square border `rectangularButtonStroke` (`line`) |
+| Plain buttons | a `ButtonWdgt` with no look of its own (a bare `ButtonWdgt` given an appearance, the demo's `SimpleRectangularButtonWdgt`): `plainButtonFill` (`paper`) at rest, `plainButtonHoverFill` (`desk`) hovered, `plainButtonPressFill` (`chrome`) pressed, read at paint from the hand's answers (`ButtonWdgt._fillForMyState`); the rectangular button's square border `rectangularButtonStroke` (`line`) |
 | Icon buttons off a strip | an `IconButtonWdgt` no frame strip inks (the demo's close icon, a pointer's close button): its glyph `iconButtonGlyph` (`muted`) at rest, `iconButtonGlyphActive` (`ink`) hovered and pressed; a strip inks the glyphs it carries itself (§5's frame look) |
 | A paint tool's edit mark | `UpperRightTriangleIconicButtonWdgt` (`EditableMarkWdgt`): the triangle `editMarkFill` / `editMarkHoverFill` / `editMarkPressFill` (`paper` / `desk` / `chrome`) by state, its pencil `editMarkInk` (`ink`) |
 | Canvas | a `CanvasWdgt`'s raster (Draw's canvas, a factory canvas) is laid on `canvasFill` (`paper`) as it is made, enlarged or cleared, unless a colour is set on the canvas |
@@ -563,7 +563,7 @@ plate of radius 6 at its top; no row paints a hairline, and the panel opts out o
    serialized and pins the old look in every saved or duplicated widget. A surface that wears a role
    holds no colour of its own and answers `_surfaceFill` / `_surfaceStroke`, which its appearance asks
    (`RectangularAppearance`, `BoxyAppearance`, `CircleBoxyAppearance`); a colour set on it still wins.
-   A state colour is derived at each state change (`_updateColor`), never declared at class level (a
+   A state colour is read at paint from the hand's answers (`_fillForMyState`), never declared at class level (a
    class-level declaration cannot read `Theme`). A pane a builder dresses wears roles by NAME
    (`ViewportWdgt.wearPaneRoles`), so it keeps them wherever it is taken.
 3. **Text:** `fontRole: WorldWdgt.theme.fonts.<role>`.

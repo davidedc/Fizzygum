@@ -140,9 +140,9 @@ does not, or where a base class crosses the boundary.** Deciding it by taste ins
 ends up awaiting a part it cannot wait for.
 
 ⭐ **A SHARED BASE LAYER IS ITSELF A PART — `app-kit` — and it is the configuration `requires` was
-built for.** Ten classes and a mixin are not any app's: the app protocol `WindowedApp`, the
+built for.** Ten classes are not any app's: the app protocol `WindowedApp`, the
 toolbar/creator-button family (`ToolbarWdgt`, `ToolbarCreatorButtonWdgt`, `CreatorButtonWdgt`, the base
-`CreatorWdgt` it shares with `GlassBoxTopWdgt`, and `ParentStainerMixin`, which `CreatorWdgt` augments),
+`CreatorWdgt` it shares with `GlassBoxTopWdgt`),
 the toolbar's overflow chevron (`OverflowChevronButtonWdgt` and its appearance), the tool-panel grid a toolbar lays its buttons out in (`ToolPanelWdgt`
 and its `GlassBoxTopWdgt` template header), and `SpeechBubbleWdgt`. **Nine** parts DERIVE from them
 across 44 inheritance edges, and eleven declare `requires` (`demos` and `dev-tools` merely

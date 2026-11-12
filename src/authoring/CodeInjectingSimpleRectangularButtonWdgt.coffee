@@ -8,12 +8,10 @@
 #
 # I LOOK LIKE EVERY OTHER TOOL: I paint nothing of my own -- my face is my picture, in the
 # toolbarGlyph ink (my palette inks it), and my hover / press state shows on the tool cell I stand
-# in (ParentStainerMixin), which also shows whether I am the ACTIVE tool, the one in the person's
-# hand (isActiveTool).
+# in (lightsAToolCell, notePointerStateChanged), which also shows whether I am the ACTIVE tool, the
+# one in the person's hand (isActiveTool).
 
 class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWdgt
-
-  @augmentWith ParentStainerMixin, @name
 
   # Why don't we store just a Function, why are we dealing with strings here?
   # 1) because the user inputs a string
@@ -32,6 +30,10 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   # and the dispatch law on CommandSpec).
   actionableAsThumbnail: true
 
+  # WHAT I AM AS A TOOL, in a word: my face's (the icon's toolName -- "pencil", "brush"), which I show
+  # as my tooltip too, and by which a toolbar's overflow row names me (OverflowChevronButtonWdgt).
+  toolName: undefined
+
   # `palette` lands in the inherited @target, which is BOTH the receiver of my press (the four-slot
   # dispatch hands it ME in slot 1, so it knows which tool was pressed) and the widget I tell about
   # newly edited source. ONE back-reference: they are one object, and two fields holding it could
@@ -42,12 +44,24 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
     # still catches the pointer (Widget.catchesPointerAt)
     @appearance = undefined
     @strokeColor = undefined
-    @toolTipMessage = face.toolTipMessage
+    @toolName = face.toolName
+    @toolTipMessage = face.toolName
+
+  # MY HOVER AND PRESS show on the tool cell I stand in, never on me (GlassBoxBottomWdgt.fillForToolState
+  # asks this of the widget whose state a cell shows).
+  lightsAToolCell: ->
+    true
+
+  # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): I paint
+  # nothing of my own, so I tell the cell I stand in, which repaints over me. A parent that is no cell
+  # answers nothing.
+  notePointerStateChanged: ->
+    @parent?.noteItemStateChanged?()
 
   # MY FACE IS A PICTURE (Widget.isPointerTargetAt, AM-I-A-PICTURE): nothing in it is a pointer
   # target, so a press on it is a press on me, and the press, the release and the click all reach me
   # together -- my cell shows pressed while the press lasts, and once it ends, hovered or at rest by
-  # where the pointer is (HighlightableMixin's endings). My edit mark is no picture: it takes its own
+  # where the pointer is (the hand's answers about me). My edit mark is no picture: it takes its own
   # presses.
   _showsChildAsAPicture: (child) ->
     child is @faceWidget

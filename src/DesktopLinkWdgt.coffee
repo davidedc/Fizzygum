@@ -6,17 +6,15 @@
 #
 # My TILE answers the pointer the way a button does (visual-design-system §4.3): at rest paper inside
 # a line border, hovered desk, pressed chrome inside a frame border -- the desktopIconTile* roles,
-# re-derived from my HighlightableMixin state at every paint. My glyph keeps its one ink in every
-# state, and my plate and caption theirs.
+# read from the hand's answers about me at every paint. My glyph keeps its one ink in every state,
+# and my plate and caption theirs.
 #   My glyph is a PICTURE, never a pointer target (_showsChildAsAPicture), so a press anywhere on my
 # tile is a press on ME: the press, the release and the click all reach me together, and my tile's
 # look follows each of them -- pressed while the press lasts, then, once it ends, hovered or at rest
-# by where the pointer is (HighlightableMixin's endings), at rest when the pointer leaves. A press on
-# my plate is a press on my caption (a rename) and leaves my tile's look alone (pressBegan).
+# by where the pointer is, at rest when the pointer leaves. A press on my plate is a press on my
+# caption (a rename) and shows no press on my tile (_showsPressOnMyTile).
 
 class DesktopLinkWdgt extends WidgetHolderWithCaptionWdgt
-
-  @augmentWith HighlightableMixin, @name
 
   # the link's caption text. Declared HERE rather than on ShortcutWdgt
   # because AppLauncherWdgt is a sibling of that class, not a
@@ -31,34 +29,35 @@ class DesktopLinkWdgt extends WidgetHolderWithCaptionWdgt
   _showsChildAsAPicture: (child) ->
     child is @icon
 
-  # HighlightableMixin's colour hook, which every one of its state transitions calls (hoverEntered,
-  # hoverExited, pressBegan, pressEnded, pressCancelled) after setting @state. My look for a state is
-  # my TILE's, which my appearance reads from the two answers below as it paints, so a transition only
-  # repaints me: no colour of mine is written here, and none a transition could leave behind. (Which
-  # is also why I wear none of the mixin's own colours, color_normal / color_hover / color_pressed.)
-  _updateColor: ->
+  # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my look is
+  # my TILE's, which my appearance reads from the two answers below as it paints, so I repaint -- no
+  # colour of mine is written, and none a gesture could leave behind.
+  notePointerStateChanged: ->
     @_changed()
 
-  # HighlightableMixin's press transition, re-answered by WHERE the press landed: one on my TILE
-  # presses me (the pressed look while it lasts); one on my PLATE is a press on my caption, a rename
-  # (WidgetHolderWithCaptionWdgt._pressIsOnMyPlate), and leaves my state, and so my tile's look, as
-  # it is. Either way the press then goes on as any widget's does (Widget.pressBegan).
-  pressBegan: (pos) ->
-    unless @_pressIsOnMyPlate pos
-      @state = @STATE_PRESSED
-      @_updateColor()
-    super
+  # Does my TILE show a press? While the hand presses me (ActivePointerWdgt.pressesOn), unless that
+  # press LANDED on my PLATE: one there is a press on my caption, a rename
+  # (WidgetHolderWithCaptionWdgt._pressIsOnMyPlate), and shows nothing on my tile. Where it landed is
+  # the hand's fact (mouseDownPosition, on the screen), asked into my plane as the hand hands a press
+  # its point.
+  _showsPressOnMyTile: ->
+    return false unless world.hand.pressesOn @
+    pressPoint = world.hand.mouseDownPosition
+    not @_pressIsOnMyPlate (@screenPointToMyPlane pressPoint if pressPoint?)
 
+  # my tile's fill and border for the pointer state I show now, which my appearance reads as it paints
   _fillForMyState: ->
     theme = WorldWdgt.theme
-    switch @state
-      when @STATE_PRESSED then theme.desktopIconTilePressedFill
-      when @STATE_HIGHLIGHTED then theme.desktopIconTileHoverFill
-      else theme.desktopIconTileFill
+    if @_showsPressOnMyTile()
+      theme.desktopIconTilePressedFill
+    else if world.hand.restsOn @
+      theme.desktopIconTileHoverFill
+    else
+      theme.desktopIconTileFill
 
   _strokeForMyState: ->
     theme = WorldWdgt.theme
-    if @state is @STATE_PRESSED then theme.desktopIconTilePressedStroke else theme.desktopIconTileStroke
+    if @_showsPressOnMyTile() then theme.desktopIconTilePressedStroke else theme.desktopIconTileStroke
 
   moveOnTopOfTopReference: ->
     # find the topmost OTHER desktop icon to layer myself just above it
