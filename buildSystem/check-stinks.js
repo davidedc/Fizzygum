@@ -83,7 +83,7 @@ const ROOTS = sourceRoots(ARGV, 'stinks');
 //
 // NB the counts are the ENGINE's (each line as lib/coffee-mask.js reads it): a ratchet measures REGRESSION.
 const STINKS = [
-  { id: 'debugger-statement', baseline: 28,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it), 33->32 on 2026-11-11 (WorldWdgt._stepWidget's, a catch below already handles an undefined step), 32->31 on 2026-11-11 (Duplicator's closed set: a value a copy cannot carry is a refusal the person is told, not a programmer's stop), 31->30 on 2026-11-12 (HighlightableMixin's, deleted with the mixin), 30->28 on 2026-11-12 (meta/Mixin.coffee's two, deleted with the mixin mechanism)
+  { id: 'debugger-statement', baseline: 11,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it), 33->32 on 2026-11-11 (WorldWdgt._stepWidget's, a catch below already handles an undefined step), 32->31 on 2026-11-11 (Duplicator's closed set: a value a copy cannot carry is a refusal the person is told, not a programmer's stop), 31->30 on 2026-11-12 (HighlightableMixin's, deleted with the mixin), 30->28 on 2026-11-12 (meta/Mixin.coffee's two, deleted with the mixin mechanism), 28->11 on 2026-11-13 (the seventeen of the cached-derivation oracle: its one report, TreeNode._reportIfCachedDiverges, needs none)
     why: 'a debugger statement is left-in debug cruft; it hard-stops execution whenever devtools are open',
     re: /^\s*debugger\b/ },
   // `undefined-literal` (baseline 83) was DELETED on 2026-08-13: it enforced `nil` OVER `undefined`,

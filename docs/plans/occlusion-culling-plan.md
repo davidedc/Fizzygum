@@ -584,7 +584,7 @@ asks for a ledger-grade refresh.
   `world.doubleCheckOcclusionCulling` (default false): whenever the bypass fires for rect R, ALSO
   paint R the normal un-culled way into a scratch offscreen context
   (`HTMLCanvasElement.createOfPhysicalDimensions`, honouring the backend switch) and byte-compare
-  the R region; `debugger`/alert on mismatch. Sound because BOTH paints fully determine every
+  the R region; report a mismatch under a gate token, as that oracle does (`TreeNode._reportIfCachedDiverges`). Sound because BOTH paints fully determine every
   pixel of R (normal path: the desktop fill covers R first; culled path: the coverer does), and
   scratch painting cannot disturb the damage bookkeeping (`_recordDrawnAreaForNextDamageRects`
   gates on `aContext == world.worldCanvasContext`, §1b). Run the suite + prof-interactive once

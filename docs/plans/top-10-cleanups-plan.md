@@ -102,7 +102,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Not started |
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Not started |
 | 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Not started |
-| 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Not started |
+| 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
 | 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Not started |
 | 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
 | 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Not started |
@@ -512,6 +512,23 @@ gauntlet's `selftests` leg) must still see a planted divergence. Then `fg gauntl
 (17 branches plus the field's declaration) and
 `grep -rnE "^\s+SLOW[A-Za-z]+:" Fizzygum/src --include='*.coffee' | wc -l`.
 
+**Landed 2026-11-13 (the loop's U3): step 1, one oracle.** `TreeNode._reportIfCachedDiverges
+queryName, answer, slowAnswer, path` holds the comparison and the report: an answer with `equals` (a
+Rectangle) is compared by it, any other (a node, a boolean) by identity, and a disagreement prints
+`CACHED_DERIVATION_DIVERGED -- <queryName> is broken` plus ` (<path>)` where the query names its
+paths ("cached", "uncached", or the island's "island"). The seventeen sites keep their
+`if world.doubleCheckCachedMethodsResults` test and call it inside, so a disarmed read pays exactly
+what it did (one field test, no call, no twin); their `debugger` lines are gone, and the
+`debugger-statement` stink falls from 28 to 11. Evidence: an old-versus-new probe that, for each of
+the twelve query bodies, arms the oracle, plants that body's SLOW twin to answer wrong, and records
+every message of an uncached and then a cached call — the two builds print byte-identical
+sequences, all seventeen messages on their own paths, and an honest twin prints nothing; the
+resolution map changes those twelve bodies and adds the oracle, nothing else; the cache-oracle
+self-test still sees its planted divergence. One inspector test moved: the oracle is one more
+member in an object inspector's list, which scrolls the selected row's window by one row
+(`macroDuplicatedInspectorDrivesCopiedTargetOnly`, recaptured mouse and finger at dpr 1 and 2).
+Step 2 stays the owner's: it adds a class-level declaration that generates accessors.
+
 ---
 
 ## §8. Ratchets for method count and complexity; split the sequential giants
@@ -813,3 +830,6 @@ Do not commit or push without asking me.
 - §1, the next part — the line then read "… two vendoring homes; …". — LANDED IN PART 2026-11-13 (loop U2): the
   third-party libraries in `vendor/`, the build's own copied files in `assets/`, `auxiliary files/` gone (§1, the
   second "Landed"). BACKLOG keeps `package.json`'s `main`, `SWCanvasBrokenTests` (owner) and the `.psd` (owner).
+- §7, in part — the line read: "§7 (½ day, then 3 days): derived-geometry caches — one oracle method (17 copies
+  today), then one declared memo (perf-gated)". — LANDED IN PART 2026-11-13 (loop U3): step 1, one oracle
+  (`TreeNode._reportIfCachedDiverges`; §7, "Landed"). BACKLOG keeps step 2, the declared memo (owner).

@@ -1398,9 +1398,7 @@ class Widget extends TreeNode
           result = @cachedVisibleBasedOnIsVisibleProperty
 
     if world.doubleCheckCachedMethodsResults
-      if result != @SLOWvisibleBasedOnIsVisibleProperty()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- visibleBasedOnIsVisibleProperty is broken"
+      @_reportIfCachedDiverges "visibleBasedOnIsVisibleProperty", result, @SLOWvisibleBasedOnIsVisibleProperty()
 
     return result
 
@@ -1529,9 +1527,7 @@ class Widget extends TreeNode
   fullBounds: ->
     if @checkFullBoundsCache == WorldWdgt.geometryVersion
       if world.doubleCheckCachedMethodsResults
-        if !@cachedFullBounds.equals @SLOWfullBounds()
-          debugger
-          console.error "CACHED_DERIVATION_DIVERGED -- fullBounds is broken (cached)"
+        @_reportIfCachedDiverges "fullBounds", @cachedFullBounds, @SLOWfullBounds(), "cached"
       return @cachedFullBounds
 
     result = @bounds
@@ -1540,9 +1536,7 @@ class Widget extends TreeNode
         result = result.merge child.fullBounds()
 
     if world.doubleCheckCachedMethodsResults
-      if !result.equals @SLOWfullBounds()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- fullBounds is broken (uncached)"
+      @_reportIfCachedDiverges "fullBounds", result, @SLOWfullBounds(), "uncached"
 
     @checkFullBoundsCache = WorldWdgt.geometryVersion
     @cachedFullBounds = result
@@ -1560,9 +1554,7 @@ class Widget extends TreeNode
     else
       if @checkFullClippedBoundsCache == WorldWdgt.geometryVersion
         if world.doubleCheckCachedMethodsResults
-          if !@cachedFullClippedBounds.equals @SLOWfullClippedBounds()
-            debugger
-            console.error "CACHED_DERIVATION_DIVERGED -- fullClippedBounds is broken"
+          @_reportIfCachedDiverges "fullClippedBounds", @cachedFullClippedBounds, @SLOWfullClippedBounds()
         return @cachedFullClippedBounds
 
       # you'd be thinking this is the same as
@@ -1576,9 +1568,7 @@ class Widget extends TreeNode
           result = result.merge child.fullClippedBounds()
 
     if world.doubleCheckCachedMethodsResults
-      if !result.equals @SLOWfullClippedBounds()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- fullClippedBounds is broken"
+      @_reportIfCachedDiverges "fullClippedBounds", result, @SLOWfullClippedBounds()
 
     @checkFullClippedBoundsCache = WorldWdgt.geometryVersion
     @cachedFullClippedBounds = result
@@ -1604,9 +1594,7 @@ class Widget extends TreeNode
       result = @cachedClippedThroughBounds
 
     if world.doubleCheckCachedMethodsResults
-      if !result.equals @SLOWclippedThroughBounds()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- clippedThroughBounds is broken"
+      @_reportIfCachedDiverges "clippedThroughBounds", result, @SLOWclippedThroughBounds()
 
     return result
   
@@ -1649,9 +1637,7 @@ class Widget extends TreeNode
       result = @cachedClipThrough
 
     if world.doubleCheckCachedMethodsResults
-      if !result.equals @SLOWclipThrough()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- clipThrough is broken"
+      @_reportIfCachedDiverges "clipThrough", result, @SLOWclipThrough()
 
     return result
 
@@ -3458,9 +3444,7 @@ class Widget extends TreeNode
       @cachedIsInCollapsedSubtree = result
 
     if world.doubleCheckCachedMethodsResults
-      if result != @SLOWisInCollapsedSubtree()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- isInCollapsedSubtree is broken"
+      @_reportIfCachedDiverges "isInCollapsedSubtree", result, @SLOWisInCollapsedSubtree()
 
     return result
   

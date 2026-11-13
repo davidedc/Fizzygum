@@ -62,17 +62,13 @@ class ClippingWdgt extends Widget
   fullBounds: ->
     if @checkFullBoundsCache == WorldWdgt.geometryVersion
       if world.doubleCheckCachedMethodsResults
-        if !@cachedFullBounds.equals @SLOWfullBounds()
-          debugger
-          console.error "CACHED_DERIVATION_DIVERGED -- fullBounds is broken (cached)"
+        @_reportIfCachedDiverges "fullBounds", @cachedFullBounds, @SLOWfullBounds(), "cached"
       return @cachedFullBounds
 
     result = @bounds
 
     if world.doubleCheckCachedMethodsResults
-      if !result.equals @SLOWfullBounds()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- fullBounds is broken (uncached)"
+      @_reportIfCachedDiverges "fullBounds", result, @SLOWfullBounds(), "uncached"
 
     @checkFullBoundsCache = WorldWdgt.geometryVersion
     @cachedFullBounds = result
@@ -84,17 +80,13 @@ class ClippingWdgt extends Widget
       if @cachedFullClippedBounds?
         if @checkFullClippedBoundsCache == WorldWdgt.geometryVersion
           if world.doubleCheckCachedMethodsResults
-            if !@cachedFullClippedBounds.equals @SLOWfullClippedBounds()
-              debugger
-              console.error "CACHED_DERIVATION_DIVERGED -- fullClippedBounds is broken"
+            @_reportIfCachedDiverges "fullClippedBounds", @cachedFullClippedBounds, @SLOWfullClippedBounds()
           return @cachedFullClippedBounds
 
       result = @clippedThroughBounds()
 
     if world.doubleCheckCachedMethodsResults
-      if !result.equals @SLOWfullClippedBounds()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- fullClippedBounds is broken"
+      @_reportIfCachedDiverges "fullClippedBounds", result, @SLOWfullClippedBounds()
 
     @checkFullClippedBoundsCache = WorldWdgt.geometryVersion
     @cachedFullClippedBounds = result

@@ -171,7 +171,8 @@ The island presents two different rectangles to two different audiences
   ∩ `_ancestorScreenClip`). Larger than the slot box when scaled up ("ink overflow").
 
 Both cached methods have `SLOW*` oracle twins overridden in lockstep for the
-`doubleCheckCachedMethodsResults` gate.
+`doubleCheckCachedMethodsResults` gate, and report a disagreement, as every cached derivation does,
+through the one oracle `TreeNode._reportIfCachedDiverges` (path `"island"`).
 
 ---
 

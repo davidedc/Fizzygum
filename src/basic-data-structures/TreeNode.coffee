@@ -158,6 +158,21 @@ class TreeNode
     return @parent.isInStorageButReachable newGcSessionId
 
 
+  # THE cached-derivation oracle. Each derived query that memoises its answer against a WorldWdgt
+  # version counter (root and firstParentClippingAtBounds here, Widget's bounds and visibility
+  # queries, and their overrides) keeps a SLOW twin that derives the answer without its own memo.
+  # While world.doubleCheckCachedMethodsResults is on (the settle leg's prelude arms it), the query
+  # hands me its answer and its twin's, and I report a disagreement under the gate token the headless
+  # runners fail on. The query tests the flag itself, so a disarmed read pays one field test and
+  # never runs its twin. An answer with `equals` (a Rectangle) is compared by it, any other (a node,
+  # a boolean) by identity. `path` names the path that answered ("cached", "uncached", an override's
+  # own "island") where the query reports its paths apart.
+  _reportIfCachedDiverges: (queryName, answer, slowAnswer, path) ->
+    diverges = if answer?.equals? then !answer.equals slowAnswer else answer isnt slowAnswer
+    return unless diverges
+    which = if path? then " (" + path + ")" else ""
+    console.error "CACHED_DERIVATION_DIVERGED -- " + queryName + " is broken" + which
+
   # TreeNode functions:
   SLOWroot: ->
     if @parent?
@@ -180,9 +195,7 @@ class TreeNode
       result = @cachedRoot
 
     if world.doubleCheckCachedMethodsResults
-      if result != @SLOWroot()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- root is broken"
+      @_reportIfCachedDiverges "root", result, @SLOWroot()
 
     return result
 
@@ -417,9 +430,7 @@ class TreeNode
   firstParentClippingAtBounds: ->
     if @checkFirstParentClippingAtBoundsCache == WorldWdgt.structureVersion
       if world.doubleCheckCachedMethodsResults
-        if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds()
-          debugger
-          console.error "CACHED_DERIVATION_DIVERGED -- firstParentClippingAtBounds is broken (cached)"
+        @_reportIfCachedDiverges "firstParentClippingAtBounds", @cachedFirstParentClippingAtBounds, @SLOWfirstParentClippingAtBounds(), "cached"
       return @cachedFirstParentClippingAtBounds
 
     if @parent?
@@ -431,9 +442,7 @@ class TreeNode
       result =  undefined
 
     if world.doubleCheckCachedMethodsResults
-      if result != @SLOWfirstParentClippingAtBounds()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- firstParentClippingAtBounds is broken (uncached)"
+      @_reportIfCachedDiverges "firstParentClippingAtBounds", result, @SLOWfirstParentClippingAtBounds(), "uncached"
 
     @checkFirstParentClippingAtBoundsCache = WorldWdgt.structureVersion
     @cachedFirstParentClippingAtBounds = result

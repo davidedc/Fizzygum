@@ -676,7 +676,7 @@ island presents **two faces**:
 `Widget.coffee:1059-1083`) compared against the cached results whenever
 `world.doubleCheckCachedMethodsResults` is on — the bounds-cache campaign's standing lesson
 is that SLOW twins must be overridden IN LOCKSTEP. Every island override above MUST override
-its SLOW twin identically or the coherence gate will alert/`debugger` at first use.
+its SLOW twin identically or the coherence gate will report `CACHED_DERIVATION_DIVERGED` at first use.
 
 Identity islands keep stock single-plane behavior bit-for-bit (virtual ≡ screen), preserving
 the identity-bypass gate.

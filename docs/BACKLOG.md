@@ -570,7 +570,7 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 - [ ] §4 (1 day): the 15 `debugger`-only invariant traps report through a gated token, or are deleted with evidence
 - [ ] §5 (2 days): lift the browser-input bridge (seven listener methods) off `WorldWdgt`
 - [ ] §6 (3 days): one plane-mapping protocol for the ancestor walk (8 loops and 10 `instanceof TransformFrameWdgt` in `Widget`)
-- [ ] §7 (½ day, then 3 days): derived-geometry caches — one oracle method (17 copies today), then one declared memo (perf-gated)
+- [ ] §7 step 2 (3 days): derived-geometry caches — one declared memo per query (perf-gated; ⛔ owner: it adds a class-level declaration that generates accessors, a new meta-mechanism). Step 1, the one oracle, landed (the plan's `## BACKLOG ledger`)
 - [ ] §8 (1 day, then 2 to 3 days): method-count and cognitive-complexity ratchets; split the sequential giants (supersedes the `lint-generic-rules-carryover-plan.md` §8.5 C line below once built)
 - [ ] §9 (4 to 5 days): icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted)
 - [ ] §10 (5 to 6 days): build logic in one language (port `build.py` + `buildProfile.py` to Node) and the gate sequence as a table

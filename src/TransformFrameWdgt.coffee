@@ -760,9 +760,7 @@ class TransformFrameWdgt extends PanelWdgt
       @cachedClipThrough = @boundingBox()   # slot box, virtual — NO ancestor intersect
       result = @cachedClipThrough
     if world.doubleCheckCachedMethodsResults
-      if !result.equals @SLOWclipThrough()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- clipThrough is broken (island)"
+      @_reportIfCachedDiverges "clipThrough", result, @SLOWclipThrough(), "island"
     return result
 
   SLOWclipThrough: ->
@@ -785,9 +783,7 @@ class TransformFrameWdgt extends PanelWdgt
       @cachedClippedThroughBounds = @_screenFootprintForDamage().intersect @_ancestorScreenClip()
       result = @cachedClippedThroughBounds
     if world.doubleCheckCachedMethodsResults
-      if !result.equals @SLOWclippedThroughBounds()
-        debugger
-        console.error "CACHED_DERIVATION_DIVERGED -- clippedThroughBounds is broken (island)"
+      @_reportIfCachedDiverges "clippedThroughBounds", result, @SLOWclippedThroughBounds(), "island"
     return result
 
   SLOWclippedThroughBounds: ->
