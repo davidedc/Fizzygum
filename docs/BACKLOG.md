@@ -562,6 +562,19 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 - [ ] §5's second candidate (unexamined): `FrameWdgt`'s docking family (`dockSideAt` to `floatOutOfDock`) as a seam of its own — assess before assuming it
 - [ ] §9 (4 to 5 days): icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted; kept open by the owner 2026-11-13, the plan's §9 has the recommendation on record — collapse)
 
+### `plans/top-10-cleanups-round-2-plan.md`
+AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first survey took the framework and the build, this one takes the test harness, the reference set and the verification tooling. Each item carries its evidence, its effort estimate, its re-measure command and its first step. The owner agreed with §1 to §9 on 2026-11-13 (§4 ruled: delete; §9 on its stated criterion) and left §10 out for now; an owner-launched `/loop` executes §1 to §9 one unit at a time (the plan's STATUS). ⛔ owner decision still open before the second step of §6.
+- [ ] §1 (½ day): class source text ships as a plain string literal (`JSON.stringify`) — the three-glyph escape, its decoder in `SourceVault.store` and the build's refusal go
+- [ ] §2 (½ day): `hashCode` leaves `Object.prototype` for a boot function — then measure `waitForFunction` and close the one-liner below that asks
+- [ ] §3 (½ day): map outlines are data — 2,638 `lineTo` statements in two files become coordinate tables and one loop, proven by an operation log
+- [ ] §4 (½ to 1 day): the in-browser failure zip, a second and ungated way to capture references, with the vendored JSZip and FileSaver (the owner ruled 2026-11-13: delete)
+- [ ] §5 (1 day): one seam for "a test is playing" — 46 lines in 15 core files name the harness, in two spellings; the hand fades the harness's DOM
+- [ ] §6 (2 days, then 1 to 2): one audited-suite gate driver in Node (three bash gates, their library and its rule-registry twin go); then instruments that share a suite pass (⛔ measured first, then the owner)
+- [ ] §7 (2 to 3 days): the `fg` leg roster as a table. **A defect stands until then: `FG_GAUNTLET_SERIAL=1 fg gauntlet` runs 17 of the 20 legs (`parts`, `storage` and `vmtruth` are missing) and prints OK** — a three-line fix of its own, the item's first step
+- [ ] §8 (2 to 3 days): a test is its macro — the command-sequence layer (six classes, a timed cursor, 389 copies of one preamble) retired; the three test toggles stay (folding them changes the tests that load a snapshot mid-test: a decision of its own)
+- [ ] §9 (2 to 3 days): instruction files — a byte budget and one home per fact (about 171 KB is loaded into every session) (the owner agreed 2026-11-13, on the item's criterion)
+- [ ] §10 (1 to 2 days, then 3; left out for now by the owner 2026-11-13): the reference set — a path made of the live axes (five single-valued segments and the user-agent spoof go); then one file per reference (the `.js` copies, 45.8 MB, and the reference loader go; needs §4 decided)
+
 ## Residual / parked items (owning doc archived)
 
 ### Pointer hit-test rework 2026-08-21 — residue (no plan doc; the arc ran assessment → execution)
