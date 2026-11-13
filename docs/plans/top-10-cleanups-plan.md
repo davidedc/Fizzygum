@@ -103,7 +103,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Landed 2026-11-13 |
 | 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Built and parked 2026-11-13: OWNER DECISION (a speed trade) |
 | 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
-| 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Not started |
+| 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Step 1 (the ratchets) landed 2026-11-13; step 2 open |
 | 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
 | 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Landed 2026-11-13 (both steps) |
 
@@ -659,6 +659,28 @@ covers them, and this survey found no new argument.
 **Re-measure.** `Fizzygum/node_modules/.bin/coffee-cc src` run from `Fizzygum/` (read-only), and
 `grep -cE '^  [A-Za-z_$][A-Za-z0-9_$]*: *(\([^)]*\))? *[-=]>' Fizzygum/src/basic-widgets/Widget.coffee`.
 
+**Landed 2026-11-13 (the loop's U9): step 1, the ratchets.** `buildSystem/check-complexity-ratchets.js`, the
+build's last gate row, a gate of its own (a stink counts one pattern over every file against one number; these
+hold a number per class and per function), in the stinks' style: a recorded value that may fall and may not rise,
+printing UNDER when it can be lowered. METHOD COUNT, by the ONE definition of a method header
+(`lib/coffee-method-header.js`, instance and class side — not this section's re-measure regex, which misses
+class-side methods, wrapped signatures and a parameter default holding a call, and which the lint index forbids
+re-declaring): `Widget` 391, `WorldWdgt` 127, `ActivePointerWdgt` 74, `FrameWdgt` 173. COGNITIVE COMPLEXITY, one
+ceiling, 15 (the published default of S3776): the 4,589 functions of src and the harness are scored, and the 106 above
+15 are recorded at their values, keyed `Class#method`, `Class.method` on the class side, `<file>#name` outside any
+class (the top three `WorldInventory#takeInventory` 130, `Serializer._buildObjectTable` 106,
+`ViewportWdgt#takeStrokeScrollFrom` 93); a new one above 15, or a recorded one rising, fails; an entry excusing
+nothing (a class file gone, a function at 15 or below, or gone) is stale and fails; the harness's six records are
+judged only when the harness is read. The analyzer, the owner's npm package `coffeescript-cognitive-complexity`
+1.0.0, is vendored as acorn is (`vendor/coffeescript-cognitive-complexity/`: its `index.js` verbatim, its `LICENSE`,
+a README). It walks the AST by node class name, which the build's minified compiler mangles, so
+`buildSystem/lib/cognitive-complexity.js` loads it only on the CoffeeScript the records were measured on — 2.7.0,
+the global install the build already requires, found behind a `coffee` on PATH or in Node's global prefix, another
+version or a wrapper passed over, none found an INVALID run — with nothing from `node_modules`; its scores equal the
+published run's, function for function, over all 580 sources. Its bite proof plants every rule, harness included
+(19 cases). `fg critique` does not show it yet: `fg` is the owner's local tooling, outside the loop's reach
+(BACKLOG has the one step to add).
+
 ---
 
 ## §9. Icon shells: one `IconWdgt` and a derived icon catalog
@@ -965,6 +987,10 @@ Do not commit or push without asking me.
   BACKLOG keeps step 2, the gate table.
 - [x] §10 step 2 (about 3 days): the gate sequence as a table (`build_it_please.sh`'s gate blocks become rows a runner executes; `lib/what-runs.js` reads the table). Step 1, the Node port, landed (the plan's `## BACKLOG ledger`)
   — CLOSED 2026-11-13 (loop U6): `buildSystem/gates.js` + `buildSystem/run-gates.js` (§10, the step-2 "Landed").
+- §8, in part — the line read: "§8 (1 day, then 2 to 3 days): method-count and cognitive-complexity ratchets; split the
+  sequential giants (supersedes the `lint-generic-rules-carryover-plan.md` §8.5 C line below once built)". — LANDED IN
+  PART 2026-11-13 (loop U9): step 1, the ratchets, `buildSystem/check-complexity-ratchets.js` (§8, "Landed"); the §8.5 C
+  line closed as superseded into its own plan's ledger. BACKLOG keeps step 2, the splits.
 - [x] §5 (2 days): lift the browser-input bridge (seven listener methods) off `WorldWdgt`
   — CLOSED 2026-11-13 (loop U7): `world.browserInput`, `src/events-input/BrowserInputBridge.coffee` (§5, "Landed").
   BACKLOG keeps §5's unexamined second candidate, `FrameWdgt`'s docking family.

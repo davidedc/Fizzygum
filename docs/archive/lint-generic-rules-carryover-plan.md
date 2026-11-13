@@ -626,4 +626,9 @@ that file can go back to being an index of OPEN work only (`docs/README.md` fili
 arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
 arc still OPEN stayed in `docs/BACKLOG.md`.
 
+- [x] `archive/lint-generic-rules-carryover-plan.md` §8.5 C: per-file metrics ratchet for god-class line counts — not
+  built — SUPERSEDED 2026-11-13 by `plans/top-10-cleanups-plan.md` §8 step 1 (its loop's U9):
+  `buildSystem/check-complexity-ratchets.js` holds the four largest classes' METHOD counts (not lines: a line ratchet
+  would punish the comments the project asks for) and every function's cognitive complexity.
+
 - [x] `archive/lint-generic-rules-carryover-plan.md` §8.1 A2: action-string dispatch resolution — BUILT as a RUNTIME sweep, not a static gate: `menu-click-sweep-headless.js`'s `UNRESOLVED_ACTION` and `pin-sweep-headless.js`'s `NO_SETTER`/`NO_GETTER` resolve every menu action and every `PinSpec` setter/getter (both gauntlet wave-A legs). A static resolver cannot see a computed-name dispatch; §8.1's premise was that it could.

@@ -487,6 +487,20 @@ const GATES = [
     when: "testsRepo",
     banner: "checking the aim census's tables against the source ...",
     failure: "!!!!!!!!!!! error: the aim census's tables are stale -- aborting build." },
+  // --- the method-count and cognitive-complexity ratchets ----------------------------------------
+  // Two recorded values that may fall and may not rise, in the stinks' style: the methods of the four
+  // classes that grew with nothing holding them (Widget, WorldWdgt, ActivePointerWdgt, FrameWdgt), and
+  // the cognitive complexity of every function of the compiled sources (above 15, only the functions
+  // recorded when the ratchet landed, each at its value). Its analyzer is vendored
+  // (vendor/coffeescript-cognitive-complexity/) and runs on the global CoffeeScript the build already
+  // requires. A class or function under its record prints UNDER: lower the record, to lock the gain in.
+  // ~2 s.
+  { script: path.join(BUILD_SYSTEM, "check-complexity-ratchets.js"),
+    args: [],
+    when: "checked",
+    banner: "checking the method-count and cognitive-complexity ratchets ...",
+    failure: "!!!!!!!!!!! error: a method-count or complexity ratchet rose -- aborting build.",
+    ok: "... method-count and complexity ratchets OK" },
 ];
 
 module.exports = { GATES, WHEN, BUILD_ARGS, TESTS_REPO };
