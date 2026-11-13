@@ -5,8 +5,9 @@
 // A self-test is a checker's proof that it can fail. One that nothing runs proves nothing: the checker can be wrong on
 // every build in between and nobody learns it (docs/archive/unrun-checks-plan.md). So a self-test is a FILE,
 // named for its subject, and this runs them all:
-//   <subject>-selftest.js           pure Node, no build, no browser — the BUILD runs these (build_it_please.sh), and
-//                                   so does `npm run selftest` in Fizzygum-tests (--repo=tests);
+//   <subject>-selftest.js           pure Node, no build, no browser — the BUILD runs these (the first row of its gate
+//                                   table, buildSystem/gates.js), and so does `npm run selftest` in Fizzygum-tests
+//                                   (--repo=tests);
 //   <subject>-selftest-headless.js  boots the built page — the gauntlet's `selftests` leg runs these (--headless).
 // The naming table is lib/what-runs.js's CONVENTIONS, which check-hand-lists.js reads too, so what this runs and what
 // a sanction may lean on cannot disagree.
@@ -26,9 +27,10 @@
 //                                extension, or outside the directories the conventions scan. node_modules, dot-dirs and
 //                                the tests repo's tests/ (test content) are not scripts.
 // This file and lib/selftest-verdict.js are the machinery, exempt from both: they name the spellings to refuse them.
-// AND EVERY GATE BITES (the node tier of a full run — the build's): every script the build, build_and_smoke.sh or an `fg` leg LAUNCHES
-// (lib/what-runs.js's run set: ANY launch edge makes it a program — but never an instrument a gate injects, nor a
-// self-test, which is a proof judged by the rules above) is a gate unless its header says why not (`// not-a-gate: <reason>`, `#` in a shell or Python file), and a gate
+// AND EVERY GATE BITES (the node tier of a full run — the build's): every script the build (each row of its gate table
+// included), build_and_smoke.sh or an `fg` leg LAUNCHES (lib/what-runs.js's run set: ANY launch edge makes it a
+// program — but never an instrument a gate injects, nor a self-test, which is a proof judged by the rules above) is a
+// gate unless its header says why not (`// not-a-gate: <reason>`, `#` in a shell or Python file), and a gate
 //   GATE_WITHOUT_REGISTRY  names its rules through lib/gate-rules.js — JS: `require(…gate-rules…).forGate(__filename)`
 //                          in its code; shell: a `gate_rules_init` call (the twin in Fizzygum-tests/scripts/lib/
 //                          audited-suite-with-infra-retry.sh) — so its exits are held to its rules;

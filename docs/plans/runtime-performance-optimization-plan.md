@@ -242,7 +242,7 @@ rebuilt dist, re-vendored, `fg gauntlet` + `fg homepage` green.
 `swcanvas.min.js`, and SWCanvas `minify.sh` runs terser with
 `drop_console=true,…,pure_funcs=['console.log',…]`, which **removes the drawImage log (and its
 argument-object construction) outright** — verified: 0 occurrences of `Core drawImage called with`
-in `swcanvas.min.js`, and `build_it_please.sh:553` cats the `.min.js`. So the shipped build, the
+in `swcanvas.min.js`, and `build_it_please.sh`'s SW boot-bundle assembly cats the `.min.js`. So the shipped build, the
 real `?sw=1` runtime, and `fg gauntlet` **never executed this log**; its measured −33%/−8.3% (§4.5)
 lives only in the *unminified* profiling shadow build (`mk-shadow-build.sh:46` appends
 `swcanvas.js`). Deleting it from source is still worth it: it removes genuinely dead debug from a

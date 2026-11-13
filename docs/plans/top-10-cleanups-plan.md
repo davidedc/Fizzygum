@@ -105,7 +105,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
 | 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Not started |
 | 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
-| 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Step 1 (Node port) landed 2026-11-13; step 2 open |
+| 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Landed 2026-11-13 (both steps) |
 
 ---
 
@@ -757,6 +757,34 @@ for timings. A second step changed the shipped files that named the Python in a 
 source, three boot files, two class sources, one harness file, and one boot error message); its
 fingerprints differ from the first step's in exactly those files.
 
+**Landed 2026-11-13 (the loop's U6): step 2, the gate sequence is a table.** `buildSystem/gates.js` holds one row
+per static gate, in the order the build runs them — the script, its arguments, WHEN it runs (`checked`, unless
+`--noSyntaxCheck`; `testsShipped`, and the profile ships the tests and the tests repo is present; `testsRepo`, and
+the tests repo is present), the line printed before it, its failure line and its OK line — with the comment that sat
+beside its shell block above each row, every line of it verbatim. `buildSystem/run-gates.js` runs the rows and stops at
+the first failure with that row's failure line, the bell and exit 1; a row naming a WHEN it does not know stops it
+before any row runs, `--noSyntaxCheck` included (exit 2). `build_it_please.sh` calls it once, where the 27 blocks that
+held the 33 gates stood (36 `$?` checks became 4). `lib/what-runs.js` reads the table once it sees the build launch
+the runner: each row is a launch by the command line the runner gives it, so a convention keyed to the invoking
+command still applies. Reached only through a JavaScript edge, `run-selftests.js` loses its discovery of the node-tier
+self-tests: measured with the reading planted off, every one drops out of the run set and `check-hand-lists` refuses
+the two sanctions that rest on one (row 7 fails). A row is resolved by its tail, like every other edge; a row whose
+script lives in the tests repo, in a layout without that repo, launches nothing (as the runner passes it over), and
+any other row naming a script it does not scan is an error. Evidence: the table was GENERATED from the blocks it replaced, and a script proves it equal to them (order,
+script, arguments, condition, banner, failure, OK) and every one of their 265 comment lines present; what-runs' answer
+equals its answer on the unchanged tree plus the runner, the table and the runner's self-test; `run-gates-selftest.js`,
+the new `what-runs-selftest.js` cases and a census case in `run-selftests-selftest.js` (a gate reached only as a row),
+each seen failing with what it guards planted away; build-tree fingerprints for the five profiles and `dev
+--noSyntaxCheck`, taken on the final tree, equal to the shell's, and their transcripts equal but for timings, the
+lines that count the self-tests and the tooling's files (which the unit's own new files change) and the baseline
+worktree's own vendor fetch and paths — the aim census running on every profile and the four gates over the tests
+only where the tests ship, on both sides, and no gate under `--noSyntaxCheck`. Planted builds, on HEAD and on the change:
+trailing whitespace in a source, and a macro calling a method nobody declares, stop both at row 1 (each gate's
+self-test runs it on a copy of the planted input); an orphan reference image runs rows 1–30 in both and stops both at
+row 31, check-refs, with the same lines, bell and exit. No planted build reaches the `testsRepo` row (the last, and
+every input it reads is read earlier or copied by its own self-test); its condition is proven by the runner's
+self-test and by every clean transcript.
+
 ---
 
 ## 11. Measured and deliberately not listed
@@ -879,6 +907,8 @@ Do not commit or push without asking me.
 - §10, in part — the line read: "§10 (5 to 6 days): build logic in one language (port `build.py` + `buildProfile.py` to
   Node) and the gate sequence as a table". — LANDED IN PART 2026-11-13 (loop U5): step 1, the port (§10, "Landed").
   BACKLOG keeps step 2, the gate table.
+- [x] §10 step 2 (about 3 days): the gate sequence as a table (`build_it_please.sh`'s gate blocks become rows a runner executes; `lib/what-runs.js` reads the table). Step 1, the Node port, landed (the plan's `## BACKLOG ledger`)
+  — CLOSED 2026-11-13 (loop U6): `buildSystem/gates.js` + `buildSystem/run-gates.js` (§10, the step-2 "Landed").
 - [x] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
       Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
       `BoxyAppearance`), and the static-checks table states no blind spot for it.

@@ -130,10 +130,17 @@ proveGate({
     expect: { SELFTEST_FAILED: /^  SELFTEST_FAILED  Fizzygum\/buildSystem\/h-selftest-headless\.js  \(exit 1, /m },
   }, {
     label: 'the gate census: a gate no proof launches, a gate that names no rule, a build step that says so, a proof that ' +
-      'never calls its helper, a not-a-gate line below the header',
+      'never calls its helper, a not-a-gate line below the header, a gate reached only as a row of the build\'s gate table',
     plants: {
       'Fizzygum/build_it_please.sh': ['noproof-gate', 'noreg-gate', 'step', 'callless-gate', 'late-gate']
-        .map((g) => `node buildSystem/${g}.js\n`).join(''),
+        .map((g) => `node buildSystem/${g}.js\n`).join('')
+        + 'node ./buildSystem/run-gates.js --noSyntaxCheck=false --shipsTests=true -- "${args[@]}"\n',
+      // the runner says why it is no gate; its table's one row names a script no text scan can read, so only the
+      // table, read as data, makes it a gate
+      [BS + 'run-gates.js']: "#!/usr/bin/env node\n'use strict';\n// not-a-gate: the runner of the table's gates\nrequire('./gates');\n",
+      [BS + 'gates.js']: "const path = require('path');\nmodule.exports = { BUILD_ARGS: 'BUILD_ARGS', GATES: [{ script: " +
+        "path.join(__dirname, ['table', 'gate'].join('-') + '.js'), args: [], when: 'checked', banner: 'b', failure: 'f' }] };\n",
+      [BS + 'table-gate.js']: "console.log('no registry');\n",
       [BS + 'noproof-gate.js']: registryGate,
       [BS + 'noreg-gate.js']: "console.log('no registry');\n",
       [BS + 'noreg-gate-selftest.js']: proofOf('noreg-gate.js', 'noreg-gate'),
@@ -147,7 +154,8 @@ proveGate({
       GATE_WITHOUT_REGISTRY: /^  GATE_WITHOUT_REGISTRY  Fizzygum\/buildSystem\/noreg-gate\.js$/m,
     },
     lines: [/^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/callless-gate\.js$/m,
-            /^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/late-gate\.js$/m],
+            /^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/late-gate\.js$/m,
+            /^  GATE_WITHOUT_REGISTRY  Fizzygum\/buildSystem\/table-gate\.js$/m],
     absent: [/step\.js/],
   }],
 });

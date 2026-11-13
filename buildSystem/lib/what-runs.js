@@ -7,7 +7,8 @@
 //   - check-hand-lists.js accepts a sanction's guard only when runSet() contains it.
 // Plan, measurements and the review it survived: docs/archive/unrun-checks-plan.md.
 //
-// THE ROOTS. Fizzygum/build_it_please.sh (every build); Fizzygum/build_and_smoke.sh when present (the build's own
+// THE ROOTS. Fizzygum/build_it_please.sh (every build), with its gate table, buildSystem/gates.js (each row a launch of
+// its script by the command line run-gates.js gives it); Fizzygum/build_and_smoke.sh when present (the build's own
 // pre-commit check: the boot smoke it launches is a gate like any other); and, when the umbrella's local `fg` wrapper is
 // present, the bodies of its fg_build / fg_suite / run_lint / run_leg functions (the presuite and gauntlet legs; all four
 // must be found, or the reading is an ERROR). `fg` is in no repo, so a bare clone has the two versioned roots alone and runSet() says
@@ -37,7 +38,9 @@
 // seen, so its target reads as never run: the safe direction, since the reader then asks for a guard that is seen to
 // run. A required module counts as run because its code runs, even where its own command-line half (behind
 // `require.main === module`) does not. A root's own conditions (`if $PROFILE_SHIPS_TESTS`) are not evaluated: a gate
-// behind a profile condition counts as run. A leg of `fg` is trusted to be in a wave; `fg` is read, never executed.
+// behind a profile condition counts as run — and so is a gate-table row's WHEN, with one exception the runner makes
+// too: a row whose script lives in the tests repo, in a layout with no tests repo, runs nothing. A row's arguments are
+// not read for scripts (a shell line's are). A leg of `fg` is trusted to be in a wave; `fg` is read, never executed.
 
 const fs = require('fs');
 const path = require('path');
@@ -50,6 +53,10 @@ const DEFAULT_LAYOUT = {
   fg: path.join(path.dirname(FIZZYGUM), 'fg'),
 };
 const FG_FUNCTIONS = ['fg_build', 'fg_suite', 'run_lint', 'run_leg'];
+// the build's gate runner, and the table of gates it runs: read here (its rows are data) when the build launches the
+// runner — a table nobody runs gates nothing
+const GATE_RUNNER = 'buildSystem/run-gates.js';
+const GATE_TABLE = 'buildSystem/gates.js';
 
 // The discovering runners and what each picks up. `onLine`, when present, says which shell invocations of the runner
 // run this kind.
@@ -288,14 +295,38 @@ function runSet(layout = DEFAULT_LAYOUT) {
     if (!reached.has(f)) { reached.add(f); why.set(f, from); how.set(f, kind); queue.push(f); return; }
     if (kind === 'launched' && how.get(f) !== 'root') how.set(f, 'launched');
   };
+  // one LAUNCH of `f`, by the command `line`: a convention keyed to an invoking command applies when the line matches
+  const launch = (f, line, from) => {
+    add(f, from, 'launched');
+    for (const [k, c] of Object.entries(CONVENTIONS)) {
+      if (c.onLine && path.basename(f) === c.runner && c.onLine(line)) for (const d of discovered[k]) add(d, `${path.basename(f)} (discovers ${k})`, 'discovered');
+    }
+  };
   const viaShell = (text, from) => {
-    for (const { token, line } of shellInvocations(text)) {
-      for (const f of resolve(token)) {
-        add(f, from, 'launched');
-        for (const [k, c] of Object.entries(CONVENTIONS)) {
-          if (c.onLine && path.basename(f) === c.runner && c.onLine(line)) for (const d of discovered[k]) add(d, `${path.basename(f)} (discovers ${k})`, 'discovered');
-        }
-      }
+    for (const { token, line } of shellInvocations(text)) for (const f of resolve(token)) launch(f, line, from);
+  };
+  // THE BUILD'S GATE TABLE (buildSystem/gates.js, which buildSystem/run-gates.js runs): each row is a launch of its
+  // script, read as the command line the runner gives it from Fizzygum/ (`node <script> <args>`; a row handed the
+  // build's own arguments reads as the shell's "${args[@]}"), so a convention keyed to the invoking command applies to
+  // a row as to a shell line -- run-selftests.js without --headless runs the node-tier self-tests. A row's script is
+  // spelled as the build's shell would spell it, relative to Fizzygum/ (`buildSystem/x.js`, `../Fizzygum-tests/
+  // scripts/x.js`; `require` resolved the table's symlinks, so the relation is taken between resolved paths), and
+  // resolved like every other edge, by its tail; a row naming no scanned script is an ERROR, never a gate silently
+  // dropped — but a row whose script lives in the tests repo (the table's TESTS_REPO), in a layout with no tests
+  // repo, launches nothing, as the runner passes it over. The table is read as it stands on disk now, like every other
+  // file here, never from require's cache.
+  const viaGateTable = (gatesFile, from) => {
+    delete require.cache[require.resolve(gatesFile)];
+    const { GATES, BUILD_ARGS, TESTS_REPO } = require(gatesFile);
+    const fizzygum = fs.realpathSync(layout.fizzygum);
+    const testsRepoPresent = layout.tests !== undefined && fs.existsSync(layout.tests) && fs.statSync(layout.tests).isDirectory();
+    for (const row of GATES) {
+      const token = path.relative(fizzygum, row.script);
+      const targets = resolve(token);
+      if (targets.length === 0 && !testsRepoPresent && TESTS_REPO !== undefined && row.script.startsWith(TESTS_REPO + path.sep)) continue;
+      if (targets.length === 0) throw new Error(`what-runs: ${GATE_TABLE} has a row for ${row.script}, which is not a scanned script`);
+      const args = row.args === BUILD_ARGS ? ['"${args[@]}"'] : row.args;
+      for (const f of targets) launch(f, ['node', token, ...args].join(' '), from);
     }
   };
 
@@ -305,6 +336,7 @@ function runSet(layout = DEFAULT_LAYOUT) {
   const before = reached.size;
   viaShell(fs.readFileSync(build, 'utf8'), 'build_it_please.sh');
   if (reached.size === before) throw new Error('what-runs: build_it_please.sh invokes no scanned script — the reading is broken');
+  if (how.get(path.join(layout.fizzygum, GATE_RUNNER)) === 'launched') viaGateTable(path.join(layout.fizzygum, GATE_TABLE), GATE_TABLE);
   const buildAndSmoke = path.join(layout.fizzygum, 'build_and_smoke.sh');
   if (fs.existsSync(buildAndSmoke)) {
     reached.add(buildAndSmoke); why.set(buildAndSmoke, 'ROOT: the build-and-smoke check'); how.set(buildAndSmoke, 'root');

@@ -2916,7 +2916,7 @@ Provenance: macOS 15.6.1 arm64 (Darwin 24.6.0), Node v22.15.0. Chrome = Puppetee
 `HeadlessChrome/127.0.0.0` (V8). WebKit = Playwright `Version/26.4 Safari/605.1.15`
 (webkit build 2287, JavaScriptCore). SWCanvas pin `468c5f76…` (matches `vendor/swcanvas.pin`).
 Both engines ran deterministic-trig → `DetTrig.install(Math)` → SWCanvas, in that order
-(mirroring `build_it_please.sh:540-551`).
+(mirroring the SW boot-bundle assembly in `build_it_please.sh`).
 
 ### 0a — transformed-drawImage determinism + edge behavior: **PASS**
 

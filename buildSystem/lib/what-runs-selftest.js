@@ -148,6 +148,78 @@ threw = '';
 try { scriptFiles(layout); } catch (e) { threw = e.message; }
 t.check(/^TOOLING_TREE_MALFORMED .*linked\.js: a symlink/.test(threw), 'a symlink among the tooling is refused, TOOLING_TREE_MALFORMED naming it', threw);
 
+// THE GATE TABLE: a second miniature build whose shell launches only the runner; the gates are the rows of its
+// buildSystem/gates.js, each a launch by the line the runner gives it -- so run-selftests.js launched by a row
+// discovers the node-tier self-tests (the table's text also names it, but a JS edge applies no line-keyed
+// convention), a row handed the build's arguments is launched too, a row whose script no text scan can name is
+// launched (the table is read as data), and a script named in a comment of the table is not. The layout is reached
+// through a SYMLINK, which `require` resolves, so a row is read back as the build's shell would spell it.
+// Then: a table its build does not run gates nothing, and a row naming a script nothing scans is an error.
+const real2 = fs.mkdtempSync(path.join(os.tmpdir(), 'what-runs-selftest-table-'));
+const root2 = `${real2}-link`;
+fs.symlinkSync(real2, root2);
+const layout2 = { fizzygum: path.join(root2, 'Fizzygum'), tests: path.join(root2, 'Fizzygum-tests'), fg: path.join(root2, 'fg') };
+const write2 = (rel, text) => { const p = path.join(root2, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
+const RUNS_THE_RUNNER = 'node ./buildSystem/run-gates.js --noSyntaxCheck=false --shipsTests=true -- "${args[@]}"\n';
+const table2 = (rows) => write2('Fizzygum/buildSystem/gates.js', [
+  "const path = require('path');",
+  "const BUILD_ARGS = 'BUILD_ARGS';",
+  "const TESTS_REPO = path.join(__dirname, '..', '..', 'Fizzygum-tests');",
+  '// node ./buildSystem/commented-in-table.js',
+  'const GATES = [',
+  ...rows.map((r) => `  { script: ${r}, args: [], when: 'checked', banner: 'b', failure: 'f' },`),
+  "  { script: path.join(__dirname, 'args-gate.js'), args: BUILD_ARGS, when: 'checked', banner: 'b', failure: 'f' },",
+  "  { script: path.join(TESTS_REPO, 'scripts', 'tests-gate.js'), args: [], when: 'testsRepo', banner: 'b', failure: 'f' },",
+  '];',
+  'module.exports = { GATES, BUILD_ARGS, TESTS_REPO };',
+].join('\n'));
+const ROWS = ["path.join(__dirname, 'run-selftests.js')", "path.join(__dirname, ['table', 'gate'].join('-') + '.js')"];
+write2('Fizzygum/build_it_please.sh', RUNS_THE_RUNNER);
+write2('Fizzygum/buildSystem/run-gates.js', "const { GATES } = require('./gates');\n");
+table2(ROWS);
+for (const f of ['run-selftests.js', 'table-gate.js', 'args-gate.js', 'commented-in-table.js', 'other.js', 'gamma-selftest.js']) write2(`Fizzygum/buildSystem/${f}`, '');
+const viaTable = runSet(layout2);
+const kind2 = (f) => viaTable.how.get(path.join(root2, 'Fizzygum', f));
+t.check(kind2('buildSystem/run-gates.js') === 'launched' && kind2('buildSystem/gates.js') === 'required',
+  'the build launches the runner, which requires the table', `${kind2('buildSystem/run-gates.js')} / ${kind2('buildSystem/gates.js')}`);
+t.check(kind2('buildSystem/table-gate.js') === 'launched',
+  'a row whose script no text scan can name is launched: the table is read as data, through a symlinked layout', String(kind2('buildSystem/table-gate.js')));
+t.check(kind2('buildSystem/run-selftests.js') === 'launched' && kind2('buildSystem/args-gate.js') === 'launched',
+  'each row of the gate table is a launched script, a BUILD_ARGS row included');
+t.check(kind2('buildSystem/gamma-selftest.js') === 'discovered',
+  'run-selftests.js launched by a table row discovers the node-tier self-tests', String(kind2('buildSystem/gamma-selftest.js')));
+t.check(kind2('buildSystem/commented-in-table.js') === undefined, 'a script named in a comment of the table does not run');
+t.check(viaTable.how.get(path.join(root2, 'Fizzygum-tests/scripts/tests-gate.js')) === undefined,
+  'a tests-repo row, in a layout with no tests repo, launches nothing and is no error (the runner passes it over)');
+write2('Fizzygum-tests/scripts/tests-gate.js', '');
+t.check(runSet(layout2).how.get(path.join(root2, 'Fizzygum-tests/scripts/tests-gate.js')) === 'launched',
+  'the same row, the tests repo present, is a launched script');
+fs.rmSync(path.join(root2, 'Fizzygum-tests'), { recursive: true, force: true });
+write2('Fizzygum/build_it_please.sh', 'node ./buildSystem/other.js\n');
+const unrun = runSet(layout2).how;
+t.check(unrun.get(path.join(root2, 'Fizzygum/buildSystem/table-gate.js')) === undefined
+  && unrun.get(path.join(root2, 'Fizzygum/buildSystem/gamma-selftest.js')) === undefined,
+  'a table its build does not run gates nothing: its rows are not launched');
+write2('Fizzygum/build_it_please.sh', RUNS_THE_RUNNER);
+table2([...ROWS, "path.join(__dirname, 'nowhere.js')"]);
+let unscanned;
+try { runSet(layout2); } catch (e) { unscanned = e.message; }
+t.check(/gates\.js has a row for .*nowhere\.js, which is not a scanned script/.test(String(unscanned)),
+  'a row naming a script nothing scans is an error, never a gate silently dropped', String(unscanned));
+fs.rmSync(root2);
+fs.rmSync(real2, { recursive: true, force: true });
+
+// THE REAL TREE: the build's own gate table is read -- a renamed runner or table would silently stop that, and every
+// node-tier self-test would read as never run
+{
+  const real = runSet();
+  const bs = path.join(__dirname, '..');
+  t.check(real.how.get(path.join(bs, 'run-gates.js')) === 'launched' && real.how.get(path.join(bs, 'gates.js')) === 'required'
+    && real.how.get(path.join(bs, 'run-gates-selftest.js')) === 'discovered',
+    'on the real tree, the build launches the gate runner and the node-tier self-tests are discovered through its table',
+    `${real.how.get(path.join(bs, 'run-gates.js'))} / ${real.how.get(path.join(bs, 'gates.js'))} / ${real.how.get(path.join(bs, 'run-gates-selftest.js'))}`);
+}
+
 // its command line: the real tree's list, one per line; anything else is a usage error (exit 2)
 const cli = (args) => spawnSync(process.execPath, [path.join(__dirname, 'what-runs.js'), ...args], { encoding: 'utf8' });
 const listed = cli(['--list-scripts']);
