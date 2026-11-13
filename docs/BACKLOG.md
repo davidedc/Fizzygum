@@ -558,11 +558,9 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
 - [ ] §4.4 follow-up: what does save-to-file mean for an ARROW'D shortcut (today: friendly error — no cross-file identity for a dangling-`.lnk` restore; needs its own decision)
 
 ### `plans/top-10-cleanups-plan.md`
-AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Each item carries its evidence, its effort estimate, its re-measure command and its first step. Since 2026-11-12 an owner-launched `/loop` executes the items that need no owner decision (the plan's STATUS says which): a landed item's line moves to the plan's `## BACKLOG ledger`, a part-landed one is rewritten to what is left. ⛔ owner decision first on §3, §9, §7's second step, part of §1 and §2's remainder.
-- [ ] §2's remainder (⛔ owner): `fg` is versioned (`Fizzygum/fg`, the plan's `## BACKLOG ledger`); the guard hook (`.claude/hooks/fizzygum-cmd-guard.py`), the process skills and the umbrella `CLAUDE.md` are still in no repo — version them in a small private umbrella repo, or in Fizzygum (which is public)
+AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Each item carries its evidence, its effort estimate, its re-measure command and its first step. Since 2026-11-12 an owner-launched `/loop` executes the items that need no owner decision (the plan's STATUS says which): a landed item's line moves to the plan's `## BACKLOG ledger`, a part-landed one is rewritten to what is left. ⛔ owner decision first on §9.
 - [ ] §5's second candidate (unexamined): `FrameWdgt`'s docking family (`dockSideAt` to `floatOutOfDock`) as a seam of its own — assess before assuming it
-- [ ] §7 step 2 (3 days): derived-geometry caches — one declared memo per query (perf-gated; ⛔ owner: it adds a class-level declaration that generates accessors, a new meta-mechanism). Step 1, the one oracle, landed (the plan's `## BACKLOG ledger`)
-- [ ] §9 (4 to 5 days): icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted)
+- [ ] §9 (4 to 5 days): icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted; kept open by the owner 2026-11-13, the plan's §9 has the recommendation on record — collapse)
 
 ## Residual / parked items (owning doc archived)
 

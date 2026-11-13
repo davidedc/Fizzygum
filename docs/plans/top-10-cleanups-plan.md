@@ -97,14 +97,14 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | # | Cleanup | Effort (estimate) | What goes away | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|
 | 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Landed 2026-11-13 (the last part on the owner's rulings) |
-| 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Landed 2026-11-13 (`fg` into the Fizzygum repo; the hook and skills stay local, owner) |
+| 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Landed 2026-11-13 (`fg` into the Fizzygum repo; the hook, the skills and the umbrella notes into a private umbrella repo) |
 | 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Landed 2026-11-13 (deleted, the owner's ruling) |
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Landed 2026-11-13; no trap fired |
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Landed 2026-11-13 |
 | 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Landed 2026-11-13 (built and parked on a speed trade; landed on the owner's ruling) |
-| 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
+| 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 declined by the owner (2026-11-13) |
 | 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Landed 2026-11-13 (both steps; three giants split, three left) |
-| 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
+| 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started: kept open by the owner (2026-11-13) |
 | 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Landed 2026-11-13 (both steps) |
 
 ---
@@ -273,8 +273,12 @@ is versioned in the Fizzygum repo.**
   check: before building anything, they refuse a profile whose tree ships no harness page. The script checked whether
   the profile ships the tests, which passed `dev-precompiled`, a tree with no harness page.
 - **`package.json`.** `npm test` runs `./fg presuite`, and the `main` that named a missing file is gone.
-- **Still unversioned.** The guard hook, the process skills and the umbrella `CLAUDE.md` stay workspace-local. Whether
-  to version them, and where, is the owner's (BACKLOG: §2's remainder; the Fizzygum repo is public).
+- **The rest of the umbrella's tooling** (the guard hook, its wiring in `.claude/settings.local.json`, the process
+  skills, the comment rubric, the umbrella's `CLAUDE.md` and `AGENTS.md`, the `fg` shim and the backlog-triage notes)
+  is versioned too, on the owner's ruling, in a small PRIVATE repo the umbrella directory itself now is. It stays out
+  of the Fizzygum repo, which is public. Its `.gitignore` is an ALLOWLIST: the sibling repos inside the umbrella
+  (Fizzygum, Fizzygum-tests, Fizzygum-builds and two vendored-tool repos) each have their own `.git` and are never
+  swept in.
 - **`fg fingerprint`.** It can build a baseline at or after this change, since the baseline worktree carries
   `Fizzygum/fg`. An older baseline still needs the manual script; the BACKLOG line keeps that and the other two
   setup gaps.
@@ -667,6 +671,14 @@ member in an object inspector's list, which scrolls the selected row's window by
 (`macroDuplicatedInspectorDrivesCopiedTargetOnly`, recaptured mouse and finger at dpr 1 and 2).
 Step 2 stays the owner's: it adds a class-level declaration that generates accessors.
 
+**Step 2 declined 2026-11-13 (the owner's ruling).** A declaration that generates the memoised accessors would be a
+code-generating class-level mechanism. That is the kind of machinery the mixin removal deleted
+(`archive/mixin-removal-plan.md`), and a generated member has no source text for the inspector's source view to show.
+What it would guard against has not happened: on that day every override of a memoised query either carried its
+`SLOW` twin (`TransformFrameWdgt`, `WorldWdgt` and `ActivePointerWdgt`'s clip pair, `ClippingWdgt`) or was itself
+uncached (`ActivePointerWdgt`'s `fullBounds` / `fullClippedBounds`). The eight hand-written memos stay, with step 1's
+one oracle.
+
 ---
 
 ## §8. Ratchets for method count and complexity; split the sequential giants
@@ -823,6 +835,14 @@ colloquial name, about 25 construction sites between them) and take one `fg pres
 **Re-measure.**
 `grep -rlE '^class [A-Za-z0-9_]+ extends IconWdgt' Fizzygum/src | wc -l` and
 `grep -cE '^  create[A-Za-z0-9]+IconWdgt: ' Fizzygum/src/demos/DemoMenus.coffee`.
+
+**Kept open 2026-11-13 (the owner's ruling).** The question stays the owner's: is per-icon class identity worth
+keeping? The recommendation on record is to collapse to one `IconWdgt` taking its appearance:
+- the appearance is the identity, and a saved world already records the appearance's class;
+- about 12% of the source files go;
+- only two type tests in either repo name a shell class (`instanceof HeartIconWdgt`, `instanceof WidgetIconWdgt`).
+
+Nothing starts until the owner decides.
 
 ---
 
@@ -1199,3 +1219,7 @@ Do not commit or push without asking me.
   - in every one of those another damage rect contained the dropped rect, so no repaint was lost in the suite.
   `_rectAlreadyIncludedInParentDamagedWidget` now passes `isSrc` on both lists, so a src rect an ancestor covers is
   the one dropped. With the bodies identical, the two loops are one loop over both lists.
+- [x] §7 step 2 (3 days): derived-geometry caches — one declared memo per query (perf-gated; ⛔ owner: it adds a class-level declaration that generates accessors, a new meta-mechanism). Step 1, the one oracle, landed (the plan's `## BACKLOG ledger`)
+  — DECLINED 2026-11-13 by the owner: no code-generating memo mechanism (§7, "Step 2 declined").
+- [x] §2's remainder (⛔ owner): `fg` is versioned (`Fizzygum/fg`, the plan's `## BACKLOG ledger`); the guard hook (`.claude/hooks/fizzygum-cmd-guard.py`), the process skills and the umbrella `CLAUDE.md` are still in no repo — version them in a small private umbrella repo, or in Fizzygum (which is public)
+  — CLOSED 2026-11-13 (the owner ruled: a small private umbrella repo): the umbrella directory is a private git repo of its own tooling, with an allowlist `.gitignore` (§2, "Landed").
