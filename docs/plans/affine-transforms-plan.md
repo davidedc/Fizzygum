@@ -170,8 +170,8 @@ insight, damage ranking, and hit-test ladder are adopted essentially unchanged.
   workspace root `CLAUDE.md`): `fg build` · `fg suite [--dpr=2|--browser=webkit]` ·
   `fg gauntlet` (build + dpr1 + dpr2 + webkit + apps) · `fg test <name>` ·
   `fg recapture <name>` · `fg apps` · `fg homepage`.
-- Standard inner-loop verification: `cd Fizzygum && ./build_and_test.sh` (full build + all
-  SystemTests headless, sharded, `speed=fastest`, dpr 1, ~1 min).
+- Standard inner-loop verification: `Fizzygum/fg presuite` (full build + all
+  SystemTests headless, sharded, `speed=fastest`, dpr 1, beside the paint audit and a dpr-2 rider, ~3–4 min).
 - The headless suite runs the world with **`?sw=1`** — the SWCanvas software backend — plus
   `&dpr=` and `&speed=` (`Fizzygum-tests/scripts/run-all-headless.js:112`). That is why one
   set of screenshot references is shared across Chrome and WebKit: SWCanvas is deterministic.

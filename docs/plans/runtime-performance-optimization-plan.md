@@ -748,7 +748,7 @@ final-shape section.
    webkit + apps). The SystemTest suite compares raw-pixel SHA-256 against committed
    references, so ANY arithmetic deviation fails loudly — this is the byte-identical gate.
    No reference may be recaptured for S-items: a mismatch means the change is wrong.
-2. **Fizzygum changes (F1–F3)**: `./build_and_test.sh` for the inner loop; full `fg gauntlet`
+2. **Fizzygum changes (F1–F3)**: `fg presuite` for the inner loop; full `fg gauntlet`
    before declaring done. F2 additionally exercises every macro (all input synthesis flows
    through the cached position).
 3. **H1**: recompute `dataHash` for a sample of committed references with the new path and

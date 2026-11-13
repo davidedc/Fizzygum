@@ -16,8 +16,8 @@
 // may not rise, and a new function above the ceiling fails. A function's key is `Class#method` (instance side),
 // `Class.method` (class side), or `<file>#name` for one outside any class (a boot file's). A recorded one that fell
 // prints UNDER (lower its record); one that fell to the ceiling or below, or that no longer exists, leaves its entry
-// excusing nothing: STALE, delete it. The harness's records (RECORDED_IN_HARNESS) are judged only when the harness
-// is read — with no tests repo they are neither met nor stale. The analyzer is vendor/coffeescript-cognitive-complexity/,
+// excusing nothing: STALE, delete it. The harness's records (RECORDED_IN_HARNESS) are judged like src's: the harness is
+// always read (the build requires the tests repo). The analyzer is vendor/coffeescript-cognitive-complexity/,
 // loaded by lib/cognitive-complexity.js on the CoffeeScript the records were measured on (MEASURED_ON).
 //
 // RULES: METHOD_COUNT_ABOVE_CEILING, COMPLEXITY_ABOVE_CEILING (a function above the ceiling, not recorded),
@@ -172,7 +172,6 @@ try {
   process.exit(2);
 }
 const files = compiledFiles(ROOTS);
-const harnessRead = files.some((p) => sourceName(p, ROOTS).startsWith('harness/'));
 const scored = [];                // { key, complexity, where, harness }
 let functions = 0;
 for (const p of files) {
@@ -236,11 +235,11 @@ const stale = (table, prefix, label) => {
   }
 };
 stale(RECORDED, '', 'RECORDED');
-if (harnessRead) stale(RECORDED_IN_HARNESS, 'harness ', 'RECORDED_IN_HARNESS');
+stale(RECORDED_IN_HARNESS, 'harness ', 'RECORDED_IN_HARNESS');
 const under = notes.filter((n) => n.includes('lower its record')).length;
 console.log(`[complexity-ratchets] complexity: ${functions} function(s) scored on CoffeeScript ${analyzer.coffeescript.version}; ` +
   `${scored.length} above ${COMPLEXITY_CEILING}, recorded ${Object.keys(RECORDED).length} in src + ` +
-  (harnessRead ? `${Object.keys(RECORDED_IN_HARNESS).length} in the harness` : `the harness's ${Object.keys(RECORDED_IN_HARNESS).length} not judged (no tests repo)`) +
+  `${Object.keys(RECORDED_IN_HARNESS).length} in the harness` +
   ` -- ${under ? 'UNDER' : 'OK'}`);
 for (const n of notes) console.log(n);
 if (failures.length) {

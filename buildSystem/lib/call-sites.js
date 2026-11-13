@@ -274,7 +274,7 @@ function textOf(lines, ld) {
 
 // ---- reading -----------------------------------------------------------------------------------------------------
 // callSites({ srcDir, testsRepoDir }) -> { sites, unreadable: [{ file, line?, message }], counts, classes }
-// `testsRepoDir` absent or not a tests repo ⇒ only src is read (counts.testsRepo = false).
+// `testsRepoDir` is required: a path holding no tests repo is refused (it throws), never read as src alone.
 function callSites({ srcDir, testsRepoDir } = {}) {
   const { CoffeeScript, Class } = loadMetaCompiler({ srcDir, compileFGCode: () => '(function() {});' });
   const fragments = [];
@@ -303,7 +303,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
   const harvestDefsOf = (text, where) => {
     try { harvestDefs(coffeeMask(text, where), ours); } catch (e) { if (!/^COFFEE_MASK_UNLEXABLE /.test(e.message)) throw e; }
   };
-  const counts = { src: 0, harness: 0, macro: 0, heredoc: 0, script: 0, fragments: 0, testsRepo: false };
+  const counts = { src: 0, harness: 0, macro: 0, heredoc: 0, script: 0, fragments: 0 };
 
   const readCoffeeFile = (file, where) => {
     const src = fs.readFileSync(file, 'utf8');
@@ -342,23 +342,21 @@ function callSites({ srcDir, testsRepoDir } = {}) {
 
   const coffeeFiles = srcFiles(srcDir);
   for (const file of coffeeFiles) { counts.src++; readCoffeeFile(file, 'src'); }
-  const repo = testsRepoDir && testsRepoFiles(testsRepoDir);
+  const repo = testsRepoDir === undefined ? undefined : testsRepoFiles(testsRepoDir);
+  if (!repo) throw new Error(`call-sites: no tests repo at ${testsRepoDir}: both repos are read, never src alone`);
   // each macro command file's sources, through the one reader: parsed as CoffeeScript here, and skipped (by their spans)
   // when its JS shell is read with the scripts below
   const macroFilesRead = [];
-  if (repo) {
-    counts.testsRepo = true;
-    for (const file of repo.harness) { counts.harness++; readCoffeeFile(file, 'harness'); coffeeFiles.push(file); }
-    for (const file of repo.macro) {
-      try { macroFilesRead.push({ file, sources: testMacroSourcesIn(fs.readFileSync(file, 'utf8'), file) }); }
-      catch (e) { unreadable.push({ file, message: e.message }); }
-    }
-    for (const { file, sources } of macroFilesRead) {
-      for (const s of sources) {
-        counts.macro++;
-        harvestDefsOf(s.text, `${file} (its macro source from line ${s.line})`);
-        units.push({ file, where: 'macro', lang: 'coffee', home: 'macro:' + file, text: s.text, lineOf: (k0) => s.line + k0, scope: 'macros' });
-      }
+  for (const file of repo.harness) { counts.harness++; readCoffeeFile(file, 'harness'); coffeeFiles.push(file); }
+  for (const file of repo.macro) {
+    try { macroFilesRead.push({ file, sources: testMacroSourcesIn(fs.readFileSync(file, 'utf8'), file) }); }
+    catch (e) { unreadable.push({ file, message: e.message }); }
+  }
+  for (const { file, sources } of macroFilesRead) {
+    for (const s of sources) {
+      counts.macro++;
+      harvestDefsOf(s.text, `${file} (its macro source from line ${s.line})`);
+      units.push({ file, where: 'macro', lang: 'coffee', home: 'macro:' + file, text: s.text, lineOf: (k0) => s.line + k0, scope: 'macros' });
     }
   }
   Class.prototype._rewriteSuperCalls = realClassRewrite;
@@ -520,149 +518,147 @@ function callSites({ srcDir, testsRepoDir } = {}) {
 
   // JS: the tests repo's scripts and each macro file's shell (its macro sources are CoffeeScript, read above)
   const imports = new Map();     // script file → Map(imported name → the module file defining it)
-  if (repo) {
-    const jsDefs = new Set();
-    const readJs = (file, where, skipRanges) => {
-      const text = fs.readFileSync(file, 'utf8');
-      let ast;
-      for (const sourceType of ['script', 'module']) {
-        try { ast = acorn.parse(text, { ecmaVersion: 'latest', sourceType, allowHashBang: true, allowReturnOutsideFunction: true, locations: true }); break; }
-        catch (e) { if (sourceType === 'module') unreadable.push({ file, message: 'acorn: ' + e.message }); }
-      }
-      if (!ast) return;
-      const inSkip = (n) => skipRanges.some(([s, e]) => s <= n.start && n.end <= e);
-      const scope = file;
-      const visit = (n, fn) => {
-        if (Array.isArray(n)) { for (const x of n) visit(x, fn); return; }
-        if (!n || typeof n.type !== 'string' || inSkip(n)) return;
-        fn(n);
-        for (const k of Object.keys(n)) if (k !== 'loc' && n[k] && typeof n[k] === 'object') visit(n[k], fn);
-      };
-      const home = where === 'script' ? 'node:' + file : 'page';      // a script runs in Node; a test file's JS shell in the page
-      // FRAMES — a JS scope is its function (a block's `let` is read as its function's: an approximation that can only
-      // keep a name local): a parameter, a declaration (destructured, loop and catch variables included), a nested
-      // function's name. A name no function declares is the file's top level, a NAME — a module function may be
-      // exported and called by name from another file (the CS rule).
-      const frameOf = new Map();
-      const topDeclared = new Set();
-      const declsOf = (n) => (n.type === 'VariableDeclarator' ? jsPatternNames(n.id)
-        : (n.type === 'FunctionDeclaration' || n.type === 'ClassDeclaration') && n.id ? [n.id.name]
-        : n.type === 'CatchClause' && n.param ? jsPatternNames(n.param) : []);
-      const scan = (n, frame) => {
-        if (Array.isArray(n)) { for (const x of n) scan(x, frame); return; }
-        if (!n || typeof n.type !== 'string' || inSkip(n)) return;
-        frameOf.set(n, frame);
-        for (const name of declsOf(n)) (frame ? frame.declared : topDeclared).add(name);
-        let inner = frame;
-        if (isJsFn(n)) {
-          inner = { id: n.start, parent: frame, declared: new Set() };
-          for (const p of n.params) for (const name of jsPatternNames(p)) inner.declared.add(name);
-        }
-        for (const k of Object.keys(n)) {
-          if (k === 'loc' || !n[k] || typeof n[k] !== 'object') continue;
-          // a function declaration's NAME is its enclosing scope's (declsOf, above); its params and body its own
-          scan(n[k], isJsFn(n) && k === 'id' ? frame : inner);
-        }
-      };
-      scan(ast, undefined);
-      const resolve = (name, frame) => {
-        for (let f = frame; f; f = f.parent) if (f.declared.has(name)) return 'local:' + file + '#' + f.id + '#' + name;
-        return 'name:' + name;
-      };
-      // what the file defines (ours)
-      const declJs = (n) => {
-        if (Array.isArray(n)) { for (const x of n) declJs(x); return; }
-        if (!n || typeof n.type !== 'string' || inSkip(n)) return;
-        if (n.type === 'FunctionDeclaration' && n.id) jsDefs.add(n.id.name);
-        if (n.type === 'VariableDeclarator' && n.id.type === 'Identifier' && n.init && isJsFn(n.init)) jsDefs.add(n.id.name);
-        if (n.type === 'Property' && !n.computed && n.key.type === 'Identifier' && (n.method || /Function/.test(n.value.type))) jsDefs.add(n.key.name);
-        if (n.type === 'MethodDefinition' && n.key.type === 'Identifier') jsDefs.add(n.key.name);
-        if (n.type === 'PropertyDefinition' && !n.computed && n.key.type === 'Identifier' && isJsFn(n.value)) jsDefs.add(n.key.name);
-        if (n.type === 'AssignmentExpression' && n.left.type === 'MemberExpression' && !n.left.computed && /Function/.test(n.right.type)) jsDefs.add(n.left.property.name);
-        if ((n.type === 'ClassDeclaration' || n.type === 'ClassExpression') && n.id)
-          defineClass(n.id.name, n.superClass ? (n.superClass.type === 'Identifier' ? n.superClass.name : '<computed>') : undefined,
-            n.body.body.some((m) => m.kind === 'constructor'), home, file);
-        for (const k of Object.keys(n)) if (k !== 'loc' && n[k] && typeof n[k] === 'object') declJs(n[k]);
-      };
-      declJs(ast);
-      // its DEFINITIONS (the CoffeeScript forms' twins). A name a top-level `const { f } = require('./m')` destructures,
-      // unrenamed, from a RELATIVE module is an IMPORT: it reaches that module's own `f` (`imports`) and defines nothing
-      // itself; from any other module, or renamed, it is DATA — a definition no reader sees.
-      const fileImports = new Map();
-      const defineJs = (n, cls) => {
-        if (Array.isArray(n)) { for (const x of n) defineJs(x, cls); return; }
-        if (!n || typeof n.type !== 'string' || inSkip(n)) return;
-        const frame = frameOf.get(n);
-        const here = { file, line: n.loc.start.line, home };
-        const bind = (key, sig) => define(key, { ...here, form: 'binding', ...sig });
-        if (n.type === 'FunctionDeclaration' && n.id) bind(resolve(n.id.name, frame), jsSignature(n));
-        if (n.type === 'VariableDeclarator') {
-          if (n.id.type === 'Identifier') bind(resolve(n.id.name, frame), jsSignature(n.init));
-          else {
-            const spec = !frame && isJsRequire(n.init) && n.init.arguments[0] && n.init.arguments[0].type === 'Literal' ? n.init.arguments[0].value : undefined;
-            const from = typeof spec === 'string' && /^\.\.?\//.test(spec) ? jsModuleFile(file, spec) : undefined;
-            for (const q of n.id.type === 'ObjectPattern' ? n.id.properties : []) {
-              const shorthand = q.type === 'Property' && !q.computed && q.key.type === 'Identifier' && q.value.type === 'Identifier' && q.key.name === q.value.name;
-              if (from && shorthand) fileImports.set(q.key.name, from);
-            }
-            for (const id of jsPatternNames(n.id)) if (!fileImports.has(id) || frame) bind(resolve(id, frame), DATA);
-          }
-        }
-        if (isJsFn(n)) for (const p of n.params) for (const id of jsPatternNames(p)) bind(resolve(id, frameOf.get(p.type === 'AssignmentPattern' ? p.left : p) || frameOf.get(n.body)), DATA);
-        if (n.type === 'CatchClause' && n.param) for (const id of jsPatternNames(n.param)) bind(resolve(id, frame), DATA);
-        if (n.type === 'AssignmentExpression' && n.left.type === 'Identifier') bind(resolve(n.left.name, frame), jsSignature(n.right));
-        if (n.type === 'AssignmentExpression' && n.left.type === 'MemberExpression' && !n.left.computed) {
-          const sig = jsSignature(n.right);
-          define('name:' + n.left.property.name, { ...here, form: 'field', ...sig });
-          if (n.left.object.type === 'Identifier' && /^(window|globalThis|self)$/.test(n.left.object.name)) bind('name:' + n.left.property.name, sig);
-        }
-        if (n.type === 'ObjectExpression') for (const p of n.properties) if (p.type === 'Property' && !p.computed && (p.key.type === 'Identifier' || p.key.type === 'Literal'))
-          define('name:' + (p.key.type === 'Identifier' ? p.key.name : String(p.key.value)), { file, line: p.loc.start.line, home, form: 'key', ...jsSignature(p.value) });
-        // a getter or a setter is not the callable: `this.h(1)` calls what the getter RETURNS — DATA
-        if ((n.type === 'MethodDefinition' || n.type === 'PropertyDefinition') && !n.computed && n.key.type === 'Identifier' && (n.kind !== 'constructor' || cls))
-          define(n.kind === 'constructor' ? 'ctor:' + cls : 'name:' + n.key.name, { ...here, form: 'member', ...(n.kind === 'get' || n.kind === 'set' ? DATA : jsSignature(n.value)) });
-        const inner = n.type === 'ClassDeclaration' || n.type === 'ClassExpression' ? (n.id ? n.id.name : undefined) : cls;
-        for (const k of Object.keys(n)) if (k !== 'loc' && n[k] && typeof n[k] === 'object') defineJs(n[k], isJsFn(n) ? undefined : inner);
-      };
-      defineJs(ast, undefined);
-      if (fileImports.size) imports.set(file, fileImports);
-      // `this` is a class's own receiver inside its methods and field initializers (an arrow keeps it, a `function`
-      // rebinds it): the class it names, or none
-      const thisClass = new Map();
-      const thisWalk = (n, cls, inClass) => {
-        if (Array.isArray(n)) { n.forEach((x) => thisWalk(x, cls, inClass)); return; }
-        if (!n || typeof n.type !== 'string') return;
-        thisClass.set(n, cls);
-        const named = n.type === 'ClassDeclaration' || n.type === 'ClassExpression' ? (n.id ? n.id.name : '<anonymous>') : inClass;
-        for (const k of Object.keys(n)) {
-          if (k === 'loc' || !n[k] || typeof n[k] !== 'object') continue;
-          const child = n[k];
-          const own = (n.type === 'MethodDefinition' && k === 'value') || (n.type === 'PropertyDefinition' && k === 'value') ? named
-            : (child.type === 'FunctionExpression' || child.type === 'FunctionDeclaration') ? undefined : cls;
-          thisWalk(child, own, named);
-        }
-      };
-      thisWalk(ast, undefined, undefined);
-      visit(ast, (n) => {
-        if (n.type !== 'CallExpression' && n.type !== 'NewExpression') return;
-        const c = n.callee;
-        const site = { file, line: n.loc.start.line, where, lang: 'js', home, scope: file };
-        if (n.type === 'NewExpression') Object.assign(site, { kind: 'new', name: c.type === 'Identifier' ? c.name : (c.type === 'MemberExpression' && !c.computed ? c.property.name : undefined) });
-        else if (c.type === 'Identifier') Object.assign(site, { kind: 'bare', name: c.name, binding: resolve(c.name, frameOf.get(n)) });
-        else if (c.type === 'MemberExpression') {
-          Object.assign(site, { kind: 'send', receiver: short(text.slice(c.object.start, c.object.end), 40),
-            name: !c.computed ? c.property.name : (c.property.type === 'Literal' && typeof c.property.value === 'string' ? c.property.value : undefined) });
-          if ((c.object.type === 'ThisExpression' || c.object.type === 'Super') && thisClass.get(n)) { site.via = 'this'; site.cls = thisClass.get(n); }
-          else if (c.object.type === 'Identifier') site.via = 'name:' + c.object.name;
-        } else Object.assign(site, { kind: 'bare', name: undefined });
-        site.args = n.arguments.map((a) => { const kind = jsArgKind(a); return { text: short(text.slice(a.start, a.end)), spread: kind === 'spread', absent: kind === 'absent', kind }; });
-        sites.push(site);
-      });
+  const jsDefs = new Set();
+  const readJs = (file, where, skipRanges) => {
+    const text = fs.readFileSync(file, 'utf8');
+    let ast;
+    for (const sourceType of ['script', 'module']) {
+      try { ast = acorn.parse(text, { ecmaVersion: 'latest', sourceType, allowHashBang: true, allowReturnOutsideFunction: true, locations: true }); break; }
+      catch (e) { if (sourceType === 'module') unreadable.push({ file, message: 'acorn: ' + e.message }); }
+    }
+    if (!ast) return;
+    const inSkip = (n) => skipRanges.some(([s, e]) => s <= n.start && n.end <= e);
+    const scope = file;
+    const visit = (n, fn) => {
+      if (Array.isArray(n)) { for (const x of n) visit(x, fn); return; }
+      if (!n || typeof n.type !== 'string' || inSkip(n)) return;
+      fn(n);
+      for (const k of Object.keys(n)) if (k !== 'loc' && n[k] && typeof n[k] === 'object') visit(n[k], fn);
     };
-    for (const file of repo.script) { counts.script++; readJs(file, 'script', []); }
-    for (const { file, sources } of macroFilesRead) readJs(file, 'macro', sources.map((s) => [s.start - 1, s.end + 1]));
-    for (const x of jsDefs) ours.add(x);
-  }
+    const home = where === 'script' ? 'node:' + file : 'page';      // a script runs in Node; a test file's JS shell in the page
+    // FRAMES — a JS scope is its function (a block's `let` is read as its function's: an approximation that can only
+    // keep a name local): a parameter, a declaration (destructured, loop and catch variables included), a nested
+    // function's name. A name no function declares is the file's top level, a NAME — a module function may be
+    // exported and called by name from another file (the CS rule).
+    const frameOf = new Map();
+    const topDeclared = new Set();
+    const declsOf = (n) => (n.type === 'VariableDeclarator' ? jsPatternNames(n.id)
+      : (n.type === 'FunctionDeclaration' || n.type === 'ClassDeclaration') && n.id ? [n.id.name]
+      : n.type === 'CatchClause' && n.param ? jsPatternNames(n.param) : []);
+    const scan = (n, frame) => {
+      if (Array.isArray(n)) { for (const x of n) scan(x, frame); return; }
+      if (!n || typeof n.type !== 'string' || inSkip(n)) return;
+      frameOf.set(n, frame);
+      for (const name of declsOf(n)) (frame ? frame.declared : topDeclared).add(name);
+      let inner = frame;
+      if (isJsFn(n)) {
+        inner = { id: n.start, parent: frame, declared: new Set() };
+        for (const p of n.params) for (const name of jsPatternNames(p)) inner.declared.add(name);
+      }
+      for (const k of Object.keys(n)) {
+        if (k === 'loc' || !n[k] || typeof n[k] !== 'object') continue;
+        // a function declaration's NAME is its enclosing scope's (declsOf, above); its params and body its own
+        scan(n[k], isJsFn(n) && k === 'id' ? frame : inner);
+      }
+    };
+    scan(ast, undefined);
+    const resolve = (name, frame) => {
+      for (let f = frame; f; f = f.parent) if (f.declared.has(name)) return 'local:' + file + '#' + f.id + '#' + name;
+      return 'name:' + name;
+    };
+    // what the file defines (ours)
+    const declJs = (n) => {
+      if (Array.isArray(n)) { for (const x of n) declJs(x); return; }
+      if (!n || typeof n.type !== 'string' || inSkip(n)) return;
+      if (n.type === 'FunctionDeclaration' && n.id) jsDefs.add(n.id.name);
+      if (n.type === 'VariableDeclarator' && n.id.type === 'Identifier' && n.init && isJsFn(n.init)) jsDefs.add(n.id.name);
+      if (n.type === 'Property' && !n.computed && n.key.type === 'Identifier' && (n.method || /Function/.test(n.value.type))) jsDefs.add(n.key.name);
+      if (n.type === 'MethodDefinition' && n.key.type === 'Identifier') jsDefs.add(n.key.name);
+      if (n.type === 'PropertyDefinition' && !n.computed && n.key.type === 'Identifier' && isJsFn(n.value)) jsDefs.add(n.key.name);
+      if (n.type === 'AssignmentExpression' && n.left.type === 'MemberExpression' && !n.left.computed && /Function/.test(n.right.type)) jsDefs.add(n.left.property.name);
+      if ((n.type === 'ClassDeclaration' || n.type === 'ClassExpression') && n.id)
+        defineClass(n.id.name, n.superClass ? (n.superClass.type === 'Identifier' ? n.superClass.name : '<computed>') : undefined,
+          n.body.body.some((m) => m.kind === 'constructor'), home, file);
+      for (const k of Object.keys(n)) if (k !== 'loc' && n[k] && typeof n[k] === 'object') declJs(n[k]);
+    };
+    declJs(ast);
+    // its DEFINITIONS (the CoffeeScript forms' twins). A name a top-level `const { f } = require('./m')` destructures,
+    // unrenamed, from a RELATIVE module is an IMPORT: it reaches that module's own `f` (`imports`) and defines nothing
+    // itself; from any other module, or renamed, it is DATA — a definition no reader sees.
+    const fileImports = new Map();
+    const defineJs = (n, cls) => {
+      if (Array.isArray(n)) { for (const x of n) defineJs(x, cls); return; }
+      if (!n || typeof n.type !== 'string' || inSkip(n)) return;
+      const frame = frameOf.get(n);
+      const here = { file, line: n.loc.start.line, home };
+      const bind = (key, sig) => define(key, { ...here, form: 'binding', ...sig });
+      if (n.type === 'FunctionDeclaration' && n.id) bind(resolve(n.id.name, frame), jsSignature(n));
+      if (n.type === 'VariableDeclarator') {
+        if (n.id.type === 'Identifier') bind(resolve(n.id.name, frame), jsSignature(n.init));
+        else {
+          const spec = !frame && isJsRequire(n.init) && n.init.arguments[0] && n.init.arguments[0].type === 'Literal' ? n.init.arguments[0].value : undefined;
+          const from = typeof spec === 'string' && /^\.\.?\//.test(spec) ? jsModuleFile(file, spec) : undefined;
+          for (const q of n.id.type === 'ObjectPattern' ? n.id.properties : []) {
+            const shorthand = q.type === 'Property' && !q.computed && q.key.type === 'Identifier' && q.value.type === 'Identifier' && q.key.name === q.value.name;
+            if (from && shorthand) fileImports.set(q.key.name, from);
+          }
+          for (const id of jsPatternNames(n.id)) if (!fileImports.has(id) || frame) bind(resolve(id, frame), DATA);
+        }
+      }
+      if (isJsFn(n)) for (const p of n.params) for (const id of jsPatternNames(p)) bind(resolve(id, frameOf.get(p.type === 'AssignmentPattern' ? p.left : p) || frameOf.get(n.body)), DATA);
+      if (n.type === 'CatchClause' && n.param) for (const id of jsPatternNames(n.param)) bind(resolve(id, frame), DATA);
+      if (n.type === 'AssignmentExpression' && n.left.type === 'Identifier') bind(resolve(n.left.name, frame), jsSignature(n.right));
+      if (n.type === 'AssignmentExpression' && n.left.type === 'MemberExpression' && !n.left.computed) {
+        const sig = jsSignature(n.right);
+        define('name:' + n.left.property.name, { ...here, form: 'field', ...sig });
+        if (n.left.object.type === 'Identifier' && /^(window|globalThis|self)$/.test(n.left.object.name)) bind('name:' + n.left.property.name, sig);
+      }
+      if (n.type === 'ObjectExpression') for (const p of n.properties) if (p.type === 'Property' && !p.computed && (p.key.type === 'Identifier' || p.key.type === 'Literal'))
+        define('name:' + (p.key.type === 'Identifier' ? p.key.name : String(p.key.value)), { file, line: p.loc.start.line, home, form: 'key', ...jsSignature(p.value) });
+      // a getter or a setter is not the callable: `this.h(1)` calls what the getter RETURNS — DATA
+      if ((n.type === 'MethodDefinition' || n.type === 'PropertyDefinition') && !n.computed && n.key.type === 'Identifier' && (n.kind !== 'constructor' || cls))
+        define(n.kind === 'constructor' ? 'ctor:' + cls : 'name:' + n.key.name, { ...here, form: 'member', ...(n.kind === 'get' || n.kind === 'set' ? DATA : jsSignature(n.value)) });
+      const inner = n.type === 'ClassDeclaration' || n.type === 'ClassExpression' ? (n.id ? n.id.name : undefined) : cls;
+      for (const k of Object.keys(n)) if (k !== 'loc' && n[k] && typeof n[k] === 'object') defineJs(n[k], isJsFn(n) ? undefined : inner);
+    };
+    defineJs(ast, undefined);
+    if (fileImports.size) imports.set(file, fileImports);
+    // `this` is a class's own receiver inside its methods and field initializers (an arrow keeps it, a `function`
+    // rebinds it): the class it names, or none
+    const thisClass = new Map();
+    const thisWalk = (n, cls, inClass) => {
+      if (Array.isArray(n)) { n.forEach((x) => thisWalk(x, cls, inClass)); return; }
+      if (!n || typeof n.type !== 'string') return;
+      thisClass.set(n, cls);
+      const named = n.type === 'ClassDeclaration' || n.type === 'ClassExpression' ? (n.id ? n.id.name : '<anonymous>') : inClass;
+      for (const k of Object.keys(n)) {
+        if (k === 'loc' || !n[k] || typeof n[k] !== 'object') continue;
+        const child = n[k];
+        const own = (n.type === 'MethodDefinition' && k === 'value') || (n.type === 'PropertyDefinition' && k === 'value') ? named
+          : (child.type === 'FunctionExpression' || child.type === 'FunctionDeclaration') ? undefined : cls;
+        thisWalk(child, own, named);
+      }
+    };
+    thisWalk(ast, undefined, undefined);
+    visit(ast, (n) => {
+      if (n.type !== 'CallExpression' && n.type !== 'NewExpression') return;
+      const c = n.callee;
+      const site = { file, line: n.loc.start.line, where, lang: 'js', home, scope: file };
+      if (n.type === 'NewExpression') Object.assign(site, { kind: 'new', name: c.type === 'Identifier' ? c.name : (c.type === 'MemberExpression' && !c.computed ? c.property.name : undefined) });
+      else if (c.type === 'Identifier') Object.assign(site, { kind: 'bare', name: c.name, binding: resolve(c.name, frameOf.get(n)) });
+      else if (c.type === 'MemberExpression') {
+        Object.assign(site, { kind: 'send', receiver: short(text.slice(c.object.start, c.object.end), 40),
+          name: !c.computed ? c.property.name : (c.property.type === 'Literal' && typeof c.property.value === 'string' ? c.property.value : undefined) });
+        if ((c.object.type === 'ThisExpression' || c.object.type === 'Super') && thisClass.get(n)) { site.via = 'this'; site.cls = thisClass.get(n); }
+        else if (c.object.type === 'Identifier') site.via = 'name:' + c.object.name;
+      } else Object.assign(site, { kind: 'bare', name: undefined });
+      site.args = n.arguments.map((a) => { const kind = jsArgKind(a); return { text: short(text.slice(a.start, a.end)), spread: kind === 'spread', absent: kind === 'absent', kind }; });
+      sites.push(site);
+    });
+  };
+  for (const file of repo.script) { counts.script++; readJs(file, 'script', []); }
+  for (const { file, sources } of macroFilesRead) readJs(file, 'macro', sources.map((s) => [s.start - 1, s.end + 1]));
+  for (const x of jsDefs) ours.add(x);
 
   // ---- identity (D2(a)) ----
   const chainOf = (name) => { const out = []; const seen = new Set(); let c = classes.get(name), n = name;

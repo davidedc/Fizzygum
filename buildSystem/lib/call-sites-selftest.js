@@ -224,7 +224,7 @@ const fixture = (files) => {
     // every fixture file was READ — a reading that skipped one would pass its case on nothing
     const read = new Set([...table.sites, ...[...table.defs.values()].flat()].map((x) => path.relative(root2, x.file)));
     const unread = Object.keys(files).filter((f) => !read.has(f));
-    if (unread.length || !table.counts.testsRepo || table.unreadable.length) throw new Error('fixture not read: ' + unread.join(', ') + JSON.stringify(table.unreadable));
+    if (unread.length || table.unreadable.length) throw new Error('fixture not read: ' + unread.join(', ') + JSON.stringify(table.unreadable));
     return table;
   } finally { fs.rmSync(root2, { recursive: true, force: true }); }
 };

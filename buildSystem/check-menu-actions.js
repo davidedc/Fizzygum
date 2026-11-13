@@ -42,8 +42,8 @@
 //   ⓘ The harness is part of the universe: methods a `*TestSupport` class copies onto a core class
 //   (`WorldTestSupport.installOnto WorldWdgt`, read from src/boot/globalFunctions.coffee) are real
 //   methods of that class on any build shipping the harness part — `WorldWdgt`'s own
-//   `"popUpSystemTestsMenu"` row is one. With the sibling tests repo absent this rule therefore
-//   SKIPS (rules 1/2/3 still run) rather than false-fail a tests-stripped checkout.
+//   `"popUpSystemTestsMenu"` row is one. So the rule reads the sibling tests repo, which every build
+//   requires, whatever the profile ships.
 //
 // ── RULE 2 (HARD, sound) — the options bag is an object.
 // A string literal where `opts` goes is provably wrong for the same reason: `opts.toolTip` on a
@@ -79,7 +79,7 @@ const path = require('path');
 const { methodSpans } = require('./lib/coffee-method-header.js');
 // The boot INSTALL EDGES (`*TestSupport.installOnto <CoreClass>`) and the members each one copies,
 // by installOnto's own semantics — one harvest, shared with check-part-edges.js.
-const { installEdges, harnessPresent } = require('./lib/install-edges.js');
+const { installEdges } = require('./lib/install-edges.js');
 // The whole-system CLASS MODEL (parent, methods, resolution order) — RULE 1b's
 // engine, reused wholesale rather than re-derived, exactly as census-hierarchy-duplication.js and
 // census-property-placement.js reuse it. Re-implementing inheritance resolution here would be a
@@ -274,64 +274,57 @@ for (const p of files) {
 // The resolution set for `@` inside class C is the union of `chainOf(X)` over every X whose chain
 // CONTAINS C — that is, C itself and every subclass of C. A verb missing from all of them is
 // dispatched at nothing: `@target[@action]` is undefined and the row throws on click.
-let ruleB = { checked: 0, skipped: '' };
-if (!harnessPresent(ROOTS.testsRepo)) {
-  // Methods a `*TestSupport` class installs onto a core class are real methods of that class
-  // wherever the harness part ships, so without the sibling repo the universe is incomplete and a
-  // miss would not be a proof. Same self-skip as check-dead-methods / check-unresolved-sends.
-  ruleB.skipped = 'sibling Fizzygum-tests not present (its *TestSupport installs are part of the resolution universe)';
-} else {
-  const census = runCensus(ROOTS);
-  const { classInfo, chainOf } = census;
+const ruleB = { checked: 0 };
+const census = runCensus(ROOTS);
+const { classInfo, chainOf } = census;
 
-  // harness members installed onto a core class, read from the ACTUAL boot edges
-  // (`WorldTestSupport.installOnto WorldWdgt` & co in src/boot/globalFunctions.coffee) by the shared
-  // harvest check-part-edges.js reads too. Only PROTOTYPE members: `@target[@action]` looks the
-  // action up on an instance, which an installed static never reaches.
-  // The harvest REFUSES a support class it cannot read faithfully -- an installOnto shape it does not
-  // model, or a @staticMembersToInstall that disagrees with the statics the class declares -- and the
-  // refusal is reported as itself, exit 2 like check-part-edges.js: without a faithful member set this
-  // rule cannot be answered.
-  let edges;
-  try { edges = installEdges(ROOTS); } catch (e) {
-    console.error('[menu-actions] FAIL — the boot install edges could not be read:\n' + e.message);
-    process.exit(2);
-  }
-  const installedOn = new Map();   // core class name -> Set(member names)
-  for (const edge of edges) {
-    if (!installedOn.has(edge.target)) installedOn.set(edge.target, new Set());
-    const into = installedOn.get(edge.target);
-    for (const m of edge.members) if (!m.isStatic) into.add(m.name);
-  }
+// harness members installed onto a core class, read from the ACTUAL boot edges
+// (`WorldTestSupport.installOnto WorldWdgt` & co in src/boot/globalFunctions.coffee) by the shared
+// harvest check-part-edges.js reads too. Only PROTOTYPE members: `@target[@action]` looks the
+// action up on an instance, which an installed static never reaches.
+// The harvest REFUSES a support class it cannot read faithfully -- an installOnto shape it does not
+// model, or a @staticMembersToInstall that disagrees with the statics the class declares -- and the
+// refusal is reported as itself, exit 2 like check-part-edges.js: without a faithful member set this
+// rule cannot be answered.
+let edges;
+try { edges = installEdges(ROOTS); } catch (e) {
+  console.error('[menu-actions] FAIL — the boot install edges could not be read:\n' + e.message);
+  process.exit(2);
+}
+const installedOn = new Map();   // core class name -> Set(member names)
+for (const edge of edges) {
+  if (!installedOn.has(edge.target)) installedOn.set(edge.target, new Set());
+  const into = installedOn.get(edge.target);
+  for (const m of edge.members) if (!m.isStatic) into.add(m.name);
+}
 
-  // C -> every class whose chain contains C (i.e. every class an `@` in C could be an instance of)
-  const receiversOf = new Map();
-  for (const name of classInfo.keys()) {
-    for (const info of chainOf(name)) {
-      if (!receiversOf.has(info.name)) receiversOf.set(info.name, new Set());
-      receiversOf.get(info.name).add(name);
-    }
+// C -> every class whose chain contains C (i.e. every class an `@` in C could be an instance of)
+const receiversOf = new Map();
+for (const name of classInfo.keys()) {
+  for (const info of chainOf(name)) {
+    if (!receiversOf.has(info.name)) receiversOf.set(info.name, new Set());
+    receiversOf.get(info.name).add(name);
   }
-  const definesIt = (clsName, action) => {
-    for (const info of chainOf(clsName)) {
-      if (info.methods.has(action)) return true;
-      const inst = installedOn.get(info.name);
-      if (inst && inst.has(action)) return true;
-    }
-    return false;
-  };
+}
+const definesIt = (clsName, action) => {
+  for (const info of chainOf(clsName)) {
+    if (info.methods.has(action)) return true;
+    const inst = installedOn.get(info.name);
+    if (inst && inst.has(action)) return true;
+  }
+  return false;
+};
 
-  for (const s of atTargetSites) {
-    if (!classInfo.has(s.cls)) continue;          // not a class file — `@` is not an instance
-    ruleB.checked++;
-    let found = false;
-    for (const receiver of (receiversOf.get(s.cls) || [s.cls])) {
-      if (definesIt(receiver, s.action)) { found = true; break; }
-    }
-    if (found) continue;
-    hard.push({ rel: s.rel, line: s.line, rule: '1b', text: s.text,
-      why: `the ${s.door} targets \`@\` with action "${s.action}", and NO class that \`@\` could be here — ${s.cls}, its subclasses, their chains — defines it, so \`@target[@action]\` is undefined and the row throws when clicked` });
+for (const s of atTargetSites) {
+  if (!classInfo.has(s.cls)) continue;          // not a class file — `@` is not an instance
+  ruleB.checked++;
+  let found = false;
+  for (const receiver of (receiversOf.get(s.cls) || [s.cls])) {
+    if (definesIt(receiver, s.action)) { found = true; break; }
   }
+  if (found) continue;
+  hard.push({ rel: s.rel, line: s.line, rule: '1b', text: s.text,
+    why: `the ${s.door} targets \`@\` with action "${s.action}", and NO class that \`@\` could be here — ${s.cls}, its subclasses, their chains — defines it, so \`@target[@action]\` is undefined and the row throws when clicked` });
 }
 
 let bad = 0;
@@ -344,8 +337,6 @@ for (const h of hard) {
 for (const u of unread) {
   console.log(`  ${u.rel}:${u.line}  ${u.name}  unread parameter \`${u.prm}\``);
 }
-
-if (ruleB.skipped) console.log(`[menu-actions] RULE 1b SKIP — ${ruleB.skipped}.`);
 
 if (bad) {
   console.error(`\n[menu-actions] FAIL — ${bad} provably-wrong menu wiring(s).`);

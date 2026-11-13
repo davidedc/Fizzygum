@@ -25,8 +25,8 @@
 // excuses nothing today and would excuse the next dead method of that name. Run with
 // --update-allowlist to (re)seed the allowlist file with the current dead set (the baseline).
 //
-// NOTE: needs the sibling Fizzygum-tests repo for an accurate reference set; if it is absent
-// (e.g. a production build, which ships no test machinery) the check SKIPS rather than false-fail.
+// It reads the sibling Fizzygum-tests repo for the reference set, on every build whatever the profile ships (the build
+// requires that repo; lib/source-files.js sourceRoots refuses a hand run without it).
 
 const fs = require('fs');
 const path = require('path');
@@ -83,12 +83,6 @@ function main() {
     console.error('[dead-methods] ERROR — --update-allowlist writes the real allowlist: it never reads another src tree or tests repo');
     process.exit(2);
   }
-  // a tests repo holding tests/ holds its harness too: compiledFiles below refuses one that does not
-  if (!fs.existsSync(path.join(ROOTS.testsRepo, 'tests'))) {
-    console.log('[dead-methods] SKIP — sibling Fizzygum-tests not present (needs it for an accurate reference set).');
-    process.exit(0);
-  }
-
   // 1. every method header in the compiled sources -> name => [first def location, ...]
   // This gate owns the method INVENTORY, so it also carries the guard for headers the shared matcher
   // cannot see: an unseen header is not a missing warning, it is a method NO gate checks at all.

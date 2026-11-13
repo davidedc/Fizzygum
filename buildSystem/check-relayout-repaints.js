@@ -38,7 +38,6 @@ const ROOTS = sourceRoots(ARGV, 'relayout-repaints');
 
 const RETIRED = /(disableTrackChanges|maybeEnableTrackChanges)/;
 
-if (!fs.existsSync(ROOTS.testsRepo)) console.log('[relayout-repaints] NOTE — the sibling Fizzygum-tests repo is absent: src/ only.');
 const violations = [];
 let scanned = 0;
 for (const p of compiledFiles(ROOTS)) {

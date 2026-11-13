@@ -142,9 +142,8 @@
  *   CLASS-SIDE method (the class model holds instance members only); and a member put on a class by
  *   anything other than an `installOnto` edge in src/boot/globalFunctions.coffee --
  *   lib/install-edges.js fails loudly on an `installOnto` whose body it does not model, but it cannot
- *   find what is not an edge. With the sibling tests repo absent there are no support classes to
- *   read, so this half SKIPS, as check-menu-actions.js's RULE 1b does, rather than report a
- *   harness-less checkout clean.
+ *   find what is not an edge. The support classes live in the sibling tests repo, which every build
+ *   requires, so this half runs on every profile.
  *
  * check-part-edges-selftest.js drives the installed-member half -- which members count as a part's own,
  * the three clauses and the member existence guard -- and the unused-`requires` rule over in-memory
@@ -159,7 +158,7 @@ const { listShippable } = require('./build');
 const { coffeeMask } = require('./lib/coffee-mask');
 const { stringLiteralsOf, guardedPartsPerLine, isLazyPart,
         declaredRequires: declaredRequiresOf } = require('./lib/part-edge-scan');
-const { installEdges, harnessPresent } = require('./lib/install-edges');
+const { installEdges } = require('./lib/install-edges');
 const { harvestDefs } = require('./lib/name-definitions');
 const { rejectUnknownArgs, rejectPositionalArgs, fileArg } = require('./lib/cli-args');
 const { sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
@@ -371,30 +370,26 @@ function main() {
   for (const rel of scanned) ownerOfAnyClass.set(path.basename(rel, '.coffee'), partOfFile(rel));
   const partOfClass = (name) => ownerOfAnyClass.get(name) || 'core';
 
-  const membersSkipped = harnessPresent(ROOTS.testsRepo) ? '' :
-    'sibling Fizzygum-tests not present (its *TestSupport classes are what installs the members)';
   const installedBy = new Map();     // member name -> Set(parts installing it onto a class outside themselves)
   const installedOn = new Map();     // target class -> Map(prototype member -> installing part), for clause (c)
   let edgeCount = 0;
-  if (!membersSkipped) {
-    let edges;
-    try { edges = installEdges(ROOTS); } catch (e) { fail(e.message); }
-    for (const edge of edges) {
-      const part = ownerOfAnyClass.get(edge.support);
-      if (!part || part === partOfClass(edge.target)) continue;
-      edgeCount++;
-      if (!installedOn.has(edge.target)) installedOn.set(edge.target, new Map());
-      for (const m of edge.members) {
-        if (!installedBy.has(m.name)) installedBy.set(m.name, new Set());
-        installedBy.get(m.name).add(part);
-        if (!m.isStatic) installedOn.get(edge.target).set(m.name, part);
-      }
+  let edges;
+  try { edges = installEdges(ROOTS); } catch (e) { fail(e.message); }
+  for (const edge of edges) {
+    const part = ownerOfAnyClass.get(edge.support);
+    if (!part || part === partOfClass(edge.target)) continue;
+    edgeCount++;
+    if (!installedOn.has(edge.target)) installedOn.set(edge.target, new Map());
+    for (const m of edge.members) {
+      if (!installedBy.has(m.name)) installedBy.set(m.name, new Set());
+      installedBy.get(m.name).add(part);
+      if (!m.isStatic) installedOn.get(edge.target).set(m.name, part);
     }
   }
 
-  // a member half that saw no install edge crossing a part checks nothing: with the harness present that is a broken
-  // harvest (lib/install-edges.js), never a clean tree
-  if (!membersSkipped && edgeCount === 0) fail('the harness is present but no install edge crosses a part — the installed-member half would check nothing; re-read lib/install-edges.js against src/boot/globalFunctions.coffee');
+  // a member half that saw no install edge crossing a part checks nothing: that is a broken harvest
+  // (lib/install-edges.js), never a clean tree
+  if (edgeCount === 0) fail('no install edge crosses a part — the installed-member half would check nothing; re-read lib/install-edges.js against src/boot/globalFunctions.coffee');
 
   // A member is its part's SYMBOL only if no file outside that part can define it. The definition
   // universe is everything that ships -- every part's files, and src/boot (core's boot and every part's declared pieces).
@@ -487,11 +482,10 @@ function main() {
 
   console.log(`[part-edges] scan done — ${scanned.length} source(s) present at boot or in a part vs ` +
     `${partClassOwner.size} part-owned class(es) in ${new Set(partClassOwner.values()).size} part(s)` +
-    (membersSkipped ? `; installed members SKIPPED -- ${membersSkipped}` :
-      ` and ${installedBy.size} member(s) that ${edgeCount} install edge(s) put onto classes outside their ` +
-      `part (${soleProvider.size} that part's alone)`) +
+    ` and ${installedBy.size} member(s) that ${edgeCount} install edge(s) put onto classes outside their ` +
+    `part (${soleProvider.size} that part's alone)` +
     `: ${refViolations.length} unguarded reference(s), ${inheritViolations.length} inheritance edge(s)` +
-    (membersSkipped ? '' : `, ${memberViolations.length} unguarded reach(es) of an installed member`) +
+    `, ${memberViolations.length} unguarded reach(es) of an installed member` +
     `, ${requiresViolations.length} of ${requiresEntries} \`requires\` entr(ies) naming a part the code never names.`);
 
   if (requiresViolations.length) {
@@ -546,8 +540,7 @@ function main() {
   }
 
   if (inheritViolations.length || refViolations.length || memberViolations.length || requiresViolations.length) process.exit(1);
-  console.log(membersSkipped ? '[part-edges] OK -- every core reference into a part is guarded.' :
-    '[part-edges] OK -- every core reference into a part, to a class or to a member it installs, is guarded.');
+  console.log('[part-edges] OK -- every core reference into a part, to a class or to a member it installs, is guarded.');
   process.exit(0);
 }
 

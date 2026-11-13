@@ -1052,7 +1052,7 @@ right for inclusion and wrong for laziness — it silently swallows the user's c
 
 **Verify**
 - [ ] `./build_it_please.sh` — every gate green
-- [ ] `./build_and_test.sh` — the SystemTest suite; recapture only what the change genuinely moves
+- [ ] `./fg presuite` — the SystemTest suite; recapture only what the change genuinely moves
 
 ---
 

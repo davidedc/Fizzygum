@@ -12,16 +12,15 @@
 const path = require('path');
 
 const BUILD_SYSTEM = __dirname;
-// the sibling tests repo: where its gates' scripts live, and the directory whose presence the testsShipped and
-// testsRepo rows ask about (run-gates.js reads it from here, so the two cannot name different places)
+// the sibling tests repo, where its gates' scripts live: a requirement of every build (build_it_please.sh refuses to
+// start without it), so no row asks whether it is there
 const TESTS_REPO = path.join(__dirname, '..', '..', 'Fizzygum-tests');
 const TESTS_SCRIPTS = path.join(TESTS_REPO, 'scripts');
 
 // WHEN a row runs — every gate stands behind the build's --noSyntaxCheck escape hatch:
 //   checked       unless --noSyntaxCheck;
-//   testsShipped  and the profile ships the tests (the harness part) and TESTS_REPO is a directory;
-//   testsRepo     and TESTS_REPO is a directory, whatever the profile ships.
-const WHEN = ['checked', 'testsShipped', 'testsRepo'];
+//   testsShipped  and the profile ships the tests (the harness part).
+const WHEN = ['checked', 'testsShipped'];
 
 // A row whose args are BUILD_ARGS is handed the build's own arguments, as the build was invoked.
 const BUILD_ARGS = 'BUILD_ARGS';
@@ -29,7 +28,7 @@ const GATES = [
   // --- the self-tests: every checker's proof that it can fail, FIRST ----------------
   // A gate whose own proof fails gives verdicts not worth reading, so the proofs run before any
   // gate does. A self-test is a FILE, `<subject>-selftest.js`, found by NAME in buildSystem/ and
-  // (when present) Fizzygum-tests/scripts/ — never listed — through lib/what-runs.js's naming table,
+  // Fizzygum-tests/scripts/ — never listed — through lib/what-runs.js's naming table,
   // which check-hand-lists.js reads too, so a sanction may lean on a self-test exactly because this
   // runs it. Each must end with the shared verdict line and a case count (one that judged nothing
   // fails), and a self-test flag offered anywhere else in a script's code fails the step: a
@@ -108,9 +107,9 @@ const GATES = [
   // macros and scripts) -- catches
   // dead code like the addRaw / fullRawMoveCenterTo deletions. A baseline of known-dead methods
   // is allowlisted in buildSystem/dead-method-allowlist.txt (a to-triage list); the gate FAILS
-  // only on a NEW dead method not in that list. (buildSystem/check-dead-methods.js -- self-skips
-  // if the sibling Fizzygum-tests repo is absent, e.g. a production build; same --noSyntaxCheck
-  // escape hatch and explicit $? check as the layering gate above.)
+  // only on a NEW dead method not in that list. (buildSystem/check-dead-methods.js -- it runs for
+  // every profile, a production one included: the tests repo it reads is always there; same
+  // --noSyntaxCheck escape hatch and explicit $? check as the layering gate above.)
   { script: path.join(BUILD_SYSTEM, "check-dead-methods.js"),
     args: [],
     when: "checked",
@@ -124,9 +123,9 @@ const GATES = [
   // `optionalParts`), carry `hand-list-sanctioned: <what fails>` naming a REAL guard (a gate/rig file,
   // a SystemTest, or a token the code emits), or be counted against a per-repo inline baseline that
   // only falls. Multi-line by design: the lists that rot are one name per line, which no per-line stink
-  // can see. (buildSystem/check-hand-lists.js -- reads src/ + buildSystem/ and, when the sibling
-  // Fizzygum-tests repo is present, its scripts/ + harness; without it the tests half SKIPS and says
-  // so. Same --noSyntaxCheck escape hatch and explicit $? check as the gates above.)
+  // can see. (buildSystem/check-hand-lists.js -- reads src/ + buildSystem/ and the sibling
+  // Fizzygum-tests repo's scripts/ + harness. Same --noSyntaxCheck escape hatch and explicit $?
+  // check as the gates above.)
   { script: path.join(BUILD_SYSTEM, "check-hand-lists.js"),
     args: [],
     when: "checked",
@@ -140,9 +139,9 @@ const GATES = [
   // positives at the cost of reach: the def set is over-approximated, paren-less/string-dispatched
   // sends are out of scope. Vendor + genuinely-dynamic names are exempted, with a REASON, in
   // buildSystem/unresolved-sends-allowlist.txt; standard JS/DOM/canvas API lives in the checker's
-  // in-file BUILTINS set. (buildSystem/check-unresolved-sends.js -- self-skips if the sibling
-  // Fizzygum-tests repo is absent, since its harness is part of the definition universe; same
-  // --noSyntaxCheck escape hatch and explicit $? check as the gates above.)
+  // in-file BUILTINS set. (buildSystem/check-unresolved-sends.js -- the sibling Fizzygum-tests
+  // repo's harness is part of the definition universe; same --noSyntaxCheck escape hatch and
+  // explicit $? check as the gates above.)
   { script: path.join(BUILD_SYSTEM, "check-unresolved-sends.js"),
     args: [],
     when: "checked",
@@ -173,8 +172,8 @@ const GATES = [
   // function or a `new` lands in an `opts = {}` slot. Every call site in BOTH repos — src, the harness,
   // every macro source, the MacroToolkit heredocs, the tests repo's scripts — read by real parsers
   // (buildSystem/lib/call-sites.js, which census-call-arity.js queries too). Exact zero, no baseline;
-  // exit 2 (INVALID) when it cannot read a source. The tests repo absent, it judges src alone and says
-  // so. Same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.
+  // exit 2 (INVALID) when it cannot read a source. Same --noSyntaxCheck escape hatch + explicit $?
+  // abort as the gates above.
   { script: path.join(BUILD_SYSTEM, "check-call-arguments.js"),
     args: [],
     when: "checked",
@@ -288,8 +287,8 @@ const GATES = [
   // buildSystem/public-api-allowlist.txt). Both are inline count-BASELINES (the check-stinks idiom): the
   // gate FAILS only when a count EXCEEDS its baseline; tighten the baseline to lock gains. Per-site escape
   // hatch for [S]: mark the CALLER `# public-call-sanctioned: <why>`. Measurement engine:
-  // buildSystem/census-public-private-calls.js (also a standalone census CLI). [U] self-skips without the
-  // sibling Fizzygum-tests repo (e.g. a production build), like the dead-method gate. (buildSystem/
+  // buildSystem/census-public-private-calls.js (also a standalone census CLI). [U] reads the sibling
+  // Fizzygum-tests repo's references too, like the dead-method gate, on every profile. (buildSystem/
   // check-call-separation.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.)
   { script: path.join(BUILD_SYSTEM, "check-call-separation.js"),
     args: [],
@@ -413,8 +412,7 @@ const GATES = [
   // corrupted/missing screenshots, not an obvious error). This runs `node --check` over every
   // tests/*.js (see ../Fizzygum-tests/scripts/check-tests-syntax.js) to catch that — and any JS
   // syntax error — BEFORE the build copies them in. Same --noSyntaxCheck escape hatch and explicit
-  // $? check as the CoffeeScript gate above; skipped when the profile ships no test machinery, or
-  // when the sibling Fizzygum-tests repo is absent.
+  // $? check as the CoffeeScript gate above; skipped when the profile ships no test machinery.
   { script: path.join(TESTS_SCRIPTS, "check-tests-syntax.js"),
     args: [],
     when: "testsShipped",
@@ -433,7 +431,7 @@ const GATES = [
   // allowed only where the test DECLARES the eval as its subject via its `evaluateString` tag —
   // a declaration rather than a count, so there is no baseline number to rot. Its own acceptance
   // corpus is scripts/check-macro-source-discipline-selftest.js, in `npm run selftest`. Pure text,
-  // milliseconds. Same --noSyntaxCheck escape hatch / $? check / ships-tests + sibling guard as above.
+  // milliseconds. Same --noSyntaxCheck escape hatch / $? check / ships-tests guard as above.
   { script: path.join(TESTS_SCRIPTS, "check-macro-source-discipline.js"),
     args: [],
     when: "testsShipped",
@@ -451,7 +449,7 @@ const GATES = [
   // recapture is a bad trade. It runs as the gauntlet's `refs` leg, or by hand via
   // `npm run check-refs:pixels` in Fizzygum-tests. (It needs no PNG optimizer either — recompress
   // --check-only never picks one; the old note claiming otherwise was wrong.) Same --noSyntaxCheck
-  // escape hatch / $? check / ships-tests + sibling guard as the gates above.
+  // escape hatch / $? check / ships-tests guard as the gates above.
   { script: path.join(TESTS_SCRIPTS, "check-refs.js"),
     args: ["--quiet"],
     when: "testsShipped",
@@ -467,7 +465,7 @@ const GATES = [
   // migration would have broken 279 in a single commit. The capture path regenerates a page at its
   // write site, which covers captures; this covers everything else by checking the property itself
   // instead of trusting every writer to remember the rule. No image decode, no browser (~0.2s). Same
-  // --noSyntaxCheck escape hatch / $? check / ships-tests + sibling guard as the gates above.
+  // --noSyntaxCheck escape hatch / $? check / ships-tests guard as the gates above.
   { script: path.join(TESTS_SCRIPTS, "check-visualisations.js"),
     args: ["--quiet"],
     when: "testsShipped",
@@ -480,11 +478,11 @@ const GATES = [
   // Fizzygum's source both ways (AIM-CENSUS STALE NAME / UNCLASSIFIED VERB / UNKNOWN VERB). Run here
   // so a verb deleted or renamed in src/macros fails the change that did it; check-hand-lists accepts
   // the census's sanctions because this runs them. ~0.2 s. Reads Fizzygum's src and the tests' macro
-  // sources, whatever the profile ships, so it runs whenever the sibling repo is present (as
-  // check-hand-lists' tests half does). Same --noSyntaxCheck escape hatch + explicit $? abort.
+  // sources, whatever the profile ships, so it runs on every build (as check-hand-lists' tests half
+  // does). Same --noSyntaxCheck escape hatch + explicit $? abort.
   { script: path.join(TESTS_SCRIPTS, "aim-census.js"),
     args: ["--tables-only"],
-    when: "testsRepo",
+    when: "checked",
     banner: "checking the aim census's tables against the source ...",
     failure: "!!!!!!!!!!! error: the aim census's tables are stale -- aborting build." },
   // --- the method-count and cognitive-complexity ratchets ----------------------------------------

@@ -5,10 +5,14 @@
 //
 //   coffeeFilesIn(root)                    every .coffee file under root, absolute, in code-point order
 //   srcFiles(src = SRC)                    src's
-//   harnessFiles(testsRepo = TESTS_REPO)   the harness's; undefined when there is no tests repo at testsRepo
-//   compiledFiles({ src, testsRepo })      src's, then the harness's (src's alone when there is no tests repo)
+//   harnessFiles(testsRepo = TESTS_REPO)   the harness's; undefined for a path holding no tests repo (a fixture
+//                                          reading src alone)
+//   compiledFiles({ src, testsRepo })      src's, then the harness's (src's alone for such a fixture)
 //   sourceRoots(argv, name)                { src, testsRepo } from the two rails, SOURCE_RAILS: --src=DIR and
-//                                          --tests-repo=DIR (lib/cli-args.js dirArg), each defaulting to this umbrella's
+//                                          --tests-repo=DIR (lib/cli-args.js dirArg), each defaulting to this umbrella's;
+//                                          the default tests repo missing is refused (exit 2): every build requires it,
+//                                          so a gate run by hand outside a workspace holding it says so rather than
+//                                          read half the sources
 //   sourceName(file, roots, srcPrefix)     the name a gate prints for a file: srcPrefix + its path in src, or
 //                                          `harness/` + its path in the harness
 //
@@ -56,9 +60,26 @@ function coffeeFilesIn(root) {
 }
 
 const srcFiles = (src = SRC) => coffeeFilesIn(src);
+// undefined for a path holding no tests repo: a library fixture reading a src miniature alone hands one
+// (install-edges-selftest.js, settling-setters-selftest.js). A gate never meets it — sourceRoots refuses a workspace
+// without the tests repo, and a rail naming no directory is refused by dirArg.
 const harnessFiles = (testsRepo = TESTS_REPO) => (fs.existsSync(testsRepo) ? coffeeFilesIn(path.join(testsRepo, HARNESS_DIR)) : undefined);
 const compiledFiles = ({ src = SRC, testsRepo = TESTS_REPO } = {}) => [...srcFiles(src), ...(harnessFiles(testsRepo) || [])];
-const sourceRoots = (argv, name) => ({ src: dirArg(argv, '--src=', SRC, name), testsRepo: dirArg(argv, '--tests-repo=', TESTS_REPO, name) });
+// THE ONE REFUSAL for a gate run outside the build without the tests repo: the build checks for it before anything else
+// (build_it_please.sh), and a gate run by hand meets it here, once for every gate that takes the rails.
+function sourceRoots(argv, name) {
+  const src = dirArg(argv, '--src=', SRC, name);
+  const testsRepo = dirArg(argv, '--tests-repo=', undefined, name);
+  if (testsRepo !== undefined) return { src, testsRepo };
+  let st;
+  try { st = fs.statSync(TESTS_REPO); } catch (e) { st = undefined; }
+  if (!st || !st.isDirectory()) {
+    console.error(`[${name}] ERROR — the sibling Fizzygum-tests repo is required (at ${TESTS_REPO}): its harness is half `
+      + 'the compiled sources, and every build requires it; check it out beside Fizzygum/, or name one with --tests-repo=DIR');
+    process.exit(2);
+  }
+  return { src, testsRepo: TESTS_REPO };
+}
 
 function sourceName(file, { testsRepo = TESTS_REPO, src = SRC } = {}, srcPrefix = '') {
   const posix = (p) => p.split(path.sep).join('/');

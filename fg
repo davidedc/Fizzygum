@@ -1,0 +1,949 @@
+#!/usr/bin/env bash
+# fg — Fizzygum cross-repo workflow wrapper. Runnable from ANY cwd.
+#
+# WHY THIS EXISTS: the build (build_it_please.sh) lives in Fizzygum/, but the
+# test / smoke / capture node scripts live in Fizzygum-tests/scripts/. Hand-chaining
+# them in one shell line repeatedly ran the test scripts from the WRONG cwd
+# (MODULE_NOT_FOUND), and the failure hid behind a masked exit code. This wrapper
+# ALWAYS cd's to the right repo internally, gates on REAL exit codes (never a pipe),
+# kills zombie headless browsers, and prints a loud PASS/FAIL banner. It deliberately
+# does NOT name the raw scripts at its call site, so it bypasses the PreToolUse guard.
+#
+# WHERE IT LIVES: in the Fizzygum repo (Fizzygum/fg), because committed code reads it —
+# buildSystem/lib/what-runs.js parses four of its functions to learn which scripts the commit-point
+# legs launch. The umbrella keeps a two-line shim at Fizzygum-all/fg that execs this file, so
+# `<umbrella>/fg <cmd>` and `Fizzygum/fg <cmd>` are the same command. ROOT is the umbrella either way.
+set -u
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+FZ="$ROOT/Fizzygum"
+FT="$ROOT/Fizzygum-tests"
+[ -x "$FZ/build_it_please.sh" ] || { echo "fg FATAL: $FZ/build_it_please.sh not found — fg lives in Fizzygum/, beside its sibling Fizzygum-tests/"; exit 3; }
+[ -d "$FT/scripts" ]           || { echo "fg FATAL: $FT/scripts not found"; exit 3; }
+
+ban(){ echo; echo "================================ $* ================================"; }
+# Verdict files — /tmp/fg-<cmd>.verdict holds "RUNNING since …" while a long op runs and
+# "<CMD> EXIT=<rc> …" when it ends. Lets an agent check a backgrounded run's state with ONE
+# command (`cat /tmp/fg-gauntlet.verdict`) instead of a foreground grep/sleep poll loop
+# (which the cmd-guard hook now blocks). Overwritten at the START of each run so a stale
+# verdict from a previous run can never be misread as this run's result.
+# verdict_start also does the machine-state pre-flight (2026-08-05 workflow audit): the
+# 2026-08-04→05 overnight gauntlet ran 7 h (total=25457s, three INFRA-FLAKE legs, refs 2122s vs
+# ~22s normal) because the machine slept/was overloaded mid-run — the "all-DISCONNECTED failed:0"
+# signature. caffeinate holds sleep off for exactly this fg process's lifetime (exits with it),
+# and the 1-min loadavg is stamped into the RUNNING verdict so an overloaded start is readable in
+# ONE peek — with a loud banner when load already ≥ core count.
+verdict_start(){
+  command -v caffeinate >/dev/null 2>&1 && { caffeinate -dims -w $$ >/dev/null 2>&1 & }
+  local load cores warn=""
+  load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print $2}')
+  cores=$(sysctl -n hw.ncpu 2>/dev/null || echo 8)
+  if [ -n "$load" ] && [ "${load%%.*}" -ge "$cores" ] 2>/dev/null; then
+    warn=" ⚠load≥cores"
+    ban "⚠ PRE-FLIGHT: 1-min loadavg $load ≥ $cores cores — a parallel run on a busy machine yields INFRA-FLAKE legs and false FAILs (2026-08-04 lesson: 7 h gauntlet, wasted night); consider waiting, or FG_GAUNTLET_SERIAL=1"
+  fi
+  echo "RUNNING since $(date '+%F %T') pid=$$ load=${load:-?}$warn" > "/tmp/fg-$1.verdict"
+}
+verdict_end(){ local n="$1" rc="$2"; shift 2; echo "$(echo "$n" | tr '[:lower:]' '[:upper:]') EXIT=$rc $* ($(date '+%F %T'))" > "/tmp/fg-$n.verdict"; }
+
+# legs_pending <cmd> <leg…> — stamp every leg log PENDING at run start, the same stale-proofing the
+# verdict gets above.
+# ⚠ WHY: run_leg truncates /tmp/fg-<leg>.log only when THAT LEG STARTS, but a gauntlet runs lint+build
+# (~1 min) first — so for that whole minute all nine leg logs still hold the PREVIOUS run's contents.
+# Anything reading them mid-run (a human peeking with `tail`, an agent's progress monitor) sees the
+# last run's results attributed to this one. On 2026-07-15 that read `webkit=248/248` and a stale
+# `Network.enable timed out` ONE MINUTE into a fresh run, and raised a false infra-flake alarm.
+# Cheap, exact, and it makes "is this line from this run?" answerable without checking mtimes.
+legs_pending(){ local cmd="$1" l; shift; for l in "$@"; do
+  echo "PENDING — $cmd started $(date '+%F %T') pid=$$; leg '$l' has not run yet." > "/tmp/fg-$l.log"
+  echo "(stamped at run start; replaced by real output when the leg begins. If you are reading THIS," >> "/tmp/fg-$l.log"
+  echo " the leg is still queued — do not read anything into it.)" >> "/tmp/fg-$l.log"
+done; }
+kill_browsers(){ pkill -9 -f "Chrome for Testing|chrome-headless|puppeteer|webkit" >/dev/null 2>&1 || true; sleep 1; }
+# hard timeout without `timeout` (absent in this env): perl alarm
+to(){ local s="$1"; shift; perl -e 'alarm shift; exec @ARGV' "$s" "$@"; }
+
+# build in Fizzygum/, gate on REAL exit + done!!! + 0 violations (stale-build safe)
+fg_build(){
+  local log=/tmp/fg-build.log
+  ( cd "$FZ" && ./build_it_please.sh "$@" ) >"$log" 2>&1; local rc=$?
+  grep -E 'selftests\] (OK|FAIL)|syntax check:|layering gate|dead-methods\]|unresolved-sends\]|call-separation\]|stinks\] (OK|FAIL)|thin-wraps\] (OK|FAIL)|test \.js syntax|aim-census\] (OK|FAIL)' "$log" | tail -10
+  if [ $rc -ne 0 ] || ! grep -q 'done!!!' "$log"; then ban "BUILD FAILED (exit $rc, no done!!!)"; tail -20 "$log"; return 1; fi
+  if grep -qE '[1-9][0-9]* violation' "$log"; then ban "LINT VIOLATION"; grep -nE 'violation|\[[A-F]\]' "$log" | tail -20; return 1; fi
+  echo "  build OK — 0 violations, done!!!"; return 0
+}
+
+# A tier that RUNS THE SUITE (presuite, gauntlet) must build a tree that ships the harness page the suite
+# drives (worldWithSystemTestHarness.html). Handed a profile without it (homepage, lean, dev-notests,
+# dev-precompiled), it would build a tree the runners cannot drive and fail a long way from its cause — so the
+# profile is asked first, through the one reader of profiles, and nothing is built. Exit 2: nothing was measured.
+suite_profile_or_refuse(){
+  ( cd "$FZ" || exit 2
+    vars=$(node ./buildSystem/lib/profile.js --shell "$@") || { echo "fg: could not read the build profile — nothing was built."; exit 2; }
+    eval "$vars"
+    $PROFILE_SHIPS_HARNESS_ENTRY && exit 0
+    echo "fg: profile '$PROFILE_NAME' ships no harness page, so the suite cannot run on it — nothing was built. Use the default (dev) profile; for a boot check of this one, build_and_smoke.sh (or fg homepage)."
+    exit 2 )
+}
+
+# full headless suite vs the CURRENT build. In a parallel gauntlet/presuite wave (FG_PARALLEL=1)
+# the pkill is skipped — the wave did ONE global kill up front and legs must not cull each other.
+fg_suite(){ [ "${FG_PARALLEL:-0}" = 1 ] || kill_browsers; ( cd "$FT" && to 900 node scripts/run-all-headless.js "$@" --shards=8 ); }  # "$@" first so a user --shards=N overrides the default 8 (run-all-headless is first-wins)
+
+# fg lint (plan P4.1): PRE-BUILD static checks in ~2 s, scoped to git-CHANGED files. Catches the
+# recurring backtick-inside-a-macro-comment JS breakage (and any .coffee parse error) BEFORE a
+# minutes-long build/suite does. gauntlet/presuite run it first (fail fast); `fg lint` runs it alone.
+run_lint(){
+  local t0=$SECONDS lrc=0 f tjs coffee_changed
+  # changed/untracked test .js → node --check each (macro sources are template-literal JS files).
+  # ALSO scripts/*.js: they are the only locally-runnable code in the repo and NOTHING gated them
+  # (this regex was anchored ^tests/, check-tests-syntax.js is scoped to tests/SystemTest_*/, and
+  # jscpd only scans Fizzygum/src/**/*.coffee) — a syntax error in scripts/lib/*.js was caught by
+  # nothing until it ran. node --check is ~free, so widen rather than keep the hole.
+  tjs=$(git -C "$FT" status --porcelain 2>/dev/null | awk '{print $NF}' | grep -E '^(tests|scripts)/.*\.js$')
+  for f in $tjs; do
+    [ -f "$FT/$f" ] || continue
+    if ! node --check "$FT/$f" 2>/tmp/fg-lint-err.txt; then
+      echo "✗ fg lint: JS syntax error in Fizzygum-tests/$f"
+      sed 's/^/    /' /tmp/fg-lint-err.txt | head -8
+      lrc=1
+    fi
+  done
+  # any changed .coffee (src OR harness) → the build's own fragmented-compile syntax gate (~1.5 s full tree)
+  coffee_changed=$( { git -C "$FZ" status --porcelain 2>/dev/null; git -C "$FT" status --porcelain 2>/dev/null; } | awk '{print $NF}' | grep -cE '\.coffee$')
+  if [ "$coffee_changed" -gt 0 ]; then
+    if ! ( cd "$FZ" && node buildSystem/check-coffee-syntax.js ) >/tmp/fg-lint-coffee.log 2>&1; then
+      echo "✗ fg lint: CoffeeScript syntax gate FAILED:"; tail -10 /tmp/fg-lint-coffee.log; lrc=1
+    fi
+  fi
+  # macro SOURCE DISCIPLINE (build gate #27, Fizzygum-tests/scripts/check-macro-source-discipline.js):
+  # `@evaluateString` is always wrong (MacroToolkit's own -- a different method), and
+  # `world.evaluateString` is allowed only where the test DECLARES the eval as its subject via its
+  # `evaluateString` tag. The BUILD is the gate of record; running it here too just turns a
+  # build-abort into an instant answer while editing a macro. Whole-tree scan, ~30ms, so it is not
+  # worth restricting to changed files -- but it only has anything to say when tests/ moved.
+  if echo "$tjs" | grep -q '^tests/'; then
+    if ! ( cd "$FT" && node scripts/check-macro-source-discipline.js ) >/tmp/fg-lint-macrosrc.log 2>&1; then
+      echo "✗ fg lint: macro source-discipline gate FAILED:"; sed 's/^/    /' /tmp/fg-lint-macrosrc.log | head -12; lrc=1
+    fi
+  fi
+  if [ $lrc -eq 0 ]; then echo "  lint OK ($((SECONDS-t0))s — $(echo "$tjs" | grep -c .) changed test/script .js checked, coffee gate $([ "$coffee_changed" -gt 0 ] && echo run || echo skipped))"; return 0
+  else ban "FG LINT FAILED"; return 1; fi
+}
+
+# ---------- gauntlet legs (dev-workflow plan P1: parallel waves + serial retry) ----------
+# run_leg <name>: ONE gauntlet leg → /tmp/fg-<name>.log; returns the leg's REAL exit code and
+# appends an "fg-leg: <name> rc=<rc> <secs>s" stamp to the log. The SAME definitions serve the
+# parallel waves (backgrounded) and the serial retry (foreground).
+# Tunables: FG_SUITE_SHARDS (suite legs; wave default 4 → 3 concurrent suites × 4 = 12 browsers),
+# FG_GATE_SHARDS (the gates' embedded suites; their own default is 6, waves pass 4).
+run_leg(){
+  local name="$1" lg="/tmp/fg-$1.log" t0=$SECONDS rc=1
+  # The suite runner writes every failure image its shards catch to this directory
+  # (run-all-headless.js, FIZZYGUM_FAILURE_IMAGES_DIR) — exported for this leg only, cleared at its
+  # start. Without it a parallel-only pixel failure leaves just its verdict line: the images live in
+  # the shard's page and die with it. collect_and_retry keeps a failed wave's set beside its log.
+  local FIZZYGUM_FAILURE_IMAGES_DIR="/tmp/fg-$1.failure-images"; export FIZZYGUM_FAILURE_IMAGES_DIR
+  rm -rf "$FIZZYGUM_FAILURE_IMAGES_DIR"
+  case "$name" in
+    dpr1)   fg_suite --shards="${FG_SUITE_SHARDS:-4}" >"$lg" 2>&1; rc=$? ;;
+    dpr2)   fg_suite --dpr=2 --shards="${FG_SUITE_SHARDS:-4}" >"$lg" 2>&1; rc=$? ;;
+    webkit) fg_suite --browser=webkit --shards="${FG_SUITE_SHARDS:-4}" >"$lg" 2>&1; rc=$? ;;
+    # THE FINGER LEG (Plan 4): the whole suite replayed as a FINGER — the toolkit translates every
+    # intent verb into the touch gesture carrying the same intent, and the run matches the finger
+    # reference axis (…/ceilPixRatio_<N>/finger/). WebKit + dpr2 = "an iPad" for this suite's
+    # purposes (ruling H2); references are captured on Chrome and reused, as the mouse ones are.
+    finger) fg_suite --pointer=finger --browser=webkit --dpr=2 --shards="${FG_SUITE_SHARDS:-4}" >"$lg" 2>&1; rc=$? ;;
+    apps)   ( cd "$FT" && to 300 node scripts/smoke-apps-headless.js ) >"$lg" 2>&1; rc=$?
+            { [ $rc -eq 0 ] && grep -q 'APPS OK' "$lg"; } || rc=1 ;;
+    # fractional-plane dpr2 rider (PRESUITE-ONLY): the reparent-transparency figure landing is
+    # the one legitimately-fractional plane-geometry class, and every pixel divergence it can
+    # cause rounds identically at dpr 1 — the dpr1 suite is BLIND to it; only a dpr2 render sees
+    # a regression (appearance local-coords arc: a real one shipped through three green
+    # presuites and was caught only by the close gauntlet). This leg is the inner loop's only
+    # dpr2 eye, over exactly the two fractional-scene tests; the gauntlet's full dpr2 leg
+    # subsumes it, so it is deliberately NOT a gauntlet leg.
+    fracplane) ( cd "$FT" && to 300 node scripts/run-sequence-headless.js --dpr=2 SystemTest_macroDropIntoRotatedStretchablePanelStretchesOnResize SystemTest_macroDropStrokedRectIntoRotatedPanel ) >"$lg" 2>&1; rc=$? ;;
+    paint)  ( cd "$FT" && to 720 node scripts/run-paint-audit.js --shards=5 ) >"$lg" 2>&1; rc=$? ;;
+    tiernaming) bash "$FT/scripts/tier-naming-audit/run-tier-naming-gate.sh" "${FG_GATE_SHARDS:-6}" >"$lg" 2>&1; rc=$? ;;
+    settle)     bash "$FT/scripts/notification-settle-audit/run-notification-settle-gate.sh" "${FG_GATE_SHARDS:-6}" >"$lg" 2>&1; rc=$? ;;
+    capstone)   bash "$FT/scripts/end-of-cycle-audit/run-capstone-gate.sh" "${FG_GATE_SHARDS:-6}" >"$lg" 2>&1; rc=$? ;;
+    # reference PIXEL integrity (no browser): decode every SWCanvas ref (1842 and growing — the count
+    # tracks the suite) and assert each re-hashes to its stored hashOfData. The build's check-refs call
+    # is STRUCTURAL only (0.2s) — this is the pixel half, kept off the build because paying it on every
+    # inner-loop build to check refs that only change on a recapture is a bad trade.
+    # ⚠ The budget is for the LOADED case, not the quiet one: standalone it is seconds, but sharing a
+    # wave with five browser legs it measured 76s once and BLEW a 120s alarm the same day (rc=142,
+    # SIGALRM — which reads as a leg failure and costs a serial retry). It scales with the reference
+    # count, so keep the headroom generous rather than tracking the measurement.
+    # Rides with the pixel check: check-visualisations --strict requires each committed
+    # visualisation.html to EQUAL what make-visualisation.js produces now (freshness, not just
+    # the resolution half that is already on every build). Same build-vs-commit-point split as
+    # check-refs itself: the cheap structural half gates the BUILD, the fuller one rides a leg,
+    # so a page-template edit is caught at a commit point instead of blocking every inner-loop
+    # build until all pages are regenerated. ~1s, no browser.
+    # And the DOCS ratchet (check-doc-narration.js, a hard zero): docs prose must not block a
+    # BUILD, so it is checked at the commit point, here, rather than only when someone runs it.
+    # The pixel check decodes every reference (~4.1k PNGs): 244-286s inside a gauntlet wave by
+    # 2026-11-09, so its alarm sits well above that (it timed out once at 300s under wave load).
+    refs)   ( cd "$FT" && to 420 node scripts/check-refs.js --pixels --quiet \
+                       && to 120 node scripts/check-visualisations.js --strict --quiet ) >"$lg" 2>&1 \
+            && ( cd "$FZ" && to 60 node buildSystem/check-doc-narration.js ) >>"$lg" 2>&1; rc=$? ;;
+    # settle-re-visit standing gate (up-edge endgame close, 2026-07-17): one dpr1 suite pass under
+    # the counting prelude; the profile must equal the committed baseline — which is EMPTY, so ANY
+    # re-visit anywhere = a convergence regression. Wave-sized via FG_GATE_SHARDS like the other
+    # gates; standalone `fg revisits` stays the full-shard form.
+    revisits) ( cd "$FT" && to 900 node scripts/revisit-gate.js -- --shards="${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
+    # arrange-idempotence oracle (owner-directed 2026-07-17, same close as revisits): ONE page,
+    # battery + post-order force-re-lay sweep in a single evaluate — ~10s, free inside the wave.
+    census) ( cd "$FT" && to 300 node scripts/staleness-census.js ) >"$lg" 2>&1; rc=$? ;;
+    # serialization gates (promoted 2026-07-22, owner-directed — its 22 spreadsheet checks had
+    # sat broken and UNNOTICED since the 2026-07-19 SpreadsheetWdgt rename because nothing ran
+    # the rig at commit points): the round-trip characterization rig (widget + world legs,
+    # native + SWCanvas, ONE browser, ~3 min) then the file:// save/load rig. Both must pass.
+    serialization) ( cd "$FT" && to 900 node scripts/serialization-roundtrip-headless.js && to 300 node scripts/serialization-file-roundtrip-headless.js ) >"$lg" 2>&1; rc=$? ;;
+    # bin/shelf storage DEEP AUDIT (Tier B, bin-shelf-eager-sorting-plan.md Phase 5): one dpr1
+    # suite pass under the storage prelude — per-test force-drain + FROM-SCRATCH reclassify
+    # asserting ZERO moves (idempotence) + structural residue; the profile must be EMPTY (no
+    # baseline file on purpose). Tier A (the STORAGE_INVARIANT console token) already rides
+    # every suite leg; this leg catches classifier self-disagreement, which Tier A cannot.
+    storage) ( cd "$FT" && to 900 node scripts/storage-invariant-gate.js -- --shards="${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
+    # VM-truth object-lifetime gate (Arc B, world-vm-truth-riders plan): one dpr1 suite pass
+    # under the forced-GC prelude — every destroyed widget must be GC-collectible one teardown
+    # later (closure retention the in-band WORLD_INVENTORY gate cannot see) + the post-GC
+    # heap-floor ceiling; exit 2 = INVALID (measured nothing — the wrapper refuses to read an
+    # unmeasured run as green). Chrome-only by design; the webkit leg keeps the in-band tier.
+    vmtruth) ( cd "$FT" && to 900 node scripts/vm-truth-gate.js -- --shards="${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
+    # LAZY PARTS (arc 4 phase 2). Two rigs the suite structurally CANNOT cover: every SystemTest
+    # runs on worldWithSystemTestHarness.html, which presets FIZZYGUM_EAGER_ALL_PARTS so no part is
+    # ever lazy there (a part arriving mid-test would be frame-paced ⇒ cycle-count-dependent ⇒ the
+    # DETERMINISM.md bug class). So laziness is only real on index.html, and only these two see it:
+    # the load path (icon present, engine + 3D vendor absent, click ⇒ loads ⇒ renders pixels) and
+    # the snapshot path (a saved world naming a class from an unloaded part loads it first — plus
+    # the ORDERING assertion that a FAILED part load leaves the desktop standing, which is what
+    # pins the pre-scan above loadWorldSnapshot's teardown). ~1 min for both.
+    parts) ( cd "$FT" && to 300 node scripts/parts-lazy-load-headless.js && to 300 node scripts/parts-snapshot-load-headless.js && to 420 node scripts/parts-lazy-icons-headless.js ) >"$lg" 2>&1; rc=$? ;;
+    # MENU CLICK SWEEP: fires every reachable menu item's ACTION and fails on a throw. The runtime
+    # half of menu-action wiring; its static half (check-menu-actions.js) runs on the build. The gate
+    # sees the shapes a text scan can see; this sees a parameter that IS read and is read as the
+    # WRONG THING — createOpener asked a MenuItemWdgt for its `.contents` and crashed on every click,
+    # and three SliderWdgt prompts threw behind a runtime tripwire nothing ever tripped, because the
+    # suite drives menus heavily but does not click EVERY item.
+    menusweep) ( cd "$FT" && to 300 node scripts/menu-click-sweep-headless.js ) >"$lg" 2>&1; rc=$? ;;
+    # EVERY PIN A CLASS ADVERTISES MUST BE SERVICEABLE. A PinSpec names its setter by STRING and the
+    # dataflow dispatches it as consumer[name]?.call, so an unresolved one is offered, accepts a
+    # wire, and silently does nothing forever. Runtime, not static, because pins() is COMPOSED and a
+    # subclass can NARROW it — a text scan reports pins a class does not have. Its appearance section
+    # found `corner radius` advertised by 16 classes with no setCornerRadius, which was ALSO a hard
+    # throw in the shape's own prompt — a two-step gesture menusweep structurally cannot reach.
+    pinsweep) ( cd "$FT" && to 300 node scripts/pin-sweep-headless.js ) >"$lg" 2>&1; rc=$? ;;
+    # THE WIDGET-GRAPH LIVENESS CONTRACT (graph-edges §4.3 promotion). The `storage` leg gates the
+    # classifier's IDEMPOTENCE; this gates its SEMANTICS through the REAL drain station: wire death
+    # severs the living producer's record (no re-declaration/delivery into a corpse), the collector
+    # files by containment ∪ flow ∪ reference (command confers nothing), close asks the same
+    # question (anyReferenceOrWireIntoWdgt), and graphEdgesOut terminates on the ex-double-injection
+    # mixin chain. One browser, ~35s. Fails on any check, STORAGE_INVARIANT token or console error.
+    graph) ( cd "$FT" && to 300 node scripts/graph-liveness-headless.js ) >"$lg" 2>&1; rc=$? ;;
+    # THE HEADLESS SELF-TESTS (unrun-checks arc): every *-selftest-headless.js, found by NAME
+    # (Fizzygum/buildSystem/lib/what-runs.js) — the proofs that need the built page: every audit
+    # prelude installs clean (incl. the ones only a person injects), heap-forensics sees a planted
+    # closure leak, the settle leg's cached-vs-SLOW oracle bites, and EVERY gauntlet leg's bite-proof
+    # runs that leg's gate on planted input and plants each of its rules (control, plants, INVALIDs).
+    # The node-tier self-tests run on every BUILD. Files run six at a time (run-selftests.js's
+    # HEADLESS_POOL), longest first: ~153 s alone, ~212 s inside a loaded wave A — the budget is
+    # wave A's longest leg (every-gate-bites arc, 2026-11-07).
+    selftests) ( cd "$FZ" && to 600 node buildSystem/run-selftests.js --headless ) >"$lg" 2>&1; rc=$? ;;
+    *) echo "run_leg: unknown leg $name" >"$lg"; rc=3 ;;
+  esac
+  echo "fg-leg: $name rc=$rc $((SECONDS-t0))s" >>"$lg"
+  # Refresh this leg's STANDALONE verdict file, but only if one already exists. Several legs
+  # (revisits, storage, vmtruth, ...) are also standalone verbs that write /tmp/fg-<name>.verdict,
+  # and a gauntlet used to leave those untouched — so `fg status` could show
+  # "REVISITS EXIT=1 FAILED" from days ago immediately beside a green gauntlet that had just
+  # re-run that very gate. At a cold session start that reads as a real failure and costs a
+  # detour. Refreshing only pre-existing files keeps `fg status` truthful without adding a
+  # verdict line per leg (18 of them would drown the section it is meant to summarise).
+  [ -f "/tmp/fg-$name.verdict" ] && verdict_end "$name" "$rc" "$([ $rc -eq 0 ] && echo OK || echo FAILED) (gauntlet leg)"
+  return $rc
+}
+leg_secs(){ sed -n 's/^fg-leg: .* rc=[0-9]* \([0-9]*s\)$/\1/p' "/tmp/fg-$1.log" 2>/dev/null | tail -1; }
+leg_headline(){ grep -E 'wall-clock|failed tests|GATE (PASSED|FAILED|INVALID)|OFFENDERS \(|APPS (OK|FAILED)|revisit-gate: (OK|FAILED|INVALID)|DRIFT |CENSUS (OK|FAILED)|SERIALIZATION RIG (OK|FAILED)|FILE ROUND-TRIP (OK|FAILED)|storage-gate: (OK|FAILED|INVALID)|LAZY PART (LOAD|SNAPSHOT LOAD) (OK|FAILED)|graph-liveness\] OK|graph-liveness FAILED|vm-truth-gate: (OK|FAILED|INVALID)|\[selftests\] (OK|FAIL)|run-sequence:|failed  :' "/tmp/fg-$1.log" 2>/dev/null | tail -2 | sed 's/^/    /'; }
+
+# run_wave <legs…>: background each leg with the browser-cull suppressed (ONE global kill ran
+# before the first wave), wait for all, append "name=rc" pairs to WAVE_RES, print headlines.
+run_wave(){
+  local n pids="" pair rc
+  for n in "$@"; do
+    ( export FIZZYGUM_KEEP_STALE_BROWSERS=1 FG_PARALLEL=1; run_leg "$n" ) &
+    pids="$pids $n:$!"
+  done
+  for pair in $pids; do
+    n="${pair%%:*}"
+    wait "${pair#*:}"; rc=$?
+    WAVE_RES="$WAVE_RES $n=$rc"
+    echo "--- $n (rc=$rc, $(leg_secs "$n")) ---"; leg_headline "$n"
+  done
+}
+
+# After the waves: PASS legs → tally; each FAILED leg → ONE serial retry, alone, browsers cleared
+# (plan P1.2 step 4). Pass-on-retry = load-flake WARNING (gauntlet still passes, loudly, with the
+# parallel-fail log preserved as /tmp/fg-<leg>.parallel-fail.log, and any failure images the wave's
+# shards caught as /tmp/fg-<leg>.parallel-fail.images); fail-on-retry = real FAIL.
+# Sets ok/warn/tally in the caller's scope.
+collect_and_retry(){
+  local pair n rc pimgs
+  for pair in $WAVE_RES; do
+    n="${pair%%=*}"; rc="${pair#*=}"
+    if [ "$rc" -eq 0 ]; then
+      tally="$tally $n:PASS($(leg_secs "$n"))"
+    else
+      ban "$n FAILED in parallel (rc=$rc) — retrying serially, alone"
+      tail -15 "/tmp/fg-$n.log"
+      cp "/tmp/fg-$n.log" "/tmp/fg-$n.parallel-fail.log" 2>/dev/null
+      # the retry's run_leg clears the leg's image dir, so the wave's pictures move out first
+      rm -rf "/tmp/fg-$n.parallel-fail.images"
+      pimgs=""
+      if [ -d "/tmp/fg-$n.failure-images" ] && [ -n "$(ls -A "/tmp/fg-$n.failure-images")" ]; then
+        mv "/tmp/fg-$n.failure-images" "/tmp/fg-$n.parallel-fail.images"
+        pimgs="; its failure images at /tmp/fg-$n.parallel-fail.images"
+      fi
+      kill_browsers
+      if run_leg "$n"; then
+        tally="$tally $n:PASS-serial-only"; warn=1
+        echo "⚠ $n: FAILED-parallel/PASSED-serial — possible load-sensitive nondeterminism (see Fizzygum-tests/DETERMINISM.md); parallel log kept at /tmp/fg-$n.parallel-fail.log$pimgs"
+      else
+        rc2=$?
+        if [ "$rc2" -eq 3 ]; then
+          # plan P6: a gate that exits 3 dropped a shard TWICE with zero failed tests — infra, not a failure
+          tally="$tally $n:INFRA-FLAKE"; warn=1
+          echo "⚠ $n: INFRA shard-drop (exit 3) — zero failed tests, NOT a test/audit failure (plan P6). Re-run the gate if paranoid; log: /tmp/fg-$n.log"
+        else
+          tally="$tally $n:FAIL"; ok=0
+          echo "--- $n serial retry also FAILED ---"; tail -25 "/tmp/fg-$n.log"
+          [ -n "$(ls -A "/tmp/fg-$n.failure-images" 2>/dev/null)" ] && echo "  failure images: /tmp/fg-$n.failure-images"
+        fi
+      fi
+    fi
+  done
+}
+
+usage(){ cat <<'EOF'
+fg — Fizzygum cross-repo wrapper (run from ANY cwd:  <umbrella>/fg <cmd>  or  <umbrella>/Fizzygum/fg <cmd>)
+  fg build [flags]                          build in Fizzygum/ (verifies 0 violations + done!!!)
+  fg suite [--dpr=2|--browser=webkit|...]   full headless suite vs the current build (8 shards)
+  fg presuite [buildflags]                  INNER LOOP: build + dpr1 suite ∥ paint audit ∥ fracplane dpr2 rider (~3-4 min)
+  fg gauntlet                               build + PARALLEL waves: [dpr1|dpr2|webkit|apps|parts|menusweep|pinsweep|graph|selftests] then
+                                            [paint|tiernaming|settle|capstone|refs|revisits|census|serialization|storage],
+                                            then vmtruth alone (wave C), then finger alone (wave D);
+                                            a failed leg gets ONE serial retry (pass ⇒ load-flake warning, not a FAIL).
+                                            The settle leg also RIDES the cached-vs-SLOW twins check (doubleCheckCachedMethodsResults suite-wide; CACHED_DERIVATION_DIVERGED fail-gated).
+                                            FG_GAUNTLET_SERIAL=1 fg gauntlet = old sequential path.
+  fg revisits                               the SETTLE-RE-VISIT standing gate (~2 min): suite under the
+                                            audit prelude, profile asserted vs scripts/revisit-baseline.json
+                                            (EMPTY since the up-edge endgame: ANY re-visit = regression).
+                                            Also a gauntlet wave-B leg — every commit-point run enforces it.
+  fg storage                                the bin/shelf storage DEEP AUDIT (Tier B, ~2 min): suite under
+                                            the storage prelude — per-test force-drain + from-scratch
+                                            reclassify asserting ZERO moves + residue checks; the profile
+                                            must be EMPTY (no baseline file on purpose). Tier A (the
+                                            STORAGE_INVARIANT token) already rides every suite leg.
+                                            Also a gauntlet wave-B leg — every commit-point run enforces it.
+  fg finger                                 THE SUITE AS A FINGER (~6 min, gauntlet wave-D leg): every
+                                            intent verb translated to the touch gesture carrying the
+                                            same intent, matched against the finger reference axis
+                                            (…/ceilPixRatio_<N>/finger/). WebKit + dpr2 = "an iPad"
+                                            (ruling H2). Mouse-only-by-meaning tests (pointerKinds
+                                            metadata) are filtered by the loader.
+  fg vmtruth                                the VM-TRUTH object-lifetime gate (Arc B, ~2 min): suite under
+                                            a forced-GC prelude — every destroyed widget must be
+                                            GC-collectible one teardown later (closure retention the
+                                            in-band WORLD_INVENTORY gate cannot see: it never walks
+                                            functions) + a post-GC heap-floor ceiling per page.
+                                            THREE verdicts: OK / FAILED / INVALID(2) = measured
+                                            nothing, never a pass. Chrome-only by design (the webkit
+                                            leg keeps the in-band tier). Localize findings with
+                                            scripts/heap-forensics.js (its self-test runs in the selftests leg).
+                                            Also a gauntlet leg (wave C) — every commit point enforces it.
+  fg census                                 the ARRANGE-IDEMPOTENCE oracle (~10s): boot + app battery
+                                            + resizes, then post-order force-re-lay EVERY widget at its
+                                            current frame — any mover / battery skip / page error FAILS.
+                                            Run for any arrange/engine change (needs a fresh build).
+                                            Also a gauntlet wave-B leg — every commit-point run enforces it.
+  fg test <SystemTest_name> [flags]         one test headless
+  fg recapture <name…>|--auto [--dprs=1,2]  GATED recapture (scripts/recapture.js): recapture (NO builds —
+                                            the world serves tests/ through a symlink, so a captured
+                                            reference is live at once), then RE-RUN THE FULL SUITE + print
+                                            COMPLETE/INCOMPLETE so a silently-incomplete recapture is
+                                            impossible. --auto discovers the stale set itself.
+                                            --pointer=finger = the FINGER references (one kind per
+                                            run); --jobs=N parallel captures (default 6).
+                                            Prefer over eyeballing a footprint.
+                                            ⚠ BUILD FIRST (fg build): discovery runs against the EXISTING
+                                            build — an unbuilt src edit trips the stale-build guard
+                                            and the run comes back INCONCLUSIVE.
+  fg run-sequence <name…> [--dpr=N]         run a NAMED SUBSET in ONE shared world (reproduce a cross-test
+                                            state leak, DETERMINISM.md §2d); --before=<name> lists predecessors
+  fg recapture-inspector                    recapture the inspector member-list churn set (the tests in
+                                            Fizzygum-tests/scripts/inspector-churn-set.json; re-derive
+                                            it with scripts/derive-inspector-churn-set.js) after a benign
+                                            framework-member change — mouse + finger refs, each through the
+                                            gated recapture.js; no builds; background it
+  fg diffpage <name...> [--dprs=1,2]        build a local ref|now|CSS-diff review page for the given
+                                            tests (dumps live renders SERIALLY, refs untouched); also
+                                            --tests-file=F | stdin | --assemble-only --work=DIR | --open
+                                            prints the fg classify triage table at the end of the run;
+                                            each test x dpr is CHANGED / UNCHANGED / INVALID, and
+                                            exit 2 = INCOMPLETE (a dump measured nothing — never "no diff")
+  fg classify [--work=DIR] [--verbose]      ADVISORY triage of the screenshots in a diffpage work dir:
+                                            REVIEW vs BENIGN? (a suspected benign shape, e.g. a member
+                                            list that only gained a row), with the evidence. Never
+                                            recaptures and never gates — a BENIGN? is a hint for reading
+                                            fg diffpage faster, not permission to recapture. --json=F.
+  fg fuzz [--rounds=N] [--seed=N]           ON-DEMAND coverage measurement of the SWCanvas text-settle
+          [--max-ms=N] [--no-rigs]          gate — NOT a test, NOT a gate, never in the gauntlet.
+                                            Delays every glyph-atlas load by a seeded-random 0..max-ms
+                                            and runs the suite + both serialization rigs; a test that
+                                            fails ONLY under injection has a pixel read the gate does
+                                            not cover (DETERMINISM.md §3g/§3i). THREE verdicts:
+                                            OK / FAILED (the finding) / INVALID (measured nothing —
+                                            a "failed: 0" line is NOT a pass). ⚠ NEVER recapture a ref
+                                            because of a fuzz failure: fix the READ.
+  fg apps                                   app-launch smoke
+  fg homepage                               production-profile build + native boot-smoke + restore normal build
+  fg critique                               ADVISORY code-critique view (~5 s, read-only, never gates):
+                                            every ratchet's "tighten me now" + stale-allowlist NOTE,
+                                            plus the 5 censuses' summary counts (public/private calls,
+                                            hierarchy duplication, property placement, ARGUMENT HOLES
+                                            -- what `positional-hole` cannot see -- and WIDGET
+                                            CONFORMANCE, whose 2 ratcheted facets also gate the build
+                                            at a non-zero FLOOR). The
+                                            Critic Browser analogue. jscpd/jsinspect stay on-demand.
+  fg doc-narration [--full]                 RATCHET: changelog prose in the PRESENT-TENSE doc buckets
+                                            (docs/architecture + docs/tooling). Fails when a file's
+                                            count RISES — the docs-side twin of the comment-narration
+                                            stink. ⛔ specs/ is NOT scanned (a spec's change statements
+                                            are load-bearing), nor are plans/ archive/ measurements/,
+                                            which are chronological by design. --write-baseline banks
+                                            a clean-up; `<!-- narration-ok: why -->` exempts a line.
+                                            Also fails on any closed item (`- [x]`) left in
+                                            docs/BACKLOG.md, a hard zero (BACKLOG_CLOSED_ITEM).
+                                            Also rides the gauntlet's refs leg (not the build: docs
+                                            prose must not block a build).
+  fg cc [coffee-cc flags|paths]             Cognitive Complexity (SonarSource S3776) of the CoffeeScript
+                                            source (npm pkg coffeescript-cognitive-complexity). Read-only,
+                                            no build/browser. `fg cc` = top methods over src; also
+                                            --by-class | --by-file | --explain <file> | --top=N | --json.
+  fg pinsweep                               EVERY ADVERTISED PIN MUST RESOLVE (~5s): a PinSpec names
+                                            its setter by STRING, so an unresolved one accepts a wire
+                                            and silently does nothing. Also checks every `announces`.
+  fg graph                                  WIDGET-GRAPH LIVENESS CONTRACT (~35s, gauntlet wave-A
+                                            leg): the storage leg gates the classifier's IDEMPOTENCE,
+                                            this gates its SEMANTICS via the real drain — wire death
+                                            severs, wire-into-bin-resident shelves (and relays via
+                                            the fixpoint), command edges confer nothing, close asks
+                                            anyReferenceOrWireIntoWdgt, mixin super chains terminate.
+  fg menusweep                              CLICK EVERY MENU ITEM (~6s): fires every reachable menu
+                                            action and fails on a throw — the RUNTIME half of menu
+                                            wiring, whose static half runs on the build
+                                            (check-menu-actions.js). Catches what no text scan can:
+                                            a parameter that IS read and is read as the WRONG THING
+                                            (slot 1 of ButtonWdgt's dispatch is the MENU ITEM).
+                                            Also a gauntlet wave-A leg.
+  fg lazyprobe                              the index.html laziness invariants — every app icon drawn
+                                            with NO app class, the Examples folder empty until opened,
+                                            one click fetching one app. THE ONLY THING THAT CAN SEE
+                                            THIS: the suite runs eager-everything on a page with no
+                                            desktop. Also runs in the gauntlet's parts leg (sampled).
+  fg hypopart <paths...>                    "what if these files were a part?" — inheritance edges,
+                                            unguarded references and cross-part callers, using the
+                                            BUILD GATE'S own classifier (never a grep)
+  fg whatpins [--profile p] [--list]        why is each class in the boot image? Walks from src/boot
+                                            and reports (1) what no boot path reaches — movable today,
+                                            transitively — and (2) SOLE ROUTES: one class holding a
+                                            whole subtree in the image. Section 2 is questions, not
+                                            findings. `--why <Class>`. (Its self-test runs on every build.)
+  fg fingerprint [profile] [baseref]        MEASURE a packaging change: build <profile> at <baseref>
+                                            in a throwaway sibling worktree, build it from the working
+                                            tree, diff the fingerprints. Defaults: homepage HEAD.
+                                            Leaves the build tree on <profile> — 'fg build' restores.
+  fg lint                                   pre-build static checks (~2 s): node --check every git-CHANGED
+                                            test .js + the coffee syntax gate if any .coffee changed.
+                                            gauntlet/presuite run it first automatically.
+  fg status                                 one-shot re-orientation: repos, build freshness, tests,
+                                            zombie browsers, fg verdicts (read-only, <2s)
+  fg killz                                  kill leftover headless test browsers
+build/suite/gauntlet/homepage also maintain /tmp/fg-<cmd>.verdict: "RUNNING since …" while
+running, "<CMD> EXIT=<rc> …" when done — cat it to check a backgrounded run (never poll-loop).
+EOF
+}
+
+cmd="${1:-help}"; shift 2>/dev/null || true
+case "$cmd" in
+  build)
+    verdict_start build
+    if fg_build "$@"; then ban "BUILD OK"; verdict_end build 0 "OK"
+    else verdict_end build 1 "FAILED"; exit 1; fi ;;
+  suite)
+    verdict_start suite
+    if fg_suite "$@"; then ban "SUITE OK"; verdict_end suite 0 "OK"
+    else ban "SUITE FAILED"; verdict_end suite 1 "FAILED"; exit 1; fi ;;
+  census)
+    # The ARRANGE-IDEMPOTENCE ORACLE (assessment §6.1 rule-2 corollary / §6.4): boots the built
+    # world, opens the app battery + basement + window-hosts, resizes everything, then post-order
+    # force-re-lays EVERY widget at its current frame — ANY mover fails (as do battery skips and
+    # page errors). Run it for any arrange/engine change. ~10s: ONE page, the whole battery +
+    # sweep runs synchronously in one page.evaluate — no macro cadence, no pixels (measured
+    # 2026-07-17; the old ~90-120s note predated the single-evaluate form). Needs a FRESH build.
+    verdict_start census
+    kill_browsers
+    if ( cd "$FT" && to 300 node scripts/staleness-census.js "$@" ); then
+      ban "CENSUS OK"; verdict_end census 0 "OK"
+    else ban "CENSUS FAILED"; verdict_end census 1 "FAILED"; exit 1; fi ;;
+  revisits)
+    # The SETTLE-RE-VISIT standing gate (sizing-model unification U4, plan §9.8): full suite
+    # under the re-visit audit prelude, then assert the (test → flush class-multiset) profile
+    # equals scripts/revisit-baseline.json. New signature = convergence regression; vanished =
+    # improvement to bake in consciously (node scripts/revisit-gate.js --write-baseline).
+    # ~2 min. Needs a FRESH build.
+    verdict_start revisits
+    kill_browsers
+    if ( cd "$FT" && to 600 node scripts/revisit-gate.js "$@" ); then
+      ban "REVISITS OK"; verdict_end revisits 0 "OK"
+    else ban "REVISITS FAILED"; verdict_end revisits 1 "FAILED"; exit 1; fi ;;
+  storage)
+    # The bin/shelf storage DEEP AUDIT (Tier B, bin-shelf-eager-sorting-plan.md Phase 5): full
+    # suite under the storage prelude — at each test's end (resetWorld entry) force-drain the
+    # pending sort, reclassify FROM SCRATCH and assert ZERO proposed moves (idempotence — the
+    # check the always-on Tier A token guard structurally cannot do) + structural residue.
+    # The profile must be EMPTY; no baseline file on purpose. ~2 min. Needs a FRESH build.
+    verdict_start storage
+    kill_browsers
+    if ( cd "$FT" && to 900 node scripts/storage-invariant-gate.js "$@" ); then
+      ban "STORAGE OK"; verdict_end storage 0 "OK"
+    else ban "STORAGE FAILED"; verdict_end storage 1 "FAILED"; exit 1; fi ;;
+  vmtruth)
+    # The VM-truth object-lifetime gate (Arc B): full suite under the forced-GC prelude —
+    # collectibility oracle + post-GC heap-floor ceiling + INVALID-on-unmeasured. ~2 min.
+    # Needs a FRESH build. Chrome-only by design.
+    verdict_start vmtruth
+    kill_browsers
+    ( cd "$FT" && to 900 node scripts/vm-truth-gate.js "$@" ); vrc=$?
+    if [ $vrc -eq 0 ]; then ban "VMTRUTH OK"; verdict_end vmtruth 0 "OK"
+    elif [ $vrc -eq 2 ]; then ban "VMTRUTH INVALID (not a result — measured nothing)"; verdict_end vmtruth 2 "INVALID"; exit 2
+    else ban "VMTRUTH FAILED"; verdict_end vmtruth 1 "FAILED"; exit 1; fi ;;
+  test)
+    [ $# -ge 1 ] || { usage; exit 2; }
+    kill_browsers; ( cd "$FT" && to 240 node scripts/run-macro-test-headless.js "$@" ) ;;
+  fuzz)
+    # Glyph-atlas delay fault injection. THREE-WAY verdict — the whole point of the tool is that
+    # INVALID is not a pass and not a fail: the prototype produced four invalid runs in one morning
+    # and three printed `failed: 0`, which reads as a clean pass. So exit 2 gets its OWN loud banner
+    # and its own verdict text; it must never be collapsed into OK or FAILED.
+    # NOT a gauntlet leg (owner-declined 2026-07-29): nondeterministic by construction.
+    verdict_start fuzz
+    kill_browsers
+    ( cd "$FT" && to 5400 node scripts/run-atlas-fuzz.js "$@" ); rc=$?
+    case $rc in
+      0) ban "FUZZ OK"; verdict_end fuzz 0 "OK" ;;
+      1) ban "FUZZ FAILED — a pixel read is NOT covered by the text-settle gate (do NOT recapture)"
+         verdict_end fuzz 1 "FAILED (finding)"; exit 1 ;;
+      *) ban "FUZZ INVALID (not a result) — the run measured nothing; do not read it as a pass"
+         verdict_end fuzz "$rc" "INVALID (not a result)"; exit "$rc" ;;
+    esac ;;
+  diffpage)
+    # Build a ref|now|CSS-diff review page. Needs a build reflecting the change under review.
+    # Read-only wrt references. Serial dumping, one browser at a time. --assemble-only skips dumping.
+    # THREE outcomes per test x dpr (CHANGED / UNCHANGED / INVALID, lib/diffwork.js): exit 2 = the page
+    # is NOT a complete review (a dump that measured nothing, an undecodable or unpaired image).
+    kill_browsers; ( cd "$FT" && node scripts/make-diff-page.js "$@" ); rc=$?
+    case $rc in
+      0) ;;
+      2) ban "DIFFPAGE INCOMPLETE — some group is INVALID (or an image is undecodable/unpaired): do NOT read the page as 'unchanged' there"; exit 2 ;;
+      *) exit "$rc" ;;
+    esac ;;
+  classify)
+    # ADVISORY ONLY — read-only over an existing diffpage work dir; no browser, no build, no refs
+    # touched. Its BENIGN? verdicts are SUSPECTED (no region manifest yet), so they may never be
+    # acted on unread: confirm in fg diffpage, then recapture by hand if the change really is benign.
+    ( cd "$FT" && node scripts/classify-diff.js "$@" ) ;;
+  cc)
+    # Cognitive Complexity (SonarSource S3776) of the CoffeeScript source, via the npm
+    # package coffeescript-cognitive-complexity (a Fizzygum devDependency; bin coffee-cc).
+    # Read-only — no build, no browser. Defaults the target to Fizzygum/src when no path
+    # arg is given (so `fg cc` and `fg cc --by-class` both scan the whole tree); otherwise
+    # flags/paths pass straight through: `fg cc --explain src/serialization/Serializer.coffee`.
+    [ -x "$FZ/node_modules/.bin/coffee-cc" ] || { echo "fg cc: coffee-cc not installed — run: ( cd \"$FZ\" && npm install )"; exit 3; }
+    havepath=0; for a in "$@"; do case "$a" in -*) ;; *) havepath=1 ;; esac; done
+    [ $havepath -eq 1 ] || set -- "$@" src
+    ( cd "$FZ" && node_modules/.bin/coffee-cc "$@" ) ;;
+  recapture)
+    # Gated recapture (scripts/recapture.js): recapture the named tests -- or --auto to DISCOVER the
+    # stale set from a suite run -- with NO BUILDS AT ALL (the built world serves Fizzygum-tests/tests
+    # through a symlink, so a deleted reference is gone at once and a captured one is live at once),
+    # then RE-RUN THE FULL SUITE at each dpr and print an unambiguous COMPLETE/INCOMPLETE verdict, so a
+    # silently-incomplete recapture is impossible. Prefer this over eyeballing a footprint. ONE pointer
+    # kind per run: `--pointer=finger` recaptures the finger references (default mouse), so a full wave
+    # is `fg recapture --auto` then `fg recapture --auto --pointer=finger`. Captures run `--jobs=N` at a
+    # time (default 6) and are recompressed in one parallel pass; measured 2026-10-16, a full mouse wave
+    # projects to ~30 min (was ~7 h serial). (Fast
+    # non-gated single-test capture, no completeness check:
+    # node scripts/capture-macro-test-references.js <name> --clean --dprs=1,2)
+    # Minutes-long, so it writes a verdict like every other long op -- its absence once left a
+    # background `until grep RECAPTURE EXIT /tmp/fg-recapture.verdict` waiter spinning forever on a
+    # file that was never going to appear (the sibling recapture-inspector had one, this did not).
+    [ $# -ge 1 ] || { usage; exit 2; }
+    verdict_start recapture
+    kill_browsers
+    if ( cd "$FT" && node scripts/recapture.js "$@" ); then
+      ban "RECAPTURE OK"; verdict_end recapture 0 "OK"
+    else ban "RECAPTURE FAILED"; verdict_end recapture 1 "FAILED"; exit 1; fi ;;
+  run-sequence)
+    # Run a NAMED SUBSET of tests in ONE shared world (scripts/run-sequence-headless.js) -- reproduce a
+    # cross-test state leak (DETERMINISM.md §2d): `fg run-sequence <predecessor> <victim>`.
+    kill_browsers
+    ( cd "$FT" && node scripts/run-sequence-headless.js "$@" ) ;;
+  recapture-inspector)
+    # The inspector member-list CHURN SET: the tests whose screenshots render a live widget member
+    # list, so a benign new member that every Widget carries as an OWN field changes their pixels. (A
+    # Widget METHOD or class-body field reaches far fewer: the inspector hides inherited members by
+    # default, so it lists one only where the inspected object is a plain Widget.)
+    # The set is READ from Fizzygum-tests/scripts/inspector-churn-set.json — the one list, which
+    # classify-diff.js also reads, as corroboration — through its one reader, scripts/lib/
+    # inspector-churn-set.js, and is re-derived by planting such a field:
+    # scripts/derive-inspector-churn-set.js (--check | --write).
+    # A name there with no tests/ directory REFUSES the run (exit 2) before anything is recaptured, as
+    # recapture.js refuses a name that is not a test.
+    # After a benign framework-member change turns them red, this ONE command hands the whole set to
+    # the gated recapture (scripts/recapture.js) once per POINTER KIND — mouse, then finger, since these
+    # tests carry finger references too and the same change leaves those stale for `fg finger`. Each
+    # run recaptures at dpr 1 and 2, re-runs the full suite of its kind and prints COMPLETE/INCOMPLETE;
+    # a mouse-only test is passed over in the finger run as TEST SKIPPED. No builds (the world serves
+    # tests/ through the js/tests link), long enough to background. Deterministic capture ⇒ if the
+    # member list did NOT change, the recapture is byte-identical and git status stays clean. Close
+    # with a normal fg gauntlet before committing.
+    verdict_start recapture-inspector
+    t_all=$SECONDS; failed=""
+    # stdout = the names, one per line; the stale entries, or a malformed-file error, go to stderr,
+    # straight to the terminal. A tests/ tree that is not all tests (TESTS_DIRECTORY_MALFORMED) is
+    # its own refusal (exit 3): the churn set is not what is wrong then.
+    churn=$( cd "$FT" && node -e '
+      let s;
+      try { s = require("./scripts/lib/inspector-churn-set").loadInspectorChurnSet(); }
+      catch (e) { process.stderr.write("  " + e.message + "\n"); process.exit(/^TESTS_DIRECTORY_MALFORMED/.test(e.message) ? 3 : 2); }
+      if (s.missing.length) { process.stderr.write("  not a test:\n" + s.missing.map(t => "    " + t + "\n").join("")); process.exit(2); }
+      process.stdout.write(s.tests.join("\n") + "\n");' ) || {
+      if [ $? -eq 3 ]; then
+        ban "RECAPTURE-INSPECTOR REFUSED — Fizzygum-tests/tests/ holds a directory that is no test (above); nothing recaptured."
+        verdict_end recapture-inspector 2 "REFUSED — tests/ malformed"; exit 2
+      fi
+      ban "RECAPTURE-INSPECTOR REFUSED — Fizzygum-tests/scripts/inspector-churn-set.json is not a current list of tests (above); nothing recaptured. Re-derive it: node scripts/derive-inspector-churn-set.js --write"
+      verdict_end recapture-inspector 2 "REFUSED — churn set not current"; exit 2; }
+    n_churn=$(printf '%s\n' "$churn" | grep -c .)
+    echo "  recapturing the $n_churn tests of the inspector churn set (Fizzygum-tests/scripts/inspector-churn-set.json)"
+    for kind in mouse finger; do
+      kill_browsers
+      pointer_flag=""; [ "$kind" = finger ] && pointer_flag="--pointer=finger"
+      lg="/tmp/fg-recapture-inspector-$kind.log"
+      echo "  $kind references: node scripts/recapture.js --dprs=1,2 $pointer_flag <the $n_churn tests>   (log: $lg)"
+      # shellcheck disable=SC2086  # $churn is the name list, one word per test
+      if ( cd "$FT" && node scripts/recapture.js --dprs=1,2 $pointer_flag $churn ) >"$lg" 2>&1
+      then echo "  ✓ $kind: RECAPTURE COMPLETE"
+      else rc=$?; echo "  ✗ $kind: recapture.js exit $rc"; failed="$failed $kind(exit $rc)"
+      fi
+      grep -E 'VERDICT:' "$lg" | sed 's/^ */    /'
+    done
+    if [ -n "$failed" ]; then ban "RECAPTURE-INSPECTOR FAILED —$failed (logs: /tmp/fg-recapture-inspector-<kind>.log)"; verdict_end recapture-inspector 1 "FAILED —$failed"; exit 1; fi
+    ban "RECAPTURE-INSPECTOR OK — $n_churn tests, mouse + finger, recaptured and gated in $(( (SECONDS-t_all)/60 ))m; close with fg gauntlet before committing"
+    verdict_end recapture-inspector 0 "OK $n_churn tests mouse+finger total=$((SECONDS-t_all))s" ;;
+  apps)
+    kill_browsers; ( cd "$FT" && to 300 node scripts/smoke-apps-headless.js "$@" ) ;;
+  presuite)
+    # INNER-LOOP tier (plan P1.5): build + [dpr1 suite (8 shards) ∥ sharded paint audit].
+    # Iterate with presuite; close a phase/commit point with the full gauntlet.
+    verdict_start presuite
+    suite_profile_or_refuse "$@" || { verdict_end presuite 2 "REFUSED — the profile ships no harness page"; exit 2; }
+    legs_pending presuite dpr1 paint fracplane
+    t_all=$SECONDS
+    run_lint || { verdict_end presuite 1 "FAILED — lint"; exit 1; }
+    fg_build "$@" || { verdict_end presuite 1 "FAILED — build"; exit 1; }
+    kill_browsers
+    WAVE_RES=""; tally=""; ok=1; warn=0
+    FG_SUITE_SHARDS=8
+    ban "PRESUITE WAVE: dpr1 suite (8 shards) ∥ paint audit (5 shards) ∥ fracplane dpr2 rider"
+    run_wave dpr1 paint fracplane
+    collect_and_retry
+    total_secs=$((SECONDS-t_all))
+    if [ $ok -eq 1 ]; then ban "PRESUITE OK —$tally — total $((total_secs/60))m$((total_secs%60))s"; verdict_end presuite 0 "OK —$tally total=${total_secs}s"
+    else ban "PRESUITE FAILED —$tally — total $((total_secs/60))m$((total_secs%60))s"; verdict_end presuite 1 "FAILED —$tally total=${total_secs}s"; exit 1; fi ;;
+  gauntlet)
+    verdict_start gauntlet
+    suite_profile_or_refuse "$@" || { verdict_end gauntlet 2 "REFUSED — the profile ships no harness page"; exit 2; }
+    # every leg run_wave launches must be listed here, or its log keeps the PREVIOUS run's
+    # contents for the whole lint+build minute and reads as this run's result (`storage` was
+    # missing and did exactly that — showing a stale rc=0 while this run had not started it).
+    legs_pending gauntlet dpr1 dpr2 webkit apps selftests paint tiernaming settle capstone refs revisits census serialization storage parts menusweep pinsweep graph vmtruth finger
+    if [ "${FG_GAUNTLET_SERIAL:-0}" = 1 ]; then
+      # ---------- SERIAL escape hatch: the pre-P1 sequential path, leg for leg ----------
+      fg_build "$@" || { verdict_end gauntlet 1 "FAILED — build"; exit 1; }
+      tally=""; ok=1
+      for leg in "dpr1:" "dpr2:--dpr=2" "webkit:--browser=webkit" "finger:--pointer=finger --browser=webkit --dpr=2"; do
+        name="${leg%%:*}"; flag="${leg#*:}"; lg="/tmp/fg-$name.log"
+        # $flag deliberately UNQUOTED: the finger leg's entry carries three flags in one field
+        if [ -n "$flag" ]; then fg_suite $flag >"$lg" 2>&1; else fg_suite >"$lg" 2>&1; fi
+        rc=$?
+        echo "--- $name ---"; grep -E 'wall-clock|failed tests' "$lg" | tail -2
+        if [ $rc -eq 0 ]; then tally="$tally $name:PASS"; else tally="$tally $name:FAIL"; ok=0; cp "$lg" "$lg.serial-fail.log" 2>/dev/null; echo "  (full leg log preserved at $lg.serial-fail.log)"; fi
+      done
+      kill_browsers; ( cd "$FT" && to 300 node scripts/smoke-apps-headless.js ) >/tmp/fg-apps.log 2>&1
+      if [ $? -eq 0 ] && grep -q 'APPS OK' /tmp/fg-apps.log; then tally="$tally apps:PASS"; else tally="$tally apps:FAIL"; ok=0; tail -8 /tmp/fg-apps.log; fi
+      # menu click sweep — the runtime half of menu-action wiring (see the parallel leg above).
+      kill_browsers; ( cd "$FT" && to 300 node scripts/menu-click-sweep-headless.js ) >/tmp/fg-menusweep.log 2>&1
+      if [ $? -eq 0 ]; then tally="$tally menusweep:PASS"; else tally="$tally menusweep:FAIL"; ok=0; grep -E '\[FAIL\]|MENU CLICK SWEEP' /tmp/fg-menusweep.log | tail -8; fi
+      kill_browsers; ( cd "$FT" && to 300 node scripts/pin-sweep-headless.js ) >/tmp/fg-pinsweep.log 2>&1
+      if [ $? -eq 0 ]; then tally="$tally pinsweep:PASS"; else tally="$tally pinsweep:FAIL"; ok=0; grep -E 'pin-sweep FAILED|NO_SETTER|NO_GETTER|ANNOUNCES' /tmp/fg-pinsweep.log | tail -10; fi
+      # widget-graph liveness contract — the runtime SEMANTICS twin of the storage idempotence gate.
+      kill_browsers; ( cd "$FT" && to 300 node scripts/graph-liveness-headless.js ) >/tmp/fg-graph.log 2>&1
+      if [ $? -eq 0 ]; then tally="$tally graph:PASS"; else tally="$tally graph:FAIL"; ok=0; grep -E 'FAIL|graph-liveness' /tmp/fg-graph.log | tail -10; fi
+      # paint-truthfulness gate (plan 5.3): the whole suite must stay paint-truthful — a forced full repaint of each
+      # test's settled end-state must not change any pixel (a delta = a dropped invalidation / D2-class ghost region).
+      # The serial hatch keeps the original single-browser audit (--shards=1, ~7 min).
+      kill_browsers; ( cd "$FT" && to 720 node scripts/run-paint-audit.js --shards=1 ) >/tmp/fg-paint.log 2>&1
+      if [ $? -eq 0 ]; then tally="$tally paint:PASS"; else tally="$tally paint:FAIL"; ok=0; grep -E 'GATE (PASSED|FAILED|INVALID)|OFFENDER|offenders|tests checked' /tmp/fg-paint.log | tail -8; fi
+      # runtime audit gates (layering/naming §5b/§9.6): the apply-2x2 lattice + callback settle-neutrality, via the
+      # off-by-default WorldWdgt flags each gate's injected prelude flips on. ~1.5 min each; each gate cd's to $FT + pkills.
+      for gate in "tiernaming:tier-naming-audit/run-tier-naming-gate.sh" "settle:notification-settle-audit/run-notification-settle-gate.sh" "capstone:end-of-cycle-audit/run-capstone-gate.sh"; do
+        gn="${gate%%:*}"; gs="${gate#*:}"; glg="/tmp/fg-$gn.log"
+        kill_browsers; bash "$FT/scripts/$gs" >"$glg" 2>&1; grc=$?
+        echo "--- $gn gate ---"; grep -E 'GATE (PASSED|FAILED|INVALID)|HARD leaf|violations=|careless pushes=' "$glg" | tail -2
+        if [ $grc -eq 0 ]; then tally="$tally $gn:PASS"
+        elif [ $grc -eq 3 ]; then tally="$tally $gn:INFRA-FLAKE"; echo "⚠ $gn: INFRA shard-drop (exit 3) — zero failed tests, not a failure (plan P6)"
+        else tally="$tally $gn:FAIL"; ok=0; fi
+      done
+      # reference pixel integrity (~10s, no browser) — see the `refs` leg in run_leg.
+      run_leg refs; if [ $? -eq 0 ]; then tally="$tally refs:PASS"; else tally="$tally refs:FAIL"; ok=0; grep -E 'FAIL|verified consistent|consistency FAILED' /tmp/fg-refs.log | tail -4; fi
+      # the headless self-tests — see the `selftests` leg in run_leg.
+      kill_browsers; run_leg selftests; if [ $? -eq 0 ]; then tally="$tally selftests:PASS"; else tally="$tally selftests:FAIL"; ok=0; grep -E 'SELFTEST_|\[selftests\]' /tmp/fg-selftests.log | tail -6; fi
+      # settle-re-visit gate (up-edge endgame close) — see the `revisits` leg in run_leg.
+      kill_browsers; ( cd "$FT" && to 900 node scripts/revisit-gate.js ) >/tmp/fg-revisits.log 2>&1
+      if [ $? -eq 0 ]; then tally="$tally revisits:PASS"; else tally="$tally revisits:FAIL"; ok=0; grep -E 'DRIFT |drifted|revisit-gate:' /tmp/fg-revisits.log | tail -6; fi
+      # arrange-idempotence oracle (~10s) — see the `census` leg in run_leg.
+      kill_browsers; ( cd "$FT" && to 300 node scripts/staleness-census.js ) >/tmp/fg-census.log 2>&1
+      if [ $? -eq 0 ]; then tally="$tally census:PASS"; else tally="$tally census:FAIL"; ok=0; grep -E 'CENSUS|movers|skipped' /tmp/fg-census.log | tail -4; fi
+      # serialization round-trip + file rigs — see the `serialization` leg in run_leg.
+      kill_browsers; run_leg serialization
+      if [ $? -eq 0 ]; then tally="$tally serialization:PASS"; else tally="$tally serialization:FAIL"; ok=0; grep -E 'SERIALIZATION RIG|FILE ROUND-TRIP|MISMATCH' /tmp/fg-serialization.log | tail -6; fi
+      if [ $ok -eq 1 ]; then ban "GAUNTLET OK —$tally"; verdict_end gauntlet 0 "OK —$tally"
+      else ban "GAUNTLET FAILED —$tally"; verdict_end gauntlet 1 "FAILED —$tally"; exit 1; fi
+    else
+      # ---------- PARALLEL path (plan P1: two waves + failed-leg serial retry) ----------
+      t_all=$SECONDS
+      run_lint || { verdict_end gauntlet 1 "FAILED — lint"; exit 1; }
+      fg_build "$@" || { verdict_end gauntlet 1 "FAILED — build"; exit 1; }
+      kill_browsers   # ONCE, up front; the waves run with the cull suppressed
+      WAVE_RES=""; tally=""; ok=1; warn=0
+      ban "WAVE A: dpr1 ∥ dpr2 ∥ webkit suites (4 shards each) ∥ apps ∥ parts ∥ sweeps ∥ graph ∥ selftests"
+      # `parts` rides in wave A, not B: it is 27s and light, but wave B already runs ~26
+      # concurrent browsers (paint 5 + four 4-shard gates + storage 4 + census + serialization)
+      # and adding a 14th leg there tipped it — serialization's 30s boot timed out and a paint
+      # shard failed to boot, both passing on the serial retry. Wave A is ~20 browsers (selftests
+      # holds up to six at a time).
+      run_wave dpr1 dpr2 webkit apps parts menusweep pinsweep graph selftests
+      ban "WAVE B: paint audit (5 shards) ∥ tiernaming ∥ settle ∥ capstone ∥ revisits gates (4 shards each) ∥ refs ∥ census ∥ serialization"
+      FG_GATE_SHARDS=4
+      run_wave paint tiernaming settle capstone refs revisits census serialization storage
+      # vmtruth runs ALONE as wave C, not inside B: it is itself a full-suite pass and wave B
+      # already tipped the box once at 14 legs (serialization boot timeouts) — +~100s of
+      # gauntlet is cheaper than an infra-flake retry lottery. Alone it gets full shards.
+      ban "WAVE C: vmtruth (VM-truth object-lifetime gate)"
+      FG_GATE_SHARDS=6
+      run_wave vmtruth
+      # finger runs ALONE as wave D, like vmtruth and for the same reason: it is itself a
+      # full-suite pass — at dpr2 under WebKit, the heaviest single leg — and wave B already
+      # tipped the box once at 14 legs.
+      ban "WAVE D: finger (the suite as a finger — webkit + dpr2)"
+      run_wave finger
+      # serial retries (if any) run each failed leg alone at its standalone shape
+      FG_SUITE_SHARDS=8; FG_GATE_SHARDS=6
+      collect_and_retry
+      total_secs=$((SECONDS-t_all))
+      if [ $ok -eq 1 ]; then
+        if [ $warn -eq 1 ]; then ban "GAUNTLET OK (load-flake warning, see above) —$tally — total $((total_secs/60))m$((total_secs%60))s"; verdict_end gauntlet 0 "OK(warn) —$tally total=${total_secs}s"
+        else ban "GAUNTLET OK —$tally — total $((total_secs/60))m$((total_secs%60))s"; verdict_end gauntlet 0 "OK —$tally total=${total_secs}s"; fi
+      else ban "GAUNTLET FAILED —$tally — total $((total_secs/60))m$((total_secs%60))s"; verdict_end gauntlet 1 "FAILED —$tally total=${total_secs}s"; exit 1; fi
+    fi ;;
+  homepage)
+    verdict_start homepage
+    fg_build --profile homepage || { verdict_end homepage 1 "FAILED — homepage build"; exit 1; }
+    kill_browsers; ( cd "$FT" && to 300 node scripts/smoke-boot-headless.js --production ); hrc=$?
+    ban "restoring normal build…"; fg_build || { verdict_end homepage 1 "FAILED — restoring normal build"; exit 1; }
+    if [ $hrc -eq 0 ]; then ban "HOMEPAGE BOOT OK (normal build restored)"; verdict_end homepage 0 "OK"
+    else ban "HOMEPAGE SMOKE FAILED (normal build restored)"; verdict_end homepage 1 "FAILED — smoke"; exit 1; fi ;;
+  menusweep)
+    kill_browsers
+    ( cd "$FT" && node scripts/menu-click-sweep-headless.js "$@" ); rc=$?
+    [ $rc -eq 0 ] && ban "MENU CLICK SWEEP OK" || ban "MENU CLICK SWEEP FAILED"
+    exit $rc ;;
+  finger)
+    verdict_start finger
+    if fg_suite --pointer=finger --browser=webkit --dpr=2 "$@"; then ban "FINGER SUITE OK"; verdict_end finger 0 "OK"
+    else ban "FINGER SUITE FAILED"; verdict_end finger 1 "FAILED"; exit 1; fi ;;
+  pinsweep)
+    kill_browsers
+    ( cd "$FT" && node scripts/pin-sweep-headless.js "$@" ); rc=$?
+    [ $rc -eq 0 ] && ban "PIN SWEEP OK" || ban "PIN SWEEP FAILED"
+    exit $rc ;;
+  graph)
+    kill_browsers
+    ( cd "$FT" && node scripts/graph-liveness-headless.js "$@" ); rc=$?
+    [ $rc -eq 0 ] && ban "GRAPH LIVENESS OK" || ban "GRAPH LIVENESS FAILED"
+    exit $rc ;;
+  lazyprobe)
+    # THE ONLY THING THAT CAN SEE LAZINESS. createDesktop runs only `if world.isIndexPage`, and the
+    # harness page + index-sw.html preset FIZZYGUM_EAGER_ALL_PARTS, so the SystemTest suite runs on a
+    # world where the desktop does not exist and nothing is lazy: a green gauntlet is NOT evidence
+    # that an on-demand path works. It shipped four broken doors, a five-of-six palette and a
+    # two-content-lists toolbar in one day before this existed.
+    # The same script runs as part of the gauntlet's `parts` leg, where it SAMPLES three icons for
+    # the per-click isolation check; here it does all of them.
+    ( cd "$FT" && node scripts/parts-lazy-icons-headless.js --exhaustive ) ;;
+
+  hypopart)
+    # "What if these files were a part?" -- answered with the build gate's OWN classifier
+    # (buildSystem/lib/part-edge-scan.js), never a grep: it strips comments and string literals,
+    # and prose naming a class has produced false hits in two separate arcs.
+    [ $# -gt 0 ] || { echo "usage: fg hypopart <file-or-dir>...   (paths relative to Fizzygum/)"; exit 2; }
+    ( cd "$FZ" && node buildSystem/hypothetical-part.js "$@" ) ;;
+
+  whatpins)
+    # The companion question to hypopart's. hypopart asks "would THIS grouping work"; this asks
+    # "what should I be grouping at all" -- by walking the boot path instead of asking who names
+    # whom, which is the hop pinned-by-lazy-parts.js cannot make (it reads one level, over the
+    # partition as it stands, so a lazy class two hops behind an eager one reads back "must not
+    # move" -- which is how 9.5 KB of C-F icon art stayed in production until it was spotted by eye).
+    # NOT a gate: section 2 ranks design questions, and most of its answers are "no, that is core".
+    ( cd "$FZ" && node buildSystem/what-pins-core.js "$@" ) ;;
+
+  fingerprint)
+    # MEASURE a packaging change instead of estimating it: build <profile> at a BASELINE ref in a
+    # throwaway sibling worktree, build it again from the working tree, and diff the fingerprints.
+    #
+    # WARN THE TRAP THIS EXISTS TO REMOVE. Fizzygum-tests must be a real WORKTREE, never a symlink:
+    # generate-pre-compiled-headless.js and build-tree-fingerprint.js both resolve their paths from
+    # __dirname, so through a symlink they address the REAL build tree while the build addresses the
+    # baseline one. Doing that by hand once produced a void measurement AND silently overwrote
+    # Fizzygum-builds/latest -- with no error at all. Only node_modules is symlinked.
+    prof="${1:-homepage}"; base="${2:-HEAD}"
+    BASEDIR="$ROOT/../Fizzygum-fingerprint-baseline"
+    verdict_start fingerprint
+    rm -rf "$BASEDIR"
+    git -C "$FZ" worktree prune; git -C "$FT" worktree prune
+    mkdir -p "$BASEDIR/Fizzygum-builds"
+    git -C "$FZ" worktree add --detach "$BASEDIR/Fizzygum" "$base" >/dev/null 2>&1 \
+      || { echo "fg fingerprint: cannot create a worktree of Fizzygum at '$base'"; verdict_end fingerprint 1 "FAILED — worktree"; exit 1; }
+    git -C "$FT" worktree add --detach "$BASEDIR/Fizzygum-tests" HEAD >/dev/null 2>&1 \
+      || { echo "fg fingerprint: cannot create a worktree of Fizzygum-tests"; verdict_end fingerprint 1 "FAILED — worktree"; exit 1; }
+    ln -sfn "$FT/node_modules" "$BASEDIR/Fizzygum-tests/node_modules"
+
+    OUT="$FT/.scratch/fingerprints"; mkdir -p "$OUT"
+    ban "fingerprint: building '$prof' at BASELINE $base"
+    ( cd "$BASEDIR/Fizzygum" && ./build_it_please.sh --profile "$prof" ) >/tmp/fg-fingerprint-base.log 2>&1 \
+      || { echo "fg fingerprint: baseline build FAILED — see /tmp/fg-fingerprint-base.log"; verdict_end fingerprint 1 "FAILED — baseline build"; exit 1; }
+    ( cd "$BASEDIR/Fizzygum-tests" && node scripts/build-tree-fingerprint.js write "$OUT/base-$prof.txt" ) || exit 1
+
+    ban "fingerprint: building '$prof' from the WORKING TREE"
+    ( cd "$FZ" && ./build_it_please.sh --profile "$prof" ) >/tmp/fg-fingerprint-cand.log 2>&1 \
+      || { echo "fg fingerprint: candidate build FAILED — see /tmp/fg-fingerprint-cand.log"; verdict_end fingerprint 1 "FAILED — candidate build"; exit 1; }
+    ( cd "$FT" && node scripts/build-tree-fingerprint.js write "$OUT/cand-$prof.txt" ) || exit 1
+
+    ban "fingerprint: $prof — BASELINE ($base) vs WORKING TREE"
+    ( cd "$FT" && node scripts/build-tree-fingerprint.js compare "$OUT/base-$prof.txt" "$OUT/cand-$prof.txt" ); drc=$?
+    git -C "$FZ" worktree remove --force "$BASEDIR/Fizzygum" >/dev/null 2>&1
+    git -C "$FT" worktree remove --force "$BASEDIR/Fizzygum-tests" >/dev/null 2>&1
+    rm -rf "$BASEDIR"
+    ban "fingerprint: the build tree now holds '$prof' — run 'fg build' to restore the dev tree"
+    # A DIFFERENCE IS THE POINT here, so a non-zero compare is not a failure: the verdict records
+    # that the measurement RAN. Read the diff.
+    verdict_end fingerprint 0 "OK — compared $prof (differences: $([ $drc -eq 0 ] && echo none || echo yes))" ;;
+
+  lint)
+    run_lint || exit 1 ;;
+  stinks)
+    # The check-stinks ratchet, callable directly (its comment-* rules are the comments-side twin
+    # of doc-narration). `fg stinks` = the full ratchet report the build runs; `fg stinks --list
+    # <id>` enumerates one stink's sites (a sweep enumerator, e.g. --list comment-past-receipt).
+    # Instant + read-only, so no verdict file.
+    ( cd "$FZ" && node buildSystem/check-stinks.js "$@" ) || exit 1 ;;
+  doc-narration)
+    # The docs-side twin of the `comment-narration` stink. RATCHET over the PRESENT-TENSE doc
+    # buckets only (architecture/ + tooling/): specs/ is excluded by owner direction (a spec's
+    # change statements are load-bearing), and plans/ archive/ measurements/ are chronological
+    # by design. Fails when a file's narration count RISES, and on any closed item left in
+    # docs/BACKLOG.md (a hard zero). --full lists every line; --write-baseline banks an
+    # improvement. Exit 2 = INVALID (it read nothing), kept as 2. Instant + read-only, so no
+    # verdict file.
+    ( cd "$FZ" && node buildSystem/check-doc-narration.js "$@" ) || exit $? ;;
+  status)
+    # One-shot session/post-compaction re-orientation (dev-workflow plan P5). READ-ONLY.
+    echo "fg status — $(date '+%F %T')"
+    for r in Fizzygum Fizzygum-tests Fizzygum-builds; do
+      d="$ROOT/$r"
+      b=$(git -C "$d" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')
+      sha=$(git -C "$d" rev-parse --short HEAD 2>/dev/null || echo '?')
+      dirty=$(git -C "$d" status --porcelain 2>/dev/null | grep -c .)
+      ab=$(git -C "$d" rev-list --left-right --count "origin/$b...HEAD" 2>/dev/null | awk '{print "behind="$1" ahead="$2}')
+      printf '  %-16s %s @ %s  dirty=%s  %s\n' "$r" "$b" "$sha" "$dirty" "${ab:-(no origin tracking)}"
+    done
+    BUILT="$ROOT/Fizzygum-builds/latest/index.html"
+    if [ ! -f "$BUILT" ]; then echo "  build: MISSING (no $BUILT)"
+    else
+      # the sources the build compiles: src and the harness (Fizzygum/buildSystem/lib/source-files.js)
+      newer=$(find "$FZ/src" "$ROOT/Fizzygum-tests/Automator-and-test-harness-src" -name '*.coffee' -newer "$BUILT" 2>/dev/null | head -3)
+      if [ -n "$newer" ]; then echo "  build: STALE — newer source, e.g.:"; echo "$newer" | sed 's/^/           /'
+      else echo "  build: FRESH (built $(date -r "$BUILT" '+%F %T'))"; fi
+    fi
+    echo "  tests: $(ls "$FT/tests" 2>/dev/null | grep -c '^SystemTest_') SystemTests"
+    echo "  zombie test browsers: $(pgrep -f 'Chrome for Testing|chrome-headless|puppeteer|webkit' 2>/dev/null | grep -c .)   (fg killz clears)"
+    echo "  fg verdicts:"
+    found=0
+    for v in /tmp/fg-*.verdict; do [ -f "$v" ] || continue; found=1; printf '    %-24s %s\n' "$(basename "$v" .verdict)" "$(cat "$v")"; done
+    if [ $found -eq 0 ]; then echo "    (none)"; fi
+    ;;
+  critique)
+    # The Critic Browser analogue (lint-generic-rules-carryover-plan Phase 5): ONE read-only view of
+    # the whole ADVISORY tier + every "you could tighten a ratchet now" signal. Nothing here gates and
+    # nothing here writes; the gates themselves run on the build. Deliberately EXCLUDES jscpd/jsinspect
+    # (minutes-slow — they stay on-demand via Fizzygum/find_duplicated_code.sh / find_similar_code.sh).
+    echo "fg critique — $(date '+%F %T')   [ADVISORY — nothing here gates]"
+    t0=$(date +%s)
+    step(){ # step <label> <cmd…> : run it, print the lines worth seeing, time it
+      local label="$1"; shift
+      local s=$(date +%s) out
+      out=$( cd "$FZ" && "$@" 2>&1 )
+      printf '\n── %s (%ss)\n' "$label" "$(( $(date +%s) - s ))"
+      echo "$out" | grep -vE '^\s*$' | sed 's/^/   /'
+    }
+    # 1-3: the ratchets — reprint only the "tighten me" / stale-entry NOTEs and the summaries
+    step "stinks — tighten?" bash -c "node ./buildSystem/check-stinks.js | grep -E 'UNDER|NOTE|OK --' || true"
+    step "dead-methods — stale allowlist?" bash -c "node ./buildSystem/check-dead-methods.js | grep -E 'NOTE|OK —' || true"
+    step "unresolved-sends — stale allowlist?" bash -c "node ./buildSystem/check-unresolved-sends.js | grep -E 'NOTE|OK —' || true"
+    step "call-separation — tighten?" bash -c "node ./buildSystem/check-call-separation.js | grep -E 'NOTE|OK —' || true"
+    # 4-6: the advisory censuses — summary counts only ( --full for the lists )
+    step "census: public/private self-calls" bash -c "node ./buildSystem/census-public-private-calls.js | grep -E '^(stats|by callee class|hard sites|total|narrowed)' || true"
+    step "census: hierarchy duplication" bash -c "node ./buildSystem/census-hierarchy-duplication.js | grep -E '^(scanned|IDENTICAL)' || true"
+    step "census: property placement" bash -c "node ./buildSystem/census-property-placement.js | grep -E '^(scanned|PULL-UP:)|withheld' || true"
+    # widget-practices conformance: the ADVISORY view. Its two ratcheted facets also run as
+    # `--gate` on the build; the other four are heuristics that must never gate. Both baselines
+    # are FLOORS, so a green ratchet is not an empty inventory.
+    step "census: widget conformance" bash -c "node ./buildSystem/census-widget-conformance.js | grep -E '^(\[widget-conformance\]|RATCHETED|ADVISORY|  [0-9]\.)' || true"
+    # 7: call arguments — the GATE's own verdict line (holes, extra arguments, positionals into options;
+    # every call in both repos, exact zero; it also runs on every build). `--values` on it lists the
+    # absences it judges values; the call-site queries are census-call-arity.js's (`<Class…>`, --super=, --call=).
+    step "call arguments (the gate's verdict)" bash -c "node ./buildSystem/check-call-arguments.js | grep -E '^\[call-arguments\]' || true"
+    printf '\n── total %ss\n' "$(( $(date +%s) - t0 ))"
+    echo "advisory only — nothing here gates; see Fizzygum/docs/archive/lint-generic-rules-carryover-plan.md"
+    echo "  lists: add --full to any census; machine-readable: --json <file>"
+    ;;
+  killz)
+    kill_browsers; echo "killed leftover headless test browsers (Chrome for Testing / chrome-headless / puppeteer / webkit)" ;;
+  *) usage ;;
+esac

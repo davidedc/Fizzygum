@@ -26,8 +26,8 @@
  *       to call from the in-world Object Inspector / scripting) goes in
  *       buildSystem/public-api-allowlist.txt (name + reason — the dead-method-allowlist idiom); an
  *       entry that is no longer a self-only public method FAILS as stale (STALE_ALLOWLIST_ENTRY).
- *       NEEDS the sibling Fizzygum-tests repo for a sound reference set: SKIPS (never false-fails)
- *       when it is absent (e.g. a production build), exactly like check-dead-methods.js.
+ *       Its reference set includes the sibling Fizzygum-tests repo, which every build requires —
+ *       a production one included — exactly like check-dead-methods.js.
  *
  * Relationship to the other gates: [A]/[G] (check-layering) ban the DIRECT low-level→settling
  * calls; [S] extends the ban to transitively-settling and effectful callees — closing the one-hop
@@ -97,33 +97,30 @@ checkRatchet('SETTLING', sSettling, BASELINE_S_SETTLING, 'settling command (it o
 checkRatchet('EFFECTFUL', sEffectful, BASELINE_S_EFFECTFUL, 'effectful command', (text) => rules.fired('S_EFFECTFUL_SELF_CALL', text));
 
 // ---------- [U] ----------
-let uMsg = 'SKIPPED (sibling Fizzygum-tests not present — needs its reference set)';
-if (census.R4) {
-  const allow = new Set(readAllowlist(ALLOWLIST).keys());
-  const candidates = census.R4.filter(r => !allow.has(r.name));
-  const uEff = candidates.filter(r => r.effectful);
-  const uQry = candidates.filter(r => !r.effectful);
-  // a STALE entry — no longer a self-only public method — excuses nothing today and would excuse the next
-  // self-only public method of that name, so it FAILS (STALE_ALLOWLIST_ENTRY)
-  const stale = [...allow].filter(n => !census.R4.some(r => r.name === n));
-  if (stale.length) {
-    problems.push(`[U] ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in buildSystem/public-api-allowlist.txt (delete each):`);
-    for (const n of stale) problems.push(rules.fired('U_STALE_ALLOWLIST_ENTRY', `    STALE_ALLOWLIST_ENTRY ${n} — no longer a self-only public method (it gained a reference that is not an @-self call, went _-tier, or was deleted)`));
-  }
-  if (uEff.length > BASELINE_U_EFFECTFUL) {
-    problems.push(rules.fired('U_EFFECTFUL_SELF_ONLY', `[U] EFFECTFUL self-only public methods: ${uEff.length} EXCEEDS the baseline ${BASELINE_U_EFFECTFUL} — a NEW public command is referenced only by @-self calls, i.e. it is not external API. Name it _-tier from the start (or, if it is deliberate end-user API for the in-world inspector/scripting, add it to buildSystem/public-api-allowlist.txt with a reason).`));
-    const newest = uEff.slice(0, 10).map(r => `${r.name} (${r.defs.slice(0, 3).join(', ')})`);
-    problems.push(`    candidates include: ${newest.join('; ')}  — run  node ./buildSystem/census-public-private-calls.js --full  to identify the new one`);
-  } else if (uEff.length < BASELINE_U_EFFECTFUL) {
-    notes.push(`[U] EFFECTFUL: ${uEff.length} < baseline ${BASELINE_U_EFFECTFUL} — tighten BASELINE_U_EFFECTFUL to lock the gain.`);
-  }
-  if (uQry.length > BASELINE_U_QUERY) {
-    problems.push(rules.fired('U_QUERY_SELF_ONLY', `[U] QUERY self-only public methods: ${uQry.length} EXCEEDS the baseline ${BASELINE_U_QUERY} — a NEW public query is referenced only by @-self calls. Name it _-tier from the start (or allowlist deliberate end-user API).`));
-  } else if (uQry.length < BASELINE_U_QUERY) {
-    notes.push(`[U] QUERY: ${uQry.length} < baseline ${BASELINE_U_QUERY} — tighten BASELINE_U_QUERY to lock the gain.`);
-  }
-  uMsg = `${uEff.length}/${BASELINE_U_EFFECTFUL} effectful + ${uQry.length}/${BASELINE_U_QUERY} query self-only public methods (${allow.size} allowlisted)`;
+const allow = new Set(readAllowlist(ALLOWLIST).keys());
+const candidates = census.R4.filter(r => !allow.has(r.name));
+const uEff = candidates.filter(r => r.effectful);
+const uQry = candidates.filter(r => !r.effectful);
+// a STALE entry — no longer a self-only public method — excuses nothing today and would excuse the next
+// self-only public method of that name, so it FAILS (STALE_ALLOWLIST_ENTRY)
+const stale = [...allow].filter(n => !census.R4.some(r => r.name === n));
+if (stale.length) {
+  problems.push(`[U] ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in buildSystem/public-api-allowlist.txt (delete each):`);
+  for (const n of stale) problems.push(rules.fired('U_STALE_ALLOWLIST_ENTRY', `    STALE_ALLOWLIST_ENTRY ${n} — no longer a self-only public method (it gained a reference that is not an @-self call, went _-tier, or was deleted)`));
 }
+if (uEff.length > BASELINE_U_EFFECTFUL) {
+  problems.push(rules.fired('U_EFFECTFUL_SELF_ONLY', `[U] EFFECTFUL self-only public methods: ${uEff.length} EXCEEDS the baseline ${BASELINE_U_EFFECTFUL} — a NEW public command is referenced only by @-self calls, i.e. it is not external API. Name it _-tier from the start (or, if it is deliberate end-user API for the in-world inspector/scripting, add it to buildSystem/public-api-allowlist.txt with a reason).`));
+  const newest = uEff.slice(0, 10).map(r => `${r.name} (${r.defs.slice(0, 3).join(', ')})`);
+  problems.push(`    candidates include: ${newest.join('; ')}  — run  node ./buildSystem/census-public-private-calls.js --full  to identify the new one`);
+} else if (uEff.length < BASELINE_U_EFFECTFUL) {
+  notes.push(`[U] EFFECTFUL: ${uEff.length} < baseline ${BASELINE_U_EFFECTFUL} — tighten BASELINE_U_EFFECTFUL to lock the gain.`);
+}
+if (uQry.length > BASELINE_U_QUERY) {
+  problems.push(rules.fired('U_QUERY_SELF_ONLY', `[U] QUERY self-only public methods: ${uQry.length} EXCEEDS the baseline ${BASELINE_U_QUERY} — a NEW public query is referenced only by @-self calls. Name it _-tier from the start (or allowlist deliberate end-user API).`));
+} else if (uQry.length < BASELINE_U_QUERY) {
+  notes.push(`[U] QUERY: ${uQry.length} < baseline ${BASELINE_U_QUERY} — tighten BASELINE_U_QUERY to lock the gain.`);
+}
+const uMsg = `${uEff.length}/${BASELINE_U_EFFECTFUL} effectful + ${uQry.length}/${BASELINE_U_QUERY} query self-only public methods (${allow.size} allowlisted)`;
 
 for (const n of notes) console.log('[call-separation] NOTE — ' + n);
 if (problems.length) {

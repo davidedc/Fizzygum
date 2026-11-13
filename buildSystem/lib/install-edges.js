@@ -40,14 +40,14 @@
  *
  * `installEdges(roots)` returns one record per edge, in boot order:
  *     { support, target, supportFile, bootLine, members: [{ name, isStatic }] }
- * A support class whose file is absent (the sibling tests repo is not checked out) yields NO edge;
- * `harnessPresent(testsRepo)` is how a caller tells that case apart from "nothing is installed" and skips.
+ * A support class no compiled source defines is refused like an unmodeled body: the harness is always read (every
+ * build requires the sibling tests repo), so an edge naming nothing is a stale boot line, never a repo left out.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { coffeeMask } = require('./coffee-mask');
-const { compiledFiles, harnessFiles, SRC, TESTS_REPO } = require('./source-files');
+const { compiledFiles, SRC, TESTS_REPO } = require('./source-files');
 
 // `roots` is the gate's { src, testsRepo } (lib/source-files.js sourceRoots: default this umbrella's trees; a gate's
 // --src= / --tests-repo= rails hand it planted copies). Boot's edges are read from src, the support classes from the
@@ -58,8 +58,6 @@ const BOOT_GLOBALS = bootGlobalsOf(SRC);
 const EDGE = /\b([A-Za-z_]\w*)\.installOnto\s+([A-Za-z_]\w*)/g;
 // a class-body key at the class-body indent: `name:` (prototype) or `@name:` (class side)
 const CLASS_BODY_KEY = /^  (@?)([A-Za-z_$][\w$]*)\s*:(?!:)/;
-
-const harnessPresent = (testsRepo = TESTS_REPO) => harnessFiles(testsRepo) !== undefined;
 
 // One class per file, filename = class name, so a support class is found by its basename in either
 // tree the build draws classes from.
@@ -144,7 +142,7 @@ function installEdges({ src = SRC, testsRepo = TESTS_REPO } = {}) {
     EDGE.lastIndex = 0;
     while ((e = EDGE.exec(code)) !== null) {
       const supportFile = fileOfClass(e[1], { src, testsRepo });
-      if (!supportFile) continue;           // its repo is not checked out -- see harnessPresent()
+      if (!supportFile) throw new Error(`${e[1]} is installed at boot (${bootGlobals}:${i + 1}) but no compiled source defines it -- src and the tests repo's harness were both read`);
       edges.push({ support: e[1], target: e[2], supportFile, bootLine: i + 1,
                    members: installedMembersOf(e[1], e[2], supportFile, drift) });
     }
@@ -158,4 +156,4 @@ function installEdges({ src = SRC, testsRepo = TESTS_REPO } = {}) {
   return edges;
 }
 
-module.exports = { installEdges, harnessPresent, BOOT_GLOBALS };
+module.exports = { installEdges, BOOT_GLOBALS };

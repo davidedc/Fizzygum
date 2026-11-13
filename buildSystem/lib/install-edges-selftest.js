@@ -2,8 +2,8 @@
 // install-edges-selftest.js — lib/install-edges.js on a miniature src written to a temp dir: an edge is read from
 // boot's code alone (one after a string holding a `#` is an edge; one named in a string is none), a support class's
 // keys are read past a heregex holding `'''`, its statics list is read to its closing bracket (not to a `]` in a
-// comment), and a statics list that disagrees with the class's own statics is refused. Run by
-// buildSystem/run-selftests.js on every build.
+// comment), a statics list that disagrees with the class's own statics is refused, and so is an edge naming a support
+// class no compiled source defines. Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -49,5 +49,8 @@ got = outcome(srcWith([EDGE], [...COPIES, ...STATICS, '  @bpUnlisted: 2']));
 t.check(/^THROWS [\s\S]*\n  UNLISTED_STATIC BpSupport\.bpUnlisted — /.test(got), 'a static the list leaves out is refused', got);
 got = outcome(srcWith([EDGE], ['  @installOnto: (target) -> target.bp = 1', '  bpMember: -> 1']));
 t.check(/^THROWS BpSupport\.installOnto copies neither its prototype nor @staticMembersToInstall/.test(got), 'an installOnto of another shape is refused', got);
+got = outcome(srcWith([EDGE, '  BpGhost.installOnto Widget if BpGhost?'], [...COPIES, '  bpMember: -> 1']));
+t.check(/^THROWS BpGhost is installed at boot \(.*globalFunctions\.coffee:3\) but no compiled source defines it/.test(got),
+  'an edge naming a support class no compiled source defines is refused, never dropped', got);
 fs.rmSync(root, { recursive: true, force: true });
 t.done();

@@ -22,16 +22,14 @@
 // anything else, which ends the attempt (a list holding any non-literal is not a pure string list).
 // A `[` inside a comment opens nothing: prose may quote a list.
 //
-// WHAT IT SCANS. The Fizzygum half: src/**/*.coffee and buildSystem/**/*.{js,py}. The tests half, when
-// the sibling Fizzygum-tests repo is present: scripts/**/*.js and Automator-and-test-harness-src/**/*.coffee.
+// WHAT IT SCANS. The Fizzygum half: src/**/*.coffee and buildSystem/**/*.{js,py}. The tests half, from the
+// sibling Fizzygum-tests repo (every build requires it): scripts/**/*.js and Automator-and-test-harness-src/**/*.coffee.
 // The .coffee files are the compiled sources as lib/source-files.js lists them (srcFiles, harnessFiles: every
 // one, refusing a symlink); the .js/.py files are the tooling's own (lib/what-runs.js scriptFiles: never a dot entry
 // such as `.scratch`, a node_modules or a __pycache__, a symlink refused). The tests repo's tests/ is skipped —
 // macro sources are test CONTENT, held by that repo's own gates. Its self-test file
 // (check-hand-lists-selftest.js) is skipped as well: its corpus is made of exactly the lists this hunts, so
 // scanning it would count the fixtures.
-// Without the tests repo the tests half SKIPS and says so, as check-dead-methods.js and
-// check-part-edges.js do.
 //
 // THE NAME UNIVERSE. CLASS names: the basename of every .coffee file under Fizzygum/src and the harness
 // (one class per file, filename = class name; src/boot's files count too, and name boot sources).
@@ -63,7 +61,7 @@
 // HOW A SANCTION'S GUARD IS RESOLVED — mechanically, and the guard must RUN, because a guard nothing runs
 // can never fail (docs/archive/unrun-checks-plan.md). At least one of:
 //   (a) the basename of a gate or rig file that RUNS: one lib/what-runs.js reaches from the build
-//       (build_it_please.sh), a discovered self-test, or a presuite/gauntlet leg of the umbrella's fg, by an
+//       (build_it_please.sh), a discovered self-test, or a presuite/gauntlet leg of fg, by an
 //       invocation — never a mention. Candidates are Fizzygum/buildSystem/*.js and lib/*.js,
 //       build_it_please.sh, and every .js or .sh under Fizzygum-tests/scripts. This file does not count:
 //       it checks that a list is examined, never current;
@@ -80,13 +78,9 @@
 //   SANCTION_EMPTY; one that sanctions no name list fails as SANCTION_STALE (the list moved, became a
 //   declaration, or was derived away, and a marker that sanctions nothing reads to the next author as if
 //   it did). ⚠ Resolution proves the guard RUNS, not that it covers the list: it makes the author name
-//   what fails, which a reviewer can then check; it cannot check it for them.
-//   Undecidable on this checkout, so listed UNVERIFIED in a NOTE rather than failed:
-//   - without the tests repo, a Fizzygum-half sanction resolving no guard, or above a list that reads as
-//     data — the guard it names may live there, and so may the harness classes that make it a name list;
-//   - without the umbrella's fg (a bare clone of the repos), a sanction whose guards exist but are not
-//     seen to run — they may run in a leg (`--fg=<path>` reads another fg, or none).
-//   One above a line where no list opens at all is SANCTION_STALE on every checkout.
+//   what fails, which a reviewer can then check; it cannot check it for them. Every sanction is decidable:
+//   both halves are always read, and so is every guard universe (the build requires the tests repo, and
+//   fg, whose legs say what runs at a commit point, is versioned beside the build).
 //
 // THE RATCHET (the check-stinks.js idiom). BASELINE_FIZZYGUM and BASELINE_TESTS cap the UNSANCTIONED
 // name lists per repo. Above its baseline a repo FAILS, printing every unsanctioned list it holds; below
@@ -109,7 +103,6 @@
 //       a census, never a gate
 //   node buildSystem/check-hand-lists.js --files <path…>  only the given files; there EVERY unsanctioned
 //       name list is a violation (no ratchet), so a plant fails exactly
-//   --fg=<path>  read that file as the umbrella's fg (a path that does not exist = none: the bare-clone view)
 // Its self-test, an in-memory corpus showing each direction bite, is check-hand-lists-selftest.js (run by
 // buildSystem/run-selftests.js on every build).
 
@@ -117,9 +110,9 @@ const fs = require('fs');
 const path = require('path');
 const { testNames } = require('./lib/tests-repo-code');
 const { rejectUnknownArgs } = require('./lib/cli-args');
-const { srcFiles, harnessFiles, compiledFiles, sourceRoots, SOURCE_RAILS, HARNESS_DIR } = require('./lib/source-files');
+const { srcFiles, harnessFiles, compiledFiles, sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
-// the four failing sanction tokens; SANCTION_UNVERIFIED is a note, never a rule
+// the four failing sanction tokens
 rules.declare(['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS', 'SANCTION_EMPTY', 'SANCTION_STALE']);
 const { runSet, scriptFiles, DEFAULT_LAYOUT: WHAT_RUNS_LAYOUT } = require('./lib/what-runs');
 
@@ -127,7 +120,7 @@ const FIZZYGUM = path.resolve(__dirname, '..');
 const UMBRELLA = path.resolve(FIZZYGUM, '..');
 const BUILD_SYSTEM = path.join(FIZZYGUM, 'buildSystem');
 // main() reads the --src= / --tests-repo= rails (lib/source-files.js sourceRoots) and places the tests repo's parts
-let ROOTS, HARNESS, SCRIPTS, TEST_DIRS;
+let ROOTS, SCRIPTS, TEST_DIRS;
 const SELF = path.resolve(__filename);
 const SELF_TEST_CORPUS = path.join(BUILD_SYSTEM, 'check-hand-lists-selftest.js');
 
@@ -350,11 +343,8 @@ function declarationKeyOf(file, list) {
 }
 
 // files: analysed [{ rel, repo, ext, lines, layout, lists, markers }]. guards: { exists, runs } (each
-// { gateFiles, testDirs, tokens }), complete (false when the tests repo is absent, so the name universe lacks
-// the harness classes and the guard universe lacks the rigs) and runsKnown (false when the umbrella's fg is
-// absent, so the commit-point legs cannot be read and "never runs" cannot be decided). Returns every list
-// with its classification and state, every resolved sanction, and every marker problem (`note: true` =
-// reported, not failed).
+// { gateFiles, testDirs, tokens }). Returns every list with its classification and state, every resolved
+// sanction, and every marker problem (each one a failure).
 function evaluate(files, universe, guards) {
   const lists = [], problems = [], sanctions = [];
   for (const f of files) {
@@ -371,28 +361,16 @@ function evaluate(files, universe, guards) {
       if (!listsOnLine.has(l.line)) listsOnLine.set(l.line, []);
       listsOnLine.get(l.line).push(rec);
     }
-    // what cannot be decided on this checkout: the harness classes that make a list a name list, or the
-    // guard a sanction names, may both live in the absent tests repo
-    const undecidable = !guards.complete && f.repo !== 'tests';
     for (const mk of f.markers) {
       const at = { file: f, line: mk.line, text: mk.text };
       if (!mk.head) { problems.push({ token: 'SANCTION_EMPTY', ...at }); continue; }
       const onTarget = (mk.target && listsOnLine.get(mk.target)) || [];
-      if (!onTarget.some(r => r.state === 'SANCTIONED')) {
-        const maybeLive = undecidable && onTarget.some(r => r.state === '-');
-        problems.push(maybeLive ? { token: 'SANCTION_UNVERIFIED', note: true, ...at } : { token: 'SANCTION_STALE', ...at });
-        continue;
-      }
+      if (!onTarget.some(r => r.state === 'SANCTIONED')) { problems.push({ token: 'SANCTION_STALE', ...at }); continue; }
       const { runs, exists } = resolveGuard(mk.text, guards);
       sanctions.push({ ...at, target: mk.target, via: runs, neverRun: exists.filter(g => !runs.includes(g)) });
       if (runs.length) continue;
-      if (exists.length) {
-        problems.push(guards.runsKnown && !undecidable
-          ? { token: 'SANCTION_GUARD_NEVER_RUNS', names: exists, ...at }
-          : { token: 'SANCTION_UNVERIFIED', note: true, ...at });
-        continue;
-      }
-      problems.push(undecidable ? { token: 'SANCTION_UNVERIFIED', note: true, ...at } : { token: 'SANCTION_NAMES_NO_GUARD', ...at });
+      if (exists.length) { problems.push({ token: 'SANCTION_GUARD_NEVER_RUNS', names: exists, ...at }); continue; }
+      problems.push({ token: 'SANCTION_NAMES_NO_GUARD', ...at });
     }
   }
   return { lists, problems, sanctions };
@@ -416,18 +394,19 @@ function harvestUniverse(coffeeFiles) {
   return { classes, members };
 }
 
-// the names a sanction may cite as a guard file: buildSystem's .js files, build_it_please.sh, and the tests repo's
-// scripts' .js and .sh files when it is present — but this gate's own
-function gateFileNames(testsPresent) {
+// the names a sanction may cite as a guard file: buildSystem's .js files, build_it_please.sh, and (withTestsScripts) the
+// tests repo's scripts' .js and .sh files — but this gate's own. The gate always reads both; the engine's self-test
+// asks for the Fizzygum half alone, outside main(), where the tests repo's scripts directory is not yet set.
+function gateFileNames(withTestsScripts) {
   const names = new Set(['build_it_please.sh', ...toolingFiles(BUILD_SYSTEM, ['.js']).map(p => path.basename(p))]);
-  if (testsPresent) for (const p of toolingFiles(SCRIPTS, ['.js', '.sh'])) names.add(path.basename(p));
+  if (withTestsScripts) for (const p of toolingFiles(SCRIPTS, ['.js', '.sh'])) names.add(path.basename(p));
   names.delete(path.basename(SELF));
   return names;
 }
 
 // the tests (lib/tests-repo-code.js testNames, which refuses a tests tree it cannot read as tests)
-function testDirNames(testsPresent) {
-  return new Set(testsPresent ? testNames(TEST_DIRS) : []);
+function testDirNames() {
+  return new Set(testNames(TEST_DIRS));
 }
 
 function loadFile(abs, repo) {
@@ -448,7 +427,7 @@ function printProblems(problems) {
     SANCTION_EMPTY: 'the marker carries no text on its own line: say what fails if the list goes stale',
     SANCTION_STALE: 'it sanctions no name list — none opens on the line it reaches (its own when it trails code, else the first line below its comment block). The list moved, became a declaration or was derived away: move the marker, or delete it',
   };
-  for (const p of problems.filter(q => !q.note)) {
+  for (const p of problems) {
     console.error(rules.fired(p.token, `  ${p.token}  ${where(p)}  "${clip(p.text)}"`));
     console.error(`      ${say[p.token]}${p.names ? ` (named, never run: ${p.names.join(', ')})` : ''}`);
   }
@@ -456,12 +435,11 @@ function printProblems(problems) {
 
 function main(argv) {
   // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-hand-lists.js [--src=DIR]
-  // [--tests-repo=DIR] [--census] [--files <paths…>] [--fg=<path>] — the rails read another src tree for the Fizzygum
+  // [--tests-repo=DIR] [--census] [--files <paths…>] — the rails read another src tree for the Fizzygum
   // half, another tests repo for the tests half (a copy carrying a plant), and both for the name universe. That every
   // rule BITES, in both modes, is proven on every build by check-hand-lists-selftest.js.
-  rejectUnknownArgs(argv, ['--census', '--names-only', '--min=', '--files', '--fg=', ...SOURCE_RAILS], 'check-hand-lists');
+  rejectUnknownArgs(argv, ['--census', '--names-only', '--min=', '--files', ...SOURCE_RAILS], 'check-hand-lists');
   ROOTS = sourceRoots(argv.filter((a) => SOURCE_RAILS.some((r) => a.startsWith(r))), 'check-hand-lists');
-  HARNESS = path.join(ROOTS.testsRepo, HARNESS_DIR);
   SCRIPTS = path.join(ROOTS.testsRepo, 'scripts');
   TEST_DIRS = path.join(ROOTS.testsRepo, 'tests');
   const census = argv.includes('--census');
@@ -472,15 +450,12 @@ function main(argv) {
   const min = minArg ? Number(minArg.slice('--min='.length)) : 2;
   if (!Number.isInteger(min) || min < 1) fail(`--min wants a positive integer, got '${minArg}'`);
 
-  const testsPresent = fs.existsSync(SCRIPTS) && fs.existsSync(HARNESS);
   const halves = [];
   try {
     halves.push({ repo: 'fizzygum', label: 'Fizzygum', baseline: BASELINE_FIZZYGUM, paths: [
       ...srcFiles(ROOTS.src), ...toolingFiles(BUILD_SYSTEM, ['.js', '.py']).filter(p => path.resolve(p) !== SELF_TEST_CORPUS)] });
-    if (testsPresent) {
-      halves.push({ repo: 'tests', label: 'Fizzygum-tests', baseline: BASELINE_TESTS, paths: [
-        ...toolingFiles(SCRIPTS, ['.js']), ...harnessFiles(ROOTS.testsRepo)] });
-    }
+    halves.push({ repo: 'tests', label: 'Fizzygum-tests', baseline: BASELINE_TESTS, paths: [
+      ...toolingFiles(SCRIPTS, ['.js']), ...harnessFiles(ROOTS.testsRepo)] });
   } catch (e) { fail(e.message); }   // a tree the definitions refuse (SOURCE_/TOOLING_TREE_MALFORMED): nothing measured
   for (const h of halves) if (!h.paths.length) fail(`the ${h.label} half holds no file to scan — a gate that reads nothing certifies everything`);
 
@@ -499,29 +474,26 @@ function main(argv) {
   // WHAT RUNS (lib/what-runs.js): the scripts the build, the discovered self-tests and fg's legs launch. The
   // world's own sources (src, the harness) run when the suite runner does: a token one of them emits is failed
   // on by every suite leg (scripts/lib/gate-tokens.js), and every SystemTest_ directory is a test that leg plays.
-  const fgArg = argv.find(a => a.startsWith('--fg='));
   let ran;
   // the tests repo's scripts are the --tests-repo= rail's, the ones this gate reads
-  try { ran = runSet({ ...WHAT_RUNS_LAYOUT, tests: ROOTS.testsRepo, ...(fgArg ? { fg: path.resolve(fgArg.slice('--fg='.length)) } : {}) }); }
+  try { ran = runSet({ ...WHAT_RUNS_LAYOUT, tests: ROOTS.testsRepo }); }
   catch (e) { fail(e.message); }
   const runBasenames = new Set([...ran.files].map(f => path.basename(f)));
   const worldRuns = runBasenames.has('run-all-headless.js');
   // this gate's own tokens never vouch for a sanction: it checks that a list is examined, never that it is current
   const tokenFiles = universeFiles.filter(f => f.abs !== SELF);
-  const exists = { gateFiles: gateFileNames(testsPresent), testDirs: testDirNames(testsPresent), tokens: guardTokensOf(tokenFiles) };
+  const exists = { gateFiles: gateFileNames(true), testDirs: testDirNames(), tokens: guardTokensOf(tokenFiles) };
   const runs = { gateFiles: new Set([...exists.gateFiles].filter(n => runBasenames.has(n))),
                  testDirs: worldRuns ? exists.testDirs : new Set(),
                  // a world source is a .coffee file the WORLD compiles — src or the harness — never a --files plant, which
                  // would otherwise vouch for its own sanction through any token it prints
                  tokens: guardTokensOf(tokenFiles.filter(f => ran.files.has(f.abs) || (worldRuns && f.ext === '.coffee' && f.repo !== 'given'))) };
-  const guards = { exists, runs, complete: testsPresent, runsKnown: ran.fgPresent };
+  const guards = { exists, runs };
   const checked = given ? givenFiles : treeFiles;
   const { lists, problems, sanctions } = evaluate(checked, universe, guards);
 
-  if (census) return printCensus(lists, sanctions, problems, { min, namesOnly: argv.includes('--names-only'), testsPresent });
+  if (census) return printCensus(lists, sanctions, problems, { min, namesOnly: argv.includes('--names-only') });
 
-  const failures = problems.filter(p => !p.note);
-  const notes = problems.filter(p => p.note);
   const nameLists = lists.filter(l => l.isName);
   const countOf = (ls, state) => ls.filter(l => l.state === state).length;
   let over = false;
@@ -536,7 +508,7 @@ function main(argv) {
       console.error(`\n[hand-lists] FAIL — ${unsanctioned.length} unsanctioned name list(s) (with --files every one is a violation):`);
       for (const l of unsanctioned) console.error(rules.fired('UNSANCTIONED_NAME_LIST', `  UNSANCTIONED_NAME_LIST  ${where(l)}  [${preview(l.items)}]`));
     }
-    console.log(`[hand-lists] ${over || failures.length ? '' : 'OK — '}${checked.length} given file(s): ${counts}.`);
+    console.log(`[hand-lists] ${over || problems.length ? '' : 'OK — '}${checked.length} given file(s): ${counts}.`);
   } else {
     const summary = [];
     for (const h of halves) {
@@ -548,8 +520,7 @@ function main(argv) {
         over = true;
         console.error(`\n[hand-lists] FAIL — ${h.label} holds ${unsanctioned.length} unsanctioned name list(s), over its baseline of ${h.baseline}. Every one:`);
         for (const l of unsanctioned) console.error(rules.fired('OVER_BASELINE', `  ${where(l)}  [${preview(l.items)}]`));
-      } else if (unsanctioned.length < h.baseline && testsPresent) {
-        // (without the harness classes some lists read as data, so a lower count there is no gain to bank)
+      } else if (unsanctioned.length < h.baseline) {
         console.log(`[hand-lists] NOTE — ${h.label} is at ${unsanctioned.length} unsanctioned name list(s), below its baseline of ${h.baseline}: tighten BASELINE_${h.repo.toUpperCase()} in buildSystem/check-hand-lists.js to lock the gain in.`);
       }
     }
@@ -558,27 +529,21 @@ function main(argv) {
       console.error('naming the guard that fails:  # hand-list-sanctioned: <the gate, rig, SystemTest or token that fails when it goes stale>');
       console.error('on the line holding its `[` or directly above it (`//` in .js).');
     }
-    if (!testsPresent) console.log('[hand-lists] tests half SKIPPED — sibling Fizzygum-tests not present (its scripts and harness are not checked, and the Fizzygum half is classified without the harness classes).');
-    if (!over && !failures.length) {
+    if (!over && !problems.length) {
       console.log(`[hand-lists] OK — ${treeFiles.length} file(s), universe ${universe.classes.size} class(es) + ${universe.members.size} member name(s); ${summary.join('; ')}.`);
     } else {
       console.log(`[hand-lists] ${summary.join('; ')}.`);
     }
   }
 
-  if (notes.length) {
-    const absent = [!testsPresent && 'the Fizzygum-tests repo', !ran.fgPresent && "the umbrella's fg (whose legs say what runs at a commit point)"].filter(Boolean).join(' and ');
-    console.log(`[hand-lists] NOTE — ${notes.length} sanction(s) UNVERIFIED: the guard each names, or the classes that make its list a name list, cannot be judged without ${absent}:`);
-    for (const n of notes) console.log(`  ${where(n)}  "${clip(n.text)}"`);
+  if (problems.length) {
+    console.error(`\n[hand-lists] FAIL — ${problems.length} sanction marker(s) are wrong (never ratcheted):`);
+    printProblems(problems);
   }
-  if (failures.length) {
-    console.error(`\n[hand-lists] FAIL — ${failures.length} sanction marker(s) are wrong (never ratcheted):`);
-    printProblems(failures);
-  }
-  return over || failures.length ? 1 : 0;
+  return over || problems.length ? 1 : 0;
 }
 
-function printCensus(lists, sanctions, problems, { min, namesOnly, testsPresent }) {
+function printCensus(lists, sanctions, problems, { min, namesOnly }) {
   const order = { CLASSES: 0, MEMBERS: 1, MIXED: 2, other: 3 };
   const shown = lists.filter(l => l.items.length >= min && (!namesOnly || l.isName))
     .sort((a, b) => order[a.kind] - order[b.kind] || a.file.rel.localeCompare(b.file.rel) || a.line - b.line);
@@ -593,7 +558,7 @@ function printCensus(lists, sanctions, problems, { min, namesOnly, testsPresent 
       console.log(`  ${where(s)} -> line ${s.target}  guard: ${s.via.length ? s.via.join(', ') : 'NONE THAT RUNS'}` +
         `${s.neverRun.length ? `  (named, never run: ${s.neverRun.join(', ')})` : ''}  "${clip(s.text)}"`);
     }
-    for (const p of problems) if (!['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS', 'SANCTION_UNVERIFIED'].includes(p.token)) console.log(`  ${where(p)}  ${p.token}  "${clip(p.text)}"`);
+    for (const p of problems) if (!['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS'].includes(p.token)) console.log(`  ${where(p)}  ${p.token}  "${clip(p.text)}"`);
   }
   const all = lists.filter(l => l.items.length >= min);
   const kinds = Object.keys(order).map(k => `${all.filter(l => l.kind === k).length} ${k}`).join(', ');
@@ -603,8 +568,7 @@ function printCensus(lists, sanctions, problems, { min, namesOnly, testsPresent 
     const n = (s) => own.filter(l => l.state === s).length;
     return `${repo}: ${n('DECLARATION')} declaration / ${n('SANCTIONED')} sanctioned / ${n('UNSANCTIONED')} unsanctioned`;
   }).filter(Boolean);
-  console.log(`\n${all.length} string list(s) with ${min}+ items (${kinds}); name lists — ${perRepo.join('; ') || 'none'}` +
-    (testsPresent ? '' : ' (tests half SKIPPED: Fizzygum-tests absent)'));
+  console.log(`\n${all.length} string list(s) with ${min}+ items (${kinds}); name lists — ${perRepo.join('; ') || 'none'}`);
   return 0;
 }
 

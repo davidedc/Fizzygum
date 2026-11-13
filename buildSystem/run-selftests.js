@@ -47,10 +47,9 @@
 // (FIZZYGUM_KEEP_STALE_BROWSERS=1: a runner otherwise culls every headless browser it did not launch).
 //
 // Usage: node buildSystem/run-selftests.js [--headless] [--repo=fizzygum|tests] [--umbrella=DIR]
-// --umbrella=DIR reads another workspace (DIR/Fizzygum, DIR/Fizzygum-tests, DIR/fg) in place of this one: a miniature
+// --umbrella=DIR reads another workspace (DIR/Fizzygum, DIR/Fizzygum-tests, DIR/Fizzygum/fg) in place of this one: a miniature
 // workspace carrying planted self-tests, the bite-proof's input (run-selftests-selftest.js).
 // Exit: 0 every self-test passed · 1 one failed (or one hides outside the convention) · 2 operational (none found).
-// The tests repo's half runs when ../Fizzygum-tests is present, and says when it is not.
 
 const fs = require('fs');
 const path = require('path');
@@ -73,7 +72,6 @@ const umbrella = () => path.dirname(LAYOUT.fizzygum);
 const repoOf = (f) => (f.startsWith(LAYOUT.tests + path.sep) ? 'tests' : 'fizzygum');
 const rootOf = (repo) => (repo === 'tests' ? LAYOUT.tests : LAYOUT.fizzygum);
 const rel = (f) => path.relative(umbrella(), f);
-const testsPresent = () => fs.existsSync(path.join(LAYOUT.tests, 'scripts'));
 // 8 node files at once (2026-11-07, every-gate-bites: 48 node self-tests, most of them a gate run on a planted copy,
 // took 5.7 s at 4 and 4.3 s at 8 on a 16-core machine at load 5; the build's budget for this step is 6 s idle)
 const NODE_POOL = 8;
@@ -274,7 +272,7 @@ async function main(argv) {
   const KNOWN = /^--(headless|repo=(fizzygum|tests)|umbrella=.*)$/;
   for (const a of argv) if (!KNOWN.test(a)) { console.error(`[selftests] ERROR — unknown argument '${a}' (--headless, --repo=fizzygum|tests, --umbrella=DIR)`); process.exit(2); }
   const givenUmbrella = dirArg(argv, '--umbrella=', undefined, 'selftests');
-  if (givenUmbrella) LAYOUT = { fizzygum: path.join(givenUmbrella, 'Fizzygum'), tests: path.join(givenUmbrella, 'Fizzygum-tests'), fg: path.join(givenUmbrella, 'fg') };
+  if (givenUmbrella) LAYOUT = { fizzygum: path.join(givenUmbrella, 'Fizzygum'), tests: path.join(givenUmbrella, 'Fizzygum-tests'), fg: path.join(givenUmbrella, 'Fizzygum', 'fg') };
   const HEADLESS = argv.includes('--headless');
   const REPO = (argv.find((a) => a.startsWith('--repo=')) || '').slice('--repo='.length) || undefined;
   const inScope = (f) => !REPO || repoOf(f) === REPO;
@@ -283,7 +281,7 @@ async function main(argv) {
   const tier = HEADLESS ? 'headless tier (-selftest-headless.js)' : 'node tier (-selftest.js)';
   if (!tests.length) { console.error(`[selftests] ERROR — no ${tier} self-test found${REPO ? ` in ${REPO}` : ''}: a runner that finds nothing certifies nothing`); process.exit(2); }
   const counts = ['fizzygum', 'tests'].filter((r) => !REPO || r === REPO).map((r) => `${r === 'tests' ? 'Fizzygum-tests' : 'Fizzygum'} ${tests.filter((f) => repoOf(f) === r).length}`);
-  console.log(`[selftests] ${tier}: ${tests.length} self-test(s) — ${counts.join(', ')}${!testsPresent() && REPO !== 'fizzygum' ? ' (Fizzygum-tests absent: its half SKIPPED)' : ''}`);
+  console.log(`[selftests] ${tier}: ${tests.length} self-test(s) — ${counts.join(', ')}`);
 
   const failures = [];
   let cases = 0;

@@ -12,16 +12,15 @@
 //   node ./buildSystem/run-gates.js --noSyntaxCheck=<true|false> --shipsTests=<true|false> -- <the build's arguments>
 //
 // build_it_please.sh runs it from Fizzygum/ (once, after build.js has written the tree), passing its --noSyntaxCheck
-// switch and the profile's PROFILE_SHIPS_TESTS; whether the tests repo is present it asks the file system, at the path
-// the table names that repo's scripts under (gates.js TESTS_REPO, beside Fizzygum/, wherever it runs from). Exit 0 when
-// every row that ran passed, 1 at the first that failed, 2 on a malformed command line or a malformed table — a row
-// naming a WHEN the runner does not know, or a table that does not say where the tests repo is: never a silent skip,
-// it stops the run before ANY row runs, whatever the build's flags, --noSyntaxCheck included. That the order, the
-// conditions, the stop and the exit codes hold is proven by run-gates-selftest.js.
+// switch and the profile's PROFILE_SHIPS_TESTS. The sibling tests repo, whose scripts some rows run, is never asked
+// about here: the build requires it, and checks for it before anything else. Exit 0 when every row that ran passed, 1
+// at the first that failed, 2 on a malformed command line or a malformed table — a row naming a WHEN the runner does
+// not know: never a silent skip, it stops the run before ANY row runs, whatever the build's flags, --noSyntaxCheck
+// included. That the order, the conditions, the stop and the exit codes hold is proven by run-gates-selftest.js.
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { GATES, WHEN, BUILD_ARGS, TESTS_REPO } = require('./gates');
+const { GATES, WHEN, BUILD_ARGS } = require('./gates');
 
 // What is wrong with a table, as one line — or undefined when every row names a WHEN the runner knows.
 function tableErrorOf(rows) {
@@ -32,10 +31,9 @@ function tableErrorOf(rows) {
 }
 
 // Does a (known) WHEN hold for this build?
-function holds(when, { noSyntaxCheck, shipsTests, testsRepoPresent }) {
+function holds(when, { noSyntaxCheck, shipsTests }) {
   if (noSyntaxCheck) return false;
-  if (when === 'testsShipped') return shipsTests && testsRepoPresent;
-  if (when === 'testsRepo') return testsRepoPresent;
+  if (when === 'testsShipped') return shipsTests;
   return true;
 }
 
@@ -79,18 +77,10 @@ if (require.main === module) {
     console.error(usage);
     process.exit(2);
   }
-  const tableError = tableErrorOf(GATES) ?? (typeof TESTS_REPO === 'string' ? undefined : 'run-gates: gates.js exports no TESTS_REPO');
+  const tableError = tableErrorOf(GATES);
   if (tableError !== undefined) {
     console.error(tableError);
     process.exit(2);
-  }
-  let testsRepoPresent;
-  // absent is ENOENT or ENOTDIR; anything else (a permission error) is an error, never "absent"
-  try {
-    testsRepoPresent = fs.statSync(TESTS_REPO).isDirectory();
-  } catch (e) {
-    if (e.code !== 'ENOENT' && e.code !== 'ENOTDIR') throw e;
-    testsRepoPresent = false;
   }
   // every line written straight to its descriptor, so it lands in order with what the gates write to theirs
   const io = {
@@ -99,5 +89,5 @@ if (require.main === module) {
     run: (script, args) => spawnSync(process.execPath, [script, ...args], { stdio: 'inherit' }).status,
     bell: () => { spawnSync('tput', ['bel'], { stdio: 'inherit' }); },
   };
-  process.exitCode = runGates(GATES, { noSyntaxCheck, shipsTests, testsRepoPresent, buildArgs: argv.slice(sep + 1) }, io);
+  process.exitCode = runGates(GATES, { noSyntaxCheck, shipsTests, buildArgs: argv.slice(sep + 1) }, io);
 }

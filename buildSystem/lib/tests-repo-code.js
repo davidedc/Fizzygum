@@ -13,9 +13,10 @@
 //
 // testsRepoCode(root) -> [{ file, kind: 'harness' | 'macro' | 'script', lines }], `lines` being the
 // file's lines with comment characters blanked (columns kept — save that a macro source's lines are its COOKED text,
-// so on a line holding a JS escape the columns after it move left); [] when the repo is absent. The scripts are the
-// tooling's own files (lib/what-runs.js scriptFiles): never a dot entry (a gitignored `.scratch/`), a node_modules or a
-// __pycache__ — what a clean checkout lacks must not decide — and a symlink is refused (TOOLING_TREE_MALFORMED).
+// so on a line holding a JS escape the columns after it move left); a root holding no tests repo is refused (it
+// throws), never read as no code. The scripts are the tooling's own files (lib/what-runs.js scriptFiles): never a dot
+// entry (a gitignored `.scratch/`), a node_modules or a __pycache__ — what a clean checkout lacks must not decide — and
+// a symlink is refused (TOOLING_TREE_MALFORMED).
 //
 // JS is PARSED (lib/js-mask.js, on acorn): a comment is cut wherever it starts, a comment marker inside a
 // string or a template is text, and a macro file's macro sources are found by the grammar, so a backtick
@@ -114,7 +115,9 @@ function macroSources(root = DEFAULT_ROOT) {
 }
 
 // THE FILE SET — which files of the tests repo are code, by kind: { harness, macro, script }, each sorted absolute
-// paths; undefined when the repo is absent. The harness is lib/source-files.js's harnessFiles, the one definition every
+// paths; undefined for a root holding no tests repo, as harnessFiles answers it (a fact about the path handed in: every
+// build requires the repo) — each reader refuses that answer loudly (lib/planted-src.js, testsRepoCode below,
+// lib/call-sites.js). The harness is lib/source-files.js's harnessFiles, the one definition every
 // gate reading the compiled sources shares (it refuses a tests repo without a harness, SOURCE_TREE_MALFORMED); the macros
 // are THE TESTS' command files. The readers of the repo's code as a whole take their files from here (testsRepoCode,
 // the call-sites table), so those cannot disagree about what is code; a gate that reads the tests one by one takes them
@@ -131,7 +134,7 @@ function testsRepoFiles(root = DEFAULT_ROOT) {
 
 function testsRepoCode(root = DEFAULT_ROOT) {
   const files = testsRepoFiles(root);
-  if (!files) return [];
+  if (!files) throw new Error(`tests-repo-code: no tests repo at ${root}`);
   const read = { harness: coffeeCode, macro: macroCode, script: jsCode };
   const out = [];
   for (const kind of ['harness', 'macro', 'script'])

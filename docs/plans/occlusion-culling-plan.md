@@ -52,7 +52,7 @@ re-vendor) and no tests-repo change expected.
 **Commands** (use the `./fg` wrapper from the umbrella root — path-correct from any cwd, loud
 PASS/FAIL; a PreToolUse guard hook blocks wrong-cwd hand-chained variants; use `git -C Fizzygum …`
 rather than cd-chains for git):
-- Inner loop: `./fg build` + `./fg suite` (or `cd Fizzygum && ./build_and_test.sh`) — full build +
+- Inner loop: `./fg build` + `./fg suite` (or `Fizzygum/fg presuite`) — full build +
   whole suite headless, parallel shards, dpr 1, ~1 min.
 - Full gate: `./fg gauntlet` (build + suite dpr1 + dpr2 + WebKit + apps + paint gates) and
   `./fg homepage` — this plan's bar is ALL legs green with **zero reference churn**.

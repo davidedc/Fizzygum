@@ -49,7 +49,7 @@
 //     build.js                requires this module and calls resolve(name) (and bootFiles(parts) for --list-boot)
 //     build_it_please.sh      eval's the shell assignments from:
 //     build_and_smoke.sh          node ./buildSystem/lib/profile.js --shell "$@"
-//     build_and_test.sh       (pass the build's WHOLE arg list -- this module owns `--profile` parsing,
+//     fg (presuite, gauntlet) (pass the build's WHOLE arg list -- this module owns `--profile` parsing,
 //                             so no caller has to re-implement it)
 //
 // ⚠ Every problem here is FATAL, never a warning that a default papers over: a profile that cannot be
@@ -931,7 +931,7 @@ function profileNameFromArgv(argv) {
   return DEFAULT_PROFILE_NAME;
 }
 
-// The facts build_it_please.sh / build_and_smoke.sh / build_and_test.sh need, as `eval`-able bash lines.
+// The facts build_it_please.sh / build_and_smoke.sh / fg need, as `eval`-able bash lines.
 //
 // Booleans are emitted as the literals true/false so the shell can keep its existing
 // `if $SOMETHING ; then` idiom, and the boot pieces and scripts come out as bash ARRAYS (quoted as

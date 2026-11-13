@@ -57,13 +57,12 @@
 // Exit 0 = zero violations; 1 = a rule fired; 2 = INVALID, never a pass: a source it cannot parse (an interpolated
 // heredoc included), a super it cannot place on a class chain, a source tree lib/source-files.js refuses
 // (SOURCE_TREE_MALFORMED: a symlink, a src or a harness holding no .coffee file) or a tooling tree lib/what-runs.js
-// refuses (TOOLING_TREE_MALFORMED: a symlink among the scripts), or a half that read nothing while its
-// input is there (no class fragment in src; no macro source or no script in a tests repo that exists).
+// refuses (TOOLING_TREE_MALFORMED: a symlink among the scripts), or a half that read nothing (no class fragment in
+// src; no macro source or no script in the tests repo).
 //
 // Run from Fizzygum/ (build_it_please.sh does): node ./buildSystem/check-call-arguments.js [--src=DIR]
-// [--tests-repo=DIR] [--values]. The rails (lib/source-files.js sourceRoots) check another tree (a planted one); a
-// tests repo that is absent is skipped and the pass line says so. --values lists the absences judged values, each with
-// its callee's site count. That every rule BITES — the value/hole distinction as a minimal pair, a hole in each repo,
+// [--tests-repo=DIR] [--values]. The rails (lib/source-files.js sourceRoots) check another tree (a planted one); both
+// repos are always read. --values lists the absences judged values, each with its callee's site count. That every rule BITES — the value/hole distinction as a minimal pair, a hole in each repo,
 // an extra argument and a positional into options in each repo, and both INVALIDs — is proven on every build by
 // check-call-arguments-selftest.js.
 
@@ -98,7 +97,7 @@ if (unreadable.length) {
 }
 if (counts.fragments === 0) invalid(`it read no class fragment in ${SRC_DIR}`);
 // (a harness with no file is refused above, SOURCE_TREE_MALFORMED)
-if (counts.testsRepo && (counts.macro === 0 || counts.script === 0)) {
+if (counts.macro === 0 || counts.script === 0) {
   invalid(`it read ${counts.macro} macro source(s) and ${counts.script} script(s) in ${TESTS_DIR}`);
 }
 
@@ -120,8 +119,7 @@ if (SHOW_VALUES) for (const { site, sites: n } of verdict.values) console.log(` 
 
 const by = (w) => sites.filter((s) => s.where === w).length;
 const unknown = sites.filter((s) => !s.knownArity).length;
-const over = `${sites.length} calls (src ${by('src')}, harness ${by('harness')}, macros ${by('macro') + by('heredoc')}, scripts ${by('script')})`
-  + (counts.testsRepo ? '' : ` — the tests repo at ${TESTS_DIR} is absent, so only src is judged`);
+const over = `${sites.length} calls (src ${by('src')}, harness ${by('harness')}, macros ${by('macro') + by('heredoc')}, scripts ${by('script')})`;
 const failed = verdict.holes.length + arity.extra.length + arity.intoOptions.length;
 if (failed > 0) {
   console.error(`\n[call-arguments] FAIL — ${verdict.holes.length} hole(s), ${arity.extra.length} extra argument(s), ${arity.intoOptions.length} positional(s) into options over ${over}.`);

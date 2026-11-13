@@ -16,8 +16,8 @@
 // harness does: a rename that misses a macro's `.name(` fails here, at build time, instead of in the suite. A macro's
 // own definitions (a local helper, an object of handlers) resolve that macro's own calls and no one else's, so they
 // never widen the shared universe.
-// Like check-dead-methods, this SKIPS (exit 0 + a loud note) when the sibling tests repo is absent,
-// rather than false-fail a tests-stripped checkout.
+// The harness is half the definition universe, so the sibling tests repo is read on every build whatever the profile
+// ships (the build requires it; lib/source-files.js sourceRoots refuses a hand run without it).
 //
 // ── THE SOUNDNESS TRADE (read before "tightening" anything here) ────────────────────────────────
 // This gate is deliberately built to have ZERO false positives at the cost of detection reach — a
@@ -74,7 +74,7 @@ const defs = require('./lib/name-definitions.js');
 const { coffeeMask } = require('./lib/coffee-mask');
 const { readAllowlist } = require('./lib/allowlist-file');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
-const { compiledFiles, harnessFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
+const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
 // bite-unplantable: BUILTINS_KEYED_OFF_PLATFORM — both sides are this file's own constants (BUILTINS_TABLE, PLATFORM_GLOBALS); a planted src tree reaches neither
 
@@ -225,11 +225,6 @@ function main() {
     console.error('[unresolved-sends] ERROR — cannot find src/ — run from the Fizzygum repo root.');
     process.exit(2);
   }
-  if (!harnessFiles(ROOTS.testsRepo)) {
-    console.log('[unresolved-sends] SKIP — sibling Fizzygum-tests not present (its harness is part of the definition universe).');
-    process.exit(0);
-  }
-
   const files = compiledFiles(ROOTS);
   const defined = harvestDefs(files);
   const sites = [...harvestCalls(files), ...harvestMacroCalls(files)];

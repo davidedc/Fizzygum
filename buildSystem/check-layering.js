@@ -807,19 +807,15 @@ function main() {
     try { checkDoubleSettle(f, gCtx, violations); }   // [T] — needs its own buffered pass (subject known only at method end)
     catch (e) { console.error(`check-layering: [T] operational error in ${f}:`, e.message); process.exit(2); }
   }
-  let macroCount = 0;
-  if (fs.existsSync(MACROS_DIR)) {           // absent when the sibling tests repo is not checked out — skip [D] then
-    let macros;
-    try { macros = commandFiles(MACROS_DIR); }
-    catch (e) { console.error('check-layering: operational error collecting macros:', e.message); process.exit(2); }
-    macroCount = macros.length;
-    for (const f of macros) {
-      try { for (const s of testMacroSourcesIn(fs.readFileSync(f, 'utf8'), f)) checkMacroText(f, s.text, (n) => s.line + n, violations); }
-      catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
-    }
+  let macros;
+  try { macros = commandFiles(MACROS_DIR); }
+  catch (e) { console.error('check-layering: operational error collecting macros:', e.message); process.exit(2); }
+  let macroCount = macros.length;
+  for (const f of macros) {
+    try { for (const s of testMacroSourcesIn(fs.readFileSync(f, 'utf8'), f)) checkMacroText(f, s.text, (n) => s.line + n, violations); }
+    catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
   }
-  // the SHARED macro verbs: every Macro.fromString literal of the compiled sources (src's read whether or not the tests
-  // repo is there)
+  // the SHARED macro verbs: every Macro.fromString literal of the compiled sources, src's and the harness's
   for (const f of files) {
     try {
       const verbs = verbMacroSourcesIn(fs.readFileSync(f, 'utf8'), f);

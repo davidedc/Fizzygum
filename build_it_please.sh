@@ -120,6 +120,21 @@ if [ ! -d ../../Fizzygum-all ]; then
   exit 1
 fi
 
+# The sibling tests repo is a REQUIREMENT of every build, whatever the profile ships: checked here, up front, so
+# nothing below needs a branch for its absence.
+if [ ! -d ../Fizzygum-tests ]; then
+  echo
+  echo ----------- error -------------
+  echo "The sibling Fizzygum-tests repo is required, and there is none at ../Fizzygum-tests."
+  echo "Every build needs it, whatever the profile ships:"
+  echo "  - the harness part's sources live there (Automator-and-test-harness-src/);"
+  echo "  - the precompiled profiles' image driver lives there (its scripts/);"
+  echo "  - the build's gates read it (the harness is compiled code like src/, and its scripts are gates)."
+  echo "Check it out beside this repo, inside Fizzygum-all."
+  echo
+  exit 1
+fi
+
 if [ ! -d ../Fizzygum-builds ]; then
   echo
   echo ----------- warning! -------------
@@ -320,9 +335,7 @@ else
   # Every headless runner and capture script ALSO regenerates them at startup, which is what
   # makes a stale manifest impossible: a test added after this build is picked up with no
   # rebuild. (This is deliberately NOT gated on --noSyntaxCheck; it is not a check.)
-  if [ -d ../Fizzygum-tests ] && command -v node &> /dev/null ; then
-    node ../Fizzygum-tests/scripts/generate-tests-manifests.js --quiet || exit 1
-  fi
+  node ../Fizzygum-tests/scripts/generate-tests-manifests.js --quiet || exit 1
 fi
 
 # generate the Fizzygum coffee file in the delete_me directory
@@ -349,8 +362,8 @@ fi
 # --- THE GATES: buildSystem/gates.js, run in order by buildSystem/run-gates.js -------------------
 # One row per static gate the build runs, in order: its script, its arguments, when it runs and what it prints. The
 # runner stops the build at the first gate that fails, ringing the bell with that gate's own failure line; every gate
-# stands behind the --noSyntaxCheck escape hatch, and the tests repo's gates run only where that repo is present —
-# four of them only where the profile also ships the tests, aim-census whatever it ships (the table says which). A row
+# stands behind the --noSyntaxCheck escape hatch, and four of the tests repo's gates run only where the profile ships
+# the tests (the table says which; the repo itself is always there, checked at the top of this file). A row
 # naming a condition the runner does not know stops the build before any gate runs. Why each gate exists sits above
 # its row in the table; what it checks and what it cannot see: docs/architecture/lint-and-static-checks.md. The
 # self-tests run FIRST, as the first row: a gate whose own proof fails gives verdicts not worth reading.

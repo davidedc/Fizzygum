@@ -97,7 +97,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | # | Cleanup | Effort (estimate) | What goes away | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|
 | 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Orphans, closed plans, the stub header and the two vendoring homes landed 2026-11-13; the rest open |
-| 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Not started |
+| 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Landed 2026-11-13 (`fg` into the Fizzygum repo; the hook and skills stay local, owner) |
 | 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Landed 2026-11-13; no trap fired |
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Landed 2026-11-13 |
@@ -247,6 +247,25 @@ the `fgPresent` deletion.
 
 **Re-measure.** `wc -lc /Users/davidedellacasa/code/Fizzygum-all/fg` and
 `grep -n "fgPresent\|layout.fg" Fizzygum/buildSystem/lib/what-runs.js Fizzygum/buildSystem/run-selftests.js`.
+
+**Landed 2026-11-13 (on the owner's ruling, with §10's follow-up "the tests repo is required" in the same change): `fg`
+is versioned in the Fizzygum repo.**
+- **Where it lives now.** The script is `Fizzygum/fg`. It finds the umbrella as its directory's parent, and the umbrella
+  keeps a two-line shim at `Fizzygum-all/fg` that execs it, so every absolute-path invocation and the guard hook's
+  messages still hold.
+- **`lib/what-runs.js`.** It reads `Fizzygum/fg` as a required root: a layout without it is an ERROR, as one without
+  the build already was. `fgPresent` is gone, and so is every reader's "undecidable" handling.
+  - `check-hand-lists.js` loses `runsKnown` and its `--fg=` rail, which had no live caller.
+  - With the tests repo also required, its `SANCTION_UNVERIFIED` note had no cause left and is deleted.
+- **One way to run the suite.** `build_and_test.sh` is deleted. `fg presuite` and `fg gauntlet` take over its one
+  check: before building anything, they refuse a profile whose tree ships no harness page. The script checked whether
+  the profile ships the tests, which passed `dev-precompiled`, a tree with no harness page.
+- **`package.json`.** `npm test` runs `./fg presuite`, and the `main` that named a missing file is gone.
+- **Still unversioned.** The guard hook, the process skills and the umbrella `CLAUDE.md` stay workspace-local. Whether
+  to version them, and where, is the owner's (BACKLOG: §2's remainder; the Fizzygum repo is public).
+- **`fg fingerprint`.** It can build a baseline at or after this change, since the baseline worktree carries
+  `Fizzygum/fg`. An older baseline still needs the manual script; the BACKLOG line keeps that and the other two
+  setup gaps.
 
 ---
 
@@ -688,7 +707,7 @@ a README). It walks the AST by node class name, which the build's minified compi
 the global install the build already requires, found behind a `coffee` on PATH or in Node's global prefix, another
 version or a wrapper passed over, none found an INVALID run — with nothing from `node_modules`; its scores equal the
 published run's, function for function, over all 580 sources. Its bite proof plants every rule, harness included
-(19 cases). `fg critique` does not show it yet: `fg` is the owner's local tooling, outside the loop's reach
+(19 cases). `fg critique` does not show it yet
 (BACKLOG has the one step to add).
 
 **Landed 2026-11-13 (the loop's U10): step 2, the sequential giants — three split, three left.** Each candidate
@@ -891,6 +910,30 @@ row 31, check-refs, with the same lines, bell and exit. No planted build reaches
 every input it reads is read earlier or copied by its own self-test); its condition is proven by the runner's
 self-test and by every clean transcript.
 
+**Landed 2026-11-13 (§10's follow-up, on the owner's ruling, in the same change as §2): the tests repo is a requirement
+of every build.** It was already one in practice. `dev` takes its harness part's sources from that repo, every
+precompiled profile runs its image driver from it, and the build's first gate copies it.
+- **The build** now checks for it up front, beside its `Fizzygum-all` name check, and stops with a clear message.
+- **A gate run by hand** gets the same answer from one place: `lib/source-files.js` `sourceRoots` refuses a workspace
+  without the repo, exit 2.
+- **Deleted, as the branches that let a build or a gate proceed without the repo:**
+  - the `testsRepo` WHEN (the aim census's row is `checked`) and `run-gates.js`'s presence probe;
+  - `what-runs.js`'s pass-over of a tests-repo row;
+  - the SKIPs and NOTEs of `check-dead-methods`, `check-unresolved-sends`, `check-menu-actions` (rule 1b),
+    `check-part-edges` (installed members), `check-layering` [D], `check-relayout-repaints`, `check-call-arguments`,
+    `check-complexity-ratchets` (the harness records), `check-call-separation` [U] and `census-public-private-calls`
+    (R4);
+  - `lib/call-sites.js`'s src-only mode, `lib/install-edges.js` `harnessPresent`, `check-hand-lists.js`'s half
+    tests-half, and `run-selftests.js`'s skip note.
+- **Kept, because a fixture or a rail reaches it, not a build:**
+  - `what-runs.js`'s missing-directory skip (the run-selftests bite-proof's miniature);
+  - `harnessFiles`' `undefined` for a path holding no tests repo (two library fixtures read a src miniature alone);
+  - `testNames`' empty answer;
+  - `build.js`'s `--tests-repo` rail.
+- **No gate rule became unreachable.** Every branch that went was a skip, a note, a run condition or a message.
+- **A former silent skip is now a refusal.** `install-edges.js` skipped an `installOnto` whose class no compiled source
+  defines; it now refuses one, and its self-test plants it.
+
 ---
 
 ## 11. Measured and deliberately not listed
@@ -1037,3 +1080,10 @@ Do not commit or push without asking me.
   in the loop's scratch)
   — CLOSED 2026-11-13 (loop U8, landed on the owner's ruling): `mapsPlaneOfChild` and its verbs on `TransformFrameWdgt`
   and `ViewportWdgt`, the eight walks folds over `_enclosingMappedPlaneRoot` (§6, "Landed").
+- [x] §2 (½ day): put `fg` and the guard hook under version control (⛔ which repo); then delete `what-runs.js`'s `fgPresent` branch
+  — CLOSED 2026-11-13 for `fg` (the owner ruled: the Fizzygum repo): `Fizzygum/fg` plus the umbrella shim, `fgPresent`
+  gone, `build_and_test.sh` folded into `fg presuite` (§2, "Landed"). BACKLOG keeps §2's remainder: the guard hook, the
+  skills and the umbrella `CLAUDE.md` (owner).
+- [x] §10, found 2026-11-13 by the loop's U6 review (medium, reached by any clone without the tests repo): **a bare Fizzygum clone does not build.** The self-tests that prove a gate on a copy of the tests repo's code (`proveGate({ testsRepo: true })`) throw in `lib/planted-src.js` (`no tests repo at … to copy`), so the build stops at its first gate, while the docs said the tests-repo gates merely skip (CLAUDE.md now says what happens); and with the profile shipping tests the build still `ln -sfn`s `js/tests` at a repo that is not there. ⛔ owner: must a bare clone build (then those self-tests need a fixture tests repo of their own), or is the tests repo a requirement (then the build should say so up front)?
+  — CLOSED 2026-11-13 (the owner ruled: the tests repo is a requirement): the build checks it up front, `sourceRoots` is
+  a gate's one refusal, every absence branch a build could reach is gone (§10, the follow-up "Landed").

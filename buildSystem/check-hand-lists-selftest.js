@@ -1,7 +1,7 @@
 'use strict';
 // check-hand-lists-selftest.js — check-hand-lists.js's engine on an in-memory corpus, each direction both ways:
-// every list state, every marker problem, the controls that keep both verdicts non-vacuous, and the
-// absent-tests-repo NOTE rule. Run by buildSystem/run-selftests.js on every build.
+// every list state, every marker problem, and the controls that keep both verdicts non-vacuous. Run by
+// buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { analyse, evaluate, guardTokensOf, gateFileNames, harvestUniverse, preview, LANG_OF_EXT } = require('./check-hand-lists');
@@ -184,14 +184,14 @@ function main() {
     const ext = path.extname(c.rel);
     return { rel: c.rel, repo: 'fizzygum', ext, ...analyse(c.text.join('\n'), LANG_OF_EXT[ext]) };
   });
-  const gateFiles = gateFileNames(false);
+  const gateFiles = gateFileNames(false);   // the Fizzygum half's gate files alone: the tests repo's scripts are main()'s
   if (!gateFiles.has('check-dead-methods.js')) fail('self-test: the real tree has no buildSystem/check-dead-methods.js to resolve guard (a) against');
   // two universes: what EXISTS (the real buildSystem's files plus a fictional rig) and what RUNS within it
   const testDirs = new Set(['SystemTest_corpusFixture']);
   const exists = { gateFiles: new Set([...gateFiles, 'corpus-unrun-rig.js']), testDirs, tokens: guardTokensOf(files) };
   const runs = { gateFiles: new Set(['check-dead-methods.js']), testDirs,
                  tokens: guardTokensOf(files.filter(f => f.rel !== 'corpus/unrun-emitter.js')) };
-  const guards = { exists, runs, complete: true, runsKnown: true };
+  const guards = { exists, runs };
   const { lists, problems } = evaluate(files, universe, guards);
   const check = (pass, msg) => t.check(pass, msg);
   const lineOf = (rel, needle, nth = 1) => {
@@ -225,34 +225,6 @@ function main() {
   const empty = evaluate(files, { classes: new Set(), members: new Set() }, guards);
   check(empty.lists.every(l => !l.isName) && empty.lists.length === lists.length,
     `control: an empty universe finds the same ${empty.lists.length} lists and calls none of them a name list`);
-  // WITHOUT THE TESTS REPO (guards.complete false, and here the universe lacking `MenuWdgt` as the absent
-  // harness's classes would be lacking): a sanction above a list that now reads as data, or naming no guard
-  // this checkout can see, is a NOTE; one above a line where no list opens stays a failure.
-  const partial = evaluate(files, { classes: new Set(['Widget', 'PanelWdgt', 'FrameWdgt']), members: universe.members },
-    { ...guards, complete: false });
-  const tokenAt = (r, rel, needle, nth) => {
-    const line = lineOf(rel, needle, nth);
-    return r.problems.filter(p => p.file.rel === rel && p.line === line).map(p => p.token + (p.note ? '(note)' : '')).join(' ') || 'none';
-  };
-  for (const [rel, needle, nth, want] of [
-    ['corpus/sanctioned-token.coffee', 'CORPUS_GUARD_TOKEN', 1, 'SANCTION_UNVERIFIED(note)'],  // its list names MenuWdgt
-    ['corpus/sanctions-wrong.js', 'trust me', 1, 'SANCTION_UNVERIFIED(note)'],
-    ['corpus/separated.js', 'hand-list-sanctioned', 1, 'SANCTION_STALE'],
-  ]) {
-    const got = tokenAt(partial, rel, needle, nth);
-    check(got === want, `tests repo absent: ${rel} marker -> ${got} (expected ${want})`);
-  }
-  // WITHOUT THE UMBRELLA'S fg (guards.runsKnown false): the commit-point legs cannot be read, so a guard that
-  // exists and is not seen to run may run in a leg — a NOTE, never a failure; a guard nothing names still fails.
-  const noFg = evaluate(files, universe, { ...guards, runsKnown: false });
-  for (const [rel, needle, nth, want] of [
-    ['corpus/never-run.js', 'corpus-unrun-rig.js fails', 1, 'SANCTION_UNVERIFIED(note)'],
-    ['corpus/never-run.js', 'CORPUS_UNRUN_TOKEN', 1, 'SANCTION_UNVERIFIED(note)'],
-    ['corpus/sanctions-wrong.js', 'trust me', 1, 'SANCTION_NAMES_NO_GUARD'],
-  ]) {
-    const got = tokenAt(noFg, rel, needle, nth);
-    check(got === want, `fg absent: ${rel} marker -> ${got} (expected ${want})`);
-  }
   universeCases();
   proveTheGate();
   t.done();

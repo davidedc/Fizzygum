@@ -1,8 +1,8 @@
 'use strict';
 // what-runs-selftest.js — lib/what-runs.js on a miniature workspace written to a temp dir: each way a file can be
 // NAMED without being run (a comment, an echo, a help message, a Python docstring) must stay out of the run set, and
-// each way one is LAUNCHED (a shell command, a pipeline stage, require(), path.join) must come in — with and without
-// the umbrella's `fg`, and through the discovering runners.
+// each way one is LAUNCHED (a shell command, a pipeline stage, require(), path.join) must come in — through the build,
+// fg's legs and the discovering runners.
 
 const fs = require('fs');
 const os = require('os');
@@ -12,7 +12,7 @@ const { spawnSync } = require('child_process');
 const t = require('./selftest-verdict').cases('what-runs');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'what-runs-selftest-'));
-const layout = { fizzygum: path.join(root, 'Fizzygum'), tests: path.join(root, 'Fizzygum-tests'), fg: path.join(root, 'fg') };
+const layout = { fizzygum: path.join(root, 'Fizzygum'), tests: path.join(root, 'Fizzygum-tests'), fg: path.join(root, 'Fizzygum', 'fg') };
 const write = (rel, text) => { const p = path.join(root, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
 
 write('Fizzygum/build_it_please.sh', [
@@ -69,7 +69,7 @@ write('Fizzygum-tests/scripts/suite-runner.js', '');
 write('Fizzygum-tests/scripts/p/x-prelude.js', '');
 write('Fizzygum-tests/scripts/q/y-prelude.js', '');
 write('Fizzygum-tests/scripts/preludes-install-selftest-headless.js', '');
-write('fg', [
+write('Fizzygum/fg', [
   'fg_build(){', '  ( cd "$FZ" && ./build_it_please.sh "$@" && node buildSystem/fg-built.js )', '}',   // first in the file
   'fg_suite(){ ( cd "$FT" && node scripts/suite-runner.js "$@" ); }   # a one-liner: its body ends on its line',
   'run_lint(){', '  echo "lint names scripts/orphan.js and runs nothing"', '}',
@@ -95,7 +95,6 @@ const NOT = ['buildSystem/commented.js', 'buildSystem/echoed.js', 'buildSystem/h
              'buildSystem/cli-tool.js', 'buildSystem/echo-unquoted.js', 'buildSystem/env-assigned.js'];
 for (const f of RUN) t.check(runs.has(f), `with fg: ${f} RUNS`, `run set ${JSON.stringify([...runs])}`);
 for (const f of NOT) t.check(!runs.has(f), `with fg: ${f} is only named, never run`);
-t.check(withFg.fgPresent === true, 'fgPresent is true when the umbrella has fg');
 const howOf = (r) => withFg.how.get(path.join(root, 'Fizzygum', r));
 t.check(howOf('buildSystem/lib/both.js') === 'launched',
   'a module some runner also LAUNCHES reads launched, though a require reached it first', `how: ${howOf('buildSystem/lib/both.js')}`);
@@ -104,12 +103,12 @@ t.check(howOf('build_it_please.sh') === 'root', 'the build reads root');
 t.check(howOf('build_and_smoke.sh') === 'root', 'the build-and-smoke check reads root', `how: ${howOf('build_and_smoke.sh')}`);
 t.check(withFg.how.get(path.join(root, 'Fizzygum-tests', 'scripts/smoked.js')) === 'launched', 'what the build-and-smoke check runs reads launched');
 
+const fgText = fs.readFileSync(layout.fg, 'utf8');
 fs.unlinkSync(layout.fg);
-const noFg = new Set(rel(runSet(layout).files));
-for (const f of ['buildSystem/gate.js', 'buildSystem/alpha-selftest.js', 'scripts/piped.sh', 'scripts/smoked.js']) t.check(noFg.has(f), `without fg: ${f} still RUNS (a versioned root reaches it)`);
-for (const f of ['scripts/leg.sh', 'scripts/runner.js', 'buildSystem/beta-selftest-headless.js', 'scripts/q/y-prelude.js']) {
-  t.check(!noFg.has(f), `without fg: ${f} is not run (only a leg or the --headless runner reaches it)`);
-}
+let noFg = '';
+try { runSet(layout); } catch (e) { noFg = e.message; }
+t.check(/^what-runs: no .*Fizzygum\/fg$/.test(noFg), 'a layout without fg is an ERROR, as one without the build is: its legs are always read', noFg);
+fs.writeFileSync(layout.fg, fgText);
 
 t.check(discover('selftest', layout).map((f) => path.basename(f)).join() === 'alpha-selftest.js', 'discover(selftest) finds exactly the -selftest.js file');
 t.check(discover('prelude', layout).length === 2, 'discover(prelude) finds both preludes');
@@ -122,7 +121,7 @@ try { runSet(layout); } catch (e) { threw = e.message; }
 t.check(/invokes no scanned script/.test(threw), 'a build script that invokes nothing is an ERROR, never an empty run set', threw);
 
 write('Fizzygum/build_it_please.sh', 'node ./buildSystem/gate.js\n');
-write('fg', 'fg_build(){\n  ./build_it_please.sh\n}\nrun_leg(){\n  :\n}\n');
+write('Fizzygum/fg', 'fg_build(){\n  ./build_it_please.sh\n}\nrun_leg(){\n  :\n}\n');
 threw = '';
 try { runSet(layout); } catch (e) { threw = e.message; }
 t.check(/defines no fg_suite, run_lint/.test(threw), "an fg missing any of its four leg functions is an ERROR (a renamed one would drop its legs)", threw);
@@ -153,12 +152,14 @@ t.check(/^TOOLING_TREE_MALFORMED .*linked\.js: a symlink/.test(threw), 'a symlin
 // discovers the node-tier self-tests (the table's text also names it, but a JS edge applies no line-keyed
 // convention), a row handed the build's arguments is launched too, a row whose script no text scan can name is
 // launched (the table is read as data), and a script named in a comment of the table is not. The layout is reached
-// through a SYMLINK, which `require` resolves, so a row is read back as the build's shell would spell it.
+// through a SYMLINK, which `require` resolves, so a row is read back as the build's shell would spell it. A row
+// whose script lives in the tests repo is launched like any other, and is an error like any other when its script
+// is missing: the build requires that repo, so nothing passes its rows over.
 // Then: a table its build does not run gates nothing, and a row naming a script nothing scans is an error.
 const real2 = fs.mkdtempSync(path.join(os.tmpdir(), 'what-runs-selftest-table-'));
 const root2 = `${real2}-link`;
 fs.symlinkSync(real2, root2);
-const layout2 = { fizzygum: path.join(root2, 'Fizzygum'), tests: path.join(root2, 'Fizzygum-tests'), fg: path.join(root2, 'fg') };
+const layout2 = { fizzygum: path.join(root2, 'Fizzygum'), tests: path.join(root2, 'Fizzygum-tests'), fg: path.join(root2, 'Fizzygum', 'fg') };
 const write2 = (rel, text) => { const p = path.join(root2, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
 const RUNS_THE_RUNNER = 'node ./buildSystem/run-gates.js --noSyntaxCheck=false --shipsTests=true -- "${args[@]}"\n';
 const table2 = (rows) => write2('Fizzygum/buildSystem/gates.js', [
@@ -169,15 +170,17 @@ const table2 = (rows) => write2('Fizzygum/buildSystem/gates.js', [
   'const GATES = [',
   ...rows.map((r) => `  { script: ${r}, args: [], when: 'checked', banner: 'b', failure: 'f' },`),
   "  { script: path.join(__dirname, 'args-gate.js'), args: BUILD_ARGS, when: 'checked', banner: 'b', failure: 'f' },",
-  "  { script: path.join(TESTS_REPO, 'scripts', 'tests-gate.js'), args: [], when: 'testsRepo', banner: 'b', failure: 'f' },",
+  "  { script: path.join(TESTS_REPO, 'scripts', 'tests-gate.js'), args: [], when: 'checked', banner: 'b', failure: 'f' },",
   '];',
   'module.exports = { GATES, BUILD_ARGS, TESTS_REPO };',
 ].join('\n'));
 const ROWS = ["path.join(__dirname, 'run-selftests.js')", "path.join(__dirname, ['table', 'gate'].join('-') + '.js')"];
 write2('Fizzygum/build_it_please.sh', RUNS_THE_RUNNER);
 write2('Fizzygum/buildSystem/run-gates.js', "const { GATES } = require('./gates');\n");
+write2('Fizzygum/fg', 'fg_build(){\n  :\n}\nfg_suite(){ :; }\nrun_lint(){\n  :\n}\nrun_leg(){\n  :\n}\n');   // legs that launch nothing
 table2(ROWS);
 for (const f of ['run-selftests.js', 'table-gate.js', 'args-gate.js', 'commented-in-table.js', 'other.js', 'gamma-selftest.js']) write2(`Fizzygum/buildSystem/${f}`, '');
+write2('Fizzygum-tests/scripts/tests-gate.js', '');
 const viaTable = runSet(layout2);
 const kind2 = (f) => viaTable.how.get(path.join(root2, 'Fizzygum', f));
 t.check(kind2('buildSystem/run-gates.js') === 'launched' && kind2('buildSystem/gates.js') === 'required',
@@ -189,12 +192,13 @@ t.check(kind2('buildSystem/run-selftests.js') === 'launched' && kind2('buildSyst
 t.check(kind2('buildSystem/gamma-selftest.js') === 'discovered',
   'run-selftests.js launched by a table row discovers the node-tier self-tests', String(kind2('buildSystem/gamma-selftest.js')));
 t.check(kind2('buildSystem/commented-in-table.js') === undefined, 'a script named in a comment of the table does not run');
-t.check(viaTable.how.get(path.join(root2, 'Fizzygum-tests/scripts/tests-gate.js')) === undefined,
-  'a tests-repo row, in a layout with no tests repo, launches nothing and is no error (the runner passes it over)');
-write2('Fizzygum-tests/scripts/tests-gate.js', '');
-t.check(runSet(layout2).how.get(path.join(root2, 'Fizzygum-tests/scripts/tests-gate.js')) === 'launched',
-  'the same row, the tests repo present, is a launched script');
+t.check(viaTable.how.get(path.join(root2, 'Fizzygum-tests/scripts/tests-gate.js')) === 'launched',
+  'a tests-repo row is a launched script', String(viaTable.how.get(path.join(root2, 'Fizzygum-tests/scripts/tests-gate.js'))));
 fs.rmSync(path.join(root2, 'Fizzygum-tests'), { recursive: true, force: true });
+let testsRowMissing;
+try { runSet(layout2); } catch (e) { testsRowMissing = e.message; }
+t.check(/gates\.js has a row for .*Fizzygum-tests\/scripts\/tests-gate\.js, which is not a scanned script/.test(String(testsRowMissing)),
+  'a tests-repo row whose script is missing is an ERROR, as any row is: nothing passes it over', String(testsRowMissing));
 write2('Fizzygum/build_it_please.sh', 'node ./buildSystem/other.js\n');
 const unrun = runSet(layout2).how;
 t.check(unrun.get(path.join(root2, 'Fizzygum/buildSystem/table-gate.js')) === undefined

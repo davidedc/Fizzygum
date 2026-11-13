@@ -36,7 +36,7 @@ profile does not know what a part is made of.
 Three consumers use it and none of them re-implement any of its rules:
 
 - `buildSystem/build.js` requires it (`partShips`, `loadParts`, `ENTRY_PAGES`);
-- `build_it_please.sh`, `build_and_smoke.sh` and `build_and_test.sh` `eval` its `--shell` output;
+- `build_it_please.sh` and `build_and_smoke.sh` `eval` its `--shell` output, and `fg` asks it the same way;
 - it also owns `--profile` PARSING, so no caller has its own copy of that either.
 
 ---
@@ -408,7 +408,7 @@ facts above, never from the identity of a particular flavour. Nothing in this co
 | whether `js/coffeescript-sources/` exists at all | `sources != "none"` |
 | when the reflective layer loads, if ever | `sources` → `BUILDFLAG_SOURCES` in the bundle |
 | which smoke a built tree gets | `form` + `sources` + `entries` (`build_and_smoke.sh` asks the profile: the production assertions, the SWCanvas page, the harness page) |
-| whether the suite runner may run at all | does the profile ship tests (`build_and_test.sh`) |
+| whether the suite runner may run at all | does the profile ship the harness page (`fg presuite` / `fg gauntlet` refuse before building) |
 
 ⚠ **`$BUILD_PATH` is shared across flavours**, and `font-assets/` survives the cleanup section. So the font-asset
 decision has TWO directions in one place — copy it, or remove any copy a previous build left — and the second is not

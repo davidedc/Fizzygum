@@ -28,11 +28,11 @@
 // (`Fizzygum/.latest-build-inputs`, gitignored): the developer's input list is no part of an artifact, and anything
 // derived from the inputs inside the tree would differ between any two builds `fg fingerprint` compares.
 //
-// buildInputs() -> every input file that exists, absolute, sorted (a declared file that does not exist is skipped: one
-// the build would fail on, an absent tests repo); inputRecordLines() -> the record's lines, `<path>\t<mtimeMs>\t<size>`,
-// the path relative to the umbrella; compareRecords(recorded, current) -> { changed, added, removed } (pure: two lists
-// of record lines); lastBuildTime() -> the stamp's mtime, or undefined; buildStaleness() -> { stale: false } or
-// { stale: true, why, changed, added, removed }. A listing that fails throws.
+// buildInputs() -> every input file that exists, absolute, sorted (a declared file that does not exist is skipped: the
+// build fails on it, and on a missing tests repo before it reads anything); inputRecordLines() -> the record's lines,
+// `<path>\t<mtimeMs>\t<size>`, the path relative to the umbrella; compareRecords(recorded, current) -> { changed, added,
+// removed } (pure: two lists of record lines); lastBuildTime() -> the stamp's mtime, or undefined; buildStaleness() ->
+// { stale: false } or { stale: true, why, changed, added, removed }. A listing that fails throws.
 
 const fs = require('fs');
 const path = require('path');

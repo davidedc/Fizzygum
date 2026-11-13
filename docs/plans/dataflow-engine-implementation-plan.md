@@ -78,23 +78,19 @@ not throwaway, and the Phase 4 socket note for the decision that seeds it.
 Identical to the rename plan's §0, restated: prerequisites `coffee`, `terser`, `node`
 (global). Tiers:
 
-- **Full** (`../Fizzygum-tests` exists): verify with `./build_and_test.sh` (~1 min,
-  headless, parallel). New behavior additionally needs NEW SystemTests (§4 rule 5) — authored in
+- **Full** (the only tier: the build requires `../Fizzygum-tests`): verify with `./fg presuite`
+  (~3–4 min, headless, parallel). New behavior additionally needs NEW SystemTests (§4 rule 5) — authored in
   the sibling repo per `src/macros/CLAUDE.md` and `src/macros/MACRO-PATTERNS.md`.
-- **Repo-only**: verify with `./build_it_please.sh --notests` (auto-creates
-  `../Fizzygum-builds`; runs the syntax, layering, and dead-method gates). Phases whose
-  deliverable is *behavior* (2a onward) should preferably run in the full tier; if executed
-  repo-only, state in the commit message that suite + new-test authoring are pending.
 
 **Verification cadence (full tier; referenced by every phase):**
 
-- **Inner loop (every commit):** `./build_and_test.sh` — dpr 1, Chrome, headless parallel
-  (~1 min); the build gates run inside it.
+- **Inner loop (every commit):** `./fg presuite` — dpr 1, Chrome, headless parallel, beside the
+  paint audit and a dpr-2 rider (~3–4 min); the build gates run inside it.
 - **Phase-close battery (mandatory at the end of Phases 2c, 4, 5, 6c, 6d; recommended at
   1 and 3):** dpr 1 suite + dpr 2 (`cd ../Fizzygum-tests && node scripts/run-all-headless.js
   --dpr=2`) + WebKit cross-engine (`npm run test:webkit`) + apps smoke
-  (`node scripts/smoke-apps-headless.js`). (The owner's umbrella `fg gauntlet` wrapper —
-  local workspace tooling, not committed — bundles exactly this battery plus the audits.)
+  (`node scripts/smoke-apps-headless.js`). (`fg gauntlet` — `Fizzygum/fg`, the workflow
+  wrapper — bundles exactly this battery plus the audits.)
 - **Serialization legs — whenever the serialized surface changes** (Phases 1, 2b/2c, 3, 4):
   `npm run test:serialization` + `npm run test:serialization:file` (the characterization
   rig — `scripts/serialization-roundtrip-headless.js` builds a fixture battery, round-trips

@@ -9,10 +9,10 @@
 //
 // THE ROOTS. Fizzygum/build_it_please.sh (every build), with its gate table, buildSystem/gates.js (each row a launch of
 // its script by the command line run-gates.js gives it); Fizzygum/build_and_smoke.sh when present (the build's own
-// pre-commit check: the boot smoke it launches is a gate like any other); and, when the umbrella's local `fg` wrapper is
-// present, the bodies of its fg_build / fg_suite / run_lint / run_leg functions (the presuite and gauntlet legs; all four
-// must be found, or the reading is an ERROR). `fg` is in no repo, so a bare clone has the two versioned roots alone and runSet() says
-// so (`fgPresent: false`); its readers then treat a commit-point-only fact as undecidable, never as false.
+// pre-commit check: the boot smoke it launches is a gate like any other); and Fizzygum/fg, the workflow wrapper that
+// runs the presuite and the gauntlet: the bodies of its fg_build / fg_suite / run_lint / run_leg functions (the legs;
+// all four must be found, or the reading is an ERROR). `fg` is versioned beside the build, so a layout without it is an
+// ERROR too, as one without the build is: a commit-point fact is always decidable.
 //
 // AN EDGE IS AN INVOCATION, NOT A MENTION. A file runs another when it LAUNCHES it:
 //   - shell (.sh, and fg's function bodies), read by a small lexer (shellCommands, below): a script that is the PROGRAM
@@ -38,9 +38,8 @@
 // seen, so its target reads as never run: the safe direction, since the reader then asks for a guard that is seen to
 // run. A required module counts as run because its code runs, even where its own command-line half (behind
 // `require.main === module`) does not. A root's own conditions (`if $PROFILE_SHIPS_TESTS`) are not evaluated: a gate
-// behind a profile condition counts as run — and so is a gate-table row's WHEN, with one exception the runner makes
-// too: a row whose script lives in the tests repo, in a layout with no tests repo, runs nothing. A row's arguments are
-// not read for scripts (a shell line's are). A leg of `fg` is trusted to be in a wave; `fg` is read, never executed.
+// behind a profile condition counts as run — and so is a gate-table row's WHEN. A row's arguments are not read for
+// scripts (a shell line's are). A leg of `fg` is trusted to be in a wave; `fg` is read, never executed.
 
 const fs = require('fs');
 const path = require('path');
@@ -50,7 +49,7 @@ const FIZZYGUM = path.resolve(__dirname, '..', '..');
 const DEFAULT_LAYOUT = {
   fizzygum: FIZZYGUM,
   tests: path.join(path.dirname(FIZZYGUM), 'Fizzygum-tests'),
-  fg: path.join(path.dirname(FIZZYGUM), 'fg'),
+  fg: path.join(FIZZYGUM, 'fg'),
 };
 const FG_FUNCTIONS = ['fg_build', 'fg_suite', 'run_lint', 'run_leg'];
 // the build's gate runner, and the table of gates it runs: read here (its rows are data) when the build launches the
@@ -68,8 +67,8 @@ const CONVENTIONS = {
 
 // THE TOOLING'S OWN FILES — the one definition every reader of them shares (the run set and discovery here, the hand-list
 // scan, the Node rigs' code set, the tooling's self-tests, the similar- and duplicate-code scans): Fizzygum's buildSystem/
-// and scripts/ (recursively) and its top-level shell scripts, and the tests repo's scripts/ when present; `.js`, `.sh` and
-// `.py` files. Never the tooling: a dot entry (a gitignored scratch such as scripts/.scratch, a dot file), a node_modules
+// and scripts/ (recursively) and its top-level shell scripts, and the tests repo's scripts/; `.js`, `.sh` and `.py`
+// files. Never the tooling: a dot entry (a gitignored scratch such as scripts/.scratch, a dot file), a node_modules
 // (a dependency tree), a __pycache__ (bytecode) — skippedEntry() says so for any walk of the repos. A SYMLINK is refused
 // (TOOLING_TREE_MALFORMED, naming it), as lib/source-files.js refuses one in the sources: a walk that follows it reads a
 // file twice or outside the tree, one that does not reads it never, and the readers would disagree. Sorted, absolute.
@@ -78,6 +77,9 @@ function scriptFiles(layout = DEFAULT_LAYOUT) {
   const out = [];
   // `deep`: a root walked whole for .js/.sh/.py; else Fizzygum's own top level, for its .sh files alone
   const visit = (dir, deep) => {
+    // a root missing from a MINIATURE layout holds nothing: run-selftests-selftest.js's workspace (the run-selftests
+    // gate's bite-proof) carries no scripts/ in either repo, and what-runs-selftest's none until it plants one. The
+    // real layout has every root — the build requires the tests repo
     if (!fs.existsSync(dir)) return;
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
       if (skippedEntry(e.name)) continue;
@@ -276,7 +278,7 @@ function fgRootText(fgPath) {
   return bodies.join('\n');
 }
 
-// { files: Set<abs path>, fgPresent, why: Map<abs path, string>, how: Map<abs path, kind> } — every script the roots
+// { files: Set<abs path>, why: Map<abs path, string>, how: Map<abs path, kind> } — every script the roots
 // reach; `how` says how it runs: 'root'; 'launched' when ANY edge launches it (the program of a shell command, a
 // script after an interpreter word, or a path.join/path.resolve launch in JS), even one first reached as a module —
 // a script some runner launches is a program with an exit code, however else it is reached; else 'required' (a JS
@@ -312,18 +314,15 @@ function runSet(layout = DEFAULT_LAYOUT) {
   // spelled as the build's shell would spell it, relative to Fizzygum/ (`buildSystem/x.js`, `../Fizzygum-tests/
   // scripts/x.js`; `require` resolved the table's symlinks, so the relation is taken between resolved paths), and
   // resolved like every other edge, by its tail; a row naming no scanned script is an ERROR, never a gate silently
-  // dropped — but a row whose script lives in the tests repo (the table's TESTS_REPO), in a layout with no tests
-  // repo, launches nothing, as the runner passes it over. The table is read as it stands on disk now, like every other
-  // file here, never from require's cache.
+  // dropped — the tests repo's rows included, since the build requires that repo. The table is read as it stands on
+  // disk now, like every other file here, never from require's cache.
   const viaGateTable = (gatesFile, from) => {
     delete require.cache[require.resolve(gatesFile)];
-    const { GATES, BUILD_ARGS, TESTS_REPO } = require(gatesFile);
+    const { GATES, BUILD_ARGS } = require(gatesFile);
     const fizzygum = fs.realpathSync(layout.fizzygum);
-    const testsRepoPresent = layout.tests !== undefined && fs.existsSync(layout.tests) && fs.statSync(layout.tests).isDirectory();
     for (const row of GATES) {
       const token = path.relative(fizzygum, row.script);
       const targets = resolve(token);
-      if (targets.length === 0 && !testsRepoPresent && TESTS_REPO !== undefined && row.script.startsWith(TESTS_REPO + path.sep)) continue;
       if (targets.length === 0) throw new Error(`what-runs: ${GATE_TABLE} has a row for ${row.script}, which is not a scanned script`);
       const args = row.args === BUILD_ARGS ? ['"${args[@]}"'] : row.args;
       for (const f of targets) launch(f, ['node', token, ...args].join(' '), from);
@@ -342,8 +341,8 @@ function runSet(layout = DEFAULT_LAYOUT) {
     reached.add(buildAndSmoke); why.set(buildAndSmoke, 'ROOT: the build-and-smoke check'); how.set(buildAndSmoke, 'root');
     viaShell(fs.readFileSync(buildAndSmoke, 'utf8'), 'build_and_smoke.sh');
   }
-  const fgPresent = fs.existsSync(layout.fg);
-  if (fgPresent) viaShell(fgRootText(layout.fg), 'ROOT: fg legs');
+  if (!fs.existsSync(layout.fg)) throw new Error(`what-runs: no ${layout.fg}`);
+  viaShell(fgRootText(layout.fg), 'ROOT: fg legs');
 
   while (queue.length) {
     const f = queue.shift();
@@ -362,7 +361,7 @@ function runSet(layout = DEFAULT_LAYOUT) {
       else for (const t of resolve(l.token)) add(t, from, 'launched');
     }
   }
-  return { files: reached, fgPresent, why, how };
+  return { files: reached, why, how };
 }
 
 module.exports = { CONVENTIONS, DEFAULT_LAYOUT, scriptFiles, skippedEntry, discover, runSet, shellCommands, shellInvocations,

@@ -3,8 +3,8 @@
 // hold is passed over, the first failure rings the bell, prints its line on stderr and stops the run with exit 1, an OK
 // line is printed only where a row has one, a BUILD_ARGS row gets the build's arguments, and a row naming a WHEN the
 // runner does not know stops the run before any row runs, under --noSyntaxCheck too; and on the real gates.js: every
-// row names a known WHEN and a script that exists, once, a row whose script lives in the tests repo runs only where
-// that repo is present, and the lint index (docs/architecture/lint-and-static-checks.md) names each gate at its row. The command line is seen refusing a malformed invocation (exit 2), refusing a malformed
+// row names a known WHEN and a script that exists, once, and the lint index (docs/architecture/lint-and-static-checks.md)
+// names each gate at its row. The command line is seen refusing a malformed invocation (exit 2), refusing a malformed
 // table (exit 2, a planted copy of the runner beside a table of its own) and, under --noSyntaxCheck=true, running
 // nothing (exit 0). Run by buildSystem/run-selftests.js on every build.
 const fs = require('fs');
@@ -30,11 +30,11 @@ const row = (script, when, ok, args = []) => ({ script, args, when, banner: `B $
 const TABLE = [
   row('a', 'checked', 'OK a'),
   row('b', 'testsShipped', 'OK b'),
-  row('c', 'testsRepo', undefined),
+  row('c', 'checked', undefined),
   row('d', 'checked', 'OK d', BUILD_ARGS),
   row('e', 'checked', 'OK e'),
 ];
-const ctx = (over) => ({ noSyntaxCheck: false, shipsTests: true, testsRepoPresent: true, buildArgs: ['--profile', 'lean'], ...over });
+const ctx = (over) => ({ noSyntaxCheck: false, shipsTests: true, buildArgs: ['--profile', 'lean'], ...over });
 const ran = (io) => io.log.filter((e) => e[0] === 'run').map((e) => e[1]).join('');
 
 { // every row, in order, each banner before its run and its OK after
@@ -47,11 +47,9 @@ const ran = (io) => io.log.filter((e) => e[0] === 'run').map((e) => e[1]).join('
   t.check(JSON.stringify(io.log) === JSON.stringify(want), 'banner, run, OK in order; a row with no OK prints none; BUILD_ARGS forwarded',
     JSON.stringify(io.log));
 }
-{ // WHEN: the tests repo absent drops b and c; the tests not shipped drops b; --noSyntaxCheck drops everything
-  const io1 = recorder(); runGates(TABLE, ctx({ testsRepoPresent: false }), io1);
-  t.check(ran(io1) === 'ade', 'no tests repo: the testsShipped and testsRepo rows are passed over', ran(io1));
+{ // WHEN: the tests not shipped drops b; --noSyntaxCheck drops everything
   const io2 = recorder(); runGates(TABLE, ctx({ shipsTests: false }), io2);
-  t.check(ran(io2) === 'acde', 'tests not shipped: the testsShipped row is passed over, the testsRepo row runs', ran(io2));
+  t.check(ran(io2) === 'acde', 'tests not shipped: the testsShipped row is passed over, every checked row runs', ran(io2));
   const io3 = recorder(); const code3 = runGates(TABLE, ctx({ noSyntaxCheck: true }), io3);
   t.check(code3 === 0 && io3.log.length === 0, '--noSyntaxCheck: nothing runs, nothing is printed, exit 0', JSON.stringify(io3.log));
 }
@@ -76,19 +74,12 @@ const ran = (io) => io.log.filter((e) => e[0] === 'run').map((e) => e[1]).join('
 }
 { // the real table
   t.check(GATES.length > 0 && tableErrorOf(GATES) === undefined, 'gates.js has rows, each naming a known WHEN', tableErrorOf(GATES));
-  // the tests repo's scripts exist only where it is checked out, which is exactly where their rows run
-  // TESTS_REPO is where the build names the tests repo everywhere else (`../Fizzygum-tests` beside Fizzygum/): a
-  // wrong path would make the runner read the repo as absent and pass five gates over, saying nothing
+  // TESTS_REPO is where the build names the tests repo everywhere else (`../Fizzygum-tests` beside Fizzygum/, which
+  // build_it_please.sh requires before anything runs): the tests repo's rows name their scripts under it
   t.check(TESTS_REPO === path.resolve(__dirname, '..', '..', 'Fizzygum-tests'),
     'gates.js TESTS_REPO is the Fizzygum-tests directory beside this repo', String(TESTS_REPO));
-  const inTestsRepo = (r) => r.script.startsWith(TESTS_REPO + path.sep);
-  t.check(GATES.filter(inTestsRepo).every((r) => r.when === 'testsShipped' || r.when === 'testsRepo'),
-    'every row whose script lives in the tests repo runs only where that repo is present',
-    GATES.filter((r) => inTestsRepo(r) && r.when === 'checked').map((r) => r.script).join(', '));
-  const testsRepoPresent = fs.existsSync(TESTS_REPO);
-  const missing = GATES.filter((r) => (testsRepoPresent || !inTestsRepo(r)) && !fs.existsSync(r.script));
-  t.check(missing.length === 0, `every gates.js row names a script that exists${testsRepoPresent ? '' : ' (the tests repo is absent: its rows not looked up)'}`,
-    missing.map((r) => r.script).join(', '));
+  const missing = GATES.filter((r) => !fs.existsSync(r.script));
+  t.check(missing.length === 0, 'every gates.js row names a script that exists', missing.map((r) => r.script).join(', '));
   t.check(new Set(GATES.map((r) => r.script)).size === GATES.length, 'no gates.js script is run twice');
   // the lint index's gate inventory names each gate's row of this table ("Wired": `row N`) — a position, so a row
   // inserted or moved renumbers every later one: held here, it fails until the index says where each gate now runs

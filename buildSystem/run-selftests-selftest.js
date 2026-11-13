@@ -88,6 +88,9 @@ const proofOf = (gate, name, call = true) => "const path = require('path');\n" +
   `const GATE = path.join(__dirname, '${gate}');\n` +
   `if (false) { const { proveGate } = require('./lib/planted-src');${call ? ' proveGate({ gate: GATE });' : ''} }\n` +
   verdict(name, 'PASS — 1 case');
+// a workspace's fg, whose four leg functions the gate census reads (lib/what-runs.js): here they launch nothing
+const FG_LAUNCHING_NOTHING = 'fg_build(){\n  :\n}\nfg_suite(){ :; }\nrun_lint(){\n  :\n}\nrun_leg(){\n  :\n}\n';
+
 proveGate({
   name: 'run-selftests',
   cases: t,
@@ -98,6 +101,7 @@ proveGate({
   control: {
     plants: {
       'Fizzygum/build_it_please.sh': 'node buildSystem/g-gate.js\n',
+      'Fizzygum/fg': FG_LAUNCHING_NOTHING,
       // a gate that builds its own self-test's path (to skip it) reads as launching it: a self-test is still no gate
       [BS + 'g-gate.js']: registryGate + "const path = require('path');\nconst SELF = path.join(__dirname, 'g-gate-selftest.js');\n",
       [BS + 'g-gate-selftest.js']: proofOf('g-gate.js', 'g-gate'),
@@ -135,6 +139,7 @@ proveGate({
       'Fizzygum/build_it_please.sh': ['noproof-gate', 'noreg-gate', 'step', 'callless-gate', 'late-gate']
         .map((g) => `node buildSystem/${g}.js\n`).join('')
         + 'node ./buildSystem/run-gates.js --noSyntaxCheck=false --shipsTests=true -- "${args[@]}"\n',
+      'Fizzygum/fg': FG_LAUNCHING_NOTHING,
       // the runner says why it is no gate; its table's one row names a script no text scan can read, so only the
       // table, read as data, makes it a gate
       [BS + 'run-gates.js']: "#!/usr/bin/env node\n'use strict';\n// not-a-gate: the runner of the table's gates\nrequire('./gates');\n",

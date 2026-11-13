@@ -52,7 +52,7 @@
  *       sources or its scripts/ rigs, comments cut and its prose, reference records and manifests
  *       unread (lib/tests-repo-code.js). Provably not external API → candidates for
  *       a `_` rename (rule [U]; deliberate end-user API goes in buildSystem/public-api-allowlist.txt).
- *       NEEDS the sibling Fizzygum-tests repo; R4 is null (and rule [U] SKIPS) when it is absent.
+ *       It reads the sibling Fizzygum-tests repo, which every build requires.
  *
  * HOW (same philosophy as the check-*.js gates — a heuristic line scanner, no type inference):
  *   - Parsing machinery: every source is read through lib/coffee-mask.js (R1-R3 read each line's bare code,
@@ -159,10 +159,10 @@ const SCHEDULE_CALL = /[@.]\s*_invalidateLayout\b/;
 // ============================== THE ENGINE ==============================
 // runCensus({ src, testsRepo }) reads the compiled sources of the trees it is given (lib/source-files.js compiledFiles:
 // src and the tests repo's harness; default this umbrella's, a gate's --src= / --tests-repo= rails hand it planted
-// copies), and R4 the tests repo's code besides. Returns { stats, R1, R2, R2narrowed, R3, R4, haveTestsRepo }.
+// copies), and R4 the tests repo's code besides. Returns { stats, R1, R2, R2narrowed, R3, R4 }.
 //   R1 row:  { cls, caller, callee, calleeClass, sanctioned, at }
 //   R2 row:  { cls, caller, ctor, callerDirectlySettles, sanctioned, callee, at }
-//   R4 row:  { name, selfCalls, effectful, defs }   (R4 = null when the tests repo is absent)
+//   R4 row:  { name, selfCalls, effectful, defs }
 function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
   if (!fs.existsSync(src)) throw new Error('cannot find ' + src + ' — run from the Fizzygum repo root');
   const roots = { src, testsRepo };
@@ -326,7 +326,7 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
   }
 
   // ---- censuses R1/R2/R3 ----
-  const out = { stats: {}, R1: [], R2: [], R2narrowed: [], R3: { public: [], private: [] }, R4: null, haveTestsRepo: false };
+  const out = { stats: {}, R1: [], R2: [], R2narrowed: [], R3: { public: [], private: [] }, R4: [] };
   let nPub = 0, nPriv = 0, nLeaf = 0;
   for (const rec of allMethods) {
     const t = tierOf(rec.name);
@@ -366,7 +366,7 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
     }
   }
 
-  // ---- R4: privatization candidates (needs the sibling tests repo) ----
+  // ---- R4: privatization candidates (src, the harness and the rest of the sibling tests repo's code) ----
   // Occurrence harvest: every REFERENCE to a public method name, by the one rule (lib/method-references.js —
   // a property access, a whole-name string, a name template, a computed access on a named class), read from
   // code (comments cut by coffee-mask). A bare word — a local, a key, a def's own name — is no reference and
@@ -397,39 +397,36 @@ function runCensus({ src = SRC, testsRepo = TESTS_REPO } = {}) {
     }
   }
   out.nameOcc = nameOcc;
-  // a tests repo that exists holds its harness (compiledFiles above refuses one that does not)
-  out.haveTestsRepo = fs.existsSync(path.join(testsRepo, 'tests'));
-  if (out.haveTestsRepo) {
-    // The rest of the tests repo's CODE (lib/tests-repo-code.js): the macro sources and the scripts/ rigs,
-    // strings kept (name dispatch) and comments cut. Its metadata prose, reference-image records and
-    // manifests are not code, so a sentence naming a method never counts as a call of it. The harness is
-    // a compiled source, read above with each reference classified by its receiver: read again here, a
-    // harness class's own `@m` would count as EXTERNAL and no harness method could be self-only.
-    for (const { kind, lines } of testsRepoCode(testsRepo)) {
-      if (kind === 'harness') continue;
-      for (const line of lines) {
-        const r = methodRefs.methodReferences(line);
-        templates.push(...r.templates);
-        computedClasses.push(...r.classes);
-        for (const n of r.names) if (publicNames.has(n)) bump(n, 'external');
-      }
+  // The rest of the tests repo's CODE (lib/tests-repo-code.js): the macro sources and the scripts/ rigs,
+  // strings kept (name dispatch) and comments cut. Its metadata prose, reference-image records and
+  // manifests are not code, so a sentence naming a method never counts as a call of it. The harness is
+  // a compiled source, read above with each reference classified by its receiver: read again here, a
+  // harness class's own `@m` would count as EXTERNAL and no harness method could be self-only.
+  for (const { kind, lines } of testsRepoCode(testsRepo)) {
+    if (kind === 'harness') continue;
+    for (const line of lines) {
+      const r = methodRefs.methodReferences(line);
+      templates.push(...r.templates);
+      computedClasses.push(...r.classes);
+      for (const n of r.names) if (publicNames.has(n)) bump(n, 'external');
     }
-    // computed dispatch from either side (a "_#{a}Connector" template, a `C::[k]` access) reaches a method by a
-    // name no token spells: not a self-call, so it disqualifies like any other reference
-    const instanceMethods = allMethods.map((r) => ({ name: r.name, cls: r.cls, classSide: false }));
-    const chainNames = (c) => (classInfo.has(c) ? chainOf(c).map((i) => i.name) : [c]);
-    for (const n of methodRefs.reachedByComputedDispatch(templates, computedClasses, instanceMethods, chainNames)) if (publicNames.has(n)) bump(n, 'other');
-    const R4 = [];
-    for (const name of publicNames) {
-      const o = nameOcc.get(name) || { self: 0, member: 0, other: 0, external: 0 };
-      if (o.self > 0 && o.member === 0 && o.other === 0 && o.external === 0) {
-        const defRecs = allMethods.filter(r => r.name === name);
-        const anyEffectful = defRecs.some(r => effectT.get(key(r)));
-        R4.push({ name, selfCalls: o.self, effectful: anyEffectful, defs: defRecs.map(r => r.cls) });
-      }
-    }
-    out.R4 = R4.sort((a, b) => b.selfCalls - a.selfCalls || (a.name < b.name ? -1 : 1));
   }
+  // computed dispatch from either side (a "_#{a}Connector" template, a `C::[k]` access) reaches a method by a
+  // name no token spells: not a self-call, so it disqualifies like any other reference
+  const instanceMethods = allMethods.map((r) => ({ name: r.name, cls: r.cls, classSide: false }));
+  // (each class's chain as a list, in resolution order: chainNames above answers a Set)
+  const chainNameList = (c) => (classInfo.has(c) ? chainOf(c).map((i) => i.name) : [c]);
+  for (const n of methodRefs.reachedByComputedDispatch(templates, computedClasses, instanceMethods, chainNameList)) if (publicNames.has(n)) bump(n, 'other');
+  const R4 = [];
+  for (const name of publicNames) {
+    const o = nameOcc.get(name) || { self: 0, member: 0, other: 0, external: 0 };
+    if (o.self > 0 && o.member === 0 && o.other === 0 && o.external === 0) {
+      const defRecs = allMethods.filter(r => r.name === name);
+      const anyEffectful = defRecs.some(r => effectT.get(key(r)));
+      R4.push({ name, selfCalls: o.self, effectful: anyEffectful, defs: defRecs.map(r => r.cls) });
+    }
+  }
+  out.R4 = R4.sort((a, b) => b.selfCalls - a.selfCalls || (a.name < b.name ? -1 : 1));
   out.allMethodNames = new Set(allMethods.map(r => r.name));
   out.allMethods = allMethods;
   // The whole-system CLASS MODEL, exposed so sibling censuses don't re-implement it. Fizzygum is
@@ -505,18 +502,14 @@ if (require.main === module) {
   console.log(`public callers mixing: ${out.R3.public.length}, private callers mixing: ${out.R3.private.length}`);
 
   console.log('\n=== R4: privatization candidates (public, only ever @-self-called) ===');
-  if (!out.R4) {
-    console.log('SKIPPED — sibling Fizzygum-tests repo not found (R4 needs its reference set to be sound).');
-  } else {
-    const cmd = out.R4.filter(r => r.effectful), qry = out.R4.filter(r => !r.effectful);
-    console.log(`total: ${out.R4.length}  (EFFECTFUL — rename first: ${cmd.length};  QUERY — cosmetic: ${qry.length})`);
-    console.log('--- EFFECTFUL candidates ---');
-    for (const r of trunc(cmd, 25)) console.log(`  ${String(r.selfCalls).padStart(4)}x  ${r.name}  (${r.defs.slice(0, 4).join(', ')}${r.defs.length > 4 ? '…' : ''})`);
-    if (!FULL) console.log('  … (--full for all)');
-    console.log('--- QUERY candidates ---');
-    for (const r of trunc(qry, 25)) console.log(`  ${String(r.selfCalls).padStart(4)}x  ${r.name}  (${r.defs.slice(0, 4).join(', ')}${r.defs.length > 4 ? '…' : ''})`);
-    if (!FULL) console.log('  … (--full for all)');
-  }
+  const cmd = out.R4.filter(r => r.effectful), qry = out.R4.filter(r => !r.effectful);
+  console.log(`total: ${out.R4.length}  (EFFECTFUL — rename first: ${cmd.length};  QUERY — cosmetic: ${qry.length})`);
+  console.log('--- EFFECTFUL candidates ---');
+  for (const r of trunc(cmd, 25)) console.log(`  ${String(r.selfCalls).padStart(4)}x  ${r.name}  (${r.defs.slice(0, 4).join(', ')}${r.defs.length > 4 ? '…' : ''})`);
+  if (!FULL) console.log('  … (--full for all)');
+  console.log('--- QUERY candidates ---');
+  for (const r of trunc(qry, 25)) console.log(`  ${String(r.selfCalls).padStart(4)}x  ${r.name}  (${r.defs.slice(0, 4).join(', ')}${r.defs.length > 4 ? '…' : ''})`);
+  if (!FULL) console.log('  … (--full for all)');
 
   if (JSON_OUT) {
     const dump = { ...out, nameOcc: undefined, allMethods: undefined, allMethodNames: undefined,
