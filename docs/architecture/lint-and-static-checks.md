@@ -553,8 +553,8 @@ excludes jscpd/jsinspect (minutes-slow — those stay on-demand behind `./find_d
 `./find_similar_code.sh`).
 
 `fg critique` (`Fizzygum/fg`) runs, in order: `check-stinks`,
-`check-dead-methods`, `check-unresolved-sends`, `check-call-separation` (reprinting only each one's `UNDER` / stale-entry
-NOTE), then four censuses' summary counts — `census-public-private-calls`, `census-hierarchy-duplication`,
+`check-dead-methods`, `check-unresolved-sends`, `check-call-separation`, `check-complexity-ratchets` (reprinting only
+each one's `UNDER` / stale-entry NOTE), then four censuses' summary counts — `census-public-private-calls`, `census-hierarchy-duplication`,
 `census-property-placement`, `census-widget-conformance` (its advisory view) — and the call-arguments gate's own verdict
 line (it also runs on every build), then an advisory-only footer.
 

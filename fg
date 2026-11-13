@@ -843,6 +843,13 @@ case "$cmd" in
     git -C "$FT" worktree add --detach "$BASEDIR/Fizzygum-tests" HEAD >/dev/null 2>&1 \
       || { echo "fg fingerprint: cannot create a worktree of Fizzygum-tests"; verdict_end fingerprint 1 "FAILED — worktree"; exit 1; }
     ln -sfn "$FT/node_modules" "$BASEDIR/Fizzygum-tests/node_modules"
+    # font-assets/ is gitignored, so a worktree has none, and every profile that ships an SWCanvas page copies it:
+    # without this the candidate shows its ~4,500 files as extra whatever the change. The build copies through the
+    # link (`cp -R font-assets/*`), so the baseline tree gets real files.
+    [ -d "$FZ/font-assets" ] && ln -sfn "$FZ/font-assets" "$BASEDIR/Fizzygum/font-assets"
+    # A baseline from before fg was versioned (Fizzygum/fg) looks for it in the umbrella, as fg then lived there:
+    # give it this one, or its build's first gate fails before anything is compared.
+    [ -e "$BASEDIR/Fizzygum/fg" ] || cp "$FZ/fg" "$BASEDIR/fg"
 
     OUT="$FT/.scratch/fingerprints"; mkdir -p "$OUT"
     ban "fingerprint: building '$prof' at BASELINE $base"
@@ -922,12 +929,13 @@ case "$cmd" in
       printf '\n── %s (%ss)\n' "$label" "$(( $(date +%s) - s ))"
       echo "$out" | grep -vE '^\s*$' | sed 's/^/   /'
     }
-    # 1-3: the ratchets — reprint only the "tighten me" / stale-entry NOTEs and the summaries
+    # 1-5: the ratchets — reprint only the "tighten me" / stale-entry NOTEs and the summaries
     step "stinks — tighten?" bash -c "node ./buildSystem/check-stinks.js | grep -E 'UNDER|NOTE|OK --' || true"
     step "dead-methods — stale allowlist?" bash -c "node ./buildSystem/check-dead-methods.js | grep -E 'NOTE|OK —' || true"
     step "unresolved-sends — stale allowlist?" bash -c "node ./buildSystem/check-unresolved-sends.js | grep -E 'NOTE|OK —' || true"
     step "call-separation — tighten?" bash -c "node ./buildSystem/check-call-separation.js | grep -E 'NOTE|OK —' || true"
-    # 4-6: the advisory censuses — summary counts only ( --full for the lists )
+    step "complexity ratchets — tighten?" bash -c "node ./buildSystem/check-complexity-ratchets.js | grep -E 'UNDER|NOTE|OK' || true"
+    # 6-8: the advisory censuses — summary counts only ( --full for the lists )
     step "census: public/private self-calls" bash -c "node ./buildSystem/census-public-private-calls.js | grep -E '^(stats|by callee class|hard sites|total|narrowed)' || true"
     step "census: hierarchy duplication" bash -c "node ./buildSystem/census-hierarchy-duplication.js | grep -E '^(scanned|IDENTICAL)' || true"
     step "census: property placement" bash -c "node ./buildSystem/census-property-placement.js | grep -E '^(scanned|PULL-UP:)|withheld' || true"
@@ -935,7 +943,7 @@ case "$cmd" in
     # `--gate` on the build; the other four are heuristics that must never gate. Both baselines
     # are FLOORS, so a green ratchet is not an empty inventory.
     step "census: widget conformance" bash -c "node ./buildSystem/census-widget-conformance.js | grep -E '^(\[widget-conformance\]|RATCHETED|ADVISORY|  [0-9]\.)' || true"
-    # 7: call arguments — the GATE's own verdict line (holes, extra arguments, positionals into options;
+    # 9: call arguments — the GATE's own verdict line (holes, extra arguments, positionals into options;
     # every call in both repos, exact zero; it also runs on every build). `--values` on it lists the
     # absences it judges values; the call-site queries are census-call-arity.js's (`<Class…>`, --super=, --call=).
     step "call arguments (the gate's verdict)" bash -c "node ./buildSystem/check-call-arguments.js | grep -E '^\[call-arguments\]' || true"
