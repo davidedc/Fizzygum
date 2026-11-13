@@ -272,7 +272,7 @@ hole test (R3) is answered by reordering, not by an options bag.
 |---|---|---|---|
 | E1 | **Value / geometry tuples** — `Point`, `Rectangle`, `Color` | canonical order; an options object would double the allocation on the hottest construction path in the system | ~960 `new Point`, 95 `new Rectangle` in `src/` |
 | E2 | **Per-frame construction** generally | same allocation argument, wherever it actually applies | — |
-| E3 | **Records mirroring a foreign API** — the `events-input/` family | fields and their order come from the DOM event, not from us; the *named* entry point is the `fromBrowserEvent` static factory, and every runtime site uses it | 5 classes, 7–11 params (two more in the family are already ≤4 on their own); `WorldWdgt`'s DOM handlers all go through the factory |
+| E3 | **Records mirroring a foreign API** — the `events-input/` family | fields and their order come from the DOM event, not from us; the *named* entry point is the `fromBrowserEvent` static factory, and every runtime site uses it | 5 classes, 7–11 params (two more in the family are already ≤4 on their own); every record the browser-input bridge's DOM listeners build (`world.browserInput`) goes through the factory |
 | E4 | **Published user-facing spellings** | a spreadsheet formula is typed by a user; changing the spelling breaks saved documents | `new SliderWdgt 0, 100, 30, 10` via `FormulaCompiler` |
 | E5 | **Arity ≤ 3, all required** | nothing to separate | 129 of 144 constructors |
 

@@ -143,13 +143,13 @@ class Serializer
   # --- whole-world snapshot (kind:"world"); see docs §11 and the plan §4.9 -----------------
   #
   # The world is DELIBERATELY NOT a table record. Serializing the world widget's own props
-  # would drag in ~50 transient fields (the render/measure canvases + contexts, seven
-  # LRUCaches, the input-event queue, the hand, the caret, the damage-rect trackers, and a
-  # dozen event-listener CLOSURES) — the walker would crash on the first one (a CanvasPattern
-  # on @appearance, exactly defect D8). Instead the genuine world state is captured in an
-  # explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS — the desktop
-  # children, the off-tree bin and shelf, the registered app windows (world.appWindows) — are
-  # walked into the object table. A snapshot restores a SETTLED world (§1): the hand-held
+  # would drag in dozens of transient fields (the render/measure canvases + contexts, seven
+  # LRUCaches, the input-event queue, the hand, the caret, the damage-rect trackers, and the
+  # browser-input bridge with its dozen event-listener CLOSURES) — the walker would crash on the
+  # first one (a CanvasPattern on @appearance, exactly defect D8). Instead the genuine world state
+  # is captured in an explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS —
+  # the desktop children, the off-tree bin and shelf, the registered app windows (world.appWindows)
+  # — are walked into the object table. A snapshot restores a SETTLED world (§1): the hand-held
   # widget and the caret are dropped by construction (they live outside the snapshot roots);
   # open UNPINNED menus/pop-ups ARE world children, so the filter below drops them explicitly.
   @serializeWorld: (theWorld, opts = {}) ->

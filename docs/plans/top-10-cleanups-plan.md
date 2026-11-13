@@ -100,7 +100,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Not started |
 | 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Landed 2026-11-13; no trap fired |
-| 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Not started |
+| 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Landed 2026-11-13 |
 | 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Not started |
 | 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
 | 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Not started |
@@ -407,6 +407,28 @@ item should be re-scoped.
 
 **Re-measure.**
 `grep -nE '^  (_init[A-Za-z]+|initEventListeners|removeEventListeners):' Fizzygum/src/WorldWdgt.coffee`.
+
+**Landed 2026-11-13 (the loop's U7): the input bridge is `world.browserInput`.** The first step found the seam
+as narrow as stated: the 20 listener closures are read nowhere outside the seven methods, and the one other
+field, the on-screen keyboard's hidden `<input>`, is read by the world's `edit`, its stop-editing body, its
+dissolution and two tests — none of them the cycle or the hand. The seven methods and the 21 fields moved, as
+copied lines, into `BrowserInputBridge` (`src/events-input/`, beside the queue it feeds): a plain collaborator
+the world builds with `new BrowserInputBridge @` where it used to call `initEventListeners`, holding a reference
+to that world rather than reading the global. Inside the moved bodies only `@x` → `@world.x` changed (26 sites),
+`_initVirtualKeyboard` became `initVirtualKeyboard`, because its one caller is now outside its class, and the
+comment over `removeEventListeners` was corrected (it said its only caller was the harness; the world's
+dissolution calls it too). The harness calls `world.browserInput.initEventListeners()` / `removeEventListeners()`
+directly; the world keeps no delegating pair. Of the two teardown paths only the dissolution releases the
+listeners — `loadWorldSnapshot` keeps its world and its listeners, as it always did (the Risk paragraph above
+says otherwise). Evidence: a script proved the moved lines equal HEAD's once those rewrites are undone, and the
+world equal HEAD's minus them; the resolution map shows 28 members leaving `WorldWdgt` (7 methods, 21 fields)
+for the bridge and, besides, only six re-pointed functions changing (the map lists no constructors, so the
+world's constructor change shows in the diff alone); a listener census by CDP (`DOMDebugger.getEventListeners`
+on `window`, `document`, `document.body` and the canvas, on `index.html` and the harness page, at boot, after
+`resetWorld`, after `loadWorldSnapshot` and around the harness's own pair) is byte-identical before and after
+— it reads each listener's type and options, not which closure it is, and the object-lifetime gate (`fg
+vmtruth`) is what sees a retained one; no reference moved on any gauntlet leg. The docking family (`FrameWdgt`,
+the second candidate) was not examined here.
 
 ---
 
@@ -909,6 +931,9 @@ Do not commit or push without asking me.
   BACKLOG keeps step 2, the gate table.
 - [x] §10 step 2 (about 3 days): the gate sequence as a table (`build_it_please.sh`'s gate blocks become rows a runner executes; `lib/what-runs.js` reads the table). Step 1, the Node port, landed (the plan's `## BACKLOG ledger`)
   — CLOSED 2026-11-13 (loop U6): `buildSystem/gates.js` + `buildSystem/run-gates.js` (§10, the step-2 "Landed").
+- [x] §5 (2 days): lift the browser-input bridge (seven listener methods) off `WorldWdgt`
+  — CLOSED 2026-11-13 (loop U7): `world.browserInput`, `src/events-input/BrowserInputBridge.coffee` (§5, "Landed").
+  BACKLOG keeps §5's unexamined second candidate, `FrameWdgt`'s docking family.
 - [x] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
       Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
       `BoxyAppearance`), and the static-checks table states no blind spot for it.

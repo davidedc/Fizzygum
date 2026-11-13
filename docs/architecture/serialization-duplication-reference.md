@@ -738,9 +738,9 @@ Save downloads `world.fzw.json` ("Save world snapshot…" world menu); load rout
 `kind` field (the drop handler / "Open from file…").
 
 **The world is DELIBERATELY NOT a table record.** Serializing the world *widget's* own props
-would drag in ~50 transient fields (the render/measure canvases + contexts, seven LRUCaches,
-the input-event queue, the hand, the caret, the damage-rect trackers, a dozen event-listener
-CLOSURES, `@appearance`'s `CanvasPattern`) — the walker crashes on the first, exactly defect
+would drag in dozens of transient fields (the render/measure canvases + contexts, seven LRUCaches,
+the input-event queue, the hand, the caret, the damage-rect trackers, the browser-input bridge with
+its dozen event-listener CLOSURES, `@appearance`'s `CanvasPattern`) — the walker crashes on the first, exactly defect
 D8. So the world's genuine state goes into an explicit, greppable **`world` envelope section**,
 and only the SNAPSHOT ROOTS are walked into the object table. This is why the world needs no
 `@serializationTransients` at all — its transient surface is simply never visited.

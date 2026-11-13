@@ -30,6 +30,13 @@ Two construction boundaries build these events, and nothing else does:
   page→world conversion, rounding to whole pixels (a pointer position can be fractional — a
   finger, a scaled page — and the rest of the system has no use for a fractional input position).
   `pointerType` is read straight off the DOM event, so it is real hardware fact, never a guess.
+  Its callers are the four pointer listeners (on the canvas) of the world's input bridge,
+  `world.browserInput` (`src/events-input/BrowserInputBridge.coffee`, a plain collaborator holding
+  its world), whose other listeners build their own records the same way — each event family's
+  `fromBrowserEvent` — for the keyboard, the wheel, the clipboard and a window resize. The world
+  builds its bridge and installs the set at construction, and its dissolution removes it; the
+  harness removes and re-installs it around every SystemTest, so a macro's synthetic events are the
+  only input.
 - **`@synthetic(...)` / `@syntheticTouch(...)`** — the MACRO boundary (the `Fizzygum-tests`
   toolkit is the one caller). Everything a browser reports about the pointer DEVICE is a
   deterministic constant here: `synthetic` bakes `pointerType: 'mouse', pointerId: 1,
@@ -426,8 +433,9 @@ enough to open anything.
 
 ### The virtual keyboard, keyed on the starting tap
 
-`WorldWdgt.edit` (the caret-creation seam) summons the hidden DOM input `_initVirtualKeyboard`
-builds iff `@hand.pointerType is 'touch' and WorldWdgt.preferencesAndSettings.useVirtualKeyboard`
+`WorldWdgt.edit` (the caret-creation seam) summons the hidden DOM input that the world's input bridge
+(`world.browserInput.initVirtualKeyboard`, `src/events-input/BrowserInputBridge.coffee`) builds iff
+`@hand.pointerType is 'touch' and WorldWdgt.preferencesAndSettings.useVirtualKeyboard`
 — the STARTING tap's kind, not a session-level device flag: an edit begun by a finger has no
 physical keyboard behind it and needs the on-screen one; an edit begun by a mouse or a pen leaves
 the canvas's own keyboard listeners to do the typing. A machine that mixes the two answers per

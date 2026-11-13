@@ -170,7 +170,7 @@ const STINKS = [
       { file: 'authoring/PaintToolbarWdgt.coffee', member: '@ERASER_TOOL_SOURCE', count: 3, why: "a paint tool's source text, which the user reads and edits: content" },
       { file: 'PreferencesAndSettings.coffee', member: 'getMinimumFontHeight', count: 1, why: 'a throwaway calibration rasterisation, never shown' },
       { file: 'WorldWdgt.coffee', member: '_showDamageRects', count: 1, why: 'the debug damage overlay: random colours by design' },
-      { file: 'WorldWdgt.coffee', member: '_initVirtualKeyboard', count: 2, why: 'styling of an invisible DOM <input>, not canvas paint' },
+      { file: 'events-input/BrowserInputBridge.coffee', member: 'initVirtualKeyboard', count: 2, why: 'styling of an invisible DOM <input>, not canvas paint' },
       { file: 'basic-widgets/BackBuffer.coffee', member: 'pixelColorAt', count: 1, why: 'value plumbing: a Color built from read pixel bytes' },
       { file: 'harness/WorldTestSupport.coffee', member: 'nextStartupAction', count: 1, why: "the harness page's DOM background when a startup run ends, not canvas paint" },
       { file: 'harness/WorldTestSupport.coffee', member: '_sizeCanvasToTestScreenResolution', count: 1, why: "the harness page's DOM background around the test canvas, not canvas paint" },

@@ -95,10 +95,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       shows its compiled JavaScript. Forwarding the record onto a wrapper (`Class.keepMemberRecord wrapper,
       Class.memberRecordOf original`, public) or accepting compiled text: the plan's owner's call.
 - [ ] **The world's inspector offers to edit its browser listeners** (found by the independent review closing "A run
-      that sets a widget field to a function blocks every world snapshot", in the plan's ledger; by reading). The world
-      holds its DOM listeners as own function fields (`pointerdownBrowserEventListener`, …), so an object inspector on
-      the world lists them with Remove, Rename and Save: changing one leaves the browser calling the old function, and
-      `removeEventListeners` passes the new one, which was never registered.
+      that sets a widget field to a function blocks every world snapshot", in the plan's ledger; by reading). The
+      world's input bridge (`world.browserInput`, a `BrowserInputBridge`) holds its DOM listeners as own function fields
+      (`pointerdownBrowserEventListener`, …), so an object inspector opened on it from the world's inspector lists them
+      with Remove, Rename and Save: changing one leaves the browser calling the old function, and
+      `removeEventListeners` passes the new one, which was never registered — at the next reset the original closure
+      stays attached and keeps the dissolved world alive.
 - [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
       independent review closing "A run that sets a widget field to a function blocks every world snapshot", in the
       plan's ledger; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
@@ -570,7 +572,8 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 - [ ] §2 (½ day): put `fg` and the guard hook under version control (⛔ which repo); then delete `what-runs.js`'s `fgPresent` branch
 - [ ] §2, found 2026-11-12 by the loop's U1 (medium): **`fg fingerprint` cannot build its BASELINE on today's tree.** Its throwaway umbrella has no `fg`, so `lib/what-runs.js` answers `fgPresent: false`, `check-hand-lists`' SANCTION_GUARD_NEVER_RUNS becomes undecidable, and `check-hand-lists-selftest.js` (which needs that rule to fire on the real layout) fails the baseline build's first gate — every profile, before anything is compared. A second setup gap of the same tool: the baseline worktree has no `font-assets/` (gitignored), so every profile that ships an SWCanvas page (`dev`, `dev-notests`) shows ~4,554 extra entries in the candidate whatever the change. A third: it compares a CLEAN baseline with a DIRTY candidate, and terser's mangler reads the build stamp's characters, so " +local-changes" alone can rename locals in a boot bundle (measured on `lean`: `classStaticListMergedUpTheChain`'s locals, same size, a FINDING until probed) — the stamp normalisation cannot see that. The loop measures by hand with a copy of `fg` in the baseline umbrella and `font-assets/` linked in as `node_modules` is (`Fizzygum-tests/.scratch/cleanups-loop/manual-fingerprint.sh`). Fix in `fg` (copy itself into the baseline, link `font-assets/`) or in the self-test (plant the layout it needs); §2's versioned `fg` dissolves the first half
 - [ ] §3 (½ to 1 day): the video-player part — delete it or gate it (⛔ owner); either way the one-carrier `requiresFlag` mechanism goes
-- [ ] §5 (2 days): lift the browser-input bridge (seven listener methods) off `WorldWdgt`
+- [ ] §5's second candidate (unexamined): `FrameWdgt`'s docking family (`dockSideAt` to `floatOutOfDock`) as a seam of its own — assess before assuming it
+- [ ] §5 follow-up, found by the loop's U7 review (low, pre-existing, reached on a touch device with a hardware keyboard): the on-screen keyboard's hidden `<input>` suppresses Backspace and Tab by `event.keyIdentifier` (`BrowserInputBridge.initVirtualKeyboard`), a property Chrome removed, so neither is prevented there; the canvas's own keydown listener tests `event.key`. Measure on a device before changing it
 - [ ] §6 (3 days): one plane-mapping protocol for the ancestor walk (8 loops and 10 `instanceof TransformFrameWdgt` in `Widget`)
 - [ ] §7 step 2 (3 days): derived-geometry caches — one declared memo per query (perf-gated; ⛔ owner: it adds a class-level declaration that generates accessors, a new meta-mechanism). Step 1, the one oracle, landed (the plan's `## BACKLOG ledger`)
 - [ ] §8 (1 day, then 2 to 3 days): method-count and cognitive-complexity ratchets; split the sequential giants (supersedes the `lint-generic-rules-carryover-plan.md` §8.5 C line below once built)
