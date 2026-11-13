@@ -2179,7 +2179,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **An object inspector on a CLASS, and a long text compared as a fact** (`macroObjectInspectorOnAClassShowsItsStaticsSource`):
   `new InspectorWdgt Color` (the class FUNCTION, not `Color.prototype`, which `inspectorClassFor` gives a class
   inspector) lists the class's statics as they are — they are the function's own properties, so "Inherited" need not
-  be clicked (clicking it adds `Function.prototype`'s and `Object.prototype`'s enumerable rows); a static function's
+  be clicked (clicking it adds the enumerable members a function inherits — today none: neither `Function.prototype`
+  nor `Object.prototype` carries one); a static function's
   pane reads the CoffeeScript kept with that very function (`Class.memberRecordOf`) — its class's, the declaring
   ancestor's for one `extend` copied down (the copy IS that function), a harness class's for one the harness
   installs — else its compiled text. ⚠ Assert a multi-line text as a FACT —

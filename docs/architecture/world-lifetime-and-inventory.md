@@ -14,7 +14,7 @@ Every piece of state on a Fizzygum page belongs to exactly one of two lifetimes:
 - **PAGE lifetime** — state that legitimately survives any world reset: the code itself
   (classes, the `SourceVault`), the font atlases and the metrics probed off them
   (`minimumFontHeight`), interned immutables (`Color._permanent`), memo caches that are pure
-  functions of their keys (the `world.cacheFor*` LRUs, the `Object::hashCode` memo), and
+  functions of their keys (the `world.cacheFor*` LRUs, the `hashOfString` memo), and
   lifetime counters (`instancesCounter`).
 - **WORLD lifetime** — everything else: widgets, their bookkeeping, collaborator state, app
   slots, DOM side effects. It dies with the world.
@@ -90,7 +90,7 @@ Two tiers keep the gate storm-proof (the ratchet's first deep cut once fired 146
 green suite):
 
 - **Gated dimensions** — `instances.*`, `statics.*`, `world.*`, `dom.*`, `swCanvasText.*`,
-  `hashCode.*`, `sourceVault.*`, `classes.*` — each checked against
+  `hashOfString.*`, `sourceVault.*`, `classes.*` — each checked against
   `WorldInventory.pageLifetimeStores`, the declared-exemption table. A declaration names a
   store by regex and states its policy WITH its reason: `bounded` (free below a stated cap;
   a self-capping store like an LRU states no cap — the store is its own enforcement) or

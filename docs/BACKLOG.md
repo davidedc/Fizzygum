@@ -274,10 +274,11 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       `check-call-arguments.js`, …) hold to other rules, so a macro that decides something on `Date.now()`,
       `performance.now()`, `Math.random()` or a timer has no gate. No macro reads a clock
       today (three mention one, in prose).
-- [ ] **A prototype extension written inside a block is `(top)` to a stink's sanction** (same review; by reading;
-      low). `check-stinks.js` names a member from a class-body key or from the code at the left margin; `Object::hashCode`
-      (`src/boot/extensions/Object-extensions.coffee`) and two of `String-extensions.coffee`'s sit indented under a
-      block, so a sanction there could not name its method. No stink hits one today.
+- [ ] **A member written inside a block (a prototype extension, a boot function) is `(top)` to a stink's sanction** (same review; by reading;
+      low). `check-stinks.js` names a member from a class-body key or from the code at the left margin; two of
+      `String-extensions.coffee`'s prototype extensions, and `window.hashOfString` (inside `globalFunctions.coffee`'s
+      `do ->` memo block), sit indented under a block, so a sanction there could not name its method. No stink hits one
+      today.
 - [ ] **Every test's two headers still call a macro test "the new style"** (found by the independent review closing
       "The automator event commands' constructors are code nothing runs", in the plan's ledger; by reading; low). 380
       `_automationCommands.js` and 381 metadata headers say "(the new style)", though macros are the only style and
@@ -564,7 +565,6 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 
 ### `plans/top-10-cleanups-round-2-plan.md`
 AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first survey took the framework and the build, this one takes the test harness, the reference set and the verification tooling. Each item carries its evidence, its effort estimate, its re-measure command and its first step. The owner agreed with §1 to §9 on 2026-11-13 (§4 ruled: delete; §9 on its stated criterion) and left §10 out for now; an owner-launched `/loop` executes §1 to §9 one unit at a time (the plan's STATUS). ⛔ owner decision still open before the second step of §6.
-- [ ] §2 (½ day): `hashCode` leaves `Object.prototype` for a boot function — then measure `waitForFunction` and close the one-liner below that asks
 - [ ] §3 (½ day): map outlines are data — 2,638 `lineTo` statements in two files become coordinate tables and one loop, proven by an operation log
 - [ ] §4 (½ to 1 day): the in-browser failure zip, a second and ungated way to capture references, with the vendored JSZip and FileSaver (the owner ruled 2026-11-13: delete)
 - [ ] §5 (1 day): one seam for "a test is playing" — 46 lines in 15 core files name the harness, in two spellings; the hand fades the harness's DOM
@@ -652,7 +652,6 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 ### One line each — every item names the archived plan and section that owns its detail
 
 - [ ] `archive/mixin-removal-plan.md` §7 Phase 8 (left to the owner by its loop): `fg` still names mixins in two places — the `fg graph` leg's comment ("…mixin chain") and the gloss bare `fg` prints for it ("mixin super chains terminate"); the rule they describe is `SUPER_CHAIN_TERMINATES` now (`graphEdgesOut` terminates on SimpleTextWdgt and TitleWdgt, and a wired one enumerates its flow edge through what it inherits from `ControllerWdgt`).
-- [ ] `archive/mixin-removal-plan.md` §7 Phase 8 (found by its U9 sweep, unmeasured): `Fizzygum-tests/scripts/run-all-headless.js` (~:18) and `run-macro-test-headless.js` (~:15) say Fizzygum's patched built-in prototypes make `waitForFunction` throw in the page. The cause measured at U9 was an inherited ENUMERABLE key on `Object.prototype` (`Object::augmentWith`, now deleted), which Puppeteer's injected bundle turns into a getter and calls; `hashCode` is the one such key left and survives the call. Whether `waitForFunction` works today is unmeasured — measure it, then correct the two comments (and keep or drop the polling-by-evaluate rule they justify).
 - [ ] (no plan; found 2026-11-12 by the mixin-removal loop's U10 docs sweep) `docs/tooling/visual-review-sample.txt` (~:14) names `SystemTest_macroEditModeTogglePencilEyeGlyph`, which has no test directory, so `fg diffpage` refuses the sample as given — drop the name or replace it with the test that now covers the edit-mode toggle's glyph.
 - [ ] `archive/mixin-removal-plan.md` §7 Phase 8: classes are still evaluated in sloppy mode (an indirect `eval.call window`); with `Mixin`'s `arguments.callee` rewrite deleted, nothing the meta-system emits needs it any more — whether to compile classes in strict mode is open (out of that plan's scope).
 - [ ] (no plan; found 2026-11-12 by the mixin-removal loop's U7 review, `Fizzygum-tests/.scratch/mixin-removal-loop/u7-relay/` LEDGER) A `StretchableWidgetContainerWdgt` keeps a stale `@contents` once its page leaves it — "Pick up", "Delete" or "Attach" on the page of a slide, a dashboard, a generic panel or a patch-programming window — and nothing clears it: each re-lay of the container moves the departed page back to its box (`_reLayout` through `_reLayoutWithOwnContents`, no parent check), drops in its margin go to that page, `add` and "Attach" forward to it, and the window's edit toggle writes its flag (the state U7 found Phase 6's early bar call still needed for). Medium, by reading (the edit-toggle half measured: `u7-relay/probe-a1.js`). Fix shape: the container hears its child leave and lets it go; what the emptied window then shows is a product decision.

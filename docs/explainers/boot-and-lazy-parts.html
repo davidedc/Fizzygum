@@ -143,7 +143,7 @@
     <tr><td class="k">3</td><td class="k">globalFunctions.coffee</td>
         <td>the boot sequence itself, plus <code>loadJSFilePromise</code> and the reflective-layer machinery</td></tr>
     <tr><td class="k">4</td><td class="k">extensions/*</td>
-        <td>prototype extensions (Array, Object, Math, String, canvas…) that must exist before any class runs</td></tr>
+        <td>prototype extensions (Array, Number, Math, String, canvas…) that must exist before any class runs</td></tr>
     <tr><td class="k">5</td><td class="k">every other shipping part's <code>bootPrelude</code></td>
         <td>the same, but contributed BY a part — today only <code>numbertimes.coffee</code>, which
         Fizzytiles' LiveCodeLang needs. A part owning its own boot piece is why the build script holds no fact

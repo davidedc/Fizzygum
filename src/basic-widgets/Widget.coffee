@@ -3931,7 +3931,7 @@ class Widget extends TreeNode
       # back to my class's "": a field of my own would only travel with my saves and copies
       delete @_ownCodeKeySuffix if Object::hasOwnProperty.call @, "_ownCodeKeySuffix"
     else
-      ownCodeKeySuffix = "-ownCode" + ownCode.hashCode()
+      ownCodeKeySuffix = "-ownCode" + hashOfString(ownCode)
       @_ownCodeKeySuffix = ownCodeKeySuffix unless ownCodeKeySuffix is @_ownCodeKeySuffix
     @_codeChangedNoSettle()
     @_fullChanged()

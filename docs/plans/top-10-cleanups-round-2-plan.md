@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1, §2. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -107,7 +107,7 @@ who has never seen the code.
 | # | Cleanup | Effort (estimate) | What goes away, and in plain words | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|
 | 1 | Class source text ships as a plain string literal | ½ day | A three-glyph escape, its decoder at boot, a build refusal, three characters no source may contain. **In plain words:** to store each class's source in a file, the build swaps quotes, backslashes and line breaks for three look-alike characters, and the page swaps them back when it starts. JavaScript already has a standard way to write any text safely, so neither swap is needed. | None | No | 8 | Landed 2026-11-13 |
-| 2 | `hashCode` leaves `Object.prototype` | ½ day | The last enumerable key on `Object.prototype`, and the reason the rigs give for never using `waitForFunction`. **In plain words:** a small helper for hashing text was attached to every object on the page. Every object then carries one extra visible property, which loops and test tools trip over. Make it an ordinary function that only text uses. | None | No | 6 | Queued for the loop |
+| 2 | `hashCode` leaves `Object.prototype` | ½ day | The last enumerable key on `Object.prototype`, and the reason the rigs give for never using `waitForFunction`. **In plain words:** a small helper for hashing text was attached to every object on the page. Every object then carries one extra visible property, which loops and test tools trip over. Make it an ordinary function that only text uses. | None | No | 6 | Landed 2026-11-13 |
 | 3 | Map outlines are data | ½ day | About 3,000 of `src/`'s 37,681 code lines (8%), written as 2,638 `lineTo` statements. **In plain words:** the two maps are drawn by thousands of hand-written "draw a line to this point" instructions. Keep the points in a list and let one short loop draw them. | None expected (one test draws a world map) | No | 10 | Queued for the loop |
 | 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Queued for the loop |
 | 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Queued for the loop |
@@ -233,6 +233,24 @@ then `[]`.
 
 **Re-measure.**
 `grep -rn '\.hashCode()' Fizzygum/src Fizzygum-tests/Automator-and-test-harness-src --include='*.coffee' | grep -v 'boot/extensions' | grep -vc ':[0-9]*:\s*#'`.
+
+**Landed 2026-11-13.** The string hash is `hashOfString text`, a boot function in
+`src/boot/globalFunctions.coffee` (named as its neighbours are, for what it returns:
+`textOfThrownValue`, `superclassOf`; the harness's records already say `hashOfData`). Its memo
+block MOVED there verbatim, with the assignment and `@toString()` → `text.toString()` the only
+changed code lines; `Object-extensions.coffee` is deleted with its `parts.json` row. The 14 call
+sites call it; `WorldInventory`'s report key is `hashOfString.stringHashCache` (renamed with its
+family and the inventory doc: nothing else read it). The re-measure command prints 0. Evidence:
+the old and the new function, each compiled from its file, agree on 36,710 inputs (every source
+text, 5,000 random strings around and past the 2,048-character cache limit, passes that hit and
+overflow the memo); `Object.keys(Object.prototype)` was `["hashCode"]` (on the harness page and
+`index.html` under Chrome and the harness page under WebKit) and is `[]` on `index.html`,
+`index-sw.html`, the harness page and a `homepage` tree; the resolution map changes
+exactly the 12 methods that hold a call site or the inventory key, wherever they are inherited.
+**`waitForFunction`, measured:** it works on the harness page and `index.html` under Puppeteer and
+on the harness page under Playwright WebKit — before this change too (`hashCode` survived
+Puppeteer's export walk) — so the rigs' comments now say their bounded in-page polls are a
+choice; no rig's wait was converted.
 
 ---
 
@@ -809,3 +827,11 @@ Do not commit or push without asking me.
 - [x] §1 (½ day): class source text ships as a plain string literal (`JSON.stringify`) — the three-glyph escape, its decoder in `SourceVault.store` and the build's refusal go
   — CLOSED 2026-11-13 (loop U1): `STRING_BLOCK` writes JSON string literals; the escape, its decoder and the refusal
   are gone (§1, "Landed").
+- [x] §2 (½ day): `hashCode` leaves `Object.prototype` for a boot function — then measure `waitForFunction` and close the one-liner below that asks
+  — CLOSED 2026-11-13 (loop U2): `hashOfString` in `src/boot/globalFunctions.coffee`; `Object.prototype` carries no
+  enumerable key (§2, "Landed").
+- [x] `archive/mixin-removal-plan.md` §7 Phase 8 (found by its U9 sweep, unmeasured): `Fizzygum-tests/scripts/run-all-headless.js` (~:18) and `run-macro-test-headless.js` (~:15) say Fizzygum's patched built-in prototypes make `waitForFunction` throw in the page. The cause measured at U9 was an inherited ENUMERABLE key on `Object.prototype` (`Object::augmentWith`, now deleted), which Puppeteer's injected bundle turns into a getter and calls; `hashCode` is the one such key left and survives the call. Whether `waitForFunction` works today is unmeasured — measure it, then correct the two comments (and keep or drop the polling-by-evaluate rule they justify).
+  — CLOSED 2026-11-13 (loop U2; filed under BACKLOG's "One line each" section, owner `archive/mixin-removal-plan.md` §7
+  Phase 8): MEASURED — `page.waitForFunction` works on the harness page and `index.html` (Puppeteer) and on the harness
+  page (Playwright WebKit), both before U2 (`hashCode` survived the call) and after (no enumerable key); the comments
+  say so, and the rigs keep their bounded, named polls as a choice (§2, "Landed").

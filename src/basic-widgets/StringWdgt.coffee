@@ -846,7 +846,7 @@ class StringWdgt extends ControllerWdgt
   # see the largest fitting size. The weight is mine unless `bold` is given: my fit passes the
   # weight it is measured in (doesTextFitInExtent).
   measureText: (text, overrideFontSize = @fittingFontSize, bold = @isBold) ->
-    cacheKey =  @buildCanvasFontProperty(overrideFontSize, bold) + "-" + text.hashCode() + @_ownCodeKeySuffix
+    cacheKey =  @buildCanvasFontProperty(overrideFontSize, bold) + "-" + hashOfString(text) + @_ownCodeKeySuffix
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit? then return cacheHit
     world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize, bold
@@ -969,8 +969,8 @@ class StringWdgt extends ControllerWdgt
     @_textInk().toString()  + "-" +
     (@_backgroundFill()?.toString() ? "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
-    @text.hashCode()  + "-" +
-    @textPossiblyCroppedToFit.hashCode()  + "-" +
+    hashOfString(@text)  + "-" +
+    hashOfString(@textPossiblyCroppedToFit)  + "-" +
     @startMark  + "-" +
     @endMark  + "-" +
     theme.textSelectionFill.toString()  + "-" +
@@ -1690,11 +1690,11 @@ class StringWdgt extends ControllerWdgt
       @_setTextNoSettle theTextContent
 
   considerCurrentTextAsReferenceText: ->
-    @hashOfTextConsideredAsReference = @text.hashCode()
+    @hashOfTextConsideredAsReference = hashOfString @text
 
   checkIfTextContentWasModifiedFromTextAtStart: ->
     if @widgetToBeNotifiedOfTextModificationChange?
-      if @hashOfTextConsideredAsReference == @text.hashCode()
+      if @hashOfTextConsideredAsReference == hashOfString @text
         @widgetToBeNotifiedOfTextModificationChange.textContentUnmodified?()
       else
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()

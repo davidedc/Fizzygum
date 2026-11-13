@@ -126,8 +126,8 @@ class PanelWdgt extends ClippingWdgt
     width = @width()
     height = @height()
 
-    posx = Math.abs(aWdgt.hashCode()) % width
-    posy = Math.abs((aWdgt.toString() + "x").hashCode()) % height
+    posx = Math.abs(hashOfString aWdgt.toString()) % width
+    posy = Math.abs(hashOfString aWdgt.toString() + "x") % height
     position = @position().add new Point posx, posy
 
     @_addNoSettle aWdgt

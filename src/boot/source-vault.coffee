@@ -20,9 +20,9 @@
 # `store` call with JSON.stringify, and a JSON string is a JavaScript string literal for any text,
 # so `store` receives a source exactly as its file holds it and keeps it as given.
 #
-# ⚠ Every enumeration here walks the Map directly. Do NOT convert it to a plain object and use
-# `for … of`: Object-extensions.coffee puts `hashCode` on Object.prototype, so an un-`own`ed
-# walk over any object in this system also yields it.
+# ⚠ Every lookup and enumeration here goes through the Map. Do NOT convert it to a plain object:
+# keyed by name, a plain object answers a name like `constructor` or `toString` from
+# Object.prototype.
 #
 # THE API GROWS WITH ITS CONSUMERS, and only with them -- twice over, here. `namesForPart` and a
 # `partOf` were both written in the phase that introduced this registry, had no callers, and were

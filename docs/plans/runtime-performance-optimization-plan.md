@@ -640,7 +640,8 @@ bumped to `468c5f7`. See §8 ledger.
 
 ### O2 — memoize `Object::hashCode` by string value 【Fizzygum; ✅ LANDED, small】
 
-**Where**: `Object::hashCode` (`src/boot/extensions/Object-extensions.coffee`, an O(length)
+**Where** (`[2026-11-13]` the function is now `hashOfString` in `src/boot/globalFunctions.coffee`, the
+memo unchanged — `plans/top-10-cleanups-round-2-plan.md` §2): `Object::hashCode` (`src/boot/extensions/Object-extensions.coffee`, an O(length)
 `charCodeAt` loop) is called from `StringWdgt`/`TextWdgt` to build back-buffer cache keys
 (`StringWdgt.coffee:655-656`; `TextWdgt.coffee:68,76,89,201,318`) — re-hashing the full label /
 wrapped-paragraph string **every paint**. Measured: `Object.hashCode` = 1.5% of the drag frame, up

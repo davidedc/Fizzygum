@@ -101,7 +101,6 @@
         "src/boot/source-vault.coffee",
         "src/boot/globalFunctions.coffee",
         "src/boot/extensions/Array-extensions.coffee",
-        "src/boot/extensions/Object-extensions.coffee",
         "src/boot/extensions/CanvasRenderingContext2D-extensions.coffee",
         "src/boot/extensions/SWCanvasElement-extensions.coffee",
         "src/boot/extensions/Math-extensions.coffee",

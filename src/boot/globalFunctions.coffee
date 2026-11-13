@@ -154,6 +154,54 @@ window.classStaticListMergedUpTheChain = (klass, staticName) ->
     ctor = superclassOf ctor
   merged
 
+# THE STRING HASH, `hashOfString text`. A boot function, never a member of Object.prototype: a member
+# there is an enumerable key of every object on the page, which every `for … of` without `own` (a
+# JavaScript `for … in`) meets.
+# It makes keys for caches (a text's back buffer, measurements and line breaks; a widget's own-code key
+# suffix), scatters a panel's widgets pseudo-randomly, and gives the harness a reference record's
+# `hashOfSystemInfo` and a name-only failure record's `hashOfData` (HashCalculator.calculateHash
+# delegates here, so this is the single implementation of the string hash).
+# adapted from http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
+#
+# TODO you can optimise for particular types of data, e.g. canvas image data, boolean arrays etc.
+# ...see how Java does it for arrays at
+# https://github.com/openjdk-mirror/jdk7u-jdk/blob/master/src/share/classes/java/util/Arrays.java#L2893
+
+# Memoized by STRING VALUE (the hash is a pure function of the text, so caching
+# by that string is always correct — no invalidation needed).
+# Why: StringWdgt/TextWdgt rebuild their back-buffer cache keys on EVERY paint by
+# re-hashing the full label / wrapped-paragraph string, so the same short strings are
+# hashed every frame (O2, docs/plans/runtime-performance-optimization-plan.md §5B; measured
+# 1.5–5.4% of a busy-desktop frame). Byte-identical — identical hash values, just not
+# recomputed. Only SHORT strings are cached (the repeated cache-key texts): a longer one
+# is hashed and not kept, so the cache can't bloat, with a size-cap backstop.
+do ->
+  stringHashCache = new Map()
+  MAX_CACHED_HASHES = 16384
+  CACHEABLE_MAX_LEN = 2048
+  # Read-only porthole for the WorldInventory (docs/archive/world-inventory-instruments-plan.md
+  # D6): the memo Map is closure-scoped, so only this accessor lets the accounting see its
+  # size and enforce the declared cap. Returns the live Map — callers must not mutate.
+  window.stringHashCacheForAudit = -> stringHashCache
+  window.hashOfString = (text) ->
+    stringToBeHashed = text.toString()
+    len = stringToBeHashed.length
+    return 0|0  if len is 0
+    cacheable = len <= CACHEABLE_MAX_LEN
+    if cacheable
+      cachedHash = stringHashCache.get stringToBeHashed
+      return cachedHash if cachedHash?
+    hash = 0|0
+    for i in [0...len]
+      char = stringToBeHashed.charCodeAt i
+      hash = ((hash << 5) - hash) + char
+      hash |= 0 # Convert to 32bit integer
+    hash = hash|0
+    if cacheable
+      stringHashCache.clear()  if stringHashCache.size >= MAX_CACHED_HASHES
+      stringHashCache.set stringToBeHashed, hash
+    hash
+
 # Helper function to use Promise style
 # instead of callback style when loading a JS
 loadJSFilePromise = (fileName) ->
