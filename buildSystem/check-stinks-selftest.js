@@ -39,6 +39,8 @@ proveGate({
     const lines = ['class BiteProofStinks', '  bpAll: ->'];
     for (const [id, text] of Object.entries(PLANT)) for (let k = 0; k < Math.max(1, counts.get(id) || 1); k++) lines.push('    ' + text);
     lines.push('    bpH = "#"; bpNullAfterHash = null', '    bpS = "null"', '    bpQ = "# this used to be text, not a comment"');
+    // the debugger statement where a line-start anchor alone would miss it: after `then`, after an arrow
+    lines.push('    if bpZ then debugger', '    bpF = -> debugger');
     // the clock's other spellings each a hit, and a Date built from a value none
     lines.push('    bpT2 = Date.now()', '    bpT3 = (new Date).getTime()', '    bpT4 = new Date - bpStart', '    bpT5 = [new Date]',
                '    bpT6 = new Date or bpY', '    bpT7 = performance.now()', '    bpT8 = performance?.now()', '    bpT9 = Date.now?()',
@@ -56,6 +58,8 @@ proveGate({
         SANCTION_COUNT: /^    SANCTION COUNT WorldWdgt\.coffee::_showDamageRects — expects 1, found 2/m,
       },
       lines: [/^    BiteProofStinks\.coffee:\d+: bpH = "#"; bpNullAfterHash = null$/m,
+              /^    BiteProofStinks\.coffee:\d+: if bpZ then debugger$/m,
+              /^    BiteProofStinks\.coffee:\d+: bpF = -> debugger$/m,
               ...['bpT2 = Date.now()', 'bpT3 = (new Date).getTime()', 'bpT4 = new Date - bpStart', 'bpT5 = [new Date]', 'bpT6 = new Date or bpY',
                   'bpT7 = performance.now()', 'bpT8 = performance?.now()', 'bpT9 = Date.now?()']
                 .map((l) => new RegExp(`^    BiteProofStinks\\.coffee:\\d+: ${esc(l)}$`, 'm')),

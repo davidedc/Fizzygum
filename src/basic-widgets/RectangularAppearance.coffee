@@ -59,7 +59,7 @@ class RectangularAppearance extends Appearance
 
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
       fill = @_fillColor()
-      if !fill? then debugger
+      if !fill? then console.error "INVARIANT_VIOLATED: a rectangular appearance paints with no fill colour"
 
       # paint the background: the whole damage box (the padding halo beyond the tight box)
       if @widget.backgroundColor?

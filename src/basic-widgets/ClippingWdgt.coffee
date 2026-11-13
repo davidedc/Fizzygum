@@ -108,7 +108,7 @@ class ClippingWdgt extends Widget
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       if !appliedShadow?
         if !@paintStroke?
-          debugger
+          console.error "INVARIANT_VIOLATED: a clipping widget re-draws its border with no paintStroke"
         @paintStroke aContext, clippingRectangle
         # editor-focus SELECTION overlay LAST -- after my own border re-draw above, else that border
         # (drawn to survive the children painting over it) would in turn paint over my selection frame.

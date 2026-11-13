@@ -141,9 +141,12 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       flat `world.steppingWdgts`; its name, and six docs that cite it (`Fizzygum/CLAUDE.md` spells it without the
       underscore), still describe the tree walk it replaced. Its comment says a member removed mid-walk is fine, and
       not that one ADDED mid-walk (`Set.forEach` visits it) steps in the same frame.
-- [ ] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
-      Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
-      `BoxyAppearance`), and the static-checks table states no blind spot for it.
+- [ ] **`WorldWdgt`'s second damage-rect pass checks a widget's SRC rect as if it were its DST** (found 2026-11-13 by
+      the review of the cleanups loop's U4; by reading; reach not established — medium if real). In
+      `_rectAlreadyIncludedInParentDamagedWidget`'s `widgetsWithMaybeChangedFullPaintBounds` loop, `@_checkARectWithHierarchy aRect, damagedWidget`
+      passes no `isSrc` for the src rect, so when an ancestor's rect contains it the `else` branch clears the
+      widget's DST slot and index instead: a dst rect never checked against the ancestor is dropped (a lost repaint?),
+      and the src rect stays. The first loop passes `true`/`false`. Measure before fixing: a probe that counts the case.
 - [ ] **A paint that throws and bans no one is told again on every frame** (found by the independent review closing "A
       paint that throws after its children blames the last child painted", in the plan's ledger; reached: a class edit
       that makes a desktop widget's `opaqueCoveredRect` throw — the world's occlusion scan meets it before any widget
@@ -567,7 +570,6 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 - [ ] §2 (½ day): put `fg` and the guard hook under version control (⛔ which repo); then delete `what-runs.js`'s `fgPresent` branch
 - [ ] §2, found 2026-11-12 by the loop's U1 (medium): **`fg fingerprint` cannot build its BASELINE on today's tree.** Its throwaway umbrella has no `fg`, so `lib/what-runs.js` answers `fgPresent: false`, `check-hand-lists`' SANCTION_GUARD_NEVER_RUNS becomes undecidable, and `check-hand-lists-selftest.js` (which needs that rule to fire on the real layout) fails the baseline build's first gate — every profile, before anything is compared. A second setup gap of the same tool: the baseline worktree has no `font-assets/` (gitignored), so every profile that ships an SWCanvas page (`dev`, `dev-notests`) shows ~4,554 extra entries in the candidate whatever the change. A third: it compares a CLEAN baseline with a DIRTY candidate, and terser's mangler reads the build stamp's characters, so " +local-changes" alone can rename locals in a boot bundle (measured on `lean`: `classStaticListMergedUpTheChain`'s locals, same size, a FINDING until probed) — the stamp normalisation cannot see that. The loop measures by hand with a copy of `fg` in the baseline umbrella and `font-assets/` linked in as `node_modules` is (`Fizzygum-tests/.scratch/cleanups-loop/manual-fingerprint.sh`). Fix in `fg` (copy itself into the baseline, link `font-assets/`) or in the self-test (plant the layout it needs); §2's versioned `fg` dissolves the first half
 - [ ] §3 (½ to 1 day): the video-player part — delete it or gate it (⛔ owner); either way the one-carrier `requiresFlag` mechanism goes
-- [ ] §4 (1 day): the 15 `debugger`-only invariant traps report through a gated token, or are deleted with evidence
 - [ ] §5 (2 days): lift the browser-input bridge (seven listener methods) off `WorldWdgt`
 - [ ] §6 (3 days): one plane-mapping protocol for the ancestor walk (8 loops and 10 `instanceof TransformFrameWdgt` in `Widget`)
 - [ ] §7 step 2 (3 days): derived-geometry caches — one declared memo per query (perf-gated; ⛔ owner: it adds a class-level declaration that generates accessors, a new meta-mechanism). Step 1, the one oracle, landed (the plan's `## BACKLOG ledger`)

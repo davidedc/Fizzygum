@@ -318,14 +318,9 @@ class TreeNode
 
     if Automator? and !widget?
       # this happens when in a test, you select
-      # a menu entry that doesn't exist.
-      # so it's a good thing that we block the test
-      # and let the user navigate through the world
-      # to find the state of affairs that caused
-      # the problem.
-      console.log "failed to find widget in test: " + world.automator.name
-      console.log "...the macro is looking for a widget/menu item that isn't present in the current world state"
-      debugger
+      # a menu entry that doesn't exist: the macro is looking for a widget or menu item that is not
+      # in the world, and the report fails the test.
+      console.error "INVARIANT_VIOLATED: isAncestorOf was asked about no widget -- in a test, the macro is looking for a widget/menu item that isn't present in the current world state"
 
     # test the widget itself
     if widget is @

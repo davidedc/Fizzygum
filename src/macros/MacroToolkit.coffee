@@ -506,7 +506,6 @@ class MacroToolkit
       button = 0
       buttons = 2
     else
-      debugger
       throw "syntheticEventsMouseMove_InputEvents: whichButton is unknown"
 
     dest = @_screenPointOfTarget dest
@@ -813,7 +812,6 @@ class MacroToolkit
       button = 2
       buttons = 2
     else
-      debugger
       throw "syntheticEventsMouseDown_InputEvents: whichButton is unknown"
 
     # A FINGER'S PRESS states its own place (there is no hover to have walked it there), so it lands
@@ -839,7 +837,6 @@ class MacroToolkit
       button = 2
       buttons = 0
     else
-      debugger
       throw "syntheticEventsMouseUp_InputEvents: whichButton is unknown"
 
     # The finger lifts where it is standing. After a right-button press (a press-and-hold, see the

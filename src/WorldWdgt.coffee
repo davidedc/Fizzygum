@@ -984,8 +984,6 @@ class WorldWdgt extends IconGridPanelWdgt
         damagedWidget.srcDamageRectIndex = @damageRects.length
       else
         damagedWidget.dstDamageRectIndex = @damageRects.length
-      if !theRect?
-        debugger
       @damageRects.push theRect
     @duplicatedDamageRectsTracker[theRect.toString()] = true
 
@@ -1009,7 +1007,7 @@ class WorldWdgt extends IconGridPanelWdgt
       damagedWidgetAncestor = damagedWidgetAncestor.parent
       if damagedWidgetAncestor.srcDamageRectIndex?
         if !@damageRects[damagedWidgetAncestor.srcDamageRectIndex]?
-          debugger
+          console.error "INVARIANT_VIOLATED: an ancestor's srcDamageRectIndex names no damage rect"
         if @damageRects[damagedWidgetAncestor.srcDamageRectIndex].containsRectangle aRect
           if isSrc
             @damageRects[damagedWidget.srcDamageRectIndex] = undefined
@@ -1023,7 +1021,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
       if damagedWidgetAncestor.dstDamageRectIndex?
         if !@damageRects[damagedWidgetAncestor.dstDamageRectIndex]?
-          debugger
+          console.error "INVARIANT_VIOLATED: an ancestor's dstDamageRectIndex names no damage rect"
         if @damageRects[damagedWidgetAncestor.dstDamageRectIndex].containsRectangle aRect
           if isSrc
             @damageRects[damagedWidget.srcDamageRectIndex] = undefined
@@ -2164,7 +2162,7 @@ class WorldWdgt extends IconGridPanelWdgt
       timeOfCurrentCycleStart = WorldWdgt.dateOfCurrentCycleStart.getTime()
 
       for event in @inputEventsQueue
-        if !event.time? then debugger
+        if !event.time? then console.error "INVARIANT_VIOLATED: a queued input event has no time"
 
         # this happens when you consume synthetic events: you can inject
         # MANY of them across frames (say, a slow drag across the screen),

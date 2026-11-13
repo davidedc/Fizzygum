@@ -152,7 +152,7 @@ class BoxyAppearance extends Appearance
 
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
       fill = @_fillColor()
-      if !fill? then debugger
+      if !fill? then console.error "INVARIANT_VIOLATED: a boxy appearance paints with no fill colour"
       ctx.fillStyle = fill.toString()
 
       if appliedShadow?

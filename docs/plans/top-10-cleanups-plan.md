@@ -99,7 +99,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Orphans, closed plans, the stub header and the two vendoring homes landed 2026-11-13; the rest open |
 | 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Not started |
 | 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
-| 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Not started |
+| 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Landed 2026-11-13; no trap fired |
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Not started |
 | 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Not started |
 | 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
@@ -344,6 +344,23 @@ are a finding to bring to the owner before the token is wired into the fail-gate
 
 **Re-measure.**
 `grep -rnE '^\s*debugger\s*$|then debugger\s*$' Fizzygum/src --include='*.coffee' | grep -v ':\s*#' | wc -l`.
+
+**Landed 2026-11-13 (the loop's U4): no trap is silent, and the stink is a hard zero.** One gate
+token, `INVARIANT_VIOLATED`, joins `GATE_TOKENS` (its bite proof is the suite-gate proofs, which
+plant every entry). Ten traps report under it, each saying which invariant broke: the two damage
+rects an ancestor's index names, a queued input event with no time, a cropped text that should fit
+and does not (its `alert` stays, being what a person sees), a text with no `measureText`, a
+rectangular and a boxy appearance painting with no fill colour, a clipping widget's border re-draw
+with no `paintStroke`, a keystroke with no key, and a macro looking for a widget that is not there.
+Each report takes the breakpoint's place and what ran after it still runs (five of them then throw
+a `TypeError`, as before); the text-fitting trap's re-call, there only to step into, goes, and so
+do the macro trap's two log lines, folded into its report. One trap is deleted with its evidence:
+`WorldWdgt._pushDamageRect`'s `!theRect?` can never be reached, because the method's first line,
+`theRect.toString()`, throws first on an undefined rect. `Class._removeHelperFunctions`' breakpoint
+goes (it already reports `HELPER_VAR_NOT_STRIPPED`), and so do the three in `MacroToolkit` that
+precede a `throw`. The `debugger-statement` stink sees the statement in any spelling (`… then
+debugger` among them), and its baseline is 0, a hard rule. The counting run was the gauntlet
+itself, at every axis it has: no converted trap fired.
 
 ---
 
@@ -833,3 +850,12 @@ Do not commit or push without asking me.
 - §7, in part — the line read: "§7 (½ day, then 3 days): derived-geometry caches — one oracle method (17 copies
   today), then one declared memo (perf-gated)". — LANDED IN PART 2026-11-13 (loop U3): step 1, one oracle
   (`TreeNode._reportIfCachedDiverges`; §7, "Landed"). BACKLOG keeps step 2, the declared memo (owner).
+- [x] §4 (1 day): the 15 `debugger`-only invariant traps report through a gated token, or are deleted with evidence
+  — CLOSED 2026-11-13 (loop U4): ten report under `INVARIANT_VIOLATED`, one deleted with its evidence, the rest
+  (one already reporting, three before a throw) simply go; the stink is a hard zero (§4, "Landed").
+- [x] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
+      Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
+      `BoxyAppearance`), and the static-checks table states no blind spot for it.
+  — CLOSED 2026-11-13 (loop U4; filed under `archive/argument-holes-both-repos-plan.md`'s section, "found by the
+  independent review closing" another item): the stink sees the statement in any spelling, the four sites are gone
+  (§4, "Landed"), and the static-checks table states its one blind spot (embedded JavaScript).

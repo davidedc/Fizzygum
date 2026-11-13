@@ -807,9 +807,9 @@ class StringWdgt extends ControllerWdgt
               fittingText += "\n"
 
           if !@doesTextFitInExtent fittingText, @originallySetFontSize
+            # the report first: an alert blocks the page until dismissed (a headless Chrome page never is)
+            console.error "INVARIANT_VIOLATED: a cropped text that should fit its extent does not: >" + fittingText + "<"
             alert "something wrong, this really should have fit: >" + fittingText + "<"
-            debugger
-            @doesTextFitInExtent fittingText, @originallySetFontSize
 
 
 
@@ -902,7 +902,7 @@ class StringWdgt extends ControllerWdgt
   # fit is measured in (fitBold; the weight I draw in while it is undefined).
   doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     if !@measureText?
-      debugger
+      console.error "INVARIANT_VIOLATED: a text asked whether it fits has no measureText"
     if text == ""
       return true
     extentOccupiedByText = new Point Math.ceil(@measureText text, overrideFontSize, @fitBold ? @isBold), @linePitch(overrideFontSize)

@@ -249,7 +249,6 @@ class Class
     # in it -- so an expression-shaped detector reports the stripper itself, on every build.
     if /^var\b[^;]*\b(hasProp|indexOf|slice)\s*=/m.test aString
       console.error "HELPER_VAR_NOT_STRIPPED: code contains a helper var, it shouldn't: " +  aString
-      debugger
 
     return aString
 

@@ -158,7 +158,7 @@ class CaretWdgt extends BlinkerWdgt
         when "Shift", "Alt", "CapsLock"
           return
         else
-          if !key? then debugger
+          if !key? then console.error "INVARIANT_VIOLATED: a keystroke to insert has no key"
           @insert key, shiftKey
 
     # notify target's parent of key event
