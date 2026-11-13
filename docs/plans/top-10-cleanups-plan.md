@@ -1184,3 +1184,5 @@ Do not commit or push without asking me.
   - the build appends its stamp to the MINIFIED boot bundle (`build_it_please.sh`, after terser), so a
     clean and a dirty tree minify alike. `scripts/build-tree-fingerprint.js` reads the stamp in its new
     spelling.
+- [x] §5 follow-up, found by the loop's U7 review (low, pre-existing, reached on a touch device with a hardware keyboard): the on-screen keyboard's hidden `<input>` suppresses Backspace and Tab by `event.keyIdentifier` (`BrowserInputBridge.initVirtualKeyboard`), a property Chrome removed, so neither is prevented there; the canvas's own keydown listener tests `event.key`. Measure on a device before changing it
+  — CLOSED 2026-11-13 (the owner's ruling: one way to read a key): `BrowserInputBridge`'s hidden input tests `event.key`, as the canvas's own keydown listener does. Not measured on a device: no rig drives the on-screen keyboard's `<input>`.

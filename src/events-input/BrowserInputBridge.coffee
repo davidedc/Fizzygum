@@ -97,13 +97,14 @@ class BrowserInputBridge
       # Default in several browsers
       # is for the backspace button to trigger
       # the "back button", so we prevent that
-      # default here.
-      if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
+      # default here. The key is read as the canvas's own keydown listener reads it, by
+      # `event.key`.
+      if event.key is "Backspace"
         event.preventDefault()
 
       # suppress tab override and make sure tab gets
       # received by all browsers
-      if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
+      if event.key is "Tab"
         event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
