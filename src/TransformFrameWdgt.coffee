@@ -200,6 +200,40 @@ class TransformFrameWdgt extends PanelWdgt
   _soleContent: ->
     @childrenNotHandlesNorCarets()?[0]
 
+  # Affine transforms (§6 Phase 4D-2b): RE-EXPRESS a dropped SUGAR FIGURE relative to the plane it lands in.
+  # When a _materializedBySugar figure (from a 4D-2a pick-out or a 4C rotate/scale) is float-dropped into a
+  # container that lives inside a non-identity island, its spec is ABSOLUTE (Σ degrees / ∏ scales over its
+  # former ancestor islands) but it is about to composite THROUGH the destination plane's transform as well --
+  # so without re-expression a 30° figure dropped into a 30° window would render at 60° (transforms compose;
+  # the 4D-1 block maps only POSITION). Re-express the figure's spec RELATIVE to the destination plane:
+  #     rel_r = figure.deg − Σ(destination-plane island degrees),  rel_s = figure.scale ÷ ∏(… island scales)
+  # so composited through the plane it renders at its ORIGINAL absolute look. When rel is identity (a
+  # return-to-SAME-plane round-trip: x−x, x÷x are IEEE-exact and the absolute spec was BUILT as Σ/∏ over the
+  # same chain in the same order at pick-out) the figure becomes an identity sugar island -- the drop's
+  # post-add _unwrapIfIdentitySugarNoSettle then dissolves it (the 4C auto-unwrap), so a round-trip leaves no
+  # island behind. Returns me (the re-spec'd figure) for the 4D-1 position-map + target.add to place. SCOPE
+  # (locked): ONLY _materializedBySugar figures re-express; an EXPLICIT island nest-composes like any content
+  # (the user authored that frame -- mutating its spec on drop would rewrite their structure). An explicit
+  # island, or a drop into an identity plane, is a no-op returning me unchanged: a rotated figure dropped onto
+  # the plain desktop re-specs to its own value (the setters early-return unchanged). A bare (non-island)
+  # payload is Widget's half of this method. Inverse of _pickOutRotatedFigureNoSettle's accumulation;
+  # NoSettle -- the drop's target.add carries the settle.
+  _reExpressFigureForPlaneOfNoSettle: (target) ->
+    return @ if !@_materializedBySugar   # explicit island payload: nest-compose, never re-spec
+    # The destination plane's linear part: the accumulated similitude over the non-identity islands the
+    # dropped payload will composite through -- target's ancestors. target is never itself a non-identity
+    # island (islands refuse drops, so dropTargetFor climbs past them), so target.accumulated*() (STRICT
+    # ancestors) equals the target-inclusive walk this used to inline -- byte-equivalent (a normalized Σ
+    # differs from the raw sum only by a multiple of 360, which relDeg's own mod cancels; the ∏ is the
+    # same ordered product). Mirrors _pickOutRotatedFigureNoSettle's accumulation (this is its inverse).
+    degPlane = target.accumulatedRotationDegrees()
+    sPlane = target.accumulatedScaleFactor()
+    relDeg = (((@transformSpec.rotationDegrees - degPlane) % 360) + 360) % 360
+    relScale = @transformSpec.scale / sPlane
+    @_setRotationNoSettle relDeg   # the island's own spec cores; each early-returns when unchanged (identity
+    @_setScaleNoSettle relScale    # plane ⇒ no-op ⇒ dormant byte-identical). rel identity ⇒ I become identity.
+    @
+
   # ---------------------------------------------------------------------------
   # The LENS declarations: an island's content-stack preferences ARE its content's knob.
   # The content-stack spec holds preferences about the DISPLAYED thing's nature ("empty
@@ -717,6 +751,57 @@ class TransformFrameWdgt extends PanelWdgt
     aContext.transform cpr * m.a, cpr * m.b, cpr * m.c, cpr * m.d, cpr * m.e, cpr * m.f
     aContext.drawImage buffer, 0, 0, buffer.width, buffer.height, slot.left(), slot.top(), slot.width(), slot.height()
     aContext.restore()
+
+  # ---------------------------------------------------------------------------
+  # THE PLANE-MAPPING PROTOCOL, my half (ViewportWdgt answers it too, for its scrolled contents).
+  # Widget's screen↔plane walks ask every ancestor they climb through whether it maps the plane
+  # of the child they climbed from: a non-identity island maps its content's (virtual) plane into
+  # its own by its similitude, pivoting on its slot box (@bounds); at identity it maps nothing, so
+  # the walks pass it by and their same-object dormant returns hold. Each mapping verb is one
+  # TransformSpec call with my slot box as the pivot — mapRect (the padded integer damage AABB) and
+  # mapRectExact stay the two separate bodies TransformSpec keeps them; the clip I impose is my own
+  # clippedThroughBounds, and rotationDegreesOfChildPlane / scaleOfChildPlane read my spec's fields.
+  # ---------------------------------------------------------------------------
+  mapsPlaneOfChild: (child) ->
+    !@transformSpec.isIdentity()
+
+  mapPointFromChildPlane: (aPoint) ->
+    @transformSpec.mapPoint aPoint, @bounds
+
+  mapPointIntoChildPlane: (aPoint) ->
+    @transformSpec.inverseMapPoint aPoint, @bounds
+
+  # The damage lane (Widget.mapRectToScreen). §4.4 buffer cache — the "destination" (new-position)
+  # deposit: the PRE-mapping rect is in my virtual (buffer) plane, so it is exactly the region the
+  # widget now occupies in my buffer — and the damage lanes pass it already grown by the widget's
+  # shadowExtendedRect, so it covers the shadow px in every crossed plane too. Deposit it as
+  # content-damage. Only the two damage-flesh-out lanes pass depositBufferDamage=true; the OTHER
+  # caller (_recordDrawnAreaForNextDamageRects, the paint-time snapshot) passes false, so a mere
+  # repaint never dirties the buffer. Each crossed island deposits, which handles nesting for
+  # free; a widget off every island never gets here.
+  mapDamageRectFromChildPlane: (aRect, depositBufferDamage) ->
+    @_depositIslandBufferDamageRect aRect if depositBufferDamage
+    @transformSpec.mapRect aRect, @bounds
+
+  # The OUTERMOST island's visible rect clips the mapped damage (§4.11), so each island crossed
+  # replaces the clip so far with its own — read at the crossing (pure per geometryVersion, so the
+  # value equals an after-the-walk read) and carried along by any LATER translation, so the damage
+  # lane's one final intersect meets both rects in the same (screen) plane even when an island sits
+  # inside a scrolled pane.
+  mapClipFromChildPlane: (clipSoFar) ->
+    @clippedThroughBounds()
+
+  mapRectExactFromChildPlane: (aRect) ->
+    @transformSpec.mapRectExact aRect, @bounds
+
+  # the linear part of my similitude, for Widget's accumulated* (Σ degrees, ∏ scales over the
+  # islands above a widget, innermost first); a translation contributes neither, so only an island
+  # answers these
+  rotationDegreesOfChildPlane: ->
+    @transformSpec.rotationDegrees
+
+  scaleOfChildPlane: ->
+    @transformSpec.scale
 
   # ---------------------------------------------------------------------------
   # the island's TWO FACES for clipping/bounds (plan §4.11); mechanism: docs/architecture/transforms.md §4.

@@ -150,7 +150,22 @@ returns plane-local geometry. The Widget-level accessors (`src/basic-widgets/Wid
 - `screenPointToMyPlane(aPoint)` — a screen point down into this widget's plane, each ancestor
   island's **inverse** map outermost→innermost. Used by hit-testing (§7).
 
-All three return the point/rect **unchanged** (same object) off any non-identity island, so
+These walks (and the damage lane's `mapRectToScreen`) never ask what class an ancestor is. They
+climb by ONE iterator over the mapping ancestors, `_enclosingMappedPlaneRoot` (asked again of the
+root it returned, it steps on), and each mapping ancestor answers the **plane-mapping protocol**:
+`mapsPlaneOfChild(child)` — does it map the plane of the child the walk climbed from — and the
+verbs that do it (`mapPointFromChildPlane`, `mapPointIntoChildPlane`,
+`mapDamageRectFromChildPlane`, `mapClipFromChildPlane`, `mapRectExactFromChildPlane`, and
+the island-only `rotationDegreesOfChildPlane` / `scaleOfChildPlane`, which the `accumulated*` pair
+sums and multiplies). An
+island answers with its spec, pivoting on its slot box, and answers nothing at identity; a
+scrolled viewport answers with its translation ([`viewports-and-planes.md`](viewports-and-planes.md)).
+A third kind of plane is a class answering the protocol (the walks ask nothing else of it; the
+island machinery that re-specs or picks out a figure still reads an island's own spec). The order
+of operations is the walks' own and byte-exact: the inverses apply outermost first (the walk
+recurses), the accumulators fold innermost first.
+
+All three return the point/rect **unchanged** (same object) with no mapping ancestor, so
 they are byte-identical when dormant. The island's own `clippedThroughBounds` / `clipThrough`
 "two faces" (§7) are framework-internal damage/hit machinery, **not** a public screen-bounds
 proxy — which is exactly why `screenBounds()` exists.

@@ -329,11 +329,15 @@ generic viewport is "viewport"; composites take their contents' name
 
 - Scrolling = a stored offset applied at paint time (UIScrollView's `bounds.origin` model);
   the plane is pinned and `_applyMoveBy` moves whole panels/windows, never a scroll step.
-  The `screenPointToMyPlane`/`localPointToScreen`/`mapRectToScreen`/`screenBounds` walks are
-  TWO-ARM — an island step (affine) and a translation step (scroll) share one climb, each
-  ancestor answering per child edge via `scrollTranslationOfChild?(child)` — so a plane's
-  residents keep integer plane-local `@bounds` while their screen positions are derived, the
-  same two-vocabulary law the islands introduced. ⚠ One rule this imposes on INPUT handlers:
+  The `screenPointToMyPlane`/`localPointToScreen`/`mapRectToScreen`/`screenBounds` walks climb
+  by one iterator over the MAPPING ancestors (`Widget._enclosingMappedPlaneRoot`), each of which
+  answers the plane-mapping protocol per child edge — `mapsPlaneOfChild(child)` and its verbs
+  (`mapPointFromChildPlane`, …): an island maps by its similitude, a viewport by its scroll
+  translation, for its contents only — so a plane's residents keep integer plane-local `@bounds`
+  while their screen positions are derived, the same two-vocabulary law the islands introduced.
+  `scrollTranslationOfChild(child)` stays the viewport's answer for the callers that need the
+  translation vector itself (the clip-through translation edge, `cornerRadiiFollowingMyOutline`,
+  `FrameWdgt._visibleBoxOnMyPage`, its own `add`). ⚠ One rule this imposes on INPUT handlers:
   `escalateEvent` forwards its args verbatim, so a `pos` escalated across a plane boundary
   is still plane-local to the SENDER — a pos-consuming GESTURE handler (`activated`,
   `doubleActivated`, the ones that still climb by escalation) on a plane's ancestor must

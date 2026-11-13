@@ -101,7 +101,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Landed 2026-11-13; no trap fired |
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Landed 2026-11-13 |
-| 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Built and parked 2026-11-13: OWNER DECISION (a speed trade) |
+| 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Landed 2026-11-13 (built and parked on a speed trade; landed on the owner's ruling) |
 | 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
 | 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Landed 2026-11-13 (both steps; three giants split, three left) |
 | 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
@@ -492,39 +492,49 @@ features; none restructures the walk.
 `grep -n "instanceof TransformFrameWdgt" Fizzygum/src/basic-widgets/Widget.coffee | wc -l` and
 `grep -rn "scrollTranslationOfChild" Fizzygum/src --include='*.coffee' | grep -v ":\s*#"`.
 
-**OWNER DECISION (OPEN, raised 2026-11-13 by the loop).** The protocol is built, proven exact, and parked
-on its speed. Nothing a person sees differs either way: the change moves no pixel. What differs is the code's
-shape and a few nanoseconds per call.
+**Landed 2026-11-13 (the loop's U8, built and parked on a speed trade, landed on the owner's ruling).** The
+existing `_enclosingMappedPlaneRoot` is the one upward iterator. Every ancestor that maps a plane answers
+`mapsPlaneOfChild(child)` and maps through its own verbs (`mapPointFromChildPlane`,
+`mapPointIntoChildPlane`, `mapDamageRectFromChildPlane`, `mapClipFromChildPlane`,
+`mapRectExactFromChildPlane`, `rotationDegreesOfChildPlane`, `scaleOfChildPlane`), on `TransformFrameWdgt` and
+`ViewportWdgt`. The eight walks are short folds over the iterator: `screenPointToMyPlane` recurses for its
+outermost-first order, and the accumulators iterate islands innermost first. All ten `instanceof
+TransformFrameWdgt` leave `Widget`. The two outside the walks go through a `TransformFrameWdgt` override of
+`_reExpressFigureForPlaneOfNoSettle` and through the existing `_materializedBySugar?` test. The `instanceof` stink
+falls from 74 to 64. The protocol's present-tense description is in `architecture/transforms.md` and
+`architecture/viewports-and-planes.md`.
 
-- **What was built** (patch `Fizzygum-tests/.scratch/cleanups-loop/u8-plane-mapping/PARKED-Fizzygum.patch`,
-  applies cleanly to Fizzygum `d85f32ee`; the loop's notes in `u8-plane-mapping/PREP.md` and `SURVEY.md`). The
-  existing `_enclosingMappedPlaneRoot` is the one upward iterator; every ancestor that maps a plane answers
-  `mapsPlaneOfChild(child)` and maps through its own verbs (`mapPointFromChildPlane`,
-  `mapPointIntoChildPlane`, `mapDamageRectFromChildPlane`, `mapClipFromChildPlane`,
-  `mapRectExactFromChildPlane`, `rotationDegreesOfChildPlane`, `scaleOfChildPlane`) on `TransformFrameWdgt` and
-  `ViewportWdgt`; the eight walks are short folds over the iterator (`screenPointToMyPlane` recursing for its
-  outermost-first order, the accumulators iterating islands innermost first); all ten `instanceof
-  TransformFrameWdgt` leave `Widget` (the two outside the walks by a `TransformFrameWdgt` override and the
-  existing `_materializedBySugar?` test), and the `instanceof` stink falls 74 → 64.
-- **Exact.** An instrument ran the OLD code beside the new on every call of the eight walks and of
-  `scrollTranslationOfChild`, comparing every number with `Object.is`: about 219 million calls over the whole
-  suite at dpr 1 and 2, as mouse and as finger, with zero disagreements, every test passing (a planted error was
-  reported, per test).
-- **Speed** (the real methods, HEAD's build against the change's, three alternating runs each; ns per call):
-  with no mapping ancestor, the common case, 13–50 % faster; in a scrolled pane 22–47 % faster; a scrolled
-  pane inside a rotated island up to 37 % faster (two methods the same); but for content of islands nested directly (no viewport
-  between) 3–14 % slower on the value walks (`screenPointToMyPlane` 221 → 229, `mapRectToScreen` 268 → 288,
-  `screenBounds` 185 → 196) and ×1.4–1.5 on the two root queries (12.5 → 17.5–19 ns) — the cost of one more call
-  layer per mapping ancestor (the capability, the verb, the iterator's restart). The loop's one attempt
-  removed the other slowdown it found (an island walk stepping through a viewport's scroll test).
-- **Options.** (a) Land the patch as it is. (b) Keep today's eight loops and ten type tests. (c) Land it with an
-  island fast path in the iterator — which would put the type test back and defeat the item.
-- **Recommendation: (a).** The slower path is content inside rotated or scaled islands, by a few
-  nanoseconds per call; every hit-test candidate outside a mapped plane and every scrolled pane gets faster;
-  and the item's aim holds — `Widget` names no subclass, and a third kind of plane is a class, not eight loops.
-  On (a): re-apply the patch, re-run the whole-suite agreement instrument (the iterator's island filter came
-  after the whole-suite runs; its subset run is clean), then the presuite, an independent review, the gauntlet
-  and `fg homepage`.
+- **Exact.** An instrument ran the OLD compiled walks beside the new ones on every call of the eight walks and of
+  `scrollTranslationOfChild`, comparing every number with `Object.is`. On the tree that landed it covered
+  218,331,467 calls over the whole suite at dpr 1 and 2, as mouse and as finger, with zero disagreements and every
+  test passing. A planted error was reported, per test.
+- **Speed.** Measured on the real methods, HEAD's build against the change's, three alternating runs each; ns per
+  call:
+
+  | Case | Change |
+  |---|---|
+  | No mapping ancestor (the common case) | 13–50 % faster |
+  | A scrolled pane | 22–47 % faster |
+  | A scrolled pane inside a rotated island | up to 37 % faster (two methods the same) |
+  | Content of islands nested directly (no viewport between): the value walks | 3–14 % slower: `screenPointToMyPlane` 221 → 229, `mapRectToScreen` 268 → 288, `screenBounds` 185 → 196 |
+  | The same content: the two root queries | ×1.4–1.5 (12.5 → 17.5–19) |
+
+  The slower cases pay for one more call layer per mapping ancestor: the capability, the verb, the iterator's
+  restart. One attempt removed another slowdown: an island walk was stepping through a viewport's scroll test. The
+  two alternatives were declined:
+  - keeping the eight loops and the ten type tests;
+  - an island fast path in the iterator, which would put the type test back.
+
+  One allocation trade goes the other way, and it was declared before the build. `mapRectToScreen` for an island
+  inside a scrolled pane builds two translation `Point`s per viewport crossed, where one was built before; every
+  other state allocates the same or less. `Widget` no longer type-tests for `TransformFrameWdgt`, and a third kind
+  of plane is a class answering the protocol, not eight loops. What the protocol does not reach is the island
+  machinery that re-specs or picks out a figure (`_reExpressFigureForPlaneOfNoSettle`'s bare-payload branch,
+  `_resolvePickOutFigureNoSettle`). It still reads an island's own `transformSpec` and constructs
+  `TrackingTransformFrameWdgt`: twelve reach-ins outside the walks, which this item never meant to move.
+- **Gates.** The presuite and an independent review. The review found no behaviour difference; its findings were
+  comments and test texts made stale, and all of them are fixed. Then the gauntlet (20 of 20), a presuite on the
+  comment-fixed tree, and `fg homepage`.
 
 ---
 
@@ -900,7 +910,7 @@ self-test and by every clean transcript.
 - **`serialization-roundtrip-headless.js`.** 5,023 lines in one file, about 25 in-page check
   functions, already selectable by `--sections=`. Splitting it by section is mechanical and
   would help its readers, but nothing depends on it.
-- **The rest of the `instanceof` ratchet.** After §6 it would stand at 64. Twenty of those test
+- **The rest of the `instanceof` ratchet.** After §6 it stands at 64. Twenty of those test
   for `Widget` itself and eleven for `Point`, which are mostly value checks, not layering
   problems. The existing ratchet is the right tool.
 - **Orphan classes.** A scan for classes that no other file's code names found one,
@@ -1022,3 +1032,8 @@ Do not commit or push without asking me.
   — CLOSED 2026-11-13 (loop U4; filed under `archive/argument-holes-both-repos-plan.md`'s section, "found by the
   independent review closing" another item): the stink sees the statement in any spelling, the four sites are gone
   (§4, "Landed"), and the static-checks table states its one blind spot (embedded JavaScript).
+- [x] §6 (3 days): one plane-mapping protocol for the ancestor walk (8 loops and 10 `instanceof TransformFrameWdgt` in
+  `Widget`) (⛔ owner: built, proven exact and PARKED on a speed trade by the loop's U8 — §6's OWNER DECISION, the patch
+  in the loop's scratch)
+  — CLOSED 2026-11-13 (loop U8, landed on the owner's ruling): `mapsPlaneOfChild` and its verbs on `TransformFrameWdgt`
+  and `ViewportWdgt`, the eight walks folds over `_enclosingMappedPlaneRoot` (§6, "Landed").

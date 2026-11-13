@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // check-plane-discipline.js — build lint: the three statically-checkable rules of the
-// paint-time scroll model (stored offset + pinned plane + two-arm mapped walks; living
+// paint-time scroll model (stored offset + pinned plane + plane-mapped walks; living
 // truth: docs/architecture/viewports-and-planes.md). Exit 0 clean / 1 violation.
 //
 // A. THE OFFSET FUNNEL (hard zero). `scrollOffsetX/Y` are MAPPING state: a write must break

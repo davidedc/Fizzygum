@@ -508,11 +508,11 @@ class Widget extends TreeNode
     # AM-I-UNCUT: clipped bounds answer only for the RECTANGLE a clipping ancestor clips to. An
     # ancestor that clips its children to a ROUNDED outline (FrameWdgt's rounded child clip, and a
     # tool cell's, GlassBoxBottomWdgt: each answers _roundedChildClipRadii — probed like
-    # scrollTranslationOfChild in the plane walks) also cuts its corner notches away, and a point
+    # mapsPlaneOfChild in the plane walks) also cuts its corner notches away, and a point
     # there falls through to whatever lies behind that ancestor, exactly as a press in the
     # ancestor's OWN notch does: the pointer agrees with the paint. Each such ancestor tests the
     # point in its own plane with its own shape test (the one its notch answers with), the point
-    # carried there through the screen by the same two-arm mappings that brought it from the screen
+    # carried there through the screen by the same plane mappings that brought it from the screen
     # to me. With no such ancestor (no rounded frame or tool cell above me), one walk up, no mapping.
     screenPoint = undefined
     childOnMyPath = @
@@ -1653,97 +1653,63 @@ class Widget extends TreeNode
   # (screen) plane against the OUTERMOST island's own visible rect (= its footprint ∩
   # its ancestor screen clips) — clipping the pre-image plane would not commute with
   # the transform (§4.11).
-  # Every screen↔plane walk here is TWO-ARM (docs/archive/paint-time-scroll-translation-plan.md
-  # §3.2): the island arm (a non-identity TransformFrameWdgt ancestor — similitude verbs) and
-  # the translation arm (any ancestor answering `scrollTranslationOfChild(child)` for the child
-  # edge just climbed through — an integer-Point translate applied to that child's subtree when
-  # mapping plane→screen; `previous` tracks the edge so the question is per-child: a viewport
-  # answers only for its contents, so its bars stay FIXED chrome with no stored role). An
-  # ancestor with no non-identity island and no translation provider contributes nothing, so
-  # off any mapped plane every walk still returns its input UNCHANGED (same object) — the
-  # dormant guarantee the byte-exact suite stands on.
+  # Every screen↔plane walk here climbs the same way: through the MAPPING ancestors above me, innermost
+  # first, one at a time, by _enclosingMappedPlaneRoot (the one upward iterator — called again on the
+  # root it returned, it steps on). A mapping ancestor is one that answers the PLANE-MAPPING PROTOCOL —
+  # `mapsPlaneOfChild(child)` for the child edge just climbed through — and maps by its own verbs
+  # (`mapPointFromChildPlane`, `mapPointIntoChildPlane`, `mapDamageRectFromChildPlane`,
+  # `mapClipFromChildPlane`, `mapRectExactFromChildPlane`, and, for an island,
+  # `rotationDegreesOfChildPlane` / `scaleOfChildPlane`). Two kinds answer today: a non-identity
+  # TransformFrameWdgt (its similitude) and a ViewportWdgt for its scrolled contents (an integer
+  # translation; per child edge, so its bars stay FIXED chrome with no stored role,
+  # docs/archive/paint-time-scroll-translation-plan.md §3.2). The walks never ask what class an
+  # ancestor is: a third kind of plane is a class answering the protocol. An ancestor that maps
+  # nothing contributes nothing, so off any mapped plane every walk still returns its input
+  # UNCHANGED (same object) — the dormant guarantee the byte-exact suite stands on.
+  # The damage lane: each mapping ancestor deposits (an island, when asked) and maps the rect, then
+  # updates the outermost island's clip (an island replaces it, a translation carries it along); ONE
+  # final intersect.
   mapRectToScreen: (aRect, depositBufferDamage = false) ->
     result = aRect
     outermostIslandClip = undefined
-    previous = @
-    ancestor = @parent
-    while ancestor?
-      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        # §4.4 buffer cache — the "destination" (new-position) deposit: the PRE-mapping rect is in
-        # THIS island's virtual (buffer) plane, so it is exactly the region this widget now occupies
-        # in the island's buffer — and the damage lanes pass it already grown by the widget's
-        # shadowExtendedRect, so it covers the shadow px in every crossed plane too. Deposit it as
-        # content-damage. Only the two damage-flesh-out lanes pass depositBufferDamage=true; the OTHER
-        # caller (_recordDrawnAreaForNextDamageRects, the paint-time snapshot) passes false, so a
-        # mere repaint never dirties the buffer. Depositing on EACH crossed island handles nesting
-        # for free. Zero dormant cost (off-island never enters).
-        ancestor._depositIslandBufferDamageRect result if depositBufferDamage
-        result = ancestor.transformSpec.mapRect result, ancestor.bounds
-        # the OUTERMOST island's visible rect clips the mapped damage (§4.11) — read it at the
-        # crossing (pure per geometryVersion, so the value equals an after-the-loop read) and let
-        # any LATER translation step carry it along, so the final intersect happens with both
-        # rects expressed in the same (screen) plane even when an island sits inside a scrolled
-        # pane. Each crossing overwrites: only the outermost island's clip applies, as before.
-        outermostIslandClip = ancestor.clippedThroughBounds()
-      else if (translation = ancestor.scrollTranslationOfChild?(previous))?
-        # translation arm: EXACT translate — no ±1px AA pad (nothing resamples), no buffer deposit
-        result = result.translateBy translation
-        outermostIslandClip = outermostIslandClip.translateBy translation if outermostIslandClip?
-      previous = ancestor
-      ancestor = ancestor.parent
+    root = @_enclosingMappedPlaneRoot()
+    while root?
+      result = root.mapDamageRectFromChildPlane result, depositBufferDamage
+      outermostIslandClip = root.mapClipFromChildPlane outermostIslandClip
+      root = root._enclosingMappedPlaneRoot()
     if outermostIslandClip?
       result = result.intersect outermostIslandClip
     result
 
   # Affine transforms (§4.6): map a SCREEN point down into THIS widget's plane, by
-  # applying the INVERSE of each ancestor island's transform, OUTERMOST first (the
-  # inverse of mapRectToScreen's innermost-first forward chain). A widget not inside
-  # any non-identity island gets the point back UNCHANGED — so hit-testing is
-  # byte-identical when dormant. Used by the hit-test predicate so a widget's
+  # applying the INVERSE of each mapping ancestor's map (a non-identity island's transform, a
+  # scrolled viewport's translation), OUTERMOST first (the inverse of mapRectToScreen's
+  # innermost-first forward chain). A widget with no mapping ancestor gets the point back
+  # UNCHANGED — so hit-testing is byte-identical when dormant. Used by the hit-test predicate so a widget's
   # bounds/pixel test runs in the plane where its (virtual) geometry lives; corner
   # fall-through and per-pixel transparency then come out exact for free (§10.4).
+  # The inverses apply OUTERMOST first, so the walk recurses: the screen point is first brought down
+  # into the plane my innermost mapping ancestor lives in (that ancestor's own screenPointToMyPlane,
+  # which recurses the same way), and only then mapped through it into my plane — no array of steps,
+  # and the same order of operations a loop over a collected list would give.
   screenPointToMyPlane: (aPoint) ->
-    # two-arm (see mapRectToScreen's header note): a step is an island (inverse similitude)
-    # or a scroll translation (a bare Point, inverted by subtract)
-    steps = undefined
-    previous = @
-    ancestor = @parent
-    while ancestor?
-      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        steps ?= []
-        steps.push ancestor              # innermost first
-      else if (translation = ancestor.scrollTranslationOfChild?(previous))?
-        steps ?= []
-        steps.push translation
-      previous = ancestor
-      ancestor = ancestor.parent
-    return aPoint if !steps?
-    result = aPoint
-    for step in steps by -1              # apply inverses outermost → innermost
-      if step.transformSpec?             # an island step (a translation step is a bare Point)
-        result = step.transformSpec.inverseMapPoint result, step.bounds
-      else
-        result = result.subtract step
-    result
+    root = @_enclosingMappedPlaneRoot()
+    return aPoint if !root?
+    root.mapPointIntoChildPlane root.screenPointToMyPlane aPoint
 
   # Affine transforms (§4.6): the exact inverse of screenPointToMyPlane — map a point in THIS
-  # widget's (virtual) plane UP to the SCREEN plane, applying each ancestor island's FORWARD
-  # transform innermost → outermost. A widget not inside any non-identity island gets the point
-  # back UNCHANGED (same object), so this is byte-identical when dormant. Used by the macro
+  # widget's (virtual) plane UP to the SCREEN plane, applying each mapping ancestor's FORWARD
+  # map innermost → outermost. A widget with no mapping ancestor gets the point back UNCHANGED
+  # (same object), so this is byte-identical when dormant. Used by the macro
   # toolkit to click an island-inner widget at the on-screen pixel its virtual point maps to:
   # once an ancestor island scales/rotates, a widget's screen position is NOT its bounds
   # position, so `.center()` alone would click the wrong pixel (and miss).
   localPointToScreen: (aPoint) ->
     result = aPoint
-    previous = @
-    ancestor = @parent
-    while ancestor?
-      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        result = ancestor.transformSpec.mapPoint result, ancestor.bounds
-      else if (translation = ancestor.scrollTranslationOfChild?(previous))?
-        result = result.add translation
-      previous = ancestor
-      ancestor = ancestor.parent
+    root = @_enclosingMappedPlaneRoot()
+    while root?
+      result = root.mapPointFromChildPlane result
+      root = root._enclosingMappedPlaneRoot()
     result
 
   # Affine transforms (§4.6): true if a non-identity TransformFrameWdgt island is on my parent chain.
@@ -1759,12 +1725,11 @@ class Widget extends TreeNode
   # must track me (a highlight) is parented HERE to composite through the transform for free (rotates +
   # clips with me, §4.6 halo-handle model). Dormant returns undefined (no island) ⇒ the highlight stays a
   # world child, byte-identical. Backs _isInsideNonIdentityIsland above (its one caller is boolean-context).
+  # The mapping ancestors that rotate or scale are the islands: they alone answer the linear part
+  # (rotationDegreesOfChildPlane), a translation having none — so the iterator, asked for those only,
+  # never asks a viewport whether it is scrolled.
   _enclosingNonIdentityIsland: ->
-    ancestor = @parent
-    while ancestor?
-      return ancestor if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-      ancestor = ancestor.parent
-    undefined
+    @_enclosingMappedPlaneRoot true
 
   # The GENERAL siblings of the pair above (paint-time-scroll-translation plan §3.2): is any
   # MAPPING ancestor — a non-identity island OR a scroll-translation provider for the child
@@ -1776,16 +1741,19 @@ class Widget extends TreeNode
   _isInsideMappedPlane: ->
     @_enclosingMappedPlaneRoot()?
 
-  # The INNERMOST mapping ancestor (island or translation provider), or undefined. For an
-  # island the root is the island itself (overlay chrome parented into it composites through
+  # The INNERMOST mapping ancestor — the first one, climbing from me, that maps the plane of the child
+  # I climbed through (the protocol in mapRectToScreen's header) — or undefined. It is also THE upward
+  # iterator of every screen↔plane walk: asked again of the root it returned, it answers the next one up.
+  # For an island the root is the island itself (overlay chrome parented into it composites through
   # the transform); for a scrolled pane it is the VIEWPORT — whose add() redirects non-chrome
-  # into its contents, i.e. onto the scrolled plane.
-  _enclosingMappedPlaneRoot: ->
+  # into its contents, i.e. onto the scrolled plane. With rotatingOrScalingOnly it answers only an
+  # ancestor that rotates or scales (one answering rotationDegreesOfChildPlane), asking no other.
+  _enclosingMappedPlaneRoot: (rotatingOrScalingOnly = false) ->
     previous = @
     ancestor = @parent
     while ancestor?
-      return ancestor if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-      return ancestor if ancestor.scrollTranslationOfChild?(previous)?
+      if !rotatingOrScalingOnly or ancestor.rotationDegreesOfChildPlane?
+        return ancestor if ancestor.mapsPlaneOfChild?(previous)
       previous = ancestor
       ancestor = ancestor.parent
     undefined
@@ -1818,15 +1786,10 @@ class Widget extends TreeNode
   # its OWN transform (which applies to its CONTENT, not its slot box) is correctly excluded.
   screenBounds: ->
     result = @boundingBox()
-    previous = @
-    ancestor = @parent
-    while ancestor?
-      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        result = ancestor.transformSpec.mapRectExact result, ancestor.bounds
-      else if (translation = ancestor.scrollTranslationOfChild?(previous))?
-        result = result.translateBy translation
-      previous = ancestor
-      ancestor = ancestor.parent
+    root = @_enclosingMappedPlaneRoot()
+    while root?
+      result = root.mapRectExactFromChildPlane result
+      root = root._enclosingMappedPlaneRoot()
     result
 
   # My OWN sugar transform — getter symmetry with the 4C setters setRotationDegrees / setScaleFactor
@@ -1846,24 +1809,23 @@ class Widget extends TreeNode
   # and my own sugar island IS an ancestor, so my own transform is included. ONE greppable
   # accumulation shared with the pick-out (_pickOutRotatedFigureNoSettle) and drop-re-express
   # (_reExpressFigureForPlaneOfNoSettle) verbs. Off any island ⇒ 0 / 1.
-  # Deliberately NO translation arm (unlike the mapping walks above): a scroll translation
-  # contributes no rotation and no scale, so these two are complete as they are.
+  # The two step over the ISLANDS only (_enclosingNonIdentityIsland, which skips a translation: it
+  # contributes no rotation and no scale), ITERATIVELY and innermost first — the drop-back unwrap needs
+  # this Σ / ∏ in exactly the order the pick-out built it.
   accumulatedRotationDegrees: ->
     total = 0
-    ancestor = @parent
-    while ancestor?
-      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        total = total + ancestor.transformSpec.rotationDegrees
-      ancestor = ancestor.parent
+    island = @_enclosingNonIdentityIsland()
+    while island?
+      total = total + island.rotationDegreesOfChildPlane()
+      island = island._enclosingNonIdentityIsland()
     ((total % 360) + 360) % 360
 
   accumulatedScaleFactor: ->
     product = 1
-    ancestor = @parent
-    while ancestor?
-      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        product = product * ancestor.transformSpec.scale
-      ancestor = ancestor.parent
+    island = @_enclosingNonIdentityIsland()
+    while island?
+      product = product * island.scaleOfChildPlane()
+      island = island._enclosingNonIdentityIsland()
     product
 
   # Public, macro-callable predicate: true iff at least one STRICT ancestor island has a non-identity
@@ -2129,9 +2091,12 @@ class Widget extends TreeNode
   # transform island is transform plumbing around ONE figure regardless of who authored it. Sugar-ONLY machinery
   # (materialize/dissolve/unwrap, halo anchor) keeps using _enclosingSugarIsland — an explicit island
   # must never auto-dissolve or be reused by the property sugar.
+  # An island at IDENTITY counts too (an explicit identity island travels whole), so this cannot ask
+  # the plane-mapping protocol, which an identity island answers nothing to: only islands define
+  # _materializedBySugar (as _dropPolicyProxy relies on), so its presence is the island test.
   _enclosingSoleContentIsland: ->
     p = @parent
-    return undefined if !(p instanceof TransformFrameWdgt)
+    return undefined if !p?._materializedBySugar?
     kids = p.childrenNotHandlesNorCarets()
     return p if kids? and kids.length == 1 and kids[0] == @
     undefined
@@ -2184,63 +2149,33 @@ class Widget extends TreeNode
       figure = content
     figure
 
-  # Affine transforms (§6 Phase 4D-2b): RE-EXPRESS a dropped SUGAR FIGURE relative to the plane it lands in.
-  # When a _materializedBySugar figure (from a 4D-2a pick-out or a 4C rotate/scale) is float-dropped into a
-  # container that lives inside a non-identity island, its spec is ABSOLUTE (Σ degrees / ∏ scales over its
-  # former ancestor islands) but it is about to composite THROUGH the destination plane's transform as well --
-  # so without re-expression a 30° figure dropped into a 30° window would render at 60° (transforms compose;
-  # the 4D-1 block maps only POSITION). Re-express the figure's spec RELATIVE to the destination plane:
-  #     rel_r = figure.deg − Σ(destination-plane island degrees),  rel_s = figure.scale ÷ ∏(… island scales)
-  # so composited through the plane it renders at its ORIGINAL absolute look. When rel is identity (a
-  # return-to-SAME-plane round-trip: x−x, x÷x are IEEE-exact and the absolute spec was BUILT as Σ/∏ over the
-  # same chain in the same order at pick-out) the figure becomes an identity sugar island -- the drop's
-  # post-add _unwrapIfIdentitySugarNoSettle then dissolves it (the 4C auto-unwrap), so a round-trip leaves no
-  # island behind. Returns me (the re-spec'd figure) for the 4D-1 position-map + target.add to place. SCOPE
-  # (locked): ONLY _materializedBySugar figures re-express; an EXPLICIT island nest-composes like any content
-  # (the user authored that frame -- mutating its spec on drop would rewrite their structure). Off any sugar
-  # figure, or into an identity plane, a no-op returning me unchanged: a non-island payload lacks
-  # _materializedBySugar (⇒ byte-identical dormant), and a rotated figure dropped onto the plain desktop
-  # re-specs to its own value (the setters early-return unchanged). Inverse of _pickOutRotatedFigureNoSettle's
-  # accumulation; NoSettle -- the drop's target.add carries the settle.
+  # Affine transforms (§6 Phase 4D-2b, §7.5 Bug F): RE-EXPRESS a dropped payload relative to the plane it lands
+  # in, so it keeps the look it had on the hand. An ISLAND payload re-expresses as an island —
+  # TransformFrameWdgt's override (a sugar figure re-specs, an explicit island nest-composes); this is a
+  # bare payload, whose own transform is identity. NoSettle -- the drop's target.add carries the settle.
   _reExpressFigureForPlaneOfNoSettle: (target) ->
     # §7.5 Bug F (reparent-transparency, DROP half): EVERY payload keeps the look it had on
     # the hand — not just sugar figures. A bare payload is a figure whose own transform is identity, so
     # its relative similitude vs the destination plane is (0 − plane, 1/plane): when the plane is
     # non-identity, wrap it in a fresh COMPENSATING sugar island at rel so it does not visibly rotate/
-    # scale at the moment of drop ("what you see while dragging is what you get"). Explicit (non-sugar)
-    # islands still nest-compose untouched (the 4D-2b scope rule).
-    if !@_materializedBySugar
-      return @ if @ instanceof TransformFrameWdgt   # explicit island payload: nest-compose, never re-spec
-      degPlane = target.accumulatedRotationDegrees()
-      sPlane = target.accumulatedScaleFactor()
-      return @ if degPlane == 0 and sPlane == 1     # identity plane — the common path, byte-identical dormant
-      relDeg = (((0 - degPlane) % 360) + 360) % 360
-      island = new TrackingTransformFrameWdgt()
-      island._materializedBySugar = true
-      # explicit 'slot' (claimsSpace arc S2, owner decision 2026-07-17): a COMPENSATING wrapper is
-      # invisible look-correction plumbing (it exists so the payload does NOT appear to rotate at
-      # the drop moment), not a user-authored transform — it must never claim layout space in the
-      # tilted container it lands in. The 4C/4D-2a sugar islands, by contrast, FOLLOW the
-      # 'footprint' default (they carry a user-visible rotation — D1's mainstream case).
-      island.transformSpec = new TransformSpec relDeg, 1 / sPlane, "slot"
-      # slot = my bounds (I am on the hand, screen coords); the wrapper pivots on the slot centre so my
-      # on-screen look is unchanged, and the 4D-1 block below places the wrapper by its visual centre.
-      island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
-      island._addNoSettle @
-      return island
-    # The destination plane's linear part: the accumulated similitude over the non-identity islands the
-    # dropped payload will composite through -- target's ancestors. target is never itself a non-identity
-    # island (islands refuse drops, so dropTargetFor climbs past them), so target.accumulated*() (STRICT
-    # ancestors) equals the target-inclusive walk this used to inline -- byte-equivalent (a normalized Σ
-    # differs from the raw sum only by a multiple of 360, which relDeg's own mod cancels; the ∏ is the
-    # same ordered product). Mirrors _pickOutRotatedFigureNoSettle's accumulation (this is its inverse).
+    # scale at the moment of drop ("what you see while dragging is what you get").
     degPlane = target.accumulatedRotationDegrees()
     sPlane = target.accumulatedScaleFactor()
-    relDeg = (((@transformSpec.rotationDegrees - degPlane) % 360) + 360) % 360
-    relScale = @transformSpec.scale / sPlane
-    @_setRotationNoSettle relDeg   # the island's own spec cores; each early-returns when unchanged (identity
-    @_setScaleNoSettle relScale    # plane ⇒ no-op ⇒ dormant byte-identical). rel identity ⇒ I become identity.
-    @
+    return @ if degPlane == 0 and sPlane == 1     # identity plane — the common path, byte-identical dormant
+    relDeg = (((0 - degPlane) % 360) + 360) % 360
+    island = new TrackingTransformFrameWdgt()
+    island._materializedBySugar = true
+    # explicit 'slot' (claimsSpace arc S2, owner decision 2026-07-17): a COMPENSATING wrapper is
+    # invisible look-correction plumbing (it exists so the payload does NOT appear to rotate at
+    # the drop moment), not a user-authored transform — it must never claim layout space in the
+    # tilted container it lands in. The 4C/4D-2a sugar islands, by contrast, FOLLOW the
+    # 'footprint' default (they carry a user-visible rotation — D1's mainstream case).
+    island.transformSpec = new TransformSpec relDeg, 1 / sPlane, "slot"
+    # slot = my bounds (I am on the hand, screen coords); the wrapper pivots on the slot centre so my
+    # on-screen look is unchanged, and the 4D-1 block below places the wrapper by its visual centre.
+    island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
+    island._addNoSettle @
+    return island
 
   # Affine transforms (§6 Phase 4D-2b): the UNWRAP half of the drop re-expression, invoked on a JUST-DROPPED
   # figure. Self-settling twin of _unwrapIfIdentitySugarNoSettle -- the drop calls it AFTER target.add's settle

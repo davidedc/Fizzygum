@@ -316,7 +316,8 @@ class ViewportWdgt extends ClippingWdgt
   # [0, max(0, contentExtent − windowExtent)] (_keepScrollOffsetInBounds). Scrolling never moves
   # the plane: children keep their plane coordinates forever, and the offset is applied as a
   # paint-time translation (the content-recursion override below) and consumed by the
-  # screen↔plane mapping walks through scrollTranslationOfChild. Two scalar prototype
+  # screen↔plane mapping walks through the plane-mapping protocol (mapsPlaneOfChild and its
+  # verbs, below). Two scalar prototype
   # defaults — scalars, NOT a Point (⛔ a class-level constant may never reference another
   # class, docs/architecture/immutable-value-classes.md §3), and scalars serialize
   # own-only-when-scrolled (the spreadsheet's viewOriginCol/Row pattern).
@@ -333,19 +334,44 @@ class ViewportWdgt extends ClippingWdgt
   _scrollTranslation: ->
     new Point @left() - (@contents.left() + @scrollOffsetX), @top() - (@contents.top() + @scrollOffsetY)
 
-  # The per-child-edge capability hook the screen↔plane walks ask of every ancestor they
-  # climb through (plan §3.2; the walks: Widget's mapRectToScreen / screenPointToMyPlane /
-  # localPointToScreen / screenBounds / _enclosingMappedPlaneRoot, and the clipThrough
-  # translation edge). Answers ONLY for my contents edge — my bars are FIXED children of the
-  # same parent, so the §7.6 fixed-vs-scrolled-children split is answered structurally, per
-  # child edge, with no stored role — and ONLY when the translation is real: at (0,0) the
-  # answer is `undefined`, the walks contribute nothing, and their same-object dormant
-  # returns are preserved.
+  # THE PLANE-MAPPING PROTOCOL, my half (TransformFrameWdgt answers it too, for its content).
+  # Widget's screen↔plane walks — mapRectToScreen, screenPointToMyPlane, localPointToScreen,
+  # screenBounds, and the iterator they share, _enclosingMappedPlaneRoot — ask every ancestor
+  # they climb through whether it maps the plane of the child they climbed from. I do ONLY
+  # for my contents edge — my bars are FIXED children of the same parent, so the §7.6
+  # fixed-vs-scrolled-children split is answered structurally, per child edge, with no stored
+  # role — and ONLY when the translation is real: at (0,0) I map nothing, the walks pass me
+  # by, and their same-object dormant returns are preserved. The zero test reads the two
+  # differences _scrollTranslation builds its Point from, so it builds none.
+  mapsPlaneOfChild: (child) ->
+    child is @contents and
+      ((@left() - (@contents.left() + @scrollOffsetX)) isnt 0 or (@top() - (@contents.top() + @scrollOffsetY)) isnt 0)
+
+  # The protocol's verbs: my contents' plane maps to mine by the translation t above, computed
+  # first and then added (a point, a rect) or subtracted (the inverse) — EXACT: no padding, and
+  # no buffer damage to deposit (nothing resamples), whatever the damage lane asks.
+  mapPointFromChildPlane: (aPoint) ->
+    aPoint.add @_scrollTranslation()
+
+  mapPointIntoChildPlane: (aPoint) ->
+    aPoint.subtract @_scrollTranslation()
+
+  mapDamageRectFromChildPlane: (aRect, depositBufferDamage) ->
+    aRect.translateBy @_scrollTranslation()
+
+  mapRectExactFromChildPlane: (aRect) ->
+    aRect.translateBy @_scrollTranslation()
+
+  # an island's clip met further in is carried along, so the damage lane's one final intersect
+  # meets the mapped damage in the same (screen) plane
+  mapClipFromChildPlane: (clipSoFar) ->
+    clipSoFar?.translateBy @_scrollTranslation()
+
+  # The translation itself, for the walks that need the vector rather than a mapping (the
+  # clipThrough translation edge, cornerRadiiFollowingMyOutline, FrameWdgt._visibleBoxOnMyPage,
+  # my own add): t when I map the child's plane, else undefined.
   scrollTranslationOfChild: (child) ->
-    return undefined unless child is @contents
-    t = @_scrollTranslation()
-    return undefined if t.x is 0 and t.y is 0
-    t
+    if @mapsPlaneOfChild child then @_scrollTranslation() else undefined
 
   # The paint-time scroll (plan §3.3), intercepted at the same content-recursion point the
   # island composites at: self (the mimic rect) and the BAR children paint in place; the
