@@ -93,11 +93,12 @@ The built page is *already* 99% of a single-file app:
 - **Load order is computed in-browser at boot** (`findLoadOrder()`, regex-scan + topological DFS,
   `dependencies-finding.coffee`) — no build-time manifest to carry.
 - **The source-string wrapper** (`build.js`, `STRING_BLOCK`):
-  `SourceVault.store("%s", "%s", "%s");` (name, escaped text, part)
-  — the escaping is still `"`→`＂`, `\`→`⧹`, newline→`⤶`, but the DECODE now lives once inside
-  `SourceVault.store` (`src/boot/source-vault.coffee`) instead of being appended to every emitted
-  line. An assembler re-emitting sources must apply the same three replacements and emit
-  `SourceVault.store` calls. (JSON was rejected historically because `file://` blocks JSON fetch.)
+  `SourceVault.store(<name>, <text>, <part>);` — `[REVISED 2026-11-13]` each argument written by
+  `JSON.stringify` (cleanups round 2 §1, `plans/top-10-cleanups-round-2-plan.md`): a JSON string is
+  a JavaScript string literal for any text, so `SourceVault.store` (`src/boot/source-vault.coffee`)
+  keeps the text as given and decodes nothing, and no character is barred from a source. An
+  assembler re-emitting sources emits `SourceVault.store` calls the same way. (A `.json` FILE is
+  still out: `file://` blocks fetching one.)
 - **The serialization arc is the complete data half:**
   - `WorldWdgt::serializeWorldSnapshot(opts)` (`src/WorldWdgt.coffee:2228`) →
     `Serializer.serializeWorld` → versioned JSON envelope
@@ -307,8 +308,8 @@ none read from the DOM:
 - **Shell template**: a literal in the class (the single-file shell is intentionally distinct from
   `src/index.html`; it is THE canonical shell for saved pages).
 - **Boot bundle + compiler texts**: from the wrapped strings the build embeds (§4.4) —
-  `window.fizzygumBootBundle_source`, `window.coffeeScriptCompiler_source` (decoded with the same
-  replacement table `SourceVault.store` applies — four characters once Phase 1 lands).
+  `window.fizzygumBootBundle_source`, `window.coffeeScriptCompiler_source` (string literals as
+  `STRING_BLOCK` writes them; `[REVISED 2026-11-13]` nothing decodes them — see §4.5's note).
 - **Boot helpers** (loading-and-compiling / logging-div / dependencies-finding minified JS): also
   embedded as wrapped strings by the build (§4.4) — they are small (~8 KB total).
 - **Source batches**: regenerated from the in-memory registry — **enumerate the `SourceVault`**
@@ -366,11 +367,20 @@ gate until a test references it) — Phase 5's harness provides that reference.
    already did exactly this shape, so model the new script on it and put it in the same
    directory (Node resolves `require('puppeteer')` from the SCRIPT's directory).
    Prerequisite: Puppeteer from `../Fizzygum-tests` (`npm i` there), same as `build_and_smoke.sh`.
-3. **Exotic-char guard**: `[REVISED 2026-07-30]` the guard half-exists — `build.py:368-370`
-   already FAILS LOUDLY on `＂ ⧹ ⤶` in any source. This plan extends the table AND the guard with
-   `＜` (fourth character), in the same place.
+3. **Exotic-char guard**: `[REVISED 2026-11-13]` there is no guard and no substitution table any
+   more: STRING_BLOCK writes JSON string literals, which bar no character (§4.5's note). What an
+   inlined block needs — no raw `<` — is §4.5's to re-derive.
 
 ### 4.5 Escaping spec (the load-bearing correctness section)
+
+> `[REVISED 2026-11-13]` The code-payload row below, the rules under it, Phase 1's two bullets and
+> the risks R1, R2 and R8 (§6) were written against the three-glyph substitution (`"`→`＂`, `\`→`⧹`, newline→`⤶`), which is
+> gone: STRING_BLOCK now writes each argument with `JSON.stringify`, `SourceVault.store` decodes
+> nothing, and the build's guard went with the substitution (cleanups round 2 §1,
+> `plans/top-10-cleanups-round-2-plan.md`). The REASON in the row stands — a raw `</script` or
+> `<!--` in an inlined block corrupts the file — and its fix needs re-deriving for a string literal
+> when this plan is taken up. (A fact for that: a string literal reads `\u003C` back as `<`, the
+> snapshot row's own escape, with no decoder.)
 
 Two independent payloads, two escapes:
 
@@ -443,10 +453,10 @@ on it).
 
 ### Phase 1 — escaping + charset groundwork (`build.js`, `src/index.html`)
 
-- Extend the STRING_BLOCK encode (`build.js`, `STRING_BLOCK` and the escape after it), the one decoder
+- `[REVISED 2026-11-13]` (written against the retired substitution — §4.5's note) Extend the STRING_BLOCK encode (`build.js`, `STRING_BLOCK` and the escape after it), the one decoder
   (`source-vault.coffee:45-48`) and the existing guard (`build.js`, the special-character check before the escape) with `＜`; add
   `<meta charset="UTF-8">` to `src/index.html` (currently BOM-only — §4.5).
-- Runtime behavior must be identical (decode restores bytes). Gate: `fg gauntlet` + `fg homepage`.
+- Runtime behavior must be identical (`[REVISED 2026-11-13]` §4.5's note: nothing decodes now). Gate: `fg gauntlet` + `fg homepage`.
 
 ### Phase 2 — boot branches (`src/boot/globalFunctions.coffee`)
 
@@ -498,14 +508,14 @@ on it).
 
 | # | Risk | Mitigation |
 |---|---|---|
-| R1 | `</script` truncation via source comments/strings | §4.5 `＜` substitution (code) + `<` (JSON); §4.4(3) build guard |
-| R2 | Charset mis-sniffing corrupts substitution chars | `<meta charset="UTF-8">` first in head, both shells (Phase 1) |
+| R1 | `</script` truncation via source comments/strings | `[REVISED 2026-11-13]` (written against the retired substitution — §4.5's note) §4.5 `＜` substitution (code) + `<` (JSON); §4.4(3) build guard |
+| R2 | Charset mis-sniffing corrupts substitution chars `[REVISED 2026-11-13]` (§4.5's note: no substitution chars now; non-ASCII source text still needs the charset) | `<meta charset="UTF-8">` first in head, both shells (Phase 1) |
 | R3 | FizzyPaint pixels may be serialization-transient | Phase 0 S1 spike BEFORE building anything |
 | R4 | Dev-build boot bundle carries `BUILDFLAG_LOAD_TESTS=true` into saved pages → 404 loads | `[REVISED 2026-07-30]` dissolved structurally: the central `loadJSFilePromise` short-circuit (§4.2.1) makes ALL loads inert; residual check = `testsManifest` stays undefined and `runPostBootActionsOnce` tolerates it (`Automator?`-guarded) |
 | R5 | DOM snapshot temptation (outerHTML) captures runtime mutations | template reassembly only; assembler reads NOTHING from the DOM |
 | R6 | `savedAt`/`build` envelope fields break generation-comparison | harness omits `savedAt`; compare code payload separately from snapshot |
 | R7 | Stale-copy UX (download model): user edits gen-N after saving, reopens gen-N-1 | inherent to the download model (TW lives with it); v2 FSA in-place save is the real fix; consider a `beforeunload` dirty-guard as a small independent follow-up |
-| R8 | Assembler encode drifts from build.js encode | same 4-char table, §4.4(3) guard, Phase 5 quine-stability test catches drift |
+| R8 | Assembler encode drifts from build.js encode | `[REVISED 2026-11-13]` (§4.5's note) same 4-char table, §4.4(3) guard, Phase 5 quine-stability test catches drift |
 | R9 | New public API trips dead-method gate | Phase 5 harness references it |
 | R10 | iOS Safari blob quirks | existing `FileSaving` data:-fallback covers; iOS is not a target |
 

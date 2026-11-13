@@ -7,8 +7,7 @@
 # was to scan `Object.keys(window)` for names ending in `_coffeSource`. That worked while the
 # answer was always "all of them", but it cannot express the question a part system asks: *which*
 # sources belong to *which* slice, so that a slice can be loaded on demand. A registry can. It
-# also gives the escaping ONE choke point (below) instead of ~500 inline `.replace` chains, and it
-# stops leaking ~500 names into the global namespace.
+# also stops leaking ~500 names into the global namespace.
 #
 # WHY A PLAIN OBJECT AND NOT A CLASS. The `Class` meta-system is itself compiled FROM a source
 # held here (globalFunctions loads the Class source through this vault), so a
@@ -17,11 +16,9 @@
 # defined before any batch runs: every generated `sources_batch_*.js` file is a sequence of
 # `SourceVault.store(…)` calls, and the bundle is the entry page's first script.
 #
-# THE ESCAPING (moved in here from build.py's per-line emission). A JS string literal cannot
-# contain a raw quote, backslash or newline, so buildSystem/build.js replaces those three
-# characters with unused lookalike unicode ones on the way out, and `store` undoes it on the way
-# in. The build ERRORS OUT if a source already contains one of the three replacements, so the
-# round-trip is exact. Keep these three characters in sync with build.js's STRING_BLOCK.
+# THE TEXT ARRIVES AS IT IS. buildSystem/build.js (`STRING_BLOCK`) writes each argument of a
+# `store` call with JSON.stringify, and a JSON string is a JavaScript string literal for any text,
+# so `store` receives a source exactly as its file holds it and keeps it as given.
 #
 # ⚠ Every enumeration here walks the Map directly. Do NOT convert it to a plain object and use
 # `for … of`: Object-extensions.coffee puts `hashCode` on Object.prototype, so an un-`own`ed
@@ -40,13 +37,9 @@ window.SourceVault =
   # name -> {text, part}
   _entries: new Map
 
-  # Called once per class by the generated sources_batch_*.js files. `escapedText` is the
-  # build's encoded form (see above); the decode happens here so the emitted call site is pure data.
-  store: (name, escapedText, part) ->
-    text = escapedText
-      .replace(/＂/g, '"')
-      .replace(/⧹/g, '\\')
-      .replace(/⤶/g, '\n')
+  # Called once per class by the generated sources_batch_*.js files (and Class-source.js), with
+  # the class's source text as its file holds it.
+  store: (name, text, part) ->
     @_entries.set name, {text: text, part: part}
     return
 

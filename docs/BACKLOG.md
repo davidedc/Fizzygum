@@ -564,7 +564,6 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 
 ### `plans/top-10-cleanups-round-2-plan.md`
 AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first survey took the framework and the build, this one takes the test harness, the reference set and the verification tooling. Each item carries its evidence, its effort estimate, its re-measure command and its first step. The owner agreed with §1 to §9 on 2026-11-13 (§4 ruled: delete; §9 on its stated criterion) and left §10 out for now; an owner-launched `/loop` executes §1 to §9 one unit at a time (the plan's STATUS). ⛔ owner decision still open before the second step of §6.
-- [ ] §1 (½ day): class source text ships as a plain string literal (`JSON.stringify`) — the three-glyph escape, its decoder in `SourceVault.store` and the build's refusal go
 - [ ] §2 (½ day): `hashCode` leaves `Object.prototype` for a boot function — then measure `waitForFunction` and close the one-liner below that asks
 - [ ] §3 (½ day): map outlines are data — 2,638 `lineTo` statements in two files become coordinate tables and one loop, proven by an operation log
 - [ ] §4 (½ to 1 day): the in-browser failure zip, a second and ungated way to capture references, with the vendored JSZip and FileSaver (the owner ruled 2026-11-13: delete)

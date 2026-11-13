@@ -231,7 +231,7 @@ against the current tree. This plan is its executable distillation.
   - `recordInstanceEdit`, `recordClassEdit`, `serializableRecords`, `replayClassEdits`.
   - A record is `{scope, className, uniqueID?, propertyName, source?, deleted?}`, its scope
     `"instance"` or `"class"`.
-- `src/boot/source-vault.coffee`: `SourceVault.store(name, escapedText, part)`, `.get(name)`,
+- `src/boot/source-vault.coffee`: `SourceVault.store(name, text, part)`, `.get(name)`,
   `.names()`. It holds only sources whose part batch has loaded.
 
 ### 1.2 Inspector and doors

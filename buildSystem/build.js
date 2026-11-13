@@ -336,40 +336,14 @@ function main(args, sink) {
 
   const filenames = shippedFiles(parts, partOfFile, allFilenames, profile);
 
-  // so here we need to take a .coffee file and generate a js that
-  // , when run, hands its contents as a string to the SourceVault.
-  // There are three ways of doing this.
-  // 1) generate a coffeescript that contains a multiline string
-  //    with the file inside it, then do another pass to convert
-  //    the .coffee into .js
-  // 2) directly generate a .js file that uses JS multi-line strings
-  // 3) directly generate a .js that contains a normal JS string
-  //    (which requires us to turn the multi-line source into a normal
-  //    js string)
-  //
-  // We used 1) before, however 3) is the easiest of the three.
-  // You'd think that 2) is easiest but that still requires some escaping
-  // of the source contents (multiline JS delimiters and in-string variables).
-  // 3) Only requires us to escape the " and the \ and to turn the newlines
-  // into something else. The easiest way is to replace " and \ with
-  // similarly-looking unicode characters and \n with another dedicated
-  // character (⤶).
-  // The DECODE (the three matching "replace"s) lives in SourceVault.store --
-  // src/boot/source-vault.coffee -- so it is written once instead of once per
-  // emitted line. Keep the two in sync: the three characters below and the
-  // three regexes there are one mechanism.
-  //
-  // Note that this mechanism fails if the "transformed to" characters
-  // are already in the string, however we detect that and besides that's why
-  // we picked some strange characters.
-  //
-  // Also note that we tried to use .json to store these strings rather
-  // than using this js trick, however .json loading is not permitted from
-  // filesystem, so we'd always need a server...
-  //
+  // Each class's .coffee text reaches the page as one line of a .js file -- a script, because a page
+  // opened over file:// cannot fetch a .json file -- that hands the text to the SourceVault:
+  // `SourceVault.store("<Name>", "<text>", "<part>");`. Every argument is written by JSON.stringify,
+  // and a JSON string is a JavaScript string literal for any text (U+2028 and U+2029 included, since
+  // ES2019), so the vault receives each source exactly as its file holds it, with nothing to decode.
   // The PART name is the third argument: it is what lets a slice of the system be
   // loaded on demand rather than all-at-boot (docs/archive/build-arc-4-dynamic-parts-plan.md).
-  const STRING_BLOCK = (name, escaped, part) => 'SourceVault.store("' + name + '", "' + escaped + '", "' + part + '");';
+  const STRING_BLOCK = (name, text, part) => 'SourceVault.store(' + JSON.stringify(name) + ', ' + JSON.stringify(text) + ', ' + JSON.stringify(part) + ');';
 
   // now iterate through the source files and create
   // 1) a few js files with A BATCH OF coffeescript sources
@@ -433,35 +407,16 @@ function main(args, sink) {
     // driver has run, the same shape as the font-assets re-prune: derived from the policy, not a
     // list of files to delete.
     if (isClassFile) {
-      // backslashes and quotes and newlines all need
-      // to be escaped. Quotes need to be escaped otherwise
-      // they'll conflict with the starting and ending quote of
-      // the complete string. Backslashes need to be escaped
-      // otherwise that'll pair up with the next characters to
-      // encode all kinds of escape sequences including backspace
-      // and tabs and others (https://en.wikipedia.org/wiki/Escape_sequences_in_C)
-      // finally, obviously newlines need to be turned into something else
-      // since js (plain) strings can't span across multiple lines.
-
-      if (content.includes('＂') || content.includes('⧹') || content.includes('⤶')) {
-        // a refusal, never a stop: ending this script with status 0 half-way through
-        // the batches would let the build stamp a tree with no parts manifest and no entry pages
-        throw new Refusal(filename + ' already holds ＂, ⧹ or ⤶ -- the characters a source\'s ", \\ and newlines are '
-          + 'written as -- so its text would not come back as it was. Likely to be a problem.');
-      }
-
-      const escapedContent = content.split('"').join('＂').split('\\').join('⧹').split('\n').join('⤶');
-
       // the vault is keyed by CLASS name, which is the file's basename
       // (one class per file, filename == class name -- see the repo CLAUDE.md)
       const sourceName = path.basename(filename).split('.coffee').join('');
-      const escapedContentWithDeclaration = STRING_BLOCK(sourceName, escapedContent, partOfFile.get(filename));
+      const storeLine = STRING_BLOCK(sourceName, content, partOfFile.get(filename));
 
       // Class is the one source loaded individually and EARLY, because the meta-system
       // has to exist before any batch's contents can be ingested (see globalFunctions'
       // boot sequence and its META_SYSTEM_SOURCES). Every other source travels in a batch only.
       if (sourceName === 'Class') {
-        writeFile('../Fizzygum-builds/latest/js/coffeescript-sources/' + sourceName + '-source.js', escapedContentWithDeclaration);
+        writeFile('../Fizzygum-builds/latest/js/coffeescript-sources/' + sourceName + '-source.js', storeLine);
       }
 
       // pile up the sources into this part's batch, and save the batch when it is big enough
@@ -469,8 +424,8 @@ function main(args, sink) {
       if (!classesOfPart.has(eachPart)) classesOfPart.set(eachPart, []);
       classesOfPart.get(eachPart).push(sourceName);
       const pile = accumulator.get(eachPart) || { text: '', length: 0 };
-      accumulator.set(eachPart, { text: pile.text + '\n\n' + escapedContentWithDeclaration,
-        length: pile.length + 2 + codePointLength(escapedContentWithDeclaration) });
+      accumulator.set(eachPart, { text: pile.text + '\n\n' + storeLine,
+        length: pile.length + 2 + codePointLength(storeLine) });
       if (accumulator.get(eachPart).length > minimumSourcesBatchSize) writeBatch(eachPart);
     }
   }

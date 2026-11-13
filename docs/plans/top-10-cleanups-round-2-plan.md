@@ -15,7 +15,8 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands.
+> the table's last column says where each stands. Landed so far: §1. Items the loop closes leave
+> `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -105,7 +106,7 @@ who has never seen the code.
 
 | # | Cleanup | Effort (estimate) | What goes away, and in plain words | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | Class source text ships as a plain string literal | ½ day | A three-glyph escape, its decoder at boot, a build refusal, three characters no source may contain. **In plain words:** to store each class's source in a file, the build swaps quotes, backslashes and line breaks for three look-alike characters, and the page swaps them back when it starts. JavaScript already has a standard way to write any text safely, so neither swap is needed. | None | No | 8 | Queued for the loop |
+| 1 | Class source text ships as a plain string literal | ½ day | A three-glyph escape, its decoder at boot, a build refusal, three characters no source may contain. **In plain words:** to store each class's source in a file, the build swaps quotes, backslashes and line breaks for three look-alike characters, and the page swaps them back when it starts. JavaScript already has a standard way to write any text safely, so neither swap is needed. | None | No | 8 | Landed 2026-11-13 |
 | 2 | `hashCode` leaves `Object.prototype` | ½ day | The last enumerable key on `Object.prototype`, and the reason the rigs give for never using `waitForFunction`. **In plain words:** a small helper for hashing text was attached to every object on the page. Every object then carries one extra visible property, which loops and test tools trip over. Make it an ordinary function that only text uses. | None | No | 6 | Queued for the loop |
 | 3 | Map outlines are data | ½ day | About 3,000 of `src/`'s 37,681 code lines (8%), written as 2,638 `lineTo` statements. **In plain words:** the two maps are drawn by thousands of hand-written "draw a line to this point" instructions. Keep the points in a list and let one short loop draw them. | None expected (one test draws a world map) | No | 10 | Queued for the loop |
 | 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Queued for the loop |
@@ -163,6 +164,26 @@ on the current build. After the change, the same probe must print the same texts
 
 **Re-measure.**
 `grep -c '＂\|⧹\|⤶' Fizzygum/buildSystem/build.js Fizzygum/src/boot/source-vault.coffee Fizzygum-tests/scripts/build-tree-fingerprint.js`.
+
+**Landed 2026-11-13.** `STRING_BLOCK` writes its three arguments with `JSON.stringify`;
+`SourceVault.store` keeps the text as given; the escape, its decoder, the build's refusal and the
+comment that chose the escape are gone, and the fingerprint tool's `STORE` reads a real string
+literal (it still reads a tree built before). The re-measure command now prints 0 for all three
+files. Nothing else read the encoded form: every other reader goes through `SourceVault.get` or
+`names`. Evidence: a probe read every `SourceVault.names()` entry on `index-sw.html` before and
+after, on Chrome and on WebKit: 553 sources, each text's SHA-256 and the vault's insertion order
+identical (the emission order `findLoadOrder` walks, so the load order follows), every text
+byte-equal to its file; a plant made by the build's own `STRING_BLOCK` (raw U+2028 and U+2029, `"`, `\`, a tab, a
+CR, `</script>`, the three retired glyphs) read back equal on both engines, loaded as a script
+file and as a DOM-inserted inline script (which no HTML parser reads, so it says nothing about
+a `<script>` block written inline in an HTML file). The batch cut still measures the text a batch holds, which JSON makes longer in
+code points, so nine batches hold a different run of sources (core 3 to 8, authoring 0 to 2);
+every part keeps its batch list and the load order is the same, and the batches are 92,691 bytes
+smaller (4,362,726 to 4,270,035; `Class-source.js` 42,874 to 41,820). The resolution map is identical. `fg fingerprint <profile> HEAD`
+for all five profiles: the same multiset of (source, part) on both sides; the files that differ
+are the batch files and `Class-source.js` wherever a profile ships them, and the boot bundle,
+whose ONE difference (seen by building both and diffing) is `store` losing its decoder, 72 bytes;
+`js/pre-compiled.js` is byte-identical on `dev-precompiled`, `homepage` and `lean`.
 
 ---
 
@@ -782,3 +803,9 @@ I want to take up item §<N>. Do this, in order:
    and wait for my go-ahead before the change itself. Verify with the plan's §14 protocol.
 Do not commit or push without asking me.
 ```
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] §1 (½ day): class source text ships as a plain string literal (`JSON.stringify`) — the three-glyph escape, its decoder in `SourceVault.store` and the build's refusal go
+  — CLOSED 2026-11-13 (loop U1): `STRING_BLOCK` writes JSON string literals; the escape, its decoder and the refusal
+  are gone (§1, "Landed").
