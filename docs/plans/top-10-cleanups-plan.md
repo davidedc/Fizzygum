@@ -2,9 +2,15 @@
 
 > **PLAN ONLY. Written to be read and executed COLD by an LLM/engineer with ZERO prior context.**
 > This is a SURVEY of ten candidate arcs, authored 2026-11-11 and ordered by effort, smallest
-> first. Nothing in it is started and nothing in it is approved: each item is a proposal with its
-> evidence, and four of the ten need an owner decision before any code moves (marked in the table
-> under "The list at a glance").
+> first. Each item is a proposal with its evidence, and four of the ten need an owner decision
+> before any code moves (marked in the table under "The list at a glance").
+>
+> **STATUS.** Since 2026-11-12 an unattended `/loop`, launched by the owner, executes these items or
+> their parts, one unit at a time: §1 but for its owner questions, §4, §5, §6, §7's first step, both
+> steps of §8, and §10. Its brief (local to the loop) rules their small choices and leaves §2, §3,
+> §9 and §7's second step to the owner. The table's last column and a `**Landed <date>.**`
+> paragraph in each item's section say what has landed; the trailing `## BACKLOG ledger` holds the
+> closed BACKLOG lines.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -88,18 +94,18 @@ confidence in the evidence, divided by cost and pixel risk (1 is the best return
 Ordered by effort, smallest first. Effort is an estimate in working days for the whole item.
 "Payoff rank" is the order by return on that effort (1 is the best).
 
-| # | Cleanup | Effort (estimate) | What goes away | Pixel risk | Owner decision first | Payoff rank |
-|---|---|---|---|---|---|---|
-| 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 |
-| 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 |
-| 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 |
-| 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 |
-| 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 |
-| 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 |
-| 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 |
-| 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 |
-| 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 |
-| 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 |
+| # | Cleanup | Effort (estimate) | What goes away | Pixel risk | Owner decision first | Payoff rank | Status |
+|---|---|---|---|---|---|---|---|
+| 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Orphans, closed plans and the stub header landed 2026-11-13; the rest open |
+| 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Not started |
+| 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
+| 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Not started |
+| 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Not started |
+| 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Not started |
+| 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Not started |
+| 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Not started |
+| 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
+| 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Not started |
 
 ---
 
@@ -153,6 +159,23 @@ with an `fg fingerprint` showing only path changes.
 **Re-measure.** For any file `F`:
 `grep -rIl --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=archive -e "F" Fizzygum Fizzygum-tests fg`
 from the umbrella directory.
+
+**Landed 2026-11-13 (the loop's U1): the orphans, the closed plans, the stub's header.** Eight of the
+nine orphans are deleted; the re-measure grep, re-run over both repos, `fg` and the umbrella's
+`.claude/`, found each named only here, in its own text or its sibling's, or in an archived record.
+`xPointerImage4.psd` is KEPT: a design source has no code reference by nature, so "unreferenced" is no
+evidence it is dead, and whether the repo keeps design sources is the owner's call (BACKLOG). The three
+closed plans moved to `docs/archive/` as `recorded-to-macro-migration-plan.md`,
+`screenshot-equality-plan.md` and `reference-filename-grammar-plan.md`, byte-for-byte (their relative
+links stay written from the tests repo's root; their INDEX lines say so and name the repo that holds
+their history); the one living mention, in the tests repo's `CLAUDE.md`, points at the archive. The
+stub `auxiliary files/pre-compiled.js` says what is true: every build copies it, a compile-at-boot tree
+ships that copy, a precompiled profile replaces it with the image the pre-compile driver harvests.
+Evidence: a build-tree fingerprint against the unchanged HEAD for all five profiles, made by hand
+because `fg fingerprint` cannot build its baseline today (BACKLOG, under §2): `dev` and `dev-notests`
+differ in `js/pre-compiled.js` alone (257 → 569 bytes, the new header), `dev-precompiled`,
+`homepage` and `lean` not at all. Left of §1: the vendoring homes, `package.json`'s `main`, the
+empty `SWCanvasBrokenTests` lists (owner), and the `.psd` (owner).
 
 ---
 
@@ -765,3 +788,11 @@ I want to take up item §<N>. Do this, in order:
    and verify with the plan's §14 protocol.
 Do not commit or push without asking me.
 ```
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- §1, in part — the line read: "§1 (½ day): repository hygiene — nine orphan files, two vendoring homes, three
+  closed plans at the tests-repo root, the empty `SWCanvasBrokenTests` lists (⛔ owner on the last)". — LANDED IN
+  PART 2026-11-13 (loop U1): eight orphan files deleted, the three closed plans archived, the pre-compiled stub's
+  header made true (§1, "Landed"). BACKLOG keeps the rest: the vendoring homes, `SWCanvasBrokenTests` (owner), the
+  kept `.psd` (owner).

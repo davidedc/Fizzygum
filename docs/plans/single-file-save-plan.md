@@ -5,11 +5,10 @@
 teardown-shared-core arc all landed; head at revision `4daded29`+): every §2/§4 fact re-verified
 against current code, corrections woven in place (the partial syncs the arcs themselves made are
 retained). Anchor on quoted **method names** first; line numbers are hints.
-⚠ Cold-executor caution: the `pre-compiled.js` stub comment (`auxiliary files/pre-compiled.js`) is
-STALE (pre-program — it still describes a `--homepage` flag and a zip download); the image is now
-harvested headlessly by `../Fizzygum-tests/scripts/generate-pre-compiled-headless.js`. Do not source
-build facts from that comment: the present-tense build reference is
-`docs/architecture/build-and-packaging.md`.
+⚠ Cold-executor caution: the image is harvested headlessly by
+`../Fizzygum-tests/scripts/generate-pre-compiled-headless.js` (the `pre-compiled.js` stub's comment,
+`auxiliary files/pre-compiled.js`, says so since 2026-11-13; before that it described a `--homepage`
+flag and a zip download). The present-tense build reference is `docs/architecture/build-and-packaging.md`.
 
 This plan is self-contained: it embeds the load-bearing findings of the 2026-07-10 research pass
 (two codebase studies + six sourced web studies on TiddlyWiki/Decker/platform behavior), so it is
