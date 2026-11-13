@@ -574,7 +574,7 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 - [ ] §3 (½ to 1 day): the video-player part — delete it or gate it (⛔ owner); either way the one-carrier `requiresFlag` mechanism goes
 - [ ] §5's second candidate (unexamined): `FrameWdgt`'s docking family (`dockSideAt` to `floatOutOfDock`) as a seam of its own — assess before assuming it
 - [ ] §5 follow-up, found by the loop's U7 review (low, pre-existing, reached on a touch device with a hardware keyboard): the on-screen keyboard's hidden `<input>` suppresses Backspace and Tab by `event.keyIdentifier` (`BrowserInputBridge.initVirtualKeyboard`), a property Chrome removed, so neither is prevented there; the canvas's own keydown listener tests `event.key`. Measure on a device before changing it
-- [ ] §6 (3 days): one plane-mapping protocol for the ancestor walk (8 loops and 10 `instanceof TransformFrameWdgt` in `Widget`)
+- [ ] §6 (3 days): one plane-mapping protocol for the ancestor walk (8 loops and 10 `instanceof TransformFrameWdgt` in `Widget`) (⛔ owner: built, proven exact and PARKED on a speed trade by the loop's U8 — §6's OWNER DECISION, the patch in the loop's scratch)
 - [ ] §7 step 2 (3 days): derived-geometry caches — one declared memo per query (perf-gated; ⛔ owner: it adds a class-level declaration that generates accessors, a new meta-mechanism). Step 1, the one oracle, landed (the plan's `## BACKLOG ledger`)
 - [ ] §8 (1 day, then 2 to 3 days): method-count and cognitive-complexity ratchets; split the sequential giants (supersedes the `lint-generic-rules-carryover-plan.md` §8.5 C line below once built)
 - [ ] §9 (4 to 5 days): icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted)

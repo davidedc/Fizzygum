@@ -101,7 +101,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Landed 2026-11-13; no trap fired |
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Landed 2026-11-13 |
-| 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Not started |
+| 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Built and parked 2026-11-13: OWNER DECISION (a speed trade) |
 | 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
 | 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Not started |
 | 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
@@ -491,6 +491,40 @@ features; none restructures the walk.
 **Re-measure.**
 `grep -n "instanceof TransformFrameWdgt" Fizzygum/src/basic-widgets/Widget.coffee | wc -l` and
 `grep -rn "scrollTranslationOfChild" Fizzygum/src --include='*.coffee' | grep -v ":\s*#"`.
+
+**OWNER DECISION (OPEN, raised 2026-11-13 by the loop).** The protocol is built, proven exact, and parked
+on its speed. Nothing a person sees differs either way: the change moves no pixel. What differs is the code's
+shape and a few nanoseconds per call.
+
+- **What was built** (patch `Fizzygum-tests/.scratch/cleanups-loop/u8-plane-mapping/PARKED-Fizzygum.patch`,
+  applies cleanly to Fizzygum `d85f32ee`; the loop's notes in `u8-plane-mapping/PREP.md` and `SURVEY.md`). The
+  existing `_enclosingMappedPlaneRoot` is the one upward iterator; every ancestor that maps a plane answers
+  `mapsPlaneOfChild(child)` and maps through its own verbs (`mapPointFromChildPlane`,
+  `mapPointIntoChildPlane`, `mapDamageRectFromChildPlane`, `mapClipFromChildPlane`,
+  `mapRectExactFromChildPlane`, `rotationDegreesOfChildPlane`, `scaleOfChildPlane`) on `TransformFrameWdgt` and
+  `ViewportWdgt`; the eight walks are short folds over the iterator (`screenPointToMyPlane` recursing for its
+  outermost-first order, the accumulators iterating islands innermost first); all ten `instanceof
+  TransformFrameWdgt` leave `Widget` (the two outside the walks by a `TransformFrameWdgt` override and the
+  existing `_materializedBySugar?` test), and the `instanceof` stink falls 74 → 64.
+- **Exact.** An instrument ran the OLD code beside the new on every call of the eight walks and of
+  `scrollTranslationOfChild`, comparing every number with `Object.is`: about 219 million calls over the whole
+  suite at dpr 1 and 2, as mouse and as finger, with zero disagreements, every test passing (a planted error was
+  reported, per test).
+- **Speed** (the real methods, HEAD's build against the change's, three alternating runs each; ns per call):
+  with no mapping ancestor, the common case, 13–50 % faster; in a scrolled pane 22–47 % faster; a scrolled
+  pane inside a rotated island up to 37 % faster (two methods the same); but for content of islands nested directly (no viewport
+  between) 3–14 % slower on the value walks (`screenPointToMyPlane` 221 → 229, `mapRectToScreen` 268 → 288,
+  `screenBounds` 185 → 196) and ×1.4–1.5 on the two root queries (12.5 → 17.5–19 ns) — the cost of one more call
+  layer per mapping ancestor (the capability, the verb, the iterator's restart). The loop's one attempt
+  removed the other slowdown it found (an island walk stepping through a viewport's scroll test).
+- **Options.** (a) Land the patch as it is. (b) Keep today's eight loops and ten type tests. (c) Land it with an
+  island fast path in the iterator — which would put the type test back and defeat the item.
+- **Recommendation: (a).** The slower path is content inside rotated or scaled islands, by a few
+  nanoseconds per call; every hit-test candidate outside a mapped plane and every scrolled pane gets faster;
+  and the item's aim holds — `Widget` names no subclass, and a third kind of plane is a class, not eight loops.
+  On (a): re-apply the patch, re-run the whole-suite agreement instrument (the iterator's island filter came
+  after the whole-suite runs; its subset run is clean), then the presuite, an independent review, the gauntlet
+  and `fg homepage`.
 
 ---
 
