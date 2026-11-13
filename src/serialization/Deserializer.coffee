@@ -1,6 +1,6 @@
 # Deserializer — rebuilds a widget graph from a Serializer envelope. See
-# docs/architecture/serialization-duplication-reference.md §9. Returns { widget, whenReady }: the widget
-# is DETACHED (the caller attaches it — a menu action, drop handler, or snapshot loader);
+# docs/architecture/serialization-duplication-reference.md §9. Returns { widget, whenReady, resolve }: the
+# widget is DETACHED (the caller attaches it — a menu action, drop handler, or snapshot loader);
 # whenReady is a promise that resolves once the async work the restore started has landed: every
 # canvas's decode (via <img> onload, on both backends), and every load a restored widget's
 # _afterDeserialization started for an element it re-makes from its own path.
@@ -13,23 +13,12 @@
 #   4. fixups       — compile $src functions, re-register world-set memberships, run the
 #                     per-class _afterDeserialization hook (a derived value -- a canvas context --
 #                     is in no record: its holder rebuilds it, lazily, as a fresh widget does)
-#   5. deliver      — return { widget, whenReady }
+#   5. deliver      — return { widget, whenReady, resolve }
 class Deserializer
 
   # Restore from an envelope string (or an already-parsed envelope object).
   @deserialize: (envelopeOrString, opts = {}) ->
-    envelope = if typeof envelopeOrString is "string" then JSON.parse(envelopeOrString) else envelopeOrString
-    unless envelope? and envelope.format is Serializer.FORMAT
-      throw new SerializationError "not a Fizzygum serialization envelope",
-        offender: "format=" + envelope?.format
-        direction: "load"
-    # the same envelope-level verdict both file doors ask for before anything changes (through
-    # whyItCanNeverBeRestored), so a file they let through cannot fail one of these after it
-    shapeProblem = @_envelopeShapeProblem envelope
-    throw new SerializationError shapeProblem, direction: "load" if shapeProblem?
-    # and asked before the first shell is built, so a refused file leaves nothing registered
-    functionSourceProblem = @_functionSourceOnANonWidget envelope
-    throw new SerializationError functionSourceProblem, direction: "load" if functionSourceProblem?
+    envelope = @_vettedEnvelope envelopeOrString
 
     records = envelope.objects
     kind = envelope.kind or "widget"
@@ -57,14 +46,36 @@ class Deserializer
         return shellByUniqueId.get(ref.$ext) ? @resolveExternal ref.$ext
       undefined
 
-    assignProps = (shell, props) ->
-      return unless props?
-      for own name, ref of props
-        if ref? and typeof ref is "object" and ref.$src?
-          srcJobs.push {shell: shell, name: name, source: ref.$src}
-        else
-          shell[name] = resolveRef ref
+    # the four passes over the records, in order (each below), then the delivery
+    @_instantiatePass records, shells, asyncPromises, shellByUniqueId
+    @_populatePass records, shells, resolveRef, srcJobs
+    @_registerPass records, shells, kind
+    @_fixupPass records, shells, srcJobs, asyncPromises
 
+    # ---- Pass 5: deliver ----
+    # `resolve` is exposed so the world-snapshot loader resolves its `world` section's references
+    # (children, bin, app windows, preferences) against the same table with the same reader -- one
+    # resolver of the reference forms, never a second.
+    whenReady = if asyncPromises.length then Promise.all(asyncPromises) else Promise.resolve()
+    { widget: shells[envelope.root], whenReady: whenReady, resolve: resolveRef }
+
+  # Before any shell is built: the envelope parsed, and the refusals asked up front — each throws.
+  @_vettedEnvelope: (envelopeOrString) ->
+    envelope = if typeof envelopeOrString is "string" then JSON.parse(envelopeOrString) else envelopeOrString
+    unless envelope? and envelope.format is Serializer.FORMAT
+      throw new SerializationError "not a Fizzygum serialization envelope",
+        offender: "format=" + envelope?.format
+        direction: "load"
+    # the same envelope-level verdict both file doors ask for before anything changes (through
+    # whyItCanNeverBeRestored), so a file they let through cannot fail one of these after it
+    shapeProblem = @_envelopeShapeProblem envelope
+    throw new SerializationError shapeProblem, direction: "load" if shapeProblem?
+    # and asked before the first shell is built, so a refused file leaves nothing registered
+    functionSourceProblem = @_functionSourceOnANonWidget envelope
+    throw new SerializationError functionSourceProblem, direction: "load" if functionSourceProblem?
+    envelope
+
+  @_instantiatePass: (records, shells, asyncPromises, shellByUniqueId) ->
     # ---- Pass 1: instantiate shells ----
     for record, i in records
       shells[i] = @instantiate record, asyncPromises
@@ -72,6 +83,16 @@ class Deserializer
     # token can resolve to a shell in pass 2 (world snapshot only emits these).
     for record, i in records when record.iid? and record.class? and record.class.charAt(0) isnt "$"
       shellByUniqueId.set record.class + "#" + record.iid, shells[i]
+    return
+
+  @_populatePass: (records, shells, resolveRef, srcJobs) ->
+    assignProps = (shell, props) ->
+      return unless props?
+      for own name, ref of props
+        if ref? and typeof ref is "object" and ref.$src?
+          srcJobs.push {shell: shell, name: name, source: ref.$src}
+        else
+          shell[name] = resolveRef ref
 
     # ---- Pass 2: populate & link ----
     for record, i in records
@@ -84,7 +105,9 @@ class Deserializer
       else
         # $Object tags and every user class: resolve & assign the recorded props
         assignProps shell, record.props
+    return
 
+  @_registerPass: (records, shells, kind) ->
     # ---- Pass 3: identity & registration ----
     for record, i in records
       shell = shells[i]
@@ -94,7 +117,9 @@ class Deserializer
         else
           shell.assignUniqueID()        # fresh id (like duplication) for kind:"widget"
         shell.registerThisInstance()
+    return
 
+  @_fixupPass: (records, shells, srcJobs, asyncPromises) ->
     # ---- Pass 4: fixups ----
     # (a) compile each injected method with its widget's own injectProperty: a {"$src"} stands only as a
     #     property of a widget's record (_envelopeShapeProblem and _functionSourceOnANonWidget refused
@@ -116,13 +141,7 @@ class Deserializer
     for shell in shells when shell instanceof Widget
       reloading = shell._afterDeserialization?()
       asyncPromises.push reloading if typeof reloading?.then is "function"
-
-    # ---- Pass 5: deliver ----
-    # `resolve` is exposed so the world-snapshot loader resolves its `world` section's references
-    # (children, bin, app windows, preferences) against the same table with the same reader -- one
-    # resolver of the reference forms, never a second.
-    whenReady = if asyncPromises.length then Promise.all(asyncPromises) else Promise.resolve()
-    { widget: shells[envelope.root], whenReady: whenReady, resolve: resolveRef }
+    return
 
   # WHY THIS BUILD CAN NEVER RESTORE THIS ENVELOPE, as a clause to follow "cannot be loaded here: "
   # (no closing full stop), or undefined when it can. PURE — it only reads the envelope — which is
@@ -249,70 +268,92 @@ class Deserializer
         Serializer.FORMAT_VERSION + "). Update Fizzygum and retry"
     return "its object table is missing" unless Array.isArray envelope.objects
     for record, i in envelope.objects
-      unless record? and typeof record.class is "string" and record.class.length
-        return "its object table is malformed (entry " + i + " names no class)"
-      # a world-set membership this build has no set for would be dropped by the restore: refused
-      # here instead. An own-property test, because a marker is DATA read out of a file. A save writes
-      # memberships, a list, only for a widget (pass 4(b) re-adds the shell to each set, whose
-      # consumers call widget methods on it).
-      if record.memberships?
-        unless Array.isArray(record.memberships) and !@_tagBuilderFor(record.class)? and @_couldBeAWidgetClass(record.class)
-          return "its object table is malformed (entry " + i + " records memberships " + @_shown(record.memberships) +
-            ", which a save writes only as a list, for a widget)"
-        for marker in record.memberships
-          unless Object::hasOwnProperty.call Serializer.WORLD_SET_MEMBERSHIPS, marker
-            return "its object table is malformed (entry " + i + " records a membership of " + @_shown(marker) +
-              ", a world set this build does not have)"
-      # its SHAPE, as its tag states it (TAG_BUILDERS' shapeProblem) or as a class record's is -- a
-      # malformed one would throw in its builder after a world load's teardown, or restore wrong
-      shapeProblem = if (builder = @_tagBuilderFor record.class)? then builder.shapeProblem record else @_classRecordShapeProblem record
-      return "its object table is malformed (entry " + i + ": " + shapeProblem + ")" if shapeProblem?
-      # every reference it carries is one a save writes (_refProblem): any other restores as undefined,
-      # or as itself, in silence
-      refs = @_refsOf record
-      for ref in refs when (refProblem = @_refProblem ref, envelope.objects.length)?
-        return "its object table is malformed (entry " + i + " holds " + refProblem + ")"
-      # a {"$src"} is a widget's injected method, the one function a save writes (Serializer's
-      # encodeFunction), so it stands only as a property of a class record: one in a tag record -- an
-      # $Array or $Set item, a $Map entry, an $Object property, any field of a Color -- is somewhere no
-      # save puts one
-      if @_tagBuilderFor(record.class)? and @_holdsFunctionSource refs
-        return "its object table is malformed (entry " + i + " holds a method's source outside a widget)"
-    # every record's identity is its own: a save writes each widget's iid once for its class, so a second
-    # record of one class with one iid is somewhere no save puts one (a world load would restore two widgets
-    # sharing a uniqueIDString, and an {"$ext"} would resolve to the last of them). Judged for a widget class
-    # this page has: a name it lacks is refused by name after this (whyItCanNeverBeRestored), or judged when
-    # its lazy part has arrived and the door re-enters
-    seenIdentities = new Set
-    for record, i in envelope.objects when record.iid? and classNamed(record.class)? and @_couldBeAWidgetClass(record.class)
-      identity = record.class + "#" + record.iid
-      return "its object table is malformed (entry " + i + " is a second " + identity + ")" if seenIdentities.has identity
-      seenIdentities.add identity
-    # a well-known key no Fizzygum build writes would bind to nothing: refused here, before anything is
-    # built (an app or class key naming a class this build lacks is not one: it is a known key, and
-    # whyItCanNeverBeRestored refuses it as a class this build does not have)
-    for key in Deserializer.wellKnownKeysIn envelope
-      return "it names the well-known object '" + key + "', which no Fizzygum build has" unless WellKnownObjects.isKnownKey key
+      return problem if (problem = @_tableEntryProblem record, i, envelope.objects.length)?
+    return problem if (problem = @_secondIdentityProblem envelope)?
+    return problem if (problem = @_unknownWellKnownKeyProblem envelope)?
     # a world file's section, which the world loader reads beside the table; a widget file carries none (no
     # widget save writes one), so neither the door's part loading nor its reflective-layer test reads source
     # edits that door never replays
     return "it carries a world section, which no widget file has" if envelope.kind isnt "world" and envelope.world?
     if envelope.world? and (sectionProblem = @_worldSectionProblem envelope.world, envelope.objects)?
       return "its world section is malformed (" + sectionProblem + ")"
-    # a world file's widget record's iid is at most its class's count in the world's idCounters (absent: 0)
-    # -- the save took the iid from that very counter, so one above it is an id a widget of its class built
-    # after the load would take again. Every world file, with a section or without; after the section's own
-    # shape, so a malformed idCounters is refused as that; and, as the identities are, for a widget class
-    # this page has
+    return problem if (problem = @_idAboveItsCountProblem envelope)?
+    # a widget file's root, the widget its door adds to the world
+    if envelope.kind isnt "world" and (rootProblem = @_recordReferenceProblem {$r: envelope.root}, envelope.objects, "a widget")?
+      return "its root is malformed (" + rootProblem + ")"
+    undefined
+
+  # One record of the object table: a clause naming its first defect, or undefined. The caller's loop walks the
+  # records in order, so a file with several defects reports the first record's.
+  @_tableEntryProblem: (record, i, objectCount) ->
+    unless record? and typeof record.class is "string" and record.class.length
+      return "its object table is malformed (entry " + i + " names no class)"
+    return problem if (problem = @_membershipsProblem record, i)?
+    # its SHAPE, as its tag states it (TAG_BUILDERS' shapeProblem) or as a class record's is -- a
+    # malformed one would throw in its builder after a world load's teardown, or restore wrong
+    shapeProblem = if (builder = @_tagBuilderFor record.class)? then builder.shapeProblem record else @_classRecordShapeProblem record
+    return "its object table is malformed (entry " + i + ": " + shapeProblem + ")" if shapeProblem?
+    # every reference it carries is one a save writes (_refProblem): any other restores as undefined,
+    # or as itself, in silence
+    refs = @_refsOf record
+    for ref in refs when (refProblem = @_refProblem ref, objectCount)?
+      return "its object table is malformed (entry " + i + " holds " + refProblem + ")"
+    # a {"$src"} is a widget's injected method, the one function a save writes (Serializer's
+    # encodeFunction), so it stands only as a property of a class record: one in a tag record -- an
+    # $Array or $Set item, a $Map entry, an $Object property, any field of a Color -- is somewhere no
+    # save puts one
+    if @_tagBuilderFor(record.class)? and @_holdsFunctionSource refs
+      return "its object table is malformed (entry " + i + " holds a method's source outside a widget)"
+    undefined
+
+  # a world-set membership this build has no set for would be dropped by the restore: refused
+  # here instead. An own-property test, because a marker is DATA read out of a file. A save writes
+  # memberships, a list, only for a widget (pass 4(b) re-adds the shell to each set, whose
+  # consumers call widget methods on it).
+  @_membershipsProblem: (record, i) ->
+    if record.memberships?
+      unless Array.isArray(record.memberships) and !@_tagBuilderFor(record.class)? and @_couldBeAWidgetClass(record.class)
+        return "its object table is malformed (entry " + i + " records memberships " + @_shown(record.memberships) +
+          ", which a save writes only as a list, for a widget)"
+      for marker in record.memberships
+        unless Object::hasOwnProperty.call Serializer.WORLD_SET_MEMBERSHIPS, marker
+          return "its object table is malformed (entry " + i + " records a membership of " + @_shown(marker) +
+            ", a world set this build does not have)"
+    undefined
+
+  # every record's identity is its own: a save writes each widget's iid once for its class, so a second
+  # record of one class with one iid is somewhere no save puts one (a world load would restore two widgets
+  # sharing a uniqueIDString, and an {"$ext"} would resolve to the last of them). Judged for a widget class
+  # this page has: a name it lacks is refused by name after this (whyItCanNeverBeRestored), or judged when
+  # its lazy part has arrived and the door re-enters
+  @_secondIdentityProblem: (envelope) ->
+    seenIdentities = new Set
+    for record, i in envelope.objects when record.iid? and classNamed(record.class)? and @_couldBeAWidgetClass(record.class)
+      identity = record.class + "#" + record.iid
+      return "its object table is malformed (entry " + i + " is a second " + identity + ")" if seenIdentities.has identity
+      seenIdentities.add identity
+    undefined
+
+  # a well-known key no Fizzygum build writes would bind to nothing: refused here, before anything is
+  # built (an app or class key naming a class this build lacks is not one: it is a known key, and
+  # whyItCanNeverBeRestored refuses it as a class this build does not have)
+  @_unknownWellKnownKeyProblem: (envelope) ->
+    for key in Deserializer.wellKnownKeysIn envelope
+      return "it names the well-known object '" + key + "', which no Fizzygum build has" unless WellKnownObjects.isKnownKey key
+    undefined
+
+  # a world file's widget record's iid is at most its class's count in the world's idCounters (absent: 0)
+  # -- the save took the iid from that very counter, so one above it is an id a widget of its class built
+  # after the load would take again. Every world file, with a section or without; after the section's own
+  # shape, so a malformed idCounters is refused as that; and, as the identities are, for a widget class
+  # this page has
+  @_idAboveItsCountProblem: (envelope) ->
     if envelope.kind is "world"
       counts = envelope.world?.idCounters ? {}
       for record, i in envelope.objects when record.iid? and classNamed(record.class)? and @_couldBeAWidgetClass(record.class)
         count = if Object::hasOwnProperty.call(counts, record.class) then counts[record.class] else 0
         if record.iid > count
           return "its object table is malformed (entry " + i + " is " + record.class + "#" + record.iid + ", above its class's count in the world's idCounters, " + count + ")"
-    # a widget file's root, the widget its door adds to the world
-    if envelope.kind isnt "world" and (rootProblem = @_recordReferenceProblem {$r: envelope.root}, envelope.objects, "a widget")?
-      return "its root is malformed (" + rootProblem + ")"
     undefined
 
   # The class half of where a {"$src"} may stand, a clause in whyItCanNeverBeRestored's form or
@@ -424,38 +465,76 @@ class Deserializer
   # names (the load sets each one on the world), and the source-edit list record by record.
   @_worldSectionProblem: (section, objects) ->
     return "it is " + @_shown(section) + ", not an object" unless @_isAPlainRecord section
-    holds = (where, value, wanted) =>
-      problem = @_recordReferenceProblem value, objects, wanted
-      if problem? then where + " holds " + problem else undefined
+    return problem if (problem = @_sectionChildrenProblem section, objects)?
+    return problem if (problem = @_sectionSingleWidgetsProblem section, objects)?
+    return problem if (problem = @_sectionAppWindowsProblem section, objects)?
+    return problem if (problem = @_sectionScalarsProblem section)?
+    return problem if (problem = @_sectionInfoDocFlagsProblem section)?
+    return problem if (problem = @_sectionUntitledNamingCountersProblem section)?
+    return problem if (problem = @_sectionIdCountersProblem section)?
+    return problem if (problem = @_sectionUsersProblem section)?
+    return problem if (problem = @_sectionSourceEditsProblem section)?
+    undefined
+
+  # A reference a world section holds to a record: a clause naming where it stands, or undefined.
+  @_heldReferenceProblem: (where, value, wanted, objects) ->
+    problem = @_recordReferenceProblem value, objects, wanted
+    if problem? then where + " holds " + problem else undefined
+
+  @_sectionChildrenProblem: (section, objects) ->
     if section.children?
       return ".children is " + @_shown(section.children) + ", not a list" unless Array.isArray section.children
       for child, i in section.children
-        return problem if (problem = holds ".children[" + i + "]", child, "a widget")?
+        return problem if (problem = @_heldReferenceProblem ".children[" + i + "]", child, "a widget", objects)?
+    undefined
+
+  @_sectionSingleWidgetsProblem: (section, objects) ->
     for [field, wanted] in [["bin", "BinWdgt"], ["shelf", "ShelfWdgt"], ["preferences", "PreferencesAndSettings"], ["desktopColor", "Color"]] when section[field]?
-      return problem if (problem = holds "." + field, section[field], wanted)?
+      return problem if (problem = @_heldReferenceProblem "." + field, section[field], wanted, objects)?
+    undefined
+
+  @_sectionAppWindowsProblem: (section, objects) ->
     if section.appWindows?
       return ".appWindows is " + @_shown(section.appWindows) + ", not an object" unless @_isAPlainRecord section.appWindows
       for own appName, appWindow of section.appWindows
-        return problem if (problem = holds ".appWindows[" + @_shown(appName) + "]", appWindow, "a widget")?
+        return problem if (problem = @_heldReferenceProblem ".appWindows[" + @_shown(appName) + "]", appWindow, "a widget", objects)?
+    undefined
+
+  @_sectionScalarsProblem: (section) ->
     return ".alpha is " + @_shown(section.alpha) + ", not a number" if section.alpha? and !Number.isFinite section.alpha
     return ".isDevMode is " + @_shown(section.isDevMode) + ", not true or false" if section.isDevMode? and typeof section.isDevMode isnt "boolean"
     return ".wallpaperPatternName is " + @_shown(section.wallpaperPatternName) + ", not a name" if section.wallpaperPatternName? and typeof section.wallpaperPatternName isnt "string"
+    undefined
+
+  @_sectionInfoDocFlagsProblem: (section) ->
     if section.infoDocFlags?
       return ".infoDocFlags is " + @_shown(section.infoDocFlags) + ", not an object" unless @_isAPlainRecord section.infoDocFlags
       for own name, flag of section.infoDocFlags when !(WorldWdgt.isInfoDocFlagName(name) and typeof flag is "boolean")
         return ".infoDocFlags[" + @_shown(name) + "] is " + @_shown(flag) + ", not an info-doc flag"
+    undefined
+
+  @_sectionUntitledNamingCountersProblem: (section) ->
     if section.untitledNamingCounters?
       return ".untitledNamingCounters is " + @_shown(section.untitledNamingCounters) + ", not an object" unless @_isAPlainRecord section.untitledNamingCounters
       for own name, count of section.untitledNamingCounters when !(Number.isInteger(count) and count >= 0)
         return ".untitledNamingCounters[" + @_shown(name) + "] is " + @_shown(count) + ", not a count"
+    undefined
+
+  @_sectionIdCountersProblem: (section) ->
     if section.idCounters?
       return ".idCounters is " + @_shown(section.idCounters) + ", not an object" unless @_isAPlainRecord section.idCounters
       for own className, count of section.idCounters when !(Number.isInteger(count) and count >= 0)
         return ".idCounters[" + @_shown(className) + "] is " + @_shown(count) + ", not a count"
+    undefined
+
+  @_sectionUsersProblem: (section) ->
     if section.users?
       return ".users is " + @_shown(section.users) + ", not a list" unless Array.isArray section.users
       for user, i in section.users when !@_isAPlainRecord(user) or (user.armedDrawingTool? and typeof user.armedDrawingTool isnt "string")
         return ".users[" + i + "] is " + @_shown(user) + ", not a user's record"
+    undefined
+
+  @_sectionSourceEditsProblem: (section) ->
     if section.sourceEdits?
       return ".sourceEdits is " + @_shown(section.sourceEdits) + ", not a list" unless Array.isArray section.sourceEdits
       for r, i in section.sourceEdits when !SourceEditsRegistry.isARecord r
@@ -513,7 +592,7 @@ class Deserializer
 
   # --- native-type tag registry ---
   # One entry per serialization tag, consulted by BOTH passes: the pass-1 factory
-  # (@instantiate, via .build) and the pass-2 linker (@deserialize, via .populate). Having
+  # (@instantiate, via .build) and the pass-2 linker (@_populatePass, via .populate). Having
   # ONE table keeps the two passes from drifting apart on the tag set. Tags NOT listed here
   # (user classes) fall to the generic branch in each pass. A tag with a `build` but no
   # `populate` ($Object) links via the generic assignProps, exactly like a user class.

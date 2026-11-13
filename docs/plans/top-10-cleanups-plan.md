@@ -103,7 +103,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Landed 2026-11-13 |
 | 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Built and parked 2026-11-13: OWNER DECISION (a speed trade) |
 | 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
-| 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Step 1 (the ratchets) landed 2026-11-13; step 2 open |
+| 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Landed 2026-11-13 (both steps; three giants split, three left) |
 | 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
 | 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Landed 2026-11-13 (both steps) |
 
@@ -681,6 +681,24 @@ published run's, function for function, over all 580 sources. Its bite proof pla
 (19 cases). `fg critique` does not show it yet: `fg` is the owner's local tooling, outside the loop's reach
 (BACKLOG has the one step to add).
 
+**Landed 2026-11-13 (the loop's U10): step 2, the sequential giants — three split, three left.** Each candidate
+was read first. Split, its statements MOVED (by a script copying lines, every original line accounted for) into
+class-side helpers in their order — a pass filling the restore's shared tables, a check returning its clause or
+`undefined`: `Deserializer.deserialize` (61 → 15: the
+envelope's vetting and four passes, `_vettedEnvelope` / `_instantiatePass` / `_populatePass` / `_registerPass` /
+`_fixupPass`, at most four of the restore's own tables crossing a boundary; the reference reader stays, since
+`deserialize` returns it), `Deserializer._envelopeShapeProblem` (59 → 14: the per-record loop stays, so a file still
+reports its first defect, and its body becomes `_tableEntryProblem` with `_membershipsProblem`; the second-identity,
+well-known-key and id-count checks each their own `…Problem`, the three one-line checks inline) and
+`Deserializer._worldSectionProblem` (82 → 10: one `_section…Problem` per field block — nine, the four single-widget
+references and the three scalars one block each — the reference closure a method).
+Their three records left the ratchet. No message changed: the file's string literals are the same multiset before
+and after. Left, with what binds each: `WorldInventory#takeInventory` (its walk is six locals shared through six
+closures; only two small tail phases could move), `Serializer._buildObjectTable` (eight closures over six shared values,
+its mutually recursive reference and slot encoders among them, two of them handed back to its callers — nothing in
+it runs in sequence) and `WorldWdgt#loadWorldSnapshot` (its class sits at its
+method ceiling, and its locals cross a try/catch/finally).
+
 ---
 
 ## §9. Icon shells: one `IconWdgt` and a derived icon catalog
@@ -991,6 +1009,10 @@ Do not commit or push without asking me.
   sequential giants (supersedes the `lint-generic-rules-carryover-plan.md` §8.5 C line below once built)". — LANDED IN
   PART 2026-11-13 (loop U9): step 1, the ratchets, `buildSystem/check-complexity-ratchets.js` (§8, "Landed"); the §8.5 C
   line closed as superseded into its own plan's ledger. BACKLOG keeps step 2, the splits.
+- [x] §8 step 2 (2 to 3 days): split the sequential giants. Step 1, the ratchets, landed (the plan's `## BACKLOG ledger`)
+  — CLOSED 2026-11-13 (loop U10): three split
+  (`Deserializer.deserialize`, `._envelopeShapeProblem`, `._worldSectionProblem`), three left with what binds each
+  (§8, the step-2 "Landed").
 - [x] §5 (2 days): lift the browser-input bridge (seven listener methods) off `WorldWdgt`
   — CLOSED 2026-11-13 (loop U7): `world.browserInput`, `src/events-input/BrowserInputBridge.coffee` (§5, "Landed").
   BACKLOG keeps §5's unexamined second candidate, `FrameWdgt`'s docking family.

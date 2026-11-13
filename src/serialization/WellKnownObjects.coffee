@@ -134,7 +134,7 @@ class WellKnownObjects
   # (SerializationError.forMissingClass): both file doors refuse such a file up front
   # (Deserializer.whyItCanNeverBeRestored), so the throw is the net for every other caller. A key no
   # Fizzygum build writes THROWS too: the deserializer refuses such a file up front
-  # (Deserializer._envelopeShapeProblem asks isKnownKey).
+  # (Deserializer._envelopeShapeProblem asks isKnownKey, through its _unknownWellKnownKeyProblem).
   @resolve: (key) ->
     return undefined unless key?
     singletons = @_liveSingletons()
