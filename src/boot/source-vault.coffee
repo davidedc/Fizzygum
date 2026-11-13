@@ -18,10 +18,10 @@
 # `SourceVault.store(…)` calls, and the bundle is the entry page's first script.
 #
 # THE ESCAPING (moved in here from build.py's per-line emission). A JS string literal cannot
-# contain a raw quote, backslash or newline, so buildSystem/build.py replaces those three
+# contain a raw quote, backslash or newline, so buildSystem/build.js replaces those three
 # characters with unused lookalike unicode ones on the way out, and `store` undoes it on the way
 # in. The build ERRORS OUT if a source already contains one of the three replacements, so the
-# round-trip is exact. Keep these three characters in sync with build.py's STRING_BLOCK.
+# round-trip is exact. Keep these three characters in sync with build.js's STRING_BLOCK.
 #
 # ⚠ Every enumeration here walks the Map directly. Do NOT convert it to a plain object and use
 # `for … of`: Object-extensions.coffee puts `hashCode` on Object.prototype, so an un-`own`ed

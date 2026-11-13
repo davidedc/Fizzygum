@@ -157,7 +157,7 @@ const isLazyPart = (parts, partName) => partName !== 'core' && !!parts[partName]
 
 // What a part may name without guarding: itself, plus the `requires` entries that actually cover
 // the reference. ⚠⚠ `requires` MEANS TWO DIFFERENT THINGS AND ONLY ONE OF THEM IS ENOUGH HERE:
-// it always promises the other part SHIPS (buildProfile.py refuses a profile missing it), but it
+// it always promises the other part SHIPS (lib/profile.js refuses a profile missing it), but it
 // promises the classes have ARRIVED only when the OWNER is lazy -- there PartsRegistry brings the
 // requirements fully in before ingesting this part. An EAGER owner is running from the first frame,
 // so a LAZY requirement may not be here yet and that site still needs a guard or an await where it

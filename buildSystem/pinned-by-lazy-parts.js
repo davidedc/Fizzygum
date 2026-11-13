@@ -24,10 +24,10 @@
  * Usage:  node buildSystem/pinned-by-lazy-parts.js [--list]
  */
 
-const fs=require('fs'), path=require('path'), {execFileSync}=require('child_process');
+const fs=require('fs'), path=require('path'), {listShippable}=require('./build');
 const REPO=require('path').resolve(__dirname,'..');
 const parts=JSON.parse(fs.readFileSync(path.join(REPO,'buildSystem/parts.json'),'utf8')).parts;
-const shippable=execFileSync('python3',['-B','buildSystem/build.py','--list-shippable'],{cwd:REPO,encoding:'utf8'}).split('\n').filter(Boolean);
+const shippable=listShippable([],{cwd:REPO}).filter(Boolean);
 const d2p=new Map();
 for(const[n,p]of Object.entries(parts)){if(n.startsWith('//'))continue;for(const d of p.dirs||[])d2p.set(path.posix.normalize(d),n);}
 const own=r=>d2p.get(path.posix.normalize(path.posix.dirname(r)));

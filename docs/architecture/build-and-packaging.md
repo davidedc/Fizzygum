@@ -25,17 +25,17 @@ authoritative statements of what that page illustrates.
 
 | File | Answers | Read by |
 |---|---|---|
-| `buildSystem/parts.json` | what the parts ARE, and what each one OWNS | `buildSystem/buildProfile.py` (and through it, everything) |
-| `buildSystem/profiles/<name>.json` | which of them ship, in what FORM, behind which PAGES | `buildSystem/buildProfile.py` |
+| `buildSystem/parts.json` | what the parts ARE, and what each one OWNS | `buildSystem/lib/profile.js` (and through it, everything) |
+| `buildSystem/profiles/<name>.json` | which of them ship, in what FORM, behind which PAGES | `buildSystem/lib/profile.js` |
 
 The split is worth keeping straight, because it is the one distinction that makes the rest simple:
 **`parts.json` is the partition; a profile is a flavour.** A part does not know which artifacts contain it, and a
 profile does not know what a part is made of.
 
-`buildSystem/buildProfile.py` is the ONE reader of both. It resolves a profile, validates it, and derives the rest.
+`buildSystem/lib/profile.js` is the ONE reader of both. It resolves a profile, validates it, and derives the rest.
 Three consumers use it and none of them re-implement any of its rules:
 
-- `buildSystem/build.py` imports it (`partShips`, `loadParts`, `ENTRY_PAGES`);
+- `buildSystem/build.js` requires it (`partShips`, `loadParts`, `ENTRY_PAGES`);
 - `build_it_please.sh`, `build_and_smoke.sh` and `build_and_test.sh` `eval` its `--shell` output;
 - it also owns `--profile` PARSING, so no caller has its own copy of that either.
 
@@ -59,7 +59,7 @@ by which a flavour stops shipping something:
 
 Boot's order is data here, never a list in the build script: the bundle is its generated head (the build flags, the
 parts manifest), then core's `bootPrelude` (boot itself), then every other shipping part's in partition order, then the
-build stamp. Every `src/boot` file is declared by exactly one part, and `build.py --list-boot` is the ONE listing of
+build stamp. Every `src/boot` file is declared by exactly one part, and `build.js --list-boot` is the ONE listing of
 them — each as `<file>\t<part>\t<prelude|script>`, read through `buildSystem/lib/boot-pieces.js`: the coverage gate
 holds `src/boot` to its files as it holds the rest of the tree to the `dirs` — and boot's by-name fetches to its
 scripts (a `js/src/<name>-min.js` in a boot file's code must be a boot script of that file's own part, and every boot
@@ -95,7 +95,7 @@ directory stays in `src/`, beside the product API the macros drive.
 **PART→PART DEPENDENCIES: `requires`.** A part may name another part's classes, and `parts.json`'s
 `requires: [...]` is where that is stated. One declaration, two readers:
 
-- **Inclusion** — `buildProfile.py` fails a profile that ships a part without what it requires. This is
+- **Inclusion** — `lib/profile.js` fails a profile that ships a part without what it requires. This is
   the both-or-neither rule — one that lived in prose until prose failed: `lean` once carried desktop
   icons whose click could only reject, because nothing checked the parts behind them shipped too.
   ⚠ Most such pairings are now stated per-CLASS instead, in `requiredParts`, and checked against the
@@ -228,7 +228,7 @@ Two things follow, and they are the ones to get right:
   profile that ships neither the door nor its app (the `lean` appliance) simply draws no icon, rather
   than one whose click could only reject.
 - **A profile must still name the door's part and its app's part together**, for the reason the
-  launcher pairing always had. It is CHECKED rather than remembered: `buildProfile.py` reads every
+  launcher pairing always had. It is CHECKED rather than remembered: `lib/profile.js` reads every
   shipped class's `requiredParts` against the profile's part list (§8).
 
 ⚠ **The lazy mode is also what makes a part per DOOR worth having.** The part is the loading unit, so
@@ -336,7 +336,7 @@ buildSystem/profiles/homepage.json          # the FILE's name is the profile's n
 { "parts":   ["core", "meta-tools"],        # "all" | [names] | {"allExcept": [names]}
   "form":    "precompiled",                 # "compile-at-boot" | "precompiled"
   "sources": "lazy",                        # "background" | "lazy" | "none"
-  "entries": ["index.html"] }               # "all" | [names], from buildProfile's ENTRY_PAGES
+  "entries": ["index.html"] }               # "all" | [names], from lib/profile.js's ENTRY_PAGES
 ```
 
 `parts` and `entries` share the same three spellings on purpose: `"all"` means a part or page added tomorrow joins
@@ -380,7 +380,7 @@ neither), not in what they start from. So an image-size measurement cannot disti
 change that moves a class between core and any lazy part moves BOTH numbers identically.
 
 ⚠⚠ **`lean` names none of them, and for `authoring` that is FORCED rather than chosen.** A profile
-with `sources: "none"` may not ship a lazy part at all (`buildProfile.py` fails the build: a lazy
+with `sources: "none"` may not ship a lazy part at all (`lib/profile.js` fails the build: a lazy
 part's source *is* its code, since the image is harvested by booting `index.html`, where lazy parts
 do not load). So the appliance has no Makers — no Docs, Sheets, Slides, Dashboards, Draw,
 Patch programming, Generic panel or Super toolbar — and, correctly, no icons for them either: an
@@ -528,7 +528,7 @@ an EAGER namer reads back "must not move" even when the whole chain is on-demand
 `DegreesConverterIconAppearance` — 9.5 KB of art nothing draws but one icon inside a folder — stayed
 in the production image until it was spotted BY EYE. `buildSystem/what-pins-core.js` (`fg whatpins`)
 asks the transitive form: walk out from the boot files (core's, and every shipped part's boot-bundle pieces, as
-`build.py --list-boot` lists them) following every reference not behind a door, and
+`build.js --list-boot` lists them) following every reference not behind a door, and
 whatever the walk never arrives at is movable, transitively, in one pass instead of over four
 move-rebuild-rerun rounds. The cost it quotes for a move is the gate's own: it reads `requires` through
 the same `declaredRequires` (`buildSystem/lib/part-edge-scan.js`), eager-owner discount included, so it
@@ -636,12 +636,12 @@ record is missing, or the record is another build's (its start time is not the s
 is the one definition, and `buildStaleness()` the one question every freshness reader asks. The inputs are the FILES
 the build names, never the directories holding them (a directory also holds what the build never reads — a
 subsystem's `CLAUDE.md`, an editor's swap file, a gate's vendored parser): every compiled source and `src/index.html`,
-the build script and its Python, `parts.json` and the profiles (`*.json`), each part's declared `assets` and `vendor`
+the build script and its two Node modules (`build.js`, `lib/profile.js`), `parts.json` and the profiles (`*.json`), each part's declared `assets` and `vendor`
 pieces, the files the build script names itself (the SWCanvas bundle's pieces, the pre-compiled stub) and every file
 under `font-assets/` (copied afresh each build, so a font deleted from the source is gone from the tree too). The gates
 are not inputs (they judge the output, they do not shape it), nor is the pre-compile driver (it shapes only a
 precompiled profile's image, which no runner tests). Every command that builds, copies, links or removes the tree's
-contents checks its own exit (by hand where it has a remedy to give, else `build_failed`; `build.py` exits 1 on each
+contents checks its own exit (by hand where it has a remedy to give, else `build_failed`; `build.js` exits 1 on each
 refusal), so a step that fails stops the build before it stamps a tree missing a piece — the `printf` lines appending a
 generated line to the boot bundle are the exception, failing only with the disk. The suite runner, the single runner (except while it captures references), the sequence runner (except
 for its `--list` / `--before` listings), the paint audit and several rigs refuse a stale build (`Fizzygum-tests/scripts/lib/assert-build-fresh.js`;
@@ -656,7 +656,7 @@ for its `--list` / `--before` listings), the paint audit and several rigs refuse
   a build failure), a profile without `core`, `precompiled` without `index.html`, `worldWithSystemTestHarness.html`
   without the `harness` part (the page exists to run the harness), and `sources: "none"` with either `meta-tools` or
   a lazy part.
-- **A new entry page** — add a row to `ENTRY_PAGES` in `buildProfile.py` (filename, renders-through-SWCanvas,
+- **A new entry page** — add a row to `ENTRY_PAGES` in `lib/profile.js` (filename, renders-through-SWCanvas,
   loads-every-part-at-boot). `"entries": "all"` picks it up.
 - **A new non-source file** — give it to the part that owns it (`assets`), never to the build script. A
   declared-but-missing asset is a hard build failure, because an asset silently not copied is the failure mode this

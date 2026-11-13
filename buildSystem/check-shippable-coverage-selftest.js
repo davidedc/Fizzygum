@@ -1,9 +1,9 @@
 'use strict';
 // check-shippable-coverage-selftest.js — check-shippable-coverage.js proved able to BITE, by running the REAL gate (and
-// through it, build.py's --list-shippable) on planted copies of src/ and of the tests repo's code (lib/planted-src.js;
+// through it, build.js's --list-shippable) on planted copies of src/ and of the tests repo's code (lib/planted-src.js;
 // the full set is the compiled sources): a .coffee file in a directory no part claims fails, and so do a file in a dot
 // directory and a dot file; one in a NEW subdirectory of a claimed directory fails too (a part's dirs are not
-// recursive), in src and in the harness; and a src/boot file no part declares (build.py --list-boot) fails. A file in a
+// recursive), in src and in the harness; and a src/boot file no part declares (build.js --list-boot) fails. A file in a
 // claimed directory, of src and of the harness, passes, and so does every src/boot file the parts declare (the real
 // tree's own). And boot's by-name fetches: a fetch renamed in globalFunctions alone fails both ways (a name no part
 // declares, a declared script nothing fetches), while a comment naming a retired script passes. Run by

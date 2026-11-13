@@ -19,7 +19,7 @@
 cd "$(dirname "$0")" || exit 2
 
 # WHICH SMOKE THIS TREE GETS is derived from the profile being built, by the same reader the build
-# uses (buildSystem/buildProfile.py) — so this script cannot disagree with the build about what is
+# uses (buildSystem/lib/profile.js) — so this script cannot disagree with the build about what is
 # in the tree it is about to boot. It used to pattern-match --homepage / --notests out of "$*",
 # which meant a third place that had to know what a flavour contains.
 #   form precompiled  -> the production assertions (booted from the pre-compiled image, and no
@@ -28,7 +28,7 @@ cd "$(dirname "$0")" || exit 2
 #   no harness entry  -> no harness-page leg: the profile ships SWCanvas pages without the test
 #                        harness (dev-notests), so there is no worldWithSystemTestHarness.html.
 # ⚠ substitute, check, THEN eval — see the same note in build_it_please.sh.
-PROFILE_VARS=$(python3 -B ./buildSystem/buildProfile.py --shell "$@")
+PROFILE_VARS=$(node ./buildSystem/lib/profile.js --shell "$@")
 if [ "$?" != "0" ]; then
   echo "build_and_smoke: could not read the build profile -- aborting." 1>&2
   exit 1

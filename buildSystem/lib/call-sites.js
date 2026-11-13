@@ -99,7 +99,7 @@ const { harvestDefs } = require('./name-definitions');
 const { coffeeMask } = require('./coffee-mask');
 const acorn = require('../../vendor/acorn/acorn.js');
 
-const IS_CLASS = /^class +\w+/m;            // the test build.py and check-coffee-syntax.js use
+const { IS_CLASS } = require('../build');   // the one test of "is this source a class file": build.js's own, which check-coffee-syntax.js uses too
 const IDENT = /^[A-Za-z_$][\w$]*$/;
 const THIS_ARG = new Set(['call', 'apply', 'bind']);
 

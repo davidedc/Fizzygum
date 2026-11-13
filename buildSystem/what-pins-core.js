@@ -61,7 +61,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { listShippable } = require('./build');
 const { guardedPartsPerLine, isLazyPart, declaredRequires } = require('./lib/part-edge-scan');
 const { coffeeMask } = require('./lib/coffee-mask');
 const { rejectUnknownArgs } = require('./lib/cli-args');
@@ -98,19 +98,18 @@ const isLazy = (p) => isLazyPart(parts, p);
 // js/pre-compiled.js, and why a packaging change can only be measured by fingerprinting ONE profile.
 const inImage = (p) => shipped.has(p) && !isLazy(p);
 
-// The boot files this profile's boot starts from (lib/boot-pieces.js, parts.json's declaration through build.py
+// The boot files this profile's boot starts from (lib/boot-pieces.js, parts.json's declaration through build.js
 // --list-boot): core's — its bundle pieces and the scripts boot fetches — and the boot-BUNDLE pieces of every other
 // shipped part, which the bundle carries whatever that part's laziness. Listed once, at load: every analysis reads
 // the same ones.
 let BOOT_ROOTS;
 try { BOOT_ROOTS = bootPieces().filter((piece) => piece.part === 'core' || (piece.kind === 'prelude' && shipped.has(piece.part))); }
-catch (e) { die('build.py --list-boot failed: ' + e.message); }
+catch (e) { die('build.js --list-boot failed: ' + e.message); }
 
 let shippable;
 try {
-  shippable = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable'],
-    { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
-} catch (e) { die('build.py --list-shippable failed: ' + e.message); }
+  shippable = listShippable([], { cwd: REPO }).filter(Boolean);
+} catch (e) { die('build.js --list-shippable failed: ' + e.message); }
 
 const dirToPart = new Map();
 for (const p of partNames) for (const d of parts[p].dirs || []) dirToPart.set(path.posix.normalize(d), p);
@@ -126,7 +125,7 @@ if (!ownerOfClass.size) die('no part-owned classes found — is parts.json only 
 
 // ⚠⚠ THE GATE'S OWN RULE, NOT A READING OF THE ARRAY. `requires` means three different things
 // depending on who is asking — non-transitive for check-part-edges, transitive for PartsRegistry's
-// load ORDERING, and a fixpoint for buildProfile's INCLUSION check — and the binding constraint on a
+// load ORDERING, and a fixpoint for lib/profile.js's INCLUSION check — and the binding constraint on a
 // move is the strictest of the three, which is the gate. Using the closure here once reported a
 // 1.8 KB move as free when it is not. The gate is stricter still for an EAGER owner: its `requires`
 // on a LAZY part promises only that the part ships, so `dev-tools` (eager) requiring `authoring`

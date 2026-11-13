@@ -105,7 +105,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 | 7 | Derived-geometry caches: one oracle, then one memo | ½ day (step 1 alone), then 3 days | 17 copies of the oracle block, 17 `debugger` lines, 8 hand-kept field pairs | None, then hot path | No | 4 | Step 1 (one oracle) landed 2026-11-13; step 2 open (owner) |
 | 8 | Ratchets for method count and complexity; split the sequential giants | 1 day (ratchets alone), then 2 to 3 days | Unbounded regrowth of the four largest classes | None for the ratchets | No | 8 | Not started |
 | 9 | Icon shells: one `IconWdgt` and a derived icon catalog | 4 to 5 days | About 69 class files (12% of all source files), 58 creator methods, 55 hand-written menu rows | Low to medium | Yes | 5 | Not started |
-| 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Not started |
+| 10 | Build logic in one language; the gate sequence as data | 5 to 6 days | Python from the toolchain (1,067 lines), 11 cross-language process bridges, about 36 copies of one bash block | None (byte-identical trees) | No | 2 | Step 1 (Node port) landed 2026-11-13; step 2 open |
 
 ---
 
@@ -253,19 +253,19 @@ the `fgPresent` deletion.
 ## §3. The video-player part: delete it or gate it
 
 **Effort.** For deletion, half a day to a day: one directory and nine scripts removed, the flag
-taken out of `parts.json`, `buildProfile.py`, `build.py` and `build_it_please.sh`, two core guards
+taken out of `parts.json`, `lib/profile.js`, `build.js` and `build_it_please.sh`, two core guards
 removed, `SimpleImageWdgt` re-homed, and five BACKLOG items moved to a ledger. The gate option is
 larger and open-ended, since five defects have to be fixed first.
 
 **Evidence.**
 - MEASURED: the `video-player` part is `src/video-player/`, 12 files and 799 lines. In
   `buildSystem/parts.json` it is the only part carrying `requiresFlag`, and
-  `buildProfile.py`'s `partShips` says the mechanism "survives profiles for exactly one carrier".
+  `lib/profile.js`'s `partShips` says the mechanism "survives profiles for exactly one carrier".
   The `dev` profile selects every part (`"parts": "all"`), and the flag requirement is what keeps
   this one out of it, so no default build ships the part and no gate has ever run its classes.
 - READ: it costs three build flags (`--includeVideoPlayer`, `--includeVideos`,
   `--keepPreviousPrivateVideos`), an `includeVideoPlayer` parameter threaded through four
-  functions of `buildProfile.py`, two guards in core (`WorldWdgt.createDesktop`'s auto-launch and
+  functions of `lib/profile.js`, two guards in core (`WorldWdgt.createDesktop`'s auto-launch and
   `WorldWdgt.draftRunVideoPlayer`), and `video-related-scripts/` (nine shell scripts, last
   committed 2025-05-16, referenced by nothing).
 - READ: `docs/BACKLOG.md` holds five open defects that live entirely inside the part: a world
@@ -297,7 +297,7 @@ Either answer removes the one-carrier mechanism. The related classes outside the
 one commit, then `fg gauntlet` and `fg homepage`.
 
 **Re-measure.**
-`grep -n "requiresFlag" Fizzygum/buildSystem/parts.json Fizzygum/buildSystem/buildProfile.py`.
+`grep -n "requiresFlag" Fizzygum/buildSystem/parts.json Fizzygum/buildSystem/lib/profile.js`.
 
 ---
 
@@ -734,6 +734,29 @@ runs every gate's bite proof) and `fg gauntlet` after each step.
 `grep -rn "execFileSync('python3'" Fizzygum/buildSystem --include='*.js' | grep -v selftest` and
 `grep -c 'if \[ "\$?" != "0" \]' Fizzygum/build_it_please.sh`.
 
+**Landed 2026-11-13 (the loop's U5): step 1, the build's Python is Node.** `buildSystem/build.js`
+(source wrapping, the parts manifest, entry pages, assets and vendor payloads, and the two listings)
+and `buildSystem/lib/profile.js` (the profile reader and every derivation, with its `--shell`
+command line) replace `build.py` and `buildProfile.py`, which are deleted with the bytecode export
+and the `__pycache__` ignore line; `python3` leaves the build's prerequisites. The seven Node tools
+that started Python now `require` the listing in-process (`listShippable` / `listBoot`, a refusal
+thrown with its text), the three shell scripts call `node`, and `IS_CLASS` is defined once, in
+`build.js`. The port keeps the Python's semantics exactly, so it carries a layer (about 650 lines) that
+reproduces them — argparse's parsing and usage text, Python's `repr` and `json.dumps`, its `glob`
+order, JSON numbers that remember whether they were integers, truthiness on malformed input. That
+layer exists only to keep every refusal's words identical, and could go once that no longer binds
+(BACKLOG). Evidence: the 65 answers a caller can ask for (`--list-shippable`, `--list-boot` and
+`--shell` for five profiles under four flag sets, plus the defaults and the rails) are byte-identical
+to the Python's; a corpus of 151 planted inputs gives every refusal the same exit code and, but for
+ruled cases, the same text (the program name in argparse's text and in the missing-placeholder
+refusal, and two messages that named a deleted file and now name the real one; five JSON/UTF-8 cases keep the build's words with Node's parser
+diagnostic after them; Python's tracebacks are crashes, kept as non-zero exits); build-tree
+fingerprints against the Python build are byte-identical for all five profiles and for
+`--includeVideoPlayer` and `--noSyntaxCheck` builds, and every full build transcript is equal but
+for timings. A second step changed the shipped files that named the Python in a comment (the page
+source, three boot files, two class sources, one harness file, and one boot error message); its
+fingerprints differ from the first step's in exactly those files.
+
 ---
 
 ## 11. Measured and deliberately not listed
@@ -853,6 +876,9 @@ Do not commit or push without asking me.
 - [x] §4 (1 day): the 15 `debugger`-only invariant traps report through a gated token, or are deleted with evidence
   — CLOSED 2026-11-13 (loop U4): ten report under `INVARIANT_VIOLATED`, one deleted with its evidence, the rest
   (one already reporting, three before a throw) simply go; the stink is a hard zero (§4, "Landed").
+- §10, in part — the line read: "§10 (5 to 6 days): build logic in one language (port `build.py` + `buildProfile.py` to
+  Node) and the gate sequence as a table". — LANDED IN PART 2026-11-13 (loop U5): step 1, the port (§10, "Landed").
+  BACKLOG keeps step 2, the gate table.
 - [x] **The `debugger-statement` stink counts only a `debugger` that opens its line** (same review; by reading; low).
       Four `if … then debugger` sites go uncounted (`WorldWdgt`, `CaretWdgt`, `RectangularAppearance`,
       `BoxyAppearance`), and the static-checks table states no blind spot for it.

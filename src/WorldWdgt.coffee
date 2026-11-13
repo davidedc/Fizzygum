@@ -636,7 +636,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
     # Every page fills the browser except the test harness's, which sizes the canvas to the
     # SystemTest screen through a member the harness part installs (WorldTestSupport). That page
-    # never ships without the part (buildProfile.py), so the guard names the dependency; it is not
+    # never ships without the part (lib/profile.js), so the guard names the dependency; it is not
     # a fallback.
     if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and @isIndexPage
       @stretchWorldToFillEntirePage()

@@ -32,7 +32,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { listShippable } = require('./build');
 const { guardedPartsPerLine } = require('./lib/part-edge-scan');
 const { coffeeMask } = require('./lib/coffee-mask');
 
@@ -45,8 +45,7 @@ if (!argv.length) {
   process.exit(2);
 }
 
-const shippable = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable'],
-  { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
+const shippable = listShippable([], { cwd: REPO }).filter(Boolean);
 
 const dirToPart = new Map();
 for (const [n, p] of Object.entries(parts)) {

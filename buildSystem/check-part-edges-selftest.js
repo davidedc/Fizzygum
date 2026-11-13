@@ -2,9 +2,9 @@
 // check-part-edges-selftest.js — check-part-edges.js's clauses on in-memory fixtures, every one both ways: which
 // installed members are a part's own, the member guard (reference, by-name dispatch, super), and the unused-
 // `requires` rule. Those are unit tests of the engine; the gate's rules are proven to BITE at the end, by running the
-// REAL gate (build.py's listing, parts.json, the class model, the boot install edges) on a planted copy of src/ and of
+// REAL gate (build.js's listing, parts.json, the class model, the boot install edges) on a planted copy of src/ and of
 // the tests repo's harness, and a planted parts.json (lib/planted-src.js); a harness file — the eager `harness` part —
-// naming a LAZY part's class unguarded fails, named by build.py's listing of it (../Fizzygum-tests/<path>). Run by
+// naming a LAZY part's class unguarded fails, named by build.js's listing of it (../Fizzygum-tests/<path>). Run by
 // buildSystem/run-selftests.js on every build.
 
 const { soleProviders, memberReaches, superReaches, unusedRequires } = require('./check-part-edges');

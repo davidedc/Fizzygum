@@ -110,11 +110,11 @@
       <text class="t" x="30" y="128">buildSystem/profiles/&lt;name&gt;.json</text>
       <text class="m" x="30" y="144">which ship, in what form, which pages</text>
       <rect class="box" x="330" y="60" width="200" height="52"/>
-      <text class="t" x="346" y="82">buildProfile.py</text>
+      <text class="t" x="346" y="82">lib/profile.js</text>
       <text class="m" x="346" y="98">the ONE reader; derives the rest</text>
       <rect class="box" x="600" y="60" width="206" height="52"/>
       <text class="t" x="616" y="82">the build</text>
-      <text class="m" x="616" y="98">build.py + build_it_please.sh</text>
+      <text class="m" x="616" y="98">build.js + build_it_please.sh</text>
       <path class="flow" d="M256 40 C 300 40, 300 70, 328 78"/>
       <path class="flow" d="M256 132 C 300 132, 300 102, 328 94"/>
       <path class="flow" d="M532 86 L 598 86"/>
@@ -380,7 +380,7 @@
     <tr><td>a part</td><td>entry in <span class="mono">parts.json</span> with its <code>dirs</code>; dev builds (<code>"parts": "all"</code>) pick it up; name it in <span class="mono">homepage.json</span> only if production should ship it; guard every core reference</td></tr>
     <tr><td>a <em>lazy</em> part</td><td>the above plus <code>"eager": false</code> — then find its doors and make each <em>await</em>, keeping the already-loaded path synchronous. A call site that cannot await (a creator button) means the class belongs <em>inside</em> the part, not outside it. Mixed directories are resolved by <b>moving files</b>, never by tagging them</td></tr>
     <tr><td>a profile</td><td>add a file under <span class="mono">buildSystem/profiles/</span> — validation covers the rest</td></tr>
-    <tr><td>an entry page</td><td>a row in <span class="mono">buildProfile.py</span>'s <span class="mono">ENTRY_PAGES</span> (name, renders-through-SWCanvas, loads-every-part)</td></tr>
+    <tr><td>an entry page</td><td>a row in <span class="mono">lib/profile.js</span>'s <span class="mono">ENTRY_PAGES</span> (name, renders-through-SWCanvas, loads-every-part)</td></tr>
     <tr><td>a non-source file</td><td>give it to the part that owns it (<code>assets</code>) — never to the build script; declared-but-missing is a hard failure</td></tr>
   </table>
 

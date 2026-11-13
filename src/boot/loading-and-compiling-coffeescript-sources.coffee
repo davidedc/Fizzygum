@@ -78,7 +78,7 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
   # dependencies later on anyways.
   promiseChain = Promise.resolve()
 
-  # "Class" travels in its part's batch too (build.py piles every source into its part's
+  # "Class" travels in its part's batch too (build.js piles every source into its part's
   # batch with no exceptions) even though it is already compiled by hand, early, by
   # loadMetaSystemPromise. Fetching that batch later just re-registers its text in
   # SourceVault -- storeSourcesAndPotentiallyCompileThemAndExecuteThem's "names" filter

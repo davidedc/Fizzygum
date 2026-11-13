@@ -47,7 +47,7 @@ default may land on a *narrow family base* where one exists, never on `Widget`.
 
 ## 2. Naming and file shape
 
-- **One class per file, filename identical to the class name.** [structural — `build.py` keys the
+- **One class per file, filename identical to the class name.** [structural — `build.js` keys the
   `SourceVault` entry by the file's basename, so a mismatch ships source text under the wrong name]
 - **New widget classes end in `Wdgt`.** [convention]
 - **Reserve `Simple*` for the frame model's naked-capability tier** — data plus a self-mutation API,

@@ -1517,7 +1517,7 @@ class MacroToolkit
   # Shared body of cut/copySelection_InputEvents: read the current selection synchronously (it still exists
   # at call time), enqueue a Cut/Copy event CARRYING that text (Fizzygum keeps no internal clipboard — see the
   # comment above), and RETURN the text so the caller can paste it back. `eventClass` is CutInputEvent or
-  # CopyInputEvent, passed as a value; both still load and are ordered correctly (build.py bundles every class;
+  # CopyInputEvent, passed as a value; both still load and are ordered correctly (build.js bundles every class;
   # the dependency finder orders by new/extends edges, and each carries its own `extends
   # ClipboardInputEvent` edge — so dropping the two literal `new`s here changes nothing).
   _selectionToClipboardEvent_InputEvents: (eventClass, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->

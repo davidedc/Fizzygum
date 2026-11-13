@@ -156,7 +156,7 @@
 
   <p>Beside the bundle, core's <code>bootScripts</code> are compiled one by one to <code>js/src/&lt;name&gt;-min.js</code>,
   which boot fetches by name as it reaches them. Every <code>src/boot</code> file is declared by exactly one part
-  (<code>build.py --list-boot</code>), and <code>check-shippable-coverage.js</code> fails one nothing declares.</p>
+  (<code>build.js --list-boot</code>), and <code>check-shippable-coverage.js</code> fails one nothing declares.</p>
 
   <h2>3 · Two boot paths</h2>
 
@@ -375,7 +375,7 @@
     — for a lazy class an existence test reads "not fetched yet" and would drop the icon for ever,
     whereas the question at boot is "can this artifact EVER produce it", so a profile that ships
     neither the door nor its app simply draws no icon; and a profile must still name a door's part and
-    its app's part together, which <code>buildProfile.py</code> now checks by reading every shipped
+    its app's part together, which <code>lib/profile.js</code> now checks by reading every shipped
     class's <code>requiredParts</code> instead of anyone remembering it.</p>
 
     <p style="margin:10px 0 0"><strong>3b · Where the caption and the art come from.</strong> Not from

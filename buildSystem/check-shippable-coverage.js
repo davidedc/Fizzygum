@@ -19,21 +19,21 @@
  * Since arc 4, --list-shippable is FLAVOUR-INDEPENDENT (it lists the whole partition, not what one
  * build flavour keeps), which is what this gate and the syntax gate both want: coverage of the
  * partition is not a property of a flavour, and a syntax error in a file only the dev build carries
- * is still a syntax error. build.py additionally fails outright if two parts claim the same
+ * is still a syntax error. build.js additionally fails outright if two parts claim the same
  * directory, so "claimed by a part" means "claimed by exactly one part".
  *
  * HOW IT WORKS
- * 1. SHIPPED set: `python3 buildSystem/build.py --list-shippable <forwarded args>` — the exact
+ * 1. SHIPPED set: `buildSystem/build.js --list-shippable <forwarded args>` (required in-process) — the exact
  *    same source of truth buildSystem/check-coffee-syntax.js uses, so this gate can't drift
  *    from what the build actually wraps-as-text and compiles in-browser.
  * 2. FULL set: lib/source-files.js compiledFiles — every .coffee file under src/ and the harness, the
  *    one definition every gate reads (a dot directory, a node_modules or a dot file included, so a file
  *    there FAILS here as UNSHIPPED; a symlink anywhere is refused, SOURCE_TREE_MALFORMED). Each is named
  *    as --list-shippable spells it: `src/…`, and `../Fizzygum-tests/Automator-and-test-harness-src/…`.
- * 3. BOOT set: `python3 buildSystem/build.py --list-boot <forwarded args>` — every src/boot file a part declares
+ * 3. BOOT set: `buildSystem/build.js --list-boot <forwarded args>` — every src/boot file a part declares
  *    (its `bootPrelude`: the boot bundle's pieces, in order; its `bootScripts`: the scripts boot fetches by name).
  *    Boot files are not classes, so they are not in --list-shippable (the syntax and part-edges gates compile what
- *    that lists the class way), but they are declared all the same, in buildSystem/parts.json, and build.py fails a
+ *    that lists the class way), but they are declared all the same, in buildSystem/parts.json, and build.js fails a
  *    declared piece that does not exist.
  * 4. unshipped = FULL − SHIPPED − BOOT. Any survivor FAILS the check: a .coffee file in a directory no part claims,
  *    or a src/boot file no part declares, ships nothing (UNSHIPPED).
@@ -45,13 +45,13 @@
  *
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
  *   node ./buildSystem/check-shippable-coverage.js [--src=DIR] [--tests-repo=DIR] [build flags...]
- * The build flags go to build.py (which refuses one it does not know); --src= and --tests-repo= check other trees (a
- * copy carrying a plant), handed to build.py's listings too. That its rule BITES is proven on every build by
+ * The build flags go to build.js (which refuses one it does not know); --src= and --tests-repo= check other trees (a
+ * copy carrying a plant), handed to build.js's listings too. That its rule BITES is proven on every build by
  * check-shippable-coverage-selftest.js.
  */
 
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { listShippable } = require('./build');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS, HARNESS_DIR } = require('./lib/source-files');
 const { bootPieces, onDiskIn } = require('./lib/boot-pieces');
 const { coffeeMask } = require('./lib/coffee-mask');
@@ -61,7 +61,7 @@ const rules = require('./lib/gate-rules').forGate(__filename);
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
 const ARGV = process.argv.slice(2);
 const ROOTS = sourceRoots(ARGV, 'check-shippable-coverage');
-// a rail given goes to build.py's listing as the resolved tree; every other argument is a build flag
+// a rail given goes to build.js's listing as the resolved tree; every other argument is a build flag
 const isRail = (a) => SOURCE_RAILS.some((r) => a.startsWith(r));
 const BUILD_ARGS = [...ARGV.filter((a) => !isRail(a)),
   ...(ARGV.some((a) => a.startsWith('--src=')) ? ['--src=' + ROOTS.src] : []),
@@ -71,26 +71,25 @@ const HARNESS_LISTED = '../Fizzygum-tests/' + HARNESS_DIR + '/';
 
 function fail(msg) { console.error('check-shippable-coverage: ' + msg); process.exit(2); }
 
-// a build.py listing (one path per line), or an operational failure
-function listing(flag) {
-  let out;
+// build.js's shippable listing (one path per line), or an operational failure
+function shippableListing() {
+  let lines;
   try {
-    out = execFileSync('python3', ['-B', 'buildSystem/build.py', flag, ...BUILD_ARGS],
-      { cwd: REPO, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+    lines = listShippable(BUILD_ARGS, { cwd: REPO });
   } catch (e) {
-    fail('could not get build.py ' + flag + ': ' + e.message);
+    fail('could not get build.js --list-shippable: ' + e.message);
   }
-  const set = new Set(out.split('\n').map(function (s) { return s.trim(); }).filter(Boolean));
-  if (!set.size) fail('build.py ' + flag + ' returned no files');
+  const set = new Set(lines.map(function (s) { return s.trim(); }).filter(Boolean));
+  if (!set.size) fail('build.js --list-shippable returned no files');
   return set;
 }
 
 // ---- 1. the SHIPPED set (the partition's classes) and the BOOT set (the parts' declared src/boot files), straight
-// from build.py (the single source of truth for both) ----
-const shippedSet = listing('--list-shippable');
+// from build.js (the single source of truth for both) ----
+const shippedSet = shippableListing();
 let pieces;
-try { pieces = bootPieces(BUILD_ARGS); } catch (e) { fail('could not get build.py --list-boot: ' + e.message); }
-if (!pieces.length) fail('build.py --list-boot returned no files');
+try { pieces = bootPieces(BUILD_ARGS); } catch (e) { fail('could not get build.js --list-boot: ' + e.message); }
+if (!pieces.length) fail('build.js --list-boot returned no files');
 const bootSet = new Set(pieces.map((piece) => piece.file));
 
 // ---- 2. the FULL set: every .coffee file the build could compile, named as --list-shippable names it ----
@@ -145,7 +144,7 @@ if (unshipped.length) {
   unshipped.sort();
   const dirs = new Set(unshipped.map(function (rel) { return path.posix.dirname(rel); }));
   console.error('check-shippable-coverage: ' + unshipped.length + ' .coffee file(s) of the compiled sources '
-    + 'are NOT covered by build.py\'s --list-shippable or --list-boot output:');
+    + 'are NOT covered by build.js\'s --list-shippable or --list-boot output:');
   for (const rel of unshipped) console.error(rules.fired('UNSHIPPED', '  UNSHIPPED ' + rel));
   console.error('');
   console.error('Fix: claim each offending directory below in the part it belongs to (its "dirs" in '

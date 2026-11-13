@@ -575,7 +575,8 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 - [ ] §7 step 2 (3 days): derived-geometry caches — one declared memo per query (perf-gated; ⛔ owner: it adds a class-level declaration that generates accessors, a new meta-mechanism). Step 1, the one oracle, landed (the plan's `## BACKLOG ledger`)
 - [ ] §8 (1 day, then 2 to 3 days): method-count and cognitive-complexity ratchets; split the sequential giants (supersedes the `lint-generic-rules-carryover-plan.md` §8.5 C line below once built)
 - [ ] §9 (4 to 5 days): icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted)
-- [ ] §10 (5 to 6 days): build logic in one language (port `build.py` + `buildProfile.py` to Node) and the gate sequence as a table
+- [ ] §10 step 2 (about 3 days): the gate sequence as a table (`build_it_please.sh`'s gate blocks become rows a runner executes; `lib/what-runs.js` reads the table). Step 1, the Node port, landed (the plan's `## BACKLOG ledger`)
+- [ ] §10 follow-up (⛔ owner, found by the loop's U5): `build.js` and `lib/profile.js` carry a layer that reproduces Python's semantics (argparse, `repr`, `json.dumps`, `glob` order, JSON integers, truthiness on malformed input) only so that every refusal keeps the Python's exact words. Keep it, or let malformed input refuse in Node's own words and drop the layer (about 650 lines) — the trees and the well-formed answers do not depend on it. One divergence it does not cover: a part, profile or entry key that reads as an array index is ordered FIRST by JavaScript, where Python kept insertion order (none exists today; a part so named would reorder the boot prelude and the listings silently)
 
 ## Residual / parked items (owning doc archived)
 

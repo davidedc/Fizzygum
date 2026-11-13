@@ -53,25 +53,25 @@
  * 2 = operational (including: the PROVIDED set cannot be established, or the tap on the
  * strip saw no fragment — a check that sees nothing must not pass).
  *
- * FILE SET: obtained from `python3 buildSystem/build.py --list-shippable <args>` — the
+ * FILE SET: obtained from `buildSystem/build.js`'s `--list-shippable <args>` listing (required in-process) — the
  * single source of truth for what the build ships, so this gate can't drift from it.
  * All args we receive are forwarded so the set matches the build's flags.
  *
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
  *   node ./buildSystem/check-coffee-syntax.js [--src=DIR] [--tests-repo=DIR] [build flags...]
  * --src= checks another src tree (a copy carrying a plant): the meta-compiler, the boot helper globals and the
- * listing (build.py --list-shippable --src=DIR) all come from it; --tests-repo= another tests repo, whose harness the
+ * listing (build.js --list-shippable --src=DIR) all come from it; --tests-repo= another tests repo, whose harness the
  * listing names (lib/source-files.js sourceRoots). That both rules BITE, in src and in the harness, is proven on every
  * build by check-coffee-syntax-selftest.js.
  * TESTING HOOK — check given files instead of the shippable set (everything after the flag
- * is a path, relative to the repo root or absolute; build flags before it still reach build.py --list-boot, which reads
+ * is a path, relative to the repo root or absolute; build flags before it still reach build.js --list-boot, which reads
  * the boot files the helper globals come from, and which refuses a flag it does not know):
  *   node ./buildSystem/check-coffee-syntax.js --files <a.coffee> [<b.coffee> ...]
  */
 
 const path = require('path');
 const fs = require('fs');
-const { execFileSync } = require('child_process');
+const { listShippable, IS_CLASS } = require('./build');
 const { sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const { bootPieces, onDiskIn } = require('./lib/boot-pieces');
 const rules = require('./lib/gate-rules').forGate(__filename);
@@ -81,12 +81,12 @@ const FILES_FLAG = process.argv.indexOf('--files');
 const OWN_ARGV = FILES_FLAG >= 0 ? process.argv.slice(2, FILES_FLAG) : process.argv.slice(2);
 const ROOTS = sourceRoots(OWN_ARGV, 'check-coffee-syntax');
 const SRC = ROOTS.src;
-// a rail given goes to build.py's listing as the resolved tree; every other argument is a build flag
+// a rail given goes to build.js's listing as the resolved tree; every other argument is a build flag
 const given = (rail) => OWN_ARGV.some((a) => a.startsWith(rail));
 const BUILD_ARGS = [...OWN_ARGV.filter((a) => !SOURCE_RAILS.some((r) => a.startsWith(r))),
   ...(given('--src=') ? ['--src=' + SRC] : []), ...(given('--tests-repo=') ? ['--tests-repo=' + ROOTS.testsRepo] : [])];
 // a listed `src/…` path names a file of the src tree being checked, a `../Fizzygum-tests/…` one a file of the tests
-// repo being checked (build.py spells both as parts.json does)
+// repo being checked (build.js spells both as parts.json does)
 const TESTS_LISTED = '../Fizzygum-tests/';
 const onDisk = (rel) => (rel.startsWith('src/') ? path.join(SRC, rel.slice(4))
   : rel.startsWith(TESTS_LISTED) ? path.join(ROOTS.testsRepo, rel.slice(TESTS_LISTED.length)) : path.resolve(REPO, rel));
@@ -122,7 +122,7 @@ const PROVIDED = new Set(declared);
   // helper only another part's boot piece assigned would be missing wherever that part is not
   let bootFiles;
   try { bootFiles = bootPieces(BUILD_ARGS).filter((piece) => piece.part === 'core').map((piece) => onDiskIn(SRC, piece)); }
-  catch (e) { fail('could not list core\'s boot files (build.py --list-boot) to establish the helper globals: ' + e.message); }
+  catch (e) { fail('could not list core\'s boot files (build.js --list-boot) to establish the helper globals: ' + e.message); }
   for (const p of bootFiles) for (const line of fs.readFileSync(p, 'utf8').split('\n')) { const m = line.match(BOOT_HELPER); if (m) assigned.add(m[1]); }
   const onlyDeclared = [...PROVIDED].filter(n => !assigned.has(n));
   const onlyAssigned = [...assigned].filter(n => !PROVIDED.has(n));
@@ -182,7 +182,7 @@ Class.prototype._removeHelperFunctions = function (compiled) {
   return realRemoveHelperFunctions.apply(this, arguments);
 };
 
-// ---- 3. get the shipped-source file list (single source of truth = build.py) ----
+// ---- 3. get the shipped-source file list (single source of truth = build.js) ----
 //   …or, with the --files testing hook, exactly the files named after it.
 let files;
 const filesFlag = process.argv.indexOf('--files');
@@ -191,17 +191,15 @@ if (filesFlag >= 0) {
   if (!files.length) fail('--files names no file');
 } else {
   try {
-    const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...BUILD_ARGS],
-      { cwd: REPO, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
-    files = out.split('\n').map(s => s.trim()).filter(Boolean);
+    files = listShippable(BUILD_ARGS, { cwd: REPO }).map(s => s.trim()).filter(Boolean);
   } catch (e) {
-    fail('could not get the shippable file list from build.py: ' + e.message);
+    fail('could not get the shippable file list from build.js: ' + e.message);
   }
-  if (!files.length) fail('build.py --list-shippable returned no files');
+  if (!files.length) fail('build.js --list-shippable returned no files');
 }
 
 // ---- 4. drive each source through the real meta-compiler ----
-const IS_CLASS = /^class +\w+/m;            // same test build.py uses (build.py IS_CLASS)
+// IS_CLASS: the one test of "is this source a class file", build.js's own (it wraps the class sources)
 
 // Silence the meta-compiler's own console noise (debug logs + the pre-existing
 // "code contains a helper var" warning from _removeHelperFunctions) while we drive

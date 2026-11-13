@@ -360,7 +360,7 @@ stink counts and sanctions by its member (2026-11-11): U2's timer is read the sa
   optionally `vendor`.
   - **`fizzytiles` is the model for a lazy part with a vendored JS payload:**
     `vendor: [{out: "js/vendor-parts/fizzytiles-3d.js", concat: ["vendor/swcanvas/…min.js", …]}]`.
-  - `build.py` assembles the payload, and `PartsRegistry` injects it with `loadJSFilePromise` before
+  - `build.js` assembles the payload, and `PartsRegistry` injects it with `loadJSFilePromise` before
     the part's classes run.
   - `PartsRegistry._vendorAlreadyPresent` hard-codes its idempotence check for `"fizzytiles-3d"` and
     must learn the new payload.
@@ -767,7 +767,7 @@ vocabulary where it fits (Appendix D). Markers are comments, so there is no pixe
 Category: src/meta-tools" in the class Comment view.
 - The part is the vault entry's `part` tag.
 - The folder needs build data: emit `window.FIZZYGUM_CLASS_FOLDERS = {ClassName: "src/…"}` next to
-  the parts manifest (`build.py`, where `partsManifest.coffee` is written).
+  the parts manifest (`build.js`, where `partsManifest.coffee` is written).
 - Moving the 101 root-level `src/` classes into folders is ☆☆ (§9).
 
 **Tests:**

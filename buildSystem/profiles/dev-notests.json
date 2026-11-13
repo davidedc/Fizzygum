@@ -10,7 +10,7 @@
     "one fact, not seven flags.",
     "",
     "The entries are a subtraction for the same reason: worldWithSystemTestHarness.html exists to run",
-    "the harness, so without the part it would boot a world with nothing to run, and buildProfile.py",
+    "the harness, so without the part it would boot a world with nothing to run, and lib/profile.js",
     "refuses that pairing. index.html and index-sw.html are what this tree is for.",
     "",
     "Nothing in the workspace builds this automatically -- it is a hand-typed check that the product",

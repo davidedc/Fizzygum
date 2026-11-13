@@ -10,7 +10,7 @@
 // any churn there would read as a stale build):
 //   - every compiled source (lib/source-files.js compiledFiles: src's and the harness's .coffee, the boot files among
 //     them) and src/index.html, which every entry page is written from;
-//   - the build itself: build_it_please.sh, build.py, buildProfile.py, parts.json and the profiles (`*.json`);
+//   - the build itself: build_it_please.sh, build.js, lib/profile.js, parts.json and the profiles (`*.json`);
 //   - what the partition declares a part ships besides its sources: each `assets` source and each `vendor` piece;
 //   - what build_it_please.sh names itself (SHELL_INPUTS below — the SWCanvas bundle's pieces and the pre-compiled stub),
 //     and every file under font-assets/ (copied whole when an entry renders through SWCanvas).
@@ -42,7 +42,7 @@ const FIZZYGUM = path.resolve(__dirname, '..', '..');
 const UMBRELLA = path.resolve(FIZZYGUM, '..');
 const STAMP = path.resolve(UMBRELLA, 'Fizzygum-builds', 'latest', '.build-stamp');   // build_it_please.sh writes it
 const RECORD = path.join(FIZZYGUM, '.latest-build-inputs');   // and this, outside the tree (gitignored)
-const BUILD_FILES = ['build_it_please.sh', 'buildSystem/build.py', 'buildSystem/buildProfile.py', 'buildSystem/parts.json',
+const BUILD_FILES = ['build_it_please.sh', 'buildSystem/build.js', 'buildSystem/lib/profile.js', 'buildSystem/parts.json',
   'src/index.html'];
 // the files build_it_please.sh reads by name, outside the partition: a rename there is a rename here (a name that no
 // longer exists is skipped, and that input goes unwatched)

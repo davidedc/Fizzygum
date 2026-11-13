@@ -75,8 +75,8 @@ not throwaway, and the Phase 4 socket note for the decision that seeds it.
 
 ## §0 Environment, verification tiers, baseline
 
-Identical to the rename plan's §0, restated: prerequisites `coffee`, `terser`, `node`,
-`python3` (global). Tiers:
+Identical to the rename plan's §0, restated: prerequisites `coffee`, `terser`, `node`
+(global). Tiers:
 
 - **Full** (`../Fizzygum-tests` exists): verify with `./build_and_test.sh` (~1 min,
   headless, parallel). New behavior additionally needs NEW SystemTests (§4 rule 5) — authored in

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # A BUILD FLAVOUR IS A PROFILE, NOT A FLAG (arc 5). buildSystem/profiles/<name>.json declares three
-# facts -- which parts ship, which code form, which entry pages -- and buildSystem/buildProfile.py
+# facts -- which parts ship, which code form, which entry pages -- and buildSystem/lib/profile.js
 # DERIVES from them everything this script used to decide by asking "is this the homepage?": the
 # tests link, BUILDFLAG_LOAD_TESTS, which build gates run, the boot-bundle prelude, whether the
 # SWCanvas bundle and its ~90 MB of font assets are built, and whether the pre-compile driver runs.
@@ -42,14 +42,14 @@ BUILD_PATH=../Fizzygum-builds/latest
 SCRATCH_PATH=$BUILD_PATH/delete_me
 
 # save the arguments because we are going to shift them to parse them here,
-# but we need to pass them as-is to the python script
+# but we need to pass them as-is to buildSystem/build.js and buildSystem/lib/profile.js
 args=( "$@" )
 
 # parse the arguments ###################################################################
 
 # we'll put the switches in these variables. NOTE what is NOT here: the build FLAVOUR. That is
-# --profile, parsed by buildSystem/buildProfile.py (see the profile block further down) so that this
-# script, build_and_smoke.sh and build.py cannot disagree about which profile is being built.
+# --profile, parsed by buildSystem/lib/profile.js (see the profile block further down) so that this
+# script, build_and_smoke.sh and build.js cannot disagree about which profile is being built.
 includeVideoPlayer=false
 includeVideos=false
 keepPreviousPrivateVideos=false
@@ -60,7 +60,7 @@ noSyntaxCheck=false
 while test $# -gt 0; do
   case "$1" in
     --profile)
-      # The NAME is buildProfile.py's business (it re-reads "${args[@]}"); here we only step over
+      # The NAME is lib/profile.js's business (it re-reads "${args[@]}"); here we only step over
       # both tokens so the rest of the loop sees the next real flag.
       if [ -z "$2" ]; then
         echo "build_it_please.sh: --profile needs a name, e.g. --profile homepage" 1>&2
@@ -84,8 +84,8 @@ while test $# -gt 0; do
       shift
       ;;
     --noSyntaxCheck)
-      # consumed here only; it is ALSO a no-op in build.py, so the forwarded
-      # "${args[@]}" (which still contains it) does not trip build.py's argparse.
+      # consumed here only; it is ALSO a no-op in build.js, so the forwarded
+      # "${args[@]}" (which still contains it) does not trip build.js's argument parsing.
       noSyntaxCheck='true'
       shift
       ;;
@@ -188,21 +188,15 @@ echo coffeescript version -------------
 coffee --version
 
 # ---- THE FLAVOUR: resolve the profile ------------------------------------------------------------
-# buildSystem/buildProfile.py loads buildSystem/profiles/<name>.json (default: dev) and hands back
+# buildSystem/lib/profile.js loads buildSystem/profiles/<name>.json (default: dev) and hands back
 # the derived facts this script needs, as shell assignments:
 #   PROFILE_NAME PROFILE_FORM PROFILE_SHIPS_TESTS PROFILE_SHIPS_SWCANVAS_ENTRY PROFILE_BOOT_PRELUDE PROFILE_BOOT_SCRIPTS
 # It gets the WHOLE arg list because it owns --profile parsing for every caller.
 # ⚠ SUBSTITUTE FIRST, THEN eval. `eval "$(cmd)"` reports the EVAL's exit code, not the command's, so
 # a profile that failed to load would leave every PROFILE_* unset and this script would cheerfully
-# build a nameless flavour -- the same masked-exit-code class as the build.py call below, which went
+# build a nameless flavour -- the same masked-exit-code class as the build step's call below, which went
 # unchecked for years (found 2026-07-30).
-# NO __pycache__ IN THE SOURCE TREE. build.py now IMPORTS buildProfile.py, so CPython would write
-# cached bytecode into buildSystem/ -- a generated artifact inside a source tree, which is the thing
-# this whole program is about not doing. Exported (not just -B on the calls below) because the build
-# reaches python3 by four paths: this script twice, and three JS gates that shell out to
-# `build.py --list-shippable`; -B on our own two calls left the gates writing it anyway (measured).
-export PYTHONDONTWRITEBYTECODE=1
-PROFILE_VARS=$(python3 -B ./buildSystem/buildProfile.py --shell "${args[@]}")
+PROFILE_VARS=$(node ./buildSystem/lib/profile.js --shell "${args[@]}")
 if [ "$?" != "0" ]; then
   tput bel
   echo "!!!!!!!!!!! error: could not read the build profile -- aborting build." 1>&2
@@ -335,20 +329,20 @@ fi
 # note that this file won't contain much code.
 # All the code of the morphs is put in other .coffee files
 # which just contain the coffeescript source as the text!
-# The flavour reaches build.py as --profile <name> inside "${args[@]}" (it resolves the profile
-# itself, through the same buildSystem/buildProfile.py this script read above), and that decides
+# The flavour reaches build.js as --profile <name> inside "${args[@]}" (it resolves the profile
+# itself, through the same buildSystem/lib/profile.js this script read above), and that decides
 # which parts' sources it wraps, which assets and vendor payloads it writes, and which entry pages
 # it generates.
 # ⚠ CHECK $? — this script has no `set -e`, and for years this call had NO check at all, so the
 # single most important step of the build (wrapping every source into the SourceVault batches,
 # writing the parts manifest, generating the entry pages, copying each part's assets) could fail
 # outright and the build still printed "done!!!" and exited 0. Found 2026-07-30 by planting a
-# deliberately missing part asset: build.py correctly printed its ERROR and exited 1, and the build
+# deliberately missing part asset: the build step correctly printed its ERROR and exited 1, and the build
 # reported OK. Same masked-failure class as the umbrella-directory check at the top of this file.
-python3 -B ./buildSystem/build.py "${args[@]}"
+node ./buildSystem/build.js "${args[@]}"
 if [ "$?" != "0" ]; then
   tput bel
-  echo "!!!!!!!!!!! error: buildSystem/build.py failed -- aborting build." 1>&2
+  echo "!!!!!!!!!!! error: buildSystem/build.js failed -- aborting build." 1>&2
   exit 1
 fi
 
@@ -396,7 +390,7 @@ fi
 # directory of src/ or of the harness ships NOTHING until a part claims it -- the build still exits 0,
 # and the syntax gate above (which reads the same --list-shippable set) skips it too; the only symptom
 # is a runtime `<NewClass> is not defined`. This gate diffs every .coffee file the build could compile
-# (buildSystem/lib/source-files.js compiledFiles: src/ and the harness) against build.py's own
+# (buildSystem/lib/source-files.js compiledFiles: src/ and the harness) against build.js's own
 # --list-shippable output, and every src/boot file against the parts' boot declarations (--list-boot),
 # and fails loudly on any survivor.
 # We pass "${args[@]}" so it checks exactly the flags THIS build uses.
@@ -905,7 +899,7 @@ if ! $noSyntaxCheck && $PROFILE_SHIPS_TESTS && [ -d ../Fizzygum-tests ] ; then
 fi
 
 # --- build-time SWCanvas reference-image gate (only when tests are part of this build) ---------
-# build.py sweeps EVERY ref file in tests/ into the asset manifest, so a STRAY/duplicate ref (e.g.
+# the tests' asset manifest (Fizzygum-tests/scripts/generate-tests-manifests.js) sweeps EVERY ref file in tests/, so a STRAY/duplicate ref (e.g.
 # left by a capture undone with `git checkout`, which leaves the new-hash file untracked) would
 # enter the build and let a WRONG render false-PASS (compareScreenshots matches ANY candidate).
 # check-refs.js fails on >1 dataHash per (test,image,dpr,OS) or an orphaned .js/.png BEFORE the
@@ -978,7 +972,7 @@ else
 fi
 
 # WHEN (or whether) the reflective layer loads -- the class source text plus the meta-system that
-# parses it. globalFunctions reads this; buildProfile.py's SOURCES_POLICIES documents the values.
+# parses it. globalFunctions reads this; lib/profile.js's SOURCES_POLICIES documents the values.
 # "none" ships no source text at all, so the boot must not go looking for it.
 printf "BUILDFLAG_SOURCES = '%s'\n" "$PROFILE_SOURCES" >> $SCRATCH_PATH/fizzygum-boot.coffee
 
@@ -988,7 +982,7 @@ echo "compiling boot file..."
 
 # The parts manifest (window.FIZZYGUM_PARTS: per part, its batch files, eagerness and vendor
 # payloads) goes IN the bundle rather than being fetched: the batch loader needs it immediately.
-# build.py writes it from buildSystem/parts.json. It is data nothing reads until boot runs, so it sits
+# build.js writes it from buildSystem/parts.json. It is data nothing reads until boot runs, so it sits
 # with the build flags in the bundle's generated head.
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat $SCRATCH_PATH/partsManifest.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee || build_failed "adding the parts manifest to the boot bundle"
@@ -1052,7 +1046,7 @@ echo "... done minifying boot file"
 # ---- the two boot bundles ------------------------------------------------------------------
 #
 # The rendering backend is a BUILD-TIME property of the entry page, so the SAME minified boot JS
-# is fronted by two different engine preludes and each page (build.py's ENTRY_PAGES) loads the
+# is fronted by two different engine preludes and each page (lib/profile.js's ENTRY_PAGES) loads the
 # one carrying the engine it can actually use. That way no artifact ships an engine it will never
 # call, and there is no runtime switch to get wrong. Both flavours come out of the ONE terser
 # pass above — the split is pure concatenation, which is why a second bundle costs ~1s.
@@ -1128,12 +1122,12 @@ echo "... done assembling the native boot bundle"
 # with a subset. PartsRegistry's vendor step is idempotent and skips it when window.SW3D and
 # SWCanvas.Core.Triangle3DOps are already there.
 #
-# ⚠ ASSEMBLED BY build.py (arc 5 PR-D6), not here. parts.json declares the payload in fizzytiles'
-# "vendor" list as an `out` path plus the vendored pieces to concatenate, and build.py writes it
+# ⚠ ASSEMBLED BY build.js (arc 5 PR-D6), not here. parts.json declares the payload in fizzytiles'
+# "vendor" list as an `out` path plus the vendored pieces to concatenate, and build.js writes it
 # only for the flavours that SHIP that part. It used to be assembled here under `if the vendored
 # source file exists` -- no part or flavour test at all, while this very comment claimed it was
 # "emitted for every flavour that ships the part" -- so a --homepage tree carried 18.9 KB of
-# software-3D engine for a part it does not ship. Only build.py knows which parts ship.
+# software-3D engine for a part it does not ship. Only build.js knows which parts ship.
 
 # The bare minified boot JS is an intermediate, never an entry page's bundle.
 rm $BOOT_MIN
@@ -1163,9 +1157,9 @@ else
   rm -rf $BUILD_PATH/font-assets || build_failed "removing the font assets no page here loads"
 fi
 
-# (the entry pages themselves are written by build.py from src/index.html — see its ENTRY_PAGES)
+# (the entry pages themselves are written by build.js from src/index.html — see lib/profile.js's ENTRY_PAGES)
 
-# (The vendored js/libs files and the assets/icons images are copied by build.py, from the "assets" list of
+# (The vendored js/libs files and the assets/icons images are copied by build.js, from the "assets" list of
 # whichever PART owns each one -- FileSaver/JSZip and the three harness pointer icons belong to the
 # harness part, the compiler and the boot splash/spinner to core. They used to be copied here
 # unconditionally and then deleted again by the --homepage block below; owning them by part means a
@@ -1259,13 +1253,13 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
   # sources: "none" -- the appliance artifact. The class source text was a build INPUT: the driver
   # above harvested the pre-compiled image by booting this very tree in compile-at-boot mode and
   # compiling every source. Now that the image exists, the text does not ship -- ~40% of the tree,
-  # and with it the ability to inspect and rewrite the system (buildProfile.py SOURCES_POLICIES).
+  # and with it the ability to inspect and rewrite the system (lib/profile.js SOURCES_POLICIES).
   # This is a DERIVED consequence of the policy, not a list of files to delete: one directory, and
   # what goes in it was never enumerated here.
   # ⚠ The parts manifest compiled into the boot bundle still NAMES those batch files, because it was
   # written before the driver ran and lives inside a minified bundle. Nothing in this artifact reads
   # the list -- globalFunctions skips the whole reflective layer under "none", and a lazy part (the
-  # other reader) is refused with this policy by buildProfile.py, precisely because a lazy part
+  # other reader) is refused with this policy by lib/profile.js, precisely because a lazy part
   # arrives AS SOURCE and so could never load here.
   # ⚠ EVERYTHING THE REFLECTIVE LAYER NEEDS IS AN INPUT TO THIS STEP, so nothing it needs can be
   # skipped earlier -- it can only be dropped here, once the image exists. Both of these were

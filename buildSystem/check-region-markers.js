@@ -2,7 +2,7 @@
 // check-region-markers.js — build gate RATCHETING the in-file region-exclusion mechanism (`»>>`)
 // down to zero. Mirrors the check-stinks.js idiom: an inline per-kind baseline that may only FALL.
 //
-// WHAT A REGION IS. build.py carries three region regexes (HOMEPAGE_EXCLUSION_PARTS,
+// WHAT A REGION IS. build.py carried three region regexes (HOMEPAGE_EXCLUSION_PARTS,
 // MACROS_INCLUSION_PARTS, VIDEOPLAYER_INCLUSION_PARTS). Each strips the text between a
 // `# »>> this part is …` opener comment and the next comment ending in `«`, so a marked region
 // simply does not exist in the flavour that strips it.
@@ -47,7 +47,7 @@ const ROOTS = sourceRoots(ARGV, 'region-markers');
 // openers, all paired; each phase that re-homes sites tightens the number here to lock the gain in.
 // Homepage: 58 (Phase 1) -> 37 (Phase 2 PROMOTE) -> 25 (Phase 3 DELETE) -> 12 (Phase 4 TESTS-REPO) -> 10 (Phase 5a folds) -> 5 (Phase 5b pinouts) -> 3 (Phase 5c demo split) -> 1 (Phase 5d world-menu split).
 // ALL THREE ARE NOW ZERO, so every baseline is a HARD RULE: any occurrence fails the build, and
-// build.py no longer carries a single region regex. The last site to go was BoxyAppearance's
+// build.js carries no region regex. The last site to go was BoxyAppearance's
 // "pick inset..." row — its action method had ceased to exist (clicking it threw) but the row still
 // RENDERED, so it was menu topology and waited for the phase that closes with a recapture wave.
 const KINDS = [
@@ -100,7 +100,7 @@ console.log(`[region-markers] scan done — ${total} region opener(s): ` +
 let failed = false;
 
 if (unknown.length) {
-  console.error(`\n[region-markers] FAIL -- ${unknown.length} »>> marker(s) build.py does not recognise (they strip NOTHING):`);
+  console.error(`\n[region-markers] FAIL -- ${unknown.length} »>> marker(s) build.js does not recognise (they strip NOTHING):`);
   for (const u of unknown) console.error(rules.fired('UNKNOWN_MARKER', `  ${u}`));
   failed = true;
 }

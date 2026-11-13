@@ -29,7 +29,7 @@ cd "$(dirname "$0")" || exit 2
 # harness part must be caught too. (The old guard matched --homepage/--notests literally, so a new
 # tests-stripped profile would have sailed past it and handed the suite runner a world with no
 # Automator and no js/tests link — a confusing failure a long way from its cause.)
-PROFILE_VARS=$(python3 -B ./buildSystem/buildProfile.py --shell "$@")
+PROFILE_VARS=$(node ./buildSystem/lib/profile.js --shell "$@")
 if [ "$?" != "0" ]; then
   echo "build_and_test: could not read the build profile -- aborting." 1>&2
   exit 2

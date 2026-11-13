@@ -48,7 +48,7 @@ The built page is *already* 99% of a single-file app:
 
 - **`Fizzygum-builds/latest/index.html` is tiny** (`[REVISED 2026-07-30]` — measured, 2,718 B):
   `<title>` + one `<style>` block, splash + spinner `<img>`s, a positioning div, one
-  `<canvas id="world">`, then TWO generated script tags (from `buildSystem/build.py`'s
+  `<canvas id="world">`, then TWO generated script tags (from `buildSystem/build.js`'s
   `generateEntryPage`, replacing the `<!--FIZZYGUM_BOOT_SCRIPTS-->` placeholder at
   `src/index.html`): an inline preset line
   `window.FIZZYGUM_USE_SWCANVAS = false; window.FIZZYGUM_EAGER_ALL_PARTS = false;` and
@@ -92,7 +92,7 @@ The built page is *already* 99% of a single-file app:
     it can request the mode, or re-derive from the vault's sources.)
 - **Load order is computed in-browser at boot** (`findLoadOrder()`, regex-scan + topological DFS,
   `dependencies-finding.coffee`) — no build-time manifest to carry.
-- **The source-string wrapper** (`build.py`, `STRING_BLOCK`):
+- **The source-string wrapper** (`build.js`, `STRING_BLOCK`):
   `SourceVault.store("%s", "%s", "%s");` (name, escaped text, part)
   — the escaping is still `"`→`＂`, `\`→`⧹`, newline→`⤶`, but the DECODE now lives once inside
   `SourceVault.store` (`src/boot/source-vault.coffee`) instead of being appended to every emitted
@@ -346,7 +346,7 @@ exists). Wrap in the same `SerializationError → world.inform` try/catch shape 
 by a test before the gate passes (known gotcha: new public API trips the symmetry-aware dead-methods
 gate until a test references it) — Phase 5's harness provides that reference.
 
-### 4.4 Build changes (`buildSystem/build.py` + `build_it_please.sh`)
+### 4.4 Build changes (`buildSystem/build.js` + `build_it_please.sh`)
 
 1. **Embed shell parts as wrapped strings in every build** (D4): after the boot bundle and
    compiler are finalized, wrap their file contents with the same STRING_BLOCK machinery into e.g.
@@ -376,7 +376,7 @@ Two independent payloads, two escapes:
 
 | Payload | Escape | Decode | Why |
 |---|---|---|---|
-| Code payload (every `SourceVault.store` block, boot-bundle/compiler/helper strings) | build.py STRING_BLOCK substitution, **extended**: `"`→`＂`, `\`→`⧹`, `\n`→`⤶`, **NEW `<`→`＜`** (fullwidth less-than U+FF1C) | **`SourceVault.store`'s decode chain gains `.replace(/＜/g,"<")`** (`src/boot/source-vault.coffee`) — arc 4 moved the decode out of the emitted line and into the vault, so this extension is a ONE-LINE change in ONE place instead of a change to the emitted template | a literal `</script` (or `<!--`) in ANY source comment/string would truncate the inline block and corrupt the whole file. Today this cannot bite (sources ship as external `.js`); inline it is fatal. Escaping ALL `<` kills `</script>` AND `<!--` parser edge cases at once. |
+| Code payload (every `SourceVault.store` block, boot-bundle/compiler/helper strings) | build.js STRING_BLOCK substitution, **extended**: `"`→`＂`, `\`→`⧹`, `\n`→`⤶`, **NEW `<`→`＜`** (fullwidth less-than U+FF1C) | **`SourceVault.store`'s decode chain gains `.replace(/＜/g,"<")`** (`src/boot/source-vault.coffee`) — arc 4 moved the decode out of the emitted line and into the vault, so this extension is a ONE-LINE change in ONE place instead of a change to the emitted template | a literal `</script` (or `<!--`) in ANY source comment/string would truncate the inline block and corrupt the whole file. Today this cannot bite (sources ship as external `.js`); inline it is fatal. Escaping ALL `<` kills `</script>` AND `<!--` parser edge cases at once. |
 | Snapshot JSON block | `json.replace(/</g,"\\u003C")` — TW-exact | none needed — `JSON.parse` restores it | `<` only occurs inside JSON strings ⇒ lossless; `</script>` can never appear as literal bytes. |
 
 Rules:
@@ -441,10 +441,10 @@ on it).
   any source is touched. (S2 needs a temporary hack for the §4.2 boot branches — e.g. a small
   patch script over the concatenated bundle text — acceptable in a scratch spike.)
 
-### Phase 1 — escaping + charset groundwork (`build.py`, `src/index.html`)
+### Phase 1 — escaping + charset groundwork (`build.js`, `src/index.html`)
 
-- Extend the STRING_BLOCK encode (`build.py:372-374`), the one decoder
-  (`source-vault.coffee:45-48`) and the existing guard (`build.py:368-370`) with `＜`; add
+- Extend the STRING_BLOCK encode (`build.js`, `STRING_BLOCK` and the escape after it), the one decoder
+  (`source-vault.coffee:45-48`) and the existing guard (`build.js`, the special-character check before the escape) with `＜`; add
   `<meta charset="UTF-8">` to `src/index.html` (currently BOM-only — §4.5).
 - Runtime behavior must be identical (decode restores bytes). Gate: `fg gauntlet` + `fg homepage`.
 
@@ -505,7 +505,7 @@ on it).
 | R5 | DOM snapshot temptation (outerHTML) captures runtime mutations | template reassembly only; assembler reads NOTHING from the DOM |
 | R6 | `savedAt`/`build` envelope fields break generation-comparison | harness omits `savedAt`; compare code payload separately from snapshot |
 | R7 | Stale-copy UX (download model): user edits gen-N after saving, reopens gen-N-1 | inherent to the download model (TW lives with it); v2 FSA in-place save is the real fix; consider a `beforeunload` dirty-guard as a small independent follow-up |
-| R8 | Assembler encode drifts from build.py encode | same 4-char table, §4.4(3) guard, Phase 5 quine-stability test catches drift |
+| R8 | Assembler encode drifts from build.js encode | same 4-char table, §4.4(3) guard, Phase 5 quine-stability test catches drift |
 | R9 | New public API trips dead-method gate | Phase 5 harness references it |
 | R10 | iOS Safari blob quirks | existing `FileSaving` data:-fallback covers; iOS is not a target |
 
@@ -514,7 +514,7 @@ on it).
 - **7.1** Precompiled single file (instant boot; +~2 MB and a second code representation) — D2 later
   option. **`[ARC 5, 2026-07-30]` The build side of this is now DATA, not work:** a profile is
   `{parts, form, sources, entries}` (`buildSystem/profiles/*.json`, read by
-  `buildSystem/buildProfile.py`), so "precompiled" is `form: "precompiled"` and the "+~2 MB second
+  `buildSystem/lib/profile.js`), so "precompiled" is `form: "precompiled"` and the "+~2 MB second
   representation" this line worries about is `sources`, which now has three settings —
   `background` (ship it and load it behind the world), `lazy` (ship it, load it only when something
   reflects; what `homepage` uses) and `none` (do not ship it at all; what `lean` uses, 10 files /

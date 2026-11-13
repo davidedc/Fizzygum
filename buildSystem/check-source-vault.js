@@ -39,7 +39,7 @@
 // (STALE_ALLOWLIST_ENTRY): it would only hide the retired pattern if it ever came back there.
 //
 // Scope: the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness; the build's own
-// python/shell side is not text-wrapped source). Runs for every build flavour — the rule is a property of the source,
+// Node/shell side is not text-wrapped source). Runs for every build flavour — the rule is a property of the source,
 // not of what is being built.
 //
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-source-vault.js [--src=DIR]

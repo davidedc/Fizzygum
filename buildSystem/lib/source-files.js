@@ -15,13 +15,13 @@
 // The rule is the testNames one (lib/tests-repo-code.js): refuse, never skip. Every .coffee file is read, one in a dot
 // directory, in a node_modules or named with a leading dot included: check-shippable-coverage.js fails each such file as
 // UNSHIPPED, so none can sit unseen. A SYMLINK anywhere under a root is refused, SOURCE_TREE_MALFORMED naming it: the
-// build's own listing (build.py's glob) follows a symlinked file and does not descend a symlinked directory, so a file
+// build's own listing (build.js's glob) follows a symlinked file and does not descend a symlinked directory, so a file
 // behind a symlink is shipped by a meaning no gate shares, or shipped by nothing and seen by nothing. A root that is
 // missing, or that holds no .coffee file, is refused too: a gate that reads no file passes. The order is the code-point
 // order of the absolute paths, so no gate's output depends on the file system's listing order.
 //
-// The partition (buildSystem/parts.json, build.py --list-shippable) answers a different question — which PART ships a
-// file — and src/boot's files are declared there apart from it (each part's bootPrelude / bootScripts, build.py
+// The partition (buildSystem/parts.json, build.js --list-shippable) answers a different question — which PART ships a
+// file — and src/boot's files are declared there apart from it (each part's bootPrelude / bootScripts, build.js
 // --list-boot). check-shippable-coverage.js is the one place that holds the files to both.
 // Its cases are source-files-selftest.js.
 

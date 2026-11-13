@@ -154,7 +154,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { listShippable } = require('./build');
 // every file is read through lib/coffee-mask.js: code is its bare view, a name used as data a literal's contents
 const { coffeeMask } = require('./lib/coffee-mask');
 const { stringLiteralsOf, guardedPartsPerLine, isLazyPart,
@@ -281,7 +281,7 @@ function unusedRequires(parts, partsNamedInCode) {
 function main() {
   // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-part-edges.js [--src=DIR]
   // [--tests-repo=DIR] [--parts=FILE] — the rails read another src tree, another tests repo and another parts.json (a
-  // bite-proof's planted copies); each reaches build.py's listing, the class model and the boot install edges too
+  // bite-proof's planted copies); each reaches build.js's listing, the class model and the boot install edges too
   // (lib/source-files.js sourceRoots: the compiled sources are src/ and the tests repo's harness). That every rule
   // BITES, and that every guard form passes, is proven on every build by check-part-edges-selftest.js.
   const argv = process.argv.slice(2);
@@ -308,10 +308,9 @@ function main() {
   // ---- which file belongs to which part -------------------------------------------------------
   let shippable;
   try {
-    shippable = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...listArgs],
-      { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
+    shippable = listShippable(listArgs, { cwd: REPO }).filter(Boolean);
   } catch (e) {
-    fail('build.py --list-shippable failed: ' + e.message);
+    fail('build.js --list-shippable failed: ' + e.message);
   }
 
   const dirToPart = new Map();
@@ -411,10 +410,10 @@ function main() {
   };
   const shippedFiles = [];             // [{ part, masked }]
   if (installedBy.size) {
-    // src/boot's files, each in the part that declares it (lib/boot-pieces.js: parts.json, through build.py --list-boot)
+    // src/boot's files, each in the part that declares it (lib/boot-pieces.js: parts.json, through build.js --list-boot)
     let pieces;
-    try { pieces = bootPieces(listArgs); } catch (e) { fail('build.py --list-boot failed: ' + e.message); }
-    if (!pieces.length) fail('build.py --list-boot listed no boot file: the boot files would drop out of the definitions unseen');
+    try { pieces = bootPieces(listArgs); } catch (e) { fail('build.js --list-boot failed: ' + e.message); }
+    if (!pieces.length) fail('build.js --list-boot listed no boot file: the boot files would drop out of the definitions unseen');
     const partOfBootFile = new Map(pieces.map((piece) => [piece.file, piece.part]));
     for (const rel of [...scanned, ...partOfBootFile.keys()]) {
       const reading = readingOf(rel);

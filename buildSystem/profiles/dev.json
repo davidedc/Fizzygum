@@ -14,7 +14,7 @@
     "`\"parts\": \"all\"` means every part the partition declares -- a new part joins the dev build",
     "with no edit here, which is the point of the spelling. One caveat: a part that declares",
     "`requiresFlag` additionally needs that flag on the command line, so video-player ships only",
-    "with --includeVideoPlayer (see buildProfile.py's partShips)."
+    "with --includeVideoPlayer (see lib/profile.js's partShips)."
   ],
 
   "parts": "all",

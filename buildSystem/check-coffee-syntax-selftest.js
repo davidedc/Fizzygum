@@ -1,6 +1,6 @@
 'use strict';
 // check-coffee-syntax-selftest.js — check-coffee-syntax.js proved able to BITE, by running the REAL gate (its listing
-// through build.py --list-shippable --src=, the real meta-compiler, the real boot helper globals) on a planted src
+// through build.js --list-shippable --src=, the real meta-compiler, the real boot helper globals) on a planted src
 // tree (lib/planted-src.js): a class member that does not parse fails, named by its FILE line; members whose compiled
 // head declares a helper the strip cuts (`%%` → modulo, a parameter-default temporary → ref) fail, named by class and
 // member. The forms the fragmented compile tolerates — a field set before a bare `super`, and the three provided

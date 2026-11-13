@@ -33,7 +33,7 @@
 //
 // Scope: the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness). Runs for every
 // build flavour — the rule is a property of the source, not of what is being built. Documentation that DESCRIBES the
-// retired mechanism (this file, parts.json, build.py, the plan docs, src/macros/CLAUDE.md) is outside that scope by
+// retired mechanism (this file, parts.json, build.js, the plan docs, src/macros/CLAUDE.md) is outside that scope by
 // construction.
 
 //
