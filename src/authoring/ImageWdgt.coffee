@@ -7,10 +7,9 @@
 # via getContextForPainting -> setRatio) all inherit.
 #
 # The payload is the paint APPARATUS -- a StretchableWidgetContainerWdgt over a
-# StretchableCanvasWdgt with a CanvasGlassTopWdgt overlay -- NOT the bitmap
-# loader SimpleImageWdgt (owner decision D13: that class has one consumer, a
-# button face, and no content flow today; merging it in waits for a
-# load-image-file consumer -- docs/BACKLOG.md).
+# StretchableCanvasWdgt with a CanvasGlassTopWdgt overlay. There is no bitmap
+# loader: a load-image-file flow, when one is built, decides where a loader
+# lives (docs/BACKLOG.md).
 
 class ImageWdgt extends GenericPanelWdgt
 

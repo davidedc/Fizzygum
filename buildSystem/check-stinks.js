@@ -104,7 +104,7 @@ const STINKS = [
       { file: 'duplication/Duplicator.coffee', member: '_shellFor', count: 1, why: "Object.create's argument for an object with no prototype (`undefined` throws): a prototype-less object copies as one" },
     ],
     re: /\bnull\b/ },
-  { id: 'clock-read', baseline: 13,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it
+  { id: 'clock-read', baseline: 8,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it; 13->8 on 2026-11-13: the video-player part was deleted
     why: 'a read of a clock — the wall clock (Date.now(), or a `new Date` given no argument — one followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` and `new Date -x` are values) or the monotonic one (performance.now(), no more an event-stream fact than the wall clock), either one existentially too (`performance?.now()`, `Date.now?()`) — in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock). Not seen: a read inside a string interpolation (the mask blanks `#{ }`)',
     // the world's one clock, read once per cycle; a clock widget built outside a cycle; the harness's own clocks,
     // which no world reads: its DOM overlay fades in real time, its run clock times a run, its commands are paced; and
@@ -131,7 +131,7 @@ const STINKS = [
   { id: 'timer', baseline: 4,   // raised 3->4 on 2026-08-04: SourceCompileScheduler._ensurePumpScheduled pumps the compile-at-boot ingest, which runs only while NO world exists (same nature as the waitNextJSEventLoopCycle timer beside it) — bug-class B needs a live suite world to bite
     why: 'setTimeout/setInterval diverge at dpr2 under parallel load (DETERMINISM.md bug-class B: heavy cycles starve timers); the cycle/step machinery is the sanctioned clock',
     re: /\b(setTimeout|setInterval)\s*\(/ },
-  { id: 'math-random', baseline: 5,
+  { id: 'math-random', baseline: 4,   // tightened 5->4 on 2026-11-13: the video-player part was deleted
     why: 'Math.random in render/layout/input code breaks byte-exact screenshot determinism',
     re: /\bMath\.random\b/ },
   { id: 'instanceof-type-test', baseline: 64,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines); 95->93 (2026-07-30, banking a gain already landed; fg critique surfaced it); 93->88 (2026-08-04, layout spec-family arc: the enum dispatch + 5 spec-class instanceofs became capability queries); 88->87 (2026-08-09, banking a gain already landed; surfaced by the comments-audit stink run); 87->77 (2026-08-19, scroll-frame role arc: the viewport/plane role queries retired the composite's instanceof tests; surfaced by the comments-audit stink run); 77->78 (2026-08-19, paint-time-scroll-translation Phase 1: Widget._enclosingMappedPlaneRoot is a new canonical mapping walk and uses the walks' one island test); 78->81 (2026-08-20, WorldInventory: a reflective walker over arbitrary/host objects needs 3 tests no polymorphism can express — Widget for zombie identity, Node for DOM leaves, ArrayBuffer for typed-array leaves; the Map/Set tests delegate to NativeValueKinds); 81->80 (2026-08-26, gesture grammar P2: the macro toolkit's move verb resolved a Widget target to a screen point TWICE inline, and the finger verbs need the same resolution -- one _screenPointOfTarget now answers for all of them); 80->77 (2026-10-16, banking a gain gesture grammar P3 landed on 2026-08-26 without tightening: the macro toolkit's _widgetOfTarget decides "which widget" a verb was aimed at in one place, so four inline `instanceof Array` identifier tests became one; surfaced by this gate's own UNDER line); 77->76 (2026-10-18, redesign W2: the tooltip lays its text out one TextWdgt per line and no longer type-tests its contents widget); 76->75 (2026-10-20, redesign W5: the vertical stack picks a drop's slot by its children's middles, and its `instanceof Point` guard on the drop point goes); 75->74 (2026-11-07, every-gate-bites Unit 0: banking a gain already landed — one new `instanceof` passed while the count sat UNDER); 74->64 (2026-11-13, top-10-cleanups §6: the plane-mapping protocol — Widget's ten `instanceof TransformFrameWdgt` went, the walks asking each ancestor `mapsPlaneOfChild` instead)
@@ -151,7 +151,7 @@ const STINKS = [
       'Theme.coffee',                                          // where the values live
       'basic-data-structures/', 'boot/', 'serialization/',     // the Color class itself and value plumbing
       'demos/', 'dev-tools/', 'graphs-plots-charts/', 'maps/', // CONTENT: a literal is the content's own colour
-      'examples/', 'fizzytiles/', 'video-player/',
+      'examples/', 'fizzytiles/',
       // (spreadsheet/ is COUNTED: its grid header, gridlines and selection are the sheet's chrome)
       'patch-programming-experimental/',                       // ICON art (its Fanout*Appearance classes are IconAppearances)
       'icons/', 'icons-dev/', 'authoring-icons/', 'demos-icons/', 'examples-icons/',

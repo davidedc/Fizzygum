@@ -28,8 +28,7 @@ class CanvasWdgt extends PanelWdgt
   # the Serializer writes it as a $Canvas record -- one record, the object table being identity-keyed.
   # Undefined while my raster is only paper, which every raster I make lays again: a canvas nothing
   # has drawn on costs a saved file nothing, and neither does a subclass whose raster is a cache it
-  # repaints (a video frame, a loaded image, a 3D render, the paint glass), since none of them draws
-  # through drawLine or clear.
+  # repaints (a 3D render, the paint glass), since neither draws through drawLine or clear.
   # saved-content: once a pen has drawn on me this raster is the drawing's only copy
   drawnRaster: undefined
 

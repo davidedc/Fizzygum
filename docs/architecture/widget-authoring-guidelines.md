@@ -906,7 +906,7 @@ whose paint throws, which is hidden until then. A change that mends nothing has 
 banned again, the error log shown again (and, for a step, the world soft-reset).
 
 **Prefer demand-driven subscription** — join when there is something to animate, leave when there is
-not, as `DataflowSource`, `ViewportWdgt`'s momentum and `SimpleImageWdgt` do. A permanent
+not, as `DataflowSource` and `ViewportWdgt`'s momentum do. A permanent
 constructor-time subscription is acceptable for a widget that genuinely always animates, and costs a
 slot in the once-per-cycle walk otherwise.
 

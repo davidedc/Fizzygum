@@ -144,10 +144,10 @@ proveGate({
   control: {
     plants: {
       'BiteProofPartGuardsWdgt.coffee': cls('BiteProofPartGuardsWdgt', 'Widget',
-        '  bpNamesOnly: ->', '    # HhmmssLabelWdgt in a comment', '    s = "HhmmssLabelWdgt in a string"',
-        '  bpSameLine: ->', '    @bpA = new HhmmssLabelWdgt() if HhmmssLabelWdgt?',
-        '  bpBlock: ->', '    if HhmmssLabelWdgt?', '      @bpB = new HhmmssLabelWdgt()',
-        '  bpEarly: ->', '    return unless HhmmssLabelWdgt?', '    @bpC = new HhmmssLabelWdgt()',
+        '  bpNamesOnly: ->', '    # ChapterXIconWdgt in a comment', '    s = "ChapterXIconWdgt in a string"',
+        '  bpSameLine: ->', '    @bpA = new ChapterXIconWdgt() if ChapterXIconWdgt?',
+        '  bpBlock: ->', '    if ChapterXIconWdgt?', '      @bpB = new ChapterXIconWdgt()',
+        '  bpEarly: ->', '    return unless ChapterXIconWdgt?', '    @bpC = new ChapterXIconWdgt()',
         '  bpMembers: (w) ->', '    @serialiseToMemory?()', '    if w.deserialiseFromMemoryAndAttachToWorld?', '      w.deserialiseFromMemoryAndAttachToWorld()'),
     },
   },
@@ -155,7 +155,7 @@ proveGate({
     label: 'an unguarded class, an inheritance, a member three ways, a requires entry nothing uses',
     args: ['--parts=' + path.join(partsDir, 'parts.json')],   // a planted parts.json: maps requires plots
     plants: {
-      'BiteProofPartRefWdgt.coffee': cls('BiteProofPartRefWdgt', 'Widget', '  bpMake: ->', '    @bpIcon = new SimpleUSAMapIconAppearance @', '    @bpLabel = new HhmmssLabelWdgt()'),
+      'BiteProofPartRefWdgt.coffee': cls('BiteProofPartRefWdgt', 'Widget', '  bpMake: ->', '    @bpIcon = new SimpleUSAMapIconAppearance @', '    @bpLabel = new ChapterXIconWdgt()'),
       'BiteProofPartInheritWdgt.coffee': cls('BiteProofPartInheritWdgt', 'SimpleUSAMapIconAppearance'),
       'BiteProofPartMemberWdgt.coffee': cls('BiteProofPartMemberWdgt', 'Widget', '  bpReach: (menu, w) ->', '    @serialiseToMemory()',
         '    menu.addMenuItem "bp", w, "deserialiseFromMemoryAndAttachToWorld"'),
@@ -169,7 +169,7 @@ proveGate({
       UNUSED_REQUIRES: /^  maps requires 'plots'$/m,
       MEMBER_SUPER: /^  src\/BiteProofPartSuperWdgt\.coffee:\d+  \S+ -> BiteProofPartSuperWdgt\.fullRenderCanvasAsItAppearsOnScreen -> super \(installed by part '\w+'; \(c\) a super into it\)$/m,
     },
-    lines: [/^  src\/BiteProofPartRefWdgt\.coffee:4  \S+ -> HhmmssLabelWdgt \(part 'video-player'\)$/m],
+    lines: [/^  src\/BiteProofPartRefWdgt\.coffee:4  \S+ -> ChapterXIconWdgt \(part 'dev-icons'\)$/m],
     absent: [/BiteProofPartGuardsWdgt/],
   }, {
     label: 'a harness file',

@@ -6,8 +6,8 @@
 #   1) as a CACHE, which pays off for a widget that has a small extent, an expensive paint and
 #      frequent repaints. Text is the ideal case, painting glyphs being slow; the worst case is a
 #      desktop-sized rectangle, where a lot of memory would hold a very short paint;
-#   2) because the widget IS a raster: a canvas a turtle's pen draws on, a loaded image, a video
-#      frame, a 3D render -- or any widget whose pixels a filter works on.
+#   2) because the widget IS a raster: a canvas a turtle's pen draws on, a 3D render -- or any
+#      widget whose pixels a filter works on.
 # Which widgets keep one is each class's decision, not a dynamic one.
 #
 # A widget keeps ONE, in its `backBuffer` field, kept by its _createRefreshOrGetBackBuffer (a
@@ -33,8 +33,8 @@ class BackBuffer
   # coverage, chroma always black -- Widget.coffee "How the shadow painting works"), made on first
   # need and shared by every widget sharing me. My canvas never changes, so the twin goes stale only
   # when my raster is drawn on in place. CanvasWdgt's clear and drawLine say so (noteRasterChanged);
-  # the other in-place drawers -- a stretchable canvas's repaint, an image, a video frame, a 3D
-  # frame, the paint tools -- do not, and their twin keeps the silhouette it was made with.
+  # the other in-place drawers -- a stretchable canvas's repaint, a 3D frame, the paint tools --
+  # do not, and their twin keeps the silhouette it was made with.
   _silhouette: undefined
 
   # the pair my maker already holds: each builder makes its canvas and context its own way (a
@@ -70,8 +70,8 @@ class BackBuffer
   # the pointer is on it only where its picture has something drawn, so the question is answered
   # PER PIXEL rather than by an outline. TOTAL, as Appearance.shapeContainsPoint must be: false
   # outside aWdgt's bounds, where no pixel is read. (A widget whose raster is known to fill its box
-  # answers catchesPointerAt itself with a plain bounds test -- cheaper, and the honest answer for an
-  # image or a video frame.)
+  # answers catchesPointerAt itself with a plain bounds test -- cheaper, and the honest answer
+  # there.)
   #   ⚠ MIND THE SPELLING, because the wrong one is silent: a Color keeps its alpha in `_a`
   # and publishes no `a`, so a `data.a is 0` test reads `undefined is 0` — false for every
   # pixel, which makes every widget answering this catch the pointer everywhere inside its

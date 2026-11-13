@@ -332,9 +332,9 @@ const GATES = [
   // and the same-class methods it reaches) writes must be a serialization transient of the class chain, or a
   // field declared as saved content with a `# saved-content: <reason>` marker on (or directly above) its
   // declaration. The back buffer itself is a transient, so a memo of it that rides a save outlives the raster
-  // it describes and the restored widget skips the paint it needs. Reads ALL of src/ -- every part, shipped or
-  // not, so it covers the flag-gated video-player part no default build carries. (buildSystem/
-  // check-back-buffer-memos.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.)
+  // it describes and the restored widget skips the paint it needs. Reads ALL of src/ -- every part, shipped in
+  // the profile being built or not. (buildSystem/check-back-buffer-memos.js -- same --noSyntaxCheck escape
+  // hatch + explicit $? abort as the gates above.)
   { script: path.join(BUILD_SYSTEM, "check-back-buffer-memos.js"),
     args: [],
     when: "checked",
@@ -347,9 +347,8 @@ const GATES = [
   // be a serialization transient of the class chain, and the chain must define both _afterDeserialization and
   // _reactToBeingCopied, the hooks that re-make it after a restore and after a copy -- neither walker carries
   // an element. An element constructed into no field says why with `# page-element-not-held: <reason>`. Reads
-  // ALL of src/ -- every part, shipped or not, so it covers the flag-gated video-player part no default build
-  // carries. (buildSystem/check-page-loaded-elements.js -- same --noSyntaxCheck escape hatch + explicit $?
-  // abort as the gates above.)
+  // ALL of src/ -- every part, shipped in the profile being built or not. (buildSystem/
+  // check-page-loaded-elements.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.)
   { script: path.join(BUILD_SYSTEM, "check-page-loaded-elements.js"),
     args: [],
     when: "checked",

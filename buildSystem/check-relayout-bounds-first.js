@@ -15,8 +15,8 @@
 // The `@_` prefix is what distinguishes a SELF apply from a child apply (`child._applyGrantedBounds` does NOT count).
 //
 // A `_reLayout` that positions children from the `newBoundsForThisLayout` PARAM (never from @-geometry) --
-// or that positions no children at all -- has no own-geometry read and passes trivially (the video-player
-// widgets, the scroll / vertical-stack containers whose child layout lives in _positionAndResizeChildren,
+// or that positions no children at all -- has no own-geometry read and passes trivially (the scroll /
+// vertical-stack containers whose child layout lives in _positionAndResizeChildren,
 // the caret which reads its PARENT/TARGET geometry). `@boundingBox()` and `@extent()` are the nil-default
 // normalisers, NOT child-positioning reads, so they do not count as own-geometry reads.
 //

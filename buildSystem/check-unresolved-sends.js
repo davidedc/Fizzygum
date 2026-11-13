@@ -189,7 +189,7 @@ function harvestCalls(files) {
 // is real.
 const BUILTINS_TABLE = `
 push pop shift slice concat join filter map some every indexOf lastIndexOf includes sort reverse fill keys values
-charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match search padStart repeat substring substr
+charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match search repeat substring substr
 toString toFixed valueOf
 sqrt pow random atan2 sin cos asin exp log sign
 now parse stringify

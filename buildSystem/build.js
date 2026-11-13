@@ -36,7 +36,7 @@ const path = require('path');
 // loadParts) and the entry pages, whose SWCanvas column the shell needs to know whether to assemble
 // the SW boot bundle. One table, two readers.
 const profileLib = require('./lib/profile');
-const { ENTRY_PAGES, loadParts, partShips, Refusal, inDirectory, py, readText, readBytes, writeText, writeAllSync, isfile, isdir,
+const { ENTRY_PAGES, loadParts, Refusal, inDirectory, py, readText, readBytes, writeText, writeAllSync, isfile, isdir,
   makedirs, copyfile, glob, pathJoin, pathBasename, pathDirname, toStdout, toStderr, finishCommandLine, encodable } = profileLib;
 const fs = require('fs');
 
@@ -91,8 +91,6 @@ const IS_CLASS = /(?:^|(?<=\n))class +([\p{L}\p{N}_]+)/u;
 // It replaced the --homepage and --notests flags (arc 5): a flavour is data, and adding one is
 // adding a file rather than threading a boolean through two scripts. A stale `--homepage` on a
 // command line now fails here, loudly, instead of silently building something else.
-// --includeVideoPlayer ships the video-player part. --includeVideos and --keepPreviousPrivateVideos do nothing here
-// (build_it_please.sh acts on them), but are accepted, or the forwarded arguments would be refused.
 // --noSyntaxCheck is consumed by build_it_please.sh, which forwards ALL of its args to
 // us; we accept it here as a no-op so the forwarded flag is not refused.
 // --list-shippable: print the source files that WOULD be shipped (one per line) and
@@ -116,9 +114,6 @@ const IS_CLASS = /(?:^|(?<=\n))class +([\p{L}\p{N}_]+)/u;
 const ACTIONS = [
   { strings: ['-h', '--help'], dest: 'help', flag: true, help: 'show this help message and exit' },
   { strings: ['--profile'], dest: 'profile', flag: false, metavar: 'PROFILE', initial: profileLib.DEFAULT_PROFILE_NAME },
-  { strings: ['--includeVideoPlayer'], dest: 'includeVideoPlayer', flag: true },
-  { strings: ['--includeVideos'], dest: 'includeVideos', flag: true },
-  { strings: ['--keepPreviousPrivateVideos'], dest: 'keepPreviousPrivateVideos', flag: true },
   { strings: ['--noSyntaxCheck'], dest: 'noSyntaxCheck', flag: true },
   { strings: ['--list-shippable'], dest: 'listShippable', flag: true },
   { strings: ['--list-boot'], dest: 'listBoot', flag: true },
@@ -432,14 +427,6 @@ function partitionFiles(parts, srcRoot, testsRepoRoot) {
   return [py.sorted(partOfFile.keys()), partOfFile];
 }
 
-// Is this part included in the flavour being built? This is what the whole-file exclusion
-// markers used to answer, one file at a time and invisibly.
-//
-// The RULE itself lives in lib/profile.js partShips, because build_it_please.sh asks the same
-// question (through its --shell mode) to decide what else goes into the tree -- and one
-// question answered in two places is how a flavour ends up shipping half a part.
-const partShipsInThisFlavour = (partName, part, profile, args) => partShips(partName, part, profile, args.includeVideoPlayer);
-
 // A declared-but-missing file is a HARD failure, not a warning: a payload silently not written
 // is the failure mode this whole mechanism replaced (the tree looks fine, and a page 404s for an
 // <img> or an injected script at runtime).
@@ -453,14 +440,17 @@ function requirePartFile(partName, sourcePath, kind) {
 // (copied) and vendor payloads (assembled from their pieces).
 //
 // This is what makes "what a flavour ships" follow from which parts ship, instead of being a
-// per-flavour prune list. A part that does not ship writes nothing.
-function copyPartAssets(parts, profile, args, sink) {
+// per-flavour prune list. A part that does not ship writes nothing. Whether a part ships is
+// answered once, by lib/profile.js's Profile.selectsPart: build_it_please.sh asks the same question
+// (through its --shell mode) to decide what else goes into the tree, and one question answered in
+// two places is how a flavour ends up shipping half a part.
+function copyPartAssets(parts, profile, sink) {
   let copiedAssets = 0;
   let builtPayloads = 0;
   for (const partName of py.keys(parts)) {
     if (partName.startsWith('//')) continue;
     const part = parts[partName];
-    if (!partShipsInThisFlavour(partName, part, profile, args)) continue;
+    if (!profile.selectsPart(partName)) continue;
 
     for (const entry of py.iter(py.get(part, 'assets', []))) {
       const [sourcePath, destinationDirectory] = py.unpack2(entry);
@@ -493,9 +483,9 @@ function copyPartAssets(parts, profile, args, sink) {
 }
 
 // The subset of the partition this flavour actually ships, in emission order.
-function shippedFiles(parts, partOfFile, orderedFilenames, profile, args) {
+function shippedFiles(parts, partOfFile, orderedFilenames, profile) {
   const excluded = new Set(py.keys(parts).filter((name) => !name.startsWith('//')
-    && !partShipsInThisFlavour(name, parts[name], profile, args)));
+    && !profile.selectsPart(name)));
   return orderedFilenames.filter((f) => !excluded.has(partOfFile.get(f)));
 }
 
@@ -530,7 +520,7 @@ function main(args, sink) {
     return;
   }
 
-  const filenames = shippedFiles(parts, partOfFile, allFilenames, profile, args);
+  const filenames = shippedFiles(parts, partOfFile, allFilenames, profile);
 
   // so here we need to take a .coffee file and generate a js that
   // , when run, hands its contents as a string to the SourceVault.
@@ -720,7 +710,7 @@ function main(args, sink) {
   // three pointer icons and FileSaver/JSZip were copied into every tree and then deleted again from
   // the production one. Owning them here means what a flavour ships FOLLOWS from which parts ship
   // (arc 5 PR-D6: derive the tail, never declare it).
-  copyPartAssets(parts, profile, args, sink);
+  copyPartAssets(parts, profile, sink);
 
   // 5) the entry pages this profile ships (its `entries`, resolved against ENTRY_PAGES). The
   // production profile ships index.html alone, which is what makes it native-only: no SWCanvas

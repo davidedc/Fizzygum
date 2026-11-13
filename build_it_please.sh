@@ -15,12 +15,6 @@
 #     the production artifact: pre-compiled, native-only, no test machinery
 #   ./build_it_please.sh --profile dev-notests
 #     the dev world with the test machinery left out
-#   ./build_it_please.sh --includeVideoPlayer --includeVideos
-#     also includes the video player and the videos
-#   ./build_it_please.sh --includeVideoPlayer --includeVideos; cp -R /Volumes/Seagate\ 5tb/Fizzygum-videos-private ../Fizzygum-builds/latest/videos
-#     as before, and copies the private videos
-#   ./build_it_please.sh --includeVideoPlayer --includeVideos --keepPreviousPrivateVideos
-#     as before but instead of copying the private videos, keep the existing ones (as these can take a long time to copy otherwise)
 
 # SELF-LOCATE: always run from this script's own directory (Fizzygum/), regardless of the caller's cwd.
 # The Bash cwd often resets to the umbrella Fizzygum-all/ between calls, and every path below is relative
@@ -50,9 +44,6 @@ args=( "$@" )
 # we'll put the switches in these variables. NOTE what is NOT here: the build FLAVOUR. That is
 # --profile, parsed by buildSystem/lib/profile.js (see the profile block further down) so that this
 # script, build_and_smoke.sh and build.js cannot disagree about which profile is being built.
-includeVideoPlayer=false
-includeVideos=false
-keepPreviousPrivateVideos=false
 # --noSyntaxCheck skips every static gate, the CoffeeScript syntax gate among them (default: they run).
 noSyntaxCheck=false
 
@@ -71,18 +62,6 @@ while test $# -gt 0; do
     --profile=*)
       shift
       ;;
-    --includeVideoPlayer)
-      includeVideoPlayer='true'
-      shift
-      ;;
-    --includeVideos)
-      includeVideos='true'
-      shift
-      ;;
-    --keepPreviousPrivateVideos)
-      keepPreviousPrivateVideos='true'
-      shift
-      ;;
     --noSyntaxCheck)
       # consumed here only; it is ALSO a no-op in build.js, so the forwarded
       # "${args[@]}" (which still contains it) does not trip build.js's argument parsing.
@@ -96,7 +75,7 @@ while test $# -gt 0; do
       echo "build_it_please.sh: unknown argument '$1'." 1>&2
       echo "  A build flavour is a PROFILE: --profile <name>, one of $(ls buildSystem/profiles/*.json 2>/dev/null | xargs -n1 basename 2>/dev/null | sed 's/\.json$//' | tr '\n' ' ')" 1>&2
       echo "  (--homepage and --notests were retired: use --profile homepage / --profile dev-notests.)" 1>&2
-      echo "  Other options: --includeVideoPlayer --includeVideos --keepPreviousPrivateVideos --noSyntaxCheck" 1>&2
+      echo "  Other options: --noSyntaxCheck" 1>&2
       exit 1
       ;;
   esac
@@ -261,23 +240,6 @@ remove_tests_link
 # remove the whole $BUILD_PATH/js directory
 rm -rf $BUILD_PATH/js || build_failed "removing the previous js tree"
 
-if $keepPreviousPrivateVideos ; then
-  if [ ! -d $BUILD_PATH/videos/Fizzygum-videos-private ]; then
-    echo
-    echo ----------- error -------------
-    echo You asked to keep the private videos but there
-    echo is such directory
-    echo
-    exit 1
-  else
-    # delete everything in $BUILD_PATH/videos apart from the $BUILD_PATH/videos/Fizzygum-videos-private directory
-    find $BUILD_PATH/videos -maxdepth 1 ! -path $BUILD_PATH/videos -not -name "Fizzygum-videos-private" -exec rm -r {} \;
-  fi
-else
-  # remove the whole $BUILD_PATH/videos directory
-  rm -rf $BUILD_PATH/videos || build_failed "removing the previous videos"
-fi
-
 # read -p "Directories should be clean, press key to continue... " -n1 -s
 
 
@@ -290,12 +252,6 @@ fi
 
 if [ ! -d $BUILD_PATH/icons ]; then
   mkdir $BUILD_PATH/icons || build_failed "making the icons directory"
-fi
-
-if $includeVideos ; then
-  if [ ! -d $BUILD_PATH/videos ]; then
-    mkdir $BUILD_PATH/videos
-  fi
 fi
 
 if [ ! -d $BUILD_PATH/js/libs ]; then
@@ -604,11 +560,6 @@ done
 echo "copying pre-compiled file"
 cp assets/pre-compiled.js $BUILD_PATH/js/pre-compiled.js || build_failed "copying the pre-compiled stub"
 echo "... done"
-
-
-if $includeVideos ; then
-  cp ../Fizzygum-videos-public/* $BUILD_PATH/videos/ || build_failed "copying the videos"
-fi
 
 echo "... done copying icon files"
 

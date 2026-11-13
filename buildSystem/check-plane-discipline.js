@@ -75,12 +75,12 @@ const SRC = ROOTS.src;
 const { methodBoundary, methodSpans } = require('./lib/coffee-method-header');
 
 // ---- baseline for section B (the check-stinks idiom: exact count, move it consciously) ----
-// 31 lines. Three of them are reached through Widget's centre queries: FridgeWdgt's magnet-to-magnet
+// 30 lines. Three of them are reached through Widget's centre queries: FridgeWdgt's magnet-to-magnet
 // distances (`m.rightCenter().distanceTo(aMagnet.leftCenter())` in magnetToLeftOf, its mirror in
 // magnetFollowing, and magnetFollowing's reciprocity test). Every magnet compared there is a child of the
 // one fridge, so all share its plane — the same comparison as the fridge's edge tests
 // (`m.right() < aMagnet.right()`) counted beside them.
-const CROSS_PLANE_MIX_BASELINE = 31;
+const CROSS_PLANE_MIX_BASELINE = 30;
 
 // ---- POSITIONAL: Widget's own position queries, READ from Widget.coffee, never hand-listed ----
 // THE RULE: a Widget instance method taking no parameter that answers a point, an edge or a rectangle

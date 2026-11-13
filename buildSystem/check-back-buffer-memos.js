@@ -10,8 +10,8 @@
 // memo claiming the paint is done, and skips it: an image widget that remembers the size it last
 // painted at comes back BLACK, a video canvas that remembers its letterbox is laid comes back with the
 // letterbox in its paper colour. The cure is to keep no memo — ask the raster (CanvasWdgt hands over a
-// NEW raster exactly when there was none or the size changed, which is what SimpleImageWdgt does) or
-// paint unconditionally (VideoPlayerCanvasWdgt's letterbox) — and this gate keeps the memo out.
+// NEW raster exactly when there was none or the size changed) or paint unconditionally — and this gate
+// keeps the memo out.
 //
 // THE RULE. Every `@field` ASSIGNED in a class's back-buffer builder (`_createRefreshOrGetBackBuffer`),
 // or in a method of the same file that the builder reaches through `@name` references (transitively),
@@ -36,17 +36,15 @@
 // the key misses — following it would report them as memos, which they are not.
 //
 // IT READS ALL OF THE COMPILED SOURCES (lib/source-files.js compiledFiles: src/ and the tests repo's harness), every
-// part, shipped or not — a build that does not ship a part still checks
-// its code, which is the point: both raster-cache widgets that drew from a loaded resource live in the
-// flag-gated `video-player` part, which no default build carries and so no suite, rig or smoke runs.
+// part, shipped or not — a build that does not ship a part still checks its code.
 // Method grouping is the shared buildSystem/lib/coffee-method-header.js (methodSpans), so a class-side
 // key bounds a method exactly as every other gate sees it.
 //
 // BLIND SPOTS (stated, not silent):
 //   - a memo written by a method the builder does NOT reach: an onload/step/event handler that records
-//     "already loaded" or "already painted". SimpleImageWdgt's `imageLoaded` is that shape (written in
-//     an Image onload closure inside _loadImage); it is a serialization transient by declaration, and
-//     this gate would not have noticed if it were not.
+//     "already loaded" or "already painted" — an `imageLoaded` flag written in an Image's onload
+//     closure is that shape: it must be a serialization transient by declaration, and this gate would
+//     not notice if it were not.
 //   - methods reached across files (an ancestor's method the builder calls) and dynamic
 //     sends (`@[name]()`, a call through another receiver) are not followed; nor is anything a keyed
 //     builder reaches (above).

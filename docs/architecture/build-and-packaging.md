@@ -35,7 +35,7 @@ profile does not know what a part is made of.
 `buildSystem/lib/profile.js` is the ONE reader of both. It resolves a profile, validates it, and derives the rest.
 Three consumers use it and none of them re-implement any of its rules:
 
-- `buildSystem/build.js` requires it (`partShips`, `loadParts`, `ENTRY_PAGES`);
+- `buildSystem/build.js` requires it (`Profile.selectsPart`, `loadParts`, `ENTRY_PAGES`);
 - `build_it_please.sh` and `build_and_smoke.sh` `eval` its `--shell` output, and `fg` asks it the same way;
 - it also owns `--profile` PARSING, so no caller has its own copy of that either.
 
@@ -73,9 +73,6 @@ Plus two properties that are **not** the same question:
 
 - `eager` (default true) — TIMING: at boot, or on demand? A lazy part is fetched by `PartsRegistry` when something
   launches it, and its source text arrives *with it*.
-- `requiresFlag` — an additional per-invocation opt-in. One carrier: `videoPlayer`. (Deliberate stopping point:
-  `--includeVideos` copies gigabytes from an external drive and `--keepPreviousPrivateVideos` exists to *not* re-copy
-  them, which describes how you are running the build, not what the artifact is.)
 
 **A part's absence must be a NO-OP at every call site**, through the class-existence guard idiom (`if DemoMenus?`,
 `world.pinouts?.reset()`), and guarded where the class is NAMED rather than at the callers.
@@ -548,14 +545,10 @@ partition and never about the classes. Read it as a prompt to ask whether the ri
 invented yet.
 
 ⛔ **The two that stay, and why it is a decision rather than a residue.** `fg whatpins` still reports
-`CanvasWdgt` and `PatchNodeWdgt` — 4.3 KB — and they are blocked **by rule, not by cost**: the EAGER
-`video-player` part extends `CanvasWdgt` and the EAGER `patch-programming-experimental` part extends
-`PatchNodeWdgt`, and an eager part cannot extend a lazy part's class at all (§2). Unblocking either
-means making those parts lazy, and the two are no longer the same question:
+`CanvasWdgt` and `PatchNodeWdgt` — 4.3 KB — and they are not the same case. `PatchNodeWdgt` is blocked **by
+rule, not by cost**: the EAGER `patch-programming-experimental` part extends it, and an eager part cannot extend a
+lazy part's class at all (§2). Unblocking it means making that part lazy:
 
-- `video-player` is **auto-launched at boot** (`WorldWdgt`: `if window.VideoPlayerWithRecommendationsWdgt?
-  then world.draftRunVideoPlayer()`). A part that runs at boot is eager by definition, so the change
-  is a product decision about whether a flag-gated draft feature should launch itself.
 - `patch-programming-experimental` **no longer has a core entanglement to point at**, and that is
   worth knowing before the next round: nothing in core names `FanoutWdgt` or `FanoutPinWdgt` in CODE
   any more — both survive only as prose in `WireSpec`/`ControllerWdgt` — and the one live
@@ -563,8 +556,9 @@ means making those parts lazy, and the two are no longer the same question:
   is a flag-less unfinished experiment that ships eagerly, so making it lazy is now a partition
   decision rather than a blocked one. 4.3 KB is still not the reason to take it.
 
-⚠ Independently of the blocker, `CanvasWdgt` is defensible core material on layering merits: it is in
-`src/basic-widgets/` and three different parts' canvas widgets derive from it. **"No boot path reaches
+`CanvasWdgt` is extended by no eager part (the eager `dev-tools` part constructs one, in `WidgetFactory`), and it is
+defensible core material on layering merits: it is in `src/basic-widgets/` and two different parts' canvas widgets
+derive from it (`authoring`, `fizzytiles`). **"No boot path reaches
 it" is not the same as "it does not belong in core"** — the analyser answers the first question only.
 
 ⚠ **A lazy part is not free on the critical path: it ADDS to the boot bundle, per CLASS NAME rather
@@ -613,7 +607,6 @@ not re-attempted: `docs/archive/core-app-slices-partition-plan.md` §4 Phase 3.
 ./build_it_please.sh --profile homepage               # production
 ./build_it_please.sh --profile lean                   # the appliance
 ./build_it_please.sh --profile dev-precompiled        # the dev world, booted from an image
-./build_it_please.sh --includeVideoPlayer --includeVideos
 ./build_it_please.sh --noSyntaxCheck                  # a gate switch, NOT a profile field:
                                                       # a profile describes an artifact, not how
                                                       # carefully you checked it

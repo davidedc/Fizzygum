@@ -199,8 +199,8 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     # _reindexCellsNoSettle then adopts through the same two calls — no double grid).
     @_buildChromeNoSettle()
     @_reconcileViewportNoSettle()
-    # I hear the keyboard from the start and act on it while I am the editor focus (processKeyDown),
-    # as a video player hears it and acts while it is in front. A copy and a restore are receivers
+    # I hear the keyboard from the start and act on it while I am the editor focus (processKeyDown).
+    # A copy and a restore are receivers
     # through the membership they carry (Widget's copy hook, the serializer's marker).
     world.keyboardEventsReceivers.add @
     return

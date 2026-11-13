@@ -49,10 +49,6 @@
     "               owner got its whole list, and that set is tested BEFORE the inheritance check,",
     "               so an eager part could even `extends` a lazy one's class with the build green.",
     "               STOP Cycles are rejected by build.js: a cycle has no valid ingest order.",
-    "  requiresFlag optional build flag this part additionally needs, on TOP of being selected by the",
-    "               profile. One carrier left ('videoPlayer'): a per-invocation opt-in rather than a",
-    "               property of an artifact. ('tests' is gone -- whether the test machinery ships is",
-    "               now just whether a profile selects the harness part, so it is not asked twice.)",
     "  bootPrelude  optional src/boot/*.coffee pieces concatenated, in order, into the boot bundle when",
     "               this part ships: the bundle is its generated head (the build flags, the parts",
     "               manifest), then core's pieces (boot itself), then every other shipping part's in",
@@ -119,7 +115,7 @@
         "src/boot/loading-and-compiling-coffeescript-sources.coffee",
         "src/boot/logging-div.coffee"
       ],
-      "//two-that-stay": "⛔ CanvasWdgt (src/basic-widgets) and PatchNodeWdgt (src/patch-programming) STAY, and this is a decision rather than a residue. buildSystem/what-pins-core.js reports both as unreached from boot, so they look like 'app-kit' material -- and they are BLOCKED, by rule rather than by cost: the EAGER 'video-player' part extends CanvasWdgt (VideoPlayerCanvasWdgt, SimpleImageWdgt) and the EAGER 'patch-programming-experimental' part extends PatchNodeWdgt (DiffingPatchNodeWdgt, RegexSubstitutionPatchNodeWdgt), and an eager part cannot extend a LAZY part's class at all -- it is running from the first frame, so the base has to be DEFINED at boot and `requires` can only promise that a part ships, never that it arrived. Unblocking means making those two parts lazy. For 'video-player' that is not a packaging question at all: it is auto-launched AT BOOT (WorldWdgt: `if window.VideoPlayerWithRecommendationsWdgt? then world.draftRunVideoPlayer()`), so it would be a product decision about whether a flag-gated draft feature should launch itself. 'patch-programming-experimental' has no core entanglement left to point at -- nothing in core NAMES FanoutWdgt or FanoutPinWdgt in code any more (both survive only as prose, in WireSpec and ControllerWdgt), and the one live construction site, DemoMenus, sits in the lazy 'demos' part, which already declares `requires: [\"patch-programming-experimental\"]`. What is left is a flag-less unfinished experiment that ships eagerly, so making it lazy is now a partition decision rather than a blocked one. 4.3 KB is not the reason to do either. ⚠ Independently of the blocker, CanvasWdgt is defensible core material on layering merits: it lives in src/basic-widgets and is the base three different parts' canvas widgets derive from -- 'no boot path reaches it' is not the same as 'it does not belong in core'.",
+      "//two-that-stay": "⛔ CanvasWdgt (src/basic-widgets) and PatchNodeWdgt (src/patch-programming) STAY, and this is a decision rather than a residue. buildSystem/what-pins-core.js reports both as unreached from boot, so they look like 'app-kit' material. PatchNodeWdgt is BLOCKED, by rule rather than by cost: the EAGER 'patch-programming-experimental' part extends it (DiffingPatchNodeWdgt, RegexSubstitutionPatchNodeWdgt), and an eager part cannot extend a LAZY part's class at all -- it is running from the first frame, so the base has to be DEFINED at boot and `requires` can only promise that a part ships, never that it arrived. Unblocking means making that part lazy, and 'patch-programming-experimental' has no core entanglement left to point at -- nothing in core NAMES FanoutWdgt or FanoutPinWdgt in code any more (both survive only as prose, in WireSpec and ControllerWdgt), and the one live construction site, DemoMenus, sits in the lazy 'demos' part, which already declares `requires: [\"patch-programming-experimental\"]`. What is left is a flag-less unfinished experiment that ships eagerly, so making it lazy is a partition decision rather than a blocked one; its size is not the reason to do it. CanvasWdgt is extended by no eager part (the eager 'dev-tools' part constructs one, in WidgetFactory), and stays on layering merits: it lives in src/basic-widgets and is the base two different parts' canvas widgets derive from ('authoring' and 'fizzytiles') -- 'no boot path reaches it' is not the same as 'it does not belong in core'.",
       "//dataflow": "⚠ src/dataflow IS CORE, DELIBERATELY -- do not extract it (owner decision, 2026-07-30). It looks like an app slice next to src/spreadsheet, and it is not: it is the wiring substrate every widget reaches (ControllerWdgt's wire verbs -- wireTo / trackTarget / declareWireTo -- mirror a controller's whole wire list into the engine through DataflowEngine.ensureWireEdges), and WorldWdgt.doOneCycle drains it EVERY cycle. Its absence is a no-op at NO call site, in either direction: a handful of reaches are optional-chained (`world.dataflow?.…` -- six today, in Widget's teardown and the spreadsheet), where a missing engine is silently ACCEPTED and that wire simply never fires; every other reach names it bare -- around thirty, more than a dozen of them in ControllerWdgt alone, plus doOneCycle's own drain -- where the first cycle throws (recount with `grep -rn world.dataflow src`). Quietly dead or loudly fatal: wires never fire, sliders stop driving their targets, patch nodes go dead. That is broken, not reduced, and it fails the absence-must-be-a-no-op rule below. Same judgment as src/meta.",
       "dirs": [
         "src",
@@ -318,12 +314,6 @@
         ["vendor/filesaver/FileSaver.min.js", "js/libs"],
         ["vendor/jszip/jszip.min.js", "js/libs"]
       ]
-    },
-
-    "video-player": {
-      "//": "Already flag-gated before this arc; its whole-file marker was redundant belt-and-braces.",
-      "dirs": ["src/video-player"],
-      "requiresFlag": "videoPlayer"
     }
   }
 }

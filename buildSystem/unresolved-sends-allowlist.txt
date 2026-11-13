@@ -19,7 +19,6 @@ generateAsync   # JSZip: zip.generateAsync(...) — same
 
 # ── host APIs used at one or two sites ──
 digest          # WebCrypto: crypto.subtle.digest("SHA-256", ...) in the harness SHA256 fallback
-load            # HTMLVideoElement: @video.load() (VideoPlayerCanvasWdgt)
 toSource        # Firefox-legacy: existence-GUARDED call (`element.toSource() if element.toSource`, ListWdgt)
 
 # ── LiveCodeLang / fizzytiles vendored eventing + scope API ──

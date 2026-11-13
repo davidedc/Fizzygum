@@ -814,12 +814,6 @@ class WorldWdgt extends IconGridPanelWdgt
     # can defer its contents at all.
     @makeFolder "Examples", new ExamplesFolderWindowWdgt
 
-    # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
-    # so in a default build this boot-time auto-launch would throw "...is not defined".
-    # Only run it when the class is actually present. (Surfaced by the boot-smoke gate;
-    # see ../Fizzygum-tests/scripts/smoke-boot-headless.js.)
-    if window.VideoPlayerWithRecommendationsWdgt? then world.draftRunVideoPlayer()
-
 
   mostRecentlyCreatedPopUp: ->
     mostRecentPopUp = undefined
@@ -2098,21 +2092,6 @@ class WorldWdgt extends IconGridPanelWdgt
       previous?.noteFocusChanged()
       focused?.noteFocusChanged()
     return
-
-
-  # The VideoPlayer family is its own part ('video-player'), shipped only with
-  # --includeVideoPlayer. createDesktop's auto-launch is guarded, so nothing calls this without
-  # the part -- but the guard belongs HERE too, on the method that names the class: a caller's
-  # guard is not a property of the callee, and the next caller will not know to repeat it.
-  # (buildSystem/check-part-edges.js is what insists.)
-  draftRunVideoPlayer: ->
-      return unless VideoPlayerWithRecommendationsWdgt?
-      videoPlayer = new FrameWdgt new VideoPlayerWithRecommendationsWdgt
-      world.add videoPlayer
-      videoPlayer.setExtent new Point 934, 896
-      # it would be -28 instead of zero here below, but the system doesn't allow
-      # to put windows outside of the screen
-      videoPlayer.moveTo new Point 174, 0
 
 
   _playQueuedEvents: ->

@@ -34,8 +34,8 @@ class Widget extends TreeNode
   # subclass ADDS to this list, so a subclass declares its OWN fields and nothing else.
   # See docs/architecture/serialization-duplication-reference.md §5.
   @serializationTransients: [
-    # frame timing for throttled stepping (fps > 0, non-synchronised: BlinkerWdgt, the video
-    # widgets) — wall-clock, so it cannot ride a file. A restored stepper has none, and the stepping
+    # frame timing for throttled stepping (fps > 0, non-synchronised: BlinkerWdgt, BouncerWdgt, the
+    # sample plots) — wall-clock, so it cannot ride a file. A restored stepper has none, and the stepping
     # loop re-seeds it on first sight (WorldWdgt._runChildrensStepFunction, `lastTime ?=`); the
     # DUPLICATOR copies it, which keeps a throttled clone's cadence in phase with its original.
     "lastTime"
@@ -931,7 +931,7 @@ class Widget extends TreeNode
     # Bulk teardown through the non-settling core, NOT the public self-settling fullDestroy(): looping
     # the public method would self-settle once PER child (O(children) flushes), and -- with fullDestroy
     # on the single-mutation tier -- each immediate settle re-fits a half-emptied container. Callers
-    # (the world teardown / video panes / a viewport replacing its contents) are reset/rebuild
+    # (the world teardown / a viewport replacing its contents) are reset/rebuild
     # contexts that settle once afterwards (or redraw an empty container), so no per-child flush is
     # wanted.
     until @children.length == 0

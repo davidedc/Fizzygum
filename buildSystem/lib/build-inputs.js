@@ -14,9 +14,8 @@
 //   - what the partition declares a part ships besides its sources: each `assets` source and each `vendor` piece;
 //   - what build_it_please.sh names itself (SHELL_INPUTS below — the SWCanvas bundle's pieces and the pre-compiled stub),
 //     and every file under font-assets/ (copied whole when an entry renders through SWCanvas).
-// Not inputs: the gates (they judge the output, they do not shape it, so a gate edit never makes a build stale), the
-// pre-compile driver (it shapes only a precompiled profile's image, which no runner tests; `fg homepage` runs it) and
-// the videos `--includeVideos` copies from ../Fizzygum-videos-public (outside the repos).
+// Not inputs: the gates (they judge the output, they do not shape it, so a gate edit never makes a build stale) and the
+// pre-compile driver (it shapes only a precompiled profile's image, which no runner tests; `fg homepage` runs it).
 //
 // THE RECORD: build_it_please.sh lays `latest/.build-start` before it reads any input (once the vendored SWCanvas a
 // fresh clone fetches is in place) and records, with it, every input with its mtime and size (`--record`, headed by the

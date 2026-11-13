@@ -234,16 +234,6 @@ class SliderWdgt extends ControllerWdgt
     else
       return (@width() - @button.width()) / @rangeSize()
 
-  # it does what setValue does, but it doesn't update the
-  # target i.e. it doesn't "fire" as when the user
-  # moves the slider.
-  # This is useful when the slider needs to reflect the
-  # state of something that has been independently changed
-  # (i.e. changed by something else than the user moving the slider)
-  _updateHandlePosition: (newvalue) ->
-    @value = Number(newvalue)
-    @_reLayoutSelfAndButton()
-
   setValue: (newvalue) ->
     @value = Number(newvalue)
     @updateTarget()
@@ -374,9 +364,9 @@ class SliderWdgt extends ControllerWdgt
   showValue: ->
     @inform @value
 
-  # Adopt a whole scale at once — the APPLY half of reflectTarget, and reflect-without-firing like
-  # _updateHandlePosition above (it deliberately does not call updateTarget: I am SHOWING a value,
-  # not producing one, so announcing would drive my target from my own reflection).
+  # Adopt a whole scale at once — the APPLY half of reflectTarget, and a reflect-without-firing (it
+  # deliberately does not call updateTarget: I am SHOWING a value, not producing one, so announcing
+  # would drive my target from my own reflection).
   #   PRIVATE: the only caller is my own reflectTarget. It was public while a viewport pushed
   # four numbers into the bars it held fields for; the reverse edge (connector §P8) makes the bar
   # pull instead, so there is no external caller left and the [U] call-separation rule is right to
@@ -449,11 +439,11 @@ class SliderWdgt extends ControllerWdgt
   # anything" and "a value takes a number or the string spelling of one" are said once each.
   # ⚠ `value` is the ONE readable pin in the tree that cannot declare `announces`, and the reason is
   # worth keeping because the answer looks like "obviously yes". Every value-PRODUCING path
-  # (setValue / setStart / setStop) does announce — but my two value-SHOWING paths do not, and must
-  # not yet: `_updateHandlePosition` and `_updateSpecs` are how I REFLECT a target, and an
-  # announcement there would re-fire on every drain pass, because neither has an equal-value cutoff.
+  # (setValue / setStart / setStop) does announce — but my value-SHOWING path does not, and must
+  # not yet: `_updateSpecs` is how I REFLECT a target, and an announcement there would re-fire on
+  # every drain pass, because it has no equal-value cutoff.
   # That is a self-sustaining loop with no cycle in it at all.
-  #   ⇒ closing it is the follower arc's business, not a one-liner: those two need the cutoff first,
+  #   ⇒ closing it is the follower arc's business, not a one-liner: that path needs the cutoff first,
   # and the only thing it would buy is a follower OF a follower — which needs a second reflector to
   # exist, since I am the only one and I can only render a pin whose target answers
   # `sliderRangeForPin`. Filed in BACKLOG.

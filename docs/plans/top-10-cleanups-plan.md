@@ -98,7 +98,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 |---|---|---|---|---|---|---|---|
 | 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Landed 2026-11-13 (the last part on the owner's rulings) |
 | 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Landed 2026-11-13 (`fg` into the Fizzygum repo; the hook and skills stay local, owner) |
-| 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
+| 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Landed 2026-11-13 (deleted, the owner's ruling) |
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Landed 2026-11-13; no trap fired |
 | 5 | Lift the browser-input bridge off `WorldWdgt` | 2 days | 7 methods and the listener closures from the world class | Low | No | 9 | Landed 2026-11-13 |
 | 6 | One plane-mapping protocol for the ancestor walk | 3 days | 8 hand-written walks, 10 type tests of a subclass inside the base class, a second way of asking one question | Low, hot path | No | 3 | Landed 2026-11-13 (built and parked on a speed trade; landed on the owner's ruling) |
@@ -329,6 +329,30 @@ one commit, then `fg gauntlet` and `fg homepage`.
 
 **Re-measure.**
 `grep -n "requiresFlag" Fizzygum/buildSystem/parts.json Fizzygum/buildSystem/lib/profile.js`.
+
+**Landed 2026-11-13 (the owner ruled: delete).** What went:
+- the `video-player` part (`src/video-player/`, twelve files, `SimpleImageWdgt` and `SimpleRasterImageButtonWdgt`
+  among them);
+- the `requiresFlag` mechanism (`lib/profile.js` `partShips` and the `includeVideoPlayer` parameter through its
+  functions; `build.js` asks `Profile.selectsPart`);
+- the three flags, which are now unknown arguments;
+- `WorldWdgt`'s boot-time auto-launch and `draftRunVideoPlayer`;
+- `video-related-scripts/`;
+- `SliderWdgt._updateHandlePosition`, whose one caller was the player's scrubber;
+- the `VIDEO_MANIFEST_LOAD_FAILED` gate token.
+
+The five BACKLOG defects that lived in the part close as moot.
+
+What stays, read and found not to be the player:
+- **The external video LINK family** (`SimpleVideoLinkWdgt`, `VideoPlayButtonWdgt`, `VideoPlayCreatorButtonWdgt`,
+  `VideoPlayIconWdgt`, `VideoPlayIconAppearance`). It opens a URL through `window.open` and is used by the info docs,
+  the welcome message, the templates window and the Slides toolbar.
+- **The graph walkers' native-video arms** (`NativeValueKinds.isVideo`, the Serializer's remediation, the Duplicator).
+  A `<video>` can still reach a world without the player: a spreadsheet formula runs unsandboxed with `@` bound to its
+  sheet. The serialization rig's `video.elementInAFieldRefused` check holds that remediation.
+
+Ratchets that fell with the part: `clock-read` 13 → 8, `math-random` 5 → 4, `WorldWdgt`'s method ceiling 127 → 126,
+plane-discipline's cross-plane mix 31 → 30, and one unresolved-sends allowlist entry and one BUILTIN.
 
 ---
 
@@ -1101,3 +1125,23 @@ Do not commit or push without asking me.
   a gate's one refusal, every absence branch a build could reach is gone (§10, the follow-up "Landed").
 - [x] §1 (the rest): repository hygiene — `package.json`'s `"main": "index.js"`, which does not exist (with §2's `test` script); the empty `SWCanvasBrokenTests` lists (⛔ owner); keep or delete the design source `assets/icons/xPointerImage4.psd` (⛔ owner). The orphans, closed plans, stub header and the two vendoring homes landed (the plan's `## BACKLOG ledger`)
   — CLOSED 2026-11-13: `main` gone with §2; `SWCanvasBrokenTests` and the `.psd` deleted on the owner's rulings (§1, the third "Landed").
+- [x] **A `VideoPlayerCanvasWdgt` with no loadable video is invisible with no visible hider, and
+      `show()`ing it HANGS a headless page** (pre-existing; surfaced 2026-08-21 while giving the two
+      video-player widgets their first-ever runtime exercise). It constructs with an OWN
+      `isVisible = false` (prototype and `Widget` base are both `true`; a plain `CanvasWdgt` is
+      visible) at `video.readyState 0` — yet the only `isVisible = false` in src is `Widget.__hide`,
+      and nothing in `src/video-player/` calls `hide()`/`__hide`, so what hides it is unlocated.
+      Forcing `show()` then hung a headless page (2-min timeout, killed). ⚠ Note the `video-player`
+      part carries `requiresFlag: videoPlayer`, so NO profile builds it by default and NO gate ever
+      runs these classes — anything here is invisible to the suite, the gauntlet and the smoke.
+  — CLOSED 2026-11-13 as moot: the video-player part is deleted (§3, "Landed").
+- [x] **A world holding the video player cannot be saved**: `SimpleRasterImageButtonWdgt` (~:24) assigns `activated` as an INSTANCE function, which the serializer refuses, so "Save world snapshot…" throws at `… → .imageWdgt → .activated` on any `--includeVideoPlayer` world, and so does saving the thumbnail, the face or the player (`Fizzygum-tests/.scratch/arc-r2/R12/logs/p8-vp-*.log`).
+  — CLOSED 2026-11-13 as moot: the video-player part is deleted (§3, "Landed").
+- [x] **A `--includeVideoPlayer` boot logs 304 `NON_INTEGER_GEOMETRY` errors** (same logs) — the integer-placement funnel is violated somewhere in the video-player part, which no gated build ships.
+  — CLOSED 2026-11-13 as moot: the video-player part is deleted (§3, "Landed").
+- [x] (video-player part) **`SimpleRasterImageButtonWdgt.imagePath` is a second copy of its face's path and goes stale**: after `setThumbnailAndVideoPath` it still reads `icons/splashScreenFakeDesktop.png` while the face shows `icons/xPointerImage.png`; the face's own `imagePath` is the truth since this arc (`.scratch/arc-r3/R34/logs/i4-census-*`).
+  — CLOSED 2026-11-13 as moot: the video-player part is deleted (§3, "Landed").
+- [x] (video-player part) **A `VideoPlayerCanvasWdgt` with no video yet throws under SWCanvas on every paint** (`CanvasCompatibleContext2D._elementToImageLike`; INFERRED a 0×0 `getImageData`), and the error console it opens rides a world snapshot (107 KB → 966 KB in 120 frames, stack entries carrying `file://` paths) — `.scratch/arc-r3/R34/logs/i4-g-harness-dpr1.log`.
+  — CLOSED 2026-11-13 as moot: the video-player part is deleted (§3, "Landed").
+- [x] §3 (½ to 1 day): the video-player part — delete it or gate it (⛔ owner); either way the one-carrier `requiresFlag` mechanism goes
+  — CLOSED 2026-11-13 (the owner ruled: delete) — the part, `requiresFlag`, the three flags, the core guards and the nine scripts are gone (§3, "Landed").

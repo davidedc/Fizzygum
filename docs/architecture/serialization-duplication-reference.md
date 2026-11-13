@@ -376,18 +376,17 @@ NAMED like one.
   rides a save that the raster it describes does not, and the restored widget meets a fresh, unpainted raster
   beside a memo claiming the paint is done, and skips it. Ask the raster instead:
   `CanvasWdgt._createRefreshOrGetBackBuffer` hands over a NEW raster exactly when there was none (built,
-  restored) or the size changed, so a widget whose raster is a cache paints on a new one (`SimpleImageWdgt`
-  compares its back buffer before and after `super`) — or paints unconditionally where that is cheap
-  (`VideoPlayerCanvasWdgt` lays its black letterbox under every frame). The gate is
+  restored) or the size changed, so a widget whose raster is a cache compares its back buffer before and after
+  `super` and paints on a new one — or paints unconditionally where that is cheap. The gate is
   `buildSystem/check-back-buffer-memos.js` (`lint-and-static-checks.md` §3): every field a back-buffer
   builder writes is a transient of the class chain or is declared `# saved-content:` (today only
-  `CanvasWdgt.drawnRaster`); it reads every part, the flag-gated `video-player` included, and is blind to a
+  `CanvasWdgt.drawnRaster`); it reads every part, shipped in the profile being built or not, and is blind to a
   memo written outside the builder's reach (an onload closure).
 - **An element the page loads is a page fact, derived from its holder's own path.** An image or a video
   is what THIS page fetched from a path; a record of it could only say where the saving page found it (an
   absolute `file://` path, a `blob:` URL that dies with its session), which is nowhere the loading page
-  need be. So no file carries one and no copy shares one: the holder keeps the path in a field (the truth:
-  `SimpleImageWdgt.imagePath`, `VideoPlayerCanvasWdgt.videoPath`), declares the element (and any flag about
+  need be. So no file carries one and no copy shares one: the holder keeps the path in a field (the truth),
+  declares the element (and any flag about
   its load, `imageLoaded`) in `@serializationTransients`, and re-makes the element from the path — with its
   load handlers — after a restore (`_afterDeserialization`) and after a copy (`_reactToBeingCopied`). The
   Serializer has no element encoder and REFUSES an element in a field that is not a declared transient,
@@ -399,7 +398,8 @@ NAMED like one.
   every field a class assigns an element (`new Image`/`new Audio`/`document.createElement` of an img,
   video or audio) is a transient of the class chain, and the chain defines both hooks; an element made
   into no field says why with `# page-element-not-held: <reason>` (today only the Deserializer's
-  `$Canvas` decoder image). It reads every part, the flag-gated `video-player` included.
+  `$Canvas` decoder image). It reads every part, shipped in the profile being built or not. No class holds a
+  page-loaded element today; the rule and its gate stand for the next one that does.
 - **A live canvas object a class caches in a field is a transient.** A gradient, a pattern or a
   canvas a paint builds lazily (`if !@colorGradient?`) has no file encoder; declare the field and let
   the paint rebuild it after a restore. The rig's `world.everyAppSnapshot.*` checks open every app
@@ -518,8 +518,6 @@ NAMED like one.
 | `Widget` (caches) | `lastTime`; the render cache `backBuffer` (a `BackBuffer`: its canvas, its context and its shadow-silhouette twin travel inside it); the flush-scoped `hasDirtyDescendant`; the damage-rect bookkeeping. NOT listed, because skipped by NAME (`Widget.isDerivedStateField`): every geometry/identity cache pair (`cachedFullBounds`, `cachedRoot`, … each with its `check…Cache` twin), `childrenBoundsUpdatedAt`, the island-buffer source lane `_islandBufferSource*` | frame timing + derived caches, all re-derived on demand after restore. ⚠ An identity cache is the one whose absence bites: `root()` itself never reads `cachedRoot` stale (it checks `structureVersion`) but a walker reads the raw field, so a stale pointer drags destroyed subtrees — and their unserializable handler functions — into capture-mode world snapshots |
 | `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcDamageRectIndex`, `dstDamageRectIndex` | per-frame damage-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
 | `FrameWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs. It sat on `Widget` while the merge was broken (the base was the only place a declaration was safe); with the merge fixed it is declared by the class that owns and reads it |
-| `SimpleImageWdgt` | `img`, `imageLoaded` | the loaded `Image` and whether it has arrived are facts about THIS page: `_afterDeserialization` and `_reactToBeingCopied` reload `imagePath`, the one saved part of the picture (a carried `true` would draw an undecoded image: a throw under SWCanvas, nothing natively — and a copy whose load the original started never repaints) |
-| `VideoPlayerCanvasWdgt` | `video` | the `<video>` element is a page fact made from `videoPath`; `_afterDeserialization` and `_reactToBeingCopied` make their own, which plays from its beginning |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
 | the gradient icon appearances (`ColorPalettePatchProgrammingIconAppearance`, `GrayscalePalettePatchProgrammingIconAppearance`, `VaporwaveBackgroundIconAppearance`, `VaporwaveSunIconAppearance`) | their cached gradient | a canvas gradient their paint builds lazily and rebuilds when absent; undeclared, a world snapshot saved with Patch Programming open throws "a value of an unrecognized type (LinearGradient)" under SWCanvas, and the closed-set guard refuses the `CanvasGradient` under native |

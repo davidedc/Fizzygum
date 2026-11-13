@@ -11,9 +11,8 @@ class CanvasAppearance extends RectangularAppearance
     BackBuffer.blitOf @widget, aContext, clippingRectangle, appliedShadow
 
   # A click lands on my widget only where something is drawn: the shape is answered per pixel
-  # (BackBuffer.isPaintedAt, TOTAL). A canvas whose raster is known to fill its box (an image, a
-  # video frame), or that must take the pointer while it is clear (the paint glass), answers
-  # catchesPointerAt itself.
+  # (BackBuffer.isPaintedAt, TOTAL). A canvas whose raster is known to fill its box, or that must
+  # take the pointer while it is clear (the paint glass), answers catchesPointerAt itself.
   shapeContainsPoint: (aPoint) ->
     BackBuffer.isPaintedAt @widget, aPoint
 

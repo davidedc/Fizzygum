@@ -664,7 +664,7 @@ class Theme
       focusedWindowTitle: {family: "Arial, sans-serif", size: 13, bold: true}
       # the small chrome labels: a text button's face (a toggle's and a chip's included), the save /
       # save + close labels, the Object Inspector's breadcrumb caption, a patch
-      # node's field labels, the video time labels
+      # node's field labels
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
       # every StringWdgt / TextWdgt built without a role
       defaultText: {family: "Arial, sans-serif", size: 13, bold: false}

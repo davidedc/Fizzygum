@@ -46,7 +46,7 @@ const ROOTS = sourceRoots(ARGV, 'complexity-ratchets');
 // the classes held, their files (src-relative) and their ceilings — recorded 2026-11-13 at the tree's own counts
 const METHOD_CEILINGS = {
   Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 391 },
-  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 127 },
+  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 126 },
   ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 74 },
   FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 173 },
 };

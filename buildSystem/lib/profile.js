@@ -644,8 +644,7 @@ class Profile {
     // compile-at-boot build: there, the sources ARE the world and are loaded to BE it, so the
     // question the field answers does not arise -- see resolve().
     this.sources = sources;
-    // the resolved part NAMES this profile selects. Whether a part ALSO needs a build flag
-    // (`requiresFlag`) is a separate question -- see partShips().
+    // the resolved part NAMES this profile selects: the parts that ship (selectsPart)
     this.selectedParts = parts;
     // the resolved entry pages, as ENTRY_PAGES rows, in ENTRY_PAGES order
     this.entries = entries;
@@ -670,25 +669,15 @@ class Profile {
   // ingest.
   get shipsSourceText() { return this.sources !== 'none'; }
 
+  // Does this part ship in the build being made? THE part-inclusion rule, written once: a part
+  // ships exactly when the profile selects it. Nothing else is asked -- no build flag, no per-part
+  // opt-in -- so build.js and build_it_please.sh (through --shell) cannot disagree about it.
   selectsPart(partName) { return this.selectedParts.includes(partName); }
 }
 
-// Does this part ship in the build being made? THE part-inclusion rule, written once.
-//
-// Two independent conditions: the profile selects it, and any additional opt-in flag it declares
-// is set. `requiresFlag` survives profiles for exactly one carrier -- the video player, whose
-// `--includeVideoPlayer` is a per-invocation opt-in rather than a property of an artifact. (The
-// other carrier, `requiresFlag: "tests"` on the harness part, is GONE: whether the test machinery
-// ships is now the profile's own `parts` selection, so it is not asked twice.)
-function partShips(partName, part, profile, includeVideoPlayer) {
-  if (!profile.selectsPart(partName)) return false;
-  if (py.get(part, 'requiresFlag', null) === 'videoPlayer' && !includeVideoPlayer) return false;
-  return true;
-}
-
 // [name, spec] for every part that ships, in parts.json order.
-const shippingParts = (parts, profile, includeVideoPlayer) =>
-  partNames(parts).filter((name) => partShips(name, parts[name], profile, includeVideoPlayer)).map((name) => [name, parts[name]]);
+const shippingParts = (parts, profile) =>
+  partNames(parts).filter((name) => profile.selectsPart(name)).map((name) => [name, parts[name]]);
 
 // The src/boot/ pieces that shipping parts contribute to the boot bundle, in order.
 //
@@ -697,9 +686,9 @@ const shippingParts = (parts, profile, includeVideoPlayer) =>
 // SourceVault, globalFunctions, the built-in prototype extensions) first, whatever its place in
 // parts.json, then every other shipping part's in partition order (e.g. fizzytiles'
 // numbertimes.coffee, which extends Number for the LiveCodeLang preprocessor).
-function bootPrelude(parts, profile, includeVideoPlayer) {
+function bootPrelude(parts, profile) {
   const pieces = [];
-  const shipping = shippingParts(parts, profile, includeVideoPlayer);
+  const shipping = shippingParts(parts, profile);
   for (const [, part] of [...shipping.filter(([name]) => name === CORE_PART), ...shipping.filter(([name]) => name !== CORE_PART)]) {
     pieces.push(...py.iter(py.get(part, 'bootPrelude', [])));
   }
@@ -708,9 +697,9 @@ function bootPrelude(parts, profile, includeVideoPlayer) {
 
 // The src/boot/ files that shipping parts have compiled one by one to js/src/<name>-min.js, which
 // boot fetches by name.
-function bootScripts(parts, profile, includeVideoPlayer) {
+function bootScripts(parts, profile) {
   const scripts = [];
-  for (const [, part] of shippingParts(parts, profile, includeVideoPlayer)) scripts.push(...py.iter(py.get(part, 'bootScripts', [])));
+  for (const [, part] of shippingParts(parts, profile)) scripts.push(...py.iter(py.get(part, 'bootScripts', [])));
   return scripts;
 }
 
@@ -941,9 +930,8 @@ function shellAssignments(argv) {
   const profile = resolve(profileNameFromArgv(argv));
   const parts = loadParts();
   bootFiles(parts);
-  const includeVideoPlayer = argv.includes('--includeVideoPlayer');
-  const prelude = bootPrelude(parts, profile, includeVideoPlayer);
-  const scripts = bootScripts(parts, profile, includeVideoPlayer);
+  const prelude = bootPrelude(parts, profile);
+  const scripts = bootScripts(parts, profile);
   const flag = (b) => (b ? 'true' : 'false');
   return [
     `PROFILE_NAME=${shellQuote(profile.name)}`,
@@ -981,7 +969,7 @@ module.exports = {
   // the profile
   PROFILES_DIRECTORY, DEFAULT_PROFILE_NAME, PARTS_MANIFEST_FILE, CORE_PART, ENTRY_PAGES, FORMS, SOURCES_POLICIES,
   HARNESS_PART, HARNESS_PAGE, META_TOOLS_PART, BOOT_DIRECTORY,
-  loadParts, checkRequiresGraph, partNames, resolveSelection, Profile, partShips, shippingParts, bootPrelude, bootScripts,
+  loadParts, checkRequiresGraph, partNames, resolveSelection, Profile, shippingParts, bootPrelude, bootScripts,
   bootFiles, availableProfileNames, resolve, profileNameFromArgv, shellAssignments,
   // the semantics build.js shares
   Refusal, PyCrash, inDirectory, py, readText, readBytes, writeText, writeAllSync, encodable, isfile, isdir, makedirs,

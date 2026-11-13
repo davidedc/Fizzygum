@@ -1633,7 +1633,7 @@ class StringWdgt extends ControllerWdgt
   # that must set text WITHOUT opening a settle -- because they run INSIDE another settle or a
   # LAYOUT PASS -- call this directly ("cores call cores"): structural re-titles (FrameWdgt.
   # _addNoSettle / _setEmptyWindowLabelNoSettle), layout code (AxisWdgt._reLayout's tick labels),
-  # menu re-ticking (MenuItemWdgt._applyRowReflectionNoSettle), per-frame updates (the video time labels). The
+  # menu re-ticking (MenuItemWdgt._applyRowReflectionNoSettle). The
   # change rides the enclosing settle / the frame's recalculateLayouts. The stringFieldWidget
   # decoding is setText-specific and stays in setText (these callers pass plain text, so the core
   # needs none).

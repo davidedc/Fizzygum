@@ -26,8 +26,7 @@
 // record's own data: URL and is dropped.
 //
 // IT READS ALL OF THE COMPILED SOURCES (lib/source-files.js compiledFiles: src/ and the tests repo's harness), every
-// part, shipped or not: both element holders live in the flag-gated
-// `video-player` part, which no default build carries and so no suite, rig or smoke runs.
+// part, shipped or not.
 // Method grouping is the shared buildSystem/lib/coffee-method-header.js (methodSpans), so a class-side key
 // bounds a method exactly as every other gate sees it.
 //

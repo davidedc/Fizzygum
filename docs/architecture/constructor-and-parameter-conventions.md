@@ -229,8 +229,7 @@ compile these files at all).
 `super` calls in subclasses pass the **old** positional signature and must change with the
 base, in one commit. Half a converted family is a broken build at best and a silently
 mis-bound field at worst. The button family (`ButtonWdgt` → `LabelButtonWdgt` →
-`MenuItemWdgt`/`MagnetWdgt`, plus `SimpleButtonWdgt`/`SimpleRectangularButtonWdgt`/
-`SimpleRasterImageButtonWdgt`) is one unit; so is the text family.
+`MenuItemWdgt`/`MagnetWdgt`, plus `SimpleButtonWdgt`/`SimpleRectangularButtonWdgt`) is one unit; so is the text family.
 
 ⚠ A **bare** `super` forwards `arguments` — what the CALLER passed — not this constructor's
 defaulted parameters. `Class.coffee`'s `_rewriteSuperCalls` rewrites it to
