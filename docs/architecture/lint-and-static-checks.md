@@ -895,7 +895,7 @@ passes unseen; resolution proves the named guard EXISTS, not that it covers the 
 entry that names nothing**, its companion rule: an allowlist, exemption, skip, fixture or install list — the three
 central `.txt` allowlists, `check-layering`'s caller allowlists and `USERLAND_FILES`, the stinks `exclude` prefixes,
 `BUILTINS` and its `PLATFORM_GLOBALS`, the menu sweep's six tables, the pin sweep's `FIXTURES`, the lazy-icons `SAMPLE`, the serialization rig's
-`DAMAGE_FIELDS` and `SWCANVAS_ONLY_CHECKS`, `_worldStateAuditExemptions`, `SWCanvasBrokenTests` — reports an entry
+`DAMAGE_FIELDS` and `SWCANVAS_ONLY_CHECKS`, `_worldStateAuditExemptions` — reports an entry
 that matched nothing this run and FAILS on it, as `STALE_ALLOWLIST_ENTRY <table> <entry> — <why>` (a gate token in the
 page, so the suite runners fail on it too). A stale entry is worse than none: it reads as a decision about something
 that does not exist, and one keyed by a NAME silently excuses whatever next reuses that name.

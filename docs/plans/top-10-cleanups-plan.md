@@ -96,7 +96,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 
 | # | Cleanup | Effort (estimate) | What goes away | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Orphans, closed plans, the stub header and the two vendoring homes landed 2026-11-13; the rest open |
+| 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Landed 2026-11-13 (the last part on the owner's rulings) |
 | 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Landed 2026-11-13 (`fg` into the Fizzygum repo; the hook and skills stay local, owner) |
 | 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Landed 2026-11-13; no trap fired |
@@ -190,6 +190,18 @@ now says `vendor/` is read through `parts.json`'s asset rows and the tools' `req
 Evidence: the hand-made build-tree fingerprint against the unchanged HEAD is byte-identical for all
 five profiles (`build.py` copies an asset by its basename, so no shipped path moved). Left of §1:
 `package.json`'s `main`, the empty `SWCanvasBrokenTests` lists (owner), and the `.psd` (owner).
+
+**Landed 2026-11-13 (the rest, on the owner's rulings).**
+- `package.json`'s `main`, which named a file that does not exist, went with §2's change (`npm test` runs
+  `./fg presuite`).
+- **`SWCanvasBrokenTests` is deleted, the owner ruling "delete the mechanism".** That is the class, the loader's filter
+  in `AutomatorLoader.testsList`, its stale-name report, and the runners' messages naming it. Its lists had been empty
+  since 2026-06-12, and "broken only under SWCanvas" is a distinction the suite no longer has: every suite page and
+  every reference is SWCanvas. The two declared ways to keep a test from playing stay: move its directory out of
+  `tests/`, or the test's own `pointerKinds` metadata with its required reason. The runners' checks that refuse a run
+  which would play nothing stay as they were.
+- **`assets/icons/xPointerImage4.psd` is deleted, the owner ruling.** It was the only design source in either repo,
+  the Photoshop original of the harness control panel's `xPointerImage.png`, and nothing read it. Git keeps it.
 
 ---
 
@@ -1087,3 +1099,5 @@ Do not commit or push without asking me.
 - [x] §10, found 2026-11-13 by the loop's U6 review (medium, reached by any clone without the tests repo): **a bare Fizzygum clone does not build.** The self-tests that prove a gate on a copy of the tests repo's code (`proveGate({ testsRepo: true })`) throw in `lib/planted-src.js` (`no tests repo at … to copy`), so the build stops at its first gate, while the docs said the tests-repo gates merely skip (CLAUDE.md now says what happens); and with the profile shipping tests the build still `ln -sfn`s `js/tests` at a repo that is not there. ⛔ owner: must a bare clone build (then those self-tests need a fixture tests repo of their own), or is the tests repo a requirement (then the build should say so up front)?
   — CLOSED 2026-11-13 (the owner ruled: the tests repo is a requirement): the build checks it up front, `sourceRoots` is
   a gate's one refusal, every absence branch a build could reach is gone (§10, the follow-up "Landed").
+- [x] §1 (the rest): repository hygiene — `package.json`'s `"main": "index.js"`, which does not exist (with §2's `test` script); the empty `SWCanvasBrokenTests` lists (⛔ owner); keep or delete the design source `assets/icons/xPointerImage4.psd` (⛔ owner). The orphans, closed plans, stub header and the two vendoring homes landed (the plan's `## BACKLOG ledger`)
+  — CLOSED 2026-11-13: `main` gone with §2; `SWCanvasBrokenTests` and the `.psd` deleted on the owner's rulings (§1, the third "Landed").

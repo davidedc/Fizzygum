@@ -192,7 +192,7 @@ push pop shift slice concat join filter map some every indexOf lastIndexOf inclu
 charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match search padStart repeat substring substr
 toString toFixed valueOf
 sqrt pow random atan2 sin cos asin exp log sign
-now parse stringify getOwnPropertyNames
+now parse stringify
 getContext measureText beginPath closePath stroke clip save restore translate scale setTransform drawImage getImageData createPattern
 preventDefault appendChild createElement getElementById getElementsByTagName querySelectorAll focus blur click
 then resolve all call test exec toDataURL
