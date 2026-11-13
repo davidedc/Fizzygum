@@ -23,10 +23,9 @@
 // nothing), which run the very command line -- the same argument parsing, the same refusals, a refusal THROWN with its
 // exact text -- and return the lines that command line would print.
 //
-// It keeps the semantics of the Python it was ported from (buildSystem/build.py, deleted in cleanups U5): the
-// arguments are parsed as Python's argparse parsed them (unique prefixes accepted, `--flag=value` and `--flag value`,
-// a value starting with `-` read as missing, its usage block wrapped at the terminal width), and every value, path,
-// order and byte follows lib/profile.js's reading of Python (its header says how).
+// Its command line is small and strict (THE ARGUMENTS below): anything it does not know is refused, exit 2, with a
+// one-line usage. Every path, order and byte it reads or writes follows lib/profile.js's reading of the input (its
+// header says how).
 
 const path = require('path');
 
@@ -36,9 +35,8 @@ const path = require('path');
 // loadParts) and the entry pages, whose SWCanvas column the shell needs to know whether to assemble
 // the SW boot bundle. One table, two readers.
 const profileLib = require('./lib/profile');
-const { ENTRY_PAGES, loadParts, Refusal, inDirectory, py, readText, readBytes, writeText, writeAllSync, isfile, isdir,
-  makedirs, copyfile, glob, pathJoin, pathBasename, pathDirname, toStdout, toStderr, finishCommandLine, encodable } = profileLib;
-const fs = require('fs');
+const { loadParts, partNames, Refusal, inDirectory, readText, readBytes, writeFile, copyData, makeDirectory, isFile, isDirectory,
+  filesIn, byCodePoint, finishCommandLine } = profileLib;
 
 // GLOBALS
 const INPUT_HTML_FILE = 'src/index.html';
@@ -85,7 +83,7 @@ const IS_CLASS = /(?:^|(?<=\n))class +([\p{L}\p{N}_]+)/u;
 // `world.pinouts?.…`), which buildSystem/check-part-edges.js requires.
 
 // ================================================================================================================
-// THE ARGUMENTS -- Python's argparse, for this one parser
+// THE ARGUMENTS
 // ================================================================================================================
 // THE FLAVOUR: --profile, a profile name, resolved by lib/profile.js against buildSystem/profiles/<name>.json.
 // It replaced the --homepage and --notests flags (arc 5): a flavour is data, and adding one is
@@ -108,252 +106,57 @@ const IS_CLASS = /(?:^|(?<=\n))class +([\p{L}\p{N}_]+)/u;
 // --src=DIR / --tests-repo=DIR / --parts=FILE, with a listing only: list the partition of ANOTHER src tree or
 // tests repo, or by another parts.json -- a static gate's bite-proof hands its gate a planted copy
 // (buildSystem/lib/planted-src.js), and the gates that read this list must read the copy's. A part directory under `src`
-// is globbed under the --src= DIR instead, one under `../Fizzygum-tests` under the --tests-repo= DIR; every path is still
+// is listed under the --src= DIR instead, one under `../Fizzygum-tests` under the --tests-repo= DIR; every path is still
 // printed as parts.json spells it (`src/...`, `../Fizzygum-tests/...`), so a gate maps it back onto the tree it was
 // handed. An empty or missing value is refused.
-const ACTIONS = [
-  { strings: ['-h', '--help'], dest: 'help', flag: true, help: 'show this help message and exit' },
-  { strings: ['--profile'], dest: 'profile', flag: false, metavar: 'PROFILE', initial: profileLib.DEFAULT_PROFILE_NAME },
-  { strings: ['--noSyntaxCheck'], dest: 'noSyntaxCheck', flag: true },
-  { strings: ['--list-shippable'], dest: 'listShippable', flag: true },
-  { strings: ['--list-boot'], dest: 'listBoot', flag: true },
-  { strings: ['--src'], dest: 'src', flag: false, metavar: 'SRC', initial: null },
-  { strings: ['--tests-repo'], dest: 'testsRepo', flag: false, metavar: 'TESTSREPO', initial: null },
-  { strings: ['--parts'], dest: 'parts', flag: false, metavar: 'PARTS', initial: null },
-];
-const OPTION_ACTIONS = new Map(ACTIONS.flatMap((action) => action.strings.map((s) => [s, action])));
-// argparse names the program after the file it was started from
-const PROG = path.basename(__filename);
+// -h / --help prints the usage line and exits 0, building nothing.
+//
+// THE RULES: each option at most once -- a second `--profile` is refused rather than overriding the first, since
+// lib/profile.js's --shell, which reads the same arg list for build_it_please.sh, takes the first; an option taking a
+// value takes it as `--opt=value` or as the next argument, which may not start with `-`; a flag takes no value; an
+// option is spelled whole. Anything else -- an unknown option, a positional argument -- is refused, exit 2, with the
+// usage line.
+const VALUE_OPTIONS = new Map([['--profile', 'profile'], ['--src', 'src'], ['--tests-repo', 'testsRepo'], ['--parts', 'parts']]);
+const FLAG_OPTIONS = new Map([['--noSyntaxCheck', 'noSyntaxCheck'], ['--list-shippable', 'listShippable'], ['--list-boot', 'listBoot']]);
+const USAGE = 'usage: build.js [--profile NAME] [--noSyntaxCheck] '
+  + '[--list-shippable | --list-boot [--src DIR] [--tests-repo DIR] [--parts FILE]]';
 
-// The help ends parsing with exit 0; anything else argparse refuses ends it with exit 2.
-class HelpShown extends Error {}
-const parserError = (message, columns) => new Refusal(usageText(columns).replace(/\n\n$/, '\n') + `${PROG}: error: ${message}`, 2);
-const argumentError = (action, message, columns) => parserError(`argument ${action.strings.join('/')}: ${message}`, columns);
-
-// a value written `-` then digits (or `-.5`) is a value, not an option: Python's `\d` (any script's digits) and its
-// `$`, which also matches before a final newline
-const NEGATIVE_NUMBER = /^-\p{Nd}+\n?$|^-\p{Nd}*\.\p{Nd}+\n?$/u;
-const codePoints = (s) => [...s];
-
-// shutil.get_terminal_size().columns: COLUMNS when it is a positive integer, else the size of the terminal stdout is
-// (when it is one), else 80. `int()` reads COLUMNS: surrounding whitespace, a sign, `_` between digits, any script's
-// decimal digits.
-const PY_SPACE = /[\t\n\v\f\r\x1c-\x1f \x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/u;
-const DECIMAL = /\p{Nd}/u;
-function pyIntOrZero(text) {
-  if (text === undefined) return 0;
-  const chars = codePoints(text);
-  let a = 0, b = chars.length;
-  while (a < b && PY_SPACE.test(chars[a])) a++;
-  while (b > a && PY_SPACE.test(chars[b - 1])) b--;
-  let sign = 1;
-  if (a < b && (chars[a] === '+' || chars[a] === '-')) { sign = chars[a] === '-' ? -1 : 1; a++; }
-  let digits = '';
-  for (let i = a; i < b; i++) {
-    const ch = chars[i];
-    if (ch === '_' && i > a && i < b - 1 && DECIMAL.test(chars[i - 1]) && DECIMAL.test(chars[i + 1])) continue;
-    if (!DECIMAL.test(ch)) return 0;
-    // a decimal digit's value: its offset in its run of decimal digits (each script's are 0..9, contiguous, in order)
-    let start = ch.codePointAt(0);
-    while (DECIMAL.test(String.fromCodePoint(start - 1))) start--;
-    digits += String((ch.codePointAt(0) - start) % 10);
-  }
-  return digits ? sign * Number(digits) : 0;
-}
-function terminalColumns(sink) {
-  let columns = pyIntOrZero(process.env.COLUMNS);
-  const lines = pyIntOrZero(process.env.LINES);
-  if (columns <= 0 || lines <= 0) {
-    const size = sink.terminalColumns || 80;
-    if (columns <= 0) columns = size;
-  }
-  return columns;
-}
-
-// HelpFormatter (width = columns - 2): the usage block, wrapped as argparse wraps it
-function usageText(columns) {
-  const textWidth = columns - 2;
-  const prefix = 'usage: ';
-  const optParts = ACTIONS.map((action) => '[' + action.strings[0] + (action.flag ? '' : ' ' + action.metavar) + ']');
-  const usage = PROG + ' ' + optParts.join(' ');
-  if (prefix.length + usage.length <= textWidth) return prefix + usage + '\n\n';
-  const getLines = (parts, indent, linePrefix) => {
-    const lines = [];
-    let line = [];
-    let lineLen = linePrefix !== undefined ? linePrefix.length - 1 : indent.length - 1;
-    for (const part of parts) {
-      if (lineLen + 1 + part.length > textWidth && line.length) {
-        lines.push(indent + line.join(' '));
-        line = [];
-        lineLen = indent.length - 1;
-      }
-      line.push(part);
-      lineLen += part.length + 1;
-    }
-    if (line.length) lines.push(indent + line.join(' '));
-    if (linePrefix !== undefined) lines[0] = lines[0].slice(indent.length);
-    return lines;
-  };
-  let lines;
-  if (prefix.length + PROG.length <= 0.75 * textWidth) {
-    // a short prog: the options follow it, wrapped under it
-    lines = getLines([PROG, ...optParts], ' '.repeat(prefix.length + PROG.length + 1), prefix);
-  } else {
-    // a long prog: on a line of its own, the options wrapped below
-    const indent = ' '.repeat(prefix.length);
-    lines = [PROG, ...getLines(optParts, indent)];
-  }
-  return prefix + lines.join('\n') + '\n\n';
-}
-
-// ... and the whole help (-h): the usage block, then every option, its help text wrapped at the help column
-function helpText(columns) {
-  const width = columns - 2;
-  const maxHelpPosition = Math.min(24, Math.max(width - 20, 4));
-  const invocation = (action) => (action.flag ? action.strings.join(', ') : action.strings.map((s) => s + ' ' + action.metavar).join(', '));
-  const actionMaxLength = Math.max(...ACTIONS.map((action) => invocation(action).length + 2));
-  const helpPosition = Math.min(actionMaxLength + 2, maxHelpPosition);
-  const helpWidth = Math.max(width - helpPosition, 11);
-  const actionWidth = helpPosition - 2 - 2;
-  // textwrap.wrap on single-spaced words (the help's words are all shorter than the narrowest help width, 11)
-  const wrap = (text, w) => {
-    const lines = [];
-    let line = '';
-    for (const word of text.split(' ')) {
-      if (line && line.length + 1 + word.length > w) { lines.push(line); line = word; } else line = line ? line + ' ' + word : word;
-    }
-    if (line) lines.push(line);
-    return lines;
-  };
-  let items = '';
-  for (const action of ACTIONS) {
-    const header = invocation(action);
-    if (!action.help) { items += '  ' + header + '\n'; continue; }
-    let indentFirst;
-    if (header.length <= actionWidth) { items += '  ' + header.padEnd(actionWidth) + '  '; indentFirst = 0; }
-    else { items += '  ' + header + '\n'; indentFirst = helpPosition; }
-    const helpLines = wrap(action.help, helpWidth);
-    items += ' '.repeat(indentFirst) + helpLines[0] + '\n';
-    for (const line of helpLines.slice(1)) items += ' '.repeat(helpPosition) + line + '\n';
-  }
-  const help = (usageText(columns) + '\noptions:\n' + items + '\n').replace(/\n\n\n+/g, '\n\n');
-  return help.replace(/^\n+|\n+$/g, '') + '\n';
-}
-
-// argparse's parse_args: the arguments, or a refusal (exit 2); -h writes the help and ends with exit 0
-function parseArgs(argv, sink) {
-  const columns = terminalColumns(sink);
-  const ns = {};
-  for (const action of ACTIONS) if (action.dest !== 'help') ns[action.dest] = action.flag ? false : action.initial;
-
-  const getOptionTuples = (optionString) => {
-    const result = [];
-    if (optionString[0] === '-' && optionString[1] === '-') {
-      const eq = optionString.indexOf('=');
-      const optionPrefix = eq < 0 ? optionString : optionString.slice(0, eq);
-      const explicitArg = eq < 0 ? undefined : optionString.slice(eq + 1);
-      for (const [s, action] of OPTION_ACTIONS) if (s.startsWith(optionPrefix)) result.push([action, s, explicitArg]);
+// The arguments, or a refusal (exit 2). `help` set means: print USAGE, do nothing else.
+function parseArgs(argv) {
+  const misuse = (problem) => new Refusal(`${problem}\n${USAGE}`, 2);
+  if (argv.includes('-h') || argv.includes('--help')) return { help: true };
+  const args = { help: false, profile: profileLib.DEFAULT_PROFILE_NAME, noSyntaxCheck: false, listShippable: false, listBoot: false,
+    src: undefined, testsRepo: undefined, parts: undefined };
+  const given = new Set();
+  for (let index = 0; index < argv.length; index++) {
+    const argument = argv[index];
+    const equals = argument.startsWith('--') ? argument.indexOf('=') : -1;
+    const option = equals < 0 ? argument : argument.slice(0, equals);
+    if (!VALUE_OPTIONS.has(option) && !FLAG_OPTIONS.has(option)) throw misuse(`unknown argument '${argument}'`);
+    if (given.has(option)) throw misuse(`${option} is given twice`);
+    given.add(option);
+    if (FLAG_OPTIONS.has(option)) {
+      if (equals >= 0) throw misuse(`${option} takes no value`);
+      args[FLAG_OPTIONS.get(option)] = true;
+    } else if (equals >= 0) {
+      args[VALUE_OPTIONS.get(option)] = argument.slice(equals + 1);
     } else {
-      const chars = codePoints(optionString);
-      const shortPrefix = chars.slice(0, 2).join(''), shortExplicitArg = chars.slice(2).join('');
-      for (const [s, action] of OPTION_ACTIONS) {
-        if (s === shortPrefix) result.push([action, s, shortExplicitArg]);
-        else if (s.startsWith(optionString)) result.push([action, s, undefined]);
-      }
+      const value = argv[index + 1];
+      if (value === undefined || value.startsWith('-')) throw misuse(`${option} needs a value`);
+      args[VALUE_OPTIONS.get(option)] = value;
+      index++;
     }
-    return result;
-  };
-  // an argument that reads as an option: [action or null (an unknown one), the option string, its `=value` or undefined]
-  const parseOptional = (arg) => {
-    if (!arg || arg[0] !== '-') return undefined;
-    if (OPTION_ACTIONS.has(arg)) return [OPTION_ACTIONS.get(arg), arg, undefined];
-    if (arg.length === 1) return undefined;
-    const eq = arg.indexOf('=');
-    if (eq >= 0 && OPTION_ACTIONS.has(arg.slice(0, eq))) return [OPTION_ACTIONS.get(arg.slice(0, eq)), arg.slice(0, eq), arg.slice(eq + 1)];
-    const tuples = getOptionTuples(arg);
-    if (tuples.length > 1) throw parserError(`ambiguous option: ${arg} could match ${tuples.map((t) => t[1]).join(', ')}`, columns);
-    if (tuples.length === 1) return tuples[0];
-    if (NEGATIVE_NUMBER.test(arg)) return undefined;
-    if (arg.includes(' ')) return undefined;
-    return [null, arg, undefined];
-  };
-
-  // which arguments are options ('O') and which are values ('A'); everything after `--` is a value
-  const optionAt = new Map();
-  let pattern = '';
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--') { pattern += '-' + 'A'.repeat(argv.length - i - 1); break; }
-    const tuple = parseOptional(argv[i]);
-    if (tuple === undefined) pattern += 'A'; else { optionAt.set(i, tuple); pattern += 'O'; }
   }
 
-  const takeAction = (action, args) => {
-    if (action.dest === 'help') { sink.stdout(helpText(columns)); throw new HelpShown(); }
-    ns[action.dest] = action.flag ? true : args[0];
-  };
-  const extras = [];
-  // one option, and its value: an option taking a value takes exactly the next argument, and only if that is no option
-  const consumeOptional = (startIndex) => {
-    let [action, optionString, explicitArg] = optionAt.get(startIndex);
-    const actionTuples = [];
-    let stop;
-    for (;;) {
-      if (action === null) { extras.push(argv[startIndex]); return startIndex + 1; }
-      if (explicitArg !== undefined) {
-        const argCount = action.flag ? 0 : 1;
-        if (argCount === 0 && optionString[1] !== '-' && explicitArg !== '') {
-          // `-hx`: a single-dash flag followed by more single-letter flags
-          actionTuples.push([action, []]);
-          const chars = codePoints(explicitArg);
-          const nextOption = optionString[0] + chars[0];
-          if (!OPTION_ACTIONS.has(nextOption)) throw argumentError(action, `ignored explicit argument ${py.repr(explicitArg)}`, columns);
-          action = OPTION_ACTIONS.get(nextOption);
-          optionString = nextOption;
-          explicitArg = chars.slice(1).join('') || undefined;
-        } else if (argCount === 1) {
-          stop = startIndex + 1;
-          actionTuples.push([action, [explicitArg]]);
-          break;
-        } else throw argumentError(action, `ignored explicit argument ${py.repr(explicitArg)}`, columns);
-      } else {
-        const start = startIndex + 1;
-        let argCount = 0;
-        if (!action.flag) {
-          if (pattern[start] !== 'A') throw argumentError(action, 'expected one argument', columns);
-          argCount = 1;
-        }
-        stop = start + argCount;
-        actionTuples.push([action, argv.slice(start, stop)]);
-        break;
-      }
-    }
-    for (const [action, args] of actionTuples) takeAction(action, args);
-    return stop;
-  };
-
-  const optionIndices = [...optionAt.keys()];
-  const maxOptionIndex = optionIndices.length ? Math.max(...optionIndices) : -1;
-  let startIndex = 0;
-  while (startIndex <= maxOptionIndex) {
-    const nextOptionIndex = Math.min(...optionIndices.filter((index) => index >= startIndex));
-    if (!optionAt.has(startIndex)) {
-      extras.push(...argv.slice(startIndex, nextOptionIndex));
-      startIndex = nextOptionIndex;
-    }
-    startIndex = consumeOptional(startIndex);
+  // which arguments go together
+  if (args.listShippable && args.listBoot) throw misuse('--list-shippable and --list-boot are two listings: ask for one');
+  if ((args.src !== undefined || args.testsRepo !== undefined || args.parts !== undefined) && !(args.listShippable || args.listBoot)) {
+    throw misuse('--src, --tests-repo and --parts only qualify --list-shippable and --list-boot');
   }
-  extras.push(...argv.slice(startIndex));
-  if (extras.length) throw parserError(`unrecognized arguments: ${extras.join(' ')}`, columns);
-
-  // this build's own rules about which arguments go together
-  if (ns.listShippable && ns.listBoot) throw parserError('--list-shippable and --list-boot are two listings: ask for one', columns);
-  if ((ns.src !== null || ns.testsRepo !== null || ns.parts !== null) && !(ns.listShippable || ns.listBoot)) {
-    throw parserError('--src=, --tests-repo= and --parts= only qualify --list-shippable and --list-boot', columns);
-  }
-  if (ns.src !== null && (!ns.src || !isdir(ns.src))) throw parserError(`--src= names no directory: ${py.repr(ns.src)}`, columns);
-  if (ns.testsRepo !== null && (!ns.testsRepo || !isdir(ns.testsRepo))) throw parserError(`--tests-repo= names no directory: ${py.repr(ns.testsRepo)}`, columns);
-  if (ns.parts !== null && (!ns.parts || !isfile(ns.parts))) throw parserError(`--parts= names no file: ${py.repr(ns.parts)}`, columns);
-  return ns;
+  if (args.src !== undefined && !isDirectory(args.src)) throw misuse(`--src names no directory: '${args.src}'`);
+  if (args.testsRepo !== undefined && !isDirectory(args.testsRepo)) throw misuse(`--tests-repo names no directory: '${args.testsRepo}'`);
+  if (args.parts !== undefined && !isFile(args.parts)) throw misuse(`--parts names no file: '${args.parts}'`);
+  return args;
 }
 
 // ================================================================================================================
@@ -368,7 +171,7 @@ function generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas, eagerAllParts
 
   if (!content.includes(BOOT_SCRIPTS_PLACEHOLDER)) {
     throw new Refusal(
-      'build.js: ' + srcHTMLFile + ' has no ' + BOOT_SCRIPTS_PLACEHOLDER
+      srcHTMLFile + ' has no ' + BOOT_SCRIPTS_PLACEHOLDER
       + ' placeholder — an entry page without a backend preset would load one'
       + ' engine and drive the other.');
   }
@@ -381,7 +184,7 @@ function generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas, eagerAllParts
     + (eagerAllParts ? 'true' : 'false') + ';</script>\n'
     + '\t\t<script type="text/javascript" src="js/' + bundleFileName + '"></script>';
 
-  writeText(destHTMLFile, content.split(BOOT_SCRIPTS_PLACEHOLDER).join(bootScripts));
+  writeFile(destHTMLFile, content.split(BOOT_SCRIPTS_PLACEHOLDER).join(bootScripts));
 }
 
 const TESTS_REPO_PREFIX = '../Fizzygum-tests';
@@ -401,38 +204,37 @@ const TESTS_REPO_PREFIX = '../Fizzygum-tests';
 // byte-comparable against its predecessor.
 function partitionFiles(parts, srcRoot, testsRepoRoot) {
   const partOfFile = new Map();
-  for (const partName of py.keys(parts)) {
-    if (partName.startsWith('//')) continue;
-    for (const eachDir of py.iter(py.index(parts[partName], 'dirs'))) {
-      // another src tree (--src) or tests repo (--tests-repo): a dir under it is globbed there, and named as
+  for (const partName of partNames(parts)) {
+    for (const eachDir of parts[partName].dirs) {
+      // another src tree (--src) or tests repo (--tests-repo): a dir under it is listed there, and named as
       // parts.json spells it, src/... or ../Fizzygum-tests/..., as always
       let spelled, root;
       for (const [prefix, given] of [['src', srcRoot], [TESTS_REPO_PREFIX, testsRepoRoot]]) {
-        if (given !== null && (eachDir === prefix || py.startswith(eachDir, prefix + '/'))) {
+        if (given !== undefined && (eachDir === prefix || eachDir.startsWith(prefix + '/'))) {
           spelled = prefix;
           root = given.replace(/\/+$/, '');
         }
       }
-      const physical = root ? root + eachDir.slice(spelled.length) : py.mustStr(eachDir, 'a part directory');
-      for (const found of glob(physical + '/*.coffee')) {
-        const filename = root ? spelled + codePoints(found).slice(codePoints(root).length).join('') : found;
+      const physical = root ? root + eachDir.slice(spelled.length) : eachDir;
+      for (const found of filesIn(physical, '.coffee')) {
+        const filename = root ? spelled + found.slice(root.length) : found;
         if (partOfFile.has(filename)) {
-          throw new Refusal(`ERROR: ${filename} is claimed by two parts: ${partOfFile.get(filename)} and ${partName}. Every directory belongs to `
-            + `exactly one part -- see ${profileLib.PARTS_MANIFEST_FILE}.`, 1, 'stdout');
+          throw new Refusal(`${filename} is claimed by two parts: ${partOfFile.get(filename)} and ${partName}. Every directory belongs to `
+            + `exactly one part -- see ${profileLib.PARTS_MANIFEST_FILE}.`);
         }
         partOfFile.set(filename, partName);
       }
     }
   }
-  return [py.sorted(partOfFile.keys()), partOfFile];
+  return [[...partOfFile.keys()].sort(byCodePoint), partOfFile];
 }
 
 // A declared-but-missing file is a HARD failure, not a warning: a payload silently not written
 // is the failure mode this whole mechanism replaced (the tree looks fine, and a page 404s for an
 // <img> or an injected script at runtime).
 function requirePartFile(partName, sourcePath, kind) {
-  if (!isfile(sourcePath)) {
-    throw new Refusal(`ERROR: part '${partName}' declares a ${kind} that does not exist: ${py.str(sourcePath)} (buildSystem/parts.json)`, 1, 'stdout');
+  if (!isFile(sourcePath)) {
+    throw new Refusal(`part '${partName}' declares ${kind} that does not exist: ${sourcePath} (buildSystem/parts.json)`);
   }
 }
 
@@ -447,34 +249,29 @@ function requirePartFile(partName, sourcePath, kind) {
 function copyPartAssets(parts, profile, sink) {
   let copiedAssets = 0;
   let builtPayloads = 0;
-  for (const partName of py.keys(parts)) {
-    if (partName.startsWith('//')) continue;
+  for (const partName of partNames(parts)) {
     const part = parts[partName];
     if (!profile.selectsPart(partName)) continue;
 
-    for (const entry of py.iter(py.get(part, 'assets', []))) {
-      const [sourcePath, destinationDirectory] = py.unpack2(entry);
-      requirePartFile(partName, sourcePath, 'asset');
-      const fullDestinationDirectory = pathJoin('../Fizzygum-builds/latest', destinationDirectory);
-      makedirs(fullDestinationDirectory);
-      copyfile(sourcePath, pathJoin(fullDestinationDirectory, pathBasename(sourcePath)));
+    for (const [sourcePath, destinationDirectory] of part.assets ?? []) {
+      requirePartFile(partName, sourcePath, 'an asset');
+      const fullDestinationDirectory = path.join(OUTPUT_HTML_DIRECTORY, destinationDirectory);
+      makeDirectory(fullDestinationDirectory);
+      copyData(sourcePath, path.join(fullDestinationDirectory, path.basename(sourcePath)));
       copiedAssets += 1;
     }
 
     // Vendor payloads: concatenate the pieces, each followed by a newline-semicolon separator
     // that terminates the unit and defends against ASI between them (the same separator the
     // boot-bundle assembly uses).
-    for (const entry of py.iter(py.get(part, 'vendor', []))) {
-      const outputPath = pathJoin('../Fizzygum-builds/latest', py.index(entry, 'out'));
-      makedirs(pathDirname(outputPath));
-      const payload = fs.openSync(profileLib.at(outputPath), 'w');
-      try {
-        for (const piece of py.iter(py.index(entry, 'concat'))) {
-          requirePartFile(partName, piece, 'vendor payload piece');
-          writeAllSync(payload, readBytes(py.mustStr(piece, 'open')));
-          writeAllSync(payload, Buffer.from('\n;\n'));
-        }
-      } finally { fs.closeSync(payload); }
+    for (const { out, concat } of part.vendor ?? []) {
+      const pieces = concat.map((piece) => {
+        requirePartFile(partName, piece, 'a vendor payload piece');
+        return readBytes(piece);
+      });
+      const outputPath = path.join(OUTPUT_HTML_DIRECTORY, out);
+      makeDirectory(path.dirname(outputPath));
+      writeFile(outputPath, Buffer.concat(pieces.flatMap((piece) => [piece, Buffer.from('\n;\n')])));
       builtPayloads += 1;
     }
   }
@@ -484,12 +281,12 @@ function copyPartAssets(parts, profile, sink) {
 
 // The subset of the partition this flavour actually ships, in emission order.
 function shippedFiles(parts, partOfFile, orderedFilenames, profile) {
-  const excluded = new Set(py.keys(parts).filter((name) => !name.startsWith('//')
-    && !profile.selectsPart(name)));
+  const excluded = new Set(partNames(parts).filter((name) => !profile.selectsPart(name)));
   return orderedFilenames.filter((f) => !excluded.has(partOfFile.get(f)));
 }
 
-// a string's length in CODE POINTS (a batch is cut by the length Python measured)
+// a string's length in CODE POINTS: a batch is cut once its text passes a length in code points, so this measure
+// decides which source opens each batch file
 function codePointLength(s) {
   let n = s.length;
   for (let i = 0; i < s.length - 1; i++) {
@@ -499,12 +296,29 @@ function codePointLength(s) {
   return n;
 }
 
+// THE PARTS MANIFEST'S SPELLING, fixed byte for byte (boot reads it as CoffeeScript, and a build is compared with its
+// predecessor by its bytes): every object's keys in code point order, `, ` between items and `: ` after a key, and
+// every character outside printable ASCII escaped -- as a backslash, `u` and four lowercase hex digits, one beyond
+// U+FFFF as its two UTF-16 halves. It spells what the manifest holds: Maps, arrays, strings and booleans.
+function manifestJson(value) {
+  if (value instanceof Map) {
+    return '{' + [...value.keys()].sort(byCodePoint).map((key) => asciiJsonString(key) + ': ' + manifestJson(value.get(key))).join(', ') + '}';
+  }
+  if (Array.isArray(value)) return '[' + value.map(manifestJson).join(', ') + ']';
+  if (typeof value === 'string') return asciiJsonString(value);
+  if (typeof value === 'boolean') return String(value);
+  throw new Error(`build.js: the parts manifest holds a value it has no spelling for: ${typeof value}`);
+}
+// JSON.stringify already escapes every control character; what it leaves raw outside printable ASCII is DEL and
+// everything above it, each UTF-16 unit of which is escaped here
+const asciiJsonString = (s) => JSON.stringify(s).replace(/[^ -~]/g, (unit) => '\\u' + unit.charCodeAt(0).toString(16).padStart(4, '0'));
+
 function main(args, sink) {
   const profile = profileLib.resolve(args.profile);
-  const parts = args.parts ? loadParts(args.parts) : loadParts();
+  const parts = loadParts(args.parts);
   // --list-boot: the parts' declared src/boot files (lib/profile.js bootFiles checks each), then stop
   if (args.listBoot) {
-    for (const [filename, part, kind] of profileLib.bootFiles(parts, args.src, args.parts || profileLib.PARTS_MANIFEST_FILE)) {
+    for (const [filename, part, kind] of profileLib.bootFiles(parts, args.src, args.parts ?? profileLib.PARTS_MANIFEST_FILE)) {
       sink.stdout(filename + '\t' + part + '\t' + kind + '\n');
     }
     return;
@@ -586,7 +400,7 @@ function main(args, sink) {
   const writeBatch = (partName) => {
     if (!batchesOfPart.has(partName)) batchesOfPart.set(partName, []);
     const basename = batchBaseName(partName, batchesOfPart.get(partName).length);
-    writeText('../Fizzygum-builds/latest/js/coffeescript-sources/' + basename + '.js', accumulator.get(partName).text);
+    writeFile('../Fizzygum-builds/latest/js/coffeescript-sources/' + basename + '.js', accumulator.get(partName).text);
     batchesOfPart.get(partName).push(basename);
     accumulator.set(partName, { text: '', length: 0 });
   };
@@ -632,21 +446,22 @@ function main(args, sink) {
       if (content.includes('＂') || content.includes('⧹') || content.includes('⤶')) {
         // a refusal, never a stop: ending this script with status 0 half-way through
         // the batches would let the build stamp a tree with no parts manifest and no entry pages
-        throw new Refusal("ERROR: I'm replacing a special character with a character that is already present in " + filename + '. Likely to be a problem.');
+        throw new Refusal(filename + ' already holds ＂, ⧹ or ⤶ -- the characters a source\'s ", \\ and newlines are '
+          + 'written as -- so its text would not come back as it was. Likely to be a problem.');
       }
 
       const escapedContent = content.split('"').join('＂').split('\\').join('⧹').split('\n').join('⤶');
 
       // the vault is keyed by CLASS name, which is the file's basename
       // (one class per file, filename == class name -- see the repo CLAUDE.md)
-      const sourceName = windowsBasename(filename).split('.coffee').join('');
+      const sourceName = path.basename(filename).split('.coffee').join('');
       const escapedContentWithDeclaration = STRING_BLOCK(sourceName, escapedContent, partOfFile.get(filename));
 
       // Class is the one source loaded individually and EARLY, because the meta-system
       // has to exist before any batch's contents can be ingested (see globalFunctions'
       // boot sequence and its META_SYSTEM_SOURCES). Every other source travels in a batch only.
       if (sourceName === 'Class') {
-        writeText('../Fizzygum-builds/latest/js/coffeescript-sources/' + sourceName + '-source.js', escapedContentWithDeclaration);
+        writeFile('../Fizzygum-builds/latest/js/coffeescript-sources/' + sourceName + '-source.js', escapedContentWithDeclaration);
       }
 
       // pile up the sources into this part's batch, and save the batch when it is big enough
@@ -661,7 +476,7 @@ function main(args, sink) {
   }
 
   // flush each part's remainder (parts are emitted in a stable order so the manifest is stable)
-  for (const eachPart of py.sorted(accumulator.keys())) {
+  for (const eachPart of [...accumulator.keys()].sort(byCodePoint)) {
     if (accumulator.get(eachPart).text !== '') writeBatch(eachPart);
   }
 
@@ -682,28 +497,28 @@ function main(args, sink) {
   // unloaded part). So the class->part map has to be BUILD data, here, present from boot.
   // Core's list is deliberately omitted: it is ~430 names nothing would read, and "no part owns
   // this name" already means "core, or not ours".
-  // (Written as Python's json.dumps(manifest, sort_keys=True) wrote it: lib/profile.js py.dumps.)
+  // (Spelled by manifestJson, which puts every key in code point order whatever order it is set in here.)
   const manifest = new Map();
-  for (const eachPart of py.sorted(batchesOfPart.keys())) {
+  for (const eachPart of [...batchesOfPart.keys()].sort(byCodePoint)) {
     const partSpec = parts[eachPart];
     const entry = new Map([
       ['batches', batchesOfPart.get(eachPart)],
-      ['eager', py.get(partSpec, 'eager', true)],
+      ['eager', partSpec.eager ?? true],
       // The parts this one's code names. PartsRegistry.ensureLoaded loads them FULLY FIRST,
       // which is the only thing that orders a cross-part `extends` -- a door naming several
       // parts goes through Promise.all and orders nothing. Emitted for every part, not just
       // lazy ones, because the manifest is also what a reader consults to understand the
       // shape; it costs a few bytes and an absent key would read as "none" rather than "n/a".
-      ['requires', py.get(partSpec, 'requires', [])],
+      ['requires', partSpec.requires ?? []],
       // Only the OUTPUT path reaches the runtime: PartsRegistry consumes each vendor entry as
       // a URL to inject (loadJSFilePromise), so how the payload was assembled from vendored
       // pieces is build-time detail that must not leak into the manifest.
-      ['vendor', py.iter(py.get(partSpec, 'vendor', [])).map((eachVendor) => py.index(eachVendor, 'out'))],
+      ['vendor', (partSpec.vendor ?? []).map((eachVendor) => eachVendor.out)],
     ]);
-    if (eachPart !== 'core') entry.set('classes', py.sorted(classesOfPart.get(eachPart) || []));
+    if (eachPart !== 'core') entry.set('classes', [...(classesOfPart.get(eachPart) || [])].sort(byCodePoint));
     manifest.set(eachPart, entry);
   }
-  writeText('../Fizzygum-builds/latest/delete_me/partsManifest.coffee', 'window.FIZZYGUM_PARTS = ' + py.dumps(manifest) + '\n');
+  writeFile('../Fizzygum-builds/latest/delete_me/partsManifest.coffee', 'window.FIZZYGUM_PARTS = ' + manifestJson(manifest) + '\n');
 
   // 4) each SHIPPING part's non-source assets. These used to be unconditional `cp`s in
   // build_it_please.sh followed by a per-flavour prune list in its --homepage block: the harness's
@@ -717,48 +532,29 @@ function main(args, sink) {
   // boot bundle is assembled for it and no font assets travel with it — both of those follow, in
   // build_it_please.sh, from "does any shipped entry render through SWCanvas".
   for (const [pageFileName, useSWCanvas, eagerAllParts] of profile.entries) {
-    generateEntryPage(INPUT_HTML_FILE, pathJoin(OUTPUT_HTML_DIRECTORY, pageFileName), useSWCanvas, eagerAllParts);
+    generateEntryPage(INPUT_HTML_FILE, path.join(OUTPUT_HTML_DIRECTORY, pageFileName), useSWCanvas, eagerAllParts);
   }
-}
-
-// ntpath.basename: the name after the last `/` or `\`, past a drive (`c:`) or a UNC share (`//host/share`) -- how the
-// vault has always named a source from its path
-function windowsBasename(p) {
-  const norm = p.split('/').join('\\');
-  let rest = p;
-  if (codePoints(p).length >= 2) {
-    if (norm.slice(0, 2) === '\\\\' && norm[2] !== '\\') {
-      const index = norm.indexOf('\\', 2);
-      if (index !== -1) {
-        let index2 = norm.indexOf('\\', index + 1);
-        if (index2 !== index + 1) {
-          if (index2 === -1) index2 = p.length;
-          rest = p.slice(index2);
-        }
-      }
-    } else if (codePoints(norm)[1] === ':') rest = codePoints(p).slice(2).join('');
-  }
-  let i = rest.length;
-  while (i && rest[i - 1] !== '/' && rest[i - 1] !== '\\') i--;
-  return rest.slice(i);
 }
 
 // ================================================================================================================
 // THE COMMAND LINE, and the listings a gate requires
 // ================================================================================================================
 
-// One run of the command line, writing through `sink` ({ stdout(text), stderr(text), terminalColumns }) → its exit
-// code. A refusal is written to its stream; a crash (lib/profile.js PyCrash, or any other error) is thrown.
+// One run of the command line, writing through `sink` ({ stdout(text), stderr(text) }) → its exit code. A refusal is
+// written to stderr after the program's name; anything else (a fault build.js did not foresee) is thrown.
 function run(argv, sink, listingOnly) {
   try {
-    const args = parseArgs(argv, sink);
+    const args = parseArgs(argv);
+    if (args.help) {
+      sink.stdout(USAGE + '\n');
+      return 0;
+    }
     if (listingOnly && !args.listShippable && !args.listBoot) throw new Error('build.js: a listing was asked for and none was parsed');
     main(args, sink);
     return 0;
   } catch (error) {
-    if (error instanceof HelpShown) return 0;
     if (error instanceof Refusal) {
-      sink[error.stream](error.message + '\n');
+      sink.stderr(`build.js: ${error.message}\n`);
       return error.exitCode;
     }
     throw error;
@@ -772,7 +568,7 @@ function run(argv, sink, listingOnly) {
 // after it can make this a build.
 function listing(flag, args = [], { cwd } = {}) {
   const out = [], err = [];
-  const sink = { stdout: (text) => out.push(toStdout(text)), stderr: (text) => err.push(toStderr(text)), terminalColumns: undefined };
+  const sink = { stdout: (text) => out.push(text), stderr: (text) => err.push(text) };
   const code = inDirectory(cwd, () => run([flag, ...args], sink, true));
   const stdout = out.join(''), stderr = err.join('');
   if (code !== 0) {
@@ -788,14 +584,10 @@ const listBoot = (args, options) => listing('--list-boot', args, options);
 module.exports = { IS_CLASS, listShippable, listBoot };
 
 if (require.main === module) {
-  const sink = {
-    stdout: (text) => process.stdout.write(toStdout(text)),
-    stderr: (text) => process.stderr.write(toStderr(text)),
-    terminalColumns: process.stdout.isTTY ? process.stdout.columns : undefined,
-  };
+  const sink = { stdout: (text) => process.stdout.write(text), stderr: (text) => process.stderr.write(text) };
   try {
     process.exitCode = run(process.argv.slice(2), sink, false);
   } catch (error) {
-    finishCommandLine(error);
+    finishCommandLine(error, 'build.js');
   }
 }

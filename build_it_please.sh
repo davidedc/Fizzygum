@@ -70,7 +70,7 @@ while test $# -gt 0; do
       ;;
     *)
       # Unknown arguments used to `break` out of the loop and be forwarded silently, so a typo (or
-      # the retired --homepage / --notests) reached build.py's argparse -- or nothing at all -- and
+      # the retired --homepage / --notests) reached build.js's argument reader -- or nothing at all -- and
       # the build made something other than what was asked for. Say so instead.
       echo "build_it_please.sh: unknown argument '$1'." 1>&2
       echo "  A build flavour is a PROFILE: --profile <name>, one of $(ls buildSystem/profiles/*.json 2>/dev/null | xargs -n1 basename 2>/dev/null | sed 's/\.json$//' | tr '\n' ' ')" 1>&2

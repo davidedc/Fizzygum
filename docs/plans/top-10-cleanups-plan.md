@@ -918,6 +918,34 @@ for timings. A second step changed the shipped files that named the Python in a 
 source, three boot files, two class sources, one harness file, and one boot error message); its
 fingerprints differ from the first step's in exactly those files.
 
+**Landed 2026-11-13 (the follow-up, the owner ruled: drop the Python-semantics layer).** `lib/profile.js` (991 → 748
+lines) and `build.js` (801 → 593) no longer reproduce Python:
+- gone are argparse, `repr` and `json.dumps`, `PyNumber`, `PyCrash`, Python's glob, the "as Python printed it"
+  writers, and truthiness on malformed input;
+- malformed input refuses in Node's own words, with the same exit codes (2 for a misuse of `build.js`'s command line,
+  1 for a bad profile or partition), every refusal on stderr, named by the program that prints it.
+
+What decides OUTPUT stays, said in its own terms:
+- strict UTF-8 with the byte-order mark kept;
+- code-point order for what is emitted sorted;
+- a batch cut by code-point length;
+- the manifest's JSON spelling;
+- the shell quoting;
+- a part directory's `*.coffee` entries, never a dot-file.
+
+New refusals, where a malformed input used to be accepted:
+- a part, profile or entry-page name that reads as an array index, which JavaScript would order first;
+- a part without `dirs`, or with `dirs` a string;
+- an `eager` that is not a boolean;
+- an abbreviated option;
+- a repeated `--profile` to `build.js`.
+
+Evidence:
+- 40 command-line answers (`--shell`, `--list-shippable`, `--list-boot` for every profile, and the defaults) are
+  byte-identical, old code against new on one tree;
+- a 64,745-check old-against-new probe of the output-shaping pieces finds no difference;
+- the build trees of all five profiles fingerprint identical to the build without the change.
+
 **Landed 2026-11-13 (the loop's U6): step 2, the gate sequence is a table.** `buildSystem/gates.js` holds one row
 per static gate, in the order the build runs them — the script, its arguments, WHEN it runs (`checked`, unless
 `--noSyntaxCheck`; `testsShipped`, and the profile ships the tests and the tests repo is present; `testsRepo`, and
@@ -1145,3 +1173,5 @@ Do not commit or push without asking me.
   — CLOSED 2026-11-13 as moot: the video-player part is deleted (§3, "Landed").
 - [x] §3 (½ to 1 day): the video-player part — delete it or gate it (⛔ owner); either way the one-carrier `requiresFlag` mechanism goes
   — CLOSED 2026-11-13 (the owner ruled: delete) — the part, `requiresFlag`, the three flags, the core guards and the nine scripts are gone (§3, "Landed").
+- [x] §10 follow-up (⛔ owner, found by the loop's U5): `build.js` and `lib/profile.js` carry a layer that reproduces Python's semantics (argparse, `repr`, `json.dumps`, `glob` order, JSON integers, truthiness on malformed input) only so that every refusal keeps the Python's exact words. Keep it, or let malformed input refuse in Node's own words and drop the layer (about 650 lines) — the trees and the well-formed answers do not depend on it. One divergence it does not cover: a part, profile or entry key that reads as an array index is ordered FIRST by JavaScript, where Python kept insertion order (none exists today; a part so named would reorder the boot prelude and the listings silently)
+  — CLOSED 2026-11-13 (the owner ruled: drop it): the layer is gone (§10, the follow-up "Landed" on the Python-semantics layer); the array-index divergence is now a refusal.

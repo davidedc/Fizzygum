@@ -643,12 +643,15 @@ for its `--list` / `--before` listings), the paint audit and several rigs refuse
 ## 7. Adding things
 
 - **A new part** — add it to `parts.json` with its `dirs`; `"parts": "all"` picks it up for the dev builds. Name it in
-  `homepage.json` only if production should have it. Guard every core reference to its classes.
+  `homepage.json` only if production should have it. Guard every core reference to its classes. `parts.json` is
+  checked for SHAPE as it is read: `dirs` is required and a list of directory paths, `eager` is `true` or `false`,
+  every other field has its one type, and a part named like an array index (`"0"`, `"12"`) is refused, since
+  JavaScript would order it ahead of every other part.
 - **A new profile** — add a file. Validation refuses: an unknown key, a missing/forbidden `sources`, a part or entry
   page that does not exist (this is the one that matters at a RENAME — it turns "production silently ships less" into
   a build failure), a profile without `core`, `precompiled` without `index.html`, `worldWithSystemTestHarness.html`
-  without the `harness` part (the page exists to run the harness), and `sources: "none"` with either `meta-tools` or
-  a lazy part.
+  without the `harness` part (the page exists to run the harness), `sources: "none"` with either `meta-tools` or
+  a lazy part, and a profile or entry-page name that reads as an array index.
 - **A new entry page** — add a row to `ENTRY_PAGES` in `lib/profile.js` (filename, renders-through-SWCanvas,
   loads-every-part-at-boot). `"entries": "all"` picks it up.
 - **A new non-source file** — give it to the part that owns it (`assets`), never to the build script. A
