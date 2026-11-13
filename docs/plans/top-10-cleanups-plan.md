@@ -1186,3 +1186,16 @@ Do not commit or push without asking me.
     spelling.
 - [x] §5 follow-up, found by the loop's U7 review (low, pre-existing, reached on a touch device with a hardware keyboard): the on-screen keyboard's hidden `<input>` suppresses Backspace and Tab by `event.keyIdentifier` (`BrowserInputBridge.initVirtualKeyboard`), a property Chrome removed, so neither is prevented there; the canvas's own keydown listener tests `event.key`. Measure on a device before changing it
   — CLOSED 2026-11-13 (the owner's ruling: one way to read a key): `BrowserInputBridge`'s hidden input tests `event.key`, as the canvas's own keydown listener does. Not measured on a device: no rig drives the on-screen keyboard's `<input>`.
+- [x] **`WorldWdgt`'s second damage-rect pass checks a widget's SRC rect as if it were its DST** (found 2026-11-13 by
+      the review of the cleanups loop's U4; by reading; reach not established — medium if real). In
+      `_rectAlreadyIncludedInParentDamagedWidget`'s `widgetsWithMaybeChangedFullPaintBounds` loop, `@_checkARectWithHierarchy aRect, damagedWidget`
+      passes no `isSrc` for the src rect, so when an ancestor's rect contains it the `else` branch clears the
+      widget's DST slot and index instead: a dst rect never checked against the ancestor is dropped (a lost repaint?),
+      and the src rect stays. The first loop passes `true`/`false`. Measure before fixing: a probe that counts the case.
+  — CLOSED 2026-11-13 (the owner's ruling: probe, then fix). Measured first, the whole suite at dpr 1 and 2,
+  mouse and finger, under a counting probe:
+  - the case is REACHED, about 12,500–13,200 times a run;
+  - in about 630 of them a widget's DST rect was dropped;
+  - in every one of those another damage rect contained the dropped rect, so no repaint was lost in the suite.
+  `_rectAlreadyIncludedInParentDamagedWidget` now passes `isSrc` on both lists, so a src rect an ancestor covers is
+  the one dropped. With the bodies identical, the two loops are one loop over both lists.

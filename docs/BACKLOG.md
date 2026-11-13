@@ -143,12 +143,6 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       flat `world.steppingWdgts`; its name, and six docs that cite it (`Fizzygum/CLAUDE.md` spells it without the
       underscore), still describe the tree walk it replaced. Its comment says a member removed mid-walk is fine, and
       not that one ADDED mid-walk (`Set.forEach` visits it) steps in the same frame.
-- [ ] **`WorldWdgt`'s second damage-rect pass checks a widget's SRC rect as if it were its DST** (found 2026-11-13 by
-      the review of the cleanups loop's U4; by reading; reach not established — medium if real). In
-      `_rectAlreadyIncludedInParentDamagedWidget`'s `widgetsWithMaybeChangedFullPaintBounds` loop, `@_checkARectWithHierarchy aRect, damagedWidget`
-      passes no `isSrc` for the src rect, so when an ancestor's rect contains it the `else` branch clears the
-      widget's DST slot and index instead: a dst rect never checked against the ancestor is dropped (a lost repaint?),
-      and the src rect stays. The first loop passes `true`/`false`. Measure before fixing: a probe that counts the case.
 - [ ] **A paint that throws and bans no one is told again on every frame** (found by the independent review closing "A
       paint that throws after its children blames the last child painted", in the plan's ledger; reached: a class edit
       that makes a desktop widget's `opaqueCoveredRect` throw — the world's occlusion scan meets it before any widget

@@ -987,22 +987,18 @@ class WorldWdgt extends IconGridPanelWdgt
           damagedWidgetAncestor.dstDamageRectIndex = undefined
 
 
+  # Each damaged widget's source (where it was) and destination (where it is) rects, each checked against its
+  # ancestors' rects, saying which of the two it is: a rect an ancestor's already contains is dropped, and only
+  # that one. The widgets whose paint bounds changed come first, then those whose full paint bounds did.
   _rectAlreadyIncludedInParentDamagedWidget: ->
-    for damagedWidget in @widgetsWithMaybeChangedPaintBounds
+    for damagedWidgets in [@widgetsWithMaybeChangedPaintBounds, @widgetsWithMaybeChangedFullPaintBounds]
+      for damagedWidget in damagedWidgets
         if damagedWidget.srcDamageRectIndex?
           aRect = @damageRects[damagedWidget.srcDamageRectIndex]
           @_checkARectWithHierarchy aRect, damagedWidget, true
         if damagedWidget.dstDamageRectIndex?
           aRect = @damageRects[damagedWidget.dstDamageRectIndex]
           @_checkARectWithHierarchy aRect, damagedWidget, false
-
-    for damagedWidget in @widgetsWithMaybeChangedFullPaintBounds
-        if damagedWidget.srcDamageRectIndex?
-          aRect = @damageRects[damagedWidget.srcDamageRectIndex]
-          @_checkARectWithHierarchy aRect, damagedWidget
-        if damagedWidget.dstDamageRectIndex?
-          aRect = @damageRects[damagedWidget.dstDamageRectIndex]
-          @_checkARectWithHierarchy aRect, damagedWidget
 
   _cleanupSrcAndDestRectsOfWidgets: ->
     for damagedWidget in @widgetsWithMaybeChangedPaintBounds
