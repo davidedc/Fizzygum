@@ -96,7 +96,7 @@ Ordered by effort, smallest first. Effort is an estimate in working days for the
 
 | # | Cleanup | Effort (estimate) | What goes away | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Orphans, closed plans and the stub header landed 2026-11-13; the rest open |
+| 1 | Repository hygiene | ½ day | 9 orphan files, a second vendoring directory, closed plans in the wrong repo, an empty skip-list mechanism | None | Partly | 10 | Orphans, closed plans, the stub header and the two vendoring homes landed 2026-11-13; the rest open |
 | 2 | Put `fg` and the guard hook under version control | ½ day | An unversioned 929-line definition of the whole verification pipeline; an "fg absent" branch in the build's own tooling | None | Yes: which repo | 1 | Not started |
 | 3 | The video-player part: delete it or gate it | ½ to 1 day (deletion) | A part no gate runs, the one-carrier `requiresFlag` mechanism, 3 build flags, 9 scripts, 5 open defects | None | Yes | 7 | Not started |
 | 4 | Silent invariant traps report, or go | 1 day | 15 invariant checks that cannot fail a run | May expose live faults | No | 6 | Not started |
@@ -174,8 +174,22 @@ ships that copy, a precompiled profile replaces it with the image the pre-compil
 Evidence: a build-tree fingerprint against the unchanged HEAD for all five profiles, made by hand
 because `fg fingerprint` cannot build its baseline today (BACKLOG, under §2): `dev` and `dev-notests`
 differ in `js/pre-compiled.js` alone (257 → 569 bytes, the new header), `dev-precompiled`,
-`homepage` and `lean` not at all. Left of §1: the vendoring homes, `package.json`'s `main`, the
-empty `SWCanvasBrokenTests` lists (owner), and the `.psd` (owner).
+`homepage` and `lean` not at all.
+
+**Landed 2026-11-13 (the loop's U2): one home for third-party code, one for the build's own files.**
+`auxiliary files/` is gone. The three third-party libraries live in `vendor/`, lower-case like
+`vendor/acorn`: `vendor/coffeescript/` (the compiler and its README), `vendor/filesaver/`,
+`vendor/jszip/`. What the project made and the build copies verbatim lives in a new `assets/`
+(the build copies it through `parts.json`'s `assets` rows, as it does the vendored libraries): the six images, with the kept
+`xPointerImage4.psd` beside the `xPointerImage.png` exported from it, in `assets/icons/`, and the
+not-pre-compiled stub as `assets/pre-compiled.js`. Every file moved with `git mv`. The readers: nine
+asset rows of `parts.json`, `lib/meta-compiler.js` (the compiler the build's CoffeeScript-reading tools load),
+`lib/build-inputs.js` (the stub, an input the staleness record watches by name) and
+`build_it_please.sh` (which spelled the old name with an escaped space); `vendor/acorn/README.md`
+now says `vendor/` is read through `parts.json`'s asset rows and the tools' `require`s too.
+Evidence: the hand-made build-tree fingerprint against the unchanged HEAD is byte-identical for all
+five profiles (`build.py` copies an asset by its basename, so no shipped path moved). Left of §1:
+`package.json`'s `main`, the empty `SWCanvasBrokenTests` lists (owner), and the `.psd` (owner).
 
 ---
 
@@ -776,7 +790,7 @@ and the owner has seen them. A fuzz or audit failure is never a reason to recapt
 
 ```
 Read Fizzygum/docs/plans/top-10-cleanups-plan.md in full (it is a survey of ten candidate
-cleanups, ordered by effort, none started). Then run
+cleanups, ordered by effort; its STATUS says what has landed). Then run
 /Users/davidedellacasa/code/Fizzygum-all/fg status and confirm no long operation is running.
 
 I want to take up item §<N>. Do this, in order:
@@ -794,5 +808,8 @@ Do not commit or push without asking me.
 - §1, in part — the line read: "§1 (½ day): repository hygiene — nine orphan files, two vendoring homes, three
   closed plans at the tests-repo root, the empty `SWCanvasBrokenTests` lists (⛔ owner on the last)". — LANDED IN
   PART 2026-11-13 (loop U1): eight orphan files deleted, the three closed plans archived, the pre-compiled stub's
-  header made true (§1, "Landed"). BACKLOG keeps the rest: the vendoring homes, `SWCanvasBrokenTests` (owner), the
+  header made true (§1, the first "Landed"). BACKLOG keeps the rest: the vendoring homes, `SWCanvasBrokenTests` (owner), the
   kept `.psd` (owner).
+- §1, the next part — the line then read "… two vendoring homes; …". — LANDED IN PART 2026-11-13 (loop U2): the
+  third-party libraries in `vendor/`, the build's own copied files in `assets/`, `auxiliary files/` gone (§1, the
+  second "Landed"). BACKLOG keeps `package.json`'s `main`, `SWCanvasBrokenTests` (owner) and the `.psd` (owner).

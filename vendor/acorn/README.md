@@ -23,5 +23,7 @@ tests repo's scripts, for `check-argument-holes.js`). Nothing in `src/` or the h
 minimal, while the build's tooling may use a pinned library where a real parser beats a hand-rolled one.
 
 **Why vendored, not an npm dependency:** the build needs no `npm i` in `Fizzygum/` — every gate runs on Node
-alone. `vendor/` is read only through explicit lists (`parts.json` vendor entries, the SWCanvas lines of
-`build_it_please.sh`), so no gate walks this directory.
+alone. A file in `vendor/` is read only by its name — `parts.json`'s `vendor` and `assets` entries,
+`build_it_please.sh` and `lib/build-inputs.js` (the SWCanvas pieces), the SWCanvas vendoring scripts, and the
+`require` of each build tool that loads a vendored library — so no gate reads its contents; the one walk over it,
+`run-selftests.js`'s search for self-tests nothing runs, reads file names only.

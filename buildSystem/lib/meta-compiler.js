@@ -31,7 +31,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const COMPILER = path.join(__dirname, '..', '..', 'auxiliary files', 'CoffeeScript', 'fizzygum-coffeescript-min.js');
+const COMPILER = path.join(__dirname, '..', '..', 'vendor', 'coffeescript', 'fizzygum-coffeescript-min.js');
 
 // The bundled CoffeeScript 2.0.3 — the compiler the browser runs (not the 2.7 CLI).
 function bundledCoffeeScript() {

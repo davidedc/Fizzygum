@@ -364,8 +364,8 @@ stink counts and sanctions by its member (2026-11-11): U2's timer is read the sa
     the part's classes run.
   - `PartsRegistry._vendorAlreadyPresent` hard-codes its idempotence check for `"fizzytiles-3d"` and
     must learn the new payload.
-- Vendored third-party code lives in `Fizzygum/vendor/` with a `.pin` file naming the source commit
-  (`vendor/swcanvas.pin` holds a sha).
+- Vendored third-party code lives in `Fizzygum/vendor/`; a library the build fetches from another repo
+  carries a `.pin` file naming the source commit (`vendor/swcanvas.pin` holds a sha).
 - `profiles/dev.json`: `"parts": "all"`, compile at boot. A new part joins the dev build with no
   profile edit. `homepage` lists its parts explicitly, so a new part stays out of production unless
   added.

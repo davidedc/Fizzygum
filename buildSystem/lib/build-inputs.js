@@ -47,7 +47,7 @@ const BUILD_FILES = ['build_it_please.sh', 'buildSystem/build.py', 'buildSystem/
 // the files build_it_please.sh reads by name, outside the partition: a rename there is a rename here (a name that no
 // longer exists is skipped, and that input goes unwatched)
 const SHELL_INPUTS = ['runtime-prelude/deterministic-trig.js', 'vendor/swcanvas/swcanvas.min.js', 'vendor/swcanvas/sw3d.js',
-  'auxiliary files/pre-compiled.js'];
+  'assets/pre-compiled.js'];
 const INPUT_TREES = ['font-assets'];   // every file under them
 const PROFILES = 'buildSystem/profiles';   // its *.json (an editor's backup beside them is no input)
 

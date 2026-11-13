@@ -138,10 +138,10 @@
       ],
       "//assets": "The boot splash + spinner (drawn before any class exists) and the CoffeeScript compiler, which ships in EVERY profile: FizzyPaint tools, spreadsheet formulas, $src snapshot records and Fizzytiles' LCL are all compiled at runtime, so a compiler-less build is a non-interactive kiosk (arc 5 PR-D3).",
       "assets": [
-        ["auxiliary files/additional-icons/spinner.svg", "icons"],
-        ["auxiliary files/additional-icons/splashScreenFakeDesktop.png", "icons"],
-        ["auxiliary files/additional-icons/splashScreenFakeDesktop@2x.png", "icons"],
-        ["auxiliary files/CoffeeScript/fizzygum-coffeescript-min.js", "js/libs"]
+        ["assets/icons/spinner.svg", "icons"],
+        ["assets/icons/splashScreenFakeDesktop.png", "icons"],
+        ["assets/icons/splashScreenFakeDesktop@2x.png", "icons"],
+        ["vendor/coffeescript/fizzygum-coffeescript-min.js", "js/libs"]
       ]
     },
 
@@ -312,11 +312,11 @@
       ],
       "//assets": "The three pointer icons SystemTestsControlPanelUpdater sets as <img src> in the harness control panel (DOM, not canvas -- so no screenshot gate can see them go missing; the parts fingerprint is what checks them), plus FileSaver + JSZip, which globalFunctions only loads when BUILDFLAG_LOAD_TESTS is set and which product FileSaving.coffee explicitly does not depend on.",
       "assets": [
-        ["auxiliary files/additional-icons/xPointerImage.png", "icons"],
-        ["auxiliary files/additional-icons/leftButtonPressed.png", "icons"],
-        ["auxiliary files/additional-icons/rightButtonPressed.png", "icons"],
-        ["auxiliary files/FileSaver/FileSaver.min.js", "js/libs"],
-        ["auxiliary files/JSZip/jszip.min.js", "js/libs"]
+        ["assets/icons/xPointerImage.png", "icons"],
+        ["assets/icons/leftButtonPressed.png", "icons"],
+        ["assets/icons/rightButtonPressed.png", "icons"],
+        ["vendor/filesaver/FileSaver.min.js", "js/libs"],
+        ["vendor/jszip/jszip.min.js", "js/libs"]
       ]
     },
 

@@ -7,7 +7,7 @@ against current code, corrections woven in place (the partial syncs the arcs the
 retained). Anchor on quoted **method names** first; line numbers are hints.
 ⚠ Cold-executor caution: the image is harvested headlessly by
 `../Fizzygum-tests/scripts/generate-pre-compiled-headless.js` (the `pre-compiled.js` stub's comment,
-`auxiliary files/pre-compiled.js`, says so since 2026-11-13; before that it described a `--homepage`
+`assets/pre-compiled.js`, says so since 2026-11-13; before that it described a `--homepage`
 flag and a zip download). The present-tense build reference is `docs/architecture/build-and-packaging.md`.
 
 This plan is self-contained: it embeds the load-bearing findings of the 2026-07-10 research pass

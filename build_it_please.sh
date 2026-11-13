@@ -1165,7 +1165,7 @@ fi
 
 # (the entry pages themselves are written by build.py from src/index.html — see its ENTRY_PAGES)
 
-# (The vendored js/libs files and the aux icons are copied by build.py, from the "assets" list of
+# (The vendored js/libs files and the assets/icons images are copied by build.py, from the "assets" list of
 # whichever PART owns each one -- FileSaver/JSZip and the three harness pointer icons belong to the
 # harness part, the compiler and the boot splash/spinner to core. They used to be copied here
 # unconditionally and then deleted again by the --homepage block below; owning them by part means a
@@ -1196,7 +1196,7 @@ for eachBootScript in "${PROFILE_BOOT_SCRIPTS[@]}" ; do
 done
 
 echo "copying pre-compiled file"
-cp auxiliary\ files/pre-compiled.js $BUILD_PATH/js/pre-compiled.js || build_failed "copying the pre-compiled stub"
+cp assets/pre-compiled.js $BUILD_PATH/js/pre-compiled.js || build_failed "copying the pre-compiled stub"
 echo "... done"
 
 
