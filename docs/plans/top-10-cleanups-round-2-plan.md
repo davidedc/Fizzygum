@@ -111,7 +111,7 @@ who has never seen the code.
 | 3 | Map outlines are data | ½ day | About 3,000 of `src/`'s 37,681 code lines (8%), written as 2,638 `lineTo` statements. **In plain words:** the two maps are drawn by thousands of hand-written "draw a line to this point" instructions. Keep the points in a list and let one short loop draw them. | None expected (one test draws both maps) | No | 10 | Landed 2026-11-13 |
 | 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Landed 2026-11-14 |
 | 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Landed 2026-11-14 |
-| 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 landed 2026-11-14; step 2's measurement queued last, its decision the owner's |
+| 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 landed 2026-11-14; step 2 measured 2026-11-14 (only `revisits` reads the same in a shared pass), its decision the owner's |
 | 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | Landed 2026-11-14 (the first step, then the table) |
 | 8 | A test is its macro | 2 to 3 days | The six command classes, the timed command cursor, 389 copies of one preamble, about 38,900 log lines a run. **In plain words:** every test file still opens with the same five-step recipe, left from when tests were recordings played back step by step. A test is now a single script, so the recipe and the player built for it can go. | Low (the macro's start cycle) | No | 3 | Landed 2026-11-14 |
 | 9 | Instruction files: a budget and one home per fact | 2 to 3 days | About 171 KB loaded into every session; each gate's story told in up to six places. **In plain words:** the notes every session must read before it starts have grown to the length of a short book, and the same explanation appears in several files. Keep the rules there and give each explanation one home. | None | Agreed 2026-11-13, on the item's criterion | 9 | Landed 2026-11-14 |
@@ -550,6 +550,39 @@ cases on canned runner transcripts, fails on each of three planted defects; (d) 
 -- scripts` finds nothing; (e) `fg gauntlet` (20 of 20 legs, the six gates green on 389 tests), `FG_GAUNTLET_SERIAL=1 fg
 gauntlet` (20 of 20, through the serial path's new helper) and `fg homepage` were green. The re-measure command above
 now finds none of its files.
+
+**Step 2 measured 2026-11-14.** One instrument, the four candidates' preludes concatenated verbatim, rode one
+whole-suite pass (6 shards, 389 tests, 137 s, green); each prelude also rode a pass alone (127 to 138 s, each green).
+Each gate's verdict half then re-read the shared audit dir and its own (`--audit-dir=`), and the lines each judge
+reads were compared per test, as multisets.
+- `revisits`: identical on all 389 tests; the same verdict (OK).
+- `settle` and `capstone`: their own lines identical on all 389 tests (none lost, none changed), but each judge also
+  reads lines that are not its own. `settle` counts every `LAYOUTAUDIT {` JSON line as a settle-inside-callback
+  violation, and `capstone` counts every one not tagged `careless` or `paint-time` as unclassified. `tiernaming` writes
+  2,777 such lines (`{"tag":"notify-invoked",…}`) in 148 tests, so both FAIL on the shared dir (`SETTLE_IN_CALLBACK`,
+  `UNCLASSIFIED_RECORD`) while both pass on their own.
+- `tiernaming`: identical on 383 of 389 tests. The six that differ are each shard's FIRST test: in the shared pass its
+  bucket also holds the corner calls made during the first reset, because the runner files every line under the
+  latest `LAYOUTAUDIT_TESTSTART` marker and another prelude marks the test's start at the reset, before
+  `tiernaming`'s own marker. Its verdict is the same (PASSED); its INFO line reads 719 corners invoked instead of 700.
+
+A shared pass would therefore need two changes first: each instrument's lines carry its own tag and each judge reads
+only that tag (`settle`'s records carry none today, and `capstone`'s "unclassified" rule would have to mean
+unclassified among its own records), and ONE test-start marker that all four share. What it would save is three of
+the four passes. In the serial gauntlet that is three suite runs of about two minutes each, some 6 to 7 of its
+37 minutes. In the parallel gauntlet the four run in wave B at 4 shards each, beside `refs` (226 s in the last run),
+`paint`, `storage` and `serialization`. The wave's length is set by `refs`, so it would barely move; the saving there
+is 12 of the wave's concurrent browser shards, that is, load. The instrument, the five audit dirs, the per-test
+comparison and each judge's output are kept in `Fizzygum-tests/.scratch/cleanups-loop-2/u11-shared-pass/`
+(`run-passes.sh`, `compare.js`, `COMPARE.md`).
+
+**OWNER DECISION (OPEN, raised 2026-11-14 by the loop).** Whether the four instruments should share a pass. Today
+only `revisits` reads exactly what it reads alone. The other three need the tag and the single test-start marker
+first, and even then a shared pass couples four gates' failure modes in one page: a shard that stalls costs four
+measurements, not one, and each gate's bite proof would also have to pass in the shared mode. Recommendation: keep
+four passes. The default, parallel gauntlet would not get shorter, and the coupling is a real cost. Reconsider if
+wave B's load starts to produce load-flake retries, or if the serial gauntlet's length starts to matter; then make the
+two changes and re-run this measurement on the kept instrument.
 
 ---
 
