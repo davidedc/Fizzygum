@@ -454,7 +454,8 @@ exactly the methods holding a site and adds the four members; `check-part-edges`
 kept on purpose: six sites (the frame loop, the hand's down, up and move, the context-menu open, a
 3D canvas's clock) used to be stripped from a production build by their `Automator?` guard; they
 now make one cheap call there that answers false.
-U6-PENDING
+No reference moved: `fg presuite` and `fg gauntlet` (20 of 20 legs, dpr 2, WebKit and finger
+included) were green on the change.
 
 ---
 
