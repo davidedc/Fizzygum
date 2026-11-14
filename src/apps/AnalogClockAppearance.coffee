@@ -151,7 +151,7 @@ class AnalogClockAppearance extends Appearance
 
     if Automator? and
      Automator.animationsPacingControl and
-     Automator.state == Automator.PLAYING
+     aTestIsPlaying()
       @widget.dateLastTicked = new Date 2011,10,30,10,8,37
 
     sec = @widget.dateLastTicked.getSeconds() + @widget.dateLastTicked.getMilliseconds()/1000

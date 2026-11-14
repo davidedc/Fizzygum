@@ -2207,7 +2207,7 @@ class WorldWdgt extends IconGridPanelWdgt
     return @_closeCycleBookkeepingNoSettle cycleStartPerfMs  if @_dissolved
 
     # replays test actions at the right time
-    if AutomatorPlayer? and Automator.state == Automator.PLAYING
+    if aTestIsPlaying()
       @automator.player.replayTestCommands()
 
     # the second half of the dissolution seam above: a reset reached from a replayed test command

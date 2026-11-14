@@ -638,7 +638,7 @@ class Widget extends TreeNode
   # (hidingOfWidgetsNumberIDInLabels), so none of these depends on how many widgets of my class were
   # built before me, the framework's own constructions included.
   toString: ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfWidgetsNumberIDInLabels
+    if Automator? and aTestIsPlaying() and Automator.hidingOfWidgetsNumberIDInLabels
       name = @widgetClassString()
     else
       name = @uniqueIDString()

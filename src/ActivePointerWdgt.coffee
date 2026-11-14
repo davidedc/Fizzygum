@@ -334,14 +334,9 @@ class ActivePointerWdgt extends Widget
     @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem wdgtTheMenuIsAbout
     @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere wdgtTheMenuIsAbout
 
-    if Automator? and
-     Automator.state == Automator.PLAYING
-      Automator.fade 'rightMouseButtonIndicator', 0, 1, 10
-      setTimeout \
-        =>
-          Automator.fade 'rightMouseButtonIndicator', 1, 0, 500
-        , 100
-    
+    # the harness page's right-button indicator (ActivePointerTestSupport)
+    @_flashRightButtonIndicator?() if aTestIsPlaying()
+
     contextMenu = wdgtTheMenuIsAbout.buildContextMenu()
     while !contextMenu and wdgtTheMenuIsAbout.parent
       wdgtTheMenuIsAbout = wdgtTheMenuIsAbout.parent
@@ -1007,7 +1002,7 @@ class ActivePointerWdgt extends Widget
     eventTime = WorldWdgt.timeOfEventBeingProcessed
     betweenEventsCheckSuppressed = Automator? and
       Automator.animationsPacingControl and
-      Automator.state != Automator.IDLE
+      aTestIsPlaying()
     return eventTime if betweenEventsCheckSuppressed
     cycleTime = WorldWdgt.dateOfCurrentCycleStart?.getTime()
     return eventTime unless cycleTime? and eventTime?
@@ -1333,11 +1328,8 @@ class ActivePointerWdgt extends Widget
     world.destroyToolTips()
     @wdgtToGrab = undefined
 
-    if Automator? and Automator.state == Automator.PLAYING
-      if e.button is 2 or e.ctrlKey
-        Automator.fade 'rightMouseButtonIndicator', 0, 1, 10
-      else
-        Automator.fade 'leftMouseButtonIndicator', 0, 1, 10
+    # the harness page's button indicators (ActivePointerTestSupport)
+    @_showButtonIndicatorPressed? e if aTestIsPlaying()
 
 
     @mouseDownPosition = @position()
@@ -1394,11 +1386,8 @@ class ActivePointerWdgt extends Widget
     # event time of the release
     @_advancePressAndHoldRecognition()
 
-    if Automator? and Automator.state == Automator.PLAYING
-      if e.button is 2
-        Automator.fade 'rightMouseButtonIndicator', 1, 0, 500
-      else
-        Automator.fade 'leftMouseButtonIndicator', 1, 0, 500
+    # the harness page's button indicators (ActivePointerTestSupport)
+    @_showButtonIndicatorReleased? e if aTestIsPlaying()
 
     w = @topWdgtUnderPointer()
 
@@ -1712,12 +1701,8 @@ class ActivePointerWdgt extends Widget
     pos = new Point e.worldX, e.worldY
     @_applyMoveTo pos
 
-    if Automator? and Automator.state == Automator.PLAYING
-      mousePointerIndicator = document.getElementById "mousePointerIndicator"
-      mousePointerIndicator.style.display = 'block'
-      posInDocument = world.getCanvasPosition()
-      mousePointerIndicator.style.left = (posInDocument.x + e.worldX - (mousePointerIndicator.clientWidth/2)) + 'px'
-      mousePointerIndicator.style.top = (posInDocument.y + e.worldY - (mousePointerIndicator.clientHeight/2)) + 'px'
+    # the harness page's pointer indicator (ActivePointerTestSupport)
+    @_movePointerIndicatorTo? e if aTestIsPlaying()
 
     # determine the new mouse-over-list.
     # Spacial multiplexing
@@ -1983,7 +1968,7 @@ class ActivePointerWdgt extends Widget
     # delivered only at drained events — the same suppression, and the same reason, that
     # _holdDecisionTime applies to the recognizer's between-events check.
     pressedMovesAreEventOnly = (not atDrainedEvent) and Automator? and
-      Automator.animationsPacingControl and Automator.state != Automator.IDLE
+      Automator.animationsPacingControl and aTestIsPlaying()
 
     mouseOverNew.forEach (newWdgt) =>
 

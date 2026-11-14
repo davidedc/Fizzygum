@@ -114,7 +114,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # wall clock when live (smooth animation). Mirrors the multi-click event-time
   # precedent (WorldWdgt.timeOfEventBeingProcessed) — see DETERMINISM.md.
   timeNowSeconds: ->
-    if Automator? and Automator.state != Automator.IDLE
+    if aTestIsPlaying()
       (WorldWdgt.timeOfEventBeingProcessed ? 0) / 1000
     else
       Date.now() / 1000

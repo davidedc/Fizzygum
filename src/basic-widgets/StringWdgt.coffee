@@ -605,7 +605,7 @@ class StringWdgt extends ControllerWdgt
   toString: ->
     # e.g. 'a StringWdgt("Hello World")'
     firstPart = super()
-    if Automator? and Automator.state != Automator.IDLE and
+    if Automator? and aTestIsPlaying() and
     Automator.hidingOfWidgetsContentExtractInLabels
       return firstPart
     else

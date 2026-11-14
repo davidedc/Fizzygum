@@ -154,6 +154,17 @@ window.classStaticListMergedUpTheChain = (klass, staticName) ->
     ctor = superclassOf ctor
   merged
 
+# IS A SYSTEM TEST PLAYING? The one question the determinism contract keeps asking
+# (Fizzygum-tests/DETERMINISM.md): while one plays, time follows the event stream. A page-level
+# question, asked of no world, because the harness's automator outlives every world the page builds
+# and a widget may ask while none stands yet; read at call time, never cached. Without the harness
+# part there is no Automator, and the answer is false. A test's three toggles (the animation pacing,
+# the two label hidings) are a different fact — they flip at every world teardown — so each site
+# that needs one reads it beside this question.
+# `window.`-qualified because a src class cannot see a boot-file local.
+window.aTestIsPlaying = ->
+  Automator? and Automator.state == Automator.PLAYING
+
 # THE STRING HASH, `hashOfString text`. A boot function, never a member of Object.prototype: a member
 # there is an enumerable key of every object on the page, which every `for … of` without `own` (a
 # JavaScript `for … in`) meets.
@@ -631,26 +642,29 @@ window.finishWorldSetup = (theWorld) ->
   # each test's own fixture is the only thing on screen.
   theWorld.createDesktop() if theWorld.isIndexPage
 
+installTestSupportMembers = ->
+  # TEST-ONLY machinery lives with the harness (../Fizzygum-tests/Automator-and-test-harness-src),
+  # not inside the shipped classes, and is grafted onto the core prototypes here. Each *TestSupport
+  # class only exists in a build that ships the harness, so the existence checks ARE the mechanism
+  # that keeps a product build free of all this -- the same pattern as `Automator?` / `MacroToolkit?`
+  # / `SystemTestsControlPanelUpdater?` below. (Before arc 3 these members sat in the core files
+  # wrapped in `»>>` region markers and were textually stripped at packaging time.)
+  WorldTestSupport.installOnto WorldWdgt  if WorldTestSupport?
+  WidgetTestSupport.installOnto Widget  if WidgetTestSupport?
+  MenuTestSupport.installOnto MenuWdgt  if MenuTestSupport?
+  CommandPanelTestSupport.installOnto CommandPanelWdgt  if CommandPanelTestSupport?
+  MenusHelperTestSupport.installOnto MenusHelper  if MenusHelperTestSupport?
+  ActivePointerTestSupport.installOnto ActivePointerWdgt  if ActivePointerTestSupport?
+
 createWorldAndStartStepping = ->
 
   # ALL world-dependent setup lives here, because under the SWCanvas backend the
   # world is created asynchronously (after the font metrics load) — so nothing
   # that touches `world` may run before this.
   startWorld = ->
-    # TEST-ONLY machinery lives with the harness (../Fizzygum-tests/Automator-and-test-harness-src),
-    # not inside the shipped classes, and is grafted onto the core prototypes here. Each *TestSupport
-    # class only exists in a build that ships the harness, so the existence checks ARE the mechanism
-    # that keeps a product build free of all this -- the same pattern as `Automator?` / `MacroToolkit?`
-    # / `SystemTestsControlPanelUpdater?` below. (Before arc 3 these members sat in the core files
-    # wrapped in `»>>` region markers and were textually stripped at packaging time.)
-    #
     # ⚠ This must run BEFORE `new WorldWdgt`: the world's own constructor calls
     # `_sizeCanvasToTestScreenResolution`, which is one of the members installed here.
-    WorldTestSupport.installOnto WorldWdgt  if WorldTestSupport?
-    WidgetTestSupport.installOnto Widget  if WidgetTestSupport?
-    MenuTestSupport.installOnto MenuWdgt  if MenuTestSupport?
-    CommandPanelTestSupport.installOnto CommandPanelWdgt  if CommandPanelTestSupport?
-    MenusHelperTestSupport.installOnto MenusHelper  if MenusHelperTestSupport?
+    installTestSupportMembers()
 
     # "false" as second parameter below
     #   fits the world in canvas as per dimensions

@@ -173,7 +173,8 @@ at every drained pointer event of a live press **and** at the per-cycle hover re
 machine uses, so a moving finger and a motionless one are both advanced. The between-events check
 reads `_holdDecisionTime`: at a drained event that IS the event's own time; between events it may
 also consult `WorldWdgt.dateOfCurrentCycleStart`, but that consultation is SUPPRESSED whenever
-`Automator.animationsPacingControl` is active and the Automator is not idle — the momentum glide's
+`Automator.animationsPacingControl` is active and a test is playing (`aTestIsPlaying()`, the boot's one
+answer to that question) — the momentum glide's
 own idiom (see `viewports-and-planes.md`) — so a replayed macro stroke stays purely
 event-determined and its screenshots reproduce, while a real finger holding perfectly still off
 the harness still gets its menu on time. Once elapsed time crosses `pressAndHoldMs` (500,
@@ -189,7 +190,7 @@ canvas) its release selects what it acted on, exactly as a mouse stroke's does.
 channel.** Anything a per-cycle re-entry produces is counted in CYCLES — wall clock — while
 everything a drained event produces is counted in EVENT time; where the two can disagree
 visibly, the cycle-driven half is suppressed while `Automator.animationsPacingControl` is active
-and the Automator is not idle. Beyond the momentum glide (`viewports-and-planes.md`) and the
+and a test is playing. Beyond the momentum glide (`viewports-and-planes.md`) and the
 hold's between-events check above, `_dispatchEventsFollowingMouseMove` takes an `atDrainedEvent`
 seat argument — `true` from the move pipeline and the teleport, `false` from the per-cycle hover
 re-sync — and under a paced replay it dispatches `pressMoved` only from the drained-event seat.

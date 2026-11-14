@@ -62,8 +62,8 @@ const RECORDED = {
   'ActivePointerWdgt#_updateDragEmbedStateMachine': 17,
   'ActivePointerWdgt#determineGrabs': 37,
   'ActivePointerWdgt#drop': 42,
-  'ActivePointerWdgt#processPointerDown': 22,
-  'ActivePointerWdgt#processPointerUp': 80,
+  'ActivePointerWdgt#processPointerDown': 17,
+  'ActivePointerWdgt#processPointerUp': 76,
   'BrowserInputBridge#_initKeyboardEventListeners': 19,
   'CaretWdgt#_oneScrollCaretIntoViewPassNoSettle': 21,
   'CaretWdgt#processKeyDown': 30,
@@ -151,7 +151,6 @@ const RECORDED = {
   'boot/extensions/SWCanvasElement-extensions.coffee#swCanvasEnsureAtlasForFont': 22,
   'boot/extensions/SWCanvasElement-extensions.coffee#swCanvasInstallPoisonedKeyRecorder': 18,
   'boot/globalFunctions.coffee#boot': 30,
-  'boot/globalFunctions.coffee#createWorldAndStartStepping': 20,
   'boot/globalFunctions.coffee#loadJSFilePromise': 18,
 };
 const RECORDED_IN_HARNESS = {

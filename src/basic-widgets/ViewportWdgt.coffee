@@ -1436,7 +1436,7 @@ class ViewportWdgt extends ClippingWdgt
           # font-atlas-wait idea).
           glideSuppressed = Automator? and
             Automator.animationsPacingControl and
-            Automator.state != Automator.IDLE
+            aTestIsPlaying()
           if !@hasVelocity or glideSuppressed or
           ((Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5))
             @_stopScrollStep()

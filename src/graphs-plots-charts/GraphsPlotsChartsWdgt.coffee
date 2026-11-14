@@ -16,7 +16,7 @@ class GraphsPlotsChartsWdgt extends RatioLockedWdgt
   # @dateLastTicked to a fixed date under the same condition). Turned on by the macro's
   # AutomatorEventCommandTurnOnAnimationsPacingControl.
   _animationFrozenForDeterministicReplay: ->
-    Automator? and Automator.animationsPacingControl and Automator.state == Automator.PLAYING
+    Automator? and Automator.animationsPacingControl and aTestIsPlaying()
 
   # The example plots animate by advancing @graphNumber each step (each concrete plot's
   # drawPlot tail seeds its RNG off @graphNumber). Freeze that advance under replay so the plot

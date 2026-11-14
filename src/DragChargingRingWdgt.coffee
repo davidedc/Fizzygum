@@ -50,7 +50,7 @@ class DragChargingRingWdgt extends Widget
   # Elapsed ms from the linger origin. Event-time (deterministic) under the harness, wall-time in
   # production — the analog-clock precedent (AnalogClockAppearance._calculateHandsAngles).
   _elapsedForCharge: ->
-    if Automator? and Automator.animationsPacingControl and Automator.state == Automator.PLAYING
+    if Automator? and Automator.animationsPacingControl and aTestIsPlaying()
       if WorldWdgt.timeOfEventBeingProcessed? and @lingerOriginEventTime?
         WorldWdgt.timeOfEventBeingProcessed - @lingerOriginEventTime
       else

@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1, §2, §3, §4, §7's first step. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1 to §5, §7's first step. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -110,7 +110,7 @@ who has never seen the code.
 | 2 | `hashCode` leaves `Object.prototype` | ½ day | The last enumerable key on `Object.prototype`, and the reason the rigs give for never using `waitForFunction`. **In plain words:** a small helper for hashing text was attached to every object on the page. Every object then carries one extra visible property, which loops and test tools trip over. Make it an ordinary function that only text uses. | None | No | 6 | Landed 2026-11-13 |
 | 3 | Map outlines are data | ½ day | About 3,000 of `src/`'s 37,681 code lines (8%), written as 2,638 `lineTo` statements. **In plain words:** the two maps are drawn by thousands of hand-written "draw a line to this point" instructions. Keep the points in a list and let one short loop draw them. | None expected (one test draws both maps) | No | 10 | Landed 2026-11-13 |
 | 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Landed 2026-11-14 |
-| 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Queued for the loop |
+| 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Landed 2026-11-14 |
 | 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 queued for the loop; step 2's measurement queued last, its decision the owner's |
 | 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | First step (the serial path's three legs) landed 2026-11-14; the table queued for the loop |
 | 8 | A test is its macro | 2 to 3 days | The six command classes, the timed command cursor, 389 copies of one preamble, about 38,900 log lines a run. **In plain words:** every test file still opens with the same five-step recipe, left from when tests were recordings played back step by step. A test is now a single script, so the recipe and the player built for it can go. | Low (the macro's start cycle) | No | 3 | Queued for the loop |
@@ -435,6 +435,26 @@ table.
 
 **Re-measure.**
 `grep -rn '\bAutomator\(Player\)\?\b' Fizzygum/src --include='*.coffee' | grep -v ':[0-9]*:\s*#' | grep -vc 'src/macros/'`.
+
+**Landed 2026-11-14.** The question is `aTestIsPlaying()`, a boot function in
+`src/boot/globalFunctions.coffee` holding the one guarded read of the automator's state (false
+without the harness part). It is asked of no world: the automator outlives worlds and a widget may
+ask while none stands. (A `WorldWdgt` static was tried first: it raised that class's method
+ceiling, which a ratchet forbids.) The 17 sites ask it; each keeps its toggle beside it, with its
+own `Automator?` guard, operands in the site's order; the two spellings were equal because the
+state starts IDLE and is only ever set IDLE or PLAYING. The hand's four reaches into the harness
+page's DOM moved, bodies verbatim, into `ActivePointerTestSupport`, installed onto
+`ActivePointerWdgt` at boot like the other five; the hand calls each through an existence test
+(`@_showButtonIndicatorPressed? e if aTestIsPlaying()`). The install lines moved, verbatim, into
+their own boot function, `installTestSupportMembers`, which the complexity ratchet required
+(`createWorldAndStartStepping` fell below the threshold and its record went; two of the hand's
+records fell, 22 to 17 and 80 to 76). The re-measure command prints 29 (46 before). Evidence:
+the site table with each old and new condition (equal truth tables); the resolution map changes
+exactly the methods holding a site and adds the four members; `check-part-edges` green. One cost,
+kept on purpose: six sites (the frame loop, the hand's down, up and move, the context-menu open, a
+3D canvas's clock) used to be stripped from a production build by their `Automator?` guard; they
+now make one cheap call there that answers false.
+U6-PENDING
 
 ---
 
@@ -897,3 +917,6 @@ Do not commit or push without asking me.
 - [x] §4 (½ to 1 day): the in-browser failure zip, a second and ungated way to capture references, with the vendored JSZip and FileSaver (the owner ruled 2026-11-13: delete)
   — CLOSED 2026-11-14 (loop U5): the zip, its two libraries, its two menu rows and the counter's download are gone
   (§4, "Landed").
+- [x] §5 (1 day): one seam for "a test is playing" — 46 lines in 15 core files name the harness, in two spellings; the hand fades the harness's DOM
+  — CLOSED 2026-11-14 (loop U6): `aTestIsPlaying()` asked at the 17 sites; the hand's harness DOM in
+  `ActivePointerTestSupport` (§5, "Landed").

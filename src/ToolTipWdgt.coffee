@@ -60,7 +60,7 @@ class ToolTipWdgt extends Widget
 
   @createInAWhileIfHandStillContainedInWidget: (widgetInvokingThis, contents, delay = 500) ->
     if Automator? and Automator.animationsPacingControl and
-     Automator.state != Automator.IDLE
+     aTestIsPlaying()
         @createBubbleHelpIfHandStillOnWidget contents, widgetInvokingThis
     else
       # the set tracks PENDING timeouts only (cancelAllScheduledToolTips clears them):
