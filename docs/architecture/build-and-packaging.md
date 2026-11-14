@@ -493,15 +493,15 @@ but from the **IMAGE**, because a lazy part's classes are absent from `js/pre-co
 The rules that came out of it are the whole of what the next slice needs:
 
 ⚠⚠ **THE IMAGE COST TRACKS CLASS COUNT AT LEAST AS MUCH AS CODE BYTES.** Every class compiles to its
-own prototype scaffolding, which the source bytes do not show, so `authoring` and `maps` move almost
-exactly the same source and `authoring` takes 1.65× as much off the image — it has 54 classes to
-maps' 4. The extreme case is an icon round: mostly one-method classes, the smallest-per-class slice
+own prototype scaffolding, which the source bytes do not show, so at the 2026-08 slicing `authoring` and
+`maps` moved almost exactly the same source and `authoring` took 1.65× as much off the image — it had
+54 classes to maps' 4. The extreme case is an icon round: mostly one-method classes, the smallest-per-class slice
 there is, taking the most off the image of any of them. ⇒ **Do not promise a number before the two
 builds are fingerprinted** (§8) — and when you must guess, a many-small-classes slice will beat its
 byte estimate and a heavily-commented one will fall short of it.
 
-⚠⚠ **SOURCE BYTES DO NOT PREDICT IMAGE BYTES, and the ratio between them varies by 2.5×.** `maps` is vector-path
-artwork — 2.5% comment bytes, essentially all code. `src/spreadsheet` is 72.1% COMMENT bytes, and comments never reach a
+⚠⚠ **SOURCE BYTES DO NOT PREDICT IMAGE BYTES, and the ratio between them varies by 2.5×.** `maps` (at the 2026-08
+slicing, before its outlines became tables) was vector-path artwork — 2.5% comment bytes, essentially all code. `src/spreadsheet` is 72.1% COMMENT bytes, and comments never reach a
 compiled, minified image. So a per-KB-of-source estimate calibrated on one slice was 33% LOW for `maps` and 50% HIGH for
 `spreadsheet`. **Estimate from a slice's CODE bytes, and treat even that as a guess until the two builds have been
 diffed** (`scripts/build-tree-fingerprint.js`, §8).

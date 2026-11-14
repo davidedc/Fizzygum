@@ -239,8 +239,9 @@ problem (opaque, uneditable, AA-dependent) is untouched. This plan replaces the 
 4. **Zero call-site churn.** Concrete appearance class names are kept; only each class's
    *parent* and *body* change. All 90+ `createAppearance` sites, the runtime pencil↔eye swap,
    and the build's load-order edges are untouched.
-5. **Honest size accounting** (don't oversell): kept-vector files (§5) total ≈3,800 lines —
-   dominated by the two maps (3,154) which stay by owner decision. With per-icon grid
+5. **Honest size accounting** (don't oversell): kept-vector files (§5) total ≈1,320 lines —
+   the two maps 674 of them, which stay by owner decision (≈3,800 and 3,154 until the maps'
+   outlines became tables on 2026-11-13). With per-icon grid
    subsets (§5 cohorts: most icons 2 grids ≈60–70 lines; detailed desktop/app icons 3 grids
    ≈110; tiny-chrome icons 1 grid ≈30), the ~79 converted files land around ≈5,000–5,800
    lines vs ≈6,400 vector lines today — a real but modest net shrink; bytes shrink more
@@ -416,12 +417,12 @@ data structure already supports it; do not build it now.
 > size-aware vector redraw (§5b, `TypewriterIconAppearance`). Each icon's re-judge picks
 > among: keep-vector / pixel-grid (this plan) / size-aware redraw (§5b).
 
-**Stays vector (11 files, ≈3,800 lines)** — each for a stated reason, finalized on the P4
+**Stays vector (11 files, ≈1,320 lines; ≈3,800 until the two maps' outlines became tables on 2026-11-13, `plans/top-10-cleanups-round-2-plan.md` §3)** — each for a stated reason, finalized on the P4
 contact sheet:
 | File | Reason |
 |---|---|
-| `maps/SimpleUSAMapIconAppearance` (2316) | owner-mandated keep |
-| `maps/SimpleWorldMapIconAppearance` (838) | owner-mandated keep |
+| `maps/SimpleUSAMapIconAppearance` (466) | owner-mandated keep |
+| `maps/SimpleWorldMapIconAppearance` (208) | owner-mandated keep |
 | `icons/IconAppearance` (337) | stays as the vector base + `PixelIconAppearance`'s parent |
 | 4 gradient icons (§1 list, ≈103 total) | gradients don't fit a small index palette |
 | `icons/FizzygumLogoWithTextIconAppearance` (179) | `fillText` typography |

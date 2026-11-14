@@ -1,5 +1,190 @@
 class SimpleWorldMapIconAppearance extends IconAppearance
 
+  # The outlines, one row per polygon in the order they are painted: its contours, each a flat list of x, y
+  # pairs (a moveTo the first pair, a lineTo each next, then a closePath), and on a polygon drawn shifted the
+  # translate it is drawn under. Coordinates are in the 1000 × 530 specification space.
+  @outlines: [
+    # October revol + Bolshevik Islands
+    {contours: [
+      [732, 22, 738, 20, 762, 33, 748, 35, 728, 29, 732, 22]
+    ]}
+    # Svalbard
+    {contours: [
+      [
+        525, 21, 542, 23, 544, 28, 528, 31, 537, 42, 528, 42, 525, 36, 520, 42, 509, 42, 508, 35, 503, 30, 506, 26,
+        525, 21
+      ]
+    ]}
+    # Zemlya Georga + other islands
+    {translate: [81, -263], contours: [
+      [547, 277, 558, 274, 557, 284, 548, 287, 517, 288, 515, 284, 535, 278, 547, 277]
+    ]}
+    # Novaya Zemlya
+    {contours: [
+      [639, 46, 659, 41, 658, 46, 643, 49, 635, 53, 625, 60, 627, 73, 616, 71, 614, 67, 621, 50, 639, 46]
+    ]}
+    # Siberian Island 3
+    {contours: [
+      [854, 46, 859, 46, 859, 50, 856, 53, 854, 52, 854, 46]
+    ]}
+    # Siberian Island 2
+    {contours: [
+      [862, 48, 868, 51, 863, 52, 862, 48]
+    ]}
+    # Siberian Island 1
+    {contours: [
+      [859, 55, 868, 60, 859, 60, 859, 55]
+    ]}
+    # Iceland
+    {contours: [
+      [405, 98, 411, 91, 416, 96, 427, 94, 429, 103, 412, 110, 405, 98]
+    ]}
+    # GB
+    {contours: [
+      [454, 128, 460, 126, 459, 131, 463, 132, 468, 146, 472, 149, 471, 155, 457, 159, 460, 154, 454, 152, 460, 146, 454, 128]
+    ]}
+    # Ireland
+    {contours: [
+      [443, 147, 452, 143, 451, 152, 448, 156, 443, 156, 443, 147]
+    ]}
+    # Japan
+    {contours: [
+      [
+        864, 158, 868, 151, 868, 168, 866, 181, 873, 188, 861, 196, 862, 205, 857, 219, 844, 223, 831, 229, 831, 222, 855, 206,
+        858, 194, 865, 172, 864, 158
+      ]
+    ]}
+    # Sardinia
+    {contours: [
+      [493, 203, 492, 197, 494, 195, 495, 203, 493, 203]
+    ]}
+    # Cuba
+    {contours: [
+      [236, 257, 248, 258, 262, 264, 255, 266, 246, 261, 238, 260, 236, 257]
+    ]}
+    # Haiti + Dominican Republic
+    {contours: [
+      [270, 267, 279, 272, 265, 273, 270, 267]
+    ]}
+    # Philippines
+    {contours: [
+      [805, 272, 808, 274, 816, 296, 819, 313, 811, 311, 805, 296, 802, 276, 805, 272]
+    ]}
+    # South America
+    {contours: [
+      [
+        266, 296, 281, 296, 297, 300, 313, 311, 325, 315, 334, 334, 369, 346, 373, 358, 365, 371, 358, 393, 352, 405, 338, 412,
+        326, 436, 317, 445, 310, 455, 296, 462, 285, 481, 285, 496, 279, 509, 284, 520, 278, 524, 269, 523, 262, 506, 260, 483,
+        262, 468, 268, 440, 270, 421, 271, 389, 261, 380, 255, 371, 246, 354, 249, 333, 256, 320, 255, 309, 266, 296
+      ]
+    ]}
+    # Sri Lanka
+    {contours: [
+      [691, 303, 696, 310, 691, 313, 691, 303]
+    ]}
+    # Kalimantan
+    {contours: [
+      [773, 325, 797, 311, 797, 325, 792, 344, 775, 340, 773, 325]
+    ]}
+    # Sulawesi
+    {contours: [
+      [803, 330, 810, 330, 811, 351, 800, 348, 803, 330]
+    ]}
+    # Papua
+    {contours: [
+      [833, 335, 867, 346, 877, 352, 884, 367, 855, 359, 849, 350, 839, 345, 833, 335]
+    ]}
+    # Java
+    {contours: [
+      [763, 351, 789, 355, 795, 361, 783, 360, 763, 354, 763, 351]
+    ]}
+    # Madagascar
+    {contours: [
+      [607, 368, 602, 395, 595, 403, 590, 398, 594, 387, 592, 377, 607, 368]
+    ]}
+    # Australia
+    {contours: [
+      [
+        860, 388, 864, 370, 876, 391, 887, 409, 892, 421, 890, 442, 883, 458, 871, 462, 857, 456, 850, 451, 843, 441, 837, 438,
+        826, 436, 812, 441, 804, 441, 791, 445, 791, 435, 786, 419, 785, 403, 804, 395, 809, 390, 817, 380, 827, 380, 833, 371,
+        847, 371, 847, 383, 860, 388
+      ]
+    ]}
+    # New Zealand
+    {contours: [
+      [949, 449, 965, 462, 943, 489, 934, 493, 931, 488, 946, 472, 956, 461, 949, 449]
+    ]}
+    # Tasmania
+    {contours: [
+      [870, 469, 880, 469, 878, 478, 872, 476, 870, 469]
+    ]}
+    # Corsica
+    {contours: [
+      [493, 195, 493, 192, 494, 191, 494, 195, 493, 195]
+    ]}
+    # Africa
+    {contours: [
+      [
+        477, 210, 490, 211, 499, 211, 498, 223, 518, 232, 531, 225, 550, 230, 558, 229, 574, 269, 592, 297, 611, 294, 609, 307,
+        602, 319, 582, 337, 578, 349, 582, 364, 578, 378, 566, 387, 568, 396, 560, 406, 553, 417, 532, 426, 524, 426, 521, 423,
+        513, 408, 505, 388, 503, 374, 508, 357, 494, 334, 494, 322, 486, 318, 483, 313, 444, 318, 426, 295, 424, 290, 423, 262,
+        428, 250, 440, 235, 443, 227, 454, 215, 463, 216, 471, 212, 477, 210, 477, 210
+      ]
+    ]}
+    # Greenland
+    {contours: [
+      [
+        353, 5, 370, 3, 407, 6, 435, 17, 425, 23, 415, 34, 420, 40, 419, 51, 410, 59, 413, 71, 401, 80, 360, 97,
+        350, 121, 336, 116, 328, 83, 313, 52, 306, 46, 300, 44, 272, 43, 271, 31, 287, 28, 301, 12, 314, 10, 326, 12,
+        353, 5
+      ]
+    ]}
+    # Noth America
+    {contours: [
+      [
+        287, 23, 278, 23, 258, 36, 253, 37, 247, 54, 254, 55, 257, 61, 264, 62, 267, 68, 276, 70, 281, 76, 282, 82,
+        300, 88, 293, 98, 285, 94, 289, 100, 289, 104, 283, 105, 286, 111, 272, 109, 266, 104, 253, 104, 253, 100, 266, 98,
+        268, 86, 259, 84, 257, 76, 241, 76, 245, 91, 236, 95, 241, 103, 239, 106, 235, 107, 221, 103, 210, 114, 207, 124,
+        212, 126, 214, 132, 221, 133, 230, 139, 241, 143, 240, 149, 249, 155, 248, 145, 250, 142, 256, 138, 255, 128, 252, 123,
+        254, 112, 265, 110, 269, 111, 275, 116, 280, 125, 287, 123, 291, 120, 298, 134, 310, 145, 313, 160, 327, 168, 326, 172,
+        306, 169, 311, 156, 299, 159, 294, 160, 295, 176, 302, 179, 286, 186, 283, 181, 278, 185, 273, 193, 263, 201, 257, 217,
+        252, 222, 242, 232, 246, 245, 244, 249, 235, 233, 206, 236, 201, 240, 199, 252, 198, 260, 203, 270, 214, 271, 218, 269,
+        226, 262, 224, 280, 238, 284, 239, 300, 255, 304, 241, 306, 234, 302, 228, 292, 221, 287, 205, 280, 187, 276, 180, 272,
+        175, 267, 174, 258, 169, 249, 163, 240, 151, 230, 164, 255, 153, 245, 141, 221, 134, 218, 130, 207, 125, 203, 122, 186,
+        122, 163, 113, 161, 111, 149, 83, 124, 57, 116, 56, 119, 47, 122, 48, 117, 42, 120, 39, 126, 30, 136, 12, 143,
+        21, 135, 28, 132, 30, 124, 12, 118, 8, 111, 12, 106, 19, 105, 20, 100, 5, 99, 3, 94, 19, 93, 8, 80,
+        23, 70, 57, 72, 89, 78, 113, 71, 119, 75, 144, 78, 144, 69, 128, 68, 125, 56, 131, 52, 148, 52, 148, 45,
+        130, 45, 125, 42, 162, 30, 207, 31, 204, 17, 215, 16, 227, 10, 235, 11, 269, 6, 291, 7, 301, 12, 287, 23
+      ]
+    ]}
+    # Eurasia
+    {contours: [
+      [
+        762, 38, 767, 42, 781, 42, 787, 52, 775, 55, 776, 58, 788, 56, 798, 59, 796, 60, 810, 62, 813, 57, 826, 63,
+        831, 71, 849, 70, 856, 69, 861, 62, 885, 67, 899, 71, 912, 71, 915, 76, 955, 76, 996, 97, 990, 104, 981, 103,
+        973, 100, 965, 102, 966, 112, 941, 122, 927, 122, 925, 124, 922, 137, 919, 145, 914, 151, 905, 159, 904, 156, 902, 143,
+        907, 131, 917, 123, 922, 120, 921, 116, 911, 115, 905, 116, 900, 124, 863, 124, 847, 143, 859, 149, 859, 167, 848, 183,
+        842, 191, 834, 189, 827, 200, 829, 216, 821, 220, 816, 204, 814, 201, 805, 198, 796, 207, 808, 210, 810, 212, 801, 218,
+        806, 228, 800, 252, 790, 260, 768, 266, 760, 272, 768, 280, 774, 294, 764, 304, 750, 293, 748, 305, 750, 311, 759, 327,
+        753, 326, 751, 322, 744, 301, 739, 278, 732, 281, 725, 261, 715, 263, 709, 268, 693, 282, 689, 302, 682, 305, 677, 295,
+        674, 285, 671, 264, 665, 266, 655, 249, 644, 252, 633, 249, 616, 243, 608, 234, 606, 235, 605, 241, 610, 248, 615, 250,
+        635, 258, 627, 274, 621, 278, 594, 291, 590, 279, 566, 236, 562, 236, 559, 229, 567, 228, 569, 213, 549, 212, 547, 210,
+        543, 199, 559, 194, 566, 193, 585, 196, 582, 189, 576, 184, 570, 183, 556, 178, 553, 180, 549, 187, 548, 195, 536, 198,
+        534, 211, 531, 209, 524, 195, 505, 181, 505, 187, 514, 196, 521, 201, 516, 201, 511, 211, 505, 208, 513, 204, 505, 196,
+        495, 185, 488, 186, 478, 190, 470, 201, 465, 212, 465, 212, 465, 212, 465, 212, 465, 212, 465, 212, 465, 212, 465, 212,
+        456, 212, 444, 205, 448, 188, 458, 187, 467, 187, 467, 180, 459, 168, 481, 155, 485, 150, 493, 148, 493, 134, 499, 132,
+        499, 139, 505, 139, 524, 132, 536, 115, 527, 107, 536, 93, 531, 91, 514, 112, 514, 124, 506, 132, 499, 124, 493, 128,
+        489, 115, 516, 86, 513, 81, 534, 69, 551, 70, 559, 78, 568, 80, 577, 83, 582, 92, 575, 94, 564, 91, 573, 102,
+        576, 104, 584, 95, 590, 93, 592, 83, 597, 83, 597, 92, 610, 85, 628, 83, 639, 78, 642, 79, 660, 85, 658, 73,
+        659, 68, 666, 58, 678, 63, 694, 63, 697, 57, 710, 56, 715, 47, 751, 43, 753, 41, 754, 39, 762, 38, 762, 38
+      ]
+    ]}
+    # Sumatra
+    {contours: [
+      [764, 341, 762, 350, 754, 345, 748, 336, 736, 315, 748, 323, 764, 341]
+    ]}
+  ]
+
   constructor: (@widget) ->
     super
     @preferredSize = new Point 500, 265
@@ -8,831 +193,17 @@ class SimpleWorldMapIconAppearance extends IconAppearance
   paintFunction: (context) ->
     fillColor = @widget.color
     fillColorString = fillColor.toString()
-
-    #// October revol + Bolshevik Islands Drawing
-    context.beginPath()
-    context.moveTo 732, 22
-    context.lineTo 738, 20
-    context.lineTo 762, 33
-    context.lineTo 748, 35
-    context.lineTo 728, 29
-    context.lineTo 732, 22
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Svalbard Drawing
-    context.beginPath()
-    context.moveTo 525, 21
-    context.lineTo 542, 23
-    context.lineTo 544, 28
-    context.lineTo 528, 31
-    context.lineTo 537, 42
-    context.lineTo 528, 42
-    context.lineTo 525, 36
-    context.lineTo 520, 42
-    context.lineTo 509, 42
-    context.lineTo 508, 35
-    context.lineTo 503, 30
-    context.lineTo 506, 26
-    context.lineTo 525, 21
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Zemlya Georga + other islands Drawing
-    context.save()
-    context.translate 81, -263
-    context.beginPath()
-    context.moveTo 547, 277
-    context.lineTo 558, 274
-    context.lineTo 557, 284
-    context.lineTo 548, 287
-    context.lineTo 517, 288
-    context.lineTo 515, 284
-    context.lineTo 535, 278
-    context.lineTo 547, 277
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    context.restore()
-    #// Novaya Zemlya Drawing
-    context.beginPath()
-    context.moveTo 639, 46
-    context.lineTo 659, 41
-    context.lineTo 658, 46
-    context.lineTo 643, 49
-    context.lineTo 635, 53
-    context.lineTo 625, 60
-    context.lineTo 627, 73
-    context.lineTo 616, 71
-    context.lineTo 614, 67
-    context.lineTo 621, 50
-    context.lineTo 639, 46
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Siberian Island 3 Drawing
-    context.beginPath()
-    context.moveTo 854, 46
-    context.lineTo 859, 46
-    context.lineTo 859, 50
-    context.lineTo 856, 53
-    context.lineTo 854, 52
-    context.lineTo 854, 46
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Siberian Island 2 Drawing
-    context.beginPath()
-    context.moveTo 862, 48
-    context.lineTo 868, 51
-    context.lineTo 863, 52
-    context.lineTo 862, 48
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Siberian Island 1 Drawing
-    context.beginPath()
-    context.moveTo 859, 55
-    context.lineTo 868, 60
-    context.lineTo 859, 60
-    context.lineTo 859, 55
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Iceland Drawing
-    context.beginPath()
-    context.moveTo 405, 98
-    context.lineTo 411, 91
-    context.lineTo 416, 96
-    context.lineTo 427, 94
-    context.lineTo 429, 103
-    context.lineTo 412, 110
-    context.lineTo 405, 98
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// GB Drawing
-    context.beginPath()
-    context.moveTo 454, 128
-    context.lineTo 460, 126
-    context.lineTo 459, 131
-    context.lineTo 463, 132
-    context.lineTo 468, 146
-    context.lineTo 472, 149
-    context.lineTo 471, 155
-    context.lineTo 457, 159
-    context.lineTo 460, 154
-    context.lineTo 454, 152
-    context.lineTo 460, 146
-    context.lineTo 454, 128
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Ireland Drawing
-    context.beginPath()
-    context.moveTo 443, 147
-    context.lineTo 452, 143
-    context.lineTo 451, 152
-    context.lineTo 448, 156
-    context.lineTo 443, 156
-    context.lineTo 443, 147
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Japan Drawing
-    context.beginPath()
-    context.moveTo 864, 158
-    context.lineTo 868, 151
-    context.lineTo 868, 168
-    context.lineTo 866, 181
-    context.lineTo 873, 188
-    context.lineTo 861, 196
-    context.lineTo 862, 205
-    context.lineTo 857, 219
-    context.lineTo 844, 223
-    context.lineTo 831, 229
-    context.lineTo 831, 222
-    context.lineTo 855, 206
-    context.lineTo 858, 194
-    context.lineTo 865, 172
-    context.lineTo 864, 158
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Sardinia Drawing
-    context.beginPath()
-    context.moveTo 493, 203
-    context.lineTo 492, 197
-    context.lineTo 494, 195
-    context.lineTo 495, 203
-    context.lineTo 493, 203
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Cuba Drawing
-    context.beginPath()
-    context.moveTo 236, 257
-    context.lineTo 248, 258
-    context.lineTo 262, 264
-    context.lineTo 255, 266
-    context.lineTo 246, 261
-    context.lineTo 238, 260
-    context.lineTo 236, 257
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Haiti + Dominican Republic Drawing
-    context.beginPath()
-    context.moveTo 270, 267
-    context.lineTo 279, 272
-    context.lineTo 265, 273
-    context.lineTo 270, 267
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Philippines Drawing
-    context.beginPath()
-    context.moveTo 805, 272
-    context.lineTo 808, 274
-    context.lineTo 816, 296
-    context.lineTo 819, 313
-    context.lineTo 811, 311
-    context.lineTo 805, 296
-    context.lineTo 802, 276
-    context.lineTo 805, 272
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// South America Drawing
-    context.beginPath()
-    context.moveTo 266, 296
-    context.lineTo 281, 296
-    context.lineTo 297, 300
-    context.lineTo 313, 311
-    context.lineTo 325, 315
-    context.lineTo 334, 334
-    context.lineTo 369, 346
-    context.lineTo 373, 358
-    context.lineTo 365, 371
-    context.lineTo 358, 393
-    context.lineTo 352, 405
-    context.lineTo 338, 412
-    context.lineTo 326, 436
-    context.lineTo 317, 445
-    context.lineTo 310, 455
-    context.lineTo 296, 462
-    context.lineTo 285, 481
-    context.lineTo 285, 496
-    context.lineTo 279, 509
-    context.lineTo 284, 520
-    context.lineTo 278, 524
-    context.lineTo 269, 523
-    context.lineTo 262, 506
-    context.lineTo 260, 483
-    context.lineTo 262, 468
-    context.lineTo 268, 440
-    context.lineTo 270, 421
-    context.lineTo 271, 389
-    context.lineTo 261, 380
-    context.lineTo 255, 371
-    context.lineTo 246, 354
-    context.lineTo 249, 333
-    context.lineTo 256, 320
-    context.lineTo 255, 309
-    context.lineTo 266, 296
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Sri Lanka Drawing
-    context.beginPath()
-    context.moveTo 691, 303
-    context.lineTo 696, 310
-    context.lineTo 691, 313
-    context.lineTo 691, 303
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Kalimantan Drawing
-    context.beginPath()
-    context.moveTo 773, 325
-    context.lineTo 797, 311
-    context.lineTo 797, 325
-    context.lineTo 792, 344
-    context.lineTo 775, 340
-    context.lineTo 773, 325
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Sulawesi Drawing
-    context.beginPath()
-    context.moveTo 803, 330
-    context.lineTo 810, 330
-    context.lineTo 811, 351
-    context.lineTo 800, 348
-    context.lineTo 803, 330
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Papua Drawing
-    context.beginPath()
-    context.moveTo 833, 335
-    context.lineTo 867, 346
-    context.lineTo 877, 352
-    context.lineTo 884, 367
-    context.lineTo 855, 359
-    context.lineTo 849, 350
-    context.lineTo 839, 345
-    context.lineTo 833, 335
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Java Drawing
-    context.beginPath()
-    context.moveTo 763, 351
-    context.lineTo 789, 355
-    context.lineTo 795, 361
-    context.lineTo 783, 360
-    context.lineTo 763, 354
-    context.lineTo 763, 351
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Madagascar Drawing
-    context.beginPath()
-    context.moveTo 607, 368
-    context.lineTo 602, 395
-    context.lineTo 595, 403
-    context.lineTo 590, 398
-    context.lineTo 594, 387
-    context.lineTo 592, 377
-    context.lineTo 607, 368
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Australia Drawing
-    context.beginPath()
-    context.moveTo 860, 388
-    context.lineTo 864, 370
-    context.lineTo 876, 391
-    context.lineTo 887, 409
-    context.lineTo 892, 421
-    context.lineTo 890, 442
-    context.lineTo 883, 458
-    context.lineTo 871, 462
-    context.lineTo 857, 456
-    context.lineTo 850, 451
-    context.lineTo 843, 441
-    context.lineTo 837, 438
-    context.lineTo 826, 436
-    context.lineTo 812, 441
-    context.lineTo 804, 441
-    context.lineTo 791, 445
-    context.lineTo 791, 435
-    context.lineTo 786, 419
-    context.lineTo 785, 403
-    context.lineTo 804, 395
-    context.lineTo 809, 390
-    context.lineTo 817, 380
-    context.lineTo 827, 380
-    context.lineTo 833, 371
-    context.lineTo 847, 371
-    context.lineTo 847, 383
-    context.lineTo 860, 388
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// New Zealand Drawing
-    context.beginPath()
-    context.moveTo 949, 449
-    context.lineTo 965, 462
-    context.lineTo 943, 489
-    context.lineTo 934, 493
-    context.lineTo 931, 488
-    context.lineTo 946, 472
-    context.lineTo 956, 461
-    context.lineTo 949, 449
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Tasmania Drawing
-    context.beginPath()
-    context.moveTo 870, 469
-    context.lineTo 880, 469
-    context.lineTo 878, 478
-    context.lineTo 872, 476
-    context.lineTo 870, 469
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Corsica Drawing
-    context.beginPath()
-    context.moveTo 493, 195
-    context.lineTo 493, 192
-    context.lineTo 494, 191
-    context.lineTo 494, 195
-    context.lineTo 493, 195
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Africa Drawing
-    context.beginPath()
-    context.moveTo 477, 210
-    context.lineTo 490, 211
-    context.lineTo 499, 211
-    context.lineTo 498, 223
-    context.lineTo 518, 232
-    context.lineTo 531, 225
-    context.lineTo 550, 230
-    context.lineTo 558, 229
-    context.lineTo 574, 269
-    context.lineTo 592, 297
-    context.lineTo 611, 294
-    context.lineTo 609, 307
-    context.lineTo 602, 319
-    context.lineTo 582, 337
-    context.lineTo 578, 349
-    context.lineTo 582, 364
-    context.lineTo 578, 378
-    context.lineTo 566, 387
-    context.lineTo 568, 396
-    context.lineTo 560, 406
-    context.lineTo 553, 417
-    context.lineTo 532, 426
-    context.lineTo 524, 426
-    context.lineTo 521, 423
-    context.lineTo 513, 408
-    context.lineTo 505, 388
-    context.lineTo 503, 374
-    context.lineTo 508, 357
-    context.lineTo 494, 334
-    context.lineTo 494, 322
-    context.lineTo 486, 318
-    context.lineTo 483, 313
-    context.lineTo 444, 318
-    context.lineTo 426, 295
-    context.lineTo 424, 290
-    context.lineTo 423, 262
-    context.lineTo 428, 250
-    context.lineTo 440, 235
-    context.lineTo 443, 227
-    context.lineTo 454, 215
-    context.lineTo 463, 216
-    context.lineTo 471, 212
-    context.lineTo 477, 210
-    context.lineTo 477, 210
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Greenland Drawing
-    context.beginPath()
-    context.moveTo 353, 5
-    context.lineTo 370, 3
-    context.lineTo 407, 6
-    context.lineTo 435, 17
-    context.lineTo 425, 23
-    context.lineTo 415, 34
-    context.lineTo 420, 40
-    context.lineTo 419, 51
-    context.lineTo 410, 59
-    context.lineTo 413, 71
-    context.lineTo 401, 80
-    context.lineTo 360, 97
-    context.lineTo 350, 121
-    context.lineTo 336, 116
-    context.lineTo 328, 83
-    context.lineTo 313, 52
-    context.lineTo 306, 46
-    context.lineTo 300, 44
-    context.lineTo 272, 43
-    context.lineTo 271, 31
-    context.lineTo 287, 28
-    context.lineTo 301, 12
-    context.lineTo 314, 10
-    context.lineTo 326, 12
-    context.lineTo 353, 5
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Noth America Drawing
-    context.beginPath()
-    context.moveTo 287, 23
-    context.lineTo 278, 23
-    context.lineTo 258, 36
-    context.lineTo 253, 37
-    context.lineTo 247, 54
-    context.lineTo 254, 55
-    context.lineTo 257, 61
-    context.lineTo 264, 62
-    context.lineTo 267, 68
-    context.lineTo 276, 70
-    context.lineTo 281, 76
-    context.lineTo 282, 82
-    context.lineTo 300, 88
-    context.lineTo 293, 98
-    context.lineTo 285, 94
-    context.lineTo 289, 100
-    context.lineTo 289, 104
-    context.lineTo 283, 105
-    context.lineTo 286, 111
-    context.lineTo 272, 109
-    context.lineTo 266, 104
-    context.lineTo 253, 104
-    context.lineTo 253, 100
-    context.lineTo 266, 98
-    context.lineTo 268, 86
-    context.lineTo 259, 84
-    context.lineTo 257, 76
-    context.lineTo 241, 76
-    context.lineTo 245, 91
-    context.lineTo 236, 95
-    context.lineTo 241, 103
-    context.lineTo 239, 106
-    context.lineTo 235, 107
-    context.lineTo 221, 103
-    context.lineTo 210, 114
-    context.lineTo 207, 124
-    context.lineTo 212, 126
-    context.lineTo 214, 132
-    context.lineTo 221, 133
-    context.lineTo 230, 139
-    context.lineTo 241, 143
-    context.lineTo 240, 149
-    context.lineTo 249, 155
-    context.lineTo 248, 145
-    context.lineTo 250, 142
-    context.lineTo 256, 138
-    context.lineTo 255, 128
-    context.lineTo 252, 123
-    context.lineTo 254, 112
-    context.lineTo 265, 110
-    context.lineTo 269, 111
-    context.lineTo 275, 116
-    context.lineTo 280, 125
-    context.lineTo 287, 123
-    context.lineTo 291, 120
-    context.lineTo 298, 134
-    context.lineTo 310, 145
-    context.lineTo 313, 160
-    context.lineTo 327, 168
-    context.lineTo 326, 172
-    context.lineTo 306, 169
-    context.lineTo 311, 156
-    context.lineTo 299, 159
-    context.lineTo 294, 160
-    context.lineTo 295, 176
-    context.lineTo 302, 179
-    context.lineTo 286, 186
-    context.lineTo 283, 181
-    context.lineTo 278, 185
-    context.lineTo 273, 193
-    context.lineTo 263, 201
-    context.lineTo 257, 217
-    context.lineTo 252, 222
-    context.lineTo 242, 232
-    context.lineTo 246, 245
-    context.lineTo 244, 249
-    context.lineTo 235, 233
-    context.lineTo 206, 236
-    context.lineTo 201, 240
-    context.lineTo 199, 252
-    context.lineTo 198, 260
-    context.lineTo 203, 270
-    context.lineTo 214, 271
-    context.lineTo 218, 269
-    context.lineTo 226, 262
-    context.lineTo 224, 280
-    context.lineTo 238, 284
-    context.lineTo 239, 300
-    context.lineTo 255, 304
-    context.lineTo 241, 306
-    context.lineTo 234, 302
-    context.lineTo 228, 292
-    context.lineTo 221, 287
-    context.lineTo 205, 280
-    context.lineTo 187, 276
-    context.lineTo 180, 272
-    context.lineTo 175, 267
-    context.lineTo 174, 258
-    context.lineTo 169, 249
-    context.lineTo 163, 240
-    context.lineTo 151, 230
-    context.lineTo 164, 255
-    context.lineTo 153, 245
-    context.lineTo 141, 221
-    context.lineTo 134, 218
-    context.lineTo 130, 207
-    context.lineTo 125, 203
-    context.lineTo 122, 186
-    context.lineTo 122, 163
-    context.lineTo 113, 161
-    context.lineTo 111, 149
-    context.lineTo 83, 124
-    context.lineTo 57, 116
-    context.lineTo 56, 119
-    context.lineTo 47, 122
-    context.lineTo 48, 117
-    context.lineTo 42, 120
-    context.lineTo 39, 126
-    context.lineTo 30, 136
-    context.lineTo 12, 143
-    context.lineTo 21, 135
-    context.lineTo 28, 132
-    context.lineTo 30, 124
-    context.lineTo 12, 118
-    context.lineTo 8, 111
-    context.lineTo 12, 106
-    context.lineTo 19, 105
-    context.lineTo 20, 100
-    context.lineTo 5, 99
-    context.lineTo 3, 94
-    context.lineTo 19, 93
-    context.lineTo 8, 80
-    context.lineTo 23, 70
-    context.lineTo 57, 72
-    context.lineTo 89, 78
-    context.lineTo 113, 71
-    context.lineTo 119, 75
-    context.lineTo 144, 78
-    context.lineTo 144, 69
-    context.lineTo 128, 68
-    context.lineTo 125, 56
-    context.lineTo 131, 52
-    context.lineTo 148, 52
-    context.lineTo 148, 45
-    context.lineTo 130, 45
-    context.lineTo 125, 42
-    context.lineTo 162, 30
-    context.lineTo 207, 31
-    context.lineTo 204, 17
-    context.lineTo 215, 16
-    context.lineTo 227, 10
-    context.lineTo 235, 11
-    context.lineTo 269, 6
-    context.lineTo 291, 7
-    context.lineTo 301, 12
-    context.lineTo 287, 23
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Eurasia Drawing
-    context.beginPath()
-    context.moveTo 762, 38
-    context.lineTo 767, 42
-    context.lineTo 781, 42
-    context.lineTo 787, 52
-    context.lineTo 775, 55
-    context.lineTo 776, 58
-    context.lineTo 788, 56
-    context.lineTo 798, 59
-    context.lineTo 796, 60
-    context.lineTo 810, 62
-    context.lineTo 813, 57
-    context.lineTo 826, 63
-    context.lineTo 831, 71
-    context.lineTo 849, 70
-    context.lineTo 856, 69
-    context.lineTo 861, 62
-    context.lineTo 885, 67
-    context.lineTo 899, 71
-    context.lineTo 912, 71
-    context.lineTo 915, 76
-    context.lineTo 955, 76
-    context.lineTo 996, 97
-    context.lineTo 990, 104
-    context.lineTo 981, 103
-    context.lineTo 973, 100
-    context.lineTo 965, 102
-    context.lineTo 966, 112
-    context.lineTo 941, 122
-    context.lineTo 927, 122
-    context.lineTo 925, 124
-    context.lineTo 922, 137
-    context.lineTo 919, 145
-    context.lineTo 914, 151
-    context.lineTo 905, 159
-    context.lineTo 904, 156
-    context.lineTo 902, 143
-    context.lineTo 907, 131
-    context.lineTo 917, 123
-    context.lineTo 922, 120
-    context.lineTo 921, 116
-    context.lineTo 911, 115
-    context.lineTo 905, 116
-    context.lineTo 900, 124
-    context.lineTo 863, 124
-    context.lineTo 847, 143
-    context.lineTo 859, 149
-    context.lineTo 859, 167
-    context.lineTo 848, 183
-    context.lineTo 842, 191
-    context.lineTo 834, 189
-    context.lineTo 827, 200
-    context.lineTo 829, 216
-    context.lineTo 821, 220
-    context.lineTo 816, 204
-    context.lineTo 814, 201
-    context.lineTo 805, 198
-    context.lineTo 796, 207
-    context.lineTo 808, 210
-    context.lineTo 810, 212
-    context.lineTo 801, 218
-    context.lineTo 806, 228
-    context.lineTo 800, 252
-    context.lineTo 790, 260
-    context.lineTo 768, 266
-    context.lineTo 760, 272
-    context.lineTo 768, 280
-    context.lineTo 774, 294
-    context.lineTo 764, 304
-    context.lineTo 750, 293
-    context.lineTo 748, 305
-    context.lineTo 750, 311
-    context.lineTo 759, 327
-    context.lineTo 753, 326
-    context.lineTo 751, 322
-    context.lineTo 744, 301
-    context.lineTo 739, 278
-    context.lineTo 732, 281
-    context.lineTo 725, 261
-    context.lineTo 715, 263
-    context.lineTo 709, 268
-    context.lineTo 693, 282
-    context.lineTo 689, 302
-    context.lineTo 682, 305
-    context.lineTo 677, 295
-    context.lineTo 674, 285
-    context.lineTo 671, 264
-    context.lineTo 665, 266
-    context.lineTo 655, 249
-    context.lineTo 644, 252
-    context.lineTo 633, 249
-    context.lineTo 616, 243
-    context.lineTo 608, 234
-    context.lineTo 606, 235
-    context.lineTo 605, 241
-    context.lineTo 610, 248
-    context.lineTo 615, 250
-    context.lineTo 635, 258
-    context.lineTo 627, 274
-    context.lineTo 621, 278
-    context.lineTo 594, 291
-    context.lineTo 590, 279
-    context.lineTo 566, 236
-    context.lineTo 562, 236
-    context.lineTo 559, 229
-    context.lineTo 567, 228
-    context.lineTo 569, 213
-    context.lineTo 549, 212
-    context.lineTo 547, 210
-    context.lineTo 543, 199
-    context.lineTo 559, 194
-    context.lineTo 566, 193
-    context.lineTo 585, 196
-    context.lineTo 582, 189
-    context.lineTo 576, 184
-    context.lineTo 570, 183
-    context.lineTo 556, 178
-    context.lineTo 553, 180
-    context.lineTo 549, 187
-    context.lineTo 548, 195
-    context.lineTo 536, 198
-    context.lineTo 534, 211
-    context.lineTo 531, 209
-    context.lineTo 524, 195
-    context.lineTo 505, 181
-    context.lineTo 505, 187
-    context.lineTo 514, 196
-    context.lineTo 521, 201
-    context.lineTo 516, 201
-    context.lineTo 511, 211
-    context.lineTo 505, 208
-    context.lineTo 513, 204
-    context.lineTo 505, 196
-    context.lineTo 495, 185
-    context.lineTo 488, 186
-    context.lineTo 478, 190
-    context.lineTo 470, 201
-    context.lineTo 465, 212
-    context.lineTo 465, 212
-    context.lineTo 465, 212
-    context.lineTo 465, 212
-    context.lineTo 465, 212
-    context.lineTo 465, 212
-    context.lineTo 465, 212
-    context.lineTo 465, 212
-    context.lineTo 456, 212
-    context.lineTo 444, 205
-    context.lineTo 448, 188
-    context.lineTo 458, 187
-    context.lineTo 467, 187
-    context.lineTo 467, 180
-    context.lineTo 459, 168
-    context.lineTo 481, 155
-    context.lineTo 485, 150
-    context.lineTo 493, 148
-    context.lineTo 493, 134
-    context.lineTo 499, 132
-    context.lineTo 499, 139
-    context.lineTo 505, 139
-    context.lineTo 524, 132
-    context.lineTo 536, 115
-    context.lineTo 527, 107
-    context.lineTo 536, 93
-    context.lineTo 531, 91
-    context.lineTo 514, 112
-    context.lineTo 514, 124
-    context.lineTo 506, 132
-    context.lineTo 499, 124
-    context.lineTo 493, 128
-    context.lineTo 489, 115
-    context.lineTo 516, 86
-    context.lineTo 513, 81
-    context.lineTo 534, 69
-    context.lineTo 551, 70
-    context.lineTo 559, 78
-    context.lineTo 568, 80
-    context.lineTo 577, 83
-    context.lineTo 582, 92
-    context.lineTo 575, 94
-    context.lineTo 564, 91
-    context.lineTo 573, 102
-    context.lineTo 576, 104
-    context.lineTo 584, 95
-    context.lineTo 590, 93
-    context.lineTo 592, 83
-    context.lineTo 597, 83
-    context.lineTo 597, 92
-    context.lineTo 610, 85
-    context.lineTo 628, 83
-    context.lineTo 639, 78
-    context.lineTo 642, 79
-    context.lineTo 660, 85
-    context.lineTo 658, 73
-    context.lineTo 659, 68
-    context.lineTo 666, 58
-    context.lineTo 678, 63
-    context.lineTo 694, 63
-    context.lineTo 697, 57
-    context.lineTo 710, 56
-    context.lineTo 715, 47
-    context.lineTo 751, 43
-    context.lineTo 753, 41
-    context.lineTo 754, 39
-    context.lineTo 762, 38
-    context.lineTo 762, 38
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-    #// Sumatra Drawing
-    context.beginPath()
-    context.moveTo 764, 341
-    context.lineTo 762, 350
-    context.lineTo 754, 345
-    context.lineTo 748, 336
-    context.lineTo 736, 315
-    context.lineTo 748, 323
-    context.lineTo 764, 341
-    context.closePath()
-    context.fillStyle = fillColorString
-    context.fill()
-
+    for outline in SimpleWorldMapIconAppearance.outlines
+      if outline.translate?
+        context.save()
+        context.translate outline.translate[0], outline.translate[1]
+      context.beginPath()
+      for contour in outline.contours
+        context.moveTo contour[0], contour[1]
+        for i in [2...contour.length] by 2
+          context.lineTo contour[i], contour[i + 1]
+        context.closePath()
+      context.fillStyle = fillColorString
+      context.fill()
+      context.restore() if outline.translate?
+    return

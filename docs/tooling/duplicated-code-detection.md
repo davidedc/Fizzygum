@@ -92,10 +92,9 @@ script overrides them (e.g. `./find_duplicated_code.sh --min-tokens 35`).
 ## Gotchas
 
 1. **jscpd SILENTLY skips files over `maxLines`/`maxSize`** (defaults: 1000 lines / 100 KB).
-   With the defaults, every file over 1000 lines drops out — today `Widget.coffee` (5400+ and
-   still growing!), `WorldWdgt.coffee`, `SimpleUSAMapIconAppearance.coffee`,
-   `LCLCodePreprocessor.coffee`, `StringWdgt.coffee`, `ActivePointerWdgt.coffee`,
-   `FrameWdgt.coffee` and `MacroToolkit.coffee` — i.e. exactly where duplication hides.
+   With the defaults, every file over 1000 lines drops out — `Widget.coffee`, `WorldWdgt.coffee`,
+   `MacroToolkit.coffee`, `FrameWdgt.coffee`, `ActivePointerWdgt.coffee`, `StringWdgt.coffee`
+   and `ViewportWdgt.coffee` among them — i.e. exactly where duplication hides.
    `.jscpd.json` raises the caps to 20000 / 2mb; if a source file ever
    outgrows those, raise them again. **Coverage audit:** "Files analyzed" in
    `duplication-report/jscpd-report.md` should equal `find src -name '*.coffee' | wc -l`

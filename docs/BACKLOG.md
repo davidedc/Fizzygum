@@ -565,7 +565,6 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 
 ### `plans/top-10-cleanups-round-2-plan.md`
 AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first survey took the framework and the build, this one takes the test harness, the reference set and the verification tooling. Each item carries its evidence, its effort estimate, its re-measure command and its first step. The owner agreed with §1 to §9 on 2026-11-13 (§4 ruled: delete; §9 on its stated criterion) and left §10 out for now; an owner-launched `/loop` executes §1 to §9 one unit at a time (the plan's STATUS). ⛔ owner decision still open before the second step of §6.
-- [ ] §3 (½ day): map outlines are data — 2,638 `lineTo` statements in two files become coordinate tables and one loop, proven by an operation log
 - [ ] §4 (½ to 1 day): the in-browser failure zip, a second and ungated way to capture references, with the vendored JSZip and FileSaver (the owner ruled 2026-11-13: delete)
 - [ ] §5 (1 day): one seam for "a test is playing" — 46 lines in 15 core files name the harness, in two spellings; the hand fades the harness's DOM
 - [ ] §6 (2 days, then 1 to 2): one audited-suite gate driver in Node (three bash gates, their library and its rule-registry twin go); then instruments that share a suite pass (⛔ measured first, then the owner)

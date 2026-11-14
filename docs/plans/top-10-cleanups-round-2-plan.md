@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1, §2. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1, §2, §3. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -108,7 +108,7 @@ who has never seen the code.
 |---|---|---|---|---|---|---|---|
 | 1 | Class source text ships as a plain string literal | ½ day | A three-glyph escape, its decoder at boot, a build refusal, three characters no source may contain. **In plain words:** to store each class's source in a file, the build swaps quotes, backslashes and line breaks for three look-alike characters, and the page swaps them back when it starts. JavaScript already has a standard way to write any text safely, so neither swap is needed. | None | No | 8 | Landed 2026-11-13 |
 | 2 | `hashCode` leaves `Object.prototype` | ½ day | The last enumerable key on `Object.prototype`, and the reason the rigs give for never using `waitForFunction`. **In plain words:** a small helper for hashing text was attached to every object on the page. Every object then carries one extra visible property, which loops and test tools trip over. Make it an ordinary function that only text uses. | None | No | 6 | Landed 2026-11-13 |
-| 3 | Map outlines are data | ½ day | About 3,000 of `src/`'s 37,681 code lines (8%), written as 2,638 `lineTo` statements. **In plain words:** the two maps are drawn by thousands of hand-written "draw a line to this point" instructions. Keep the points in a list and let one short loop draw them. | None expected (one test draws a world map) | No | 10 | Queued for the loop |
+| 3 | Map outlines are data | ½ day | About 3,000 of `src/`'s 37,681 code lines (8%), written as 2,638 `lineTo` statements. **In plain words:** the two maps are drawn by thousands of hand-written "draw a line to this point" instructions. Keep the points in a list and let one short loop draw them. | None expected (one test draws both maps) | No | 10 | Landed 2026-11-13 |
 | 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Queued for the loop |
 | 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Queued for the loop |
 | 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 queued for the loop; step 2's measurement queued last, its decision the owner's |
@@ -266,8 +266,9 @@ re-emits them as tables, one loop per file, and an operation-log proof.
 - MEASURED: their bodies are 2,638 `context.lineTo` statements in 81 polygons (50 and 31
   `beginPath` calls), each polygon followed by the same `closePath` / `fillStyle` / `fill`.
 - MEASURED: one SystemTest draws a map: `SystemTest_macroSampleDashboardPlots`, whose sample
-  dashboard holds world maps. So the world map's pixels are held by that test's references;
-  the USA map's by none.
+  dashboard holds a USA map and a world map (its image 0 shows both). So both maps' pixels are
+  held by that test's references. (Corrected 2026-11-14 by the loop: this read "world maps" and
+  "the USA map's by none".)
 
 **Why it matters.** Polygon coordinates are data written as code. As code they are compiled in
 the browser on every compile-at-boot start of the `maps` part, masked by every static gate on
@@ -281,15 +282,30 @@ as a row with its own fields, never special-cased in code.
 
 **Risk.** None expected on references. The proof is not a screenshot: wrap a recording context
 around `paintFunction` on the old and the new class and require the two call logs (method names
-and arguments, in order) to be identical. That is stronger than pixels, covers the USA map that
-no test draws, and needs no capture; the dashboard test then confirms the world map at both
-densities.
+and arguments, in order) to be identical. That is stronger than pixels, covers every polygon
+whether or not a screenshot shows it, and needs no capture; the dashboard test then confirms
+both maps at both densities.
 
 **First step.** Write the recorder and take the old logs. Then write the converter as
 parse-and-re-emit (the workspace rule for bulk edits of structured files), never a regex pass.
 
 **Re-measure.**
 `grep -c 'context.lineTo' Fizzygum/src/maps/SimpleUSAMapIconAppearance.coffee Fizzygum/src/maps/SimpleWorldMapIconAppearance.coffee`.
+
+**Landed 2026-11-13.** Each map appearance holds its outlines as a class-level table, `@outlines`:
+one row per polygon in painting order, its `contours` a list of flat `[x, y, x, y, …]` lists and,
+on the one world polygon drawn shifted, a `translate` field; `paintFunction` is one loop that
+issues exactly the old calls in the old order (the per-polygon `fillStyle` set included).
+Maryland is the one polygon with two contours, a row like any other. A throwaway converter
+parsed each paint body with a strict per-line grammar (anything else stops it), kept every
+number's source text, and checked its own output by compiling the table back and walking it.
+The files went from 2,261 and 803 code lines to 410 and 171 (64,215 and 23,034 bytes to 25,691
+and 9,579); the re-measure command prints 1 for each (the loop's one `lineTo`). Evidence: a
+recording context (every call with its arguments and every property set, in order) driven
+through each appearance's `_paintColoredIcon`, the path a paint takes into `paintFunction`, at
+two widget sizes: the four operation logs (2,261 and 803 operations) are byte-identical old
+and new; the resolution map changes the two `paintFunction` members and nothing else;
+`SystemTest_macroSampleDashboardPlots` passes untouched at both densities and both pointers.
 
 ---
 
@@ -835,3 +851,6 @@ Do not commit or push without asking me.
   Phase 8): MEASURED — `page.waitForFunction` works on the harness page and `index.html` (Puppeteer) and on the harness
   page (Playwright WebKit), both before U2 (`hashCode` survived the call) and after (no enumerable key); the comments
   say so, and the rigs keep their bounded, named polls as a choice (§2, "Landed").
+- [x] §3 (½ day): map outlines are data — 2,638 `lineTo` statements in two files become coordinate tables and one loop, proven by an operation log
+  — CLOSED 2026-11-13 (loop U3): `@outlines` tables and one loop in each map appearance; the operation logs are
+  byte-identical (§3, "Landed").
