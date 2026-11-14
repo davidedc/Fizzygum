@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1 to §5, §6's step 1, §7, §8. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1 to §5, §6's step 1, §7, §8, §9. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -114,7 +114,7 @@ who has never seen the code.
 | 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 landed 2026-11-14; step 2's measurement queued last, its decision the owner's |
 | 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | Landed 2026-11-14 (the first step, then the table) |
 | 8 | A test is its macro | 2 to 3 days | The six command classes, the timed command cursor, 389 copies of one preamble, about 38,900 log lines a run. **In plain words:** every test file still opens with the same five-step recipe, left from when tests were recordings played back step by step. A test is now a single script, so the recipe and the player built for it can go. | Low (the macro's start cycle) | No | 3 | Landed 2026-11-14 |
-| 9 | Instruction files: a budget and one home per fact | 2 to 3 days | About 171 KB loaded into every session; each gate's story told in up to six places. **In plain words:** the notes every session must read before it starts have grown to the length of a short book, and the same explanation appears in several files. Keep the rules there and give each explanation one home. | None | Agreed 2026-11-13, on the item's criterion | 9 | Queued for the loop, last |
+| 9 | Instruction files: a budget and one home per fact | 2 to 3 days | About 171 KB loaded into every session; each gate's story told in up to six places. **In plain words:** the notes every session must read before it starts have grown to the length of a short book, and the same explanation appears in several files. Keep the rules there and give each explanation one home. | None | Agreed 2026-11-13, on the item's criterion | 9 | Landed 2026-11-14 |
 | 10 | The reference set: live axes, then one file per reference | 1 to 2 days, then 3 | Five single-valued path segments, the user-agent spoof, 213 lines of UA sniffing; then 4,046 files, 45.8 MB, and the reference loader. **In plain words:** every expected screenshot sits five folders deep in folders that never vary (one operating system, one browser), and is saved twice: as a picture and as the same picture wrapped in a script. Flatten the folders, then keep only the picture. | None (pixels untouched) | Step 2 depends on §4 | 2 | Not queued: left out for now by the owner (2026-11-13) |
 
 ---
@@ -801,6 +801,29 @@ before and after of that one section.
 **Re-measure.**
 `cat CLAUDE.md Fizzygum/CLAUDE.md Fizzygum-tests/CLAUDE.md | wc -c` (from the umbrella).
 
+**Landed 2026-11-14.** The criterion, applied sentence by sentence to `Fizzygum/CLAUDE.md`,
+`Fizzygum-tests/CLAUDE.md` and the eleven `"//…"` keys of `Fizzygum-tests/package.json`. A read-only
+survey classified each of their 727 sentences and found its home. Every sentence that carries ⚠ or ⛔
+or says never, must or always stayed as written, and so did every sentence a kept rule needs in order
+to mean anything (a kept "That gate …" keeps the sentence that names the gate); a handful were
+corrected where their fact was false (four drain stations, not two; the harness takes two seats at
+the reset rather than calling a teardown of its own; no live counts). What moved was mechanism,
+history, measurements and case law that a home already tells: the rig's script (its header, or a
+comment beside the code it describes), the architecture doc that owns the subsystem, the archive for
+history, the measurements doc for a number. Three facts no home told were added first (the pin
+sweep's blind spot, and a "not a SystemTest" line in two rig headers), and the homes that told a
+moved fact falsely were corrected first. Each rig keeps one line that names it, says what
+it is for and points at its header; `package.json` keeps one line per key; each `CLAUDE.md` says, in
+one line, that it has a ceiling. Sizes: `Fizzygum/CLAUDE.md` 49,251 → 35,027 bytes,
+`Fizzygum-tests/CLAUDE.md` 101,142 → 67,477 bytes, `package.json` 18,654 → 4,148 bytes; the
+re-measure above now reads 124,311 (from 172,200). The proof,
+one row per removed or rewritten sentence with where it lives now, is `MOVED.md` in the loop's scratch
+directory (`Fizzygum-tests/.scratch/cleanups-loop-2/u10-instruction-files/`). The ratchet is a rule of
+`buildSystem/check-doc-narration.js`, `INSTRUCTION_FILE_OVER_CEILING`: each of the two files at most
+its ceiling, the baseline file's `instructionBytes`, recorded at these sizes and lowered with
+`--write-baseline` as they shrink. The gate reads both repos, so its rail is now `--umbrella=DIR`
+(`lint-and-static-checks.md` §3b-docs).
+
 ---
 
 ## §10. The reference set: a path of live axes, then one file per reference
@@ -1031,3 +1054,7 @@ Do not commit or push without asking me.
   `advanceTestPlaying`); each test file holds its macro sources only; one `_failCurrentTest` (§8, "Landed").
 - §6, in part — the line read: "§6 (2 days, then 1 to 2): one audited-suite gate driver in Node (three bash gates, their library and its rule-registry twin go); then instruments that share a suite pass (⛔ measured first, then the owner)". — LANDED IN PART 2026-11-14
   (loop U8): step 1, `lib/audited-suite.js` and six Node gates (§6, "Step 1 landed"). BACKLOG keeps step 2.
+- [x] §9 (2 to 3 days): instruction files — a byte budget and one home per fact (about 171 KB is loaded into every session) (the owner agreed 2026-11-13, on the item's criterion)
+  — CLOSED 2026-11-14 (loop U10): the two `CLAUDE.md` files keep what changes a reader's next action, each moved
+  sentence's home shown first; `package.json` keeps one line per key; `INSTRUCTION_FILE_OVER_CEILING` holds each
+  file to its ceiling (§9, "Landed").

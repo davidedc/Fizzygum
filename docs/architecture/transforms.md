@@ -128,7 +128,7 @@ demand and never stored as truth.**
 
 Under an island, a widget's screen position is **not** its bounds position. Fizzygum resolves
 this by splitting the geometry API into two families **distinguishable by name** (canonical
-spec: `docs/archive/affine-geometry-api-plan.md`; law summary also in `Fizzygum/CLAUDE.md`):
+spec: `docs/archive/affine-geometry-api-plan.md`):
 
 - **Layout-box family** — `width` / `height` / `extent` / `bounds` / `boundingBox` /
   `position` / `center` / `left` / … : the widget's **own-plane** layout box. Plane-local,

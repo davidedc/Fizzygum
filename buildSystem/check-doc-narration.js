@@ -20,6 +20,14 @@
 //                                        so a `- [x]` there is an item that never moved. A hard zero with no baseline
 //                                        (BACKLOG_CLOSED_ITEM). Its prose is NOT judged for narration: an open item's
 //                                        "found 2026-10-23" is provenance.
+//   CHECKED   the two INSTRUCTION FILES  `Fizzygum/CLAUDE.md` and `Fizzygum-tests/CLAUDE.md`, for ONE thing: their
+//                                        size. A session loads them before any work, and again after every compaction,
+//                                        so each has a byte CEILING (INSTRUCTION_FILE_OVER_CEILING), recorded in the
+//                                        baseline file beside the narration counts. Such a file keeps routing, the
+//                                        commands, the rules that change what a reader does next, and one line per rig
+//                                        pointing at its header; mechanism, history, measurements and case law live in
+//                                        the rig's header or the architecture doc that owns the subsystem. Their prose
+//                                        is not judged for narration.
 //   SKIPPED   specs/                     a spec states what the product must do, and its
 //                                        landing/change statements are load-bearing (owner
 //                                        direction 2026-08-09)
@@ -36,7 +44,7 @@
 // (BACKLOG_CLOSED_ITEM is a hard zero: SCOPE above). The buckets carry pre-existing debt (mostly
 // in the two gate-documentation docs, where a ban is explained by narrating what was removed),
 // and rewriting all of it at once risks damaging real content.
-// So: a per-file baseline in `check-doc-narration-baseline.json`, and the check FAILS when any
+// So: a per-file baseline in `check-doc-narration-baseline.json` (its `narration` section), and the check FAILS when any
 // file's count RISES or a new file starts narrating. Accretion stops today; the debt burns down
 // deliberately. Lower a number whenever you clean a doc — `--write-baseline` re-records.
 //
@@ -49,17 +57,21 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
 
-// [--docs=DIR] reads another docs tree (a planted one: the bite-proof's input, check-doc-narration-selftest.js, which
-// proves every rule below BITES). It never writes the real baseline from another tree.
+// [--umbrella=DIR] reads another umbrella — `DIR/Fizzygum/docs` and the instruction files under `DIR` (a planted one: the
+// bite-proof's input, check-doc-narration-selftest.js, which proves every rule below BITES). It never writes the real
+// baseline from another tree.
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--full', '--write-baseline', '--docs='], 'doc-narration');
-rejectPositionalArgs(ARGV, 'doc-narration', 'a docs tree is named with --docs=DIR');
-if (ARGV.includes('--write-baseline') && ARGV.some((a) => a.startsWith('--docs='))) {
-  console.error('[doc-narration] ERROR — --write-baseline writes the real baseline: it never reads another docs tree');
+rejectUnknownArgs(ARGV, ['--full', '--write-baseline', '--umbrella='], 'doc-narration');
+rejectPositionalArgs(ARGV, 'doc-narration', 'an umbrella is named with --umbrella=DIR');
+if (ARGV.includes('--write-baseline') && ARGV.some((a) => a.startsWith('--umbrella='))) {
+  console.error('[doc-narration] ERROR — --write-baseline writes the real baseline: it never reads another umbrella');
   process.exit(2);
 }
-const DOCS = dirArg(ARGV, '--docs=', path.join(__dirname, '..', 'docs'), 'doc-narration');
+const UMBRELLA = dirArg(ARGV, '--umbrella=', path.join(__dirname, '..', '..'), 'doc-narration');
+const DOCS = path.join(UMBRELLA, 'Fizzygum', 'docs');
 const BUCKETS = ['architecture', 'tooling'];
+// the instruction files a session loads, each held to its byte ceiling (header, SCOPE)
+const INSTRUCTION_FILES = ['Fizzygum/CLAUDE.md', 'Fizzygum-tests/CLAUDE.md'];
 
 // Each rule is high-precision on purpose: a gate with a zero baseline only stays credible if it
 // does not cry wolf. Ambiguous phrasings ("no longer compiles", "the old value") are deliberately
@@ -137,10 +149,19 @@ const total = Object.values(counts).reduce((a, b) => a + b, 0);
 // a run that read no doc checked nothing (a wrong root, a renamed bucket): no pass
 if (!scanned) { console.error(`[doc-narration] ERROR — no .md doc under ${BUCKETS.map((b) => path.join(DOCS, b)).join(' or ')} — a run that read nothing is no pass`); process.exit(2); }
 
+// the instruction files' sizes; one that is missing is one this run could not hold to its ceiling: no pass
+const bytes = {};
+for (const rel of INSTRUCTION_FILES) {
+  const p = path.join(UMBRELLA, rel);
+  if (!fs.existsSync(p)) { console.error(`[doc-narration] ERROR — no ${p}: a run that cannot read an instruction file checked nothing there — no pass`); process.exit(2); }
+  bytes[rel] = fs.statSync(p).size;
+}
+
 if (write) {
-  fs.writeFileSync(BASELINE_PATH, JSON.stringify(counts, null, 2) + '\n');
+  fs.writeFileSync(BASELINE_PATH, JSON.stringify({ narration: counts, instructionBytes: bytes }, null, 2) + '\n');
   console.log(hits.join('\n'));
-  console.log(`\nbaseline written: ${total} line(s) across ${Object.keys(counts).length} file(s).`);
+  console.log(`\nbaseline written: ${total} line(s) across ${Object.keys(counts).length} file(s); ceilings ` +
+    INSTRUCTION_FILES.map((f) => `${f} ${bytes[f]} bytes`).join(', ') + '.');
   process.exit(0);
 }
 
@@ -158,9 +179,21 @@ for (const [lineNo, line] of proseLines(fs.readFileSync(BACKLOG_PATH, 'utf8'))) 
   else closedItems.push(`  docs/BACKLOG.md:${lineNo}  [closed item]  …${line.trim().slice(0, 110)}`);
 }
 
-const baseline = fs.existsSync(BASELINE_PATH)
+const baselineFile = fs.existsSync(BASELINE_PATH)
   ? JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8')) : {};
+const baseline = baselineFile.narration || {};
 const baseTotal = Object.values(baseline).reduce((a, b) => a + b, 0);
+
+// each instruction file against its ceiling; a file with none recorded is one this run cannot judge: no pass
+const ceilings = baselineFile.instructionBytes || {};
+const over = [];
+for (const rel of INSTRUCTION_FILES) {
+  if (!Number.isInteger(ceilings[rel])) {
+    console.error(`[doc-narration] ERROR — no byte ceiling for ${rel} in ${BASELINE_PATH}: record one with --write-baseline — no pass`);
+    process.exit(2);
+  }
+  if (bytes[rel] > ceilings[rel]) over.push(`  ${rel}: ${bytes[rel]} bytes > ceiling ${ceilings[rel]}`);
+}
 
 const risen = [], improved = [];
 for (const [f, n] of Object.entries(counts)) {
@@ -191,10 +224,21 @@ if (risen.length) {
   console.log('specs/, plans/, archive/ and measurements/ are chronological by design, not scanned.');
   console.log('Run with --full to list every line.');
 }
-if (closedItems.length || risen.length) process.exit(1);
+if (over.length) {
+  if (closedItems.length || risen.length) console.log('');
+  console.log(`INSTRUCTION FILE OVER ITS CEILING — ${over.length} file(s):`);
+  for (const line of over) console.log(rules.fired('INSTRUCTION_FILE_OVER_CEILING', line));
+  console.log('\nAn instruction file keeps routing, the commands, the rules that change what a reader does next, and one');
+  console.log("line per rig pointing at its header; mechanism, history, measurements and case law go to the rig's header");
+  console.log('or the architecture doc that owns them (docs/architecture/lint-and-static-checks.md §3b-docs). A rule a reader');
+  console.log('must meet before any work may raise the ceiling: `--write-baseline`, in the same commit.');
+}
+if (closedItems.length || risen.length || over.length) process.exit(1);
 
 console.log(`OK — ${scanned} docs in ${BUCKETS.join('/')}; ${total} narration line(s), baseline ${baseTotal}; ` +
-  `BACKLOG.md ${openItems} open item(s), 0 closed.`);
+  `BACKLOG.md ${openItems} open item(s), 0 closed; ` +
+  INSTRUCTION_FILES.map((f) => `${f} ${bytes[f]} of ${ceilings[f]} bytes`).join(', ') + '.');
+for (const rel of INSTRUCTION_FILES) if (bytes[rel] < ceilings[rel]) improved.push(`  ${rel}: ceiling ${ceilings[rel]} -> ${bytes[rel]} bytes`);
 if (improved.length) {
   console.log('IMPROVED — bank it with `node buildSystem/check-doc-narration.js --write-baseline`:');
   console.log(improved.join('\n'));

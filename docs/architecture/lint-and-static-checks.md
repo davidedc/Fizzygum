@@ -134,7 +134,7 @@ reformatted line goes blind). Three pieces hold it:
   launched shell or Python script has no registry, so it says why it is not a gate (`# not-a-gate: <reason>`) or fails.
 - **The proof**, one judge (`buildSystem/lib/prove-rules.js`) behind two runners: a static gate's `<gate>-selftest.js`
   plants a copy of its input tree (`lib/planted-src.js` `proveGate`, through the gate's `--src=` / `--tests-repo=` /
-  `--tests-dir=` / `--docs=` / `--parts=` / `--umbrella=` rail; a gate reading the compiled sources takes `testsRepo:
+  `--tests-dir=` / `--parts=` / `--umbrella=` rail; a gate reading the compiled sources takes `testsRepo:
   true`, a copy of the tests repo's code where a plant keyed `harness/<rel>` lands); a gauntlet leg's `<rig>-selftest-headless.js` plants page JavaScript
   through the rig's `--prelude=` (`Fizzygum-tests/scripts/lib/gate-bite-proof.js` `proveLeg`), with the rig's own subset
   rails keeping it cheap (`--tests=`, `--apps=`, `--sections=`, `--expectations=`, `--baseline=`, `--audit-dir=`).
@@ -526,13 +526,13 @@ the dead one it replaced — and eventually contradict itself, one section stati
 another still proposed it.
 
 **Scope is deliberately narrow.** It scans `architecture/` + `tooling/` (present tense by definition)
-for narration, and `BACKLOG.md` for ONE thing — a closed item, read at the end of this section — and
-NOTHING else: `specs/` is excluded because a spec's change/landing statements are load-bearing
+for narration, `BACKLOG.md` for ONE thing — a closed item — and the two instruction files for their
+size, both read at the end of this section, and NOTHING else: `specs/` is excluded because a spec's change/landing statements are load-bearing
 (owner direction), and `plans/`, `archive/` and `measurements/` are chronological BY DESIGN — archive
 is immutable past tense, plans are future tense, measurements are dated snapshots.
 
-**It is a RATCHET at a HARD ZERO** — the per-file baseline in
-`buildSystem/check-doc-narration-baseline.json` is EMPTY, so any narrating line in these buckets fails
+**It is a RATCHET at a HARD ZERO** — the per-file baseline (the `narration` section of
+`buildSystem/check-doc-narration-baseline.json`) is EMPTY, so any narrating line in these buckets fails
 it. It was seeded as a burn-down ratchet (19 lines, concentrated here and in
 `layering-naming-convention.md`, where a ban is often explained by narrating what it removed); the debt
 is paid, and an empty baseline is the honest end state — a number nobody can justify is a number nobody
@@ -550,6 +550,21 @@ under any bullet, outside a fenced block) is an item that never moved: `BACKLOG_
 zero with no baseline and no hatch. Nothing else in the file is judged — an open item's "found
 2026-10-23" is its provenance, not narration — and the OK line states the open count it read. A docs
 tree with no `BACKLOG.md` is INVALID (exit 2), never a pass.
+
+**Each instruction file has a byte CEILING** (`INSTRUCTION_FILE_OVER_CEILING`). `Fizzygum/CLAUDE.md` and
+`Fizzygum-tests/CLAUDE.md` are loaded by every session before any work, and again after every
+compaction, so each may hold at most the bytes its ceiling records: the `instructionBytes` section of
+the same baseline file, written by the same `--write-baseline`. Such a file keeps what changes a
+reader's next action — routing, the commands, every rule that carries ⚠ or ⛔ or says never / must /
+always, and one line per rig that names it, says what it is for and points at its header. Mechanism,
+history, measurements and case law live in the rig's script (its header, or beside the code a comment
+describes) or in the architecture doc that owns the subsystem (the criterion is cleanup round 2's §9,
+`docs/plans/top-10-cleanups-round-2-plan.md`). A file under its ceiling prints in the IMPROVED block,
+so the ceiling comes down as a file shrinks; a rule every reader must meet before any work may raise
+it, in the same commit. Their prose is not judged for narration. The gate reads both repos, so its
+rail is `--umbrella=DIR` (as `run-selftests.js`'s is); an umbrella missing either file, or a baseline
+with no ceiling for one, is INVALID (exit 2). The bite proof plants a file one byte over the REAL
+ceiling, and one exactly at it in the control.
 
 ## 3c. The ANALYSIS tools (advisory censuses — never gates)
 
