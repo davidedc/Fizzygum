@@ -96,7 +96,9 @@ A launch is a shell command that executes the script or hands it to an interpret
 echo, a test, a heredoc or a comment that names a script runs nothing), a JS `require`, a script named in a
 `path.join`/`path.resolve` call, or a row of the build's gate table — read as data once the build is seen launching
 `run-gates.js`, each row the command line the runner gives it, so a self-test discovered by its invoking line is
-discovered from its row, and a row naming a script the reading does not scan is an error; a self-test's own edges are
+discovered from its row, and a row naming a script the reading does not scan is an error — or a step of a row of `fg`'s
+LEG table (`buildSystem/legs.js`), read the same way once `fg`'s `legs` reader is seen launching it, a row that no
+gauntlet wave and no presuite schedules an error too (it would vouch for a program nothing runs); a self-test's own edges are
 not followed (it exercises its subject on fixtures). The
 blind spots are in its header. It also holds the ONE definition of the TOOLING'S OWN FILES (`scriptFiles`): Fizzygum's
 `buildSystem/` and `scripts/` and top-level shell scripts, and the tests repo's `scripts/` — `.js`, `.sh`, `.py`; never a
@@ -1222,6 +1224,10 @@ source to satisfy a new rule.
 - `buildSystem/gates.js` + `buildSystem/run-gates.js` — the gate sequence, one row per gate (`when`: `checked`, or
   `testsShipped` for the four gates over the shipped tests), and the runner
   `build_it_please.sh` calls once; `lib/what-runs.js` reads the table once it sees the build launch the runner.
+- `buildSystem/legs.js` — `fg`'s gauntlet legs, one row per leg (its waves, its steps with their cwd and alarm, its pass
+  line, whether its exit 3 is an infra flake, its headline, its verb), which `fg` reads through `node buildSystem/legs.js
+  --shell` (the waves, the serial path, the stale-proofed logs, the usage roster) and `lib/what-runs.js` reads as data;
+  its cases, fg's own runner run on a small table under `/bin/bash` 3.2 included, are `legs-selftest.js`.
 - `src/basic-widgets/Widget.coffee` — `_settleLayoutsAfter` (~:928; the one-flush throw ~:952); `_invalidateLayout`
   (~:4919; `FLOWRULE_VIOLATION` ~:4959); the immediate-mutator apply corners (`_apply*`/`_commit*`) + the `_<name>NoSettle` cores.
 

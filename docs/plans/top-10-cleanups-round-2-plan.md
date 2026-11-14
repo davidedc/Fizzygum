@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1 to §5, §6's step 1, §7's first step, §8. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1 to §5, §6's step 1, §7, §8. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -112,7 +112,7 @@ who has never seen the code.
 | 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Landed 2026-11-14 |
 | 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Landed 2026-11-14 |
 | 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 landed 2026-11-14; step 2's measurement queued last, its decision the owner's |
-| 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | First step (the serial path's three legs) landed 2026-11-14; the table queued for the loop |
+| 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | Landed 2026-11-14 (the first step, then the table) |
 | 8 | A test is its macro | 2 to 3 days | The six command classes, the timed command cursor, 389 copies of one preamble, about 38,900 log lines a run. **In plain words:** every test file still opens with the same five-step recipe, left from when tests were recordings played back step by step. A test is now a single script, so the recipe and the player built for it can go. | Low (the macro's start cycle) | No | 3 | Landed 2026-11-14 |
 | 9 | Instruction files: a budget and one home per fact | 2 to 3 days | About 171 KB loaded into every session; each gate's story told in up to six places. **In plain words:** the notes every session must read before it starts have grown to the length of a short book, and the same explanation appears in several files. Keep the rules there and give each explanation one home. | None | Agreed 2026-11-13, on the item's criterion | 9 | Queued for the loop, last |
 | 10 | The reference set: live axes, then one file per reference | 1 to 2 days, then 3 | Five single-valued path segments, the user-agent spoof, 213 lines of UA sniffing; then 4,046 files, 45.8 MB, and the reference loader. **In plain words:** every expected screenshot sits five folders deep in folders that never vary (one operating system, one browser), and is saved twice: as a picture and as the same picture wrapped in a script. Flatten the folders, then keep only the picture. | None (pixels untouched) | Step 2 depends on §4 | 2 | Not queued: left out for now by the owner (2026-11-13) |
@@ -612,6 +612,39 @@ before this step either; it now runs `paint` through `run_leg` too, as the waves
 recorded as the table's fixture, is the table unit's launch census, taken before its first edit;
 the table itself is its own unit.
 
+**The table landed 2026-11-14.** `Fizzygum/buildSystem/legs.js` holds the legs, one row each: its waves (A to D, and/or
+the presuite), its steps (each the cwd, the `to` alarm, the script and its arguments, or a suite step fg_suite runs;
+`{SUITE_SHARDS}` and `{GATE_SHARDS}` stand for the shard counts fg sets per wave), its pass line (`apps`), whether its
+exit 3 is an infra flake (the six audited-suite gates), its headline and its standalone verb; the comments of
+`run_leg`'s case arms moved above their rows verbatim, as `gates.js`'s did from the build script, with the three
+comments that say why `parts`, `vmtruth` and `finger` sit in their waves and the serial path's own notes on the paint
+and audit gates; the standalone verbs keep their own command lines (their alarms and arguments differ from the legs' by
+design, and the census holds them unchanged): a row names its verb. `fg` stays the entry point and keeps what is its
+own; it reads the table through `node buildSystem/legs.js --shell`, every list once at the start of a run and checked
+(empty, or anything but leg names, refuses the run), and a leg the run named that no wave started fails it: `run_leg` is
+one body that runs the row it is given (each step in a subshell, the log truncated once and appended to, the first
+failing step ending the leg with its exit code), and the presuite, the four waves (their banners generated), the serial
+path, `legs_pending`, the headlines, the retry's exit-3 rule and the usage lines that name legs read it. The serial path
+runs the table's legs one after another, in wave order, through `run_leg` — the same rows the waves run, so it cannot
+run fewer —, its suites at 8 shards as the serial retry runs them; each leg now gets `run_leg`'s failure-image
+directory, stamp and verdict refresh, a browser kill before it, and on a failure the last 15 lines of its log in place
+of a per-leg grep. A leg the table does not hold is now a hard failure (it was exit 3, the infra code, which the retry
+read as a load flake). `lib/what-runs.js` reads the rows as data once fg's `legs` reader is seen launching the table,
+and refuses a row no wave and no presuite schedules: the "trusted to be in a wave" blind spot is a check. Evidence: (a)
+a launch census before the first edit and after (`fg` run under logging stand-ins for `node`, `perl`, `pkill` and the
+rest, ahead of the real ones on `PATH`; the build real): the parallel gauntlet's 25 launches (each argv, cwd, alarm,
+environment and log redirection), the presuite's and every standalone verb's are identical; the serial path's differ
+only as intended — the nine legs that bypassed `run_leg` now get its failure-image directory, the suites' 8 shards are
+passed twice (the runner reads the first), a browser kill precedes every leg, and the legs run in wave order; (b)
+`what-runs.js`'s run set is the same, plus the table and its self-test; (c) `fg gauntlet` green on the table (20 of 20 legs, 18 min), and `FG_GAUNTLET_SERIAL=1 fg gauntlet` green (20 of 20, 37 min), and `fg homepage`; every comment line of the
+old `run_leg` survives verbatim in `fg` or in the table but one header line made true; `legs-selftest.js` runs fg's own
+runner, taken out of `fg`, under `/bin/bash` 3.2 on a small table (order, a wave, a failing row, exit 3, a pass line, an
+unknown leg, a reader answering anything but a row) and fails on planted defects. Hardened on the way: a leg whose row
+`run_leg` cannot read, or that has no step, fails, and a leg list that is empty or holds anything but leg names refuses
+the run, so a broken reader can never read as a green run. The re-measure command above now prints 0, as before the
+first step (the serial path names no leg at all); the landed table's own: `node Fizzygum/buildSystem/legs.js --shell
+names gauntlet | wc -w` prints 20.
+
 ---
 
 ## §8. A test is its macro
@@ -982,6 +1015,11 @@ Do not commit or push without asking me.
   byte-identical (§3, "Landed").
 - §7, in part — the line read: "§7 (2 to 3 days): the `fg` leg roster as a table. **A defect stands until then: `FG_GAUNTLET_SERIAL=1 fg gauntlet` runs 17 of the 20 legs (`parts`, `storage` and `vmtruth` are missing) and prints OK** — a three-line fix of its own, the item's first step". — LANDED IN PART 2026-11-14 (loop U4): the serial path
   runs all 20 legs (§7, "First step landed"). BACKLOG keeps the table.
+- [x] §7 (2 to 3 days): the `fg` leg roster as a table, so the places that name the legs (the plan's §7 lists six) read one list (the serial path's three missing legs, the item's first step, landed 2026-11-14)
+  — CLOSED 2026-11-14 (loop U9): `buildSystem/legs.js`, read by fg and by `what-runs.js` (§7, "The table landed").
+- [x] §7 (medium, unreached today; found by the first step's review): a leg named in a wave list but missing from `run_leg` returns 3, which `collect_and_retry` reads as an infra flake, so the gauntlet prints OK with a load-flake warning — a typo while building the table would hit it; the table should make an unknown leg a hard failure
+  — CLOSED 2026-11-14 (loop U9): a leg the table does not hold fails with exit 1, its log saying why; exit 3 is an
+  infra flake only for a leg the table marks so (§7, "The table landed").
 - [x] §4 (½ to 1 day): the in-browser failure zip, a second and ungated way to capture references, with the vendored JSZip and FileSaver (the owner ruled 2026-11-13: delete)
   — CLOSED 2026-11-14 (loop U5): the zip, its two libraries, its two menu rows and the counter's download are gone
   (§4, "Landed").

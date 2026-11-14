@@ -213,8 +213,59 @@ t.check(/gates\.js has a row for .*nowhere\.js, which is not a scanned script/.t
 fs.rmSync(root2);
 fs.rmSync(real2, { recursive: true, force: true });
 
-// THE REAL TREE: the build's own gate table is read -- a renamed runner or table would silently stop that, and every
-// node-tier self-test would read as never run
+// THE LEG TABLE (buildSystem/legs.js): fg's `legs` reader launches it, and its rows are read as data — a row's script
+// runs though no text of fg names it, a convention keyed to a row's command line applies (run-selftests.js --headless);
+// a row no wave and no presuite schedules, or a step naming no scanned script, is an ERROR; an fg with no reader reads
+// no table. The miniature table is legs.js's own code around a small LEGS.
+{
+  const root3 = fs.mkdtempSync(path.join(os.tmpdir(), 'what-runs-legs-'));
+  const layout3 = { fizzygum: path.join(root3, 'Fizzygum'), tests: path.join(root3, 'Fizzygum-tests'), fg: path.join(root3, 'Fizzygum', 'fg') };
+  const write3 = (rel, text) => { const p = path.join(root3, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
+  const legsCode = fs.readFileSync(path.join(__dirname, '..', 'legs.js'), 'utf8');
+  const table3 = (rows) => {
+    const a = legsCode.indexOf('\nconst LEGS = [\n'), b = legsCode.indexOf('\n];\n', a);
+    write3('Fizzygum/buildSystem/legs.js', legsCode.slice(0, a) + '\nconst LEGS = ' + JSON.stringify(rows) + ';\n' + legsCode.slice(b + 4));
+  };
+  const FG_PARTS = ['fg_build(){\n  :\n}', 'fg_suite(){ ( cd "$FT" && node scripts/run-all-headless.js "$@" ); }', 'run_lint(){\n  :\n}', 'run_leg(){\n  :\n}'];
+  const READER = 'legs(){ ( cd "$FZ" && node buildSystem/legs.js --shell "$@" ); }';
+  write3('Fizzygum/build_it_please.sh', 'node ./buildSystem/built.js\n');
+  for (const f of ['Fizzygum/buildSystem/built.js', 'Fizzygum/buildSystem/run-selftests.js', 'Fizzygum/buildSystem/delta-selftest-headless.js',
+    'Fizzygum-tests/scripts/run-all-headless.js', 'Fizzygum-tests/scripts/leg-a.js', 'Fizzygum-tests/scripts/leg-d.js']) write3(f, '');
+  const STEP = (cwd, script, ...args) => ({ cwd, alarm: 1, script, args });
+  const ROWS3 = [
+    { name: 'a', waves: ['A'], steps: [STEP('tests', 'scripts/leg-a.js')], headline: 'x' },
+    { name: 'b', waves: ['B'], steps: [STEP('fizzygum', 'buildSystem/run-selftests.js', '--headless')], headline: 'x' },
+    { name: 'c', waves: ['C'], steps: [{ suite: ['--dpr=2'] }], headline: 'x' },
+    { name: 'd', waves: ['D', 'presuite'], steps: [STEP('tests', 'scripts/leg-d.js', '{GATE_SHARDS}')], headline: 'x' },
+  ];
+  write3('Fizzygum/fg', [...FG_PARTS, READER].join('\n') + '\n');
+  table3(ROWS3);
+  const viaLegs = runSet(layout3);
+  const of3 = (rel) => viaLegs.how.get(path.join(root3, rel));
+  t.check(of3('Fizzygum/buildSystem/legs.js') === 'launched', 'fg\'s legs reader launches the leg table', String(of3('Fizzygum/buildSystem/legs.js')));
+  t.check(of3('Fizzygum-tests/scripts/leg-a.js') === 'launched' && of3('Fizzygum-tests/scripts/leg-d.js') === 'launched'
+    && viaLegs.why.get(path.join(root3, 'Fizzygum-tests/scripts/leg-a.js')) === 'ROOT: fg legs',
+    'a row\'s script is a launch of fg\'s legs, though no text of fg names it', `${of3('Fizzygum-tests/scripts/leg-a.js')} / ${of3('Fizzygum-tests/scripts/leg-d.js')}`);
+  t.check(of3('Fizzygum/buildSystem/delta-selftest-headless.js') === 'discovered',
+    'a row\'s command line is read for a convention: run-selftests.js --headless discovers the headless self-tests', String(of3('Fizzygum/buildSystem/delta-selftest-headless.js')));
+  let threw3 = '';
+  table3([...ROWS3, { name: 'idle', waves: [], steps: [STEP('tests', 'scripts/leg-a.js')], headline: 'x' }]);
+  try { runSet(layout3); } catch (e) { threw3 = e.message; }
+  t.check(/legs\.js cannot be run: leg "idle": no wave and no presuite runs it/.test(threw3),
+    'a row no wave and no presuite schedules is an ERROR: it would vouch for a program nothing runs', threw3);
+  threw3 = '';
+  table3([...ROWS3, { name: 'e', waves: ['A'], steps: [STEP('tests', 'scripts/nowhere.js')], headline: 'x' }]);
+  try { runSet(layout3); } catch (e) { threw3 = e.message; }
+  t.check(/leg e runs scripts\/nowhere\.js, which is not a scanned script/.test(threw3), 'a step naming no scanned script is an ERROR, never a leg dropped', threw3);
+  table3(ROWS3);
+  write3('Fizzygum/fg', FG_PARTS.join('\n') + '\n');
+  t.check(!runSet(layout3).files.has(path.join(root3, 'Fizzygum-tests/scripts/leg-a.js')), 'an fg with no legs reader reads no table: its rows run nothing');
+  fs.rmSync(root3, { recursive: true, force: true });
+}
+
+// THE REAL TREE: the build's own gate table and fg's leg table are read -- a renamed runner, reader or table would
+// silently stop that, and every node-tier self-test, every leg's program and every headless self-test would read as
+// never run
 {
   const real = runSet();
   const bs = path.join(__dirname, '..');
@@ -222,6 +273,11 @@ fs.rmSync(real2, { recursive: true, force: true });
     && real.how.get(path.join(bs, 'run-gates-selftest.js')) === 'discovered',
     'on the real tree, the build launches the gate runner and the node-tier self-tests are discovered through its table',
     `${real.how.get(path.join(bs, 'run-gates.js'))} / ${real.how.get(path.join(bs, 'gates.js'))} / ${real.how.get(path.join(bs, 'run-gates-selftest.js'))}`);
+  const scripts = path.join(path.dirname(path.resolve(bs, '..')), 'Fizzygum-tests', 'scripts');
+  t.check(real.how.get(path.join(bs, 'legs.js')) === 'launched' && real.how.get(path.join(scripts, 'revisit-gate.js')) === 'launched'
+    && real.how.get(path.join(scripts, 'revisit-gate-selftest-headless.js')) === 'discovered',
+    'on the real tree, fg launches its leg table, a leg\'s program is launched through it, and the headless self-tests are discovered',
+    `${real.how.get(path.join(bs, 'legs.js'))} / ${real.how.get(path.join(scripts, 'revisit-gate.js'))} / ${real.how.get(path.join(scripts, 'revisit-gate-selftest-headless.js'))}`);
 }
 
 // its command line: the real tree's list, one per line; anything else is a usage error (exit 2)
