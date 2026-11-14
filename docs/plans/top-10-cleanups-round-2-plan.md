@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1, §2, §3, §7's first step. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1, §2, §3, §4, §7's first step. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -109,7 +109,7 @@ who has never seen the code.
 | 1 | Class source text ships as a plain string literal | ½ day | A three-glyph escape, its decoder at boot, a build refusal, three characters no source may contain. **In plain words:** to store each class's source in a file, the build swaps quotes, backslashes and line breaks for three look-alike characters, and the page swaps them back when it starts. JavaScript already has a standard way to write any text safely, so neither swap is needed. | None | No | 8 | Landed 2026-11-13 |
 | 2 | `hashCode` leaves `Object.prototype` | ½ day | The last enumerable key on `Object.prototype`, and the reason the rigs give for never using `waitForFunction`. **In plain words:** a small helper for hashing text was attached to every object on the page. Every object then carries one extra visible property, which loops and test tools trip over. Make it an ordinary function that only text uses. | None | No | 6 | Landed 2026-11-13 |
 | 3 | Map outlines are data | ½ day | About 3,000 of `src/`'s 37,681 code lines (8%), written as 2,638 `lineTo` statements. **In plain words:** the two maps are drawn by thousands of hand-written "draw a line to this point" instructions. Keep the points in a list and let one short loop draw them. | None expected (one test draws both maps) | No | 10 | Landed 2026-11-13 |
-| 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Queued for the loop |
+| 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Landed 2026-11-14 |
 | 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Queued for the loop |
 | 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 queued for the loop; step 2's measurement queued last, its decision the owner's |
 | 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | First step (the serial path's three legs) landed 2026-11-14; the table queued for the loop |
@@ -360,6 +360,30 @@ pixel in the suite must stay put. The harness part's fingerprint changes (two fi
 
 **Re-measure.**
 `grep -rn 'saveFailedScreenshots\|packUpForDownload\|JSZip' Fizzygum-tests/Automator-and-test-harness-src Fizzygum-tests/scripts --include='*.coffee' --include='*.js' | grep -vc '^\S*:[0-9]*:\s*[#/]'`.
+
+**Landed 2026-11-14.** Deleted: `AutomatorPlayer.saveFailedScreenshots`, `createImageFromImageData`,
+`_subtractScreenshots` and the kept-references static `loadedImagesToBeKeptForLaterDiff` that only
+the zip read; `Automator.showTestSource` and `packUpForDownload`; the two menu rows;
+`SystemTestsReferenceImage`'s two zip writers; `vendor/jszip/` and `vendor/filesaver/` with their
+`parts.json` rows and their two boot loads. The control panel's failed-tests counter stays, as a
+counter: its click and its link styling went. Kept, because a headless tool reads them:
+`collectedFailureImages`, the failure budget, a record's `imageData`, `createJSContent`. Two checks
+lost subjects with the code: the unresolved-sends allowlist's JSZip entries are retired, and so are
+five `BUILTINS` names (plus the `window` receiver) that no remaining call sends in the form the gate
+reads, `.name(` (`drawImage`, `getImageData`, `toDataURL` and `window.open` are still used, written
+without parentheses, which that gate does not read); its self-test control names
+`bitmapText.loadFont()` as its allowlisted example, whose entry is load-bearing (removed, the gate
+fails at the name's real call site); the menu sweep's one ellipsis exception went. `README-swcanvas-tests.md`'s
+capture procedure is the headless one. The re-measure command prints 0. Evidence: a census of every
+deleted name in both repos (only this plan, the lint index's note and dated records remain); the
+resolution map loses exactly the seven methods and changes three bodies; `fg menusweep` green.
+`fg fingerprint` shows the two libraries leaving `js/libs` in `dev`, every boot bundle 122 bytes
+shorter (the two loads and the boot log's names, the one difference a bundle A/B shows), the
+harness batches and the core batch holding `FileSaving`'s comment changing, and
+`js/pre-compiled.js` byte-identical in `homepage` and `lean`. One test changed, as this
+section's Risk said: `SystemTest_macroHoppingBetweenSubMenus` image 5, its submenu two rows
+shorter, every changed pixel inside the submenu's old box; recaptured at both densities for
+both pointers.
 
 ---
 
@@ -697,8 +721,8 @@ approved: the tree is rewritten once.
 - READ: the loader appends one `<script>` per reference to `document.head` for the life of the
   page and tracks their loads, with a fallback timer. `docs/BACKLOG.md` holds an open defect of
   exactly this step: a reference that never loaded reports as a pixel mismatch.
-- READ: at run time a record's pixels are read in one place, the in-browser difference image
-  of §4.
+- READ: at run time a record's pixels were read in one place, the in-browser difference image
+  of §4; since §4 landed (2026-11-14) nothing reads them, so step 2's dependency on §4 is met.
   `check-refs.js --pixels` (the gauntlet's `refs` leg, about 4 minutes) exists to catch a `.js`
   whose stored hash and pixels have drifted apart, which is a failure only a second copy can
   have. Its other half, re-hashing each PNG against the hash in its name, stays.
@@ -870,3 +894,6 @@ Do not commit or push without asking me.
   byte-identical (§3, "Landed").
 - §7, in part — the line read: "§7 (2 to 3 days): the `fg` leg roster as a table. **A defect stands until then: `FG_GAUNTLET_SERIAL=1 fg gauntlet` runs 17 of the 20 legs (`parts`, `storage` and `vmtruth` are missing) and prints OK** — a three-line fix of its own, the item's first step". — LANDED IN PART 2026-11-14 (loop U4): the serial path
   runs all 20 legs (§7, "First step landed"). BACKLOG keeps the table.
+- [x] §4 (½ to 1 day): the in-browser failure zip, a second and ungated way to capture references, with the vendored JSZip and FileSaver (the owner ruled 2026-11-13: delete)
+  — CLOSED 2026-11-14 (loop U5): the zip, its two libraries, its two menu rows and the counter's download are gone
+  (§4, "Landed").

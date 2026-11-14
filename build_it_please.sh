@@ -533,8 +533,8 @@ fi
 # (the entry pages themselves are written by build.js from src/index.html — see lib/profile.js's ENTRY_PAGES)
 
 # (The vendored js/libs files and the assets/icons images are copied by build.js, from the "assets" list of
-# whichever PART owns each one -- FileSaver/JSZip and the three harness pointer icons belong to the
-# harness part, the compiler and the boot splash/spinner to core. They used to be copied here
+# whichever PART owns each one -- the three harness pointer icons belong to the harness part, the
+# compiler and the boot splash/spinner to core. They used to be copied here
 # unconditionally and then deleted again by the --homepage block below; owning them by part means a
 # flavour stops shipping an asset because the part is absent, with no prune list to maintain.
 # twgl-full.js is gone entirely: fizzytiles software-renders through SW3D, not WebGL.)

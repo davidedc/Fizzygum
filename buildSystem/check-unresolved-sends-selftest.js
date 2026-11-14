@@ -95,8 +95,8 @@ proveGate({
   pass: /^\[unresolved-sends\] OK — /m,
   control: {
     plants: {
-      'BiteProofSendsOk.coffee': ['class BiteProofSendsOk', '  bp: (zip) ->', '    # @biteProofInAComment()', '    s = "@biteProofInAString()"',
-        '    zip.generateAsync()', '    [1].push(2)', '    Math.round(1.5)', '    x.CapitalisedName()', ''].join('\n'),
+      'BiteProofSendsOk.coffee': ['class BiteProofSendsOk', '  bp: (bitmapText) ->', '    # @biteProofInAComment()', '    s = "@biteProofInAString()"',
+        '    bitmapText.loadFont()', '    [1].push(2)', '    Math.round(1.5)', '    x.CapitalisedName()', ''].join('\n'),
     },
   },
   runs: [{

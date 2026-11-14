@@ -477,8 +477,8 @@ function main(args, sink) {
 
   // 4) each SHIPPING part's non-source assets. These used to be unconditional `cp`s in
   // build_it_please.sh followed by a per-flavour prune list in its --homepage block: the harness's
-  // three pointer icons and FileSaver/JSZip were copied into every tree and then deleted again from
-  // the production one. Owning them here means what a flavour ships FOLLOWS from which parts ship
+  // three pointer icons were copied into every tree and then deleted again from the production one.
+  // Owning them here means what a flavour ships FOLLOWS from which parts ship
   // (arc 5 PR-D6: derive the tail, never declare it).
   copyPartAssets(parts, profile, sink);
 

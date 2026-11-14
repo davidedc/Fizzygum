@@ -62,7 +62,7 @@
     "                          the historical behaviour); `lean` is the profile that drops it",
     "                          outright. Changing this line is the whole of that decision.",
     "  the absent parts      -> their assets and vendor payloads are simply never written (so no",
-    "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
+    "                          fizzytiles 3D payload, no harness pointer icons)"
   ],
 
   "parts": ["core", "app-kit", "meta-tools", "examples-icons", "example-degrees-converter", "example-doc", "example-slide", "example-dashboard", "example-sheet", "authoring", "maps", "plots", "spreadsheet"],

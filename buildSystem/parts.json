@@ -75,8 +75,8 @@
     "               pairs. A part that does not ship copies none of them, which is how a flavour",
     "               stops shipping an asset with nobody maintaining a prune list. Arc 5 PR-D6:",
     "               the tail is DERIVED, never declared -- these pairs say who OWNS a file, and",
-    "               what ships follows from that. The three pointer icons and FileSaver/JSZip used",
-    "               to be copied unconditionally and then deleted again by the --homepage block.",
+    "               what ships follows from that. The harness's three pointer icons used to be",
+    "               copied unconditionally and then deleted again by the --homepage block.",
     "",
     "So a part can own five kinds of thing -- sources (dirs), files (assets), assembled payloads",
     "(vendor), boot-bundle pieces (bootPrelude) and boot scripts (bootScripts) -- and ALL FIVE appear or vanish together with the",
@@ -305,13 +305,11 @@
         "../Fizzygum-tests/Automator-and-test-harness-src",
         "../Fizzygum-tests/Automator-and-test-harness-src/AutomatorEventCommands"
       ],
-      "//assets": "The three pointer icons SystemTestsControlPanelUpdater sets as <img src> in the harness control panel (DOM, not canvas -- so no screenshot gate can see them go missing; the parts fingerprint is what checks them), plus FileSaver + JSZip, which globalFunctions only loads when BUILDFLAG_LOAD_TESTS is set and which product FileSaving.coffee explicitly does not depend on.",
+      "//assets": "The three pointer icons SystemTestsControlPanelUpdater sets as <img src> in the harness control panel (DOM, not canvas -- so no screenshot gate can see them go missing; the parts fingerprint is what checks them).",
       "assets": [
         ["assets/icons/xPointerImage.png", "icons"],
         ["assets/icons/leftButtonPressed.png", "icons"],
-        ["assets/icons/rightButtonPressed.png", "icons"],
-        ["vendor/filesaver/FileSaver.min.js", "js/libs"],
-        ["vendor/jszip/jszip.min.js", "js/libs"]
+        ["assets/icons/rightButtonPressed.png", "icons"]
       ]
     }
   }

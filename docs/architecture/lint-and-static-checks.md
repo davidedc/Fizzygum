@@ -276,7 +276,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   says so.
   **Two exemption lists, on purpose:** the in-file `BUILTINS` set is a fact about the PLATFORM (JS/DOM/canvas), while
   `unresolved-sends-allowlist.txt` is a fact about Fizzygum's VENDOR dependencies — one named API we reach at a few
-  sites, where the recorded reason is worth more than the suppression (JSZip, WebCrypto, the LCL event router, the
+  sites, where the recorded reason is worth more than the suppression (WebCrypto, the LCL event router, the
   SWCanvas bitmapText API, a Firefox-legacy guarded `toSource`). Seeded at exactly 9 entries, each triaged against its
   real call site.
 - **stinks (`check-stinks.js`).** A "stink" is a smell driven to zero, ratcheted at a `baseline` (max tolerated count)

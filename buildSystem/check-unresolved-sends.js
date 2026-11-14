@@ -189,15 +189,14 @@ function harvestCalls(files) {
 // is real.
 const BUILTINS_TABLE = `
 push pop shift slice concat join filter map some every indexOf lastIndexOf includes sort reverse fill keys values
-charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match search repeat substring substr
+charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match repeat substring substr
 toString toFixed valueOf
 sqrt pow random atan2 sin cos asin exp log sign
 now parse stringify
-getContext measureText beginPath closePath stroke clip save restore translate scale setTransform drawImage getImageData createPattern
+getContext measureText beginPath closePath stroke clip save restore translate scale setTransform createPattern
 preventDefault appendChild createElement getElementById getElementsByTagName querySelectorAll focus blur click
-then resolve all call test exec toDataURL
+then resolve all call test exec
 has get clear
-open
 isInteger isFinite isView from
 getTime getHours getMinutes getSeconds getMilliseconds
 Math.abs Math.floor Math.ceil Math.round Math.min Math.max Array.isArray
@@ -208,7 +207,7 @@ const BUILTINS_KEYED = new Set(BUILTINS_TABLE.filter((e) => e.includes('.')));  
 // bare shared name "only ever sent to the platform". A fact about the platform; an entry no BUILTINS
 // call is sent to fails as stale, and one naming a Fizzygum class fails outright.
 const PLATFORM_GLOBALS = new Set(`
-Math Object Array ArrayBuffer Number String JSON Date Promise performance document window
+Math Object Array ArrayBuffer Number String JSON Date Promise performance document
 `.trim().split(/\s+/));
 
 // ─── run ────────────────────────────────────────────────────────────────────────────────────────

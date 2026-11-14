@@ -13,10 +13,6 @@
 # Seeded 2026-07-15 (docs/lint-generic-rules-carryover-plan.md Phase 1). Every entry was triaged
 # against its real call site; there were exactly these 9 and no others.
 
-# ── JSZip (vendored: js/jszip.min.js) ──
-file            # JSZip: zip.file(...) — harness screenshot zips + the src source-download path
-generateAsync   # JSZip: zip.generateAsync(...) — same
-
 # ── host APIs used at one or two sites ──
 digest          # WebCrypto: crypto.subtle.digest("SHA-256", ...) in the harness SHA256 fallback
 toSource        # Firefox-legacy: existence-GUARDED call (`element.toSource() if element.toSource`, ListWdgt)

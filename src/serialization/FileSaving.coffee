@@ -3,8 +3,7 @@
 # docs/architecture/serialization-duplication-reference.md §10.
 #
 # This is a PRODUCT feature and ships in ALL builds, production included — it is core-part code, and
-# it does NOT depend on the dev-only vendored FileSaver/JSZip (which belong to the harness part and
-# so travel only with a build that ships the test machinery). ~one method: Blob -> object URL -> synthetic <a download> click ->
+# it depends on no vendored library. ~one method: Blob -> object URL -> synthetic <a download> click ->
 # revoke. Spike-proven byte-exact over file:// in headless Chrome (plan Appendix A).
 class FileSaving
 
@@ -13,7 +12,7 @@ class FileSaving
     blob = new Blob [string], {type: mimeType}
     if @isSafari()
       # Safari has historically ignored the <a download> attribute for blob: URLs, so
-      # navigate a data: URL instead (mirrors the test harness's Automator.coffee fallback).
+      # navigate a data: URL instead.
       reader = new FileReader
       reader.onload = -> window.location.href = reader.result
       reader.readAsDataURL blob

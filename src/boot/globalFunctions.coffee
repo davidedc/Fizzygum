@@ -503,13 +503,11 @@ boot = ->
     loadJSFilePromise("js/libs/fizzygum-coffeescript-min.js")
   ]
 
-  # FileSaver + jszip + the two test manifests are TEST machinery, so they load only for a
+  # The two test manifests are TEST machinery, so they load only for a
   # tests-carrying build. A ?generatePreCompiled boot needs none of it: it just accumulates
   # window.JSSourcesContainer.content, which an external headless driver reads back out and
   # writes to disk from Node (../Fizzygum-tests/scripts/generate-pre-compiled-headless.js).
   if BUILDFLAG_LOAD_TESTS
-    bootLoadPromises.push loadJSFilePromise "js/libs/FileSaver.min.js"
-    bootLoadPromises.push loadJSFilePromise "js/libs/jszip.min.js"
     bootLoadPromises.push loadJSFilePromise "js/tests/testsManifest.js"
     bootLoadPromises.push loadJSFilePromise "js/tests/testsAssetsManifest.js"
 
@@ -518,7 +516,7 @@ boot = ->
 
   Promise.all bootLoadPromises
   .then ->
-    if bootLoadingDebugWrites then console.log "---- FileSaver, jszip, testsManifest, testsAssetsManifest, pre-compiled, coffeescript loaded"
+    if bootLoadingDebugWrites then console.log "---- testsManifest, testsAssetsManifest, pre-compiled, coffeescript loaded"
     # this is the code path that we want to load/start fast.
     # All other situations (non-precompiled, or loading tests)
     # are not as important, they can take a few second more, we don't
