@@ -83,7 +83,7 @@ and to a MEMBER a part installs onto a class it does not own (the harness's `*Te
 "is it here?" and a lazy part needs "get it here".
 
 A part's `dirs` may span both repos. `harness` owns the tests repo's harness sources AND `src/macros`:
-the macro engine and toolkit are started only by the harness (`AutomatorEventCommandStartMacro`) and
+the macro engine and toolkit are started only by the harness (`AutomatorPlayer._startTheTestsMacro`) and
 reach back into it at every assertion and screenshot (`world.automator.player`, harness-installed
 members), so the two are ONE shipping unit — as two parts, a build could ship either without the
 other, kept honest only by a guard at every crossing, and the field reaches no gate can follow. The

@@ -13,8 +13,8 @@ class GraphsPlotsChartsWdgt extends RatioLockedWdgt
 
   # true while a SystemTest replays with animations-pacing control on -- animated widgets must then
   # render a FIXED, deterministic frame (mirrors AnalogClockAppearance._calculateHandsAngles, which pins
-  # @dateLastTicked to a fixed date under the same condition). Turned on by the macro's
-  # AutomatorEventCommandTurnOnAnimationsPacingControl.
+  # @dateLastTicked to a fixed date under the same condition). Turned on as each test starts
+  # (AutomatorPlayer.TEST_START_STEPS).
   _animationFrozenForDeterministicReplay: ->
     Automator? and Automator.animationsPacingControl and aTestIsPlaying()
 

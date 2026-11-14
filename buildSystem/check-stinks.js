@@ -107,12 +107,12 @@ const STINKS = [
   { id: 'clock-read', baseline: 8,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it; 13->8 on 2026-11-13: the video-player part was deleted
     why: 'a read of a clock — the wall clock (Date.now(), or a `new Date` given no argument — one followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` and `new Date -x` are values) or the monotonic one (performance.now(), no more an event-stream fact than the wall clock), either one existentially too (`performance?.now()`, `Date.now?()`) — in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock). Not seen: a read inside a string interpolation (the mask blanks `#{ }`)',
     // the world's one clock, read once per cycle; a clock widget built outside a cycle; the harness's own clocks,
-    // which no world reads: its DOM overlay fades in real time, its run clock times a run, its commands are paced; and
+    // which no world reads: its DOM overlay fades in real time, its run clock times a run, a test's macro starts after a real-time wait; and
     // the compile scheduler's frame budget, which decides how much compiling a cycle does
     sanctioned: [
       { file: 'WorldWdgt.coffee', member: '_updateTimeReferences', count: 1, why: "the world's one clock: read once at each cycle's start, and every reader takes the cycle's time from WorldWdgt.dateOfCurrentCycleStart" },
       { file: 'apps/AnalogClockWdgt.coffee', member: 'constructor', count: 1, why: 'a clock built outside a cycle (the desktop\'s, at boot, before the first) has no cycle time to read and shows the real time until its first tick; a playing test pins the date it draws' },
-      { file: 'harness/AutomatorPlayer.coffee', member: 'replayTestCommands', count: 1, why: "the pacing of a test's recorded commands, in real time" },
+      { file: 'harness/AutomatorPlayer.coffee', member: 'advanceTestPlaying', count: 1, why: "the wait before a test's macro starts (AutomatorPlayer.START_MACRO_AFTER_MS), in real time" },
       { file: 'harness/Automator.coffee', member: '@fade', count: 1, why: "a fade of the control panel's DOM overlay starts at the real time it is asked for" },
       { file: 'harness/Automator.coffee', member: '@_fadeStep', count: 1, why: "a fade step of the control panel's DOM overlay, paced in real time" },
       { file: 'harness/AutomatorPlayer.coffee', member: '_timeSinceStartOfTestsAsString', count: 1, why: 'the run clock the control panel shows, in real time' },

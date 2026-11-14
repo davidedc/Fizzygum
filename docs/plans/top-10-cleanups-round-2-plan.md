@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1 to §5, §7's first step. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1 to §5, §7's first step, §8. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -113,7 +113,7 @@ who has never seen the code.
 | 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Landed 2026-11-14 |
 | 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 queued for the loop; step 2's measurement queued last, its decision the owner's |
 | 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | First step (the serial path's three legs) landed 2026-11-14; the table queued for the loop |
-| 8 | A test is its macro | 2 to 3 days | The six command classes, the timed command cursor, 389 copies of one preamble, about 38,900 log lines a run. **In plain words:** every test file still opens with the same five-step recipe, left from when tests were recordings played back step by step. A test is now a single script, so the recipe and the player built for it can go. | Low (the macro's start cycle) | No | 3 | Queued for the loop |
+| 8 | A test is its macro | 2 to 3 days | The six command classes, the timed command cursor, 389 copies of one preamble, about 38,900 log lines a run. **In plain words:** every test file still opens with the same five-step recipe, left from when tests were recordings played back step by step. A test is now a single script, so the recipe and the player built for it can go. | Low (the macro's start cycle) | No | 3 | Landed 2026-11-14 |
 | 9 | Instruction files: a budget and one home per fact | 2 to 3 days | About 171 KB loaded into every session; each gate's story told in up to six places. **In plain words:** the notes every session must read before it starts have grown to the length of a short book, and the same explanation appears in several files. Keep the rules there and give each explanation one home. | None | Agreed 2026-11-13, on the item's criterion | 9 | Queued for the loop, last |
 | 10 | The reference set: live axes, then one file per reference | 1 to 2 days, then 3 | Five single-valued path segments, the user-agent spoof, 213 lines of UA sniffing; then 4,046 files, 45.8 MB, and the reference loader. **In plain words:** every expected screenshot sits five folders deep in folders that never vary (one operating system, one browser), and is saved twice: as a picture and as the same picture wrapped in a script. Flatten the folders, then keep only the picture. | None (pixels untouched) | Step 2 depends on §4 | 2 | Not queued: left out for now by the owner (2026-11-13) |
 
@@ -650,6 +650,42 @@ reproduce it for every test before any test file is rewritten.
 `cd Fizzygum-tests/tests && grep -h '"automatorEventCommandName"' */*_automationCommands.js | grep -o 'AutomatorEventCommand[A-Za-z]*' | sort | uniq -c`
 (five names, 389 each).
 
+**Landed 2026-11-14.** The first step measured the start over the whole suite, twice (a scratch prelude stamping the
+world's cycle counter and the wall clock at the reset, at each toggle's write, at the macro's start and at the pump's
+first calls). Both runs, all 389 tests, identical test by test: the reset at cycle R turns the three toggles off; they
+are turned on at R+1, R+2 and R+3, in the order pacing, number IDs, content extracts; the macro starts on the first
+cycle at least 200 ms of wall clock after the third (R+18 or R+19 — the one part the clock decides); its pump
+initialises at the next cycle and the macro takes its first step at the one after. The start is now stated once, in
+`AutomatorPlayer`: `TEST_START_STEPS` (the steps by name) and `START_MACRO_AFTER_MS` (200), taken by
+`advanceTestPlaying`, which the world's replay station asks each cycle in place of `replayTestCommands`; only the
+macro's step waits; the reset is still the public `world.resetWorld()`, the prototype method the audit preludes wrap. It
+landed first as that exact schedule (five steps), re-measured identical for every test and green through the whole
+gauntlet with no pixel moved; then, as the item allowed, it was simplified to two steps: the reset turns the three
+toggles back on in its own cycle, and the macro starts 200 ms after the reset (re-measured twice, identical for every
+test: 200 to 214 ms, at R+14 to R+16). The gauntlet passed again with no pixel moved, the canary and the dpr-2, WebKit
+and finger legs included, so the simplification stays. The six command classes are gone. StartMacro's body moved to
+`_startTheTestsMacro` (each source read into a local, and `Macro.fromString` handed that name, which the build's reader
+of macro sources passes over as a reference), its three checks beside it, and `screenshotImageNamesFromMacroSources` to
+`AutomatorLoader` as a static, which the loader, the phantom-pass guard and the cleanup ask. Each test's
+`_automationCommands.js` keeps its name and global and holds `mainMacroSource`, plus `extraSubroutineSources` in 16
+tests, and nothing else: a converter (vendored acorn) refused any file not exactly the canonical five records (none),
+copied every template literal as its bytes, and wrote one header pointing at the new home, as the 388 metadata headers
+now do. One `_failCurrentTest` replaces the five copies and does what the fullest did; each line the runners match is
+unchanged, except that a start step that throws is named by its step (`FAIL (command exception) <test>: StartMacro
+threw: …`), and that path now also turns the page red, writes the control panel and counts the failure. The cleanup
+clears the images the macro declares (every reference on disk is declared by its test's macro, measured) and prints none
+of the 38,900 lines a run used to. The re-measure command above prints nothing. Two complexity records went
+(`replayTestCommands` 25; `matchOrRecordSWCanvasScreenshot` 20 → 15) and one fell (`loadImagesOfTest` 34 → 25); the
+suite bite-proof hooks `_startTheTestsMacro`, which its hook list now names. Measured on the way, for the owner's
+decision on folding the toggles ("Not in this item", above): in the whole suite no test turns a toggle off after its
+start — no macro loads a world snapshot — so the reason given there is not exercised by any test today. Evidence: every
+test's macro sources, read by `testMacroSourcesIn`, hash the same before and after; the same prelude, re-run twice on
+the five-step landing, read the first run's schedule for every test (per test, the cycles relative to the reset
+identical; the macro's start 200 to 215 ms after the third toggle, at R+18 or R+19); the resolution map changes exactly
+the members the change touches (six classes fewer), and the three moved checks hash identically on their new home.
+No reference moved: `fg presuite`, `fg gauntlet` (20 of 20 legs, on each schedule) and `fg homepage`
+were green.
+
 ---
 
 ## §9. Instruction files: a budget and one home per fact
@@ -805,7 +841,8 @@ WebKit. For step 2: a prelude that makes the loader ignore every record's `image
   classes, owned by `plans/creation-and-templates-plan.md` §4.3).
 - **The harness's control panel.** `AutomatorPlayer` writes the panel's DOM directly at 12
   places beside `SystemTestsControlPanelUpdater`'s 5. Worth folding into §8's
-  `failCurrentTest`, not an item of its own.
+  `failCurrentTest`, not an item of its own. (§8 folded the failure writes into
+  `_failCurrentTest`; 8 direct writes are left.)
 
 ## 12. Already owned elsewhere (not listed again)
 
@@ -921,3 +958,6 @@ Do not commit or push without asking me.
 - [x] §5 (1 day): one seam for "a test is playing" — 46 lines in 15 core files name the harness, in two spellings; the hand fades the harness's DOM
   — CLOSED 2026-11-14 (loop U6): `aTestIsPlaying()` asked at the 17 sites; the hand's harness DOM in
   `ActivePointerTestSupport` (§5, "Landed").
+- [x] §8 (2 to 3 days): a test is its macro — the command-sequence layer (six classes, a timed cursor, 389 copies of one preamble) retired; the three test toggles stay (folding them changes the tests that load a snapshot mid-test: a decision of its own)
+  — CLOSED 2026-11-14 (loop U7): the start is one schedule in `AutomatorPlayer` (`TEST_START_STEPS`,
+  `advanceTestPlaying`); each test file holds its macro sources only; one `_failCurrentTest` (§8, "Landed").

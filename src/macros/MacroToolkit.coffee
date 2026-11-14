@@ -2400,8 +2400,8 @@ class MacroToolkit
   # The reusable "verb" library for high-level macro tests: returns a Set of
   # macro SUBROUTINES (bringUpInspector, clickMenuItemOfWidget, takeScreenshot,
   # …) that any test's main macro can call by name. A macro test ships only its
-  # own main macro (as a string on its AutomatorEventCommandStartMacro command);
-  # that command links the main macro against THIS shared set, so the common
+  # own main macro (as a string in its _automationCommands.js); the harness
+  # (AutomatorPlayer._startTheTestsMacro) links the main macro against THIS shared set, so the common
   # navigation/assertion verbs aren't copied into every test. The verbs compose
   # the @..._InputEvents primitives defined above.
   standardMacroSubroutines: ->

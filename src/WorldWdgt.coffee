@@ -2195,7 +2195,7 @@ class WorldWdgt extends IconGridPanelWdgt
     @_playQueuedEvents()
 
     # THE DISSOLUTION SEAM. resetWorld can run from EITHER of the two stations that hand control to
-    # user/test code — a queued event's menu action (just above), or the replayed command every
+    # user/test code — a queued event's menu action (just above), or the start step every
     # SystemTest opens with (just below) — and it DESTROYS this world and hands the page to its
     # replacement. Everything after this point in the cycle belongs to that replacement: this world
     # has no tree, no hand and no listeners left, and the animation pump gives the new world a whole
@@ -2206,11 +2206,12 @@ class WorldWdgt extends IconGridPanelWdgt
     # The FRAME still has to close out, though — that bookkeeping is the page's, not this world's.
     return @_closeCycleBookkeepingNoSettle cycleStartPerfMs  if @_dissolved
 
-    # replays test actions at the right time
+    # takes the playing test's next start step when its time has come, and ends the test once its
+    # macro is done (AutomatorPlayer.advanceTestPlaying)
     if aTestIsPlaying()
-      @automator.player.replayTestCommands()
+      @automator.player.advanceTestPlaying()
 
-    # the second half of the dissolution seam above: a reset reached from a replayed test command
+    # the second half of the dissolution seam above: a reset reached from a test's start step
     # lands here instead. Same reasoning, same close-out.
     return @_closeCycleBookkeepingNoSettle cycleStartPerfMs  if @_dissolved
 

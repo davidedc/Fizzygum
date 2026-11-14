@@ -410,7 +410,7 @@ release settle (`_beforeBeingGrabbed`): the release re-lays the host being left,
 places its children (a document's flow) would otherwise put the widget back, leaving it riding the
 hand off by the threshold travel. Playback runs these exact rules: there is no Automator carve-out,
 so a replayed mouse drag waits out the threshold as a user's does, and a test cannot ask otherwise
-(`AutomatorEventCommandStartMacro` refuses the retired `grabDragThreshold` metadata key).
+(`AutomatorPlayer._checkNoRetiredMetadataKeys` refuses the retired `grabDragThreshold` metadata key).
 Pinned by the value assertions of `SystemTest_macroSimpleDocumentHandlesOldInspector` (a window
 dragged out of a document lands exactly where the drag puts it, on either pointer).
 

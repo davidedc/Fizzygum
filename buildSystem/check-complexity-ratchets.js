@@ -154,10 +154,8 @@ const RECORDED = {
   'boot/globalFunctions.coffee#loadJSFilePromise': 18,
 };
 const RECORDED_IN_HARNESS = {
-  'AutomatorLoader#loadImagesOfTest': 34,
+  'AutomatorLoader#loadImagesOfTest': 25,
   'AutomatorLoader#selectTestsFromTagsOrTestNames': 32,
-  'AutomatorPlayer#matchOrRecordSWCanvasScreenshot': 20,
-  'AutomatorPlayer#replayTestCommands': 25,
   'SystemInfo#constructor': 25,
   'WorldTestSupport#nextStartupAction': 26,
 };

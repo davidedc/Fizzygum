@@ -3,7 +3,7 @@
 // read as the text it compiles. Two kinds, one reader each; a reader of macro CODE reads both:
 //   testMacroSourcesIn(text, file, ast)  a test's command file (JS): the value of its `mainMacroSource`, and each element
 //                                        of its `extraSubroutineSources` array (none when that is absent, `null` or
-//                                        `undefined`) — what AutomatorEventCommandStartMacro compiles. `ast` is the
+//                                        `undefined`) — what AutomatorPlayer._startTheTestsMacro compiles. `ast` is the
 //                                        file's parse (lib/js-mask.js parseJs), when the caller has it.
 //   verbMacroSourcesIn(text, file)       a CoffeeScript file: the argument of each `Macro.fromString` call that is a
 //                                        string literal — MacroToolkit's standard verbs —, read off the bundled

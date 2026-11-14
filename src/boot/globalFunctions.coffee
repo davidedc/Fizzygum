@@ -475,7 +475,7 @@ boot = ->
   # wall-clock per test (a 2s dwell + a 0.5s fade), unaffected by ?speed=, so for
   # a headless/CI sweep it is ~half the total runtime and pure waste. It is
   # orthogonal to ?speed (speed compresses the gestures; this drops the preamble),
-  # touches only DOM (not the world cycle, the command sequence, or the screenshot
+  # touches only DOM (not the world cycle, the test's start steps, or the screenshot
   # pixels), so skipping it leaves every test's result byte-identical. Browser
   # default is SHOWN (watchable); the headless runners pass ?intro=0. Absent ⇒ true.
   window.FIZZYGUM_SHOW_TEST_INTRO = true

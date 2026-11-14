@@ -65,16 +65,16 @@ const noHarness = refusal(() => harnessFiles(at('repoWithoutHarness')));
 t.check(noHarness === `SOURCE_TREE_MALFORMED ${at('repoWithoutHarness/' + HARNESS_DIR)}: there is no such directory`,
   'a tests repo without a harness is refused', noHarness || 'read');
 put(`repo/${HARNESS_DIR}/H.coffee`);
-put(`repo/${HARNESS_DIR}/AutomatorEventCommands/C.coffee`);
+put(`repo/${HARNESS_DIR}/Deep/C.coffee`);
 const roots = { src: at('src'), testsRepo: at('repo') };
 const compiled = compiledFiles(roots);
-const harness = [at(`repo/${HARNESS_DIR}/AutomatorEventCommands/C.coffee`), at(`repo/${HARNESS_DIR}/H.coffee`)];
+const harness = [at(`repo/${HARNESS_DIR}/Deep/C.coffee`), at(`repo/${HARNESS_DIR}/H.coffee`)];
 t.check(JSON.stringify(compiled) === JSON.stringify([...want, ...harness]), 'the compiled files are src\'s, then the harness\'s, each in code-point order',
   compiled.map((p) => path.relative(temp, p)).join(' '));
 
 // the names a gate prints
 const names = [at('src/a/z.coffee'), harness[0]].map((f) => sourceName(f, roots)).join(' ');
-t.check(names === 'a/z.coffee harness/AutomatorEventCommands/C.coffee', 'sourceName: a src file by its path in src, a harness file under harness/', names);
+t.check(names === 'a/z.coffee harness/Deep/C.coffee', 'sourceName: a src file by its path in src, a harness file under harness/', names);
 const prefixed = [at('src/a/z.coffee'), harness[1]].map((f) => sourceName(f, roots, 'src/')).join(' ');
 t.check(prefixed === 'src/a/z.coffee harness/H.coffee', 'sourceName with a prefix: the prefix goes on src\'s names only', prefixed);
 

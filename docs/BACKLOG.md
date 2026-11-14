@@ -279,13 +279,15 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       `String-extensions.coffee`'s prototype extensions, and `window.hashOfString` (inside `globalFunctions.coffee`'s
       `do ->` memo block), sit indented under a block, so a sanction there could not name its method. No stink hits one
       today.
-- [ ] **Every test's two headers still call a macro test "the new style"** (found by the independent review closing
-      "The automator event commands' constructors are code nothing runs", in the plan's ledger; by reading; low). 380
-      `_automationCommands.js` and 381 metadata headers say "(the new style)", though macros are the only style and
-      the recorder is gone: a mechanical comment edit over both files of every test.
+- [ ] **Every test's metadata header still calls a macro test "the new style"** (found by the independent review closing
+      "The automator event commands' constructors are code nothing runs", in the plan's ledger; by reading; low). 387
+      metadata headers say "(the new style)", though macros are the only style and the recorder is gone: a mechanical
+      comment edit over the metadata file of every test. (The `_automationCommands.js` headers were re-emitted without
+      it by `plans/top-10-cleanups-round-2-plan.md` §8.)
 - [ ] **No gate holds a commands-file header to its own test** (same review; by reading; low). A header names its
       metadata file (`(<Name>.js)`), and a header copied from a sibling test would name the sibling's: nothing checks
-      it. The test the author-macro-test skill says to copy carried the stale wording 18 headers shared.
+      it. Every header names its own test today (round 2's §8 re-emitted all 389 from each test's name); a new test's
+      author copies one by hand.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
 - [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes
@@ -568,7 +570,7 @@ AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by
 - [ ] §6 (2 days, then 1 to 2): one audited-suite gate driver in Node (three bash gates, their library and its rule-registry twin go); then instruments that share a suite pass (⛔ measured first, then the owner)
 - [ ] §7 (2 to 3 days): the `fg` leg roster as a table, so the places that name the legs (the plan's §7 lists six) read one list (the serial path's three missing legs, the item's first step, landed 2026-11-14)
 - [ ] §7 (medium, unreached today; found by the first step's review): a leg named in a wave list but missing from `run_leg` returns 3, which `collect_and_retry` reads as an infra flake, so the gauntlet prints OK with a load-flake warning — a typo while building the table would hit it; the table should make an unknown leg a hard failure
-- [ ] §8 (2 to 3 days): a test is its macro — the command-sequence layer (six classes, a timed cursor, 389 copies of one preamble) retired; the three test toggles stay (folding them changes the tests that load a snapshot mid-test: a decision of its own)
+- [ ] §8 follow-up (⛔ owner ruling): each test's `_automationCommands.js` now holds only its macro sources, so its name no longer says what it holds — rename it (e.g. `_macro.js`), or fold it into the metadata file; the loop kept the name (its brief), since a rename touches the two definitions of a test's files, every runner and 389 directories
 - [ ] §9 (2 to 3 days): instruction files — a byte budget and one home per fact (about 171 KB is loaded into every session) (the owner agreed 2026-11-13, on the item's criterion)
 - [ ] §10 (1 to 2 days, then 3; left out for now by the owner 2026-11-13): the reference set — a path made of the live axes (five single-valued segments and the user-agent spoof go); then one file per reference (the `.js` copies, 45.8 MB, and the reference loader go; needs §4 decided)
 

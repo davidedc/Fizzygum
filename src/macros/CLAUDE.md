@@ -14,8 +14,8 @@ so the two ship as one unit:
 
 This file is the **router**: architecture + the rules you must get right. Two companion docs hold the detail —
 **`MACRO-PATTERNS.md`** (the per-mechanic reuse-pattern catalogue, one entry per test) and the verb
-**doc-comments in `MacroToolkit.coffee`** (full signatures + behaviour). The L5 *harness* (`Automator*`,
-`AutomatorEventCommand*`) lives in the sibling **`Fizzygum-tests`** repo (see
+**doc-comments in `MacroToolkit.coffee`** (full signatures + behaviour). The L5 *harness* (`Automator*`)
+lives in the sibling **`Fizzygum-tests`** repo (see
 `../../../Fizzygum-tests/CLAUDE.md` and the `/author-macro-test` skill).
 
 ## Why macros exist
@@ -27,14 +27,16 @@ synthesises the real input events. Resilient to layout change.
 
 ## How a macro test runs, end to end
 
-1. `tests/SystemTest_<name>/<name>_automationCommands.js` is a tiny sequence: `ResetWorld`, a few `TurnOn*`
-   determinism toggles, then **one** `AutomatorEventCommandStartMacro` carrying the test's macro as a string
-   (`mainMacroSource`, plus optional `extraSubroutineSources`). Screenshot reference names are **not** listed —
+1. `tests/SystemTest_<name>/<name>_automationCommands.js` holds the test's macro as a string (`mainMacroSource`,
+   plus optional `extraSubroutineSources`) and nothing else. How a test STARTS is the harness's, stated once
+   (`AutomatorPlayer.TEST_START_STEPS`, taken by `AutomatorPlayer.advanceTestPlaying`): the world's reset, which
+   turns the three determinism toggles back on in its own cycle, then the macro, `START_MACRO_AFTER_MS` of wall
+   clock after the reset. Screenshot reference names are **not** listed —
    the loader extracts them from the `takeScreenshot_InputEvents_Macro "name"` calls in the source. The four
    **mandatory** self-doc strings — `intent`, `scenario`, `assertions`, `provenance` — live in the metadata
-   `SystemTest_<name>.js` and are validated at replay (a missing/empty one throws, by name). The
-   `AutomatorEventCommandStartMacro` doc-comment is the single source of truth for the format.
-2. `AutomatorEventCommandStartMacro.executeEventCommand` (harness) calls
+   `SystemTest_<name>.js` and are validated at replay (a missing/empty one throws, by name). The doc-comment
+   above `AutomatorPlayer._startTheTestsMacro` is the single source of truth for the format.
+2. `AutomatorPlayer._startTheTestsMacro` (harness) calls
    **`world.macroToolkit.standardMacroSubroutines()`** for the reusable verb library, adds any per-test
    `extraSubroutineSources`, `linkTo`s the `mainMacroSource`, and `start()`s it.
 3. **`Macro`** parses the generator and rewrites verb calls `fooMacro args` → `yield from fooMacro.call this,
@@ -48,7 +50,7 @@ synthesises the real input events. Resilient to layout change.
    fingerprint — emitted by the `takeScreenshot` verb itself), or `<number>` (ms). Each step pushes timed synthetic
    events onto `world.inputEventsQueue`; `playQueuedEvents` (also in `doOneCycle`) executes them.
 5. **Harness bridge:** while a macro runs `world.macroToolkit.aMacroIsRunning` is true and
-   `AutomatorPlayer.replayTestCommands` pauses until the generator reports done, then ends the test. Screenshots:
+   `AutomatorPlayer.advanceTestPlaying` waits until the generator reports done, then ends the test. Screenshots:
    the macro calls `world.automator.player.compareScreenshots` in-flow (the `takeScreenshot_InputEvents_Macro`
    verb); `AutomatorLoader.loadImagesOfTest` preloads the references whose names it extracts from the source.
 
@@ -63,7 +65,7 @@ The one registered macro test (the regression anchor) is `Fizzygum-tests/tests/S
 | **L2** locators & one-shot actions | read the live tree, compose L1 | `…_InputEvents` (+ bare locator names) | `MacroToolkit` |
 | **L3** macro verbs (generators) | reusable `…_InputEvents_Macro` SOURCE strings from `standardMacroSubroutines()` | `…_InputEvents_Macro` | `MacroToolkit` |
 | **L4** driver + state | the pump stub, the `wait*` gates, the macro-step fields | (state / predicates) | `MacroToolkit` |
-| **L5** test runner (harness) | `Automator*`, `AutomatorEventCommand*` | `Automator…` | `Fizzygum-tests/` |
+| **L5** test runner (harness) | `Automator*` | `Automator…` | `Fizzygum-tests/` |
 
 All of L0–L4 is absent from a production build (the part is not in its profile).
 
@@ -432,8 +434,8 @@ then reset to `noOperation` when done.
 
 Anything that touches `world.automator` is a **harness** (assertion) concern, not framework. Today
 `takeScreenshot_InputEvents_Macro` lives in the framework verb set as a pragmatic stripped source string that calls
-`world.automator.player.compareScreenshots`; the sanctioned future move is for `AutomatorEventCommandStartMacro` to
-contribute that verb via the `extraSubroutineSources` merge-seam.
+`world.automator.player.compareScreenshots`; the sanctioned future move is for the harness
+(`AutomatorPlayer._startTheTestsMacro`) to contribute that verb via the `extraSubroutineSources` merge-seam.
 
 ## Build-exclusion contract (part membership)
 
