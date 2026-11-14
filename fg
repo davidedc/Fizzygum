@@ -706,8 +706,9 @@ case "$cmd" in
       if [ $? -eq 0 ]; then tally="$tally graph:PASS"; else tally="$tally graph:FAIL"; ok=0; grep -E 'FAIL|graph-liveness' /tmp/fg-graph.log | tail -10; fi
       # paint-truthfulness gate (plan 5.3): the whole suite must stay paint-truthful — a forced full repaint of each
       # test's settled end-state must not change any pixel (a delta = a dropped invalidation / D2-class ghost region).
-      # The serial hatch keeps the original single-browser audit (--shards=1, ~7 min).
-      kill_browsers; ( cd "$FT" && to 720 node scripts/run-paint-audit.js --shards=1 ) >/tmp/fg-paint.log 2>&1
+      # It runs as the `paint` leg in run_leg does (five shards): one browser cannot audit the whole suite inside
+      # the audit's own 600 s bound (measured 2026-11-14: 389 tests, 0 checked at 600 s, at load 9).
+      kill_browsers; run_leg paint
       if [ $? -eq 0 ]; then tally="$tally paint:PASS"; else tally="$tally paint:FAIL"; ok=0; grep -E 'GATE (PASSED|FAILED|INVALID)|OFFENDER|offenders|tests checked' /tmp/fg-paint.log | tail -8; fi
       # runtime audit gates (layering/naming §5b/§9.6): the apply-2x2 lattice + callback settle-neutrality, via the
       # off-by-default WorldWdgt flags each gate's injected prelude flips on. ~1.5 min each; each gate cd's to $FT + pkills.
@@ -732,6 +733,14 @@ case "$cmd" in
       # serialization round-trip + file rigs — see the `serialization` leg in run_leg.
       kill_browsers; run_leg serialization
       if [ $? -eq 0 ]; then tally="$tally serialization:PASS"; else tally="$tally serialization:FAIL"; ok=0; grep -E 'SERIALIZATION RIG|FILE ROUND-TRIP|MISMATCH' /tmp/fg-serialization.log | tail -6; fi
+      # the bin/shelf deep audit, the lazy-part rigs and the VM-truth lifetime gate — see the `storage`,
+      # `parts` and `vmtruth` legs in run_leg.
+      kill_browsers; run_leg storage
+      if [ $? -eq 0 ]; then tally="$tally storage:PASS"; else tally="$tally storage:FAIL"; ok=0; grep -E 'storage-gate:|failed tests' /tmp/fg-storage.log | tail -6; fi
+      kill_browsers; run_leg parts
+      if [ $? -eq 0 ]; then tally="$tally parts:PASS"; else tally="$tally parts:FAIL"; ok=0; grep -E 'LAZY (PART|ICONS)|\[FAIL\]|INVALID' /tmp/fg-parts.log | tail -6; fi
+      kill_browsers; run_leg vmtruth
+      if [ $? -eq 0 ]; then tally="$tally vmtruth:PASS"; else tally="$tally vmtruth:FAIL"; ok=0; grep -E 'vm-truth-gate:|failed tests' /tmp/fg-vmtruth.log | tail -6; fi
       if [ $ok -eq 1 ]; then ban "GAUNTLET OK —$tally"; verdict_end gauntlet 0 "OK —$tally"
       else ban "GAUNTLET FAILED —$tally"; verdict_end gauntlet 1 "FAILED —$tally"; exit 1; fi
     else

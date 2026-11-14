@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1, §2, §3. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1, §2, §3, §7's first step. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -112,7 +112,7 @@ who has never seen the code.
 | 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Queued for the loop |
 | 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Queued for the loop |
 | 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 queued for the loop; step 2's measurement queued last, its decision the owner's |
-| 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | Queued for the loop (the serial path's fix first, as a unit of its own) |
+| 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | First step (the serial path's three legs) landed 2026-11-14; the table queued for the loop |
 | 8 | A test is its macro | 2 to 3 days | The six command classes, the timed command cursor, 389 copies of one preamble, about 38,900 log lines a run. **In plain words:** every test file still opens with the same five-step recipe, left from when tests were recordings played back step by step. A test is now a single script, so the recipe and the player built for it can go. | Low (the macro's start cycle) | No | 3 | Queued for the loop |
 | 9 | Instruction files: a budget and one home per fact | 2 to 3 days | About 171 KB loaded into every session; each gate's story told in up to six places. **In plain words:** the notes every session must read before it starts have grown to the length of a short book, and the same explanation appears in several files. Keep the rules there and give each explanation one home. | None | Agreed 2026-11-13, on the item's criterion | 9 | Queued for the loop, last |
 | 10 | The reference set: live axes, then one file per reference | 1 to 2 days, then 3 | Five single-valued path segments, the user-agent spoof, 213 lines of UA sniffing; then 4,046 files, 45.8 MB, and the reference loader. **In plain words:** every expected screenshot sits five folders deep in folders that never vary (one operating system, one browser), and is saved twice: as a picture and as the same picture wrapped in a script. Flatten the folders, then keep only the picture. | None (pixels untouched) | Step 2 depends on §4 | 2 | Not queued: left out for now by the owner (2026-11-13) |
@@ -500,7 +500,8 @@ is a gauntlet whose per-leg command lines are identical before and after.
   shell, and states that "a leg of `fg` is trusted to be in a wave".
 
 **Why it matters.** A commit-point check that can silently run fewer legs than it names is the
-failure the whole gate system exists to prevent, and it is live. The build's gates got a table
+failure the whole gate system exists to prevent, and the serial path did it until the first step
+landed (2026-11-14). The build's gates got a table
 for this reason (`buildSystem/gates.js`, run by `run-gates.js`).
 
 **Fix shape.** One table (a Node module beside `gates.js`), a row per leg: name, command, alarm,
@@ -521,7 +522,20 @@ exact command line from a green gauntlet's logs as the fixture the table must re
 
 **Re-measure.**
 `sed -n '/SERIAL escape hatch/,/PARALLEL path/p' Fizzygum/fg | grep -cE 'parts-lazy|storage-invariant|vm-truth|run_leg (parts|storage|vmtruth)'`
-(0 today: the serial path launches none of the three).
+(0 before the first step landed: the serial path launched none of the three).
+
+**First step landed 2026-11-14.** The serial path runs `storage`, `parts` and `vmtruth` through
+`run_leg`, after `serialization`, each as that branch's other legs run: browsers killed first, its
+verdict in the tally, a short grep of its log on failure. The re-measure command prints 4: the
+three launches, and the `vmtruth` line's own failure grep, whose pattern names `vm-truth-gate:`.
+The first serial run then showed a second drift: the serial path audited paint in one browser
+(`--shards=1`, "~7 min"), which can no longer finish the 389-test suite inside the audit's own
+600 s bound (measured alone at load 9: 0 tests checked), so the serial gauntlet could not pass
+before this step either; it now runs `paint` through `run_leg` too, as the waves do. Evidence:
+`FG_GAUNTLET_SERIAL=1 fg gauntlet` ran green, its tally naming the same 20 legs as
+`legs_pending`, in 37 minutes (the first, failing run took 44). The first step's second half, every leg's command line
+recorded as the table's fixture, is the table unit's launch census, taken before its first edit;
+the table itself is its own unit.
 
 ---
 
@@ -854,3 +868,5 @@ Do not commit or push without asking me.
 - [x] §3 (½ day): map outlines are data — 2,638 `lineTo` statements in two files become coordinate tables and one loop, proven by an operation log
   — CLOSED 2026-11-13 (loop U3): `@outlines` tables and one loop in each map appearance; the operation logs are
   byte-identical (§3, "Landed").
+- §7, in part — the line read: "§7 (2 to 3 days): the `fg` leg roster as a table. **A defect stands until then: `FG_GAUNTLET_SERIAL=1 fg gauntlet` runs 17 of the 20 legs (`parts`, `storage` and `vmtruth` are missing) and prints OK** — a three-line fix of its own, the item's first step". — LANDED IN PART 2026-11-14 (loop U4): the serial path
+  runs all 20 legs (§7, "First step landed"). BACKLOG keeps the table.
