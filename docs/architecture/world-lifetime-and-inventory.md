@@ -169,7 +169,8 @@ launched with `--js-flags=--expose-gc --enable-precise-memory-info` (both flags 
 dose: without the second, `performance.memory` is quantized and the floor gate is blind).
 The prelude records a `WeakRef` for every widget at `unregisterThisInstance` (the moment it
 leaves the live registry and is supposed to be garbage) and, at each `resetWorld` — after
-the teardown and the in-band audits — forces a double GC and asserts, with THREE verdicts:
+the teardown and the in-band audits — forces a double GC and asserts, with three verdicts (and a fourth exit, 3, for a
+shard dropped twice: the audited-suite gates' shared retry gave up, re-run):
 
 - **RETENTION, in two tiers — because the cheap question and the true question are not the
   same question.** *Tier 1* (in the page, at every `resetWorld`) forces the double GC and
@@ -203,8 +204,8 @@ the teardown and the in-band audits — forces a double GC and asserts, with THR
   (`LAYOUTAUDIT VMHEAP`); per page, `min(last 10) − min(samples 3..15)` must stay ≤ 96 MB
   (green-suite worst: +44 MB — the heap legitimately balloons and deflates with test
   composition, so only the FLOOR is a leak signal; endpoint statistics are noise).
-- **INVALID (exit 2)** — the run measured NOTHING and must never read as a pass: a test
-  bucket with no heap sample (prelude not installed, or no `window.gc`), no reset ever
+- **INVALID (exit 2)** — the run measured NOTHING and must never read as a pass: a test the
+  runner played with no bucket, a test bucket with no heap sample (prelude not installed, or no `window.gc`), no reset ever
   observed to REPLACE the world, or — the tier-2 case — **a suspect tier 1 raised that
   tier 2 never answered**, whether because the confirmation broke on a shard or because it
   never ran at all. A suspect nobody asked the snapshot about is not a suspect that came

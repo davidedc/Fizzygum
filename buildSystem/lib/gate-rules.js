@@ -33,9 +33,7 @@
 // LOSES whatever its reader had not taken yet — all of it, measured, when the reader is slow (a proof's spawn under a
 // loaded pool) — while the RULES line, written synchronously at exit, survives: a rule fired with no violation line.
 //
-// A shell gate's twin is gate_rules_init / gate_rule in Fizzygum-tests/scripts/lib/audited-suite-with-infra-retry.sh
-// (the same exits, from an EXIT trap; its proof is that repo's lib/gate-rules-sh-selftest.js). This one's proof:
-// lib/gate-rules-selftest.js.
+// Its proof: lib/gate-rules-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
@@ -74,7 +72,8 @@ function parseRulesLine(out, gate) {
 // The exit line must REACH its reader. On the way out fd 1 can be a non-blocking pipe still full of the report the gate
 // just flushed (a big one — the census prints a thousand offender lines), and writeSync then throws EAGAIN: retried
 // after a short nap, for up to two seconds, rather than lost — a lost RULES line reads as a gate that named no rule.
-// A closed pipe (EPIPE) or anything else ends the attempt.
+// A closed pipe (EPIPE) or anything else ends the attempt. (Fizzygum-tests/scripts/lib/audited-suite.js relays its
+// embedded suite's output through it too.)
 function writeAll(fd, s) {
   const buf = Buffer.from(s);
   const nap = new Int32Array(new SharedArrayBuffer(4));
@@ -154,4 +153,4 @@ function forGate(file, { name } = {}) {
   return api;
 }
 
-module.exports = { forGate, readRules, parseRulesLine, RULES_LINE_RE };
+module.exports = { forGate, readRules, parseRulesLine, RULES_LINE_RE, writeAll };

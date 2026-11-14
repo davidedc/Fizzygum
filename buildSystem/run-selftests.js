@@ -31,9 +31,9 @@
 // included), build_and_smoke.sh or an `fg` leg LAUNCHES (lib/what-runs.js's run set: ANY launch edge makes it a
 // program — but never an instrument a gate injects, nor a self-test, which is a proof judged by the rules above) is a
 // gate unless its header says why not (`// not-a-gate: <reason>`, `#` in a shell or Python file), and a gate
-//   GATE_WITHOUT_REGISTRY  names its rules through lib/gate-rules.js — JS: `require(…gate-rules…).forGate(__filename)`
-//                          in its code; shell: a `gate_rules_init` call (the twin in Fizzygum-tests/scripts/lib/
-//                          audited-suite-with-infra-retry.sh) — so its exits are held to its rules;
+//   GATE_WITHOUT_REGISTRY  names its rules through lib/gate-rules.js — `require(…gate-rules…).forGate(__filename)` in
+//                          its code — so its exits are held to its rules (a gate is JavaScript: a launched shell or
+//                          Python script has no registry, so it says why it is not a gate, or it fails here);
 //   GATE_WITHOUT_PROOF     is LAUNCHED by a self-test that requires and calls a proof helper (lib/planted-src.js proveGate, or the
 //                          tests repo's lib/gate-bite-proof.js proveLeg), which plants each of those rules.
 // A new gate therefore arrives with its proof or fails the build.
@@ -246,9 +246,7 @@ function gateCensus(layout, isUmbrella) {
   for (const f of gates) {
     const text = fs.readFileSync(f, 'utf8');
     if (NOT_A_GATE_RE.test(headerOf(text))) { exempt.push(f); continue; }
-    const registry = f.endsWith('.js') ? usesRegistry(text)
-      : f.endsWith('.sh') ? shellCommands(text).some((w) => w[0] && w[0].text === 'gate_rules_init' && !w[0].headQuoted) : false;
-    if (!registry) noRegistry.push(f);
+    if (!(f.endsWith('.js') && usesRegistry(text))) noRegistry.push(f);
     if (!proved.has(f)) noProof.push(f);
   }
   return { noRegistry, noProof, gates: gates.length - exempt.length, exempt: exempt.length };
@@ -328,9 +326,9 @@ async function main(argv) {
     for (const f of census.noRegistry) console.error(rules.fired('GATE_WITHOUT_REGISTRY', `  GATE_WITHOUT_REGISTRY  ${rel(f)}`));
     for (const f of census.noProof) console.error(rules.fired('GATE_WITHOUT_PROOF', `  GATE_WITHOUT_PROOF  ${rel(f)}`));
     if (unproved) {
-      console.error('      Every script the build or an fg leg launches is a gate: it names its rules (lib/gate-rules.js; a shell');
-      console.error('      gate gate_rules_init) and a self-test plants each one (proveGate / proveLeg, launching it by');
-      console.error('      path.join(__dirname, …)) — or its header says why it is not one: `// not-a-gate: <reason>`.');
+      console.error('      Every script the build or an fg leg launches is a gate: it names its rules (lib/gate-rules.js)');
+      console.error('      and a self-test plants each one (proveGate / proveLeg, launching it by path.join(__dirname, …))');
+      console.error('      — or its header says why it is not one: `// not-a-gate: <reason>` (`#` in a shell or Python file).');
     }
   }
   if (hiding.length || stray.length) {

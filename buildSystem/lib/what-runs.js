@@ -34,10 +34,9 @@
 // COMMAND (`--headless` or not) applies only to a shell invocation of its runner whose command matches.
 //
 // BLIND SPOTS, plainly. A launch spelled any other way — a path assembled with `+`, a template literal, a variable
-// holding a path computed elsewhere, a path handed to a shell FUNCTION (`run_audited_suite x-prelude.js`) — is not
-// seen, so its target reads as never run: the safe direction, since the reader then asks for a guard that is seen to
-// run. A required module counts as run because its code runs, even where its own command-line half (behind
-// `require.main === module`) does not. A root's own conditions (`if $PROFILE_SHIPS_TESTS`) are not evaluated: a gate
+// holding a path computed elsewhere — is not seen, so its target reads as never run: the safe direction, since the
+// reader then asks for a guard that is seen to run. A required module counts as run because its code runs, even
+// where its own command-line half (behind `require.main === module`) does not. A root's own conditions (`if $PROFILE_SHIPS_TESTS`) are not evaluated: a gate
 // behind a profile condition counts as run — and so is a gate-table row's WHEN. A row's arguments are not read for
 // scripts (a shell line's are). A leg of `fg` is trusted to be in a wave; `fg` is read, never executed.
 

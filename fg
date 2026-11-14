@@ -165,9 +165,9 @@ run_leg(){
     # subsumes it, so it is deliberately NOT a gauntlet leg.
     fracplane) ( cd "$FT" && to 300 node scripts/run-sequence-headless.js --dpr=2 SystemTest_macroDropIntoRotatedStretchablePanelStretchesOnResize SystemTest_macroDropStrokedRectIntoRotatedPanel ) >"$lg" 2>&1; rc=$? ;;
     paint)  ( cd "$FT" && to 720 node scripts/run-paint-audit.js --shards=5 ) >"$lg" 2>&1; rc=$? ;;
-    tiernaming) bash "$FT/scripts/tier-naming-audit/run-tier-naming-gate.sh" "${FG_GATE_SHARDS:-6}" >"$lg" 2>&1; rc=$? ;;
-    settle)     bash "$FT/scripts/notification-settle-audit/run-notification-settle-gate.sh" "${FG_GATE_SHARDS:-6}" >"$lg" 2>&1; rc=$? ;;
-    capstone)   bash "$FT/scripts/end-of-cycle-audit/run-capstone-gate.sh" "${FG_GATE_SHARDS:-6}" >"$lg" 2>&1; rc=$? ;;
+    tiernaming) ( cd "$FT" && to 900 node scripts/tier-naming-audit/tier-naming-gate.js "${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
+    settle)     ( cd "$FT" && to 900 node scripts/notification-settle-audit/settle-gate.js "${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
+    capstone)   ( cd "$FT" && to 900 node scripts/end-of-cycle-audit/capstone-gate.js "${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
     # reference PIXEL integrity (no browser): decode every SWCanvas ref (1842 and growing — the count
     # tracks the suite) and assert each re-hashes to its stored hashOfData. The build's check-refs call
     # is STRUCTURAL only (0.2s) — this is the pixel half, kept off the build because paying it on every
@@ -192,8 +192,8 @@ run_leg(){
     # settle-re-visit standing gate (up-edge endgame close, 2026-07-17): one dpr1 suite pass under
     # the counting prelude; the profile must equal the committed baseline — which is EMPTY, so ANY
     # re-visit anywhere = a convergence regression. Wave-sized via FG_GATE_SHARDS like the other
-    # gates; standalone `fg revisits` stays the full-shard form.
-    revisits) ( cd "$FT" && to 900 node scripts/revisit-gate.js -- --shards="${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
+    # gates; standalone `fg revisits` runs the gate's own default (6 shards).
+    revisits) ( cd "$FT" && to 900 node scripts/revisit-gate.js "${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
     # arrange-idempotence oracle (owner-directed 2026-07-17, same close as revisits): ONE page,
     # battery + post-order force-re-lay sweep in a single evaluate — ~10s, free inside the wave.
     census) ( cd "$FT" && to 300 node scripts/staleness-census.js ) >"$lg" 2>&1; rc=$? ;;
@@ -207,13 +207,13 @@ run_leg(){
     # asserting ZERO moves (idempotence) + structural residue; the profile must be EMPTY (no
     # baseline file on purpose). Tier A (the STORAGE_INVARIANT console token) already rides
     # every suite leg; this leg catches classifier self-disagreement, which Tier A cannot.
-    storage) ( cd "$FT" && to 900 node scripts/storage-invariant-gate.js -- --shards="${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
+    storage) ( cd "$FT" && to 900 node scripts/storage-invariant-gate.js "${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
     # VM-truth object-lifetime gate (Arc B, world-vm-truth-riders plan): one dpr1 suite pass
     # under the forced-GC prelude — every destroyed widget must be GC-collectible one teardown
     # later (closure retention the in-band WORLD_INVENTORY gate cannot see) + the post-GC
     # heap-floor ceiling; exit 2 = INVALID (measured nothing — the wrapper refuses to read an
     # unmeasured run as green). Chrome-only by design; the webkit leg keeps the in-band tier.
-    vmtruth) ( cd "$FT" && to 900 node scripts/vm-truth-gate.js -- --shards="${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
+    vmtruth) ( cd "$FT" && to 900 node scripts/vm-truth-gate.js "${FG_GATE_SHARDS:-6}" ) >"$lg" 2>&1; rc=$? ;;
     # LAZY PARTS (arc 4 phase 2). Two rigs the suite structurally CANNOT cover: every SystemTest
     # runs on worldWithSystemTestHarness.html, which presets FIZZYGUM_EAGER_ALL_PARTS so no part is
     # ever lazy there (a part arriving mid-test would be frame-paced ⇒ cycle-count-dependent ⇒ the
@@ -263,7 +263,7 @@ run_leg(){
   # re-run that very gate. At a cold session start that reads as a real failure and costs a
   # detour. Refreshing only pre-existing files keeps `fg status` truthful without adding a
   # verdict line per leg (18 of them would drown the section it is meant to summarise).
-  [ -f "/tmp/fg-$name.verdict" ] && verdict_end "$name" "$rc" "$([ $rc -eq 0 ] && echo OK || echo FAILED) (gauntlet leg)"
+  [ -f "/tmp/fg-$name.verdict" ] && verdict_end "$name" "$rc" "$(case $rc in (0) echo OK;; (2) echo INVALID;; (3) echo INFRA-FLAKE;; (*) echo FAILED;; esac) (gauntlet leg)"
   return $rc
 }
 leg_secs(){ sed -n 's/^fg-leg: .* rc=[0-9]* \([0-9]*s\)$/\1/p' "/tmp/fg-$1.log" 2>/dev/null | tail -1; }
@@ -336,8 +336,13 @@ fg — Fizzygum cross-repo wrapper (run from ANY cwd:  <umbrella>/fg <cmd>  or  
                                             [paint|tiernaming|settle|capstone|refs|revisits|census|serialization|storage],
                                             then vmtruth alone (wave C), then finger alone (wave D);
                                             a failed leg gets ONE serial retry (pass ⇒ load-flake warning, not a FAIL).
+                                            The six AUDITED-SUITE gates (tiernaming|settle|capstone|revisits|storage|vmtruth:
+                                            Fizzygum-tests/scripts/lib/audited-suite.js) retry a dropped shard themselves; exit 3
+                                            (dropped twice, zero failed tests) reads INFRA-FLAKE — re-run, never a FAIL.
                                             The settle leg also RIDES the cached-vs-SLOW twins check (doubleCheckCachedMethodsResults suite-wide; CACHED_DERIVATION_DIVERGED fail-gated).
                                             FG_GAUNTLET_SERIAL=1 fg gauntlet = old sequential path.
+  fg revisits|storage|vmtruth [gate args]   gate args, as every audited-suite gate takes them: [shards=6] [--tests=A,B]
+                                            [--prelude=FILE] [--out=DIR] [--audit-dir=DIR] (judge an existing dir, run no suite)
   fg revisits                               the SETTLE-RE-VISIT standing gate (~2 min): suite under the
                                             audit prelude, profile asserted vs scripts/revisit-baseline.json
                                             (EMPTY since the up-edge endgame: ANY re-visit = regression).
@@ -359,8 +364,8 @@ fg — Fizzygum cross-repo wrapper (run from ANY cwd:  <umbrella>/fg <cmd>  or  
                                             GC-collectible one teardown later (closure retention the
                                             in-band WORLD_INVENTORY gate cannot see: it never walks
                                             functions) + a post-GC heap-floor ceiling per page.
-                                            THREE verdicts: OK / FAILED / INVALID(2) = measured
-                                            nothing, never a pass. Chrome-only by design (the webkit
+                                            Verdicts: OK / FAILED / INVALID(2) = measured nothing,
+                                            never a pass / INFRA-FLAKE(3). Chrome-only by design (the webkit
                                             leg keeps the in-band tier). Localize findings with
                                             scripts/heap-forensics.js (its self-test runs in the selftests leg).
                                             Also a gauntlet leg (wave C) — every commit point enforces it.
@@ -507,8 +512,9 @@ case "$cmd" in
     # ~2 min. Needs a FRESH build.
     verdict_start revisits
     kill_browsers
-    if ( cd "$FT" && to 600 node scripts/revisit-gate.js "$@" ); then
-      ban "REVISITS OK"; verdict_end revisits 0 "OK"
+    ( cd "$FT" && to 600 node scripts/revisit-gate.js "$@" ); vrc=$?
+    if [ $vrc -eq 0 ]; then ban "REVISITS OK"; verdict_end revisits 0 "OK"
+    elif [ $vrc -eq 3 ]; then ban "REVISITS INFRA-FLAKE (a shard dropped twice — re-run; not a result)"; verdict_end revisits 3 "INFRA-FLAKE"; exit 3
     else ban "REVISITS FAILED"; verdict_end revisits 1 "FAILED"; exit 1; fi ;;
   storage)
     # The bin/shelf storage DEEP AUDIT (Tier B, bin-shelf-eager-sorting-plan.md Phase 5): full
@@ -518,8 +524,9 @@ case "$cmd" in
     # The profile must be EMPTY; no baseline file on purpose. ~2 min. Needs a FRESH build.
     verdict_start storage
     kill_browsers
-    if ( cd "$FT" && to 900 node scripts/storage-invariant-gate.js "$@" ); then
-      ban "STORAGE OK"; verdict_end storage 0 "OK"
+    ( cd "$FT" && to 900 node scripts/storage-invariant-gate.js "$@" ); vrc=$?
+    if [ $vrc -eq 0 ]; then ban "STORAGE OK"; verdict_end storage 0 "OK"
+    elif [ $vrc -eq 3 ]; then ban "STORAGE INFRA-FLAKE (a shard dropped twice — re-run; not a result)"; verdict_end storage 3 "INFRA-FLAKE"; exit 3
     else ban "STORAGE FAILED"; verdict_end storage 1 "FAILED"; exit 1; fi ;;
   vmtruth)
     # The VM-truth object-lifetime gate (Arc B): full suite under the forced-GC prelude —
@@ -530,6 +537,7 @@ case "$cmd" in
     ( cd "$FT" && to 900 node scripts/vm-truth-gate.js "$@" ); vrc=$?
     if [ $vrc -eq 0 ]; then ban "VMTRUTH OK"; verdict_end vmtruth 0 "OK"
     elif [ $vrc -eq 2 ]; then ban "VMTRUTH INVALID (not a result — measured nothing)"; verdict_end vmtruth 2 "INVALID"; exit 2
+    elif [ $vrc -eq 3 ]; then ban "VMTRUTH INFRA-FLAKE (a shard dropped twice — re-run; not a result)"; verdict_end vmtruth 3 "INFRA-FLAKE"; exit 3
     else ban "VMTRUTH FAILED"; verdict_end vmtruth 1 "FAILED"; exit 1; fi ;;
   test)
     [ $# -ge 1 ] || { usage; exit 2; }
@@ -710,23 +718,28 @@ case "$cmd" in
       # the audit's own 600 s bound (measured 2026-11-14: 389 tests, 0 checked at 600 s, at load 9).
       kill_browsers; run_leg paint
       if [ $? -eq 0 ]; then tally="$tally paint:PASS"; else tally="$tally paint:FAIL"; ok=0; grep -E 'GATE (PASSED|FAILED|INVALID)|OFFENDER|offenders|tests checked' /tmp/fg-paint.log | tail -8; fi
-      # runtime audit gates (layering/naming §5b/§9.6): the apply-2x2 lattice + callback settle-neutrality, via the
-      # off-by-default WorldWdgt flags each gate's injected prelude flips on. ~1.5 min each; each gate cd's to $FT + pkills.
-      for gate in "tiernaming:tier-naming-audit/run-tier-naming-gate.sh" "settle:notification-settle-audit/run-notification-settle-gate.sh" "capstone:end-of-cycle-audit/run-capstone-gate.sh"; do
-        gn="${gate%%:*}"; gs="${gate#*:}"; glg="/tmp/fg-$gn.log"
-        kill_browsers; bash "$FT/scripts/$gs" >"$glg" 2>&1; grc=$?
-        echo "--- $gn gate ---"; grep -E 'GATE (PASSED|FAILED|INVALID)|HARD leaf|violations=|careless pushes=' "$glg" | tail -2
+      # serial_gate <leg> <pattern>: one of the six AUDITED-SUITE gates (Fizzygum-tests/scripts/lib/audited-suite.js),
+      # run by its run_leg definition; its headline is the log's lines matching <pattern>. Exit 3 is the infra shard-drop
+      # twice (zero failed tests): a warning, never a FAIL — the parallel path reads it so too (collect_and_retry).
+      serial_gate(){
+        local gn="$1" pat="$2" grc
+        kill_browsers; run_leg "$gn"; grc=$?
+        echo "--- $gn gate ---"; grep -E "$pat" "/tmp/fg-$gn.log" | tail -2
         if [ $grc -eq 0 ]; then tally="$tally $gn:PASS"
         elif [ $grc -eq 3 ]; then tally="$tally $gn:INFRA-FLAKE"; echo "⚠ $gn: INFRA shard-drop (exit 3) — zero failed tests, not a failure (plan P6)"
         else tally="$tally $gn:FAIL"; ok=0; fi
-      done
+      }
+      # runtime audit gates (layering/naming §5b/§9.6, end-of-cycle drawdown §8): the apply-2x2 lattice, callback
+      # settle-neutrality, careless end-of-cycle pushes + paint-time schedules. ~1.5 min each.
+      serial_gate tiernaming 'GATE (PASSED|FAILED|INVALID)|HARD leaf'
+      serial_gate settle 'GATE (PASSED|FAILED|INVALID)|violations='
+      serial_gate capstone 'GATE (PASSED|FAILED|INVALID)|careless pushes='
       # reference pixel integrity (~10s, no browser) — see the `refs` leg in run_leg.
       run_leg refs; if [ $? -eq 0 ]; then tally="$tally refs:PASS"; else tally="$tally refs:FAIL"; ok=0; grep -E 'FAIL|verified consistent|consistency FAILED' /tmp/fg-refs.log | tail -4; fi
       # the headless self-tests — see the `selftests` leg in run_leg.
       kill_browsers; run_leg selftests; if [ $? -eq 0 ]; then tally="$tally selftests:PASS"; else tally="$tally selftests:FAIL"; ok=0; grep -E 'SELFTEST_|\[selftests\]' /tmp/fg-selftests.log | tail -6; fi
       # settle-re-visit gate (up-edge endgame close) — see the `revisits` leg in run_leg.
-      kill_browsers; ( cd "$FT" && to 900 node scripts/revisit-gate.js ) >/tmp/fg-revisits.log 2>&1
-      if [ $? -eq 0 ]; then tally="$tally revisits:PASS"; else tally="$tally revisits:FAIL"; ok=0; grep -E 'DRIFT |drifted|revisit-gate:' /tmp/fg-revisits.log | tail -6; fi
+      serial_gate revisits 'GATE INVALID|DRIFT |drifted|revisit-gate:'
       # arrange-idempotence oracle (~10s) — see the `census` leg in run_leg.
       kill_browsers; ( cd "$FT" && to 300 node scripts/staleness-census.js ) >/tmp/fg-census.log 2>&1
       if [ $? -eq 0 ]; then tally="$tally census:PASS"; else tally="$tally census:FAIL"; ok=0; grep -E 'CENSUS|movers|skipped' /tmp/fg-census.log | tail -4; fi
@@ -735,12 +748,10 @@ case "$cmd" in
       if [ $? -eq 0 ]; then tally="$tally serialization:PASS"; else tally="$tally serialization:FAIL"; ok=0; grep -E 'SERIALIZATION RIG|FILE ROUND-TRIP|MISMATCH' /tmp/fg-serialization.log | tail -6; fi
       # the bin/shelf deep audit, the lazy-part rigs and the VM-truth lifetime gate — see the `storage`,
       # `parts` and `vmtruth` legs in run_leg.
-      kill_browsers; run_leg storage
-      if [ $? -eq 0 ]; then tally="$tally storage:PASS"; else tally="$tally storage:FAIL"; ok=0; grep -E 'storage-gate:|failed tests' /tmp/fg-storage.log | tail -6; fi
+      serial_gate storage 'GATE INVALID|storage-gate:|failed tests'
       kill_browsers; run_leg parts
       if [ $? -eq 0 ]; then tally="$tally parts:PASS"; else tally="$tally parts:FAIL"; ok=0; grep -E 'LAZY (PART|ICONS)|\[FAIL\]|INVALID' /tmp/fg-parts.log | tail -6; fi
-      kill_browsers; run_leg vmtruth
-      if [ $? -eq 0 ]; then tally="$tally vmtruth:PASS"; else tally="$tally vmtruth:FAIL"; ok=0; grep -E 'vm-truth-gate:|failed tests' /tmp/fg-vmtruth.log | tail -6; fi
+      serial_gate vmtruth 'GATE INVALID|vm-truth-gate:|failed tests'
       if [ $ok -eq 1 ]; then ban "GAUNTLET OK —$tally"; verdict_end gauntlet 0 "OK —$tally"
       else ban "GAUNTLET FAILED —$tally"; verdict_end gauntlet 1 "FAILED —$tally"; exit 1; fi
     else

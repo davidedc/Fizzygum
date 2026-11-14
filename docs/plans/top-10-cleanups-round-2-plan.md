@@ -15,7 +15,7 @@
 > by the owner, executes §1 to §9 one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-2/`). The second step of §6 stays a measurement followed
 > by an owner decision. An item's section gains a `**Landed <date>.**` paragraph as it lands, and
-> the table's last column says where each stands. Landed so far: §1 to §5, §7's first step, §8. Items the loop closes leave
+> the table's last column says where each stands. Landed so far: §1 to §5, §6's step 1, §7's first step, §8. Items the loop closes leave
 > `docs/BACKLOG.md` for this plan's trailing BACKLOG ledger.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -111,7 +111,7 @@ who has never seen the code.
 | 3 | Map outlines are data | ½ day | About 3,000 of `src/`'s 37,681 code lines (8%), written as 2,638 `lineTo` statements. **In plain words:** the two maps are drawn by thousands of hand-written "draw a line to this point" instructions. Keep the points in a list and let one short loop draw them. | None expected (one test draws both maps) | No | 10 | Landed 2026-11-13 |
 | 4 | The in-browser failure zip | ½ to 1 day | A second, ungated way to capture references; two vendored libraries; about 260 harness lines. **In plain words:** there are two ways to save new expected screenshots: a command that checks its own work, and an old button in the test page that downloads a zip with a copy script. Remove the old button and the two libraries only it needs. | One test shows the menu that loses two rows | Ruled 2026-11-13: delete | 7 | Landed 2026-11-14 |
 | 5 | One seam for "a test is playing" | 1 day | 46 lines in 15 core files that name the harness; two spellings of one question; core fading the harness's DOM. **In plain words:** many widgets ask "is a test driving me right now?", each in its own wording. Give them one shared way to ask, and stop the framework from reaching into the test page's own buttons and indicators. | Low | No | 5 | Landed 2026-11-14 |
-| 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 queued for the loop; step 2's measurement queued last, its decision the owner's |
+| 6 | One audited-suite gate driver, then shared passes | 2 days, then 1 to 2 | Three bash gates, their bash library, the bash twin of the rule registry, five hard-coded home paths; then up to three of eleven suite passes per gauntlet. **In plain words:** six checks each re-run the whole test suite with a different measuring tool attached. Half are written in shell and half in Node, and the two halves react differently when a browser dies. Write them one way; then see whether several tools can share one run. | None | Step 2: measured first | 4 | Step 1 landed 2026-11-14; step 2's measurement queued last, its decision the owner's |
 | 7 | The `fg` leg roster as a table | 2 to 3 days | A roster written six times; a serial gauntlet that runs 17 of 20 legs and says OK. **In plain words:** the list of checks to run before a commit is written out by hand in six places. One copy fell behind and skips three checks while still reporting success. Keep one list that every place reads. | None | No | 1 | First step (the serial path's three legs) landed 2026-11-14; the table queued for the loop |
 | 8 | A test is its macro | 2 to 3 days | The six command classes, the timed command cursor, 389 copies of one preamble, about 38,900 log lines a run. **In plain words:** every test file still opens with the same five-step recipe, left from when tests were recordings played back step by step. A test is now a single script, so the recipe and the player built for it can go. | Low (the macro's start cycle) | No | 3 | Landed 2026-11-14 |
 | 9 | Instruction files: a budget and one home per fact | 2 to 3 days | About 171 KB loaded into every session; each gate's story told in up to six places. **In plain words:** the notes every session must read before it starts have grown to the length of a short book, and the same explanation appears in several files. Keep the rules there and give each explanation one home. | None | Agreed 2026-11-13, on the item's criterion | 9 | Queued for the loop, last |
@@ -520,6 +520,36 @@ wider one.
 
 **Re-measure.**
 `wc -l Fizzygum-tests/scripts/*-audit/run-*-gate.sh Fizzygum-tests/scripts/lib/audited-suite-with-infra-retry.sh; git -C Fizzygum-tests grep -c '/Users/' -- scripts`.
+
+**Step 1 landed 2026-11-14.** `Fizzygum-tests/scripts/lib/audited-suite.js` holds what the six gates share:
+`parseGateArgs` (one grammar, `[shards=6] [--tests=A,B] [--prelude=FILE] [--out=DIR] [--audit-dir=DIR]` plus a gate's
+own flags; anything else, a repeat or an empty value exits 2; the Node gates' `--` passthrough is gone),
+`runAuditedSuite` (the bash library's retry, read and ported: one retry of the shard-drop shape — at min(3, shards)
+shards, since a run that needs its tests on one page asks for 1 —, exit 3 on a second drop, the audit dir wiped before
+each attempt; the runner's stdout and stderr relayed live as one stream and written to the suite log) and
+`missingBuckets` (every test the runner's `_tests-to-play.txt` lists has its bucket). The three bash gates are now
+`tier-naming-gate.js`, `settle-gate.js` and `capstone-gate.js` beside their preludes, each firing the bash gate's rule
+ids through `gate-rules.js` and printing every line `fg` and the bite proofs read (capstone keeps its own order);
+`revisit-gate.js`, `storage-invariant-gate.js` and `vm-truth-gate.js` run their suite through the module, gaining the
+retry, exit 3 and the every-bucket check, their verdict code unchanged. Two choices, for the owner's second look: a
+runner exit other than 0 or 1 (2: it measured nothing; a signal) reads INVALID in all six — four already read it so,
+while the bash tier-naming and settle gates read it FAILED —; and listings sort by code point, where the bash gates
+sorted in the caller's locale, so their order differed between machines. Gone: the three bash gates, the bash library,
+its registry twin and that twin's self-test, the build census's shell-registry branch, `suite-summary.js`'s shell
+command line (its only caller was the library), the blind-spot sentence in `what-runs.js` (no self-test case held it),
+and the five home paths (the two hand tools find the repo from their own path). `fg`: the three legs run the Node gates
+under the same 900-s alarm as their siblings, all six take shards positionally, the serial gauntlet reads exit 3 as
+INFRA-FLAKE for all six (it did for three), and `fg revisits`, `fg storage` and `fg vmtruth` print INFRA-FLAKE for it.
+Evidence: (a) each bash gate run on the whole suite before the port, its audit dir and output kept; its verdict half,
+extracted unchanged from the old tree, reproduces those runs' verdict lines byte for byte, and was run on 27 doctored
+copies of the three dirs (every violation kind, an install gap, an unmeasured bucket, a missing bucket, no runner list,
+several at once): the Node gates' re-check of the same 27 gives the same exit, the same rules, the same non-list lines
+in order and the same lines as a multiset, in every case; (b) the six bite proofs pass with their plants unchanged (the
+vm-truth proof's synthesized dirs now carry the runner's list, as a run's do); (c) `lib/audited-suite-selftest.js`, 39
+cases on canned runner transcripts, fails on each of three planted defects; (d) `git -C Fizzygum-tests grep -c '/Users/'
+-- scripts` finds nothing; (e) `fg gauntlet` (20 of 20 legs, the six gates green on 389 tests), `FG_GAUNTLET_SERIAL=1 fg
+gauntlet` (20 of 20, through the serial path's new helper) and `fg homepage` were green. The re-measure command above
+now finds none of its files.
 
 ---
 
@@ -961,3 +991,5 @@ Do not commit or push without asking me.
 - [x] §8 (2 to 3 days): a test is its macro — the command-sequence layer (six classes, a timed cursor, 389 copies of one preamble) retired; the three test toggles stay (folding them changes the tests that load a snapshot mid-test: a decision of its own)
   — CLOSED 2026-11-14 (loop U7): the start is one schedule in `AutomatorPlayer` (`TEST_START_STEPS`,
   `advanceTestPlaying`); each test file holds its macro sources only; one `_failCurrentTest` (§8, "Landed").
+- §6, in part — the line read: "§6 (2 days, then 1 to 2): one audited-suite gate driver in Node (three bash gates, their library and its rule-registry twin go); then instruments that share a suite pass (⛔ measured first, then the owner)". — LANDED IN PART 2026-11-14
+  (loop U8): step 1, `lib/audited-suite.js` and six Node gates (§6, "Step 1 landed"). BACKLOG keeps step 2.

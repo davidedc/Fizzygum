@@ -271,9 +271,10 @@ core-vs-convenience choice; which ⌀ notification gaps are worth filling.
 
 The static name-consistency catches mislabels a scanner can see; RUNTIME verifies the name matches what the body
 ACTUALLY does (the ground truth — indirect/dynamic-dispatch paths the scanner can't follow). Each audit is a PRELUDE
-that wraps prototypes once, before the page's own scripts run, and a standalone `run-*-gate.sh` that plays the WHOLE
-suite under it and reads what the wrappers logged — siblings of `run-capstone-gate.sh` (whose pass also carries the
-paint-read-only audit), and wired into `fg gauntlet`.
+that wraps prototypes once, before the page's own scripts run, and a gate of its own that plays the WHOLE suite under
+it and reads what the wrappers logged — siblings of `capstone-gate.js` (whose pass also carries the paint-read-only
+audit), all three on the audited-suite gates' shared driver (`Fizzygum-tests/scripts/lib/audited-suite.js`), and wired
+into `fg gauntlet`.
 ⚠ **These two gates carry no `WorldWdgt` flag, and that is the design rather than an omission.** They once mirrored the
 `auditUndeclaredEndOfCycle` pattern — an off-by-default flag a prelude flips on, with the recording behind it — but the
 observation moved entirely into the prelude's own wrappers, which never consult a flag. The two vestigial flags were
@@ -281,7 +282,7 @@ deleted once measurement showed nothing read them. `auditUndeclaredEndOfCycle` (
 member: there the RECORDING really does sit in product code behind the flag.
 
 ### 5.1 tier-naming — the apply 2×2 (runtime twin of [I]/[K])
-`Fizzygum-tests/scripts/tier-naming-audit/` (prelude + `run-tier-naming-gate.sh`). It wraps every apply-2×2 corner +
+`Fizzygum-tests/scripts/tier-naming-audit/` (prelude + `tier-naming-gate.js`). It wraps every apply-2×2 corner +
 the seam (`_announce*`) + the react steps across all classes, and:
 - **HARD-fails the unconditional NEGATIVES** (sound): a `__commit*` leaf that fired the seam or a react step in its own
   scope (not a true bottom); a `_apply*Base` bypass twin that fired the seam (it reacts only — and the seam is dead,
@@ -292,7 +293,7 @@ the seam (`_announce*`) + the react steps across all classes, and:
   layout) — so "never reached" is a REVIEW HINT, not a failure.
 
 ### 5.2 notification-settle — the callbacks (runtime twin of [J])
-`Fizzygum-tests/scripts/notification-settle-audit/` (prelude + `run-notification-settle-gate.sh`). It wraps every
+`Fizzygum-tests/scripts/notification-settle-audit/` (prelude + `settle-gate.js`). It wraps every
 `_reactTo*`/`_before*` callback + the settle tiers across the suite and HARD-fails a callback that OPENS A FLUSH — an
 ATTACHED-receiver `_settleLayoutsAfter` (it would throw) or any `recalculateLayouts`. It catches an INDIRECT leak the
 static [J] cannot see (a callback → some method → an attached settle). **It PERMITS an ORPHAN-receiver

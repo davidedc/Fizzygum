@@ -128,8 +128,8 @@ reformatted line goes blind). Three pieces hold it:
   on an exit 0 likewise (`RULE_FIRED_BUT_PASSED`). A rule no plant can reach says why in the gate's header,
   `// bite-unplantable: <ID> — <reason>` (stale if the gate cannot fire it). A gate run as a program writes its stdout
   and stderr synchronously: on macOS a pipe write is asynchronous in Node, and a gate that prints and then calls
-  `process.exit` loses what a slow reader had not yet taken — every line of it, measured. The shell gates' twin is
-  `gate_rules_init` / `gate_rule` in `Fizzygum-tests/scripts/lib/audited-suite-with-infra-retry.sh` (an EXIT trap).
+  `process.exit` loses what a slow reader had not yet taken — every line of it, measured. A gate is JavaScript: a
+  launched shell or Python script has no registry, so it says why it is not a gate (`# not-a-gate: <reason>`) or fails.
 - **The proof**, one judge (`buildSystem/lib/prove-rules.js`) behind two runners: a static gate's `<gate>-selftest.js`
   plants a copy of its input tree (`lib/planted-src.js` `proveGate`, through the gate's `--src=` / `--tests-repo=` /
   `--tests-dir=` / `--docs=` / `--parts=` / `--umbrella=` rail; a gate reading the compiled sources takes `testsRepo:
@@ -148,8 +148,8 @@ reformatted line goes blind). Three pieces hold it:
   (`build_and_smoke.sh`, which launches the boot smoke) or an `fg` leg LAUNCHES
   (`lib/what-runs.js`'s run set: ANY launch edge makes a script a program, however else it is reached — but never a
   `*-prelude.js` instrument a gate injects, nor a self-test, which is a proof the runner judges by its own
-  `SELFTEST_*` rules) is a gate unless its HEADER says `not-a-gate: <reason>` (the build steps, a tool or reader a gate
-  runs and judges, a sourced library), and fails the build as `GATE_WITHOUT_REGISTRY` or `GATE_WITHOUT_PROOF` (no
+  `SELFTEST_*` rules) is a gate unless its HEADER says `not-a-gate: <reason>` (the build steps, a tool a gate runs and
+  judges), and fails the build as `GATE_WITHOUT_REGISTRY` or `GATE_WITHOUT_PROOF` (no
   self-test that calls a proof helper — `proveGate` / `proveLeg` — launches it, by `path.join(__dirname, '<gate>')`).
   That census IS this table's proof column: every row below, and every gauntlet leg, has its proof, and a new gate
   arrives with one or fails the build. A value flag written with a space (`--src DIR`, `--prelude FILE`, `--tests X`)
@@ -341,7 +341,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
 
 **Two RUNTIME naming-audit gates (suite-run, NOT build-time).** The naming convention also carries two off-by-default
 runtime audits that run over the WHOLE SystemTest suite (not `build_it_please.sh`) — each an injected prelude that wraps
-prototypes before the page's own scripts run, with a standalone `run-*-gate.sh`, siblings of the end-of-cycle
+prototypes before the page's own scripts run, with a gate of its own (`tier-naming-gate.js`, `settle-gate.js`), siblings of the end-of-cycle
 capstone gate (whose pass also carries the paint-read-only audit) and wired into `fg gauntlet`. ⚠ Unlike that sibling,
 neither carries a `WorldWdgt` audit flag:
 all their observation lives in the prelude's own wrappers, so there is nothing for a flag to switch:
@@ -385,6 +385,15 @@ why the install count was never coverage — with the wrappers suppressed, `prel
 `0/307` observed. The standing rule is the fuzz/vmtruth doctrine — **an unmeasured run is NEVER a pass**.
 ⚠ A coverage shortfall exits **2 = INVALID** everywhere, so a runner or wrapper that greps verdict lines must know the
 word (the `fg` wrapper's `leg_headline` does).
+**The six suite-wide audit gates share ONE driver**, `Fizzygum-tests/scripts/lib/audited-suite.js` (`tiernaming`,
+`settle`, `capstone`, `revisits`, `storage`, `vmtruth`; each keeps its own verdict and names its own rules): the embedded
+suite run (dpr 1, fastest, the audit dir wiped before each attempt), the INFRA retry (the runner exits non-zero with a
+valid RESULT block showing no failed test, no gate token, no SHORT shard and a shard short of complete: ONE retry at
+min(3, shards) shards; dropping twice exits **3**, which `fg` reads as INFRA-FLAKE — re-run, never a FAIL), the
+every-bucket check (every test the runner's `_tests-to-play.txt` lists must have its bucket, else INVALID), and one
+argument grammar (`[shards=6] [--tests=A,B] [--prelude=FILE] [--out=DIR] [--audit-dir=DIR]`). A runner exit other
+than 0 or 1 (2: it measured nothing; a signal) reads INVALID in all six. Its cases, the retry on canned runner
+transcripts included: `lib/audited-suite-selftest.js`.
 ⭐ **And a gate must not restate a rule the product already owns.** The paint-read-only audit (a rider on the `capstone` leg) used to carry its own copy of <!-- narration-ok: the lesson IS the divergence: a gate that copied a product predicate drifted from it -->
 `Widget._invalidateLayout`'s predicate; the two had silently diverged (the copy excluded freefloating-triggered
 schedules, the product's never did) while its comment claimed to record "the EXACT set". The prelude now observes the
