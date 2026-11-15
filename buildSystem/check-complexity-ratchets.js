@@ -43,12 +43,13 @@ rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'complexity-ratchets');
 rejectPositionalArgs(ARGV, 'complexity-ratchets', 'a src tree is named with --src=DIR');
 const ROOTS = sourceRoots(ARGV, 'complexity-ratchets');
 
-// the classes held, their files (src-relative) and their ceilings — recorded 2026-11-13 at the tree's own counts
+// the classes held, their files (src-relative) and their ceilings — recorded 2026-11-13 at the tree's own counts, and
+// lowered whenever a class holds fewer
 const METHOD_CEILINGS = {
   Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 391 },
   WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 126 },
   ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 74 },
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 173 },
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 170 },
 };
 
 const COMPLEXITY_CEILING = 15;

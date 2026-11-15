@@ -764,8 +764,8 @@ assertion a recapture after a regression silently stores two different hashes an
   target isn't its container). ⚠ Take every screenshot AFTER the settling `container.moveTo`, never the raw post-drag-release frame (the
   charging-ring invisible-alpha teardown residue can differ at dpr2 — same caveat as the DWELL-TO-ARM entry).
 - **Internal window dropped INTO a window → becomes its content** (`macroInternalWindowDroppedIntoWindowFits` /
-  `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `FrameWdgt.add`
-  (`:179`) re-parents it as FRAME CONTENT, `_positionAndResizeChildren` (`:384`) COUPLES their bounds (the free-floating
+  `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `FrameWdgt._addNoSettle`
+  re-parents it as FRAME CONTENT, `_positionAndResizeChildren` (`:384`) COUPLES their bounds (the free-floating
   OUTER window sizes itself to WRAP the content + chrome), relabelled "window with an internal window". Then
   `@resizeWindowBy_InputEvents` resizes the outer and the inner content stretches to fill (the resizer lies in the
   outer window's grip strip, below the inner window). Shared fixture verbs: `buildExternalAndFreeInternalWindow_Macro()` (`return
@@ -1946,7 +1946,7 @@ assertion a recapture after a regression silently stores two different hashes an
   reproduces the pre-change shot's dataHash pixel-for-pixel. FIXTURE: the document demo is just `new
   DocumentViewportWdgt` at (35,30) 370×325 (`demoMenus.createDocumentViewportWdgt`, `DemoMenus.coffee:651` — it ships with the
   default "A small string…" paragraph); drop-to-insert puts a dropped widget AFTER the sibling whose span contains the drop Y,
-  appending below everything (`VerticalStackPanelWdgt.add:17`) — three authored drops produce lorem/small/lorem,
+  appending below everything (`VerticalStackPanelWdgt._addNoSettle`) — three authored drops produce lorem/small/lorem,
   including a REORDER of an existing paragraph by dropping it onto another paragraph's span (pick a drop Y inside that span
   under BOTH the pre- and post-grab layouts — the flow tightens the moment the grabbed paragraph leaves it). GOTCHA: after the
   font change a paragraph's CENTRE can lie below the viewport clip, so `@openMenuOf_InputEvents` (a centre right-click) would

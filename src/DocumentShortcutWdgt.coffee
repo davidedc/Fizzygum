@@ -7,8 +7,6 @@ class DocumentShortcutWdgt extends ShortcutWdgt
   # constructor, driven by the per-instance arrow-contract declaration; my inner art is the
   # base's default, the object composite around the referent's representative icon)
 
-  _reactToChildDropped: (droppedWidget) ->
-
   # what a press on my tile does: bring my document up (WidgetHolderWithCaptionWdgt.activated
   # decides tile or plate, and hands a tile press here)
   _activateMyTile: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->

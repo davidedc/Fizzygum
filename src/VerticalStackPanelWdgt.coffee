@@ -85,6 +85,10 @@ class VerticalStackPanelWdgt extends ClippingWdgt
     @parent?._reactToChildAlphaChanged? @, alpha
     return alpha
 
+  # _addNoSettle -- the non-settling core of add(): Widget.add, the one public settle wrapper, reaches
+  # it by late binding. The stack-specific work (_resizeToWithoutSpacing + the drop's sibling slot)
+  # only uses immediate mutators / structural cores, so build-time / layout-time / teardown adders
+  # can call it directly without flushing layouts.
   # opts.positionInPlane -- where the widget was released: the POINTER's position at the release
   # (the hand's), expressed in MY plane (the drop dispatcher maps it through screenPointToMyPlane
   # before handing it over -- ActivePointerWdgt.drop -- and a viewport holding me takes its scroll
@@ -93,12 +97,6 @@ class VerticalStackPanelWdgt extends ClippingWdgt
   # names that slot outright, and wins over it.
   # A key this receiver does not read (opts.notContent, which only the frame acts on) is simply
   # ignored -- which is why one drop-site call can address any container in the add family.
-  add: (aWdgt, opts = {}) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
-
-  # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
-  # work (_resizeToWithoutSpacing + the drop's sibling slot) only uses immediate mutators / structural
-  # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
   _addNoSettle: (aWdgt, opts = {}) ->
     aWdgt._resizeToWithoutSpacing()
     unless opts.atIndex?

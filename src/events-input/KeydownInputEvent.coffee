@@ -1,8 +1,6 @@
 class KeydownInputEvent extends KeyboardInputEvent
 
   processEvent: ->
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-    #
     # SNAPSHOT the receivers: this event is delivered to the receivers registered when it
     # ARRIVED. A receiver added while it is being processed (world.edit creating a caret from
     # inside a receiver's handler — a Tab hop's switchTextFieldFocus, the spreadsheet starting

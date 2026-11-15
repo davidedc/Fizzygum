@@ -92,7 +92,7 @@ class BrowserInputBridge
     document.body.appendChild @inputDOMElementForVirtualKeyboard
 
     @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener = (event) =>
-      @world.inputEventsQueue.push InputDOMElementForVirtualKeyboardKeydownInputEvent.fromBrowserEvent event
+      @world.inputEventsQueue.push KeydownInputEvent.fromBrowserEvent event
 
       # Default in several browsers
       # is for the backspace button to trigger
@@ -110,8 +110,10 @@ class BrowserInputBridge
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
       @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener, false
 
+    # a soft-keyboard key RELEASE is a KeyupInputEvent (it dispatches processKeyUp), never a
+    # KeydownInputEvent -- that would re-run processKeyDown and double every keystroke on touch devices
     @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener = (event) =>
-      @world.inputEventsQueue.push InputDOMElementForVirtualKeyboardKeyupInputEvent.fromBrowserEvent event
+      @world.inputEventsQueue.push KeyupInputEvent.fromBrowserEvent event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keyup",

@@ -422,8 +422,6 @@ class Widget extends TreeNode
     @registerThisInstance()
     @assignUniqueID()
 
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-
     @bounds = Rectangle.EMPTY
     @minimumExtent = new Point 5,5
 

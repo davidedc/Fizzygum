@@ -1664,9 +1664,6 @@ class ViewportWdgt extends ClippingWdgt
     if wraps
       @contents._applyBounds @position(), @extent()
 
-  enableDragsDropsAndEditing: ->
-    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()
-
   _enableDragsDropsAndEditingNoSettle: ->
     if @dragsDropsAndEditingEnabled
       return
@@ -1680,9 +1677,6 @@ class ViewportWdgt extends ClippingWdgt
     @parent?.showEditModeInBar?()
 
     @contents._enableDragsDropsAndEditingNoSettle()
-
-  disableDragsDropsAndEditing: ->
-    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
 
   _disableDragsDropsAndEditingNoSettle: ->
     if !@dragsDropsAndEditingEnabled

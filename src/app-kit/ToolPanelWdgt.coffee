@@ -61,12 +61,8 @@ class ToolPanelWdgt extends PanelWdgt
       @_addNoSettle eachWidget
     return
 
-  # Public add self-settles over the non-settling core (the Widget /
-  # VerticalStackPanelWdgt add/_addNoSettle pattern); the pre-convert shape is in
-  # docs/archive/layout-optimizations-and-oo-cleanup-plan.md.
-  add: (aWdgt, opts = {}) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
-
+  # _addNoSettle -- my add core: Widget.add, the one public settle wrapper, reaches it by late
+  # binding (the pre-convert shape is in docs/archive/layout-optimizations-and-oo-cleanup-plan.md).
   _addNoSettle: (aWdgt, opts = {}) ->
     positionInPlane = opts.positionInPlane
 

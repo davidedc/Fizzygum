@@ -498,6 +498,20 @@ const GATES = [
     banner: "checking the method-count and cognitive-complexity ratchets ...",
     failure: "!!!!!!!!!!! error: a method-count or complexity ratchet rose -- aborting build.",
     ok: "... method-count and complexity ratchets OK" },
+  // --- the IDENTICAL-OVERRIDE gate ----------------------------------------------------------------
+  // The provable half of buildSystem/census-hierarchy-duplication.js: an override whose signature and body equal the
+  // nearest definition it inherits, with no `super` in its body, is the same code with nothing bound to its class -- a
+  // second place to edit that does nothing -- so it is deleted, not kept. Held at ZERO; a copy kept because its
+  // prototype must OWN the member says so with `# identical-override-sanctioned: <why>`. An identical body holding
+  // `super` is not judged (a `super` binds to the class it is written in) and stays advisory with the rest of the
+  // census, which `fg critique` prints. ~1 s. Reads the compiled sources (src/ and the harness) whatever the flavour
+  // ships.
+  { script: path.join(BUILD_SYSTEM, "census-hierarchy-duplication.js"),
+    args: ["--gate"],
+    when: "checked",
+    banner: "checking for overrides identical to what they inherit ...",
+    failure: "!!!!!!!!!!! error: an override identical to what it inherits -- aborting build.",
+    ok: "... identical-override check OK" },
 ];
 
 module.exports = { GATES, WHEN, BUILD_ARGS, TESTS_REPO };

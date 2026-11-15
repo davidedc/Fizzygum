@@ -1,1 +1,0 @@
-class InputDOMElementForVirtualKeyboardKeydownInputEvent extends KeydownInputEvent

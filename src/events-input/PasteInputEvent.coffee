@@ -17,4 +17,3 @@ class PasteInputEvent extends ClipboardInputEvent
 
   processEvent: ->
     world.caret?.processPaste @text
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED

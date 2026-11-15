@@ -1078,17 +1078,15 @@ class FrameWdgt extends ClippingWdgt
   _reLayoutMayResizeOwnWidth: ->
     @isFreeFloating() and !@contents?.contentStackSpec()?.desiredWidth?
 
+  # _addNoSettle -- the non-settling core of add(): Widget.add, the one public settle wrapper,
+  # reaches it by late binding. Folds in the frame's content bookkeeping (title, @contents
+  # swap, spec init + first-placement re-arm) so the build/teardown chain
+  # (_buildAndConnectChildrenNoSettle) adds chrome + content WITHOUT flushing layouts: super
+  # reaches Widget._addNoSettle directly (A2a de-inherit), all non-settling. Adding @contents
+  # through THIS core (vs the bare base _addNoSettle) is exactly what keeps the content wired by
+  # the deferred re-fit.
   # opts.notContent -- add as CHROME, not as my content: skip the title/@contents bookkeeping below.
   # The frame is the only receiver in the add family that acts on it.
-  add: (aWdgt, opts = {}) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
-
-  # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle).
-  # Folds in the frame's content bookkeeping (title, @contents swap, spec init +
-  # first-placement re-arm) so the build/teardown chain (_buildAndConnectChildrenNoSettle)
-  # adds chrome + content WITHOUT flushing layouts: super reaches Widget._addNoSettle
-  # directly (A2a de-inherit), all non-settling. Adding @contents through THIS core (vs
-  # the bare base _addNoSettle) is exactly what keeps the content wired by the deferred re-fit.
   _addNoSettle: (aWdgt, opts = {}) ->
     # opts.dockSide -- the incoming widget takes one of my EDGE SLOTS, not my content slot: the
     # hand's drop-to-dock names the side the release resolved to, and the dock core arms the edge
@@ -2424,32 +2422,27 @@ class FrameWdgt extends ClippingWdgt
       @_noteMyModeToWindowsInMe()
       @_dockedToolbar()?.reactToViewModeInFrame?()
 
-  # Frame-level edit-mode switch (§5.B): route through the PAYLOAD's own core --
-  # the payload owns the dragsDropsAndEditingEnabled flag and its core does the
+  # Frame-level edit-mode switch (§5.B), the cores Widget's two settling wrappers
+  # (enable/disableDragsDropsAndEditing) reach by late binding: route through the PAYLOAD's
+  # own core -- the payload owns the dragsDropsAndEditingEnabled flag and its core does the
   # recursive child locking/unlocking -- then flip my own bar (I am the bar owner;
   # the payload's `@parent?.show*ModeInBar?()` notify reaches me too, idempotently).
   # The Widget base core would act SHALLOWLY on @contents (one child level, no
   # payload-specific propagation) and notify only @parent. I write no flag of my
   # own: my mode is my payload's (isInEditMode), which the bar's edit toggle switches
   # without passing through me.
-  enableDragsDropsAndEditing: ->
-    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()
-
   _enableDragsDropsAndEditingNoSettle: ->
     @contents?._enableDragsDropsAndEditingNoSettle()
     # public-call-sanctioned: showEditModeInBar is the window-bar mode PROTOCOL, driven
     # cross-object by content widgets (`@parent?.showEditModeInBar?()`), so it stays public — and
-    # it settles nothing (it marks; my own settling wrapper above flushes the mark)
+    # it settles nothing (it marks; the settling wrapper I inherit from Widget flushes the mark)
     @showEditModeInBar()
-
-  disableDragsDropsAndEditing: ->
-    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
 
   _disableDragsDropsAndEditingNoSettle: ->
     @contents?._disableDragsDropsAndEditingNoSettle()
     # public-call-sanctioned: showViewModeInBar is the window-bar mode PROTOCOL, driven
     # cross-object by content widgets (`@parent?.showViewModeInBar?()`), so it stays public — and
-    # it settles nothing (it marks; my own settling wrapper above flushes the mark)
+    # it settles nothing (it marks; the settling wrapper I inherit from Widget flushes the mark)
     @showViewModeInBar()
 
   # My edit mode is my content's (I always have one -- a placeholder when nothing else): the

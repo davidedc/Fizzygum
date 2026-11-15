@@ -28,7 +28,9 @@ it duplicates are not textual twins sitting in one file. The censuses close exac
 seconds-fast, so unlike jscpd/jsinspect they also run inside **`fg critique`**. They feed the SAME
 ledger (`duplication-report/triage-report.md`, ROUND 4 / 4b) and follow the same cycle below.
 ⚠ Their findings are CANDIDATES, never proofs — `super` is meta-compiled and property access is partly
-dynamic. Details + the soundness rules: `docs/architecture/lint-and-static-checks.md` §3c.
+dynamic — with ONE exception, which the build gates at zero: an override identical to the definition it inherits,
+with no `super` in its body (`census-hierarchy-duplication.js --gate`). Details + the soundness rules:
+`docs/architecture/lint-and-static-checks.md` §3 and §3c.
 
 Run both: they see different things. The exact scan misses a clone the moment one identifier
 is renamed — or when an interleaved comment breaks the token run, or when CoffeeScript's
@@ -244,7 +246,8 @@ count is not automatically a backlog.**
 **Scoreboard for the hierarchy axis (2026-07-15, arc complete):** 23 findings actioned across all tranches
 (9 no-op overrides + 1 field in A/B/C, 13 fields in Phase 3) against **26 triaged-and-correctly-rejected**
 (16 write-only, 10 pull-up). The rejection rate is the point, not a failure: these censuses are heuristic by
-construction and can never be gates (`docs/architecture/lint-and-static-checks.md` §3b).
+construction, so their findings never gate (`docs/architecture/lint-and-static-checks.md` §3b) — save the one provable
+subset, an identical override with no `super`, which the build holds at zero (§3, identical-override).
 
 Closed-arc snapshot with the full case law (the removability test, the inspector-churn finding, the
 `super`-chaining trap, the four census exclusions, the write-only/enumeration rule):

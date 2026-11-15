@@ -45,10 +45,6 @@ class SimpleTextWdgt extends TextWdgt
     @fittingSpec = FittingSpecText.FIT_BOX_TO_TEXT
     @_reLayoutSelf()
 
-
-  colloquialName: ->
-    "text"
-
   # On Tab, this widget inserts two spaces instead of letting the target handle Tab
   # (instead of `@target instanceof SimpleTextWdgt` in the caret; type-test-elimination campaign)
   tabInsertsSpaces: ->

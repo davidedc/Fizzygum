@@ -22,7 +22,8 @@
 > plan (`docs/plans/fg-node-port-plan.md`) passes. An unattended `/loop`, launched by the owner,
 > executes the approved items one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-3/`). An item's section gains a `**Landed <date>.**`
-> paragraph as it lands, and the table's last column says where each stands.
+> paragraph as it lands, and the table's last column says where each stands. Landed: §1
+> (2026-11-15).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -116,7 +117,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 
 | # | Cleanup | Effort (estimate) | What goes away, and in plain words | Why, and the trade-offs (ELI5) | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Overrides that override nothing | ½ day | 8 methods identical to the one they inherit, 2 empty subclasses, 6 comments about a removed recorder; the provable part of an advisory count becomes a build gate. **In plain words:** some classes re-declare a method exactly as their parent already has it. The copies were cleaned out once and grew back because nothing checks. Remove them and add the check. | **Why:** if the same recipe is written on two pages of the cookbook, one day somebody fixes one page and forgets the other. Keep one page, and have the build refuse a second. **Trade-offs:** the new check adds about a second to every build; a copy that someone keeps on purpose needs a one-line note saying why; a few inspector screenshots may show fewer rows. | Low (inspector member lists) | No | 3 | Approved by the owner (2026-11-15); queued |
+| 1 | Overrides that override nothing | ½ day | 8 methods identical to the one they inherit, 2 empty subclasses, 6 comments about a removed recorder; the provable part of an advisory count becomes a build gate. **In plain words:** some classes re-declare a method exactly as their parent already has it. The copies were cleaned out once and grew back because nothing checks. Remove them and add the check. | **Why:** if the same recipe is written on two pages of the cookbook, one day somebody fixes one page and forgets the other. Keep one page, and have the build refuse a second. **Trade-offs:** the new check adds about a second to every build; a copy that someone keeps on purpose needs a one-line note saying why; a few inspector screenshots may show fewer rows. | Low (inspector member lists) | No | 3 | Landed 2026-11-15 (§1, "Landed") |
 | 2 | The LRU cache on a `Map` | ½ day | A linked-list class, a 24-hour expiry no caller varies, 3 of the 8 remaining wall-clock reads. **In plain words:** the text caches keep their entries in a hand-built list and stamp each one with the time of day. JavaScript's own `Map` already remembers insertion order, so the list and the clock are not needed. | **Why:** the cache is a toy box that throws out the toy nobody has touched for longest. Today it also looks at a clock every time a toy is touched, so it can throw out toys left alone for a whole day, which never matters. A box that just remembers the order is enough, and the code that draws text stops looking at clocks. **Trade-offs:** this box is opened thousands of times a second, so the new one must be timed to be sure it is not slower; and a toy left for a day is no longer thrown out (still correct: the same text always measures the same). | None expected (hot path: measure speed) | No | 8 | Approved by the owner (2026-11-15); queued |
 | 3 | One pinned toolchain | ½ to 1 day | Two global installs, a version nobody chose in the production artifact, two unused pinned packages, a second copy of an analyzer. **In plain words:** the build shrinks its output with whatever version of a tool happens to be installed on the machine, while the version the project wrote down sits unused. Use the written-down one. | **Why:** a cake recipe that says "use whatever oven is in the house" gives a different cake in every house, and nobody can tell whether the cake changed or the oven did. Write the oven down and use that one. **Trade-offs:** a fresh machine runs one install command in this folder before it can build; upgrading the tool becomes something a person does on purpose, never something that happens by itself. | None (byte-identical trees expected) | No | 1 | Approved by the owner (2026-11-15); queued |
 | 4 | The experimental patch-programming part | ½ to 1 day (deletion) | 6 classes (495 lines) that production never ships, that no test builds, and that only three rows of the dev demo menu can create; the stated reason one base class is held in core. **In plain words:** a folder labelled "unfinished" holds three building blocks for wiring widgets together: a splitter, a text-comparing box and a find-and-replace box. No test uses any of them, a user of the shipped product cannot reach them, and the splitter's job is now done by every widget on its own. Finish them or delete them. | **Why:** it is a half-built toy left in the middle of the room. Nobody plays with it, but everybody has to step around it and dust it whenever the room is tidied. Finish it or put it away. **Trade-offs:** putting it away loses the half-done work from the tree (git still has it) and its three rows in the dev demo menu; no test changes. Finishing the two text boxes instead is real feature work, not tidying, and only worth it if they are wanted in the product. | None expected (no test builds any of the six or opens their menu) | Yes | 5 | Left for a later day by the owner (2026-11-15) |
@@ -218,6 +219,46 @@ and run `fg presuite`.
 **Re-measure.**
 `cd Fizzygum && node buildSystem/census-hierarchy-duplication.js --full | grep -A10 'IDENTICAL-TO-INHERITED ('`
 and `grep -rn "RECORDING IF NEEDED" Fizzygum/src | wc -l`.
+
+**Landed 2026-11-15.** Nine overrides are gone, each read first: no class between it and the
+definition it equals defines the member, and none holds `super`. Eight are the census's; the
+ninth, `DocumentShortcutWdgt._reactToChildDropped`, is an empty body identical to
+`ShortcutWdgt`'s, which the census used to skip ("two empty bodies — nothing to say") and the gate
+found once it judged empty bodies too. The comments that described the subclass moved to the core
+they describe (`FrameWdgt._addNoSettle` now documents `opts.notContent`,
+`VerticalStackPanelWdgt._addNoSettle` `opts.positionInPlane`, and the frame's two edit-mode cores
+say that Widget's wrappers reach them). `BrowserInputBridge` pushes
+`KeydownInputEvent`/`KeyupInputEvent` and the two empty classes are deleted (the keyup class's
+comment is on the keyup listener); the six recorder markers are deleted. `FrameWdgt`'s method
+ceiling is banked at 170. The gate is `census-hierarchy-duplication.js --gate`, the LAST row of
+`gates.js` (row 35, so no row number in the lint index moved): rule `IDENTICAL_OVERRIDE`, at zero,
+judging only an override with no `super` in its body (read on the bare view) whose signature and
+body equal the NEAREST definition of its name, with `# identical-override-sanctioned: <why>` on or
+directly above the header for a copy whose ownership is read (none today). Making it a gate
+tightened the census's reading, in both modes: a signature is the parameter list read to its
+balanced parenthesis plus the arrow (`->`/`=>`), and one it cannot read whole equals nothing (the
+old pattern read any list holding a `)` as empty, so `(w = @top()) -> @f w` and `-> @f w` compared
+equal); the nearest definition is the nearest class defining the NAME, a field included; two empty
+bodies count. Its self-test plants a plain, an empty, a default-holding-a-call, a
+`super`-only-in-a-string, a reasonless-marker and a harness override (each fires), and in the
+control a `super`-holding one, two sanctioned ones, a different list, a default against no list, a
+different arrow and a field in a class between (none fires); its pass line names no count. The two
+summary lines `fg critique` prints are unchanged. One finding while building:
+`check-layering-selftest.js` planted renames on the deleted `add:` overrides to empty
+`WRAPPER_EXCLUDED`; it now renames the four widget classes that still define `add:` (Widget's
+the one settling one) and still sees `G_STALE_WRAPPER_EXCLUDED` fire. Prose naming a deleted member
+was corrected (one src comment, two lines of `src/macros/MACRO-PATTERNS.md`, ten lines of test
+prose, whose six pages were regenerated and pass `check-visualisations --strict`; the end-of-cycle
+layout prelude's comment), as were the docs that said the census can never gate. Evidence: a
+resolution map of every class before and after (547 → 545 classes) changed only where explained —
+the two classes' 18 lines; the frame cores' and three `processEvent`s' comment-only text; and
+`initVirtualKeyboard`, whose old hash comes back when its two class names and its two added
+comment lines are undone. Every deleted member resolves, on every class, to a function with the
+same hash as before. A probe dispatching a keydown and a keyup on the virtual-keyboard input saw
+the same `processEvent` and fields before and after.
+No pixel moved and no reference was recaptured: the presuite (389 of 389, the paint audit and
+the dpr-2 rider), the gauntlet (20 of 20 legs, its dpr-2, WebKit and finger legs included, no
+serial retry) and `fg homepage` all passed.
 
 ---
 
@@ -819,9 +860,9 @@ launch for launch.
   states the rule and records that deleting such wrappers kept `check-thin-wraps` green. §1
   re-applies it.
 - **The hierarchy census is never promoted to a gate as it stands.** Its header gives the
-  reason (`buildSystem/census-hierarchy-duplication.js`, "WHY THIS CAN NEVER BE A GATE"): equal
-  text that contains `super` is not equal dispatch. §1 gates only the bodies with no `super`,
-  and leaves the rest advisory.
+  reason (`buildSystem/census-hierarchy-duplication.js`, "WHAT IS GATED, AND WHY ONLY THAT"):
+  equal text that contains `super` is not equal dispatch. §1 gates only the bodies with no
+  `super`, and leaves the rest advisory.
 - **Removing a member from a core prototype is not automatically pixel-free.** Inspector member
   lists are screenshotted (`docs/archive/god-class-decomposition-plan.md`, guardrail 1). §1 and
   §4 budget for it.
@@ -898,3 +939,9 @@ I want to take up item §<N>. Do this, in order:
    and wait for my go-ahead before the change itself. Verify with the plan's §14 protocol.
 Do not commit or push without asking me.
 ```
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] §1 (½ day): overrides that override nothing — 8 methods identical to the one they inherit, 2 empty event subclasses, 6 recorder comments; the census's `super`-free subset becomes a build gate at zero (the census itself stays advisory)
+  — CLOSED 2026-11-15 (loop U1): nine identical overrides, the two empty event classes and the six markers are gone, and
+  `census-hierarchy-duplication.js --gate` holds the `super`-free subset at zero on every build (§1, "Landed").

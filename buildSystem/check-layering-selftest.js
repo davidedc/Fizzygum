@@ -158,8 +158,8 @@ proveGate({
   }, {
     label: 'every exemption table excusing nothing',
     edits: [
-      ...['VerticalStackPanelWdgt', 'FrameWdgt', 'IconGridPanelWdgt', 'basic-widgets/ViewportWdgt', 'basic-widgets/Widget',
-        'authoring/StretchableWidgetContainerWdgt', 'app-kit/ToolPanelWdgt'].map((f) => [`${f}.coffee`, /^  add(\s*:)/m, '  addBiteProofRenamed$1']),
+      ...['IconGridPanelWdgt', 'basic-widgets/ViewportWdgt', 'basic-widgets/Widget',
+        'authoring/StretchableWidgetContainerWdgt'].map((f) => [`${f}.coffee`, /^  add(\s*:)/m, '  addBiteProofRenamed$1']),
       ['HandleWdgt.coffee', /DeferredSettle\b/g, 'DeferredSettleBiteProofStale'],
       ['StackElementsSizeAdjustingWdgt.coffee', /DeferredSettle\b/g, 'DeferredSettleBiteProofStale'],
       ...['authoring/CalculatingPatchNodeWdgt', 'patch-programming-experimental/RegexSubstitutionPatchNodeWdgt',

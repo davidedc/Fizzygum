@@ -1,8 +1,6 @@
 class KeyupInputEvent extends KeyboardInputEvent
 
   processEvent: ->
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-
     # dispatch to keyboard receivers (world.keyboardEventsReceivers -- the caret always;
     # the spreadsheet registers too). Neither implements
     # processKeyUp today, so this loop is currently a no-op.
