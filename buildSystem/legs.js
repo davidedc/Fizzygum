@@ -98,10 +98,11 @@ const LEGS = [
   // closure leak, the settle leg's cached-vs-SLOW oracle bites, and EVERY gauntlet leg's bite-proof
   // runs that leg's gate on planted input and plants each of its rules (control, plants, INVALIDs).
   // The node-tier self-tests run on every BUILD. Files run six at a time (run-selftests.js's
-  // HEADLESS_POOL), longest first: ~153 s alone, ~212 s inside a loaded wave A — the budget is
-  // wave A's longest leg (every-gate-bites arc, 2026-11-07).
+  // HEADLESS_POOL), longest first: ~2,100 s of work in 25 files, 354 s alone and 391–449 s inside
+  // wave A (2026-11-15) — the budget is wave A's longest leg. Its alarm is 900 s: at a start load of
+  // 35.5 on 16 cores the leg ran past 600 s in wave A and passed alone, a load flake, not a fault.
   { name: 'selftests', waves: ['A'],
-    steps: [{ cwd: 'fizzygum', alarm: 600, script: 'buildSystem/run-selftests.js', args: ['--headless'] }],
+    steps: [{ cwd: 'fizzygum', alarm: 900, script: 'buildSystem/run-selftests.js', args: ['--headless'] }],
     headline: '\\[selftests\\] (OK|FAIL)' },
   // ---- wave B
   // paint-truthfulness gate (plan 5.3): the whole suite must stay paint-truthful — a forced full repaint of each

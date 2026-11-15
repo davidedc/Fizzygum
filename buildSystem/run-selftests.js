@@ -285,7 +285,7 @@ async function main(argv) {
   let cases = 0;
   const t0 = Date.now();
   const env = HEADLESS ? { ...process.env, FIZZYGUM_KEEP_STALE_BROWSERS: '1' } : process.env;
-  // the headless limit sits under the gauntlet leg's own alarm (600 s), so this runner always reports before it is killed
+  // the headless limit sits under the gauntlet leg's own alarm (900 s), so this runner always reports before it is killed
   const durations = readDurations(), took = {};
   await runAll(tests, HEADLESS ? HEADLESS_POOL : NODE_POOL, { timeoutSecs: HEADLESS ? 480 : 120, env }, (f, r) => {
     took[f] = +r.secs;
