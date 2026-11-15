@@ -1,5 +1,31 @@
 # `fg` as a Node program — the port, and every process situation it must handle
 
+> **STATUS: COMPLETE 2026-11-15 (cleanups loop 3, U7).** Every step of §7 passed and the port landed.
+> `Fizzygum/fg` is a Node launcher; the program is `buildSystem/fg-commit-point.js`, `buildSystem/fg-verbs.js` and
+> `buildSystem/lib/fg-supervisor.js` (§6's two required separations: the commit point is `lib/what-runs.js`'s root; the
+> supervisor knows nothing of legs). Its standing cases are `lib/fg-supervisor-selftest.js` (every build: the rows of §4
+> A, a reused pid, a timeout with no `ps`) and `fg-gauntlet-selftest-headless.js` (the gauntlet's `selftests` leg: a fake
+> gauntlet through the real entry point, and the §5 drills — SIGTERM, SIGKILL then STALE then `killz`, the lock, an
+> internal error, a table that cannot load, the build's ceiling, a closed stdout; the fingerprint drill stays in the
+> theatre, which needs a stand-in git). The evidence — the inventory, the readers, the
+> theatre's scenarios and drills, the launch census, the run sets, the real runs, the live drills — is local to the loop,
+> `Fizzygum-tests/.scratch/cleanups-loop-3/u7-fg-node/`, beside the bash fg it replaced (`fg.before`). What the proof
+> found beyond §4/§5, each fixed before the landing: a browser kill inside a leg did not see the leg's
+> `FIZZYGUM_FAILURE_IMAGES_DIR` (the census); a signal's INTERRUPTED verdict raced the run's own, which went on with
+> refused launches (now a signal seals the verdict and the run stops between phases); an error thrown in a verb never
+> reached the INVALID path (now the dispatcher catches it); the live drills (step 10) found that two long operations
+> starting together both passed the `.running` check (now ONE lock, created exclusively, `/tmp/fg-long-operation.lock`)
+> and that after a SIGKILL `fg killz` could not clear the run's orphaned runners, which relaunched browsers (now a long
+> run records every program it launches in its `.running` file, and `fg killz` kills what a DEAD run left behind, never
+> a live run's); the independent review found that a leg table that cannot LOAD crashed fg before its verdict (now
+> REFUSED with its verdict), that `ps`'s start time followed the caller's locale (now `LC_ALL=C`: it is the identity two
+> fg processes compare), that a timeout could not kill a program when `ps` failed (now its own handle is signalled too),
+> that a leg with a pass line kept a failing step's code where bash made it 1, and that a run interrupted after its
+> waves still printed an OK banner. Observed and kept: bash printed a refused table's reasons
+> twice, fg prints them once; a baseline with no `Fizzygum/fg` gets the bash fg from git history (bash copied itself,
+> which the Node launcher cannot do alone); a descendant born and orphaned between two 2-second snapshots is not seen
+> (`fg killz` stays the fallback, §5 row 1).
+>
 > **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 > Authored 2026-11-15 as the owning plan of item §10 of
 > `docs/plans/top-10-cleanups-round-3-plan.md` (read that item first: it has the evidence and the
@@ -78,8 +104,11 @@ Re-derive this table from the source before trusting it; it was read on 2026-11-
   `infraExit` leg: `INFRA-FLAKE` and a warning. Otherwise `FAIL`, the last 25 lines, the images' path.
 - `legs_all_ran`: a leg named by the run with no result is `NEVER-RAN` and fails the run.
 
-**Verbs, their exits and verdicts.** `help`/no argument: usage, exit 0. Unknown verb: usage,
-exit 0 (see §5 row 14).
+**Verbs, their exits and verdicts.** `help`/no argument: usage, exit 0 (`help` has no arm of its own: it reaches
+the unknown-verb arm). Unknown verb: usage, exit 0 (see §5 row 14). A verb that kills browsers first: `test`,
+`diffpage`, `run-sequence`, `apps`, `menusweep`, `pinsweep`, `graph`, `census`, `revisits`, `storage`, `vmtruth`,
+`fuzz`, `recapture`, `recapture-inspector` (per pointer kind), `homepage` (before its smoke); `lazyprobe`, `visualise`,
+`classify`, `cc`, `hypopart`, `whatpins` and `fingerprint` do not.
 
 | Verb | Alarm | Exit codes | Verdict file |
 |---|---|---|---|
@@ -91,8 +120,8 @@ exit 0 (see §5 row 14).
 | `test` | 240 | the runner's own (142 on alarm); usage and 2 with no name | no |
 | `fuzz` | 5400 | 0, 1, any other = INVALID with that code | yes |
 | `diffpage` | none | 0, 2 = INCOMPLETE, else the tool's | no |
-| `classify`, `run-sequence`, `lazyprobe`, `whatpins` | none | the tool's | no |
-| `cc` | none | 3 when the analyzer is absent, else the tool's | no |
+| `classify`, `run-sequence`, `lazyprobe`, `whatpins`, `visualise` | none | the tool's (`lazyprobe` ignores its arguments: always `--exhaustive`) | no |
+| `cc` | none | 3 when the analyzer is absent, else the tool's (`src` appended when no argument is a path) | no |
 | `recapture` | none | 0, 1; usage and 2 with no argument | yes |
 | `recapture-inspector` | none | 0, 1, 2 = REFUSED | yes; two logs `/tmp/fg-recapture-inspector-<kind>.log` |
 | `apps` | 300 | the tool's | no |
@@ -143,9 +172,12 @@ is the first survey's §10: the build's Python was ported to Node and proven by 
 5. The order of everything observable: lint before build, waves in order, legs waited for in
    launch order, the retry after all four waves.
 6. The run set `what-runs.js` computes, and every gate's bite proof, unchanged.
-7. What stays an external program: `git`, `pkill`, `pgrep`, `caffeinate`, `node`, the build
-   script. What becomes plain JavaScript: `perl` (the alarm), `sysctl`, `awk`, `sed`, `grep`,
-   `tail`, `date`, `ls`, `cp`, `mv`, `rm`, `find`. These are the ONLY launch differences allowed.
+7. What stays an external program: `git`, `pkill`, `pgrep`, `caffeinate`, `node`, `npm`, the
+   build script. What becomes plain JavaScript: `perl` (the alarm), `sysctl`, and every text and
+   file utility bash used — `awk`, `sed`, `grep`, `tail`, `head`, `tr`, `cat`, `date`, `ls`, `cp`,
+   `mv`, `rm`, `ln`, `mkdir`, `cmp`, `find`, `basename`, `dirname`, `sleep`, `command -v` (the list
+   re-derived from the source at step 1). The supervisor adds one launch bash never made: `ps`, for
+   §4's tree snapshots. These are the ONLY launch differences allowed.
 
 ## 4. Process situations: the full matrix
 
@@ -332,7 +364,7 @@ FG_GAUNTLET_SERIAL=1 /Users/davidedellacasa/code/Fizzygum-all/fg gauntlet   # on
 ## 12. Start prompt for a fresh session
 
 ```
-Read Fizzygum/docs/plans/fg-node-port-plan.md in full, then Fizzygum/fg and buildSystem/legs.js.
+Read Fizzygum/docs/archive/fg-node-port-plan.md in full, then Fizzygum/fg and buildSystem/legs.js.
 Run /Users/davidedellacasa/code/Fizzygum-all/fg status and confirm no long operation is running.
 Carry out §7 step 1 and step 2 only (the inventory and the readers), show me every difference
 from the plan's §1, and wait for my go-ahead. Do not commit or push without asking me.

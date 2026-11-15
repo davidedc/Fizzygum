@@ -1,30 +1,33 @@
 'use strict';
-// not-a-gate: the table of fg's gauntlet legs and its reader for fg (`--shell`) — the programs its rows name are the gates
+// not-a-gate: the table of fg's gauntlet legs — the programs its rows name are the gates
 // legs.js — THE GAUNTLET'S LEGS, one row each: what `fg` runs at a commit point (`fg gauntlet`, its parallel waves and
-// its serial path) and in its inner loop (`fg presuite`). `fg` stays the entry point and keeps what is its own — the
-// verdict files, the `to` alarm, keeping the machine awake, killing browsers, backgrounding a wave, the serial retry,
-// the tally —; it asks this table WHICH legs there are and HOW each one runs (`node buildSystem/legs.js --shell …`),
-// so the waves, the serial path, the stale-proofing of the leg logs and the usage roster cannot name different legs.
-// The comments above each row are fg's own, verbatim, moved from `run_leg`'s case arms (the precedent: gates.js, the
-// build's gate table, whose comments moved from build_it_please.sh). lib/what-runs.js reads the rows to know what the
-// legs launch, and refuses a row no wave and no presuite schedules: a leg nothing runs would vouch for its programs.
+// its serial path) and in its inner loop (`fg presuite`). fg (buildSystem/fg-commit-point.js, which requires this table)
+// keeps what is its own — the verdict files, the alarms, keeping the machine awake, killing browsers, running a wave
+// at once, the serial retry, the tally —; it asks this table WHICH legs there are and HOW each one runs, so the waves,
+// the serial path, the stale-proofing of the leg logs and the usage roster cannot name different legs.
+// The comments above each row are fg's own, verbatim, moved from the bash fg's `run_leg` case arms (the precedent:
+// gates.js, the build's gate table, whose comments moved from build_it_please.sh). lib/what-runs.js reads the rows to
+// know what the legs launch, and refuses a row no wave and no presuite schedules: a leg nothing runs would vouch for its
+// programs.
 //
 // A row:
 //   name      the leg's name (`/tmp/fg-<name>.log`)
 //   waves     where it runs: a gauntlet wave ('A'..'D', run in that order, each wave's legs at once) and/or 'presuite'
-//   steps     what it runs, in order, each in its own subshell, the log truncated once and then appended to; the first
-//             step that fails ends the leg with its exit code. A step is
-//               { suite: [flags…] }                          fg_suite (the suite runner, its kill and its alarm), or
-//               { cwd: 'tests'|'fizzygum', alarm: <s>, script, args: [] }  `( cd … && to <alarm> node <script> <args> )`
+//   steps     what it runs, in order, the log truncated once and then appended to; the first step that fails ends the
+//             leg with its exit code. A step is
+//               { suite: [flags…] }                          fg's suite step (the suite runner, its kill and its alarm), or
+//               { cwd: 'tests'|'fizzygum', alarm: <s>, script, args: [] }  `node <script> <args>` from that repo, killed
+//                                                            (with every process it started) past its alarm
 //             An argument `{SUITE_SHARDS}` or `{GATE_SHARDS}` is the shard count fg's caller sets for the run
-//             (`${FG_SUITE_SHARDS:-4}`, `${FG_GATE_SHARDS:-6}`), expanded when the leg runs.
-//   passLine  a line the log must also hold for the leg to pass (its program's own verdict line)
+//             (FG_SUITE_SHARDS, default 4; FG_GATE_SHARDS, default 6), expanded when the leg runs.
+//   passLine  a line the log must also hold for the leg to pass (its program's own verdict line), plain text: fg searches
+//             the log for it as written
 //   infraExit true for a leg whose exit 3 is an INFRA flake (the six audited-suite gates' shard dropped twice): a
 //             warning, never a FAIL. Any other leg's 3 is a failure like any other non-zero exit.
 //   headline  the lines of its log fg shows under the leg's name after a wave (grep -E), last two matches
 //   verb      the standalone `fg` verb that runs the same program, if any (its own command line, in fg)
 //
-// Its cases: legs-selftest.js (the table's own rules, and the reader fg runs, on a small table).
+// Its cases: legs-selftest.js (the table's own rules, and fg's leg runner, on a small table).
 
 // the headline of a leg whose log relays a suite run's summary
 const SUITE = 'wall-clock|failed tests';
@@ -103,7 +106,7 @@ const LEGS = [
   // ---- wave B
   // paint-truthfulness gate (plan 5.3): the whole suite must stay paint-truthful — a forced full repaint of each
   // test's settled end-state must not change any pixel (a delta = a dropped invalidation / D2-class ghost region).
-  // It runs as the `paint` leg in run_leg does (five shards): one browser cannot audit the whole suite inside
+  // It runs as the `paint` leg does (five shards): one browser cannot audit the whole suite inside
   // the audit's own 600 s bound (measured 2026-11-14: 389 tests, 0 checked at 600 s, at load 9).
   { name: 'paint', waves: ['presuite', 'B'],
     steps: [{ cwd: 'tests', alarm: 720, script: 'scripts/run-paint-audit.js', args: ['--shards=5'] }],
@@ -203,7 +206,7 @@ const WAVES = ['A', 'B', 'C', 'D'];
 const PLACES = new Set([...WAVES, 'presuite']);
 const SHARDS = ['{SUITE_SHARDS}', '{GATE_SHARDS}'];
 const CWDS = new Set(['tests', 'fizzygum']);
-// what fg_suite runs (in the tests repo) for a suite step
+// what fg's suite step runs (in the tests repo)
 const SUITE_RUNNER = 'scripts/run-all-headless.js';
 
 // Every reason the table cannot be run, as lines (empty: it can). A name twice; a row no wave and no presuite schedules
@@ -222,7 +225,7 @@ function tableErrors(legs = LEGS) {
     if (!Array.isArray(r.steps) || !r.steps.length) errors.push(at + ': no step');
     else for (const s of r.steps) {
       const words = s.suite || s.args || [];
-      if (s.suite) { if (s.script || s.cwd || s.alarm) errors.push(at + ': a suite step is fg_suite\'s alone (its alarm and cwd)'); }
+      if (s.suite) { if (s.script || s.cwd || s.alarm) errors.push(at + ': a suite step is fg\'s suite step alone (its alarm and cwd)'); }
       else if (!CWDS.has(s.cwd) || !(s.alarm > 0) || !s.script || !Array.isArray(s.args)) errors.push(at + ': a step is { suite } or { cwd, alarm, script, args }');
       for (const w of words) for (const m of String(w).match(/\{[A-Z_]+\}/g) || []) if (!SHARDS.includes(m)) errors.push(at + ': unknown placeholder ' + m);
       for (const w of words) if (typeof w !== 'string' || !w.length || /[\t\n]/.test(w)) errors.push(at + ': an argument is a non-empty string with no tab or line break');
@@ -232,6 +235,7 @@ function tableErrors(legs = LEGS) {
     for (const [field, v] of [['headline', r.headline], ['passLine', r.passLine]]) {
       if (v !== undefined && (typeof v !== 'string' || !v.length || /[\t\n]/.test(v))) errors.push(at + ': its ' + field + ' is a non-empty line with no tab');
     }
+    if (typeof r.passLine === 'string' && /[.[\]*^$\\]/.test(r.passLine)) errors.push(at + ': its passLine is plain text (no . [ ] * ^ $ \\): fg searches the log for it as written');
   }
   for (const w of WAVES) if (!legs.some((r) => (r.waves || []).includes(w))) errors.push('wave ' + w + ' holds no leg');
   return errors;
@@ -252,16 +256,6 @@ function legNamed(name, legs = LEGS) {
   return r;
 }
 
-// A row as fg's run_leg reads it, one tab-separated line each: `passline<TAB><line>` first when the row has one (fg
-// reads it before the steps, since a failing step ends the reading), then a line per step — `suite<TAB><flag>…` or
-// `step<TAB>tests|fizzygum<TAB><alarm><TAB><script><TAB><arg>…`.
-function rowLines(name, legs = LEGS) {
-  const r = legNamed(name, legs);
-  const lines = r.passLine ? ['passline\t' + r.passLine] : [];
-  for (const s of r.steps) lines.push(s.suite ? ['suite', ...s.suite].join('\t') : ['step', s.cwd, s.alarm, s.script, ...s.args].join('\t'));
-  return lines;
-}
-
 // fg's usage lines that name legs: the presuite's, the gauntlet's waves (A and B listed, a one-leg wave "alone"), the
 // serial retry, and the gates whose exit 3 is an infra flake (the line that follows them is fg's own).
 function roster(legs = LEGS) {
@@ -275,28 +269,5 @@ function roster(legs = LEGS) {
     pad + 'The AUDITED-SUITE gates (' + legsIn('infra', legs).join('|') + ':'];
 }
 
-module.exports = { LEGS, WAVES, SUITE_RUNNER, tableErrors, legsIn, legNamed, rowLines, roster };
+module.exports = { LEGS, WAVES, SUITE_RUNNER, tableErrors, legsIn, legNamed, roster };
 
-// fg's reader: `node buildSystem/legs.js --shell <what>` prints, for bash 3.2 to read —
-//   names <wave|presuite|gauntlet|infra>   the legs, space-separated
-//   row <name>                             rowLines, one per line
-//   headline <name>                        the leg's headline pattern
-//   banner <wave|presuite>                 the legs joined by ' ∥ ' (a wave's banner)
-//   roster                                 the usage roster lines
-// A table that cannot be run, an unknown leg or place, or anything else exits 2, saying why: fg then refuses to run
-// rather than run a wave of nothing.
-if (require.main === module) {
-  const [flag, what, arg] = process.argv.slice(2);
-  const fail = (m) => { process.stderr.write('legs.js: ' + m + '\n'); process.exit(2); };
-  if (flag !== '--shell') fail('usage: node buildSystem/legs.js --shell names|row|headline|banner|roster …');
-  const errors = tableErrors();
-  if (errors.length) fail('the leg table cannot be run:\n  ' + errors.join('\n  '));
-  try {
-    if (what === 'names') console.log(legsIn(arg).join(' '));
-    else if (what === 'row') console.log(rowLines(arg).join('\n'));
-    else if (what === 'headline') console.log(legNamed(arg).headline);
-    else if (what === 'banner') console.log(legsIn(arg).join(' ∥ '));
-    else if (what === 'roster') console.log(roster().join('\n'));
-    else fail('unknown request ' + JSON.stringify(what));
-  } catch (e) { fail(e.message); }
-}

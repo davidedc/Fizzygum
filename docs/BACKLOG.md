@@ -250,7 +250,6 @@ AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by 
 - [ ] §7 (1 to 2 days; left for a later day by the owner 2026-11-15; ⛔ owner on which tools go): on-demand tools — one roster, each proven to start by the `selftests` leg
 - [ ] The visualisation page generator runs only when asked (`fg visualise`, a capture): no build or leg loads it, so a break shows only on use and a capture only warns — medium; the §7 roster would prove it starts. → "The visualisation page generator runs only when asked"
 - [ ] §9 (2 to 3 days; left for a later day by the owner 2026-11-15; ⛔ owner: rename or fold): a test is one file — takes up the round-2 §8 follow-up above; selection facts move to the generated manifest
-- [ ] §10 (4 to 5 days; ruled 2026-11-15: land and push when every proof passes): `fg` as a Node program — its own plan, `plans/fg-node-port-plan.md`, has the process-situation matrix and the ten-step proof
 
 ## Residual / parked items (owning doc archived)
 

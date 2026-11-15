@@ -9,17 +9,17 @@
 //
 // THE ROOTS. Fizzygum/build_it_please.sh (every build), with its gate table, buildSystem/gates.js (each row a launch of
 // its script by the command line run-gates.js gives it); Fizzygum/build_and_smoke.sh when present (the build's own
-// pre-commit check: the boot smoke it launches is a gate like any other); and Fizzygum/fg, the workflow wrapper that
-// runs the presuite and the gauntlet: the bodies of its fg_build / fg_suite / run_lint / run_leg functions (all four
-// must be found, or the reading is an ERROR), of its `legs` reader when fg has one, and — when that reader launches
-// it — its LEG TABLE, buildSystem/legs.js, whose rows are the legs (read as data, as the build's gate table is). That the
-// real fg's reader launches the table, and the table's programs are launched through it, is what-runs-selftest.js's
-// real-tree case: an fg that stopped reading its table would drop every leg's program from the run set. `fg` is versioned
-// beside the build, so a layout without it is an ERROR too, as one without the build is: a commit-point fact is always
-// decidable.
+// pre-commit check: the boot smoke it launches is a gate like any other); and fg's COMMIT POINT,
+// buildSystem/fg-commit-point.js — the build, the lint, the suite and the leg runner of `fg presuite` / `fg gauntlet`,
+// read as JavaScript like any other file — and the LEG TABLE it requires, buildSystem/legs.js, whose rows are the legs
+// (read as data, as the build's gate table is). The commit point must require the table, or the reading is an ERROR:
+// an fg that stopped reading its table would drop every leg's program from the run set (what-runs-selftest.js's
+// real-tree case holds the real one to it). fg's on-demand verbs (buildSystem/fg-verbs.js) are no root: a tool only a
+// person starts is no gate's guard. `fg` and its commit point are versioned beside the build, so a layout without
+// either is an ERROR too, as one without the build is: a commit-point fact is always decidable.
 //
 // AN EDGE IS AN INVOCATION, NOT A MENTION. A file runs another when it LAUNCHES it:
-//   - shell (.sh, and fg's function bodies), read by a small lexer (shellCommands, below): a script that is the PROGRAM
+//   - shell (.sh), read by a small lexer (shellCommands, below): a script that is the PROGRAM
 //     a command executes, or that follows an INTERPRETER word (node, bash, sh, python3, source, `.`) — a flag's value
 //     included (`node runner.js --prelude=x.js`: the runner injects it into its pages). A printing command, a test, a
 //     file operation, an assignment, a heredoc body and a comment launch nothing; a `$( … )` substitution is a command
@@ -55,9 +55,8 @@ const DEFAULT_LAYOUT = {
   tests: path.join(path.dirname(FIZZYGUM), 'Fizzygum-tests'),
   fg: path.join(FIZZYGUM, 'fg'),
 };
-const FG_FUNCTIONS = ['fg_build', 'fg_suite', 'run_lint', 'run_leg'];
-// fg's reader of its leg table, and the table: read here (its rows are data) when the reader launches it
-const FG_TABLE_READER = 'legs';
+// fg's commit point, and the leg table it requires: read here (its rows are data)
+const FG_COMMIT_POINT = 'buildSystem/fg-commit-point.js';
 const LEG_TABLE = 'buildSystem/legs.js';
 // the build's gate runner, and the table of gates it runs: read here (its rows are data) when the build launches the
 // runner — a table nobody runs gates nothing
@@ -267,24 +266,6 @@ function jsLaunches(file, text) {
   return out;
 }
 
-// The bodies of fg's four leg-running functions. Each must be found: a renamed one would silently drop its legs from
-// the run set, so a missing one is an ERROR. A one-line function (`fg_suite(){ …; }`) ends on its own line.
-function fgRootText(fgPath) {
-  const text = fs.readFileSync(fgPath, 'utf8');
-  const bodies = [], missing = [];
-  for (const name of [...FG_FUNCTIONS, FG_TABLE_READER]) {
-    const found = new RegExp(`(^|\\n)${name}\\(\\)\\{`).exec(text);
-    if (!found) { if (name !== FG_TABLE_READER) missing.push(name); continue; }
-    const at = found.index + found[1].length - 1;   // the newline before the header (-1 at the start of the file)
-    const lineEnd = text.indexOf('\n', at + 1);
-    const firstLine = text.slice(at + 1, lineEnd < 0 ? text.length : lineEnd);
-    const end = /}\s*(#.*)?$/.test(firstLine) ? lineEnd : text.indexOf('\n}', at + 1);
-    bodies.push(text.slice(Math.max(at, 0), end < 0 ? text.length : end));
-  }
-  if (missing.length) throw new Error(`what-runs: ${fgPath} defines no ${missing.join(', ')} — cannot read its legs`);
-  return bodies.join('\n');
-}
-
 // { files: Set<abs path>, why: Map<abs path, string>, how: Map<abs path, kind> } — every script the roots
 // reach; `how` says how it runs: 'root'; 'launched' when ANY edge launches it (the program of a shell command, a
 // script after an interpreter word, or a path.join/path.resolve launch in JS), even one first reached as a module —
@@ -336,9 +317,9 @@ function runSet(layout = DEFAULT_LAYOUT) {
     }
   };
 
-  // THE GAUNTLET'S LEG TABLE (buildSystem/legs.js, which fg's run_leg runs through its `legs` reader): each step of each
-  // row is a launch of its script by the command line fg gives it — `node <script> <args>` from the tests repo or from
-  // Fizzygum/, a suite step fg_suite's runner with the step's flags —, so a convention keyed to the invoking command
+  // THE GAUNTLET'S LEG TABLE (buildSystem/legs.js, which fg's commit point requires): each step of each row is a launch
+  // of its script by the command line fg gives it — `node <script> <args>` from the tests repo or from Fizzygum/, a
+  // suite step the suite runner with the step's flags —, so a convention keyed to the invoking command
   // applies (`run-selftests.js --headless` discovers the headless self-tests). A step naming no scanned script is an
   // ERROR, and so is a table fg cannot run (legs.js tableErrors: a row no wave and no presuite schedules among its
   // reasons). Read as it stands on disk now, never from require's cache.
@@ -368,8 +349,20 @@ function runSet(layout = DEFAULT_LAYOUT) {
     viaShell(fs.readFileSync(buildAndSmoke, 'utf8'), 'build_and_smoke.sh');
   }
   if (!fs.existsSync(layout.fg)) throw new Error(`what-runs: no ${layout.fg}`);
-  viaShell(fgRootText(layout.fg), 'ROOT: fg legs');
-  if (how.get(path.join(layout.fizzygum, LEG_TABLE)) === 'launched') viaLegTable(path.join(layout.fizzygum, LEG_TABLE), 'ROOT: fg legs');
+  const commitPoint = path.join(layout.fizzygum, FG_COMMIT_POINT), legTable = path.join(layout.fizzygum, LEG_TABLE);
+  if (!fs.existsSync(commitPoint)) throw new Error(`what-runs: no ${commitPoint} — cannot read fg's legs`);
+  reached.add(commitPoint); why.set(commitPoint, 'ROOT: fg legs'); how.set(commitPoint, 'root');
+  let requiresTable = false;
+  for (const l of jsLaunches(commitPoint, fs.readFileSync(commitPoint, 'utf8'))) {
+    if (l.required) {
+      for (const cand of [l.required, l.required + '.js', path.join(l.required, 'index.js')]) {
+        if (cand === legTable) requiresTable = true;
+        add(cand, 'ROOT: fg legs', 'required');
+      }
+    } else for (const t of resolve(l.token)) add(t, 'ROOT: fg legs', 'launched');
+  }
+  if (!requiresTable) throw new Error(`what-runs: ${commitPoint} requires no ${LEG_TABLE} — cannot read its legs`);
+  viaLegTable(legTable, 'ROOT: fg legs');
 
   while (queue.length) {
     const f = queue.shift();

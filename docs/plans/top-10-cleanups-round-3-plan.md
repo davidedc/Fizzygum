@@ -19,11 +19,11 @@
 > for). Ruled the same day: §3 pins the tools through npm (`npm ci`), not by vendoring; §5
 > generates the pages and stops committing them; §8 shortens every item AND applies the
 > 2026-11-11 bar to what is already filed; §10 lands and is pushed when every proof of its own
-> plan (`docs/plans/fg-node-port-plan.md`) passes. An unattended `/loop`, launched by the owner,
+> plan (`docs/archive/fg-node-port-plan.md`) passes. An unattended `/loop`, launched by the owner,
 > executes the approved items one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-3/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §1, §3, §5,
-> §6, §8 (2026-11-15); §2 is parked on the owner's decision.
+> §6, §8, §10 (2026-11-15); §2 is parked on the owner's decision.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -126,7 +126,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | 7 | On-demand tools: one roster, each proven to start | 1 to 2 days | A tool nothing references, nine profiling scripts kept under `docs/`, a second front door (28 npm scripts) beside `fg`. **In plain words:** about fifty helper scripts are only ever started by hand, so nothing notices when one breaks. Keep one list of them, check that each still starts, and delete the ones nobody can reach. | **Why:** tools kept in a drawer and never tried may turn out broken on the very day you need them; one already sat broken for three months. Keep a list of what is in the drawer and press each tool's "on" button whenever the big check runs. **Trade-offs:** the big check gets a little longer; "it switches on" is not the same as "it still works properly"; and throwing a tool away risks losing one that somebody uses twice a year. | None | Partly (which tools go) | 9 | Left for a later day by the owner (2026-11-15) |
 | 8 | The backlog is an index again | 1 day | About 105 KB that cannot be read in one pass; items the owner's own bar keeps out. **In plain words:** the list of open work says it is only an index, but many entries are half a page long, and it has grown past what the tools can read at once. Shorten each entry to a line or two and move the detail to the plan that owns it. | **Why:** a to-do list so long that nobody reads to the end stops working as a list: the same thing gets written down twice, and the important things hide among the small ones. Give each thing a line or two and keep its long story in the folder it belongs to. **Trade-offs:** reading an item's whole story takes one more hop to another file; and moving 212 items risks dropping a sentence, so a script has to check that every sentence landed somewhere. | None | Yes (the bar applies to what is already filed) | 6 | Landed 2026-11-15 (§8, "Landed") |
 | 9 | A test is one file | 2 to 3 days | 389 files, a second script load per test, a load of every test's metadata before any run, fields nothing reads. **In plain words:** every test is split across two files for a reason that no longer exists, and before running anything the test page loads a file for every test in the suite. One file per test, and a generated list that says which tests exist. | **Why:** every test keeps its instructions in one envelope and its name tag in another, and before any test starts, the page opens the name-tag envelope of every test in the building. One envelope per test, and one printed list of who is here. **Trade-offs:** every tool that reads tests has to learn the new shape in the same change (19 files name the old one); 778 files change in one commit; and the printed list becomes something a test run cannot do without. | None (macro sources byte-identical) | Yes (rename or fold; this item recommends fold) | 2 | Left for a later day by the owner (2026-11-15) |
-| 10 | `fg` in the toolchain's language | 4 to 5 days | 856 lines of bash run by a 2007 shell, 45 hops from bash into Node, a table printed by Node for bash to parse. **In plain words:** the command that runs every check is a long shell script, executed by the old shell macOS ships, and it calls into JavaScript dozens of times. Write it in JavaScript like the rest of the tooling. | **Why:** the one who marks everybody's homework writes in a different language from everybody else, so none of the class's spell-checkers can read the marker's own notes, and that old dialect has already hidden mistakes. Have the marker write in the class's language. **Trade-offs:** it is a rewrite of the very thing that says "safe to commit", so a slip here is the expensive kind; it takes about a week and adds no feature; and shell is naturally good at starting and stopping programs, which takes more care to do as well in JavaScript. | None | No | 10 | Approved by the owner (2026-11-15); queued |
+| 10 | `fg` in the toolchain's language | 4 to 5 days | 856 lines of bash run by a 2007 shell, 45 hops from bash into Node, a table printed by Node for bash to parse. **In plain words:** the command that runs every check is a long shell script, executed by the old shell macOS ships, and it calls into JavaScript dozens of times. Write it in JavaScript like the rest of the tooling. | **Why:** the one who marks everybody's homework writes in a different language from everybody else, so none of the class's spell-checkers can read the marker's own notes, and that old dialect has already hidden mistakes. Have the marker write in the class's language. **Trade-offs:** it is a rewrite of the very thing that says "safe to commit", so a slip here is the expensive kind; it takes about a week and adds no feature; and shell is naturally good at starting and stopping programs, which takes more care to do as well in JavaScript. | None | No | 10 | Landed 2026-11-15 (§10, "Landed") |
 
 ---
 
@@ -964,7 +964,7 @@ whole process group, the one serial retry, the exit codes 0, 1, 2 and 3. `what-r
 approximated. The umbrella's guard hook and every instruction file name `fg` by path, which
 does not change.
 
-**Its own plan.** `docs/plans/fg-node-port-plan.md` holds the inventory of what `fg` does today,
+**Its own plan.** `docs/archive/fg-node-port-plan.md` holds the inventory of what `fg` does today,
 the full matrix of process situations (a child that hangs, crashes, ignores a signal or leaves
 descendants; `fg` itself interrupted, killed or throwing; a closed stdout; a second run; sleep),
 the deliberate differences, and the ten-step proof. **Ruled 2026-11-15 (owner):** land and push
@@ -977,6 +977,64 @@ paths and each standalone verb, and keep the logs. The port is done when it repr
 launch for launch.
 
 **Re-measure.** `wc -l Fizzygum/fg; grep -c -E '\bnode +["$./A-Za-z]' Fizzygum/fg; /bin/bash --version | head -1`.
+
+**Landed 2026-11-15.** `fg` is a Node program. `Fizzygum/fg` is a short launcher; the program is
+three modules:
+- `buildSystem/fg-commit-point.js`: the build, the lint, the suite, the leg runner, the waves, the
+  retry, `presuite` and `gauntlet`. `lib/what-runs.js` reads it as the commit point's root, as
+  JavaScript, and holds it to requiring the leg table.
+- `buildSystem/fg-verbs.js`: every other verb, the usage and the dispatcher. It is no root, so an
+  on-demand tool is never counted as run at a commit point.
+- `buildSystem/lib/fg-supervisor.js`: how a program is started (its output to a file descriptor),
+  timed out, and made to end together with every process it started. It knows nothing of legs.
+
+What went: `legs.js`'s `--shell` printer, and `what-runs.js`'s reading of four bash functions. Its
+shell lexer stays for the two build scripts. The bash `fg` is kept in the loop's scratch directory
+(`u7-fg-node/fg.before`).
+
+The proof followed `docs/archive/fg-node-port-plan.md` §7 (local evidence in
+`Fizzygum-tests/.scratch/cleanups-loop-3/u7-fg-node/`):
+1. The inventory was re-derived from the bash source. Its differences from that plan's §1 are
+   corrected there.
+2. Every reader of what fg writes was listed. No script executes fg.
+3. A theatre of stand-in programs: two copies of a stand-in workspace, one running the bash fg and
+   one the Node fg.
+4. 108 scenarios — every verb, every branch of the leg machinery, both gauntlet paths and
+   `presuite` — compared stdout, stderr, the exit code, every temp file and every program launched.
+   They are equal except where §5 rules otherwise.
+5. That launch census found one real difference: a browser kill inside a leg did not see the leg's
+   `FIZZYGUM_FAILURE_IMAGES_DIR`. It is fixed.
+6. Eight drills, recorded on bash and asserted on Node. They found two more defects in the port,
+   both fixed: a signal's verdict raced the run's own, and an error thrown in a verb never reached
+   the INVALID path. The independent review then found five more, all fixed (the archived plan's
+   STATUS lists them).
+7. The run set is the same files, plus fg's own new modules (`legs.js` launched → required).
+8. The new fg's real runs: `fg presuite` (223 s), a parallel `fg gauntlet` (20 of 20, 1204 s, no retry),
+   ONE serial gauntlet (20 of 20) and `fg homepage`, all green on the final code. The old fg's
+   last parallel gauntlet on this tree (20 of 20, 1136 s) is the tally they compare with.
+9. Standing self-tests: `lib/fg-supervisor-selftest.js` (21 cases, about 3 s, every build) and
+   `fg-gauntlet-selftest-headless.js` (23 cases in the `selftests` leg: a fake gauntlet through
+   the real entry point, and the drills of the §5 differences).
+10. Live drills: SIGTERM and SIGINT to `fg gauntlet` in wave A end it INTERRUPTED (143, 130), with
+   no process of the run and no browser alive 15 s later. After a SIGKILL, `fg status` says STALE
+   and `fg killz` clears what the run left (130 processes). A second `fg build` during a gauntlet
+   is refused (exit 2).
+
+The plan's §5 lists the deliberate differences:
+- a leg leaves no process behind, and its log names a signal or a timeout;
+- an interrupted run says INTERRUPTED and kills its children;
+- an error in fg is INVALID, exit 2;
+- a closed stdout no longer ends the run;
+- `fg status` tells a dead run from a live one (STALE);
+- a second long operation is refused while one runs;
+- a leg that slept says so;
+- verdicts are written whole;
+- `fingerprint` ends its verdict on every exit;
+- the build has a ceiling (`FG_BUILD_ALARM_SECS`, default 1800 s);
+- an unknown verb exits 2.
+
+Two more came from the live drills: one atomic lock for long operations, and `fg killz` killing what a dead run left
+behind.
 
 ---
 
@@ -1126,6 +1184,9 @@ Do not commit or push without asking me.
   full text moved verbatim into the plan that owns it (`## BACKLOG detail`), and the low unreached findings into
   their plan's ledger as noted, not queued; README rule 5 states the index form and the 2026-11-11 bar, and
   `check-doc-narration` holds an item's length to a ceiling (§8, "Landed").
+- [x] §10 (4 to 5 days; ruled 2026-11-15: land and push when every proof passes): `fg` as a Node program — its own plan, `plans/fg-node-port-plan.md`, has the process-situation matrix and the ten-step proof
+  — CLOSED 2026-11-15 (loop U7): `fg` is a Node program (`Fizzygum/fg` a launcher; buildSystem/fg-commit-point.js,
+  fg-verbs.js, lib/fg-supervisor.js), every proof of its plan passed, and the plan is archived (§10, "Landed").
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

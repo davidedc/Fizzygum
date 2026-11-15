@@ -2,7 +2,8 @@
 // what-runs-selftest.js — lib/what-runs.js on a miniature workspace written to a temp dir: each way a file can be
 // NAMED without being run (a comment, an echo, a help message, a Python docstring) must stay out of the run set, and
 // each way one is LAUNCHED (a shell command, a pipeline stage, require(), path.join) must come in — through the build,
-// fg's legs and the discovering runners.
+// fg's commit point and its leg table, and the discovering runners. fg's on-demand verbs are no root.
+
 
 const fs = require('fs');
 const os = require('os');
@@ -10,6 +11,13 @@ const path = require('path');
 const { runSet, discover, shellInvocations, scriptFiles } = require('./what-runs');
 const { spawnSync } = require('child_process');
 const t = require('./selftest-verdict').cases('what-runs');
+// a leg table written from legs.js's own code around a small LEGS (its tableErrors, legsIn and SUITE_RUNNER the real ones)
+const legsCode = fs.readFileSync(path.join(__dirname, '..', 'legs.js'), 'utf8');
+const legsTable = (rows) => {
+  const a = legsCode.indexOf('\nconst LEGS = [\n'), b = legsCode.indexOf('\n];\n', a);
+  return legsCode.slice(0, a) + '\nconst LEGS = ' + JSON.stringify(rows) + ';\n' + legsCode.slice(b + 4);
+};
+const STEP = (cwd, script, ...args) => ({ cwd, alarm: 1, script, args });
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'what-runs-selftest-'));
 const layout = { fizzygum: path.join(root, 'Fizzygum'), tests: path.join(root, 'Fizzygum-tests'), fg: path.join(root, 'Fizzygum', 'fg') };
@@ -69,16 +77,24 @@ write('Fizzygum-tests/scripts/suite-runner.js', '');
 write('Fizzygum-tests/scripts/p/x-prelude.js', '');
 write('Fizzygum-tests/scripts/q/y-prelude.js', '');
 write('Fizzygum-tests/scripts/preludes-install-selftest-headless.js', '');
-write('Fizzygum/fg', [
-  'fg_build(){', '  ( cd "$FZ" && ./build_it_please.sh "$@" && node buildSystem/fg-built.js )', '}',   // first in the file
-  'fg_suite(){ ( cd "$FT" && node scripts/suite-runner.js "$@" ); }   # a one-liner: its body ends on its line',
-  'run_lint(){', '  echo "lint names scripts/orphan.js and runs nothing"', '}',
-  'run_leg(){', '  case "$1" in',
-  '    x) bash "$FT/scripts/leg.sh" ;;',
-  '    selftests) ( cd "$FZ" && node buildSystem/run-selftests.js --headless ) ;;',
-  '  esac', '}',
-  'fg_unrelated(){', '  node scripts/orphan.js', '}',
-].join('\n'));
+// fg: the entry point (never read), its on-demand verbs (no root: what they launch is not run at a commit point), and
+// its commit point, read as JavaScript, which requires the leg table
+write('Fizzygum/fg', "#!/usr/bin/env node\nrequire('./buildSystem/fg-verbs');\n");
+write('Fizzygum/buildSystem/fg-verbs.js', "const path = require('path');\nrun(['node', path.join('scripts', 'orphan.js')]);\n");
+const COMMIT_POINT = [
+  "const path = require('path');",
+  "const L = require('./legs');",
+  "run(['./build_it_please.sh']); run(['node', path.join('buildSystem', 'fg-built.js')]);",
+  "run(['node', path.join('scripts', 'suite-runner.js')]);",
+  "say('lint names scripts/orphan.js and runs nothing');",
+].join('\n') + '\n';
+write('Fizzygum/buildSystem/fg-commit-point.js', COMMIT_POINT);
+write('Fizzygum/buildSystem/legs.js', legsTable([
+  { name: 'x', waves: ['A'], steps: [STEP('tests', 'scripts/leg.sh')], headline: 'x' },
+  { name: 'selftests', waves: ['B'], steps: [STEP('fizzygum', 'buildSystem/run-selftests.js', '--headless')], headline: 'x' },
+  { name: 's', waves: ['C', 'D'], steps: [{ suite: [] }], headline: 'x' },
+]));
+write('Fizzygum-tests/scripts/run-all-headless.js', '');
 
 const rel = (s) => [...s].map((f) => path.relative(root, f).replace(/^Fizzygum(-tests)?\//, '')).sort();
 const withFg = runSet(layout);
@@ -121,10 +137,12 @@ try { runSet(layout); } catch (e) { threw = e.message; }
 t.check(/invokes no scanned script/.test(threw), 'a build script that invokes nothing is an ERROR, never an empty run set', threw);
 
 write('Fizzygum/build_it_please.sh', 'node ./buildSystem/gate.js\n');
-write('Fizzygum/fg', 'fg_build(){\n  ./build_it_please.sh\n}\nrun_leg(){\n  :\n}\n');
+fs.renameSync(path.join(root, 'Fizzygum/buildSystem/fg-commit-point.js'), path.join(root, 'Fizzygum/buildSystem/renamed.js'));
 threw = '';
 try { runSet(layout); } catch (e) { threw = e.message; }
-t.check(/defines no fg_suite, run_lint/.test(threw), "an fg missing any of its four leg functions is an ERROR (a renamed one would drop its legs)", threw);
+t.check(/^what-runs: no .*buildSystem\/fg-commit-point\.js — cannot read fg's legs$/.test(threw),
+  "a layout without fg's commit point is an ERROR (a renamed one would drop every leg)", threw);
+fs.renameSync(path.join(root, 'Fizzygum/buildSystem/renamed.js'), path.join(root, 'Fizzygum/buildSystem/fg-commit-point.js'));
 
 // THE TOOLING'S OWN FILES (scriptFiles): every root, never a dot entry, a node_modules or a __pycache__, a symlink refused
 write('Fizzygum/scripts/vendor-step.sh', 'echo vendoring\n');
@@ -177,7 +195,10 @@ const table2 = (rows) => write2('Fizzygum/buildSystem/gates.js', [
 const ROWS = ["path.join(__dirname, 'run-selftests.js')", "path.join(__dirname, ['table', 'gate'].join('-') + '.js')"];
 write2('Fizzygum/build_it_please.sh', RUNS_THE_RUNNER);
 write2('Fizzygum/buildSystem/run-gates.js', "const { GATES } = require('./gates');\n");
-write2('Fizzygum/fg', 'fg_build(){\n  :\n}\nfg_suite(){ :; }\nrun_lint(){\n  :\n}\nrun_leg(){\n  :\n}\n');   // legs that launch nothing
+write2('Fizzygum/fg', '');   // fg, and legs that launch only a script of Fizzygum/ (this layout removes its tests repo)
+write2('Fizzygum/buildSystem/fg-commit-point.js', "require('./legs');\n");
+write2('Fizzygum/buildSystem/legs.js', legsTable(['A', 'B', 'C', 'D'].map((w) => ({ name: w.toLowerCase(), waves: [w], steps: [STEP('fizzygum', 'buildSystem/leg-noop.js')], headline: 'x' }))));
+write2('Fizzygum/buildSystem/leg-noop.js', '');
 table2(ROWS);
 for (const f of ['run-selftests.js', 'table-gate.js', 'args-gate.js', 'commented-in-table.js', 'other.js', 'gamma-selftest.js']) write2(`Fizzygum/buildSystem/${f}`, '');
 write2('Fizzygum-tests/scripts/tests-gate.js', '');
@@ -213,36 +234,31 @@ t.check(/gates\.js has a row for .*nowhere\.js, which is not a scanned script/.t
 fs.rmSync(root2);
 fs.rmSync(real2, { recursive: true, force: true });
 
-// THE LEG TABLE (buildSystem/legs.js): fg's `legs` reader launches it, and its rows are read as data — a row's script
+// THE LEG TABLE (buildSystem/legs.js): fg's commit point requires it, and its rows are read as data — a row's script
 // runs though no text of fg names it, a convention keyed to a row's command line applies (run-selftests.js --headless);
-// a row no wave and no presuite schedules, or a step naming no scanned script, is an ERROR; an fg with no reader reads
-// no table. The miniature table is legs.js's own code around a small LEGS.
+// a row no wave and no presuite schedules, or a step naming no scanned script, is an ERROR, and so is a commit point
+// that requires no table. The miniature table is legs.js's own code around a small LEGS.
 {
   const root3 = fs.mkdtempSync(path.join(os.tmpdir(), 'what-runs-legs-'));
   const layout3 = { fizzygum: path.join(root3, 'Fizzygum'), tests: path.join(root3, 'Fizzygum-tests'), fg: path.join(root3, 'Fizzygum', 'fg') };
   const write3 = (rel, text) => { const p = path.join(root3, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); };
-  const legsCode = fs.readFileSync(path.join(__dirname, '..', 'legs.js'), 'utf8');
-  const table3 = (rows) => {
-    const a = legsCode.indexOf('\nconst LEGS = [\n'), b = legsCode.indexOf('\n];\n', a);
-    write3('Fizzygum/buildSystem/legs.js', legsCode.slice(0, a) + '\nconst LEGS = ' + JSON.stringify(rows) + ';\n' + legsCode.slice(b + 4));
-  };
-  const FG_PARTS = ['fg_build(){\n  :\n}', 'fg_suite(){ ( cd "$FT" && node scripts/run-all-headless.js "$@" ); }', 'run_lint(){\n  :\n}', 'run_leg(){\n  :\n}'];
-  const READER = 'legs(){ ( cd "$FZ" && node buildSystem/legs.js --shell "$@" ); }';
+  const table3 = (rows) => write3('Fizzygum/buildSystem/legs.js', legsTable(rows));
+  const COMMIT3 = "const path = require('path');\nconst L = require('./legs');\nrun(['node', path.join('scripts', 'run-all-headless.js')]);\n";
   write3('Fizzygum/build_it_please.sh', 'node ./buildSystem/built.js\n');
   for (const f of ['Fizzygum/buildSystem/built.js', 'Fizzygum/buildSystem/run-selftests.js', 'Fizzygum/buildSystem/delta-selftest-headless.js',
     'Fizzygum-tests/scripts/run-all-headless.js', 'Fizzygum-tests/scripts/leg-a.js', 'Fizzygum-tests/scripts/leg-d.js']) write3(f, '');
-  const STEP = (cwd, script, ...args) => ({ cwd, alarm: 1, script, args });
   const ROWS3 = [
     { name: 'a', waves: ['A'], steps: [STEP('tests', 'scripts/leg-a.js')], headline: 'x' },
     { name: 'b', waves: ['B'], steps: [STEP('fizzygum', 'buildSystem/run-selftests.js', '--headless')], headline: 'x' },
     { name: 'c', waves: ['C'], steps: [{ suite: ['--dpr=2'] }], headline: 'x' },
     { name: 'd', waves: ['D', 'presuite'], steps: [STEP('tests', 'scripts/leg-d.js', '{GATE_SHARDS}')], headline: 'x' },
   ];
-  write3('Fizzygum/fg', [...FG_PARTS, READER].join('\n') + '\n');
+  write3('Fizzygum/fg', '');
+  write3('Fizzygum/buildSystem/fg-commit-point.js', COMMIT3);
   table3(ROWS3);
   const viaLegs = runSet(layout3);
   const of3 = (rel) => viaLegs.how.get(path.join(root3, rel));
-  t.check(of3('Fizzygum/buildSystem/legs.js') === 'launched', 'fg\'s legs reader launches the leg table', String(of3('Fizzygum/buildSystem/legs.js')));
+  t.check(of3('Fizzygum/buildSystem/legs.js') === 'required', 'fg\'s commit point requires the leg table', String(of3('Fizzygum/buildSystem/legs.js')));
   t.check(of3('Fizzygum-tests/scripts/leg-a.js') === 'launched' && of3('Fizzygum-tests/scripts/leg-d.js') === 'launched'
     && viaLegs.why.get(path.join(root3, 'Fizzygum-tests/scripts/leg-a.js')) === 'ROOT: fg legs',
     'a row\'s script is a launch of fg\'s legs, though no text of fg names it', `${of3('Fizzygum-tests/scripts/leg-a.js')} / ${of3('Fizzygum-tests/scripts/leg-d.js')}`);
@@ -258,8 +274,11 @@ fs.rmSync(real2, { recursive: true, force: true });
   try { runSet(layout3); } catch (e) { threw3 = e.message; }
   t.check(/leg e runs scripts\/nowhere\.js, which is not a scanned script/.test(threw3), 'a step naming no scanned script is an ERROR, never a leg dropped', threw3);
   table3(ROWS3);
-  write3('Fizzygum/fg', FG_PARTS.join('\n') + '\n');
-  t.check(!runSet(layout3).files.has(path.join(root3, 'Fizzygum-tests/scripts/leg-a.js')), 'an fg with no legs reader reads no table: its rows run nothing');
+  write3('Fizzygum/buildSystem/fg-commit-point.js', "const path = require('path');\nrun(['node', path.join('scripts', 'run-all-headless.js')]);\n");
+  threw3 = '';
+  try { runSet(layout3); } catch (e) { threw3 = e.message; }
+  t.check(/fg-commit-point\.js requires no buildSystem\/legs\.js — cannot read its legs$/.test(threw3),
+    'a commit point that requires no leg table is an ERROR: its rows would silently run nothing', threw3);
   fs.rmSync(root3, { recursive: true, force: true });
 }
 
@@ -274,9 +293,10 @@ fs.rmSync(real2, { recursive: true, force: true });
     'on the real tree, the build launches the gate runner and the node-tier self-tests are discovered through its table',
     `${real.how.get(path.join(bs, 'run-gates.js'))} / ${real.how.get(path.join(bs, 'gates.js'))} / ${real.how.get(path.join(bs, 'run-gates-selftest.js'))}`);
   const scripts = path.join(path.dirname(path.resolve(bs, '..')), 'Fizzygum-tests', 'scripts');
-  t.check(real.how.get(path.join(bs, 'legs.js')) === 'launched' && real.how.get(path.join(scripts, 'revisit-gate.js')) === 'launched'
+  t.check(real.how.get(path.join(bs, 'fg-commit-point.js')) === 'root' && real.how.get(path.join(bs, 'legs.js')) === 'required'
+    && real.how.get(path.join(scripts, 'revisit-gate.js')) === 'launched'
     && real.how.get(path.join(scripts, 'revisit-gate-selftest-headless.js')) === 'discovered',
-    'on the real tree, fg launches its leg table, a leg\'s program is launched through it, and the headless self-tests are discovered',
+    'on the real tree, fg\'s commit point requires its leg table, a leg\'s program is launched through it, and the headless self-tests are discovered',
     `${real.how.get(path.join(bs, 'legs.js'))} / ${real.how.get(path.join(scripts, 'revisit-gate.js'))} / ${real.how.get(path.join(scripts, 'revisit-gate-selftest-headless.js'))}`);
 }
 

@@ -36,7 +36,7 @@ profile does not know what a part is made of.
 Three consumers use it and none of them re-implement any of its rules:
 
 - `buildSystem/build.js` requires it (`Profile.selectsPart`, `loadParts`, `ENTRY_PAGES`);
-- `build_it_please.sh` and `build_and_smoke.sh` `eval` its `--shell` output, and `fg` asks it the same way;
+- `build_it_please.sh` and `build_and_smoke.sh` `eval` its `--shell` output, and `fg` reads the same output;
 - it also owns `--profile` PARSING, so no caller has its own copy of that either.
 
 ---
