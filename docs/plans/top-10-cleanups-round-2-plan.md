@@ -918,12 +918,11 @@ that are gone or going.
 
 **Risk.** No pixel changes: step 1 moves files and step 2 deletes a copy. The risks are
 readers. Every script that walks the tree must go through `refpaths.js` (check
-`check-refs.js`, `check-visualisations.js`, `make-visualisation.js`,
+`check-refs.js`, `make-visualisation.js`,
 `recompress-swcanvas-references.js`, `recapture.js`, `capture-macro-test-references.js`,
-`macro-page-lib.js`, and the self-tests that spell the path: `check-refs-selftest.js`,
-`check-visualisations-selftest.js`). Every committed `visualisation.html` embeds reference
-paths and must be regenerated in the same commit (`check-visualisations.js` fails the build
-otherwise). Step 2 needs §4 decided first: with the in-browser difference image kept, a record
+`macro-page-lib.js`, and the self-tests that spell the path: `check-refs-selftest.js`). A
+`visualisation.html` embeds reference paths, but the pages are generated and never committed
+(round 3's §5), so `fg visualise` rewrites them after the move. Step 2 needs §4 decided first: with the in-browser difference image kept, a record
 still needs its pixels.
 
 **First step.** For step 1: `git mv` one test's references to the new shape on a scratch branch,

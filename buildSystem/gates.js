@@ -455,22 +455,6 @@ const GATES = [
     banner: "checking SWCanvas reference images for strays/duplicates ...",
     failure: "!!!!!!!!!!! error: SWCanvas reference check failed -- aborting build.",
     ok: "... SWCanvas references OK" },
-  // --- build-time visualisation-page gate (only when tests are part of this build) ---------------
-  // A test's visualisation.html EMBEDS its reference filenames, and a reference filename carries the
-  // image's dataHash -- so anything that renames or re-captures a reference without regenerating the
-  // page leaves it pointing at a PNG that no longer exists. That break is SILENT: nothing in CI opens
-  // these pages, so a broken one looks exactly like a working one until a human clicks it. Measured
-  // twice: 10 of 305 pages were already broken on 2026-08-21, and the 2026-08-22 filename-grammar
-  // migration would have broken 279 in a single commit. The capture path regenerates a page at its
-  // write site, which covers captures; this covers everything else by checking the property itself
-  // instead of trusting every writer to remember the rule. No image decode, no browser (~0.2s). Same
-  // --noSyntaxCheck escape hatch / $? check / ships-tests guard as the gates above.
-  { script: path.join(TESTS_SCRIPTS, "check-visualisations.js"),
-    args: ["--quiet"],
-    when: "testsShipped",
-    banner: "checking visualisation pages for broken image references ...",
-    failure: "!!!!!!!!!!! error: visualisation page check failed -- aborting build.",
-    ok: "... visualisation pages OK" },
   // --- the aim census's TABLES (../Fizzygum-tests/scripts/aim-census.js --tables-only) ------------
   // The census of where every macro test aims is a measurement, never a gate — but its own tables
   // classify every MacroToolkit verb and name the classes and members it reads, and those are held to

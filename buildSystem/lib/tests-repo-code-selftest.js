@@ -104,6 +104,11 @@ for (const [what, plant, unplant, expect] of [
   ['a test with no command file (a copy whose files keep the old name)', () => { makeTest('SystemTest_copy', ['meta']); fs.writeFileSync(path.join(layoutTests, 'SystemTest_copy', 'SystemTest_old_automationCommands.js'), ''); },
     () => fs.rmSync(path.join(layoutTests, 'SystemTest_copy'), { recursive: true }),
     /^TESTS_DIRECTORY_MALFORMED: \S+\/tests\/SystemTest_copy — it has no command file SystemTest_copy_automationCommands\.js, which the harness loads by its name$/],
+  ['a deleted test\'s leftover page beside anything else (here a stray note)', () => {
+    makeTest('SystemTest_stray', []); fs.writeFileSync(path.join(layoutTests, 'SystemTest_stray', 'visualisation.html'), '');
+    fs.writeFileSync(path.join(layoutTests, 'SystemTest_stray', 'notes.txt'), ''); },
+    () => fs.rmSync(path.join(layoutTests, 'SystemTest_stray'), { recursive: true }),
+    /^TESTS_DIRECTORY_MALFORMED: \S+\/tests\/SystemTest_stray — it has no metadata file SystemTest_stray\.js, which the harness loads by its name$/],
 ]) {
   plant();
   let refusal = '';
@@ -111,8 +116,15 @@ for (const [what, plant, unplant, expect] of [
   t.check(expect.test(refusal), `${what} is refused, naming it (${refusal || 'read without refusal'})`);
   unplant();
 }
+// what a DELETED test leaves behind — git keeps the files it ignores: its generated page and Finder's .DS_Store files,
+// at any depth — holds no test, and is passed over
+makeTest('SystemTest_deleted', []);
+for (const rel of ['visualisation.html', '.DS_Store', 'automation-assets/Mac-OS-X/.DS_Store']) {
+  fs.mkdirSync(path.dirname(path.join(layoutTests, 'SystemTest_deleted', rel)), { recursive: true });
+  fs.writeFileSync(path.join(layoutTests, 'SystemTest_deleted', rel), '');
+}
 const names = testNames(layoutTests).join(' ');
-t.check(names === 'SystemTest_a SystemTest_a_b SystemTest_b', `the tests are tests/' directories, sorted (${names})`);
+t.check(names === 'SystemTest_a SystemTest_a_b SystemTest_b', `the tests are tests/' directories, sorted — a deleted test's leftovers passed over (${names})`);
 t.check(macroSources(layout).map((m) => path.basename(m.file)).join(' ') === 'SystemTest_a_automationCommands.js SystemTest_a_b_automationCommands.js SystemTest_b_automationCommands.js',
   'every test\'s command file, by its name');
 t.check(testNameOf('macroX') === 'SystemTest_macroX' && testNameOf('SystemTest_macroX') === 'SystemTest_macroX', 'a word names its test with or without the prefix');

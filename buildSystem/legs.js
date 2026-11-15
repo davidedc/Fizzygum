@@ -127,19 +127,12 @@ const LEGS = [
   // wave with five browser legs it measured 76s once and BLEW a 120s alarm the same day (rc=142,
   // SIGALRM — which reads as a leg failure and costs a serial retry). It scales with the reference
   // count, so keep the headroom generous rather than tracking the measurement.
-  // Rides with the pixel check: check-visualisations --strict requires each committed
-  // visualisation.html to EQUAL what make-visualisation.js produces now (freshness, not just
-  // the resolution half that is already on every build). Same build-vs-commit-point split as
-  // check-refs itself: the cheap structural half gates the BUILD, the fuller one rides a leg,
-  // so a page-template edit is caught at a commit point instead of blocking every inner-loop
-  // build until all pages are regenerated. ~1s, no browser.
   // And the DOCS ratchet (check-doc-narration.js, a hard zero): docs prose must not block a
   // BUILD, so it is checked at the commit point, here, rather than only when someone runs it.
   // The pixel check decodes every reference (~4.1k PNGs): 244-286s inside a gauntlet wave by
   // 2026-11-09, so its alarm sits well above that (it timed out once at 300s under wave load).
   { name: 'refs', waves: ['B'],
     steps: [{ cwd: 'tests', alarm: 420, script: 'scripts/check-refs.js', args: ['--pixels', '--quiet'] },
-      { cwd: 'tests', alarm: 120, script: 'scripts/check-visualisations.js', args: ['--strict', '--quiet'] },
       { cwd: 'fizzygum', alarm: 60, script: 'buildSystem/check-doc-narration.js', args: [] }],
     headline: 'FAIL|verified consistent|consistency FAILED', verb: 'doc-narration' },
   // settle-re-visit standing gate (up-edge endgame close, 2026-07-17): one dpr1 suite pass under

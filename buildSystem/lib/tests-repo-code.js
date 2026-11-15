@@ -30,8 +30,8 @@
 // (macroSources: the macro sends); lib/call-sites.js — the reader behind check-call-arguments.js and
 // census-call-arity.js — (testsRepoFiles); and every reader that walks the tests one by one (THE TESTS, below): the
 // gates check-layering.js [D], check-hand-lists.js, and the tests repo's check-macro-source-discipline.js, aim-census.js,
-// check-tests-syntax.js, check-visualisations.js and check-refs.js; its manifest generator (scripts/lib/tests-manifests.js);
-// its runners and capture tools. Its cases are tests-repo-code-selftest.js.
+// check-tests-syntax.js and check-refs.js; its manifest generator (scripts/lib/tests-manifests.js); its page generator
+// (make-visualisation.js); its runners and capture tools. Its cases are tests-repo-code-selftest.js.
 
 const fs = require('fs');
 const path = require('path');
@@ -79,6 +79,10 @@ function macroCode(text, file) {
 // metadata, `<name>.js`, and its commands, `<name>_automationCommands.js` — the paths AutomatorLoader's _loadTestMetadata
 // and loadTest build from the name. A directory that is not such a test is refused, TESTS_DIRECTORY_MALFORMED naming
 // it, never skipped: the harness would play it, so a reader that passed it over would pass a test it never read.
+// The one exception holds NOTHING git tracks: every file in it, at any depth, is a LEFTOVER the tests repo ignores — a
+// test's generated visualisation.html (scripts/make-visualisation.js), a Finder .DS_Store. That is what a deleted
+// test leaves behind (git removes the files it tracks and keeps the ones it ignores), never a test, so it is passed
+// over; a directory holding anything else beside them is judged as a test.
 // `testsDir` is the tests/ directory (a gate's --tests-dir= rail hands it another).
 //   testNames(testsDir)          every test's name, sorted by code point; [] when there is no tests/ directory
 //   testNameOf(word)             the test a word names: `macroX` and `SystemTest_macroX` both name SystemTest_macroX
@@ -91,9 +95,16 @@ const TEST_PREFIX = 'SystemTest_';
 const commandFileOf = (testsDir, name) => path.join(testsDir, name, name + '_automationCommands.js');
 const metadataFileOf = (testsDir, name) => path.join(testsDir, name, name + '.js');
 const testNameOf = (word) => (word.startsWith(TEST_PREFIX) ? word : TEST_PREFIX + word);
+// the files a deleted test leaves behind, which the tests repo ignores (see THE TESTS, above)
+const LEFTOVER_FILES = new Set(['visualisation.html', '.DS_Store']);
+function onlyLeftovers(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  return entries.length > 0 && entries.every((e) => (e.isDirectory() ? onlyLeftovers(path.join(dir, e.name)) : LEFTOVER_FILES.has(e.name)));
+}
 function testNames(testsDir = DEFAULT_TESTS) {
   if (!fs.existsSync(testsDir)) return [];
-  const names = fs.readdirSync(testsDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort(byCodePoint);
+  const names = fs.readdirSync(testsDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)
+    .filter((name) => !onlyLeftovers(path.join(testsDir, name))).sort(byCodePoint);
   for (const name of names) {
     const refuse = (why) => { throw new Error(`TESTS_DIRECTORY_MALFORMED: ${path.join(testsDir, name)} — ${why}`); };
     if (!name.startsWith(TEST_PREFIX)) refuse(`a directory of tests/ is a test the harness plays, and a test is named ${TEST_PREFIX}<name>`);

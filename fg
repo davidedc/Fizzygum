@@ -328,6 +328,9 @@ cat <<'EOF'
                                             prints the fg classify triage table at the end of the run;
                                             each test x dpr is CHANGED / UNCHANGED / INVALID, and
                                             exit 2 = INCOMPLETE (a dump measured nothing — never "no diff")
+  fg visualise [SystemTest_<name>]          write a test's visualisation.html (its references, metadata
+                                            and macro step comments), or every test's (~0.2 s): generated
+                                            when wanted, never committed
   fg classify [--work=DIR] [--verbose]      ADVISORY triage of the screenshots in a diffpage work dir:
                                             REVIEW vs BENIGN? (a suspected benign shape, e.g. a member
                                             list that only gained a row), with the evidence. Never
@@ -347,8 +350,9 @@ cat <<'EOF'
   fg critique                               ADVISORY code-critique view (~5 s, read-only, never gates):
                                             every ratchet's "tighten me now" + stale-allowlist NOTE,
                                             plus the 5 censuses' summary counts (public/private calls,
-                                            hierarchy duplication, property placement, ARGUMENT HOLES
-                                            -- what `positional-hole` cannot see -- and WIDGET
+                                            HIERARCHY DUPLICATION, whose identical-override subset
+                                            also gates the build at zero, property placement, ARGUMENT
+                                            HOLES -- what `positional-hole` cannot see -- and WIDGET
                                             CONFORMANCE, whose 2 ratcheted facets also gate the build
                                             at a non-zero FLOOR). The
                                             Critic Browser analogue. jscpd/jsinspect stay on-demand.
@@ -498,6 +502,11 @@ case "$cmd" in
       2) ban "DIFFPAGE INCOMPLETE — some group is INVALID (or an image is undecodable/unpaired): do NOT read the page as 'unchanged' there"; exit 2 ;;
       *) exit "$rc" ;;
     esac ;;
+  visualise)
+    # Write tests/SystemTest_<name>/visualisation.html for one test, or for every test with no argument
+    # (scripts/make-visualisation.js, ~0.2 s for all). A page is a function of its own test's directory, so it is
+    # generated when it is wanted and never committed (the tests repo's .gitignore); a capture rewrites its own.
+    ( cd "$FT" && node scripts/make-visualisation.js "$@" ) ;;
   classify)
     # ADVISORY ONLY — read-only over an existing diffpage work dir; no browser, no build, no refs
     # touched. Its BENIGN? verdicts are SUSPECTED (no region manifest yet), so they may never be

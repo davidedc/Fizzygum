@@ -576,8 +576,8 @@ AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by
 AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first two took the structure, the build, the harness and the verification tooling, this one takes what the ratchets do not measure: zeros nothing holds, the shape the removed recorder left behind, and tools only a person starts. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §1, §2, §3, §5, §6, §8 and §10 approved, for an unattended loop (the plan's STATUS has the rulings); §4, §7 and §9 left for a later day.
 - [ ] §2 (½ day; ⛔ PARKED 2026-11-15 on a speed trade, the owner decides — §2 "OWNER DECISION"): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (built and proven; one shape makes an eviction ×2.9 slower, the faster one pins memory)
 - [ ] §4 (½ to 1 day; left for a later day by the owner 2026-11-15; ⛔ owner): the `patch-programming-experimental` part — six classes no test builds and no production user can reach; the fanout is redundant now that wires are a list; the product question is whether the diff and regex nodes are wanted (finish them) or not (delete all six)
-- [ ] §5 (1 day; ruled 2026-11-15: generate, do not commit): `visualisation.html` pages are generated, not committed — 375 files and the gate that holds them to their inputs go
 - [ ] §7 (1 to 2 days; left for a later day by the owner 2026-11-15; ⛔ owner on which tools go): on-demand tools — one roster, each proven to start by the `selftests` leg
+- [ ] (filed by U5's review, 2026-11-15; medium) the visualisation page generator now runs only when asked (`fg visualise`, a capture): no build or leg loads it, so a break (a renamed `tests-repo-code`/`macro-sources` export) shows only when someone runs it, and a capture only warns — §7's roster is where it would be proven to start
 - [ ] §8 (1 day; ruled 2026-11-15: shorten and apply the bar to what is filed): this file is an index again — the 2026-11-11 filing bar written down, each item one or two lines, detail in the owning plan
 - [ ] §9 (2 to 3 days; left for a later day by the owner 2026-11-15; ⛔ owner: rename or fold): a test is one file — takes up the round-2 §8 follow-up above; selection facts move to the generated manifest
 - [ ] §10 (4 to 5 days; ruled 2026-11-15: land and push when every proof passes): `fg` as a Node program — its own plan, `plans/fg-node-port-plan.md`, has the process-situation matrix and the ten-step proof
@@ -606,8 +606,8 @@ and `architecture/occlusion-culling.md` §2a. What it deliberately did not take 
   Its follow-ups are filed under "Residue arc 2026-10-16 — follow-ups" below.
 - [ ] (optional, owner to decide) the gauntlet's `refs` leg hits fg's own leg alarm in-wave on a loaded machine
       (twice on 2026-10-15; the second time wave B's legs ran ~280 s each) — a budget question, not a reference
-      problem. ⚠ The log line `Alarm clock: 14` names SIGALRM by its signal NUMBER: the budgets are `to 300`
-      (`check-refs.js --pixels`) and `to 120` (`check-visualisations.js --strict`), not 14 s.
+      problem. ⚠ The log line `Alarm clock: 14` names SIGALRM by its signal NUMBER: the budget is the alarm
+      `buildSystem/legs.js` gives `check-refs.js --pixels`, not 14 s.
 
 ### Residue arc 2026-10-16 — follow-ups (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
 - Six of its follow-ups are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16 — its six
