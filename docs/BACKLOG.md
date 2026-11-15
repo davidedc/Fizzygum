@@ -571,6 +571,19 @@ AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by
 - [ ] §8 follow-up (⛔ owner ruling): each test's `_automationCommands.js` now holds only its macro sources, so its name no longer says what it holds — rename it (e.g. `_macro.js`), or fold it into the metadata file; the loop kept the name (its brief), since a rename touches the two definitions of a test's files, every runner and 389 directories
 - [ ] §10 (1 to 2 days, then 3; left out for now by the owner 2026-11-13): the reference set — a path made of the live axes (five single-valued segments and the user-agent spoof go); then one file per reference (the `.js` copies, 45.8 MB, and the reference loader go; needs §4 decided)
 
+### `plans/top-10-cleanups-round-3-plan.md`
+AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first two took the structure, the build, the harness and the verification tooling, this one takes what the ratchets do not measure: zeros nothing holds, the shape the removed recorder left behind, and tools only a person starts. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §1, §2, §3, §5, §6, §8 and §10 approved, for an unattended loop (the plan's STATUS has the rulings); §4, §7 and §9 left for a later day.
+- [ ] §1 (½ day): overrides that override nothing — 8 methods identical to the one they inherit, 2 empty event subclasses, 6 recorder comments; the census's `super`-free subset becomes a build gate at zero (the census itself stays advisory)
+- [ ] §2 (½ day): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (hot path: measured first)
+- [ ] §3 (½ to 1 day; ruled 2026-11-15: npm-pinned, `npm ci`): one pinned toolchain — the build runs the `coffee` and `terser` its lockfile names, not the globally installed ones
+- [ ] §4 (½ to 1 day; left for a later day by the owner 2026-11-15; ⛔ owner): the `patch-programming-experimental` part — six classes no test builds and no production user can reach; the fanout is redundant now that wires are a list; the product question is whether the diff and regex nodes are wanted (finish them) or not (delete all six)
+- [ ] §5 (1 day; ruled 2026-11-15: generate, do not commit): `visualisation.html` pages are generated, not committed — 375 files and the gate that holds them to their inputs go
+- [ ] §6 (1 day): the three Automator test switches become one question, and the shipping teardown's call into the harness goes (measured first)
+- [ ] §7 (1 to 2 days; left for a later day by the owner 2026-11-15; ⛔ owner on which tools go): on-demand tools — one roster, each proven to start by the `selftests` leg
+- [ ] §8 (1 day; ruled 2026-11-15: shorten and apply the bar to what is filed): this file is an index again — the 2026-11-11 filing bar written down, each item one or two lines, detail in the owning plan
+- [ ] §9 (2 to 3 days; left for a later day by the owner 2026-11-15; ⛔ owner: rename or fold): a test is one file — takes up the round-2 §8 follow-up above; selection facts move to the generated manifest
+- [ ] §10 (4 to 5 days; ruled 2026-11-15: land and push when every proof passes): `fg` as a Node program — its own plan, `plans/fg-node-port-plan.md`, has the process-situation matrix and the ten-step proof
+
 ## Residual / parked items (owning doc archived)
 
 ### Pointer hit-test rework 2026-08-21 — residue (no plan doc; the arc ran assessment → execution)
