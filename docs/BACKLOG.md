@@ -250,6 +250,19 @@ AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by 
 - [ ] The visualisation page generator runs only when asked (`fg visualise`, a capture): no build or leg loads it, so a break shows only on use and a capture only warns — medium; the §7 roster would prove it starts. → "The visualisation page generator runs only when asked"
 - [ ] §9 (2 to 3 days; left for a later day by the owner 2026-11-15; ⛔ owner: rename or fold): a test is one file — takes up the round-2 §8 follow-up above; selection facts move to the generated manifest
 
+### `plans/top-10-cleanups-round-4-plan.md`
+AUTHORED 2026-11-15, the fourth SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). The source reads clean on every instrument, so seven of the ten are in the tooling and the harness: what the `fg` port's equality rule froze, work that is done twice, and build profiles nothing builds. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §9 left for a later day; the other nine approved along the survey's recommendations, for an unattended loop (the plan's STATUS has the rulings).
+- [ ] §1 (¼ day; ruled: yes, taken last): the stopped cleanup surveys leave `plans/` for `archive/`, this one included — 278 KB, a quarter of the folder; their waiting items stay in this file
+- [ ] §2 (½ day): `fg` says what it does — five stale usage lines and one missing; `fg status` asks `buildStaleness()`; `fg` asks `lib/profile.js` in-process; closes three lines of this file
+- [ ] §3 (½ day; ruled: they go if no production artifact grows by more than 2 KB): the build's last text-level strip — four `sed` lines turn six compiled `Automator?` tests into `if (false)`
+- [ ] §4 (½ day; ruled: npm): build-time libraries from one place — acorn and the complexity analyzer are vendored, the other tools npm-pinned; the analyzer exists twice, byte for byte
+- [ ] §5 (½ to 1 day): one SHA-256 in the harness — the hand-written one (89 code lines) re-hashes pixels the browser's digest already answered; its two callers take the digest or compare bytes
+- [ ] §6 (1 day): gate rows run side by side, and the tests syntax gate parses in-process — the gates are 58 s of a 60 s build, 11.5 s of it 778 `node --check` launches; supersedes the mask-cache line
+- [ ] §7 (1 day; ruled: lands only if not slower): text cache keys are the text — takes up the 32-bit `hashOfString` collision line under the runtime-performance plan; and the line-break key gains the fitting mode it omits (probed: a paragraph's layout throws)
+- [ ] §8 (1 day): audit preludes share one head — 17 copied blocks (170 lines) across 13 page-injected instrument files; `lib/audited-suite.js` joins the shared head to each
+- [ ] ⛔ §9 (1 to 1½ days; left for a later day by the owner 2026-11-15; owner: which profiles are products): no verb, leg or gate builds `lean`, `dev-notests` or `dev-precompiled`
+- [ ] §10 (2 to 3 days; ruled: lands when every proof passes): the build is one Node program — 260 lines of bash, the `--shell` bridge, the hand list `SHELL_INPUTS` → `plans/build-node-port-plan.md`
+
 ## Residual / parked items (owning doc archived)
 
 ### Pointer hit-test rework 2026-08-21 — residue (no plan doc; the arc ran assessment → execution)
