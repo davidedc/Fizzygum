@@ -555,3 +555,15 @@ messages and wait (Phase-0 of this program already has a pending commit; coordin
       assertion-only macro test (6 assertions: registry populated, parent-knows-child,
       inherited-property propagation fires, the redefinition guard holds and is non-vacuous),
       running on both engines in every suite pass.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### OWNER DECISION: a failed async door tells the user nothing
+
+- [ ] **OWNER DECISION (2026-08-21, from the async-rejection sweep): a failed async door tells the user NOTHING.** Every product promise chain was swept for missing `.catch` (13 `.then` in `boot/globalFunctions.coffee`, 10 in `PartsRegistry.coffee`, 3 each in `WorldWdgt.coffee` and `boot/loading-and-compiling-coffeescript-sources.coffee`, 2 in `Widget.coffee`, 1 each in `FileLoading`/`DemoMenus`/`VideoPlayerWithRecommendationsWdgt`/`SWCanvasElement-extensions`). ⭐ **The sweep's finding is that these are NOT N defects** — the subsystem has thought about rejection and handles the parts that matter: `PartsRegistry` neutralises unhandled rejections centrally (`inFlight.catch -> undefined`), `canEverProvideClass` keeps an icon off screen when its part can never arrive (the `lean` dead-icon rule), `whenOptionalPartsLoaded` exists precisely so a door cannot become "a click that can only reject", and `loadWorldSnapshot` bails out BEFORE mutating so a failed load "leaves the user with nothing instead of the desktop they still have". What is uniformly absent is USER FEEDBACK: on a TRANSIENT failure of a part the build does ship (a bad read over `file://`, a corrupt part file), the click silently does nothing — consistently, everywhere, which is what suggests it is a decision rather than an oversight. The question is whether a failed door should `inform`, and it is a product call. ⚠ Note this is a DIFFERENT shape from the `saveFailedScreenshots` bug fixed the same day: that one was PARTIAL failure discarding work that had already succeeded, which is a bug on any reading; these are all-or-nothing by design. The two FILE doors are settled: a drop or "Open from file…" reports a load's asynchronous failure as it reports a synchronous one (`FileLoading._reportingSerializationErrors`, argument-holes ledger, "The widget-file door never loads the lazy part a file needs"). The question stands for every other async door.
+
+### StorageSorter-roots unification (plan D2's stated non-goal)
+
+- [ ] StorageSorter-roots unification (plan D2's stated non-goal): `StorageSorter._runClassifier`'s
+      phases build their own root/marking enumeration — examine folding it onto
+      `WorldWdgt.graphLivenessRoots()` in a dedicated pass, NOT by side-effect of another arc.

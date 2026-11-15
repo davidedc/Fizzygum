@@ -483,3 +483,14 @@ or the §5/§6 ledgers as a whole.
       revisit-trace preludes, census-nosettle-naming — which also hand-lists the repaint verbs `lib/repaint-verbs.js`
       now owns —, heap-forensics roots, smoke-boot).
 - [x] Tier 4 (§6): the standing guard — allowlists report unused entries; a hand-list gate; the doctrine.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### Tier 4's residue (plan §6 ledger):
+
+- [ ] **Tier 4's residue (plan §6 ledger):**
+  - [ ] **The four LiveCodeLang vocabulary lists are the hand-list gate's whole Fizzygum baseline (4)**
+        (`LCLCodePreprocessor`'s `qualifyingCommands` / `primitives` / `commandsExcludingScaleRotateMove` /
+        `colorCommands`): they mirror the commands `FridgeMagnets3DCanvasWdgt` implements, and only six of the 29 are
+        exercised by a test. Their guard is `plans/livecodelang-cleanup-and-extensions-plan.md`'s R1 (the
+        headless preprocessor gate reading the canvas's methods); then sanction them and drop the baseline to 0.

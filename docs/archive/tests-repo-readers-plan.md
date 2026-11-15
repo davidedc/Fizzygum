@@ -475,3 +475,11 @@ Execution order: Unit 0 → Unit A → Unit C → `census-call-arity` adopts →
       way. Adopting the reader may unmask findings of each gate's own (dead methods first), so each is its
       gate's arc: measure, then triage. (Section "archive/typed-code-saves-residue-plan.md".) — CLOSED here: the
       Mandate's Units.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### `census-property-placement`'s exclusion 1 counts every WORD inside any string
+
+- [ ] **`census-property-placement`'s exclusion 1 counts every WORD inside any string** (`STRING_WORDS`, 3429)
+      as a possible by-name access. By the method-reference rule (`buildSystem/lib/method-references.js`) only a
+      whole-name string can reach a member. Advisory census; its tests-repo reading is already right.

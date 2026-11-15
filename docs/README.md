@@ -29,10 +29,12 @@ all arcs, each linking to the plan section that owns the detail).
 2. **Arc closes → `git mv` the plan to `archive/`**, stamp a status header
    (COMPLETE/FALSIFIED/PARKED + date + one line), add its line to
    `archive/INDEX.md`, and remove its items from `BACKLOG.md` — closed entries
-   move VERBATIM into a trailing `## BACKLOG ledger (closed items, moved from
-   docs/BACKLOG.md)` section of the plan that CLOSED them, beside how they
-   closed, naming the section an item was filed under when that is another
-   plan's. An item closed without
+   move VERBATIM into the `## BACKLOG ledger (closed items, moved from
+   docs/BACKLOG.md)` section near the end of the plan that CLOSED them, beside
+   how they closed, naming the section an item was filed under when that is
+   another plan's. An item whose full text sits in a `## BACKLOG detail`
+   section (rule 5) moves from there, and its one index line is deleted. An
+   item closed without
    a plan of its own goes to the plan whose section held it; one whose arc
    never had a plan, into `archive/backlog-closed-items-ledger.md`.
 3. **Durable residue goes to `architecture/`.** If an arc changed how a
@@ -44,9 +46,27 @@ all arcs, each linking to the plan section that owns the detail).
    `architecture/` (rewritten present-tense) with the original archived.
 5. **Deferred/open items always have a `BACKLOG.md` line** pointing at the
    owning plan section — including items whose plan is archived (PARKED).
+   The file is an INDEX: an item is ONE line — what is wrong or what is to
+   do, then its reach or severity — and its full text lives in a trailing
+   `## BACKLOG detail (open items, moved from docs/BACKLOG.md)` section of the
+   plan its BACKLOG section names (an arc with no plan file:
+   `archive/backlog-open-items-detail.md`), under a heading equal to the
+   item's bold title; the line ends in `→` and the file, or the quoted
+   heading, only where either differs. An item whose whole text fits one line
+   is only that line (its plan's own section holds the rest), and a section
+   with no open item left leaves the index, its note moving to its plan's
+   ledger. `check-doc-narration` holds an item's length to a ceiling
+   (`BACKLOG_ITEM_TOO_LONG`). **The bar (owner,
+   2026-11-11):** an item is filed only if a person reaches it through the
+   product (a gesture, or a file a save writes) and would notice the
+   consequence, or if it is medium or worse whatever its reach (a crash or a
+   hang, lost work, code run unasked, a gate or rig that can hang or flake or
+   whose bite is unproven). A low finding nobody reaches gets one line in the
+   owning plan's `## BACKLOG ledger`, "noted, not queued", never a backlog line.
 6. **Archive is immutable.** Don't edit archived docs except to correct a
-   status stamp or to receive closed items under rule 2; supersede, don't
-   rewrite.
+   status stamp, to receive closed items under rule 2, or to receive an open
+   item's detail, a BACKLOG section's note or a "noted, not queued" line
+   under rule 5; supersede, don't rewrite.
 
 ## Architecture docs
 

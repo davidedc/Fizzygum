@@ -109,3 +109,13 @@ over its own corner.
   flag saying so does not survive the save.
 - ⭐ **A rule stated as one query is cheap to keep true.** The strip, the grip and the view-mode ruling all answer
   `HandleWdgt.wouldShow`, so they cannot disagree about whether a window can be resized.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### Owner's call — a floating toolbar wears the window strip
+
+- [ ] Owner's call, stands at "one rule" until told otherwise — a floating toolbar is a window, so it wears the strip: a floating row goes from 103 to 145 px tall and gains 31 px of run. The alternative, a floating toolbar without a strip, needs back the keep-clear code this arc retired (`_farAlongPadding`, `cornerResizerFootprint`, the frame's corner chain) and a second grip look. Comparison pictures were shown to the owner in the arc.
+
+### Observation — a window added by code into a view-mode window
+
+- [ ] Observation — a plain panel already holding a window, added by code to the content of a window in view mode, leaves that inner window's grip showing until the outer window next changes mode: a mount re-asks the window being mounted and a mode change walks down to every window in the content (`FrameWdgt._noteMyModeToWindowsInMe`), but here only the panel is added, so no window is told. No gesture reaches this, since a window in view mode refuses drops.

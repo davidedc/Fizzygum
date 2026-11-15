@@ -640,3 +640,9 @@ In `drop: ->`, immediately inside `if @isThisPointerFloatDraggingSomething()` (b
 
 (The `gapCreditTotal` fields refer to the RETIRED v1 mechanic — kept so re-runs stay comparable with the §2
 telemetry; the live decision metric is `finalStillGap`-style elapsed event-time.)
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### InternalVsExternalWindowDrop's unarmed drop can arm under load
+
+- [ ] `archive/drag-embed-implementation-plan.md` (dwell-to-arm; case law `../../Fizzygum-tests/DETERMINISM.md` §3k): `SystemTest_macroInternalVsExternalWindowDrop`'s UNARMED drop is §3k's bug class — it carries the window, waits `waitNoInputsOngoing`, then clicks, and the click is stamped from the cycle that wait ends in, so under load the hold crosses `dwellToArmMs` (450) and the window nests. Seen once (2026-11-12, the mixin-removal loop's U2 gauntlet, its tiernaming leg's parallel wave: "the unarmed window landed on the world, not nested in the panel under it — expected: true found: false", images 1–3; passed the serial retry; log kept at `Fizzygum-tests/.scratch/mixin-removal-loop/u2-clipping/tiernaming-parallel-fail.log`). Fix per §3k: schedule the release in event time in the same step as the carry (`@clickAfterHoldingStill_InputEvents`), then confirm image_1 byte-identical.

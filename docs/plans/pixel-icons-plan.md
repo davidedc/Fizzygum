@@ -951,3 +951,9 @@ classes.
   `swcanvas-reproduces-what-native-hides`, `fizzygum-runtime-backend-swcanvas`.
 - Owner brainstorm (2026-07-17 session): problems 1–3, chunky-pixel reframe, locked decisions
   (a)/(b)/(c) — summarized in §0; this doc is the durable record.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### §5 pre-step: owner re-judges the convert list
+
+- [ ] §5 pre-step: owner re-judges the convert list against the crispness-audit tiers (`measurements/vector-icon-crispness-audit-2026-07-19.md` §7) — per icon now a THREE-way choice: keep-vector / pixel-grid / size-aware redraw (§5b; 9 icons LANDED by 2026-07-22 on the shared `SizeAwareIconAppearance` base — Typewriter/Folder/ShortcutArrow, super-toolbar, generic-panel, patch-programming, simple-slide, dashboards, Bin; process = local skill `/convert-icon-size-aware`)

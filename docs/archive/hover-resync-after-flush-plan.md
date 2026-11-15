@@ -357,3 +357,9 @@ recorded here so a future fix arc is cold-executable:
   mismatching converter (ELIMINATE) and exit 0 with a crashing converter (CONVERT). A fix that trades careless pushes for
   broken tests currently PASSES the gate. Fix: the gate should also fail on `suite runner exit != 0` (it already captures
   `suite_rc`). The paint-readonly gate shares the shape — check it too.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### The capstone gate's paint-time half has the push-count-only weakness
+
+- [ ] `archive/hover-resync-after-flush-plan.md` § CAPSTONE GATE WEAKNESS note: the capstone's paint-time half (the paint-read-only audit, which now rides the capstone pass) shares the careless-push-count-only weakness — still open backlog

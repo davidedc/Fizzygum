@@ -672,3 +672,9 @@ Items of `docs/BACKLOG.md` this arc closes (they leave that file when it lands):
   page (§6d): one connection block per text, from the shared builder, last, on every page.
 - [x] Two observations found verifying §6d (§6e): the label row lookup fails by name and has a query twin;
   the over-tall-menu test's wheel reaches the end again, its claim asserted by value.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### Observation — a number wider than its column shows ellipsised
+
+- [ ] Observation — a number wider than its column shows ellipsised ("12345…"), since numbers never spill (R12): a reader can take the shown digits for the value. Mainstream spreadsheets show `###` or switch to scientific notation; which one fits here is the owner's call. The formula bar shows the cell's source, so a computed value is shown nowhere in full.

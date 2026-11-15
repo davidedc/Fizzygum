@@ -394,3 +394,9 @@ arc's items leave BACKLOG when it closes). Nothing above this line changed; any 
 arc still OPEN stayed in `docs/BACKLOG.md`.
 
 - [x] `archive/atlas-delay-fuzz-tool-plan.md`: promote the glyph-atlas delay injector from a gitignored `.scratch/` prototype to `scripts/audit-preludes/atlas-delay-prelude.js` + `scripts/run-atlas-fuzz.js` + a local `fg fuzz`. **✅ EXECUTED 2026-07-29 — built, gated, verified** (plan §9). Fault-injects the lazy-atlas timing to find pixel reads NOT covered by the text-settle gate — the invariant has been violated 3× (DETERMINISM.md §3g ×2 rigs, §3i). ⚠ the non-negotiable piece is the VALIDITY GATE (3-state PASS/FAIL/INVALID + mandatory proof-of-injection): the prototype produced 4 invalid runs in one morning, 3 of them printing `failed: 0`. ⛔ NOT a gauntlet leg (owner-declined 2026-07-29: nondeterministic by construction). Extension §3.4 covers the two serialization rigs, the paths that actually broke.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### fg fuzz has NO working regression fixture
+
+- [ ] `archive/atlas-delay-fuzz-tool-plan.md` §9: `fg fuzz` has NO working regression fixture — §5 test 3 (revert flake A's `waitForScreenshotReady` and expect a catch) does not reproduce: 13/13 passes under injection AND 3/3 with none, because a fresh page makes ~1 `loadFont` call against a ~one-frame window. A fixture needs a scenario with MANY atlas loads and a pixel read near one of them. Until then the tool's own failure paths are covered only by the canned-transcript corpus (`npm run selftest`) plus the two live INVALID drills.

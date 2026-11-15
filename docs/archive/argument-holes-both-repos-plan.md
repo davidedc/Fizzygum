@@ -3596,3 +3596,420 @@ for (const s of sites) if (s.absentBefore.length) {
       about a shortcut), read the question's absence now (plant: a Save that stores unchecked fails it). Recaptured: the object
       inspector's member list in `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly` (a new `Widget` member adds
       a row; every shot looked at first), mouse and finger, dpr 1 and 2.
+- **The W3 plan's grep for typed arrays in `src/serialization/` now finds a predicate** (found by the independent
+      review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's ledger; by
+      reading; low). `docs/plans/wire-vocabulary-extensions-plan.md` reads the grep as 0 hits; it now finds 2 lines in
+      `NativeValueKinds` (`isBuffer`'s comment and code: a predicate the Duplicator and `WorldInventory` ask — still no
+      serializer arm, as the plan's S1 says).
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **Both walkers drop an Array's or a buffer's own extra properties, by no stated rule** (found by the second
+      independent review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's
+      ledger; by reading; low). `_copyArray`, `_copyBuffer` and the Serializer's `$Array` carry the items and nothing else.
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **`_runChildrensStepFunction` walks no children** (found by the independent review closing "Widget's `step`
+      documentation is false", in the plan's ledger; by reading; low). `WorldWdgt._runChildrensStepFunction` walks the
+      flat `world.steppingWdgts`; its name, and six docs that cite it (`Fizzygum/CLAUDE.md` spells it without the
+      underscore), still describe the tree walk it replaced. Its comment says a member removed mid-walk is fine, and
+      not that one ADDED mid-walk (`Set.forEach` visits it) steps in the same frame.
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **An auto-scroll's step is told a press's end as a stroke's would be** (found by the independent review closing
+      "A viewport's gesture bookkeeping outlives its gesture", in the plan's ledger; by reading; low).
+      `ViewportWdgt.pressEnded` / `pressCancelled` call whichever `_scrollStep` is installed with a point; an
+      auto-scroll's step takes none, so a press ending on a pane that is auto-scrolling runs one more auto-scroll frame.
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **A test's provenance says the edge auto-scroll is suppressed under the pacing control** (same review; by
+      reading; low). `SystemTest_macroScrollPanelDragToScrollFlags`'s provenance (and its visualisation page) says so,
+      and names the retired `world.wdgtsWithOngoingScrollMomentum`; the auto-scroll is not suppressed (its contract is
+      saturation, DETERMINISM.md §3m).
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "A viewport's gesture bookkeeping outlives its gesture".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **Some envelope fields are type-checked only** (found by the same review; by reading; low). `formatVersion`
+      (missing, a string), `kind` (any value but "world" restores with fresh ids), `wallpaperPatternName` (any
+      string), a user's `armedDrawingTool` (any string), and unknown section or record fields pass unread.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "The load vets the whole envelope up front".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **A record sharing a surviving widget's id loads** (same review; by reading; low). Neither iid rule sees the widgets
+      a load keeps (the hand): a corrupt file's `ActivePointerWdgt` record of iid 1 restores a second widget sharing the
+      hand's `uniqueIDString`.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "Duplicate or over-counter iids load".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **The load restores a `WorldWdgt` counter no save writes** (same review; by reading; low).
+      `Serializer.collectIdCounters` skips `WorldWdgt`, but `loadWorldSnapshot`'s step 2 writes any class's key from
+      `.idCounters`, and the vetting does not refuse that one.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "Duplicate or over-counter iids load".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **A widget file's records are indexed by saved ids its load reassigns** (same review; by reading; low).
+      `Deserializer.deserialize` pass 1 indexes every record by its saved iid for `{"$ext"}` (a world file's form),
+      though a widget file's pass 3 gives each a fresh id.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "Duplicate or over-counter iids load".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **A lazy part's class is judged after the world door's confirm** (same review; by reading; low; pre-existing).
+      The reasons that need the class (a method's source, an app key, the two iid rules) wait for its part, so a
+      person can confirm replacing the desktop and only then be refused, after the part's fetch.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "Duplicate or over-counter iids load".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **`Deserializer.deserialize` on a world file answers no widget and refuses nothing** (same review; by reading;
+      low; pre-existing). Called directly on a `kind:"world"` envelope it answers `widget: shells[undefined]` (a world
+      file has no root); only `loadWorldSnapshot` reads one.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing the serialization cleanup — "A user object with an own `$wk` key saves and then is refused" and three more.)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **A restored world's asset reload that fails is an unhandled rejection** (same review; by reading; low).
+      `result.whenReady?.then? => @_fullChanged()` (`WorldWdgt.loadWorldSnapshot`) has no rejection handler.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "A page member the load could not return to boot runs in the loaded world but is recorded nowhere".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **The serialization reference numbers the load's steps apart from the code** (same review; by reading; low).
+      §11 counts the restore 1–5 where `loadWorldSnapshot` counts 0–9, and the notice's paragraph sits under its step
+      1 ("before anything changes") though the return and the replays run after the teardown.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "A page member the load could not return to boot runs in the loaded world but is recorded nowhere".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **Test macro sources are outside every stink's reach** (found by the independent review closing "The wall-clock
+      stink does not see `performance.now()`", in the plan's ledger; by reading; low). `check-stinks.js` reads the
+      compiled sources (`lib/source-files.js` `compiledFiles`: src and the harness); a macro body is CoffeeScript held
+      in a `tests/` template literal, which the gates that read macros (`check-macro-source-discipline.js`,
+      `check-call-arguments.js`, …) hold to other rules, so a macro that decides something on `Date.now()`,
+      `performance.now()`, `Math.random()` or a timer has no gate. No macro reads a clock
+      today (three mention one, in prose).
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **A member written inside a block (a prototype extension, a boot function) is `(top)` to a stink's sanction** (same review; by reading;
+      low). `check-stinks.js` names a member from a class-body key or from the code at the left margin; two of
+      `String-extensions.coffee`'s prototype extensions, and `window.hashOfString` (inside `globalFunctions.coffee`'s
+      `do ->` memo block), sit indented under a block, so a sanction there could not name its method. No stink hits one
+      today.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "The wall-clock stink does not see `performance.now()`".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **Every test's metadata header still calls a macro test "the new style"** (found by the independent review closing
+      "The automator event commands' constructors are code nothing runs", in the plan's ledger; by reading; low). 387
+      metadata headers say "(the new style)", though macros are the only style and the recorder is gone: a mechanical
+      comment edit over the metadata file of every test. (The `_automationCommands.js` headers were re-emitted without
+      it by `plans/top-10-cleanups-round-2-plan.md` §8.)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+- **No gate holds a commands-file header to its own test** (same review; by reading; low). A header names its
+      metadata file (`(<Name>.js)`), and a header copied from a sibling test would name the sibling's: nothing checks
+      it. Every header names its own test today (round 2's §8 re-emitted all 389 from each test's name); a new test's
+      author copies one by hand.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "The automator event commands' constructors are code nothing runs".)
+  — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### Every gate re-masks all of the compiled sources
+
+- [ ] **Every gate re-masks all of the compiled sources** (found closing "Every build tool walks src for itself", in
+      the plan's ledger; measured). Masking src takes
+      about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
+      build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
+
+### Nothing keeps the similar-code mirror working
+
+- [ ] **Nothing keeps the similar-code mirror working** (found closing "`find_similar_code.sh` stops at its mirror", in
+      the plan's ledger; measured; a trade-off, not queued by the loop). `buildSystem/coffee-to-js-mirror.js` compiles
+      the tree with CoffeeScript 1 for `find_similar_code.sh`, and no build or gate runs it, so a construct the two
+      compilers read differently stopped the scan unnoticed from f002a7b7 (2026-08-16) to 2026-11-10. Holding every source to the
+      mirror on each build would cost the mirror's run (a few seconds) per build: whether that is worth it is the same
+      question as "Every gate re-masks all of the compiled sources".
+
+### A booted-true wait that saw the world but not boot's end
+
+- [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** (found by the
+      independent review closing "The rigs wait for their pages to boot a dozen ways", in the plan's ledger; by
+      reading). `startedWithin` has one line for every predicate, so a world standing whose boot never finished (a
+      rejected layer load, `stillLoadingSources` stuck) reads "did not start within 90s", where the boot smoke's own
+      wait used to say it did not finish booting.
+
+### The profiling scripts boot their pages their own way
+
+- [ ] **The profiling scripts boot their pages their own way** (same review). `docs/profiling/prof-run.js` and
+      `prof-interactive.js` keep their own world waits and "did not become ready" line, outside the shared boot wait.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "The rigs wait for their pages to boot a dozen ways".)
+
+### `fg`'s selftests-leg budget comment and its `run-sequence` usage are stale
+
+- [ ] **`fg`'s selftests-leg budget comment and its `run-sequence` usage are stale** (same review; by reading).
+      `fg`'s comment budgets the leg at about 153 s alone and 212 s in a
+      loaded wave A (measured 326 s on 2026-11-11, the smoke-apps self-test its longest file now that its two
+      never-starting pages wait the shared 90 s each), and its `run-sequence` usage does not say the runner now refuses a
+      stale build.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "The rigs wait for their pages to boot a dozen ways".)
+
+### `fg status` reads build freshness from the sources alone
+
+- [ ] **`fg status` reads build freshness from the sources alone** (found closing "Build freshness reads only the
+      sources' mtimes", in the plan's ledger; by reading).
+      The runners now ask `Fizzygum/buildSystem/lib/build-inputs.js` (the files the build's output is made from)
+      against `.build-stamp`; `fg status`'s `build: FRESH/STALE` line still compares the sources' mtimes on its own, so
+      an edit of `parts.json`, `src/index.html`, `vendor/` or the build's Python still reads FRESH there while every
+      runner refuses the build. It could ask the same definition (`node -e` over build-inputs.js).
+
+### A hand-list sanction can cite a script that judges nothing
+
+- [ ] **A hand-list sanction can cite a script that judges nothing** (found by the independent review closing "Every
+      tool walks the tooling's own files for itself", in the plan's ledger; by reading; low). `check-hand-lists.js`
+      accepts as a guard any existing gate-file NAME that the run set holds, and the run set holds every launched or
+      required script: a required library (`coffee-mask.js`) or a script that states `not-a-gate` (the tests repo's
+      `generate-tests-manifests.js`, `recompress-swcanvas-references.js`) is citable, so a sanction can name a "guard"
+      that checks nothing. The gate census (`run-selftests.js` `gateCensus`) knows the true gate set.
+
+### A widget file runs the code it carries at load, with no confirm
+
+- [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
+      loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
+      `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function
+      literal: a file whose method source is `(window.x = 1; -> 42)` set `window.x` on load, through the drop and
+      "Open from file…". The world door asks first ("…can run code the snapshot carries"); the widget door asks
+      nothing. Whether a widget file carrying a `{"$src"}` should confirm, or a `{"$src"}` be held to a function
+      literal, is a product call.
+
+### A save refused for a function a run left does not offer its way out
+
+- [ ] **A save refused for a function a run left does not offer its way out** (found closing "A run that sets a
+      widget field to a function blocks every world snapshot", in the plan's ledger; OWNER DECISION). The refusal names
+      the widget, the field and the gestures that clear it (an inspector's Remove, or its Save as
+      CoffeeScript), and every later save is refused until the person takes one. Whether the refusal should also
+      OFFER that way out (a button that removes the field, or opens an inspector on the widget), whether a save
+      should instead LEAVE such a function out and say so (a told drop, against the serializer's "never a silent
+      drop" unless a told drop is ruled not silent), or whether a run should WARN when it leaves one, is a UX call.
+
+### An object inspector's Inherited filter hides values under superclass names
+
+- [ ] **An object inspector's "Inherited" filter hides a value a widget holds under a name a superclass declares**
+      (found by the independent review closing "A run that sets a widget field to a function blocks every world
+      snapshot", in the plan's ledger; measured 2026-11-10 and PARKED for the owner: a design question). With
+      "Inherited" off (the default), `InspectorWdgt._filteredMemberNames` keeps a member only if the subject's own
+      class's prototype declares it or no prototype up the chain does, and "Own props only" narrows that further: an own
+      VALUE under a name a superclass declares counts as inherited, and `memberFactsOf` dims it. So a run's
+      `@step = -> …` (`Widget` declares `step`) is listed only with Inherited on, and so is every widget's own state
+      (`parent`, `bounds`, `color`, …): measured, a rectangle lists 1 row by default and 0 with "Own props only" while
+      owning 14; a text hides 23 own props, the world 24. The serializer's refusal of a run's function names this
+      inspector as the way out. What "Inherited" and "Own props only" mean for an own value is the inspector's design;
+      the dimming half is also one of "W3 follow-up"'s owner-review points (below). Options: keep (the remedy text then
+      says "turn on Inherited"); a value the subject holds is never inherited (the default list gains every own prop,
+      +10–24 rows on common widgets); "Own props only" lists every own prop whatever "Inherited" says (the default list
+      unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
+      2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
+      member it inherits".)
+  (Moved here from docs/BACKLOG.md, where "below" meant "W3 follow-up", now `archive/redesign/redesign-plan.md`, "W3 follow-up — the owner-review points W3 left open".)
+
+### A pre-compiled tree's replaced member reads as its class's source
+
+- [ ] **On a pre-compiled tree, a member a run replaced before the reflective layer arrived reads as its class's
+      source** (found by the independent review closing "A run that replaces a class's member reads as a recorded
+      source it no longer runs", in the plan's ledger; reached on `homepage` / `dev-precompiled`: Run `X::m = -> …` in
+      a desktop text, then open the first inspector). The layer ingests each class beside the code the image runs
+      (`Class._keepMyMembersRecords`) and keeps a record for whatever function the prototype holds then. Telling a
+      run's function from the image's by its NAME was tried and FALSIFIED by the production smoke: the image is
+      minified (`terser --compress --mangle`), which drops function-expression names, so every image member is
+      anonymous too. A FIELD a run wrote before the layer arrived reads the same way (the ingest keeps the value the
+      prototype holds then as the field's record, `Class.keepFieldRecord`, and a value has no identity at all), which
+      the field half of "A class inspector's field row reads its record by NAME" left here. Options (a trade-off, the
+      owner's): keep function names in the image (`keep_fnames`; bytes unmeasured) and skip anonymous functions at
+      ingest; a boot-side note of the functions (and field values) the image made, kept as it defines each class; or
+      accept it.
+
+### A wrapped member reads as compiled text
+
+- [ ] **A wrapped member reads as compiled text, which the Smalltalk talk plan says it never does** (same review;
+      reached by the plan's U2 MethodTally, which wraps every own function member of the profiled classes).
+      `docs/plans/smalltalk-talk-2026-11-plan.md` (S1, its §"selectionFromList shows the recorded CoffeeScript") relies
+      on the inspector reading a member's source by name; it reads the source kept with the FUNCTION, so a wrapper
+      shows its compiled JavaScript. Forwarding the record onto a wrapper (`Class.keepMemberRecord wrapper,
+      Class.memberRecordOf original`, public) or accepting compiled text: the plan's owner's call.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "A run that replaces a class's member reads as a recorded source it no longer runs".)
+
+### The world's inspector offers to edit its browser listeners
+
+- [ ] **The world's inspector offers to edit its browser listeners** (found by the independent review closing "A run
+      that sets a widget field to a function blocks every world snapshot", in the plan's ledger; by reading). The
+      world's input bridge (`world.browserInput`, a `BrowserInputBridge`) holds its DOM listeners as own function fields
+      (`pointerdownBrowserEventListener`, …), so an object inspector opened on it from the world's inspector lists them
+      with Remove, Rename and Save: changing one leaves the browser calling the old function, and
+      `removeEventListeners` passes the new one, which was never registered — at the next reset the original closure
+      stays attached and keeps the dissolved world alive.
+
+### A function with no kept source shows compiled JavaScript
+
+- [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
+      independent review closing "A run that sets a widget field to a function blocks every world snapshot", in the
+      plan's ledger; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
+      label such a pane, or make it read-only? The same holds, with real CoffeeScript, on a READ-ONLY subject (a class
+      function's statics): the pane is typeable and shows a modified mark, with no Save (noted closing "An object
+      inspector on a class shows its statics as compiled text").
+
+### Three plans teach a stamp without its declaration
+
+- [ ] **Three plans teach a stamp without its declaration** (found by the independent review closing "A runtime
+      object stamped derived is dropped from an inspector holding it", in the plan's ledger; by reading).
+      `docs/plans/creation-and-templates-plan.md` ("and/or stamp"), `dataflow-engine-implementation-plan.md` ("skipped
+      by the copier") and `affine-transforms-plan.md` name a no-op `rebuildDerivedValue` stamp as what keeps a
+      runtime-only object out of a copy; it does so only in a field its class declares in `@serializationTransients`
+      (stamp AND declare — the reference doc §5), else the stamp makes a page object, shared by a copy.
+
+### A runtime object can be stamped only by one class's private helper
+
+- [ ] **A runtime object can be stamped only by one class's private helper** (found by the independent review
+      closing "Nothing holds every stamped field to its declaration", in the plan's ledger; by reading; low).
+      `FridgeMagnets3DCanvasWdgt._keepTransient` holds a stamp to its declarations; a second class stamping
+      `rebuildDerivedValue` by hand has no such check, and nothing restricts where that stamp is written (a shared
+      helper, or a static rule on `rebuildDerivedValue` writes). Its firing is proven only by a scratch plant.
+
+### The field census is blind to `@[name] =` writes
+
+- [ ] **The field census is blind to `@[name] =` writes** (same review; by reading; low).
+      `census-widget-conformance.js` facet 1 (and the other `@field =` scanners) read a literal `@name` write, and their
+      headers state no blind spot for a computed one.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "Nothing holds every stamped field to its declaration".)
+
+### Is an inspector's subject always a page object?
+
+- [ ] **Is an inspector's subject always a page object?** (found by the independent review closing "A runtime object
+      stamped derived is dropped from an inspector holding it", in the plan's ledger; the owner's ruling). A Duplicate
+      deep-copies an ordinary data subject (an array, a plain object, a data-class instance), so the copy inspects a
+      detached clone rather than the live value it was opened on; a widget subject is shared (an outside widget).
+
+### A hook override that skips `super` is unguarded
+
+- [ ] **A hook override that skips `super` is unguarded** (found by the independent review closing "A drag-scroll
+      leaves a viewport holding a function no save can write", in the plan's ledger; by reading). Two toolbars
+      overrode `_reactToBeingCopied` without `super` the moment `ViewportWdgt` gained one, and nothing said so: no gate
+      holds an override of a per-class hook (`_reactToBeingCopied`, `_afterDeserialization`, …) to call the one it
+      shadows.
+
+### A paint that throws and bans no one is told again on every frame
+
+- [ ] **A paint that throws and bans no one is told again on every frame** (found by the independent review closing "A
+      paint that throws after its children blames the last child painted", in the plan's ledger; reached: a class edit
+      that makes a desktop widget's `opaqueCoveredRect` throw — the world's occlusion scan meets it before any widget
+      paints — or one that makes the world's own paint throw). The retry loop ends on a pass that bans no one new, so
+      the page goes on, but nothing is banned: the next frame's paint throws the same way, and each error is added to
+      the error log, whose `addText` re-sets the whole growing log every time, so the page slows as it goes.
+
+### Nothing standing checks that a glide is seen
+
+- [ ] **Nothing standing checks that a glide is seen** (same review; by reading; low). The suite suppresses glides while
+      a test plays, so `ViewportWdgt.isScrollGliding` or `WorldWdgt.anyScrollMomentumOngoing`
+      answering false always would pass every gate, and the macro pump's glide gate (`MacroToolkit._queueDrained`) can never close, since a
+      macro only runs while a test plays; only a scratch probe (`.scratch/viewport-gesture-bookkeeping/probe.js`) covers it.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "A viewport's gesture bookkeeping outlives its gesture".)
+
+### A `$Canvas`'s size is not bounded by the backend's surface
+
+- [ ] **A `$Canvas`'s size is not bounded by the backend's surface** (found by the independent review closing "The load
+      vets the whole envelope up front", in the plan's ledger; by reading). On an SWCanvas page a canvas wider or taller
+      than 16384 px — saved by a native page, or resampled up by a load at a higher pixel ratio — throws in its builder
+      after the teardown; the bound is the loading page's backend's, so it is a load-time (not a shape) question.
+
+### `world.loadGuard.unbuildableClassRefused` cannot tell which rule refused
+
+- [ ] **`world.loadGuard.unbuildableClassRefused` cannot tell which rule refused** (found by the independent review
+      closing "Duplicate or over-counter iids load", in the plan's ledger; by reading; low). Its expected cause
+      `'NoSuchClassWdgt'` also appears in a wrong refusal naming that class, so the check passes either way.
+
+### A save writes an info-doc flag that is no boolean, which the load refuses
+
+- [ ] **A save writes an info-doc flag that is no boolean, which the load refuses** (found by the independent review
+      closing the serialization cleanup — "A user object with an own `$wk` key saves and then is refused" and three
+      more — in the plan's ledger; by reading; low). The save sweeps every own world field the flag name fits and writes
+      its value as it is; a console `world.infoDoc_x_created = 1` makes a file `_worldSectionProblem` refuses — the
+      "save writes what the load refuses" class the Color refusal closed.
+
+### A load whose restore throws keeps the registry of the world it replaced
+
+- [ ] **A load whose restore throws keeps the registry of the world it replaced** (found by the independent review
+      closing "A page member the load could not return to boot runs in the loaded world but is recorded nowhere", in
+      the plan's ledger; by reading; low). `loadWorldSnapshot` installs the restored registry only on success, though
+      by then the page's code is boot plus the file's replays plus the unreturned members: a save after the failed
+      load writes records that no longer describe it.
+
+### A colour takes any number: NaN, ±Infinity, out of range
+
+- [ ] **A colour takes any number: NaN, ±Infinity and out-of-range components paint differently on each backend**
+      (found closing "`Color.create` never checks its components", in the plan's ledger; by reading; a design call).
+      `Color` reads every component as a number (`Color._channel`, `Color._alpha`), and any number makes a colour:
+      `Color.create NaN, 0, 0` (as a non-numeric text reads) is `rgb(NaN,0,0)`, which the native canvas ignores (the
+      previous fill style paints) and SWCanvas parses as 0 (black; a NaN alpha stays opaque), and ±Infinity does the
+      same; `Color.create 300, 0, 0` keys apart from the `255, 0, 0` it paints as. Options: refuse a non-finite
+      component (the format then needs no `{"$num"}` in a Color); clamp r, g, b to 0..255 and a to 0..1, one key per
+      painted colour; leave it.
+
+### Spreadsheet formulas are taught `new Color`, which the class calls factory-only
+
+- [ ] **Spreadsheet formulas are taught `new Color`, which the class calls factory-only** (found by the independent
+      review closing "`Color.create` never checks its components", in the plan's ledger).
+      `docs/specs/dataflow-engine-spec.md` teaches `new Color r, g, b` in a formula; `Color`'s constructor comment says
+      it "should ONLY be used from the static factories" (`Color.create` interns, so a formula mints a fresh instance
+      per recompute). Either teach `Color.create`, or say why a formula's colour need not be interned.
+
+### A load judges an app key's kind by the page's edited members
+
+- [ ] **A load judges an app key's kind by the page's edited members, then returns them to boot** (found by the
+      independent review closing "An `app:` key naming a class that is no app is `new`-ed during a restore", in the
+      plan's ledger; by reading; low, contrived). `WellKnownObjects.isAppClass` reads a class's LIVE `wellKnownKey`, and
+      the world door asks it before its teardown, while the load returns the page's class edits to boot
+      (`SourceEditsRegistry.returnThePageToBootSources`) after it: a page that added or edited a class's
+      `wellKnownKey` passes the up-front judgement, and the restore's own `resolveApp` then throws after the teardown.
+      The up-front predicate is otherwise a pure read of the file; this one depends on page state the load is about
+      to change. PARKED 2026-11-10 by the backlog loop for the owner (a design call): judging the kind
+      by the members the load WILL leave means either running the file's `wellKnownKey` source (or boot's) before the
+      confirm — code from the file, before the person agreed to load it — or moving the app-key judgement after the
+      return to boot and replay, which happen after the teardown, so a refusal there would leave an empty desktop.
+      The same seam has two more directions (found by the review closing [30]/[32], by reading): a FILE needs no page
+      edit to reach it — its own class-level record editing or removing `wellKnownKey`, beside an `app:` key, passes
+      the up-front judgement (the page's members) and empties the desktop when the replay removes the marker and
+      `resolveApp` throws; and a page that edited a REAL app's marker away has a genuine file refused up front,
+      although after the return to boot that class is an app again (desktop kept, refusal wrong).
+      Options: (a) leave it (contrived either way); (b) judge app kind by a fact no member edit changes — a class whose
+      prototype descends from `WindowedApp`, or a class-side (static) flag, which member edits cannot reach and which
+      names no app-kit class from core — dropping the marker as the definition; the WRITER changes too
+      (`WellKnownObjects.keyFor`'s marker fallback), or saving and loading disagree; the only option that closes all
+      three directions; (c) make the restore's own `resolveApp` refuse softly (an inform and an absent app) — against
+      `WellKnownObjects`' own law that a key naming a class must resolve; (d) judge app kind against the BOOT member
+      (the page's own vault text, trusted, and loaded wherever a page can have edited one), which closes both page
+      directions and runs none of the file's code, leaving the file direction; (e) refuse up front a file whose
+      class-level records name `wellKnownKey` — static, and it fails in the safe direction; (f) return the page to
+      boot after the confirm and before the teardown — a refused load has then already discarded the page's edits.
+
+### A kept-source alias loses its identity on a copy and a load
+
+- [ ] **A kept-source alias loses its identity on a copy and a load** (found by the independent review closing "A kept
+      source of a fat-arrow method keeps its first receiver in copies", in the plan's ledger; by reading; pre-existing
+      for the load). `B.g = P.f` holds P's injected function; the copy and the load each compile `g` afresh on B's copy, so
+      `B'.g` is bound to `B'` and is no longer `P'.f` — whether an alias across widgets should follow its referent is
+      the open part.
+
+### A copy pixel-copies every back buffer it will discard
+
+- [ ] **A copy pixel-copies every back buffer it will discard** (same review; by reading). `backBuffer` is a render
+      cache (a serialization transient, not `isDerivedAt`), so `_cloneContentInto` deep-copies the canvas
+      (`_copyCanvas`, a `drawImage`) for each widget of a copy, and the copy repaints at its first paint anyway.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "A kept source of a fat-arrow method keeps its first receiver in copies".)
+
+### `eliminateInvisibleCharacter` strips only the first marker
+
+- [ ] **`eliminateInvisibleCharacter` strips only the first marker** (same review; by reading). `String.replace` with a
+      string pattern replaces one occurrence; a measured string holding two U+2063 (a user's text carrying one) is
+      measured with the second.
+  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "A kept source of a fat-arrow method keeps its first receiver in copies".)
+
+### The Smalltalk talk plan describes a `<name>_source` field
+
+- [ ] **The Smalltalk talk plan describes a `<name>_source` field** (found by the independent review closing "A run that
+      replaces a saved method leaves its kept source describing the old one", in the plan's ledger). `docs/plans/smalltalk-talk-2026-11-plan.md`
+      says `Class.applyMemberEdit` sets `proto[memberName + "_source"]` (false before this close too) and skips
+      `<name>_source` strings that no longer exist: the injected source is kept with its function (`Widget.keptSourceOf`).
+      Left for the owner, whose plan it is.
+
+### `fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly
+
+- [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** (found by the independent
+      review closing "The inspector churn set cannot see a class inspector's member list move", in the plan's ledger;
+      by reading; low). The churn set and its readers act per TEST, not per shot: a test in the set is recaptured whole,
+      so a shot that proves BEHAVIOUR rather than renders a member list is re-recorded with the member
+      list's churn, whatever it now shows.
+
+### A scrolled pane keeps its height when its content shrinks in the same settle
+
+- [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
+      refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
+      `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the
+      class inspector's member rows shrank, and their `ScrolledPaneWdgt` stayed 9164 px tall where a second refresh
+      makes it 7420, after which it is stable. At rest no pixel differs, but the scroll range is wrong until then. A
+      settled world that a second re-lay still moves is a question for the engine.

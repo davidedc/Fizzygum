@@ -509,3 +509,9 @@ Everything through the umbrella wrapper, absolute path, backgrounded for long op
   `dont-let-recapture-churn-dictate-design`.
 - Comment rubric: umbrella `.claude/comment-rubric.md` (present-tense comments; no
   "used to/no longer" phrasing — enforced by the comment-stink gate).
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### §6 auto-empty: empty the bin at snapshot/quit
+
+- [ ] `archive/basement-to-bin-plan.md` §6 auto-empty: empty the bin automatically at snapshot/quit — DEFERRED, not rejected; revisit after living with the Bin (recoverability expectations; the doGC on-screen precondition it worried about is GONE since the bin/shelf split)

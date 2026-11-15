@@ -23,7 +23,7 @@
 > executes the approved items one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-3/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §1, §3, §5,
-> §6 (2026-11-15); §2 is parked on the owner's decision.
+> §6, §8 (2026-11-15); §2 is parked on the owner's decision.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -124,7 +124,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | 5 | Visualisation pages are generated, not committed | 1 day | 375 committed generated files (4.2 MB), the build gate that exists to catch them going stale, the generator's branches for recorded tests and native references. **In plain words:** each test has a web page describing it, made by a script and then saved in git, with a check that fails when the saved copy falls behind. Make the page when it is wanted and stop saving it. | **Why:** keeping a photo of every drawing means taking a new photo each time a drawing changes, and somebody has to keep checking that no photo is old. Twice the photos were old. Look at the drawing instead: make the page when you want to see it. **Trade-offs:** the pages can no longer be opened straight from the repository without running a command first; making all of them takes some seconds that have not been measured yet. | None | Yes | 7 | Landed 2026-11-15 (§5, "Landed") |
 | 6 | Three test switches become one question | 1 day | Three class statics, their reset, and a call from the shipping teardown into the test harness. **In plain words:** three on/off switches are flipped on when a test starts and off when it ends. They always agree with "a test is running", which the code can already ask. Ask that and drop the switches. | **Why:** three light switches are always flipped together when the game starts and together when it ends. One sign that says "game on" tells you the same thing, and nobody can forget a switch. It also means the everyday code no longer has to reach into the test kit to flip them back. **Trade-offs:** no switch can be flipped on its own any more (nothing does that today); and the instant between "old world gone" and "test started" has to be measured first, because a label built in that instant could come out different. | Low (the start cycle) | No | 4 | Landed 2026-11-15 (§6, "Landed") |
 | 7 | On-demand tools: one roster, each proven to start | 1 to 2 days | A tool nothing references, nine profiling scripts kept under `docs/`, a second front door (28 npm scripts) beside `fg`. **In plain words:** about fifty helper scripts are only ever started by hand, so nothing notices when one breaks. Keep one list of them, check that each still starts, and delete the ones nobody can reach. | **Why:** tools kept in a drawer and never tried may turn out broken on the very day you need them; one already sat broken for three months. Keep a list of what is in the drawer and press each tool's "on" button whenever the big check runs. **Trade-offs:** the big check gets a little longer; "it switches on" is not the same as "it still works properly"; and throwing a tool away risks losing one that somebody uses twice a year. | None | Partly (which tools go) | 9 | Left for a later day by the owner (2026-11-15) |
-| 8 | The backlog is an index again | 1 day | About 105 KB that cannot be read in one pass; items the owner's own bar keeps out. **In plain words:** the list of open work says it is only an index, but many entries are half a page long, and it has grown past what the tools can read at once. Shorten each entry to a line or two and move the detail to the plan that owns it. | **Why:** a to-do list so long that nobody reads to the end stops working as a list: the same thing gets written down twice, and the important things hide among the small ones. Give each thing a line or two and keep its long story in the folder it belongs to. **Trade-offs:** reading an item's whole story takes one more hop to another file; and moving 212 items risks dropping a sentence, so a script has to check that every sentence landed somewhere. | None | Yes (the bar applies to what is already filed) | 6 | Approved by the owner (2026-11-15); queued |
+| 8 | The backlog is an index again | 1 day | About 105 KB that cannot be read in one pass; items the owner's own bar keeps out. **In plain words:** the list of open work says it is only an index, but many entries are half a page long, and it has grown past what the tools can read at once. Shorten each entry to a line or two and move the detail to the plan that owns it. | **Why:** a to-do list so long that nobody reads to the end stops working as a list: the same thing gets written down twice, and the important things hide among the small ones. Give each thing a line or two and keep its long story in the folder it belongs to. **Trade-offs:** reading an item's whole story takes one more hop to another file; and moving 212 items risks dropping a sentence, so a script has to check that every sentence landed somewhere. | None | Yes (the bar applies to what is already filed) | 6 | Landed 2026-11-15 (§8, "Landed") |
 | 9 | A test is one file | 2 to 3 days | 389 files, a second script load per test, a load of every test's metadata before any run, fields nothing reads. **In plain words:** every test is split across two files for a reason that no longer exists, and before running anything the test page loads a file for every test in the suite. One file per test, and a generated list that says which tests exist. | **Why:** every test keeps its instructions in one envelope and its name tag in another, and before any test starts, the page opens the name-tag envelope of every test in the building. One envelope per test, and one printed list of who is here. **Trade-offs:** every tool that reads tests has to learn the new shape in the same change (19 files name the old one); 778 files change in one commit; and the printed list becomes something a test run cannot do without. | None (macro sources byte-identical) | Yes (rename or fold; this item recommends fold) | 2 | Left for a later day by the owner (2026-11-15) |
 | 10 | `fg` in the toolchain's language | 4 to 5 days | 856 lines of bash run by a 2007 shell, 45 hops from bash into Node, a table printed by Node for bash to parse. **In plain words:** the command that runs every check is a long shell script, executed by the old shell macOS ships, and it calls into JavaScript dozens of times. Write it in JavaScript like the rest of the tooling. | **Why:** the one who marks everybody's homework writes in a different language from everybody else, so none of the class's spell-checkers can read the marker's own notes, and that old dialect has already hidden mistakes. Have the marker write in the class's language. **Trade-offs:** it is a rewrite of the very thing that says "safe to commit", so a slip here is the expensive kind; it takes about a week and adds no feature; and shell is naturally good at starting and stopping programs, which takes more care to do as well in JavaScript. | None | No | 10 | Approved by the owner (2026-11-15); queued |
 
@@ -786,6 +786,67 @@ by reading, unstated), owner-pending or not. That table is the proposal.
 
 **Re-measure.** `wc -lc Fizzygum/docs/BACKLOG.md; grep -c '^\s*- \[ \]' Fizzygum/docs/BACKLOG.md`.
 
+**Landed 2026-11-15.** `docs/BACKLOG.md` is an index: 199 open items in 328 lines and 55,814
+bytes. Before, it held 220 task lines (217 items once three nested sub-items join their parents)
+in 689 lines and 107,746 bytes.
+
+MEASURED: a whole-file read of the old file stopped at line 347 of 689, at 42,134 tokens against a
+read's 25,000. By the same ratio the new file is about 21,800 tokens, so one read takes it.
+
+A read-only survey classed every old item against the owner's bar and drafted its line. The loop
+reviewed the classes, and an independent review then read the result. The table of all 217 items
+(class, why, destination) is the loop's own, kept locally:
+`Fizzygum-tests/.scratch/cleanups-loop-3/u6-backlog-index/ITEMS.md`.
+
+- 131 items became one line each: what is wrong or what is to do, then its reach or severity.
+  Every item waiting on the owner carries ⛔.
+  - Each item's FULL OLD TEXT moved verbatim, under `### <its bold title>`, into a trailing
+    `## BACKLOG detail (open items, moved from docs/BACKLOG.md)` section of the plan that owns it
+    (25 archived plans and 6 active ones), or into `archive/backlog-open-items-detail.md`. That
+    file is new: the twin of the closed-items ledger, for arcs with no plan file.
+  - The eight multi-line section notes moved the same way, each leaving a one-line status.
+  - Moved text that leaned on a neighbour is followed by a note saying what it meant: a "same
+    review", a "below", a "the plan above".
+- 68 items were already one short line and stay as they were, each its own whole text; where it
+  names a plan section (`§7.1`, `W2`, `P4`), that section holds the rest.
+- 17 findings call themselves low and give no reach path: by reading, a console write, a
+  hand-made file, a doc's wording. All 17 came from the argument-holes plan's reviews, and they
+  moved to that plan's `## BACKLOG ledger` as noted, not queued.
+  - The survey proposed six more that stay filed, because each can bite: a check proven only by a
+    scratch plant; a failed load whose next save writes stale records; a recapture tool that
+    re-records a behaviour shot blind; a hand-list guard that may judge nothing; a census blind
+    spot its header does not state; a save of a flag the load refuses.
+- One section held no open item (the focus arc's). It left the index, and its heading and note
+  moved, quoted, to that plan's ledger.
+- This item's own line moved to this plan's ledger.
+
+A line's pointer names only what the reader cannot already tell: the file defaults to the plan the
+section heading names, and the heading defaults to the item's bold title.
+
+`docs/README.md`:
+- rule 5 now states the index form and the 2026-11-11 bar;
+- rule 2 says a closing item moves from its detail section into the ledger;
+- rule 6 lets an archived plan receive an open item's detail, a section's note or a noted line.
+
+`check-doc-narration.js` gains `BACKLOG_ITEM_TOO_LONG`. It measures an open item on its raw text,
+taking every line Markdown renders as part of it (indented deeper, after a blank line too; a fenced
+block inside it; a quoted item's quoted lines; a lazy continuation), inline code included, and
+holds it to the `backlogItemChars` ceiling in its baseline file. The ceiling is 325, the longest
+item now.
+- `--write-baseline` refuses to record a ceiling over 400, and a baseline with no ceiling is
+  INVALID.
+- The self-test plants an item one character over the ceiling with its overflow in inline code,
+  and one in each of the four shapes. It proves both refusals on a throwaway baseline
+  (`--baseline=FILE`). A gate missing any one of the four shapes fails it.
+
+PROOF (`verify.py`, beside the table), run on the re-emitted files before this plan's own STATUS,
+table row and this paragraph were written:
+- every old item's full text is found exactly once, in its destination or as its own line in the
+  backlog;
+- every section note is found once;
+- every pointer resolves to a heading;
+- no line of any destination's original text was lost or changed.
+
 ---
 
 ## §9. A test is one file
@@ -1060,3 +1121,22 @@ Do not commit or push without asking me.
 - [x] §5 (1 day; ruled 2026-11-15: generate, do not commit): `visualisation.html` pages are generated, not committed — 375 files and the gate that holds them to their inputs go
   — CLOSED 2026-11-15 (loop U5): the pages are ignored and generated by `fg visualise` (and by a capture); the gate,
   its self-test and the generator's recorded and native branches are gone (§5, "Landed").
+- [x] §8 (1 day; ruled 2026-11-15: shorten and apply the bar to what is filed): this file is an index again — the 2026-11-11 filing bar written down, each item one or two lines, detail in the owning plan
+  — CLOSED 2026-11-15 (loop U6): the backlog holds one line per open item, small enough for one read; each item's
+  full text moved verbatim into the plan that owns it (`## BACKLOG detail`), and the low unreached findings into
+  their plan's ledger as noted, not queued; README rule 5 states the index form and the 2026-11-11 bar, and
+  `check-doc-narration` holds an item's length to a ceiling (§8, "Landed").
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### §2: the LRU cache on a Map
+
+- [ ] §2 (½ day; ⛔ PARKED 2026-11-15 on a speed trade, the owner decides — §2 "OWNER DECISION"): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (built and proven; one shape makes an eviction ×2.9 slower, the faster one pins memory)
+
+### §4: the patch-programming-experimental part
+
+- [ ] §4 (½ to 1 day; left for a later day by the owner 2026-11-15; ⛔ owner): the `patch-programming-experimental` part — six classes no test builds and no production user can reach; the fanout is redundant now that wires are a list; the product question is whether the diff and regex nodes are wanted (finish them) or not (delete all six)
+
+### The visualisation page generator runs only when asked
+
+- [ ] (filed by U5's review, 2026-11-15; medium) the visualisation page generator now runs only when asked (`fg visualise`, a capture): no build or leg loads it, so a break (a renamed `tests-repo-code`/`macro-sources` export) shows only when someone runs it, and a capture only warns — §7's roster is where it would be proven to start

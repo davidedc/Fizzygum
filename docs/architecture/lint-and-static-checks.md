@@ -526,8 +526,8 @@ the dead one it replaced — and eventually contradict itself, one section stati
 another still proposed it.
 
 **Scope is deliberately narrow.** It scans `architecture/` + `tooling/` (present tense by definition)
-for narration, `BACKLOG.md` for ONE thing — a closed item — and the two instruction files for their
-size, both read at the end of this section, and NOTHING else: `specs/` is excluded because a spec's change/landing statements are load-bearing
+for narration, `BACKLOG.md` for TWO things — a closed item, and an open item's length — and the two
+instruction files for their size, all read at the end of this section, and NOTHING else: `specs/` is excluded because a spec's change/landing statements are load-bearing
 (owner direction), and `plans/`, `archive/` and `measurements/` are chronological BY DESIGN — archive
 is immutable past tense, plans are future tense, measurements are dated snapshots.
 
@@ -547,9 +547,17 @@ cannot trip it. Not on the build — docs prose should not block a build — so 
 **`BACKLOG.md` holds OPEN items only** (filing rule 2: a closed item moves, verbatim, into the trailing
 `## BACKLOG ledger` of the plan that closed it), so a closed task item there (`- [x]` at any depth,
 under any bullet, outside a fenced block) is an item that never moved: `BACKLOG_CLOSED_ITEM`, a hard
-zero with no baseline and no hatch. Nothing else in the file is judged — an open item's "found
-2026-10-23" is its provenance, not narration — and the OK line states the open count it read. A docs
-tree with no `BACKLOG.md` is INVALID (exit 2), never a pass.
+zero with no baseline and no hatch. The file is an INDEX (filing rule 5: one line per item — what is
+wrong or to do, then its reach or severity; its full text lives in the plan that owns it), so an
+open item longer than the CEILING the `backlogItemChars` entry of the same baseline file records fails:
+`BACKLOG_ITEM_TOO_LONG`, the item measured on its raw text: its task line and every line Markdown renders
+as part of it (indented deeper, after a blank line too; a fenced block inside it; a quoted item's quoted
+lines; a lazy continuation), whitespace collapsed, inline code included. The ceiling comes down through the
+IMPROVED block like the instruction files'; `--write-baseline` refuses to record one over 400
+characters, so an item's detail goes to its plan, never the index, and a baseline with no item ceiling
+is INVALID (exit 2). Its self-test proves both refusals on a throwaway baseline (`--baseline=FILE`). Nothing else in the file is judged —
+an open item's "found 2026-10-23" is its provenance, not narration — and the OK line states the open
+count it read. A docs tree with no `BACKLOG.md` is INVALID (exit 2), never a pass.
 
 **Each instruction file has a byte CEILING** (`INSTRUCTION_FILE_OVER_CEILING`). `Fizzygum/CLAUDE.md` and
 `Fizzygum-tests/CLAUDE.md` are loaded by every session before any work, and again after every
@@ -879,8 +887,8 @@ tighten incrementally):
   `buildSystem/public-api-allowlist.txt` (call-separation [U]: deliberate end-user inspector/scripting API).
   Each of those gates **FAILS on a stale entry** — one that excuses nothing — naming it after the arc-wide
   word `STALE_ALLOWLIST_ENTRY` (see "Every stated table fails on an entry that names nothing" below); a count that
-  falls below its baseline is a gain to bank, and stays a NOTE (`fg critique` resurfaces those — but for
-  `check-complexity-ratchets`' UNDER notes, which it does not run yet: docs/BACKLOG.md §8).
+  falls below its baseline is a gain to bank, and stays a NOTE (`fg critique` resurfaces those, the stinks'
+  and `check-complexity-ratchets`' UNDER notes alike).
 - **per-method / per-line marker** (the fourteen in-code markers tabled above): the justification
   lives at the method, no central list; a NEW unmarked violation fails the build. Best when the exception is a property
   of one method or one line, not a count.

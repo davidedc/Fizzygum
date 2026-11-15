@@ -14,12 +14,20 @@
 //
 // SCOPE — deliberately NOT every bucket:
 //   CHECKED   architecture/ tooling/     present tense by definition
-//   CHECKED   BACKLOG.md                 for ONE thing: a closed item (a `- [x]` task item at any depth, any bullet,
+//   CHECKED   BACKLOG.md                 for TWO things: a closed item (a `- [x]` task item at any depth, any bullet,
 //                                        outside a fenced block). The file holds OPEN items only — filing rule 2
 //                                        moves a closed item, verbatim, into the ledger of the plan that closed it —
 //                                        so a `- [x]` there is an item that never moved. A hard zero with no baseline
-//                                        (BACKLOG_CLOSED_ITEM). Its prose is NOT judged for narration: an open item's
-//                                        "found 2026-10-23" is provenance.
+//                                        (BACKLOG_CLOSED_ITEM). And an open item's LENGTH (its task line and every
+//                                        line Markdown renders as part of it — indented deeper, after a blank line
+//                                        too; a fenced block inside it; a quoted item's quoted lines; a lazy
+//                                        continuation — whitespace collapsed): the file is an INDEX,
+//                                        each item what is wrong or to do, its reach or severity and where its detail
+//                                        lives, so an item over the CEILING the baseline file records fails
+//                                        (BACKLOG_ITEM_TOO_LONG) — measured on the raw text, inline code included;
+//                                        `--write-baseline` records the longest open item, and refuses one over
+//                                        BACKLOG_ITEM_HARD_MAX. Its prose is NOT judged for narration: an open
+//                                        item's "found 2026-10-23" is provenance.
 //   CHECKED   the two INSTRUCTION FILES  `Fizzygum/CLAUDE.md` and `Fizzygum-tests/CLAUDE.md`, for ONE thing: their
 //                                        size. A session loads them before any work, and again after every compaction,
 //                                        so each has a byte CEILING (INSTRUCTION_FILE_OVER_CEILING), recorded in the
@@ -58,12 +66,14 @@ const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-a
 const rules = require('./lib/gate-rules').forGate(__filename);
 
 // [--umbrella=DIR] reads another umbrella — `DIR/Fizzygum/docs` and the instruction files under `DIR` (a planted one: the
-// bite-proof's input, check-doc-narration-selftest.js, which proves every rule below BITES). It never writes the real
-// baseline from another tree.
+// bite-proof's input, check-doc-narration-selftest.js, which proves every rule below BITES). [--baseline=FILE] reads,
+// and --write-baseline writes, another baseline file: the bite-proof's rail for the missing-ceiling and over-400
+// refusals. It never writes the REAL baseline from another tree.
 const ARGV = process.argv.slice(2);
-rejectUnknownArgs(ARGV, ['--full', '--write-baseline', '--umbrella='], 'doc-narration');
+rejectUnknownArgs(ARGV, ['--full', '--write-baseline', '--umbrella=', '--baseline='], 'doc-narration');
 rejectPositionalArgs(ARGV, 'doc-narration', 'an umbrella is named with --umbrella=DIR');
-if (ARGV.includes('--write-baseline') && ARGV.some((a) => a.startsWith('--umbrella='))) {
+const BASELINE_ARG = (ARGV.find((a) => a.startsWith('--baseline=')) || '').slice('--baseline='.length);
+if (ARGV.includes('--write-baseline') && ARGV.some((a) => a.startsWith('--umbrella=')) && !BASELINE_ARG) {
   console.error('[doc-narration] ERROR — --write-baseline writes the real baseline: it never reads another umbrella');
   process.exit(2);
 }
@@ -117,7 +127,7 @@ function proseLines(text) {
 // An explicit, reason-bearing escape hatch for a line that must QUOTE the narration words.
 const ALLOW = /<!--\s*narration-ok:/i;
 
-const BASELINE_PATH = path.join(__dirname, 'check-doc-narration-baseline.json');
+const BASELINE_PATH = BASELINE_ARG ? path.resolve(BASELINE_ARG) : path.join(__dirname, 'check-doc-narration-baseline.json');
 const write = process.argv.includes('--write-baseline');
 const verbose = process.argv.includes('--full') || write;
 
@@ -157,26 +167,78 @@ for (const rel of INSTRUCTION_FILES) {
   bytes[rel] = fs.statSync(p).size;
 }
 
-if (write) {
-  fs.writeFileSync(BASELINE_PATH, JSON.stringify({ narration: counts, instructionBytes: bytes }, null, 2) + '\n');
-  console.log(hits.join('\n'));
-  console.log(`\nbaseline written: ${total} line(s) across ${Object.keys(counts).length} file(s); ceilings ` +
-    INSTRUCTION_FILES.map((f) => `${f} ${bytes[f]} bytes`).join(', ') + '.');
-  process.exit(0);
-}
-
-// BACKLOG.md's closed items (header, SCOPE). An index it cannot read is one this run checked nothing in: no pass.
+// BACKLOG.md's closed items and its open items' lengths (header, SCOPE). An index it cannot read is one this run checked
+// nothing in: no pass.
 const BACKLOG_PATH = path.join(DOCS, 'BACKLOG.md');
 if (!fs.existsSync(BACKLOG_PATH)) { console.error(`[doc-narration] ERROR — no ${BACKLOG_PATH}: a run that cannot read the open-items index checked nothing there — no pass`); process.exit(2); }
 // A task-list item at any depth, any bullet (`-` `*` `+` `1.` `1)`), inside a quote too; a fenced block is skipped.
 const TASK_ITEM = /^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[([ xX])\](?=\s|$)/;
+// the ceiling --write-baseline may record for an open item's length: an index line, never a page
+const BACKLOG_ITEM_HARD_MAX = 400;
 const closedItems = [];
+const openItemLengths = [];   // { lineNo, chars, text }
 let openItems = 0;
-for (const [lineNo, line] of proseLines(fs.readFileSync(BACKLOG_PATH, 'utf8'))) {
-  const m = line.match(TASK_ITEM);
-  if (!m) continue;
-  if (m[1] === ' ') openItems++;
-  else closedItems.push(`  docs/BACKLOG.md:${lineNo}  [closed item]  …${line.trim().slice(0, 110)}`);
+let item;                      // the open item being read: its task line and every line Markdown makes part of it
+const closeItem = () => { if (item) openItemLengths.push(item); item = undefined; };
+// An item is FOUND on the prose line (inline code stripped, so a `- [x]` quoted in code is no item; a fenced block
+// holds none) and MEASURED on its raw text. Its lines are the ones Markdown renders as part of it: a line indented
+// deeper than its task line (after a blank line too), a fenced block opened inside it, a quoted item's quoted lines,
+// and a LAZY continuation — an unindented line straight after its text that opens no block of its own. Inline code
+// and fenced lines count: a pointer's path is part of the line a reader reads.
+const QUOTE_PREFIX = /^(?:\s*>)+ ?/;
+const unquoted = (s) => s.replace(QUOTE_PREFIX, '');
+const indentOf = (s) => s.search(/\S/);
+const FENCE = /^\s*```/;
+const OPENS_A_BLOCK = /^\s*(?:[-*+]\s|\d+[.)]\s|#|```|\||<)/;   // a list item, a heading, a fence, a table, HTML
+const backlogRaw = fs.readFileSync(BACKLOG_PATH, 'utf8').split('\n');
+let fence;                     // while inside a fenced block: { inItem } — whether the block belongs to the open item
+let afterBlank = false;
+backlogRaw.forEach((raw, i) => {
+  const lineNo = i + 1;
+  const body = unquoted(raw);
+  if (fence) {
+    if (fence.inItem && item) item.text += ' ' + raw.trim();
+    if (FENCE.test(body)) fence = undefined;
+    return;
+  }
+  if (FENCE.test(body)) {
+    fence = { inItem: !!item && indentOf(body) > item.indent };
+    if (fence.inItem) item.text += ' ' + raw.trim(); else closeItem();
+    afterBlank = false;
+    return;
+  }
+  const m = raw.replace(/`[^`]*`/g, '').match(TASK_ITEM);
+  if (m) {
+    closeItem();
+    if (m[1] === ' ') { openItems++; item = { lineNo, indent: indentOf(body), quoted: QUOTE_PREFIX.test(raw), text: raw.trim() }; }
+    else closedItems.push(`  docs/BACKLOG.md:${lineNo}  [closed item]  …${raw.replace(/`[^`]*`/g, '').trim().slice(0, 110)}`);
+    afterBlank = false;
+    return;
+  }
+  if (!body.trim()) { afterBlank = true; return; }      // a blank line keeps the item open: the next line decides
+  if (item) {
+    const deeper = indentOf(body) > item.indent && (!item.quoted || QUOTE_PREFIX.test(raw));
+    const lazy = !afterBlank && !OPENS_A_BLOCK.test(body);
+    if (deeper || lazy) { item.text += ' ' + raw.trim(); afterBlank = false; return; }
+  }
+  closeItem();
+  afterBlank = false;
+});
+closeItem();
+for (const it of openItemLengths) it.chars = it.text.replace(/\s+/g, ' ').length;
+const longestOpenItem = openItemLengths.reduce((a, b) => (b.chars > a ? b.chars : a), 0);
+
+if (write) {
+  if (longestOpenItem > BACKLOG_ITEM_HARD_MAX) {
+    console.error(`[doc-narration] ERROR — the longest open item of docs/BACKLOG.md is ${longestOpenItem} characters, over ` +
+      `${BACKLOG_ITEM_HARD_MAX}: shorten it (its detail goes to the plan that owns it) before recording a ceiling — nothing written`);
+    process.exit(2);
+  }
+  fs.writeFileSync(BASELINE_PATH, JSON.stringify({ narration: counts, instructionBytes: bytes, backlogItemChars: longestOpenItem }, null, 2) + '\n');
+  console.log(hits.join('\n'));
+  console.log(`\nbaseline written: ${total} line(s) across ${Object.keys(counts).length} file(s); ceilings ` +
+    INSTRUCTION_FILES.map((f) => `${f} ${bytes[f]} bytes`).join(', ') + `, an open BACKLOG item ${longestOpenItem} characters.`);
+  process.exit(0);
 }
 
 const baselineFile = fs.existsSync(BASELINE_PATH)
@@ -194,6 +256,15 @@ for (const rel of INSTRUCTION_FILES) {
   }
   if (bytes[rel] > ceilings[rel]) over.push(`  ${rel}: ${bytes[rel]} bytes > ceiling ${ceilings[rel]}`);
 }
+
+// each open item against the recorded ceiling; a baseline with none is one this run cannot judge: no pass
+const itemCeiling = baselineFile.backlogItemChars;
+if (!Number.isInteger(itemCeiling)) {
+  console.error(`[doc-narration] ERROR — no open-item ceiling (backlogItemChars) in ${BASELINE_PATH}: record one with --write-baseline — no pass`);
+  process.exit(2);
+}
+const longItems = openItemLengths.filter((it) => it.chars > itemCeiling)
+  .map((it) => `  docs/BACKLOG.md:${it.lineNo}  [${it.chars} > ${itemCeiling} characters]  …${it.text.slice(0, 90)}`);
 
 const risen = [], improved = [];
 for (const [f, n] of Object.entries(counts)) {
@@ -233,12 +304,20 @@ if (over.length) {
   console.log('or the architecture doc that owns them (docs/architecture/lint-and-static-checks.md §3b-docs). A rule a reader');
   console.log('must meet before any work may raise the ceiling: `--write-baseline`, in the same commit.');
 }
-if (closedItems.length || risen.length || over.length) process.exit(1);
+if (longItems.length) {
+  if (closedItems.length || risen.length || over.length) console.log('');
+  console.log(`BACKLOG ITEM OVER THE INDEX CEILING — ${longItems.length} item(s):`);
+  for (const line of longItems) console.log(rules.fired('BACKLOG_ITEM_TOO_LONG', line));
+  console.log('\ndocs/BACKLOG.md is an INDEX (docs/README.md filing rule 5): an item says what is wrong or what is to do, its');
+  console.log('reach or severity, and where its detail lives; the detail goes, verbatim, to the plan that owns it.');
+}
+if (closedItems.length || risen.length || over.length || longItems.length) process.exit(1);
 
 console.log(`OK — ${scanned} docs in ${BUCKETS.join('/')}; ${total} narration line(s), baseline ${baseTotal}; ` +
   `BACKLOG.md ${openItems} open item(s), 0 closed; ` +
   INSTRUCTION_FILES.map((f) => `${f} ${bytes[f]} of ${ceilings[f]} bytes`).join(', ') + '.');
 for (const rel of INSTRUCTION_FILES) if (bytes[rel] < ceilings[rel]) improved.push(`  ${rel}: ceiling ${ceilings[rel]} -> ${bytes[rel]} bytes`);
+if (longestOpenItem < itemCeiling) improved.push(`  docs/BACKLOG.md: open-item ceiling ${itemCeiling} -> ${longestOpenItem} characters`);
 if (improved.length) {
   console.log('IMPROVED — bank it with `node buildSystem/check-doc-narration.js --write-baseline`:');
   console.log(improved.join('\n'));

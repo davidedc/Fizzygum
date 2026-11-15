@@ -1230,3 +1230,55 @@ blast radius to check FIRST when a phase touches the surface, not as a proof of 
 - Case law on why census findings are questions, not instructions:
   [`../archive/duplication-triage-2026-07-15-hierarchy-round4.md`](../archive/duplication-triage-2026-07-15-hierarchy-round4.md) ·
   [`../archive/census-findings-triage-plan.md`](../archive/census-findings-triage-plan.md)
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### The backlog's note on this plan
+
+Acted on `measurements/widget-practices-survey-2026-08-14.md` (28 facets over all 270 widget classes)
+to reach `architecture/widget-authoring-guidelines.md`. The per-phase log lives in the archived plan's
+"As landed" blocks and in `archive/INDEX.md`; the survey now carries an appended **"state at close"**
+delta table, and the mechanical half of it is re-runnable as `buildSystem/census-widget-conformance.js`.
+Landed: undeclared instance fields 9 classes/11 fields → **0/0** (a true zero — the connector arc's P9
+retired the last floor), `_reLayout` prologue copies 24 → **8** stated exceptions, W9's three
+enforcement tiers, W6a (a LIVE BUG: three `SliderWdgt` prompts stored the slider's own value, not the
+typed one), and W7 — which landed as ONE derivation instead of the 164 hand-written names the plan
+asked for.
+⭐ **The recapture rule this arc measured:** `InspectorWdgt.showingInherited` defaults to FALSE, so a
+member list shows the inspected class's OWN members. A pull-up to a base class is inspector-FREE; a
+declaration on a class some test OPENS is what costs. Predict from the plan's §11.1 per-surface test
+lists, not from how many classes inherit the field.
+
+### RESIDUAL W6b (owner-gated, D3) — idempotence guards on the B/C/D pin setters.
+
+- [ ] **RESIDUAL W6b (owner-gated, D3) — idempotence guards on the B/C/D pin setters.** Deliberately
+      not done in-arc: the dataflow engine's equal-value cutoff already covers most of what the guard
+      would buy, and `archive/connector-ubiquity-and-reflection-plan.md` §P2's bind-time precedence rule
+      may change what the guard should DO. When it runs, it wants its own commit plus the
+      patch-programming and °C↔°F converter macros run explicitly.
+      **✅ RE-DERIVED AGAINST P2, 2026-08-17 (P2 landed): W6b is INDEPENDENT of P2 — the one
+      P2-specific hazard is dissolved, not mitigated.** The archived plan §2.6 note 3 feared that
+      *"P2's bind-time rule depends on both wires FIRING at bind time; an idempotence guard could
+      swallow the second fire when the two sides already agree"*. That was written against the
+      SKETCH, which had both wires fire and the later one win. As landed, `bindTo` fires exactly ONCE
+      by construction — `wireTo` (pushes) + `declareWireTo` (moves nothing) — so there is no second
+      fire for a guard to swallow, and precedence cannot depend on setter idempotence. The follow-on
+      case is covered too: delivering A's value into B runs B's `updateTarget`, but that re-mark is
+      the ECHO the engine already drops while B is the node being applied into, and if the two sides
+      already agree the equal-value cutoff stops the walk with or without a guard.
+      ⇒ **What remains is exactly what the plan's §2.6 note 2 already stated, unchanged by P2**: the
+      cutoff decides only whether to traverse ONWARD, while `_applyWireValue` still CALLS the setter
+      with an equal value — so the guard's whole remaining value is suppressing the SETTER'S OWN side
+      effects (its `_changed()` repaint and any onward fire) on an equal write. That is a paint /
+      redundant-work question, not a dataflow-correctness one, which is why it is a real behaviour
+      change and still wants its own commit and its own evidence. **No connector dependency is left:
+      whenever it runs, it runs on its own merits.**
+
+### RESIDUAL W7 other half (owner-gated, D4) — `representativeIcon`.
+
+- [ ] **RESIDUAL W7 other half (owner-gated, D4) — `representativeIcon`.** All but thirteen classes
+      answer the base `new WidgetIconWdgt` — nine declare an override (`ScriptWdgt`, `FolderWindowWdgt`,
+      `FrameWdgt`, `ImageWdgt`, `DashboardWdgt`, `SlideWdgt`, `GenericPanelWdgt`, `DocumentWdgt`,
+      `PatchProgrammingWdgt`) and four inherit one. Unlike a colloquial name, an icon CANNOT be derived from a class
+      name, so this stays the hand-written job the plan described — worth doing only for what can be
+      referenced from the desktop, not as a sweep.

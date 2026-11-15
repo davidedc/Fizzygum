@@ -524,3 +524,9 @@ no behavior either way; the honest default is "lift only when a second user exis
 - BACKLOG: the §7.6 line (update it to point HERE on landing this plan) and the §7.2
   recorded refusal (stands regardless).
 - Memory: `scroll-frame-role-architecture-arc` (the §7.2 mechanism + this arc's genesis).
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### Phase 4: lift scroll translation to ClippingWdgt
+
+- [ ] ⛔ `archive/paint-time-scroll-translation-plan.md` Phase 4 (OWNER-GATED): lift `scrollOffsetX/Y` + `_writeScrollOffset` + the paint interception + the `scrollTranslationOfChild` provider from `ViewportWdgt` to the clipping base class `ClippingWdgt` — "scrollability as a property of every panel". Designed, deliberately unlifted until a second user exists (YAGNI; the seam is stated in that plan's STATUS BOX Phase-4 row). Phases 0–3 of the arc are EXECUTED (2026-08-20): the offset is stored truth, the plane is pinned, paint/hit/damage/clip/input all speak the translation; living truth = `architecture/viewports-and-planes.md`.

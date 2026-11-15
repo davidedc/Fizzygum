@@ -1090,3 +1090,17 @@ Do not commit or push without asking me.
   — CLOSED 2026-11-14 (loop U10): the two `CLAUDE.md` files keep what changes a reader's next action, each moved
   sentence's home shown first; `package.json` keeps one line per key; `INSTRUCTION_FILE_OVER_CEILING` holds each
   file to its ceiling (§9, "Landed").
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### §6 step 2: instruments that share a suite pass
+
+- [ ] §6 step 2 (1 to 2 days; ⛔ the owner decides — the measurement is in, 2026-11-14): instruments that share a suite pass — `run-all-headless.js` takes several `--audit-prelude=`; the candidates `tiernaming`, `settle`, `capstone`, `revisits`. Measured: only `revisits` reads the same in a shared pass; the others first need a tag per instrument and one test-start marker; the saving is load, not wall time, in the parallel gauntlet. Recommendation: keep four passes (the plan's §6, "Step 2 measured", "OWNER DECISION") (step 1, the one audited-suite driver in Node, landed 2026-11-14)
+
+### §8 follow-up: rename or fold _automationCommands.js
+
+- [ ] §8 follow-up (⛔ owner ruling): each test's `_automationCommands.js` now holds only its macro sources, so its name no longer says what it holds — rename it (e.g. `_macro.js`), or fold it into the metadata file; the loop kept the name (its brief), since a rename touches the two definitions of a test's files, every runner and 389 directories
+
+### §10: the reference set as a path of the live axes
+
+- [ ] §10 (1 to 2 days, then 3; left out for now by the owner 2026-11-13): the reference set — a path made of the live axes (five single-valued segments and the user-agent spoof go); then one file per reference (the `.js` copies, 45.8 MB, and the reference loader go; needs §4 decided)

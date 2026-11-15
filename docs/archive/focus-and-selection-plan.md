@@ -766,3 +766,9 @@ Residue closed by the focus-residue arc (2026-10-23, the session after this plan
 - [x] `ActivePointerWdgt`'s hover cleanup does not test the dock-band record. **DONE 2026-10-24** — measured not reachable (a
       band always stands with the ring or the label; census 0 in 1278 updates); the condition names every record anyway
       (owner's call).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- Its section in docs/BACKLOG.md held no open item, so it left the index (cleanups loop 3, U6, 2026-11-15); verbatim:
+  > ### `archive/focus-and-selection-plan.md` — the focused window and the selected desktop icon (✅ CLOSED 2026-10-23: every unit landed as one commit pair; closed items in the plan's ledger. Its four residue items were closed by the focus-residue arc the same day — ledger in the plan; the items below are what that arc found)
+  > The FOCUS arc the redesign deferred (its plan §0.5.2): focus derived once per cycle from z-order, the draft's focused-window look through `FrameWdgt._frameLook()`, and the selected icon as the existing editor focus drawn the icon's own way. Owner decisions D1–D11 LOCKED 2026-10-23, every recommendation (plan §2); D11, added from the owner seeing a dropped Docs Maker window ringed: a top-level window is focused, never selected (unit S0).

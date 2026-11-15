@@ -3074,3 +3074,13 @@ ACTIVE: §7.1–§7.4 remain open and stay listed in `docs/BACKLOG.md`. The land
 already recorded in §7 banked-item 8 — this is the BACKLOG line that pointed at it.
 
 - [x] §7.8: SWCanvas bilinear drawImage — **BOTH halves DONE.** Rotation half: `archive/swcanvas-bilinear-rotated-composite-plan.md` (SWCanvas `619dc1c`). Scale half: `archive/swcanvas-scale-path-smoothing-plan.md` (2026-08-13): smooth when the effective sample step ≠ 1, `imageSmoothingEnabled` implemented (default true, both API layers), step-1 blits byte-exact by construction, `_compositeScaleOnly` re-shaped to whole-mapping+damage-clip (strip seams byte-identical to full composites), owner D2a policy = INTEGER-scale islands opt out to crisp NN via the standard flag on both backends. Follow-up (small, owner-gated): extend the crisp-NN policy to 90°-multiple ROTATED islands at integer scale — needs quadrant-exact `TransformSpec._cosSin` ({0,±1} at 90° multiples) first, because NN through the current ~1e-16 residue matrices floor-picks wrong texels; note that exactness change re-baselines existing 90° rotation refs, so it is its own mini-arc.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### The backlog's note on this plan
+
+Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12
+(`archive/appearance-local-coords-plan.md` — every appearance body now draws through the ctx matrix,
+byte-identically; the vector-replay prerequisite is banked); §7.8 SWCanvas bilinear LANDED 2026-08-12/13
+(both halves — the as-built record is that plan's §7 banked-item 8, and the closed BACKLOG line for
+it now sits in the plan's § "BACKLOG ledger"); REMAINING = big §7.1-7.4 items, design-first, owner-gated.

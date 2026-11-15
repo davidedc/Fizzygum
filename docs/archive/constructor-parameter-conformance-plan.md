@@ -1217,3 +1217,11 @@ its FLOOR, since both survivors are `undefined`-as-a-VALUE and annotated as such
   the genuine remainder is small (`setValue` ×5, `processKeyDown` ×2 in the serialization rig).
 
 ⚠⚠ Standing, and learned TWICE in this arc (P3, then P8 item 3 in the same class family): **"I checked the callers" is HALF a sweep — a signature is owned by its call sites AND its `super` sites.** `grep -rn "extends <Class>\b" src/`, then RECURSE, however small the caller count looks. P9 adds the companion: **sweep by the FAMILY name, not the one method the count flagged** — two flagged holes in `_createReferenceAndCloseNoSettle` turned out to be six methods sharing one core, all three implementations carrying the same triplicated type-sniff that a single menu item had forced on them. Also: ctor changes are serialization/duplication-SAFE (`Object.create`, ctor never run); sweep BOTH repos incl. the harness `.coffee`; reference churn is a red flag, not an expected cost.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### Plan §7d-D: Widget.textPrompt keeps an undisplayed msg operand
+
+- [ ] Plan §7d-D, deliberately left open: `Widget.textPrompt` keeps a `msg` operand its only
+  receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The dead
+  FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one.

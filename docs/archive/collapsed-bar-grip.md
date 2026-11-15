@@ -122,3 +122,9 @@ tap-through keeps C17 whole. The archived plans stay as they are.
   drag there. The grip now does, and the test releases a drag at its origin to prove it.
 - ⭐⭐ **A regression test is proven by putting the bug back.** A prelude restoring the old recording in the page made the new
   test fail with the report's own numbers: expected 290, found 365.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### Observation — a collapsed band lifted out of its dock gains a toggle
+
+- [ ] Observation, pre-existing — a band collapsed in its dock and then lifted out gains its edit toggle while still collapsed (`FrameWdgt._reDeriveBarRosterNoSettle` re-creates it, where a collapse in place destroys it), so its bar wears a toggle other collapsed bars do not, and shows no grip at any width because the toggle holds that corner. Harmless: expanding it puts everything right.

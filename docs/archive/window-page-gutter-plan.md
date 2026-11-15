@@ -458,3 +458,13 @@ dpr 1 and 2.
 
 - [x] DONE 2026-10-22/23 — P0, U1–U4 (each pixel-neutral at gutter 0), the flip (13 tests changed, all inside the predicted 21), W (owner review D9–D11), ONE recapture wave at mouse and finger, a new test (`SystemTest_macroPageSelectionRingInWindowGutter`); gauntlet 19/19 + homepage.
 - [x] **DONE 2026-10-23** — the `serialization` leg's parallel-only failures were the FILE rig reading Chrome's zero-byte placeholder: Chrome reserves `<name>.fzw.json` at 0 bytes while the bytes are still in `.crdownload`, then renames over it, and the rig took the first `.json` name it saw (a probe watched the placeholder appear in every download). Replaying the rig with an empty download reproduced both logs exactly, down to the dropped hash 1017937238 — which also showed `file.dropHandlerRestores` passing on the REJECTION message (an `inform` pop-up is a FrameWdgt). Fix in `scripts/serialization-file-roundtrip-headless.js`: the download is read when `Browser.downloadProgress` reports it completed (`allowAndName`, read by guid); the restored window is looked for among non-pop-ups, with a rejection reported as one. Both serialization rigs also drop an ABANDONED boot's page errors on their boot-storm reload retry, which a 12-way stress run showed failing a run the reload had rescued.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### Observation — a world snapshot restores bounds and re-lays nothing
+
+- [ ] Observation — a world snapshot restores bounds as saved and re-lays nothing, so a window saved under another theme shows its old geometry until something re-lays it (measured by the U1/U2 probes: a Docs Maker saved at gutter 0 loads flush until re-laid).
+
+### Naming follow-up — gutter names narrower than what they do
+
+- [ ] Naming follow-up — `StretchablePanelWdgt._insetEdgeRects` now also answers all four edges in a gutter, and `ActivePointerWdgt._targetReachedThroughAGutter` / `_moveGutterDropInsideTarget` / `releasedInAGutter` also cover a letterboxed page's margin: names narrower than what they do. `Widget._clampedPositionWithin`'s comment says `aWdgt` where `_moveGutterDropInsideTarget` passes a `Rectangle` (same four accessors).

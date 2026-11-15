@@ -1,426 +1,106 @@
 # BACKLOG.md — every open item, with its owning doc
 
-Index only: the executable detail lives in the linked plan section. **OPEN items only** — an
-item leaves this file when it closes, and lands in the `## BACKLOG ledger` section of the plan
-that closed it (README rule 2). A subsection's owning plan lives in `plans/` while the arc is
-active and in `archive/` once it closes; either way the open items it left behind stay here.
-Closed items whose arc never had a plan file are collected in
-`archive/backlog-closed-items-ledger.md`. Keep it current per README rules 2 and 5; a `- [x]` line
-here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` leg).
+Index only: each open item is ONE line — what is wrong or what is to do, then its reach or severity (README rule 5; a
+line over the recorded length fails `check-doc-narration`, `BACKLOG_ITEM_TOO_LONG`). Its full text is in the plan its
+section heading names (a section that names none: `archive/backlog-open-items-detail.md`), in that plan's
+`## BACKLOG detail` section, under a heading equal to the item's bold title; a trailing `→` gives the file, or the
+quoted heading, only where it differs. A line with no bold title and no `→` is the item's whole text (where it names
+a plan section, `§7.1`, `W2`, `P4`, that section holds the rest). **What is filed (owner, 2026-11-11):** a
+finding a person reaches through the product (a gesture, or a file a save writes) and would notice, or one that is
+medium or worse whatever its reach (a crash or hang, lost work, code run unasked, a gate or rig that can hang or flake
+or whose bite is unproven); a low finding nobody reaches gets one "noted, not queued" line in its plan's
+`## BACKLOG ledger` instead. **OPEN items only** — an item leaves this file when it closes, and lands in the
+`## BACKLOG ledger` section of the plan that closed it (README rule 2). A subsection's owning plan lives in `plans/`
+while the arc is active and in `archive/` once it closes; either way the open items it left behind stay here. Closed
+items whose arc never had a plan file are collected in `archive/backlog-closed-items-ledger.md`, open ones' detail in
+`archive/backlog-open-items-detail.md`. Keep it current per README rules 2 and 5; a `- [x]` line here fails
+`check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` leg).
 
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **Every gate re-masks all of the compiled sources** (found closing "Every build tool walks src for itself", in
-      the plan's ledger; measured). Masking src takes
-      about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
-      build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
-- [ ] **Nothing keeps the similar-code mirror working** (found closing "`find_similar_code.sh` stops at its mirror", in
-      the plan's ledger; measured; a trade-off, not queued by the loop). `buildSystem/coffee-to-js-mirror.js` compiles
-      the tree with CoffeeScript 1 for `find_similar_code.sh`, and no build or gate runs it, so a construct the two
-      compilers read differently stopped the scan unnoticed from f002a7b7 (2026-08-16) to 2026-11-10. Holding every source to the
-      mirror on each build would cost the mirror's run (a few seconds) per build: whether that is worth it is the same
-      question as "Every gate re-masks all of the compiled sources".
-- [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** (found by the
-      independent review closing "The rigs wait for their pages to boot a dozen ways", in the plan's ledger; by
-      reading). `startedWithin` has one line for every predicate, so a world standing whose boot never finished (a
-      rejected layer load, `stillLoadingSources` stuck) reads "did not start within 90s", where the boot smoke's own
-      wait used to say it did not finish booting.
-- [ ] **The profiling scripts boot their pages their own way** (same review). `docs/profiling/prof-run.js` and
-      `prof-interactive.js` keep their own world waits and "did not become ready" line, outside the shared boot wait.
-- [ ] **`fg`'s selftests-leg budget comment and its `run-sequence` usage are stale** (same review; by reading).
-      `fg`'s comment budgets the leg at about 153 s alone and 212 s in a
-      loaded wave A (measured 326 s on 2026-11-11, the smoke-apps self-test its longest file now that its two
-      never-starting pages wait the shared 90 s each), and its `run-sequence` usage does not say the runner now refuses a
-      stale build.
-- [ ] **`fg status` reads build freshness from the sources alone** (found closing "Build freshness reads only the
-      sources' mtimes", in the plan's ledger; by reading).
-      The runners now ask `Fizzygum/buildSystem/lib/build-inputs.js` (the files the build's output is made from)
-      against `.build-stamp`; `fg status`'s `build: FRESH/STALE` line still compares the sources' mtimes on its own, so
-      an edit of `parts.json`, `src/index.html`, `vendor/` or the build's Python still reads FRESH there while every
-      runner refuses the build. It could ask the same definition (`node -e` over build-inputs.js).
-- [ ] **A hand-list sanction can cite a script that judges nothing** (found by the independent review closing "Every
-      tool walks the tooling's own files for itself", in the plan's ledger; by reading; low). `check-hand-lists.js`
-      accepts as a guard any existing gate-file NAME that the run set holds, and the run set holds every launched or
-      required script: a required library (`coffee-mask.js`) or a script that states `not-a-gate` (the tests repo's
-      `generate-tests-manifests.js`, `recompress-swcanvas-references.js`) is citable, so a sanction can name a "guard"
-      that checks nothing. The gate census (`run-selftests.js` `gateCensus`) knows the true gate set.
-- [ ] **A widget file runs the code it carries at load, with no confirm** (found closing "The widget-file door never
-      loads the lazy part a file needs", in the plan's ledger; measured). A `{"$src"}` is restored with
-      `injectProperty`, which evaluates `@<name> = <text>`, and nothing requires the text to be a bare function
-      literal: a file whose method source is `(window.x = 1; -> 42)` set `window.x` on load, through the drop and
-      "Open from file…". The world door asks first ("…can run code the snapshot carries"); the widget door asks
-      nothing. Whether a widget file carrying a `{"$src"}` should confirm, or a `{"$src"}` be held to a function
-      literal, is a product call.
-- [ ] **A save refused for a function a run left does not offer its way out** (found closing "A run that sets a
-      widget field to a function blocks every world snapshot", in the plan's ledger; OWNER DECISION). The refusal names
-      the widget, the field and the gestures that clear it (an inspector's Remove, or its Save as
-      CoffeeScript), and every later save is refused until the person takes one. Whether the refusal should also
-      OFFER that way out (a button that removes the field, or opens an inspector on the widget), whether a save
-      should instead LEAVE such a function out and say so (a told drop, against the serializer's "never a silent
-      drop" unless a told drop is ruled not silent), or whether a run should WARN when it leaves one, is a UX call.
-- [ ] **An object inspector's "Inherited" filter hides a value a widget holds under a name a superclass declares**
-      (found by the independent review closing "A run that sets a widget field to a function blocks every world
-      snapshot", in the plan's ledger; measured 2026-11-10 and PARKED for the owner: a design question). With
-      "Inherited" off (the default), `InspectorWdgt._filteredMemberNames` keeps a member only if the subject's own
-      class's prototype declares it or no prototype up the chain does, and "Own props only" narrows that further: an own
-      VALUE under a name a superclass declares counts as inherited, and `memberFactsOf` dims it. So a run's
-      `@step = -> …` (`Widget` declares `step`) is listed only with Inherited on, and so is every widget's own state
-      (`parent`, `bounds`, `color`, …): measured, a rectangle lists 1 row by default and 0 with "Own props only" while
-      owning 14; a text hides 23 own props, the world 24. The serializer's refusal of a run's function names this
-      inspector as the way out. What "Inherited" and "Own props only" mean for an own value is the inspector's design;
-      the dimming half is also one of "W3 follow-up"'s owner-review points (below). Options: keep (the remedy text then
-      says "turn on Inherited"); a value the subject holds is never inherited (the default list gains every own prop,
-      +10–24 rows on common widgets); "Own props only" lists every own prop whatever "Inherited" says (the default list
-      unchanged); only an own FUNCTION under a declared name is listed by default. (Its code-pane half closed
-      2026-11-10 in the plan's ledger, under the title "An object inspector hides a widget's own field that shadows a
-      member it inherits".)
-- [ ] **On a pre-compiled tree, a member a run replaced before the reflective layer arrived reads as its class's
-      source** (found by the independent review closing "A run that replaces a class's member reads as a recorded
-      source it no longer runs", in the plan's ledger; reached on `homepage` / `dev-precompiled`: Run `X::m = -> …` in
-      a desktop text, then open the first inspector). The layer ingests each class beside the code the image runs
-      (`Class._keepMyMembersRecords`) and keeps a record for whatever function the prototype holds then. Telling a
-      run's function from the image's by its NAME was tried and FALSIFIED by the production smoke: the image is
-      minified (`terser --compress --mangle`), which drops function-expression names, so every image member is
-      anonymous too. A FIELD a run wrote before the layer arrived reads the same way (the ingest keeps the value the
-      prototype holds then as the field's record, `Class.keepFieldRecord`, and a value has no identity at all), which
-      the field half of "A class inspector's field row reads its record by NAME" left here. Options (a trade-off, the
-      owner's): keep function names in the image (`keep_fnames`; bytes unmeasured) and skip anonymous functions at
-      ingest; a boot-side note of the functions (and field values) the image made, kept as it defines each class; or
-      accept it.
-- [ ] **A wrapped member reads as compiled text, which the Smalltalk talk plan says it never does** (same review;
-      reached by the plan's U2 MethodTally, which wraps every own function member of the profiled classes).
-      `docs/plans/smalltalk-talk-2026-11-plan.md` (S1, its §"selectionFromList shows the recorded CoffeeScript") relies
-      on the inspector reading a member's source by name; it reads the source kept with the FUNCTION, so a wrapper
-      shows its compiled JavaScript. Forwarding the record onto a wrapper (`Class.keepMemberRecord wrapper,
-      Class.memberRecordOf original`, public) or accepting compiled text: the plan's owner's call.
-- [ ] **The world's inspector offers to edit its browser listeners** (found by the independent review closing "A run
-      that sets a widget field to a function blocks every world snapshot", in the plan's ledger; by reading). The
-      world's input bridge (`world.browserInput`, a `BrowserInputBridge`) holds its DOM listeners as own function fields
-      (`pointerdownBrowserEventListener`, …), so an object inspector opened on it from the world's inspector lists them
-      with Remove, Rename and Save: changing one leaves the browser calling the old function, and
-      `removeEventListeners` passes the new one, which was never registered — at the next reset the original closure
-      stays attached and keeps the dissolved world alive.
-- [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
-      independent review closing "A run that sets a widget field to a function blocks every world snapshot", in the
-      plan's ledger; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
-      label such a pane, or make it read-only? The same holds, with real CoffeeScript, on a READ-ONLY subject (a class
-      function's statics): the pane is typeable and shows a modified mark, with no Save (noted closing "An object
-      inspector on a class shows its statics as compiled text").
-- [ ] **Three plans teach a stamp without its declaration** (found by the independent review closing "A runtime
-      object stamped derived is dropped from an inspector holding it", in the plan's ledger; by reading).
-      `docs/plans/creation-and-templates-plan.md` ("and/or stamp"), `dataflow-engine-implementation-plan.md` ("skipped
-      by the copier") and `affine-transforms-plan.md` name a no-op `rebuildDerivedValue` stamp as what keeps a
-      runtime-only object out of a copy; it does so only in a field its class declares in `@serializationTransients`
-      (stamp AND declare — the reference doc §5), else the stamp makes a page object, shared by a copy.
-- [ ] **A runtime object can be stamped only by one class's private helper** (found by the independent review
-      closing "Nothing holds every stamped field to its declaration", in the plan's ledger; by reading; low).
-      `FridgeMagnets3DCanvasWdgt._keepTransient` holds a stamp to its declarations; a second class stamping
-      `rebuildDerivedValue` by hand has no such check, and nothing restricts where that stamp is written (a shared
-      helper, or a static rule on `rebuildDerivedValue` writes). Its firing is proven only by a scratch plant.
-- [ ] **The field census is blind to `@[name] =` writes** (same review; by reading; low).
-      `census-widget-conformance.js` facet 1 (and the other `@field =` scanners) read a literal `@name` write, and their
-      headers state no blind spot for a computed one.
-- [ ] **The W3 plan's grep for typed arrays in `src/serialization/` now finds a predicate** (found by the independent
-      review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's ledger; by
-      reading; low). `docs/plans/wire-vocabulary-extensions-plan.md` reads the grep as 0 hits; it now finds 2 lines in
-      `NativeValueKinds` (`isBuffer`'s comment and code: a predicate the Duplicator and `WorldInventory` ask — still no
-      serializer arm, as the plan's S1 says).
-- [ ] **Both walkers drop an Array's or a buffer's own extra properties, by no stated rule** (found by the second
-      independent review closing "An inspector's Duplicate throws on a subject the copier refuses", in the plan's
-      ledger; by reading; low). `_copyArray`, `_copyBuffer` and the Serializer's `$Array` carry the items and nothing else.
-- [ ] **Is an inspector's subject always a page object?** (found by the independent review closing "A runtime object
-      stamped derived is dropped from an inspector holding it", in the plan's ledger; the owner's ruling). A Duplicate
-      deep-copies an ordinary data subject (an array, a plain object, a data-class instance), so the copy inspects a
-      detached clone rather than the live value it was opened on; a widget subject is shared (an outside widget).
-- [ ] **A hook override that skips `super` is unguarded** (found by the independent review closing "A drag-scroll
-      leaves a viewport holding a function no save can write", in the plan's ledger; by reading). Two toolbars
-      overrode `_reactToBeingCopied` without `super` the moment `ViewportWdgt` gained one, and nothing said so: no gate
-      holds an override of a per-class hook (`_reactToBeingCopied`, `_afterDeserialization`, …) to call the one it
-      shadows.
-- [ ] **`_runChildrensStepFunction` walks no children** (found by the independent review closing "Widget's `step`
-      documentation is false", in the plan's ledger; by reading; low). `WorldWdgt._runChildrensStepFunction` walks the
-      flat `world.steppingWdgts`; its name, and six docs that cite it (`Fizzygum/CLAUDE.md` spells it without the
-      underscore), still describe the tree walk it replaced. Its comment says a member removed mid-walk is fine, and
-      not that one ADDED mid-walk (`Set.forEach` visits it) steps in the same frame.
-- [ ] **A paint that throws and bans no one is told again on every frame** (found by the independent review closing "A
-      paint that throws after its children blames the last child painted", in the plan's ledger; reached: a class edit
-      that makes a desktop widget's `opaqueCoveredRect` throw — the world's occlusion scan meets it before any widget
-      paints — or one that makes the world's own paint throw). The retry loop ends on a pass that bans no one new, so
-      the page goes on, but nothing is banned: the next frame's paint throws the same way, and each error is added to
-      the error log, whose `addText` re-sets the whole growing log every time, so the page slows as it goes.
-- [ ] **An auto-scroll's step is told a press's end as a stroke's would be** (found by the independent review closing
-      "A viewport's gesture bookkeeping outlives its gesture", in the plan's ledger; by reading; low).
-      `ViewportWdgt.pressEnded` / `pressCancelled` call whichever `_scrollStep` is installed with a point; an
-      auto-scroll's step takes none, so a press ending on a pane that is auto-scrolling runs one more auto-scroll frame.
-- [ ] **Nothing standing checks that a glide is seen** (same review; by reading; low). The suite suppresses glides while
-      a test plays, so `ViewportWdgt.isScrollGliding` or `WorldWdgt.anyScrollMomentumOngoing`
-      answering false always would pass every gate, and the macro pump's glide gate (`MacroToolkit._queueDrained`) can never close, since a
-      macro only runs while a test plays; only a scratch probe (`.scratch/viewport-gesture-bookkeeping/probe.js`) covers it.
-- [ ] **A test's provenance says the edge auto-scroll is suppressed under the pacing control** (same review; by
-      reading; low). `SystemTest_macroScrollPanelDragToScrollFlags`'s provenance (and its visualisation page) says so,
-      and names the retired `world.wdgtsWithOngoingScrollMomentum`; the auto-scroll is not suppressed (its contract is
-      saturation, DETERMINISM.md §3m).
-- [ ] **A `$Canvas`'s size is not bounded by the backend's surface** (found by the independent review closing "The load
-      vets the whole envelope up front", in the plan's ledger; by reading). On an SWCanvas page a canvas wider or taller
-      than 16384 px — saved by a native page, or resampled up by a load at a higher pixel ratio — throws in its builder
-      after the teardown; the bound is the loading page's backend's, so it is a load-time (not a shape) question.
-- [ ] **Some envelope fields are type-checked only** (found by the same review; by reading; low). `formatVersion`
-      (missing, a string), `kind` (any value but "world" restores with fresh ids), `wallpaperPatternName` (any
-      string), a user's `armedDrawingTool` (any string), and unknown section or record fields pass unread.
-- [ ] **`world.loadGuard.unbuildableClassRefused` cannot tell which rule refused** (found by the independent review
-      closing "Duplicate or over-counter iids load", in the plan's ledger; by reading; low). Its expected cause
-      `'NoSuchClassWdgt'` also appears in a wrong refusal naming that class, so the check passes either way.
-- [ ] **A record sharing a surviving widget's id loads** (same review; by reading; low). Neither iid rule sees the widgets
-      a load keeps (the hand): a corrupt file's `ActivePointerWdgt` record of iid 1 restores a second widget sharing the
-      hand's `uniqueIDString`.
-- [ ] **The load restores a `WorldWdgt` counter no save writes** (same review; by reading; low).
-      `Serializer.collectIdCounters` skips `WorldWdgt`, but `loadWorldSnapshot`'s step 2 writes any class's key from
-      `.idCounters`, and the vetting does not refuse that one.
-- [ ] **A widget file's records are indexed by saved ids its load reassigns** (same review; by reading; low).
-      `Deserializer.deserialize` pass 1 indexes every record by its saved iid for `{"$ext"}` (a world file's form),
-      though a widget file's pass 3 gives each a fresh id.
-- [ ] **A lazy part's class is judged after the world door's confirm** (same review; by reading; low; pre-existing).
-      The reasons that need the class (a method's source, an app key, the two iid rules) wait for its part, so a
-      person can confirm replacing the desktop and only then be refused, after the part's fetch.
-- [ ] **A save writes an info-doc flag that is no boolean, which the load refuses** (found by the independent review
-      closing the serialization cleanup — "A user object with an own `$wk` key saves and then is refused" and three
-      more — in the plan's ledger; by reading; low). The save sweeps every own world field the flag name fits and writes
-      its value as it is; a console `world.infoDoc_x_created = 1` makes a file `_worldSectionProblem` refuses — the
-      "save writes what the load refuses" class the Color refusal closed.
-- [ ] **`Deserializer.deserialize` on a world file answers no widget and refuses nothing** (same review; by reading;
-      low; pre-existing). Called directly on a `kind:"world"` envelope it answers `widget: shells[undefined]` (a world
-      file has no root); only `loadWorldSnapshot` reads one.
-- [ ] **A load whose restore throws keeps the registry of the world it replaced** (found by the independent review
-      closing "A page member the load could not return to boot runs in the loaded world but is recorded nowhere", in
-      the plan's ledger; by reading; low). `loadWorldSnapshot` installs the restored registry only on success, though
-      by then the page's code is boot plus the file's replays plus the unreturned members: a save after the failed
-      load writes records that no longer describe it.
-- [ ] **A restored world's asset reload that fails is an unhandled rejection** (same review; by reading; low).
-      `result.whenReady?.then? => @_fullChanged()` (`WorldWdgt.loadWorldSnapshot`) has no rejection handler.
-- [ ] **The serialization reference numbers the load's steps apart from the code** (same review; by reading; low).
-      §11 counts the restore 1–5 where `loadWorldSnapshot` counts 0–9, and the notice's paragraph sits under its step
-      1 ("before anything changes") though the return and the replays run after the teardown.
-- [ ] **A colour takes any number: NaN, ±Infinity and out-of-range components paint differently on each backend**
-      (found closing "`Color.create` never checks its components", in the plan's ledger; by reading; a design call).
-      `Color` reads every component as a number (`Color._channel`, `Color._alpha`), and any number makes a colour:
-      `Color.create NaN, 0, 0` (as a non-numeric text reads) is `rgb(NaN,0,0)`, which the native canvas ignores (the
-      previous fill style paints) and SWCanvas parses as 0 (black; a NaN alpha stays opaque), and ±Infinity does the
-      same; `Color.create 300, 0, 0` keys apart from the `255, 0, 0` it paints as. Options: refuse a non-finite
-      component (the format then needs no `{"$num"}` in a Color); clamp r, g, b to 0..255 and a to 0..1, one key per
-      painted colour; leave it.
-- [ ] **Spreadsheet formulas are taught `new Color`, which the class calls factory-only** (found by the independent
-      review closing "`Color.create` never checks its components", in the plan's ledger).
-      `docs/specs/dataflow-engine-spec.md` teaches `new Color r, g, b` in a formula; `Color`'s constructor comment says
-      it "should ONLY be used from the static factories" (`Color.create` interns, so a formula mints a fresh instance
-      per recompute). Either teach `Color.create`, or say why a formula's colour need not be interned.
-- [ ] **A load judges an app key's kind by the page's edited members, then returns them to boot** (found by the
-      independent review closing "An `app:` key naming a class that is no app is `new`-ed during a restore", in the
-      plan's ledger; by reading; low, contrived). `WellKnownObjects.isAppClass` reads a class's LIVE `wellKnownKey`, and
-      the world door asks it before its teardown, while the load returns the page's class edits to boot
-      (`SourceEditsRegistry.returnThePageToBootSources`) after it: a page that added or edited a class's
-      `wellKnownKey` passes the up-front judgement, and the restore's own `resolveApp` then throws after the teardown.
-      The up-front predicate is otherwise a pure read of the file; this one depends on page state the load is about
-      to change. PARKED 2026-11-10 by the backlog loop for the owner (a design call): judging the kind
-      by the members the load WILL leave means either running the file's `wellKnownKey` source (or boot's) before the
-      confirm — code from the file, before the person agreed to load it — or moving the app-key judgement after the
-      return to boot and replay, which happen after the teardown, so a refusal there would leave an empty desktop.
-      The same seam has two more directions (found by the review closing [30]/[32], by reading): a FILE needs no page
-      edit to reach it — its own class-level record editing or removing `wellKnownKey`, beside an `app:` key, passes
-      the up-front judgement (the page's members) and empties the desktop when the replay removes the marker and
-      `resolveApp` throws; and a page that edited a REAL app's marker away has a genuine file refused up front,
-      although after the return to boot that class is an app again (desktop kept, refusal wrong).
-      Options: (a) leave it (contrived either way); (b) judge app kind by a fact no member edit changes — a class whose
-      prototype descends from `WindowedApp`, or a class-side (static) flag, which member edits cannot reach and which
-      names no app-kit class from core — dropping the marker as the definition; the WRITER changes too
-      (`WellKnownObjects.keyFor`'s marker fallback), or saving and loading disagree; the only option that closes all
-      three directions; (c) make the restore's own `resolveApp` refuse softly (an inform and an absent app) — against
-      `WellKnownObjects`' own law that a key naming a class must resolve; (d) judge app kind against the BOOT member
-      (the page's own vault text, trusted, and loaded wherever a page can have edited one), which closes both page
-      directions and runs none of the file's code, leaving the file direction; (e) refuse up front a file whose
-      class-level records name `wellKnownKey` — static, and it fails in the safe direction; (f) return the page to
-      boot after the confirm and before the teardown — a refused load has then already discarded the page's edits.
-- [ ] **A kept-source alias loses its identity on a copy and a load** (found by the independent review closing "A kept
-      source of a fat-arrow method keeps its first receiver in copies", in the plan's ledger; by reading; pre-existing
-      for the load). `B.g = P.f` holds P's injected function; the copy and the load each compile `g` afresh on B's copy, so
-      `B'.g` is bound to `B'` and is no longer `P'.f` — whether an alias across widgets should follow its referent is
-      the open part.
-- [ ] **A copy pixel-copies every back buffer it will discard** (same review; by reading). `backBuffer` is a render
-      cache (a serialization transient, not `isDerivedAt`), so `_cloneContentInto` deep-copies the canvas
-      (`_copyCanvas`, a `drawImage`) for each widget of a copy, and the copy repaints at its first paint anyway.
-- [ ] **`eliminateInvisibleCharacter` strips only the first marker** (same review; by reading). `String.replace` with a
-      string pattern replaces one occurrence; a measured string holding two U+2063 (a user's text carrying one) is
-      measured with the second.
-- [ ] **The Smalltalk talk plan describes a `<name>_source` field** (found by the independent review closing "A run that
-      replaces a saved method leaves its kept source describing the old one", in the plan's ledger). `docs/plans/smalltalk-talk-2026-11-plan.md`
-      says `Class.applyMemberEdit` sets `proto[memberName + "_source"]` (false before this close too) and skips
-      `<name>_source` strings that no longer exist: the injected source is kept with its function (`Widget.keptSourceOf`).
-      Left for the owner, whose plan it is.
-- [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** (found by the independent
-      review closing "The inspector churn set cannot see a class inspector's member list move", in the plan's ledger;
-      by reading; low). The churn set and its readers act per TEST, not per shot: a test in the set is recaptured whole,
-      so a shot that proves BEHAVIOUR rather than renders a member list is re-recorded with the member
-      list's churn, whatever it now shows.
-- [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** (found closing "A class edit
-      refreshes only what a repaint shows", in the plan's ledger; measured). In that item's world census, an edit of
-      `MenuItemWdgt.preferredExtentForWidth` refreshed every widget in one settle (`WorldWdgt.noteCodeChanged`): the
-      class inspector's member rows shrank, and their `ScrolledPaneWdgt` stayed 9164 px tall where a second refresh
-      makes it 7420, after which it is stable. At rest no pixel differs, but the scroll range is wrong until then. A
-      settled world that a second re-lay still moves is a question for the engine.
-- [ ] **Test macro sources are outside every stink's reach** (found by the independent review closing "The wall-clock
-      stink does not see `performance.now()`", in the plan's ledger; by reading; low). `check-stinks.js` reads the
-      compiled sources (`lib/source-files.js` `compiledFiles`: src and the harness); a macro body is CoffeeScript held
-      in a `tests/` template literal, which the gates that read macros (`check-macro-source-discipline.js`,
-      `check-call-arguments.js`, …) hold to other rules, so a macro that decides something on `Date.now()`,
-      `performance.now()`, `Math.random()` or a timer has no gate. No macro reads a clock
-      today (three mention one, in prose).
-- [ ] **A member written inside a block (a prototype extension, a boot function) is `(top)` to a stink's sanction** (same review; by reading;
-      low). `check-stinks.js` names a member from a class-body key or from the code at the left margin; two of
-      `String-extensions.coffee`'s prototype extensions, and `window.hashOfString` (inside `globalFunctions.coffee`'s
-      `do ->` memo block), sit indented under a block, so a sanction there could not name its method. No stink hits one
-      today.
-- [ ] **Every test's metadata header still calls a macro test "the new style"** (found by the independent review closing
-      "The automator event commands' constructors are code nothing runs", in the plan's ledger; by reading; low). 387
-      metadata headers say "(the new style)", though macros are the only style and the recorder is gone: a mechanical
-      comment edit over the metadata file of every test. (The `_automationCommands.js` headers were re-emitted without
-      it by `plans/top-10-cleanups-round-2-plan.md` §8.)
-- [ ] **No gate holds a commands-file header to its own test** (same review; by reading; low). A header names its
-      metadata file (`(<Name>.js)`), and a header copied from a sibling test would name the sibling's: nothing checks
-      it. Every header names its own test today (round 2's §8 re-emitted all 389 from each test's name); a new test's
-      author copies one by hand.
+- [ ] **Every gate re-masks all of the compiled sources** — masking src takes about 650 ms and 20 build gates each mask all of it: about 13 s a build; a mask cache keyed by file content could win it back.
+- [ ] **Nothing keeps the similar-code mirror working** — no build or gate runs `coffee-to-js-mirror.js`, so `find_similar_code.sh` stopped unnoticed from 2026-08-16 to 11-10; holding sources to it costs seconds a build.
+- [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** — `startedWithin` has one line for every predicate, so a boot stuck after the world stands misreads. → "A booted-true wait that saw the world but not boot's end"
+- [ ] **The profiling scripts boot their pages their own way** — `docs/profiling/prof-run.js` and `prof-interactive.js` keep their own world waits and "did not become ready" line, outside the shared boot wait.
+- [ ] **`fg`'s selftests-leg budget comment and its `run-sequence` usage are stale** — the comment budgets about 153 s alone, 212 s in wave A (measured 326 s, 2026-11-11); the usage omits the stale-build refusal.
+- [ ] **`fg status` reads build freshness from the sources alone** — an edit of `parts.json`, `src/index.html`, `vendor/` or the build's Python reads FRESH there while every runner refuses the build.
+- [ ] **A hand-list sanction can cite a script that judges nothing** — `check-hand-lists.js` accepts any run-set script as a guard (a library, a `not-a-gate` script), so a guard may check nothing; by reading, low.
+- [ ] **A widget file runs the code it carries at load, with no confirm** — a `{"$src"}` method text runs on a drop or "Open from file…" (the world door asks first); confirm, or hold it to a function literal: a product call.
+- [ ] ⛔ **A save refused for a function a run left does not offer its way out** — every later save is refused until the person clears the field; offer a button, drop it and say so, or warn at the run: a UX call.
+- [ ] ⛔ **An object inspector's "Inherited" filter hides own values under superclass-declared names** — a run's `@step` and own state (`parent`, `bounds`) list only with Inherited on; four options, the owner's design call. → "An object inspector's Inherited filter hides values under superclass names"
+- [ ] ⛔ **On a pre-compiled tree, a run's early member replacement reads as its class's source** — reached on `homepage`: the minified image has no function names; options: `keep_fnames`, a boot-side note, or accept. → "A pre-compiled tree's replaced member reads as its class's source"
+- [ ] ⛔ **A wrapped member reads as compiled text, which the Smalltalk talk plan says it never does** — U2's MethodTally wrappers show compiled JavaScript; forward the record onto the wrapper or accept it: the owner's call. → "A wrapped member reads as compiled text"
+- [ ] **The world's inspector offers to edit its browser listeners** — `world.browserInput`'s listener fields list Remove/Rename/Save; an edit leaves the browser calling the old function and keeps the dissolved world alive.
+- [ ] ⛔ **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** — its Save is always refused; a read-only subject (class statics) is typeable too; label the pane or make it read-only. → "A function with no kept source shows compiled JavaScript"
+- [ ] **Three plans teach a stamp without its declaration** — creation-and-templates, dataflow-engine-implementation and affine-transforms omit `@serializationTransients`; a stamp alone makes a page object a copy shares.
+- [ ] **A runtime object can be stamped only by one class's private helper** — `FridgeMagnets3DCanvasWdgt._keepTransient` holds its `rebuildDerivedValue` stamp to declarations, nothing else does; proven only by a scratch plant.
+- [ ] **The field census is blind to `@[name] =` writes** — `census-widget-conformance.js` facet 1 and the other `@field =` scanners read only a literal `@name`, and their headers state no blind spot; by reading, low.
+- [ ] ⛔ **Is an inspector's subject always a page object?** — a Duplicate deep-copies a data subject (an array, a plain object), so the copy inspects a detached clone; a widget subject is shared. The owner's ruling.
+- [ ] **A hook override that skips `super` is unguarded** — two toolbars overrode `_reactToBeingCopied` without `super` unnoticed; no gate holds a per-class hook override (`_afterDeserialization`, …) to call the one it shadows.
+- [ ] **A paint that throws and bans no one is told again on every frame** — reached by a class edit making `opaqueCoveredRect` or the world's paint throw; the growing error log is re-set each frame, so the page slows.
+- [ ] **Nothing standing checks that a glide is seen** — the suite suppresses glides, so `isScrollGliding` answering false passes every gate and the macro pump's glide gate never closes; only a scratch probe covers it.
+- [ ] **A `$Canvas`'s size is not bounded by the backend's surface** — on an SWCanvas page a saved canvas over 16384 px (from a native page, or resampled up) throws in its builder after the teardown.
+- [ ] **`world.loadGuard.unbuildableClassRefused` cannot tell which rule refused** — its expected cause `'NoSuchClassWdgt'` also appears in a wrong refusal naming that class, so the check passes either way.
+- [ ] **A save writes an info-doc flag that is no boolean, which the load refuses** — a console `world.infoDoc_x_created = 1` makes a save the load refuses (the save-writes-what-load-refuses class); by reading, low.
+- [ ] **A load whose restore throws keeps the registry of the world it replaced** — a save after the failed load writes records that no longer describe the page's code; by reading, low.
+- [ ] **A colour takes any number (NaN, ±Infinity, out of range)** — `rgb(NaN,0,0)` keeps the previous fill on native and paints black on SWCanvas; `300,0,0` keys apart from `255,0,0`; refuse, clamp or leave: a design call. → "A colour takes any number: NaN, ±Infinity, out of range"
+- [ ] **Spreadsheet formulas are taught `new Color`, which the class calls factory-only** — `docs/specs/dataflow-engine-spec.md` teaches it, so a formula mints an un-interned colour per recompute; teach `Color.create`, or say why not.
+- [ ] ⛔ **A load judges an app key's kind by the page's edited members, then returns them to boot** — a `wellKnownKey` edit passes the up-front check and empties the desktop when `resolveApp` throws; parked for the owner. → "A load judges an app key's kind by the page's edited members"
+- [ ] **A kept-source alias loses its identity on a copy and a load** — `B.g = P.f` is compiled afresh on B's copy, so `B'.g` is no longer `P'.f`; whether an alias across widgets should follow its referent is open.
+- [ ] **A copy pixel-copies every back buffer it will discard** — `_cloneContentInto` deep-copies each widget's `backBuffer` render cache (`_copyCanvas`), though the copy repaints at its first paint anyway.
+- [ ] **`eliminateInvisibleCharacter` strips only the first marker** — `String.replace` with a string pattern replaces one occurrence, so a text holding two U+2063 is measured with the second.
+- [ ] ⛔ **The Smalltalk talk plan describes a `<name>_source` field** — it says `Class.applyMemberEdit` sets `proto[memberName + "_source"]`; the source is kept with its function (`Widget.keptSourceOf`). The owner's plan.
+- [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** — it acts per test, so a shot proving behaviour is re-recorded with the member list's churn; by reading, low.
+- [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** — after a class edit an inspector's pane stayed 9164 px where a second re-lay gives 7420; the scroll range is wrong until then.
 
 ### `archive/every-gate-bites-plan.md` — every gate's every rule bites, and the build refuses a gate without a proof (CLOSED 2026-11-07; Units 0, A–F done, see its ledger)
-- [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes
-      on purpose, filed with what it misses:
-  - [ ] `check-raw-pointer-reads`: a column-0 line inside a handler ends its body, and any `screenPointToMyPlane` on
-        a line excuses every raw read on it.
-  - [ ] `vm-truth-gate.js` skips its heap-floor ceiling below 20 samples per page, so a short (`--tests=`) run never
-        judges it; its proof plants `HEAP_FLOOR` on a fabricated `--audit-dir=` instead.
+- [ ] **The masks Unit 0 found that are heuristic by design** — `check-raw-pointer-reads` ends a handler at a column-0 line and excuses a line naming `screenPointToMyPlane`; `vm-truth-gate.js` skips its heap floor below 20 samples.
 
 ### `archive/tests-repo-readers-plan.md` — one definition of a method reference, read from code (CLOSED 2026-11-06; Units 0, A, B, C, E done, see its ledger)
-- [ ] **`census-property-placement`'s exclusion 1 counts every WORD inside any string** (`STRING_WORDS`, 3429)
-      as a possible by-name access. By the method-reference rule (`buildSystem/lib/method-references.js`) only a
-      whole-name string can reach a member. Advisory census; its tests-repo reading is already right.
+- [ ] **`census-property-placement`'s exclusion 1 counts every WORD inside any string** (3429) as a possible by-name access, where only a whole-name string can reach a member; an advisory census.
 
 ### `archive/hand-kept-lists-plan.md` — hand-kept lists: derive them, or make them fail when stale (2026-11-05; CLOSED 2026-11-06, all four tiers landed)
-- [ ] **Tier 4's residue (plan §6 ledger):**
-  - [ ] **The four LiveCodeLang vocabulary lists are the hand-list gate's whole Fizzygum baseline (4)**
-        (`LCLCodePreprocessor`'s `qualifyingCommands` / `primitives` / `commandsExcludingScaleRotateMove` /
-        `colorCommands`): they mirror the commands `FridgeMagnets3DCanvasWdgt` implements, and only six of the 29 are
-        exercised by a test. Their guard is `plans/livecodelang-cleanup-and-extensions-plan.md`'s R1 (the
-        headless preprocessor gate reading the canvas's methods); then sanction them and drop the baseline to 0.
+- [ ] **Tier 4's residue** — the four LiveCodeLang vocabulary lists are the hand-list gate's whole Fizzygum baseline (4); once the LiveCodeLang plan's R1 preprocessor gate guards them, sanction them and drop it to 0. → "Tier 4's residue (plan §6 ledger):"
 
 ### `archive/world-inventory-instruments-plan.md` — the object-lifetime program, stated in that plan's §0 (Arcs A, B and C CLOSED 2026-08-20/21)
-- [ ] **OWNER DECISION (2026-08-21, from the async-rejection sweep): a failed async door tells the user NOTHING.** Every product promise chain was swept for missing `.catch` (13 `.then` in `boot/globalFunctions.coffee`, 10 in `PartsRegistry.coffee`, 3 each in `WorldWdgt.coffee` and `boot/loading-and-compiling-coffeescript-sources.coffee`, 2 in `Widget.coffee`, 1 each in `FileLoading`/`DemoMenus`/`VideoPlayerWithRecommendationsWdgt`/`SWCanvasElement-extensions`). ⭐ **The sweep's finding is that these are NOT N defects** — the subsystem has thought about rejection and handles the parts that matter: `PartsRegistry` neutralises unhandled rejections centrally (`inFlight.catch -> undefined`), `canEverProvideClass` keeps an icon off screen when its part can never arrive (the `lean` dead-icon rule), `whenOptionalPartsLoaded` exists precisely so a door cannot become "a click that can only reject", and `loadWorldSnapshot` bails out BEFORE mutating so a failed load "leaves the user with nothing instead of the desktop they still have". What is uniformly absent is USER FEEDBACK: on a TRANSIENT failure of a part the build does ship (a bad read over `file://`, a corrupt part file), the click silently does nothing — consistently, everywhere, which is what suggests it is a decision rather than an oversight. The question is whether a failed door should `inform`, and it is a product call. ⚠ Note this is a DIFFERENT shape from the `saveFailedScreenshots` bug fixed the same day: that one was PARTIAL failure discarding work that had already succeeded, which is a bug on any reading; these are all-or-nothing by design. The two FILE doors are settled: a drop or "Open from file…" reports a load's asynchronous failure as it reports a synchronous one (`FileLoading._reportingSerializationErrors`, argument-holes ledger, "The widget-file door never loads the lazy part a file needs"). The question stands for every other async door.
-- [ ] StorageSorter-roots unification (plan D2's stated non-goal): `StorageSorter._runClassifier`'s
-      phases build their own root/marking enumeration — examine folding it onto
-      `WorldWdgt.graphLivenessRoots()` in a dedicated pass, NOT by side-effect of another arc.
+- [ ] ⛔ **OWNER DECISION: a failed async door tells the user NOTHING** — on a transient failure of a part the build ships (a bad `file://` read), a click silently does nothing; whether a door should `inform` is a product call. → "OWNER DECISION: a failed async door tells the user nothing"
+- [ ] StorageSorter-roots unification (plan D2's stated non-goal): examine folding `StorageSorter._runClassifier`'s own root/marking enumeration onto `WorldWdgt.graphLivenessRoots()`, in a dedicated pass. → "StorageSorter-roots unification (plan D2's stated non-goal)"
 
 ### `archive/shared-base-layer-part-plan.md`
-CLOSED 2026-08-02 — executed in full; the residue is in `architecture/build-and-packaging.md` §2/§5.
-As-landed record (the `app-kit` part itself, and the `check-part-edges.js` gate gap it found in
-passing): that plan's § "BACKLOG ledger". What stayed open is the two classes it could not move:
-- [ ] **The last two, and they are a DECISION not a gap: `CanvasWdgt` + `PatchNodeWdgt` (4.3 KB) stay in core.** The EAGER `patch-programming-experimental` part EXTENDS `PatchNodeWdgt`, and an eager part cannot derive from a lazy one at all; `CanvasWdgt` is extended by no eager part since the video player went (2026-11-13), and stays on layering merits. ⛔ Do not re-attempt for the bytes. Full pricing: `architecture/build-and-packaging.md` §5.
+CLOSED 2026-08-02, executed in full (residue in `architecture/build-and-packaging.md` §2/§5); open: the two classes it could not move. → "The backlog's note on this plan"
+- [ ] **The last two stay in core: `CanvasWdgt` + `PatchNodeWdgt` (4.3 KB)** — a decision, not a gap: the eager `patch-programming-experimental` part extends `PatchNodeWdgt`. Do not re-attempt for the bytes. → "CanvasWdgt and PatchNodeWdgt stay in core: a decision, not a gap"
 
 ### `archive/stroke-flip-and-fracplane-coverage-plan.md`
 CLOSED 2026-08-12 — executed in full the day it was authored; residue in `architecture/appearance-paint-convention.md` (stroke + overlay bullets) and the archive stamp. P1–P3 and the thin-stroke finding are in that plan's § "BACKLOG ledger". What remains open is one of the pre-existing defects the arc FOUND:
-- [ ] **FOUND BY P1's recapture (P1 = the §4.4(B) border/overlay flip, in that plan's § "BACKLOG ledger"), pre-existing, owner-gated: a hand-carried window's pixels are NOT refreshed when a pending glyph atlas arrives mid-drag** — on a cold page the carry freezes placeholder blocks and `waitForScreenshotReady` truthfully reports settled (the live text DID settle; the carried pixels are stale), so the screenshot gate cannot see it. User-visible product behavior (drag a window before fonts settle), and the deterministic face of the open flake-A class (`suite-nondeterminism-flakes-arc`): solo-cadence repro = revert the pre-carry settle yield in `SystemTest_macroDragEmbedWindowTransitNeverArms` and run it on a fresh page. Test-side mitigation landed (that yield); the sibling mid-carry-screenshot tests share the race and can get the same wait if it ever bites.
+- [ ] ⛔ **A hand-carried window's pixels are not refreshed when a pending glyph atlas arrives mid-drag** — user-visible (drag a window before fonts settle), invisible to the screenshot gate; owner-gated; a test-side wait landed. → "A hand-carried window is not refreshed when a glyph atlas arrives mid-drag"
 
 ### `archive/widget-practices-convergence-plan.md` — ✅ **CLOSED 2026-08-17 (W0–W10), two residuals below**
-Acted on `measurements/widget-practices-survey-2026-08-14.md` (28 facets over all 270 widget classes)
-to reach `architecture/widget-authoring-guidelines.md`. The per-phase log lives in the archived plan's
-"As landed" blocks and in `archive/INDEX.md`; the survey now carries an appended **"state at close"**
-delta table, and the mechanical half of it is re-runnable as `buildSystem/census-widget-conformance.js`.
-Landed: undeclared instance fields 9 classes/11 fields → **0/0** (a true zero — the connector arc's P9
-retired the last floor), `_reLayout` prologue copies 24 → **8** stated exceptions, W9's three
-enforcement tiers, W6a (a LIVE BUG: three `SliderWdgt` prompts stored the slider's own value, not the
-typed one), and W7 — which landed as ONE derivation instead of the 164 hand-written names the plan
-asked for.
-⭐ **The recapture rule this arc measured:** `InspectorWdgt.showingInherited` defaults to FALSE, so a
-member list shows the inspected class's OWN members. A pull-up to a base class is inspector-FREE; a
-declaration on a class some test OPENS is what costs. Predict from the plan's §11.1 per-surface test
-lists, not from how many classes inherit the field.
-- [ ] **RESIDUAL W6b (owner-gated, D3) — idempotence guards on the B/C/D pin setters.** Deliberately
-      not done in-arc: the dataflow engine's equal-value cutoff already covers most of what the guard
-      would buy, and `archive/connector-ubiquity-and-reflection-plan.md` §P2's bind-time precedence rule
-      may change what the guard should DO. When it runs, it wants its own commit plus the
-      patch-programming and °C↔°F converter macros run explicitly.
-      **✅ RE-DERIVED AGAINST P2, 2026-08-17 (P2 landed): W6b is INDEPENDENT of P2 — the one
-      P2-specific hazard is dissolved, not mitigated.** The archived plan §2.6 note 3 feared that
-      *"P2's bind-time rule depends on both wires FIRING at bind time; an idempotence guard could
-      swallow the second fire when the two sides already agree"*. That was written against the
-      SKETCH, which had both wires fire and the later one win. As landed, `bindTo` fires exactly ONCE
-      by construction — `wireTo` (pushes) + `declareWireTo` (moves nothing) — so there is no second
-      fire for a guard to swallow, and precedence cannot depend on setter idempotence. The follow-on
-      case is covered too: delivering A's value into B runs B's `updateTarget`, but that re-mark is
-      the ECHO the engine already drops while B is the node being applied into, and if the two sides
-      already agree the equal-value cutoff stops the walk with or without a guard.
-      ⇒ **What remains is exactly what the plan's §2.6 note 2 already stated, unchanged by P2**: the
-      cutoff decides only whether to traverse ONWARD, while `_applyWireValue` still CALLS the setter
-      with an equal value — so the guard's whole remaining value is suppressing the SETTER'S OWN side
-      effects (its `_changed()` repaint and any onward fire) on an equal write. That is a paint /
-      redundant-work question, not a dataflow-correctness one, which is why it is a real behaviour
-      change and still wants its own commit and its own evidence. **No connector dependency is left:
-      whenever it runs, it runs on its own merits.**
-- [ ] **RESIDUAL W7 other half (owner-gated, D4) — `representativeIcon`.** All but thirteen classes
-      answer the base `new WidgetIconWdgt` — nine declare an override (`ScriptWdgt`, `FolderWindowWdgt`,
-      `FrameWdgt`, `ImageWdgt`, `DashboardWdgt`, `SlideWdgt`, `GenericPanelWdgt`, `DocumentWdgt`,
-      `PatchProgrammingWdgt`) and four inherit one. Unlike a colloquial name, an icon CANNOT be derived from a class
-      name, so this stays the hand-written job the plan described — worth doing only for what can be
-      referenced from the desktop, not as a sweep.
+Acted on the 2026-08-14 widget-practices survey to reach `architecture/widget-authoring-guidelines.md`; per-phase log in the plan's "As landed" blocks. → "The backlog's note on this plan"
+- [ ] ⛔ **RESIDUAL W6b — idempotence guards on the B/C/D pin setters** (owner-gated, D3) — independent of P2; it would suppress an equal write's setter side effects (repaint, onward fire): its own commit and evidence. → "RESIDUAL W6b (owner-gated, D3) — idempotence guards on the B/C/D pin setters."
+- [ ] ⛔ **RESIDUAL W7 other half — `representativeIcon`** (owner-gated, D4) — all but thirteen classes answer the base `WidgetIconWdgt`; an icon cannot be derived, so hand-write one only for what the desktop can reference. → "RESIDUAL W7 other half (owner-gated, D4) — `representativeIcon`."
 
 ### `archive/menu-action-wiring-plan.md` — CLOSED, residual included; SIX live bugs fixed
-Four found by reading (three `SliderWdgt` prompts that threw on every click; three demo "…launcher"
-items that crashed), two more found by the rig that closed the arc's own residual (every widget
-wearing a `BoxyAppearance` threw when its numerical-setters menu was built; `cornerRadiusPopout` read
-a field only `BoxWdgt` declares). Both halves are gated: `buildSystem/check-menu-actions.js` on the
-build, and `menu-click-sweep-headless.js` (`fg menusweep`) as a gauntlet wave-A leg. The two open
-findings became `archive/menu-subject-routing-plan.md`, now CLOSED too (the two dead dev-tools items
-fixed, the latent `triggeringWidget` mis-feed given its adapters).
-- **Stated limits of the sweep, so nobody reads a green run as more than it is** (all printed every
-  run, so a drift is visible rather than silent): it covers DISPATCH, not click plumbing (it fires the
-  action directly — a real click tears the menu down under the walk; the suite covers the other side);
-  its roots are **hand-picked representatives plus the world in both of the shapes it builds a menu
-  in** — a coverage model, not exhaustion, and the rig prints the live root count and REPORTS any
-  root it could not build; and ~51 items per run are skipped because an earlier item in the same walk DESTROYED the
-  receiver. ⚠⚠ **A rig that mutates the world manufactures its own bugs** — `make pointer` looked like
-  a find until it was re-run in ISOLATION and did not throw. **Re-run any sweep finding in isolation
-  before believing it.**
-- [ ] Expand the root list only when a bug is found in a class that has none — generic instantiation
-      of ~270 widget classes is fragile, and the reported unbuilt-root count is what makes the gap visible.
-- ⚠ **The sweep's DISTINCT count is coverage BREADTH, not a ratchet** — it moves in BOTH directions on
-  changes that lose no reach, because `Widget._attachToChosenParent` builds one menu row PER WIDGET
-  CURRENTLY IN THE WORLD. `menus walked` is the stable reach number; `--verbose` prints the pair set so
-  a move is diffed, not argued about. (Detail: `archive/menu-subject-routing-plan.md` §5.2.)
+Both halves gated: `check-menu-actions.js` on the build, `fg menusweep` in gauntlet wave A; the sweep's stated limits are in the plan. → "The backlog's note on this plan"
+- [ ] Expand the menu-click sweep's root list only when a bug is found in a class that has none: generic instantiation of ~270 widget classes is fragile, and the reported unbuilt-root count shows the gap. → "Expand the menu sweep's root list only when a bug needs it"
 
 ### `archive/constructor-parameter-conformance-plan.md` — **CLOSED, P0–P9 all landed**
 The arc's narrative, decisions and standing lessons live in that plan's BACKLOG ledger.
-- [ ] Plan §7d-D, deliberately left open: `Widget.textPrompt` keeps a `msg` operand its only
-  receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The dead
-  FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one.
+- [ ] ⛔ Plan §7d-D: `Widget.textPrompt` keeps a `msg` operand its only receiver (`CodePromptWdgt`) has no title bar to display; whether the door should shed the operand is an owner call. → "Plan §7d-D: Widget.textPrompt keeps an undisplayed msg operand"
 
 ### `archive/frames-input-touch-program.md` — the frames·input·touch PROGRAM (CLOSED 2026-08-27; all five plans executed and archived)
 One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifestations derived from lifetime × parentage; Pointer Events; the single-geometry visual wave; the command-panel/`User` model; the gesture grammar + finger harness (the `finger` gauntlet leg, wave D). The living truth is in the architecture corpus (`input-and-gestures.md`, `viewports-and-planes.md`, `widget-authoring-guidelines.md`, the macros CLAUDE docs, the tests-repo reference grammar); rulings and the drained tail ledger are in the archived program doc. Residue rows, each with its origin:
-- [ ] **icons on ordinary menus** (world menu, context menus): owner taste, not built; land only when a
-      consumer asks. The mechanism already exists — `CommandSpec.icon` — so a consumer costs one call
-      site, not a new axis. Origin: `archive/command-panel-unification-plan.md` §2.2.
-- [ ] **remainder-menu alternative projections**: the chevron's overflow menu ships icon+label rows;
-      a grid pop ("a vertical toolbar") or a label-only pop are available BY DERIVATION on the same
-      `CommandSpec` rows, one line each — land when a consumer asks. Origin:
-      `archive/command-panel-unification-plan.md` §2.2/OD2.
-- [ ] **T4 — multi-pointer**: pinch derived from two `pointerId`s, retiring the Safari `gesturestart`/`gesturechange` no-op listeners kept beside the pointer listeners until then (ruling I1). Origin: program tail T4, filed at the Plan 4 close.
-- [ ] **T5 — desktop-edge docking**: the world's edges as dock slots, a taskbar strip. `EdgeDockLayoutSpec` is world-CAPABLE (names no host type) but the world grows no slots — a desktop dock needs a dock loop in the world's arrange, a fill gesture, and a stated precedence against the `StretchLayoutSpec`s the world already consumes, all unruled. Origin: program tail T5.
-- [ ] **T18 — halo crowding at touch scale, PAIRED with the owner-pending G2 halo feel-check (one conversation)**: at `handleSize 44` the five corner-internal handles fully overlap on any widget below ~2·handleSize (~92 px); the Plan 3 z-order interim (corner resizer frontmost) stands, handles are hold-exempt chrome under the grammar, and the open DESIGN question (fewer handles below a size floor? edge zones? a halo mode?) is the same conversation as how the halo should FEEL at 44 px. Origin: program tail T18, owner-ruled OD4(a) at the Plan 4 review.
-- [ ] **multi-user input attribution**: strokes carry `pointerId` and the `User` model exists (`world.users`); a User-per-pointer mapping is designed when a second input DEVICE exists. Origin: the Plan 3.5 `User` model's "Plan 4 at the earliest" marker, discharged at the Plan 4 close.
-- [ ] **finger scrolling for the spreadsheet**: the sheet takes no drag-scroll (wheel/scrollbar only), which is exactly why its three wheel tests are declared mouse-only on the finger axis; a finger-scrollable sheet is a product FEATURE (the grammar re-gates existing scroll surfaces, it adds none). Origin: Plan 4 P3 discovery classification.
-- [ ] **inspector row-locator: scroll-further beyond 3 nudges**: `clickOnListItemFromTopInspector` aims inside the row∩pane slice and the L3 locator nudges up to 3× toward an off-window row; a row still unreachable after that throws a named error (the honest floor — it has never fired in a green run). If a legitimately deeper list ever trips it, extend the nudge loop rather than the aim. Origin: `archive/widget-input-vocabulary-plan.md` P3.
+- [ ] **icons on ordinary menus** (world menu, context menus) — owner taste, not built; `CommandSpec.icon` already exists, so a consumer costs one call site. Land only when a consumer asks.
+- [ ] **remainder-menu alternative projections** — a grid pop or a label-only pop of the chevron's overflow menu, available by derivation on the same `CommandSpec` rows; land when a consumer asks.
+- [ ] **T4 — multi-pointer** — pinch derived from two `pointerId`s, retiring the Safari `gesturestart`/`gesturechange` no-op listeners (ruling I1).
+- [ ] **T5 — desktop-edge docking** — the world's edges as dock slots, a taskbar strip; needs a dock loop in the world's arrange, a fill gesture and a precedence against its `StretchLayoutSpec`s, all unruled.
+- [ ] ⛔ **T18 — halo crowding at touch scale** — at `handleSize 44` the five corner handles overlap on widgets below ~92 px; fewer handles, edge zones or a halo mode is decided with the owner-pending G2 halo feel-check.
+- [ ] **multi-user input attribution** — strokes carry `pointerId` and `world.users` exists; a User-per-pointer mapping is designed when a second input device exists.
+- [ ] **finger scrolling for the spreadsheet** — the sheet takes no drag-scroll (wheel/scrollbar only), so its three wheel tests are mouse-only on the finger axis; a finger-scrollable sheet is a product feature.
+- [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
 ### `plans/affine-transforms-plan.md`
-Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12
-(`archive/appearance-local-coords-plan.md` — every appearance body now draws through the ctx matrix,
-byte-identically; the vector-replay prerequisite is banked); §7.8 SWCanvas bilinear LANDED 2026-08-12/13
-(both halves — the as-built record is that plan's §7 banked-item 8, and the closed BACKLOG line for
-it now sits in the plan's § "BACKLOG ledger"); REMAINING = big §7.1-7.4 items, design-first, owner-gated.
+Phase 4, residuals, claimsSpace, §7.7 and §7.8 landed; REMAINING = big §7.1-7.4 items, design-first, owner-gated. → "The backlog's note on this plan"
 - [ ] §7.1: transform policy engine (banked, not built)
 - [ ] §7.2: leaf self-warp (non-island rotation)
 - [ ] §7.3: quad-aware damage + occlusion behind transformed widgets
@@ -432,25 +112,19 @@ Phases 0-8 plus F1/F2/F4/F5/F6 all LANDED; remaining = F3 (the 'operate' cell su
 
 ### `plans/wire-vocabulary-extensions-plan.md`
 AUTHORED 2026-07-24, NOT STARTED, owner-gated; land the reserved wire semantics (per-event delivery, cold edges, buffer payloads) + record the deadline law. Demand side: `architecture/app-fit-criteria.md` facet 9.
-- [ ] W1: `firesPerEvent` per-event mini-pass DELIVERY (spec §4/§13) — flag/menu/edge records landed, delivery still POOLS (`DataflowEngine.markStale` deferral note); resolve D1–D5 (scoping, settle, pool hygiene, re-entrancy, determinism); acceptance = CounterPatchNodeWdgt + t1–t3
+- [ ] W1: `firesPerEvent` per-event mini-pass DELIVERY — flag/menu/edge records landed, delivery still pools; resolve D1–D5 (scoping, settle, pool hygiene, re-entrancy, determinism); acceptance = CounterPatchNodeWdgt + t1–t3 → "W1: firesPerEvent per-event mini-pass delivery"
 - [ ] W2: cold edges (spec §8, attribute carried, zero readers) + cold-then-hot structured-event idiom; riders: Diffing `setInput2` bug, written-never-read `setInput*IsConnected` flags, plain/`Hot` setter-pair rationalization
 - [ ] W3: buffer payloads as current values — immutable `BufferValue` handle (identity/generation equality), `bufferSetters()` fourth table; spikes S1 (serializer has NO typed-array arm today) + S2 (DeepCopy policy)
 - [ ] W4: the deadline law — signal-rate stays below the floor; lands into spec/architecture as residue when W1–W3 land
 
 ### `archive/connector-ubiquity-and-reflection-plan.md` — ✅ CLOSED 2026-08-18 (P1–P9, P10(c)+(d))
-Authored 2026-08-14; the law it landed is **a controller is a view of the value it controls, and
-stays one however that value changes**. Every landed step, and every defect found while landing
-one, is in that plan's "As landed" blocks and in its § "BACKLOG ledger" — read those before
-trusting any section's original sketch (§2.4 in particular is history: P1 replaced the write-only
-tables it surveys). Not the wire *vocabulary* (that is the plan above). What stayed open is
-five follow-ons that each want their own decision or arc, and the two re-homed/refused items
-(its one by-catch defect, the `getPixelColor` alpha units, is CLOSED — see that plan's ledger):
-- [ ] **THE SHADOW PASS HAS THREE COVERAGE STRATEGIES AND THEY DISAGREE** (found while landing the pop-up-overflow arc; owner-raised). `Widget.coffee` states the contract at the shadow entry point — *"a shadow is the caster's per-pixel COVERAGE"* — and coverage is an OPACITY, so two coincident opaque widgets have coverage 1, not 1.36. Three implementations exist: **(1) recursive re-paint** (the general path) draws every descendant as shadow, so overlapping opaque children STACK — 0.2 over 0.2 composites to 0.36, which is a visible doubly-dark core in the band under every menu and prompt; **(2) the opaque-panel short-circuit** (`ClippingWdgt`, `if @alpha != 1` — a fully opaque clipping panel draws ONE rectangle and skips its children); **(3) the silhouette blit** (`HTMLCanvasElement.blackSilhouetteOf`, used by `BackBuffer` and the transform islands). ⭐ **The "optimisation" (2) and the buffer path (3) are the only ones that honour the contract; the general path (1) is the broken one** — so the shadow a subtree casts today depends on whether an ancestor happens to be an opaque clipping panel, which is not a property anyone reasons about. ⇒ unify on the silhouette. ⚠ Own arc: it changes EVERY shadow in the system (removing every doubled band), so it needs its own before/after evidence and a deliberate mass recapture, not a side effect of something else.
-- [ ] **Menu LENGTH is now a pure UX question, and worth its own arc.** Widget context menus run 19–42 rows (measured 2026-08-17 at the harness world: `TextWdgt` 40, `StringWdgt` 36, `SimpleTextWdgt`/`TitleWdgt` 33, `SliderWdgt` 26, `RectangleWdgt` 19). Nobody scans 40 rows. Grouping related rows behind submenus — what §P2 did locally for `connect`/`bind ⇄` — would shorten every menu. Deliberately NOT bundled with the overflow fix (owner call): the fix establishes the invariant so no row count can break reachability again, which is what makes the length question a taste question rather than a correctness one.
-- [ ] **A2 residue — `SliderWdgt.value` is the one readable pin that still cannot declare `announces`, and closing it is the FOLLOWER arc's job.** Its value-producing paths announce; its value-SHOWING path (`_updateSpecs`) does not and must not yet — neither has an equal-value cutoff, so an announcement there would re-fire on every drain pass, a self-sustaining loop with **no cycle in it at all**. Three things belong together in that arc and none is worth doing alone: (a) the cutoff on those two; (b) a SECOND reflector — something that shows a value it does not own without needing a `SliderRange`, e.g. a label displaying a widget's value live — which is the only thing (a) would buy anything for; (c) ⚠ **the cycle rule**: two mutually-tracking controllers are prevented today by an ACCIDENT (`SliderWdgt` does not answer `sliderRangeForPin`, so slider-follows-slider cannot be built), not by a rule. The right shape is to refuse the cycle where it would be CREATED — `_canTrackWire` rejects a target that already follows me — rather than keeping the graph deaf so cycles cannot form, which is what the suppressed announcements did by accident.
+Landed "a controller is a view of the value it controls"; open: five follow-ons wanting their own decision or arc, two re-homed/refused. → "The backlog's note on this plan"
+- [ ] ⛔ **THE SHADOW PASS HAS THREE COVERAGE STRATEGIES AND THEY DISAGREE** — recursive re-paint stacks overlapping children: a visible doubly-dark band under every menu and prompt; unify on the silhouette, own arc, mass recapture.
+- [ ] ⛔ **Menu LENGTH is now a pure UX question, and worth its own arc** — widget context menus run 19–42 rows (`TextWdgt` 40); grouping related rows behind submenus would shorten every menu; a taste question. → "Menu LENGTH is now a pure UX question, and worth its own arc."
+- [ ] **A2 residue — `SliderWdgt.value` still cannot declare `announces`** — the FOLLOWER arc's job, three parts together: an equal-value cutoff, a second reflector, and refusing a tracking cycle where it would be created. → "A2 residue — SliderWdgt.value cannot declare announces"
 - [ ] `FanoutWdgt` is now a visual affordance over a capability every citizen has, rather than the only way to fan out (P4). Nothing forces a rewrite and it lives in a part production does not ship — do it when something needs it.
-- [ ] **The absorb-query CUT WIRE is a CLASS, not an instance — AUDITED 2026-08-18, root cause single, and DELIBERATELY NOT FIXED.** A parent-directed capability query (`@parent?.someQuery?()`) names its receiver by POSITION, so inserting a container between two collaborators silently re-points it: the `?.` returns undefined, the caller takes its "no opinion" arm, and nothing says a word. Fixing one instance of that (the pop-up rows pane, `9f4ba5d4`) raised the obvious question, so the whole family was measured. **The audit criterion is mechanical**: the DIRECT parent does not implement Q but a HIGHER ancestor does ⇒ cut. (If nobody in the chain implements Q, that is the ordinary "this class has no opinion" case the `?.` exists for, and is not a finding.) ⚠ It only bites queries with REACH intent — a query genuinely ABOUT the direct parent (`isFrame`, `showEditModeInBar`) makes a grandchild look "cut" when it is merely nested, which is why the raw criterion reported ~110 hits over 193 widgets and the reach-intent ones reported 4. Domain: **21 parent-directed query sites, 14 distinct names** (`grep -rn "@parent\??\.[a-zA-Z_]*?(" src/`). ⇒ **The absorb query `_reLayOutAfterContainedPanelChange` is cut everywhere the container is a plain `ScrollPanelWdgt`, and the root cause is ONE thing: a scroll panel's `@contents` is a plain `PanelWdgt`, which does not forward** — so `FrameWdgt` in a scroll panel, `SimpleVerticalStackPanelWdgt` in a scroll panel, and `MenuRowsPanelWdgt` in a `ListWdgt` all reach a silent `PanelWdgt` while the class that implements the absorb sits one level higher. ⚠⚠ **Measurement also overturned the reasoning that would have dismissed the frame case**: `ScrollPanelWdgt.add` redirects only non-frame children into `@contents`, from which it follows (wrongly) that a frame is a direct child of the scroll panel — a live frame dropped in one has parent `PanelWdgt`. ⇒ **NOT FIXED, and the reason is that NOT ALL ABSORBS ARE EQUAL.** `PopUpWdgt`'s absorb re-takes the POP-UP'S OWN EXTENT and nothing else ever does, so missing it left a wrong FINAL state — a menu drawn at its old height with a blank strip (measured: 255px, still 255px after 3 cycles, 210px when the absorb is forced). `ScrollPanelWdgt`'s absorb only runs synchronously what the deferred arm (`_reFitContainer`) runs at the next cycle anyway: measured, the cost is **ONE CYCLE of a stale scroll thumb** (52px in the absorb window, 61px after the cycle) and forcing the absorb after settle changes NOTHING. Nothing observes a within-cycle transient — screenshots are taken at settle points — which is why 304 tests are green. ⇒ **Next step if it is ever worked: it is a DESIGN choice, not a patch** — forward on `PanelWdgt` (broad, one line, but changes every scroll panel's flush timing), or give `ScrollPanelWdgt` its contents a class of its own as `PopUpRowsPaneWdgt` is (heavier, precedent exists), or change the asker contract to climb rather than ask the direct parent (touches all four askers). ⚠ `ListWdgt._reLayOutAfterContainedPanelChange` returns `undefined` DELIBERATELY (a stated opt-out) — so it is correct today by two independent routes, and any fix must keep it opted out. Probes: `Fizzygum-tests/.scratch/a3-parent-query-reach-audit.js` (whole family, 193 widgets), `a3-absorb-reach-nested.js` (the nestings where a receiver can exist — the general audit's fixture had every frame on the bare desktop, where "nobody answers" is correct and proves nothing), `a3-absorb-consequence.js` (the visible cost).
-- [ ] ⛔ P10(a) RECORDED REFUSAL: `ButtonWdgt.trigger` does NOT get routed through the dataflow drain (pools destroy click counts; no value to pull; commands aren't pins; 328 menu actions would each need the `_*NoSettle` lattice the ONE 6c prompt slider needed). Revisit only after W1 lands, opt-in per button
+- [ ] ⛔ **The absorb-query CUT WIRE is a CLASS, not an instance** — a scroll panel's plain `PanelWdgt` contents do not forward the absorb query: one cycle of stale scroll thumb; a design choice, deliberately not fixed. → "The absorb-query cut wire is a class, not an instance"
+- [ ] ⛔ P10(a) RECORDED REFUSAL: `ButtonWdgt.trigger` is not routed through the dataflow drain (pools destroy click counts; commands aren't pins); revisit only after W1 lands, opt-in per button. → "P10(a) recorded refusal: ButtonWdgt.trigger stays off the drain"
 
 ### `plans/livecodelang-cleanup-and-extensions-plan.md`
 AUTHORED 2026-07-07, NOT STARTED; owner-initiated execution only.
@@ -462,36 +136,36 @@ AUTHORED 2026-07-07, NOT STARTED; owner-initiated execution only.
 
 ### `archive/redesign/redesign-plan.md` — the visual redesign (COMPLETE 2026-10-22; its open follow-ups stay here)
 One design system (a `Theme` token layer, seam rules, drawn chrome icons, size-aware icons) reaching the draft (`archive/redesign/`, beside the plan) surface by surface, with the suite made aim-by-meaning first. The look as built is `architecture/visual-design-system.md`; the owner decisions are in the plan's §0.5. The items below are the arc's open follow-ups; "the plan" in them is the archived plan.
-- [ ] T follow-up — a hidden or collapsed title piece keeps a STALE box: a pinned menu's `label` is a hidden StringWdgt at (0,0), and a collapsed window title keeps the centre it had (three never-delivered tests aimed there, plan §4 T Findings). Harmless to the product (nothing paints or hits it); decide at W1/W2, which rebuild the strip, whether a not-shown piece should answer geometry at all.
-- [ ] W3 follow-up — the owner-review points W3 left open, listed in the plan's §4 W3 "Open review points": an instance's own property dimmed like an inherited one; the code pane's line pitch 15 (no line-height knob; W5's documents need one too); the toggle and chip hover/press looks; the prompt buttons' placement; wrapped breadcrumb rows' indent; a taken-apart pane's transparent look; a disabled button's shadow on the desktop; `injectProperty` removed from the chain leaving the footer; the error log's two-label pause toggle.
-- [ ] W2 follow-up — the owner-review points W2 left open, listed in the plan's §4 W2 "Open review points": the fat scroll indicator's look; tooltip placement over the menu it explains; the 20 px tick column; narrow pinned menus hiding their title (since 2026-10-25 every pinned menu takes its rows' width at the pin — a title wider than the rows hid in the strip already, and now the extra width goes too, `visual-design-system.md` §5 "A pop-up"). (The prompt slider's thumb that returned to black after one hover is fixed in G-C1: the prompt slider wears the content slider's look, read at paint.)
-- [ ] W1 follow-up — the owner-review points W1 left open, listed in the plan's §4 W1 "Open review points": collapsed-strip corners; the crescent inside a window's bottom corners; card corners under a host's strip; pinned-menu rows under the border (W2); what the grip's square covers; whether the grip should compensate the drag-threshold lag; the "grip" name clash with ruling C12.
-- [ ] G-E follow-up — a ROW's look is chosen once, in `MenuItemWdgt._lookFor` (and `MemberRowWdgt`'s), and COPIED into the row, its label and its indicators at construction (~16 own fields: fills, plate geometry, insets, fonts, inks), so a saved or duplicated row keeps the look of the day it was built; every other G surface reads its role where it is painted. Moving the menu, list and member rows to a read at paint (a row-kind record and every reader asking the theme through it: `LabelButtonAppearance`, the rows' layout, the label's ink, the indicators) is pixel-neutral but rewires every row the suite shows (167 shots of 63 tests). Census: `Fizzygum-tests/.scratch/g/RE-report.md` §2.4. (plan `archive/redesign/redesign-plan.md` §4 G)
-- [ ] G-E follow-up — the demo pointer (`dev-tools/PointerWdgt`, "Make pointer") keeps its own chrome: a 160-grey box and a white label, outside the redesign's palette, and its close button now wears the off-strip icon button's `muted` glyph on that grey (low contrast). Give it the plate look or a role of its own. (plan `archive/redesign/redesign-plan.md` §4 G)
-- [ ] G-D follow-up — a finger does not hover, and two tests about the hover WASH replay under a finger without ever showing it: `macroHierarchyMenuHoverHighlightsExactSubtree` (its whole subject is the wash; its finger references hold no wash pixel) is not declared mouse-only, and `macroTargetingHighlightsCandidateWidget`'s highlight shots show none under a finger (its menu flows do run). Declare the first `pointerKinds: ["mouse"]` with its reason (and drop its finger references), and decide whether the second's finger run should assert what a finger CAN show.
-- [ ] G-C follow-up — UNEXPLAINED: the `menusweep` leg hung silently in parallel wave A twice (the G-C close gauntlet 2026-10-21 and the Z close 2026-10-22: the leg's 300 s alarm, rc 142, no output), passing its serial retry each time; 8 instrumented sweeps beside a full parallel suite did not reproduce it. The sweep stamps its stages and every root on stderr as it reaches them (2026-10-29), so the next sighting's log tail names the root it stopped in — read it then.
-- [ ] R0 follow-up — a MASS recapture is dominated by its discovery pass: `recapture.js --auto` re-verifies EVERY parallel suite failure single-process, at each density, before capturing. W1 measured about 45 min of discovery for the mouse wave (297 tests × 2 dprs) and about 55 for the finger wave, of 1 h 49 min and 2 h 00 min in all; the recompress pass took about 33 min each. When the parallel failures are all pixel mismatches, a parallel re-verify (or none) would save most of it.
-- [ ] F follow-up — the S2 symbols W6 left (W6 kept the wire rows' ➜ / ⇄, "Bind ⇄" and the text menu's pictograms as wording and appended them, with ↔ and °, to the symbols atlas, plan §4 W6): (the Templates "useful characters" palette was TRIMMED at G-E to characters the atlases carry, owner, and its quote to straight quotes and an em dash) the font sets lack ¹ ² “ ” ‘ ― (and Arial's own °, drawn from the symbols atlas meanwhile, a little wide); `StringWdgt.toString`'s newline mark "↵" boxes in dev displays. A font-set addition regenerates every font atlas (~4,200; plan §4 W6, R4).
-- [ ] W5 follow-up — a document paragraph being DRAGGED is plain in the hand (square, text flush, re-wrapped at its full width), because the item shape is asked of the text's container and the hand is not a page; it takes the shape again where it lands. Keeping the item look in flight needs the hand to know where the drag came from.
-- [ ] W5 follow-up — the document's drop rule (a dropped widget goes before the first item whose middle is below the drop point) cannot append after an item whose middle lies below the visible page without scrolling the page while dragging; seven tests were re-aimed around it. An auto-scroll at the page's edges while carrying (the list's `macroListWdgtAutoScrollsNearDraggedEdge` precedent) would close it.
-- [ ] W5 follow-up — with the caret 1 px after its slot's boundary and 2 px wide (owner decision), a click ON the drawn caret in front of a glyph narrower than 5 px (Arial 13 `t`, `i`, `l`, `.`) picks the next slot; a caret at the end of a tight label paints 1–3 px outside the label's box.
-- [ ] W5 follow-up — a caret at the right edge of a scrolling viewport with no padding (a loose string in a scroll panel) has its last column under the viewport's 1 px border: `ViewportWdgt.scrollCaretIntoView` follows with a margin of `padding + extraPadding` (0 there), and the caret's band clamp stands aside inside a viewport plane (W5b: two clamps disagreed and cost a settle re-visit). Making the caret fully visible there needs the follow's margin to include the border.
-- [ ] W5 follow-up — `Theme.titleBarTextHeight` (the window title's stand-in before its label exists) could go: its two readers answer only before the title piece exists, and the pop-up band is floored at `menuRowHeight` anyway; removing it needs a class-side "line pitch of a role" query `StringWdgt.linePitch` would share.
-- [ ] W5 follow-ups (W5e, pre-existing, found on the tool cells) — the press lifecycle (2026-10-24: every widget the press's `pressBegan` reached is told its ending, `input-and-gestures.md`) closed the stuck PRESSED looks this line used to list (the edit mark's tool cell, the frame-strip icon buttons whose empty face caught the release). Still open: a copied or loaded toolbar keeps its items' saved pointer state; and a view/edit switch (`_engageDocksNoSettle`) does not tell a docked band's corner chain (no observed case).
-- [ ] W6 follow-up — a text that sizes its box to its contents measures its STORED text, not what it shows (`TextWdgt.preferredExtentForWidth` / `_reLayoutSelf` read `@text`, not `transformTextOneToOne @text`), so a display case or a password on such a text would size the box to the wrong form. No title uses that mode today (W6a).
-- [ ] W6 follow-up (BitmapText) — the shipped font-assets release carries 124 dpr-2 bold/italic font atlases at 73–84.5 px (Arial 49, Courier New 32, Times New Roman 43) whose single-row image sits under two-row positioning data, so glyphs past the wrap draw blank (a recovery regenerated their bundles and kept the old images). A font-set regeneration rewrites them (R4, `Fizzygum-tests/.scratch/w6/R4-report.md` §3).
-- [ ] W6 follow-up (owner review points) — 11 px capitals in a menu header show uneven letter gaps at dpr 1; "Empty window" (sentence case, 2 px wider) drops below the title crop grade in a 72 px title box, so two shots show no title; the symbols atlas's glyphs are small, sit high and are never bold (⍿ is a dot at 13 px dpr 1); a rotated widget's hierarchy reads "Rectangle" / "Rectangle 2" (the transform island names itself after its content); the test fixtures' own labels stay lowercase ("hover me", "hide the box", "beta"…).
-- [ ] W6 follow-up — wording leftovers: a pinned menu's or prompt's `colloquialName` is a quoted form that lands in a saved file's name ('"Desktop" window.fzw.json'); the dev menu spells "Serialise widget to memory" beside "Deserialize…".
-- [ ] W6 follow-up (design note) — a menu ROW that opened a confirmation would need both the submenu chevron and "…", which the two rules forbid together; no row does today (the bin's confirmation comes from a button). Decide before one is added (the menu-click sweep's flag proof and "…" proof would disagree).
-- [ ] F follow-up — S3 ladder anomalies for W4's icon work: Bin draws lopsided ridges at even S 18–32 (pre-existing: its ridge drop rule measures the left ridge by its left edge and the right by its right edge); GenericPanel (halo erases the border) and Typewriter (no keys) degenerate at 14.
-- [ ] G-A follow-up — the C-F converter's DEMO variant (`CFDegreesConverterIconAppearance`, demos-icons) paints its parent's art: its grey F degree sign went with the redraw, because the size-aware base has no secondary-ink helper (a raw fill style breaks the shadow pass). Add a `_useDetail`-style role helper if a second ink is ever wanted.
+- [ ] T follow-up — a hidden or collapsed title piece keeps a STALE box (a pinned menu's hidden `label` at (0,0), a collapsed title's old centre); harmless to the product; should a not-shown piece answer geometry? → "T follow-up — a hidden or collapsed title piece keeps a STALE box"
+- [ ] ⛔ W3 follow-up — the owner-review points W3 left open: an own property dimmed like an inherited one, the code pane's line pitch, toggle and chip looks, the prompt buttons' placement, and more (the plan's §4 W3). → "W3 follow-up — the owner-review points W3 left open"
+- [ ] ⛔ W2 follow-up — the owner-review points W2 left open: the fat scroll indicator's look, tooltip placement over its menu, the 20 px tick column, narrow pinned menus hiding their title (the plan's §4 W2). → "W2 follow-up — the owner-review points W2 left open"
+- [ ] ⛔ W1 follow-up — the owner-review points W1 left open: collapsed-strip corners, a window's bottom-corner crescent, card corners, the grip's square and drag lag, the "grip" name clash (the plan's §4 W1). → "W1 follow-up — the owner-review points W1 left open"
+- [ ] G-E follow-up — menu, list and member rows copy their look at construction (~16 own fields), so a saved or duplicated row keeps the look of the day it was built; a read at paint is pixel-neutral (rewires 167 shots). → "G-E follow-up — a ROW's look is chosen once and copied at construction"
+- [ ] G-E follow-up — the demo pointer ("Make pointer") keeps its own chrome: a 160-grey box and a white label outside the palette, its close glyph low-contrast on that grey; give it the plate look or a role. → "G-E follow-up — the demo pointer keeps its own chrome"
+- [ ] G-D follow-up — `macroHierarchyMenuHoverHighlightsExactSubtree` replays under a finger with no wash pixel: declare it mouse-only, drop its finger refs; decide what `macroTargetingHighlightsCandidateWidget`'s finger run asserts. → "G-D follow-up — two hover-wash tests replay under a finger"
+- [ ] G-C follow-up — UNEXPLAINED: the `menusweep` gauntlet leg hung silently in parallel wave A twice (300 s alarm, no output), passing its serial retry; its stderr stamps name the root at the next sighting. → "G-C follow-up — UNEXPLAINED: the menusweep leg hung silently in wave A"
+- [ ] R0 follow-up — `recapture.js --auto` re-verifies every parallel failure single-process before capturing: about 45–55 min of a 2 h mass recapture; a parallel re-verify (or none) would save most of it. → "R0 follow-up — a MASS recapture is dominated by its discovery pass"
+- [ ] F follow-up — the font sets lack ¹ ² “ ” ‘ ― (Arial's ° comes from the symbols atlas, a little wide) and `StringWdgt.toString`'s "↵" boxes in dev displays; adding to the font set regenerates every atlas. → "F follow-up — the S2 symbols W6 left"
+- [ ] W5 follow-up — a document paragraph being DRAGGED is plain in the hand (square, flush, re-wrapped at full width) and takes its item shape again where it lands; needs the hand to know where the drag came from. → "W5 follow-up — a document paragraph being DRAGGED is plain in the hand"
+- [ ] W5 follow-up — a document drop cannot append after an item whose middle lies below the visible page without scrolling while dragging (seven tests re-aimed); an edge auto-scroll while carrying would close it. → "W5 follow-up — a document drop cannot append below the visible page"
+- [ ] W5 follow-up — with the caret 1 px after its slot and 2 px wide (owner decision), a click on it before a glyph under 5 px wide (`t`, `i`, `l`) picks the next slot; at a tight label's end it paints outside the box. → "W5 follow-up — a click on the caret before a narrow glyph"
+- [ ] W5 follow-up — a caret at the right edge of a padless scrolling viewport (a loose string in a scroll panel) has its last column under the 1 px border; `scrollCaretIntoView`'s margin should include the border. → "W5 follow-up — a caret at a padless viewport's edge under its border"
+- [ ] W5 follow-up — `Theme.titleBarTextHeight` could go: its two readers answer only before the title piece exists; removing it needs a class-side "line pitch of a role" query `StringWdgt.linePitch` would share. → "W5 follow-up — Theme.titleBarTextHeight could go"
+- [ ] W5 follow-ups (W5e) — a copied or loaded toolbar keeps its items' saved pointer state; a view/edit switch (`_engageDocksNoSettle`) does not tell a docked band's corner chain (no observed case). → "W5 follow-ups (W5e) — a copied or loaded toolbar keeps pointer state"
+- [ ] W6 follow-up — a text that sizes its box to its contents measures its stored `@text`, not `transformTextOneToOne @text`, so a display case or a password would size wrongly; no title uses that mode today. → "W6 follow-up — a self-sizing text measures its stored text"
+- [ ] W6 follow-up (BitmapText) — 124 shipped dpr-2 bold/italic font atlases at 73–84.5 px carry a one-row image under two-row data, so glyphs past the wrap draw blank; a font-set regeneration (R4) rewrites them. → "W6 follow-up (BitmapText) — dpr-2 bold/italic atlases draw blank"
+- [ ] ⛔ W6 follow-up (owner review points) — uneven 11 px menu-header capitals at dpr 1, "Empty window" below the title crop grade, small symbols-atlas glyphs, a rotated widget named after its content, lowercase fixture labels. → "W6 follow-up (owner review points)"
+- [ ] W6 follow-up — wording leftovers: a pinned menu's or prompt's quoted `colloquialName` lands in a saved file's name ('"Desktop" window.fzw.json'); the dev menu spells "Serialise" beside "Deserialize…". → "W6 follow-up — wording leftovers"
+- [ ] W6 follow-up (design note) — a menu row opening a confirmation would need both the submenu chevron and "…", which the two rules forbid together; no row does today; decide before one is added. → "W6 follow-up (design note) — a menu row that opens a confirmation"
+- [ ] F follow-up — S3 ladder anomalies for the icon work: Bin draws lopsided ridges at even S 18–32 (its drop rule measures the two ridges by opposite edges); GenericPanel and Typewriter degenerate at 14. → "F follow-up — S3 ladder anomalies for W4's icon work"
+- [ ] G-A follow-up — the C-F converter's demo icon (`CFDegreesConverterIconAppearance`) lost its grey F degree sign: the size-aware base has no secondary-ink helper; add a role helper if a second ink is wanted. → "G-A follow-up — the C-F converter's DEMO variant paints its parent"
 - [ ] G-A follow-up — a Fizzytiles magnet's label is a `StringWdgt` that keeps its own font and ink, so a magnet loaded from a snapshot keeps the label look it was saved with (the magnet's box and border are read at paint).
-- [ ] G-B follow-up (owner G2, still open) — on a widget smaller than ~92 px on a side the halo's five 44 px plates overlap (the corner plate on top); accepted at G-B, decided with the halo feel-check.
+- [ ] ⛔ G-B follow-up (owner G2, still open) — on a widget smaller than ~92 px on a side the halo's five 44 px plates overlap (the corner plate on top); accepted at G-B, decided with the halo feel-check.
 
 ### `archive/window-page-gutter-plan.md` — one gutter around a window's page, its bands and its selection ring (✅ CLOSED 2026-10-23: Fizzygum 6e4946cd, Fizzygum-tests cc9aa0e1e, pushed)
 A window's PAGE keeps one 8 px gutter on every side and between it and its bands; PANES stay flush; a document's inset yields to the gutter; a page's selection ring lies in the gutter, painted by the window; gutter and letterbox-margin drops go to the page; a Stretchable page in a gutter is a four-edged sheet; a document's caret scroll margin is its own. Rule: `architecture/visual-design-system.md` §4.10.
-- [ ] Observation — a world snapshot restores bounds as saved and re-lays nothing, so a window saved under another theme shows its old geometry until something re-lays it (measured by the U1/U2 probes: a Docs Maker saved at gutter 0 loads flush until re-laid).
-- [ ] Naming follow-up — `StretchablePanelWdgt._insetEdgeRects` now also answers all four edges in a gutter, and `ActivePointerWdgt._targetReachedThroughAGutter` / `_moveGutterDropInsideTarget` / `releasedInAGutter` also cover a letterboxed page's margin: names narrower than what they do. `Widget._clampedPositionWithin`'s comment says `aWdgt` where `_moveGutterDropInsideTarget` passes a `Rectangle` (same four accessors).
+- [ ] Observation — a world snapshot restores bounds as saved and re-lays nothing, so a window saved under another theme keeps its old geometry until re-laid (a Docs Maker saved at gutter 0 loads flush). → "Observation — a world snapshot restores bounds and re-lays nothing"
+- [ ] Naming follow-up — `_insetEdgeRects`, `_targetReachedThroughAGutter`, `_moveGutterDropInsideTarget` and `releasedInAGutter` cover more than their names say; `_clampedPositionWithin`'s comment says `aWdgt` for a `Rectangle`. → "Naming follow-up — gutter names narrower than what they do"
 
 ### `archive/spreadsheet-ux-plan.md` — the spreadsheet as a page, with a formula bar, zoom, its own toolbar and the Sheets Maker (✅ COMPLETE 2026-11-04)
 Owner rulings R1–R13 (the plan's §1); what the arc left out on purpose:
@@ -500,18 +174,15 @@ Owner rulings R1–R13 (the plan's §1); what the arc left out on purpose:
 - [ ] Ranges: a multi-cell selection (the style subject would hand over a range's style), SUM over a range. Plan §1.
 - [ ] Insert / delete a row or column (every formula's references rewritten), and fill down. Plan §1.
 - [ ] Pinch-to-zoom as a world-wide gesture any zoomable widget answers (the sheet's zoom is a menu today). Plan §1.
-- [ ] Observation — a number wider than its column shows ellipsised ("12345…"), since numbers never spill (R12): a reader can take the shown digits for the value. Mainstream spreadsheets show `###` or switch to scientific notation; which one fits here is the owner's call. The formula bar shows the cell's source, so a computed value is shown nowhere in full.
+- [ ] ⛔ Observation — a number wider than its column shows ellipsised ("12345…"), so a reader can take the shown digits for the value; `###` or scientific notation: the owner's call. → "Observation — a number wider than its column shows ellipsised"
 
 ### `archive/collapsed-bar-grip.md` — a collapsed window keeps its grip, and its bar can have a width of its own (✅ COMPLETE 2026-11-01)
-- [ ] Observation, pre-existing — a band collapsed in its dock and then lifted out gains its edit toggle while still collapsed (`FrameWdgt._reDeriveBarRosterNoSettle` re-creates it, where a collapse in place destroys it), so its bar wears a toggle other collapsed bars do not, and shows no grip at any width because the toggle holds that corner. Harmless: expanding it puts everything right.
+- [ ] Observation — a band collapsed in its dock and then lifted out gains its edit toggle while still collapsed, so its bar shows no grip at any width; harmless: expanding it puts everything right. → "Observation — a collapsed band lifted out of its dock gains a toggle"
 
 ### `archive/window-grip-strip.md` — every window's grip in a strip of its own (✅ COMPLETE 2026-10-31; what it dissolved is in that record)
-- [ ] Owner's call, stands at "one rule" until told otherwise — a floating toolbar is a window, so it wears the strip: a floating row goes from 103 to 145 px tall and gains 31 px of run. The alternative, a floating toolbar without a strip, needs back the keep-clear code this arc retired (`_farAlongPadding`, `cornerResizerFootprint`, the frame's corner chain) and a second grip look. Comparison pictures were shown to the owner in the arc.
-- [ ] Observation — a plain panel already holding a window, added by code to the content of a window in view mode, leaves that inner window's grip showing until the outer window next changes mode: a mount re-asks the window being mounted and a mode change walks down to every window in the content (`FrameWdgt._noteMyModeToWindowsInMe`), but here only the panel is added, so no window is told. No gesture reaches this, since a window in view mode refuses drops.
+- [ ] ⛔ Owner's call, stands at "one rule": a floating toolbar is a window, so it wears the strip (103 → 145 px tall); a stripless one needs back the retired keep-clear code and a second grip look. → "Owner's call — a floating toolbar wears the window strip"
+- [ ] Observation — a panel holding a window, added by code to a view-mode window's content, leaves the inner window's grip showing until the outer changes mode; no gesture reaches this (view mode refuses drops). → "Observation — a window added by code into a view-mode window"
 - [ ] Observation — the Examples folder's "New York City" slide in EDIT mode: the map window's viewport is 42 px shorter, so the nested "NYC: traffic" plot is mostly cut off. It opens in view mode, which is unaffected.
-
-### `archive/focus-and-selection-plan.md` — the focused window and the selected desktop icon (✅ CLOSED 2026-10-23: every unit landed as one commit pair; closed items in the plan's ledger. Its four residue items were closed by the focus-residue arc the same day — ledger in the plan; the items below are what that arc found)
-The FOCUS arc the redesign deferred (its plan §0.5.2): focus derived once per cycle from z-order, the draft's focused-window look through `FrameWdgt._frameLook()`, and the selected icon as the existing editor focus drawn the icon's own way. Owner decisions D1–D11 LOCKED 2026-10-23, every recommendation (plan §2); D11, added from the owner seeing a dropped Docs Maker window ringed: a top-level window is focused, never selected (unit S0).
 
 ### `plans/occlusion-culling-plan.md`
 P0-P3 (Avenue A) LANDED 2026-07-09; P4/P5/P5b/P5c OWNER-GATED, not started.
@@ -522,7 +193,7 @@ P0-P3 (Avenue A) LANDED 2026-07-09; P4/P5/P5b/P5c OWNER-GATED, not started.
 
 ### `plans/pixel-icons-plan.md`
 AUTHORED 2026-07-18, NOT STARTED; replace ~79 vector `*IconAppearance` files with ASCII index-mask pixel icons (16/32/48 all supported, per-icon subset by usage cohort, coverage-rule variant selection; maps/gradients/logo-with-text stay vector); ⛔ two owner gates (P0 aesthetic, P4 mass recapture).
-- [ ] §5 pre-step: owner re-judges the convert list against the crispness-audit tiers (`measurements/vector-icon-crispness-audit-2026-07-19.md` §7) — per icon now a THREE-way choice: keep-vector / pixel-grid / size-aware redraw (§5b; 9 icons LANDED by 2026-07-22 on the shared `SizeAwareIconAppearance` base — Typewriter/Folder/ShortcutArrow, super-toolbar, generic-panel, patch-programming, simple-slide, dashboards, Bin; process = local skill `/convert-icon-size-aware`)
+- [ ] ⛔ §5 pre-step: the owner re-judges the convert list against the crispness-audit tiers — per icon keep-vector / pixel-grid / size-aware redraw (9 icons landed size-aware by 2026-07-22). → "§5 pre-step: owner re-judges the convert list"
 - [ ] P0: spike (`PixelIconAppearance` + hand-converted Heart) + native≡SWCanvas byte-identity evidence + ⛔ owner aesthetic sign-off
 - [ ] P1: rasterizer/parser hardening (variants, crop, literal palette entries)
 - [ ] P2: sentinel-supersample authoring tool + all-icon draft contact sheet
@@ -533,11 +204,11 @@ AUTHORED 2026-07-18, NOT STARTED; replace ~79 vector `*IconAppearance` files wit
 
 ### `plans/runtime-performance-optimization-plan.md`
 H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-24; NEXT = O3
-- [ ] §5B O3: per-widget/descend occlusion (plan P4/P5) — large, owner-gated
+- [ ] ⛔ §5B O3: per-widget/descend occlusion (plan P4/P5) — large, owner-gated
 - [ ] §5B O4b: SWCanvas glyph-run batching — ⚠ DE-URGENTED by the O4a correction (steady-state glyph stream ≈ just the desktop logo); do not build on the pre-correction numbers. O4a's as-landed entry is in this plan's § "BACKLOG ledger"
 - [ ] §8/top banner: S2 Tier 2, S6b, F1 (precompiled test-harness boot) still unlanded
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
-- [ ] the text caches key on a 32-bit `hashOfString` of the text with no check that the text matches: two texts that collide ("Of"/"PG", "Aa"/"BB") at the same font and extent share ONE entry, so the second widget draws the first's text (probed 2026-11-15: two `StringWdgt`s share one back buffer) — medium: reached by typing such a pair into two same-width labels or cells; `StringWdgt.createBufferCacheKey`, `TextWdgt` `breakTextIntoLines`/`getParagraphs`, `StringWdgt` `measureText`
+- [ ] The text caches key on a 32-bit `hashOfString` with no check that the text matches: colliding texts ("Of"/"PG") at one font and extent share one entry, so the second draws the first's text — medium, reached by typing. → "The text caches key on a 32-bit hash with no text check"
 
 ### `plans/single-file-save-plan.md`
 AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0 spikes S1/S2
@@ -546,8 +217,8 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 
 ### `archive/onion-widget-composition-plan.md` — "The Frame model" — ✅ FLAGSHIP ARC COMPLETE 2026-07-20 (A·C·B·D·E); follow-ons below
 Naked `Simple*` capability → framed `*Wdgt` citizen (`FrameWdgt`, was `WindowWdgt`) → App=launcher. Intrinsic-framing principle LOCKED (D1–D9). Correctness-first — no churn deferrals. Every landed phase (§5 P0, A, B, C and its two dock tails, D-1/D-2/D-3, E, E1's refusal, E3, plus the build-tooling and census riders) is in that plan's § "BACKLOG ledger".
-- [ ] §5.B follow-ons: `DeckWdgt` = D2 reserved name, no substrate yet. Creation-menu wording ✅ 2026-07-20 — the citizen-creator dev-menu labels renamed to the kind ("simple document"→"document", "Simple slide"→"slide", + the two launchers "document launcher"/"slide launcher"); recapture-FREE (those labels are dev-menu-only, navigated/screenshotted by no test). The `simple plain text …` dev-menu cluster left as-is (out of scope, owner kept it tight)
-- [ ] §5.D follow-ons: a load-image-FILE flow into `ImageWdgt` (the bitmap loader `SimpleImageWdgt` went with the video player on 2026-11-13, its only consumers; such a flow builds its loader where it needs one — the stamp drop-flow already imports pixels). The ungrammatical "a Image" hierarchy row ✅ FIXED 2026-07-20 — `Widget.toString` now derives the article ("an" before a vowel-initial class name, else "a"); probe-verified (`an Image`/`an AnalogClock`/`a Rectangle`), zero recaptures (no test screenshots a vowel-initial menu label)
+- [ ] §5.B follow-ons: `DeckWdgt` = D2 reserved name, no substrate yet → "§5.B follow-ons: DeckWdgt reserved name"
+- [ ] §5.D follow-ons: a load-image-FILE flow into `ImageWdgt` (its bitmap loader went with the video player; such a flow builds its loader where it needs one) → "§5.D follow-ons: a load-image-FILE flow into ImageWdgt"
 
 ### `plans/creation-and-templates-plan.md`
 AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a-template (Factory) | run-an-assembler (ScriptRunner); App = a Factory over an empty framed `*Wdgt` in edit mode. Supersedes the reference plan's launcher/Factory.
@@ -559,7 +230,7 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
-- [ ] §4.4 follow-up: what does save-to-file mean for an ARROW'D shortcut (today: friendly error — no cross-file identity for a dangling-`.lnk` restore; needs its own decision)
+- [ ] ⛔ §4.4 follow-up: what does save-to-file mean for an ARROW'D shortcut (today: friendly error — no cross-file identity for a dangling-`.lnk` restore; needs its own decision)
 
 ### `plans/top-10-cleanups-plan.md`
 AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Each item carries its evidence, its effort estimate, its re-measure command and its first step. Since 2026-11-12 an owner-launched `/loop` executes the items that need no owner decision (the plan's STATUS says which): a landed item's line moves to the plan's `## BACKLOG ledger`, a part-landed one is rewritten to what is left. ⛔ owner decision first on §9.
@@ -568,122 +239,90 @@ AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (
 
 ### `plans/top-10-cleanups-round-2-plan.md`
 AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first survey took the framework and the build, this one takes the test harness, the reference set and the verification tooling. Each item carries its evidence, its effort estimate, its re-measure command and its first step. The owner agreed with §1 to §9 on 2026-11-13 (§4 ruled: delete; §9 on its stated criterion) and left §10 out for now; an owner-launched `/loop` executes §1 to §9 one unit at a time (the plan's STATUS). ⛔ owner decision still open before the second step of §6.
-- [ ] §6 step 2 (1 to 2 days; ⛔ the owner decides — the measurement is in, 2026-11-14): instruments that share a suite pass — `run-all-headless.js` takes several `--audit-prelude=`; the candidates `tiernaming`, `settle`, `capstone`, `revisits`. Measured: only `revisits` reads the same in a shared pass; the others first need a tag per instrument and one test-start marker; the saving is load, not wall time, in the parallel gauntlet. Recommendation: keep four passes (the plan's §6, "Step 2 measured", "OWNER DECISION") (step 1, the one audited-suite driver in Node, landed 2026-11-14)
-- [ ] §8 follow-up (⛔ owner ruling): each test's `_automationCommands.js` now holds only its macro sources, so its name no longer says what it holds — rename it (e.g. `_macro.js`), or fold it into the metadata file; the loop kept the name (its brief), since a rename touches the two definitions of a test's files, every runner and 389 directories
-- [ ] §10 (1 to 2 days, then 3; left out for now by the owner 2026-11-13): the reference set — a path made of the live axes (five single-valued segments and the user-agent spoof go); then one file per reference (the `.js` copies, 45.8 MB, and the reference loader go; needs §4 decided)
+- [ ] ⛔ §6 step 2 (1 to 2 days; the owner decides): instruments sharing one suite pass — only `revisits` reads the same in a shared pass; the saving is load, not wall time; recommendation: keep four passes → "§6 step 2: instruments that share a suite pass"
+- [ ] ⛔ §8 follow-up (owner ruling): `_automationCommands.js` holds only macro sources, so its name misleads — rename it (e.g. `_macro.js`) or fold it into the metadata file; touches every runner and 389 directories → "§8 follow-up: rename or fold _automationCommands.js"
+- [ ] ⛔ §10 (1 to 2 days, then 3; left out for now by the owner): the reference set — a path of the live axes, then one file per reference (the 45.8 MB `.js` copies and the loader go; needs §4 decided) → "§10: the reference set as a path of the live axes"
 
 ### `plans/top-10-cleanups-round-3-plan.md`
 AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first two took the structure, the build, the harness and the verification tooling, this one takes what the ratchets do not measure: zeros nothing holds, the shape the removed recorder left behind, and tools only a person starts. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §1, §2, §3, §5, §6, §8 and §10 approved, for an unattended loop (the plan's STATUS has the rulings); §4, §7 and §9 left for a later day.
-- [ ] §2 (½ day; ⛔ PARKED 2026-11-15 on a speed trade, the owner decides — §2 "OWNER DECISION"): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (built and proven; one shape makes an eviction ×2.9 slower, the faster one pins memory)
-- [ ] §4 (½ to 1 day; left for a later day by the owner 2026-11-15; ⛔ owner): the `patch-programming-experimental` part — six classes no test builds and no production user can reach; the fanout is redundant now that wires are a list; the product question is whether the diff and regex nodes are wanted (finish them) or not (delete all six)
+- [ ] ⛔ §2 (½ day; parked 2026-11-15 on a speed trade, the owner decides): the LRU cache on a `Map` — built and proven; one shape makes an eviction ×2.9 slower, the faster one pins memory → "§2: the LRU cache on a Map"
+- [ ] ⛔ §4 (½ to 1 day; owner, a later day): the `patch-programming-experimental` part — six classes no test builds and no production user reaches; finish the diff and regex nodes, or delete all six → "§4: the patch-programming-experimental part"
 - [ ] §7 (1 to 2 days; left for a later day by the owner 2026-11-15; ⛔ owner on which tools go): on-demand tools — one roster, each proven to start by the `selftests` leg
-- [ ] (filed by U5's review, 2026-11-15; medium) the visualisation page generator now runs only when asked (`fg visualise`, a capture): no build or leg loads it, so a break (a renamed `tests-repo-code`/`macro-sources` export) shows only when someone runs it, and a capture only warns — §7's roster is where it would be proven to start
-- [ ] §8 (1 day; ruled 2026-11-15: shorten and apply the bar to what is filed): this file is an index again — the 2026-11-11 filing bar written down, each item one or two lines, detail in the owning plan
+- [ ] The visualisation page generator runs only when asked (`fg visualise`, a capture): no build or leg loads it, so a break shows only on use and a capture only warns — medium; the §7 roster would prove it starts. → "The visualisation page generator runs only when asked"
 - [ ] §9 (2 to 3 days; left for a later day by the owner 2026-11-15; ⛔ owner: rename or fold): a test is one file — takes up the round-2 §8 follow-up above; selection facts move to the generated manifest
 - [ ] §10 (4 to 5 days; ruled 2026-11-15: land and push when every proof passes): `fg` as a Node program — its own plan, `plans/fg-node-port-plan.md`, has the process-situation matrix and the ten-step proof
 
 ## Residual / parked items (owning doc archived)
 
 ### Pointer hit-test rework 2026-08-21 — residue (no plan doc; the arc ran assessment → execution)
-`isTransparentAt` + the `noticesTransparentClick` flag retired for three single-meaning members —
-`Appearance.shapeContainsPoint` (outline) / `Widget.catchesPointerAt` (does my surface stop the
-pointer) / `Widget.isPointerTargetAt` (the whole question) — and `opaqueCoveredRect`'s exact-class
-switch dissolved onto the appearances. Living truth: `architecture/widget-authoring-guidelines.md` §5
-and `architecture/occlusion-culling.md` §2a. What it deliberately did not take on:
-- [ ] **`BubblyAppearance.shapeContainsPoint` OVER-CLAIMS its tail strip** (named in the class, not
-      silent). A bubble's rounded body occupies only the top `h - h/5`; the bottom fifth is empty
-      except for the spike. It inherits `BoxyAppearance`'s rounded-box test, so a click in the empty
-      corner beside the spike stops on the bubble instead of falling through. Harmless today (a speech
-      bubble is not a thing you click past; the tooltip is a plain rounded plate since W2), and correcting it needs an analytic body+spike
-      point test — a BEHAVIOUR change with hover-pixel churn, not a rename. ⭐ Its `opaqueCoveredRect`
-      twin was NOT harmless and is already refused: `BoxyAppearance`'s `insetBy cornerRadius + 1`
-      reaches BELOW the fill for any bubble taller than ~5×(cornerRadius+1), and a `ToolTipWdgt` is a
-      direct child of the world, so the culler asks it and would have dropped real pixels.
+`isTransparentAt` + `noticesTransparentClick` retired for three single-meaning members (`widget-authoring-guidelines.md` §5); what it did not take on: → "Pointer hit-test rework 2026-08-21 — the backlog's note"
+- [ ] **`BubblyAppearance.shapeContainsPoint` OVER-CLAIMS its tail strip** — a click beside the spike stops on the bubble; harmless today; a fix needs an analytic body+spike test (a behaviour change with hover churn).
 
 ### SliderTrackClickMovesButton side-problems arc 2026-10-15 — residue (no plan doc; case law in `../../Fizzygum-tests/DETERMINISM.md` §3j)
-- The three measured residue items (the list verb's thin-geometry drag, the pixel-short move, the ~1 px bars
-  in short viewports) are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16".
-  Its follow-ups are filed under "Residue arc 2026-10-16 — follow-ups" below.
-- [ ] (optional, owner to decide) the gauntlet's `refs` leg hits fg's own leg alarm in-wave on a loaded machine
-      (twice on 2026-10-15; the second time wave B's legs ran ~280 s each) — a budget question, not a reference
-      problem. ⚠ The log line `Alarm clock: 14` names SIGALRM by its signal NUMBER: the budget is the alarm
-      `buildSystem/legs.js` gives `check-refs.js --pixels`, not 14 s.
+The three measured residue items are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16"; its follow-ups are filed under that arc. → "SliderTrackClickMovesButton side-problems arc 2026-10-15 — the backlog's note"
+- [ ] ⛔ (optional, owner to decide) the gauntlet's `refs` leg hits its leg alarm in-wave on a loaded machine (twice on 2026-10-15) — a budget question; `Alarm clock: 14` names SIGALRM, not 14 s. → "The gauntlet's refs leg hits its leg alarm in-wave on a loaded machine"
 
 ### Residue arc 2026-10-16 — follow-ups (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
-- Six of its follow-ups are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16 — its six
-  follow-ups".
-- [ ] **The corner-occupancy protocol does not see the temporary resize/move halo** (2026-10-16). A halo's
-      bottom-right handle is not a declared occupant, so a bar runs under it while the halo is up (its side
-      handles already sat on the bars). Related, pre-existing: `Widget._setLayoutSpec` updates the
-      visibility of only its FIRST handle child, so a halo handle that precedes a frame's resizer would
-      keep the resizer's visibility, and its corner reserve, stale.
+Six of its follow-ups are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16 — its six follow-ups". → "Residue arc 2026-10-16 — the backlog's note"
+- [ ] **The corner-occupancy protocol does not see the temporary resize/move halo** — a bar runs under the halo's bottom-right handle; and `_setLayoutSpec` updates the visibility of only its first handle child.
 
 ### Residue-2 arc 2026-10-25 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
 The arc that closed the residue arc's five items (the image widget's back-buffer memo and the back-buffer-memos gate, a saved raster's pixel ratio, SWCanvas's deflate encoder, the finger wheel's held swipes and a scroll stroke ending at its release, the shared method grouping's class-side keys) measured these on the way and left them open:
-- [ ] **The sw3d work is not vendored**: SWCanvas branch `sw3d-game` (6 commits, `examples/` only) forked from `main` before the pinned font-symbols commit and its `dist/sw3d.min.js` was never rebuilt; bring it in as its own pin bump, from a branch rebased onto `main` with a rebuilt dist, with its own whole-suite check (it reaches Fizzytiles).
-- [ ] `census-widget-conformance.js` facet 1 (`declarationsOf`): its `(?!\(|->|=>)` lookahead is defeated by backtracking, so every class-level key counts as a declaration — and that is LOAD-BEARING (a naive fix makes the ratcheted gate report `FridgeMagnets3DCanvasWdgt`'s function-valued fields).
+- [ ] **The sw3d work is not vendored** — SWCanvas branch `sw3d-game` forked before the pinned commit and its `dist/sw3d.min.js` was never rebuilt; bring it in as its own pin bump with a whole-suite check.
+- [ ] `census-widget-conformance.js` facet 1 (`declarationsOf`): its `(?!\(|->|=>)` lookahead is defeated by backtracking, so every class-level key counts as a declaration — load-bearing: a naive fix flags function-valued fields. → "census-widget-conformance.js facet 1: lookahead defeated"
 
 ### Save/restore-fidelity arc 2026-10-25 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
 The arc that closed five save/restore and scroll items (a frame's placeholder exists only while shown; an element the page loads is derived from its holder's path, gate #30; a menu re-takes its width at a lifetime change; a viewport's frame covers its own box) measured these on the way and left them open:
-- [ ] **A demo `PointerWdgt` holds its `target` only through a field** (demos part): the world inventory reads the target as ESCAPED the moment a pointer is made (`RectangleWdgt#1@world.children.[0].target`) and after the pointers die; a single-widget save of a pointer is refused (`→ .target`) and a world snapshot CAPTURES the target as an off-tree record (`Fizzygum-tests/.scratch/arc-r3/R12/q2-pointer.js`). Same shape as the placeholder this arc dissolved: an owned widget kept off the tree.
-- [ ] **The overflow (») menu's miniature of a text-bearing tool races the glyph atlas on SWCanvas pages**: `OverflowChevronButtonWdgt._miniatureOf` pictures each hidden tool ONCE; the Slides toolbar's "Fizzygum logo with text" icon (`FizzygumLogoWithTextIconAppearance` types with `fillText`, no live-picture escape) shot while text is still loading keeps 36 px of placeholder boxes until the menu's next opening (`.scratch/arc-r3/R3b/logs/overflow-*.log`). The same one-shot picture of a plain `StringWdgt` in an `InertIconHolderWdgt` keeps them for good. Native pages are unaffected; no test opens an overflow holding a text tool.
-- [ ] **On `index-sw.html` in an ordinary browser, SWCanvas's `drawImage` of an image loaded over `file://` throws `SecurityError`** (it reads the image's pixels; the harness runs with `--allow-file-access-from-files`), so an image widget cannot paint on the SW page outside the harness. Nothing shipped draws an `HTMLImageElement` today (`.scratch/arc-r3/R34/logs/i4-noflag-sw.log`).
+- [ ] **A demo `PointerWdgt` holds its `target` only through a field** — the inventory reads the target as ESCAPED, a single-widget save of a pointer is refused (`→ .target`), and a world snapshot captures it off-tree.
+- [ ] **The overflow (») menu's miniature of a text tool races the glyph atlas on SWCanvas pages** — the Slides toolbar's logo-with-text icon keeps placeholder boxes until the menu reopens; a `StringWdgt`'s, for good. → "The overflow menu's miniature of a text tool races the glyph atlas"
+- [ ] **On `index-sw.html` outside the harness, SWCanvas's `drawImage` of a `file://` image throws `SecurityError`** — an image widget cannot paint there; nothing shipped draws an `HTMLImageElement` today. → "SWCanvas drawImage of a file:// image throws SecurityError"
 
 ### SWCanvas correctness arc 2026-10-27 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
 The arc that fixed SWCanvas's queued defects and the egregious ones it found (owner triage rule: fix what reaches Fizzygum's tests or usage, or is egregious — a missing shape or row, a hole, paint in the wrong place, a throw or a hang; the minors stay here) measured these and left them open. Each is SWCanvas-repo work, then a re-vendor, and none reaches Fizzygum's current tests unless it says so. Evidence is under `Fizzygum-tests/.scratch/arc-sw/` (research notes `R-A3/NOTES.md`, `R-B2/NOTES.md`, `R-C2/NOTES.md`).
-- [ ] **Ellipses are flattened by their MINOR radius** (`Context2D._bakeEllipse`, `PathFlattener._flattenEllipse`): uniform-angle chords miss the major-axis ends by up to (a/b)×0.25 px — worst 0.52 px filled and 0.50 px stroked, against the 0.25 px tolerance. Fix, prototyped in `R-B2/v-chords`: size the count by the device semi-major radius (0.21 / 0.18 px). Fizzygum draws no ellipse.
-- [ ] **Path2D curves are flattened with a USER-space tolerance** (`PathFlattener.flattenPath` takes no transform), so the device error grows with the scale: at scale 4 a Path2D arc misses by 0.92 px and an ellipse by 1.53 px (a device tolerance through the CTM's largest singular value gives 0.25 / 0.22). Béziers too (`R-A2/logs/bezier-scale-tolerance.log`). Fizzygum uses no Path2D.
-- [ ] **Arc segment counts read the CTM's largest COLUMN length, not its largest singular value** (`Context2D`'s `max(scaleX, scaleY)`): under scale-then-rotate they under-count. It moves 2 SWCanvas PNGs (51 px); no assertion catches it at test sizes (worst 0.125 px).
-- [ ] **Two `arcTo` flatteners disagree**: `Context2D._bakeArcTo` (a device-space count) and `PathFlattener._handleArcTo` (a user-space count, which also skips t1 within 0.01 and ends at cos/sin(end) rather than exactly at t2). `fillStadium` (a Path2D) differs from the path `roundRect` in 84 of 5376 cases, and from a `roundRect` clip in 42 (ties, scales 1 and 2). Fix: one sampler and one count (then 0 and 0). An in-page Fizzygum sample did not change.
-- [ ] **Open thick strokes end square to the last CHORD, not to the curve** (`StrokeGenerator._generateCaps` takes the first and last segments' tangents): the error is ≈ halfWidth·sin(chord angle / 2), 0.76 / 1.51 / 2.31 px at lw 20 / 40 / 60 on r 60 open arcs (0.25 with the curve's own tangents). Closed rings are fine.
-- [ ] **`fillArc` / `outerStrokeArc` / `fillStrokeOuter` drop sub-0.5 px segments near the apex** (`ArcOps`'s `segRight - segLeft < MIN_EDGE_LENGTH`, six sites): `fillArc` misses 24 pixel centres (worst 0.39 px) and `outerStrokeArc` 23 (worst 0.31); and the pie keeps the half-open rule on the circle where `fillCircle` contracts by `FILL_EPSILON`. Fizzygum calls none of them.
-- [ ] **Path curves are inscribed chords**: a filled curve misses pixel centres up to 0.25 px inside the true curve (arc fills: 1075 px; `fillStadium` ≤ 0.023 px). Exact crossings are prototyped (`R-B/swc`, "EC9"; a start on the active-edge filler in `R-B2/v-exact/swc`, its curve layer not begun); they want the curve-tag layer two items down.
-- [ ] **Stroke flattening ignores the line width, and a curve's vertices are stroked as user joins**: arcs flatten for their radius alone, Béziers at 0.25 USER units, and every flattened vertex takes the stroke's `lineJoin` (miter spikes, bevel facets). Design in `R-A2/NOTES.md`: ONE curve-tag layer feeding the exact fills above, a sweep join at a vertex inside one curve, and flattening for max(r, halfWidth) device px. On 54 arc cases the stroke misses 5169–9544 px today and 1244 with all three. Test draft `R-A2/tests-draft/0NN-thick-curve-stroke-is-its-sweep.js`.
-- [ ] **A FILL's pixel at an exact tie can depend on where the fill is drawn** (strokes are anchored since the follow-ons: SWCanvas §9 entry 32). Fills, clips and `isPointInPath` keep absolute device arithmetic, so an integer-vertex fill decides a pixel centre exactly on its edge by rounding at its own magnitude (10 of 836 renders differ between positions, 1 px each; 34 of 3576 integer-edge tie crossings). A device frame for fills was built and REFUSED (`Fizzygum-tests/.scratch/arc-sw/U17/NOTES.md`): a caller that computes its vertices at the device position (`FolderIconAppearance`'s slant, before it drew from its own box) is re-rounded consistently by absolute arithmetic, and the frame made such fills depend on position. It wants the path stored translation-free first: the default path is kept in DEVICE space and mapped back through the inverse, which is inexact at non-dyadic scales (0.75, 1.5, 3), so two spellings of one shape disagree on ties there (fill 232 / clip 116 of 5376 cases at scale 3). The rotated `strokeRect` (`RectOpsRot`) is not framed either. Fizzygum runs at dpr 1 and 2 only.
-- [ ] **A semi-transparent rotated `strokeRect` blends some pixels twice** (`RectOpsRot._stroke_Rot_Alpha`: the two opposite edges of a pair share a role, so where they overlap they blend twice): 48 of 648 cases, 1171 px, every one a rect with min(w, h) < lineWidth. The axis-aligned direct `strokeRect` does the same on tiny rects (lw 6 on a 4×4 rect paints alpha 193 for a 0.5 colour).
-- [ ] **`Color` stores premultiplied 8-bit components**, so a translucent colour's straight components drift: up to 127 levels at alpha 1–15, 7 at 16–63, 1 at ≥ 128 (rgba(200,100,50,1/255) reads back (255,0,0,1)). Fix prototyped in `R-C2/N2c-keep/` (exact straight storage, and `copy` of a transparent colour gives 0,0,0,0; faster; a core test draft): over opaque destinations it then matches Chrome (0 of 1270 samples differ, main 526 at 1 level). Fizzygum: ±1 level, INFERRED ~30–40 tests per density to recapture (from a 62-test sample).
-- [ ] **`putImageData` of (255,0,0,0) keeps its RGB**, where Chrome reads back 0,0,0,0. Invisible (alpha 0).
-- [ ] **`xor` is binary on partial alpha** (it gives 0,0,0,0; off by up to 127–178 levels), and **`lighter` and the blend modes fall back to source-over** (off by up to 220). Fizzygum uses only source-over, source-in and destination-out.
-- [ ] (Fizzygum) **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (~:45-46), which puts both ring edges ON pixel centres, so the 3.5 ring is asymmetric at dpr 1. An integer radius 3 is symmetric at dpr 1 and 2 under every variant (`R-B2/logs/ring-symmetry.log`). Cosmetic; a fix moves the palette's pixels (a recapture).
+- [ ] **Ellipses are flattened by their MINOR radius** (SWCanvas) — chords miss the major-axis ends by up to 0.52 px against a 0.25 px tolerance; fix prototyped in `R-B2/v-chords`. Fizzygum draws no ellipse.
+- [ ] **Path2D curves are flattened with a USER-space tolerance** (SWCanvas) — the device error grows with the scale (an arc misses by 0.92 px at scale 4; Béziers too). Fizzygum uses no Path2D.
+- [ ] **Arc segment counts read the CTM's largest COLUMN length, not its largest singular value** (SWCanvas) — under scale-then-rotate they under-count: 2 SWCanvas PNGs move (51 px); no assertion sees it (worst 0.125 px). → "Arc segment counts read the CTM's largest column length"
+- [ ] **Two `arcTo` flatteners disagree** (SWCanvas: a device-space and a user-space count) — `fillStadium` differs from the path `roundRect` in 84 of 5376 cases; fix: one sampler and one count.
+- [ ] **Open thick strokes end square to the last CHORD, not to the curve** (SWCanvas `_generateCaps`) — off by 0.76 / 1.51 / 2.31 px at lw 20 / 40 / 60 on r 60 open arcs; closed rings are fine.
+- [ ] **`fillArc` / `outerStrokeArc` / `fillStrokeOuter` drop sub-0.5 px segments near the apex** (SWCanvas `ArcOps`) — 23–24 pixel centres missed (worst 0.39 px). Fizzygum calls none of them. → "fillArc and friends drop sub-0.5 px segments near the apex"
+- [ ] **Path curves are inscribed chords** (SWCanvas) — a filled curve misses pixel centres up to 0.25 px inside the true curve; exact crossings are prototyped and want the curve-tag layer of the stroke-flattening item.
+- [ ] **Stroke flattening ignores the line width, and a curve's vertices are stroked as user joins** (SWCanvas) — 54 arc cases miss 5169–9544 px; design in `R-A2/NOTES.md`: one curve-tag layer and a sweep join. → "Stroke flattening ignores the line width"
+- [ ] **A FILL's pixel at an exact tie can depend on where the fill is drawn** (SWCanvas) — 10 of 836 renders differ by 1 px between positions; a device frame was refused; it wants a translation-free stored path first.
+- [ ] **A semi-transparent rotated `strokeRect` blends some pixels twice** (SWCanvas `RectOpsRot`) — 48 of 648 cases, every one a rect with min(w, h) < lineWidth; the axis-aligned one does the same on tiny rects.
+- [ ] **`Color` stores premultiplied 8-bit components** (SWCanvas) — a translucent colour's straight components drift (up to 127 levels at alpha 1–15); fix prototyped; in Fizzygum ±1 level, INFERRED ~30–40 tests a density to recapture.
+- [ ] **`putImageData` of (255,0,0,0) keeps its RGB** (SWCanvas), where Chrome reads back 0,0,0,0. Invisible (alpha 0).
+- [ ] **`xor` is binary on partial alpha** (SWCanvas), and `lighter` and the blend modes fall back to source-over (off by up to 220). Fizzygum uses only source-over, source-in and destination-out.
+- [ ] **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (Fizzygum) — both ring edges fall on pixel centres, so the 3.5 ring is asymmetric at dpr 1; radius 3 is symmetric; cosmetic, a recapture.
 
 ### Tooling arc 2026-10-29 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
-- [ ] **A screenshot whose reference never LOADED reports as a pixel mismatch.** `AutomatorPlayer.compareScreenshots`
-      falls through to "FAIL - no screenshots like this one" when `candidates` is EMPTY, the same words as a real
-      mismatch. Seen at the arc's closing gauntlet (machine at load 54, battery 7%): the `settle` leg's parallel run
-      failed `SystemTest_macroLockedCompositeWidgetPreventsDrag` image_1, and the picture the leg kept
-      (`FIZZYGUM_FAILURE_IMAGES_DIR`) is pixel-identical to the committed reference (its hash `a329fa14…` IS the
-      reference's) — so no reference was there to match, on a shard that had needed a boot-storm reload. Fix: an empty
-      candidate set gets its own failure line ("no reference loaded for X — its pixels were not compared"), still a
-      failure, so the next one classifies itself as infra at a glance; then ask why a reference record can go missing
-      mid-run (the loader proceeds on the reference scripts' onload — does an onerror go unreported?).
+- [ ] **A screenshot whose reference never LOADED reports as a pixel mismatch** — an empty candidate set says "no screenshots like this one" (seen in a loaded `settle` leg); give it its own line, then find why one goes missing. → "A screenshot whose reference never LOADED reports as a pixel mismatch."
 
 ### One line each — every item names the archived plan and section that owns its detail
-
-- [ ] `archive/mixin-removal-plan.md` §7 Phase 8 (left to the owner by its loop): `fg` still names mixins in two places — the `fg graph` leg's comment ("…mixin chain") and the gloss bare `fg` prints for it ("mixin super chains terminate"); the rule they describe is `SUPER_CHAIN_TERMINATES` now (`graphEdgesOut` terminates on SimpleTextWdgt and TitleWdgt, and a wired one enumerates its flow edge through what it inherits from `ControllerWdgt`).
-- [ ] (no plan; found 2026-11-12 by the mixin-removal loop's U10 docs sweep) `docs/tooling/visual-review-sample.txt` (~:14) names `SystemTest_macroEditModeTogglePencilEyeGlyph`, which has no test directory, so `fg diffpage` refuses the sample as given — drop the name or replace it with the test that now covers the edit-mode toggle's glyph.
-- [ ] `archive/mixin-removal-plan.md` §7 Phase 8: classes are still evaluated in sloppy mode (an indirect `eval.call window`); with `Mixin`'s `arguments.callee` rewrite deleted, nothing the meta-system emits needs it any more — whether to compile classes in strict mode is open (out of that plan's scope).
-- [ ] (no plan; found 2026-11-12 by the mixin-removal loop's U7 review, `Fizzygum-tests/.scratch/mixin-removal-loop/u7-relay/` LEDGER) A `StretchableWidgetContainerWdgt` keeps a stale `@contents` once its page leaves it — "Pick up", "Delete" or "Attach" on the page of a slide, a dashboard, a generic panel or a patch-programming window — and nothing clears it: each re-lay of the container moves the departed page back to its box (`_reLayout` through `_reLayoutWithOwnContents`, no parent check), drops in its margin go to that page, `add` and "Attach" forward to it, and the window's edit toggle writes its flag (the state U7 found Phase 6's early bar call still needed for). Medium, by reading (the edit-toggle half measured: `u7-relay/probe-a1.js`). Fix shape: the container hears its child leave and lets it go; what the emptied window then shows is a product decision.
-- [ ] `archive/drag-embed-implementation-plan.md` (dwell-to-arm; case law `../../Fizzygum-tests/DETERMINISM.md` §3k): `SystemTest_macroInternalVsExternalWindowDrop`'s UNARMED drop is §3k's bug class — it carries the window, waits `waitNoInputsOngoing`, then clicks, and the click is stamped from the cycle that wait ends in, so under load the hold crosses `dwellToArmMs` (450) and the window nests. Seen once (2026-11-12, the mixin-removal loop's U2 gauntlet, its tiernaming leg's parallel wave: "the unarmed window landed on the world, not nested in the panel under it — expected: true found: false", images 1–3; passed the serial retry; log kept at `Fizzygum-tests/.scratch/mixin-removal-loop/u2-clipping/tiernaming-parallel-fail.log`). Fix per §3k: schedule the release in event time in the same step as the carry (`@clickAfterHoldingStill_InputEvents`), then confirm image_1 byte-identical.
-- [ ] `archive/atlas-delay-fuzz-tool-plan.md` §9: `fg fuzz` has NO working regression fixture — §5 test 3 (revert flake A's `waitForScreenshotReady` and expect a catch) does not reproduce: 13/13 passes under injection AND 3/3 with none, because a fresh page makes ~1 `loadFont` call against a ~one-frame window. A fixture needs a scenario with MANY atlas loads and a pixel read near one of them. Until then the tool's own failure paths are covered only by the canned-transcript corpus (`npm run selftest`) plus the two live INVALID drills.
-- [ ] `archive/build-arc-4-dynamic-parts-plan.md` §5.4 (phase 3, DECLINED by the owner 2026-07-30 — optional by construction, NOT an unfinished retirement): flip further parts to `"eager": false`. Ready: `dev-icons` (14 classes, zero call-site work) and `patch-programming-experimental` (6 classes, check its menu entry points first). ⛔ `demos` / `dev-tools` are the bigger case and probably not worth it — both are constructed AT BOOT (`globalFunctions.coffee` builds `demoMenus`; `WorldWdgt` builds `world.widgetFactory` / `world.pinouts`), so laziness there means converting boot-time construction into on-demand construction, a different change from the pilot's. `meta-tools` (inspectors) additionally needs an ingestion-on-demand seam. Each flip = `"eager": false` + entry-point conversion (the promise API, NOT an `if X?` guard — that would swallow the click) + `fg gauntlet` + a smoke absence assertion.
+- [ ] `fg` still names mixins in two places — the `fg graph` leg's comment ("…mixin chain") and its usage gloss ("mixin super chains terminate"); the rule is `SUPER_CHAIN_TERMINATES` now. Left to the owner by the mixin loop. → `archive/mixin-removal-plan.md`, "fg still names mixins in two places"
+- [ ] `docs/tooling/visual-review-sample.txt` names `SystemTest_macroEditModeTogglePencilEyeGlyph`, which has no test directory, so `fg diffpage` refuses the sample; drop it, or name the test covering the glyph now. → "visual-review-sample.txt names a test that no longer exists"
+- [ ] Classes are still evaluated in sloppy mode (an indirect `eval.call window`); with `Mixin`'s `arguments.callee` rewrite deleted nothing needs it — whether to compile classes in strict mode is open. → `archive/mixin-removal-plan.md`, "Classes are still evaluated in sloppy mode"
+- [ ] A `StretchableWidgetContainerWdgt` keeps a stale `@contents` after "Pick up", "Delete" or "Attach" on its page (a slide, a dashboard, a panel): re-lays move the departed page back, drops go to it — medium. → "A StretchableWidgetContainerWdgt keeps a stale @contents"
+- [ ] `SystemTest_macroInternalVsExternalWindowDrop`'s unarmed drop is DETERMINISM.md §3k's class: under load its hold crosses `dwellToArmMs` and the window nests (seen once); schedule the release in event time. → `archive/drag-embed-implementation-plan.md`, "InternalVsExternalWindowDrop's unarmed drop can arm under load"
+- [ ] `fg fuzz` has NO working regression fixture: reverting flake A's `waitForScreenshotReady` passes 13/13 under injection; a fixture needs many atlas loads and a pixel read near one. → `archive/atlas-delay-fuzz-tool-plan.md`, "fg fuzz has NO working regression fixture"
+- [ ] Dynamic parts §5.4 phase 3 (DECLINED by the owner 2026-07-30; optional, not an unfinished retirement): flip further parts to `"eager": false` — `dev-icons` and `patch-programming-experimental` ready. → `archive/build-arc-4-dynamic-parts-plan.md`, "§5.4 phase 3: flip further parts to lazy"
 - [ ] `archive/basement-dormant-layout-flag-plan.md` §5: design + implement the cached _inBasement flag
 - [ ] `archive/basement-dormant-layout-flag-plan.md` §7: step-by-step build of the flag — not started
 - [ ] `archive/basement-dormant-layout-flag-plan.md` §8: mandatory gauntlet + dpr2 torture verification — never run
-- [ ] `archive/basement-to-bin-plan.md` §6 auto-empty: empty the bin automatically at snapshot/quit — DEFERRED, not rejected; revisit after living with the Bin (recoverability expectations; the doGC on-screen precondition it worried about is GONE since the bin/shelf split)
+- [ ] Bin auto-empty (basement-to-bin §6): empty the bin automatically at snapshot/quit — deferred, not rejected; revisit after living with the Bin (its doGC precondition is gone since the bin/shelf split) → `archive/basement-to-bin-plan.md`, "§6 auto-empty: empty the bin at snapshot/quit"
 - [ ] `archive/basement-to-bin-plan.md` §4 Phase 3c: bin presentation — swap the pseudo-random scatter for a representativeIcon grid — cosmetic follow-up, owner kept scatter for the semantics arc
 - [ ] `archive/caret-follow-in-place-settle-plan.md` §5: decisive first step: trace where typing's caret drains today
 - [ ] `archive/caret-follow-in-place-settle-plan.md` §6: implement the fix shape once §5's trace is known
 - [ ] `archive/caret-follow-in-place-settle-plan.md` §7: mandatory byte-exact verification protocol — not run
-- [ ] `archive/claimsspace-footprint-default-and-scroll-reachability-plan.md` §5 S3 / G2: owner halo feel-check (desktop/document/scroll-panel), post-push
+- [ ] ⛔ `archive/claimsspace-footprint-default-and-scroll-reachability-plan.md` §5 S3 / G2: owner halo feel-check (desktop/document/scroll-panel), post-push → `archive/claimsspace-footprint-default-and-scroll-reachability-plan.md`
 - [ ] `archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md` §8-C follow-up 4a: FizzyPaint canvas-resize ghost — fix identified, couldn't reproduce to verify
 - [ ] `archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md` §8-C follow-up 4b: broader ScrollPanel resize-preservation — implemented, verified no-op, reverted
 - [ ] `archive/swcanvas-invisible-pixel-hash-nondeterminism-plan.md` §5: whether PNG export flattens over opaque background — uninspected
 - [ ] `archive/swcanvas-invisible-pixel-hash-nondeterminism-plan.md` §5: backfill blast radius (SWCanvas ref count, scriptability) — uncounted
 - [ ] `archive/swcanvas-invisible-pixel-hash-nondeterminism-plan.md` §5: cross-engine (V8 vs JSC) invisible-pixel residue identity — unverified
 - [ ] `archive/god-class-decomposition-plan.md` Tier 3 / C21: context-menu construction relocation to menusHelper — deferred, screenshot label-strip risk
-- [ ] `archive/hover-resync-after-flush-plan.md` § CAPSTONE GATE WEAKNESS note: the capstone's paint-time half (the paint-read-only audit, which now rides the capstone pass) shares the careless-push-count-only weakness — still open backlog
+- [ ] The capstone gate's paint-time half (the paint-read-only audit, which rides the capstone pass) shares the careless-push-count-only weakness of the hover-resync plan's CAPSTONE GATE WEAKNESS note — open. → `archive/hover-resync-after-flush-plan.md`, "The capstone gate's paint-time half has the push-count-only weakness"
 - [ ] `archive/lint-generic-rules-carryover-plan.md` §8.2 A3: must-call-super table-driven rule — not built
 - [ ] `archive/lint-generic-rules-carryover-plan.md` §8.4 A6: dead-class detector (ReClassNotReferencedRule) — not built
 - [ ] `archive/lint-generic-rules-carryover-plan.md` §8.9: empty-catch stink — needs multiline stink-engine extension
-- [ ] `archive/lint-ratchet-static-checks-plan.md` Phase 4: encode tier in underscore prefix on immediate mutators — PARKED, owner-gated, low priority
-- [ ] ⛔ `archive/paint-time-scroll-translation-plan.md` Phase 4 (OWNER-GATED): lift `scrollOffsetX/Y` + `_writeScrollOffset` + the paint interception + the `scrollTranslationOfChild` provider from `ViewportWdgt` to the clipping base class `ClippingWdgt` — "scrollability as a property of every panel". Designed, deliberately unlifted until a second user exists (YAGNI; the seam is stated in that plan's STATUS BOX Phase-4 row). Phases 0–3 of the arc are EXECUTED (2026-08-20): the offset is stored truth, the plane is pinned, paint/hit/damage/clip/input all speak the translation; living truth = `architecture/viewports-and-planes.md`.
+- [ ] ⛔ `archive/lint-ratchet-static-checks-plan.md` Phase 4: encode tier in underscore prefix on immediate mutators — PARKED, owner-gated, low priority → `archive/lint-ratchet-static-checks-plan.md`
+- [ ] ⛔ Paint-time scroll translation Phase 4 (owner-gated): lift `scrollOffsetX/Y`, `_writeScrollOffset`, the paint interception and the provider from `ViewportWdgt` to `ClippingWdgt`, unlifted until a second user → `archive/paint-time-scroll-translation-plan.md`, "Phase 4: lift scroll translation to ClippingWdgt"

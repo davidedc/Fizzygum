@@ -851,3 +851,9 @@ ACTIVE: O3, O4b, §8/S2/S6b/F1 and §5 F3 remain open and stay listed in `docs/B
 landing belongs with §5B O4 and §8's post-landing measurement ledger.
 
 - [x] §5B O4a: spreadsheet text de-directified — LANDED 2026-07-24 as "scalar text is a StringWdgt child, period" (owner design decision; cells + headers hold passive StringWdgt children, (+4,+2) inset = byte-identical, zero recaptures; StringWdgt buffers cache for free; renders −96–99%, dpr1 wall-clock within noise); the A/B CORRECTED the O4 attribution (shadow "73%" ≈ atlas-warm-up storms) — `measurements/drawimage-blit-attribution-2026-07-24.md` ⚠ + final-shape sections
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### The text caches key on a 32-bit hash with no text check
+
+- [ ] the text caches key on a 32-bit `hashOfString` of the text with no check that the text matches: two texts that collide ("Of"/"PG", "Aa"/"BB") at the same font and extent share ONE entry, so the second widget draws the first's text (probed 2026-11-15: two `StringWdgt`s share one back buffer) — medium: reached by typing such a pair into two same-width labels or cells; `StringWdgt.createBufferCacheKey`, `TextWdgt` `breakTextIntoLines`/`getParagraphs`, `StringWdgt` `measureText`

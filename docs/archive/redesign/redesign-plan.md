@@ -960,3 +960,97 @@ Legacy icons shown on any redesigned surface are converted with the skill. Every
       small shared glyph-helper would fold both pairs. Work it only when one of these files is
       next touched for its own reasons — standalone it is churn without a consumer.
       (Section "Naming-gloss audit 2026-08-18".)
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### T follow-up — a hidden or collapsed title piece keeps a STALE box
+
+- [ ] T follow-up — a hidden or collapsed title piece keeps a STALE box: a pinned menu's `label` is a hidden StringWdgt at (0,0), and a collapsed window title keeps the centre it had (three never-delivered tests aimed there, plan §4 T Findings). Harmless to the product (nothing paints or hits it); decide at W1/W2, which rebuild the strip, whether a not-shown piece should answer geometry at all.
+
+### W3 follow-up — the owner-review points W3 left open
+
+- [ ] W3 follow-up — the owner-review points W3 left open, listed in the plan's §4 W3 "Open review points": an instance's own property dimmed like an inherited one; the code pane's line pitch 15 (no line-height knob; W5's documents need one too); the toggle and chip hover/press looks; the prompt buttons' placement; wrapped breadcrumb rows' indent; a taken-apart pane's transparent look; a disabled button's shadow on the desktop; `injectProperty` removed from the chain leaving the footer; the error log's two-label pause toggle.
+
+### W2 follow-up — the owner-review points W2 left open
+
+- [ ] W2 follow-up — the owner-review points W2 left open, listed in the plan's §4 W2 "Open review points": the fat scroll indicator's look; tooltip placement over the menu it explains; the 20 px tick column; narrow pinned menus hiding their title (since 2026-10-25 every pinned menu takes its rows' width at the pin — a title wider than the rows hid in the strip already, and now the extra width goes too, `visual-design-system.md` §5 "A pop-up"). (The prompt slider's thumb that returned to black after one hover is fixed in G-C1: the prompt slider wears the content slider's look, read at paint.)
+
+### W1 follow-up — the owner-review points W1 left open
+
+- [ ] W1 follow-up — the owner-review points W1 left open, listed in the plan's §4 W1 "Open review points": collapsed-strip corners; the crescent inside a window's bottom corners; card corners under a host's strip; pinned-menu rows under the border (W2); what the grip's square covers; whether the grip should compensate the drag-threshold lag; the "grip" name clash with ruling C12.
+
+### G-E follow-up — a ROW's look is chosen once and copied at construction
+
+- [ ] G-E follow-up — a ROW's look is chosen once, in `MenuItemWdgt._lookFor` (and `MemberRowWdgt`'s), and COPIED into the row, its label and its indicators at construction (~16 own fields: fills, plate geometry, insets, fonts, inks), so a saved or duplicated row keeps the look of the day it was built; every other G surface reads its role where it is painted. Moving the menu, list and member rows to a read at paint (a row-kind record and every reader asking the theme through it: `LabelButtonAppearance`, the rows' layout, the label's ink, the indicators) is pixel-neutral but rewires every row the suite shows (167 shots of 63 tests). Census: `Fizzygum-tests/.scratch/g/RE-report.md` §2.4. (plan `archive/redesign/redesign-plan.md` §4 G)
+
+### G-E follow-up — the demo pointer keeps its own chrome
+
+- [ ] G-E follow-up — the demo pointer (`dev-tools/PointerWdgt`, "Make pointer") keeps its own chrome: a 160-grey box and a white label, outside the redesign's palette, and its close button now wears the off-strip icon button's `muted` glyph on that grey (low contrast). Give it the plate look or a role of its own. (plan `archive/redesign/redesign-plan.md` §4 G)
+
+### G-D follow-up — two hover-wash tests replay under a finger
+
+- [ ] G-D follow-up — a finger does not hover, and two tests about the hover WASH replay under a finger without ever showing it: `macroHierarchyMenuHoverHighlightsExactSubtree` (its whole subject is the wash; its finger references hold no wash pixel) is not declared mouse-only, and `macroTargetingHighlightsCandidateWidget`'s highlight shots show none under a finger (its menu flows do run). Declare the first `pointerKinds: ["mouse"]` with its reason (and drop its finger references), and decide whether the second's finger run should assert what a finger CAN show.
+
+### G-C follow-up — UNEXPLAINED: the menusweep leg hung silently in wave A
+
+- [ ] G-C follow-up — UNEXPLAINED: the `menusweep` leg hung silently in parallel wave A twice (the G-C close gauntlet 2026-10-21 and the Z close 2026-10-22: the leg's 300 s alarm, rc 142, no output), passing its serial retry each time; 8 instrumented sweeps beside a full parallel suite did not reproduce it. The sweep stamps its stages and every root on stderr as it reaches them (2026-10-29), so the next sighting's log tail names the root it stopped in — read it then.
+
+### R0 follow-up — a MASS recapture is dominated by its discovery pass
+
+- [ ] R0 follow-up — a MASS recapture is dominated by its discovery pass: `recapture.js --auto` re-verifies EVERY parallel suite failure single-process, at each density, before capturing. W1 measured about 45 min of discovery for the mouse wave (297 tests × 2 dprs) and about 55 for the finger wave, of 1 h 49 min and 2 h 00 min in all; the recompress pass took about 33 min each. When the parallel failures are all pixel mismatches, a parallel re-verify (or none) would save most of it.
+
+### F follow-up — the S2 symbols W6 left
+
+- [ ] F follow-up — the S2 symbols W6 left (W6 kept the wire rows' ➜ / ⇄, "Bind ⇄" and the text menu's pictograms as wording and appended them, with ↔ and °, to the symbols atlas, plan §4 W6): (the Templates "useful characters" palette was TRIMMED at G-E to characters the atlases carry, owner, and its quote to straight quotes and an em dash) the font sets lack ¹ ² “ ” ‘ ― (and Arial's own °, drawn from the symbols atlas meanwhile, a little wide); `StringWdgt.toString`'s newline mark "↵" boxes in dev displays. A font-set addition regenerates every font atlas (~4,200; plan §4 W6, R4).
+
+### W5 follow-up — a document paragraph being DRAGGED is plain in the hand
+
+- [ ] W5 follow-up — a document paragraph being DRAGGED is plain in the hand (square, text flush, re-wrapped at its full width), because the item shape is asked of the text's container and the hand is not a page; it takes the shape again where it lands. Keeping the item look in flight needs the hand to know where the drag came from.
+
+### W5 follow-up — a document drop cannot append below the visible page
+
+- [ ] W5 follow-up — the document's drop rule (a dropped widget goes before the first item whose middle is below the drop point) cannot append after an item whose middle lies below the visible page without scrolling the page while dragging; seven tests were re-aimed around it. An auto-scroll at the page's edges while carrying (the list's `macroListWdgtAutoScrollsNearDraggedEdge` precedent) would close it.
+
+### W5 follow-up — a click on the caret before a narrow glyph
+
+- [ ] W5 follow-up — with the caret 1 px after its slot's boundary and 2 px wide (owner decision), a click ON the drawn caret in front of a glyph narrower than 5 px (Arial 13 `t`, `i`, `l`, `.`) picks the next slot; a caret at the end of a tight label paints 1–3 px outside the label's box.
+
+### W5 follow-up — a caret at a padless viewport's edge under its border
+
+- [ ] W5 follow-up — a caret at the right edge of a scrolling viewport with no padding (a loose string in a scroll panel) has its last column under the viewport's 1 px border: `ViewportWdgt.scrollCaretIntoView` follows with a margin of `padding + extraPadding` (0 there), and the caret's band clamp stands aside inside a viewport plane (W5b: two clamps disagreed and cost a settle re-visit). Making the caret fully visible there needs the follow's margin to include the border.
+
+### W5 follow-up — Theme.titleBarTextHeight could go
+
+- [ ] W5 follow-up — `Theme.titleBarTextHeight` (the window title's stand-in before its label exists) could go: its two readers answer only before the title piece exists, and the pop-up band is floored at `menuRowHeight` anyway; removing it needs a class-side "line pitch of a role" query `StringWdgt.linePitch` would share.
+
+### W5 follow-ups (W5e) — a copied or loaded toolbar keeps pointer state
+
+- [ ] W5 follow-ups (W5e, pre-existing, found on the tool cells) — the press lifecycle (2026-10-24: every widget the press's `pressBegan` reached is told its ending, `input-and-gestures.md`) closed the stuck PRESSED looks this line used to list (the edit mark's tool cell, the frame-strip icon buttons whose empty face caught the release). Still open: a copied or loaded toolbar keeps its items' saved pointer state; and a view/edit switch (`_engageDocksNoSettle`) does not tell a docked band's corner chain (no observed case).
+
+### W6 follow-up — a self-sizing text measures its stored text
+
+- [ ] W6 follow-up — a text that sizes its box to its contents measures its STORED text, not what it shows (`TextWdgt.preferredExtentForWidth` / `_reLayoutSelf` read `@text`, not `transformTextOneToOne @text`), so a display case or a password on such a text would size the box to the wrong form. No title uses that mode today (W6a).
+
+### W6 follow-up (BitmapText) — dpr-2 bold/italic atlases draw blank
+
+- [ ] W6 follow-up (BitmapText) — the shipped font-assets release carries 124 dpr-2 bold/italic font atlases at 73–84.5 px (Arial 49, Courier New 32, Times New Roman 43) whose single-row image sits under two-row positioning data, so glyphs past the wrap draw blank (a recovery regenerated their bundles and kept the old images). A font-set regeneration rewrites them (R4, `Fizzygum-tests/.scratch/w6/R4-report.md` §3).
+
+### W6 follow-up (owner review points)
+
+- [ ] W6 follow-up (owner review points) — 11 px capitals in a menu header show uneven letter gaps at dpr 1; "Empty window" (sentence case, 2 px wider) drops below the title crop grade in a 72 px title box, so two shots show no title; the symbols atlas's glyphs are small, sit high and are never bold (⍿ is a dot at 13 px dpr 1); a rotated widget's hierarchy reads "Rectangle" / "Rectangle 2" (the transform island names itself after its content); the test fixtures' own labels stay lowercase ("hover me", "hide the box", "beta"…).
+
+### W6 follow-up — wording leftovers
+
+- [ ] W6 follow-up — wording leftovers: a pinned menu's or prompt's `colloquialName` is a quoted form that lands in a saved file's name ('"Desktop" window.fzw.json'); the dev menu spells "Serialise widget to memory" beside "Deserialize…".
+
+### W6 follow-up (design note) — a menu row that opens a confirmation
+
+- [ ] W6 follow-up (design note) — a menu ROW that opened a confirmation would need both the submenu chevron and "…", which the two rules forbid together; no row does today (the bin's confirmation comes from a button). Decide before one is added (the menu-click sweep's flag proof and "…" proof would disagree).
+
+### F follow-up — S3 ladder anomalies for W4's icon work
+
+- [ ] F follow-up — S3 ladder anomalies for W4's icon work: Bin draws lopsided ridges at even S 18–32 (pre-existing: its ridge drop rule measures the left ridge by its left edge and the right by its right edge); GenericPanel (halo erases the border) and Typewriter (no keys) degenerate at 14.
+
+### G-A follow-up — the C-F converter's DEMO variant paints its parent
+
+- [ ] G-A follow-up — the C-F converter's DEMO variant (`CFDegreesConverterIconAppearance`, demos-icons) paints its parent's art: its grey F degree sign went with the redraw, because the size-aware base has no secondary-ink helper (a raw fill style breaks the shadow pass). Add a `_useDetail`-style role helper if a second ink is ever wanted.

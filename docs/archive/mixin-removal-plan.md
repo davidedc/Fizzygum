@@ -1143,3 +1143,13 @@ changelog prose; add the base-class lookup rule and the new classes to
 - [x] **`Object::augmentWith` copies the mixin literal's inherited keys too** (found by the independent review closing "An object inspector on a class shows its statics as compiled text", in the plan's ledger; by reading). `Object-extensions.coffee`'s `augmentWith` walks the literal with a non-own `for … of`, so every mixin consumer's class function — and, through `extend`, every subclass — owns `augmentWith`, `addInstanceProperties` and `hashCode` (enumerable on `Object.prototype`) as undeclared statics, which an object inspector on such a class lists. (`docs/architecture/mixins.md` says only the literal's own keys are copied.) — CLOSED 2026-11-12 (loop), filed under `archive/argument-holes-both-repos-plan.md`. Moot: `Object::augmentWith` is deleted with the mechanism (Phase 8), and no class ran it after Phase 7.
 - [x] §7 Phase 8: the mechanism's teardown (waits on Phases 1–7) — CLOSED 2026-11-12 (loop). `Mixin.coffee`, `augmentWith` / `addInstanceProperties`, the boot and build mixin paths, `Class`'s and the inspectors' and `SourceEditsRegistry`'s mixin members and branches, and every build tool's DSL model deleted, with the four mechanism-only rules and their plants; proven by the resolution map (only the deleted vocabulary moves), §9.5's empty greps, every static gate and self-test, `fg presuite` / `fg gauntlet` / `fg homepage`; one inspector test's member list recaptured.
 - [x] §7 Phase 9: docs and close — CLOSED 2026-11-12 (loop). `mixins.md` archived (SUPERSEDED), the authoring guidelines' §16 states how a shared behaviour is homed now and what moving a member to a base class changes, the living docs and other plans' now-false mixin mentions corrected, this plan archived; proven by the build's doc-narration and visualisation gates and `fg gauntlet`.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### fg still names mixins in two places
+
+- [ ] `archive/mixin-removal-plan.md` §7 Phase 8 (left to the owner by its loop): `fg` still names mixins in two places — the `fg graph` leg's comment ("…mixin chain") and the gloss bare `fg` prints for it ("mixin super chains terminate"); the rule they describe is `SUPER_CHAIN_TERMINATES` now (`graphEdgesOut` terminates on SimpleTextWdgt and TitleWdgt, and a wired one enumerates its flow edge through what it inherits from `ControllerWdgt`).
+
+### Classes are still evaluated in sloppy mode
+
+- [ ] `archive/mixin-removal-plan.md` §7 Phase 8: classes are still evaluated in sloppy mode (an indirect `eval.call window`); with `Mixin`'s `arguments.callee` rewrite deleted, nothing the meta-system emits needs it any more — whether to compile classes in strict mode is open (out of that plan's scope).

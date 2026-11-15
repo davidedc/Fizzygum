@@ -317,3 +317,42 @@ coordinator reviews it for falsified premises and missing stop rules before it i
       selection look. The click stays a separate verdict. Pinned by `SystemTest_macroEveryPressIsToldItsEnding` and the
       extended `SystemTest_macroMouseDragScrollOfMenuRowsFiresNoRow`; the predicted recapture (mouse 5 tests, finger 3,
       48 files) matched exactly.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### icons on ordinary menus
+
+- [ ] **icons on ordinary menus** (world menu, context menus): owner taste, not built; land only when a
+      consumer asks. The mechanism already exists — `CommandSpec.icon` — so a consumer costs one call
+      site, not a new axis. Origin: `archive/command-panel-unification-plan.md` §2.2.
+
+### remainder-menu alternative projections
+
+- [ ] **remainder-menu alternative projections**: the chevron's overflow menu ships icon+label rows;
+      a grid pop ("a vertical toolbar") or a label-only pop are available BY DERIVATION on the same
+      `CommandSpec` rows, one line each — land when a consumer asks. Origin:
+      `archive/command-panel-unification-plan.md` §2.2/OD2.
+
+### T4 — multi-pointer
+
+- [ ] **T4 — multi-pointer**: pinch derived from two `pointerId`s, retiring the Safari `gesturestart`/`gesturechange` no-op listeners kept beside the pointer listeners until then (ruling I1). Origin: program tail T4, filed at the Plan 4 close.
+
+### T5 — desktop-edge docking
+
+- [ ] **T5 — desktop-edge docking**: the world's edges as dock slots, a taskbar strip. `EdgeDockLayoutSpec` is world-CAPABLE (names no host type) but the world grows no slots — a desktop dock needs a dock loop in the world's arrange, a fill gesture, and a stated precedence against the `StretchLayoutSpec`s the world already consumes, all unruled. Origin: program tail T5.
+
+### T18 — halo crowding at touch scale
+
+- [ ] **T18 — halo crowding at touch scale, PAIRED with the owner-pending G2 halo feel-check (one conversation)**: at `handleSize 44` the five corner-internal handles fully overlap on any widget below ~2·handleSize (~92 px); the Plan 3 z-order interim (corner resizer frontmost) stands, handles are hold-exempt chrome under the grammar, and the open DESIGN question (fewer handles below a size floor? edge zones? a halo mode?) is the same conversation as how the halo should FEEL at 44 px. Origin: program tail T18, owner-ruled OD4(a) at the Plan 4 review.
+
+### multi-user input attribution
+
+- [ ] **multi-user input attribution**: strokes carry `pointerId` and the `User` model exists (`world.users`); a User-per-pointer mapping is designed when a second input DEVICE exists. Origin: the Plan 3.5 `User` model's "Plan 4 at the earliest" marker, discharged at the Plan 4 close.
+
+### finger scrolling for the spreadsheet
+
+- [ ] **finger scrolling for the spreadsheet**: the sheet takes no drag-scroll (wheel/scrollbar only), which is exactly why its three wheel tests are declared mouse-only on the finger axis; a finger-scrollable sheet is a product FEATURE (the grammar re-gates existing scroll surfaces, it adds none). Origin: Plan 4 P3 discovery classification.
+
+### inspector row-locator: scroll-further beyond 3 nudges
+
+- [ ] **inspector row-locator: scroll-further beyond 3 nudges**: `clickOnListItemFromTopInspector` aims inside the row∩pane slice and the L3 locator nudges up to 3× toward an off-window row; a row still unreachable after that throws a named error (the honest floor — it has never fired in a green run). If a legitimately deeper list ever trips it, extend the nudge loop rather than the aim. Origin: `archive/widget-input-vocabulary-plan.md` P3.

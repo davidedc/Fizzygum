@@ -332,3 +332,9 @@ next. Owner gate on the whole plan: not started until owner says so.
   `docs/measurements/dataflow-measurements.md` — build record + convergence numbers.
 - `../Fizzygum-tests/DETERMINISM.md` — binding for W1/W3 consumers.
 - `docs/BACKLOG.md` — this plan's items live under its section.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### W1: firesPerEvent per-event mini-pass delivery
+
+- [ ] W1: `firesPerEvent` per-event mini-pass DELIVERY (spec §4/§13) — flag/menu/edge records landed, delivery still POOLS (`DataflowEngine.markStale` deferral note); resolve D1–D5 (scoping, settle, pool hygiene, re-entrancy, determinism); acceptance = CounterPatchNodeWdgt + t1–t3

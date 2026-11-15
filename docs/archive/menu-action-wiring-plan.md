@@ -165,3 +165,33 @@ Gauntlet 14/14. Every conversion is pixel-free by construction (no drawn string 
 that could have, `menuItem.parent.title`, was probe-verified identical first). Two argument holes
 disappear from the tests repo as a side effect, since the macro no longer has to write
 `w.showOutputPins undefined, w`.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### The backlog's note on this plan
+
+Four found by reading (three `SliderWdgt` prompts that threw on every click; three demo "…launcher"
+items that crashed), two more found by the rig that closed the arc's own residual (every widget
+wearing a `BoxyAppearance` threw when its numerical-setters menu was built; `cornerRadiusPopout` read
+a field only `BoxWdgt` declares). Both halves are gated: `buildSystem/check-menu-actions.js` on the
+build, and `menu-click-sweep-headless.js` (`fg menusweep`) as a gauntlet wave-A leg. The two open
+findings became `archive/menu-subject-routing-plan.md`, now CLOSED too (the two dead dev-tools items
+fixed, the latent `triggeringWidget` mis-feed given its adapters).
+- **Stated limits of the sweep, so nobody reads a green run as more than it is** (all printed every
+  run, so a drift is visible rather than silent): it covers DISPATCH, not click plumbing (it fires the
+  action directly — a real click tears the menu down under the walk; the suite covers the other side);
+  its roots are **hand-picked representatives plus the world in both of the shapes it builds a menu
+  in** — a coverage model, not exhaustion, and the rig prints the live root count and REPORTS any
+  root it could not build; and ~51 items per run are skipped because an earlier item in the same walk DESTROYED the
+  receiver. ⚠⚠ **A rig that mutates the world manufactures its own bugs** — `make pointer` looked like
+  a find until it was re-run in ISOLATION and did not throw. **Re-run any sweep finding in isolation
+  before believing it.**
+- ⚠ **The sweep's DISTINCT count is coverage BREADTH, not a ratchet** — it moves in BOTH directions on
+  changes that lose no reach, because `Widget._attachToChosenParent` builds one menu row PER WIDGET
+  CURRENTLY IN THE WORLD. `menus walked` is the stable reach number; `--verbose` prints the pair set so
+  a move is diffed, not argued about. (Detail: `archive/menu-subject-routing-plan.md` §5.2.)
+
+### Expand the menu sweep's root list only when a bug needs it
+
+- [ ] Expand the root list only when a bug is found in a class that has none — generic instantiation
+      of ~270 widget classes is fragile, and the reported unbuilt-root count is what makes the gap visible.

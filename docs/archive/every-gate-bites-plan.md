@@ -1214,3 +1214,14 @@ they are the definitions the new harvest must learn.
 - `docs/archive/hand-kept-lists-plan.md`: why the meta-rule must be derived.
 - `buildSystem/check-unresolved-sends.js` header: "THE SOUNDNESS TRADE" and "KNOWN GAPS".
 - Memory: `bite-proofs.md`, `unrun-checks.md`, `hand-kept-lists-tier34.md`.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### The masks Unit 0 found that are heuristic by design
+
+- [ ] **The masks Unit 0 found that are heuristic by design (plan §8.3, "File").** Each is a reading the gate makes
+      on purpose, filed with what it misses:
+  - [ ] `check-raw-pointer-reads`: a column-0 line inside a handler ends its body, and any `screenPointToMyPlane` on
+        a line excuses every raw read on it.
+  - [ ] `vm-truth-gate.js` skips its heap-floor ceiling below 20 samples per page, so a short (`--tests=`) run never
+        judges it; its proof plants `HEAP_FLOOR` on a fabricated `--audit-dir=` instead.
