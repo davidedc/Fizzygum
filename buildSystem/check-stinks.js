@@ -104,7 +104,7 @@ const STINKS = [
       { file: 'duplication/Duplicator.coffee', member: '_shellFor', count: 1, why: "Object.create's argument for an object with no prototype (`undefined` throws): a prototype-less object copies as one" },
     ],
     re: /\bnull\b/ },
-  { id: 'clock-read', baseline: 8,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it; 13->8 on 2026-11-13: the video-player part was deleted
+  { id: 'clock-read', baseline: 5,   // tightened 19->13 on 2026-11-09: Automator.fade reads the clock itself, so ActivePointerWdgt's six callers no longer pass it; 13->8 on 2026-11-13: the video-player part was deleted; 8->5 on 2026-11-15: LRUCache keeps recency in a Map's order and no longer stamps or expires entries
     why: 'a read of a clock — the wall clock (Date.now(), or a `new Date` given no argument — one followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` and `new Date -x` are values) or the monotonic one (performance.now(), no more an event-stream fact than the wall clock), either one existentially too (`performance?.now()`, `Date.now?()`) — in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock). Not seen: a read inside a string interpolation (the mask blanks `#{ }`)',
     // the world's one clock, read once per cycle; a clock widget built outside a cycle; the harness's own clocks,
     // which no world reads: its DOM overlay fades in real time, its run clock times a run, a test's macro starts after a real-time wait; and

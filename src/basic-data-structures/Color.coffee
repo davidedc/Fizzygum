@@ -158,10 +158,10 @@ class Color
   # TODO this is not an actual Color, breaks equality, can we do something else?
   @ANGLECOLOR:           "angleColor"
 
-  @_cache: new LRUCache 300, 1000*60*60*24
+  @_cache: new LRUCache 300
 
   # permanent intern table for the named constants above: unlike @_cache (an LRU that
-  # evicts and expires), an entry here is canonical for the whole session, so asking
+  # evicts), an entry here is canonical for the whole session, so asking
   # @create for a constant's rgba values keeps returning THE constant instance (e.g.
   # Color.BLACK) no matter how many other colors get minted in between.
   @_permanent: {}

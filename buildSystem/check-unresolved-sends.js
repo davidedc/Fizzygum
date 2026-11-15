@@ -196,7 +196,7 @@ now parse stringify
 getContext measureText beginPath closePath stroke clip save restore translate scale setTransform createPattern
 preventDefault appendChild createElement getElementById getElementsByTagName querySelectorAll focus blur click
 then resolve all call test exec
-has get clear
+has get clear next
 isInteger isFinite isView from
 getTime getHours getMinutes getSeconds getMilliseconds
 Math.abs Math.floor Math.ceil Math.round Math.min Math.max Array.isArray

@@ -22,8 +22,8 @@
 > plan (`docs/archive/fg-node-port-plan.md`) passes. An unattended `/loop`, launched by the owner,
 > executes the approved items one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-3/`). An item's section gains a `**Landed <date>.**`
-> paragraph as it lands, and the table's last column says where each stands. Landed: §1, §3, §5,
-> §6, §8, §10 (2026-11-15); §2 is parked on the owner's decision.
+> paragraph as it lands, and the table's last column says where each stands. Landed: §1, §2 (on the
+> owner's ruling (a)), §3, §5, §6, §8, §10 (2026-11-15).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -118,7 +118,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | # | Cleanup | Effort (estimate) | What goes away, and in plain words | Why, and the trade-offs (ELI5) | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Overrides that override nothing | ½ day | 8 methods identical to the one they inherit, 2 empty subclasses, 6 comments about a removed recorder; the provable part of an advisory count becomes a build gate. **In plain words:** some classes re-declare a method exactly as their parent already has it. The copies were cleaned out once and grew back because nothing checks. Remove them and add the check. | **Why:** if the same recipe is written on two pages of the cookbook, one day somebody fixes one page and forgets the other. Keep one page, and have the build refuse a second. **Trade-offs:** the new check adds about a second to every build; a copy that someone keeps on purpose needs a one-line note saying why; a few inspector screenshots may show fewer rows. | Low (inspector member lists) | No | 3 | Landed 2026-11-15 (§1, "Landed") |
-| 2 | The LRU cache on a `Map` | ½ day | A linked-list class, a 24-hour expiry no caller varies, 3 of the 8 remaining wall-clock reads. **In plain words:** the text caches keep their entries in a hand-built list and stamp each one with the time of day. JavaScript's own `Map` already remembers insertion order, so the list and the clock are not needed. | **Why:** the cache is a toy box that throws out the toy nobody has touched for longest. Today it also looks at a clock every time a toy is touched, so it can throw out toys left alone for a whole day, which never matters. A box that just remembers the order is enough, and the code that draws text stops looking at clocks. **Trade-offs:** this box is opened thousands of times a second, so the new one must be timed to be sure it is not slower; and a toy left for a day is no longer thrown out (still correct: the same text always measures the same). | None expected (hot path: measure speed) | No | 8 | ⛔ Parked 2026-11-15 on a speed trade (§2, "OWNER DECISION") |
+| 2 | The LRU cache on a `Map` | ½ day | A linked-list class, a 24-hour expiry no caller varies, 3 of the 8 remaining wall-clock reads. **In plain words:** the text caches keep their entries in a hand-built list and stamp each one with the time of day. JavaScript's own `Map` already remembers insertion order, so the list and the clock are not needed. | **Why:** the cache is a toy box that throws out the toy nobody has touched for longest. Today it also looks at a clock every time a toy is touched, so it can throw out toys left alone for a whole day, which never matters. A box that just remembers the order is enough, and the code that draws text stops looking at clocks. **Trade-offs:** this box is opened thousands of times a second, so the new one must be timed to be sure it is not slower; and a toy left for a day is no longer thrown out (still correct: the same text always measures the same). | None expected (hot path: measure speed) | No | 8 | Landed 2026-11-15 on the owner's ruling (a) (§2, "Landed") |
 | 3 | One pinned toolchain | ½ to 1 day | Two global installs, a version nobody chose in the production artifact, two unused pinned packages, a second copy of an analyzer. **In plain words:** the build shrinks its output with whatever version of a tool happens to be installed on the machine, while the version the project wrote down sits unused. Use the written-down one. | **Why:** a cake recipe that says "use whatever oven is in the house" gives a different cake in every house, and nobody can tell whether the cake changed or the oven did. Write the oven down and use that one. **Trade-offs:** a fresh machine runs one install command in this folder before it can build; upgrading the tool becomes something a person does on purpose, never something that happens by itself. | None (byte-identical trees expected) | No | 1 | Landed 2026-11-15 (§3, "Landed") |
 | 4 | The experimental patch-programming part | ½ to 1 day (deletion) | 6 classes (495 lines) that production never ships, that no test builds, and that only three rows of the dev demo menu can create; the stated reason one base class is held in core. **In plain words:** a folder labelled "unfinished" holds three building blocks for wiring widgets together: a splitter, a text-comparing box and a find-and-replace box. No test uses any of them, a user of the shipped product cannot reach them, and the splitter's job is now done by every widget on its own. Finish them or delete them. | **Why:** it is a half-built toy left in the middle of the room. Nobody plays with it, but everybody has to step around it and dust it whenever the room is tidied. Finish it or put it away. **Trade-offs:** putting it away loses the half-done work from the tree (git still has it) and its three rows in the dev demo menu; no test changes. Finishing the two text boxes instead is real feature work, not tidying, and only worth it if they are wanted in the product. | None expected (no test builds any of the six or opens their menu) | Yes | 5 | Left for a later day by the owner (2026-11-15) |
 | 5 | Visualisation pages are generated, not committed | 1 day | 375 committed generated files (4.2 MB), the build gate that exists to catch them going stale, the generator's branches for recorded tests and native references. **In plain words:** each test has a web page describing it, made by a script and then saved in git, with a check that fails when the saved copy falls behind. Make the page when it is wanted and stop saving it. | **Why:** keeping a photo of every drawing means taking a new photo each time a drawing changes, and somebody has to keep checking that no photo is old. Twice the photos were old. Look at the drawing instead: make the page when you want to see it. **Trade-offs:** the pages can no longer be opened straight from the repository without running a command first; making all of them takes some seconds that have not been measured yet. | None | Yes | 7 | Landed 2026-11-15 (§5, "Landed") |
@@ -313,7 +313,7 @@ the `typeof` of every key over one suite run. One type per cache is the go-ahead
 `grep -rn "new LRUCache" Fizzygum/src --include='*.coffee'` (eight lines, one age) and
 `cd Fizzygum && node buildSystem/check-stinks.js --list clock-read | head -10`.
 
-**OWNER DECISION (OPEN, raised 2026-11-15 by the loop).** The `Map` cache was built, proven
+**OWNER DECISION (raised 2026-11-15 by the loop; DECIDED the same day: (a)).** The `Map` cache was built, proven
 equivalent and timed, and is PARKED on a speed trade the plan's own rule leaves to the owner
 ("land only if no case is slower"). A person using Fizzygum sees and feels nothing either way: the
 choice is between a few hundred nanoseconds on a rare path and keeping the linked list.
@@ -349,6 +349,32 @@ choice is between a few hundred nanoseconds on a rare path and keeping the linke
   `boot/dependencies-finding.coffee`'s REQUIRES hint has no other user that needs it at class
   definition time (`Color._cache` builds an `LRUCache` while classes are being defined; the harness's
   hints are read only inside methods), so its comment's example is the one to reword.
+
+**Landed 2026-11-15 (the owner's ruling: (a)).** Before ruling, the owner asked what (a) costs at runtime, so it was
+measured.
+- A prelude counted every cache's hits and evictions over one whole suite (the suite green under it). The back-buffer
+  cache answers about 150 hits per eviction, text measurements about 3, top-level line breaking (10 entries) about
+  1.5, `Color._cache` about 5, the four 300-entry caches 13 or more.
+- The REAL classes, HEAD's and (a), timed at those capacities and mixes (Node's V8, an A/A run within 1 ns): (a) is
+  FASTER in every one — by 30 ns per round at text measurements' mix, by 85 ns at line breaking's, by 2.3 µs per 150
+  hits at the back buffers'. It is slower only where no cache sits in the suite: a 1000-entry cache under pure
+  eviction churn (+171 ns per eviction; the earlier in-browser figure, +192.5). All the caches' work together is
+  about 0.03% of the suite's CPU, an estimate from those counts and costs.
+- What landed:
+  - `LRUCache` is one `Map`: a hit takes its key out and puts it back, and an eviction drops the Map's first key.
+    Its surface keeps `get`, `set`, `has`, `remove`, `reset`, `keys`, `size` and `capacity`.
+  - `DoubleLinkedList`, the 24-hour expiry, `onDispose` and three clock reads go (`clock-read` 8 → 5). The eight
+    constructions lose their `1000*60*60*24`.
+  - The SWCanvas recorder's wrapped `set` takes two arguments. `next` joins `check-unresolved-sends`' platform table.
+  - `dependencies-finding.coffee`'s REQUIRES comment now says that no class of src needs a hint: `LRUCache`'s was
+    the last, and the harness's name classes a method builds.
+- Proofs:
+  - the old and new classes on the same 200,000 and 1,000,000 random operations: every return, size, key set and
+    evicted key the same;
+  - the resolution map: only `LRUCache`'s members changed, and `DoubleLinkedList`'s went;
+  - the presuite, the gauntlet and `fg homepage`.
+
+The evidence is local: `Fizzygum-tests/.scratch/cleanups-loop-3/u2-lru-map/` (`q/` holds the runtime measurement).
 
 ---
 
@@ -1187,12 +1213,11 @@ Do not commit or push without asking me.
 - [x] §10 (4 to 5 days; ruled 2026-11-15: land and push when every proof passes): `fg` as a Node program — its own plan, `plans/fg-node-port-plan.md`, has the process-situation matrix and the ten-step proof
   — CLOSED 2026-11-15 (loop U7): `fg` is a Node program (`Fizzygum/fg` a launcher; buildSystem/fg-commit-point.js,
   fg-verbs.js, lib/fg-supervisor.js), every proof of its plan passed, and the plan is archived (§10, "Landed").
+- [x] §2 (½ day; ⛔ PARKED 2026-11-15 on a speed trade, the owner decides — §2 "OWNER DECISION"): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (built and proven; one shape makes an eviction ×2.9 slower, the faster one pins memory)
+  — CLOSED 2026-11-15 (the owner ruled (a)): `LRUCache` is one Map with a fresh first-key eviction; measured faster
+  at every cache's suite mix (§2, "Landed").
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
-
-### §2: the LRU cache on a Map
-
-- [ ] §2 (½ day; ⛔ PARKED 2026-11-15 on a speed trade, the owner decides — §2 "OWNER DECISION"): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (built and proven; one shape makes an eviction ×2.9 slower, the faster one pins memory)
 
 ### §4: the patch-programming-experimental part
 

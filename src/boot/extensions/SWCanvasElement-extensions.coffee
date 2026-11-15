@@ -157,10 +157,10 @@ swCanvasInstallPoisonedKeyRecorder = ->
   # instance wrap, serialization-safe: the world is deliberately not a table record,
   # so its caches (and this closure) never meet the serializer's walker
   originalCacheSet = cache.set
-  cache.set = (key, value, onDispose) ->
+  cache.set = (key, value) ->
     if swCanvasColdWindowOpen()
       swCanvasPoisonedCacheKeys.push key if swCanvasPoisonedCacheKeys.indexOf(key) == -1
-    originalCacheSet.call @, key, value, onDispose
+    originalCacheSet.call @, key, value
   # A cache HIT on a poisoned entry poisons the CONSUMER too: entries are shared
   # content-keyed across widgets, and a widget REBUILT mid-cold-window (layout churn
   # recreates e.g. axis labels) blits the poisoned entry WITHOUT any fillText — no

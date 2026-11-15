@@ -50,9 +50,15 @@ extractDependenciesFromSource = ->
 
   # a hand-written escape hatch for a dependency the scanner below can't see:
   # its regexes only match class-declaration-level lines (EXTENDS /
-  # CONSTRUCTION_IN_CLASS_DECLARATION / CLASS_USE_IN_CLASS_DECLARATION), so a
-  # "new SomeClass" inside a constructor BODY needs a manual REQUIRES hint
-  # (e.g. LRUCache.coffee's REQUIRES DoubleLinkedList) to get an edge at all.
+  # CONSTRUCTION_IN_CLASS_DECLARATION / CLASS_USE_IN_CLASS_DECLARATION), so when
+  # a class's code runs WHILE another class is being defined (a class-level
+  # `@x: new Y` constructs a Y then, and whatever Y's constructor builds must
+  # already exist), that inner dependency needs a manual REQUIRES hint to get an
+  # edge at all. No class of src needs one: the last was LRUCache's
+  # REQUIRES DoubleLinkedList (Color's `@_cache: new LRUCache` built a list),
+  # gone since LRUCache holds a Map. The harness's hints (e.g.
+  # AutomatorLoader.coffee's REQUIRES SystemTestsSystemInfo) name a class a
+  # METHOD builds, which runs after boot has defined every class.
   REQUIRES = ///\sREQUIRES\s*(\w+)///
 
   EXTENDS = ///\sextends\s*(\w+)///

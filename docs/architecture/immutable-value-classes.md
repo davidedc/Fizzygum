@@ -167,4 +167,4 @@ attachment-spec shape as the layout family, serialized with its widget and carry
 SHARED between controllers — a duplicated controller deep-copies its records, or toggling one copy's
 policy would reach the other's), `MultiClickRecognizer` (its header mandates
 per-instance mutable state), `PreferencesAndSettings`, all containers
-(`LRUCache`, `DoubleLinkedList`, `TreeNode`, `InputEventsQueue`).
+(`LRUCache`, `TreeNode`, `InputEventsQueue`).

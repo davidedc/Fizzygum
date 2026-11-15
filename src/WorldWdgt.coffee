@@ -672,13 +672,13 @@ class WorldWdgt extends IconGridPanelWdgt
     # when using an inspector it's not uncommon to render
     # 400 labels just for the properties, so trying to size
     # the cache accordingly...
-    @cacheForTextMeasurements = new LRUCache 1000, 1000*60*60*24
-    @cacheForTextParagraphSplits = new LRUCache 300, 1000*60*60*24
-    @cacheForParagraphsWordsSplits = new LRUCache 300, 1000*60*60*24
-    @cacheForParagraphsWrappingData = new LRUCache 300, 1000*60*60*24
-    @cacheForTextWrappingData = new LRUCache 300, 1000*60*60*24
-    @cacheForImmutableBackBuffers = new LRUCache 1000, 1000*60*60*24
-    @cacheForTextBreakingIntoLinesTopLevel = new LRUCache 10, 1000*60*60*24
+    @cacheForTextMeasurements = new LRUCache 1000
+    @cacheForTextParagraphSplits = new LRUCache 300
+    @cacheForParagraphsWordsSplits = new LRUCache 300
+    @cacheForParagraphsWrappingData = new LRUCache 300
+    @cacheForTextWrappingData = new LRUCache 300
+    @cacheForImmutableBackBuffers = new LRUCache 1000
+    @cacheForTextBreakingIntoLinesTopLevel = new LRUCache 10
 
     @inputEventsQueue = new InputEventsQueue
 
