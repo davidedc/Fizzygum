@@ -153,10 +153,10 @@ here fails `check-doc-narration` (`BACKLOG_CLOSED_ITEM`, the gauntlet's `refs` l
       "A viewport's gesture bookkeeping outlives its gesture", in the plan's ledger; by reading; low).
       `ViewportWdgt.pressEnded` / `pressCancelled` call whichever `_scrollStep` is installed with a point; an
       auto-scroll's step takes none, so a press ending on a pane that is auto-scrolling runs one more auto-scroll frame.
-- [ ] **Nothing standing checks that a glide is seen** (same review; by reading; low). The suite suppresses glides under
-      the Automator's pacing control, so `ViewportWdgt.isScrollGliding` or `WorldWdgt.anyScrollMomentumOngoing`
-      answering false always would pass every gate, and the macro pump would screenshot a pane mid-glide in a session
-      without the control; only a scratch probe (`.scratch/viewport-gesture-bookkeeping/probe.js`) covers it.
+- [ ] **Nothing standing checks that a glide is seen** (same review; by reading; low). The suite suppresses glides while
+      a test plays, so `ViewportWdgt.isScrollGliding` or `WorldWdgt.anyScrollMomentumOngoing`
+      answering false always would pass every gate, and the macro pump's glide gate (`MacroToolkit._queueDrained`) can never close, since a
+      macro only runs while a test plays; only a scratch probe (`.scratch/viewport-gesture-bookkeeping/probe.js`) covers it.
 - [ ] **A test's provenance says the edge auto-scroll is suppressed under the pacing control** (same review; by
       reading; low). `SystemTest_macroScrollPanelDragToScrollFlags`'s provenance (and its visualisation page) says so,
       and names the retired `world.wdgtsWithOngoingScrollMomentum`; the auto-scroll is not suppressed (its contract is
@@ -577,7 +577,6 @@ AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by 
 - [ ] §2 (½ day; ⛔ PARKED 2026-11-15 on a speed trade, the owner decides — §2 "OWNER DECISION"): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (built and proven; one shape makes an eviction ×2.9 slower, the faster one pins memory)
 - [ ] §4 (½ to 1 day; left for a later day by the owner 2026-11-15; ⛔ owner): the `patch-programming-experimental` part — six classes no test builds and no production user can reach; the fanout is redundant now that wires are a list; the product question is whether the diff and regex nodes are wanted (finish them) or not (delete all six)
 - [ ] §5 (1 day; ruled 2026-11-15: generate, do not commit): `visualisation.html` pages are generated, not committed — 375 files and the gate that holds them to their inputs go
-- [ ] §6 (1 day): the three Automator test switches become one question, and the shipping teardown's call into the harness goes (measured first)
 - [ ] §7 (1 to 2 days; left for a later day by the owner 2026-11-15; ⛔ owner on which tools go): on-demand tools — one roster, each proven to start by the `selftests` leg
 - [ ] §8 (1 day; ruled 2026-11-15: shorten and apply the bar to what is filed): this file is an index again — the 2026-11-11 filing bar written down, each item one or two lines, detail in the owning plan
 - [ ] §9 (2 to 3 days; left for a later day by the owner 2026-11-15; ⛔ owner: rename or fold): a test is one file — takes up the round-2 §8 follow-up above; selection facts move to the generated manifest

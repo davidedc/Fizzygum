@@ -6,8 +6,8 @@
 # PRESENTATION ONLY. The arm DECISION is the hand's pure event-time elapsed check
 # (ActivePointerWdgt._updateDragEmbedStateMachine); the ring never feeds it. The FILL amount is a pure
 # function of ELAPSED time from the linger origin, computed the analog-clock way (src/apps/
-# AnalogClockAppearance.coffee): deterministic EVENT-time under the test harness (Automator.animationsPacing
-# Control) so a byte-exact screenshot mid-charge is reproducible, WALL-time in production so the ring
+# AnalogClockAppearance.coffee): deterministic EVENT-time while a test plays (aTestIsPlaying) so a
+# byte-exact screenshot mid-charge is reproducible, WALL-time in production so the ring
 # keeps filling smoothly during a physically frozen hold (which emits zero events — the S2 finding).
 #
 # No stepping registration: WorldWdgt.addDragAffordanceWidgets calls updateChargeDeclaration every
@@ -50,7 +50,7 @@ class DragChargingRingWdgt extends Widget
   # Elapsed ms from the linger origin. Event-time (deterministic) under the harness, wall-time in
   # production — the analog-clock precedent (AnalogClockAppearance._calculateHandsAngles).
   _elapsedForCharge: ->
-    if Automator? and Automator.animationsPacingControl and aTestIsPlaying()
+    if aTestIsPlaying()
       if WorldWdgt.timeOfEventBeingProcessed? and @lingerOriginEventTime?
         WorldWdgt.timeOfEventBeingProcessed - @lingerOriginEventTime
       else

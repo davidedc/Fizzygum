@@ -218,7 +218,7 @@ step pays the tail the frames did not sample — end point minus press point —
 frame, so a release and the next press drained in one frame lose nothing. A pane that takes no scroll gesture — `scrollPolicy 'never'`, or one
 that does not drag-scroll — is TRANSPARENT to the press, as it is to the wheel: `pressBegan` passes
 the press on, so a drag over a cropping pane nested in a scrolling one reaches the scrolling one. Release seeds a
-POST-RELEASE MOMENTUM glide (friction 0.8), suppressed under the Automator's pacing control so
+POST-RELEASE MOMENTUM glide (friction 0.8), suppressed while a test plays (`aTestIsPlaying()`) so
 screenshots stay event-determined. Every scroll step — a stroke, its glide, the edge auto-scroll — ends at
 ONE place (`_stopScrollStep`), and what a step knows rides on the step itself, never beside it: the
 glide's flag (`isScrollGliding`, which the macro pump asks of every stepping widget through

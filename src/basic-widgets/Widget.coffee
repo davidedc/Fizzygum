@@ -632,11 +632,10 @@ class Widget extends TreeNode
   # Widget string representation: e.g. 'a Widget' or 'a Widget#2' — my DEBUG name, the one I show
   # as a VALUE (the inspector's fields, error messages) and the seed of my scatter spot in a panel
   # (PanelWdgt._addInPseudoRandomPositionNoSettle hashes it). A row that NAMES me reads my rowName
-  # instead. While the test harness plays, the instance number is hidden
-  # (hidingOfWidgetsNumberIDInLabels), so none of these depends on how many widgets of my class were
-  # built before me, the framework's own constructions included.
+  # instead. While the test harness plays, the instance number is hidden, so none of these depends
+  # on how many widgets of my class were built before me, the framework's own constructions included.
   toString: ->
-    if Automator? and aTestIsPlaying() and Automator.hidingOfWidgetsNumberIDInLabels
+    if aTestIsPlaying()
       name = @widgetClassString()
     else
       name = @uniqueIDString()

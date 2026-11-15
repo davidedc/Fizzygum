@@ -2561,17 +2561,6 @@ class WorldWdgt extends IconGridPanelWdgt
       if typeof eachClassFunction.lastBuiltInstanceNumericID is "number"
         eachClassFunction.lastBuiltInstanceNumericID = 0
 
-    # The per-test automator display/pacing toggles come back to their defaults here, through an
-    # existence-soaked hook the harness installs (WorldTestSupport._resetAutomatorTogglesNoSettle).
-    # WHICH toggles exist is the harness's knowledge, not the world's — shipping code does not write
-    # a harness class's statics — and an artifact without the harness has no toggles to reset, so the
-    # soak is the whole conditional.
-    # ⚠ THE CALL SITS HERE, not in the test teardown, because BOTH callers of the shared teardown
-    # core reach it through this method: a serialization test loads a whole-world snapshot MID-test,
-    # and the toggles must flip at exactly the same moment on that path as on the test reset —
-    # otherwise macro pacing changes under a running test and its references churn.
-    @_resetAutomatorTogglesNoSettle?()
-
     super()
 
   destroyToolTips: ->

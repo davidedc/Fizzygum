@@ -59,9 +59,8 @@ class ToolTipWdgt extends Widget
     @ongoingTimeouts.clear()
 
   @createInAWhileIfHandStillContainedInWidget: (widgetInvokingThis, contents, delay = 500) ->
-    if Automator? and Automator.animationsPacingControl and
-     aTestIsPlaying()
-        @createBubbleHelpIfHandStillOnWidget contents, widgetInvokingThis
+    if aTestIsPlaying()
+      @createBubbleHelpIfHandStillOnWidget contents, widgetInvokingThis
     else
       # the set tracks PENDING timeouts only (cancelAllScheduledToolTips clears them):
       # a fired timeout removes itself, otherwise the set grows for the life of the page

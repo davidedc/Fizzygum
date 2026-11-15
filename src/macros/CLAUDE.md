@@ -29,9 +29,8 @@ synthesises the real input events. Resilient to layout change.
 
 1. `tests/SystemTest_<name>/<name>_automationCommands.js` holds the test's macro as a string (`mainMacroSource`,
    plus optional `extraSubroutineSources`) and nothing else. How a test STARTS is the harness's, stated once
-   (`AutomatorPlayer.TEST_START_STEPS`, taken by `AutomatorPlayer.advanceTestPlaying`): the world's reset, which
-   turns the three determinism toggles back on in its own cycle, then the macro, `START_MACRO_AFTER_MS` of wall
-   clock after the reset. Screenshot reference names are **not** listed —
+   (`AutomatorPlayer.TEST_START_STEPS`, taken by `AutomatorPlayer.advanceTestPlaying`): the world's reset, then the
+   macro, `START_MACRO_AFTER_MS` of wall clock after the reset. Screenshot reference names are **not** listed —
    the loader extracts them from the `takeScreenshot_InputEvents_Macro "name"` calls in the source. The four
    **mandatory** self-doc strings — `intent`, `scenario`, `assertions`, `provenance` — live in the metadata
    `SystemTest_<name>.js` and are validated at replay (a missing/empty one throws, by name). The doc-comment

@@ -238,8 +238,8 @@ Transitions:
     pre-authorized reframe; the falsified accumulator is not to be re-attempted.
 - **Ring feedback is PRESENTATION, driven by the established time-animated-widget pattern** (the analog
   clock precedent, `src/apps/AnalogClockWdgt.coffee:99-108`): the charging-ring ephemeral steps on
-  `world.steppingWdgts`, filling over wall time from the linger origin (quantized to RING_STEPS), and under
-  `Automator.animationsPacingControl` follows the harness's virtual pacing exactly as live clocks already do
+  `world.steppingWdgts`, filling over wall time from the linger origin (quantized to RING_STEPS), and while a
+  test plays (`aTestIsPlaying()`) follows the harness's virtual pacing exactly as live clocks already do
   in byte-exact tests. The decision NEVER reads ring state; production users always SEE the ring fill during
   a sincere hold (cycles never stop), so an armed release is never a surprise — the loud-armed-state promise
   is kept by feedback, not by crippling the decision rule.
@@ -380,7 +380,7 @@ highlighted/decorated carries any state about its own decoration. Per element:
 |---|---|---|
 | Candidate highlight | **EPHEMERAL — the existing `HighlighterWdgt` flow, almost verbatim** (`widgetsToBeHighlighted.add candidate` on resolution, remove on candidate change) | 2px (logical) rounded outline just inside the candidate's `clippedThroughBounds`; the accent (`dropCandidateOutline`), 2 px (`dropOutlineWidth`), its corners following the target's own (`Widget.cornerRadiiFollowingMyOutline`). Needs a STYLE CHANNEL the current mechanism lacks (today: hardcoded blue fill, alpha 50) — either per-target style descriptors (Set → Map target→style) or distinct ephemeral declaration sets per style; owner/implementation choice |
 | Dock band highlight (§4.1) | **EPHEMERAL — its own `HighlighterWdgt`, keyed to a BOX, not a widget** (`world.dragEmbedDockBandDeclared {host, box}`): a band is a region of its host's body, not a widget, so it rides its own declare-and-reconcile slot instead of the `widgetsToBeHighlighted` channel above — the host's own candidate outline stands down for as long as a band is offered | Same candidate-accent outline style as the row above (`HighlighterWdgt.candidateOutlineStyle`, the accent), drawn around the band's WHOLE rectangle rather than a widget's bounds; mapped through the host's screen bounds so it renders correctly inside a rotated/scaled island too |
-| Charging ring (the radial timeout) | **EPHEMERAL — new cursor-anchored type, and a STEPPING one** (the analog-clock pattern, `AnalogClockWdgt.coffee:99-108`): fills over wall time from the linger origin in production; under `Automator.animationsPacingControl` follows the harness's virtual pacing like the clocks already do in byte-exact tests. Reconciler positions it at hand + (16,16); repaints only on quantized step change | Radius ~9px; RING_STEPS discrete segments; PRESENTATION ONLY — the armed decision is §6's event-time elapsed check and never reads ring state |
+| Charging ring (the radial timeout) | **EPHEMERAL — new cursor-anchored type, and a STEPPING one** (the analog-clock pattern, `AnalogClockWdgt.coffee:99-108`): fills over wall time from the linger origin in production; while a test plays (`aTestIsPlaying()`) follows the harness's virtual pacing like the clocks already do in byte-exact tests. Reconciler positions it at hand + (16,16); repaints only on quantized step change | Radius ~9px; RING_STEPS discrete segments; PRESENTATION ONLY — the armed decision is §6's event-time elapsed check and never reads ring state |
 | Armed label | **EPHEMERAL — text type** (the pinout `StringWdgt` readout is the in-code precedent) | Near cursor: "Drop to insert into '<title>'" (title truncated ~24 chars) |
 | Lock badge (reluctant) | **EPHEMERAL anchored to the destination's title bar** — deliberately NOT a state change of the real edit toggle: it never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | A `line`-coloured outline (`dropReluctantOutline`, the candidate's width) on the destination + small "view-only" badge at title-bar right |
 | §9 teaching hint | **EPHEMERAL — text type.** Non-interactability is exactly right here: it is click-THROUGH (the next click acts on the world AND dismisses it — the pointer-down handler drops the declaration) | One line near the landing; no buttons, no timeout |
@@ -426,7 +426,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
   type-test-elimination convention.)
 - **Event-time decision, clock-driven feedback**: the arming DECISION derives only from input-event
   timestamps (macro tests synthesize them, so arm/re-anchor/disarm are exactly testable at `speed=fastest`
-  with speed-invariant references); the ring/pulse ANIMATIONS ride the stepping + `animationsPacingControl`
+  with speed-invariant references); the ring/pulse ANIMATIONS ride the stepping + `aTestIsPlaying()`
   pattern that already keeps live clocks byte-exact in the suite.
 - **Auto-scroll interaction** (behavior change to gate): with windows always droppable,
   `maybeStartAutoScrollForDraggedWidget` would begin edge-scrolling scroll panels during window drags (today

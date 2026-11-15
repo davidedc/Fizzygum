@@ -601,12 +601,11 @@ class StringWdgt extends ControllerWdgt
 
   # My DEBUG representation (Widget.toString) with an extract of my text: 'a StringWdgt#3
   # ("Hello↵World...")'. A row that NAMES me reads my rowName instead. While the test harness plays,
-  # the extract is hidden (hidingOfWidgetsContentExtractInLabels), like the instance number.
+  # the extract is hidden, like the instance number.
   toString: ->
     # e.g. 'a StringWdgt("Hello World")'
     firstPart = super()
-    if Automator? and aTestIsPlaying() and
-    Automator.hidingOfWidgetsContentExtractInLabels
+    if aTestIsPlaying()
       return firstPart
     else
       return firstPart + " (\"" + @text.slice(0, 30).replace(/(?:\r\n|\r|\n)/g, '↵') + "...\")"

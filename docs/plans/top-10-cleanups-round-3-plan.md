@@ -22,7 +22,7 @@
 > plan (`docs/plans/fg-node-port-plan.md`) passes. An unattended `/loop`, launched by the owner,
 > executes the approved items one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-3/`). An item's section gains a `**Landed <date>.**`
-> paragraph as it lands, and the table's last column says where each stands. Landed: §1, §3
+> paragraph as it lands, and the table's last column says where each stands. Landed: §1, §3, §6
 > (2026-11-15); §2 is parked on the owner's decision.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
@@ -122,7 +122,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | 3 | One pinned toolchain | ½ to 1 day | Two global installs, a version nobody chose in the production artifact, two unused pinned packages, a second copy of an analyzer. **In plain words:** the build shrinks its output with whatever version of a tool happens to be installed on the machine, while the version the project wrote down sits unused. Use the written-down one. | **Why:** a cake recipe that says "use whatever oven is in the house" gives a different cake in every house, and nobody can tell whether the cake changed or the oven did. Write the oven down and use that one. **Trade-offs:** a fresh machine runs one install command in this folder before it can build; upgrading the tool becomes something a person does on purpose, never something that happens by itself. | None (byte-identical trees expected) | No | 1 | Landed 2026-11-15 (§3, "Landed") |
 | 4 | The experimental patch-programming part | ½ to 1 day (deletion) | 6 classes (495 lines) that production never ships, that no test builds, and that only three rows of the dev demo menu can create; the stated reason one base class is held in core. **In plain words:** a folder labelled "unfinished" holds three building blocks for wiring widgets together: a splitter, a text-comparing box and a find-and-replace box. No test uses any of them, a user of the shipped product cannot reach them, and the splitter's job is now done by every widget on its own. Finish them or delete them. | **Why:** it is a half-built toy left in the middle of the room. Nobody plays with it, but everybody has to step around it and dust it whenever the room is tidied. Finish it or put it away. **Trade-offs:** putting it away loses the half-done work from the tree (git still has it) and its three rows in the dev demo menu; no test changes. Finishing the two text boxes instead is real feature work, not tidying, and only worth it if they are wanted in the product. | None expected (no test builds any of the six or opens their menu) | Yes | 5 | Left for a later day by the owner (2026-11-15) |
 | 5 | Visualisation pages are generated, not committed | 1 day | 375 committed generated files (4.2 MB), the build gate that exists to catch them going stale, the generator's branches for recorded tests and native references. **In plain words:** each test has a web page describing it, made by a script and then saved in git, with a check that fails when the saved copy falls behind. Make the page when it is wanted and stop saving it. | **Why:** keeping a photo of every drawing means taking a new photo each time a drawing changes, and somebody has to keep checking that no photo is old. Twice the photos were old. Look at the drawing instead: make the page when you want to see it. **Trade-offs:** the pages can no longer be opened straight from the repository without running a command first; making all of them takes some seconds that have not been measured yet. | None | Yes | 7 | Approved by the owner (2026-11-15); queued |
-| 6 | Three test switches become one question | 1 day | Three class statics, their reset, and a call from the shipping teardown into the test harness. **In plain words:** three on/off switches are flipped on when a test starts and off when it ends. They always agree with "a test is running", which the code can already ask. Ask that and drop the switches. | **Why:** three light switches are always flipped together when the game starts and together when it ends. One sign that says "game on" tells you the same thing, and nobody can forget a switch. It also means the everyday code no longer has to reach into the test kit to flip them back. **Trade-offs:** no switch can be flipped on its own any more (nothing does that today); and the instant between "old world gone" and "test started" has to be measured first, because a label built in that instant could come out different. | Low (the start cycle) | No | 4 | Approved by the owner (2026-11-15); queued |
+| 6 | Three test switches become one question | 1 day | Three class statics, their reset, and a call from the shipping teardown into the test harness. **In plain words:** three on/off switches are flipped on when a test starts and off when it ends. They always agree with "a test is running", which the code can already ask. Ask that and drop the switches. | **Why:** three light switches are always flipped together when the game starts and together when it ends. One sign that says "game on" tells you the same thing, and nobody can forget a switch. It also means the everyday code no longer has to reach into the test kit to flip them back. **Trade-offs:** no switch can be flipped on its own any more (nothing does that today); and the instant between "old world gone" and "test started" has to be measured first, because a label built in that instant could come out different. | Low (the start cycle) | No | 4 | Landed 2026-11-15 (§6, "Landed") |
 | 7 | On-demand tools: one roster, each proven to start | 1 to 2 days | A tool nothing references, nine profiling scripts kept under `docs/`, a second front door (28 npm scripts) beside `fg`. **In plain words:** about fifty helper scripts are only ever started by hand, so nothing notices when one breaks. Keep one list of them, check that each still starts, and delete the ones nobody can reach. | **Why:** tools kept in a drawer and never tried may turn out broken on the very day you need them; one already sat broken for three months. Keep a list of what is in the drawer and press each tool's "on" button whenever the big check runs. **Trade-offs:** the big check gets a little longer; "it switches on" is not the same as "it still works properly"; and throwing a tool away risks losing one that somebody uses twice a year. | None | Partly (which tools go) | 9 | Left for a later day by the owner (2026-11-15) |
 | 8 | The backlog is an index again | 1 day | About 105 KB that cannot be read in one pass; items the owner's own bar keeps out. **In plain words:** the list of open work says it is only an index, but many entries are half a page long, and it has grown past what the tools can read at once. Shorten each entry to a line or two and move the detail to the plan that owns it. | **Why:** a to-do list so long that nobody reads to the end stops working as a list: the same thing gets written down twice, and the important things hide among the small ones. Give each thing a line or two and keep its long story in the folder it belongs to. **Trade-offs:** reading an item's whole story takes one more hop to another file; and moving 212 items risks dropping a sentence, so a script has to check that every sentence landed somewhere. | None | Yes (the bar applies to what is already filed) | 6 | Approved by the owner (2026-11-15); queued |
 | 9 | A test is one file | 2 to 3 days | 389 files, a second script load per test, a load of every test's metadata before any run, fields nothing reads. **In plain words:** every test is split across two files for a reason that no longer exists, and before running anything the test page loads a file for every test in the suite. One file per test, and a generated list that says which tests exist. | **Why:** every test keeps its instructions in one envelope and its name tag in another, and before any test starts, the page opens the name-tag envelope of every test in the building. One envelope per test, and one printed list of who is here. **Trade-offs:** every tool that reads tests has to learn the new shape in the same change (19 files name the old one); 778 files change in one commit; and the printed list becomes something a test run cannot do without. | None (macro sources byte-identical) | Yes (rename or fold; this item recommends fold) | 2 | Left for a later day by the owner (2026-11-15) |
@@ -597,7 +597,7 @@ mid-test would run on with them off.
 - READ: `Automator` holds three class statics, all `false` by default: `animationsPacingControl`,
   `hidingOfWidgetsNumberIDInLabels`, `hidingOfWidgetsContentExtractInLabels`.
 - READ: `AutomatorPlayer` turns the three on together at each test's start (grep
-  `Automator.animationsPacingControl = true`: two sites, the second where a run completes).
+  `Automator.animationsPacingControl = true`: two sites, the second in `startTestPlaying`).
   `WorldTestSupport._resetAutomatorTogglesNoSettle` turns the three off together.
 - READ: the shipping teardown calls that harness method through an existence check
   (`@_resetAutomatorTogglesNoSettle?()` in `WorldWdgt.fullDestroyChildren`). The tests repo's
@@ -635,6 +635,28 @@ Zero disagreements is the go-ahead; any disagreement names the cycle and the rea
 **Re-measure.**
 `grep -rn "animationsPacingControl\|hidingOfWidgets" Fizzygum/src Fizzygum-tests/Automator-and-test-harness-src | grep -v -E ':[0-9]+:\s*#' | wc -l`
 (22 today).
+
+**Landed 2026-11-15.** The three statics, their four writes (`startTestPlaying`, the `ResetWorld`
+start step), `WorldTestSupport._resetAutomatorTogglesNoSettle` and the shipping teardown's soaked
+call to it (`WorldWdgt.fullDestroyChildren`) are gone; the `ResetWorld` step keeps its reset. Every
+one of the eleven read sites already ANDed its switch with `aTestIsPlaying()`, so with the derived
+answers substituted (the label switches: a test is playing; pacing: a test is playing, or one has
+been played on this page) each became exactly `aTestIsPlaying()`. The re-measure command now prints
+0. The comments, `aTestIsPlaying`'s own, the macro docs, the authoring skill, the architecture and
+spec docs and twelve lines of present-tense test prose (their pages regenerated) say what is true;
+the `provenance` strings that name the switch (six), dated records of a migration, keep what was
+true then. A
+`loadWorldSnapshot` in the middle of a test (no test does one) used to turn the switches off for
+the rest of that test; the derived answers follow the player instead. Evidence: before any code
+moved, an instrument read every switch through an accessor and compared it with the derived
+answer over the whole suite, both pointers: zero disagreements in 45,829 pacing and 148 label reads
+(mouse) and 92,387 and 148 (finger), and a planted wrong derivation is reported. Round 2's
+start-schedule instrument, before (twice) and after: the macro still starts 14 to 16 cycles after
+the reset, as the wall clock decides (per test, equal to the first run in 327 of 389 tests, against
+321 between two runs of the untouched tree), and the macro's first steps keep their cycles in all
+389. A resolution map changed only the edited members and the classes that inherit them. The
+presuite, the gauntlet (20 of 20, its dpr-2, WebKit and finger legs included) and `fg homepage`
+pass: no pixel moved. `ViewportWdgt#takeStrokeScrollFrom`'s complexity record falls to 92.
 
 ---
 
@@ -934,10 +956,10 @@ launch for launch.
   move them.
 - **Text-level exclusion is retired.** Whatever §4 chooses, it adds no marker and no flag
   (`Fizzygum/CLAUDE.md`, "How a build flavour excludes code").
-- **The three test switches flip at every world teardown on purpose**, so that a mid-test
-  snapshot load is covered (`WorldTestSupport`, the comment over
-  `_resetAutomatorTogglesNoSettle`). §6 removes them only after measuring that no reader ever
-  sees them differ from the derived answer.
+- **The three test switches flipped at every world teardown on purpose**, so that a mid-test
+  snapshot load was covered (the comment over the `WorldTestSupport._resetAutomatorTogglesNoSettle`
+  that §6 removed). §6 removed them only after measuring that no reader ever saw them differ from
+  the derived answer.
 - **A timing rewrite is proven with a prelude on hooks the old and the new code share**, stamped
   with the page's own cycle counter (round 2's §8, "Landed"). §6 and §9 use that instrument.
 - **A blanket script edit of structured files has cost the project before.** §5, §8 and §9 parse
@@ -1009,3 +1031,6 @@ Do not commit or push without asking me.
   — CLOSED 2026-11-15 (loop U3): the build runs the `coffee` and `terser` `package.json` pins exactly (`npm ci`), refuses
   any other installed version, and every profile's tree is byte-identical to the one the global tools built (§3,
   "Landed").
+- [x] §6 (1 day): the three Automator test switches become one question, and the shipping teardown's call into the harness goes (measured first)
+  — CLOSED 2026-11-15 (loop U4): the switches are one question, `aTestIsPlaying()`; the shipping teardown no longer calls
+  into the harness (§6, "Landed").

@@ -143,15 +143,12 @@ class AnalogClockAppearance extends Appearance
     x * x + y * y <= radius * radius
 
   # The hand angles, 0 at 12 o'clock and growing clockwise, into my widget's fields, from its
-  # dateLastTicked -- which a playing SystemTest pins (under
-  # Automator.animationsPacingControl) to 10:08:37 on a fixed day: a time with no
-  # hand on an axis and no two hands together, so every hand shows, and an edit that mirrors the
-  # second hand (macroAnalogClockInspectEdit) moves it.
+  # dateLastTicked -- which a playing SystemTest pins (aTestIsPlaying) to 10:08:37 on a fixed day: a
+  # time with no hand on an axis and no two hands together, so every hand shows, and an edit that
+  # mirrors the second hand (macroAnalogClockInspectEdit) moves it.
   _calculateHandsAngles: ->
 
-    if Automator? and
-     Automator.animationsPacingControl and
-     aTestIsPlaying()
+    if aTestIsPlaying()
       @widget.dateLastTicked = new Date 2011,10,30,10,8,37
 
     sec = @widget.dateLastTicked.getSeconds() + @widget.dateLastTicked.getMilliseconds()/1000

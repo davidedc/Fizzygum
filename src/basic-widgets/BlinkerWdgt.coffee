@@ -11,12 +11,9 @@ class BlinkerWdgt extends Widget
     @color = WorldWdgt.theme.caretFill
   
   step: ->
-    # While the Automator is pacing animations mid-test (a test playing),
-    # stay visible instead of toggling -- so screenshots see a consistent
-    # blinker state.
-    if Automator? and
-     Automator.animationsPacingControl and
-     aTestIsPlaying()
+    # While a test plays, stay visible instead of toggling -- so screenshots
+    # see a consistent blinker state.
+    if aTestIsPlaying()
       return
  
     # otherwise toggle visibility at the constructor's fps

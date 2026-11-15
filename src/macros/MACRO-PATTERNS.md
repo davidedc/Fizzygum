@@ -359,7 +359,7 @@ assertion a recapture after a regression silently stores two different hashes an
   INLINE — it hugs the box to the text, so the text always fits its OWN box and the "edit:" prompt-on-crop branch becomes
   unreachable (the PANEL does the clipping and scrolling). A single-line StringWdgt is `isScrollable`, so `gotoSlot`'s
   scroll-panel branch fires; drive the moves via the input-event verbs (never poke `world.caret`) so `scrollCaretIntoView` genuinely fires;
-  the caret is non-blinking only under the `TurnOnAnimationsPacingControl` preamble (`BlinkerWdgt.coffee:21-24`). The VERTICAL sibling
+  the caret is non-blinking only while a test plays (`BlinkerWdgt.step`). The VERTICAL sibling
   (`macroScrollPanelCaretBroughtIntoViewWhenMoved`) exercises the SAME path via the V-branch (`:514-521`) and is the bare-`ViewportWdgt`
   counterpart of `macroDocumentCaretBroughtIntoViewWhenMoved`: an editable string at the TOP + a tall `RectangleWdgt` below it overflow
   VERTICALLY (a V-scrollbar); `@wheelOn_InputEvents panel, +Δ` scrolls the string+caret OUT of view above the viewport (the wheel alone does NOT
@@ -1433,8 +1433,8 @@ assertion a recapture after a regression silently stores two different hashes an
   fits again, so build the fixture content BIGGER than the viewport; pans CLAMP at the content edge — drag TOWARD the unseen
   overflow or nothing visibly happens. Set the flags directly (the recording's inspector-eval route is covered ground).
   DETERMINISM — three cadence couplings live in the drag-to-scroll step: (1) POST-RELEASE MOMENTUM (a per-frame glide,
-  friction 0.8 on the last frame's hand delta until <0.5px; its DISTANCE is cadence-dependent) — suppressed under
-  `Automator.animationsPacingControl`, and a live glide is asked of the stepping set (`world.anyScrollMomentumOngoing`, each viewport's `isScrollGliding`), which gates
+  friction 0.8 on the last frame's hand delta until <0.5px; its DISTANCE is cadence-dependent) — suppressed while a
+  test plays (`aTestIsPlaying()`), and a live glide is asked of the stepping set (`world.anyScrollMomentumOngoing`, each viewport's `isScrollGliding`), which gates
   the macro pump's `noInputsOngoing`/`readyForMacroScreenshot` (never capture while momentum settles). The `Date.now()`-
   driven EDGE AUTO-SCROLL is NOT suppressed — it is load-bearing with its own test (the edge-auto-scroll entry above):
   its contract is the same saturation rule as (3); (2) RELEASE TRUNCATION — the step samples the hand per FRAME, so the pointer-path tail

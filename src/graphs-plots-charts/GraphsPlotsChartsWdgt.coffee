@@ -11,12 +11,11 @@ class GraphsPlotsChartsWdgt extends RatioLockedWdgt
     @_applyExtent new Point 200, 200
     world.steppingWdgts.add @
 
-  # true while a SystemTest replays with animations-pacing control on -- animated widgets must then
-  # render a FIXED, deterministic frame (mirrors AnalogClockAppearance._calculateHandsAngles, which pins
-  # @dateLastTicked to a fixed date under the same condition). Turned on as each test starts
-  # (AutomatorPlayer.TEST_START_STEPS).
+  # true while a SystemTest replays (aTestIsPlaying) -- animated widgets must then render a FIXED,
+  # deterministic frame (mirrors AnalogClockAppearance._calculateHandsAngles, which pins
+  # @dateLastTicked to a fixed date under the same condition).
   _animationFrozenForDeterministicReplay: ->
-    Automator? and Automator.animationsPacingControl and aTestIsPlaying()
+    aTestIsPlaying()
 
   # The example plots animate by advancing @graphNumber each step (each concrete plot's
   # drawPlot tail seeds its RNG off @graphNumber). Freeze that advance under replay so the plot

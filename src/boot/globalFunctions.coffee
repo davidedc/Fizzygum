@@ -158,9 +158,10 @@ window.classStaticListMergedUpTheChain = (klass, staticName) ->
 # (Fizzygum-tests/DETERMINISM.md): while one plays, time follows the event stream. A page-level
 # question, asked of no world, because the harness's automator outlives every world the page builds
 # and a widget may ask while none stands yet; read at call time, never cached. Without the harness
-# part there is no Automator, and the answer is false. A test's three toggles (the animation pacing,
-# the two label hidings) are a different fact — they flip at every world teardown — so each site
-# that needs one reads it beside this question.
+# part there is no Automator, and the answer is false. What a playing test needs held still asks
+# this question: the clock and the plots pinned, the blinker held visible, a tooltip shown at once,
+# the momentum glide and the between-events clock checks suppressed, and a widget's instance number
+# and text extract left out of its label.
 # `window.`-qualified because a src class cannot see a boot-file local.
 window.aTestIsPlaying = ->
   Automator? and Automator.state == Automator.PLAYING

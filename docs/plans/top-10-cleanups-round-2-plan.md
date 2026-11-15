@@ -988,10 +988,10 @@ WebKit. For step 2: a prelude that makes the loader ignore every record's `image
   is captured (`Fizzygum-tests/DETERMINISM.md`).
 - **The automator version means "what the harness captures".** Neither §8 nor §10 changes that,
   so neither bumps it (`Fizzygum-tests/CLAUDE.md`, "BUMPING the Automator version").
-- **The three test toggles flip at every world teardown, on purpose**
+- **The three test toggles flipped at every world teardown, on purpose**
   (`WorldWdgt.fullDestroyChildren`, the comment over `_resetAutomatorTogglesNoSettle`): moving
-  or folding them changes pacing under a running test that loads a snapshot. §5 and §8 leave
-  them where they are.
+  or folding them would change pacing under a running test that loads a snapshot. §5 and §8 left
+  them where they were; round 3's §6 folded them, having measured that no test does that.
 - **A blanket script edit of structured files has cost the project before** (a `perl -pi`
   de-indenting CoffeeScript). §3, §8 and §10 parse and re-emit, then diff.
 - **The determinism core was assessed and left** (`docs/archive/god-class-decomposition-plan.md`,

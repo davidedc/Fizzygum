@@ -993,16 +993,14 @@ class ActivePointerWdgt extends Widget
     not aScrollSurfaceWouldClaimIt
 
   # The time the hold decides against. At a drained event it is that EVENT's own time, and under
-  # the harness that is the WHOLE decision: the pacing control suppresses the between-events
-  # consultation below — the viewport momentum glide's own idiom — so a replayed stroke is purely
+  # the harness that is the WHOLE decision: while a test plays the between-events consultation below
+  # is suppressed — the viewport momentum glide's own idiom — so a replayed stroke is purely
   # event-determined and its screenshots reproduce. Off the harness the per-cycle re-entry may also
   # consult the cycle clock, so a real finger holding PERFECTLY still, emitting no events at all,
   # still gets its menu on time.
   _holdDecisionTime: ->
     eventTime = WorldWdgt.timeOfEventBeingProcessed
-    betweenEventsCheckSuppressed = Automator? and
-      Automator.animationsPacingControl and
-      aTestIsPlaying()
+    betweenEventsCheckSuppressed = aTestIsPlaying()
     return eventTime if betweenEventsCheckSuppressed
     cycleTime = WorldWdgt.dateOfCurrentCycleStart?.getTime()
     return eventTime unless cycleTime? and eventTime?
@@ -1964,11 +1962,10 @@ class ActivePointerWdgt extends Widget
     # keeps getting its pressed moves. Under a REPLAY it is the difference between two renderings:
     # a cycle landing between the event that ARMS a touch stroke and the next queued move turns one
     # withheld move into a delivered one, and a paint tool lays a dab that another run does not
-    # (measured: one 4x4 dab, 1 run in 5). So while the Automator paces a replay, pressed moves are
+    # (measured: one 4x4 dab, 1 run in 5). So while a test plays, pressed moves are
     # delivered only at drained events — the same suppression, and the same reason, that
     # _holdDecisionTime applies to the recognizer's between-events check.
-    pressedMovesAreEventOnly = (not atDrainedEvent) and Automator? and
-      Automator.animationsPacingControl and aTestIsPlaying()
+    pressedMovesAreEventOnly = (not atDrainedEvent) and aTestIsPlaying()
 
     mouseOverNew.forEach (newWdgt) =>
 

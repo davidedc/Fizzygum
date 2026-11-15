@@ -1362,7 +1362,7 @@ class ViewportWdgt extends ClippingWdgt
     # velocity. Only when this drag actually scroll-dragged (a float-move of the viewport must not get
     # a parting scroll), and only if it ends inside me (matching the per-frame gate below). Answers
     # whether I scrolled.
-    #   CADENCE COLLAPSE: under the harness's pacing control (or just a slow / HiDPI frame) the whole
+    #   CADENCE COLLAPSE: while a test plays (or just in a slow / HiDPI frame) the whole
     # press->drag->release can drain inside ONE cycle, so no frame sampled the stroke and
     # wasScrollDragging is false. When the gesture never float-dragged anything and the hand isn't
     # poised to detach a widget (so it IS a scroll-drag, not a float-move) and the press is inside me,
@@ -1429,14 +1429,12 @@ class ViewportWdgt extends ClippingWdgt
           # POST-RELEASE MOMENTUM (the glide): keep scrolling by the flush's delta (else the last
           # frame's), decayed by friction each frame, until it fades. Both that delta and the glide
           # length are FRAME-CADENCE driven (how many queued events played back in the final frame),
-          # so under the test harness's animations pacing control the glide is SUPPRESSED outright —
+          # so while a test plays the glide is SUPPRESSED outright —
           # the content stops exactly at the event-determined release offset and screenshots are
           # reproducible across engines. While a glide IS running (normal interactive use) the step
           # says so (isScrollGliding), so the macro pump can hold until it settles (the
           # font-atlas-wait idea).
-          glideSuppressed = Automator? and
-            Automator.animationsPacingControl and
-            aTestIsPlaying()
+          glideSuppressed = aTestIsPlaying()
           if !@hasVelocity or glideSuppressed or
           ((Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5))
             @_stopScrollStep()
@@ -1473,8 +1471,8 @@ class ViewportWdgt extends ClippingWdgt
   startAutoScrolling: ->
     # The edge auto-scroll is wall-clock driven (the Date.now() settle below
     # plus per-frame increments), but unlike the momentum glide in
-    # takeStrokeScrollFrom it is NOT suppressed under the test harness's pacing
-    # control: it is a load-bearing interaction with its own SystemTest
+    # takeStrokeScrollFrom it is NOT suppressed while a test plays: it is a
+    # load-bearing interaction with its own SystemTest
     # (macroListWdgtAutoScrollsNearDraggedEdge). Its determinism contract is
     # SATURATION instead — a macro holds the drag in the edge band long
     # enough that the scroll CLAMPS, so the screenshotted endpoint is

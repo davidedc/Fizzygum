@@ -536,7 +536,7 @@ time, so a saved or duplicated sheet wears the current look.
   rationale was that no `accept`/`cancel` handlers existed (only `CaretWdgt` escalated them,
   to nobody — and, it turned out, the escalation fired AFTER the caret's own destroy
   unparented it, so it could never deliver) and that a live caret blinks under a screenshot
-  (in fact the caret is pinned ALWAYS-VISIBLE under the Automator's animations pacing —
+  (in fact the caret is pinned ALWAYS-VISIBLE while a test plays —
   which is why carets appear deterministically in committed references). So 2b's sheet
   drove a private edit buffer as sole keyboard receiver, latterly with a steady
   end-of-text-bar affordance. The standard-caret arc deleted the buffer, the bar
