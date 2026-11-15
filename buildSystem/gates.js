@@ -489,8 +489,9 @@ const GATES = [
   // classes that grew with nothing holding them (Widget, WorldWdgt, ActivePointerWdgt, FrameWdgt), and
   // the cognitive complexity of every function of the compiled sources (above 15, only the functions
   // recorded when the ratchet landed, each at its value). Its analyzer is vendored
-  // (vendor/coffeescript-cognitive-complexity/) and runs on the global CoffeeScript the build already
-  // requires. A class or function under its record prints UNDER: lower the record, to lock the gain in.
+  // (vendor/coffeescript-cognitive-complexity/) and runs on the CoffeeScript package.json pins, the one the build
+  // compiles its boot files with. A class or function under its record prints UNDER: lower the record, to lock the
+  // gain in.
   // ~2 s.
   { script: path.join(BUILD_SYSTEM, "check-complexity-ratchets.js"),
     args: [],

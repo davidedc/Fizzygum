@@ -75,8 +75,8 @@ not throwaway, and the Phase 4 socket note for the decision that seeds it.
 
 ## §0 Environment, verification tiers, baseline
 
-Identical to the rename plan's §0, restated: prerequisites `coffee`, `terser`, `node`
-(global). Tiers:
+Identical to the rename plan's §0, restated: prerequisites `node` (global) and `npm ci` in
+`Fizzygum/` (the `coffee` and `terser` the build runs, pinned). Tiers:
 
 - **Full** (the only tier: the build requires `../Fizzygum-tests`): verify with `./fg presuite`
   (~3–4 min, headless, parallel). New behavior additionally needs NEW SystemTests (§4 rule 5) — authored in

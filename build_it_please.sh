@@ -165,21 +165,26 @@ mkdir -p $BUILD_PATH
 touch "$BUILD_PATH/.build-start"
 node buildSystem/lib/build-inputs.js --record "$BUILD_PATH/.build-start" > .latest-build-inputs.reading || build_failed "recording the build's inputs (buildSystem/lib/build-inputs.js)"
 
-if ! command -v terser &> /dev/null
-then
-    echo "Terser could not be found, please see https://www.npmjs.com/package/terser"
-    exit 1
-fi
-
-if ! command -v coffee &> /dev/null
-then
-    echo "CoffeeScript could not be found, please install it using:"
-    echo "npm install --global coffeescript"
-    exit 1
-fi
+# THE TOOLCHAIN is the one package.json and its lockfile pin, installed by `npm ci` in Fizzygum/: the CoffeeScript that
+# compiles the boot files and the terser that minifies them and the pre-compiled image. The artifact's bytes depend on
+# both versions, so they are chosen (package.json), never whatever a machine has installed globally. Each runs from its
+# OWN package -- node_modules/.bin/coffee is a link two packages declare (coffeescript-v1 has a `coffee` too) -- and an
+# install whose version is not the pinned one (an older `npm install`, a partial one) stops the build here.
+COFFEE="$PWD/node_modules/coffeescript/bin/coffee"
+TERSER="$PWD/node_modules/terser/bin/terser"
+node -e '
+  const pins = require("./package.json").devDependencies;
+  for (const name of ["coffeescript", "terser"]) {
+    let installed = "not installed";
+    try { installed = require("./node_modules/" + name + "/package.json").version; } catch (e) {}
+    if (installed !== pins[name]) {
+      console.log(name + " in Fizzygum/node_modules is " + installed + ", not the " + pins[name] + " package.json pins: run npm ci in Fizzygum/.");
+      process.exit(1);
+    }
+  }' || exit 1
 
 echo coffeescript version -------------
-coffee --version
+"$COFFEE" --version
 
 # ---- THE FLAVOUR: resolve the profile ------------------------------------------------------------
 # buildSystem/lib/profile.js loads buildSystem/profiles/<name>.json (default: dev) and hands back
@@ -385,7 +390,7 @@ if [ -n "$(git status --porcelain 2>/dev/null)" ]; then FG_BUILD_DIRTY=" +local-
 # JS, so it is an intermediate like $BOOT_MIN below (which the SW/native assembly already removes
 # with the same reasoning). Keeping intermediates out of the tree is what makes "what a flavour
 # ships" derivable instead of something a per-flavour prune list has to remember.
-coffee -b -c -o $SCRATCH_PATH/ $SCRATCH_PATH/fizzygum-boot.coffee || build_failed "compiling the boot bundle's CoffeeScript"
+"$COFFEE" -b -c -o $SCRATCH_PATH/ $SCRATCH_PATH/fizzygum-boot.coffee || build_failed "compiling the boot bundle's CoffeeScript"
 BOOT_JS=$SCRATCH_PATH/fizzygum-boot.js
 echo "... done compiling boot file"
 
@@ -406,7 +411,7 @@ if ! $PROFILE_SHIPS_TESTS ; then
   sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BOOT_JS || build_failed "stripping the harness checks from the boot code"
 fi
 
-terser --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BOOT_JS
+"$TERSER" --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BOOT_JS
 if [ "$?" != "0" ]; then
   tput bel;
   echo "!!!!!!!!!!! error: minifying the boot file failed!" 1>&2
@@ -558,8 +563,8 @@ mkdir -p $BUILD_PATH/js/src || build_failed "making the js/src directory"
 # build hang until puppeteer's protocol timeout, with no error naming the missing file (measured).
 for eachBootScript in "${PROFILE_BOOT_SCRIPTS[@]}" ; do
   eachBootScriptName=$(basename "$eachBootScript" .coffee)
-  coffee -b -c -o "$JSSRC_SCRATCH/" "$eachBootScript" || build_failed "compiling the boot script $eachBootScript"
-  terser --compress --output "$BUILD_PATH/js/src/$eachBootScriptName-min.js" -- "$JSSRC_SCRATCH/$eachBootScriptName.js" || build_failed "minifying the boot script $eachBootScript"
+  "$COFFEE" -b -c -o "$JSSRC_SCRATCH/" "$eachBootScript" || build_failed "compiling the boot script $eachBootScript"
+  "$TERSER" --compress --output "$BUILD_PATH/js/src/$eachBootScriptName-min.js" -- "$JSSRC_SCRATCH/$eachBootScriptName.js" || build_failed "minifying the boot script $eachBootScript"
 done
 
 echo "copying pre-compiled file"
@@ -615,7 +620,7 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
   sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/pre-compiled.js || build_failed "stripping the harness checks from the pre-compiled image"
   sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/pre-compiled.js || build_failed "stripping the harness checks from the pre-compiled image"
 
-  terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js || build_failed "minifying the pre-compiled image"
+  "$TERSER" --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js || build_failed "minifying the pre-compiled image"
   mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js || build_failed "moving the minified pre-compiled image into place"
 
   # sources: "none" -- the appliance artifact. The class source text was a build INPUT: the driver

@@ -12,10 +12,10 @@ copied verbatim from the npm package `coffeescript-cognitive-complexity@1.0.0`, 
 It measures SonarSource's Cognitive Complexity (rule S3776) on the CoffeeScript AST. It walks that AST by node CLASS
 NAME, so it needs a CoffeeScript whose node classes keep their names: the build's own minified compiler
 (`vendor/coffeescript/`) does not, so `buildSystem/lib/cognitive-complexity.js` loads this file with its one
-`require("coffeescript")` answered by the CoffeeScript the build already requires globally (`build_it_please.sh` runs
-its `coffee` to compile the boot files) — and only at the version a caller's numbers were measured on (2.7.0 for the
-ratchet gate), found behind a `coffee` on PATH or in Node's global prefix: a different version's AST may score
-differently, so another is passed over, and with none found the gate reads INVALID.
+`require("coffeescript")` answered by the CoffeeScript package the toolchain pins (`package.json` and its lockfile,
+installed by `npm ci` in `Fizzygum/`; `build_it_please.sh` runs its `coffee` to compile the boot files) — and only at
+the version a caller's numbers were measured on (2.7.0 for the ratchet gate): a different version's AST may score
+differently, so with another, or none installed, the gate reads INVALID.
 
 **Do not hand-edit either file.** To move to another release, replace both from that release's tarball (check its
 integrity against the registry's), update the facts above, and run every gate's self-test

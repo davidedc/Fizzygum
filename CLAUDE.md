@@ -8,7 +8,7 @@ A CoffeeScript GUI framework — a "web operating system" (windows, desktop, dra
 
 ## Build, run, watch
 
-Prerequisites are installed **globally, not via `npm`**: `coffee` (`npm i -g coffeescript`), `terser`, and `fswatch` (watch script only), on Node 20 or later (`buildSystem/lib/profile.js` checks every JSON string with `String#isWellFormed`). `npm test` runs `./fg presuite` — see Testing.
+Prerequisites: `npm ci` here (the `coffee` and `terser` the build runs, pinned in `package.json`), a global `fswatch` (watch script only), Node 20 or later (`buildSystem/lib/profile.js` checks every JSON string with `String#isWellFormed`). `npm test` runs `./fg presuite` — see Testing.
 
 - **Build:** `./build_it_please.sh` → output goes to `../Fizzygum-builds/latest`.
   - **A build FLAVOUR is a PROFILE, not a flag:** `--profile <name>` selects `buildSystem/profiles/<name>.json`, and a plain invocation builds `dev`. ⛔ `--homepage` and `--notests` are DELETED (arc 5) and now fail loudly; the shipped profiles are:

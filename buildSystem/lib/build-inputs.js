@@ -10,7 +10,8 @@
 // any churn there would read as a stale build):
 //   - every compiled source (lib/source-files.js compiledFiles: src's and the harness's .coffee, the boot files among
 //     them) and src/index.html, which every entry page is written from;
-//   - the build itself: build_it_please.sh, build.js, lib/profile.js, parts.json and the profiles (`*.json`);
+//   - the build itself: build_it_please.sh, build.js, lib/profile.js, parts.json and the profiles (`*.json`), and
+//     package-lock.json, which pins the CoffeeScript and the terser the build runs (an upgrade there is new output);
 //   - what the partition declares a part ships besides its sources: each `assets` source and each `vendor` piece;
 //   - what build_it_please.sh names itself (SHELL_INPUTS below — the SWCanvas bundle's pieces and the pre-compiled stub),
 //     and every file under font-assets/ (copied whole when an entry renders through SWCanvas).
@@ -42,7 +43,7 @@ const UMBRELLA = path.resolve(FIZZYGUM, '..');
 const STAMP = path.resolve(UMBRELLA, 'Fizzygum-builds', 'latest', '.build-stamp');   // build_it_please.sh writes it
 const RECORD = path.join(FIZZYGUM, '.latest-build-inputs');   // and this, outside the tree (gitignored)
 const BUILD_FILES = ['build_it_please.sh', 'buildSystem/build.js', 'buildSystem/lib/profile.js', 'buildSystem/parts.json',
-  'src/index.html'];
+  'src/index.html', 'package-lock.json'];
 // the files build_it_please.sh reads by name, outside the partition: a rename there is a rename here (a name that no
 // longer exists is skipped, and that input goes unwatched)
 const SHELL_INPUTS = ['runtime-prelude/deterministic-trig.js', 'vendor/swcanvas/swcanvas.min.js', 'vendor/swcanvas/sw3d.js',

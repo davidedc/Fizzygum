@@ -22,8 +22,8 @@
 > plan (`docs/plans/fg-node-port-plan.md`) passes. An unattended `/loop`, launched by the owner,
 > executes the approved items one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-3/`). An item's section gains a `**Landed <date>.**`
-> paragraph as it lands, and the table's last column says where each stands. Landed: §1
-> (2026-11-15).
+> paragraph as it lands, and the table's last column says where each stands. Landed: §1, §3
+> (2026-11-15); §2 is parked on the owner's decision.
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -119,7 +119,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 |---|---|---|---|---|---|---|---|---|
 | 1 | Overrides that override nothing | ½ day | 8 methods identical to the one they inherit, 2 empty subclasses, 6 comments about a removed recorder; the provable part of an advisory count becomes a build gate. **In plain words:** some classes re-declare a method exactly as their parent already has it. The copies were cleaned out once and grew back because nothing checks. Remove them and add the check. | **Why:** if the same recipe is written on two pages of the cookbook, one day somebody fixes one page and forgets the other. Keep one page, and have the build refuse a second. **Trade-offs:** the new check adds about a second to every build; a copy that someone keeps on purpose needs a one-line note saying why; a few inspector screenshots may show fewer rows. | Low (inspector member lists) | No | 3 | Landed 2026-11-15 (§1, "Landed") |
 | 2 | The LRU cache on a `Map` | ½ day | A linked-list class, a 24-hour expiry no caller varies, 3 of the 8 remaining wall-clock reads. **In plain words:** the text caches keep their entries in a hand-built list and stamp each one with the time of day. JavaScript's own `Map` already remembers insertion order, so the list and the clock are not needed. | **Why:** the cache is a toy box that throws out the toy nobody has touched for longest. Today it also looks at a clock every time a toy is touched, so it can throw out toys left alone for a whole day, which never matters. A box that just remembers the order is enough, and the code that draws text stops looking at clocks. **Trade-offs:** this box is opened thousands of times a second, so the new one must be timed to be sure it is not slower; and a toy left for a day is no longer thrown out (still correct: the same text always measures the same). | None expected (hot path: measure speed) | No | 8 | ⛔ Parked 2026-11-15 on a speed trade (§2, "OWNER DECISION") |
-| 3 | One pinned toolchain | ½ to 1 day | Two global installs, a version nobody chose in the production artifact, two unused pinned packages, a second copy of an analyzer. **In plain words:** the build shrinks its output with whatever version of a tool happens to be installed on the machine, while the version the project wrote down sits unused. Use the written-down one. | **Why:** a cake recipe that says "use whatever oven is in the house" gives a different cake in every house, and nobody can tell whether the cake changed or the oven did. Write the oven down and use that one. **Trade-offs:** a fresh machine runs one install command in this folder before it can build; upgrading the tool becomes something a person does on purpose, never something that happens by itself. | None (byte-identical trees expected) | No | 1 | Approved by the owner (2026-11-15); queued |
+| 3 | One pinned toolchain | ½ to 1 day | Two global installs, a version nobody chose in the production artifact, two unused pinned packages, a second copy of an analyzer. **In plain words:** the build shrinks its output with whatever version of a tool happens to be installed on the machine, while the version the project wrote down sits unused. Use the written-down one. | **Why:** a cake recipe that says "use whatever oven is in the house" gives a different cake in every house, and nobody can tell whether the cake changed or the oven did. Write the oven down and use that one. **Trade-offs:** a fresh machine runs one install command in this folder before it can build; upgrading the tool becomes something a person does on purpose, never something that happens by itself. | None (byte-identical trees expected) | No | 1 | Landed 2026-11-15 (§3, "Landed") |
 | 4 | The experimental patch-programming part | ½ to 1 day (deletion) | 6 classes (495 lines) that production never ships, that no test builds, and that only three rows of the dev demo menu can create; the stated reason one base class is held in core. **In plain words:** a folder labelled "unfinished" holds three building blocks for wiring widgets together: a splitter, a text-comparing box and a find-and-replace box. No test uses any of them, a user of the shipped product cannot reach them, and the splitter's job is now done by every widget on its own. Finish them or delete them. | **Why:** it is a half-built toy left in the middle of the room. Nobody plays with it, but everybody has to step around it and dust it whenever the room is tidied. Finish it or put it away. **Trade-offs:** putting it away loses the half-done work from the tree (git still has it) and its three rows in the dev demo menu; no test changes. Finishing the two text boxes instead is real feature work, not tidying, and only worth it if they are wanted in the product. | None expected (no test builds any of the six or opens their menu) | Yes | 5 | Left for a later day by the owner (2026-11-15) |
 | 5 | Visualisation pages are generated, not committed | 1 day | 375 committed generated files (4.2 MB), the build gate that exists to catch them going stale, the generator's branches for recorded tests and native references. **In plain words:** each test has a web page describing it, made by a script and then saved in git, with a check that fails when the saved copy falls behind. Make the page when it is wanted and stop saving it. | **Why:** keeping a photo of every drawing means taking a new photo each time a drawing changes, and somebody has to keep checking that no photo is old. Twice the photos were old. Look at the drawing instead: make the page when you want to see it. **Trade-offs:** the pages can no longer be opened straight from the repository without running a command first; making all of them takes some seconds that have not been measured yet. | None | Yes | 7 | Approved by the owner (2026-11-15); queued |
 | 6 | Three test switches become one question | 1 day | Three class statics, their reset, and a call from the shipping teardown into the test harness. **In plain words:** three on/off switches are flipped on when a test starts and off when it ends. They always agree with "a test is running", which the code can already ask. Ask that and drop the switches. | **Why:** three light switches are always flipped together when the game starts and together when it ends. One sign that says "game on" tells you the same thing, and nobody can forget a switch. It also means the everyday code no longer has to reach into the test kit to flip them back. **Trade-offs:** no switch can be flipped on its own any more (nothing does that today); and the instant between "old world gone" and "test started" has to be measured first, because a label built in that instant could come out different. | Low (the start cycle) | No | 4 | Approved by the owner (2026-11-15); queued |
@@ -409,6 +409,28 @@ proof that the switch itself moves nothing.
 **Re-measure.**
 `terser --version; node -p 'require("./node_modules/terser/package.json").version'` from
 `Fizzygum/`, and `grep -n -E '(coffee|terser) -' Fizzygum/build_it_please.sh`.
+
+**Landed 2026-11-15.** `package.json` pins `terser` at 5.39.1 (the version the global install
+reported, so production's bytes stay what they were) and `coffeescript` at 2.7.0, exactly, and the
+lockfile follows (only terser's tree moved). `build_it_please.sh` runs each tool from its own
+package (`node_modules/coffeescript/bin/coffee`, `node_modules/terser/bin/terser`: the
+`node_modules/.bin/coffee` link is `coffeescript-v1`'s, which declares a `coffee` too), and a build
+whose installed version of either is not the pinned one, or that has none, stops with "run npm ci
+in Fizzygum/"; `package-lock.json` is a build input (`buildSystem/lib/build-inputs.js`).
+`buildSystem/lib/cognitive-complexity.js` loads the pinned CoffeeScript and still refuses any
+version but its caller's; its search of `PATH` and Node's global prefix is gone. `fg fingerprint`
+gives its baseline worktree the toolchain: this tree's `node_modules` when the two lockfiles are the
+same, else that worktree's own `npm ci`, so a change to a pinned version is measured against the
+baseline's versions (a baseline from before the pin builds with the global tools on `PATH`, as it
+did then). The second copy of the analyzer stays: `fg cc` needs the npm package's command
+line (`cli.js`), which the vendored copy does not ship, and adding one would be a new mechanism.
+`fswatch` stays global. The instruction files, `architecture/build-and-packaging.md` §6, the gate
+table's comment and the vendored analyzer's README say what is true. Evidence:
+`fg fingerprint <profile> HEAD` (HEAD built by the global tools) for `dev`, `dev-precompiled`,
+`dev-notests`, `homepage` and `lean`: every tree equivalent, file for file (4,611, 54, 4,604, 42
+and 10 files); a build with neither a global `coffee` nor a global `terser` on `PATH` passes; a
+planted older terser and a planted missing CoffeeScript are each refused; the presuite (389 of
+389), the gauntlet (20 of 20, no serial retry) and `fg homepage` pass.
 
 ---
 
@@ -983,3 +1005,7 @@ Do not commit or push without asking me.
 - [x] §1 (½ day): overrides that override nothing — 8 methods identical to the one they inherit, 2 empty event subclasses, 6 recorder comments; the census's `super`-free subset becomes a build gate at zero (the census itself stays advisory)
   — CLOSED 2026-11-15 (loop U1): nine identical overrides, the two empty event classes and the six markers are gone, and
   `census-hierarchy-duplication.js --gate` holds the `super`-free subset at zero on every build (§1, "Landed").
+- [x] §3 (½ to 1 day; ruled 2026-11-15: npm-pinned, `npm ci`): one pinned toolchain — the build runs the `coffee` and `terser` its lockfile names, not the globally installed ones
+  — CLOSED 2026-11-15 (loop U3): the build runs the `coffee` and `terser` `package.json` pins exactly (`npm ci`), refuses
+  any other installed version, and every profile's tree is byte-identical to the one the global tools built (§3,
+  "Landed").

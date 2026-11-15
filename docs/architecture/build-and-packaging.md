@@ -614,6 +614,15 @@ not re-attempted: `docs/archive/core-app-slices-partition-plan.md` §4 Phase 3.
 
 There are **no flavour flags**. An unknown argument is a hard error that lists the available profiles.
 
+**The toolchain is pinned.** The build compiles the boot files with the `coffeescript` package's `coffee` and minifies
+them and the pre-compiled image with the `terser` package's: the exact versions `package.json` and its lockfile name,
+which `npm ci` in `Fizzygum/` installs. A build whose installed version of either is not the pinned one stops and says
+so (each is run from its own package: `node_modules/.bin/coffee` is a link `coffeescript-v1` declares too). The artifact's bytes depend on both, so
+`package-lock.json` is a build input (below), an upgrade is a deliberate edit of `package.json`, and `fg fingerprint`
+measures one: its baseline worktree installs its OWN lockfile when that differs from this tree's. The complexity
+ratchet's analyzer reads the same pinned CoffeeScript (`buildSystem/lib/cognitive-complexity.js`). The static gates and
+the browser share another compiler, the vendored `vendor/coffeescript/` (`buildSystem/lib/meta-compiler.js`).
+
 ### Is the last build stale?
 
 `build_it_please.sh` lays a start marker before it reads any input (once the vendored SWCanvas a fresh clone fetches
@@ -629,7 +638,7 @@ record is missing, or the record is another build's (its start time is not the s
 is the one definition, and `buildStaleness()` the one question every freshness reader asks. The inputs are the FILES
 the build names, never the directories holding them (a directory also holds what the build never reads — a
 subsystem's `CLAUDE.md`, an editor's swap file, a gate's vendored parser): every compiled source and `src/index.html`,
-the build script and its two Node modules (`build.js`, `lib/profile.js`), `parts.json` and the profiles (`*.json`), each part's declared `assets` and `vendor`
+the build script and its two Node modules (`build.js`, `lib/profile.js`), `parts.json` and the profiles (`*.json`), `package-lock.json` (the toolchain's versions), each part's declared `assets` and `vendor`
 pieces, the files the build script names itself (the SWCanvas bundle's pieces, the pre-compiled stub) and every file
 under `font-assets/` (copied afresh each build, so a font deleted from the source is gone from the tree too). The gates
 are not inputs (they judge the output, they do not shape it), nor is the pre-compile driver (it shapes only a

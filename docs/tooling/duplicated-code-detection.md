@@ -39,7 +39,7 @@ terseness keeps a whole duplicated method under the token window. The structural
 (verified example: `VerticalStackPanelWdgt`'s `add`/`_addNoSettle` ≈ `ToolPanelWdgt`'s).
 
 Scans `src/**/*.coffee` for copy/paste duplication with [jscpd](https://github.com/kucherenko/jscpd)
-(pinned devDependency — `npm install` once) and writes reports to `duplication-report/`
+(pinned devDependency — `npm ci` once) and writes reports to `duplication-report/`
 (gitignored). ~1.5 s per pass for the whole framework. The intended product is the
 **LLM handoff file** `duplication-report/jscpd-report.ai.txt` — a compact
 `fileA:x-y ~ fileB:x-y` clone-pair list to paste to an LLM for triage and actioning.

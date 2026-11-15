@@ -3,14 +3,12 @@
 // SonarSource rule S3776 on the CoffeeScript AST), loaded for the build's gates.
 //
 // The analyzer walks the AST by node CLASS NAME, so it needs a CoffeeScript whose node classes keep their names. The
-// build's own compiler (vendor/coffeescript/, minified) does not; the CoffeeScript the build already requires
-// globally does (build_it_please.sh runs its `coffee` to compile the boot files). Scores can differ between
-// CoffeeScript versions — a version's AST is its own — so a caller names the ONE version its numbers were measured on,
-// and only that version is used: the coffeescript package behind a `coffee` on PATH (resolved through its symlink),
-// or in Node's global prefix (`<node>/../lib/node_modules`, where `npm i -g` puts it). Any other is passed over —
-// e.g. a project-local `node_modules/.bin/coffee` first on PATH under `npm run` — and with none, loading throws, so a
-// gate says it measured nothing (exit 2) rather than scoring on another AST. The vendored file is loaded as
-// published, its one `require("coffeescript")` answered by that package and nothing resolved from node_modules.
+// build's own compiler (vendor/coffeescript/, minified) does not; the coffeescript package the toolchain pins does
+// (package.json and its lockfile, installed by `npm ci` in Fizzygum/: build_it_please.sh runs its `coffee` to compile
+// the boot files). Scores can differ between CoffeeScript versions — a version's AST is its own — so a caller names the
+// ONE version its numbers were measured on, and the pinned package is used only at that version: another, or none,
+// throws, so a gate says it measured nothing (exit 2) rather than scoring on another AST. The vendored file is loaded
+// as published, its one `require("coffeescript")` answered by that package and nothing else resolved from node_modules.
 //
 //   const { analyzerOn } = require('./lib/cognitive-complexity');
 //   const { analyze, coffeescript } = analyzerOn('2.7.0');
@@ -23,30 +21,22 @@ const Module = require('module');
 
 const ANALYZER = path.join(__dirname, '..', '..', 'vendor', 'coffeescript-cognitive-complexity', 'index.js');
 
-// the coffeescript packages a build could be using: behind each `coffee` on PATH, then Node's global prefix
-function candidates() {
-  const out = [];
-  for (const dir of (process.env.PATH || '').split(path.delimiter)) {
-    const bin = path.join(dir || '.', 'coffee');
-    if (fs.existsSync(bin)) out.push({ root: path.resolve(path.dirname(fs.realpathSync(bin)), '..'), via: bin });
-  }
-  out.push({ root: path.resolve(path.dirname(process.execPath), '..', 'lib', 'node_modules', 'coffeescript'), via: 'node\'s global prefix' });
-  return out.map((c) => {
-    const pkgFile = path.join(c.root, 'package.json');
-    const pkg = fs.existsSync(pkgFile) ? JSON.parse(fs.readFileSync(pkgFile, 'utf8')) : {};
-    return { ...c, name: pkg.name, version: pkg.version };
-  });
+// the coffeescript package the toolchain pins, with the version its package.json says (none when it is not installed)
+const PINNED = path.join(__dirname, '..', '..', 'node_modules', 'coffeescript');
+function pinnedCoffeeScript() {
+  const pkgFile = path.join(PINNED, 'package.json');
+  const pkg = fs.existsSync(pkgFile) ? JSON.parse(fs.readFileSync(pkgFile, 'utf8')) : {};
+  return { root: PINNED, via: 'Fizzygum/node_modules, which package.json pins', name: pkg.name, version: pkg.version };
 }
 
 const loaded = new Map();
 function analyzerOn(version) {
   if (loaded.has(version)) return loaded.get(version);
-  const found = candidates();
-  const coffeescript = found.find((c) => c.name === 'coffeescript' && c.version === version);
-  if (!coffeescript) {
-    const seen = found.filter((c) => c.name === 'coffeescript').map((c) => `${c.version} (${c.via})`).join(', ') || 'none';
-    throw new Error(`no CoffeeScript ${version} found (on PATH or in node's global prefix; seen: ${seen}) — the ` +
-      `recorded scores were measured on ${version}: install it globally (npm i -g coffeescript@${version}), or re-measure`);
+  const coffeescript = pinnedCoffeeScript();
+  if (coffeescript.name !== 'coffeescript' || coffeescript.version !== version) {
+    const seen = coffeescript.version ? `CoffeeScript ${coffeescript.version}` : 'none installed';
+    throw new Error(`the pinned CoffeeScript (${coffeescript.via}) is ${seen}, not ${version} — the recorded scores ` +
+      `were measured on ${version}: run 'npm ci' in Fizzygum/, or re-measure`);
   }
   const cs = require(coffeescript.root);          // the package itself first: a failure here names it, not the analyzer
   const m = new Module(ANALYZER, module);

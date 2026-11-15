@@ -509,7 +509,7 @@ case "$cmd" in
     # Read-only — no build, no browser. Defaults the target to Fizzygum/src when no path
     # arg is given (so `fg cc` and `fg cc --by-class` both scan the whole tree); otherwise
     # flags/paths pass straight through: `fg cc --explain src/serialization/Serializer.coffee`.
-    [ -x "$FZ/node_modules/.bin/coffee-cc" ] || { echo "fg cc: coffee-cc not installed — run: ( cd \"$FZ\" && npm install )"; exit 3; }
+    [ -x "$FZ/node_modules/.bin/coffee-cc" ] || { echo "fg cc: coffee-cc not installed — run: ( cd \"$FZ\" && npm ci )"; exit 3; }
     havepath=0; for a in "$@"; do case "$a" in -*) ;; *) havepath=1 ;; esac; done
     [ $havepath -eq 1 ] || set -- "$@" src
     ( cd "$FZ" && node_modules/.bin/coffee-cc "$@" ) ;;
@@ -749,6 +749,17 @@ case "$cmd" in
     # A baseline from before fg was versioned (Fizzygum/fg) looks for it in the umbrella, as fg then lived there:
     # give it this one, or its build's first gate fails before anything is compared.
     [ -e "$BASEDIR/Fizzygum/fg" ] || cp "$FZ/fg" "$BASEDIR/fg"
+    # The toolchain (Fizzygum/node_modules: the coffee and terser package.json pins) is gitignored as well, and the
+    # build runs it. The baseline gets this tree's when its lockfile is the same; else it installs its own (npm ci), so
+    # that a change to a pinned version -- exactly what a fingerprint exists to measure -- builds the baseline with ITS
+    # versions, never these. A baseline whose lockfile cannot install is no measurement. (A baseline from before the
+    # build ran its pinned tools reads none of them: it builds with the global coffee and terser on PATH, as it did then.)
+    if cmp -s "$FZ/package-lock.json" "$BASEDIR/Fizzygum/package-lock.json"; then
+      ln -sfn "$FZ/node_modules" "$BASEDIR/Fizzygum/node_modules"
+    else
+      ( cd "$BASEDIR/Fizzygum" && npm ci --no-audit --no-fund ) >/tmp/fg-fingerprint-npm.log 2>&1 \
+        || { echo "fg fingerprint: npm ci in the baseline worktree FAILED — see /tmp/fg-fingerprint-npm.log"; verdict_end fingerprint 1 "FAILED — baseline npm ci"; exit 1; }
+    fi
 
     OUT="$FT/.scratch/fingerprints"; mkdir -p "$OUT"
     ban "fingerprint: building '$prof' at BASELINE $base"
