@@ -118,7 +118,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | # | Cleanup | Effort (estimate) | What goes away, and in plain words | Why, and the trade-offs (ELI5) | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Overrides that override nothing | ½ day | 8 methods identical to the one they inherit, 2 empty subclasses, 6 comments about a removed recorder; the provable part of an advisory count becomes a build gate. **In plain words:** some classes re-declare a method exactly as their parent already has it. The copies were cleaned out once and grew back because nothing checks. Remove them and add the check. | **Why:** if the same recipe is written on two pages of the cookbook, one day somebody fixes one page and forgets the other. Keep one page, and have the build refuse a second. **Trade-offs:** the new check adds about a second to every build; a copy that someone keeps on purpose needs a one-line note saying why; a few inspector screenshots may show fewer rows. | Low (inspector member lists) | No | 3 | Landed 2026-11-15 (§1, "Landed") |
-| 2 | The LRU cache on a `Map` | ½ day | A linked-list class, a 24-hour expiry no caller varies, 3 of the 8 remaining wall-clock reads. **In plain words:** the text caches keep their entries in a hand-built list and stamp each one with the time of day. JavaScript's own `Map` already remembers insertion order, so the list and the clock are not needed. | **Why:** the cache is a toy box that throws out the toy nobody has touched for longest. Today it also looks at a clock every time a toy is touched, so it can throw out toys left alone for a whole day, which never matters. A box that just remembers the order is enough, and the code that draws text stops looking at clocks. **Trade-offs:** this box is opened thousands of times a second, so the new one must be timed to be sure it is not slower; and a toy left for a day is no longer thrown out (still correct: the same text always measures the same). | None expected (hot path: measure speed) | No | 8 | Approved by the owner (2026-11-15); queued |
+| 2 | The LRU cache on a `Map` | ½ day | A linked-list class, a 24-hour expiry no caller varies, 3 of the 8 remaining wall-clock reads. **In plain words:** the text caches keep their entries in a hand-built list and stamp each one with the time of day. JavaScript's own `Map` already remembers insertion order, so the list and the clock are not needed. | **Why:** the cache is a toy box that throws out the toy nobody has touched for longest. Today it also looks at a clock every time a toy is touched, so it can throw out toys left alone for a whole day, which never matters. A box that just remembers the order is enough, and the code that draws text stops looking at clocks. **Trade-offs:** this box is opened thousands of times a second, so the new one must be timed to be sure it is not slower; and a toy left for a day is no longer thrown out (still correct: the same text always measures the same). | None expected (hot path: measure speed) | No | 8 | ⛔ Parked 2026-11-15 on a speed trade (§2, "OWNER DECISION") |
 | 3 | One pinned toolchain | ½ to 1 day | Two global installs, a version nobody chose in the production artifact, two unused pinned packages, a second copy of an analyzer. **In plain words:** the build shrinks its output with whatever version of a tool happens to be installed on the machine, while the version the project wrote down sits unused. Use the written-down one. | **Why:** a cake recipe that says "use whatever oven is in the house" gives a different cake in every house, and nobody can tell whether the cake changed or the oven did. Write the oven down and use that one. **Trade-offs:** a fresh machine runs one install command in this folder before it can build; upgrading the tool becomes something a person does on purpose, never something that happens by itself. | None (byte-identical trees expected) | No | 1 | Approved by the owner (2026-11-15); queued |
 | 4 | The experimental patch-programming part | ½ to 1 day (deletion) | 6 classes (495 lines) that production never ships, that no test builds, and that only three rows of the dev demo menu can create; the stated reason one base class is held in core. **In plain words:** a folder labelled "unfinished" holds three building blocks for wiring widgets together: a splitter, a text-comparing box and a find-and-replace box. No test uses any of them, a user of the shipped product cannot reach them, and the splitter's job is now done by every widget on its own. Finish them or delete them. | **Why:** it is a half-built toy left in the middle of the room. Nobody plays with it, but everybody has to step around it and dust it whenever the room is tidied. Finish it or put it away. **Trade-offs:** putting it away loses the half-done work from the tree (git still has it) and its three rows in the dev demo menu; no test changes. Finishing the two text boxes instead is real feature work, not tidying, and only worth it if they are wanted in the product. | None expected (no test builds any of the six or opens their menu) | Yes | 5 | Left for a later day by the owner (2026-11-15) |
 | 5 | Visualisation pages are generated, not committed | 1 day | 375 committed generated files (4.2 MB), the build gate that exists to catch them going stale, the generator's branches for recorded tests and native references. **In plain words:** each test has a web page describing it, made by a script and then saved in git, with a check that fails when the saved copy falls behind. Make the page when it is wanted and stop saving it. | **Why:** keeping a photo of every drawing means taking a new photo each time a drawing changes, and somebody has to keep checking that no photo is old. Twice the photos were old. Look at the drawing instead: make the page when you want to see it. **Trade-offs:** the pages can no longer be opened straight from the repository without running a command first; making all of them takes some seconds that have not been measured yet. | None | Yes | 7 | Approved by the owner (2026-11-15); queued |
@@ -270,9 +270,10 @@ serial retry) and `fg homepage` all passed.
 - READ: `src/basic-data-structures/LRUCache.coffee` (46 code lines) keeps a plain-object hash of
   nodes and a `DoubleLinkedList` (26 code lines) for recency. `DoubleLinkedList` has no other
   user.
-- MEASURED: seven instances exist, all built in `WorldWdgt`'s constructor (the text measurement,
-  paragraph, wrapping and back-buffer caches), and every one passes the same second argument,
-  `1000*60*60*24`: a 24-hour maximum age.
+- MEASURED: eight instances exist — seven built in `WorldWdgt`'s constructor (the text
+  measurement, paragraph, wrapping and back-buffer caches) and `Color._cache`, a class static (the
+  colour intern table; a first count of seven missed it) — and every one passes the same second
+  argument, `1000*60*60*24`: a 24-hour maximum age.
 - READ: the age is enforced by reading `Date.now()` in `set`, `_refreshNode` and
   `_isExpiredNode`, so every cache hit reads the wall clock.
 - MEASURED: `node buildSystem/check-stinks.js --list clock-read` counts 8 sites at baseline 8;
@@ -309,8 +310,45 @@ declares these caches bounded because the class evicts at capacity, which stays 
 the `typeof` of every key over one suite run. One type per cache is the go-ahead.
 
 **Re-measure.**
-`grep -rn "new LRUCache" Fizzygum/src --include='*.coffee'` (seven lines, one age) and
+`grep -rn "new LRUCache" Fizzygum/src --include='*.coffee'` (eight lines, one age) and
 `cd Fizzygum && node buildSystem/check-stinks.js --list clock-read | head -10`.
+
+**OWNER DECISION (OPEN, raised 2026-11-15 by the loop).** The `Map` cache was built, proven
+equivalent and timed, and is PARKED on a speed trade the plan's own rule leaves to the owner
+("land only if no case is slower"). A person using Fizzygum sees and feels nothing either way: the
+choice is between a few hundred nanoseconds on a rare path and keeping the linked list.
+- What was measured. The first step: each of the eight caches is asked with ONE kind of key over a
+  whole suite (two by number, six by string), so a `Map` takes a key as given. The old class (from
+  HEAD) and the new one, driven by the same 200,000 and 1,000,000 random operations, agreed on every
+  return, size, key set and evicted key. No caller reads `keys()` or a return of `set`/`remove`/
+  `reset`. A resolution map changed only `LRUCache`'s lines and dropped `DoubleLinkedList`'s.
+- Shape 1, a fresh `keys().next()` per eviction (median ns per call over three alternating runs of
+  the real methods, HEAD's build → the change's): hit by string key 60 → 42.5, hit by number key
+  62.5 → 35, miss then set 77.5 → 72.5, **eviction 100 → 292.5 (×2.9)**. A `Map` keeps a deleted
+  entry's slot until it compacts, and an LRU deletes at the front, so each fresh iterator steps over
+  every hole earlier evictions left.
+- Shape 2, one key iterator kept for the cache's life, was faster everywhere (eviction 117.5 → 62.5)
+  and is RULED OUT: V8 moves an iterator onto a `Map`'s current table only when it is advanced, so it
+  pins every superseded table — about 40 bytes per hit, released only by the next eviction
+  (measured with the cache kept live: 6.13 MB flat without it, 10.09 MB after 100,000 hits and
+  14.05 MB after 200,000 with it). The documented interactive profile shows the back-buffer cache at
+  175–189 of 1000 entries with no eviction, so that growth would be unbounded in a real session.
+- The options. (a) Shape 1: the plan's shape as written; `DoubleLinkedList`, the expiry and three
+  clock reads go; an eviction costs about 190 ns more, and it only ever follows a miss that does the
+  real work (a text measurement or a back-buffer render, microseconds and up). (b) Keep the linked
+  list and remove only the expiry and its clock reads (`maxAge`, `lastVisitTime`, `onDispose`):
+  `clock-read` still falls to 5, `DoubleLinkedList` stays, speed unmeasured. (c) A third shape (an
+  iterator kept only across back-to-back evictions, or a periodic compaction): unmeasured, and it
+  needs the equivalence, timing and retention probes again.
+- Recommendation: (a). Its slower case is the rare one and is dwarfed by the miss it follows; its
+  faster cases are the hot ones.
+- The work is kept: `Fizzygum-tests/.scratch/cleanups-loop-3/u2-lru-map/` — `PARKED-Fizzygum.patch`
+  (shape 2 with its docs, applies to `4921a02b`), `LRUCache.shape1.coffee` (shape 1's class), the
+  probes (`old-vs-new.js`, `timing-probe.js`, `cross-build-timing.sh`, `lru-keytype-prelude.js`)
+  and `PREP.md`. Taking it up again: the review's notes are in `PREP.md` — among them that
+  `boot/dependencies-finding.coffee`'s REQUIRES hint has no other user that needs it at class
+  definition time (`Color._cache` builds an `LRUCache` while classes are being defined; the harness's
+  hints are read only inside methods), so its comment's example is the one to reword.
 
 ---
 

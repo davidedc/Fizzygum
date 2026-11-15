@@ -537,6 +537,7 @@ H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-
 - [ ] §5B O4b: SWCanvas glyph-run batching — ⚠ DE-URGENTED by the O4a correction (steady-state glyph stream ≈ just the desktop logo); do not build on the pre-correction numbers. O4a's as-landed entry is in this plan's § "BACKLOG ledger"
 - [ ] §8/top banner: S2 Tier 2, S6b, F1 (precompiled test-harness boot) still unlanded
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
+- [ ] the text caches key on a 32-bit `hashOfString` of the text with no check that the text matches: two texts that collide ("Of"/"PG", "Aa"/"BB") at the same font and extent share ONE entry, so the second widget draws the first's text (probed 2026-11-15: two `StringWdgt`s share one back buffer) — medium: reached by typing such a pair into two same-width labels or cells; `StringWdgt.createBufferCacheKey`, `TextWdgt` `breakTextIntoLines`/`getParagraphs`, `StringWdgt` `measureText`
 
 ### `plans/single-file-save-plan.md`
 AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0 spikes S1/S2
@@ -573,7 +574,7 @@ AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by
 
 ### `plans/top-10-cleanups-round-3-plan.md`
 AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first two took the structure, the build, the harness and the verification tooling, this one takes what the ratchets do not measure: zeros nothing holds, the shape the removed recorder left behind, and tools only a person starts. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §1, §2, §3, §5, §6, §8 and §10 approved, for an unattended loop (the plan's STATUS has the rulings); §4, §7 and §9 left for a later day.
-- [ ] §2 (½ day): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (hot path: measured first)
+- [ ] §2 (½ day; ⛔ PARKED 2026-11-15 on a speed trade, the owner decides — §2 "OWNER DECISION"): the LRU cache on a `Map` — `DoubleLinkedList`, the 24-hour expiry and 3 of the 8 `clock-read` sites go (built and proven; one shape makes an eviction ×2.9 slower, the faster one pins memory)
 - [ ] §3 (½ to 1 day; ruled 2026-11-15: npm-pinned, `npm ci`): one pinned toolchain — the build runs the `coffee` and `terser` its lockfile names, not the globally installed ones
 - [ ] §4 (½ to 1 day; left for a later day by the owner 2026-11-15; ⛔ owner): the `patch-programming-experimental` part — six classes no test builds and no production user can reach; the fanout is redundant now that wires are a list; the product question is whether the diff and regex nodes are wanted (finish them) or not (delete all six)
 - [ ] §5 (1 day; ruled 2026-11-15: generate, do not commit): `visualisation.html` pages are generated, not committed — 375 files and the gate that holds them to their inputs go
