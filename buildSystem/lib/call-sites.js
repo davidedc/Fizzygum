@@ -13,7 +13,7 @@
 //   - every macro source (lib/macro-sources.js: the COOKED text the page compiles, each line on its file line), as
 //     authored — before Macro.coffee rewrites verb calls into `yield from`: each test's, and every verb's (a
 //     `Macro.fromString "…"` literal of a CoffeeScript file, CODE in a string).
-//   - the tests repo's scripts and each macro file's JS shell: acorn (vendor/acorn), skipping the shell's macro
+//   - the tests repo's scripts and each macro file's JS shell: acorn (the pinned package), skipping the shell's macro
 //     sources (their spans, from the same testMacroSourcesIn read). The file set is tests-repo-code's testsRepoFiles.
 // ⚠ The 2.0.3 bundle is MINIFIED, so node kinds are told STRUCTURALLY, by their `children` names. A call is one of
 //   THREE shapes (found by cross-checking every call against CoffeeScript 2.7's `ast: true`, archive plan §9):
@@ -97,7 +97,8 @@ const { srcFiles } = require('./source-files');
 const { testMacroSourcesIn, verbMacroSourcesIn } = require('./macro-sources');
 const { harvestDefs } = require('./name-definitions');
 const { coffeeMask } = require('./coffee-mask');
-const acorn = require('../../vendor/acorn/acorn.js');
+// the pinned acorn, by its path in Fizzygum/node_modules: never a bare name another node_modules could answer
+const acorn = require(path.join(__dirname, '..', '..', 'node_modules', 'acorn', 'dist', 'acorn.js'));
 
 const { IS_CLASS } = require('../build');   // the one test of "is this source a class file": build.js's own, which check-coffee-syntax.js uses too
 const IDENT = /^[A-Za-z_$][\w$]*$/;

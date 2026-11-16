@@ -616,8 +616,9 @@ There are **no flavour flags**. An unknown argument is a hard error that lists t
 
 **The toolchain is pinned.** The build compiles the boot files with the `coffeescript` package's `coffee` and minifies
 them and the pre-compiled image with the `terser` package's: the exact versions `package.json` and its lockfile name,
-which `npm ci` in `Fizzygum/` installs. A build whose installed version of either is not the pinned one stops and says
-so (each is run from its own package: `node_modules/.bin/coffee` is a link `coffeescript-v1` declares too). The artifact's bytes depend on both, so
+which `npm ci` in `Fizzygum/` installs, together with the two libraries the static gates load (acorn and the
+complexity analyzer, pinned the same way). A build whose installed version of any of the four is not the pinned one
+stops and says so (each is run from its own package: `node_modules/.bin/coffee` is a link `coffeescript-v1` declares too). The artifact's bytes depend on both, so
 `package-lock.json` is a build input (below), an upgrade is a deliberate edit of `package.json`, and `fg fingerprint`
 measures one: its baseline worktree installs its OWN lockfile when that differs from this tree's. The complexity
 ratchet's analyzer reads the same pinned CoffeeScript (`buildSystem/lib/cognitive-complexity.js`). The static gates and
@@ -637,7 +638,7 @@ edited (during the build or since), deleted, renamed, added, or put back with an
 record is missing, or the record is another build's (its start time is not the stamp's). `buildSystem/lib/build-inputs.js`
 is the one definition, and `buildStaleness()` the one question every freshness reader asks. The inputs are the FILES
 the build names, never the directories holding them (a directory also holds what the build never reads — a
-subsystem's `CLAUDE.md`, an editor's swap file, a gate's vendored parser): every compiled source and `src/index.html`,
+subsystem's `CLAUDE.md`, an editor's swap file, a vendored library's README): every compiled source and `src/index.html`,
 the build script and its two Node modules (`build.js`, `lib/profile.js`), `parts.json` and the profiles (`*.json`), `package-lock.json` (the toolchain's versions), each part's declared `assets` and `vendor`
 pieces, the files the build script names itself (the SWCanvas bundle's pieces, the pre-compiled stub) and every file
 under `font-assets/` (copied afresh each build, so a font deleted from the source is gone from the tree too). The gates

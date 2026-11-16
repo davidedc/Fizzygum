@@ -1,14 +1,16 @@
 'use strict';
-// cognitive-complexity.js — the vendored Cognitive Complexity analyzer (vendor/coffeescript-cognitive-complexity/,
-// SonarSource rule S3776 on the CoffeeScript AST), loaded for the build's gates.
+// cognitive-complexity.js — the Cognitive Complexity analyzer (the coffeescript-cognitive-complexity package
+// package.json pins, SonarSource rule S3776 on the CoffeeScript AST), loaded for the build's gates.
 //
 // The analyzer walks the AST by node CLASS NAME, so it needs a CoffeeScript whose node classes keep their names. The
 // build's own compiler (vendor/coffeescript/, minified) does not; the coffeescript package the toolchain pins does
 // (package.json and its lockfile, installed by `npm ci` in Fizzygum/: build_it_please.sh runs its `coffee` to compile
 // the boot files). Scores can differ between CoffeeScript versions — a version's AST is its own — so a caller names the
 // ONE version its numbers were measured on, and the pinned package is used only at that version: another, or none,
-// throws, so a gate says it measured nothing (exit 2) rather than scoring on another AST. The vendored file is loaded
-// as published, its one `require("coffeescript")` answered by that package and nothing else resolved from node_modules.
+// throws, so a gate says it measured nothing (exit 2) rather than scoring on another AST. The analyzer is loaded by its
+// path in Fizzygum/node_modules, at the version package.json pins exactly (build_it_please.sh refuses another), and
+// as published: its one `require("coffeescript")` is answered by that pinned CoffeeScript, and nothing else is resolved
+// from node_modules.
 //
 //   const { analyzerOn } = require('./lib/cognitive-complexity');
 //   const { analyze, coffeescript } = analyzerOn('2.7.0');
@@ -19,7 +21,7 @@ const fs = require('fs');
 const path = require('path');
 const Module = require('module');
 
-const ANALYZER = path.join(__dirname, '..', '..', 'vendor', 'coffeescript-cognitive-complexity', 'index.js');
+const ANALYZER = path.join(__dirname, '..', '..', 'node_modules', 'coffeescript-cognitive-complexity', 'index.js');
 
 // the coffeescript package the toolchain pins, with the version its package.json says (none when it is not installed)
 const PINNED = path.join(__dirname, '..', '..', 'node_modules', 'coffeescript');

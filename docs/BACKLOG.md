@@ -256,7 +256,6 @@ AUTHORED 2026-11-15, the fourth SURVEY of ten candidate cleanup arcs, ordered by
 - [ ] §1 (¼ day; ruled: yes, taken last): the stopped cleanup surveys leave `plans/` for `archive/`, this one included — 278 KB, a quarter of the folder; their waiting items stay in this file
 - [ ] §2 (½ day): `fg` says what it does — five stale usage lines and one missing; `fg status` asks `buildStaleness()`; `fg` asks `lib/profile.js` in-process; closes three lines of this file
 - [ ] §3 (½ day; ruled: they go if no production artifact grows by more than 2 KB): the build's last text-level strip — four `sed` lines turn six compiled `Automator?` tests into `if (false)`
-- [ ] §4 (½ day; ruled: npm): build-time libraries from one place — acorn and the complexity analyzer are vendored, the other tools npm-pinned; the analyzer exists twice, byte for byte
 - [ ] §6 (1 day): gate rows run side by side, and the tests syntax gate parses in-process — the gates are 58 s of a 60 s build, 11.5 s of it 778 `node --check` launches; supersedes the mask-cache line
 - [ ] ⛔ §7 (1 day; PARKED 2026-11-16, owner: the measured speed trade, options in §7): text cache keys are the text — takes up the 32-bit `hashOfString` collision line under the runtime-performance plan; and the line-break key gains the fitting mode it omits
 - [ ] ⛔ §9 (1 to 1½ days; left for a later day by the owner 2026-11-15; owner: which profiles are products): no verb, leg or gate builds `lean`, `dev-notests` or `dev-precompiled`

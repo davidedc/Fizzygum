@@ -64,8 +64,9 @@ Every exit is 1. `build_failed "<what>"` rings the terminal bell (`tput bel`), p
 6. `mkdir -p` the tree, `touch` its `.build-start`, and record the inputs:
    `node buildSystem/lib/build-inputs.js --record <.build-start>` into
    `.latest-build-inputs.reading` (in `Fizzygum/`).
-7. The toolchain: the installed `coffeescript` and `terser` must be the versions
-   `package.json` pins (a one-line message naming `npm ci`). It prints
+7. The toolchain: the installed `coffeescript`, `terser`, `acorn` and
+   `coffeescript-cognitive-complexity` must be the versions `package.json` pins (a one-line
+   message naming `npm ci`). It prints
    `coffeescript version -------------` and the compiler's own version line.
 8. The profile: `node buildSystem/lib/profile.js --shell <args>`, `eval`'d. It prints one
    `profile: …` line.

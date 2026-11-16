@@ -27,7 +27,7 @@
 > executes the nine one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-4/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §5
-> (2026-11-16), §8 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
+> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -134,7 +134,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | 1 | Stopped surveys leave `plans/` | ¼ day | Three files, 278 KB, a quarter of the folder for active plans; 25 of their 30 items have landed. **In plain words:** the folder for work still to do holds three long reports that are almost entirely about work already done. Move them to the archive; the five items they left stay on the open-work index. | **Why:** a to-do drawer stuffed with finished homework makes the unfinished pages hard to find. Put the finished homework on the shelf and leave a note in the drawer for the five pages still to do. **Trade-offs:** a reader of an old item hops to the archive folder for its story; 28 lines in other files that name the old location must be corrected in the same change. | None | Yes (a filing ruling) | 8 | Approved by the owner (2026-11-15); queued |
 | 2 | `fg` says what it does, and asks the build's own modules | ½ day | Five stale lines and one missing line in `fg`'s help; a second way of judging "is the build fresh"; a Node program reading a Node module through shell text; a status count that can never read zero. **In plain words:** the command that runs every check was rewritten last round under a rule that its help text must not change by one byte. The rule has done its job. Now the help can say what the command does, and the command can ask its neighbours directly. | **Why:** the leaflet in the box still describes last year's toy. Nobody is hurt, but whoever reads the leaflet learns the wrong thing, and one page of it says "fresh" while the kitchen says "stale". **Trade-offs:** the help text changes, so anything that compares it with the old text has to be found first; nothing else. | None | No | 5 | Approved by the owner (2026-11-15); queued |
 | 3 | The build's last text-level strip | ½ day | Four `sed` lines that rewrite compiled JavaScript by pattern, a macOS-only flag, a comment about a class that no longer exists. **In plain words:** when the build makes the production version, it searches the finished code for six "is the test kit here?" questions and replaces each with "no", so the code behind the question can be thrown away. Each question already answers "no" by itself when the test kit is absent. | **Why:** somebody goes through the finished book with correction fluid, painting over six sentences that begin "if the teacher is in the room". The teacher is never in that room, so the sentences do nothing anyway. And if the printer ever changes the lettering, the fluid misses and nobody notices. Stop painting. **Trade-offs:** the production file grows by the size of those six passages (to be measured first; a few hundred bytes of 1.3 MB are expected). | None | No | 6 | Approved by the owner (2026-11-15); queued |
-| 4 | Build-time libraries from one place | ½ day | A second way of pinning a tool; one analyzer present twice, byte for byte; two hand-kept notes of where a copy came from. **In plain words:** some helper programs the build uses are fetched by one install command at exact versions; two others are pasted into the repository by hand; and one of those two is also fetched, so it exists twice. Pick one way. | **Why:** most of the kitchen tools come from the shop with a receipt, and two were copied by hand from a friend's, with a hand-written note of where they came from. One of those was also bought, so there are two of it. One way of getting tools means one list to check. **Trade-offs:** the shop way needs the network on a new machine (already true since round 3); the by-hand way keeps every upgrade a manual chore. | None | Yes (which place) | 9 | Approved by the owner (2026-11-15); queued |
+| 4 | Build-time libraries from one place | ½ day | A second way of pinning a tool; one analyzer present twice, byte for byte; two hand-kept notes of where a copy came from. **In plain words:** some helper programs the build uses are fetched by one install command at exact versions; two others are pasted into the repository by hand; and one of those two is also fetched, so it exists twice. Pick one way. | **Why:** most of the kitchen tools come from the shop with a receipt, and two were copied by hand from a friend's, with a hand-written note of where they came from. One of those was also bought, so there are two of it. One way of getting tools means one list to check. **Trade-offs:** the shop way needs the network on a new machine (already true since round 3); the by-hand way keeps every upgrade a manual chore. | None | Yes (which place) | 9 | Landed 2026-11-16 (§4, "Landed") |
 | 5 | One SHA-256 in the harness | ½ to 1 day | A hand-written SHA-256 (about 89 of the file's 109 code lines), a second hashing of pixels already hashed, one of three implementations that must agree. **In plain words:** to recognise a screenshot the test kit computes a fingerprint of its pixels. It has two fingerprint machines, the browser's own and a hand-written one, and for a screenshot that does not match it runs both on the same pixels. Use the browser's, and pass its answer along. | **Why:** two rulers that must agree to the last hair: if they ever differ, every saved picture gets the wrong name. One ruler cannot disagree with itself. **Trade-offs:** the two places that use the hand-written one cannot wait for an answer today, so one is handed the answer that already exists and the other compares the pixels directly; the saved pictures' names must be shown unchanged. | None (the same digest; proven on one capture) | No | 4 | Landed 2026-11-16 (§5, "Landed") |
 | 6 | Gate rows run side by side; the tests syntax gate parses in-process | 1 day | 778 process launches per build; a one-at-a-time queue of 33 checks on a 16-core machine; the reason for a planned cache. **In plain words:** every build runs 34 checks one after another, and one of them starts a fresh program for each of 778 test files just to see whether the file parses. Parse them all in one program, and let checks that do not depend on each other run at the same time. | **Why:** thirty-three children wait in one line to wash their hands at one tap while fifteen taps stand unused, and one child walks to a different sink for each finger. Use the taps. Every build, and so every test run, waits for this line. **Trade-offs:** the printed report must still come out in the old order, so each check's output is held until its turn; and when one check fails, the ones after it have already run for nothing. | None | No | 1 | Approved by the owner (2026-11-15); queued |
 | 7 | Text cache keys are the text | 1 day | Seven cache keys built on a 32-bit hash, the hash's own memo table and its accounting, a filed bug. **In plain words:** to avoid measuring and drawing the same text again, results are filed under a short number computed from the text. Two different texts can get the same number ("Of" and "PG" do), and then the second shows the first's result. File results under the text itself, beside the font, size, alignment and the rest, which the label already carries and which do not change. | **Why:** coats in the cloakroom are hung by the first two letters of the owner's name, so Anna sometimes gets Andrew's coat. Hang them by the whole name. **Trade-offs:** whole names take longer to read than two letters, and this cloakroom is used thousands of times a second, so it must be timed on real use before and after; the labels also take a little more room. | None expected (a difference would be a collision being put right) | No | 2 | Parked 2026-11-16: measured slower; OWNER DECISION open (§7) |
@@ -364,6 +364,29 @@ build). A tests-repo gate would reach the parser through `Fizzygum/node_modules`
 
 **Re-measure.** `ls Fizzygum/vendor` and
 `cmp Fizzygum/vendor/coffeescript-cognitive-complexity/index.js Fizzygum/node_modules/coffeescript-cognitive-complexity/index.js`.
+
+**Landed 2026-11-16 (option (a), as ruled).** `package.json` pins `acorn` 8.19.0 and
+`coffeescript-cognitive-complexity` 1.0.0 exactly (`npm install --save-dev --save-exact`), and
+`vendor/acorn/` and `vendor/coffeescript-cognitive-complexity/` are gone. Before the vendored
+files went, each installed file was `cmp`-identical to its vendored twin (`dist/acorn.js`,
+`index.js`). The three readers load the installed packages by a path built from `__dirname`,
+never by a bare name: `lib/js-mask.js` and `lib/call-sites.js` for acorn,
+`lib/cognitive-complexity.js` for the analyzer (it keeps its contract: the pinned CoffeeScript
+at the version its caller names, or INVALID). The build's installed-version check names all
+four packages with one message, so a stale install stops the build with `run npm ci in
+Fizzygum/`; a planted `"acorn": "8.18.0"` showed it doing so. The hoisted acorn is now 8.19.0
+(was 7.4.1, which `jscpd`'s `is-expression` still gets, nested); `terser` already ran on its own
+nested 8.19.0 and now shares the hoisted one, the same bytes, so the minifier is unchanged.
+
+The evidence:
+- the static gates' whole transcript (`run-gates.js`, as the build runs it) is unchanged but for
+  its timings, and the gate census still reads 55 launched gates;
+- `fg critique` is unchanged;
+- `fg build`, the presuite, the gauntlet and `fg homepage` pass.
+
+The tests repo's tools now need `npm ci` in `Fizzygum/` too: they parse with the pinned acorn
+(its `CLAUDE.md` says so). `Fizzygum/CLAUDE.md`'s prerequisite line is four bytes shorter; its
+ceiling is banked in `buildSystem/check-doc-narration-baseline.json`.
 
 ---
 
@@ -1007,3 +1030,7 @@ Do not commit or push without asking me.
 - [x] §8 (1 day): audit preludes share one head — 17 copied blocks (170 lines) across 13 page-injected instrument files; `lib/audited-suite.js` joins the shared head to each
   — CLOSED 2026-11-16 (loop U3): the helpers equal in meaning live in `scripts/audit-preludes/audit-head.js`, joined in
   front of every instrument and plant that uses them by `scripts/lib/audit-head.js` (§8, "Landed").
+
+- [x] §4 (½ day; ruled: npm): build-time libraries from one place — acorn and the complexity analyzer are vendored, the other tools npm-pinned; the analyzer exists twice, byte for byte
+  — CLOSED 2026-11-16 (loop U4): both are exact npm devDependencies, checked by the build, and `vendor/` holds neither
+  (§4, "Landed").

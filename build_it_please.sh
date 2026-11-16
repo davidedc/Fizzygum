@@ -166,15 +166,17 @@ touch "$BUILD_PATH/.build-start"
 node buildSystem/lib/build-inputs.js --record "$BUILD_PATH/.build-start" > .latest-build-inputs.reading || build_failed "recording the build's inputs (buildSystem/lib/build-inputs.js)"
 
 # THE TOOLCHAIN is the one package.json and its lockfile pin, installed by `npm ci` in Fizzygum/: the CoffeeScript that
-# compiles the boot files and the terser that minifies them and the pre-compiled image. The artifact's bytes depend on
-# both versions, so they are chosen (package.json), never whatever a machine has installed globally. Each runs from its
-# OWN package -- node_modules/.bin/coffee is a link two packages declare (coffeescript-v1 has a `coffee` too) -- and an
-# install whose version is not the pinned one (an older `npm install`, a partial one) stops the build here.
+# compiles the boot files and the terser that minifies them and the pre-compiled image, and the two libraries the
+# static gates load: acorn (lib/js-mask.js, lib/call-sites.js) and the complexity analyzer (lib/cognitive-complexity.js).
+# The artifact's bytes depend on the first two, and the gates' verdicts on the last two, so all four are chosen
+# (package.json, exact versions), never whatever a machine has installed. Each runs from its OWN package --
+# node_modules/.bin/coffee is a link two packages declare (coffeescript-v1 has a `coffee` too) -- and an install whose
+# version is not the pinned one (an older `npm install`, a partial one) stops the build here.
 COFFEE="$PWD/node_modules/coffeescript/bin/coffee"
 TERSER="$PWD/node_modules/terser/bin/terser"
 node -e '
   const pins = require("./package.json").devDependencies;
-  for (const name of ["coffeescript", "terser"]) {
+  for (const name of ["coffeescript", "terser", "acorn", "coffeescript-cognitive-complexity"]) {
     let installed = "not installed";
     try { installed = require("./node_modules/" + name + "/package.json").version; } catch (e) {}
     if (installed !== pins[name]) {

@@ -8,7 +8,7 @@
 // parseJs(text, file?) -> { ast, comments }: the acorn Program and the comments' [start, end) ranges, for a reader that
 //   needs the grammar — lib/tests-repo-code.js finds a test's macro sources in it — and, beside it, the mask.
 //
-// It PARSES the text with acorn (vendor/acorn — build-time only, see its README), so what is a regex literal, a
+// It PARSES the text with acorn (the version package.json pins, build-time only), so what is a regex literal, a
 // division, a string or a template is decided by JavaScript's grammar, never by a lexer's guess at the previous
 // token. A text that does not parse is REFUSED: maskJs throws `JS_MASK_UNPARSEABLE`, naming the file, the parser's
 // message and the position, so a reader of code it cannot read stops loudly instead of guessing. It parses with
@@ -19,7 +19,9 @@
 // Readers: lib/tests-repo-code.js, lib/gate-rules.js, lib/what-runs.js and run-selftests.js; lib/call-sites.js parses
 // with the same acorn. Its cases are in tests-repo-code-selftest.js.
 
-const acorn = require('../../vendor/acorn/acorn.js');
+const path = require('path');
+// the pinned acorn, by its path in Fizzygum/node_modules: never a bare name another node_modules could answer
+const acorn = require(path.join(__dirname, '..', '..', 'node_modules', 'acorn', 'dist', 'acorn.js'));
 
 const OPTIONS = { ecmaVersion: 'latest', allowHashBang: true, allowReturnOutsideFunction: true };
 

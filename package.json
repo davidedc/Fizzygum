@@ -27,8 +27,9 @@
   },
   "homepage": "https://github.com/davidedc/Fizzygum#readme",
   "devDependencies": {
+    "acorn": "8.19.0",
     "coffeescript": "2.7.0",
-    "coffeescript-cognitive-complexity": "^1.0.0",
+    "coffeescript-cognitive-complexity": "1.0.0",
     "coffeescript-v1": "npm:coffeescript@^1.12.7",
     "jscpd": "^4.2.5",
     "jsinspect": "^0.12.7",

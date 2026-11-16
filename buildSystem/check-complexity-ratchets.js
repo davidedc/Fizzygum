@@ -17,13 +17,13 @@
 // `Class.method` (class side), or `<file>#name` for one outside any class (a boot file's). A recorded one that fell
 // prints UNDER (lower its record); one that fell to the ceiling or below, or that no longer exists, leaves its entry
 // excusing nothing: STALE, delete it. The harness's records (RECORDED_IN_HARNESS) are judged like src's: the harness is
-// always read (the build requires the tests repo). The analyzer is vendor/coffeescript-cognitive-complexity/,
-// loaded by lib/cognitive-complexity.js on the CoffeeScript the records were measured on (MEASURED_ON).
+// always read (the build requires the tests repo). The analyzer is the coffeescript-cognitive-complexity package
+// package.json pins, loaded by lib/cognitive-complexity.js on the CoffeeScript the records were measured on (MEASURED_ON).
 //
 // RULES: METHOD_COUNT_ABOVE_CEILING, COMPLEXITY_ABOVE_CEILING (a function above the ceiling, not recorded),
 // COMPLEXITY_ABOVE_RECORD (a recorded function risen), STALE_ALLOWLIST_ENTRY (a ceiling naming no class file, a record
 // naming no function above the ceiling). Exit 0 clean, 1 a rule fired, 2 nothing could be measured — no CoffeeScript
-// MEASURED_ON found, or a source the analyzer cannot parse (it parses each whole file as CoffeeScript 2.7 does, so a
+// MEASURED_ON found, no analyzer installed (`npm ci` in Fizzygum/), or a source the analyzer cannot parse (it parses each whole file as CoffeeScript 2.7 does, so a
 // spelling only the browser's meta-system accepts — a bare `super` followed by a postfix `if` — must be spelled
 // `super(…)` or stand on its own line). That every rule bites is proven on every build by
 // check-complexity-ratchets-selftest.js.

@@ -6,7 +6,7 @@
 // (Fizzygum-tests/scripts/lib/assert-build-fresh.js), the single runner's capture-path warning and torture's report.
 //
 // THE INPUTS are the FILES the build names, never the directories that hold them (a directory also holds what the
-// build never reads — a subsystem's CLAUDE.md, an editor's swap file, a Finder .DS_Store, a gate's vendored parser — and
+// build never reads — a subsystem's CLAUDE.md, an editor's swap file, a Finder .DS_Store, a vendored library's README — and
 // any churn there would read as a stale build):
 //   - every compiled source (lib/source-files.js compiledFiles: src's and the harness's .coffee, the boot files among
 //     them) and src/index.html, which every entry page is written from;
