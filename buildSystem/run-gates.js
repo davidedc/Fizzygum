@@ -17,8 +17,8 @@
 //
 //   node ./buildSystem/run-gates.js --noSyntaxCheck=<true|false> --shipsTests=<true|false> -- <the build's arguments>
 //
-// build_it_please.sh runs it from Fizzygum/ (once, after build.js has written the tree), passing its --noSyntaxCheck
-// switch and the profile's PROFILE_SHIPS_TESTS. The sibling tests repo, whose scripts some rows run, is never asked
+// The build (buildSystem/run-build.js, which build_it_please.sh launches) runs it from Fizzygum/ (once, after build.js
+// has written the tree), passing its --noSyntaxCheck switch and the profile's shipsTests. The sibling tests repo, whose scripts some rows run, is never asked
 // about here: the build requires it, and checks for it before anything else. Exit 0 when every row that ran passed, 1
 // at the first that failed, 2 on a malformed command line or a malformed table — a row naming a WHEN the runner does
 // not know: never a silent skip, it stops the run before ANY row runs, whatever the build's flags, --noSyntaxCheck
