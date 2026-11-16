@@ -28,7 +28,7 @@
 >
 > **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 > Authored 2026-11-15 as the owning plan of item §10 of
-> `docs/plans/top-10-cleanups-round-3-plan.md` (read that item first: it has the evidence and the
+> `docs/archive/top-10-cleanups-round-3-plan.md` (read that item first: it has the evidence and the
 > honest scope). The owner approved the item on 2026-11-15 and ruled its landing: **land and
 > push when every proof below passes; the bash `fg` leaves the repo; a copy is kept in the
 > loop's scratch directory.** The owner also asked that the port "covers ALL the edge and corner
@@ -351,8 +351,8 @@ FG_GAUNTLET_SERIAL=1 /Users/davidedellacasa/code/Fizzygum-all/fg gauntlet   # on
 
 ## 11. References
 
-- `docs/plans/top-10-cleanups-round-3-plan.md` §10 (the item), §13 (its case law)
-- `docs/plans/top-10-cleanups-round-2-plan.md` §6 and §7, "Landed" (the Node gate driver and the
+- `docs/archive/top-10-cleanups-round-3-plan.md` §10 (the item), §13 (its case law)
+- `docs/archive/top-10-cleanups-round-2-plan.md` §6 and §7, "Landed" (the Node gate driver and the
   leg table: the two precedents, with what each proof looked like)
 - `buildSystem/legs.js`, `buildSystem/legs-selftest.js`, `buildSystem/lib/what-runs.js`,
   `buildSystem/run-selftests.js`

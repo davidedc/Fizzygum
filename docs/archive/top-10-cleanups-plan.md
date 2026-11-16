@@ -5,6 +5,11 @@
 > first. Each item is a proposal with its evidence, and four of the ten need an owner decision
 > before any code moves (marked in the table under "The list at a glance").
 >
+> **STOPPED 2026-11-13 (its loop; the survey archived 2026-11-16, round 4's §1).** Landed, by the loop and on the
+> owner's rulings: §1 to §6, §8, §10, and §7's step 1 (its step 2 declined by the owner). Waiting on the owner: §9
+> (icon shells: is per-icon class identity wanted?); not yet examined: §5's second candidate (the docking family) —
+> the BACKLOG lines under this file's name.
+>
 > **STATUS.** Since 2026-11-12 an unattended `/loop`, launched by the owner, executes these items or
 > their parts, one unit at a time: §1 but for its owner questions, §4, §5, §6, §7's first step, both
 > steps of §8, and §10. Its brief (local to the loop) rules their small choices and leaves §2, §3,
@@ -1107,7 +1112,7 @@ and the owner has seen them. A fuzz or audit failure is never a reason to recapt
 ## 16. Start prompt for a fresh session
 
 ```
-Read Fizzygum/docs/plans/top-10-cleanups-plan.md in full (it is a survey of ten candidate
+Read Fizzygum/docs/archive/top-10-cleanups-plan.md in full (it is a survey of ten candidate
 cleanups, ordered by effort; its STATUS says what has landed). Then run
 /Users/davidedellacasa/code/Fizzygum-all/fg status and confirm no long operation is running.
 

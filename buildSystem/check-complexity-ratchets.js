@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // check-complexity-ratchets.js — two RATCHETS in the check-stinks.js style: a recorded value that may fall and may
-// not rise (docs/plans/top-10-cleanups-plan.md §8 step 1).
+// not rise (docs/archive/top-10-cleanups-plan.md §8 step 1).
 //
 // METHOD COUNT. The four classes that grew with nothing holding them — Widget, WorldWdgt, ActivePointerWdgt and
 // FrameWdgt — each hold at most METHOD_CEILINGS' count of methods: the lines of its file that open a method, instance

@@ -417,7 +417,7 @@ data structure already supports it; do not build it now.
 > size-aware vector redraw (§5b, `TypewriterIconAppearance`). Each icon's re-judge picks
 > among: keep-vector / pixel-grid (this plan) / size-aware redraw (§5b).
 
-**Stays vector (11 files, ≈1,320 lines; ≈3,800 until the two maps' outlines became tables on 2026-11-13, `plans/top-10-cleanups-round-2-plan.md` §3)** — each for a stated reason, finalized on the P4
+**Stays vector (11 files, ≈1,320 lines; ≈3,800 until the two maps' outlines became tables on 2026-11-13, `archive/top-10-cleanups-round-2-plan.md` §3)** — each for a stated reason, finalized on the P4
 contact sheet:
 | File | Reason |
 |---|---|

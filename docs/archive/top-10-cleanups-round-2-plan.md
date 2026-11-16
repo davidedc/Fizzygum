@@ -6,9 +6,13 @@
 > any code moves, and two more have a second step that does (marked in the table under "The list
 > at a glance").
 >
-> **Relation to the first survey.** `docs/plans/top-10-cleanups-plan.md` (authored 2026-11-11) is
+> **Relation to the first survey.** `docs/archive/top-10-cleanups-plan.md` (authored 2026-11-11) is
 > the first round. Nine of its ten items have landed and its §9 (icon shells) is kept open by the
 > owner. Nothing here repeats it: this round was surveyed on the tree as that round left it.
+>
+> **STOPPED 2026-11-14 (its loop; the survey archived 2026-11-16, round 4's §1).** Landed: §1 to §5, §6's step 1, §7,
+> §8, §9. Waiting on the owner: §6's step 2 (measured; the recommendation keeps four passes), §8's follow-up (rename
+> or fold `_automationCommands.js`) and §10 (the reference set) — the BACKLOG lines under this file's name.
 >
 > **STATUS (owner, 2026-11-13).** The owner agreed with §1 to §9 and left §10 out for now. §4 is
 > ruled: option (a), delete. §9 is agreed on its stated criterion. An unattended `/loop`, launched
@@ -966,7 +970,7 @@ WebKit. For step 2: a prelude that makes the loader ignore every record's `image
 
 | Topic | Owner |
 |---|---|
-| Icon shells: one `IconWdgt` and a derived catalog (and `DemoMenus`' roughly 60 `create…IconWdgt` methods) | `plans/top-10-cleanups-plan.md` §9 (kept open by the owner) |
+| Icon shells: one `IconWdgt` and a derived catalog (and `DemoMenus`' roughly 60 `create…IconWdgt` methods) | `archive/top-10-cleanups-plan.md` §9 (kept open by the owner) |
 | The creator-button and toolbar-button classes | `plans/creation-and-templates-plan.md` §4.3 |
 | Two icon-appearance generations and pixel icons | `plans/pixel-icons-plan.md` |
 | LiveCodeLang, `LCLCodePreprocessor`, `LCLProgramRunner` | `plans/livecodelang-cleanup-and-extensions-plan.md` |
@@ -1026,7 +1030,7 @@ prints 0.
 
 - `Fizzygum/CLAUDE.md`, `Fizzygum-tests/CLAUDE.md`, `Fizzygum-tests/DETERMINISM.md`
 - `docs/README.md` (filing rules), `docs/BACKLOG.md`, `docs/archive/INDEX.md`
-- `docs/plans/top-10-cleanups-plan.md` (the first survey; its §9 is open, its §10 is the
+- `docs/archive/top-10-cleanups-plan.md` (the first survey; its §9 is open, its §10 is the
   precedent for §6 and §7 here)
 - `docs/architecture/build-and-packaging.md` (§1, §4)
 - `docs/architecture/lint-and-static-checks.md` (the gate index and the bite-proof rule; §6, §7)
@@ -1038,7 +1042,7 @@ prints 0.
 ## 16. Start prompt for a fresh session
 
 ```
-Read Fizzygum/docs/plans/top-10-cleanups-round-2-plan.md in full (a survey of ten candidate
+Read Fizzygum/docs/archive/top-10-cleanups-round-2-plan.md in full (a survey of ten candidate
 cleanups, ordered by effort). Then run /Users/davidedellacasa/code/Fizzygum-all/fg status and
 confirm no long operation is running.
 

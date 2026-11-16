@@ -3681,7 +3681,7 @@ for (const s of sites) if (s.absentBefore.length) {
       "The automator event commands' constructors are code nothing runs", in the plan's ledger; by reading; low). 387
       metadata headers say "(the new style)", though macros are the only style and the recorder is gone: a mechanical
       comment edit over the metadata file of every test. (The `_automationCommands.js` headers were re-emitted without
-      it by `plans/top-10-cleanups-round-2-plan.md` §8.)
+      it by `archive/top-10-cleanups-round-2-plan.md` §8.)
   — noted, not queued (below the 2026-11-11 bar): moved out of docs/BACKLOG.md 2026-11-15 (cleanups loop 3, U6).
 - **No gate holds a commands-file header to its own test** (same review; by reading; low). A header names its
       metadata file (`(<Name>.js)`), and a header copied from a sibling test would name the sibling's: nothing checks

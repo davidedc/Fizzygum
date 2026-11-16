@@ -6,13 +6,17 @@
 > any code moves, and two more need a smaller ruling (marked in the table under "The list at a
 > glance").
 >
-> **Relation to the earlier surveys.** `docs/plans/top-10-cleanups-plan.md` (2026-11-11) took the
+> **Relation to the earlier surveys.** `docs/archive/top-10-cleanups-plan.md` (2026-11-11) took the
 > framework's structure and the build; nine of its ten items have landed and its §9 (icon shells)
-> is kept open by the owner. `docs/plans/top-10-cleanups-round-2-plan.md` (2026-11-13) took the
+> is kept open by the owner. `docs/archive/top-10-cleanups-round-2-plan.md` (2026-11-13) took the
 > test harness, the reference set and the verification tooling; nine landed and its §10 (the
 > reference set) was left out for now by the owner. Nothing here repeats either: this round was
 > surveyed on the tree as they left it. Two items take up something those rounds named and did
 > not queue (§6, §9), and say so.
+>
+> **STOPPED 2026-11-15 (its loop; the survey archived 2026-11-16, round 4's §1).** Landed: §1, §2, §3, §5, §6, §8,
+> §10. Waiting on the owner: §4, §7 and §9 (left for a later day); open beside them: the visualisation page
+> generator's line (medium), which §7 would prove — the BACKLOG lines under this file's name.
 >
 > **STATUS (owner, 2026-11-15).** The owner approved §1, §2, §3, §5, §6, §8 and §10, and left §4,
 > §7 and §9 for a later day (they stay on `docs/BACKLOG.md` and are not taken up until asked
@@ -1092,9 +1096,9 @@ behind.
 
 | Topic | Owner |
 |---|---|
-| Icon shells: one `IconWdgt` and a derived catalog | `plans/top-10-cleanups-plan.md` §9 (kept open by the owner) |
-| The reference set: live path axes, one file per reference; and with it the `macro` prefix of every test name | `plans/top-10-cleanups-round-2-plan.md` §10 (left out for now by the owner) |
-| Audit instruments that share a suite pass | `plans/top-10-cleanups-round-2-plan.md` §6 step 2 (measured; the owner's decision) |
+| Icon shells: one `IconWdgt` and a derived catalog | `archive/top-10-cleanups-plan.md` §9 (kept open by the owner) |
+| The reference set: live path axes, one file per reference; and with it the `macro` prefix of every test name | `archive/top-10-cleanups-round-2-plan.md` §10 (left out for now by the owner) |
+| Audit instruments that share a suite pass | `archive/top-10-cleanups-round-2-plan.md` §6 step 2 (measured; the owner's decision) |
 | The creator-button and toolbar-button classes | `plans/creation-and-templates-plan.md` §4.3 |
 | Two icon-appearance generations and pixel icons | `plans/pixel-icons-plan.md` |
 | LiveCodeLang, its four vocabulary lists, `Number::times` | `plans/livecodelang-cleanup-and-extensions-plan.md` |
@@ -1165,7 +1169,7 @@ changes.
 
 - `Fizzygum/CLAUDE.md`, `Fizzygum-tests/CLAUDE.md`, `Fizzygum-tests/DETERMINISM.md`
 - `docs/README.md` (filing rules), `docs/BACKLOG.md`, `docs/archive/INDEX.md`
-- `docs/plans/top-10-cleanups-plan.md` and `docs/plans/top-10-cleanups-round-2-plan.md` (the two
+- `docs/archive/top-10-cleanups-plan.md` and `docs/archive/top-10-cleanups-round-2-plan.md` (the two
   earlier surveys; their "Landed" paragraphs are the precedents cited above)
 - `docs/architecture/lint-and-static-checks.md` (the gate index and the bite-proof rule; §1, §5)
 - `docs/architecture/build-and-packaging.md` (parts and profiles; §3, §4)
@@ -1176,7 +1180,7 @@ changes.
 ## 16. Start prompt for a fresh session
 
 ```
-Read Fizzygum/docs/plans/top-10-cleanups-round-3-plan.md in full (a survey of ten candidate
+Read Fizzygum/docs/archive/top-10-cleanups-round-3-plan.md in full (a survey of ten candidate
 cleanups, ordered by effort). Then run /Users/davidedellacasa/code/Fizzygum-all/fg status and
 confirm no long operation is running.
 

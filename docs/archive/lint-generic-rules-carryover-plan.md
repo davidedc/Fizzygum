@@ -627,7 +627,7 @@ arc's items leave BACKLOG when it closes). Nothing above this line changed; any 
 arc still OPEN stayed in `docs/BACKLOG.md`.
 
 - [x] `archive/lint-generic-rules-carryover-plan.md` §8.5 C: per-file metrics ratchet for god-class line counts — not
-  built — SUPERSEDED 2026-11-13 by `plans/top-10-cleanups-plan.md` §8 step 1 (its loop's U9):
+  built — SUPERSEDED 2026-11-13 by `archive/top-10-cleanups-plan.md` §8 step 1 (its loop's U9):
   `buildSystem/check-complexity-ratchets.js` holds the four largest classes' METHOD counts (not lines: a line ratchet
   would punish the comments the project asks for) and every function's cognitive complexity.
 

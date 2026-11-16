@@ -94,7 +94,7 @@ The built page is *already* 99% of a single-file app:
   `dependencies-finding.coffee`) — no build-time manifest to carry.
 - **The source-string wrapper** (`build.js`, `STRING_BLOCK`):
   `SourceVault.store(<name>, <text>, <part>);` — `[REVISED 2026-11-13]` each argument written by
-  `JSON.stringify` (cleanups round 2 §1, `plans/top-10-cleanups-round-2-plan.md`): a JSON string is
+  `JSON.stringify` (cleanups round 2 §1, `archive/top-10-cleanups-round-2-plan.md`): a JSON string is
   a JavaScript string literal for any text, so `SourceVault.store` (`src/boot/source-vault.coffee`)
   keeps the text as given and decodes nothing, and no character is barred from a source. An
   assembler re-emitting sources emits `SourceVault.store` calls the same way. (A `.json` FILE is
@@ -377,7 +377,7 @@ gate until a test references it) — Phase 5's harness provides that reference.
 > the risks R1, R2 and R8 (§6) were written against the three-glyph substitution (`"`→`＂`, `\`→`⧹`, newline→`⤶`), which is
 > gone: STRING_BLOCK now writes each argument with `JSON.stringify`, `SourceVault.store` decodes
 > nothing, and the build's guard went with the substitution (cleanups round 2 §1,
-> `plans/top-10-cleanups-round-2-plan.md`). The REASON in the row stands — a raw `</script` or
+> `archive/top-10-cleanups-round-2-plan.md`). The REASON in the row stands — a raw `</script` or
 > `<!--` in an inlined block corrupts the file — and its fix needs re-deriving for a string literal
 > when this plan is taken up. (A fact for that: a string literal reads `\u003C` back as `<`, the
 > snapshot row's own escape, with no decoder.)

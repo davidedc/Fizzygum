@@ -574,7 +574,7 @@ reader's next action — routing, the commands, every rule that carries ⚠ or �
 always, and one line per rig that names it, says what it is for and points at its header. Mechanism,
 history, measurements and case law live in the rig's script (its header, or beside the code a comment
 describes) or in the architecture doc that owns the subsystem (the criterion is cleanup round 2's §9,
-`docs/plans/top-10-cleanups-round-2-plan.md`). A file under its ceiling prints in the IMPROVED block,
+`docs/archive/top-10-cleanups-round-2-plan.md`). A file under its ceiling prints in the IMPROVED block,
 so the ceiling comes down as a file shrinks; a rule every reader must meet before any work may raise
 it, in the same commit. Their prose is not judged for narration. The gate reads both repos, so its
 rail is `--umbrella=DIR` (as `run-selftests.js`'s is); an umbrella missing either file, or a baseline

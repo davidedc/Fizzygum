@@ -14,10 +14,10 @@
 > `build_failed` sites, not 44 (round 4's §3 removed four). The evidence — the inventory, the readers, the baseline of
 > the bash build, the planted layout's 84 scenarios, the fingerprints, the run sets, the real runs — is local to the
 > loop, `Fizzygum-tests/.scratch/cleanups-loop-4/u8-build-node/`, beside the scripts it replaced (`*.before`). The
-> summary of what landed: `docs/plans/top-10-cleanups-round-4-plan.md` §10, "Landed".
+> summary of what landed: `docs/archive/top-10-cleanups-round-4-plan.md` §10, "Landed".
 
 > **PLAN ONLY. Written to be read and executed COLD by an LLM/engineer with ZERO prior context.**
-> Authored 2026-11-15 for item §10 of `docs/plans/top-10-cleanups-round-4-plan.md` (read that
+> Authored 2026-11-15 for item §10 of `docs/archive/top-10-cleanups-round-4-plan.md` (read that
 > section first: it holds the evidence and the reasons). The owner approved the item the same
 > day ("approve all the others along your best recommendation"), and the recommendation was:
 > land it and push it when EVERY proof of §5 below passes, and never land it partly proven.
@@ -262,8 +262,8 @@ directory and summarised in the ledger.
 ## 8. Start prompt for a fresh session
 
 ```
-Read Fizzygum/docs/plans/build-node-port-plan.md in full, then §10 of
-Fizzygum/docs/plans/top-10-cleanups-round-4-plan.md. Run
+Read Fizzygum/docs/archive/build-node-port-plan.md in full, then §10 of
+Fizzygum/docs/archive/top-10-cleanups-round-4-plan.md. Run
 /Users/davidedellacasa/code/Fizzygum-all/fg status and confirm nothing is running and both
 repos are clean.
 

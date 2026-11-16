@@ -6,7 +6,7 @@
 # so on a large cache under pure eviction churn (every operation a new key) that walk passes the holes earlier
 # evictions left: there an eviction costs about 270 ns where a linked list cost about 95; with hits in between, and
 # on every cache size and hit/eviction mix the suite produces, this class is faster (measured; the trade was the
-# owner's, docs/plans/top-10-cleanups-round-3-plan.md §2). Keeping ONE iterator instead would be faster still, but
+# owner's, docs/archive/top-10-cleanups-round-3-plan.md §2). Keeping ONE iterator instead would be faster still, but
 # a Map iterator pins every table the Map has outgrown until it advances — memory a cache that rarely evicts never
 # gives back.
 #

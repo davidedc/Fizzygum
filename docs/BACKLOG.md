@@ -230,27 +230,26 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
 - [ ] ⛔ §4.4 follow-up: what does save-to-file mean for an ARROW'D shortcut (today: friendly error — no cross-file identity for a dangling-`.lnk` restore; needs its own decision)
 
-### `plans/top-10-cleanups-plan.md`
+### `archive/top-10-cleanups-plan.md`
 AUTHORED 2026-11-11, a SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Each item carries its evidence, its effort estimate, its re-measure command and its first step. Since 2026-11-12 an owner-launched `/loop` executes the items that need no owner decision (the plan's STATUS says which): a landed item's line moves to the plan's `## BACKLOG ledger`, a part-landed one is rewritten to what is left. ⛔ owner decision first on §9.
 - [ ] §5's second candidate (unexamined): `FrameWdgt`'s docking family (`dockSideAt` to `floatOutOfDock`) as a seam of its own — assess before assuming it
 - [ ] §9 (4 to 5 days): icon shells — one `IconWdgt` plus a derived icon catalog (⛔ owner: is per-icon class identity wanted; kept open by the owner 2026-11-13, the plan's §9 has the recommendation on record — collapse)
 
-### `plans/top-10-cleanups-round-2-plan.md`
+### `archive/top-10-cleanups-round-2-plan.md`
 AUTHORED 2026-11-13, the second SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first survey took the framework and the build, this one takes the test harness, the reference set and the verification tooling. Each item carries its evidence, its effort estimate, its re-measure command and its first step. The owner agreed with §1 to §9 on 2026-11-13 (§4 ruled: delete; §9 on its stated criterion) and left §10 out for now; an owner-launched `/loop` executes §1 to §9 one unit at a time (the plan's STATUS). ⛔ owner decision still open before the second step of §6.
 - [ ] ⛔ §6 step 2 (1 to 2 days; the owner decides): instruments sharing one suite pass — only `revisits` reads the same in a shared pass; the saving is load, not wall time; recommendation: keep four passes → "§6 step 2: instruments that share a suite pass"
 - [ ] ⛔ §8 follow-up (owner ruling): `_automationCommands.js` holds only macro sources, so its name misleads — rename it (e.g. `_macro.js`) or fold it into the metadata file; touches every runner and 389 directories → "§8 follow-up: rename or fold _automationCommands.js"
 - [ ] ⛔ §10 (1 to 2 days, then 3; left out for now by the owner): the reference set — a path of the live axes, then one file per reference (the 45.8 MB `.js` copies and the loader go; needs §4 decided) → "§10: the reference set as a path of the live axes"
 
-### `plans/top-10-cleanups-round-3-plan.md`
+### `archive/top-10-cleanups-round-3-plan.md`
 AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). Where the first two took the structure, the build, the harness and the verification tooling, this one takes what the ratchets do not measure: zeros nothing holds, the shape the removed recorder left behind, and tools only a person starts. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §1, §2, §3, §5, §6, §8 and §10 approved, for an unattended loop (the plan's STATUS has the rulings); §4, §7 and §9 left for a later day.
 - [ ] ⛔ §4 (½ to 1 day; owner, a later day): the `patch-programming-experimental` part — six classes no test builds and no production user reaches; finish the diff and regex nodes, or delete all six → "§4: the patch-programming-experimental part"
 - [ ] §7 (1 to 2 days; left for a later day by the owner 2026-11-15; ⛔ owner on which tools go): on-demand tools — one roster, each proven to start by the `selftests` leg
 - [ ] The visualisation page generator runs only when asked (`fg visualise`, a capture): no build or leg loads it, so a break shows only on use and a capture only warns — medium; the §7 roster would prove it starts. → "The visualisation page generator runs only when asked"
 - [ ] §9 (2 to 3 days; left for a later day by the owner 2026-11-15; ⛔ owner: rename or fold): a test is one file — takes up the round-2 §8 follow-up above; selection facts move to the generated manifest
 
-### `plans/top-10-cleanups-round-4-plan.md`
+### `archive/top-10-cleanups-round-4-plan.md`
 AUTHORED 2026-11-15, the fourth SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). The source reads clean on every instrument, so seven of the ten are in the tooling and the harness: what the `fg` port's equality rule froze, work that is done twice, and build profiles nothing builds. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §9 left for a later day; the other nine approved along the survey's recommendations, for an unattended loop (the plan's STATUS has the rulings).
-- [ ] §1 (¼ day; ruled: yes, taken last): the stopped cleanup surveys leave `plans/` for `archive/`, this one included — 278 KB, a quarter of the folder; their waiting items stay in this file
 - [ ] ⛔ §7 (1 day; PARKED 2026-11-16, owner: the measured speed trade, options in §7): text cache keys are the text — takes up the 32-bit `hashOfString` collision line under the runtime-performance plan; and the line-break key gains the fitting mode it omits
 - [ ] ⛔ §9 (1 to 1½ days; left for a later day by the owner 2026-11-15; owner: which profiles are products): no verb, leg or gate builds `lean`, `dev-notests` or `dev-precompiled`
 

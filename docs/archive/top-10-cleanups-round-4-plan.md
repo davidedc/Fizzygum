@@ -7,15 +7,19 @@
 > one more was a re-listing the owner might have declined again (§10); STATUS, below, says how
 > each was ruled.
 >
-> **Relation to the earlier surveys.** `docs/plans/top-10-cleanups-plan.md` (2026-11-11) took the
-> framework's structure and the build. `docs/plans/top-10-cleanups-round-2-plan.md` (2026-11-13)
+> **Relation to the earlier surveys.** `docs/archive/top-10-cleanups-plan.md` (2026-11-11) took the
+> framework's structure and the build. `docs/archive/top-10-cleanups-round-2-plan.md` (2026-11-13)
 > took the test harness, the reference set and the verification tooling.
-> `docs/plans/top-10-cleanups-round-3-plan.md` (2026-11-15, morning) took what the ratchets do
+> `docs/archive/top-10-cleanups-round-3-plan.md` (2026-11-15, morning) took what the ratchets do
 > not measure. Of their thirty items, twenty-five have landed and five wait on the owner (round
 > 1's §9, round 2's §10, round 3's §4, §7 and §9). Nothing here repeats any of them: this round
 > was surveyed on the tree as round 3's loop left it the same evening. Three items take up
 > something already filed in `docs/BACKLOG.md` and say so (§2, §6, §7), and one re-lists
 > something round 2 measured and left, with what has changed since (§10).
+>
+> **STOPPED 2026-11-16 (its loop, after §1, which archived it).** Landed: §1, §2, §3, §4, §5, §6, §8, §10. Waiting on
+> the owner: §7 (built, proven and parked on its measured speed trade: the OWNER DECISION in §7, the patch in the
+> loop's scratch) and §9 (skipped) — the BACKLOG lines under this file's name.
 >
 > **STATUS (owner, 2026-11-15).** The owner skipped §9 for now (it stays on `docs/BACKLOG.md`
 > and is not taken up until asked for) and approved the other nine "along your best
@@ -27,7 +31,7 @@
 > executes the nine one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-4/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §5
-> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16), §6 (2026-11-16), §2 (2026-11-16), §10 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
+> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16), §6 (2026-11-16), §2 (2026-11-16), §10 (2026-11-16), §1 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -131,7 +135,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 
 | # | Cleanup | Effort (estimate) | What goes away, and in plain words | Why, and the trade-offs (ELI5) | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Stopped surveys leave `plans/` | ¼ day | Three files, 278 KB, a quarter of the folder for active plans; 25 of their 30 items have landed. **In plain words:** the folder for work still to do holds three long reports that are almost entirely about work already done. Move them to the archive; the five items they left stay on the open-work index. | **Why:** a to-do drawer stuffed with finished homework makes the unfinished pages hard to find. Put the finished homework on the shelf and leave a note in the drawer for the five pages still to do. **Trade-offs:** a reader of an old item hops to the archive folder for its story; 28 lines in other files that name the old location must be corrected in the same change. | None | Yes (a filing ruling) | 8 | Approved by the owner (2026-11-15); queued |
+| 1 | Stopped surveys leave `plans/` | ¼ day | Three files, 278 KB, a quarter of the folder for active plans; 25 of their 30 items have landed. **In plain words:** the folder for work still to do holds three long reports that are almost entirely about work already done. Move them to the archive; the five items they left stay on the open-work index. | **Why:** a to-do drawer stuffed with finished homework makes the unfinished pages hard to find. Put the finished homework on the shelf and leave a note in the drawer for the five pages still to do. **Trade-offs:** a reader of an old item hops to the archive folder for its story; 28 lines in other files that name the old location must be corrected in the same change. | None | Yes (a filing ruling) | 8 | Landed 2026-11-16 (§1, "Landed") |
 | 2 | `fg` says what it does, and asks the build's own modules | ½ day | Five stale lines and one missing line in `fg`'s help; a second way of judging "is the build fresh"; a Node program reading a Node module through shell text; a status count that can never read zero. **In plain words:** the command that runs every check was rewritten last round under a rule that its help text must not change by one byte. The rule has done its job. Now the help can say what the command does, and the command can ask its neighbours directly. | **Why:** the leaflet in the box still describes last year's toy. Nobody is hurt, but whoever reads the leaflet learns the wrong thing, and one page of it says "fresh" while the kitchen says "stale". **Trade-offs:** the help text changes, so anything that compares it with the old text has to be found first; nothing else. | None | No | 5 | Landed 2026-11-16 (§2, "Landed") |
 | 3 | The build's last text-level strip | ½ day | Four `sed` lines that rewrite compiled JavaScript by pattern, a macOS-only flag, a comment about a class that no longer exists. **In plain words:** when the build makes the production version, it searches the finished code for six "is the test kit here?" questions and replaces each with "no", so the code behind the question can be thrown away. Each question already answers "no" by itself when the test kit is absent. | **Why:** somebody goes through the finished book with correction fluid, painting over six sentences that begin "if the teacher is in the room". The teacher is never in that room, so the sentences do nothing anyway. And if the printer ever changes the lettering, the fluid misses and nobody notices. Stop painting. **Trade-offs:** the production file grows by the size of those six passages (to be measured first; a few hundred bytes of 1.3 MB are expected). | None | No | 6 | Landed 2026-11-16 (§3, "Landed") |
 | 4 | Build-time libraries from one place | ½ day | A second way of pinning a tool; one analyzer present twice, byte for byte; two hand-kept notes of where a copy came from. **In plain words:** some helper programs the build uses are fetched by one install command at exact versions; two others are pasted into the repository by hand; and one of those two is also fetched, so it exists twice. Pick one way. | **Why:** most of the kitchen tools come from the shop with a receipt, and two were copied by hand from a friend's, with a hand-written note of where they came from. One of those was also bought, so there are two of it. One way of getting tools means one list to check. **Trade-offs:** the shop way needs the network on a new machine (already true since round 3); the by-hand way keeps every upgrade a manual chore. | None | Yes (which place) | 9 | Landed 2026-11-16 (§4, "Landed") |
@@ -193,6 +197,14 @@ Not proposed: splitting the two largest plans (§11 says why).
 **First step.** Ask the owner the ruling. The moves follow in one commit.
 
 **Re-measure.** `ls Fizzygum/docs/plans | wc -l` and `cat Fizzygum/docs/plans/*.md | wc -c`.
+
+**Landed 2026-11-16 (as ruled, taken last).** The four surveys, this one included, are in
+`docs/archive/`, each STATUS header stamped STOPPED with the date its loop stopped, what landed and
+what waits on the owner; `docs/archive/INDEX.md` has a line for each; the BACKLOG's four section
+headings name `archive/…`, and their items are unchanged; every reference to the four old paths in
+both repos is corrected (43, in 16 files); `docs/README.md` rule 2 says a survey is closed when its
+loop stops. Proof: a grep of both repos and the umbrella's `CLAUDE.md` for the four old paths finds
+nothing; `fg doc-narration` and the gauntlet (its build included) pass.
 
 ---
 
@@ -1084,9 +1096,9 @@ Re-measured: seven lines of bash in `build_it_please.sh` (254 before); nine trac
 
 | Topic | Owner |
 |---|---|
-| Icon shells: one `IconWdgt` and a derived catalog | `plans/top-10-cleanups-plan.md` §9 (kept open by the owner) |
-| The reference set: live path axes, one file per reference | `plans/top-10-cleanups-round-2-plan.md` §10 (left out for now by the owner) |
-| The experimental patch-programming part; the on-demand tools roster; a test is one file | `plans/top-10-cleanups-round-3-plan.md` §4, §7, §9 (left for a later day by the owner) |
+| Icon shells: one `IconWdgt` and a derived catalog | `archive/top-10-cleanups-plan.md` §9 (kept open by the owner) |
+| The reference set: live path axes, one file per reference | `archive/top-10-cleanups-round-2-plan.md` §10 (left out for now by the owner) |
+| The experimental patch-programming part; the on-demand tools roster; a test is one file | `archive/top-10-cleanups-round-3-plan.md` §4, §7, §9 (left for a later day by the owner) |
 | The creator-button and toolbar-button classes | `plans/creation-and-templates-plan.md` §4.3 |
 | Two icon-appearance generations and pixel icons | `plans/pixel-icons-plan.md` |
 | LiveCodeLang, its five allowlisted dead methods and the unreferenced `LCLProgramRunner` | `plans/livecodelang-cleanup-and-extensions-plan.md` |
@@ -1149,8 +1161,8 @@ operation at a time.
 
 - `Fizzygum/CLAUDE.md`, `Fizzygum-tests/CLAUDE.md`, `Fizzygum-tests/DETERMINISM.md`
 - `docs/README.md` (filing rules; §1), `docs/BACKLOG.md`, `docs/archive/INDEX.md`
-- `docs/plans/top-10-cleanups-plan.md`, `docs/plans/top-10-cleanups-round-2-plan.md`,
-  `docs/plans/top-10-cleanups-round-3-plan.md` (the three earlier surveys; their "Landed"
+- `docs/archive/top-10-cleanups-plan.md`, `docs/archive/top-10-cleanups-round-2-plan.md`,
+  `docs/archive/top-10-cleanups-round-3-plan.md` (the three earlier surveys; their "Landed"
   paragraphs are the precedents cited above)
 - `docs/archive/fg-node-port-plan.md` (the port's rules; §2, §10)
 - `docs/archive/build-node-port-plan.md` (§10's own plan)
@@ -1165,7 +1177,7 @@ operation at a time.
 ## 16. Start prompt for a fresh session
 
 ```
-Read Fizzygum/docs/plans/top-10-cleanups-round-4-plan.md in full (a survey of ten candidate
+Read Fizzygum/docs/archive/top-10-cleanups-round-4-plan.md in full (a survey of ten candidate
 cleanups, ordered by effort). Then run /Users/davidedellacasa/code/Fizzygum-all/fg status and
 confirm no long operation is running and both repos are clean.
 
@@ -1225,3 +1237,6 @@ Do not commit or push without asking me.
   — CLOSED 2026-11-16 (loop U8): `build_it_please.sh` is a launcher of `buildSystem/run-build.js`; the profile is
   asked in-process (`--shell` is gone) and the files read by name are named once (`SHELL_INPUTS` is gone); every proof
   of the port's plan passed (§10, "Landed").
+- [x] §1 (¼ day; ruled: yes, taken last): the stopped cleanup surveys leave `plans/` for `archive/`, this one included — 278 KB, a quarter of the folder; their waiting items stay in this file
+  — CLOSED 2026-11-16 (loop U9): the four surveys are in `docs/archive/`, stamped STOPPED; their waiting items stay on
+  the BACKLOG under their `archive/` headings (§1, "Landed").
