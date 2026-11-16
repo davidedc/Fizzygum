@@ -395,7 +395,6 @@ facts above, never from the identity of a particular flavour. Nothing in this co
 |---|---|
 | the `js/tests` symlink + `BUILDFLAG_LOAD_TESTS` | does the `harness` part ship? |
 | the three build gates over the shipped tests (the `testsShipped` rows of `buildSystem/gates.js`: test `.js` syntax, macro-source discipline, reference-image strays) | same |
-| stripping the dead `if Automator?` branches | same, inverted — no Automator, no checks to keep |
 | assembling the SWCanvas boot bundle | does any shipped entry render through SWCanvas? |
 | shipping the ~90 MB `font-assets/` (and re-pruning an inherited copy) | same |
 | which assets and vendor payloads land in the tree | the shipping parts' own `assets` / `vendor` |

@@ -49,7 +49,7 @@
     "",
     "Everything else about this tree FOLLOWS from these four facts, with nothing to maintain:",
     "  no harness part      -> no js/tests link, BUILDFLAG_LOAD_TESTS false, the tests-repo build",
-    "                          gates skipped, and the dead `if Automator?` branches stripped",
+    "                          gates skipped, and every `if Automator?` guard false when it runs",
     "  index.html only      -> no SWCanvas boot bundle and no font-assets/ (~90 MB not deployed)",
     "  form precompiled     -> the pre-compile driver harvests the image from a compile-at-boot boot,",
     "                          then it is minified in place; the world starts from that image",

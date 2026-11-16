@@ -27,7 +27,7 @@
 > executes the nine one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-4/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §5
-> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
+> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -133,7 +133,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 |---|---|---|---|---|---|---|---|---|
 | 1 | Stopped surveys leave `plans/` | ¼ day | Three files, 278 KB, a quarter of the folder for active plans; 25 of their 30 items have landed. **In plain words:** the folder for work still to do holds three long reports that are almost entirely about work already done. Move them to the archive; the five items they left stay on the open-work index. | **Why:** a to-do drawer stuffed with finished homework makes the unfinished pages hard to find. Put the finished homework on the shelf and leave a note in the drawer for the five pages still to do. **Trade-offs:** a reader of an old item hops to the archive folder for its story; 28 lines in other files that name the old location must be corrected in the same change. | None | Yes (a filing ruling) | 8 | Approved by the owner (2026-11-15); queued |
 | 2 | `fg` says what it does, and asks the build's own modules | ½ day | Five stale lines and one missing line in `fg`'s help; a second way of judging "is the build fresh"; a Node program reading a Node module through shell text; a status count that can never read zero. **In plain words:** the command that runs every check was rewritten last round under a rule that its help text must not change by one byte. The rule has done its job. Now the help can say what the command does, and the command can ask its neighbours directly. | **Why:** the leaflet in the box still describes last year's toy. Nobody is hurt, but whoever reads the leaflet learns the wrong thing, and one page of it says "fresh" while the kitchen says "stale". **Trade-offs:** the help text changes, so anything that compares it with the old text has to be found first; nothing else. | None | No | 5 | Approved by the owner (2026-11-15); queued |
-| 3 | The build's last text-level strip | ½ day | Four `sed` lines that rewrite compiled JavaScript by pattern, a macOS-only flag, a comment about a class that no longer exists. **In plain words:** when the build makes the production version, it searches the finished code for six "is the test kit here?" questions and replaces each with "no", so the code behind the question can be thrown away. Each question already answers "no" by itself when the test kit is absent. | **Why:** somebody goes through the finished book with correction fluid, painting over six sentences that begin "if the teacher is in the room". The teacher is never in that room, so the sentences do nothing anyway. And if the printer ever changes the lettering, the fluid misses and nobody notices. Stop painting. **Trade-offs:** the production file grows by the size of those six passages (to be measured first; a few hundred bytes of 1.3 MB are expected). | None | No | 6 | Approved by the owner (2026-11-15); queued |
+| 3 | The build's last text-level strip | ½ day | Four `sed` lines that rewrite compiled JavaScript by pattern, a macOS-only flag, a comment about a class that no longer exists. **In plain words:** when the build makes the production version, it searches the finished code for six "is the test kit here?" questions and replaces each with "no", so the code behind the question can be thrown away. Each question already answers "no" by itself when the test kit is absent. | **Why:** somebody goes through the finished book with correction fluid, painting over six sentences that begin "if the teacher is in the room". The teacher is never in that room, so the sentences do nothing anyway. And if the printer ever changes the lettering, the fluid misses and nobody notices. Stop painting. **Trade-offs:** the production file grows by the size of those six passages (to be measured first; a few hundred bytes of 1.3 MB are expected). | None | No | 6 | Landed 2026-11-16 (§3, "Landed") |
 | 4 | Build-time libraries from one place | ½ day | A second way of pinning a tool; one analyzer present twice, byte for byte; two hand-kept notes of where a copy came from. **In plain words:** some helper programs the build uses are fetched by one install command at exact versions; two others are pasted into the repository by hand; and one of those two is also fetched, so it exists twice. Pick one way. | **Why:** most of the kitchen tools come from the shop with a receipt, and two were copied by hand from a friend's, with a hand-written note of where they came from. One of those was also bought, so there are two of it. One way of getting tools means one list to check. **Trade-offs:** the shop way needs the network on a new machine (already true since round 3); the by-hand way keeps every upgrade a manual chore. | None | Yes (which place) | 9 | Landed 2026-11-16 (§4, "Landed") |
 | 5 | One SHA-256 in the harness | ½ to 1 day | A hand-written SHA-256 (about 89 of the file's 109 code lines), a second hashing of pixels already hashed, one of three implementations that must agree. **In plain words:** to recognise a screenshot the test kit computes a fingerprint of its pixels. It has two fingerprint machines, the browser's own and a hand-written one, and for a screenshot that does not match it runs both on the same pixels. Use the browser's, and pass its answer along. | **Why:** two rulers that must agree to the last hair: if they ever differ, every saved picture gets the wrong name. One ruler cannot disagree with itself. **Trade-offs:** the two places that use the hand-written one cannot wait for an answer today, so one is handed the answer that already exists and the other compares the pixels directly; the saved pictures' names must be shown unchanged. | None (the same digest; proven on one capture) | No | 4 | Landed 2026-11-16 (§5, "Landed") |
 | 6 | Gate rows run side by side; the tests syntax gate parses in-process | 1 day | 778 process launches per build; a one-at-a-time queue of 33 checks on a 16-core machine; the reason for a planned cache. **In plain words:** every build runs 34 checks one after another, and one of them starts a fresh program for each of 778 test files just to see whether the file parses. Parse them all in one program, and let checks that do not depend on each other run at the same time. | **Why:** thirty-three children wait in one line to wash their hands at one tap while fifteen taps stand unused, and one child walks to a different sink for each finger. Use the taps. Every build, and so every test run, waits for this line. **Trade-offs:** the printed report must still come out in the old order, so each check's output is held until its turn; and when one check fails, the ones after it have already run for nothing. | None | No | 1 | Approved by the owner (2026-11-15); queued |
@@ -311,6 +311,34 @@ else, and its size is the number to show the owner.
 
 **Re-measure.** `grep -v '^\s*#' Fizzygum/build_it_please.sh | grep -c "sed -i"` (4 today) and
 `grep -rn 'Automator?' Fizzygum/src --include='*.coffee' | grep -v ':\s*#' | wc -l` (7).
+
+**Landed 2026-11-16 (the bytes within the ruling).** The four `sed` lines, their two comments and
+the `if` that held the boot pair are gone from `build_it_please.sh`, and with them the strip's
+row in the derivation table (`build-and-packaging.md` §4, `lib/profile.js`'s header,
+`parts.json`'s note on the harness part). `ButtonWdgt.trigger`'s comment says the check cannot run
+without the harness part. Measured with `fg fingerprint <profile> HEAD`, the four lines removed
+and nothing else:
+
+| profile | boot bundle | image | growth |
+|---|---|---|---|
+| `dev` | identical | identical | none |
+| `homepage` | +280 | +764 | 1,044 bytes |
+| `lean` | +280 | +764 | 1,044 bytes |
+| `dev-notests` | +280 (each of two) | unchanged | 560 bytes |
+| `dev-precompiled` | identical | +1,441 | 1,441 bytes |
+
+Both production artifacts stay under the ruled 2 KB. A `homepage` built with the old and the new
+script, both re-printed one statement a line, differs in exactly the six guarded branches:
+- the two hand-offs of the test manifests (boot code);
+- `TreeNode.isAncestorOf`'s invariant report;
+- `ButtonWdgt.trigger`'s type tripwire;
+- the world's automator;
+- the desktop menu's "System tests" row.
+
+No other line differs, apart from the build's own stamp. `dev-precompiled`'s image keeps its
+harness guards live, as the `dev` page it mirrors does. The evidence besides the table:
+`./build_and_smoke.sh` passes for `lean`, `dev-notests` and `dev-precompiled`; `fg homepage`
+passes; the resolution map moves only `ButtonWdgt.trigger` (by its comment); the gauntlet passes.
 
 ---
 
@@ -1034,3 +1062,7 @@ Do not commit or push without asking me.
 - [x] §4 (½ day; ruled: npm): build-time libraries from one place — acorn and the complexity analyzer are vendored, the other tools npm-pinned; the analyzer exists twice, byte for byte
   — CLOSED 2026-11-16 (loop U4): both are exact npm devDependencies, checked by the build, and `vendor/` holds neither
   (§4, "Landed").
+
+- [x] §3 (½ day; ruled: they go if no production artifact grows by more than 2 KB): the build's last text-level strip — four `sed` lines turn six compiled `Automator?` tests into `if (false)`
+  — CLOSED 2026-11-16 (loop U5): the lines are gone; `homepage` and `lean` each grow by 1,044 bytes, the six guarded
+  branches and nothing else (§3, "Landed").

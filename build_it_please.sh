@@ -398,21 +398,6 @@ echo "... done compiling boot file"
 
 echo "minifying boot file..."
 
-if ! $PROFILE_SHIPS_TESTS ; then
-  # There are a few
-  #    "if Automator? ...", "if AutomatorRecorder? ...", "if AutomatorPlayer? ..."
-  #    "if Automator? and ...", "if AutomatorRecorder? and ...", "if AutomatorPlayer? and ..."
-  # sections in the boot code. Every Automator* class lives in the HARNESS part, so when that part
-  # does not ship none of them exist, the code in those sections is completely dead,
-  # so we can search/replace those checks with "if (false", so that terser can just eliminate
-  # both the checks and the dead-code sections.
-  #
-  # notice that OSX sed is different from GNU sed, so we need to give the -i '' parameter which means
-  # "in-place editing, but don't make a backup file"
-  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BOOT_JS || build_failed "stripping the harness checks from the boot code"
-  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BOOT_JS || build_failed "stripping the harness checks from the boot code"
-fi
-
 "$TERSER" --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BOOT_JS
 if [ "$?" != "0" ]; then
   tput bel;
@@ -605,22 +590,6 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
   # (The unminified boot JS and the three unminified js/src helpers used to be pruned here. They
   # are build INTERMEDIATES that no page loads in any flavour, so they are now compiled into the
   # scratch dir and never enter the tree at all -- see the $BOOT_JS / $JSSRC_SCRATCH assignments.)
-
-
-  # There are many
-  #    "if Automator? ...", "if AutomatorRecorder? ...", "if AutomatorPlayer? ..."
-  #    "if Automator? and ...", "if AutomatorRecorder? and ...", "if AutomatorPlayer? and ..."
-  # sections in the code. A precompiled artifact is only built for a profile without the harness
-  # part, so none of those three classes exists, the code in those sections is completely dead,
-  # so we can search/replace those checks with "if (false", so that terser can just eliminate
-  # both the checks and the dead-code sections.
-  # At the moment this was put in place, this line saves around 12kBs
-  # (11990 bytes to be precise) in the final build.
-  #
-  # notice that OSX sed is different from GNU sed, so we need to give the -i '' parameter which means
-  # "in-place editing, but don't make a backup file"
-  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/pre-compiled.js || build_failed "stripping the harness checks from the pre-compiled image"
-  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/pre-compiled.js || build_failed "stripping the harness checks from the pre-compiled image"
 
   "$TERSER" --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js || build_failed "minifying the pre-compiled image"
   mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js || build_failed "moving the minified pre-compiled image into place"

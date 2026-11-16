@@ -18,8 +18,7 @@
 // DERIVED here from those three (arc 5 PR-D6: derive, never declare):
 //
 //     the js/tests symlink + BUILDFLAG_LOAD_TESTS      <- does the `harness` part ship?
-//     the two tests-repo build gates                   <- same
-//     stripping the dead `if Automator?` branches       <- same, inverted: no Automator, no checks
+//     the three tests-repo build gates                 <- same
 //     assembling the SWCanvas boot bundle               <- does any shipped entry render through SWCanvas?
 //     shipping the ~90 MB font-assets/                  <- same
 //     which non-source files land in the tree           <- the shipping parts' own `assets` / `vendor`
