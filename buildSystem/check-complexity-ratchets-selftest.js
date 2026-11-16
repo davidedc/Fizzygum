@@ -38,7 +38,7 @@ proveGate({
       ['WorldInventory.coffee', /^  takeInventory: ->\n/m, '  takeInventory: ->\n    if biteProofA\n      if biteProofB\n        biteProofC = 1\n']],
     expect: {
       METHOD_COUNT_ABOVE_CEILING: /^  METHOD_COUNT_ABOVE_CEILING  Widget: \d+ methods \(ceiling \d+\) — basic-widgets\/Widget\.coffee$/m,
-      COMPLEXITY_ABOVE_RECORD: /^  COMPLEXITY_ABOVE_RECORD  WorldInventory#takeInventory: 133 \(recorded 130\) — WorldInventory\.coffee:\d+$/m,
+      COMPLEXITY_ABOVE_RECORD: /^  COMPLEXITY_ABOVE_RECORD  WorldInventory#takeInventory: 132 \(recorded 129\) — WorldInventory\.coffee:\d+$/m,
     },
   }, {
     label: 'a new function above the ceiling, in src and in the harness',
@@ -50,8 +50,8 @@ proveGate({
     edits: [['WorldInventory.coffee', /^  takeInventory: ->\n/m, '  takeInventoryRenamed: ->\n']],
     unplant: ['FrameWdgt.coffee'],
     expect: {
-      STALE_ALLOWLIST_ENTRY: /^  STALE_ALLOWLIST_ENTRY  RECORDED\['WorldInventory#takeInventory'\] \(130\) names no function above the ceiling/m,
-      COMPLEXITY_ABOVE_CEILING: /^  COMPLEXITY_ABOVE_CEILING  WorldInventory#takeInventoryRenamed: 130 \(ceiling 15\)/m,
+      STALE_ALLOWLIST_ENTRY: /^  STALE_ALLOWLIST_ENTRY  RECORDED\['WorldInventory#takeInventory'\] \(129\) names no function above the ceiling/m,
+      COMPLEXITY_ABOVE_CEILING: /^  COMPLEXITY_ABOVE_CEILING  WorldInventory#takeInventoryRenamed: 129 \(ceiling 15\)/m,
     },
     lines: [/^  STALE_ALLOWLIST_ENTRY  METHOD_CEILINGS\.FrameWdgt names FrameWdgt\.coffee, which does not exist/m],
   }, {

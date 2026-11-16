@@ -36,7 +36,6 @@ class WorldInventory
     {match: /^world\.cacheFor/, policy: "bounded", reason: "the text/paint LRUs (LRUCache evicts at its own capacity); entries legitimately accumulate across teardowns"}
     {match: /^world\.widgetsWithMaybeChanged\w*PaintBounds$/, policy: "bounded", reason: "per-cycle damage queues, drained by the next repaint; the teardown filters dead entries, so a live entry at the seam is legitimate pending damage -- and zombie-reporting THROUGH the queues stays live"}
     {match: /^statics\.Color\._cache$/, policy: "bounded", cap: 300, reason: "the Color intern LRU"}
-    {match: /^hashOfString\.stringHashCache$/, policy: "bounded", cap: 16384, reason: "the hashOfString memo; self-clears at cap"}
     {match: /^swCanvasText\.(atlasRequested|missingAtlases)$/, policy: "monotonic-ok", reason: "one entry per atlas id, requested/warned once per page"}
     {match: /^swCanvasText\.(coldGlyphWidgets|poisonedCacheKeys)$/, policy: "bounded", reason: "per-refresh transients: recorded at cold glyph draws, drained wholesale at the atlas-warm refresh (whose consumer skips destroyed/detached entries); the world teardown additionally drops destroyed entries at its seam"}
     {match: /\.instancesCounter$/, policy: "monotonic-ok", reason: "lifetime allocation counter, never reset by design"}
@@ -65,7 +64,6 @@ class WorldInventory
     world:        "gated"
     dom:          "gated"
     swCanvasText: "gated"
-    hashOfString: "gated"
     sourceVault:  "gated"
     classes:      "gated"
     objects:      "report-only"
@@ -272,7 +270,7 @@ class WorldInventory
         sized = WorldInventory._containerSize descriptor.value
         report["world." + fieldName] = sized if sized?
 
-    # the module-state portholes (read-only accessors; absent builds are a no-op)
+    # the module-state porthole (a read-only accessor; an absent build is a no-op)
     textState = window.swCanvasTextStateForAudit?()
     if textState?
       report["swCanvasText.atlasRequested"] = Object.keys(textState.atlasRequested).length
@@ -282,8 +280,6 @@ class WorldInventory
       # walking it would zombie-report a race that is benign by design
       report["swCanvasText.coldGlyphWidgets"] = textState.coldGlyphWidgets.length
       report["swCanvasText.poisonedCacheKeys"] = textState.poisonedCacheKeys.length
-    hashCache = window.stringHashCacheForAudit?()
-    report["hashOfString.stringHashCache"] = hashCache.size if hashCache?
 
     # counted, never walked: the vault holds every class's source text
     report["sourceVault.entries"] = SourceVault.names().length if SourceVault?

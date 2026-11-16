@@ -69,7 +69,7 @@ class TextWdgt extends StringWdgt
   # The paragraph and word splits are keyed by their text alone: the split runs no code of mine, so
   # my own code (Widget._ownCodeKeySuffix, which keys every cache whose work runs some) cannot change it.
   getParagraphs: (text) ->
-    cacheKey = hashOfString text
+    cacheKey = text
     paragraphs = world.cacheForTextParagraphSplits.get cacheKey
     if paragraphs? then return paragraphs
     paragraphs = text.split "\n"
@@ -77,7 +77,7 @@ class TextWdgt extends StringWdgt
     paragraphs
 
   getWordsOfParagraph: (eachParagraph) ->
-    cacheKey = hashOfString eachParagraph
+    cacheKey = eachParagraph
     wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get cacheKey
     if wordsOfThisParagraph? then return wordsOfThisParagraph
     wordsOfThisParagraph = eachParagraph.split " "
@@ -90,7 +90,7 @@ class TextWdgt extends StringWdgt
     string = string + StringWdgt.INVISIBLE_CARRIAGE_RETURN
 
   getWrappingData: (overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph) ->
-    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashOfString(eachParagraph) + @_ownCodeKeySuffix
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + eachParagraph.length + ":" + eachParagraph + @_ownCodeKeySuffix
     wrappingData = world.cacheForParagraphsWrappingData.get cacheKey
 
 
@@ -169,7 +169,7 @@ class TextWdgt extends StringWdgt
 
     # the entry keeps a pitch-derived height and fit verdict, so my line box is part of its key, and so
     # is code of my own (a linePitch of my own measures differently from my class's)
-    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashOfString(text) + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix() + @_ownCodeKeySuffix
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + text.length + ":" + text + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix() + @_ownCodeKeySuffix
     textWrappingData = world.cacheForTextWrappingData.get cacheKey
     if textWrappingData? then return textWrappingData
     wrappedLinesOfWholeText = []
@@ -255,9 +255,12 @@ class TextWdgt extends StringWdgt
   breakTextIntoLines: (text = (@transformTextOneToOne @text), overrideFontSize, justCheckIfItFitsInThisExtent, widthOverride) ->
 
     # FIT_BOX_TO_TEXT always breaks the text at the SET font size (the box is what
-    # grows; the font is never scaled).
+    # grows; the font is never scaled), and never answers a fit check: getTextWrappingData
+    # applies both, and so does my key below, so a text sizing its box to its text and a
+    # text fitted to its box never share an entry.
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       overrideFontSize = @originallySetFontSize
+      justCheckIfItFitsInThisExtent = undefined
 
     # Easy, lazy way to get soft-wrapping.
     # TODO you can actually simplify lots of code in the
@@ -278,7 +281,7 @@ class TextWdgt extends StringWdgt
 
     # what this caches is getTextWrappingData's answer, which reads my line box and my code (my own
     # getParagraphs, say)
-    cacheKey = hashOfString(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + widgetWidth + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix() + @_ownCodeKeySuffix
+    cacheKey = text.length + ":" + text + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + widgetWidth + "-" + justCheckIfItFitsInThisExtent + @_lineBoxCacheKeySuffix() + @_ownCodeKeySuffix
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
     if textWrappingData? then return textWrappingData
 

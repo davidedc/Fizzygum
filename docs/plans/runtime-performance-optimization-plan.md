@@ -639,10 +639,12 @@ free ~5%; but NOT a big lever. The real remaining headroom is **O3 (per-widget o
 micro-opt. **✅ LANDED 2026-07-09** — SWCanvas `e5f207b..468c5f7` (main), Fizzygum `vendor/swcanvas.pin`
 bumped to `468c5f7`. See §8 ledger.
 
-### O2 — memoize `Object::hashCode` by string value 【Fizzygum; ✅ LANDED, small】
+### O2 — memoize `Object::hashCode` by string value 【Fizzygum; ✅ LANDED, small; superseded 2026-11-16】
 
 **Where** (`[2026-11-13]` the function is now `hashOfString` in `src/boot/globalFunctions.coffee`, the
-memo unchanged — `archive/top-10-cleanups-round-2-plan.md` §2): `Object::hashCode` (`src/boot/extensions/Object-extensions.coffee`, an O(length)
+memo unchanged — `archive/top-10-cleanups-round-2-plan.md` §2; `[2026-11-16]` the memo is DELETED: the text caches
+key on the texts themselves, and no paint or layout path calls `hashOfString` — `archive/top-10-cleanups-round-4-plan.md`
+§7): `Object::hashCode` (`src/boot/extensions/Object-extensions.coffee`, an O(length)
 `charCodeAt` loop) is called from `StringWdgt`/`TextWdgt` to build back-buffer cache keys
 (`StringWdgt.coffee:655-656`; `TextWdgt.coffee:68,76,89,201,318`) — re-hashing the full label /
 wrapped-paragraph string **every paint**. Measured: `Object.hashCode` = 1.5% of the drag frame, up
@@ -852,9 +854,3 @@ ACTIVE: O3, O4b, §8/S2/S6b/F1 and §5 F3 remain open and stay listed in `docs/B
 landing belongs with §5B O4 and §8's post-landing measurement ledger.
 
 - [x] §5B O4a: spreadsheet text de-directified — LANDED 2026-07-24 as "scalar text is a StringWdgt child, period" (owner design decision; cells + headers hold passive StringWdgt children, (+4,+2) inset = byte-identical, zero recaptures; StringWdgt buffers cache for free; renders −96–99%, dpr1 wall-clock within noise); the A/B CORRECTED the O4 attribution (shadow "73%" ≈ atlas-warm-up storms) — `measurements/drawimage-blit-attribution-2026-07-24.md` ⚠ + final-shape sections
-
-## BACKLOG detail (open items, moved from docs/BACKLOG.md)
-
-### The text caches key on a 32-bit hash with no text check
-
-- [ ] the text caches key on a 32-bit `hashOfString` of the text with no check that the text matches: two texts that collide ("Of"/"PG", "Aa"/"BB") at the same font and extent share ONE entry, so the second widget draws the first's text (probed 2026-11-15: two `StringWdgt`s share one back buffer) — medium: reached by typing such a pair into two same-width labels or cells; `StringWdgt.createBufferCacheKey`, `TextWdgt` `breakTextIntoLines`/`getParagraphs`, `StringWdgt` `measureText`

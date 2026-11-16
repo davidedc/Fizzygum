@@ -206,7 +206,6 @@ H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-
 - [ ] §5B O4b: SWCanvas glyph-run batching — ⚠ DE-URGENTED by the O4a correction (steady-state glyph stream ≈ just the desktop logo); do not build on the pre-correction numbers. O4a's as-landed entry is in this plan's § "BACKLOG ledger"
 - [ ] §8/top banner: S2 Tier 2, S6b, F1 (precompiled test-harness boot) still unlanded
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
-- [ ] The text caches key on a 32-bit `hashOfString` with no check that the text matches: colliding texts ("Of"/"PG") at one font and extent share one entry, so the second draws the first's text — medium, reached by typing. → "The text caches key on a 32-bit hash with no text check"
 
 ### `plans/single-file-save-plan.md`
 AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0 spikes S1/S2
@@ -250,7 +249,6 @@ AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by 
 
 ### `archive/top-10-cleanups-round-4-plan.md`
 AUTHORED 2026-11-15, the fourth SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). The source reads clean on every instrument, so seven of the ten are in the tooling and the harness: what the `fg` port's equality rule froze, work that is done twice, and build profiles nothing builds. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §9 left for a later day; the other nine approved along the survey's recommendations, for an unattended loop (the plan's STATUS has the rulings).
-- [ ] ⛔ §7 (1 day; PARKED 2026-11-16, owner: the measured speed trade, options in §7): text cache keys are the text — takes up the 32-bit `hashOfString` collision line under the runtime-performance plan; and the line-break key gains the fitting mode it omits
 - [ ] ⛔ §9 (1 to 1½ days; left for a later day by the owner 2026-11-15; owner: which profiles are products): no verb, leg or gate builds `lean`, `dev-notests` or `dev-precompiled`
 
 ## Residual / parked items (owning doc archived)

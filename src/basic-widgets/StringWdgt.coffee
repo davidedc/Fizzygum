@@ -845,7 +845,7 @@ class StringWdgt extends ControllerWdgt
   # see the largest fitting size. The weight is mine unless `bold` is given: my fit passes the
   # weight it is measured in (doesTextFitInExtent).
   measureText: (text, overrideFontSize = @fittingFontSize, bold = @isBold) ->
-    cacheKey =  @buildCanvasFontProperty(overrideFontSize, bold) + "-" + hashOfString(text) + @_ownCodeKeySuffix
+    cacheKey =  @buildCanvasFontProperty(overrideFontSize, bold) + "-" + text.length + ":" + text + @_ownCodeKeySuffix
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit? then return cacheHit
     world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize, bold
@@ -968,8 +968,8 @@ class StringWdgt extends ControllerWdgt
     @_textInk().toString()  + "-" +
     (@_backgroundFill()?.toString() ? "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
-    hashOfString(@text)  + "-" +
-    hashOfString(@textPossiblyCroppedToFit)  + "-" +
+    @text.length + ":" + @text + "-" +
+    @textPossiblyCroppedToFit.length + ":" + @textPossiblyCroppedToFit + "-" +
     @startMark  + "-" +
     @endMark  + "-" +
     theme.textSelectionFill.toString()  + "-" +

@@ -136,7 +136,7 @@ const RECORDED = {
   'Widget#subWidgetsMergedPreferredBounds': 16,
   'Widget.functionLiteralReading': 25,
   'WorldInventory#diffAgainstBaseline': 28,
-  'WorldInventory#takeInventory': 130,
+  'WorldInventory#takeInventory': 129,
   'WorldWdgt#__reLayoutOneSettleNode': 16,
   'WorldWdgt#_checkARectWithHierarchy': 29,
   'WorldWdgt#_fleshOutDamage': 22,

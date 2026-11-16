@@ -613,7 +613,7 @@ Archived docs are immutable history — the current-state truth lives in
 - **`top-10-cleanups-plan.md`** — STOPPED 2026-11-13 (archived 2026-11-16). The first SURVEY of ten candidate cleanup arcs (the framework's structure and the build), ranked by effort, each with its evidence, effort, re-measure command and first step; its loop and the owner's rulings landed eight items and §7's first step (the owner declined its second); §9 (icon shells) waits on the owner, and §5's second candidate (the docking family) is unexamined.
 - **`top-10-cleanups-round-2-plan.md`** — STOPPED 2026-11-14 (archived 2026-11-16). The second survey (the test harness, the reference set, the verification tooling); landed §1 to §9 but §6's step 2, which waits on the owner with §8's follow-up (rename or fold `_automationCommands.js`) and §10 (the reference set).
 - **`top-10-cleanups-round-3-plan.md`** — STOPPED 2026-11-15 (archived 2026-11-16). The third survey (what the ratchets do not measure); landed seven, among them `fg` ported to Node; §4, §7 and §9 wait on the owner.
-- **`top-10-cleanups-round-4-plan.md`** — STOPPED 2026-11-16. The fourth survey (the tooling and the harness, the source reading clean); landed eight, among them the build ported to Node (`build-node-port-plan.md`) and the move of the four surveys to the archive; §7 (parked on a speed trade) and §9 wait on the owner.
+- **`top-10-cleanups-round-4-plan.md`** — STOPPED 2026-11-16. The fourth survey (the tooling and the harness, the source reading clean); landed nine (§7, the text cache keys, after the loop on the owner's ruling), among them the build ported to Node (`build-node-port-plan.md`) and the move of the four surveys to the archive; §9 waits on the owner.
 
 ## Build & toolchain
 
