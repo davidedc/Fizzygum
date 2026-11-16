@@ -257,7 +257,7 @@ AUTHORED 2026-11-15, the fourth SURVEY of ten candidate cleanup arcs, ordered by
 - [ ] §3 (½ day; ruled: they go if no production artifact grows by more than 2 KB): the build's last text-level strip — four `sed` lines turn six compiled `Automator?` tests into `if (false)`
 - [ ] §4 (½ day; ruled: npm): build-time libraries from one place — acorn and the complexity analyzer are vendored, the other tools npm-pinned; the analyzer exists twice, byte for byte
 - [ ] §6 (1 day): gate rows run side by side, and the tests syntax gate parses in-process — the gates are 58 s of a 60 s build, 11.5 s of it 778 `node --check` launches; supersedes the mask-cache line
-- [ ] §7 (1 day; ruled: lands only if not slower): text cache keys are the text — takes up the 32-bit `hashOfString` collision line under the runtime-performance plan; and the line-break key gains the fitting mode it omits (probed: a paragraph's layout throws)
+- [ ] ⛔ §7 (1 day; PARKED 2026-11-16, owner: the measured speed trade, options in §7): text cache keys are the text — takes up the 32-bit `hashOfString` collision line under the runtime-performance plan; and the line-break key gains the fitting mode it omits
 - [ ] §8 (1 day): audit preludes share one head — 17 copied blocks (170 lines) across 13 page-injected instrument files; `lib/audited-suite.js` joins the shared head to each
 - [ ] ⛔ §9 (1 to 1½ days; left for a later day by the owner 2026-11-15; owner: which profiles are products): no verb, leg or gate builds `lean`, `dev-notests` or `dev-precompiled`
 - [ ] §10 (2 to 3 days; ruled: lands when every proof passes): the build is one Node program — 260 lines of bash, the `--shell` bridge, the hand list `SHELL_INPUTS` → `plans/build-node-port-plan.md`

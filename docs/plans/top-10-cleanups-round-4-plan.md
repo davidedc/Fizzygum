@@ -27,7 +27,7 @@
 > executes the nine one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-4/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §5
-> (2026-11-16).
+> (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -137,7 +137,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | 4 | Build-time libraries from one place | ½ day | A second way of pinning a tool; one analyzer present twice, byte for byte; two hand-kept notes of where a copy came from. **In plain words:** some helper programs the build uses are fetched by one install command at exact versions; two others are pasted into the repository by hand; and one of those two is also fetched, so it exists twice. Pick one way. | **Why:** most of the kitchen tools come from the shop with a receipt, and two were copied by hand from a friend's, with a hand-written note of where they came from. One of those was also bought, so there are two of it. One way of getting tools means one list to check. **Trade-offs:** the shop way needs the network on a new machine (already true since round 3); the by-hand way keeps every upgrade a manual chore. | None | Yes (which place) | 9 | Approved by the owner (2026-11-15); queued |
 | 5 | One SHA-256 in the harness | ½ to 1 day | A hand-written SHA-256 (about 89 of the file's 109 code lines), a second hashing of pixels already hashed, one of three implementations that must agree. **In plain words:** to recognise a screenshot the test kit computes a fingerprint of its pixels. It has two fingerprint machines, the browser's own and a hand-written one, and for a screenshot that does not match it runs both on the same pixels. Use the browser's, and pass its answer along. | **Why:** two rulers that must agree to the last hair: if they ever differ, every saved picture gets the wrong name. One ruler cannot disagree with itself. **Trade-offs:** the two places that use the hand-written one cannot wait for an answer today, so one is handed the answer that already exists and the other compares the pixels directly; the saved pictures' names must be shown unchanged. | None (the same digest; proven on one capture) | No | 4 | Landed 2026-11-16 (§5, "Landed") |
 | 6 | Gate rows run side by side; the tests syntax gate parses in-process | 1 day | 778 process launches per build; a one-at-a-time queue of 33 checks on a 16-core machine; the reason for a planned cache. **In plain words:** every build runs 34 checks one after another, and one of them starts a fresh program for each of 778 test files just to see whether the file parses. Parse them all in one program, and let checks that do not depend on each other run at the same time. | **Why:** thirty-three children wait in one line to wash their hands at one tap while fifteen taps stand unused, and one child walks to a different sink for each finger. Use the taps. Every build, and so every test run, waits for this line. **Trade-offs:** the printed report must still come out in the old order, so each check's output is held until its turn; and when one check fails, the ones after it have already run for nothing. | None | No | 1 | Approved by the owner (2026-11-15); queued |
-| 7 | Text cache keys are the text | 1 day | Seven cache keys built on a 32-bit hash, the hash's own memo table and its accounting, a filed bug. **In plain words:** to avoid measuring and drawing the same text again, results are filed under a short number computed from the text. Two different texts can get the same number ("Of" and "PG" do), and then the second shows the first's result. File results under the text itself, beside the font, size, alignment and the rest, which the label already carries and which do not change. | **Why:** coats in the cloakroom are hung by the first two letters of the owner's name, so Anna sometimes gets Andrew's coat. Hang them by the whole name. **Trade-offs:** whole names take longer to read than two letters, and this cloakroom is used thousands of times a second, so it must be timed on real use before and after; the labels also take a little more room. | None expected (a difference would be a collision being put right) | No | 2 | Approved by the owner (2026-11-15); queued |
+| 7 | Text cache keys are the text | 1 day | Seven cache keys built on a 32-bit hash, the hash's own memo table and its accounting, a filed bug. **In plain words:** to avoid measuring and drawing the same text again, results are filed under a short number computed from the text. Two different texts can get the same number ("Of" and "PG" do), and then the second shows the first's result. File results under the text itself, beside the font, size, alignment and the rest, which the label already carries and which do not change. | **Why:** coats in the cloakroom are hung by the first two letters of the owner's name, so Anna sometimes gets Andrew's coat. Hang them by the whole name. **Trade-offs:** whole names take longer to read than two letters, and this cloakroom is used thousands of times a second, so it must be timed on real use before and after; the labels also take a little more room. | None expected (a difference would be a collision being put right) | No | 2 | Parked 2026-11-16: measured slower; OWNER DECISION open (§7) |
 | 8 | Audit preludes share one head | 1 day | 17 copied blocks (170 lines) across 13 instrument files. **In plain words:** six measuring instruments are slipped into the test page, each as one self-contained file, and each carries its own copy of the same small helpers. A fix made in one copy does not reach the others. Keep the helpers in one file and join it to each instrument when it is used. | **Why:** six toolboxes each hold their own copy of the same screwdriver, and one day one copy is found bent. Keep one good screwdriver and lend it to every box. **Trade-offs:** an instrument is no longer one file that can be handed over by itself; the joining step is one more thing that can go wrong, and has to be proven by the instruments' own planted faults. | None | No | 10 | Approved by the owner (2026-11-15); queued |
 | 9 | Every profile is built by something, or it goes | 1 to 1½ days | Three of five build flavours that no command, gate or test ever builds. **In plain words:** the project can be built in five flavours. The checks build two of them. The other three are built only when a person remembers to, so nothing would notice if one stopped working. Have a check build each flavour that is wanted, and delete the ones that are not. | **Why:** five doors lead out of the house and two are tried every day. The other three may be stuck, and nobody will know until the day one is needed. Try every door now and then, or brick up the ones nobody uses. **Trade-offs:** trying a door takes a minute or two each time; bricking one up loses a flavour somebody may want twice a year. | None | Yes (which flavours are products) | 7 | Left for a later day by the owner (2026-11-15) |
 | 10 | The build is one Node program | 2 to 3 days | 260 lines of bash, the shell-text bridge out of the profile module, a hand list of the files the script reads, the flag mapping of a second script. **In plain words:** the build is a shell script that starts a JavaScript program seven times and has one of them print shell text for it to read back. Round 2 measured it and left it. Since then the command that calls it has moved to JavaScript, and it is the last shell program a commit depends on. | **Why:** the family now speaks one language at the table, except for one member who needs every sentence passed on a slip of paper, in both directions. **Trade-offs:** it rewrites the thing that makes the product, so every flavour's output must be shown identical byte for byte before and after (a tool for that exists); it adds no feature; and seven small shell helpers remain, so shell does not leave the repository. | None (byte-identical trees) | No (a re-listing: the owner may decline it again) | 3 | Approved by the owner (2026-11-15); queued |
@@ -607,6 +607,50 @@ before any key changes.
 
 **Re-measure.**
 `grep -rn 'hashOfString' Fizzygum/src --include='*.coffee' | grep -v ':\s*#' | wc -l` (17).
+
+**OWNER DECISION (OPEN, raised 2026-11-16 by the loop).** The loop built the change as ruled and
+measured it, and it is slower, so it parked: the patch is
+`Fizzygum-tests/.scratch/cleanups-loop-4/u2-text-keys/PARKED-Fizzygum.patch`, its evidence beside it.
+- What the patch does, proven: every key holds its text (a composite key as `length:text`). The
+  "Of"/"PG" collision is gone from all four caches it reaches: the paragraph split, the word split,
+  measuring ("PG" measured 12 wide instead of 17) and the label's back buffer (two labels shared
+  one). The line-break key gains its fitting mode (the probe's thrown layout is gone). And
+  `hashOfString`'s memo, porthole and inventory row are deleted: after the change its only callers
+  (1,745 calls a suite: a text's edit check, the bin's scatter, own-code edits) are on no paint or
+  layout path. Hash values are unchanged.
+- What a person would see: nothing, in normal use. With the patch, two labels whose texts collide
+  (typed "Of" and "PG" into two cells of one width) each show their own text; today the second
+  shows the first's.
+- The measurement: the real methods, HEAD's build against the patch's, three runs each,
+  alternating, blocks of at least 40,000 calls, on a replay of 98 tests' lookups. It was run twice,
+  after an A/A run between two builds of HEAD read every case the same (spreads 0.3% to 9.3%). Per
+  call:
+  - slower: top-level line breaking 1,260 → 1,618 ns (+28%), back buffers 1,184 → 1,421 ns (+20%),
+    paragraph wrapping +9%, whole-text wrapping +7%;
+  - within the A/A spread: paragraph splits +8% (its spread 9.3%), measuring;
+  - faster: word splits, a short label (1%), and a text of 3,000 characters (line breaking
+    13.3 → 4.3 µs, its buffer key 26.9 → 9.1 µs, its paragraph split 13.2 µs → 25 ns).
+
+  Weighted by one suite's lookups (1.30 M back-buffer keys, 0.56 M measures, 0.39 M line breaks),
+  that is about +0.57 s of CPU over a whole suite run, about 0.07% of its ~800 shard-seconds.
+- The two-level shape (the text, then the fixed fields) was not built, because it cannot reach the
+  largest regression. The back-buffer cache is shared with `PaletteWdgt`'s flat keys, and the
+  SWCanvas cold-glyph recorder (`SWCanvasElement-extensions.coffee`) wraps its `get`/`set` and
+  evicts poisoned entries by their flat key string. A two-level buffer cache would change that
+  protocol, a mechanism neither plan names, so the case with 1.3 M lookups a suite has no shape this
+  item may build.
+- Options:
+  - (a) land the patch as measured;
+  - (b) keep the hashes and check the text on a hit (each entry keeps its text, and a mismatch is a
+    miss): exact, keys stay short, every hit compares texts; unmeasured;
+  - (c) give each text a unique number from a counter instead of its hash, keeping the keys'
+    shape: today's speed, but the memo stays as an intern table; unmeasured;
+  - (d) land only the line-break key's fitting mode now (a correctness fix with no speed cost),
+    leaving the collision filed.
+- Recommendation: (a). The cost is a fraction of a microsecond per text painted, about 0.07% of a
+  suite's CPU. Long texts get three times faster, a wrong text a person can type is gone, and one
+  mechanism (the memo and its accounting) is deleted. If "not slower" stands, (d) now and (b) or
+  (c) measured later.
 
 ---
 
