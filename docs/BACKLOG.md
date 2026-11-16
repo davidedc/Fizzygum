@@ -19,7 +19,6 @@ items whose arc never had a plan file are collected in `archive/backlog-closed-i
 ## Open items by owning arc
 
 ### `archive/argument-holes-both-repos-plan.md` — the hole test over both repos: a code parser, the callers test, the button family's head in opts (CLOSED 2026-11-07; Units 0, A–E done, see its ledger)
-- [ ] **Every gate re-masks all of the compiled sources** — masking src takes about 650 ms and 20 build gates each mask all of it: about 13 s a build; a mask cache keyed by file content could win it back.
 - [ ] **Nothing keeps the similar-code mirror working** — no build or gate runs `coffee-to-js-mirror.js`, so `find_similar_code.sh` stopped unnoticed from 2026-08-16 to 11-10; holding sources to it costs seconds a build.
 - [ ] **A `{ booted: true }` wait that saw the world but not boot's end says "did not start"** — `startedWithin` has one line for every predicate, so a boot stuck after the world stands misreads. → "A booted-true wait that saw the world but not boot's end"
 - [ ] **The profiling scripts boot their pages their own way** — `docs/profiling/prof-run.js` and `prof-interactive.js` keep their own world waits and "did not become ready" line, outside the shared boot wait.
@@ -255,7 +254,6 @@ AUTHORED 2026-11-15, the third SURVEY of ten candidate cleanup arcs, ordered by 
 AUTHORED 2026-11-15, the fourth SURVEY of ten candidate cleanup arcs, ordered by effort (smallest first; the plan's table also gives each item's payoff rank). The source reads clean on every instrument, so seven of the ten are in the tooling and the harness: what the `fg` port's equality rule froze, work that is done twice, and build profiles nothing builds. Each item carries its evidence, its effort estimate, its re-measure command and its first step. OWNER 2026-11-15: §9 left for a later day; the other nine approved along the survey's recommendations, for an unattended loop (the plan's STATUS has the rulings).
 - [ ] §1 (¼ day; ruled: yes, taken last): the stopped cleanup surveys leave `plans/` for `archive/`, this one included — 278 KB, a quarter of the folder; their waiting items stay in this file
 - [ ] §2 (½ day): `fg` says what it does — five stale usage lines and one missing; `fg status` asks `buildStaleness()`; `fg` asks `lib/profile.js` in-process; closes three lines of this file
-- [ ] §6 (1 day): gate rows run side by side, and the tests syntax gate parses in-process — the gates are 58 s of a 60 s build, 11.5 s of it 778 `node --check` launches; supersedes the mask-cache line
 - [ ] ⛔ §7 (1 day; PARKED 2026-11-16, owner: the measured speed trade, options in §7): text cache keys are the text — takes up the 32-bit `hashOfString` collision line under the runtime-performance plan; and the line-break key gains the fitting mode it omits
 - [ ] ⛔ §9 (1 to 1½ days; left for a later day by the owner 2026-11-15; owner: which profiles are products): no verb, leg or gate builds `lean`, `dev-notests` or `dev-precompiled`
 - [ ] §10 (2 to 3 days; ruled: lands when every proof passes): the build is one Node program — 260 lines of bash, the `--shell` bridge, the hand list `SHELL_INPUTS` → `plans/build-node-port-plan.md`

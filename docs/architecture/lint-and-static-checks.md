@@ -81,10 +81,11 @@ rule **[I]**. Full convention + rationale: `docs/architecture/layering-naming-co
 All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates, `Fizzygum-tests/scripts/`), each a
 ROW of one table, `buildSystem/gates.js`: its script, its arguments, WHEN it runs (`checked`: unless `--noSyntaxCheck`;
 `testsShipped`: and the profile ships the tests — the tests repo itself is a requirement of every build, which
-`build_it_please.sh` checks before anything else), the line it prints before running, its failure line and its OK line — and, as a comment above the row, why it
-exists. `build_it_please.sh` calls `buildSystem/run-gates.js` once, which runs the rows in order and stops the build at
-the first that fails: the bell, that row's failure line, exit 1 (its order, conditions and stop are proven by
-`run-gates-selftest.js`). **Exit codes:** `0` clean · `1` violation
+`build_it_please.sh` checks before anything else), the line it prints before its output, its failure line and its OK line — and, as a comment above the row, why it
+exists. `build_it_please.sh` calls `buildSystem/run-gates.js` once, which runs the first row (the self-tests) alone and the
+rest side by side (eight at a time, each row's output captured), REPORTS them in table order and stops the build at
+the first that fails: that row's output, the bell, its failure line, exit 1 (its report order, the first row alone, its
+conditions and its stop are proven by `run-gates-selftest.js`). **Exit codes:** `0` clean · `1` violation
 · `2` operational error. **Shared escape hatch:**
 `--noSyntaxCheck` skips *every* gate (use to bisect a gate bug; never to ship).
 

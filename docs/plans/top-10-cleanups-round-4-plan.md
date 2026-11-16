@@ -27,7 +27,7 @@
 > executes the nine one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-4/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §5
-> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
+> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16), §6 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -136,7 +136,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | 3 | The build's last text-level strip | ½ day | Four `sed` lines that rewrite compiled JavaScript by pattern, a macOS-only flag, a comment about a class that no longer exists. **In plain words:** when the build makes the production version, it searches the finished code for six "is the test kit here?" questions and replaces each with "no", so the code behind the question can be thrown away. Each question already answers "no" by itself when the test kit is absent. | **Why:** somebody goes through the finished book with correction fluid, painting over six sentences that begin "if the teacher is in the room". The teacher is never in that room, so the sentences do nothing anyway. And if the printer ever changes the lettering, the fluid misses and nobody notices. Stop painting. **Trade-offs:** the production file grows by the size of those six passages (to be measured first; a few hundred bytes of 1.3 MB are expected). | None | No | 6 | Landed 2026-11-16 (§3, "Landed") |
 | 4 | Build-time libraries from one place | ½ day | A second way of pinning a tool; one analyzer present twice, byte for byte; two hand-kept notes of where a copy came from. **In plain words:** some helper programs the build uses are fetched by one install command at exact versions; two others are pasted into the repository by hand; and one of those two is also fetched, so it exists twice. Pick one way. | **Why:** most of the kitchen tools come from the shop with a receipt, and two were copied by hand from a friend's, with a hand-written note of where they came from. One of those was also bought, so there are two of it. One way of getting tools means one list to check. **Trade-offs:** the shop way needs the network on a new machine (already true since round 3); the by-hand way keeps every upgrade a manual chore. | None | Yes (which place) | 9 | Landed 2026-11-16 (§4, "Landed") |
 | 5 | One SHA-256 in the harness | ½ to 1 day | A hand-written SHA-256 (about 89 of the file's 109 code lines), a second hashing of pixels already hashed, one of three implementations that must agree. **In plain words:** to recognise a screenshot the test kit computes a fingerprint of its pixels. It has two fingerprint machines, the browser's own and a hand-written one, and for a screenshot that does not match it runs both on the same pixels. Use the browser's, and pass its answer along. | **Why:** two rulers that must agree to the last hair: if they ever differ, every saved picture gets the wrong name. One ruler cannot disagree with itself. **Trade-offs:** the two places that use the hand-written one cannot wait for an answer today, so one is handed the answer that already exists and the other compares the pixels directly; the saved pictures' names must be shown unchanged. | None (the same digest; proven on one capture) | No | 4 | Landed 2026-11-16 (§5, "Landed") |
-| 6 | Gate rows run side by side; the tests syntax gate parses in-process | 1 day | 778 process launches per build; a one-at-a-time queue of 33 checks on a 16-core machine; the reason for a planned cache. **In plain words:** every build runs 34 checks one after another, and one of them starts a fresh program for each of 778 test files just to see whether the file parses. Parse them all in one program, and let checks that do not depend on each other run at the same time. | **Why:** thirty-three children wait in one line to wash their hands at one tap while fifteen taps stand unused, and one child walks to a different sink for each finger. Use the taps. Every build, and so every test run, waits for this line. **Trade-offs:** the printed report must still come out in the old order, so each check's output is held until its turn; and when one check fails, the ones after it have already run for nothing. | None | No | 1 | Approved by the owner (2026-11-15); queued |
+| 6 | Gate rows run side by side; the tests syntax gate parses in-process | 1 day | 778 process launches per build; a one-at-a-time queue of 33 checks on a 16-core machine; the reason for a planned cache. **In plain words:** every build runs 34 checks one after another, and one of them starts a fresh program for each of 778 test files just to see whether the file parses. Parse them all in one program, and let checks that do not depend on each other run at the same time. | **Why:** thirty-three children wait in one line to wash their hands at one tap while fifteen taps stand unused, and one child walks to a different sink for each finger. Use the taps. Every build, and so every test run, waits for this line. **Trade-offs:** the printed report must still come out in the old order, so each check's output is held until its turn; and when one check fails, the ones after it have already run for nothing. | None | No | 1 | Landed 2026-11-16 (§6, "Landed") |
 | 7 | Text cache keys are the text | 1 day | Seven cache keys built on a 32-bit hash, the hash's own memo table and its accounting, a filed bug. **In plain words:** to avoid measuring and drawing the same text again, results are filed under a short number computed from the text. Two different texts can get the same number ("Of" and "PG" do), and then the second shows the first's result. File results under the text itself, beside the font, size, alignment and the rest, which the label already carries and which do not change. | **Why:** coats in the cloakroom are hung by the first two letters of the owner's name, so Anna sometimes gets Andrew's coat. Hang them by the whole name. **Trade-offs:** whole names take longer to read than two letters, and this cloakroom is used thousands of times a second, so it must be timed on real use before and after; the labels also take a little more room. | None expected (a difference would be a collision being put right) | No | 2 | Parked 2026-11-16: measured slower; OWNER DECISION open (§7) |
 | 8 | Audit preludes share one head | 1 day | 17 copied blocks (170 lines) across 13 instrument files. **In plain words:** six measuring instruments are slipped into the test page, each as one self-contained file, and each carries its own copy of the same small helpers. A fix made in one copy does not reach the others. Keep the helpers in one file and join it to each instrument when it is used. | **Why:** six toolboxes each hold their own copy of the same screwdriver, and one day one copy is found bent. Keep one good screwdriver and lend it to every box. **Trade-offs:** an instrument is no longer one file that can be handed over by itself; the joining step is one more thing that can go wrong, and has to be proven by the instruments' own planted faults. | None | No | 10 | Landed 2026-11-16 (§8, "Landed") |
 | 9 | Every profile is built by something, or it goes | 1 to 1½ days | Three of five build flavours that no command, gate or test ever builds. **In plain words:** the project can be built in five flavours. The checks build two of them. The other three are built only when a person remembers to, so nothing would notice if one stopped working. Have a check build each flavour that is wanted, and delete the ones that are not. | **Why:** five doors lead out of the house and two are tried every day. The other three may be stuck, and nobody will know until the day one is needed. Try every door now and then, or brick up the ones nobody uses. **Trade-offs:** trying a door takes a minute or two each time; bricking one up loses a flavour somebody may want twice a year. | None | Yes (which flavours are products) | 7 | Left for a later day by the owner (2026-11-15) |
@@ -550,6 +550,46 @@ byte for byte, on a green tree and on each planted failure of `run-gates-selftes
 ```
 node -e "const {spawnSync}=require('child_process'),p=require('path');const {GATES,BUILD_ARGS}=require('./buildSystem/gates');let t=0;for(const r of GATES.slice(1)){const a=Date.now();spawnSync(process.execPath,[r.script,...(r.args===BUILD_ARGS?[]:r.args)],{stdio:'ignore'});const d=Date.now()-a;t+=d;console.log(d,p.basename(r.script))}console.log('total ms',t)"
 ```
+
+**Landed 2026-11-16.** `run-gates.js` runs the first row (the self-tests) alone, its output
+inherited as before. Every other row whose WHEN holds runs through a pool of eight (the
+self-test runner's precedent), its stdout and stderr captured as one stream into a file of one
+temporary directory. Each row is reported in table order: its banner as soon as every row before
+it has been reported (so a row that hangs is the last banner printed), then, once it has
+finished, its captured output and its OK line. At the first failing row the runner prints that
+row's output, rings the bell, prints the failure line on stderr, stops the rows still running,
+waits for them and exits 1; no row starts once any row has failed. The temporary directory is
+removed when the runner exits and when SIGINT or SIGTERM stops it. A failure of the runner itself
+stops every started row first and exits 2. `--noSyntaxCheck` and a malformed table behave as
+before. No row writes a file another row reads (each row's script and libraries were
+read for writes), so the rows' running order is free and only their report is ordered.
+
+`check-tests-syntax.js` parses each file with `new vm.Script` in its own process. Its rule, its
+summary line and its exit codes are unchanged, and a failing file is reported as the engine
+reports it. It reads each file as a classic script, as the page does, so it now also fails a
+top-level `return` (which `node --check` accepted; its self-test plants one), and an `export` or
+a top-level `await` (which `node --check` read as a module). None of the 778 test files has
+any of the three.
+
+Two things a developer sees are different:
+- a pooled row's stderr text arrives on the runner's stdout, in its place in that row's output;
+- a pooled row no longer writes to a terminal.
+
+The evidence:
+- with the old and the new runner on one tree, the merged transcripts are identical, timings
+  masked;
+- `run-gates-selftest.js` (34 cases) proves the new facts on a table of its own and on real
+  processes under a planted copy of the runner; a planted pool of one fails it, and so does a
+  planted no-op stop;
+- under `--noSyntaxCheck` both runners print nothing, exit 0;
+- timings, three runs each, on a busier machine afterwards:
+
+  | | before | after |
+  |---|---|---|
+  | `run-gates.js` as the build runs it | 58.2, 59.8, 60.1 s (load 27 to 31) | 25.9, 27.5, 28.6 s (load 53 to 64) |
+  | `fg build` | 61.8, 62.0, 66.7 s | 30.8, 30.9, 36.0 s |
+
+The BACKLOG line on re-masking closes with these numbers; no cache was built.
 
 ---
 
@@ -1066,3 +1106,11 @@ Do not commit or push without asking me.
 - [x] §3 (½ day; ruled: they go if no production artifact grows by more than 2 KB): the build's last text-level strip — four `sed` lines turn six compiled `Automator?` tests into `if (false)`
   — CLOSED 2026-11-16 (loop U5): the lines are gone; `homepage` and `lean` each grow by 1,044 bytes, the six guarded
   branches and nothing else (§3, "Landed").
+
+- [x] §6 (1 day): gate rows run side by side, and the tests syntax gate parses in-process — the gates are 58 s of a 60 s build, 11.5 s of it 778 `node --check` launches; supersedes the mask-cache line
+  — CLOSED 2026-11-16 (loop U6): the rows after the self-tests run eight at a time, reported in table order; the tests
+  syntax gate parses in-process; `run-gates.js` 58–60 s → 26–29 s, `fg build` 62–67 s → 31–36 s (§6, "Landed").
+- [x] **Every gate re-masks all of the compiled sources** — masking src takes about 650 ms and 20 build gates each mask all of it: about 13 s a build; a mask cache keyed by file content could win it back.
+  — CLOSED 2026-11-16 (loop U6), filed under `archive/argument-holes-both-repos-plan.md` (its BACKLOG detail: masking
+  src takes about 650 ms in each of 20 gates' processes, about 13 s a build): with the rows side by side the gates take
+  26–29 s of wall time instead of 58–60, and no cache was built (§6, "Landed").

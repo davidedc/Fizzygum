@@ -13,7 +13,7 @@
 // token. A text that does not parse is REFUSED: maskJs throws `JS_MASK_UNPARSEABLE`, naming the file, the parser's
 // message and the position, so a reader of code it cannot read stops loudly instead of guessing. It parses with
 // `ecmaVersion: 'latest'` — whatever this Node runs (class fields, `#private`, static blocks), the build reads; the
-// tests repo's scripts and macro command files are held to `node --check` by check-tests-syntax.js. Parsed as a
+// tests' macro command files are held to the engine's parser by check-tests-syntax.js. Parsed as a
 // script first (CommonJS: a top-level `return` is allowed), then as a module.
 //
 // Readers: lib/tests-repo-code.js, lib/gate-rules.js, lib/what-runs.js and run-selftests.js; lib/call-sites.js parses

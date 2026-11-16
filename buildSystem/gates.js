@@ -1,8 +1,8 @@
 'use strict';
-// gates.js — THE BUILD'S GATE SEQUENCE, as data. One row per static gate the build runs, in the order it runs them:
-// the script, its arguments, WHEN it runs, the line it prints before it runs, the line it prints (with the terminal
-// bell) when it fails, and the line it prints when it passes. buildSystem/run-gates.js runs the rows in order and stops
-// at the first failure (build_it_please.sh calls it once, after build.js has written the tree). lib/what-runs.js
+// gates.js — THE BUILD'S GATE SEQUENCE, as data. One row per static gate the build runs, in the order it reports them:
+// the script, its arguments, WHEN it runs, the line it prints before its output, the line it prints (with the terminal
+// bell) when it fails, and the line it prints when it passes. buildSystem/run-gates.js runs the first row alone and the
+// rest side by side, reports them in this order and stops at the first failure (build_it_please.sh calls it once, after build.js has written the tree). lib/what-runs.js
 // requires this table and reads each row as the command line it is, `node <script> <args>`, so the census in
 // run-selftests.js holds every gate listed here to its rule registry and its proof, and a self-test discovered by its
 // gate's line is discovered from its row. What each gate checks, and what it cannot see:
@@ -408,8 +408,8 @@ const GATES = [
   // --- build-time test-.js syntax gate (only when tests are part of this build) ---------
   // Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
   // template literal; a stray backtick silently corrupts the file so the test never loads (with
-  // corrupted/missing screenshots, not an obvious error). This runs `node --check` over every
-  // tests/*.js (see ../Fizzygum-tests/scripts/check-tests-syntax.js) to catch that — and any JS
+  // corrupted/missing screenshots, not an obvious error). This parses every test's two .js files as
+  // classic scripts (see ../Fizzygum-tests/scripts/check-tests-syntax.js) to catch that — and any JS
   // syntax error — BEFORE the build copies them in. Same --noSyntaxCheck escape hatch and explicit
   // $? check as the CoffeeScript gate above; skipped when the profile ships no test machinery.
   { script: path.join(TESTS_SCRIPTS, "check-tests-syntax.js"),

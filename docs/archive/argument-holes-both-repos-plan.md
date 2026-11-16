@@ -3692,13 +3692,6 @@ for (const s of sites) if (s.absentBefore.length) {
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
-### Every gate re-masks all of the compiled sources
-
-- [ ] **Every gate re-masks all of the compiled sources** (found closing "Every build tool walks src for itself", in
-      the plan's ledger; measured). Masking src takes
-      about 650 ms (`lib/coffee-mask.js`), and 20 build gates each mask all of it in their own process: about 13 s a
-      build, most of the +15.2 s the comment-masker item accepted. A mask cache keyed by file content could win it back.
-
 ### Nothing keeps the similar-code mirror working
 
 - [ ] **Nothing keeps the similar-code mirror working** (found closing "`find_similar_code.sh` stops at its mirror", in
