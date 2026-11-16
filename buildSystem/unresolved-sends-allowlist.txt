@@ -14,7 +14,7 @@
 # against its real call site; there were exactly these 9 and no others.
 
 # ── host APIs used at one or two sites ──
-digest          # WebCrypto: crypto.subtle.digest("SHA-256", ...) in the harness SHA256 fallback
+digest          # WebCrypto: crypto.subtle.digest("SHA-256", ...) in SHA256.hashRawPixelsAsync, the harness's one pixel digest
 toSource        # Firefox-legacy: existence-GUARDED call (`element.toSource() if element.toSource`, ListWdgt)
 
 # ── LiveCodeLang / fizzytiles vendored eventing + scope API ──

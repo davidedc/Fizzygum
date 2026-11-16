@@ -136,7 +136,7 @@ const RECALC_WHITELIST = new Set(['doOneCycle', ...TIERS.all, ...RECALC_ORACLES]
 const isLowLevel = (name) =>
   // (no /^raw[A-Z]/, /^silent/ or /^fullRaw/ arm: zero raw*/silent*/fullRaw* method DEFS exist in the compiled
   //  sources — the geometry/structural families sit on the _/__ tiers (§6/§3d) and rule [M] bans them from
-  //  reappearing; the harness's raw-PIXEL data, `rawPixelInfo`, is a parameter, never a method.)
+  //  reappearing; a raw* name that remains in the compiled sources is a local or a field, never a method.)
   /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
                             // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop / _amIDirectlyInside*)
@@ -322,8 +322,8 @@ const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepar
 // SUBTREE-AWARE vocabulary (fullChanged / fullCopy / fullDestroy / fullBounds / fullPaintInto / fullImage* -- ~25
 // live defs), out of scope for this campaign. Only the specific retired `fullRaw` mover prefix is caught.
 const FRAGMENT_BANNED = /^(silent[A-Z]|raw[A-Z]|fullRaw)/;
-// (no allowlist: the ban is unconditional over the compiled sources, the harness included, whose raw-PIXEL data
-// `rawPixelInfo` is a parameter, never a method name.)
+// (no allowlist: the ban is unconditional over the compiled sources, the harness included; a raw* name that remains
+// there is a local or a field, never a method name.)
 const APPLY_ANDNOTIFY_BANNED = /^_apply\w*AndNotify$/;  // [M] the retired _apply*AndNotify polymorphic-apply suffix (Tier B, 2026-07-02): the corners dropped it to the bare _apply* once the notify seam was deleted (2026-07-01). NB _commit*AndNotify is a DIFFERENT (collapsed) corner, deliberately not caught here.
 
 // [N] the retired notify-by-mutation CONTAINER SEAM must not be re-defined (Opt-4 hygiene guard, 2026-07-01). The two

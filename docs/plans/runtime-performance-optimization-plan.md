@@ -279,8 +279,9 @@ dist → re-vendor into Fizzygum (`./scripts/vendor-swcanvas.sh`, updates `vendo
 `crypto.subtle`); `compareScreenshots` snapshots the surface synchronously then hashes off-thread and
 records the match when it resolves; a new `"waitForScreenshotHash"` Macro pump gate holds the macro (and
 test completion) until each digest settles (so `assertScreenshotsIdentical` still sees fingerprints). Cold
-paths (the `SystemTestsReferenceImage` ctor + the paint-truthfulness fingerprint) keep the sync JS impl —
-same digest by spec. **Verified:** full `fg gauntlet` green (dpr1/dpr2/webkit/apps + paint/tiernaming/
+paths (the `SystemTestsReferenceImage` ctor + the paint-truthfulness fingerprint) kept the sync JS impl
+until cleanups round 4 §5 removed it: the ctor now takes the digest it is handed, and the audit compares
+pixels. **Verified:** full `fg gauntlet` green (dpr1/dpr2/webkit/apps + paint/tiernaming/
 settle/capstone, 194 tests, 0 failed) → **zero reference churn, cross-engine**; and a direct A/B on a real
 dpr2 frame (1920×880, 6.45 MB) measured **80.95 ms → 2.92 ms per hash = 27.7×**, digests identical. See §8.
 
