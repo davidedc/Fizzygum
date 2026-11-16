@@ -97,6 +97,14 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **finger scrolling for the spreadsheet** — the sheet takes no drag-scroll (wheel/scrollbar only), so its three wheel tests are mouse-only on the finger axis; a finger-scrollable sheet is a product feature.
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
+### `plans/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (AUTHORED 2026-11-16, nothing landed)
+- [ ] P0: spike S1 (the paint mechanism, planted) and measurement M1 (test fallout); decisions D1–D8 were ratified 2026-11-16 (§4.2) — not started
+- [ ] P1: content in view mode refuses restyling from any toolbar; a drawing takes no click-placed widget (rulings R8, R9) — not started
+- [ ] P2: a drawing paints with the previous tool while every palette shows the new one — the surface takes up its tool at use, windows hold their own (§6.2) — not started
+- [ ] P3: a toolbar docked on one window acts on another's selection; a creator docked on a nested Maker places outside it (§6.3–§6.5) — not started
+- [ ] ⛔ P4: tools with nothing to act on show dimmed — the owner picks the look and sees the diff page before its recapture (§6.6) — not started
+- [ ] P5: `architecture/toolbars.md`, the class headers stating the old model, archive and close — not started
+
 ### `plans/affine-transforms-plan.md`
 Phase 4, residuals, claimsSpace, §7.7 and §7.8 landed; REMAINING = big §7.1-7.4 items, design-first, owner-gated. → "The backlog's note on this plan"
 - [ ] §7.1: transform policy engine (banked, not built)
