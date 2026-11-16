@@ -66,6 +66,7 @@ items whose arc never had a plan file are collected in `archive/backlog-closed-i
 ### `archive/world-inventory-instruments-plan.md` — the object-lifetime program, stated in that plan's §0 (Arcs A, B and C CLOSED 2026-08-20/21)
 - [ ] ⛔ **OWNER DECISION: a failed async door tells the user NOTHING** — on a transient failure of a part the build ships (a bad `file://` read), a click silently does nothing; whether a door should `inform` is a product call. → "OWNER DECISION: a failed async door tells the user nothing"
 - [ ] StorageSorter-roots unification (plan D2's stated non-goal): examine folding `StorageSorter._runClassifier`'s own root/marking enumeration onto `WorldWdgt.graphLivenessRoots()`, in a dedicated pass. → "StorageSorter-roots unification (plan D2's stated non-goal)"
+- [ ] The `vmtruth` leg's pin cap is within reach of a green suite: a shard's spreadsheet tests leave 139 to 200+ uncollected (all UNRETAINED) cells at a sweep; past 200 a page it reads INVALID — medium: fg's serial retry absorbs it. → "The vmtruth leg's pin cap is within reach of a green suite"
 
 ### `archive/shared-base-layer-part-plan.md`
 CLOSED 2026-08-02, executed in full (residue in `architecture/build-and-packaging.md` §2/§5); open: the two classes it could not move. → "The backlog's note on this plan"
@@ -258,7 +259,6 @@ AUTHORED 2026-11-15, the fourth SURVEY of ten candidate cleanup arcs, ordered by
 - [ ] §4 (½ day; ruled: npm): build-time libraries from one place — acorn and the complexity analyzer are vendored, the other tools npm-pinned; the analyzer exists twice, byte for byte
 - [ ] §6 (1 day): gate rows run side by side, and the tests syntax gate parses in-process — the gates are 58 s of a 60 s build, 11.5 s of it 778 `node --check` launches; supersedes the mask-cache line
 - [ ] ⛔ §7 (1 day; PARKED 2026-11-16, owner: the measured speed trade, options in §7): text cache keys are the text — takes up the 32-bit `hashOfString` collision line under the runtime-performance plan; and the line-break key gains the fitting mode it omits
-- [ ] §8 (1 day): audit preludes share one head — 17 copied blocks (170 lines) across 13 page-injected instrument files; `lib/audited-suite.js` joins the shared head to each
 - [ ] ⛔ §9 (1 to 1½ days; left for a later day by the owner 2026-11-15; owner: which profiles are products): no verb, leg or gate builds `lean`, `dev-notests` or `dev-precompiled`
 - [ ] §10 (2 to 3 days; ruled: lands when every proof passes): the build is one Node program — 260 lines of bash, the `--shell` bridge, the hand list `SHELL_INPUTS` → `plans/build-node-port-plan.md`
 

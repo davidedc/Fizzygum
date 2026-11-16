@@ -567,3 +567,22 @@ messages and wait (Phase-0 of this program already has a pending commit; coordin
 - [ ] StorageSorter-roots unification (plan D2's stated non-goal): `StorageSorter._runClassifier`'s
       phases build their own root/marking enumeration — examine folding it onto
       `WorldWdgt.graphLivenessRoots()` in a dedicated pass, NOT by side-effect of another arc.
+
+### The vmtruth leg's pin cap is within reach of a green suite
+
+- [ ] Filed 2026-11-16 by the round-4 cleanups loop (unit U3, measured while placing a gauntlet warning). Tier 1 of
+      `scripts/vm-truth-gate.js` PINS every destroyed widget still alive at the first sweep after its reset, and
+      `scripts/audit-preludes/vm-truth-prelude.js` caps the pins at `MAX_PINNED` = 200 a page; a suspect past the cap is
+      dropped, and a dropped suspect reads INVALID (exit 2), since tier 2 never answered it. On a green suite, shard 4 of
+      6 sometimes leaves 139 to 200+ cells, strings and frame chrome alive at that sweep, most of them destroyed during
+      its spreadsheet tests (`SpreadsheetErrorPropagation`, `SpreadsheetScrollKeyboardFollow`), and tier 2 confirms
+      every one UNRETAINED: the collector had not got to them. The tests whose suspects were dropped once the cap was
+      full were `SpreadsheetScrollKeyboardFollow`, `SpreadsheetScrollWheel` and `TiltedFigureShadowAsDarkAsStraight`.
+      Measured on two worktree builds, four runs each side of one change, alternating: suspects 160 (139 on shard 4),
+      1, 0, 18 against 6, 1, 20, 2. Over every run of the later tree that night, 200+ (INVALID) twice in nine runs.
+      In a gauntlet the leg then passes on fg's serial retry (a "load-flake" warning). Not a leak: a measurement whose
+      capacity a green suite can fill. The evidence is local to the loop:
+      `Fizzygum-tests/.scratch/cleanups-loop-4/u3-prelude-head/` (`vmtruth-ab.log`, `preu1-vmtruth.log`, the runs'
+      audit dirs). Options to weigh: a higher cap (snapshot memory), a second GC before pinning, or pinning per shard
+      page reset. Medium: it costs a serial retry at commit points, and a run where the retry also overflows fails the
+      gauntlet.

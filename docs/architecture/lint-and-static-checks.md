@@ -346,7 +346,11 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
 **Two RUNTIME naming-audit gates (suite-run, NOT build-time).** The naming convention also carries two off-by-default
 runtime audits that run over the WHOLE SystemTest suite (not `build_it_please.sh`) — each an injected prelude that wraps
 prototypes before the page's own scripts run, with a gate of its own (`tier-naming-gate.js`, `settle-gate.js`), siblings of the end-of-cycle
-capstone gate (whose pass also carries the paint-read-only audit) and wired into `fg gauntlet`. ⚠ Unlike that sibling,
+capstone gate (whose pass also carries the paint-read-only audit) and wired into `fg gauntlet`. Every such prelude, and
+every plant file (`*-plant.js`) of their bite proofs, takes the helpers they share (the test-boundary read and print,
+the held install findings, `ownMethod`, a plant's `playing()` and its install retry) from the audit head,
+`Fizzygum-tests/scripts/audit-preludes/audit-head.js`, which `scripts/lib/audit-head.js` joins in front of it for every
+runner; one injected alone says `AUDIT_HEAD_MISSING` and installs nothing. ⚠ Unlike that sibling,
 neither carries a `WorldWdgt` audit flag:
 all their observation lives in the prelude's own wrappers, so there is nothing for a flag to switch:
 - **tier-naming** (`Fizzygum-tests/scripts/tier-naming-audit/`) — the dynamic twin of

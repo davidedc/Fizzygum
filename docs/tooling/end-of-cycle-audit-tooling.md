@@ -10,9 +10,10 @@ the survey campaign it documents is complete).
 ## Where it lives (committed, reusable)
 
 `Fizzygum-tests/scripts/end-of-cycle-audit/` (tracked):
-- **`layout-audit-prelude.js`** — a behaviour-neutral runtime prelude injected via `run-macro-test-headless.js`'s
-  `--prelude=` flag (single test) **or `run-all-headless.js`'s `--audit-prelude=`/`--audit-dir=` flags (the SHARDED
-  loop)** — flags, never environment variables (`Fizzygum-tests/scripts/lib/page-rails.js`).
+- **`layout-audit-prelude.js`** — a behaviour-neutral runtime prelude, joined behind the shared audit head
+  (`scripts/lib/audit-head.js`), injected via `run-macro-test-headless.js`'s `--prelude=` flag (single test) **or
+  `run-all-headless.js`'s `--audit-prelude=`/`--audit-dir=` flags (the SHARDED loop)** — flags, never environment
+  variables (`Fizzygum-tests/scripts/lib/page-rails.js`).
   It rAF-polls until `Widget`/`WorldWdgt`/`world` exist, then patches prototypes to log one `LAYOUTAUDIT <json>` line per
   **ORIGIN** survivor at the end-of-cycle flush. It also emits `LAYOUTAUDIT_TESTSTART <name>` and resets the
   boot/interaction boundary at each test transition, so a sharded run (one browser plays many tests) segments + classifies

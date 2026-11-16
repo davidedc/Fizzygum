@@ -27,7 +27,7 @@
 > executes the nine one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-4/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §5
-> (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
+> (2026-11-16), §8 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -138,7 +138,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | 5 | One SHA-256 in the harness | ½ to 1 day | A hand-written SHA-256 (about 89 of the file's 109 code lines), a second hashing of pixels already hashed, one of three implementations that must agree. **In plain words:** to recognise a screenshot the test kit computes a fingerprint of its pixels. It has two fingerprint machines, the browser's own and a hand-written one, and for a screenshot that does not match it runs both on the same pixels. Use the browser's, and pass its answer along. | **Why:** two rulers that must agree to the last hair: if they ever differ, every saved picture gets the wrong name. One ruler cannot disagree with itself. **Trade-offs:** the two places that use the hand-written one cannot wait for an answer today, so one is handed the answer that already exists and the other compares the pixels directly; the saved pictures' names must be shown unchanged. | None (the same digest; proven on one capture) | No | 4 | Landed 2026-11-16 (§5, "Landed") |
 | 6 | Gate rows run side by side; the tests syntax gate parses in-process | 1 day | 778 process launches per build; a one-at-a-time queue of 33 checks on a 16-core machine; the reason for a planned cache. **In plain words:** every build runs 34 checks one after another, and one of them starts a fresh program for each of 778 test files just to see whether the file parses. Parse them all in one program, and let checks that do not depend on each other run at the same time. | **Why:** thirty-three children wait in one line to wash their hands at one tap while fifteen taps stand unused, and one child walks to a different sink for each finger. Use the taps. Every build, and so every test run, waits for this line. **Trade-offs:** the printed report must still come out in the old order, so each check's output is held until its turn; and when one check fails, the ones after it have already run for nothing. | None | No | 1 | Approved by the owner (2026-11-15); queued |
 | 7 | Text cache keys are the text | 1 day | Seven cache keys built on a 32-bit hash, the hash's own memo table and its accounting, a filed bug. **In plain words:** to avoid measuring and drawing the same text again, results are filed under a short number computed from the text. Two different texts can get the same number ("Of" and "PG" do), and then the second shows the first's result. File results under the text itself, beside the font, size, alignment and the rest, which the label already carries and which do not change. | **Why:** coats in the cloakroom are hung by the first two letters of the owner's name, so Anna sometimes gets Andrew's coat. Hang them by the whole name. **Trade-offs:** whole names take longer to read than two letters, and this cloakroom is used thousands of times a second, so it must be timed on real use before and after; the labels also take a little more room. | None expected (a difference would be a collision being put right) | No | 2 | Parked 2026-11-16: measured slower; OWNER DECISION open (§7) |
-| 8 | Audit preludes share one head | 1 day | 17 copied blocks (170 lines) across 13 instrument files. **In plain words:** six measuring instruments are slipped into the test page, each as one self-contained file, and each carries its own copy of the same small helpers. A fix made in one copy does not reach the others. Keep the helpers in one file and join it to each instrument when it is used. | **Why:** six toolboxes each hold their own copy of the same screwdriver, and one day one copy is found bent. Keep one good screwdriver and lend it to every box. **Trade-offs:** an instrument is no longer one file that can be handed over by itself; the joining step is one more thing that can go wrong, and has to be proven by the instruments' own planted faults. | None | No | 10 | Approved by the owner (2026-11-15); queued |
+| 8 | Audit preludes share one head | 1 day | 17 copied blocks (170 lines) across 13 instrument files. **In plain words:** six measuring instruments are slipped into the test page, each as one self-contained file, and each carries its own copy of the same small helpers. A fix made in one copy does not reach the others. Keep the helpers in one file and join it to each instrument when it is used. | **Why:** six toolboxes each hold their own copy of the same screwdriver, and one day one copy is found bent. Keep one good screwdriver and lend it to every box. **Trade-offs:** an instrument is no longer one file that can be handed over by itself; the joining step is one more thing that can go wrong, and has to be proven by the instruments' own planted faults. | None | No | 10 | Landed 2026-11-16 (§8, "Landed") |
 | 9 | Every profile is built by something, or it goes | 1 to 1½ days | Three of five build flavours that no command, gate or test ever builds. **In plain words:** the project can be built in five flavours. The checks build two of them. The other three are built only when a person remembers to, so nothing would notice if one stopped working. Have a check build each flavour that is wanted, and delete the ones that are not. | **Why:** five doors lead out of the house and two are tried every day. The other three may be stuck, and nobody will know until the day one is needed. Try every door now and then, or brick up the ones nobody uses. **Trade-offs:** trying a door takes a minute or two each time; bricking one up loses a flavour somebody may want twice a year. | None | Yes (which flavours are products) | 7 | Left for a later day by the owner (2026-11-15) |
 | 10 | The build is one Node program | 2 to 3 days | 260 lines of bash, the shell-text bridge out of the profile module, a hand list of the files the script reads, the flag mapping of a second script. **In plain words:** the build is a shell script that starts a JavaScript program seven times and has one of them print shell text for it to read back. Round 2 measured it and left it. Since then the command that calls it has moved to JavaScript, and it is the last shell program a commit depends on. | **Why:** the family now speaks one language at the table, except for one member who needs every sentence passed on a slip of paper, in both directions. **Trade-offs:** it rewrites the thing that makes the product, so every flavour's output must be shown identical byte for byte before and after (a tool for that exists); it adds no feature; and seven small shell helpers remain, so shell does not leave the repository. | None (byte-identical trees) | No (a re-listing: the owner may decline it again) | 3 | Approved by the owner (2026-11-15); queued |
 
@@ -674,7 +674,8 @@ measured it, and it is slower, so it parked: the patch is
   some test"). A correction to one copy does not reach the others.
 - READ: an instrument is handed to the runner as ONE file (`--audit-prelude=FILE`). The six
   gates that do so share one driver, `scripts/lib/audited-suite.js`, and the self-test tier
-  already joins preludes into one file before a run (`composed-selftest-prelude.js`).
+  already joins a prelude and a plant into one file before a run
+  (`notification-settle-audit/cache-oracle-selftest-headless.js`, its `settle-plus-plant.js`).
 
 **Why it matters.** These files decide what six gauntlet legs see. They are the one family of
 tooling where the duplication scanner still finds the same helper written many times.
@@ -695,6 +696,43 @@ would be the real finding).
 **Re-measure.** `./find_duplicated_code.sh --tests` from `Fizzygum/`, then count the pairs in
 `duplication-report/tests/jscpd-report.json` whose two files both sit under the four
 directories.
+
+**Landed 2026-11-16.** One page script, `scripts/audit-preludes/audit-head.js` (the head),
+holds the helpers that meant the same thing in every copy: the test-boundary READ AND PRINT
+(`testStarted`), the held install-time findings (`findingsBuffer`), `ownMethod`, a plant's
+`playing()` and its install-and-retry loop (`applyPlant`). It defines one non-enumerable page
+global, `window.__auditHead`, once a page, and prints nothing of its own. Eight preludes and
+eight plants call it. Each of the eight test-boundary callers keeps its own seam (a world reset,
+a layout flush or a paint), its own last-name variable and its own follow-ups, because the seam
+decides which bucket a line lands in. Each instrument and plant that uses the head opens with
+one guard: injected without it, it says `AUDIT_HEAD_MISSING` and installs nothing.
+
+The join is ONE function, `joined` in `scripts/lib/audit-head.js`, lifted from the cache-oracle
+proof's own join. Its callers:
+- `lib/audited-suite.js` (the six audited gates);
+- `preludes-install-selftest-headless.js`, which also proves the missing-head line fails a run;
+- the cache-oracle proof;
+- `lib/gate-bite-proof.js` `fileText`, which every leg proof reads its plant files through;
+- a command line that the two person-run shells and the usage lines use.
+
+The single-test and sequence runners take one `--prelude=`, so the join is in every caller, not
+only in `audited-suite.js`; no runner gained a rail or a flag. Not moved, though equal in their
+copies: `attachedClock`, `hook`, the READS check, the class enumerations, the install guards and
+`poll`. Not merged, because they differ: tier-naming's console.log findings, storage's per-call
+findings, the double-wrap markers.
+
+The evidence:
+- each gate's buckets before and after: settle, capstone, revisit and storage byte-identical;
+- tier-naming byte-identical across four alternating runs of HEAD's scripts and the change's
+  (its baseline and its first after-run each differed in one first-test bucket, a boot race
+  that also varies between runs of HEAD's own scripts);
+- vm-truth OK with no finding;
+- the clone pairs between instrument files 17 → 14 (170 → 120 lines), none of them a moved
+  helper;
+- the install self-test and the audited-suite self-test pass.
+
+The vm-truth gate's baseline run read INVALID by its pin cap, which is older than this round's
+first unit: filed in `docs/BACKLOG.md` under the object-lifetime program.
 
 ---
 
@@ -965,3 +1003,7 @@ Do not commit or push without asking me.
 - [x] §5 (½ to 1 day): one SHA-256 in the harness — the hand-written one (89 code lines) re-hashes pixels the browser's digest already answered; its two callers take the digest or compare bytes
   — CLOSED 2026-11-16 (loop U1): the page has one digest, the browser's; a recorded screenshot is named by the digest
   its comparison already took, and the paint audit compares pixels (§5, "Landed").
+
+- [x] §8 (1 day): audit preludes share one head — 17 copied blocks (170 lines) across 13 page-injected instrument files; `lib/audited-suite.js` joins the shared head to each
+  — CLOSED 2026-11-16 (loop U3): the helpers equal in meaning live in `scripts/audit-preludes/audit-head.js`, joined in
+  front of every instrument and plant that uses them by `scripts/lib/audit-head.js` (§8, "Landed").
