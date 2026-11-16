@@ -12,7 +12,8 @@
 // `<CMD> EXIT=<rc> <text> (<date>)`), the `PENDING` stamp of a leg log, the `fg-leg: <name> rc=<rc> <n>s` stamp, the
 // banners, the tally (`<leg>:PASS(<n>s)`, `PASS-serial-only`, `INFRA-FLAKE`, `FAIL`, `NEVER-RAN`), the order of
 // everything (lint before build, waves in order, a wave's legs waited for in launch order, the retries after the last
-// wave) and every program launched, its arguments, its cwd, its alarm and the `FG_*`/`FIZZYGUM_*` it sees. Two shard
+// wave) and every program launched, its arguments, its cwd, its alarm and the `FG_*`/`FIZZYGUM_*` it sees — but one:
+// the profile is asked in this process (suiteProfileOrRefuse), where bash ran `lib/profile.js --shell`. Two shard
 // counts behave as bash's SHELL variables did: fg sets `FG_SUITE_SHARDS` / `FG_GATE_SHARDS` for its own placeholders,
 // and a program sees them only when fg's caller had exported them.
 // BETTER where the plan's §5 says so (each its own ruling): a leg leaves no process behind and its log names a signal or
@@ -346,13 +347,30 @@ async function fgBuild(flags = []) {
 }
 
 // A tier that RUNS THE SUITE must build a tree that ships the harness page: the profile is asked first, through the
-// one reader of profiles, and nothing is built otherwise. 0, or 2 (nothing was measured).
+// one reader of profiles (lib/profile.js, in this process: the flags read as the build reads them, and the parts'
+// boot declarations checked as the build checks them first), and nothing is built otherwise. The reader is required
+// HERE, not when fg loads: one that cannot load refuses these tiers, and every other verb still works (as the leg
+// table, B12). What it refuses is said as it says it on its own command line (finishCommandLine, on stderr: a
+// refusal's words after its name, anything else its stack). 0, or 2 (nothing was measured).
 async function suiteProfileOrRefuse(flags) {
-  const r = await capture(['node', './' + path.join('buildSystem', 'lib', 'profile.js'), '--shell', ...flags], { cwd: FZ });
-  if (r.rc !== 0) { say('fg: could not read the build profile — nothing was built.'); return 2; }
-  const value = (k) => { const m = new RegExp('^' + k + '=(.*)$', 'm').exec(r.text); return m ? m[1] : ''; };
-  if (value('PROFILE_SHIPS_HARNESS_ENTRY') === 'true') return 0;
-  say(`fg: profile '${value('PROFILE_NAME')}' ships no harness page, so the suite cannot run on it — nothing was built. Use the default (dev) profile; for a boot check of this one, build_and_smoke.sh (or fg homepage).`);
+  let profiles, profile;
+  try {
+    profiles = require('./lib/profile');
+    // its relative paths are Fizzygum/'s, whatever directory fg runs from
+    profile = profiles.inDirectory(FZ, () => {
+      const named = profiles.resolve(profiles.profileNameFromArgv(flags));
+      profiles.bootFiles(profiles.loadParts());
+      return named;
+    });
+  } catch (error) {
+    // (finishCommandLine also sets process.exitCode; fg's own finish sets it again, to fg's code)
+    if (profiles === undefined) process.stderr.write(String((error && error.stack) || error) + '\n');
+    else profiles.finishCommandLine(error, 'profile.js');
+    say('fg: could not read the build profile — nothing was built.');
+    return 2;
+  }
+  if (profile.shipsHarnessEntry) return 0;
+  say(`fg: profile '${profile.name}' ships no harness page, so the suite cannot run on it — nothing was built. Use the default (dev) profile; for a boot check of this one, build_and_smoke.sh (or fg homepage).`);
   return 2;
 }
 

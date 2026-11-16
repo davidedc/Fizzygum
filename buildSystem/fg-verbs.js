@@ -11,7 +11,8 @@
 // otherwise, it is one of the plan's §5 rulings: an UNKNOWN verb prints the usage and exits 2 (`fg` and `fg help` exit
 // 0); a long operation is refused while another runs (FG_ALLOW_CONCURRENT=1 overrides); `fg status` tells a RUNNING
 // verdict whose fg is gone (STALE); `fingerprint` ends its verdict on every exit; an interrupted verb says INTERRUPTED
-// in its verdict and kills its children; an error in fg is INVALID (exit 2).
+// in its verdict and kills its children; an error in fg is INVALID (exit 2). The usage text is not byte-equal to the
+// bash fg's, and `fg status`'s build line is the runners' own answer (lib/build-inputs.js buildStaleness).
 
 const fs = require('fs');
 const path = require('path');
@@ -75,7 +76,10 @@ const USAGE_TAIL = [
   "                                            build — an unbuilt src edit trips the stale-build guard",
   "                                            and the run comes back INCONCLUSIVE.",
   "  fg run-sequence <name…> [--dpr=N]         run a NAMED SUBSET in ONE shared world (reproduce a cross-test",
-  "                                            state leak, DETERMINISM.md §2d); --before=<name> lists predecessors",
+  "                                            state leak, DETERMINISM.md §2d); --before=<name> lists predecessors.",
+  "                                            A STALE build (its inputs not the ones it was built from) is",
+  "                                            refused, exit 2 (--list and --before excepted;",
+  "                                            FIZZYGUM_ALLOW_STALE_BUILD=1 overrides)",
   "  fg recapture-inspector                    recapture the inspector member-list churn set (the tests in",
   "                                            Fizzygum-tests/scripts/inspector-churn-set.json; re-derive",
   "                                            it with scripts/derive-inspector-churn-set.js) after a benign",
@@ -106,7 +110,7 @@ const USAGE_TAIL = [
   "                                            because of a fuzz failure: fix the READ.",
   "  fg apps                                   app-launch smoke",
   "  fg homepage                               production-profile build + native boot-smoke + restore normal build",
-  "  fg critique                               ADVISORY code-critique view (~5 s, read-only, never gates):",
+  "  fg critique                               ADVISORY code-critique view (~15 s, read-only, never gates):",
   "                                            every ratchet's \"tighten me now\" + stale-allowlist NOTE,",
   "                                            plus the 5 censuses' summary counts (public/private calls,",
   "                                            HIERARCHY DUPLICATION, whose identical-override subset",
@@ -123,7 +127,10 @@ const USAGE_TAIL = [
   "                                            which are chronological by design. --write-baseline banks",
   "                                            a clean-up; `<!-- narration-ok: why -->` exempts a line.",
   "                                            Also fails on any closed item (`- [x]`) left in",
-  "                                            docs/BACKLOG.md, a hard zero (BACKLOG_CLOSED_ITEM).",
+  "                                            docs/BACKLOG.md, a hard zero (BACKLOG_CLOSED_ITEM), an",
+  "                                            open one over its length ceiling (BACKLOG_ITEM_TOO_LONG),",
+  "                                            and Fizzygum/CLAUDE.md or Fizzygum-tests/CLAUDE.md over",
+  "                                            its byte ceiling (INSTRUCTION_FILE_OVER_CEILING).",
   "                                            Also rides the gauntlet's refs leg (not the build: docs",
   "                                            prose must not block a build).",
   "  fg cc [coffee-cc flags|paths]             Cognitive Complexity (SonarSource S3776) of the CoffeeScript",
@@ -138,7 +145,8 @@ const USAGE_TAIL = [
   "                                            this gates its SEMANTICS via the real drain — wire death",
   "                                            severs, wire-into-bin-resident shelves (and relays via",
   "                                            the fixpoint), command edges confer nothing, close asks",
-  "                                            anyReferenceOrWireIntoWdgt, mixin super chains terminate.",
+  "                                            anyReferenceOrWireIntoWdgt, graphEdgesOut's super chains",
+  "                                            terminate (SUPER_CHAIN_TERMINATES).",
   "  fg menusweep                              CLICK EVERY MENU ITEM (~6s): fires every reachable menu",
   "                                            action and fails on a throw — the RUNTIME half of menu",
   "                                            wiring, whose static half runs on the build",
@@ -168,9 +176,13 @@ const USAGE_TAIL = [
   "                                            gauntlet/presuite run it first automatically.",
   "  fg status                                 one-shot re-orientation: repos, build freshness, tests,",
   "                                            zombie browsers, fg verdicts (read-only, <2s)",
-  "  fg killz                                  kill leftover headless test browsers",
+  "  fg killz                                  kill leftover headless test browsers, and what a dead fg",
+  "                                            run left behind",
   "build/suite/gauntlet/homepage also maintain /tmp/fg-<cmd>.verdict: \"RUNNING since …\" while",
   "running, \"<CMD> EXIT=<rc> …\" when done — cat it to check a backgrounded run (never poll-loop).",
+  "ONE long operation at a time: a second is refused, exit 2 (FG_ALLOW_CONCURRENT=1 overrides). An",
+  "interrupted run's verdict says INTERRUPTED; a run whose fg died reads STALE in fg status (fg killz",
+  "kills what it left running). An unknown verb exits 2.",
 ].join('\n') + '\n';
 
 const usage = () => out(USAGE_HEAD + L.roster().join('\n') + '\n' + USAGE_TAIL);
@@ -451,24 +463,29 @@ async function status() {
       .split('\n').filter((l) => l.length).map((l) => { const f = l.trim().split(/\s+/); return `behind=${f[0]} ahead=${f[1] === undefined ? '' : f[1]}`; }).join('\n');
     say(`  ${r.padEnd(16)} ${b} @ ${sha}  dirty=${dirty}  ${counts || '(no origin tracking)'}`);
   }
+  // the build's freshness as the runners judge it (lib/build-inputs.js buildStaleness: every input the build read, as
+  // it recorded them when it began), when the last completed build STARTED (lastBuildTime: the .build-stamp carries the
+  // start marker's time, the record's identity), and for a stale one at most three inputs.
+  // The reader is required here, not when fg loads (a broken one leaves every other line of status, and every other
+  // verb); inputs it cannot list read STALE, as the runners refuse such a build (lib/assert-build-fresh.js).
   const BUILT = `${ROOT}/Fizzygum-builds/latest/index.html`;
   if (!fs.existsSync(BUILT) || !fs.statSync(BUILT).isFile()) say(`  build: MISSING (no ${BUILT})`);
   else {
-    const builtAt = fs.statSync(BUILT).mtimeMs;
-    const newer = [];
-    const walk = (dir) => {
-      let entries;
-      try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
-      for (const e of entries) {
-        if (newer.length >= 3) return;
-        const p = path.join(dir, e.name);
-        if (e.isDirectory()) walk(p);
-        else if (e.name.endsWith('.coffee') && fs.statSync(p).mtimeMs > builtAt) newer.push(p);
-      }
-    };
-    walk(`${FZ}/src`); walk(`${ROOT}/Fizzygum-tests/Automator-and-test-harness-src`);
-    if (newer.length) { say('  build: STALE — newer source, e.g.:'); for (const p of newer) say('           ' + p); }
-    else say(`  build: FRESH (built ${C.stamp(fs.statSync(BUILT).mtime)})`);
+    let s, at;
+    try {
+      const inputs = require('./lib/build-inputs');
+      at = inputs.lastBuildTime();
+      s = inputs.buildStaleness();
+    } catch (e) {
+      s = { stale: true, why: `the build's inputs cannot be listed: ${String((e && e.message) || e).split('\n')[0]}`, changed: [], added: [], removed: [] };
+    }
+    const built = at === undefined ? '' : ` (the last build started ${C.stamp(new Date(at))})`;
+    if (!s.stale) say(`  build: FRESH${built}`);
+    else {
+      const inputs = [...s.changed.map((f) => `${f} (changed)`), ...s.added.map((f) => `${f} (added)`), ...s.removed.map((f) => `${f} (removed)`)];
+      say(`  build: STALE${built} — ${s.why}${inputs.length ? ', e.g.:' : ''}`);
+      for (const p of inputs.slice(0, 3)) say('           ' + p);
+    }
   }
   let tests = 0;
   try { tests = fs.readdirSync(`${FT}/tests`).filter((n) => !n.startsWith('.') && /^SystemTest_/.test(n)).length; } catch (e) { /* 0 */ }

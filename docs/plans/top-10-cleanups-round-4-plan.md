@@ -27,7 +27,7 @@
 > executes the nine one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-4/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §5
-> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16), §6 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
+> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16), §6 (2026-11-16), §2 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -132,7 +132,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | # | Cleanup | Effort (estimate) | What goes away, and in plain words | Why, and the trade-offs (ELI5) | Pixel risk | Owner decision first | Payoff rank | Status |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Stopped surveys leave `plans/` | ¼ day | Three files, 278 KB, a quarter of the folder for active plans; 25 of their 30 items have landed. **In plain words:** the folder for work still to do holds three long reports that are almost entirely about work already done. Move them to the archive; the five items they left stay on the open-work index. | **Why:** a to-do drawer stuffed with finished homework makes the unfinished pages hard to find. Put the finished homework on the shelf and leave a note in the drawer for the five pages still to do. **Trade-offs:** a reader of an old item hops to the archive folder for its story; 28 lines in other files that name the old location must be corrected in the same change. | None | Yes (a filing ruling) | 8 | Approved by the owner (2026-11-15); queued |
-| 2 | `fg` says what it does, and asks the build's own modules | ½ day | Five stale lines and one missing line in `fg`'s help; a second way of judging "is the build fresh"; a Node program reading a Node module through shell text; a status count that can never read zero. **In plain words:** the command that runs every check was rewritten last round under a rule that its help text must not change by one byte. The rule has done its job. Now the help can say what the command does, and the command can ask its neighbours directly. | **Why:** the leaflet in the box still describes last year's toy. Nobody is hurt, but whoever reads the leaflet learns the wrong thing, and one page of it says "fresh" while the kitchen says "stale". **Trade-offs:** the help text changes, so anything that compares it with the old text has to be found first; nothing else. | None | No | 5 | Approved by the owner (2026-11-15); queued |
+| 2 | `fg` says what it does, and asks the build's own modules | ½ day | Five stale lines and one missing line in `fg`'s help; a second way of judging "is the build fresh"; a Node program reading a Node module through shell text; a status count that can never read zero. **In plain words:** the command that runs every check was rewritten last round under a rule that its help text must not change by one byte. The rule has done its job. Now the help can say what the command does, and the command can ask its neighbours directly. | **Why:** the leaflet in the box still describes last year's toy. Nobody is hurt, but whoever reads the leaflet learns the wrong thing, and one page of it says "fresh" while the kitchen says "stale". **Trade-offs:** the help text changes, so anything that compares it with the old text has to be found first; nothing else. | None | No | 5 | Landed 2026-11-16 (§2, "Landed") |
 | 3 | The build's last text-level strip | ½ day | Four `sed` lines that rewrite compiled JavaScript by pattern, a macOS-only flag, a comment about a class that no longer exists. **In plain words:** when the build makes the production version, it searches the finished code for six "is the test kit here?" questions and replaces each with "no", so the code behind the question can be thrown away. Each question already answers "no" by itself when the test kit is absent. | **Why:** somebody goes through the finished book with correction fluid, painting over six sentences that begin "if the teacher is in the room". The teacher is never in that room, so the sentences do nothing anyway. And if the printer ever changes the lettering, the fluid misses and nobody notices. Stop painting. **Trade-offs:** the production file grows by the size of those six passages (to be measured first; a few hundred bytes of 1.3 MB are expected). | None | No | 6 | Landed 2026-11-16 (§3, "Landed") |
 | 4 | Build-time libraries from one place | ½ day | A second way of pinning a tool; one analyzer present twice, byte for byte; two hand-kept notes of where a copy came from. **In plain words:** some helper programs the build uses are fetched by one install command at exact versions; two others are pasted into the repository by hand; and one of those two is also fetched, so it exists twice. Pick one way. | **Why:** most of the kitchen tools come from the shop with a receipt, and two were copied by hand from a friend's, with a hand-written note of where they came from. One of those was also bought, so there are two of it. One way of getting tools means one list to check. **Trade-offs:** the shop way needs the network on a new machine (already true since round 3); the by-hand way keeps every upgrade a manual chore. | None | Yes (which place) | 9 | Landed 2026-11-16 (§4, "Landed") |
 | 5 | One SHA-256 in the harness | ½ to 1 day | A hand-written SHA-256 (about 89 of the file's 109 code lines), a second hashing of pixels already hashed, one of three implementations that must agree. **In plain words:** to recognise a screenshot the test kit computes a fingerprint of its pixels. It has two fingerprint machines, the browser's own and a hand-written one, and for a screenshot that does not match it runs both on the same pixels. Use the browser's, and pass its answer along. | **Why:** two rulers that must agree to the last hair: if they ever differ, every saved picture gets the wrong name. One ruler cannot disagree with itself. **Trade-offs:** the two places that use the hand-written one cannot wait for an answer today, so one is handed the answer that already exists and the other compares the pixels directly; the saved pictures' names must be shown unchanged. | None (the same digest; proven on one capture) | No | 4 | Landed 2026-11-16 (§5, "Landed") |
@@ -253,6 +253,45 @@ beside the behaviour it should state, and show the owner the diff of the usage a
 
 **Re-measure.** `/Users/davidedellacasa/code/Fizzygum-all/fg | grep -c mixin` (1 today), and
 the `Fizzygum-builds` line of `fg status`.
+
+**Landed 2026-11-16.** The six usage texts say the behaviour: `fg graph` names its rule,
+`SUPER_CHAIN_TERMINATES` (and so does the leg's comment in `legs.js`); `fg killz` also kills what
+a dead run left running; `fg critique` says about 15 s (14.0 s at load 52, 14.1 s at load 9, on
+16 cores); `fg doc-narration` also names the BACKLOG item-length ceiling and the byte ceilings of
+`Fizzygum/CLAUDE.md` and `Fizzygum-tests/CLAUDE.md`; `fg run-sequence` says a STALE build is
+refused, exit 2 (`--list` and `--before` excepted, `FIZZYGUM_ALLOW_STALE_BUILD=1` overriding);
+and a new line beside the verdict note says that a second long operation is refused (exit 2,
+`FG_ALLOW_CONCURRENT=1`), that an interrupted run says INTERRUPTED, that a run whose `fg` died
+reads STALE, and that an unknown verb exits 2.
+`fg status` prints what `buildStaleness()` answers: its build line keeps its first two words,
+gives when the last completed build started (`lastBuildTime()`: `.build-stamp` carries the
+start marker's time), and for a stale build says why, naming at most three inputs; its own walk
+is gone. `fg` asks `lib/profile.js` in its own
+process for the suite tiers' harness-page check (`--shell` stays for the build script). Both
+modules are required where they are used, not when `fg` loads, so a reader that cannot load
+refuses only what needs it: the suite tiers refuse, exit 2, and `fg status` and `fg help` still
+answer (the same rule as the leg table's, B12); inputs `fg status` cannot list read STALE, as
+the runners refuse such a build.
+
+The evidence:
+- the diff of bare `fg`'s output is the six texts and nothing else, and `fg | grep -c mixin`
+  is 0;
+- `touch buildSystem/parts.json` with no content change: `fg status` reads STALE and names
+  `Fizzygum/buildSystem/parts.json (changed)`; after `fg build` it reads FRESH;
+- `fg presuite --profile nosuch` and `--profile lean` print the same lines on each stream as
+  before, exit 2;
+- the run set (`what-runs.js --list-scripts`, and `runSet()`) is unchanged;
+- `fg-gauntlet-selftest-headless.js` (the `selftests` leg) runs a copy of `fg` whose stand-in
+  profile reader answers in process, and which holds no `lib/build-inputs.js`, so every case
+  proves `fg` loads without it (a planted load of it when `fg` loads fails every case). Two new
+  drills: a profile reader that cannot load refuses `presuite` before the build while
+  `fg status` and `fg help` answer (a planted load of `lib/profile.js` when `fg` loads fails it
+  and nothing else); and `fg status`'s build line on a copy with a tree reads STALE when no
+  reader can list the inputs, names at most three inputs for a stale answer and says when the
+  build started for a fresh one (a planted list of all four fails it and nothing else).
+
+Not done (that repository is not the loop's): `Fizzygum-builds` gains no `.gitignore`, so its
+`dirty=2` (`.DS_Store` and `latest/`, both untracked) stays.
 
 ---
 
@@ -1114,3 +1153,20 @@ Do not commit or push without asking me.
   — CLOSED 2026-11-16 (loop U6), filed under `archive/argument-holes-both-repos-plan.md` (its BACKLOG detail: masking
   src takes about 650 ms in each of 20 gates' processes, about 13 s a build): with the rows side by side the gates take
   26–29 s of wall time instead of 58–60, and no cache was built (§6, "Landed").
+
+- [x] §2 (½ day): `fg` says what it does — five stale usage lines and one missing; `fg status` asks `buildStaleness()`; `fg` asks `lib/profile.js` in-process; closes three lines of this file
+  — CLOSED 2026-11-16 (loop U7): the usage says what each verb does, `fg status` prints what `buildStaleness()`
+  answers, and `fg` asks `lib/profile.js` in its own process (§2, "Landed").
+- [x] **`fg`'s selftests-leg budget comment and its `run-sequence` usage are stale** — the comment budgets about 153 s alone, 212 s in wave A (measured 326 s, 2026-11-11); the usage omits the stale-build refusal.
+  — CLOSED 2026-11-16 (loop U7), filed under `archive/argument-holes-both-repos-plan.md` (its BACKLOG detail: the
+  comment budgeted 153 s alone and 212 s in wave A, measured 326 s; the usage did not say the runner refuses a stale
+  build): `5e12b629` rewrote the comment with the measured figures, and `fg run-sequence`'s usage now says a build
+  older than its inputs is refused, exit 2 (§2, "Landed").
+- [x] **`fg status` reads build freshness from the sources alone** — an edit of `parts.json`, `src/index.html`, `vendor/` or the build's Python reads FRESH there while every runner refuses the build.
+  — CLOSED 2026-11-16 (loop U7), filed under `archive/argument-holes-both-repos-plan.md` (its BACKLOG detail: the
+  runners ask `lib/build-inputs.js` against `.build-stamp`, while `fg status` compared the sources' mtimes on its own):
+  `fg status` asks `buildStaleness()` and `lastBuildTime()`, and its own walk is gone (§2, "Landed").
+- [x] `fg` still names mixins in two places — the `fg graph` leg's comment ("…mixin chain") and its usage gloss ("mixin super chains terminate"); the rule is `SUPER_CHAIN_TERMINATES` now. Left to the owner by the mixin loop. → `archive/mixin-removal-plan.md`, "fg still names mixins in two places"
+  — CLOSED 2026-11-16 (loop U7), filed under `archive/mixin-removal-plan.md` (its BACKLOG detail: the rule is
+  `SUPER_CHAIN_TERMINATES`, `graphEdgesOut` terminating on SimpleTextWdgt and TitleWdgt): the usage gloss and the
+  leg's comment name the rule, and `fg | grep -c mixin` is 0 (§2, "Landed").

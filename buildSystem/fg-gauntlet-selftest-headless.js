@@ -22,9 +22,16 @@ const FZ_REAL = path.resolve(__dirname, '..');
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'fg-gauntlet-selftest-'));
 const FZ = path.join(temp, 'Fizzygum'), FT = path.join(temp, 'Fizzygum-tests'), TMP = path.join(temp, 'tmp'), BIN = path.join(temp, 'bin');
 const write = (p, text, mode) => { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); if (mode) fs.chmodSync(p, mode); };
+// fg's own modules; NOT the build-inputs reader `fg status` asks, so every case holds that fg loads without it (a drill
+// below stands one in)
 for (const f of ['fg', 'buildSystem/fg-commit-point.js', 'buildSystem/fg-verbs.js', 'buildSystem/lib/fg-supervisor.js']) write(path.join(FZ, f), fs.readFileSync(path.join(FZ_REAL, f), 'utf8'));
 write(path.join(FZ, 'build_it_please.sh'), '#!/bin/sh\necho "[selftests] OK"\n[ -f "$FG_FAKE_BUILD_FAILS_FILE" ] && exit 1\n[ -f "$FG_FAKE_BUILD_HANGS_FILE" ] && sleep 30\necho "done!!!"\n', 0o755);
-write(path.join(FZ, 'buildSystem/lib/profile.js'), "console.log('PROFILE_NAME=dev\\nPROFILE_SHIPS_HARNESS_ENTRY=true');\n");
+// the stand-in profile reader: the calls fg's commit point makes, in-process, answering a dev profile that ships the
+// harness page
+const PROFILE = path.join(FZ, 'buildSystem/lib/profile.js');
+const PROFILE_STAND_IN = "module.exports = { inDirectory: (dir, fn) => fn(), profileNameFromArgv: () => 'dev',\n" +
+  "  resolve: (name) => ({ name, shipsHarnessEntry: true }), loadParts: () => ({}), bootFiles: () => {}, finishCommandLine: () => {} };\n";
+write(PROFILE, PROFILE_STAND_IN);
 write(path.join(BIN, 'pkill'), '#!/bin/sh\nexit 1\n', 0o755);
 // a step: prints its name, then does what the file named by its argument says (an exit code, "hang", "nopass")
 write(path.join(FT, 'scripts/step.js'), `
@@ -190,6 +197,41 @@ try {
     const help = spawnSync(process.execPath, [path.join(FZ, 'fg'), 'help'], { env: ENV(r.planFile, { FG_LEGS_TABLE: broken }), encoding: 'utf8' });
     t.check(end.code === 2 && /^GAUNTLET EXIT=2 REFUSED — the leg table/.test(verdictOf('gauntlet')) && help.status === 0,
       'a leg table that cannot load: the gauntlet is REFUSED with its verdict, `fg help` still answers (B12)', JSON.stringify(end) + verdictOf('gauntlet') + help.status);
+
+    // the same for the profile reader fg asks in-process: one that cannot load refuses a suite tier before anything is
+    // built (exit 2, its verdict says so), and `fg status` and `fg help` still answer
+    fs.writeFileSync(PROFILE, 'module.exports = { this is not JavaScript\n');
+    const unread = fg(['presuite']);
+    const statusUnread = spawnSync(process.execPath, [path.join(FZ, 'fg'), 'status'], { env: ENV(path.join(temp, 'no-plan.json')), encoding: 'utf8' });
+    const helpUnread = spawnSync(process.execPath, [path.join(FZ, 'fg'), 'help'], { env: ENV(path.join(temp, 'no-plan.json')), encoding: 'utf8' });
+    fs.writeFileSync(PROFILE, PROFILE_STAND_IN);
+    t.check(unread.status === 2 && /^PRESUITE EXIT=2 REFUSED/.test(unread.verdict) && /could not read the build profile — nothing was built/.test(unread.out)
+      && /SyntaxError/.test(unread.out) && !/done!!!/.test(unread.out) && statusUnread.status === 0 && /build: MISSING/.test(statusUnread.stdout)
+      && helpUnread.status === 0 && /fg status/.test(helpUnread.stdout),
+    'a profile reader that cannot load: presuite is REFUSED before the build, `fg status` and `fg help` still answer',
+    unread.status + unread.verdict + unread.out + statusUnread.status + statusUnread.stdout.slice(-300) + helpUnread.status);
+
+    // `fg status`'s build line, on a copy that has a tree: with no build-inputs reader it reads STALE (inputs it cannot
+    // list), then a stand-in reader answers stale (at most three inputs named) and fresh; the first two words stay
+    const BUILT = path.join(temp, 'Fizzygum-builds', 'latest', 'index.html'), INPUTS = path.join(FZ, 'buildSystem/lib/build-inputs.js');
+    const buildLine = () => {
+      const st = spawnSync(process.execPath, [path.join(FZ, 'fg'), 'status'], { env: ENV(path.join(temp, 'no-plan.json')), encoding: 'utf8' });
+      return { status: st.status, text: st.stdout.split('\n').filter((l) => /^  build: |^           \S/.test(l)).join('\n') };
+    };
+    write(BUILT, '<!doctype html>\n');
+    const noReader = buildLine();
+    const reader = (staleness) => write(INPUTS, `module.exports = { lastBuildTime: () => ${Date.UTC(2026, 0, 2, 3, 4, 5)}, buildStaleness: () => (${staleness}) };\n`);
+    reader("{ stale: true, why: 'W', changed: ['a', 'b'], added: ['c'], removed: ['d'] }");
+    const stale = buildLine();
+    reader('{ stale: false }');
+    const fresh = buildLine();
+    fs.rmSync(INPUTS); fs.rmSync(BUILT);
+    const at = '\\(the last build started \\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\\)';
+    t.check(noReader.status === 0 && /^  build: STALE — the build's inputs cannot be listed: Cannot find module/.test(noReader.text)
+      && stale.status === 0 && new RegExp(`^  build: STALE ${at} — W, e\\.g\\.:\\n {11}a \\(changed\\)\\n {11}b \\(changed\\)\\n {11}c \\(added\\)$`).test(stale.text)
+      && fresh.status === 0 && new RegExp(`^  build: FRESH ${at}$`).test(fresh.text),
+    "fg status's build line: inputs it cannot list read STALE; a stale answer names at most three inputs; a fresh one says when the build started",
+    [noReader, stale, fresh].map((x) => x.status + ' ' + x.text).join('\n'));
 
     // B11: the build's ceiling
     fs.writeFileSync(path.join(temp, 'build-hangs'), '');

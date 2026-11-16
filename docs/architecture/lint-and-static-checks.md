@@ -589,7 +589,7 @@ SUMMARY COUNTS by default, with `--full` for the lists; `census-call-arity.js` i
 (`--call=` / `--super=` / bare `new <Class>` names) and prints only what you asked for. Two of them,
 `census-widget-conformance.js` and `census-hierarchy-duplication.js`, ALSO have a `--gate` mode that the build runs —
 that half is a gate and lives in §3's table. Run them from `Fizzygum/`
-— or all at once, with every ratchet's "tighten me" note, via **`fg critique`** (~5 s, read-only). It deliberately
+— or all at once, with every ratchet's "tighten me" note, via **`fg critique`** (~15 s, read-only). It deliberately
 excludes jscpd/jsinspect (minutes-slow — those stay on-demand behind `./find_duplicated_code.sh` /
 `./find_similar_code.sh`).
 

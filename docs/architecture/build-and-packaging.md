@@ -35,8 +35,9 @@ profile does not know what a part is made of.
 `buildSystem/lib/profile.js` is the ONE reader of both. It resolves a profile, validates it, and derives the rest.
 Three consumers use it and none of them re-implement any of its rules:
 
-- `buildSystem/build.js` requires it (`Profile.selectsPart`, `loadParts`, `ENTRY_PAGES`);
-- `build_it_please.sh` and `build_and_smoke.sh` `eval` its `--shell` output, and `fg` reads the same output;
+- `buildSystem/build.js` requires it (`Profile.selectsPart`, `loadParts`, `ENTRY_PAGES`), and so does `fg`, whose
+  suite tiers ask whether a profile ships the harness page;
+- `build_it_please.sh` and `build_and_smoke.sh` `eval` its `--shell` output;
 - it also owns `--profile` PARSING, so no caller has its own copy of that either.
 
 ---
@@ -647,7 +648,8 @@ contents checks its own exit (by hand where it has a remedy to give, else `build
 refusal), so a step that fails stops the build before it stamps a tree missing a piece — the `printf` lines appending a
 generated line to the boot bundle are the exception, failing only with the disk. The suite runner, the single runner (except while it captures references), the sequence runner (except
 for its `--list` / `--before` listings), the paint audit and several rigs refuse a stale build (`Fizzygum-tests/scripts/lib/assert-build-fresh.js`;
-`FIZZYGUM_ALLOW_STALE_BUILD=1` overrides); the reference-capture tool does not ask. ⚠ `fg status` prints FRESH/STALE by a check of its own, over the sources only.
+`FIZZYGUM_ALLOW_STALE_BUILD=1` overrides); the reference-capture tool does not ask. `fg status` prints the same answer: FRESH or STALE, when the last completed build
+started, and for a stale one why, naming at most three of the inputs.
 
 ## 7. Adding things
 

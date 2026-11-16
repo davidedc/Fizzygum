@@ -87,8 +87,8 @@ const LEGS = [
   // classifier's IDEMPOTENCE; this gates its SEMANTICS through the REAL drain station: wire death
   // severs the living producer's record (no re-declaration/delivery into a corpse), the collector
   // files by containment ∪ flow ∪ reference (command confers nothing), close asks the same
-  // question (anyReferenceOrWireIntoWdgt), and graphEdgesOut terminates on the ex-double-injection
-  // mixin chain. One browser, ~35s. Fails on any check, STORAGE_INVARIANT token or console error.
+  // question (anyReferenceOrWireIntoWdgt), and graphEdgesOut's super chains terminate
+  // (SUPER_CHAIN_TERMINATES). One browser, ~35s. Fails on any check, STORAGE_INVARIANT token or console error.
   { name: 'graph', waves: ['A'],
     steps: [{ cwd: 'tests', alarm: 300, script: 'scripts/graph-liveness-headless.js', args: [] }],
     headline: 'graph-liveness\\] OK|graph-liveness FAILED', verb: 'graph' },

@@ -1146,10 +1146,6 @@ changelog prose; add the base-class lookup rule and the new classes to
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
-### fg still names mixins in two places
-
-- [ ] `archive/mixin-removal-plan.md` §7 Phase 8 (left to the owner by its loop): `fg` still names mixins in two places — the `fg graph` leg's comment ("…mixin chain") and the gloss bare `fg` prints for it ("mixin super chains terminate"); the rule they describe is `SUPER_CHAIN_TERMINATES` now (`graphEdgesOut` terminates on SimpleTextWdgt and TitleWdgt, and a wired one enumerates its flow edge through what it inherits from `ControllerWdgt`).
-
 ### Classes are still evaluated in sloppy mode
 
 - [ ] `archive/mixin-removal-plan.md` §7 Phase 8: classes are still evaluated in sloppy mode (an indirect `eval.call window`); with `Mixin`'s `arguments.callee` rewrite deleted, nothing the meta-system emits needs it any more — whether to compile classes in strict mode is open (out of that plan's scope).

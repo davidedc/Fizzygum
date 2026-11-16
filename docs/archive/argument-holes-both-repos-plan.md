@@ -3715,24 +3715,6 @@ for (const s of sites) if (s.absentBefore.length) {
       `prof-interactive.js` keep their own world waits and "did not become ready" line, outside the shared boot wait.
   (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "The rigs wait for their pages to boot a dozen ways".)
 
-### `fg`'s selftests-leg budget comment and its `run-sequence` usage are stale
-
-- [ ] **`fg`'s selftests-leg budget comment and its `run-sequence` usage are stale** (same review; by reading).
-      `fg`'s comment budgets the leg at about 153 s alone and 212 s in a
-      loaded wave A (measured 326 s on 2026-11-11, the smoke-apps self-test its longest file now that its two
-      never-starting pages wait the shared 90 s each), and its `run-sequence` usage does not say the runner now refuses a
-      stale build.
-  (Moved here from docs/BACKLOG.md, where "same review" meant the item before it: the independent review closing "The rigs wait for their pages to boot a dozen ways".)
-
-### `fg status` reads build freshness from the sources alone
-
-- [ ] **`fg status` reads build freshness from the sources alone** (found closing "Build freshness reads only the
-      sources' mtimes", in the plan's ledger; by reading).
-      The runners now ask `Fizzygum/buildSystem/lib/build-inputs.js` (the files the build's output is made from)
-      against `.build-stamp`; `fg status`'s `build: FRESH/STALE` line still compares the sources' mtimes on its own, so
-      an edit of `parts.json`, `src/index.html`, `vendor/` or the build's Python still reads FRESH there while every
-      runner refuses the build. It could ask the same definition (`node -e` over build-inputs.js).
-
 ### A hand-list sanction can cite a script that judges nothing
 
 - [ ] **A hand-list sanction can cite a script that judges nothing** (found by the independent review closing "Every
