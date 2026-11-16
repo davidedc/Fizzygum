@@ -17,7 +17,7 @@ Phase status (update this table as phases close):
 
 | Phase | What | Status |
 |---|---|---|
-| P0 | Spike S1 (the paint mechanism, planted); measure M1 (test fallout). D1–D8 are already ratified | not started |
+| P0 | Spike S1 (the paint mechanism, planted); measure M1 (test fallout). D1–D8 are already ratified | DONE 2026-11-16: S1 passes every row; M1a, M1b empty; M1c 26 shots in 12 tests (§8 "P0 results") |
 | P1 | Content-side bugs: view-mode content refuses restyling; a drawing takes no click-placed widget | not started |
 | P2 | The seam + paint: the surface takes up its tool at use; windows hold their own tool | not started |
 | — | OWNER CHECKPOINT: dock / undock by hand, judge the feel (D3) | — |
@@ -386,7 +386,8 @@ call separation, part edges).
   person. Under D4 nothing else is tested.
 - A tool finds the toolbar it stands in by a capability climb
   (`allParentsBottomToTopSuchThat (p) -> p.hostWindow?`, `src/basic-data-structures/TreeNode.coffee`),
-  never by a class test. A tool standing in no toolbar works for the person. Give this ONE home that all
+  never by a class test. ⚠ Measured in P0: that helper's array is ROOT-first (self last), so the nearest
+  match is its LAST element. A tool standing in no toolbar works for the person. Give this ONE home that all
   three tool families can ask (a static on `ToolbarWdgt` reaches them all: authoring requires app-kit;
   choose by `widget-authoring-guidelines.md` §16).
 - "In reach of host H" = inside H's CONTENT subtree (`H.contents` is the widget or its ancestor). A band
@@ -543,7 +544,8 @@ with), and a dimmed tool ignores its press. The look is the owner's choice from 
 7. **Core / part layering.** `FrameWdgt` and `WorldWdgt` gain generic members only; every call from core
    into a payload is an existence-guarded capability call.
 8. **Finger input.** No hover exists; the press path alone must take the tool up. Every new test runs
-   under both pointers.
+   under both pointers. (P0 measured: a touch stroke's glass still hears one `hoverMoved`, the hand
+   arriving at the touch point, before its `pressMoved`s; the press path alone was proven separately.)
 
 ---
 
@@ -581,6 +583,180 @@ with), and a dimmed tool ignores its press. The look is the owner's choice from 
 4. Acceptance: S1 all rows as stated; the three sets recorded. No commit (nothing in the repos changed
    but this plan). Report to the owner and wait for the go-ahead to start P1.
 
+#### P0 results (recorded 2026-11-16; Fizzygum `93a5ddab` = authoring head + this plan, tests `f470874b0`, build FRESH, no source change)
+
+**§1 re-verified.** Since `14905c4c` only this plan's own commit landed; the four files §0.5 names are
+unchanged and every method §1 names sits where it says, line numbers included. One reader §1 does not
+list: `Fizzygum-tests/scripts/serialization-roundtrip-headless.js` (`R.paintedSurface`) finds the glass
+with `isPaintingOverlay`, so P2's deletion of that chain must re-point it (`instanceof CanvasGlassTopWdgt`).
+
+**S1 — PASS: every acceptance row.** Probe `Fizzygum-tests/.scratch/paint-two-makers/s1-spike.js`, its
+plant in `s1-plant.js` beside it (gitignored; restated here so it can be rebuilt). `index-sw.html`, dpr 1,
+real CDP mouse input. Fixture: three Drawings Makers A, B, C at 400×620 (any shorter and the palette puts
+toothpaste and eraser behind its overflow »); B's and C's palettes undocked by a press-drag on their band's
+grip. A stroke is a press-drag across 60% of the glass; it is read twice and both readings must name the
+same tool: the changed-pixel box in `StretchableCanvasWdgt.behindTheScenesBackBuffer`, scaled to screen
+pixels (buffer px × canvas width ÷ buffer width: a canvas narrowed by a second band is drawn smaller than
+its buffer, so a 16 px brush lays a 20 px band there), and the kept source of the glass's `applyToolAt`.
+Pencil 4 px, brush 16, toothpaste 18 (17.4 after a rescale), view mode 0.
+
+The plant, as §6.2 states it: on `CanvasGlassTopWdgt.prototype` the two entries, `_applyToolInReach`,
+`_takeUpToolInReach` (compare, `removeOwnProperty` each name the previous source assigns, inject the new),
+`_sourceOfToolInReach`, the edit-mode test (nearest ancestor answering
+`coordinatesDragsDropsAndEditingForChildren`, asked `isInEditMode`), `_toolHolder` (climb; the first
+`isFrame` whose `contents` is the child the climb came up through and that `wearsDrawingTools`, else
+`world.user`) and `hoverExited` as a class method; on `FrameWdgt.prototype` `armedDrawingTool` /
+`armDrawingTool` (idempotent; a change tells its docked payloads to refresh), `dockedPayloads`,
+`wearsDrawingTools`, `dockHost` (`@parent if @_myEdgeDockSpec()?`); on `ToolbarWdgt.prototype`
+`hostWindow`, `holdsDrawingTools` and the refresh verb (every cell `noteItemStateChanged`); the palette
+tool's `activated` and `isActiveTool` against its holder; the stock sources compiled through
+`Widget.compilePropertyAssignments` and re-joined without `hoverMoved` / `pressMoved` (pencil, brush,
+eraser keep `applyToolAt`; toothpaste keeps `paintBrush`, `initialiseQueueIfNeeded`, `pressEnded`,
+`applyToolAt`); `ImageWdgt._makeStartingPayload` wrapped to delete what it injected; the transfers on
+`_dockFrameNoSettle` (first drawing-tool toolbar on the host: the host adopts the hand),
+`_reactToChildRemoved` (a re-homed band, not destroyed, leaving the host wearing none: the hand takes the
+host's tool, the host's field cleared) and `_buildDockedToolbarNoSettle` (D1: an empty hand at a birth
+gives the window pencil); and every pusher §6.2 deletes neutralised: `_armSelectedTool` and
+`applyArmedDrawingTool` refresh only, `reactToEditModeInFrame` / `reactToViewModeInFrame` deleted from the
+prototype, `newCodeToInjectFromButton` and `injectCodeIntoTarget` no-ops.
+
+The run (rows reordered only where a row's precondition needs it: row 6 runs before row 5, which closes A;
+before row 4 the hand is put back on toothpaste, because row 3's tap moved it):
+
+| Row | Measured |
+|---|---|
+| 1 | BRUSH on A's docked palette: A paints brush (16), B paints pencil (4); the floating palettes show pencil, A's shows brush; hand pencil |
+| 2 | TOOTHPASTE on B's floating palette: B toothpaste (18), C (also undocked) toothpaste (18), A still brush; both floating palettes show toothpaste |
+| 3 | A, then B, to view mode: neither takes paint and both glasses carry no tool members; PENCIL tapped on a floating palette meanwhile changes only the hand; back in edit mode A paints brush (its own), B pencil (the hand's by then) |
+| 4 | the floating palette re-docked on B by a real drag (a ~1 s still hold over B's left band arms the drag-embed dwell): B adopts the hand's toothpaste, keeps painting it (17.4), its palette still shows toothpaste; a later PENCIL on C's floating palette leaves B on toothpaste while C follows (pencil) |
+| 6 | a second palette, opened floating, docked on A's right by a real drag: no transfer (A already wears one); both of A's palettes highlight brush; ERASER on the second, then BRUSH on the first: both follow each time; A paints brush; the hand untouched |
+| 5 | A closed from its bar, "Don't save" (a destroy): the hand unchanged. Extra: B closed, "OK" (saved, the window put on the shelf): the hand unchanged |
+
+31 checks, 31 pass, no page error; no glass ever carried an OWN `hoverMoved` / `pressMoved` (checked after
+every stroke). Transfers logged: three births adopting the hand, two departures (pencil), one re-dock
+arrival adopting toothpaste, one second-palette arrival with no transfer.
+
+Beyond the acceptance rows, same plant:
+- **Finger** (`s1-finger.js`, touch-emulated page, CDP touch): a touch tap on a floating palette sets the
+  hand; a touch stroke on a palette-less drawing paints it; a touch tap on a docked palette then a touch
+  stroke paints the host's tool, the hand untouched; view mode lays nothing. 5 of 5. ⚠ §7 risk 8's
+  premise is not literal here: a touch stroke's glass hears ONE `hoverMoved` (pointerType touch, the hand
+  arriving at the touch point) before its `pressMoved`s, and the take-up ran there. The press path alone
+  was then proven separately: the hand changed while the finger was down, and the next `pressMoved` took
+  the new tool up (toothpaste, 18 px).
+- **Cost** (`s1-cost.js`): a take-up after a change costs a median 2.0 / 5.0 / 6.6 / 1.9 ms (pencil /
+  brush / toothpaste / eraser; worst 9.3), once per change; an unchanged take-up (the climb and the
+  compare, paid on every move over a glass) about 1.7 µs.
+- **Transitions** (`s1-transitions.js`, §7 risk 4, driven by the frames' own verbs; 10 of 10): with the
+  window on brush and the hand on pencil, none of these writes the hand or the window's tool: a re-side
+  (`dockAtSide`), the band collapsed, the window collapsed, view mode and back. A payload destroyed and
+  rebuilt (`_resetToDefaultContents`) writes no hand either, and its FRESH palette's arrival makes the
+  window adopt the hand (brush → pencil: the drawing is new, as D1 wants). A palette docked into a slot
+  another palette holds keeps the window's tool and writes no hand. D1: a Maker born while the hand is
+  empty takes pencil and leaves the hand empty. The holder climb through a nesting window: a bare drawing
+  surface placed in a Docs Maker that wears a docked palette takes its tool from the Docs Maker (brush
+  tapped there: the drawing takes brush, the hand stays pencil).
+
+What S1 established for P2:
+1. **Every pusher goes in the same step as the entries.** The first run left `reactToViewModeInFrame`
+   live: at the mode flip it injected the old no-op `hoverMoved` / `pressMoved` onto the docked drawing's
+   glass as INSTANCE members, which shadow the class entries, and the drawing then painted nothing in
+   either mode. That is §7 risk 1's shadowing member, made by a pusher. P2's step order (§8 P2.1) must not
+   leave a build where the entries exist and any pusher survives.
+2. **A direct arming mixes with the take-up.** The take-up removes only what it injected itself
+   (`_takenUpToolSource`), so a tool source injected onto a glass by anything else stays and is overlaid.
+   The only such site outside `ImageWdgt` is `SystemTest_macroEveryPressIsToldItsEnding` §(d), which arms
+   its glass with `injectProperties PaintToolbarWdgt.sourceForToolKey "toothpaste"`: P2 re-authors it to
+   arm through the hand (`world.user.armDrawingTool 'toothpaste'`). Add it to §8 P2.4's re-read list.
+3. **`_reactToChildRemoved` is also a destroy's notification** (`Widget._destroyNoSettle` →
+   `previousParent._reactToChildRemoved`, with `child.destroyed` already true). In every destroy S1 drove
+   (a window closed with "Don't save", a payload reset retiring its bands, a palette replacing a palette)
+   the departure condition never held: the slot was freed first, or the toolbar was destroyed before its
+   frame. Nothing structural guarantees that order, so the departure still excludes a destroy explicitly
+   (`child.destroyed`), as the plant did.
+4. **The climb helper §6.1 names is root-first.** `TreeNode.allParentsBottomToTopSuchThat` recurses to
+   the root and pushes self last (measured: root, middle, self), so the NEAREST match is its LAST element;
+   take that, or climb by hand.
+5. **A second palette cannot keep D3's invariant.** Docked on a window that already wears one, it shows
+   the window's tool, not the hand's it showed floating (pencil → brush in row 6). §6.2 already scopes
+   the arrival transfer to the first such toolbar and R7 requires the agreement, so this is the expected
+   consequence. It is one more thing the owner sees at the D3 checkpoint.
+6. **Docking by drag needs the drag-embed dwell** (`ActivePointerWdgt.drop`: `wasArmed and
+   releasedOverBand`). P2's docking tests use `dwellDragWindowByTitleToEmbed_InputEvents_Macro`.
+7. **Readers to keep in view:** `SystemTest_macroPinnedMenuTicksFollowTheirState` reads
+   `world.user.armedDrawingTool` through a FLOATING palette's overflow menu (expected unaffected);
+   `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile` reads `resolveInjectionTarget`,
+   `sourceCodeToBeInjected` and `modifyCodeToBeInjected`; `SystemTest_macroDrawingsMakerReEnableEditing`
+   reads the two mode hooks and the hand.
+
+**M1 — the three sets.** Instruments under `Fizzygum-tests/.scratch/m1/` (gitignored):
+`m1-observe-prelude.js` (log-only; joined behind `scripts/audit-preludes/audit-head.js` by
+`node scripts/lib/audit-head.js` and run as `run-all-headless.js --audit-prelude=… --audit-dir=…`),
+`m1-p3-plant.js` (P3's rule, `--prelude=`) with its witness `m1-plant-witness-prelude.js` (beside the plant,
+as the `--audit-prelude`), and `analyse-m1.js` / `analyse-witness.js`. Each was proven on a positive control
+before the full runs. The observer was run on seven toolbar tests; its first version installed 3 of its 14
+hooks, because `allClassFunctions()` answers class FUNCTIONS, not names. The plant was run on §3.2's T1 and a
+C1 variant (`ctl-plant.js`): today B's paragraph goes bold from A's bar and the text box lands in front-most
+Docs D; planted, neither. Every suite run was dpr 1, 8 shards, valid and complete. The observer runs are green
+(mouse 389/389, finger 374/374, a second mouse run 389/389) and are the baseline.
+
+What the instruments mean by each word: a tool's toolbar is its nearest `ToolbarWdgt` ancestor; DOCKED when
+that toolbar's frame answers `_myEdgeDockSpec()` (R3), the HOST being that frame's parent; IN REACH = inside
+the host's `contents`. A PROPERTY tool is an `EditorContentPropertyChangerButtonWdgt` other than
+`TemplatesButtonWdgt` (D6), hooked at each class's own `activated` and at
+`ChangeFontButtonWdgt.setFontNameFromMenu` (the font tool applies from its menu row). A CREATOR is a
+`CreatorWdgt` other than a `ToolbarCreatorButtonWdgt` (D6; the only override of `activated`). A shot is
+`AutomatorPlayer.compareScreenshots`; a tool SHOWS when its `clippedThroughBounds()` is not empty.
+
+- **M1a — EMPTY (mouse and finger).** The whole suite activates a docked property tool 9 times, every time
+  with the focus in its host's reach: Bold in `macroSelectionOverlaySurvivesBringToFront` (Docs),
+  `macroSpreadsheetEnterTabDeleteMoves` and `macroSpreadsheetToolbarActsOnSelection` (Sheets); AlignRight in
+  `macroPinnedMenuTicksFollowTheirState` (Docs); AlignLeft in `macroSpreadsheetKeysFollowFocus`; the font row
+  in `macroSpreadsheetMenuTicksStayLive`; FillColor, MoreDecimals and SliderInCell in
+  `macroSpreadsheetToolbarActsOnSelection`. It activates no floating property tool, clicks no docked creator,
+  and clicks one floating creator (a `GlassBoxTopWdgt` lid in `macroToolbarChevronPopsOverflow`, placed on
+  the desktop).
+- **M1b — EMPTY (mouse 389/389 and finger 374/374 pass with P3's rule planted).** The witness proves the
+  plant was live at every shot (1033 of 1033 mouse, 990 of 990 finger) and consulted: it changed
+  `_styleSubject`'s answer up to 165 (mouse) / 170 (finger) times per page, rising inside
+  `macroDockAnyFrame`, `macroDocsToolbarDockSidesAndFloat`, `macroPageSelectionRingInWindowGutter`,
+  `macroSpreadsheetDragWidgetOutOfCell`, `macroSpreadsheetKeysFollowFocus`,
+  `macroTabletDockedToolbarChevron` (and, under finger, `macroSpreadsheetDropWidgetIntoCell`). All of
+  those are highlight reads (`isActiveTool`) of a docked bar while the focus was elsewhere, on a subject
+  that lacked the style, so no look changed. The align, font-name and creator counters stayed 0. So P3
+  changes no existing test. Its coverage is §8 P3.2's new tests alone, and §8 P3.3's "the failing set must
+  EQUAL M1b's" reads: no existing test may fail.
+- **M1c — 26 shots in 12 tests (identical under finger, and across two mouse runs).** Read with §6.6's
+  whole rule (a property tool whose subject, within its host when docked, is absent or does not offer its
+  verb; docked or floating; plus a docked creator on a host that takes no placed widget). Every one is a
+  property tool on `TextToolbarWdgt` docked on a Docs Maker (97 tool-showings), `TextToolbarWdgt` floating
+  (43), or `SheetToolbarWdgt` docked on a Sheets Maker (27); creators: 0. Most show a Maker whose bar has
+  nothing focused in reach: a freshly opened Maker has no editor focus. Asterisked shots are outside §8
+  P0.3c's narrower count (a DOCKED bar with no subject in reach: 21 shots in 11 tests); §6.6's rule adds
+  the floating bar's 5.
+
+  | Test | Shots |
+  |---|---|
+  | `macroCollapsedDockIsAnEdgeSliver` | 0, 2 |
+  | `macroDockAnyFrame` | 0, 1 |
+  | `macroDockedFrameHasNoCloseNoResizer` | 0 |
+  | `macroDocsToolbarDockSidesAndFloat` | 0, 1, 2*, 3 |
+  | `macroDocsToolbarSlotEditViewToggle` | 0, 2 |
+  | `macroPageSelectionRingInWindowGutter` | 0*, 2, 3 |
+  | `macroSpreadsheetDragWidgetOutOfCell` | 2 |
+  | `macroSpreadsheetDuplicate` | 1 |
+  | `macroSpreadsheetKeysFollowFocus` | 2 |
+  | `macroTabletDockedToolbarChevron` | 1, 2, 3 |
+  | `macroToolbarGridPacksAndSpreadsOnlyWhenFull` | 0, 1, 2 |
+  | `macroToolbarWindowBarCrossesItsRun` | 0*, 1*, 3* |
+
+  R8 (P1's view-mode refusal, approximated with the selection ring's editing climb,
+  `WorldWdgt._widgetBeingEdited`) adds 0 shots. So P4's recapture is these 12 tests at dpr 1 and 2,
+  mouse and finger, well inside §7 risk 3's "a few dozen". Blind spots: a showing bar hidden behind
+  another window is still counted (an over-count); the rows of an open overflow pop-up are not counted,
+  so if P4 dims those rows too, shots with such a pop-up open join; "offers its verb" is read off each
+  class's own `activated` (§6.6 leaves the verb test itself to P4).
+
 ### P1 — content-side bugs (independent of the rest)
 
 1. R8: the view-mode refusal, at the one query (§6.3 describes where it ends up; in P1 it guards
@@ -596,7 +772,11 @@ with), and a dimmed tool ignores its press. The look is the owner's choice from 
 
 1. §6.1, then §6.2 in this order: the surface's entries and take-up → the holder pair on `FrameWdgt` →
    the palette tool answering its own press → the transfers → D2's table and the save → the deletions.
-   Build after each; the syntax gate runs on every build.
+   Build after each; the syntax gate runs on every build. ⚠ No build may hold the entries beside a
+   surviving pusher: S1 measured a live `reactToViewModeInFrame` injecting instance `hoverMoved` /
+   `pressMoved` that shadow the class entries (P0 results, finding 1). The stock sources lose their two
+   lines, and the pushers (`_armSelectedTool`, the two `reactTo…ModeInFrame`, `newCodeToInjectFromButton`,
+   `injectCodeIntoTarget`, `ImageWdgt`'s injection) stop pushing, in the SAME step as the entries.
 2. Keep `PaintToolbarWdgt`'s refresh working through this phase with whatever is smallest (its own edge
    to the user may stay until P3 moves it to the base).
 3. Tests (macros; assert VALUES with `assertValuesEqual` wherever a pixel is not the point; paint
@@ -608,7 +788,12 @@ with), and a dimmed tool ignores its press. The look is the owner's choice from 
    image_0 == image_2 assertion and its comments name the hooks being deleted),
    `SystemTest_macroPencilPaintsStrokeOnLeftDrag`, `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`,
    `SystemTest_macroSuperToolbarOpensEveryToolbar`, `SystemTest_macroEditModeSlidingToggle`. True up their
-   metadata prose where it describes the old mechanism.
+   metadata prose where it describes the old mechanism. Also, from P0: re-author
+   `SystemTest_macroEveryPressIsToldItsEnding` §(d), which arms its glass by injecting
+   `PaintToolbarWdgt.sourceForToolKey "toothpaste"` directly (under the take-up that mixes two tools: arm
+   through `world.user.armDrawingTool 'toothpaste'` instead); and re-point
+   `Fizzygum-tests/scripts/serialization-roundtrip-headless.js` `R.paintedSurface`, which finds the glass
+   with `isPaintingOverlay`, before that chain is deleted.
 5. Gates: `fg presuite`; the finger suite; `fg gauntlet` (its `serialization`, `menusweep`, `pinsweep`,
    `vmtruth` and `storage` legs all touch this change). Expected pixel change: none outside the tests
    above; explain any other.
