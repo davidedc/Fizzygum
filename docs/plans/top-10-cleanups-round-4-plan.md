@@ -23,11 +23,11 @@
 > is written in its item's `**Ruled 2026-11-15 (owner).**` paragraph: §1 yes, a stopped survey
 > is archived; §3 the lines go if a production artifact grows by no more than 2 KB; §4 npm;
 > §7 lands only if it is not slower; §10 lands and is pushed when every proof of its own plan
-> (`docs/plans/build-node-port-plan.md`) passes. An unattended `/loop`, launched by the owner,
+> (`docs/archive/build-node-port-plan.md`) passes. An unattended `/loop`, launched by the owner,
 > executes the nine one unit at a time; its brief and ledger are local to the loop
 > (`Fizzygum-tests/.scratch/cleanups-loop-4/`). An item's section gains a `**Landed <date>.**`
 > paragraph as it lands, and the table's last column says where each stands. Landed: §5
-> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16), §6 (2026-11-16), §2 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
+> (2026-11-16), §8 (2026-11-16), §4 (2026-11-16), §3 (2026-11-16), §6 (2026-11-16), §2 (2026-11-16), §10 (2026-11-16). Parked, an owner decision open in its section: §7 (2026-11-16).
 >
 > **Mandate.** Each item aims at ELIMINATING a duplicated mechanism or a dead one, not at making it
 > easier to live with. Where an item stops short of elimination, it says why.
@@ -110,7 +110,7 @@ return).
 4. **An item that is taken up becomes its own plan** in `docs/plans/` when it is more than a
    day's work (§9, §10), following `docs/README.md`'s filing rules; its line in
    `docs/BACKLOG.md` then points at the new plan and this survey's line for it is removed. §10
-   has its plan already: `docs/plans/build-node-port-plan.md`.
+   has its plan already: `docs/archive/build-node-port-plan.md`.
 5. **Verify with the shared protocol in §14**, plus whatever the item adds.
 6. **Never commit or push without the owner's approval.** Present a summary and the proposed
    commit message and wait.
@@ -140,7 +140,7 @@ as one would explain it to a five-year-old; each item's own section has the prec
 | 7 | Text cache keys are the text | 1 day | Seven cache keys built on a 32-bit hash, the hash's own memo table and its accounting, a filed bug. **In plain words:** to avoid measuring and drawing the same text again, results are filed under a short number computed from the text. Two different texts can get the same number ("Of" and "PG" do), and then the second shows the first's result. File results under the text itself, beside the font, size, alignment and the rest, which the label already carries and which do not change. | **Why:** coats in the cloakroom are hung by the first two letters of the owner's name, so Anna sometimes gets Andrew's coat. Hang them by the whole name. **Trade-offs:** whole names take longer to read than two letters, and this cloakroom is used thousands of times a second, so it must be timed on real use before and after; the labels also take a little more room. | None expected (a difference would be a collision being put right) | No | 2 | Parked 2026-11-16: measured slower; OWNER DECISION open (§7) |
 | 8 | Audit preludes share one head | 1 day | 17 copied blocks (170 lines) across 13 instrument files. **In plain words:** six measuring instruments are slipped into the test page, each as one self-contained file, and each carries its own copy of the same small helpers. A fix made in one copy does not reach the others. Keep the helpers in one file and join it to each instrument when it is used. | **Why:** six toolboxes each hold their own copy of the same screwdriver, and one day one copy is found bent. Keep one good screwdriver and lend it to every box. **Trade-offs:** an instrument is no longer one file that can be handed over by itself; the joining step is one more thing that can go wrong, and has to be proven by the instruments' own planted faults. | None | No | 10 | Landed 2026-11-16 (§8, "Landed") |
 | 9 | Every profile is built by something, or it goes | 1 to 1½ days | Three of five build flavours that no command, gate or test ever builds. **In plain words:** the project can be built in five flavours. The checks build two of them. The other three are built only when a person remembers to, so nothing would notice if one stopped working. Have a check build each flavour that is wanted, and delete the ones that are not. | **Why:** five doors lead out of the house and two are tried every day. The other three may be stuck, and nobody will know until the day one is needed. Try every door now and then, or brick up the ones nobody uses. **Trade-offs:** trying a door takes a minute or two each time; bricking one up loses a flavour somebody may want twice a year. | None | Yes (which flavours are products) | 7 | Left for a later day by the owner (2026-11-15) |
-| 10 | The build is one Node program | 2 to 3 days | 260 lines of bash, the shell-text bridge out of the profile module, a hand list of the files the script reads, the flag mapping of a second script. **In plain words:** the build is a shell script that starts a JavaScript program seven times and has one of them print shell text for it to read back. Round 2 measured it and left it. Since then the command that calls it has moved to JavaScript, and it is the last shell program a commit depends on. | **Why:** the family now speaks one language at the table, except for one member who needs every sentence passed on a slip of paper, in both directions. **Trade-offs:** it rewrites the thing that makes the product, so every flavour's output must be shown identical byte for byte before and after (a tool for that exists); it adds no feature; and seven small shell helpers remain, so shell does not leave the repository. | None (byte-identical trees) | No (a re-listing: the owner may decline it again) | 3 | Approved by the owner (2026-11-15); queued |
+| 10 | The build is one Node program | 2 to 3 days | 260 lines of bash, the shell-text bridge out of the profile module, a hand list of the files the script reads, the flag mapping of a second script. **In plain words:** the build is a shell script that starts a JavaScript program seven times and has one of them print shell text for it to read back. Round 2 measured it and left it. Since then the command that calls it has moved to JavaScript, and it is the last shell program a commit depends on. | **Why:** the family now speaks one language at the table, except for one member who needs every sentence passed on a slip of paper, in both directions. **Trade-offs:** it rewrites the thing that makes the product, so every flavour's output must be shown identical byte for byte before and after (a tool for that exists); it adds no feature; and seven small shell helpers remain, so shell does not leave the repository. | None (byte-identical trees) | No (a re-listing: the owner may decline it again) | 3 | Landed 2026-11-16 (§10, "Landed") |
 
 ---
 
@@ -926,7 +926,7 @@ changed since and what that round did not measure. The owner may decline it agai
 evidence then stands as a record.
 
 **Ruled 2026-11-15 (owner, on this survey's recommendation).** Approved. It has a plan of its
-own, `docs/plans/build-node-port-plan.md`: the inventory of the script, what must stay equal,
+own, `docs/archive/build-node-port-plan.md`: the inventory of the script, what must stay equal,
 the six differences allowed and ten proofs in order. It lands and is pushed when every one of
 those proofs passes, and it is never landed partly proven.
 
@@ -990,6 +990,57 @@ untouched tree.
 **Re-measure.**
 `grep -v '^\s*#' Fizzygum/build_it_please.sh | grep -vc '^\s*$'` (260) and
 `git -C Fizzygum ls-files | grep -c '\.sh$'` (9).
+
+**Landed 2026-11-16 (every proof of the port's plan passed).** `build_it_please.sh` is a launcher
+(seven lines of bash: it moves to `Fizzygum/`, checks for `node`, runs `buildSystem/run-build.js`);
+the build's sequencing is that module, the script's 28 steps in 19 functions, the script's comments
+above the step each explains. It LAUNCHES what the script launched — the compiler, the minifier, `node`, `git`, and
+the file utilities `rm`, `mkdir`, `cp`, `ln`, `mv`, `touch`, `cat` and `tput` — with the script's
+arguments, so a failing step says what it said; only the text work is JavaScript. A Ctrl-C is the
+running program's to answer, as it was under the shell: one that handles it and exits is a step that
+failed (exit 1), one that dies of it ends the build by the same signal. `build_and_smoke.sh`
+launches `buildSystem/run-build-and-smoke.js`. The port plan's six differences hold: the profile is
+asked in-process (`lib/profile.js` `profileForBuild`, which the build, build_and_smoke and `fg`'s suite
+tiers ask; `--shell`, `shellQuote` and the command-line half of `profile.js` are gone); the files the
+build reads by name are named once (`run-build.js` `READS_BY_NAME`, which `lib/build-inputs.js`
+requires: `SHELL_INPUTS` is gone); the `node` check is the launchers'; build_and_smoke's flag is
+computed in Node (`smokeFor`); the cleaner refuses a tree that is not `../Fizzygum-builds/latest` and
+a recursive removal spelled with a trailing slash; the stamp is still made by `touch -r`. Two changes
+the readings needed: `lib/what-runs.js` reads the gate table when ANY reached file launches
+`run-gates.js` (it read it only when the script's own text did: the old reading of the ported tree
+loses 70 files, every gate and its libraries), and `writeAll` moves to `lib/write-all.js` (re-exported
+by `lib/gate-rules.js`, which loads acorn: the build writes before it can say acorn is missing), which
+`finishCommandLine` now writes through (a pipe's `process.stderr.write` is not synchronous on macOS).
+`run-build-selftest.js` (node tier, 18 cases, about 6 s) holds the green paths, one exit of each kind,
+the cleaner's refusals and build_and_smoke's flag for each profile.
+
+The evidence (the loop's ledger has the rest):
+- P1: 28 steps and 54 exits (40 `build_failed` sites, not 44: §3 removed four); P2: every reader in
+  both repos;
+- P4, on a planted `Fizzygum-all` with stand-in programs and file utilities failing on demand: 92
+  scenarios (every profile green, every reachable exit, three unchecked steps, a build killed and the
+  next one, four Ctrl-C drills, `build_and_smoke.sh`), each run twice per side: 89 byte-identical in
+  stdout, stderr, their merge, the exit code and every file left; the other three differ only in a
+  diagnostic of the shell's own (a boot bundle that cannot be appended to, the tests repo gone before
+  the pre-compile driver's `cd`, `build_and_smoke.sh` without `node`), which carries a line number of
+  the script, `./build_it_please.sh: line 408: …`, that no other program can print;
+- P5 on scratch: the suite behind the tests link untouched by every clean, a top-level dot file in
+  `font-assets/` never copied, the stamp at the start marker's time, the cleaner's refusals;
+- P6: `fg fingerprint <profile> HEAD` for all five profiles, no difference; the transcripts against
+  the bash build's: stderr identical, stdout and the merge differing in the same seven lines for every
+  profile, each the port's own (one more self-test; one more stated not-a-gate file, the two new
+  modules launched and `lib/profile.js` no longer; four more scanned files); the record of the inputs differing only in the files the port changed and `run-build.js`;
+- P7: the run set loses nothing, every file runs as before but `lib/profile.js` (launched → required);
+- P8: `./build_and_smoke.sh` for each profile, `fg build`, `fg presuite`, `fg gauntlet`, `fg homepage`;
+- P9: the new self-test, and `fg-gauntlet-selftest-headless.js` (its stand-in build script unedited;
+  its stand-in profile reader answers `profileForBuild`, the one call `fg` makes now),
+  `lib/what-runs-selftest.js` (two new cases: a gate runner launched by a JavaScript sequencing has its
+  table read, one only required has none), `run-selftests-selftest.js`, `lib/build-inputs-selftest.js`;
+- P10: a touched `run-build.js` reads STALE in `fg status` and to a runner, FRESH after a build; a
+  build killed after its start marker leaves what the bash build left, and the next build does the
+  same.
+
+Re-measured: seven lines of bash in `build_it_please.sh` (254 before); nine tracked `.sh` files.
 
 ---
 
@@ -1102,7 +1153,7 @@ operation at a time.
   `docs/plans/top-10-cleanups-round-3-plan.md` (the three earlier surveys; their "Landed"
   paragraphs are the precedents cited above)
 - `docs/archive/fg-node-port-plan.md` (the port's rules; §2, §10)
-- `docs/plans/build-node-port-plan.md` (§10's own plan)
+- `docs/archive/build-node-port-plan.md` (§10's own plan)
 - `docs/architecture/lint-and-static-checks.md` (the gate index and the bite-proof rule; §6)
 - `docs/architecture/build-and-packaging.md` (parts and profiles; §3, §9, §10)
 - `docs/tooling/duplicated-code-detection.md` (the scanner; §8, §11)
@@ -1170,3 +1221,7 @@ Do not commit or push without asking me.
   — CLOSED 2026-11-16 (loop U7), filed under `archive/mixin-removal-plan.md` (its BACKLOG detail: the rule is
   `SUPER_CHAIN_TERMINATES`, `graphEdgesOut` terminating on SimpleTextWdgt and TitleWdgt): the usage gloss and the
   leg's comment name the rule, and `fg | grep -c mixin` is 0 (§2, "Landed").
+- [x] §10 (2 to 3 days; ruled: lands when every proof passes): the build is one Node program — 260 lines of bash, the `--shell` bridge, the hand list `SHELL_INPUTS` → `archive/build-node-port-plan.md`
+  — CLOSED 2026-11-16 (loop U8): `build_it_please.sh` is a launcher of `buildSystem/run-build.js`; the profile is
+  asked in-process (`--shell` is gone) and the files read by name are named once (`SHELL_INPUTS` is gone); every proof
+  of the port's plan passed (§10, "Landed").

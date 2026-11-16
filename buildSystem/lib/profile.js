@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 'use strict';
 // not-a-gate: the build step that derives a profile's flavour; it refuses a malformed profile, judging no code
 //
@@ -46,18 +45,16 @@
 //
 // USAGE
 //     build.js                requires this module and calls resolve(name) (and bootFiles(parts) for --list-boot)
-//     fg (presuite, gauntlet) requires it: resolve(profileNameFromArgv(flags)), then bootFiles(loadParts()),
-//                             inside inDirectory(Fizzygum/)
-//     build_it_please.sh      eval's the shell assignments from:
-//     build_and_smoke.sh          node ./buildSystem/lib/profile.js --shell "$@"
-//                             (pass the build's WHOLE arg list -- this module owns `--profile` parsing,
-//                             so no caller has to re-implement it)
+//     run-build.js            (the build, `./build_it_please.sh`), run-build-and-smoke.js (`./build_and_smoke.sh`)
+//     fg (presuite, gauntlet) and fg's suite tiers (inside inDirectory(Fizzygum/)) require it and call
+//                             profileForBuild(argv) -- pass the build's WHOLE arg list: this module owns
+//                             `--profile` parsing, so no caller has to re-implement it
 //
 // ⚠ Every problem here is FATAL, never a warning that a default papers over: a profile that cannot be
 // read, or names a part that no longer exists, would otherwise silently ship the wrong artifact -- and a
 // rename is exactly when that happens. A refusal is THROWN (a `Refusal`, carrying its text and exit code),
-// never a process exit: gates require this module in-process. Only a command line prints one -- the --shell
-// one below, or build.js's -- after its own name, and sets the exit code.
+// never a process exit: gates require this module in-process. Only a command line prints one -- build.js's, the
+// build's, build_and_smoke's or fg's, through finishCommandLine -- after its own name, and sets the exit code.
 //
 // HOW THE INPUT IS READ. Each rule here either decides what the build WRITES, or refuses what it could not
 // read faithfully:
@@ -83,6 +80,7 @@
 //     exist holds none (filesIn).
 
 const fs = require('fs');
+const { writeAll } = require('./write-all');
 
 // ================================================================================================================
 // Reading and writing
@@ -181,12 +179,6 @@ function filesIn(dir, suffix) {
 // CODE POINT order, for Array#sort: UTF-8 bytes compare in code point order, where a plain sort() compares UTF-16
 // units and so puts a character beyond U+FFFF before one in U+E000..U+FFFF.
 const byCodePoint = (a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b));
-
-// A word the shell reads back as exactly `s`: as it is when it holds only characters no shell treats specially (the
-// ASCII word characters and @%+=:,./-), `''` when empty, else single-quoted, each `'` in it written `'"'"'`. The
-// --shell answers are eval'd, so this spelling is part of what they say.
-const SHELL_UNSAFE = /[^\w@%+=:,./-]/;
-const shellQuote = (s) => (!s ? "''" : !SHELL_UNSAFE.test(s) ? s : "'" + s.split("'").join("'\"'\"'") + "'");
 
 // ================================================================================================================
 // The profile
@@ -441,7 +433,7 @@ class Profile {
 
   // Does this part ship in the build being made? THE part-inclusion rule, written once: a part
   // ships exactly when the profile selects it. Nothing else is asked -- no build flag, no per-part
-  // opt-in -- so build.js and build_it_please.sh (through --shell) cannot disagree about it.
+  // opt-in -- so build.js and the build that launches it (run-build.js) cannot disagree about it.
   selectsPart(partName) { return this.selectedParts.includes(partName); }
 }
 
@@ -480,7 +472,7 @@ const BOOT_DIRECTORY = 'src/boot';
 // file list. Each must sit under src/boot/ (no `..`), exist
 // (in `srcRoot` when given: another src tree, a bite-proof's planted copy) and be declared once, and no two
 // boot scripts may share a name (each becomes js/src/<name>-min.js); anything else fails the build --
-// which asks this at its first step (--shell) and through build.js --list-boot, the list
+// which asks this at its first step (profileForBuild) and through build.js --list-boot, the list
 // check-shippable-coverage.js holds every src/boot file to.
 function bootFiles(parts, srcRoot, partsFile = PARTS_MANIFEST_FILE) {
   const declaredBy = new Map();
@@ -683,42 +675,26 @@ function profileNameFromArgv(argv) {
   return DEFAULT_PROFILE_NAME;
 }
 
-// The facts build_it_please.sh / build_and_smoke.sh need, as `eval`-able bash lines.
-//
-// Booleans are emitted as the literals true/false so the shell can keep its existing
-// `if $SOMETHING ; then` idiom, and the boot pieces and scripts come out as bash ARRAYS (each word
-// quoted by shellQuote, so a path with a space cannot break the eval). The parts' boot declarations are
-// checked first (bootFiles), so a bad one fails the build at its first step, naming itself.
-function shellAssignments(argv) {
+// What a build of the profile its arguments name needs (the build, build_and_smoke and fg's suite tiers ask this):
+// the profile, the parts, and the boot pieces and scripts its shipping parts declare. The parts' boot declarations
+// are checked first (bootFiles), so a bad one fails the build at its first step, naming itself.
+function profileForBuild(argv) {
   const profile = resolve(profileNameFromArgv(argv));
   const parts = loadParts();
   bootFiles(parts);
-  const prelude = bootPrelude(parts, profile);
-  const scripts = bootScripts(parts, profile);
-  const flag = (b) => (b ? 'true' : 'false');
-  return [
-    `PROFILE_NAME=${shellQuote(profile.name)}`,
-    `PROFILE_FORM=${shellQuote(profile.form)}`,
-    `PROFILE_SOURCES=${shellQuote(profile.sources)}`,
-    `PROFILE_SHIPS_SOURCE_TEXT=${flag(profile.shipsSourceText)}`,
-    `PROFILE_SHIPS_TESTS=${flag(profile.shipsTests)}`,
-    `PROFILE_SHIPS_SWCANVAS_ENTRY=${flag(profile.shipsSWCanvasEntry)}`,
-    `PROFILE_SHIPS_HARNESS_ENTRY=${flag(profile.shipsHarnessEntry)}`,
-    `PROFILE_BOOT_PRELUDE=(${prelude.map(shellQuote).join(' ')})`,
-    `PROFILE_BOOT_SCRIPTS=(${scripts.map(shellQuote).join(' ')})`,
-  ];
+  return { profile, parts, prelude: bootPrelude(parts, profile), scripts: bootScripts(parts, profile) };
 }
 
 // A command line's end: a refusal's words on stderr after the program's name, and its exit code; anything else is a
-// fault this module did not foresee, printed as Node prints it, exit 1. Never stdout: a --shell caller's command
-// substitution must capture no junk there (an eval of a half-written assignment list is worse than no output). Never
-// process.exit: the exit code is SET, and the output already written drains before the process ends.
+// fault this module did not foresee, printed as Node prints it, exit 1. Never stdout, which is the caller's report.
+// Written whole and at once (writeAll), so it lands before the line its caller writes next whatever stderr is (a
+// pipe's process.stderr.write is not synchronous on macOS). Never process.exit: the exit code is SET.
 function finishCommandLine(error, program) {
   if (error instanceof Refusal) {
-    process.stderr.write(`${program}: ${error.message}\n`);
+    writeAll(2, `${program}: ${error.message}\n`);
     process.exitCode = error.exitCode;
   } else {
-    process.stderr.write(String((error && error.stack) || error) + '\n');
+    writeAll(2, String((error && error.stack) || error) + '\n');
     process.exitCode = 1;
   }
 }
@@ -728,22 +704,8 @@ module.exports = {
   PROFILES_DIRECTORY, DEFAULT_PROFILE_NAME, PARTS_MANIFEST_FILE, CORE_PART, ENTRY_PAGES, FORMS, SOURCES_POLICIES,
   HARNESS_PART, HARNESS_PAGE, META_TOOLS_PART, BOOT_DIRECTORY,
   loadParts, checkRequiresGraph, partNames, resolveSelection, Profile, shippingParts, bootPrelude, bootScripts,
-  bootFiles, availableProfileNames, resolve, profileNameFromArgv, shellAssignments,
+  bootFiles, availableProfileNames, resolve, profileNameFromArgv, profileForBuild,
   // the reading and writing build.js shares
   Refusal, inDirectory, readText, readBytes, writeFile, copyData, makeDirectory, isFile, isDirectory, filesIn,
   byCodePoint, finishCommandLine,
 };
-
-// THE COMMAND LINE: `node ./buildSystem/lib/profile.js --shell [the build's whole arg list]` prints the shell
-// assignments (shellAssignments) on stdout; a refusal goes to stderr with exit 1. Every other argument is left to
-// profileNameFromArgv, which reads `--profile` and ignores the rest.
-if (require.main === module) {
-  try {
-    const argv = process.argv.slice(2);
-    if (!argv.includes('--shell')) fail("no --shell given -- usage: profile.js --shell [the build's whole arg list]");
-    const lines = shellAssignments(argv.filter((argument) => argument !== '--shell'));
-    process.stdout.write(lines.map((line) => line + '\n').join(''));
-  } catch (error) {
-    finishCommandLine(error, 'profile.js');
-  }
-}

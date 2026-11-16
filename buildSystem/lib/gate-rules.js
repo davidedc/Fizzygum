@@ -69,23 +69,9 @@ function parseRulesLine(out, gate) {
   return undefined;
 }
 
-// The exit line must REACH its reader. On the way out fd 1 can be a non-blocking pipe still full of the report the gate
-// just flushed (a big one — the census prints a thousand offender lines), and writeSync then throws EAGAIN: retried
-// after a short nap, for up to two seconds, rather than lost — a lost RULES line reads as a gate that named no rule.
-// A closed pipe (EPIPE) or anything else ends the attempt. (Fizzygum-tests/scripts/lib/audited-suite.js relays its
-// embedded suite's output through it too.)
-function writeAll(fd, s) {
-  const buf = Buffer.from(s);
-  const nap = new Int32Array(new SharedArrayBuffer(4));
-  let off = 0, waited = 0;
-  while (off < buf.length) {
-    try { off += fs.writeSync(fd, buf, off); } catch (e) {
-      if (e.code !== 'EAGAIN' || waited >= 2000) return;
-      Atomics.wait(nap, 0, 0, 10);
-      waited += 10;
-    }
-  }
-}
+// The exit line must REACH its reader, through a pipe still full of the report the gate just flushed: lib/write-all.js
+// (re-exported below, as the gates and the gate runner take it from here).
+const { writeAll } = require('./write-all');
 
 function forGate(file, { name } = {}) {
   const gate = name || path.basename(file).replace(/\.(js|sh)$/, '');

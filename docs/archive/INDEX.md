@@ -695,6 +695,7 @@ Archived docs are immutable history — the current-state truth lives in
   - ⚖ "DEAD in V8 coverage" ≠ safe to cut — the error-reporting path is dead only because the corpus compiles clean yet fires on live-edit typos (KEEP); real language features unused-in-corpus stay usable (KEEP); only exotic tooling (sourcemap/JSX/import-export/literate/shebang/baseFileName) was cut
   - ⚖ the vendored file has THREE refs, not two — the plan AND memory undercounted, missing the runtime boot loader (`src/boot/globalFunctions.coffee`); grep the WHOLE tree before a rename, not just the build scripts
   - ⚖ byte-identity to STOCK 2.0.3 (not 2.7.0) is what keeps the pixel-exact gauntlet refs valid — the fork is frozen on 2.0.3; tracking upstream is an anti-goal, which is why it's an own-package derivative, not a CoffeeScript branch
+- **`build-node-port-plan.md`** — COMPLETE 2026-11-16 (cleanups round 4, §10). The build ported from bash to Node: `build_it_please.sh` a launcher of `buildSystem/run-build.js`, which launches what the script launched with its arguments; the inventory (28 steps, 54 exits), what must stay equal, the six deliberate differences (the profile asked in-process, the by-name reads named once, the `node` check in the launcher, the smoke flag in Node, a safer cleaner, the stamp), and the ten proofs — a planted layout running bash and Node through every exit (83 of 84 byte-identical, the 84th a shell line number), `fg fingerprint` on all five profiles, the run set, the real runs.
 
 ## Process & workflow
 

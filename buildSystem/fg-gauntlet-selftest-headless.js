@@ -29,8 +29,8 @@ write(path.join(FZ, 'build_it_please.sh'), '#!/bin/sh\necho "[selftests] OK"\n[ 
 // the stand-in profile reader: the calls fg's commit point makes, in-process, answering a dev profile that ships the
 // harness page
 const PROFILE = path.join(FZ, 'buildSystem/lib/profile.js');
-const PROFILE_STAND_IN = "module.exports = { inDirectory: (dir, fn) => fn(), profileNameFromArgv: () => 'dev',\n" +
-  "  resolve: (name) => ({ name, shipsHarnessEntry: true }), loadParts: () => ({}), bootFiles: () => {}, finishCommandLine: () => {} };\n";
+const PROFILE_STAND_IN = "module.exports = { inDirectory: (dir, fn) => fn(),\n" +
+  "  profileForBuild: () => ({ profile: { name: 'dev', shipsHarnessEntry: true } }), finishCommandLine: () => {} };\n";
 write(PROFILE, PROFILE_STAND_IN);
 write(path.join(BIN, 'pkill'), '#!/bin/sh\nexit 1\n', 0o755);
 // a step: prints its name, then does what the file named by its argument says (an exit code, "hang", "nopass")

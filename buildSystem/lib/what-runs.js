@@ -7,8 +7,9 @@
 //   - check-hand-lists.js accepts a sanction's guard only when runSet() contains it.
 // Plan, measurements and the review it survived: docs/archive/unrun-checks-plan.md.
 //
-// THE ROOTS. Fizzygum/build_it_please.sh (every build), with its gate table, buildSystem/gates.js (each row a launch of
-// its script by the command line run-gates.js gives it); Fizzygum/build_and_smoke.sh when present (the build's own
+// THE ROOTS. Fizzygum/build_it_please.sh (every build: it launches buildSystem/run-build.js, which launches the rest),
+// with its gate table, buildSystem/gates.js (each row a launch of its script by the command line run-gates.js gives it,
+// read when ANY reached file launches run-gates.js); Fizzygum/build_and_smoke.sh when present (the build's own
 // pre-commit check: the boot smoke it launches is a gate like any other); and fg's COMMIT POINT,
 // buildSystem/fg-commit-point.js — the build, the lint, the suite and the leg runner of `fg presuite` / `fg gauntlet`,
 // read as JavaScript like any other file — and the LEG TABLE it requires, buildSystem/legs.js, whose rows are the legs
@@ -40,7 +41,7 @@
 // BLIND SPOTS, plainly. A launch spelled any other way — a path assembled with `+`, a template literal, a variable
 // holding a path computed elsewhere — is not seen, so its target reads as never run: the safe direction, since the
 // reader then asks for a guard that is seen to run. A required module counts as run because its code runs, even
-// where its own command-line half (behind `require.main === module`) does not. A root's own conditions (`if $PROFILE_SHIPS_TESTS`) are not evaluated: a gate
+// where its own command-line half (behind `require.main === module`) does not. A launcher's own conditions (`if (profile.shipsTests)`) are not evaluated: a gate
 // behind a profile condition counts as run — and so is a gate-table row's WHEN. A row's arguments are not read for
 // scripts (a shell line's are). A leg of `fg` is a row of its leg table, and a row no gauntlet wave and no presuite
 // schedules is an ERROR (it would vouch for programs nothing runs); `fg` itself is read, never executed.
@@ -280,10 +281,17 @@ function runSet(layout = DEFAULT_LAYOUT) {
   const selfTests = new Set([...discovered.selftest, ...discovered.selftestHeadless]);
 
   const reached = new Set(), why = new Map(), how = new Map(), queue = [];
+  // the gate table is read once, when its runner is first LAUNCHED (a require of it runs no row), whoever launches it
+  const gateRunner = path.join(layout.fizzygum, GATE_RUNNER);
+  let gateTableRead = false;
   const add = (f, from, kind) => {
     if (!known.has(f)) return;
-    if (!reached.has(f)) { reached.add(f); why.set(f, from); how.set(f, kind); queue.push(f); return; }
-    if (kind === 'launched' && how.get(f) !== 'root') how.set(f, 'launched');
+    if (!reached.has(f)) { reached.add(f); why.set(f, from); how.set(f, kind); queue.push(f); }
+    else if (kind === 'launched' && how.get(f) !== 'root') how.set(f, 'launched');
+    if (f === gateRunner && how.get(f) === 'launched' && !gateTableRead) {
+      gateTableRead = true;
+      viaGateTable(path.join(layout.fizzygum, GATE_TABLE), GATE_TABLE);
+    }
   };
   // one LAUNCH of `f`, by the command `line`: a convention keyed to an invoking command applies when the line matches
   const launch = (f, line, from) => {
@@ -342,7 +350,6 @@ function runSet(layout = DEFAULT_LAYOUT) {
   const before = reached.size;
   viaShell(fs.readFileSync(build, 'utf8'), 'build_it_please.sh');
   if (reached.size === before) throw new Error('what-runs: build_it_please.sh invokes no scanned script — the reading is broken');
-  if (how.get(path.join(layout.fizzygum, GATE_RUNNER)) === 'launched') viaGateTable(path.join(layout.fizzygum, GATE_TABLE), GATE_TABLE);
   const buildAndSmoke = path.join(layout.fizzygum, 'build_and_smoke.sh');
   if (fs.existsSync(buildAndSmoke)) {
     reached.add(buildAndSmoke); why.set(buildAndSmoke, 'ROOT: the build-and-smoke check'); how.set(buildAndSmoke, 'root');

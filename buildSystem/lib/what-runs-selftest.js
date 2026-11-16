@@ -225,6 +225,23 @@ const unrun = runSet(layout2).how;
 t.check(unrun.get(path.join(root2, 'Fizzygum/buildSystem/table-gate.js')) === undefined
   && unrun.get(path.join(root2, 'Fizzygum/buildSystem/gamma-selftest.js')) === undefined,
   'a table its build does not run gates nothing: its rows are not launched');
+// a build whose sequencing is a JavaScript module (the real one is run-build.js, which the shell launcher runs): the
+// runner LAUNCHED by that module (a path.join) has its table read as a shell launch has, its rows' conventions applied;
+// a runner the module only REQUIRES runs no row
+write2('Fizzygum-tests/scripts/tests-gate.js', '');
+write2('Fizzygum/build_it_please.sh', 'exec node buildSystem/sequencer.js "$@"\n');
+write2('Fizzygum/buildSystem/sequencer.js', "const path = require('path');\nrequire('child_process').spawnSync('node', [path.join('buildSystem', 'run-gates.js')]);\n");
+const viaModule = runSet(layout2).how;
+const kindM = (f) => viaModule.get(path.join(root2, 'Fizzygum', f));
+t.check(kindM('buildSystem/sequencer.js') === 'launched' && kindM('buildSystem/run-gates.js') === 'launched' && kindM('buildSystem/table-gate.js') === 'launched'
+  && kindM('buildSystem/gamma-selftest.js') === 'discovered',
+  "a runner launched by the build's JavaScript sequencing has its table read: the rows launched, their conventions applied",
+  ['sequencer.js', 'run-gates.js', 'table-gate.js', 'gamma-selftest.js'].map((f) => kindM('buildSystem/' + f)).join(' '));
+write2('Fizzygum/buildSystem/sequencer.js', "require('./run-gates');\n");
+const requiredOnly = runSet(layout2).how;
+t.check(requiredOnly.get(path.join(root2, 'Fizzygum/buildSystem/run-gates.js')) === 'required'
+  && requiredOnly.get(path.join(root2, 'Fizzygum/buildSystem/table-gate.js')) === undefined,
+  'a runner the sequencing only requires runs no row', String(requiredOnly.get(path.join(root2, 'Fizzygum/buildSystem/table-gate.js'))));
 write2('Fizzygum/build_it_please.sh', RUNS_THE_RUNNER);
 table2([...ROWS, "path.join(__dirname, 'nowhere.js')"]);
 let unscanned;

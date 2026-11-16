@@ -33,11 +33,12 @@ The split is worth keeping straight, because it is the one distinction that make
 profile does not know what a part is made of.
 
 `buildSystem/lib/profile.js` is the ONE reader of both. It resolves a profile, validates it, and derives the rest.
-Three consumers use it and none of them re-implement any of its rules:
+Every consumer requires it, and none of them re-implements any of its rules:
 
-- `buildSystem/build.js` requires it (`Profile.selectsPart`, `loadParts`, `ENTRY_PAGES`), and so does `fg`, whose
-  suite tiers ask whether a profile ships the harness page;
-- `build_it_please.sh` and `build_and_smoke.sh` `eval` its `--shell` output;
+- `buildSystem/build.js` (`Profile.selectsPart`, `loadParts`, `ENTRY_PAGES`);
+- the build's sequencing, `buildSystem/run-build.js`, and `build_and_smoke.sh`'s, `buildSystem/run-build-and-smoke.js`,
+  and `fg`'s suite tiers (does the profile ship the harness page?), all through one question, `profileForBuild`: the
+  profile and the boot pieces and scripts its parts ship, their declarations checked first;
 - it also owns `--profile` PARSING, so no caller has its own copy of that either.
 
 ---
@@ -614,6 +615,14 @@ not re-attempted: `docs/archive/core-app-slices-partition-plan.md` §4 Phase 3.
 
 There are **no flavour flags**. An unknown argument is a hard error that lists the available profiles.
 
+`build_it_please.sh` is a launcher: it moves to `Fizzygum/`, checks for `node` and runs `buildSystem/run-build.js`, the
+build's sequencing in Node — its header lists the steps in order, and each step's comment says why it is so. It
+launches the compiler, the minifier, `node`, `git` and the file utilities with the arguments the build has always given
+them, so a step that fails says what it always said (only a diagnostic the shell itself printed — a file it could not
+open, a directory or program it could not find — comes without the script's line number); a Ctrl-C is the running
+program's to answer. `build_and_smoke.sh` launches `buildSystem/run-build-and-smoke.js`
+the same way.
+
 **The toolchain is pinned.** The build compiles the boot files with the `coffeescript` package's `coffee` and minifies
 them and the pre-compiled image with the `terser` package's: the exact versions `package.json` and its lockfile name,
 which `npm ci` in `Fizzygum/` installs, together with the two libraries the static gates load (acorn and the
@@ -626,7 +635,7 @@ the browser share another compiler, the vendored `vendor/coffeescript/` (`buildS
 
 ### Is the last build stale?
 
-`build_it_please.sh` lays a start marker before it reads any input (once the vendored SWCanvas a fresh clone fetches
+The build (`run-build.js`) lays a start marker before it reads any input (once the vendored SWCanvas a fresh clone fetches
 is in place), removes `Fizzygum-builds/latest/.build-stamp` at its first write to the tree, and gives the stamp that
 marker's time as its very last act: a build that did not complete leaves no stamp, and the stamp's time is when the last
 completed build began reading its inputs. With the marker the build RECORDS every input it is about to read, each
@@ -639,14 +648,14 @@ record is missing, or the record is another build's (its start time is not the s
 is the one definition, and `buildStaleness()` the one question every freshness reader asks. The inputs are the FILES
 the build names, never the directories holding them (a directory also holds what the build never reads — a
 subsystem's `CLAUDE.md`, an editor's swap file, a vendored library's README): every compiled source and `src/index.html`,
-the build script and its two Node modules (`build.js`, `lib/profile.js`), `parts.json` and the profiles (`*.json`), `package-lock.json` (the toolchain's versions), each part's declared `assets` and `vendor`
-pieces, the files the build script names itself (the SWCanvas bundle's pieces, the pre-compiled stub) and every file
+the build's launcher and its three Node modules (`run-build.js`, `build.js`, `lib/profile.js`), `parts.json` and the profiles (`*.json`), `package-lock.json` (the toolchain's versions), each part's declared `assets` and `vendor`
+pieces, the files the build names itself (`run-build.js`'s `READS_BY_NAME`: the SWCanvas bundle's pieces, the pre-compiled stub) and every file
 under `font-assets/` (copied afresh each build, so a font deleted from the source is gone from the tree too). The gates
 are not inputs (they judge the output, they do not shape it), nor is the pre-compile driver (it shapes only a
 precompiled profile's image, which no runner tests). Every command that builds, copies, links or removes the tree's
-contents checks its own exit (by hand where it has a remedy to give, else `build_failed`; `build.js` exits 1 on each
-refusal), so a step that fails stops the build before it stamps a tree missing a piece — the `printf` lines appending a
-generated line to the boot bundle are the exception, failing only with the disk. The suite runner, the single runner (except while it captures references), the sequence runner (except
+contents checks its own exit (by hand where it has a remedy to give, else `buildFailed`; `build.js` exits 1 on each
+refusal), so a step that fails stops the build before it stamps a tree missing a piece — the appends of a generated
+line to the boot bundle are the exception, failing only with the disk. The suite runner, the single runner (except while it captures references), the sequence runner (except
 for its `--list` / `--before` listings), the paint audit and several rigs refuse a stale build (`Fizzygum-tests/scripts/lib/assert-build-fresh.js`;
 `FIZZYGUM_ALLOW_STALE_BUILD=1` overrides); the reference-capture tool does not ask. `fg status` prints the same answer: FRESH or STALE, when the last completed build
 started, and for a stale one why, naming at most three of the inputs.

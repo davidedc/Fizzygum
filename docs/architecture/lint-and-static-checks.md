@@ -81,8 +81,8 @@ rule **[I]**. Full convention + rationale: `docs/architecture/layering-naming-co
 All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates, `Fizzygum-tests/scripts/`), each a
 ROW of one table, `buildSystem/gates.js`: its script, its arguments, WHEN it runs (`checked`: unless `--noSyntaxCheck`;
 `testsShipped`: and the profile ships the tests — the tests repo itself is a requirement of every build, which
-`build_it_please.sh` checks before anything else), the line it prints before its output, its failure line and its OK line — and, as a comment above the row, why it
-exists. `build_it_please.sh` calls `buildSystem/run-gates.js` once, which runs the first row (the self-tests) alone and the
+the build checks before anything else), the line it prints before its output, its failure line and its OK line — and, as a comment above the row, why it
+exists. The build (`buildSystem/run-build.js`, which `build_it_please.sh` launches) calls `buildSystem/run-gates.js` once, which runs the first row (the self-tests) alone and the
 rest side by side (eight at a time, each row's output captured), REPORTS them in table order and stops the build at
 the first that fails: that row's output, the bell, its failure line, exit 1 (its report order, the first row alone, its
 conditions and its stop are proven by `run-gates-selftest.js`). **Exit codes:** `0` clean · `1` violation
@@ -95,8 +95,8 @@ fires. `buildSystem/lib/what-runs.js` is the ONE statement of what runs — the 
 self-tests and `fg`'s presuite/gauntlet legs LAUNCH, plus the naming table the discovering runners read.
 A launch is a shell command that executes the script or hands it to an interpreter (read by a small shell lexer, so an
 echo, a test, a heredoc or a comment that names a script runs nothing), a JS `require`, a script named in a
-`path.join`/`path.resolve` call, or a row of the build's gate table — read as data once the build is seen launching
-`run-gates.js`, each row the command line the runner gives it, so a self-test discovered by its invoking line is
+`path.join`/`path.resolve` call, or a row of the build's gate table — read as data once any file the reading reaches
+(the build's own sequencing, `run-build.js`) is seen launching `run-gates.js`, each row the command line the runner gives it, so a self-test discovered by its invoking line is
 discovered from its row, and a row naming a script the reading does not scan is an error — or a step of a row of `fg`'s
 LEG table (`buildSystem/legs.js`), read the same way: `fg`'s commit point (`buildSystem/fg-commit-point.js`, the build,
 lint, suite and leg runner of `fg presuite`/`fg gauntlet`) is a root read as JavaScript, and must require the table, a
@@ -676,7 +676,7 @@ separating dead state from enumeration payload needs exactly the analysis a name
   would ratchet an idiom, not a smell.
 - A **`console.log` stink, and `drop_console` in the production build — both rejected 2026-07-15, decided, do not
   re-open without new evidence.** It is true that console.logs are NOT stripped from production (`drop_console` appears
-  nowhere in `build_it_please.sh`; `terser --compress` keeps `console.*`), but that fact is operationally empty: of 224
+  nowhere in the build's minifier command lines, `buildSystem/run-build.js`; `terser --compress` keeps `console.*`), but that fact is operationally empty: of 224
   non-comment sites, **201 are behind an explicit debug flag** (`@detailedDebug`, `window.srcLoadCompileDebugWrites`)
   and all 23 others are multi-line guards, audit blocks, Automator-only paths, or error handlers — **nothing logs in
   normal operation**. `drop_console` would be actively HARMFUL (it strips the error diagnostics we want in prod), and it
@@ -1256,7 +1256,7 @@ source to satisfy a new rule.
   the self-tests step, the tooling's own files every reader of them shares, and the run set `check-hand-lists.js` reads.
 - `buildSystem/gates.js` + `buildSystem/run-gates.js` — the gate sequence, one row per gate (`when`: `checked`, or
   `testsShipped` for the three gates over the shipped tests), and the runner
-  `build_it_please.sh` calls once; `lib/what-runs.js` reads the table once it sees the build launch the runner.
+  the build (`run-build.js`) calls once; `lib/what-runs.js` reads the table once it sees a reached file launch the runner.
 - `buildSystem/legs.js` — `fg`'s gauntlet legs, one row per leg (its waves, its steps with their cwd and alarm, its pass
   line, whether its exit 3 is an infra flake, its headline, its verb), which `fg`'s commit point requires (the waves, the
   serial path, the stale-proofed logs, the usage roster) and `lib/what-runs.js` reads as data; its cases, a copy of fg's

@@ -7,7 +7,7 @@
 # This mirrors how SWCanvas itself vendors BitmapText: the bulk SWCanvas bytes
 # are NOT committed to Fizzygum's git (vendor/swcanvas/ is gitignored). Only the
 # one-line pin (vendor/swcanvas.pin, a commit SHA) is committed. A fresh clone's
-# first build auto-fetches the pinned bundle (see build_it_please.sh).
+# first build auto-fetches the pinned bundle (see buildSystem/run-build.js, vendorEngine).
 #
 # Two modes:
 #   (default, from-pin)   reads vendor/swcanvas.pin and downloads that exact

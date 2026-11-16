@@ -2,18 +2,18 @@
 // gates.js — THE BUILD'S GATE SEQUENCE, as data. One row per static gate the build runs, in the order it reports them:
 // the script, its arguments, WHEN it runs, the line it prints before its output, the line it prints (with the terminal
 // bell) when it fails, and the line it prints when it passes. buildSystem/run-gates.js runs the first row alone and the
-// rest side by side, reports them in this order and stops at the first failure (build_it_please.sh calls it once, after build.js has written the tree). lib/what-runs.js
+// rest side by side, reports them in this order and stops at the first failure (the build, buildSystem/run-build.js, calls it once, after build.js has written the tree). lib/what-runs.js
 // requires this table and reads each row as the command line it is, `node <script> <args>`, so the census in
 // run-selftests.js holds every gate listed here to its rule registry and its proof, and a self-test discovered by its
 // gate's line is discovered from its row. What each gate checks, and what it cannot see:
 // docs/architecture/lint-and-static-checks.md. The comments above each row are the build's own, verbatim, as they
-// stood beside that gate's block in build_it_please.sh: where one names the shell's explicit `$?` abort, read the
-// runner's stop at the first failure; where one names `"${args[@]}"`, read BUILD_ARGS.
+// stood beside that gate's block in the bash build script it once was: where one names the shell's explicit `$?` abort,
+// read the runner's stop at the first failure; where one names `"${args[@]}"`, read BUILD_ARGS.
 const path = require('path');
 
 const BUILD_SYSTEM = __dirname;
-// the sibling tests repo, where its gates' scripts live: a requirement of every build (build_it_please.sh refuses to
-// start without it), so no row asks whether it is there
+// the sibling tests repo, where its gates' scripts live: a requirement of every build (the build refuses to start
+// without it), so no row asks whether it is there
 const TESTS_REPO = path.join(__dirname, '..', '..', 'Fizzygum-tests');
 const TESTS_SCRIPTS = path.join(TESTS_REPO, 'scripts');
 

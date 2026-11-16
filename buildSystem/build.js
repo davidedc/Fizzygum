@@ -2,7 +2,8 @@
 'use strict';
 // not-a-gate: the build step that assembles the tree; the gates are the checks it is followed by
 //
-// build.js -- performs only some of the steps of the build (build_it_please.sh does the rest):
+// build.js -- performs only some of the steps of the build (the rest are buildSystem/run-build.js's, the build's
+// sequencing, which `./build_it_please.sh` launches):
 //
 // 1) For each class file (not all of the coffee files are class files), it
 //    generates a special string that contains the coffeescript source of the
@@ -11,7 +12,7 @@
 //    generating the documentation on the fly.
 //
 // 2) Passes over the files that DON'T contain classes (it names each as it goes):
-//    the boot files are compiled into the boot bundle by build_it_please.sh.
+//    the boot files are compiled into the boot bundle by run-build.js.
 //
 // 3) Generates the entry pages (see ENTRY_PAGES) from the single page source,
 //    each one presetting its rendering backend and loading the matching boot
@@ -31,9 +32,9 @@ const path = require('path');
 
 // THE FLAVOUR, as data. lib/profile.js reads buildSystem/profiles/<name>.json and derives from it
 // everything this build used to decide by asking "is this the homepage?" -- read its header first.
-// It also owns the two tables we share with build_it_please.sh: the partition (parts.json, via
-// loadParts) and the entry pages, whose SWCanvas column the shell needs to know whether to assemble
-// the SW boot bundle. One table, two readers.
+// It also owns the two tables we share with the build's sequencing (run-build.js): the partition
+// (parts.json, via loadParts) and the entry pages, whose SWCanvas column the sequencing needs to know
+// whether to assemble the SW boot bundle. One table, two readers.
 const profileLib = require('./lib/profile');
 const { loadParts, partNames, Refusal, inDirectory, readText, readBytes, writeFile, copyData, makeDirectory, isFile, isDirectory,
   filesIn, byCodePoint, finishCommandLine } = profileLib;
@@ -89,7 +90,7 @@ const IS_CLASS = /(?:^|(?<=\n))class +([\p{L}\p{N}_]+)/u;
 // It replaced the --homepage and --notests flags (arc 5): a flavour is data, and adding one is
 // adding a file rather than threading a boolean through two scripts. A stale `--homepage` on a
 // command line now fails here, loudly, instead of silently building something else.
-// --noSyntaxCheck is consumed by build_it_please.sh, which forwards ALL of its args to
+// --noSyntaxCheck is consumed by the build's sequencing (run-build.js), which forwards ALL of its args to
 // us; we accept it here as a no-op so the forwarded flag is not refused.
 // --list-shippable: print the source files that WOULD be shipped (one per line) and
 // exit WITHOUT building anything. This is the single source of truth for the build-time
@@ -112,7 +113,7 @@ const IS_CLASS = /(?:^|(?<=\n))class +([\p{L}\p{N}_]+)/u;
 // -h / --help prints the usage line and exits 0, building nothing.
 //
 // THE RULES: each option at most once -- a second `--profile` is refused rather than overriding the first, since
-// lib/profile.js's --shell, which reads the same arg list for build_it_please.sh, takes the first; an option taking a
+// lib/profile.js's profileNameFromArgv, which reads the same arg list for the build, takes the first; an option taking a
 // value takes it as `--opt=value` or as the next argument, which may not start with `-`; a flag takes no value; an
 // option is spelled whole. Anything else -- an unknown option, a positional argument -- is refused, exit 2, with the
 // usage line.
@@ -243,8 +244,8 @@ function requirePartFile(partName, sourcePath, kind) {
 //
 // This is what makes "what a flavour ships" follow from which parts ship, instead of being a
 // per-flavour prune list. A part that does not ship writes nothing. Whether a part ships is
-// answered once, by lib/profile.js's Profile.selectsPart: build_it_please.sh asks the same question
-// (through its --shell mode) to decide what else goes into the tree, and one question answered in
+// answered once, by lib/profile.js's Profile.selectsPart: the build's sequencing (run-build.js) asks the
+// same question (through profileForBuild) to decide what else goes into the tree, and one question answered in
 // two places is how a flavour ends up shipping half a part.
 function copyPartAssets(parts, profile, sink) {
   let copiedAssets = 0;
@@ -403,7 +404,7 @@ function main(args, sink) {
     // ships. See parts.json's header for why that moved out of the files.
     // ⚠ Emitted for EVERY profile, including sources: "none". The source text is what the
     // pre-compile driver compiles to harvest the image, so a "none" artifact needs it DURING its
-    // own build and simply does not ship it -- build_it_please.sh drops the directory after the
+    // own build and simply does not ship it -- the build (run-build.js) drops the directory after the
     // driver has run, the same shape as the font-assets re-prune: derived from the policy, not a
     // list of files to delete.
     if (isClassFile) {
@@ -436,7 +437,7 @@ function main(args, sink) {
   }
 
   // THE RUNTIME PARTS MANIFEST. Written as CoffeeScript and concatenated into the boot bundle by
-  // build_it_please.sh, NOT fetched as its own file: the batch loader needs it immediately, and a
+  // the build (run-build.js), NOT fetched as its own file: the batch loader needs it immediately, and a
   // separate fetch would be one more thing that can arrive late. (It replaces the old
   // numberOfSourceBatches.coffee, which said only "there are N batches, they are called
   // sources_batch_0..N-1" -- true while every source was one undifferentiated stream.)
@@ -485,7 +486,7 @@ function main(args, sink) {
   // 5) the entry pages this profile ships (its `entries`, resolved against ENTRY_PAGES). The
   // production profile ships index.html alone, which is what makes it native-only: no SWCanvas
   // boot bundle is assembled for it and no font assets travel with it — both of those follow, in
-  // build_it_please.sh, from "does any shipped entry render through SWCanvas".
+  // the build's sequencing (run-build.js), from "does any shipped entry render through SWCanvas".
   for (const [pageFileName, useSWCanvas, eagerAllParts] of profile.entries) {
     generateEntryPage(INPUT_HTML_FILE, path.join(OUTPUT_HTML_DIRECTORY, pageFileName), useSWCanvas, eagerAllParts);
   }

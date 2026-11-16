@@ -1,5 +1,21 @@
 # The build as a Node program — the plan for round 4's §10
 
+> **STATUS: COMPLETE 2026-11-16 (cleanups loop 4, U8).** Every proof of §5 passed and the port landed.
+> `Fizzygum/build_it_please.sh` is a launcher; the build's sequencing is `buildSystem/run-build.js`, and
+> `build_and_smoke.sh` launches `buildSystem/run-build-and-smoke.js`. The six differences of §3 hold (difference 5 in
+> the script's order: the tests link goes just before the removal of `js/` that holds it, after the removals of the
+> pages and icons, which never meet it), with two readings the port needed: `lib/what-runs.js` reads the gate table when any reached file launches `run-gates.js`
+> (§0's warning, measured: the old reading of the ported tree loses 70 files), and `writeAll` lives in
+> `lib/write-all.js`. The module LAUNCHES the file utilities the script launched, so a failing one says what it said
+> (E3), and a Ctrl-C is the running program's to answer, as under the shell; P4's only differences (3 of 92
+> scenarios) are diagnostics of the shell's own — a file it could not open, a `cd` that failed, a `node` it could not
+> find — which carry a line number of the script. Its standing cases are `run-build-selftest.js` (node tier: the green paths, one exit of
+> each kind, the cleaner's refusals, build_and_smoke's flag per profile). §1's count drifted before the port: 40
+> `build_failed` sites, not 44 (round 4's §3 removed four). The evidence — the inventory, the readers, the baseline of
+> the bash build, the planted layout's 84 scenarios, the fingerprints, the run sets, the real runs — is local to the
+> loop, `Fizzygum-tests/.scratch/cleanups-loop-4/u8-build-node/`, beside the scripts it replaced (`*.before`). The
+> summary of what landed: `docs/plans/top-10-cleanups-round-4-plan.md` §10, "Landed".
+
 > **PLAN ONLY. Written to be read and executed COLD by an LLM/engineer with ZERO prior context.**
 > Authored 2026-11-15 for item §10 of `docs/plans/top-10-cleanups-round-4-plan.md` (read that
 > section first: it holds the evidence and the reasons). The owner approved the item the same
