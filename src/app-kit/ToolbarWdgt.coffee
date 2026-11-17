@@ -4,9 +4,12 @@
 # (_toolbarItems) and, where it differs, its docking defaults. The SAME
 # construction serves both toolbar homes, and in BOTH it is a FrameWdgt's content: FLOATING (a
 # window on the desktop, built by the toolbar creator buttons / ToolbarsApp) and DOCKED (a band
-# in a host frame's edge slot). The buttons inside don't bind to an editor instance -- they
-# act on the focused widget or create-by-drag -- which is exactly what lets
-# one construction serve every home.
+# in a host frame's edge slot). The buttons inside don't bind to an editor instance, which is
+# exactly what lets one construction serve every home: each tool finds what it acts on itself, from
+# the one question I answer -- WHO I WORK FOR (hostWindow): the window whose edge slot I occupy
+# while I am docked, the person while I float (or stand inside a window as its content, which is
+# no dock). A paint tool sets its tool on that holder (hostWindowOf); the text tools act on the
+# focused widget, and the creators create by click or by drag.
 #
 # Colloquial name rides the contents: ToolPanelWdgt.viewportColloquialName
 # names the whole strip "toolbar" in hierarchy menus.
@@ -68,6 +71,72 @@ class ToolbarWdgt extends ViewportWdgt
   # form so the boot dependency finder sees the class edges.
   _toolbarItems: ->
     []
+
+  # ===== who I work for =====
+
+  # The window I work for: the one whose edge slot my frame occupies (FrameWdgt.dockHost), asked of my
+  # frame at every asking. undefined: I work for the person -- I float, or my frame is another
+  # window's content, which is no dock. Every edge-slot dock ties me, whatever the host holds.
+  hostWindow: ->
+    @parent?.dockHost?()
+
+  # WHO A TOOL WORKS FOR, the one home every tool asks: the window the toolbar it stands in works
+  # for (hostWindow), found by climbing from the tool to its nearest ancestor that answers the
+  # question -- a capability, so no tool names a toolbar class. undefined when the tool stands in no
+  # toolbar or its toolbar floats: the tool then works for the person.
+  @hostWindowOf: (aWidget) ->
+    each = aWidget
+    while each?
+      return each.hostWindow() if each.hostWindow?
+      each = each.parent
+    undefined
+
+  # Do I carry a DRAWING tool -- a tool that names a paint tool by its key (drawingToolKey), whatever
+  # else I carry beside it? A window wearing me then holds a tool of its own (FrameWdgt
+  # .armedDrawingTool), which the drawings in its content paint with.
+  holdsDrawingTools: ->
+    @allChildrenBottomToTop().some (each) -> each.drawingToolKey?
+
+  # Does `aFrame` WEAR drawing tools -- does one of the payloads in its edge slots carry them? Asked
+  # by a paint surface looking for its holder, and by a palette leaving a window. A frame with no
+  # slots wears nothing.
+  @wearsDrawingTools: (aFrame) ->
+    (aFrame.dockedPayloads?() ? []).some (each) -> each.holdsDrawingTools?()
+
+  # MY TOOLS' LOOKS MAY HAVE MOVED: the holder I work for changed its tool, or I changed holder by
+  # docking or leaving. Every one of my cells re-derives its look, asking its tool (a tool with no
+  # state to show answers nothing and stays at rest), the hidden ones too, so a cell my strip shows
+  # later is already right; each cell passes the news on to what shows it through it (a toolbar
+  # overflow menu's row).
+  noteToolHolderChanged: ->
+    for cell in @contents.childrenNotHandlesNorCarets()
+      cell.noteItemStateChanged?()
+    return
+
+  # I ARRIVED in `host`'s edge slot (told by FrameWdgt._dockFrameNoSettle, my slot already mine).
+  # Moving a palette changes neither what it shows nor what the drawing it joins paints with: so when
+  # I carry drawing tools and no other payload `host` wears does, the host adopts the person's tool
+  # as it stands, an empty hand included. A host already wearing drawing tools keeps its own, which I
+  # show from now on.
+  noteDockedOn: (host) ->
+    return unless @holdsDrawingTools()
+    othersHoldDrawingTools = host.dockedPayloads().some (each) => each isnt @ and each.holdsDrawingTools?()
+    host.armDrawingTool world.user?.armedDrawingTool unless othersHoldDrawingTools
+    @noteToolHolderChanged()
+    return
+
+  # I LEFT `host`'s edge slot by being re-homed (told by FrameWdgt._reactToChildRemoved, my slot
+  # already free; never for a destroy, a re-side, a disengage or a collapse). The same invariant:
+  # when I carried drawing tools and `host` wears none any more, the person takes the host's tool,
+  # which I go on showing, and the host gives it up.
+  noteUndockedFrom: (host) ->
+    return unless @holdsDrawingTools()
+    unless ToolbarWdgt.wearsDrawingTools host
+      toolKey = host.armedDrawingTool
+      host.armDrawingTool undefined
+      world.user.armDrawingTool toolKey
+    @noteToolHolderChanged()
+    return
 
   # THE BOX A FRAME AROUND ME TAKES WHEN I FLOAT -- my grid's own natural box within the `room`
   # the frame has left after its chrome (owner ruling: a free manifestation HUGS its payload, so

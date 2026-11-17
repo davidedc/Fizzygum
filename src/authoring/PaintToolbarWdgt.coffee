@@ -1,18 +1,17 @@
 # The PAINT palette (Frame-model plan §5.D): the tool strip that occupies an ImageWdgt's
 # toolbar-slot (docked left), or floats like any toolbar. It is the PALETTE VARIANT of the ONE
 # toolbar construction -- four commands (pencil / brush / toothpaste / eraser) in the shared tool
-# grid, each cell holding a tool that carries its own injectable source and answers its own tap.
-# What makes it a palette rather than a rack of drag-out thumbnails is SELECTION -- and the tool
-# chosen is not MINE. It is the PERSON's: `world.user.armedDrawingTool` (User), because I am a
-# destination-generic instrument that serves whichever image is in reach, so a hand holding a
-# pencil holds it for every drawing at once. I am therefore a VIEW of that fact (my highlight
-# derives from it, and I re-read it whenever it announces) and a CONTROLLER over it (a tap on one
-# of my cells arms that tool on the user). See CommandSpec for the dispatch law both projections
-# of a command obey.
+# grid, each cell holding a tool that answers its own tap. What makes it a palette rather than a rack
+# of drag-out thumbnails is SELECTION -- and the tool chosen is not MINE. It is my HOLDER's: the
+# window whose edge slot I occupy while I am docked (its FrameWdgt.armedDrawingTool), the person
+# while I float (world.user.armedDrawingTool, User) -- the one question every toolbar answers, who I
+# work for (ToolbarWdgt.hostWindow). Each of my tools asks it itself, so I am only where the tools
+# stand: a tap on one sets that tool on the holder, and each cell shows whether its tool is the one
+# the holder holds. See CommandSpec for the dispatch law both projections of a command obey.
 #
-# The tools inject their handler source into a painting overlay resolved when the selection moves
-# (resolveInjectionTarget below) -- any paint toolbar can serve any image (owner decision D12:
-# injection stays the arming mechanism in D-1; a world-level tool object is D-2's design space).
+# Nothing of mine reaches a drawing. A paint surface takes its tool up when it is USED
+# (CanvasGlassTopWdgt.hoverMoved / pressMoved), from its own nearest holder, and reads what a tool key
+# means from me (sourceForToolKey): the person's edit of that tool, else my stock source.
 #
 # Clicking anywhere in here -- a tool, its icon, an edit mark, the grid between them -- must not
 # steal the editor focus pointer from the image being edited. ToolbarWdgt declares that exclusion
@@ -22,35 +21,24 @@
 
 class PaintToolbarWdgt extends ToolbarWdgt
 
-  # my four commands. Each holds the source its command injects; my strip's depth is no constant of
+  # my four commands. Each is named by its key (drawingToolKey); my strip's depth is no constant of
   # mine at all -- ToolbarWdgt derives it from the grid's own cell metrics, like every other strip.
   pencilTool: undefined
   brushTool: undefined
   toothpasteTool: undefined
   eraserTool: undefined
 
-  # whether MY frame is in edit mode, i.e. whether the person's tool reaches my painting surface
-  # at all. Born true: a drawing is born editable, its payload built with the pencil source
-  # already injected -- the same statement the User makes by being born holding a pencil.
-  _armed: true
-
-  # HOW A TOOL SOURCE IS SHAPED. A drawing surface is one of the few widgets with business on BOTH
-  # pointer-move channels, so every tool below injects both and routes them into one body: a HOVER
-  # move shows where the tool would land, and a PRESSED move carries the button as a fact — the
-  # primary button lays paint down, any other previews exactly as a hover does. One body means the
-  # two channels cannot drift, and it is the body a person opens when they edit the tool.
-  #
-  # what an unchosen palette injects: a no-op, because view mode must not paint, and neither must
-  # a strip whose chosen tool was pressed a second time (§5.D D-i #4).
-  @TOOL_OFF_SOURCE: "hoverMoved = -> return\npressMoved = -> return"
+  # HOW A TOOL SOURCE IS SHAPED. A source is a blurb of `name = value` assignments the paint surface
+  # carries as its own instance members while it holds that tool: `applyToolAt`, the one body a
+  # person opens when they edit the tool, and any helpers it calls (the toothpaste's paintBrush, its
+  # queue's initialiser and the pressEnded that drains it). The surface owns the two pointer-move
+  # entries and routes both into applyToolAt (CanvasGlassTopWdgt.hoverMoved / pressMoved), with @
+  # bound to the surface: a HOVER move shows where the tool would land, and a PRESSED move carries
+  # the button as a fact -- the primary button lays paint down, any other previews exactly as a hover
+  # does. So a source never assigns either entry (the save of a tool's code refuses one that does:
+  # CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries), and "no tool" is simply no tool members.
 
   @PENCIL_TOOL_SOURCE: """
-      hoverMoved = (pos) ->
-          @applyToolAt pos
-
-      pressMoved = (pos, mouseButton) ->
-          @applyToolAt pos, mouseButton
-
       applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBuffer.canvasContext
@@ -88,12 +76,6 @@ class PaintToolbarWdgt extends ToolbarWdgt
       """
 
   @BRUSH_TOOL_SOURCE: """
-      hoverMoved = (pos) ->
-          @applyToolAt pos
-
-      pressMoved = (pos, mouseButton) ->
-          @applyToolAt pos, mouseButton
-
       applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBuffer.canvasContext
@@ -277,12 +259,6 @@ class PaintToolbarWdgt extends ToolbarWdgt
                       contextMain.restore()
               delete @queue
 
-      hoverMoved = (pos) ->
-          @applyToolAt pos
-
-      pressMoved = (pos, mouseButton) ->
-          @applyToolAt pos, mouseButton
-
       applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBuffer.canvasContext
@@ -330,12 +306,6 @@ class PaintToolbarWdgt extends ToolbarWdgt
       """
 
   @ERASER_TOOL_SOURCE: """
-      hoverMoved = (pos) ->
-          @applyToolAt pos
-
-      pressMoved = (pos, mouseButton) ->
-          @applyToolAt pos, mouseButton
-
       applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBuffer.canvasContext
@@ -372,34 +342,47 @@ class PaintToolbarWdgt extends ToolbarWdgt
   # no glass lid over it -- and a tap on the cell reaches the tool itself, which is what the
   # dispatch law asks of a cell (CommandSpec's header). The EDIT MARK rides the tool: the triangle
   # in the tool's own top-right corner opens that command's source for editing.
+  #   Each face is built in the toolbar glyph ink, the ink of every toolbar's glyphs (a creator
+  # button or a text tool takes it in its createAppearance), where an icon built without a colour
+  # would take the plain icon ink (IconWdgt).
   _toolbarItems: ->
-    @pencilTool = new CodeInjectingSimpleRectangularButtonWdgt @, new Pencil2IconWdgt, 'pencil'
-    @brushTool = new CodeInjectingSimpleRectangularButtonWdgt @, new BrushIconWdgt, 'brush'
-    @toothpasteTool = new CodeInjectingSimpleRectangularButtonWdgt @, new ToothpasteIconWdgt, 'toothpaste'
-    @eraserTool = new CodeInjectingSimpleRectangularButtonWdgt @, new EraserIconWdgt, 'eraser'
+    glyphInk = WorldWdgt.theme.toolbarGlyph
+    @pencilTool = new CodeInjectingSimpleRectangularButtonWdgt (new Pencil2IconWdgt glyphInk), 'pencil'
+    @brushTool = new CodeInjectingSimpleRectangularButtonWdgt (new BrushIconWdgt glyphInk), 'brush'
+    @toothpasteTool = new CodeInjectingSimpleRectangularButtonWdgt (new ToothpasteIconWdgt glyphInk), 'toothpaste'
+    @eraserTool = new CodeInjectingSimpleRectangularButtonWdgt (new EraserIconWdgt glyphInk), 'eraser'
 
     for tool in @_tools()
-      tool.sourceCodeToBeInjected = PaintToolbarWdgt.sourceForToolKey tool.drawingToolKey
       new EditableMarkWdgt tool, tool, "editInjectableSource"
 
     @_tools()
 
-  # WHAT A TOOL KEY MEANS, stated once and read twice: my cells take their editable copy from here
-  # at build, and a drawing asks it what to be born painting (ImageWdgt._makeStartingPayload). The
-  # person's hand speaks in KEYS (User.armedDrawingTool), so this is where a key becomes behaviour;
-  # a key naming no tool of mine means nothing paints.
+  # WHAT A TOOL KEY MEANS NOW: the person's edit of that tool (User.drawingToolOverrideFor: there is
+  # ONE table of edited tool code, the person's, whichever cell's edit mark wrote it), else my stock
+  # source. Holders speak in KEYS (User and FrameWdgt armedDrawingTool), so this is where a key
+  # becomes behaviour, read at each use by the paint surface (CanvasGlassTopWdgt._sourceOfToolInReach)
+  # and by a tool's edit mark, which opens the source it means now. A key naming no tool of mine
+  # means nothing (undefined): nothing paints.
   @sourceForToolKey: (toolKey) ->
+    world.user.drawingToolOverrideFor(toolKey) ? PaintToolbarWdgt.stockSourceForToolKey toolKey
+
+  # THE STOCK TOOLS: what each key means while the person has not edited it. A key naming no tool of
+  # mine answers undefined.
+  @stockSourceForToolKey: (toolKey) ->
     switch toolKey
       when 'pencil' then PaintToolbarWdgt.PENCIL_TOOL_SOURCE
       when 'brush' then PaintToolbarWdgt.BRUSH_TOOL_SOURCE
       when 'toothpaste' then PaintToolbarWdgt.TOOTHPASTE_TOOL_SOURCE
       when 'eraser' then PaintToolbarWdgt.ERASER_TOOL_SOURCE
-      else PaintToolbarWdgt.TOOL_OFF_SOURCE
+      else undefined
 
-  # ONE edge user -> me, waking me whenever the person's hand changes by ANY route: a tap on THIS
-  # palette, a tap on the one docked in another drawing, a restored snapshot. firesOnAnyChange
-  # because what I show is not the user's VALUE -- a person has no single value -- so
-  # markNonValueChange has to reach me; I never read what is delivered, I re-read the user.
+  # ONE edge user -> me, waking me whenever the person's hand changes by ANY route: a tap on a
+  # floating palette, a palette leaving a window, a restored snapshot (and when the person edits a
+  # tool's code, User.overrideDrawingTool, which moves no highlight). firesOnAnyChange because what
+  # I show is not the user's VALUE -- a person has no single value -- so markNonValueChange has to
+  # reach me; I never read what is delivered, my cells re-read their holder (noteToolHolderChanged).
+  # While I am docked my holder is my host window, which tells me itself when its tool changes
+  # (FrameWdgt.armDrawingTool), so then the hand's announcement only re-reads what has not moved.
   # The reflecting menu row's own seam, one level up (MenuItemWdgt._subscribeToMyReflectedSource).
   #   Lifecycle needs nothing at MY end: Widget._destroyNoSettle calls removeAllEdgesOf, so a
   # destroyed palette drops itself out of the user's out-set as it dies.
@@ -409,7 +392,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
 
   _subscribeToTheArmedDrawingTool: ->
     return unless world?.user?
-    world.dataflow.addEdge world.user, @, action: "applyArmedDrawingTool", firesOnAnyChange: true
+    world.dataflow.addEdge world.user, @, action: "noteToolHolderChanged", firesOnAnyChange: true
     return
 
   # A palette arriving any way OTHER than construction still has to watch the same hand: neither a
@@ -422,113 +405,6 @@ class PaintToolbarWdgt extends ToolbarWdgt
     super
     @_subscribeToTheArmedDrawingTool()
 
-  # ===== target resolution (§5.D D-ii 3, owner decision D11) =====
-  # DOCKED: my parent is the band frame holding me, and a band answers with its HOST's surface --
-  # act on THAT image, whether or not anything has been clicked yet. FLOATING: my frame is docked
-  # in nothing and its content is me, so it answers undefined -- fall to the FOCUSED widget, which
-  # is the only thing that says which image a loose palette is aimed at.
-  # Either leg resolves through the paintingOverlay() capability chain
-  # (glass / canvas / container / frame); undefined = nothing paintable, and arming is then a
-  # visual-only change of which tool the strip shows chosen (the text-toolbar no-op contract).
-  resolveInjectionTarget: ->
-    @parent?.paintingOverlay?() ? world.editorFocusWdgt?.paintingOverlay?()
-
-  # ===== the frame's mode protocol (driven by FrameWdgt.showEdit/ViewModeInBar) =====
-  # @_armed records WHETHER MY FRAME IS IN EDIT MODE, which is my half of what gets injected into
-  # my surface (the person's hand is the other half). Transition-guarded because the
-  # show*ModeInBar protocol is idempotently re-driven (e.g. the edit-button recreate on window
-  # uncollapse reflects the CURRENT mode): only a real mode TRANSITION re-injects.
-  # ⚠ Neither hook may fire a button action OR a settling setter: they run inside the content's
-  # enable/disable flush (the transitive-settle trap that forced the retired editor's
-  # detach-then-teardown dance), where a self-settling public setter re-enters the flush guard.
-  # Injection is settle-free, and so is the re-drive below.
-  #   Neither hook touches the USER'S hand, and that is the point of the split: my frame's mode
-  # says whether THIS drawing may be painted on, never what the person is holding. So a drawing
-  # put in view mode stops taking paint while the pencil stays in hand for every other drawing,
-  # and putting it back in edit mode re-arms whatever the person is holding by then.
-  reactToEditModeInFrame: ->
-    return if @_armed
-    @_armed = true
-    @_armSelectedTool()
-    return
-
-  reactToViewModeInFrame: ->
-    return if !@_armed
-    @_armed = false
-    @_armSelectedTool()
-    return
-
-  # ===== the person's hand: I am its VIEW, and its CONTROLLER =====
-
-  # A tap on a cell reaches the tool (the dispatch law) and the tool tells me, handing itself in
-  # the dispatch's first slot -- the one thing the press knows that I do not. I turn it into the
-  # person's KEY and state the result on the user. THE SECOND TAP'S MEANING IS MINE: tapping the
-  # tool already in hand puts it DOWN, which is a fact about the GESTURE -- the model verb only
-  # states what is held (User.armDrawingTool), so nothing that merely re-states a hand, a restored
-  # snapshot included, can be mistaken for a second tap.
-  #   No settle here: what the write produces is an ANNOUNCEMENT, and the cycle's dataflow drain
-  # applies it -- to me and to every other palette -- inside its own.
-  selectTool: (whichTool) ->
-    tappedKey = whichTool.drawingToolKey
-    world.user.armDrawingTool (if tappedKey is world.user.armedDrawingTool then undefined else tappedKey)
-
-  # The user's hand moved. Re-read it: the highlight re-derives at my next arrange, and my own
-  # surface gets whatever the hand now holds. Every open palette hears the same announcement,
-  # which is what makes arming a pencil anywhere arm it everywhere.
-  applyArmedDrawingTool: ->
-    @_armSelectedTool()
-    return
-
-  # Put the armed tool's handlers on MY painting surface; an empty hand -- or a frame in view mode
-  # -- means nothing paints here. undefined target = nothing paintable in reach, and the change is
-  # then a visual-only one (the text-toolbar no-op contract).
-  _armSelectedTool: ->
-    @resolveInjectionTarget()?.injectProperties @_sourceOfSelectedTool()
-    @_invalidateLayout()
-    return
-
-  # Each tool carries its own command's source. With an empty hand the surface gets the no-op, and
-  # so it does while my frame is in view mode -- the mode is MINE, the hand is the person's.
-  _sourceOfSelectedTool: ->
-    return PaintToolbarWdgt.TOOL_OFF_SOURCE unless @_armed
-    @_armedTool()?.sourceCodeToBeInjected ? PaintToolbarWdgt.TOOL_OFF_SOURCE
-
-  # WHICH OF MY CELLS the person's hand names -- looked up FROM the key, never stored: my cells
-  # come and go with me and the hand outlives them all.
-  _armedTool: ->
-    armedKey = world?.user?.armedDrawingTool
-    return undefined unless armedKey?
-    for each in @_tools()
-      return each if each.drawingToolKey is armedKey
-    undefined
-
+  # my tools, in strip order
   _tools: ->
     (each for each in [@pencilTool, @brushTool, @toothpasteTool, @eraserTool] when each?)
-
-  # Is `tool` the one in the person's hand -- the ACTIVE tool, whose cell shows it
-  # (CodeInjectingSimpleRectangularButtonWdgt.isActiveTool asks)? Read from the hand at every
-  # asking, never stored.
-  holdsInHand: (tool) ->
-    tool? and tool is @_armedTool()
-
-  # The highlight is a VIEW of the person's hand, re-derived at every arrange (the
-  # CommandPanelWdgt._deriveTickColumn idiom, ruling C5): every tool's face wears the toolbar glyph
-  # ink, the same armed or not, and every tool's CELL re-derives its look, which asks the tool
-  # whether it is the active one (holdsInHand) -- so the armed tool's cell shows active and no other
-  # does. No cell stores "am I the armed one", so no cell can disagree with the hand.
-  _deriveToolHighlights: ->
-    for tool in @_tools()
-      tool.faceWidget.setColor WorldWdgt.theme.toolbarGlyph
-      tool.parent?.noteItemStateChanged?()
-    return
-
-  _reLayoutChildren: ->
-    @_deriveToolHighlights()
-    super
-
-  # Unlike a normal button, which injects code only when pressed, the ARMED tool must pick up
-  # newly edited source immediately, without being re-pressed: the tool notifies me of new code,
-  # and I forward the injection only when it is the one in the person's hand.
-  newCodeToInjectFromButton: (whichToolHasNewCode) ->
-    if whichToolHasNewCode is @_armedTool()
-      whichToolHasNewCode.injectCodeIntoTarget()

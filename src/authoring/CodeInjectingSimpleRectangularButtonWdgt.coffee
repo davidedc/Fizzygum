@@ -1,28 +1,25 @@
-# A PALETTE'S TOOL: a SimpleRectangularButtonWdgt carrying the editable source its command injects
-# into another widget. The INJECTION target is resolved by the palette that owns me (Frame-model
-# plan §5.D: the paint toolbar resolves the painting overlay of the frame it is docked in, or of
-# the focused widget -- so one toolbar serves any image, replacing the construction-bound target
-# this button used to carry), and WHEN it is injected is the palette's business too: my press only
-# tells the palette to choose me, and the palette arms whatever the choice leaves selected -- one
-# write, from the one fact.
+# A PALETTE'S TOOL: a SimpleRectangularButtonWdgt naming one paint tool by its KEY (drawingToolKey).
+# I answer my own press: I set my key on my HOLDER -- the window whose edge slot my toolbar occupies
+# while it is docked, the person while it floats (ToolbarWdgt.hostWindowOf) -- and I am the ACTIVE
+# tool exactly while my holder holds my key. Both holders answer the same pair (armedDrawingTool,
+# armDrawingTool), so I never ask which kind I found. I push nothing onto any drawing: a paint surface
+# takes its tool up when it is used, from its own nearest holder (CanvasGlassTopWdgt).
+#
+# MY EDIT MARK opens what my key means NOW (PaintToolbarWdgt.sourceForToolKey) and saves an edit into
+# the person's ONE table of edited tool code (User.overrideDrawingTool), so every palette's cell for my
+# key, docked or floating, opens the same code, and every surface using my key takes the edit up at its
+# next use.
 #
 # I LOOK LIKE EVERY OTHER TOOL: I paint nothing of my own -- my face is my picture, in the
-# toolbarGlyph ink (my palette inks it), and my hover / press state shows on the tool cell I stand
-# in (lightsAToolCell, notePointerStateChanged), which also shows whether I am the ACTIVE tool, the
-# one in the person's hand (isActiveTool).
+# toolbarGlyph ink (my palette builds it so), and my hover / press state shows on the tool cell I
+# stand in (lightsAToolCell, notePointerStateChanged), which also shows whether I am the ACTIVE tool
+# (isActiveTool).
 
 class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWdgt
 
-  # Why don't we store just a Function, why are we dealing with strings here?
-  # 1) because the user inputs a string
-  # 2) because we NEED to keep the Coffeescript source code around, if
-  #    we just hold the Function then we lose the CS source
-
-  sourceCodeToBeInjected: ""
-
-  # WHICH COMMAND I AM, as the person's hand names it ('pencil' | 'brush' | …): the key my palette
-  # hands to world.user.armDrawingTool, and the key it looks me up by when the hand changes. A
-  # KEY rather than my identity, because the fact outlives every palette that shows it (User).
+  # WHICH COMMAND I AM, as a holder names it ('pencil' | 'brush' | …): the key I set on my holder,
+  # and the key my edit mark edits. A KEY rather than my identity, because the fact outlives every
+  # palette that shows it (User).
   drawingToolKey: undefined
 
   # I act on my own press rather than standing in a cell waiting to be dragged out, so the tool
@@ -34,12 +31,10 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   # as my tooltip too, and by which a toolbar's overflow row names me (OverflowChevronButtonWdgt).
   toolName: undefined
 
-  # `palette` lands in the inherited @target, which is BOTH the receiver of my press (the four-slot
-  # dispatch hands it ME in slot 1, so it knows which tool was pressed) and the widget I tell about
-  # newly edited source. ONE back-reference: they are one object, and two fields holding it could
-  # disagree. `face` is the icon I show; `drawingToolKey` names the command I am.
-  constructor: (palette, face, @drawingToolKey) ->
-    super target: palette, action: "selectTool", face: face
+  # `face` is the icon I show; `drawingToolKey` names the command I am. No target and no action: I
+  # answer my own press (activated), so the inherited trigger has nothing to dispatch.
+  constructor: (face, @drawingToolKey) ->
+    super face: face
     # no rectangle and no border: the undefined appearance paints nothing at all, and my whole box
     # still catches the pointer (Widget.catchesPointerAt)
     @appearance = undefined
@@ -66,40 +61,52 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   _showsChildAsAPicture: (child) ->
     child is @faceWidget
 
-  # Am I the ACTIVE tool, the one in the person's hand? My palette answers (it keeps no record of
-  # its own: it reads the hand), and my cell asks at every derivation of its look.
-  isActiveTool: ->
-    @target?.holdsInHand?(@) ? false
+  # WHO HOLDS MY TOOL: the window my toolbar works for, else the person. Read at every asking, never
+  # stored, so a palette that docks or floats away is answered by its new holder at once.
+  _holder: ->
+    ToolbarWdgt.hostWindowOf(@) ? world.user
 
-  # A tool press is about the palette that owns me and about nothing above it, so the click ENDS
-  # here rather than climbing the strip -- the shape every other toolbar tool has (a creator button
-  # and an editor-property button both end their clicks the same way).
+  # Am I the ACTIVE tool -- does my holder hold my key? My cell asks at every derivation of its look,
+  # and an overflow row standing for my cell ticks by the same answer.
+  isActiveTool: ->
+    holder = @_holder()
+    holder.armedDrawingTool? and holder.armedDrawingTool is @drawingToolKey
+
+  # A tool press is about my holder and about nothing above me, so the click ENDS here rather than
+  # climbing the strip -- the shape every other toolbar tool has (a creator button and an
+  # editor-property button both end their clicks the same way). A tap on my cell and my overflow row
+  # (OverflowChevronButtonWdgt.triggerToolFromMenu) both arrive here. THE SECOND TAP'S MEANING IS
+  # MINE: tapping the tool my holder already holds puts it DOWN, which is a fact about the GESTURE --
+  # the holder's verb only states what is held, so nothing that merely re-states a tool, a restored
+  # snapshot included, can be mistaken for a second tap.
+  #   No settle here: the person's write is an ANNOUNCEMENT the cycle's dataflow drain delivers to
+  # every palette, and a window's write tells its docked palettes itself (FrameWdgt.armDrawingTool).
   activated: ->
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       @propagateKillPopUps()
-    @trigger()
+    holder = @_holder()
+    holder.armDrawingTool (if @drawingToolKey is holder.armedDrawingTool then undefined else @drawingToolKey)
+    return
 
   editInjectableSource: ->
-    @textPrompt "Code", @, "modifyCodeToBeInjected", defaultContents: @sourceCodeToBeInjected
-
-  # Push MY source onto the surface the palette resolves now -- what an EDIT to my source needs, so
-  # that a tool already chosen picks the new code up without being re-pressed. Choosing a tool goes
-  # the other way round: the palette reads the source off the chosen tool
-  # (PaintToolbarWdgt._sourceOfSelectedTool). undefined target = nothing paintable in reach.
-  injectCodeIntoTarget: ->
-    @target.resolveInjectionTarget?()?.injectProperties @sourceCodeToBeInjected
+    @textPrompt "Code", @, "modifyCodeToBeInjected", defaultContents: PaintToolbarWdgt.sourceForToolKey @drawingToolKey
 
   # The textPrompt callback: the prompt delivers ONE argument, the composed source text
   # (CodePromptWdgt.deliverValue — the same value delivery every prompt makes).
   # The new source is CHECKED before it is stored -- first compiled as the person typed it, which
   # places an error in the text they see, then read as a blurb exactly as it will be injected
   # (Widget.compilePropertyAssignments): code outside its `name = value` assignments is refused by
-  # its line, and each assignment is compiled. Source that fails either throws here, stores nothing,
-  # and the prompt reports it (CodePromptWdgt.deliverValue). Without this, an unarmed tool would keep
-  # it silently: code that does not compile would throw at every later arm, and code outside an
+  # its line, and each assignment is compiled; last, a source assigning one of the paint surface's
+  # two entries is refused by its line (CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries), since
+  # it would shadow them. Source that fails any of these throws here, stores nothing, and the prompt
+  # reports it (CodePromptWdgt.deliverValue). Without this, the person's table would keep it
+  # silently: code that does not compile would throw at the next use of the tool, and code outside an
   # assignment would never run.
+  #   What is stored is the person's edit of my KEY (User.overrideDrawingTool): every surface using
+  # that key takes it up at its next use.
   modifyCodeToBeInjected: (newSource) ->
     compileFGCode newSource, true
-    Widget.compilePropertyAssignments newSource
-    @sourceCodeToBeInjected = newSource
-    @target.newCodeToInjectFromButton? @
+    assignments = Widget.compilePropertyAssignments newSource
+    CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries newSource, assignments
+    world.user.overrideDrawingTool @drawingToolKey, newSource
+    return

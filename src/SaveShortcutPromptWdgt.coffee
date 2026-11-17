@@ -13,7 +13,9 @@ class SaveShortcutPromptWdgt extends PromptWdgt
 
   wdgtWhereReferenceWillGo: undefined
   # my two buttons besides the OK I share with the family (PromptWdgt.okButton): Don't save
-  # destroys the widget being closed, Cancel dismisses me and leaves it open.
+  # destroys the widget being closed WITH ITS SUBTREE (fullDestroy: a single-widget destroy empties
+  # its children and leaves every one of them alive and owned by nothing), Cancel dismisses me and
+  # leaves it open.
   dontSaveButton: undefined
   cancelButton: undefined
 
@@ -49,7 +51,7 @@ class SaveShortcutPromptWdgt extends PromptWdgt
   # save-as has its own three buttons, OK the primary action, and no leading divider (unlike the
   # base's).
   _addButtonsInto: (panel) ->
-    @dontSaveButton = new SimpleButtonWdgt target: @target, action: "destroy", face: "Don't save"
+    @dontSaveButton = new SimpleButtonWdgt target: @target, action: "fullDestroy", face: "Don't save"
     # "Cancel" here just dismisses this prompt, but the target wdgt remains open.
     @cancelButton = new SimpleButtonWdgt target: @, action: "close", face: "Cancel"
     @okButton = new SimpleButtonWdgt target: @, action: "createReferenceAndCloseFromMenu", face: "OK", primary: true

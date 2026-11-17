@@ -69,6 +69,14 @@ class FrameWdgt extends ClippingWdgt
   # would be ONE map shared by every frame.
   dockedFrames: undefined
 
+  # THE DRAWING TOOL I HOLD while I wear one in an edge slot: a tool KEY, or undefined for none. I am
+  # one of the two holders of a tool (the person, User, is the other) and answer the same pair,
+  # armedDrawingTool / armDrawingTool, so what reads a holder never asks which kind it found. I hold
+  # only the key: what it means is the parts' business, and the payloads I dock tell me when to
+  # adopt or give up a tool (they are told of their own arrival and departure: _dockFrameNoSettle,
+  # _reactToChildRemoved). A plain string field, so it rides my save and my copy as it stands.
+  armedDrawingTool: undefined
+
   # ===== LIFETIME: one state, two manifestations of it (program rulings C2/C3) =====
   # MY ONE LIFETIME STATE, which every transient-vs-furniture branch below reads:
   #   'transient'  — mid-gesture UI (a menu, a prompt). The next click outside me (or on a
@@ -290,6 +298,12 @@ class FrameWdgt extends ClippingWdgt
   _myEdgeDockSpec: ->
     return @layoutSpec if @layoutSpec?.isEdgeDock?()
     undefined
+
+  # The window whose edge slot I occupy, or undefined when I am docked in none (a desktop window, a
+  # window nested in another's content, a pop-up). PUBLIC, the door to the private question above: my
+  # payload asks it to learn whom it works for (ToolbarWdgt.hostWindow).
+  dockHost: ->
+    @parent if @_myEdgeDockSpec()?
 
   # The POP-UP row of the same vocabulary: my strip is my header BAND -- inside my border, across
   # my content box (bandInset past the border at both ends, so it spans exactly what my rows
@@ -876,22 +890,6 @@ class FrameWdgt extends ClippingWdgt
     else
       return @contents.representativeIcon()
 
-  # paintingOverlay() capability chain (§5.D): a paint toolbar resolving its
-  # injection target asks the frame, which asks its content
-  # (container -> canvas -> glass). Frames over non-paintable content answer
-  # undefined through the ?.
-  #   A DOCKED BAND answers its HOST'S surface: a band's own content is the toolbar, so asking it
-  # alone would say "nothing paintable" for the one arrangement where the paintable thing is
-  # certain -- the strip is chrome the host is wearing, and the surface its tools act on is the
-  # host's content. A FLOATING toolbar's frame is docked in nothing and still answers undefined,
-  # which is what routes a floating press to the focus pointer instead
-  # (PaintToolbarWdgt.resolveInjectionTarget).
-  paintingOverlay: ->
-    ownAnswer = @contents?.paintingOverlay?()
-    return ownAnswer if ownAnswer?
-    return undefined unless @_myEdgeDockSpec()?
-    @parent?.paintingOverlay?()
-
   # The close-from-bar POLICY (Frame-model plan §5.E E2): a tracked field replaces
   # the per-instance `closeFromFrameBar = -> …` monkey-patches the sample/info
   # factories used to inject. 'saveOrAsk'
@@ -1152,8 +1150,16 @@ class FrameWdgt extends ClippingWdgt
   #   A departing SLOT OCCUPANT frees its slot here: the grab that lifts a docked frame out
   # re-homes it and notifies me, and a slot still pointing at a child that lives somewhere else
   # would reserve a band for it forever.
+  #   And its payload is told it LEFT me (noteUndockedFrom, a capability: a payload with nothing to
+  # do about it answers nothing), once its slot is free, so what it reads of me no longer counts it.
+  # Only a departure by re-homing is one: this hook is also a destroy's notification (the dying child
+  # is already marked destroyed), and a destroy is no departure. A slot freed BEFORE its occupant goes
+  # is none either -- a re-side (_reSideMyDockNoSettle) and a content change's retirement
+  # (_retireDockedFramesNoSettle) free it themselves.
   _reactToChildRemoved: (child) ->
+    wasDocked = @_isMyDockedFrame child
     @_freeDockSlotOf child
+    child.contents?.noteUndockedFrom? @ if wasDocked and !child.destroyed
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 
@@ -1372,7 +1378,9 @@ class FrameWdgt extends ClippingWdgt
   # attachment. What the band grants the PAYLOAD is the thickness the payload declares for itself
   # if it declares one (dockThickness, which the spec asks at every measure, so nothing about it
   # is recorded), else the extent it arrives with, which the spec records. An occupied slot's
-  # previous holder is set free first -- one frame per side.
+  # previous holder is set free first -- one frame per side. Last, the payload is told it ARRIVED
+  # (noteDockedOn, a capability: a payload with nothing to do about it answers nothing), with its slot
+  # already filled, so what it reads of me counts it.
   _dockFrameNoSettle: (aFrame, side) ->
     payload = aFrame.contents
     unless payload.dockThickness?
@@ -1388,6 +1396,7 @@ class FrameWdgt extends ClippingWdgt
     @dockedFrames[side] = aFrame
     @_reflectDockVisibilityNoSettle()
     @_invalidateLayout()
+    payload.noteDockedOn? @
 
   # Whether a band is DRAWN follows its dock's engagement -- never the other way round, because
   # visibility is never a layout input (the layout reads the spec, in _dockedFrameAt). One place,
@@ -1415,17 +1424,39 @@ class FrameWdgt extends ClippingWdgt
     @_reflectDockVisibilityNoSettle()
     @_invalidateLayout()
 
-  # The docked frame holding my content's toolbar variant, and the strip inside it. The strip is
-  # the PAYLOAD (program ruling C11) -- the frame around it is the same chrome any other frame
-  # wears, which is what lets the one object dock and float without being rebuilt.
+  # The docked frame holding my content's toolbar variant. The strip inside it is the PAYLOAD
+  # (program ruling C11) -- the frame around it is the same chrome any other frame wears, which is
+  # what lets the one object dock and float without being rebuilt.
   _dockedToolbarFrame: ->
     for side in FrameWdgt.DOCK_SIDES
       dockedFrame = @dockedFrames?[side]
       return dockedFrame if dockedFrame? and dockedFrame.parent == @
     undefined
 
-  _dockedToolbar: ->
-    @_dockedToolbarFrame()?.contents
+  # WHAT I WEAR: the payloads of the frames in my edge slots, in my slots' order (DOCK_SIDES), each
+  # one still mine (a band on its way out is not). A band my view mode disengaged is hidden and
+  # still docked, so its payload is still listed. PUBLIC and paint-agnostic: whoever needs to know
+  # what a window wears asks it (ToolbarWdgt.wearsDrawingTools), and I tell these payloads when my
+  # tool changes (armDrawingTool).
+  dockedPayloads: ->
+    payloads = []
+    for side in FrameWdgt.DOCK_SIDES
+      dockedFrame = @dockedFrames?[side]
+      payloads.push dockedFrame.contents if dockedFrame?.parent is @ and dockedFrame.contents?
+    payloads
+
+  # THE ONE WRITE of the tool I hold (armedDrawingTool above), the User's twin: it only states the
+  # fact, and IDEMPOTENTLY -- holding what I already hold changes nothing and tells no one. After a
+  # real change each payload I wear is told to re-read its holder (noteToolHolderChanged, a
+  # capability: a payload with no tools to show answers nothing), so a palette docked on me shows my
+  # tool at once. The paint surfaces in my content need no telling: each takes its tool up at its
+  # next use.
+  armDrawingTool: (toolKey) ->
+    return if toolKey is @armedDrawingTool
+    @armedDrawingTool = toolKey
+    for eachPayload in @dockedPayloads()
+      eachPayload.noteToolHolderChanged?()
+    return
 
   # Build my content's toolbar variant and dock it, framed, at the side the variant asks for. A
   # framed CITIZEN declares its kind's variant itself (§5.B); a plain frame asks the content it
@@ -1527,8 +1558,8 @@ class FrameWdgt extends ClippingWdgt
   # LEAVE THE SLOT for the desktop, AS I AM. There is nothing to convert -- I am already a frame,
   # and everything that made me look docked was my edge spec, which the desktop does not give me:
   # I land wearing a window's skin, close piece, resize handle and top bar. I pop out IN PLACE (my
-  # payload keeps its own top-left) and my payload serves any widget via the focus pointer, like
-  # every summoned toolbar.
+  # payload keeps its own top-left) and my payload, docked in nothing, works for the person, like
+  # every summoned toolbar (ToolbarWdgt.hostWindow).
   floatOutOfDock: ->
     return unless @_myEdgeDockSpec()?
     payload = @contents
@@ -2410,17 +2441,11 @@ class FrameWdgt extends ClippingWdgt
       # enable/disable settle; the engagement invalidates, and that flush covers it.
       @_engageDocksNoSettle true
       @_noteMyModeToWindowsInMe()
-      # a mode-reactive toolbar (PaintToolbarWdgt re-arms/disarms its tools,
-      # §5.D) rides the SAME protocol; the hooks transition-guard themselves
-      # because this reflector is idempotently re-driven (e.g. the edit-button
-      # recreate on window uncollapse).
-      @_dockedToolbar()?.reactToEditModeInFrame?()
 
   showViewModeInBar: ->
       @editButton?.showViewMode()
       @_engageDocksNoSettle false
       @_noteMyModeToWindowsInMe()
-      @_dockedToolbar()?.reactToViewModeInFrame?()
 
   # Frame-level edit-mode switch (§5.B), the cores Widget's two settling wrappers
   # (enable/disableDragsDropsAndEditing) reach by late binding: route through the PAYLOAD's

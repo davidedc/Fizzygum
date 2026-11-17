@@ -19,8 +19,8 @@ Phase status (update this table as phases close):
 |---|---|---|
 | P0 | Spike S1 (the paint mechanism, planted); measure M1 (test fallout). D1–D8 are already ratified | DONE 2026-11-16: S1 passes every row; M1a, M1b empty; M1c 26 shots in 12 tests (§8 "P0 results") |
 | P1 | Content-side bugs: view-mode content refuses restyling; a drawing takes no click-placed widget | DONE 2026-11-16: `WorldWdgt.editableEditorFocus`, `StretchableCanvasWdgt.stampsDroppedWidgets`, two new tests; gauntlet green (§8 "P1 results") |
-| P2 | The seam + paint: the surface takes up its tool at use; windows hold their own tool | not started |
-| — | OWNER CHECKPOINT: dock / undock by hand, judge the feel (D3) | — |
+| P2 | The seam + paint: the surface takes up its tool at use; windows hold their own tool | DONE 2026-11-17: the glass's class entries + take-up, `FrameWdgt`'s holder pair, the D3 transfers, D2's table and its save, three new tests; gauntlet green (§8 "P2 results") |
+| — | OWNER CHECKPOINT: dock / undock by hand, judge the feel (D3) | OPEN: three behaviours to judge are listed in §8 "P2 results" |
 | P3 | Text tools and creators onto the seam; the refresh moves to `ToolbarWdgt`; mixed bars | not started |
 | P4 | Tools with nothing to act on show dimmed (D5) | not started |
 | — | OWNER CHECKPOINT: the owner picks the dimmed look, then sees the diff page before P4's recapture | — |
@@ -922,6 +922,133 @@ the host's `contents`. A PROPERTY tool is an `EditorContentPropertyChangerButton
 6. Summary + commit message; wait. **Then the owner checkpoint:** the owner docks and undocks palettes by
    hand and rules on D3.
 
+#### P2 results (recorded 2026-11-17, on Fizzygum `fa5f3417` and tests `b7b071767`)
+
+**The seam (§6.1), as built.**
+- `FrameWdgt.dockHost` (public): the window whose edge slot I occupy, else undefined.
+- `FrameWdgt.dockedPayloads` (public, paint-agnostic): what a window wears, in slot order; a disengaged band is
+  still listed.
+- `ToolbarWdgt.hostWindow`: who I work for — my frame's `dockHost`; undefined means the person.
+- `ToolbarWdgt.hostWindowOf(aWidget)`, a static: the ONE home every tool asks. It climbs by hand, nearest first,
+  to the first ancestor answering `hostWindow` (`allParentsBottomToTopSuchThat` is root-first; its sibling
+  `allParentsTopToBottomSuchThat` is the nearest-first one — the names read backwards).
+- `ToolbarWdgt.holdsDrawingTools` and the static `ToolbarWdgt.wearsDrawingTools(aFrame)`.
+
+**Paint (§6.2), as built.**
+- The surface owns the entries. `CanvasGlassTopWdgt`'s class `hoverMoved` / `pressMoved` run
+  `_applyToolInReach`, and its `_takeUpToolInReach` is §6.2's block verbatim. Its `hoverExited` is a class
+  method too, and `ImageWdgt._makeStartingPayload` injects nothing.
+  - **Which tool:** `_sourceOfToolInReach` asks P1's ONE view-mode question, `Widget.sitsInViewModeContent`,
+    rather than a second climb. For a glass, the deciding ancestor is its own canvas (a `PanelWdgt`), whose
+    flag the drawing's container sets at every mode flip.
+  - **Who holds it:** `_toolHolder` climbs to the first frame whose `contents` the climb came through and that
+    wears drawing tools, else the person.
+  - The only `injectProperties` call that injects a tool source in src is now the take-up.
+- The holders.
+  - `FrameWdgt.armedDrawingTool` is a plain field, and `armDrawingTool` is idempotent; after a real change it
+    tells each docked payload `noteToolHolderChanged`.
+  - `User` keeps its pair and holds D2's table: `drawingToolOverrides`, `drawingToolOverrideFor`,
+    `overrideDrawingTool`, and `replaceDrawingToolOverrides` for the load.
+- The palette tool answers its own press against `ToolbarWdgt.hostWindowOf(@) ? world.user`, and its
+  `isActiveTool` reads the same holder.
+  - Its constructor is `(face, drawingToolKey)`. `sourceCodeToBeInjected` and `injectCodeIntoTarget` are gone.
+  - Its edit mark opens `PaintToolbarWdgt.sourceForToolKey`: the person's edit, else `stockSourceForToolKey`.
+  - Its save keeps the two compile checks, then D7's refusal (`CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries`,
+    the names in `CanvasGlassTopWdgt.TOOL_ENTRIES`), then writes the person's table.
+- The transfers are two guarded notifications from core. Their logic lives on `ToolbarWdgt`, so a mixed bar
+  transfers too.
+  - `_dockFrameNoSettle` ends with `payload.noteDockedOn? @`.
+  - `_reactToChildRemoved` tells `noteUndockedFrom` only to a band that was docked and is not destroyed.
+  - D1 lives in `ImageWdgt`'s override of `_buildDockedToolbarNoSettle`: the window takes pencil when it wears
+    drawing tools and holds none. That covers a birth, a payload reset and the "Toolbar" row.
+- The refresh: `ToolbarWdgt.noteToolHolderChanged` tells every cell `noteItemStateChanged`.
+  `PaintToolbarWdgt` keeps its one edge to the user (action `noteToolHolderChanged`) until P3.
+- Deleted, as §6.2 lists them, plus `FrameWdgt._dockedToolbar`.
+  - The whole `paintingOverlay` / `isPaintingOverlay` chain went. Its one other reader,
+    `serialization-roundtrip-headless.js`'s `R.paintedSurface`, now finds the glass by class.
+  - `_deriveToolHighlights`' re-inking of the faces was still owed, because an icon built without a colour
+    takes `iconInk`, not `toolbarGlyph`. The faces are now built in `toolbarGlyph`, as every other toolbar's
+    glyphs are, and every reference still matches.
+- The save. Each `users` record carries `drawingToolOverrides` (left out while empty;
+  `Serializer._userRecord`).
+  - `Deserializer._userRecordProblem` refuses a table that is not a plain record of strings.
+  - The load REPLACES the live person's table with the file's.
+  - A window's tool rides ordinary widget serialization.
+
+**Measured on the build** (acceptance probes in `Fizzygum-tests/.scratch/p2/`, gitignored, real CDP input, no
+plant; each also passes on the pre-P2 build with S1's plant (`--plant-s1`) and fails there without it):
+- `p2-accept.js`: 42 of 42, S1's six rows plus a D2 row. Edited pencil code reaches a palette-less drawing and a
+  drawing whose window holds pencil, and leaves a toothpaste drawing alone. No glass ever carried its own
+  `hoverMoved` / `pressMoved`, and every stroked glass carried exactly its source's members.
+- `p2-finger.js`: 10 of 10. A hand change made while the finger is down is taken up at the next `pressMoved`.
+- `p2-transitions.js`: 22 of 22. The holder climb through a Docs Maker holds, and a later hand change leaves
+  the nested drawing alone.
+  - ⚠ One row differs from S1: a palette dropped into an OCCUPIED slot. `_dockFrameNoSettle` destroys the
+    occupant before the add, so the host wears no other palette and ADOPTS THE HAND (S1's plant compared
+    against the state before the dock and kept the host's tool).
+- **For the owner's D3 checkpoint**, three behaviours to judge by hand: a palette dropped into an occupied slot
+  makes the window adopt the hand (above); a SECOND palette docked on a window shows the window's tool, not the
+  hand's it showed floating (P0 finding 5); undocking changes the tool of every other drawing that follows the
+  hand (D3's accepted side effect).
+- `p2-cost.js`: 34 of 34. A take-up costs a median of 1.9 / 5.1 / 6.8 / 1.9 ms (pencil / brush / toothpaste /
+  eraser), worst 13.5 ms, once per change. An unchanged use costs 0.1 µs under the hand and 1.4 µs under a
+  window.
+
+**Tests.**
+- New, each with one screenshot at dpr 1 and 2, mouse and finger; finger references differ from mouse ones
+  because a finger stroke's dabs fall elsewhere, while every value assertion is the same on both pointers:
+  - `SystemTest_macroTwoDrawingsKeepTheirOwnTools` (24 assertions): two drawings, the floating palette driving
+    only palette-less drawings, view mode with the palette floating.
+  - `SystemTest_macroPaletteDockUndockKeepsTheTool` (29): the undock hands the window's tool to the person; the
+    re-dock adopts it; a tap, a view-mode flip and a re-side write nothing; "Don't save" leaves the hand alone.
+  - `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder` (24): D2 through a real edit-mark prompt, and a
+    drawing nested in a Docs Maker wearing a palette.
+- Each bites under both pointers through `--prelude=` (`Fizzygum-tests/.scratch/p2-tests/`):
+  - the hand-only holder fails the first test and the third's nesting half;
+  - no transfers fails the second, and the arrival alone removed fails it at the re-dock;
+  - the stock-only key table fails the third's edit half.
+- Re-authored:
+  - `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile` now guards D7 for both entry names (it is the
+    guard named by `TOOL_ENTRIES`' hand-list sanction) and a valid edit taken up at use.
+  - `SystemTest_macroEveryPressIsToldItsEnding` §(d) arms through the person and takes the tool up with one
+    move before its spy goes on (an earlier spy is overwritten by the take-up's injection).
+- Prose trued up: `macroDrawingsMakerReEnableEditing`, `macroPencilPaintsStrokeOnLeftDrag`,
+  `macroPinnedMenuTicksFollowTheirState`.
+
+**Found on the way.**
+- **Fixed in P2: "Don't save" leaked the closed window's whole subtree.** `SaveShortcutPromptWdgt`'s button
+  dispatched a single-widget `destroy`, which empties `children` and leaves the canvas, glass, bar and docked
+  palette alive and owned by nothing: 21 `WORLD_INVENTORY_` ESCAPED rows behind the new dock/undock test, on
+  both pointers. It now dispatches `fullDestroy`. No earlier test drove "Don't save".
+- Filed: a drawing standing bare in a view-mode document still takes paint (its canvas holds its own mode,
+  which the document's flip does not reach — the shape of the sheet that still takes typing); Home and End are
+  wrong in a multi-line text (`TextWdgt.startOfLine` / `endOfLine` read `.y` from `slotRowAndColumn`, which
+  answers `[row, column]`).
+- Not filed (no gesture reaches them): a programmatic `dockFrame` of a band onto its own host runs a departure
+  and an arrival (`_addNoSettle` re-homes it), so it writes the hand; a band destroyed directly leaves its host's
+  `armedDrawingTool` set, which nothing reads while the host wears no drawing tools and the next arrival
+  overwrites.
+
+**Ratchets and gates moved.**
+- `FrameWdgt`'s method ceiling: 170 → 171, under the owner's standing ruling. In: `dockHost`, `dockedPayloads`,
+  `armDrawingTool`. Out: `paintingOverlay`, `_dockedToolbar`.
+- `CanvasGlassTopWdgt.TOOL_ENTRIES` carries a hand-list sanction naming the test that guards it.
+- `check-unresolved-sends.js` BUILTINS gains `getImageData`, the canvas platform call the new tests read pixels
+  with (src spells it without parentheses, so these macros are its first visible senders).
+- The tier-naming audit's `NON_GEOMETRY` (`Fizzygum-tests/scripts/tier-naming-audit/tier-naming-prelude.js`) gains
+  `_applyToolInReach`: an `_apply*` name that applies a tool, not a frame. Its absence failed the first P2
+  gauntlet's `tiernaming` leg and, through that gate's own control run, its `selftests` leg (both deterministic;
+  the other 18 legs passed).
+
+**Gates.**
+- `fg presuite` passed after the source change (391 of 391), after the save (391 of 391; the serialization rig at
+  178 expectations, the file rig at 10 checks) and with the new tests (394 of 394). Each was paint-truthful, and no
+  existing reference changed: P2 moved no pixel outside its new tests, and no inspector member list moved either.
+- The finger suite at dpr 1 passed: 379 of 379.
+- Each new test's follower runs clean on both pointers (no `WORLD_INVENTORY_` line).
+- `fg gauntlet` passed all 20 legs with no retry (1233 s). The first run failed `tiernaming` and `selftests` on
+  the unclassified `_applyToolInReach` alone (see above).
+
 ### P3 — text tools and creators on the seam; the refresh on the base
 
 1. §6.3, §6.4, §6.5. The two subclasses reduce to their lists.
@@ -1068,4 +1195,6 @@ the content asking the same question as the text menu above.
 
 - [x] P0: spike S1 (the paint mechanism, planted) and measurement M1 (test fallout); decisions D1–D8 were ratified 2026-11-16 (§4.2) — CLOSED 2026-11-16: S1 passed every row; M1a and M1b empty; M1c 26 shots in 12 tests (§8 "P0 results"), Fizzygum `6b4c0d65`
 - [x] P1: content in view mode refuses restyling from any toolbar; a drawing takes no click-placed widget (rulings R8, R9) — CLOSED 2026-11-16: `WorldWdgt.editableEditorFocus` and `StretchableCanvasWdgt.stampsDroppedWidgets`, two new tests (§8 "P1 results")
+- [x] P2: a drawing paints with the previous tool while every palette shows the new one — the surface takes up its tool at use, windows hold their own (§6.2) — CLOSED 2026-11-17: `CanvasGlassTopWdgt._takeUpToolInReach`, `FrameWdgt.armedDrawingTool`, the D3 transfers on `ToolbarWdgt`, D2's table on `User` and its save, three new tests (§8 "P2 results")
+- [x] "Don't save" leaks the closed window's whole subtree (found in P2) — CLOSED 2026-11-17 in P2: `SaveShortcutPromptWdgt`'s button dispatches `fullDestroy`
 - [x] A text's own menu restyles it in view mode (found in P1) — CLOSED 2026-11-16 in P1: `StringWdgt._addTextMenuEntries` and `TextWdgt`'s "Soft wrap" row ask `Widget.sitsInViewModeContent` and offer no editing row in view-mode content; V1 asserts it (§8 "P1 results")

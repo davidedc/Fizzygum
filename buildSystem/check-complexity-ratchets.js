@@ -54,7 +54,11 @@ const METHOD_CEILINGS = {
   // intent-named notification, noteEditModeChanged
   WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 128 },
   ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 74 },
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 170 },
+  // raised 170 -> 171 on 2026-11-17 under the owner's standing ruling of 2026-11-16 (the right shape over the count): a
+  // window is a holder of a paint tool and answers the person's pair (armedDrawingTool / armDrawingTool), offers its
+  // docked payloads (dockedPayloads) and the window whose edge slot it occupies (dockHost) as generic queries, so a
+  // toolbar can ask whom it works for; the paintingOverlay chain and _dockedToolbar went
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 171 },
 };
 
 const COMPLEXITY_CEILING = 15;

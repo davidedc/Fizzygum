@@ -105,11 +105,6 @@ class StretchableWidgetContainerWdgt extends Widget
   standsInWindowPageGutter: ->
     ((@parent?.pageGutterAround? @) ? 0) > 0
 
-  # paintingOverlay() capability chain (§5.D): delegate to my content -- for an
-  # ImageWdgt's payload that is the paintable canvas, which answers its glass.
-  paintingOverlay: ->
-    @contents?.paintingOverlay?()
-
   # ===== holder-frame ratio hooks (§5.B) =====
   # As a framed citizen's direct content I answer the frame's dropped/grabbed
   # notifications myself. (Hand-written, NOT a RatioLockedWdgt -- deliberately: my

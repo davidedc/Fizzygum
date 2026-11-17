@@ -29,30 +29,26 @@ class ImageWdgt extends GenericPanelWdgt
     container.disableDrops()
     mainCanvas = container.contents
 
-    # overlayCanvas: the glass the tools inject their handlers into (the
-    # paintingOverlay() capability chain resolves to it). Feedback draws on
-    # the glass; the actual painting reaches the canvas through
-    # @underlyingCanvasWdgt.getContextForPainting().
+    # overlayCanvas: the glass, the paint surface. It takes its tool up itself whenever it is used
+    # (CanvasGlassTopWdgt), so nothing is given to it here. Feedback draws on the glass; the actual
+    # painting reaches the canvas through @underlyingCanvasWdgt.getContextForPainting().
     overlayCanvas = new CanvasGlassTopWdgt
     overlayCanvas.underlyingCanvasWdgt = mainCanvas
     overlayCanvas.disableDrops()
     mainCanvas.add overlayCanvas
 
-    overlayCanvas.injectProperty "hoverExited", """
-        # don't leave any trace behind then the pointer
-        # moves out.
-        (pos) ->
-            context = @backBuffer.canvasContext
-            context.setTransform 1, 0, 0, 1, 0, 0
-            context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
-            @_changed()
-    """
-
-    # Born painting WHAT THE HAND HOLDS (User.armedDrawingTool): open a drawing while holding the
-    # brush and it hands you the brush, which is what a destination-generic instrument means. An
-    # EMPTY hand falls back to the pencil, because a new drawing must always be immediately
-    # paintable -- and that fallback is THIS drawing's birth choice, never an arming: it puts
-    # nothing in the person's hand, so a hand deliberately emptied stays empty everywhere else.
-    overlayCanvas.injectProperties PaintToolbarWdgt.sourceForToolKey (world.user?.armedDrawingTool ? 'pencil')
-
     container
+
+  # BORN PAINTING. The palette my frame docks makes me adopt WHAT THE HAND HOLDS as it arrives
+  # (ToolbarWdgt.noteDockedOn): open a drawing while holding the brush and it hands you the brush. An
+  # EMPTY hand falls back to the pencil, because a new drawing must always be immediately paintable
+  # -- and that fallback is THIS drawing's birth choice, never an arming: it puts nothing in the
+  # person's hand, so a hand deliberately emptied stays empty everywhere else. Asked wherever my
+  # toolbar is docked: at my birth, after a payload reset rebuilds my band, and from the "Toolbar"
+  # row of my menu.
+  _buildDockedToolbarNoSettle: (side) ->
+    super
+    # public-call-sanctioned: armDrawingTool is the holder's one write (FrameWdgt), settle-free and
+    # touching no geometry; this birth choice is exactly that write
+    @armDrawingTool 'pencil' if !@armedDrawingTool? and ToolbarWdgt.wearsDrawingTools @
+    return

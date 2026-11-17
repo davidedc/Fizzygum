@@ -2802,11 +2802,15 @@ class WorldWdgt extends IconGridPanelWdgt
         @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
         @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
       # the people at this world: the file's state onto the LIVE users, positionally. Through the
-      # write VERB, so the announcement reaches every palette the load has just restored -- and the
-      # verb is idempotent (User.armDrawingTool states a fact), so re-stating a hand the live user
-      # already holds is simply quiet.
+      # write VERBS, so the announcement reaches every palette the load has just restored -- and each
+      # verb states a fact and announces only a change, so re-stating what the live user already
+      # holds is simply quiet. The hand is re-stated (User.armDrawingTool); the edits of the tools
+      # BECOME the file's (User.replaceDrawingToolOverrides), since this world and its users outlive
+      # the load: an edit made here that the file lacks must not survive it, and a record carrying
+      # no edits means none.
       for eachRecord, i in (section.users or [])
         @users?[i]?.armDrawingTool eachRecord.armedDrawingTool
+        @users?[i]?.replaceDrawingToolOverrides eachRecord.drawingToolOverrides
       # 6. install the restored (self-contained, off-tree) storage containers (the teardown
       #    destroyed the previous pair) so every $r pointer at them (the bin opener's target, ...)
       #    stays consistent, and re-bind the app windows into the registry, @appWindows

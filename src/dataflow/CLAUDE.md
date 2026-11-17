@@ -169,8 +169,10 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
 (`a.equals?(b)` when defined, else identity).
 
 `User` (`world.users`, core) is a live non-widget node on this seam beside `DataflowSource`: it
-holds no `dataflowRecompute`, only `markNonValueChange`s when `armedDrawingTool` changes, and
-every palette holds one `firesOnAnyChange` edge to it, re-deriving its highlight on announce.
+holds no `dataflowRecompute`, only `markNonValueChange`s when `armedDrawingTool` or its edits of the paint
+tools (`drawingToolOverrides`) change, and every palette holds one `firesOnAnyChange` edge to it: on announce its
+cells re-read the holder they work for (`ToolbarWdgt.noteToolHolderChanged`). A window holding a tool of its own
+(`FrameWdgt.armDrawingTool`) is no dataflow node: it tells the palettes it wears directly.
 
 ## The two verbs, and the drain
 

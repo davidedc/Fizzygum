@@ -768,9 +768,12 @@ unserializable value still raises the rich `SerializationError`.
 (`[{$r}…]`), `desktopColor` (`{$r}`), `alpha`, `isDevMode`, `wallpaperPatternName`,
 `infoDocFlags` (the `world.infoDoc_*_created` own booleans — named in one place, `WorldWdgt.infoDocFlagName` /
 `isInfoDocFlagName`, which InfoDocs, the save, the load's vetting and the teardown all ask),
-`untitledNamingCounters`, `users` (`world.users` — each `User`'s `armedDrawingTool` KEY,
-captured by name like the naming service since a `User` is a plain delegated collaborator,
-not a tree object), `appWindows` (`{AppClassName:{$r}}`),
+`untitledNamingCounters`, `users` (`world.users` — one record per `User` (`Serializer._userRecord`): the
+`armedDrawingTool` KEY, and the person's edits of the paint tools, `drawingToolOverrides` (tool key → source
+text, left out while there are none), captured by name like the naming service since a `User` is a plain
+delegated collaborator, not a tree object; the load re-states the hand and REPLACES the live person's edits
+with the file's, `User.replaceDrawingToolOverrides`, since the users outlive the load; a window's own tool,
+`FrameWdgt.armedDrawingTool`, is an ordinary field of the window), `appWindows` (`{AppClassName:{$r}}`),
 `bin` (`{$r}`), `shelf` (`{$r}`), `preferences` (a FORCED data record — `refFor` would give the
 `{"$wk":"preferences"}` symbolic link, but the section needs the actual values, restored onto
 the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
@@ -925,7 +928,7 @@ recorded as that member's edit would have been (`recordMembersStillRunning`, §1
 - **instance** — the object inspector's Save (`InspectorWdgt.applyPropertyEdit`) records
   `recordInstanceEdit(widget, name, txt)` when the value it saves is a function.
   `Widget.injectProperty` itself records nothing: the product injects its own handlers through it
-  (an `ImageWdgt`'s overlay, a paint tool's switch) and a load re-injects each `{"$src"}` through
+  (a paint surface taking up its tool, `CanvasGlassTopWdgt._takeUpToolInReach`) and a load re-injects each `{"$src"}` through
   it, none of them an edit a person made. Instance edits ALSO ride serialization on their own: the
   injected function keeps its source → `{"$src"}` → re-injected on restore (§5). The registry
   adds auditability.

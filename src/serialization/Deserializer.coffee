@@ -530,8 +530,21 @@ class Deserializer
   @_sectionUsersProblem: (section) ->
     if section.users?
       return ".users is " + @_shown(section.users) + ", not a list" unless Array.isArray section.users
-      for user, i in section.users when !@_isAPlainRecord(user) or (user.armedDrawingTool? and typeof user.armedDrawingTool isnt "string")
-        return ".users[" + i + "] is " + @_shown(user) + ", not a user's record"
+      for user, i in section.users
+        return problem if (problem = @_userRecordProblem ".users[" + i + "]", user)?
+    undefined
+
+  # One record of a world section's `users`, in the shape a save writes it (Serializer._userRecord): a plain
+  # record whose armed tool, when present, is a key, and whose edits of the tools, when present, are a plain
+  # record whose every own value is a tool's source text -- the restore makes them the person's own
+  # (User.replaceDrawingToolOverrides). A clause naming `where`, or undefined.
+  @_userRecordProblem: (where, user) ->
+    return where + " is " + @_shown(user) + ", not a user's record" unless @_isAPlainRecord(user) and (!user.armedDrawingTool? or typeof user.armedDrawingTool is "string")
+    edits = user.drawingToolOverrides
+    return undefined unless edits?
+    return where + ".drawingToolOverrides is " + @_shown(edits) + ", not an object" unless @_isAPlainRecord edits
+    for own toolKey, source of edits when typeof source isnt "string"
+      return where + ".drawingToolOverrides[" + @_shown(toolKey) + "] is " + @_shown(source) + ", not a tool's source"
     undefined
 
   @_sectionSourceEditsProblem: (section) ->

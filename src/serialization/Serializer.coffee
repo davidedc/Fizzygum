@@ -204,9 +204,9 @@ class Serializer
       howManyUntitledShortcuts: uns?.howManyUntitledShortcuts or 0
       howManyUntitledFoldersShortcuts: uns?.howManyUntitledFoldersShortcuts or 0
     # the people at this world (User) — plain delegated collaborators like the naming service, so
-    # their state is captured by NAME here rather than through the object table. The armed drawing
-    # tool is a KEY, so it captures as itself; a restore applies it to the live users positionally.
-    section.users = ({armedDrawingTool: eachUser.armedDrawingTool} for eachUser in (theWorld.users or []))
+    # their state is captured by NAME here rather than through the object table, one record each
+    # (_userRecord); a restore applies each record to the live users positionally.
+    section.users = (@_userRecord eachUser for eachUser in (theWorld.users or []))
     # the app windows, by app class name (each may be orphaned-but-revivable).
     section.appWindows = {}
     for [appName, appWindow] in liveAppWindows
@@ -232,6 +232,16 @@ class Serializer
     envelope.savedAt = opts.savedAt if opts.savedAt?
     envelope.build = window.FIZZYGUM_BUILD if window.FIZZYGUM_BUILD?
     if opts.prettyPrint then JSON.stringify(envelope, null, 2) else JSON.stringify(envelope)
+
+  # One person's record in a world section's `users`: the tool in their hand, a KEY, as itself, and
+  # their edits of the tools (User.drawingToolOverrides) as a plain record of its own entries, tool
+  # key -> source text, left out while they have none. Written entry by entry (Object.fromEntries), so
+  # each key is an own entry of the record whatever it spells: a key is data.
+  @_userRecord: (user) ->
+    record = {armedDrawingTool: user.armedDrawingTool}
+    edits = Object.entries user.drawingToolOverrides ? {}
+    record.drawingToolOverrides = Object.fromEntries edits if edits.length > 0
+    record
 
   # The per-class ID counters to restore. The SAME enumeration as
   # WorldWdgt.fullDestroyChildren's id-zeroing (allClassFunctions — the `instances`-Set

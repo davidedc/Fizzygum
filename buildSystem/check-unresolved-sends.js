@@ -194,6 +194,7 @@ toString toFixed valueOf
 sqrt pow random atan2 sin cos asin exp log sign
 now parse stringify
 getContext measureText beginPath closePath stroke clip save restore translate scale setTransform createPattern
+getImageData
 preventDefault appendChild createElement getElementById getElementsByTagName querySelectorAll focus blur click
 then resolve all call test exec
 has get clear next
