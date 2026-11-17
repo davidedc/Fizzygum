@@ -251,11 +251,16 @@ class WorldWdgt extends IconGridPanelWdgt
   # widget's own damage deposits into its island buffer through the exact flesh-out lanes.
   # resetImmutableBackBuffersCache above remains the whole-world verb (test oracles; the
   # unattributed-cold-draw fallback).
+  #   Every widget ON SCREEN is repainted, and a widget the hand carries is on screen: its root is the
+  # hand, not me (isOrphan asks for neither). Nothing else would heal it -- a carried widget is painted
+  # again only when it moves -- so an atlas landing after a drag's last move would leave its boxes up
+  # while the text gate, its flags cleared, reports the text settled. Only an orphan is skipped
+  # (destroyed, detached, in the bin): its pixels are already erased.
   noteColdGlyphRegionsWarm: (widgets, cacheKeys) ->
     for key in cacheKeys
       @cacheForImmutableBackBuffers?.remove key
     for w in widgets
-      continue unless w? and w.root() == @   # destroyed/detached: its pixels are already erased
+      continue unless w? and !w.isOrphan()
       # cross-invalidation-sanctioned: atlas-warm orchestration — the world repaints the
       # widgets recorded as having painted cold placeholder glyphs
       w._fullChangedIncludingShadowOwner()
