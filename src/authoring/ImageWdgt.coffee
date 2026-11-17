@@ -42,7 +42,7 @@ class ImageWdgt extends GenericPanelWdgt
   # BORN PAINTING. The palette my frame docks makes me adopt WHAT THE HAND HOLDS as it arrives
   # (ToolbarWdgt.noteDockedOn): open a drawing while holding the brush and it hands you the brush. An
   # EMPTY hand falls back to the pencil, because a new drawing must always be immediately paintable
-  # -- and that fallback is THIS drawing's birth choice, never an arming: it puts nothing in the
+  # -- and that fallback is THIS drawing's birth choice, armed on me alone: it puts nothing in the
   # person's hand, so a hand deliberately emptied stays empty everywhere else. Asked wherever my
   # toolbar is docked: at my birth, after a payload reset rebuilds my band, and from the "Toolbar"
   # row of my menu.

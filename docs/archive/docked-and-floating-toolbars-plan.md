@@ -1,5 +1,11 @@
 # Docked and floating toolbars — who a tool works for
 
+**✅ CLOSED 2026-11-17 — archived. P0–P5 landed, each phase its own commit point, P1–P5 each closed by a green `fg gauntlet`:
+P0 Fizzygum `6b4c0d65` (with the plan, `93a5ddab`); P1 `fa5f3417` / tests `b7b071767`; P2 `8e4393c6` / `f90f0741e`; P3
+`c89a2f27` / `08cfea36f`; P4 `24fc1e1b` / `ef0541b5c`; P5 the commits that archive this file. Living truth:
+`architecture/toolbars.md`; the dimmed tool cell in `architecture/visual-design-system.md`; the `users` section in
+`architecture/serialization-duplication-reference.md`. Open residue is in `../BACKLOG.md` under this file's name.**
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 AUTHORED 2026-11-16 against Fizzygum master `14905c4c` and Fizzygum-tests master `f470874b0` (389
 SystemTests). Nothing in this plan is implemented. Owner rulings R1–R10 (§4.1) and decisions D1–D8 (§4.2)
@@ -24,7 +30,7 @@ Phase status (update this table as phases close):
 | P3 | Text tools and creators onto the seam; the refresh moves to `ToolbarWdgt`; mixed bars | DONE 2026-11-17: the host-scoped door, the creators' host placement, the two edges and one refresh on `ToolbarWdgt`, three new tests; no existing test changed; gauntlet green (§8 "P3 results") |
 | P4 | Tools with nothing to act on show dimmed (D5) | DONE 2026-11-17: one contract for the property tools (verb, subject, one refusal), the cell-derived dimmed look, two new tests, 17 tests recaptured; gauntlet green (§8 "P4 rulings", "P4 results") |
 | — | OWNER CHECKPOINT: the owner picks the dimmed look, then sees the diff page before P4's recapture | APPROVED 2026-11-17: the look picked (§8 "P4 rulings"), the diff page (31 shots) reviewed before the recapture |
-| P5 | Docs, archive, close | not started |
+| P5 | Docs, archive, close | DONE 2026-11-17: `architecture/toolbars.md`, three class headers corrected, the serialization reference's `users` section, the plan archived (§8 "P5 results") |
 
 ---
 
@@ -1269,6 +1275,64 @@ bounces; the first presuite STOPPED on the one test outside the forecast, and th
 4. `git mv` this plan to `docs/archive/`, stamp it, add its `INDEX.md` line, move its BACKLOG lines into
    a `## BACKLOG ledger` section here (README rule 2), and file anything left open.
 
+#### P5 results (2026-11-17, on Fizzygum `24fc1e1b` and tests `ef0541b5c`)
+
+**The reference.** `docs/architecture/toolbars.md`, verified against src:
+- construction and the two homes;
+- docked in the strong sense only;
+- who a tool works for, as a table by kind, with why modes and properties differ;
+- the holders, the take-up at use, the sources and the one table of edits, the D3 transfers;
+- the door and the contract of the property tools, and dimming (pointing at `visual-design-system.md` for the look);
+- creators, the refresh, how to write each kind of tool, and the tests that guard it all.
+
+It is linked from:
+- `Fizzygum/CLAUDE.md`'s subsystem-references line. That file sat exactly at its byte ceiling, so the ceiling rose
+  35294 → 35421: the one link, +127 bytes, under the owner's standing ruling that a ratchet does not dictate the design.
+- `widget-authoring-guidelines.md`'s See also.
+- `visual-design-system.md`'s tool cell, where two sentences still stated the old model: "each text toolbar hears both
+  through one dataflow edge" (every toolbar does) and "Draw's armed tool" (a paint tool's holder).
+
+**Fact-checked.** A second Opus agent, read-only, checked the doc claim by claim against src (about 170 true). It
+found no false claim, and 16 imprecise or misleading ones, all fixed. The weightiest:
+- "whom a toolbar works for never changes when content arrives" misled: a window whose content is replaced retires
+  every band it wears (`FrameWdgt._retireDockedFramesNoSettle`) and docks the new content's toolbar;
+- a new paint tool also needs a field that `PaintToolbarWdgt._tools` lists, since the strip and the edit marks both
+  come from `_tools`;
+- a loaded file's tool edits are vetted only as strings (below, in the ledger).
+
+**The class headers.** Audited by one Opus agent against src (U1, 0 bounces). Seven of the ten were true as they stand:
+- `ToolbarWdgt`, `TextToolbarWdgt`, `CodeInjectingSimpleRectangularButtonWdgt`, `CanvasGlassTopWdgt`, `CreatorWdgt`,
+  `EditorContentPropertyChangerButtonWdgt`;
+- `InfoDocs.coffee`, whose user-facing text says nothing about docked or floating toolbars and is true where it names a
+  tool's edit mark.
+
+Three were corrected:
+- `User`: "no pointer path consults me" is false, since a paint surface's holder climb ends at `world.user`. The point it
+  makes, that nothing attributes an event to a person, stands. It also no longer names "this arc".
+- `ImageWdgt`: the pencil fallback is "never an arming", which contradicted the `armDrawingTool` write beside it.
+- `PaintToolbarWdgt`: a text tool "takes the ink in its createAppearance", whereas it reads the ink as it paints (P4).
+
+None of the deleted members of §6.2 is named anywhere in src.
+
+**The serialization reference.** The `users` section now also states:
+- the load's vetting of a record (`Deserializer._userRecordProblem`) and the positional restore;
+- that a palette cell holds no code, so the person's table is the one saved home of an edited tool;
+- that a paint surface's taken-up members and `_takenUpToolSource` ride its record and are compared at its first use.
+
+**Left as written.** Thirteen tests' metadata (and their visualisation pages) name this plan at its `plans/` path. They are provenance, written when
+the path was true; the suite leaves other archived plans' paths the same way.
+
+**Gates.** P5's predicted failing set was EMPTY.
+- `fg presuite` after the comment edits: 399 of 399, paint-truthful, the dpr-2 rider clean.
+- `fg gauntlet`: all 20 legs green (1365 s), with one load-flake warning. The 1-min load was 40 on 16 cores at the
+  start, which the gauntlet's pre-flight flagged.
+  - `capstone` failed in its wave on one shot, `SystemTest_macroPointerCancelAbortsDragWithoutClick` image_0, and
+    passed when retried serially, alone.
+  - The obtained image differs from the reference only in the empty window's placeholder line, "Drop a widget in
+    here", painted as blocks: the half-warm glyph atlas (`Fizzygum-tests/DETERMINISM.md` §3g).
+  - The test passed in the dpr1, dpr2, WebKit and finger legs of the same gauntlet. No comment can reach it.
+- Ledger: U1 (the header audit) and the fact-check each landed with 0 bounces.
+
 ---
 
 ## 9. Verification protocol
@@ -1383,5 +1447,7 @@ the content asking the same question as the text menu above.
 - [x] OWNER CHECKPOINT after P2: dock and undock palettes by hand and rule on D3 — CLOSED 2026-11-17: the owner approved D3 as built, with the three behaviours §8 "P2 results" lists
 - [x] P3: a toolbar docked on one window acts on another's selection; a creator docked on a nested Maker places outside it (§6.3–§6.5) — CLOSED 2026-11-17: `WorldWdgt.editableEditorFocus(hostWindow)`, `CreatorWdgt._placeIntoMyHost`, the refresh and its two edges on `ToolbarWdgt` (`noteToolStatesChanged`), three new tests (§8 "P3 results")
 - [x] P4: tools with nothing to act on show dimmed (D5, §6.6) — CLOSED 2026-11-17: the property tools' one contract (`verb`, `_subjectOfferingMyVerb`, `hasSomethingToActOn`, the refusal in `activated`), `GlassBoxBottomWdgt.holdsToolWithNothingToActOn`, `toolbarGlyphDimmed`, two new tests, 17 tests recaptured (§8 "P4 rulings", "P4 results")
+- [x] P5: `architecture/toolbars.md`, the class headers stating the old model, archive and close — CLOSED 2026-11-17: `docs/architecture/toolbars.md` written and linked, three class headers corrected (`User`, `ImageWdgt`, `PaintToolbarWdgt`), the serialization reference's `users` section, this plan archived (§8 "P5 results")
 - [x] "Don't save" leaks the closed window's whole subtree (found in P2) — CLOSED 2026-11-17 in P2: `SaveShortcutPromptWdgt`'s button dispatches `fullDestroy`
 - [x] A text's own menu restyles it in view mode (found in P1) — CLOSED 2026-11-16 in P1: `StringWdgt._addTextMenuEntries` and `TextWdgt`'s "Soft wrap" row ask `Widget.sitsInViewModeContent` and offer no editing row in view-mode content; V1 asserts it (§8 "P1 results")
+- A loaded file's edited tool code is vetted only as strings (found in P5's fact-check): `Deserializer._userRecordProblem` neither compiles an edit nor refuses one assigning `hoverMoved` / `pressMoved`, which the edit mark's save refuses, so a hand-made file could plant a tool that shadows a surface's entries. No save writes one: every saved edit passed the edit mark's checks. Low, reached by no gesture — noted, not queued.

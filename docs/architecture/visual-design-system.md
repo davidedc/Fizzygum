@@ -196,7 +196,7 @@ rest no fill at all (the band's `paper` shows), hovered `toolCellHoverFill` (`de
 (`chrome`), ACTIVE `toolCellActiveFill` (`desk`, the draft's active tool), rounded at `toolCellCornerRadius` (6). The cell
 reads that look as it paints, from the hand's answers about the widget a tap on it reaches (its lid, or its tool:
 `pressesOn`, `restsOn`) and from its tool's `isActiveTool`, and repaints whenever a tool tells it something changed
-(`noteItemStateChanged`: a tool's `notePointerStateChanged` for the pointer state, and from whatever decides the active state: Draw's armed tool, the text tools' mirror of the edited
+(`noteItemStateChanged`: a tool's `notePointerStateChanged` for the pointer state, and from whatever decides the active state: the tool a paint tool's holder holds, the text tools' mirror of the edited
 text), so no tool leaves a stale colour on it. The text tools MIRROR the edited text (the editor focus,
 `world.editorFocusWdgt`, or the style it hands over: a spreadsheet hands over its selected cell's, `SheetCellStyle`):
 B is active while it is bold, I while it is italic, `</>` while it is monospaced, an align tool
@@ -206,8 +206,8 @@ content in view mode (`EditorContentPropertyChangerButtonWdgt.hasSomethingToActO
 pointer state (`GlassBoxBottomWdgt.holdsToolWithNothingToActOn`), and its glyph takes `toolbarGlyphDimmed`
 (`disabledText`, the ink of a disabled button's label). Like a disabled button, it drops its hover and press look and
 refuses its press (the font tool opens no menu). Creators, paint tools and Templates never dim. The focus has ONE write (`WorldWdgt._setEditorFocusNoSettle`), and a text's style setters
-announce a change while it is the focus (`noteStyleChanged`); each text toolbar hears both through one dataflow edge
-world → toolbar, so it follows in the same cycle with no timer. A hidden active tool ticks its row in the `»` menu. It clips its tool to its rounded outline, so a press in a corner notch
+announce a change while it is the focus (`noteStyleChanged`); every toolbar hears both through its dataflow edge
+world → toolbar, so it follows in the same cycle with no timer ([`toolbars.md`](toolbars.md) §7, the refresh). A hidden active tool ticks its row in the `»` menu. It clips its tool to its rounded outline, so a press in a corner notch
 falls through. Every glyph in a toolbar is `toolbarGlyph` (`ink`), a dimmed tool's `toolbarGlyphDimmed`; the overflow `»` is the drawn double chevron at
 `toolOverflowGlyphSize` (16) on the same state plate. The text toolbar's faces are B, I and `</>` typed in their
 faces' fonts, and the rest drawn as size-aware control glyphs on the » × − + weight (2 px in the 44 cell), ink only and

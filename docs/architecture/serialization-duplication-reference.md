@@ -771,9 +771,15 @@ unserializable value still raises the rich `SerializationError`.
 `untitledNamingCounters`, `users` (`world.users` — one record per `User` (`Serializer._userRecord`): the
 `armedDrawingTool` KEY, and the person's edits of the paint tools, `drawingToolOverrides` (tool key → source
 text, left out while there are none), captured by name like the naming service since a `User` is a plain
-delegated collaborator, not a tree object; the load re-states the hand and REPLACES the live person's edits
-with the file's, `User.replaceDrawingToolOverrides`, since the users outlive the load; a window's own tool,
-`FrameWdgt.armedDrawingTool`, is an ordinary field of the window), `appWindows` (`{AppClassName:{$r}}`),
+delegated collaborator, not a tree object; the load's vetting refuses a record that is not a plain record, a tool
+key that is not a string, or edits that are not a plain record of strings (`Deserializer._userRecordProblem`: the
+sources themselves are not compiled at the load), then applies each record to the live users positionally,
+re-stating the hand and REPLACING the person's edits with the file's, `User.replaceDrawingToolOverrides`, since the
+users outlive the load; a window's own tool, `FrameWdgt.armedDrawingTool`, is an ordinary field of the window, and a
+palette cell holds no code, so what a tool key MEANS is saved in one place, the person's table; a paint surface's
+taken-up tool members and the source they came from (`CanvasGlassTopWdgt._takenUpToolSource`) ride its record like
+any injected member, and its first use after a load compares that source with what its holder's key means now —
+[`toolbars.md`](toolbars.md) §4), `appWindows` (`{AppClassName:{$r}}`),
 `bin` (`{$r}`), `shelf` (`{$r}`), `preferences` (a FORCED data record — `refFor` would give the
 `{"$wk":"preferences"}` symbolic link, but the section needs the actual values, restored onto
 the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class

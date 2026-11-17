@@ -347,8 +347,8 @@ class PaintToolbarWdgt extends ToolbarWdgt
   # dispatch law asks of a cell (CommandSpec's header). The EDIT MARK rides the tool: the triangle
   # in the tool's own top-right corner opens that command's source for editing.
   #   Each face is built in the toolbar glyph ink, the ink of every toolbar's glyphs (a creator
-  # button or a text tool takes it in its createAppearance), where an icon built without a colour
-  # would take the plain icon ink (IconWdgt).
+  # button takes it in its createAppearance, a text tool reads it as it paints), where an icon built
+  # without a colour would take the plain icon ink (IconWdgt).
   _toolbarItems: ->
     glyphInk = WorldWdgt.theme.toolbarGlyph
     @pencilTool = new CodeInjectingSimpleRectangularButtonWdgt (new Pencil2IconWdgt glyphInk), 'pencil'

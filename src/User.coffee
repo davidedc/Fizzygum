@@ -24,11 +24,12 @@
 #
 # ── WHAT IS AND IS NOT MINE ──────────────────────────────────────────────────────────────────
 # `world.editorFocusWdgt` (which widget the person is editing) and `world.caret` (where their
-# typing goes) are the same KIND of fact and are future kin here -- they stay where they are
-# today; moving them is not this arc's business.
+# typing goes) are the same KIND of fact and are future kin here -- they stay on the world, not
+# here.
 #   Multi-user INPUT ATTRIBUTION is out of scope: `world.users` is a list because the concept is
 # per-person, and it holds ONE member today. Nothing here decides which person an incoming event
-# belongs to, and no pointer/keyboard path consults me.
+# belongs to: what reads me at a pointer event -- a palette tool's press, a paint surface finding its
+# holder (CanvasGlassTopWdgt._toolHolder) -- reads `world.user`, the one acting.
 class User
 
   # THE TOOL IN HAND: a tool KEY ('pencil' | 'brush' | 'toothpaste' | 'eraser'), or undefined for

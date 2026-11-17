@@ -1183,6 +1183,7 @@ the debt.
 - [`layering-naming-convention.md`](layering-naming-convention.md) · [`layout.md`](layout.md) · [`transforms.md`](transforms.md) · [`appearance-paint-convention.md`](appearance-paint-convention.md) · [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md) — the mechanics.
 - [`visual-design-system.md`](visual-design-system.md) — where a widget's look is decided (`Theme`: palette, roles, font roles, metrics, shadows) and the rules it follows.
 - [`serialization-duplication-reference.md`](serialization-duplication-reference.md) · [`immutable-value-classes.md`](immutable-value-classes.md) · [`build-and-packaging.md`](build-and-packaging.md).
+- [`toolbars.md`](toolbars.md) — a toolbar tool: whom it works for, docked or floating, by its kind (mode, property, creator, subject-less), and how to write one of each.
 - [`lint-and-static-checks.md`](lint-and-static-checks.md) — every gate cited above.
 - [`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md) — how the existing widget population scores against these rules (dated snapshot; re-run `buildSystem/census-widget-conformance.js` for the mechanical facets).
 - [`../archive/widget-practices-convergence-plan.md`](../archive/widget-practices-convergence-plan.md) — the arc bringing the existing tree to these rules.
